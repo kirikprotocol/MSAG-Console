@@ -40,9 +40,6 @@
   page_menu_space(out);
   page_menu_button(session, out, "mbActivate",  "common.buttons.activate", "smsc.activateHint");
   page_menu_button(session, out, "mbDeactivate",  "common.buttons.deactivate",  "smsc.activateHint");
-  page_menu_space(out);
-  page_menu_button(session, out, "mbApplyConfig", "common.buttons.applyConfig", "smsc.masterHint");
-  page_menu_space(out);
   page_menu_end(out);%>
 <div class=content>
 <table cellpadding=0 cellspacing=0 height=30px class=smsc_status>
@@ -76,7 +73,7 @@
 <tr class=row<%=id&1%>>
   <td><input class=check type=radio name=checkedSmsc value="<%=node%>"></td>
   <td><%=node%></td>
-  <td><%=smscServStatus((SMSCAppContext) request.getAttribute("appContext"), Constants.SMSC_serv_IDs.get(new Byte(id)))%></td>
+  <td><%=smscServStatus((SMSCAppContext) request.getAttribute("appContext"), (String) Constants.SMSC_serv_IDs.get(new Byte(id)))%></td>
 </tr>
 <%}%>
 </tbody>
@@ -85,14 +82,11 @@
   page_menu_begin(out);
   page_menu_button(session, out, "mbOnline", "common.buttons.online", "smsc.start");
   page_menu_button(session, out, "mbOffline", "common.buttons.offline", "smsc.stop");
-  page_menu_space(out);      
+  page_menu_space(out);
   page_menu_button(session, out, "mbSwitchOver", "common.buttons.switchOver", "common.hints.switchOver");
   page_menu_space(out);
   page_menu_button(session, out, "mbActivate",  "common.buttons.activate", "smsc.activateHint");
   page_menu_button(session, out, "mbDeactivate",  "common.buttons.deactivate",  "smsc.activateHint");
-  page_menu_space(out);
-  page_menu_button(session, out, "mbApplyConfig", "common.buttons.applyConfig", "smsc.masterHint");
-  page_menu_space(out);
   page_menu_end(out);}%>
 <%@
  include file="/WEB-INF/inc/html_3_footer.jsp"%><%@

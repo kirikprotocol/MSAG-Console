@@ -31,7 +31,7 @@ function openTopMon()
     <td >&nbsp;<%
       if (ServiceIDForShowStatus != null && ServiceIDForShowStatus.length() > 0)
       {
-        if (!ServiceIDForShowStatus.isEquals(Constants.SMSC_SME_ID))
+        if (!ServiceIDForShowStatus.equals(Constants.SMSC_SME_ID))
         {
         %><%=StringEncoderDecoder.encode(ServiceIDForShowStatus)%>&nbsp;
           <%=getLocString("grammatic.is")%>&nbsp;

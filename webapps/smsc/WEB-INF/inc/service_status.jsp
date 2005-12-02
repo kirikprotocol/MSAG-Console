@@ -33,7 +33,7 @@ String rgStatus(SMSCAppContext appContext, String serviceId, String elem_id)
 	byte status = ServiceInfo.STATUS_UNKNOWN;
 //    String node = "";
 	try {
-		status = appContext.getHostsManager().getServiceStatus(serviceId);
+		status = appContext.getHostsManager().getServiceInfo(serviceId).getStatus();
 	} catch (Throwable e)
 	{}
 	String result = "<span id=\"" + elem_id + "\" datasrc=#tdcStatuses DATAFORMATAS=html datafld=\"" + StringEncoderDecoder.encode(serviceId) + "\">";
@@ -88,10 +88,10 @@ String smscStatus(SMSCAppContext appContext)
     String elem_id = "RUNNING_STATUSERVICE_" + StringEncoderDecoder.encode(Constants.SMSC_SME_ID);
 	byte status = ServiceInfo.STATUS_UNKNOWN;
 	try {
-		status = appContext.getHostsManager().getServiceStatus(Constants.SMSC_SME_ID);
+		status = appContext.getHostsManager().getServiceInfo(Constants.SMSC_SME_ID).getStatus();
 	} catch (Throwable e)
 	{}
-	String result = "<span id=\"" + elem_id + "\" datasrc=#tdcStatuses DATAFORMATAS=html datafld=\"" + StringEncoderDecoder.encode(Constants.SMSC_SME_ID) + "\">";
+	String result = "<span id=\"" + elem_id + "\" datasrc=#tdcSmscStatuses DATAFORMATAS=html datafld=\"" + StringEncoderDecoder.encode(Constants.SMSC_SME_ID) + "\">";
     for (Iterator i = Constants.SMSC_serv_IDs.keySet().iterator(); i.hasNext();)
     {
         Byte id = (Byte) i.next();
@@ -134,7 +134,7 @@ String smscServStatusString(SMSCAppContext appContext, String serviceId)
 {
 	byte status = ServiceInfo.STATUS_UNKNOWN;
 	try {
-		status = appContext.getHostsManager().getServiceStatus(serviceId);
+		status = appContext.getHostsManager().getServiceInfo(serviceId).getStatus();
 	} catch (Throwable e)
 	{}
 	String result = "";

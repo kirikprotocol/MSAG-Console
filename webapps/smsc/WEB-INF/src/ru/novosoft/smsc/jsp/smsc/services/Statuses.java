@@ -10,6 +10,7 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.SmeStatus;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.PageBean;
+import ru.novosoft.smsc.jsp.SMSCAppContext;
 
 import java.util.List;
 
@@ -54,4 +55,30 @@ public class Statuses extends PageBean
   {
     this.colored = colored;
   }
+
+	public String smscServStatusString(String serviceId)
+	{
+		byte status = ServiceInfo.STATUS_UNKNOWN;
+		try {
+			status = appContext.getHostsManager().getServiceInfo(serviceId).getStatus();
+		} catch (Throwable e)
+		{}
+		String result = "";
+			switch (status)
+			{
+				case ServiceInfo.STATUS_OFFLINE:
+					result += appContext.getLocaleString("common.statuses.deactivated");
+					break;
+				case ServiceInfo.STATUS_ONLINE1:
+					result += appContext.getLocaleString("common.statuses.activated");
+					break;
+				case ServiceInfo.STATUS_ONLINE2:
+					result += appContext.getLocaleString("common.statuses.activated");
+					break;
+				default:
+					result += appContext.getLocaleString("common.statuses.unknown");
+					break;
+			}
+		return result;
+	}
 }

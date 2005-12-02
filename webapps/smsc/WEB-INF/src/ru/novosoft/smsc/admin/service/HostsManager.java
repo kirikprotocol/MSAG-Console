@@ -211,7 +211,7 @@ public class HostsManager
 	public synchronized void switchOver(final String serviceId) throws AdminException
 	{
 		ResourceGroup rg = getService(serviceId);
-		byte status = getServiceStatus(serviceId);
+		byte status = getServiceInfo(serviceId).getStatus();
 		switch (status)
 		{
 			case ServiceInfo.STATUS_ONLINE1:
