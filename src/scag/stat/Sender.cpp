@@ -34,7 +34,7 @@ int Registrator::Execute()
     {
         SmppStatEvent si;
 
-        int count =  7. * ( (double)random() / 2147483648. ) + 1;
+        int count =  3. * ( (double)random() / 2147483648. ) + 1;
         for(int i = 0; i<= count - 1; i++){
             strcpy(si.smeId, "sme1");
             strcpy(si.routeId, "route1");
@@ -45,7 +45,7 @@ int Registrator::Execute()
             sm->registerEvent(si);
         }
 
-        count =  7. * ( (double)random() / 2147483648. ) + 1;
+        count =  3. * ( (double)random() / 2147483648. ) + 1;
         for(int i = 0; i<= count - 1; i++){
             strcpy(si.smeId, "sme2");
             strcpy(si.routeId, "route2");
@@ -56,7 +56,7 @@ int Registrator::Execute()
             sm->registerEvent(si);
         }
 
-        count =  7. * ( (double)random() / 2147483648. ) + 1;
+        count =  3. * ( (double)random() / 2147483648. ) + 1;
         for(int i = 0; i <= count - 1; i++){
             strcpy(si.smeId, "sme3");
             strcpy(si.routeId, "route3");
@@ -67,7 +67,7 @@ int Registrator::Execute()
             sm->registerEvent(si);
         }
 
-        count =  7. * ( (double)random() / 2147483648. ) + 1;
+        count =  3. * ( (double)random() / 2147483648. ) + 1;
         for(int i = 0; i<= count - 1; i++){
             strcpy(si.smeId, "sme3");
             strcpy(si.routeId, "route3");
@@ -78,7 +78,7 @@ int Registrator::Execute()
             sm->registerEvent(si);
         }
 
-        count =  7. * ( (double)random() / 2147483648. ) + 1;
+        count =  3. * ( (double)random() / 2147483648. ) + 1;
         for(int i = 0; i<= count - 1; i++){
             strcpy(si.smeId, "sme3");
             strcpy(si.routeId, "route3");
