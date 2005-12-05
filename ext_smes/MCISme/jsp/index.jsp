@@ -59,14 +59,12 @@ function checkApplyResetButtons()
     <tr class=row0>
       <td style="padding-right:3px"><input class=check type=checkbox id=toStartService name=toStart value=service onClick="checkStartStop();"></td>
       <th><label for=toStartSme><%= getLocString("mcisme.label.mci_service")%></label></th>
-      <td><%= serviceStatus(bean.getAppContext(), bean.getSmeId(),
-                            "MCISme_RUNNING_STATUSERVICE_MCISme")%></td>
+      <td><%= serviceStatus(bean.getAppContext(), bean.getSmeId(), "MCISme_RUNNING_STATUSERVICE_MCISme")%></td>
     </tr>
     <tr class=row1 id=profRow>
       <td style="padding-right:3px"><input class=check type=checkbox id=toStartProfiler name=toStart value=profiler onClick="checkStartStop();"></td>
       <th><label for=toStartProfiler><%= getLocString("mcisme.label.mci_profiler")%><label></th>
-      <td><%= serviceStatus(bean.getAppContext(), bean.getProfilerSmeId(),
-                            "MCIProf_RUNNING_STATUSERVICE_MCIProf")%></td>
+      <td><%= serviceStatus(bean.getAppContext(), bean.getProfilerSmeId(), "MCIProf_RUNNING_STATUSERVICE_MCIProf")%></td>
     </tr>
     <tr class=row0>
       <td style="padding-right:3px">&nbsp;</td><th>&nbsp;</th><td>&nbsp;</td>
@@ -117,12 +115,21 @@ page_menu_end(out);
 <script type="text/javascript" language="JavaScript">
 function checkStartStop()
 {
+  var status = document.all.RUNNING_STATUSERVICE_MCISme.innerText;
+  var serviceRunning = (status == "<%= getLocString("common.statuses.online1") %>" ||
+                        status == "<%= getLocString("common.statuses.online2") %>" ||
+                        status == "<%= getLocString("common.statuses.running") %>" );
+  var serviceStopped = (status == "<%= getLocString("common.statuses.offline") %>" ||
+                        status == "<%= getLocString("common.statuses.stopped") %>" );
   var serviceChecked  = opForm.all.toStartService.checked;
-  var serviceRunning  = document.all.MCISme_RUNNING_STATUSERVICE_MCISme.innerText == "running";
-  var serviceStopped  = document.all.MCISme_RUNNING_STATUSERVICE_MCISme.innerText == "stopped";
+
+  status = document.all.RUNNING_STATUSERVICE_MCIProf.innerText;
+  var profilerRunning = (status == "<%= getLocString("common.statuses.online1") %>" ||
+                         status == "<%= getLocString("common.statuses.online2") %>" ||
+                         status == "<%= getLocString("common.statuses.running") %>" );
+  var profilerStopped = (status == "<%= getLocString("common.statuses.offline") %>" ||
+                         status == "<%= getLocString("common.statuses.stopped") %>" );
   var profilerChecked = opForm.all.toStartProfiler.checked;
-  var profilerRunning = document.all.MCIProf_RUNNING_STATUSERVICE_MCIProf.innerText == "running";
-  var profilerStopped = document.all.MCIProf_RUNNING_STATUSERVICE_MCIProf.innerText == "stopped";
 
   var serviceStart  = serviceStopped && serviceChecked;
   var serviceStop   = serviceRunning && serviceChecked;
