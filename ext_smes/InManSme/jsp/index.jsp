@@ -36,8 +36,17 @@
 <script type="text/javascript" language="JavaScript">
 function refreshStartStopButtonsStatus()
 {
-	document.all.mbStart.disabled = (document.all.RUNNING_STATUSERVICE_<%=bean.getSmeId()%>.innerText != "<%=getLocString("common.statuses.stopped")%>");
-	document.all.mbStop.disabled  = (document.all.RUNNING_STATUSERVICE_<%=bean.getSmeId()%>.innerText != "<%=getLocString("common.statuses.running")%>");
+    var status = document.all.RUNNING_STATUSERVICE_<%=ServiceIDForShowStatus%>.innerText;
+    document.all.mbStart.disabled = (status == "<%= getLocString("common.statuses.online1") %>" ||
+                                     status == "<%= getLocString("common.statuses.online2") %>" ||
+                                     status == "<%= getLocString("common.statuses.running") %>" ||
+                                     status == "<%= getLocString("common.statuses.stopping")%>" ||
+                                     status == "<%= getLocString("common.statuses.starting")%>" ||
+                                     status == "<%= getLocString("common.statuses.unknown" )%>" );
+    document.all.mbStop.disabled  = (status == "<%= getLocString("common.statuses.offline") %>" ||
+                                     status == "<%= getLocString("common.statuses.stopped") %>" ||
+                                     status == "<%= getLocString("common.statuses.stopping")%>" ||
+                                     status == "<%= getLocString("common.statuses.unknown") %>" );
 	window.setTimeout(refreshStartStopButtonsStatus, 500);
 }
 refreshStartStopButtonsStatus();
