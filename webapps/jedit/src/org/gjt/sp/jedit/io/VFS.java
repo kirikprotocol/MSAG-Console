@@ -275,9 +275,9 @@ public abstract class VFS
  {
   if(path.equals("/"))
    return path;
-  if (jEdit.getBooleanProperty("bufferWorkWithId")) {
+ /* if (jEdit.getBooleanProperty("bufferWorkWithId")) {
     return jEdit.IdToFileName(path);
-  }
+  } */
   while(path.endsWith("/") || path.endsWith(""+jEdit.separatorChar))
    path = path.substring(0,path.length() - 1);
 
@@ -288,8 +288,10 @@ public abstract class VFS
 
   // don't want getFileName("roots:") to return ""
   if(index == -1 || index == path.length() - 1)
-   return path;
-
+  {  if (jEdit.getBooleanProperty("bufferWorkWithId"))
+          path=jEdit.IdToFileName(path);
+    return path;
+  }
   return path.substring(index + 1);
  } //}}}
 

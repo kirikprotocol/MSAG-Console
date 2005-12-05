@@ -88,7 +88,7 @@ public class HelpViewer extends JFrame implements EBComponent
    // what to do?
   }
   */
-    baseURL = MiscUtilities.constructPath(jEdit.getJEditHome(),"doc");
+  baseURL = MiscUtilities.constructPath(jEdit.getJEditHome(),"doc");
 
   history = new String[25];
 
@@ -187,6 +187,10 @@ public class HelpViewer extends JFrame implements EBComponent
    else
    {
     shortURL = url;
+    if(baseURL.endsWith("/"))
+    url = baseURL + url;
+   else
+    url = baseURL + '/' + url;
    }
   }
   else
@@ -197,24 +201,35 @@ public class HelpViewer extends JFrame implements EBComponent
    else
     url = baseURL + '/' + url;
   }
-
+  System.out.println("HelpViewer.gotoURL line 200 url= "+url);
   // reset default cursor so that the hand cursor doesn't
   // stick around
   viewer.setCursor(Cursor.getDefaultCursor());
 
-  URL _url = null;
+  URL _url = null; int command=jEdit.getParseXml();
+  // HttpURLConnection c=null;
+  String content="?username="+jEdit.username+"&password="+jEdit.password+"&command="+command+"&file="+url;
   try
   {
-   _url = new URL(url);
+  // _url = new URL(url);
+   _url=new URL(jEdit.servletUrl,content);
 
-   if(!_url.equals(viewer.getPage()))
+    if(!_url.equals(viewer.getPage()))
     title.setText(jEdit.getProperty("helpviewer.loading"));
    else
    {
-    /* don't show loading msg because we won't
-       receive a propertyChanged */
+    // don't show loading msg because we won't
+     //  receive a propertyChanged
    }
 
+
+
+
+  /* String r=jEdit.LongStringGet(url,jEdit.getParseXml());
+   if (!r.equals(viewer.getText()))
+      title.setText(jEdit.getProperty("helpviewer.loading"));
+   viewer.setText(r);
+   */   
    viewer.setPage(_url);
    if(addToHistory)
    {

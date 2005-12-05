@@ -1464,7 +1464,7 @@ public class jEdit extends Applet
       if (MiscUtilities.getProtocolOfURL(path).equals("file"))
         path = path.substring(5);
     }
-    path = MiscUtilities.constructPath(parent, path);
+    if (!jEdit.getBooleanProperty("bufferWorkWithId")) path = MiscUtilities.constructPath(parent, path);
     synchronized (bufferListLock) {
       Buffer buffer = getBuffer(path);
       if (buffer != null)

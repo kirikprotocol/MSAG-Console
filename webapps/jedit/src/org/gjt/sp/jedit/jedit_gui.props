@@ -57,17 +57,9 @@ startup=true
 #}}}
 
 #{{{ Tool bar
-view.toolbar=new-file open-file close-buffer save - print page-setup - \
-	undo redo cut copy paste - find find-next - new-view unsplit \
-	split-horizontal split-vertical - buffer-options global-options - \
-	plugin-manager - help
+view.toolbar=undo redo cut copy paste - find find-next - unsplit \
+	split-horizontal split-vertical - buffer-options global-options 
 
-new-file.icon=New.png
-open-file.icon=Open.png
-save.icon=Save.png
-close-buffer.icon=Cancel.png
-print.icon=Print.png
-page-setup.icon=PageSetup.png
 undo.icon=Undo.png
 redo.icon=Redo.png
 cut.icon=Cut.png
@@ -75,13 +67,11 @@ copy.icon=Copy.png
 paste.icon=Paste.png
 find.icon=Find.png
 find-next.icon=FindAgain.png
-new-view.icon=NewView.png
 unsplit.icon=UnSplit.png
 split-horizontal.icon=SplitHorizontal.png
 split-vertical.icon=SplitVertical.png
 buffer-options.icon=Properties.png
 global-options.icon=Preferences.png
-plugin-manager.icon=Plugins.png
 help.icon=Help.png
 
 #{{{ Icon list for tool bar editor
@@ -109,13 +99,8 @@ icons=AdjustWidth.png \
 	Load.png \
 	Minus.png \
 	MultipleResults.png \
-	NewDir.png \
 	New.png \
-	NewView.png \
-	NextFile.png \
 	Open.png \
-	PageSetup.png \
-	ParentDir.png \
 	Parse.png \
 	Paste.png \
 	Pause.png \
@@ -123,17 +108,8 @@ icons=AdjustWidth.png \
 	Plugins.png \
 	Plus.png \
 	Preferences.png \
-	PreviousFile.png \
-	Print.png \
 	Properties.png \
 	Redo.png \
-	Reload.png \
-	Run.png \
-	RunAgain.png \
-	RunToBuffer.png \
-	Save.png \
-	SaveAll.png \
-	SaveAs.png \
 	SingleResult.png \
 	SplitHorizontal.png \
 	SplitVertical.png \

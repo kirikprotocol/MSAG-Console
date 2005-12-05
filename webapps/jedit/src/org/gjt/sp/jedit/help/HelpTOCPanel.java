@@ -195,16 +195,20 @@ class HelpTOCPanel extends JPanel
  //{{{ loadTOC() method
  private void loadTOC(DefaultMutableTreeNode root, String path)
  {
-  TOCHandler h = new TOCHandler(root,MiscUtilities.getParentOfPath(path));
+
+   String basePath = MiscUtilities.constructPath(jEdit.getJEditHome(),"doc");
+   String fullPath=MiscUtilities.constructPath(basePath,path);
+   System.out.println("HelpTOCPanel.loadTOC path= "+path +" basePath= "+basePath+" fullpath= "+fullPath);
+   TOCHandler h = new TOCHandler(root,fullPath);
   XmlParser parser = new XmlParser();
   Reader in = null;
   parser.setHandler(h);
-
+ int command=jEdit.getParseXml();
+ String content="?username="+jEdit.username+"&password="+jEdit.password+"&command="+command+"&file="+fullPath;
   try
   {
-   in = new InputStreamReader(
-    new URL(helpViewer.getBaseURL()
-    + '/' + path).openStream());
+   in = new InputStreamReader(new URL(jEdit.servletUrl,content).openStream());
+   //in = new InputStreamReader(new URL(helpViewer.getBaseURL() + '/' + path).openStream());
    parser.parse(null, null, in);
   }
   catch(XmlException xe)
