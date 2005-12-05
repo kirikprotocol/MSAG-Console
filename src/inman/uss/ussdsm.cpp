@@ -161,12 +161,12 @@ void USSDSM::onProcessUSSRequest(USSRequestMessage* req)
     makeUI(ui4, _msAdr, (_vLR->getCFG()).vlr_addr);
 
     //set result listener, and initiate TCAP dialog
-    Invoke* op = _dlg->invoke( MAPUSS_OpCode::processUSS_Request );
+    Invoke* op = _dlg->initInvoke( MAPUSS_OpCode::processUSS_Request );
     assert( op );
     op->setListener(_ires = new USSTcapListener(op, this));
 
     op->setParam( &arg );
-    op->send( _dlg );
+    op->send();
     _dlg->beginDialog(&ui4[0], ui4.size());
 }
 
@@ -220,12 +220,12 @@ USSDialog::~USSDialog()
 {
 }
 
-USHORT_T USSDialog::handleEndDialog()
-{
-    smsc_log_debug(logger," USSDialog{id = %d} received END", this->getId());
+//USHORT_T USSDialog::handleEndDialog()
+//{
+//    smsc_log_debug(logger," USSDialog{id = %d} received END", this->getId());
 //    _pDsm->onDialogEnd(this);
-    return 0;
-}
+//    return 0;
+//}
 
 }//namespace uss
 }//namespace inman

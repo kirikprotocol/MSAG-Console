@@ -62,7 +62,7 @@ public:
     USSDialog(USSDSM * pDsm, Session* pSession);
     virtual ~USSDialog();
     // Transaction level callbacks
-    USHORT_T handleEndDialog();
+//    USHORT_T handleEndDialog();
 
 protected:
     USSDSM * _pDsm; //parent state machine
