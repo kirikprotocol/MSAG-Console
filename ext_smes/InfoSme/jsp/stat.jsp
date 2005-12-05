@@ -1,13 +1,9 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ page import="ru.novosoft.smsc.infosme.beans.TasksStatistics,
-                 ru.novosoft.smsc.util.StringEncoderDecoder,
-                 java.util.*,
-                 ru.novosoft.smsc.infosme.backend.Statistics,
-                 ru.novosoft.smsc.infosme.backend.CountersSet,
+<%@ page import="ru.novosoft.smsc.util.StringEncoderDecoder,
+                 java.util.*, ru.novosoft.smsc.infosme.backend.Statistics,
                  ru.novosoft.smsc.infosme.backend.DateCountersSet,
                  ru.novosoft.smsc.infosme.backend.HourCountersSet,
-                 java.text.SimpleDateFormat,
-                 ru.novosoft.smsc.infosme.beans.InfoSmeBean,
+                 java.text.SimpleDateFormat, ru.novosoft.smsc.infosme.beans.InfoSmeBean,
                  ru.novosoft.smsc.jsp.PageBean"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.infosme.beans.TasksStatistics" />
 <jsp:setProperty name="bean" property="*"/>
@@ -66,7 +62,7 @@ page_menu_end(out);
   if (statistics != null)
   {
     %><div class=content>
-    <script>
+    <script type="text/javascript">
       function toggleVisible(p, c)
       {
         var o = p.className == "collapsing_list_opened";

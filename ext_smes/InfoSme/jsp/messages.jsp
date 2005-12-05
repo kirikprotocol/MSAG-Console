@@ -1,7 +1,6 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="ru.novosoft.smsc.util.StringEncoderDecoder,
-                 java.util.*, java.text.SimpleDateFormat,
-                 ru.novosoft.smsc.infosme.backend.Message,
+                 java.util.*, ru.novosoft.smsc.infosme.backend.Message,
                  ru.novosoft.smsc.jsp.util.tables.QueryResultSet,
                  ru.novosoft.smsc.infosme.backend.tables.messages.MessageDataItem"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.infosme.beans.Messages" />
@@ -17,7 +16,7 @@
 %><%@ include file="inc/menu_switch.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="inc/header.jsp"%>
-<script>
+<script type="text/javascript">
 function setSort(sorting)
 {
 	if (sorting == "<%=bean.getSort()%>")

@@ -1,12 +1,6 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ page import="ru.novosoft.smsc.admin.Constants,
-					  ru.novosoft.smsc.jsp.SMSCJspException,
-					  ru.novosoft.smsc.jsp.SMSCErrors,
-					  ru.novosoft.smsc.infosme.beans.Providers,
-					  ru.novosoft.smsc.infosme.beans.Index,
-                 java.util.Collection,
-                 java.util.Iterator,
-                 java.net.URLEncoder,
+<%@ page import="ru.novosoft.smsc.infosme.beans.Providers,
+                 java.util.Collection, java.util.Iterator, java.net.URLEncoder,
                  ru.novosoft.smsc.util.StringEncoderDecoder"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.infosme.beans.Providers" />
 <jsp:setProperty name="bean" property="*"/>
@@ -40,7 +34,7 @@
 <div class=content>
 <input type=hidden name=edit>
 <input type=hidden name=sort>
-<script>
+<script type="text/javascript">
 function setSort(sorting)
 {
 	if (sorting == "<%=bean.getSort()%>")
@@ -85,7 +79,7 @@ page_menu_button(session, out, "mbDelete", "common.buttons.delete", "infosme.hin
 page_menu_space(out);
 page_menu_end(out);
 %>
-<script>
+<script type="text/javascript">
 checkCheckboxesForMbDeleteButton();
 </script>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>

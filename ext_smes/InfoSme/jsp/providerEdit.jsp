@@ -1,7 +1,5 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="ru.novosoft.smsc.infosme.beans.ProviderEdit,
-                 ru.novosoft.smsc.jsp.SMSCJspException,
-                 ru.novosoft.smsc.jsp.SMSCErrors,
                  ru.novosoft.smsc.util.StringEncoderDecoder"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.infosme.beans.ProviderEdit" />
 <jsp:setProperty name="bean" property="*"/>

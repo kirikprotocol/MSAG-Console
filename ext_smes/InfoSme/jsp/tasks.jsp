@@ -1,10 +1,6 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="ru.novosoft.smsc.infosme.beans.Tasks,
-                 java.net.URLEncoder,
-                 ru.novosoft.smsc.jsp.SMSCJspException,
-                 ru.novosoft.smsc.jsp.SMSCErrors,
-                 java.util.Collection,
-                 java.util.Iterator,
+                 java.net.URLEncoder, java.util.Iterator,
                  ru.novosoft.smsc.util.StringEncoderDecoder,
                  ru.novosoft.smsc.jsp.util.tables.QueryResultSet,
                  ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataItem"%>
@@ -44,7 +40,7 @@
     <PARAM NAME="UseHeader" VALUE="True">
     <PARAM NAME="TextQualifier" VALUE='"'>
   </OBJECT>
-  <script>
+  <script type="text/javascript">
     function refreshTaskStatuses()
     {
       document.all.tdcTasksStatuses.DataURL = document.all.tdcTasksStatuses.DataURL;
@@ -54,7 +50,7 @@
     refreshTaskStatuses();
   </script>
 <%}%>
-<script>
+<script type="text/javascript">
 function setSort(sorting)
 {
 	if (sorting == "<%=bean.getSort()%>")
@@ -144,7 +140,7 @@ if (bean.isSmeRunning()) {
 page_menu_space(out);
 page_menu_end(out);
 %>
-<script>
+<script type="text/javascript">
 <%if (bean.isSmeRunning()) {%>checkCheckboxesForMbDeleteButton();<%}%>
 </script>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>

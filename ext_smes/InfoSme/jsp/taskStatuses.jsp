@@ -1,5 +1,4 @@
-<%@ page import="java.util.*,
-                 ru.novosoft.smsc.util.StringEncoderDecoder"%><jsp:useBean id="bean" class="ru.novosoft.smsc.infosme.beans.TaskStatuses"/><jsp:setProperty name="bean" property="*"/><%
+<%@ page import="java.util.*, ru.novosoft.smsc.util.StringEncoderDecoder"%><jsp:useBean id="bean" class="ru.novosoft.smsc.infosme.beans.TaskStatuses"/><jsp:setProperty name="bean" property="*"/><%
 /*try
 {*/
 //String CPATH = request.getContextPath() + "/smsc";

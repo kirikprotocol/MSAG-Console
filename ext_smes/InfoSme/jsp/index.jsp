@@ -1,9 +1,5 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ page import="ru.novosoft.smsc.admin.Constants,
-				 ru.novosoft.smsc.infosme.beans.Index,
-				 ru.novosoft.smsc.jsp.SMSCJspException,
-				 ru.novosoft.smsc.jsp.SMSCErrors,
-                 ru.novosoft.smsc.jsp.util.tables.QueryResultSet,
+<%@ page import="ru.novosoft.smsc.jsp.util.tables.QueryResultSet,
                  java.util.*, ru.novosoft.smsc.util.Functions,
                  ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataItem,
                  ru.novosoft.smsc.util.StringEncoderDecoder,
@@ -27,7 +23,7 @@
 	<PARAM NAME="DataURL" VALUE="/smsc/smsc/esme_InfoSme/taskStatuses.jsp">
 	<PARAM NAME="UseHeader" VALUE="True">
 	<PARAM NAME="TextQualifier" VALUE='"'>
-</OBJECT><script>
+</OBJECT><script type="text/javascript">
 function refreshTaskStatuses()
 {
 	document.all.tdcTasksStatuses.DataURL = document.all.tdcTasksStatuses.DataURL;
@@ -37,7 +33,7 @@ function refreshTaskStatuses()
 refreshTaskStatuses();
 </script>
 <div class=content>
-<script>
+<script type="text/javascript">
 function checkApplyResetButtons()
 {
   opForm.all.mbApply.disabled = !(opForm.all.allCheck.checked || opForm.all.tasksCheck.checked || opForm.all.schedsCheck.checked);
@@ -116,7 +112,7 @@ page_menu_button(session, out, "mbApply",  "common.buttons.apply", "infosme.hint
 page_menu_button(session, out, "mbReset",  "common.buttons.reset", "infosme.hint.reset_changes", bean.isChangedAll() || bean.isChangedTasks() || bean.isChangedShedules());
 page_menu_end(out);
 %>
-<script>
+<script type="text/javascript">
 function checkStartStop()
 {
   var status = document.all.InfoSme_RUNNING_STATUSERVICE_InfoSme.innerText;
@@ -237,7 +233,7 @@ function setSort(sorting)
   page_menu_space(out);
   page_menu_end(out);
 %>
-<script>
+<script type="text/javascript">
 function checkTasks()
 {
   var prefix = "checked";

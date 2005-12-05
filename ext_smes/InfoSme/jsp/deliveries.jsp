@@ -1,7 +1,7 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%><%@
-    page import="ru.novosoft.smsc.infosme.beans.Deliveries, java.net.URLEncoder,
+    page import="ru.novosoft.smsc.infosme.beans.Deliveries,
                  ru.novosoft.smsc.jsp.SMSCJspException, ru.novosoft.smsc.jsp.SMSCErrors,
-                 java.util.Collection, java.util.Iterator, ru.novosoft.smsc.util.StringEncoderDecoder,
+                 ru.novosoft.smsc.util.StringEncoderDecoder,
                  ru.novosoft.smsc.infosme.beans.InfoSmeBean, ru.novosoft.smsc.jsp.PageBean,
                  ru.novosoft.util.jsp.MultipartServletRequest"%><jsp:useBean id="deliveries_bean" scope="session" class="ru.novosoft.smsc.infosme.beans.Deliveries" /><jsp:setProperty name="deliveries_bean" property="*"/><%
 
@@ -166,7 +166,7 @@ else {
 <div class=secInfo><%= getLocString("infosme.label.status")%>&nbsp;<span id=tdcStatus datasrc=#tdcProgress DATAFORMATAS=html datafld="status" style='color:blue;'><%= bean.getStatusStr()%></span></div>
 <div class=secInfo><%= getLocString("infosme.label.messages_generated")%>&nbsp;<span datasrc=#tdcProgress DATAFORMATAS=html datafld="messages"><%= bean.getMessages()%></span></div>
 <div class=secInfo><%= getLocString("infosme.label.total_progress")%>&nbsp;<span datasrc=#tdcProgress DATAFORMATAS=html datafld="progress"><%= bean.getProgress()%></span>%</div>
-<script>
+<script type="text/javascript">
 function refreshProgressStatus()
 {
 	document.all.tdcProgress.DataURL = document.all.tdcProgress.DataURL;
@@ -214,7 +214,7 @@ refreshProgressStatus();
         page_menu_button(session, out, "mbNext",   "infosme.button.next_page", "infosme.hint.next_page", false);
         page_menu_space(out);
         page_menu_end(out);
-        %><script>
+        %><script type="text/javascript">
         function checkCreateButton() {
           opForm.all.mbNext.disabled = (opForm.all.<%=Deliveries.ABONENTS_FILE_PARAM%>.value.length <= 0);
         }</script><%

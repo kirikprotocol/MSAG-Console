@@ -1,9 +1,6 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="ru.novosoft.smsc.infosme.beans.ScheduleEdit,
-                 ru.novosoft.smsc.jsp.SMSCJspException,
-                 ru.novosoft.smsc.jsp.SMSCErrors,
-                 ru.novosoft.smsc.util.StringEncoderDecoder,
-                 java.util.Iterator"%>
+                 ru.novosoft.smsc.util.StringEncoderDecoder, java.util.Iterator"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.infosme.beans.ScheduleEdit" />
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -30,7 +27,7 @@
 <input type=hidden name=initialized value=true>
 <input type=hidden name=create value=<%=bean.isCreate()%>>
 <input type=hidden name=oldSchedule value="<%=bean.getOldSchedule()%>">
-<script>
+<script type="text/javascript">
 function selectType()
 {
   var typeSel = opForm.all.typeSelect.options[opForm.all.typeSelect.selectedIndex];
@@ -213,7 +210,7 @@ function selectMontlyType()
   <td><input class=txt name=intervalTime value="<%=StringEncoderDecoder.encode(bean.getIntervalTime())%>"></td>
 </tr>
 </table>
-<script>
+<script type="text/javascript">
 selectType();
 selectMontlyType();
 </script>

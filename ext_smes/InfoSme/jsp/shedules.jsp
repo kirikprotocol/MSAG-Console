@@ -1,12 +1,7 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ page import="ru.novosoft.smsc.admin.Constants,
-					  ru.novosoft.smsc.infosme.beans.Shedules,
-					  ru.novosoft.smsc.jsp.SMSCJspException,
-					  ru.novosoft.smsc.jsp.SMSCErrors,
-                 java.net.URLEncoder,
-                 ru.novosoft.smsc.jsp.util.tables.QueryResultSet,
-                 java.util.*,
-                 ru.novosoft.smsc.util.StringEncoderDecoder,
+<%@ page import="ru.novosoft.smsc.infosme.beans.Shedules,
+                 java.net.URLEncoder, ru.novosoft.smsc.jsp.util.tables.QueryResultSet,
+                 java.util.*, ru.novosoft.smsc.util.StringEncoderDecoder,
                  ru.novosoft.smsc.infosme.backend.tables.schedules.ScheduleDataItem"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.infosme.beans.Shedules" />
 <jsp:setProperty name="bean" property="*"/>
@@ -39,7 +34,7 @@
 <input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
 <input type=hidden name=edit>
 <input type=hidden name=sort>
-<script>
+<script type="text/javascript">
 function setSort(sorting)
 {
 	if (sorting == "<%=bean.getSort()%>")
@@ -96,7 +91,7 @@ page_menu_button(session, out, "mbDelete", "common.buttons.delete", "infosme.hin
 page_menu_space(out);
 page_menu_end(out);
 %>
-<script>
+<script type="text/javascript">
 checkCheckboxesForMbDeleteButton();
 </script>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>

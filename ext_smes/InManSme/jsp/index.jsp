@@ -1,8 +1,7 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ page import="ru.sibinco.inman.beans.Index,
-                 ru.novosoft.smsc.util.*,  java.text.*, java.util.*,
+<%@ page import="ru.sibinco.inman.beans.Index, ru.novosoft.smsc.util.*,
                  ru.novosoft.smsc.jsp.SMSCJspException, ru.novosoft.smsc.jsp.SMSCErrors,
-                 ru.novosoft.smsc.admin.Constants, ru.novosoft.smsc.admin.service.ServiceInfo"%>
+                 ru.novosoft.smsc.admin.service.ServiceInfo"%>
 <jsp:useBean id="inManBean" scope="page" class="ru.sibinco.inman.beans.Index"/><%
   Index bean = inManBean;
 %><jsp:setProperty name="inManBean" property="*" /><%
@@ -34,7 +33,7 @@
   page_menu_button(session, out, "mbStop",  "common.buttons.stop",  "inman.stopService",  bean.getStatus() == ServiceInfo.STATUS_RUNNING);
   page_menu_end(out);
 %>
-<script language="JavaScript">
+<script type="text/javascript" language="JavaScript">
 function refreshStartStopButtonsStatus()
 {
 	document.all.mbStart.disabled = (document.all.RUNNING_STATUSERVICE_<%=bean.getSmeId()%>.innerText != "<%=getLocString("common.statuses.stopped")%>");
