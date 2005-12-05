@@ -56,6 +56,103 @@ defer=false
 startup=true
 #}}}
 
+#{{{ Tool bar
+view.toolbar=new-file open-file close-buffer save - print page-setup - \
+	undo redo cut copy paste - find find-next - new-view unsplit \
+	split-horizontal split-vertical - buffer-options global-options - \
+	plugin-manager - help
+
+new-file.icon=New.png
+open-file.icon=Open.png
+save.icon=Save.png
+close-buffer.icon=Cancel.png
+print.icon=Print.png
+page-setup.icon=PageSetup.png
+undo.icon=Undo.png
+redo.icon=Redo.png
+cut.icon=Cut.png
+copy.icon=Copy.png
+paste.icon=Paste.png
+find.icon=Find.png
+find-next.icon=FindAgain.png
+new-view.icon=NewView.png
+unsplit.icon=UnSplit.png
+split-horizontal.icon=SplitHorizontal.png
+split-vertical.icon=SplitVertical.png
+buffer-options.icon=Properties.png
+global-options.icon=Preferences.png
+plugin-manager.icon=Plugins.png
+help.icon=Help.png
+
+#{{{ Icon list for tool bar editor
+icons=AdjustWidth.png \
+	ArrowD.png \
+	ArrowL.png \
+	ArrowR.png \
+	ArrowU.png \
+	BrokenImage.png \
+	ButtonProperties.png \
+	Cancel.png \
+	Clear.png \
+	Copy.png \
+	CopyToBuffer.png \
+	CurrentDir.png \
+	Cut.png \
+	Delete.png \
+	Drive.png \
+	FindAgain.png \
+	FindInDir.png \
+	Find.png \
+	Floppy.png \
+	Help.png \
+	Home.png \
+	Load.png \
+	Minus.png \
+	MultipleResults.png \
+	NewDir.png \
+	New.png \
+	NewView.png \
+	NextFile.png \
+	Open.png \
+	PageSetup.png \
+	ParentDir.png \
+	Parse.png \
+	Paste.png \
+	Pause.png \
+	Play.png \
+	Plugins.png \
+	Plus.png \
+	Preferences.png \
+	PreviousFile.png \
+	Print.png \
+	Properties.png \
+	Redo.png \
+	Reload.png \
+	Run.png \
+	RunAgain.png \
+	RunToBuffer.png \
+	Save.png \
+	SaveAll.png \
+	SaveAs.png \
+	SingleResult.png \
+	SplitHorizontal.png \
+	SplitVertical.png \
+	Stop.png \
+	Undo.png \
+	UnSplit.png \
+	ZoomIn.png \
+	ZoomOut.png \
+	Blank24.gif
+#}}}
+
+view.search.find=Search for:
+view.search.close-tooltip=Hide search bar
+
+view.action.prompt=Action:
+view.action.no-completions=No matching actions found
+view.action.close-tooltip=Hide action bar
+#}}}
+
 
 #{{{ Context menu
 view.context=cut copy paste paste-previous paste-deleted - \
