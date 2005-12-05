@@ -28,7 +28,7 @@ public class Constants
 
 	static
 	{
-		SMSC_serv_IDs.put(new Byte((byte) 1), "SMSCService1");
-		SMSC_serv_IDs.put(new Byte((byte) 2), "SMSCService2");
+		SMSC_serv_IDs.put(new Byte((byte) 1), "SMSCservice1");
+		SMSC_serv_IDs.put(new Byte((byte) 2), "SMSCservice2");
 	}
 }

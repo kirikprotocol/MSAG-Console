@@ -88,7 +88,10 @@ public class ServiceInfo
 			{
 				sme = smeManager.get(id);
 			}
-			catch (AdminException e) {sme = new SME(id, 0, SME.SMPP, 0, 0, 0, "", "", "", 0, false, false, 0, "", false, SME.MODE_TRX, 0, 0);}
+			catch (AdminException e)
+			{
+				sme = new SME(id, 0, SME.SMPP, 0, 0, 0, "", "", "", 0, false, false, 0, "", false, SME.MODE_TRX, 0, 0);
+			}
 		}
 		this.status = status;
 		this.serviceFolder = new File(WebAppFolders.getServicesFolder(), servId);
