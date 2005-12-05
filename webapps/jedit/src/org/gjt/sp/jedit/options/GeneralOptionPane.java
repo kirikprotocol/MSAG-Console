@@ -62,7 +62,7 @@ public class GeneralOptionPane extends AbstractOptionPane
   encoding = new JComboBox(encodings);
   encoding.setEditable(true);
   encoding.setSelectedItem(jEdit.getProperty("buffer.encoding",
-   System.getProperty("file.encoding")));
+   (String)jEdit.getSystemProperties().get("file.encoding")));
   addComponent(jEdit.getProperty("options.general.encoding"),encoding);
 
   /* Auto detect encoding */

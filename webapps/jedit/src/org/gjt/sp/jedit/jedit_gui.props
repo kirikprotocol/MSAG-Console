@@ -58,7 +58,7 @@ startup=true
 
 #{{{ Tool bar
 view.toolbar=undo redo cut copy paste - find find-next - unsplit \
-	split-horizontal split-vertical - buffer-options global-options 
+	split-horizontal split-vertical - buffer-options global-options
 
 undo.icon=Undo.png
 redo.icon=Redo.png
@@ -72,7 +72,6 @@ split-horizontal.icon=SplitHorizontal.png
 split-vertical.icon=SplitVertical.png
 buffer-options.icon=Properties.png
 global-options.icon=Preferences.png
-help.icon=Help.png
 
 #{{{ Icon list for tool bar editor
 icons=AdjustWidth.png \
@@ -94,7 +93,6 @@ icons=AdjustWidth.png \
 	FindInDir.png \
 	Find.png \
 	Floppy.png \
-	Help.png \
 	Home.png \
 	Load.png \
 	Minus.png \
