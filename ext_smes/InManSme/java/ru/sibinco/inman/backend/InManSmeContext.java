@@ -50,7 +50,8 @@ public class InManSmeContext
         this.appContext = appContext;
         resetConfig();
         logger.info("New InManSmeContext instance created");
-        inManSme = new InManSme(appContext.getHostsManager().getServiceInfo(this.smeId), config.getInt("port"));
+        inManSme = new InManSme(appContext.getHostsManager().getServiceInfo(this.smeId),
+                                config.getString("host"), config.getInt("port"));
     }
 
     public Config loadCurrentConfig()

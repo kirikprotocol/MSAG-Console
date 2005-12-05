@@ -14,8 +14,9 @@ import ru.novosoft.smsc.jsp.SMSCAppContext;
  */
 public class InManSme extends Service
 {
-    public InManSme(final ServiceInfo info, final int port) {
+    public InManSme(final ServiceInfo info, final String host, final int port) {
         super(info, port);
+        this.host = host;
     }
 
     public void updateInfo(final SMSCAppContext appContext) throws AdminException {

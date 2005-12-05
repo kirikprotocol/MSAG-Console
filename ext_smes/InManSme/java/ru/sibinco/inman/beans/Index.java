@@ -57,7 +57,7 @@ public class Index extends PageBean
       }
       catch (Throwable e) {
         logger.error("Failed to init InMan", e);
-        return error("Failed to init InMan", e);
+        return error("inman.error.init", e);
       }
 
       return (!initialized) ? loadConfig():result;
@@ -72,7 +72,7 @@ public class Index extends PageBean
           smeId = Functions.getServiceId(request.getServletPath());
         } catch (AdminException e) {
           logger.error("Could not discover sme id", e);
-          error("Could not discover sme id, \"" + smeId + "\" assumed", e);
+          error("inman.error.sme_id", smeId, e);
         }
 
         try {
@@ -80,7 +80,7 @@ public class Index extends PageBean
           inManSme.updateInfo(appContext);
         } catch (AdminException e) {
           logger.error("Could not refresh InMan status", e);
-          result = error("Could not refresh InMan status", e);
+          result = error("inman.error.status", e);
         }
 
         if (mbApply != null)  return apply();
@@ -107,7 +107,7 @@ public class Index extends PageBean
         }
         catch (Exception ex) {
             logger.error("Failed to load config", ex);
-            return error("Failed to load config", ex);
+            return error("inman.error.config_load", ex);
         }
         return RESULT_OK;
     }
@@ -128,7 +128,7 @@ public class Index extends PageBean
         }
         catch (Exception ex) {
             logger.error("Failed to save config", ex);
-            return error("Failed to save config", ex);
+            return error("inman.error.config_save", ex);
         }
         return RESULT_OK;
     }
@@ -141,10 +141,10 @@ public class Index extends PageBean
           result = saveConfig();
         } catch (Throwable e) {
           logger.error("Failed to save InMan config", e);
-          return error("Failed to save InMan config", e);
+          return error("inman.error.config_save", e);
         }
         return (result != RESULT_OK) ? result:
-                message("Changes saved, you should restart InMan to apply changes");
+                message("inman.message.need_restart");
     }
 
     protected int reset()
@@ -157,7 +157,7 @@ public class Index extends PageBean
           result = loadConfig();
         } catch (Throwable e) {
           logger.debug("Couldn't reload InMan config", e);
-          return error("Could not reload InMan config", e);
+          return error("inman.error.config_reload", e);
         }
         return result;
     }
@@ -170,7 +170,7 @@ public class Index extends PageBean
           try { Thread.sleep(5000); } catch (InterruptedException e) {}
         } catch (AdminException e) {
           logger.error("Could not start InMan", e);
-          result = error("Could not start InMan", e);
+          result = error("inman.error.start", e);
         }
         return result;
     }
@@ -182,7 +182,7 @@ public class Index extends PageBean
           getAppContext().getHostsManager().shutdownService(getSmeId());
         } catch (AdminException e) {
           logger.error("Could not stop InMan", e);
-          result = error("Could not stop InMan", e);
+          result = error("inman.error.stop", e);
         }
         return result;
     }
