@@ -105,6 +105,14 @@ refreshStartStopButtonsStatus();
 	<th>Billing interval (sec)</th>
     <td><input class=txt name=billingInterval maxlength="5" value="<%=bean.getBillingInterval()%>"></td>
 </tr>
+<tr class=row<%= (rowN++)%2%>>
+    <th>IN_Timeout (sec)</th>
+    <td><input class=txt name=inTimeout maxlength="5" value="<%=bean.getInTimeout()%>"></td>
+</tr>
+<tr class=row<%= (rowN++)%2%>>
+    <th>SMSC_Timeout (sec)</th>
+    <td><input class=txt name=smscTimeout maxlength="5" value="<%=bean.getSmscTimeout()%>"></td>
+</tr>
 </table>
 </div><%
   page_menu_begin(out);

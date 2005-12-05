@@ -42,6 +42,8 @@ public class Index extends PageBean
     private String billingInterval  = "";
     private String cdrMode          = "all";
     private String billMode         = "all";
+    private String inTimeout        = "";
+    private String smscTimeout      = "";
 
     protected int init(List errors)
     {
@@ -104,6 +106,10 @@ public class Index extends PageBean
             billingInterval = Integer.toString(config.getInt("billingInterval"));
             cdrMode = config.getString("cdrMode");
             billMode = config.getString("billMode");
+            try { inTimeout = Integer.toString(config.getInt("IN_Timeout")); }
+            catch(Throwable th) { inTimeout = ""; }
+            try { smscTimeout = Integer.toString(config.getInt("SMSC_Timeout")); }
+            catch(Throwable th) { smscTimeout = ""; }
         }
         catch (Exception ex) {
             logger.error("Failed to load config", ex);
@@ -124,6 +130,18 @@ public class Index extends PageBean
             config.setInt("billingInterval", Integer.parseInt(billingInterval));
             config.setString("cdrMode", cdrMode);
             config.setString("billMode", billMode);
+            try {
+              if (inTimeout != null && inTimeout.trim().length() > 0)
+                  config.setInt("IN_Timeout", Integer.parseInt(inTimeout));
+            } catch(Throwable th) {
+                logger.warn("IN_Timeout is invalid", th);
+            }
+            try {
+              if (smscTimeout != null && smscTimeout.trim().length() > 0)
+                  config.setInt("SMSC_Timeout", Integer.parseInt(smscTimeout));
+            } catch(Throwable th) {
+                logger.warn("SMSC_Timeout is invalid", th);
+            }
             config.save();
         }
         catch (Exception ex) {
@@ -294,5 +312,19 @@ public class Index extends PageBean
     }
     public void setBillMode(String billMode) {
         this.billMode = billMode;
+    }
+
+    public String getInTimeout() {
+        return inTimeout;
+    }
+    public void setInTimeout(String inTimeout) {
+        this.inTimeout = inTimeout;
+    }
+
+    public String getSmscTimeout() {
+        return smscTimeout;
+    }
+    public void setSmscTimeout(String smscTimeout) {
+        this.smscTimeout = smscTimeout;
     }
 }
