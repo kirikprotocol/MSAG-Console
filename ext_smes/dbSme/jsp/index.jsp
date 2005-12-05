@@ -1,11 +1,6 @@
-<%@ page import="ru.novosoft.smsc.admin.Constants,
-					  ru.novosoft.smsc.jsp.SMSCJspException,
-					  ru.novosoft.smsc.jsp.SMSCErrors,
-					  ru.novosoft.smsc.dbsme.Index,
-					  java.util.Iterator,
-					  ru.novosoft.smsc.util.SortedList,
-                 ru.novosoft.smsc.jsp.PageBean,
-                 ru.novosoft.smsc.util.Functions"%>
+<%@ page import="ru.novosoft.smsc.jsp.SMSCJspException,
+				 ru.novosoft.smsc.jsp.SMSCErrors, ru.novosoft.smsc.dbsme.Index,
+                 ru.novosoft.smsc.jsp.PageBean, ru.novosoft.smsc.util.Functions"%>
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.dbsme.Index" />
 <jsp:setProperty name="bean" property="*"/>

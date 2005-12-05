@@ -13,7 +13,7 @@
 	sme_menu_end(out);
 	if (ServiceIDForShowStatus != null && ServiceIDForShowStatus.length() > 0)
 	{
-    %><script>
+    %><script type="text/javascript">
         function refreshDBSmeStartStopButtonsStatus()
         {
             var status = document.all.RUNNING_STATUSERVICE_<%=ServiceIDForShowStatus%>.innerText;

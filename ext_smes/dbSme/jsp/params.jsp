@@ -1,8 +1,5 @@
-<%@ page import="ru.novosoft.smsc.admin.Constants,
-					  ru.novosoft.smsc.jsp.SMSCJspException,
-					  ru.novosoft.smsc.jsp.SMSCErrors,
-					  ru.novosoft.smsc.dbsme.Params,
-                 ru.novosoft.smsc.jsp.PageBean"%>
+<%@ page import="ru.novosoft.smsc.jsp.SMSCJspException, ru.novosoft.smsc.jsp.SMSCErrors,
+				 ru.novosoft.smsc.dbsme.Params, ru.novosoft.smsc.jsp.PageBean"%>
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.dbsme.Params" />
 <jsp:setProperty name="bean" property="*"/>

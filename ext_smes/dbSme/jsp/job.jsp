@@ -1,17 +1,6 @@
-<%@ page import="ru.novosoft.smsc.admin.Constants,
-					  ru.novosoft.smsc.jsp.SMSCJspException,
-					  ru.novosoft.smsc.jsp.SMSCErrors,
-					  ru.novosoft.smsc.util.config.Config,
-					  java.util.Set,
-					  java.util.Iterator,
-					  ru.novosoft.smsc.util.StringEncoderDecoder,
-					  ru.novosoft.smsc.dbsme.Job,
-					  ru.novosoft.smsc.jsp.util.tables.DataItem,
-					  java.net.URLEncoder,
-					  ru.novosoft.smsc.dbsme.Provider,
-					  java.util.List,
-					  java.util.LinkedList,
-                 ru.novosoft.smsc.jsp.PageBean"%>
+<%@ page import="ru.novosoft.smsc.jsp.SMSCJspException, ru.novosoft.smsc.jsp.SMSCErrors,
+    	  	     ru.novosoft.smsc.util.StringEncoderDecoder, ru.novosoft.smsc.dbsme.Job,
+   		         java.util.List, java.util.LinkedList, ru.novosoft.smsc.jsp.PageBean"%>
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.dbsme.Job" />
 <jsp:setProperty name="bean" property="*"/>
@@ -56,7 +45,7 @@
 <input type=hidden name=jobId value="<%=StringEncoderDecoder.encode(bean.getJobId())%>">
 <input type=hidden name=creating value="<%=bean.isCreating()%>">
 <input type=hidden name=initialized value=true>
-<script>
+<script type="text/javascript">
 function setType()
 {
 	switch(opForm.type.selectedIndex)
@@ -111,9 +100,7 @@ function setType()
 		finishParams(out);
 	finishSection(out);
 %>
-<script>
-setType();
-</script>
+<script type="text/javascript">setType();</script>
 </div><%
 page_menu_begin(out);
 page_menu_button(session, out, "mbDone",   "common.buttons.done",   "dbsme.hint.accept");

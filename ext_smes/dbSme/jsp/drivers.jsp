@@ -1,8 +1,5 @@
-<%@ page import="ru.novosoft.smsc.admin.Constants,
-			     ru.novosoft.smsc.jsp.SMSCJspException,  ru.novosoft.smsc.jsp.SMSCErrors,
-			     ru.novosoft.smsc.dbsme.Index, ru.novosoft.smsc.util.config.Config,
+<%@ page import="ru.novosoft.smsc.jsp.SMSCJspException,  ru.novosoft.smsc.jsp.SMSCErrors,
 				 java.util.Set, java.util.Iterator, ru.novosoft.smsc.dbsme.Drivers,
-			     ru.novosoft.smsc.jsp.smsc.localeResources.Section,
 				 ru.novosoft.smsc.util.StringEncoderDecoder, ru.novosoft.smsc.jsp.PageBean"%>
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.dbsme.Drivers" />
@@ -37,7 +34,7 @@
 <%@ include file="/WEB-INF/inc/collapsing_tree.jsp"%>
 <%@ include file="inc/menu.jsp"%>
 <div class=content>
-<script>
+<script type="text/javascript">
 function clickAddDriver()
 {
 	var typeElem   = opForm.all['dsdriver_new.type'];
@@ -90,7 +87,7 @@ function clickRemoveDriver(id_to_remove)
 		</tr><%
 	}
 %>
-<tr id=dsdriver_new class=row<%=(rowN++)&1%>>
+<tr id=dsdriver_new class=row<%=(rowN+1)&1%>>
 	<td><input class=txt  id="dsdriver_new.type"   name="dsdriver_new_type"  ></td>
 	<td><input class=txtW id="dsdriver_new.loadup" name="dsdriver_new_loadup"></td>
 	<td><%button(out, "but_add.gif", "mbAdd", "common.buttons.add", "dbsme.hint.add_new_driver", "return clickAddDriver();");%></td>

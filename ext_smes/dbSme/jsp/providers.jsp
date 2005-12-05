@@ -1,14 +1,7 @@
-<%@ page import="ru.novosoft.smsc.admin.Constants,
-					  ru.novosoft.smsc.jsp.SMSCJspException,
-					  ru.novosoft.smsc.jsp.SMSCErrors,
-					  ru.novosoft.smsc.util.config.Config,
-					  java.util.Set,
-					  java.util.Iterator,
-					  ru.novosoft.smsc.util.StringEncoderDecoder,
-					  ru.novosoft.smsc.jsp.util.tables.DataItem,
-					  ru.novosoft.smsc.dbsme.Providers,
-					  java.net.URLEncoder,
-                 ru.novosoft.smsc.jsp.PageBean"%>
+<%@ page import="ru.novosoft.smsc.jsp.SMSCJspException, ru.novosoft.smsc.jsp.SMSCErrors,
+	             java.util.Iterator, ru.novosoft.smsc.util.StringEncoderDecoder,
+				 ru.novosoft.smsc.jsp.util.tables.DataItem, ru.novosoft.smsc.dbsme.Providers,
+			     java.net.URLEncoder, ru.novosoft.smsc.jsp.PageBean"%>
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.dbsme.Providers" />
 <jsp:setProperty name="bean" property="*"/>
@@ -49,7 +42,7 @@
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="inc/menu.jsp"%>
 <div class=content>
-<script>
+<script type="text/javascript">
 function setSort(sorting)
 {
 	if (sorting == "<%=bean.getSort()%>")
