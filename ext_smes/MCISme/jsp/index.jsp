@@ -1,9 +1,5 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ page import="ru.novosoft.smsc.admin.Constants, ru.novosoft.smsc.mcisme.beans.Index,
-                 ru.novosoft.smsc.jsp.SMSCJspException, ru.novosoft.smsc.jsp.SMSCErrors,
-                 java.util.*, ru.novosoft.smsc.util.StringEncoderDecoder,
-                 ru.novosoft.smsc.util.Functions,
-                 ru.novosoft.smsc.admin.service.ServiceInfo,
+<%@ page import="ru.novosoft.smsc.util.Functions,
                  ru.novosoft.smsc.mcisme.backend.CountersSet,
                  ru.novosoft.smsc.mcisme.backend.RuntimeSet"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.mcisme.beans.Index" />
@@ -21,7 +17,7 @@
 	<PARAM NAME="DataURL" VALUE="/smsc/smsc/esme_MCISme/statuses.jsp">
 	<PARAM NAME="UseHeader" VALUE="True">
 	<PARAM NAME="TextQualifier" VALUE='"'>
-</OBJECT><script>
+</OBJECT><script type="text/javascript">
 function refreshMCISmeTdcStatuses()
 {
 	document.all.tdcMCISmeStatuses.DataURL = document.all.tdcMCISmeStatuses.DataURL;
@@ -31,7 +27,7 @@ function refreshMCISmeTdcStatuses()
 refreshMCISmeTdcStatuses();
 </script>
 <div class=content>
-<script>
+<script type="text/javascript">
 function checkApplyResetButtons()
 {
   opForm.all.mbApply.disabled = !(opForm.all.allCheck.checked);
@@ -118,7 +114,7 @@ page_menu_button(session, out, "mbApply",  "common.buttons.apply",  "mcisme.hint
 page_menu_button(session, out, "mbReset",  "common.buttons.reset",  "mcisme.hint.reset", bean.isConfigChanged());
 page_menu_end(out);
 %>
-<script language="JavaScript">
+<script type="text/javascript" language="JavaScript">
 function checkStartStop()
 {
   var serviceChecked  = opForm.all.toStartService.checked;

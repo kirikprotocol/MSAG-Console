@@ -1,6 +1,5 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ page import="ru.novosoft.smsc.admin.Constants, ru.novosoft.smsc.mcisme.beans.Templates,
-					       ru.novosoft.smsc.jsp.SMSCJspException, ru.novosoft.smsc.jsp.SMSCErrors,
+<%@ page import="ru.novosoft.smsc.mcisme.beans.Templates,
                  ru.novosoft.smsc.util.StringEncoderDecoder, ru.novosoft.smsc.mcisme.beans.MCISmeBean,
                  java.net.URLEncoder, java.util.*, ru.novosoft.smsc.util.Functions"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.mcisme.beans.Templates" />
@@ -33,7 +32,7 @@ int rowN=1;
 List informList = bean.getInformTemplates();
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="inc/header.jsp"%>
-<script>
+<script type="text/javascript">
 function editMCISmeTemplate(editObjectName, editButtonName)
 {
   opForm.all.jbutton.name       = editButtonName;
@@ -96,7 +95,7 @@ page_menu_end(out);
 rowN = 1;
 List notifyList = bean.getNotifyTemplates();
 %>
-<script>checkCheckboxesForInformTemplate();</script>
+<script type="text/javascript">checkCheckboxesForInformTemplate();</script>
 <div class=content>
 <div class=page_subtitle><%= getLocString("mcisme.subtitle.notify_template")%></div>
 <table id="notify_table" cellspacing=5>
@@ -140,6 +139,6 @@ page_menu_button(session, out, "mbNotifyDelete", "mcisme.button.del_template", "
                                "return confirm('"+getLocString("mcisme.confirm.del_notify_template")+"');");
 page_menu_space(out);
 page_menu_end(out);%>
-<script>checkCheckboxesForNotifyTemplate();</script>
+<script type="text/javascript">checkCheckboxesForNotifyTemplate();</script>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

@@ -1,8 +1,6 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ page import="ru.novosoft.smsc.admin.Constants, ru.novosoft.smsc.mcisme.beans.Rule,
-				 ru.novosoft.smsc.jsp.SMSCJspException, ru.novosoft.smsc.jsp.SMSCErrors,
-			     java.util.Set, java.util.Iterator, ru.novosoft.smsc.util.StringEncoderDecoder,
-				 java.util.Collection, ru.novosoft.smsc.mcisme.beans.MCISmeBean"%>
+<%@ page import="ru.novosoft.smsc.util.StringEncoderDecoder,
+				 ru.novosoft.smsc.mcisme.beans.MCISmeBean"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.mcisme.beans.Rule" />
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -48,7 +46,7 @@
   <th>Cause</th>
   <td><input class=txt name=cause value="<%=bean.getCause()%>" maxlength="10" validation="id" onkeyup="resetValidation(this)"></td>
 </tr>
-<tr class=row<%=(rowN++)&1%>>
+<tr class=row<%=(rowN+1)&1%>>
   <th valign=top>Reg-Exp</th>
   <td valign=top><textarea name=regexp><%=StringEncoderDecoder.encode(bean.getRegexp())%></textarea></td>
 </tr>

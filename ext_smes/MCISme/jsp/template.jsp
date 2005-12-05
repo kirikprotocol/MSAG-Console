@@ -1,11 +1,6 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ page import="ru.novosoft.smsc.admin.Constants,
-					  ru.novosoft.smsc.mcisme.beans.Template,
-					  ru.novosoft.smsc.jsp.SMSCJspException,
-					  ru.novosoft.smsc.jsp.SMSCErrors,
-					  java.util.Set, java.util.Iterator,
-					  ru.novosoft.smsc.util.StringEncoderDecoder,
-					  java.util.Collection, ru.novosoft.smsc.mcisme.beans.MCISmeBean"%>
+<%@ page import="ru.novosoft.smsc.util.StringEncoderDecoder,
+				 ru.novosoft.smsc.mcisme.beans.MCISmeBean"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.mcisme.beans.Template" />
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -31,7 +26,7 @@
                                 ((informTemplate) ? "inform_":"notify_") + 
                                 ((createTemplate) ? "c":"m"));
 %>
-<script>
+<script type="text/javascript">
 function checkMultiAndGroupping(show)
 {
   var row = opForm.all.templateTable.rows["multiParamRow"];
@@ -75,7 +70,7 @@ function checkMultiAndGroupping(show)
   <th valign=top>Single row</th>
   <td valign=top><textarea name=singleRow><%=StringEncoderDecoder.encode(bean.getSingleRow())%></textarea></td>
 </tr>
-<tr class=row<%=(rowN++)&1%> id="multiParamRow">
+<tr class=row<%=(rowN+1)&1%> id="multiParamRow">
   <th valign=top>Multi row</th>
   <td valign=top><textarea name=multiRow><%=StringEncoderDecoder.encode(bean.getMultiRow())%></textarea></td>
 </tr>

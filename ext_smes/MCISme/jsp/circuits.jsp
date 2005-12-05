@@ -1,11 +1,6 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ page import="ru.novosoft.smsc.admin.Constants,
-					  ru.novosoft.smsc.mcisme.beans.Circuits,
-					  ru.novosoft.smsc.jsp.SMSCJspException,
-					  ru.novosoft.smsc.jsp.SMSCErrors,
-					  java.util.Set, java.util.Iterator,
-					  ru.novosoft.smsc.util.StringEncoderDecoder,
-					  java.util.Collection, ru.novosoft.smsc.mcisme.beans.MCISmeBean"%>
+<%@ page import="ru.novosoft.smsc.mcisme.beans.Circuits,
+				java.util.Iterator, ru.novosoft.smsc.util.StringEncoderDecoder, java.util.Collection"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.mcisme.beans.Circuits" />
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -17,7 +12,7 @@
 <%@ include file="inc/header.jsp"%>
 <%@ include file="/WEB-INF/inc/collapsing_tree.jsp"%>
 <div class=content>
-<script>
+<script type="text/javascript">
 function clickAddCircuits()
 {
   var mscElem = opForm.all.circuits_new_msc;
@@ -93,7 +88,7 @@ function clickRemoveCircuits(id_to_remove)
 		</tr><%
 	}
 %>
-<tr id=circuits_new class=row<%=(rowN++)&1%>>
+<tr id=circuits_new class=row<%=(rowN+1)&1%>>
 	<td><input class=txt  id="circuits_new_msc" name="circuits_new_msc"></td>
 	<td><input class=txtW id="circuits_new_hsn" name="circuits_new_hsn"></td>
   <td><input class=txtW id="circuits_new_spn" name="circuits_new_spn"></td>

@@ -1,8 +1,6 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ page import="ru.novosoft.smsc.admin.Constants, ru.novosoft.smsc.mcisme.beans.Offset,
-				 ru.novosoft.smsc.jsp.SMSCJspException, ru.novosoft.smsc.jsp.SMSCErrors,
-			     java.util.Set, java.util.Iterator, ru.novosoft.smsc.util.StringEncoderDecoder,
-				 java.util.Collection, ru.novosoft.smsc.mcisme.beans.MCISmeBean"%>
+<%@ page import="ru.novosoft.smsc.util.StringEncoderDecoder,
+				 ru.novosoft.smsc.mcisme.beans.MCISmeBean"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.mcisme.beans.Offset" />
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -40,8 +38,8 @@
   <th><%= getLocString("mcisme.label.tzo_value")%></th>
   <td><input class=txt name=offset value="<%=StringEncoderDecoder.encode(bean.getOffset())%>" maxlength="10" validation="nonEmpty" onkeyup="resetValidation(this)"></td>
 </tr>
-<tr class=row<%=(rowN++)&1%>>
-  <th valign=top>mcisme.label.tzo_re</th>
+<tr class=row<%=(rowN+1)&1%>>
+  <th valign=top><%= getLocString("mcisme.label.tzo_re")%></th>
   <td valign=top><textarea name=regexp><%=StringEncoderDecoder.encode(bean.getRegexp())%></textarea></td>
 </tr>
 </table>

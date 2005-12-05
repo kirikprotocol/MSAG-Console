@@ -1,6 +1,5 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ page import="ru.novosoft.smsc.admin.Constants, ru.novosoft.smsc.mcisme.beans.Rules,
-			     ru.novosoft.smsc.jsp.SMSCJspException, ru.novosoft.smsc.jsp.SMSCErrors,
+<%@ page import="ru.novosoft.smsc.mcisme.beans.Rules,
                  ru.novosoft.smsc.util.StringEncoderDecoder, ru.novosoft.smsc.mcisme.beans.MCISmeBean,
                  java.net.URLEncoder, java.util.*, ru.novosoft.smsc.util.Functions"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.mcisme.beans.Rules" />
@@ -26,7 +25,7 @@ int rowN=1;
 List rulesList = bean.getRules();
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="inc/header.jsp"%>
-<script>
+<script type="text/javascript">
 function editMCISmeRule(editObjectName, editButtonName)
 {
   opForm.all.jbutton.name   = editButtonName;

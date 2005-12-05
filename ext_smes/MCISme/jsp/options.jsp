@@ -1,8 +1,6 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ page import="ru.novosoft.smsc.admin.Constants, ru.novosoft.smsc.mcisme.beans.Options,
-                 ru.novosoft.smsc.jsp.SMSCJspException, ru.novosoft.smsc.jsp.SMSCErrors,
-                 ru.novosoft.smsc.util.StringEncoderDecoder, java.util.*,
-                 ru.novosoft.smsc.mcisme.beans.MCISmeBean"%>
+<%@ page import="ru.novosoft.smsc.mcisme.beans.Options,
+                 ru.novosoft.smsc.util.StringEncoderDecoder, ru.novosoft.smsc.mcisme.beans.MCISmeBean"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.mcisme.beans.Options" />
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -146,7 +144,7 @@
   <td><input class=txt name=smscPassword value="<%=StringEncoderDecoder.encode(bean.getSmscPassword())%>"></td>
 </tr>
 </table>
-<script>
+<script type="text/javascript">
 function switchConstraint()
 {
   opForm.all.constraintValue.disabled = (opForm.all.constraintType.value == <%= Options.NO_CONSTRAINT%>);

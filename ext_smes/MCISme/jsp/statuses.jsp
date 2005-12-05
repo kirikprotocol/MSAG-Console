@@ -1,5 +1,4 @@
-<%@ page import="java.util.*, ru.novosoft.smsc.util.StringEncoderDecoder,
-                 ru.novosoft.smsc.mcisme.backend.CountersSet,
+<%@ page import="ru.novosoft.smsc.mcisme.backend.CountersSet,
                  ru.novosoft.smsc.mcisme.backend.RuntimeSet"%><jsp:useBean id="bean" class="ru.novosoft.smsc.mcisme.beans.Index"/><jsp:setProperty name="bean" property="*"/><%
 bean.process(request);
 CountersSet cset = bean.getStatistics(); RuntimeSet  rset = bean.getRuntime();
