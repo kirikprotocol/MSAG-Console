@@ -55,6 +55,26 @@ public abstract class ErrorSource implements EBComponent
   }
  } //}}}
 
+  //{{{ registerAndCheckErrorSource() method
+ /**
+  * Registers an error source.
+  * @param errorSource The error source
+  */
+  public static void registerAndCheckErrorSource(ErrorSource errorSource)
+  {
+    if(errorSource.registered)
+   return;
+
+  synchronized(errorSources)
+  {
+   if (errorSources.size()>0) return;
+   errorSources.addElement(errorSource);
+   errorSource.registered = true;
+   cachedErrorSources = null;
+   EditBus.send(new ErrorSourceUpdate(errorSource,ErrorSourceUpdate.ERROR_SOURCE_ADDED,null));
+  }
+  } //}}}
+
  //{{{ unregisterErrorSource() method
  /**
   * Unregisters an error source.
@@ -69,11 +89,10 @@ public abstract class ErrorSource implements EBComponent
 
   synchronized(errorSources)
   {
-   errorSources.removeElement(errorSource);
-   errorSource.registered = false;
-   cachedErrorSources = null;
-   EditBus.send(new ErrorSourceUpdate(errorSource,
-    ErrorSourceUpdate.ERROR_SOURCE_REMOVED,null));
+    errorSources.removeElement(errorSource);
+    errorSource.registered = false;
+    cachedErrorSources = null;
+    EditBus.send(new ErrorSourceUpdate(errorSource,ErrorSourceUpdate.ERROR_SOURCE_REMOVED,null));
   }
  } //}}}
 

@@ -28,10 +28,7 @@ import java.awt.Component;
 import org.gjt.sp.jedit.gui.KeyEventWorkaround;
 import org.gjt.sp.jedit.GUIUtilities;
 import org.gjt.sp.jedit.View;
-import org.gjt.sp.jedit.EditPane;
-import org.gjt.sp.jedit.textarea.JEditTextArea;
 
-import javax.swing.*;
 
 import xml.XmlActions;
 

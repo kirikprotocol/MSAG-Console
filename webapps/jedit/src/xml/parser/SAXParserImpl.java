@@ -290,13 +290,13 @@ public class SAXParserImpl extends XmlParser
   //{{{ addError() method
   private void addError(int type, String uri, int line, String message)
   {
-   errorSource.addError(type,XmlPlugin.uriToFile(uri),line,
+    errorSource.addError(type,XmlPlugin.uriToFile(uri),line,
     0,0,message);
   } //}}}
    //{{{ addError() method
    private void addError(int type, String uri, int line,int start,int end, String message)
    {
-    errorSource.addError(type,XmlPlugin.uriToFile(uri),line,
+     errorSource.addError(type,XmlPlugin.uriToFile(uri),line,
      start,end,message);
    } //}}}
 
@@ -366,15 +366,14 @@ public class SAXParserImpl extends XmlParser
    throws SAXException
   {
    InputSource source = null;
-      System.out.println("SAXParserImpl resolveEntity systemId= "+systemId);
+      //System.out.println("SAXParserImpl resolveEntity systemId= "+systemId);
    try
    {
     source = CatalogManager.resolve(loc.getSystemId(),publicId,systemId);
    }
    catch(SAXException s)
    {
-    errorSource.addError(ErrorSource.ERROR,
-     buffer.getPath(),
+     errorSource.addError(ErrorSource.ERROR,buffer.getPath(),
      Math.max(0,loc.getLineNumber()-1),0,0,
      s.getMessage());
    }
@@ -411,9 +410,9 @@ public class SAXParserImpl extends XmlParser
   //{{{ endPrefixMapping() method
   public void endPrefixMapping(String prefix)
   {
-   System.out.println("SAXParserImpl.endPrefixMapping prefix= "+prefix);
+//   System.out.println("SAXParserImpl.endPrefixMapping prefix= "+prefix);
    String uri = (String)activePrefixes.get(prefix);
-   System.out.println("SAXParserImpl.endPrefixMapping uri= "+uri);
+//   System.out.println("SAXParserImpl.endPrefixMapping uri= "+uri);
     // check for built-in completion info for this URI
    // (eg, XSL, XSD, XHTML has this).
       if(uri != null)

@@ -68,6 +68,8 @@ public class BufferSaveRequest extends BufferIORequest
     URL url=null;
     HttpURLConnection c=null;
     BufferedReader in=null;  int command=jEdit.getWrite();
+   if (jEdit.getBooleanProperty("bufferWorkWithId")) command=jEdit.getUpdateRule();
+   if (buffer!=null && buffer.getBooleanProperty("newRule")) command=jEdit.getAddRule();
     String content="?username="+jEdit.username+"&password="+jEdit.password+"&command="+command+"&file="+path;
     String inputLine="";    OutputStream _out=null;
     LinkedList list=new  LinkedList();
@@ -97,15 +99,15 @@ public class BufferSaveRequest extends BufferIORequest
   OutputStream out = null;
   try
   {
+
    String[] args = { vfs.getFileName(path) };
    setStatus(jEdit.getProperty("vfs.status.save",args));
-
+ if (!jEdit.getBooleanProperty("bufferWorkWithId")) {
    // the entire save operation can be aborted...
    setAbortable(true);
 
    path = vfs._canonPath(session,path,view);   if(!MiscUtilities.isURL(path))
     path = MiscUtilities.resolveSymlinks(path);
-
    // Only backup once per session
    if(buffer.getProperty(Buffer.BACKED_UP) == null
     || jEdit.getBooleanProperty("backupEverySave"))
@@ -113,7 +115,8 @@ public class BufferSaveRequest extends BufferIORequest
         vfs._backup(session,path,view);
     buffer.setBooleanProperty(Buffer.BACKED_UP,true);
    }
-
+  }
+   System.out.println("BufferSaveRequest.run path= "+path);
    /* if the VFS supports renaming files, we first
     * save to #<filename>#save#, then rename that
     * to <filename>, so that if the save fails,
@@ -126,7 +129,7 @@ public class BufferSaveRequest extends BufferIORequest
    String savePath;
 
    boolean twoStageSave = (vfs.getCapabilities() & VFS.RENAME_CAP) != 0
-    && jEdit.getBooleanProperty("twoStageSave");
+    && jEdit.getBooleanProperty("twoStageSave") && !jEdit.getBooleanProperty("bufferWorkWithId");
    if(twoStageSave)
    {
     savePath = vfs.getTwoStageSaveName(path);
@@ -139,10 +142,12 @@ public class BufferSaveRequest extends BufferIORequest
    else
     savePath = path;
  //  out = vfs._createOutputStream(session,savePath,view);
-        InputStream _in=null; BufferedReader in = null;
-    savePath=vfs.getFileName(savePath);
-    URL url; HttpURLConnection c=null; int command=jEdit.getSaveRule();
+        InputStream _in=null; BufferedReader in = null;int command=jEdit.getWrite();
+    if (jEdit.getBooleanProperty("bufferWorkWithId")) command=jEdit.getUpdateRule();
+    if (buffer!=null && buffer.getBooleanProperty("newRule")) command=jEdit.getAddRule();
+    URL url; HttpURLConnection c=null;
     String content="?username="+jEdit.username+"&password="+jEdit.password+"&command="+command+"&file="+savePath;
+    System.out.println("BufferSaveRequest command=SaveRule comnent= "+content);
     try {
           url=new URL(jEdit.servletUrl,content);
           c=(HttpURLConnection) url.openConnection();
@@ -160,6 +165,7 @@ public class BufferSaveRequest extends BufferIORequest
     buffer.readLock();
     if(out != null)
     {
+      System.out.println("BufferSaveRequest.run out != null !!!");
      // Can't use buffer.getName() here because
      // it is not changed until the save is
      // complete
@@ -177,6 +183,10 @@ public class BufferSaveRequest extends BufferIORequest
        String status=in.readLine();
   // else throw new FileNotFoundException(status);
      System.out.println("BufferSaveRequest run line 178 status= "+status);
+    if (status.equals("false")) {
+      String[] pp = { in.readLine() };
+         VFSManager.error(view,path,"ioerror.write-error",pp);
+    }
            if(_in != null) _in.close();
            if(in != null) in.close();
           if (c!=null) c.disconnect();
@@ -192,7 +202,7 @@ public class BufferSaveRequest extends BufferIORequest
      if((vfs.getCapabilities() & VFS.DELETE_CAP) != 0)
      {
       if(jEdit.getBooleanProperty("persistentMarkers")
-       && buffer.getMarkers().size() != 0)
+       && buffer.getMarkers().size() != 0 && !jEdit.getBooleanProperty("bufferWorkWithId"))
       {
        setStatus(jEdit.getProperty("vfs.status.save-markers",args));
        setProgressValue(0);

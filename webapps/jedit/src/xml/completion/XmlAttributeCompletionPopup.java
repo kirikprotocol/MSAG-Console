@@ -199,11 +199,11 @@ public class XmlAttributeCompletionPopup extends JWindow
    switch(evt.getKeyCode())
    {
    case KeyEvent.VK_ENTER:
-   // keyTyped('\n');
+    keyTyped(evt.getKeyChar());
     evt.consume();
     break;
    case KeyEvent.VK_TAB:
-    //keyTyped('\t');
+    keyTyped(/*'\t'*/evt.getKeyChar());
     evt.consume();
     break;
    case KeyEvent.VK_ESCAPE:

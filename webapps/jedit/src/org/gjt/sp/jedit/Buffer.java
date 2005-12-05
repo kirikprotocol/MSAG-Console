@@ -3213,7 +3213,9 @@ public class Buffer
     markers = new Vector();
     properties = new HashMap();
     indentRules = new ArrayList();
-
+    if (jEdit.getBooleanProperty("newRule")) {
+      setBooleanProperty("newRule",true);
+    }
     //{{{ need to convert entries of 'props' to PropValue instances
     Enumeration e = props.keys();
     while(e.hasMoreElements())
@@ -3401,16 +3403,18 @@ public class Buffer
     {
       file = new File(path);
       filePath=path;
-      symlinkPath = MiscUtilities.resolveSymlinks(path);
-
+     if (!jEdit.getBooleanProperty("bufferWorkWithId")) symlinkPath = MiscUtilities.resolveSymlinks(path);
+     else symlinkPath=path;
       // if we don't do this, the autosave file won't be
       // deleted after a save as
-      if(autosaveFile != null)
+      if(autosaveFile != null && !jEdit.getBooleanProperty("bufferWorkWithId"))
         jEdit.BoolGet(autosaveName,jEdit.Delete);//1=Delete;
+    if (!jEdit.getBooleanProperty("bufferWorkWithId")) {
       autosaveFile = new File(file.getParent(),'_' + name + '_');
       autosaveName=autosaveFile.getPath();
       if (File.separatorChar!=jEdit.separatorChar)
               autosaveName=autosaveName.replace(File.separatorChar,jEdit.separatorChar);
+    }
     }
     else
     {
@@ -3455,7 +3459,6 @@ public class Buffer
     else
       return false;
   } //}}}
-
   //{{{ checkFileForLoad() method
   private boolean checkFileForLoad(View view, VFS vfs, String path)
   {
@@ -3464,7 +3467,13 @@ public class Buffer
       Object session = vfs.createVFSSession(path,view);
       if(session == null)
         return false;
-
+      if (jEdit.getBooleanProperty("bufferWorkWithId")) {
+        if (!jEdit.BoolGet(path,jEdit.getExistRule()) && !jEdit.getBooleanProperty("newRule")) {
+            VFSManager.error(view,path,"ioerror",new String[] { "Rule: "+path+" not exist !" });
+            return false;
+       }
+       return true;
+      }
       try
       {
         VFSFile file = vfs._getFile(session,path,view);

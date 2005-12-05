@@ -237,8 +237,7 @@ public class ErrorListPlugin extends EBPlugin
     for(int i = 0; i < editPanes.length; i++)
     {
      EditPane pane = editPanes[i];
-     pane.getTextArea().getPainter()
-      .repaint();
+     pane.getTextArea().getPainter().repaint();
      addErrorOverviewIfErrors(pane.getTextArea());
     }
     view = view.getNext();

@@ -81,6 +81,8 @@ xml.show-attributes=1
 # Enable autofill tag attributes
 xml.autofill=false
 
+# Disable root element
+xml.disableRootElement=true
 
 # DTD validation
 # this can be set on a per-buffer basis too

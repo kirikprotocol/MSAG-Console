@@ -60,19 +60,49 @@ public class XmlActions
          }
        else {
          final XmlParsedData data = (XmlParsedData)_data;
-         final View _view=view;
-         final TagParser.Tag _tag=tag;
-         final String _text=text;
+      //   final View _view=view;
+      //   final TagParser.Tag _tag=tag;
+      //   final String _text=text;
      /*    SwingUtilities.invokeLater(new Runnable()
          {
            public void run()
            {  */
-             completeAttrubite(_text,_tag,data,_view);
+             completeAttrubite(text,tag,data,view);
       /*     }
          }); */
        }
      }
 
+   public static boolean checkRootTag(View view)
+     {
+       JEditTextArea textArea = view.getTextArea();
+       if(XmlPlugin.isDelegated(textArea))
+       {
+         view.getToolkit().beep();
+         return false;
+       }
+       Buffer buffer = view.getBuffer();
+       SideKickParsedData _data = SideKickParsedData.getParsedData(view);
+       if(!(_data instanceof XmlParsedData))
+       { System.out.println("XMLActions EditTagBackCompletion oshibka : Not an XML file");
+         // GUIUtilities.error(view,"xml-no-data",null);
+         return false;
+       }
+       String text = buffer.getText(0,buffer.getLength());
+       int caret = textArea.getCaretPosition();
+       TagParser.Tag tag = TagParser.getTagForOffsetAndProlog(text,caret+1);
+       if(tag == null /*|| tag.type == TagParser.T_END_TAG*/)
+         { //view.getToolkit().beep();
+         return false;
+         }
+       else {  //System.out.println("XMLActions.checkRootTag start tag.tag= "+tag.tag);
+          String Root=jEdit.getProperty("RootElement");
+         //System.out.println("RootElement= "+Root);
+         if (tag.tag.equals(jEdit.getProperty("RootElement")) || tag.tag.equals("?xml"))
+                 return true;
+       }
+      return false;
+     }
    public static void completeAttrubite(String text,TagParser.Tag tag,XmlParsedData data,View view) {
    HashMap attributes = new HashMap();
     // use a StringTokenizer to parse the tag
@@ -154,13 +184,15 @@ public class XmlActions
     } //}}}
   boolean autofill= jEdit.getBooleanProperty("xml.autofill");
   ElementDecl elementDecl = data.getElementDecl(tag.tag);
-  System.out.println("xml.XmlActions.completeAttributes before new EditTag line 157 elementDecl.completionInfo.entityHash= "+elementDecl.completionInfo.entityHash);
+ /* System.out.println("xml.XmlActions.completeAttributes before new EditTag line 157 elementDecl.completionInfo.entityHash= "+elementDecl.completionInfo.entityHash);
   System.out.println("elementDecl.attributes= "+elementDecl.attributes);
+  System.out.println("Tag.attributes= "+attributes);   
   System.out.println("elementDecl.name= "+elementDecl.name);
   System.out.println("elementDecl.any= "+elementDecl.any);
   System.out.println("elementDecl.empty= "+elementDecl.empty);
   System.out.println("data.html= "+data.html);
-      EditTag dialog = new EditTag(view,tag.tag, elementDecl,attributes,
+ */
+     EditTag dialog = new EditTag(view,tag.tag, elementDecl,attributes,
               elementDecl.completionInfo.entityHash,data.ids,data.html);
   System.out.println("dialog.getNames().size()= "+dialog.getNames().size());
      JEditTextArea textArea =view.getTextArea();

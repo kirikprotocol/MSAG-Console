@@ -432,7 +432,7 @@ class SideKick implements EBComponent
     Log.log(Log.DEBUG,this,"ParseAWTRequest");
 
     setErrorSource(errorSource);
- 
+
     int errorCount = errorSource.getErrorCount();
     
     if(showParsingMessage || errorCount != 0)

@@ -1177,6 +1177,27 @@ public class GUIUtilities
   int y = gcbounds.y + (gcbounds.height - win.getHeight()) / 2;
   win.setLocation(x,y);
  } //}}}
+  //{{{ centerOnScreen() method
+  /**
+   * Centers the given window on the screen. This method is needed because
+   * JDK 1.3 does not have a <code>JWindow.setLocationRelativeTo()</code>
+   * method.
+   * @since jEdit 4.2pre3
+   */
+  public static void centerOnScreen(Window win,int width,int height)
+  {
+
+
+    GraphicsDevice gd = GraphicsEnvironment
+    .getLocalGraphicsEnvironment()
+    .getDefaultScreenDevice();
+   Rectangle gcbounds = gd.getDefaultConfiguration().getBounds();
+   int x = gcbounds.x + (gcbounds.width - width) / 2;
+   int y = gcbounds.y + (gcbounds.height - height) / 2;
+   Rectangle desired = new Rectangle(x, y, width,height);
+   win.setBounds(desired);
+    // win.setLocation(x,y);
+  } //}}}
 
  //}}}
 

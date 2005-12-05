@@ -41,6 +41,7 @@ import org.gjt.sp.jedit.search.*;
 import org.gjt.sp.jedit.textarea.*;
 import org.gjt.sp.util.Log;
 import xml.EditTag;
+import xml.XmlActions;
 import sidekick.SideKickActions;
 //}}}
 
@@ -612,8 +613,11 @@ public class View extends JFrame implements EBComponent
       && from != VIEW)
      {
       Log.log(Log.DEBUG,this,"Translated: "+ keyStroke);
-     }
-     if(inputHandler.handleKey(keyStroke))
+     } System.out.println("View.processKeyEvent line 615");
+         if (jEdit.getBooleanProperty("xml.disableRootElement")) {
+             if(XmlActions.checkRootTag(this)) return;
+            }
+      if(inputHandler.handleKey(keyStroke))
       evt.consume();
     }
    }
@@ -648,8 +652,9 @@ public class View extends JFrame implements EBComponent
 
    break;
   case KeyEvent.KEY_PRESSED:
-   if(keyEventInterceptor != null)
-    keyEventInterceptor.keyPressed(evt);
+   if(keyEventInterceptor != null) {
+     System.out.println("View.processKeyEvent line 652 keyEventInterceptor= "+keyEventInterceptor);
+    keyEventInterceptor.keyPressed(evt); }
    else if(KeyEventWorkaround.isBindable(evt.getKeyCode()))
    {
     /* boolean */ focusOnTextArea = false;
@@ -674,8 +679,16 @@ public class View extends JFrame implements EBComponent
       Log.log(Log.DEBUG,this,
        "Translated: "
        + keyStroke);
+
      }
-     if(inputHandler.handleKey(keyStroke))
+      if (jEdit.getBooleanProperty("xml.disableRootElement")) {
+       if(keyStroke.key!=KeyEvent.VK_DOWN && keyStroke.key!=KeyEvent.VK_UP
+         && keyStroke.key!=KeyEvent.VK_LEFT && keyStroke.key!=KeyEvent.VK_RIGHT  ) {
+             if(XmlActions.checkRootTag(this)) return;
+            }
+       }
+     System.out.println("View.processKeyEvent line 679");
+      if(inputHandler.handleKey(keyStroke))
       evt.consume();
     }
     // we might have been closed as a result of
@@ -1633,7 +1646,7 @@ loop:  for(;;)
     toolBarManager.removeToolBar(toolBar);
 
    toolBar = GUIUtilities.loadToolBar("view.toolbar");
-
+    System.out.println("add Toolbar View line 1649");
    addToolBar(TOP_GROUP, SYSTEM_BAR_LAYER, toolBar);
   }
   else if(toolBar != null)

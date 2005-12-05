@@ -198,7 +198,12 @@ public class XmlAttributeCompletion  extends SideKickCompletion
     }
    } //}}}
 
-   protected View view;
+  public void setItems(List items)
+  {
+    this.items = items;
+  }
+
+  protected View view;
    protected JEditTextArea textArea;
    protected String text;
    protected List items = new ArrayList();

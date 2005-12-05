@@ -51,7 +51,6 @@ public class EditTag
   this.html = html;
   this.view=view;
 
-
   //{{{ Attribute table
   attributeModel = createAttributeModel(element.attributes,
    attributeValues,ids);
@@ -65,7 +64,8 @@ public class EditTag
   //{{{ Buttons
 
   prepareTag();  //set list of names here
-  closeTag=">";
+  if (names.size()==0) AddRequredValues(attributeValues);
+   closeTag=">";
 
  /*  if(element.empty)
      {
@@ -168,6 +168,7 @@ Attribute attr = (Attribute)attributeModel.get(i);
  private View view;
  private ArrayList names;
  private String closeTag;
+ private Map attributeValues;
   //}}}
 
   public String getElementName()
@@ -235,7 +236,7 @@ Attribute attr = (Attribute)attributeModel.get(i);
     value,values,attr.type,attr.required));
   }
 
-  Collections.sort(attributeModel,new AttributeCompare());
+ // Collections.sort(attributeModel,new AttributeCompare());
 
   return attributeModel;
  } //}}}
@@ -311,6 +312,66 @@ Attribute attr = (Attribute)attributeModel.get(i);
  this.names=names;
   //preview.setText(newTag);
  } //}}}
+  private void AddRequredValues(Map attributeValues)
+   {
+     int tagNameCase = TextUtilities.getStringCase(elementName);
+/*  int in=elementName.indexOf(':');
+  String shortName=elementName;
+  if (in!=-1) shortName=elementName.substring(in+1);
+*/
+    StringBuffer buf = new StringBuffer("<");
+    buf.append(elementName); buf.append(' ');
+    ArrayList names=new ArrayList(5);
+      for(int i = 0; i < attributeModel.size(); i++)
+    {
+     Attribute attr = (Attribute)attributeModel.get(i);
+     if(attr.set ) { //nameSet.put(attr.name,new Boolean(attr.set));
+       if(attributeValues.get(attr.name)==null) {
+       names.add(attr.name); continue;}
+      System.out.println("name of attribute  = "+attr.name+" set= "+attr.set);
+     //
+     }
+     String attrName = attr.name;
+     if(html)
+     {
+      switch(tagNameCase)
+      {
+      case TextUtilities.UPPER_CASE:
+       attrName = attr.name.toUpperCase();
+       break;
+      case TextUtilities.LOWER_CASE:
+       attrName = attr.name.toLowerCase();
+       break;
+      case TextUtilities.TITLE_CASE:
+       attrName = TextUtilities.toTitleCase(attr.name);
+       break;
+      }
+     }
+
+     buf.append(' ');
+     buf.append(attrName);
+
+     if(html && attr.name.equals(attr.value.value))
+     {
+      continue;
+     }
+
+     buf.append("=\"");
+     if(attr.value.value != null)
+     {
+      buf.append(XmlActions.charactersToEntities(
+       attr.value.value,entityHash));
+     }
+     buf.append("\" ");
+    }
+     System.out.println("EditTag buf= "+buf.toString()+" backCursor= "+backCursor);
+    view.setNames(names);
+     // buf.append("/>");
+    isOK=true;
+    newTag = buf.toString();
+   this.names=names;
+    //preview.setText(newTag);
+   } //}}}
 
  //}}}
 
@@ -335,7 +396,7 @@ Attribute attr = (Attribute)attributeModel.get(i);
       int _caret=textArea.getCaretPosition();
       textArea.setCaretPosition(_caret-2);
    }
-    evt=null;
+    evt.consume();//evt=null;
     break;
    case KeyEvent.VK_TAB:
     break;

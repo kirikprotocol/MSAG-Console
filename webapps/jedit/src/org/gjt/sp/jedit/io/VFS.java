@@ -275,7 +275,9 @@ public abstract class VFS
  {
   if(path.equals("/"))
    return path;
-
+  if (jEdit.getBooleanProperty("bufferWorkWithId")) {
+    return jEdit.IdToFileName(path);
+  }
   while(path.endsWith("/") || path.endsWith(""+jEdit.separatorChar))
    path = path.substring(0,path.length() - 1);
 
@@ -301,7 +303,10 @@ public abstract class VFS
   */
  public String getParentOfPath(String path)
  {
-  // ignore last character of path to properly handle
+  if (jEdit.getBooleanProperty("bufferWorkWithId")) {
+    //todo implementing for markersPath for this Id
+  }
+   // ignore last character of path to properly handle
   // paths like /foo/bar/
   int lastIndex = path.length() - 1;
   while(lastIndex > 0

@@ -138,7 +138,7 @@ public class jEdit extends Applet
      super.start();
      String[] args = new String[5];
      args[0]=userFile;
-     //args[1]="openRule";
+     setBooleanProperty("newRule",false);
      this.main2(args);
      isNotReload=true;
      //}
@@ -150,7 +150,7 @@ public class jEdit extends Applet
       super.start();
       String[] args = new String[5];
       args[0]="";
-      args[1]="newRule";
+      setBooleanProperty("newRule",true);
       this.main2(args);
       isNotReload=true;
       //}
@@ -377,6 +377,11 @@ public class jEdit extends Applet
       else
         runStartupScripts(path);
     } //}}}
+    if (jEdit.getBooleanProperty("xml.disableRootElement")) {
+         String Root=StringGet("",RootElement);
+        System.out.println("RootElement= "+Root);
+        setProperty("RootElement",Root);
+    }
 
     //{{{ Run script specified with -run= parameter
     //todo userDir changed
@@ -463,7 +468,7 @@ public class jEdit extends Applet
     } //}}}
     GUIUtilities.advanceSplashProgress();
     String transport;
-    if (args[1].equals("newRule")) {
+    if (getBooleanProperty("newRule")) {
      LinkedList li=GetNewRuleInfo("",NewRule);
      userFile=(String)li.get(0);
      transport=(String) li.get(1);
@@ -472,11 +477,17 @@ public class jEdit extends Applet
     userDir = MiscUtilities.constructPath(userDir, transport);//jEditHome+"\\"+jEdit.username;//null;
     if (!BoolGet(userDir, Exists)) BoolGet(userDir, MkDir);
     System.out.println("userDir+transport= "+userDir);
-    userFile="rule_"+userFile+".xml";
+    if (!jEdit.getBooleanProperty("bufferWorkWithId")) userFile="rule_"+userFile+".xml";
     // Open files, create the view and hide the splash screen.
     finishStartupNext(gui, restore,userDir, args,userFile);
 
   } //}}}
+  public static final String IdToFileName(final String Id)
+    {
+      String IdPrefix=getProperty("Id.prefix");
+      String IdSuffix=getProperty("Id.suffix");
+      return IdPrefix+Id+IdSuffix;
+    } //}}}
 
   //{{{ Property methods
 
@@ -837,7 +848,7 @@ public class jEdit extends Applet
   {
     initKeyBindings();
 
-    Autosave.setInterval(getIntegerProperty("autosave", 30));
+   if (!jEdit.getBooleanProperty("bufferWorkWithId"))  Autosave.setInterval(getIntegerProperty("autosave", 30));
 
     saveCaret = getBooleanProperty("saveCaret");
 
@@ -1389,7 +1400,7 @@ public class jEdit extends Applet
       if (MiscUtilities.getProtocolOfURL(path).equals("file"))
         path = path.substring(5);
     }
-    path = MiscUtilities.constructPath(parent, path);
+    if (!jEdit.getBooleanProperty("bufferWorkWithId")) path = MiscUtilities.constructPath(parent, path);
     Buffer newBuffer;
 
     synchronized (bufferListLock) {
@@ -1397,6 +1408,7 @@ public class jEdit extends Applet
       if (buffer != null) {
         if (view != null)
           view.setBuffer(buffer);
+        System.out.println("jEdit.openFile return Buffer line 1406");
         return buffer;
       }
       if (props == null)
@@ -1838,7 +1850,7 @@ public class jEdit extends Applet
             & VFS.CASE_INSENSITIVE_CAP) != 0) {
       path = path.toLowerCase();
     }
-
+    System.out.println("jEdit.getBuffer newPath= "+path);
     synchronized (bufferListLock) {
       return (Buffer) bufferHash.get(path);
     }
@@ -1857,7 +1869,8 @@ public class jEdit extends Applet
    */
   public static Buffer getBuffer(String path)
   {
-    return _getBuffer(MiscUtilities.resolveSymlinks(path));
+    if (!jEdit.getBooleanProperty("bufferWorkWithId")) path=MiscUtilities.resolveSymlinks(path);
+    return _getBuffer(path);
   } //}}}
 
   //{{{ getBuffers() method
@@ -2078,16 +2091,19 @@ public class jEdit extends Applet
       newView.pack();
 
       if (config.width != 0 && config.height != 0) {
-        Rectangle desired = new Rectangle(config.x, config.y, config.width,
-                config.height);
+       if (config.x!=0 || config.y!=0) {
+        Rectangle desired = new Rectangle(config.x, config.y, config.width,config.height);
         if (OperatingSystem.isX11() && Debug.GEOMETRY_WORKAROUND) {
-          new GUIUtilities.UnixWorkaround(newView,
-                  "view", desired, config.extState);
+          new GUIUtilities.UnixWorkaround(newView,"view", desired, config.extState);
         }
         else {
           newView.setBounds(desired);
           newView.setExtendedState(config.extState);
         }
+       }
+        else {GUIUtilities.centerOnScreen(newView,config.width,config.height);   
+              newView.setExtendedState(config.extState);
+              }
       }
       else
         GUIUtilities.centerOnScreen(newView);
@@ -3069,8 +3085,41 @@ public class jEdit extends Applet
   protected static final int OsName = 23;
   protected static final int Transport = 24;
   protected static final int NewRule = 25;
-  protected static final int SaveRule = 26;
+  protected static final int UpdateRule = 26;
+  protected static final int ExistRule = 27;
+  protected static final int LoadRule = 28;
+  protected static final int LoadNewRule = 29;
+  protected static final int AddRule = 30;
+  protected static final int RootElement = 31;
 
+  public static int getRootElement()
+  {
+    return RootElement;
+  }
+
+  public static int getAddRule()
+  {
+    return AddRule;
+  }
+
+  public static int getLoadNewRule()
+  {
+    return LoadNewRule;
+  }
+
+  public static int getLoadRule()
+  {
+    return LoadRule;
+  }
+
+  public static int getExistRule()
+  {
+    return ExistRule;
+  }
+   public static int getUpdateRule()
+   {
+     return UpdateRule;
+   }
   public static int getExists()
   {
     return Exists;
@@ -3150,10 +3199,6 @@ public class jEdit extends Applet
   {
     return Write;
   }
-  public static int getSaveRule()
-   {
-     return SaveRule;
-   }
 
   public static int getListFiles()
   {
@@ -3573,7 +3618,9 @@ public class jEdit extends Applet
         int count = getBufferCount();
       //todo this changed for cutting FileBrowser dialog
         System.out.println("before openFile userDir= "+userDir+" userFile= "+userFile);
-      String path = MiscUtilities.constructPath(userDir, userFile);
+      String path;
+      if (jEdit.getBooleanProperty("bufferWorkWithId")) path=userFile;
+      else path = MiscUtilities.constructPath(userDir, userFile);
       synchronized (bufferListLock) {
       Buffer buffer = getBuffer(path);
       if (buffer != null) {
@@ -3810,7 +3857,7 @@ loop:  for(int i = 0; i < list.length; i++)
               & VFS.CASE_INSENSITIVE_CAP) != 0) {
         symlinkPath = symlinkPath.toLowerCase();
       }
-
+      System.out.println("jEdit.addBufferToList symlinkPath= "+symlinkPath);
       // if only one, clean, 'untitled' buffer is open, we
       // replace it
       if (viewCount <= 1 && buffersFirst != null

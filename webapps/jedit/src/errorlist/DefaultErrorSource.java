@@ -297,7 +297,7 @@ public class DefaultErrorSource extends ErrorSource implements EBComponent
  {
   DefaultError newError = new DefaultError(this,errorType,path,lineIndex,
    start,end,error);
-  ErrorSource.registerErrorSource(this);
+   ErrorSource.registerAndCheckErrorSource(this);
   addError(newError);
  } //}}}
 
@@ -440,9 +440,11 @@ public class DefaultErrorSource extends ErrorSource implements EBComponent
     this.path = path;
    else
    {
+    this.path=path;
+    if(!jEdit.getBooleanProperty("bufferWorkWithId")) {
     this.path = MiscUtilities.constructPath(jEdit.getJEditHome(),path);//System.getProperty("user.dir"),path);
-    this.path = MiscUtilities.resolveSymlinks(
-     this.path);
+    this.path = MiscUtilities.resolveSymlinks(this.path);
+    }
    }
 
    this.lineIndex = lineIndex;

@@ -62,23 +62,31 @@ public class BufferLoadRequest extends BufferIORequest
  } //}}}
 
   public void _createInputStream(Object session, String path,
- Buffer buffer, long length) throws IOException ,FileNotFoundException
+ Buffer buffer, long length,boolean markers) throws IOException ,FileNotFoundException
  {
 
     URL url=null;
     HttpURLConnection c=null;InputStream _in=null;
     int command=jEdit.getParseXml();
-    String content="?username="+jEdit.username+"&password="+jEdit.password+"&command="+command+"&file="+path;
+   if (jEdit.getBooleanProperty("bufferWorkWithId")) command=jEdit.getLoadRule();
+   if (buffer!=null && buffer.getBooleanProperty("newRule")) command=jEdit.getLoadNewRule();
+   String content="?username="+jEdit.username+"&password="+jEdit.password+"&command="+command+"&file="+path;
+   System.out.println("BufferLoadRequest _createInputStream content= "+content);
     try {
       url=new URL(jEdit.servletUrl,content);
       c=(HttpURLConnection) url.openConnection();
       c.connect(); String status=c.getHeaderField("status");
+      if (jEdit.getBooleanProperty("bufferWorkWithId")) {
+        String len=c.getHeaderField("length");
+        System.out.println("BufferLoadRequest._createInputStream len= "+len);
+        length=Long.parseLong(len);
+      }
       System.out.println("BufferLoadRequest _createInputStream status= "+status);
       if (!status.equals("ok")) throw new FileNotFoundException(status);
       _in=c.getInputStream();
       if(_in == null)
      return;
-     if (buffer==null) read(autodetect(_in),length,false);
+     if (!markers) read(autodetect(_in),length,false);
      else readMarkers(buffer,_in);
     } catch (MalformedURLException e) {
       e.printStackTrace();
@@ -104,8 +112,11 @@ public class BufferLoadRequest extends BufferIORequest
   {
    try
    {
+     setAbortable(true);
+    long length = 0L;
+    if (!jEdit.getBooleanProperty("bufferWorkWithId")) {
+
     String[] args = { vfs.getFileName(path) };
-    setAbortable(true);
     if(!buffer.isTemporary())
     {
      setStatus(jEdit.getProperty("vfs.status.load",args));
@@ -114,20 +125,19 @@ public class BufferLoadRequest extends BufferIORequest
 
     path = vfs._canonPath(session,path,view);
 
-    VFSFile entry = vfs._getFile(
-     session,path,view);
-    long length;
+    VFSFile entry = vfs._getFile(session,path,view);
     if(entry != null)
      length = entry.getLength();
     else
      length = 0L;
 
+    }
   /*  in = vfs._createInputStream(session,path,
      false,view);
     if(in == null)
      return;
       */
-        _createInputStream(session,path,null,length);
+        _createInputStream(session,path,buffer,length,false);
     //read(autodetect(in),length,false);
     buffer.setNewFile(false);
    }
@@ -165,7 +175,7 @@ public class BufferLoadRequest extends BufferIORequest
     buffer.setBooleanProperty(ERROR_OCCURRED,true);
    }
 
-   if(jEdit.getBooleanProperty("persistentMarkers"))
+   if(jEdit.getBooleanProperty("persistentMarkers") && !jEdit.getBooleanProperty("bufferWorkWithId"))
    {
     try
     {
@@ -175,7 +185,7 @@ public class BufferLoadRequest extends BufferIORequest
      setAbortable(true);
 
     // in = vfs._createInputStream(session,markersPath,true,view);
-      _createInputStream(session,markersPath,buffer,0);
+      _createInputStream(session,markersPath,buffer,0,true);
          // if(in != null)
      // readMarkers(buffer,in);
     }

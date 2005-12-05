@@ -50,7 +50,7 @@ restore.cli=true
 persistentMarkers=true
 
 # Two-stage save (save to #filename#save# first, then filename)
-twoStageSave=true
+twoStageSave=false
 
 # Strip trailing EOL
 stripTrailingEOL=true
@@ -63,6 +63,11 @@ saveCaret=true
 
 # Backup on every save
 backupEverySave=false
+
+# Buffer work with rule Id
+bufferWorkWithId=true
+Id.prefix=rule_
+Id.suffix=.xml
 
 # Number of backups to make, 0=no backups
 backups=1
@@ -160,10 +165,10 @@ buffer.collapseFolds=0
 textColors=false
 
 # Show toolbar?
-view.showToolbar=false
+view.showToolbar=true
 
 # Show searchbar?
-view.showSearchbar=false
+view.showSearchbar=true
 
 # Show buffer switcher?
 view.showBufferSwitcher=false
@@ -323,6 +328,8 @@ view.fracFontMetrics=false
 # Docking and tool bar positioning
 view.docking.alternateLayout=false
 view.toolbar.alternateLayout=false
+view.width=700
+view.height=700
 view.bottomPos=100
 
 #{{{ Status bar
