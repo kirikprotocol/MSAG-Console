@@ -22,16 +22,14 @@ namespace smsc
     {
         Logger* inapLogger;
         Logger* tcapLogger;
-        Logger* dumpLogger;
-      }
+    }
   }
 };
+using smsc::inman::inap::inapLogger;
+using smsc::inman::inap::tcapLogger;
 
 using smsc::inman::Service;
 using smsc::inman::InService_CFG;
-using smsc::inman::inap::inapLogger;
-using smsc::inman::inap::tcapLogger;
-using smsc::inman::inap::dumpLogger;
 using smsc::util::config::Manager;
 using smsc::util::config::ConfigException;
 
@@ -42,8 +40,7 @@ static void init_logger()
 {
   Logger::Init();
     inapLogger = Logger::getInstance("smsc.inman");
-    tcapLogger = Logger::getInstance("smsc.inman.inap.dump");
-    dumpLogger = Logger::getInstance("smsc.inman.inap.dump");
+    tcapLogger = Logger::getInstance("smsc.inman.inap");
 }
 
 extern "C" static void sighandler( int signal )
@@ -55,10 +52,11 @@ extern "C" static void sighandler( int signal )
     smsc_log_info(inapLogger, "Service shutdown complete");
 }
 
-//CDR_NONE = 0, CDR_ALL = 1, CDR_POSTPAID = 2, CDR_PREPAID = 3
-static const char * const _CDRmodes[4] = {"none", "all", "postpaid", "prepaid"};
+//CDR_NONE = 0, CDR_ALL = 1, CDR_POSTPAID = 2
+static const char * const _CDRmodes[3] = {"none", "all", "postpaid"};
 //BILL_ALL = 0, BILL_USSD, BILL_SMS
 static const char * const _BILLmodes[4] = {"all", "ussd", "sms", "none"};
+
 
 struct INBillConfig : public InService_CFG
 {
@@ -70,6 +68,7 @@ public:
         ssn = port = billingInterval = 0;
         billMode = smsc::inman::BILL_ALL;
         cdrMode =  InService_CFG::CDR_ALL;
+        capTimeout = tcpTimeout = 0;
     }
 
     void read(Manager& manager)
@@ -92,10 +91,10 @@ public:
         try {
             host = manager.getString("host");
             port = manager.getInt("port");
-            smsc_log_info(inapLogger, "SMSC: %s:%d", host, port);
+            smsc_log_info(inapLogger, "INMan: %s:%d", host, port);
         } catch (ConfigException& exc) {
             host = 0; port = 0;
-            throw ConfigException("SMSC host or port missing");
+            throw ConfigException("INMan host or port missing");
         }
         try {
             char* bmode = manager.getString("billMode");
@@ -113,9 +112,7 @@ public:
         }
         try {
             char* cdrs = manager.getString("cdrMode");
-            if (!strcmp(cdrs, _CDRmodes[InService_CFG::CDR_PREPAID]))
-                cdrMode = InService_CFG::CDR_PREPAID;
-            else if (!strcmp(cdrs, _CDRmodes[InService_CFG::CDR_POSTPAID]))
+            if (!strcmp(cdrs, _CDRmodes[InService_CFG::CDR_POSTPAID]))
                 cdrMode = InService_CFG::CDR_POSTPAID;
             else if (!strcmp(cdrs, _CDRmodes[InService_CFG::CDR_NONE]))
                 cdrMode = InService_CFG::CDR_NONE;
@@ -131,7 +128,7 @@ public:
                 billingInterval = manager.getInt("billingInterval");
                 if (billingInterval < _inman_MIN_BILLING_INTERVAL) {
                     billingDir = NULL; billingInterval = 0;
-                    smsc_log_info(inapLogger, "Parameter 'billingInterval' should be grater than %ld seconds",
+                    smsc_log_error(inapLogger, "Parameter 'billingInterval' should be grater than %ld seconds",
                                           _inman_MIN_BILLING_INTERVAL);
                     throw ConfigException("Parameter 'billingInterval' should be grater than %ld seconds",
                                           _inman_MIN_BILLING_INTERVAL);
@@ -143,6 +140,39 @@ public:
                 throw ConfigException("billingDir or billingInterval invalid or missing");
             }
         }
+
+        //OPTIONAL PARAMETERS:
+        uint32_t tmo = 0;
+        try {
+            tmo = (uint32_t)manager.getInt("IN_Timeout");
+        } catch (ConfigException& exc) {
+        }
+        if (tmo) {
+            if (tmo >= 65535) {
+                smsc_log_error(inapLogger, "Parameter 'IN_Timeout' should be less than 65535 seconds");
+                throw ConfigException("Parameter 'IN_Timeout' should be less than 65535 seconds");
+            } else { 
+                capTimeout = (unsigned short)tmo;
+                smsc_log_info(inapLogger, "IN_Timeout: %u", capTimeout);
+            }
+        } else 
+            smsc_log_info(inapLogger, "IN_Timeout: default");
+
+        tmo = 0;
+        try {
+            tmo = (uint32_t)manager.getInt("SMSC_Timeout");
+        } catch (ConfigException& exc) {
+        }
+        if (tmo) {
+            if (tmo >= 65535) {
+                smsc_log_error(inapLogger, "Parameter 'SMSC_Timeout' should be less than 65535 seconds");
+                throw ConfigException("Parameter 'SMSC_Timeout' should be less than 65535 seconds");
+            } else { 
+                tcpTimeout = (unsigned short)tmo;
+                smsc_log_info(inapLogger, "SMSC_Timeout: %u", tcpTimeout);
+            }
+        } else
+            smsc_log_info(inapLogger, "SMSC_Timeout: default");
     }
 };
 
@@ -169,7 +199,7 @@ int main(int argc, char** argv)
         exit(-1);
     }
     try {
-        g_pService = new Service(&cfg);
+        g_pService = new Service(&cfg, inapLogger);
         g_pService->start();
 
         sigset(SIGTERM, sighandler);

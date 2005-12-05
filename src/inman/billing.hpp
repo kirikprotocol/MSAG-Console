@@ -22,21 +22,38 @@ namespace inman   {
 
 typedef enum { BILL_ALL = 0, BILL_USSD, BILL_SMS, BILL_NONE } BILL_MODE;
 
+/* Inman interoperation scheme:
+SMSC   < - >           Billing      < - >    Inap (SCF)
+ChargeSms           -> [ bilStarted,
+                         bilInited:          InitialDP -> SSF ]
+
+                       [ bilReleased:        SCF <- ReleaseSMS
+ChargeSmsResult     <-   | bilProcessed:     SCF <- ContinueSMS ]
+
+[ CHARGING_POSSIBLE:
+  DeliverySmsResult -> [  bilApproved:       eventReportSMS -> SSF
+                          bilComplete :                     <-    ]
+]
+*/
+
 class Service;
 class Billing : public SSF, public InmanHandler
 {
 public:
-    typedef enum { billPrepaid, billPostpaid } BillingType;
-    typedef enum { bilIdle, bilStarted, bilInited, bilProcessed, bilApproved, bilComplete, billAborted } BillingState;
+    typedef enum {
+        bilIdle, bilStarted, bilInited, bilReleased, bilProcessed, 
+        bilApproved, bilComplete, bilAborted
+    } BillingState;
 
-    Billing(Service* service, unsigned int id, Session*, Connect*, BILL_MODE bMode);
+    Billing(Service* service, unsigned int id, Session*, Connect*, BILL_MODE bMode,
+            USHORT_T capTimeout = 0, USHORT_T tcpTimeout = 0, Logger * uselog = NULL);
     virtual ~Billing();
 
     unsigned int getId() const { return id; }
     
     void     handleCommand(InmanCommand* cmd);
     //
-    BillingType getBillingType(void) const;
+    bool    isPostpaidBill(void) const { return postpaidBill; }
     //retuns false if CDR was not complete
     bool     BillComplete(void) const;
     //returns true if succeeded, false if CDR was not complete
@@ -57,6 +74,7 @@ public:
     virtual void abortSMS(unsigned char errcode, bool tcapLayer);
 
 protected:
+    void finishBilling(void);
     void abortBilling(InmanErrorType errType, uint16_t errCode);
 
     Mutex           bilMutex;   //
@@ -68,8 +86,10 @@ protected:
     Connect*        connect;
     Service*        service;
     CDRRecord       cdr;        //data for CDR record creation
-    BillingType     billType;
+    bool            postpaidBill;                                
     BILL_MODE       billMode;
+    unsigned short  _capTimeout; //timeout for interconnection with IN-platform
+    unsigned short  _tcpTimeout; //timeout for interconnection with SMSC
 };
 
 } //inman

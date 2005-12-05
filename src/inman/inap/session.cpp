@@ -169,15 +169,14 @@ Dialog* Session::findDialog(USHORT_T id)
 
 void Session::closeDialog(Dialog* pDlg)
 {
-    if( !pDlg ) return;
-    smsc_log_debug(logger,"Close dialog (SSN=%d, Dialog id=%d)", SSN, pDlg->did );
-
-  for( ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++)
-  {
-       SessionListener* ptr = *it;
-       ptr->onDialogEnd( pDlg );
-  }
+    if (!pDlg)
+        return;
+    for( ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++) {
+        SessionListener* ptr = *it;
+        ptr->onDialogEnd(pDlg);
+    }
     dialogs.erase(pDlg->getId());
+    smsc_log_debug(logger,"Close dialog (SSN=%d, Dialog id=%d)", SSN, pDlg->getId() );
 }
 
 void Session::closeAllDialogs()

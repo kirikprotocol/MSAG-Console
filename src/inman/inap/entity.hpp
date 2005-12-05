@@ -11,19 +11,35 @@ namespace smsc  {
 namespace inman {
 namespace inap  {
 
-class Dialog;
+typedef std::vector<unsigned char> RawBuffer;
 
 class TcapEntity
 {
 protected:
-    typedef std::vector<unsigned char> RawBuffer;
-
     UCHAR_T     id;
     UCHAR_T     opcode;
     UCHAR_T     tag;
     Component*	param;
     bool        ownComp; //this Entity is owner of 'param'
 
+public:
+    TcapEntity(UCHAR_T tId, UCHAR_T tTag = 0, UCHAR_T tOpCode = 0)
+        : id(tId), tag(tTag), opcode(tOpCode), param(NULL), ownComp(false) { }
+
+    virtual ~TcapEntity() { if (ownComp) delete param; }
+
+    USHORT_T    getId() const           { return id; }
+    UCHAR_T     getTag() const          { return tag; }
+    void        setTag(UCHAR_T t)       { tag = t; }
+    UCHAR_T     getOpcode() const       { return opcode; }
+    void        setOpcode(UCHAR_T opc)  { opcode = opc; }
+    Component*  getParam() const        { return param; }
+    //sets 'param' without passing ownership, it's caller responsibility to free Component
+    void        setParam(Component* p)     { param = p; ownComp = false; }
+    //grands the ownership of 'param', Component will be freed by ~TcapEntity()
+    void        ownParam(Component* p)     { param = p; ownComp = true; }
+
+    //throws runtime_error
     void encode(RawBuffer& operation, RawBuffer& params)
     {
         operation.clear(); params.clear();
@@ -32,28 +48,8 @@ protected:
             param->encode(params);
     }
 
-public:
-    TcapEntity()
-        : id(0), tag(0), opcode(0), param(NULL), ownComp(false) { }
-
-    TcapEntity(UCHAR_T tId, UCHAR_T tTag, UCHAR_T tOpCode)
-        : id(tId), tag(tTag), opcode(tOpCode), param(NULL), ownComp(false) { }
-
-    virtual ~TcapEntity() { if (ownComp) delete param; }
-
-    USHORT_T    getId() const          { return id; }
-    void        setId(USHORT_T inId)   { id = inId; }
-    UCHAR_T     getTag() const         { return tag; }
-    void        setTag(UCHAR_T t)      { tag = t; }
-    UCHAR_T     getOpcode() const      { return opcode; }
-    void        setOpcode(UCHAR_T opc) { opcode = opc; }
-    Component*  getParam() const     { return param; }
-    //sets 'param' without passing ownership, it's caller responsibility to free Component
-    void        setParam(Component* p)     { param = p; ownComp = false; }
-    //grands the ownership of 'param', Component will be freed by ~TcapEntity()
-    void        ownParam(Component* p)     { param = p; ownComp = true; }
-
-    virtual void send(Dialog*) = 0;
+//abstract:
+    virtual void send() = 0;
 };
 
 } //inap

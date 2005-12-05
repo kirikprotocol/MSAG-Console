@@ -3,15 +3,11 @@ static char const ident[] = "$Id$";
 /// Callbacks implementation
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-#include <assert.h>
-
-
 #include "inman/inap/inss7util.hpp"
 
 #include "inman/inap/infactory.hpp"
 #include "inman/inap/session.hpp"
 #include "inman/inap/dialog.hpp"
-#include "inman/inap/invoke.hpp"
 #include "inman/common/util.hpp"
 
 using smsc::inman::inap::Dialog;
@@ -19,38 +15,31 @@ using smsc::inman::inap::Session;
 using smsc::inman::inap::InSessionFactory;
 using smsc::inman::inap::getTcapBindErrorMessage;
 using smsc::inman::common::dump;
-using smsc::inman::common::dumpToLog;
 using smsc::inman::common::format;
 
 namespace smsc {
 namespace inman {
 namespace inap {
-extern Logger* inapLogger;
-extern Logger* tcapLogger;
-extern Logger* dumpLogger;
+    extern Logger* tcapLogger;
 }
 }
 }
 
 using smsc::inman::inap::tcapLogger;
-using smsc::inman::inap::inapLogger;
-using smsc::inman::inap::dumpLogger;
 
 //-------------------------------- Util functions --------------------------------
 static Dialog* findDialog(UCHAR_T ssn, USHORT_T dialogueId)
 {
-  Session* pSession = InSessionFactory::getInstance()->findSession( ssn );
-  if( !pSession )
-  {
-    smsc_log_warn( tcapLogger, "Invalid SSN: 0x%X", ssn );
-    return 0;
-  }
+    Session* pSession = InSessionFactory::getInstance()->findSession( ssn );
+    if (!pSession) {
+        smsc_log_warn( tcapLogger, "Invalid SSN: 0x%X", ssn );
+        return 0;
+    }
     Dialog* pDlg = pSession->findDialog( dialogueId );
-  if( !pDlg )
-  {
-    smsc_log_warn( tcapLogger, "Invalid dialog ID: 0x%X", dialogueId );
-    return 0;
-  }
+    if (!pDlg) {
+        smsc_log_warn( tcapLogger, "Invalid dialog ID: 0x%X", dialogueId );
+        return 0;
+    }
     return pDlg;
 }
 
@@ -191,7 +180,7 @@ USHORT_T EINSS7_I97TEndInd(     UCHAR_T          ssn,
                   );
 
   Dialog* dlg = findDialog( ssn, dialogueId );
-  if( dlg ) dlg->handleEndDialog();
+  if( dlg ) dlg->handleEndDialog(compPresent ? true : false);
   return MSG_OK;
 }
 

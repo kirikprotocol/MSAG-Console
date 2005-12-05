@@ -1,104 +1,26 @@
 static char const ident[] = "$Id$";
-#include <assert.h>
-#include <stdexcept>
-#include <string>
 
-#include "inman/common/util.hpp"
-#include "inman/inap/inss7util.hpp"
 #include "inman/inap/dialog.hpp"
-#include "inman/inap/session.hpp"
-#include "inman/inap/results.hpp"
-
-using std::runtime_error;
-using smsc::inman::common::format;
 
 namespace smsc  {
 namespace inman {
 namespace inap  {
 
-void InvokeResultLast::send(Dialog* dialog)
+void InvokeResultLast::send(void) //throws runtime_error
 {
-  assert( dialog );
-  assert( dialog->getSession() );
-
-  RawBuffer op;
-  RawBuffer params;
-  encode( op, params );
-
-  UCHAR_T result = EINSS7_I97TResultLReq
-  (
-    	dialog->getSession()->getSSN(),
-    	MSG_USER_ID,
-    	TCAP_INSTANCE_ID,
-    	dialog->getId(),
-    	id,
-		tag,
-		op.size(), 	//operationLength,
-		&op[0], //*operationCode_p,
-		params.size(), //paramLength,
-		&params[0] //*parameters_p
-   );
-
-  if(result != 0)
-  	throw runtime_error( format("InvokeReq failed with code %d (%s)", result,getTcapReasonDescription(result)));
-
+    _dlg->sendResultLast(this);
 }
 
-void InvokeResultNotLast::send(Dialog* dialog)
+void InvokeResultNotLast::send(void) //throws runtime_error
 {
-  assert( dialog );
-  assert( dialog->getSession() );
-
-  RawBuffer op;
-  RawBuffer params;
-  encode( op, params );
-
-  UCHAR_T result = EINSS7_I97TResultNLReq
-  (
-    	dialog->getSession()->getSSN(),
-    	MSG_USER_ID,
-    	TCAP_INSTANCE_ID,
-    	dialog->getId(),
-    	id,
-		tag,
-		op.size(), 	//operationLength,
-		&op[0], //*operationCode_p,
-		params.size(), //paramLength,
-		&params[0] //*parameters_p
-   );
-
-  if(result != 0)
-  	throw runtime_error( format("InvokeReq failed with code %d (%s)", result,getTcapReasonDescription(result)));
-
+    _dlg->sendResultNotLast(this);
 }
 
-void InvokeResultError::send(Dialog* dialog)
+void InvokeResultError::send(void) //throws runtime_error
 {
-  assert( dialog );
-  assert( dialog->getSession() );
-
-  RawBuffer op;
-  RawBuffer params;
-  encode( op, params );
-
-  UCHAR_T result = EINSS7_I97TUErrorReq
-  (
-    	dialog->getSession()->getSSN(),
-    	MSG_USER_ID,
-    	TCAP_INSTANCE_ID,
-    	dialog->getId(),
-    	id,
-		tag,
-		op.size(), 	//operationLength,
-		&op[0], //*operationCode_p,
-		params.size(), //paramLength,
-		&params[0] //*parameters_p
-  );
-
-  if(result != 0)
-  	throw runtime_error( format("InvokeReq failed with code %d (%s)", result,getTcapReasonDescription(result)));
-
+    _dlg->sendResultError(this);
 }
+
 
 } // namespace inap
 } // namespace inmgr

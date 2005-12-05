@@ -23,8 +23,7 @@ namespace smsc  {
 namespace inman {
 
 struct InService_CFG {
-    typedef enum { CDR_NONE = 0, CDR_ALL = 1, CDR_POSTPAID = 2, CDR_PREPAID = 3} CDR_MODE;
-//    typedef enum { BILL_ALL = 0, BILL_USSD, BILL_SMS, BILL_NONE } BILL_MODE;
+    typedef enum { CDR_NONE = 0, CDR_ALL = 1, CDR_POSTPAID = 2} CDR_MODE;
 
     const char*     ssf_addr;
     const char*     scf_addr;
@@ -35,6 +34,8 @@ struct InService_CFG {
     CDR_MODE        cdrMode;
     const char *    billingDir;      //location to store CDR files
     long            billingInterval; //rolling interval for CDR files
+    unsigned short  capTimeout;      //optional timeout for operations with IN platform
+    unsigned short  tcpTimeout;      //optional timeout for TCP interaction with SMSC
 };
 
 class Billing;

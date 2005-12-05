@@ -9,40 +9,42 @@ namespace smsc  {
 namespace inman {
 namespace inap  {
 
+class Dialog;
+
 class InvokeResultLast : public TcapEntity
 {
 public:
-    InvokeResultLast()
-        : TcapEntity(0, 0, 0) { }
+    InvokeResultLast(Dialog* dlg, UCHAR_T tId, UCHAR_T tTag = 0, UCHAR_T tOpCode = 0)
+        : TcapEntity(tId, tTag, tOpCode), _dlg(dlg) {}
 
-    InvokeResultLast(UCHAR_T tId, UCHAR_T tTag, UCHAR_T tOpCode)
-        : TcapEntity(tId, tTag, tOpCode) {}
+    void send();    //throws runtime_error
 
-    virtual void send(Dialog* dialog);
+protected:
+    Dialog *         _dlg;      //parent Dialog
 };
 
 class InvokeResultNotLast : public TcapEntity
 {
 public:
-    InvokeResultNotLast()
-        : TcapEntity(0, 0, 0) { }
+    InvokeResultNotLast(Dialog* dlg, UCHAR_T tId, UCHAR_T tTag = 0, UCHAR_T tOpCode = 0)
+        : TcapEntity(tId, tTag, tOpCode), _dlg(dlg) {}
 
-    InvokeResultNotLast(UCHAR_T tId, UCHAR_T tTag, UCHAR_T tOpCode)
-        : TcapEntity(tId, tTag, tOpCode) {}
+    void send();    //throws runtime_error
 
-    virtual void send(Dialog* dialog);
+protected:
+    Dialog *         _dlg;      //parent Dialog
 };
 
 class InvokeResultError : public TcapEntity
 {
 public:
-    InvokeResultError()
-        : TcapEntity(0, 0, 0) { }
+    InvokeResultError(Dialog* dlg, UCHAR_T tId, UCHAR_T tTag = 0, UCHAR_T tOpCode = 0)
+        : TcapEntity(tId, tTag, tOpCode), _dlg(dlg) {}
 
-    InvokeResultError(UCHAR_T tId, UCHAR_T tTag, UCHAR_T tOpCode)
-        : TcapEntity(tId, tTag, tOpCode) {}
+    void send();    //throws runtime_error
 
-    virtual void send(Dialog* dialog);
+protected:
+    Dialog *         _dlg;      //parent Dialog
 };
 
 } //inap

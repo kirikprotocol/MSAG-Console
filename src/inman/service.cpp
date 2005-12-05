@@ -126,13 +126,11 @@ void Service::billingFinished(Billing* bill)
     else {
         smsc_log_debug(logger, "InmanSrv: Bill[0x%X] %scomplete, cdrMode: %d, billingType: %sPAID",
                         billId, bill->BillComplete() ? "" : "IN", _cfg.cdrMode, 
-                       (bill->getBillingType() == Billing::billPrepaid) ? "PRE" : "POST");
+                        bill->isPostpaidBill() ? "POST": "PRE");
         if (_cfg.cdrMode && bill->BillComplete()) {
             if ((_cfg.cdrMode == InService_CFG::CDR_ALL)
-                || ((_cfg.cdrMode == InService_CFG::CDR_PREPAID)
-                    && (bill->getBillingType() == Billing::billPrepaid))
                 || ((_cfg.cdrMode == InService_CFG::CDR_POSTPAID)
-                    && (bill->getBillingType() == Billing::billPostpaid)))
+                    && bill->isPostpaidBill()))
                 bfs->bill(bill->getCDRRecord());
                 smsc_log_debug(logger, "InmanSrv: CDR written for Billing[0x%X]", billId);
         }
@@ -175,7 +173,8 @@ void Service::onCommandReceived(Connect* conn, SerializableObject* recvCmd)
     Billing* bill;
     BillingMap::iterator it = workers.find(dlgId);
     if (it == workers.end()) {
-        bill = new Billing(this, dlgId, session, conn, _cfg.billMode);
+        bill = new Billing(this, dlgId, session, conn, _cfg.billMode,
+                           _cfg.capTimeout, _cfg.tcpTimeout, logger);
         workers.insert(BillingMap::value_type(dlgId, bill));
     } else
         bill = (*it).second;

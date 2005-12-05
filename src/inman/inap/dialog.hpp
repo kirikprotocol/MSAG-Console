@@ -9,6 +9,7 @@
 #include "logger/Logger.h"
 #include "inman/common/types.hpp"
 #include "inman/inap/invoke.hpp"
+#include "inman/inap/results.hpp"
 #include "inman/common/observable.hpp"
 
 using smsc::inman::common::ObservableT;
@@ -27,33 +28,43 @@ class DialogListener
   public:
     virtual void onDialogInvoke(Invoke*) = 0;
     virtual void onDialogPAbort(UCHAR_T abortCause) = 0;
+    virtual void onDialogREnd(bool compPresent) = 0;
 };
 
+static const USHORT_T   _DEFAULT_INVOKE_TIMER = 30; //seconds
 
 class Dialog : public ObservableT< DialogListener >
 {
-    friend class Session;
-
-  public:
-    Dialog(Session* session, USHORT_T id, unsigned dialog_ac_idx );
+public:
+    Dialog(Session* session, USHORT_T id, unsigned dialog_ac_idx, Logger * uselog = NULL);
     virtual ~Dialog();
 
-    virtual Invoke* invoke(UCHAR_T opcode);
+    //sets the default timeout for Invoke result waiting
+    void setInvokeTimeout(USHORT_T timeout);
+
+    //creates and registers Invoke, sets its response waiting timeout,
+    //zero as timeout value sets Invoke timer equal to the Dialog default timeout value
+    Invoke* initInvoke(UCHAR_T opcode, USHORT_T timeout = 0);
+    void    releaseInvoke(UCHAR_T invId);
+    //resets the Invoke timer, extending its lifetime (response waiting)
+    void    resetInvokeTimer(UCHAR_T invokeId);
+
+    void    sendInvoke(Invoke * inv);
+    void    sendResultLast(InvokeResultLast* res);
+    void    sendResultNotLast(InvokeResultNotLast* res);
+    void    sendResultError(InvokeResultError* res);
 
     // Transaction layer
-    virtual void beginDialog(const SCCP_ADDRESS_T& remote_addr, UCHAR_T* ui, USHORT_T uilen);
-    virtual void beginDialog(const SCCP_ADDRESS_T& remote_addr);
-    //called by client of this dialog instance
-    virtual void beginDialog();
-    virtual void beginDialog(UCHAR_T* ui, USHORT_T uilen);
-    virtual void continueDialog();
-    virtual void endDialog(USHORT_T termination);
-    virtual void timerReset();
+    void beginDialog(UCHAR_T* ui = NULL, USHORT_T uilen = 0);
+    //start dialog with new remote address
+    void beginDialog(const SCCP_ADDRESS_T& remote_addr, UCHAR_T* ui = NULL, USHORT_T uilen = 0);
+    void continueDialog();
+    void endDialog(USHORT_T termination);
 
     // Transaction level callbacks
     virtual USHORT_T handleBeginDialog();
     virtual USHORT_T handleContinueDialog();
-    virtual USHORT_T handleEndDialog();
+    virtual USHORT_T handleEndDialog(bool compPresent);
     virtual USHORT_T handlePAbortDialog(UCHAR_T abortCause);
 
     // Interaction level callbacks
@@ -63,29 +74,28 @@ class Dialog : public ObservableT< DialogListener >
     virtual USHORT_T handleResultNotLast(UCHAR_T invokeId, UCHAR_T tag, USHORT_T oplen, const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm);
     virtual USHORT_T handleUserError(UCHAR_T invokeId, UCHAR_T tag, USHORT_T oplen, const UCHAR_T *op, USHORT_T pmlen,  const UCHAR_T *pm);
 
-   public:
-    USHORT_T getId()      const { return did;       }
-    void     setId(USHORT_T id) { did = id;         }
-    USHORT_T getNextInvokeId()  { return invokeId++;}
+public:
+    void     setId(USHORT_T did){ _dId = did; } //do not use this manually !
+    USHORT_T getId()      const { return _dId;       }
+    UCHAR_T  getNextInvokeId()  { return _lastInvId++;}
     USHORT_T getQSrv()    const { return qSrvc;     }
-    USHORT_T getTimeout() const { return timeout;   }
+    USHORT_T getTimeout() const { return _timeout;  }
     Session* getSession() const { return session;   }
 
-   protected:
-
-    InvokeMap       originating;
-    InvokeMap       terminating;
+protected:
+    InvokeMap       originating; //Invokes, which have result/errors defined
+    InvokeMap       terminating; //
     Session*        session;
     SCCP_ADDRESS_T  ownAddr;
     SCCP_ADDRESS_T  remoteAddr;
+    UCHAR_T         dSSN;   //SubSystemNumber dialog uses
     unsigned        _ac_idx; //ApplicationContext index, see acdefs.hpp
     APP_CONTEXT_T   ac;
-    USHORT_T        opid;
-    USHORT_T        did;
-    USHORT_T        timeout;
+    USHORT_T        _dId;
+    USHORT_T        _timeout;
     UCHAR_T         qSrvc;
     UCHAR_T         priority;
-    UCHAR_T         invokeId;
+    UCHAR_T         _lastInvId;
     Logger*         logger;
 };
 

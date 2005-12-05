@@ -26,60 +26,70 @@ namespace inman {
 namespace inap  {
 
 /////////////////////////////////////////////////////////////////////////////////////
-// Dialog class
+// Dialog class implementation
 /////////////////////////////////////////////////////////////////////////////////////
 
-extern Logger* tcapLogger;
-
-Dialog::Dialog(Session* pSession, USHORT_T dlgId, unsigned dialog_ac_idx)
-  : logger(Logger::getInstance("smsc.inman.inap.Dialog"))
-  , did( dlgId )
-  , session( pSession )
-  , qSrvc(EINSS7_I97TCAP_QLT_BOTH)
-  , priority(EINSS7_I97TCAP_PRI_HIGH_0)
-  , timeout( 30 )
-  , invokeId( 1 )
+Dialog::Dialog(Session* pSession, USHORT_T dlgId,
+               unsigned dialog_ac_idx, Logger * uselog/* = NULL*/)
+  : logger(uselog)
+  , _dId( dlgId ), session( pSession )
+  , qSrvc(EINSS7_I97TCAP_QLT_BOTH), priority(EINSS7_I97TCAP_PRI_HIGH_0)
+  , _timeout(_DEFAULT_INVOKE_TIMER), _lastInvId(0)
   , _ac_idx(dialog_ac_idx)
 {
-  ac = *smsc::ac::ACOID::OIDbyIdx(dialog_ac_idx);
-  if(session)
-  {
+    assert(session);
+    if (!logger)
+        logger = Logger::getInstance("smsc.inman.inap.Dialog");
+
+    ac = *smsc::ac::ACOID::OIDbyIdx(dialog_ac_idx);
     ownAddr    = session->ssfAddr;
     remoteAddr = session->scfAddr;
-  }
+    dSSN = session->getSSN();
 }
 
 Dialog::~Dialog()
 {
+    session->closeDialog(this);
+
     InvokeMap::const_iterator it;
     for (it = originating.begin(); it != originating.end(); it++) {
         Invoke * inv = (*it).second;
+        smsc_log_debug(logger, "Dialog[%u]: releasing Invoke[%u] (opcode = %u), respType: %d, status: %d",
+                       _dId, inv->getId(), inv->getOpcode(), inv->getResponseType(), inv->getStatus());
         delete inv;
     }
     for (it = terminating.begin(); it != terminating.end(); it++) {
         Invoke * inv = (*it).second;
+        smsc_log_debug(logger, "Dialog[%u]: releasing Invoke[%u] (opcode = %u), respType: %d, status: %d",
+                       _dId, inv->getId(), inv->getOpcode(), inv->getResponseType(), inv->getStatus());
         delete inv;
     }
 }
 
-void Dialog::beginDialog(UCHAR_T* ui, USHORT_T uilen)
+
+void Dialog::setInvokeTimeout(USHORT_T timeout)
 {
-    smsc_log_debug(tcapLogger,"BEGIN_REQ");
-    smsc_log_debug(tcapLogger," SSN: 0x%X", session->getSSN());
-    smsc_log_debug(tcapLogger," UserID: 0x%X", MSG_USER_ID );
-    smsc_log_debug(tcapLogger," TcapInstanceID: 0x%X", TCAP_INSTANCE_ID );
-    smsc_log_debug(tcapLogger," DialogID: 0x%X", did );
-    smsc_log_debug(tcapLogger," PriOrder: 0x%X", priority );
-    smsc_log_debug(tcapLogger," QoS: 0x%X", qSrvc );
-    smsc_log_debug(tcapLogger," Dest. address: %s", dump(remoteAddr.addrLen ,remoteAddr.addr  ).c_str() );
-    smsc_log_debug(tcapLogger," Org. address: %s" , dump(ownAddr.addrLen ,ownAddr.addr  ).c_str() );
-    smsc_log_debug(tcapLogger," App. context: %s" , dump(ac.acLen ,ac.ac ).c_str() );
+    _timeout = timeout ? timeout : _DEFAULT_INVOKE_TIMER;
+}
+
+void Dialog::beginDialog(UCHAR_T* ui/* = NULL*/, USHORT_T uilen/* = 0*/)
+{
+    smsc_log_debug(logger,"BEGIN_REQ");
+    smsc_log_debug(logger," SSN: 0x%X", dSSN);
+    smsc_log_debug(logger," UserID: 0x%X", MSG_USER_ID );
+    smsc_log_debug(logger," TcapInstanceID: 0x%X", TCAP_INSTANCE_ID );
+    smsc_log_debug(logger," DialogID: 0x%X", _dId );
+    smsc_log_debug(logger," PriOrder: 0x%X", priority );
+    smsc_log_debug(logger," QoS: 0x%X", qSrvc );
+    smsc_log_debug(logger," Dest. address: %s", dump(remoteAddr.addrLen, remoteAddr.addr).c_str());
+    smsc_log_debug(logger," Org. address: %s" , dump(ownAddr.addrLen, ownAddr.addr).c_str());
+    smsc_log_debug(logger," App. context: %s" , dump(ac.acLen, ac.ac).c_str());
     if (ui && uilen)
-        smsc_log_debug(tcapLogger," User info: %s" , dump(uilen ,ui).c_str() );
+        smsc_log_debug(logger," User info: %s" , dump(uilen, ui).c_str());
 
     USHORT_T result = EINSS7_I97TBeginReq(
-                        session->getSSN(), MSG_USER_ID, TCAP_INSTANCE_ID,
-                        did, priority, qSrvc,
+                        dSSN, MSG_USER_ID, TCAP_INSTANCE_ID,
+                        _dId, priority, qSrvc,
                         remoteAddr.addrLen, remoteAddr.addr,
                         ownAddr.addrLen, ownAddr.addr,
                         ac.acLen, ac.ac,
@@ -90,118 +100,222 @@ void Dialog::beginDialog(UCHAR_T* ui, USHORT_T uilen)
                                                 getTcapReasonDescription(result)));
 }
 
-void Dialog::beginDialog(const SCCP_ADDRESS_T& remote_addr, UCHAR_T* ui, USHORT_T uilen)
+void Dialog::beginDialog(const SCCP_ADDRESS_T& remote_addr,
+                         UCHAR_T* ui/* = NULL*/, USHORT_T uilen/* = 0*/)
 {
-    remoteAddr = remote_addr;
+    remoteAddr = remote_addr;    
     beginDialog(ui, uilen);
 }
 
 
-void Dialog::beginDialog(const SCCP_ADDRESS_T& remote_addr)
-{
-    remoteAddr = remote_addr;
-    beginDialog(NULL, 0);
-}
-
-void Dialog::beginDialog()
-{
-    beginDialog(NULL, 0);
-}
-
 void Dialog::continueDialog()
 {
-  smsc_log_debug(tcapLogger,"CONTINUE_REQ");
-  smsc_log_debug(tcapLogger," SSN: 0x%X", session->getSSN());
-  smsc_log_debug(tcapLogger," UserID: 0x%X", MSG_USER_ID );
-  smsc_log_debug(tcapLogger," TcapInstanceID: 0x%X", TCAP_INSTANCE_ID );
-  smsc_log_debug(tcapLogger," DialogID: 0x%X", did );
-  smsc_log_debug(tcapLogger," PriOrder: 0x%X", priority );
-  smsc_log_debug(tcapLogger," QoS: 0x%X", qSrvc );
-  smsc_log_debug(tcapLogger," Org. address: %s" , dump(session->ssfAddr.addrLen ,session->ssfAddr.addr  ).c_str() );
-  smsc_log_debug(tcapLogger," App. context: %s" , dump(ac.acLen ,ac.ac ).c_str() );
+    smsc_log_debug(logger,"CONTINUE_REQ");
+    smsc_log_debug(logger," SSN: 0x%X", dSSN);
+    smsc_log_debug(logger," UserID: 0x%X", MSG_USER_ID );
+    smsc_log_debug(logger," TcapInstanceID: 0x%X", TCAP_INSTANCE_ID );
+    smsc_log_debug(logger," DialogID: 0x%X", _dId );
+    smsc_log_debug(logger," PriOrder: 0x%X", priority );
+    smsc_log_debug(logger," QoS: 0x%X", qSrvc );
+    smsc_log_debug(logger," Org. address: %s" , dump(ownAddr.addrLen, ownAddr.addr).c_str() );
+    smsc_log_debug(logger," App. context: %s" , dump(ac.acLen ,ac.ac ).c_str() );
 
-  USHORT_T result = EINSS7_I97TContinueReq(
-    session->getSSN(),
-    MSG_USER_ID,
-    TCAP_INSTANCE_ID,
-    did,
-    priority,
-    qSrvc,
-    session->ssfAddr.addrLen,
-    session->ssfAddr.addr,
-    ac.acLen,
-    ac.ac,
-    0,
-    NULL);
+    USHORT_T result =
+        EINSS7_I97TContinueReq(dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId,
+                               priority, qSrvc, ownAddr.addrLen, ownAddr.addr,
+                               ac.acLen, ac.ac, 0, NULL);
 
-  if(result != 0)
-    throw runtime_error( format("ContinueReq failed with code %d (%s)", result,getTcapReasonDescription(result)));
+    if (result != 0)
+        throw runtime_error( format("ContinueReq failed with code %d (%s)",
+                                    result,getTcapReasonDescription(result)));
 }
 
 void Dialog::endDialog(USHORT_T termination)
 {
-  smsc_log_debug(tcapLogger,"END_REQ");
-  smsc_log_debug(tcapLogger," SSN: 0x%X", session->getSSN());
-  smsc_log_debug(tcapLogger," UserID: 0x%X", MSG_USER_ID );
-  smsc_log_debug(tcapLogger," TcapInstanceID: 0x%X", TCAP_INSTANCE_ID );
-  smsc_log_debug(tcapLogger," DialogID: 0x%X", did );
-  smsc_log_debug(tcapLogger," PriOrder: 0x%X", priority );
-  smsc_log_debug(tcapLogger," QoS: 0x%X", qSrvc );
-  smsc_log_debug(tcapLogger," Termination: 0x%X", termination );
-  smsc_log_debug(tcapLogger," App. context: %s" , dump(ac.acLen ,ac.ac ).c_str() );
+    smsc_log_debug(logger,"END_REQ");
+    smsc_log_debug(logger," SSN: 0x%X", dSSN);
+    smsc_log_debug(logger," UserID: 0x%X", MSG_USER_ID );
+    smsc_log_debug(logger," TcapInstanceID: 0x%X", TCAP_INSTANCE_ID );
+    smsc_log_debug(logger," DialogID: 0x%X", _dId );
+    smsc_log_debug(logger," PriOrder: 0x%X", priority );
+    smsc_log_debug(logger," QoS: 0x%X", qSrvc );
+    smsc_log_debug(logger," Termination: 0x%X", termination );
+    smsc_log_debug(logger," App. context: %s" , dump(ac.acLen ,ac.ac ).c_str() );
 
-  USHORT_T result = EINSS7_I97TEndReq(
-    session->getSSN(),
-    MSG_USER_ID,
-    TCAP_INSTANCE_ID,
-    did,
-    priority,
-    qSrvc,
-    termination,
-    ac.acLen,
-    ac.ac,
-    0,
-    NULL);
+    USHORT_T result =
+        EINSS7_I97TEndReq(dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId,
+                          priority, qSrvc, termination,
+                          ac.acLen, ac.ac, 0, NULL);
 
-  if(result != 0)
-    throw runtime_error( format("EndReq failed with code %d (%s)", result,getTcapReasonDescription(result)));
+    if (result != 0)
+        throw runtime_error( format("EndReq failed with code %d (%s)",
+                                    result,getTcapReasonDescription(result)));
 }
 
 
-void Dialog::timerReset()
+void Dialog::sendInvoke(Invoke * inv)
 {
-  smsc_log_debug(tcapLogger,"TIME_RESET_REQ");
-  smsc_log_debug(tcapLogger," SSN: 0x%X", session->getSSN());
-  smsc_log_debug(tcapLogger," UserID: 0x%X", MSG_USER_ID );
-  smsc_log_debug(tcapLogger," TcapInstanceID: 0x%X", TCAP_INSTANCE_ID );
-  smsc_log_debug(tcapLogger," DialogID: 0x%X", did );
+    RawBuffer   op, params;
+    inv->encode(op, params); //throws exception
 
-  USHORT_T result = EINSS7_I97TTimerResetReq
-  (
-      session->getSSN(),
-      MSG_USER_ID,
-      TCAP_INSTANCE_ID,
-      did,
-      1
-    );
+    const Invoke * linked = inv->getLinkedTo();
+    USHORT_T invTimeout = inv->getTimeout();
 
-  if(result != 0)
-    throw runtime_error( format("TimerResetReq failed with code %d (%s)", result,getTcapReasonDescription(result)));
+    if (!invTimeout)
+        invTimeout = _timeout;
 
+    smsc_log_debug(logger, "EINSS7_I97TInvokeReq("
+                "ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
+                "invokeId=%d, lunkedused=\"%s\", linkedid=%d, "
+                "tag=\"%s\", opcode[%d]={%s}, parameters[%d]={%s})",
+                dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId,
+                inv->getId(), linked ? "YES" : "NO", linked ? linked->getId() : 0,
+                (inv->getTag() == EINSS7_I97TCAP_OPERATION_TAG_LOCAL) ? "LOCAL" : "GLOBAL",
+                op.size(), dump(op.size(), &op[0]).c_str(),
+                params.size(), dump(params.size(), &params[0]).c_str());
+
+    UCHAR_T result = 
+        EINSS7_I97TInvokeReq(dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId, inv->getId(), 
+            linked ? EINSS7_I97TCAP_LINKED_ID_USED : EINSS7_I97TCAP_LINKED_ID_NOT_USED,
+            linked ? linked->getId() : 0,
+            EINSS7_I97TCAP_OP_CLASS_1, invTimeout, inv->getTag(),
+            op.size(), &op[0], params.size(), &params[0]);
+
+    if (result != 0)
+        throw runtime_error( format("InvokeReq failed with code %d (%s)",
+                                    result,getTcapReasonDescription(result)));
 }
 
-Invoke* Dialog::invoke(UCHAR_T opcode)
+void Dialog::sendResultLast(InvokeResultLast* res)
 {
-  Invoke* invoke = new Invoke(getNextInvokeId(),
-                              EINSS7_I97TCAP_OPERATION_TAG_LOCAL, opcode);
-  //register invoke if OPERATION has RESULT/ERRORS defined,
-  //in order to provide possibility to call result/error listeners
-  OperationFactory * fact = ApplicationContextFactory::getFactory(_ac_idx);
-  if (fact->hasResult(opcode) || fact->hasErrors(opcode))
-      originating.insert(InvokeMap::value_type(invoke->getId(), invoke));
-  else
-      terminating.insert(InvokeMap::value_type(invoke->getId(), invoke));
-  return invoke;
+    RawBuffer   op, params;
+    res->encode(op, params);
+
+    smsc_log_debug(logger, "EINSS7_I97TResultLReq("
+                "ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
+                "invokeId=%d, tag=\"%s\", opcode[%d]={%s}, parameters[%d]={%s})",
+                dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId,
+                res->getId(), 
+                (res->getTag() == EINSS7_I97TCAP_OPERATION_TAG_LOCAL) ? "LOCAL" : "GLOBAL",
+                op.size(), dump(op.size(), &op[0]).c_str(),
+                params.size(), dump(params.size(), &params[0]).c_str());
+
+    UCHAR_T result =
+        EINSS7_I97TResultLReq(dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId,
+    	res->getId(), res->getTag(),
+        op.size(), &op[0], params.size(), &params[0]);
+
+    if (result != 0)
+  	throw runtime_error( format("ResultLReq failed with code %d (%s)",
+                                    result,getTcapReasonDescription(result)));
+}
+
+void Dialog::sendResultNotLast(InvokeResultNotLast* res)
+{
+    RawBuffer   op, params;
+    res->encode(op, params);
+
+    smsc_log_debug(logger, "EINSS7_I97TResultNLReq("
+                "ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
+                "invokeId=%d, tag=\"%s\", opcode[%d]={%s}, parameters[%d]={%s})",
+                dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId,
+                res->getId(), 
+                (res->getTag() == EINSS7_I97TCAP_OPERATION_TAG_LOCAL) ? "LOCAL" : "GLOBAL",
+                op.size(), dump(op.size(), &op[0]).c_str(),
+                params.size(), dump(params.size(), &params[0]).c_str());
+
+    UCHAR_T result =
+        EINSS7_I97TResultNLReq(dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId,
+        res->getId(), res->getTag(),
+        op.size(), &op[0], params.size(), &params[0]);
+
+    if (result != 0)
+        throw runtime_error( format("ResultNLReq failed with code %d (%s)",
+                                    result,getTcapReasonDescription(result)));
+}
+
+
+void Dialog::sendResultError(InvokeResultError* res)
+{
+    RawBuffer   op, params;
+    res->encode(op, params);
+
+    smsc_log_debug(logger, "EINSS7_I97TUErrorReq("
+                "ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
+                "invokeId=%d, tag=\"%s\", opcode[%d]={%s}, parameters[%d]={%s})",
+                dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId,
+                res->getId(), 
+                (res->getTag() == EINSS7_I97TCAP_OPERATION_TAG_LOCAL) ? "LOCAL" : "GLOBAL",
+                op.size(), dump(op.size(), &op[0]).c_str(),
+                params.size(), dump(params.size(), &params[0]).c_str());
+
+    UCHAR_T result =
+        EINSS7_I97TUErrorReq(dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId,
+        res->getId(), res->getTag(),
+        op.size(), &op[0], params.size(), &params[0]);
+
+    if (result != 0)
+        throw runtime_error( format("UErrorReq failed with code %d (%s)",
+                                    result,getTcapReasonDescription(result)));
+}
+
+
+void Dialog::resetInvokeTimer(UCHAR_T invokeId)
+{
+    smsc_log_debug(logger,"TIME_RESET_REQ");
+    smsc_log_debug(logger," SSN: 0x%X", dSSN);
+    smsc_log_debug(logger," UserID: 0x%X", MSG_USER_ID );
+    smsc_log_debug(logger," TcapInstanceID: 0x%X", TCAP_INSTANCE_ID );
+    smsc_log_debug(logger," DialogID: 0x%X", _dId );
+    smsc_log_debug(logger," InvokeID: 0x%X", invokeId );
+
+    USHORT_T result = 
+        EINSS7_I97TTimerResetReq(dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId, invokeId);
+
+    if (result != 0)
+        throw runtime_error( format("TimerResetReq failed with code %d (%s)",
+                                    result,getTcapReasonDescription(result)));
+}
+
+Invoke* Dialog::initInvoke(UCHAR_T opcode, USHORT_T timeout/* = 0*/)
+{
+    Invoke::InvokeResponse  resp = Invoke::respNone;
+    OperationFactory * fact = ApplicationContextFactory::getFactory(_ac_idx);
+
+    if (fact->hasErrors(opcode))
+        resp = Invoke::respError;
+    if (fact->hasResult(opcode))
+        resp = Invoke::respResultOrError;
+
+    Invoke* invoke = new Invoke(this, getNextInvokeId(),
+                              EINSS7_I97TCAP_OPERATION_TAG_LOCAL, opcode, resp);
+    invoke->setTimeout(timeout ? timeout : _timeout);
+
+    //register invoke if OPERATION has RESULT/ERRORS defined,
+    //in order to provide possibility to call result/error listeners
+    if (resp != Invoke::respNone)
+        originating.insert(InvokeMap::value_type(invoke->getId(), invoke));
+    else
+        terminating.insert(InvokeMap::value_type(invoke->getId(), invoke));
+    return invoke;
+}
+
+void Dialog::releaseInvoke(UCHAR_T invId)
+{
+    //search both maps for Invoke and unregister it
+    InvokeMap::const_iterator it = originating.find(invId);
+    if (it == originating.end()) {
+        it = terminating.find(invId);
+        if (it != terminating.end()) {
+            Invoke * inv = (*it).second;
+            terminating.erase(invId);
+            delete inv;
+        }
+    } else {
+        Invoke * inv = (*it).second;
+        originating.erase(invId);
+        delete inv;
+    }
 }
 
 /* ------------------------------------------------------------------------ *
@@ -217,9 +331,18 @@ USHORT_T Dialog::handleContinueDialog()
   return MSG_OK;
 }
 
-USHORT_T Dialog::handleEndDialog()
+USHORT_T Dialog::handleEndDialog(bool compPresent)
 {
-  return MSG_OK;
+    smsc_log_debug(logger, "TCAP Dialog[%d] got T_END_IND, components are %sexpected",
+                   _dId, compPresent ? "" : "not ");
+    //NOTE: calling onDialogREnd() may lead to this Dialog destruction,
+    //so iterate over ListenerList copy.
+    ListenerList cpList = listeners;
+    for (ListenerList::iterator it = cpList.begin(); it != cpList.end(); it++) {
+        DialogListener* ptr = *it;
+        ptr->onDialogREnd(compPresent);
+    }
+    return MSG_OK;
 }
 
 //Reports dialog abort to dialogListener
@@ -246,7 +369,7 @@ USHORT_T Dialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const 
     assert( oplen > 0 );
     assert( tag == EINSS7_I97TCAP_OPERATION_TAG_LOCAL );
 
-    Invoke  invoke(invId, tag, op[0]);
+    Invoke  invoke(this, invId, tag, op[0]);
 
     if (pmlen) { //operation parameters present
         Component* comp = ApplicationContextFactory::getFactory(_ac_idx)->createArg(op[0]);
@@ -273,7 +396,7 @@ USHORT_T Dialog::handleLCancelInvoke(UCHAR_T invId)
     InvokeMap::const_iterator it = originating.find(invId);
     if (it == originating.end()) {
         it = terminating.find(invId);
-        if (it != originating.end())
+        if (it != terminating.end())
             inv = (*it).second;
     } else
         inv = (*it).second;
@@ -293,7 +416,7 @@ USHORT_T Dialog::handleResultLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, co
     //search for originating Invoke, prepare result and call invoke result listeners
     InvokeMap::const_iterator it = originating.find(invId);
     if (it != originating.end()) {
-        InvokeResultLast  result(invId, tag, op[0]);
+        InvokeResultLast  result(this, invId, tag, op[0]);
 
         Component* resParm = ApplicationContextFactory::getFactory(_ac_idx)->createRes(op[0]);
         assert(resParm);
@@ -319,7 +442,7 @@ USHORT_T Dialog::handleResultNotLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen,
     //search for originating Invoke, prepare result and call invoke result listeners
     InvokeMap::const_iterator it = originating.find(invId);
     if (it != originating.end()) {
-        InvokeResultNotLast  result(invId, tag, op[0]);
+        InvokeResultNotLast  result(this, invId, tag, op[0]);
 
         Component* resParm = ApplicationContextFactory::getFactory(_ac_idx)->createRes(op[0]);
         assert(resParm);
@@ -345,7 +468,7 @@ USHORT_T Dialog::handleUserError(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, con
     //search for originating Invoke, prepare result and call invoke result listeners
     InvokeMap::const_iterator it = originating.find(invId);
     if (it != originating.end()) {
-        InvokeResultError  resErr(invId, tag, op[0]);
+        InvokeResultError  resErr(this, invId, tag, op[0]);
 
         //Error may have no parameters
         Component* errParm = ApplicationContextFactory::getFactory(_ac_idx)->createErr(op[0]);

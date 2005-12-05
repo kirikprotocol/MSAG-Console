@@ -29,7 +29,13 @@ void InapOpResListener::error(TcapEntity* resE)
 
 void InapOpResListener::lcancel()
 {
-    orgInap->onOperationLCancel(orgInv);
+    if ((orgInv->getResponseType() == Invoke::respResultOrError)
+        && (orgInv->getStatus() == Invoke::resWait)) {
+        orgInap->onOperationLCancel(orgInv);
+    } else { //just release original Invoke and its Listener
+        orgInv->setListener(NULL);
+        orgInap->releaseOperation(orgInv);
+    }
 }
 
 
@@ -41,16 +47,18 @@ Invoke * InapOpResListener::getOrgInv() const
 /* ************************************************************************** *
  * class Inap implementation:
  * ************************************************************************** */
-Inap::Inap(Session* pSession, SSF * ssfHandler)
-    : ssfHdl(ssfHandler)
-    , session(pSession)
-    , logger(Logger::getInstance("smsc.inman.inap.Inap"))
-
+Inap::Inap(Session* pSession, SSF * ssfHandler,
+           USHORT_T timeout/* = 0*/, Logger * uselog/* = NULL*/)
+    : ssfHdl(ssfHandler), session(pSession)
+    , logger(uselog), _state(Inap::ctrIdle)
 {
     assert(ssfHandler);
     assert(pSession);
+    if (!logger)
+        logger = Logger::getInstance("smsc.inman.Inap");
     dialog = session->openDialog(id_ac_cap3_sms_AC);
     assert(dialog);
+    dialog->setInvokeTimeout(timeout);
     dialog->addListener(this);
 }
 
@@ -58,23 +66,70 @@ Inap::~Inap()
 {
     dialog->removeListener(this);
 
+    //this is the optimized variant of releaseAllOperations()
     ResultHandlersMAP::const_iterator it;
     for (it = resHdls.begin(); it != resHdls.end(); it++) {
         InapOpResListener * ires = (*it).second;
         (ires->getOrgInv())->setListener(NULL);
-        //Invoke will be deleted by ~Dialog()
         delete ires;
     }
-    session->closeDialog(dialog);
+    //All remaining Invokes will be deleted by ~Dialog()
     delete dialog;
 }
 
+Invoke* Inap::initOperation(UCHAR_T opcode)
+{
+    Invoke* op = dialog->initInvoke(opcode);
+    assert( op );
+    InapOpResListener * ires = new InapOpResListener(op, this);
+    assert(ires);
+    op->setListener(ires);
+    resHdls.insert(ResultHandlersMAP::value_type(op->getId(), ires));
+    smsc_log_debug(logger, "Inap: initiated Invoke[%u] (opcode = %u), respType: %d",
+                   op->getId(), op->getOpcode(), op->getResponseType());
+    return op;
+}
+
+void Inap::releaseAllOperations(void)
+{
+    ResultHandlersMAP::const_iterator it;
+    for (it = resHdls.begin(); it != resHdls.end(); it++) {
+        InapOpResListener * ires = (*it).second;
+        Invoke * inv = ires->getOrgInv();
+        inv->setListener(NULL);
+        delete ires;
+        smsc_log_debug(logger, "Inap: releasing Invoke[%u] (opcode = %u), respType: %d, status: %d",
+                       inv->getId(), inv->getOpcode(), inv->getResponseType(), inv->getStatus());
+        dialog->releaseInvoke(inv->getId());
+    }
+    resHdls.clear();
+}
+
+void Inap::releaseOperation(Invoke * inv)
+{
+    USHORT_T invId = inv->getId();
+    smsc_log_debug(logger, "Inap: releasing Invoke[%u] (opcode = %u), respType: %d, status: %d",
+                   invId, inv->getOpcode(), inv->getResponseType(), inv->getStatus());
+
+    ResultHandlersMAP::const_iterator it = resHdls.find(invId);
+    if (it != resHdls.end()) {
+        dialog->releaseInvoke(invId);
+        InapOpResListener * ires = (*it).second;
+        resHdls.erase(invId);
+        delete ires;
+    }
+}
+
+//Called if Operation got ResultError
 void Inap::onOperationError(Invoke *op, TcapEntity * resE)
 {
+    UCHAR_T opcode = op->getOpcode();
     smsc_log_error(logger, "Inap: Invoke[%u] (opcode = %u) got an error: %d",
-                   (unsigned)op->getId(), (unsigned)op->getOpcode(),
-                   (unsigned)resE->getOpcode());
-    switch(op->getOpcode()) {
+                   (unsigned)op->getId(), (unsigned)opcode, (unsigned)resE->getOpcode());
+    releaseOperation(op);
+
+    //call operation errors handler
+    switch(opcode) {
     case InapOpCode::InitialDPSMS: {
         ssfHdl->abortSMS(resE->getOpcode(), false);
     } break;
@@ -84,11 +139,16 @@ void Inap::onOperationError(Invoke *op, TcapEntity * resE)
     }
 }
 
+//Called if Operation got L_CANCEL while waiting result
 void Inap::onOperationLCancel(Invoke *op)
 {
+    UCHAR_T opcode = op->getOpcode();
     smsc_log_error(logger, "Inap: Invoke[%u] (opcode = %u) got L_CANCEL",
-                   (unsigned)op->getId(), (unsigned)op->getOpcode());
-    switch(op->getOpcode()) {
+                   (unsigned)op->getId(), (unsigned)opcode);
+    releaseOperation(op);
+
+    //call operation errors handler
+    switch(opcode) {
     case InapOpCode::InitialDPSMS: {
         ssfHdl->abortSMS(smsc::inman::tcapResourceLimitation, true);
     } break;
@@ -101,10 +161,26 @@ void Inap::onOperationLCancel(Invoke *op)
 /* ------------------------------------------------------------------------ *
  * DialogListener interface
  * ------------------------------------------------------------------------ */
+//SSF sent DialogPAbort (some system error on SSF side).
 void Inap::onDialogPAbort(UCHAR_T abortCause)
 {
+    _state = Inap::ctrAborted;
+    releaseAllOperations();
     ssfHdl->abortSMS(abortCause, true);
 }
+
+//SSF sent DialogEnd, it's either succsesfull contract completion,
+//or some logic error (f.ex. timeout expiration) on SSF side.
+void Inap::onDialogREnd(bool compPresent)
+{
+    if (_state < Inap::ctrReported)
+        onDialogPAbort(smsc::inman::tcapResourceLimitation);
+    else {
+        _state = Inap::ctrFinished;
+        releaseAllOperations();
+    }
+}
+
 
 void Inap::onDialogInvoke(Invoke* op)
 {
@@ -122,13 +198,16 @@ void Inap::onDialogInvoke(Invoke* op)
     }   break;
     case InapOpCode::RequestReportSMSEvent: {
         assert(op->getParam());
+        _state = Inap::ctrRequested;
         ssfHdl->requestReportSMSEvent(static_cast<RequestReportSMSEventArg*>(op->getParam()));
     }   break;
     case InapOpCode::ContinueSMS: {
+        _state = Inap::ctrContinued;
         ssfHdl->continueSMS();
     }   break;
     case InapOpCode::ReleaseSMS: {
         assert(op->getParam());
+        _state = Inap::ctrReleased;
         ssfHdl->releaseSMS(static_cast<ReleaseSMSArg*>(op->getParam()));
     }   break;
     case InapOpCode::ResetTimerSMS: {
@@ -144,32 +223,24 @@ void Inap::onDialogInvoke(Invoke* op)
  * ------------------------------------------------------------------------ */
 void Inap::initialDPSMS(InitialDPSMSArg* arg)
 {
-    Invoke* op = dialog->invoke( InapOpCode::InitialDPSMS );
-    assert( op );
-    assert( arg );
+    assert(arg);
+    Invoke* op = initOperation(InapOpCode::InitialDPSMS);
 
-    InapOpResListener * ires = new InapOpResListener(op, this);
-    resHdls.insert(ResultHandlersMAP::value_type(op->getId(), ires));
-    op->setListener(ires);
-
-    op->setParam( arg );
-    op->send(dialog);
+    op->setParam(arg);
+    op->send();
     dialog->beginDialog();
+    _state = Inap::ctrInited;
 }
 
 void Inap::eventReportSMS(EventReportSMSArg* arg)
 {
-    Invoke* op = dialog->invoke( InapOpCode::EventReportSMS );
-    assert( op );
-    assert( arg );
+    assert(arg);
+    Invoke* op = initOperation(InapOpCode::EventReportSMS);
 
-    InapOpResListener * ires = new InapOpResListener(op, this);
-    resHdls.insert(ResultHandlersMAP::value_type(op->getId(), ires));
-    op->setListener(ires);
-
-    op->setParam( arg );
-    op->send( dialog );
+    op->setParam(arg);
+    op->send();
     dialog->continueDialog();
+    _state = Inap::ctrReported;
 }
 
 } //inap
