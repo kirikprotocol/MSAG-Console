@@ -6,7 +6,7 @@
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.mcisme.beans.Rule" />
 <jsp:setProperty name="bean" property="*"/>
 <%
-  TITLE="Missed Calls Info SME Administration";
+  TITLE=getLocString("mcisme.title");
   MENU0_SELECTION = "MENU0_SERVICES";
   int beanResult = bean.process(request);
   switch(beanResult)
@@ -22,7 +22,7 @@
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="inc/header.jsp"%><%
-  String rulePageSubtitle = "Rule "+(bean.isCreateRule() ? "create":"modify");
+  String rulePageSubtitle = getLocString("mcisme.subtitle.rule_"+(bean.isCreateRule() ? "c":"m"));
 %>
 <div class=content>
 <input type=hidden name=initialized value=true>
@@ -55,8 +55,8 @@
 </table>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbDone",   "Done",   "Submit changes");
-page_menu_button(out, "mbCancel", "Cancel", "Discard changes");
+page_menu_button(session, out, "mbDone",   "common.buttons.done",   "mcisme.hint.done_edit");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "mcisme.hint.cancel_changes");
 page_menu_space(out);
 page_menu_end(out);
 %><%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>

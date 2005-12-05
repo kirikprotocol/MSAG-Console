@@ -6,8 +6,8 @@
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.mcisme.beans.Templates" />
 <jsp:setProperty name="bean" property="*"/>
 <%
-	TITLE="Missed Calls Info SME Administration";
-	MENU0_SELECTION = "MENU0_SERVICES";
+  TITLE=getLocString("mcisme.title");
+  MENU0_SELECTION = "MENU0_SERVICES";
   int beanResult = bean.process(request);
   switch (beanResult)
   {
@@ -51,10 +51,10 @@ function checkCheckboxesForNotifyTemplate() {
 </script>
 <div class=content>
 <input type=hidden name=editTemplate value="<%=bean.getEditTemplate()%>">
-<div class=page_subtitle>Inform abonents templates</div>
+<div class=page_subtitle><%= getLocString("mcisme.subtitle.inform_template")%></div>
 <table id="inform_table" cellspacing=5>
 <tr><td>
-  <label>Default template:</label>
+  <label><%= getLocString("mcisme.label_default_template")%></label>
   <select name="defaultInformId" id="defaultInformId">
   <%for (Iterator i=informList.iterator(); i.hasNext();) {
     Templates.Identity id = (Templates.Identity)i.next();%>
@@ -79,7 +79,7 @@ function checkCheckboxesForNotifyTemplate() {
                  value="<%=encName%>" <%=bean.isInformTemplateChecked(id.name) ? "checked":""%>
                  onClick="checkCheckboxesForInformTemplate();"></td>
       <td><%= id.id%></td>
-      <td><a href="#" title="Edit inform template"
+      <td><a href="#" title="<%= getLocString("mcisme.hint.inform_template_edit")%>"
              onClick='return editMCISmeTemplate("<%=encName%>", "mbInformEdit");'><%=encName%></a></td>
     </tr><%
   }%>
@@ -88,9 +88,9 @@ function checkCheckboxesForNotifyTemplate() {
 </table>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbInformAdd",    "Add template",  "Add new inform template");
-page_menu_button(out, "mbInformDelete", "Delete template(s)", "Delete selected inform template(s)", 
-                      "return confirm('Are you sure to delete all checked inform templates(s)?');");
+page_menu_button(session, out, "mbInformAdd",    "mcisme.button.add_template", "mcisme.hint.add_inform_template");
+page_menu_button(session, out, "mbInformDelete", "mcisme.button.del_template", "mcisme.button.del_inform_template",
+                               "return confirm('"+getLocString("mcisme.confirm.del_inform_template")+"');");
 page_menu_space(out);
 page_menu_end(out);
 rowN = 1;
@@ -98,10 +98,10 @@ List notifyList = bean.getNotifyTemplates();
 %>
 <script>checkCheckboxesForInformTemplate();</script>
 <div class=content>
-<div class=page_subtitle>Notify callers templates</div>
+<div class=page_subtitle><%= getLocString("mcisme.subtitle.notify_template")%></div>
 <table id="notify_table" cellspacing=5>
 <tr><td>
-  <label>Default template:</label>
+  <label><%= getLocString("mcisme.label_default_template")%></label>
   <select name="defaultNotifyId" id="defaultNotifyId">
   <%for (Iterator i=notifyList.iterator(); i.hasNext();) {
       Templates.Identity id = (Templates.Identity)i.next();%>
@@ -126,7 +126,7 @@ List notifyList = bean.getNotifyTemplates();
                  value="<%=encName%>" <%=bean.isNotifyTemplateChecked(id.name) ? "checked":""%>
                  onclick="checkCheckboxesForNotifyTemplate();"></td>
       <td><%= id.id%></td>
-      <td><a href="#" title="Edit notify template"
+      <td><a href="#" title="<%= getLocString("mcisme.hint.notify_template_edit")%>"
              onClick='return editMCISmeTemplate("<%=encName%>", "mbNotifyEdit");'><%=encName%></a></td>
     </tr><%
   }%>
@@ -135,9 +135,9 @@ List notifyList = bean.getNotifyTemplates();
 </table>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbNotifyAdd",    "Add template",  "Add new notify template");
-page_menu_button(out, "mbNotifyDelete", "Delete template(s)", "Delete selected notify template(s)",
-                      "return confirm('Are you sure to delete all checked notify templates(s)?');");
+page_menu_button(session, out, "mbNotifyAdd",    "mcisme.button.add_template", "mcisme.button.add_notify_template");
+page_menu_button(session, out, "mbNotifyDelete", "mcisme.button.del_template", "mcisme.button.del_notify_template",
+                               "return confirm('"+getLocString("mcisme.confirm.del_notify_template")+"');");
 page_menu_space(out);
 page_menu_end(out);%>
 <script>checkCheckboxesForNotifyTemplate();</script>

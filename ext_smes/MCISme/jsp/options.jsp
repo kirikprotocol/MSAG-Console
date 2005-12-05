@@ -6,16 +6,16 @@
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.mcisme.beans.Options" />
 <jsp:setProperty name="bean" property="*"/>
 <%
-	TITLE="Missed Calls Info SME Administration";
+	TITLE=getLocString("mcisme.title");
 	MENU0_SELECTION = "MENU0_SERVICES";
-  int beanResult = bean.process(request);
+    int beanResult = bean.process(request);
 %><%@ include file="inc/menu_switch.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="inc/header.jsp"%>
 <%@ include file="/WEB-INF/inc/collapsing_tree.jsp"%>
 <div class=content>
 <input type=hidden name=initialized value=true>
-<div class=page_subtitle>General options</div>
+<div class=page_subtitle><%= getLocString("mcisme.subtitle.gen_options")%></div>
 <table class=properties_list cellspacing=0 width="100%">
 <col width="20%">
 <col width="80%">
@@ -155,7 +155,7 @@ function switchConstraint()
 }
 switchConstraint();
 </script>
-<div class=page_subtitle>Release responce settings and codes</div>
+<div class=page_subtitle><%= getLocString("mcisme.subtitle.rr_settings")%></div>
 <table class=properties_list cellspacing=0 width="100%" <%rowN=0;%>>
 <col width="40%">
 <col width="60%">
@@ -227,7 +227,7 @@ switchConstraint();
   <td>&nbsp;</td>
 </tr>
 </table>
-<div class=page_subtitle>Data Source</div>
+<div class=page_subtitle><%= getLocString("mcisme.subtitle.ds")%></div>
 <table class=properties_list cellspacing=0  width="100%" <%rowN=0;%>>
 <col width="20%">
 <col width="80%">
@@ -264,7 +264,7 @@ switchConstraint();
   <td><input class=txt name=dataSourceJdbcSource value="<%=StringEncoderDecoder.encode(bean.getDataSourceJdbcSource())%>"></td>
 </tr>
 </table>
-<div class=page_subtitle>MCI Profiler options</div>
+<div class=page_subtitle><%= getLocString("mcisme.subtitle.mci_prof_options")%></div>
 <table class=properties_list cellspacing=0  width="100%" <%rowN=0;%>>
 <col width="20%">
 <col width="80%">
@@ -303,8 +303,8 @@ switchConstraint();
 </table>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbDone",  "Done",  "Done editing");
-page_menu_button(out, "mbCancel", "Cancel", "Cancel changes", "clickCancel()");
+page_menu_button(session, out, "mbDone",   "common.buttons.done",   "mcisme.hint.done_edit");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "mcisme.hint.cancel_changes", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>

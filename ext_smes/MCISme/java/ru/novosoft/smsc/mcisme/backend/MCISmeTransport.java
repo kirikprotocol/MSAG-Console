@@ -23,8 +23,9 @@ class MCISmeTransport extends Service
   private static final String method_getStatistics_ID = "getStatistics";
   private static final String method_getRuntime_ID = "getRuntime";
 
-  public MCISmeTransport(ServiceInfo info, int port) throws AdminException {
+  public MCISmeTransport(ServiceInfo info, String host, int port) throws AdminException {
     super(info, port);
+    this.host = host;
   }
 
   private long[] decode(String str, int valuesCount) throws AdminException

@@ -6,7 +6,7 @@
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.mcisme.beans.Offsets" />
 <jsp:setProperty name="bean" property="*"/>
 <%
-  TITLE="Missed Calls Info SME Administration";
+  TITLE=getLocString("mcisme.title");
   MENU0_SELECTION = "MENU0_SERVICES";
   int beanResult = bean.process(request);
   switch (beanResult)
@@ -41,15 +41,15 @@ function checkCheckboxesForOffsets() {
 </script>
 <div class=content>
 <input type=hidden name=editOffset value="<%= bean.getEditOffset()%>">
-<div class=page_subtitle>User TimeZone offset rules</div>
+<div class=page_subtitle><%= getLocString("mcisme.subtitle.tz_rules")%></div>
 <table id="offsets_table" cellspacing=5>
 <tr><td>
   <table class=list cellspacing=1 width="100%">
   <col width="1%"  align=left><col width="20%" align=left><col width="79%" align=left>
   <tr class=row<%=(rowN++)&1%>>
     <th class=ico><img src="/images/ico16_checked_sa.gif" class=ico16 alt="&nbsp;"></th>
-    <th nowrap valign=top style="text-align: left">Offset name</th>
-    <th nowrap valign=top style="text-align: left">Offset (in hours)</th>
+    <th nowrap valign=top style="text-align: left"><%= getLocString("mcisme.label.tz_o_name")%></th>
+    <th nowrap valign=top style="text-align: left"><%= getLocString("mcisme.label.tzo_value")%></th>
   </tr>
   <%for (Iterator i=offsetsList.iterator(); i.hasNext();) {
     Offsets.Identity id = (Offsets.Identity)i.next();
@@ -58,7 +58,7 @@ function checkCheckboxesForOffsets() {
       <td><input class=check type=checkbox name=checked
                  value="<%=encName%>" <%= (bean.isChecked(id.name) ? "checked":"")%>
                  onClick="checkCheckboxesForOffsets();"></td>
-      <td><a href="#" title="Edit offset"
+      <td><a href="#" title="<%= getLocString("mcisme.hint.tz_edit")%>"
              onClick='return editMCISmeOffset("<%=encName%>", "mbEdit");'><%=encName%></a></td>
       <td><%= ((id.offset > 0) ? "+":"")+Integer.toString(id.offset)%></td>
     </tr><%
@@ -68,9 +68,9 @@ function checkCheckboxesForOffsets() {
 </table>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbAdd",    "Add new",  "Add new offset");
-page_menu_button(out, "mbDelete", "Delete offset(s)", "Delete selected offset(s)",
-                      "return confirm('Are you sure to delete all checked offset(s)?');");
+page_menu_button(session, out, "mbAdd",    "mcisme.button.add_new",  "mcisme.hint.add_new_tz");
+page_menu_button(session, out, "mbDelete", "mcisme.button.del_tz", "mcisme.hint.del_tz",
+                               "return confirm('"+getLocString("mcisme.confirm.tz")+"');");
 page_menu_space(out);
 page_menu_end(out);
 %>

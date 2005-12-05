@@ -9,10 +9,10 @@
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.mcisme.beans.EventsStatistics" />
 <jsp:setProperty name="bean" property="*"/>
 <%
-	TITLE="Missed Calls Info SME Administration";
+	TITLE=getLocString("mcisme.title");
 	MENU0_SELECTION = "MENU0_SERVICES";
-  int rowN = 0;
-  int beanResult = bean.process(request);
+    int rowN = 0;
+    int beanResult = bean.process(request);
 %><%@ include file="inc/menu_switch.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="inc/header.jsp"%>
@@ -24,15 +24,15 @@
 <col width="10%">
 <col width="40%">
 <tr class=row<%=rowN++&1%>>
-  <th style="text-align:right">From</th>
+  <th style="text-align:right"><%= getLocString("mcisme.label.from")%></th>
   <td><input class=calendarField id=fromDate name=fromDate value="<%=StringEncoderDecoder.encode(bean.getFromDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(fromDate, false, true);">...</button></td>
-  <th style="text-align:right">To</th>
+  <th style="text-align:right"><%= getLocString("mcisme.label.till")%></th>
   <td><input class=calendarField id=tillDate name=tillDate value="<%=StringEncoderDecoder.encode(bean.getTillDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(tillDate, false, true);">...</button></td>
 </tr>
 </table>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbQuery",  "Query",  "Query statistics");
+page_menu_button(session, out, "mbQuery",  "common.buttons.query",  "mcisme.hint.query_stat");
 page_menu_space(out);
 page_menu_end(out);
 
@@ -95,11 +95,6 @@ page_menu_end(out);
     %>
     </table>
     </div><%
-    page_menu_begin(out);
-    page_menu_button(out, "mbDone",  "Done",  "Done editing");
-    page_menu_button(out, "mbCancel", "Cancel", "Cancel changes", "clickCancel()");
-    page_menu_space(out);
-    page_menu_end(out);
   }
 %>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>

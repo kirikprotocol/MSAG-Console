@@ -9,10 +9,10 @@
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.mcisme.beans.Index" />
 <jsp:setProperty name="bean" property="*"/>
 <%
-  ServiceIDForShowStatus = Functions.getServiceId(request.getServletPath());
-	TITLE="Missed Calls Info SME Administration";
+    ServiceIDForShowStatus = Functions.getServiceId(request.getServletPath());
+	TITLE=getLocString("mcisme.title");
 	MENU0_SELECTION = "MENU0_SERVICES";
-  int beanResult = bean.process(request);
+    int beanResult = bean.process(request);
 %><%@ include file="inc/menu_switch.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="inc/header.jsp"%>
@@ -62,13 +62,13 @@ function checkApplyResetButtons()
     <col width="20%" align="right">
     <tr class=row0>
       <td style="padding-right:3px"><input class=check type=checkbox id=toStartService name=toStart value=service onClick="checkStartStop();"></td>
-      <th><label for=toStartSme>MCI Service</label></th>
+      <th><label for=toStartSme><%= getLocString("mcisme.label.mci_service")%></label></th>
       <td><%= serviceStatus(bean.getAppContext(), bean.getSmeId(),
                             "MCISme_RUNNING_STATUSERVICE_MCISme")%></td>
     </tr>
     <tr class=row1 id=profRow>
       <td style="padding-right:3px"><input class=check type=checkbox id=toStartProfiler name=toStart value=profiler onClick="checkStartStop();"></td>
-      <th><label for=toStartProfiler>MCI Profiler<label></th>
+      <th><label for=toStartProfiler><%= getLocString("mcisme.label.mci_profiler")%><label></th>
       <td><%= serviceStatus(bean.getAppContext(), bean.getProfilerSmeId(),
                             "MCIProf_RUNNING_STATUSERVICE_MCIProf")%></td>
     </tr>
@@ -86,23 +86,23 @@ function checkApplyResetButtons()
     <col width="80%">
     <col width="20%" align="right">
     <tr class=row0>
-      <th>General settings</th>
+      <th><%= getLocString("mcisme.label.get_settings")%></th>
       <td><%= configStatus(bean.isOptionsChanged())%></td>
     </tr>
     <tr class=row1>
-      <th>Drivers configuration</th>
+      <th><%= getLocString("mcisme.label.ds_drivers_config")%></th>
       <td><%= configStatus(bean.isDriversChanged())%></td>
     </tr>
     <tr class=row0>
-      <th>Templates definitions</th>
+      <th><%= getLocString("mcisme.label.templates_config")%></th>
       <td><%= configStatus(bean.isTemplatesChanged())%></td>
     </tr>
     <tr class=row1>
-      <th>Rules definitions</th>
+      <th><%= getLocString("mcisme.label.rules_config")%></th>
       <td><%= configStatus(bean.isRulesChanged())%></td>
     </tr>
     <tr class=row0>
-      <th>TimeZone Offsets</th>
+      <th><%= getLocString("mcisme.label.tz_offsets")%></th>
       <td><%= configStatus(bean.isOffsetsChanged())%></td>
     </tr>
     </table>
@@ -111,11 +111,11 @@ function checkApplyResetButtons()
 </table>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbStart", "Start", "Start selected service(s)");
-page_menu_button(out, "mbStop",  "Stop",  "Stop selected service(s)");
+page_menu_button(session, out, "mbStart", "common.buttons.start", "mcisme.hint.start_services");
+page_menu_button(session, out, "mbStop",  "common.buttons.stop",  "mcisme.hint.stop_services");
 page_menu_space(out);
-page_menu_button(out, "mbApply",  "Apply",  "Apply changes", bean.isConfigChanged());
-page_menu_button(out, "mbReset",  "Reset",  "Discard changes", bean.isConfigChanged());
+page_menu_button(session, out, "mbApply",  "common.buttons.apply",  "mcisme.hint.apply", bean.isConfigChanged());
+page_menu_button(session, out, "mbReset",  "common.buttons.reset",  "mcisme.hint.reset", bean.isConfigChanged());
 page_menu_end(out);
 %>
 <script language="JavaScript">
@@ -145,7 +145,7 @@ checkStartStop();
 </script><%
   CountersSet cstatSet = bean.getStatistics(); RuntimeSet  rstatSet = bean.getRuntime();
 %><div class=content>
-<div class=page_subtitle>Service runtime status</div>
+<div class=page_subtitle><%= getLocString("mcisme.subtitle.service_runtime")%></div>
 <table class=properties_list cellspacing=0 width="100%">
 <col width="20%" align=left>
 <col width="25%" align=left>
@@ -153,9 +153,9 @@ checkStartStop();
 <col width="25%" align=left>
 <thread>
   <tr class=row1>
-    <th>In service</th>
-    <th>In/Out queues</th>
-    <th>In/Out speed (sms per sec)</th>
+    <th><%= getLocString("mcisme.label.in_service")%></th>
+    <th><%= getLocString("mcisme.label.io_queues")%></th>
+    <th><%= getLocString("mcisme.label.io_speed")%></th>
     <th>&nbsp;</th>
   </tr>
   <tr class=row0>
@@ -166,7 +166,7 @@ checkStartStop();
   </tr>
 </thread>
 </table><br/>
-<div class=page_subtitle>Last hour statistics</div>
+<div class=page_subtitle><%= getLocString("mcisme.subtitle.lh_stat")%></div>
 <table class=properties_list cellspacing=0 width="100%">
 <col width="20%" align=left>
 <col width="25%" align=left>
@@ -174,10 +174,10 @@ checkStartStop();
 <col width="25%" align=left>
 <thread>
   <tr class=row1>
-    <th>Missed calls</th>
-    <th>Abonents informed</th>
-    <th>Failures count</th>
-    <th>Notifications sent</th>
+    <th><%= getLocString("mcisme.label.missed_calls")%></th>
+    <th><%= getLocString("mcisme.label.abonents_informed")%></th>
+    <th><%= getLocString("mcisme.label.failures_count")%></th>
+    <th><%= getLocString("mcisme.label.notifications_sent")%></th>
   </tr>
   <tr class=row0>
     <td nowrap valign=top><span datasrc=#tdcMCISmeStatuses DATAFORMATAS=html datafld="cstatMissed"><%= (cstatSet != null) ? cstatSet.missed:0%></span></td>

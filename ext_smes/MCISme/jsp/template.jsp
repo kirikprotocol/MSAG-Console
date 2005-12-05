@@ -9,7 +9,7 @@
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.mcisme.beans.Template" />
 <jsp:setProperty name="bean" property="*"/>
 <%
-	TITLE="Missed Calls Info SME Administration";
+	TITLE=getLocString("mcisme.title");
 	MENU0_SELECTION = "MENU0_SERVICES";
   int beanResult = bean.process(request);
 	switch(beanResult)
@@ -27,8 +27,9 @@
 <%@ include file="inc/header.jsp"%><%
   boolean informTemplate = bean.isInformTemplate();
   boolean createTemplate = bean.isCreateTemplate();
-  String templatePageSubtitle = ((informTemplate) ? "Inform":"Notify")+
-       " template "+((createTemplate) ? "create":"modify");
+  String templatePageSubtitle = getLocString("mcisme.subtitle.template_" +
+                                ((informTemplate) ? "inform_":"notify_") + 
+                                ((createTemplate) ? "c":"m"));
 %>
 <script>
 function checkMultiAndGroupping(show)
@@ -82,8 +83,8 @@ function checkMultiAndGroupping(show)
 </table>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbDone",   "Done",   "Submit changes");
-page_menu_button(out, "mbCancel", "Cancel", "Discard changes");
+page_menu_button(session, out, "mbDone",   "common.buttons.done",   "mcisme.hint.done_edit");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "mcisme.hint.cancel_changes");
 page_menu_space(out);
 page_menu_end(out);
 if (informTemplate) {%>

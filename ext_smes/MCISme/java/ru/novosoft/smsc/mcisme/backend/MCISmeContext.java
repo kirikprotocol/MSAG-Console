@@ -53,7 +53,8 @@ public class MCISmeContext
         this.smeId = smeId;
         this.appContext = appContext;
         resetConfig();
-        this.mciSme = new MCISme(appContext.getHostsManager().getServiceInfo(this.smeId), config.getInt("MCISme.Admin.port"));
+        this.mciSme = new MCISme(appContext.getHostsManager().getServiceInfo(this.smeId),
+                                 config.getString("MCISme.Admin.host"), config.getInt("MCISme.Admin.port"));
     }
 
     public Config loadCurrentConfig()

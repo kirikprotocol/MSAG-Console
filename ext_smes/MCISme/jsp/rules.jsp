@@ -6,7 +6,7 @@
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.mcisme.beans.Rules" />
 <jsp:setProperty name="bean" property="*"/>
 <%
-  TITLE="Missed Calls Info SME Administration";
+  TITLE=getLocString("mcisme.title");
   MENU0_SELECTION = "MENU0_SERVICES";
   int beanResult = bean.process(request);
   switch (beanResult)
@@ -41,15 +41,15 @@ function checkCheckboxesForRules() {
 </script>
 <div class=content>
 <input type=hidden name=editRule value="<%= bean.getEditRule()%>">
-<div class=page_subtitle>Redirect rules</div>
+<div class=page_subtitle><%= getLocString("mcisme.subtitle.redirect_rules")%></div>
 <table id="rules_table" cellspacing=5>
 <tr><td>
   <table class=list cellspacing=1 width="100%">
   <col width="1%"  align=left><col width="20%" align=left><col width="79%" align=left>
   <tr class=row<%=(rowN++)&1%>>
     <th class=ico><img src="/images/ico16_checked_sa.gif" class=ico16 alt="&nbsp;"></th>
-    <th nowrap valign=top style="text-align: left">Rule name</th>
-    <th nowrap valign=top style="text-align: left">Priority</th>
+    <th nowrap valign=top style="text-align: left"><%= getLocString("mcisme.label.rule_name")%></th>
+    <th nowrap valign=top style="text-align: left"><%= getLocString("mcisme.label.priority")%></th>
   </tr>
   <%for (Iterator i=rulesList.iterator(); i.hasNext();) {
     Rules.Identity id = (Rules.Identity)i.next();
@@ -58,7 +58,7 @@ function checkCheckboxesForRules() {
       <td><input class=check type=checkbox name=checked
                  value="<%=encName%>" <%= (bean.isChecked(id.name) ? "checked":"")%>
                  onClick="checkCheckboxesForRules();"></td>
-      <td><a href="#" title="Edit rule"
+      <td><a href="#" title="<%= getLocString("mcisme.hint.rule_edit")%>"
              onClick='return editMCISmeRule("<%=encName%>", "mbEdit");'><%=encName%></a></td>
       <td><%= id.priority%></td>
     </tr><%
@@ -68,9 +68,9 @@ function checkCheckboxesForRules() {
 </table>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbAdd",    "Add new",  "Add new rule");
-page_menu_button(out, "mbDelete", "Delete rule(s)", "Delete selected rule(s)",
-                      "return confirm('Are you sure to delete all checked rule(s)?');");
+page_menu_button(session, out, "mbAdd",    "mcisme.button.add_new",   "mcisme.hint.add_new_rule");
+page_menu_button(session, out, "mbDelete", "mcisme.button.del_rules", "mcisme.hint.del_rules",
+                               "return confirm('"+getLocString("mcisme.confirm.del_rules")+"');");
 page_menu_space(out);
 page_menu_end(out);
 %>
