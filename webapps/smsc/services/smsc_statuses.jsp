@@ -7,7 +7,11 @@ byte status = ServiceInfo.STATUS_UNKNOWN;
     try
     {
 		status = bean.getAppContext().getHostsManager().getServiceInfo(Constants.SMSC_SME_ID).getStatus();
-	} catch (Throwable e) {}
+	}
+    catch (Throwable e)
+    {
+        errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR), e);
+    }
 String result = Constants.SMSC_SME_ID + "\r\n";
     for (Iterator i = Constants.SMSC_serv_IDs.keySet().iterator(); i.hasNext();)
     {
@@ -37,5 +41,6 @@ String result = Constants.SMSC_SME_ID + "\r\n";
 				result += getLocString("common.statuses.unknown");
 				break;
 		}
+        result += " ";
     }
 out.print(result);%>

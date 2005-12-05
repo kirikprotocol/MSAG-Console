@@ -243,7 +243,7 @@ public class HostsManager
 	 ServiceInfo smscInfo = serviceManager.getInfo(Constants.SMSC_SME_ID);
 	 smscInfo.setStatus(getServiceStatus(Constants.SMSC_SME_ID));
 	 services.put(Constants.SMSC_SME_ID, smscInfo);
-     logger.debug("Refresh services: " + services.size() + " services found");
+//     logger.debug("Refresh services: " + services.size() + " services found");
      serviceManager.updateServices(services);
   }
 
