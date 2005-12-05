@@ -15,7 +15,7 @@ public class RuntimeSet
   public long inSpeed  = 0;
   public long outSpeed = 0;
 
-  public RuntimeSet() {};
+  public RuntimeSet() {}
   public RuntimeSet(long activeTasks, long inQueueSize, long outQueueSize, long inSpeed, long outSpeed)
   {
     this.activeTasks = activeTasks;
