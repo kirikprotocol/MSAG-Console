@@ -33,45 +33,61 @@ int Registrator::Execute()
     while(!isStopping)
     {
         SmppStatEvent si;
-        strcpy(si.smeId, "sme1");
-        strcpy(si.routeId, "route1");
-        si.smeProviderId = 1;
-        si.routeProviderId = 1;
-        si.counter = cntDelivered;
-        si.errCode = 1;
-        sm->registerEvent(si);
 
-        strcpy(si.smeId, "sme2");
-        strcpy(si.routeId, "route2");
-        si.smeProviderId = 2;
-        si.routeProviderId = 2;
-        si.counter = cntAccepted;
-        si.errCode = 1;
-        sm->registerEvent(si);
+        int count =  7. * ( (double)random() / 2147483648. ) + 1;
+        for(int i = 0; i<= count - 1; i++){
+            strcpy(si.smeId, "sme1");
+            strcpy(si.routeId, "route1");
+            si.smeProviderId = 1;
+            si.routeProviderId = 1;
+            si.counter = cntDelivered;
+            si.errCode = 1;
+            sm->registerEvent(si);
+        }
 
-        strcpy(si.smeId, "sme3");
-        strcpy(si.routeId, "route3");
-        si.smeProviderId = 3;
-        si.routeProviderId = 3;
-        si.counter = cntRejected;
-        si.errCode = 1;
-        sm->registerEvent(si);
+        count =  7. * ( (double)random() / 2147483648. ) + 1;
+        for(int i = 0; i<= count - 1; i++){
+            strcpy(si.smeId, "sme2");
+            strcpy(si.routeId, "route2");
+            si.smeProviderId = 2;
+            si.routeProviderId = 2;
+            si.counter = cntAccepted;
+            si.errCode = 1;
+            sm->registerEvent(si);
+        }
 
-        strcpy(si.smeId, "sme3");
-        strcpy(si.routeId, "route3");
-         si.smeProviderId = 3;
-        si.routeProviderId = 3;
-        si.counter = cntGw_Rejected;
-        si.errCode = 1;
-        sm->registerEvent(si);
+        count =  7. * ( (double)random() / 2147483648. ) + 1;
+        for(int i = 0; i <= count - 1; i++){
+            strcpy(si.smeId, "sme3");
+            strcpy(si.routeId, "route3");
+            si.smeProviderId = 3;
+            si.routeProviderId = 3;
+            si.counter = cntRejected;
+            si.errCode = 1;
+            sm->registerEvent(si);
+        }
 
-        strcpy(si.smeId, "sme3");
-        strcpy(si.routeId, "route3");
-        si.smeProviderId = 3;
-        si.routeProviderId = 3;
-        si.counter = cntFailed;
-        si.errCode = 1;
-        sm->registerEvent(si);
+        count =  7. * ( (double)random() / 2147483648. ) + 1;
+        for(int i = 0; i<= count - 1; i++){
+            strcpy(si.smeId, "sme3");
+            strcpy(si.routeId, "route3");
+            si.smeProviderId = 3;
+            si.routeProviderId = 3;
+            si.counter = cntGw_Rejected;
+            si.errCode = 1;
+            sm->registerEvent(si);
+        }
+
+        count =  7. * ( (double)random() / 2147483648. ) + 1;
+        for(int i = 0; i<= count - 1; i++){
+            strcpy(si.smeId, "sme3");
+            strcpy(si.routeId, "route3");
+            si.smeProviderId = 3;
+            si.routeProviderId = 3;
+            si.counter = cntFailed;
+            si.errCode = 1;
+            sm->registerEvent(si);
+        }
 
         useconds_t pause = 50000. * ( (double)random() / 2147483648. );
         if(pause < 5000 ) pause = 5000; 
