@@ -1,37 +1,43 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ page import="ru.novosoft.smsc.admin.Constants, ru.novosoft.smsc.mtsmsme.beans.Index,
-                 ru.novosoft.smsc.jsp.SMSCJspException, ru.novosoft.smsc.jsp.SMSCErrors,
+<%@ page import="ru.novosoft.smsc.mtsmsme.beans.Index,
                  java.util.*, ru.novosoft.smsc.util.StringEncoderDecoder,
-                 ru.novosoft.smsc.util.Functions,
-                 ru.novosoft.smsc.admin.service.ServiceInfo"%>
+                 ru.novosoft.smsc.util.Functions"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.mtsmsme.beans.Index" />
 <jsp:setProperty name="bean" property="*"/>
 <%
   ServiceIDForShowStatus = Functions.getServiceId(request.getServletPath());
-	TITLE="Mobile Terminated Short Messages SME Administration";
-	MENU0_SELECTION = "MENU0_SERVICES";
+  TITLE=getLocString("mtsmsme.title");
+  MENU0_SELECTION = "MENU0_SERVICES";
   int beanResult = bean.process(request);
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="/WEB-INF/inc/collapsing_tree.jsp"%><%
 page_menu_begin(out);
 page_menu_space(out);
-page_menu_button(out, "mbStart", "Start", "Start service");
-page_menu_button(out, "mbStop",  "Stop",  "Stop service");
+page_menu_button(session, out, "mbStart", "common.buttons.start", "mtsmsme.hint.start");
+page_menu_button(session, out, "mbStop",  "common.buttons.stop",  "mtsmsme.hint.stop");
 page_menu_end(out);%>
-<script language="JavaScript">
+<script  type="text/javascript" language="JavaScript">
 function checkStartStop()
 {
-  opForm.all.mbStart.disabled = !(document.all.RUNNING_STATUSERVICE_MTSMSme.innerText == "stopped");
-  opForm.all.mbStop.disabled = !(document.all.RUNNING_STATUSERVICE_MTSMSme.innerText == "running");
-
-  window.setTimeout(checkStartStop, 500);
+    var status = document.all.RUNNING_STATUSERVICE_<%=ServiceIDForShowStatus%>.innerText;
+    document.all.mbStart.disabled = (status == "<%= getLocString("common.statuses.online1") %>" ||
+                                     status == "<%= getLocString("common.statuses.online2") %>" ||
+                                     status == "<%= getLocString("common.statuses.running") %>" ||
+                                     status == "<%= getLocString("common.statuses.stopping")%>" ||
+                                     status == "<%= getLocString("common.statuses.starting")%>" ||
+                                     status == "<%= getLocString("common.statuses.unknown" )%>" );
+    document.all.mbStop.disabled  = (status == "<%= getLocString("common.statuses.offline") %>" ||
+                                     status == "<%= getLocString("common.statuses.stopped") %>" ||
+                                     status == "<%= getLocString("common.statuses.stopping")%>" ||
+                                     status == "<%= getLocString("common.statuses.unknown") %>" );
+    window.setTimeout(checkStartStop, 500);
 }
 checkStartStop();
 </script>
 <div class=content>
 <input type=hidden name=initialized value=true>
-<div class=page_subtitle>SMSC Connection settings</div>
+<div class=page_subtitle><%= getLocString("mtsmsme.subtitle.smsc_connection")%></div>
 <table class=properties_list cellspacing=0 width="100%">
 <col width="20%">
 <col width="80%">
@@ -57,18 +63,18 @@ checkStartStop();
   <td><input class=txt name=smscPassword value="<%=StringEncoderDecoder.encode(bean.getSmscPassword())%>"></td>
 </tr>
 </table><br/>
-<div class=page_subtitle>Address to alias mapping</div>
-<script>
+<div class=page_subtitle><%= getLocString("mtsmsme.subtitle.a_to_a_map")%></div>
+<script type="text/javascript">
 function clickAddMapping()
 {
 	var addressElem = opForm.all.mapping_new_address;
-  var aliasElem   = opForm.all.mapping_new_alias;
+    var aliasElem   = opForm.all.mapping_new_alias;
 
-  var newRow = mapping_table_id.insertRow(mapping_table_id.rows.length-1);
+    var newRow = mapping_table_id.insertRow(mapping_table_id.rows.length-1);
 	newRow.className = "row" + (mapping_table_id.rows.length & 1);
 	newRow.id = "mapping_row_" + addressElem.value;
 	var newCell = document.createElement("td");
-  var newSection = addressElem.value.replace(/[.]/g, "_");
+    var newSection = addressElem.value.replace(/[.]/g, "_");
 
 	newCell.innerHTML = "<input class=txt name=\"<%=Index.MAPPING_SECTION_NAME%>." + newSection + ".address\" value=\"" + addressElem.value + "\">";
 	newRow.appendChild(newCell);
@@ -76,7 +82,7 @@ function clickAddMapping()
 	newCell.innerHTML = "<input class=txtW name=\"<%=Index.MAPPING_SECTION_NAME%>." + newSection + ".alias\" value=\"" + aliasElem.value + "\">";
 	newRow.appendChild(newCell);
 	newCell = document.createElement("td");
-	newCell.innerHTML = "<img src=\"/images/but_del.gif\" class=button jbuttonName=\"mbRemove\" jbuttonValue=\"Remove\" title=\"Remove this mapping\" jbuttonOnclick=\"return clickRemoveMapping('" + newRow.id + "');\">";
+	newCell.innerHTML = "<img src=\"/images/but_del.gif\" class=button jbuttonName=\"mbRemove\" jbuttonValue=\"common.buttons.remove\" title=\"mtsmsme.hint.remove_mapping\" jbuttonOnclick=\"return clickRemoveMapping('" + newRow.id + "');\">";
 	newRow.appendChild(newCell);
 
 	addressElem.value = "";
@@ -109,20 +115,20 @@ function clickRemoveMapping(id_to_remove)
 		%><tr class=row<%=(rowN++)&1%> id=mapping_row_<%=StringEncoderDecoder.encode(address)%>>
 			<td><input class=txt  name="<%=section%>.address" value="<%=address%>"></td>
 			<td><input class=txtW name="<%=section%>.alias"   value="<%=alias%>"></td>
-			<td><%button(out, "but_del.gif", "mbDel", "Remove", "Remove this mapping", "return clickRemoveMapping('mapping_row_" + StringEncoderDecoder.encode(address) + "');");%></td>
+			<td><%button(out, "but_del.gif", "mbDel", "common.buttons.remove", "mtsmsme.hint.remove_mapping", "return clickRemoveMapping('mapping_row_" + StringEncoderDecoder.encode(address) + "');");%></td>
 		</tr><%
 	}
 %>
-<tr id=mapping_new class=row<%=(rowN++)&1%>>
+<tr id=mapping_new class=row<%=(rowN+1)&1%>>
 	<td><input class=txt  id="mapping_new_address" name="mapping_new_address"></td>
 	<td><input class=txtW id="mapping_new_alias"   name="mapping_new_alias"  ></td>
-	<td><%button(out, "but_add.gif", "mbAdd", "Add", "Add new mapping", "return clickAddMapping();");%></td>
+	<td><%button(out, "but_add.gif", "mbAdd", "common.buttons.add", "mtsmsme.hint.add_mapping", "return clickAddMapping();");%></td>
 </tr>
 </table>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbApply",  "Apply",  "Apply changes");
-page_menu_button(out, "mbReset",  "Reset",  "Discard changes");
+page_menu_button(session, out, "mbApply",  "common.buttons.apply",  "mtsmsme.hint.apply");
+page_menu_button(session, out, "mbReset",  "common.buttons.reset",  "mtsmsme.hint.reset");
 page_menu_space(out);
 page_menu_end(out);%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>

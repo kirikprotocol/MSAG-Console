@@ -34,7 +34,12 @@ public class MTSMSmeBean extends PageBean
     }
   }
   public boolean isSmeRunning() {
-    return getSmeStatus() == ServiceInfo.STATUS_RUNNING;
+      try {
+        return appContext.getHostsManager().getServiceInfo(smeId).isOnline();
+      } catch (Exception e) {
+        logger.error("Couldn't obtain MTSMSme status", e);
+        return false;
+      }
   }
 
   protected int init(List errors)
@@ -46,7 +51,7 @@ public class MTSMSmeBean extends PageBean
       mtsmSmeContext = MTSMSmeContext.getInstance(appContext, smeId);
     } catch (Throwable e) {
       logger.error("Couldn't init MTSMSme", e);
-      return error("Couldn't init MTSMSme", e);
+      return error("mtsmsme.error.init", e);
     }
 
     return result;
@@ -58,7 +63,7 @@ public class MTSMSmeBean extends PageBean
       smeId = Functions.getServiceId(request.getServletPath());
     } catch (AdminException e) {
       logger.error("Could not discover sme id", e);
-      error("Could not discover sme id, \"" + smeId + "\" assumed", e);
+      error("mtsmsme.error.discover_sme_id", smeId, e);
     }
     return super.process(request);
   }

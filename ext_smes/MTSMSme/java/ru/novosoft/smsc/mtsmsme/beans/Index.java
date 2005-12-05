@@ -43,7 +43,7 @@ public class Index extends IndexProperties
       getMTSMSmeContext().resetConfig();
     } catch (Throwable e) {
       logger.debug("Couldn't reload MTSM Sme config", e);
-      return error("Could not reload MTSM Sme config", e);
+      return error("mtsmsme.error.config_reload", e);
     }
     return RESULT_DONE;
   }
@@ -61,7 +61,7 @@ public class Index extends IndexProperties
       }
     } catch (Throwable e) {
       logger.error("Couldn't save MTSM Sme config", e);
-      result = error("Could not save MTSM Sme config", e);
+      result = error("mtsmsme.error.config_save", e);
     }
     return result;
   }
@@ -74,7 +74,7 @@ public class Index extends IndexProperties
       try { Thread.sleep(5000); } catch (InterruptedException e) {}
     } catch (AdminException e) {
       logger.error("Could not start MTSM Sme", e);
-      result = error("Could not start MTSM Sme", e);
+      result = error("mtsmsme.error.start", e);
     }
     return result;
   }
@@ -86,7 +86,7 @@ public class Index extends IndexProperties
       getAppContext().getHostsManager().shutdownService(getSmeId());
     } catch (AdminException e) {
       logger.error("Could not stop MTSM Sme", e);
-      result = error("Could not stop MTSM Sme", e);
+      result = error("mtsmsme.error.stop", e);
     }
     return result;
   }

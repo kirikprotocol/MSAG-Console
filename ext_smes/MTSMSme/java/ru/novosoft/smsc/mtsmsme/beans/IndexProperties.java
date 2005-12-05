@@ -23,9 +23,9 @@ public abstract class IndexProperties extends MTSMSmeBean
   private boolean initialized = false;
 
   private String smscHost = "";
-  private int smscPort = 0;
+  private int    smscPort = 0;
   private String smscSid = "";
-  private int smscTimeout = 0;
+  private int    smscTimeout = 0;
   private String smscPassword = "";
 
   private String mapping_new_address = null;
@@ -45,11 +45,6 @@ public abstract class IndexProperties extends MTSMSmeBean
     {
       try
       {
-        //smppThreadPoolMax = getConfig().getInt("MTSMSme.SMPPThreadPool.max");
-        //smppThreadPoolInit = getConfig().getInt("MTSMSme.SMPPThreadPool.init");
-        //adminHost = getConfig().getString("MTSMSme.Admin.host");
-        //adminPort = getConfig().getInt("MTSMSme.Admin.port");
-
         smscHost = getConfig().getString("MTSMSme.SMSC.host");
         smscPort = getConfig().getInt("MTSMSme.SMSC.port");
         smscSid = getConfig().getString("MTSMSme.SMSC.sid");
@@ -58,7 +53,7 @@ public abstract class IndexProperties extends MTSMSmeBean
 
       } catch (Exception e) {
         logger.error(e);
-        return error(e.getMessage());
+        return error("mtsmsme.error.config_load_failed", e);
       }
     }
     return result;
@@ -73,7 +68,7 @@ public abstract class IndexProperties extends MTSMSmeBean
       getAppContext().getHostsManager().refreshServices();
     } catch (AdminException e) {
       logger.error("Could not refresh services status", e);
-      result = error("Could not refresh services status", e);
+      result = error("mtsmsme.error.refresh_status", e);
     }
 
     if (initialized) setAliases(request.getParameterMap());
@@ -88,10 +83,6 @@ public abstract class IndexProperties extends MTSMSmeBean
 
   protected int save()
   {
-    //getConfig().setInt   ("MTSMSme.SMPPThreadPool.max", smppThreadPoolMax);
-    //getConfig().setInt   ("MTSMSme.SMPPThreadPool.init", smppThreadPoolInit);
-    //getConfig().setString("MTSMSme.Admin.host", adminHost);
-    //getConfig().setInt   ("MTSMSme.Admin.port", adminPort);
     getConfig().setString("MTSMSme.SMSC.host", smscHost);
     getConfig().setInt   ("MTSMSme.SMSC.port", smscPort);
     getConfig().setString("MTSMSme.SMSC.sid", smscSid);
@@ -238,13 +229,6 @@ public abstract class IndexProperties extends MTSMSmeBean
   protected abstract int reset();
   protected abstract int start();
   protected abstract int stop();
-
-  public byte getStatus() {
-    return getSmeStatus();
-  }
-  public boolean isMTSMSmeStarted() {
-    return isSmeRunning();
-  }
 
   public String getMbApply() {
     return mbApply;
