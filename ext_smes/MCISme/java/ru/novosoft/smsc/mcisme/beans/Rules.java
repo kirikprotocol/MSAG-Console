@@ -79,7 +79,7 @@ public class Rules extends MCISmeBean
             rules.add(new Rules.Identity(priority, section));
           }
         } catch (Exception e) {
-          return error("Failed to load rules", e);
+          return error("mcisme.error.rules_load", e);
         }
         return RESULT_OK;
     }
@@ -96,7 +96,7 @@ public class Rules extends MCISmeBean
             checkedSet.remove(checked[i]);
           }
         } catch (Exception e) {
-          return error("Failed to delete rules(s)", e);
+          return error("mcisme.error.rules_delete", e);
         }
         return RESULT_OK;
     }

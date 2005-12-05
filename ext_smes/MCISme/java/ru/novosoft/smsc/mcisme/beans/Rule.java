@@ -36,7 +36,7 @@ public class Rule extends MCISmeBean
         if (!initialized && !createRule)
         {
             if (ruleName == null || ruleName.length() == 0)
-                return error("Rule name not specified");
+                return error("mcisme.error.rule_name");
             result = loadFromConfig(getConfig(), ruleName);
             if (result != RESULT_OK) return result;
             oldRuleName = ruleName;
@@ -60,20 +60,20 @@ public class Rule extends MCISmeBean
     private int done()
     {
         if (ruleName == null || ruleName.length() == 0)
-            return error("Rule name not specified");
+            return error("mcisme.error.rule_name");
 
         Config config = getConfig();
 
         if (createRule) // create new rule
         {
             if (containsInConfig(config, ruleName))
-                return error("Rule '"+ruleName+"' already exists");
+                return error("mcisme.error.rule_exists", ruleName);
         }
         else // edit old rule
         {
             if ( oldRuleName != null && oldRuleName.length() > 0) {
                 if (!oldRuleName.equals(ruleName) && containsInConfig(config, ruleName))
-                    return error("Rule '"+ruleName+"' already exists");
+                    return error("mcisme.error.rule_exists", ruleName);
                 removeFromConfig(config, oldRuleName);
             }
         }
@@ -108,7 +108,7 @@ public class Rule extends MCISmeBean
             inform = (0 != config.getInt(prefix + ".inform"));
         }
         catch (Exception e) {
-            return error("Load from config failed", e);
+            return error("mcisme.error.config_load_failed", e);
         }
         return RESULT_OK;
     }

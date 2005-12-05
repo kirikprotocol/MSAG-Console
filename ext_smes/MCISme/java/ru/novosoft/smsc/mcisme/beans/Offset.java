@@ -34,7 +34,7 @@ public class Offset extends MCISmeBean
         if (!initialized && !createOffset)
         {
             if (offsetName == null || offsetName.length() == 0)
-                return error("Offset name not specified");
+                return error("mcisme.error.tz_name");
             result = loadFromConfig(getConfig(), offsetName);
             if (result != RESULT_OK) return result;
             oldOffsetName = offsetName;
@@ -58,20 +58,20 @@ public class Offset extends MCISmeBean
     private int done()
     {
         if (offsetName == null || offsetName.length() == 0)
-            return error("Offset name not specified");
+            return error("mcisme.error.tz_name");
 
         Config config = getConfig();
 
         if (createOffset) // create new offset
         {
             if (containsInConfig(config, offsetName))
-                return error("Offset '"+offsetName+"' already exists");
+                return error("mcisme.error.tz_exists", offsetName);
         }
         else // edit old offset
         {
             if ( oldOffsetName != null && oldOffsetName.length() > 0) {
                 if (!oldOffsetName.equals(offsetName) && containsInConfig(config, offsetName))
-                    return error("Offset '"+offsetName+"' already exists");
+                    return error("mcisme.error.tz_exists", offsetName);
                 removeFromConfig(config, oldOffsetName);
             }
         }
@@ -102,7 +102,7 @@ public class Offset extends MCISmeBean
             regexp = config.getString(prefix + ".regexp");
         }
         catch (Exception e) {
-            return error("Load from config failed", e);
+            return error("mcisme.error.config_load_failed", e);
         }
         return RESULT_OK;
     }

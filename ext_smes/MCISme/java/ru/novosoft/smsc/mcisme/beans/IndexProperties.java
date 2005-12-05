@@ -42,10 +42,10 @@ public abstract class IndexProperties extends MCISmeBean
       mciSme.updateInfo(appContext);
     } catch (AdminException e) {
       logger.error("Could not refresh MCI Sme status", e);
-      result = error("Could not refresh MCI Sme status", e);
+      result = error("mcisme.error.refresh_status", e);
     }
 
-    mcismeStarted = mciSme.getInfo().getStatus() == ServiceInfo.STATUS_RUNNING;
+    mcismeStarted = mciSme.getInfo().isOnline();
 
     toStartSet.addAll(Arrays.asList(toStart));
 
@@ -66,7 +66,7 @@ public abstract class IndexProperties extends MCISmeBean
   {
     CountersSet cs = null;
     try {
-      if (getStatus() == ServiceInfo.STATUS_RUNNING) cs = mciSme.getStatistics();
+      if (mciSme.getInfo().isOnline()) cs = mciSme.getStatistics();
     } catch (AdminException e) {
       e.printStackTrace();
     }
@@ -77,7 +77,7 @@ public abstract class IndexProperties extends MCISmeBean
   {
     RuntimeSet rs = null;
     try {
-      if (getStatus() == ServiceInfo.STATUS_RUNNING) rs = mciSme.getRuntime();
+      if (mciSme.getInfo().isOnline()) rs = mciSme.getRuntime();
     } catch (AdminException e) {
       e.printStackTrace();
     }

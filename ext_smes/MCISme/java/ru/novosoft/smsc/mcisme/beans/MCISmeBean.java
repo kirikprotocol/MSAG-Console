@@ -3,7 +3,6 @@ package ru.novosoft.smsc.mcisme.beans;
 import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.Functions;
-import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.mcisme.backend.MCISmeContext;
 import ru.novosoft.smsc.mcisme.backend.MCISme;
@@ -77,11 +76,11 @@ public class MCISmeBean extends PageBean
     try {
       mciSmeContext = MCISmeContext.getInstance(appContext, smeId);
       mciSme = mciSmeContext.getMCISme();
-      smeRunning = mciSme.getInfo().getStatus() == ServiceInfo.STATUS_RUNNING;
+      smeRunning = mciSme.getInfo().isOnline();
       config = mciSmeContext.getConfig();
     } catch (Throwable e) {
       logger.error("Couldn't get MCISme config", e);
-      return error("Could not get MCISsme config", e);
+      return error("mcisme.error.config_load", e);
     }
 
     return result;
@@ -93,7 +92,7 @@ public class MCISmeBean extends PageBean
       smeId = Functions.getServiceId(request.getServletPath());
     } catch (AdminException e) {
       logger.error("Could not discover sme id", e);
-      error("Could not discover sme id, \"" + smeId + "\" assumed", e);
+      error("mcisme.error.discover_sme_id", smeId, e);
     }
 
     int result = super.process(request);
@@ -123,7 +122,7 @@ public class MCISmeBean extends PageBean
       mciSmeContext.resetConfig();
       config = mciSmeContext.getConfig();
     } catch (Throwable th) {
-      logger.error("Restore config failed", th);
+      logger.error("mcisme.error.config_restore", th);
     }
   }
   protected Config getConfig() {

@@ -59,14 +59,14 @@ public class Circuits extends MCISmeBean
         if (paramName.endsWith("tsm")) {
           try { Integer.parseInt(paramValue, 16); }
           catch(NumberFormatException e) {
-            restore(); return error("Invalid hex string '"+paramValue+"'", e);
+            restore(); return error("mcisme.error.invalid_hex", paramValue, e);
           }
           getConfig().setString(paramName, paramValue);
         } else {
           int intValue = 0;
           try { intValue = Integer.parseInt(paramValue); }
           catch(NumberFormatException e) {
-            restore(); return error("Invalid int parameter '"+paramValue+"'", e);
+            restore(); return error("mcisme.error.invalid_int", paramValue, e);
           }
           getConfig().setInt(paramName, intValue);
         }
@@ -80,14 +80,12 @@ public class Circuits extends MCISmeBean
       int intValue = 0;
       try { intValue = Integer.parseInt(circuits_new_hsn); }
       catch(NumberFormatException e) {
-        final String err = "Invalid int parameter for HSN '"+circuits_new_hsn+"'";
-        restore(); return error(err, e);
+        restore(); return error("mcisme.error.invalid_hsn", circuits_new_hsn, e);
       }
       getConfig().setInt   (PREFIX + circuits_new_msc + ".hsn", intValue);
       try { intValue = Integer.parseInt(circuits_new_spn); }
       catch(NumberFormatException e) {
-        final String err = "Invalid int parameter for SPN '"+circuits_new_spn+"'";
-        restore(); return error(err, e);
+        restore(); return error("mcisme.error.invalid_spn", circuits_new_spn, e);
       }
       getConfig().setInt   (PREFIX + circuits_new_msc + ".spn", intValue);
       try {
@@ -97,8 +95,7 @@ public class Circuits extends MCISmeBean
           throw new NumberFormatException("TSM length="+tsm_length+", must be from 1 up to 8 simbols");
         Long.parseLong(circuits_new_tsm, 16);
       } catch(Exception e) {
-        final String err = "Invalid hex string for TSM '"+circuits_new_tsm+"'";
-        restore(); return error(err, e);
+        restore(); return error("mcisme.error.invalid_tsm", circuits_new_tsm, e);
       }
       getConfig().setString(PREFIX + circuits_new_msc + ".tsm", circuits_new_tsm);
     }

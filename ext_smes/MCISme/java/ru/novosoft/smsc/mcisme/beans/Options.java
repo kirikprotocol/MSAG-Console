@@ -141,12 +141,12 @@ public class Options extends MCISmeBean
         }
         setDefaultReasonsMask(defaultReasonsMask);
 
-        int maxCallersCount = -1;
+        int maxCallersCount;
         try { maxCallersCount = getConfig().getInt("MCISme.maxCallersCount"); } catch (Throwable th) {
           maxCallersCount = -1;
           logger.warn("Parameter 'MCISme.maxCallersCount' wasn't specified. Callers check disabled");
         }
-        int maxMessagesCount = -1;
+        int maxMessagesCount;
         try { maxMessagesCount = getConfig().getInt("MCISme.maxMessagesCount"); } catch (Throwable th) {
           maxMessagesCount = -1;
           logger.warn("Parameter 'MCISme.maxMessagesCount' wasn't specified. Messages check disabled");
@@ -231,7 +231,7 @@ public class Options extends MCISmeBean
 
       } catch (Exception e) {
         logger.error(e);
-        return error(e.getMessage());
+        return error("mcisme.error.config_load_failed", e);
       }
     }
     return result;

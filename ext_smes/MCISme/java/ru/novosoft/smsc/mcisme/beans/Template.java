@@ -42,7 +42,7 @@ public class Template extends MCISmeBean
     if (!initialized && !createTemplate)
     {
       if (templateName == null || templateName.length() == 0)
-        return error("Template name not specified");
+        return error("mcisme.error.template_name");
       result = loadFromConfig(getConfig(), templateName);
       if (result != RESULT_OK) return result;
       oldTemplateName = templateName;
@@ -66,7 +66,7 @@ public class Template extends MCISmeBean
   private int done()
   {
     if (templateName == null || templateName.length() == 0)
-      return error("Template name not specified");
+      return error("mcisme.error.template_name");
 
     Config config = getConfig();
     final String defaultIdParam = getTemplateSectionPrefix() + ".default";
@@ -75,9 +75,9 @@ public class Template extends MCISmeBean
     if (createTemplate) // create new template
     {
       if (containsInConfig(config, templateName))
-        return error("Template '"+templateName+"' already exists");
+        return error("mcisme.error.template_exists", templateName);
       if (containsInConfig(config, templateId, null))
-        return error("Template with id="+templateId+" already exists");
+        return error("mcisme.error.template_exists", "id="+templateId);
       if (defaultTemplateId < 0)
         config.setInt(defaultIdParam, templateId);
     }
@@ -86,9 +86,9 @@ public class Template extends MCISmeBean
       if ( oldTemplateName != null && oldTemplateName.length() > 0 &&
           !oldTemplateName.equals(templateName) &&
           containsInConfig(config, templateName))
-        return error("Template '"+templateName+"' already exists");
+        return error("mcisme.error.template_exists", templateName);
       if (containsInConfig(config, templateId, oldTemplateName))
-        return error("Template with id="+templateId+" already exists");
+        return error("mcisme.error.template_exists", "id="+templateId);
 
       if ( oldTemplateName != null && oldTemplateName.length() > 0 )
       {
@@ -163,7 +163,7 @@ public class Template extends MCISmeBean
       }
     }
     catch (Exception e) {
-      return error("Load from config failed", e);
+      return error("mcisme.error.config_load_failed", e);
     }
     return RESULT_OK;
   }

@@ -99,7 +99,7 @@ public class Templates extends MCISmeBean
         informTemplates.add(new Identity(id, section));
       }
     } catch (Exception e) {
-      return error("Failed to load inform templates", e);      
+      return error("mcisme.error.template_load_i", e);
     }
     
     try {
@@ -111,7 +111,7 @@ public class Templates extends MCISmeBean
         notifyTemplates.add(new Identity(id, section));
       }
     } catch (Exception e) {
-      return error("Failed to load notify templates", e);
+      return error("mcisme.error.template_load_n", e);
     }
 
     return RESULT_OK;
@@ -133,7 +133,7 @@ public class Templates extends MCISmeBean
         getMCISmeContext().setChangedTemplates(true);
       }
     } catch (Exception e) {
-      return error("Failed to check default template id", e);
+      return error("mcisme.error.template_default", e);
     }
     return RESULT_OK;
   }
@@ -156,10 +156,9 @@ public class Templates extends MCISmeBean
         informCheckedSet.remove(informChecked[i]);
       }
     } catch (Exception e) {
-      return error("Failed to delete inform template(s)", e);
+      return error("mcisme.error.template_del_i", e);
     }
-    return (needWarning) ? warning("Can't delete default inform template '"+
-                                   defaultTemplateName+"'") : RESULT_OK;
+    return (needWarning) ? warning("mcisme.warn.template_del_i", defaultTemplateName) : RESULT_OK;
   }
   private int notifyDelete()
   {
@@ -178,10 +177,9 @@ public class Templates extends MCISmeBean
         notifyCheckedSet.remove(notifyChecked[i]);
       }
     } catch (Exception e) {
-      return error("Failed to delete notify template(s)", e);
+      return error("mcisme.error.template_del_n", e);
     }
-    return (needWarning) ? warning("Can't delete default notify template '"+
-                                   defaultTemplateName+"'") : RESULT_OK;
+    return (needWarning) ? warning("mcisme.warn.template_del_n", defaultTemplateName) : RESULT_OK;
   }
 
   public boolean isInformTemplateChecked(String templateName) {

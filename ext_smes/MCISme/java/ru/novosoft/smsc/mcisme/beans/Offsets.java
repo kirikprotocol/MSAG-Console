@@ -79,7 +79,7 @@ public class Offsets extends MCISmeBean
             offsets.add(new Offsets.Identity(offset, section));
           }
         } catch (Exception e) {
-          return error("Failed to load TZ offsets", e);
+          return error("mcisme.error.tz_load", e);
         }
         return RESULT_OK;
     }
@@ -96,7 +96,7 @@ public class Offsets extends MCISmeBean
             checkedSet.remove(checked[i]);
           }
         } catch (Exception e) {
-          return error("Failed to delete offset(s)", e);
+          return error("mcisme.error.tz_delete", e);
         }
         return RESULT_OK;
     }

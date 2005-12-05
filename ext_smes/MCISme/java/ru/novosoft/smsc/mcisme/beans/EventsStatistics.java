@@ -54,10 +54,10 @@ public class EventsStatistics extends MCISmeBean
           if (getMCISmeContext().getDataSource() != null)
             statistics = stat.getStatistics(query);
           else
-            return error("DataSource not initialized");
+            return error("mcisme.error.ds_init");
         } catch (Throwable e) {
           logger.debug("Couldn't get statisctics", e);
-          return error("Couldn't get statisctics", e);
+          return error("mcisme.error.get_stat", e);
         }
         mbQuery = null;
       }

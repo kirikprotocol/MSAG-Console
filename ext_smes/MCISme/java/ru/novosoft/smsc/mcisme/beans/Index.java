@@ -65,21 +65,21 @@ public class Index extends IndexProperties
       getMCISmeContext().setChangedOffsets(false);
     } catch (Throwable e) {
       logger.debug("Couldn't reload MCI Sme config", e);
-      return error("Could not reload MCI Sme config", e);
+      return error("mcisme.error.config_reload", e);
     }
     return RESULT_DONE;
   }
 
   protected int apply()
   {
-    int result = RESULT_DONE;
+    int result;
     try {
       logger.debug("Apply ...");
       final Config oldConfig = getMCISmeContext().loadCurrentConfig();
       result = applyGlobalParams(oldConfig);
     } catch (Throwable e) {
       logger.error("Couldn't save MCI Sme config", e);
-      result = error("Could not save MCI Sme config", e);
+      result = error("mcisme.error.config_save", e);
     }
     return result;
   }
@@ -94,7 +94,7 @@ public class Index extends IndexProperties
         try { Thread.sleep(5000); } catch (InterruptedException e) {}
       } catch (AdminException e) {
         logger.error("Could not start MCI Sme", e);
-        result = error("Could not start MCI Sme", e);
+        result = error("mcisme.error.start_service", e);
       }
     }
     else if (isToStart("profiler"))
@@ -104,7 +104,7 @@ public class Index extends IndexProperties
         try { Thread.sleep(5000); } catch (InterruptedException e) {}
       } catch (AdminException e) {
         logger.error("Could not start MCI Profiler", e);
-        result = error("Could not start MCI Profiler", e);
+        result = error("mcisme.error.start_profiler", e);
       }
     }
     return result;
@@ -119,7 +119,7 @@ public class Index extends IndexProperties
         getAppContext().getHostsManager().shutdownService(getSmeId());
       } catch (AdminException e) {
         logger.error("Could not stop MCI Sme", e);
-        result = error("Could not stop MCI Sme", e);
+        result = error("mcisme.error.stop_service", e);
       }
     }
     else if (isToStart("profiler"))
@@ -128,7 +128,7 @@ public class Index extends IndexProperties
         getAppContext().getHostsManager().shutdownService(getProfilerSmeId());
       } catch (AdminException e) {
         logger.error("Could not stop MCI Profiler", e);
-        result = error("Could not stop MCI Profiler", e);
+        result = error("mcisme.error.stop_profiler", e);
       }
     }
     return result;
