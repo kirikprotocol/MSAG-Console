@@ -86,10 +86,10 @@ public class GlobalOptions extends OptionsDialog
   jEditGroup.addOptionPane("view");
   rootGroup.addOptionGroup(jEditGroup);
 
-  browserGroup = new OptionGroup("browser");
-  browserGroup.addOptionPane("browser.general");
-  browserGroup.addOptionPane("browser.colors");
-  rootGroup.addOptionGroup(browserGroup);
+ // browserGroup = new OptionGroup("browser");
+ // browserGroup.addOptionPane("browser.general");
+ // browserGroup.addOptionPane("browser.colors");
+ // rootGroup.addOptionGroup(browserGroup);
 
   return paneTreeModel;
  } //}}}
