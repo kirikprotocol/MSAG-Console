@@ -895,6 +895,18 @@
  </CODE>
 </ACTION>
 
+<ACTION NAME="ok">
+   <CODE>
+    buffer.save(view,null,true);
+   </CODE>
+</ACTION>
+
+ <ACTION NAME="cancel">
+     <CODE>
+      jEdit.closeView(view);
+     </CODE>
+  </ACTION>
+
 <ACTION NAME="save-all">
  <CODE>
   jEdit.saveAllBuffers(view);

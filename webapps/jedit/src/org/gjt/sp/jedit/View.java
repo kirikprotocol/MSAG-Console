@@ -26,6 +26,7 @@ package org.gjt.sp.jedit;
 import javax.swing.event.*;
 import javax.swing.text.*;
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
@@ -1250,9 +1251,11 @@ public void setEdittag(boolean edit)
 
   /* On Mac OS X, apps are not supposed to show their name in the
   title bar. */
-  if(!OperatingSystem.isMacOS())
-   title.append(jEdit.getProperty("view.title"));
-
+  if(!OperatingSystem.isMacOS() )
+   { if(!jEdit.getBooleanProperty("bufferWorkWithId"))
+      title.append(jEdit.getProperty("view.title"));
+     else title.append(jEdit.getProperty("RootElement"));
+   }
   boolean unsavedChanges = false;
 
   for(int i = 0; i < buffers.size(); i++)
@@ -1261,11 +1264,16 @@ public void setEdittag(boolean edit)
     title.append(", ");
 
    Buffer buffer = (Buffer)buffers.elementAt(i);
-      String name=buffer.getName();
-      if (name.endsWith(".xml")) name=name.substring(0,name.length()-4);
-      if (name.startsWith("rule_")) name=name.substring(5);
+      String name=(jEdit.getBooleanProperty("bufferWorkWithId") ? buffer.getPath(): buffer.getName());
+      if(jEdit.getBooleanProperty("bufferWorkWithId"))  {
+        String nameId=jEdit.StringGet(name,jEdit.RuleName);
+        title.append(" ");title.append(nameId);title.append(" [");
+      }
+     // if (name.endsWith(".xml")) name=name.substring(0,name.length()-4);
+     // if (name.startsWith("rule_")) name=name.substring(5);
       title.append((showFullPath && !buffer.isNewFile())
     ? buffer.getPath() : name);
+   if(jEdit.getBooleanProperty("bufferWorkWithId")) title.append("]");
    if(buffer.isDirty())
    {
     unsavedChanges = true;
@@ -1299,11 +1307,8 @@ public void setEdittag(boolean edit)
   dockableWindowManager = new DockableWindowManager(this,
    DockableWindowFactory.getInstance(),config);
 
-  topToolBars = new JPanel(new VariableGridLayout(
-   VariableGridLayout.FIXED_NUM_COLUMNS,1));
-  bottomToolBars = new JPanel(new VariableGridLayout(
-   VariableGridLayout.FIXED_NUM_COLUMNS,1));
-
+  topToolBars = new JPanel(new VariableGridLayout(VariableGridLayout.FIXED_NUM_COLUMNS,1));
+  bottomToolBars = new JPanel(new VariableGridLayout(VariableGridLayout.FIXED_NUM_COLUMNS,1));
   toolBarManager = new ToolBarManager(topToolBars, bottomToolBars);
 
   status = new StatusBar(this);
@@ -1393,6 +1398,7 @@ public void setEdittag(boolean edit)
  private ToolBarManager toolBarManager;
 
  private Box toolBar;
+ private Box textToolBar;
  private SearchBar searchBar;
  private ActionBar actionBar;
 
@@ -1646,8 +1652,11 @@ loop:  for(;;)
     toolBarManager.removeToolBar(toolBar);
 
    toolBar = GUIUtilities.loadToolBar("view.toolbar");
-    System.out.println("add Toolbar View line 1649");
    addToolBar(TOP_GROUP, SYSTEM_BAR_LAYER, toolBar);
+    if(textToolBar != null)
+        toolBarManager.removeToolBar(textToolBar);
+   textToolBar = GUIUtilities.loadTextBar("view.savebar");
+   addToolBar(BOTTOM_GROUP, SYSTEM_BAR_LAYER, textToolBar);
   }
   else if(toolBar != null)
   {

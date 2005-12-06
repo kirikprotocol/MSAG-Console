@@ -51,6 +51,43 @@ public class EnhancedButton extends RolloverButton
   setToolTipText(toolTip);
  } //}}}
 
+  public EnhancedButton(String text, String toolTip, String action,
+    ActionContext context)
+   {
+    super(text);
+    
+    this.action = action;
+
+    if(action != null)
+    {
+     setEnabled(true);
+     addActionListener(new EditAction.Wrapper(context,action));
+     addMouseListener(new MouseHandler());
+    }
+    else
+     setEnabled(false);
+
+    setToolTipText(toolTip);
+   } //}}}
+  public EnhancedButton(String text, Icon icon,String toolTip, String action,
+     ActionContext context)
+    {
+     super(text,icon);
+
+     this.action = action;
+
+     if(action != null)
+     {
+      setEnabled(true);
+      addActionListener(new EditAction.Wrapper(context,action));
+      addMouseListener(new MouseHandler());
+     }
+     else
+      setEnabled(false);
+
+     setToolTipText(toolTip);
+    } //}}}
+
  //{{{ isFocusTraversable() method
  public boolean isFocusTraversable()
  {

@@ -24,6 +24,7 @@ package org.gjt.sp.jedit;
 
 //{{{ Imports
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.net.*;
@@ -402,6 +403,95 @@ public class GUIUtilities
 
   return toolBar;
  } //}}}
+  //{{{ loadTextBar() method
+  /**
+   * Creates a toolbar.with text button
+   * @param name The toolbar name
+   * @since jEdit 4.2pre2
+   */
+  public static Box loadTextBar(String name)
+  {
+   return loadTextBar(jEdit.getActionContext(),name,true);
+  } //}}}
+
+  //{{{ loadSaveBar() method
+ /**
+  * Creates a toolbar.with text buttons
+  * @param context An action context; either
+  * <code>jEdit.getActionContext()</code> or
+  * <code>VFSBrowser.getActionContext()</code>.
+  * @param name The toolbar name
+  * @since jEdit 4.2pre2
+  */
+public static Box loadTextBar(ActionContext context, String name,boolean haveIcon)
+ {
+  Box toolBar = new Box(BoxLayout.LINE_AXIS);
+  toolBar.add(Box.createVerticalStrut(25));
+  String buttons = jEdit.getProperty(name);
+  if(buttons != null)
+  {
+   StringTokenizer st = new StringTokenizer(buttons);
+   while(st.hasMoreTokens())
+   {
+    String button = st.nextToken();
+    if(button.equals("-"))
+     toolBar.add(Box.createHorizontalStrut(12));
+    else
+    {
+     JButton b = loadTextButton(context,button,haveIcon);
+     // int fontSize=b.getFont().getSize();//b.setSize(new Dimension(50,50));//.setSize(50,50);
+     // int x=button.length()*fontSize+32;
+     // b.setPreferredSize(new Dimension(x,25));
+      //b.repaint();
+
+      if(b != null)
+        toolBar.add(b);
+    }
+   }
+
+  }
+  toolBar.add(Box.createGlue());
+
+  return toolBar;
+ } //}}}
+public static EnhancedButton loadTextButton(ActionContext context,
+  String name,boolean haveIcon)
+ {
+  String label = jEdit.getProperty(name + ".label");
+
+  if(label == null)
+   label = name;
+
+  String toolTip = prettifyMenuLabel(label);
+  String shortcut1 = jEdit.getProperty(name + ".shortcut");
+  String shortcut2 = jEdit.getProperty(name + ".shortcut2");
+  if(shortcut1 != null || shortcut2 != null)
+  {
+   toolTip = toolTip + " ("
+    + (shortcut1 != null
+    ? shortcut1 : "")
+    + ((shortcut1 != null && shortcut2 != null)
+    ? " or " : "")
+    + (shortcut2 != null
+    ? shortcut2
+    : "") + ")";
+  }
+
+ if (haveIcon) {
+   Icon icon;
+    String iconName = jEdit.getProperty(name + ".icon");
+    if(iconName == null)
+     icon = loadIcon("BrokenImage.png");
+    else
+    {
+     icon = loadIcon(iconName);
+     if(icon == null)
+      icon = loadIcon("BrokenImage.png");
+    }
+  return new EnhancedButton(label,icon,toolTip,name,context);
+ }
+  return new EnhancedButton(label,toolTip,name,context);
+ } //}}}
 
  //{{{ loadToolButton() method
  /**
@@ -416,7 +506,6 @@ public class GUIUtilities
  {
   return loadToolButton(jEdit.getActionContext(),name);
  } //}}}
-
  //{{{ loadToolButton() method
  /**
   * Loads a tool bar button. The tooltip is constructed from

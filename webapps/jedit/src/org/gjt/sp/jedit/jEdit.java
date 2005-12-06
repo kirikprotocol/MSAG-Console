@@ -3091,6 +3091,7 @@ public class jEdit extends Applet
   protected static final int LoadNewRule = 29;
   protected static final int AddRule = 30;
   protected static final int RootElement = 31;
+  protected static final int RuleName = 32;
 
   public static int getRootElement()
   {

@@ -68,7 +68,19 @@ public class RolloverButton extends JButton
 
   setIcon(icon);
  } //}}}
+   public RolloverButton(String text)
+ {
+  this();
 
+  setText(text);
+ } //}}}
+public RolloverButton(String text,Icon icon)
+ {
+  super(text,icon);
+   if(OperatingSystem.hasJava15())
+       setContentAreaFilled(false);
+   addMouseListener(new MouseOverHandler());
+ } //}}}
  //{{{ updateUI() method
  public void updateUI()
  {
@@ -80,7 +92,7 @@ public class RolloverButton extends JButton
   else
    super.updateUI();
 
-  setBorder(new EtchedBorder());
+  setBorder(new EtchedBorder(0));
   setBorderPainted(false);
   setMargin(new Insets(1,1,1,1));
 

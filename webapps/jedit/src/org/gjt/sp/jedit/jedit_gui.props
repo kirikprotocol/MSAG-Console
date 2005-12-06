@@ -56,6 +56,14 @@ defer=false
 startup=true
 #}}}
 
+#{{{ Save bar
+view.savebar=ok - - - cancel
+
+ok.label=OK
+cancel.label=Cancel
+ok.icon=Ok.gif
+cancel.icon=Cancel.gif
+#}}}
 #{{{ Tool bar
 view.toolbar=undo redo cut copy paste - find find-next - unsplit \
 	split-horizontal split-vertical - buffer-options global-options

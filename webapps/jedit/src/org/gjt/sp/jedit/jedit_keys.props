@@ -30,6 +30,7 @@ print.shortcut=C+p
 exit.shortcut=C+q
 # C+r is a prefix
 save.shortcut=C+s
+ok.shortcut=C+s
 add-marker-shortcut.shortcut=C+t
 select-marker.shortcut=C+u
 paste.shortcut=C+v
