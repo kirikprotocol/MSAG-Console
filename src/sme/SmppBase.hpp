@@ -103,6 +103,7 @@ public:
   virtual void handleEvent(SmppHeader *pdu)=0;
   virtual void handleError(int errorCode)=0;
   virtual bool handleIdle(){return false;}
+  virtual void handleTimeout(int seqNum){}
 };
 
 class SmppThread:public Thread{
@@ -214,19 +215,29 @@ protected:
   volatile bool running;
 
   time_t lastUpdate;
+  time_t lastTOCheck;
 
   bool IdleCheck()
   {
+    time_t now=time(NULL);
+    if(lastTOCheck!=now)
+    {
+      listener->handleTimeout(0);
+      lastTOCheck=now;
+    }
     if(idleTimeout)
     {
-      if(!socket->canRead(idleTimeout))
+      if(!socket->canRead(1))
       {
         if(time(NULL)-lastUpdate>disconnectTimeout)
         {
           socket->Close();
           return true;
         }
-        listener->handleIdle();
+        if(time(NULL)-now>idleTimeout)
+        {
+          listener->handleIdle();
+        }
         return false;
       }else
       {
@@ -506,6 +517,10 @@ protected:
       }
       return true;
     }
+    void handleTimeout(int seq)
+    {
+      session.processTimeouts();
+    }
   };
   class InnerSyncTransmitter;
   friend class InnerSyncTransmitter;
@@ -607,7 +622,7 @@ protected:
         throw SmppInvalidBindState();
       }
       //int seq=pdu->get_sequenceNumber();
-      //session.registerPdu(seq,NULL);
+      session.registerPdu(pdu->get_sequenceNumber(),NULL);
       session.writer.enqueue(pdu);
       return NULL;
     };
@@ -761,26 +776,41 @@ protected:
 
   IntHash<Lock> lock;
 
-  void registerPdu(int seq,Event* event)
+  void processTimeouts()
   {
     MutexGuard g(lockMutex);
     IntHash<Lock>::Iterator i=lock.First();
     Lock l;
     int key;
-    __trace2__("registerPdu seq=%d",seq);
     time_t now=time(NULL);
-    __require__(!lock.Exist(seq));
     while(i.Next(key,l))
     {
+      __trace2__("to check:%d<%d",l.timeOut,now);
       if(l.timeOut<now)
       {
-        if(!l.pdu)lock.Delete(key);
+        if(!l.pdu)
+        {
+          listener->handleTimeout(key);
+          lock.Delete(key);
+        }
         if(l.event)
         {
           l.event->Signal();
         }
       }
     }
+  }
+
+  void registerPdu(int seq,Event* event)
+  {
+    processTimeouts();
+    MutexGuard g(lockMutex);
+    __trace2__("registerPdu seq=%d",seq);
+    if(lock.Exist(seq))
+    {
+      throw smsc::util::Exception("Attempt to register pdu with already registered seq=%d",seq);
+    }
+    Lock l;
     l.timeOut=time(NULL)+cfg.smppTimeOut;
     l.event=event;
     l.pdu=NULL;
