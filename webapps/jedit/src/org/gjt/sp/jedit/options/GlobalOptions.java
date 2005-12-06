@@ -74,10 +74,10 @@ public class GlobalOptions extends OptionsDialog
   jEditGroup.addOptionPane("general");
   jEditGroup.addOptionPane("gutter");
   jEditGroup.addOptionPane("mouse");
-  jEditGroup.addOptionPane("print");
+ // jEditGroup.addOptionPane("print");
  // jEditGroup.addOptionPane("plugin-manager");
-  jEditGroup.addOptionPane("firewall");
-  jEditGroup.addOptionPane("save-back");
+ // jEditGroup.addOptionPane("firewall");
+ // jEditGroup.addOptionPane("save-back");
   jEditGroup.addOptionPane("shortcuts");
   jEditGroup.addOptionPane("status");
   jEditGroup.addOptionPane("syntax");
