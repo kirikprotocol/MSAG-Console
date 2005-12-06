@@ -112,6 +112,7 @@ public class PanelWindowContainer implements DockableWindowContainer
   else
    throw new InternalError("Invalid position: " + position);
 
+ if (!entry.factory.name.equals("error-list")) {
   JToggleButton button = new JToggleButton();
   button.setMargin(new Insets(1,1,1,1));
   button.setRequestFocusEnabled(false);
@@ -127,7 +128,7 @@ public class PanelWindowContainer implements DockableWindowContainer
   buttonGroup.add(button);
   buttons.add(button);
   entry.btn = button;
-
+ }
   wm.revalidate();
  } //}}}
 
@@ -137,8 +138,10 @@ public class PanelWindowContainer implements DockableWindowContainer
   if(entry.factory.name.equals(mostRecent))
    mostRecent = null;
 
+  if (!entry.factory.name.equals("error-list")) {
   buttonPanel.remove(entry.btn);
   buttons.remove(entry.btn);
+  }
   entry.btn = null;
 
   dockables.remove(entry);
@@ -237,7 +240,7 @@ public class PanelWindowContainer implements DockableWindowContainer
 
    dockablePanel.showDockable(entry.factory.name);
 
-   entry.btn.setSelected(true);
+   if (!entry.factory.name.equals("error-list")) entry.btn.setSelected(true);
 
    if(entry.win instanceof DefaultFocusComponent)
    {
