@@ -55,7 +55,7 @@ public class TopMenu extends ArrayList {
 
             Collection serviceItems = new ArrayList();
             serviceItems.add(new MenuItem("menu.services.hosts", "/smsc/hosts/index.jsp"));
-            serviceItems.add(new MenuItem("menu.services.services", "/smsc/services/index.jsp"));
+//            serviceItems.add(new MenuItem("menu.services.services", "/smsc/services/index.jsp"));
 			serviceItems.add(new MenuItem("menu.services.services", "/smsc/services/resourceGroups.jsp"));
             add(new MenuItem("menu.services", "", serviceItems));
 

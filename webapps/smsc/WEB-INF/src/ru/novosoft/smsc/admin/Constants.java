@@ -12,7 +12,6 @@ public class Constants
 {
   public static final int ROUTE_ID_MAXLENGTH = 32;
   public static final String SMSC_SME_ID = "SMSC";
-  public static final Map SMSC_serv_IDs = new HashMap();
 
   public static final String TomcatRealmName = "SMSC.SmscRealm";
   public static final long ServicesRefreshTimeoutMillis = 1000;
@@ -25,10 +24,4 @@ public class Constants
   public static final String CONSOLE_SESSION_ID = "Console Session";
   public static final long Day = 86400000;
   public static final long Hour = 3600000;
-
-	static
-	{
-		SMSC_serv_IDs.put(new Byte((byte) 1), "SMSCservice1");
-		SMSC_serv_IDs.put(new Byte((byte) 2), "SMSCservice2");
-	}
 }

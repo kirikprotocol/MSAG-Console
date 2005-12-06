@@ -14,7 +14,8 @@
               ru.novosoft.smsc.jsp.util.tables.QueryResultSet,
               ru.novosoft.smsc.jsp.util.tables.DataItem,
               ru.novosoft.smsc.admin.smsc_service.Smsc,
-              ru.novosoft.smsc.admin.smsc_service.SmscList"
+              ru.novosoft.smsc.admin.smsc_service.SmscList,
+              ru.novosoft.smsc.admin.resource_group.ResourceGroupConstants"
 %><jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.smsc_service.Switch"
 /><jsp:setProperty name="bean" property="*"/><%
   FORM_METHOD = "POST";
@@ -31,13 +32,6 @@
 			errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
 	}
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-<table cellpadding=0 cellspacing=0 height=30px class=smsc_status>
-  <tr>
-    <th background="/images/smsc_17.jpg" nowrap><%=TITLE%></th>
-    <td>&nbsp;<%=Constants.SMSC_SME_ID%>&nbsp;<%=getLocString("grammatic.is")%>&nbsp;<%=rgStatus((SMSCAppContext) request.getAttribute("appContext"),  Constants.SMSC_SME_ID)%></td>
-    <td width=12px background="/images/smsc_19.jpg" style="padding-right:0px;"></td>
-  </tr>
-</table>
 <%
   if ((errorMessages.size() == 0)||(!((SMSCJspException) errorMessages.get(0)).getMessage().equals(SMSCErrors.error.smsc.contextInitFailed))) {
   page_menu_begin(out);
@@ -60,6 +54,7 @@
 	<th class=ico><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
 	<th><%=getLocString("common.sortmodes.node")%></th>
 	<th><%=getLocString("common.sortmodes.status")%></th>
+	<th><%=getLocString("common.sortmodes.status")%></th>
 </tr>
 </thead>
 <tbody>
@@ -74,7 +69,8 @@
 <tr class=row<%=id&1%>>
   <td><input class=check type=radio name=checkedSmsc value="<%=node%>"></td>
   <td><%=node%></td>
-  <td><%=smscServStatus((SMSCAppContext) request.getAttribute("appContext"), (String) Constants.SMSC_serv_IDs.get(new Byte(id)))%></td>
+  <td><%=serviceStatus((SMSCAppContext) request.getAttribute("appContext"), (String) ResourceGroupConstants.SMSC_serv_IDs.get(new Byte(id)))%></td>
+  <td><%=smscServStatus((SMSCAppContext) request.getAttribute("appContext"), Constants.SMSC_SME_ID, id)%></td>
 </tr>
 <%}%>
 </tbody>

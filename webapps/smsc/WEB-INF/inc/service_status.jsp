@@ -4,7 +4,8 @@
 					  ru.novosoft.smsc.admin.AdminException,
                  ru.novosoft.smsc.jsp.SMSCAppContext,
                  ru.novosoft.smsc.admin.Constants,
-                 java.util.Iterator"%><%@ include file = "/WEB-INF/inc/show_sme_status.jsp"%><%!
+                 java.util.Iterator,
+                 ru.novosoft.smsc.admin.resource_group.ResourceGroupConstants"%><%@ include file = "/WEB-INF/inc/show_sme_status.jsp"%><%!
 String smeStatus(SMSCAppContext appContext, String serviceId)
 {
 	SmeStatus status = null;
@@ -86,31 +87,32 @@ String serviceStatus(SMSCAppContext appContext, String serviceId, String elem_id
 String smscStatus(SMSCAppContext appContext)
 {
     String elem_id = "RUNNING_STATUSERVICE_" + StringEncoderDecoder.encode(Constants.SMSC_SME_ID);
-	byte status = ServiceInfo.STATUS_UNKNOWN;
-	try {
-		status = appContext.getHostsManager().getServiceInfo(Constants.SMSC_SME_ID).getStatus();
-	} catch (Throwable e)
-	{}
 	String result = "<span id=\"" + elem_id + "\" datasrc=#tdcSmscStatuses DATAFORMATAS=html datafld=\"" + StringEncoderDecoder.encode(Constants.SMSC_SME_ID) + "\">";
-    for (Iterator i = Constants.SMSC_serv_IDs.keySet().iterator(); i.hasNext();)
+    for (Iterator i = ResourceGroupConstants.SMSC_serv_IDs.keySet().iterator(); i.hasNext();)
     {
+	    byte status = ServiceInfo.STATUS_UNKNOWN;
         Byte id = (Byte) i.next();
+	    try
+        {
+		status = appContext.getHostsManager().getServiceInfo((String) ResourceGroupConstants.SMSC_serv_IDs.get(id)).getStatus();
+	    } catch (Throwable e)
+	    {}
 		switch (status)
 		{
 			case ServiceInfo.STATUS_OFFLINE:
                 result = result + Constants.SMSC_SME_ID + id + " " + getLocString("grammatic.is") + " ";
 				result = result + getLocString("common.statuses.offline") + "_";
-                result += smscServStatusString(appContext, (String) Constants.SMSC_serv_IDs.get(id));
+                result += smscServStatusString(appContext, Constants.SMSC_SME_ID, id.byteValue());
 				break;
 			case ServiceInfo.STATUS_ONLINE1:
                 result = result + Constants.SMSC_SME_ID + id + " " + getLocString("grammatic.is") + " ";
 				result = result + getLocString("common.statuses.online") + "_";
-                result += smscServStatusString(appContext, (String) Constants.SMSC_serv_IDs.get(id));
+                result += smscServStatusString(appContext, Constants.SMSC_SME_ID, id.byteValue());
 				break;
 			case ServiceInfo.STATUS_ONLINE2:
                 result = result + Constants.SMSC_SME_ID + id + " " + getLocString("grammatic.is") + " ";
 				result = result + getLocString("common.statuses.online") + "_";
-                result += smscServStatusString(appContext, (String) Constants.SMSC_serv_IDs.get(id));
+                result += smscServStatusString(appContext, Constants.SMSC_SME_ID, id.byteValue());
 				break;
 			default:
 				result += getLocString("common.statuses.unknown");
@@ -122,33 +124,40 @@ String smscStatus(SMSCAppContext appContext)
 	return result;
 }
 
-String smscServStatus(SMSCAppContext appContext, String serviceId)
+String smscServStatus(SMSCAppContext appContext, String serviceId, byte nodeId)
 {
     String elem_id = "RUNNING_STATUSERVICE_" + StringEncoderDecoder.encode(serviceId);
 	String result = "<span id=\"" + elem_id + "\" datasrc=#tdcStatuses DATAFORMATAS=html datafld=\"" + StringEncoderDecoder.encode(serviceId) + "\">";
-    result += smscServStatusString(appContext, serviceId);
+    result += smscServStatusString(appContext, serviceId, nodeId);
 	result += "</span>";
 	return result;
 }
 
-String smscServStatusString(SMSCAppContext appContext, String serviceId)
+String smscServStatusString(SMSCAppContext appContext, String serviceId, byte nodeId)
 {
+    //the same code is in Statuses.java
 	byte status = ServiceInfo.STATUS_UNKNOWN;
 	try {
 		status = appContext.getHostsManager().getServiceInfo(serviceId).getStatus();
 	} catch (Throwable e)
 	{}
 	String result = "";
+    String deact = getLocString("common.statuses.deactivated");
+    String act = getLocString("common.statuses.activated");
 		switch (status)
 		{
 			case ServiceInfo.STATUS_OFFLINE:
-				result += getLocString("common.statuses.deactivated");
+				result += deact;
 				break;
 			case ServiceInfo.STATUS_ONLINE1:
-				result += getLocString("common.statuses.activated");
+                if (nodeId == ServiceInfo.STATUS_ONLINE1)
+				    result += act;
+                    else result += deact;
 				break;
 			case ServiceInfo.STATUS_ONLINE2:
-				result += getLocString("common.statuses.activated");
+                if (nodeId == ServiceInfo.STATUS_ONLINE2)
+				    result += act;
+                    else result += deact;
 				break;
 			default:
 				result += getLocString("common.statuses.unknown");

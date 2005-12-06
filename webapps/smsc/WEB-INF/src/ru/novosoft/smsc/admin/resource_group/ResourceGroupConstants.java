@@ -1,5 +1,8 @@
 package ru.novosoft.smsc.admin.resource_group;
 
+import java.util.Map;
+import java.util.HashMap;
+
 /**
  * Created by IntelliJ IDEA.
  * User: starkom
@@ -23,6 +26,14 @@ public class ResourceGroupConstants
 	public static final String RESOURCEGROUP_TYPE_STRING_HA = "HA";
 
 	public static final String RESOURCEGROUP_INSTALLTYPE_PARAM_NAME = "installation.type";
+
+	public static final Map SMSC_serv_IDs = new HashMap();
+
+	static
+	{
+		SMSC_serv_IDs.put(new Byte((byte) 1), "SMSCservice1");
+		SMSC_serv_IDs.put(new Byte((byte) 2), "SMSCservice2");
+	}
 
 	public static byte getTypeFromString(String sType)
 	{

@@ -71,7 +71,7 @@ public class ResourceGroupHAImpl extends ResourceGroupImpl
 		return NativeResourceGroupHA.ResourceGroup_listNodes(swigCPtr);
 	}
 
-	public byte getOnlineStatus(String nodeName)
+/*	public byte getOnlineStatus(String nodeName)
 	{
 		logger.debug("Getting online status for rg: " + getName() + " at node: " + nodeName);
 		if (NativeResourceGroupHA.ResourceGroup_onlineStatus(swigCPtr, nodeName))
@@ -84,7 +84,7 @@ public class ResourceGroupHAImpl extends ResourceGroupImpl
 				logger.debug("OFFLINE returned");
 				return ServiceInfo.STATUS_OFFLINE;
 			}
-	}
+	}*/
 
 	public byte getOnlineStatus()
 	{

@@ -56,7 +56,7 @@ public class Statuses extends PageBean
     this.colored = colored;
   }
 
-	public String smscServStatusString(String serviceId)
+	public String smscServStatusString(String serviceId, byte nodeId)
 	{
 		byte status = ServiceInfo.STATUS_UNKNOWN;
 		try {
@@ -64,16 +64,22 @@ public class Statuses extends PageBean
 		} catch (Throwable e)
 		{}
 		String result = "";
+		String deact = appContext.getLocaleString("common.statuses.deactivated");
+		String act = appContext.getLocaleString("common.statuses.activated");
 			switch (status)
 			{
 				case ServiceInfo.STATUS_OFFLINE:
-					result += appContext.getLocaleString("common.statuses.deactivated");
+					result += deact;
 					break;
 				case ServiceInfo.STATUS_ONLINE1:
-					result += appContext.getLocaleString("common.statuses.activated");
+					if (nodeId == ServiceInfo.STATUS_ONLINE1)
+						result += act;
+						else result += deact;
 					break;
 				case ServiceInfo.STATUS_ONLINE2:
-					result += appContext.getLocaleString("common.statuses.activated");
+					if (nodeId == ServiceInfo.STATUS_ONLINE2)
+						result += act;
+						else result += deact;
 					break;
 				default:
 					result += appContext.getLocaleString("common.statuses.unknown");

@@ -19,8 +19,6 @@ public interface ResourceGroup
 {
 	String getName();
 
-	byte getOnlineStatus(String nodeName);
-
 	byte getOnlineStatus();
 
 	void switchOver(String nodeName);

@@ -96,7 +96,7 @@ public class Switch extends SmscBean
 	{
 	  try
 	  {
-		  String smscServName = (String) Constants.SMSC_serv_IDs.get(new Byte(SmscList.getNodeId(checkedSmsc)));
+		  String smscServName = (String) ResourceGroupConstants.SMSC_serv_IDs.get(new Byte(SmscList.getNodeId(checkedSmsc)));
 		  hostsManager.startService(smscServName);
 		  return RESULT_OK;
 	  }
@@ -111,7 +111,7 @@ public class Switch extends SmscBean
   {
 	try
 	{
-		String smscServName = (String) Constants.SMSC_serv_IDs.get(new Byte(SmscList.getNodeId(checkedSmsc)));
+		String smscServName = (String) ResourceGroupConstants.SMSC_serv_IDs.get(new Byte(SmscList.getNodeId(checkedSmsc)));
 		hostsManager.shutdownService(smscServName);
 		return RESULT_OK;
 	}

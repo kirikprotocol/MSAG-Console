@@ -1,5 +1,6 @@
 <%@page import="java.util.*, ru.novosoft.smsc.admin.service.ServiceInfo,
-                ru.novosoft.smsc.admin.Constants"%><%@
+                ru.novosoft.smsc.admin.Constants,
+                ru.novosoft.smsc.admin.resource_group.ResourceGroupConstants"%><%@
  include file="/WEB-INF/inc/localization.jsp"%><jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.services.Statuses"/><jsp:setProperty name="bean" property="*"/><%
 String CPATH = request.getContextPath() + "/smsc";
 bean.process(request);
@@ -8,7 +9,7 @@ if (!c.contains(Constants.SMSC_SME_ID))
   c.add(Constants.SMSC_SME_ID);
 if (!c.contains(Constants.ARCHIVE_DAEMON_SVC_ID))
   c.add(Constants.ARCHIVE_DAEMON_SVC_ID);
-c.addAll(Constants.SMSC_serv_IDs.values());
+c.addAll(ResourceGroupConstants.SMSC_serv_IDs.values());
 String result = "";
 for (Iterator i = c.iterator(); i.hasNext(); )
 {
