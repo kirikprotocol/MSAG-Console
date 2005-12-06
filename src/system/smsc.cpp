@@ -1049,7 +1049,14 @@ void Smsc::run()
          if(rv!=ETIME && rv!=ETIMEDOUT)break;
       }
     }
-    if(stopFlag)return;
+    if(stopFlag)
+    {
+      delete inManCom;
+      inManCom=0;
+      delete statMan;
+      statMan=0;
+      return;
+    }
     // starting inman
     smeman.registerInternallSmeProxy("INMANCOMM",inManCom);
     tp.startTask(inManCom);
