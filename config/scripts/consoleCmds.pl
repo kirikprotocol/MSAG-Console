@@ -30,6 +30,13 @@ getline($sck,60);
 while(<$f>)
 {
   s/[\r\n]//g;
+  next unless length($_);
+  if(/^#/)
+  {
+    print "$_\n";
+    next;
+  }
+
   putline($sck,$_);
   getline($sck,60);
 }
