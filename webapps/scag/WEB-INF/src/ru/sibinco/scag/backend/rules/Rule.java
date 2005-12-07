@@ -50,9 +50,8 @@ public class Rule
    // ruleMap.put("length",new Long(length));
   }
 
-  public static Rule createNewRule(long id,String transport,Provider provider,String name) {
-    String lineSeparator=System.getProperty("line.separator");
-    int sep=lineSeparator.length();
+  public static Rule createNewRule(long id,String transport,Provider provider,String name)
+  {
     String schema=Transport.getSchemaByTransport(transport);
     LinkedList body=new LinkedList();
     body.add(XML_LINE);
