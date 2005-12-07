@@ -234,7 +234,7 @@ public class Index extends PageBean
   public boolean isSmeRunning()
   {
     try {
-      return appContext.getHostsManager().getServiceInfo(proxySmeId).getStatus() == ServiceInfo.STATUS_RUNNING;
+      return appContext.getHostsManager().getServiceInfo(proxySmeId).isOnline();
     } catch (AdminException e) {
       logger.debug("Couldn't get proxysme status", e);
       return false;
