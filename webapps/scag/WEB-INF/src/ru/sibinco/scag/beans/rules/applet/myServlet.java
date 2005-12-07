@@ -55,6 +55,7 @@ public class myServlet extends HttpServlet
   protected static final int LoadNewRule = 29;
   protected static final int AddRule = 30;
   protected static final int RootElement = 31;
+  protected static final int RuleName = 32;
   protected HttpSession session = null;
 
   // public static String userdir=null;
@@ -75,6 +76,7 @@ public class myServlet extends HttpServlet
        case NewRule:    li=NewRule(req);   SendResult(li,res); break;
        case RootElement:li=RootElement(req);   SendResult(li,res); break;
        case LoadRule:   li=LoadRule(req,file,res); SendResult(li,res); break;
+       case RuleName:   li=RuleName(req,file,res); SendResult(li,res); break;
        case LoadNewRule:li=LoadNewRule(req,file,res); SendResult(li,res); break;
        case ExistRule:  ExistRule(req,file ,res); break;
        case Transport : list=getTransport(file,req);break;
@@ -192,14 +194,34 @@ public class myServlet extends HttpServlet
            } catch (IOException e) { e.printStackTrace(); }
          }
   }
+
+ private LinkedList RuleName(HttpServletRequest req,final String file,HttpServletResponse res) throws IOException
+    {
+      System.out.println("RuleName id= "+file);
+      SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
+      Rule rule=appContext.getRuleManager().getRule(Long.valueOf(file));
+      String name; LinkedList li= new LinkedList();
+      if (rule!=null) {
+        name=rule.getName();
+        li.add("ok");li.add(name);
+      }
+      else {
+        session = req.getSession(false);
+        Rule newRule =(Rule)session.getAttribute("newRule");
+        if (newRule!=null) {name=newRule.getName(); li.add("ok");li.add(name);}
+        else li.add("Error : Not such Rule with id= "+file);
+      }
+      return li;
+    }
   private LinkedList LoadRule(HttpServletRequest req,final String file,HttpServletResponse res) throws IOException
     {
       System.out.println("LoadRule id= "+file);
       SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
-      Map ruleMap=appContext.getRuleManager().getRuleMap(Long.valueOf(file));
-      Long length=(Long) ruleMap.get("length");
+      /*Map ruleMap=appContext.getRuleManager().getRuleMap(Long.valueOf(file));
+       Long length=(Long) ruleMap.get("length");
       res.setHeader("length",String.valueOf(length));
-      return (LinkedList) ruleMap.get("body");
+      LinkedList li=(LinkedList) ruleMap.get("body"); */
+      return appContext.getRuleManager().getRuleBody(Long.valueOf(file));
     }
 
   private LinkedList LoadNewRule(HttpServletRequest req,final String file,HttpServletResponse res) throws IOException
@@ -208,8 +230,9 @@ public class myServlet extends HttpServlet
     LinkedList li;
     session = req.getSession(false);
     Rule newRule =(Rule)session.getAttribute("newRule");
-    long length= newRule.getLength();
+    /*long length= newRule.getLength();
     res.setHeader("length",String.valueOf(length));
+    */
     li=newRule.getBody();
     if(li.size()>0) li.addFirst("ok");
     else li.add("error: newRule is null!");

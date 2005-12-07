@@ -69,11 +69,17 @@ public class RuleManager
   {
     return (Rule) rules.get(ruleId);
   }
-   public Map getRuleMap(Long ruleId)
+  public LinkedList getRuleBody(Long ruleId)
+ {
+   Rule rule= (Rule) rules.get(ruleId);
+   return rule.getBody();
+ }
+
+  /*  public Map getRuleMap(Long ruleId)
   {
     Rule rule= (Rule) rules.get(ruleId);
     return rule.getRuleMap();
-  }
+  }  */
 
   public String getRuleTransportDir(String ruleId)
   {       Rule r=(Rule) rules.get(Long.decode(ruleId));
@@ -105,8 +111,8 @@ public class RuleManager
 
         logger.debug("enter " + this.getClass().getName() + ".loadFromFile(\"" + fileName + "\")");
         LinkedList body=LoadXml(file.getAbsolutePath());
-        long length=file.length();
-        System.out.println("RuleManager.LoadFromFolder file.length= "+length);
+        //long length=file.length();
+        //System.out.println("RuleManager.LoadFromFolder file.length= "+length);
         try {
         final Document ruleDoc = Utils.parse(file.getAbsolutePath());
         Element el=ruleDoc.getDocumentElement();
@@ -141,7 +147,7 @@ public class RuleManager
         Provider provider = (Provider) providerManager.getProviders().get(providerId);
         Long id=Long.decode(ruleId);
 
-        rules.put(id, new Rule(id,name, notes,provider,transport,body,length));
+        rules.put(id, new Rule(id,name, notes,provider,transport,body/*,length*/));
         logger.debug("exit " + this.getClass().getName() + ".loadFromFile(\"" + fileName + "\")");
 
 
@@ -155,7 +161,7 @@ public class RuleManager
       String fileId=fileName.substring(5,fileName.length()-4);
       Long id=Long.decode(fileId);
       String notes="Load Error "+e.getMessage();
-      rules.put(id, new Rule(id,"unknown", notes,null,_transportDir.toLowerCase(),body,length));
+      rules.put(id, new Rule(id,"unknown", notes,null,_transportDir.toLowerCase(),body/*,length*/));
       logger.error("Couldn't parse", e);
       System.out.println("RuleManager LoadFromFile fileName= "+fileName+" SAXException e= "+e.getMessage());
           // throw new SibincoException("Couldn't parse", e);
@@ -180,7 +186,7 @@ public class RuleManager
      try {  _in = new FileInputStream(fileName); in = new BufferedReader(new InputStreamReader(_in));
        li.addFirst("ok");
        while ((inputLine = in.readLine()) != null) {li.add(inputLine);length+=inputLine.length(); }
-     } catch (FileNotFoundException e) { //e.printStackTrace();
+     } catch (FileNotFoundException e) { e.printStackTrace();
        li.addFirst(e.getMessage());
      } catch (IOException e) {  e.printStackTrace();
      }
@@ -228,7 +234,7 @@ public class RuleManager
   Long Id=Long.valueOf(ruleId);
   rules.put(Id,newRule);
   lastRuleId++;
-  saveRule(r,newRule);
+  saveRule(r,ruleId);
 }
 
   public synchronized void updateRule(BufferedReader r, final String ruleId) throws SibincoException
@@ -236,27 +242,27 @@ public class RuleManager
    //String ruleId=fileName.substring(5,fileName.length()-4);
    System.out.println("updateRule ruleId= "+ruleId);
    //gateway.updateRule(ruleId);
-   Rule rule=(Rule)rules.get(Long.valueOf(ruleId));
-   saveRule(r,rule);
+   saveRule(r,ruleId);
  }
 
-  private void saveRule(BufferedReader r,Rule rule) throws SibincoException
+  private void saveRule(BufferedReader r,String ruleId) throws SibincoException
     {
+      Rule rule=(Rule)rules.get(Long.valueOf(ruleId));
       try {
-        String filename="rule_"+String.valueOf(rule.getId())+".xml";
+        String filename="rule_"+ruleId+".xml";
         String transport= rule.getTransport().toLowerCase();
         final File folder = new File(rulesFolder, transport);
         File newFile= new File(folder,filename);
         final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), Functions.getLocaleEncoding()));
-        String s; LinkedList li=new LinkedList();
+        String s; LinkedList li=new LinkedList();li.addFirst("ok");
         while((s=r.readLine())!=null) { li.add(s);
           //System.out.println(s);
           out.println(s);
         }
         out.flush();
         out.close();
-        long length=newFile.length();
-        rule.updateBody(li,length);
+        //long length=newFile.length();
+        rule.updateBody(li/*,length*/);
       } catch (FileNotFoundException e) {
         throw new SibincoException("Couldn't save new rule : Couldn't write to destination config filename: " + e.getMessage());
       } catch (IOException e) {
