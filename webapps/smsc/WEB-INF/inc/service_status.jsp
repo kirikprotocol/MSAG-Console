@@ -166,6 +166,8 @@ String smscServStatusString(SMSCAppContext appContext, String serviceId, byte no
 	return result;
 }
 
+%><%
+if( browserType == BROWSER_TYPE_MSIE ) {
 %><OBJECT id="tdcStatuses" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
 	<PARAM NAME="DataURL" VALUE="<%=CPATH%>/services/statuses.jsp">
 	<PARAM NAME="UseHeader" VALUE="True">
@@ -191,3 +193,6 @@ function refreshStatus()
 }
 refreshStatus();
 </script>
+<%
+}
+%>

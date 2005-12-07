@@ -17,9 +17,20 @@ private String ServiceIDForShowStatus = null;
 private boolean isServiceStatusColored = false;
 private boolean isServiceStatusNeeded = false;
 private java.util.List errorMessages = new ArrayList();
+private final int BROWSER_TYPE_UNKNOWN=0;
+private final int BROWSER_TYPE_MSIE=1;
+private final int BROWSER_TYPE_MOZILLA=2;
+private final int BROWSER_TYPE_SAFARI=3;
 %><%@
  include file="/WEB-INF/inc/localization.jsp"%><%
 errorMessages.clear();
+int browserType = BROWSER_TYPE_UNKNOWN;
+{
+  String _browserType = request.getHeader("User-Agent");
+  if( _browserType.indexOf("MSIE") != -1 ) browserType = BROWSER_TYPE_MSIE;
+  else if( _browserType.indexOf("AppleWebKit") != -1 ) browserType = BROWSER_TYPE_SAFARI;
+  else if( _browserType.indexOf("Mozilla/") != -1 ) browserType = BROWSER_TYPE_MOZILLA;
+}
 request.setAttribute(Constants.SMSC_ERROR_MESSAGES_ATTRIBUTE_NAME, errorMessages);
 FORM_URI = (String)request.getAttribute("requestURI");
 if (FORM_URI == null)
