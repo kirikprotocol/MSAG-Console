@@ -18,24 +18,19 @@ using smsc::inman::comp::InapOpCode;
 InapOpResListener::InapOpResListener(Invoke * op, Inap * pInap)
     : orgInv(op), orgInap(pInap)
 { 
-    assert(op);
-    assert(pInap);
+    assert(op && pInap);
 }
 
 void InapOpResListener::error(TcapEntity* resE)
 {
+    orgInv->setListener(NULL);
     orgInap->onOperationError(orgInv, resE);
 }
 
 void InapOpResListener::lcancel()
 {
-    if ((orgInv->getResponseType() == Invoke::respResultOrError)
-        && (orgInv->getStatus() == Invoke::resWait)) {
-        orgInap->onOperationLCancel(orgInv);
-    } else { //just release original Invoke and its Listener
-        orgInv->setListener(NULL);
-        orgInap->releaseOperation(orgInv);
-    }
+    orgInv->setListener(NULL);
+    orgInap->onOperationLCancel(orgInv);
 }
 
 
@@ -108,8 +103,9 @@ void Inap::releaseAllOperations(void)
 void Inap::releaseOperation(Invoke * inv)
 {
     USHORT_T invId = inv->getId();
+    UCHAR_T  opcode = inv->getOpcode();
     smsc_log_debug(logger, "Inap: releasing Invoke[%u] (opcode = %u), respType: %d, status: %d",
-                   invId, inv->getOpcode(), inv->getResponseType(), inv->getStatus());
+                   invId, opcode, inv->getResponseType(), inv->getStatus());
 
     ResultHandlersMAP::const_iterator it = resHdls.find(invId);
     if (it != resHdls.end()) {
@@ -124,7 +120,7 @@ void Inap::releaseOperation(Invoke * inv)
 void Inap::onOperationError(Invoke *op, TcapEntity * resE)
 {
     UCHAR_T opcode = op->getOpcode();
-    smsc_log_error(logger, "Inap: Invoke[%u] (opcode = %u) got an error: %d",
+    smsc_log_error(logger, "Inap: Invoke[%u] (opcode = %u) got an returnError: %d",
                    (unsigned)op->getId(), (unsigned)opcode, (unsigned)resE->getOpcode());
     releaseOperation(op);
 
@@ -133,27 +129,40 @@ void Inap::onOperationError(Invoke *op, TcapEntity * resE)
     case InapOpCode::InitialDPSMS: {
         ssfHdl->abortSMS(resE->getOpcode(), false);
     } break;
-//    case InapOpCode::EventReportSMS: {
-//    } break;
+    case InapOpCode::EventReportSMS: {
+        ssfHdl->abortSMS(resE->getOpcode(), false);
+    } break;
     default:;
     }
 }
 
-//Called if Operation got L_CANCEL while waiting result
+//Called if Operation got L_CANCEL, possibly while waiting result
 void Inap::onOperationLCancel(Invoke *op)
 {
     UCHAR_T opcode = op->getOpcode();
-    smsc_log_error(logger, "Inap: Invoke[%u] (opcode = %u) got L_CANCEL",
+
+    if ((op->getResponseType() == Invoke::respResultOrError)
+        && (op->getStatus() == Invoke::resWait))
+        smsc_log_error(logger,
+                "Inap: Invoke[%u] (opcode = %u) got L_CANCEL expecting returnResult",
+                (unsigned)op->getId(), (unsigned)opcode);
+    else
+        smsc_log_debug(logger, "Inap: Invoke[%u] (opcode = %u) got L_CANCEL",
                    (unsigned)op->getId(), (unsigned)opcode);
     releaseOperation(op);
 
-    //call operation errors handler
-    switch(opcode) {
+    //check for Inap state, to handle possible CAP3SMS CONTRACT timeout expiration
+    switch (opcode) {
     case InapOpCode::InitialDPSMS: {
-        ssfHdl->abortSMS(smsc::inman::tcapResourceLimitation, true);
+        if (_state == Inap::ctrInited) { //still has not got smsProcessingPackage 
+            smsc_log_error(logger,
+                "Inap: state %d, still has not got any Operation of smsProcessingPackage",
+                _state);
+            ssfHdl->abortSMS(smsc::inman::tcapResourceLimitation, true);
+        }
     } break;
-//    case InapOpCode::EventReportSMS: {
-//    } break;
+    case InapOpCode::EventReportSMS: { //normal situation
+    } break;
     default:;
     }
 }
