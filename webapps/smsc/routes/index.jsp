@@ -218,7 +218,7 @@ for(Iterator i = bean.getRoutes().iterator(); i.hasNext(); row++)
 %>
 <tr class=row<%=row&1%>>
 	<td><input class=check type=checkbox name=checkedRouteIds value="<%=encRouteId%>" <%=bean.isRouteChecked(routeId) ? "checked" : ""%>></td>
-	<td <%=onClick%>><div id=<%=rowId%>_HEAD <%=encNotes.length() > 0 ? "class=collapsing_list_closed" : "class=collapsing_list_empty"%>><a href="#" title="<%=getLocString("routes.editSubTitle")%>" onClick='return edit("<%=encRouteId%>")'><%=encRouteId%></a></div></td>
+	<td <%=onClick%>><div id=<%=rowId%>_HEAD <%=encNotes.length() > 0 ? "class=collapsing_list_closed" : "class=collapsing_list_empty"%>><a href="javascript:edit('<%=encRouteId%>')" title="<%=getLocString("routes.editSubTitle")%>"><%=encRouteId%></a></div></td>
 	<td <%=onClick%>><%if (isActive                 ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
 	<td <%=onClick%>><%if (isEnabling               ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
 	<td <%=onClick%>><%if (isBilling                ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
