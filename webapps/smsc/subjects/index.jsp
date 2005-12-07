@@ -164,9 +164,9 @@ function clickMasks(idSuffix)
 <thead>
 <tr>
 	<th>&nbsp;</th>
-	<th><a href="#" <%=bean.getSort().endsWith("Name") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.nameHint")%>" onclick='return setSort("Name")'><%=getLocString("common.sortmodes.name")%></a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("Default SME") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("subjects.sortDefaultSmeHint")%>" onclick='return setSort("Default SME")'><%=getLocString("subjects.sortDefaultSme")%></a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("Masks") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.masksHint")%>" onclick='return setSort("Masks")'><%=getLocString("common.sortmodes.masks")%></a></th>
+	<th><a href="javascript:setSort('Name')" <%=bean.getSort().endsWith("Name") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.nameHint")%>"><%=getLocString("common.sortmodes.name")%></a></th>
+	<th><a href="javascript:setSort('Default SME')" <%=bean.getSort().endsWith("Default SME") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("subjects.sortDefaultSmeHint")%>"><%=getLocString("subjects.sortDefaultSme")%></a></th>
+	<th><a href="javascript:setSort('Masks')" <%=bean.getSort().endsWith("Masks") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.masksHint")%>"><%=getLocString("common.sortmodes.masks")%></a></th>
 </tr>
 </thead>
 <tbody>
@@ -192,7 +192,7 @@ for(Iterator i = bean.getSubjects().iterator(); i.hasNext(); row++)
 %>
 <tr class=row<%=row&1%>>
 	<td class=check><input class=check type=checkbox name=checkedSubjects value="<%=encName%>" <%=bean.isSubjectChecked(name) ? "checked" : ""%>></td>
-	<td <%=onClick%>><div id=<%=rowId%>_HEAD <%=encNotes.length() > 0 ? "class=collapsing_list_closed" : "class=collapsing_list_empty"%>><a href="#" title="<%=getLocString("subjects.editSubTitle")%>" onClick='return edit("<%=encName%>")'><%=encName%></a></div></td>
+	<td <%=onClick%>><div id=<%=rowId%>_HEAD <%=encNotes.length() > 0 ? "class=collapsing_list_closed" : "class=collapsing_list_empty"%>><a href="javascript:edit('<%=encName%>')" title="<%=getLocString("subjects.editSubTitle")%>"><%=encName%></a></div></td>
 	<td <%=onClick%>><%=encDefSme%></td>
 	<td><%
     if (masks.size() > 0)

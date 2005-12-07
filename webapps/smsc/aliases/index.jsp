@@ -79,9 +79,9 @@ function setSort(sorting)
 <thead>
 <tr>
 	<th>&nbsp;</th>
-	<th><a href="#" <%=bean.getSort().endsWith("Alias") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.aliasHint")%>" onclick='return setSort("Alias")'><%=getLocString("common.sortmodes.alias")%></a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("Address") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.addressHint")%>" onclick='return setSort("Address")'><%=getLocString("common.sortmodes.address")%></a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("Hide") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.hideHint")%>" onclick='return setSort("Hide")'><%=getLocString("common.sortmodes.hide")%></a></th>
+	<th><a href="javascript:setSort('Alias')" <%=bean.getSort().endsWith("Alias") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.aliasHint")%>"><%=getLocString("common.sortmodes.alias")%></a></th>
+	<th><a href="javascript:setSort('Address')" <%=bean.getSort().endsWith("Address") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.addressHint")%>"><%=getLocString("common.sortmodes.address")%></a></th>
+	<th><a href="javascripr:setSort('Hide')" <%=bean.getSort().endsWith("Hide") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.hideHint")%>"><%=getLocString("common.sortmodes.hide")%></a></th>
 </tr>
 </thead>
 <tbody>
@@ -95,7 +95,7 @@ String encAddress = StringEncoderDecoder.encode((String)item.getValue("Address")
 %>
 <tr class=row<%=(row++)&1%>>
 	<td class=check><input class=check type=checkbox name=checkedAliases value="<%=encAlias%>" <%=bean.isAliasChecked((String)item.getValue("Alias")) ? "checked" : ""%>></td>
-	<td class=name><a href="#" title="<%=getLocString("aliases.editTitle")%>" onClick='return edit("<%=encAlias%>", "<%=encAddress%>", "<%=item.getValue("Hide")%>")'><%=encAlias%></a></td>
+	<td class=name><a href="javascript:edit('<%=encAlias%>', '<%=encAddress%>', '<%=item.getValue("Hide")%>')" title="<%=getLocString("aliases.editTitle")%>"><%=encAlias%></a></td>
 	<td><%=encAddress%></td>
 	<td><%=item.getValue("Hide")%></td>
 </tr>

@@ -116,8 +116,8 @@ String serviceControl = (row == 0) ? "start" : "stop";
 %>
 <tr class=row<%=row&1%>>
 	<td><input class=check type=checkbox name=serviceIds value="<%=encodedServiceId%>" <%=checkedServices.contains(serviceId) ? "checked" : ""%>></td>
-	<td><a  href="#" title="<%=getLocString("host.editServHint")%>" onClick="return editService('<%=encodedServiceId%>');"><%=getLocString("common.buttons.edit")%></a></td>
-	<td><a href="#" title="<%=getLocString("host.viewServInfo")%>" onClick="return viewService('<%=encodedServiceId%>');"><%=encodedServiceId%></a></td>
+	<td><a  href="javascript:editService('<%=encodedServiceId%>')" title="<%=getLocString("host.editServHint")%>"><%=getLocString("common.buttons.edit")%></a></td>
+	<td><a href="javascript:viewService('<%=encodedServiceId%>')" title="<%=getLocString("host.viewServInfo")%>"><%=encodedServiceId%></a></td>
 	<td><%=serviceStatus(bean.getAppContext(), serviceId)%></td>
 </tr>
 <%}}%>

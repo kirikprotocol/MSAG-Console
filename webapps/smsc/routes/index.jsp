@@ -182,14 +182,13 @@ o.put("SMEs", "5");
 <thead>
 <tr>
 	<th class=ico><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
-	<th><a href="#" <%=bean.getSort().endsWith("Route ID")                ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.nameHint")%>"      onclick='return setSort("Route ID")'               ><%=getLocString("common.sortmodes.name")%></a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("active")                  ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.activeHint")%>"    onclick='return setSort("active")'                 ><%=getLocString("common.sortmodes.active")%></a></th>
-
-	<th><a href="#" <%=bean.getSort().endsWith("isEnabling")              ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.allowHint")%>"     onclick='return setSort("isEnabling")'             ><%=getLocString("common.sortmodes.allow")%></a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("isBilling")               ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.billingHint")%>"   onclick='return setSort("isBilling")'              ><%=getLocString("common.sortmodes.billing")%></a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("isArchiving")             ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.archivingHint")%>" onclick='return setSort("isArchiving")'            ><%=getLocString("common.sortmodes.archiving")%></a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("suppressDeliveryReports") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.reportsHint")%>"   onclick='return setSort("suppressDeliveryReports")'><%=getLocString("common.sortmodes.reports")%></a></th>
-  <th><a href="#" <%=bean.getSort().endsWith("isTransit")               ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.transitHint")%>"   onclick='return setSort("isTransit")'              ><%=getLocString("common.sortmodes.transit")%></a></th>
+	<th><a href="javascript:setSort('Route ID')" <%=bean.getSort().endsWith("Route ID")                ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.nameHint")%>"><%=getLocString("common.sortmodes.name")%></a></th>
+	<th><a href="javascript:setSort('active')" <%=bean.getSort().endsWith("active")                    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.activeHint")%>"><%=getLocString("common.sortmodes.active")%></a></th>
+	<th><a href="javascript:setSort('isEnabling')" <%=bean.getSort().endsWith("isEnabling")            ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.allowHint")%>"><%=getLocString("common.sortmodes.allow")%></a></th>
+	<th><a href="javascript:setSort('isBilling')" <%=bean.getSort().endsWith("isBilling")              ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.billingHint")%>"><%=getLocString("common.sortmodes.billing")%></a></th>
+	<th><a href="javascript:setSort('isArchiving')" <%=bean.getSort().endsWith("isArchiving")          ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.archivingHint")%>"><%=getLocString("common.sortmodes.archiving")%></a></th>
+	<th><a href="javascript:setSort('suppressDeliveryReports')" <%=bean.getSort().endsWith("suppressDeliveryReports") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.reportsHint")%>"><%=getLocString("common.sortmodes.reports")%></a></th>
+  <th><a href="javascript:setSort('isTransit')" <%=bean.getSort().endsWith("isTransit")              ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.transitHint")%>"><%=getLocString("common.sortmodes.transit")%></a></th>
 </tr>
 </thead>
 <tbody>

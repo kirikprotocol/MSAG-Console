@@ -18,7 +18,6 @@ int pageCurrent = bean.getStartPositionInt() / bean.getPageSizeInt(); // 1
 int pageFirst = (pageCurrent -4) < 0 ? 0 : (pageCurrent -4); // 0
 int pageTotal = (itemsTotal / bean.getPageSizeInt()) + ((itemsTotal % bean.getPageSizeInt()) > 0 ? 1 : 0); // 2
 int pageLast = (pageCurrent +4) > (pageTotal-1) ? (pageTotal-1) : (pageCurrent +4);
-String jscript = "navigatePage";
 %>
 <script>
 function navigatePage(pageNum)
@@ -33,16 +32,16 @@ function navigatePage(pageNum)
 </script>
 <table class=navbar cellspacing=1 cellpadding=0>
 <tr>
-<td class=first onclick="return <%=jscript%>(0)" title="<%=getLocString("navbar.firstPage")%>"><a href="#">&nbsp;</a></td>
+<td class=first><a href="javascript:navigatePage(0)"><img src="/images/nav_first.gif" width="12" height="11" alt="<%=getLocString("navbar.firstPage")%>"></a></td>
 <%if(pageCurrent > 0){%>
-<td class=prev onclick="return <%=jscript%>(<%=pageCurrent-1%>)" title="<%=getLocString("navbar.prevPage")%>"><a href="#">&nbsp;</a></td>
+<td class=prev><a href="javascript:navigatePage(<%=pageCurrent-1%>)"><img src="/images/nav_prev.gif" width="12" height="11" alt="<%=getLocString("navbar.prevPage")%>"></a></td>
 <%}
 for(int pageNum=pageFirst;pageNum<=pageLast;pageNum++)
 {%>
-<td class=<%=pageNum==pageCurrent ? "current":"page"%> onclick="return <%=jscript%>(<%=pageNum%>)" title="<%=getLocString("navbar.pagePre") + pageNum + 1%>"><%=pageNum + 1%></td>
+<td class="<%=pageNum==pageCurrent ? "current":"page"%>" ><a href="javascript:navigatePage(<%=pageNum%>)" title="<%=getLocString("navbar.pagePre") + pageNum + 1%>"><%=pageNum + 1%></a></td>
 <%}%>
 <%if(pageCurrent+1 < pageTotal){%>
-<td class=next title="<%=getLocString("navbar.nextPage")%>" onclick="return <%=jscript%>(<%=pageCurrent+1%>)"><a href="#">&nbsp;</a></td>
+<td class=next><a href="javascript:navigatePage(<%=pageCurrent+1%>)"><img src="/images/nav_next.gif" width="12" height="11" alt="<%=getLocString("navbar.nextPage")%>"></a></td>
 <%}%>
-<td class=last onclick="return <%=jscript%>(<%=pageTotal > 0 ? pageTotal-1 : 0%>)" title="<%=getLocString("navbar.lastPage")%>"><a href="#">&nbsp;</a></td>
+<td class=last><a href="javascript:navigatePage(<%=pageTotal > 0 ? pageTotal-1 : 0%>)"><img src="/images/nav_last.gif" width="12" height="11" alt="<%=getLocString("navbar.lastPage")%>"></a></td>
 <td class=total><%= getLocString("common.sortmodes.total") + ": " + itemsTotal + " " + getLocString("common.util.items")%></td>

@@ -72,9 +72,9 @@ function setSort(sorting)
 <col width=10%>
 <col width=45%>
 <tr>
-	  <th><a href="#" <%=bean.getSort().endsWith("commutator") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.commutatorHint")%>" onclick='return setSort("commutator")'><%=getLocString("common.sortmodes.commutator")%></a></th>
-	  <th><a href="#" <%=bean.getSort().endsWith("status")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.statusHint")%>"     onclick='return setSort("status")'    ><%=getLocString("common.sortmodes.status")%></a></th>
-	  <th><a href="#" <%=bean.getSort().endsWith("failures")   ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.failuresHint")%>"   onclick='return setSort("failures")'  ><%=getLocString("common.sortmodes.failures")%></a></th>
+	  <th><a href="javascript:setSort('commutator')" <%=bean.getSort().endsWith("commutator") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.commutatorHint")%>"><%=getLocString("common.sortmodes.commutator")%></a></th>
+	  <th><a href="javascript:setSort('status')" <%=bean.getSort().endsWith("status")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.statusHint")%>"><%=getLocString("common.sortmodes.status")%></a></th>
+	  <th><a href="javascript:setSort('failures')" <%=bean.getSort().endsWith("failures")   ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.failuresHint")%>"><%=getLocString("common.sortmodes.failures")%></a></th>
 	  <th><%=getLocString("common.sortmodes.actions")%></th>
 </tr><%
 for (Iterator i = mscList.iterator(); i.hasNext();) {

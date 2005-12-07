@@ -68,16 +68,16 @@ function setSort(sorting)
 <thead>
 <tr>
 	<th><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
-	<th><a href="#" <%=bean.getSort().endsWith("mask")          ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.maskHint")%>"              onclick='return setSort("mask")'         ><%=getLocString("common.sortmodes.mask")%></a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("codeset")       ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.codepageHint")%>"          onclick='return setSort("codeset")'      ><%=getLocString("common.sortmodes.codepage")%></a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("reportinfo")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.reportInfoHint")%>"        onclick='return setSort("reportinfo")'   ><%=getLocString("common.sortmodes.reportInfo")%></a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("locale")        ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.localeHint")%>"            onclick='return setSort("locale")'       ><%=getLocString("common.sortmodes.locale")%></a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("hidden")        ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.hiddenHint")%>"            onclick='return setSort("hidden")'       ><%=getLocString("common.sortmodes.hidden")%></a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("hidden_mod")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.modifiableHint")%>"        onclick='return setSort("hidden_mod")'   ><%=getLocString("common.sortmodes.modifiable")%></a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("divert")        ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.divertHint")%>"            onclick='return setSort("divert")'       ><%=getLocString("common.sortmodes.divert")%></a></th>
+	<th><a href="javascript:setSort('mask')" <%=bean.getSort().endsWith("mask")            ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.maskHint")%>"><%=getLocString("common.sortmodes.mask")%></a></th>
+	<th><a href="javascript:setSort('codeset')" <%=bean.getSort().endsWith("codeset")      ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.codepageHint")%>"><%=getLocString("common.sortmodes.codepage")%></a></th>
+	<th><a href="javascript:setSort('reportinfo')" <%=bean.getSort().endsWith("reportinfo")? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.reportInfoHint")%>"><%=getLocString("common.sortmodes.reportInfo")%></a></th>
+	<th><a href="javascript:setSort('locale')" <%=bean.getSort().endsWith("locale")        ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.localeHint")%>"><%=getLocString("common.sortmodes.locale")%></a></th>
+	<th><a href="javascript:setSort('hidden')" <%=bean.getSort().endsWith("hidden")        ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.hiddenHint")%>"><%=getLocString("common.sortmodes.hidden")%></a></th>
+	<th><a href="javascript:setSort('hidden_mod')" <%=bean.getSort().endsWith("hidden_mod")? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.modifiableHint")%>"><%=getLocString("common.sortmodes.modifiable")%></a></th>
+	<th><a href="javascript:setSort('divert')" <%=bean.getSort().endsWith("divert")        ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.divertHint")%>"><%=getLocString("common.sortmodes.divert")%></a></th>
 	<th><%=getLocString("common.sortmodes.divertActive")%></th>
-	<th><a href="#" <%=bean.getSort().endsWith("divert_mod")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.divertModifiableHint")%>"  onclick='return setSort("divert_mod")'   ><%=getLocString("common.sortmodes.divertModifiable")%></a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("ussd7bit")      ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.ussd7bitHint")%>"          onclick='return setSort("ussd7bit")'     ><%=getLocString("common.sortmodes.ussd7bit")%></a></th>
+	<th><a href="javascript:setSort('divert_mod')" <%=bean.getSort().endsWith("divert_mod")? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.divertModifiableHint")%>"><%=getLocString("common.sortmodes.divertModifiable")%></a></th>
+	<th><a href="javascript:setSort('ussd7bit')" <%=bean.getSort().endsWith("ussd7bit")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.ussd7bitHint")%>"><%=getLocString("common.sortmodes.ussd7bit")%></a></th>
 </tr>
 </thead>
 <tbody>
@@ -113,7 +113,7 @@ if (divertActive.length() == 0)
 	<td class=name><%
 		if (bean.isEditAllowed())
 		{
-			%><a href="#" title="<%=getLocString("profiles.editSubTitle")%>" onClick='return editProfile("<%=profileMask%>")'><%=encProfileMask%></a><%
+			%><a href="javascript:editProfile('<%=profileMask%>')" title="<%=getLocString("profiles.editSubTitle")%>"><%=encProfileMask%></a><%
 		}
 		else
 		{

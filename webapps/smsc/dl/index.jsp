@@ -73,8 +73,8 @@ function edit(dlName)
 <thead>
 <tr>
 	<th>&nbsp;</th>
-	<th><a href="#" <%=bean.getSort().endsWith("name")  ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.nameHint")%>"  onclick='return setSort("name") '><%=getLocString("common.sortmodes.name")%></a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("owner") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.ownerHint")%>" onclick='return setSort("owner")'><%=getLocString("common.sortmodes.owner")%></a></th>
+	<th><a href="javascript:setSort('name')" <%=bean.getSort().endsWith("name")  ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.nameHint")%>"><%=getLocString("common.sortmodes.name")%></a></th>
+	<th><a href="javascript:setSort('owner')" <%=bean.getSort().endsWith("owner") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.ownerHint")%>"><%=getLocString("common.sortmodes.owner")%></a></th>
 </tr>
 </thead>
 <tbody><%
@@ -88,7 +88,7 @@ for (Iterator i = bean.getDls().iterator(); i.hasNext(); )
 	%>
 	<tr class=row<%=(row++)&1%>>
 		<td class=check><input class=check type=checkbox name=checkedDls value="<%=encName%>" <%=bean.isDlChecked(name) ? "checked" : ""%>></td>
-		<td class=name><a href="#" title="<%=getLocString("dl.editTitle")%>" onClick='return edit("<%=encName%>")'><%=encName%></a></td>
+		<td class=name><a href="javascript:edit('<%=encName%>')" title="<%=getLocString("dl.editTitle")%>"><%=encName%></a></td>
 		<td><%=encOwner%></td>
 	</tr><%
 }

@@ -60,42 +60,5 @@ table.navbar td.prev a,
 table.navbar td.next a,
 table.navbar td.last a
 {
-	background-position: left;
-	background-repeat: no-repeat;
 	text-decoration: none;
-}
-table.navbar td.first a
-{
-	background-image: url(/images/nav_first.gif);
-}
-table.navbar td.first a:hover
-{
-	background-image: url(/images/nav_first_over.gif);
-}
-
-table.navbar td.prev a
-{
-	background-image: url(/images/nav_prev.gif);
-}
-table.navbar td.prev a:hover
-{
-	background-image: url(/images/nav_prev_over.gif);
-}
-
-table.navbar td.next a
-{
-	background-image: url(/images/nav_next.gif);
-}
-table.navbar td.next a:hover
-{
-	background-image: url(/images/nav_next_over.gif);
-}
-
-table.navbar td.last a
-{
-	background-image: url(/images/nav_last.gif);
-}
-table.navbar td.last a:hover
-{
-	background-image: url(/images/nav_last_over.gif);
 }

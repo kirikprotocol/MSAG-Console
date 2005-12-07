@@ -75,7 +75,7 @@ String hostName = (String) i.next();
 %>
 <tr class=row<%=row&1%>>
 	<td class=check><input class=check type=checkbox name=hostIds value="<%=hostName%>" <%=hostIds.contains(hostName) ? "checked" : ""%>></td>
-	<td class=name><a href="#" title="<%=getLocString("host.viewTitle")%>" onClick='return viewHost("<%=hostName%>")'><%=hostName%></a></td>
+	<td class=name><a href="javascript:viewHost('<%=hostName%>')" title="<%=getLocString("host.viewTitle")%>"><%=hostName%></a></td>
 	<td class=num><%=bean.getHostPort(hostName)%></td>
 	<td align=center><span class=C00F title="<%=getLocString("common.sortmodes.total")%>"><%=bean.getServicesTotal(hostName)%></span> / <span class=C080 title="<%=getLocString("common.sortmodes.running")%>"><%=bean.getServicesRunning(hostName)%></span></td>
 </tr>

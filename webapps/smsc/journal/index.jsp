@@ -66,12 +66,12 @@ function setSort(sorting)
 <col width="25%">
 <thead>
 <tr>
-	<th><a href="#" <%=bean.getSort().endsWith("timestamp")   ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.timeHint")%>"        onclick='return setSort("timestamp") '> <%=getLocString("common.sortmodes.time")%></a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("user")        ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.userHint")%>"        onclick='return setSort("user")'>       <%=getLocString("common.sortmodes.user")%></a></th>
-	<%--th><a href="#" <%=bean.getSort().endsWith("sessionId") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by session" onclick='return setSort("sessionId")'>session ID</a></th--%>
-	<th><a href="#" <%=bean.getSort().endsWith("subjectType") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.subjectTypeHint")%>" onclick='return setSort("subjectType")'><%=getLocString("common.sortmodes.subjectType")%></a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("subjectId")   ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.subjectIdHint")%>"   onclick='return setSort("subjectId")'>  <%=getLocString("common.sortmodes.subjectId")%></a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("action")      ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.actionHint")%>"      onclick='return setSort("action")'>     <%=getLocString("common.sortmodes.action")%></a></th>
+	<th><a href="javascript:setSort('timestamp')" <%=bean.getSort().endsWith("timestamp")   ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.timeHint")%>"><%=getLocString("common.sortmodes.time")%></a></th>
+	<th><a href="javascript:setSort('user')" <%=bean.getSort().endsWith("user")        ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.userHint")%>"><%=getLocString("common.sortmodes.user")%></a></th>
+	<%--th><a href="javascript:setSort('sessionId')" <%=bean.getSort().endsWith("sessionId") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by session">session ID</a></th--%>
+	<th><a href="javascript:setSort('subjectType')" <%=bean.getSort().endsWith("subjectType") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.subjectTypeHint")%>"><%=getLocString("common.sortmodes.subjectType")%></a></th>
+	<th><a href="javascript:setSort('subjectId')" <%=bean.getSort().endsWith("subjectId")   ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.subjectIdHint")%>"><%=getLocString("common.sortmodes.subjectId")%></a></th>
+	<th><a href="javascript:setSort('action')" <%=bean.getSort().endsWith("action")      ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.actionHint")%>"><%=getLocString("common.sortmodes.action")%></a></th>
   <th colspan=2><%=getLocString("common.sortmodes.addInfo")%></th>
 </tr>
 </thead>

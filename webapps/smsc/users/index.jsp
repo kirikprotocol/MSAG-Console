@@ -75,10 +75,10 @@ function setSort(sorting)
 <thead>
 <tr>
 	<th class=ico><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
-	<th><a href="#" <%=bean.getSort().endsWith("login") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.loginHint")%>" onclick='return setSort("login")'><%=getLocString("common.sortmodes.login")%></a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("firstName") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.firstNameHint")%>" onclick='return setSort("firstName")'><%=getLocString("common.sortmodes.firstName")%></a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("lastName") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.lastNameHint")%>" onclick='return setSort("lastName")'><%=getLocString("common.sortmodes.lastName")%></a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("dept") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.departmentHint")%>" onclick='return setSort("dept")'><%=getLocString("common.sortmodes.department")%></a></th>
+	<th><a href="javascript:setSort('login')" <%=bean.getSort().endsWith("login") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.loginHint")%>"><%=getLocString("common.sortmodes.login")%></a></th>
+	<th><a href="javascript:setSort('firstName')" <%=bean.getSort().endsWith("firstName") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.firstNameHint")%>"><%=getLocString("common.sortmodes.firstName")%></a></th>
+	<th><a href="javascript:setSort('lastName')" <%=bean.getSort().endsWith("lastName") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.lastNameHint")%>"><%=getLocString("common.sortmodes.lastName")%></a></th>
+	<th><a href="javascript:setSort('dept')" <%=bean.getSort().endsWith("dept") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.departmentHint")%>"><%=getLocString("common.sortmodes.department")%></a></th>
 </tr>
 </thead>
 <tbody>
@@ -95,7 +95,7 @@ String encDept = StringEncoderDecoder.encode((String) item.getValue("dept"));
 %>
 <tr class=row<%=row&1%>>
 	<td><input class=check type=checkbox name=checkedUserLogins value="<%=encLogin%>" <%=bean.isLoginChecked(login) ? "checked" : ""%>></td>
-	<td><a href="#" title="<%=getLocString("users.editSubTitle")%>" onClick='return edit("<%=encLogin%>")'><%=encLogin%></a></td>
+	<td><a href="javascript:edit('<%=encLogin%>')" title="<%=getLocString("users.editSubTitle")%>" ><%=encLogin%></a></td>
 	<td><%=encFirstName%>&nbsp;</td>
 	<td><%=encLastName%>&nbsp;</td>
 	<td><%=encDept%>&nbsp;</td>

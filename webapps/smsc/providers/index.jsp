@@ -120,8 +120,8 @@ function clickClickable(headId, bodyId)
 <thead>
 <tr>
 	<th width="1%" class=ico><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
-	<th width="14%" align=left><a href="#" <%=bean.getSort().endsWith("id")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.idHint")%>"   onclick='return setSort("id")'  ><%=getLocString("common.sortmodes.id")%></a></th>
-	<th width="20%" align=left><a href="#" <%=bean.getSort().endsWith("name")  ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.nameHint")%>" onclick='return setSort("name")'  ><%=getLocString("common.sortmodes.name")%></a></th>
+	<th width="14%" align=left><a href="javascript:setSort('id')" <%=bean.getSort().endsWith("id")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.idHint")%>"><%=getLocString("common.sortmodes.id")%></a></th>
+	<th width="20%" align=left><a href="javascript:setSort('name')" <%=bean.getSort().endsWith("name")  ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.nameHint")%>"><%=getLocString("common.sortmodes.name")%></a></th>
   <th width="65%" align=left>&nbsp </th>
   </tr>
 </thead>
@@ -149,7 +149,7 @@ if (have) {
 <tr class=row<%=row&1%>>
 <td><input class=check type=checkbox name=checkedProviderNames value="<%=encName%>" <%=bean.isProviderChecked(name) ? "checked" : ""%>></td>
 	<td><%=encProviderId%>&nbsp;</td>
-  <td><a href="#" title="<%=getLocString("providers.editSubTitle")%>" onClick='return edit("<%=encProviderId%>","<%=encName%>")'><%=encName%></a></td>
+  <td><a href="javascript:edit('<%=encProviderId%>','<%=encName%>')" title="<%=getLocString("providers.editSubTitle")%>"><%=encName%></a></td>
 </tr>
 <tr class=row<%=row&1%> id=<%=rowId%>_BODY style="display:none">
   <td>&nbsp;</td>

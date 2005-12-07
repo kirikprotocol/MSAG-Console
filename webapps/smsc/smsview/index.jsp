@@ -207,13 +207,13 @@ function setSort(sorting)
 <thead>
 <tr class=row0>
   <th>&nbsp;</th>
-  <th><a href="#" <%=bean.getSort().endsWith("name")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("smsview.idHint")%>"          onclick='return setSort("name")'><%=getLocString("common.sortmodes.id")%></a></th>
-  <th><a href="#" <%=bean.getSort().endsWith("sendDate") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("smsview.sortSubmitHint")%>"  onclick='return setSort("sendDate")'><%=getLocString("smsview.sortSubmit")%></a></th>
-  <th><a href="#" <%=bean.getSort().endsWith("lastDate") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("smsview.sortTriedHint")%>"   onclick='return setSort("lastDate")'><%=getLocString("smsview.sortTried")%></a></th>
-  <th><a href="#" <%=bean.getSort().endsWith("from")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("smsview.sourceHint")%>"      onclick='return setSort("from")'><%=getLocString("common.sortmodes.source")%></a></th>
-  <th><a href="#" <%=bean.getSort().endsWith("to")       ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("smsview.destinationHint")%>" onclick='return setSort("to")'><%=getLocString("common.sortmodes.destination")%></a></th>
+  <th><a href="javascript:setSort('name')" <%=bean.getSort().endsWith("name")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("smsview.idHint")%>"><%=getLocString("common.sortmodes.id")%></a></th>
+  <th><a href="javascript:setSort('sendDate')" <%=bean.getSort().endsWith("sendDate") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("smsview.sortSubmitHint")%>"><%=getLocString("smsview.sortSubmit")%></a></th>
+  <th><a href="javascript:setSort('lastDate')" <%=bean.getSort().endsWith("lastDate") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("smsview.sortTriedHint")%>"><%=getLocString("smsview.sortTried")%></a></th>
+  <th><a href="javascript:setSort('from')" <%=bean.getSort().endsWith("from")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("smsview.sourceHint")%>"><%=getLocString("common.sortmodes.source")%></a></th>
+  <th><a href="javascript:setSort('to')" <%=bean.getSort().endsWith("to")       ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("smsview.destinationHint")%>"><%=getLocString("common.sortmodes.destination")%></a></th>
   <th><%=getLocString("smsview.route")%></th>
-  <th><a href="#" <%=bean.getSort().endsWith("status") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("smsview.statusHint")%>" onclick='return setSort("status")'><%=getLocString("common.sortmodes.status")%></a></th>
+  <th><a href="javascript:setSort('status')" <%=bean.getSort().endsWith("status") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("smsview.statusHint")%>"><%=getLocString("common.sortmodes.status")%></a></th>
 </tr></thead>
 <tbody><%
 int firstIndex = bean.getStartPositionInt()+1;

@@ -79,9 +79,9 @@ function setSort(sorting)
 <thead>
 <tr>
 	<th>&nbsp;</th>
-	<th><a href="#" <%=bean.getSort().endsWith("address") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.addressHint")%>" onclick='return setSort("address")'><%=getLocString("common.sortmodes.address")%></a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("max_lst") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.maxListsHint")%>" onclick='return setSort("max_lst")'><%=getLocString("common.sortmodes.maxLists")%></a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("max_el") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.maxElementsHint")%>" onclick='return setSort("max_el")'><%=getLocString("common.sortmodes.maxElements")%></a></th>
+	<th><a href="javascript:setSort('address')" <%=bean.getSort().endsWith("address") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.addressHint")%>"><%=getLocString("common.sortmodes.address")%></a></th>
+	<th><a href="javascript:setSort('max_lst')" <%=bean.getSort().endsWith("max_lst") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.maxListsHint")%>"><%=getLocString("common.sortmodes.maxLists")%></a></th>
+	<th><a href="javascript:setSort('max_el')" <%=bean.getSort().endsWith("max_el") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.maxElementsHint")%>"><%=getLocString("common.sortmodes.maxElements")%></a></th>
 </tr>
 </thead>
 <tbody><%
@@ -98,7 +98,7 @@ for (Iterator i = bean.getPrincipals().iterator(); i.hasNext(); )
 	%>
 	<tr class=row<%=(row++)&1%>>
 		<td><input class=check type=checkbox name=checked value="<%=addressEnc%>" <%=bean.isChecked(address) ? "checked" : ""%>></td>
-		<td><a href="#" title="<%=getLocString("dl.editPrincipalTitle")%>" onClick='return editSomething("<%=addressEnc%>")'><%=addressToShowEnc%></a></td>
+		<td><a href="javascript:editSomething('<%=addressEnc%>')" title="<%=getLocString("dl.editPrincipalTitle")%>"><%=addressToShowEnc%></a></td>
 		<td><%=max_lst%></td>
 		<td><%=max_el%></td>
 	</tr><%

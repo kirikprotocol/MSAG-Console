@@ -70,7 +70,6 @@ refreshStartStopButtonsStatus();
     startParams(out);
       param(out, "smsc.core.stateCount", "core.state_machines_count",   bean.getIntParam(   "core.state_machines_count"));
       param(out, "smsc.core.queueLimit", "core.eventQueueLimit",        bean.getIntParam("core.eventQueueLimit"));
-      param(out, "smsc.core.reschTable", "core.reschedule_table",       bean.getStringParam("core.reschedule_table"));
       param(out, "smsc.core.servAddr",   "core.service_center_address", bean.getStringParam("core.service_center_address"));
       param(out, "smsc.core.ussdAddr",   "core.ussd_center_address",    bean.getStringParam("core.ussd_center_address"));
       param(out, "smsc.core.ussdSSN",    "core.ussd_ssn",               bean.getIntParam(   "core.ussd_ssn"));
@@ -130,21 +129,6 @@ refreshStartStopButtonsStatus();
       param(out, "smsc.mesStor.archiveInterval", "MessageStore.archiveInterval", bean.getIntParam("MessageStore.archiveInterval"));
       param(out, "smsc.mesStor.statDir",         "MessageStore.statisticsDir", bean.getStringParam("MessageStore.statisticsDir"));
     finishParams(out);
-    //~~~~~~~~~~~~~~~~~~~~~~~~ MessageStore.Storage ~~~~~~~~~~~~~~~~~~~~~~~~
-    startSection(out, "MessageStore.Storage", "smsc.mesStor.storage", false);
-      startParams(out);
-        param(out, "smsc.mesStor.storage.dbInstance",     "MessageStore.Storage.dbInstance",     bean.getStringParam("MessageStore.Storage.dbInstance"));
-        param(out, "smsc.mesStor.storage.dbUserName",     "MessageStore.Storage.dbUserName",     bean.getStringParam("MessageStore.Storage.dbUserName"));
-        param(out, "smsc.mesStor.storage.dbUserPassword", "MessageStore.Storage.dbUserPassword", bean.getStringParam("MessageStore.Storage.dbUserPassword"));
-      finishParams(out);
-    finishSection(out);
-    //~~~~~~~~~~~~~~~~~~~~~~~~ MessageStore.Cache ~~~~~~~~~~~~~~~~~~~~~~~~
-    startSection(out, "MessageStore.Cache", "smsc.mesStor.cache", false);
-      startParams(out);
-        param(out, "smsc.mesStor.cache.enabled", "MessageStore.Cache.enabled", bean.getBoolParam("MessageStore.Cache.enabled"));
-        param(out, "smsc.mesStor.cache.capacity", "MessageStore.Cache.capacity", bean.getIntParam("MessageStore.Cache.capacity"));
-      finishParams(out);
-    finishSection(out);
   //~~~~~~~~~~~~~~~~~~~~~~~~ MessageStore.LocalStore ~~~~~~~~~~~~~~~~~~~~~~~~
     startSection(out, "MessageStore.LocalStore", "smsc.mesStor.localStore", false);
       startParams(out);
@@ -153,38 +137,6 @@ refreshStartStopButtonsStatus();
         param(out, "smsc.mesStor.localStore.minRollTime", "MessageStore.LocalStore.minRollTime", bean.getIntParam("MessageStore.LocalStore.minRollTime"));
         param(out, "smsc.mesStor.localStore.msgidfile", "MessageStore.LocalStore.msgidfile", bean.getStringParam("MessageStore.LocalStore.msgidfile"));
       finishParams(out);
-    finishSection(out);
-    //~~~~~~~~~~~~~~~~~~~~~~~~ MessageStore.Connections ~~~~~~~~~~~~~~~~~~~~~~~~
-    startSection(out, "MessageStore.Connections", "smsc.mesStor.connections", false);
-      startParams(out);
-        param(out, "smsc.mesStor.connections.max", "MessageStore.Connections.max", bean.getIntParam("MessageStore.Connections.max"));
-        param(out, "smsc.mesStor.connections.init", "MessageStore.Connections.init", bean.getIntParam("MessageStore.Connections.init"));
-      finishParams(out);
-    finishSection(out);
-  finishSection(out);
-  //################################## DataSource #############################
-  startSection(out, "DataSource", "smsc.dataSource", false);
-    startParams(out);
-      param(out, "smsc.dataSource.type",           "DataSource.type",           bean.getStringParam("DataSource.type"));
-      param(out, "smsc.dataSource.connections",    "DataSource.connections",    bean.getIntParam(   "DataSource.connections"));
-      param(out, "smsc.dataSource.dbInstance",     "DataSource.dbInstance",     bean.getStringParam("DataSource.dbInstance"));
-      param(out, "smsc.dataSource.dbUserName",     "DataSource.dbUserName",     bean.getStringParam("DataSource.dbUserName"));
-      param(out, "smsc.dataSource.dbUserPassword", "DataSource.dbUserPassword", bean.getStringParam("DataSource.dbUserPassword"));
-    finishParams(out);
-    //~~~~~~~~~~~~~~~~~~~~~~~~ StartupLoader.DataSourceDrivers ~~~~~~~~~~~~~~~~~~~~~~~~
-    startSection(out, "StartupLoader.DataSourceDrivers", "smsc.dataSource.drivers", false);
-      for (Iterator i = bean.getDatasourceDrivers().iterator(); i.hasNext();)
-      {
-        String name = (String) i.next();
-        String encName = StringEncoderDecoder.encode(name);
-        //---------------------------------- StartupLoader.DataSourceDrivers.%name% -----------------------------
-        startSectionPre(out, "StartupLoader.DataSourceDrivers." + encName, encName, false);
-          startParams(out);
-            param(out, "smsc.dataSource.drivers.type",   "StartupLoader.DataSourceDrivers." + encName + ".type",   bean.getStringParam("StartupLoader.DataSourceDrivers." + name + ".type"));
-            param(out, "smsc.dataSource.drivers.loadup", "StartupLoader.DataSourceDrivers." + encName + ".loadup", bean.getStringParam("StartupLoader.DataSourceDrivers." + name + ".loadup"));
-          finishParams(out);
-        finishSection(out);
-      }
     finishSection(out);
   finishSection(out);
   //################################## smpp #############################
@@ -233,6 +185,7 @@ refreshStartStopButtonsStatus();
       param(out, "smsc.profiler.defaultDivertModifiable", "profiler.defaultDivertModifiable", bean.getBoolParam(  "profiler.defaultDivertModifiable"));
       param(out, "smsc.profiler.defaultUssdIn7Bit",       "profiler.defaultUssdIn7Bit",       bean.getBoolParam(  "profiler.defaultUssdIn7Bit"));
       param(out, "smsc.profiler.defaultUdhConcat",        "profiler.defaultUdhConcat",        bean.getBoolParam(  "profiler.defaultUdhConcat"));
+      param(out, "smsc.profiler.storeFile",               "profiler.storeFile",               bean.getStringParam("profiler.storeFile"));
 
     finishParams(out);
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~ profiler.ussdOpsMapping ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -307,6 +260,31 @@ refreshStartStopButtonsStatus();
       param(out, "smsc.MscManager.storeFile",      "MscManager.storeFile",    bean.getStringParam("MscManager.storeFile"));
     finishParams(out);
   finishSection(out);
+  //################################## INMAN #############################
+  startSection(out, "inman", "smsc.inman", false);
+    startParams(out);
+      param(out, "common.util.host", "inman.host", bean.getStringParam("inman.host"));
+      param(out, "common.util.port", "inman.port", bean.getIntParam("inman.port"));
+    finishParams(out);
+    startSection(out, "inman.chargingPolicy", "smsc.inman.chargingPolicy", false);
+      startParams(out);
+        param(out, "smsc.inman.peer2peer", "inman.chargingPolicy.peer2peer", bean.getStringParam("inman.chargingPolicy.peer2peer"));
+        param(out, "smsc.inman.other", "inman.chargingPolicy.other", bean.getStringParam("inman.chargingPolicy.other"));
+      finishParams(out);
+    finishSection(out);
+  finishSection(out);
+  //################################## Cluster #############################
+startSection(out, "cluster", "smsc.cluster", false);
+  startParams(out);
+    param(out, "smsc.cluster.mode", "cluster.mode", bean.getStringParam("cluster.mode"));
+    param(out, "smsc.cluster.agentHost", "cluster.agentHost", bean.getStringParam("cluster.agentHost"));
+    param(out, "smsc.cluster.agentPort", "cluster.agentPort", bean.getIntParam("cluster.agentPort"));
+    param(out, "smsc.cluster.host1", "cluster.host1", bean.getStringParam("cluster.host1"));
+    param(out, "smsc.cluster.port1", "cluster.port1", bean.getIntParam("cluster.port1"));
+    param(out, "smsc.cluster.host2", "cluster.host2", bean.getStringParam("cluster.host2"));
+    param(out, "smsc.cluster.port2", "cluster.port2", bean.getIntParam("cluster.port2"));
+  finishParams(out);
+finishSection(out);
 
 %></div><%
 page_menu_begin(out);

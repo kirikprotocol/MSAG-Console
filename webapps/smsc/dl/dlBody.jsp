@@ -141,8 +141,8 @@ function addMembers()
 <thead>
 <tr>
 	<th class=secInner colspan=2 style="border-bottom: 1px solid #888888;">
-    <a href="#" <%=bean.getSort().endsWith("address") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%>
-     title="<%=getLocString("common.sortmodes.addressHint")%>" onclick='return setSort("address")'>
+    <a href="javascript:setSort('address')" <%=bean.getSort().endsWith("address") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%>
+     title="<%=getLocString("common.sortmodes.addressHint")%>">
      <%=getLocString("common.sortmodes.address")%></a></th>
 </tr>
 </thead>

@@ -67,7 +67,7 @@ function clickEdit(value)
 <col width=1px>
 <tr class=row0>
   <td>&nbsp;</td>
-  <td><a href="#" onClick="return clickEdit('<%=bean.getDefaultResheduleName()%>');"><%=defaultReshedule%></a></td>
+  <td><a href="javascript:clickEdit('<%=bean.getDefaultResheduleName()%>')"><%=defaultReshedule%></a></td>
 </tr>
 <tr  class=row1>
 <td>&nbsp;</td>
@@ -83,7 +83,7 @@ function clickEdit(value)
       rows = 1;
     %><tr class=row0>
     <td><input class=check type=checkbox name=checkedShedules value="<%=reshedule%>" <%=bean.isSheduleChecked(reshedule) ? "checked" : ""%>></td>
-    <td><a href="#" onClick="return clickEdit('<%=reshedule%>');"><%=reshedule%></a></td></tr>
+    <td><a href="javascript:clickEdit('<%=reshedule%>')"><%=reshedule%></a></td></tr>
 
  <%
     //int count = 0;

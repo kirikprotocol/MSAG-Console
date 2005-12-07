@@ -109,11 +109,11 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
 %>
 <tr class=row<%=row&1%>>
 	<td class=check><input class=check type=checkbox name=serviceIds value="<%=encodedServiceId%>" <%=serviceIds.contains(serviceId) ? "checked" : ""%>></td>
-	<%if (request.isUserInRole("services")) {%><td class=name><a  href="#" title="<%=getLocString("services.editSubTitle")%>" onClick="return editService('<%=encodedServiceId%>');"><%=getLocString("common.links.edit")%></a></td><%}%>
+	<%if (request.isUserInRole("services")) {%><td class=name><a  href="javascript:editService('<%=encodedServiceId%>')" title="<%=getLocString("services.editSubTitle")%>"><%=getLocString("common.links.edit")%></a></td><%}%>
 	<td class=name><%
 		if (bean.isServiceAdministrable(serviceId) && request.isUserInRole("services"))
 		{
-			%><a href="#" title="<%=getLocString("host.viewServInfo")%>" onClick="return viewService('<%=encodedServiceId%>');"><%=encodedServiceId%></a><%
+			%><a href="javascript:viewService('<%=encodedServiceId%>')" title="<%=getLocString("host.viewServInfo")%>"><%=encodedServiceId%></a><%
 		}
 			else
 		{
@@ -124,7 +124,7 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
     %><td class=name><%
 		if (bean.isService(serviceId))
 		{
-			%><a href="#" title="<%=getLocString("host.viewTitle")%>" onClick="return viewHost('<%=bean.getHost(serviceId)%>');"><%=bean.getHost(serviceId)%></a><%
+			%><a href="javascript:viewHost('<%=bean.getHost(serviceId)%>')" title="<%=getLocString("host.viewTitle")%>"><%=bean.getHost(serviceId)%></a><%
 		} else
 		{
 			%>&nbsp;<%

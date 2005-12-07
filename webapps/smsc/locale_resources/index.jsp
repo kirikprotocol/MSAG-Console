@@ -74,7 +74,7 @@ function navigate(direction)
 <thead>
 <tr>
 	<%--th>&nbsp;</th--%>
- 	<th><a href="#" <%=bean.getSort().endsWith("locale") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.localeHint")%>" onclick='return setSort("locale")'><%=getLocString("common.sortmodes.locale")%></a></th>
+ 	<th><a href="javascript:setSort('locale')" <%=bean.getSort().endsWith("locale") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.localeHint")%>"><%=getLocString("common.sortmodes.locale")%></a></th>
 </tr>
 </thead>
 <tbody>
@@ -87,7 +87,7 @@ String encLocale = StringEncoderDecoder.encode(locale);
 %>
 <tr class=row<%=(row++)&1%>>
 	<%--td class=check><input class=check type=checkbox name=checkedLocales value="<%=encLocale%>" <%=bean.isLocaleChecked(locale) ? "checked" : ""%>></td--%>
-	<td class=name><a href="#" title="<%=getLocString("locale.viewSubTitle")%>" onClick='return view("<%=encLocale%>")'><%=encLocale%></a></td>
+	<td class=name><a href="javascript:view('<%=encLocale%>')" title="<%=getLocString("locale.viewSubTitle")%>"><%=encLocale%></a></td>
 </tr>
 <%}}%>
 </tbody>
