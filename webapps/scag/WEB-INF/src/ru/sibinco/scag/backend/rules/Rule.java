@@ -54,7 +54,6 @@ public class Rule
     String lineSeparator=System.getProperty("line.separator");
     int sep=lineSeparator.length();
     String schema=Transport.getSchemaByTransport(transport);
-    System.out.println("XML_LINE length= "+XML_LINE.length());
     LinkedList body=new LinkedList();
     body.add(XML_LINE);
     body.add("<"+ROOT_ELEMENT+" xmlns:xsi=\""+XMLNS_XSI+"\"");
