@@ -165,13 +165,13 @@ public class HostsManager
 
   public synchronized Service removeService(final String serviceId) throws AdminException
   {
-/*	int useFlag = isSmeUsed(serviceId);
+	int useFlag = isSmeUsed(serviceId);
 	if (useFlag != 0)
 	{
 		if (useFlag == 1) throw new AdminException("Service \"" + serviceId + "\" is used by routes");
 		if (useFlag == 2) throw new AdminException("Service \"" + serviceId + "\" is used by subjects");
 	}
-    final ResourceGroup resGroup = resourceGroupManager.getServiceResourceGroup(serviceId);
+    final ResourceGroup resGroup = getService(serviceId);
     if (null == resGroup)
       throw new AdminException("Service \"" + serviceId + "\" host not found");
 
@@ -179,7 +179,7 @@ public class HostsManager
     final Service service = serviceManager.remove(serviceId);
     smeManager.remove(serviceId);
 
-    return service;*/ return null;
+    return service;
   }
 
   public synchronized void startService(final String serviceId) throws AdminException

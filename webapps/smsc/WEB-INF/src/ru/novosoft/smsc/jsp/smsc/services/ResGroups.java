@@ -43,6 +43,12 @@ public class ResGroups extends PageBean
 
     if (null != mbAddService)
       return RESULT_ADD;
+	else if (null != mbDelete) {
+	  if (request.isUserInRole("services"))
+		return deleteServices();
+	  else
+		return error(SMSCErrors.error.services.notAuthorizedForDeletingService);
+	}
     else if (null != mbStartService)
       return startServices();
     else if (null != mbStopService)
@@ -92,7 +98,30 @@ public class ResGroups extends PageBean
   /**
    * ********************* Command handlers ***************************
    */
+  protected int deleteServices()
+  {
+    final List notRemoved = new LinkedList();
+    for (int i = 0; i < serviceIds.length; i++) {
+      final String id = serviceIds[i];
+      try {
+        if (hostsManager.isService(id))
+		{
+			throw new AdminException("Couldn't delete service \"" + id +'"'+". This is service");
+        }
+        else
+          hostsManager.removeSme(id);
 
+        journalAppend(SubjectTypes.TYPE_service, id, Actions.ACTION_DEL);
+        //appContext.getStatuses().setServicesChanged(true);
+      } catch (Throwable e) {
+        error(SMSCErrors.error.services.coudntDeleteService, id);
+        logger.error("Couldn't delete service \"" + id + '"', e);
+        notRemoved.add(id);
+      }
+    }
+    serviceIds = (String[]) notRemoved.toArray(new String[0]);
+    return 0 == errors.size() ? RESULT_DONE : RESULT_ERROR;
+  }
 
   protected int processSwitchOver()
   {

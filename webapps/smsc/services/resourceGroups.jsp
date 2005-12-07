@@ -28,6 +28,9 @@ switch(bean.process(request))
 	case ResGroups.RESULT_VIEW_NODES:
 		response.sendRedirect(CPATH+"/hosts/nodesView.jsp?servName="+bean.getServiceId());
 		return;
+	case Index.RESULT_ADD:
+		response.sendRedirect("serviceAddInternal.jsp" + (bean.getHostId() != null ? ("?hostName=" + bean.getHostId()) : ""));
+		return;
 	case Index.RESULT_EDIT:
 		response.sendRedirect(CPATH+"/services/serviceEditSme.jsp?serviceId="+URLEncoder.encode(bean.getServiceId()));
 		return;
@@ -40,6 +43,9 @@ MENU0_SELECTION = "MENU0_SERVICES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 page_menu_begin(out);
+page_menu_button(session, out, "mbAddService",  "common.buttons.add",  "services.add");
+page_menu_button(session, out, "mbDelete", "common.buttons.delete", "services.deleteHint", "return confirm('" + getLocString("services.deleteConfirm") + "')");
+page_menu_space(out);
 page_menu_button(session, out, "mbDisconnectServices",  "common.buttons.disconnect",  "services.disconnectHint", "return confirm('" + getLocString("services.disconnectConfirm") + "')", bean.isSmscAlive());
 page_menu_button(session, out, "mbStartService",  "common.buttons.online",  "services.startHint");
 page_menu_button(session, out, "mbStopService",  "common.buttons.offline",  "services.stopHint");
@@ -137,6 +143,9 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
 </div>
 <%
 page_menu_begin(out);
+page_menu_button(session, out, "mbAddService",  "common.buttons.add",  "services.add");
+page_menu_button(session, out, "mbDelete", "common.buttons.delete", "services.deleteHint", "return confirm('" + getLocString("services.deleteConfirm") + "')");
+page_menu_space(out);
 page_menu_button(session, out, "mbDisconnectServices",  "common.buttons.disconnect",  "services.disconnectHint", "return confirm('" + getLocString("services.disconnectConfirm") + "')", bean.isSmscAlive());
 page_menu_button(session, out, "mbStartService",  "common.buttons.online",  "services.startHint");
 page_menu_button(session, out, "mbStopService",  "common.buttons.offline",  "services.stopHint");
