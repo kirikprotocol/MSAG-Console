@@ -198,6 +198,7 @@ void Billing::abortSMS(unsigned char errCode, bool tcapLayer)
                    (unsigned)errCode, tcapLayer ? "TCAP" : "CAP3");
 
     switch (state) {
+    case Billing::bilStarted:
     case Billing::bilInited: {
         //continue dialog with MSC despite of CAP error, switch to CDR mode
         ChargeSmsResult res(tcapLayer ? InErrTCAP : InErrCAP3, (uint16_t)errCode,
