@@ -81,7 +81,7 @@ public class Index extends SmeBean
         logger.warn("Could not load old config", e);
       }
       getConfig().save();
-      if (appContext.getHostsManager().getServiceInfo(SmeContext.SME_ID).getStatus() == ServiceInfo.STATUS_RUNNING)
+      if (appContext.getHostsManager().getServiceInfo(SmeContext.SME_ID).isOnline())
         result = warning("You need to restart sme to apply changes");
       getSmeContext().applyJdbc(oldConfig);
       if (getSmeContext().getConnectionPool() == null)
