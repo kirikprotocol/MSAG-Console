@@ -251,14 +251,17 @@ int Profiler::updatemask(const Address& address,const Profile& profile)
   MutexGuard g(mtx);
   HashKey k(address);
   bool exists=profiles->Exists(k);
-  Profile& profRef=profiles->add(address,profile);
   try{
     if(exists)
     {
-      fileUpdate(address,profile);
+      bool exact;
+      Profile& profRef=profiles->find(address,exact);
+      profRef.assign(profile);
+      fileUpdate(address,profRef);
       return pusUpdated;
     }else
     {
+      Profile& profRef=profiles->add(address,profile);
       fileInsert(address,profRef);
       return pusInserted;
     }
