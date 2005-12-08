@@ -55,16 +55,16 @@ page_menu_end(out);
 <script>
 function viewService(serviceId)
 {
-	document.all.jbutton.value = "view";
-	document.all.jbutton.name = "mbView";
+	document.getElementById('jbutton').value = "view";
+	document.getElementById('jbutton').name = "mbView";
 	opForm.serviceId.value = serviceId;
 	opForm.submit();
 	return false;
 }
 function editService(serviceId)
 {
-	document.all.jbutton.value = "edit service";
-	document.all.jbutton.name = "mbEditService";
+	document.getElementById('jbutton').value = "edit service";
+	document.getElementById('jbutton').name = "mbEditService";
 	opForm.serviceId.value = serviceId;
 	opForm.submit();
 	return false;

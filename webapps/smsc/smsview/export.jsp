@@ -42,26 +42,26 @@ int rowN=0;
 <div class=page_subtitle>Database Settings</div>
 <script>
 function defaultSetting(){
-  document.all.source.value="<%=defExpSett.getSource()%>";
-  document.all.driver.value="<%=defExpSett.getDriver()%>";
-  document.all.user.value="<%=defExpSett.getUser()%>";
-  document.all.password.value="<%=defExpSett.getPassword()%>";
-  document.all.tablesPrefix.value="<%=defExpSett.getTablesPrefix()%>";
+  document.getElementById('source').value="<%=defExpSett.getSource()%>";
+  document.getElementById('driver').value="<%=defExpSett.getDriver()%>";
+  document.getElementById('user').value="<%=defExpSett.getUser()%>";
+  document.getElementById('password').value="<%=defExpSett.getPassword()%>";
+  document.getElementById('tablesPrefix').value="<%=defExpSett.getTablesPrefix()%>";
 
-  document.all.source.disabled=true;
-  document.all.driver.disabled=true;
-  document.all.user.disabled=true;
-  document.all.password.disabled=true;
-  document.all.tablesPrefix.disabled=true;
+  document.getElementById('source').disabled=true;
+  document.getElementById('driver').disabled=true;
+  document.getElementById('user').disabled=true;
+  document.getElementById('password').disabled=true;
+  document.getElementById('tablesPrefix').disabled=true;
 
 }
 
 function userDefined(){
-  document.all.source.disabled=false;
-  document.all.driver.disabled=false;
-  document.all.user.disabled=false;
-  document.all.password.disabled=false;
-  document.all.tablesPrefix.disabled=false;
+  document.getElementById('source').disabled=false;
+  document.getElementById('driver').disabled=false;
+  document.getElementById('user').disabled=false;
+  document.getElementById('password').disabled=false;
+  document.getElementById('tablesPrefix').disabled=false;
 }
 
 </script>

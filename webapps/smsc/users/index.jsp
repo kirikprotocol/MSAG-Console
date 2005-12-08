@@ -51,7 +51,7 @@ page_menu_end(out);
 <script>
 function edit(name_to_edit)
 {
-	document.all.jbutton.name = "mbEdit";
+	document.getElementById('jbutton').name = "mbEdit";
 	opForm.editUserLogin.value = name_to_edit;
 	opForm.submit();
 	return false;

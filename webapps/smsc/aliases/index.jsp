@@ -54,7 +54,7 @@ page_menu_end(out);
 <script>
 function edit(alias, address, hide)
 {
-	document.all.jbutton.name = "mbEdit";
+	document.getElementById('jbutton').name = "mbEdit";
 	opForm.editAlias.value = alias;
 	opForm.editAddress.value = address;
 	opForm.editHide.value = hide;

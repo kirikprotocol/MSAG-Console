@@ -44,7 +44,7 @@ MENU0_SELECTION = "MENU0_PROFILES_GROUPS";
 <script>
 function editProfile(profileMask)
 {
-	document.all.jbutton.name = "mbEdit";
+	document.getElementById('jbutton').name = "mbEdit";
 	opForm.profileMask.value = profileMask;
 	opForm.submit();
 	return false;

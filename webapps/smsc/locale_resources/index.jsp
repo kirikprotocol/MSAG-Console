@@ -47,7 +47,7 @@ page_menu_end(out);
 <script>
 function view(locale)
 {
-	document.all.jbutton.name = "mbView";
+	document.getElementById('jbutton').name = "mbView";
 	opForm.viewLocaleResource.value = locale;
 	opForm.submit();
 	return false;
@@ -63,8 +63,8 @@ function setSort(sorting)
 }
 function navigate(direction)
 {
-	document.all.jbutton.name = direction;
-	document.all.jbutton.value = direction;
+	document.getElementById('jbutton').name = direction;
+	document.getElementById('jbutton').value = direction;
 	opForm.submit();
 	return false;
 }

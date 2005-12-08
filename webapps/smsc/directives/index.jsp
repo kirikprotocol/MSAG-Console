@@ -34,7 +34,7 @@ MENU0_SELECTION = "MENU0_SMSC_Directives";
 <script>
 function removeDirectiveAlias(rowId)
 {
-  var tbl = opForm.all.aliases;
+  var tbl = document.getElementById('aliases');
   var r = tbl.rows(rowId);
   tbl.deleteRow(r.rowIndex);
 }
@@ -49,7 +49,7 @@ function createInput(id, value)
 function addSelectOption(select, text, value)
 {
   var o = document.createElement("OPTION");
-  select.options.add(o);
+  select.add(o);
   o.value = o.innerText = text;
   if (text == value)
     o.selected = true;
@@ -69,9 +69,9 @@ function createSelect(id, value)
 }
 function addDirectiveAlias()
 {
-  var tbl = opForm.all.aliases;
-  var aElem = opForm.all.newAlias;
-  var dElem = opForm.all.newDirective;
+  var tbl = document.getElementById('aliases');
+  var aElem = document.getElementById('newAlias');
+  var dElem = document.getElementById('newDirective');
   var a = aElem.value;
   var d = dElem.value;
   var aHex = encodeHEX(a);
@@ -135,7 +135,7 @@ function addDirectiveAlias()
         <option value="unhide"   >unhide</option>
         <option value="flash"    >flash</option>
       </select></td>
-  <td><img src="/images/but_add.gif" onclick="return validateField(opForm.all.newAlias) && addDirectiveAlias();" style="cursor:hand;"></td>
+  <td><img src="/images/but_add.gif" onclick="return validateField(document.getElementById('newAlias')) && addDirectiveAlias();" style="cursor:hand;"></td>
 </tr>
 </table>
 </div>

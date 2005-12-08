@@ -48,8 +48,8 @@ page_menu_end(out);
 %><script>
 function refreshStartStopButtonsStatus()
 {
-	document.all.mbStart.disabled = (document.all.RUNNING_STATUSERVICE_<%=Constants.SMSC_SME_ID%>.innerText != "<%=getLocString("common.statuses.stopped")%>");
-	document.all.mbStop.disabled = (document.all.RUNNING_STATUSERVICE_<%=Constants.SMSC_SME_ID%>.innerText != "<%=getLocString("common.statuses.running")%>");
+	document.getElementById('mbStart').disabled = (document.getElementById('RUNNING_STATUSERVICE_<%=Constants.SMSC_SME_ID%>').innerText != "<%=getLocString("common.statuses.stopped")%>");
+	document.getElementById('mbStop').disabled = (document.getElementById('RUNNING_STATUSERVICE_<%=Constants.SMSC_SME_ID%>').innerText != "<%=getLocString("common.statuses.running")%>");
 	window.setTimeout(refreshStartStopButtonsStatus, 500);
 }
 refreshStartStopButtonsStatus();

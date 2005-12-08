@@ -296,21 +296,21 @@ function validateForm(frm)
 
 function clickCancel()
 {
-	document.all.jbutton.name = "mbCancel";
+	document.getElementById('jbutton').name = "mbCancel";
 	opForm.submit();
 	return false;
 }
 
 function clickClear()
 {
-	document.all.jbutton.name = "mbClear";
+	document.getElementById('jbutton').name = "mbClear";
 	opForm.submit();
 	return false;
 }
 
 function selectFirstTextInput()
 {
-	var inputs = document.all.tags("INPUT");
+	var inputs = document.body.getElementsByTagName("INPUT");
 	if (inputs!=null)
 	{
 		for (i=0; i<inputs.length; i++)
@@ -396,23 +396,23 @@ function findPosHeight(o)
 
 function clickFilter()
 {
-	document.all.jbutton.name = "mbFilter";
+	document.getElementById('jbutton').name = "mbFilter";
 	opForm.submit();
 	return false;
 }
 
 function noValidationSubmit(buttonElem)
 {
-  document.all.jbutton.value = buttonElem.jbuttonValue;
-  document.all.jbutton.name  = buttonElem.jbuttonName;
+  document.getElementById('jbutton').value = buttonElem.jbuttonValue;
+  document.getElementById('jbutton').name  = buttonElem.jbuttonName;
   opForm.submit();
   return false;
 }
 
 function editSomething(editObjectName)
 {
-	opForm.all.jbutton.name = "mbEdit";
-	opForm.all.edit.value = editObjectName;
+	document.getElementById('jbutton').name = "mbEdit";
+	document.getElementById('edit').value = editObjectName;
 	opForm.submit();
 	return false;
 }
@@ -420,8 +420,8 @@ function editSomething(editObjectName)
 /** for navbar **/
 function navigate(direction)
 {
-	document.all.jbutton.name = direction;
-	document.all.jbutton.value = direction;
+	document.getElementById('jbutton').name = direction;
+	document.getElementById('jbutton').value = direction;
 	opForm.submit();
 	return false;
 }
@@ -443,7 +443,7 @@ function checkCheckboxes(elem)
 
 function checkCheckboxesForMbDeleteButton()
 {
-  return checkCheckboxes(opForm.all.mbDelete);
+  return checkCheckboxes(document.getElementById('mbDelete'));
 }
 
 function byteToHexStr(bth)
@@ -465,4 +465,18 @@ function removeRow(tbl, rowId)
 {
 	var rowElem = tbl.rows(rowId);
 	tbl.deleteRow(rowElem.rowIndex);
+}
+
+function findChildById(elem, id) {
+  var childs = elem.childNodes;
+  for ( var i = 0; i < childs.length; i++ ) {
+    var child = childs.item(i);
+    try {
+      if( child.id == id ) return child;
+    } catch (Exception) {
+    }
+    var res = findChildById( child, id );
+    if( res != null ) return res;
+  }
+  return null;
 }

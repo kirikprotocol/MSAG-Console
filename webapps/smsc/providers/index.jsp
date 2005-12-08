@@ -60,7 +60,7 @@ MENU0_SELECTION = "MENU0_PROVIDERS";
 <script>
 function edit(id_to_edit,name_to_edit)
 {
-	document.all.jbutton.name = "mbEdit";
+	document.getElementById('jbutton').name = "mbEdit";
 	opForm.editName.value = name_to_edit;
   opForm.editId.value = id_to_edit;
   opForm.submit();
@@ -79,7 +79,7 @@ function setSort(sorting)
 
 function clickAddSelect()
 {
-	document.all.jbutton.name = "mbAddProvider";
+	document.getElementById('jbutton').name = "mbAddProvider";
 	opForm.submit();
 	return false;
 }

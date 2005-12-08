@@ -20,8 +20,8 @@ function openTopMon()
   if (isServiceStatusNeeded || (ServiceIDForShowStatus != null && ServiceIDForShowStatus.length() > 0))
   {%><%@ include file="/WEB-INF/inc/service_status.jsp"%><%}
 %>
-<%@
- include file="/WEB-INF/inc/calendar.jsp"%><%@
+<!--%@
+ include file="/WEB-INF/inc/calendar.jsp"%--><%@
  include file="/WEB-INF/inc/html_1_header.jsp"%><%@
  include file="/WEB-INF/inc/messages.jsp"%>
 <%-- SMSC Status --%>

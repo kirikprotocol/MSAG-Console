@@ -43,8 +43,8 @@ page_menu_end(out);
 <script>
 function viewHost(hostName)
 {
-	document.all.jbutton.value = "view";
-	document.all.jbutton.name = "mbView";
+	document.getElementById('jbutton').value = "view";
+	document.getElementById('jbutton').name = "mbView";
 	opForm.hostName.value = hostName;
 	opForm.submit();
 	return false;

@@ -35,10 +35,10 @@ MENU0_SELECTION = "MENU0_ACL";
 var global_counter = 0;
 function addAclAddress()
 {
-  var valueElem = opForm.all.new_address;
+  var valueElem = document.getElementById('new_address');
   var addr = valueElem.value;
   if (addr != null && addr.length > 0) {
-    var tbl = opForm.all.aclAddresses;
+    var tbl = document.getElementById('aclAddresses');
     var newRow = tbl.insertRow(tbl.rows.length);
 		newRow.className = "row" + ((tbl.rows.length+1) & 1);
     newRow.id = "addrRow_" + (global_counter++);
@@ -46,7 +46,7 @@ function addAclAddress()
     newCell.innerHTML = '<input name=addresses value="'+addr+'">';
     newRow.appendChild(newCell);
     newCell = document.createElement("td");
-    newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeRow(opForm.all.aclAddresses, \'' + newRow.id + '\')" style="cursor: hand;">';
+    newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeRow(document.getElementById(\'aclAddresses\'), \'' + newRow.id + '\')" style="cursor: hand;">';
     newRow.appendChild(newCell);
     valueElem.value = "";
     valueElem.focus();

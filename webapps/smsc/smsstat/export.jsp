@@ -31,6 +31,7 @@
     }
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
+<%@ include file="/WEB-INF/inc/calendar.jsp"%>
 <div class=content>
 <input type=hidden name=initialized value=true>
 <div class=page_subtitle><%=getLocString("stat.exportSubTitle")%></div>
@@ -45,26 +46,26 @@
 <div class=page_subtitle><%=getLocString("stat.exportDest")%></div>
 <script>
 function defaultSetting(){
-  document.all.source.value="<%=bean.getSource()%>";
-  document.all.driver.value="<%=bean.getDriver()%>";
-  document.all.user.value="<%=bean.getUser()%>";
-  document.all.password.value="<%=bean.getPassword()%>";
-  document.all.tablesPrefix.value="<%=bean.getTablesPrefix()%>";
+  document.getElementById('source').value="<%=bean.getSource()%>";
+  document.getElementById('driver').value="<%=bean.getDriver()%>";
+  document.getElementById('user').value="<%=bean.getUser()%>";
+  document.getElementById('password').value="<%=bean.getPassword()%>";
+  document.getElementById('tablesPrefix').value="<%=bean.getTablesPrefix()%>";
 
-  document.all.source.disabled=true;
-  document.all.driver.disabled=true;
-  document.all.user.disabled=true;
-  document.all.password.disabled=true;
-  document.all.tablesPrefix.disabled=true;
+  document.getElementById('source').disabled=true;
+  document.getElementById('driver').disabled=true;
+  document.getElementById('user').disabled=true;
+  document.getElementById('password').disabled=true;
+  document.getElementById('tablesPrefix').disabled=true;
 
 }
 
 function userDefined(){
-  document.all.source.disabled=false;
-  document.all.driver.disabled=false;
-  document.all.user.disabled=false;
-  document.all.password.disabled=false;
-  document.all.tablesPrefix.disabled=false;
+  document.getElementById('source').disabled=false;
+  document.getElementById('driver').disabled=false;
+  document.getElementById('user').disabled=false;
+  document.getElementById('password').disabled=false;
+  document.getElementById('tablesPrefix').disabled=false;
 }
 
 </script>

@@ -50,7 +50,7 @@ MENU0_SELECTION = "MENU0_PROFILES";
 <script>
 function editProfile(profileMask)
 {
-	document.all.jbutton.name = "mbEdit";
+	document.getElementById('jbutton').name = "mbEdit";
 	opForm.profileMask.value = profileMask;
 	opForm.submit();
 	return false;
@@ -61,16 +61,16 @@ function setSort(sorting)
 		opForm.sort.value = "-<%=bean.getSort()%>";
 	else
 		opForm.sort.value = sorting;
-        document.all.runQuery.value = false;
+        document.getElementById('runQuery').value = false;
 	opForm.submit();
 	return false;
 }
 function runQuery(){
-    document.all.runQuery.value = true;
+    document.getElementById('runQuery').value = true;
 }
 function closeQuery(){
-    document.all.closeQuery.value = true;
-    document.all.runQuery.value = false;
+    document.getElementById('closeQuery').value = true;
+    document.getElementById('runQuery').value = false;
 }
 </script>
 <%=getLocString("profiles.profilePrefix")%> <input class=txt name=filterMask value="<%=bean.getFilterMask()%>" validation="address_prefix" onkeyup="resetValidation(this)">

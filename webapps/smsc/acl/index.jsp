@@ -91,7 +91,7 @@ MENU0_SELECTION = "MENU0_ACL";
     <script>
     function delAclAddress(rowN)
     {
-      var tbl = opForm.all.addresses_table;
+      var tbl = document.getElementById('addresses_table');
       var row = tbl.rows("address_row_"+rowN);
       if (confirm('<%=getLocString("acl.delAddressConfirm")%> "' + row.address + '"?')) {
         var addressElem = document.createElement("input");
@@ -107,10 +107,10 @@ MENU0_SELECTION = "MENU0_ACL";
     var global_counter = 0;
     function addAclAddress()
     {
-      var valueElem = opForm.all.new_address_qweqwe;
+      var valueElem = document.getElementById('new_address_qweqwe');
       var addr = valueElem.value;
       if (addr != null && addr.length > 0) {
-        var tbl = opForm.all.addresses_table;
+        var tbl = document.getElementById('addresses_table');
         var newRow = tbl.insertRow(tbl.rows.length);
         newRow.className = "row" + ((tbl.rows.length) & 1);
         newRow.id = "addrRow_" + (global_counter);
@@ -118,7 +118,7 @@ MENU0_SELECTION = "MENU0_ACL";
         newCell.innerHTML = addr + "<input type=hidden name=new_address id=new_address_" + global_counter + " value=\"" + addr + "\">";
         newRow.appendChild(newCell);
         newCell = document.createElement("td");
-        newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeRow(opForm.all.addresses_table, \'' + newRow.id + '\')" style="cursor: hand;">';
+        newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeRow(document.getElementById(\'addresses_table\'), \'' + newRow.id + '\')" style="cursor: hand;">';
         newRow.appendChild(newCell);
         valueElem.value = "";
         valueElem.focus();

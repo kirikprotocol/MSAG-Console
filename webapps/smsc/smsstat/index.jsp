@@ -33,6 +33,7 @@
     if (needCSVDownload) FORM_URI=CPATH+"/smsstat/csv_download.jsp";
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
+<%@ include file="/WEB-INF/inc/calendar.jsp"%>
 <div class=content>
 <div class=page_subtitle><%=getLocString("stat.subTitle")%></div>
 <input type=hidden name=initialized value=true>
@@ -110,7 +111,7 @@ while (i.hasNext())
     DateCountersSet date = (DateCountersSet)obj;
     String dateStr = formatter.format(date.getDate());
 %>  <tr class=row0>
-        <td width="23%" align=right style="cursor:hand" onClick="toggleVisible(opForm.all.p<%=disNo%>, opForm.all.c<%=disNo%>);"><div id="p<%=disNo%>" class=collapsing_list_<%=i.hasNext() ? "closed" : "opened"%>><%= dateStr%><div></td>
+        <td width="23%" align=right style="cursor:hand" onClick="toggleVisible(document.getElementById('p<%=disNo%>'), document.getElementById('c<%=disNo%>'));"><div id="p<%=disNo%>" class=collapsing_list_<%=i.hasNext() ? "closed" : "opened"%>><%= dateStr%><div></td>
         <td width="11%" align=right><%= date.accepted%></td>
         <td width="11%" align=right><%= date.rejected%></td>
         <td width="11%" align=right><%= date.delivered%></td>
@@ -164,7 +165,7 @@ while (i.hasNext())
             Collection errs = sme.getErrors();
         %>
         <tr class=row0>
-            <td width="23%" align=right style="cursor:hand" onClick="toggleVisible(opForm.all.p<%=disNo%>, opForm.all.c<%=disNo%>);"><div id="p<%=disNo%>" class=collapsing_list_closed><%= smeStr%><div></td>
+            <td width="23%" align=right style="cursor:hand" onClick="toggleVisible(document.getElementById('p<%=disNo%>'), document.getElementById('c<%=disNo%>'));"><div id="p<%=disNo%>" class=collapsing_list_closed><%= smeStr%><div></td>
             <td width="11%" align=right><%= sme.accepted%></td>
             <td width="11%" align=right><%= sme.rejected%></td>
             <td width="11%" align=right><%= sme.delivered%></td>
@@ -226,7 +227,7 @@ while (i.hasNext())
             Collection errs = route.getErrors();
         %>
         <tr class=row0>
-            <td width="23%" align=right style="cursor:hand" onClick="toggleVisible(opForm.all.p<%=disNo%>, opForm.all.c<%=disNo%>);"><div id="p<%=disNo%>" class=collapsing_list_closed><%= routeStr%><div></td>
+            <td width="23%" align=right style="cursor:hand" onClick="toggleVisible(document.getElementById('p<%=disNo%>'), document.getElementById('c<%=disNo%>'));"><div id="p<%=disNo%>" class=collapsing_list_closed><%= routeStr%><div></td>
             <td width="11%" align=right><%= route.accepted%></td>
             <td width="11%" align=right><%= route.rejected%></td>
             <td width="11%" align=right><%= route.delivered%></td>

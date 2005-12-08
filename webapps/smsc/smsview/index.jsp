@@ -35,6 +35,7 @@
   }
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
+<%@ include file="/WEB-INF/inc/calendar.jsp"%>
 <div class=content><%
 {%>
 <div class=page_subtitle><%=getLocString("common.titles.searchParams")%></div>
@@ -149,22 +150,22 @@
 <script>
 function hideAddresses()
 {
-  if (document.all.abonentAddress.value != "" && document.all.abonentAddress.value != "*") {
-    document.all.fromAddress.disabled = document.all.toAddress.disabled = true;
-    document.all.fromAddress.value    = document.all.toAddress.value    = "*";
+  if (document.getElementById('abonentAddress').value != "" && document.getElementById('abonentAddress').value != "*") {
+    document.getElementById('fromAddress').disabled = document.getElementById('toAddress').disabled = true;
+    document.getElementById('fromAddress').value    = document.getElementById('toAddress').value    = "*";
   } else {
-    document.all.fromAddress.disabled = document.all.toAddress.disabled = false;
+    document.getElementById('fromAddress').disabled = document.getElementById('toAddress').disabled = false;
   }
   return true;
 }
 function hideSmeIds()
 {
-  if (document.all.smeId.value != "" && document.all.smeId.value != "*") {
-    document.all.srcSmeId.disabled = document.all.dstSmeId.disabled = true;
-    document.all.srcSmeId.value    = document.all.dstSmeId.value    = "*";
+  if (document.getElementById('smeId').value != "" && document.getElementById('smeId').value != "*") {
+    document.getElementById('srcSmeId').disabled = document.getElementById('dstSmeId').disabled = true;
+    document.getElementById('srcSmeId').value    = document.getElementById('dstSmeId').value    = "*";
   }
   else {
-    document.all.srcSmeId.disabled = document.all.dstSmeId.disabled = false;
+    document.getElementById('srcSmeId').disabled = document.getElementById('dstSmeId').disabled = false;
   }
   return true;
 }

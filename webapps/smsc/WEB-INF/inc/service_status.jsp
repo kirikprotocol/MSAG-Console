@@ -167,7 +167,7 @@ String smscServStatusString(SMSCAppContext appContext, String serviceId, byte no
 }
 
 %><%
-if( browserType == BROWSER_TYPE_MSIE ) {
+if( getBrowserType(request) == BROWSER_TYPE_MSIE ) {
 %><OBJECT id="tdcStatuses" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
 	<PARAM NAME="DataURL" VALUE="<%=CPATH%>/services/statuses.jsp">
 	<PARAM NAME="UseHeader" VALUE="True">
@@ -183,12 +183,12 @@ if( browserType == BROWSER_TYPE_MSIE ) {
 </OBJECT><script>
 function refreshStatus()
 {
-	document.all.tdcStatuses.DataURL = document.all.tdcStatuses.DataURL;
-	document.all.tdcStatuses.reset();
-	document.all.tdcSmscStatuses.DataURL = document.all.tdcSmscStatuses.DataURL;
-	document.all.tdcSmscStatuses.reset();
-	document.all.tdcConnStatuses.DataURL = document.all.tdcConnStatuses.DataURL;
-	document.all.tdcConnStatuses.reset();
+	document.getElementById('tdcStatuses').DataURL = document.getElementById('tdcStatuses').DataURL;
+	document.getElementById('tdcStatuses').reset();
+	document.getElementById('tdcSmscStatuses').DataURL = document.getElementById('tdcSmscStatuses').DataURL;
+	document.getElementById('tdcSmscStatuses').reset();
+	document.getElementById('tdcConnStatuses').DataURL = document.getElementById('tdcConnStatuses').DataURL;
+	document.getElementById('tdcConnStatuses').reset();
 	window.setTimeout(refreshStatus, 5000);
 }
 refreshStatus();

@@ -1,5 +1,5 @@
 <link rel="STYLESHEET" type="text/css" href="/styles/calendar.css">
-<script src=<%=getCalendarLocMsgFileName()%> type="text/javascript"></script>
+<script src="<%=getCalendarLocMsgFileName()%>" type="text/javascript"></script>
 <script src="/scripts/calendar.js" type="text/javascript"></script>
 <iframe id=calendarIFrame class=calendarHiddenLayer2 src="/images/blank.html"></iframe>
 <div id="calendarPanel" class="calendarHiddenLayer"

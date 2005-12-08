@@ -154,7 +154,7 @@ int disNo = 1;
             Collection errs = route.getErrors();
         %>
         <tr class=row0>
-            <td width="19%" align=right style="cursor:hand" onClick="toggleVisible(opForm.all.p<%=disNo%>, opForm.all.c<%=disNo%>);"><div id="p<%=disNo%>" class=collapsing_list_closed><%= routeStr%><div></td>
+            <td width="19%" align=right style="cursor:hand" onClick="toggleVisible(document.getElementById('p<%=disNo%>'), document.getElementById('c<%=disNo%>'));"><div id="p<%=disNo%>" class=collapsing_list_closed><%= routeStr%><div></td>
             <td width="9%" align=right><%= providerStr %></td>
             <td width="9%" align=right><%= categoryStr %></td>
             <td width="9%" align=right><%= route.accepted%></td>

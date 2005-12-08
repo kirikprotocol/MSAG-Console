@@ -63,7 +63,7 @@ page_menu_end(out);%>
 <script>
 function edit(name_to_edit)
 {
-	document.all.jbutton.name = "mbEdit";
+	document.getElementById('jbutton').name = "mbEdit";
 	opForm.editRouteId.value = name_to_edit;
 	opForm.submit();
   window.event.cancelBubble = true;
@@ -81,7 +81,7 @@ function setSort(sorting)
 
 function clickFilterSelect()
 {
-	document.all.jbutton.name = "mbQuickFilter";
+	document.getElementById('jbutton').name = "mbQuickFilter";
 	opForm.submit();
 	return false;
 }

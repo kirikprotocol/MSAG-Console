@@ -16,7 +16,7 @@
       if (bean.isCreate()) {
       %><input class=radio type=radio name=system id=systemTrue  value=true  onClick="checkSystemRadio();" <%=bean.isSystem() ? "checked" : ""%>><label for=systemTrue >&nbsp;<%=getLocString("dl.owner.system")%></label>
         <input class=radio type=radio name=system id=systemFalse value=false onClick="checkSystemRadio();" <%=bean.isSystem() ? "" : "checked"%>><label for=systemFalse>&nbsp;<input class=txt name=owner id=ownerAddress value="<%=StringEncoderDecoder.encode(bean.getOwner())%>" validation="address" onkeyup="resetValidation(this)"></label>
-        <script>function checkSystemRadio() {opForm.all.ownerAddress.disabled = opForm.all.systemTrue.checked;}
+        <script>function checkSystemRadio() {document.getElementById('ownerAddress').disabled = document.getElementById('systemTrue').checked;}
         checkSystemRadio();</script><%
       } else {
         %><%=bean.isSystem() ? "SYSTEM" : StringEncoderDecoder.encode(bean.getOwner())%><%
@@ -35,7 +35,7 @@
 <script>
 function removeSubmitters(rowId)
 {
-    var t = opForm.all.SubmittersTable;
+    var t = document.getElementById('SubmittersTable');
   var r = t.rows(rowId);
   if (r != null)
     t.deleteRow(r.rowIndex);
@@ -45,12 +45,12 @@ var rowCounter = 0;
 
 function addSubmitters()
 {
-  var fme = opForm.all.newSubmitters;
+  var fme = document.getElementById('newSubmitters');
   var fm = fme.value;
   if (fm == null || fm == "")
     return false;
 
-  var t = opForm.all.SubmittersTable;
+  var t = document.getElementById('SubmittersTable');
   var r = t.insertRow(t.rows.length -1);
   r.id = "row_Submitters_" + rowCounter++;
   var c1 = r.insertCell();
@@ -107,7 +107,7 @@ function setSort(sorting)
 <script>
 function removeMembers(rowId)
 {
-    var t = opForm.all.MembersTable;
+    var t = document.getElementById('MembersTable');
   var r = t.rows(rowId);
   if (r != null)
     t.deleteRow(r.rowIndex);
@@ -117,12 +117,12 @@ var rowCounter = 0;
 
 function addMembers()
 {
-  var fme = opForm.all.newMembers;
+  var fme = document.getElementById('newMembers');
   var fm = fme.value;
   if (fm == null || fm == "")
     return false;
 
-  var t = opForm.all.MembersTable;
+  var t = document.getElementById('MembersTable');
   var r = t.insertRow(t.rows.length -1);
   r.id = "row_Members_" + rowCounter++;
   var c1 = r.insertCell();

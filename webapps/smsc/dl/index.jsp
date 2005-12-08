@@ -59,7 +59,7 @@ function setSort(sorting)
 }
 function edit(dlName)
 {
-	document.all.jbutton.name = "mbEdit";
+	document.getElementById('jbutton').name = "mbEdit";
 	opForm.editDl.value = dlName;
 	opForm.submit();
 	return false;

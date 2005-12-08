@@ -50,9 +50,9 @@ page_menu_end(out);
 <script>
 function clickEdit(value)
 {
-  opForm.all.jbutton.value = "mbEdit";
-  opForm.all.jbutton.name = "mbEdit";
-  opForm.all.editKey.value = value;
+  document.getElementById('jbutton').value = "mbEdit";
+  document.getElementById('jbutton').name = "mbEdit";
+  document.getElementById('editKey').value = value;
   opForm.submit();
   return false;
 }

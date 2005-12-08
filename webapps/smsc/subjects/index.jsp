@@ -41,7 +41,7 @@ MENU0_SELECTION = "MENU0_SUBJECTS";
 <script>
 function removeFilterMask(rowId)
 {
-  var t = opForm.all.filterMasksTable;
+  var t = document.getElementById('filterMasksTable');
   var r = t.rows(rowId);
   if (r != null)
     t.deleteRow(r.rowIndex);
@@ -51,12 +51,12 @@ var rowCounter = 0;
 
 function addFilterMask()
 {
-  var fme = opForm.all.newFilterMask;
+  var fme = document.getElementById('newFilterMask');
   var fm = fme.value;
   if (fm == null || fm == "")
     return false;
 
-  var t = opForm.all.filterMasksTable;
+  var t = document.getElementById('filterMasksTable');
   var r = t.insertRow(t.rows.length -1);
   r.id = "row_FilterMask_" + rowCounter++;
   var c1 = r.insertCell();
@@ -122,7 +122,7 @@ page_menu_end(out);%>
 <script>
 function edit(name_to_edit)
 {
-	document.all.jbutton.name = "mbEdit";
+	document.getElementById('jbutton').name = "mbEdit";
 	opForm.editName.value = name_to_edit;
 	opForm.submit();
 	return false;
@@ -138,8 +138,8 @@ function setSort(sorting)
 }
 function navigate(direction)
 {
-	document.all.jbutton.name = direction;
-	document.all.jbutton.value = direction;
+	document.getElementById('jbutton').name = direction;
+	document.getElementById('jbutton').value = direction;
 	opForm.submit();
 	return false;
 }

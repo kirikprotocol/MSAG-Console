@@ -35,4 +35,4 @@
 		</tr>
 		</table>
 		<span id="MENU0_NONE"></span>
-		<script>document.all.MENU0_NONE.className = 'submenu_sel';</script>
+		<script>document.getElementById('MENU0_NONE').className = 'submenu_sel';</script>
