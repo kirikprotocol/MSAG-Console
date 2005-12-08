@@ -281,11 +281,12 @@ function srcSmeIdChanged()
 				var selectElem = document.getElementById('srcSubjSelect');
 				var tbl = document.getElementById('sources_table');
 				var rowElem = tbl.rows(rowId);
-				var subjValue = findChildById( rowElem, 'subjSrc').value;
+        var subjObj = findChildById( rowElem, 'subjSrc');
+        var subjValue = subjObj.value;
 				var oOption = document.createElement("OPTION");
+        selectElem.add(oOption);
         oOption.innerText = subjValue;
         oOption.value = subjValue;
-        selectElem.add(oOption);
 				selectElem.disabled = false;
 				tbl.deleteRow(rowElem.rowIndex);
 			}
@@ -380,7 +381,8 @@ function srcSmeIdChanged()
 					newCell.innerHTML = smesSelectText;
 					newSelect = findChildById(newCell, 'newSmesSelect');
 					newSelect.name = "dst_mask_sme_" + encodeHEX(mask);					
-					findChildById(newSelect, 'option_' + encodeHEX(sme)).selected = true;
+					var optObj = findChildById(newSelect, 'option_' + encodeHEX(sme));
+          optObj.selected = true;
 					newRow.appendChild(newCell);
 					
 					newCell = document.createElement("td");
@@ -411,8 +413,10 @@ function srcSmeIdChanged()
 				var selectElem = document.getElementById('dstSubjSelect');
 				var tbl = document.getElementById('destinations_table');
 				var rowElem = tbl.rows(rowId);
-				var subjValue = findChildById(rowElem, 'subjDst').value;
-        var subjDefaultSme = findChildById(rowElem, 'subjDst').defaultSme;
+        var subjObj = findChildById(rowElem, 'subjDst');
+        var subjValue = subjObj.value;
+        var subjDSObj = findChildById(rowElem, 'subjDst');
+        var subjDefaultSme = subjDSObj.defaultSme;
 				var oOption = document.createElement("OPTION");
 				selectElem.add(oOption);
 				oOption.innerText = subjValue;
@@ -440,14 +444,16 @@ function srcSmeIdChanged()
 
 					newCell = document.createElement("td");
 					newCell.innerHTML = subjValue + '<input id=subjDst type=hidden name=checkedDestinations value="' + subjValue + '">';
-          findChildById( newCell, 'subjDst' ).defaultSme = subjDefaultSme;
+          var subjDstObj = findChildById( newCell, 'subjDst' );
+          subjDstObj.defaultSme = subjDefaultSme;
 					newRow.appendChild(newCell);
 
 					newCell = document.createElement("td");
 					newCell.innerHTML = smesSelectText;
 					newSelect = findChildById( newCell, 'newSmesSelect');
 					newSelect.name = "dst_sme_" + encodeHEX(subjValue);
-					findChildById(newSelect, 'option_' + encodeHEX(sme)).selected = true;
+					var optObj = findChildById(newSelect, 'option_' + encodeHEX(sme));
+          optObj.selected = true;
 					newRow.appendChild(newCell);
 
 					newCell = document.createElement("td");

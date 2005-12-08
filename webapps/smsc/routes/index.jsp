@@ -66,7 +66,6 @@ function edit(name_to_edit)
 	document.getElementById('jbutton').name = "mbEdit";
 	opForm.editRouteId.value = name_to_edit;
 	opForm.submit();
-  window.event.cancelBubble = true;
 	return false;
 }
 function setSort(sorting)

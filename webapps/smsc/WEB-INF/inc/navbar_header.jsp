@@ -22,7 +22,12 @@ int pageLast = (pageCurrent +4) > (pageTotal-1) ? (pageTotal-1) : (pageCurrent +
 <script>
 function navigatePage(pageNum)
 {
-	document.getElementById('startPosition').value = pageNum*<%=bean.getPageSize()%>;
+	var spObj = document.getElementById('startPosition');
+  if( spObj == null ) {
+    var elems = document.getElementsByName('startPosition');
+    if( elems.length > 0 ) spObj = elems.item(0);
+  }
+  spObj.value = pageNum*<%=bean.getPageSize()%>;
     if(document.getElementById('runQuery') != null){
         document.getElementById('runQuery').value = false;
     }

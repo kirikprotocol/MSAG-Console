@@ -64,7 +64,6 @@ function edit(id_to_edit,name_to_edit)
 	opForm.editName.value = name_to_edit;
   opForm.editId.value = id_to_edit;
   opForm.submit();
-  window.event.cancelBubble = true;
 	return false;
 }
 function setSort(sorting)

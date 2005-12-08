@@ -50,7 +50,7 @@
   private static final String createSelection(String prefix, String catName, String catPriority)
   {
     StringBuffer result = new StringBuffer();
-    result.append("<select name=\"").append(prefix).append(catName).append("\" style=\"font-size:80%;\" onClick=\"window.event.cancelBubble = true;\">");
+    result.append("<select name=\"").append(prefix).append(catName).append("\" style=\"font-size:80%;\">");
     for (int i = 0; i < PRIORITIES.length; i++) {
       createOption(result, PRIORITIES[i], catPriority);
     }
