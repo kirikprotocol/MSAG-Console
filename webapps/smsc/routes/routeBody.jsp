@@ -380,7 +380,7 @@ function srcSmeIdChanged()
 					newCell.innerHTML = smesSelectText;
 					newSelect = findChildById(newCell, 'newSmesSelect');
 					newSelect.name = "dst_mask_sme_" + encodeHEX(mask);					
-					newSelect.all["option_" + encodeHEX(sme)].selected = true;
+					findChildById(newSelect, 'option_' + encodeHEX(sme)).selected = true;
 					newRow.appendChild(newCell);
 					
 					newCell = document.createElement("td");
@@ -447,7 +447,7 @@ function srcSmeIdChanged()
 					newCell.innerHTML = smesSelectText;
 					newSelect = findChildById( newCell, 'newSmesSelect');
 					newSelect.name = "dst_sme_" + encodeHEX(subjValue);
-					newSelect.all["option_" + encodeHEX(sme)].selected = true;
+					findChildById(newSelect, 'option_' + encodeHEX(sme)).selected = true;
 					newRow.appendChild(newCell);
 
 					newCell = document.createElement("td");
