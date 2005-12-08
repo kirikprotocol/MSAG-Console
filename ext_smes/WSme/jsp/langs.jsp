@@ -63,7 +63,7 @@
     LangRow lang = (LangRow)langs.get(i);
   %><tr class=row<%=rowN&1%>0>
       <td nowrap valign=top>
-        <%if (bean.isWSmeStarted()) {%>
+        <%if (bean.isWSmeOnline()) {%>
         <input class=check type=checkbox name=selectedRows value="<%= lang.mask%>">&nbsp;
         <%}%><%= StringEncoderDecoder.encode(lang.mask)%>
       </td>
@@ -83,7 +83,7 @@
 <input type=hidden name=pageSize value=<%=bean.getPageSize()%>>
 <%@ include file="/WEB-INF/inc/navbar.jsp"%>
 
-<%if (bean.isWSmeStarted()) {%>
+<%if (bean.isWSmeOnline()) {%>
 <br>
 <div class=page_subtitle>Manage languages</div>
 <table class=properties_list cellspacing=0>
@@ -104,7 +104,7 @@
 </div>
 <%
 page_menu_begin(out);
-if (bean.isWSmeStarted()) {
+if (bean.isWSmeOnline()) {
 	page_menu_button(out, "btnAdd",  "Add new language",  "Add new language");
 	page_menu_button(out, "btnDel",  "Delete selected",  "Delete selected languages",  "return noValidationSubmit(this);");
 }

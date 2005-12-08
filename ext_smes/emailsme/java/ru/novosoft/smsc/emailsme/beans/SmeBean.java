@@ -84,13 +84,13 @@ public class SmeBean extends PageBean
     this.initialized = initialized;
   }
 
-  public byte getServiceStatus()
+  public boolean isServiceOnline()
   {
     try {
-      return appContext.getHostsManager().getServiceInfo(SmeContext.SME_ID).getStatus();
+      return appContext.getHostsManager().getServiceInfo(SmeContext.SME_ID).isOnline();
     } catch (AdminException e) {
       logger.error("Couldn't get EMailSme status", e);
-      return ServiceInfo.STATUS_UNKNOWN;
+      return false;
     }
   }
 }

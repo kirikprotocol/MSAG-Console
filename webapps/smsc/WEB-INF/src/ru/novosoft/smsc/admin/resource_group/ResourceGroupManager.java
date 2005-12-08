@@ -31,7 +31,6 @@ public class ResourceGroupManager
 		this.appContext = appContext;
 		this.config = this.appContext.getConfig();
 		logger.debug("Initializing resource group manager");
-		String[] rgNames;
 		switch(getInstallType())
 		{
 			case ResourceGroupConstants.RESOURCEGROUP_TYPE_SINGLE:
@@ -59,22 +58,7 @@ public class ResourceGroupManager
 			case ResourceGroupConstants.RESOURCEGROUP_TYPE_HA:
 				NativeResourceGroupHA.LoadLibrary();
 				logger.debug("JNI Library loaded");
-				logger.debug("ResourceGroup_listGroups calling");
-				rgNames = NativeResourceGroupHA.ResourceGroup_listGroups();
-				logger.debug("ResourceGroup_listGroups returned resource groups:" + rgNames.length);
-				for (int i = 0; i < rgNames.length; i++)
-				{
-					try
-					{
-						ResourceGroup rg = new ResourceGroupHAImpl(rgNames[i]);
-						add(rg);
-						logger.debug("Resource group \"" + rg.getName() + "\" added");
-					}
-					catch (AdminException e)
-					{
-						logger.error("Couldn't init resource group:" + rgNames[i], e);
-					}
-				}
+				refreshResGroupList();
 				break;
 			default: throw new AdminException("Invalid type of installation");
 		}
@@ -137,5 +121,26 @@ public class ResourceGroupManager
       }
     }
 		return result;
+	}
+
+	public void refreshResGroupList() throws AdminException
+	{
+		String[] rgNames;
+		logger.debug("ResourceGroup_listGroups calling");
+		rgNames = NativeResourceGroupHA.ResourceGroup_listGroups();
+		logger.debug("ResourceGroup_listGroups returned resource groups:" + rgNames.length);
+		for (int i = 0; i < rgNames.length; i++)
+		{
+			try
+			{
+				ResourceGroup rg = new ResourceGroupHAImpl(rgNames[i]);
+				add(rg);
+				logger.debug("Resource group \"" + rg.getName() + "\" added");
+			}
+			catch (AdminException e)
+			{
+				logger.error("Couldn't init resource group:" + rgNames[i], e);
+			}
+		}
 	}
 }

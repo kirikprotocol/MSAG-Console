@@ -60,4 +60,9 @@ public class ResourceGroupList
 	{
 		return resourceGroups.values().iterator();
 	}
+
+	public void clear()
+	{
+		resourceGroups.clear();
+	}
 }

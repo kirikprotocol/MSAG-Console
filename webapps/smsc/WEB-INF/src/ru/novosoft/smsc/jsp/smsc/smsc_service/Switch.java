@@ -65,7 +65,7 @@ public class Switch extends SmscBean
 	{
 		try
 		{
-			hostsManager.shutdownService(Constants.SMSC_SME_ID);
+			hostsManager.shutdownService(checkedSmsc);
 			return RESULT_OK;
 		}
 		catch (Throwable e)
@@ -81,7 +81,7 @@ public class Switch extends SmscBean
   {
     if (!getStatusOnline()) {
       try {
-        hostsManager.startService(Constants.SMSC_SME_ID);
+        hostsManager.startService(checkedSmsc);
         return RESULT_OK;
       } catch (Throwable e) {
         logger.error("Couldn't start SMSC", e);
@@ -96,8 +96,7 @@ public class Switch extends SmscBean
 	{
 	  try
 	  {
-		  String smscServName = (String) ResourceGroupConstants.SMSC_serv_IDs.get(new Byte(SmscList.getNodeId(checkedSmsc)));
-		  hostsManager.startService(smscServName);
+		  hostsManager.startService(Constants.SMSC_SME_ID);
 		  return RESULT_OK;
 	  }
 	  catch (Throwable e)
@@ -111,8 +110,7 @@ public class Switch extends SmscBean
   {
 	try
 	{
-		String smscServName = (String) ResourceGroupConstants.SMSC_serv_IDs.get(new Byte(SmscList.getNodeId(checkedSmsc)));
-		hostsManager.shutdownService(smscServName);
+		hostsManager.shutdownService(Constants.SMSC_SME_ID);
 		return RESULT_OK;
 	}
 	catch (Throwable e)

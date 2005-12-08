@@ -111,9 +111,7 @@ public class WSmeFormBean extends IndexBean
       return error(WSmeErrors.error.admin.ApplyFailed, e.getMessage());
     }
 
-    int status = getWSmeStatus();
-    if (status == ServiceInfo.STATUS_RUNNING ||
-        status == ServiceInfo.STATUS_STARTING) {
+    if (isWSmeOnline()) {
       int result = processStop();
       if (result != RESULT_OK) return result;
       return processStart();
@@ -130,9 +128,7 @@ public class WSmeFormBean extends IndexBean
 
   private int processStart()
   {
-    int status = getWSmeStatus();
-    if (status != ServiceInfo.STATUS_RUNNING &&
-        status != ServiceInfo.STATUS_STARTING) {
+    if (isWSmeOnline()) {
       try {
         hostsManager.startService(getSmeId());
         return RESULT_OK;
@@ -146,9 +142,7 @@ public class WSmeFormBean extends IndexBean
 
   private int processStop()
   {
-    int status = getWSmeStatus();
-    if (status != ServiceInfo.STATUS_STOPPED &&
-        status != ServiceInfo.STATUS_STOPPED) {
+    if (isWSmeOnline()) {
       try {
         hostsManager.shutdownService(getSmeId());
         return RESULT_OK;
@@ -160,18 +154,13 @@ public class WSmeFormBean extends IndexBean
       return RESULT_OK;
   }
 
-  public byte getWSmeStatus()
+  public boolean isWSmeOnline()
   {
     try {
-      return hostsManager.getServiceInfo(getSmeId()).getStatus();
+      return hostsManager.getServiceInfo(getSmeId()).isOnline();
     } catch (AdminException e) {
-      return ServiceInfo.STATUS_UNKNOWN;
+      return false;
     }
-  }
-
-  public boolean isWSmeStarted()
-  {
-    return (getWSmeStatus() == ServiceInfo.STATUS_RUNNING);
   }
 
   private int loadParams()

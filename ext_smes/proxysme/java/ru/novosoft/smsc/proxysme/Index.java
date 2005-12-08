@@ -162,8 +162,10 @@ public class Index extends PageBean
 
     if (isSmeRunning()) {
       try {
-        Service service = appContext.getHostsManager().getService(proxySmeId);
-        service.call("ProxySme", "applay", Type.Types[Type.StringType], new HashMap());
+		ServiceInfo proxySmeInfo = appContext.getHostsManager().getServiceInfo(proxySmeId);
+		ServiceInfo info = new ServiceInfo(proxySmeId, adminHost, proxySmeInfo.getServiceFolder().getAbsolutePath(), "", false, proxySmeInfo.getSme(), proxySmeInfo.getStatus());
+        Service service = new Service(info, adminPort);
+        service.call("ProxySme", "apply", Type.Types[Type.StringType], new HashMap());
       } catch (Throwable e) {
         logger.debug("Couldn't call apply", e);
         return error("Couldn't call apply", e);

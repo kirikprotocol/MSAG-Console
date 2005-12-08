@@ -9,6 +9,7 @@ package ru.novosoft.smsc.wsme;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.service.Service;
+import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 
 import java.security.Principal;
@@ -20,7 +21,6 @@ public class WSmeContext
   private static Map instances = new HashMap();
 
   private WSme wsme = null;
-  private Service wsmeService = null;
   private SMSCAppContext appContext;
   private HashMap preferences = new HashMap();
 
@@ -28,10 +28,10 @@ public class WSmeContext
   {
     this.appContext = appContext;
     try {
-      wsmeService = this.appContext.getHostsManager().getService(smeId);
-      wsme = new WSme(wsmeService);
+      ServiceInfo wsmeServiceInfo = this.appContext.getHostsManager().getServiceInfo(smeId);
+      wsme = new WSme(wsmeServiceInfo);
 
-      wsme.init(wsmeService);
+      wsme.init(wsmeServiceInfo);
     } catch (AdminException e) {
       System.out.println("Exception in initialization:");
       e.printStackTrace();
@@ -66,11 +66,6 @@ public class WSmeContext
   synchronized public SMSCAppContext getAppContext()
   {
     return appContext;
-  }
-
-  synchronized public Service getWsmeService()
-  {
-    return wsmeService;
   }
 
   synchronized public WSme getWsme()

@@ -27,14 +27,13 @@ public class WSme extends WSmeTransport
 
   private WSmeLock dsLock = new WSmeLock();
 
-  public WSme(Service wsmeService) throws AdminException
+  public WSme(ServiceInfo wsmeServiceInfo) throws AdminException
   {
-    super(wsmeService.getInfo(), -1);
+    super(wsmeServiceInfo, -1);
   }
-  public void init(Service wsmeService) throws AdminException
+  public void init(ServiceInfo info) throws AdminException
   {
     try {
-      ServiceInfo info = wsmeService.getInfo();
       configFile = new File(new File(info.getServiceFolder(), "conf"), "config.xml");
       System.out.println("Config file '" + configFile.getAbsolutePath() + "'");
 

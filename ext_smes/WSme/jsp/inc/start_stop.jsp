@@ -1,8 +1,8 @@
 <%@ page import="ru.novosoft.smsc.admin.Constants"%><%
 page_menu_begin(out);
 page_menu_space(out);
-page_menu_button(out, "btnStart",  "Start",  "Start WSme", "return noValidationSubmit(this);", bean.getWSmeStatus() == ServiceInfo.STATUS_STOPPED);
-page_menu_button(out, "btnStop",   "Stop",   "Stop WSme",  "return noValidationSubmit(this);", bean.getWSmeStatus() == ServiceInfo.STATUS_RUNNING);
+page_menu_button(out, "btnStart",  "Start",  "Start WSme", "return noValidationSubmit(this);", !bean.isWSmeOnline());
+page_menu_button(out, "btnStop",   "Stop",   "Stop WSme",  "return noValidationSubmit(this);", bean.isWSmeOnline());
 page_menu_end(out);
 %>
 <script>

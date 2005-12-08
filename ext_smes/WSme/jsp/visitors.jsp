@@ -62,7 +62,7 @@
     String mask = (String)visitors.get(i);
   %><tr class=row<%=rowN&1%>0>
       <td nowrap valign=top>
-        <%if (bean.isWSmeStarted()) {%>
+        <%if (bean.isWSmeOnline()) {%>
         <input class=check type=checkbox name=selectedRows value="<%= mask%>">&nbsp;
         <%}%><%= StringEncoderDecoder.encode(mask)%>
       </td>
@@ -78,7 +78,7 @@
 <input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
 <input type=hidden name=pageSize value=<%=bean.getPageSize()%>>
 <%@ include file="/WEB-INF/inc/navbar.jsp"%>
-<%if (bean.isWSmeStarted()) {%>
+<%if (bean.isWSmeOnline()) {%>
 <div class=page_subtitle>Manage visitors</div>
 <table class=properties_list cellspacing=0 cellspadding=1 width="100%">
 <thead>
@@ -94,7 +94,7 @@
 </div>
 <%
 page_menu_begin(out);
-if (bean.isWSmeStarted()) {
+if (bean.isWSmeOnline()) {
 	page_menu_button(out, "btnAdd",  "Add new visitor",  "Add new visitor mask");
 	page_menu_button(out, "btnDel",  "Delete selected",  "Delete selected visitors",  "return noValidationSubmit(this);");
 }

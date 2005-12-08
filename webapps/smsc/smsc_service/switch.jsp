@@ -53,8 +53,8 @@
 <tr>
 	<th class=ico><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
 	<th><%=getLocString("common.sortmodes.node")%></th>
-	<th><%=getLocString("common.sortmodes.status")%></th>
-	<th><%=getLocString("common.sortmodes.status")%></th>
+	<th><%=getLocString("common.sortmodes.smscServStatus")%></th>
+	<th><%=getLocString("common.sortmodes.smscStatus")%></th>
 </tr>
 </thead>
 <tbody>
@@ -65,11 +65,12 @@
   {
       String node = (String) i.next();
       byte id = Byte.parseByte((String) nodes.get(node));
+      String smscServId = (String) ResourceGroupConstants.SMSC_serv_IDs.get(new Byte(id));
 %>
 <tr class=row<%=id&1%>>
-  <td><input class=check type=radio name=checkedSmsc value="<%=node%>"></td>
+  <td><input class=check type=radio name=checkedSmsc value="<%=smscServId%>"></td>
   <td><%=node%></td>
-  <td><%=serviceStatus((SMSCAppContext) request.getAttribute("appContext"), (String) ResourceGroupConstants.SMSC_serv_IDs.get(new Byte(id)))%></td>
+  <td><%=serviceStatus((SMSCAppContext) request.getAttribute("appContext"), smscServId)%></td>
   <td><%=smscServStatus((SMSCAppContext) request.getAttribute("appContext"), Constants.SMSC_SME_ID, id)%></td>
 </tr>
 <%}%>

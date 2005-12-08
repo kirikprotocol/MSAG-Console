@@ -306,6 +306,7 @@ public class HostsManager
 	}
 
     smeManager.remove(smeId);
+	resourceGroupManager.refreshResGroupList();  
   }
 
 
