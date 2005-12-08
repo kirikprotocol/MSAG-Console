@@ -3,7 +3,13 @@ use strict;
 use constant PROCLIMIT=>50;
 use constant TIMEOUT=>60;
 
-open(my $f,'mar.txt');
+if(@ARGV!=2)
+{
+  print "Usage: $0 inputfile outputfile\n";
+  exit;
+}
+
+open(my $f,$ARGV[0]) || die "Failed to open $ARGV[0]:$!";
 
 my $smes={};
 
@@ -50,7 +56,7 @@ chel.plmn
 
 my @undo;
 
-open($f,'>import.con') || die "Failed to open createsmes.con:$!";
+open($f,'>'.$ARGV[1]) || die "Failed to open $ARGV[1]:$!";
 for my $sme(sort(keys(%$smes)))
 {
   print $f qq[add sme $sme password @{[$smes->{$sme}->{pwd}]} timeout @{[TIMEOUT]} receiptScheme "default" proclimit @{[PROCLIMIT]}\n];
