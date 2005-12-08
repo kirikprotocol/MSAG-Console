@@ -18,81 +18,80 @@ public class ProfileAddCommand extends ProfileGenCommand
 	private String mask;
 	int updateResult;
 
-  public void setMask(String mask)
-  {
-    this.mask = mask;
-  }
-
-  public void process(CommandContext ctx)
-  {
-    String out = "Profile for mask '" + mask + "'";
-
-    if (isAliasOptions && !isAliasHide && !isAliasModifiable) {
-      ctx.setMessage("expecting alias option(s). " +
-                     "Syntax: alias [hide|nohide|substitute] [modifiable|notmodifiable]");
-      ctx.setStatus(CommandContext.CMD_PARSE_ERROR);
-      return;
-    }
-    if (isDivertOptions && !isDivert && !isDivertModifiable &&
-        !isDivertActiveAbsent && !isDivertActiveBarred && !isDivertActiveBlocked &&
-        !isDivertActiveCapacity && !isDivertActiveUnconditional)
+    public void setMask(String mask)
     {
-      ctx.setMessage("expecting divert option(s). " +
-                     "Syntax: divert <string> [absent][barred][blocked][capacity][unconditional] "+
-                     "[modifiable|notmodifiable]");
-      ctx.setStatus(CommandContext.CMD_PARSE_ERROR);
-      return;
+      this.mask = mask;
     }
 
-    try {
-      Mask profileMask = new Mask(mask);
-      if (!ctx.getSmsc().isLocaleRegistered(locale))
-        throw new Exception("Locale '" + locale + "' is not registered");
+    public void process(CommandContext ctx)
+    {
+      String out = "Profile for mask '" + mask + "'";
 
-      Profile profile = new Profile(profileMask, codepage, ussd7bit, report, locale,
-                                    aliasHide, aliasModifiable,
-                                    divert, divertActiveUnconditional, divertActiveAbsent,
-                                    divertActiveBlocked, divertActiveBarred, divertActiveCapacity,
-                                    divertModifiable, udhConcat, translit);
-
-      updateResult = ctx.getSmsc().profileUpdate(profileMask, profile);
-      switch (updateResult) {
-        case 1:	//pusUpdated
-          ctx.setMessage(out + " was updated");
-          ctx.setStatus(CommandContext.CMD_OK);
-          break;
-        case 2: //pusInserted
-          ctx.setMessage(out + " added");
-          ctx.setStatus(CommandContext.CMD_OK);
-          break;
-        case 3: //pusUnchanged
-          ctx.setMessage(out + " is identical to default.");
-          ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-          break;
-        default: // pusError
-          ctx.setMessage("Couldn't add " + out + ". Unknown cause");
-          ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-          break;
+      if (isAliasOptions && !isAliasHide && !isAliasModifiable) {
+        ctx.setMessage("expecting alias option(s). " +
+                       "Syntax: alias [hide|nohide|substitute] [modifiable|notmodifiable]");
+        ctx.setStatus(CommandContext.CMD_PARSE_ERROR);
+        return;
       }
-    } catch (Exception e) {
-      ctx.setMessage("Couldn't add " + out + ". Cause: " + e.getMessage());
-      ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+      if (isDivertOptions && !isDivert && !isDivertModifiable &&
+          !isDivertActiveAbsent && !isDivertActiveBarred && !isDivertActiveBlocked &&
+          !isDivertActiveCapacity && !isDivertActiveUnconditional)
+      {
+        ctx.setMessage("expecting divert option(s). " +
+                       "Syntax: divert <string> [absent][barred][blocked][capacity][unconditional] "+
+                       "[modifiable|notmodifiable]");
+        ctx.setStatus(CommandContext.CMD_PARSE_ERROR);
+        return;
+      }
+
+      try {
+        Mask profileMask = new Mask(mask);
+        if (!ctx.getSmsc().isLocaleRegistered(locale))
+          throw new Exception("Locale '" + locale + "' is not registered");
+
+        Profile profile = new Profile(profileMask, codepage, ussd7bit, report, locale,
+                                      aliasHide, aliasModifiable,
+                                      divert, divertActiveUnconditional, divertActiveAbsent,
+                                      divertActiveBlocked, divertActiveBarred, divertActiveCapacity,
+                                      divertModifiable, udhConcat, translit);
+
+        updateResult = ctx.getSmsc().profileUpdate(profileMask, profile);
+        switch (updateResult) {
+          case 1:	//pusUpdated
+            ctx.setMessage(out + " was updated");
+            ctx.setStatus(CommandContext.CMD_OK);
+            break;
+          case 2: //pusInserted
+            ctx.setMessage(out + " added");
+            ctx.setStatus(CommandContext.CMD_OK);
+            break;
+          case 3: //pusUnchanged
+            ctx.setMessage(out + " is identical to default.");
+            ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+            break;
+          default: // pusError
+            ctx.setMessage("Couldn't add " + out + ". Unknown cause");
+            ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+            break;
+        }
+      } catch (Exception e) {
+        ctx.setMessage("Couldn't add " + out + ". Cause: " + e.getMessage());
+        ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+      }
     }
-  }
 
-  public String getId()
-  {
-    return "PROFILE_ADD";
-  }
-
+    public String getId()
+    {
+      return "PROFILE_ADD";
+    }
 
 	public void updateJournalAndStatuses(CommandContext ctx, String userName)
 	{
 		byte act = 0;
 		switch (updateResult)
 		{
-			case 1: act = Actions.ACTION_MODIFY;break;
-			case 2: act = Actions.ACTION_ADD;break;
+			case 1: act = Actions.ACTION_MODIFY; break;
+			case 2: act = Actions.ACTION_ADD; break;
 			default: return;
 		}
 		journalAppend(ctx, userName, SubjectTypes.TYPE_profile, mask, act);

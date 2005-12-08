@@ -980,6 +980,12 @@ public CommandParser(ParserSharedInputState state) {
 			cmd.setNoneReport();
 			break;
 		}
+		case VAL_FINAL:
+		{
+			match(VAL_FINAL);
+			cmd.setFinalReport();
+			break;
+		}
 		default:
 		{
 			throw new NoViableAltException(LT(1), getFilename());
@@ -1998,6 +2004,12 @@ public CommandParser(ParserSharedInputState state) {
 			{
 				match(VAL_NONE);
 				cmd.setNoneReport();
+				break;
+			}
+			case VAL_FINAL:
+			{
+				match(VAL_FINAL);
+				cmd.setFinalReport();
 				break;
 			}
 			default:
@@ -5003,6 +5015,7 @@ public CommandParser(ParserSharedInputState state) {
 		"\"suppress\"",
 		"\"pass\"",
 		"\"full\"",
+		"\"final\"",
 		"\"none\"",
 		"\"default\"",
 		"\"ucs2\"",

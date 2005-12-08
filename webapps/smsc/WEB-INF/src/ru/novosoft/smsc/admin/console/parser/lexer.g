@@ -126,6 +126,7 @@ tokens {
   VAL_SUPPRESS  = "suppress";
   VAL_PASS      = "pass";
   VAL_FULL      = "full";
+  VAL_FINAL     = "final";
   VAL_NONE      = "none";
   VAL_DEF       = "default";
   VAL_UCS2      = "ucs2";

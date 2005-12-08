@@ -575,8 +575,9 @@ addprofile returns [ProfileAddCommand cmd] {
     cmd = new ProfileAddCommand();
 }
 	: (mask:STR  { cmd.setMask(mask.getText());    })
-	  (OPT_REPORT (VAL_FULL { cmd.setFullReport(); }
-	  	      |VAL_NONE { cmd.setNoneReport(); } ))
+	  (OPT_REPORT (VAL_FULL  { cmd.setFullReport(); }
+	  	      |VAL_NONE  { cmd.setNoneReport(); } 
+		      |VAL_FINAL { cmd.setFinalReport(); }))
   	  (OPT_LOCALE { cmd.setLocale(getnameid("Locale name")); } )
 	  (OPT_ENCODE profile_encode_opt[cmd] )?
 	  (TGT_ALIAS  profile_alias_opt[cmd]  )?
@@ -595,8 +596,9 @@ altprofile returns [ProfileAlterCommand cmd] {
     cmd = new ProfileAlterCommand();
 }
 	: (addr:STR   { cmd.setAddress(addr.getText()); })
-	  (OPT_REPORT (VAL_FULL { cmd.setFullReport(); }
-		      |VAL_NONE { cmd.setNoneReport(); } ))?
+	  (OPT_REPORT (VAL_FULL  { cmd.setFullReport(); }
+		      |VAL_NONE  { cmd.setNoneReport(); } 
+		      |VAL_FINAL { cmd.setFinalReport(); }))?
 	  (OPT_LOCALE { cmd.setLocale(getnameid("Locale name")); } )?
 	  (OPT_ENCODE profile_encode_opt[cmd] )?
 	  (TGT_ALIAS  profile_alias_opt[cmd]  )?

@@ -59,7 +59,9 @@ public abstract class ProfileGenCommand extends CommandClass
   public void setFullReport() {
     this.report = Profile.REPORT_OPTION_Full; isReport = true;
   }
-
+  public void setFinalReport() {
+    this.report = Profile.REPORT_OPTION_Final; isReport = true;
+  }
   public void setLocale(String locale) {
     this.locale = locale; isLocale = true;
   }

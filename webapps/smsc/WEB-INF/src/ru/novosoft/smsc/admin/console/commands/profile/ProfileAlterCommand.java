@@ -33,7 +33,7 @@ public class ProfileAlterCommand extends ProfileGenCommand
         {
             ctx.setMessage("expecting 'encoding', 'report', 'locale', 'alias', 'divert' option(s). "+
                            "Syntax: alter profile <profile_address> "+
-                           "[report (full|none)] [locale <locale_name>] "+
+                           "[report (full|none|final)] [locale <locale_name>] "+
                            "[encoding (default|ucs2|latin1|ucs2-latin1) [ussd7bit]] "+
                            "[alias [hide|nohide|substitute] [modifiable|notmodifiable]] "+
                            "[divert [(set <divert>)|clear] [(on|off) [absent][barred][blocked][capacity][unconditional]] "+
@@ -59,11 +59,11 @@ public class ProfileAlterCommand extends ProfileGenCommand
                 if (isAliasHide) profile.setAliasHide(aliasHide);
                 if (isAliasModifiable) profile.setAliasModifiable(aliasModifiable);
                 if (isDivert) profile.setDivert(divert);
-                if (isDivertActiveAbsent) profile.setDivertActiveAbsent(divertActiveOn ? divertActiveAbsent:false);
-                if (isDivertActiveBarred) profile.setDivertActiveBarred(divertActiveOn ? divertActiveBarred:false);
-                if (isDivertActiveBlocked) profile.setDivertActiveBlocked(divertActiveOn ? divertActiveBlocked:false);
-                if (isDivertActiveCapacity) profile.setDivertActiveCapacity(divertActiveOn ? divertActiveCapacity:false);
-                if (isDivertActiveUnconditional) profile.setDivertActiveUnconditional(divertActiveOn ? divertActiveUnconditional:false);
+                if (isDivertActiveAbsent) profile.setDivertActiveAbsent(divertActiveOn && divertActiveAbsent);
+                if (isDivertActiveBarred) profile.setDivertActiveBarred(divertActiveOn && divertActiveBarred);
+                if (isDivertActiveBlocked) profile.setDivertActiveBlocked(divertActiveOn && divertActiveBlocked);
+                if (isDivertActiveCapacity) profile.setDivertActiveCapacity(divertActiveOn && divertActiveCapacity);
+                if (isDivertActiveUnconditional) profile.setDivertActiveUnconditional(divertActiveOn && divertActiveUnconditional);
                 if (isDivertModifiable) profile.setDivertModifiable(divertModifiable);
                 if (isUdhConcat) profile.setUdhConcat(udhConcat);
                 if (isTranslit) profile.setTranslit(translit);
