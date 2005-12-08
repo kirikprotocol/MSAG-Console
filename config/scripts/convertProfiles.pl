@@ -20,7 +20,7 @@ while(<$f>)
   {
     $rec{$hdr[$i]}=$rec[$i];
   }
-  next if $rec{TON_FULL}!=1 || $rec{NPI_FULL}!=1;
+  next if $rec{TON_FULL}!=1 || $rec{NPI_FULL}!=1 || $rec{ADDR_FULL}=~/\?/;
   next unless $rec{ADDR_FULL}=~/^7/;
   next if $rec{TON_SHORT}!=$rec{TON_FULL} || $rec{NPI_SHORT}!=$rec{NPI_FULL};
   if(exists($unique{$rec{ADDR_FULL}}))
