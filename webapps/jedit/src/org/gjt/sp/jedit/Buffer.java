@@ -3216,6 +3216,8 @@ public class Buffer
     if (jEdit.getBooleanProperty("newRule")) {
       setBooleanProperty("newRule",true);
     }
+   // String[] foldModes = FoldHandler.getFoldModes();
+    setStringProperty("folding","sidekick");
     //{{{ need to convert entries of 'props' to PropValue instances
     Enumeration e = props.keys();
     while(e.hasMoreElements())
