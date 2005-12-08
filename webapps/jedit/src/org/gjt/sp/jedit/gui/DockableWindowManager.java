@@ -855,7 +855,8 @@ public class DockableWindowManager extends JPanel implements EBComponent
  //{{{ addEntry() method
  private void addEntry(DockableWindowFactory.Window factory)
  {
-  Entry e;
+  // System.out.println("dockableWindowManager.addEntry line 858 factory.name= "+factory.name);
+   Entry e;
   if(view.isPlainView())
   {
    // don't show menu items to dock into a plain view

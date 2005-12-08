@@ -1609,7 +1609,7 @@ loop:  for(;;)
   */
  private void propertiesChanged()
  {
-  setJMenuBar(GUIUtilities.loadMenuBar("view.mbar"));
+ // setJMenuBar(GUIUtilities.loadMenuBar("view.mbar"));
 
   loadToolBars();
 

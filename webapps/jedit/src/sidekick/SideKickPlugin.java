@@ -42,6 +42,7 @@ public class SideKickPlugin extends EBPlugin
  //{{{ Some constants
  public static final String PARSER_PROPERTY = "sidekick.parser";
  public static final String PARSED_DATA_PROPERTY = "sidekick.parsed-data";
+ public static final String ERROR_SOURCE_PROPERTY = "SideKick"; 
  public static final String PARSE_COUNT = "sidekick.parse-count";
  //}}}
 
@@ -66,7 +67,7 @@ public class SideKickPlugin extends EBPlugin
   View view = jEdit.getFirstView();
   while(view != null)
   {
-   uninitView(view);
+   closeView(view);
    SideKickParsedData.setParsedData(view,null);
 
    EditPane[] panes = view.getEditPanes();
@@ -94,7 +95,7 @@ public class SideKickPlugin extends EBPlugin
    if(vu.getWhat() == ViewUpdate.CREATED)
     initView(view);
    else if(vu.getWhat() == ViewUpdate.CLOSED)
-    uninitView(view);
+    closeView(view);
   }
   else if(msg instanceof EditPaneUpdate)
   {
@@ -307,7 +308,13 @@ public class SideKickPlugin extends EBPlugin
   sidekick.dispose();
   sidekicks.remove(view);
  } //}}}
-
+    //{{{ uninitView() method
+ private void closeView(View view)
+ {
+  SideKick sidekick = (SideKick)sidekicks.get(view);
+  sidekick.closeView();
+  sidekicks.remove(view);
+ } //}}}
  //{{{ initTextArea() method
  private void initTextArea(JEditTextArea textArea)
  {

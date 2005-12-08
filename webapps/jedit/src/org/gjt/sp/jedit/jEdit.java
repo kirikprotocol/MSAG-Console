@@ -1651,7 +1651,7 @@ public class jEdit extends Applet
     removeBufferFromList(buffer);
     buffer.close();
     DisplayManager.bufferClosed(buffer);
-
+    System.out.println("jEdit._closeBuffer line 1654 EditBus.send(new BufferUpdate(buffer, view, BufferUpdate.CLOSED))");
     EditBus.send(new BufferUpdate(buffer, view, BufferUpdate.CLOSED));
 
     // Create a new file when the last is closed

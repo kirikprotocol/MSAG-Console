@@ -47,11 +47,12 @@ public abstract class ErrorSource implements EBComponent
 
   synchronized(errorSources)
   {
+  // if (errorSources.size()>0)  errorSources.clear();
    errorSources.addElement(errorSource);
    errorSource.registered = true;
    cachedErrorSources = null;
-   EditBus.send(new ErrorSourceUpdate(errorSource,
-    ErrorSourceUpdate.ERROR_SOURCE_ADDED,null));
+   System.out.println("ErrorSource.registerErrorSource line 53 EditBus.send(new ErrorSourceUpdate(errorSource,ErrorSourceUpdate.ERROR_SOURCE_ADDED,null)) errorSources.size= "+errorSources.size());
+   EditBus.send(new ErrorSourceUpdate(errorSource,ErrorSourceUpdate.ERROR_SOURCE_ADDED,null));
   }
  } //}}}
 
@@ -71,6 +72,7 @@ public abstract class ErrorSource implements EBComponent
    errorSources.addElement(errorSource);
    errorSource.registered = true;
    cachedErrorSources = null;
+   System.out.println("ErrorSource.registerAndCheckErrorSource line 53 EditBus.send(new ErrorSourceUpdate(errorSource,ErrorSourceUpdate.ERROR_SOURCE_ADDED,null)) errorSources.size= "+errorSources.size());
    EditBus.send(new ErrorSourceUpdate(errorSource,ErrorSourceUpdate.ERROR_SOURCE_ADDED,null));
   }
   } //}}}
@@ -92,6 +94,7 @@ public abstract class ErrorSource implements EBComponent
     errorSources.removeElement(errorSource);
     errorSource.registered = false;
     cachedErrorSources = null;
+    System.out.println("ErrorSource.unregisterErrorSource line 95 EditBus.send(new ErrorSourceUpdate(errorSource,ErrorSourceUpdate.ERROR_SOURCE_REMOVED,null)) errorSources.size= "+errorSources.size());
     EditBus.send(new ErrorSourceUpdate(errorSource,ErrorSourceUpdate.ERROR_SOURCE_REMOVED,null));
   }
  } //}}}

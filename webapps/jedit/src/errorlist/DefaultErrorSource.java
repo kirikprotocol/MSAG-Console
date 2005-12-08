@@ -194,6 +194,7 @@ public class DefaultErrorSource extends ErrorSource implements EBComponent
    {
     public void run()
     {
+      System.out.println("errorSource.clear() EditBus.send(ERRORS_CLEARED)");
      ErrorSourceUpdate message = new ErrorSourceUpdate(DefaultErrorSource.this,
       ErrorSourceUpdate.ERRORS_CLEARED,null);
      EditBus.send(message);
@@ -297,6 +298,7 @@ public class DefaultErrorSource extends ErrorSource implements EBComponent
  {
   DefaultError newError = new DefaultError(this,errorType,path,lineIndex,
    start,end,error);
+   System.out.println("DefaultErrorSource.AddError line 301");
    ErrorSource.registerAndCheckErrorSource(this);
   addError(newError);
  } //}}}

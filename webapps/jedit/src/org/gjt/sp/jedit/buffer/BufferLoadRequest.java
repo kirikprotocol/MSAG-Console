@@ -76,11 +76,11 @@ public class BufferLoadRequest extends BufferIORequest
       url=new URL(jEdit.servletUrl,content);
       c=(HttpURLConnection) url.openConnection();
       c.connect(); String status=c.getHeaderField("status");
-      if (jEdit.getBooleanProperty("bufferWorkWithId")) {
+     /* if (jEdit.getBooleanProperty("bufferWorkWithId")) {
         String len=c.getHeaderField("length");
         System.out.println("BufferLoadRequest._createInputStream len= "+len);
-        length=Long.parseLong(len);
-      }
+        length=0;//Long.parseLong(len);
+      }  */
       System.out.println("BufferLoadRequest _createInputStream status= "+status);
       if (!status.equals("ok")) throw new FileNotFoundException(status);
       _in=c.getInputStream();
@@ -113,7 +113,7 @@ public class BufferLoadRequest extends BufferIORequest
    try
    {
      setAbortable(true);
-    long length = 0L;
+    long length = 0;
     if (!jEdit.getBooleanProperty("bufferWorkWithId")) {
 
     String[] args = { vfs.getFileName(path) };

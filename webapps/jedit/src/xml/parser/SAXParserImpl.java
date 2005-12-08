@@ -55,7 +55,7 @@ public class SAXParserImpl extends XmlParser
  public SideKickParsedData parse(Buffer buffer, DefaultErrorSource errorSource)
  {
   stopped = false;
-   System.out.println("SAXParserImpl.parse line 57");
+   System.out.println("SAXParserImpl.parse line 57 path= "+buffer.getPath());
   String text;
 
   try

@@ -85,6 +85,7 @@ class SideKick implements EBComponent
   if(parser == null)
   {
    Log.log(Log.DEBUG,this,"No parser");
+    System.out.println("SideKick.parse parser==null !!! before setErrorSource(null);");
    setErrorSource(null);
    showNotParsedMessage();
    SideKickPlugin.finishParsingBuffer(buffer);
@@ -101,7 +102,9 @@ class SideKick implements EBComponent
    sendUpdate();
   } //}}}
 
-  DefaultErrorSource errorSource = new DefaultErrorSource("SideKick");
+ // DefaultErrorSource errorSource=(DefaultErrorSource) buffer.getProperty(SideKickPlugin.ERROR_SOURCE_PROPERTY);
+ // if (errorSource==null)
+  DefaultErrorSource  errorSource = new DefaultErrorSource("SideKick");
   SideKickParsedData[] data = new SideKickParsedData[1];
     SideKickPlugin.addWorkRequest(new ParseRequest(
    parser,buffer,errorSource,data),false);
@@ -116,7 +119,13 @@ class SideKick implements EBComponent
   EditBus.removeFromBus(this);
   removeBufferChangeListener(buffer);
  } //}}}
-
+   //{{{ dispose() method
+ void closeView()
+ {
+  setErrorSource(null);
+  EditBus.removeFromBus(this);
+  removeBufferChangeListener(buffer);
+ } //}}}
  //{{{ getParser() method
  SideKickParser getParser()
  {
@@ -204,10 +213,22 @@ class SideKick implements EBComponent
   {
    int errorCount = errorSource.getErrorCount();
    if(errorCount != 0)
-    ErrorSource.registerErrorSource(errorSource);
-  }
+   { ErrorSource.registerErrorSource(errorSource);
+    // buffer.setProperty(SideKickPlugin.ERROR_SOURCE_PROPERTY,errorSource);
+   }
+   }
  } //}}}
 
+   //{{{ setErrorSource() method
+ private void clearErrorForBuffer(Buffer buffer)
+ {
+  if(this.errorSource != null)
+  {
+   //ErrorSource.unregisterErrorSource(this.errorSource);
+   this.errorSource.removeFileErrors(buffer.getPath());
+  }
+
+ } //}}}
   public DefaultErrorSource getErrorSource()
   {
     return errorSource;
@@ -299,7 +320,9 @@ class SideKick implements EBComponent
   else if(bmsg.getWhat() == BufferUpdate.PROPERTIES_CHANGED) {
    setParser();                                               }
   else if(bmsg.getWhat() == BufferUpdate.CLOSED) {
-   setErrorSource(null);                          }
+     System.out.println("SideKick.handleBufferUpdate BufferUpdate.CLOSED setErrorSource(null);");
+   setErrorSource(null);/*clearErrorForBuffer(buffer);  */                        }
+
  } //}}}
  
  //{{{ handleEditPaneUpdate() method
@@ -405,6 +428,7 @@ class SideKick implements EBComponent
   public void run()
   {
    data[0] = parser.parse(buffer,errorSource);
+    System.out.println("SideKick.parse path= "+buffer.getPath()+" finished errors added line 426");
   }
  } //}}}
 

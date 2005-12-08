@@ -1598,7 +1598,9 @@ forward_scan:  do
   * Deselects everything.
   */
  public void selectNone()
- {view.getEditPane().propertiesChanged2();
+ {
+  EditPane pane=view.getEditPane();
+  if (pane!=null) pane.propertiesChanged2();
   invalidateSelectedLines();
   setSelection((Selection)null);
  } //}}}

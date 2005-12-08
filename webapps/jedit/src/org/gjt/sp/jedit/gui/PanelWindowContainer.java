@@ -240,7 +240,7 @@ public class PanelWindowContainer implements DockableWindowContainer
 
    dockablePanel.showDockable(entry.factory.name);
 
-   if (!entry.factory.name.equals("error-list")) entry.btn.setSelected(true);
+  // if (!entry.factory.name.equals("error-list")) entry.btn.setSelected(true);
 
    if(entry.win instanceof DefaultFocusComponent)
    {
