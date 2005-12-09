@@ -237,12 +237,19 @@ public class RuleManager
   saveRule(r,ruleId);
 }
 
-  public synchronized void updateRule(BufferedReader r, final String ruleId) throws SibincoException
+  public synchronized LinkedList updateRule(BufferedReader r, final String ruleId) throws SibincoException
  {
    //String ruleId=fileName.substring(5,fileName.length()-4);
    System.out.println("updateRule ruleId= "+ruleId);
-   //gateway.updateRule(ruleId);
+   LinkedList li=new LinkedList();
+/*   try {
+     li=(LinkedList) gateway.updateRule(ruleId);
+   } catch (SibincoException e) {
+     e.printStackTrace();//logger.warn(e.getMessage());  //To change body of catch statement use File | Settings | File Templates.
+
+   } */
    saveRule(r,ruleId);
+   return li;
  }
 
   private void saveRule(BufferedReader r,String ruleId) throws SibincoException

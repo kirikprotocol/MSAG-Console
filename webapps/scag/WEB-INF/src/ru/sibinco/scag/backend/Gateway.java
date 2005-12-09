@@ -47,6 +47,7 @@ public class Gateway extends Proxy
   private static final String SCAG_COMPONENT_ID = "scag";
   private static final String LOAD_ROUTES_METHOD_ID = "loadRoutes";
   private static final String TRACE_ROUTE_METHOD_ID = "traceRoute";
+  private static final String UPDATE_RULE_METHOD_ID = "updateRule";
   private static final String SME_STATUS_ID = "statusSme";
   private long serviceRefreshTimeStamp = 0;
   private Map smeStatuses = new HashMap();
@@ -144,11 +145,17 @@ public class Gateway extends Proxy
             throw new SibincoException("Couldn't register Rule, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
     }
 
-    public void updateRule(final String ruleId) throws SibincoException {
+ /*    public void updateRule(final String ruleId) throws SibincoException {
         final Response response = super.runCommand(new UpdateRule(ruleId));
         if (Response.StatusOk != response.getStatus())
             throw new SibincoException("Couldn't modify Rule, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
     }
+  */
+ public synchronized List updateRule(final String ruleId) throws SibincoException {
+        String err = "Couldn't update rule , nested: ";
+        final Object res = call(UPDATE_RULE_METHOD_ID, err, Type.Types[Type.StringListType], new HashMap());
+        return res instanceof List ? (List) res : null;
+ }
 
     public void regSmsc(final SmscInfo SmscInfo) throws SibincoException
   {

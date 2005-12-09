@@ -150,25 +150,31 @@ public class myServlet extends HttpServlet
   {
     System.out.println("myServlet updateRule");
     SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
-    PrintWriter out = res.getWriter();
+
     //transport
-    OutputStream _out=null;
+    LinkedList li;//=new LinkedList();
+    int errorType=0;
+    int lineIndex=0;
+    int start=0;
+    int end=0;String error;
     BufferedReader r=req.getReader();
     try {
-      appContext.getRuleManager().updateRule(r,file);
-       out.print("true");out.flush();out.close();
+      li=appContext.getRuleManager().updateRule(r,file);
+    /*  errorType=Integer.parseInt((String)li.get(0));  res.setIntHeader("errorType",errorType);
+      lineIndex=Integer.parseInt((String)li.get(1));  res.setIntHeader("lineIndex",lineIndex);
+      start=Integer.parseInt((String)li.get(2));      res.setIntHeader("start",start);
+      end=Integer.parseInt((String)li.get(3));        res.setIntHeader("end",end);
+      error=(String)li.get(4);res.setHeader("error",error);
+    */  res.setHeader("status","ok");
+
     } catch (SibincoException e) {
       e.printStackTrace();//logger.warn(e.getMessage());  //To change body of catch statement use File | Settings | File Templates.
-      out.println("false");
-      out.println(e.getMessage());
-      out.flush();out.close();
+      res.setHeader("status",e.getMessage());
     }
-     finally{
-           try {
-             if (r!=null) r.close();
-           } catch (IOException e) { e.printStackTrace(); }
-         }
-  }
+  PrintWriter out = res.getWriter();
+  out.print("true");out.flush();out.close();
+
+ }
      private void AddRule(HttpServletRequest req,final String file,HttpServletResponse res) throws IOException
   {
     System.out.println("myServlet AddRule");
