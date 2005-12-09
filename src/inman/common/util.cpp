@@ -151,6 +151,8 @@ int dump(std::string& fstr, unsigned short size, unsigned char* buff, bool ascii
             chars += sprintf(tmp, "'%c' ", ch);
         fstr += tmp;
     }
+    if (size)
+        fstr.erase(fstr.end()); //erase last space char
     return chars;
 }
 
