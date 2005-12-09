@@ -3,10 +3,10 @@ private boolean sme_menu_delimiter_needed = false;
 void sme_menu_begin(JspWriter out) throws IOException
 {
    sme_menu_delimiter_needed = false;
-	out.print("<table class=sme_menu cellpadding=0px cellspacing=0px>");
-	out.print("<tr>");
-	out.print("<th width=12px background=\"/images/smsc_35.jpg\">&nbsp;</th>");
-	out.print("<th width=12px>&nbsp;</th>");
+   out.print("<table class=sme_menu cellpadding=0px cellspacing=0px>");
+   out.print("<tr>");
+   out.print("<th width=12px background=\"/images/smsc_35.jpg\">&nbsp;</th>");
+   out.print("<th width=12px>&nbsp;</th>");
 }
 void sme_menu_button(JspWriter out, String name, String value, String visibleName, String title) throws IOException
 {
@@ -24,12 +24,11 @@ void sme_menu_button(JspWriter out, String name, String value, String visibleNam
 {
 	if (sme_menu_delimiter_needed)
 		out.print("<td width=1px>|</td>");
-	out.print("<td width=1px>");
-	//out.print("<input type=submit id=\"" + name + "\" name=\"" + name + "\" value=\"" + value + "\" title=\"" + title + "\"" + (enabled ? "" : " disabled") + ((onclick != null && onclick.length() > 0) ? (" onclick=\"" + onclick + '"') : "" ) +">");
-	out.print("<a id=\"" + name + "\" jbuttonName=\"" + name + "\" jbuttonValue=\"" + value + "\""
+	  out.print("<td width=1px>");
+  	out.print("<a id=\"" + name + "\""
 				+ (enabled ? "" : " class=disabled")
 				+ ((title != null && title.length() > 0) ? " title=\"" + title + "\"" : "")
-				+ ((onclick != null && onclick.length() > 0) ? (" jbuttonOnclick=\"" + onclick + '"') : "" ) 
+				+ ((onclick != null && onclick.length() > 0) ? (" href=\"javascript:" + onclick + '"') : (" href=\"javascript: clickSubmit('"+name+"', '"+value+"')\"") ) 
 				+">" + visibleName + "</a>");
 	out.print("</td>");
 	sme_menu_delimiter_needed = true;
