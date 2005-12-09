@@ -20,6 +20,7 @@
 <%if (request.isUserInRole(InfoSmeBean.INFOSME_ADMIN_ROLE)) {%>
 <%@ include file="inc/header.jsp"%>
 <%}%>
+<%@ include file="/WEB-INF/inc/calendar.jsp"%>
 <div class=content>
 <div class=page_subtitle><%= getLocString("infosme.subtitle.stat_params")%></div>
 <input type=hidden name=initialized value=true>
@@ -51,9 +52,9 @@
 </table>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbQuery",  "common.buttons.query",  "infosme.hint.query_stat");
+page_menu_button(session, out, "mbQuery",  "common.buttons.query",  "infosme.hint.query_stat");
 if (!request.isUserInRole(InfoSmeBean.INFOSME_ADMIN_ROLE)) {
-page_menu_button(out, "mbCancel",  "infosme.button.main_page", "infosme.hint.main_page", "clickCancel()");
+page_menu_button(session, out, "mbCancel",  "infosme.button.main_page", "infosme.hint.main_page", "clickCancel()");
 }
 page_menu_space(out);
 page_menu_end(out);

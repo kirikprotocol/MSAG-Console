@@ -15,6 +15,7 @@
   int beanResult = bean.process(request);
 %><%@ include file="inc/menu_switch.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
+<%@ include file="/WEB-INF/inc/calendar.jsp"%>
 <%@ include file="inc/header.jsp"%>
 <script type="text/javascript">
 function setSort(sorting)

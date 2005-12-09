@@ -480,3 +480,13 @@ function findChildById(elem, id) {
   }
   return null;
 }
+
+function clickSubmit( name, value )
+{
+	if (opForm.onsubmit() == false)
+		return false;
+	opForm.jbutton.value = value;
+	opForm.jbutton.name = name
+	opForm.submit();
+	return false;
+}

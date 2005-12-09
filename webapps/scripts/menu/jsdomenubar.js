@@ -171,8 +171,12 @@ function menuBarItemClick(e) { // Private method
 		}
 	}
 	if (!e) {
-		var e = window.event;
-		e.cancelBubble = true;
+    try {
+      var e = window.event;
+      e.cancelBubble = true;
+    } catch(ex) {
+    }
+
 	}
 	if (e.stopPropagation) {
 		e.stopPropagation();
@@ -402,8 +406,11 @@ function jsDOMenuBar() {
   this.addMenuBarItem = addMenuBarItem;
 	this.menuBarObj.onclick = function(e) { // Private method
 		if (!e) {
-			var e = window.event;
-			e.cancelBubble = true;
+      try {
+        var e = window.event;
+        e.cancelBubble = true;
+      } catch(ex) {
+      }
 		}
 		if (e.stopPropagation) {
 			e.stopPropagation();

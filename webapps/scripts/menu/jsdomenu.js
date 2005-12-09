@@ -430,8 +430,11 @@ function menuItemClick(e) { // Private method
     }
   }
   if (!e) {
-    var e = window.event;
-    e.cancelBubble = true;
+    try {
+      var e = window.event;
+      e.cancelBubble = true;
+    } catch (ex) {
+    }
   }
 	if (e.stopPropagation) {
     e.stopPropagation();
@@ -529,8 +532,11 @@ function addMenuItem(menuItemObj) { // Public method
     };
     itemElm.onclick = function(e) { // Private method
       if (!e) {
-        var e = window.event;
-        e.cancelBubble = true;
+        try {
+          var e = window.event;
+          e.cancelBubble = true;
+        } catch(ex) {
+        }
       }
       if (e.stopPropagation) {
         e.stopPropagation();
