@@ -31,6 +31,9 @@ for (Iterator i = c.iterator(); i.hasNext(); )
 		case ServiceInfo.STATUS_ONLINE2:
 			result += getLocString("common.statuses.online2");
 			break;
+		case ServiceInfo.STATUS_ONLINE:
+			result += getLocString("common.statuses.online");
+			break;
 		default:
 			result += getLocString("common.statuses.unknown");
 			break;

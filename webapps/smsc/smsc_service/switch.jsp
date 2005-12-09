@@ -35,14 +35,14 @@
 <%
   if ((errorMessages.size() == 0)||(!((SMSCJspException) errorMessages.get(0)).getMessage().equals(SMSCErrors.error.smsc.contextInitFailed))) {
   page_menu_begin(out);
-  page_menu_button(session, out, "mbOnline", "common.buttons.online", "smsc.start");
-  page_menu_button(session, out, "mbOffline", "common.buttons.offline", "smsc.stop");
+  page_menu_button(session, out, "mbOnline", "common.buttons.online", "common.hints.online");
+  page_menu_button(session, out, "mbOffline", "common.buttons.offline", "common.hints.offline");
   page_menu_space(out);
   page_menu_button(session, out, "mbSwitchOver", "common.buttons.switchOver", "common.hints.switchOver");
   page_menu_space(out);
   page_menu_button(session, out, "mbActivate",  "common.buttons.activate", "smsc.activateHint");
-  page_menu_button(session, out, "mbDeactivate",  "common.buttons.deactivate",  "smsc.activateHint");
-  page_menu_end(out);%>
+  page_menu_button(session, out, "mbDeactivate",  "common.buttons.deactivate",  "smsc.deActivateHint");
+  page_menu_end(out);}%>
 <div class=content>
 <table class=list cellspacing=1 cellpadding=1 id=SMSC_LIST_TABLE>
 <col width="5%" align=left>
@@ -77,14 +77,15 @@
 </tbody>
 </table>
 </div><%
+  if ((errorMessages.size() == 0)||(!((SMSCJspException) errorMessages.get(0)).getMessage().equals(SMSCErrors.error.smsc.contextInitFailed))) {
   page_menu_begin(out);
-  page_menu_button(session, out, "mbOnline", "common.buttons.online", "smsc.start");
-  page_menu_button(session, out, "mbOffline", "common.buttons.offline", "smsc.stop");
+  page_menu_button(session, out, "mbOnline", "common.buttons.online", "common.hints.online");
+  page_menu_button(session, out, "mbOffline", "common.buttons.offline", "common.hints.offline");
   page_menu_space(out);
   page_menu_button(session, out, "mbSwitchOver", "common.buttons.switchOver", "common.hints.switchOver");
   page_menu_space(out);
   page_menu_button(session, out, "mbActivate",  "common.buttons.activate", "smsc.activateHint");
-  page_menu_button(session, out, "mbDeactivate",  "common.buttons.deactivate",  "smsc.activateHint");
+  page_menu_button(session, out, "mbDeactivate",  "common.buttons.deactivate",  "smsc.deActivateHint");
   page_menu_end(out);}%>
 <%@
  include file="/WEB-INF/inc/html_3_footer.jsp"%><%@

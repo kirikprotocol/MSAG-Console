@@ -35,7 +35,7 @@ function openTopMon()
         {
         %><%=StringEncoderDecoder.encode(ServiceIDForShowStatus)%>&nbsp;
           <%=getLocString("grammatic.is")%>&nbsp;
-          <%=rgStatus((SMSCAppContext) request.getAttribute("appContext"),  ServiceIDForShowStatus)%><%
+          <%=serviceStatus((SMSCAppContext) request.getAttribute("appContext"),  ServiceIDForShowStatus)%><%
         }
         else
         { %>

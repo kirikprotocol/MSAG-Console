@@ -26,6 +26,7 @@ public class ServiceInfo
   public static final byte STATUS_OFFLINE = 0;
   public static final byte STATUS_ONLINE1 = 1;
   public static final byte STATUS_ONLINE2 = 2;
+  public static final byte STATUS_ONLINE = 127;
 
   protected String id = "";
   protected String host = "";
@@ -164,6 +165,9 @@ public class ServiceInfo
     else if ("online2".equalsIgnoreCase(statusStr)) {
       this.status = STATUS_ONLINE2;
     }
+	else if ("online".equalsIgnoreCase(statusStr)) {
+	  this.status = STATUS_ONLINE;
+	}
     else if ("offline".equalsIgnoreCase(statusStr)) {
       this.status = STATUS_OFFLINE;
     }
@@ -178,6 +182,8 @@ public class ServiceInfo
         return "online1";
       case STATUS_ONLINE2:
         return "online2";
+      case STATUS_ONLINE:
+        return "online";
       case STATUS_OFFLINE:
         return "offline";
       case STATUS_UNKNOWN:

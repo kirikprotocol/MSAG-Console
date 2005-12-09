@@ -35,6 +35,9 @@ byte status = ServiceInfo.STATUS_UNKNOWN;
 				    else result = result + getLocString("common.statuses.offline") + "_";
                 result += bean.smscServStatusString(Constants.SMSC_SME_ID, id.byteValue());
 				break;
+            case ServiceInfo.STATUS_ONLINE:
+                result = result + Constants.SMSC_SME_ID + getLocString("grammatic.is");
+                result += getLocString("common.statuses.online");
 			default:
 				result += getLocString("common.statuses.unknown");
 				break;

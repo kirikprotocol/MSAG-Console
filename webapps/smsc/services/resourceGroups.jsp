@@ -47,8 +47,8 @@ page_menu_button(session, out, "mbAddService",  "common.buttons.add",  "services
 page_menu_button(session, out, "mbDelete", "common.buttons.delete", "services.deleteHint", "return confirm('" + getLocString("services.deleteConfirm") + "')");
 page_menu_space(out);
 page_menu_button(session, out, "mbDisconnectServices",  "common.buttons.disconnect",  "services.disconnectHint", "return confirm('" + getLocString("services.disconnectConfirm") + "')", bean.isSmscAlive());
-page_menu_button(session, out, "mbStartService",  "common.buttons.online",  "services.startHint");
-page_menu_button(session, out, "mbStopService",  "common.buttons.offline",  "services.stopHint");
+page_menu_button(session, out, "mbStartService",  "common.buttons.online",  "common.hints.online");
+page_menu_button(session, out, "mbStopService",  "common.buttons.offline",  "common.hints.offline");
 page_menu_button(session, out, "mbSwitchOver",  "common.buttons.switchOver",  "common.hints.switchOver");
 page_menu_end(out);
 %><div class=content>
@@ -130,7 +130,7 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
 	<td class=name><%
 		if (bean.isService(serviceId))
 		{
-			%><%=rgStatus(bean.getAppContext(), serviceId)%><%
+			%><%=serviceStatus(bean.getAppContext(), serviceId)%><%
 		} else
 		{
 			%>&nbsp;<%
@@ -147,9 +147,9 @@ page_menu_button(session, out, "mbAddService",  "common.buttons.add",  "services
 page_menu_button(session, out, "mbDelete", "common.buttons.delete", "services.deleteHint", "return confirm('" + getLocString("services.deleteConfirm") + "')");
 page_menu_space(out);
 page_menu_button(session, out, "mbDisconnectServices",  "common.buttons.disconnect",  "services.disconnectHint", "return confirm('" + getLocString("services.disconnectConfirm") + "')", bean.isSmscAlive());
-page_menu_button(session, out, "mbStartService",  "common.buttons.online",  "services.startHint");
-page_menu_button(session, out, "mbStopService",  "common.buttons.offline",  "services.stopHint");
-page_menu_button(session, out, "mbSwitchOver",  "common.buttons.switchOver",  "common.hints.switchOver");    
+page_menu_button(session, out, "mbStartService",  "common.buttons.online",  "common.hints.online");
+page_menu_button(session, out, "mbStopService",  "common.buttons.offline",  "common.hints.offline");
+page_menu_button(session, out, "mbSwitchOver",  "common.buttons.switchOver",  "common.hints.switchOver");
 page_menu_end(out);
 %><%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

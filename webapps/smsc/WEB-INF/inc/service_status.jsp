@@ -23,40 +23,6 @@ String serviceStatus(SMSCAppContext appContext, String serviceId)
   return serviceStatus(appContext, serviceId, elem_id);
 }
 
-String rgStatus(SMSCAppContext appContext, String serviceId)
-{
-  String elem_id = "RUNNING_STATUSERVICE_" + StringEncoderDecoder.encode(serviceId);
-  return rgStatus(appContext, serviceId, elem_id);
-}
-
-String rgStatus(SMSCAppContext appContext, String serviceId, String elem_id)
-{
-	byte status = ServiceInfo.STATUS_UNKNOWN;
-//    String node = "";
-	try {
-		status = appContext.getHostsManager().getServiceInfo(serviceId).getStatus();
-	} catch (Throwable e)
-	{}
-	String result = "<span id=\"" + elem_id + "\" datasrc=#tdcStatuses DATAFORMATAS=html datafld=\"" + StringEncoderDecoder.encode(serviceId) + "\">";
-		switch (status)
-		{
-			case ServiceInfo.STATUS_OFFLINE:
-				result += getLocString("common.statuses.offline");
-				break;
-			case ServiceInfo.STATUS_ONLINE1:
-				result += getLocString("common.statuses.online1");
-				break;
-			case ServiceInfo.STATUS_ONLINE2:
-				result += getLocString("common.statuses.online2");
-				break;
-			default:
-				result += getLocString("common.statuses.unknown");
-				break;
-		}
-	result += "</span>";
-	return result;
-}
-
 String serviceStatus(SMSCAppContext appContext, String serviceId, String elem_id)
 {
 	byte status = ServiceInfo.STATUS_UNKNOWN;
@@ -68,15 +34,23 @@ String serviceStatus(SMSCAppContext appContext, String serviceId, String elem_id
 	switch (status)
 	{
 		case ServiceInfo.STATUS_OFFLINE:
+            result += "<img src=\"/images/ic_offline.gif\" width=16 height=16 title='offline'>";
 			result += getLocString("common.statuses.offline");
 			break;
 		case ServiceInfo.STATUS_ONLINE1:
+            result += "<img src=\"/images/ic_online1.gif\" width=16 height=16 title='online1'>";
 			result += getLocString("common.statuses.online1");
 			break;
 		case ServiceInfo.STATUS_ONLINE2:
+            result += "<img src=\"/images/ic_online2.gif\" width=16 height=16 title='online2'>";
 			result += getLocString("common.statuses.online2");
 			break;
+		case ServiceInfo.STATUS_ONLINE:
+            result += "<img src=\"/images/ic_online.gif\" width=16 height=16 title='online'>";
+			result += getLocString("common.statuses.online");
+			break;
 		default:
+            result += "<img src=\"/images/ic_unknown.gif\" width=16 height=16 title='unknown'>";
 			result += getLocString("common.statuses.unknown");
 			break;
 	}
@@ -114,6 +88,9 @@ String smscStatus(SMSCAppContext appContext)
 				result = result + getLocString("common.statuses.online") + "_";
                 result += smscServStatusString(appContext, Constants.SMSC_SME_ID, id.byteValue());
 				break;
+            case ServiceInfo.STATUS_ONLINE:
+                result = result + Constants.SMSC_SME_ID + getLocString("grammatic.is");
+                result += getLocString("common.statuses.online");
 			default:
 				result += getLocString("common.statuses.unknown");
 				break;
