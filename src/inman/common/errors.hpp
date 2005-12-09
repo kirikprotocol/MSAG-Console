@@ -9,52 +9,62 @@
 #include "inman/common/util.hpp"
 
 namespace smsc {
-namespace inman{
+namespace inman {
 namespace common {
 
 class CustomError : public std::exception
 {
-	protected:
- 		std::string message;
- 	public:	
-		CustomError() throw()
-		{
-		}
+    protected:
+        std::string message;
 
-		CustomError(const std::string& msg) throw() : message( msg ) 
-		{
-		}
+    public:	
+        CustomError() throw()
+        { }
+        CustomError(const std::string& msg) throw()
+            : message( msg )
+        { }
 
-		~CustomError() throw()
-		{
-		}
+        ~CustomError() throw()
+        { }
 
-		const char* what() const throw()
-		{
-			return message.c_str();
-		}
+        const char* what() const throw()
+        {
+            return message.c_str();
+        }
 };
 
 class SystemError : public CustomError
 {
-		int errorCode;
-	public:
+    protected:
+        int errorCode;
 
-		SystemError(const std::string& msg) throw()
-			: errorCode( errno )
-		{
-			message = format( "%s : %s (0x%02X)", msg.c_str(), getErrorString(), errorCode );
-		}
+    public:
+        SystemError(const char * msg) throw()
+            : errorCode( errno )
+        {
+            format(message, "%s : %s (0x%02X)", msg, getErrorString(), errorCode);
+        }
 
-		int getErrorCode() const
-		{
-			return errorCode;
-		}
+        SystemError(std::string & msg) throw()
+            : errorCode( errno )
+        {
+            format(message, "%s : %s (0x%02X)", msg.c_str(), getErrorString(), errorCode);
+        }
 
-		const char* getErrorString() const
-		{
-			return strerror( errorCode );
-		}
+        void Init(const char * msg)
+        {
+            format(message, "%s : %s (0x%02X)", msg, getErrorString(), errorCode = errno);
+        }
+
+        int getErrorCode() const
+        {
+	    return errorCode;
+        }
+
+        const char* getErrorString() const
+        {
+            return strerror(errorCode);
+        }
 };
 
 }

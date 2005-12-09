@@ -30,30 +30,40 @@ void pack_addr(unsigned char* dst, const char* src, int len)
   }
 }
 
-#ifdef _WIN32
-  static inline int vsnprintf(char* ch,int bufsize,const char* fmt,va_list va)
-  {
-    int was_writen = _vsnprintf(ch,bufsize,fmt,va);
-    return was_writen;
-  }
-#else
-  static inline int vsnprintf(char* ch, int bufsize, const char* fmt,va_list va)
-  {
-    int was_writen = vsprintf(ch,fmt,va);
-    assert( was_writen < bufsize );
-    return was_writen;
-  }
-#endif
 
-std::string format(const char* fmt,...)
+int format(std::string & fstr, const char* fmt, ...)
 {
-  char format_buffer[ 4096 ];
-  va_list va;
-  va_start(va,fmt);
-  unsigned u = vsnprintf(format_buffer,sizeof(format_buffer)-1, fmt,va);
-  format_buffer[u] = 0;
-  va_end(va);
-  return std::string(format_buffer);
+    char format_buffer[4096];
+
+    va_list va;
+    va_start(va, fmt);
+#ifdef _WIN32
+    int u = _vsnprintf
+#else
+    int u = vsnprintf
+#endif
+            (format_buffer, sizeof(format_buffer) - 1, fmt, va);
+    va_end(va);
+    format_buffer[u] = 0;
+    fstr += format_buffer;
+    return u;
+}
+
+std::string format(const char* fmt, ...)
+{
+    char format_buffer[4096];
+
+    va_list va;
+    va_start(va, fmt);
+#ifdef _WIN32
+    int u = _vsnprintf
+#else
+    int u = vsnprintf
+#endif
+            (format_buffer, sizeof(format_buffer) - 1, fmt, va);
+    va_end(va);
+    format_buffer[u] = 0;
+    return std::string(format_buffer);
 }
 
 
@@ -127,19 +137,30 @@ void fillAddress( ADDRESS_BUF_T *dst, const char *saddr)
   }
 }
 
+
+int dump(std::string& fstr, unsigned short size, unsigned char* buff, bool ascii)
+{
+    int chars = 0;
+    for (int i = 0; i < size; i++) {
+        char tmp[32];
+        unsigned char ch = buff[i];
+
+        if ((ch < 32) || (ch > 127) || !ascii)
+            chars += sprintf(tmp, "0x%02X ", ch);
+        else 
+            chars += sprintf(tmp, "'%c' ", ch);
+        fstr += tmp;
+    }
+    return chars;
+}
+
 std::string dump(unsigned short size, unsigned char* buff, bool ascii)
 {
-  std::string reply;
-  for (int i = 0; i < size; i++)
-  {
-    char tmp[32];
-    unsigned char ch = buff[i];
-    if((ch < 32) || (ch > 127) || !ascii) sprintf( tmp, "0x%02X ", ch );
-    else sprintf( tmp, "'%c' ", ch );
-    reply += tmp;
-  }
-  return reply;
+    std::string reply;
+    dump(reply, size, buff, ascii);
+    return reply;
 }
+
 
 void dumpToLog(Logger* logger, int len, const unsigned char* buffer )
 {
