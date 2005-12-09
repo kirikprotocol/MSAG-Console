@@ -180,22 +180,23 @@ public class BufferSaveRequest extends BufferIORequest
           if(out != null) out.close();
           _in = c.getInputStream(); // _in = new FileInputStream(path);
       in = new BufferedReader(new InputStreamReader(_in));//new FileReader(fileName));
-          //String status=c.getHeaderField("status");
-      //if (status.equals("ok"))
-       String status=in.readLine();
+          String status=c.getHeaderField("status");
+      if (!status.equals("ok")) {
+        if (jEdit.getBooleanProperty("bufferWorkWithId")) {
+                DefaultErrorSource errorSource= SideKickPlugin.getErrorSource(view);
+                int errorType=c.getHeaderFieldInt("errorType",0);
+                int lineIndex=c.getHeaderFieldInt("lineIndex",0); int start=c.getHeaderFieldInt("start",0);
+                int end=c.getHeaderFieldInt("end",0);String error=c.getHeaderField("error");
+                errorSource.addError(errorType,path,lineIndex,start,end,error);
+              }
+
+      }
+       String status1=in.readLine();
   // else throw new FileNotFoundException(status);
-     System.out.println("BufferSaveRequest run line 178 status= "+status);
-    if (status.equals("false")) {
+     System.out.println("BufferSaveRequest run line 178 status= "+status1);
+
+    if (status1.equals("false")) {
        String[] pp = { in.readLine() };
-
-       if (jEdit.getBooleanProperty("bufferWorkWithId")) {
-          DefaultErrorSource errorSource= SideKickPlugin.getErrorSource(view);
-          int errorType=c.getHeaderFieldInt("errorType",0);
-          int lineIndex=c.getHeaderFieldInt("lineIndex",0); int start=c.getHeaderFieldInt("start",0);
-          int end=c.getHeaderFieldInt("end",0);
-          errorSource.addError(errorType,path,lineIndex,start,end,pp[0]);
-        }
-
        VFSManager.error(view,path,"ioerror.write-error",pp);
     }
            if(_in != null) _in.close();
