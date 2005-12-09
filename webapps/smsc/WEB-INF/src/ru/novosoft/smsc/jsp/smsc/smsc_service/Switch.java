@@ -61,7 +61,7 @@ public class Switch extends SmscBean
 
   private int processOffline()
   {
-	if (getStatusOnline())
+	if (getStatusOnline(checkedSmsc))
 	{
 		try
 		{
@@ -79,7 +79,7 @@ public class Switch extends SmscBean
 
   private int processOnline()
   {
-    if (!getStatusOnline()) {
+    if (!getStatusOnline(checkedSmsc)) {
       try {
         hostsManager.startService(checkedSmsc);
         return RESULT_OK;
@@ -134,10 +134,10 @@ public class Switch extends SmscBean
 		}
 	}
 
-	public boolean getStatusOnline()
+	public boolean getStatusOnline(String serviceId)
 	{
 		try {
-		  return hostsManager.getServiceInfo(Constants.SMSC_SME_ID).isOnline();
+		  return hostsManager.getServiceInfo(serviceId).isOnline();
 		} catch (AdminException e) {
 		  return false;
 		}
