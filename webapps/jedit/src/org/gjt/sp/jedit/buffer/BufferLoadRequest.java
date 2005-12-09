@@ -82,10 +82,10 @@ public class BufferLoadRequest extends BufferIORequest
       if (!status.equals("ok"))  {
         if (jEdit.getBooleanProperty("bufferWorkWithId")) {
           DefaultErrorSource errorSource=SideKickPlugin.getErrorSource(view);
-          int errorType=c.getHeaderFieldInt("errorType",0); String _path=c.getHeaderField("id");
+          int errorType=c.getHeaderFieldInt("errorType",0); 
           int lineIndex=c.getHeaderFieldInt("lineIndex",0); int start=c.getHeaderFieldInt("start",0);
           int end=c.getHeaderFieldInt("end",0);
-          errorSource.addError(errorType,_path,lineIndex,start,end,status);
+          errorSource.addError(errorType,path,lineIndex,start,end,status);
         }
         else throw new FileNotFoundException(status);
       }
