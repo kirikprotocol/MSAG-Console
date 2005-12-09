@@ -28,7 +28,8 @@ public class ScriptSession extends Session
 
     private void showMessage(int code, String message) throws IOException
     {
-        printString(((code == CommandContext.CMD_LIST ||
+        printString(((code == CommandContext.CMD_WARNING ||
+                      code == CommandContext.CMD_LIST ||
                       code == CommandContext.CMD_OK) ? "+ ":"- ")+code);
         if (message != null) printString(" "+message);
         printString("\r\n");

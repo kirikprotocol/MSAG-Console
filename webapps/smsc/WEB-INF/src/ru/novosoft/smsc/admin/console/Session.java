@@ -70,8 +70,8 @@ public abstract class Session extends Thread
         return userAuthorized();
     }
     protected boolean userInRole(String role) {
-        return (user != null) ? AuthenticatorProxy.getInstance().
-                hasRole(Constants.TomcatRealmName, user, role) : false;
+        return ((user != null) &&
+                AuthenticatorProxy.getInstance().hasRole(Constants.TomcatRealmName, user, role));
     }
     protected boolean commandAllowed(String command) {
         if (userAuthorized()) {
@@ -205,7 +205,9 @@ public abstract class Session extends Thread
                 if (commandAllowed(cmd.getId())) {
                     stopTimer();
                     cmd.process(ctx);
-					if (ctx.getStatus() == CommandContext.CMD_OK)
+					if (ctx.getStatus() == CommandContext.CMD_OK ||
+                        ctx.getStatus() == CommandContext.CMD_LIST ||
+                        ctx.getStatus() == CommandContext.CMD_WARNING)
 						cmd.updateJournalAndStatuses(ctx, getUserName());
                 } else {
                     ctx.setMessage("Not enough rights to execute specified command");

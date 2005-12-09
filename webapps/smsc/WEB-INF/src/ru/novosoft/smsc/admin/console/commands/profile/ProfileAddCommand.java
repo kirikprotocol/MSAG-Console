@@ -67,7 +67,7 @@ public class ProfileAddCommand extends ProfileGenCommand
             break;
           case 3: //pusUnchanged
             ctx.setMessage(out + " is identical to default.");
-            ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+            ctx.setStatus(CommandContext.CMD_WARNING);
             break;
           default: // pusError
             ctx.setMessage("Couldn't add " + out + ". Unknown cause");

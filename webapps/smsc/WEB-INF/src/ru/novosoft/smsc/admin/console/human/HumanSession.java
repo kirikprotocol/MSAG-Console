@@ -102,7 +102,8 @@ public class HumanSession extends Session
                 }
             }
         } else {
-            printString((status == CommandContext.CMD_OK) ? "Ok. ":"Failed: ");
+            printString((status == CommandContext.CMD_OK) ? "Ok. ":
+                        ((status == CommandContext.CMD_WARNING) ? "Warning: ":"Failed: "));
             printlnString(message);
         }
     }
