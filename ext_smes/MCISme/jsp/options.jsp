@@ -147,9 +147,9 @@
 <script type="text/javascript">
 function switchConstraint()
 {
-  opForm.all.constraintValue.disabled = (opForm.all.constraintType.value == <%= Options.NO_CONSTRAINT%>);
-  if (!opForm.all.constraintValue.disabled) opForm.all.constraintValue.focus();
-  else opForm.all.constraintValue.value = '';
+  document.getElementById('constraintValue').disabled = (document.getElementById('constraintType').value == <%= Options.NO_CONSTRAINT%>);
+  if (!document.getElementById('constraintValue').disabled) document.getElementById('constraintValue').focus();
+  else document.getElementById('constraintValue').value = '';
 }
 switchConstraint();
 </script>

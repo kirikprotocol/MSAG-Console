@@ -29,7 +29,7 @@
 <script type="text/javascript">
 function checkMultiAndGroupping(show)
 {
-  var row = opForm.all.templateTable.rows["multiParamRow"];
+  var row = document.getElementById('templateTable').rows["multiParamRow"];
   row.runtimeStyle.display = (show) ? "block":"none";
 }
 </script>

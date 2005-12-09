@@ -37,8 +37,8 @@
 <script type="text/javascript">
 function clickAddDriver()
 {
-	var typeElem   = opForm.all['dsdriver_new.type'];
-	var loadupElem = opForm.all['dsdriver_new.loadup'];
+	var typeElem   = document.getElementById('dsdriver_new.type');
+	var loadupElem = document.getElementById('dsdriver_new.loadup');
     var newRow = drivers_table_id.insertRow(drivers_table_id.rows.length-1);
 	newRow.className = "row" + (drivers_table_id.rows.length & 1);
 	newRow.id = "dsdriver_row_" + typeElem.value;

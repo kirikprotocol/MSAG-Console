@@ -43,8 +43,8 @@
   <script type="text/javascript">
     function refreshTaskStatuses()
     {
-      document.all.tdcTasksStatuses.DataURL = document.all.tdcTasksStatuses.DataURL;
-      document.all.tdcTasksStatuses.reset();
+      document.getElementById('tdcTasksStatuses').DataURL = document.getElementById('tdcTasksStatuses').DataURL;
+      document.getElementById('tdcTasksStatuses').reset();
       window.setTimeout(refreshTaskStatuses, 1000);
     }
     refreshTaskStatuses();

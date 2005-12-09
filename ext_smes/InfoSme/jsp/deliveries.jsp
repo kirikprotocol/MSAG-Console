@@ -169,12 +169,12 @@ else {
 <script type="text/javascript">
 function refreshProgressStatus()
 {
-	document.all.tdcProgress.DataURL = document.all.tdcProgress.DataURL;
-	document.all.tdcProgress.reset();
-    if (document.all.tdcStatus.innerText != null &&
-        document.all.tdcStatus.innerText == 'Finished') opForm.all.mbNext.disabled = false;
-    else if (document.all.tdcStatus.innerText != null &&
-        document.all.tdcStatus.innerText.match('Error') != null) opForm.all.mbCancel.innerText = 'Abort';
+	document.getElementById('tdcProgress').DataURL = document.getElementById('tdcProgress').DataURL;
+	document.getElementById('tdcProgress').reset();
+    if (document.getElementById('tdcStatus').innerText != null &&
+        document.getElementById('tdcStatus').innerText == 'Finished') document.getElementById('mbNext').disabled = false;
+    else if (document.getElementById('tdcStatus').innerText != null &&
+        document.getElementById('tdcStatus').innerText.match('Error') != null) document.getElementById('mbCancel').innerText = 'Abort';
 	else window.setTimeout(refreshProgressStatus, 500);
 }
 refreshProgressStatus();
@@ -216,7 +216,7 @@ refreshProgressStatus();
         page_menu_end(out);
         %><script type="text/javascript">
         function checkCreateButton() {
-          opForm.all.mbNext.disabled = (opForm.all.<%=Deliveries.ABONENTS_FILE_PARAM%>.value.length <= 0);
+          document.getElementById('mbNext').disabled = (document.getElementById('<%=Deliveries.ABONENTS_FILE_PARAM%>').value.length <= 0);
         }</script><%
         break;
     case 2:

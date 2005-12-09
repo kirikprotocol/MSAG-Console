@@ -26,8 +26,8 @@
 </OBJECT><script type="text/javascript">
 function refreshTaskStatuses()
 {
-	document.all.tdcTasksStatuses.DataURL = document.all.tdcTasksStatuses.DataURL;
-	document.all.tdcTasksStatuses.reset();
+	document.getElementById('tdcTasksStatuses').DataURL = document.getElementById('tdcTasksStatuses').DataURL;
+	document.getElementById('tdcTasksStatuses').reset();
 	window.setTimeout(refreshTaskStatuses, 5000);
 }
 refreshTaskStatuses();
@@ -36,10 +36,10 @@ refreshTaskStatuses();
 <script type="text/javascript">
 function checkApplyResetButtons()
 {
-  opForm.all.mbApply.disabled = !(opForm.all.allCheck.checked || opForm.all.tasksCheck.checked || opForm.all.schedsCheck.checked);
-  opForm.all.mbReset.disabled = !(   (<%=bean.isChangedAll()%> && opForm.all.allCheck.checked)
-                                  || (<%=bean.isChangedTasks()%> && opForm.all.tasksCheck.checked)
-                                  || (<%=bean.isChangedShedules()%> && opForm.all.schedsCheck.checked)
+  document.getElementById('mbApply').disabled = !(document.getElementById('allCheck').checked || document.getElementById('tasksCheck').checked || document.getElementById('schedsCheck').checked);
+  document.getElementById('mbReset').disabled = !(   (<%=bean.isChangedAll()%> && document.getElementById('allCheck').checked)
+                                  || (<%=bean.isChangedTasks()%> && document.getElementById('tasksCheck').checked)
+                                  || (<%=bean.isChangedShedules()%> && document.getElementById('schedsCheck').checked)
                                  );
 }
 </script>
@@ -115,7 +115,7 @@ page_menu_end(out);
 <script type="text/javascript">
 function checkStartStop()
 {
-  var status = document.all.InfoSme_RUNNING_STATUSERVICE_InfoSme.innerText;
+  var status = document.getElementById('InfoSme_RUNNING_STATUSERVICE_InfoSme').innerText;
   var smeRunning = (status == "<%= getLocString("common.statuses.online1") %>" ||
                     status == "<%= getLocString("common.statuses.online2") %>" ||
                     status == "<%= getLocString("common.statuses.running") %>" ||
@@ -127,11 +127,11 @@ function checkStartStop()
                     status == "<%= getLocString("common.statuses.stopping")%>" ||
                     status == "<%= getLocString("common.statuses.unknown") %>" );
 
-  var smeChecked = opForm.all.toStartSme.checked;
-  var procChecked = opForm.all.toStartProcessor.checked;
-  var procRunning = opForm.all.procStatus.innerText == "running";
-  var schedChecked = opForm.all.toStartScheduler.checked;
-  var schedRunning = opForm.all.schedStatus.innerText == "running";
+  var smeChecked = document.getElementById('toStartSme').checked;
+  var procChecked = document.getElementById('toStartProcessor').checked;
+  var procRunning = document.getElementById('procStatus').innerText == "running";
+  var schedChecked = document.getElementById('toStartScheduler').checked;
+  var schedRunning = document.getElementById('schedStatus').innerText == "running";
 
   var smeStart = smeStopped && smeChecked;
   var smeStop = smeRunning && smeChecked;
@@ -143,14 +143,14 @@ function checkStartStop()
   var start = smeStart || (smeRunning && (procStart || schedStart));
   var stop = smeStop || (smeRunning && (procStop || schedStop));
 
-  opForm.all.mbStart.disabled = !start;
-  opForm.all.mbStop.disabled = !stop;
+  document.getElementById('mbStart').disabled = !start;
+  document.getElementById('mbStop').disabled = !stop;
 
-  opForm.all.startStopTable.rows.procRow.runtimeStyle.display = smeRunning ? "block" : "none";
-  opForm.all.startStopTable.rows.schedRow.runtimeStyle.display = smeRunning ? "block" : "none";
+  document.getElementById('startStopTable').rows.procRow.runtimeStyle.display = smeRunning ? "block" : "none";
+  document.getElementById('startStopTable').rows.schedRow.runtimeStyle.display = smeRunning ? "block" : "none";
 
-  opForm.all.toStartProcessor.disabled = smeChecked;
-  opForm.all.toStartScheduler.disabled = smeChecked;
+  document.getElementById('toStartProcessor').disabled = smeChecked;
+  document.getElementById('toStartScheduler').disabled = smeChecked;
 
   window.setTimeout(checkStartStop, 500);
 }
@@ -246,12 +246,12 @@ function checkTasks()
     if (inp.type == "checkbox" && inp.id != null && inp.id.substring(0, prefixLen) == prefix)
       disabledElem &= !inp.checked;
   }
-  document.all.mbEnableTask.disabled = document.all.mbDisableTask.disabled
-    = document.all.mbStartTask.disabled = document.all.mbStopTask.disabled = disabledElem;
+  document.getElementById('mbEnableTask').disabled = document.getElementById('mbDisableTask').disabled
+    = document.getElementById('mbStartTask').disabled = document.getElementById('mbStopTask').disabled = disabledElem;
   return true;
 }
 checkTasks();
-checkCheckboxes(opForm.all.mbApply);
+checkCheckboxes(document.getElementById('mbApply'));
 </script>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

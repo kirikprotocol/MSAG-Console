@@ -1,8 +1,8 @@
 <%@ page import="ru.novosoft.smsc.wsme.beans.WSmeFormBean"%><script>
 function clickMenu(menuSelection)
 {
-    document.all.jbutton.name  = "menuSelection";
-    document.all.jbutton.value = menuSelection;
+    document.getElementById('jbutton').name  = "menuSelection";
+    document.getElementById('jbutton').value = menuSelection;
     opForm.submit();
     return false;
 }

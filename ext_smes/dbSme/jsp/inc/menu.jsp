@@ -16,14 +16,14 @@
     %><script type="text/javascript">
         function refreshDBSmeStartStopButtonsStatus()
         {
-            var status = document.all.RUNNING_STATUSERVICE_<%=ServiceIDForShowStatus%>.innerText;
-            document.all.mbStart.disabled = (status == "<%= getLocString("common.statuses.online1") %>" ||
+            var status = document.getElementById('RUNNING_STATUSERVICE_<%=ServiceIDForShowStatus%>').innerText;
+            document.getElementById('mbStart').disabled = (status == "<%= getLocString("common.statuses.online1") %>" ||
                                              status == "<%= getLocString("common.statuses.online2") %>" ||
                                              status == "<%= getLocString("common.statuses.running") %>" ||
                                              status == "<%= getLocString("common.statuses.stopping")%>" ||
                                              status == "<%= getLocString("common.statuses.starting")%>" ||
                                              status == "<%= getLocString("common.statuses.unknown" )%>" );
-            document.all.mbStop.disabled  = (status == "<%= getLocString("common.statuses.offline") %>" ||
+            document.getElementById('mbStop').disabled  = (status == "<%= getLocString("common.statuses.offline") %>" ||
                                              status == "<%= getLocString("common.statuses.stopped") %>" ||
                                              status == "<%= getLocString("common.statuses.stopping")%>" ||
                                              status == "<%= getLocString("common.statuses.unknown") %>" );

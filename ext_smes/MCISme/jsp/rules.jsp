@@ -28,14 +28,14 @@ List rulesList = bean.getRules();
 <script type="text/javascript">
 function editMCISmeRule(editObjectName, editButtonName)
 {
-  opForm.all.jbutton.name   = editButtonName;
-  opForm.all.jbutton.value  = editButtonName;
-  opForm.all.editRule.value = editObjectName;
+  document.getElementById('jbutton').name   = editButtonName;
+  document.getElementById('jbutton').value  = editButtonName;
+  document.getElementById('editRule').value = editObjectName;
   opForm.submit();
   return false;
 }
 function checkCheckboxesForRules() {
-  return checkCheckboxes(opForm.all.mbDelete);
+  return checkCheckboxes(document.getElementById('mbDelete'));
 }
 </script>
 <div class=content>

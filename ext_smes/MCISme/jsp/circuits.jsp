@@ -15,10 +15,10 @@
 <script type="text/javascript">
 function clickAddCircuits()
 {
-  var mscElem = opForm.all.circuits_new_msc;
-  var hsnElem = opForm.all.circuits_new_hsn;
-  var spnElem = opForm.all.circuits_new_spn;
-  var tsmElem = opForm.all.circuits_new_tsm;
+  var mscElem = document.getElementById('circuits_new_msc');
+  var hsnElem = document.getElementById('circuits_new_hsn');
+  var spnElem = document.getElementById('circuits_new_spn');
+  var tsmElem = document.getElementById('circuits_new_tsm');
   if (trim(mscElem.value) == '' || trim(hsnElem.value) == '' ||
       trim(spnElem.value) == '' || trim(hsnElem.value) == '') {
       alert('<%= getLocString("mcisme.alert.circuits_1")%>.\n<%= getLocString("mcisme.alert.circuits_2")%>');

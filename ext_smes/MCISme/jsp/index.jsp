@@ -20,8 +20,8 @@
 </OBJECT><script type="text/javascript">
 function refreshMCISmeTdcStatuses()
 {
-	document.all.tdcMCISmeStatuses.DataURL = document.all.tdcMCISmeStatuses.DataURL;
-	document.all.tdcMCISmeStatuses.reset();
+	document.getElementById('tdcMCISmeStatuses').DataURL = document.getElementById('tdcMCISmeStatuses').DataURL;
+	document.getElementById('tdcMCISmeStatuses').reset();
 	window.setTimeout(refreshMCISmeTdcStatuses, 2000);
 }
 refreshMCISmeTdcStatuses();
@@ -30,8 +30,8 @@ refreshMCISmeTdcStatuses();
 <script type="text/javascript">
 function checkApplyResetButtons()
 {
-  opForm.all.mbApply.disabled = !(opForm.all.allCheck.checked);
-  opForm.all.mbReset.disabled = !((<%=bean.isConfigChanged()%> && opForm.all.allCheck.checked));
+  document.getElementById('mbApply').disabled = !(document.getElementById('allCheck').checked);
+  document.getElementById('mbReset').disabled = !((<%=bean.isConfigChanged()%> && document.getElementById('allCheck').checked));
 }
 </script>
 <%! private String configStatus(boolean isChanged) {
@@ -115,21 +115,21 @@ page_menu_end(out);
 <script type="text/javascript" language="JavaScript">
 function checkStartStop()
 {
-  var status = document.all.RUNNING_STATUSERVICE_MCISme.innerText;
+  var status = document.getElementById('RUNNING_STATUSERVICE_MCISme').innerText;
   var serviceRunning = (status == "<%= getLocString("common.statuses.online1") %>" ||
                         status == "<%= getLocString("common.statuses.online2") %>" ||
                         status == "<%= getLocString("common.statuses.running") %>" );
   var serviceStopped = (status == "<%= getLocString("common.statuses.offline") %>" ||
                         status == "<%= getLocString("common.statuses.stopped") %>" );
-  var serviceChecked  = opForm.all.toStartService.checked;
+  var serviceChecked  = document.getElementById('toStartService').checked;
 
-  status = document.all.RUNNING_STATUSERVICE_MCIProf.innerText;
+  status = document.getElementById('RUNNING_STATUSERVICE_MCIProf').innerText;
   var profilerRunning = (status == "<%= getLocString("common.statuses.online1") %>" ||
                          status == "<%= getLocString("common.statuses.online2") %>" ||
                          status == "<%= getLocString("common.statuses.running") %>" );
   var profilerStopped = (status == "<%= getLocString("common.statuses.offline") %>" ||
                          status == "<%= getLocString("common.statuses.stopped") %>" );
-  var profilerChecked = opForm.all.toStartProfiler.checked;
+  var profilerChecked = document.getElementById('toStartProfiler').checked;
 
   var serviceStart  = serviceStopped && serviceChecked;
   var serviceStop   = serviceRunning && serviceChecked;
@@ -139,8 +139,8 @@ function checkStartStop()
   var start = serviceStart || profilerStart;
   var stop  = serviceStop  || profilerStop;
 
-  opForm.all.mbStart.disabled = !start;
-  opForm.all.mbStop.disabled = !stop;
+  document.getElementById('mbStart').disabled = !start;
+  document.getElementById('mbStop').disabled = !stop;
 
   window.setTimeout(checkStartStop, 500);
 }

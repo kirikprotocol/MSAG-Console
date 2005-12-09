@@ -5,8 +5,8 @@
 <script language="JScript">
 function noValidationSubmit(buttonElem)
 {
-  document.all.jbutton.value = buttonElem.jbuttonValue;
-  document.all.jbutton.name  = buttonElem.jbuttonName;
+  document.getElementById('jbutton').value = buttonElem.jbuttonValue;
+  document.getElementById('jbutton').name  = buttonElem.jbuttonName;
   opForm.submit();
   return false;
 }

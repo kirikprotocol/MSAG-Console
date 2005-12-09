@@ -28,14 +28,14 @@ List offsetsList = bean.getOffsets();
 <script type="text/javascript">
 function editMCISmeOffset(editObjectName, editButtonName)
 {
-  opForm.all.jbutton.name   = editButtonName;
-  opForm.all.jbutton.value  = editButtonName;
-  opForm.all.editOffset.value = editObjectName;
+  document.getElementById('jbutton').name   = editButtonName;
+  document.getElementById('jbutton').value  = editButtonName;
+  document.getElementById('editOffset').value = editObjectName;
   opForm.submit();
   return false;
 }
 function checkCheckboxesForOffsets() {
-  return checkCheckboxes(opForm.all.mbDelete);
+  return checkCheckboxes(document.getElementById('mbDelete'));
 }
 </script>
 <div class=content>

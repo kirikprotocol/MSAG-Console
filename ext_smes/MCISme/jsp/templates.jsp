@@ -35,17 +35,17 @@ List informList = bean.getInformTemplates();
 <script type="text/javascript">
 function editMCISmeTemplate(editObjectName, editButtonName)
 {
-  opForm.all.jbutton.name       = editButtonName;
-  opForm.all.jbutton.value      = editButtonName;
-  opForm.all.editTemplate.value = editObjectName;
+  document.getElementById('jbutton').name       = editButtonName;
+  document.getElementById('jbutton').value      = editButtonName;
+  document.getElementById('editTemplate').value = editObjectName;
   opForm.submit();
   return false;
 }
 function checkCheckboxesForInformTemplate() {
-  return checkCheckboxes(opForm.all.mbInformDelete);
+  return checkCheckboxes(document.getElementById('mbInformDelete'));
 }
 function checkCheckboxesForNotifyTemplate() {
-  return checkCheckboxes(opForm.all.mbNotifyDelete);
+  return checkCheckboxes(document.getElementById('mbNotifyDelete'));
 }
 </script>
 <div class=content>

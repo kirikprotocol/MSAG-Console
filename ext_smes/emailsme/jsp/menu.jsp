@@ -18,8 +18,8 @@
 		%><script>
 			function refreshWSmeStartStopButtonsStatus()
 			{
-				document.all.mbStart.disabled = (document.all.RUNNING_STATUSERVICE_<%=ServiceIDForShowStatus%>.innerText != "stopped");
-				document.all.mbStop.disabled = (document.all.RUNNING_STATUSERVICE_<%=ServiceIDForShowStatus%>.innerText != "running");
+				document.getElementById('mbStart').disabled = (document.getElementById('RUNNING_STATUSERVICE_<%=ServiceIDForShowStatus%>').innerText != "stopped");
+				document.getElementById('mbStop').disabled = (document.getElementById('RUNNING_STATUSERVICE_<%=ServiceIDForShowStatus%>').innerText != "running");
 				window.setTimeout(refreshWSmeStartStopButtonsStatus, 500);
 			}
 			refreshWSmeStartStopButtonsStatus();

@@ -20,14 +20,14 @@ page_menu_end(out);%>
 <script  type="text/javascript" language="JavaScript">
 function checkStartStop()
 {
-    var status = document.all.RUNNING_STATUSERVICE_<%=ServiceIDForShowStatus%>.innerText;
-    document.all.mbStart.disabled = (status == "<%= getLocString("common.statuses.online1") %>" ||
+    var status = document.getElementById('RUNNING_STATUSERVICE_<%=ServiceIDForShowStatus%>').innerText;
+    document.getElementById('mbStart').disabled = (status == "<%= getLocString("common.statuses.online1") %>" ||
                                      status == "<%= getLocString("common.statuses.online2") %>" ||
                                      status == "<%= getLocString("common.statuses.running") %>" ||
                                      status == "<%= getLocString("common.statuses.stopping")%>" ||
                                      status == "<%= getLocString("common.statuses.starting")%>" ||
                                      status == "<%= getLocString("common.statuses.unknown" )%>" );
-    document.all.mbStop.disabled  = (status == "<%= getLocString("common.statuses.offline") %>" ||
+    document.getElementById('mbStop').disabled  = (status == "<%= getLocString("common.statuses.offline") %>" ||
                                      status == "<%= getLocString("common.statuses.stopped") %>" ||
                                      status == "<%= getLocString("common.statuses.stopping")%>" ||
                                      status == "<%= getLocString("common.statuses.unknown") %>" );
@@ -67,8 +67,8 @@ checkStartStop();
 <script type="text/javascript">
 function clickAddMapping()
 {
-	var addressElem = opForm.all.mapping_new_address;
-    var aliasElem   = opForm.all.mapping_new_alias;
+	var addressElem = document.getElementById('mapping_new_address');
+    var aliasElem   = document.getElementById('mapping_new_alias');
 
     var newRow = mapping_table_id.insertRow(mapping_table_id.rows.length-1);
 	newRow.className = "row" + (mapping_table_id.rows.length & 1);

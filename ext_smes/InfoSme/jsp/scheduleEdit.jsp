@@ -30,11 +30,11 @@
 <script type="text/javascript">
 function selectType()
 {
-  var typeSel = opForm.all.typeSelect.options[opForm.all.typeSelect.selectedIndex];
+  var typeSel = document.getElementById('typeSelect').options[document.getElementById('typeSelect').selectedIndex];
 
   if (typeSel != null && typeSel.value != null)
   {
-    var tableRows = opForm.all.tableId.rows;
+    var tableRows = document.getElementById('tableId').rows;
 
     var row_endDateTime = tableRows.row_endDateTime;
     var row_everyNDays = tableRows.row_everyNDays ;
@@ -76,17 +76,17 @@ function selectType()
 }
 function selectMontlyType()
 {
-  if (opForm.all.monthlyTypeDay.checked == true)
+  if (document.getElementById('monthlyTypeDay').checked == true)
   {
-    opForm.all.monthlyTypeDayCell.disabled=false;
-    opForm.all.monthlyTypeWeekCell.disabled=true;
-    opForm.all.weekDayNSelect.disabled=true;
-    opForm.all.weekDaySelect.disabled=true;
+    document.getElementById('monthlyTypeDayCell').disabled=false;
+    document.getElementById('monthlyTypeWeekCell').disabled=true;
+    document.getElementById('weekDayNSelect').disabled=true;
+    document.getElementById('weekDaySelect').disabled=true;
   } else {
-    opForm.all.monthlyTypeDayCell.disabled=true;
-    opForm.all.monthlyTypeWeekCell.disabled=false;
-    opForm.all.weekDayNSelect.disabled=false;
-    opForm.all.weekDaySelect.disabled=false;
+    document.getElementById('monthlyTypeDayCell').disabled=true;
+    document.getElementById('monthlyTypeWeekCell').disabled=false;
+    document.getElementById('weekDayNSelect').disabled=false;
+    document.getElementById('weekDaySelect').disabled=false;
   }
 }
 </script>
