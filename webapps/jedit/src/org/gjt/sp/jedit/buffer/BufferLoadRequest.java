@@ -78,17 +78,11 @@ public class BufferLoadRequest extends BufferIORequest
       url=new URL(jEdit.servletUrl,content);
       c=(HttpURLConnection) url.openConnection();
       c.connect(); String status=c.getHeaderField("status");
+      /* if (jEdit.getBooleanProperty("bufferWorkWithId")) {
+
+        } */
       System.out.println("BufferLoadRequest _createInputStream status= "+status);
-      if (!status.equals("ok"))  {
-        if (jEdit.getBooleanProperty("bufferWorkWithId")) {
-          DefaultErrorSource errorSource=SideKickPlugin.getErrorSource(view);
-          int errorType=c.getHeaderFieldInt("errorType",0); 
-          int lineIndex=c.getHeaderFieldInt("lineIndex",0); int start=c.getHeaderFieldInt("start",0);
-          int end=c.getHeaderFieldInt("end",0);
-          errorSource.addError(errorType,path,lineIndex,start,end,status);
-        }
-        else throw new FileNotFoundException(status);
-      }
+      if (!status.equals("ok")) throw new FileNotFoundException(status);
       _in=c.getInputStream();
       if(_in == null)
         return;

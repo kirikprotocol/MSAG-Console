@@ -37,6 +37,8 @@ import java.net.MalformedURLException;
 import org.gjt.sp.jedit.io.*;
 import org.gjt.sp.jedit.*;
 import org.gjt.sp.util.*;
+import errorlist.DefaultErrorSource;
+import sidekick.SideKickPlugin;
 //}}}
 
 /**
@@ -184,8 +186,17 @@ public class BufferSaveRequest extends BufferIORequest
   // else throw new FileNotFoundException(status);
      System.out.println("BufferSaveRequest run line 178 status= "+status);
     if (status.equals("false")) {
-      String[] pp = { in.readLine() };
-         VFSManager.error(view,path,"ioerror.write-error",pp);
+       String[] pp = { in.readLine() };
+
+       if (jEdit.getBooleanProperty("bufferWorkWithId")) {
+          DefaultErrorSource errorSource= SideKickPlugin.getErrorSource(view);
+          int errorType=c.getHeaderFieldInt("errorType",0);
+          int lineIndex=c.getHeaderFieldInt("lineIndex",0); int start=c.getHeaderFieldInt("start",0);
+          int end=c.getHeaderFieldInt("end",0);
+          errorSource.addError(errorType,path,lineIndex,start,end,pp[0]);
+        }
+
+       VFSManager.error(view,path,"ioerror.write-error",pp);
     }
            if(_in != null) _in.close();
            if(in != null) in.close();
