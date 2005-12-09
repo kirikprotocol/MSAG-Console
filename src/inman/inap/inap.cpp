@@ -6,6 +6,12 @@ static char const ident[] = "$Id$";
 #include "inman/inap/inap.hpp"
 #include "inman/interaction/inerrcodes.hpp"
 
+#define CAP_OPER_INITED 1
+#define CAP_OPER_DONE   2
+
+#define TCAP_DLG_COMP_LAST 2
+#define TCAP_DLG_COMP_WAIT 1
+
 namespace smsc {
 namespace inman {
 namespace inap {
@@ -42,13 +48,12 @@ Invoke * InapOpResListener::getOrgInv() const
 /* ************************************************************************** *
  * class Inap implementation:
  * ************************************************************************** */
-Inap::Inap(Session* pSession, SSF * ssfHandler,
+Inap::Inap(Session* pSession, SSFhandler * ssfHandler,
            USHORT_T timeout/* = 0*/, Logger * uselog/* = NULL*/)
-    : ssfHdl(ssfHandler), session(pSession)
-    , logger(uselog), _state(Inap::ctrIdle)
+    : ssfHdl(ssfHandler), session(pSession), logger(uselog)
 {
-    assert(ssfHandler);
-    assert(pSession);
+    assert(ssfHandler && pSession);
+    _capState.value = _dlgState.value = 0;
     if (!logger)
         logger = Logger::getInstance("smsc.inman.Inap");
     dialog = session->openDialog(id_ac_cap3_sms_AC);
@@ -120,17 +125,17 @@ void Inap::releaseOperation(Invoke * inv)
 void Inap::onOperationError(Invoke *op, TcapEntity * resE)
 {
     UCHAR_T opcode = op->getOpcode();
-    smsc_log_error(logger, "Inap: Invoke[%u] (opcode = %u) got an returnError: %d",
+    smsc_log_error(logger, "Inap: Invoke[%u] (opcode = %u) got a returnError: %d",
                    (unsigned)op->getId(), (unsigned)opcode, (unsigned)resE->getOpcode());
     releaseOperation(op);
 
     //call operation errors handler
-    switch(opcode) {
+    switch (opcode) {
     case InapOpCode::InitialDPSMS: {
-        ssfHdl->abortSMS(resE->getOpcode(), false);
+        ssfHdl->onAbortSMS(resE->getOpcode(), false);
     } break;
     case InapOpCode::EventReportSMS: {
-        ssfHdl->abortSMS(resE->getOpcode(), false);
+        ssfHdl->onAbortSMS(resE->getOpcode(), false);
     } break;
     default:;
     }
@@ -151,14 +156,17 @@ void Inap::onOperationLCancel(Invoke *op)
                    (unsigned)op->getId(), (unsigned)opcode);
     releaseOperation(op);
 
-    //check for Inap state, to handle possible CAP3SMS CONTRACT timeout expiration
     switch (opcode) {
     case InapOpCode::InitialDPSMS: {
-        if (_state == Inap::ctrInited) { //still has not got smsProcessingPackage 
+        _capState.s.ctrInited = CAP_OPER_DONE;
+        //It's need to check for Inap state, to handle possible CAP3 timeout expiration
+        //NOTE: Dialog indications preceed Invoke indications, so it's enough to just
+        //check the _dlgState for remote continuation/end
+        if (!(_dlgState.s.dlgRContinued || _dlgState.s.dlgREnded)) {
             smsc_log_error(logger,
-                "Inap: state %d, still has not got any Operation of smsProcessingPackage",
-                _state);
-            ssfHdl->abortSMS(smsc::inman::tcapResourceLimitation, true);
+                "Inap: (state cap: %u, dlg: %u) still has not got any Operation of smsProcessingPackage",
+                _capState.value, _dlgState.value);
+            ssfHdl->onAbortSMS(smsc::inman::tcapResourceLimitation, true);
         }
     } break;
     case InapOpCode::EventReportSMS: { //normal situation
@@ -170,65 +178,83 @@ void Inap::onOperationLCancel(Invoke *op)
 /* ------------------------------------------------------------------------ *
  * DialogListener interface
  * ------------------------------------------------------------------------ */
-//SSF sent DialogPAbort (some system error on SSF side).
-void Inap::onDialogPAbort(UCHAR_T abortCause)
+//SCF sent ContinueDialog.
+void Inap::onDialogContinue(bool compPresent)
 {
-    _state = Inap::ctrAborted;
-    releaseAllOperations();
-    ssfHdl->abortSMS(abortCause, true);
+    _dlgState.s.dlgRContinued = compPresent ?
+                        TCAP_DLG_COMP_WAIT : TCAP_DLG_COMP_LAST;
 }
 
-//SSF sent DialogEnd, it's either succsesfull contract completion,
+//SCF sent DialogPAbort (some system error on SSF side).
+void Inap::onDialogPAbort(UCHAR_T abortCause)
+{
+    _capState.s.ctrAborted = _dlgState.s.dlgAborted = 1;
+    releaseAllOperations();
+    ssfHdl->onAbortSMS(abortCause, true);
+}
+
+//SCF sent DialogEnd, it's either succsesfull contract completion,
 //or some logic error (f.ex. timeout expiration) on SSF side.
 void Inap::onDialogREnd(bool compPresent)
 {
-    if (_state < Inap::ctrReported)
-        onDialogPAbort(smsc::inman::tcapResourceLimitation);
-    else {
-        _state = Inap::ctrFinished;
-        releaseAllOperations();
-    }
+    if (!compPresent) {
+        _dlgState.s.dlgREnded = TCAP_DLG_COMP_LAST;
+        if (!_capState.s.ctrReported)
+            onDialogPAbort(smsc::inman::tcapResourceLimitation);
+        else {
+            _capState.s.ctrFinished = 1;
+            releaseAllOperations();
+        }
+    } else
+        _dlgState.s.dlgREnded = TCAP_DLG_COMP_WAIT; //handle ongoing Invoke
 }
 
 
-void Inap::onDialogInvoke(Invoke* op)
+void Inap::onDialogInvoke(Invoke* op, bool lastComp)
 {
     assert(op);
-    // SSF handler keeps (Billing*) casted to (SSF*)
-    switch(op->getOpcode()) {
+
+    if (lastComp) {
+        if (_dlgState.s.dlgRContinued == TCAP_DLG_COMP_WAIT)
+            _dlgState.s.dlgRContinued == TCAP_DLG_COMP_LAST;
+        else if (_dlgState.s.dlgREnded == TCAP_DLG_COMP_WAIT)
+            _dlgState.s.dlgREnded == TCAP_DLG_COMP_LAST;
+    }
+
+    switch (op->getOpcode()) {
     case InapOpCode::FurnishChargingInformationSMS: {
         assert(op->getParam());
-        ssfHdl->furnishChargingInformationSMS(static_cast<FurnishChargingInformationSMSArg*>
+        ssfHdl->onFurnishChargingInformationSMS(static_cast<FurnishChargingInformationSMSArg*>
                                                 (op->getParam()));
     }   break;
     case InapOpCode::ConnectSMS: {
         assert(op->getParam());
-        ssfHdl->connectSMS(static_cast<ConnectSMSArg*>(op->getParam()));
+        ssfHdl->onConnectSMS(static_cast<ConnectSMSArg*>(op->getParam()));
     }   break;
     case InapOpCode::RequestReportSMSEvent: {
         assert(op->getParam());
-        _state = Inap::ctrRequested;
-        ssfHdl->requestReportSMSEvent(static_cast<RequestReportSMSEventArg*>(op->getParam()));
+        _capState.s.ctrRequested = 1;
+        ssfHdl->onRequestReportSMSEvent(static_cast<RequestReportSMSEventArg*>(op->getParam()));
     }   break;
     case InapOpCode::ContinueSMS: {
-        _state = Inap::ctrContinued;
-        ssfHdl->continueSMS();
+        _capState.s.ctrContinued = 1;
+        ssfHdl->onContinueSMS();
     }   break;
     case InapOpCode::ReleaseSMS: {
         assert(op->getParam());
-        _state = Inap::ctrReleased;
-        ssfHdl->releaseSMS(static_cast<ReleaseSMSArg*>(op->getParam()));
+        _capState.s.ctrReleased = 1;
+        ssfHdl->onReleaseSMS(static_cast<ReleaseSMSArg*>(op->getParam()));
     }   break;
     case InapOpCode::ResetTimerSMS: {
         assert(op->getParam());
-        ssfHdl->resetTimerSMS(static_cast<ResetTimerSMSArg*>(op->getParam()));
+        ssfHdl->onResetTimerSMS(static_cast<ResetTimerSMSArg*>(op->getParam()));
     }   break;
     default:;
     }
 }
 
 /* ------------------------------------------------------------------------ *
- * SCF interface
+ * SCFcontractor interface
  * ------------------------------------------------------------------------ */
 void Inap::initialDPSMS(InitialDPSMSArg* arg)
 {
@@ -238,7 +264,8 @@ void Inap::initialDPSMS(InitialDPSMSArg* arg)
     op->setParam(arg);
     op->send();
     dialog->beginDialog();
-    _state = Inap::ctrInited;
+    _capState.s.ctrInited = CAP_OPER_INITED;
+    _dlgState.s.dlgInited = 1;
 }
 
 void Inap::eventReportSMS(EventReportSMSArg* arg)
@@ -249,7 +276,8 @@ void Inap::eventReportSMS(EventReportSMSArg* arg)
     op->setParam(arg);
     op->send();
     dialog->continueDialog();
-    _state = Inap::ctrReported;
+    _capState.s.ctrReported = CAP_OPER_INITED;
+    _dlgState.s.dlgLContinued = 1;
 }
 
 } //inap

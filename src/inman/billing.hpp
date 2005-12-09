@@ -9,7 +9,7 @@
 
 using smsc::inman::inap::Inap;
 using smsc::inman::inap::Dialog;
-using smsc::inman::inap::SSF;
+using smsc::inman::inap::SSFhandler;
 using smsc::inman::interaction::Connect;
 using smsc::inman::interaction::InmanCommand;
 using smsc::inman::interaction::InmanHandler;
@@ -23,21 +23,21 @@ namespace inman   {
 typedef enum { BILL_ALL = 0, BILL_USSD, BILL_SMS, BILL_NONE } BILL_MODE;
 
 /* Inman interoperation scheme:
-SMSC   < - >           Billing      < - >    Inap (SCF)
+SMSC   < - >           Billing      < - >    Inap (SSF)  < - >    In-platform(SCF)
 ChargeSms           -> [ bilStarted,
-                         bilInited:          InitialDP -> SSF ]
+                         bilInited:          InitialDP ->  SCF]
 
-                       [ bilReleased:        SCF <- ReleaseSMS
-ChargeSmsResult     <-   | bilProcessed:     SCF <- ContinueSMS ]
+                       [ bilReleased:        SSF <- ReleaseSMS
+ChargeSmsResult     <-   | bilProcessed:     SSF <- ContinueSMS ]
 
 [ CHARGING_POSSIBLE:
-  DeliverySmsResult -> [  bilApproved:       eventReportSMS -> SSF
+  DeliverySmsResult -> [  bilApproved:       eventReportSMS -> SCF
                           bilComplete :                     <-    ]
 ]
 */
 
 class Service;
-class Billing : public SSF, public InmanHandler
+class Billing : public SSFhandler, public InmanHandler
 {
 public:
     typedef enum {
@@ -65,16 +65,16 @@ public:
     virtual void onChargeSms(ChargeSms*);
     virtual void onDeliverySmsResult(DeliverySmsResult*);
     //InmanHandler interface
-    virtual void connectSMS(ConnectSMSArg* arg);
-    virtual void continueSMS();
-    virtual void furnishChargingInformationSMS(FurnishChargingInformationSMSArg* arg);
-    virtual void releaseSMS(ReleaseSMSArg* arg);
-    virtual void requestReportSMSEvent(RequestReportSMSEventArg* arg);
-    virtual void resetTimerSMS(ResetTimerSMSArg* arg);
-    virtual void abortSMS(unsigned char errcode, bool tcapLayer);
+    virtual void onConnectSMS(ConnectSMSArg* arg);
+    virtual void onContinueSMS();
+    virtual void onFurnishChargingInformationSMS(FurnishChargingInformationSMSArg* arg);
+    virtual void onReleaseSMS(ReleaseSMSArg* arg);
+    virtual void onRequestReportSMSEvent(RequestReportSMSEventArg* arg);
+    virtual void onResetTimerSMS(ResetTimerSMSArg* arg);
+    virtual void onAbortSMS(unsigned char errcode, bool tcapLayer);
 
 protected:
-    void finishBilling(void);
+//    void finishBilling(void);
     void abortBilling(InmanErrorType errType, uint16_t errCode);
 
     Mutex           bilMutex;   //

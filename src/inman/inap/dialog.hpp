@@ -26,7 +26,8 @@ typedef std::map< UCHAR_T, Invoke* > InvokeMap;
 class DialogListener
 {
   public:
-    virtual void onDialogInvoke(Invoke*) = 0;
+    virtual void onDialogInvoke(Invoke*, bool lastComp) = 0;
+    virtual void onDialogContinue(bool compPresent) = 0;
     virtual void onDialogPAbort(UCHAR_T abortCause) = 0;
     virtual void onDialogREnd(bool compPresent) = 0;
 };
@@ -62,19 +63,24 @@ public:
     void endDialog(USHORT_T termination);
 
     // Transaction level callbacks
-    virtual USHORT_T handleBeginDialog();
-    virtual USHORT_T handleContinueDialog();
-    virtual USHORT_T handleEndDialog(bool compPresent);
-    virtual USHORT_T handlePAbortDialog(UCHAR_T abortCause);
+    USHORT_T handleBeginDialog();
+    USHORT_T handleContinueDialog(bool compPresent);
+    USHORT_T handleEndDialog(bool compPresent);
+    USHORT_T handlePAbortDialog(UCHAR_T abortCause);
 
     // Interaction level callbacks
-    virtual USHORT_T handleInvoke(UCHAR_T invokeId, UCHAR_T tag, USHORT_T oplen, const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm);
-    virtual USHORT_T handleLCancelInvoke(UCHAR_T invokeId);
-    virtual USHORT_T handleResultLast(UCHAR_T invokeId, UCHAR_T tag, USHORT_T oplen, const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm);
-    virtual USHORT_T handleResultNotLast(UCHAR_T invokeId, UCHAR_T tag, USHORT_T oplen, const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm);
-    virtual USHORT_T handleUserError(UCHAR_T invokeId, UCHAR_T tag, USHORT_T oplen, const UCHAR_T *op, USHORT_T pmlen,  const UCHAR_T *pm);
+    USHORT_T handleInvoke(UCHAR_T invokeId, UCHAR_T tag, USHORT_T oplen,
+                                const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm,
+                                bool lastComp);
+    USHORT_T handleLCancelInvoke(UCHAR_T invokeId);
+    USHORT_T handleResultLast(UCHAR_T invokeId, UCHAR_T tag, USHORT_T oplen,
+                                const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm);
+    USHORT_T handleResultNotLast(UCHAR_T invokeId, UCHAR_T tag, USHORT_T oplen,
+                                const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm);
+    USHORT_T handleUserError(UCHAR_T invokeId, UCHAR_T tag, USHORT_T oplen,
+                                const UCHAR_T *op, USHORT_T pmlen,  const UCHAR_T *pm);
 
-public:
+    //own methods
     void     setId(USHORT_T did){ _dId = did; } //do not use this manually !
     USHORT_T getId()      const { return _dId;       }
     UCHAR_T  getNextInvokeId()  { return _lastInvId++;}

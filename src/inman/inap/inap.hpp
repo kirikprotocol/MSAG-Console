@@ -23,36 +23,36 @@ namespace smsc {
 namespace inman {
 namespace inap {
 
-/* cap3SMS CONTRACT:   SCF <-> SSF
+/* cap3SMS CONTRACT:    Inap(SSF) <-> In-platform(SCF)
 
 ->  smsActivationPackage:
-        InitialDP -> SSF
+        InitialDP -> SCF
 [ <-  smsConnectPackage:
-        SCF <- connectSMS ]
+        SSF <- connectSMS ]
 <-  smsProcessingPackage:
-        SCF <- ContinueSMS | ReleaseSMS
+        SSF <- ContinueSMS | ReleaseSMS
 [ <-> smsEventHandlingPackage
-        SCF <- RquestReportSMSEvent
-        eventReportSMS -> SSF       ]
+        SSF <- RequestReportSMSEvent
+        eventReportSMS -> SCF       ]
 [ <- smsBillingPackage:
-        SCF <- FurnishChargingInformationSMS ]
+        SSF <- FurnishChargingInformationSMS ]
 [ <- smsTimerPackage:
-        SCF <- ResetTimerSMS ]
+        SSF <- ResetTimerSMS ]
 */
 
-class SSF
+class SSFhandler
 {
   public: //operations:
-    virtual void connectSMS(ConnectSMSArg* arg) = 0;
-    virtual void continueSMS() = 0;
-    virtual void furnishChargingInformationSMS(FurnishChargingInformationSMSArg* arg) = 0;
-    virtual void releaseSMS(ReleaseSMSArg* arg) = 0;
-    virtual void requestReportSMSEvent(RequestReportSMSEventArg* arg) = 0;
-    virtual void resetTimerSMS(ResetTimerSMSArg* arg) = 0;
-    virtual void abortSMS(unsigned char ercode, bool tcapLayer) = 0;
+    virtual void onConnectSMS(ConnectSMSArg* arg) = 0;
+    virtual void onContinueSMS() = 0;
+    virtual void onFurnishChargingInformationSMS(FurnishChargingInformationSMSArg* arg) = 0;
+    virtual void onReleaseSMS(ReleaseSMSArg* arg) = 0;
+    virtual void onRequestReportSMSEvent(RequestReportSMSEventArg* arg) = 0;
+    virtual void onResetTimerSMS(ResetTimerSMSArg* arg) = 0;
+    virtual void onAbortSMS(unsigned char ercode, bool tcapLayer) = 0;
 };
 
-class SCF
+class SCFcontractor
 {
   public: //operations:
     virtual void initialDPSMS(InitialDPSMSArg* arg) = 0;
@@ -62,26 +62,51 @@ class SCF
     virtual void onOperationLCancel(Invoke *op) = 0;
 };
 
+typedef union {
+    unsigned short value;
+    struct {
+        unsigned int ctrInited : 2;
+        unsigned int ctrReleased : 1;
+        unsigned int ctrContinued : 1;
+        unsigned int ctrRequested : 1;
+        unsigned int ctrReported : 1;
+        unsigned int ctrFinished : 1;
+        unsigned int ctrAborted : 1;
+    } s;
+} CAP3State;
+
+typedef union {
+    unsigned short value;
+    struct {
+        unsigned int dlgInited : 1;
+        unsigned int dlgRContinued : 2; //1: T_CONT_IND, 2: + INVOKE_IND
+        unsigned int dlgLContinued : 1; //1: T_CONT_REQ
+        unsigned int dlgREnded : 2;     //1: T_END_IND, 2: + INVOKE_IND
+        unsigned int dlgLEnded : 1;     //1: T_END_REQ
+        unsigned int dlgAborted : 1;
+    } s;
+} TCAPState;
+
 class InapOpResListener;
-class Inap : public DialogListener, public SCF
+//NOTE: Inap doesn't maintain own timer for operations, it uses instead the 
+//innate timer of the SS7 stack for Invoke lifetime.
+class Inap : public DialogListener, public SCFcontractor
 {
 public:
-    typedef enum {
-        ctrIdle = 0, ctrInited = 1, ctrReleased, ctrContinued,
-        ctrRequested, ctrReported, ctrFinished, ctrAborted
-    } SCFState;
-    //timeout for OPERATIONs Invoke
-    Inap(Session* pSession, SSF * ssfHandler, USHORT_T timeout = 0, Logger * uselog = NULL);
+    //NOTE: timeout is for OPERATIONs Invokes lifetime
+    Inap(Session* pSession, SSFhandler * ssfHandler,
+         USHORT_T timeout = 0, Logger * uselog = NULL);
     virtual ~Inap();
 
-    // SCF interface
+    // SCFcontractor interface
     void initialDPSMS(InitialDPSMSArg* arg);     //begins TCAP dialog
     void eventReportSMS(EventReportSMSArg* arg); //continues TCAP dialog
     void onOperationError(Invoke *op, TcapEntity * resE);
     void onOperationLCancel(Invoke *op);
 
     // DialogListener interface
-    virtual void onDialogInvoke(Invoke* op);
+    virtual void onDialogInvoke(Invoke* op, bool lastComp);
+    virtual void onDialogContinue(bool compPresent);
     virtual void onDialogPAbort(UCHAR_T abortCause);
     virtual void onDialogREnd(bool compPresent);
 
@@ -90,14 +115,15 @@ public:
 
 protected:
     void    releaseAllOperations(void);
-protected:
+
     typedef std::map<USHORT_T, InapOpResListener*> ResultHandlersMAP;
     Dialog*     dialog;     //TCAP dialog
     Session*    session;    //TCAP dialogs factory
     Logger*     logger;
-    SSF*        ssfHdl;
+    SSFhandler* ssfHdl;
     ResultHandlersMAP resHdls;
-    SCFState    _state;     //current state of cap3SMS CONTRACT
+    CAP3State   _capState;  //current state of cap3SMS CONTRACT
+    TCAPState   _dlgState;  //current state of TCAP Dialog
 };
 
 class InapOpResListener: public InvokeListener

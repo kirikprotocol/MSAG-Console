@@ -66,7 +66,6 @@ void Billing::handleCommand(InmanCommand* cmd)
         }
     } //no break, fall into default !!!
 
-
 //    case Billing::bilStarted:
 //    case Billing::bilInited:
 //    case Billing::bilReleased:
@@ -127,7 +126,7 @@ void Billing::onChargeSms(ChargeSms* sms)
     } else {
         //do not ask IN platform, just create CDR
         smsc_log_debug(logger, "SSF initiated billing via CDR");
-        continueSMS();
+        onContinueSMS();
     }
 }
 
@@ -150,14 +149,14 @@ void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes)
 }
 
 /* -------------------------------------------------------------------------- *
- * InmanHandler(SCF) interface implementation:
+ * InmanHandler(SSF) interface implementation:
  * -------------------------------------------------------------------------- */
-void Billing::connectSMS(ConnectSMSArg* arg)
+void Billing::onConnectSMS(ConnectSMSArg* arg)
 {
     smsc_log_debug(logger, "SSF <-- SCF ConnectSMS");
 }
 
-void Billing::continueSMS()
+void Billing::onContinueSMS()
 {
     smsc_log_debug(logger, "SSF <-- SCF ContinueSMS");
     ChargeSmsResult res;
@@ -167,7 +166,7 @@ void Billing::continueSMS()
 }
 
 #define POSTPAID_RPCause 41     //RP Cause: 'Temporary Failure'
-void Billing::releaseSMS(ReleaseSMSArg* arg)
+void Billing::onReleaseSMS(ReleaseSMSArg* arg)
 {
     //NOTE: For postpaid abonent IN-platform returns RP Cause: 'Temporary Failure'
     postpaidBill = (arg->rPCause == POSTPAID_RPCause) ? true : false;
@@ -191,14 +190,14 @@ void Billing::releaseSMS(ReleaseSMSArg* arg)
 
 //Called by Inap if CAP dialog with IN-platform is aborted.
 //may be called if state is [bilInited .. bilApproved]
-void Billing::abortSMS(unsigned char errCode, bool tcapLayer)
+void Billing::onAbortSMS(unsigned char errCode, bool tcapLayer)
 {
     bilMutex.Lock();
     smsc_log_error(logger, "SSF <-- SCF System Error, code: %u, layer %s",
                    (unsigned)errCode, tcapLayer ? "TCAP" : "CAP3");
 
     switch (state) {
-    case Billing::bilStarted:
+//    case Billing::bilStarted:
     case Billing::bilInited: {
         //continue dialog with MSC despite of CAP error, switch to CDR mode
         ChargeSmsResult res(tcapLayer ? InErrTCAP : InErrCAP3, (uint16_t)errCode,
@@ -227,12 +226,12 @@ void Billing::abortSMS(unsigned char errCode, bool tcapLayer)
 }
 
 
-void Billing::furnishChargingInformationSMS(FurnishChargingInformationSMSArg* arg)
+void Billing::onFurnishChargingInformationSMS(FurnishChargingInformationSMSArg* arg)
 {
     smsc_log_debug( logger, "SSF <-- SCF FurnishChargingInformationSMS" );
 }
 
-void Billing::requestReportSMSEvent(RequestReportSMSEventArg* arg)
+void Billing::onRequestReportSMSEvent(RequestReportSMSEventArg* arg)
 {
     smsc_log_debug(logger, "SSF <-- SCF RequestReportSMSEvent");
 
@@ -247,7 +246,7 @@ void Billing::requestReportSMSEvent(RequestReportSMSEventArg* arg)
     }
 }
 
-void Billing::resetTimerSMS(ResetTimerSMSArg* arg)
+void Billing::onResetTimerSMS(ResetTimerSMSArg* arg)
 {
     smsc_log_debug( logger, "SSF <-- SCF ResetTimerSMS" );
 }

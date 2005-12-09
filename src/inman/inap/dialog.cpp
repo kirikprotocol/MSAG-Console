@@ -326,9 +326,17 @@ USHORT_T Dialog::handleBeginDialog()
   return MSG_OK;
 }
 
-USHORT_T Dialog::handleContinueDialog()
+USHORT_T Dialog::handleContinueDialog(bool compPresent)
 {
-  return MSG_OK;
+    smsc_log_debug(logger, "TCAP Dialog[%d] got T_CONT_IND, components are %sexpected",
+                   _dId, compPresent ? "" : "not ");
+
+    for (ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++) {
+        DialogListener* ptr = *it;
+        ptr->onDialogContinue(compPresent);
+    }
+
+    return MSG_OK;
 }
 
 USHORT_T Dialog::handleEndDialog(bool compPresent)
@@ -363,11 +371,11 @@ USHORT_T Dialog::handlePAbortDialog(UCHAR_T abortCause)
  * Interaction level callbacks
  * ------------------------------------------------------------------------ */
 //Reports incoming Invoke to dialogListener
-USHORT_T Dialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm)
+USHORT_T Dialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const UCHAR_T *op,
+                              USHORT_T pmlen, const UCHAR_T *pm, bool lastComp)
 {
-    assert( op );
-    assert( oplen > 0 );
-    assert( tag == EINSS7_I97TCAP_OPERATION_TAG_LOCAL );
+    assert(op && (oplen > 0));
+    assert(tag == EINSS7_I97TCAP_OPERATION_TAG_LOCAL);
 
     Invoke  invoke(this, invId, tag, op[0]);
 
@@ -383,7 +391,7 @@ USHORT_T Dialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const 
     ListenerList cpList = listeners;
     for (ListenerList::iterator it = cpList.begin(); it != cpList.end(); it++) {
         DialogListener* ptr = *it;
-        ptr->onDialogInvoke(&invoke);
+        ptr->onDialogInvoke(&invoke, lastComp);
     }
     return MSG_OK;
 }
