@@ -133,8 +133,8 @@
 </table>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbApply", "Apply", "Apply changes");
-page_menu_button(out, "mbClear", "Clear", "Cancel changes");
+page_menu_button(session, out, "mbApply", "Apply", "Apply changes");
+page_menu_button(session, out, "mbClear", "Clear", "Cancel changes");
 page_menu_space(out);
 page_menu_end(out);
 %>
