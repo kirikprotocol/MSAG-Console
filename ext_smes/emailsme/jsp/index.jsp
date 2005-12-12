@@ -16,8 +16,8 @@
 <div class=content>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbApplyAll",  "Save",   "Save changes");
-page_menu_button(out, "mbResetAll",  "Reset",  "Discard changes");
+page_menu_button(session, out, "mbApplyAll",  "Save",   "Save changes");
+page_menu_button(session, out, "mbResetAll",  "Reset",  "Discard changes");
 page_menu_space(out);
 page_menu_end(out);
 %>

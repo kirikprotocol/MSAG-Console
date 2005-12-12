@@ -80,8 +80,8 @@
     <%@ include file="/WEB-INF/inc/navbar_nofilter.jsp"%>
     </div><%
     page_menu_begin(out);
-    page_menu_button(out, "mbAdd",    "Add",    "Add new profile");
-    page_menu_button(out, "mbDelete", "Delete", "Delete checked profile(s)", "return confirm('Are you sure to delete all checked profile(s)?');");
+    page_menu_button(session, out, "mbAdd",    "Add",    "Add new profile");
+    page_menu_button(session, out, "mbDelete", "Delete", "Delete checked profile(s)", "return confirm('Are you sure to delete all checked profile(s)?');");
     page_menu_space(out);
     page_menu_end(out);
     %>

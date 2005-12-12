@@ -76,8 +76,8 @@ function clickRemoveDriver(id_to_remove)
 </table>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbDone",  "Done",  "Done editing");
-page_menu_button(out, "mbCancel", "Cancel", "Cancel changes");
+page_menu_button(session, out, "mbDone",  "Done",  "Done editing");
+page_menu_button(session, out, "mbCancel", "Cancel", "Cancel changes");
 page_menu_space(out);
 page_menu_end(out);
 %>
