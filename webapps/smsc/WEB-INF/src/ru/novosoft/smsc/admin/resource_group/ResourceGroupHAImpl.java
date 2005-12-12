@@ -15,35 +15,6 @@ import java.util.HashMap;
  */
 public class ResourceGroupHAImpl extends ResourceGroupImpl
 {
-	protected static HashMap haname2sme = new HashMap();
-	protected static HashMap smename2ha = new HashMap();
-
-	static
-	{
-		haname2sme.put("smscagent-harg", "SMSC");
-		haname2sme.put("archiver-harg", "ArchiveDaemon");
-		haname2sme.put("dbsme-harg", "dbSme");
-		haname2sme.put("infosme-harg", "InfoSme");
-		haname2sme.put("mcisme-harg", "MCISme");
-		haname2sme.put("mciprof-harg", "MCIProf");
-		haname2sme.put("inman-harg", "inman");
-		haname2sme.put("proxysme-harg", "proxysme");
-		haname2sme.put("smsc1-sarg", "SMSCservice1");
-		haname2sme.put("smsc2-sarg", "SMSCservice2");
-		haname2sme.put("webapp-harg", "webapp");
-
-		smename2ha.put("SMSC", "smscagent-harg");
-		smename2ha.put("ArchiveDaemon", "archiver-harg");
-		smename2ha.put("dbSme", "dbsme-harg");
-		smename2ha.put("InfoSme", "infosme-harg");
-		smename2ha.put("MCISme", "mcisme-harg");
-		smename2ha.put("MCIProf", "mciprof-harg");
-		smename2ha.put("inman", "inman-harg");
-		smename2ha.put("proxysme", "proxysme-harg");
-		smename2ha.put("SMSCservice1", "smsc1-sarg");
-		smename2ha.put("SMSCservice2", "smsc2-sarg");
-		smename2ha.put("webapp", "webapp-harg");
-	}
 
 	protected long swigCPtr;
 	protected boolean swigCMemOwn;
@@ -56,7 +27,7 @@ public class ResourceGroupHAImpl extends ResourceGroupImpl
 	public ResourceGroupHAImpl(String rgName) throws AdminException
 	{
 		this(NativeResourceGroupHA.new_ResourceGroup(rgName), true);
-		name = (String) haname2sme.get(rgName);
+		name = ResourceGroupNameMap.getSmeByName(rgName);
 		if (name == null) throw new AdminException("Couldn't map resource group ha-name:" + rgName);
 		logger.info("Resource group (haname="+rgName+", smename="+name+") created");
 	}

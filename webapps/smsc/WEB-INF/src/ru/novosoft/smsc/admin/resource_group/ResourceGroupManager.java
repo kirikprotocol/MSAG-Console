@@ -31,9 +31,14 @@ public class ResourceGroupManager
 		this.appContext = appContext;
 		this.config = this.appContext.getConfig();
 		logger.debug("Initializing resource group manager");
-		switch(getInstallType())
-		{
-			case ResourceGroupConstants.RESOURCEGROUP_TYPE_SINGLE:
+    try {
+      ResourceGroupNameMap.init(appContext.getConfig().getString(ResourceGroupConstants.RESOURCEGROUP_RG_MAP_FILE));
+    } catch (Exception e) {
+      logger.warn("Could not init RG mapping", e);
+    }
+    switch(getInstallType())
+    {
+      case ResourceGroupConstants.RESOURCEGROUP_TYPE_SINGLE:
 /*				NativeResourceGroupSingle.LoadLibrary();
 				logger.debug("JNI Library loaded");
 				rgNames = NativeResourceGroupSingle.ResourceGroup_listGroups();
@@ -43,8 +48,8 @@ public class ResourceGroupManager
 					add(rg);
 					logger.debug("Resource group \"" + rg.getName() + "\" added");
 				}*/
-				break;
-			case ResourceGroupConstants.RESOURCEGROUP_TYPE_HS:
+        break;
+      case ResourceGroupConstants.RESOURCEGROUP_TYPE_HS:
 /*				NativeResourceGroupHS.LoadLibrary();
 				logger.debug("JNI Library loaded");
 				rgNames = NativeResourceGroupHS.ResourceGroup_listGroups();
@@ -54,14 +59,14 @@ public class ResourceGroupManager
 					add(rg);
 					logger.debug("Resource group \"" + rg.getName() + "\" added");
 				}*/
-				break;
-			case ResourceGroupConstants.RESOURCEGROUP_TYPE_HA:
-				NativeResourceGroupHA.LoadLibrary();
-				logger.debug("JNI Library loaded");
-				refreshResGroupList();
-				break;
-			default: throw new AdminException("Invalid type of installation");
-		}
+        break;
+      case ResourceGroupConstants.RESOURCEGROUP_TYPE_HA:
+        NativeResourceGroupHA.LoadLibrary();
+        logger.debug("JNI Library loaded");
+        refreshResGroupList();
+        break;
+      default: throw new AdminException("Invalid type of installation");
+    }
 		logger.debug("Resource group manager initialized");
 	}
 

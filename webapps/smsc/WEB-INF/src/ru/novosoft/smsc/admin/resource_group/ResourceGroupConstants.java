@@ -26,6 +26,7 @@ public class ResourceGroupConstants
 	public static final String RESOURCEGROUP_TYPE_STRING_HA = "HA";
 
 	public static final String RESOURCEGROUP_INSTALLTYPE_PARAM_NAME = "installation.type";
+  public static final String RESOURCEGROUP_RG_MAP_FILE = "installation.rgmapFile";
 
 	public static final Map SMSC_serv_IDs = new HashMap();
 
