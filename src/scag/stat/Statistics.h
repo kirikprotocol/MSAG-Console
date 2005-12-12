@@ -13,8 +13,10 @@ namespace stat {
 
 using smsc::smeman::SmeRecord;
 
-    namespace Counters{
-        enum SmppStatCounter{
+    namespace Counters
+    {
+        enum SmppStatCounter
+        {
           cntAccepted,
           cntRejected,
           cntDelivered,
@@ -27,9 +29,23 @@ using smsc::smeman::SmeRecord;
           cntRecieptFailed
 
         };
+
+        enum HttpStatCounter
+        {
+          httpRequest,
+          httpRequestRejected,
+          httpResponse,
+          httpResponseRejected,
+          httpDelivered,
+          httpFailed,
+
+          httpBillingOk = 0x1000,
+          httpBillingFailed,
+        };
     }
 
-    struct SmppStatEvent{
+    struct SmppStatEvent
+    {
       char smeId[smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1];
       char routeId[smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH+1];
       int  smeProviderId;
@@ -37,6 +53,7 @@ using smsc::smeman::SmeRecord;
       int counter;
       int errCode;
       bool internal;
+
       SmppStatEvent()
       {
         smeId[0]=0;
@@ -78,14 +95,27 @@ using smsc::smeman::SmeRecord;
         internal = src.internal;
       }
     };
+    
+    struct HttpStatEvent
+    {
+      std::string routeId;
+      int serviceProviderId;
+      int counter;
+      int errCode;
+      
+      HttpStatEvent(int cnt=-1, const std::string& rId="", int spId=-1, int err=0)
+        : routeId(rId), serviceProviderId(spId), counter(cnt), errCode(err) {};
 
-    enum CheckTrafficPeriod{
+      // TODO: add copy constructor & operator=
+    };
+
+    enum CheckTrafficPeriod
+    {
         checkMinPeriod,
         checkHourPeriod,
         checkDayPeriod,
         checkMonthPeriod
     };
-
 
     class Statistics
     {
@@ -93,7 +123,8 @@ using smsc::smeman::SmeRecord;
 
         static Statistics& Instance();
 
-        virtual void registerEvent(const SmppStatEvent& si) = 0;
+        virtual void registerEvent(const SmppStatEvent& se) = 0;
+        virtual void registerEvent(const HttpStatEvent& se) = 0;
         virtual bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value) = 0;
 
     protected:
