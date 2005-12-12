@@ -69,7 +69,7 @@ for my $sme(sort(keys(%$smes)))
   {
     print $f qq[add route "$sme > $plmn" notes "mar" active hide nobill arc allow receipt serviceid 0 priority 16000 src subj $sme dst subj $plmn MAP_PROXY\n];
     push @undo,qq[delete route "$sme > $plmn"];
-    print $f qq[add route "$sme < $plmn" notes "mar" active hide   bill arc allow receipt serviceid 0 priority 16000 src subj $sme dst subj $plmn $sme\n];
+    print $f qq[add route "$sme < $plmn" notes "mar" active hide   bill arc allow receipt serviceid 0 priority 16000 src subj $plmn dst subj $sme $sme\n];
     push @undo,qq[delete route "$sme < $plmn"];
   }
   print $f qq[alter route "ALL_SME_REPORTS < SMSC" add dst subj $sme $sme\n];
