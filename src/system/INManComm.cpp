@@ -150,7 +150,7 @@ void INManComm::Report(int dlgId,const SMS& sms,bool final)
   res.setDestIMSI(sms.getDestinationDescriptor().imsi);
   res.setDestMSC(sms.getDestinationDescriptor().msc);
   res.setDestSMEid(sms.getDestinationSmeId());
-  res.setDeliveryTime(time(NULL));
+  res.setDeliveryTime(time(NULL)+timezone);
 
   smsc::inman::interaction::ObjectBuffer buf(0);
   smsc::inman::interaction::SerializerInap::getInstance()->serialize(&res,buf);
