@@ -123,15 +123,21 @@ void Dialog::continueDialog()
                     "}",
                    dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId, priority, qSrvc, 
                    dump(ownAddr.addrLen, ownAddr.addr).c_str(),
+                   ac.acLen, dump(ac.acLen, ac.ac).c_str()
+/*
                    (_state < Dialog::dlgConfirmed) ? ac.acLen : 0,
                    (_state < Dialog::dlgConfirmed) ? dump(ac.acLen, ac.ac).c_str() : ""
+*/                   
                    );
 
     USHORT_T result =
         EINSS7_I97TContinueReq(dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId,
                                priority, qSrvc, ownAddr.addrLen, ownAddr.addr,
+                               ac.acLen, ac.ac,
+/*
                                (_state < Dialog::dlgConfirmed) ? ac.acLen : 0,
                                (_state < Dialog::dlgConfirmed) ? ac.ac : NULL, 
+*/                               
                                0, NULL);
 
     if (result != 0)
