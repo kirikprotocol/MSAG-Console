@@ -201,6 +201,7 @@ void InitialDPSMSArg::setLocationInformationMSC(const Address& addr)
     /**/
     //reset _asn_ctx & optionals
     memset(&(comp->_cGidOrSAIorLAI), 0, sizeof(comp->_cGidOrSAIorLAI));
+/*
     comp->_cGidOrSAIorLAI.present =
         CellGlobalIdOrServiceAreaIdOrLAI_PR_cellGlobalIdOrServiceAreaIdFixedLength;
 
@@ -212,6 +213,7 @@ void InitialDPSMSArg::setLocationInformationMSC(const Address& addr)
     memcpy(comp->_cGidOrSAIorLAI.choice.cellGlobalIdOrServiceAreaIdFixedLength.buf,
 							_cgidorsaifl1_buf, 7);
     comp->_li.cellGlobalIdOrServiceAreaIdOrLAI = &(comp->_cGidOrSAIorLAI);
+*/
     /**/
     comp->idp.locationInformationMSC = &(comp->_li);
 }
@@ -219,7 +221,7 @@ void InitialDPSMSArg::setLocationInformationMSC(const Address& addr)
 void InitialDPSMSArg::setLocationInformationMSC(const char* text)
 {
     Address	sadr(text);
-    InitialDPSMSArg::setSMSCAddress((const Address&)sadr);
+    InitialDPSMSArg::setLocationInformationMSC((const Address&)sadr);
 }
 
 
