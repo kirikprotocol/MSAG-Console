@@ -95,6 +95,10 @@ const CDRRecord & Billing::getCDRRecord(void) const
  * -------------------------------------------------------------------------- */
 void Billing::onChargeSms(ChargeSms* sms)
 {
+    smsc_log_debug(logger, "Billing[0x%x]: Call.Adr <%s>, Dest.Adr <%s>", id,
+                    sms->getCallingPartyNumber().c_str(),
+                    sms->getDestinationSubscriberNumber().c_str());
+
     sms->export2CDR(cdr);
 
     if ( (billMode == smsc::inman::BILL_ALL)
