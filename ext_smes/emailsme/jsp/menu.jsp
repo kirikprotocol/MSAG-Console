@@ -9,8 +9,8 @@
   sme_menu_space(out);
   if (ServiceIDForShowStatus != null && ServiceIDForShowStatus.length() > 0)
   {
-    sme_menu_button(out, "mbStart",  "Start",  "Start",  "Start DbSme", "return noValidationSubmit(this);", !bean.isServiceOnline());
-    sme_menu_button(out, "mbStop",   "Stop",   "Stop",   "Stop DbSme",  "return noValidationSubmit(this);", bean.isServiceOnline());
+    sme_menu_button(out, "mbStart",  "Start",  "Start",  "Start EMailSme", "", !bean.isServiceOnline());
+    sme_menu_button(out, "mbStop",   "Stop",   "Stop",   "Stop EMailSme",  "", bean.isServiceOnline());
   }
   sme_menu_end(out);
   if (ServiceIDForShowStatus != null && ServiceIDForShowStatus.length() > 0)
