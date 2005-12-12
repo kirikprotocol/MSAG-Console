@@ -3,7 +3,8 @@
 
 <config>
   <section name="installation">
-   <param name="type">HA</param>
+   <param name="type" type="string">HA</param>
+   <param name="rgmapFile" type="string"></param>
   </section>
 
   <section name="nodes">
