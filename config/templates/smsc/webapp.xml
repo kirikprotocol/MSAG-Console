@@ -6,13 +6,13 @@
    <param name="type">HA</param>
   </section>
 
-  <section name="smscenters">
+  <section name="nodes">
     <section name="smsc-node1">
-      <param name="stopfilename" type="string">c:/stop.txt</param>
+      <param name="id" type="string">1</param>
     </section>
 
     <section name="smsc-node2">
-      <param name="stopfilename" type="string">d:/stop.txt</param>
+      <param name="id" type="string">2</param>
     </section>
   </section>
 
