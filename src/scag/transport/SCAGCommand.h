@@ -2,28 +2,27 @@
 #define SCAG_TRANSPORT_COMMAND
 
 #include "util/int.h"
-#include "sms/sms.h"
 
 namespace scag { namespace transport
 {
-    const uint8_t T_TYPE_SMPP = 1;
-    const uint8_t T_TYPE_WAP  = 2;
-    const uint8_t T_TYPE_MMS  = 3;
-
-    using smsc::sms::Address;
-
-    enum TransportType
+    enum TransportType 
     {
-        SMPP = T_TYPE_SMPP,
-        WAP  = T_TYPE_WAP,
-        MMS  = T_TYPE_MMS
+        SMPP = 1, HTTP = 2, MMS = 3
     };
 
     class SCAGCommand
     {
     public:
-        virtual TransportType getType()const=0;
-        virtual int getRuleId()const=0;
+    
+        virtual TransportType getType() const = 0;
+	
+        virtual int getRuleId() const = 0;
+        virtual setRuleId(int ruleId) = 0;
+	
+    	virtual int64_t getOperationId() const = 0;
+    	virtual void setOperationId(int64_t op) = 0;
+    
+    	virtual ~SCAGCommand() {};
     };
 
 }}
