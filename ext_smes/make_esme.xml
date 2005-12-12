@@ -22,7 +22,7 @@
     <pathelement path="${java_src}"/>
     <pathelement path="${java_out}"/>
     <pathelement path="${BUILD_DIR}/classes/smsc"/>
-    <fileset dir="${libs_path}" includes="log4j.jar antlr.jar nsjsp.jar classes12.jar"/>
+    <fileset dir="${libs_path}" includes="log4j.jar antlr.jar nsjsp.jar classes12.jar connpool.jar"/>
     <fileset dir="${CATALINA_HOME}/common/lib" includes="servlet.jar"/>
   </path>
 
