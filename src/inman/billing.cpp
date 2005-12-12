@@ -181,6 +181,10 @@ void Billing::onReleaseSMS(ReleaseSMSArg* arg)
     if (postpaidBill) {
         state = Billing::bilProcessed;
         smsc_log_debug(logger, "SSF switched to billing via CDR");
+        bilMutex.Lock();
+        delete inap;
+        inap = NULL;
+        bilMutex.Unlock();
     } else {
         state = Billing::bilReleased;
         smsc_log_debug(logger, "SSF cancels billing");
