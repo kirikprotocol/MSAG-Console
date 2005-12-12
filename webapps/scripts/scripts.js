@@ -401,10 +401,10 @@ function clickFilter()
 	return false;
 }
 
-function noValidationSubmit(buttonElem)
+function noValidationSubmit(buttonElem, value, name)
 {
-  document.getElementById('jbutton').value = buttonElem.jbuttonValue;
-  document.getElementById('jbutton').name  = buttonElem.jbuttonName;
+  opForm.jbutton.value = value;
+  opForm.jbutton.name = name
   opForm.submit();
   return false;
 }
