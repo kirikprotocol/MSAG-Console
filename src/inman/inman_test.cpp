@@ -37,16 +37,29 @@ typedef struct {
     const char *  imsi;
 } Abonent;
 
+typedef enum { adrNumeric = 0, adrAlphaNum = 1 } AddressTypeInd;
+
+static const char * const _dstAdr[] = {
+     ".1.1.79139859489"
+    ,".5.0.ussd:448"
+};
+
+static const Abonent  _abonents[2] = {
+    //Nezhinsky phone(prepaid):
+     { abPrepaid, ".1.1.79139343290", "250013900405871" }
+    //Ryzhkov phone(postpaid:
+    ,{ abPostpaid, ".1.1.79139859489", "250013901464251" }
+};
 
 class INDialog {
 public:
     typedef enum { dIdle = 0, dCharged = 1, dApproved, dReported } INState;
 
-    INDialog(unsigned int id, AbonentType ab_type, bool ussd_op,
-             bool batch_mode = false,
+    INDialog(unsigned int id, AbonentType ab_type, AddressTypeInd adr_type,
+             bool ussd_op, bool batch_mode = false,
              DeliverySmsResult_t delivery = smsc::inman::interaction::DELIVERY_SUCCESSED)
         : did(id), state(INDialog::dIdle), abType(ab_type), ussdOp(ussd_op)
-        , batchMode(batch_mode), dlvrRes(delivery)
+        , batchMode(batch_mode), dlvrRes(delivery), adrType(adr_type)
     {}
 
     void setState(INState new_state) { state = new_state; }
@@ -61,17 +74,10 @@ protected:
     bool                batchMode;
     DeliverySmsResult_t dlvrRes;
     AbonentType         abType;
+    AddressTypeInd      adrType; //destination address type
     bool                ussdOp;
 };
 
-
-
-static const Abonent  _abonents[2] = {
-    //Nezhinsky phone(prepaid):
-     { abPrepaid, ".1.1.79139343290", "250013900405871" }
-    //Ryzhkov phone(postpaid:
-    ,{ abPostpaid, ".1.1.79139859489", "250013901464251" }
-};
 
 class Facade : public Thread, public SmscHandler
 {
@@ -86,11 +92,13 @@ protected:
     AbonentType         abType;
     bool                _ussdOp;
     INDialogsMap        _Dialogs;
+    AddressTypeInd      _adrType; //dafault destination address type
 
 public:
     Facade(const char* host, int port)
         : logger(Logger::getInstance("smsc.InFacade"))
-        , dialogId(0), abType(abPrepaid), _running (false), _ussdOp(false)
+        , dialogId(0), abType(abPrepaid), _running (false)
+        , _ussdOp(false), _adrType(adrNumeric)
     {
         std::string msg;
         msg = format("InFacade: connecting to InManager at %s:%d...\n", host, port);
@@ -126,6 +134,9 @@ public:
         }
     }
 
+    void setAddressType(AddressTypeInd adr_type) { _adrType = adr_type; }
+    AddressTypeInd getAddressType(void) { return _adrType; }
+
     bool isUssdOp(void) { return _ussdOp; }
     void setUssdOp(bool op) { _ussdOp = op; }
 
@@ -136,11 +147,11 @@ public:
     unsigned getNextDialogId(void) { return ++dialogId; }
 
     unsigned int initDialog(unsigned int did = 0, bool batch_mode = false,
-             DeliverySmsResult_t delivery = smsc::inman::interaction::DELIVERY_SUCCESSED)
+                            DeliverySmsResult_t delivery = smsc::inman::interaction::DELIVERY_SUCCESSED)
     {
         if (!did)
             did = getNextDialogId();
-        INDialog * dlg = new INDialog(did, abType, _ussdOp, batch_mode, delivery);
+        INDialog * dlg = new INDialog(did, abType, _adrType, _ussdOp, batch_mode, delivery);
         _Dialogs.insert(INDialogsMap::value_type(did, dlg));
         return did;
     }
@@ -161,9 +172,7 @@ public:
         ChargeSms op;
 
         op.setDialogId(dlgId);
-
-        op.setDestinationSubscriberNumber( ".1.1.79139859489" ); // missing for MT
-
+        op.setDestinationSubscriberNumber( _dstAdr[_adrType]);
         op.setCallingPartyNumber(_abonents[abType].addr);
         op.setCallingIMSI(_abonents[abType].imsi);
 
@@ -389,10 +398,13 @@ void cmd_config(Console&, const std::vector<std::string> &args)
 {
     if (_pFacade->isRunning()) {
         AbonentType ab = _pFacade->getAbonent();
-        fprintf(stdout, "Current Abonent: %s (%s)\n", _abonents[ab].addr,
-                                 (ab == abPrepaid) ? "prepaid":"postpaid");
-        fprintf(stdout, "  bearerType to use: dp%s\n",
-                _pFacade->isUssdOp() ? "USSD" : "SMS");
+        fprintf(stdout,
+                "Current Abonent: %s (%s)\n"
+                "  bearerType to use: dp%s\n"
+                "  dest.adr type: %sumeric\n"
+                ,_abonents[ab].addr, (ab == abPrepaid) ? "prepaid":"postpaid",
+                _pFacade->isUssdOp() ? "USSD" : "SMS",
+                _pFacade->getAddressType() ? "alphaN" : "n");
     } else
         throw ConnectionClosedException();
 }
@@ -435,6 +447,24 @@ void cmd_dpussd(Console&, const std::vector<std::string> &args)
         throw ConnectionClosedException();
 }
 
+void cmd_adrNum(Console&, const std::vector<std::string> &args)
+{
+    if (_pFacade->isRunning()) {
+        _pFacade->setAddressType(adrNumeric);
+        fprintf(stdout, "Current dest.adr type: numeric\n");
+    } else
+        throw ConnectionClosedException();
+}
+
+void cmd_adrAlpha(Console&, const std::vector<std::string> &args)
+{
+    if (_pFacade->isRunning()) {
+        _pFacade->setAddressType(adrAlphaNum);
+        fprintf(stdout, "Current dest.adr type: alphaNumeric\n");
+    } else
+        throw ConnectionClosedException();
+}
+
 
 int main(int argc, char** argv)
 {
@@ -464,6 +494,8 @@ int main(int argc, char** argv)
         console.addItem( "dpsms",  cmd_dpsms );
         console.addItem( "dpussd",  cmd_dpussd );
         console.addItem( "config",  cmd_config);
+        console.addItem( "adrnum",  cmd_adrNum);
+        console.addItem( "adralpha",  cmd_adrAlpha);
 
         _pFacade->Start();
 
