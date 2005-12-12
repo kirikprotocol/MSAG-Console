@@ -312,9 +312,135 @@ int InterconnectManager::Execute()
         profile.offset = 10;
 
 
-        Command *cmd = new ProfileUpdateCommand(addr, profile);
-        printf("send command\n");
-        sendCommand(cmd);
+        Command *cmd1 = new ProfileUpdateCommand(addr, profile);
+
+        const char * address_ = "address1234567890123";
+        int plan_ = 1;
+        int type_ = 2;
+        Command *cmd2 = new ProfileDeleteCommand(plan_, type_, address_);
+        
+
+        smsc::smeman::SmeInfo si;
+        si.typeOfNumber = 1;
+        si.numberingPlan = 2;
+        si.interfaceVersion = 0x34;
+        //si.rangeOfAddress = ".*";
+        si.rangeOfAddress = "";
+        //si.systemType = "regular";
+        si.systemType = "";
+        //si.password = "password";
+        si.password = "";
+        //si.hostname = "hostname";
+        si.hostname = "";
+        si.port = 1;
+        //si.systemId = "systemId";
+        si.systemId = "";
+        si.priority = 1;
+        si.SME_N = 1;
+        si.disabled = true;
+        si.wantAlias = true;
+        si.forceDC = true;
+        si.internal = false;
+        si.bindMode = smsc::smeman::smeRX;
+        //si.receiptSchemeName = "receiptShemeName";
+        si.receiptSchemeName = "";
+        si.timeout = 1;
+        si.proclimit = 2;
+        si.schedlimit = 3;
+        si.providerId = 4;
+
+        Command *cmd3 = new SmeAddCommand(si);
+        Command *cmd4 = new SmeUpdateCommand(si);
+        Command *cmd5 = new SmeRemoveCommand("systemId");
+
+        const char *mscNum_ = "mscnum1";
+        Command *cmd6 = new MscUnregisterCommand(mscNum_);
+        Command *cmd7 = new MscBlockCommand(mscNum_);
+        Command *cmd8 = new MscClearCommand(mscNum_);
+        Command *cmd9 = new MscReportCommand("mscnum1", true, 5);
+        Command *cmd10 = new MscRegistrateCommand("mscnum1", 1);
+
+        Command *cmd11 = new PrcAddPrincipalCommand(1, 2, 3, "address");
+        Command *cmd12 = new PrcDeletePrincipalCommand("address");
+        Command *cmd13 = new PrcAlterPrincipalCommand(1, 2, "address");
+
+        Command *cmd14 = new MemAddMemberCommand(50235, "dlname", "address");
+        Command *cmd15 = new MemDeleteMemberCommand("dlname", "address");
+
+        Command *cmd16 = new SbmAddSubmiterCommand(1, "dlname", "address");
+        Command *cmd17 = new SbmDeleteSubmiterCommand("dlname", "address");
+
+        Command *cmd18 = new DlAddCommand(1, "dlname", "owner", 1, 2);
+        Command *cmd19 = new DlDeleteCommand("dlname");
+        Command *cmd20 = new DlAlterCommand(1, "dlname");
+
+        Command *cmd21 = new ApplyRoutesCommand();
+        Command *cmd22 = new ApplyAliasesCommand();
+        Command *cmd23 = new ApplyRescheduleCommand();
+        
+
+        printf("======= Profile commands =========\n");
+        printf("send command: %02X\n", cmd1->getType());
+        sendCommand(cmd1);
+        printf("send command: %02X\n", cmd2->getType());
+        sendCommand(cmd2);
+
+        printf("======= Sme commands     =========\n");
+        printf("send command: %02X\n", cmd3->getType());
+        sendCommand(cmd3);
+        printf("send command: %02X\n", cmd4->getType());
+        sendCommand(cmd4);
+        printf("send command: %02X\n", cmd5->getType());
+        sendCommand(cmd5);
+
+        printf("======= Msc commands     =========\n");
+        printf("send command: %02X\n", cmd6->getType());
+        sendCommand(cmd6);
+        printf("send command: %02X\n", cmd7->getType());
+        sendCommand(cmd7);
+        printf("send command: %02X\n", cmd8->getType());
+        sendCommand(cmd8);
+        printf("send command: %02X\n", cmd9->getType());
+        sendCommand(cmd9);
+        printf("send command: %02X\n", cmd10->getType());
+        sendCommand(cmd10);
+
+        printf("======= Prc commands     =========\n");
+        printf("send command: %02X\n", cmd11->getType());
+        sendCommand(cmd11);
+        printf("send command: %02X\n", cmd12->getType());
+        sendCommand(cmd12);
+        printf("send command: %02X\n", cmd13->getType());
+        sendCommand(cmd13);
+
+        printf("======= Mem commands     =========\n");
+        printf("send command: %02X\n", cmd14->getType());
+        sendCommand(cmd14);
+        printf("send command: %02X\n", cmd15->getType());
+        sendCommand(cmd15);
+
+        printf("======= Sbm commands     =========\n");
+        printf("send command: %02X\n", cmd16->getType());
+        sendCommand(cmd16);
+        printf("send command: %02X\n", cmd17->getType());
+        sendCommand(cmd17);
+
+        printf("======= Dl commands      =========\n");
+        printf("send command: %02X\n", cmd18->getType());
+        sendCommand(cmd18);
+        printf("send command: %02X\n", cmd19->getType());
+        sendCommand(cmd19);
+        printf("send command: %02X\n", cmd20->getType());
+        sendCommand(cmd20);
+
+        printf("======= Apply commands      =========\n");
+        printf("send command: %02X\n", cmd21->getType());
+        sendCommand(cmd21);
+        printf("send command: %02X\n", cmd22->getType());
+        sendCommand(cmd22);
+        printf("send command: %02X\n", cmd23->getType());
+        sendCommand(cmd23);
+        //sendCommand(cmd);
         printf("command sent\n");
         flushCommands();
     }*/

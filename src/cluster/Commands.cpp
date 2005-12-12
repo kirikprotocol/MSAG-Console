@@ -1294,7 +1294,6 @@ void* MscReportCommand::serialize(uint32_t &len)
     memcpy((void*)(buffer + 1),        (const void*)&val64, 8);
 
     //printf("mscNum: '%s', len: %d\n", mscNum, strlen(mscNum));
-    buffer = new uint8_t[len];
     memcpy((void*)(buffer + 9), (const void*)mscNum, 22);
 
     }catch(...){
@@ -1466,7 +1465,7 @@ bool SmeAddCommand::deserialize(void *buffer, uint32_t len)
 
   try {
 
-  if(len < 39 || !buffer)
+  if(len < 38 || !buffer)
       return false;
 
   uint8_t val;
@@ -1729,7 +1728,7 @@ void* SmeUpdateCommand::serialize(uint32_t &len)
 }
 bool SmeUpdateCommand::deserialize(void *buffer, uint32_t len)
 {
-    if(len < 39 || !buffer)
+    if(len < 38 || !buffer)
       return false;
 
   try {
