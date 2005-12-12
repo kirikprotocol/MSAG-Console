@@ -423,12 +423,12 @@ void DeliverySmsResult::load(ObjectBuffer& in)
     value = static_cast<DeliverySmsResult_t>(v);
     in >> final;
     //optional data for CDR generation (on successfull delivery)
-    if (!value) {
+//    if (!value) {
         in >> destImsi;
         in >> destMSC;
         in >> destSMEid;
         in >> finalTimeTZ;
-    }
+//    }
 }
 
 void DeliverySmsResult::save(ObjectBuffer& out)
@@ -436,12 +436,12 @@ void DeliverySmsResult::save(ObjectBuffer& out)
     out << (unsigned short)value;
     out << final;
     //optional data for CDR generation (on successfull delivery)
-    if (!value) {
+//    if (!value) {
         out << destImsi;
         out << destMSC;
         out << destSMEid;
         out << finalTimeTZ;
-    }
+//    }
 }
 
 void DeliverySmsResult::export2CDR(CDRRecord & cdr) const
