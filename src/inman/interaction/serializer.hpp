@@ -37,11 +37,11 @@ inline ObjectBuffer& operator<<(ObjectBuffer& buf, const std::vector<unsigned ch
 }
 inline ObjectBuffer& operator>>(ObjectBuffer& buf, std::vector<unsigned char>& arr )
 {
+    unsigned char arrBuf[255 + 1];
     unsigned char len;
     buf.Read((char*)&len, 1);
-    unsigned char* arrBuf = new unsigned char[len];
     buf.Read((char*)arrBuf, len);
-    arr.assign(arrBuf, arrBuf + len);
+    arr.insert(arr.end(), arrBuf, arrBuf + len);
     return buf;
 }
 
@@ -54,11 +54,12 @@ inline ObjectBuffer& operator<<(ObjectBuffer& buf, const std::string& str)
 }
 inline ObjectBuffer& operator>>(ObjectBuffer& buf, std::string& str )
 {
+    char strBuf[255 + 1];
     unsigned char len;
     buf.Read((char*)&len,1);
-    char* strBuf = new char[len + 1];
     buf.Read(strBuf,len);
-    str.assign( strBuf, strBuf + len );
+    strBuf[len] = 0;
+    str += strBuf;
     return buf;
 }
 
