@@ -68,10 +68,10 @@
       String smscServId = (String) ResourceGroupConstants.SMSC_serv_IDs.get(new Byte(id));
 %>
 <tr class=row<%=id&1%>>
-  <td><input class=check type=radio name=checkedSmsc value="<%=smscServId%>"></td>
+  <td width="1%"><input class=check type=radio name=checkedSmsc value="<%=smscServId%>"></td>
   <td><%=node%></td>
-  <td><%=serviceStatus((SMSCAppContext) request.getAttribute("appContext"), smscServId)%></td>
-  <td><%=smscServStatus((SMSCAppContext) request.getAttribute("appContext"), Constants.SMSC_SME_ID, id)%></td>
+  <td width="1%" nowrap><%=serviceStatus((SMSCAppContext) request.getAttribute("appContext"), smscServId)%></td>
+  <td width="1%" nowrap><%=smscServStatus((SMSCAppContext) request.getAttribute("appContext"), Constants.SMSC_SME_ID, id)%></td>
 </tr>
 <%}%>
 </tbody>
