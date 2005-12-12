@@ -5,7 +5,7 @@ import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.WebAppFolders;
-import ru.novosoft.util.conpool.NSConnectionPool;
+import ru.sibinco.util.conpool.ConnectionPool;
 
 import java.io.*;
 import java.util.*;
@@ -415,14 +415,14 @@ public class SmsStat
     private final static String VALUES_ROUTE_ERR_SQL =
         " (period, routeid, errcode, counter) VALUES (?, ?, ?, ?)";
 
-    private NSConnectionPool createDataSource(ExportSettings export) throws SQLException
+    private ConnectionPool createDataSource(ExportSettings export) throws SQLException
     {
       Properties props = new Properties();
       props.setProperty("jdbc.source", export.getSource());
       props.setProperty("jdbc.driver", export.getDriver());
       props.setProperty("jdbc.user", export.getUser());
       props.setProperty("jdbc.pass", export.getPassword());
-      return new NSConnectionPool(props);
+      return new ConnectionPool(props);
     }
 
     private String prepareWherePart(long from, long till)
@@ -472,7 +472,7 @@ public class SmsStat
         stmt.setLong(pos++, err.counter);
     }
 
-    private void shutdownPool(NSConnectionPool pool)
+    private void shutdownPool(ConnectionPool pool)
     {
         try { if (pool != null) pool.shutdown(); }
         catch(Throwable th) { logger.error("Failed to close data source", th); }
@@ -560,7 +560,7 @@ public class SmsStat
         long fromPeriod = query.isFromDateEnabled() ? calculatePeriod(query.getFromDate()) : -1;
         long tillPeriod = query.isTillDateEnabled() ? calculatePeriod(query.getTillDate()) : -1;
 
-        NSConnectionPool pool = null; String errMessage = null;
+        ConnectionPool pool = null; String errMessage = null;
         Connection connection = null; Statement stmt = null;
         PreparedStatement insertSms = null; PreparedStatement insertErr = null;
         PreparedStatement insertSmeSms = null; PreparedStatement insertSmeErr = null;

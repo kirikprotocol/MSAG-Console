@@ -3,7 +3,7 @@ package ru.novosoft.smsc.emailsme.beans;
 import ru.novosoft.smsc.emailsme.backend.*;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
-import ru.novosoft.util.conpool.NSConnectionPool;
+import ru.sibinco.util.conpool.ConnectionPool;
 
 import javax.servlet.http.HttpServletRequest;
 import java.sql.*;
@@ -51,7 +51,7 @@ public class Profiles extends SmeBean
 
     checkedSet.addAll(Arrays.asList(checked));
 
-    final NSConnectionPool connectionPool = getSmeContext().getConnectionPool();
+    final ConnectionPool connectionPool = getSmeContext().getConnectionPool();
     if (connectionPool != null) {
       try {
         resultSet = new ProfilesDataSource().query(connectionPool, new ProfilesQuery(getPageSizeInt(), new ProfilesFilter(null, null, -1, null), getSort(), getStartPositionInt()));
@@ -79,7 +79,7 @@ public class Profiles extends SmeBean
 
   private int delete()
   {
-    final NSConnectionPool connectionPool = getSmeContext().getConnectionPool();
+    final ConnectionPool connectionPool = getSmeContext().getConnectionPool();
     if (connectionPool == null)
       return error("Could not connect to SQL server");
 

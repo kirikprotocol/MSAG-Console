@@ -1,6 +1,6 @@
 package ru.novosoft.smsc.emailsme.beans;
 
-import ru.novosoft.util.conpool.NSConnectionPool;
+import ru.sibinco.util.conpool.ConnectionPool;
 
 import javax.servlet.http.HttpServletRequest;
 import java.sql.*;
@@ -37,7 +37,7 @@ public class Edit extends SmeBean
         dayLimit = 0;
         forward = "";
       } else {
-        final NSConnectionPool connectionPool = getSmeContext().getConnectionPool();
+        final ConnectionPool connectionPool = getSmeContext().getConnectionPool();
         if (connectionPool == null)
           return error("Could not connect to SQL server");
 
@@ -84,7 +84,7 @@ public class Edit extends SmeBean
 
   private int done()
   {
-    final NSConnectionPool connectionPool = getSmeContext().getConnectionPool();
+    final ConnectionPool connectionPool = getSmeContext().getConnectionPool();
     if (connectionPool == null)
       return error("Could not connect to SQL server");
 

@@ -5,7 +5,7 @@ import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.config.Config;
-import ru.novosoft.util.conpool.NSConnectionPool;
+import ru.sibinco.util.conpool.ConnectionPool;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
@@ -33,7 +33,7 @@ public class SmeContext
 
   private final SMSCAppContext appContext;
   private Config config;
-  private NSConnectionPool connectionPool;
+  private ConnectionPool connectionPool;
   private String sort = "addr";
   private int pageSize = 20;
   private Category logger = Category.getInstance(this.getClass());
@@ -55,7 +55,7 @@ public class SmeContext
     return config;
   }
 
-  public NSConnectionPool getConnectionPool()
+  public ConnectionPool getConnectionPool()
   {
     return connectionPool;
   }
@@ -99,7 +99,7 @@ public class SmeContext
         connectionPoolConfig.setProperty("jdbc.driver", newDriver);
         connectionPoolConfig.setProperty("jdbc.user", newUser);
         connectionPoolConfig.setProperty("jdbc.pass", newPassword);
-        connectionPool = new NSConnectionPool(connectionPoolConfig);
+        connectionPool = new ConnectionPool(connectionPoolConfig);
       }
     } catch (Throwable e) {
       logger.error("Could not init connection pool", e);

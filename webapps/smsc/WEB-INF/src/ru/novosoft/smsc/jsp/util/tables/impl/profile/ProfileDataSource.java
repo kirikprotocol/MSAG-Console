@@ -12,7 +12,7 @@ import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.jsp.util.tables.Query;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.QueryResultSetImpl;
-import ru.novosoft.util.conpool.NSConnectionPool;
+import ru.sibinco.util.conpool.ConnectionPool;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -23,9 +23,9 @@ public class ProfileDataSource
 {
   private static final String[] columnNames = {"Mask", "Codepage", "Report info", "Locale", "Alias hide", "Hide modifiable", "divert", "divert_act", "divert_mod", "ussd7bit"};
 
-  NSConnectionPool connectionPool = null;
+  ConnectionPool connectionPool = null;
 
-  public ProfileDataSource(NSConnectionPool connectionPool) throws AdminException
+  public ProfileDataSource(ConnectionPool connectionPool) throws AdminException
   {
     this.connectionPool = connectionPool;
   }

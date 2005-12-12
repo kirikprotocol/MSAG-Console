@@ -11,7 +11,6 @@ import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
-import ru.novosoft.util.conpool.NSConnectionPool;
 import org.apache.log4j.Category;
 
 /**
@@ -46,7 +45,7 @@ public class SmscList {
     return (String)id2NodeName.get(String.valueOf(nodeId));
   }
 
-  public SmscList(final Config webappConfig, final NSConnectionPool connectionPool, SMSCAppContext smscAppContext) throws AdminException {
+  public SmscList(final Config webappConfig, SMSCAppContext smscAppContext) throws AdminException {
     this.config = webappConfig;
     this.appContext = smscAppContext;
     Set nodeNames = config.getSectionChildSectionNames("nodes");
@@ -64,7 +63,7 @@ public class SmscList {
       }
       String smscConfFolder = webappConfig.getString("smsc.config folder");
       WebAppFolders.setSmscConfFolder(new File(smscConfFolder));
-      smsc = new Smsc(Constants.SMSC_SME_ID, webappConfig.getString("smsc.host"), webappConfig.getInt("smsc.port"), smscConfFolder, connectionPool, appContext);
+      smsc = new Smsc(Constants.SMSC_SME_ID, webappConfig.getString("smsc.host"), webappConfig.getInt("smsc.port"), smscConfFolder, appContext);
       logger.debug("SMSC added");
     }
     catch (AdminException e) {

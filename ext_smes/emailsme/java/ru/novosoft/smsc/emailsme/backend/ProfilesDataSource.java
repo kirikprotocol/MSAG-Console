@@ -3,7 +3,7 @@ package ru.novosoft.smsc.emailsme.backend;
 import ru.novosoft.smsc.jsp.util.tables.Query;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSourceImpl;
-import ru.novosoft.util.conpool.NSConnectionPool;
+import ru.sibinco.util.conpool.ConnectionPool;
 
 import java.sql.*;
 
@@ -20,7 +20,7 @@ public class ProfilesDataSource extends AbstractDataSourceImpl
     super(new String[]{"addr", "userid", "dayLimit", "forward"});
   }
 
-  public QueryResultSet query(NSConnectionPool connectionPool, Query query_to_run) throws SQLException
+  public QueryResultSet query(ConnectionPool connectionPool, Query query_to_run) throws SQLException
   {
     clear();
     Connection connection = connectionPool.getConnection();

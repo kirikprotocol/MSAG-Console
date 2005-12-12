@@ -17,7 +17,7 @@
   <property name="console_out" location="${java_out}/${smsc_package_path}/admin/console"/>
   <property name="auth_path" value="${smsc_package_path}/util/auth"/>
 
-  <fileset id="common_libs" dir="${libs_path}" includes="log4j.jar antlr.jar nsjsp.jar classes12.jar nls_charset12.jar"/>
+  <fileset id="common_libs" dir="${libs_path}" includes="log4j.jar antlr.jar nsjsp.jar classes12.jar nls_charset12.jar connpool.jar"/>
   <fileset id="webapps_libs" dir="${basedir}/WEB-INF/lib" includes="taglibs-input.jar"/>
 
   <path id="classpath">

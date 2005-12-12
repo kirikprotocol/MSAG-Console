@@ -27,14 +27,12 @@ import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.StatusesImpl;
 import ru.novosoft.smsc.jsp.Statuses;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
-import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileDataSource;
 import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileQuery;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.xml.Utils;
-import ru.novosoft.util.conpool.NSConnectionPool;
 
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
@@ -96,7 +94,6 @@ public class Smsc extends Service
   private DistributionListAdmin distributionListAdmin = null;
 
   private AliasSet aliases = null;
-  private ProfileDataSource profileDataSource = null;
 
   private ProfileDataFile profileDataFile = null;
 
@@ -106,7 +103,7 @@ public class Smsc extends Service
   private SMSCAppContext appContext = null;
 	private Statuses statuses = new StatusesImpl();
 
-  public Smsc(final String SmscName, final String smscHost, final int smscPort, final String smscConfFolderString, final NSConnectionPool connectionPool, SMSCAppContext smscAppContext) throws AdminException
+  public Smsc(final String SmscName, final String smscHost, final int smscPort, final String smscConfFolderString, SMSCAppContext smscAppContext) throws AdminException
   {
     super(new ServiceInfo(SmscName, smscHost, "", "", true, null, ServiceInfo.STATUS_OFFLINE), smscPort);
 
@@ -114,10 +111,8 @@ public class Smsc extends Service
       this.configFolder = new File(smscConfFolderString);
       final Document aliasesDoc = Utils.parse(new FileReader(new File(configFolder, "aliases.xml")));
       aliases = new AliasSet(aliasesDoc.getDocumentElement());
-      profileDataSource = new ProfileDataSource(connectionPool);
       profileDataFile = new ProfileDataFile();
       profileDataFile.init(getSmscConfig(), getConfigFolder().getAbsolutePath());
-
     } catch (FactoryConfigurationError error) {
       logger.error("Couldn't configure xml parser factory", error);
       throw new AdminException("Couldn't configure xml parser factory: " + error.getMessage());
@@ -261,17 +256,11 @@ public class Smsc extends Service
     final Map args = new HashMap();
     args.put("address", mask.getMask());
     call(SMSC_COMPONENT_ID, PROFILE_DELETE_METHOD_ID, Type.Types[Type.IntType], args);
-    profileDataSource.delete(mask);
   }
 
-  public synchronized QueryResultSet profilesQuery(final ProfileQuery query) throws AdminException
-  {
-    return profileDataSource.query(query);
-  }
-
- public synchronized QueryResultSet profilesQueryFromFile(final ProfileQuery query) throws AdminException {
+  public synchronized QueryResultSet profilesQueryFromFile(final ProfileQuery query) throws AdminException {
      return profileDataFile.query(query);
- }
+  }
 
   public synchronized void applyProfiles()
   {

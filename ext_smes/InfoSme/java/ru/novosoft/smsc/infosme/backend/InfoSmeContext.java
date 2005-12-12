@@ -5,7 +5,7 @@ import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.config.Config;
-import ru.novosoft.util.conpool.NSConnectionPool;
+import ru.sibinco.util.conpool.ConnectionPool;
 
 import javax.sql.DataSource;
 import javax.xml.parsers.ParserConfigurationException;
@@ -142,7 +142,7 @@ public class InfoSmeContext
         properties.setProperty("jdbc.driver", newConfig.getString("InfoSme.systemDataSource.jdbc.driver"));
         properties.setProperty("jdbc.user", newConfig.getString("InfoSme.systemDataSource.dbUserName"));
         properties.setProperty("jdbc.pass", newConfig.getString("InfoSme.systemDataSource.dbUserPassword"));
-        dataSource = new NSConnectionPool(properties);
+        dataSource = new ConnectionPool(properties);
       }
     } catch (Throwable e) {
       logger.error("Could not init datasource", e);

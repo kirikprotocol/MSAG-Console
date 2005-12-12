@@ -7,7 +7,7 @@ import ru.novosoft.smsc.admin.smsview.*;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.WebAppFolders;
-import ru.novosoft.util.conpool.NSConnectionPool;
+import ru.sibinco.util.conpool.ConnectionPool;
 
 import java.io.*;
 import java.util.*;
@@ -167,7 +167,7 @@ private final static String INSERT_VALUES =
     props.setProperty("jdbc.driver", export.getDriver());
     props.setProperty("jdbc.user", export.getUser());
     props.setProperty("jdbc.pass", export.getPassword());
-    return new NSConnectionPool(props);
+    return new ConnectionPool(props);
   }
     private oracle.jdbc.OracleConnection getOracleConnection(ExportSettings export) throws SQLException
   {

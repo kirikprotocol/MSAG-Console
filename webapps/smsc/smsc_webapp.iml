@@ -6,6 +6,24 @@
     <exclude-output />
     <exploded url="file://$MODULE_DIR$/../../../build/smsc/exploded/smsc" />
     <exclude-exploded />
+    <content url="file://$MODULE_DIR$/../../ext_smes/InfoSme">
+      <sourceFolder url="file://$MODULE_DIR$/../../ext_smes/InfoSme/java" isTestSource="false" />
+    </content>
+    <content url="file://$MODULE_DIR$/../../ext_smes/MCISme">
+      <sourceFolder url="file://$MODULE_DIR$/../../ext_smes/MCISme/java" isTestSource="false" />
+    </content>
+    <content url="file://$MODULE_DIR$/../../ext_smes/MTSMSme">
+      <sourceFolder url="file://$MODULE_DIR$/../../ext_smes/MTSMSme/java" isTestSource="false" />
+    </content>
+    <content url="file://$MODULE_DIR$/../../ext_smes/dbSme">
+      <sourceFolder url="file://$MODULE_DIR$/../../ext_smes/dbSme/java" isTestSource="false" />
+    </content>
+    <content url="file://$MODULE_DIR$/../../ext_smes/emailsme">
+      <sourceFolder url="file://$MODULE_DIR$/../../ext_smes/emailsme/java" isTestSource="false" />
+    </content>
+    <content url="file://$MODULE_DIR$/../../ext_smes/proxysme">
+      <sourceFolder url="file://$MODULE_DIR$/../../ext_smes/proxysme/java" isTestSource="false" />
+    </content>
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/WEB-INF/src" isTestSource="false" />
     </content>
@@ -88,6 +106,15 @@
       </library>
     </orderEntry>
     <orderEntry type="library" name="Tomcat" level="application_server_libraries" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../libs/connpool.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
     <orderEntryProperties />
   </component>
   <component name="WebModuleBuildComponent">
@@ -130,6 +157,11 @@
       <attribute name="method" value="1" />
       <attribute name="URI" value="/WEB-INF/lib/classes12.jar" />
       <url>jar://$MODULE_DIR$/../libs/classes12.jar!/</url>
+    </containerElement>
+    <containerElement type="library" level="module">
+      <attribute name="method" value="1" />
+      <attribute name="URI" value="/WEB-INF/lib/connpool.jar" />
+      <url>jar://$MODULE_DIR$/../libs/connpool.jar!/</url>
     </containerElement>
     <containerElement type="library" level="module">
       <attribute name="method" value="1" />

@@ -25,7 +25,7 @@ import ru.novosoft.smsc.util.LocaleMessages;
 import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.xml.WebXml;
-import ru.novosoft.util.conpool.NSConnectionPool;
+import ru.sibinco.util.conpool.ConnectionPool;
 import ru.novosoft.util.jsp.AppContextImpl;
 
 import javax.sql.DataSource;
@@ -54,7 +54,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 
 	private Smsc smsc = null;
 	private SmscList smscList = null;
-	private NSConnectionPool connectionPool = null;
+	private ConnectionPool connectionPool = null;
 
 	private Statuses statuses = new StatusesImpl();
 	private Journal journal = new Journal();
@@ -142,7 +142,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 			System.out.println("Installation type is not defined in webconfig");
 			throw new AdminException("Installation type is not defined in webconfig");
 		}
-		smscList = new SmscList(webappConfig, connectionPool, this);
+		smscList = new SmscList(webappConfig, this);
 		smeManager = new SmeManagerImpl(smsc);
 		ResourceGroupManager resourceGroupManager = new ResourceGroupManager(this);
 		serviceManager = new ServiceManagerImpl();
@@ -181,7 +181,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
     props.setProperty("jdbc.driver", config.getString("profiler.jdbc.driver"));
     props.setProperty("jdbc.user", config.getString("profiler.jdbc.user"));
     props.setProperty("jdbc.pass", config.getString("profiler.jdbc.password"));
-    connectionPool = new NSConnectionPool(props);
+    connectionPool = new ConnectionPool(props);
   }
 
   private void startConsole() throws Exception
