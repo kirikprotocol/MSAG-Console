@@ -379,7 +379,7 @@ void cmd_reportErr(Console&, const std::vector<std::string> &args)
             fprintf(stdout, "WRN: unknown dialog id specified (%s)!\n", args[1].c_str());
 
         _pFacade->sendDeliverySmsResult(did,
-                smsc::inman::interaction::DELIVERY_SUCCESSED);
+                smsc::inman::interaction::DELIVERY_FAILED);
     } else
         throw ConnectionClosedException();
 }
