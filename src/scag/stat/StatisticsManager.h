@@ -189,7 +189,9 @@ namespace stat {
         
         virtual int Execute();
 
-        virtual void registerEvent(const SmppStatEvent& si);
+        virtual void registerEvent(const SmppStatEvent& se);
+        virtual void registerEvent(const HttpStatEvent& se);
+
         bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value);
 
         virtual void getPerfData(uint64_t *cnt);

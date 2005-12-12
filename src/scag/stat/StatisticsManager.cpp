@@ -117,7 +117,7 @@ void StatisticsManager::incError(IntHash<int>& hash, int errcode)
     else (*counter)++;
 }
 
-void StatisticsManager::registerEvent(const SmppStatEvent& si)
+void StatisticsManager::registerEvent(const SmppStatEvent& se)
 {
   MutexGuard  switchGuard(switchLock);
 
@@ -127,64 +127,64 @@ void StatisticsManager::registerEvent(const SmppStatEvent& si)
 
   using namespace Counters;
 
-  genCounters.inc(si.counter);
+  genCounters.inc(se.counter);
 
-  if (si.smeId && si.smeId[0])
+  if (se.smeId && se.smeId[0])
   {
-    if(si.counter < cntBillingOk){
-        smeSt = statBySmeId[currentIndex].GetPtr(si.smeId);
+    if(se.counter < cntBillingOk){
+        smeSt = statBySmeId[currentIndex].GetPtr(se.smeId);
 
-        /*int cnt = si.counter < 0x1000 ? si.counter : si.counter - 0x1000 + 5;
-        smsc_log_debug(logger, "\nsmeId: '%s', %s\n", si.smeId, cnt_[cnt]);*/
+        /*int cnt = se.counter < 0x1000 ? se.counter : se.counter - 0x1000 + 5;
+        smsc_log_debug(logger, "\nsmeId: '%s', %s\n", se.smeId, cnt_[cnt]);*/
 
         if(!smeSt)
         {
             CommonStat newStat;
-            statBySmeId[currentIndex].Insert(si.smeId, newStat);
-            smeSt=statBySmeId[currentIndex].GetPtr(si.smeId);
+            statBySmeId[currentIndex].Insert(se.smeId, newStat);
+            smeSt=statBySmeId[currentIndex].GetPtr(se.smeId);
         }
 
-        if(si.internal){
-            srvSt = srvStatBySmeId[currentIndex].GetPtr(si.smeId);
+        if(se.internal){
+            srvSt = srvStatBySmeId[currentIndex].GetPtr(se.smeId);
             if(!srvSt){
                 CommonStat newStat;
-                srvStatBySmeId[currentIndex].Insert(si.smeId, newStat);
-                srvSt=srvStatBySmeId[currentIndex].GetPtr(si.smeId);
+                srvStatBySmeId[currentIndex].Insert(se.smeId, newStat);
+                srvSt=srvStatBySmeId[currentIndex].GetPtr(se.smeId);
             }
 
             // run-time statistics
-            incScSmppCounter(si.smeId, indexByCounter(si.counter));
+            incScSmppCounter(se.smeId, indexByCounter(se.counter));
         }else
             // run-time statistics
-            incSvcSmppCounter(si.smeId, indexByCounter(si.counter));
+            incSvcSmppCounter(se.smeId, indexByCounter(se.counter));
     }
   }
 
-  if (si.routeId && si.routeId[0])
+  if (se.routeId && se.routeId[0])
   {
-    //smsc_log_debug(logger, "routeId: '%s'", si.routeId);
-    routeSt = statByRouteId[currentIndex].GetPtr(si.routeId);
+    //smsc_log_debug(logger, "routeId: '%s'", se.routeId);
+    routeSt = statByRouteId[currentIndex].GetPtr(se.routeId);
     if(!routeSt)
     {
       CommonStat newStat;
-      statByRouteId[currentIndex].Insert(si.routeId, newStat);
-      routeSt=statByRouteId[currentIndex].GetPtr(si.routeId);
+      statByRouteId[currentIndex].Insert(se.routeId, newStat);
+      routeSt=statByRouteId[currentIndex].GetPtr(se.routeId);
     }
   }
 
-  if(si.counter < cntBillingOk)
+  if(se.counter < cntBillingOk)
   {
-    if(smeSt) incError(smeSt->errors, si.errCode);
-    if(srvSt) incError(srvSt->errors, si.errCode);
-    if(routeSt) incError(routeSt->errors, si.errCode);
+    if(smeSt) incError(smeSt->errors, se.errCode);
+    if(srvSt) incError(srvSt->errors, se.errCode);
+    if(routeSt) incError(routeSt->errors, se.errCode);
   }
 
-  if(smeSt && si.smeProviderId!=-1)smeSt->providerId=si.smeProviderId;
-  if(srvSt && si.smeProviderId!=-1)srvSt->providerId=si.smeProviderId;
-  if(routeSt && si.routeProviderId!=-1)routeSt->providerId=si.routeProviderId;
+  if(smeSt && se.smeProviderId!=-1)smeSt->providerId=se.smeProviderId;
+  if(srvSt && se.smeProviderId!=-1)srvSt->providerId=se.smeProviderId;
+  if(routeSt && se.routeProviderId!=-1)routeSt->providerId=se.routeProviderId;
 
   int c;
-  switch(si.counter)
+  switch(se.counter)
   {
 #define INC_STAT(cnt,field) case cnt:{\
       if(smeSt)smeSt->field++; \
@@ -206,11 +206,11 @@ void StatisticsManager::registerEvent(const SmppStatEvent& si)
 
   }
 
-  if (si.routeId && si.routeId[0])
+  if (se.routeId && se.routeId[0])
   {
-      if( si.counter == cntAccepted){
+      if( se.counter == cntAccepted){
           int id, newRouteId;
-          if(  (id = routeMap.regRoute(si.routeId, newRouteId)) == -1)
+          if(  (id = routeMap.regRoute(se.routeId, newRouteId)) == -1)
               id = newRouteId;
 
           time_t now = time(0);
@@ -226,6 +226,11 @@ void StatisticsManager::registerEvent(const SmppStatEvent& si)
           }
       }
   }
+}
+
+void StatisticsManager::registerEvent(const HttpStatEvent& se)
+{
+    // TODO: implement !!!
 }
 
 bool StatisticsManager::checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value)

@@ -15,7 +15,7 @@ using smsc::smeman::SmeRecord;
 
     namespace Counters
     {
-        enum SmppStatCounter
+        typedef enum 
         {
           cntAccepted,
           cntRejected,
@@ -27,10 +27,9 @@ using smsc::smeman::SmeRecord;
           cntBillingFailed,
           cntRecieptOk,
           cntRecieptFailed
+        } SmppStatCounter;
 
-        };
-
-        enum HttpStatCounter
+        typedef enum
         {
           httpRequest,
           httpRequestRejected,
@@ -40,8 +39,8 @@ using smsc::smeman::SmeRecord;
           httpFailed,
 
           httpBillingOk = 0x1000,
-          httpBillingFailed,
-        };
+          httpBillingFailed
+        } HttpStatCounter;
     }
 
     struct SmppStatEvent
