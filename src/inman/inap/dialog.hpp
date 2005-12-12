@@ -37,6 +37,10 @@ static const USHORT_T   _DEFAULT_INVOKE_TIMER = 30; //seconds
 class Dialog : public ObservableT< DialogListener >
 {
 public:
+    typedef enum {
+        dlgIdle = 0, dlgInited, dlgContinued, dlgConfirmed, dlgEnded
+    } DialogState;
+
     Dialog(Session* session, USHORT_T id, unsigned dialog_ac_idx, Logger * uselog = NULL);
     virtual ~Dialog();
 
@@ -103,6 +107,7 @@ protected:
     UCHAR_T         priority;
     UCHAR_T         _lastInvId;
     Logger*         logger;
+    DialogState     _state;
 };
 
 } //inap

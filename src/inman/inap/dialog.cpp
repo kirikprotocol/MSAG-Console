@@ -35,7 +35,7 @@ Dialog::Dialog(Session* pSession, USHORT_T dlgId,
   , _dId( dlgId ), session( pSession )
   , qSrvc(EINSS7_I97TCAP_QLT_BOTH), priority(EINSS7_I97TCAP_PRI_HIGH_0)
   , _timeout(_DEFAULT_INVOKE_TIMER), _lastInvId(0)
-  , _ac_idx(dialog_ac_idx)
+  , _ac_idx(dialog_ac_idx), _state(Dialog::dlgIdle)
 {
     assert(session);
     if (!logger)
@@ -74,18 +74,21 @@ void Dialog::setInvokeTimeout(USHORT_T timeout)
 
 void Dialog::beginDialog(UCHAR_T* ui/* = NULL*/, USHORT_T uilen/* = 0*/)
 {
-    smsc_log_debug(logger,"BEGIN_REQ");
-    smsc_log_debug(logger," SSN: 0x%X", dSSN);
-    smsc_log_debug(logger," UserID: 0x%X", MSG_USER_ID );
-    smsc_log_debug(logger," TcapInstanceID: 0x%X", TCAP_INSTANCE_ID );
-    smsc_log_debug(logger," DialogID: 0x%X", _dId );
-    smsc_log_debug(logger," PriOrder: 0x%X", priority );
-    smsc_log_debug(logger," QoS: 0x%X", qSrvc );
-    smsc_log_debug(logger," Dest. address: %s", dump(remoteAddr.addrLen, remoteAddr.addr).c_str());
-    smsc_log_debug(logger," Org. address: %s" , dump(ownAddr.addrLen, ownAddr.addr).c_str());
-    smsc_log_debug(logger," App. context: %s" , dump(ac.acLen, ac.ac).c_str());
-    if (ui && uilen)
-        smsc_log_debug(logger," User info: %s" , dump(uilen, ui).c_str());
+    smsc_log_debug(logger, "BEGIN_REQ -> {"
+                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
+                    "  DialogID: 0x%X\n"
+                    "  PriOrder: 0x%X, QoS: 0x%X\n"
+                    "  Dest. address: %s\n"
+                    "  Org. address: %s\n"
+                    "  App. context: %s\n"
+                    "  User info[%u]: %s\n"
+                    "}",
+                   dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId, priority, qSrvc, 
+                   dump(remoteAddr.addrLen, remoteAddr.addr).c_str(),
+                   dump(ownAddr.addrLen, ownAddr.addr).c_str(),
+                   dump(ac.acLen, ac.ac).c_str(),
+                   uilen, dump(uilen, ui).c_str()
+                   );
 
     USHORT_T result = EINSS7_I97TBeginReq(
                         dSSN, MSG_USER_ID, TCAP_INSTANCE_ID,
@@ -98,6 +101,7 @@ void Dialog::beginDialog(UCHAR_T* ui/* = NULL*/, USHORT_T uilen/* = 0*/)
     if (result != 0)
         throw runtime_error( format("BeginReq failed with code %d (%s)", result,
                                                 getTcapReasonDescription(result)));
+    _state = Dialog::dlgInited;
 }
 
 void Dialog::beginDialog(const SCCP_ADDRESS_T& remote_addr,
@@ -110,37 +114,46 @@ void Dialog::beginDialog(const SCCP_ADDRESS_T& remote_addr,
 
 void Dialog::continueDialog()
 {
-    smsc_log_debug(logger,"CONTINUE_REQ");
-    smsc_log_debug(logger," SSN: 0x%X", dSSN);
-    smsc_log_debug(logger," UserID: 0x%X", MSG_USER_ID );
-    smsc_log_debug(logger," TcapInstanceID: 0x%X", TCAP_INSTANCE_ID );
-    smsc_log_debug(logger," DialogID: 0x%X", _dId );
-    smsc_log_debug(logger," PriOrder: 0x%X", priority );
-    smsc_log_debug(logger," QoS: 0x%X", qSrvc );
-    smsc_log_debug(logger," Org. address: %s" , dump(ownAddr.addrLen, ownAddr.addr).c_str() );
-    smsc_log_debug(logger," App. context: %s" , dump(ac.acLen ,ac.ac ).c_str() );
+    smsc_log_debug(logger, "CONTINUE_REQ -> {"
+                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
+                    "  DialogID: 0x%X\n"
+                    "  PriOrder: 0x%X, QoS: 0x%X\n"
+                    "  Org. address: %s\n"
+                    "  App. context[%u]: %s\n"
+                    "}",
+                   dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId, priority, qSrvc, 
+                   dump(ownAddr.addrLen, ownAddr.addr).c_str(),
+                   (_state < Dialog::dlgConfirmed) ? ac.acLen : 0,
+                   (_state < Dialog::dlgConfirmed) ? dump(ac.acLen, ac.ac).c_str() : ""
+                   );
 
     USHORT_T result =
         EINSS7_I97TContinueReq(dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId,
                                priority, qSrvc, ownAddr.addrLen, ownAddr.addr,
-                               ac.acLen, ac.ac, 0, NULL);
+                               (_state < Dialog::dlgConfirmed) ? ac.acLen : 0,
+                               (_state < Dialog::dlgConfirmed) ? ac.ac : NULL, 
+                               0, NULL);
 
     if (result != 0)
         throw runtime_error( format("ContinueReq failed with code %d (%s)",
-                                    result,getTcapReasonDescription(result)));
+                                    result, getTcapReasonDescription(result)));
+
+    if (_state < Dialog::dlgConfirmed)
+        _state  = Dialog::dlgContinued;
 }
 
 void Dialog::endDialog(USHORT_T termination)
 {
-    smsc_log_debug(logger,"END_REQ");
-    smsc_log_debug(logger," SSN: 0x%X", dSSN);
-    smsc_log_debug(logger," UserID: 0x%X", MSG_USER_ID );
-    smsc_log_debug(logger," TcapInstanceID: 0x%X", TCAP_INSTANCE_ID );
-    smsc_log_debug(logger," DialogID: 0x%X", _dId );
-    smsc_log_debug(logger," PriOrder: 0x%X", priority );
-    smsc_log_debug(logger," QoS: 0x%X", qSrvc );
-    smsc_log_debug(logger," Termination: 0x%X", termination );
-    smsc_log_debug(logger," App. context: %s" , dump(ac.acLen ,ac.ac ).c_str() );
+    smsc_log_debug(logger, "END_REQ -> {"
+                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
+                    "  DialogID: 0x%X\n"
+                    "  PriOrder: 0x%X, QoS: 0x%X\n"
+                    "  Termination: 0x%X\n"
+                    "  App. context[%u]: %s\n"
+                    "}",
+                   dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId, priority, qSrvc,
+                   termination, ac.acLen, dump(ac.acLen, ac.ac).c_str()
+                   );
 
     USHORT_T result =
         EINSS7_I97TEndReq(dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId,
@@ -150,6 +163,8 @@ void Dialog::endDialog(USHORT_T termination)
     if (result != 0)
         throw runtime_error( format("EndReq failed with code %d (%s)",
                                     result,getTcapReasonDescription(result)));
+
+    _state  = Dialog::dlgEnded;
 }
 
 
@@ -323,14 +338,15 @@ void Dialog::releaseInvoke(UCHAR_T invId)
  * ------------------------------------------------------------------------ */
 USHORT_T Dialog::handleBeginDialog()
 {
-  return MSG_OK;
+    _state = Dialog::dlgInited;
+    return MSG_OK;
 }
 
 USHORT_T Dialog::handleContinueDialog(bool compPresent)
 {
-    smsc_log_debug(logger, "TCAP Dialog[%d] got T_CONT_IND, components are %sexpected",
-                   _dId, compPresent ? "" : "not ");
-
+//    smsc_log_debug(logger, "TCAP Dialog[%d] got CONTINUE_IND, components are %sexpected",
+//                   _dId, compPresent ? "" : "not ");
+    _state = Dialog::dlgConfirmed;
     for (ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++) {
         DialogListener* ptr = *it;
         ptr->onDialogContinue(compPresent);
@@ -341,8 +357,10 @@ USHORT_T Dialog::handleContinueDialog(bool compPresent)
 
 USHORT_T Dialog::handleEndDialog(bool compPresent)
 {
-    smsc_log_debug(logger, "TCAP Dialog[%d] got T_END_IND, components are %sexpected",
-                   _dId, compPresent ? "" : "not ");
+//    smsc_log_debug(logger, "TCAP Dialog[%d] got END_IND, components are %sexpected",
+//                   _dId, compPresent ? "" : "not ");
+
+    _state = Dialog::dlgEnded;
     //NOTE: calling onDialogREnd() may lead to this Dialog destruction,
     //so iterate over ListenerList copy.
     ListenerList cpList = listeners;
@@ -356,6 +374,7 @@ USHORT_T Dialog::handleEndDialog(bool compPresent)
 //Reports dialog abort to dialogListener
 USHORT_T Dialog::handlePAbortDialog(UCHAR_T abortCause)
 {
+    _state = Dialog::dlgEnded;
     //NOTE: calling onDialogPAbort() may lead to this Dialog destruction,
     //so iterate over ListenerList copy.
     ListenerList cpList = listeners;
