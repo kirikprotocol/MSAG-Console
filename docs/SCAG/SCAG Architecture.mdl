@@ -2643,24 +2643,6 @@
 				line_color 	3342489
 				fill_color 	8421631
 				quidu      	"429425430379"
-				compartment 	(object Compartment
-				    Parent_View 	@84
-				    location   	(365, 540)
-				    font       	(object Font
-					size       	10
-					face       	"Arial"
-					charSet    	204
-					bold       	FALSE
-					italics    	TRUE
-					underline  	FALSE
-					strike     	FALSE
-					color      	0
-					default_color 	TRUE)
-				    icon_style 	"Icon"
-				    fill_color 	16777215
-				    anchor     	2
-				    nlines     	5
-				    max_width  	0)
 				width      	440
 				height     	332
 				annotation 	8
@@ -11234,24 +11216,6 @@
 					line_color 	3342489
 					fill_color 	13434879
 					quidu      	"429425430379"
-					compartment 	(object Compartment
-					    Parent_View 	@403
-					    location   	(1873, 1500)
-					    font       	(object Font
-						size       	10
-						face       	"Arial"
-						charSet    	204
-						bold       	FALSE
-						italics    	TRUE
-						underline  	FALSE
-						strike     	FALSE
-						color      	0
-						default_color 	TRUE)
-					    icon_style 	"Icon"
-					    fill_color 	16777215
-					    anchor     	2
-					    nlines     	5
-					    max_width  	0)
 					width      	624
 					height     	282
 					annotation 	8
@@ -15666,7 +15630,8 @@
 					parameters 	(list Parameters
 					    (object Parameter "p"
 						quid       	"439BDA060330"
-						type       	"HttpProcessor")
+						type       	"HttpProcessor"
+						quidu      	"439BDA1E012D")
 					    (object Parameter "maxThreads"
 						quid       	"439BDA06036E"
 						type       	"int")
@@ -15697,7 +15662,8 @@
 					parameters 	(list Parameters
 					    (object Parameter "request"
 						quid       	"439BDA5E0298"
-						type       	"HttpRequest"))
+						type       	"HttpRequest"
+						quidu      	"439BDB3201F7"))
 					result     	"bool"
 					concurrency 	"Sequential"
 					opExportControl 	"Public"
@@ -15707,8 +15673,22 @@
 					parameters 	(list Parameters
 					    (object Parameter "response"
 						quid       	"439BDA7203C2"
-						type       	"HttpResponse"))
+						type       	"HttpResponse"
+						quidu      	"439BDB3B01C9"))
 					result     	"bool"
+					concurrency 	"Sequential"
+					opExportControl 	"Public"
+					uid        	0)
+				    (object Operation "statusResponse"
+					quid       	"439D45DE0381"
+					parameters 	(list Parameters
+					    (object Parameter "response"
+						quid       	"439D45E101DB"
+						type       	"HttpResponse"
+						quidu      	"439BDB3B01C9")
+					    (object Parameter "delivered"
+						quid       	"439D45E1021A"
+						type       	"bool"))
 					concurrency 	"Sequential"
 					opExportControl 	"Public"
 					uid        	0)))
@@ -15786,58 +15766,7 @@
 				origin_x   	0
 				origin_y   	566
 				items      	(list diagram_item_list
-				    (object ClassView "Class" "Logical View::transport::http::HttpProcessor" @659
-					ShowCompartmentStereotypes 	TRUE
-					IncludeAttribute 	TRUE
-					IncludeOperation 	TRUE
-					ShowOperationSignature 	TRUE
-					location   	(992, 1168)
-					font       	(object Font
-					    size       	10
-					    face       	"Arial"
-					    charSet    	204
-					    bold       	FALSE
-					    italics    	FALSE
-					    underline  	FALSE
-					    strike     	FALSE
-					    color      	0
-					    default_color 	TRUE)
-					label      	(object ItemLabel
-					    Parent_View 	@659
-					    location   	(385, 1103)
-					    fill_color 	13434879
-					    nlines     	1
-					    max_width  	1214
-					    justify    	0
-					    label      	"HttpProcessor")
-					icon       	"Interface"
-					icon_style 	"Decoration"
-					line_color 	3342489
-					fill_color 	16777088
-					quidu      	"439BDA1E012D"
-					compartment 	(object Compartment
-					    Parent_View 	@659
-					    location   	(385, 1164)
-					    font       	(object Font
-						size       	10
-						face       	"Arial"
-						charSet    	204
-						bold       	FALSE
-						italics    	FALSE
-						underline  	FALSE
-						strike     	FALSE
-						color      	0
-						default_color 	TRUE)
-					    icon_style 	"Icon"
-					    fill_color 	13434879
-					    anchor     	2
-					    nlines     	3
-					    max_width  	981)
-					width      	1232
-					height     	330
-					annotation 	8
-					autoResize 	TRUE)
-				    (object ClassView "Class" "Logical View::transport::http::HttpCommand" @660
+				    (object ClassView "Class" "Logical View::transport::http::HttpCommand" @659
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
 					IncludeOperation 	TRUE
@@ -15854,7 +15783,7 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@660
+					    Parent_View 	@659
 					    location   	(836, 1677)
 					    fill_color 	13434879
 					    nlines     	1
@@ -15869,7 +15798,7 @@
 					height     	126
 					annotation 	8
 					autoResize 	TRUE)
-				    (object ClassView "Class" "Logical View::transport::SCAGCommand" @661
+				    (object ClassView "Class" "Logical View::transport::SCAGCommand" @660
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
 					IncludeOperation 	TRUE
@@ -15886,7 +15815,7 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@661
+					    Parent_View 	@660
 					    location   	(696, 2013)
 					    fill_color 	13434879
 					    nlines     	1
@@ -15898,7 +15827,7 @@
 					fill_color 	8421631
 					quidu      	"429425430379"
 					compartment 	(object Compartment
-					    Parent_View 	@661
+					    Parent_View 	@660
 					    location   	(696, 2118)
 					    font       	(object Font
 						size       	10
@@ -15914,19 +15843,19 @@
 					    fill_color 	13434879
 					    anchor     	2
 					    nlines     	5
-					    max_width  	529)
+					    max_width  	537)
 					width      	642
 					height     	382
 					annotation 	8
 					autoResize 	TRUE)
-				    (object InheritView "" @662
+				    (object InheritView "" @661
 					stereotype 	TRUE
 					line_color 	3342489
 					quidu      	"439BDAA602F9"
-					client     	@660
-					supplier   	@661
+					client     	@659
+					supplier   	@660
 					line_style 	0)
-				    (object ClassView "Class" "Logical View::transport::http::HttpRequest" @663
+				    (object ClassView "Class" "Logical View::transport::http::HttpRequest" @662
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
 					IncludeOperation 	TRUE
@@ -15943,7 +15872,7 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@663
+					    Parent_View 	@662
 					    location   	(277, 1677)
 					    fill_color 	13434879
 					    nlines     	1
@@ -15958,7 +15887,7 @@
 					height     	126
 					annotation 	8
 					autoResize 	TRUE)
-				    (object ClassView "Class" "Logical View::transport::http::HttpResponse" @664
+				    (object ClassView "Class" "Logical View::transport::http::HttpResponse" @663
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
 					IncludeOperation 	TRUE
@@ -15975,7 +15904,7 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@664
+					    Parent_View 	@663
 					    location   	(1416, 1677)
 					    fill_color 	13434879
 					    nlines     	1
@@ -15990,35 +15919,21 @@
 					height     	126
 					annotation 	8
 					autoResize 	TRUE)
-				    (object InheritView "" @665
+				    (object InheritView "" @664
 					stereotype 	TRUE
 					line_color 	3342489
 					quidu      	"439BDB47019A"
-					client     	@663
-					supplier   	@660
+					client     	@662
+					supplier   	@659
 					line_style 	0)
-				    (object InheritView "" @666
+				    (object InheritView "" @665
 					stereotype 	TRUE
 					line_color 	3342489
 					quidu      	"439BDB4B011D"
-					client     	@664
-					supplier   	@660
+					client     	@663
+					supplier   	@659
 					line_style 	0)
-				    (object UsesView "" @667
-					stereotype 	TRUE
-					line_color 	3342489
-					quidu      	"439BDB81021A"
-					client     	@659
-					supplier   	@663
-					line_style 	0)
-				    (object UsesView "" @668
-					stereotype 	TRUE
-					line_color 	3342489
-					quidu      	"439BDB85021A"
-					client     	@659
-					supplier   	@664
-					line_style 	0)
-				    (object ClassView "Class" "Logical View::util::threads::ThreadedTask" @669
+				    (object ClassView "Class" "Logical View::util::threads::ThreadedTask" @666
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
 					IncludeOperation 	TRUE
@@ -16035,7 +15950,7 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@669
+					    Parent_View 	@666
 					    location   	(2201, 646)
 					    fill_color 	13434879
 					    nlines     	1
@@ -16050,7 +15965,111 @@
 					height     	172
 					annotation 	8
 					autoResize 	TRUE)
-				    (object ClassView "Class" "Logical View::util::threads::ThreadPool" @670
+				    (object ClassView "Class" "Logical View::transport::http::HttpStateMachine" @667
+					ShowCompartmentStereotypes 	TRUE
+					IncludeAttribute 	TRUE
+					IncludeOperation 	TRUE
+					ShowOperationSignature 	TRUE
+					location   	(2368, 1168)
+					font       	(object Font
+					    size       	10
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
+					label      	(object ItemLabel
+					    Parent_View 	@667
+					    location   	(2151, 1117)
+					    fill_color 	13434879
+					    nlines     	1
+					    max_width  	434
+					    justify    	0
+					    label      	"HttpStateMachine")
+					icon_style 	"Icon"
+					line_color 	3342489
+					fill_color 	13434879
+					quidu      	"439BDC7300DE"
+					width      	452
+					height     	126
+					annotation 	8
+					autoResize 	TRUE)
+				    (object InheritView "" @668
+					stereotype 	TRUE
+					line_color 	3342489
+					quidu      	"439BDC8001F8"
+					client     	@667
+					supplier   	@666
+					line_style 	0)
+				    (object ClassView "Class" "Logical View::transport::http::HttpProcessor" @669
+					ShowCompartmentStereotypes 	TRUE
+					IncludeAttribute 	TRUE
+					IncludeOperation 	TRUE
+					ShowOperationSignature 	TRUE
+					location   	(992, 1168)
+					font       	(object Font
+					    size       	10
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
+					label      	(object ItemLabel
+					    Parent_View 	@669
+					    location   	(297, 1078)
+					    fill_color 	13434879
+					    nlines     	1
+					    max_width  	1390
+					    justify    	0
+					    label      	"HttpProcessor")
+					icon       	"Interface"
+					icon_style 	"Decoration"
+					line_color 	3342489
+					fill_color 	16777088
+					quidu      	"439BDA1E012D"
+					compartment 	(object Compartment
+					    Parent_View 	@669
+					    location   	(297, 1139)
+					    font       	(object Font
+						size       	10
+						face       	"Arial"
+						charSet    	204
+						bold       	FALSE
+						italics    	FALSE
+						underline  	FALSE
+						strike     	FALSE
+						color      	0
+						default_color 	TRUE)
+					    icon_style 	"Icon"
+					    fill_color 	13434879
+					    anchor     	2
+					    nlines     	4
+					    max_width  	1122)
+					width      	1408
+					height     	380
+					annotation 	8
+					autoResize 	TRUE)
+				    (object UsesView "" @670
+					stereotype 	TRUE
+					line_color 	3342489
+					quidu      	"439BDB81021A"
+					client     	@669
+					supplier   	@662
+					line_style 	0)
+				    (object UsesView "" @671
+					stereotype 	TRUE
+					line_color 	3342489
+					quidu      	"439BDB85021A"
+					client     	@669
+					supplier   	@663
+					line_style 	0)
+				    (object ClassView "Class" "Logical View::util::threads::ThreadPool" @672
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
 					IncludeOperation 	TRUE
@@ -16067,7 +16086,7 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@670
+					    Parent_View 	@672
 					    location   	(2225, 230)
 					    fill_color 	13434879
 					    nlines     	1
@@ -16082,14 +16101,14 @@
 					height     	172
 					annotation 	8
 					autoResize 	TRUE)
-				    (object AssociationViewNew "$UNNAMED$27" @671
+				    (object AssociationViewNew "$UNNAMED$27" @673
 					location   	(2368, 511)
 					stereotype 	TRUE
 					line_color 	3342489
 					quidu      	"4291B2FF00DD"
 					roleview_list 	(list RoleViews
-					    (object RoleView "$UNNAMED$29" @672
-						Parent_View 	@671
+					    (object RoleView "$UNNAMED$29" @674
+						Parent_View 	@673
 						location   	(32, -1297)
 						font       	(object Font
 						    size       	10
@@ -16101,8 +16120,8 @@
 						    strike     	FALSE
 						    color      	0
 						    default_color 	TRUE)
-						label      	(object SegLabel @673
-						    Parent_View 	@672
+						label      	(object SegLabel @675
+						    Parent_View 	@674
 						    location   	(2327, 414)
 						    font       	(object Font
 							size       	10
@@ -16127,11 +16146,11 @@
 						stereotype 	TRUE
 						line_color 	3342489
 						quidu      	"4291B2FF033F"
-						client     	@671
-						supplier   	@670
+						client     	@673
+						supplier   	@672
 						line_style 	0)
-					    (object RoleView "$UNNAMED$28" @674
-						Parent_View 	@671
+					    (object RoleView "$UNNAMED$28" @676
+						Parent_View 	@673
 						location   	(32, -1297)
 						font       	(object Font
 						    size       	10
@@ -16143,8 +16162,8 @@
 						    strike     	FALSE
 						    color      	0
 						    default_color 	TRUE)
-						label      	(object SegLabel @675
-						    Parent_View 	@674
+						label      	(object SegLabel @677
+						    Parent_View 	@676
 						    location   	(2327, 608)
 						    font       	(object Font
 							size       	10
@@ -16169,11 +16188,11 @@
 						stereotype 	TRUE
 						line_color 	3342489
 						quidu      	"4291B2FF032F"
-						client     	@671
-						supplier   	@669
+						client     	@673
+						supplier   	@666
 						line_style 	0
-						label      	(object SegLabel @676
-						    Parent_View 	@674
+						label      	(object SegLabel @678
+						    Parent_View 	@676
 						    location   	(2437, 580)
 						    font       	(object Font
 							size       	10
@@ -16194,45 +16213,6 @@
 						    pctDist    	0.573770
 						    height     	69
 						    orientation 	0))))
-				    (object ClassView "Class" "Logical View::transport::http::HttpStateMachine" @677
-					ShowCompartmentStereotypes 	TRUE
-					IncludeAttribute 	TRUE
-					IncludeOperation 	TRUE
-					ShowOperationSignature 	TRUE
-					location   	(2368, 1168)
-					font       	(object Font
-					    size       	10
-					    face       	"Arial"
-					    charSet    	204
-					    bold       	FALSE
-					    italics    	FALSE
-					    underline  	FALSE
-					    strike     	FALSE
-					    color      	0
-					    default_color 	TRUE)
-					label      	(object ItemLabel
-					    Parent_View 	@677
-					    location   	(2171, 1093)
-					    fill_color 	13434879
-					    nlines     	1
-					    max_width  	395
-					    justify    	0
-					    label      	"HttpStateMachine")
-					icon_style 	"Icon"
-					line_color 	3342489
-					fill_color 	13434879
-					quidu      	"439BDC7300DE"
-					width      	413
-					height     	175
-					annotation 	8
-					autoResize 	TRUE)
-				    (object InheritView "" @678
-					stereotype 	TRUE
-					line_color 	3342489
-					quidu      	"439BDC8001F8"
-					client     	@677
-					supplier   	@669
-					line_style 	0)
 				    (object ClassView "Class" "Logical View::transport::http::HttpManager" @679
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
@@ -16278,13 +16258,13 @@
 					    fill_color 	13434879
 					    anchor     	2
 					    nlines     	3
-					    max_width  	1191)
+					    max_width  	1200)
 					width      	1416
 					height     	236
 					annotation 	8
 					autoResize 	TRUE)
 				    (object AssociationViewNew "$UNNAMED$159" @680
-					location   	(992, 712)
+					location   	(992, 699)
 					font       	(object Font
 					    size       	10
 					    face       	"Arial"
@@ -16301,7 +16281,7 @@
 					roleview_list 	(list RoleViews
 					    (object RoleView "processor" @681
 						Parent_View 	@680
-						location   	(-448, 120)
+						location   	(-448, 107)
 						font       	(object Font
 						    size       	10
 						    face       	"Arial"
@@ -16314,7 +16294,7 @@
 						    default_color 	TRUE)
 						label      	(object SegLabel @682
 						    Parent_View 	@681
-						    location   	(1129, 914)
+						    location   	(1129, 893)
 						    font       	(object Font
 							size       	10
 							face       	"Arial"
@@ -16338,11 +16318,11 @@
 						line_color 	3342489
 						quidu      	"439BDA760384"
 						client     	@680
-						supplier   	@659
+						supplier   	@669
 						line_style 	0)
 					    (object RoleView "$UNNAMED$160" @683
 						Parent_View 	@680
-						location   	(-448, 120)
+						location   	(-448, 107)
 						stereotype 	TRUE
 						line_color 	3342489
 						quidu      	"439BDA760386"
@@ -16372,7 +16352,7 @@
 						line_color 	3342489
 						quidu      	"439BDC4901B7"
 						client     	@684
-						supplier   	@670
+						supplier   	@672
 						line_style 	0)
 					    (object RoleView "$UNNAMED$163" @686
 						Parent_View 	@684
@@ -16387,8 +16367,8 @@
 					stereotype 	TRUE
 					line_color 	3342489
 					quidu      	"439BDE81037A"
-					client     	@677
-					supplier   	@659
+					client     	@667
+					supplier   	@669
 					line_style 	0))))))
 		logical_presentations 	(list unit_reference_list
 		    (object ClassDiagram "Main"
@@ -16471,7 +16451,7 @@
 				    fill_color 	16777215
 				    anchor     	2
 				    nlines     	5
-				    max_width  	531)
+				    max_width  	540)
 				width      	644
 				height     	336
 				annotation 	8
