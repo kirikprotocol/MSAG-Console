@@ -719,7 +719,7 @@ int Profiler::Execute()
 
       try{
         len=getSmsText(sms,body,sizeof(body));
-        if(len<=0)throw Exception("sms for profiler too large");
+        if(len<0)throw Exception("sms for profiler too large");
       }catch(...)
       {
         status=MAKE_COMMAND_STATUS(CMD_ERR_PERM,Status::INVOPTPARAMVAL);
