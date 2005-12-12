@@ -41,7 +41,7 @@ void INManComm::Init(const char* argHost,int argPort)
 
 static void FillChargeOp(SMSId id,smsc::inman::interaction::ChargeSms& op,const SMS& sms)
 {
-  op.setDestinationSubscriberNumber(sms.getDestinationAddress().toString());
+  op.setDestinationSubscriberNumber(sms.getDealiasedDestinationAddress().toString());
   op.setCallingPartyNumber(sms.getOriginatingAddress().toString());
   op.setCallingIMSI(sms.getOriginatingDescriptor().imsi);
   op.setSMSCAddress(INManComm::scAddr.toString());
