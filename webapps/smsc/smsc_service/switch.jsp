@@ -45,10 +45,10 @@
   page_menu_end(out);}%>
 <div class=content>
 <table class=list cellspacing=1 cellpadding=1 id=SMSC_LIST_TABLE>
-<col width="5%" align=left>
-<col width="35%" align=left>
-<col width="30%" align=left>
-<col width="30%" align=left>
+<col width="1%" align=left>
+<col width="79%" align=left>
+<col width="10%" align=left>
+<col width="10%" align=left>
 <thead>
 <tr>
 	<th class=ico><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
@@ -68,10 +68,10 @@
       String smscServId = (String) ResourceGroupConstants.SMSC_serv_IDs.get(new Byte(id));
 %>
 <tr class=row<%=id&1%>>
-  <td width="1%"><input class=check type=radio name=checkedSmsc value="<%=smscServId%>"></td>
+  <td><input class=check type=radio name=checkedSmsc value="<%=smscServId%>"></td>
   <td><%=node%></td>
-  <td width="1%" nowrap><%=serviceStatus((SMSCAppContext) request.getAttribute("appContext"), smscServId)%></td>
-  <td width="1%" nowrap><%=smscServStatus((SMSCAppContext) request.getAttribute("appContext"), Constants.SMSC_SME_ID, id)%></td>
+  <td><%=serviceStatus((SMSCAppContext) request.getAttribute("appContext"), smscServId)%></td>
+  <td><%=smscServStatus((SMSCAppContext) request.getAttribute("appContext"), Constants.SMSC_SME_ID, id)%></td>
 </tr>
 <%}%>
 </tbody>

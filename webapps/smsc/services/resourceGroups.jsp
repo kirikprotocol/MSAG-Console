@@ -85,17 +85,17 @@ function editService(serviceId)
 <table class=list cellspacing=1 width="100%">
 <col width="1%" align=center>
 <%if (request.isUserInRole("services")) {%><col width="1%"><%}%>
-<col width="1%" align=left>
+<col width="60%" align=left>
 <col width="1%" align=center>
-<col width="1%" align=center>
-<col width="1%" align=center>
+<col width="20%" align=left>
+<col width="10%" align=center>
 <thead>
 <tr>
 	<th class=ico><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
 	<%if (request.isUserInRole("services")) {%><th>&nbsp;</th><%}%>
 	<th><%=getLocString("common.sortmodes.service")%></th>
 	<th colspan="2"><%=getLocString("common.sortmodes.status")%></th>
-    <th>online node</th>
+  <th><%=getLocString("common.sortmodes.runstatus")%></th>
 </tr>
 </thead>
 <tbody>

@@ -75,7 +75,7 @@ String smscStatus(SMSCAppContext appContext)
       case ServiceInfo.STATUS_ONLINE1:
       case ServiceInfo.STATUS_ONLINE2:
         result += Constants.SMSC_SME_ID + " " + getLocString("grammatic.at") + " "+SmscList.getNodeFromId((byte)i) + " " + getLocString("common.statuses.online");
-        result += smscServStatusString(appContext, Constants.SMSC_SME_ID, (byte)i);
+        result += " "+smscServStatusString(appContext, Constants.SMSC_SME_ID, (byte)i);
         break;
       case ServiceInfo.STATUS_ONLINE:
         result = result + Constants.SMSC_SME_ID + getLocString("grammatic.is") + getLocString("common.statuses.online");
