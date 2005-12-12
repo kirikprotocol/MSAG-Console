@@ -109,7 +109,7 @@ String encodedServiceId = StringEncoderDecoder.encode(serviceId);
 List serviceIds = Arrays.asList(bean.getServiceIds());
 %>
 <tr class=row<%=row&1%>>
-	<td class=check><input class=check type=checkbox name=serviceIds value="<%=encodedServiceId%>" <%=serviceIds.contains(serviceId) ? "checked" : ""%>></td>
+	<td class=check width="1%"><input class=check type=checkbox name=serviceIds value="<%=encodedServiceId%>" <%=serviceIds.contains(serviceId) ? "checked" : ""%>></td>
 	<%if (request.isUserInRole("services")) {%><td class=name><a  href="javascript:editService('<%=encodedServiceId%>')" title="<%=getLocString("services.editSubTitle")%>"><%=getLocString("common.links.edit")%></a></td><%}%>	<td class=name><%
 		if (bean.isServiceAdministrable(serviceId) && request.isUserInRole("services"))
 		{
@@ -120,14 +120,14 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
 			%><%=encodedServiceId%><%
 		}
 	%></td>
-	<td class=name>
+	<td class=name width="1%">
 <%= bean.isServiceDisabled(serviceId)
  ?
   "<img src=\"/images/ic_disable.gif\" width=10 height=10 title='" + getLocString("common.hints.disabled") + "'>"
  :
   "<img src=\"/images/ic_enable.gif\" width=10 height=10 title='" + getLocString("common.hints.enabled") + "'>"%></td>
-	<td class=name><%=smeStatus(bean.getAppContext(), serviceId)%></td>
-	<td class=name><%
+	<td class=name width="1%" nowrap><%=smeStatus(bean.getAppContext(), serviceId)%></td>
+	<td class=name width="1%" nowrap><%
 		if (bean.isService(serviceId))
 		{
 			%><%=serviceStatus(bean.getAppContext(), serviceId)%><%

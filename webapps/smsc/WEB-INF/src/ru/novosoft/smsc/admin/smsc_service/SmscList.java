@@ -28,6 +28,7 @@ public class SmscList {
   private Category logger = Category.getInstance(this.getClass());
   private Smsc smsc = null;
   public static Map nodeName2Id = new HashMap();
+  public static Map id2NodeName = new HashMap();
 
 	public static byte getNodeId(String nodename)
 	{
@@ -37,12 +38,13 @@ public class SmscList {
 
 	public static String getNodeFromId(byte nodeId)
 	{
-		String idStr = Byte.toString(nodeId);
+/*		String idStr = Byte.toString(nodeId);
 		Object[] ids = nodeName2Id.values().toArray();
 		for (int i = 0; i < ids.length; i++)
 			if (((String)ids[i]).equals(idStr)) { return (String) nodeName2Id.keySet().toArray()[i];}
-		return "";
-	}
+		return "";*/
+    return (String)id2NodeName.get(String.valueOf(nodeId));
+  }
 
   public SmscList(final Config webappConfig, final NSConnectionPool connectionPool, SMSCAppContext smscAppContext) throws AdminException {
     this.config = webappConfig;
@@ -56,6 +58,7 @@ public class SmscList {
         String nodeName = StringEncoderDecoder.decodeDot(encodedName.substring(encodedName.lastIndexOf('.') + 1));
         String nodeId = config.getString(encodedName + ".id");
         nodeName2Id.put(nodeName, nodeId);
+        id2NodeName.put(nodeId, nodeName);
 //				final String stopFileName = config.getString(encodedName + ".stopfilename");
 //				stopFileNames.put(nodeName, stopFileName);
       }
