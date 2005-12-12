@@ -146,6 +146,12 @@ void INManComm::Report(int dlgId,const SMS& sms,bool final)
       final
     );
   res.setDialogId(dlgId);
+
+  res.setDestIMSI(sms.getDestinationDescriptor().imsi);
+  res.setDestMSC(sms.getDestinationDescriptor().msc);
+  res.setDestSMEid(sms.getDestinationSmeId());
+  res.setDeliveryTime(time(NULL));
+
   smsc::inman::interaction::ObjectBuffer buf(0);
   smsc::inman::interaction::SerializerInap::getInstance()->serialize(&res,buf);
   packetWriter.enqueue(buf.get(),buf.GetPos());
