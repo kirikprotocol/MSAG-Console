@@ -25,6 +25,7 @@ GT           =  SSN
   <param name="cdrMode" type="string">all</param>        <!-- options: none, all, postpaid -->
   <param name="billingDir" type="string">./cdrs</param>  <!-- directory to store CDRs -->
   <param name="billingInterval" type="int">120</param>   <!-- rolling interval, units: seconds -->
+  <param name="serviceKey" type="int">11</param>         <!-- IN service key: uint32_t -->
   <!-- OPTIONAL PARAMETERS: -->
   <param name="IN_Timeout" type="int">20</param>      <!-- timeout on CAP operations, units: seconds, max: 65535 -->
   <param name="SMSC_Timeout" type="int">180</param>   <!-- timeout on TCP operations, units: seconds, max: 65535 -->
