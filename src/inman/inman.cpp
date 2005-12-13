@@ -34,6 +34,7 @@ using smsc::util::config::Manager;
 using smsc::util::config::ConfigException;
 
 
+static char     _runService = 0;
 static Service* g_pService = 0;
 
 static void init_logger()
@@ -45,11 +46,7 @@ static void init_logger()
 
 extern "C" static void sighandler( int signal )
 {
-    assert( g_pService );
-    g_pService->stop();
-    delete g_pService;
-    g_pService = 0;
-    smsc_log_info(inapLogger, "Service shutdown complete");
+    _runService = 0;
 }
 
 //CDR_NONE = 0, CDR_ALL = 1, CDR_POSTPAID = 2
@@ -200,11 +197,16 @@ int main(int argc, char** argv)
     }
     try {
         g_pService = new Service(&cfg, inapLogger);
+        assert(g_pService);
+        _runService = 1;
         g_pService->start();
 
         sigset(SIGTERM, sighandler);
-        while(g_pService)
+        while(_runService)
             usleep(1000 * 100);
+
+        g_pService->stop();
+        delete g_pService;
 
     } catch(const std::exception& error) {
         smsc_log_fatal(inapLogger, "%s", error.what() );
@@ -212,6 +214,6 @@ int main(int argc, char** argv)
         delete g_pService;
         exit(1);
     }
-
+    smsc_log_info(inapLogger, "Service shutdown complete");
     return(0);
 }
