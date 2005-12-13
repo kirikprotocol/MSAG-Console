@@ -165,6 +165,7 @@ void InBillingFileStorage::bill(const CDRRecord & cdr)
 {
     std::string rec;
     CDRRecord::csvEncode(cdr, rec);
+    smsc_log_debug( logger, "BFS: Writing rec sz=%d data: %s", rec.size(), rec.c_str());
     RFSWrite(rec.c_str(), rec.size());
     RFSFlush();
 }
