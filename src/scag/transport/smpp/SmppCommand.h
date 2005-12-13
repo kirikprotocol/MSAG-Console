@@ -1194,7 +1194,7 @@ public:
       return 0;
   }
 
-  void setOperationId(int64_t op)
+ void setOperationId(int64_t op)
   {
   }
 				

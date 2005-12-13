@@ -2,17 +2,6 @@
 #include "scag/re/smpp/SmppAdapter.h"
 #include "scag/re/actions/ActionContext.h"
 
-//#include "scag/SAX2Print.hpp"
-class st : public scag::stat::Statistics
-{
-public:
-    virtual bool checkTraffic(std::string routeId, scag::stat::CheckTrafficPeriod period, int64_t value) 
-    {
-        return true;
-    }
-    virtual void registerEvent(const scag::stat::SmppStatEvent &si) {}
-};
-
 
 namespace scag { namespace re {
 
@@ -30,7 +19,8 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     RuleStatus rs;
 
     smsc::util::config::Config config;
-    st _statistics;
+    //st _statistics;
+    Statistics& _statistics = Statistics::Instance();
 
     SmppCommand * smppcommand = dynamic_cast<SmppCommand *>(&command);
     if (!smppcommand) throw SCAGException("SmppEventHandler: command is not 'smpp-type'");
