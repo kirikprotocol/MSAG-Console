@@ -129,6 +129,7 @@ void Billing::onChargeSms(ChargeSms* sms)
         inap->initialDPSMS(&arg); //begins TCAP dialog
     } else {
         //do not ask IN platform, just create CDR
+        postpaidBill = true;
         smsc_log_debug(logger, "SSF initiated billing via CDR");
         onContinueSMS();
     }
@@ -140,8 +141,9 @@ void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes)
     EventTypeSMS_e eventType = (smsRes->GetValue() == smsc::inman::interaction::DELIVERY_SUCCESSED) ? 
                                 EventTypeSMS_o_smsSubmission : EventTypeSMS_o_smsFailure;
 
-    smsc_log_debug(logger, "SSF --> SCF EventReportSMS( EventType: DELIVERY_%s (0x%X), MessageType: 0x%X )",
-        (eventType == EventTypeSMS_o_smsFailure) ? "FAILED" : "SUCCEEDED", eventType, messageType);
+    smsc_log_debug(logger, "SSF%s EventReportSMS( EventType: DELIVERY_%s (0x%X), MessageType: 0x%X )",
+                   inap ? " --> SCF" : ":", (eventType == EventTypeSMS_o_smsFailure) ?
+                   "FAILED" : "SUCCEEDED", eventType, messageType);
 
     smsRes->export2CDR(cdr);
     if (inap) { //continue TCAP dialog if it's still active
