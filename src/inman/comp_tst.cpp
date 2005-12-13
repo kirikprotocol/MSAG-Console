@@ -16,7 +16,7 @@ int main (void)
     smsc_log_debug(tstLogger, "--> InitialDPSMS");
 
     DeliveryMode_e mode = smsc::inman::comp::DeliveryMode_Originating;
-    InitialDPSMSArg arg(mode);
+    InitialDPSMSArg arg(mode, 11);
 
     if (mode == smsc::inman::comp::DeliveryMode_Originating) {
 	arg.setDestinationSubscriberNumber(".0.1.131133"); // missing for MT
