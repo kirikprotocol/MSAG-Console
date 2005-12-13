@@ -23,14 +23,34 @@ public class ProfilesDataSource extends AbstractDataSourceImpl
   public QueryResultSet query(ConnectionPool connectionPool, Query query_to_run) throws SQLException
   {
     clear();
-    Connection connection = connectionPool.getConnection();
-    PreparedStatement statement = connection.prepareStatement("select * from emlsme_profiles");
-    ResultSet resultSet = statement.executeQuery();
-    while (resultSet.next()) {
-      add(new ProfilesDataItem(resultSet.getString("address"), resultSet.getString("username"),
-                               resultSet.getInt("daily_limit"), resultSet.getString("forward")));
+    Connection connection = null;
+    PreparedStatement statement = null;
+    ResultSet resultSet = null;
+    try {
+      connection = connectionPool.getConnection();
+      statement = connection.prepareStatement("select * from emlsme_profiles");
+      resultSet = statement.executeQuery();
+      while (resultSet.next()) {
+        add(new ProfilesDataItem(resultSet.getString("address"), resultSet.getString("username"),
+                                 resultSet.getInt("daily_limit"), resultSet.getString("forward")));
+      }
+    } finally {
+      if( resultSet != null ) {
+        try {
+          resultSet.close();
+        } catch (SQLException e) {}
+      }
+      if( statement != null ) {
+        try {
+          statement.close();
+        } catch (SQLException e) {}
+      }
+      if( connection != null ) {
+        try {
+          connection.close();
+        } catch (SQLException e) {}
+      }
     }
-    connection.close();
     return super.query(query_to_run);
   }
 }
