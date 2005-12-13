@@ -17,10 +17,10 @@ namespace common  {
 // удаляет все обьекты из контейнера
 struct DeletePtr : std::unary_function< void*, void > 
 {
-	result_type operator( ) ( argument_type ptr )
-   	{
-      		delete ptr;
-   	}
+    result_type operator( ) ( argument_type ptr )
+    {
+        delete ptr;
+    }
 };
 
 // Два следующих класса помогают создавать источники и обработчики событий
@@ -46,72 +46,65 @@ struct DeletePtr : std::unary_function< void*, void >
 template < class Listener >
 class ObservableT
 {
-
 public:
+    typedef std::list<Listener*> ListenerList;
 
-	typedef std::list<Listener*> ListenerList;
+    ObservableT() { }
+    ~ObservableT() { removeAllListeners(); }
 
-	ObservableT()
-	{
-	}
+    void addListener(Listener* pListener)
+    {
+        listeners.push_back( pListener );
+    }
 
-	~ObservableT()
-	{
-		removeAllListeners();
-	}
+    void removeListener(Listener* pListener)
+    {
+        listeners.remove( pListener );
+    }
 
-	void addListener(Listener* pListener)
-	{
-		listeners.push_back( pListener );
-	}
+    void removeAllListeners(void)
+    {
+        std::for_each( listeners.begin(), listeners.end(), DeletePtr() );
+        listeners.clear();
+    }
 
-	void removeListener(Listener* pListener)
-	{
-		listeners.remove( pListener );
-	}
-
-	void removeAllListeners()
-	{
-		std::for_each( listeners.begin(), listeners.end(), DeletePtr() );
-		listeners.clear();
-	}
+    bool hasListeners(void)
+    {
+        typename ListenerList::iterator it = listeners.begin();
+        return (bool)(it != listeners.end());
+    }
 
 protected:
+    ListenerList listeners;
 
-	void notify0(void (Listener::*method)())
-	{
-		for( typename ListenerList::iterator it = listeners.begin();
-		it != listeners.end(); it++)
-	 	{
-			 Listener* ptr = *it;
-			 (*ptr.*method)();
-		}
-	}
+    void notify0(void (Listener::*method)())
+    {
+        for (typename ListenerList::iterator it = listeners.begin();
+                                            it != listeners.end(); it++) {
+            Listener* ptr = *it;
+            (*ptr.*method)();
+        }
+    }
 
-	template <typename param1_t>
-	void notify1(void (Listener::*method)(param1_t), param1_t param1)
-	{
-		for( typename ListenerList::iterator it = listeners.begin();
-		it != listeners.end(); it++)
-	 	{
-			 Listener* ptr = *it;
-			 (*ptr.*method)( param1 );
-		}
-	}
+    template <typename param1_t>
+    void notify1(void (Listener::*method)(param1_t), param1_t param1)
+    {
+        for (typename ListenerList::iterator it = listeners.begin();
+                                            it != listeners.end(); it++) {
+            Listener* ptr = *it;
+            (*ptr.*method)( param1 );
+        }
+    }
 
-	template <typename param1_t, typename param2_t>
-	void notify2(void (Listener::*method)(param1_t, param2_t), param1_t param1, param2_t param2)
-	{
-		for( typename ListenerList::iterator it = listeners.begin();
-		it != listeners.end(); it++)
-	 	{
-			 Listener* ptr = *it;
-			 (*ptr.*method)( param1, param2 );
-		}
-	}
-
-
-	ListenerList listeners;
+    template <typename param1_t, typename param2_t>
+    void notify2(void (Listener::*method)(param1_t, param2_t), param1_t param1, param2_t param2)
+    {
+        for (typename ListenerList::iterator it = listeners.begin();
+                                            it != listeners.end(); it++) {
+            Listener* ptr = *it;
+            (*ptr.*method)( param1, param2 );
+        }
+    }
 };
 
 }
