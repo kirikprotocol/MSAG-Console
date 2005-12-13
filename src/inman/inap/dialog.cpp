@@ -122,7 +122,8 @@ void Dialog::continueDialog()
                     "  App. context[%u]: %s\n"
                     "}",
                    dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId, priority, qSrvc, 
-                   dump(ownAddr.addrLen, ownAddr.addr).c_str(),
+//                   dump(ownAddr.addrLen, ownAddr.addr).c_str(),
+		   "",
                    ac.acLen, dump(ac.acLen, ac.ac).c_str()
 /*
                    (_state < Dialog::dlgConfirmed) ? ac.acLen : 0,
@@ -132,7 +133,8 @@ void Dialog::continueDialog()
 
     USHORT_T result =
         EINSS7_I97TContinueReq(dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId,
-                               priority, qSrvc, ownAddr.addrLen, ownAddr.addr,
+//                               priority, qSrvc, ownAddr.addrLen, ownAddr.addr,
+                               priority, qSrvc, 0, NULL,
                                ac.acLen, ac.ac,
 /*
                                (_state < Dialog::dlgConfirmed) ? ac.acLen : 0,
