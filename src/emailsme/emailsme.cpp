@@ -41,6 +41,8 @@ using namespace std;
 FILE *emlIn;
 FILE *emlOut;
 
+char hostName[256];
+
 class EmptyGetAdapter:public GetAdapter{
 public:
 
@@ -318,7 +320,7 @@ int SendEMail(const string& from,const Array<string>& to,const string& subj,cons
     return ProcessSmsCodes::NETERROR;
   }
   CheckCode(s,220);
-  s.Printf("HELO\r\n");
+  s.Printf("HELO %s\r\n",hostName);
   CheckCode(s,250);
   s.Printf("MAIL FROM: %s\r\n",ExtractEmail(from).c_str());
   CheckCode(s,250);
@@ -729,6 +731,12 @@ int main(int argc,char* argv[])
   sigset(16,disp);
   sigset(SIGINT,ctrlc);
   sigset(SIGTERM,ctrlc);
+
+  if(gethostname(hostName,sizeof(hostName))!=0)
+  {
+    smsc_log_warn(smsc::logger::Logger::getInstance("emlsme"),"gethostname failed:%d",errno);
+    strcpy(hostName,"localhost");
+  }
 
   cfg::mainId=pthread_self();
 
