@@ -99,6 +99,8 @@ public class SmeContext
         connectionPoolConfig.setProperty("jdbc.driver", newDriver);
         connectionPoolConfig.setProperty("jdbc.user", newUser);
         connectionPoolConfig.setProperty("jdbc.pass", newPassword);
+        connectionPoolConfig.setProperty("jdbc.min.connections", "0");
+        connectionPoolConfig.setProperty("jdbc.max.idle.time", "240");
         connectionPool = new ConnectionPool(connectionPoolConfig);
       }
     } catch (Throwable e) {

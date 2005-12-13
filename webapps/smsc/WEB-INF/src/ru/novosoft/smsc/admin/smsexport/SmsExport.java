@@ -167,6 +167,8 @@ private final static String INSERT_VALUES =
     props.setProperty("jdbc.driver", export.getDriver());
     props.setProperty("jdbc.user", export.getUser());
     props.setProperty("jdbc.pass", export.getPassword());
+    props.setProperty("jdbc.min.connections", "0");
+    props.setProperty("jdbc.max.idle.time", "240");
     return new ConnectionPool(props);
   }
     private oracle.jdbc.OracleConnection getOracleConnection(ExportSettings export) throws SQLException

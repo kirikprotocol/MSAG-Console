@@ -422,6 +422,8 @@ public class SmsStat
       props.setProperty("jdbc.driver", export.getDriver());
       props.setProperty("jdbc.user", export.getUser());
       props.setProperty("jdbc.pass", export.getPassword());
+      props.setProperty("jdbc.min.connections", "0");
+      props.setProperty("jdbc.max.idle.time", "240");
       return new ConnectionPool(props);
     }
 

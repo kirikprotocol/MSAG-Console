@@ -181,6 +181,8 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
     props.setProperty("jdbc.driver", config.getString("profiler.jdbc.driver"));
     props.setProperty("jdbc.user", config.getString("profiler.jdbc.user"));
     props.setProperty("jdbc.pass", config.getString("profiler.jdbc.password"));
+    props.setProperty("jdbc.min.connections", "0");
+    props.setProperty("jdbc.max.idle.time", "240");
     connectionPool = new ConnectionPool(props);
   }
 

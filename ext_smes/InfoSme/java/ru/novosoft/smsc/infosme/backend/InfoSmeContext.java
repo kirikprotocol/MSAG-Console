@@ -142,6 +142,8 @@ public class InfoSmeContext
         properties.setProperty("jdbc.driver", newConfig.getString("InfoSme.systemDataSource.jdbc.driver"));
         properties.setProperty("jdbc.user", newConfig.getString("InfoSme.systemDataSource.dbUserName"));
         properties.setProperty("jdbc.pass", newConfig.getString("InfoSme.systemDataSource.dbUserPassword"));
+        properties.setProperty("jdbc.min.connections", "0");
+        properties.setProperty("jdbc.max.idle.time", "240");
         dataSource = new ConnectionPool(properties);
       }
     } catch (Throwable e) {
