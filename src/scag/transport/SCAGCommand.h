@@ -17,7 +17,7 @@ namespace scag { namespace transport
         virtual TransportType getType() const = 0;
 	
         virtual int getRuleId() const = 0;
-        virtual setRuleId(int ruleId) = 0;
+        virtual void setRuleId(int ruleId) = 0;
 	
     	virtual int64_t getOperationId() const = 0;
     	virtual void setOperationId(int64_t op) = 0;

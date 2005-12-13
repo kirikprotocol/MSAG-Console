@@ -1178,10 +1178,27 @@ public:
   {
     return SMPP;
   }
+
   int getRuleId()const
   {
     return cmd->get_ruleId();
   }
+  
+  void setRuleId(int ruleId)
+  {
+  
+  }
+		
+  int64_t getOperationId() const
+  {
+      return 0;
+  }
+
+l void setOperationId(int64_t op)
+  {
+  }
+				
+  
 };
 
 } //smpp
