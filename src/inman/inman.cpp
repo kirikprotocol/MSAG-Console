@@ -65,7 +65,7 @@ public:
         ssn = port = billingInterval = 0;
         billMode = smsc::inman::BILL_ALL;
         cdrMode =  InService_CFG::CDR_ALL;
-        capTimeout = tcpTimeout = 0;
+        serviceKey = capTimeout = tcpTimeout = 0;
     }
 
     void read(Manager& manager)
@@ -136,6 +136,13 @@ public:
                 billingDir = NULL; billingInterval = 0;
                 throw ConfigException("billingDir or billingInterval invalid or missing");
             }
+        }
+        try {
+            serviceKey = (unsigned int)manager.getInt("serviceKey");
+            smsc_log_info(inapLogger, "serviceKey: %d", serviceKey);
+        } catch (ConfigException& exc) {
+            serviceKey = 0;
+            throw ConfigException("serviceKey is invalid or missing");
         }
 
         //OPTIONAL PARAMETERS:

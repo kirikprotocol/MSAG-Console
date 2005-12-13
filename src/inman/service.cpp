@@ -175,7 +175,7 @@ void Service::onCommandReceived(Connect* conn, SerializableObject* recvCmd)
     BillingMap::iterator it = workers.find(dlgId);
     if (it == workers.end()) {
         bill = new Billing(this, dlgId, session, conn, _cfg.billMode,
-                           _cfg.capTimeout, _cfg.tcpTimeout, logger);
+                           _cfg.serviceKey, _cfg.capTimeout, _cfg.tcpTimeout, logger);
         workers.insert(BillingMap::value_type(dlgId, bill));
     } else
         bill = (*it).second;

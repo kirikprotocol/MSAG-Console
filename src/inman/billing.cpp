@@ -18,12 +18,13 @@ namespace smsc  {
 namespace inman {
 
 Billing::Billing(Service* serv, unsigned int bid, Session* pSession,
-                 Connect* conn, BILL_MODE bMode, USHORT_T capTimeout/* = 0*/,
+                 Connect* conn, BILL_MODE bMode, unsigned int serv_key,
+                 USHORT_T capTimeout/* = 0*/,
                  USHORT_T tcpTimeout/* = 0*/, Logger * uselog/* = NULL*/)
         : service(serv), id(bid), logger(uselog)
         , session(pSession), connect(conn), state(bilIdle)
         , inap(NULL), postpaidBill(false)
-        , billMode(bMode), _capTimeout(capTimeout)
+        , billMode(bMode), _capTimeout(capTimeout), _serviceKey(serv_key)
 {
     assert( connect );
     assert( session );
@@ -111,7 +112,7 @@ void Billing::onChargeSms(ChargeSms* sms)
         inap = new Inap(session, this, _capTimeout, logger); //initialize TCAP dialog
         assert(inap);
 
-        InitialDPSMSArg arg(smsc::inman::comp::DeliveryMode_Originating);
+        InitialDPSMSArg arg(smsc::inman::comp::DeliveryMode_Originating, _serviceKey);
 
         arg.setDestinationSubscriberNumber(sms->getDestinationSubscriberNumber().c_str()); // missing for MT
         arg.setCallingPartyNumber(sms->getCallingPartyNumber().c_str());

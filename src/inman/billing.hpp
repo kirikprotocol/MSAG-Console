@@ -46,7 +46,8 @@ public:
     } BillingState;
 
     Billing(Service* service, unsigned int id, Session*, Connect*, BILL_MODE bMode,
-            USHORT_T capTimeout = 0, USHORT_T tcpTimeout = 0, Logger * uselog = NULL);
+            unsigned int serv_key, USHORT_T capTimeout = 0, USHORT_T tcpTimeout = 0,
+            Logger * uselog = NULL);
     virtual ~Billing();
 
     unsigned int getId() const { return id; }
@@ -90,6 +91,7 @@ protected:
     BILL_MODE       billMode;
     unsigned short  _capTimeout; //timeout for interconnection with IN-platform
     unsigned short  _tcpTimeout; //timeout for interconnection with SMSC
+    unsigned int    _serviceKey; //service id for InitialDP operation
 };
 
 } //inman

@@ -25,7 +25,7 @@ using std::vector;
 class PrivateInitialDPSMSArg
 {
   public:
-    PrivateInitialDPSMSArg(DeliveryMode_e idpMode);
+    PrivateInitialDPSMSArg(DeliveryMode_e idpMode, unsigned int serv_key);
     ~PrivateInitialDPSMSArg();
 
     InitialDPSMSArg_t	idp;
@@ -48,10 +48,10 @@ class PrivateInitialDPSMSArg
     unsigned char			_cGidOrSAIfl[7];
 };
 
-PrivateInitialDPSMSArg::PrivateInitialDPSMSArg(DeliveryMode_e idpMode)
+PrivateInitialDPSMSArg::PrivateInitialDPSMSArg(DeliveryMode_e idpMode, unsigned int serviceKey)
 {
     memset(&idp, 0, sizeof(idp)); //clear _asn_ctx & optionals
-    idp.serviceKey = 11;
+    idp.serviceKey = serviceKey;
 
     _dlvrMode = (EventTypeSMS_t)idpMode;
     idp.eventTypeSMS = &_dlvrMode;
@@ -225,10 +225,10 @@ void InitialDPSMSArg::setLocationInformationMSC(const char* text)
 }
 
 
-InitialDPSMSArg::InitialDPSMSArg(DeliveryMode_e idpMode)
+InitialDPSMSArg::InitialDPSMSArg(DeliveryMode_e idpMode, unsigned int serviceKey)
 {
     compLogger = smsc::logger::Logger::getInstance("smsc.inman.comp.InitialDPSMSArg");
-    comp = new PrivateInitialDPSMSArg(idpMode);
+    comp = new PrivateInitialDPSMSArg(idpMode, serviceKey);
 }
 InitialDPSMSArg::~InitialDPSMSArg() { delete(comp); }
 

@@ -13,7 +13,6 @@ using smsc::logger::Logger;
 using std::map;
 using smsc::inman::common::format;
 using smsc::sms::Address;
-//using smsc::sms::AddressValue;
 
 /* GVR NOTE: while linking the below enums are taken from generated
  * asn1/c codec, so they should not have namespace prefix.
@@ -85,7 +84,7 @@ class PrivateInitialDPSMSArg;
 class InitialDPSMSArg: public Component	//SSF -> SCF
 {
     public:
-	InitialDPSMSArg(DeliveryMode_e idpMode);
+	InitialDPSMSArg(DeliveryMode_e idpMode, unsigned int serviceKey);
 	~InitialDPSMSArg();
 
 	void setDestinationSubscriberNumber(const Address& addr);	// missing for MT
@@ -98,7 +97,6 @@ class InitialDPSMSArg: public Component	//SSF -> SCF
 	void setCallingPartyNumber(const char * text);
 
 	void setIMSI(const std::string& imsi); //imsi contains sequence of ASCII digits
-//	void setIMSI(const AddressValue& imsi);
 
 	void setSMSCAddress(const Address& addr);
 	void setSMSCAddress(const char * text);

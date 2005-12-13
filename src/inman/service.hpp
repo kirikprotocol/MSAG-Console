@@ -36,6 +36,7 @@ struct InService_CFG {
     long            billingInterval; //rolling interval for CDR files
     unsigned short  capTimeout;      //optional timeout for operations with IN platform
     unsigned short  tcpTimeout;      //optional timeout for TCP interaction with SMSC
+    unsigned int    serviceKey;      //service id for InitialDP operation
 };
 
 class Billing;
