@@ -7,7 +7,7 @@ namespace scag { namespace transport
 {
     enum TransportType 
     {
-        SMPP = 1, HTTP = 2, MMS = 3
+        SMPP = 1, HTTP = 2, MMS = 3, WAP = 4
     };
 
     class SCAGCommand
