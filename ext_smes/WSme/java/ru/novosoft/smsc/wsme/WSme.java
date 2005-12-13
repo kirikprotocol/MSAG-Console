@@ -9,10 +9,9 @@ package ru.novosoft.smsc.wsme;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.Mask;
-import ru.novosoft.smsc.admin.service.Service;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.util.config.Config;
-import ru.novosoft.util.conpool.NSConnectionPool;
+import ru.sibinco.util.conpool.ConnectionPool;
 
 import javax.sql.DataSource;
 import java.io.File;
@@ -74,7 +73,7 @@ public class WSme extends WSmeTransport
       props.setProperty("jdbc.driver", newConfig.getString(CONFIG_PARAM_BASE + "driver"));
       props.setProperty("jdbc.user", newConfig.getString(CONFIG_PARAM_BASE + "user"));
       props.setProperty("jdbc.pass", newConfig.getString(CONFIG_PARAM_BASE + "password"));
-      ds = new NSConnectionPool(props);
+      ds = new ConnectionPool(props);
     } catch (Exception exc) {
       AdminException ae = new AdminException("Init datasource failed, cause: " + exc.getMessage());
       System.out.println(ae.getMessage());
