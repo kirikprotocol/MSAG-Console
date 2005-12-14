@@ -21,8 +21,17 @@ GT           =  SSN
   <param name="host" type="string">@inman.host@</param>
   <param name="port" type="int">@inman.port@</param>     <!-- InMan service port -->
 
-  <param name="billMode" type="string">all</param>       <!-- options: none, all, ussd, sms -->
-  <param name="cdrMode" type="string">all</param>        <!-- options: none, all, postpaid -->
+  <param name="billMode" type="string">all</param>       <!-- options: none, all, ussd, sms
+                                                          none: don't request IN platform write CDR instead
+                                                          all:  always reqiest IN platform
+                                                          ussd: request IN platform in case of USSD only, bill SMS to CDR
+                                                          sms:  request IN platform in case of SMS only, bill USSD to CDR
+                                                         -->
+  <param name="cdrMode" type="string">all</param>        <!-- options: none, all, postpaid
+                                                          none: don't write CDR at all
+                                                          all:  always write CDR
+                                                          pospaid: write CDR either for POSTPAID abonents or in case of IN platform interaction error
+                                                         -->
   <param name="billingDir" type="string">./cdrs</param>  <!-- directory to store CDRs -->
   <param name="billingInterval" type="int">120</param>   <!-- rolling interval, units: seconds -->
   <param name="serviceKey" type="int">11</param>         <!-- IN service key: uint32_t -->
@@ -31,14 +40,14 @@ GT           =  SSN
   <param name="SMSC_Timeout" type="int">180</param>   <!-- timeout on TCP operations, units: seconds, max: 65535 -->
 
 
-<!-- unknown VLR make request to HLR 
+<!-- unknown VLR make request to HLR
   <param name="vlrAddress" type="string">791398699810</param>
   <param name="vlrSSN" type="int">7</param>
   <param name="inAddress" type="string">79139860005</param>
   <param name="inSSN" type="int">6</param>
   <param name="userSSN" type="int">7</param>
   <param name="host" type="string">@ussman.host@</param>
-  <param name="port" type="int">@ussman.port@</param>  
+  <param name="port" type="int">@ussman.port@</param>
 --->
 
 <!-- unknown point make ussd reguest to IN point
