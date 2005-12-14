@@ -47,9 +47,9 @@ public abstract class ErrorSource implements EBComponent
 
   synchronized(errorSources)
   {
-  // if (errorSources.size()>0)  errorSources.clear();
+   System.out.println("REGISTERED in registerErrorSource "+errorSource.getName()+" ErrorSource");
    errorSources.addElement(errorSource);
-   errorSource.registered = true;
+   errorSource.registered=true;
    cachedErrorSources = null;
    System.out.println("ErrorSource.registerErrorSource line 53 EditBus.send(new ErrorSourceUpdate(errorSource,ErrorSourceUpdate.ERROR_SOURCE_ADDED,null)) errorSources.size= "+errorSources.size());
    EditBus.send(new ErrorSourceUpdate(errorSource,ErrorSourceUpdate.ERROR_SOURCE_ADDED,null));
@@ -69,8 +69,9 @@ public abstract class ErrorSource implements EBComponent
   synchronized(errorSources)
   {
    if (errorSources.size()>0) return;
+   System.out.println("REGISTERED in registerAndCheckErrorSource "+errorSource.getName()+" ErrorSource");
    errorSources.addElement(errorSource);
-   errorSource.registered = true;
+   errorSource.registered=true;
    cachedErrorSources = null;
    System.out.println("ErrorSource.registerAndCheckErrorSource line 53 EditBus.send(new ErrorSourceUpdate(errorSource,ErrorSourceUpdate.ERROR_SOURCE_ADDED,null)) errorSources.size= "+errorSources.size());
    EditBus.send(new ErrorSourceUpdate(errorSource,ErrorSourceUpdate.ERROR_SOURCE_ADDED,null));
@@ -91,10 +92,12 @@ public abstract class ErrorSource implements EBComponent
 
   synchronized(errorSources)
   {
+    System.out.println("UNREGISTERED "+errorSource.getName()+" ErrorSource");
     errorSources.removeElement(errorSource);
-    errorSource.registered = false;
+    errorSource.registered=false;
     cachedErrorSources = null;
     System.out.println("ErrorSource.unregisterErrorSource line 95 EditBus.send(new ErrorSourceUpdate(errorSource,ErrorSourceUpdate.ERROR_SOURCE_REMOVED,null)) errorSources.size= "+errorSources.size());
+    System.out.println();
     EditBus.send(new ErrorSourceUpdate(errorSource,ErrorSourceUpdate.ERROR_SOURCE_REMOVED,null));
   }
  } //}}}

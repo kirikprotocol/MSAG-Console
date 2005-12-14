@@ -86,7 +86,7 @@ class SideKick implements EBComponent
   {
    Log.log(Log.DEBUG,this,"No parser");
     System.out.println("SideKick.parse parser==null !!! before setErrorSource(null);");
-   setErrorSource(null);
+   setErrorSource(null, 1);
    showNotParsedMessage();
    SideKickPlugin.finishParsingBuffer(buffer);
    return;
@@ -104,7 +104,7 @@ class SideKick implements EBComponent
 
  // DefaultErrorSource errorSource=(DefaultErrorSource) buffer.getProperty(SideKickPlugin.ERROR_SOURCE_PROPERTY);
  // if (errorSource==null)
-  DefaultErrorSource  errorSource = new DefaultErrorSource("SideKick");
+  DefaultErrorSource  errorSource = new DefaultErrorSource("SideKick "+SideKickPlugin.getSideKickNumber(this.view));
   SideKickParsedData[] data = new SideKickParsedData[1];
     SideKickPlugin.addWorkRequest(new ParseRequest(
    parser,buffer,errorSource,data),false);
@@ -115,14 +115,14 @@ class SideKick implements EBComponent
  //{{{ dispose() method
  void dispose()
  {
-  setErrorSource(null);
+  setErrorSource(null, 2);
   EditBus.removeFromBus(this);
   removeBufferChangeListener(buffer);
  } //}}}
    //{{{ dispose() method
  void closeView()
  {
-  setErrorSource(null);
+  setErrorSource(null, 3);
   EditBus.removeFromBus(this);
   removeBufferChangeListener(buffer);
  } //}}}
@@ -199,14 +199,18 @@ class SideKick implements EBComponent
  } //}}}
 
  //{{{ setErrorSource() method
- private void setErrorSource(DefaultErrorSource errorSource)
+ private void setErrorSource(DefaultErrorSource errorSource, int loc)
  {
-  if(this.errorSource != null)
+  System.out.println();
+  System.out.println("setErrorSource of SideKick "+SideKickPlugin.getSideKickNumber(this.view)+" is invoked");
+  System.out.println("from place number "+loc);
+  if (this.errorSource != null)
   {
    ErrorSource.unregisterErrorSource(this.errorSource);
-   this.errorSource.clear();
+   this.errorSource.clear();   
   }
-  
+
+  if (SideKickPlugin.getSideKickNumber(this.view)==-1){System.out.println("This SideKick is removed!!!"); return;}
   this.errorSource = errorSource;
 
   if(errorSource != null)
@@ -271,7 +275,7 @@ class SideKick implements EBComponent
  //{{{ showNotParsedMessage() method
  private void showNotParsedMessage()
  {
-  setErrorSource(null);
+  setErrorSource(null,4);
 
   SideKickParsedData data = new SideKickParsedData(buffer.getName());
   data.root.add(new DefaultMutableTreeNode(
@@ -321,7 +325,7 @@ class SideKick implements EBComponent
    setParser();                                               }
   else if(bmsg.getWhat() == BufferUpdate.CLOSED) {
      System.out.println("SideKick.handleBufferUpdate BufferUpdate.CLOSED setErrorSource(null);");
-   setErrorSource(null);/*clearErrorForBuffer(buffer);  */                        }
+   setErrorSource(null,5);/*clearErrorForBuffer(buffer);  */                        }
 
  } //}}}
  
@@ -455,7 +459,7 @@ class SideKick implements EBComponent
    {
     Log.log(Log.DEBUG,this,"ParseAWTRequest");
 
-    setErrorSource(errorSource);
+    setErrorSource(errorSource,6);
 
     int errorCount = errorSource.getErrorCount();
     

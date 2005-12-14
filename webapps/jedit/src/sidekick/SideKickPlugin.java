@@ -332,6 +332,9 @@ public class SideKickPlugin extends EBPlugin
   textArea.putClientProperty(SideKickBindings.class,null);
   textArea.removeKeyListener(b);
  } //}}}
-
+ public static int getSideKickNumber(View view)
+ {
+    return (new Vector(sidekicks.keySet())).indexOf(view);
+ }
  //}}}
 }
