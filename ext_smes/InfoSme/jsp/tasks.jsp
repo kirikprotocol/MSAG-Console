@@ -117,7 +117,7 @@ function setSort(sorting)
 
       %><tr class=row<%=rowN++&1%>>
         <td><%if (bean.isSmeRunning()) {%><input class=check type=checkbox name=checked value="<%=idEnc%>" <%=bean.isTaskChecked(id) ? "checked" : ""%> onclick="checkCheckboxesForMbDeleteButton();"><%}else{%>&nbsp;<%}%></td>
-        <td><a href="#" title="Edit task" onClick='return editSomething("<%=idEnc%>");'><%=nameEnc%></a></td>
+        <td><a href="javascript:editSomething('<%=idEnc%>')" title="Edit task"><%=nameEnc%></a></td>
         <td nowrap><%=providerEnc%></td>
         <td><%if (enabled       ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
         <td><span datasrc=#tdcTasksStatuses DATAFORMATAS=html datafld="gen<%=idHex%>"><%if (generating    ){%><img src="/images/ic_running.gif"><%}else{%><img src="/images/ic_stopped.gif"><%}%></span></td>
