@@ -7,6 +7,7 @@
  */
 package ru.novosoft.smsc.admin.mscman;
 
+import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
@@ -14,8 +15,6 @@ import ru.novosoft.smsc.jsp.util.tables.impl.mscman.MscDataSource;
 import ru.novosoft.smsc.jsp.util.tables.impl.mscman.MscQuery;
 
 import java.util.List;
-
-import org.apache.log4j.Category;
 
 public class MscManager {
   private Category logger = Category.getInstance(MscManager.class);

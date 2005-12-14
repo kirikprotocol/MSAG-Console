@@ -5,9 +5,6 @@
  */
 package ru.novosoft.smsc.admin;
 
-import java.util.Map;
-import java.util.HashMap;
-
 public class Constants
 {
   public static final int ROUTE_ID_MAXLENGTH = 32;

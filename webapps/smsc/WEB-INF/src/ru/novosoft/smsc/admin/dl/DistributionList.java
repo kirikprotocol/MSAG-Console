@@ -6,8 +6,8 @@
  */
 package ru.novosoft.smsc.admin.dl;
 
-import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataItem;
 
 public class DistributionList extends AbstractDataItem

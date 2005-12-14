@@ -16,7 +16,9 @@ import ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasQuery;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 import java.io.PrintWriter;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 
 public class AliasSet

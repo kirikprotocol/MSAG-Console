@@ -7,10 +7,10 @@
  */
 package ru.novosoft.smsc.admin.console;
 
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.io.IOException;
 
 public abstract class Gate extends Thread
 {

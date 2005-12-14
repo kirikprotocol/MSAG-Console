@@ -2,8 +2,8 @@ package ru.novosoft.smsc.admin.console.commands.misc;
 
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.console.commands.CommandClass;
-import ru.novosoft.smsc.admin.provider.ProviderManager;
 import ru.novosoft.smsc.admin.provider.Provider;
+import ru.novosoft.smsc.admin.provider.ProviderManager;
 
 import java.util.Iterator;
 

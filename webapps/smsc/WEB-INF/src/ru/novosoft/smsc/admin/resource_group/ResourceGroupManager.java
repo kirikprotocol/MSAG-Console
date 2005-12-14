@@ -1,16 +1,17 @@
 package ru.novosoft.smsc.admin.resource_group;
 
-import ru.novosoft.smsc.jsp.SMSCAppContext;
-import ru.novosoft.smsc.util.config.Config;
-import ru.novosoft.smsc.util.StringEncoderDecoder;
+import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.smsc_service.SmeManager;
-import org.apache.log4j.Category;
+import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.smsc.util.config.Config;
 
-import java.util.*;
-import java.io.IOException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by IntelliJ IDEA.
@@ -32,7 +33,7 @@ public class ResourceGroupManager
 		this.config = this.appContext.getConfig();
 		logger.debug("Initializing resource group manager");
     try {
-      ResourceGroupNameMap.init(appContext.getConfig().getString(ResourceGroupConstants.RESOURCEGROUP_RG_MAP_FILE));
+      ResourceGroupNameMap.init(config.getString(ResourceGroupConstants.RESOURCEGROUP_RG_MAP_FILE));
     } catch (Exception e) {
       logger.warn("Could not init RG mapping", e);
     }

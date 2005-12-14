@@ -5,13 +5,12 @@
  */
 package ru.novosoft.smsc.admin.route;
 
+import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.util.SortedList;
 
 import java.io.PrintWriter;
 import java.util.*;
-
-import org.apache.log4j.Category;
 
 
 public class MaskList

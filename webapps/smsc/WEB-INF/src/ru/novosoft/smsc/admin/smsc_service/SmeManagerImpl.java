@@ -7,7 +7,6 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.SME;
 import ru.novosoft.smsc.admin.route.SMEList;
 import ru.novosoft.smsc.admin.route.SmeStatus;
-import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.WebAppFolders;

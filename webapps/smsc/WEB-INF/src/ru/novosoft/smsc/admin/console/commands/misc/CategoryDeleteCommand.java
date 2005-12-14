@@ -1,11 +1,11 @@
 package ru.novosoft.smsc.admin.console.commands.misc;
 
+import ru.novosoft.smsc.admin.category.Category;
+import ru.novosoft.smsc.admin.category.CategoryManager;
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.console.commands.CommandClass;
-import ru.novosoft.smsc.admin.category.CategoryManager;
-import ru.novosoft.smsc.admin.category.Category;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
 
 /**
  * Created by IntelliJ IDEA.

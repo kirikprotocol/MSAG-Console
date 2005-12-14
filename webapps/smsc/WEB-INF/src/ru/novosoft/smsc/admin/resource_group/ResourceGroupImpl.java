@@ -1,13 +1,5 @@
 package ru.novosoft.smsc.admin.resource_group;
 
-import ru.novosoft.smsc.util.SortedList;
-import ru.novosoft.smsc.admin.smsc_service.SmeManager;
-import ru.novosoft.smsc.admin.service.ServiceInfo;
-import ru.novosoft.smsc.admin.Constants;
-import ru.novosoft.smsc.admin.AdminException;
-
-import java.util.*;
-
 import org.apache.log4j.Category;
 
 /**
@@ -21,7 +13,7 @@ import org.apache.log4j.Category;
 public abstract class ResourceGroupImpl implements ResourceGroup
 {
 	protected String name;
-	
+
 	protected String[] nodes;
 
 	protected Category logger = Category.getInstance(this.getClass().getName());

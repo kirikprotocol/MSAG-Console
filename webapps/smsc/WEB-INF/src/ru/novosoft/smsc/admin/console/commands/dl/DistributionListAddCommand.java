@@ -9,11 +9,11 @@ package ru.novosoft.smsc.admin.console.commands.dl;
 
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.console.commands.CommandClass;
-import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
 import ru.novosoft.smsc.admin.dl.DistributionList;
+import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
 import ru.novosoft.smsc.admin.dl.exceptions.ListAlreadyExistsException;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
 
 public class DistributionListAddCommand extends CommandClass
 {

@@ -9,12 +9,12 @@ package ru.novosoft.smsc.admin.console.commands.route;
 
 
 import ru.novosoft.smsc.admin.console.CommandContext;
+import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.route.Mask;
+import ru.novosoft.smsc.admin.route.MaskList;
 import ru.novosoft.smsc.admin.route.SME;
 import ru.novosoft.smsc.admin.route.Subject;
-import ru.novosoft.smsc.admin.route.MaskList;
-import ru.novosoft.smsc.admin.route.Mask;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
-import ru.novosoft.smsc.admin.journal.Actions;
 
 import java.util.Iterator;
 

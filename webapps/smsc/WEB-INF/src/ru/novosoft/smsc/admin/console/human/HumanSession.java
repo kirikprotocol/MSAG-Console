@@ -7,12 +7,12 @@
  */
 package ru.novosoft.smsc.admin.console.human;
 
-import ru.novosoft.smsc.admin.console.Session;
-import ru.novosoft.smsc.admin.console.Console;
 import ru.novosoft.smsc.admin.console.CommandContext;
+import ru.novosoft.smsc.admin.console.Console;
+import ru.novosoft.smsc.admin.console.Session;
 
-import java.net.Socket;
 import java.io.IOException;
+import java.net.Socket;
 import java.util.Iterator;
 
 public class HumanSession extends Session

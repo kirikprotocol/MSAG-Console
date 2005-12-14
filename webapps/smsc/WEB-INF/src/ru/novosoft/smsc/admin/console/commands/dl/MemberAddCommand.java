@@ -12,8 +12,8 @@ import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
 import ru.novosoft.smsc.admin.dl.exceptions.ListNotExistsException;
 import ru.novosoft.smsc.admin.dl.exceptions.MemberAlreadyExistsException;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
 
 public class MemberAddCommand extends CommandClass
 {

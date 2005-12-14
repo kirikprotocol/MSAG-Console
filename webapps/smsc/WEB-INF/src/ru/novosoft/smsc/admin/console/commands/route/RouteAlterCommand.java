@@ -8,12 +8,12 @@
 package ru.novosoft.smsc.admin.console.commands.route;
 
 
-import ru.novosoft.smsc.admin.console.CommandContext;
-import ru.novosoft.smsc.admin.route.*;
-import ru.novosoft.smsc.admin.provider.Provider;
 import ru.novosoft.smsc.admin.category.Category;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.provider.Provider;
+import ru.novosoft.smsc.admin.route.*;
 
 
 public class RouteAlterCommand extends RouteGenCommand

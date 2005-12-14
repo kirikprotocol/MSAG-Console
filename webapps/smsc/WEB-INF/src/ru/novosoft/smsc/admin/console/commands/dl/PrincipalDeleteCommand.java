@@ -10,8 +10,8 @@ package ru.novosoft.smsc.admin.console.commands.dl;
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
-import ru.novosoft.smsc.admin.dl.exceptions.PrincipalNotExistsException;
 import ru.novosoft.smsc.admin.dl.exceptions.PrincipalInUseException;
+import ru.novosoft.smsc.admin.dl.exceptions.PrincipalNotExistsException;
 
 public class PrincipalDeleteCommand extends CommandClass
 {

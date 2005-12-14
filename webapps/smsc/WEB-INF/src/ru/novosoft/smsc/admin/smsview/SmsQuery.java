@@ -9,13 +9,12 @@ package ru.novosoft.smsc.admin.smsview;
  * @version 1.0
  */
 
-import ru.novosoft.smsc.util.Functions;
-import ru.novosoft.smsc.admin.route.Mask;
+import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.route.Mask;
+import ru.novosoft.smsc.util.Functions;
 
 import java.util.Date;
-
-import org.apache.log4j.Category;
 
 public class SmsQuery
 {

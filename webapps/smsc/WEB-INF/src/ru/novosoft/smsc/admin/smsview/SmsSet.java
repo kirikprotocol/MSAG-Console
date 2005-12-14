@@ -9,7 +9,9 @@ package ru.novosoft.smsc.admin.smsview;
  * @version 1.0
  */
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 public class SmsSet
 {

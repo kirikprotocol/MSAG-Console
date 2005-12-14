@@ -8,10 +8,10 @@
 package ru.novosoft.smsc.admin.console.commands.profile;
 
 import ru.novosoft.smsc.admin.console.CommandContext;
+import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.profiler.Profile;
 import ru.novosoft.smsc.admin.route.Mask;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
-import ru.novosoft.smsc.admin.journal.Actions;
 
 public class ProfileAddCommand extends ProfileGenCommand
 {

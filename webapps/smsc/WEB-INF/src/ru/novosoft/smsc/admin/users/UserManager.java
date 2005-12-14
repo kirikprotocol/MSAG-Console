@@ -24,8 +24,8 @@ import ru.novosoft.smsc.util.xml.Utils;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
-import java.util.*;
 import java.security.Principal;
+import java.util.*;
 
 public class UserManager implements DataSource
 {

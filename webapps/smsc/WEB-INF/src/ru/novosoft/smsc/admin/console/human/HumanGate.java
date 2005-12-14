@@ -7,12 +7,12 @@
  */
 package ru.novosoft.smsc.admin.console.human;
 
-import ru.novosoft.smsc.admin.console.Gate;
 import ru.novosoft.smsc.admin.console.Console;
+import ru.novosoft.smsc.admin.console.Gate;
 import ru.novosoft.smsc.admin.console.Session;
 
-import java.net.Socket;
 import java.io.IOException;
+import java.net.Socket;
 
 public class HumanGate extends Gate
 {

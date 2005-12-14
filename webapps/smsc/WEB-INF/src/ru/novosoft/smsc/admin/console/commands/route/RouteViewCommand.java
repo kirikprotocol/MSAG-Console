@@ -7,11 +7,14 @@
  */
 package ru.novosoft.smsc.admin.console.commands.route;
 
+import ru.novosoft.smsc.admin.category.Category;
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.console.commands.CommandClass;
-import ru.novosoft.smsc.admin.route.*;
 import ru.novosoft.smsc.admin.provider.Provider;
-import ru.novosoft.smsc.admin.category.Category;
+import ru.novosoft.smsc.admin.route.Destination;
+import ru.novosoft.smsc.admin.route.Route;
+import ru.novosoft.smsc.admin.route.SME;
+import ru.novosoft.smsc.admin.route.Source;
 
 import java.util.Iterator;
 

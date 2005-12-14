@@ -1,11 +1,9 @@
 package ru.novosoft.smsc.admin.provider;
 
 import ru.novosoft.smsc.jsp.SMSCAppContext;
-import ru.novosoft.smsc.jsp.util.tables.DataSource;
-import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
-import ru.novosoft.smsc.jsp.util.tables.Query;
 import ru.novosoft.smsc.jsp.util.tables.Filter;
-import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSourceImpl;
+import ru.novosoft.smsc.jsp.util.tables.Query;
+import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.QueryResultSetImpl;
 import ru.novosoft.smsc.jsp.util.tables.impl.provider.ProviderDataItem;
 import ru.novosoft.smsc.util.StringEncoderDecoder;

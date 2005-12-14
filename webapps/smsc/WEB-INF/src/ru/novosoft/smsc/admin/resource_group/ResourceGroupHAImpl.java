@@ -1,10 +1,8 @@
 package ru.novosoft.smsc.admin.resource_group;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.smsc_service.SmscList;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
-
-import java.util.HashMap;
+import ru.novosoft.smsc.admin.smsc_service.SmscList;
 
 /**
  * Created by IntelliJ IDEA.
@@ -41,21 +39,6 @@ public class ResourceGroupHAImpl extends ResourceGroupImpl
 	{
 		return NativeResourceGroupHA.ResourceGroup_listNodes(swigCPtr);
 	}
-
-/*	public byte getOnlineStatus(String nodeName)
-	{
-		logger.debug("Getting online status for rg: " + getName() + " at node: " + nodeName);
-		if (NativeResourceGroupHA.ResourceGroup_onlineStatus(swigCPtr, nodeName))
-			{
-				logger.debug("ONLINE returned");
-				return SmscList.getNodeId(nodeName);
-			}
-			else
-			{
-				logger.debug("OFFLINE returned");
-				return ServiceInfo.STATUS_OFFLINE;
-			}
-	}*/
 
 	public byte getOnlineStatus()
 	{

@@ -1,8 +1,8 @@
 package ru.novosoft.smsc.admin.console.commands.acl;
 
+import ru.novosoft.smsc.admin.acl.AclInfo;
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.console.commands.CommandClass;
-import ru.novosoft.smsc.admin.acl.AclInfo;
 
 import java.util.List;
 

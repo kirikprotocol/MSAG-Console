@@ -8,6 +8,8 @@ package ru.novosoft.smsc.admin.preferences;
 
 //todo Надо бы сделать контейнер для topmonPrefs, perfmonPrefs и других будущих хэшмапных префов, чтобы код не воротить каждый раз
 
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.category.CategoryFilter;
@@ -21,9 +23,6 @@ import ru.novosoft.smsc.jsp.util.tables.impl.user.UserFilter;
 import ru.novosoft.smsc.util.LocaleMessages;
 
 import java.util.*;
-
-import org.w3c.dom.NodeList;
-import org.w3c.dom.Element;
 
 public class UserPreferences
 {

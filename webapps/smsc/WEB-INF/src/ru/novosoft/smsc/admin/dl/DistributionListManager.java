@@ -9,19 +9,12 @@ package ru.novosoft.smsc.admin.dl;
 
 
 import ru.novosoft.smsc.admin.AdminException;
-//import org.apache.log4j.Category;
-//import ru.novosoft.smsc.admin.smsc_service.Smsc;
+import ru.novosoft.smsc.admin.dl.exceptions.*;
 import ru.novosoft.smsc.admin.service.Service;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.service.Type;
-import ru.novosoft.smsc.admin.dl.exceptions.*;
 import ru.novosoft.smsc.jsp.util.tables.impl.dl.DlFilter;
-/*
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-*/
+
 import java.util.*;
 
 /**

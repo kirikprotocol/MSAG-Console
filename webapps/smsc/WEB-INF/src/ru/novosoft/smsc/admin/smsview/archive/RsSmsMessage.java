@@ -3,7 +3,6 @@ package ru.novosoft.smsc.admin.smsview.archive;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.smsview.SmsDescriptor;
 import ru.novosoft.smsc.admin.smsview.SmsRow;
-import ru.novosoft.smsc.admin.smsview.SmsSource;
 
 import java.io.ByteArrayInputStream;
 import java.io.EOFException;

@@ -3,22 +3,21 @@ package ru.novosoft.smsc.admin.service;
 import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
-import ru.novosoft.smsc.admin.resource_group.ResourceGroupManager;
 import ru.novosoft.smsc.admin.resource_group.ResourceGroup;
+import ru.novosoft.smsc.admin.resource_group.ResourceGroupManager;
 import ru.novosoft.smsc.admin.route.SME;
 import ru.novosoft.smsc.admin.smsc_service.RouteSubjectManager;
 import ru.novosoft.smsc.admin.smsc_service.SmeManager;
 import ru.novosoft.smsc.admin.smsc_service.SmscList;
-import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.WebAppFolders;
+import ru.novosoft.smsc.util.config.Config;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 
 /**
  * Created by igork Date: Jan 20, 2003 Time: 6:23:33 PM
@@ -338,7 +337,6 @@ public class HostsManager
 
   public synchronized ServiceInfo getServiceInfo(final String serviceId) throws AdminException
   {
-//    return new ServiceInfo(serviceId, smeManager, getServiceStatus(serviceId));
     refreshServices();
     return serviceManager.getInfo(serviceId);
   }

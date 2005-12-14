@@ -2,12 +2,12 @@ package ru.novosoft.smsc.admin.resource_group;
 
 import org.apache.log4j.Category;
 
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.HashMap;
-import java.util.Properties;
 import java.util.Iterator;
 import java.util.Map;
-import java.io.IOException;
-import java.io.FileInputStream;
+import java.util.Properties;
 
 /**
  * Created by Serge Lugovoy

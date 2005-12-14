@@ -1,9 +1,9 @@
 package ru.novosoft.smsc.admin.console.commands.misc;
 
+import ru.novosoft.smsc.admin.category.Category;
+import ru.novosoft.smsc.admin.category.CategoryManager;
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.console.commands.CommandClass;
-import ru.novosoft.smsc.admin.category.CategoryManager;
-import ru.novosoft.smsc.admin.category.Category;
 
 import java.util.Iterator;
 

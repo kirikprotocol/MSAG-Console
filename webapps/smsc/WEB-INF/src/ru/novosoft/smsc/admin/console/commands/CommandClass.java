@@ -1,12 +1,8 @@
 package ru.novosoft.smsc.admin.console.commands;
 
+import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
-import ru.novosoft.smsc.admin.Constants;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
-import ru.novosoft.smsc.admin.journal.Actions;
-
-import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.

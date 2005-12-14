@@ -10,9 +10,9 @@ package ru.novosoft.smsc.admin.console.commands.route;
 
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.console.commands.CommandClass;
-import ru.novosoft.smsc.admin.route.Route;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.route.Route;
 
 public class RouteDeleteCommand extends CommandClass
 {

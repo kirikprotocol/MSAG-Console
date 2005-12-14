@@ -1,13 +1,5 @@
 package ru.novosoft.smsc.admin.resource_group;
 
-import ru.novosoft.smsc.util.config.Config;
-import ru.novosoft.smsc.admin.smsc_service.SmeManager;
-import ru.novosoft.smsc.admin.service.ServiceInfo;
-import ru.novosoft.smsc.admin.AdminException;
-
-import java.util.Map;
-import java.util.List;
-
 /**
  * Created by IntelliJ IDEA.
  * User: starkom

@@ -8,9 +8,9 @@ package ru.novosoft.smsc.admin.smsstat;
  * To change this template use Options | File Templates.
  */
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.ArrayList;
 
 public class DateCountersSet extends CountersSet
 {

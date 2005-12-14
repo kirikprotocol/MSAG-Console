@@ -7,12 +7,15 @@
  */
 package ru.novosoft.smsc.admin.console;
 
+import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.console.parser.CommandLexer;
 import ru.novosoft.smsc.admin.console.parser.CommandParser;
-import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.util.auth.AuthenticatorProxy;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.StringReader;
 import java.net.Socket;
 import java.net.SocketException;
 import java.security.Principal;

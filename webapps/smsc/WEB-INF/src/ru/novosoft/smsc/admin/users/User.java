@@ -7,12 +7,11 @@ package ru.novosoft.smsc.admin.users;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import ru.novosoft.smsc.admin.preferences.UserPreferences;
+import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 import java.security.Principal;
 import java.util.*;
-
-import ru.novosoft.smsc.util.StringEncoderDecoder;
-import ru.novosoft.smsc.admin.preferences.UserPreferences;
 
 public class User implements Principal
 {

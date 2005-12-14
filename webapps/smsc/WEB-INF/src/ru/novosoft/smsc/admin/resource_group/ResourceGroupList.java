@@ -1,13 +1,12 @@
 package ru.novosoft.smsc.admin.resource_group;
 
-import ru.novosoft.smsc.admin.resource_group.ResourceGroup;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.util.SortedList;
 
-import java.util.Map;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by IntelliJ IDEA.

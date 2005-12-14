@@ -5,8 +5,8 @@
  */
 package ru.novosoft.smsc.admin.alias;
 
-import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.route.Mask;
 
 
 public class Alias

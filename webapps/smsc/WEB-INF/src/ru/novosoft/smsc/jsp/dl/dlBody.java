@@ -80,10 +80,10 @@ public abstract class dlBody extends IndexBean
       return error(SMSCErrors.error.dl.invalidAddress, e);
     }
 
-    if (initialized && fullSubmittersList.size() == 0)
+/*    if (initialized && fullSubmittersList.size() == 0)
       return error(SMSCErrors.error.dl.noSubmittersEntered);
     if (initialized && fullMembersList.size() == 0)
-      return error(SMSCErrors.error.dl.noMembersEntered);
+      return error(SMSCErrors.error.dl.noMembersEntered);*/
 
     return RESULT_OK;
   }

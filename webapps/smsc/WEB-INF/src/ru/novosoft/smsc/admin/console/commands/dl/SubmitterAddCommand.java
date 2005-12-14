@@ -13,8 +13,8 @@ import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
 import ru.novosoft.smsc.admin.dl.exceptions.ListNotExistsException;
 import ru.novosoft.smsc.admin.dl.exceptions.PrincipalNotExistsException;
 import ru.novosoft.smsc.admin.dl.exceptions.SubmitterAlreadyExistsException;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
 
 public class SubmitterAddCommand extends CommandClass
 {
