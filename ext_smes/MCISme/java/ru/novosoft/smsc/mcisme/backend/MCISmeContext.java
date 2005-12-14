@@ -86,6 +86,7 @@ public class MCISmeContext {
         properties.setProperty("jdbc.pass", newConfig.getString("MCISme.DataSource.dbUserPassword"));
         properties.setProperty("jdbc.min.connections", "0");
         properties.setProperty("jdbc.max.idle.time", "240");
+        properties.setProperty("jdbc.pool.name", "mcisme");
         dataSource = new ConnectionPool(properties);
       }
     } catch (Throwable e) {

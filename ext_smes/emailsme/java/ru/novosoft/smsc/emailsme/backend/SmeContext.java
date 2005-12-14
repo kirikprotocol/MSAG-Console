@@ -101,6 +101,7 @@ public class SmeContext
         connectionPoolConfig.setProperty("jdbc.pass", newPassword);
         connectionPoolConfig.setProperty("jdbc.min.connections", "0");
         connectionPoolConfig.setProperty("jdbc.max.idle.time", "240");
+        connectionPoolConfig.setProperty("jdbc.pool.name", "emailsme");
         connectionPool = new ConnectionPool(connectionPoolConfig);
       }
     } catch (Throwable e) {

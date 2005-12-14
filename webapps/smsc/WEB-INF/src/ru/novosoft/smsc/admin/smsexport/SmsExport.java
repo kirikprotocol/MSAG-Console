@@ -169,6 +169,7 @@ private final static String INSERT_VALUES =
     props.setProperty("jdbc.pass", export.getPassword());
     props.setProperty("jdbc.min.connections", "0");
     props.setProperty("jdbc.max.idle.time", "240");
+    props.setProperty("jdbc.pool.name", "smsexport");
     return new ConnectionPool(props);
   }
     private oracle.jdbc.OracleConnection getOracleConnection(ExportSettings export) throws SQLException
