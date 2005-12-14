@@ -114,7 +114,7 @@ public class RouteAlterCommand extends RouteGenCommand
             } else if (action == ACTION_DEL) {
               Source oldSrc = newRoute.getSources().get(src.getName());
               if (oldSrc != null) {
-                if (newRoute.getSources().size() > 1) newRoute.removeDestination(src.getName());
+                if (newRoute.getSources().size() > 1) newRoute.removeSource(src.getName());
                 else throw new Exception("Couldn't delete source '" + src.getName() + "' for " + out + ". It rest only one");
               }
               else throw new Exception("Source '" + src.getName() + "' not found for " + out);
