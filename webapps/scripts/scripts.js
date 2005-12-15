@@ -1,12 +1,18 @@
 function resetValidation(elem)
 {
 	elem.errorMessage = null;
-	elem.runtimeStyle.color = elem.style.color;
+  try {
+    elem.runtimeStyle.color = elem.style.color;
+  } catch(ex) {
+  }
 	if(elem.tagName == "SELECT")
 	{
 		elem = elem.parentElement;
 	}
-	elem.runtimeStyle.borderColor = elem.style.borderColor;
+  try {
+    elem.runtimeStyle.borderColor = elem.style.borderColor;
+  } catch(ex) {
+  }
 /*	var errPointer = elem.nextSibling;
 	if(errPointer != null)
 	{
@@ -37,12 +43,18 @@ function validationError(elem, txt)
 	if (!elem.disabled)
 	  elem.focus();
 
-	elem.runtimeStyle.color = "#FF0000";
+  try {
+    elem.runtimeStyle.color = "#FF0000";
+  } catch(ex) {
+  }
 	if(elem.tagName == "SELECT")
 	{
 		elem = elem.parentElement;
 	}
-	elem.runtimeStyle.borderColor = "#FF0000";
+  try {
+    elem.runtimeStyle.borderColor = "#FF0000";
+  } catch(ex) {
+  }
 
 	return false;
 }
