@@ -87,7 +87,7 @@ for (Iterator i = mscList.iterator(); i.hasNext();) {
     <td align=center><%= item.getFailuresCount()%></td>
     <td align=right>
 		<%button(out, !item.ismLock() ? getLocImageFileName("but_lock") : getLocImageFileName("but_lock_dis"),
-             "mbBlock", "Lock", "mscman.lockButtonHint", "opForm.mscKey.value='" + commutator + "'; clickSubmit('mbLock', 'Lock')");%>
+             "mbBlock", "Lock", "mscman.lockButtonHint", "opForm.mscKey.value='" + commutator + "'; clickSubmit('mbBlock', 'Lock')");%>
 		<%button(out, item.isaLock() || item.ismLock() ? getLocImageFileName("but_unlock") : getLocImageFileName("but_unlock_dis"),
              "mbClear", "UnLock", "mscman.unlockButtonHint", "opForm.mscKey.value='" + commutator + "'; clickSubmit('mbClear', 'UnLock')");%>
 		<%button(out, getLocImageFileName("but_unregister"),
