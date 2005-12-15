@@ -98,7 +98,6 @@
       <col width="1%">
       <col width="98%">
 <%
-      final String filterName = bean.getFilterName();
       for (int i = 0; i < bean.getFilter_masks().length; i++) {
         final String filterMask    = bean.getFilter_masks()[i];
         final String filterMaskHex = StringEncoderDecoder.encodeHEX(filterMask);
@@ -118,17 +117,12 @@
         <td><img src="/images/but_add.gif" onclick="addFilterMask()" style="cursor:hand;"></td>
         <td>&nbsp;</td>
       </tr>
-      <tr>
-        <td>
-          <input class=txt name=filter_name id=filter_name value="<%= StringEncoderDecoder.encode(filterName) %>" validation="nonEmpty" onkeyup="resetValidation(this)">
-        </td>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-      </tr>
     </table>
-  </div>
-  <div class=page_subtitle>
-    <%= getLocString("subjects.filterName") %>
+<%    final String filterName = bean.getFilterName();%>
+    <div class=page_subtitle>
+      <%= getLocString("subjects.filterName") %>
+    </div>
+    <input class=txt name=filter_name id=filter_name value="<%= StringEncoderDecoder.encode(filterName) %>" validation="nonEmpty" onkeyup="resetValidation(this)">
   </div>
 <%
   page_menu_begin(out);
