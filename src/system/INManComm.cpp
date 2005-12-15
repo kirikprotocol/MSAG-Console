@@ -45,7 +45,7 @@ static void FillChargeOp(SMSId id,smsc::inman::interaction::ChargeSms& op,const 
   op.setCallingPartyNumber(sms.getOriginatingAddress().toString());
   op.setCallingIMSI(sms.getOriginatingDescriptor().imsi);
   op.setSMSCAddress(INManComm::scAddr.toString());
-  op.setSubmitTimeTZ(sms.getSubmitTime()+timezone);
+  op.setSubmitTimeTZ(sms.getSubmitTime());
   op.setTPShortMessageSpecificInfo(0x11);
   op.setTPProtocolIdentifier(sms.getIntProperty(Tag::SMPP_PROTOCOL_ID));
   op.setTPDataCodingScheme(sms.getIntProperty(Tag::SMPP_DATA_CODING));
@@ -150,7 +150,7 @@ void INManComm::Report(int dlgId,const SMS& sms,bool final)
   res.setDestIMSI(sms.getDestinationDescriptor().imsi);
   res.setDestMSC(sms.getDestinationDescriptor().msc);
   res.setDestSMEid(sms.getDestinationSmeId());
-  res.setDeliveryTime(time(NULL)+timezone);
+  res.setDeliveryTime(time(NULL));
 
   smsc::inman::interaction::ObjectBuffer buf(0);
   smsc::inman::interaction::SerializerInap::getInstance()->serialize(&res,buf);
