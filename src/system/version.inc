@@ -1,7 +1,7 @@
 
 #define VER_MAJOR 1
 #define VER_MINOR 9
-#define VER_BUILD 1906
+#define VER_BUILD 2108
 #define VER_MAKE_STR2(X) #X
 #define VER_MAKE_STR(X) VER_MAKE_STR2(X)
 #define VER_DATE  "Fri Jun 10 00:27:59 2005"
