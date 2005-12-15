@@ -143,17 +143,16 @@ void OCIConnection::ping()
     MutexGuard connectGuard(connectLock);
     if (!isConnected || !pingStmt) return;
 
-    bool pingOk = false;
+    bool pingOk = true;
     try // Execute ping statement
     {
         MutexGuard guard(getAccessMutex());
         check(OCIStmtExecute(svchp, pingStmt, errhp, 1, 0, 
                              (CONST OCISnapshot *) NULL,
                              (OCISnapshot *) NULL, OCI_DEFAULT));
-        pingOk = true;
     } 
-    catch (...) { 
-        // Do nothing
+    catch (...) {
+        pingOk = false; // Do nothing
     }
     smsc_log_debug(log, "Connection %p ping %s", this, (pingOk) ? "ok":"fail");
 }
@@ -760,37 +759,46 @@ void OCIResultSet::prepare()
     OCIParam *param = 0;
     ub4 counter = 1;
 
-    MutexGuard guard(getAccessMutex());
-
-    /* Request a parameter descriptor for position 1 in the select-list */
-    sb4 status = OCIParamGet(owner->stmt, OCI_HTYPE_STMT,
+    sb4 status = 0;
+    {
+        MutexGuard guard(getAccessMutex());
+        /* Request a parameter descriptor for position 1 in the select-list */
+        status = OCIParamGet(owner->stmt, OCI_HTYPE_STMT,
                              owner->errhp, (dvoid **)&param, (ub4) counter);
+    }
+
     /* Loop only if a descriptor was successfully retrieved for
     current position, starting at 1 */
     while (status==OCI_SUCCESS)
     {
         ub2 type = 0; ub2 size = 0;
 
-        /* Retrieve the data type attribute */
-        owner->check(OCIAttrGet((dvoid *) param, (ub4) OCI_DTYPE_PARAM,
-                                (dvoid *) &type, (ub4 *) 0,
-                                (ub4) OCI_ATTR_DATA_TYPE,
-                                (OCIError*) owner->errhp));
-        /* Retrieve max data size */
-        owner->check(OCIAttrGet((dvoid *) param, (ub4) OCI_DTYPE_PARAM,
-                                (dvoid *) &size, (ub4 *) 0,
-                                (ub4) OCI_ATTR_DATA_SIZE,
-                                (OCIError *) owner->errhp));
+        {
+            MutexGuard guard(getAccessMutex());
+            /* Retrieve the data type attribute */
+            owner->check(OCIAttrGet((dvoid *) param, (ub4) OCI_DTYPE_PARAM,
+                                    (dvoid *) &type, (ub4 *) 0,
+                                    (ub4) OCI_ATTR_DATA_TYPE,
+                                    (OCIError*) owner->errhp));
+            /* Retrieve max data size */
+            owner->check(OCIAttrGet((dvoid *) param, (ub4) OCI_DTYPE_PARAM,
+                                    (dvoid *) &size, (ub4 *) 0,
+                                    (ub4) OCI_ATTR_DATA_SIZE,
+                                    (OCIError *) owner->errhp));
+        }
 
         OCIDataDescriptor* descriptor = new OCIDataDescriptor(type, size);
         owner->define(counter, descriptor->type, descriptor->data,
                       descriptor->size, (dvoid *) &descriptor->ind);
         descriptors.Push(descriptor);
 
-        owner->check(OCIDescriptorFree((dvoid *) param, OCI_DTYPE_PARAM));
-        /* increment counter and get next descriptor, if there is one */
-        status = OCIParamGet(owner->stmt, OCI_HTYPE_STMT,
-                             owner->errhp, (dvoid **)&param, (ub4) ++counter);
+        {
+            MutexGuard guard(getAccessMutex());
+            owner->check(OCIDescriptorFree((dvoid *) param, OCI_DTYPE_PARAM));
+            /* increment counter and get next descriptor, if there is one */
+            status = OCIParamGet(owner->stmt, OCI_HTYPE_STMT,
+                                 owner->errhp, (dvoid **)&param, (ub4) ++counter);
+        }
     }
 }
 
@@ -1014,14 +1022,15 @@ void OCIRoutine::prepare(const char* call, const char* name, bool func/*=false*/
     ub1      bndDupl[FUNCTION_MAX_ARGUMENTS_COUNT];
     OCIBind* bndHndl[FUNCTION_MAX_ARGUMENTS_COUNT];
 
-    MutexGuard guard(getAccessMutex());
-
-    check(OCIStmtGetBindInfo (stmt, errhp, bndSize, 1, &bndFound,
-                              bndBvnp, bndBvnl, bndInvp, bndInpl, bndDupl,
-                              bndHndl));
-    if (bndFound < 0) throw SQLException("Too many bind variables "
-                                         "in PL/SQL call! Max allowed is %d.",
-                                         FUNCTION_MAX_ARGUMENTS_COUNT);
+    {
+        MutexGuard guard(getAccessMutex());
+        check(OCIStmtGetBindInfo (stmt, errhp, bndSize, 1, &bndFound,
+                                  bndBvnp, bndBvnl, bndInvp, bndInpl, bndDupl,
+                                  bndHndl));
+        if (bndFound < 0) throw SQLException("Too many bind variables "
+                                             "in PL/SQL call! Max allowed is %d.",
+                                             FUNCTION_MAX_ARGUMENTS_COUNT);
+    }
     for (int x=0; x<bndFound; x++)
     {
         std::string bndstr(bndBvnp[x] ? (const char *)bndBvnp[x]:
@@ -1035,25 +1044,30 @@ void OCIRoutine::prepare(const char* call, const char* name, bool func/*=false*/
     OCIDescribe *dschp  = 0;    // describe handle
 
     ub2         numargs, pos, level;
-    /* allocate describe handle for routine */
-    check(OCIHandleAlloc((dvoid *) envhp, (dvoid **) &dschp,
-                         (ub4) OCI_HTYPE_DESCRIBE,
-                         (size_t) 0, (dvoid **) 0));
+    {
+        MutexGuard guard(getAccessMutex());
+        /* allocate describe handle for routine */
+        check(OCIHandleAlloc((dvoid *) envhp, (dvoid **) &dschp,
+                             (ub4) OCI_HTYPE_DESCRIBE,
+                             (size_t) 0, (dvoid **) 0));
+    }
     try
     {
-        /* get the describe handle for routine */
-        check(OCIDescribeAny(svchp, errhp, (text *)name, (ub4)strlen(name),
-                             OCI_OTYPE_NAME, 0,
-                             (func) ? OCI_PTYPE_FUNC : OCI_PTYPE_PROC, dschp));
-        /* get the parameter handle */
-        check(OCIAttrGet(dschp, OCI_HTYPE_DESCRIBE, &parmh,
-                         0, OCI_ATTR_PARAM, errhp));
-        /* get the number of arguments and the arglist */
-        check(OCIAttrGet(parmh, OCI_DTYPE_PARAM, &arglst,
-                         0, OCI_ATTR_LIST_ARGUMENTS, errhp));
-        check(OCIAttrGet(arglst, OCI_DTYPE_PARAM, &numargs,
-                         0, OCI_ATTR_NUM_PARAMS, errhp));
-
+        {
+            MutexGuard guard(getAccessMutex());
+            /* get the describe handle for routine */
+            check(OCIDescribeAny(svchp, errhp, (text *)name, (ub4)strlen(name),
+                                 OCI_OTYPE_NAME, 0,
+                                 (func) ? OCI_PTYPE_FUNC : OCI_PTYPE_PROC, dschp));
+            /* get the parameter handle */
+            check(OCIAttrGet(dschp, OCI_HTYPE_DESCRIBE, &parmh,
+                             0, OCI_ATTR_PARAM, errhp));
+            /* get the number of arguments and the arglist */
+            check(OCIAttrGet(parmh, OCI_DTYPE_PARAM, &arglst,
+                             0, OCI_ATTR_LIST_ARGUMENTS, errhp));
+            check(OCIAttrGet(arglst, OCI_DTYPE_PARAM, &numargs,
+                             0, OCI_ATTR_NUM_PARAMS, errhp));
+        }
         __trace2__("Num-args is %d", numargs);
 
         // For procedure, begin with 1 for function, begin with 0.
@@ -1064,24 +1078,31 @@ void OCIRoutine::prepare(const char* call, const char* name, bool func/*=false*/
             ub4         atrlen = 0;
             OCIParam   *innerlst = 0;
 
-            check(OCIParamGet(arglst, OCI_DTYPE_PARAM, errhp, (void **)&arg, i));
+            {
+                MutexGuard guard(getAccessMutex());
+                check(OCIParamGet(arglst, OCI_DTYPE_PARAM, errhp, (void **)&arg, i));
+            }
 
             try
             {
                 ub2 type = 0; ub2 size = 0;
-                if (i != 0)
                 {
-                    check(OCIAttrGet(arg, OCI_DTYPE_PARAM, &atr, &atrlen,
-                                     OCI_ATTR_NAME, errhp));
-                }
-                check(OCIAttrGet(arg, OCI_DTYPE_PARAM, &type, 0,
-                                 OCI_ATTR_DATA_TYPE, errhp));
-                check(OCIAttrGet((dvoid *)arg, (ub4)OCI_DTYPE_PARAM,
-                                 (dvoid *)&size, (ub4 *)0,
-                                 (ub4)OCI_ATTR_DATA_SIZE, errhp));
+                    MutexGuard guard(getAccessMutex());
 
-                check(OCIAttrGet(arg, OCI_DTYPE_PARAM, &innerlst, 0,
-                                 OCI_ATTR_LIST_ARGUMENTS, errhp));
+                    if (i != 0)
+                    {
+                        check(OCIAttrGet(arg, OCI_DTYPE_PARAM, &atr, &atrlen,
+                                         OCI_ATTR_NAME, errhp));
+                    }
+                    check(OCIAttrGet(arg, OCI_DTYPE_PARAM, &type, 0,
+                                     OCI_ATTR_DATA_TYPE, errhp));
+                    check(OCIAttrGet((dvoid *)arg, (ub4)OCI_DTYPE_PARAM,
+                                     (dvoid *)&size, (ub4 *)0,
+                                     (ub4)OCI_ATTR_DATA_SIZE, errhp));
+
+                    check(OCIAttrGet(arg, OCI_DTYPE_PARAM, &innerlst, 0,
+                                     OCI_ATTR_LIST_ARGUMENTS, errhp));
+                }
                 if (innerlst) // check if the current argument is a record.
                     throw SQLException("RecordSet type is not supported for use "
                                        "in context of PL/SQL calls!");
@@ -1116,21 +1137,33 @@ void OCIRoutine::prepare(const char* call, const char* name, bool func/*=false*/
             }
             catch (SQLException& exc)
             {
-                if (arg) check(OCIDescriptorFree(arg, OCI_DTYPE_PARAM));
+                if (arg) {
+                    MutexGuard guard(getAccessMutex());
+                    check(OCIDescriptorFree(arg, OCI_DTYPE_PARAM));
+                }
                 throw;
             }
 
-            check(OCIDescriptorFree(arg, OCI_DTYPE_PARAM)); arg = 0;
+            {
+                MutexGuard guard(getAccessMutex());
+                check(OCIDescriptorFree(arg, OCI_DTYPE_PARAM)); arg = 0;
+            }
         }
     }
     catch (SQLException& exc)
     {
-        if (dschp) check(OCIHandleFree((dvoid *) dschp, (ub4) OCI_HTYPE_DESCRIBE));
+        if (dschp) {
+            MutexGuard guard(getAccessMutex());
+            check(OCIHandleFree((dvoid *) dschp, (ub4) OCI_HTYPE_DESCRIBE));
+        }
         cleanupDescriptors();
         throw;
     }
 
-    if (dschp) check(OCIHandleFree((dvoid *) dschp, (ub4) OCI_HTYPE_DESCRIBE));
+    if (dschp) {
+        MutexGuard guard(getAccessMutex());
+        check(OCIHandleFree((dvoid *) dschp, (ub4) OCI_HTYPE_DESCRIBE));
+    }
 }
 
 bool OCIRoutine::isTextsEqual(text* txt1, ub4 len1, text* txt2, ub4 len2)
