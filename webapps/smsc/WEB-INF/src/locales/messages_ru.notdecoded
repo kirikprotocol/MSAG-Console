@@ -421,7 +421,7 @@ sms.body.tag.63=SMSC_TRANSLIT
 
 #--------------COMMON---------------
 common.mainTitle = SMS Center Administration Console
-common.copyright = Copyright&nbsp;&copy;&nbsp;2003.&nbsp;All&nbsp;rights&nbsp;reserved.
+common.copyright = Copyright&nbsp;&copy;&nbsp;2003-2005.&nbsp;All&nbsp;rights&nbsp;reserved.
 common.version = Version&nbsp;1.9
 
 common.errors.error = Error:
