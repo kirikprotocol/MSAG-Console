@@ -6,7 +6,7 @@
 <!-- background  -->
 <table cellspacing="0" cellpadding="0" height="100%" style="position: absolute; top:0; left:0; z-index: -1;">
 <tr><td width="12px" background="/images/smsc_24.jpg"></td><td>&nbsp;</td><td width="12px" background="/images/smsc_26.jpg"></td></tr>
-</table> */%>
+</table>
 <!-- "SMS Service Center" header -->
 <table cellspacing="0" cellpadding="0" border="0" ><tr>
   <td width="236"><IMG SRC="/images/smsc_04.jpg" WIDTH="236" HEIGHT="45" ALT=""></td>
