@@ -245,6 +245,7 @@ namespace smsc { namespace db
     private:
         
         Connection*         next;
+        Mutex        accessMutex;
 
         inline void setNextConnection(Connection* connection) {
             next = connection;
@@ -253,7 +254,7 @@ namespace smsc { namespace db
         inline Connection* getNextConnection(void) {
             return next;
         };
-    
+        
     protected:
         
 		smsc::logger::Logger *log;
@@ -272,6 +273,8 @@ namespace smsc { namespace db
         Routine* _getRoutine(const char* id);
         bool _registerRoutine(const char* id, Routine* routine);
 
+        virtual void ping() = 0;
+    
     public:
         
         virtual ~Connection() {};
@@ -279,6 +282,10 @@ namespace smsc { namespace db
         inline bool isAvailable() {
             return (isConnected && !isDead);
         };
+
+        Mutex& getAccessMutex() {
+            return accessMutex;
+        }
     
         bool registerStatement(const char* id, Statement* statement);
         bool unregisterStatement(const char* id);
@@ -442,7 +449,7 @@ namespace smsc { namespace db
         };
     };
     
-    class ConnectionPool
+    class ConnectionPool : public Thread
     {
     private:
 
@@ -450,6 +457,9 @@ namespace smsc { namespace db
         smsc::logger::Logger *log;
 
         EventMonitor         monitor;
+        Event                pingEvent;
+        bool                 pingStarted;
+        Mutex                pingStartLock;
         
         struct ConnectionQueue
         {
@@ -485,6 +495,10 @@ namespace smsc { namespace db
         void freeConnection(Connection* connection);
         void closeConnections();
         void closeRegisteredQueries(const char* id);
+
+        virtual int Execute();
+        void Start();
+        void Stop();
     };
 
     class PoolledDataSource : public DataSource
@@ -500,6 +514,7 @@ namespace smsc { namespace db
         {
             DataSource::init(config);
             pool = new ConnectionPool(*((DataSource *)this), config);
+            if (pool) pool->Start();
             if (watchDog) watchDog->Start();
         };
 

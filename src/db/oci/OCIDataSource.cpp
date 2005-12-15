@@ -35,11 +35,14 @@ const char* FUNCTION_RETURN_ATTR_NAME   = "RETURN";
 const int FUNCTION_RETURN_ATTR_LEN      = strlen(FUNCTION_RETURN_ATTR_NAME);
 const int MAX_DB_CHAR_STR_LENGTH        = 4000;
 
+const char* PING_STATEMENT_SQL = "SELECT 0 FROM DUAL";
+int PING_STATEMENT_SQL_LEN = strlen(PING_STATEMENT_SQL);
+
 OCIConnection::OCIConnection(const char* instance,
                              const char* user, const char* password)
     : Connection(),
         dbInstance(instance), dbUserName(user), dbUserPassword(password),
-            envhp(0), svchp(0), srvhp(0), errhp(0), sesshp(0)
+            envhp(0), svchp(0), srvhp(0), errhp(0), sesshp(0), pingStmt(0)
 {
     __require__(dbInstance && dbUserName && dbUserPassword);
     //printf("Connection : %s %s %s\n", dbInstance, dbUserName, dbUserPassword);
@@ -60,12 +63,12 @@ void OCIConnection::connect()
     {
         if (!isConnected)
         {
-            envhp=0L; svchp=0L; srvhp=0L; errhp=0L; sesshp=0L;
+            envhp=0L; svchp=0L; srvhp=0L; errhp=0L; sesshp=0L; pingStmt=0L;
 
-            // open connection to DB and begin user session
             {
                 MutexGuard  guard2(doConnectLock);
 
+                // open connection to DB and begin user session
                 check(OCIEnvCreate(&envhp, OCI_OBJECT|OCI_ENV_NO_MUTEX,
                                    (dvoid *)0, 0, 0, 0, (size_t) 0, (dvoid **)0));
                 check(OCIHandleAlloc((dvoid *)envhp, (dvoid **)&errhp,
@@ -92,6 +95,13 @@ void OCIConnection::connect()
                 check(OCIAttrSet((dvoid *)svchp, (ub4) OCI_HTYPE_SVCCTX,
                                  (dvoid *)sesshp, (ub4) 0,
                                  (ub4) OCI_ATTR_SESSION, errhp));
+
+                // create ping statement
+                check(OCIHandleAlloc((dvoid *)envhp, (dvoid **) &pingStmt,
+                                     OCI_HTYPE_STMT, 0, (dvoid **)0));
+                check(OCIStmtPrepare(pingStmt, errhp, (text *)PING_STATEMENT_SQL,
+                                     (ub4) PING_STATEMENT_SQL_LEN,
+                                     (ub4) OCI_NTV_SYNTAX, (ub4) OCI_DEFAULT));
             }
 
             isConnected = true; isDead = false;
@@ -106,12 +116,13 @@ void OCIConnection::connect()
 void OCIConnection::cleanupHandlers()
 {
     MutexGuard  guard2(doConnectLock);
-    if (errhp && svchp) {
-    // logoff from database server
+    if (pingStmt) { // free ping statement handle
+        (void) OCIHandleFree(pingStmt, OCI_HTYPE_STMT);
+    }
+    if (errhp && svchp) { // logoff from database server
         (void) OCILogoff(svchp, errhp);
     }
-    if (envhp) {
-    // free envirounment handle, all derrived handles will be freed too
+    if (envhp) { // free envirounment handle, all derrived handles will be freed too
         (void) OCIHandleFree(envhp, OCI_HTYPE_ENV);
     }
     svchp = 0; envhp = 0; errhp = 0;
@@ -127,22 +138,44 @@ void OCIConnection::disconnect()
         isConnected = false; isDead = false;
     }
 }
+void OCIConnection::ping()
+{
+    MutexGuard connectGuard(connectLock);
+    if (!isConnected || !pingStmt) return;
+
+    bool pingOk = false;
+    try // Execute ping statement
+    {
+        MutexGuard guard(getAccessMutex());
+        check(OCIStmtExecute(svchp, pingStmt, errhp, 1, 0, 
+                             (CONST OCISnapshot *) NULL,
+                             (OCISnapshot *) NULL, OCI_DEFAULT));
+        pingOk = true;
+    } 
+    catch (...) { 
+        // Do nothing
+    }
+    smsc_log_debug(log, "Connection %p ping %s", this, (pingOk) ? "ok":"fail");
+}
 
 void OCIConnection::commit()
     throw(SQLException)
 {
+    MutexGuard guard(getAccessMutex());
     check(OCITransCommit(svchp, errhp, OCI_DEFAULT));
 }
 
 void OCIConnection::rollback()
     throw(SQLException)
 {
+    MutexGuard guard(getAccessMutex());
     check(OCITransRollback(svchp, errhp, OCI_DEFAULT));
 }
 void OCIConnection::abort()
     throw(SQLException)
 {
-    MutexGuard  guard(connectLock);
+    MutexGuard connectGuard(connectLock);
+    MutexGuard guard(getAccessMutex());
 
     // TODO: check that operation is still active on this connection !!!
     if (isConnected && svchp && errhp) {
@@ -293,6 +326,10 @@ OCIQuery::OCIQuery(OCIConnection* connection)
     __require__(owner);
     envhp = owner->envhp; svchp = owner->svchp; errhp = owner->errhp;
 }
+Mutex& OCIQuery::getAccessMutex() {
+    return owner->getAccessMutex();
+}
+
 void OCIQuery::prepare(const char* query)
     throw(SQLException)
 {
@@ -302,19 +339,26 @@ void OCIQuery::prepare(const char* query)
     sqlquery = new char[querylen+1];
     strcpy(sqlquery, query);
     
-    check(OCIHandleAlloc((dvoid *)envhp, (dvoid **) &stmt,
-                         OCI_HTYPE_STMT, 0, (dvoid **)0));
-    check(OCIStmtPrepare(stmt, errhp, (text *)sqlquery, (ub4) querylen,
-                         (ub4) OCI_NTV_SYNTAX, (ub4) OCI_DEFAULT));
+    {
+        MutexGuard guard(getAccessMutex());
 
-    ub4 prefetch=256;
-    check(OCIAttrSet( (dvoid *) stmt, (ub4) OCI_HTYPE_STMT,
-      (dvoid *) &prefetch, (ub4) sizeof(ub4),
-      (ub4) OCI_ATTR_PREFETCH_ROWS, errhp));
+        check(OCIHandleAlloc((dvoid *)envhp, (dvoid **) &stmt,
+                             OCI_HTYPE_STMT, 0, (dvoid **)0));
+        check(OCIStmtPrepare(stmt, errhp, (text *)sqlquery, (ub4) querylen,
+                             (ub4) OCI_NTV_SYNTAX, (ub4) OCI_DEFAULT));
+
+        ub4 prefetch=256;
+        check(OCIAttrSet( (dvoid *) stmt, (ub4) OCI_HTYPE_STMT,
+          (dvoid *) &prefetch, (ub4) sizeof(ub4),
+          (ub4) OCI_ATTR_PREFETCH_ROWS, errhp));
+    }
 }
 OCIQuery::~OCIQuery()
 {
-    if (stmt) (void) OCIHandleFree(stmt, OCI_HTYPE_STMT);
+    if (stmt) {
+        MutexGuard guard(getAccessMutex());
+        (void) OCIHandleFree(stmt, OCI_HTYPE_STMT);
+    }
     if (sqlquery) delete sqlquery;
 }
 
@@ -323,7 +367,9 @@ void OCIQuery::bind(ub4 pos, ub2 type,
     throw(SQLException)
 {
     __trace2__("Bind by pos: %d, type %d", pos, type);
+
     OCIBind *bind = 0;
+    MutexGuard guard(getAccessMutex());
     check(OCIBindByPos(stmt, &bind, errhp, pos,
                        placeholder, size, type, indp,
                        (ub2 *) 0, (ub2 *) 0, (ub4) 0, (ub4 *) 0,
@@ -342,6 +388,7 @@ void OCIQuery::bind(CONST text* name, sb4 name_len, ub2 type,
     */
 
     OCIBind *bind = 0;
+    MutexGuard guard(getAccessMutex());
     check(OCIBindByName(stmt, &bind, errhp, name, name_len,
                         placeholder, size, type, indp,
                         (ub2 *) 0, (ub2 *) 0, (ub4) 0, (ub4 *) 0,
@@ -353,6 +400,7 @@ void OCIQuery::define(ub4 pos, ub2 type,
     throw(SQLException)
 {
     OCIDefine*  define = 0;
+    MutexGuard guard(getAccessMutex());
     check(OCIDefineByPos(stmt, &define, errhp, pos,
                          placeholder, size, type, indp,
                          (ub2 *) 0, (ub2 *) 0, OCI_DEFAULT));
@@ -392,6 +440,7 @@ void OCIQuery::check(sword status)
 sword OCIQuery::execute(ub4 mode, ub4 iters, ub4 rowoff)
     throw(SQLException)
 {
+    MutexGuard guard(getAccessMutex());
     return OCIStmtExecute(svchp, stmt, errhp, iters, rowoff,
                           (CONST OCISnapshot *) NULL,
                           (OCISnapshot *) NULL, mode);
@@ -400,6 +449,7 @@ sword OCIQuery::execute(ub4 mode, ub4 iters, ub4 rowoff)
 sword OCIQuery::fetch()
     throw(SQLException)
 {
+    MutexGuard guard(getAccessMutex());
     return OCIStmtFetch(stmt, errhp, (ub4) 1, (ub4) OCI_FETCH_NEXT,
                         (ub4) OCI_DEFAULT);
 }
@@ -420,6 +470,7 @@ OCIStatement::~OCIStatement()
 ub4 OCIStatement::getRowsAffectedCount()
 {
     ub4 res = 0;
+    MutexGuard guard(getAccessMutex());
     if (OCIAttrGet((CONST dvoid *)stmt, OCI_HTYPE_STMT,
                    &res, NULL, OCI_ATTR_ROW_COUNT, errhp) != OCI_SUCCESS)
     {
@@ -693,6 +744,11 @@ void OCIStatement::setDateTime(int pos, time_t time, bool null)
 
 /* ------------------------ ResultSet implementation ----------------------- */
 
+Mutex& OCIResultSet::getAccessMutex()
+{
+    return owner->getAccessMutex();
+}
+
 void OCIResultSet::prepare()
     throw(SQLException)
 {
@@ -703,6 +759,8 @@ void OCIResultSet::prepare()
 
     OCIParam *param = 0;
     ub4 counter = 1;
+
+    MutexGuard guard(getAccessMutex());
 
     /* Request a parameter descriptor for position 1 in the select-list */
     sb4 status = OCIParamGet(owner->stmt, OCI_HTYPE_STMT,
@@ -955,6 +1013,8 @@ void OCIRoutine::prepare(const char* call, const char* name, bool func/*=false*/
     ub1      bndInpl[FUNCTION_MAX_ARGUMENTS_COUNT];
     ub1      bndDupl[FUNCTION_MAX_ARGUMENTS_COUNT];
     OCIBind* bndHndl[FUNCTION_MAX_ARGUMENTS_COUNT];
+
+    MutexGuard guard(getAccessMutex());
 
     check(OCIStmtGetBindInfo (stmt, errhp, bndSize, 1, &bndFound,
                               bndBvnp, bndBvnl, bndInvp, bndInpl, bndDupl,

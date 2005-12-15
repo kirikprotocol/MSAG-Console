@@ -172,8 +172,8 @@ void ConnectionPool::loadPoolSize(ConfigView* config)
 }
 
 ConnectionPool::ConnectionPool(DataSource& _ds, ConfigView* config)
-    throw(ConfigException) : ds(_ds), count(0),
-        log(Logger::getInstance("smsc.db.ConnectionPool")),
+    throw(ConfigException) : Thread(), ds(_ds), count(0),
+        log(Logger::getInstance("smsc.db.ConnectionPool")), pingStarted(false),
             idleHead(0), idleTail(0), idleCount(0), head(0), tail(0), queueLen(0)
 {
     loadPoolSize(config);
@@ -208,7 +208,43 @@ Connection* ConnectionPool::pop(void)
 
 ConnectionPool::~ConnectionPool()
 {
+    this->Stop();
     closeConnections();
+}
+
+void ConnectionPool::Start()
+{
+    MutexGuard guard(pingStartLock);
+    if (!pingStarted) {
+        pingStarted = true;
+        Thread::Start();
+    }
+}
+void ConnectionPool::Stop()
+{
+    MutexGuard guard(pingStartLock);
+    if (pingStarted) {
+        pingStarted = false;
+        pingEvent.Signal();
+    }
+}
+int ConnectionPool::Execute()
+{
+    
+    while (pingStarted)
+    {
+        pingEvent.Wait(60000);
+        if (!pingStarted) break;
+
+        {
+            MutexGuard guard(monitor);
+            for (int i=0; i<connections.Count(); i++) {
+                Connection* connection = connections[i];
+                if (connection) connection->ping();
+            }
+        }
+    }
+    return 0;
 }
 
 Connection* ConnectionPool::getConnection()

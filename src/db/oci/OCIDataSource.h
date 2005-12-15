@@ -46,6 +46,8 @@ namespace smsc { namespace db { namespace oci
         dvoid* getField(int pos)
             throw (InvalidArgumentException);
 
+        Mutex& getAccessMutex();
+
     public:
         
         OCIResultSet(OCIStatement* statement) : ResultSet(), owner(statement) {};
@@ -129,6 +131,8 @@ namespace smsc { namespace db { namespace oci
             throw(SQLException);
     
         OCIQuery(OCIConnection* connection);
+
+        Mutex& getAccessMutex();
 
     public:
 
@@ -315,8 +319,13 @@ namespace smsc { namespace db { namespace oci
         OCIServer*      srvhp;  // OCI server handle
         OCIError*       errhp;  // OCI error handle
         OCISession*     sesshp; // OCI session handle
+        OCIStmt*      pingStmt; // OCI ping statement handle
 
         void cleanupHandlers();
+
+    protected:
+
+        virtual void ping();
 
     public:
 
@@ -339,7 +348,7 @@ namespace smsc { namespace db { namespace oci
             throw(SQLException);
         virtual void abort() 
             throw(SQLException);
-        
+
         void check(sword status) 
             throw(SQLException);
     };
