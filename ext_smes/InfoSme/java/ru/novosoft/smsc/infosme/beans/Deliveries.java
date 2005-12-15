@@ -1,6 +1,5 @@
 package ru.novosoft.smsc.infosme.beans;
 
-import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.smsc.util.Transliterator;

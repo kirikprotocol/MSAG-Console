@@ -25,7 +25,11 @@
         response.sendRedirect("stat.jsp?csv=true");
         return;
     case InfoSmeBean.RESULT_DONE:
-        response.sendRedirect("deliveries.jsp");
+        if (request.isUserInRole(InfoSmeBean.INFOSME_ADMIN_ROLE)) {
+            response.sendRedirect("index.jsp");
+        } else {
+            response.sendRedirect("deliveries.jsp");
+        }
         return;
     default:
         errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction,

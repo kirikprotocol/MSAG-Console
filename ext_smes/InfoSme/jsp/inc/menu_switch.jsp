@@ -38,6 +38,9 @@
     case InfoSmeBean.RESULT_DONE:
       response.sendRedirect("index.jsp");
       return;
+    case InfoSmeBean.RESULT_DELIVERIES:
+      response.sendRedirect("deliveries.jsp");
+      return;
     default:
       errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
   }

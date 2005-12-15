@@ -88,6 +88,8 @@ public class InfoSmeBean extends PageBean
       return RESULT_SHEDULES;
     else if ("messages".equals(mbMenu))
       return RESULT_MESSAGES;
+    else if ("deliveries".equals(mbMenu))
+      return RESULT_DELIVERIES;
     else
       return result;
   }
