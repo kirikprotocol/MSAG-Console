@@ -1222,13 +1222,13 @@ public:
           __trace2__(":SUBMIT_MULTI_COMMAND: dest_flag = %d",pduX->message.dests[u].flag);
           if ( pduX->message.dests[u].flag == 0x01 ) // SME address
           {
-            sm.dests[u].value = pduX->message.dests[u].get_value();
+            sm.dests[u].value = pduX->message.dests[u].get_value()?pduX->message.dests[u].get_value():"";
             sm.dests[u].ton = pduX->message.dests[u].get_typeOfNumber();
             sm.dests[u].npi = pduX->message.dests[u].get_numberingPlan();
           }
           else if (pduX->message.dests[u].flag == 0x02)// Distribution list
           {
-            sm.dests[u].value = pduX->message.dests[u].get_value();
+            sm.dests[u].value = pduX->message.dests[u].get_value()?pduX->message.dests[u].get_value():"";
           }
           else
           {
