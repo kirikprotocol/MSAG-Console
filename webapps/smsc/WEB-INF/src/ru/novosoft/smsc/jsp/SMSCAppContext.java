@@ -9,7 +9,6 @@ package ru.novosoft.smsc.jsp;
 import ru.novosoft.smsc.admin.acl.AclManager;
 import ru.novosoft.smsc.admin.category.CategoryManager;
 import ru.novosoft.smsc.admin.journal.Journal;
-import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.admin.provider.ProviderManager;
 import ru.novosoft.smsc.admin.resources.ResourcesManager;
 import ru.novosoft.smsc.admin.service.HostsManager;
@@ -23,13 +22,11 @@ import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.xml.WebXml;
 import ru.novosoft.util.jsp.AppContext;
 
-import javax.sql.DataSource;
 import java.util.Locale;
 import java.util.Set;
 
 
-public interface SMSCAppContext extends AppContext
-{
+public interface SMSCAppContext extends AppContext {
 	Config getConfig();
 
 	HostsManager getHostsManager();
