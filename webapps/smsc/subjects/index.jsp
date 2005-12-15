@@ -78,15 +78,15 @@
       }
 
       function clickClickable(headId, bodyId) {
-        var _head = document.all(headId);
-        var _body = document.all(bodyId);
+        var _head = document.getElementById(headId);
+        var _body = document.getElementById(bodyId);
 
         if (_body.runtimeStyle.display == 'none' || _body.runtimeStyle.display == '') {
           _head.className = 'collapsing_list_opened';
-          _body.runtimeStyle.display = 'block';
+          _body.style.display = 'block';
         } else {
           _head.className = 'collapsing_list_closed';
-          _body.runtimeStyle.display = 'none';
+          _body.style.display = 'none';
         }
       }
     </script>
@@ -139,7 +139,7 @@
   page_menu_end(out);
 %>
   <div class=content>
-    <input type=hidden name=startPosition value="<%= bean.getStartPosition() %>">
+    <input type=hidden id=startPosition name=startPosition value="<%= bean.getStartPosition() %>">
     <input type=hidden name=editName>
     <input type=hidden name=totalSize value=<%= bean.getTotalSize() %>>
     <input type=hidden name=sort>
@@ -176,15 +176,15 @@
       }
 
       function clickMasks(idSuffix) {
-        var h = opForm.all("masks_header_" + idSuffix);
-        var b = opForm.all("masks_body_" + idSuffix);
+        var h = document.getElementById("masks_header_" + idSuffix);
+        var b = document.getElementById("masks_body_" + idSuffix);
 
         if (h.className == "collapsing_list_closed") {
           h.className = "collapsing_list_opened";
-          b.runtimeStyle.display = "block";
+          b.style.display = "block";
         } else {
           h.className = "collapsing_list_closed";
-          b.runtimeStyle.display = "none";
+          b.style.display = "none";
         }
       }
     </script>

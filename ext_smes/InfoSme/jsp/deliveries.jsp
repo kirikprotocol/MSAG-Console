@@ -54,7 +54,7 @@ else {
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="/WEB-INF/inc/calendar.jsp"%>
 <%@ include file="/WEB-INF/inc/time.jsp"%>
-<%if (bean.getStage() == 3) {%>
+<%if (bean.getStage() == 3 && isBrowserMSIE(request) ) {%>
 <OBJECT id="tdcProgress" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
 	<PARAM NAME="DataURL" VALUE="/smsc/smsc/esme_InfoSme/taskProgress.jsp">
 	<PARAM NAME="UseHeader" VALUE="True">

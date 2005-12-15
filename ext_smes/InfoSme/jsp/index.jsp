@@ -19,6 +19,9 @@
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="inc/header.jsp"%>
 <%@ include file="/WEB-INF/inc/collapsing_tree.jsp"%>
+<%
+  if( isBrowserMSIE(request) ) {
+%>
 <OBJECT id="tdcTasksStatuses" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
 	<PARAM NAME="DataURL" VALUE="/smsc/smsc/esme_InfoSme/taskStatuses.jsp">
 	<PARAM NAME="UseHeader" VALUE="True">
@@ -32,6 +35,9 @@ function refreshTaskStatuses()
 }
 refreshTaskStatuses();
 </script>
+<%
+  }
+%>
 <div class=content>
 <script type="text/javascript">
 function checkApplyResetButtons()

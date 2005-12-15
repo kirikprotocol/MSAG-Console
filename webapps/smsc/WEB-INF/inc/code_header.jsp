@@ -28,6 +28,9 @@ public int getBrowserType(HttpServletRequest request) {
   else if( _browserType.indexOf("Mozilla/") != -1 ) return BROWSER_TYPE_MOZILLA;
   else return BROWSER_TYPE_UNKNOWN;
 }
+public boolean isBrowserMSIE(HttpServletRequest request) {
+  return getBrowserType(request) == BROWSER_TYPE_MSIE;
+}
 %><%@include file="/WEB-INF/inc/localization.jsp"%><%
 errorMessages.clear();
 request.setAttribute(Constants.SMSC_ERROR_MESSAGES_ATTRIBUTE_NAME, errorMessages);
