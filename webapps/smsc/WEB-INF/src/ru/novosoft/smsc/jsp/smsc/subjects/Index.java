@@ -120,12 +120,22 @@ public final class Index extends IndexBean {
 		}
 
 		logger.debug("Subjects.Index - process with sorting [" + (String) preferences.getSubjectsSortOrder().get(0) + "]");
-		ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectFilter filter = preferences.getSubjectsFilter();
 		if (!filterName.equals("")) {
-			filter.getNames().clear();
-			filter.getNames().add(filterName);
+			Set names = new HashSet();
+			names.add(filterName);
+			try {
+				ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectFilter filter =
+						new ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectFilter(names, preferences.getSubjectsFilter().getSmeIds(), "");
+				filter.setMasks((String[]) preferences.getSubjectsFilter().getMaskStrings().toArray());
+				subjects = routeSubjectManager.getSubjects().query(new SubjectQuery(pageSize, filter, preferences.getSubjectsSortOrder(), startPosition));
+			}
+			catch (AdminException e) {
+				subjects = routeSubjectManager.getSubjects().query(new SubjectQuery(pageSize, preferences.getSubjectsFilter(), preferences.getSubjectsSortOrder(), startPosition));
+			}
 		}
-		subjects = routeSubjectManager.getSubjects().query(new SubjectQuery(pageSize, filter, preferences.getSubjectsSortOrder(), startPosition));
+		else {
+			subjects = routeSubjectManager.getSubjects().query(new SubjectQuery(pageSize, preferences.getSubjectsFilter(), preferences.getSubjectsSortOrder(), startPosition));
+		}
 		if (request.getSession().getAttribute("SUBJECT_NAME") != null) {
 			subjects = getSubjectsByName((String) request.getSession().getAttribute("SUBJECT_NAME"));
 			request.getSession().removeAttribute("SUBJECT_NAME");

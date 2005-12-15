@@ -1,9 +1,8 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="ru.novosoft.smsc.jsp.smsc.routes.Index,
                  ru.novosoft.smsc.jsp.util.tables.DataItem,
-				 ru.novosoft.smsc.admin.route.SourceList,
-				 ru.novosoft.smsc.admin.route.DestinationList
-                 ,
+                 ru.novosoft.smsc.admin.route.SourceList,
+                 ru.novosoft.smsc.admin.route.DestinationList,
                  java.net.URLEncoder,
                  ru.novosoft.smsc.jsp.SMSCJspException,
                  ru.novosoft.smsc.jsp.SMSCErrors,
@@ -249,25 +248,25 @@ for(Iterator i = bean.getRoutes().iterator(); i.hasNext(); row++)
     loadDate = dateFormat.format(loadFileDate);
   }
 
-  page_menu_begin(out);
-  page_menu_button(session, out, "mbAdd",  "routes.add",  "routes.addHint");
-  page_menu_button(session, out, "mbDelete", "routes.delete", "routes.deleteHint");
-  if (bean.getAppContext().getStatuses().isRoutesChanged() || bean.getAppContext().getStatuses().isSubjectsChanged())
-    if (!bean.getAppContext().getStatuses().isRoutesRestored())
-      page_menu_button(session, out, "mbSave", "common.buttons.saveCurrent", "routes.saveCurrentHint");
-  if (bean.getAppContext().getStatuses().isRoutesSaved() && !bean.getAppContext().getStatuses().isRoutesRestored())
-    page_menu_button(session, out, "mbRestore", "common.buttons.loadSaved", "routes.loadSavedHint",
-                     restoreDate != null
-                        ? "return confirm('" + getLocString("routes.loadSavedConfirmPre") + restoreDate + getLocString("routes.loadSavedConfirmPost") + "');"
-                        : null
-                     );
-  if (bean.getAppContext().getStatuses().isRoutesChanged() || bean.getAppContext().getStatuses().isSubjectsChanged())
-    page_menu_button(session, out, "mbLoad", "common.buttons.restoreApplied", "routes.restoreAppliedHint",
-                     loadDate != null
-                        ? "return confirm('" + getLocString("routes.restoreAppliedConfirmPre") + loadDate + getLocString("routes.restoreAppliedConfirmPost") + "');"
-                        : null
-                     );
-  page_menu_space(out);
-  page_menu_end(out);%>
+    page_menu_begin(out);
+    page_menu_button(session, out, "mbAdd", "routes.add", "routes.addHint");
+    page_menu_button(session, out, "mbDelete", "routes.delete", "routes.deleteHint");
+    if (bean.getAppContext().getStatuses().isRoutesChanged() || bean.getAppContext().getStatuses().isSubjectsChanged())
+        if (!bean.getAppContext().getStatuses().isRoutesRestored())
+            page_menu_button(session, out, "mbSave", "common.buttons.saveCurrent", "routes.saveCurrentHint");
+    if (bean.getAppContext().getStatuses().isRoutesSaved() && !bean.getAppContext().getStatuses().isRoutesRestored())
+        page_menu_button(session, out, "mbRestore", "common.buttons.loadSaved", "routes.loadSavedHint",
+                         restoreDate != null
+                                 ? "return confirm('" + getLocString("routes.loadSavedConfirmPre") + restoreDate + getLocString("routes.loadSavedConfirmPost") + "');"
+                                 : null
+        );
+    if (bean.getAppContext().getStatuses().isRoutesChanged() || bean.getAppContext().getStatuses().isSubjectsChanged())
+        page_menu_button(session, out, "mbLoad", "common.buttons.restoreApplied", "routes.restoreAppliedHint",
+                         loadDate != null
+                                 ? "return confirm('" + getLocString("routes.restoreAppliedConfirmPre") + loadDate + getLocString("routes.restoreAppliedConfirmPost") + "');"
+                                 : null
+        );
+    page_menu_space(out);
+    page_menu_end(out);%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>
