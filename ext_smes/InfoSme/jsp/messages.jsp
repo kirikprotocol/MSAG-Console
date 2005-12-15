@@ -30,7 +30,7 @@ function setSort(sorting)
 </script>
 <div class=content>
 <input type=hidden name=initialized value=true>
-<input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
+<input type=hidden name=startPosition id=startPosition value="<%=bean.getStartPosition()%>">
 <input type=hidden name=sort>
 <%Collection allTasks = bean.getAllTasks();
   if (allTasks.size() > 0) {%>

@@ -40,7 +40,7 @@ public interface SMSCAppContext extends AppContext
 
 	void setSmsc(Smsc newSmsc);
 
-	DataSource getConnectionPool();
+//	DataSource getConnectionPool();
 
 //	UserPreferences getUserPreferences(java.security.Principal loginedPrincipal);
 

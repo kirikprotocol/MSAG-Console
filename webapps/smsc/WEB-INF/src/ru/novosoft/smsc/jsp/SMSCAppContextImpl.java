@@ -54,7 +54,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 
 	private Smsc smsc = null;
 	private SmscList smscList = null;
-	private ConnectionPool connectionPool = null;
+//	private ConnectionPool connectionPool = null;
 
 	private Statuses statuses = new StatusesImpl();
 	private Journal journal = new Journal();
@@ -132,7 +132,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
       }
 
       resourcesManager = new ResourcesManagerImpl();
-      createConnectionPool(webappConfig);
+//      createConnectionPool(webappConfig);
 		try
 		{
 			this.instType = ResourceGroupConstants.getTypeFromString(webappConfig.getString(ResourceGroupConstants.RESOURCEGROUP_INSTALLTYPE_PARAM_NAME));
@@ -174,7 +174,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 	}
   }
 
-  private void createConnectionPool(Config config) throws Config.ParamNotFoundException, Config.WrongParamTypeException, SQLException
+/*  private void createConnectionPool(Config config) throws Config.ParamNotFoundException, Config.WrongParamTypeException, SQLException
   {
     Properties props = new Properties();
     props.setProperty("jdbc.source", config.getString("profiler.jdbc.source"));
@@ -185,7 +185,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
     props.setProperty("jdbc.max.idle.time", "240");
     props.setProperty("jdbc.pool.name", "smsc");
     connectionPool = new ConnectionPool(props);
-  }
+  }*/
 
   private void startConsole() throws Exception
   {
@@ -245,10 +245,10 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
     return categoryManager;
   }
 
-  public DataSource getConnectionPool()
+/*  public DataSource getConnectionPool()
   {
     return connectionPool;
-  }
+  }*/
 
   public Statuses getStatuses()
   {

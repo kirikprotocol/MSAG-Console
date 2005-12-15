@@ -83,7 +83,7 @@ else {
 <col width="85%">
 <tr class=row0>
     <th><%= getLocString("infosme.label.file_location")%></th>
-    <td><input class=txt type=file name="<%=Deliveries.ABONENTS_FILE_PARAM%>" onChange="checkCreateButton();"></td>
+    <td><input class=txt type=file name="<%=Deliveries.ABONENTS_FILE_PARAM%>" id="<%=Deliveries.ABONENTS_FILE_PARAM%>" onChange="checkCreateButton();"></td>
 </tr>
 </table>
         <%}
