@@ -346,6 +346,10 @@ time_t RollingFileStorage::getLastRollingTime(void) const
  * -------------------------------------------------------------------------- */
 bool RollingFileStorage::mkCurrFile(bool roll/* = true*/)
 {
+    time_t      curTm = time(NULL);
+    if (roll)
+        _lastRollTime = curTm;
+
     if (_currFile.isOpened()) {
         if (!roll)
             return false;
@@ -365,7 +369,6 @@ bool RollingFileStorage::mkCurrFile(bool roll/* = true*/)
         FSEntry::rollFileExt(_location, _currFileName, _Ext.c_str());
     }
 
-    time_t      curTm = time(NULL);
     char        tmStamp[MAX_FS_TIME_STAMP_SZ + 1];
     //NOTE:  cftime allows [00,61] range for seconds, instead of [00,59],
     //so use gmtime_r() that adjusts seconds first and then strftime, that
