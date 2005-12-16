@@ -328,14 +328,14 @@ public class RouteFilter implements Filter
 
       case 1:
 
-        return (isSourcesAllowed(srcs, Subj) == ALLOWED
+        return     isSourcesAllowed(srcs, Subj) == ALLOWED
                 || isDestinationsAllowed(dsts, Subj) == ALLOWED
                 || isSourcesAllowed(srcs, Mask) == ALLOWED
                 || isDestinationsAllowed(dsts, Mask) == ALLOWED
                 || isSMEsAllowed(dsts) == ALLOWED
                 || isNamesAllowed(name) == ALLOWED
                 || isProvidersAllowed(providerId) == ALLOWED
-                || isCategoriesAllowed(categoryId) == ALLOWED);
+                || isCategoriesAllowed(categoryId) == ALLOWED;
 
       case 2:
 

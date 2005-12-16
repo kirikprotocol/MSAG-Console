@@ -71,18 +71,21 @@ public class Index extends IndexBean
   protected int init(List errors)
   {
     int result = super.init(errors);
-    if (result != RESULT_OK)
-      return result;
+	  if (result != RESULT_OK) {
+		  return result;
+	  }
 
     providerManager = appContext.getProviderManager();
     categoryManager = appContext.getCategoryManager();
     // providers=providerManager.getProviders();
     //providers=providerManager.getProviders();
     pageSize = preferences.getRoutesPageSize();
-    if (sort != null)
-      preferences.getRoutesSortOrder().set(0, sort);
-    else
-      sort = (String) preferences.getRoutesSortOrder().get(0);
+	  if (sort != null) {
+		  preferences.getRoutesSortOrder().set(0, sort);
+	  }
+	  else {
+		  sort = (String) preferences.getRoutesSortOrder().get(0);
+	  }
 
     return RESULT_OK;
   }
@@ -91,8 +94,9 @@ public class Index extends IndexBean
   {
     routes = new EmptyResultSet();
     int result = super.process(request);
-    if (result != RESULT_OK)
-      return result;
+	  if (result != RESULT_OK) {
+		  return result;
+	  }
 
     if (!initialized) {
       final RouteFilter routesFilter = preferences.getRoutesFilter(appContext);
@@ -109,12 +113,15 @@ public class Index extends IndexBean
       } catch (Exception e) {
         queryName = "";
       }
-      try {
-        querySubj = srcChks[0];
-      } catch (Exception e) {
-        querySubj = "";
-      }
-      try {
+		if (srcChks.length == 1) { //если записан вручную
+			try {
+				querySubj = srcChks[0];
+			}
+			catch (Exception e) {
+				querySubj = "";
+			}
+		}
+		try {
         queryMask = srcMasks[0];
       } catch (Exception e) {
         queryMask = "";
@@ -137,34 +144,50 @@ public class Index extends IndexBean
     }
 
 
-    if (mbAdd != null)
-      return RESULT_ADD;
-    else if (mbEdit != null)
-      return RESULT_EDIT;
-    else if (mbDelete != null) {
-      int dresult = deleteRoutes();
-      return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
-    }
-    else if (mbSave != null) {
-      int dresult = saveRoutes();
-      return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
-    }
-    else if (mbLoad != null) {
-      int dresult = loadRoutes();
-      return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
-    }
-    else if (mbRestore != null) {
-      int dresult = restoreRoutes();
-      return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
-    }
-    else if (mbQuickFilter != null) {
-      int dresult = updateFilter();
-      return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
-    }
-    else if (mbClear != null) {
-      int dresult = clearFilter();
-      return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
-    }
+	  if (mbAdd != null) {
+		  return RESULT_ADD;
+	  }
+	  else {
+		  if (mbEdit != null) {
+			  return RESULT_EDIT;
+		  }
+		  else {
+			  if (mbDelete != null) {
+				  int dresult = deleteRoutes();
+				  return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
+			  }
+			  else {
+				  if (mbSave != null) {
+					  int dresult = saveRoutes();
+					  return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
+				  }
+				  else {
+					  if (mbLoad != null) {
+						  int dresult = loadRoutes();
+						  return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
+					  }
+					  else {
+						  if (mbRestore != null) {
+							  int dresult = restoreRoutes();
+							  return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
+						  }
+						  else {
+							  if (mbQuickFilter != null) {
+								  int dresult = updateFilter();
+								  return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
+							  }
+							  else {
+								  if (mbClear != null) {
+									  int dresult = clearFilter();
+									  return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
+								  }
+							  }
+						  }
+					  }
+				  }
+			  }
+		  }
+	  }
 
     logger.debug("Routes.Index - process with sorting [" + (String) preferences.getRoutesSortOrder().get(0) + "]");
     routes = routeSubjectManager.getRoutes().query(new RouteQuery(pageSize, preferences.getRoutesFilter(appContext), preferences.getRoutesSortOrder(), startPosition));
@@ -203,10 +226,12 @@ public class Index extends IndexBean
     try {
       final RouteFilter routesFilter = preferences.getRoutesFilter(appContext);
       routesFilter.setIntersection(1);
-      if (queryName != null)
-        routesFilter.setNames(new String[]{queryName.toLowerCase()});
-      else
-        routesFilter.setNames(new String[0]);
+		if (queryName != null) {
+			routesFilter.setNames(new String[]{queryName.toLowerCase()});
+		}
+		else {
+			routesFilter.setNames(new String[0]);
+		}
       if (querySubj != null) {
         routesFilter.setSourceSubjectNames(new String[]{querySubj.toLowerCase()});
         routesFilter.setDestinationSubjectNames(new String[]{querySubj.toLowerCase()});
@@ -249,18 +274,24 @@ public class Index extends IndexBean
         routesFilter.setSourceMaskStrings(new String[0]);
         routesFilter.setDestinationMaskStrings(new String[0]);
       }
-      if (querySMEs != null)
-        routesFilter.setSmeIds(new String[]{querySMEs.toLowerCase()});
-      else
-        routesFilter.setSmeIds(new String[0]);
-      if (queryProvider != null)
-        routesFilter.setProviders(new String[]{queryProvider.toLowerCase()});
-      else
-        routesFilter.setProviders(new String[0]);
-      if (queryCategory != null)
-        routesFilter.setCategories(new String[]{queryCategory.toLowerCase()});
-      else
-        routesFilter.setCategories(new String[0]);
+		if (querySMEs != null) {
+			routesFilter.setSmeIds(new String[]{querySMEs.toLowerCase()});
+		}
+		else {
+			routesFilter.setSmeIds(new String[0]);
+		}
+		if (queryProvider != null) {
+			routesFilter.setProviders(new String[]{queryProvider.toLowerCase()});
+		}
+		else {
+			routesFilter.setProviders(new String[0]);
+		}
+		if (queryCategory != null) {
+			routesFilter.setCategories(new String[]{queryCategory.toLowerCase()});
+		}
+		else {
+			routesFilter.setCategories(new String[0]);
+		}
 
       /*    if ("5".equals(filterSelect))
                   routesFilter.setSmeIds(new String[]{queryName});

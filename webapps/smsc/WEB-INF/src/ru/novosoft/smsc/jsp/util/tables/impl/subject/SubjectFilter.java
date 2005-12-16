@@ -63,6 +63,16 @@ public class SubjectFilter implements Filter
     return false;
   }
 
+	private boolean isNameAllowed(String nameStr)
+	{
+		for (Iterator i = names.iterator(); i.hasNext();)
+		{
+			final String name = (String) i.next();
+			if (name.toLowerCase().indexOf(nameStr.toLowerCase()) != -1) return true; 
+		}
+		return false;
+	}
+
   public boolean isItemAllowed(DataItem item)
   {
     if (isEmpty())
@@ -71,7 +81,7 @@ public class SubjectFilter implements Filter
     String item_name = (String) item.getValue("Name");
     String item_sme = (String) item.getValue("Default SME");
     Vector item_masks = (Vector) item.getValue("Masks");
-    return (names.isEmpty() || names.contains(item_name))
+    return (names.isEmpty() || isNameAllowed(item_name))
             && (smes.isEmpty() || smes.contains(item_sme))
             && (masks.isEmpty() || isAnyMaskAllowed(item_masks));
   }
