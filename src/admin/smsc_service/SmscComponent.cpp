@@ -28,6 +28,7 @@ using namespace smsc::acls;
 using smsc::cluster::ApplyRoutesCommand;
 using smsc::cluster::ApplyAliasesCommand;
 using smsc::cluster::ApplyRescheduleCommand;
+using smsc::cluster::ApplyLocaleResourceCommand;
 using smsc::cluster::SmeAddCommand;
 using smsc::cluster::SmeRemoveCommand;
 using smsc::cluster::SmeUpdateCommand;
@@ -1619,6 +1620,18 @@ throw (AdminException)
   {
     smsc::resourcemanager::ResourceManager::reload(configs.cfgman->getString("core.locales"), configs.cfgman->getString("core.default_locale"));
   }
+
+  if(smsc_app_runner->getApp()->isHs()){
+      Interconnect * iconn = Interconnect::getInstance();
+      if(!iconn){
+          smsc_log_warn(logger, "InterconnectManager undefined, can't send applyRoutes command");
+          //return;
+      }else{
+          ApplyLocaleResourceCommand * cmd = new ApplyLocaleResourceCommand();
+          iconn->sendCommand(cmd);
+      }
+  }
+
   return Variant("");
 }
 

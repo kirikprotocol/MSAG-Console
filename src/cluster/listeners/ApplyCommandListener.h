@@ -28,6 +28,7 @@ protected:
 	void applyRoutes();
     void applyAliases();
     void applyReschedule();
+    void applyLocalResource();
     const smsc::system::SmscConfigs *configs;
     //smsc::smeman::SmeManager *smeman;
 

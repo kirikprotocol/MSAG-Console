@@ -2,7 +2,7 @@
 #include "scag/re/smpp/SmppAdapter.h"
 #include "scag/re/actions/ActionContext.h"
 
-
+    
 namespace scag { namespace re {
 
 enum SmppHandlerType

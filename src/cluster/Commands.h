@@ -28,6 +28,7 @@ namespace smsc { namespace cluster
         APPLYROUTES_CMD =           0x00000000,
         APPLYALIASES_CMD =          0x00000001,
         APPLYRESCHEDULE_CMD =       0x00000002,
+        APPLYLOCALERESOURCE_CMD =   0x00000003,
         PROFILEUPDATE_CMD =         0x00010000,
         PROFILEDELETE_CMD =         0x00010001,
         MSCREGISTRATE_CMD =         0x00020000,
@@ -119,6 +120,17 @@ namespace smsc { namespace cluster
         ApplyRescheduleCommand() : Command(APPLYRESCHEDULE_CMD) {};
 
         virtual ~ApplyRescheduleCommand() {};
+
+        virtual void* serialize(uint32_t &len);
+        virtual bool deserialize(void *buffer, uint32_t len);
+    };
+
+    class ApplyLocaleResourceCommand : public Command
+    {
+    public:
+        ApplyLocaleResourceCommand() : Command(APPLYLOCALERESOURCE_CMD) {};
+
+        virtual ~ApplyLocaleResourceCommand() {};
 
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);

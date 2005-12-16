@@ -1,4 +1,4 @@
-#include "Rule.h"
+    #include "Rule.h"
 #include "scag/transport/smpp/SmppCommand.h"
 #include "scag/re/smpp/SmppEventHandler.h"
 

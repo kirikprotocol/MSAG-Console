@@ -41,6 +41,9 @@ void ApplyCommandListener::handle(const Command& command)
     case APPLYRESCHEDULE_CMD:
         applyReschedule();
 		break;
+    case APPLYLOCALRESOURCE_CMD:
+        applyLocalResource();
+		break;
 	}
 }
 
@@ -104,6 +107,13 @@ void ApplyCommandListener::applyAliases()
 void ApplyCommandListener::applyReschedule()
 {
     smsc::system::RescheduleCalculator::init(smsc::util::findConfigFile("schedule.xml"));
+}
+
+void ApplyCommandListener::applyLocalResource()
+{
+    if(!configs) Exception("Configs undifend");
+    if(!app) throw Exception("Smsc undefined");
+    smsc::resourcemanager::ResourceManager::reload(configs->cfgman->getString("core.locales"), configs->cfgman->getString("core.default_locale"));
 }
 
 }

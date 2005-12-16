@@ -286,7 +286,7 @@ int InterconnectManager::Execute()
       flushCommands();
     }
 
-    /*sleep(30);
+    sleep(30);
     if(isMaster())
     {
         const smsc::sms::Address addr(".1.1.address1234567890123");
@@ -314,7 +314,7 @@ int InterconnectManager::Execute()
 
         Command *cmd1 = new ProfileUpdateCommand(addr, profile);
 
-        const char * address_ = "address1234567890123";
+        /*const char * address_ = "address1234567890123";
         int plan_ = 1;
         int type_ = 2;
         Command *cmd2 = new ProfileDeleteCommand(plan_, type_, address_);
@@ -376,13 +376,14 @@ int InterconnectManager::Execute()
 
         Command *cmd21 = new ApplyRoutesCommand();
         Command *cmd22 = new ApplyAliasesCommand();
-        Command *cmd23 = new ApplyRescheduleCommand();
+        Command *cmd23 = new ApplyRescheduleCommand();*/
+        Command *cmd24 = new ApplyLocaleResourceCommand();
         
 
         printf("======= Profile commands =========\n");
         printf("send command: %02X\n", cmd1->getType());
         sendCommand(cmd1);
-        printf("send command: %02X\n", cmd2->getType());
+        /*printf("send command: %02X\n", cmd2->getType());
         sendCommand(cmd2);
 
         printf("======= Sme commands     =========\n");
@@ -431,19 +432,21 @@ int InterconnectManager::Execute()
         printf("send command: %02X\n", cmd19->getType());
         sendCommand(cmd19);
         printf("send command: %02X\n", cmd20->getType());
-        sendCommand(cmd20);
+        sendCommand(cmd20);*/
 
         printf("======= Apply commands      =========\n");
-        printf("send command: %02X\n", cmd21->getType());
+        /*printf("send command: %02X\n", cmd21->getType());
         sendCommand(cmd21);
         printf("send command: %02X\n", cmd22->getType());
         sendCommand(cmd22);
         printf("send command: %02X\n", cmd23->getType());
-        sendCommand(cmd23);
+        sendCommand(cmd23);*/
+        printf("send command: %02X\n", cmd24->getType());
+        sendCommand(cmd24);
         //sendCommand(cmd);
         printf("command sent\n");
         flushCommands();
-    }*/
+    }
 
     // TODO: Send commands from commands queue (on commandsMonitor)
     while(!isStoped())
