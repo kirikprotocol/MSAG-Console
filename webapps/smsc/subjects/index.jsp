@@ -118,11 +118,11 @@
         <td>&nbsp;</td>
       </tr>
     </table>
-<%    final String filterName = bean.getFilterName();%>
+<%    final String filtrName = bean.getFilterName();%>
     <div class=page_subtitle>
       <%= getLocString("subjects.filterName") %>
     </div>
-    <input class=txt name=filter_name id=filter_name value="<%= StringEncoderDecoder.encode(filterName) %>" validation="nonEmpty" onkeyup="resetValidation(this)">
+    <input class=txt name=filterName id=filterName value="<%= StringEncoderDecoder.encode(filtrName) %>" validation="nonEmpty" onkeyup="resetValidation(this)">
   </div>
 <%
   page_menu_begin(out);

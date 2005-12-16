@@ -18,6 +18,8 @@ import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.impl.route.RouteFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.route.RouteQuery;
+import ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectFilter;
+import ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectQuery;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -216,7 +218,33 @@ public class Index extends IndexBean
       if (queryMask != null) {
         routesFilter.setSourceMaskStrings(new String[]{queryMask});
         routesFilter.setDestinationMaskStrings(new String[]{queryMask});
-      }
+		/*если указана в фильтре рутов маска, то поискать ее сначала в сабжектах, и икать в рутах еще и имя этого сабжекта*/
+		if (querySubj == null)
+		{
+			SubjectFilter subjFilter = preferences.getSubjectsFilter();
+			List oldSubjectsMasks = subjFilter.getMaskStrings();
+			Set oldSubjectsNames = subjFilter.getNames();
+			List oldSubjectsSmeIds = subjFilter.getSmeIds();
+			String[] mask = new String[1];
+			mask[0] = queryMask;
+			subjFilter.setMasks(mask);
+			subjFilter.setNames(new String[0]);
+			subjFilter.setSmes(new String[0]);
+			QueryResultSet subjectsByMask = routeSubjectManager.getSubjects().query(new SubjectQuery(pageSize*5, subjFilter, preferences.getSubjectsSortOrder(), 0));
+			String[] sourceSubjects = new String[subjectsByMask.size()];
+			String[] destSubjects = new String[subjectsByMask.size()];
+			for (int i = 0; i < subjectsByMask.size(); i++)
+			{
+				sourceSubjects[i] = (String) subjectsByMask.get(i).getValue("Name");
+				destSubjects[i] = (String) subjectsByMask.get(i).getValue("Name");
+			}
+			routesFilter.setSourceSubjectNames(sourceSubjects);
+			routesFilter.setDestinationSubjectNames(destSubjects);
+			subjFilter.setMasks((String[])oldSubjectsMasks.toArray());
+			subjFilter.setNames((String[])oldSubjectsNames.toArray());
+			subjFilter.setSmes((String[])oldSubjectsSmeIds.toArray());
+		}
+	  }
       else {
         routesFilter.setSourceMaskStrings(new String[0]);
         routesFilter.setDestinationMaskStrings(new String[0]);
