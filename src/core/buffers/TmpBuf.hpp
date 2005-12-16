@@ -1,3 +1,4 @@
+#ident "$Id$"
 #ifndef __SMSC_CORE_BUFFERS_HPP__
 #define __SMSC_CORE_BUFFERS_HPP__
 
@@ -83,6 +84,20 @@ public:
   {
     std::copy(realBuf+pos,realBuf+pos+count,dst);
     pos+=count;
+  }
+
+  //Checks for ABR, returns number of objects have been red
+  int ReadSafe(T* dst,int count)
+  {
+      int maxPos = heapSize ? heapSize : SZ;
+
+      if ((pos + count) >= maxPos)
+          count = maxPos - pos;
+      if (count) {
+          std::copy(realBuf + pos, realBuf + pos + count, dst);
+          pos += count;
+      }
+      return count;
   }
 
   T* GetCurPtr()
