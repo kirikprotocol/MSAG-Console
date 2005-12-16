@@ -41,7 +41,7 @@ void ApplyCommandListener::handle(const Command& command)
     case APPLYRESCHEDULE_CMD:
         applyReschedule();
 		break;
-    case APPLYLOCALRESOURCE_CMD:
+    case APPLYLOCALERESOURCE_CMD:
         applyLocalResource();
 		break;
 	}
