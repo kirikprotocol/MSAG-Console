@@ -7,7 +7,7 @@
 #include <string.h>
 #include <string>
 
-#include "Uint64Converter.h"
+#include "util/Uint64Converter.h"
 #include "DaemonCommunicator.h"
 
 using smsc::util::Uint64Converter;

@@ -8,7 +8,7 @@
 #include "core/buffers/TmpBuf.hpp"
 #include "core/network/Socket.hpp"
 #include "logger/Logger.h"
-#include "store/Uint64Converter.h"
+#include "util/Uint64Converter.h"
 
 using smsc::logger::Logger;
 using smsc::core::network::Socket;
