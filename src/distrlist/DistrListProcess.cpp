@@ -24,6 +24,7 @@ static uint32_t GetNextDialogId()
 }
 
 struct BIG_MULTI{};
+struct INV_DSTADDR{};
 
 DistrListProcess::DistrListProcess(DistrListAdmin* admin,SmeRegistrar* reg) :
   admin(admin),
@@ -128,12 +129,16 @@ int DistrListProcess::Execute()
       try{
         SubmitMulti(cmd);
       }catch(exception& e){
-        __trace2__(":DPL: <exception> %s",e.what());
+        __warn2__(smsc::logger::_trace_cat, ":DPL: <exception> %s", e.what());
         SmscCommand cmdR = SmscCommand::makeSubmitMultiResp(0,cmd->get_dialogId(),Status::CNTSUBDL);
         cmd.getProxy()->putCommand(cmdR);
       }catch(BIG_MULTI&){
-        __trace__(":DPL: <exception> counts of member of multi great then MAX_COUNT for task");
+        __warn__(smsc::logger::_trace_cat, ":DPL: <exception> counts of member of multi great then MAX_COUNT for task");
         SmscCommand cmdR = SmscCommand::makeSubmitMultiResp(0,cmd->get_dialogId(),Status::CNTSUBDL);
+        cmd.getProxy()->putCommand(cmdR);
+      }catch(INV_DSTADDR&){
+        __warn__(smsc::logger::_trace_cat, ":DPL: <exception> one of destination addresses is invalid");
+        SmscCommand cmdR = SmscCommand::makeSubmitMultiResp(0,cmd->get_dialogId(),Status::INVDSTADR);
         cmd.getProxy()->putCommand(cmdR);
       }
     }
@@ -489,7 +494,10 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
     }
     else
     {
-     __trace2__(":DPL: distrib addr %d.%d.%s",multi->dests[i].ton,multi->dests[i].npi,multi->dests[i].value.c_str());
+      __trace2__(":DPL: distrib addr %d.%d.%s",multi->dests[i].ton,multi->dests[i].npi,multi->dests[i].value.c_str());
+      if( multi->dests[i].value.length() == 0 ) {
+        throw INV_DSTADDR();
+      }
      task->list[task->count].addr = Address(
        multi->dests[i].value.length(),
        multi->dests[i].ton,
