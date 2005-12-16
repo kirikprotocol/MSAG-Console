@@ -146,7 +146,11 @@ void OCIConnection::ping()
     bool pingOk = true;
     try // Execute ping statement
     {
+        sb2 indp = OCI_IND_NOTNULL;
+        OCINumber   number; OCIDefine*  define = 0; 
         MutexGuard guard(getAccessMutex());
+        check(OCIDefineByPos(pingStmt, &define, errhp, 1, (dvoid *)&number, sizeof(OCINumber),
+                             SQLT_VNU, (dvoid *)&indp, (ub2 *) 0, (ub2 *) 0, OCI_DEFAULT));
         check(OCIStmtExecute(svchp, pingStmt, errhp, 1, 0, 
                              (CONST OCISnapshot *) NULL,
                              (OCISnapshot *) NULL, OCI_DEFAULT));
