@@ -126,7 +126,7 @@ public final class Index extends IndexBean {
 			try {
 				ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectFilter filter =
 						new ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectFilter(names, preferences.getSubjectsFilter().getSmeIds(), "");
-				filter.setMasks((String[]) preferences.getSubjectsFilter().getMaskStrings().toArray());
+				filter.setMasks((String[]) preferences.getSubjectsFilter().getMaskStrings().toArray(new String[0]));
 				subjects = routeSubjectManager.getSubjects().query(new SubjectQuery(pageSize, filter, preferences.getSubjectsSortOrder(), startPosition));
 			}
 			catch (AdminException e) {

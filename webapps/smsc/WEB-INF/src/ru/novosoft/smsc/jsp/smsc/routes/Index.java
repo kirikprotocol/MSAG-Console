@@ -240,9 +240,9 @@ public class Index extends IndexBean
 			}
 			routesFilter.setSourceSubjectNames(sourceSubjects);
 			routesFilter.setDestinationSubjectNames(destSubjects);
-			subjFilter.setMasks((String[])oldSubjectsMasks.toArray());
-			subjFilter.setNames((String[])oldSubjectsNames.toArray());
-			subjFilter.setSmes((String[])oldSubjectsSmeIds.toArray());
+			subjFilter.setMasks((String[])oldSubjectsMasks.toArray(new String[0]));
+			subjFilter.setNames((String[])oldSubjectsNames.toArray(new String[0]));
+			subjFilter.setSmes((String[])oldSubjectsSmeIds.toArray(new String[0]));
 		}
 	  }
       else {
