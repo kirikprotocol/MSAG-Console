@@ -437,7 +437,7 @@ int InterconnectManager::Execute()
         sendCommand(cmd20);
 
         printf("======= Apply commands      =========\n");
-        /*printf("send command: %02X\n", cmd21->getType());
+        printf("send command: %02X\n", cmd21->getType());
         sendCommand(cmd21);
         printf("send command: %02X\n", cmd22->getType());
         sendCommand(cmd22);
