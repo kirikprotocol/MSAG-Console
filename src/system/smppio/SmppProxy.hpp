@@ -556,9 +556,9 @@ public:
     MutexGuard mg(mutex);
     if(!opened)return false;
     if(!smppReceiverSocket && !smppTransmitterSocket)return false;
-    if(smppReceiverSocket)smppReceiverSocket->getSocket()->GetPeer(in);
+    if(smppReceiverSocket && smppReceiverSocket->getSocket() ) smppReceiverSocket->getSocket()->GetPeer(in);
     else in[0]=0;
-    if(smppTransmitterSocket)smppTransmitterSocket->getSocket()->GetPeer(out);
+    if(smppTransmitterSocket && smppTransmitterSocket->getSocket() ) smppTransmitterSocket->getSocket()->GetPeer(out);
     else out[0]=0;
     return in[0]!=0 || out[0]!=0;
   }
