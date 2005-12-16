@@ -33,7 +33,8 @@ import java.util.*;
 //import java.security.Principal;
 
 
-public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext {
+public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
+{
 	private Config webappConfig = null;
 	private WebXml webXmlConfig = null;
 	private HostsManager hostsManager = null;
@@ -245,11 +246,43 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 		return userManager;
 	}
 
-	public void destroy() {
-		if (console != null) console.close();
-		if (perfServer != null) perfServer.shutdown();
-		if (topServer != null) topServer.shutdown();
-	}
+  HashMap smeContexts = new HashMap();
+  Object smeContextsLock = new Object();
+  long smeContextsId = 0;
+
+  public Long registerSMEContext(SMEAppContext smeContext)
+  {
+    Long contextId = null;
+    synchronized(smeContextsLock) {
+        contextId = new Long(smeContextsId++);
+        smeContexts.put(contextId, smeContext);
+    }
+    return contextId;
+  }
+  public void unregisterSMEContext(Long contextId)
+  {
+    synchronized(smeContextsLock) {
+        if (contextId != null) smeContexts.remove(contextId);
+    }
+  }
+
+  public void destroy()
+  {
+    if (console != null) console.close();
+    if (perfServer != null) perfServer.shutdown();
+    if (topServer != null) topServer.shutdown();
+
+    synchronized(smeContextsLock) // shutdown all smeContexts
+    {
+        for (Iterator it = smeContexts.values().iterator(); it.hasNext(); ) {
+            Object obj = it.next();
+            if (obj instanceof SMEAppContext) {
+                ((SMEAppContext)obj).shutdown();
+            }
+        }
+        smeContexts.clear(); smeContextsId = 0;
+    }
+  }
 
 	public Locale getLocale() {
 		Locale result = null;

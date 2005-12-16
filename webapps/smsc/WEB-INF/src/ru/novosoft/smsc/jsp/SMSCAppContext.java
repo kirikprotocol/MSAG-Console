@@ -26,52 +26,57 @@ import java.util.Locale;
 import java.util.Set;
 
 
-public interface SMSCAppContext extends AppContext {
-	Config getConfig();
+public interface SMSCAppContext extends AppContext
+{
+  Config getConfig();
 
-	HostsManager getHostsManager();
+  HostsManager getHostsManager();
 
-	UserManager getUserManager();
+  UserManager getUserManager();
 
-	Smsc getSmsc();
+  Smsc getSmsc();
 
-	void setSmsc(Smsc newSmsc);
+  void setSmsc(Smsc newSmsc);
 
 //	DataSource getConnectionPool();
 
 //	UserPreferences getUserPreferences(java.security.Principal loginedPrincipal);
 
-	Statuses getStatuses();
+  Statuses getStatuses();
 
-	void destroy();
+  void destroy();
 
-	String getInitErrorCode();
+  String getInitErrorCode();
 
-	Locale getLocale();
+  Locale getLocale();
 
-	String getLocaleString(String key);
+  String getLocaleString(String key);
 
-	Set getLocaleStrings(String prefix);
+  Set getLocaleStrings(String prefix);
 
-	SmeManager getSmeManager();
+  SmeManager getSmeManager();
 
-	ProviderManager getProviderManager();
+  ProviderManager getProviderManager();
 
-	CategoryManager getCategoryManager();
+  CategoryManager getCategoryManager();
 
-	RouteSubjectManager getRouteSubjectManager();
+  RouteSubjectManager getRouteSubjectManager();
 
-	ResourcesManager getResourcesManager();
+  ResourcesManager getResourcesManager();
 
-	Journal getJournal();
+  Journal getJournal();
 
-	WebXml getWebXmlConfig();
+  WebXml getWebXmlConfig();
 
-	AclManager getAclManager();
+  AclManager getAclManager();
 
-	SmscList getSmscList();
+  SmscList getSmscList();
 
-	ServiceManager getServiceManager();
+  ServiceManager getServiceManager();
 
-	byte getInstallType();
+  byte getInstallType();
+
+  Long registerSMEContext(SMEAppContext smeContext);
+
+  void unregisterSMEContext(Long contextId);
 }
