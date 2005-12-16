@@ -4,6 +4,7 @@
 #include "smpp/smpp_structures.h"
 #include "profiler/profiler-types.hpp"
 #include "smeman/smeinfo.h"
+#include "util/BufferSerialization.hpp"
 
 #include "Commands.h"
 
@@ -11,6 +12,8 @@ namespace smsc { namespace cluster
 {
     using namespace smsc::core::synchronization;
     using smsc::core::buffers::IntHash;
+    using namespace smsc::logger;
+    using smsc::util::BufferSerializator;
 
     class CommandFactory
     {
@@ -556,7 +559,8 @@ bool ApplyLocaleResourceCommand::deserialize(void *buffer, uint32_t len)
 
 ProfileUpdateCommand::ProfileUpdateCommand(const smsc::sms::Address& addr,const smsc::profiler::Profile& profile_)
         : Command(PROFILEUPDATE_CMD),
-          profile(profile_)
+          profile(profile_),
+          logger(smsc::logger::Logger::getInstance("im.cmd.prf"))
 {
   plan=addr.plan;
   type=addr.type;
@@ -577,281 +581,76 @@ void* ProfileUpdateCommand::serialize(uint32_t &len)
   try {
     buffer = new uint8_t[1024];
     uint8_t *buff = buffer;
-    putByte(buff, plan);
-    putByte(buff, type);
-    putString(buff, address, 21);
-    putInt( buff, profile.codepage );
-    putInt( buff, profile.reportoptions );
-    putInt( buff, profile.hide );
-    putByte( buff, profile.hideModifiable?1:0);
-    putByte( buff, profile.divertModifiable?1:0);
-    putByte( buff, profile.udhconcat?1:0);
-    putByte( buff, profile.translit?1:0);
+    BufferSerializator::putByte(buff, plan);
+    BufferSerializator::putByte(buff, type);
+    BufferSerializator::putString(buff, address, 21);
+    BufferSerializator::putInt( buff, profile.codepage );
+    BufferSerializator::putInt( buff, profile.reportoptions );
+    BufferSerializator::putInt( buff, profile.hide );
+    BufferSerializator::putByte( buff, profile.hideModifiable?1:0);
+    BufferSerializator::putByte( buff, profile.divertModifiable?1:0);
+    BufferSerializator::putByte( buff, profile.udhconcat?1:0);
+    BufferSerializator::putByte( buff, profile.translit?1:0);
     //============= Puts divertActive in buffer ================
-    putByte( buff, profile.divertActive?1:0);
-    putByte( buff, profile.divertActiveAbsent?1:0);
-    putByte( buff, profile.divertActiveBlocked?1:0);
-    putByte( buff, profile.divertActiveBarred?1:0);
-    putByte( buff, profile.divertActiveCapacity?1:0);
-    //============= Puts offset =================================
-
-    uint64_t val64 = profile.offset;
-    uint64_t tmp = val64;;
-    unsigned char *ptr=(unsigned char *)&val64;
-    ptr[0]=(unsigned char)(tmp>>56);
-    ptr[1]=(unsigned char)(tmp>>48)&0xFF;
-    ptr[2]=(unsigned char)(tmp>>40)&0xFF;
-    ptr[3]=(unsigned char)(tmp>>32)&0xFF;
-    ptr[4]=(unsigned char)(tmp>>24)&0xFF;
-    ptr[5]=(unsigned char)(tmp>>16)&0xFF;
-    ptr[6]=(unsigned char)(tmp>>8)&0xFF;
-    ptr[7]=(unsigned char)(tmp&0xFF);
-
-    memcpy((void*)(buffer + 37),        (const void*)&val64, 8);
+    BufferSerializator::putByte( buff, profile.divertActive?1:0);
+    BufferSerializator::putByte( buff, profile.divertActiveAbsent?1:0);
+    BufferSerializator::putByte( buff, profile.divertActiveBlocked?1:0);
+    BufferSerializator::putByte( buff, profile.divertActiveBarred?1:0);
+    BufferSerializator::putByte( buff, profile.divertActiveCapacity?1:0);
+    //============= Puts offset =================================   
+    BufferSerializator::putInt64(buff, profile.offset);
 
     //============= Puts local and divert in buffer =============
+    BufferSerializator::putString(buff, profile.locale);
+    BufferSerializator::putString(buff, profile.divert);
 
-    memcpy((void*)(buffer + 45),                  (const void*)profile.locale.c_str(), profile.locale.length() + 1);
-    //printf("local: '%s', len: %d\n", profile.locale.c_str(), profile.locale.length());
-    memcpy((void*)(buffer + 46 + profile.locale.length()), (const void*)profile.divert.c_str(), profile.divert.length() + 1);
-    //printf("divert: '%s', len: %d\n", profile.divert.c_str(), profile.divert.length());
+    len = buff-buffer;
 
     }catch(...){
       if( buffer ) delete buffer;
       return 0;
     }
-
+    
     return (void*)buffer;
 }
 bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
 {
-    if(len < 46|| !buffer)
-        return false;
-
-    /*
-
-        buffer := <AddressInfo> <ProfileInfo>
-
-        <AddressInfo> := <plan : 1> <type : 1> <Address : 21>
-
-        <ProfileInfo> := <codePage : 1> <reportOption : 1> <hideOption : 1> <divertActive : 1> <flags : 1> <offset : 8>
-                            <local : string> <divert : string>
-
-        <codePage : 1>
-                0 - default
-                1 - Latin1
-                2 - Ucs2
-                3 - Ucs2AndLat
-
-
-        <reportOption : 1>      Values matchs with constants of ProfileReportOptions namespace
-                0 - ReportNone
-                1 - ReportFull
-                2 - ReportFinal
-
-        <hideOption : 1>        Values matchs constants of HideOption namespace
-                0 - hoDisabled
-                1 - hoEnabled
-                2 - hoSubstitute
-
-
-        <divertActive : 1>
-                1 bit - profile.divertActive
-                2 bit - profile.divertActiveAbsent
-                3 bit - profile.divertActiveBlocked
-                4 bit - profile.divertActiveBarred
-                5 bit - profile.divertActiveCapacity
-
-        <flags : 1>
-                1 bit - profile.hideModifaible
-                2 bit - profile.divertModifaible
-                3 bit - profile.udhContact
-                4 bit - profile.translit
-                5 bit - udds7bit (codePage)
-    */
-
-    try {
-
-    uint8_t val;
-
-    //====== Gets plan, type and Address =======
-
-    memcpy((void*)&plan,    (const void*)buffer, 1);
-    memcpy((void*)&type,    (const void*)((uint8_t*)buffer + 1), 1);
-    memcpy((void*)&address, (const void*)((uint8_t*)buffer + 2), 21);
-    //printf("p: %d, t: %d, address: '%s'\n", plan, type, address);
-
-    //============= Gets codePage ===============
-
-    uint32_t val32;
-    memcpy((void*)&val32,     (const void*)((uint8_t*)buffer + 23), 4);
-    profile.codepage = ntohl(val32);
-
-    /*switch(val){
-    case 0:
-        profile.codepage = smsc::smpp::DataCoding::SMSC7BIT;
-        break;
-    case 1:
-        profile.codepage = smsc::smpp::DataCoding::LATIN1;
-        break;
-    case 2:
-        profile.codepage = smsc::smpp::DataCoding::UCS2;
-        break;
-    case 3:
-        profile.codepage = smsc::smpp::DataCoding::UCS2 | smsc::smpp::DataCoding::LATIN1;
-        break;
-    }*/
-
-    //printf("codePage: ");
-    /*if(profile.codepage == smsc::smpp::DataCoding::SMSC7BIT)
-        printf("SMSC7BIT\n");
-    if(profile.codepage & (int)smsc::smpp::DataCoding::LATIN1)
-        printf("LATIN1\n");
-    if(profile.codepage & (int)smsc::smpp::DataCoding::UCS2)
-        printf("UCS2\n");*/
-
-    //============= Gets reportOption ===========
-
-    memcpy((void*)&val32,     (const void*)((uint8_t*)buffer + 27), 4);
-    profile.reportoptions = ntohl(val32);
-
-    /*switch(val){
-    case 0:
-        profile.reportoptions = smsc::profiler::ProfileReportOptions::ReportNone;
-        break;
-    case 1:
-        profile.reportoptions = smsc::profiler::ProfileReportOptions::ReportFull;
-        break;
-    case 2:
-        profile.reportoptions = smsc::profiler::ProfileReportOptions::ReportFinal;
-        break;
-    }*/
-
-    //printf("reportOption: ");
-    /*if(profile.reportoptions == smsc::profiler::ProfileReportOptions::ReportNone)
-        printf("ReportNone\n");
-    if(profile.reportoptions == smsc::profiler::ProfileReportOptions::ReportFull)
-        printf("ReportFull\n");
-    if(profile.reportoptions == smsc::profiler::ProfileReportOptions::ReportFinal)
-        printf("ReportFinal\n");*/
-
-    //============= Gets hideOption ===========
-
-    memcpy((void*)&val32,     (const void*)((uint8_t*)buffer + 31), 4);
-    profile.hide = ntohl(val32);
-
-    /*switch(val){
-    case 0:
-        profile.hide = smsc::profiler::HideOption::hoDisabled;
-        break;
-    case 1:
-        profile.hide = smsc::profiler::HideOption::hoEnabled;
-        break;
-    case 2:
-        profile.hide = smsc::profiler::HideOption::hoSubstitute;
-        break;
-    }*/
-
-    //printf("hideOption: ");
-    /*if(profile.hide == smsc::profiler::HideOption::hoDisabled)
-        printf("hoDisabled\n");
-    if(profile.hide == smsc::profiler::HideOption::hoEnabled)
-        printf("hoEnabled\n");
-    if(profile.hide == smsc::profiler::HideOption::hoSubstitute)
-        printf("hoSubstitute\n");*/
-
-    //============= Gets flags ================
-
-    memcpy((void*)&val,     (const void*)((uint8_t*)buffer + 35), 1);
-
-#define BIT(x) (((uint8_t)1)<<((uint8_t)x))
-
-    profile.hideModifiable =    val & (uint8_t)1;
-    profile.divertModifiable =  val & BIT(1);
-    profile.udhconcat =         val & BIT(2);
-    profile.translit =          val & BIT(3);
-
-    /*if(profile.hideModifiable)
-        printf("hideModifaible ok\n");
-    if(profile.divertModifiable)
-        printf("divertModifaible ok\n");
-    if(profile.udhconcat)
-        printf("udhContact ok\n");
-    if(profile.translit)
-        printf("translit ok\n");
-
-    if(val & BIT(4))
-        profile.codepage |= 0x80;
-
-    if(profile.codepage |= 0x80)
-        printf("codePage |= 0x80 ok\n");*/
-
-#undef BIT
-
-    //============= Gets divertActive ================
-
-    memcpy((void*)&val,     (const void*)((uint8_t*)buffer + 36), 1);
-
-#define BIT(x) (((uint8_t)1)<<((uint8_t)x))
-
-    profile.divertActive =          val & (uint8_t)1;
-    profile.divertActiveAbsent =    val & BIT(1);
-    profile.divertActiveBlocked =   val & BIT(2);
-    profile.divertActiveBarred =    val & BIT(3);
-    profile.divertActiveCapacity =  val & BIT(4);
-
-    /*if(profile.divertActive)
-        printf("divertActive ok\n");
-    if(profile.divertActiveAbsent)
-        printf("divertActiveAbsent ok\n");
-    if(profile.divertActiveBlocked)
-        printf("divertActiveBlocked ok\n");
-    if(profile.divertActiveBarred)
-        printf("divertActiveBarred ok\n");
-    if(profile.divertActiveCapacity)
-        printf("divertActiveCapacity ok\n");*/
-
-#undef BIT
-
-    //============= Gets offset ======================
-
-    uint64_t val64;
-    memcpy((void*)&val64,       (const void*)( (uint8_t*)buffer + 37 ), 8);
-
-    uint64_t tmp=0;
-    memset(&tmp, 0, 8);
-    unsigned char *ptr=(unsigned char *)&val64;
-    tmp = (uint64_t)( ptr[0] ) << 56;
-    tmp += (uint64_t)( ptr[1] ) << 48;
-    tmp += (uint64_t)( ptr[2] ) << 40;
-    tmp += (uint64_t)( ptr[3] ) << 32;
-    tmp += (uint64_t)( ptr[4] ) << 24;
-    tmp += (uint64_t)( ptr[5] ) << 16;
-    tmp += (uint64_t)( ptr[6] ) << 8;
-    tmp += (uint64_t)( ptr[7] );
-
-    profile.offset = tmp;
-
-    //============= Gets local and divert ============
-
-    profile.locale = (const char*)((uint8_t*)buffer + 45);
-
-    //printf("local: '%s', len: %d\n", local.c_str(), local.length());
-
-    if(45 + profile.locale.length() >= len)
-        return false;
-
-    profile.divert = (const char*)((uint8_t*)buffer + 46 + profile.locale.length());
-
-    //printf("divert: '%s', len: %d", divert.c_str(), divert.length());
-
-    if(46 + profile.locale.length() + profile.divert.length() != len)
-        return false;
-
-    }catch(...){
+    
+    if(!buffer){
+        smsc_log_warn(logger, "ProfileUpdateCommand, buffer undefined");
         return false;
     }
 
+    try {
+    
+    uint8_t *buff = (uint8_t*)buffer;
+    plan = BufferSerializator::getByte(buff);
+    type = BufferSerializator::getByte(buff);
+    BufferSerializator::getString(buff, address, 21);
+    profile.codepage = BufferSerializator::getInt( buff);
+    profile.reportoptions = BufferSerializator::getInt( buff);
+    profile.hide  = BufferSerializator::getInt( buff);
+    profile.hideModifiable = BufferSerializator::getByte( buff);
+    profile.divertModifiable = BufferSerializator::getByte( buff);
+    profile.udhconcat = BufferSerializator::getByte( buff);
+    profile.translit = BufferSerializator::getByte( buff);
+    //============= Gets divertActive in buffer ================
+    profile.divertActive = BufferSerializator::getByte( buff);
+    profile.divertActiveAbsent = BufferSerializator::getByte( buff);
+    profile.divertActiveBlocked = BufferSerializator::getByte( buff);
+    profile.divertActiveBarred = BufferSerializator::getByte( buff);
+    profile.divertActiveCapacity = BufferSerializator::getByte( buff);
+    //============= Gets offset =================================   
+    profile.offset = BufferSerializator::getInt64(buff);
+
+    //============= Gets local and divert in buffer =============
+    profile.locale = BufferSerializator::getString(buff);
+    profile.divert = BufferSerializator::getString(buff);
+
+    }catch(...){
+      if( buffer ) delete buffer;
+      return 0;
+    }
 
     return true;
 }

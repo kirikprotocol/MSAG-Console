@@ -295,10 +295,12 @@ int InterconnectManager::Execute()
         profile.codepage = smsc::smpp::DataCoding::SMSC7BIT;
         profile.reportoptions = 0;
         profile.hide = 0;
-        profile.locale = "locale";
+        //profile.locale = "locale";
+        profile.locale = "";
         profile.hideModifiable = true;
 
-        profile.divert = "divert";
+        //profile.divert = "divert";
+        profile.divert = "";
         profile.divertActive = true;
         profile.divertActiveAbsent = false;
         profile.divertActiveBlocked = false;

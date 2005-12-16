@@ -10,6 +10,7 @@
 #include "acls/interfaces.h"
 #include "core/buffers/File.hpp"
 #include "profiler/profiler-types.hpp"
+#include "logger/Logger.h"
 
 #ifdef _WIN32
 #include <stdint.h>
@@ -21,6 +22,7 @@
 
 namespace smsc { namespace cluster
 {
+    using namespace smsc::logger;
 
     const int SMEID_LENGTH = smsc::sms::MAX_SMESYSID_TYPE_LENGTH + 1;
 
@@ -145,6 +147,7 @@ namespace smsc { namespace cluster
          uint8_t type;
          char address[21];
          smsc::profiler::Profile profile;
+         smsc::logger::Logger * logger;
 
     public:
         ProfileUpdateCommand(const smsc::sms::Address& addr,const smsc::profiler::Profile& profile_);
