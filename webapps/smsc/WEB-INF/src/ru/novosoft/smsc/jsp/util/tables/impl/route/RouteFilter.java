@@ -328,14 +328,14 @@ public class RouteFilter implements Filter
 
       case 1:
 
-        return (src_subjects.isEmpty() || isSourcesAllowed(srcs, Subj) == ALLOWED
-                || isDestinationsAllowed(dsts, Subj) == ALLOWED)
-                && (src_masks.isEmpty() || isSourcesAllowed(srcs, Mask) == ALLOWED
-                || isDestinationsAllowed(dsts, Mask) == ALLOWED)
-                && (smes.isEmpty() || isSMEsAllowed(dsts) == ALLOWED)
-                && (names.isEmpty() || isNamesAllowed(name) == ALLOWED)
-                && (providers.isEmpty() || isProvidersAllowed(providerId) == ALLOWED)
-                && (categories.isEmpty() || isCategoriesAllowed(categoryId) == ALLOWED);
+        return (isSourcesAllowed(srcs, Subj) == ALLOWED
+                || isDestinationsAllowed(dsts, Subj) == ALLOWED
+                || isSourcesAllowed(srcs, Mask) == ALLOWED
+                || isDestinationsAllowed(dsts, Mask) == ALLOWED
+                || isSMEsAllowed(dsts) == ALLOWED
+                || isNamesAllowed(name) == ALLOWED
+                || isProvidersAllowed(providerId) == ALLOWED
+                || isCategoriesAllowed(categoryId) == ALLOWED);
 
       case 2:
 
