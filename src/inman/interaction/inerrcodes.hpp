@@ -13,7 +13,8 @@ typedef enum {
 } InmanErrorType;
 
 typedef enum {
-    InProtocol_GeneralError = 1
+    InProtocol_GeneralError = 1,
+    InProtocol_ResourceLimitation
 } InmanProtocolErrors;
 
 typedef enum {
