@@ -65,7 +65,7 @@ public class SubjectList
     }
   }
 
-  public void add(Subject s)
+  public synchronized void add(Subject s)
           throws AdminException
   {
     if (s == null)
@@ -77,7 +77,7 @@ public class SubjectList
     subjects.put(s.getName(), s);
   }
 
-  public Subject remove(String subjectName)
+  public synchronized Subject remove(String subjectName)
   {
     Subject removed = (Subject) subjects.remove(subjectName);
     if (removed != null)
@@ -85,32 +85,32 @@ public class SubjectList
     return removed;
   }
 
-  public int size()
+  public synchronized int size()
   {
     return subjects.size();
   }
 
-  public Subject get(String subjectName)
+  public synchronized Subject get(String subjectName)
   {
     return (Subject) subjects.get(subjectName);
   }
 
-  public Iterator iterator()
+  public synchronized Iterator iterator()
   {
     return subjects.values().iterator();
   }
 
-  public boolean isEmpty()
+  public synchronized boolean isEmpty()
   {
     return subjects.isEmpty();
   }
 
-  public List getNames()
+  public synchronized List getNames()
   {
     return new SortedList(subjects.keySet());
   }
 
-  public PrintWriter store(PrintWriter out)
+  public synchronized PrintWriter store(PrintWriter out)
   {
     for (Iterator i = iterator(); i.hasNext();) {
       ((Subject) i.next()).store(out);
@@ -118,7 +118,7 @@ public class SubjectList
     return out;
   }
 
-  public QueryResultSet query(SubjectQuery query)
+  public synchronized QueryResultSet query(SubjectQuery query)
   {
     dataSource.clear();
     for (Iterator i = subjects.values().iterator(); i.hasNext();) {
@@ -128,7 +128,7 @@ public class SubjectList
     return dataSource.query(query);
   }
 
-  public boolean contains(String subjectName)
+  public synchronized boolean contains(String subjectName)
   {
     return subjects.keySet().contains(subjectName);
   }

@@ -47,7 +47,7 @@
 <%@ include file="inc/menu.jsp"%>
 <%@include file="/WEB-INF/inc/collapsing_tree.jsp"%>
 <input type=hidden name=oldProviderName value="<%=StringEncoderDecoder.encode(bean.getOldProviderName())%>">
-<input type=hidden name=edit value="<%=StringEncoderDecoder.encode(bean.getEdit() == null ? "" : bean.getEdit())%>">
+<input type=hidden name=edit id=edit value="<%=StringEncoderDecoder.encode(bean.getEdit() == null ? "" : bean.getEdit())%>">
 <input type=hidden name=creating value="<%=bean.isCreating()%>">
 <input type=hidden name=initialized value=true>
 <input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
@@ -126,7 +126,7 @@ function setSort(sorting)
 %>
 <tr class=row<%=(row++)&1%>>
 	<td><input class=check type=checkbox name=checked value="<%=encId%>" <%=bean.isJobChecked(jobId) ? "checked" : ""%>></td>
-	<td style="cursor:hand;" onClick='return editSomething("<%=encId%>")' title="<%= getLocString("dbsme.label.edit_job")%> <%=encName%>"><a href="#"><%=encName%></a></td>
+	<td style="cursor:hand;"><a href="javascript:editSomething('<%=encId%>')" title="<%= getLocString("dbsme.label.edit_job")%> <%=encName%>"><%=encName%></a></td>
 	<td><%=encType%>&nbsp;</td>
 	<td><%=encAddress%>&nbsp;</td>
 	<td><%=encAlias%>&nbsp;</td>
@@ -142,7 +142,7 @@ page_menu_begin(out);
 page_menu_button(session, out, "mbAdd",    "dbsme.button.add_job",     "dbsme.hint.add_job", beanResult == PageBean.RESULT_OK);
 page_menu_button(session, out, "mbDelete", "dbsme.button.delete_jobs", "dbsme.hint.delete_jobs", "return confirm('"+getLocString("dbsme.confirm.delete_jobs")+"')", beanResult == PageBean.RESULT_OK);
 page_menu_button(session, out, "mbDone",   "common.buttons.done",   "dbsme.hint.accept",     beanResult == PageBean.RESULT_OK);
-page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "dbsme.hint.cancel", "return noValidationSubmit(this);");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "dbsme.hint.cancel", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 }

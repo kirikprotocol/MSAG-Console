@@ -131,7 +131,7 @@ public class Job extends DbsmeBean
     int result = super.process(request);
     if (result != RESULT_OK)
       return result;
-
+    logger.debug("JobBean super.ok: "+mbDone);
     if (mbCancel != null)
       return RESULT_DONE;
     if (mbDone != null)
@@ -142,6 +142,7 @@ public class Job extends DbsmeBean
 
   private int save()
   {
+    logger.debug("Saving job");
     if (creating) {
       jobId = jobName;
       if (jobId == null || jobId.length() == 0) {
@@ -188,6 +189,7 @@ public class Job extends DbsmeBean
     if (output_format != null && output_format.length() > 0) config.setString(jobPrefix + ".MessageSet.OUTPUT_FORMAT", output_format);
     if (invalid_config != null && invalid_config.length() > 0) config.setString(jobPrefix + ".MessageSet.INVALID_CONFIG", invalid_config);
 
+    logger.debug("saving changes");
     try {
       config.save();
     } catch (Exception e) {

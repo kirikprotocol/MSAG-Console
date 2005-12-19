@@ -104,7 +104,7 @@ function setType()
 </div><%
 page_menu_begin(out);
 page_menu_button(session, out, "mbDone",   "common.buttons.done",   "dbsme.hint.accept");
-page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "dbsme.hint.cancel", "return noValidationSubmit(this);");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "dbsme.hint.cancel", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>
