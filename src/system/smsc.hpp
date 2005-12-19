@@ -489,9 +489,12 @@ public:
     inManCom->ChargeSms(id,sms,ctx);
   }
 
-  void ReportDelivery(int dlgId,const SMS& sms,bool final)
+  void ReportDelivery(int dlgId,const SMS& sms,bool final,int policy)
   {
-    inManCom->Report(dlgId,sms,final);
+    if(sms.billingRecord && sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==policy)
+    {
+      inManCom->Report(dlgId,sms,final);
+    }
   }
 
   bool isHs(){ return ishs;}
