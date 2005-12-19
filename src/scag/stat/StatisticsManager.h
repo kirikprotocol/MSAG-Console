@@ -81,6 +81,42 @@ namespace stat {
       }
     };
 
+    struct HttpStat
+    {
+      int providerId;
+      int request;
+      int requestRejected;
+      int response;
+      int responseRejected;
+      int delivered;
+      int failed;
+
+      int billingOk;
+      int billingFailed;
+
+      IntHash<int> errors;
+
+      HttpStat()
+      {
+        Reset();
+      }
+
+      void Reset()
+      {
+        providerId = -1;
+        request = 0;
+        requestRejected = 0;
+        response = 0;
+        responseRejected = 0;
+        delivered = 0;
+        failed = 0;
+
+        billingOk = 0;
+        billingFailed = 0;
+        errors.Empty();
+      }
+    };
+
     class StatisticsManager : public Statistics, public PerformanceListener, public PerformanceServer, public Thread
     {
     friend class Statistics;
@@ -95,10 +131,14 @@ namespace stat {
 
         smsc::logger::Logger    *logger;
 
-        Hash<CommonStat>    statBySmeId[2];
-        Hash<CommonStat>   statByRouteId[2];
-        Hash<CommonStat>   srvStatBySmeId[2];
-        IntHash<TrafficRecord> trafficByRouteId;
+        Hash<CommonStat>        statBySmeId[2];
+        Hash<CommonStat>        statByRouteId[2];
+        Hash<CommonStat>        srvStatBySmeId[2];
+        IntHash<TrafficRecord>  trafficByRouteId;
+
+        Hash<HttpStat>          httpStatByRouteId[2];
+        IntHash<HttpStat>          httpStatByProviderId[2];
+        IntHash<TrafficRecord>  httpTrafficByRouteId;
 
         int     currentIndex;
         bool    bExternalFlush;
@@ -184,6 +224,7 @@ namespace stat {
     public:
 
         static RouteMap routeMap;
+        static RouteMap httpRouteMap;
 
         static void init(const StatManConfig& statManCfg);    
         

@@ -36,6 +36,7 @@ const char*    SMSC_STAT_HEADER_TEXT   = "SCAG.STAT";
 const char*    SMSC_STAT_DIR_NAME_FORMAT  = "%04d-%02d";
 const char*    SMSC_STAT_FILE_NAME_FORMAT = "%02d.rts";
 RouteMap StatisticsManager::routeMap;
+RouteMap StatisticsManager::httpRouteMap;
 
 inline unsigned GetLongevity(StatisticsManager*) { return 5; }
 //typedef SingletonHolder<StatisticsManager, CreateUsingNew, SingletonWithLongevity> SingleSM;
@@ -207,7 +208,7 @@ void StatisticsManager::registerEvent(const SmppStatEvent& se)
   }
 
   if (se.routeId && se.routeId[0])
-  {
+  {             
       if( se.counter == cntAccepted){
           int id, newRouteId;
           if(  (id = routeMap.regRoute(se.routeId, newRouteId)) == -1)
@@ -230,83 +231,168 @@ void StatisticsManager::registerEvent(const SmppStatEvent& se)
 
 void StatisticsManager::registerEvent(const HttpStatEvent& se)
 {
-    // TODO: implement !!!
-}
-
-bool StatisticsManager::checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value)
-{
-        MutexGuard mg(switchLock);
-
-        int id;
-        if(  (id = routeMap.getIntRouteId(routeId.c_str())) == -1)
-            return false;
-
-        TrafficRecord *tr = 0;
-
-        switch(period){
-        case checkMinPeriod:
-            tr = trafficByRouteId.GetPtr(id);
-            if(tr){
-                time_t now = time(0);
-                tm tmnow;   localtime_r(&now, &tmnow);
-                tr->reset(tmnow);
-
-                long mincnt_, hourcnt_, daycnt_, monthcnt_;
-                uint8_t year_, month_, day_, hour_, min_;
-                tr->getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
-                                    year_, month_, day_, hour_, min_);
-                if(mincnt_ <= value)
-                    return true;
-            }
-            break;
-        case checkHourPeriod:
-            tr = trafficByRouteId.GetPtr(id);
-            if(tr){
-                time_t now = time(0);
-                tm tmnow;   localtime_r(&now, &tmnow);
-                tr->reset(tmnow);
-
-                long mincnt_, hourcnt_, daycnt_, monthcnt_;
-                uint8_t year_, month_, day_, hour_, min_;
-                tr->getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
-                                    year_, month_, day_, hour_, min_);
-                if(hourcnt_ <= value)
-                    return true;
-            }
-            break;
-        case checkDayPeriod:
-            tr = trafficByRouteId.GetPtr(id);
-            if(tr){
-                time_t now = time(0);
-                tm tmnow;   localtime_r(&now, &tmnow);
-                tr->reset(tmnow);
-
-                long mincnt_, hourcnt_, daycnt_, monthcnt_;
-                uint8_t year_, month_, day_, hour_, min_;
-                tr->getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
-                                    year_, month_, day_, hour_, min_);
-                if(daycnt_ <= value)
-                    return true;
-            }
-            break;
-        case checkMonthPeriod:
-            tr = trafficByRouteId.GetPtr(id);
-            if(tr){
-                time_t now = time(0);
-                tm tmnow;   localtime_r(&now, &tmnow);
-                tr->reset(tmnow);
-
-                long mincnt_, hourcnt_, daycnt_, monthcnt_;
-                uint8_t year_, month_, day_, hour_, min_;
-                tr->getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
-                                    year_, month_, day_, hour_, min_);
-                //printf("%04d-%02d-%02d %02d:%02d (m, h, d, M): %d, %d, %d, %d\n", year_ + 1900, month_ + 1, day_, hour_, min_, mincnt_, hourcnt_, daycnt_, monthcnt_);
-                if(monthcnt_ <= value)
-                    return true;
-            }
-            break;
+      // TODO: implement !!!
+    MutexGuard  switchGuard(switchLock);
+    
+    HttpStat* providerSt=0;
+    HttpStat* routeSt=0;
+    
+    using namespace Counters;
+    
+    genCounters.inc(se.counter);
+    
+    if (se.serviceProviderId != -1)
+    {
+        if(se.counter < httpBillingOk){
+                providerSt = httpStatByProviderId[currentIndex].GetPtr(se.serviceProviderId);                
+    
+                if(!providerSt)
+                {
+                    HttpStat newStat;
+                    httpStatByProviderId[currentIndex].Insert(se.serviceProviderId, newStat);
+                    providerSt=httpStatByProviderId[currentIndex].GetPtr(se.serviceProviderId);
+                }        
         }
-        return false;
+    }
+    
+    if (se.routeId.length())
+    {
+        //smsc_log_debug(logger, "routeId: '%s'", se.routeId);
+        routeSt = httpStatByRouteId[currentIndex].GetPtr(se.routeId.c_str());
+        if(!routeSt)
+        {
+            HttpStat newStat;
+            httpStatByRouteId[currentIndex].Insert(se.routeId.c_str(), newStat);
+            routeSt=httpStatByRouteId[currentIndex].GetPtr(se.routeId.c_str());
+        }
+    }
+    
+    if(se.counter < httpBillingOk)
+    {
+        if(providerSt)  incError(providerSt->errors, se.errCode);
+        if(routeSt)     incError(routeSt->errors, se.errCode);
+    }
+    
+    if(providerSt && se.serviceProviderId != -1) providerSt->providerId = se.serviceProviderId;
+    if(routeSt    && se.serviceProviderId != -1) routeSt->providerId = se.serviceProviderId;
+    
+    int c;
+    switch(se.counter)
+    {
+    #define INC_STAT(cnt,field) case cnt:{\
+          if(providerSt)providerSt->field++; \
+          if(routeSt)routeSt->field++; \
+          }break;
+    
+        INC_STAT(httpRequest,request)
+        INC_STAT(httpRequestRejected,requestRejected)
+        INC_STAT(httpResponse,response)
+        INC_STAT(httpResponseRejected,responseRejected)
+        INC_STAT(httpDelivered,delivered)
+        INC_STAT(httpFailed,failed)
+        INC_STAT(httpBillingOk,billingOk)
+        INC_STAT(httpBillingFailed,billingFailed)
+
+    #undef INC_STAT
+    
+    }
+    
+    if (se.routeId.length())
+    {
+        if( se.counter == httpRequest){
+              int id, newRouteId;
+              if(  (id = httpRouteMap.regRoute(se.routeId.c_str(), newRouteId)) == -1)
+                  id = newRouteId;
+    
+              time_t now = time(0);
+              tm tmnow;   localtime_r(&now, &tmnow);
+              TrafficRecord *tr = 0;
+              tr = httpTrafficByRouteId.GetPtr(id);
+              if(tr){
+                    tr->inc(tmnow);
+              }else{
+                  TrafficRecord tr(1, 1, 1, 1, 
+                                   tmnow.tm_year, tmnow.tm_mon, tmnow.tm_mday, tmnow.tm_hour, tmnow.tm_min);
+                  httpTrafficByRouteId.Insert(id, tr);
+              }
+        }
+    }
+}
+    
+    bool StatisticsManager::checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value)
+    {
+            MutexGuard mg(switchLock);
+    
+            int id;
+            if(  (id = routeMap.getIntRouteId(routeId.c_str())) == -1)
+                return false;
+    
+            TrafficRecord *tr = 0;
+    
+            switch(period){
+            case checkMinPeriod:
+                tr = trafficByRouteId.GetPtr(id);
+                if(tr){
+                    time_t now = time(0);
+                    tm tmnow;   localtime_r(&now, &tmnow);
+                    tr->reset(tmnow);
+    
+                    long mincnt_, hourcnt_, daycnt_, monthcnt_;
+                    uint8_t year_, month_, day_, hour_, min_;
+                    tr->getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
+                                        year_, month_, day_, hour_, min_);
+                    if(mincnt_ <= value)
+                        return true;
+                }
+                break;
+            case checkHourPeriod:
+                tr = trafficByRouteId.GetPtr(id);
+                if(tr){
+                    time_t now = time(0);
+                    tm tmnow;   localtime_r(&now, &tmnow);
+                    tr->reset(tmnow);
+    
+                    long mincnt_, hourcnt_, daycnt_, monthcnt_;
+                    uint8_t year_, month_, day_, hour_, min_;
+                    tr->getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
+                                        year_, month_, day_, hour_, min_);
+                    if(hourcnt_ <= value)
+                        return true;
+                }
+                break;
+            case checkDayPeriod:
+                tr = trafficByRouteId.GetPtr(id);
+                if(tr){
+                    time_t now = time(0);
+                    tm tmnow;   localtime_r(&now, &tmnow);
+                    tr->reset(tmnow);
+    
+                    long mincnt_, hourcnt_, daycnt_, monthcnt_;
+                    uint8_t year_, month_, day_, hour_, min_;
+                    tr->getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
+                                        year_, month_, day_, hour_, min_);
+                    if(daycnt_ <= value)
+                        return true;
+                }
+                break;
+            case checkMonthPeriod:
+                tr = trafficByRouteId.GetPtr(id);
+                if(tr){
+                    time_t now = time(0);
+                    tm tmnow;   localtime_r(&now, &tmnow);
+                    tr->reset(tmnow);
+    
+                    long mincnt_, hourcnt_, daycnt_, monthcnt_;
+                    uint8_t year_, month_, day_, hour_, min_;
+                    tr->getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
+                                        year_, month_, day_, hour_, min_);
+                    //printf("%04d-%02d-%02d %02d:%02d (m, h, d, M): %d, %d, %d, %d\n", year_ + 1900, month_ + 1, day_, hour_, min_, mincnt_, hourcnt_, daycnt_, monthcnt_);
+                    if(monthcnt_ <= value)
+                        return true;
+                }
+                break;
+            }
+            return false;
 }
 
 int StatisticsManager::Execute()
