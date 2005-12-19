@@ -25,8 +25,7 @@ import java.util.*;
  * To change this template use File | Settings | File Templates.
  */
 
-public class DistributionListManager extends Service implements DistributionListAdmin
-{
+public class DistributionListManager extends Service implements DistributionListAdmin {
   private static final String SMSC_COMPONENT_ID = "SMSC";
 
   private static final String GET_PRINCIPALS_METHOD_ID = "prc_list";
@@ -41,79 +40,74 @@ public class DistributionListManager extends Service implements DistributionList
   private final static String DELETE_SUBMITTER_METHOD_ID = "sbm_delete";
   private final static String SUBMITTERS_METHOD_ID = "sbm_list";
   private final static String ADD_DL_METHOD_ID = "dl_add";
- // private final static String DELETE_MEMBERS_METHOD_ID = "delete_members";
+  // private final static String DELETE_MEMBERS_METHOD_ID = "delete_members";
   private final static String DELETE_DL_METHOD_ID = "dl_delete";
   private final static String GET_DL_METHOD_ID = "dl_get";
   private final static String LIST_DL_METHOD_ID = "dl_list";
   private final static String ALT_DL_METHOD_ID = "dl_alter";
 
-
 /*
-  private final static String GET_PRINCIPALS_SQL = "SELECT ADDRESS, MAX_LST, MAX_EL FROM DL_PRINCIPALS";
-  private final static String CHECK_PRINCIPAL_SQL = "SELECT NVL(COUNT(*), 0) FROM DL_PRINCIPALS WHERE ADDRESS=?";
-  private final static String ADD_PRINCIPAL_SQL = "INSERT INTO DL_PRINCIPALS (ADDRESS, MAX_LST, MAX_EL) VALUES (?, ?, ?)";
-  private final static String CHECK_PRINCIPAL_SUB_SQL = "SELECT NVL(COUNT(*), 0) FROM DL_SUBMITTERS WHERE ADDRESS=?";
-  private final static String DELETE_PRINCIPAL_SQL = "DELETE FROM DL_PRINCIPALS WHERE ADDRESS=?";
-  private final static String GET_PRINCIPAL_SQL = "SELECT ADDRESS, MAX_LST, MAX_EL FROM DL_PRINCIPALS WHERE ADDRESS=?";
-  private final static String ALT_PRINCIPAL_LIST_SQL = "UPDATE DL_PRINCIPALS SET MAX_LST=? WHERE ADDRESS=?";
-  private final static String ALT_PRINCIPAL_ELEM_SQL = "UPDATE DL_PRINCIPALS SET MAX_EL=? WHERE ADDRESS=?";
-  private final static String CHECK_MEMBER_SQL = "SELECT NVL(COUNT(*), 0) FROM DL_MEMBERS WHERE LIST=? AND ADDRESS=?";
-  private final static String ADD_MEMBER_SQL = "INSERT INTO DL_MEMBERS (LIST, ADDRESS) VALUES (?, ?)";
-  private final static String DELETE_MEMBER_SQL = "DELETE FROM DL_MEMBERS WHERE LIST=? AND ADDRESS= ?";
-  private final static String GET_MEMBERS_SQL = "SELECT ADDRESS FROM DL_MEMBERS WHERE LIST=?";
-  private final static String CHECK_SUBMITTER_SQL = "SELECT NVL(COUNT(*), 0) FROM DL_SUBMITTERS WHERE LIST=? AND ADDRESS=?";
-  private final static String ADD_SUBMITTER_SQL = "INSERT INTO DL_SUBMITTERS (LIST, ADDRESS) VALUES (?, ?)";
-  private final static String DELETE_SUBMITTER_SQL = "DELETE FROM DL_SUBMITTERS WHERE LIST=? AND ADDRESS=?";
-  private final static String GET_LIST_PRINCIPALS_SQL = "SELECT ADDRESS, MAX_LST, MAX_EL FROM DL_PRINCIPALS WHERE ADDRESS IN (SELECT ADDRESS FROM DL_SUBMITTERS WHERE LIST=?)";
-  private final static String CHECK_DL_SQL = "SELECT NVL(COUNT(*), 0) FROM DL_SET WHERE LIST=?";
-  private final static String ADD_DL_SQL = "INSERT INTO DL_SET (LIST, MAX_EL, OWNER) VALUES (?, ?, ?)";
-  private final static String DELETE_MEMBERS_SQL = "DELETE FROM DL_MEMBERS WHERE LIST=?";
-  private final static String DELETE_DL_SUB_SQL = "DELETE FROM DL_SUBMITTERS WHERE LIST=?";
-  private final static String DELETE_DL_SQL = "DELETE FROM DL_SET WHERE LIST=?";
-  private final static String GET_DL_SQL = "SELECT LIST, OWNER, MAX_EL FROM DL_SET WHERE LIST=?";
-  private final static String LIST_DL_SQL = "SELECT LIST, OWNER, MAX_EL FROM DL_SET";
-  private final static String ALT_DL_SQL = "UPDATE DL_SET SET MAX_EL=? WHERE LIST=?";
-  private final static String GET_DL_SQL_FOR_UPDATE = "SELECT MAX_EL, OWNER FROM DL_SET WHERE LIST=?"; // FOR UPDATE
-  private final static String GET_DLMEMBERS_SQL = "SELECT NVL(COUNT(*), 0) FROM DL_MEMBERS WHERE LIST=?";
-  private final static String GET_DLS_FOR_OWNER_SQL = "SELECT NVL(COUNT(*), 0) FROM DL_SET WHERE OWNER=?";
-  private final static String GET_MAX_MEMBERS_COUNT_FOR_OWNER_SQL = "SELECT NVL(MAX(COUNT(LIST)), 0) FROM DL_MEMBERS WHERE LIST IN (SELECT LIST FROM DL_SET WHERE OWNER=?) GROUP BY LIST";
-  */
+private final static String GET_PRINCIPALS_SQL = "SELECT ADDRESS, MAX_LST, MAX_EL FROM DL_PRINCIPALS";
+private final static String CHECK_PRINCIPAL_SQL = "SELECT NVL(COUNT(*), 0) FROM DL_PRINCIPALS WHERE ADDRESS=?";
+private final static String ADD_PRINCIPAL_SQL = "INSERT INTO DL_PRINCIPALS (ADDRESS, MAX_LST, MAX_EL) VALUES (?, ?, ?)";
+private final static String CHECK_PRINCIPAL_SUB_SQL = "SELECT NVL(COUNT(*), 0) FROM DL_SUBMITTERS WHERE ADDRESS=?";
+private final static String DELETE_PRINCIPAL_SQL = "DELETE FROM DL_PRINCIPALS WHERE ADDRESS=?";
+private final static String GET_PRINCIPAL_SQL = "SELECT ADDRESS, MAX_LST, MAX_EL FROM DL_PRINCIPALS WHERE ADDRESS=?";
+private final static String ALT_PRINCIPAL_LIST_SQL = "UPDATE DL_PRINCIPALS SET MAX_LST=? WHERE ADDRESS=?";
+private final static String ALT_PRINCIPAL_ELEM_SQL = "UPDATE DL_PRINCIPALS SET MAX_EL=? WHERE ADDRESS=?";
+private final static String CHECK_MEMBER_SQL = "SELECT NVL(COUNT(*), 0) FROM DL_MEMBERS WHERE LIST=? AND ADDRESS=?";
+private final static String ADD_MEMBER_SQL = "INSERT INTO DL_MEMBERS (LIST, ADDRESS) VALUES (?, ?)";
+private final static String DELETE_MEMBER_SQL = "DELETE FROM DL_MEMBERS WHERE LIST=? AND ADDRESS= ?";
+private final static String GET_MEMBERS_SQL = "SELECT ADDRESS FROM DL_MEMBERS WHERE LIST=?";
+private final static String CHECK_SUBMITTER_SQL = "SELECT NVL(COUNT(*), 0) FROM DL_SUBMITTERS WHERE LIST=? AND ADDRESS=?";
+private final static String ADD_SUBMITTER_SQL = "INSERT INTO DL_SUBMITTERS (LIST, ADDRESS) VALUES (?, ?)";
+private final static String DELETE_SUBMITTER_SQL = "DELETE FROM DL_SUBMITTERS WHERE LIST=? AND ADDRESS=?";
+private final static String GET_LIST_PRINCIPALS_SQL = "SELECT ADDRESS, MAX_LST, MAX_EL FROM DL_PRINCIPALS WHERE ADDRESS IN (SELECT ADDRESS FROM DL_SUBMITTERS WHERE LIST=?)";
+private final static String CHECK_DL_SQL = "SELECT NVL(COUNT(*), 0) FROM DL_SET WHERE LIST=?";
+private final static String ADD_DL_SQL = "INSERT INTO DL_SET (LIST, MAX_EL, OWNER) VALUES (?, ?, ?)";
+private final static String DELETE_MEMBERS_SQL = "DELETE FROM DL_MEMBERS WHERE LIST=?";
+private final static String DELETE_DL_SUB_SQL = "DELETE FROM DL_SUBMITTERS WHERE LIST=?";
+private final static String DELETE_DL_SQL = "DELETE FROM DL_SET WHERE LIST=?";
+private final static String GET_DL_SQL = "SELECT LIST, OWNER, MAX_EL FROM DL_SET WHERE LIST=?";
+private final static String LIST_DL_SQL = "SELECT LIST, OWNER, MAX_EL FROM DL_SET";
+private final static String ALT_DL_SQL = "UPDATE DL_SET SET MAX_EL=? WHERE LIST=?";
+private final static String GET_DL_SQL_FOR_UPDATE = "SELECT MAX_EL, OWNER FROM DL_SET WHERE LIST=?"; // FOR UPDATE
+private final static String GET_DLMEMBERS_SQL = "SELECT NVL(COUNT(*), 0) FROM DL_MEMBERS WHERE LIST=?";
+private final static String GET_DLS_FOR_OWNER_SQL = "SELECT NVL(COUNT(*), 0) FROM DL_SET WHERE OWNER=?";
+private final static String GET_MAX_MEMBERS_COUNT_FOR_OWNER_SQL = "SELECT NVL(MAX(COUNT(LIST)), 0) FROM DL_MEMBERS WHERE LIST IN (SELECT LIST FROM DL_SET WHERE OWNER=?) GROUP BY LIST";
+*/
 
- // private DataSource ds;
- // private Category logger = Category.getInstance(this.getClass());
+  // private DataSource ds;
+  // private Category logger = Category.getInstance(this.getClass());
 
-  public DistributionListManager(ServiceInfo info,int smscPort /*,DataSource ds*/)
-  {
-    super(info,smscPort);
-   // this.ds = ds;
+  public DistributionListManager(ServiceInfo info, int smscPort /*,DataSource ds*/) {
+    super(info, smscPort);
+    // this.ds = ds;
   }
 
-  public synchronized void setInfo(ServiceInfo info)
-  {
-   super.setInfo(info);
+  public synchronized void setInfo(ServiceInfo info) {
+    super.setInfo(info);
   }
 
-  private List parsePrincipalList(final List listStr)
-  {
+  private List parsePrincipalList(final List listStr) {
     if (null == listStr || 0 == listStr.size())
       return new LinkedList();
     // final StringBuffer buffer = new StringBuffer(listStr.size());
     final List result = new LinkedList();
     int i = 0;
-    while (i < listStr.size())  {
+    while (i < listStr.size()) {
       String address = (String) listStr.get(i++);
-      int maxLists = Integer.parseInt((String)listStr.get(i++));
-      int maxElements = Integer.parseInt((String)listStr.get(i++));
-      result.add(new Principal(address,maxLists,maxElements));
+      int maxLists = Integer.parseInt((String) listStr.get(i++));
+      int maxElements = Integer.parseInt((String) listStr.get(i++));
+      result.add(new Principal(address, maxLists, maxElements));
     }
     return result;
   }
 
-  public synchronized List principals() throws AdminException
-  {
+  public synchronized List principals() throws AdminException {
     List list;
 
-	checkSmscIsRunning();
+    checkSmscIsRunning();
     final Map args = new HashMap();
     args.put("address", "");
     final Object res = call(SMSC_COMPONENT_ID, GET_PRINCIPALS_METHOD_ID, Type.Types[Type.StringListType], args);
@@ -122,283 +116,271 @@ public class DistributionListManager extends Service implements DistributionList
     return parsePrincipalList(list);
   }
 
-  public synchronized List principals(String address) throws AdminException
-    {
-      List list;
-	  checkSmscIsRunning();
-	  final Map args = new HashMap();
-      args.put("address", address);
-      final Object res = call(SMSC_COMPONENT_ID, GET_PRINCIPALS_METHOD_ID, Type.Types[Type.StringListType], args);
+  public synchronized List principals(String address) throws AdminException {
+    List list;
+    checkSmscIsRunning();
+    final Map args = new HashMap();
+    args.put("address", address);
+    final Object res = call(SMSC_COMPONENT_ID, GET_PRINCIPALS_METHOD_ID, Type.Types[Type.StringListType], args);
 
-      list = res instanceof List ? (List) res : null;
-      return parsePrincipalList(list);
-    }
+    list = res instanceof List ? (List) res : null;
+    return parsePrincipalList(list);
+  }
 
-  public synchronized void addPrincipal(Principal prc) throws AdminException, PrincipalAlreadyExistsException
-  {
+  public synchronized void addPrincipal(Principal prc) throws AdminException, PrincipalAlreadyExistsException {
     //for void no use call
     //  List list=principals(); if (list.contains(prc)) throw new PrincipalAlreadyExistsException(prc);
-	checkSmscIsRunning();
-	final Map args = new HashMap();
+    checkSmscIsRunning();
+    final Map args = new HashMap();
     args.put("address", prc.getAddress());
     args.put("maxLists", prc.getMaxListsInteger());
-    args.put("maxElements",prc.getMaxElementsInteger());
+    args.put("maxElements", prc.getMaxElementsInteger());
     call(SMSC_COMPONENT_ID, ADD_PRINCIPAL_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
-  public synchronized void deletePrincipal(String address) throws AdminException, PrincipalNotExistsException, PrincipalInUseException
-  {
+  public synchronized void deletePrincipal(String address) throws AdminException, PrincipalNotExistsException, PrincipalInUseException {
     /* List list=principals(); Principal prc=null;
     for (Iterator it = list.iterator(); it.hasNext();) {
     prc = (Principal) it.next();  if (prc.getAddress().equals(address))  break;
     }
     if (prc == null)  throw new PrincipalNotExistsException(address);
     */
-	checkSmscIsRunning();
-	final Map args = new HashMap();
+    checkSmscIsRunning();
+    final Map args = new HashMap();
     args.put("address", address);
     call(SMSC_COMPONENT_ID, DELETE_PRINCIPAL_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
-  public synchronized Principal getPrincipal(String address) throws AdminException, PrincipalNotExistsException
-  {
+  public synchronized Principal getPrincipal(String address) throws AdminException, PrincipalNotExistsException {
     List list;
-	checkSmscIsRunning();
+    checkSmscIsRunning();
 
     final Map args = new HashMap();
     args.put("address", address);
     final Object res = call(SMSC_COMPONENT_ID, GET_PRINCIPAL_METHOD_ID, Type.Types[Type.StringListType], args);
     list = res instanceof List ? (List) res : null;
-    if (list==null)  throw new AdminException("Unsupported return type for commmand "+GET_PRINCIPAL_METHOD_ID);
-    String addr=(String)list.get(0);
-    int maxLists=Integer.parseInt((String)list.get(1));
-    int maxElements=Integer.parseInt((String)list.get(2));
-    return new Principal(addr,maxLists,maxElements);
+    if (list == null) throw new AdminException("Unsupported return type for commmand " + GET_PRINCIPAL_METHOD_ID);
+    String addr = (String) list.get(0);
+    int maxLists = Integer.parseInt((String) list.get(1));
+    int maxElements = Integer.parseInt((String) list.get(2));
+    return new Principal(addr, maxLists, maxElements);
   }
 
   public synchronized void alterPrincipal(Principal prc, boolean altLists, boolean altElements)
           throws AdminException, PrincipalNotExistsException, ListsCountExceededException,
-          MembersCountExceededForOwnerException
-  {
+          MembersCountExceededForOwnerException {
     // List list=principals(); if (!list.contains(prc)) throw new PrincipalNotExistsException(prc.getAddress());
-	checkSmscIsRunning();
-	final Map args = new HashMap();
+    checkSmscIsRunning();
+    final Map args = new HashMap();
     args.put("address", prc.getAddress());
     args.put("maxLists", prc.getMaxListsInteger());
     args.put("maxElements", prc.getMaxElementsInteger());
-    args.put("altLists",  new Boolean(altLists) );
-    args.put("altElements",new Boolean(altElements));
+    args.put("altLists", new Boolean(altLists));
+    args.put("altElements", new Boolean(altElements));
     call(SMSC_COMPONENT_ID, ALT_PRINCIPAL_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
-  public synchronized void addMember(String dlname, String address) throws AdminException, ListNotExistsException, MemberAlreadyExistsException
-  {
-	checkSmscIsRunning();
-	final Map args = new HashMap();
+  public synchronized void addMember(String dlname, String address) throws AdminException, ListNotExistsException, MemberAlreadyExistsException {
+    checkSmscIsRunning();
+    final Map args = new HashMap();
     args.put("address", address);
     args.put("dlname", dlname);
     call(SMSC_COMPONENT_ID, ADD_MEMBER_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
-  public synchronized void deleteMember(String dlname, String address) throws AdminException, ListNotExistsException, MemberNotExistsException
-  {
-	checkSmscIsRunning();
-	final Map args = new HashMap();
+  public synchronized void deleteMember(String dlname, String address) throws AdminException, ListNotExistsException, MemberNotExistsException {
+    checkSmscIsRunning();
+    final Map args = new HashMap();
     args.put("address", address);
     args.put("dlname", dlname);
     call(SMSC_COMPONENT_ID, DELETE_MEMBER_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
-  public synchronized List members(String dlname) throws AdminException, ListNotExistsException
-  {
+  public synchronized List members(String dlname) throws AdminException, ListNotExistsException {
     List list;
-	checkSmscIsRunning();
+    checkSmscIsRunning();
     final Map args = new HashMap();
     args.put("dlname", dlname);
     final Object res = call(SMSC_COMPONENT_ID, GET_MEMBERS_METHOD_ID, Type.Types[Type.StringListType], args);
     list = res instanceof List ? (List) res : null;
-    if (list==null)  throw new AdminException("Unsupported return type for commmand "+GET_MEMBERS_METHOD_ID);
+    if (list == null) throw new AdminException("Unsupported return type for commmand " + GET_MEMBERS_METHOD_ID);
     return list;
   }
 
-  public synchronized void grantPosting(String dlname, String submitter) throws AdminException, ListNotExistsException, PrincipalNotExistsException, SubmitterAlreadyExistsException
-  {
+  public synchronized void grantPosting(String dlname, String submitter) throws AdminException, ListNotExistsException, PrincipalNotExistsException, SubmitterAlreadyExistsException {
     checkSmscIsRunning();
-	final Map args = new HashMap();
+    final Map args = new HashMap();
     args.put("dlname", dlname);
     args.put("address", submitter);
-    call(SMSC_COMPONENT_ID, ADD_SUBMITTER_METHOD_ID, Type.Types[Type.StringType], args);
+    try {
+      call(SMSC_COMPONENT_ID, ADD_SUBMITTER_METHOD_ID, Type.Types[Type.StringType], args);
+    } catch (AdminException e) {
+      if (e.getMessage().equals("SubmitterAlreadyExistsException")) {
+        logger.warn("Submitter "+submitter+" already exists in list "+dlname);
+      }
+    }
 
   }
 
-  public synchronized void revokePosting(String dlname, String submitter) throws AdminException, ListNotExistsException, SubmitterNotExistsException
-  {
-	checkSmscIsRunning();
+  public synchronized void revokePosting(String dlname, String submitter) throws AdminException, ListNotExistsException, SubmitterNotExistsException {
+    checkSmscIsRunning();
     final Map args = new HashMap();
     args.put("dlname", dlname);
     args.put("address", submitter);
     call(SMSC_COMPONENT_ID, DELETE_SUBMITTER_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
-  public synchronized List submitters(String dlname) throws AdminException, ListNotExistsException
-  {
+  public synchronized List submitters(String dlname) throws AdminException, ListNotExistsException {
     List list;
     checkSmscIsRunning();
-	final Map args = new HashMap();
+    final Map args = new HashMap();
     args.put("dlname", dlname);
     final Object res = call(SMSC_COMPONENT_ID, SUBMITTERS_METHOD_ID, Type.Types[Type.StringListType], args);
     list = res instanceof List ? (List) res : null;
-    if (list==null)  throw new AdminException("Unsupported return type for commmand "+SUBMITTERS_METHOD_ID);
+    if (list == null) throw new AdminException("Unsupported return type for commmand " + SUBMITTERS_METHOD_ID);
     return parsePrincipalList(list);
   }
 
-  public synchronized void addDistributionList(DistributionList dl) throws AdminException, ListAlreadyExistsException
-  {
+  public synchronized void addDistributionList(DistributionList dl) throws AdminException, ListAlreadyExistsException {
     checkSmscIsRunning();
-	final Map args = new HashMap();
+    final Map args = new HashMap();
     args.put("dlname", dl.getName());
     args.put("owner", dl.getOwner());
-    args.put("maxElements",new Integer(dl.getMaxElements()));
+    args.put("maxElements", new Integer(dl.getMaxElements()));
     call(SMSC_COMPONENT_ID, ADD_DL_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
-  public synchronized void deleteDistributionList(String dlname) throws AdminException, ListNotExistsException
-  {
+  public synchronized void deleteDistributionList(String dlname) throws AdminException, ListNotExistsException {
     checkSmscIsRunning();
-	final Map args = new HashMap();
+    final Map args = new HashMap();
     args.put("dlname", dlname);
     call(SMSC_COMPONENT_ID, DELETE_DL_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
-  public synchronized DistributionList getDistributionList(String dlname) throws AdminException, ListNotExistsException
-  {
+  public synchronized DistributionList getDistributionList(String dlname) throws AdminException, ListNotExistsException {
 
     List list;
     checkSmscIsRunning();
-	final Map args = new HashMap();
+    final Map args = new HashMap();
     args.put("dlname", dlname);
     final Object res = call(SMSC_COMPONENT_ID, GET_DL_METHOD_ID, Type.Types[Type.StringListType], args);
     list = res instanceof List ? (List) res : null;
-    if (list==null)  throw new AdminException("Unsupported return type for commmand "+GET_DL_METHOD_ID);
-    String name = (String)list.get(0);
-    String owner = (String)list.get(1);
-    if (owner.equals("")) owner=null;
-    int maxElements = Integer.parseInt((String)list.get(2));
+    if (list == null) throw new AdminException("Unsupported return type for commmand " + GET_DL_METHOD_ID);
+    String name = (String) list.get(0);
+    String owner = (String) list.get(1);
+    if (owner.equals("")) owner = null;
+    int maxElements = Integer.parseInt((String) list.get(2));
     DistributionList dl = new DistributionList(name, owner, maxElements);
     return dl;
   }
 
-   private List parseDistributionList(final List listStr /*, DlFilter filter*/) throws AdminException
-  {
+  private List parseDistributionList(final List listStr /*, DlFilter filter*/) throws AdminException {
     if (null == listStr || 0 == listStr.size())
       return new LinkedList();
     final List result = new LinkedList();
     int i = 0;
-    while (i < listStr.size())  {
-      String name = (String)listStr.get(i++);
-      String owner = (String)listStr.get(i++);
-      if (owner.equals("")) owner=null;
-      int maxElements = Integer.parseInt((String)listStr.get(i++));
-      final DistributionList dl=new DistributionList(name, owner, maxElements);
-     // if (filter == null || filter.isItemAllowed(dl)) {
+    while (i < listStr.size()) {
+      String name = (String) listStr.get(i++);
+      String owner = (String) listStr.get(i++);
+      if (owner.equals("")) owner = null;
+      int maxElements = Integer.parseInt((String) listStr.get(i++));
+      final DistributionList dl = new DistributionList(name, owner, maxElements);
+      // if (filter == null || filter.isItemAllowed(dl)) {
       result.add(dl);
-    //  }
+      //  }
     }
     return result;
   }
 
-  private  List internal_list( DlFilter filter) throws AdminException
-  {
+  private List internal_list(DlFilter filter) throws AdminException {
     List list;
     checkSmscIsRunning();
-	final Map args = new HashMap();
-    args.put("names", new LinkedList()); args.put("owners", new LinkedList());
-    if (filter!=null) {
+    final Map args = new HashMap();
+    args.put("names", new LinkedList());
+    args.put("owners", new LinkedList());
+    if (filter != null) {
       if (!filter.isNamesContainsRegexp() && !filter.isOwnersContainsRegexp()) {
-        List names=Arrays.asList(filter.getNames());
-        List owners=Arrays.asList(filter.getOwners());
-        args.put("names", names); args.put("owners", owners);
+        List names = Arrays.asList(filter.getNames());
+        List owners = Arrays.asList(filter.getOwners());
+        args.put("names", names);
+        args.put("owners", owners);
       }
     }
     final Object res = call(SMSC_COMPONENT_ID, LIST_DL_METHOD_ID, Type.Types[Type.StringListType], args);
     list = res instanceof List ? (List) res : null;
-    if (list==null)  throw new AdminException("Unsupported return type for commmand "+LIST_DL_METHOD_ID);
+    if (list == null) throw new AdminException("Unsupported return type for commmand " + LIST_DL_METHOD_ID);
     return parseDistributionList(list /*,filter*/);
- /*
-    List list = new ArrayList();
-    PreparedStatement stmt = null;
-    Connection connection = null;
-    ResultSet rs = null;
-    try {
-      connection = ds.getConnection();
-      stmt = connection.prepareStatement(sql_statement);
-      rs = stmt.executeQuery();
-      while (rs.next()) {
-        String name = rs.getString(1);
-        String owner = rs.getString(2);
-        if (rs.wasNull()) owner = null;
-        int maxElements = rs.getInt(3);
-        final DistributionList dl = new DistributionList(name, owner, maxElements);
-        if (filter == null || filter.isItemAllowed(dl))
-          list.add(dl);
-      }
-      rs.close();
-      rs = null;
-    } catch (Exception exc) {
-      exc.printStackTrace();
-      throw new AdminException(exc.getMessage());
-    } finally {
-      try {
-        if (stmt != null) stmt.close();
-        connection.close();
-      } catch (Exception cexc) {
-        cexc.printStackTrace();
-        throw new AdminException(cexc.getMessage());
-      }
-    }
-    return list;  */
+    /*
+ List list = new ArrayList();
+ PreparedStatement stmt = null;
+ Connection connection = null;
+ ResultSet rs = null;
+ try {
+   connection = ds.getConnection();
+   stmt = connection.prepareStatement(sql_statement);
+   rs = stmt.executeQuery();
+   while (rs.next()) {
+     String name = rs.getString(1);
+     String owner = rs.getString(2);
+     if (rs.wasNull()) owner = null;
+     int maxElements = rs.getInt(3);
+     final DistributionList dl = new DistributionList(name, owner, maxElements);
+     if (filter == null || filter.isItemAllowed(dl))
+       list.add(dl);
+   }
+   rs.close();
+   rs = null;
+ } catch (Exception exc) {
+   exc.printStackTrace();
+   throw new AdminException(exc.getMessage());
+ } finally {
+   try {
+     if (stmt != null) stmt.close();
+     connection.close();
+   } catch (Exception cexc) {
+     cexc.printStackTrace();
+     throw new AdminException(cexc.getMessage());
+   }
+ }
+ return list;  */
   }
 
-  public synchronized List list() throws AdminException
-  {
+  public synchronized List list() throws AdminException {
     return internal_list(/*LIST_DL_SQL,*/ null);
   }
 
-  public synchronized List list(DlFilter filter) throws AdminException
-  {
+  public synchronized List list(DlFilter filter) throws AdminException {
     if (filter.isEmpty())
       return list();
- /*   String where_clause = "";
-    if (!filter.isNamesContainsRegexp() && !filter.isOwnersContainsRegexp()) {
-      for (int i = 0; i < filter.getNames().length; i++) {
-        String name = filter.getNames()[i];
-        where_clause += (i == 0 ? "" : " or ") + "(list like '" + name + "%')";
-      }
-      for (int i = 0; i < filter.getOwners().length; i++) {
-        String owner = filter.getOwners()[i];
-        where_clause += (i == 0 ? "" : " or ") + "(owner like '" + owner + "%')";
-      }
-      if (where_clause.length() > 0)
-        where_clause = " where " + where_clause;
-    } */
+    /*   String where_clause = "";
+   if (!filter.isNamesContainsRegexp() && !filter.isOwnersContainsRegexp()) {
+     for (int i = 0; i < filter.getNames().length; i++) {
+       String name = filter.getNames()[i];
+       where_clause += (i == 0 ? "" : " or ") + "(list like '" + name + "%')";
+     }
+     for (int i = 0; i < filter.getOwners().length; i++) {
+       String owner = filter.getOwners()[i];
+       where_clause += (i == 0 ? "" : " or ") + "(owner like '" + owner + "%')";
+     }
+     if (where_clause.length() > 0)
+       where_clause = " where " + where_clause;
+   } */
 
     return internal_list(/* LIST_DL_SQL + where_clause, */ filter);
   }
 
-  public synchronized void alterDistributionList(String dlname, int maxElements) throws AdminException, ListNotExistsException
-  {
-	checkSmscIsRunning();
-	final Map args = new HashMap();
+  public synchronized void alterDistributionList(String dlname, int maxElements) throws AdminException, ListNotExistsException {
+    checkSmscIsRunning();
+    final Map args = new HashMap();
     args.put("dlname", dlname);
-    args.put("maxElements",new Integer(maxElements));
+    args.put("maxElements", new Integer(maxElements));
     call(SMSC_COMPONENT_ID, ALT_DL_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
-	public synchronized void checkSmscIsRunning() throws AdminException
-	{
-		if (!getInfo().isOnline())
-			throw new AdminException("SMSC is not running.");
-	}
+  public synchronized void checkSmscIsRunning() throws AdminException {
+    if (!getInfo().isOnline())
+      throw new AdminException("SMSC is not running.");
+  }
 
   ////////////////////////////////////////////////////
   // old implementation
