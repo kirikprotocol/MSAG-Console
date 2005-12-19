@@ -197,9 +197,9 @@ void Profiler::remove(const Address& address)
     using namespace smsc::cluster;
     if(Interconnect::getInstance()->getRole()!=SLAVE)
     {
-      storeFile.Seek(profRef.offset-AddressSize()-1);
+      storeFile.Seek(profRef.offset-AddressSize()-8-1);
       storeFile.WriteByte(0);
-      holes.push_back(profRef.offset-AddressSize()-1);
+      holes.push_back(profRef.offset-AddressSize()-8-1);
       if(Interconnect::getInstance()->getRole()==MASTER)
       {
         Interconnect::getInstance()->sendCommand(new ProfileDeleteCommand(address.plan,address.type,address.value));
