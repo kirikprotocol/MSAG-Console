@@ -3433,6 +3433,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       }
     }
     try{
+      sms.setLastResult(GET_STATUS_CODE(t.command->get_resp()->get_status()));
       smsc->ReportDelivery(t.command->get_resp()->get_inDlgId(),sms,final,Smsc::chargeOnDelivery);
     }catch(std::exception& e)
     {
