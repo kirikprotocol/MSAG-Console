@@ -34,7 +34,7 @@
 <input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
 <input type=hidden name=edit id=edit>
 <input type=hidden name=sort id=sort>
-<%if (bean.isSmeRunning() && isBrowserMSIE() ) {%>
+<%if (bean.isSmeRunning() && isBrowserMSIE(request) ) {%>
   <OBJECT id="tdcTasksStatuses" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
     <PARAM NAME="DataURL" VALUE="/smsc/smsc/esme_InfoSme/taskStatuses.jsp">
     <PARAM NAME="UseHeader" VALUE="True">
