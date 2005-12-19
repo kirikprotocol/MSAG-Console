@@ -276,7 +276,7 @@ __synchronized__
   if ( records[index]->proxy )
   {
     __trace2__("Failed to register proxy with sid:%s",systemId.c_str());
-    __warning__("Sme proxy with tihs systemId already registered");
+    __warning__("Sme proxy with this systemId already registered");
     throw runtime_error(string("proxy with id ")+systemId+" already exists");
   }
   {
@@ -304,7 +304,7 @@ SmeProxy* SmeManager::checkSmeProxy(const SmeSystemId& systemId,const SmePasswor
   }
   if ( records[index]->info.password!=pwd)
   {
-    __trace2__("Invalid password for sme %s (%s!=%s)",systemId.c_str(),
+    __warning2__("Invalid password for sme %s (%s!=%s)",systemId.c_str(),
       records[index]->info.password.c_str(),pwd.c_str());
     throw SmeRegisterException(SmeRegisterFailReasons::rfInvalidPassword);
   }

@@ -52,7 +52,7 @@ public:
     {
       case SmeRegisterFailReasons::rfUnknownSystemId:return "Unknown systemId";
       case SmeRegisterFailReasons::rfAlreadyRegistered:return "Already registered";
-      case SmeRegisterFailReasons::rfInvalidPassword:return "Invalid passowrd";
+      case SmeRegisterFailReasons::rfInvalidPassword:return "Invalid password";
       case SmeRegisterFailReasons::rfInternalError:return "Internal error";
       case SmeRegisterFailReasons::rfDisabled:return "Disabled";
     }
