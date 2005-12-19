@@ -39,7 +39,7 @@ public class RouteList
     }
   }
 
-  public void put(Route r)
+  public synchronized void put(Route r)
   {
     if (map.containsKey(r.getName()))
       throw new IllegalArgumentException("Route \"" + r.getName() + "\" already exist");
@@ -48,22 +48,22 @@ public class RouteList
     map.put(r.getName(), r);
   }
 
-  public Route get(String routeName)
+  public synchronized Route get(String routeName)
   {
     return (Route) map.get(routeName);
   }
 
-  public boolean isEmpty()
+  public synchronized boolean isEmpty()
   {
     return map.isEmpty();
   }
 
-  public Iterator iterator()
+  public synchronized Iterator iterator()
   {
     return map.values().iterator();
   }
 
-  public Route remove(String routeName)
+  public synchronized Route remove(String routeName)
   {
     Route r = (Route) map.remove(routeName);
     if (r != null)
@@ -71,14 +71,14 @@ public class RouteList
     return r;
   }
 
-  public void rename(String oldRouteName, String newRouteName)
+  public synchronized void rename(String oldRouteName, String newRouteName)
   {
     Route r = remove(oldRouteName);
     r.setName(newRouteName);
     put(r);
   }
 
-  public PrintWriter store(PrintWriter out)
+  public synchronized PrintWriter store(PrintWriter out)
   {
     for (Iterator i = iterator(); i.hasNext();) {
       ((Route) i.next()).store(out);
@@ -86,7 +86,7 @@ public class RouteList
     return out;
   }
 
-  public QueryResultSet query(RouteQuery query)
+  public synchronized QueryResultSet query(RouteQuery query)
   {
     dataSource.clear();
     for (Iterator i = map.values().iterator(); i.hasNext();) {
@@ -96,12 +96,12 @@ public class RouteList
     return dataSource.query(query);
   }
 
-  public boolean contains(String routeId)
+  public synchronized boolean contains(String routeId)
   {
     return map.containsKey(routeId);
   }
 
-  public boolean isSubjectUsed(String subjectId)
+  public synchronized boolean isSubjectUsed(String subjectId)
   {
     for (Iterator i = map.values().iterator(); i.hasNext();) {
       Route route = (Route) i.next();
