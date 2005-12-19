@@ -58,12 +58,16 @@ public class DbsmeBean extends IndexBean
 
     try {
       originalConfigFile = new File(appContext.getHostsManager().getServiceInfo(smeId).getServiceFolder(), "conf/config.xml");
-      if (!originalConfigFile.exists()) {
-          logger.error("Couldn't find DBSme config file (" + originalConfigFile.getAbsolutePath() + ")");
-          return error("dbsme.error.no_config", originalConfigFile.getAbsolutePath());
+      if (!tempConfigFile.exists()) {
+        if (!originalConfigFile.exists()) {
+            logger.error("Couldn't find DBSme config file (" + originalConfigFile.getAbsolutePath() + ")");
+            return error("dbsme.error.no_config", originalConfigFile.getAbsolutePath());
+        }
+        restoreFromOriginalConfig();
       }
-
-      restoreFromOriginalConfig();
+      else {
+        config = new Config(tempConfigFile);
+      }
 
       try {
         context = DbSmeContext.getInstance(getAppContext(), smeId,
