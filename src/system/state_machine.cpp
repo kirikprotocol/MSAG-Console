@@ -2232,9 +2232,11 @@ StateType StateMachine::submitChargeResp(Tuple& t)
   }
 
 
-  if(sms->billingRecord && sms->getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit)
+  try{
+    smsc->ReportDelivery(resp->cntx.inDlgId,*sms,true,Smsc::chargeOnSubmit);
+  }catch(std::exception& e)
   {
-    smsc->ReportDelivery(resp->cntx.inDlgId,*sms,true);
+    smsc_log_warn(smsLog,"ReportDelivery failed:'%s'",e.what());
   }
 
   //
@@ -2695,7 +2697,12 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
   {
     smsc_log_warn(smsLog, "Invalidate of %lld failed",t.msgId);
     smsc->getScheduler()->InvalidSms(t.msgId);
-    smsc->ReportDelivery(inDlgId,sms,true);
+    try{
+      smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
+    }catch(std::exception& e)
+    {
+      smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
+    }
     return ERROR_STATE;
   }
 
@@ -2703,7 +2710,12 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
   {
     smsc_log_warn(smsLog, "FWD: sms in expired state msgId=%lld",t.msgId);
     smsc->getScheduler()->InvalidSms(t.msgId);
-    smsc->ReportDelivery(inDlgId,sms,true);
+    try{
+      smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
+    }catch(std::exception& e)
+    {
+      smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
+    }
     return EXPIRED_STATE;
   }
   time_t now=time(NULL);
@@ -2723,7 +2735,12 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     info2(smsLog, "FWD: %lld expired (valid:%u - now:%u)",t.msgId,sms.getValidTime(),now);
 
     sendFailureReport(sms,t.msgId,EXPIRED_STATE,"expired");
-    smsc->ReportDelivery(inDlgId,sms,true);
+    try{
+      smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
+    }catch(std::exception& e)
+    {
+      smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
+    }
 
     return EXPIRED_STATE;
   }
@@ -2744,7 +2761,12 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     {
       __warning__("failed to change sms state to undeliverable");
     }
-    smsc->ReportDelivery(inDlgId,sms,true);
+    try{
+      smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
+    }catch(std::exception& e)
+    {
+      smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
+    }
     return UNDELIVERABLE_STATE;
   }
 
@@ -2752,7 +2774,12 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
   {
     smsc_log_warn(smsLog, "FWD: sms msgId=%lld is not in enroute (%d)",t.msgId,sms.getState());
     smsc->getScheduler()->InvalidSms(t.msgId);
-    smsc->ReportDelivery(inDlgId,sms,true);
+    try{
+      smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
+    }catch(std::exception& e)
+    {
+      smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
+    }
     return sms.getState();
   }
   if( sms.getNextTime()>now && sms.getAttemptsCount()==0 && (!isReschedulingForward || sms.getLastResult()==0) )
@@ -2760,7 +2787,12 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     debug2(smsLog, "FWD: nextTime>now (%d>%d)",sms.getNextTime(),now);
     SmeIndex idx=smsc->getSmeIndex(sms.dstSmeId);
     smsc->getScheduler()->AddScheduledSms(t.msgId,sms,idx);
-    smsc->ReportDelivery(inDlgId,sms,false);
+    try{
+      smsc->ReportDelivery(inDlgId,sms,false,Smsc::chargeOnDelivery);
+    }catch(std::exception& e)
+    {
+      smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
+    }
     return sms.getState();
   }
 
@@ -2774,7 +2806,12 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
       smsc_log_warn(smsLog,"FORWARD: Failed to change state of USSD request to undeliverable. msgId=%lld",t.msgId);
     }
     smsc->getScheduler()->InvalidSms(t.msgId);
-    smsc->ReportDelivery(inDlgId,sms,true);
+    try{
+      smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
+    }catch(std::exception& e)
+    {
+      smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
+    }
     return UNDELIVERABLE_STATE;
   }
 
@@ -2809,7 +2846,12 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
       smsc_log_warn(smsLog,"FORWARD: Failed to change state of fwd/dgm sms to undeliverable. msgId=%lld",t.msgId);
     }
     smsc->getScheduler()->InvalidSms(t.msgId);
-    smsc->ReportDelivery(inDlgId,sms,true);
+    try{
+      smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
+    }catch(std::exception& e)
+    {
+      smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
+    }
     return UNDELIVERABLE_STATE;
   }
 
@@ -2929,7 +2971,12 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
       __trace__("FORWARD: failed to change state to enroute");
     }
     smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
-    smsc->ReportDelivery(inDlgId,sms,false);
+    try{
+      smsc->ReportDelivery(inDlgId,sms,false,Smsc::chargeOnDelivery);
+    }catch(std::exception& e)
+    {
+      smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
+    }
     return ERROR_STATE;
   }
 
@@ -2959,7 +3006,12 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     {
       __warning__("FORWARD: failed to change state to enroute");
     }
-    smsc->ReportDelivery(inDlgId,sms,false);
+    try{
+      smsc->ReportDelivery(inDlgId,sms,false,Smsc::chargeOnDelivery);
+    }catch(std::exception& e)
+    {
+      smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
+    }
     return ENROUTE_STATE;
   }
   // create task
@@ -2972,7 +3024,12 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     if(pres!=psSingle && pres!=psMultiple)
     {
       debug2(smsLog,"FWD: divert failed - cannot concat, msgId=%lld",t.msgId);
-      smsc->ReportDelivery(inDlgId,sms,true);
+    try{
+      smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
+    }catch(std::exception& e)
+    {
+      smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
+    }
       return UNKNOWN_STATE;
     }
     debug2(smsLog,"%lld after repartition: %s",t.msgId,pres==psSingle?"single":"multiple");
@@ -3015,7 +3072,12 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
       {
         __warning__("FORWARD: failed to change state to enroute");
       }
-      smsc->ReportDelivery(inDlgId,sms,false);
+    try{
+      smsc->ReportDelivery(inDlgId,sms,false,Smsc::chargeOnDelivery);
+    }catch(std::exception& e)
+    {
+      smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
+    }
       return ENROUTE_STATE;
     }
     tg.active=true;
@@ -3033,7 +3095,12 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     {
       __warning__("FORWARD: failed to change state to enroute");
     }
-    smsc->ReportDelivery(inDlgId,sms,false);
+    try{
+      smsc->ReportDelivery(inDlgId,sms,false,Smsc::chargeOnDelivery);
+    }catch(std::exception& e)
+    {
+      smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
+    }
     return ENROUTE_STATE;
   }
   Address srcOriginal=sms.getOriginatingAddress();
@@ -3201,9 +3268,14 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     {
       __warning__("FORWARD: failed to change state to enroute");
     }
-    Task t;
-    smsc->tasks.findAndRemoveTask(uniqueId,dialogId2,&t);
-    smsc->ReportDelivery(inDlgId,sms,Status::isErrorPermanent(errstatus));
+    Task tsk;
+    smsc->tasks.findAndRemoveTask(uniqueId,dialogId2,&tsk);
+    try{
+      smsc->ReportDelivery(inDlgId,sms,Status::isErrorPermanent(errstatus),Smsc::chargeOnDelivery);
+    }catch(std::exception& e)
+    {
+      smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
+    }
     return Status::isErrorPermanent(errstatus)?UNDELIVERABLE_STATE:ENROUTE_STATE;
   }
   info2(smsLog, "FWDDLV: deliver ok msgId=%lld, seq number:%d",t.msgId,dialogId2);
@@ -3360,7 +3432,12 @@ StateType StateMachine::deliveryResp(Tuple& t)
         }
       }
     }
-    smsc->ReportDelivery(t.command->get_resp()->get_inDlgId(),sms,final);
+    try{
+      smsc->ReportDelivery(t.command->get_resp()->get_inDlgId(),sms,final,Smsc::chargeOnDelivery);
+    }catch(std::exception& e)
+    {
+      smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
+    }
   }
 
   int sttype=GET_STATUS_TYPE(t.command->get_resp()->get_status());
@@ -4134,9 +4211,16 @@ StateType StateMachine::alert(Tuple& t)
 
   if(sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnDelivery)
   {
-    smsc->ReportDelivery(ad.inDlgId,sms,
-     (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==1 ||
-     (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2);
+    try{
+      smsc->ReportDelivery(ad.inDlgId,sms,
+       (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==1 ||
+       (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2,
+       Smsc::chargeOnDelivery
+       );
+    }catch(std::exception& e)
+    {
+      smsc_log_warn(smsLog,"ReportDelivery failed:'%s'",e.what());
+    }
   }
 
   if(!sms.Invalidate(__FILE__,__LINE__))
