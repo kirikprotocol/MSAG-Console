@@ -15,106 +15,95 @@ import ru.novosoft.smsc.jsp.util.tables.Filter;
 import java.util.*;
 
 
-public class SubjectFilter implements Filter
-{
-  private Set names = new HashSet();
-  private List smes = new LinkedList();
-  private MaskList masks = new MaskList();
+public class SubjectFilter implements Filter {
+	private Set names = new HashSet();
+	private List smes = new LinkedList();
+	private MaskList masks = new MaskList();
 
-  public SubjectFilter()
-  {
-  }
+	public SubjectFilter() {
+	}
 
-  public SubjectFilter(Set names, List smeIds, String masks)
-  {
-    this.names = names;
-    this.smes = smeIds;
-    this.masks = new MaskList(masks);
-  }
+	public SubjectFilter(Set names, List smeIds, String masks) {
+		this.names = names;
+		this.smes = smeIds;
+		this.masks = new MaskList(masks);
+	}
 
-  public boolean isEmpty()
-  {
-    return this.names.isEmpty() && this.smes.isEmpty() && this.masks.isEmpty();
-  }
+	public boolean isEmpty() {
+		return this.names.isEmpty() && this.smes.isEmpty() && this.masks.isEmpty();
+	}
 
-  private boolean isMaskAllowed(String maskStr)
-  {
-    final Mask mask;
-    try {
-      mask = new Mask(maskStr);
-    } catch (AdminException e) {
-      return false;
-    }
+	private boolean isMaskAllowed(String maskStr) {
+		final Mask mask;
+		try {
+			mask = new Mask(maskStr);
+		}
+		catch (AdminException e) {
+			return false;
+		}
 
-    for (Iterator i = masks.iterator(); i.hasNext();) {
-      final Mask m = (Mask) i.next();
-      if (m.addressConfirm(mask))
-        return true;
-    }
-    return false;
-  }
-
-  private boolean isAnyMaskAllowed(Vector item_masks)
-  {
-	if (masks.isEmpty()) return false;
-	for (Iterator i = item_masks.iterator(); i.hasNext();) {
-      if (isMaskAllowed((String) i.next()))
-        return true;
-    }
-    return false;
-  }
-
-	private boolean isNameAllowed(String nameStr)
-	{
-		if (names.isEmpty()) return false;
-		for (Iterator i = names.iterator(); i.hasNext();)
-		{
-			final String name = (String) i.next();
-			if (name.toLowerCase().indexOf(nameStr.toLowerCase()) != -1) return true; 
+		for (Iterator i = masks.iterator(); i.hasNext();) {
+			final Mask m = (Mask) i.next();
+			if (m.addressConfirm(mask)) {
+				return true;
+			}
 		}
 		return false;
 	}
 
-  public boolean isItemAllowed(DataItem item)
-  {
-    if (isEmpty())
-      return true;
+	private boolean isAnyMaskAllowed(Vector item_masks) {
+		if (masks.isEmpty()) return false;
+		for (Iterator i = item_masks.iterator(); i.hasNext();) {
+			if (isMaskAllowed((String) i.next())) {
+				return true;
+			}
+		}
+		return false;
+	}
 
-    String item_name = (String) item.getValue("Name");
-    String item_sme = (String) item.getValue("Default SME");
-    Vector item_masks = (Vector) item.getValue("Masks");
-    return  isNameAllowed(item_name)
-         || (!smes.isEmpty() && smes.contains(item_sme))
-         || isAnyMaskAllowed(item_masks);
-  }
+	private boolean isNameAllowed(String nameStr) {
+		if (names.isEmpty()) return false;
+		for (Iterator i = names.iterator(); i.hasNext();) {
+			final String name = (String) i.next();
+			if (nameStr.toLowerCase().indexOf(name.toLowerCase()) != -1) return true;
+		}
+		return false;
+	}
 
-  public List getMaskStrings()
-  {
-    return masks.getNames();
-  }
+	public boolean isItemAllowed(DataItem item) {
+		if (isEmpty()) {
+			return true;
+		}
 
-  public Set getNames()
-  {
-    return names;
-  }
+		String item_name = (String) item.getValue("Name");
+		String item_sme = (String) item.getValue("Default SME");
+		Vector item_masks = (Vector) item.getValue("Masks");
+		return isNameAllowed(item_name)
+				|| (!smes.isEmpty() && smes.contains(item_sme))
+				|| isAnyMaskAllowed(item_masks);
+	}
 
-  public List getSmeIds()
-  {
-    return smes;
-  }
+	public List getMaskStrings() {
+		return masks.getNames();
+	}
 
-  public void setMasks(String[] newMasks) throws AdminException
-  {
-    this.masks = new MaskList(newMasks);
-  }
+	public Set getNames() {
+		return names;
+	}
 
-  public void setNames(String[] newNames)
-  {
-    this.names = new HashSet(Arrays.asList(newNames));
-  }
+	public List getSmeIds() {
+		return smes;
+	}
 
-  public void setSmes(String[] newSmes)
-  {
-    this.smes = Arrays.asList(newSmes);
-  }
+	public void setMasks(String[] newMasks) throws AdminException {
+		this.masks = new MaskList(newMasks);
+	}
+
+	public void setNames(String[] newNames) {
+		this.names = new HashSet(Arrays.asList(newNames));
+	}
+
+	public void setSmes(String[] newSmes) {
+		this.smes = Arrays.asList(newSmes);
+	}
 }

@@ -107,18 +107,26 @@
             <input class=txt name=filter_masks value="<%= StringEncoderDecoder.encode(filterMask) %>" validation="mask" onkeyup="resetValidation(this)">
           </td>
           <td><img src="/images/but_del.gif" onclick="removeFilterMask('filterMaskRow_<%= filterMaskHex %>')" style="cursor:hand;"></td>
-          <td>&nbsp;</td>
+          <td>
+            &nbsp;
+          </td>
         </tr>
-<%    }     %>
+<%
+      }
+%>
       <tr>
         <td>
           <input class=txt name=filter_masks value="" id=newFilterMask validation="mask" onkeyup="resetValidation(this)">
         </td>
         <td><img src="/images/but_add.gif" onclick="addFilterMask()" style="cursor:hand;"></td>
-        <td>&nbsp;</td>
+        <td>
+          &nbsp;
+        </td>
       </tr>
     </table>
-<%    final String filtrName = bean.getFilterName();%>
+<%
+    final String filtrName = bean.getFilterName();
+%>
     <div class=page_subtitle>
       <%= getLocString("subjects.filterName") %>
     </div>
@@ -127,6 +135,7 @@
 <%
   page_menu_begin(out);
   page_menu_button(session, out, "mbQuery", "common.buttons.query", "subjects.queryHint");
+  page_menu_button(session, out, "mbClear", "common.buttons.clear", "common.buttons.clearFilter", "clickClear()");
   page_menu_space(out);
   page_menu_end(out);
 %>

@@ -46,6 +46,7 @@ public final class Index extends IndexBean {
 	private String mbLoad = null;
 	private String mbRestore = null;
 	private String mbQuery = null;
+	private String mbClear = null;
 
 	protected int init(List errors) {
 		int result = super.init(errors);
@@ -113,6 +114,13 @@ public final class Index extends IndexBean {
 								int dresult = restoreRoutes();
 								return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
 							}
+							else {
+								if (mbClear != null) {
+									int dresult = clearFilter();
+									return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
+								}
+							}
+
 						}
 					}
 				}
@@ -121,21 +129,11 @@ public final class Index extends IndexBean {
 
 		logger.debug("Subjects.Index - process with sorting [" + (String) preferences.getSubjectsSortOrder().get(0) + "]");
 		if (!filterName.equals("")) {
-			Set names = new HashSet();
-			names.add(filterName);
-			try {
-				ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectFilter filter =
-						new ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectFilter(names, preferences.getSubjectsFilter().getSmeIds(), "");
-				filter.setMasks((String[]) preferences.getSubjectsFilter().getMaskStrings().toArray(new String[0]));
-				subjects = routeSubjectManager.getSubjects().query(new SubjectQuery(pageSize, filter, preferences.getSubjectsSortOrder(), startPosition));
-			}
-			catch (AdminException e) {
-				subjects = routeSubjectManager.getSubjects().query(new SubjectQuery(pageSize, preferences.getSubjectsFilter(), preferences.getSubjectsSortOrder(), startPosition));
-			}
+			String[] name = new String[1];
+			name[0] = filterName;
+			preferences.getSubjectsFilter().setNames(name);
 		}
-		else {
-			subjects = routeSubjectManager.getSubjects().query(new SubjectQuery(pageSize, preferences.getSubjectsFilter(), preferences.getSubjectsSortOrder(), startPosition));
-		}
+		subjects = routeSubjectManager.getSubjects().query(new SubjectQuery(pageSize, preferences.getSubjectsFilter(), preferences.getSubjectsSortOrder(), startPosition));
 		if (request.getSession().getAttribute("SUBJECT_NAME") != null) {
 			subjects = getSubjectsByName((String) request.getSession().getAttribute("SUBJECT_NAME"));
 			request.getSession().removeAttribute("SUBJECT_NAME");
@@ -165,6 +163,18 @@ public final class Index extends IndexBean {
 			}
 		}
 		return subjects;
+	}
+
+	private int clearFilter() {
+		try {
+			preferences.getSubjectsFilter().setMasks(new String[0]);
+			preferences.getSubjectsFilter().setNames(new String[0]);
+			preferences.getSubjectsFilter().setSmes(new String[0]);
+		}
+		catch (AdminException e) {
+			return error(SMSCErrors.error.routes.CantUpdateFilter, e);
+		}
+		return RESULT_OK;
 	}
 
 	protected int deleteSubject() {
@@ -343,5 +353,13 @@ public final class Index extends IndexBean {
 
 	public void setFilterName(String filterName) {
 		this.filterName = filterName;
+	}
+
+	public String getMbClear() {
+		return mbClear;
+	}
+
+	public void setMbClear(String mbClear) {
+		this.mbClear = mbClear;
 	}
 }
