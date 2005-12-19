@@ -56,7 +56,8 @@ public class SubjectFilter implements Filter
 
   private boolean isAnyMaskAllowed(Vector item_masks)
   {
-    for (Iterator i = item_masks.iterator(); i.hasNext();) {
+	if (masks.isEmpty()) return false;
+	for (Iterator i = item_masks.iterator(); i.hasNext();) {
       if (isMaskAllowed((String) i.next()))
         return true;
     }
@@ -65,6 +66,7 @@ public class SubjectFilter implements Filter
 
 	private boolean isNameAllowed(String nameStr)
 	{
+		if (names.isEmpty()) return false;
 		for (Iterator i = names.iterator(); i.hasNext();)
 		{
 			final String name = (String) i.next();
@@ -81,9 +83,9 @@ public class SubjectFilter implements Filter
     String item_name = (String) item.getValue("Name");
     String item_sme = (String) item.getValue("Default SME");
     Vector item_masks = (Vector) item.getValue("Masks");
-    return (names.isEmpty() || isNameAllowed(item_name))
-            && (smes.isEmpty() || smes.contains(item_sme))
-            && (masks.isEmpty() || isAnyMaskAllowed(item_masks));
+    return  isNameAllowed(item_name)
+         || (!smes.isEmpty() && smes.contains(item_sme))
+         || isAnyMaskAllowed(item_masks);
   }
 
   public List getMaskStrings()
