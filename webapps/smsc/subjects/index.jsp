@@ -122,7 +122,7 @@
     <div class=page_subtitle>
       <%= getLocString("subjects.filterName") %>
     </div>
-    <input class=txt name=filterName id=filterName value="<%= StringEncoderDecoder.encode(filtrName) %>" validation="nonEmpty" onkeyup="resetValidation(this)">
+    <input class=txt name=filterName id=filterName value="<%= StringEncoderDecoder.encode(filtrName) %>">
   </div>
 <%
   page_menu_begin(out);
