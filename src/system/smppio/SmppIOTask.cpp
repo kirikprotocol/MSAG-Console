@@ -101,7 +101,7 @@ void SmppInputThread::killSocket(int idx)
   sockets.Delete(idx);
   SmppSocketsManager *m=
     (SmppSocketsManager*)s->getData(SOCKET_SLOT_SOCKETSMANAGER);
-  trace2("removing socket %p by input thread",s);
+  trace2("Removing socket %p from smppsocket %p by input thread",s,ss);
   mon.Unlock();
   KillProxy(ss->getChannelType(),ss->getProxy(),smeManager);
   mon.Lock();
@@ -305,11 +305,12 @@ int SmppInputThread::Execute()
               case SmppCommandSet::BIND_TRANCIEVER:
               {
                 if(ss->getProxy() &&
-                    (
-                      !ss->getProxy()->isOpened() ||
-                      ss->getProxy()->isDisconnecting() ||
-                      ss->getProxy()->isUnbinding()
-                    )
+                   ss->getChannelType()!=ctUnbound &&
+                   (
+                     !ss->getProxy()->isOpened() ||
+                     ss->getProxy()->isDisconnecting() ||
+                     ss->getProxy()->isUnbinding()
+                   )
                   )
                 {
                   __trace__("Decline bind of sme that is already bound, disconnecting or unbinding");
@@ -698,6 +699,7 @@ int SmppInputThread::Execute()
                     KillProxy(ss->getChannelType(),ss->getProxy(),smeManager);
                     mon.Lock();
                     ss->assignProxy(0);
+                    ss->setChannelType(ctUnbound);
                   }else
                   {
                     SendGNack(ss,pdu->get_sequenceNumber(),SmppStatusSet::ESME_RINVBNDSTS);

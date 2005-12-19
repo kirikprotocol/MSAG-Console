@@ -23,6 +23,7 @@ enum{
 };
 
 enum{
+  ctUnbound,
   ctReceiver,    //channel type
   ctTransmitter,
   ctTransceiver
@@ -43,7 +44,8 @@ public:
     socket(sock),
     timeOut(timeOut),
     lastEnquireLink(0),
-    lastUpdate(0)
+    lastUpdate(0),
+    channelType(ctUnbound)
   {
     proxy=NULL;
     inThread=NULL;
