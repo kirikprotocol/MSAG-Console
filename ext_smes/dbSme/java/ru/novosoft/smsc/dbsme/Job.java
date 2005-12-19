@@ -448,7 +448,17 @@ public class Job extends DbsmeBean
 
   public void setInitialized(boolean initialized)
   {
+    logger.debug("Set initialized bool");
     this.initialized = initialized;
+  }
+
+  public void setInitialized(String ini)
+  {
+    logger.debug("Set initialized string");
+    if( ini != null && ini.length() > 0)
+      this.initialized = true;
+    else
+      this.initialized = false;
   }
 
   public String getJobId()
