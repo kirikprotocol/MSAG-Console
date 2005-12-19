@@ -83,9 +83,9 @@ function createImgButton2(imgUrl, onclickT, tooltipText, styleText)
 }
 function addParam(sectionName)
 {
-	tableElem = opForm.all("paramTable_" + sectionName);
-	paramNameElem = opForm.all("newParamName_" + sectionName);
-	paramValueElem = opForm.all("newParamValue_" + sectionName);
+	tableElem = document.getElementById("paramTable_" + sectionName);
+	paramNameElem = document.getElementById("newParamName_" + sectionName);
+	paramValueElem = document.getElementById("newParamValue_" + sectionName);
 
 	newRow = tableElem.insertRow(tableElem.rows.length-1);
 	newRow.className = "row" + (tableElem.rows.length & 1);
@@ -119,16 +119,16 @@ function removeParam_Event()
 }
 function removeParam(sectionName, paramName)
 {
-	tableElem = opForm.all("paramTable_" + sectionName);
+	tableElem = document.getElementById("paramTable_" + sectionName);
 	rowId = "paramRow_" + sectionName + "<%=Section.NAME_DELIMETER%>" + paramName;
 	rowElem = tableElem.rows(rowId);
 	tableElem.deleteRow(rowElem.rowIndex);
 }
 function removeSection(sectionName)
 {
-	sectionElem = opForm.all("sectionHeader_" + sectionName);
+	sectionElem = document.getElementById("sectionHeader_" + sectionName);
 	sectionElem.removeNode(true);
-	sectionElem = opForm.all("sectionValue_" + sectionName);
+	sectionElem = document.getElementById("sectionValue_" + sectionName);
 	sectionElem.removeNode(true);
 }
 function sectionHeader(sectionName, fullName)
@@ -192,11 +192,11 @@ function sectionValue(sectionName, fullName)
 }
 function addSection(parentSectionName)
 {
-	newSectionNameElem = opForm.all("newSectionInput_" + parentSectionName);
+	newSectionNameElem = document.getElementById("newSectionInput_" + parentSectionName);
 	newSectionName = newSectionNameElem.value;
 	fullName = parentSectionName + "<%=Section.NAME_DELIMETER%>" + newSectionName;
 
-	parentSectionTable = opForm.all("sectionValue_" + parentSectionName);
+	parentSectionTable = document.getElementById("sectionValue_" + parentSectionName);
 
 	parentNewRow = parentSectionTable.insertRow(parentSectionTable.rows.length);
 	parentNewRow.insertCell();
