@@ -3,3 +3,4 @@
 
 # binary name source name libraries         
 migration/profiler_ora2bin ImportFromOracle -L$(SMSC_BUILDDIR)/bin -ldb -llogger -L$(ORACLE_LIB) -lutil-config -lutil-xml $(ORACLE_LIB)/libclntsh.so -L$(SMSC_BUILDDIR)/bin/db/exceptions/ -ldb_exc $(XERCES_LIB) -lcore-threads -lpthread -ldl -lrt
+util/repairProfile repair -L$(SMSC_BUILDDIR)/bin -llogger
