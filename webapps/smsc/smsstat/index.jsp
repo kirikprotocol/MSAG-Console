@@ -285,7 +285,7 @@ page_menu_end(out);
 </tr>
 <tr class=row0>
     <th width="23%"><div align=right><%=getLocString("stat.errorCode")%></div></th>
-    <th width="11%"><div align=right><%=getLocString("common.util.Count")%></div></th>
+    <th width="11%"><div align=right><%=getLocString("common.util.count")%></div></th>
     <th width="11%">&nbsp;</th>
     <th width="11%">&nbsp;</th>
     <th width="11%">&nbsp;</th>
