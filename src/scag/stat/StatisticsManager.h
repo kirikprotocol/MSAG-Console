@@ -137,7 +137,8 @@ namespace stat {
         IntHash<TrafficRecord>  trafficByRouteId;
 
         Hash<HttpStat>          httpStatByRouteId[2];
-        IntHash<HttpStat>          httpStatByProviderId[2];
+        Hash<HttpStat>          httpStatByServiceId[2];
+        IntHash<HttpStat>       httpStatByProviderId[2];
         IntHash<TrafficRecord>  httpTrafficByRouteId;
 
         int     currentIndex;
@@ -151,6 +152,10 @@ namespace stat {
         void  resetCounters(int index);
         void  flushCounters(int index);
         void  dumpCounters(const uint8_t* buff, int buffLen, const tm& flushTM);
+
+        void  resetHttpCounters(int index);
+        void  flushHttpCounters(int index);
+        void  dumpHttpCounters(const uint8_t* buff, int buffLen, const tm& flushTM);
 
         void flushTraffic();
         void dumpTraffic(const IntHash<TrafficRecord>& traff);

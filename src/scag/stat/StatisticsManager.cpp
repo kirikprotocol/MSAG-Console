@@ -30,11 +30,12 @@ using namespace scag::util::singleton;
 using smsc::core::buffers::File;
 using scag::config::StatManConfig;
 
-const uint16_t SMSC_STAT_DUMP_INTERVAL = 60; // in seconds
-const uint16_t SMSC_STAT_VERSION_INFO  = 0x0001;
-const char*    SMSC_STAT_HEADER_TEXT   = "SCAG.STAT";
-const char*    SMSC_STAT_DIR_NAME_FORMAT  = "%04d-%02d";
-const char*    SMSC_STAT_FILE_NAME_FORMAT = "%02d.rts";
+const uint16_t SCAG_STAT_DUMP_INTERVAL = 60; // in seconds
+const uint16_t SCAG_STAT_VERSION_INFO  = 0x0001;
+const char*    SCAG_STAT_HEADER_TEXT   = "SCAG.STAT";
+const char*    SCAG_SMPP_STAT_DIR_NAME_FORMAT  = "SMPP/%04d-%02d";
+const char*    SCAG_HTTP_STAT_DIR_NAME_FORMAT  = "HTTP/%04d-%02d";
+const char*    SCAG_STAT_FILE_NAME_FORMAT = "%02d.rts";
 RouteMap StatisticsManager::routeMap;
 RouteMap StatisticsManager::httpRouteMap;
 
@@ -236,10 +237,11 @@ void StatisticsManager::registerEvent(const HttpStatEvent& se)
     
     HttpStat* providerSt=0;
     HttpStat* routeSt=0;
+    HttpStat* srvSt=0;
     
     using namespace Counters;
     
-    genCounters.inc(se.counter);
+    //genCounters.inc(se.counter);
     
     if (se.serviceProviderId != -1)
     {
@@ -266,15 +268,29 @@ void StatisticsManager::registerEvent(const HttpStatEvent& se)
             routeSt=httpStatByRouteId[currentIndex].GetPtr(se.routeId.c_str());
         }
     }
+
+    if (se.serviceId.length())
+    {
+        //smsc_log_debug(logger, "routeId: '%s'", se.routeId);
+        srvSt = httpStatByServiceId[currentIndex].GetPtr(se.serviceId.c_str());
+        if(!srvSt)
+        {
+            HttpStat newStat;
+            httpStatByServiceId[currentIndex].Insert(se.serviceId.c_str(), newStat);
+            srvSt=httpStatByServiceId[currentIndex].GetPtr(se.serviceId.c_str());
+        }
+    }
     
     if(se.counter < httpBillingOk)
     {
         if(providerSt)  incError(providerSt->errors, se.errCode);
         if(routeSt)     incError(routeSt->errors, se.errCode);
+        if(srvSt)       incError(srvSt->errors, se.errCode);
     }
     
     if(providerSt && se.serviceProviderId != -1) providerSt->providerId = se.serviceProviderId;
     if(routeSt    && se.serviceProviderId != -1) routeSt->providerId = se.serviceProviderId;
+    if(srvSt      && se.serviceProviderId != -1) srvSt->providerId = se.serviceProviderId;
     
     int c;
     switch(se.counter)
@@ -282,6 +298,7 @@ void StatisticsManager::registerEvent(const HttpStatEvent& se)
     #define INC_STAT(cnt,field) case cnt:{\
           if(providerSt)providerSt->field++; \
           if(routeSt)routeSt->field++; \
+          if(srvSt)routeSt->field++; \
           }break;
     
         INC_STAT(httpRequest,request)
@@ -482,7 +499,7 @@ int StatisticsManager::switchCounters()
 void StatisticsManager::calculateTime(tm& flushTM)
 {
     time_t flushTime = time(0);
-    if (!bExternalFlush) flushTime -= SMSC_STAT_DUMP_INTERVAL;
+    if (!bExternalFlush) flushTime -= SCAG_STAT_DUMP_INTERVAL;
     gmtime_r(&flushTime, &flushTM); flushTM.tm_sec = 0;
 }
 
@@ -650,11 +667,169 @@ void StatisticsManager::flushCounters(int index)
 
 }
 
+void StatisticsManager::flushHttpCounters(int index)
+{
+
+    tm flushTM; calculateTime(flushTM);
+    smsc_log_debug(logger, "Flushing statistics for %02d.%02d.%04d %02d:%02d:%02d GMT",
+                   flushTM.tm_mday, flushTM.tm_mon+1, flushTM.tm_year+1900,
+                   flushTM.tm_hour, flushTM.tm_min, flushTM.tm_sec);
+
+    try
+    {
+        TmpBuf<uint8_t, 4096> buff(4096);
+
+        // Head of record
+        uint8_t value8 = 0;
+        value8 = (uint8_t)(flushTM.tm_hour); buff.Append((uint8_t *)&value8, sizeof(value8));
+        value8 = (uint8_t)(flushTM.tm_min);  buff.Append((uint8_t *)&value8, sizeof(value8));
+
+        // Route statistic
+        int32_t value32 = 0;
+        value32 = httpStatByRouteId[index].GetCount(); 
+        value32 = htonl(value32); buff.Append((uint8_t *)&value32, sizeof(value32));
+
+        httpStatByRouteId[index].First();
+        char* routeId = 0;
+        HttpStat* routeStat = 0;
+        while (httpStatByRouteId[index].Next(routeId, routeStat))
+        {
+            if (!routeStat || !routeId || routeId[0] == '\0') continue;
+          
+            __trace2__("routeid=%s",routeId);
+            // Writes length of routeId and routId
+            uint8_t routIdLen = (uint8_t)strlen(routeId);
+            buff.Append((uint8_t *)&routIdLen, sizeof(routIdLen));
+            buff.Append((uint8_t *)routeId, routIdLen);
+            // Writes rout statistics for this routId
+            value32 = htonl(routeStat->providerId);         buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(routeStat->request);            buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(routeStat->requestRejected);    buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(routeStat->response);           buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(routeStat->responseRejected);   buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(routeStat->delivered);          buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(routeStat->failed);             buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(routeStat->billingOk);          buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(routeStat->billingFailed);      buff.Append((uint8_t *)&value32, sizeof(value32));                                                      
+            /*printf("p: %d, req: %d, req_r: %d, res: %d, res_r: %d, d: %d, f: %d, bo:%d, bf: %d\n", routeStat->providerId,
+                   routeStat->request, routeStat->requestRejected, routeStat->response, routeStat->responseRejected, routeStat->delivered,
+                   routeStat->failed, routeStat->billingOk, routeStat->billingFailed);*/
+
+            // Writes route errors count.
+            value32 = routeStat->errors.Count(); 
+            value32 = htonl(value32); buff.Append((uint8_t *)&value32, sizeof(value32));
+            IntHash<int>::Iterator rit = routeStat->errors.First();
+            int recError, reCounter;
+            while (rit.Next(recError, reCounter))
+            {
+                // Statistics for this errors
+                value32 = htonl(recError);  buff.Append((uint8_t *)&value32, sizeof(value32));
+                value32 = htonl(reCounter); buff.Append((uint8_t *)&value32, sizeof(value32));
+                //printf("e: %d, c: %d\n", recError, reCounter);
+            }
+            routeStat = 0;
+        }
+
+        // Service statistics
+        value32 = httpStatByServiceId[index].GetCount(); 
+        value32 = htonl(value32); buff.Append((uint8_t *)&value32, sizeof(value32));
+
+        httpStatByServiceId[index].First();
+        char* srvId = 0;
+        HttpStat* srvStat = 0;
+        while (httpStatByServiceId[index].Next(srvId, srvStat))
+        {
+            if (!srvStat || !srvId || srvId[0] == '\0') continue;
+            
+            int cnt=2;
+            // Writes length of smeId and smeId
+            uint8_t srvIdLen = (uint8_t)strlen(srvId);
+            buff.Append((uint8_t *)&srvIdLen, sizeof(srvIdLen));
+            buff.Append((uint8_t *)srvId, srvIdLen);
+            // Writes sme statistics for this smeId
+            value32 = htonl(srvStat->providerId);         buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(srvStat->request);            buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(srvStat->requestRejected);    buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(srvStat->response);           buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(srvStat->responseRejected);   buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(srvStat->delivered);          buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(srvStat->failed);             buff.Append((uint8_t *)&value32, sizeof(value32));
+
+            // Writes sme common errors count.
+            value32 = srvStat->errors.Count(); 
+            value32 = htonl(value32); buff.Append((uint8_t *)&value32, sizeof(value32));
+
+            IntHash<int>::Iterator sit = srvStat->errors.First();
+            int secError, seCounter;
+            while (sit.Next(secError, seCounter))
+            {
+                // Statistics for this errors
+                value32 = htonl(secError);  buff.Append((uint8_t *)&value32, sizeof(value32));
+                value32 = htonl(seCounter); buff.Append((uint8_t *)&value32, sizeof(value32));
+            }
+            srvStat = 0;
+        }
+
+        // Provider statistics
+        value32 = httpStatByProviderId[index].Count(); 
+        value32 = htonl(value32); buff.Append((uint8_t *)&value32, sizeof(value32));
+
+        IntHash<HttpStat>::Iterator stIter = httpStatByProviderId[index].First();
+        int pId = -1;
+        HttpStat pStat;
+        while (stIter.Next(pId, pStat))
+        {
+            if (pId != -1) continue;
+            
+            int cnt=2;
+            // Writes length of smeId and smeId
+            value32 = htonl(pId); buff.Append((uint8_t *)&value32, sizeof(value32));
+            // Writes sme statistics for this smeId
+            value32 = htonl(pStat.request);            buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(pStat.requestRejected);    buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(pStat.response);           buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(pStat.responseRejected);   buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(pStat.delivered);          buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(pStat.failed);             buff.Append((uint8_t *)&value32, sizeof(value32));
+
+            // Writes sme common errors count.
+            value32 = pStat.errors.Count(); 
+            value32 = htonl(value32); buff.Append((uint8_t *)&value32, sizeof(value32));
+
+            IntHash<int>::Iterator sit = pStat.errors.First();
+            int secError, seCounter;
+            while (sit.Next(secError, seCounter))
+            {
+                // Statistics for this errors
+                value32 = htonl(secError);  buff.Append((uint8_t *)&value32, sizeof(value32));
+                value32 = htonl(seCounter); buff.Append((uint8_t *)&value32, sizeof(value32));
+            }
+        }
+
+        dumpHttpCounters(buff, buff.GetPos(), flushTM);
+
+    }
+    catch (Exception& exc)
+    {
+        smsc_log_error(logger, "Http Statistics flush failed. Cause: %s", exc.what());
+    }
+
+    resetHttpCounters(index);
+
+}
+
 void StatisticsManager::resetCounters(int index)
 {
   statBySmeId[index].Empty();
   statByRouteId[index].Empty();
   srvStatBySmeId[index].Empty();
+}
+
+void StatisticsManager::resetHttpCounters(int index)
+{
+  httpStatByRouteId[index].Empty();
+  httpStatByServiceId[index].Empty();
+  httpStatByProviderId[index].Empty();
 }
 
 void StatisticsManager::Fseek(long offset, int whence, FILE* &cfPtr)
@@ -800,7 +975,7 @@ void StatisticsManager::dumpCounters(const uint8_t* buff, int buffLen, const tm&
 
     if (!bFileTM || fileTM.tm_mon != flushTM.tm_mon || fileTM.tm_year != flushTM.tm_year)
     {
-        sprintf(dirName, SMSC_STAT_DIR_NAME_FORMAT, flushTM.tm_year+1900, flushTM.tm_mon+1);
+        sprintf(dirName, SCAG_SMPP_STAT_DIR_NAME_FORMAT, flushTM.tm_year+1900, flushTM.tm_mon+1);
         createDir(location + "/" + dirName); bFileTM = false; hasDir = true;
         smsc_log_debug(logger, "New dir '%s' created", dirName);
     }
@@ -809,8 +984,8 @@ void StatisticsManager::dumpCounters(const uint8_t* buff, int buffLen, const tm&
     {
         char fileName[128]; 
         std::string fullPath = location;
-        if (!hasDir) sprintf(dirName, SMSC_STAT_DIR_NAME_FORMAT, flushTM.tm_year+1900, flushTM.tm_mon+1);
-        sprintf(fileName, SMSC_STAT_FILE_NAME_FORMAT, flushTM.tm_mday);
+        if (!hasDir) sprintf(dirName, SCAG_SMPP_STAT_DIR_NAME_FORMAT, flushTM.tm_year+1900, flushTM.tm_mon+1);
+        sprintf(fileName, SCAG_STAT_FILE_NAME_FORMAT, flushTM.tm_mday);
         fullPath += '/'; fullPath += (const char*)dirName; 
         fullPath += '/'; fullPath += (const char*)fileName; 
         const char* fullPathStr = fullPath.c_str();
@@ -826,8 +1001,8 @@ void StatisticsManager::dumpCounters(const uint8_t* buff, int buffLen, const tm&
         }
 
         if (needHeader) { // create header (if new file created)
-            file.Write(SMSC_STAT_HEADER_TEXT, strlen(SMSC_STAT_HEADER_TEXT));
-            uint16_t version = htons(SMSC_STAT_VERSION_INFO);
+            file.Write(SCAG_STAT_HEADER_TEXT, strlen(SCAG_STAT_HEADER_TEXT));
+            uint16_t version = htons(SCAG_STAT_VERSION_INFO);
             file.Write(&version, sizeof(version));
             file.Flush();
         }
@@ -843,6 +1018,68 @@ void StatisticsManager::dumpCounters(const uint8_t* buff, int buffLen, const tm&
     file.Write((const void *)&value32, sizeof(value32));
     file.Flush();
     smsc_log_debug(logger, "Statistics data dumped.");
+
+    }catch(std::exception & exc){
+        if (file.isOpened()) file.Close();
+        bFileTM = false;
+        throw exc;
+    }
+}
+
+void StatisticsManager::dumpHttpCounters(const uint8_t* buff, int buffLen, const tm& flushTM)
+{
+    smsc_log_debug(logger, "Statistics dump called for %02d:%02d GMT", 
+                   flushTM.tm_hour, flushTM.tm_min);
+
+    try {
+
+    char dirName[128]; bool hasDir = false;
+
+    if (!bFileTM || fileTM.tm_mon != flushTM.tm_mon || fileTM.tm_year != flushTM.tm_year)
+    {
+        sprintf(dirName, SCAG_HTTP_STAT_DIR_NAME_FORMAT, flushTM.tm_year+1900, flushTM.tm_mon+1);
+        createDir(location + "/" + dirName); bFileTM = false; hasDir = true;
+        smsc_log_debug(logger, "New dir '%s' created", dirName);
+    }
+
+    if (!bFileTM || fileTM.tm_mday != flushTM.tm_mday)
+    {
+        char fileName[128]; 
+        std::string fullPath = location;
+        if (!hasDir) sprintf(dirName, SCAG_HTTP_STAT_DIR_NAME_FORMAT, flushTM.tm_year+1900, flushTM.tm_mon+1);
+        sprintf(fileName, SCAG_STAT_FILE_NAME_FORMAT, flushTM.tm_mday);
+        fullPath += '/'; fullPath += (const char*)dirName; 
+        fullPath += '/'; fullPath += (const char*)fileName; 
+        const char* fullPathStr = fullPath.c_str();
+
+        if (file.isOpened()) file.Close();
+            
+        bool needHeader = true;
+        if (File::Exists(fullPathStr)) { 
+            needHeader = false;
+            file.WOpen(fullPathStr);
+        } else {
+            file.RWCreate(fullPathStr);
+        }
+
+        if (needHeader) { // create header (if new file created)
+            file.Write(SCAG_STAT_HEADER_TEXT, strlen(SCAG_STAT_HEADER_TEXT));
+            uint16_t version = htons(SCAG_STAT_VERSION_INFO);
+            file.Write(&version, sizeof(version));
+            file.Flush();
+        }
+        fileTM = flushTM; bFileTM = true;
+        smsc_log_debug(logger, "%s file '%s' %s", (needHeader) ? "New":"Existed",
+                       fileName, (needHeader) ? "created":"opened");
+    }
+    
+    smsc_log_debug(logger, "Http Statistics data dump...");
+    uint32_t value32 = htonl(buffLen);
+    file.Write((const void *)&value32, sizeof(value32));
+    file.Write((const void *)buff, buffLen); // write dump to it
+    file.Write((const void *)&value32, sizeof(value32));
+    file.Flush();
+    smsc_log_debug(logger, "Http Statistics data dumped.");
 
     }catch(std::exception & exc){
         if (file.isOpened()) file.Close();

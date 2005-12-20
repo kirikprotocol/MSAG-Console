@@ -98,12 +98,13 @@ using smsc::smeman::SmeRecord;
     struct HttpStatEvent
     {
       std::string routeId;
+      std::string serviceId;
       int serviceProviderId;
       int counter;
       int errCode;
       
-      HttpStatEvent(int cnt=-1, const std::string& rId="", int spId=-1, int err=0)
-        : routeId(rId), serviceProviderId(spId), counter(cnt), errCode(err) {};
+      HttpStatEvent(int cnt=-1, const std::string& rId="", const std::string& sId="", int spId=-1, int err=0)
+        : routeId(rId), serviceId(sId), serviceProviderId(spId), counter(cnt), errCode(err) {};
 
       // TODO: add copy constructor & operator=
     };
