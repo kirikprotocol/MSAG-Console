@@ -5901,7 +5901,7 @@ loop:   for(int i = lineNo + 1; i < getLineCount(); i++)
    getToolkit().beep();
    return;
   }
-
+  if (!displayManager.isLineVisible(caretLine+1)) selectFold();
   if(getSelectionCount() != 0)
   {
    Selection[] selections = getSelection();
