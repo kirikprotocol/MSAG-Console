@@ -42,6 +42,11 @@ public:
     return realBuf;
   }
 
+  int  getSize(void)
+  {
+      return heapSize ? heapSize : SZ;
+  }
+
   void Append(const T* data,int count)
   {
     if(count==0)return;
