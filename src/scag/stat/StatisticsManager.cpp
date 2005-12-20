@@ -434,11 +434,11 @@ int StatisticsManager::Execute()
         smsc_log_debug(logger, "Execute() >> End wait");
 
         int flushIndex = switchCounters();
-        flushCounters(flushIndex);
-        flushHttpCounters(flushIndex);
+        //flushCounters(flushIndex);
+        //flushHttpCounters(flushIndex);
 
-        flushTraffic();
-        flushHttpTraffic();
+        //flushTraffic();
+        //flushHttpTraffic();
 
         bExternalFlush = false;
         doneEvent.Signal();
