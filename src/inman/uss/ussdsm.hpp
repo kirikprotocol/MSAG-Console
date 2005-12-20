@@ -7,7 +7,7 @@
 #include "inman/inap/session.hpp"
 #include "inman/inap/dialog.hpp"
 #include "inman/comp/usscomp.hpp"
-#include "inman/interaction/ussmessages.hpp"
+#include "inman/uss/ussmessages.hpp"
 #include "inman/interaction/connect.hpp"
 
 

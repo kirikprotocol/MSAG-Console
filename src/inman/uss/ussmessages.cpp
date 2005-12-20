@@ -4,7 +4,7 @@ static char const ident[] = "$Id$";
 #include <string>
 #include <stdexcept>
 
-#include "inman/interaction/ussmessages.hpp"
+#include "inman/uss/ussmessages.hpp"
 #include "inman/common/util.hpp"
 #include "inman/common/cvtutil.hpp"
 

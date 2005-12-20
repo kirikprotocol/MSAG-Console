@@ -4,7 +4,7 @@ static char const ident[] = "$Id$";
 #include "inman/inap/infactory.hpp"
 #include "inman/inap/dialog.hpp"
 #include "inman/interaction/server.hpp"
-#include "inman/interaction/ussmessages.hpp"
+//#include "inman/uss/ussmessages.hpp"
 #include "inman/uss/vlr.hpp"
 #include "inman/uss/ussdsm.hpp"
 
@@ -13,8 +13,8 @@ using smsc::inman::inap::InSessionFactory;
 using smsc::inman::interaction::SerializerITF;
 using smsc::inman::interaction::SerializerUSS;
 using smsc::inman::interaction::Server;
-using smsc::inman::interaction::USSMessageBase;
-using smsc::inman::interaction::USSRequestMessage;
+//using smsc::inman::interaction::USSMessageBase;
+//using smsc::inman::interaction::USSRequestMessage;
 using smsc::inman::interaction::USS2CMD;
 
 namespace smsc  {

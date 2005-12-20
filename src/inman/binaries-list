@@ -7,6 +7,6 @@
 inman/inman_test inman_test $(SOCKETLIB) -lrt -L$(SMSC_BUILDDIR)/bin -lcore-threads -lthread -llogger -lcore-network -lnsl -linman-interaction -linman-common
 inman/inman inman $(SOCKETLIB) -linman  -linman-storage -linman-inap -linman-comp -linman-codec -linman-codec_uss -linman-asn1rt -linman-interaction -linman-common -lutil-config -lutil-xml $(XERCES_LIB) -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) -linman-inap $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -lcore-threads -lthread -llogger -lcore-network -lnsl -ldl
 inman/ussman ussman $(SOCKETLIB) -linman -linman-inap -linman-uss -linman-codec -linman-codec_uss -linman-asn1rt -linman-common -linman-interaction -linman-comp -lutil-config -lutil-xml $(XERCES_LIB) -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) -linman-inap $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -lcore-threads -lthread -llogger -lcore-network -lnsl -ldl
-inman/ussman_test ussman_test $(SOCKETLIB) -lrt -L$(SMSC_BUILDDIR)/bin -lcore-threads -lthread -llogger -lcore-network -lnsl -linman-interaction -linman-common
+inman/ussman_test ussman_test $(SOCKETLIB) -lrt -L$(SMSC_BUILDDIR)/bin -lcore-threads -lthread -llogger -lcore-network -lnsl -linman-uss -linman-interaction -linman-common -linman-codec_uss
 
 

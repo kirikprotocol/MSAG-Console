@@ -6,10 +6,10 @@ static char const ident[] = "$Id$";
 #include "inman/common/util.hpp"
 #include "inman/uss/ussdsm.hpp"
 #include "inman/uss/vlr.hpp"
-#include "inman/interaction/ussmessages.hpp"
+//#include "inman/interaction/ussmessages.hpp"
 #include "inman/comp/acdefs.hpp"
 
-using smsc::inman::interaction::USSRequestMessage;
+//using smsc::inman::interaction::USSRequestMessage;
 using smsc::inman::interaction::USSResultMessage;
 using smsc::inman::interaction::USS2CMD;
 using smsc::inman::interaction::USSDATA_T;

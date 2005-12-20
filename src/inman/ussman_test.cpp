@@ -10,7 +10,7 @@ static char const ident[] = "$Id$";
 #include "core/threads/Thread.hpp"
 #include "inman/common/console.hpp"
 #include "inman/common/util.hpp"
-#include "inman/interaction/ussmessages.hpp"
+#include "inman/uss/ussmessages.hpp"
 
 using smsc::logger::Logger;
 using smsc::core::threads::Thread;
