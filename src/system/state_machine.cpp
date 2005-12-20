@@ -458,15 +458,6 @@ bool checkSourceAddress(const std::string& pattern,const Address& src)
   return re->Match(buf,m,n);
 }
 
-struct Directive{
-  int start;
-  int end;
-  Directive():start(0),end(0){}
-  Directive(int st,int en):start(st),end(en){}
-  Directive(const Directive& d):start(d.start),end(d.end){}
-};
-
-
 void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
 {
   const char *body="";
@@ -475,7 +466,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
   int dc=sms.getIntProperty(Tag::SMPP_DATA_CODING);
   if(dc==DataCoding::BINARY)return;
   bool udhi=(sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)==0x40;
-  int udhiLen=0;
+  int udhLen=0;
   if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
   {
     SMS tmp(sms);
@@ -506,9 +497,9 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
   unsigned int olen=len;
   if(udhi)
   {
-    udhiLen=(*(const unsigned char*)body)+1;
-    len-=udhiLen;
-    body+=udhiLen;
+    udhLen=(*(const unsigned char*)body)+1;
+    len-=udhLen;
+    body+=udhLen;
   }
   if(len==0)return;
   bool hasDirectives=false;
@@ -535,7 +526,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
   len=getSmsText(&sms,buf,len*2+1);
   if(((int)len)<0)throw Exception("message too long\n");
 
-  Array<Directive> offsets;
+  int lastDirectiveSymbol=0;
   /*
   RegExp def("/#def\\s+(\\d+)#/i");
   __require__(def.LastError()==regexp::errNone);
@@ -563,14 +554,14 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
     {
       __trace__("DIRECT: ack found");
       sms.setDeliveryReport(REPORT_ACK);
-      offsets.Push(Directive(m[0].start,m[0].end));
+      lastDirectiveSymbol=m[0].end;
       i=m[0].end;
     }else
     if(dreNoAck.MatchEx(buf,buf+i,buf+len,m,n=10))
     {
       __trace__("DIRECT: noack found");
       sms.setDeliveryReport(REPORT_NOACK);
-      offsets.Push(Directive(m[0].start,m[0].end));
+      lastDirectiveSymbol=m[0].end;
       i=m[0].end;
     }else
     if(dreHide.MatchEx(buf,buf+i,buf+len,m,n=10))
@@ -582,7 +573,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
       {
         __trace__("DIRECT: error, hide is not modifiable");
       }
-      offsets.Push(Directive(m[0].start,m[0].end));
+      lastDirectiveSymbol=m[0].end;
       i=m[0].end;
     }else
     if(dreUnhide.MatchEx(buf,buf+i,buf+len,m,n=10))
@@ -594,14 +585,14 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
       {
         __trace__("DIRECT: error, hide is not modifiable");
       }
-      offsets.Push(Directive(m[0].start,m[0].end));
+      lastDirectiveSymbol=m[0].end;
       i=m[0].end;
     }else
     if(dreNoTrans.MatchEx(buf,buf+i,buf+len,m,n=10))
     {
       __trace__("DIRECT: notrans");
       sms.setIntProperty(Tag::SMSC_TRANSLIT,0);
-      offsets.Push(Directive(m[0].start,m[0].end));
+      lastDirectiveSymbol=m[0].end;
       i=m[0].end;
     }else
     if(dreFlash.MatchEx(buf,buf+i,buf+len,m,n=10))
@@ -610,7 +601,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
       {
         sms.setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,1);
       }
-      offsets.Push(Directive(m[0].start,m[0].end));
+      lastDirectiveSymbol=m[0].end;
       i=m[0].end;
     }else
     if(dreDef.MatchEx(buf,buf+i,buf+len,m,n=10))
@@ -623,7 +614,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
       t+=mnts;
       __trace2__("DIRECT: %*s, t=%d",m[0].end-m[0].start,buf+m[0].start,t);
       sms.setNextTime(time(NULL)+t*60);
-      offsets.Push(Directive(m[0].start,m[0].end));
+      lastDirectiveSymbol=m[0].end;
       i=m[0].end;
     }else
     if(dreTemplate.MatchEx(buf,buf+i,buf+len,m,n=10))
@@ -677,10 +668,9 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
         }
         j=m[0].end;
       }
-      Directive d(i,j);
+      lastDirectiveSymbol=j;
       tmplstart=i;
       tmpllen=j-i;
-      offsets.Push(d);
       i=j;
     }else
     if(dreUnknown.MatchEx(buf,buf+i,buf+len,m,n=10))
@@ -691,46 +681,23 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
       break;
     }
   }
-  if(offsets.Count()==0)return;
-  if(tmplname.length() && i<len)
+  if(lastDirectiveSymbol==0)return;
+  if(tmplname.length())
   {
-    Directive d(i,len);
-    offsets.Push(d);
-  }
-  for(i=offsets.Count()-1;i>=0;i--)
-  {
-    if(offsets[i-1].end==offsets[i].start)
-    {
-      offsets[i-1].end=offsets[i].end;
-      offsets.Delete(i);
-    }
+    lastDirectiveSymbol=len;
   }
   if(sms.getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::SMSC7BIT)
   {
     int pos=0;
     int fix=0;
-    for(int i=0;i<=len;i++)
+    for(int i=0;i<len;i++)
     {
-      if(offsets[pos].start==i)
-      {
-        offsets[pos].start+=fix;
-      }
-      if(offsets[pos].end==i)
-      {
-        offsets[pos].end+=fix;
-        pos++;
-        if(pos==offsets.Count())break;
-      }
-      if(strchr(escchars,buf[i]))fix++;
+      if(strchr(escchars,buf[i]))lastDirectiveSymbol++;
     }
   }
   if(sms.getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
   {
-    for(i=0;i<offsets.Count();i++)
-    {
-      offsets[i].start*=2;
-      offsets[i].end*=2;
-    }
+    lastDirectiveSymbol*=2;
   }
   string newtext;
   if(tmplname.length())
@@ -759,30 +726,17 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
   char *ptr=newBody;
   if(udhi)
   {
-    memcpy(ptr,body-udhiLen,udhiLen);
-    ptr+=udhiLen;
+    memcpy(ptr,body-udhLen,udhLen);
+    ptr+=udhLen;
   }
 
-  if(offsets.Count()>1)
+  int tailLen=olen-udhLen-lastDirectiveSymbol;
+  if(tailLen)
   {
-    memcpy(ptr,body,offsets[0].start);
-    ptr+=offsets[0].start;
-    for(i=0;i<offsets.Count()-1;i++)
-    {
-      __trace2__("offset[i]=%d,%d",offsets[i].start,offsets[i].end);
-      memcpy(ptr,body+offsets[i].end,offsets[i+1].start-offsets[i].end);
-      ptr+=offsets[i+1].start-offsets[i].end;
-    }
-    memcpy(ptr,body+offsets[i].end,olen-udhiLen-offsets[i].end);
-  }else
-  {
-    if(offsets[0].start==0)
-      memcpy(ptr,body+offsets[0].end,olen-udhiLen-offsets[0].end);
-    else
-      memcpy(ptr,body,offsets[0].start);
+    memcpy(ptr,body+lastDirectiveSymbol,tailLen);
+    ptr+=tailLen;
   }
-  int newlen=(ptr-newBody)+olen-udhiLen-offsets[i].end;
-  if(!udhi)udhiLen=0;
+  int newlen=tailLen+udhLen;
   if(newtext.length())
   {
     bool hb=hasHighBit(newtext.c_str(),newtext.length());
@@ -790,25 +744,25 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
     {
       if(dc==DataCoding::LATIN1)
       {
-        auto_ptr<short> b(new short[newlen-udhiLen]);
-        ConvertMultibyteToUCS2(newBody+udhiLen,newlen-udhiLen,b.get(),(newlen-udhiLen)*2,CONV_ENCODING_CP1251);
-        memcpy(newBody+udhiLen,b.get(),(newlen-udhiLen)*2);
+        auto_ptr<short> b(new short[newlen-udhLen]);
+        ConvertMultibyteToUCS2(newBody+udhLen,newlen-udhLen,b.get(),(newlen-udhLen)*2,CONV_ENCODING_CP1251);
+        memcpy(newBody+udhLen,b.get(),(newlen-udhLen)*2);
       }else //SMSC7BIT
       {
-        TmpBuf<char,256> x(newlen-udhiLen+1);
-        int cvtlen=ConvertSMSC7BitToLatin1(newBody+udhiLen,newlen-udhiLen,x.get());
+        TmpBuf<char,256> x(newlen-udhLen+1);
+        int cvtlen=ConvertSMSC7BitToLatin1(newBody+udhLen,newlen-udhLen,x.get());
         ConvertMultibyteToUCS2
         (
           x.get(),
           cvtlen,
-          (short*)newBody+udhiLen,
-          (newlen-udhiLen)*2,
+          (short*)newBody+udhLen,
+          (newlen-udhLen)*2,
           CONV_ENCODING_CP1251
         );
       }
       sms.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::UCS2);
       dc=DataCoding::UCS2;
-      newlen=2*newlen-udhiLen;
+      newlen=2*newlen-udhLen;
     }
     if(hb || dc==DataCoding::UCS2)
     {
