@@ -158,9 +158,13 @@ namespace stat {
         void  dumpHttpCounters(const uint8_t* buff, int buffLen, const tm& flushTM);
 
         void flushTraffic();
-        void dumpTraffic(const IntHash<TrafficRecord>& traff);
+        void dumpTraffic(const IntHash<TrafficRecord>& traff, const std::string& path);
         void resetTraffic(const tm& tmDate);
         void incRouteTraffic(const int routeId, const tm& tmDate);
+
+        void flushHttpTraffic();
+        void resetHttpTraffic(const tm& tmDate);
+        void incHttpRouteTraffic(const int routeId, const tm& tmDate);
 
         void  calculateTime(tm& flushTM);
         int   calculateToSleep();

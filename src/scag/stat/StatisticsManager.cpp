@@ -432,9 +432,12 @@ int StatisticsManager::Execute()
         awakeEvent.Wait(toSleep); // Wait for next hour begins ...
         smsc_log_debug(logger, "Execute() >> End wait");
 
-        flushCounters(switchCounters());
+        int flushIndex = switchCounters();
+        flushCounters(flushIndex);
+        flushHttpCounters(flushIndex);
 
         flushTraffic();
+        flushHttpTraffic();
 
         bExternalFlush = false;
         doneEvent.Signal();
@@ -490,6 +493,7 @@ int StatisticsManager::switchCounters()
     time_t date = time(0);
     localtime_r(&date, &tmDate);
     resetTraffic(tmDate);
+    resetHttpTraffic(tmDate);
 
     int flushIndex = currentIndex;
     currentIndex ^= 1; //switch between 0 and 1
@@ -1096,10 +1100,23 @@ void StatisticsManager::flushTraffic()
         traff = trafficByRouteId;
     }
 
-    dumpTraffic(traff);
+    std::string path = traffloc + std::string("/SMPP/"); 
+    dumpTraffic(traff, path);
 }
 
-void StatisticsManager::dumpTraffic(const IntHash<TrafficRecord>& traff)
+void StatisticsManager::flushHttpTraffic()
+{
+    IntHash<TrafficRecord> traff;
+    {
+        MutexGuard mg(switchLock);
+        traff = trafficByRouteId;
+    }
+
+    std::string path = traffloc + std::string("/HTTP/"); 
+    dumpTraffic(traff, path);
+}
+
+void StatisticsManager::dumpTraffic(const IntHash<TrafficRecord>& traff, const std::string& path)
 {
     const int pos = smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH + 1;
     const int sz = pos + 21;
@@ -1144,20 +1161,13 @@ void StatisticsManager::dumpTraffic(const IntHash<TrafficRecord>& traff)
     }
 
     if(fbuff.GetPos() > 0){
-        std::string loc = traffloc + std::string("/") + "traffic.tmp";
-        /*FILE *cfPtr = 0;
-        Fopen(cfPtr, loc.c_str()); // open or create for update
-        Fwrite(fbuff, fbuff.GetPos(), cfPtr);
-        Fclose(cfPtr);*/
-
         try {
-     
+            std::string loc = path + "traffic.tmp";     
             File tfile;
             tfile.WOpen(loc.c_str());
             tfile.Write(fbuff, fbuff.GetPos());
             tfile.Close();
-
-            std::string traffpath = traffloc + std::string("/") + "traffic.dat";
+            std::string traffpath = path + "traffic.dat";
             rename(loc.c_str(), traffpath.c_str());
         }catch(FileException & e){
             smsc_log_warn(logger, "Failed to dump traffic. Detailes: %s", e.what());
@@ -1165,7 +1175,7 @@ void StatisticsManager::dumpTraffic(const IntHash<TrafficRecord>& traff)
             smsc_log_warn(logger, "Failed to dump traffic. Unknown error.");
         }
     }else{
-        std::string traffpath = traffloc + std::string("/") + "traffic.dat";
+        std::string traffpath = path + "traffic.dat";
         remove(traffpath.c_str());
     }
     
@@ -1283,10 +1293,42 @@ void StatisticsManager::resetTraffic(const tm& tmDate)
     }
 }
 
+void StatisticsManager::resetHttpTraffic(const tm& tmDate)
+{
+    IntHash<TrafficRecord>::Iterator traffit = httpTrafficByRouteId.First();
+    int routeId = 0;
+    TrafficRecord *routeTraff;
+    while (traffit.Next(routeId, routeTraff))
+    {
+        /*long mincnt_, hourcnt_, daycnt_, monthcnt_; 
+        uint8_t year_, month_, day_, hour_, min_;
+        printf("\nresetTraffic routeId: %d\n", routeId);
+        printf("%04d-%02d-%02d %02d:%02d\n", tmDate.tm_year + 1900, tmDate.tm_mon + 1, tmDate.tm_mday, tmDate.tm_hour, tmDate.tm_min);
+        routeTraff->getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
+                                    year_, month_, day_, hour_, min_);
+        printf("%04d-%02d-%02d %02d:%02d (m, h, d, M): %d, %d, %d, %d\n", year_ + 1900, month_ + 1, day_, hour_, min_, mincnt_, hourcnt_, daycnt_, monthcnt_);*/
+
+        routeTraff->reset(tmDate);
+
+        /*routeTraff->getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
+                                    year_, month_, day_, hour_, min_);
+        printf("%04d-%02d-%02d %02d:%02d (m, h, d, M): %d, %d, %d, %d\n\n", year_ + 1900, month_ + 1, day_, hour_, min_, mincnt_, hourcnt_, daycnt_, monthcnt_);*/
+    }
+}
+
 void StatisticsManager::incRouteTraffic(const int routeId, const tm& tmDate)
 {
     TrafficRecord *tr = 0;
     tr = trafficByRouteId.GetPtr(routeId);
+    if(tr){
+        tr->inc(tmDate);
+    }
+}
+
+void StatisticsManager::incHttpRouteTraffic(const int routeId, const tm& tmDate)
+{
+    TrafficRecord *tr = 0;
+    tr = httpTrafficByRouteId.GetPtr(routeId);
     if(tr){
         tr->inc(tmDate);
     }
