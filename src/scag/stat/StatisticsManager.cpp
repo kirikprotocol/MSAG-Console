@@ -91,7 +91,8 @@ void StatisticsManager::configure(const StatManConfig& statManConfig)
     sender.init((PerformanceListener*)this, (PerformanceServer*)this);
     sender.InitServer(perfHost, perfGenPort, perfSvcPort, perfScPort);
 
-    initTraffic(); // Initializes traffic hash
+    initTraffic();     // Initializes traffic hash
+    initHttpTraffic(); // Initializes http traffic hash
     logger = Logger::getInstance("statman");
 }
 
@@ -1185,10 +1186,7 @@ void StatisticsManager::dumpTraffic(const IntHash<TrafficRecord>& traff, const s
 void StatisticsManager::initTraffic()
 {
 
-    const std::string loc = traffloc + std::string("/") + "traffic.dat";
-    /*FILE *cfPtr = 0;
-    Fopen(cfPtr, loc);
-    Fseek(0, SEEK_SET, cfPtr);*/
+    const std::string loc = traffloc + std::string("/SMPP/") + "traffic.dat";
 
     File tfile;
 
@@ -1208,7 +1206,6 @@ void StatisticsManager::initTraffic()
     tm tmnow;  localtime_r(&now, &tmnow);
 
     int read_size = -1;
-    //while( (read_size = Fread(cfPtr, buff, sz)) == 1){
     while( (read_size = tfile.Read(buff, sz)) == 1){
 
         // Copies routeId
@@ -1267,6 +1264,89 @@ void StatisticsManager::initTraffic()
     }catch(...)
     {
         smsc_log_warn(logger, "Failed to init traffic. Unknown error");
+    }
+}
+
+void StatisticsManager::initHttpTraffic()
+{
+
+    const std::string loc = traffloc + std::string("/HTTP/") + "traffic.dat";
+
+    File tfile;
+
+    try {
+
+    tfile.ROpen(loc.c_str());
+
+    const int pos = smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH + 1;
+    const int sz = pos + 21;
+    char buff[sz];
+    char routeId[pos];
+    uint32_t val;
+    uint8_t year, month, day, hour, min;
+    int id;
+    long mincnt, hourcnt, daycnt, monthcnt;
+    time_t now = time(0);
+    tm tmnow;  localtime_r(&now, &tmnow);
+
+    int read_size = -1;
+    while( (read_size = tfile.Read(buff, sz)) == 1){
+
+        // Copies routeId
+        memcpy((void*)routeId, (const void*)buff, pos);
+        if(routeMap.regRoute(routeId, id) != -1)
+            continue;
+
+        // Coies counters
+        memcpy((void*)&val, (const void*)(buff + pos), 4);
+        mincnt = ntohl(val);
+        memcpy((void*)&val, (const void*)(buff + pos + 4), 4);
+        hourcnt = ntohl(val);
+        memcpy((void*)&val, (const void*)(buff + pos + 8), 4);
+        daycnt = ntohl(val);
+        memcpy((void*)&val, (const void*)(buff + pos + 12), 4);
+        monthcnt = ntohl(val);
+
+        // Copies date
+        memcpy((void*)&year,    (const void*)(buff + pos + 16), 1);
+        memcpy((void*)&month,   (const void*)(buff + pos + 17), 1);
+        memcpy((void*)&day,     (const void*)(buff + pos + 18), 1);
+        memcpy((void*)&hour,    (const void*)(buff + pos + 19), 1);
+        memcpy((void*)&min,     (const void*)(buff + pos + 20), 1);
+
+        TrafficRecord tr(mincnt, hourcnt, daycnt, monthcnt, 
+                         year, month, day, hour, min);
+
+        if(tmnow.tm_year != year)
+            continue;
+        if(tmnow.tm_mon != month)
+            continue;
+
+        /*long mincnt_, hourcnt_, daycnt_, monthcnt_; 
+        uint8_t year_, month_, day_, hour_, min_;
+
+        tr.getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
+                                    year_, month_, day_, hour_, min_);
+        printf("%04d-%02d-%02d %02d:%02d (m, h, d, M): %d, %d, %d, %d\n", year_ + 1900, month_ + 1, day_, hour_, min_, mincnt_, hourcnt_, daycnt_, monthcnt_);*/
+
+        tr.reset(tmnow);
+
+        /*tr.getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
+                                    year_, month_, day_, hour_, min_);
+        printf("%04d-%02d-%02d %02d:%02d (m, h, d, M): %d, %d, %d, %d\n\n", year_ + 1900, month_ + 1, day_, hour_, min_, mincnt_, hourcnt_, daycnt_, monthcnt_);*/
+
+        httpTrafficByRouteId.Insert(id, tr);
+
+    }
+
+    tfile.Close();
+
+    }catch(FileException & e)
+    {
+        smsc_log_warn(logger, "Failed to init http traffic. Detailes: %s", e.what());
+    }catch(...)
+    {
+        smsc_log_warn(logger, "Failed to init http traffic. Unknown error");
     }
 }
 

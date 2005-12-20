@@ -210,6 +210,7 @@ namespace stat {
         void Fwrite(const void* data, size_t size, FILE* &cfPtr);
         size_t Fread(FILE* &cfPtr, void* data, size_t size);
         void initTraffic();
+        void initHttpTraffic();
 
         static bool createDir(const std::string& dir);
         bool createStorageDir(const std::string loc);
