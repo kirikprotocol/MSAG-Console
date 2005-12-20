@@ -202,6 +202,10 @@ namespace stat {
         tm              fileTM;
         File file;
 
+        bool            httpIsFileTM;
+        tm              httpFileTM;
+        File httpFile;
+
         std::string traffloc;
         void Fopen(FILE* &cfPtr, const std::string loc);
         void Fseek(long offset, int whence, FILE* &cfPtr);

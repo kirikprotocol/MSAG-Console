@@ -74,11 +74,17 @@ void StatisticsManager::configure(const StatManConfig& statManConfig)
     if( !location.length() )
         throw Exception("StatisticsManager, configure: Dirrectory has zero length.");
 
-    if (!createStorageDir(location)) 
-        throw Exception("Can't open statistics directory: '%s'", location.c_str());
+    int len = location.length();
+    const char slash = location.c_str()[len-1];
+    bool isslash = (slash == '/');
 
-    if (!createStorageDir(traffloc)) 
-        throw Exception("Can't open traffic directory: '%s'", traffloc.c_str());
+    std::string smppLoc = isslash ? location + "SMPP" : location + "/SMPP";
+    if (!createStorageDir(smppLoc)) 
+        throw Exception("Can't open statistics directory: '%s'", smppLoc.c_str());
+
+    std::string httpLoc = isslash ? location + "HTTP" : location + "/HTTP";
+    if (!createStorageDir(httpLoc)) 
+        throw Exception("Can't open statistics directory: '%s'", httpLoc.c_str());
 
     std::string perfHost = statManConfig.getPerfHost();
     if(!perfHost.length())
@@ -434,11 +440,11 @@ int StatisticsManager::Execute()
         smsc_log_debug(logger, "Execute() >> End wait");
 
         int flushIndex = switchCounters();
-        //flushCounters(flushIndex);
-        //flushHttpCounters(flushIndex);
+        flushCounters(flushIndex);
+        flushHttpCounters(flushIndex);
 
-        //flushTraffic();
-        //flushHttpTraffic();
+        flushTraffic();
+        flushHttpTraffic();
 
         bExternalFlush = false;
         doneEvent.Signal();
@@ -522,7 +528,7 @@ void StatisticsManager::flushCounters(int index)
 {
 
     tm flushTM; calculateTime(flushTM);
-    smsc_log_debug(logger, "Flushing statistics for %02d.%02d.%04d %02d:%02d:%02d GMT",
+    smsc_log_debug(logger, "Flushing SMPP statistics for %02d.%02d.%04d %02d:%02d:%02d GMT",
                    flushTM.tm_mday, flushTM.tm_mon+1, flushTM.tm_year+1900,
                    flushTM.tm_hour, flushTM.tm_min, flushTM.tm_sec);
 
@@ -676,7 +682,7 @@ void StatisticsManager::flushHttpCounters(int index)
 {
 
     tm flushTM; calculateTime(flushTM);
-    smsc_log_debug(logger, "Flushing statistics for %02d.%02d.%04d %02d:%02d:%02d GMT",
+    smsc_log_debug(logger, "Flushing HTTP Statistics for %02d.%02d.%04d %02d:%02d:%02d GMT",
                    flushTM.tm_mday, flushTM.tm_mon+1, flushTM.tm_year+1900,
                    flushTM.tm_hour, flushTM.tm_min, flushTM.tm_sec);
 
@@ -981,6 +987,7 @@ void StatisticsManager::dumpCounters(const uint8_t* buff, int buffLen, const tm&
     if (!bFileTM || fileTM.tm_mon != flushTM.tm_mon || fileTM.tm_year != flushTM.tm_year)
     {
         sprintf(dirName, SCAG_SMPP_STAT_DIR_NAME_FORMAT, flushTM.tm_year+1900, flushTM.tm_mon+1);
+        smsc_log_debug(logger, "dirName: %s", dirName);
         createDir(location + "/" + dirName); bFileTM = false; hasDir = true;
         smsc_log_debug(logger, "New dir '%s' created", dirName);
     }
@@ -1040,14 +1047,14 @@ void StatisticsManager::dumpHttpCounters(const uint8_t* buff, int buffLen, const
 
     char dirName[128]; bool hasDir = false;
 
-    if (!bFileTM || fileTM.tm_mon != flushTM.tm_mon || fileTM.tm_year != flushTM.tm_year)
+    if (!httpIsFileTM || httpFileTM.tm_mon != flushTM.tm_mon || httpFileTM.tm_year != flushTM.tm_year)
     {
         sprintf(dirName, SCAG_HTTP_STAT_DIR_NAME_FORMAT, flushTM.tm_year+1900, flushTM.tm_mon+1);
-        createDir(location + "/" + dirName); bFileTM = false; hasDir = true;
+        createDir(location + "/" + dirName); httpIsFileTM = false; hasDir = true;
         smsc_log_debug(logger, "New dir '%s' created", dirName);
     }
 
-    if (!bFileTM || fileTM.tm_mday != flushTM.tm_mday)
+    if (!httpIsFileTM || httpFileTM.tm_mday != flushTM.tm_mday)
     {
         char fileName[128]; 
         std::string fullPath = location;
@@ -1057,38 +1064,38 @@ void StatisticsManager::dumpHttpCounters(const uint8_t* buff, int buffLen, const
         fullPath += '/'; fullPath += (const char*)fileName; 
         const char* fullPathStr = fullPath.c_str();
 
-        if (file.isOpened()) file.Close();
+        if (httpFile.isOpened()) httpFile.Close();
             
         bool needHeader = true;
         if (File::Exists(fullPathStr)) { 
             needHeader = false;
-            file.WOpen(fullPathStr);
+            httpFile.WOpen(fullPathStr);
         } else {
-            file.RWCreate(fullPathStr);
+            httpFile.RWCreate(fullPathStr);
         }
 
         if (needHeader) { // create header (if new file created)
-            file.Write(SCAG_STAT_HEADER_TEXT, strlen(SCAG_STAT_HEADER_TEXT));
+            httpFile.Write(SCAG_STAT_HEADER_TEXT, strlen(SCAG_STAT_HEADER_TEXT));
             uint16_t version = htons(SCAG_STAT_VERSION_INFO);
-            file.Write(&version, sizeof(version));
-            file.Flush();
+            httpFile.Write(&version, sizeof(version));
+            httpFile.Flush();
         }
-        fileTM = flushTM; bFileTM = true;
+        httpFileTM = flushTM; httpIsFileTM = true;
         smsc_log_debug(logger, "%s file '%s' %s", (needHeader) ? "New":"Existed",
                        fileName, (needHeader) ? "created":"opened");
     }
     
     smsc_log_debug(logger, "Http Statistics data dump...");
     uint32_t value32 = htonl(buffLen);
-    file.Write((const void *)&value32, sizeof(value32));
-    file.Write((const void *)buff, buffLen); // write dump to it
-    file.Write((const void *)&value32, sizeof(value32));
-    file.Flush();
+    httpFile.Write((const void *)&value32, sizeof(value32));
+    httpFile.Write((const void *)buff, buffLen); // write dump to it
+    httpFile.Write((const void *)&value32, sizeof(value32));
+    httpFile.Flush();
     smsc_log_debug(logger, "Http Statistics data dumped.");
 
     }catch(std::exception & exc){
-        if (file.isOpened()) file.Close();
-        bFileTM = false;
+        if (httpFile.isOpened()) httpFile.Close();
+        httpIsFileTM = false;
         throw exc;
     }
 }
