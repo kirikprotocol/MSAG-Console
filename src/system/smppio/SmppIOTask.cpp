@@ -305,8 +305,8 @@ int SmppInputThread::Execute()
               case SmppCommandSet::BIND_TRANCIEVER:
               {
                 if(ss->getProxy() &&
-                   ss->getChannelType()!=ctUnbound &&
                    (
+                     ss->getChannelType()!=ctUnbound ||
                      !ss->getProxy()->isOpened() ||
                      ss->getProxy()->isDisconnecting() ||
                      ss->getProxy()->isUnbinding()
