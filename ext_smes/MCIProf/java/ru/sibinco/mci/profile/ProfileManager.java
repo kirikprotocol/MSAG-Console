@@ -69,18 +69,20 @@ public class ProfileManager
       DEFAULT_PROFILE_INFO.eventMask = ProfileInfo.MASK_ALL;
       logger.warn("Parameter '"+DEFAULT_REASONS_MASK+"' missed. All masks on by default");
     }
-    try {
-      DEFAULT_PROFILE_INFO.inform = Boolean.getBoolean(properties.getProperty(DEFAULT_INFORM));
-    } catch (Exception e) {
+
+    String strBool = properties.getProperty(DEFAULT_INFORM);
+    if (strBool == null || strBool.trim().length() <= 0) {
       DEFAULT_PROFILE_INFO.inform = true;
       logger.warn("Parameter '"+DEFAULT_INFORM+"' missed. Default flag is on");
     }
-    try {
-      DEFAULT_PROFILE_INFO.notify = Boolean.getBoolean(properties.getProperty(DEFAULT_NOTIFY));
-    } catch (Exception e) {
+    else DEFAULT_PROFILE_INFO.inform = strBool.trim().equalsIgnoreCase("true");
+    
+    strBool = properties.getProperty(DEFAULT_NOTIFY);
+    if (strBool == null || strBool.trim().length() <= 0) {
       DEFAULT_PROFILE_INFO.notify = false;
       logger.warn("Parameter '"+DEFAULT_NOTIFY+"' missed. Default flag is off");
     }
+    else DEFAULT_PROFILE_INFO.notify = strBool.trim().equalsIgnoreCase("true");
 
     int defaultInformId = -1; int defaultNotifyId = -1;
     try {
