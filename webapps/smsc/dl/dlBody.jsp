@@ -38,6 +38,7 @@
           <script>
             function checkSystemRadio() {
               document.getElementById('ownerAddress').disabled = document.getElementById('systemTrue').checked;
+              document.getElementById('maxElements').disabled = !document.getElementById('systemTrue').checked;
             }
 
             checkSystemRadio();
@@ -57,7 +58,7 @@
         <%= getLocString("dl.maxMembersCount") %>:
       </th>
       <td>
-        <input class=txt name=maxElements value="<%= bean.getMaxElements() %>" validation="positive" onkeyup="resetValidation(this)">
+        <input class=txt name=maxElements id=maxElements value="<%= bean.getMaxElements() %>" validation="positive" onkeyup="resetValidation(this)">
       </td>
     </tr>
   </table>
