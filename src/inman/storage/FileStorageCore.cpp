@@ -346,29 +346,10 @@ time_t RollingFileStorage::getLastRollingTime(void) const
  * -------------------------------------------------------------------------- */
 bool RollingFileStorage::mkCurrFile(bool roll/* = true*/)
 {
+    if (_currFile.isOpened() && !roll) //file already exists, exit
+        return false;
+
     time_t      curTm = time(NULL);
-    if (roll)
-        _lastRollTime = curTm;
-
-    if (_currFile.isOpened()) {
-        if (!roll)
-            return false;
-        File::offset_type fpos;
-
-        try { fpos = _currFile.Pos(); }
-        catch (FileException& exc) {
-            throw FileSystemException(exc.getErrNo(), exc.what());
-        }
-        if (fpos <= _headerLen)
-            return false; // file is empty, skip rolling 
-        //roll and close file
-        try { _currFile.Close(); }
-        catch (FileException& exc) {
-            throw FileSystemException(exc.getErrNo(), exc.what());
-        }
-        FSEntry::rollFileExt(_location, _currFileName, _Ext.c_str());
-    }
-
     char        tmStamp[MAX_FS_TIME_STAMP_SZ + 1];
     //NOTE:  cftime allows [00,61] range for seconds, instead of [00,59],
     //so use gmtime_r() that adjusts seconds first and then strftime, that
@@ -379,13 +360,39 @@ bool RollingFileStorage::mkCurrFile(bool roll/* = true*/)
     if (!tmLen || (tmLen >= MAX_FS_TIME_STAMP_SZ))
         throw FileSystemException(-2, "User time stamp format is invalid or too long!");
 
-    std::string newFileName(tmStamp);
-    newFileName += '.';
-    newFileName += _lastExt;
-
     std::string filePath = _location;
     filePath += '/';
-    filePath += newFileName;
+    filePath += tmStamp;
+    filePath += '.';
+
+    _lastRollTime = curTm;
+
+    if (_currFile.isOpened()) {
+        File::offset_type fpos;
+
+        try { fpos = _currFile.Pos(); }
+        catch (FileException& exc) {
+            throw FileSystemException(exc.getErrNo(), exc.what());
+        }
+        if (fpos <= _headerLen) {// file is empty, skip rolling but rename file
+            std::string rollName = filePath;
+            rollName += _lastExt;
+
+            try { _currFile.Rename(rollName.c_str()); }
+            catch (FileException& exc) {
+                throw FileSystemException(exc.getErrNo(), exc.what());
+            }
+            return false; 
+        }
+        //roll and close file
+        try { _currFile.Close(); }
+        catch (FileException& exc) {
+            throw FileSystemException(exc.getErrNo(), exc.what());
+        }
+        FSEntry::rollFileExt((std::string&)_currFile.getFileName(), _Ext.c_str());
+    }
+
+    filePath += _lastExt;
     
     if (File::Exists(filePath.c_str()))
         throw FileSystemException(EEXIST, "Failed to create new file '%s'. File already exists!",
@@ -396,9 +403,7 @@ bool RollingFileStorage::mkCurrFile(bool roll/* = true*/)
         throw FileSystemException(exc.getErrNo(), "Failed to create new file '%s'. Details: %s",
                                    filePath.c_str(), exc.what());
     }
-    _currFileName = newFileName;
-    _lastRollTime = curTm;
-
+    
     //write header
     if (_Parms.fileHeaderText) {
         try { _currFile.Write(_Parms.fileHeaderText, strlen(_Parms.fileHeaderText)); }

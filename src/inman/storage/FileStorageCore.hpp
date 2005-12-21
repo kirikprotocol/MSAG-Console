@@ -80,7 +80,6 @@ typedef struct {
 class RollingFileStorage { //all methods throws FileSystemException
 protected:
     File            _currFile;
-    std::string     _currFileName;
     Mutex           _storageLock;
     std::string     _location;
     std::string     _lastExt;
