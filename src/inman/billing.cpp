@@ -300,12 +300,13 @@ void Billing::onChargeSms(ChargeSms* sms)
 
 void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes)
 {
-    EventTypeSMS_e eventType = (smsRes->GetValue() == smsc::inman::interaction::DELIVERY_SUCCESSED) ? 
-                                EventTypeSMS_o_smsSubmission : EventTypeSMS_o_smsFailure;
+    EventTypeSMS_e eventType = smsRes->GetValue() ? EventTypeSMS_o_smsFailure :
+                                                    EventTypeSMS_o_smsSubmission;
 
-    smsc_log_debug(logger, "Billing[%u.%u]: DELIVERY_%s",
+    smsc_log_debug(logger, "Billing[%u.%u]: DELIVERY_%s (code: %u)",
                    _bconn->bConnId(), _bId,
-                   (eventType == EventTypeSMS_o_smsFailure) ? "FAILED" : "SUCCEEDED");
+                   (eventType == EventTypeSMS_o_smsFailure) ? "FAILED" : "SUCCEEDED",
+                   smsRes->GetValue());
 
     smsRes->export2CDR(cdr);
     if (inap) { //continue TCAP dialog if it's still active

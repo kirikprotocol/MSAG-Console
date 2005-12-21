@@ -25,7 +25,6 @@ using smsc::inman::interaction::ChargeSmsResult;
 using smsc::inman::interaction::DeliverySmsResult;
 using smsc::inman::interaction::SmscHandler;
 using smsc::inman::interaction::SmscCommand;
-using smsc::inman::interaction::DeliverySmsResult_t;
 
 
 #define prompt(str)     fprintf(stdout, str.c_str()); smsc_log_debug(logger, str.c_str())
@@ -57,15 +56,14 @@ public:
     typedef enum { dIdle = 0, dCharged = 1, dApproved, dReported } INState;
 
     INDialog(unsigned int id, AbonentType ab_type, AddressTypeInd adr_type,
-             bool ussd_op, bool batch_mode = false,
-             DeliverySmsResult_t delivery = smsc::inman::interaction::DELIVERY_SUCCESSED)
+             bool ussd_op, bool batch_mode = false, uint32_t delivery = 0)
         : did(id), state(INDialog::dIdle), abType(ab_type), ussdOp(ussd_op)
         , batchMode(batch_mode), dlvrRes(delivery), adrType(adr_type)
     {}
 
     void setState(INState new_state) { state = new_state; }
     INState getState(void) { return state; }
-    DeliverySmsResult_t getDlvrResult(void) { return dlvrRes; }
+    uint32_t getDlvrResult(void) { return dlvrRes; }
 
     bool    isBatchMode(void) { return batchMode; }
 
@@ -73,7 +71,7 @@ protected:
     unsigned int        did;
     INState             state;
     bool                batchMode;
-    DeliverySmsResult_t dlvrRes;
+    uint32_t dlvrRes;
     AbonentType         abType;
     AddressTypeInd      adrType; //destination address type
     bool                ussdOp;
@@ -150,7 +148,7 @@ public:
     unsigned getNextDialogId(void) { return ++dialogId; }
 
     unsigned int initDialog(unsigned int did = 0, bool batch_mode = false,
-                            DeliverySmsResult_t delivery = smsc::inman::interaction::DELIVERY_SUCCESSED)
+                            uint32_t delivery = 0)
     {
         if (!did)
             did = getNextDialogId();
@@ -213,19 +211,20 @@ public:
         }
     }
 
-    void sendDeliverySmsResult(unsigned int dlgId, DeliverySmsResult_t deliveryStatus)
+    void sendDeliverySmsResult(unsigned int dlgId, uint32_t deliveryStatus)
     {
         DeliverySmsResult   op(deliveryStatus);
         op.setDialogId(dlgId);
         std::string msg = format("Sending DeliverySmsResult: DELIVERY_%s [dlgId: %u]\n",
-                                 !deliveryStatus ? "SUCCESSED" : "FAILED", dlgId);
+                                 !deliveryStatus ? "SUCCEEDED" : "FAILED", dlgId);
         prompt(msg);
-        if (!deliveryStatus) { //fill optional fields
-            op.setDestIMSI("250013901464251");
-            op.setDestMSC(".1.1.79139860001");
-            op.setDestSMEid("DST_MAP_PROXY");
-            op.setDeliveryTime(time(NULL));
-        }
+        //fill fields for CDR creation
+        op.setDestIMSI("250013901464251");
+        op.setDestMSC(".1.1.79139860001");
+        op.setDestSMEid("DST_MAP_PROXY");
+        op.setDivertedAdr(_dstAdr[_adrType]);
+        op.setDeliveryTime(time(NULL));
+        
         
         INDialog * dlg = findDialog(dlgId);
         if (dlg) {
@@ -349,8 +348,7 @@ void cmd_charge(Console&, const std::vector<std::string> &args)
 void cmd_chargeOk(Console&, const std::vector<std::string> &args)
 {
     if (_pFacade->isRunning()) {
-        unsigned int did = _pFacade->initDialog(0, true,
-                            smsc::inman::interaction::DELIVERY_SUCCESSED);
+        unsigned int did = _pFacade->initDialog(0, true, 0);
         _pFacade->sendChargeSms(did);
     } else
         throw ConnectionClosedException();
@@ -359,8 +357,7 @@ void cmd_chargeOk(Console&, const std::vector<std::string> &args)
 void cmd_chargeErr(Console&, const std::vector<std::string> &args)
 {
     if (_pFacade->isRunning()) {
-        unsigned int did = _pFacade->initDialog(0, true,
-                            smsc::inman::interaction::DELIVERY_FAILED);
+        unsigned int did = _pFacade->initDialog(0, true, 1016);
         _pFacade->sendChargeSms(did);
     } else
         throw ConnectionClosedException();
@@ -383,8 +380,7 @@ void cmd_reportOk(Console&, const std::vector<std::string> &args)
         if (!_pFacade->findDialog(did))
             fprintf(stdout, "WRN: unknown dialog id specified (%s)!\n", args[1].c_str());
 
-        _pFacade->sendDeliverySmsResult(did,
-                smsc::inman::interaction::DELIVERY_SUCCESSED);
+        _pFacade->sendDeliverySmsResult(did, 0);
     } else
         throw ConnectionClosedException();
 }
@@ -405,8 +401,7 @@ void cmd_reportErr(Console&, const std::vector<std::string> &args)
         if (!_pFacade->findDialog(did))
             fprintf(stdout, "WRN: unknown dialog id specified (%s)!\n", args[1].c_str());
 
-        _pFacade->sendDeliverySmsResult(did,
-                smsc::inman::interaction::DELIVERY_FAILED);
+        _pFacade->sendDeliverySmsResult(did, 1016);
     } else
         throw ConnectionClosedException();
 }
@@ -529,7 +524,7 @@ void cmd_dlvrExc(Console&, const std::vector<std::string> &args)
         else
             dlgId = _pFacade->getNextDialogId();
 
-        DeliverySmsResult   op(smsc::inman::interaction::DELIVERY_FAILED);
+        DeliverySmsResult   op(1016);
         op.setDialogId(dlgId);
 
         ObjectBuffer    buffer(1024);

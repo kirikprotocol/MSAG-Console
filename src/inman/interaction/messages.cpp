@@ -418,15 +418,13 @@ void ChargeSmsResult::handle(SmscHandler* handler)
 
 
 DeliverySmsResult::DeliverySmsResult()
-    : value(DELIVERY_SUCCESSED)
-    , final(true)
+    : value(0), final(true)
 {
     setObjectId((unsigned short)DELIVERY_SMS_RESULT_TAG);
 }
 
-DeliverySmsResult::DeliverySmsResult(DeliverySmsResult_t val, bool finalAttemp /*= true*/)
-    : value(val)
-    , final(finalAttemp)
+DeliverySmsResult::DeliverySmsResult(uint32_t val, bool finalAttemp /*= true*/)
+    : value(val), final(finalAttemp)
 {
     setObjectId((unsigned short)DELIVERY_SMS_RESULT_TAG);
 }
@@ -435,7 +433,7 @@ DeliverySmsResult::~DeliverySmsResult()
 {
 }
 
-void DeliverySmsResult::setResultValue(DeliverySmsResult_t res)
+void DeliverySmsResult::setResultValue(uint32_t res)
 {
     value = res;
 }
@@ -451,49 +449,53 @@ void DeliverySmsResult::setDestSMEid(const std::string& sme_id)
 {
     destSMEid = sme_id;
 }
+void DeliverySmsResult::setDivertedAdr(const std::string& dvrt_adr)
+{
+    divertedAdr = dvrt_adr;
+}
 void DeliverySmsResult::setDeliveryTime(time_t final_tm)
 {
     finalTimeTZ = final_tm;
 }
 
 
-DeliverySmsResult_t DeliverySmsResult::GetValue() const
+uint32_t DeliverySmsResult::GetValue() const
 {
     return value;
 }
 
 void DeliverySmsResult::load(ObjectBuffer& in) throw(CustomException)
 {
-    unsigned short v;
-    in >> v;
-    value = static_cast<DeliverySmsResult_t>(v);
+    in >> value;
     in >> final;
     //optional data for CDR generation (on successfull delivery)
     in >> destImsi;
     in >> destMSC;
     in >> destSMEid;
+    in >> divertedAdr;
     in >> finalTimeTZ;
 }
 
 void DeliverySmsResult::save(ObjectBuffer& out)
 {
-    out << (unsigned short)value;
+    out << value;
     out << final;
     //optional data for CDR generation (on successfull delivery)
     out << destImsi;
     out << destMSC;
     out << destSMEid;
+    out << divertedAdr;
     out << finalTimeTZ;
 }
 
 void DeliverySmsResult::export2CDR(CDRRecord & cdr) const
 {
-    if (!(cdr._dlvrRes = (CDRRecord::CDRDeliveryStatus)value)) {
-        cdr._dstIMSI = destImsi;
-        cdr._dstMSC = destMSC;
-        cdr._dstSMEid = destSMEid;
-        cdr._finalTime = finalTimeTZ;
-    }
+    cdr._dlvrRes = value;
+    cdr._dstIMSI = destImsi;
+    cdr._dstMSC = destMSC;
+    cdr._dstSMEid = destSMEid;
+    cdr._finalTime = finalTimeTZ;
+    cdr._divertedAdr = divertedAdr;
     cdr._finalized = final;
 }
 

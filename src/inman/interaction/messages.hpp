@@ -85,13 +85,6 @@ typedef enum
 } 
 ChargeSmsResult_t;
 
-typedef enum
-{
-    DELIVERY_SUCCESSED = 0,
-    DELIVERY_FAILED    = 1
-} 
-DeliverySmsResult_t;
-
 
 class ChargeSms : public InmanCommand
 {
@@ -186,16 +179,17 @@ class DeliverySmsResult : public InmanCommand
 {
 public:
     DeliverySmsResult();    //constructor for successfull delivery 
-    DeliverySmsResult(DeliverySmsResult_t, bool finalAttemp = true);
+    DeliverySmsResult(uint32_t, bool finalAttemp = true);
     virtual ~DeliverySmsResult();
 
-    void setResultValue(DeliverySmsResult_t res);
+    void setResultValue(uint32_t res);
     void setDestIMSI(const std::string& imsi);
     void setDestMSC(const std::string& msc);
     void setDestSMEid(const std::string& sme_id);
+    void setDivertedAdr(const std::string& dvrt_adr);
     void setDeliveryTime(time_t final_tm);
 
-    DeliverySmsResult_t GetValue() const;
+    uint32_t GetValue() const;
 
     void export2CDR(CDRRecord & cdr) const;
     //InmanCommand interface
@@ -207,13 +201,14 @@ protected:
     virtual void save(ObjectBuffer& out);
 
 private:
-    DeliverySmsResult_t value;
+    uint32_t      value;    //0, or errorcode
     bool          final;    //successfull delivery or last delivery attempt,
                             //enforces CDR generation
     //optional data for CDR generation (on successfull delivery)
     std::string   destImsi;
     std::string   destMSC;
     std::string   destSMEid;
+    std::string   divertedAdr;
     time_t        finalTimeTZ;
 };
 
