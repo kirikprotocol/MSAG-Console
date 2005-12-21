@@ -26,7 +26,8 @@ public:
     void InitServer(std::string perfHost, int genPort, int svcPort, int scPort);
 protected:
 	PerfSocketServer perfServer;
-    int perfCnt[PERF_CNT_COUNT][60];
+    int smppPerfCnt[PERF_CNT_COUNT][60];
+    //int httpPerfCnt[PERF_HTTP_COUNT][60];
     int timeshift;
     time_t times[60];
     timespec start;

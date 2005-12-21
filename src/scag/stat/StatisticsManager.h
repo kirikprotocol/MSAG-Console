@@ -174,17 +174,17 @@ namespace stat {
         Sender sender;
 
         Mutex                            svcCountersLock;
-        Hash   <SmePerformanceCounter*>  svcSmppCounters;
-        Hash   <SmePerformanceCounter*>  svcWapCounters;
-        Hash   <SmePerformanceCounter*>  svcMmsCounters;
+        Hash   <SmppPerformanceCounter*>  svcSmppCounters;
+        Hash   <HttpPerformanceCounter*>  svcWapCounters;
+        Hash   <SmppPerformanceCounter*>  svcMmsCounters;
 
         Array<Socket*> svcSockets;
         Mutex svcSocketsMutex;
 
-        Mutex                            scCountersLock;
-        Hash   <SmePerformanceCounter*>  scSmppCounters;
-        Hash   <SmePerformanceCounter*>  scWapCounters;
-        Hash   <SmePerformanceCounter*>  scMmsCounters;
+        Mutex                             scCountersLock;
+        Hash   <SmppPerformanceCounter*>  scSmppCounters;
+        Hash   <HttpPerformanceCounter*>  scWapCounters;
+        Hash   <SmppPerformanceCounter*>  scMmsCounters;
 
         Array<Socket*> scSockets;
         Mutex scSocketsMutex;
@@ -235,6 +235,7 @@ namespace stat {
         uint8_t* StatisticsManager::dumpScCounters(uint32_t& smePerfDataSize);
 
         int indexByCounter(int counter);
+        int indexByHttpCounter(int counter);
     public:
 
         static RouteMap routeMap;
@@ -249,7 +250,8 @@ namespace stat {
 
         bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value);
 
-        virtual void getPerfData(uint64_t *cnt);
+        virtual void getSmppPerfData(uint64_t *cnt);
+        //virtual void getHttpPerfData(uint64_t *cnt);
         virtual void reportGenPerformance(PerformanceData * data);
         virtual void reportSvcPerformance();
         virtual void reportScPerformance();

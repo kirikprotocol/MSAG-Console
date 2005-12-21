@@ -74,21 +74,27 @@ void StatisticsManager::configure(const StatManConfig& statManConfig)
     if( !location.length() )
         throw Exception("StatisticsManager, configure: Dirrectory has zero length.");
 
+    // Deletes last slash if it exists
     int len = location.length();
     const char slash = location.c_str()[len-1];
-    bool isslash = (slash == '/');
+    if(slash == '/'){
+        char loc[1024];
+        memcpy((void*)loc, (const void*)location.c_str(), len-1);
+        loc[len-1] = 0;
+        location = loc;
+    }
 
-    std::string smppLoc = isslash ? location + "SMPP" : location + "/SMPP";
+    std::string smppLoc = location + "/SMPP";
     if (!createStorageDir(smppLoc)) 
         throw Exception("Can't open statistics directory: '%s'", smppLoc.c_str());
 
-    std::string httpLoc = isslash ? location + "HTTP" : location + "/HTTP";
+    std::string httpLoc = location + "/HTTP";
     if (!createStorageDir(httpLoc)) 
         throw Exception("Can't open statistics directory: '%s'", httpLoc.c_str());
 
     std::string perfHost = statManConfig.getPerfHost();
     if(!perfHost.length())
-        throw Exception("StatisticsManager, configure: Dirrectory has zero length.");
+        throw Exception("StatisticsManager, configure: Performance host has zero length.");
     int perfGenPort = statManConfig.getPerfGenPort();
     int perfSvcPort = statManConfig.getPerfSvcPort();
     int perfScPort = statManConfig.getPerfScPort();
@@ -136,23 +142,12 @@ void StatisticsManager::registerEvent(const SmppStatEvent& se)
 
   using namespace Counters;
 
-  genCounters.inc(se.counter);
+  genCounters.incSmpp(se.counter);
 
   if (se.smeId && se.smeId[0])
   {
     if(se.counter < cntBillingOk){
-        smeSt = statBySmeId[currentIndex].GetPtr(se.smeId);
-
-        /*int cnt = se.counter < 0x1000 ? se.counter : se.counter - 0x1000 + 5;
-        smsc_log_debug(logger, "\nsmeId: '%s', %s\n", se.smeId, cnt_[cnt]);*/
-
-        if(!smeSt)
-        {
-            CommonStat newStat;
-            statBySmeId[currentIndex].Insert(se.smeId, newStat);
-            smeSt=statBySmeId[currentIndex].GetPtr(se.smeId);
-        }
-
+      
         if(se.internal){
             srvSt = srvStatBySmeId[currentIndex].GetPtr(se.smeId);
             if(!srvSt){
@@ -162,10 +157,20 @@ void StatisticsManager::registerEvent(const SmppStatEvent& se)
             }
 
             // run-time statistics
+            printf("register sc, serviceId: %s\n", se.smeId);
             incScSmppCounter(se.smeId, indexByCounter(se.counter));
-        }else
+        }else{
+            smeSt = statBySmeId[currentIndex].GetPtr(se.smeId);
+            if(!smeSt)
+            {
+                CommonStat newStat;
+                statBySmeId[currentIndex].Insert(se.smeId, newStat);
+                smeSt=statBySmeId[currentIndex].GetPtr(se.smeId);
+            }
+
             // run-time statistics
             incSvcSmppCounter(se.smeId, indexByCounter(se.counter));
+        }
     }
   }
 
@@ -248,7 +253,7 @@ void StatisticsManager::registerEvent(const HttpStatEvent& se)
     
     using namespace Counters;
     
-    //genCounters.inc(se.counter);
+    genCounters.incHttp(se.counter);
     
     if (se.serviceProviderId != -1)
     {
@@ -278,13 +283,16 @@ void StatisticsManager::registerEvent(const HttpStatEvent& se)
 
     if (se.serviceId.length())
     {
-        //smsc_log_debug(logger, "routeId: '%s'", se.routeId);
-        srvSt = httpStatByServiceId[currentIndex].GetPtr(se.serviceId.c_str());
-        if(!srvSt)
-        {
-            HttpStat newStat;
-            httpStatByServiceId[currentIndex].Insert(se.serviceId.c_str(), newStat);
-            srvSt=httpStatByServiceId[currentIndex].GetPtr(se.serviceId.c_str());
+        if(se.counter < httpBillingOk){
+            //smsc_log_debug(logger, "routeId: '%s'", se.routeId);
+            srvSt = httpStatByServiceId[currentIndex].GetPtr(se.serviceId.c_str());
+            if(!srvSt)
+            {
+                HttpStat newStat;
+                httpStatByServiceId[currentIndex].Insert(se.serviceId.c_str(), newStat);
+                srvSt=httpStatByServiceId[currentIndex].GetPtr(se.serviceId.c_str());
+            }
+            incSvcWapCounter(se.serviceId.c_str(), indexByHttpCounter(se.counter));
         }
     }
     
@@ -1425,55 +1433,61 @@ void StatisticsManager::incSvcSmppCounter(const char* systemId, int index)
 {
     if (!systemId || !systemId[0] || index<0 || index>=PERF_CNT_COUNT) return;
 
-    SmePerformanceCounter*  counter = 0;
-    SmePerformanceCounter** smeCounter = svcSmppCounters.GetPtr(systemId);
+    MutexGuard guard(svcCountersLock);
 
-    if (!smeCounter) counter = new SmePerformanceCounter();
-    else if (*smeCounter) counter = *smeCounter;
+    SmppPerformanceCounter*  counter = 0;
+    SmppPerformanceCounter** smppCounter = svcSmppCounters.GetPtr(systemId);
+
+    if (!smppCounter) counter = new SmppPerformanceCounter();
+    else if (*smppCounter) counter = *smppCounter;
     else {
-        counter = new SmePerformanceCounter();
-        smeCounter = 0; svcSmppCounters.Delete(systemId);
+        counter = new SmppPerformanceCounter();
+        smppCounter = 0; svcSmppCounters.Delete(systemId);
     }
 
     counter->counters[index]++;
     if (!counter->slots[index]) counter->slots[index] = newSlotCounter();
     counter->slots[index]->Inc();
 
-    if (!smeCounter) svcSmppCounters.Insert(systemId, counter);
+    if (!smppCounter) svcSmppCounters.Insert(systemId, counter);
 }
 
 void StatisticsManager::incSvcWapCounter(const char* systemId, int index)
 {
-    if (!systemId || !systemId[0] || index<0 || index>=PERF_CNT_COUNT) return;
+    if (!systemId || !systemId[0] || index<0 || index>=PERF_HTTP_COUNT) return;
 
-    SmePerformanceCounter*  counter = 0;
-    SmePerformanceCounter** smeCounter = svcWapCounters.GetPtr(systemId);
+    MutexGuard guard(svcCountersLock);
 
-    if (!smeCounter) counter = new SmePerformanceCounter();
-    else if (*smeCounter) counter = *smeCounter;
+    HttpPerformanceCounter*  counter = 0;
+    HttpPerformanceCounter** httpCounter = svcWapCounters.GetPtr(systemId);
+
+    if (!httpCounter) counter = new HttpPerformanceCounter();
+    else if (*httpCounter) counter = *httpCounter;
     else {
-        counter = new SmePerformanceCounter();
-        smeCounter = 0; svcWapCounters.Delete(systemId);
+        counter = new HttpPerformanceCounter();
+        httpCounter = 0; svcWapCounters.Delete(systemId);
     }
 
     counter->counters[index]++;
     if (!counter->slots[index]) counter->slots[index] = newSlotCounter();
     counter->slots[index]->Inc();
 
-    if (!smeCounter) svcWapCounters.Insert(systemId, counter);
+    if (!httpCounter) svcWapCounters.Insert(systemId, counter);
 }
 
 void StatisticsManager::incSvcMmsCounter(const char* systemId, int index)
 {
     if (!systemId || !systemId[0] || index<0 || index>=PERF_CNT_COUNT) return;
 
-    SmePerformanceCounter*  counter = 0;
-    SmePerformanceCounter** smeCounter = svcMmsCounters.GetPtr(systemId);
+    MutexGuard guard(svcCountersLock);
 
-    if (!smeCounter) counter = new SmePerformanceCounter();
+    SmppPerformanceCounter*  counter = 0;
+    SmppPerformanceCounter** smeCounter = svcMmsCounters.GetPtr(systemId);
+
+    if (!smeCounter) counter = new SmppPerformanceCounter();
     else if (*smeCounter) counter = *smeCounter;
     else {
-        counter = new SmePerformanceCounter();
+        counter = new SmppPerformanceCounter();
         smeCounter = 0; svcMmsCounters.Delete(systemId);
     }
 
@@ -1488,55 +1502,61 @@ void StatisticsManager::incScSmppCounter(const char* systemId, int index)
 {
     if (!systemId || !systemId[0] || index<0 || index>=PERF_CNT_COUNT) return;
 
-    SmePerformanceCounter*  counter = 0;
-    SmePerformanceCounter** smeCounter = scSmppCounters.GetPtr(systemId);
+    MutexGuard guard(scCountersLock);
 
-    if (!smeCounter) counter = new SmePerformanceCounter();
-    else if (*smeCounter) counter = *smeCounter;
+    SmppPerformanceCounter*  counter = 0;
+    SmppPerformanceCounter** smppCounter = scSmppCounters.GetPtr(systemId);
+
+    if (!smppCounter) counter = new SmppPerformanceCounter();
+    else if (*smppCounter) counter = *smppCounter;
     else {
-        counter = new SmePerformanceCounter();
-        smeCounter = 0; scSmppCounters.Delete(systemId);
+        counter = new SmppPerformanceCounter();
+        smppCounter = 0; scSmppCounters.Delete(systemId);
     }
 
     counter->counters[index]++;
     if (!counter->slots[index]) counter->slots[index] = newSlotCounter();
     counter->slots[index]->Inc();
 
-    if (!smeCounter) scSmppCounters.Insert(systemId, counter);
+    if (!smppCounter) scSmppCounters.Insert(systemId, counter);
 }
 
 void StatisticsManager::incScWapCounter(const char* systemId, int index)
 {
-    if (!systemId || !systemId[0] || index<0 || index>=PERF_CNT_COUNT) return;
+    if (!systemId || !systemId[0] || index<0 || index>=PERF_HTTP_COUNT) return;
 
-    SmePerformanceCounter*  counter = 0;
-    SmePerformanceCounter** smeCounter = scWapCounters.GetPtr(systemId);
+    MutexGuard guard(scCountersLock);
 
-    if (!smeCounter) counter = new SmePerformanceCounter();
-    else if (*smeCounter) counter = *smeCounter;
+    HttpPerformanceCounter*  counter = 0;
+    HttpPerformanceCounter** httpCounter = scWapCounters.GetPtr(systemId);
+
+    if (!httpCounter) counter = new HttpPerformanceCounter();
+    else if (*httpCounter) counter = *httpCounter;
     else {
-        counter = new SmePerformanceCounter();
-        smeCounter = 0; scWapCounters.Delete(systemId);
+        counter = new HttpPerformanceCounter();
+        httpCounter = 0; scWapCounters.Delete(systemId);
     }
 
     counter->counters[index]++;
     if (!counter->slots[index]) counter->slots[index] = newSlotCounter();
     counter->slots[index]->Inc();
 
-    if (!smeCounter) scWapCounters.Insert(systemId, counter);
+    if (!httpCounter) scWapCounters.Insert(systemId, counter);
 }
 
 void StatisticsManager::incScMmsCounter(const char* systemId, int index)
 {
     if (!systemId || !systemId[0] || index<0 || index>=PERF_CNT_COUNT) return;
 
-    SmePerformanceCounter*  counter = 0;
-    SmePerformanceCounter** smeCounter = scMmsCounters.GetPtr(systemId);
+    MutexGuard guard(scCountersLock);
 
-    if (!smeCounter) counter = new SmePerformanceCounter();
+    SmppPerformanceCounter*  counter = 0;
+    SmppPerformanceCounter** smeCounter = scMmsCounters.GetPtr(systemId);
+
+    if (!smeCounter) counter = new SmppPerformanceCounter();
     else if (*smeCounter) counter = *smeCounter;
     else {
-        counter = new SmePerformanceCounter();
+        counter = new SmppPerformanceCounter();
         smeCounter = 0; scMmsCounters.Delete(systemId);
     }
 
@@ -1556,16 +1576,16 @@ void StatisticsManager::reportGenPerformance(PerformanceData * data)
     //ld.size=htonl(sizeof(ld));
     int size = 100;
     ld.size=htonl(size);
-    ld.countersNumber=htonl(ld.countersNumber);
+    ld.smppCountersNumber=htonl(ld.smppCountersNumber);
 
 
     for(int i=0;i<PERF_CNT_COUNT;i++)
     {
-      ld.counters[i].lastSecond=htonl(ld.counters[i].lastSecond);
-      ld.counters[i].average=htonl(ld.counters[i].average);
+      ld.smppCounters[i].lastSecond=htonl(ld.smppCounters[i].lastSecond);
+      ld.smppCounters[i].average=htonl(ld.smppCounters[i].average);
 
-      uint64_t tmp=ld.counters[i].total;
-      unsigned char *ptr=(unsigned char *)&ld.counters[i].total;
+      uint64_t tmp=ld.smppCounters[i].total;
+      unsigned char *ptr=(unsigned char *)&ld.smppCounters[i].total;
       ptr[0]=(unsigned char)(tmp>>56);
       ptr[1]=(unsigned char)(tmp>>48)&0xFF;
       ptr[2]=(unsigned char)(tmp>>40)&0xFF;
@@ -1576,6 +1596,25 @@ void StatisticsManager::reportGenPerformance(PerformanceData * data)
       ptr[7]=(unsigned char)(tmp&0xFF);
     }
 
+    /*ld.httpCountersNumber=htonl(ld.httpCountersNumber);
+
+    for(int i=0;i<PERF_HTTP_COUNT;i++)
+    {
+      ld.httpCounters[i].lastSecond=htonl(ld.httpCounters[i].lastSecond);
+      ld.httpCounters[i].average=htonl(ld.httpCounters[i].average);
+
+      uint64_t tmp=ld.httpCounters[i].total;
+      unsigned char *ptr=(unsigned char *)&ld.httpCounters[i].total;
+      ptr[0]=(unsigned char)(tmp>>56);
+      ptr[1]=(unsigned char)(tmp>>48)&0xFF;
+      ptr[2]=(unsigned char)(tmp>>40)&0xFF;
+      ptr[3]=(unsigned char)(tmp>>32)&0xFF;
+      ptr[4]=(unsigned char)(tmp>>24)&0xFF;
+      ptr[5]=(unsigned char)(tmp>>16)&0xFF;
+      ptr[6]=(unsigned char)(tmp>>8)&0xFF;
+      ptr[7]=(unsigned char)(tmp&0xFF);
+    }*/
+
     ld.uptime=htonl(ld.uptime);
     ld.now=htonl(ld.now);
     ld.sessionCount=htonl(ld.sessionCount);
@@ -1585,10 +1624,8 @@ void StatisticsManager::reportGenPerformance(PerformanceData * data)
     for(int i=0;i<genSockets.Count();i++)
     {
 
-      //int wr=genSockets[i]->WriteAll((char*)&ld, sizeof(ld));
       int wr=genSockets[i]->WriteAll((char*)&ld, 100);
 
-      //if(wr!=sizeof(ld))
       if(wr!=100)
       {
         genSockets[i]->Abort();
@@ -1599,10 +1636,15 @@ void StatisticsManager::reportGenPerformance(PerformanceData * data)
     }
 }
 
-void StatisticsManager::getPerfData(uint64_t *cnt)
+void StatisticsManager::getSmppPerfData(uint64_t *cnt)
 {
-    genCounters.getCounters(cnt);
+    genCounters.getSmppCounters(cnt);
 }
+
+/*void StatisticsManager::getHttpPerfData(uint64_t *cnt)
+{
+    genCounters.getHttpCounters(cnt);
+}*/
 
 void StatisticsManager::reportSvcPerformance()
 {
@@ -1634,11 +1676,12 @@ uint8_t* StatisticsManager::dumpSvcCounters(uint32_t& smePerfDataSize)
     {
         MutexGuard guard(svcCountersLock);
 
-        uint32_t reclen = sizeof(char)*(smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1)+sizeof(uint16_t)*2*PERF_CNT_COUNT;
+        uint32_t smppReclen = sizeof(char)*(smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1)+sizeof(uint16_t)*2*PERF_CNT_COUNT;
+        uint32_t httpReclen = sizeof(char)*(smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1)+sizeof(uint16_t)*2*PERF_HTTP_COUNT;
         smePerfDataSize = sizeof(uint32_t)+sizeof(uint32_t)+3*sizeof(uint16_t)+ 
-             reclen*svcSmppCounters.GetCount()+
-             reclen*svcWapCounters.GetCount()+
-             reclen*svcMmsCounters.GetCount();
+             smppReclen*svcSmppCounters.GetCount()+
+             httpReclen*svcWapCounters.GetCount()+
+             smppReclen*svcMmsCounters.GetCount();
 
         uint8_t* data = new uint8_t[smePerfDataSize];
         uint8_t* packet = data; memset(packet, 0, smePerfDataSize);
@@ -1651,8 +1694,8 @@ uint8_t* StatisticsManager::dumpSvcCounters(uint32_t& smePerfDataSize)
         *((uint16_t*)packet) = htons((uint16_t)svcSmppCounters.GetCount()); packet += sizeof(uint16_t);
         
         svcSmppCounters.First();
-        char* systemId = 0; SmePerformanceCounter* smeCounter = 0;
-        while (svcSmppCounters.Next(systemId, smeCounter))
+        char* systemId = 0; SmppPerformanceCounter* smppCounter = 0;
+        while (svcSmppCounters.Next(systemId, smppCounter))
         {
             // char[MAX_SMESYSID_TYPE_LENGTH+1], null terminated smeId
             if (systemId) strncpy((char *)packet, systemId, smsc::sms::MAX_SMESYSID_TYPE_LENGTH);
@@ -1661,38 +1704,38 @@ uint8_t* StatisticsManager::dumpSvcCounters(uint32_t& smePerfDataSize)
             for (int i=0; i<PERF_CNT_COUNT; i++)
             {
                 // uint16_t(2)  xxx counter + avg (hour)
-                *((uint16_t*)packet) = (smeCounter) ? htons(smeCounter->counters[i]):0; packet += sizeof(uint16_t);
-                TimeSlotCounter<int>* cnt = (smeCounter && smeCounter->slots[i]) ? smeCounter->slots[i]:0;
+                *((uint16_t*)packet) = (smppCounter) ? htons(smppCounter->counters[i]):0; packet += sizeof(uint16_t);
+                TimeSlotCounter<int>* cnt = (smppCounter && smppCounter->slots[i]) ? smppCounter->slots[i]:0;
                 *((uint16_t*)packet) = (cnt) ? htons((uint16_t)cnt->Avg()):0; packet += sizeof(uint16_t);
             }
-            if (smeCounter) smeCounter->clear();
+            if (smppCounter) smppCounter->clear();
         }
 
         *((uint16_t*)packet) = htons((uint16_t)svcWapCounters.GetCount()); packet += sizeof(uint16_t);
 
         svcWapCounters.First();
-        systemId = 0; smeCounter = 0;
-        while (svcWapCounters.Next(systemId, smeCounter))
+        systemId = 0; HttpPerformanceCounter * httpCounter = 0;
+        while (svcWapCounters.Next(systemId, httpCounter))
         {
             // char[MAX_SMESYSID_TYPE_LENGTH+1], null terminated smeId
             if (systemId) strncpy((char *)packet, systemId, smsc::sms::MAX_SMESYSID_TYPE_LENGTH);
             packet += smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1;
             
-            for (int i=0; i<PERF_CNT_COUNT; i++)
+            for (int i=0; i<PERF_HTTP_COUNT; i++)
             {
                 // uint16_t(2)  xxx counter + avg (hour)
-                *((uint16_t*)packet) = (smeCounter) ? htons(smeCounter->counters[i]):0; packet += sizeof(uint16_t);
-                TimeSlotCounter<int>* cnt = (smeCounter && smeCounter->slots[i]) ? smeCounter->slots[i]:0;
+                *((uint16_t*)packet) = (httpCounter) ? htons(httpCounter->counters[i]):0; packet += sizeof(uint16_t);
+                TimeSlotCounter<int>* cnt = (httpCounter && httpCounter->slots[i]) ? httpCounter->slots[i]:0;
                 *((uint16_t*)packet) = (cnt) ? htons((uint16_t)cnt->Avg()):0; packet += sizeof(uint16_t);
             }
-            if (smeCounter) smeCounter->clear();
+            if (httpCounter) httpCounter->clear();
         }
 
         *((uint16_t*)packet) = htons((uint16_t)svcMmsCounters.GetCount()); packet += sizeof(uint16_t);
 
         svcMmsCounters.First();
-        systemId = 0; smeCounter = 0;
-        while (svcMmsCounters.Next(systemId, smeCounter))
+        systemId = 0; smppCounter = 0;
+        while (svcMmsCounters.Next(systemId, smppCounter))
         {
             // char[MAX_SMESYSID_TYPE_LENGTH+1], null terminated smeId
             if (systemId) strncpy((char *)packet, systemId, smsc::sms::MAX_SMESYSID_TYPE_LENGTH);
@@ -1701,11 +1744,11 @@ uint8_t* StatisticsManager::dumpSvcCounters(uint32_t& smePerfDataSize)
             for (int i=0; i<PERF_CNT_COUNT; i++)
             {
                 // uint16_t(2)  xxx counter + avg (hour)
-                *((uint16_t*)packet) = (smeCounter) ? htons(smeCounter->counters[i]):0; packet += sizeof(uint16_t);
-                TimeSlotCounter<int>* cnt = (smeCounter && smeCounter->slots[i]) ? smeCounter->slots[i]:0;
+                *((uint16_t*)packet) = (smppCounter) ? htons(smppCounter->counters[i]):0; packet += sizeof(uint16_t);
+                TimeSlotCounter<int>* cnt = (smppCounter && smppCounter->slots[i]) ? smppCounter->slots[i]:0;
                 *((uint16_t*)packet) = (cnt) ? htons((uint16_t)cnt->Avg()):0; packet += sizeof(uint16_t);
             }
-            if (smeCounter) smeCounter->clear();
+            if (smppCounter) smppCounter->clear();
         }
         
         return data;
@@ -1741,23 +1784,26 @@ uint8_t* StatisticsManager::dumpScCounters(uint32_t& smePerfDataSize)
     {
         MutexGuard guard(scCountersLock);
 
-        uint32_t reclen = sizeof(char)*(smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1)+sizeof(uint16_t)*2*PERF_CNT_COUNT;
-        smePerfDataSize = sizeof(uint32_t)+3*sizeof(uint16_t)+ 
-             reclen*scSmppCounters.GetCount()+
-             reclen*scWapCounters.GetCount()+
-             reclen*scMmsCounters.GetCount();
+        uint32_t smppReclen = sizeof(char)*(smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1)+sizeof(uint16_t)*2*PERF_CNT_COUNT;
+        uint32_t httpReclen = sizeof(char)*(smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1)+sizeof(uint16_t)*2*PERF_HTTP_COUNT;
+        smePerfDataSize = sizeof(uint32_t)+sizeof(uint32_t)+3*sizeof(uint16_t)+ 
+             smppReclen*scSmppCounters.GetCount()+
+             httpReclen*scWapCounters.GetCount()+
+             smppReclen*scMmsCounters.GetCount();
 
         uint8_t* data = new uint8_t[smePerfDataSize];
         uint8_t* packet = data; memset(packet, 0, smePerfDataSize);
 
         // uint32_t     Total packet size
         *((uint32_t*)packet) = htonl(smePerfDataSize-sizeof(uint32_t)); packet += sizeof(uint32_t);
-        // uint16_t     Services count
+        // queue size
+        *((uint32_t*)packet) = htonl(0); packet += sizeof(uint32_t);
+        // uint16_t     Smpp count
         *((uint16_t*)packet) = htons((uint16_t)scSmppCounters.GetCount()); packet += sizeof(uint16_t);
         
         scSmppCounters.First();
-        char* systemId = 0; SmePerformanceCounter* smeCounter = 0;
-        while (scSmppCounters.Next(systemId, smeCounter))
+        char* systemId = 0; SmppPerformanceCounter* smppCounter = 0;
+        while (scSmppCounters.Next(systemId, smppCounter))
         {
             // char[MAX_SMESYSID_TYPE_LENGTH+1], null terminated smeId
             if (systemId) strncpy((char *)packet, systemId, smsc::sms::MAX_SMESYSID_TYPE_LENGTH);
@@ -1766,38 +1812,38 @@ uint8_t* StatisticsManager::dumpScCounters(uint32_t& smePerfDataSize)
             for (int i=0; i<PERF_CNT_COUNT; i++)
             {
                 // uint16_t(2)  xxx counter + avg (hour)
-                *((uint16_t*)packet) = (smeCounter) ? htons(smeCounter->counters[i]):0; packet += sizeof(uint16_t);
-                TimeSlotCounter<int>* cnt = (smeCounter && smeCounter->slots[i]) ? smeCounter->slots[i]:0;
+                *((uint16_t*)packet) = (smppCounter) ? htons(smppCounter->counters[i]):0; packet += sizeof(uint16_t);
+                TimeSlotCounter<int>* cnt = (smppCounter && smppCounter->slots[i]) ? smppCounter->slots[i]:0;
                 *((uint16_t*)packet) = (cnt) ? htons((uint16_t)cnt->Avg()):0; packet += sizeof(uint16_t);
             }
-            if (smeCounter) smeCounter->clear();
+            if (smppCounter) smppCounter->clear();
         }
 
         *((uint16_t*)packet) = htons((uint16_t)scWapCounters.GetCount()); packet += sizeof(uint16_t);
 
         scWapCounters.First();
-        systemId = 0; smeCounter = 0;
-        while (scWapCounters.Next(systemId, smeCounter))
+        systemId = 0; HttpPerformanceCounter * httpCounter = 0;
+        while (scWapCounters.Next(systemId, httpCounter))
         {
             // char[MAX_SMESYSID_TYPE_LENGTH+1], null terminated smeId
             if (systemId) strncpy((char *)packet, systemId, smsc::sms::MAX_SMESYSID_TYPE_LENGTH);
             packet += smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1;
             
-            for (int i=0; i<PERF_CNT_COUNT; i++)
+            for (int i=0; i<PERF_HTTP_COUNT; i++)
             {
                 // uint16_t(2)  xxx counter + avg (hour)
-                *((uint16_t*)packet) = (smeCounter) ? htons(smeCounter->counters[i]):0; packet += sizeof(uint16_t);
-                TimeSlotCounter<int>* cnt = (smeCounter && smeCounter->slots[i]) ? smeCounter->slots[i]:0;
+                *((uint16_t*)packet) = (httpCounter) ? htons(httpCounter->counters[i]):0; packet += sizeof(uint16_t);
+                TimeSlotCounter<int>* cnt = (httpCounter && httpCounter->slots[i]) ? httpCounter->slots[i]:0;
                 *((uint16_t*)packet) = (cnt) ? htons((uint16_t)cnt->Avg()):0; packet += sizeof(uint16_t);
             }
-            if (smeCounter) smeCounter->clear();
+            if (httpCounter) httpCounter->clear();
         }
 
         *((uint16_t*)packet) = htons((uint16_t)scMmsCounters.GetCount()); packet += sizeof(uint16_t);
 
         scMmsCounters.First();
-        systemId = 0; smeCounter = 0;
-        while (scMmsCounters.Next(systemId, smeCounter))
+        systemId = 0; smppCounter = 0;
+        while (scMmsCounters.Next(systemId, smppCounter))
         {
             // char[MAX_SMESYSID_TYPE_LENGTH+1], null terminated smeId
             if (systemId) strncpy((char *)packet, systemId, smsc::sms::MAX_SMESYSID_TYPE_LENGTH);
@@ -1806,11 +1852,11 @@ uint8_t* StatisticsManager::dumpScCounters(uint32_t& smePerfDataSize)
             for (int i=0; i<PERF_CNT_COUNT; i++)
             {
                 // uint16_t(2)  xxx counter + avg (hour)
-                *((uint16_t*)packet) = (smeCounter) ? htons(smeCounter->counters[i]):0; packet += sizeof(uint16_t);
-                TimeSlotCounter<int>* cnt = (smeCounter && smeCounter->slots[i]) ? smeCounter->slots[i]:0;
+                *((uint16_t*)packet) = (smppCounter) ? htons(smppCounter->counters[i]):0; packet += sizeof(uint16_t);
+                TimeSlotCounter<int>* cnt = (smppCounter && smppCounter->slots[i]) ? smppCounter->slots[i]:0;
                 *((uint16_t*)packet) = (cnt) ? htons((uint16_t)cnt->Avg()):0; packet += sizeof(uint16_t);
             }
-            if (smeCounter) smeCounter->clear();
+            if (smppCounter) smppCounter->clear();
         }
         
         return data;
@@ -1863,6 +1909,30 @@ int StatisticsManager::indexByCounter(int counter)
       return PERF_CNT_GW_REJECTED;
   case cntFailed:
       return PERF_CNT_FAILED;
+  }
+
+  return -1;
+}
+
+int StatisticsManager::indexByHttpCounter(int counter)
+{
+
+  using namespace Counters;
+
+  switch(counter)
+  {
+  case httpRequest:
+      return PERF_HTTP_REQUEST;
+  case httpRequestRejected:
+      return PERF_HTTP_REQUEST_REJECTED;
+  case httpResponse:
+      return PERF_HTTP_RESPONSE;
+  case httpResponseRejected:
+      return PERF_HTTP_RESPONSE_REJECTED;
+  case httpDelivered:
+      return PERF_HTTP_DELIVERED;
+  case httpFailed:
+      return PERF_HTTP_FAILED;
   }
 
   return -1;

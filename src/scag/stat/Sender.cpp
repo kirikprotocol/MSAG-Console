@@ -41,6 +41,7 @@ int Registrator::Execute()
             si.smeProviderId = 1;
             si.routeProviderId = 1;
             si.counter = cntDelivered;
+            si.internal = true;
             si.errCode = 1;
             sm->registerEvent(si);
         }
@@ -52,6 +53,7 @@ int Registrator::Execute()
             si.smeProviderId = 2;
             si.routeProviderId = 2;
             si.counter = cntAccepted;
+            si.internal = false;
             si.errCode = 1;
             sm->registerEvent(si);
         }
@@ -63,6 +65,7 @@ int Registrator::Execute()
             si.smeProviderId = 3;
             si.routeProviderId = 3;
             si.counter = cntRejected;
+            si.internal = true;
             si.errCode = 1;
             sm->registerEvent(si);
         }
@@ -74,6 +77,7 @@ int Registrator::Execute()
             si.smeProviderId = 3;
             si.routeProviderId = 3;
             si.counter = cntGw_Rejected;
+            si.internal = false;
             si.errCode = 1;
             sm->registerEvent(si);
         }
@@ -85,6 +89,7 @@ int Registrator::Execute()
             si.smeProviderId = 3;
             si.routeProviderId = 3;
             si.counter = cntFailed;
+            si.internal = true;
             si.errCode = 1;
             sm->registerEvent(si);
         }
@@ -118,8 +123,10 @@ int Sender::Execute()
     time_t perfStart=start.tv_sec;
     for(int i=0;i<60;i++)times[i]=start.tv_sec;
     int lastscnt=0;
-    memset(perfCnt,0,sizeof(perfCnt));
-    uint64_t lastPerfCnt[PERF_CNT_COUNT]={0,};
+    memset(smppPerfCnt,0,sizeof(smppPerfCnt));
+    //memset(httpPerfCnt,0,sizeof(httpPerfCnt));
+    uint64_t lastSmppPerfCnt[PERF_CNT_COUNT]={0,};
+    //uint64_t lastHttpPerfCnt[PERF_HTTP_COUNT]={0,};
     //now.tv_sec=0;
     int i;
 
@@ -166,16 +173,24 @@ int Sender::Execute()
 
       if(isStopping)break;
 
-      uint64_t perf[PERF_CNT_COUNT];
+      uint64_t smppPerf[PERF_CNT_COUNT];
+      //uint64_t httpPerf[PERF_HTTP_COUNT];
       // success, error, reschedule
-      perfListener->getPerfData(perf);
+      perfListener->getSmppPerfData(smppPerf);
+      //perfListener->getHttpPerfData(httpPerf);
       PerformanceData d;
-      d.countersNumber=PERF_CNT_COUNT;
+      d.smppCountersNumber=PERF_CNT_COUNT;
       for(i=0;i<PERF_CNT_COUNT;i++)
       {
-        d.counters[i].lastSecond=(int)(perf[i]-lastPerfCnt[i]);
-        d.counters[i].total=perf[i];
+        d.smppCounters[i].lastSecond=(int)(smppPerf[i]-lastSmppPerfCnt[i]);
+        d.smppCounters[i].total=smppPerf[i];
       }
+      /*d.httpCountersNumber=PERF_HTTP_COUNT;
+      for(i=0;i<PERF_HTTP_COUNT;i++)
+      {
+        d.httpCounters[i].lastSecond=(int)(httpPerf[i]-lastHttpPerfCnt[i]);
+        d.httpCounters[i].total=httpPerf[i];
+      }*/
 
 
       int scnt=(now.tv_sec-perfStart)/60;
@@ -190,40 +205,64 @@ int Sender::Execute()
         int idx=timeshift-1;
         if(idx<0)idx=59;
         times[idx]=now.tv_sec;
-        for(i=0;i<PERF_CNT_COUNT;i++)perfCnt[i][idx]=0;
+
+        for(i=0;i<PERF_CNT_COUNT;i++)smppPerfCnt[i][idx]=0;
+        //for(i=0;i<PERF_HTTP_COUNT;i++)httpPerfCnt[i][idx]=0;
       }
       if(scnt!=lastscnt)
       {
         times[scnt]=now.tv_sec;
         lastscnt=scnt;
       }
+
       for(int j=0;j<PERF_CNT_COUNT;j++)
       {
-        d.counters[j].average=0;
+        d.smppCounters[j].average=0;
       }
+      /*for(int j=0;j<PERF_HTTP_COUNT;j++)
+      {
+        d.httpCounters[j].average=0;
+      }*/
+
       int idx=timeshift;
       for(i=0;i<=scnt;i++,idx++)
       {
         if(idx>=60)idx=0;
         if(i==scnt)
         {
+
           for(int j=0;j<PERF_CNT_COUNT;j++)
           {
-            perfCnt[j][idx]+=d.counters[j].lastSecond;
+            smppPerfCnt[j][idx]+=d.smppCounters[j].lastSecond;
           }
+          /*for(int j=0;j<PERF_HTTP_COUNT;j++)
+          {
+            httpPerfCnt[j][idx]+=d.httpCounters[j].lastSecond;
+          }*/
+
         }
+
         for(int j=0;j<PERF_CNT_COUNT;j++)
         {
-          d.counters[j].average+=perfCnt[j][idx];
+          d.smppCounters[j].average+=smppPerfCnt[j][idx];
         }
+        /*for(int j=0;j<PERF_HTTP_COUNT;j++)
+        {
+          d.httpCounters[j].average+=httpPerfCnt[j][idx];
+        }*/
+
       }
       int diff=now.tv_sec-times[timeshift];
       if(diff==0)diff=1;
 
       for(i=0;i<PERF_CNT_COUNT;i++)
       {
-        d.counters[i].average/=diff;
+        d.smppCounters[i].average/=diff;
       }
+      /*for(i=0;i<PERF_HTTP_COUNT;i++)
+      {
+        d.httpCounters[i].average/=diff;
+      }*/
 
       d.now=now.tv_sec;
       d.uptime=now.tv_sec-start.tv_sec;
@@ -234,8 +273,12 @@ int Sender::Execute()
 
       for(i=0;i<PERF_CNT_COUNT;i++)
       {
-        lastPerfCnt[i]=perf[i];
+        lastSmppPerfCnt[i]=smppPerf[i];
       }
+      /*for(i=0;i<PERF_HTTP_COUNT;i++)
+      {
+        lastHttpPerfCnt[i]=httpPerf[i];
+      }*/
 
       perfListener->reportSvcPerformance();
       perfListener->reportScPerformance();
