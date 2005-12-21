@@ -33,6 +33,7 @@ int Registrator::Execute()
     while(!isStopping)
     {
         SmppStatEvent si;
+        HttpStatEvent hs;
 
         int count =  3. * ( (double)random() / 2147483648. ) + 1;
         for(int i = 0; i<= count - 1; i++){
@@ -92,6 +93,16 @@ int Registrator::Execute()
             si.internal = true;
             si.errCode = 1;
             sm->registerEvent(si);
+        }
+
+        hs.routeId = "route1";
+        hs.serviceId = "http1";
+        hs.serviceProviderId = 1;
+        hs.counter = 1;
+        hs.errCode = 1;
+        count =  3. * ( (double)random() / 2147483648. ) + 1;
+        for(int i = 0; i<= count - 1; i++){            
+            sm->registerEvent(hs);
         }
 
         useconds_t pause = 50000. * ( (double)random() / 2147483648. );

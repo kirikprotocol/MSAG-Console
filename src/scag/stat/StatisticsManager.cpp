@@ -157,7 +157,6 @@ void StatisticsManager::registerEvent(const SmppStatEvent& se)
             }
 
             // run-time statistics
-            printf("register sc, serviceId: %s\n", se.smeId);
             incScSmppCounter(se.smeId, indexByCounter(se.counter));
         }else{
             smeSt = statBySmeId[currentIndex].GetPtr(se.smeId);
