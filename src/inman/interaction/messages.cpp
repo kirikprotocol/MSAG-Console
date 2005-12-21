@@ -22,7 +22,12 @@ namespace interaction {
  * class SerializerInap implementation:
  * ************************************************************************** */
 
+//SerializerInap implements two deserialization modes:
+// - complete: both the packet and contained object are deserialized
+// - partial:  only packet prefix is parsed(required to identify object), remaining data
+//             is set as object data buffer.
 SerializerInap::SerializerInap()
+    : _mode(SerializerInap::dsrlPartial)
 {
     registerProduct( CHARGE_SMS_TAG, new ProducerT< ChargeSms >() );
     registerProduct( CHARGE_SMS_RESULT_TAG, new ProducerT< ChargeSmsResult>() );
@@ -50,26 +55,67 @@ SerializerInap* SerializerInap::getInstance()
                             --- processed by load()/save() method --
 */
 
-SerializableObject* SerializerInap::deserialize(ObjectBuffer& in)
+SerializableObject* SerializerInap::deserializePrefix(ObjectBuffer& in) throw(CustomException)
 {
-    unsigned short objectId, version;
+    unsigned short objectId = 0, version;
     unsigned int   dialogId;
 
-    in >> version;
+    try {
+        in >> version;
+        in >> dialogId;
+        in >> objectId;
+    } catch (SerializerException & exc) {
+        throw SerializerException("SrlzrInap: invalid packet structure",
+                                  SerializerException::invPacket, exc.what());
+    }
+    if (version != FORMAT_VERSION)
+        throw SerializerException(format("SrlzrInap: Invalid format version: 0x%X", version).c_str(),
+                                  SerializerException::invPacket, NULL);
 
-    if( version != FORMAT_VERSION ) 
-        throw runtime_error( format("SrlzrInap: Invalid fromat version: 0x%X", version) );
-
-    in >> dialogId;
-    in >> objectId;
-
-    SerializableObject* obj = create( objectId );
+    SerializableObject* obj = create(objectId);
     if( !obj ) 
-        throw runtime_error( format("SrlzrInap: Invalid object ID: 0x%X", objectId) );
+        throw SerializerException(format("SrlzrInap: Invalid object ID: 0x%X", objectId).c_str(),
+                                  SerializerException::invObject, NULL);
 
     obj->setDialogId(dialogId);
     obj->setObjectId(objectId);
-    obj->load( in );
+    return obj;
+}
+
+
+SerializableObject* SerializerInap::deserializeAndOwn(ObjectBuffer * in, bool ownBuf/* = true*/) throw(CustomException)
+{
+    SerializableObject* obj = deserializePrefix(*in);
+
+    if (_mode == SerializerInap::dsrlComplete) {
+        try { obj->load(*in); }
+        catch (SerializerException & exc) {
+            throw SerializerException(
+                format("SrlzrInap: deserialization failure obj 0x%X (dlgId: %u)",
+                        obj->getObjectId(), obj->getDialogId()).c_str(),
+                        SerializerException::invObjData, exc.what());
+        }
+        if (ownBuf)
+            delete in;
+    } else
+        obj->setDataBuf(in, ownBuf);
+    return obj;
+}
+
+SerializableObject* SerializerInap::deserialize(ObjectBuffer& in) throw(CustomException)
+{
+    SerializableObject* obj = deserializePrefix(in);
+
+    if (_mode == SerializerInap::dsrlComplete) {
+        try { obj->load(in); }
+        catch (SerializerException & exc) {
+            throw SerializerException(
+                format("SrlzrInap: deserialization failure obj 0x%X (dlgId: %u)",
+                        obj->getObjectId(), obj->getDialogId()).c_str(),
+                        SerializerException::invObjData, exc.what());
+        }
+    } else
+        obj->setDataBuf(&in, false);
 
     return obj;
 }
@@ -235,7 +281,7 @@ const std::string&  ChargeSms::getLocationInformationMSC(void) const
     return locationInformationMSC;
 }
 
-void ChargeSms::load(ObjectBuffer& in)
+void ChargeSms::load(ObjectBuffer& in) throw(CustomException)
 {
     in >> destinationSubscriberNumber;
     in >> callingPartyNumber;
@@ -346,7 +392,7 @@ ChargeSmsResult_t ChargeSmsResult::GetValue() const
     return value;
 }
 
-void ChargeSmsResult::load(ObjectBuffer& in)
+void ChargeSmsResult::load(ObjectBuffer& in) throw(CustomException)
 {
     unsigned short v;
     in >> v;
@@ -416,19 +462,17 @@ DeliverySmsResult_t DeliverySmsResult::GetValue() const
     return value;
 }
 
-void DeliverySmsResult::load(ObjectBuffer& in)
+void DeliverySmsResult::load(ObjectBuffer& in) throw(CustomException)
 {
     unsigned short v;
     in >> v;
     value = static_cast<DeliverySmsResult_t>(v);
     in >> final;
     //optional data for CDR generation (on successfull delivery)
-//    if (!value) {
-        in >> destImsi;
-        in >> destMSC;
-        in >> destSMEid;
-        in >> finalTimeTZ;
-//    }
+    in >> destImsi;
+    in >> destMSC;
+    in >> destSMEid;
+    in >> finalTimeTZ;
 }
 
 void DeliverySmsResult::save(ObjectBuffer& out)
@@ -436,12 +480,10 @@ void DeliverySmsResult::save(ObjectBuffer& out)
     out << (unsigned short)value;
     out << final;
     //optional data for CDR generation (on successfull delivery)
-//    if (!value) {
-        out << destImsi;
-        out << destMSC;
-        out << destSMEid;
-        out << finalTimeTZ;
-//    }
+    out << destImsi;
+    out << destMSC;
+    out << destSMEid;
+    out << finalTimeTZ;
 }
 
 void DeliverySmsResult::export2CDR(CDRRecord & cdr) const

@@ -14,156 +14,246 @@ namespace smsc  {
 namespace inman {
 namespace interaction  {
 
-Server::Server(const char* host, int port, SerializerITF * serializer)
-        : logger(Logger::getInstance("smsc.inman.inap.Server"))
-        , running( false )
-        , ipSerializer(serializer)
+//timeout for select()
+#define TIMEOUT_STEP 100 //millisecs
+
+Server::Server(const char* host, int port, SerializerITF * serializer,
+               unsigned int timeout_secs/* = 20*/, unsigned short max_conn/* = 10*/,
+               Logger* uselog/* = NULL*/)
+        : ipSerializer(serializer), _maxConn(max_conn)
+        , _runState(Server::lstStopping), logger(uselog)
 {
-    assert(serializer);
+    assert(host && serializer);
+    if (!logger)
+        logger = Logger::getInstance("smsc.inman.TCPSrv");
 
-    if ( serverSocket.InitServer( host, port, 0 ) != 0 )
-        throw SystemError( format("Can't init server socket. Host: %s:%d", host, port)  );
+    if (serverSocket.InitServer(host, port, timeout_secs))
+        throw SystemError(format("TCPSrv: failed to init server socket %s:%d", host, port));
 
-    if( serverSocket.StartServer() != 0 )
-        throw SystemError( format("Can't start server socket. Host: %s:%d", host, port)  );
+    if(serverSocket.StartServer())
+        throw SystemError(format("TCPSrv: failed to start server socket %s:%d", host, port));
 }
 
 Server::~Server()
 {
+    _mutex.Lock();
+    removeAllListeners();
+    _mutex.Unlock();
+
+    if (_runState != Server::lstStopped)
+        Stop();
+    WaitFor();
+
     serverSocket.Close();
+    smsc_log_debug(logger, "TCPSrv: server socket closed.");
+}
+
+//Closes all client's connections
+void Server::closeAllConnects(void)
+{
+    ConnectsList    cplist = connects;
+    for (ConnectsList::const_iterator cit = cplist.begin(); cit != cplist.end(); cit++)
+        closeConnect(*cit);
 }
 
 void Server::openConnect(Connect* connect)
 {
-    assert( connect );
+    assert(connect);
+    _mutex.Lock();
     connects.push_back( connect );
+    _mutex.Unlock();
 
-    for( ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++)
-    {
+    for (ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++) {
         ServerListener* ptr = *it;
-        ptr->onConnectOpened( this, connect );
+        ptr->onConnectOpened(this, connect);
     }
 }
 
 void Server::closeConnect(Connect* connect)
 {
-    assert( connect );
-    for( ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++)
-    {
+    assert(connect);
+    for (ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++) {
         ServerListener* ptr = *it;
-        ptr->onConnectClosed( this, connect );
+        ptr->onConnectClosing( this, connect );
     }
-    connects.remove( connect );
+    _mutex.Lock();
+    connects.remove(connect);
+    _mutex.Unlock();
+
+    SOCKET sockId = connect->getSocketId();
     delete connect;
+    smsc_log_debug(logger, "TCPSrv: Socket[%u] closed.", (unsigned)sockId);
 }
 
-void Server::Run()
+void Server::Stop(unsigned int timeOutMilliSecs/* = 400*/)
 {
-    running = true;
-    while ( running )
-    {
-        fd_set read;
-        fd_set error;
+    if (_runState == Server::lstStopped)
+        return;
 
-        FD_ZERO( &read );
-        FD_ZERO( &error );
+    //adjust timeout for TIMEOUT_STEP millsecs
+    timeOutMilliSecs = TIMEOUT_STEP*((timeOutMilliSecs + (TIMEOUT_STEP/2))/TIMEOUT_STEP);
 
-        FD_SET( serverSocket.getSocket(), &read );
-        FD_SET( serverSocket.getSocket(), &error );
+    smsc_log_debug(logger, "TCPSrv: stopping Listener thread, timeout = %u ms ..",
+                   timeOutMilliSecs);
+    _mutex.Lock();
+    if (_runState == Server::lstRunning)
+        _runState = Server::lstStopping;
+    _mutex.Unlock();
 
-        int max = serverSocket.getSocket();
+    for (timeOutMilliSecs += TIMEOUT_STEP;
+          timeOutMilliSecs > 0; timeOutMilliSecs -= TIMEOUT_STEP) {
+        if (_runState == Server::lstStopped)
+            break;
+        usleep(1000*TIMEOUT_STEP); //microsecs
+    }
 
-        for( Connects::iterator i = connects.begin(); i != connects.end(); i++ )
-        {
-            SOCKET socket = (*i)->getSocket()->getSocket();
-            FD_SET( socket, &read );
-            FD_SET( socket, &error );
-            if( socket > max ) max = socket;
-        }
+    _mutex.Lock();
+    if (_runState != Server::lstStopped) {
+        smsc_log_debug(logger, "TCPSrv: timeout expired, %u connects are still active",
+                       connects.size());
+        _runState = Server::lstStopped;  //forcedly stop Listener thread
+    }
+    _mutex.Unlock();
+}
 
-        Synch::getInstance()->Unlock();
-        int n  = select(  max+1, &read, 0, &error, 0 );
 
-        if ( !running )
-        {
-            smsc_log_debug(logger, "Server stopped");
+Server::ShutdownReason Server::Listen()
+{
+    struct timeval tmo;
+    Server::ShutdownReason result = Server::srvStopped;
+
+    tmo.tv_sec = 0;
+    tmo.tv_usec = 1000L*TIMEOUT_STEP;
+
+    _mutex.Lock();
+    _runState = Server::lstRunning;
+    while (_runState != Server::lstStopped) {
+        //check for last connect while stopping
+        if ((_runState == Server::lstStopping) && !connects.size()) {
+            _runState = Server::lstStopped;
+            _mutex.Unlock();
+            smsc_log_debug(logger, "TCPSrv: all connects finished, stopping ..");
             break;
         }
 
-        Synch::getInstance()->Lock();
+        int     n, maxSock = 0;
+        fd_set  readSet;
+        fd_set  errorSet;
 
-        if ( n < 0 )
-            throw SystemError("select failed");
+        FD_ZERO(&readSet);
+        FD_ZERO(&errorSet);
 
-        if ( FD_ISSET( serverSocket.getSocket(), &read ) )
-        {
-            Socket* clientSocket = serverSocket.Accept();
-            if ( !clientSocket ) {
-                smsc_log_error(logger, "Can't accept client connection %d (%s)", errno, strerror( errno ) );
-            } else {
-                smsc_log_debug(logger, "Open new connect (0x%X)", clientSocket->getSocket());
-                Connect* connect = new Connect( clientSocket, ipSerializer);
-                openConnect( connect );
-                continue;
-            }
+        if (_runState == Server::lstRunning) {
+            FD_SET(serverSocket.getSocket(), &readSet);
+            FD_SET(serverSocket.getSocket(), &errorSet);
+            maxSock = serverSocket.getSocket();
+        } //in case of lstStopping the clients connection should be served for a while
+        for (ConnectsList::iterator i = connects.begin(); i != connects.end(); i++) {
+            SOCKET  socket = (*i)->getSocketId();
+            FD_SET(socket, &readSet);
+            FD_SET(socket, &errorSet);
+            if (socket > maxSock)
+                maxSock = socket;
         }
+        _mutex.Unlock();
 
-        if ( FD_ISSET( serverSocket.getSocket(), &error ) )
-        {
-            smsc_log_debug(logger, "Server socket error - exit." );
-            running = false;
-            continue;
+        if (!(n = select(maxSock+1, &readSet, 0, &errorSet, &tmo))) { //timeout expired
+            _mutex.Lock(); continue;
         }
+            
+        if (n < 0) {
+            smsc_log_fatal(logger, "TCPSrv: select() failed, cause: %d (%s)",
+                           errno, strerror(errno));
+            result = Server::srvError;
+            _mutex.Lock();
+            _runState = Server::lstStopped;
+            _mutex.Unlock();
+        }
+        if (_runState == Server::lstStopped)
+            break;
 
-        // Iterate over copy for safe modify original collection
-        Connects stump( connects );
-        for ( Connects::iterator i = stump.begin(); i != stump.end(); i++ )
-        {
+        //Serve clients connects first (iterate over list copy in order
+        //to safely modify original collection)
+        _mutex.Lock();
+        ConnectsList stump(connects);
+        _mutex.Unlock();
+        for (ConnectsList::iterator i = stump.begin(); i != stump.end(); i++) {
             Connect* conn = (*i);
-            SOCKET socket = conn->getSocket()->getSocket();
+            SOCKET socket = conn->getSocketId();
 
-            if ( FD_ISSET( socket, &read ) )
-            {
-                smsc_log_debug(logger, "Event on socket 0x%X", socket );
-                if ( !conn->process() )
-                {
-                    smsc_log_debug(logger, "Close socket 0x%X", socket );
-                    closeConnect( conn );
+            if (FD_ISSET(socket, &readSet)) {
+                smsc_log_debug(logger, "TCPSrv: Event on socket[%u]", socket);
+                if (!conn->process()) {
+                    CustomException * exc = conn->hasException();
+                    if (exc) {
+                        smsc_log_error(logger, "TCPSrv: %s", exc->what());
+                        conn->resetException();
+                    } else //remote point ends connection
+                        closeConnect(conn);
                 }
             }
-
-            if ( FD_ISSET( socket, &error ) )
-            {
-                smsc_log_debug(logger, "Error - close socket (0x%X)", socket );
-                closeConnect( conn );
+            if (FD_ISSET(socket, &errorSet)) {
+                smsc_log_debug(logger, "TCPSrv: Error Event on socket[%u].", socket);
+                conn->handleConnectError(true);
+                closeConnect(conn);
             }
         }
-    }
+
+        if (_runState == Server::lstRunning) {
+            if (FD_ISSET(serverSocket.getSocket(), &readSet)) {
+                Socket* clientSocket = serverSocket.Accept();
+                if (!clientSocket) {
+                    smsc_log_error(logger, "TCPSrv: failed to accept client connection, cause: %d (%s)",
+                                   errno, strerror(errno));
+                } else if (connects.size() < _maxConn) {
+                    smsc_log_debug(logger, "TCPSrv: accepted new connect[%u]",
+                                   clientSocket->getSocket());
+                    Connect* connect = new Connect(clientSocket, ipSerializer,
+                                                   Connect::frmStraightData, logger);
+                    openConnect(connect);
+                    if (!connect->hasListeners()) {
+                        smsc_log_warn(logger, "TCPSrv: No listeners being set for connect[%u]!",
+                                      connect->getSocketId());
+                        closeConnect(connect);
+                    }
+                } else { //connects number exceeded
+                    delete clientSocket;
+                    smsc_log_warn(logger, "TCPSrv: connection refused, resource limitation.");
+                }
+            }
+            if (FD_ISSET(serverSocket.getSocket(), &errorSet)) {
+                smsc_log_fatal(logger, "TCPSrv: Error on server socket, stopping ..");
+                result = Server::srvError;
+                _runState = Server::lstStopping;
+            }
+        }
+        _mutex.Lock();
+    } /* eow */
+    return result;
 }
 
-void Server::Stop() 
-{
-    running = false;
-    serverSocket.Close();
-}
 
 // Thread entry point
 int Server::Execute()
 {
-    int result = 0;
-    started.SignalAll();
-    try
-    {
-        smsc_log_debug(logger, "TCPSrv: Thread started");
-        Run();
+    Server::ShutdownReason result = Server::srvStopped;
+    try {
+        smsc_log_debug(logger, "TCPSrv: Listener thread started.");
+        result = Listen();
+    } catch (const std::exception& error) {
+        smsc_log_error(logger, "TCPSrv: Listener thread failure: %s", error.what());
+        result = Server::srvConnError;
     }
-    catch(const std::exception& error)
-    {
-        smsc_log_error(logger, "TCPSrv: Error in thread: %s", error.what() );
-        result = 1;
+    smsc_log_debug(logger, "TCPSrv: Listener thread finished, cause %d", (int)result);
+
+    closeAllConnects(); //forcedly close active connects
+    
+    //notify ServerListeners about server shutdown
+    ListenerList cplist = listeners;
+    for (ListenerList::iterator it = cplist.begin(); it != cplist.end(); it++) {
+        ServerListener* ptr = *it;
+        ptr->onServerShutdown(this, result);
     }
-    stopped.SignalAll();
-    smsc_log_debug(logger, "TCPSrv: Thread finished");
     return result;
 }
 

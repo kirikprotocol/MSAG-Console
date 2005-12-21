@@ -12,7 +12,10 @@ static char const ident[] = "$Id$";
 
 static const UCHAR_T VER_HIGH    = 0;
 static const UCHAR_T VER_LOW     = 1;
-static const long _inman_MIN_BILLING_INTERVAL = 10; //in seconds
+
+static const long _in_CFG_MIN_BILLING_INTERVAL = 10; //in seconds
+static const unsigned int _in_CFG_MAX_BILLINGS = 10000;
+
 
 namespace smsc
 {
@@ -37,12 +40,6 @@ using smsc::util::config::ConfigException;
 static char     _runService = 0;
 static Service* g_pService = 0;
 
-static void init_logger()
-{
-  Logger::Init();
-    inapLogger = Logger::getInstance("smsc.inman");
-    tcapLogger = Logger::getInstance("smsc.inman.inap");
-}
 
 extern "C" static void sighandler( int signal )
 {
@@ -61,28 +58,28 @@ struct INBillConfig : public InService_CFG
 public:
     INBillConfig() 
     {
-        ssf_addr = scf_addr = host = billingDir = NULL;
-        ssn = port = billingInterval = 0;
-        billMode = smsc::inman::BILL_ALL;
-        cdrMode =  InService_CFG::CDR_ALL;
-        serviceKey = capTimeout = tcpTimeout = 0;
+        bill.ssf_addr = bill.scf_addr = host = bill.billingDir = NULL;
+        bill.ssn = port = bill.billingInterval = 0;
+        bill.billMode = smsc::inman::BILL_ALL;
+        bill.cdrMode =  BillingCFG::CDR_ALL;
+        bill.serviceKey = bill.capTimeout = bill.tcpTimeout =  bill.maxBilling = 0;
     }
 
     void read(Manager& manager)
     {
         try {
-            ssf_addr = manager.getString("ssfAddress");
-            ssn = manager.getInt("ssn");
-            smsc_log_info( inapLogger, "SSF : GT=%s,SSN=%d", ssf_addr,ssn );
+            bill.ssf_addr = manager.getString("ssfAddress");
+            bill.ssn = manager.getInt("ssn");
+            smsc_log_info(inapLogger, "SSF : GT=%s, SSN=%d", bill.ssf_addr, bill.ssn);
         } catch(ConfigException& exc) {
-            ssf_addr = 0; ssn = 0;
+            bill.ssf_addr = 0; bill.ssn = 0;
             throw ConfigException("ssfAddress or ssn missing");
         }
         try {
-            scf_addr = manager.getString("scfAddress");
-            smsc_log_info( inapLogger, "SCF : GT=%s", scf_addr );
+            bill.scf_addr = manager.getString("scfAddress");
+            smsc_log_info(inapLogger, "SCF : GT=%s", bill.scf_addr);
         } catch (ConfigException& exc) {
-            scf_addr = 0;
+            bill.scf_addr = 0;
             throw ConfigException("scfAddress missing");
         }
         try {
@@ -96,84 +93,99 @@ public:
         try {
             char* bmode = manager.getString("billMode");
             if (!strcmp(bmode, _BILLmodes[smsc::inman::BILL_SMS]))
-                billMode = smsc::inman::BILL_SMS;
+                bill.billMode = smsc::inman::BILL_SMS;
             else if (!strcmp(bmode, _BILLmodes[smsc::inman::BILL_USSD]))
-                billMode = smsc::inman::BILL_USSD;
+                bill.billMode = smsc::inman::BILL_USSD;
             else if (!strcmp(bmode, _BILLmodes[smsc::inman::BILL_NONE]))
-                billMode = smsc::inman::BILL_NONE;
+                bill.billMode = smsc::inman::BILL_NONE;
             else if (strcmp(bmode, _BILLmodes[smsc::inman::BILL_ALL]))
                 throw ConfigException("billMode unknown or missing");
-            smsc_log_info(inapLogger, "billMode: %s [%d]", bmode, billMode);
+            smsc_log_info(inapLogger, "billMode: %s [%d]", bmode, bill.billMode);
         } catch (ConfigException& exc) {
             throw ConfigException("billMode unknown or missing");
         }
         try {
             char* cdrs = manager.getString("cdrMode");
-            if (!strcmp(cdrs, _CDRmodes[InService_CFG::CDR_POSTPAID]))
-                cdrMode = InService_CFG::CDR_POSTPAID;
-            else if (!strcmp(cdrs, _CDRmodes[InService_CFG::CDR_NONE]))
-                cdrMode = InService_CFG::CDR_NONE;
-            else if (strcmp(cdrs, _CDRmodes[InService_CFG::CDR_ALL]))
+            if (!strcmp(cdrs, _CDRmodes[BillingCFG::CDR_POSTPAID]))
+                bill.cdrMode = BillingCFG::CDR_POSTPAID;
+            else if (!strcmp(cdrs, _CDRmodes[BillingCFG::CDR_NONE]))
+                bill.cdrMode = BillingCFG::CDR_NONE;
+            else if (strcmp(cdrs, _CDRmodes[BillingCFG::CDR_ALL]))
                 throw ConfigException("cdrMode unknown or missing");
-            smsc_log_info(inapLogger, "cdrMode: %s [%d]", cdrs, cdrMode);
+            smsc_log_info(inapLogger, "cdrMode: %s [%d]", cdrs, bill.cdrMode);
         } catch (ConfigException& exc) {
             throw ConfigException("cdrMode unknown or missing");
         }
-        if (cdrMode != InService_CFG::CDR_NONE) {
+        if (bill.cdrMode != BillingCFG::CDR_NONE) {
             try {
-                billingDir = manager.getString("billingDir");
-                billingInterval = manager.getInt("billingInterval");
-                if (billingInterval < _inman_MIN_BILLING_INTERVAL) {
-                    billingDir = NULL; billingInterval = 0;
+                bill.billingDir = manager.getString("billingDir");
+                bill.billingInterval = manager.getInt("billingInterval");
+                if (bill.billingInterval < _in_CFG_MIN_BILLING_INTERVAL) {
+                    bill.billingDir = NULL; bill.billingInterval = 0;
                     smsc_log_error(inapLogger, "Parameter 'billingInterval' should be grater than %ld seconds",
-                                          _inman_MIN_BILLING_INTERVAL);
+                                          _in_CFG_MIN_BILLING_INTERVAL);
                     throw ConfigException("Parameter 'billingInterval' should be grater than %ld seconds",
-                                          _inman_MIN_BILLING_INTERVAL);
+                                          _in_CFG_MIN_BILLING_INTERVAL);
                 }
-                smsc_log_info(inapLogger, "billingDir: %s", billingDir);
-                smsc_log_info(inapLogger, "billingInterval: %d", billingInterval);
+                smsc_log_info(inapLogger, "billingDir: %s", bill.billingDir);
+                smsc_log_info(inapLogger, "billingInterval: %d", bill.billingInterval);
             } catch (ConfigException& exc) {
-                billingDir = NULL; billingInterval = 0;
+                bill.billingDir = NULL; bill.billingInterval = 0;
                 throw ConfigException("billingDir or billingInterval invalid or missing");
             }
         }
         try {
-            serviceKey = (unsigned int)manager.getInt("serviceKey");
-            smsc_log_info(inapLogger, "serviceKey: %d", serviceKey);
+            bill.serviceKey = (unsigned int)manager.getInt("serviceKey");
+            smsc_log_info(inapLogger, "serviceKey: %d", bill.serviceKey);
         } catch (ConfigException& exc) {
-            serviceKey = 0;
+            bill.serviceKey = 0;
             throw ConfigException("serviceKey is invalid or missing");
         }
 
         //OPTIONAL PARAMETERS:
         uint32_t tmo = 0;
-        try {
-            tmo = (uint32_t)manager.getInt("IN_Timeout");
-        } catch (ConfigException& exc) {
-        }
+        //
+        try { tmo = (uint32_t)manager.getInt("maxBillings"); }
+        catch (ConfigException& exc) { }
+
+        if (tmo) {
+            if (tmo > _in_CFG_MAX_BILLINGS) {
+                smsc_log_error(inapLogger, "Parameter 'IN_Timeout' should be less than 65535 seconds");
+                throw ConfigException("Parameter 'IN_Timeout' should be less than 65535 seconds");
+            } else {
+                bill.maxBilling = (unsigned short)tmo;
+                smsc_log_info(inapLogger, "maxBillings: %u", bill.maxBilling);
+            }
+        } else
+            smsc_log_info(inapLogger, "maxBillings: default");
+
+        //
+        tmo = 0;
+        try { tmo = (uint32_t)manager.getInt("IN_Timeout"); }
+        catch (ConfigException& exc) { }
+
         if (tmo) {
             if (tmo >= 65535) {
                 smsc_log_error(inapLogger, "Parameter 'IN_Timeout' should be less than 65535 seconds");
                 throw ConfigException("Parameter 'IN_Timeout' should be less than 65535 seconds");
             } else { 
-                capTimeout = (unsigned short)tmo;
-                smsc_log_info(inapLogger, "IN_Timeout: %u", capTimeout);
+                bill.capTimeout = (unsigned short)tmo;
+                smsc_log_info(inapLogger, "IN_Timeout: %u", bill.capTimeout);
             }
         } else 
             smsc_log_info(inapLogger, "IN_Timeout: default");
 
+        //
         tmo = 0;
-        try {
-            tmo = (uint32_t)manager.getInt("SMSC_Timeout");
-        } catch (ConfigException& exc) {
-        }
+        try { tmo = (uint32_t)manager.getInt("SMSC_Timeout"); }
+        catch (ConfigException& exc) { }
         if (tmo) {
             if (tmo >= 65535) {
                 smsc_log_error(inapLogger, "Parameter 'SMSC_Timeout' should be less than 65535 seconds");
                 throw ConfigException("Parameter 'SMSC_Timeout' should be less than 65535 seconds");
             } else { 
-                tcpTimeout = (unsigned short)tmo;
-                smsc_log_info(inapLogger, "SMSC_Timeout: %u", tcpTimeout);
+                bill.tcpTimeout = (unsigned short)tmo;
+                smsc_log_info(inapLogger, "SMSC_Timeout: %u", bill.tcpTimeout);
             }
         } else
             smsc_log_info(inapLogger, "SMSC_Timeout: default");
@@ -184,10 +196,13 @@ int main(int argc, char** argv)
 {
     char *  cfgFile = (char*)"config.xml";
 
-    init_logger();
-    smsc_log_info( inapLogger,"***************************");
-    smsc_log_info( inapLogger,"* SIBINCO IN MANAGER v%d.%d *", VER_HIGH, VER_LOW);
-    smsc_log_info( inapLogger,"***************************");
+    Logger::Init();
+    inapLogger = Logger::getInstance("smsc.inman");
+    tcapLogger = Logger::getInstance("smsc.inman.inap");
+
+    smsc_log_info(inapLogger,"***************************");
+    smsc_log_info(inapLogger,"* SIBINCO IN MANAGER v%d.%d *", VER_HIGH, VER_LOW);
+    smsc_log_info(inapLogger,"***************************");
     if (argc > 1)
         cfgFile = argv[1];
     smsc_log_info(inapLogger,"* Config file: %s", cfgFile);
@@ -208,9 +223,10 @@ int main(int argc, char** argv)
         _runService = 1;
         g_pService->start();
 
+        //handle SIGTERM only in main thread
         sigset(SIGTERM, sighandler);
         while(_runService)
-            usleep(1000 * 100);
+            usleep(1000 * 200); //sleep 200 ms
 
         g_pService->stop();
         delete g_pService;
@@ -221,6 +237,6 @@ int main(int argc, char** argv)
         delete g_pService;
         exit(1);
     }
-    smsc_log_info(inapLogger, "Service shutdown complete");
+    smsc_log_info(inapLogger, "IN MANAGER shutdown complete");
     return(0);
 }

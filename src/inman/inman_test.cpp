@@ -11,13 +11,14 @@ static char const ident[] = "$Id$";
 #include "inman/common/console.hpp"
 #include "inman/common/util.hpp"
 #include "inman/interaction/messages.hpp"
+#include "inman/interaction/connect.hpp"
 
 
 using smsc::core::threads::Thread;
 using smsc::inman::common::Console;
 using smsc::inman::common::format;
-using smsc::inman::interaction;
-using smsc::inman::interaction::ObjectPipe;
+
+using smsc::inman::interaction::Connect;
 using smsc::inman::interaction::SerializerInap;
 using smsc::inman::interaction::ChargeSms;
 using smsc::inman::interaction::ChargeSmsResult;
@@ -87,7 +88,7 @@ protected:
     bool                _running;
     unsigned            dialogId;
     Socket*             socket;
-    ObjectPipe*         pipe;
+    Connect*            pipe;
     Logger*             logger;
     AbonentType         abType;
     bool                _ussdOp;
@@ -116,9 +117,8 @@ public:
             smsc_log_error(logger, msg.c_str());
             throw std::runtime_error(msg.c_str());
         }
-        pipe = new ObjectPipe(socket, SerializerInap::getInstance(),
-                                        ObjectPipe::frmLengthPrefixed);
-        pipe->setLogger(logger);
+        pipe = new Connect(socket, SerializerInap::getInstance(),
+                                        Connect::frmLengthPrefixed, logger);
     }
 
     virtual ~Facade()
@@ -133,6 +133,9 @@ public:
             delete dlg;
         }
     }
+
+    SerializerITF * getSerializer(void) const { return SerializerInap::getInstance(); }
+    Connect *       getConnect(void) const { return pipe; }
 
     void setAddressType(AddressTypeInd adr_type) { _adrType = adr_type; }
     AddressTypeInd getAddressType(void) { return _adrType; }
@@ -166,11 +169,8 @@ public:
     }
 
 
-    void sendChargeSms(unsigned int dlgId)
+    void composeChargeSms(ChargeSms& op, unsigned int dlgId, bool ussd_op)
     {
-        //compose ChargeSms
-        ChargeSms op;
-
         op.setDialogId(dlgId);
         op.setDestinationSubscriberNumber( _dstAdr[_adrType]);
         op.setCallingPartyNumber(_abonents[abType].addr);
@@ -190,11 +190,18 @@ public:
         op.setServiceId(1234);
         op.setUserMsgRef(0x01fa);
         op.setMsgId(0x010203040506);
-        op.setServiceOp(_ussdOp ? 0 : -1);
+        op.setServiceOp(ussd_op ? 0 : -1);
+    }
+
+    void sendChargeSms(unsigned int dlgId)
+    {
+        //compose ChargeSms
+        ChargeSms op;
+        composeChargeSms(op, dlgId, _ussdOp);
 
         std::string msg = format("Sending ChargeSms [dlgId: %u] ..\n", op.getDialogId());
         prompt(msg);
-        pipe->send(&op);
+        pipe->sendObj(&op);
 
         INDialog * dlg = findDialog(dlgId);
         assert(dlg);
@@ -232,7 +239,7 @@ public:
             msg =  format("WRN: Dialog[%u] is inknown!\n", dlgId);
             prompt(msg);
         }
-        pipe->send(&op);
+        pipe->sendObj(&op);
     }
 
     void onChargeSmsResult(ChargeSmsResult* result)
@@ -280,11 +287,22 @@ public:
             FD_SET( socket->getSocket(), &read );
             int n = select(  socket->getSocket()+1, &read, 0, 0, 0 );
             if ( n > 0 ) {
-                SmscCommand* cmd = static_cast<SmscCommand*>(pipe->receive());
+                SmscCommand* cmd = static_cast<SmscCommand*>(pipe->receiveObj());
                 if (cmd) {
-                    if (cmd->getObjectId() == smsc::inman::interaction::CHARGE_SMS_RESULT_TAG)
-                        cmd->handle(this);
-                    else
+                    if (cmd->getObjectId() == smsc::inman::interaction::CHARGE_SMS_RESULT_TAG) {
+                        bool goon = true;
+                        try { cmd->loadDataBuf(); }
+                        catch (SerializerException& exc) {
+                            std::string msg = format("ERR: corrupted cmd %u (dlgId: %u): %s",
+                                                    cmd->getObjectId(), cmd->getDialogId(),
+                                                    exc.what());
+                            fprintf(stdout, msg.c_str());
+                            smsc_log_error(logger, msg.c_str());
+                            goon = false;
+                        }
+                        if (goon)
+                            cmd->handle(this);
+                    } else
                         fprintf(stdout, "ERR: unknown command recieved: %u\n",
                                 cmd->getObjectId());
                 } else { //socket closed or socket error
@@ -465,6 +483,67 @@ void cmd_adrAlpha(Console&, const std::vector<std::string> &args)
         throw ConnectionClosedException();
 }
 
+//USAGE: chargeExc [num_bytes] [dlgId]
+//sends specified number of bytes of ChargeSMS packet, causing exception on remote point
+void cmd_chargeExc(Console&, const std::vector<std::string> &args)
+{
+    if (_pFacade->isRunning()) {
+        uint32_t size = 8; //send prefix only by default
+        unsigned dlgId;
+
+        if (args.size() > 1)
+            size = (uint32_t)atoi(args[1].c_str());
+        if (args.size() > 2)
+            dlgId = (unsigned)atoi(args[2].c_str());
+        else
+            dlgId = _pFacade->getNextDialogId();
+
+        ChargeSms op;
+        _pFacade->composeChargeSms(op, dlgId, true);
+
+        ObjectBuffer    buffer(1024);
+        SerializerITF * serl = _pFacade->getSerializer();
+        serl->serialize(&op, buffer);
+        Connect* conn = _pFacade->getConnect();
+
+        uint32_t len = htonl(size);
+        conn->send((const unsigned char*)&len, 4);
+        conn->send(buffer.get(), size);
+        fprintf(stdout, "Sent %u bytes of ChargeSMS (dlgId: %u)\n", size, dlgId);
+    } else
+        throw ConnectionClosedException();
+}
+
+//USAGE: dlvrExc [num_bytes] [dlgId]
+//sends specified number of bytes of DeliverySmsResult packet, causing exception on remote point
+void cmd_dlvrExc(Console&, const std::vector<std::string> &args)
+{
+    if (_pFacade->isRunning()) {
+        uint32_t size = 8;
+        unsigned dlgId;
+
+        if (args.size() > 1)
+            size = (uint32_t)atoi(args[1].c_str());
+        if (args.size() > 2)
+            dlgId = (unsigned)atoi(args[2].c_str());
+        else
+            dlgId = _pFacade->getNextDialogId();
+
+        DeliverySmsResult   op(smsc::inman::interaction::DELIVERY_FAILED);
+        op.setDialogId(dlgId);
+
+        ObjectBuffer    buffer(1024);
+        SerializerITF * serl = _pFacade->getSerializer();
+        serl->serialize(&op, buffer);
+        Connect* conn = _pFacade->getConnect();
+
+        uint32_t len = htonl(size);
+        conn->send((const unsigned char*)&len, 4);
+        conn->send(buffer.get(), size);
+        fprintf(stdout, "Sent %u bytes of DeliverySmsResult (dlgId: %u)\n", size, dlgId);
+    } else
+        throw ConnectionClosedException();
+}
 
 int main(int argc, char** argv)
 {
@@ -496,6 +575,8 @@ int main(int argc, char** argv)
         console.addItem( "config",  cmd_config);
         console.addItem( "adrnum",  cmd_adrNum);
         console.addItem( "adralpha",  cmd_adrAlpha);
+        console.addItem( "chargeExc",  cmd_chargeExc);
+        console.addItem( "dlvrExc",  cmd_dlvrExc); 
 
         _pFacade->Start();
 

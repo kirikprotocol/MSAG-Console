@@ -15,61 +15,54 @@ using smsc::inman::inap::Dispatcher;
 using smsc::inman::inap::Session;
 using smsc::inman::interaction::Server;
 using smsc::inman::interaction::ServerListener;
-using smsc::inman::interaction::ConnectListener;
+//using smsc::inman::interaction::ConnectListener;
 using smsc::inman::filestore::InBillingFileStorage;
 using smsc::inman::filestore::InFileStorageRoller;
+using smsc::inman::BillingCFG;
+using smsc::inman::BillingConnect;
+
+#define INMAN_TCP_RESTART_ATTEMPTS  2
 
 namespace smsc  {
 namespace inman {
 
 struct InService_CFG {
-    typedef enum { CDR_NONE = 0, CDR_ALL = 1, CDR_POSTPAID = 2} CDR_MODE;
-
-    const char*     ssf_addr;
-    const char*     scf_addr;
-    int             ssn;
     const char*     host;
     int             port;
-    BILL_MODE       billMode;
-    CDR_MODE        cdrMode;
-    const char *    billingDir;      //location to store CDR files
-    long            billingInterval; //rolling interval for CDR files
-    unsigned short  capTimeout;      //optional timeout for operations with IN platform
-    unsigned short  tcpTimeout;      //optional timeout for TCP interaction with SMSC
-    unsigned int    serviceKey;      //service id for InitialDP operation
+    BillingCFG      bill;
 };
 
-class Billing;
-class Service : public ServerListener, ConnectListener
+class Service : public ServerListener
 {
-    typedef std::map<unsigned int, Billing*> BillingMap;
+    typedef std::map<unsigned int, BillingConnect*> BillingConnMap;
 
 public:
     Service(const InService_CFG * in_cfg, Logger * uselog = NULL);
     virtual ~Service();
 
+    void start();
+    void stop();
+    void writeCDR(unsigned int bcId, unsigned int bilId, const CDRRecord & cdr);
+
+    void onBillingConnectClosed(unsigned int connId);
+    
     //ServerListener interface
-    virtual void onConnectOpened(Server*, Connect*);
-    virtual void onConnectClosed(Server*, Connect*);
-
-    //ConnectListener interface
-    virtual void onCommandReceived(Connect*, SerializableObject*);
-
-    virtual void billingFinished(Billing* bill);
-
-    virtual void start();
-    virtual void stop();
+    void onConnectOpened(Server* srv, Connect* conn);
+    void onConnectClosing(Server* srv, Connect* conn);
+    void onServerShutdown(Server* srv, Server::ShutdownReason reason);
 
 private:
-    BillingMap  workers;
-    Logger*     logger;
-    Session*    session;
-    Dispatcher* dispatcher;
-    Server*     server;
-    bool        running;
-    InService_CFG _cfg;
+    Mutex           _mutex;
+    BillingConnMap  bConnects;
+    Logger*         logger;
+    Session*        session;
+    Dispatcher*     dispatcher;
+    Server*         server;
+    volatile bool   running;
+    InService_CFG   _cfg;
     InBillingFileStorage*    bfs;
     InFileStorageRoller *    roller;
+    unsigned        tcpRestartCount;
 };
 
 } //inman

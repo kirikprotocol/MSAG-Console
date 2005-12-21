@@ -15,6 +15,7 @@ namespace inman {
 Service::Service(const InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
     : logger(uselog), _cfg(*in_cfg)
     , session(0), dispatcher(0), server(0), bfs(0)
+    , tcpRestartCount(0)
 {
     if (!logger)
         logger = Logger::getInstance("smsc.inman.Service");
@@ -27,26 +28,27 @@ Service::Service(const InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
     dispatcher = new Dispatcher();
     smsc_log_debug(logger, "InmanSrv: TCAP dispatcher inited");
 
-    server = new Server(_cfg.host, _cfg.port, SerializerInap::getInstance());
+    server = new Server(_cfg.host, _cfg.port, SerializerInap::getInstance(),
+                        _cfg.bill.tcpTimeout, 10, logger);
     server->addListener(this);
     smsc_log_debug(logger, "InmanSrv: TCP server inited");
 
-    if (_cfg.cdrMode) {
-        bfs = new InBillingFileStorage(_cfg.billingDir, 0, logger);
+    if (_cfg.bill.cdrMode) {
+        bfs = new InBillingFileStorage(_cfg.bill.billingDir, 0, logger);
         assert(bfs);
         int oldfs = bfs->RFSOpen(true);
         assert(oldfs >= 0);
         smsc_log_debug(logger, "InmanSrv: Billing storage opened%s",
                        oldfs > 0 ? ", old files rolled": "");
 
-        if (_cfg.billingInterval) { //use external storage roller
-            roller = new InFileStorageRoller(bfs, (unsigned long)_cfg.billingInterval);
+        if (_cfg.bill.billingInterval) { //use external storage roller
+            roller = new InFileStorageRoller(bfs, (unsigned long)_cfg.bill.billingInterval);
             assert(roller);
             smsc_log_debug(logger, "InmanSrv: BillingStorage roller inited");
         }
     }
 
-    session = factory->openSession(_cfg.ssn, _cfg.ssf_addr, _cfg.scf_addr);
+    session = factory->openSession(_cfg.bill.ssn, _cfg.bill.ssf_addr, _cfg.bill.scf_addr);
     assert(session);
     smsc_log_debug(logger, "InmanSrv: TCAP session inited");
 
@@ -60,36 +62,47 @@ Service::~Service()
     smsc_log_debug( logger, "InmanSrv: Releasing .." );
     InSessionFactory* factory = InSessionFactory::getInstance();
 
-    smsc_log_debug( logger, "InmanSrv: ReleaseSession" );
+    smsc_log_debug( logger, "InmanSrv: Releasing TCAP Session" );
     factory->closeSession( session );
 
-    server->removeListener( this );
-    smsc_log_debug( logger, "InmanSrv: Delete TCP server" );
-    delete server;
+    if (server) {
+        server->removeListener(this);
+        smsc_log_debug( logger, "InmanSrv: Deleting TCP server" );
+        delete server;
+    }
 
-    smsc_log_debug( logger, "InmanSrv: Delete TCAP dispatcher");
+    smsc_log_debug( logger, "InmanSrv: Deleting TCAP dispatcher");
     delete dispatcher;
 
     if (bfs) {
-        smsc_log_debug( logger, "InmanSrv: Close Billing storage");
+        smsc_log_debug( logger, "InmanSrv: Closing Billing storage");
         bfs->RFSClose();
         if (roller)
             delete roller;
         delete bfs;
     }
+    smsc_log_debug( logger, "InmanSrv: Released." );
+}
+
+
+void Service::writeCDR(unsigned int bcId, unsigned int bilId, const CDRRecord & cdr)
+{
+    bfs->bill(cdr);
+    smsc_log_debug(logger, "InmanSrv: CDR written for Billing[%u.%u]",
+                   bcId, bilId);
 }
 
 
 void Service::start()
 {
-    smsc_log_debug(logger, "InmanSrv: Starting TCAP dispatcher");
+    smsc_log_debug(logger, "InmanSrv: Starting TCAP dispatcher ..");
     dispatcher->Start();
 
-    smsc_log_debug(logger, "InmanSrv: Starting TCP server");
+    smsc_log_debug(logger, "InmanSrv: Starting TCP server ..");
     server->Start();
 
     if (roller) {
-        smsc_log_debug(logger, "InmanSrv: Starting BillingStorage roller");
+        smsc_log_debug(logger, "InmanSrv: Starting BillingStorage roller ..");
         roller->Start();
     }
     
@@ -99,89 +112,102 @@ void Service::start()
 
 void Service::stop()
 {
-    smsc_log_debug( logger, "InmanSrv: Stopping TCP server");
-    server->Stop();
-    server->WaitFor();
+    if (server) {
+        smsc_log_debug( logger, "InmanSrv: Stopping TCP server ..");
+        server->Stop();
+        server->WaitFor();
+    }
 
-    smsc_log_debug( logger, "InmanSrv: Stopping TCAP dispatcher");
+    smsc_log_debug( logger, "InmanSrv: Stopping TCAP dispatcher ..");
     dispatcher->Stop();
     dispatcher->WaitFor();
 
     if (roller) {
-        smsc_log_debug(logger, "InmanSrv: Stopping BillingStorage roller");
+        smsc_log_debug(logger, "InmanSrv: Stopping BillingStorage roller ..");
         roller->Stop();
         roller->WaitFor();
     }
     running = false;
+    smsc_log_debug(logger, "InmanSrv: Stopped.");
 }
 
-void Service::billingFinished(Billing* bill)
+//Local point requests to end connection
+void Service::onBillingConnectClosed(unsigned int connId)
 {
-    assert( bill );
-    unsigned int billId = bill->getId();
-
-    BillingMap::iterator it = workers.find(billId);
-    if (it == workers.end())
-        smsc_log_error(logger, "InmanSrv: Attempt to free unregistered Billing, id: 0x%X", billId);
-    else {
-        smsc_log_debug(logger, "InmanSrv: Bill[0x%X] %scomplete, cdrMode: %d, billingType: %sPAID",
-                        billId, bill->BillComplete() ? "" : "IN", _cfg.cdrMode, 
-                        bill->isPostpaidBill() ? "POST": "PRE");
-        if (_cfg.cdrMode && bill->BillComplete()) {
-            if ((_cfg.cdrMode == InService_CFG::CDR_ALL)
-                || ((_cfg.cdrMode == InService_CFG::CDR_POSTPAID)
-                    && bill->isPostpaidBill())) {
-            	    bfs->bill(bill->getCDRRecord());
-            	    smsc_log_debug(logger, "InmanSrv: CDR written for Billing[0x%X]", billId);
-		}
-        }
-        workers.erase(billId);
+    _mutex.Lock();
+    BillingConnMap::const_iterator it = bConnects.find(connId);
+    if (it != bConnects.end()) {
+        BillingConnect* bcon = (*it).second;
+        bConnects.erase(connId);
+        _mutex.Unlock();
+        delete bcon;
+        smsc_log_debug(logger, "InmanSrv: BillingConnect[0x%X] closed", connId);
+    } else {
+        _mutex.Unlock();
+        smsc_log_warn(logger, "InmanSrv: attempt to close unknown connect[0x%X]", connId);
     }
-    delete bill;
-    smsc_log_debug(logger, "InmanSrv: Billing[0x%X] finished", billId);
 }
-
 /* -------------------------------------------------------------------------- *
  * ServerListener interface implementation:
  * -------------------------------------------------------------------------- */
-void Service::onConnectOpened(Server*, Connect* connect)
+void Service::onConnectOpened(Server* srv, Connect* conn)
 {
-    assert( connect );
-    smsc_log_debug(logger, "InmanSrv: New connection opened");
-    connect->addListener( this );
-    connect->setPipeFormat(ObjectPipe::frmLengthPrefixed);
+    assert(conn);
+    conn->setConnectFormat(Connect::frmLengthPrefixed);
+    BillingConnect *bcon = new BillingConnect(&_cfg.bill, session, conn, this, logger);
+    if (bcon) {
+        _mutex.Lock();
+        bConnects.insert(BillingConnMap::value_type(conn->getSocketId(), bcon));
+        conn->addListener(bcon);
+        _mutex.Unlock();
+        smsc_log_debug(logger, "InmanSrv: New BillingConnect[%u] created",
+                       conn->getSocketId());
+    }
 }
 
-void Service::onConnectClosed(Server*, Connect* connect)
+//Remote point ends connection
+void Service::onConnectClosing(Server* srv, Connect* conn)
 {
-    assert( connect );
-    smsc_log_debug( logger, "InmanSrv: Connection closed" );
-    connect->removeListener( this );
+    assert(conn);
+    unsigned int connId = (unsigned int)conn->getSocketId();
+    _mutex.Lock();
+    BillingConnMap::const_iterator it = bConnects.find(connId);
+    if (it != bConnects.end()) {
+        BillingConnect *bcon = (*it).second;
+        conn->removeListener(bcon);
+        bConnects.erase(connId);
+        _mutex.Unlock();
+
+        delete bcon;
+        smsc_log_debug(logger, "InmanSrv: BillingConnect[%u] closed", connId);
+    } else {
+        _mutex.Unlock();
+        smsc_log_warn(logger, "InmanSrv: attempt to close unknown connect[%u]", connId);
+    }
 }
 
-/* -------------------------------------------------------------------------- *
- * ConnectListener interface implementation:
- * -------------------------------------------------------------------------- */
-void Service::onCommandReceived(Connect* conn, SerializableObject* recvCmd)
+void Service::onServerShutdown(Server* srv, Server::ShutdownReason reason)
 {
-    InmanCommand* cmd = static_cast<InmanCommand*>(recvCmd);
-    assert( cmd );
+//    assert(srv == server);
+    smsc_log_debug(logger, "InmanSrv: TCP server shutdowned, reason %d", reason);
 
-    unsigned int dlgId = cmd->getDialogId();
-    smsc_log_debug(logger, "InmanSrv: Command 0x%X for Billing 0x%X received",
-                   cmd->getObjectId(), dlgId);
+    if (reason != Server::srvStopped) { //try to restart
+        srv->removeListener(this);
+        delete srv;
+        server = NULL;
 
-    Billing* bill;
-    BillingMap::iterator it = workers.find(dlgId);
-    if (it == workers.end()) {
-        bill = new Billing(this, dlgId, session, conn, _cfg.billMode,
-                           _cfg.serviceKey, _cfg.capTimeout, _cfg.tcpTimeout, logger);
-        workers.insert(BillingMap::value_type(dlgId, bill));
-    } else
-        bill = (*it).second;
-    bill->handleCommand(cmd);
+        if (++tcpRestartCount <= INMAN_TCP_RESTART_ATTEMPTS) {
+            smsc_log_debug(logger, "InmanSrv: Restarting TCP server ..");
+            server = new Server(_cfg.host, _cfg.port, SerializerInap::getInstance(),
+                                _cfg.bill.tcpTimeout, 10, logger);
+            server->addListener(this);
+            smsc_log_debug(logger, "InmanSrv: TCP server inited");
+            server->Start();
+        } else {
+            throw SystemError("InmanSrv: TCP server continual failure, exiting.");
+        }
+    }
 }
-
 
 } // namespace inmgr
 } // namespace smsc

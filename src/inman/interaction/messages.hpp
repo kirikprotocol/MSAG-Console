@@ -11,6 +11,7 @@
 using smsc::inman::interaction::ObjectBuffer;
 using smsc::inman::interaction::SerializableObject;
 using smsc::inman::interaction::SerializerITF;
+using smsc::inman::interaction::SerializerException;
 using smsc::inman::common::FactoryT;
 using smsc::inman::cdr::CDRRecord;
 using smsc::inman::interaction::SerializerITF;
@@ -18,35 +19,35 @@ using smsc::inman::interaction::SerializerITF;
 using smsc::inman::InmanErrorCode;
 using smsc::inman::InmanErrorType;
 
-
-#define INMAN_RPCAUSE_LIMIT         (unsigned int)255
-#define INMAN_PROTOCOL_ERROR_BASE   (unsigned int)260
-//TCP dialogue command sequence broken
-#define INMAN_PROTOCOL_ERROR        INMAN_PROTOCOL_ERROR_BASE 
-#define INMAN_PROTOCOL_ERROR_LIMIT  (unsigned int)279
-
-#define INMAN_SCF_ERROR_BASE        (unsigned int)280
-
 namespace smsc  {
 namespace inman {
 namespace interaction {
 
-
-//serializer for Inman commands, transferred over TCP socket
+//Serializer for Inman commands, transferred over TCP socket
+//SerializerInap implements two deserialization modes:
+// - complete: both the packet and contained object are deserialized
+// - partial:  only packet prefix is parsed(required to identify object), remaining data
+//             is set as object data buffer.
 class SerializerInap : public SerializerITF, public FactoryT< unsigned short, SerializableObject >
 {
-    public:
-        enum { FORMAT_VERSION = 0x0001 };
+public:
+    enum { FORMAT_VERSION = 0x0001 };
+    typedef enum  { dsrlPartial = 0, dsrlComplete } DeserializationMode;
 
-        virtual ~SerializerInap();
+    virtual ~SerializerInap();
 
-        SerializableObject* deserialize(ObjectBuffer&);
-        void                serialize(SerializableObject*, ObjectBuffer& out);
+    //SerializerITF interface:
+    SerializableObject* deserialize(ObjectBuffer& in) throw(CustomException); 
+    SerializableObject* deserializeAndOwn(ObjectBuffer* in, bool ownBuf = true) throw(CustomException); 
+    void                serialize(SerializableObject*, ObjectBuffer& out);
 
-        static SerializerInap* getInstance();
+    static SerializerInap* getInstance();
 
-    protected:
-        SerializerInap();
+protected:
+    SerializerInap();
+    SerializableObject* deserializePrefix(ObjectBuffer& in) throw(CustomException);
+
+    DeserializationMode _mode;
 };
 
 
@@ -134,7 +135,7 @@ public:
 
 protected:
     //SerializableObject interface
-    void load(ObjectBuffer& in);
+    void load(ObjectBuffer& in) throw(CustomException);
     void save(ObjectBuffer& out);
 
 private:
@@ -174,7 +175,7 @@ public:
     virtual void handle(SmscHandler*);
 
 protected:
-    virtual void load(ObjectBuffer& in);
+    virtual void load(ObjectBuffer& in) throw(CustomException);
     virtual void save(ObjectBuffer& out);
 
 private:
@@ -202,7 +203,7 @@ public:
 
 protected:
     //SerializableObject interface
-    virtual void load(ObjectBuffer& in);
+    virtual void load(ObjectBuffer& in) throw(CustomException);
     virtual void save(ObjectBuffer& out);
 
 private:
