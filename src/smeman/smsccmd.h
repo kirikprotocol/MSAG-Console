@@ -787,7 +787,7 @@ public:
     _cmd.ref_count = 1;
     _cmd.cmdid = SUBMIT_MULTI_SM_RESP;
     _cmd.dta = new SubmitMultiResp;
-    _cmd.get_MultiResp ()->set_messageId(messageId?"":messageId);
+    _cmd.get_MultiResp ()->set_messageId(messageId?messageId:"");
     _cmd.get_MultiResp()->set_status(status);
     _cmd.dialogId = dialogId;
     _cmd.get_MultiResp()->set_unsuccessCount(0);
