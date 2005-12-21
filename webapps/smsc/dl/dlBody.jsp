@@ -121,8 +121,7 @@
           <%-- <td><img src="/images/but_del.gif" onclick="removeSubmitters('SubmittersRow_<%=SubmittersHex%>')" style="cursor:hand;"></td>  --%>
           <td>
 <%
-            delButton(out, "mbDel", "Del", "dl.delSubmitterHint", "removeSubmitters('SubmittersRow_" + SubmittersHex +
-                    "');return false;");
+            delButton(out, "mbDel", "Del", "dl.delSubmitterHint", "removeSubmitters('SubmittersRow_" + SubmittersHex + "')");
 %>
           </td>
         </tr>
@@ -135,7 +134,7 @@
         </td>
         <td>
 <%
-          addButton(out, "mbAdd", "Add", "dl.addSubmitterHint", "addSubmitters();return false;");
+          addButton(out, "mbAdd", "Add", "dl.addSubmitterHint", "addSubmitters()");
 %>
         </td>
       </tr>

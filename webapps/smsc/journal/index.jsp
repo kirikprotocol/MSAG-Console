@@ -111,7 +111,7 @@ function setSort(sorting)
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbClearNonappliable",  "journal.clear",  "journal.clearHint", "return confirm('"+getLocString("journal.clearConfirm")+"');");
+page_menu_confirm_button(session, out, "mbClearNonappliable",  "journal.clear",  "journal.clearHint", getLocString("journal.clearConfirm"));
 page_menu_space(out);
 page_menu_end(out);
 %>

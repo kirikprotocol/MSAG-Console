@@ -87,7 +87,7 @@ function setSort(sorting)
 </div><%
 page_menu_begin(out);
 page_menu_button(session, out, "mbAdd",    "common.buttons.add",    "infosme.hint.add_schedule");
-page_menu_button(session, out, "mbDelete", "common.buttons.delete", "infosme.hint.del_scheduls", "return confirm('"+getLocString("infosme.confirm.del_schedules")+"');");
+page_menu_confirm_button(session, out, "mbDelete", "common.buttons.delete", "infosme.hint.del_scheduls", getLocString("infosme.confirm.del_schedules"));
 page_menu_space(out);
 page_menu_end(out);
 %>

@@ -1,8 +1,6 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ page import="ru.novosoft.smsc.jsp.smsc.acl.Index,
-                 ru.novosoft.smsc.jsp.*,
-                 ru.novosoft.smsc.admin.acl.AclInfo,
-                 ru.novosoft.smsc.admin.route.Mask"%>
+<%@ page import="ru.novosoft.smsc.admin.acl.AclInfo,
+                 ru.novosoft.smsc.jsp.smsc.acl.Index"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.acl.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -139,7 +137,7 @@ MENU0_SELECTION = "MENU0_ACL";
         String address = (String) i.next();
         %><tr class=row<%=row%2%> id=address_row_<%=row%> address="<%=address%>">
           <td><%=address%></td>
-          <td><%delButton(out, "remove address", "remove address", "acl.delButtonHint", "return delAclAddress("+row+")");%></td>
+          <td><%delButton(out, "remove address", "remove address", "acl.delButtonHint", "delAclAddress("+row+")");%></td>
         </tr><%
         row++;
       }
@@ -147,7 +145,7 @@ MENU0_SELECTION = "MENU0_ACL";
     %>
       <tr class=row<%=row++%2%>>
         <td><input class=txt name=new_address id=new_address_qweqwe></td>
-        <td><%addButton(out, "add address", "add address", "acl.addButtonHint", "return addAclAddress()");%></td>
+        <td><%addButton(out, "add address", "add address", "acl.addButtonHint", "addAclAddress()");%></td>
       </tr>
     </table></div><%
     page_menu_begin(out);

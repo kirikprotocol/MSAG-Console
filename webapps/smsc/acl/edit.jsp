@@ -85,7 +85,7 @@ function addAclAddress()
   </tr>
   <tr class=row0>
   	<td><input class=txt name="addresses" id="new_address"></td>
-  	<td><%addButton(out, "add address", "add address", "acl.addButtonHint", "return addAclAddress()");%></td>
+  	<td><%addButton(out, "add address", "add address", "acl.addButtonHint", "addAclAddress()");%></td>
   </tr>
   </table>
 </div><%

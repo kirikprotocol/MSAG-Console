@@ -163,14 +163,14 @@ MENU0_SELECTION = "MENU0_PROFILES_LOOKUP";
 		case ProfileEx.MATCH_MASK:
 			page_menu_button(session, out, "mbAdd",        "profiles.add",      "profiles.addHint");
 			page_menu_button(session, out, "mbEditMask",   "profiles.editMask", "profiles.editMaskHint");
-			page_menu_button(session, out, "mbDeleteMask", "profiles.deleteMask",  "profiles.deleteMaskHint", "return confirm('"+getLocString("profiles.deleteMaskConfirm")+"');");
+			page_menu_confirm_button(session, out, "mbDeleteMask", "profiles.deleteMask",  "profiles.deleteMaskHint", getLocString("profiles.deleteMaskConfirm"));
 			break;
 		case ProfileEx.MATCH_DEFAULT:
 			page_menu_button(session, out, "mbAdd",        "profiles.add",  "profiles.addHint");
 			break;
 		case ProfileEx.MATCH_EXACT:
 			page_menu_button(session, out, "mbEdit",   "common.buttons.edit",   "profiles.editProfileHint");
-			page_menu_button(session, out, "mbDelete", "common.buttons.delete", "profiles.deleteProfileHint", "return confirm('"+getLocString("profiles.deleteProfileConfirm")+"');");
+			page_menu_confirm_button(session, out, "mbDelete", "common.buttons.delete", "profiles.deleteProfileHint", getLocString("profiles.deleteProfileConfirm"));
 			break;
 	}
 	page_menu_space(out);

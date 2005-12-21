@@ -177,7 +177,7 @@ function closeQuery(){
 		{
 			page_menu_begin(out);
 			page_menu_button(session, out, "mbAdd",  "profiles.add",  "profiles.addHint");
-			page_menu_button(session, out, "mbDelete", "common.buttons.delete", "profiles.deleteHint", "return confirm('"+getLocString("profiles.deleteConfirm")+"');", false);
+			page_menu_confirm_button(session, out, "mbDelete", "common.buttons.delete", "profiles.deleteHint", getLocString("profiles.deleteConfirm"), null, false);
 			page_menu_space(out);
 			page_menu_end(out);
 		}

@@ -88,8 +88,7 @@ function checkCheckboxesForNotifyTemplate() {
 </div><%
 page_menu_begin(out);
 page_menu_button(session, out, "mbInformAdd",    "mcisme.button.add_template", "mcisme.hint.add_inform_template");
-page_menu_button(session, out, "mbInformDelete", "mcisme.button.del_template", "mcisme.button.del_inform_template",
-                               "return confirm('"+getLocString("mcisme.confirm.del_inform_template")+"');");
+page_menu_confirm_button(session, out, "mbInformDelete", "mcisme.button.del_template", "mcisme.button.del_inform_template", getLocString("mcisme.confirm.del_inform_template"));
 page_menu_space(out);
 page_menu_end(out);
 rowN = 1;
@@ -135,8 +134,7 @@ List notifyList = bean.getNotifyTemplates();
 </div><%
 page_menu_begin(out);
 page_menu_button(session, out, "mbNotifyAdd",    "mcisme.button.add_template", "mcisme.button.add_notify_template");
-page_menu_button(session, out, "mbNotifyDelete", "mcisme.button.del_template", "mcisme.button.del_notify_template",
-                               "return confirm('"+getLocString("mcisme.confirm.del_notify_template")+"');");
+page_menu_confirm_button(session, out, "mbNotifyDelete", "mcisme.button.del_template", "mcisme.button.del_notify_template", getLocString("mcisme.confirm.del_notify_template"));
 page_menu_space(out);
 page_menu_end(out);%>
 <script type="text/javascript">checkCheckboxesForNotifyTemplate();</script>

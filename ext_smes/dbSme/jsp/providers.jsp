@@ -104,7 +104,7 @@ function edit(pName)
 </div><%
 page_menu_begin(out);
 page_menu_button(session, out, "mbAdd",     "dbsme.button.add_provider",   "dbsme.hint.add_provider");
-page_menu_button(session, out, "mbDelete",  "dbsme.button.delete_providers", "dbsme.hint.delete_providers", "return confirm('"+getLocString("dbsme.confirm.delete_providers")+"')");
+page_menu_confirm_button(session, out, "mbDelete",  "dbsme.button.delete_providers", "dbsme.hint.delete_providers", getLocString("dbsme.confirm.delete_providers"));
 page_menu_space(out);
 page_menu_button(session, out, "mbEnable",  "dbsme.button.enable",  "dbsme.hint.enable_providers",  !bean.isConfigChanged());
 page_menu_button(session, out, "mbDisable", "dbsme.button.disable", "dbsme.hint.disable_providers", !bean.isConfigChanged());

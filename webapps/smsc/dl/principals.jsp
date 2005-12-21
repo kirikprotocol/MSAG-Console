@@ -112,7 +112,7 @@ for (Iterator i = bean.getPrincipals().iterator(); i.hasNext(); )
     }
     page_menu_begin(out);
     page_menu_button(session, out, "mbAdd",  "dl.addPrincipal",  "dl.addPrincipalHint");
-    page_menu_button(session, out, "mbDelete", "dl.deletePrincipal", "dl.deletePrincipalHint", "return confirm('"+getLocString("dl.deletePrincipalConfirm")+"');");
+    page_menu_confirm_button(session, out, "mbDelete", "dl.deletePrincipal", "dl.deletePrincipalHint", getLocString("dl.deletePrincipalConfirm"));
     page_menu_space(out);
     page_menu_end(out);
   }

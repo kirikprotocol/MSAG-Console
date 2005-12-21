@@ -68,8 +68,7 @@ function checkCheckboxesForRules() {
 </div><%
 page_menu_begin(out);
 page_menu_button(session, out, "mbAdd",    "mcisme.button.add_new",   "mcisme.hint.add_new_rule");
-page_menu_button(session, out, "mbDelete", "mcisme.button.del_rules", "mcisme.hint.del_rules",
-                               "return confirm('"+getLocString("mcisme.confirm.del_rules")+"');");
+page_menu_confirm_button(session, out, "mbDelete", "mcisme.button.del_rules", "mcisme.hint.del_rules", getLocString("mcisme.confirm.del_rules"));
 page_menu_space(out);
 page_menu_end(out);
 %>

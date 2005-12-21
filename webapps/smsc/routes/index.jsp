@@ -255,15 +255,15 @@ for(Iterator i = bean.getRoutes().iterator(); i.hasNext(); row++)
         if (!bean.getAppContext().getStatuses().isRoutesRestored())
             page_menu_button(session, out, "mbSave", "common.buttons.saveCurrent", "routes.saveCurrentHint");
     if (bean.getAppContext().getStatuses().isRoutesSaved() && !bean.getAppContext().getStatuses().isRoutesRestored())
-        page_menu_button(session, out, "mbRestore", "common.buttons.loadSaved", "routes.loadSavedHint",
+        page_menu_confirm_button(session, out, "mbRestore", "common.buttons.loadSaved", "routes.loadSavedHint",
                          restoreDate != null
-                                 ? "return confirm('" + getLocString("routes.loadSavedConfirmPre") + restoreDate + getLocString("routes.loadSavedConfirmPost") + "');"
+                                 ? getLocString("routes.loadSavedConfirmPre") + restoreDate + getLocString("routes.loadSavedConfirmPost")
                                  : null
         );
     if (bean.getAppContext().getStatuses().isRoutesChanged() || bean.getAppContext().getStatuses().isSubjectsChanged())
-        page_menu_button(session, out, "mbLoad", "common.buttons.restoreApplied", "routes.restoreAppliedHint",
+        page_menu_confirm_button(session, out, "mbLoad", "common.buttons.restoreApplied", "routes.restoreAppliedHint",
                          loadDate != null
-                                 ? "return confirm('" + getLocString("routes.restoreAppliedConfirmPre") + loadDate + getLocString("routes.restoreAppliedConfirmPost") + "');"
+                                 ? getLocString("routes.restoreAppliedConfirmPre") + loadDate + getLocString("routes.restoreAppliedConfirmPost")
                                  : null
         );
     page_menu_space(out);

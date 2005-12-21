@@ -68,8 +68,7 @@ function checkCheckboxesForOffsets() {
 </div><%
 page_menu_begin(out);
 page_menu_button(session, out, "mbAdd",    "mcisme.button.add_new",  "mcisme.hint.add_new_tz");
-page_menu_button(session, out, "mbDelete", "mcisme.button.del_tz", "mcisme.hint.del_tz",
-                               "return confirm('"+getLocString("mcisme.confirm.tz")+"');");
+page_menu_confirm_button(session, out, "mbDelete", "mcisme.button.del_tz", "mcisme.hint.del_tz", getLocString("mcisme.confirm.tz"));
 page_menu_space(out);
 page_menu_end(out);
 %>

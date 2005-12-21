@@ -142,10 +142,10 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 			}
 			smscList = new SmscList(webappConfig, this);
 			smeManager = new SmeManagerImpl(smsc);
-			ResourceGroupManager resourceGroupManager = new ResourceGroupManager(this);
 			serviceManager = new ServiceManagerImpl();
 			serviceManager.add(smsc);
 			routeSubjectManager = new RouteSubjectManagerImpl(smeManager);
+			ResourceGroupManager resourceGroupManager = new ResourceGroupManager(this);
 			hostsManager = new HostsManager(resourceGroupManager, serviceManager, smeManager, routeSubjectManager);
 			aclManager = new AclManager(this);
 			Config localeConfig = new Config(new File(webappConfig.getString("system.localization file")));

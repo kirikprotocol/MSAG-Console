@@ -139,7 +139,7 @@ if (bean.isEditAllowed())
 {
 	page_menu_begin(out);
 	page_menu_button(session, out, "mbAdd",  "profiles.add",  "profiles.addHint");
-	page_menu_button(session, out, "mbDelete", "common.buttons.delete", "profiles.deleteHint", "return confirm('"+getLocString("profiles.deleteConfirm")+"');");
+	page_menu_confirm_button(session, out, "mbDelete", "common.buttons.delete", "profiles.deleteHint", getLocString("profiles.deleteConfirm"));
 	page_menu_space(out);
 	page_menu_end(out);
 }%>

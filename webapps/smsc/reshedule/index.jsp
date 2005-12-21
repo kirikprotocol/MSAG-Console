@@ -39,7 +39,7 @@ include file="/WEB-INF/inc/html_3_header.jsp"%><%@
 include file="/WEB-INF/inc/collapsing_tree.jsp"%><%
 page_menu_begin(out);
 page_menu_button(session, out, "mbAdd",    "common.buttons.add",  "reschedule.addHint", !bean.isAllErrorsAssigned());
-page_menu_button(session, out, "mbDelete", "common.buttons.delete",  "reschedule.deleteHint", "return confirm('"+getLocString("reschedule.deleteConfirm")+"')");
+page_menu_confirm_button(session, out, "mbDelete", "common.buttons.delete",  "reschedule.deleteHint", getLocString("reschedule.deleteConfirm"));
 page_menu_space(out);
 page_menu_button(session, out, "mbSave",  "common.buttons.save",  "reschedule.saveHint");
 page_menu_button(session, out, "mbReset", "common.buttons.reset", "reschedule.resetHint");
@@ -111,7 +111,7 @@ function clickEdit(value)
 </div><%
 page_menu_begin(out);
 page_menu_button(session, out, "mbAdd",    "common.buttons.add",  "reschedule.addHint", !bean.isAllErrorsAssigned());
-page_menu_button(session, out, "mbDelete", "common.buttons.delete",  "reschedule.deleteHint", "return confirm('"+getLocString("reschedule.deleteConfirm")+"')");
+page_menu_confirm_button(session, out, "mbDelete", "common.buttons.delete",  "reschedule.deleteHint", getLocString("reschedule.deleteConfirm"));
 page_menu_space(out);
 page_menu_button(session, out, "mbSave",  "common.buttons.save",  "reschedule.saveHint");
 page_menu_button(session, out, "mbReset", "common.buttons.reset", "reschedule.resetHint");

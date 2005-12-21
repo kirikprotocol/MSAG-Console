@@ -75,7 +75,7 @@ function setSort(sorting)
 <%
 page_menu_begin(out);
 page_menu_button(session, out, "mbAdd",    "common.buttons.add",    "infosme.hint.add_provider");
-page_menu_button(session, out, "mbDelete", "common.buttons.delete", "infosme.hint.del_providers", "return confirm('"+getLocString("infosme.confirm.del_providers")+"');");
+page_menu_confirm_button(session, out, "mbDelete", "common.buttons.delete", "infosme.hint.del_providers", getLocString("infosme.confirm.del_providers"));
 page_menu_space(out);
 page_menu_end(out);
 %>
