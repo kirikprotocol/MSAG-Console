@@ -38,12 +38,12 @@ struct CDRRecord {
     std::string     _dstIMSI;       //DST_IMSI: recipient IMSI
     std::string     _dstMSC;        //DST_MSC:	recipient MSC
     std::string     _dstSMEid;      //DST_SME_ID: recipient SME identifier
-    CDRDeliveryStatus _dlvrRes;   //STATUS: delivery status
-
-    //not processed by Inman for now:
+    uint32_t        _dlvrRes;       //STATUS: delivery status: 0 or error code
     std::string     _divertedAdr;   //DIVERTED_FOR: if cdrType == dpDiverted, keeps
                                     //original destination number that differs from
                                     //address to which delivery was made.
+
+    //not processed by Inman for now:                                    
     uint32_t        _dpLength;      //DATA_LENGTH: message length: in chars for dpText,
                                     //in bytes for dpBinary.
 //private:
