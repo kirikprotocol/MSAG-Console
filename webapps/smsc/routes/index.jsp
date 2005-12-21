@@ -119,7 +119,7 @@ function clickClickable(headId, bodyId)
 
 <%
 page_small_menu_begin(out);
-page_menu_button(session, out, "mbQuickFilter",  "common.buttons.apply",  "common.buttons.applyFilter","return clickFilterSelect()",true);
+page_menu_button(session, out, "mbQuickFilter",  "common.buttons.apply",  "common.buttons.applyFilter","clickFilterSelect()",true);
 page_menu_button(session, out, "mbClear", "common.buttons.clear", "common.buttons.clearFilter", "clickClear()");
 //page_menu_button(out, "mbCancel", "common.buttons.cancel", "common.buttons.cancelFilterEditing", "clickCancel()");
 //page_menu_space(out);

@@ -39,10 +39,10 @@
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <div class=content>
 <input type=hidden name=initialized value=true>
-<input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
+<input type=hidden id=startPosition name=startPosition value="<%=bean.getStartPosition()%>">
 <input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
 <input type=hidden name=sort>
-<input type=hidden name=edit>
+<input type=hidden id=edit name=edit>
 <%=getLocString("dl.addressStartsWith")%>
 <input class=txt name=filterAddress value="<%=bean.getFilterAddress() == null ? "" : StringEncoderDecoder.encode(bean.getFilterAddress())%>" validation="address_prefix" onkeyup="resetValidation(this)">
 </div>
