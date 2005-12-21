@@ -788,42 +788,6 @@ void StatisticsManager::flushHttpCounters(int index)
             srvStat = 0;
         }
 
-        // Provider statistics
-        value32 = httpStatByProviderId[index].Count(); 
-        value32 = htonl(value32); buff.Append((uint8_t *)&value32, sizeof(value32));
-
-        IntHash<HttpStat>::Iterator stIter = httpStatByProviderId[index].First();
-        int pId = -1;
-        HttpStat pStat;
-        while (stIter.Next(pId, pStat))
-        {
-            if (pId != -1) continue;
-            
-            int cnt=2;
-            // Writes length of smeId and smeId
-            value32 = htonl(pId); buff.Append((uint8_t *)&value32, sizeof(value32));
-            // Writes sme statistics for this smeId
-            value32 = htonl(pStat.request);            buff.Append((uint8_t *)&value32, sizeof(value32));
-            value32 = htonl(pStat.requestRejected);    buff.Append((uint8_t *)&value32, sizeof(value32));
-            value32 = htonl(pStat.response);           buff.Append((uint8_t *)&value32, sizeof(value32));
-            value32 = htonl(pStat.responseRejected);   buff.Append((uint8_t *)&value32, sizeof(value32));
-            value32 = htonl(pStat.delivered);          buff.Append((uint8_t *)&value32, sizeof(value32));
-            value32 = htonl(pStat.failed);             buff.Append((uint8_t *)&value32, sizeof(value32));
-
-            // Writes sme common errors count.
-            value32 = pStat.errors.Count(); 
-            value32 = htonl(value32); buff.Append((uint8_t *)&value32, sizeof(value32));
-
-            IntHash<int>::Iterator sit = pStat.errors.First();
-            int secError, seCounter;
-            while (sit.Next(secError, seCounter))
-            {
-                // Statistics for this errors
-                value32 = htonl(secError);  buff.Append((uint8_t *)&value32, sizeof(value32));
-                value32 = htonl(seCounter); buff.Append((uint8_t *)&value32, sizeof(value32));
-            }
-        }
-
         dumpHttpCounters(buff, buff.GetPos(), flushTM);
 
     }

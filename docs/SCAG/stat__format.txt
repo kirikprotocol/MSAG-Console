@@ -1,6 +1,5 @@
 <stat> = <hour: uint8><min: uint8>	<routeCount:      uint32><routeRecord:     1...routeCount>
 					<servicesCount:   uint32><serviceRecord:   1...serviceCount>
-					<providerCount:   uint32><providerRecord:  1...providerCount>
 <routeRecord> = <routeIdLength: uint8><routeId: routeIdLength bytes>
 			<providerId: 		uint32>
 			<request:    		uint32>
@@ -16,16 +15,6 @@
 
 <serviceRecord> = <serviceIdLength: uint8><serviceId: serviceIdLength bytes>
 			<providerId: 		uint32>
-			<request:    		uint32>
-			<requestRejected: 	uint32>
-			<response: 		uint32>
-			<responseRejected: 	uint32>
-			<delivered: 		uint32>
-			<failed: 		uint32>
-		<errCount: uint32><errRecord: 1...errCount>
-<errRecord> = <errCode: uint32><errCounter: uint32>
-
-<providerRecord> = 	<providerId: 		uint32>
 			<request:    		uint32>
 			<requestRejected: 	uint32>
 			<response: 		uint32>
