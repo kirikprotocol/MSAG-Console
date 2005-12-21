@@ -111,8 +111,11 @@ void TSM::BEGIN_received(uint8_t _laddrlen, uint8_t *_laddr, uint8_t _raddrlen, 
     req.invokeId = msg.getInvokeId();
     req.mms = mtf.isMMS();
     makeSmsToRequest(&mtf,&req);
-    if (tco->sender) tco->sender->send(&req);
-    smsc_log_debug(logger,"tsm otid=%s receive BEGIN with component, mms=%d, INVOKE sent",ltrid.toString().c_str(),req.mms);
+    if (tco->sender)
+    {
+      smsc_log_debug(logger,"tsm otid=%s receive BEGIN with component, mms=%d, INVOKE sending",ltrid.toString().c_str(),req.mms);
+      tco->sender->send(&req);
+    }
   }
   else
   {

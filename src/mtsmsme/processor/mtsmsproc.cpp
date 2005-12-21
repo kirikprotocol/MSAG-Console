@@ -33,7 +33,7 @@ using smsc::core::synchronization::MutexGuard;
 using smsc::mtsmsme::processor::util::getReturnCodeDescription;
 
 #define MAXENTRIES 1000
-#define USER USER03_ID
+#define USER USER04_ID
 #define MAXSEGM 272
 #define SSN 191
 #define TCINST 0
