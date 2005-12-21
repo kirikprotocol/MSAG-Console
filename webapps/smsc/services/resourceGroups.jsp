@@ -46,7 +46,7 @@ page_menu_begin(out);
 page_menu_button(session, out, "mbAddService",  "common.buttons.add",  "services.add");
 page_menu_button(session, out, "mbDelete", "common.buttons.delete", "services.deleteHint", "return confirm('" + getLocString("services.deleteConfirm") + "')");
 page_menu_space(out);
-page_menu_button(session, out, "mbDisconnectServices",  "common.buttons.disconnect",  "services.disconnectHint", "return confirm('" + getLocString("services.disconnectConfirm") + "')", bean.isSmscAlive());
+page_menu_confirm_button(session, out, "mbDisconnectServices",  "common.buttons.disconnect",  "services.disconnectHint", getLocString("services.disconnectConfirm"), null, bean.isSmscAlive());
 page_menu_button(session, out, "mbStartService",  "common.buttons.online",  "common.hints.online");
 page_menu_button(session, out, "mbStopService",  "common.buttons.offline",  "common.hints.offline");
 page_menu_button(session, out, "mbSwitchOver",  "common.buttons.switchOver",  "common.hints.switchOver");

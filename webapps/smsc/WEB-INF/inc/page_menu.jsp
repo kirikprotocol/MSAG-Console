@@ -29,45 +29,33 @@
   void page_menu_button(HttpSession session, JspWriter out, String name, String value, String title, boolean enabled) throws IOException {
     page_menu_button(session, out, name, value, title, null, enabled);
   }
-//void page_menu_button(JspWriter out, String name, String value, String title, String onclick, boolean enabled) throws IOException
-//{
-//	if (page_menu_delimiter_needed)
-//		out.print("<td width=\"1px\">|</td>");
-//	out.print("<td width=\"1px\">");
-//
-//	out.print("<a id=\"" + name + "\" jbuttonName=\"" + name + "\" jbuttonValue=\"" + value + "\"" + (enabled ? "" : " disabled")
-//				+ ((title != null && title.length() > 0) ? " title=\"" + title + "\"" : "")
-//				+ ((onclick != null && onclick.length() > 0) ? (" jbuttonOnclick=\"" + onclick + '"') : "" )
-//				+">" + value + "</a>");
-//
-//    //out.print("<input type=submit id=\"" + name + "\" name=\"" + name + "\" value=\"" + value + "\" title=\"" + title + "\"" + (enabled ? "" : " disabled") + ((onclick != null && onclick.length() > 0) ? (" onclick=\"" + onclick + '"') : "" ) +">");
-//	out.print("</td>");
-//	page_menu_delimiter_needed = true;
-//}
 
   void page_menu_button(HttpSession session, JspWriter out, String name, String value, String title, String onclick, boolean enabled) throws IOException {
     if (page_menu_delimiter_needed)
       out.print("<td width=\"1px\">|</td>");
     out.print("<td width=\"1px\">");
- /*   boolean isNotNull = false;
-    if (session.getAttribute("BROWSER_TYPE") != null) {
-      isNotNull = true;
-    }
-    if (isNotNull) {
-      if (session.getAttribute("BROWSER_TYPE").equals("IE")) {
-        out.print("<a id=\"" + name + "\" jbuttonName=\"" + name + "\" jbuttonValue=\"" + value + "\"" + (enabled ? "" : " disabled")
-                + ((title != null && title.length() > 0) ? " title=\"" + getLocString(title) + "\"" : "")
-                + ((onclick != null && onclick.length() > 0) ? (" jbuttonOnclick=\"" + onclick + '"') : "")
-                + ">" + getLocString(value) + "</a>");
-      } else {
-        out.print("<input type=submit id=\"" + name + "\" name=\"" + name + "\" value=\"" + getLocString(value) + "\" title=\"" + getLocString(title) + "\"" + (enabled ? "" : " disabled") + ((onclick != null && onclick.length() > 0) ? (" onclick=\"" + onclick + '"') : "") + ">");
-      }
-    } else {
-      out.print("<input type=submit id=\"" + name + "\" name=\"" + name + "\" value=\"" + getLocString(value) + "\" title=\"" + getLocString(title) + "\"" + (enabled ? "" : " disabled") + ((onclick != null && onclick.length() > 0) ? (" onclick=\"" + onclick + '"') : "") + ">");
-    }*/
     out.print("<a id=\"" + name + "\"" + (enabled ? "" : " disabled")
             + ((title != null && title.length() > 0) ? " title=\"" + getLocString(title) + "\"" : "")
-            + ((onclick != null && onclick.length() > 0) ? (" href=\"javascript:" + onclick + '"') : " href=\"javascript:clickSubmit('"+name+"','"+getLocString(value)+"')\"")
+            + ((onclick != null && onclick.length() > 0) ? (" href=\"javascript:" + onclick + '"') : " href=\"javascript:clickSubmit('" + name + "','" + getLocString(value) + "')\"")
+            + ">" + getLocString(value) + "</a>");
+    out.print("</td>");
+    page_menu_delimiter_needed = true;
+  }
+
+  void page_menu_confirm_button(HttpSession session, JspWriter out, String name, String value, String title, String confirmation) throws IOException {
+    page_menu_confirm_button(session, out, name, value, title, confirmation, null, true);
+  }
+
+  void page_menu_confirm_button(HttpSession session, JspWriter out, String name, String value, String title, String confirmation, String onclick) throws IOException {
+    page_menu_confirm_button(session, out, name, value, title, confirmation, onclick, true);
+  }
+  void page_menu_confirm_button(HttpSession session, JspWriter out, String name, String value, String title, String confirmation, String onclick, boolean enabled) throws IOException {
+    if (page_menu_delimiter_needed)
+      out.print("<td width=\"1px\">|</td>");
+    out.print("<td width=\"1px\">");
+    out.print("<a id=\"" + name + "\"" + (enabled ? "" : " disabled")
+            + ((title != null && title.length() > 0) ? " title=\"" + getLocString(title) + "\"" : "")
+            + ((onclick != null && onclick.length() > 0) ? (" href=\"javascript:" + onclick + '"') : " href=\"javascript:if( confirm('"+confirmation+"') ) clickSubmit('" + name + "','" + getLocString(value) + "')\"")
             + ">" + getLocString(value) + "</a>");
     out.print("</td>");
     page_menu_delimiter_needed = true;
