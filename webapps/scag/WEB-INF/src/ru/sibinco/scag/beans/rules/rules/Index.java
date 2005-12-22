@@ -3,7 +3,9 @@ package ru.sibinco.scag.beans.rules.rules;
 import ru.sibinco.scag.beans.TabledBeanImpl;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.backend.rules.RuleManager;
+import ru.sibinco.scag.backend.rules.Rule;
 import ru.sibinco.lib.bean.TabledBean;
+import ru.sibinco.lib.SibincoException;
 
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpServletRequest;
@@ -19,7 +21,7 @@ import java.util.*;
  */
 public class Index extends TabledBeanImpl implements TabledBean
 {
-  private final Map rules = Collections.synchronizedMap(new HashMap());
+  //private final Map rules = Collections.synchronizedMap(new HashMap());
   private boolean newRule=false;
   protected HttpSession session = null;
 
@@ -42,7 +44,23 @@ public class Index extends TabledBeanImpl implements TabledBean
 
   protected void delete()
   {
-    rules.keySet().removeAll(checkedSet);
+    RuleManager ruleManager=appContext.getRuleManager();
+    final Map rules =  ruleManager.getRules();
+    //rules.keySet().removeAll(checkedSet);
+    for (Iterator iterator = checkedSet.iterator(); iterator.hasNext();)
+    {
+          final String ruleId = (String) iterator.next();
+          Rule rule = (Rule)rules.get(Long.decode(ruleId));
+          try
+          {
+            ruleManager.removeRule(ruleId, rule.getTransport().toLowerCase());
+          }
+          catch (SibincoException e)
+          {
+              e.printStackTrace();
+          }
+          rules.remove(Long.decode(ruleId));
+    }
   }
 }
 

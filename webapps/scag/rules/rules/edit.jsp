@@ -13,7 +13,7 @@
     </jsp:attribute>
     <jsp:body>
         <sm-ep:properties title="">
-            <sm-ep:txt title="Name:" name="name"/>
+            <sm-ep:txt title="Name:" name="name" validation="ruleName"/>
             <sm-ep:list title="Transport" name="transportId"
                         values="${fn:join(bean.transportIds, ',')}"
                         valueTitles="${fn:join(bean.transportTitles, ',')}"/>

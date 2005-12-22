@@ -277,7 +277,14 @@ public class RuleManager
         throw new SibincoException("Couldn't save new rule template", e);
       }
     }
-
+    public synchronized void removeRule(String ruleId, String transport) throws SibincoException
+    {
+        //gateway.removeRule(ruleId);
+          final File folder = new File(rulesFolder, transport);
+          String filename="rule_"+ruleId+".xml";
+          File fileForDeleting= new File(folder,filename);
+          if (fileForDeleting.delete()!=true) throw new SibincoException("Couldn't delete rule " + fileForDeleting.getAbsolutePath());
+    }
 
 }
 
