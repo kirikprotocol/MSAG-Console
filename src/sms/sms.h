@@ -1709,7 +1709,7 @@ struct SMS
   {
     messageBody.setIntProperty(tag,value);
   }
-  const string& getStrProperty(int tag)
+  const string& getStrProperty(int tag)const
   {
     return messageBody.getStrProperty(tag);
   }
@@ -1725,7 +1725,7 @@ struct SMS
   {
     return messageBody.hasIntProperty(tag);
   }
-  bool hasStrProperty(int tag)
+  bool hasStrProperty(int tag)const
   {
     return messageBody.hasStrProperty(tag);
   }
