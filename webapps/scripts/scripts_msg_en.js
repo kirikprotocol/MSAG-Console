@@ -25,3 +25,4 @@ var causeValueErrorMsg_pre = "Invalid release cause: value '";
 var causeValueErrorMsg_post = "' is undefined";
 
 var unknownValidationTypeErrorMsg = "unknown validation type";
+var wrongRuleNameMsg = "Rule name can't contain \", < , > , & , \' character(s)";

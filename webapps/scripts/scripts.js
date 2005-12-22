@@ -262,6 +262,25 @@ function validateField_release_cause(elem)
     return validationError(elem, causeValueErrorMsg_pre + intValue + causeValueErrorMsg_post);
 }
 
+function validateField_ruleName(elem)
+{
+   var pattern = /^.*["&<>'].*$/;
+   if (elem.value == null || elem.value.length == 0)
+   {
+	 validationError(elem, nonEmptyErrorMsg)
+	 //validationError(elem, "Must be not empty");
+	 return false;
+   }
+   else if (elem.value.match(pattern) != null)
+   {
+     validationError(elem, wrongRuleNameMsg)
+     //validationError(elem, "Rule name can't contain \", < , > , & , \' character(s)");
+     return false;
+   }
+   else
+     return true;
+}
+
 function validateField(elem)
 {
     switch (elem.validation)
@@ -283,6 +302,7 @@ function validateField(elem)
     case "reschedule": return validateField_reschedule(elem);
     case "release_cause": return validateField_release_cause(elem);
     case "language": return validateField_language(elem);
+    case "ruleName": return validateField_ruleName(elem);
     }
     alert(unknownValidationTypeErrorMsg + ": " + elem.validation);
     return false;
