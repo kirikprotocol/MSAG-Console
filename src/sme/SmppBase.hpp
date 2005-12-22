@@ -1124,6 +1124,7 @@ protected:
         //disposePdu(pdu);
         writer.Shutdown();
         close();
+        listener->handleError(smppErrorNetwork);
       }break;
       default:
       {
