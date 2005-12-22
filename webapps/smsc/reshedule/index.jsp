@@ -46,7 +46,7 @@ page_menu_button(session, out, "mbReset", "common.buttons.reset", "reschedule.re
 page_menu_end(out);
 %><%-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~ SMSC Config ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
 <div class=content>
-<input type=hidden name=editKey>
+<input type=hidden name=editKey id=editKey>
 <script>
 function clickEdit(value)
 {
