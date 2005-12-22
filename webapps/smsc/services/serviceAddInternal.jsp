@@ -7,7 +7,7 @@ TITLE = getLocString("services.addTitle2");
 switch(bean.process(request))
 {
 	case ServiceAddInternal.RESULT_DONE:
-		response.sendRedirect("index.jsp");
+		response.sendRedirect("resourceGroups.jsp");
 		return;
 	case ServiceAddInternal.RESULT_OK:
 
