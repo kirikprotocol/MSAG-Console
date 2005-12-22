@@ -9,7 +9,7 @@ package ru.novosoft.smsc.util;
 import java.util.*;
 
 
-public class SortedVector extends Vector
+public class SortedVector extends ArrayList
 {
   private Comparator comparator = null;
 
@@ -31,18 +31,13 @@ public class SortedVector extends Vector
     comparator = comp;
   }
 
-  public SortedVector(int initialCapacity, int capacityIncrement, Comparator comp)
-  {
-    super(initialCapacity, capacityIncrement);
-    comparator = comp;
-  }
 
   public void add(int index, Object element)
   {
     throw new UnsupportedOperationException("Inserting in any specified position is not allowed in SortedVector");
   }
 
-  public synchronized boolean add(Object o)
+  public boolean add(Object o)
   {
     int pos = Collections.binarySearch(this, o, comparator);
     if (pos < 0)
@@ -51,12 +46,12 @@ public class SortedVector extends Vector
     return true;
   }
 
-  public synchronized void addElement(Object obj)
+  public void addElement(Object obj)
   {
     this.add(obj);
   }
 
-  public synchronized boolean addAll(Collection c)
+  public boolean addAll(Collection c)
   {
     for (Iterator i = c.iterator(); i.hasNext();) {
       this.add(i.next());
@@ -64,7 +59,7 @@ public class SortedVector extends Vector
     return !c.isEmpty();
   }
 
-  public synchronized boolean addAll(int index, Collection c)
+  public boolean addAll(int index, Collection c)
   {
     throw new UnsupportedOperationException("Inserting in any specified position is not allowed in SortedVector");
   }
@@ -74,13 +69,17 @@ public class SortedVector extends Vector
     this.add(index, obj);
   }*/
 
-  public synchronized Object set(int index, Object element)
+  public Object set(int index, Object element)
   {
     throw new UnsupportedOperationException("Replacing elements is not allowed in SortedVector");
   }
 
-  public synchronized void setElementAt(Object obj, int index)
+  public void setElementAt(Object obj, int index)
   {
     this.set(index, obj);
+  }
+
+  public void sort() {
+    Collections.sort(this, comparator);
   }
 }

@@ -14,16 +14,16 @@ import java.util.*;
 
 public abstract class AbstractDataSourceImpl implements DataSource
 {
-  protected Vector data = new Vector();
+  protected ArrayList data = new ArrayList();
   protected Map sorts = new HashMap();
   protected String[] columnNames = null;
 
   protected AbstractDataSourceImpl(String[] columnNames)
   {
     this.columnNames = columnNames;
-    for (int i = 0; i < columnNames.length; i++) {
+/*    for (int i = 0; i < columnNames.length; i++) {
       sorts.put(columnNames[i], new SortedVector(new DataItemComparator(columnNames[i])));
-    }
+    }*/
   }
 
   public String[] getColumnNames()
@@ -34,17 +34,18 @@ public abstract class AbstractDataSourceImpl implements DataSource
   protected void add(DataItem item)
   {
     data.add(item);
-    for (Iterator i = sorts.values().iterator(); i.hasNext();) {
+/*    for (Iterator i = sorts.values().iterator(); i.hasNext();) {
       ((SortedVector) i.next()).add(item);
-    }
+    }*/
   }
 
   protected void remove(DataItem item)
   {
     data.remove(item);
     for (Iterator i = sorts.values().iterator(); i.hasNext();) {
-      ((SortedVector) i.next()).remove(item);
+      ((SortedVector) i.next()).clear();
     }
+    sorts.clear();
   }
 
   public void clear()
@@ -53,6 +54,7 @@ public abstract class AbstractDataSourceImpl implements DataSource
     for (Iterator i = sorts.values().iterator(); i.hasNext();) {
       ((SortedVector) i.next()).clear();
     }
+    sorts.clear();
   }
 
   public QueryResultSet query(Query query_to_run)
@@ -64,9 +66,14 @@ public abstract class AbstractDataSourceImpl implements DataSource
       isNegativeSort = true;
     }
 
-    Vector srcVector = data;
-    if (query_to_run.getSortOrder().size() > 0)
+    ArrayList srcVector = data;
+    if (query_to_run.getSortOrder().size() > 0) {
       srcVector = (SortedVector) sorts.get(sort);
+      if( srcVector == null ) {
+        srcVector = new SortedVector(data, new DataItemComparator(sort));
+        sorts.put(sort, srcVector);
+      }
+    }
     if (query_to_run.getSortOrder().size() > 1)
       throw new UnsupportedOperationException("Hierarchical sorts not implemented");
 
@@ -75,7 +82,7 @@ public abstract class AbstractDataSourceImpl implements DataSource
     Filter filter = query_to_run.getFilter();
 
     if (isNegativeSort) {
-      Vector reversedSrcVector = new Vector(srcVector);
+      ArrayList reversedSrcVector = new ArrayList(srcVector);
       Collections.reverse(reversedSrcVector);
       srcVector = reversedSrcVector;
     }
