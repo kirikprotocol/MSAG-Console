@@ -10,7 +10,7 @@
 
 #define __FUNCTION__ __func__
 
-#define DLSMSADMIN
+//#define DLSMSADMIN
 
 namespace smsc{
 namespace distrlist{
