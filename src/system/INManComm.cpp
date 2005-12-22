@@ -58,6 +58,15 @@ static void FillChargeOp(SMSId id,smsc::inman::interaction::ChargeSms& op,const 
   op.setMsgId(id);
   op.setServiceOp(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)?sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP):-1);
   op.setPartsNum(sms.getIntProperty(Tag::SMSC_ORIGINALPARTSNUM));
+  if(sms.hasStrProperty(Tag::SMPP_SHORT_MESSAGE))
+  {
+    op.setMsgLength(sms.getStrProperty(Tag::SMPP_SHORT_MESSAGE).length());
+  }else
+  {
+    unsigned len;
+    sms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+    op.setMsgLength(len);
+  }
 }
 
 
