@@ -994,7 +994,7 @@ public:
     return cmd;
   }
 
-  static SmscCommand makeSmppPduCommand(SmppHeader* pdu)
+  static SmscCommand makeSmppPduCommand(SmppHeader* pdu,int channel/*1 receiver,2 transmitter*/)
   {
     SmscCommand cmd;
     cmd.cmd=new _SmscCommand;
@@ -1002,7 +1002,7 @@ public:
     _cmd.ref_count=1;
     _cmd.cmdid=SMPP_PDU;
     _cmd.dta=pdu;
-    _cmd.dialogId=0;
+    _cmd.dialogId=channel;
     return cmd;
   }
 
