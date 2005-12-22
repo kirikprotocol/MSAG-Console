@@ -61,7 +61,11 @@ public class SortedVector extends ArrayList
 
   public boolean addAll(int index, Collection c)
   {
-    throw new UnsupportedOperationException("Inserting in any specified position is not allowed in SortedVector");
+    if( this.addAll(index, c) ) {
+      Collections.sort(this, comparator);
+      return true;
+    }
+    return false;
   }
 
   /*public synchronized void insertElementAt(Object obj, int index)
@@ -71,7 +75,7 @@ public class SortedVector extends ArrayList
 
   public Object set(int index, Object element)
   {
-    throw new UnsupportedOperationException("Replacing elements is not allowed in SortedVector");
+    return this.set(index, element);
   }
 
   public void setElementAt(Object obj, int index)
