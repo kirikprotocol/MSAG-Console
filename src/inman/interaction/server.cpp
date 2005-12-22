@@ -51,9 +51,12 @@ Server::~Server()
 //Closes all client's connections
 void Server::closeAllConnects(void)
 {
-    ConnectsList    cplist = connects;
-    for (ConnectsList::const_iterator cit = cplist.begin(); cit != cplist.end(); cit++)
-        closeConnect(*cit);
+    if (connects.size()) {
+        ConnectsList    cplist = connects;
+        smsc_log_debug(logger, "TCPSrv: killing %u connects ..", cplist.size());
+        for (ConnectsList::const_iterator cit = cplist.begin(); cit != cplist.end(); cit++)
+            closeConnect(*cit);
+    }
 }
 
 void Server::openConnect(Connect* connect)
@@ -229,6 +232,7 @@ Server::ShutdownReason Server::Listen()
         }
         _mutex.Lock();
     } /* eow */
+    _mutex.Unlock();
     return result;
 }
 
