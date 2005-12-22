@@ -534,11 +534,17 @@ void AclManager::addPhone(AclIdent aclident,const AclPhoneNumber& phone)
   DiskHash<AclDiskRecord,Int64Record> dh;
   FixedRecordFile<AclDiskRecord> frf(aclMembersSig,aclMembersVer);
 
+  Int64Record off;
+  AclDiskRecord key(Address(phone.c_str()));
   OpenOrCreateDH(dh,aclident);
+  if(dh.LookUp(key,off))
+  {
+    return;
+  }
   frf.Open(getStoreFile(aclident).c_str());
 
-  Int64Record off(frf.Append(AclDiskRecord(Address(phone.c_str()))));
-  dh.Insert(AclDiskRecord(Address(phone.c_str())),off);
+  off=frf.Append(AclDiskRecord(Address(phone.c_str())));
+  dh.Insert(key,off);
   /*
   const char* sql = "INSERT INTO SMS_ACL (ID, ADDRESS) VALUES (%d,'%s')";
 
