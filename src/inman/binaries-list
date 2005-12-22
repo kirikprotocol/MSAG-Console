@@ -1,7 +1,7 @@
 #
 # $Id$
 #
--inman/cvtest cvtest -zrescan -lrt -L$(SMSC_BUILDDIR)/bin -linman-common 
+#inman/cvtest cvtest -zrescan -lrt -L$(SMSC_BUILDDIR)/bin -linman-common 
 -inman/tstfactr tstfactr -zrescan -lrt -L$(SMSC_BUILDDIR)/bin -llogger -linman-common -linman-comp -linman-codec -linman-codec_uss -linman-asn1rt
 -inman/comp_tst comp_tst -zrescan -lrt -L$(SMSC_BUILDDIR)/bin -llogger -linman-common -linman-comp -linman-codec -linman-asn1rt
 inman/inman_test inman_test $(SOCKETLIB) -lrt -L$(SMSC_BUILDDIR)/bin -lcore-threads -lthread -llogger -lcore-network -lnsl -linman-interaction -linman-common
