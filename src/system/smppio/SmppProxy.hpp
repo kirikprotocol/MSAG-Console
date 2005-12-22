@@ -212,7 +212,7 @@ public:
           errresp=SmscCommand::makeDeliverySmResp("",cmd->get_dialogId(),Status::INVBNDSTS);
           break;
         case SUBMIT:
-          errresp=SmscCommand::makeSubmitSmResp("",cmd->get_dialogId(),Status::INVBNDSTS);
+          errresp=SmscCommand::makeSubmitSmResp("",cmd->get_dialogId(),Status::INVBNDSTS,cmd->get_sms()->getIntProperty(Tag::SMPP_DATA_SM));
           break;
         case SUBMIT_MULTI_SM:
           errresp=SmscCommand::makeSubmitMultiResp("",cmd->get_dialogId(),Status::INVBNDSTS);
@@ -356,7 +356,7 @@ public:
         cmdMode=2;
       }
 
-    }if(cmdid==SMPP_PDU)
+    }else if(cmdid==SMPP_PDU)
     {
       cmdMode=cmd->get_dialogId();//1 receiver 2 transmitter
     }
