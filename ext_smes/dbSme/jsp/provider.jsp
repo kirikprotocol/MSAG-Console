@@ -140,7 +140,7 @@ function setSort(sorting)
 </div><%
 page_menu_begin(out);
 page_menu_button(session, out, "mbAdd",    "dbsme.button.add_job",     "dbsme.hint.add_job", beanResult == PageBean.RESULT_OK);
-page_menu_confirm_button(session, out, "mbDelete", "dbsme.button.delete_jobs", "dbsme.hint.delete_jobs", getLocString("dbsme.confirm.delete_jobs"), beanResult == PageBean.RESULT_OK);
+page_menu_confirm_button(session, out, "mbDelete", "dbsme.button.delete_jobs", "dbsme.hint.delete_jobs", getLocString("dbsme.confirm.delete_jobs"), null, beanResult == PageBean.RESULT_OK);
 page_menu_button(session, out, "mbDone",   "common.buttons.done",   "dbsme.hint.accept",     beanResult == PageBean.RESULT_OK);
 page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "dbsme.hint.cancel", "clickCancel()");
 page_menu_space(out);
