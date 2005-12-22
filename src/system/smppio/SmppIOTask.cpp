@@ -328,7 +328,11 @@ int SmppInputThread::Execute()
                   );
                   ((PduBindTRXResp*)resp)->set_scInterfaceVersion(0x34);
                   ((PduBindTRXResp*)resp)->set_systemId("smsc");
-                  SmscCommand cmd=SmscCommand::makeSmppPduCommand(resp);
+                  SmscCommand cmd=SmscCommand::makeSmppPduCommand
+                  (
+                    resp,
+                    ss->getChannelType()==ctReceiver?1:2
+                  );
                   try{
                     ss->getProxy()->putCommand(cmd);
                   }catch(...)
