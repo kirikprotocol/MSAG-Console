@@ -80,7 +80,7 @@ void INManComm::ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INSmsChargeRespo
 
   smsc::inman::interaction::ObjectBuffer buf(16);
   smsc::inman::interaction::SerializerInap::getInstance()->serialize(&op,buf);
-  packetWriter.enqueue(buf.get(),buf.GetPos());
+  packetWriter.enqueue((const char*)buf.get(),buf.getDataSize());
 
 
   sync::MutexGuard mg(reqMtx);
@@ -116,7 +116,7 @@ void INManComm::ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INFwdSmsChargeRe
 
   smsc::inman::interaction::ObjectBuffer buf(16);
   smsc::inman::interaction::SerializerInap::getInstance()->serialize(&op,buf);
-  packetWriter.enqueue(buf.get(),buf.GetPos());
+  packetWriter.enqueue((const char*)buf.get(),buf.getDataSize());
 
 
   sync::MutexGuard mg(reqMtx);
@@ -140,9 +140,7 @@ void INManComm::Report(int dlgId,const SMS& sms,bool final)
   info2(log,"Report:%d/%d",dlgId,sms.lastResult);
   smsc::inman::interaction::DeliverySmsResult res
     (
-      sms.lastResult==Status::OK?
-        smsc::inman::interaction::DELIVERY_SUCCESSED:
-        smsc::inman::interaction::DELIVERY_FAILED,
+      sms.lastResult,
       final
     );
   res.setDialogId(dlgId);
@@ -152,9 +150,14 @@ void INManComm::Report(int dlgId,const SMS& sms,bool final)
   res.setDestSMEid(sms.getDestinationSmeId());
   res.setDeliveryTime(time(NULL));
 
+  if(sms.hasStrProperty(Tag::SMSC_DIVERTED_TO))
+  {
+    res.setDivertedAdr(sms.getStrProperty(Tag::SMSC_DIVERTED_TO));
+  }
+
   smsc::inman::interaction::ObjectBuffer buf(0);
   smsc::inman::interaction::SerializerInap::getInstance()->serialize(&res,buf);
-  packetWriter.enqueue(buf.get(),buf.GetPos());
+  packetWriter.enqueue((const char*)buf.get(),buf.getDataSize());
 }
 
 
@@ -224,22 +227,23 @@ int INManComm::Execute()
       info2(log,"Socket read failed:%d",errno);
       socketOk=false;
       socket->Close();
-      socket=new Socket();
+      socket=new net::Socket();
       continue;
     }
     packetSize=ntohl(packetSize);
-    buf.setSize(packetSize);
-    if(socket->ReadAll(buf.get(),packetSize)<=0)
+    buf.reset(packetSize);
+    if(socket->ReadAll((char*)buf.get(),packetSize)<=0)
     {
       info2(log,"Socket read failed:%d",errno);
       socketOk=false;
       socket->Close();
-      socket=new Socket();
+      socket=new net::Socket();
       continue;
     }
+    buf.setDataSize(packetSize);
     std::auto_ptr<smsc::inman::interaction::SerializableObject> obj;
     try{
-      buf.SetPos(0);
+      buf.setPos(0);
       obj=std::auto_ptr<smsc::inman::interaction::SerializableObject>
         (
           smsc::inman::interaction::SerializerInap::getInstance()->deserialize(buf)
@@ -249,7 +253,7 @@ int INManComm::Execute()
       warn2(log,"Failed to deserialize buffer:%s",e.what());
       socket->Close();
       socketOk=false;
-      socket=new Socket();
+      socket=new net::Socket();
       continue;
     }
     if(obj->getObjectId()!=smsc::inman::interaction::CHARGE_SMS_RESULT_TAG)

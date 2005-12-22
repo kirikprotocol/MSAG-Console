@@ -3388,7 +3388,16 @@ StateType StateMachine::deliveryResp(Tuple& t)
     }
     try{
       sms.setLastResult(GET_STATUS_CODE(t.command->get_resp()->get_status()));
-      smsc->ReportDelivery(t.command->get_resp()->get_inDlgId(),sms,final,Smsc::chargeOnDelivery);
+      if(sms.hasStrProperty(Tag::SMSC_DIVERTED_TO) && !t.command->get_resp()->get_diverted())
+      {
+        std::string savedDivert=sms.getStrProperty(Tag::SMSC_DIVERTED_TO);
+        sms.getMessageBody().dropProperty(Tag::SMSC_DIVERTED_TO);
+        smsc->ReportDelivery(t.command->get_resp()->get_inDlgId(),sms,final,Smsc::chargeOnDelivery);
+        sms.setStrProperty(Tag::SMSC_DIVERTED_TO,savedDivert.c_str());
+      }else
+      {
+        smsc->ReportDelivery(t.command->get_resp()->get_inDlgId(),sms,final,Smsc::chargeOnDelivery);
+      }
     }catch(std::exception& e)
     {
       smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
