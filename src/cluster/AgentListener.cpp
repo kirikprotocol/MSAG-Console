@@ -92,6 +92,10 @@ void AgentListener::init(const std::string& host, int port, pid_t pid_)
     {
       smsc_log_warn(logger,"Failed to init AgentListener srv socket at %s:%d",host.c_str(),port);
     }
+    linger l;
+    l.l_onoff=1;
+    l.l_linger=0;
+    setsockopt(srvSock.getSocket(),SOL_SOCKET,SO_LINGER,(char*)&l,sizeof(l));
 };
 
 void AgentListener::Stop()

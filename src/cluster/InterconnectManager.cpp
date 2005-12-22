@@ -207,6 +207,12 @@ void InterconnectManager::internalInit()
     throw Exception("InterconnectManager: Can't start socket server");
   }
 
+  linger l;
+  l.l_onoff=1;
+  l.l_linger=0;
+  setsockopt(socket.getSocket(),SOL_SOCKET,SO_LINGER,(char*)&l,sizeof(l));
+
+
   if( attachedSocket.Init(attachedInAddr.c_str(), attachedPort, 0) )
   {
     throw Exception("InterconnectManager: Failed to init socket for %s:%d", attachedInAddr.c_str(), attachedPort);
@@ -320,7 +326,7 @@ int InterconnectManager::Execute()
         int plan_ = 1;
         int type_ = 2;
         Command *cmd2 = new ProfileDeleteCommand(plan_, type_, address_);
-        
+
 
         smsc::smeman::SmeInfo si;
         si.typeOfNumber = 1;
@@ -380,7 +386,7 @@ int InterconnectManager::Execute()
         Command *cmd22 = new ApplyAliasesCommand();
         Command *cmd23 = new ApplyRescheduleCommand();
         Command *cmd24 = new ApplyLocaleResourceCommand();
-        
+
 
         printf("======= Profile commands =========\n");
         printf("send command: %02X\n", cmd1->getType());
