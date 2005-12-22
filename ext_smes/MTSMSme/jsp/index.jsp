@@ -115,14 +115,14 @@ function clickRemoveMapping(id_to_remove)
 		%><tr class=row<%=(rowN++)&1%> id=mapping_row_<%=StringEncoderDecoder.encode(address)%>>
 			<td><input class=txt  name="<%=section%>.address" value="<%=address%>"></td>
 			<td><input class=txtW name="<%=section%>.alias"   value="<%=alias%>"></td>
-			<td><%button(out, "but_del.gif", "mbDel", "common.buttons.remove", "mtsmsme.hint.remove_mapping", "return clickRemoveMapping('mapping_row_" + StringEncoderDecoder.encode(address) + "');");%></td>
+			<td><%button(out, "/images/but_del.gif", "mbDel", "common.buttons.remove", "mtsmsme.hint.remove_mapping", "return clickRemoveMapping('mapping_row_" + StringEncoderDecoder.encode(address) + "');");%></td>
 		</tr><%
 	}
 %>
 <tr id=mapping_new class=row<%=(rowN+1)&1%>>
 	<td><input class=txt  id="mapping_new_address" name="mapping_new_address"></td>
 	<td><input class=txtW id="mapping_new_alias"   name="mapping_new_alias"  ></td>
-	<td><%button(out, "but_add.gif", "mbAdd", "common.buttons.add", "mtsmsme.hint.add_mapping", "return clickAddMapping();");%></td>
+	<td><%button(out, "/images/but_add.gif", "mbAdd", "common.buttons.add", "mtsmsme.hint.add_mapping", "return clickAddMapping();");%></td>
 </tr>
 </table>
 </div><%

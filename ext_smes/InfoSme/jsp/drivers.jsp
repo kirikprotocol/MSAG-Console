@@ -64,14 +64,14 @@ function clickRemoveDriver(id_to_remove)
 		%><tr class=row<%=(rowN++)&1%> id=dsdriver_row_<%=StringEncoderDecoder.encode(type)%>>
 			<td><input class=txt name="<%=driverSectionName%>.type"    value="<%=type%>"></td>
 			<td><input class=txtW name="<%=driverSectionName%>.loadup" value="<%=loadup%>"></td>
-			<td><%button(out, "but_del.gif", "mbDel", "infosme.button.remove_ds_driver", "infosme.hint.remove_ds_driver", "return clickRemoveDriver('dsdriver_row_" + StringEncoderDecoder.encode(type) + "');");%></td>
+			<td><%button(out, "/images/but_del.gif", "mbDel", "infosme.button.remove_ds_driver", "infosme.hint.remove_ds_driver", "return clickRemoveDriver('dsdriver_row_" + StringEncoderDecoder.encode(type) + "');");%></td>
 		</tr><%
 	}
 %>
 <tr id=dsdriver_new class=row<%=(rowN+1)&1%>>
 	<td><input class=txt  id="dsdriver_new_type"   name="dsdriver_new_type"  ></td>
 	<td><input class=txtW id="dsdriver_new_loadup" name="dsdriver_new_loadup"></td>
-	<td><%button(out, "but_add.gif", "mbAdd", "infosme.button.add_ds_driver", "infosme.hint.add_ds_driver", "return clickAddDriver();");%></td>
+	<td><%button(out, "/images/but_add.gif", "mbAdd", "infosme.button.add_ds_driver", "infosme.hint.add_ds_driver", "return clickAddDriver();");%></td>
 </tr>
 </table>
 </div><%

@@ -84,7 +84,7 @@ function clickRemoveCircuits(id_to_remove)
 			<td><input class=txtW name="<%=mscSection%>.hsn" value="<%=hsn%>"></td>
       <td><input class=txtW name="<%=mscSection%>.spn" value="<%=spn%>"></td>
       <td><input class=txtW name="<%=mscSection%>.tsm" value="<%=tsm%>"></td>
-			<td><%button(out, "but_del.gif", "mbDel", "common.buttons.remove", "mcisme.hint.remove_circuits", "return clickRemoveCircuits('circuits_row_" + StringEncoderDecoder.encode(msc) + "');");%></td>
+			<td><%button(out, "/images/but_del.gif", "mbDel", "common.buttons.remove", "mcisme.hint.remove_circuits", "return clickRemoveCircuits('circuits_row_" + StringEncoderDecoder.encode(msc) + "');");%></td>
 		</tr><%
 	}
 %>
@@ -93,7 +93,7 @@ function clickRemoveCircuits(id_to_remove)
 	<td><input class=txtW id="circuits_new_hsn" name="circuits_new_hsn"></td>
   <td><input class=txtW id="circuits_new_spn" name="circuits_new_spn"></td>
   <td><input class=txtW id="circuits_new_tsm" name="circuits_new_tsm"></td>
-	<td><%button(out, "but_add.gif", "mbAdd", "common.buttons.add", "mcisme.hint.add_circuits", "return clickAddCircuits();");%></td>
+	<td><%button(out, "/images/but_add.gif", "mbAdd", "common.buttons.add", "mcisme.hint.add_circuits", "return clickAddCircuits();");%></td>
 </tr>
 </table>
 </div><%
