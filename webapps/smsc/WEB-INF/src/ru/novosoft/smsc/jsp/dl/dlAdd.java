@@ -88,9 +88,15 @@ public class dlAdd extends dlBody
   private int save()
   {
     int result = RESULT_DONE;
-    DistributionListAdmin admin = appContext.getSmsc().getDistributionListAdmin();
+	DistributionListAdmin admin = appContext.getSmsc().getDistributionListAdmin();
     try {
-      final DistributionList dl = new DistributionList(name, system ? "" : owner, maxElements);
+		if (!system) {
+			name = name.replaceAll("\\s", ""); //убираем все пробелы из имени
+			name = owner.replaceFirst("\\+","") + "/" + name;
+			// при создании персонального листа его имя должно быть в виде
+			// номер_телефона_без_плюсика/имя_без_пробелов
+		}
+	  final DistributionList dl = new DistributionList(name, system ? "" : owner, maxElements);
       admin.addDistributionList(dl);
       MaskList newSubmitters = new MaskList(fullSubmittersList);
       boolean ownerAdded = false;
