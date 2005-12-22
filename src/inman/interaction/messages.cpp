@@ -301,6 +301,7 @@ void ChargeSms::load(ObjectBuffer& in) throw(CustomException)
     in >> msgId;
     in >> ussdServiceOp;
     in >> partsNum;
+    in >> msgLen;
 }
 
 void ChargeSms::save(ObjectBuffer& out)
@@ -323,13 +324,13 @@ void ChargeSms::save(ObjectBuffer& out)
     out << msgId;
     out << ussdServiceOp;
     out << partsNum;
+    out << msgLen;
 }
 
 
 void ChargeSms::export2CDR(CDRRecord & cdr) const
 {
     cdr._msgId = msgId;
-    cdr._cdrType = CDRRecord::dpOrdinary;
     cdr._mediaType = (parseCBS_DCS(tpDataCodingScheme) == CBS_DCS::dcBINARY8) ?
                         CDRRecord::dpBinary : CDRRecord::dpText ;
     cdr._bearer = (ussdServiceOp < 0) ? CDRRecord::dpSMS : CDRRecord::dpUSSD;
@@ -346,8 +347,7 @@ void ChargeSms::export2CDR(CDRRecord & cdr) const
     cdr._userMsgRef = userMsgRef;
 
     cdr._dstAdr = destinationSubscriberNumber;
-    //message length is not transferred to InMan, just set it to 1
-    cdr._dpLength = 1;
+    cdr._dpLength = (uint32_t)msgLen;
 }
 
 
@@ -496,6 +496,7 @@ void DeliverySmsResult::export2CDR(CDRRecord & cdr) const
     cdr._dstSMEid = destSMEid;
     cdr._finalTime = finalTimeTZ;
     cdr._divertedAdr = divertedAdr;
+    cdr._cdrType = divertedAdr.size() ? CDRRecord::dpDiverted: CDRRecord::dpOrdinary;
     cdr._finalized = final;
 }
 

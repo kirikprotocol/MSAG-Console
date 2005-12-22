@@ -189,6 +189,7 @@ public:
         op.setUserMsgRef(0x01fa);
         op.setMsgId(0x010203040506);
         op.setServiceOp(ussd_op ? 0 : -1);
+        op.setMsgLength(160);
     }
 
     void sendChargeSms(unsigned int dlgId)
