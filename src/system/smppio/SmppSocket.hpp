@@ -23,10 +23,10 @@ enum{
 };
 
 enum{
-  ctUnbound,
-  ctReceiver,    //channel type
-  ctTransmitter,
-  ctTransceiver
+  ctUnbound=0,
+  ctReceiver=1,    //channel type
+  ctTransmitter=2,
+  ctTransceiver=3
 };
 
 #define SSOCK_PACKET_SIZE 1024

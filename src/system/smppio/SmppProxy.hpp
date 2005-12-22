@@ -200,7 +200,7 @@ public:
     return inQueueCount;
   }
 
-  void putIncomingCommand(const SmscCommand& cmd)
+  void putIncomingCommand(const SmscCommand& cmd,int ct)
   {
     if(!CheckValidOutgoingCmd(cmd) || disconnecting)
     {
@@ -232,6 +232,8 @@ public:
         default:
           errresp=SmscCommand::makeGenericNack(cmd->get_dialogId(),Status::INVBNDSTS);
       }
+      SmppHeader* pdu=errresp.makePdu(0);
+      errresp=SmscCommand::makeSmppPduCommand(pdu,ct);
       //cmd->get_dialogId(),SmppStatusSet::ESME_RINVBNDSTS
       //putCommand(errresp);
       __trace2__("SmppProxy::putIncomingCommand: error answer cmdid=%d",errresp->get_commandId());
