@@ -26,7 +26,7 @@ public final class SmscList {
 	private final Category logger = Category.getInstance(this.getClass());
 	private Smsc smsc = null;
 	public static final Map nodeName2Id = new HashMap();
-	private static final Map id2NodeName = new HashMap();
+	public static final Map id2NodeName = new HashMap();
 
 	public static byte getNodeId(String nodename) {
 		String idStr = (String) nodeName2Id.get(nodename);

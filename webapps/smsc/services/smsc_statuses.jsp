@@ -9,9 +9,14 @@
   bean.process(request);
 
   byte   status = ServiceInfo.STATUS_UNKNOWN;
-  String result = Constants.SMSC_SME_ID + "\r\n";
+  String result = Constants.SMSC_SME_ID;
+  for (Iterator i = SmscList.id2NodeName.keySet().iterator(); i.hasNext();)
+  {
+      result += " ," + (String) i.next();
+  }
+  result += "\r\n";
 
-  for (byte i = 0; i < ResourceGroupConstants.SMSC_serv_IDs.size(); i++) {
+  for (byte i = 1; i <= ResourceGroupConstants.SMSC_serv_IDs.size(); i++) {
     try {
       status = bean.getAppContext().getHostsManager().getServiceInfo((String)ResourceGroupConstants.SMSC_serv_IDs.get(new
               Byte(i))).getStatus();
@@ -36,6 +41,11 @@
     }
 
     result += "&nbsp;&nbsp;&nbsp;";
+  }
+
+  for (byte i = 1; i <= SmscList.id2NodeName.size(); i++)
+  {
+      result += " ," + bean.smscServStatusString(Constants.SMSC_SME_ID, i);
   }
 
   out.print(result);%>

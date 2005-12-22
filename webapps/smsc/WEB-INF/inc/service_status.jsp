@@ -101,8 +101,8 @@
 
   String smscServStatus(SMSCAppContext appContext, String serviceId, byte nodeId) {
     String elem_id = "RUNNING_STATUSERVICE_" + StringEncoderDecoder.encode(serviceId);
-    String result  = "<span id=\"" + elem_id + "\" datasrc=#tdcStatuses DATAFORMATAS=html datafld=\"" +
-            StringEncoderDecoder.encode(serviceId) + "\">";
+    String result  = "<span id=\"" + elem_id + "\" datasrc=#tdcSmscStatuses DATAFORMATAS=html datafld=\"" +
+            StringEncoderDecoder.encode(Byte.toString(nodeId)) + "\">";
 
     result += smscServStatusString(appContext, serviceId, nodeId);
     result += "</span>";
