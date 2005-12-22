@@ -105,6 +105,26 @@ int Registrator::Execute()
             sm->registerEvent(hs);
         }
 
+        hs.routeId = "route2";
+        hs.serviceId = "http2";
+        hs.serviceProviderId = 2;
+        hs.counter = 2;
+        hs.errCode = 1;
+        count =  3. * ( (double)random() / 2147483648. ) + 1;
+        for(int i = 0; i<= count - 1; i++){            
+            sm->registerEvent(hs);
+        }
+
+        hs.routeId = "route3";
+        hs.serviceId = "http3";
+        hs.serviceProviderId = 3;
+        hs.counter = 3;
+        hs.errCode = 1;
+        count =  3. * ( (double)random() / 2147483648. ) + 1;
+        for(int i = 0; i<= count - 1; i++){            
+            sm->registerEvent(hs);
+        }
+
         useconds_t pause = 50000. * ( (double)random() / 2147483648. );
         if(pause < 5000 ) pause = 5000; 
         //printf("pause: %d sec.\n", pause);
