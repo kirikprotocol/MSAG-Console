@@ -6,9 +6,19 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
+#include "util/int.h"
 
 namespace smsc{
 namespace util{
+
+inline uint64_t getmillis()
+{
+#ifdef _WIN32
+  return 0;
+#else
+  return gethrtime()/1000000l;
+#endif
+}
 
 inline void millisleep(unsigned msec)
 {
