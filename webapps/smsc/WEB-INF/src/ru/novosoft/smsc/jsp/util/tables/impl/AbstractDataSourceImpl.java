@@ -93,6 +93,7 @@ public abstract class AbstractDataSourceImpl implements DataSource
     final int start_position = query_to_run.getStartPosition();
     int totalCount = 0;
     for (int count_to_skip = 0; i.hasNext() && count_to_skip < start_position;) {
+      i.next();
       count_to_skip++;
       totalCount++;
     }
