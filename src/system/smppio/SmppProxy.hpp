@@ -328,6 +328,7 @@ public:
     if(!outqueue.Peek(cmd))return false;
     if(ct==-1)
     {
+      //
     }
     int cmdMode=-1;
     int cmdid=cmd->get_commandId();
@@ -353,7 +354,11 @@ public:
         cmdMode=2;
       }
 
-    }else
+    }if(cmdid==SMPP_PDU)
+    {
+      cmdMode=cmd->get_dialogId();//1 receiver 2 transmitter
+    }
+    else
     {
       if(!(
                  cmdid==SUBMIT_RESP ||
@@ -375,8 +380,7 @@ public:
                    cmdid==ENQUIRELINK_RESP ||
                    cmdid==UNBIND ||
                    cmdid==UNBIND_RESP ||
-                   cmdid==GENERIC_NACK ||
-                   cmdid==SMPP_PDU
+                   cmdid==GENERIC_NACK
         )
       {
         cmdMode=2;
