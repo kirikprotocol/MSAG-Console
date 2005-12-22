@@ -297,9 +297,9 @@ public:
     return f.Size();
   }
 
-  void Flush()
+  void Flush(int maxSpeed=0)
   {
-    f.MemoryFlush();
+    f.MemoryFlush(maxSpeed);
   }
 
   void Close()

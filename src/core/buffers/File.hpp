@@ -19,6 +19,7 @@
 #include <string>
 #include <string.h>
 #include <errno.h>
+#include "util/sleep.h"
 #include "util/int.h"
 #ifndef NOLOGGERPLEASE
 #include "util/debug.h"
@@ -37,6 +38,7 @@
 # include <inttypes.h>
 # include <unistd.h>
 #endif
+
 
 
 namespace smsc{
@@ -228,7 +230,7 @@ public:
     }
   }
 
-  void MemoryFlush()
+  void MemoryFlush(int maxSpeed=0)
   {
     if(!isInMemory() || fd==-1)throw FileException(FileException::errFileNotOpened,filename.c_str());
     std::string tmp=filename+".tmp";
@@ -239,8 +241,16 @@ public:
     if(g==-1)throw FileException(FileException::errOpenFailed,filename.c_str());
     offset_type written=0;
 
+    int blockSize=8192;
+    if(maxSpeed>0)
+    {
+      blockSize=maxSpeed;
+    }
+    uint64_t writeTime;
+
     do{
-      size_t piece=(size_t)(fileSize-written<8192?fileSize-written:8192);
+      if(maxSpeed>0)writeTime=smsc::util::getmillis();
+      size_t piece=(size_t)(fileSize-written<blockSize?fileSize-written:blockSize);
 
       if(write(g,buffer+written,(size_t)piece)!=(ssize_t)piece)
       {
@@ -249,6 +259,11 @@ public:
         throw FileException(FileException::errWriteFailed,filename.c_str());
       }
       written+=piece;
+      if(maxSpeed>0)
+      {
+        writeTime=smsc::util::getmillis()-writeTime;
+        if(writeTime<1000)smsc::util::millisleep(1000-writeTime);
+      }
     }while(written<fileSize);
     close(fd);
     fd=-1;

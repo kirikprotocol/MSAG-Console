@@ -193,12 +193,17 @@ protected:
     int addrRootSize;
     int defAddrChunkSize;
     Hash<int> smeAddrChunkSize;
+
+    int maxFlushSpeed;
   }config;
 
   struct DataSet{
 
-    void CreateNew()
+
+    void CreateNew(int flushSpeed)
     {
+      maxFlushSpeed=flushSpeed;
+
       idHash=new SmsIdDiskHash;
       srcIdHash=new SmeIdDiskHash;
       dstIdHash=new SmeIdDiskHash;
@@ -232,18 +237,18 @@ protected:
 
     void Flush()
     {
-      idHash->Flush();
-      srcIdHash->Flush();
-      dstIdHash->Flush();
-      routeIdHash->Flush();
-      srcAddrHash->Flush();
-      dstAddrHash->Flush();
+      idHash->Flush(maxFlushSpeed);
+      srcIdHash->Flush(maxFlushSpeed);
+      dstIdHash->Flush(maxFlushSpeed);
+      routeIdHash->Flush(maxFlushSpeed);
+      srcAddrHash->Flush(maxFlushSpeed);
+      dstAddrHash->Flush(maxFlushSpeed);
 
-      srcIdData->Flush();
-      dstIdData->Flush();
-      srcAddrData->Flush();
-      dstAddrData->Flush();
-      routeIdData->Flush();
+      srcIdData->Flush(maxFlushSpeed);
+      dstIdData->Flush(maxFlushSpeed);
+      srcAddrData->Flush(maxFlushSpeed);
+      dstAddrData->Flush(maxFlushSpeed);
+      routeIdData->Flush(maxFlushSpeed);
     }
 
     void Discard()
@@ -262,6 +267,7 @@ protected:
       routeIdData->DiscardCache();
     }
 
+    int maxFlushSpeed;
 
     RefPtr<SmsIdDiskHash> idHash;
     RefPtr<SmeIdDiskHash> srcIdHash;

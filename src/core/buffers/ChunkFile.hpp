@@ -278,9 +278,9 @@ public:
     opened=false;
   }
 
-  void Flush()
+  void Flush(int maxSpeed=0)
   {
-    if(isCached)f.MemoryFlush();
+    if(isCached)f.MemoryFlush(maxSpeed);
   }
 
   File::offset_type Size()

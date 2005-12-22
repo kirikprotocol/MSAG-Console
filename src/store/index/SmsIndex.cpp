@@ -25,6 +25,7 @@ void SmsIndex::Init(ConfigView* cfg_)
   config.routeIdChunkSize=cfg.getInt("routeIdChunkSize");
   config.addrRootSize=cfg.getInt("addrRootSize");
   config.defAddrChunkSize=cfg.getInt("defAddrChunkSize");
+  config.maxFlushSpeed=cfg.getInt("maxFlushSpeed");
 
   using smsc::util::config::CStrSet;
   auto_ptr<ConfigView> smeConfig(cfg.getSubConfig("smeAddrChunkSize"));
@@ -62,7 +63,7 @@ void SmsIndex::IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms)
 
   if(!File::Exists((path+"smsid.idx").c_str()))
   {
-    ds.CreateNew();
+    ds.CreateNew(config.maxFlushSpeed);
 
     ds.idHash->Create((path+"smsid.idx").c_str(),config.smsIdHashSize,cached);
 
@@ -98,7 +99,7 @@ void SmsIndex::IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms)
       ci->usedInLastTransaction=true;
     }else
     {
-      ds.CreateNew();
+      ds.CreateNew(config.maxFlushSpeed);
 
       ds.idHash->Open((path+"smsid.idx").c_str(),false,cached);
 
