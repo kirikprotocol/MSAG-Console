@@ -20,12 +20,12 @@ resourcemanager
 distrlist
 mscman
 stat
-wsme
 proxysme
 emailsme
 infosme
 license
-smppgw
 acls
 mcisme
-scag
+inman
+cluster
+mtsmsme

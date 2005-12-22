@@ -304,6 +304,9 @@ int SmppInputThread::Execute()
               case SmppCommandSet::BIND_TRANSMITTER:
               case SmppCommandSet::BIND_TRANCIEVER:
               {
+                if(ss->getProxy()) {
+	          __trace2__("bind cmd: prx: %p, ct=%d, opnd=%d, dscnt=%d, unbnd=%d", ss->getProxy(), ss->getChannelType(), ss->getProxy()->isOpened(), ss->getProxy()->isDisconnecting(), ss->getProxy()->isUnbinding());
+		}
                 if(ss->getProxy() &&
                    (
                      ss->getChannelType()!=ctUnbound ||
