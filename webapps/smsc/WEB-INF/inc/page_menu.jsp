@@ -44,7 +44,7 @@
     out.print("<a id=\"" + name + "\"" +
       (enabled ? "" : " disabled") +
       ((title != null && title.length() > 0) ? " title=\"" + getLocString(title) + "\"" : "") +
-      ((onclick != null && onclick.length() > 0) ? printHref(out, onclick) : printHref(oput, "clickSubmit('" + name + "','" + getLocString(value) + "')")) +
+      ((onclick != null && onclick.length() > 0) ? printHref(out, onclick) : printHref(out, "clickSubmit('" + name + "','" + getLocString(value) + "')")) +
       ">" + getLocString(value) + "</a>");
     out.print("</td>");
 
