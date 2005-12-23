@@ -95,7 +95,7 @@ int Registrator::Execute()
             sm->registerEvent(si);
         }
 
-        /*hs.routeId = "route1";
+        hs.routeId = "route1";
         hs.serviceId = "http1";
         hs.serviceProviderId = 1;
         hs.counter = 1;
@@ -123,7 +123,7 @@ int Registrator::Execute()
         count =  3. * ( (double)random() / 2147483648. ) + 1;
         for(int i = 0; i<= count - 1; i++){            
             sm->registerEvent(hs);
-        }*/
+        }
 
         useconds_t pause = 50000. * ( (double)random() / 2147483648. );
         if(pause < 5000 ) pause = 5000; 
