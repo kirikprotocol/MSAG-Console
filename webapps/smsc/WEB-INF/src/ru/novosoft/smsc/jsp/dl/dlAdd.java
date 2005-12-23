@@ -53,6 +53,7 @@ public class dlAdd extends dlBody
       return result;
 
     initialized = true;
+    if( system ) owner = "";
 
     if (mbSave != null)
       return save();
