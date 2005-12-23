@@ -37,16 +37,16 @@ function navigatePage(pageNum)
 </script>
 <table class=navbar cellspacing=1 cellpadding=0>
 <tr>
-<td class=first><a href="javascript:navigatePage(0)"><img src="/images/nav_first.gif" width="12" height="11" alt="<%=getLocString("navbar.firstPage")%>"></a></td>
+<td class=first><a <%=javaHref%>"javascript:navigatePage(0)"><img src="/images/nav_first.gif" width="12" height="11" alt="<%=getLocString("navbar.firstPage")%>"></a></td>
 <%if(pageCurrent > 0){%>
-<td class=prev><a href="javascript:navigatePage(<%=pageCurrent-1%>)"><img src="/images/nav_prev.gif" width="12" height="11" alt="<%=getLocString("navbar.prevPage")%>"></a></td>
+<td class=prev><a <%=javaHref%>"javascript:navigatePage(<%=pageCurrent-1%>)"><img src="/images/nav_prev.gif" width="12" height="11" alt="<%=getLocString("navbar.prevPage")%>"></a></td>
 <%}
 for(int pageNum=pageFirst;pageNum<=pageLast;pageNum++)
 {%>
-<td class="<%=pageNum==pageCurrent ? "current":"page"%>" ><a href="javascript:navigatePage(<%=pageNum%>)" title="<%=getLocString("navbar.pagePre") + pageNum + 1%>"><%=pageNum + 1%></a></td>
+<td class="<%=pageNum==pageCurrent ? "current":"page"%>" ><a <%=javaHref%>"javascript:navigatePage(<%=pageNum%>)" title="<%=getLocString("navbar.pagePre") + pageNum + 1%>"><%=pageNum + 1%></a></td>
 <%}%>
 <%if(pageCurrent+1 < pageTotal){%>
-<td class=next><a href="javascript:navigatePage(<%=pageCurrent+1%>)"><img src="/images/nav_next.gif" width="12" height="11" alt="<%=getLocString("navbar.nextPage")%>"></a></td>
+<td class=next><a <%=javaHref%>"javascript:navigatePage(<%=pageCurrent+1%>)"><img src="/images/nav_next.gif" width="12" height="11" alt="<%=getLocString("navbar.nextPage")%>"></a></td>
 <%}%>
-<td class=last><a href="javascript:navigatePage(<%=pageTotal > 0 ? pageTotal-1 : 0%>)"><img src="/images/nav_last.gif" width="12" height="11" alt="<%=getLocString("navbar.lastPage")%>"></a></td>
+<td class=last><a <%=javaHref%>"javascript:navigatePage(<%=pageTotal > 0 ? pageTotal-1 : 0%>)"><img src="/images/nav_last.gif" width="12" height="11" alt="<%=getLocString("navbar.lastPage")%>"></a></td>
 <td class=total><%= getLocString("common.sortmodes.total") + ": " + itemsTotal + " " + getLocString("common.util.items")%></td>

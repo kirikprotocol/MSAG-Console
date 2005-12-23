@@ -46,8 +46,8 @@
     : " disabled") + ((title != null && title.length() > 0)
     ? " title=\"" + getLocString(title) + "\""
     : "") + ((onclick != null && onclick.length() > 0)
-    ? (" href=\"javascript:" + onclick + '"')
-    : " href=\"javascript:clickSubmit('" + name + "','" + getLocString(value) + "')\"") + ">" + getLocString(value) + "</a>")
+    ? (" "+javaHref+"\"javascript:" + onclick + '"')
+    : " "+javaHref+"\"javascript:clickSubmit('" + name + "','" + getLocString(value) + "')\"") + ">" + getLocString(value) + "</a>")
             ;
     out.print("</td>");
 
@@ -75,10 +75,10 @@
             (enabled ? "" : " disabled") +
             ((title != null && title.length() > 0) ? " title=\"" + getLocString(title) + "\"" : "") +
             ((onclick != null && onclick.length() > 0)
-                    ? (" href=\"javascript:" + onclick + '"')
+                    ? (" "+javaHref+"\"javascript:" + onclick + '"')
                     : ((confirmation != null && confirmation.length() > 0)
-                        ? " href=\"javascript:if( confirm('" + confirmation + "') ) clickSubmit('" + name + "','" + getLocString(value) + "')\""
-                        : " href=\"javascript:clickSubmit('" + name + "','" + getLocString(value) + "')\"")) + ">" + getLocString(value) + "</a>"
+                        ? " "+javaHref+"\"javascript:if( confirm('" + confirmation + "') ) clickSubmit('" + name + "','" + getLocString(value) + "')\""
+                        : " "+javaHref+"\"javascript:clickSubmit('" + name + "','" + getLocString(value) + "')\"")) + ">" + getLocString(value) + "</a>"
             );
     out.print("</td>");
 

@@ -21,10 +21,14 @@ private final int BROWSER_TYPE_UNKNOWN=0;
 private final int BROWSER_TYPE_MSIE=1;
 private final int BROWSER_TYPE_MOZILLA=2;
 private final int BROWSER_TYPE_SAFARI=3;
+private       int browserType = -1;
+private       String javaHref = "href=";
 public int getBrowserType(HttpServletRequest request) {
   String _browserType = request.getHeader("User-Agent");
-  if( _browserType.indexOf("MSIE") != -1 ) return BROWSER_TYPE_MSIE;
-  else if( _browserType.indexOf("AppleWebKit") != -1 ) return BROWSER_TYPE_SAFARI;
+  if( _browserType.indexOf("MSIE") != -1 ) {
+    javaHref = "href=\"#\" onClick=";
+    return BROWSER_TYPE_MSIE;
+  } else if( _browserType.indexOf("Safari") != -1 ) return BROWSER_TYPE_SAFARI;
   else if( _browserType.indexOf("Mozilla/") != -1 ) return BROWSER_TYPE_MOZILLA;
   else return BROWSER_TYPE_UNKNOWN;
 }
@@ -32,6 +36,7 @@ public boolean isBrowserMSIE(HttpServletRequest request) {
   return getBrowserType(request) == BROWSER_TYPE_MSIE;
 }
 %><%@include file="/WEB-INF/inc/localization.jsp"%><%
+browserType = getBrowserType(request);
 errorMessages.clear();
 request.setAttribute(Constants.SMSC_ERROR_MESSAGES_ATTRIBUTE_NAME, errorMessages);
 FORM_URI = (String)request.getAttribute("requestURI");

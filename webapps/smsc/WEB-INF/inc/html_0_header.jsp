@@ -14,6 +14,15 @@
 <link rel="STYLESHEET" type="text/css" href="/styles/messages.css">
 <link rel="STYLESHEET" type="text/css" href="/styles/page_menu.css">
 <link rel="STYLESHEET" type="text/css" href="/styles/sme_menu.css">
+<%if(browser_type == BROWSER_TYPE_MSIE) {
+%><link rel="STYLESHEET" type="text/css" href="/styles/browser_ie.css"><%
+} else if(browser_type == BROWSER_TYPE_MOZILLA) {
+%><link rel="STYLESHEET" type="text/css" href="/styles/browser_mozilla.css"><%
+} else if(browser_type == BROWSER_TYPE_SAFARI) {
+%><link rel="STYLESHEET" type="text/css" href="/styles/browser_safari.css"><%
+} else {
+%><link rel="STYLESHEET" type="text/css" href="/styles/browser_unknown.css"><%
+}%>
 <script src="<%=getScriptsLocMsgFileName()%>" type="text/javascript"></script>
 <script src="<%=getLocJSConfFileName()%>" type="text/javascript"></script>
 <script src="/scripts/scripts.js" type="text/javascript"></script>

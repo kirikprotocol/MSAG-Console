@@ -140,7 +140,7 @@
 
 %>
 <%
-  if (getBrowserType(request) == BROWSER_TYPE_MSIE) {
+  if (browserType == BROWSER_TYPE_MSIE) {
 %>
 <OBJECT id="tdcStatuses" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
     <PARAM NAME="DataURL" VALUE="<%= CPATH %>/services/statuses.jsp">
