@@ -27,14 +27,17 @@ public class dlAdd extends dlBody
 
   protected int init(List errors)
   {
+    logger.debug("Init dladd bean");
     int result = super.init(errors);
     if (result != RESULT_OK)
       return result;
 
-    if (name == null) {
+    if (name == null || name.length() == 0) {
       name = "";
       owner = "";
       maxElements = 0;
+      fullSubmittersList = null;
+      fullMembersList = null;
     }
     if (fullSubmittersList == null)
       fullSubmittersList = new LinkedList();
