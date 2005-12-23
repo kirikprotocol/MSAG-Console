@@ -1590,20 +1590,21 @@ public class jEdit extends Applet
 
     if (buffer.isDirty()) {
       Object[] args = {buffer.getName()};
-      int result = GUIUtilities.confirm(view, "notsaved", args,
-              JOptionPane.YES_NO_CANCEL_OPTION,
+      int result = GUIUtilities.confirm(view, "closewindow", args,
+              JOptionPane.YES_NO_OPTION,
               JOptionPane.WARNING_MESSAGE);
       if (result == JOptionPane.YES_OPTION) {
-        if (!buffer.save(view, null, true))
-          return false;
+        //if (!buffer.save(view, null, true))
+        _closeBuffer(view, buffer);
+            return true;
 
-        VFSManager.waitForRequests();
+        /*VFSManager.waitForRequests();
         if (buffer.getBooleanProperty(BufferIORequest
                 .ERROR_OCCURRED)) {
           return false;
-        }
+        }              */
       }
-      else if (result != JOptionPane.NO_OPTION)
+      else if (result == JOptionPane.NO_OPTION)
         return false;
     }
 
@@ -2717,7 +2718,7 @@ public class jEdit extends Applet
   private static View activeView;
 
   private static boolean startupDone;
-  private static boolean destroyed;
+  private static boolean destroyed=true;
   private static Thread mainThread;
   //}}}
 

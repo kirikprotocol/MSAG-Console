@@ -54,6 +54,7 @@ public class SAXParserImpl extends XmlParser
  //{{{ parse() method
  public SideKickParsedData parse(Buffer buffer, DefaultErrorSource errorSource)
  {
+  parsingComplete = false;
   stopped = false;
    System.out.println("SAXParserImpl.parse line 57 path= "+buffer.getPath());
   String text;
@@ -69,7 +70,8 @@ public class SAXParserImpl extends XmlParser
   }
 
   if(text.length() == 0)
-   return new XmlParsedData(buffer.getName(),false);
+  {parsingComplete = true;
+   return new XmlParsedData(buffer.getName(),false);}
     XmlParsedData data = new XmlParsedData(buffer.getName(),false);
 
   SymbolTable symbolTable = new SymbolTable();
@@ -165,6 +167,7 @@ public class SAXParserImpl extends XmlParser
     System.out.println("xml.parser.SAXParserImpl parse line 164 data.mappings.size="+data.mappings.size());
    //CompletionInfo info1=(CompletionInfo) data.mappings.get("scag");
    //System.out.println("info1.elements= "+info1.elements);
+   parsingComplete = true;
    return data;
  } //}}}
  public SideKickParsedData checkData(Buffer buffer,SideKickParsedData checkedData)

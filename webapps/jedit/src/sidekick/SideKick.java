@@ -104,7 +104,7 @@ class SideKick implements EBComponent
 
  // DefaultErrorSource errorSource=(DefaultErrorSource) buffer.getProperty(SideKickPlugin.ERROR_SOURCE_PROPERTY);
  // if (errorSource==null)
-  DefaultErrorSource  errorSource = new DefaultErrorSource("SideKick "+SideKickPlugin.getSideKickNumber(this.view));
+  DefaultErrorSource  errorSource = new DefaultErrorSource("SideKick "+SideKickPlugin.getSideKickNumber(this.view),view);
   SideKickParsedData[] data = new SideKickParsedData[1];
     SideKickPlugin.addWorkRequest(new ParseRequest(
    parser,buffer,errorSource,data),false);
@@ -206,10 +206,13 @@ class SideKick implements EBComponent
   System.out.println("from place number "+loc);
   if (this.errorSource != null)
   {
-   ErrorSource.unregisterErrorSource(this.errorSource);
-   this.errorSource.clear();   
+   ErrorSource.unregisterErrorSource(this.view,this.errorSource);
+   this.errorSource.clear();
   }
-
+  else
+  {
+      System.out.println("errorsource=null of SideKick " +SideKickPlugin.getSideKickNumber(this.view));
+  }
   if (SideKickPlugin.getSideKickNumber(this.view)==-1){System.out.println("This SideKick is removed!!!"); return;}
   this.errorSource = errorSource;
 
@@ -217,7 +220,7 @@ class SideKick implements EBComponent
   {
    int errorCount = errorSource.getErrorCount();
    if(errorCount != 0)
-   { ErrorSource.registerErrorSource(errorSource);
+   { ErrorSource.registerErrorSource(this.view, errorSource);
     // buffer.setProperty(SideKickPlugin.ERROR_SOURCE_PROPERTY,errorSource);
    }
    }

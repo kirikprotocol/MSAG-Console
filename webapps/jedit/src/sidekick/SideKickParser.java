@@ -54,7 +54,7 @@ import org.gjt.sp.util.Log;
 public abstract class SideKickParser
 {
  public static final String SERVICE = "sidekick.SideKickParser";
-
+ public boolean parsingComplete = false;
  //{{{ SideKickParser constructor
  /**
   * The parser constructor.
@@ -218,6 +218,16 @@ public abstract class SideKickParser
  {
   return null;
  } //}}}
- 
+
+ public synchronized void setParsingComplete(boolean parsingComplete)
+ {
+     this.parsingComplete = parsingComplete;
+ }
+
+ public boolean isParsingComplete()
+ {
+      return this.parsingComplete;
+ }
+
  private String name;
 }

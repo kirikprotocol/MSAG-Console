@@ -41,6 +41,9 @@ import org.gjt.sp.jedit.search.RESearchMatcher;
 import org.gjt.sp.jedit.syntax.*;
 import org.gjt.sp.jedit.textarea.*;
 import org.gjt.sp.util.*;
+import errorlist.DefaultErrorSource;
+import errorlist.ErrorSource;
+import sidekick.SideKickPlugin;
 //}}}
 
 /**
@@ -422,12 +425,30 @@ public class Buffer
    */
   public boolean save(final View view, String path, final boolean rename)
   {
+    if (!(SideKickPlugin.getParserForBuffer(this)).isParsingComplete())
+    {
+        GUIUtilities.message(view,"saving-rule-while-parsing",null);
+        return false;
+    }
     if(isPerformingIO())
     {
       GUIUtilities.error(view,"buffer-multiple-io",null);
       return false;
     }
-   System.out.println("Buffer.save path= "+path+" rename= "+rename);
+    DefaultErrorSource des = (DefaultErrorSource)ErrorSource.getErrorSourceByView(view);
+    if (des != null)
+    {
+      if (des.getErrorCount()>0)
+      {
+         GUIUtilities.error(view,"save-rule-error",null);
+         return false;
+      }
+    }
+    else
+    {
+      System.out.println("There is no errorsource associated with this view");
+    }
+    System.out.println("Buffer.save path= "+path+" rename= "+rename);
     setBooleanProperty(BufferIORequest.ERROR_OCCURRED,false);
 
     if(path == null && getFlag(NEW_FILE))

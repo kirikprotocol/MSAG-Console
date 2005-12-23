@@ -40,6 +40,7 @@ class SideKickBindings extends KeyAdapter
  //{{{ keyTyped() method
  public void keyTyped(KeyEvent evt)
  {
+    (SideKickPlugin.getParserForBuffer(GUIUtilities.getView((Component)evt.getSource()).getBuffer())).setParsingComplete(false);
     System.out.println("sidekick.SideKickBinding keyTyped before parse line 40");
   evt = KeyEventWorkaround.processKeyEvent(evt);
   if(evt == null)

@@ -24,6 +24,7 @@ package sidekick;
 
 //{{{ Imports
 import errorlist.DefaultErrorSource;
+import errorlist.ErrorSource;
 import javax.swing.*;
 import java.util.*;
 import org.gjt.sp.jedit.gui.*;
@@ -246,6 +247,7 @@ public class SideKickPlugin extends EBPlugin
    buffer.setProperty(PARSED_DATA_PROPERTY,null);
    buffer = buffer.getNext();
   }
+  ErrorSource.unregisterAll();
   sidekicks = new HashMap();
   parsers = new HashMap();
   if (worker!=null) worker.stop();
@@ -307,6 +309,7 @@ public class SideKickPlugin extends EBPlugin
   SideKick sidekick = (SideKick)sidekicks.get(view);
   sidekick.dispose();
   sidekicks.remove(view);
+  ErrorSource.unregisterByView(view);
  } //}}}
     //{{{ uninitView() method
  private void closeView(View view)
@@ -314,6 +317,7 @@ public class SideKickPlugin extends EBPlugin
   SideKick sidekick = (SideKick)sidekicks.get(view);
   sidekick.closeView();
   sidekicks.remove(view);
+  ErrorSource.unregisterByView(view);
  } //}}}
  //{{{ initTextArea() method
  private void initTextArea(JEditTextArea textArea)

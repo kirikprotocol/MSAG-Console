@@ -2044,4 +2044,19 @@ plugin-manager.remove-failed.message=The plugin {0}\n\
  could not be removed.
 #}}}
 
+#{{{ Save rule error
+     save-rule-error.title=Save rule error
+     save-rule-error.message=Can't save file with error(s).
+#}}}
+
+#{{{ Saving while parsing
+     saving-rule-while-parsing.title=Buffer parsing is not complete
+     saving-rule-while-parsing.message=Can't save while buffer parsing.
+#}}}
+
+#{{{ Close window dialog
+     closewindow.title=Buffer was changed
+     closewindow.message=Are you sure to exit without saving?
+#}}}
+
 #}}}

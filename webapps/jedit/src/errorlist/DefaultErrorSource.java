@@ -28,6 +28,7 @@ import javax.swing.SwingUtilities;
 import java.util.*;
 import org.gjt.sp.jedit.msg.*;
 import org.gjt.sp.jedit.*;
+import sidekick.SideKickPlugin;
 //}}}
 
 /**
@@ -39,10 +40,12 @@ public class DefaultErrorSource extends ErrorSource implements EBComponent
  /**
   * Creates a new default error source.
   */
- public DefaultErrorSource(String name)
+ public DefaultErrorSource(String name, View view)
  {
   errors = new Hashtable();
   this.name = name;
+  this.view = view;
+  this.registered=false;
  } //}}}
 
  //{{{ getName() method
@@ -299,7 +302,7 @@ public class DefaultErrorSource extends ErrorSource implements EBComponent
   DefaultError newError = new DefaultError(this,errorType,path,lineIndex,
    start,end,error);
    System.out.println("DefaultErrorSource.AddError line 301");
-   ErrorSource.registerAndCheckErrorSource(this);
+   if (SideKickPlugin.getSideKickNumber(view)!=-1) ErrorSource.registerAndCheckErrorSource(view,this);
   addError(newError);
  } //}}}
 
@@ -317,6 +320,7 @@ public class DefaultErrorSource extends ErrorSource implements EBComponent
  } //}}}
 
  //{{{ Protected members
+ protected View view;
  protected String name;
  protected int errorCount;
  protected Hashtable errors;

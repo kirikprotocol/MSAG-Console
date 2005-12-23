@@ -25,6 +25,7 @@ package errorlist;
 //{{{ Imports
 import org.gjt.sp.jedit.*;
 import java.util.Vector;
+import java.util.HashMap;
 //}}}
 
 /**
@@ -40,16 +41,19 @@ public abstract class ErrorSource implements EBComponent
   * Registers an error source.
   * @param errorSource The error source
   */
- public static void registerErrorSource(ErrorSource errorSource)
+ public static void registerErrorSource(View view,ErrorSource errorSource)
  {
-  if(errorSource.registered)
-   return;
-
+  if(errorSource.isRegistered() )
+  {
+    System.out.println("ErrorSource "+errorSource.getName()+" is registered!!!");
+    return;
+  }
   synchronized(errorSources)
   {
-   System.out.println("REGISTERED in registerErrorSource "+errorSource.getName()+" ErrorSource");
-   errorSources.addElement(errorSource);
-   errorSource.registered=true;
+   System.out.println("REGISTERED in registerErrorSource "+errorSource.getName()+" ErrorSource with errors quantity: "+errorSource.getErrorCount());
+   errorSources.put(view,errorSource);
+   //errorSource.registered=true;
+   errorSource.register(true);
    cachedErrorSources = null;
    System.out.println("ErrorSource.registerErrorSource line 53 EditBus.send(new ErrorSourceUpdate(errorSource,ErrorSourceUpdate.ERROR_SOURCE_ADDED,null)) errorSources.size= "+errorSources.size());
    EditBus.send(new ErrorSourceUpdate(errorSource,ErrorSourceUpdate.ERROR_SOURCE_ADDED,null));
@@ -61,17 +65,17 @@ public abstract class ErrorSource implements EBComponent
   * Registers an error source.
   * @param errorSource The error source
   */
-  public static void registerAndCheckErrorSource(ErrorSource errorSource)
+  public static void registerAndCheckErrorSource(View view,ErrorSource errorSource)
   {
-    if(errorSource.registered)
-   return;
-
+    if(errorSource.isRegistered())
+     return;
   synchronized(errorSources)
   {
    if (errorSources.size()>0) return;
-   System.out.println("REGISTERED in registerAndCheckErrorSource "+errorSource.getName()+" ErrorSource");
-   errorSources.addElement(errorSource);
-   errorSource.registered=true;
+   System.out.println("REGISTERED in registerAndCheckErrorSource "+errorSource.getName()+" ErrorSource with errors quantity: "+errorSource.getErrorCount());
+   errorSources.put(view, errorSource);
+   //errorSource.registered=true;
+   errorSource.register(true);
    cachedErrorSources = null;
    System.out.println("ErrorSource.registerAndCheckErrorSource line 53 EditBus.send(new ErrorSourceUpdate(errorSource,ErrorSourceUpdate.ERROR_SOURCE_ADDED,null)) errorSources.size= "+errorSources.size());
    EditBus.send(new ErrorSourceUpdate(errorSource,ErrorSourceUpdate.ERROR_SOURCE_ADDED,null));
@@ -83,25 +87,33 @@ public abstract class ErrorSource implements EBComponent
   * Unregisters an error source.
   * @param errorSource The error source
   */
- public static void unregisterErrorSource(ErrorSource errorSource)
+ public static void unregisterErrorSource(View view,ErrorSource errorSource)
  {
-  if(!errorSource.registered)
-   return;
-
+  if(!errorSource.isRegistered())
+  {
+    System.out.println("erroSource "+ errorSource.getName()+" is registered so return from unregisterErrorSource");
+    return;
+  }
   EditBus.removeFromBus(errorSource);
 
   synchronized(errorSources)
   {
     System.out.println("UNREGISTERED "+errorSource.getName()+" ErrorSource");
-    errorSources.removeElement(errorSource);
-    errorSource.registered=false;
+    errorSources.remove(view);
+    errorSource.register(false);
     cachedErrorSources = null;
     System.out.println("ErrorSource.unregisterErrorSource line 95 EditBus.send(new ErrorSourceUpdate(errorSource,ErrorSourceUpdate.ERROR_SOURCE_REMOVED,null)) errorSources.size= "+errorSources.size());
     System.out.println();
     EditBus.send(new ErrorSourceUpdate(errorSource,ErrorSourceUpdate.ERROR_SOURCE_REMOVED,null));
   }
  } //}}}
-
+ public static void unregisterByView(View view)
+ {
+  synchronized(errorSources)
+  {
+    errorSources.remove(view);
+  }
+ }
  //{{{ getErrorSources() method
  /**
   * Returns an array of registered error sources.
@@ -114,7 +126,7 @@ public abstract class ErrorSource implements EBComponent
    {
     cachedErrorSources = new ErrorSource[
      errorSources.size()];
-    errorSources.copyInto(cachedErrorSources);
+    errorSources.values().toArray(cachedErrorSources);
    }
    return cachedErrorSources;
   }
@@ -122,6 +134,10 @@ public abstract class ErrorSource implements EBComponent
 
  //}}}
 
+ public static ErrorSource getErrorSourceByView(View view)
+ {
+     return (ErrorSource)errorSources.get(view);
+ }
  //{{{ Constants
  /**
   * An error.
@@ -182,6 +198,19 @@ public abstract class ErrorSource implements EBComponent
  public abstract ErrorSource.Error[] getLineErrors(String path,
   int startLineIndex, int endLineIndex);
  //}}}
+  public synchronized void register(boolean registered)
+  {
+     this.registered=registered;
+  }
+  public boolean isRegistered()
+  {
+      return this.registered;
+  }
+
+    public static void unregisterAll()
+    {
+      errorSources =  new HashMap();
+    }
 
  //{{{ Private members
 
@@ -190,7 +219,7 @@ public abstract class ErrorSource implements EBComponent
  // for improved performance
  protected boolean registered;
 
- private static Vector errorSources = new Vector();
+ private static HashMap errorSources = new HashMap();
  private static ErrorSource[] cachedErrorSources;
  //}}}
 

@@ -82,6 +82,7 @@ class Reflect
      interpreter == null ? null : interpreter.getClassManager();
     Class clas = object.getClass();
         if ( (object instanceof Buffer) && (methodName.equals("save") || methodName.equals("saveAs") ) ) {
+          System.out.println("Reflect invokeObjectMethod: object is instanceof Buffer and method is save");
           Buffer buf=(Buffer)object; View view=null; boolean val=false;String str=null;
           for (int i = 0; i < args.length; i++) {
           Object arg = args[i];
