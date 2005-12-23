@@ -3374,33 +3374,38 @@ StateType StateMachine::deliveryResp(Tuple& t)
     bool final=
       GET_STATUS_TYPE(t.command->get_resp()->get_status())==CMD_OK ||
       GET_STATUS_TYPE(t.command->get_resp()->get_status())==CMD_ERR_PERM;
+    bool lastPart=false;
+    bool multiPart=sms.hasBinProperty(Tag::SMSC_CONCATINFO);
     if(final && GET_STATUS_TYPE(t.command->get_resp()->get_status())!=CMD_ERR_PERM)
     {
-      if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
+      if(multiPart)
       {
         unsigned len;
         ConcatInfo *ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,&len);
         if(sms.getConcatSeqNum()<ci->num-1)
         {
-          final=false;
+          lastPart=true;
         }
       }
     }
-    try{
-      sms.setLastResult(GET_STATUS_CODE(t.command->get_resp()->get_status()));
-      if(sms.hasStrProperty(Tag::SMSC_DIVERTED_TO) && !t.command->get_resp()->get_diverted())
-      {
-        std::string savedDivert=sms.getStrProperty(Tag::SMSC_DIVERTED_TO);
-        sms.getMessageBody().dropProperty(Tag::SMSC_DIVERTED_TO);
-        smsc->ReportDelivery(t.command->get_resp()->get_inDlgId(),sms,final,Smsc::chargeOnDelivery);
-        sms.setStrProperty(Tag::SMSC_DIVERTED_TO,savedDivert.c_str());
-      }else
-      {
-        smsc->ReportDelivery(t.command->get_resp()->get_inDlgId(),sms,final,Smsc::chargeOnDelivery);
-      }
-    }catch(std::exception& e)
+    if(!multiPart || lastPart)
     {
-      smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
+      try{
+        sms.setLastResult(GET_STATUS_CODE(t.command->get_resp()->get_status()));
+        if(sms.hasStrProperty(Tag::SMSC_DIVERTED_TO) && !t.command->get_resp()->get_diverted())
+        {
+          std::string savedDivert=sms.getStrProperty(Tag::SMSC_DIVERTED_TO);
+          sms.getMessageBody().dropProperty(Tag::SMSC_DIVERTED_TO);
+          smsc->ReportDelivery(t.command->get_resp()->get_inDlgId(),sms,final,Smsc::chargeOnDelivery);
+          sms.setStrProperty(Tag::SMSC_DIVERTED_TO,savedDivert.c_str());
+        }else
+        {
+          smsc->ReportDelivery(t.command->get_resp()->get_inDlgId(),sms,final,Smsc::chargeOnDelivery);
+        }
+      }catch(std::exception& e)
+      {
+        smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
+      }
     }
   }
 
