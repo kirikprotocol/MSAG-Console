@@ -33,15 +33,15 @@ public int getBrowserType(HttpServletRequest request) {
   else return BROWSER_TYPE_UNKNOWN;
 }
 
-public void printHref(JspWriter out, String action) throws IOException {
+public String makeHref(String action) throws IOException {
   if( browserType == BROWSER_TYPE_MSIE ) {
     if( action.indexOf("return") != -1 ) {
-      out.print(" href=\"#\" onClick=\""+action+"\" ");
+      return " href=\"#\" onClick=\""+action+"\" ";
     } else {
-      out.print(" href=\"#\" onClick=\"return "+action+"\" ");
+      return " href=\"#\" onClick=\"return "+action+"\" ";
     }
   } else {
-    out.print(" href=\"javascript:"+action+"\" ");
+    return " href=\"javascript:"+action+"\" ";
   }
 }
 

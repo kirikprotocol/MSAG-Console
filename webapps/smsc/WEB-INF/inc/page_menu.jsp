@@ -44,7 +44,7 @@
     out.print("<a id=\"" + name + "\"" +
       (enabled ? "" : " disabled") +
       ((title != null && title.length() > 0) ? " title=\"" + getLocString(title) + "\"" : "") +
-      ((onclick != null && onclick.length() > 0) ? printHref(out, onclick) : printHref(out, "clickSubmit('" + name + "','" + getLocString(value) + "')")) +
+      ((onclick != null && onclick.length() > 0) ? makeHref(onclick) : makeHref("clickSubmit('" + name + "','" + getLocString(value) + "')")) +
       ">" + getLocString(value) + "</a>");
     out.print("</td>");
 
@@ -71,10 +71,10 @@
     out.print("<a id=\"" + name + "\"" +
             (enabled ? "" : " disabled") +
             ((title != null && title.length() > 0) ? " title=\"" + getLocString(title) + "\"" : "") +
-            ((onclick != null && onclick.length() > 0) ? printHref( out, onclick )
+            ((onclick != null && onclick.length() > 0) ? makeHref( onclick )
               : ((confirmation != null && confirmation.length() > 0) ?
-                    printHref(out, "clickConfirmSubmit('" + name + "','" + getLocString(value) + "', '"+confirmation+"')")
-                  : printHref(out, "clickSubmit('" + name + "','" + getLocString(value) + "')")
+                    makeHref("clickConfirmSubmit('" + name + "','" + getLocString(value) + "', '"+confirmation+"')")
+                  : makeHref("clickSubmit('" + name + "','" + getLocString(value) + "')")
                 )
             ) +
             ">" + getLocString(value) + "</a>"

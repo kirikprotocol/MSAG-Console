@@ -28,7 +28,7 @@ void sme_menu_button(JspWriter out, String name, String value, String visibleNam
   	out.print("<a id=\"" + name + "\""
 				+ (enabled ? "" : " class=disabled")
 				+ ((title != null && title.length() > 0) ? " title=\"" + title + "\"" : "")
-				+ ((onclick != null && onclick.length() > 0) ? (" href=\"javascript:" + onclick + '"') : (" href=\"javascript: clickSubmit('"+name+"', '"+value+"')\"") ) 
+				+ ((onclick != null && onclick.length() > 0) ? makeHref( onclick ) : makeHref("clickSubmit('"+name+"', '"+value+"')") )
 				+">" + visibleName + "</a>");
 	out.print("</td>");
 	sme_menu_delimiter_needed = true;
