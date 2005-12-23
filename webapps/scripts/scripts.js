@@ -527,3 +527,9 @@ function clickSubmit(name, value)
     opForm.submit();
     return false;
 }
+
+function clickConfirmSubmit( name, value, conf) {
+  if( confirm(conf) ) return clickSubmit();
+  return false;
+}
+

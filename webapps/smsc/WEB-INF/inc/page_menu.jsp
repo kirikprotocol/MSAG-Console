@@ -41,14 +41,11 @@
     }
 
     out.print("<td width=\"1px\">");
-    out.print("<a id=\"" + name + "\"" + (enabled
-    ? ""
-    : " disabled") + ((title != null && title.length() > 0)
-    ? " title=\"" + getLocString(title) + "\""
-    : "") + ((onclick != null && onclick.length() > 0)
-    ? (" "+javaHref+"\"javascript:" + onclick + '"')
-    : " "+javaHref+"\"javascript:clickSubmit('" + name + "','" + getLocString(value) + "')\"") + ">" + getLocString(value) + "</a>")
-            ;
+    out.print("<a id=\"" + name + "\"" +
+      (enabled ? "" : " disabled") +
+      ((title != null && title.length() > 0) ? " title=\"" + getLocString(title) + "\"" : "") +
+      ((onclick != null && onclick.length() > 0) ? printHref(out, onclick) : printHref(oput, "clickSubmit('" + name + "','" + getLocString(value) + "')")) +
+      ">" + getLocString(value) + "</a>");
     out.print("</td>");
 
     page_menu_delimiter_needed = true;
@@ -74,11 +71,13 @@
     out.print("<a id=\"" + name + "\"" +
             (enabled ? "" : " disabled") +
             ((title != null && title.length() > 0) ? " title=\"" + getLocString(title) + "\"" : "") +
-            ((onclick != null && onclick.length() > 0)
-                    ? (" "+javaHref+"\"javascript:" + onclick + '"')
-                    : ((confirmation != null && confirmation.length() > 0)
-                        ? " "+javaHref+"\"javascript:if( confirm('" + confirmation + "') ) clickSubmit('" + name + "','" + getLocString(value) + "')\""
-                        : " "+javaHref+"\"javascript:clickSubmit('" + name + "','" + getLocString(value) + "')\"")) + ">" + getLocString(value) + "</a>"
+            ((onclick != null && onclick.length() > 0) ? printHref( out, onclick )
+              : ((confirmation != null && confirmation.length() > 0) ?
+                    printHref(out, "clickConfirmSubmit('" + name + "','" + getLocString(value) + "', '"+confirmation+"')")
+                  : printHref(out, "clickSubmit('" + name + "','" + getLocString(value) + "')")
+                )
+            ) +
+            ">" + getLocString(value) + "</a>"
             );
     out.print("</td>");
 

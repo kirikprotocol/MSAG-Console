@@ -2,7 +2,9 @@
                  java.net.URLEncoder,
                  ru.novosoft.smsc.util.StringEncoderDecoder,
                  ru.novosoft.smsc.admin.Constants"
-%><%@
+%>
+<%@ page import="java.io.IOException"%>
+<%@
 page pageEncoding="windows-1251"%><%@
 page contentType="text/html; charset=windows-1251"%><%@
 page buffer="64kb"%><%!
@@ -22,18 +24,30 @@ private final int BROWSER_TYPE_MSIE=1;
 private final int BROWSER_TYPE_MOZILLA=2;
 private final int BROWSER_TYPE_SAFARI=3;
 private       int browserType = -1;
-private       String javaHref = "href=";
 public int getBrowserType(HttpServletRequest request) {
   String _browserType = request.getHeader("User-Agent");
   if( _browserType.indexOf("Safari") != -1 ) return BROWSER_TYPE_SAFARI;
   else if( _browserType.indexOf("MSIE") != -1 ) {
-    javaHref = "href=\"#\" onClick=";
     return BROWSER_TYPE_MSIE;
   } else if( _browserType.indexOf("Mozilla/") != -1 ) return BROWSER_TYPE_MOZILLA;
   else return BROWSER_TYPE_UNKNOWN;
 }
+
+public void printHref(JspWriter out, String action) throws IOException {
+  if( browserType == BROWSER_TYPE_MSIE ) {
+    if( action.indexOf("return") != -1 ) {
+      out.print(" href=\"#\" onClick=\""+action+"\" ");
+    } else {
+      out.print(" href=\"#\" onClick=\"return "+action+"\" ");
+    }
+  } else {
+    out.print(" href=\"javascript:"+action+"\" ");
+  }
+}
+
+
 public boolean isBrowserMSIE(HttpServletRequest request) {
-  return getBrowserType(request) == BROWSER_TYPE_MSIE;
+  return browserType == BROWSER_TYPE_MSIE;
 }
 %><%@include file="/WEB-INF/inc/localization.jsp"%><%
 browserType = getBrowserType(request);
