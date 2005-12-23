@@ -25,11 +25,11 @@ private       int browserType = -1;
 private       String javaHref = "href=";
 public int getBrowserType(HttpServletRequest request) {
   String _browserType = request.getHeader("User-Agent");
-  if( _browserType.indexOf("MSIE") != -1 ) {
+  if( _browserType.indexOf("Safari") != -1 ) return BROWSER_TYPE_SAFARI;
+  else if( _browserType.indexOf("MSIE") != -1 ) {
     javaHref = "href=\"#\" onClick=";
     return BROWSER_TYPE_MSIE;
-  } else if( _browserType.indexOf("Safari") != -1 ) return BROWSER_TYPE_SAFARI;
-  else if( _browserType.indexOf("Mozilla/") != -1 ) return BROWSER_TYPE_MOZILLA;
+  } else if( _browserType.indexOf("Mozilla/") != -1 ) return BROWSER_TYPE_MOZILLA;
   else return BROWSER_TYPE_UNKNOWN;
 }
 public boolean isBrowserMSIE(HttpServletRequest request) {
