@@ -1,5 +1,7 @@
-<stat> = <hour: uint8><min: uint8>	<routeCount:      uint32><routeRecord:     1...routeCount>
+<header> = <head: 9 bytes><version: uint16>
+<stat> = <len: uint32><hour: uint8><min: uint8>	<routeCount:      uint32><routeRecord:     1...routeCount>
 					<servicesCount:   uint32><serviceRecord:   1...serviceCount>
+	 <len: uint32>
 <routeRecord> = <routeIdLength: uint8><routeId: routeIdLength bytes>
 			<providerId: 		uint32>
 			<request:    		uint32>
