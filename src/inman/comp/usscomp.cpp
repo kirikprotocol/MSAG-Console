@@ -119,7 +119,7 @@ bool ProcessUSSRequestArg::msAlerting_present(void)
     return (_alrt == alertingNotSet) ? false : true;
 }
 
-const Address& ProcessUSSRequestArg::getMSISDNadr(void) const
+const TonNpiAddress& ProcessUSSRequestArg::getMSISDNadr(void) const
 {
     return _msAdr;
 }
@@ -135,15 +135,14 @@ enum AlertingPattern ProcessUSSRequestArg::getAlertingPattern(void) const
     return _alrt;
 }
 
-void ProcessUSSRequestArg::setMSISDNadr(const Address& msadr)
+void ProcessUSSRequestArg::setMSISDNadr(const TonNpiAddress& msadr)
 {
     _msAdr = msadr;
 }
 
 void ProcessUSSRequestArg::setMSISDNadr(const char* adrStr)
 {
-    Address  msadr(adrStr);
-    _msAdr = msadr;
+    _msAdr.fromText(adrStr);
 }
 
 
@@ -165,7 +164,7 @@ void ProcessUSSRequestArg::decode(const vector<unsigned char>& buf)
         _msAdr = smsc::inman::comp::OCTET_STRING_2_Addres(dcmd->msisdn);
         assert(_msAdr.length < MAP_MAX_ISDN_AddressLength);
     } else
-        _msAdr.setValue(0, NULL);
+        _msAdr.clear();
 
     if (dcmd->alertingPattern) {
         assert(dcmd->alertingPattern->size == 1);

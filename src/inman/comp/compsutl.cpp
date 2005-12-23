@@ -36,9 +36,9 @@ std::string printType2String(asn_TYPE_descriptor_t * def, void * tStruct) {
   return result;
 }
 
-Address	OCTET_STRING_2_Addres(OCTET_STRING_t * octs)
+TonNpiAddress OCTET_STRING_2_Addres(OCTET_STRING_t * octs)
 {
-    Address	addr;
+    TonNpiAddress addr;
     if (octs && octs->size)
 	unpackOCTS2MAPAddress(addr, (TONNPI_ADDRESS_OCTS *)(octs->buf), octs->size - 1);
     return addr;

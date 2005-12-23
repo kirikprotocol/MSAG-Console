@@ -63,10 +63,10 @@ PrivateInitialDPSMSArg::~PrivateInitialDPSMSArg() { }
 /*
  * NOTE: The CAP4 specifies that the packed address in DestinationSubscriberNumber
  * may be up to 40 octets long, though actually, it doesn't exceed the SMS-AddressString
- * length, which is 10 octet. That's why the Address structure is used and 
+ * length, which is 10 octet. That's why the TonNpiAddress structure is used and 
  * calling the packMAPAddress2OCTS() is safe.
  */
-void InitialDPSMSArg::setDestinationSubscriberNumber(const Address& addr)
+void InitialDPSMSArg::setDestinationSubscriberNumber(const TonNpiAddress& addr)
 {
     Address2OCTET_STRING(comp->_destSN, addr);
     comp->idp.destinationSubscriberNumber = &(comp->_destSN);
@@ -74,11 +74,12 @@ void InitialDPSMSArg::setDestinationSubscriberNumber(const Address& addr)
 
 void InitialDPSMSArg::setDestinationSubscriberNumber(const char * text)
 {
-    Address	sadr(text);
-    InitialDPSMSArg::setDestinationSubscriberNumber((const Address&)sadr);
+    TonNpiAddress   sadr;
+    if (sadr.fromText(text))
+        InitialDPSMSArg::setDestinationSubscriberNumber((const TonNpiAddress&)sadr);
 }
 
-void InitialDPSMSArg::setCalledPartyNumber(const Address& addr)
+void InitialDPSMSArg::setCalledPartyNumber(const TonNpiAddress& addr)
 {
     Address2OCTET_STRING(comp->_clldPN, addr);
     comp->idp.calledPartyNumber = &(comp->_clldPN);
@@ -86,11 +87,12 @@ void InitialDPSMSArg::setCalledPartyNumber(const Address& addr)
 
 void InitialDPSMSArg::setCalledPartyNumber(const char * text)
 {
-    Address	sadr(text);
-    InitialDPSMSArg::setCalledPartyNumber((const Address&)sadr);
+    TonNpiAddress   sadr;
+    if (sadr.fromText(text))
+        InitialDPSMSArg::setCalledPartyNumber((const TonNpiAddress&)sadr);
 }
 
-void InitialDPSMSArg::setCallingPartyNumber(const Address& addr)
+void InitialDPSMSArg::setCallingPartyNumber(const TonNpiAddress& addr)
 {
     Address2OCTET_STRING(comp->_clngPN, addr);
     comp->idp.callingPartyNumber = &(comp->_clngPN);
@@ -98,8 +100,9 @@ void InitialDPSMSArg::setCallingPartyNumber(const Address& addr)
 
 void InitialDPSMSArg::setCallingPartyNumber(const char * text)
 {
-    Address	sadr(text);
-    InitialDPSMSArg::setCallingPartyNumber((const Address&)sadr);
+    TonNpiAddress   sadr;
+    if (sadr.fromText(text))
+        InitialDPSMSArg::setCallingPartyNumber((const TonNpiAddress&)sadr);
 }
 
 //imsi contains sequence of ASCII digits
@@ -114,7 +117,7 @@ void InitialDPSMSArg::setIMSI(const std::string& imsi)
 }
 
 
-void InitialDPSMSArg::setSMSCAddress(const Address& addr)
+void InitialDPSMSArg::setSMSCAddress(const TonNpiAddress& addr)
 {
     Address2OCTET_STRING(comp->_adrSMSC, addr);
     comp->idp.sMSCAddress = &(comp->_adrSMSC);
@@ -122,8 +125,9 @@ void InitialDPSMSArg::setSMSCAddress(const Address& addr)
 
 void InitialDPSMSArg::setSMSCAddress(const char * text)
 {
-    Address	sadr(text);
-    InitialDPSMSArg::setSMSCAddress((const Address&)sadr);
+    TonNpiAddress   sadr;
+    if (sadr.fromText(text))
+        InitialDPSMSArg::setSMSCAddress((const TonNpiAddress&)sadr);
 }
 
 
@@ -186,18 +190,19 @@ void InitialDPSMSArg::setTPValidityPeriod(time_t vpVal, enum TP_VP_format fmt)
 }
 
 /* Sets VLR number and LocationNumber (duplicates it from VLR) */
-void InitialDPSMSArg::setLocationInformationMSC(const Address& addr)
+void InitialDPSMSArg::setLocationInformationMSC(const TonNpiAddress& addr)
 {
     memset(&(comp->_li), 0, sizeof(comp->_li)); //reset _asn_ctx & optionals
 
-    /* NOTE: Address cann't be the alphanumeric */
+    /* NOTE: TonNpiAddress cann't be the alphanumeric */
     Address2OCTET_STRING(comp->_vlrNumber, addr);
     comp->_li.vlr_number = &(comp->_vlrNumber);
     /**/
     ZERO_OCTET_STRING(comp->_locNumber);
     comp->_locNumber.size = packMAPAddress2LocationOCTS(addr,
 			    (LOCATION_ADDRESS_OCTS *)(comp->_locNumber.buf));
-    comp->_li.locationNumber = &(comp->_locNumber);
+    if (comp->_locNumber.size)
+        comp->_li.locationNumber = &(comp->_locNumber);
     /**/
     //reset _asn_ctx & optionals
     memset(&(comp->_cGidOrSAIorLAI), 0, sizeof(comp->_cGidOrSAIorLAI));
@@ -220,8 +225,9 @@ void InitialDPSMSArg::setLocationInformationMSC(const Address& addr)
 
 void InitialDPSMSArg::setLocationInformationMSC(const char* text)
 {
-    Address	sadr(text);
-    InitialDPSMSArg::setLocationInformationMSC((const Address&)sadr);
+    TonNpiAddress   sadr;
+    if (sadr.fromText(text))
+        InitialDPSMSArg::setLocationInformationMSC((const TonNpiAddress&)sadr);
 }
 
 

@@ -3,7 +3,8 @@
 #define __SMSC_INMAN_INAP_COMPS_HPP__
 
 #include <map>
-#include "sms/sms.h"
+
+#include "inman/common/adrutil.hpp"
 #include "inman/comp/compdefs.hpp"
 #include "inman/common/util.hpp"
 #include "logger/Logger.h"
@@ -12,7 +13,7 @@ using smsc::logger::Logger;
 
 using std::map;
 using smsc::inman::common::format;
-using smsc::sms::Address;
+
 
 /* GVR NOTE: while linking the below enums are taken from generated
  * asn1/c codec, so they should not have namespace prefix.
@@ -87,18 +88,18 @@ class InitialDPSMSArg: public Component	//SSF -> SCF
 	InitialDPSMSArg(DeliveryMode_e idpMode, unsigned int serviceKey);
 	~InitialDPSMSArg();
 
-	void setDestinationSubscriberNumber(const Address& addr);	// missing for MT
+	void setDestinationSubscriberNumber(const TonNpiAddress& addr);	// missing for MT
 	void setDestinationSubscriberNumber(const char * text);
 
-	void setCalledPartyNumber(const Address& addr);			// missing for MO
+	void setCalledPartyNumber(const TonNpiAddress& addr);			// missing for MO
 	void setCalledPartyNumber(const char * text);
 
-	void setCallingPartyNumber(const Address& addr);
+	void setCallingPartyNumber(const TonNpiAddress& addr);
 	void setCallingPartyNumber(const char * text);
 
 	void setIMSI(const std::string& imsi); //imsi contains sequence of ASCII digits
 
-	void setSMSCAddress(const Address& addr);
+	void setSMSCAddress(const TonNpiAddress& addr);
 	void setSMSCAddress(const char * text);
 
 	void setTimeAndTimezone(time_t tmVal);
@@ -108,7 +109,7 @@ class InitialDPSMSArg: public Component	//SSF -> SCF
 	void setTPDataCodingScheme(unsigned char );
 	void setTPValidityPeriod(time_t vpVal, enum TP_VP_format fmt);
 
-	void setLocationInformationMSC(const Address& addr);
+	void setLocationInformationMSC(const TonNpiAddress& addr);
 	void setLocationInformationMSC(const char* text);
 
 	void encode(vector<unsigned char>& buf);
@@ -175,14 +176,14 @@ class ConnectSMSArg: public Component //SCF -> SSF
 	ConnectSMSArg();
 	~ConnectSMSArg();
 
-	const Address&	destinationSubscriberNumber();
-	const Address&	callingPartyNumber();
-	const Address&	SMSCAddress();
+	const TonNpiAddress&	destinationSubscriberNumber() { return dstSN; }
+	const TonNpiAddress&	callingPartyNumber() { return clngPN; }
+	const TonNpiAddress&	SMSCAddress() { return sMSCAdr; }
 
 //	void encode(vector<unsigned char>& buf);
 	void decode(const vector<unsigned char>& buf);
     protected:
-	Address	dstSN, clngPN, sMSCAdr;
+	TonNpiAddress	dstSN, clngPN, sMSCAdr;
     private:
 	Logger* compLogger;
 };

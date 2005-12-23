@@ -50,7 +50,7 @@ inline void smsc_log_component(Logger *lgi, asn_TYPE_descriptor_t * asnDef, void
     }
 }
 
-extern Address	OCTET_STRING_2_Addres(OCTET_STRING_t * octs);
+extern TonNpiAddress OCTET_STRING_2_Addres(OCTET_STRING_t * octs);
 
 
 }//namespace comp

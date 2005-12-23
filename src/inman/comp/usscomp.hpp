@@ -4,7 +4,8 @@
 
 #include <vector>
 #include <stdexcept>
-#include "sms/sms.h"
+
+#include "inman/common/adrutil.hpp"
 #include "logger/Logger.h"
 #include "compdefs.hpp"
 #include "acdefs.hpp"
@@ -13,7 +14,6 @@ using smsc::logger::Logger;
 
 using std::runtime_error;
 using std::vector;
-using smsc::sms::Address;
 using smsc::inman::comp::Component;
 using smsc::inman::comp::OperationFactory;
 
@@ -93,15 +93,15 @@ public:
     //Setters:
     //Optional parameters
     void setAlertingPattern(enum AlertingPattern alrt);
-    void setMSISDNadr(const Address& msadr);
+    void setMSISDNadr(const TonNpiAddress& msadr);
     void setMSISDNadr(const char * adrStr);
 
     //Getters:
     //Optional parameters
     bool  msISDNadr_present(void);
     bool  msAlerting_present(void);
-    //returns empty Address if msISDN adr absent
-    const Address& getMSISDNadr(void) const; 
+    //returns empty TonNpiAddress if msISDN adr absent
+    const TonNpiAddress& getMSISDNadr(void) const; 
     //returns alertingNotSet if alerting absent
     enum AlertingPattern getAlertingPattern(void) const;
 
@@ -111,8 +111,7 @@ public:
 private:
     //Optional parameters:
     AlertingPattern_e 	_alrt;		// == alertingNotSet for absence
-    Address 		_msAdr; 	// MS ISDN address, '\0' or "0" for absence
-
+    TonNpiAddress      	_msAdr; 	// MS ISDN address, '\0' or "0" for absence
     Logger*		compLogger;
 };
 

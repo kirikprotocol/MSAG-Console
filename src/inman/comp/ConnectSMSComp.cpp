@@ -33,10 +33,6 @@ void ConnectSMSArg::decode(const vector<unsigned char>& buf)
     asn_DEF_ConnectSMSArg.free_struct(&asn_DEF_ConnectSMSArg, dcmd, 0);
 }
 
-const Address & ConnectSMSArg::destinationSubscriberNumber() { return dstSN; }
-const Address & ConnectSMSArg::callingPartyNumber() { return clngPN; }
-const Address & ConnectSMSArg::SMSCAddress() { return sMSCAdr; }
-
 /* this method doesn't required */
 //void ConnectSMSArg::encode(vector<unsigned char>& buf) 
 //{ throw EncodeError("Not implemented"); }
