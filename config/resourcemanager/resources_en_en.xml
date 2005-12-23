@@ -148,8 +148,12 @@
         <param name="listerr">Failed to get lists:Delete $$string import=reason$$</param>
         <param name="madderr">Member add to $$string import=arg1$$ error:$$string import=reason$$</param>
         <param name="maddok">Member $$string import=arg2$$ added to list $$string import=arg1$$</param>
+        <param name="sadderr">Submitter add to $$string import=arg1$$ error:$$string import=reason$$</param>
+        <param name="saddok">Submitter $$string import=arg2$$ added to list $$string import=arg1$$</param>
         <param name="mdelerr">Failed to delete member $$string import=arg2$$ from list $$string import=arg1$$:$$string import=reason$$</param>
         <param name="mdelok">Member $$string import=arg2$$ deleted from list $$string import=arg1$$</param>
+        <param name="sdelerr">Failed to delete submitter $$string import=arg2$$ from list $$string import=arg1$$:$$string import=reason$$</param>
+        <param name="sdelok">Submitter $$string import=arg2$$ deleted from list $$string import=arg1$$</param>
         <param name="sendok">Message sent to $$string import=arg2$$ members</param>
         <param name="senderr">Failed to send message to list:$$string import=reason$$</param>
       </section>
