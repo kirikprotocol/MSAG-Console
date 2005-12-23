@@ -293,6 +293,67 @@ int DistrListProcess::Execute()
             reason="member doesn't exists";
           }
         }else
+        if(cmd=="adds")
+        {
+          Address submitter(arg2.c_str());
+          try{
+            tmpl="dl.sadderr";
+            admin->grantPosting(fullarg,addr,submitter);
+            tmpl="dl.saddok";
+          }catch(ListNotExistsException& e)
+          {
+            reason="list not found";
+          }catch(PrincipalNotExistsException& e)
+          {
+            reason="principal not found";
+          }catch(SubmitterAlreadyExistsException& e)
+          {
+            reason="submitter already exists";
+          }
+        }else
+        if(cmd=="dels")
+        {
+          Address submitter(arg2.c_str());
+          try{
+            tmpl="dl.sdelerr";
+            admin->revokePosting(fullarg,addr,submitter);
+            tmpl="dl.sdelok";
+          }catch(ListNotExistsException& e)
+          {
+            reason="list not found";
+          }catch(SubmitterNotExistsException& e)
+          {
+            reason="submitter not found";
+          }catch(IllegalSubmitterException& e)
+          {
+            reason="illegal submitter";
+          }
+        }else
+        if(cmd=="slist")
+        {
+          try{
+            tmpl="dl.slisterr";
+            Array<Address> addrs;
+            admin->getSubmitters(fullarg,addrs);
+            tmpl="dl.slistok";
+            if(addrs.Count()==0)
+            {
+              tmpl="dl.slistempty";
+            }else
+            {
+              char buf[32];
+              for(int i=0;i<addrs.Count();i++)
+              {
+                addrs[i].getText(buf,sizeof(buf));
+                if(i!=0)answer+=',';
+                answer+=buf;
+              }
+            }
+          }catch(ListNotExistsException& e)
+          {
+            reason="list not found";
+          }
+        }else
         if(cmd=="send")
         {
           Array<Address> m;
