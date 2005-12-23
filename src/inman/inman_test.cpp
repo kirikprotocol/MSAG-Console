@@ -173,8 +173,8 @@ public:
         op.setDestinationSubscriberNumber( _dstAdr[_adrType]);
         op.setCallingPartyNumber(_abonents[abType].addr);
         op.setCallingIMSI(_abonents[abType].imsi);
-
-        op.setLocationInformationMSC( ".1.1.79139860001" );
+        
+        op.setLocationInformationMSC( (_adrType != adrAlphaNum) ? ".1.1.79139860001" : "" );
         op.setSMSCAddress(".1.1.79029869990");
 
         op.setSubmitTimeTZ(time(NULL));
