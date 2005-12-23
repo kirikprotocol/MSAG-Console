@@ -34,5 +34,7 @@ public class ApplyRoutesCommand extends CommandClass
 	{
 		ctx.getStatuses().setRoutesChanged(false);
 		ctx.getJournal().clear(SubjectTypes.TYPE_route);
-	}
+        ctx.getStatuses().setSubjectsChanged(false);
+        ctx.getJournal().clear(SubjectTypes.TYPE_subject);
+    }
 }

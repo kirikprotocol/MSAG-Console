@@ -38,7 +38,9 @@ public class ApplyAllCommand extends CommandClass
 	{
 		ctx.getStatuses().setRoutesChanged(false);
 		ctx.getJournal().clear(SubjectTypes.TYPE_route);
-		ctx.getStatuses().setCategoriesChanged(false);
+        ctx.getStatuses().setSubjectsChanged(false);
+        ctx.getJournal().clear(SubjectTypes.TYPE_subject);
+        ctx.getStatuses().setCategoriesChanged(false);
 		ctx.getJournal().clear(SubjectTypes.TYPE_category);
 		ctx.getStatuses().setProvidersChanged(false);
 		ctx.getJournal().clear(SubjectTypes.TYPE_provider);
