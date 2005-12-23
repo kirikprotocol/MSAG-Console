@@ -23,8 +23,8 @@ function timeMakeTimeStr(hour, minute, second, PM) {
 }
 function timeClose() {
     timePanel.releaseCapture();
-    timePanel.runtimeStyle.display = "none";
-    document.getElementById('timeIFrame').runtimeStyle.display = "none";
+    timePanel.style.display = "none";
+    document.getElementById('timeIFrame').style.display = "none";
     timeMouseDown = false;
     timePressedTime = false;
     timePressedHour = false;
@@ -109,12 +109,12 @@ function showTime(timeInputText, us) {
     timePanel.style.posLeft = PageX;
     timePanel.style.posTop = PageY + timeInputText.offsetHeight;
     createTimePanel(hour, minute, second, PM);
-    timePanel.runtimeStyle.display = "block";
-    document.getElementById('timeIFrame').runtimeStyle.posLeft = PageX;
-    document.getElementById('timeIFrame').runtimeStyle.posTop = PageY + timeInputText.offsetHeight;
-    document.getElementById('timeIFrame').runtimeStyle.width = timePanel.offsetWidth;
-    document.getElementById('timeIFrame').runtimeStyle.height = timePanel.offsetHeight;
-    document.getElementById('timeIFrame').runtimeStyle.display = "block";
+    timePanel.style.display = "block";
+    document.getElementById('timeIFrame').style.posLeft = PageX;
+    document.getElementById('timeIFrame').style.posTop = PageY + timeInputText.offsetHeight;
+    document.getElementById('timeIFrame').style.width = timePanel.offsetWidth;
+    document.getElementById('timeIFrame').style.height = timePanel.offsetHeight;
+    document.getElementById('timeIFrame').style.display = "block";
     timePanel.setCapture();
     return false;
 }

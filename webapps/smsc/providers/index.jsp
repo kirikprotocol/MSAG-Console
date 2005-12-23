@@ -96,15 +96,15 @@ function clickClickable(headId, bodyId)
 {
   var _head = document.all(headId);
   var _body = document.all(bodyId);
-  if (_body.runtimeStyle.display == 'none' || _body.runtimeStyle.display == '')
+  if (_body.style.display == 'none' || _body.style.display == '')
   {
     _head.className = 'collapsing_list_opened';
-    _body.runtimeStyle.display = 'block';
+    _body.style.display = 'block';
   }
   else
   {
     _head.className = 'collapsing_list_closed';
-    _body.runtimeStyle.display = 'none';
+    _body.style.display = 'none';
   }
 }
 </script>

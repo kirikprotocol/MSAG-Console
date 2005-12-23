@@ -68,15 +68,15 @@ void printOptionsString(JspWriter out, HttpServletRequest request, List journalE
     out.println("</td></tr>");
     out.println("<script>");
     out.println("function click" + journalRowId + "() {");
-    out.println("  if (" + journalRowId + ".runtimeStyle.display == 'none') {");
-    out.println("    " + journalRowId + ".runtimeStyle.display = 'block';");
+    out.println("  if (" + journalRowId + ".style.display == 'none') {");
+    out.println("    " + journalRowId + ".style.display = 'block';");
     out.println("    " + journalRowId + "_div.className = 'collapsing_list_opened';");
     out.println("  } else {");
-    out.println("    " + journalRowId + ".runtimeStyle.display = 'none';");
+    out.println("    " + journalRowId + ".style.display = 'none';");
     out.println("    " + journalRowId + "_div.className = 'collapsing_list_closed';");
     out.println("  }");
     out.println("}");
-    out.println(journalRowId + ".runtimeStyle.display = 'none';</script>");
+    out.println(journalRowId + ".style.display = 'none';</script>");
   }
 }
 %><jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.Index"/><%

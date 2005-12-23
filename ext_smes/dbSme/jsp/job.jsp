@@ -51,14 +51,14 @@ function setType()
 	switch(opForm.type.selectedIndex)
 	{
 	   case 0:
-			ROW_TYPE_SQL1.runtimeStyle.display = "block";
-			ROW_TYPE_PLSQL1.runtimeStyle.display = "none";
-			ROW_TYPE_PLSQL2.runtimeStyle.display = "none";
+			ROW_TYPE_SQL1.style.display = "block";
+			ROW_TYPE_PLSQL1.style.display = "none";
+			ROW_TYPE_PLSQL2.style.display = "none";
 			break;
 		case 1:
-			ROW_TYPE_SQL1.runtimeStyle.display = "none";
-			ROW_TYPE_PLSQL1.runtimeStyle.display = "block";
-			ROW_TYPE_PLSQL2.runtimeStyle.display = "block";
+			ROW_TYPE_SQL1.style.display = "none";
+			ROW_TYPE_PLSQL1.style.display = "block";
+			ROW_TYPE_PLSQL2.style.display = "block";
 			break;
 	}
 }

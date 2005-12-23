@@ -81,7 +81,7 @@
         var _head = document.getElementById(headId);
         var _body = document.getElementById(bodyId);
 
-        if (_body.runtimeStyle.display == 'none' || _body.runtimeStyle.display == '') {
+        if (_body.style.display == 'none' || _body.style.display == '') {
           _head.className = 'collapsing_list_opened';
           _body.style.display = 'block';
         } else {

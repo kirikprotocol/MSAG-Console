@@ -46,31 +46,31 @@ function selectType()
     var row_monthes = tableRows.row_monthes;
     var row_intervalTime = tableRows.row_intervalTime;
 
-    row_endDateTime.runtimeStyle.display="none";
-    row_everyNDays.runtimeStyle.display="none";
-    row_everyNWeeks.runtimeStyle.display="none";
-    row_weekDays.runtimeStyle.display="none";
-    row_dayOfMonth.runtimeStyle.display="none";
-    row_weekDay.runtimeStyle.display="none";
-    row_monthes.runtimeStyle.display="none";
-    row_intervalTime.runtimeStyle.display="none";
+    row_endDateTime.style.display="none";
+    row_everyNDays.style.display="none";
+    row_everyNWeeks.style.display="none";
+    row_weekDays.style.display="none";
+    row_dayOfMonth.style.display="none";
+    row_weekDay.style.display="none";
+    row_monthes.style.display="none";
+    row_intervalTime.style.display="none";
 
     if ("once" == typeSel.value) {
     } else if ("daily" == typeSel.value) {
-      row_endDateTime.runtimeStyle.display="block";
-      row_everyNDays.runtimeStyle.display="block";
+      row_endDateTime.style.display="block";
+      row_everyNDays.style.display="block";
     } else if ("weekly" == typeSel.value) {
-      row_endDateTime.runtimeStyle.display="block";
-      row_everyNWeeks.runtimeStyle.display="block";
-      row_weekDays.runtimeStyle.display="block";
+      row_endDateTime.style.display="block";
+      row_everyNWeeks.style.display="block";
+      row_weekDays.style.display="block";
     } else if ("monthly" == typeSel.value) {
-      row_endDateTime.runtimeStyle.display="block";
-      row_dayOfMonth.runtimeStyle.display="block";
-      row_weekDay.runtimeStyle.display="block";
-      row_monthes.runtimeStyle.display="block";
+      row_endDateTime.style.display="block";
+      row_dayOfMonth.style.display="block";
+      row_weekDay.style.display="block";
+      row_monthes.style.display="block";
     } else if ("interval" == typeSel.value) {
-      row_endDateTime.runtimeStyle.display="block";
-      row_intervalTime.runtimeStyle.display="block";
+      row_endDateTime.style.display="block";
+      row_intervalTime.style.display="block";
     }
   }
   return true;

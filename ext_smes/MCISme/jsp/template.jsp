@@ -30,7 +30,7 @@
 function checkMultiAndGroupping(show)
 {
   var row = document.getElementById('templateTable').rows["multiParamRow"];
-  row.runtimeStyle.display = (show) ? "block":"none";
+  row.style.display = (show) ? "block":"none";
 }
 </script>
 <div class=content>

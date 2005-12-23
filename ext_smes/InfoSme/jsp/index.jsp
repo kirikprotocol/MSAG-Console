@@ -152,8 +152,8 @@ function checkStartStop()
   document.getElementById('mbStart').disabled = !start;
   document.getElementById('mbStop').disabled = !stop;
 
-  document.getElementById('startStopTable').rows.procRow.runtimeStyle.display = smeRunning ? "block" : "none";
-  document.getElementById('startStopTable').rows.schedRow.runtimeStyle.display = smeRunning ? "block" : "none";
+  document.getElementById('startStopTable').rows.procRow.style.display = smeRunning ? "block" : "none";
+  document.getElementById('startStopTable').rows.schedRow.style.display = smeRunning ? "block" : "none";
 
   document.getElementById('toStartProcessor').disabled = smeChecked;
   document.getElementById('toStartScheduler').disabled = smeChecked;

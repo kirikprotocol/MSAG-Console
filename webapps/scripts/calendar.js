@@ -50,8 +50,8 @@ function calendarMakeDateStr(year, month, day, hour, minute, second, PM) {
 }
 function calendarClose() {
     calendarPanel.releaseCapture();
-    calendarPanel.runtimeStyle.display = "none";
-    document.getElementById('calendarIFrame').runtimeStyle.display = "none";
+    calendarPanel.style.display = "none";
+    document.getElementById('calendarIFrame').style.display = "none";
     calendarMouseDown = false;
     calendarPressedTime = false;
     calendarPressedHour = false;
@@ -232,12 +232,12 @@ function showCalendar(calendarInputText, us, showTime) {
     calendarPanel.style.posLeft = PageX;
     calendarPanel.style.posTop = PageY + calendarInputText.offsetHeight;
     createCalendarPanel(year, month, day, hour, minute, second, PM);
-    calendarPanel.runtimeStyle.display = "block";
-    document.getElementById('calendarIFrame').runtimeStyle.posLeft = PageX;
-    document.getElementById('calendarIFrame').runtimeStyle.posTop = PageY + calendarInputText.offsetHeight;
-    document.getElementById('calendarIFrame').runtimeStyle.width = calendarPanel.offsetWidth;
-    document.getElementById('calendarIFrame').runtimeStyle.height = calendarPanel.offsetHeight;
-    document.getElementById('calendarIFrame').runtimeStyle.display = "block";
+    calendarPanel.style.display = "block";
+    document.getElementById('calendarIFrame').style.posLeft = PageX;
+    document.getElementById('calendarIFrame').style.posTop = PageY + calendarInputText.offsetHeight;
+    document.getElementById('calendarIFrame').style.width = calendarPanel.offsetWidth;
+    document.getElementById('calendarIFrame').style.height = calendarPanel.offsetHeight;
+    document.getElementById('calendarIFrame').style.display = "block";
     calendarPanel.setCapture();
     return false;
 }

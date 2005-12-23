@@ -75,7 +75,7 @@ if (stat != null && !needCSVDownload)
   {
     var o = p.className == "collapsing_list_opened";
     p.className = o ? "collapsing_list_closed"  : "collapsing_list_opened";
-    c.runtimeStyle.display = o ? "none" : "block";
+    c.style.display = o ? "none" : "block";
   }
 </script>
 <table class=list cellspacing=0>

@@ -2,7 +2,7 @@ function resetValidation(elem)
 {
     elem.errorMessage = null;
     try {
-        elem.runtimeStyle.color = elem.style.color;
+        elem.style.color = elem.style.color;
     }
     catch(ex) {
     }
@@ -11,7 +11,7 @@ function resetValidation(elem)
         elem = elem.parentElement;
     }
     try {
-        elem.runtimeStyle.borderColor = elem.style.borderColor;
+        elem.style.borderColor = elem.style.borderColor;
     }
     catch(ex) {
     }
@@ -34,8 +34,8 @@ function validateShowErrors(elem)
 			errPointer.className="errPointer";
 		}
 		errPointer.style.display = "block";
-		errPointer.runtimeStyle.right = elem.runtimeStyle.posRight;
-		errPointer.runtimeStyle.top = elem.runtimeStyle.posTop;*/
+		errPointer.style.right = elem.runtimeStyle.posRight;
+		errPointer.style.top = elem.runtimeStyle.posTop;*/
 }
 
 function validationError(elem, txt)
@@ -46,7 +46,7 @@ function validationError(elem, txt)
         elem.focus();
 
     try {
-        elem.runtimeStyle.color = "#FF0000";
+        elem.style.color = "#FF0000";
     }
     catch(ex) {
     }
@@ -55,7 +55,7 @@ function validationError(elem, txt)
         elem = elem.parentElement;
     }
     try {
-        elem.runtimeStyle.borderColor = "#FF0000";
+        elem.style.borderColor = "#FF0000";
     }
     catch(ex) {
     }
