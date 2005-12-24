@@ -52,8 +52,8 @@ MENU0_SELECTION = "MENU0_PROVIDERS";
  %><div class=content>
 <input type=hidden name=initialized value=true>
 <input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
-<input type=hidden name=editName>
-<input type=hidden name=editId>
+<input type=hidden name=editName id=editName>
+<input type=hidden name=editId id=editId>
 <input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
 <input type=hidden name=sort>
 

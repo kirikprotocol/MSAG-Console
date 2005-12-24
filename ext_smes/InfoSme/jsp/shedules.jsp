@@ -32,7 +32,7 @@
 <div class=content>
 <input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
 <input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
-<input type=hidden name=edit>
+<input type=hidden name=edit id=edit>
 <input type=hidden name=sort>
 <script type="text/javascript">
 function setSort(sorting)

@@ -46,7 +46,7 @@ page_menu_end(out);
 <input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
 <input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
 <input type=hidden name=sort>
-<input type=hidden name=editDl>
+<input type=hidden name=editDl id=editDl>
 <script>
 function setSort(sorting)
 {

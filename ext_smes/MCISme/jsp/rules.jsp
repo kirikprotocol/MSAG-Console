@@ -39,7 +39,7 @@ function checkCheckboxesForRules() {
 }
 </script>
 <div class=content>
-<input type=hidden name=editRule value="<%= bean.getEditRule()%>">
+<input type=hidden name=editRule id=editRule value="<%= bean.getEditRule()%>">
 <div class=page_subtitle><%= getLocString("mcisme.subtitle.redirect_rules")%></div>
 <table id="rules_table" cellspacing=5>
 <tr><td>

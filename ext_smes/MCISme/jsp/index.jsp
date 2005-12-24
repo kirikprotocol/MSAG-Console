@@ -44,7 +44,7 @@ function checkApplyResetButtons()
   else if (status == ServiceInfo.STATUS_STOPPED)  return "stopped";
   return "<span style='color:blue;'>unknown</span>";
 }%-->
-<input type=hidden name=edit>
+<input type=hidden name=edit id=edit>
 
 <table cellspacing=0 cellpadding=0>
 <col width="48%">

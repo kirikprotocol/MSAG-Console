@@ -45,9 +45,9 @@ page_menu_end(out);
 %>
 <div class=content>
 <input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
-<input type=hidden name=editAlias>
-<input type=hidden name=editAddress>
-<input type=hidden name=editHide>
+<input type=hidden name=editAlias id=editAlias>
+<input type=hidden name=editAddress id=editAddress>
+<input type=hidden name=editHide id=editHide>
 <input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
 <input type=hidden name=sort>
 

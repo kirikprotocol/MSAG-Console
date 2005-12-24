@@ -34,7 +34,7 @@
     %>
     <div class=content>
     <input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
-    <input type=hidden name=edit>
+    <input type=hidden name=edit id=edit>
     <input type=hidden name=sort>
     <script>
     function setSort(sorting)

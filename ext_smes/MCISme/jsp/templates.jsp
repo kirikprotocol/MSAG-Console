@@ -49,7 +49,7 @@ function checkCheckboxesForNotifyTemplate() {
 }
 </script>
 <div class=content>
-<input type=hidden name=editTemplate value="<%=bean.getEditTemplate()%>">
+<input type=hidden name=editTemplate id=editTemplate value="<%=bean.getEditTemplate()%>">
 <div class=page_subtitle><%= getLocString("mcisme.subtitle.inform_template")%></div>
 <table id="inform_table" cellspacing=5>
 <tr><td>

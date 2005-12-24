@@ -141,7 +141,7 @@
 %>
   <div class=content>
     <input type=hidden id=startPosition name=startPosition value="<%= bean.getStartPosition() %>">
-    <input type=hidden name=editName>
+    <input type=hidden name=editName id=editName>
     <input type=hidden name=totalSize value=<%= bean.getTotalSize() %>>
     <input type=hidden name=sort>
     <input type=hidden name=initialized value=true>

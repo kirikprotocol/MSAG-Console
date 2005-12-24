@@ -39,7 +39,7 @@ function checkCheckboxesForOffsets() {
 }
 </script>
 <div class=content>
-<input type=hidden name=editOffset value="<%= bean.getEditOffset()%>">
+<input type=hidden name=editOffset id=editOffset value="<%= bean.getEditOffset()%>">
 <div class=page_subtitle><%= getLocString("mcisme.subtitle.tz_rules")%></div>
 <table id="offsets_table" cellspacing=5>
 <tr><td>

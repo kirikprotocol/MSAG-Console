@@ -32,7 +32,7 @@
 <%@ include file="inc/header.jsp"%>
 <%@ include file="/WEB-INF/inc/collapsing_tree.jsp"%>
 <div class=content>
-<input type=hidden name=edit>
+<input type=hidden name=edit id=edit>
 <input type=hidden name=sort>
 <script type="text/javascript">
 function setSort(sorting)
