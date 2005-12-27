@@ -159,7 +159,7 @@ public class Index extends SmscBean
 
   private int processStart()
   {
-    if (getStatusOnline()) {
+    if (!getStatusOnline()) {
       try {
         hostsManager.startService(Constants.SMSC_SME_ID);
         return RESULT_OK;
@@ -174,7 +174,7 @@ public class Index extends SmscBean
 
   private int processStop()
   {
-    if (!getStatusOnline()) {
+    if (getStatusOnline()) {
       try {
         hostsManager.shutdownService(Constants.SMSC_SME_ID);
         return RESULT_OK;

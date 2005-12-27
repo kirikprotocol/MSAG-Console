@@ -26,16 +26,16 @@ function openTopMon(){
  <td >&nbsp;<%
   if (ServiceIDForShowStatus != null && ServiceIDForShowStatus.length() > 0)
   {
-    if (!ServiceIDForShowStatus.equals(Constants.SMSC_SME_ID))
-    {
-    %><%=StringEncoderDecoder.encode(ServiceIDForShowStatus)%>&nbsp;
-      <%=getLocString("grammatic.is")%>&nbsp;
-      <%=serviceStatus((SMSCAppContext) request.getAttribute("appContext"),  ServiceIDForShowStatus)%><%
-    }
-    else
+    if (ServiceIDForShowStatus.equals(Constants.SMSC_SME_ID) && ((SMSCAppContext) request.getAttribute("appContext")).getInstallType() != ResourceGroupConstants.RESOURCEGROUP_TYPE_SINGLE)
     { %>
      <%=smscStatus((SMSCAppContext) request.getAttribute("appContext"))%>
      <%
+    }
+    else
+    {
+     %><%=StringEncoderDecoder.encode(ServiceIDForShowStatus)%>&nbsp;
+      <%=getLocString("grammatic.is")%>&nbsp;
+      <%=serviceStatus((SMSCAppContext) request.getAttribute("appContext"),  ServiceIDForShowStatus)%><%
     }
   }%></td>
  <td width=12px background="/images/smsc_19.jpg" style="padding-right:0px;"></td></tr>

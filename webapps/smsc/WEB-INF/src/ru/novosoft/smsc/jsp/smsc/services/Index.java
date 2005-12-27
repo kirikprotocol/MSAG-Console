@@ -164,7 +164,6 @@ public class Index extends PageBean
           notStartedIds.add(svcId);
           result = error(SMSCErrors.error.hosts.couldntStartService, svcId, e);
           logger.error("Couldn't start services \"" + svcId + '"', e);
-          continue;
         }
       }
       else {

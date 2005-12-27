@@ -1,9 +1,6 @@
 <%@
  include file="/WEB-INF/inc/code_header.jsp"%><%@
- page import="ru.novosoft.smsc.jsp.smsc.reshedule.Edit,
-              java.net.URLEncoder,
-              ru.novosoft.smsc.jsp.SMSCJspException,
-              ru.novosoft.smsc.jsp.SMSCErrors"
+ page import="ru.novosoft.smsc.jsp.smsc.reshedule.Edit"
 %><jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.reshedule.Edit"
 /><jsp:setProperty name="bean" property="*"/><%
 FORM_METHOD = "POST";

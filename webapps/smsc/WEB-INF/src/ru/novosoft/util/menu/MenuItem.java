@@ -10,8 +10,11 @@ import java.util.Iterator;
 public class MenuItem implements Serializable {
 
     public static final int ITEM_ID_TOP = 0;
+	public static byte VISIBLE_IN_ALL = 1;
+	public static byte VISIBLE_IN_SINGLE = 2;
+	public static byte VISIBLE_IN_HA = 3;
 
-    private int id;
+	private int id;
     private int parentId;
     private String key;
     private String caption;
@@ -19,13 +22,19 @@ public class MenuItem implements Serializable {
     private String target;
     private String onclick;
 
-    private Collection subMenu;
+	private byte visibleMask = VISIBLE_IN_ALL;
+	// 1 - visible in all installation types
+	// 2 - visible in single
+	// 3 - visible in ha
+
+	private Collection subMenu;
     int subMenuWidth;
 
-    public MenuItem(String key, String uri) {
+    public MenuItem(String key, String uri, byte mask) {
         this.key = key;
         this.uri = uri;
-    }
+		this.visibleMask = mask;
+	}
 
     public MenuItem(String key, String uri, String target) {
         this.key = key;
@@ -141,4 +150,8 @@ public class MenuItem implements Serializable {
     public void setOnclick(String onclick) {
         this.onclick = onclick;
     }
+
+	public byte getVisibleMask() {
+		return visibleMask;
+	}
 }

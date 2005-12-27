@@ -240,22 +240,6 @@ public class ResGroups extends PageBean
     return result;
   }
 
-
-  public String getHost(final String sId)
-  {
-    try
-	{
-		String result = "";
-		String[] nodes = hostsManager.getServiceNodes(sId);
-		for(int i = 0; i < nodes.length; i++) {if (i == 0) result += nodes[i]; else result = result + ", " +nodes[i];}
-		return result;
-	} catch (Throwable e) {
-      error(SMSCErrors.error.services.couldntGetServiceInfo, e);
-      logger.error("Couldn't get service info for service \"" + sId + '"', e);
-      return "";
-    }
-  }
-
   public SmeStatus getSmeStatus(final String id)
   {
     try {

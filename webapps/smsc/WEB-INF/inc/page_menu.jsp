@@ -73,7 +73,7 @@
             ((title != null && title.length() > 0) ? " title=\"" + getLocString(title) + "\"" : "") +
             ((onclick != null && onclick.length() > 0) ? makeHref( onclick )
               : ((confirmation != null && confirmation.length() > 0) ?
-                    makeHref("clickConfirmSubmit('" + name + "','" + getLocString(value) + "', '"+confirmation+"')")
+                    makeHref("clickConfirmSubmit('" + name + "','" + getLocString(value) + "','"+confirmation+"')")
                   : makeHref("clickSubmit('" + name + "','" + getLocString(value) + "')")
                 )
             ) +

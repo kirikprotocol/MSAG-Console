@@ -1,5 +1,4 @@
-<%@ page import="ru.novosoft.smsc.util.StringEncoderDecoder,
-                 ru.novosoft.smsc.jsp.SMSCAppContext"%><!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head>
 <title><%=(BROWSER_TITLE==null) ? TITLE : BROWSER_TITLE%></title>
 <base href="<%=request.getScheme()%>://<%=request.getServerName()%>:<%=request.getServerPort() + CPATH%>/">

@@ -1,15 +1,7 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="ru.novosoft.smsc.jsp.smsc.providers.IndexProvider,
                  ru.novosoft.smsc.jsp.util.tables.DataItem,
-				 ru.novosoft.smsc.admin.route.SourceList,
-				 ru.novosoft.smsc.admin.route.DestinationList,
-                 java.net.URLEncoder,
-                 ru.novosoft.smsc.jsp.SMSCJspException,
-                 ru.novosoft.smsc.jsp.SMSCErrors,
-                 ru.novosoft.smsc.util.StringEncoderDecoder,
-                 java.text.DateFormat,
-                 ru.novosoft.smsc.jsp.util.tables.QueryResultSet,
-                 ru.novosoft.smsc.jsp.smsc.providers.IndexProvider"%>
+				 ru.novosoft.smsc.jsp.util.tables.QueryResultSet"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.categories.IndexCategory"/>
 <jsp:setProperty name="bean" property="*"/>
 <%@ taglib uri="http://jakarta.apache.org/taglibs/input-1.0" prefix="input" %>

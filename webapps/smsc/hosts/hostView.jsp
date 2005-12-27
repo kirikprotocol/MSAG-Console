@@ -1,13 +1,9 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.hosts.HostView"/>
 <jsp:setProperty name="bean" property="*"/>
-<%@page import="ru.novosoft.smsc.jsp.smsc.hosts.HostView, ru.novosoft.smsc.admin.service.ServiceInfo,
-                ru.novosoft.smsc.util.StringEncoderDecoder,
-                java.util.*,
-                java.net.URLEncoder,
-                ru.novosoft.smsc.jsp.SMSCJspException,
-                ru.novosoft.smsc.jsp.SMSCErrors,
-                ru.novosoft.smsc.jsp.PageBean"%>
+<%@page import="ru.novosoft.smsc.jsp.PageBean, ru.novosoft.smsc.jsp.smsc.hosts.HostView,
+                java.util.Arrays,
+                java.util.List"%>
 <%
 isServiceStatusNeeded = true;
 switch (bean.process(request))

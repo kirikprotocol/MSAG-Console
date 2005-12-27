@@ -40,11 +40,9 @@
   <script>
     function refreshStartStopButtonsStatus() {
       document.getElementById('mbStart').disabled = (document.getElementById(
-              'RUNNING_STATUSERVICE_<%= Constants.SMSC_SME_ID %>
-').innerText != "<%= getLocString("common.statuses.stopped") %>");
+              'RUNNING_STATUSERVICE_<%= Constants.SMSC_SME_ID %>').innerText != "<%= getLocString("common.statuses.offline") %>");
       document.getElementById('mbStop').disabled = (document.getElementById(
-              'RUNNING_STATUSERVICE_<%= Constants.SMSC_SME_ID %>
-').innerText != "<%= getLocString("common.statuses.running") %>");
+              'RUNNING_STATUSERVICE_<%= Constants.SMSC_SME_ID %>').innerText == "<%= getLocString("common.statuses.offline") %>");
 
       window.setTimeout(refreshStartStopButtonsStatus, 500);
     }

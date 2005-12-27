@@ -176,14 +176,14 @@ public class ServiceAddExternalAdm extends SmeBean
     try {
       serviceInfo
               = new ServiceInfo(serviceId, hostName,
-                      /*appContext.getHostsManager().getDaemonServicesFolder(hostName) + File.separatorChar + serviceId*/"",
+                      appContext.getHostsManager().getDaemonServicesFolder(hostName) + File.separatorChar + serviceId,
                       startupArgs, autostart,
                       new SME(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), systemType, password,
                               rangeOfAddress, -1, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode, proclimit, schedlimit),
                       ServiceInfo.STATUS_OFFLINE);
-    }/* catch (AdminException e) {
+    } catch (AdminException e) {
       return error(SMSCErrors.error.services.coudntAddService, e);
-    }*/ catch (NullPointerException e) {
+    } catch (NullPointerException e) {
       return error(SMSCErrors.error.services.NotAllParametersDefined, e);
     }
 

@@ -1,11 +1,10 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.hosts.Index"/>
 <jsp:setProperty name="bean" property="*"/>
-<%@page import="ru.novosoft.smsc.jsp.smsc.hosts.Index,
-                java.net.URLEncoder,
-                ru.novosoft.smsc.jsp.SMSCJspException,
-                ru.novosoft.smsc.jsp.SMSCErrors,
-                ru.novosoft.smsc.jsp.PageBean"%>
+<%@page import="ru.novosoft.smsc.jsp.PageBean,
+                ru.novosoft.smsc.jsp.smsc.hosts.Index,
+                java.util.Arrays,
+                java.util.List"%>
 <%
 TITLE = getLocString("host.title");
 switch (bean.process(request))

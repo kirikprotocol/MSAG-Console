@@ -6,6 +6,7 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.acl.AclManager;
 import ru.novosoft.smsc.admin.category.CategoryManager;
 import ru.novosoft.smsc.admin.console.Console;
+import ru.novosoft.smsc.admin.daemon.DaemonManager;
 import ru.novosoft.smsc.admin.journal.Journal;
 import ru.novosoft.smsc.admin.provider.ProviderManager;
 import ru.novosoft.smsc.admin.resource_group.ResourceGroupConstants;
@@ -13,9 +14,7 @@ import ru.novosoft.smsc.admin.resource_group.ResourceGroupManager;
 import ru.novosoft.smsc.admin.resources.ResourcesManager;
 import ru.novosoft.smsc.admin.resources.ResourcesManagerImpl;
 import ru.novosoft.smsc.admin.route.RouteSubjectManagerImpl;
-import ru.novosoft.smsc.admin.service.HostsManager;
-import ru.novosoft.smsc.admin.service.ServiceManager;
-import ru.novosoft.smsc.admin.service.ServiceManagerImpl;
+import ru.novosoft.smsc.admin.service.*;
 import ru.novosoft.smsc.admin.smsc_service.*;
 import ru.novosoft.smsc.admin.users.User;
 import ru.novosoft.smsc.admin.users.UserManager;
@@ -33,8 +32,7 @@ import java.util.*;
 //import java.security.Principal;
 
 
-public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
-{
+public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext {
 	private Config webappConfig = null;
 	private WebXml webXmlConfig = null;
 	private HostsManager hostsManager = null;
@@ -118,11 +116,10 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 		super();
 		try {
 			System.out.println("Starting SMSC Administartion Web Application **************************************************");
-			initLogger();
+//			initLogger();
 			webappConfig = new Config(new File(configFileName));
 			System.out.println("webappConfig = " + configFileName + " **************************************************");
-			WebAppFolders.init(webappConfig.getString("system.webapp folder"), webappConfig.getString("system.work folder"), webappConfig.getString("system.services folder"));
-
+			WebAppFolders.init(webappConfig.getString("system.webapp folder"), webappConfig.getString("system.work folder"));
 			try {
 				webXmlConfig = new WebXml(new File(WebAppFolders.getWebinfFolder(), "web.xml"));
 			}
@@ -137,7 +134,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 				this.instType = ResourceGroupConstants.getTypeFromString(webappConfig.getString(ResourceGroupConstants.RESOURCEGROUP_INSTALLTYPE_PARAM_NAME));
 			}
 			catch (Exception e) {
-				System.out.println("Installation type is not defined in webconfig");
+				System.out.println("Installation type is not defined in webconfig (installation.type missed)");
 				throw new AdminException("Installation type is not defined in webconfig");
 			}
 			smscList = new SmscList(webappConfig, this);
@@ -145,8 +142,19 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 			serviceManager = new ServiceManagerImpl();
 			serviceManager.add(smsc);
 			routeSubjectManager = new RouteSubjectManagerImpl(smeManager);
-			ResourceGroupManager resourceGroupManager = new ResourceGroupManager(this);
-			hostsManager = new HostsManager(resourceGroupManager, serviceManager, smeManager, routeSubjectManager);
+			switch (this.instType) {
+			case ResourceGroupConstants.RESOURCEGROUP_TYPE_SINGLE:
+				DaemonManager daemonManager = new DaemonManager(smeManager, webappConfig);
+				hostsManager = new HostsManagerSingleImpl(daemonManager, serviceManager, smeManager, routeSubjectManager);
+				break;
+			case ResourceGroupConstants.RESOURCEGROUP_TYPE_HA:
+				WebAppFolders.setHAServicesFolder(webappConfig.getString("system.services folder"));
+				ResourceGroupManager resourceGroupManager = new ResourceGroupManager(this);
+				hostsManager = new HostsManagerHAImpl(resourceGroupManager, serviceManager, smeManager, routeSubjectManager);
+				break;
+			default:
+				throw new AdminException("Unknown installation type");
+			}
 			aclManager = new AclManager(this);
 			Config localeConfig = new Config(new File(webappConfig.getString("system.localization file")));
 			LocaleMessages.init(localeConfig); // должно вызыватьс€ раньше, чем ёзерћанагер
@@ -246,43 +254,42 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 		return userManager;
 	}
 
-  HashMap smeContexts = new HashMap();
-  Object smeContextsLock = new Object();
-  long smeContextsId = 0;
+	HashMap smeContexts = new HashMap();
+	Object smeContextsLock = new Object();
+	long smeContextsId = 0;
 
-  public Long registerSMEContext(SMEAppContext smeContext)
-  {
-    Long contextId = null;
-    synchronized(smeContextsLock) {
-        contextId = new Long(smeContextsId++);
-        smeContexts.put(contextId, smeContext);
-    }
-    return contextId;
-  }
-  public void unregisterSMEContext(Long contextId)
-  {
-    synchronized(smeContextsLock) {
-        if (contextId != null) smeContexts.remove(contextId);
-    }
-  }
+	public Long registerSMEContext(SMEAppContext smeContext) {
+		Long contextId = null;
+		synchronized (smeContextsLock) {
+			contextId = new Long(smeContextsId++);
+			smeContexts.put(contextId, smeContext);
+		}
+		return contextId;
+	}
 
-  public void destroy()
-  {
-    if (console != null) console.close();
-    if (perfServer != null) perfServer.shutdown();
-    if (topServer != null) topServer.shutdown();
+	public void unregisterSMEContext(Long contextId) {
+		synchronized (smeContextsLock) {
+			if (contextId != null) smeContexts.remove(contextId);
+		}
+	}
 
-    synchronized(smeContextsLock) // shutdown all smeContexts
-    {
-        for (Iterator it = smeContexts.values().iterator(); it.hasNext(); ) {
-            Object obj = it.next();
-            if (obj instanceof SMEAppContext) {
-                ((SMEAppContext)obj).shutdown();
-            }
-        }
-        smeContexts.clear(); smeContextsId = 0;
-    }
-  }
+	public void destroy() {
+		if (console != null) console.close();
+		if (perfServer != null) perfServer.shutdown();
+		if (topServer != null) topServer.shutdown();
+
+		synchronized (smeContextsLock) // shutdown all smeContexts
+		{
+			for (Iterator it = smeContexts.values().iterator(); it.hasNext();) {
+				Object obj = it.next();
+				if (obj instanceof SMEAppContext) {
+					((SMEAppContext) obj).shutdown();
+				}
+			}
+			smeContexts.clear();
+			smeContextsId = 0;
+		}
+	}
 
 	public Locale getLocale() {
 		Locale result = null;

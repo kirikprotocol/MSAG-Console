@@ -1,16 +1,6 @@
 <%@
  include file="/WEB-INF/inc/code_header.jsp"%><%@
- page import="ru.novosoft.smsc.admin.service.ServiceInfo,
-              ru.novosoft.smsc.admin.Constants,
-              java.io.IOException,
-              ru.novosoft.smsc.util.StringEncoderDecoder,
-              java.util.Iterator,
-              ru.novosoft.smsc.jsp.SMSCJspException,
-              ru.novosoft.smsc.jsp.SMSCErrors,
-              ru.novosoft.smsc.jsp.smsc.reshedule.Index,
-              java.util.Collection,
-              java.util.Locale,
-              java.net.URLEncoder"
+ page import="ru.novosoft.smsc.jsp.smsc.reshedule.Index"
 %><jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.reshedule.Index"
 /><jsp:setProperty name="bean" property="*"/><%
 FORM_METHOD = "POST";

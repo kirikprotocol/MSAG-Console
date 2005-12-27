@@ -124,13 +124,9 @@ function checkStartStop()
   var status = document.getElementById('InfoSme_RUNNING_STATUSERVICE_InfoSme').innerText;
   var smeRunning = (status == "<%= getLocString("common.statuses.online1") %>" ||
                     status == "<%= getLocString("common.statuses.online2") %>" ||
-                    status == "<%= getLocString("common.statuses.running") %>" ||
-                    status == "<%= getLocString("common.statuses.stopping")%>" ||
-                    status == "<%= getLocString("common.statuses.starting")%>" ||
+                    status == "<%= getLocString("common.statuses.online") %>" ||
                     status == "<%= getLocString("common.statuses.unknown" )%>" );
   var smeStopped  = (status == "<%= getLocString("common.statuses.offline") %>" ||
-                    status == "<%= getLocString("common.statuses.stopped") %>" ||
-                    status == "<%= getLocString("common.statuses.stopping")%>" ||
                     status == "<%= getLocString("common.statuses.unknown") %>" );
 
   var smeChecked = document.getElementById('toStartSme').checked;

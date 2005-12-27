@@ -8,9 +8,9 @@ package ru.novosoft.smsc.jsp;
 
 import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.Constants;
-import ru.novosoft.smsc.admin.users.UserManager;
 import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.admin.service.HostsManager;
+import ru.novosoft.smsc.admin.users.UserManager;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;

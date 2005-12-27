@@ -523,13 +523,13 @@ function clickSubmit(name, value)
     if (opForm.onsubmit() == false)
         return false;
     opForm.jbutton.value = value;
-    opForm.jbutton.name = name
+    opForm.jbutton.name = name;
     opForm.submit();
     return false;
 }
 
 function clickConfirmSubmit( name, value, conf) {
-  if( confirm(conf) ) return clickSubmit();
+  if (confirm(conf)) return clickSubmit(name, value);
   return false;
 }
 

@@ -16,13 +16,12 @@ public class WebAppFolders
   protected static File smscConfFolder = null;
 	protected static File servicesFolder = null;
 
-  public static void init(String webappFolder, String workFolder, String servicesFolder)
+  public static void init(String webappFolder, String workFolder)
   {
     WebAppFolders.webappFolder = new File(webappFolder);
     WebAppFolders.webinfFolder = new File(webappFolder, "WEB-INF");
     WebAppFolders.webinfLibFolder = new File(webinfFolder, "lib");
     WebAppFolders.workFolder = new File(workFolder);
-	WebAppFolders.servicesFolder = new File(servicesFolder);
   }
 
   public static File getServiceJspsFolder(String serviceId)
@@ -60,8 +59,13 @@ public class WebAppFolders
 		WebAppFolders.smscConfFolder = smscConfFolder;
 	}
 
-	public static File getServicesFolder()
+	public static File getHAServicesFolder()
 	{
 		return servicesFolder;
+	}
+
+	public static void setHAServicesFolder(String servicesFolder)
+	{
+		WebAppFolders.servicesFolder = new File(servicesFolder);
 	}
 }

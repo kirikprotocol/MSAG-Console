@@ -1,8 +1,5 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ page import="ru.novosoft.smsc.jsp.smsc.routes.RoutesFilter,
-                 ru.novosoft.smsc.jsp.util.tables.impl.route.RouteFilter,
-                 java.util.*,
-                 ru.novosoft.smsc.util.StringEncoderDecoder
+<%@ page import="ru.novosoft.smsc.jsp.smsc.routes.RoutesFilter
                  "%>
 <%@ taglib uri="http://jakarta.apache.org/taglibs/input-1.0" prefix="input" %>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.routes.RoutesFilter"/>

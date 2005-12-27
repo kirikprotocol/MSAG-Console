@@ -62,8 +62,8 @@ include file="/WEB-INF/inc/collapsing_tree.jsp"%><%!
 <script language="JavaScript">
 function refreshStartStopButtonsStatus()
 {
-	document.getElementById('mbStart').disabled = (document.getElementById('RUNNING_STATUSERVICE_<%=Constants.ARCHIVE_DAEMON_SVC_ID%>').innerText != "<%=getLocString("common.statuses.stopped")%>");
-	document.getElementById('mbStop').disabled = (document.getElementById('RUNNING_STATUSERVICE_<%=Constants.ARCHIVE_DAEMON_SVC_ID%>').innerText != "<%=getLocString("common.statuses.running")%>");
+    document.getElementById('mbStart').disabled = (document.getElementById('RUNNING_STATUSERVICE_<%=Constants.ARCHIVE_DAEMON_SVC_ID%>').innerText != "<%=getLocString("common.statuses.offline")%>");
+	document.getElementById('mbStop').disabled = (document.getElementById('RUNNING_STATUSERVICE_<%=Constants.ARCHIVE_DAEMON_SVC_ID%>').innerText == "<%=getLocString("common.statuses.offline")%>");
 	window.setTimeout(refreshStartStopButtonsStatus, 500);
 }
 refreshStartStopButtonsStatus();
