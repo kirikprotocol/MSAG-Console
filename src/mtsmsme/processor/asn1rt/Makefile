@@ -1,6 +1,6 @@
 
-CFLAGS := -I. -I../asn1rt $(CFLAGS)
-PACKAGE := mtsmsme.processor.codec
+CFLAGS := -I. $(CFLAGS)
+PACKAGE := mtsmsme.processor.asn1rt
 
 ifndef SMSC_SRCDIR
 $(error SMSC_SRCDIR is not defined)

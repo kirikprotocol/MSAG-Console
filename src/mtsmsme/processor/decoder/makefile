@@ -1,5 +1,5 @@
-CFLAGS := -I../codec $(CFLAGS) -Dasn_DEF=asn_DEF_MessageType
-CXXFLAGS := -I../codec $(CFLAGS) -Dasn_DEF=asn_DEF_MessageType
+CFLAGS := -I../codec -I../asn1rt $(CFLAGS) -Dasn_DEF=asn_DEF_MessageType
+CXXFLAGS := -I../codec -I../asn1rt $(CFLAGS) -Dasn_DEF=asn_DEF_MessageType
 PACKAGE := mtsmsme.processor.decoder
 
 ifndef SMSC_SRCDIR

@@ -1,1 +1,1 @@
-mtsmsme/decoder dec -lmtsmsme-processor-decoder -lmtsmsme-processor-codec
+mtsmsme/decoder dec -lmtsmsme-processor-decoder -lmtsmsme-processor-codec -lmtsmsme-processor-asn1rt

@@ -3,4 +3,4 @@
 
 # binary name source name libraries         
 
-mtsmsme/MTSMSme 	  MTSMSme	 -ldl $(SOCKETLIB) -lcore-network -lmtsmsme-processor -lmtsmsme-processor-codec -lutil-config -lutil-xml -lutil -lutil-recoder-recode_dll -lcore-threads -lcore-buffers -lthread $(XERCES_LIB) -lsms $(__LIBRARIES) -l$(SS7_LIBRARY_NAME) -lmtsmsme-processor-codec -lmtsmsme-processor -lrt -L$(SMSC_BUILDDIR)/bin -llogger -lnsl
+mtsmsme/MTSMSme     MTSMSme  -ldl $(SOCKETLIB) -lcore-network -lmtsmsme-processor -lmtsmsme-processor-codec -lutil-config -lutil-xml -lutil -lutil-recoder-recode_dll -lcore-threads -lcore-buffers -lthread $(XERCES_LIB) -lsms $(__LIBRARIES) -l$(SS7_LIBRARY_NAME) -lmtsmsme-processor-asn1rt -lmtsmsme-processor-codec -lmtsmsme-processor -lrt -L$(SMSC_BUILDDIR)/bin -llogger -lnsl
