@@ -1,10 +1,11 @@
 #include "Session.h"
-#include <scag/re/CommandBrige.h>
+#include "scag/exc/SCAGExceptions.h"
+#include <iostream>
 
 namespace scag { namespace sessions {
 
+using namespace scag::exceptions;
 using namespace scag::re;
-
 
 void Operation::detachBill(int BillId)
 {
@@ -62,7 +63,7 @@ void Session::DeserializeProperty(SessionBuffer& buff)
 void Session::DeserializeOperations(SessionBuffer& buff)
 {
     Operation * operation;
-    COperationKey key;
+    int key;
 
     unsigned int Count;
     unsigned int BillId;
@@ -82,9 +83,9 @@ void Session::DeserializeOperations(SessionBuffer& buff)
             operation->BillList.push_back(BillId);
         }
 
-        buff >> operation->type >> operation->validityTime;
-        buff >> key.destAddress >> key.key;
-        OperationHash.Insert(key,operation);
+        buff >> operation->type;
+        buff >> key;
+        OperationsHash.Insert(key,operation);
     }
 }
 
@@ -125,12 +126,11 @@ void Session::SerializeProperty(SessionBuffer& buff)
 void Session::SerializeOperations(SessionBuffer& buff)
 {
     Operation * operation;
-    COperationKey key;
+    int key;
 
-    OperationHash.First();
-    XHash <COperationKey,Operation *,XOperationHashFunc>::Iterator it = OperationHash.getIterator();
+    COperationsHash::Iterator it = OperationsHash.First();
 
-    buff << OperationHash.Count();
+    buff << OperationsHash.Count();
 
     for (;it.Next(key, operation);)
     {              
@@ -141,8 +141,8 @@ void Session::SerializeOperations(SessionBuffer& buff)
             buff << (*billIt);
         }
 
-        buff << operation->type << operation->validityTime;
-        buff << key.destAddress << key.key;
+        buff << operation->type;
+        buff << key;
     }
 }
 
@@ -175,9 +175,8 @@ void Session::Serialize(SessionBuffer& buff)
 
 
     if (m_pCurrentOperation != 0) 
-        buff << currentOperationKey.destAddress << currentOperationKey.key;
+        buff << currentOperationId;
    
-    buff << needReleaseCurrentOperation;
     buff << m_SessionKey.abonentAddr << (uint32_t)m_SessionKey.USR << lastAccessTime;
 }
 
@@ -198,11 +197,10 @@ void Session::Deserialize(SessionBuffer& buff)
 
     if (hasCurrentOperation) 
     {
-        buff >> currentOperationKey.destAddress >> currentOperationKey.key;
-        if (OperationHash.Exists(currentOperationKey)) m_pCurrentOperation = OperationHash.Get(currentOperationKey);
+        buff >> currentOperationId;
+        if (OperationsHash.Exist(currentOperationId)) m_pCurrentOperation = OperationsHash.Get(currentOperationId);
     }
 
-    buff >> needReleaseCurrentOperation;
     buff >> m_SessionKey.abonentAddr;
 
     unsigned int tmp;
@@ -235,7 +233,7 @@ Property* Session::getProperty(const std::string& name)
 Session::Session(const CSessionKey& key) 
     : PropertyManager(), lastAccessTime(-1), 
         bChanged(false), bDestroy(false), accessCount(0), Owner(0),m_pCurrentOperation(0),
-        needReleaseCurrentOperation(false), logger(0)
+        logger(0), lastOperationId(0), m_isTransact(false)
 {
     logger = Logger::getInstance("scag.re");
     m_SessionKey = key;
@@ -245,6 +243,7 @@ Session::~Session()
 {
     // rollback all pending billing transactions & destroy session
 
+    std::cout << "**************** END" << std::endl;
 
     char * key;
     AdapterProperty * value = 0;
@@ -253,8 +252,11 @@ Session::~Session()
     for (Hash <AdapterProperty *>::Iterator it = PropertyHash.getIterator(); it.Next(key, value);)
         if (value) delete value;
 
+    std::cout << "**************** END" << std::endl;
 
     abort();
+    std::cout << "**************** END" << std::endl;
+
 }
 
 
@@ -262,79 +264,240 @@ void Session::abort()
 {
     if (!Owner) return;
 
-    COperationKey key;
+    int key;
     Operation * value;
     
-    OperationHash.First();
-    XHash <COperationKey,Operation *,XOperationHashFunc>::Iterator it = OperationHash.getIterator();
+    COperationsHash::Iterator it = OperationsHash.First();
 
     for (;it.Next(key, value);)
     {              
         delete value;
     }
 
-    OperationHash.Empty();
+    OperationsHash.Empty();
     PendingOperationList.clear();
 
     m_pCurrentOperation = 0;
+    lastOperationId = 0;
+
     Owner->startTimer(m_SessionKey,0);
     smsc_log_error(logger,"Session: session aborted");
 }
 
 bool Session::hasOperations() 
 {
-    return !(PendingOperationList.empty() && (OperationHash.Count() == 0));
+    return !(PendingOperationList.empty() && (OperationsHash.Count() == 0));
 }
 
-void Session::expireOperation(time_t currentTime)
+int Session::getNewOperationId()
 {
+    return ++lastOperationId;
+}
+
+bool Session::hasPending()
+{
+    return !(PendingOperationList.empty());
+}
+
+void Session::expirePendingOperation()
+{
+    if (!(PendingOperationList.empty())) PendingOperationList.pop_front();
+}
+
+
+void Session::closeCurrentOperation()
+{
+    delete m_pCurrentOperation;
+    m_pCurrentOperation = 0;
+    OperationsHash.Delete(currentOperationId);
+}
+
+void Session::endOperation(RuleStatus& ruleStatus)
+{
+    if (!m_pCurrentOperation) throw SCAGException("Session: Fatal error - cannot end operation. Couse: current operation not found");
+
+    Operation * operation = 0;
+
+    switch (m_pCurrentOperation->type)
+    {
+    case CO_DELIVER_SM:
+        break;
+
+    case CO_DELIVER_SM_RESP:
+        if ((m_SmppDiscriptor.lastIndex = 0)||((m_SmppDiscriptor.lastIndex > 0)&&(m_SmppDiscriptor.lastIndex == m_SmppDiscriptor.currentIndex)))
+        {
+            closeCurrentOperation();
+        }
+        break;
+
+    case CO_SUBMIT_SM:
+        if (!m_isTransact) 
+        {
+            PendingOperation pendingOperation;
+            pendingOperation.type = CO_RECEIPT_DELIVER_SM;
+            pendingOperation.validityTime = SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
+
+            PendingOperationList.push_back(pendingOperation);
+        }
+        break;
+
+    case CO_SUBMIT_SM_RESP:
+        if ((m_SmppDiscriptor.lastIndex = 0)||((m_SmppDiscriptor.lastIndex > 0)&&(m_SmppDiscriptor.lastIndex == m_SmppDiscriptor.currentIndex)))
+        {
+            closeCurrentOperation();
+        }
+        break;
+
+    case CO_RECEIPT_DELIVER_SM:
+        //TODO:: Ќужно учесть политику дл€ multipart
+        closeCurrentOperation();
+        break;
+
+    }
 
 }
 
 
+void Session::AddNewOperationToHash(SCAGCommand& cmd, int type)
+{
+    Operation * operation = new Operation();
+    operation->type = type;
+
+    cmd.setOperationId(getNewOperationId());
+    OperationsHash.Insert(cmd.getOperationId(),operation);
+    currentOperationId = cmd.getOperationId();
+    m_pCurrentOperation = operation;
+}
 
 bool Session::startOperation(SCAGCommand& cmd)
 {
     if (!Owner) return false;
 
-    COperationKey operationKey;
+    Operation * operation = 0;
 
-    operationKey.destAddress = CommandBrige::getDestAddr(cmd);
-    operationKey.key = CommandBrige::getKey(cmd);
 
-    needReleaseCurrentOperation = CommandBrige::isFinalCommand(cmd);
-
-    if (!OperationHash.Exists(operationKey)) 
+    try
     {
-        Operation * operation = new Operation();
-        
-        //TODO: fill operation params
-        OperationHash.Insert(operationKey,operation);
+        m_SmppDiscriptor = CommandBrige::getSmppDiscriptor(cmd);
+    } catch (SCAGException& e)
+    {
+        throw e;
     }
 
-    m_pCurrentOperation = OperationHash.Get(operationKey);
-    currentOperationKey = operationKey;
+    std::cout << "**************** 0" << std::endl;
+
+    switch (m_SmppDiscriptor.cmdType)
+    {
+    case CO_DELIVER_SM:
+        {
+
+            if (m_SmppDiscriptor.currentIndex == 0)
+            {
+                AddNewOperationToHash(cmd, m_SmppDiscriptor.cmdType);
+            }
+
+            if (m_SmppDiscriptor.lastIndex > 0) 
+            {
+                operation = OperationsHash.Get(cmd.getOperationId());
+                //TODO: check what to do if there are no session?
+                //if (!operation) ...
+                operation->setStatus(m_SmppDiscriptor.currentIndex,m_SmppDiscriptor.lastIndex);
+
+
+                currentOperationId = cmd.getOperationId();
+                m_pCurrentOperation = operation;
+            }
+            std::cout << "**************** 1" << std::endl;
+                
+            break;
+        }
+
+    case CO_DELIVER_SM_RESP:
+        {
+            std::cout << "**************** 2" << std::endl;
+
+            operation = OperationsHash.Get(cmd.getOperationId());
+            //TODO: check what to do if there are no session?
+            //if (!operation) ...
+
+            currentOperationId = cmd.getOperationId();
+            m_pCurrentOperation = operation;
+
+            if (m_SmppDiscriptor.lastIndex == 0) break; //single response
+
+            //multipart response
+            operation->setStatus(m_SmppDiscriptor.currentIndex,m_SmppDiscriptor.lastIndex);
+            break;
+        }
+
+    case CO_SUBMIT_SM:
+        {
+            std::cout << "**************** 3" << std::endl;
+
+            int UMR = CommandBrige::getUMR(cmd);
+            if (UMR == 0)
+            {
+                AddNewOperationToHash(cmd, m_SmppDiscriptor.cmdType);
+                break;
+            }
+            //TODO: проверить есть ли ожидаема€ операци€ SUBMIT, если еЄ нет, то что и как делать?
+
+            //single command
+            if (m_SmppDiscriptor.currentIndex == 0)
+            {
+                std::list<PendingOperation>::iterator it;
+    
+                for (it = PendingOperationList.begin(); it!=PendingOperationList.end(); ++it)
+                {
+                    if (it->type == m_SmppDiscriptor.cmdType) 
+                    {
+                        AddNewOperationToHash(cmd, m_SmppDiscriptor.cmdType);
+                        PendingOperationList.erase(it);
+                        break;
+                    }
+                }
+            } 
+            //multipart command
+            if (m_SmppDiscriptor.lastIndex > 0) 
+            {
+                operation = OperationsHash.Get(cmd.getOperationId());
+                //TODO: check what to do if there are no session?
+                //if (!operation) ...
+
+                currentOperationId = cmd.getOperationId();
+                m_pCurrentOperation = operation;
+                operation->setStatus(m_SmppDiscriptor.currentIndex,m_SmppDiscriptor.lastIndex);
+            }
+            break;
+        }
+
+    case CO_SUBMIT_SM_RESP:
+        {
+            std::cout << "**************** 4" << std::endl;
+
+            operation = OperationsHash.Get(cmd.getOperationId());
+            //TODO: check what to do if there are no session?
+            //if (!operation) ...
+            currentOperationId = cmd.getOperationId();
+            m_pCurrentOperation = operation;
+
+            if (m_SmppDiscriptor.lastIndex == 0) break; //single response
+
+            operation->setStatus(m_SmppDiscriptor.currentIndex,m_SmppDiscriptor.lastIndex);
+            break;
+        }
+
+    case CO_RECEIPT_DELIVER_SM:
+        {
+        }
+
+
+    }
 
     smsc_log_error(logger,"** Session: operation started");
    
-    Owner->startTimer(this->getSessionKey(), this->getWakeUpTime());
+    //Owner->startTimer(this->getSessionKey(), this->getWakeUpTime());
     return true;
-}
-
-void Session::releaseOperation()
-{
-    
-    if (m_pCurrentOperation)
-    {
-        if (needReleaseCurrentOperation) 
-        {
-            OperationHash.Delete(currentOperationKey);
-            m_pCurrentOperation = 0;
-
-            smsc_log_error(logger,"** Session: operation released");
-            Owner->startTimer(m_SessionKey,this->getWakeUpTime());
-        }
-    }
 }
 
 void Session::addPendingOperation(PendingOperation pendingOperation)
@@ -360,40 +523,10 @@ Operation * Session::GetCurrentOperation() const
 
 time_t Session::getWakeUpTime()
 {
-    time_t time1 = 0;
-    time_t time2 = 0;
+    time_t time = 0;
 
-    Operation * operation = 0;
-    if (!PendingOperationList.empty()) time1 = (PendingOperationList.begin())->validityTime;
-
-    if (OperationHash.Count()) 
-    {
-
-        COperationKey key;
-        Operation * value;
-        time_t minTime;
-
-        OperationHash.First();
-        XHash <COperationKey,Operation *,XOperationHashFunc>::Iterator it = OperationHash.getIterator();
-
-        OperationHash.Next(key,value);
-        time2 = value->validityTime;
-
-        for (;it.Next(key, value);)
-        {
-            if (minTime > value->validityTime) 
-            {
-                time2 = value->validityTime;
-            }
-        }
-        
-    }
-
-    if (time1 == 0) return time2;
-    if (time2 == 0) return time1;
-
-    if (time1 > time2) return time2;
-    else return time1;
+    if (!PendingOperationList.empty()) time = (PendingOperationList.begin())->validityTime;
+    return time;
 }
 
 

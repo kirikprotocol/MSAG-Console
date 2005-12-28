@@ -4,14 +4,12 @@
 #include <string>
 #include <core/threads/Thread.hpp>
 #include "Session.h"
-#include "scag/config/sessn/SessionManagerConfig.h"
 #include "scag/transport/SCAGCommand.h"
 
 namespace scag { namespace sessions 
 {
     using namespace smsc::core::threads;
     using scag::transport::SCAGCommand;
-    using scag::config::SessionManagerConfig;
     
 
     class SessionManager 

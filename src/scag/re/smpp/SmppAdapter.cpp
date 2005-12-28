@@ -136,7 +136,6 @@ Hash<int> SmppCommandAdapter::InitSubmitFieldNames()
     hs["priority_flag"]                 = Tag::SMPP_PRIORITY; 
     hs["schedule_delivery_time"]        = Tag::SMPP_SCHEDULE_DELIVERY_TIME;
 
-
     //hs["registred_delivery"]            = Tag::SMPP_REGISTRED_DELIVERY; //mask +
     hs["rd_receipt_off"]                = RD_RECEIPT_OFF;
     hs["rd_receipt_on"]                 = RD_RECEIPT_ON;

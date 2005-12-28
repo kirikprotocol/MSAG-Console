@@ -2,7 +2,6 @@
 #include "scag/re/smpp/SmppAdapter.h"
 #include "scag/re/actions/ActionContext.h"
 
-    
 namespace scag { namespace re {
 
 enum SmppHandlerType
@@ -19,17 +18,28 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     RuleStatus rs;
 
     smsc::util::config::Config config;
-    //st _statistics;
-    Statistics& _statistics = Statistics::Instance();
+    Statistics * _statistics = 0;
 
+    try
+    {
+        *_statistics = Statistics::Instance();
+    } catch (...)
+    {
+        throw SCAGException("EventHandler: Cannot get Statistics instance");
+    }
+    
+    
     SmppCommand * smppcommand = dynamic_cast<SmppCommand *>(&command);
     if (!smppcommand) throw SCAGException("SmppEventHandler: command is not 'smpp-type'");
 
     SmppCommandAdapter _command(*smppcommand);
-    
-    session.startOperation(command);
 
-    ActionContext context(_constants, session, _command,_statistics);
+    if (!session.startOperation(command))
+    {
+        //TODO: направить отлуп в стейт-машину
+    }
+
+    ActionContext context(_constants, session, _command,*_statistics);
 
     smsc_log_debug(logger, "Process EventHandler...");
 
@@ -45,6 +55,7 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     }
 
     rs = context.getStatus();
+    session.endOperation(rs);
     return rs;
 }
 
@@ -54,7 +65,7 @@ int SmppEventHandler::StrToHandlerId(const std::string& str)
     if (str == "submit_sm_resp")        return SUBMIT_RESP;
     if (str == "deliver_sm")            return DELIVERY;
     if (str == "deliver_sm_resp")       return DELIVERY_RESP;
-    if (str == "reciept")               return RECEIPT;
+    if (str == "receipt")               return RECEIPT;
 /*
     if (str == "FORWARD")               return FORWARD;
     if (str == "GENERIC_NACK")          return GENERIC_NACK;

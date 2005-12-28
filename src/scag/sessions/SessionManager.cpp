@@ -19,7 +19,6 @@
 #include "scag/util/sms/HashUtil.h"
 #include "scag/re/CommandBrige.h"
 
-
 namespace scag { namespace sessions 
 {
     using namespace smsc::core::threads;
@@ -40,6 +39,7 @@ namespace scag { namespace sessions
             CSessionKey SessionKey;
             time_t nextWakeTime;
             bool bOpened;
+            bool hasPending;
 
             CSessionAccessData() : nextWakeTime(0), bOpened(false) {}
         };
@@ -125,7 +125,6 @@ SessionManagerImpl::~SessionManagerImpl()
     {
         delete (*it);
     }
-
 }
 
 
@@ -215,7 +214,7 @@ int SessionManagerImpl::processExpire()
         CSessionSetIterator it;
         for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();++it)
         {
-            if (!(*it)->bOpened) break;
+            if ((!(*it)->bOpened)&&((*it)->hasPending)) break;
         }
 
         time_t now;
@@ -233,11 +232,28 @@ int SessionManagerImpl::processExpire()
         iPeriod = (*it)->nextWakeTime - now;
         if (iPeriod > 0) return iPeriod;
 
+        //expire pending operations
+        Session * session = store.getSession((*it)->SessionKey);
+
+        while (iPeriod < 0)
+        {
+            session->expirePendingOperation();
+            (*it)->hasPending = session->hasPending();
+
+            iPeriod = (*it)->nextWakeTime - now;
+        }
+
+        if (iPeriod > 0) return iPeriod;
+
         // Session expired
-        SessionHash.Delete((*it)->SessionKey);
-        SessionExpirePool.erase(it);
-        store.deleteSession((*it)->SessionKey);
-        delete (*it);
+        if (!session->hasOperations()) 
+        {
+            SessionHash.Delete((*it)->SessionKey);
+            SessionExpirePool.erase(it);
+            store.deleteSession((*it)->SessionKey);
+            delete (*it);
+        }
+
     }
 }
 
@@ -246,10 +262,6 @@ Session* SessionManagerImpl::getSession(const CSessionKey& sessionKey)
 {
 
     Session*    session = 0;
-    //CSessionKey sessionKey; 
-
-    //sessionKey.abonentAddr = CommandBrige::getAbonentAddr(command);
-    //sessionKey.USR = CommandBrige::getUMR(command);
 
     MutexGuard guard(inUseMonitor);
 
@@ -289,25 +301,10 @@ Session * SessionManagerImpl::newSession(CSessionKey& sessionKey)
 
     accessData->bOpened = true;
     accessData->nextWakeTime = time;
+    accessData->hasPending = session->hasPending();
 
     CSessionSetIterator it;
     std::pair<CSessionSetIterator, bool> pr;
-
-    /*
-    CSessionSetIterator it;
-    for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();++it) 
-    {
-        if (time < it->nextWakeTime)
-        {
-            it->bOpened = true;
-            CSLIterator _it = SessionExpirePool.insert(it,accessData);
-            SessionHash.Insert(sessionKey,_it);
-            return session;
-        }
-    }
-    it = SessionExpirePool.insert(SessionExpirePool.end(),accessData);
-    SessionHash.Insert(sessionKey,it);
-    */
 
     pr = SessionExpirePool.insert(accessData);
     SessionHash.Insert(sessionKey,pr.first);
@@ -323,13 +320,25 @@ void SessionManagerImpl::releaseSession(Session* session)
 
     MutexGuard guard(inUseMonitor);
     if (session->isChanged()) store.updateSession(session);
-    session->releaseOperation();
-
+    
     CSessionSetIterator it;
 
     if (!SessionHash.Exists(sessionKey)) throw SCAGException("SessionManager: Fatal error 0");
     it = SessionHash.Get(sessionKey);
-    (*it)->bOpened = false;
+
+    if (!session->hasOperations()) 
+    {
+        SessionHash.Delete(sessionKey);
+        SessionExpirePool.erase(it);
+        delete (*it);
+    }
+    else
+    {
+        (*it)->bOpened = false;
+        (*it)->hasPending = session->hasPending();
+    }
+
+
 
     inUseMonitor.notifyAll();
 }

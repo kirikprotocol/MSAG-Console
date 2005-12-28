@@ -57,6 +57,11 @@ RuleStatus Rule::process(SCAGCommand& command,Session& session)
         rs.status = false;
         smsc_log_error(logger,e.what());
         return rs;
+    } catch (...)
+    {
+        rs.status = false;
+        smsc_log_error(logger,"EvendHandler: Process terminated - Unknown system error");
+        return rs;
     }
     return rs;
 }

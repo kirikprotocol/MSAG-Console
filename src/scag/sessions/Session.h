@@ -9,15 +9,21 @@
 #include <logger/Logger.h>
 #include <scag/bill/BillingManager.h>
 #include <core/buffers/XHash.hpp>
+#include <core/buffers/IntHash.hpp>
 
 #include <scag/util/sms/HashUtil.h>
 #include <scag/transport/SCAGCommand.h>
 
 #include <sms/sms_serializer.h>
+#include <scag/re/RuleStatus.h>
+#include <scag/re/CommandBrige.h>
+#include "scag/config/sessn/SessionManagerConfig.h"
 
 namespace scag { namespace sessions 
 {
+    using scag::config::SessionManagerConfig;
     using namespace smsc::sms::BufOps;
+    using scag::re::CSmppDiscriptor;
 
     using smsc::logger::Logger;
     using namespace scag::util::properties;
@@ -28,6 +34,7 @@ namespace scag { namespace sessions
     using namespace smsc::core::buffers;
     using namespace scag::util::sms;
     using namespace scag::bill;
+    using scag::re::RuleStatus;
 
 
     class SessionBuffer : public smsc::sms::BufOps::SmsBuffer
@@ -65,7 +72,7 @@ namespace scag { namespace sessions
         }
     };    
 
-    struct COperationKey
+ /*   struct COperationKey
     {
         smsc::sms::Address destAddress;
         int key;
@@ -81,7 +88,7 @@ namespace scag { namespace sessions
     class XOperationHashFunc {
     public:
         static uint32_t CalcHash(const COperationKey& key) { return XAddrHashFunc::CalcHash(key.destAddress);}
-    };
+    };       */
 
 
     class SessionOwner
@@ -98,7 +105,7 @@ namespace scag { namespace sessions
         time_t validityTime;
     };
 
-    class Operation : public PendingOperation
+    class Operation
     {
         friend class Session;
  //       friend class Comparator;
@@ -107,15 +114,22 @@ namespace scag { namespace sessions
         Operation(const Operation& operation);
         std::list <int> BillList;
     public:
+        uint8_t type;
         void attachBill(int BillId); 
         void detachBill(int BillId);
         void rollbackAll();
+
+        void setStatus(int currentIndex,int lastIndex)
+        {
+            //TODO: Implement
+        }
+
         ~Operation() {rollbackAll();}
         Operation() :logger(0) {logger = Logger::getInstance("scag.re");};
     };
 
 
-    typedef XHash<COperationKey,Operation*,XOperationHashFunc> COperationsHash;
+    typedef IntHash<Operation*> COperationsHash;
 
 
     class Session : public PropertyManager
@@ -123,11 +137,14 @@ namespace scag { namespace sessions
 
         Logger * logger;
         std::list<PendingOperation> PendingOperationList;
-        COperationsHash OperationHash;
+        COperationsHash OperationsHash;
         SessionOwner * Owner;
         Operation * m_pCurrentOperation;
-        COperationKey currentOperationKey;
-        bool needReleaseCurrentOperation;
+        int currentOperationId;
+        int lastOperationId;
+
+        CSmppDiscriptor m_SmppDiscriptor;
+        bool m_isTransact;
 
         CSessionKey             m_SessionKey;
         time_t                  lastAccessTime;
@@ -137,7 +154,9 @@ namespace scag { namespace sessions
 
         Hash<AdapterProperty *> PropertyHash;
 
-
+        void closeCurrentOperation();
+        int getNewOperationId();
+        void AddNewOperationToHash(SCAGCommand& cmd, int type);
 
         void SerializeProperty(SessionBuffer& buff);
         void SerializeOperations(SessionBuffer& buff);
@@ -160,11 +179,13 @@ namespace scag { namespace sessions
 
         void setOwner(SessionOwner * _Owner) { Owner = _Owner;}
         bool hasOperations();
-        void expireOperation(time_t currentTime);
+        bool hasPending();
         bool startOperation(SCAGCommand& cmd);
-        void releaseOperation();
+        void endOperation(RuleStatus& ruleStatus);
 
         void addPendingOperation(PendingOperation pendingOperation);
+        void expirePendingOperation();
+
         void abort();
         Operation * GetCurrentOperation() const;
         time_t Session::getWakeUpTime();

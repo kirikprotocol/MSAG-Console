@@ -1,5 +1,5 @@
 #include "EventHandler.h"
-#include <util/Exception.hpp>
+//#include <util/Exception.hpp>
 
 namespace scag { namespace re {
 
