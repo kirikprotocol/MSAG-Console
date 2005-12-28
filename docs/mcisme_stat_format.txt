@@ -1,0 +1,9 @@
+<stat> = <head: 16 bytes><version: uint16><statRec: 1..n>
+
+<statRec> = 	<length: uint32> 
+			<hour: 		uint8>
+			<missed: 	uint32>
+			<delivered: 	uint32>
+			<failed: 	uint32>
+			<notified: 	uint32>
+		<length: uint32>
