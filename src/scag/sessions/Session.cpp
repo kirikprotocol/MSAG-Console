@@ -220,13 +220,15 @@ void Session::changed(AdapterProperty& property)
 
 Property* Session::getProperty(const std::string& name)
 {
-    AdapterProperty ** property = PropertyHash.GetPtr(name.c_str());
-    if (!property) 
+    AdapterProperty ** propertyPTR = PropertyHash.GetPtr(name.c_str());
+
+    if (!propertyPTR) 
     {
-        (*property) = new AdapterProperty(name,this,"");
-        PropertyHash.Insert(name.c_str(),*property);
+        AdapterProperty * property = new AdapterProperty(name,this,"");
+        PropertyHash.Insert(name.c_str(),property);
+        return property;
     }
-    return (*property);
+    return (*propertyPTR);
 }
 
 Session::Session(const CSessionKey& key) 
