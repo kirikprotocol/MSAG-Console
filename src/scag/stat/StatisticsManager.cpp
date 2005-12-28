@@ -958,7 +958,6 @@ void StatisticsManager::dumpCounters(const uint8_t* buff, int buffLen, const tm&
     if (!bFileTM || fileTM.tm_mon != flushTM.tm_mon || fileTM.tm_year != flushTM.tm_year)
     {
         sprintf(dirName, SCAG_SMPP_STAT_DIR_NAME_FORMAT, flushTM.tm_year+1900, flushTM.tm_mon+1);
-        smsc_log_debug(logger, "dirName: %s", dirName);
         createDir(location + "/" + dirName); bFileTM = false; hasDir = true;
         smsc_log_debug(logger, "New dir '%s' created", dirName);
     }
