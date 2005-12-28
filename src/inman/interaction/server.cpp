@@ -44,18 +44,21 @@ Server::~Server()
         Stop();
     WaitFor();
 
-    serverSocket.Close();
-    smsc_log_debug(logger, "TCPSrv: server socket closed.");
+    if (serverSocket.getSocket() != INVALID_SOCKET) {
+        serverSocket.Abort();
+        smsc_log_debug(logger, "TCPSrv: server socket closed.");
+    }
 }
 
 //Closes all client's connections
-void Server::closeAllConnects(void)
+void Server::closeAllConnects(bool abort/* = false*/)
 {
     if (connects.size()) {
         ConnectsList    cplist = connects;
-        smsc_log_debug(logger, "TCPSrv: killing %u connects ..", cplist.size());
+        smsc_log_debug(logger, "TCPSrv: %s %u connects ..", abort ? "killing" : "closing",
+                       cplist.size());
         for (ConnectsList::const_iterator cit = cplist.begin(); cit != cplist.end(); cit++)
-            closeConnect(*cit);
+            closeConnect(*cit, abort);
     }
 }
 
@@ -72,18 +75,19 @@ void Server::openConnect(Connect* connect)
     }
 }
 
-void Server::closeConnect(Connect* connect)
+void Server::closeConnect(Connect* connect, bool abort/* = false*/)
 {
     assert(connect);
     for (ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++) {
         ServerListener* ptr = *it;
-        ptr->onConnectClosing( this, connect );
+        ptr->onConnectClosing(this, connect);
     }
     _mutex.Lock();
     connects.remove(connect);
     _mutex.Unlock();
 
     SOCKET sockId = connect->getSocketId();
+    connect->close(abort);
     delete connect;
     smsc_log_debug(logger, "TCPSrv: Socket[%u] closed.", (unsigned)sockId);
 }
@@ -198,7 +202,7 @@ Server::ShutdownReason Server::Listen()
             if (FD_ISSET(socket, &errorSet)) {
                 smsc_log_debug(logger, "TCPSrv: Error Event on socket[%u].", socket);
                 conn->handleConnectError(true);
-                closeConnect(conn);
+                closeConnect(conn, true);
             }
         }
 
@@ -228,6 +232,8 @@ Server::ShutdownReason Server::Listen()
                 smsc_log_fatal(logger, "TCPSrv: Error on server socket, stopping ..");
                 result = Server::srvError;
                 _runState = Server::lstStopping;
+                serverSocket.Abort();
+                smsc_log_debug(logger, "TCPSrv: server socket closed");
             }
         }
         _mutex.Lock();
@@ -246,11 +252,12 @@ int Server::Execute()
         result = Listen();
     } catch (const std::exception& error) {
         smsc_log_error(logger, "TCPSrv: Listener thread failure: %s", error.what());
-        result = Server::srvConnError;
+        result = Server::srvUnexpected;
     }
     smsc_log_debug(logger, "TCPSrv: Listener thread finished, cause %d", (int)result);
 
-    closeAllConnects(); //forcedly close active connects
+    //forcedly close active connects
+    closeAllConnects(result == Server::srvStopped ? false : true);
     
     //notify ServerListeners about server shutdown
     ListenerList cplist = listeners;

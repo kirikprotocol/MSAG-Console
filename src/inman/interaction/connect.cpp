@@ -33,6 +33,14 @@ Connect::~Connect()
         delete _exc;
 }
 
+void Connect::close(bool abort/* = false*/)
+{
+    if (abort)
+        socket->Abort();
+    else
+        socket->Close();
+}
+
 void Connect::setConnectFormat(Connect::ConnectFormat frm, ConnectParms * prm/* = NULL*/)
 {
     _frm = frm;

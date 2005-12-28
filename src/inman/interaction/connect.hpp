@@ -42,10 +42,10 @@ public:
             ConnectFormat frm = Connect::frmLengthPrefixed, Logger * uselog = NULL);
     virtual ~Connect();
 
-    Socket* getSocket() const   { return socket; }
-    SOCKET  getSocketId() const { return socket->getSocket(); }
+    Socket* getSocket(void) const   { return socket; }
+    SOCKET  getSocketId(void) const { return socket->getSocket(); }
     void    setConnectFormat(Connect::ConnectFormat frm, ConnectParms * prm = NULL);
-
+    void    close(bool abort = false);
     //sends bytes directly to socket, 
     //returns -1 on error, otherwise - number of bytes sent
     int     send (const unsigned char *buf, int bufSz);

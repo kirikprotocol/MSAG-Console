@@ -31,9 +31,9 @@ public:
     typedef std::list<Connect*> ConnectsList;
     typedef enum { lstStopped = 0, lstStopping, lstRunning } ServerState;
     typedef enum {
-        srvConnError = -1,  //child connection has thrown fatal exception
+        srvUnexpected = -1, //listener caught unexpected fatal exception
         srvStopped = 0,     //normal shutdown
-        srvError = 1        //server fatal error
+        srvError = 1        //server socket fatal error
     } ShutdownReason;
 
     Server(const char* szHost, int nPort, SerializerITF * serializer,
@@ -42,7 +42,7 @@ public:
     virtual ~Server();
 
     void openConnect(Connect* connect);
-    void closeConnect(Connect* connect);
+    void closeConnect(Connect* connect, bool abort = false);
 
     int  Execute(); //listener thread entry point
     void Stop(unsigned int timeOutMilliSecs = 400);
@@ -50,7 +50,7 @@ public:
 protected:
     ShutdownReason Listen();
     //Closes all client's connections
-    void closeAllConnects(void);
+    void closeAllConnects(bool abort = false);
 
     Mutex           _mutex;
     volatile
