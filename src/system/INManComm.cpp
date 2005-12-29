@@ -259,6 +259,7 @@ int INManComm::Execute()
         (
           smsc::inman::interaction::SerializerInap::getInstance()->deserialize(buf)
         );
+      obj->loadDataBuf();
     }catch(std::exception& e)
     {
       warn2(log,"Failed to deserialize buffer:%s",e.what());
@@ -283,6 +284,7 @@ int INManComm::Execute()
         info2(log,"Request for response with dlgId=%d not found",result->getDialogId());
         continue;
       }
+      debug2(log,"Received response for dlgId=%d, value=%d",result->getDialogId(),result->GetValue());
       if(it->second->chargeType==ReqData::ctSubmit)
       {
         cmd=smsc::smeman::SmscCommand::makeINSmsChargeResponse
