@@ -188,7 +188,6 @@ void Service::onConnectClosing(Server* srv, Connect* conn)
 
 void Service::onServerShutdown(Server* srv, Server::ShutdownReason reason)
 {
-//    assert(srv == server);
     smsc_log_debug(logger, "InmanSrv: TCP server shutdowned, reason %d", reason);
 
     if (reason != Server::srvStopped) { //try to restart
@@ -198,13 +197,22 @@ void Service::onServerShutdown(Server* srv, Server::ShutdownReason reason)
 
         if (++tcpRestartCount <= INMAN_TCP_RESTART_ATTEMPTS) {
             smsc_log_debug(logger, "InmanSrv: Restarting TCP server ..");
-            server = new Server(_cfg.host, _cfg.port, SerializerInap::getInstance(),
-                                _cfg.bill.tcpTimeout, 10, logger);
-            server->addListener(this);
-            smsc_log_debug(logger, "InmanSrv: TCP server inited");
-            server->Start();
+            try {
+                server = new Server(_cfg.host, _cfg.port, SerializerInap::getInstance(),
+                                    _cfg.bill.tcpTimeout, 10, logger);
+                server->addListener(this);
+                smsc_log_debug(logger, "InmanSrv: TCP server inited");
+                server->Start();
+            } catch (CustomException & exc) {
+                smsc_log_error(logger, "InmanSrv: TCP server restart failure: %s",
+                               exc.what());
+                ++tcpRestartCount;
+                throw CustomException("InmanSrv: TCP server restart failure",
+                                      tcpRestartCount, exc.what());
+            }
         } else {
-            throw SystemError("InmanSrv: TCP server continual failure, exiting.");
+            throw CustomException("InmanSrv: TCP server continual failure, exiting.",
+                                  tcpRestartCount);
         }
     }
 }
