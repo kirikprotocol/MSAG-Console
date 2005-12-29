@@ -65,6 +65,7 @@ namespace scag { namespace sessions
         typedef std::set<CSessionAccessData*,FAccessDataLess> CSessionSet;
         typedef std::set<CSessionAccessData*>::iterator CSessionSetIterator;
         typedef XHash<CSessionKey,CSessionSetIterator,XSessionHashFunc> CSessionHash;
+
         typedef XHash<Address,int,XAddrHashFunc> CUMRHash;
 
         EventMonitor    inUseMonitor;
@@ -121,10 +122,20 @@ SessionManagerImpl::~SessionManagerImpl()
     Stop(); 
 
     CSessionSetIterator it;
+
     for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();++it)
     {
         delete (*it);
     }
+
+/*    CSessionKey key;
+    CSessionSetIterator * value;
+    
+    SessionHash.First();
+    for (CSessionHash::Iterator it = SessionHash.getIterator(); it.Next(key, value);)
+    {
+        store.deleteSession(key);
+    }     */
 }
 
 
