@@ -3,8 +3,6 @@ static char const ident[] = "$Id$";
 
 #include "cvtutil.hpp"
 
-using std::runtime_error;
-
 namespace smsc {
 namespace cvtutil {
 
@@ -303,7 +301,7 @@ unsigned unpack7Bit2Text(const unsigned char* b7buf, unsigned b7len,
  */
 unsigned unpack7Bit2TextSafe(const unsigned char* b7buf, unsigned b7len,
 				unsigned char* text, unsigned maxtlen,
-				unsigned * _7bit_chars)
+				unsigned * _7bit_chars) throw(std::runtime_error)
 {
     unsigned		tlen = 0, shift = 0, num7ch = 0;
     unsigned char	ch, *ptr  = (unsigned char*)b7buf;
@@ -313,7 +311,7 @@ unsigned unpack7Bit2TextSafe(const unsigned char* b7buf, unsigned b7len,
 	if (tlen < maxtlen)
 	    text[tlen++] = ch;
 	else
-	    throw runtime_error("unpack7Bit2Text: ABW attempt detected!");
+	    throw std::runtime_error("unpack7Bit2Text: ABW attempt detected!");
     }
     text[tlen] = 0;
 
@@ -355,6 +353,7 @@ unsigned unpack7BitPadded2Text(const unsigned char* b7buf, unsigned b7len,
 
 unsigned unpack7BitPadded2TextSafe(const unsigned char* b7buf, unsigned b7len,
 						unsigned char* text, unsigned maxtlen)
+                                    throw(std::runtime_error)
 {
     unsigned	num7ch = 0;
     unsigned	tlen = unpack7Bit2TextSafe(b7buf, b7len, text, maxtlen, &num7ch);

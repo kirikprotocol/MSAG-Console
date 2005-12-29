@@ -96,6 +96,7 @@ inline void packCharAs7Bit(unsigned char *& ptr, unsigned& shift,
  */
 inline void packCharAs7BitSafe(unsigned char *& ptr, unsigned& shift,
 			 unsigned char val8bit, unsigned char* ptr_end)
+                         throw(std::runtime_error)
 {
     if (ptr >= ptr_end)
 	throw std::runtime_error("packCharAs7Bit: ABW attempt detected!");
@@ -160,13 +161,14 @@ extern unsigned unpack7Bit2Text(const unsigned char* b7buf, unsigned b7len,
 				std::string & str, unsigned * _7bit_chars);
 extern unsigned unpack7Bit2TextSafe(const unsigned char* b7buf, unsigned b7len,
 				    unsigned char* text, unsigned maxtlen,
-				    unsigned * _7bit_chars);
+				    unsigned * _7bit_chars) throw(std::runtime_error);
 extern unsigned unpack7BitPadded2Text(const unsigned char* b7buf, unsigned b7len,
 							unsigned char* text);
 extern unsigned unpack7BitPadded2Text(const unsigned char* b7buf, unsigned b7len,
                                                         std::string & str);
 extern unsigned unpack7BitPadded2TextSafe(const unsigned char* b7buf, unsigned b7len,
-						unsigned char* text, unsigned maxtlen);
+						unsigned char* text, unsigned maxtlen)
+                                                throw(std::runtime_error);
 /* ************************************************************************** *
  * Time conversion utility functions
  * ************************************************************************** */
