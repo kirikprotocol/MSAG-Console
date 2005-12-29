@@ -1,16 +1,12 @@
 static char const ident[] = "$Id$";
-#include <vector>
 
 #include "ReleaseSMSArg.h"
 #include "comps.hpp"
 #include "compsutl.hpp"
 
-
 namespace smsc {
 namespace inman {
 namespace comp {
-using std::vector;
-
 
 ReleaseSMSArg::ReleaseSMSArg()
 {
@@ -19,7 +15,7 @@ ReleaseSMSArg::ReleaseSMSArg()
 }
 ReleaseSMSArg::~ReleaseSMSArg() { }
 
-void ReleaseSMSArg::decode(const vector<unsigned char>& buf)
+void ReleaseSMSArg::decode(const vector<unsigned char>& buf) throw(CustomException)
 {
     RPCause_t *		dcmd = NULL;	/* decoded structure */
     asn_dec_rval_t	drc;		/* Decoder return value  */
@@ -36,10 +32,6 @@ void ReleaseSMSArg::decode(const vector<unsigned char>& buf)
     smsc_log_component(compLogger, &asn_DEF_ReleaseSMSArg, dcmd);
     asn_DEF_ReleaseSMSArg.free_struct(&asn_DEF_ReleaseSMSArg, dcmd, 0);
 }
-
-/* this method doesn't required */
-//void ReleaseSMSArg::encode(vector<unsigned char>& buf)
-//{ throw EncodeError("Not implemented"); }
 
 }//namespace comp
 }//namespace inman

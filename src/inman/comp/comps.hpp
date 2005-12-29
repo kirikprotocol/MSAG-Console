@@ -6,14 +6,11 @@
 
 #include "inman/common/adrutil.hpp"
 #include "inman/comp/compdefs.hpp"
-#include "inman/common/util.hpp"
 #include "logger/Logger.h"
 
 using smsc::logger::Logger;
 
 using std::map;
-using smsc::inman::common::format;
-
 
 /* GVR NOTE: while linking the below enums are taken from generated
  * asn1/c codec, so they should not have namespace prefix.
@@ -82,41 +79,44 @@ typedef enum DeliveryMode {
 // Direction: gsmSSF or gprsSSF -> gsmSCF, Timer: Tidpsms
 // This operation is used after a TDP to indicate request for service.
 class PrivateInitialDPSMSArg;
-class InitialDPSMSArg: public Component	//SSF -> SCF
+//NOTE: requires the preceeding call of tzset()
+class InitialDPSMSArg: public Component //SSF -> SCF
 {
-    public:
-	InitialDPSMSArg(DeliveryMode_e idpMode, unsigned int serviceKey);
-	~InitialDPSMSArg();
+public:
+    InitialDPSMSArg(DeliveryMode_e idpMode, unsigned int serviceKey);
+    ~InitialDPSMSArg();
 
-	void setDestinationSubscriberNumber(const TonNpiAddress& addr);	// missing for MT
-	void setDestinationSubscriberNumber(const char * text);
+    void setDestinationSubscriberNumber(const TonNpiAddress& addr); // missing for MT
+    void setDestinationSubscriberNumber(const char * text);
 
-	void setCalledPartyNumber(const TonNpiAddress& addr);			// missing for MO
-	void setCalledPartyNumber(const char * text);
+    void setCalledPartyNumber(const TonNpiAddress& addr);           // missing for MO
+    void setCalledPartyNumber(const char * text);
 
-	void setCallingPartyNumber(const TonNpiAddress& addr);
-	void setCallingPartyNumber(const char * text);
+    void setCallingPartyNumber(const TonNpiAddress& addr);
+    void setCallingPartyNumber(const char * text);
 
-	void setIMSI(const std::string& imsi); //imsi contains sequence of ASCII digits
+    //imsi contains sequence of ASCII digits
+    void setIMSI(const std::string& imsi) throw(CustomException);
 
-	void setSMSCAddress(const TonNpiAddress& addr);
-	void setSMSCAddress(const char * text);
+    void setSMSCAddress(const TonNpiAddress& addr);
+    void setSMSCAddress(const char * text);
 
-	void setTimeAndTimezone(time_t tmVal);
+    //NOTE: requires the preceeding call of tzset()
+    void setTimeAndTimezone(time_t tmVal) throw(CustomException);
+    void setTPValidityPeriod(time_t vpVal, enum TP_VP_format fmt) throw(CustomException);
 
-	void setTPShortMessageSpecificInfo(unsigned char );
-	void setTPProtocolIdentifier(unsigned char );
-	void setTPDataCodingScheme(unsigned char );
-	void setTPValidityPeriod(time_t vpVal, enum TP_VP_format fmt);
+    void setTPShortMessageSpecificInfo(unsigned char );
+    void setTPProtocolIdentifier(unsigned char );
+    void setTPDataCodingScheme(unsigned char );
 
-	void setLocationInformationMSC(const TonNpiAddress& addr);
-	void setLocationInformationMSC(const char* text);
+    void setLocationInformationMSC(const TonNpiAddress& addr);
+    void setLocationInformationMSC(const char* text);
 
-	void encode(vector<unsigned char>& buf);
-//	void decode(const vector<unsigned char>& buf);
-    private:
-	Logger*  compLogger;
-	PrivateInitialDPSMSArg* comp;
+    void encode(vector<unsigned char>& buf) throw(CustomException);
+
+private:
+    Logger*  compLogger;
+    PrivateInitialDPSMSArg* comp;
 };
       
 //  Direction: gsmSSF or gprsSSF -> gsmSCF, Timer: Terbsms
@@ -132,8 +132,8 @@ class EventReportSMSArg: public Component //SSF -> SCF
 	EventReportSMSArg(EventTypeSMS_e et, messageType_e mt);
 	~EventReportSMSArg() {}
 
-	void encode(vector<unsigned char>& buf);
-//	void decode(const vector<unsigned char>& buf);
+	void encode(vector<unsigned char>& buf) throw(CustomException);
+
     private:
 	Logger*  compLogger;
 };
@@ -160,8 +160,8 @@ class RequestReportSMSEventArg: public Component //SSF -> SCF, SCF -> SSF
 
 	const SMSEventVector& getSMSEvents();
 
-//	void  encode(vector<unsigned char>& buf);
-	void  decode(const vector<unsigned char>& buf);
+	void  decode(const vector<unsigned char>& buf) throw(CustomException);
+
     private:
 	InternalRequestReportSMSEventArg* comp;
 	Logger*  compLogger;
@@ -180,8 +180,8 @@ class ConnectSMSArg: public Component //SCF -> SSF
 	const TonNpiAddress&	callingPartyNumber() { return clngPN; }
 	const TonNpiAddress&	SMSCAddress() { return sMSCAdr; }
 
-//	void encode(vector<unsigned char>& buf);
-	void decode(const vector<unsigned char>& buf);
+	void decode(const vector<unsigned char>& buf) throw(CustomException);
+
     protected:
 	TonNpiAddress	dstSN, clngPN, sMSCAdr;
     private:
@@ -200,8 +200,8 @@ class FurnishChargingInformationSMSArg: public Component //SCF -> SSF
 	FurnishChargingInformationSMSArg();
 	~FurnishChargingInformationSMSArg();
 
-//	void encode(vector<unsigned char>& buf);
-	void decode(const vector<unsigned char>& buf);
+	void decode(const vector<unsigned char>& buf) throw(CustomException);
+
     private:
 	PrivateFurnishChargingInformationSMSArg* comp;
 	Logger* compLogger;
@@ -217,8 +217,8 @@ class ReleaseSMSArg: public Component //SCF -> SSF
 	ReleaseSMSArg();
 	~ReleaseSMSArg();
 
-//	void encode(vector<unsigned char>& buf);
-	void decode(const vector<unsigned char>& buf);
+	void decode(const vector<unsigned char>& buf) throw(CustomException);
+
     private:
 	Logger* compLogger;
 };
@@ -234,8 +234,8 @@ class ResetTimerSMSArg: public Component //SCF -> SSF
 	ResetTimerSMSArg();
 	~ResetTimerSMSArg();
 
-//	void encode(vector<unsigned char>& buf);
-	void decode(const vector<unsigned char>& buf);
+	void decode(const vector<unsigned char>& buf) throw(CustomException);
+
     private:
 	Logger* compLogger;
 };

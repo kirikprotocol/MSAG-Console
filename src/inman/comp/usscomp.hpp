@@ -2,18 +2,12 @@
 #ifndef __SMSC_INMAN_MAPUSS_COMPS_HPP__
 #define __SMSC_INMAN_MAPUSS_COMPS_HPP__
 
-#include <vector>
-#include <stdexcept>
-
 #include "inman/common/adrutil.hpp"
 #include "logger/Logger.h"
 #include "compdefs.hpp"
 #include "acdefs.hpp"
 
 using smsc::logger::Logger;
-
-using std::runtime_error;
-using std::vector;
 using smsc::inman::comp::Component;
 using smsc::inman::comp::OperationFactory;
 
@@ -68,7 +62,7 @@ public:
     //Setters:
     //assigns USS data, that is plain LATIN1 text,
     //it will be transferred in GSM 7bit packed form. 
-    void setUSSData(const unsigned char * data, unsigned size);
+    void setUSSData(const unsigned char * data, unsigned size) throw(CustomException);
     //assigns USS data encoded according to CBS coding scheme (UCS2, GSM 7bit packed, etc)
     void setRAWUSSData(unsigned char dcs, const unsigned char * data, unsigned size);
 
@@ -105,8 +99,8 @@ public:
     //returns alertingNotSet if alerting absent
     enum AlertingPattern getAlertingPattern(void) const;
 
-    void encode(vector<unsigned char>& buf);
-    void decode(const vector<unsigned char>& buf);
+    void encode(vector<unsigned char>& buf) throw(CustomException);
+    void decode(const vector<unsigned char>& buf) throw(CustomException);
 
 private:
     //Optional parameters:
@@ -121,8 +115,8 @@ public:
     ProcessUSSRequestRes();
     ~ProcessUSSRequestRes();
 
-    void encode(vector<unsigned char>& buf);
-    void decode(const vector<unsigned char>& buf);
+    void encode(vector<unsigned char>& buf) throw(CustomException);
+    void decode(const vector<unsigned char>& buf) throw(CustomException);
 
 private:
     Logger*		compLogger;

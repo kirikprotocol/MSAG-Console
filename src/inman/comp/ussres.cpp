@@ -5,17 +5,11 @@ static char const ident[] = "$Id$";
 #include "inman/codec_uss/USSD-Res.h"
 #include "usscomp.hpp"
 #include "compsutl.hpp"
-#include "inman/common/util.hpp"
-
-
-typedef std::runtime_error EncodeError;
-typedef std::runtime_error DecodeError;
 
 namespace smsc {
 namespace inman {
 namespace usscomp {
 		    
-using smsc::inman::common::format;
 using smsc::inman::comp::smsc_log_component;
 
 
@@ -30,7 +24,7 @@ ProcessUSSRequestRes::ProcessUSSRequestRes()
 ProcessUSSRequestRes::~ProcessUSSRequestRes() { }
 
 
-void ProcessUSSRequestRes::decode(const vector<unsigned char>& buf)
+void ProcessUSSRequestRes::decode(const vector<unsigned char>& buf) throw(CustomException)
 {
     USSD_Res_t *        dcmd = NULL;    /* decoded structure */
     asn_dec_rval_t      drc;            /* Decoder return value  */
@@ -40,15 +34,17 @@ void ProcessUSSRequestRes::decode(const vector<unsigned char>& buf)
 
     /* decode ussd string */
     assert(dcmd->ussd_DataCodingScheme.size == 1);
-    assert(dcmd->ussd_String.size <= MAP_MAX_USSD_StringLength);
     this->setRAWUSSData(dcmd->ussd_DataCodingScheme.buf[0],
                         dcmd->ussd_String.buf, dcmd->ussd_String.size);
 
     smsc_log_component(compLogger, &asn_DEF_USSD_Res, dcmd);
     asn_DEF_USSD_Res.free_struct(&asn_DEF_USSD_Res, dcmd, 0);
+    if (_uSSData.size() > MAP_MAX_USSD_StringLength)
+        smsc_log_warn(compLogger, "ProcessUSSRequestRes: ussdata size is too large: %u",
+                      _uSSData.size());
 }
 
-void ProcessUSSRequestRes::encode(vector<unsigned char>& buf)
+void ProcessUSSRequestRes::encode(vector<unsigned char>& buf) throw(CustomException)
 {
     asn_enc_rval_t      er;
     /* construct USSD_Arg */
@@ -63,8 +59,11 @@ void ProcessUSSRequestRes::encode(vector<unsigned char>& buf)
     cmd.ussd_DataCodingScheme.buf[0] = _dCS;
     
     /* prepare ussd string */
+    if (_uSSData.size() > MAP_MAX_USSD_StringLength)
+        throw CustomException("ProcessUSSRequestRes: ussdata size is too large",
+                              _uSSData.size(), NULL);
+
     cmd.ussd_String.size = _uSSData.size();
-    assert(cmd.ussd_String.size < MAP_MAX_USSD_StringLength);
     cmd.ussd_String.buf = &fussdsbuf[0];
     memcpy(cmd.ussd_String.buf, &_uSSData[0], cmd.ussd_String.size);
 

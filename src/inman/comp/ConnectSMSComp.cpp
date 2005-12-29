@@ -17,7 +17,7 @@ ConnectSMSArg::ConnectSMSArg()
 }
 ConnectSMSArg::~ConnectSMSArg() { }
 
-void ConnectSMSArg::decode(const vector<unsigned char>& buf)
+void ConnectSMSArg::decode(const vector<unsigned char>& buf) throw(CustomException)
 {
     ConnectSMSArg_t *dcmd = NULL;	/* decoded structure */
     asn_dec_rval_t	drc;		/* Decoder return value  */
@@ -32,10 +32,6 @@ void ConnectSMSArg::decode(const vector<unsigned char>& buf)
     smsc_log_component(compLogger, &asn_DEF_ConnectSMSArg, dcmd);
     asn_DEF_ConnectSMSArg.free_struct(&asn_DEF_ConnectSMSArg, dcmd, 0);
 }
-
-/* this method doesn't required */
-//void ConnectSMSArg::encode(vector<unsigned char>& buf) 
-//{ throw EncodeError("Not implemented"); }
 
 }//namespace comp
 }//namespace inman

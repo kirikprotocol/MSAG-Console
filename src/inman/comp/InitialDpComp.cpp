@@ -1,13 +1,17 @@
 static char const ident[] = "$Id$";
-#include <vector>
-#include <time.h>
+//#include <time.h>
 
 #include "inman/asn1rt/asn_internal.h"
 #include "inman/codec/InitialDPSMSArg.h"
 #include "comps.hpp"
 #include "compsutl.hpp"
-#include "inman/common/util.hpp"
-using smsc::inman::common::dump;
+//#include "inman/common/util.hpp"
+//using smsc::inman::common::dump;
+
+using smsc::cvtutil::packTimeT2BCD7;
+using smsc::cvtutil::packTimeT2BCD8;
+using smsc::cvtutil::packTP_VP_Relative;
+using smsc::cvtutil::packNumString2BCD;
 
 #define OCTET_STRING_DECL(name, szo) unsigned char name##_buf[szo]; OCTET_STRING_t name
 #define ZERO_OCTET_STRING(name)	{ memset(&name, 0, sizeof(name)); name.buf = name##_buf; }
@@ -19,8 +23,6 @@ using smsc::inman::common::dump;
 namespace smsc {
 namespace inman {
 namespace comp {
-using std::vector;
-
 
 class PrivateInitialDPSMSArg
 {
@@ -106,13 +108,14 @@ void InitialDPSMSArg::setCallingPartyNumber(const char * text)
 }
 
 //imsi contains sequence of ASCII digits
-void InitialDPSMSArg::setIMSI(const std::string& imsi)
+void InitialDPSMSArg::setIMSI(const std::string& imsi) throw(CustomException)
 {
     //smsc_log_debug( compLogger, "IMSI: %s (%d)", imsi.c_str(), imsi.length());
-    assert(((imsi.length() + 1)/2) <= CAP_MAX_IMSILength);
+    if (((imsi.length() + 1)/2) > CAP_MAX_IMSILength)
+        throw CustomException("InitialDPMSArg: IMSI length is too long", imsi.length(), NULL);
+
     ZERO_OCTET_STRING(comp->_iMSI);
-    comp->_iMSI.size = smsc::cvtutil::packNumString2BCD(comp->_iMSI.buf,
-						imsi.c_str(), imsi.length());
+    comp->_iMSI.size = packNumString2BCD(comp->_iMSI.buf, imsi.c_str(), imsi.length());
     comp->idp.iMSI = &(comp->_iMSI);
 }
 
@@ -130,12 +133,13 @@ void InitialDPSMSArg::setSMSCAddress(const char * text)
         InitialDPSMSArg::setSMSCAddress((const TonNpiAddress&)sadr);
 }
 
-
-void InitialDPSMSArg::setTimeAndTimezone(time_t tmVal)
+//requires the preceeding call of tzset()
+void InitialDPSMSArg::setTimeAndTimezone(time_t tmVal) throw(CustomException)
 {
-    tzset();
     ZERO_OCTET_STRING(comp->_tmTz);
-    assert( !smsc::cvtutil::packTimeT2BCD8((unsigned char (*)[8])(comp->_tmTz.buf), tmVal) );
+    int res = packTimeT2BCD8((unsigned char (*)[8])(comp->_tmTz.buf), tmVal);
+    if (res)
+        throw CustomException("InitialDPSMSArg: bad timeTZ", res, NULL);
     comp->_tmTz.size = 8;
     //smsc_log_debug( compLogger, "BCD time: %s", dump(comp->_tmTz.size, comp->_tmTz.buf).c_str() );
     comp->idp.timeAndTimezone = &(comp->_tmTz);
@@ -168,25 +172,26 @@ void InitialDPSMSArg::setTPDataCodingScheme(unsigned char tPDCSch)
     //smsc_log_debug( compLogger, "TPDCS: %x", (unsigned)(comp->idp.tPDataCodingScheme->buf[0]));
 }
 
-void InitialDPSMSArg::setTPValidityPeriod(time_t vpVal, enum TP_VP_format fmt)
+//requires the preceeding call of tzset()
+void InitialDPSMSArg::setTPValidityPeriod(time_t vpVal, enum TP_VP_format fmt) throw(CustomException)
 {
     ZERO_OCTET_STRING(comp->_tPVP);
     switch (fmt) {
     case tp_vp_relative: {
 	comp->_tPVP.size = 1;
-	comp->_tPVP.buf[0] = smsc::cvtutil::packTP_VP_Relative(vpVal);
+	comp->_tPVP.buf[0] = packTP_VP_Relative(vpVal);
 	//smsc_log_debug( compLogger, "TP-VP: %x", (unsigned)(comp->_tPVP.buf[0]));
     }   break;
     case tp_vp_absolute: {
+        int res;
 	comp->_tPVP.size = 7;
-	if (smsc::cvtutil::packTimeT2BCD7((unsigned char (*)[7])(comp->_tPVP.buf), vpVal))
-	    throw runtime_error(":INMAN: bad time value");
+	if ((res = packTimeT2BCD7((unsigned char (*)[7])(comp->_tPVP.buf), vpVal)) != 0)
+	    throw CustomException("InitialDPSMSArg: bad time value", res, NULL);
     }   break;
-    default: //unsupported
-	throw runtime_error(":INMAN: unsupported TP-VP format");
+    default:
+	throw CustomException("InitialDPSMSArg: unsupported TP-VP format", (int)fmt, NULL);
     }
     comp->idp.tPValidityPeriod = &(comp->_tPVP);
-    
 }
 
 /* Sets VLR number and LocationNumber (duplicates it from VLR) */
@@ -239,18 +244,13 @@ InitialDPSMSArg::InitialDPSMSArg(DeliveryMode_e idpMode, unsigned int serviceKey
 InitialDPSMSArg::~InitialDPSMSArg() { delete(comp); }
 
 
-/* this method doesn't required */
-//void InitialDPSMSArg::decode(const vector<unsigned char>& buf)
-//{ throw DecodeError("Not implemented"); }
 
-void InitialDPSMSArg::encode(vector<unsigned char>& buf)
+void InitialDPSMSArg::encode(vector<unsigned char>& buf) throw(CustomException)
 {
     asn_enc_rval_t er;
 
     //debug: print structure content
     smsc_log_component(compLogger, &asn_DEF_InitialDPSMSArg, &comp->idp); 
-    //asn_fprint(stdout, &asn_DEF_InitialDPSMSArg, &comp->idp);
-    
 
     er = der_encode(&asn_DEF_InitialDPSMSArg, &comp->idp, print2vec, &buf);
     INMAN_LOG_ENC(er, asn_DEF_InitialDPSMSArg);

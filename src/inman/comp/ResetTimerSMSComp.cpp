@@ -1,5 +1,4 @@
 static char const ident[] = "$Id$";
-#include <vector>
 
 #include "ResetTimerSMSArg.h"
 #include "comps.hpp"
@@ -8,8 +7,6 @@ static char const ident[] = "$Id$";
 namespace smsc {
 namespace inman {
 namespace comp {
-using std::vector;
-
 
 ResetTimerSMSArg::ResetTimerSMSArg()
 {
@@ -18,7 +15,7 @@ ResetTimerSMSArg::ResetTimerSMSArg()
 }
 ResetTimerSMSArg::~ResetTimerSMSArg() { }
 
-void ResetTimerSMSArg::decode(const vector<unsigned char>& buf)
+void ResetTimerSMSArg::decode(const vector<unsigned char>& buf) throw(CustomException)
 {
     ResetTimerSMSArg_t *dcmd = NULL;	/* decoded structure */
     asn_dec_rval_t	drc;		/* Decoder return value  */
@@ -30,10 +27,6 @@ void ResetTimerSMSArg::decode(const vector<unsigned char>& buf)
     smsc_log_component(compLogger, &asn_DEF_ResetTimerSMSArg, dcmd);
     asn_DEF_ResetTimerSMSArg.free_struct(&asn_DEF_ResetTimerSMSArg, dcmd, 0);
 }
-
-/* this method doesn't required */
-//void ResetTimerSMSArg::encode(vector<unsigned char>& buf)
-//{ throw EncodeError("Not implemented"); }
 
 }//namespace comp
 }//namespace inman

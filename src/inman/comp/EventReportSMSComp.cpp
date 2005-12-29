@@ -18,13 +18,7 @@ EventReportSMSArg::EventReportSMSArg(EventTypeSMS_e et, messageType_e mt)
     compLogger = smsc::logger::Logger::getInstance("smsc.inman.comp.EventReportSMSArg");
 }
 
-//EventReportSMSArg::~EventReportSMSArg() {}
-
-/* this method doesn't required */
-//void EventReportSMSArg::decode(const vector<unsigned char>& buf)
-//{ throw DecodeError("Not implemented"); }
-
-void EventReportSMSArg::encode(vector<unsigned char>& buf)
+void EventReportSMSArg::encode(vector<unsigned char>& buf) throw(CustomException)
 {
     asn_enc_rval_t	er;
     /* construct EventReportSMSArg */
