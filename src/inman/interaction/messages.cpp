@@ -15,7 +15,7 @@ using smsc::cbs::parseCBS_DCS;
 using smsc::cbs::CBS_DCS;
 
 namespace smsc  {
-namespace inman {                                 
+namespace inman {
 namespace interaction {
 
 /* ************************************************************************** *
@@ -73,7 +73,7 @@ SerializableObject* SerializerInap::deserializePrefix(ObjectBuffer& in) throw(Cu
                                   SerializerException::invPacket, NULL);
 
     SerializableObject* obj = create(objectId);
-    if( !obj ) 
+    if( !obj )
         throw SerializerException(format("SrlzrInap: Invalid object ID: 0x%X", objectId).c_str(),
                                   SerializerException::invObject, NULL);
 
@@ -375,7 +375,7 @@ ChargeSmsResult::ChargeSmsResult(uint32_t errCode, ChargeSmsResult_t res/* = CHA
     setObjectId((unsigned short)CHARGE_SMS_RESULT_TAG);
 }
 
-ChargeSmsResult::ChargeSmsResult(InmanErrorType errType, uint16_t errCode, 
+ChargeSmsResult::ChargeSmsResult(InmanErrorType errType, uint16_t errCode,
                                  ChargeSmsResult_t res/* = CHARGING_NOT_POSSIBLE*/)
     : InmanErrorCode(errType, errCode)
     , value(res)
@@ -509,4 +509,3 @@ void DeliverySmsResult::handle(InmanHandler* handler)
 } //interaction
 } //inman
 } //smsc
-
