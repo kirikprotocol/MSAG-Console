@@ -60,6 +60,7 @@ struct TonNpiAddress {
         numPlanInd = (unsigned char)iplan;
         typeOfNumber = (unsigned char)itype;
         memcpy(value, addr_value, length = strlen((const char*)addr_value));
+        return true;
     }
 
     //use at least 30 chars buffer
