@@ -29,13 +29,13 @@ public:
     {
         if (msg)
             message += msg;
+        if (errCode)
+            format(message, " (code: %u)", errCode);
         if (err_desc) {
             desc += err_desc;
             message += ": ";
             message += err_desc;
         }
-        if (errCode)
-            format(message, "(code: %u)", errCode);
     }
     ~CustomException() throw()
     {}
