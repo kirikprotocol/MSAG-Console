@@ -346,10 +346,11 @@ void Billing::onContinueSMS()
 }
 
 #define POSTPAID_RPCause 41     //RP Cause: 'Temporary Failure'
+#define REJECT_RPCause 21       //RP Cause: 'Reject SMS transfer - no money, honey'
 void Billing::onReleaseSMS(ReleaseSMSArg* arg)
 {
     //NOTE: For postpaid abonent IN-platform returns RP Cause: 'Temporary Failure'
-    postpaidBill = (arg->rPCause == POSTPAID_RPCause) ? true : false;
+    postpaidBill = (arg->rPCause != REJECT_RPCause) ? true : false;
 
     smsc_log_debug(logger, "Billing[%u.%u]: SSF <-- SCF ReleaseSMS, RP cause: %u",
                    _bconn->bConnId(), _bId, (unsigned)arg->rPCause);
