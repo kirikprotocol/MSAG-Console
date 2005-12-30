@@ -1093,10 +1093,10 @@ static string RouteToString(MapDialog* dialog)
   TryDestroyDialog(__dialogid_map,true,err.code,__ssn);\
 }catch(exception& e){\
   __map_trace2__("%s: exception dialogid 0x%x/0x%x <exception>:%s",__func__,__dialogid_map,__dialogid_smsc, e.what());\
-  TryDestroyDialog(__dialogid_map,true,MAKE_ERRORCODE(CMD_ERR_FATAL,Status::SYSFAILURE),__ssn);\
+  TryDestroyDialog(__dialogid_map,true,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::SYSFAILURE),__ssn);\
 }catch(...){\
   __map_trace2__("%s: exception dialogid 0x%x/0x%x <exception>:...",__func__,__dialogid_map,__dialogid_smsc);\
-  TryDestroyDialog(__dialogid_map,true,MAKE_ERRORCODE(CMD_ERR_FATAL,Status::SYSFAILURE),__ssn);\
+  TryDestroyDialog(__dialogid_map,true,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::SYSFAILURE),__ssn);\
 }
 
 static bool SendSms(MapDialog* dialog){
@@ -1398,7 +1398,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
   unsigned dialog_ssn = 0;
   DialogRefGuard dialog;
     MAP_TRY {
-    if( !isMapBound() ) throw runtime_error("MAP is not bound yet");
+    if( !isMapBound() || MAP_disconnectDetected ) throw runtime_error("MAP is not bound yet");
     if ( cmd->get_commandId() != SUBMIT_RESP ) {
       if ( cmd->get_commandId() != DELIVERY && cmd->get_commandId() != QUERYABONENTSTATUS)
         throw MAPDIALOG_BAD_STATE("putCommand: must be DELIVERY or QUERYABONENTSTATUS");
