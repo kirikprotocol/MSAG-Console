@@ -4,6 +4,7 @@ static char const ident[] = "$Id$";
 #include <assert.h>
 #include <memory>
 #include <string.h>
+#include <string>
 
 #include "service.hpp"
 #include "logger/Logger.h"
@@ -17,6 +18,7 @@ static const long _in_CFG_MIN_BILLING_INTERVAL = 10; //in seconds
 static const unsigned int _in_CFG_MAX_BILLINGS = 10000;
 
 
+
 namespace smsc
 {
   namespace inman
@@ -24,12 +26,14 @@ namespace smsc
     namespace inap
     {
         Logger* inapLogger;
-        Logger* tcapLogger;
+//        Logger* tcapLogger;
+        extern Logger * _EINSS7_logger_DFLT;
     }
   }
 };
 using smsc::inman::inap::inapLogger;
-using smsc::inman::inap::tcapLogger;
+//using smsc::inman::inap::tcapLogger;
+using smsc::inman::inap::_EINSS7_logger_DFLT;
 
 using smsc::inman::Service;
 using smsc::inman::InService_CFG;
@@ -49,9 +53,10 @@ extern "C" static void sighandler( int signal )
 //CDR_NONE = 0, CDR_ALL = 1, CDR_POSTPAID = 2
 static const char * const _CDRmodes[3] = {"none", "all", "postpaid"};
 //BILL_ALL = 0, BILL_USSD, BILL_SMS
-static const char * const _BILLmodes[4] = {"all", "ussd", "sms", "none"};
+static const char * const _BILLmodes[4] = {"none", "all", "ussd", "sms"};
 
 
+#define RP_MO_SM_transfer_rejected 21       //3GPP TS 24.011 Annex E-2
 struct INBillConfig : public InService_CFG
 {
 
@@ -62,7 +67,14 @@ public:
         bill.ssn = port = bill.billingInterval = 0;
         bill.billMode = smsc::inman::BILL_ALL;
         bill.cdrMode =  BillingCFG::CDR_ALL;
-        bill.serviceKey = bill.capTimeout = bill.tcpTimeout =  bill.maxBilling = 0;
+        bill.serviceKey = bill.capTimeout = bill.tcpTimeout = 0;
+
+        //OPTIONAL PARAMETERS:
+        bill.userId = 3; //USER03_ID
+        bill.maxBilling = 10;
+        bill.capTimeout = 20;
+        bill.tcpTimeout = 30;
+        bill.rejectRPC.push_back(RP_MO_SM_transfer_rejected);
     }
 
     void read(Manager& manager)
@@ -144,7 +156,7 @@ public:
 
         //OPTIONAL PARAMETERS:
         uint32_t tmo = 0;
-        //
+        //maxBillings
         try { tmo = (uint32_t)manager.getInt("maxBillings"); }
         catch (ConfigException& exc) { }
 
@@ -157,9 +169,9 @@ public:
                 smsc_log_info(inapLogger, "maxBillings: %u", bill.maxBilling);
             }
         } else
-            smsc_log_info(inapLogger, "maxBillings: default");
+            smsc_log_info(inapLogger, "maxBillings: default %u", bill.maxBilling);
 
-        //
+        //IN_Timeout
         tmo = 0;
         try { tmo = (uint32_t)manager.getInt("IN_Timeout"); }
         catch (ConfigException& exc) { }
@@ -173,9 +185,9 @@ public:
                 smsc_log_info(inapLogger, "IN_Timeout: %u", bill.capTimeout);
             }
         } else 
-            smsc_log_info(inapLogger, "IN_Timeout: default");
+            smsc_log_info(inapLogger, "IN_Timeout: default %u", bill.capTimeout);
 
-        //
+        //SMSC_Timeout
         tmo = 0;
         try { tmo = (uint32_t)manager.getInt("SMSC_Timeout"); }
         catch (ConfigException& exc) { }
@@ -188,7 +200,48 @@ public:
                 smsc_log_info(inapLogger, "SMSC_Timeout: %u", bill.tcpTimeout);
             }
         } else
-            smsc_log_info(inapLogger, "SMSC_Timeout: default");
+            smsc_log_info(inapLogger, "SMSC_Timeout: default %u", bill.tcpTimeout);
+
+        //ss7UserId
+        tmo = 0;
+        try { tmo = (uint32_t)manager.getInt("ss7UserId"); }
+        catch (ConfigException& exc) { }
+        if (tmo) {
+            if (tmo > 20) {
+                smsc_log_error(inapLogger, "Parameter 'ss7UserId' should belong to range [1..20]");
+                throw ConfigException("Parameter 'ss7UserId' should be belong to range [1..20]");
+            } else { 
+                bill.userId = (unsigned char)tmo;
+                smsc_log_info(inapLogger, "ss7UserId: %u", bill.userId);
+            }
+        } else
+            smsc_log_info(inapLogger, "ss7UserId: default %u", bill.userId);
+
+        //rejectRPC list
+        char* str = NULL;
+        try { str = manager.getString("RPCausesList"); }
+        catch (ConfigException& exc) { }
+
+        if (str) {
+            std::string rplist(str);
+            std::string::size_type pos = 0, commaPos;
+            do {
+                commaPos = rplist.find_first_of(',', pos);
+                std::string rp_s = rplist.substr(pos, commaPos);
+                int rp_i = atoi(rp_s.c_str());
+                if (rp_i && (rp_i <= 0xFF))
+                    bill.rejectRPC.push_back((unsigned char)rp_i);
+                else
+                    throw ConfigException(format("Parameter RPCausesList element:"
+                            " \'%s\' is invalid!", rp_s.c_str()).c_str());
+                pos = commaPos + 1;
+            } while (commaPos != rplist.npos);
+        }
+        std::string rplist("Parameter RPCausesList: ");
+        smsc::inman::RPCList::iterator it = bill.rejectRPC.begin();
+        for (int i=0; it != bill.rejectRPC.end(); it++, i++)
+            format(rplist, "%s%u", i ? ", ":"", (*it));
+        smsc_log_info(inapLogger, rplist.c_str());
     }
 };
 
@@ -196,9 +249,11 @@ int main(int argc, char** argv)
 {
     char *  cfgFile = (char*)"config.xml";
 
+    tzset();
     Logger::Init();
     inapLogger = Logger::getInstance("smsc.inman");
-    tcapLogger = Logger::getInstance("smsc.inman.inap");
+    //tcapLogger = Logger::getInstance("smsc.inman.inap");
+    _EINSS7_logger_DFLT = Logger::getInstance("smsc.inman.inap");
 
     smsc_log_info(inapLogger,"***************************");
     smsc_log_info(inapLogger,"* SIBINCO IN MANAGER v%d.%d *", VER_HIGH, VER_LOW);
