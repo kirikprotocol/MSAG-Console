@@ -5,7 +5,7 @@ namespace smsc  {
 namespace inman {
 namespace inap  {
 
-void Invoke::send(void) //throws runtime_error
+void Invoke::send(void) throw(CustomException)
 {
     _dlg->sendInvoke(this);
 }

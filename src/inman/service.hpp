@@ -11,11 +11,10 @@
 #include "inman/storage/FileStorages.hpp"
 #include "inman/billing.hpp"
 
-using smsc::inman::inap::Dispatcher;
+using smsc::inman::inap::TCAPDispatcher;
 using smsc::inman::inap::Session;
 using smsc::inman::interaction::Server;
 using smsc::inman::interaction::ServerListener;
-//using smsc::inman::interaction::ConnectListener;
 using smsc::inman::filestore::InBillingFileStorage;
 using smsc::inman::filestore::InFileStorageRoller;
 using smsc::inman::BillingCFG;
@@ -56,7 +55,7 @@ private:
     BillingConnMap  bConnects;
     Logger*         logger;
     Session*        session;
-    Dispatcher*     dispatcher;
+    TCAPDispatcher* disp;
     Server*         server;
     volatile bool   running;
     InService_CFG   _cfg;

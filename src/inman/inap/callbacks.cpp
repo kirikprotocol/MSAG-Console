@@ -3,66 +3,51 @@ static char const ident[] = "$Id$";
 /// Callbacks implementation
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-#include "inman/inap/inss7util.hpp"
+#include <assert.h>
 
-#include "inman/inap/infactory.hpp"
-#include "inman/inap/session.hpp"
+
+#include "inman/inap/dispatcher.hpp"
 #include "inman/inap/dialog.hpp"
 #include "inman/common/util.hpp"
 
 using smsc::inman::inap::Dialog;
 using smsc::inman::inap::Session;
-using smsc::inman::inap::InSessionFactory;
+using smsc::inman::inap::TCAPDispatcher;
 using smsc::inman::inap::getTcapBindErrorMessage;
 using smsc::inman::common::dump;
 using smsc::inman::common::format;
 
-namespace smsc {
-namespace inman {
-namespace inap {
-    extern Logger* tcapLogger;
-}
-}
-}
 
-using smsc::inman::inap::tcapLogger;
+#define tcapLogger TCAPDispatcher::getInstance()->TCAPLogger()
 
 //-------------------------------- Util functions --------------------------------
 static Dialog* findDialog(UCHAR_T ssn, USHORT_T dialogueId)
 {
-    Session* pSession = InSessionFactory::getInstance()->findSession( ssn );
+    TCAPDispatcher *dsp = TCAPDispatcher::getInstance();
+    assert(dsp);
+
+    Session* pSession = dsp->findSession(ssn);
     if (!pSession) {
-        smsc_log_warn( tcapLogger, "Invalid SSN: %u", ssn );
+        smsc_log_warn( dsp->TCAPLogger(), "SS7CB: Invalid/inactive session, SSN: %u", ssn);
         return 0;
     }
-    Dialog* pDlg = pSession->findDialog( dialogueId );
-    if (!pDlg) {
-        smsc_log_warn(tcapLogger, "Invalid(closed) dialog ID: 0x%X", dialogueId);
-        return 0;
-    }
+    Dialog* pDlg = pSession->findDialog(dialogueId);
+    if (!pDlg)
+        smsc_log_warn(dsp->TCAPLogger(), "SS7CB: Invalid(closed) dialog ID: 0x%X", dialogueId);
     return pDlg;
 }
 
 USHORT_T EINSS7_I97TBindConf(UCHAR_T ssn, USHORT_T userId,
                             EINSS7INSTANCE_T tcapInstanceId, UCHAR_T bindResult)
 {
-    smsc_log_debug(tcapLogger,
+    TCAPDispatcher *dsp = TCAPDispatcher::getInstance();
+    assert(dsp);
+
+    smsc_log_debug(dsp->TCAPLogger(),
                  "SS7_I97TBindConf(SSN=%u, UserId=%u, TcapInstanceId=%u, bindResult=%u(%s))",
                    ssn, userId, tcapInstanceId, bindResult, getTcapBindErrorMessage(bindResult));
 
-    Session* pSession = InSessionFactory::getInstance()->findSession(ssn);
-    if (!pSession) {
-        smsc_log_warn(tcapLogger, "Invalid SSN: %u", ssn);
-        return MSG_OK;
-    }
-
-    if (EINSS7_I97TCAP_BIND_OK == bindResult) {
-        pSession->setState(Session::BOUNDED);
-    } else {
-        smsc_log_error(tcapLogger, "BIND failed: '%s' (code 0x%X)",
-                       getTcapBindErrorMessage(bindResult), bindResult);
-        pSession->setState(Session::ERROR);
-    }
+    dsp->confirmSession(ssn, bindResult);
     return MSG_OK;
 }
 
@@ -77,7 +62,7 @@ USHORT_T EINSS7_I97TStateInd(UCHAR_T          ssn,
 {
     smsc_log_debug(tcapLogger, 
                    "SS7_I97TStateInd(SSN=%u, UserId=%u, TcapInstanceId=%u, "
-                    "UserState=%u, AffectedSsn=%u, AffectedSpc=%u, LocalSpc =%u"
+                    "UserState=%u, AffectedSsn=%u, AffectedSpc=%u, LocalSpc =%u, "
                     "SubsysMultiplicityInd=%u)",
                     ssn, userId, tcapInstanceId, userState, affectedSsn,
                     affectedSpc, localSpc, subsysMultiplicityInd);

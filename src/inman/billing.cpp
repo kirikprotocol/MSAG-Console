@@ -1,6 +1,5 @@
 static char const ident[] = "$Id$";
 #include <assert.h>
-#include <memory>
 #include <stdexcept>
 
 #include "billing.hpp"
@@ -11,9 +10,6 @@ using smsc::inman::interaction::CHARGE_SMS_TAG;
 using smsc::inman::interaction::CHARGE_SMS_RESULT_TAG;
 using smsc::inman::interaction::DELIVERY_SMS_RESULT_TAG;
 using smsc::inman::BILL_MODE;
-
-using std::auto_ptr;
-using std::runtime_error;
 
 namespace smsc  {
 namespace inman {
@@ -26,7 +22,7 @@ BillingConnect::BillingConnect(BillingCFG * cfg, Session* ss7_sess, Connect* con
     : logger(uselog), _cfg(*cfg), _ss7Sess(ss7_sess)
     , _conn(conn), _inSrvc(in_srvc)
 {
-    assert(conn && in_srvc && ss7_sess);
+    assert(conn && in_srvc && cfg);
     logger = uselog ? uselog : Logger::getInstance("smsc.inman.BillConn");
     _bcId = _conn->getSocketId();
     if (!_cfg.maxBilling)
@@ -98,7 +94,7 @@ void BillingConnect::onCommandReceived(Connect* conn, SerializableObject* recvCm
     BillingMap::iterator it = workers.find(dlgId);
     if (it == workers.end()) {
         if (workers.size() < _cfg.maxBilling) {
-            bill = new Billing(this, dlgId, _ss7Sess, _cfg.billMode, _cfg.serviceKey, _cfg.capTimeout, logger);
+            bill = new Billing(this, dlgId, &_cfg, logger);
             workers.insert(BillingMap::value_type(dlgId, bill));
         } else {
             ChargeSmsResult res(InErrINprotocol, InProtocol_ResourceLimitation,
@@ -135,15 +131,12 @@ void BillingConnect::onConnectError(Connect* conn, bool fatal/* = false*/)
 /* ************************************************************************** *
  * class Billing implementation:
  * ************************************************************************** */
-
-Billing::Billing(BillingConnect* bconn, unsigned int b_id, Session* ss7_sess,
-                 BILL_MODE bMode, unsigned int serv_key,
-                 USHORT_T capTimeout/* = 0*/, Logger * uselog/* = NULL*/)
-        : _bconn(bconn), _bId(b_id), _ss7Sess(ss7_sess)
-        , _billMode(bMode), _serviceKey(serv_key), _capTimeout(capTimeout)
+Billing::Billing(BillingConnect* bconn, unsigned int b_id, 
+            BillingCFG * cfg, Logger * uselog/* = NULL*/)
+        : _bconn(bconn), _bId(b_id), _cfg(*cfg), _ss7Sess(NULL)
         , logger(uselog), state(bilIdle), inap(NULL), postpaidBill(false)
 {
-    assert( bconn && ss7_sess );
+    assert( bconn && cfg );
     if (!logger)
         logger = Logger::getInstance("smsc.inman.Billing");
 }
@@ -249,6 +242,28 @@ const CDRRecord & Billing::getCDRRecord(void) const
     return cdr;
 }
 
+Session * Billing::activateSSN(void)
+{
+    smsc_log_debug(logger, "Billing[%u.%u]: Searching for TCAP session [SSN=%u] ..",
+                    _bconn->bConnId(), _bId, _cfg.ssn);
+
+    TCAPDispatcher *disp = TCAPDispatcher::getInstance();
+
+    if ((_ss7Sess = disp->findSession(_cfg.ssn)) != NULL) {
+        if (disp->getState() != TCAPDispatcher::ss7LISTEN) {
+            if (!disp->reconnect(TCAPDispatcher::ss7LISTEN))
+                _ss7Sess = NULL;
+        }
+        return _ss7Sess;
+    }
+    if (disp->getState() != TCAPDispatcher::ss7LISTEN) {
+        if (!disp->reconnect(TCAPDispatcher::ss7LISTEN))
+            return (_ss7Sess = NULL);
+        _ss7Sess = disp->openSession(_cfg.ssn, _cfg.ssf_addr, _cfg.scf_addr);
+    }
+
+    return _ss7Sess;
+}
 /* -------------------------------------------------------------------------- *
  * SSF interface implementation:
  * -------------------------------------------------------------------------- */
@@ -261,39 +276,53 @@ void Billing::onChargeSms(ChargeSms* sms)
 
     sms->export2CDR(cdr);
 
-    if ( (_billMode == smsc::inman::BILL_ALL)
-        || ((_billMode == smsc::inman::BILL_USSD)
+    if ( (_cfg.billMode == smsc::inman::BILL_ALL)
+        || ((_cfg.billMode == smsc::inman::BILL_USSD)
             && (cdr._bearer == CDRRecord::dpUSSD))
-        || ((_billMode == smsc::inman::BILL_SMS)
+        || ((_cfg.billMode == smsc::inman::BILL_SMS)
             && (cdr._bearer == CDRRecord::dpSMS)) ) {
         smsc_log_debug(logger, "Billing[%u.%u]: initiating billing via SCF",
                        _bconn->bConnId(), _bId);
 
-        inap = new Inap(_ss7Sess, this, _capTimeout, logger); //initialize TCAP dialog
-        assert(inap);
+        if (!activateSSN()) {
+            smsc_log_error(logger, "Billing[%u.%u]: TCAP Session is not available",
+                           _bconn->bConnId(), _bId);
+            postpaidBill = true;
+        }
+    } else
+        postpaidBill = true;
 
-        InitialDPSMSArg arg(smsc::inman::comp::DeliveryMode_Originating, _serviceKey);
+    if (!postpaidBill) {
+        try { //Initiate CAP3 dialog
+            inap = new Inap(_ss7Sess, this, _cfg.capTimeout, logger); //initialize TCAP dialog
+            assert(inap);
 
-        arg.setDestinationSubscriberNumber(sms->getDestinationSubscriberNumber().c_str()); // missing for MT
-        arg.setCallingPartyNumber(sms->getCallingPartyNumber().c_str());
-        arg.setIMSI(sms->getCallingIMSI().c_str());
-        arg.setLocationInformationMSC( sms->getLocationInformationMSC().c_str());
-        arg.setSMSCAddress(sms->getSMSCAddress().c_str());
-        arg.setTimeAndTimezone(sms->getSubmitTimeTZ());
-        arg.setTPShortMessageSpecificInfo(sms->getTPShortMessageSpecificInfo());
-        arg.setTPValidityPeriod(sms->getTPValidityPeriod(), smsc::inman::comp::tp_vp_relative);
-        arg.setTPProtocolIdentifier(sms->getTPProtocolIdentifier());
-        arg.setTPDataCodingScheme(sms->getTPDataCodingScheme());
+            InitialDPSMSArg arg(smsc::inman::comp::DeliveryMode_Originating, _cfg.serviceKey);
 
-        smsc_log_debug(logger, "Billing[%u.%u]: SSF --> SCF InitialDPSMS",
-                        _bconn->bConnId(), _bId);
-        state = Billing::bilInited;
-        inap->initialDPSMS(&arg); //begins TCAP dialog
-    } else {
-        //do not ask IN platform, just create CDR
+            arg.setDestinationSubscriberNumber(sms->getDestinationSubscriberNumber().c_str());
+            arg.setCallingPartyNumber(sms->getCallingPartyNumber().c_str());
+            arg.setIMSI(sms->getCallingIMSI().c_str());
+            arg.setLocationInformationMSC( sms->getLocationInformationMSC().c_str());
+            arg.setSMSCAddress(sms->getSMSCAddress().c_str());
+            arg.setTimeAndTimezone(sms->getSubmitTimeTZ());
+            arg.setTPShortMessageSpecificInfo(sms->getTPShortMessageSpecificInfo());
+            arg.setTPValidityPeriod(sms->getTPValidityPeriod(), smsc::inman::comp::tp_vp_relative);
+            arg.setTPProtocolIdentifier(sms->getTPProtocolIdentifier());
+            arg.setTPDataCodingScheme(sms->getTPDataCodingScheme());
+
+            smsc_log_debug(logger, "Billing[%u.%u]: SSF --> SCF InitialDPSMS",
+                            _bconn->bConnId(), _bId);
+            state = Billing::bilInited;
+            inap->initialDPSMS(&arg); //begins TCAP dialog
+        } catch (std::exception& exc) {
+            smsc_log_error(logger, "Billing[%u.%u]: %s",
+                           _bconn->bConnId(), _bId, exc.what());
+            postpaidBill = true;
+        }
+    }
+    if (postpaidBill) { //do not ask IN platform, just create CDR
         smsc_log_debug(logger, "Billing[%u.%u]: initiated billing via CDR",
                         _bconn->bConnId(), _bId);
-        postpaidBill = true;
         onContinueSMS();
     }
 }
@@ -315,9 +344,15 @@ void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes)
                        _bconn->bConnId(), _bId,
                        (eventType == EventTypeSMS_o_smsFailure) ? "Failure" : "Submission",
                        eventType, MessageType_notification);
-
-        smsc::inman::comp::EventReportSMSArg    report(eventType, MessageType_notification);
-        inap->eventReportSMS(&report);
+        try {
+            smsc::inman::comp::EventReportSMSArg    report(eventType, MessageType_notification);
+            inap->eventReportSMS(&report);
+        } catch (std::exception & exc) {
+            postpaidBill = true;
+            smsc_log_error(logger, "Billing[%u.%u]: %s", exc.what());
+            delete inap;
+            inap = NULL;
+        }
     }
     state = Billing::bilComplete;
     _bconn->billingDone(this);
@@ -332,10 +367,10 @@ void Billing::onConnectSMS(ConnectSMSArg* arg)
                    _bconn->bConnId(), _bId);
 }
 
-void Billing::onContinueSMS()
+void Billing::onContinueSMS(void)
 {
-    smsc_log_debug(logger, "Billing[%u.%u]: SSF <-- SCF ContinueSMS",
-                   _bconn->bConnId(), _bId);
+    smsc_log_debug(logger, "Billing[%u.%u]: %s", _bconn->bConnId(), _bId,
+                   postpaidBill ? "<-- CHARGING_POSSIBLE" : "SSF <-- SCF ContinueSMS");
     ChargeSmsResult res;
     res.setDialogId(_bId);
 
@@ -346,16 +381,20 @@ void Billing::onContinueSMS()
 }
 
 #define POSTPAID_RPCause 41     //RP Cause: 'Temporary Failure'
-#define REJECT_RPCause 21       //RP Cause: 'Reject SMS transfer - no money, honey'
 void Billing::onReleaseSMS(ReleaseSMSArg* arg)
 {
-    //NOTE: For postpaid abonent IN-platform returns RP Cause: 'Temporary Failure'
-    postpaidBill = (arg->rPCause != REJECT_RPCause) ? true : false;
-
     smsc_log_debug(logger, "Billing[%u.%u]: SSF <-- SCF ReleaseSMS, RP cause: %u",
                    _bconn->bConnId(), _bId, (unsigned)arg->rPCause);
 
-
+    postpaidBill = true;
+    //check for RejectSMS causes:
+    for (RPCList::iterator it = _cfg.rejectRPC.begin();
+                            it != _cfg.rejectRPC.end(); it++) {
+        if ((*it) == arg->rPCause) {
+            postpaidBill = false;
+            break;
+        }
+    }
     ChargeSmsResult res(InErrRPCause, (uint16_t)arg->rPCause, postpaidBill ?
                         smsc::inman::interaction::CHARGING_POSSIBLE : 
                         smsc::inman::interaction::CHARGING_NOT_POSSIBLE);

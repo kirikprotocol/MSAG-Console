@@ -39,8 +39,8 @@ public:
     //grands the ownership of 'param', Component will be freed by ~TcapEntity()
     void        ownParam(Component* p)     { param = p; ownComp = true; }
 
-    //throws runtime_error
-    void encode(RawBuffer& operation, RawBuffer& params)
+    //throws CustomException
+    void encode(RawBuffer& operation, RawBuffer& params) throw(CustomException)
     {
         operation.clear(); params.clear();
         operation.push_back(opcode);
@@ -49,7 +49,7 @@ public:
     }
 
 //abstract:
-    virtual void send() = 0;
+    virtual void send() throw(CustomException) = 0;
 };
 
 } //inap

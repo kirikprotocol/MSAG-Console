@@ -51,7 +51,7 @@ public:
     void setTimeout(USHORT_T timeOut) { _timeout = timeOut; }
     USHORT_T getTimeout(void) const   { return _timeout; }
 
-    virtual void send(void); //throws runtime_error
+    void send(void) throw(CustomException);
 
     void notifyResultListener(TcapEntity* resp);
     void notifyResultNListener(TcapEntity* resp);

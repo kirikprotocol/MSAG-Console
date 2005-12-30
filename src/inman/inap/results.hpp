@@ -17,7 +17,7 @@ public:
     InvokeResultLast(Dialog* dlg, UCHAR_T tId, UCHAR_T tTag = 0, UCHAR_T tOpCode = 0)
         : TcapEntity(tId, tTag, tOpCode), _dlg(dlg) {}
 
-    void send();    //throws runtime_error
+    void send() throw(CustomException);
 
 protected:
     Dialog *         _dlg;      //parent Dialog
@@ -29,7 +29,7 @@ public:
     InvokeResultNotLast(Dialog* dlg, UCHAR_T tId, UCHAR_T tTag = 0, UCHAR_T tOpCode = 0)
         : TcapEntity(tId, tTag, tOpCode), _dlg(dlg) {}
 
-    void send();    //throws runtime_error
+    void send() throw(CustomException);
 
 protected:
     Dialog *         _dlg;      //parent Dialog
@@ -41,7 +41,7 @@ public:
     InvokeResultError(Dialog* dlg, UCHAR_T tId, UCHAR_T tTag = 0, UCHAR_T tOpCode = 0)
         : TcapEntity(tId, tTag, tOpCode), _dlg(dlg) {}
 
-    void send();    //throws runtime_error
+    void send() throw(CustomException);
 
 protected:
     Dialog *         _dlg;      //parent Dialog

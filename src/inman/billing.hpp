@@ -35,7 +35,9 @@ using smsc::core::synchronization::Mutex;
 namespace smsc    {
 namespace inman   {
 
-typedef enum { BILL_ALL = 0, BILL_USSD, BILL_SMS, BILL_NONE } BILL_MODE;
+typedef enum { BILL_NONE = 0, BILL_ALL, BILL_USSD, BILL_SMS } BILL_MODE;
+
+typedef std::list<unsigned char> RPCList;
 
 struct BillingCFG {
     typedef enum { CDR_NONE = 0, CDR_ALL = 1, CDR_POSTPAID = 2} CDR_MODE;
@@ -48,11 +50,13 @@ struct BillingCFG {
     unsigned short  tcpTimeout;      //optional timeout for TCP interaction with SMSC
     unsigned short  maxBilling;      //maximum number of Billings per connect
 //SS7 interaction:
+    unsigned char   userId;          //PortSS7 user id [1..20]
     unsigned short  capTimeout;      //optional timeout for operations with IN platform
-    const char*     ssf_addr;
-    const char*     scf_addr;
-    int             ssn;
-    unsigned int    serviceKey;     //service id for InitialDP operation
+    const char*     ssf_addr;        //
+    const char*     scf_addr;        //IN platform address
+    int             ssn;             //
+    unsigned int    serviceKey;      //service id for InitialDP operation
+    RPCList         rejectRPC;       //list of RP causes forcing charging denial
 };
 
 class Billing;
@@ -101,8 +105,8 @@ public:
         bilApproved, bilComplete, bilAborted
     } BillingState;
 
-    Billing(BillingConnect* bconn, unsigned int b_id, Session* ss7_sess, BILL_MODE bMode,
-            unsigned int serv_key, USHORT_T capTimeout = 0, Logger * uselog = NULL);
+    Billing(BillingConnect* bconn, unsigned int b_id, 
+            BillingCFG * cfg, Logger * uselog = NULL);
     virtual ~Billing();
 
     unsigned int getId() const { return _bId; }
@@ -133,18 +137,17 @@ public:
 
 protected:
     void abortBilling(InmanErrorType errType, uint16_t errCode);
+    Session * Billing::activateSSN(void);
 
     Mutex           bilMutex;   //
+    BillingCFG      _cfg;
     Logger*         logger;
     unsigned int    _bId;       //unique billing dialogue id
-    BILL_MODE       _billMode;
-    unsigned int    _serviceKey;
     BillingConnect* _bconn;     //parent BillingConnect
     BillingState    state;
 
     Session*        _ss7Sess;   //TCAP dialogs factory
     Inap*           inap;       //Inap wrapper for dialog
-    unsigned short  _capTimeout; //timeout for interconnection with IN-platform
 
     CDRRecord       cdr;        //data for CDR record creation
     bool            postpaidBill;

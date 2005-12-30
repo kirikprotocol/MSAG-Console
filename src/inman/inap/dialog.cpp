@@ -7,14 +7,9 @@ static char const ident[] = "$Id$";
 
 #include "inman/inap/inss7util.hpp"
 #include "inman/inap/dialog.hpp"
-#include "inman/inap/infactory.hpp"
 #include "inman/inap/session.hpp"
-#include "inman/inap/results.hpp"
 #include "inman/comp/acdefs.hpp"
 #include "inman/common/util.hpp"
-
-using std::runtime_error;
-using std::auto_ptr;
 
 using smsc::inman::common::format;
 using smsc::inman::common::dump;
@@ -72,7 +67,7 @@ void Dialog::setInvokeTimeout(USHORT_T timeout)
     _timeout = timeout ? timeout : _DEFAULT_INVOKE_TIMER;
 }
 
-void Dialog::beginDialog(UCHAR_T* ui/* = NULL*/, USHORT_T uilen/* = 0*/)
+void Dialog::beginDialog(UCHAR_T* ui/* = NULL*/, USHORT_T uilen/* = 0*/) throw (CustomException)
 {
     smsc_log_debug(logger, "BEGIN_REQ -> {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
@@ -89,7 +84,6 @@ void Dialog::beginDialog(UCHAR_T* ui/* = NULL*/, USHORT_T uilen/* = 0*/)
                    dump(ac.acLen, ac.ac).c_str(),
                    uilen, dump(uilen, ui).c_str()
                    );
-
     USHORT_T result = EINSS7_I97TBeginReq(
                         dSSN, MSG_USER_ID, TCAP_INSTANCE_ID,
                         _dId, priority, qSrvc,
@@ -97,22 +91,21 @@ void Dialog::beginDialog(UCHAR_T* ui/* = NULL*/, USHORT_T uilen/* = 0*/)
                         ownAddr.addrLen, ownAddr.addr,
                         ac.acLen, ac.ac,
                         uilen, ui);
-
     if (result != 0)
-        throw runtime_error( format("BeginReq failed with code %d (%s)", result,
-                                                getTcapReasonDescription(result)));
+        throw CustomException("BeginReq failed", result,
+                                    getTcapReasonDescription(result));
     _state = Dialog::dlgInited;
 }
 
-void Dialog::beginDialog(const SCCP_ADDRESS_T& remote_addr,
-                         UCHAR_T* ui/* = NULL*/, USHORT_T uilen/* = 0*/)
+void Dialog::beginDialog(const SCCP_ADDRESS_T& remote_addr, UCHAR_T* ui/* = NULL*/,
+                         USHORT_T uilen/* = 0*/) throw (CustomException)
 {
     remoteAddr = remote_addr;    
     beginDialog(ui, uilen);
 }
 
 
-void Dialog::continueDialog()
+void Dialog::continueDialog(void) throw (CustomException)
 {
     smsc_log_debug(logger, "CONTINUE_REQ -> {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
@@ -143,14 +136,13 @@ void Dialog::continueDialog()
                                0, NULL);
 
     if (result != 0)
-        throw runtime_error( format("ContinueReq failed with code %d (%s)",
-                                    result, getTcapReasonDescription(result)));
-
+        throw CustomException("ContinueReq failed",
+                                    result, getTcapReasonDescription(result));
     if (_state < Dialog::dlgConfirmed)
         _state  = Dialog::dlgContinued;
 }
 
-void Dialog::endDialog(USHORT_T termination)
+void Dialog::endDialog(USHORT_T termination) throw (CustomException)
 {
     smsc_log_debug(logger, "END_REQ -> {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
@@ -169,17 +161,15 @@ void Dialog::endDialog(USHORT_T termination)
                           ac.acLen, ac.ac, 0, NULL);
 
     if (result != 0)
-        throw runtime_error( format("EndReq failed with code %d (%s)",
-                                    result,getTcapReasonDescription(result)));
-
+        throw CustomException("EndReq failed", result, getTcapReasonDescription(result));
     _state  = Dialog::dlgEnded;
 }
 
 
-void Dialog::sendInvoke(Invoke * inv)
+void Dialog::sendInvoke(Invoke * inv) throw (CustomException)
 {
     RawBuffer   op, params;
-    inv->encode(op, params); //throws exception
+    inv->encode(op, params); //throws CustomException
 
     const Invoke * linked = inv->getLinkedTo();
     USHORT_T invTimeout = inv->getTimeout();
@@ -205,14 +195,14 @@ void Dialog::sendInvoke(Invoke * inv)
             op.size(), &op[0], params.size(), &params[0]);
 
     if (result != 0)
-        throw runtime_error( format("InvokeReq failed with code %d (%s)",
-                                    result,getTcapReasonDescription(result)));
+        throw CustomException("InvokeReq failed",
+                                    result, getTcapReasonDescription(result));
 }
 
-void Dialog::sendResultLast(InvokeResultLast* res)
+void Dialog::sendResultLast(InvokeResultLast* res) throw (CustomException)
 {
     RawBuffer   op, params;
-    res->encode(op, params);
+    res->encode(op, params); //throws CustomException
 
     smsc_log_debug(logger, "EINSS7_I97TResultLReq("
                 "ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
@@ -229,14 +219,14 @@ void Dialog::sendResultLast(InvokeResultLast* res)
         op.size(), &op[0], params.size(), &params[0]);
 
     if (result != 0)
-  	throw runtime_error( format("ResultLReq failed with code %d (%s)",
-                                    result,getTcapReasonDescription(result)));
+        throw CustomException("ResultLReq failed",
+                                    result, getTcapReasonDescription(result));
 }
 
-void Dialog::sendResultNotLast(InvokeResultNotLast* res)
+void Dialog::sendResultNotLast(InvokeResultNotLast* res) throw (CustomException)
 {
     RawBuffer   op, params;
-    res->encode(op, params);
+    res->encode(op, params); //throws CustomException
 
     smsc_log_debug(logger, "EINSS7_I97TResultNLReq("
                 "ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
@@ -253,15 +243,15 @@ void Dialog::sendResultNotLast(InvokeResultNotLast* res)
         op.size(), &op[0], params.size(), &params[0]);
 
     if (result != 0)
-        throw runtime_error( format("ResultNLReq failed with code %d (%s)",
-                                    result,getTcapReasonDescription(result)));
+        throw CustomException("ResultNLReq failed",
+                                    result, getTcapReasonDescription(result));
 }
 
 
-void Dialog::sendResultError(InvokeResultError* res)
+void Dialog::sendResultError(InvokeResultError* res) throw (CustomException)
 {
     RawBuffer   op, params;
-    res->encode(op, params);
+    res->encode(op, params);  //throws CustomException
 
     smsc_log_debug(logger, "EINSS7_I97TUErrorReq("
                 "ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
@@ -278,12 +268,11 @@ void Dialog::sendResultError(InvokeResultError* res)
         op.size(), &op[0], params.size(), &params[0]);
 
     if (result != 0)
-        throw runtime_error( format("UErrorReq failed with code %d (%s)",
-                                    result,getTcapReasonDescription(result)));
+        throw CustomException("UErrorReq failed", result, getTcapReasonDescription(result));
 }
 
 
-void Dialog::resetInvokeTimer(UCHAR_T invokeId)
+void Dialog::resetInvokeTimer(UCHAR_T invokeId) throw (CustomException)
 {
     smsc_log_debug(logger,"TIME_RESET_REQ");
     smsc_log_debug(logger," SSN: 0x%X", dSSN);
@@ -296,8 +285,8 @@ void Dialog::resetInvokeTimer(UCHAR_T invokeId)
         EINSS7_I97TTimerResetReq(dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId, invokeId);
 
     if (result != 0)
-        throw runtime_error( format("TimerResetReq failed with code %d (%s)",
-                                    result,getTcapReasonDescription(result)));
+        throw CustomException("TimerResetReq failed",
+                              result, getTcapReasonDescription(result));
 }
 
 Invoke* Dialog::initInvoke(UCHAR_T opcode, USHORT_T timeout/* = 0*/)
@@ -354,7 +343,10 @@ USHORT_T Dialog::handleContinueDialog(bool compPresent)
 {
 //    smsc_log_debug(logger, "TCAP Dialog[%d] got CONTINUE_IND, components are %sexpected",
 //                   _dId, compPresent ? "" : "not ");
-    _state = Dialog::dlgConfirmed;
+    if (_state == Dialog::dlgInited)
+        _state = Dialog::dlgContinued;
+    else
+        _state = Dialog::dlgConfirmed;
     for (ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++) {
         DialogListener* ptr = *it;
         ptr->onDialogContinue(compPresent);

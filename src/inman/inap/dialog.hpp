@@ -11,9 +11,11 @@
 #include "inman/inap/invoke.hpp"
 #include "inman/inap/results.hpp"
 #include "inman/common/observable.hpp"
+#include "inman/common/errors.hpp"
 
 using smsc::inman::common::ObservableT;
 using smsc::logger::Logger;
+using smsc::inman::common::CustomException;
 
 namespace smsc {
 namespace inman {
@@ -45,26 +47,27 @@ public:
     virtual ~Dialog();
 
     //sets the default timeout for Invoke result waiting
-    void setInvokeTimeout(USHORT_T timeout);
+    void    setInvokeTimeout(USHORT_T timeout);
 
     //creates and registers Invoke, sets its response waiting timeout,
     //zero as timeout value sets Invoke timer equal to the Dialog default timeout value
     Invoke* initInvoke(UCHAR_T opcode, USHORT_T timeout = 0);
     void    releaseInvoke(UCHAR_T invId);
     //resets the Invoke timer, extending its lifetime (response waiting)
-    void    resetInvokeTimer(UCHAR_T invokeId);
+    void    resetInvokeTimer(UCHAR_T invokeId) throw (CustomException);
 
-    void    sendInvoke(Invoke * inv);
-    void    sendResultLast(InvokeResultLast* res);
-    void    sendResultNotLast(InvokeResultNotLast* res);
-    void    sendResultError(InvokeResultError* res);
+    void    sendInvoke(Invoke * inv) throw(CustomException);
+    void    sendResultLast(InvokeResultLast* res) throw(CustomException);
+    void    sendResultNotLast(InvokeResultNotLast* res) throw(CustomException);
+    void    sendResultError(InvokeResultError* res) throw(CustomException);
 
     // Transaction layer
-    void beginDialog(UCHAR_T* ui = NULL, USHORT_T uilen = 0);
+    void beginDialog(UCHAR_T* ui = NULL, USHORT_T uilen = 0) throw(CustomException);
     //start dialog with new remote address
-    void beginDialog(const SCCP_ADDRESS_T& remote_addr, UCHAR_T* ui = NULL, USHORT_T uilen = 0);
-    void continueDialog();
-    void endDialog(USHORT_T termination);
+    void beginDialog(const SCCP_ADDRESS_T& remote_addr,
+                     UCHAR_T* ui = NULL, USHORT_T uilen = 0) throw(CustomException);
+    void continueDialog() throw(CustomException);
+    void endDialog(USHORT_T termination) throw(CustomException);
 
     // Transaction level callbacks
     USHORT_T handleBeginDialog();

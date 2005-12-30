@@ -6,17 +6,17 @@ namespace smsc  {
 namespace inman {
 namespace inap  {
 
-void InvokeResultLast::send(void) //throws runtime_error
+void InvokeResultLast::send(void) throw(CustomException)
 {
     _dlg->sendResultLast(this);
 }
 
-void InvokeResultNotLast::send(void) //throws runtime_error
+void InvokeResultNotLast::send(void) throw(CustomException)
 {
     _dlg->sendResultNotLast(this);
 }
 
-void InvokeResultError::send(void) //throws runtime_error
+void InvokeResultError::send(void) throw(CustomException)
 {
     _dlg->sendResultError(this);
 }
