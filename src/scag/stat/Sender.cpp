@@ -30,68 +30,24 @@ int Registrator::Execute()
 
     printf("Registrator is started\n");
 
+    int counter = 0;
+    int httpCounter = 0;
+
     while(!isStopping)
     {
         SmppStatEvent si;
         HttpStatEvent hs;
 
         //=============== sme1 =====================
-        int count =  2. * ( (double)random() / 2147483648. ) + 1;
+        if(++counter == 5) counter = 0;
+        int count =  3. * ( (double)random() / 2147483648. ) + 1;
         for(int i = 0; i<= count - 1; i++){
             strcpy(si.smeId, "sme1");
             strcpy(si.routeId, "route1");
             si.smeProviderId = 1;
             si.routeProviderId = 1;
-            si.counter = cntDelivered;
-            si.internal = true;
-            si.errCode = 1;
-            sm->registerEvent(si);
-        }
-
-        count =  2. * ( (double)random() / 2147483648. ) + 1;
-        for(int i = 0; i<= count - 1; i++){
-            strcpy(si.smeId, "sme1");
-            strcpy(si.routeId, "route1");
-            si.smeProviderId = 1;
-            si.routeProviderId = 1;
-            si.counter = cntAccepted;
-            si.internal = true;
-            si.errCode = 1;
-            sm->registerEvent(si);
-        }
-
-        count =  2. * ( (double)random() / 2147483648. ) + 1;
-        for(int i = 0; i<= count - 1; i++){
-            strcpy(si.smeId, "sme1");
-            strcpy(si.routeId, "route1");
-            si.smeProviderId = 1;
-            si.routeProviderId = 1;
-            si.counter = cntRejected;
-            si.internal = true;
-            si.errCode = 1;
-            sm->registerEvent(si);
-        }
-
-        count =  2. * ( (double)random() / 2147483648. ) + 1;
-        for(int i = 0; i<= count - 1; i++){
-            strcpy(si.smeId, "sme1");
-            strcpy(si.routeId, "route1");
-            si.smeProviderId = 1;
-            si.routeProviderId = 1;
-            si.counter = cntGw_Rejected;
-            si.internal = true;
-            si.errCode = 1;
-            sm->registerEvent(si);
-        }
-
-        count =  2. * ( (double)random() / 2147483648. ) + 1;
-        for(int i = 0; i<= count - 1; i++){
-            strcpy(si.smeId, "sme1");
-            strcpy(si.routeId, "route1");
-            si.smeProviderId = 1;
-            si.routeProviderId = 1;
-            si.counter = cntFailed;
-            si.internal = true;
+            si.counter = counter;
+            si.internal = false;
             si.errCode = 1;
             sm->registerEvent(si);
         }
@@ -146,60 +102,11 @@ int Registrator::Execute()
         }
 
         //=================== http1 ====================
+        if(++httpCounter == 6) httpCounter = 0;
         hs.routeId = "route1";
         hs.serviceId = "http1";
         hs.serviceProviderId = 1;
-        hs.counter = 0;
-        hs.errCode = 1;
-        count =  3. * ( (double)random() / 2147483648. ) + 1;
-        for(int i = 0; i<= count - 1; i++){            
-            sm->registerEvent(hs);
-        }
-
-        hs.routeId = "route1";
-        hs.serviceId = "http1";
-        hs.serviceProviderId = 1;
-        hs.counter = 1;
-        hs.errCode = 1;
-        count =  3. * ( (double)random() / 2147483648. ) + 1;
-        for(int i = 0; i<= count - 1; i++){            
-            sm->registerEvent(hs);
-        }
-
-        hs.routeId = "route1";
-        hs.serviceId = "http1";
-        hs.serviceProviderId = 1;
-        hs.counter = 2;
-        hs.errCode = 1;
-        count =  3. * ( (double)random() / 2147483648. ) + 1;
-        for(int i = 0; i<= count - 1; i++){            
-            sm->registerEvent(hs);
-        }
-
-        hs.routeId = "route1";
-        hs.serviceId = "http1";
-        hs.serviceProviderId = 1;
-        hs.counter = 3;
-        hs.errCode = 1;
-        count =  3. * ( (double)random() / 2147483648. ) + 1;
-        for(int i = 0; i<= count - 1; i++){            
-            sm->registerEvent(hs);
-        }
-
-        hs.routeId = "route1";
-        hs.serviceId = "http1";
-        hs.serviceProviderId = 1;
-        hs.counter = 4;
-        hs.errCode = 1;
-        count =  3. * ( (double)random() / 2147483648. ) + 1;
-        for(int i = 0; i<= count - 1; i++){            
-            sm->registerEvent(hs);
-        }
-
-        hs.routeId = "route1";
-        hs.serviceId = "http1";
-        hs.serviceProviderId = 1;
-        hs.counter = 5;
+        hs.counter = httpCounter;
         hs.errCode = 1;
         count =  3. * ( (double)random() / 2147483648. ) + 1;
         for(int i = 0; i<= count - 1; i++){            
