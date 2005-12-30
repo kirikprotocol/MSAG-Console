@@ -132,7 +132,7 @@ static string FormatText(const char* format,...)
 void checkMapReq(USHORT_T result, const char* func) {
   if ( result != ET96MAP_E_OK ) {
     const string &text = FormatText("MAP request call failed result=%d in %s", result, func);
-    if ( result == 1009 || result == 1011 ) {
+    if ( result == 1009 || result == 1011 || result == 0x3f1) {
       MAP_disconnectDetected = true;
       throw MAPDIALOG_TEMP_ERROR(text, Status::SYSFAILURE);
     } else {
