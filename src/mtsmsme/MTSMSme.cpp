@@ -247,7 +247,7 @@ public:
         PduSubmitSm  sm;
         sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
         fillSmppPduFromSms(&sm, (SMS *)sms);
-        
+
         int seqNum = session->getNextSeq();
         sm.get_header().set_sequenceNumber(seqNum);
         sm.get_message().get_dest()  .set_typeOfNumber(da.type);
@@ -296,8 +296,14 @@ public:
         int status = pdu->get_commandStatus();
 
         // search and report status to Request via RequestController
-        smsc_log_info(logger, "Got responce for seqNum=%d (status=%d)", seqNum, status);
+        smsc_log_info(logger, "receive response for seqNum=%d (status=%d)", seqNum, status);
         controller.stateRequest(seqNum, status);
+    }
+    void handleTimeout(int seqNum)
+    {
+      int status = DELIVERYTIMEDOUT;
+      smsc_log_info(logger, "receive timeout for seqNum=%d (status=%d)", seqNum, status);
+      controller.stateRequest(seqNum, status);
     }
     void handleEvent(SmppHeader *pdu)
     {
