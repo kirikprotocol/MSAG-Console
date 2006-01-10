@@ -117,10 +117,10 @@ public:
     //
     bool     isPostpaidBill(void) const { return postpaidBill; }
     //retuns false if CDR was not complete
+    bool     CDRComplete(void) const { return cdr._finalized; }
+    //returns true if all billing stages are completed
     bool     BillComplete(void) const;
-    //returns true if succeeded, false if CDR was not complete
-    //bool     getCDRasCSV(const std::string & rec);
-    
+    //    
     const CDRRecord & getCDRRecord(void) const;
 
     //SSF interface

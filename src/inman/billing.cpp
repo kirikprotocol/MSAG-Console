@@ -61,11 +61,12 @@ void BillingConnect::billingDone(Billing* bill)
     } else {
         workers.erase(billId);
         _mutex.Unlock();
-        smsc_log_debug(logger, "BillConn[%u]: Billing[%u] %scomplete, "
+        smsc_log_debug(logger, "BillConn[%u]: Billing[%u] %scomplete, CDR is %scomposed, "
                        "cdrMode: %d, billingType: %sPAID",
                         _bcId, billId, bill->BillComplete() ? "" : "IN",
-                        _cfg.cdrMode, bill->isPostpaidBill() ? "POST": "PRE");
-        if (_cfg.cdrMode && bill->BillComplete()) {
+                       bill->CDRComplete() ? "" : "NOT ",
+                       _cfg.cdrMode, bill->isPostpaidBill() ? "POST": "PRE");
+        if (_cfg.cdrMode && bill->CDRComplete()) {
             if ((_cfg.cdrMode == BillingCFG::CDR_ALL)
                 || ((_cfg.cdrMode == BillingCFG::CDR_POSTPAID)
                     && bill->isPostpaidBill())) {
@@ -231,7 +232,7 @@ void Billing::handleCommand(InmanCommand* cmd)
     } /* eosw */
 }
 
-//retuns false if CDR was not complete
+//returns true if all billing stages are completed
 bool Billing::BillComplete(void) const
 {
     return ((state == Billing::bilComplete) && cdr._finalized) ? true : false;
