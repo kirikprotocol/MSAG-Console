@@ -123,13 +123,12 @@ int InFileStorageRoller::Execute(void)
             _rFS->RFSRoll();
             nextTm = _rFS->getLastRollingTime() + _interval;
         }
+        _mutex.Lock();
         if ((sleepSecs = (int)(nextTm - time(NULL))) > 0)
             //NOTE: sleepSecs should be converted to millisecs, so check
             //for overflow. Consider sleepSecs*1000 ~~ sleepSecs*1024,
             //hence limit is 2**22 (= 4194304 = 0x400000)
             _mutex.wait(sleepSecs > 0x400000 ? 0x400000 : sleepSecs*1000);
-        else
-            _mutex.Lock();
     }
     return 0;
 }
