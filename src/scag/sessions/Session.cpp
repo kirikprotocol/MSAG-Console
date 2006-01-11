@@ -1,6 +1,5 @@
 #include "Session.h"
 #include "scag/exc/SCAGExceptions.h"
-#include <iostream>
 
 namespace scag { namespace sessions {
 
@@ -244,7 +243,6 @@ Session::~Session()
 {
     // rollback all pending billing transactions & destroy session
 
-    std::cout << "**************** END" << std::endl;
 
     char * key;
     AdapterProperty * value = 0;
@@ -253,11 +251,7 @@ Session::~Session()
     for (Hash <AdapterProperty *>::Iterator it = PropertyHash.getIterator(); it.Next(key, value);)
         if (value) delete value;
 
-    std::cout << "**************** END" << std::endl;
-
     abort();
-    std::cout << "**************** END" << std::endl;
-
 }
 
 
@@ -302,7 +296,11 @@ bool Session::hasPending()
 
 void Session::expirePendingOperation()
 {
-    if (!(PendingOperationList.empty())) PendingOperationList.pop_front();
+    if (!(PendingOperationList.empty())) 
+    {
+        PendingOperationList.pop_front();
+//        smsc_log_debug(logger,"Session: pending operation has expiried");
+    }
 }
 
 
@@ -358,7 +356,6 @@ void Session::endOperation(RuleStatus& ruleStatus)
 
 }
 
-
 void Session::AddNewOperationToHash(SCAGCommand& cmd, int type)
 {
     Operation * operation = new Operation();
@@ -385,8 +382,6 @@ bool Session::startOperation(SCAGCommand& cmd)
         throw e;
     }
 
-    std::cout << "**************** 0" << std::endl;
-
     switch (m_SmppDiscriptor.cmdType)
     {
     case CO_DELIVER_SM:
@@ -395,9 +390,7 @@ bool Session::startOperation(SCAGCommand& cmd)
             if (m_SmppDiscriptor.currentIndex == 0)
             {
                 AddNewOperationToHash(cmd, m_SmppDiscriptor.cmdType);
-            }
-
-            if (m_SmppDiscriptor.lastIndex > 0) 
+            } else if (m_SmppDiscriptor.lastIndex > 0) 
             {
                 operation = OperationsHash.Get(cmd.getOperationId());
                 //TODO: check what to do if there are no session?
@@ -408,14 +401,12 @@ bool Session::startOperation(SCAGCommand& cmd)
                 currentOperationId = cmd.getOperationId();
                 m_pCurrentOperation = operation;
             }
-            std::cout << "**************** 1" << std::endl;
                 
             break;
         }
 
     case CO_DELIVER_SM_RESP:
         {
-            std::cout << "**************** 2" << std::endl;
 
             operation = OperationsHash.Get(cmd.getOperationId());
             //TODO: check what to do if there are no session?
@@ -433,7 +424,6 @@ bool Session::startOperation(SCAGCommand& cmd)
 
     case CO_SUBMIT_SM:
         {
-            std::cout << "**************** 3" << std::endl;
 
             int UMR = CommandBrige::getUMR(cmd);
             if (UMR == 0)
@@ -474,7 +464,6 @@ bool Session::startOperation(SCAGCommand& cmd)
 
     case CO_SUBMIT_SM_RESP:
         {
-            std::cout << "**************** 4" << std::endl;
 
             operation = OperationsHash.Get(cmd.getOperationId());
             //TODO: check what to do if there are no session?
@@ -511,6 +500,7 @@ void Session::addPendingOperation(PendingOperation pendingOperation)
         if (it->validityTime > pendingOperation.validityTime) 
         {
             PendingOperationList.insert(it,pendingOperation);
+            Owner->startTimer(this->getSessionKey(), this->getWakeUpTime());
             return;
         }
     }

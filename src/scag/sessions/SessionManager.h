@@ -5,12 +5,14 @@
 #include <core/threads/Thread.hpp>
 #include "Session.h"
 #include "scag/transport/SCAGCommand.h"
+#include "scag/sessions/SessionStore.h"
 
 namespace scag { namespace sessions 
 {
     using namespace smsc::core::threads;
     using scag::transport::SCAGCommand;
-    
+    using scag::sessions::SessionPtr;
+
 
     class SessionManager 
     {
@@ -25,10 +27,10 @@ namespace scag { namespace sessions
         static SessionManager& Instance();
 
 
-        virtual Session* newSession(CSessionKey& key) = 0;
-        virtual Session* getSession(const CSessionKey& key) = 0;
-        virtual void releaseSession(Session* session)     = 0;
-        virtual void closeSession  (const Session* session)     = 0;
+        virtual SessionPtr newSession(CSessionKey& key) = 0;
+        virtual SessionPtr getSession(const CSessionKey& key) = 0;
+        virtual void releaseSession(SessionPtr session)     = 0;
+        virtual void closeSession  (const SessionPtr session)     = 0;
         
     };
 }}
