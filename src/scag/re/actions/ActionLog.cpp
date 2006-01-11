@@ -118,6 +118,7 @@ bool ActionLog::run(ActionContext& context)
 
 ActionLog::~ActionLog()
 {
+    smsc_log_debug(logger, "'log' action released");
 }
 
 

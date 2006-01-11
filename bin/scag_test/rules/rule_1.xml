@@ -8,15 +8,17 @@
             transport="SMPP">
 		
     <deliver_sm>
+	<return result="1" />
     </deliver_sm>
     
     <deliver_sm_resp>
+	<return result="1" />
     </deliver_sm_resp>
 
 
     <submit_sm>
         <if test="#OA" op="eq" value="10">
-            <if test="DA" op="eq" value="11">
+            <if test="#DA" op="eq" value="11">
     	        <return result="0" />
 	    </if>
 	</if>
@@ -25,6 +27,7 @@
 	
 
     <submit_sm_resp>
+	<return result="1" />
     </submit_sm_resp>
 															    								      
 </scag:rule>
