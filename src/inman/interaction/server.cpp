@@ -1,13 +1,8 @@
 static char const ident[] = "$Id$";
 #include <assert.h>
 
-#include "inman/common/synch.hpp"
 #include "inman/interaction/server.hpp"
-#include "inman/common/util.hpp"
-#include "inman/common/errors.hpp"
 
-using smsc::inman::common::Synch;
-using smsc::inman::common::format;
 using smsc::inman::common::SystemError;
 
 namespace smsc  {

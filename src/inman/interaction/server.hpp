@@ -1,24 +1,16 @@
 #ident "$Id$"
-
 #ifndef __SMSC_INMAN_TCP_SERVER__
 #define __SMSC_INMAN_TCP_SERVER__
 
 #include <list>
 
-#include "logger/Logger.h"
 #include "core/threads/Thread.hpp"
-#include "core/synchronization/Event.hpp"
-#include "core/network/Socket.hpp"
-#include "inman/common/observable.hpp"
+#include "core/synchronization/Mutex.hpp"
 #include "inman/interaction/connect.hpp"
 
-using smsc::logger::Logger;
-using smsc::core::network::Socket;
-using smsc::inman::interaction::Connect;
 using smsc::core::threads::Thread;
-using smsc::core::synchronization::Event;
-using smsc::inman::common::ObservableT;
-
+using smsc::core::synchronization::Mutex;
+using smsc::inman::interaction::Connect;
 
 namespace smsc  {
 namespace inman {
