@@ -8,19 +8,22 @@
             transport="SMPP">
 		
     <deliver_sm>
+	<if test="#OA" op="eq" value="10">
+	    <if test="DA" op="eq" value="11"> 
+		<set var="$flag" value="1" />
+	        <return result="0" />
+	    </if>
+	</if>
     </deliver_sm>
     
     <deliver_sm_resp>
+	<if test="$flag">
+	    <return result = "0" />
+	</if>
     </deliver_sm_resp>
 
 
     <submit_sm>
-        <if test="#OA" op="eq" value="10">
-            <if test="DA" op="eq" value="11">
-    	        <return result="0" />
-	    </if>
-	</if>
-	<return result = "1" />
     </submit_sm>
 	
 
