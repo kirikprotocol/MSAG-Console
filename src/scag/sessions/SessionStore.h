@@ -5,9 +5,15 @@
 #include <string>
 
 #include "Session.h"
+#include "core/buffers/RefPtr.hpp"
+#include "core/synchronization/Mutex.hpp"
 
-namespace scag { namespace sessions 
+namespace scag { namespace sessions
 {
+    typedef smsc::core::buffers::RefPtr<Session,smsc::core::synchronization::Mutex> SessionPtr;
+
+    typedef void (*SessionLoadCallback)(void*,Session*);
+
     class SessionStore
     {
     public:
@@ -15,14 +21,13 @@ namespace scag { namespace sessions
         SessionStore() {};
         ~SessionStore() {};
 
-        void init(const std::string& dir);
+        void init(const std::string& dir,SessionLoadCallback cb,void* data);
 
-        Session * getSession(const CSessionKey& sessionKey);
+        SessionPtr getSession(const CSessionKey& sessionKey);
 
-        void newSession(const CSessionKey& sessionKey);
+        SessionPtr newSession(const CSessionKey& sessionKey);
         void deleteSession(const CSessionKey& sessionKey);
-        void updateSession(Session* session);
-        void loadExpireList(COperationsHash& opList);
+        void updateSession(SessionPtr session);
     };
 }}
 
