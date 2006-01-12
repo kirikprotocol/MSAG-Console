@@ -3,32 +3,33 @@
 namespace scag { namespace sessions 
 {
 
-    void SessionStore::init(const std::string& dir)
+    void SessionStore::init(const std::string& dir,SessionLoadCallback cb,void* data)
     {
     
     }
     
-    Session * SessionStore::getSession(const CSessionKey& sessionKey)
+    SessionPtr SessionStore::getSession(const CSessionKey& sessionKey)
     {
-        Session * session = new Session(sessionKey);
+        SessionPtr session;
+        session = new Session(sessionKey);
         return session;
     }
 
-    void SessionStore::newSession(const CSessionKey& sessionKey)
+    SessionPtr SessionStore::newSession(const CSessionKey& sessionKey)
     {
+        SessionPtr session;
+        session = new Session(sessionKey);
+        return session;
     }
     
     void SessionStore::deleteSession(const CSessionKey& sessionKey)
     {
     }
     
-    void SessionStore::updateSession(Session* session)
+    void SessionStore::updateSession(SessionPtr session)
     {
     }
     
-    void SessionStore::loadExpireList(COperationsHash& opList)
-    {
-    }
-    
+   
 }}
 

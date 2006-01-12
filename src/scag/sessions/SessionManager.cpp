@@ -32,52 +32,39 @@ namespace scag { namespace sessions
 
     using smsc::logger::Logger;
 
-    struct CSessionAccessData
-    {
-        CSessionKey SessionKey;
-        time_t nextWakeTime;
-        bool bOpened;
-        bool hasPending;
-
-        CSessionAccessData() : nextWakeTime(0), bOpened(false) {}
-    };
-
-    class XSessionHashFunc {
-    public:
-        static uint32_t CalcHash(const CSessionKey& key)
-        {
-            return XAddrHashFunc::CalcHash(key.abonentAddr);
-        }
-    };
-
-
-    struct FAccessDataLess 
-    {
-        bool operator () (const CSessionAccessData* x,const CSessionAccessData* y) const
-        {
-            return (x->nextWakeTime < y->nextWakeTime);
-        }
-    };
-
-
-    typedef std::set<CSessionAccessData*,FAccessDataLess> CSessionSet;
-    typedef std::set<CSessionAccessData*>::iterator CSessionSetIterator;
-    typedef XHash<CSessionKey,CSessionSetIterator,XSessionHashFunc> CSessionHash;
-
-
-    class SessionManagerListBuilder
-    {
-    public:
-        void AddSession(Session * session)
-        {
-
-        }
-    };
-
 
     class SessionManagerImpl : public SessionManager, public Thread, public SessionOwner 
     {
-        friend class SessionManagerListBuilder;
+        struct CSessionAccessData
+        {
+            CSessionKey SessionKey;
+            time_t nextWakeTime;
+            bool bOpened;
+            bool hasPending;
+
+            CSessionAccessData() : nextWakeTime(0), bOpened(false) {}
+        };
+
+        class XSessionHashFunc {
+        public:
+            static uint32_t CalcHash(const CSessionKey& key)
+            {
+                return XAddrHashFunc::CalcHash(key.abonentAddr);
+            }
+        };
+
+
+        struct FAccessDataLess 
+        {
+            bool operator () (const CSessionAccessData* x,const CSessionAccessData* y) const
+            {
+                return (x->nextWakeTime < y->nextWakeTime);
+            }
+        };
+
+        typedef std::set<CSessionAccessData*,FAccessDataLess> CSessionSet;
+        typedef std::set<CSessionAccessData*>::iterator CSessionSetIterator;
+        typedef XHash<CSessionKey,CSessionSetIterator,XSessionHashFunc> CSessionHash;
 
         typedef XHash<Address,int,XAddrHashFunc> CUMRHash;
 
@@ -100,8 +87,8 @@ namespace scag { namespace sessions
         int  processExpire();
         int16_t getNewUSR(Address& address);
 
-        SessionManagerListBuilder listBuilder;
     public:
+        void AddRestoredSession(Session * session);
 
         void init(const SessionManagerConfig& config);
 
@@ -110,8 +97,8 @@ namespace scag { namespace sessions
         
         // SessionManager interface
         virtual SessionPtr getSession(const CSessionKey& sessionKey);
-        virtual void releaseSession(Session* session);
-        virtual void closeSession(const Session* session);
+        virtual void releaseSession(SessionPtr session);
+        virtual void closeSession(SessionPtr session);
 
         virtual int Execute();
         virtual void Start();
@@ -132,15 +119,20 @@ static Mutex initSessionManagerLock;
 inline unsigned GetLongevity(SessionManager*) { return 6; } // ? Move upper ? 
 typedef SingletonHolder<SessionManagerImpl> SingleSM;
 
-void SessionManagerCallback(void * builder,Session * session)
+void SessionManagerCallback(void * sm,Session * session)
 {
-    if (builder == 0) return;
+    if (sm == 0) return;
     if (session == 0) return;
 
-    SessionManagerListBuilder * listBuilder = (SessionManagerListBuilder *)builder;
-    listBuilder->AddSession(session);
+    SessionManagerImpl * smImpl = (SessionManagerImpl *)sm;
+    smImpl->AddRestoredSession(session);
 }
 
+
+void SessionManagerImpl::AddRestoredSession(Session * session)
+{
+
+}
 
 SessionManagerImpl::~SessionManagerImpl() 
 { 
@@ -192,7 +184,7 @@ SessionManager& SessionManager::Instance()
 void SessionManagerImpl::init(const SessionManagerConfig& _config) // possible throws exceptions
 {
     this->config = _config;
-    store.init(config.dir,SessionManagerCallback,&listBuilder);
+    store.init(config.dir,SessionManagerCallback,this);
 
     if (!logger)
       logger = Logger::getInstance("scag.re.SessionManager");
@@ -298,20 +290,20 @@ int SessionManagerImpl::processExpire()
 SessionPtr SessionManagerImpl::getSession(const CSessionKey& sessionKey)
 {
 
-    Session*    session = 0;
+    SessionPtr session;
 
     MutexGuard guard(inUseMonitor);
 
     CSessionSetIterator it;
 
-    if (!SessionHash.Exists(sessionKey)) return 0; 
+    if (!SessionHash.Exists(sessionKey)) return session; 
 
     it = SessionHash.Get(sessionKey);
 
     while ((*it)->bOpened)
     {
         inUseMonitor.wait();
-        if (!SessionHash.Exists(sessionKey)) return 0;
+        if (!SessionHash.Exists(sessionKey)) return session;
     }                                      
 
     (*it)->bOpened = true;
@@ -380,7 +372,7 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
 }
 
 
-void SessionManagerImpl::closeSession(const SessionPtr session)
+void SessionManagerImpl::closeSession(SessionPtr session)
 {
     if (!session.Get()) return;
     CSessionKey sessionKey = session->getSessionKey();

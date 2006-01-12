@@ -369,10 +369,10 @@ void Session::AddNewOperationToHash(SCAGCommand& cmd, int type)
 
 bool Session::startOperation(SCAGCommand& cmd)
 {
+
     if (!Owner) return false;
 
     Operation * operation = 0;
-
 
     try
     {

@@ -30,7 +30,7 @@ namespace scag { namespace sessions
         virtual SessionPtr newSession(CSessionKey& key) = 0;
         virtual SessionPtr getSession(const CSessionKey& key) = 0;
         virtual void releaseSession(SessionPtr session)     = 0;
-        virtual void closeSession  (const SessionPtr session)     = 0;
+        virtual void closeSession  (SessionPtr session)     = 0;
         
     };
 }}
