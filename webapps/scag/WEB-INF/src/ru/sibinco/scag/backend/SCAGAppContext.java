@@ -19,6 +19,8 @@ import ru.sibinco.scag.backend.sme.ProviderManager;
 import ru.sibinco.scag.backend.sme.CategoryManager;
 import ru.sibinco.scag.backend.sme.SmscsManager;
 import ru.sibinco.scag.perfmon.PerfServer;
+import ru.sibinco.scag.svcmon.SvcMonServer;
+import ru.sibinco.scag.scmon.ScServer;
 import ru.sibinco.tomcat_auth.XmlAuthenticator;
 
 import javax.sql.DataSource;
@@ -52,6 +54,8 @@ public class SCAGAppContext
   private final ScagRoutingManager scagRoutingManager;
   private final ResourceManager resourceManager;
   private final PerfServer perfServer;
+  private final SvcMonServer svcMonServer;
+  private final ScServer scServer;
   private final Daemon gwDaemon;
   private final Gateway gateway;
   private final Statuses statuses;
@@ -98,6 +102,10 @@ public class SCAGAppContext
       statuses = new Statuses();
       perfServer = new PerfServer(config);
       perfServer.start();
+      svcMonServer = new SvcMonServer(config);
+      svcMonServer.start();
+      scServer = new ScServer(config);
+      scServer.start();
       XmlAuthenticator.init(new File(config.getString("users_config_file")));
     } catch (Throwable e) {
       logger.fatal("Could not initialize App Context", e);
