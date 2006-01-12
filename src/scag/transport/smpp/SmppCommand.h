@@ -1186,7 +1186,7 @@ public:
   
   void setRuleId(int ruleId)
   {
-  
+      cmd->set_ruleId(ruleId);
   }
 		
   int64_t getOperationId() const
