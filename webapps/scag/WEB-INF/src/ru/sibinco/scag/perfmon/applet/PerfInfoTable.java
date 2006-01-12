@@ -8,7 +8,7 @@ public class PerfInfoTable extends Canvas {
 
   static final int pad = 1;
   static final int grid = 1;
-  static final int numHeads = 6;
+  static final int numHeads = 5;
   static final int numRows = 3;
   static final int colorShift = 16;
 
@@ -20,9 +20,10 @@ public class PerfInfoTable extends Canvas {
     new Color(bgColor.getRed(), bgColor.getGreen(), bgColor.getBlue() + colorShift), // accepted
     new Color(bgColor.getRed() + colorShift, bgColor.getGreen() + colorShift, bgColor.getBlue() + colorShift), // rejected
     new Color(bgColor.getRed(), bgColor.getGreen() + colorShift, bgColor.getBlue()), // delivered
-    new Color(bgColor.getRed() + colorShift, bgColor.getGreen(), bgColor.getBlue()), // deliver err
-    new Color(bgColor.getRed(), bgColor.getGreen() + colorShift, bgColor.getBlue() + colorShift), // trans ok
-    new Color(bgColor.getRed() + colorShift, bgColor.getGreen() + colorShift, bgColor.getBlue()) // trans failed
+    //new Color(bgColor.getRed() + colorShift, bgColor.getGreen(), bgColor.getBlue()), // deliver err
+    new Color(bgColor.getRed(), bgColor.getGreen() + colorShift, bgColor.getBlue() + colorShift), // Gw rejected
+    //new Color(bgColor.getRed() + colorShift, bgColor.getGreen() + colorShift, bgColor.getBlue()) // Failed
+    new Color(bgColor.getRed() + colorShift, bgColor.getGreen(), bgColor.getBlue()), // Failed
   };
 
   PerfSnap snap;
