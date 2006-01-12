@@ -154,6 +154,8 @@ namespace scag { namespace sessions
 
         Hash<AdapterProperty *> PropertyHash;
 
+        void ClearOperations();
+
         void closeCurrentOperation();
         int getNewOperationId();
         void AddNewOperationToHash(SCAGCommand& cmd, int type);

@@ -208,6 +208,7 @@ void SessionManagerImpl::Start()
 void SessionManagerImpl::Stop()
 {
     MutexGuard guard(stopLock);
+
     if (bStarted) 
     {
         bStarted = false;
@@ -223,8 +224,8 @@ int SessionManagerImpl::Execute()
     while (isStarted())
     {
         int secs = processExpire();
+        //smsc_log_debug(logger,"SessionManager::----------- ping %d",secs);
         awakeEvent.Wait(secs*1000);
-//        smsc_log_debug(logger,"SessionManager::----------- ping %d",secs);
     }
     smsc_log_info(logger,"SessionManager::stop executing");
     exitEvent.Signal();
@@ -238,7 +239,7 @@ int SessionManagerImpl::processExpire()
 
     while (1) 
     {
-        if (SessionExpirePool.empty()) return SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
+        if (SessionExpirePool.empty()) return 1;//SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
 
         CSessionSetIterator it;
         for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();++it)
@@ -264,24 +265,26 @@ int SessionManagerImpl::processExpire()
         //expire pending operations
         SessionPtr session = store.getSession((*it)->SessionKey);
 
-        while ((iPeriod < 0)&&(session->hasPending()))
+        while ((iPeriod <= 0)&&(session->hasPending()))
         {
             session->expirePendingOperation();
             (*it)->hasPending = session->hasPending();
+            (*it)->nextWakeTime = session->getWakeUpTime();
 
             iPeriod = (*it)->nextWakeTime - now;
         }
 
-        if (iPeriod > 0) return iPeriod;
-
         // Session expired
+        //smsc_log_debug(logger,"SessionManager: ********* %d ******** %d **** %d",session->hasOperations(),iPeriod,session->hasPending());
+
         if (!session->hasOperations()) 
         {
             SessionHash.Delete((*it)->SessionKey);
             SessionExpirePool.erase(it);
             store.deleteSession((*it)->SessionKey);
             delete (*it);
-        }
+        } 
+        else if (iPeriod > 0) return iPeriod;
 
     }
 }
@@ -359,6 +362,8 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
         SessionHash.Delete(sessionKey);
         SessionExpirePool.erase(it);
         delete (*it);
+
+        store.deleteSession(sessionKey);
     }
     else
     {
@@ -369,6 +374,7 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
 
 
     inUseMonitor.notifyAll();
+    smsc_log_debug(logger,"SessionManager: session released");
 }
 
 
@@ -389,6 +395,7 @@ void SessionManagerImpl::closeSession(SessionPtr session)
     SessionHash.Delete(sessionKey);
     delete (*it);
 
+    smsc_log_debug(logger,"SessionManager: session closed");
     inUseMonitor.notifyAll();
 }
 

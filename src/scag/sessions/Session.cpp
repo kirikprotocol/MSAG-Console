@@ -176,7 +176,8 @@ void Session::Serialize(SessionBuffer& buff)
     if (m_pCurrentOperation != 0) 
         buff << currentOperationId;
    
-    buff << m_SessionKey.abonentAddr << (uint32_t)m_SessionKey.USR << lastAccessTime;
+    buff << m_SessionKey.abonentAddr << (uint32_t)m_SessionKey.USR << lastAccessTime << lastOperationId << m_isTransact;
+    buff << m_SmppDiscriptor.cmdType << m_SmppDiscriptor.currentIndex << m_SmppDiscriptor.lastIndex;
 }
 
 
@@ -206,7 +207,16 @@ void Session::Deserialize(SessionBuffer& buff)
     buff >> tmp;
     m_SessionKey.USR = tmp;
 
-    buff >> lastAccessTime;     
+    buff >> lastAccessTime >> lastOperationId >> m_isTransact;     
+
+    buff >> tmp;
+    m_SmppDiscriptor.cmdType = (CommandOperations)tmp;
+
+    buff >> tmp;
+    m_SmppDiscriptor.currentIndex = tmp;
+
+    buff >> tmp;
+    m_SmppDiscriptor.lastIndex = tmp;
 }
 
 
@@ -251,17 +261,18 @@ Session::~Session()
     for (Hash <AdapterProperty *>::Iterator it = PropertyHash.getIterator(); it.Next(key, value);)
         if (value) delete value;
 
-    abort();
+    ClearOperations();
+    smsc_log_debug(logger,"Session: session destroyed");
 }
 
 
-void Session::abort()
+void Session::ClearOperations()
 {
     if (!Owner) return;
 
     int key;
     Operation * value;
-    
+
     COperationsHash::Iterator it = OperationsHash.First();
 
     for (;it.Next(key, value);)
@@ -274,8 +285,13 @@ void Session::abort()
 
     m_pCurrentOperation = 0;
     lastOperationId = 0;
+}
 
+void Session::abort()
+{
+    ClearOperations();
     Owner->startTimer(m_SessionKey,0);
+
     smsc_log_error(logger,"Session: session aborted");
 }
 
@@ -299,7 +315,7 @@ void Session::expirePendingOperation()
     if (!(PendingOperationList.empty())) 
     {
         PendingOperationList.pop_front();
-//        smsc_log_debug(logger,"Session: pending operation has expiried");
+        smsc_log_debug(logger,"Session: pending operation has expiried");
     }
 }
 
@@ -309,6 +325,7 @@ void Session::closeCurrentOperation()
     delete m_pCurrentOperation;
     m_pCurrentOperation = 0;
     OperationsHash.Delete(currentOperationId);
+    smsc_log_debug(logger,"Session: close current operation");
 }
 
 void Session::endOperation(RuleStatus& ruleStatus)
@@ -317,19 +334,24 @@ void Session::endOperation(RuleStatus& ruleStatus)
 
     Operation * operation = 0;
 
-    switch (m_pCurrentOperation->type)
+    switch (m_SmppDiscriptor.cmdType)
     {
     case CO_DELIVER_SM:
+        smsc_log_debug(logger,"Session: CO_DELIVER_SM detected");
         break;
 
     case CO_DELIVER_SM_RESP:
-        if ((m_SmppDiscriptor.lastIndex = 0)||((m_SmppDiscriptor.lastIndex > 0)&&(m_SmppDiscriptor.lastIndex == m_SmppDiscriptor.currentIndex)))
+        smsc_log_debug(logger,"Session: CO_DELIVER_SM_RESP detected %d-%d",m_SmppDiscriptor.lastIndex,m_SmppDiscriptor.currentIndex);
+
+        if ((m_SmppDiscriptor.lastIndex == 0)||((m_SmppDiscriptor.lastIndex > 0)&&(m_SmppDiscriptor.lastIndex == m_SmppDiscriptor.currentIndex)))
         {
             closeCurrentOperation();
         }
         break;
 
     case CO_SUBMIT_SM:
+        smsc_log_debug(logger,"Session: CO_SUBMIT_SM detected");
+
         if (!m_isTransact) 
         {
             PendingOperation pendingOperation;
@@ -341,6 +363,8 @@ void Session::endOperation(RuleStatus& ruleStatus)
         break;
 
     case CO_SUBMIT_SM_RESP:
+        smsc_log_debug(logger,"Session: CO_SUBMIT_SM_RESP detected");
+
         if ((m_SmppDiscriptor.lastIndex = 0)||((m_SmppDiscriptor.lastIndex > 0)&&(m_SmppDiscriptor.lastIndex == m_SmppDiscriptor.currentIndex)))
         {
             closeCurrentOperation();
@@ -348,6 +372,7 @@ void Session::endOperation(RuleStatus& ruleStatus)
         break;
 
     case CO_RECEIPT_DELIVER_SM:
+        smsc_log_debug(logger,"Session: CO_RECEIPT_DELIVER_SM detected");
         //TODO:: Нужно учесть политику для multipart
         closeCurrentOperation();
         break;
@@ -407,6 +432,7 @@ bool Session::startOperation(SCAGCommand& cmd)
 
     case CO_DELIVER_SM_RESP:
         {
+            smsc_log_debug(logger,"Session: !! CO_DELIVER_SM_RESP detected !!");
 
             operation = OperationsHash.Get(cmd.getOperationId());
             //TODO: check what to do if there are no session?
@@ -483,7 +509,6 @@ bool Session::startOperation(SCAGCommand& cmd)
 
 
     }
-
     smsc_log_error(logger,"** Session: operation started");
    
     //Owner->startTimer(this->getSessionKey(), this->getWakeUpTime());
@@ -514,7 +539,9 @@ Operation * Session::GetCurrentOperation() const
 
 time_t Session::getWakeUpTime()
 {
-    time_t time = 0;
+    long now;
+    time(&now);
+    time_t time = now;
 
     if (!PendingOperationList.empty()) time = (PendingOperationList.begin())->validityTime;
     return time;
