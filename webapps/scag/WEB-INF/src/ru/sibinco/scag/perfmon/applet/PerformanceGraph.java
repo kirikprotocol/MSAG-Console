@@ -17,10 +17,8 @@ public class PerformanceGraph extends Canvas {
   private static final Color colorGraphAccepted = Color.blue;
   private static final Color colorGraphRejected = Color.white;
   private static final Color colorGraphDelivered = Color.green;
-  private static final Color colorGraphDeliverErr = Color.red;
-  private static final Color colorGraphTransok = Color.cyan;
-  private static final Color colorGraphTransfailed = Color.orange;
-//  private static final Color colorGraphTotal = Color.white;
+  private static final Color colorGraphGwRejected = Color.cyan;
+  private static final Color colorGraphFailed = Color.red;
 
   Image offscreen;
   int numGrids = 1;
@@ -174,29 +172,24 @@ public class PerformanceGraph extends Canvas {
         if( PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE || (PerfMon.viewMode == PerfMon.VIEWMODE_IO && PerfMon.viewOutputEnabled) ) {
           if(PerfMon.viewMode == PerfMon.VIEWMODE_IO || (PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE && PerfMon.viewDeliverErrEnabled))
           drawGraphLine(g, posy, posx,
-                  (int) snap.last[PerfSnap.IDX_DELIVERERR], (int) prevSnap.last[PerfSnap.IDX_DELIVERERR],
+                  (int) snap.last[PerfSnap.IDX_GW_REJECTED], (int) prevSnap.last[PerfSnap.IDX_GW_REJECTED],
                   0, 0,
-                  maxheight, colorGraphDeliverErr);
+                  maxheight, colorGraphGwRejected);
           if(PerfMon.viewMode == PerfMon.VIEWMODE_IO || (PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE && PerfMon.viewDeliveredEnabled))
           drawGraphLine(g, posy, posx,
                   (int) snap.last[PerfSnap.IDX_DELIVERED], (int) prevSnap.last[PerfSnap.IDX_DELIVERED],
-                  (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) snap.last[PerfSnap.IDX_DELIVERERR]:0,
-                  (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) prevSnap.last[PerfSnap.IDX_DELIVERERR]:0,
+                  (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) snap.last[PerfSnap.IDX_GW_REJECTED]:0,
+                  (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) prevSnap.last[PerfSnap.IDX_GW_REJECTED]:0,
                   maxheight, colorGraphDelivered);
         }
         // draw transaction graphs
         if( PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE || (PerfMon.viewMode == PerfMon.VIEWMODE_IO && PerfMon.viewTransactionEnabled) ) {
-          if(PerfMon.viewMode == PerfMon.VIEWMODE_IO || (PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE && PerfMon.viewTransfailEnabled))
-          drawGraphLine(g, posy, posx,
-                  (int) snap.last[PerfSnap.IDX_TRANSFAILED], (int) prevSnap.last[PerfSnap.IDX_TRANSFAILED],
-                  0, 0,
-                  maxheight, colorGraphTransfailed);
           if(PerfMon.viewMode == PerfMon.VIEWMODE_IO || (PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE && PerfMon.viewTransokEnabled))
           drawGraphLine(g, posy, posx,
-                  (int) snap.last[PerfSnap.IDX_TRANSOK], (int) prevSnap.last[PerfSnap.IDX_TRANSOK],
-                  (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) snap.last[PerfSnap.IDX_TRANSFAILED]:0,
-                  (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) prevSnap.last[PerfSnap.IDX_TRANSFAILED]:0,
-                  maxheight, colorGraphTransok);
+                  (int) snap.last[PerfSnap.IDX_FAILED], (int) prevSnap.last[PerfSnap.IDX_FAILED],
+                  (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) snap.last[PerfSnap.IDX_GW_REJECTED]:0,
+                  (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) prevSnap.last[PerfSnap.IDX_GW_REJECTED]:0,
+                  maxheight, colorGraphFailed);
         }
       }
     }

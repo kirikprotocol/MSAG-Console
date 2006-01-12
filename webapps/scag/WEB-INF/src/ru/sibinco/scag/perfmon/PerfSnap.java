@@ -7,23 +7,26 @@ import java.util.*;
 import java.io.*;
 
 public class PerfSnap {
-  public long last[] = {0, 0, 0, 0, 0, 0};
-  public long avg[] = {0, 0, 0, 0, 0, 0};
-  public long total[] = {0, 0, 0, 0, 0, 0};
+  public long last[] = {0, 0, 0, 0, 0};
+  public long avg[] = {0, 0, 0, 0, 0};
+  public long total[] = {0, 0, 0, 0, 0};
 
   public int uptime;
   public int sctime;
   public int queueSize;
+  public int sessionCount;
+
 
   public String strUptime;
   public String strSctime;
+  public String strSessionCount;
 
   public final static int IDX_ACCEPTED = 0;
   public final static int IDX_REJECTED = 1;
   public final static int IDX_DELIVERED = 2;
-  public final static int IDX_DELIVERERR = 3;
-  public final static int IDX_TRANSOK = 4;
-  public final static int IDX_TRANSFAILED = 5;
+  public final static int IDX_GW_REJECTED = 3;
+  public final static int IDX_FAILED = 4;
+
 
   public PerfSnap() {
   }
@@ -34,9 +37,11 @@ public class PerfSnap {
     System.arraycopy(snap.total, 0, total, 0, snap.total.length);
     uptime = snap.uptime;
     sctime = snap.sctime;
+    sessionCount = snap.sessionCount;
     queueSize = snap.queueSize;
     strSctime = new String(snap.strSctime);
     strUptime = new String(snap.strUptime);
+    strSessionCount = new String(snap.strSessionCount);
   }
 
   protected String verbDigit(String key, int number) {
@@ -89,6 +94,7 @@ public class PerfSnap {
     }
     {
       strSctime = PerfMon.dateFormat.format(new Date(((long) sctime) * 1000));
+      strSessionCount = new Integer(sessionCount).toString();
     }
   }
 
@@ -96,6 +102,7 @@ public class PerfSnap {
       throws IOException {
     out.writeInt(uptime);
     out.writeInt(sctime);
+    out.writeInt(sessionCount);
     out.writeInt(queueSize);
     writeArray(out, last);
     writeArray(out, avg);
@@ -112,6 +119,7 @@ public class PerfSnap {
       throws IOException {
     uptime = in.readInt();
     sctime = in.readInt();
+    sessionCount = in.readInt();
     queueSize = in.readInt();
     readArray(in, last);
     readArray(in, avg);
@@ -127,11 +135,7 @@ public class PerfSnap {
 
   public void init(SnapBufferReader in) throws IOException {
     queueSize = in.readNetworkInt();
-    uptime = in.readNetworkInt();
-    sctime = in.readNetworkInt();
 
-    in.readNetworkInt(); // padding to make counters alligned to 8 bytes
-    in.readNetworkInt(); // read num of counters
     last[PerfSnap.IDX_ACCEPTED] = (long) in.readNetworkInt();
     avg[PerfSnap.IDX_ACCEPTED] = (long) in.readNetworkInt();
     total[PerfSnap.IDX_ACCEPTED] = in.readNetworkLong();
@@ -144,16 +148,16 @@ public class PerfSnap {
     avg[PerfSnap.IDX_DELIVERED] = (long) in.readNetworkInt();
     total[PerfSnap.IDX_DELIVERED] = in.readNetworkLong();
 
-    last[PerfSnap.IDX_DELIVERERR] = (long) in.readNetworkInt();
-    avg[PerfSnap.IDX_DELIVERERR] = (long) in.readNetworkInt();
-    total[PerfSnap.IDX_DELIVERERR] = in.readNetworkLong();
+    last[PerfSnap.IDX_GW_REJECTED] = (long) in.readNetworkInt();
+    avg[PerfSnap.IDX_GW_REJECTED] = (long) in.readNetworkInt();
+    total[PerfSnap.IDX_GW_REJECTED] = in.readNetworkLong();
 
-    last[PerfSnap.IDX_TRANSOK] = (long) in.readNetworkInt();
-    avg[PerfSnap.IDX_TRANSOK] = (long) in.readNetworkInt();
-    total[PerfSnap.IDX_TRANSOK] = in.readNetworkLong();
+    last[PerfSnap.IDX_FAILED] = (long) in.readNetworkInt();
+    avg[PerfSnap.IDX_FAILED] = (long) in.readNetworkInt();
+    total[PerfSnap.IDX_FAILED] = in.readNetworkLong();
 
-    last[PerfSnap.IDX_TRANSFAILED] = (long) in.readNetworkInt();
-    avg[PerfSnap.IDX_TRANSFAILED] = (long) in.readNetworkInt();
-    total[PerfSnap.IDX_TRANSFAILED] = in.readNetworkLong();
+    sessionCount = in.readNetworkInt();
+    uptime = in.readNetworkInt();
+    sctime = in.readNetworkInt();
   }
 }

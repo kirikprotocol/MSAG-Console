@@ -20,6 +20,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
   public static final int VIEWMODE_SEPARATE = 1;
   AdvancedLabel uptimeLabel;
   AdvancedLabel sctimeLabel;
+  AdvancedLabel sessionCountLabel;
   PerformanceBar perfbar;
   PerfInfoTable perfTable;
   PerformanceGraph perfGraph;
@@ -185,7 +186,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
 
     uptimeLabel = new AdvancedLabel(snap.strUptime);
     sctimeLabel = new AdvancedLabel(snap.strSctime);
-
+    sessionCountLabel = new AdvancedLabel(snap.strSessionCount);
 
     Panel p = new Panel(new GridLayout(1, 2));
     // uptime
@@ -198,6 +199,12 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     lg.setLayout(new BorderLayout());
     lg.add(sctimeLabel, BorderLayout.CENTER);
     p.add(lg);
+    // sesscount
+    lg = new LabelGroup(localeText.getString("lab.sesscount"), LabelGroup.NORTHWEST);
+    lg.setLayout(new BorderLayout());
+    lg.add(sessionCountLabel, BorderLayout.CENTER);
+    p.add(lg);
+
 
     gbc.gridx = 1;
     gbc.gridy = 1;
@@ -255,9 +262,9 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
           while(!isStopping) {
             snap.read(is);
             snap.calc();
-//              System.out.println("Got snap: ls="+snap.last[PerfSnap.IDX_DELIVERED]+" le="+snap.last[PerfSnap.IDX_DELIVERERR]+" upt="+snap.uptime+" tm="+(new Date(snap.sctime*1000)).toString());
             uptimeLabel.setText(snap.strUptime);
             sctimeLabel.setText(snap.strSctime);
+            sessionCountLabel.setText(snap.strSessionCount);
             perfbar.setSnap(snap);
             perfTable.setSnap(snap);
             perfGraph.addSnap(snap);
