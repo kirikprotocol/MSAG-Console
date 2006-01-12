@@ -33,31 +33,24 @@ public class TopMenu  extends ArrayList {
 
             Collection endpointItems = new ArrayList();
             endpointItems.add(new MenuItem("menu.endpoint.services","/endpoints/services/index.jsp"));
-            endpointItems.add(new MenuItem("menu.endpoint.services.monitor","/endpoints/services/monitor/index.jsp"));
+            endpointItems.add(new MenuItem("menu.endpoint.services.monitor","","/endpoints/services/monitor/index.jsp', 'svcmon', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=640');"));
             endpointItems.add(new MenuItem("menu.endpoint.centers","/endpoints/centers/index.jsp"));
-            endpointItems.add(new MenuItem("menu.endpoint.centers.monitor","/endpoints/centers/monitor/index.jsp"));
+            endpointItems.add(new MenuItem("menu.endpoint.centers.monitor","","/endpoints/centers/monitor/index.jsp', 'scmon', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=640');"));
             add(new MenuItem("menu.endpoint", "", endpointItems));
 
             Collection routingItems = new ArrayList();
             routingItems.add(new MenuItem("menu.routing.subjects", "/routing/subjects/index.jsp"));
             routingItems.add(new MenuItem("menu.routing.routes", "/routing/routes/index.jsp"));
-//            routingItems.add(new MenuItem("menu.routing.billing", "/routing/billing/index.jsp"));
             routingItems.add(new MenuItem("menu.routing.tracer", "/routing/tracer/index.jsp"));
             add(new MenuItem("menu.routing", "", routingItems));
 
-//            Collection serviceItems = new ArrayList();
-//            serviceItems.add(new MenuItem("menu.services.sme", "/services/sme/index.jsp"));
-//            serviceItems.add(new MenuItem("menu.services.services", "/services/services/index.jsp"));
-//            add(new MenuItem("menu.services", "", serviceItems));
-
             Collection rulesItems = new ArrayList();
             rulesItems.add(new MenuItem("menu.rules.rules", "/rules/rules/index.jsp"));
-            //rulesItems.add(new MenuItem("menu.rules.rules","", "/rules/rules/index.jsp','xmledit','channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=580');"));
             add(new MenuItem("menu.rules", "", rulesItems));
 
             Collection statisticItems = new ArrayList();
             statisticItems.add(new MenuItem("menu.stat.monitor","", "/stat/monitor/index.jsp','perfmon', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=580');"));
-            statisticItems.add(new MenuItem("menu.stat.stat","/stat/stat/index.jsp"));//", "/stat/stat/index.jsp', 'topmon', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=640');"));
+            statisticItems.add(new MenuItem("menu.stat.stat","/stat/stat/index.jsp"));
             add(new MenuItem("menu.stat", "", statisticItems));
 
         } catch (Exception e) {
