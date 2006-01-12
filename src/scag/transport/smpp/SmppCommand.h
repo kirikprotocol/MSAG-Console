@@ -358,6 +358,7 @@ struct _SmppCommand
   SmppEntity *ent;
   int ruleId;
   int priority;
+  uint64_t opId;
   _SmppCommand() : ref_count(0), dta(0), ent(0),priority(ScagCommandDefaultPriority)
   {
   }
@@ -455,6 +456,14 @@ struct _SmppCommand
   int get_ruleId()
   {
     return ruleId;
+  }
+  void set_operationId(uint64_t id)
+  {
+    opId=id;
+  }
+  uint64_t get_operationId()
+  {
+    return opId;
   }
 };
 
@@ -1183,22 +1192,23 @@ public:
   {
     return cmd->get_ruleId();
   }
-  
+
   void setRuleId(int ruleId)
   {
-      cmd->set_ruleId(ruleId);
-  }
-		
-  int64_t getOperationId() const
-  {
-      return 0;
+    cmd->set_ruleId(ruleId);
   }
 
- void setOperationId(int64_t op)
+  int64_t getOperationId() const
   {
+    return cmd->get_operationId();
   }
-				
-  
+
+  void setOperationId(int64_t op)
+  {
+    cmd->set_operationId(op);
+  }
+
+
 };
 
 } //smpp
