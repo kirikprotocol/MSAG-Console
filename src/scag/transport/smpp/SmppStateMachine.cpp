@@ -125,7 +125,11 @@ void StateMachine::processSubmit(SmppCommand& cmd)
   scag::sessions::CSessionKey key;
   key.USR=sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
   key.abonentAddr=sms.getDestinationAddress();
-  scag::sessions::Session* session=scag::sessions::SessionManager::Instance().newSession(key);
+  scag::sessions::SessionPtr session=scag::sessions::SessionManager::Instance().getSession(key);
+  if(!session.Get())
+  {
+    session=scag::sessions::SessionManager::Instance().newSession(key);
+  }
 
   scag::re::RuleStatus st=scag::re::RuleEngine::Instance().process(cmd,*session);
 
@@ -162,6 +166,22 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
     return;
   }
 
+  scag::sessions::CSessionKey key;
+  key.USR=orgCmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+  key.abonentAddr=orgCmd->get_sms()->getDestinationAddress();
+
+  scag::sessions::SessionPtr session=scag::sessions::SessionManager::Instance().getSession(key);
+  if(!session.Get())
+  {
+    smsc_log_warn(log,"Session not found. key='%s:%d'",key.abonentAddr.toString().c_str(),key.USR);
+    cmd->get_resp()->set_status(smsc::system::Status::RX_T_APPN);
+  }
+  else
+  {
+    scag::re::RuleStatus st=scag::re::RuleEngine::Instance().process(cmd,*session);
+  }
+
+
   SmppEntity* dst=orgCmd.getEntity();
 
   cmd->set_dialogId(orgCmd->get_dialogId());
@@ -172,6 +192,7 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
   {
     smsc_log_warn(log,"SubmitResp:Failed to put command into %s:%s",dst->getSystemId(),e.what());
   }
+  if(session.Get())scag::sessions::SessionManager::Instance().releaseSession(session);
 }
 
 void StateMachine::processDelivery(SmppCommand& cmd)
@@ -199,6 +220,29 @@ void StateMachine::processDelivery(SmppCommand& cmd)
   cmd->set_ruleId(ri.ruleId);
 
 
+  scag::sessions::CSessionKey key;
+  key.USR=sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+  key.abonentAddr=sms.getDestinationAddress();
+  scag::sessions::SessionPtr session=scag::sessions::SessionManager::Instance().getSession(key);
+  if(!session.Get())
+  {
+    session=scag::sessions::SessionManager::Instance().newSession(key);
+  }
+
+  scag::re::RuleStatus st=scag::re::RuleEngine::Instance().process(cmd,*session);
+
+  if(!st.status)
+  {
+    smsc_log_info(log,"Submit: RuleEngine returned result=%d",st.result);
+    DeliveryResp(cmd,
+      st.temporal?smsc::system::Status::RX_T_APPN:
+                  smsc::system::Status::RX_P_APPN
+    );
+    scag::sessions::SessionManager::Instance().releaseSession(session);
+    return;
+  }
+
+
   try{
     int newSeq=dst->getNextSeq();
     reg.Register(dst->getUid(),newSeq,cmd);
@@ -207,6 +251,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
   {
     smsc_log_info(log,"Delivery:Failed to putCommand into %s:%s",dst->getSystemId(),e.what());
   }
+  scag::sessions::SessionManager::Instance().releaseSession(session);
 }
 
 void StateMachine::processDeliveryResp(SmppCommand& cmd)
@@ -219,6 +264,21 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
     return;
   }
 
+  scag::sessions::CSessionKey key;
+  key.USR=orgCmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+  key.abonentAddr=orgCmd->get_sms()->getDestinationAddress();
+
+  scag::sessions::SessionPtr session=scag::sessions::SessionManager::Instance().getSession(key);
+  if(!session.Get())
+  {
+    smsc_log_warn(log,"Session not found. key='%s:%d'",key.abonentAddr.toString().c_str(),key.USR);
+    cmd->get_resp()->set_status(smsc::system::Status::RX_T_APPN);
+  }
+  else
+  {
+    scag::re::RuleStatus st=scag::re::RuleEngine::Instance().process(cmd,*session);
+  }
+
   cmd->get_resp()->set_messageId("");
 
   SmppEntity* dst=orgCmd.getEntity();
@@ -229,6 +289,7 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
   {
     smsc_log_warn(log,"DeliveryResp:Failed to put command into %s:%s",dst->getSystemId(),e.what());
   }
+  if(session.Get())scag::sessions::SessionManager::Instance().releaseSession(session);
 }
 
 void StateMachine::SubmitResp(SmppCommand& cmd,int status)
