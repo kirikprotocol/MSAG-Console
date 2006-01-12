@@ -9,6 +9,14 @@
   <property name="perfmon_src" location="${java_src}/${perfmon_path}"/>
   <property name="perfmon_out" location="${java_out}/${perfmon_path}"/>
 
+  <property name="svcmon_path" value="ru/sibinco/scag/svcmon"/>
+  <property name="svcmon_src" location="${java_src}/${svcmon_path}"/>
+  <property name="svcmon_out" location="${java_out}/${svcmon_path}"/>
+
+  <property name="scmon_path" value="ru/sibinco/scag/scmon"/>
+  <property name="scmon_src" location="${java_src}/${scmon_path}"/>
+  <property name="scmon_out" location="${java_out}/${scmon_path}"/>
+
   <property name="sibinco_lib" location="${BUILD_DIR}/jars/sibinco_lib.jar"/>
   <property name="tomcat_auth_lib" location="${BUILD_DIR}/jars/sibinco_tomcat_auth.jar"/>
   <property name="log4j_jar" location="WEB-INF/lib/log4j.jar"/>
@@ -28,11 +36,14 @@
            classpath="${sibinco_lib}:${tomcat_auth_lib}:${log4j_jar}:${servlet_jar}:${tomcat_server_libs}" debug="yes"/>
     <native2ascii encoding="Cp1251" src="${java_src}/locales" dest="${java_out}/locales"/>
     <native2ascii encoding="Cp1251" src="${perfmon_src}/applet" dest="${perfmon_out}/applet"/>
+    <native2ascii encoding="Cp1251" src="${svcmon_src}/applet" dest="${svcmon_out}/applet"/>
+    <native2ascii encoding="Cp1251" src="${scmon_src}/applet" dest="${scmon_out}/applet"/>
   </target>
 
   <target name="build" depends="clean,compile" description="generate the distribution">
     <jar jarfile="${java_lib}/scag.jar">
       <fileset dir="${java_out}" excludes="${perfmon_path}/applet/**" />
+      <fileset dir="${java_out}" excludes="${svcmon_path}/applet/**" />
     </jar>
     <unjar src="${sibinco_lib}" dest="${exploded}/unjar_tmp"/>
     <mkdir dir="${exploded}/stat/monitor"/>
@@ -40,6 +51,31 @@
       <fileset dir="${java_out}">
         <include name="${perfmon_path}/applet/**"/>
         <include name="${perfmon_path}/PerfSnap.class"/>
+      </fileset>
+      <fileset dir="${exploded}/unjar_tmp">
+        <include name="ru/sibinco/lib/backend/applet/**"/>
+        <include name="ru/sibinco/lib/backend/util/SnapBufferReader.class"/>
+      </fileset>
+    </jar>
+    <mkdir dir="${exploded}/endpoints/services/monitor"/>
+    <jar jarfile="${exploded}/endpoints/services/monitor/svcmon.jar">
+      <fileset dir="${java_out}">
+        <include name="${svcmon_path}/applet/**"/>
+        <include name="${svcmon_path}/snap/**"/>
+        <include name="${svcmon_path}/SvcSnap.class"/>
+      </fileset>
+      <fileset dir="${exploded}/unjar_tmp">
+        <include name="ru/sibinco/lib/backend/applet/**"/>
+        <include name="ru/sibinco/lib/backend/util/SnapBufferReader.class"/>
+      </fileset>
+    </jar>
+    <mkdir dir="${exploded}/endpoints/centers/monitor"/>
+    <jar jarfile="${exploded}/endpoints/centers/monitor/scmon.jar">
+      <fileset dir="${java_out}">
+        <include name="${scmon_path}/applet/**"/>
+        <include name="${scmon_path}/applet/*.java"/>
+        <include name="${scmon_path}/ScSnap.class"/>
+        <include name="${scmon_path}/snap/**"/>
       </fileset>
       <fileset dir="${exploded}/unjar_tmp">
         <include name="ru/sibinco/lib/backend/applet/**"/>
