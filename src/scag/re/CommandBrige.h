@@ -42,7 +42,6 @@ public:
         
         _SmppCommand& cmd = *smppCommand->operator ->();
 
-
         CommandId cmdid = cmd.get_commandId();
         void * dta = cmd.dta;
         SMS * sms = 0;
@@ -59,34 +58,48 @@ public:
 
             if (receiptMessageId) SmppDiscriptor.cmdType = CO_RECEIPT_DELIVER_SM;
             else SmppDiscriptor.cmdType = CO_DELIVER_SM;
+
+            
+            SmppDiscriptor.lastIndex = sms->getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
+            SmppDiscriptor.currentIndex = sms->getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
             
             break;
         case SUBMIT:
             sms = (SMS*)dta;
 
             SmppDiscriptor.cmdType = CO_SUBMIT_SM;
+
+            SmppDiscriptor.lastIndex = sms->getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
+            SmppDiscriptor.currentIndex = sms->getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
+
             break;
         case DELIVERY_RESP:
+            
             sms = ((SmsResp*)dta)->get_sms();
 
-            receiptMessageId = atoi(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
+            if (sms) receiptMessageId = atoi(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
+            else throw SCAGException("Command Bridge Error: SCAGCommand SMS data for DELIVERY_RESP is invalid");
+
+            SmppDiscriptor.lastIndex = sms->getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
+            SmppDiscriptor.currentIndex = sms->getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
 
             if (receiptMessageId) SmppDiscriptor.cmdType = CO_RECEIPT_DELIVER_SM_RESP;
             else SmppDiscriptor.cmdType = CO_DELIVER_SM_RESP;
+
             break;
         case SUBMIT_RESP:
             SmppDiscriptor.cmdType = CO_SUBMIT_SM_RESP;
+
+            SmppDiscriptor.lastIndex = sms->getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
+            SmppDiscriptor.currentIndex = sms->getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
             break;
         }
-
+        /*
         if (sms == 0) throw SCAGException("Command Bridge Error: Unknown SCAGCommand data");
 
         SmppDiscriptor.lastIndex = sms->getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
         SmppDiscriptor.currentIndex = sms->getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
-
-
-        //TODO: Implement
-        SmppDiscriptor.cmdType = CO_DELIVER_SM;
+          */
 
         return SmppDiscriptor;
     }
