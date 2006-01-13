@@ -283,6 +283,7 @@ int SessionManagerImpl::processExpire()
             SessionExpirePool.erase(it);
             store.deleteSession((*it)->SessionKey);
             delete (*it);
+            smsc_log_debug(logger,"SessionManager: session expired");
         } 
         else if (iPeriod > 0) return iPeriod;
 
