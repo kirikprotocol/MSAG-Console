@@ -11,23 +11,30 @@ import java.util.Collection;
  * Time: 13:54:45
  * To change this template use File | Settings | File Templates.
  */
-public class DateCountersSet extends CountersSet
-{
-  private Date date;
+public class DateCountersSet extends CountersSet {
+    private Date date;
 
-  private Vector byHours = new Vector(); // contains HourCountersSet
+    private Vector byHours = new Vector(); // contains HourCountersSet
 
-  DateCountersSet(Date date) {
-    this.date = date;
-  }
-  public void addHourStat(HourCountersSet set) {
-    byHours.addElement(set);
-    super.incrementFull(set);
-  }
-  public Collection getHourStat() {
-    return byHours;
-  }
-  public Date getDate() {
-    return date;
-  }
+    DateCountersSet(Date date) {
+        this.date = date;
+    }
+
+    public void addHourStat(HourCountersSet set) {
+        byHours.addElement(set);
+        super.incrementFullForSMPPTransport(set);
+    }
+
+    public void addHttpHourStat(HourCountersSet set) {
+        byHours.addElement(set);
+        super.incrementFullForHttpTransport(set);
+    }
+
+    public Collection getHourStat() {
+        return byHours;
+    }
+
+    public Date getDate() {
+        return date;
+    }
 }

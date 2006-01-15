@@ -30,7 +30,7 @@ public class Statistics {
 
     public void addDateStat(DateCountersSet set) {
         byDates.add(set);
-        total.incrementFull(set);
+        total.incrementFullForSMPPTransport(set);
     }
 
     public Collection getDateStat() {

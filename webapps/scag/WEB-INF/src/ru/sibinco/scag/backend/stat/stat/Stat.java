@@ -1,36 +1,28 @@
 package ru.sibinco.scag.backend.stat.stat;
 
-import ru.sibinco.lib.backend.util.config.Config;
 import ru.sibinco.lib.backend.util.Functions;
-import ru.sibinco.scag.beans.MessageException;
-import ru.sibinco.scag.backend.SCAGAppContext;
+import ru.sibinco.lib.backend.util.config.Config;
 import ru.sibinco.scag.backend.Constants;
-import ru.sibinco.scag.backend.stat.stat.CountersSet;
-import ru.sibinco.scag.backend.stat.stat.DateCountersSet;
-import ru.sibinco.scag.backend.stat.stat.HourCountersSet;
-import ru.sibinco.scag.backend.stat.stat.ExtendedCountersSet;
-import ru.sibinco.scag.backend.stat.stat.SmeIdCountersSet;
-import ru.sibinco.scag.backend.stat.stat.SmscIdCountersSet;
-import ru.sibinco.scag.backend.stat.stat.RouteIdCountersSet;
+import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.transport.Transport;
+import ru.sibinco.scag.beans.MessageException;
 
-
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Collection;
-import java.util.TimeZone;
-import java.util.Calendar;
-import java.util.TreeMap;
-import java.util.Iterator;
-import java.text.SimpleDateFormat;
-import java.text.ParseException;
-import java.io.File;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.EOFException;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.ByteArrayInputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.TimeZone;
+import java.util.TreeMap;
 
 /**
  * Created by IntelliJ IDEA.
@@ -267,9 +259,11 @@ public class Stat {
                             }
                             haveValues = true; // read and increase counters
 
-                            scanRoutesAndGeneralStat(countersForRoute, lastHourCounter, is);
-                            scanSmes(countersForSme, is);
-                            scanSmsc(countersForSmsc, is);
+                            scanRoutesAndGeneralStat(countersForRoute, lastHourCounter, is, query.getTransport());
+                            scanSmes(countersForSme, is, query.getTransport());
+                            if (query.getTransport() == Transport.SMPP_TRANSPORT_ID) {
+                                scanSmsc(countersForSmsc, is);
+                            }
                         } catch (EOFException exc) {
                             logger.warn("Incomplete record #" + recordNum + " in " + path + "");
                         }
@@ -315,7 +309,11 @@ public class Stat {
             }
 
             HourCountersSet set = new HourCountersSet(hour);
-            set.incrementFull(hourCounter);
+            if (query.getTransport() == Transport.SMPP_TRANSPORT_ID) {
+                set.incrementFullForSMPPTransport(hourCounter);
+            } else if (query.getTransport() == Transport.HTTP_TRANSPORT_ID) {
+                set.incrementFullForHttpTransport(hourCounter);
+            }
             dateCounters.addHourStat(set);
         }
         if (dateCounters != null)
@@ -343,8 +341,25 @@ public class Stat {
         int billingFailed = (int) readUInt32(is);
         int recieptOk = (int) readUInt32(is);
         int recieptFailed = (int) readUInt32(is);
-        set.incrementFull(accepted, rejected, delivered, gw_rejected, failed, billingOk, billingFailed, recieptOk, recieptFailed);
-        countersSet.incrementFull(accepted, rejected, delivered, gw_rejected, failed, billingOk, billingFailed, recieptOk, recieptFailed);
+        set.incrementFullForSMPPTransport(accepted, rejected, delivered, gw_rejected, failed, billingOk, billingFailed, recieptOk, recieptFailed);
+        countersSet.incrementFullForSMPPTransport(accepted, rejected, delivered, gw_rejected, failed, billingOk, billingFailed, recieptOk, recieptFailed);
+    }
+
+
+    private void scanHttpRouteAndGeneralStatCounters(CountersSet set, CountersSet countersSet, InputStream is) throws IOException {
+        int request = (int) readUInt32(is);
+        int requestRejected = (int) readUInt32(is);
+        int response = (int) readUInt32(is);
+        int responseRejected = (int) readUInt32(is);
+        int delivered = (int) readUInt32(is);
+        int failed = (int) readUInt32(is);
+        int billingOk = (int) readUInt32(is);
+        int billingFailed = (int) readUInt32(is);
+
+        set.incrementFullForHttpTransport(request, requestRejected, response, responseRejected,
+                delivered, failed, billingOk, billingFailed);
+        countersSet.incrementFullForHttpTransport(request, requestRejected, response, responseRejected,
+                delivered, failed, billingOk, billingFailed);
     }
 
     private void scanSmeCounters(CountersSet set, InputStream is) throws IOException {
@@ -353,7 +368,17 @@ public class Stat {
         int delivered = (int) readUInt32(is);
         int gw_rejected = (int) readUInt32(is);
         int failed = (int) readUInt32(is);
-        set.increment(accepted, rejected, delivered, gw_rejected, failed);
+        set.incrementForSMPPTransport(accepted, rejected, delivered, gw_rejected, failed);
+    }
+
+    private void scanHttpSmeCounters(CountersSet set, InputStream is) throws IOException {
+        int request = (int) readUInt32(is);
+        int requestRejected = (int) readUInt32(is);
+        int response = (int) readUInt32(is);
+        int responseRejected = (int) readUInt32(is);
+        int delivered = (int) readUInt32(is);
+        int failed = (int) readUInt32(is);
+        set.incrementForHttpTransport(request, requestRejected, response, responseRejected, delivered, failed);
     }
 
     private void scanSmscCounters(CountersSet set, InputStream is) throws IOException {
@@ -362,7 +387,7 @@ public class Stat {
         int delivered = (int) readUInt32(is);
         int gw_rejected = (int) readUInt32(is);
         int failed = (int) readUInt32(is);
-        set.increment(accepted, rejected, delivered, gw_rejected, failed);
+        set.incrementForSMPPTransport(accepted, rejected, delivered, gw_rejected, failed);
     }
 
     private void scanErrors(ExtendedCountersSet set, InputStream is) throws IOException {
@@ -374,7 +399,7 @@ public class Stat {
         }
     }
 
-    private void scanSmes(HashMap map, InputStream is) throws IOException {
+    private void scanSmes(HashMap map, InputStream is, long transport) throws IOException {
         int counter = (int) readUInt32(is);
         while (counter-- > 0) {
             int sme_id_len = readUInt8(is);
@@ -386,7 +411,11 @@ public class Stat {
                 map.put(smeId, set);
             }
             set.setProviderId(providerId);
-            scanSmeCounters(set, is);
+            if (transport == Transport.SMPP_TRANSPORT_ID) {
+                scanSmeCounters(set, is);
+            } else if (transport == Transport.HTTP_TRANSPORT_ID) {
+                scanHttpSmeCounters(set, is);
+            }
             scanErrors(set, is);
         }
     }
@@ -410,7 +439,7 @@ public class Stat {
         }
     }
 
-    private void scanRoutesAndGeneralStat(HashMap map, CountersSet lastHourCounter, InputStream is) throws IOException {
+    private void scanRoutesAndGeneralStat(HashMap map, CountersSet lastHourCounter, InputStream is, long transport) throws IOException {
         int counter = (int) readUInt32(is);
         while (counter-- > 0) {
             int route_id_len = readUInt8(is);
@@ -424,7 +453,11 @@ public class Stat {
                 map.put(routeId, set);
             }
             set.setProviderId(providerId);
-            scanRouteAndGeneralStatCounters(set, lastHourCounter, is);
+            if (transport == Transport.SMPP_TRANSPORT_ID) {
+                scanRouteAndGeneralStatCounters(set, lastHourCounter, is);
+            } else if (transport == Transport.HTTP_TRANSPORT_ID) {
+                scanHttpRouteAndGeneralStatCounters(set, lastHourCounter, is);
+            }
             scanErrors(set, is);
         }
     }
