@@ -68,8 +68,8 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
     int graphHiGrid;
     int graphHead;
     int headerHeight;
-    int wapListStart;
-    int wapGraphStart;
+    int httpListStart;
+    int httpGraphStart;
     int separatorWidth = 0; //igor
 
     int mouseX;
@@ -79,7 +79,7 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
     private static final int SORT_ASC = 2;
     int smeSortId = -1;
     int smeSortState;
-    Comparator wapComparator = null;
+    Comparator httpComparator = null;
 
     int split = -1;
     int shiftStep = 10;
@@ -116,8 +116,8 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
     public void setSnap(SvcSnap snap) {
         snapHttpHistory.addSnap(snap);
         this.snap = new SvcSnap(snap);
-        if (wapComparator != null)
-            this.snap.sortHttpSnaps(wapComparator);
+        if (httpComparator != null)
+            this.snap.sortHttpSnaps(httpComparator);
 
         repaint();
     }
@@ -140,10 +140,10 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
                 headerHeight = fm.getHeight() + pad + 3;
                 counterWidth = fm.stringWidth("0000");
                 smeNameWidth = fm.stringWidth("WWWWWWWWWWWWWWWW");
-                wapListStart = pad + separatorWidth + pad; //igor
-                wapGraphStart = wapListStart + pad + smeNameWidth + (counterWidth + pad) *
+                httpListStart = pad + separatorWidth + pad; //igor
+                httpGraphStart = httpListStart + pad + smeNameWidth + (counterWidth + pad) *
                         (HttpSnap.COUNTERS * 2) + pad + pad;
-                prefsz = new Dimension(wapGraphStart + 1 + maxSpeed * graphScale + pad,
+                prefsz = new Dimension(httpGraphStart + 1 + maxSpeed * graphScale + pad,
                         headerHeight + rowHeight * 6 + pad);
 
                 graphTextWidth = fmg.stringWidth("0000");
@@ -176,7 +176,7 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
         g.setColor(headColor);
         int hpos = pad + fm.getAscent();
 
-        x = wapListStart;
+        x = httpListStart;
         g.setColor(smeColor);
         g.drawString(localeText.getString("snh.httpname"), x + pad, hpos);
         x += smeNameWidth;
@@ -189,7 +189,7 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
             x += pad + counterWidth;
         }
         // draw graph scale
-        x = wapGraphStart + 1;
+        x = httpGraphStart + 1;
         g.setColor(graphColor);
         for (int i = graphHead; ; i += graphHead) {
             int pos = x + i * graphScale;
@@ -206,13 +206,13 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
         x = 0;
         //y = pad + fh + 3;
         y = pad + fh + 1;
-        x = wapListStart;
+        x = httpListStart;
         for (int i = 0; i < snap.httpCount; i++) {
             if ((i % 2) == 0) {
                 g.setColor(colorHiBackground);
                 g.fillRect(x + pad, y, size.width - x - 2 * pad, rowHeight);
             }
-            drawWapSnap(g, i, x, y, size, fm);
+            drawHttpSnap(g, i, x, y, size, fm);
             y += rowHeight;
         }
         g.setClip(0, size.height - split + separatorWidth, size.width, split - separatorWidth);
@@ -238,7 +238,7 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
         if (split > 0) g.drawLine(pad, hp, size.width - pad, hp);
     }
 
-    void drawWapSnap(Graphics g, int i, int x, int y, Dimension size, FontMetrics fm) {
+    void drawHttpSnap(Graphics g, int i, int x, int y, Dimension size, FontMetrics fm) {
         int hpos = y + fm.getAscent();
         HttpSnap ss = snap.httpSnaps[i];
         if (snapHttpHistory.getCurrentHttp() != null && snapHttpHistory.getCurrentHttp().equals(ss.httpId))
@@ -288,9 +288,9 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
 
     void drawSortState(Graphics g, FontMetrics fm) {
         if (smeSortId == 0) {
-            drawSortGradient(g, wapListStart, smeNameWidth, fm, smeSortState == SORT_ASC);
+            drawSortGradient(g, httpListStart, smeNameWidth, fm, smeSortState == SORT_ASC);
         } else if (smeSortId > 0) {
-            drawSortGradient(g, wapListStart + smeNameWidth + pad + (counterWidth + pad) * (smeSortId - 1), counterWidth, fm, smeSortState == SORT_ASC);
+            drawSortGradient(g, httpListStart + smeNameWidth + pad + (counterWidth + pad) * (smeSortId - 1), counterWidth, fm, smeSortState == SORT_ASC);
         }
     }
 
@@ -469,8 +469,8 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
         int x = e.getX();
         if (y < headerHeight) {
 
-            if (x > wapListStart && x < wapGraphStart) {
-                x -= wapListStart;
+            if (x > httpListStart && x < httpGraphStart) {
+                x -= httpListStart;
                 int sortid = -1;
                 if (x < smeNameWidth) {
                     sortid = 0;
@@ -480,20 +480,20 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
                 if (smeSortId == sortid) {
                     if (smeSortState == SORT_ASC) {
                         smeSortId = -1;
-                        wapComparator = null;
+                        httpComparator = null;
                     } else {
                         smeSortState = SORT_ASC;
-                        setWapComparator(sortid, true);
+                        setHttpComparator(sortid, true);
                     }
                 } else {
                     smeSortId = sortid;
                     smeSortState = SORT_DESC;
-                    setWapComparator(sortid, false);
+                    setHttpComparator(sortid, false);
                 }
             }
         } else if (y < size.height - split) {
             // lists area
-            if (x > wapListStart && x < wapListStart + smeNameWidth) {
+            if (x > httpListStart && x < httpListStart + smeNameWidth) {
                 // click on sme name
                 int idx = (y - headerHeight) / rowHeight;
                 if (idx < snap.httpCount) {
@@ -508,13 +508,13 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
         }
     }
 
-    void setWapComparator(int sortid, boolean asc) {
+    void setHttpComparator(int sortid, boolean asc) {
         if (sortid == 0)
-            wapComparator = new HttpIdComparator(asc);
+            httpComparator = new HttpIdComparator(asc);
         else if (((sortid - 1) % 2) == 0)
-            wapComparator = new HttpSpeedComparator(asc, (sortid - 1) / 2);
+            httpComparator = new HttpSpeedComparator(asc, (sortid - 1) / 2);
         else
-            wapComparator = new HttpAverageSpeedComparator(asc, (sortid - 1) / 2);
+            httpComparator = new HttpAverageSpeedComparator(asc, (sortid - 1) / 2);
     }
 
     public void mousePressed(MouseEvent e) {

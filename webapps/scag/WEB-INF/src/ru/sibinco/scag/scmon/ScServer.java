@@ -131,16 +131,4 @@ public class ScServer extends Thread {
         }
     }
 
-//    public static void main(String args[]) {
-//        Properties config = new Properties();
-//        try {
-//            config.load(new FileInputStream(args[0]));
-//            ScServer topServer = new ScServer(config);
-//            topServer.start();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
-
 }
-

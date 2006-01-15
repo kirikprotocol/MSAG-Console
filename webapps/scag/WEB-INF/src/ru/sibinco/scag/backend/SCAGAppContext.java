@@ -124,12 +124,13 @@ public class SCAGAppContext
     return new NSConnectionPool(props);
   }
 
-  public void destroy()
-  {
-    perfServer.shutdown();
-  }
+    public void destroy() {
+        perfServer.shutdown();
+        svcMonServer.shutdown();
+        scServer.shutdown();
+    }
 
-  public static synchronized SCAGAppContext getInstance(final String config_filename) throws Throwable, IOException, ParserConfigurationException,
+    public static synchronized SCAGAppContext getInstance(final String config_filename) throws Throwable, IOException, ParserConfigurationException,
                                                                                                Config.ParamNotFoundException, SAXException, SibincoException
   {
 
