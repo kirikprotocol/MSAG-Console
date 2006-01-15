@@ -59,7 +59,7 @@
     </sm-ep:properties>
     </c:when>
     <c:when test="${bean.transportId == 2}">
-        <sm-ep:properties title="WAP Service info">
+        <sm-ep:properties title="HTTP Service info">
         Place your content here
         </sm-ep:properties>
         </c:when>

@@ -15,7 +15,7 @@ import ru.sibinco.scag.backend.sme.ProviderManager;
 
 /**
  * The <code>Center</code> class represents of
- * <p>SMS centers, WAP and MMS gateway<p/>
+ * <p>SMS centers, HTTP and MMS gateway<p/>
  * Date: 15.07.2005
  * Time: 12:43:26
  *

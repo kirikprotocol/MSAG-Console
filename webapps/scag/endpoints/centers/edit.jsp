@@ -62,7 +62,7 @@
                 </sm-ep:properties>
             </c:when>
             <c:when test="${bean.transportId == 2}">
-                <sm-ep:properties title="WAP Service Center info">
+                <sm-ep:properties title="HTTP Service Center info">
                     <br>
                     Place your content here
                 </sm-ep:properties>

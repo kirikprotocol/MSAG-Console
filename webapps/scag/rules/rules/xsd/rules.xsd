@@ -103,7 +103,7 @@
     <simpleType name="Transport">
         <restriction base="string">
             <enumeration value="SMPP"/>
-            <enumeration value="WAP"/>
+            <enumeration value="HTTP"/>
             <enumeration value="MMS"/>
         </restriction>
     </simpleType>

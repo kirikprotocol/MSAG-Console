@@ -90,7 +90,7 @@ public class RuleManager
   {
     try {
       loadFromFolder("smpp");
-      loadFromFolder("wap");
+      loadFromFolder("http");
       loadFromFolder("mms");
     } catch (SibincoException e) {
       e.printStackTrace();
@@ -102,7 +102,8 @@ public class RuleManager
   public synchronized void loadFromFolder(String _transportDir) throws SibincoException
   {
      File folder=new File(rulesFolder,_transportDir);
-
+      if(!folder.exists())
+        folder.mkdirs();
       File[] dir=folder.listFiles();
       for (int i = 0; i < dir.length; i++) {
         File file = dir[i];

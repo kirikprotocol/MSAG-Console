@@ -26,7 +26,7 @@ public class Svc {
 
     public static final byte SMPP = 0;
     public static final byte SS7 = 1;
-    public static final byte WAP = 2;
+    public static final byte HTTP = 2;
     public static final byte MMS = 3;
 
     public static final byte MODE_TX = 1;
