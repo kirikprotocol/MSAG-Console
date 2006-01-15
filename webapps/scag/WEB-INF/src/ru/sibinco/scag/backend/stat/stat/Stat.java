@@ -5,6 +5,14 @@ import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.scag.beans.MessageException;
 import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.Constants;
+import ru.sibinco.scag.backend.stat.stat.CountersSet;
+import ru.sibinco.scag.backend.stat.stat.DateCountersSet;
+import ru.sibinco.scag.backend.stat.stat.HourCountersSet;
+import ru.sibinco.scag.backend.stat.stat.ExtendedCountersSet;
+import ru.sibinco.scag.backend.stat.stat.SmeIdCountersSet;
+import ru.sibinco.scag.backend.stat.stat.SmscIdCountersSet;
+import ru.sibinco.scag.backend.stat.stat.RouteIdCountersSet;
+import ru.sibinco.scag.backend.transport.Transport;
 
 
 import java.util.Date;
@@ -48,7 +56,7 @@ public class Stat {
     private SimpleDateFormat dateDayLocalFormat = new SimpleDateFormat(DATE_DAY_FORMAT);
 
     private String statstorePath;
-    private final static String PARAM_NAME_STAT_DIR = "MessageStorage.statisticsDir";
+    private final static String PARAM_NAME_STAT_DIR = "StatisticsManager.statisticsDir";
 
     private Date fromQueryDate = null;
     private Date tillQueryDate = null;
@@ -77,12 +85,14 @@ public class Stat {
         dateDayLocalFormat.setTimeZone(TimeZone.getDefault());
     }
 
-    private TreeMap getStatQueryDirs() throws MessageException {
-        File statPath = new File(statstorePath);
+    private TreeMap getStatQueryDirs(long transport) throws MessageException {
+
+        File statPath = new File(statstorePath, Transport.getTransportName((int) transport));
+
         if (statPath == null || !statPath.isAbsolute()) {
             File gwConfFile = SCAGAppContext.getScagConfFolder();
             String gwDirFile = gwConfFile.getParent();
-            statPath = new File(gwDirFile, statstorePath);
+            statPath = new File(gwDirFile, statstorePath + File.separatorChar + Transport.getTransportName((int) transport));
             logger.debug("Stat path: by gateway conf '" + statPath.getAbsolutePath() + "'");
         } else {
             logger.debug("Stat path: is absolute '" + statPath.getAbsolutePath() + "'");
@@ -123,7 +133,6 @@ public class Stat {
 
             File dirNameFile = new File(statPath, dirName);
             File[] dirFiles = dirNameFile.listFiles();
-            //logger.debug("Stat path: dir '" + dirNameFile.getAbsolutePath() + "'");
             if (dirFiles == null || dirFiles.length == 0) continue;
 
             for (int j = 0; j < dirFiles.length; j++) {
@@ -180,10 +189,9 @@ public class Stat {
         }
 
         Statistics stat = new Statistics();
-        TreeMap selectedFiles = getStatQueryDirs();
+        TreeMap selectedFiles = getStatQueryDirs(query.getTransport());
         if (selectedFiles == null || selectedFiles.size() <= 0) return stat;
 
-        //TreeMap statByHours = new TreeMap(); // to add lastHourCounter to it
         HashMap countersForSme = new HashMap(); // contains SmeIdCountersSet
         HashMap countersForRoute = new HashMap(); // contains RouteIdCountersSet
         HashMap countersForSmsc = new HashMap(); // contains SmscIdCountersSet
@@ -201,10 +209,11 @@ public class Stat {
             InputStream input = null;
             try {
                 input = new BufferedInputStream(new FileInputStream(path));
-                String fileStamp = readString(input, 9);
+                String fileStamp = readString(input, 9); // read head: 9 bytes
                 if (fileStamp == null || !fileStamp.equals("SCAG.STAT"))
                     throw new MessageException("unsupported header of file (support only SCAG.STAT file )");
-                readUInt16(input); // read version for support reasons
+                readUInt16(input); // read version for support reasons uint16
+
                 CountersSet lastHourCounter = new CountersSet();
 
                 Date lastDate = null;
@@ -217,7 +226,8 @@ public class Stat {
                 {
                     try {
                         recordNum++;
-                        int rs1 = (int) readUInt32(input);
+                        int rs1 = (int) readUInt32(input); // reading length uint32
+
                         if (buffer.length < rs1) buffer = new byte[rs1];
                         Functions.readBuffer(input, buffer, rs1);
                         int rs2 = (int) readUInt32(input);
@@ -238,8 +248,10 @@ public class Stat {
                                 continue;
                             }
 
-                            if (prevHour == -1) prevHour = hour;
-                            if (lastDate == null) lastDate = curDate;
+                            if (prevHour == -1)
+                                prevHour = hour;
+                            if (lastDate == null)
+                                lastDate = curDate;
 
                             if (hour != prevHour && haveValues) { // switch to new hour
                                 logger.debug("New hour: " + hour + ", dump stat for: " + dateDayFormat.format(lastDate) + " GMT");
@@ -279,14 +291,14 @@ public class Stat {
                     th.printStackTrace();
                 }
             }
-        } // for (Iterator iterator = selectedFiles.keySet().iterator(); iterator.hasNext();)
+        } // end "for (Iterator iterator = selectedFiles.keySet().iterator(); iterator.hasNext();)"
+
         logger.debug("End scanning statistics at: " + new Date() + " time spent: " +
                 (System.currentTimeMillis() - tm) / 1000);
 
         DateCountersSet dateCounters = null;
         Date lastDate = null;
-        for (Iterator it = statByHours.keySet().iterator(); it.hasNext();)
-        {
+        for (Iterator it = statByHours.keySet().iterator(); it.hasNext();) {
             Date hourDate = (Date) it.next();
             CountersSet hourCounter = (CountersSet) statByHours.get(hourDate);
             localCaledar.setTime(hourDate);
@@ -306,14 +318,18 @@ public class Stat {
             set.incrementFull(hourCounter);
             dateCounters.addHourStat(set);
         }
-        if (dateCounters != null) stat.addDateStat(dateCounters);
+        if (dateCounters != null)
+            stat.addDateStat(dateCounters);
 
         Collection countersSme = countersForSme.values();
-        if (countersSme != null) stat.addSmeIdCollection(countersSme);
+        if (countersSme != null)
+            stat.addSmeIdCollection(countersSme);
         Collection countersRoute = countersForRoute.values();
-        if (countersRoute != null) stat.addRouteIdCollection(countersRoute);
+        if (countersRoute != null)
+            stat.addRouteIdCollection(countersRoute);
         Collection countersSmsc = countersForSmsc.values();
-        if (countersSmsc != null) stat.addSmscIdCollection(countersSmsc);
+        if (countersSmsc != null)
+            stat.addSmscIdCollection(countersSmsc);
         return stat;
     }
 
@@ -400,7 +416,7 @@ public class Stat {
             int route_id_len = readUInt8(is);
             String routeId = readString(is, route_id_len);
 
-            int providerId = (int)readUInt32(is);
+            int providerId = (int) readUInt32(is);
 
             RouteIdCountersSet set = (RouteIdCountersSet) map.get(routeId);
             if (set == null) {
