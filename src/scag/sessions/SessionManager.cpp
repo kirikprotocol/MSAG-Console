@@ -131,7 +131,26 @@ void SessionManagerCallback(void * sm,Session * session)
 
 void SessionManagerImpl::AddRestoredSession(Session * session)
 {
+    CSessionKey sessionKey;
 
+    sessionKey = session->getSessionKey();
+    //TODO: проверить надо ли пересоздавать USR?
+    sessionKey.USR = getNewUSR(sessionKey.abonentAddr);
+    session->setOwner(this);
+
+    time_t time = session->getWakeUpTime();
+
+    CSessionAccessData * accessData = new CSessionAccessData();
+
+    accessData->bOpened = false;
+    accessData->nextWakeTime = time;
+    accessData->hasPending = session->hasPending();
+
+    CSessionSetIterator it;
+    std::pair<CSessionSetIterator, bool> pr;
+
+    pr = SessionExpirePool.insert(accessData);
+    SessionHash.Insert(sessionKey,pr.first);
 }
 
 SessionManagerImpl::~SessionManagerImpl() 
@@ -298,16 +317,19 @@ SessionPtr SessionManagerImpl::getSession(const CSessionKey& sessionKey)
 
     MutexGuard guard(inUseMonitor);
 
-    CSessionSetIterator it;
+    CSessionSetIterator * itPtr = SessionHash.GetPtr(sessionKey);
+    
 
-    if (!SessionHash.Exists(sessionKey)) return session; 
+    if (!itPtr) return session; 
 
-    it = SessionHash.Get(sessionKey);
+    CSessionSetIterator it = (*itPtr);
 
     while ((*it)->bOpened)
     {
         inUseMonitor.wait();
-        if (!SessionHash.Exists(sessionKey)) return session;
+        itPtr = SessionHash.GetPtr(sessionKey);
+        if (!itPtr) return session;
+        it = (*itPtr);
     }                                      
 
     (*it)->bOpened = true;
@@ -353,10 +375,10 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
     MutexGuard guard(inUseMonitor);
     if (session->isChanged()) store.updateSession(session);
     
-    CSessionSetIterator it;
+    CSessionSetIterator * itPtr = SessionHash.GetPtr(sessionKey);
 
-    if (!SessionHash.Exists(sessionKey)) throw SCAGException("SessionManager: Fatal error 0");
-    it = SessionHash.Get(sessionKey);
+    if (!itPtr) throw SCAGException("SessionManager: Fatal error 0");
+    CSessionSetIterator it = (*itPtr);
 
     if (!session->hasOperations()) 
     {
@@ -387,10 +409,11 @@ void SessionManagerImpl::closeSession(SessionPtr session)
     MutexGuard guard(inUseMonitor);
     store.deleteSession(sessionKey);
 
-    CSessionSetIterator it;
+    CSessionSetIterator * itPtr;
 
-    if (!SessionHash.Exists(sessionKey)) throw SCAGException("SessionManager: Fatal error 1");
-    it = SessionHash.Get(sessionKey);
+    itPtr = SessionHash.GetPtr(sessionKey);
+    if (!itPtr) throw SCAGException("SessionManager: Fatal error 1");
+    CSessionSetIterator it = (*itPtr);
 
     SessionExpirePool.erase(it);
     SessionHash.Delete(sessionKey);
@@ -405,11 +428,12 @@ void SessionManagerImpl::startTimer(CSessionKey key,time_t deadLine)
     MutexGuard guard(inUseMonitor);
 
 
-    if (!SessionHash.Exists(key)) throw SCAGException("SessionManager: Fatal error 2");
+    CSessionSetIterator * itPtr = SessionHash.GetPtr(key);
 
-    CSessionSetIterator it;
-    it = SessionHash.Get(key);
-/*
+    if (!itPtr) throw SCAGException("SessionManager: Fatal error 2");
+    CSessionSetIterator it = (*itPtr);
+
+    /*
     while (it->bOpened) 
     {
         inUseMonitor.wait();
@@ -423,17 +447,13 @@ void SessionManagerImpl::startTimer(CSessionKey key,time_t deadLine)
 
 int16_t SessionManagerImpl::getNewUSR(Address& address)
 {
-    //TODO: Develop expire mehanism
-
     int16_t result = 0;
-    if (UMRHash.Exists(address)) 
-    {
-        result = UMRHash.Get(address)++;
-        UMRHash[address] = result;
-        return result;
-    }
 
-    UMRHash.Insert(address,result);
+    int * resultPtr = UMRHash.GetPtr(address);
+
+    if (resultPtr) result = (*resultPtr)++; 
+    else UMRHash.Insert(address,result);
+
     return result;
 }
 
