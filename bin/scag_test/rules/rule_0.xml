@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scag:rule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://www.sibinco.com/SCAG smpp_rules.xsd"
+            xmlns:scag="http://www.sibinco.com/SCAG"
+            xmlns:bill="http://www.sibinco.com/SCAG/CDRBILL"
+            xmlns:session="http://www.sibinco.com/SCAG/SESSIONS"
+            xmlns:operation="http://www.sibinco.com/SCAG/OPERATIONS"
+            transport="SMPP">
+		
+    <deliver_sm>
+	<if test="#OA" op="eq" value="10">
+	    <if test="#DA" op="eq" value="11"> 
+	        <return result="0" />
+	    </if>
+	</if>
+    </deliver_sm>
+    
+    <deliver_sm_resp>
+	<return result="1" />
+    </deliver_sm_resp>
+
+
+    <submit_sm>
+	<return result="1" />
+    </submit_sm>
+	
+
+    <submit_sm_resp>
+	<return result="1" />
+    </submit_sm_resp>
+															    								      
+</scag:rule>
