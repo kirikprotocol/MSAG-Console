@@ -215,7 +215,7 @@ refreshProgressStatus();
         break;
     case 1:
         page_menu_begin(out);
-        page_menu_button(session, out, "mbCancel", "common.buttons.cancel",    "infosme.hint.cancel_task_add", "clickCancel()");
+        //page_menu_button(session, out, "mbCancel", "common.buttons.cancel",    "infosme.hint.cancel_task_add", "clickCancel()");
         page_menu_button(session, out, "mbNext",   "infosme.button.next_page", "infosme.hint.next_page", false);
         page_menu_space(out);
         page_menu_end(out);

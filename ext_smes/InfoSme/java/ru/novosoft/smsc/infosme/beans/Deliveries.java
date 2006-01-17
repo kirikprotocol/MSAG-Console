@@ -76,7 +76,7 @@ public class Deliveries extends InfoSmeBean
     {
         switch (stage)
         {
-            case 0: stage++; return RESULT_OK;
+            case 0: initCleanup(); stage++; return RESULT_OK;
             case 1: return RESULT_OK;
             case 2: return processFile();
             case 3: return processTask();
@@ -84,6 +84,19 @@ public class Deliveries extends InfoSmeBean
         }
         stage = 0;
         return RESULT_DONE;
+    }
+
+    private void initCleanup()
+    {
+      stage = 0;
+
+      if (incomingFile != null && incomingFile.isFile() &&
+          incomingFile.exists()) incomingFile.delete();
+      incomingFile = null;
+
+      transliterate = false;
+      taskTableName = null;
+      task = new Task();
     }
 
     private int cleanup()
