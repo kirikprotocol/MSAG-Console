@@ -312,7 +312,7 @@ void StatisticsManager::registerEvent(const HttpStatEvent& se)
     #define INC_STAT(cnt,field) case cnt:{\
           if(providerSt)providerSt->field++; \
           if(routeSt)routeSt->field++; \
-          if(srvSt)routeSt->field++; \
+          if(srvSt)srvSt->field++; \
           }break;
     
         INC_STAT(httpRequest,request)
@@ -704,7 +704,7 @@ void StatisticsManager::flushHttpCounters(int index)
 
         // Route statistic
         int32_t value32 = 0;
-        value32 = httpStatByRouteId[index].GetCount(); 
+        value32 = httpStatByRouteId[index].GetCount();
         value32 = htonl(value32); buff.Append((uint8_t *)&value32, sizeof(value32));
 
         httpStatByRouteId[index].First();
