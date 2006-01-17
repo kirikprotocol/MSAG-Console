@@ -28,8 +28,6 @@ int Registrator::Execute()
 {
     using namespace Counters;
 
-    printf("Registrator is started\n");
-
     int counter = 0;
     int httpCounter = 0;
     int providerId = 1;
@@ -133,7 +131,8 @@ int Sender::Execute()
     
 
 
-    for(;;)
+    //for(;;)
+    while(!isStopping)
     {
       
       while(now.tv_sec==time(NULL))ev.Wait(10);
@@ -274,7 +273,9 @@ int Sender::Execute()
     }
 
     //Statistics is made
+    printf("Registrator stoping...\n");
     registrator.Stop();
+    printf("Registrator stoped\n");
     return 1;
 }
 

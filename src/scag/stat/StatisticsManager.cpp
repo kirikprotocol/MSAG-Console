@@ -764,6 +764,10 @@ void StatisticsManager::flushHttpCounters(int index)
             uint8_t srvIdLen = (uint8_t)strlen(srvId);
             buff.Append((uint8_t *)&srvIdLen, sizeof(srvIdLen));
             buff.Append((uint8_t *)srvId, srvIdLen);
+            smsc_log_info(logger, "providerId: %d", srvStat->providerId);
+            smsc_log_info(logger, "request: %d", srvStat->request);
+            smsc_log_info(logger, "requestRejected: %d", srvStat->requestRejected);
+            smsc_log_info(logger, "response: %d", srvStat->response);
             // Writes sme statistics for this smeId
             value32 = htonl(srvStat->providerId);         buff.Append((uint8_t *)&value32, sizeof(value32));
             value32 = htonl(srvStat->request);            buff.Append((uint8_t *)&value32, sizeof(value32));
