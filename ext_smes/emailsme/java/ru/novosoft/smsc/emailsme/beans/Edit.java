@@ -109,6 +109,7 @@ public class Edit extends SmeBean
         statement.setString(3, forward);
         statement.setString(4, addr);
         int updatedRows = statement.executeUpdate();
+        connection.commit();
         logger.debug("Updated " + updatedRows + " rows");
       }
     } catch (SQLException e) {
