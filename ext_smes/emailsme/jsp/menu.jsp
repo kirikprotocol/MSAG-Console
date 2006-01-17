@@ -16,7 +16,7 @@
   if (ServiceIDForShowStatus != null && ServiceIDForShowStatus.length() > 0)
   {
 		%><script>
-			function refreshWSmeStartStopButtonsStatus()
+			function refreshEmailSmeStartStopButtonsStatus()
 			{
               var status = document.getElementById('RUNNING_STATUSERVICE_<%=ServiceIDForShowStatus%>').innerText;
               document.getElementById('mbStart').disabled = (status == "<%= getLocString("common.statuses.online1") %>" ||
@@ -25,9 +25,9 @@
                                                status == "<%= getLocString("common.statuses.unknown" )%>" );
               document.getElementById('mbStop').disabled  = (status == "<%= getLocString("common.statuses.offline") %>" ||
                                                status == "<%= getLocString("common.statuses.unknown") %>" );
-    		  window.setTimeout(refreshWSmeStartStopButtonsStatus, 500);
+    		  window.setTimeout(refreshEmailSmeStartStopButtonsStatus, 500);
 			}
-			refreshWSmeStartStopButtonsStatus();
+			refreshEmailSmeStartStopButtonsStatus();
 		</script><%
   }
 %>
