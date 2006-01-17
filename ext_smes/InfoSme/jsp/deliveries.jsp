@@ -35,7 +35,9 @@
         errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction,
                                                SMSCJspException.ERROR_CLASS_ERROR));
     }
-
+    if (request.isUserInRole(InfoSmeBean.INFOSME_ADMIN_ROLE)) {%>
+      <%@ include file="inc/menu_switch.jsp"%><%
+    }
 System.out.println("Stage="+bean.getStage()+", multi="+(multi == null ? "null":multi.toString()));
 if (bean.getStage() == 1 && multi != null) {
     int result = bean.receiveFile((MultipartServletRequest)request.getAttribute("multipart.request"));
@@ -52,6 +54,9 @@ else {
 }
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
+<%if (request.isUserInRole(InfoSmeBean.INFOSME_ADMIN_ROLE)) {%>
+<%@ include file="inc/header.jsp"%>
+<%}%>
 <%@ include file="/WEB-INF/inc/calendar.jsp"%>
 <%@ include file="/WEB-INF/inc/time.jsp"%>
 <%if (bean.getStage() == 3 && isBrowserMSIE(request) ) {%>
