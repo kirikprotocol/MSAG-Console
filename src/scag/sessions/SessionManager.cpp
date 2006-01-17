@@ -86,6 +86,7 @@ namespace scag { namespace sessions
         bool isStarted();
         int  processExpire();
         int16_t getNewUSR(Address& address);
+        int16_t getLastUSR(Address& address);
 
     public:
         void AddRestoredSession(Session * session);
@@ -134,8 +135,20 @@ void SessionManagerImpl::AddRestoredSession(Session * session)
     CSessionKey sessionKey;
 
     sessionKey = session->getSessionKey();
-    //TODO: проверить надо ли пересоздавать USR?
-    sessionKey.USR = getNewUSR(sessionKey.abonentAddr);
+
+    int16_t lastUSR = getLastUSR(sessionKey.abonentAddr);
+    lastUSR++;
+
+    int16_t maxUSR;
+
+    if (sessionKey.USR > lastUSR) maxUSR = sessionKey.USR;
+    else maxUSR = lastUSR;
+
+    sessionKey.USR = lastUSR;
+    UMRHash.Insert(sessionKey.abonentAddr,maxUSR);
+
+    session->setSessionKey(sessionKey);
+    
     session->setOwner(this);
 
     time_t time = session->getWakeUpTime();
@@ -348,6 +361,7 @@ SessionPtr SessionManagerImpl::newSession(CSessionKey& sessionKey)
 
     session = store.newSession(sessionKey);
     session->setOwner(this);
+    session->setSessionKey(sessionKey);
 
     time_t time = session->getWakeUpTime();
 
@@ -445,13 +459,22 @@ void SessionManagerImpl::startTimer(CSessionKey key,time_t deadLine)
 }
 
 
-int16_t SessionManagerImpl::getNewUSR(Address& address)
+int16_t SessionManagerImpl::getLastUSR(Address& address)
 {
     int16_t result = 0;
 
     int * resultPtr = UMRHash.GetPtr(address);
+    if (resultPtr) result = (*resultPtr); 
+    return result;
+}
 
-    if (resultPtr) result = (*resultPtr)++; 
+int16_t SessionManagerImpl::getNewUSR(Address& address)
+{
+    int16_t result = 1;
+
+    int * resultPtr = UMRHash.GetPtr(address);
+
+    if (resultPtr) result = ++(*resultPtr); 
     else UMRHash.Insert(address,result);
 
     return result;

@@ -173,6 +173,9 @@ namespace scag { namespace sessions
         virtual ~Session();
         
         CSessionKey getSessionKey() const  { return m_SessionKey; }
+        void setSessionKey(CSessionKey& key) { m_SessionKey = key; }
+
+
         inline time_t getLastAccessTime() const { return lastAccessTime; }
         inline bool isChanged() const { return bChanged; }
         
