@@ -89,7 +89,7 @@
                         <th width="15%" style="text-align:right">Reciept OK/Failed</th>
                     </tr>
                     <tr class=row0>
-                        <th width="20%" style="text-align:right">Total SMS processed:</th>
+                        <th width="20%" style="text-align:right">Total HTTP processed:</th>
                         <th width="7%" style="text-align:right">${total.request}</th>
                         <th width="7%" style="text-align:right">${total.requestRejected}</th>
                         <th width="7%" style="text-align:right">${total.response}</th>
