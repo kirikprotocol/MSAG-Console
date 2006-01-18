@@ -22,7 +22,7 @@ int PerfSocketServer::Execute()
     smsc::core::network::Multiplexer::SockArray ready, err;
     printf("Execute is starting...\n");
 
-    if(!isStopping) return 1;
+    if(isStopping) return 1;
 
     if( genSocket.StartServer())
         smsc_log_warn(logger, "General statistics socket can't start");
