@@ -19,21 +19,19 @@ import java.util.List;
  *
  * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
  */
-public class Index  extends TabledBeanImpl implements TabledBean
-{
-  protected Collection getDataSource()
-  {
-    return appContext.getCategoryManager().getCategories().values();
-  }
+public class Index extends TabledBeanImpl implements TabledBean {
 
-  protected void delete() throws SCAGJspException
-  {
-    final List toRemove = new ArrayList(checked.length);
-    for (int i = 0; i < checked.length; i++) {
-      final String categoryIdStr = checked[i];
-      final Long categoryId = Long.decode(categoryIdStr);
-      toRemove.add(categoryId);
+    protected Collection getDataSource() {
+        return appContext.getCategoryManager().getCategories().values();
     }
-    appContext.getCategoryManager().getCategories().keySet().removeAll(toRemove);
-  }
+
+    protected void delete() throws SCAGJspException {
+        final List toRemove = new ArrayList(checked.length);
+        for (int i = 0; i < checked.length; i++) {
+            final String categoryIdStr = checked[i];
+            final Long categoryId = Long.decode(categoryIdStr);
+            toRemove.add(categoryId);
+        }
+        appContext.getCategoryManager().getCategories().keySet().removeAll(toRemove);
+    }
 }
