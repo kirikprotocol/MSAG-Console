@@ -473,7 +473,7 @@ public:
   }
 
   enum{
-    chargeOnSubmit,chargeOnDelivery
+    chargeOnSubmit,chargeOnDelivery,chargeAlways
   };
 
   int p2pChargePolicy;
@@ -489,12 +489,24 @@ public:
     inManCom->ChargeSms(id,sms,ctx);
   }
 
-  void ReportDelivery(int dlgId,const SMS& sms,bool final,int policy)
+  bool ReportDelivery(int dlgId,const SMS& sms,bool final,int policy)
   {
-    if(sms.billingRecord && sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==policy)
+    try{
+      if(sms.billingRecord &&
+          (
+            sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==policy ||
+            policy==chargeAlways
+          )
+        )
+      {
+        inManCom->Report(dlgId,sms,final);
+      }
+    }catch(std::exception& e)
     {
-      inManCom->Report(dlgId,sms,final);
+      smsc_log_warn(smsc::logger::Logger::getInstance("inmancom"),"ReportDelivery failed:%s",e.what());
+      return false;
     }
+    return true;
   }
 
   bool isHs(){ return ishs;}
