@@ -90,14 +90,6 @@ namespace scag { namespace sessions
         static uint32_t CalcHash(const COperationKey& key) { return XAddrHashFunc::CalcHash(key.destAddress);}
     };       */
 
-
-    class SessionOwner
-    {
-    public:
-        virtual void startTimer(CSessionKey key,time_t deadLine) = 0;
-    };
-
-
     class PendingOperation
     {
     public:
@@ -108,7 +100,6 @@ namespace scag { namespace sessions
     class Operation
     {
         friend class Session;
- //       friend class Comparator;
 
         Logger * logger;
         Operation(const Operation& operation);
@@ -131,14 +122,17 @@ namespace scag { namespace sessions
 
     typedef IntHash<Operation*> COperationsHash;
 
+    class SessionManagerImpl;
 
     class Session : public PropertyManager
     {
+        friend class SessionManagerImpl;
 
         Logger * logger;
         std::list<PendingOperation> PendingOperationList;
+        std::list<PendingOperation> PrePendingOperationList;
+
         COperationsHash OperationsHash;
-        SessionOwner * Owner;
         Operation * m_pCurrentOperation;
         int currentOperationId;
         int lastOperationId;
@@ -159,6 +153,8 @@ namespace scag { namespace sessions
         void closeCurrentOperation();
         int getNewOperationId();
         void AddNewOperationToHash(SCAGCommand& cmd, int type);
+        void DoAddPendingOperation(PendingOperation& pendingOperation);
+
 
         void SerializeProperty(SessionBuffer& buff);
         void SerializeOperations(SessionBuffer& buff);
@@ -182,7 +178,6 @@ namespace scag { namespace sessions
         virtual void changed(AdapterProperty& property);
         virtual Property* getProperty(const std::string& name);
 
-        void setOwner(SessionOwner * _Owner) { Owner = _Owner;}
         bool hasOperations();
         bool hasPending();
         bool startOperation(SCAGCommand& cmd);
@@ -298,10 +293,3 @@ namespace scag { namespace sessions
   
 #endif // SCAG_SESSIONS_SESSION
 
-/*
-SessionGuard sg = store.GetSession(key);
-Session* s = sg.getSession();
-if (!s) {
-
-}
-*/

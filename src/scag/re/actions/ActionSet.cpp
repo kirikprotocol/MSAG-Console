@@ -10,7 +10,7 @@ ActionSet::ActionSet()
         
 ActionSet::~ActionSet()
 {
-    smsc_log_debug(logger,"Action 'set' released");
+    //smsc_log_debug(logger,"Action 'set' released");
 }
 
 void ActionSet::init(const SectionParams& params,PropertyObject propertyObject)

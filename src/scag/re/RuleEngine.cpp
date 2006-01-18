@@ -424,6 +424,8 @@ RuleEngineImpl::~RuleEngineImpl()
 {
     XMLPlatformUtils::Terminate();
     if (rules) rules->unref();
+
+    smsc_log_debug(logger,"Rule Engine released");
 }
 
 

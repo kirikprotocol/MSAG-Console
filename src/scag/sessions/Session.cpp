@@ -106,7 +106,6 @@ void Session::DeserializePendingOperations(SessionBuffer& buff)
 }
 
 
-
 void Session::SerializeProperty(SessionBuffer& buff)
 {
     char * key;
@@ -242,7 +241,7 @@ Property* Session::getProperty(const std::string& name)
 
 Session::Session(const CSessionKey& key) 
     : PropertyManager(), lastAccessTime(-1), 
-        bChanged(false), bDestroy(false), accessCount(0), Owner(0),m_pCurrentOperation(0),
+        bChanged(false), bDestroy(false), accessCount(0), m_pCurrentOperation(0),
         logger(0), lastOperationId(0), m_isTransact(false)
 {
     logger = Logger::getInstance("scag.re");
@@ -268,8 +267,6 @@ Session::~Session()
 
 void Session::ClearOperations()
 {
-    if (!Owner) return;
-
     int key;
     Operation * value;
 
@@ -282,6 +279,7 @@ void Session::ClearOperations()
 
     OperationsHash.Empty();
     PendingOperationList.clear();
+    PrePendingOperationList.clear();
 
     m_pCurrentOperation = 0;
     lastOperationId = 0;
@@ -290,8 +288,6 @@ void Session::ClearOperations()
 void Session::abort()
 {
     ClearOperations();
-    Owner->startTimer(m_SessionKey,0);
-
     smsc_log_error(logger,"Session: session aborted");
 }
 
@@ -328,6 +324,7 @@ void Session::closeCurrentOperation()
     smsc_log_debug(logger,"Session: close current operation");
 }
 
+
 void Session::endOperation(RuleStatus& ruleStatus)
 {
     if (!m_pCurrentOperation) throw SCAGException("Session: Fatal error - cannot end operation. Couse: current operation not found");
@@ -358,7 +355,7 @@ void Session::endOperation(RuleStatus& ruleStatus)
             pendingOperation.type = CO_RECEIPT_DELIVER_SM;
             pendingOperation.validityTime = SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
 
-            PendingOperationList.push_back(pendingOperation);
+            PrePendingOperationList.push_back(pendingOperation);
         }
         break;
 
@@ -394,9 +391,6 @@ void Session::AddNewOperationToHash(SCAGCommand& cmd, int type)
 
 bool Session::startOperation(SCAGCommand& cmd)
 {
-
-    if (!Owner) return false;
-
     Operation * operation = 0;
 
     try
@@ -511,13 +505,16 @@ bool Session::startOperation(SCAGCommand& cmd)
     }
     smsc_log_error(logger,"** Session: operation started");
    
-    //Owner->startTimer(this->getSessionKey(), this->getWakeUpTime());
     return true;
 }
 
 void Session::addPendingOperation(PendingOperation pendingOperation)
 {
+    PrePendingOperationList.push_back(pendingOperation);
+}
 
+void Session::DoAddPendingOperation(PendingOperation& pendingOperation)
+{
     std::list<PendingOperation>::iterator it;
 
     for (it = PendingOperationList.begin(); it!=PendingOperationList.end(); ++it)
@@ -525,7 +522,6 @@ void Session::addPendingOperation(PendingOperation pendingOperation)
         if (it->validityTime > pendingOperation.validityTime) 
         {
             PendingOperationList.insert(it,pendingOperation);
-            Owner->startTimer(this->getSessionKey(), this->getWakeUpTime());
             return;
         }
     }

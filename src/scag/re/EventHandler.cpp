@@ -8,7 +8,7 @@ using namespace scag::util::properties;
 
 EventHandler::~EventHandler()
 {
-    smsc_log_debug(logger, "EventHandler: start destructor");
+    //smsc_log_debug(logger, "EventHandler: start destructor");
     int key;
     Action * value;
 
@@ -18,7 +18,7 @@ EventHandler::~EventHandler()
     {
         delete (*it);
     }
-    smsc_log_debug(logger, "EventHandler released");
+    //smsc_log_debug(logger, "EventHandler released");
 }
 
 

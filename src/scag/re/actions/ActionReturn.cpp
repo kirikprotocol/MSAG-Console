@@ -7,7 +7,7 @@ namespace scag { namespace re { namespace actions {
 
 ActionReturn::~ActionReturn()
 {
-    smsc_log_debug(logger,"Action 'return' released");
+    //smsc_log_debug(logger,"Action 'return' released");
 }
 
 void ActionReturn::init(const SectionParams& params,PropertyObject propertyObject)

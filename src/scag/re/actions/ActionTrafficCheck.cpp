@@ -119,7 +119,7 @@ ActionTrafficCheck::~ActionTrafficCheck()
         delete (*it);
     }
 
-    smsc_log_debug(logger, "'TrafficCheck' action released");
+    //smsc_log_debug(logger, "'TrafficCheck' action released");
 }
 
 

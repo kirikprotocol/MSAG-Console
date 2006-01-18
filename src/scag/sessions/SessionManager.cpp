@@ -33,7 +33,7 @@ namespace scag { namespace sessions
     using smsc::logger::Logger;
 
 
-    class SessionManagerImpl : public SessionManager, public Thread, public SessionOwner 
+    class SessionManagerImpl : public SessionManager, public Thread
     {
         struct CSessionAccessData
         {
@@ -104,7 +104,6 @@ namespace scag { namespace sessions
         virtual int Execute();
         virtual void Start();
 
-        virtual void startTimer(CSessionKey key,time_t deadLine);
         virtual SessionPtr newSession(CSessionKey& sessionKey);
 
     };
@@ -149,8 +148,6 @@ void SessionManagerImpl::AddRestoredSession(Session * session)
 
     session->setSessionKey(sessionKey);
     
-    session->setOwner(this);
-
     time_t time = session->getWakeUpTime();
 
     CSessionAccessData * accessData = new CSessionAccessData();
@@ -177,14 +174,17 @@ SessionManagerImpl::~SessionManagerImpl()
         delete (*it);
     }
 
-/*    CSessionKey key;
+    CSessionKey key;
     CSessionSetIterator * value;
     
     SessionHash.First();
     for (CSessionHash::Iterator it = SessionHash.getIterator(); it.Next(key, value);)
     {
-        store.deleteSession(key);
-    }     */
+        SessionPtr session = store.getSession(key);
+        session->abort();
+    }     
+
+    smsc_log_debug(logger,"SessionManager released");
 }
 
 
@@ -330,6 +330,8 @@ SessionPtr SessionManagerImpl::getSession(const CSessionKey& sessionKey)
 
     MutexGuard guard(inUseMonitor);
 
+    smsc_log_debug(logger,"SessionManager: get session");
+
     CSessionSetIterator * itPtr = SessionHash.GetPtr(sessionKey);
     
 
@@ -360,7 +362,6 @@ SessionPtr SessionManagerImpl::newSession(CSessionKey& sessionKey)
     sessionKey.USR = getNewUSR(sessionKey.abonentAddr);
 
     session = store.newSession(sessionKey);
-    session->setOwner(this);
     session->setSessionKey(sessionKey);
 
     time_t time = session->getWakeUpTime();
@@ -399,15 +400,25 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
         SessionHash.Delete(sessionKey);
         SessionExpirePool.erase(it);
         delete (*it);
-
+        
         store.deleteSession(sessionKey);
-    }
-    else
-    {
-        (*it)->bOpened = false;
-        (*it)->hasPending = session->hasPending();
+        return;
     }
 
+    (*it)->bOpened = false;
+    (*it)->hasPending = session->hasPending();
+
+    std::list<PendingOperation>::iterator itPending;
+
+    if (session->PrePendingOperationList.size() > 0) 
+    {
+        for (itPending = session->PrePendingOperationList.begin(); itPending!=session->PrePendingOperationList.end(); ++itPending)
+        {
+            session->DoAddPendingOperation(*itPending);
+        }
+        (*it)->nextWakeTime = session->getWakeUpTime();
+        session->PrePendingOperationList.clear();
+    }
 
 
     inUseMonitor.notifyAll();
@@ -437,6 +448,7 @@ void SessionManagerImpl::closeSession(SessionPtr session)
     inUseMonitor.notifyAll();
 }
 
+/*
 void SessionManagerImpl::startTimer(CSessionKey key,time_t deadLine)
 {
     MutexGuard guard(inUseMonitor);
@@ -447,17 +459,10 @@ void SessionManagerImpl::startTimer(CSessionKey key,time_t deadLine)
     if (!itPtr) throw SCAGException("SessionManager: Fatal error 2");
     CSessionSetIterator it = (*itPtr);
 
-    /*
-    while (it->bOpened) 
-    {
-        inUseMonitor.wait();
-        if (!SessionHash.Exists(key)) return;
-        it = SessionHash.Get(key);
-    }
-*/
+  
     (*it)->nextWakeTime = deadLine;
 }
-
+  */
 
 int16_t SessionManagerImpl::getLastUSR(Address& address)
 {

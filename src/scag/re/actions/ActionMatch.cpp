@@ -115,7 +115,7 @@ ActionMatch::ActionMatch() : re(0)
 ActionMatch::~ActionMatch() 
 {
     if (re) delete re;
-    smsc_log_debug(logger, "'match' action released");
+    //smsc_log_debug(logger, "'match' action released");
 }
 
 

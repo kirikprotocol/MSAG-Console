@@ -82,7 +82,7 @@ ActionIf::~ActionIf()
         delete (*it);
     }
 
-    smsc_log_debug(logger, "'if' action released");
+//    smsc_log_debug(logger, "'if' action released");
 }
 
 

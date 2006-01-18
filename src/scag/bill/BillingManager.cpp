@@ -20,6 +20,9 @@
 
 #include "scag/re/actions/ActionFactory.h"
 
+#include <iostream>
+
+
 namespace scag { namespace bill
 {
     using namespace scag::exceptions;
@@ -64,7 +67,7 @@ Mutex                 BillingManagerImpl::loadupLock;
 static bool  bBillingManagerInited = false;
 static Mutex initBillingManagerLock;
 
-inline unsigned GetLongevity(BillingManager*) { return 7; } 
+inline unsigned GetLongevity(BillingManager*) { return 3; } 
 typedef SingletonHolder<BillingManagerImpl> SingleBM;
 
 void BillingManager::Init(BillingManagerConfig& config)
@@ -132,20 +135,18 @@ BillingManagerImpl::~BillingManagerImpl()
 
    //TODO : chick if we must free billingmachines
 
-
-
-
-   if (!handles.Count()) return;
-
-   smsc_log_info(logger, "Unloading BillingMachines ...");
-   while (handles.Count())
+   if (handles.Count()) 
    {
-       void* handle=0L;
-       (void) handles.Pop(handle);
-       if (handle) dlclose(handle);
+       smsc_log_info(logger, "Unloading BillingMachines ...");
+       while (handles.Count())
+       {
+           void* handle=0L;
+           (void) handles.Pop(handle);
+           if (handle) dlclose(handle);
+       }
+       smsc_log_info(logger, "BillingMachines unloaded");
    }
-   smsc_log_info(logger, "BillingMachines unloaded");
-
+   smsc_log_info(logger, "BillingManager released");
 }
 
 

@@ -1,5 +1,4 @@
 #include "SessionStore.h"
-#include <iostream>
 
 namespace scag { namespace sessions 
 {
@@ -25,7 +24,6 @@ namespace scag { namespace sessions
     
     void SessionStore::deleteSession(const CSessionKey& sessionKey)
     {
-        //if (currSession) delete currSession;
     }
     
     void SessionStore::updateSession(SessionPtr session)

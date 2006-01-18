@@ -164,11 +164,43 @@ public:
 
     }
 
-    static int16_t getUMR(const SCAGCommand& cmd)  
+    static int16_t getUMR(const SCAGCommand& command)  
     {
 //        Tag::SMPP_SAR_MSG_REF_NUM
-        
-        return 0;
+
+        SCAGCommand& _command = const_cast<SCAGCommand&>(command);
+
+        SmppCommand * smppCommand = dynamic_cast<SmppCommand *>(&_command);
+        if (!smppCommand) throw SCAGException("Command Bridge Error: SCAGCommand is not smpp-type");
+
+
+        _SmppCommand& cmd = *smppCommand->operator ->();
+
+        CommandId cmdid = cmd.get_commandId();
+        void * dta = cmd.dta;
+        SMS * sms = 0;
+
+        if (!dta) throw SCAGException("Command Bridge Error: SCAGCommand data is invalid");
+
+        switch (cmdid) 
+        {
+        case DELIVERY:
+            sms = (SMS*)dta;
+            break;
+        case SUBMIT:
+            sms = (SMS*)dta;
+            break;
+        case DELIVERY_RESP:
+            sms = ((SmsResp*)dta)->get_sms();
+            break;
+        case SUBMIT_RESP:
+            sms = ((SmsResp*)dta)->get_sms();
+            break;
+        default:
+            throw SCAGException("Command Bridge Error: Unknown cmdid for SCAGCommand");
+        }
+
+        return sms->getIntProperty(Tag::SMPP_SAR_MSG_REF_NUM);
     }
 };
 
