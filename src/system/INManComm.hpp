@@ -156,6 +156,7 @@ protected:
   smsc::smeman::SmeRegistrar* smeReg;
 
   struct ReqData;
+  friend struct ReqData;
   typedef std::map<int,ReqData*> ReqDataMap;
   typedef std::multimap<time_t,ReqDataMap::iterator> TimeMap;
   struct ReqData{
