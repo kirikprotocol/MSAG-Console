@@ -262,7 +262,7 @@ public:
       if(maxSpeed>0)
       {
         writeTime=smsc::util::getmillis()-writeTime;
-        if(writeTime<1000)smsc::util::millisleep(1000-writeTime);
+        if(writeTime<1000)smsc::util::millisleep((unsigned)(1000-writeTime));
       }
     }while(written<fileSize);
     close(fd);
@@ -340,7 +340,7 @@ public:
   {
     Close();
     filename=fn;
-    fd=open(fn,O_WRONLY|O_APPEND|O_LARGEFILE,0644);
+    fd=open(fn,O_CREAT|O_WRONLY|O_APPEND|O_LARGEFILE,0644);
     if(fd==-1)throw FileException(FileException::errOpenFailed,fn);
   }
 
@@ -892,6 +892,14 @@ protected:
     buffer=newbuf;
     bufferSize=newsz;
   }
+};
+
+class FileFlushGuard{
+public:
+  FileFlushGuard(File& argFile):file(argFile){}
+  ~FileFlushGuard(){file.Flush();}
+protected:
+  File& file;
 };
 
 } //namespace buffers
