@@ -5,6 +5,8 @@
     Javascript engine based
 */
 
+//#define NEXTVERSION
+
 #include <core/threads/Thread.hpp>
 #include <scag/re/RuleEngine.h>
 #include <logger/Logger.h>
@@ -31,9 +33,11 @@
 
 using scag::re::RuleEngine;
 using scag::re::RuleStatus;
+
 using scag::sessions::SessionManager;
 using scag::sessions::SessionManagerConfig;
 using scag::sessions::CSessionKey;
+
 using scag::transport::smpp::SmppCommand;
 
 using namespace scag::transport::smpp;
@@ -388,6 +392,9 @@ static JSBool _deleterule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 */
 static JSBool _rulerun(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
+
+#ifdef NEXTVERSION
+
  CSessionKey key;
 
 if(argc<8)
@@ -516,6 +523,9 @@ if(argc<8)
 	      return JS_TRUE;
       }
 	*rval=BOOLEAN_TO_JSVAL(true); 
+
+
+#endif
 
   return JS_TRUE;
 

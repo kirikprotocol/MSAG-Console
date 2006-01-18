@@ -1,0 +1,74 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: fdlibm - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\GREEN~1.OFF\LOCALS~1\Temp\RSPED3.tmp" with contents
+[
+/nologo /MDd /W3 /GX /Z7 /Od /D "_DEBUG" /D "WIN32" /D _X86_=1 /D "_WINDOWS" /D "_IEEE_LIBM" /Fp"..\Debug/fdlibm.pch" /YX /Fo"..\Debug/" /Fd"..\Debug/" /FD /c 
+"D:\users\green\projects\js\src\fdlibm\w_atan2.c"
+"D:\users\green\projects\js\src\fdlibm\s_copysign.c"
+"D:\users\green\projects\js\src\fdlibm\w_pow.c"
+"D:\users\green\projects\js\src\fdlibm\e_pow.c"
+"D:\users\green\projects\js\src\fdlibm\k_standard.c"
+"D:\users\green\projects\js\src\fdlibm\e_atan2.c"
+"D:\users\green\projects\js\src\fdlibm\s_isnan.c"
+"D:\users\green\projects\js\src\fdlibm\s_fabs.c"
+"D:\users\green\projects\js\src\fdlibm\w_sqrt.c"
+"D:\users\green\projects\js\src\fdlibm\s_scalbn.c"
+"D:\users\green\projects\js\src\fdlibm\e_sqrt.c"
+"D:\users\green\projects\js\src\fdlibm\s_rint.c"
+"D:\users\green\projects\js\src\fdlibm\s_atan.c"
+"D:\users\green\projects\js\src\fdlibm\s_finite.c"
+"D:\users\green\projects\js\src\fdlibm\s_matherr.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\GREEN~1.OFF\LOCALS~1\Temp\RSPED3.tmp" 
+Creating temporary file "C:\DOCUME~1\GREEN~1.OFF\LOCALS~1\Temp\RSPED4.tmp" with contents
+[
+/nologo /out:"..\Debug\fdlibm.lib" 
+\users\green\projects\js\src\Debug\w_atan2.obj
+\users\green\projects\js\src\Debug\s_copysign.obj
+\users\green\projects\js\src\Debug\w_pow.obj
+\users\green\projects\js\src\Debug\e_pow.obj
+\users\green\projects\js\src\Debug\k_standard.obj
+\users\green\projects\js\src\Debug\e_atan2.obj
+\users\green\projects\js\src\Debug\s_isnan.obj
+\users\green\projects\js\src\Debug\s_fabs.obj
+\users\green\projects\js\src\Debug\w_sqrt.obj
+\users\green\projects\js\src\Debug\s_scalbn.obj
+\users\green\projects\js\src\Debug\e_sqrt.obj
+\users\green\projects\js\src\Debug\s_rint.obj
+\users\green\projects\js\src\Debug\s_atan.obj
+\users\green\projects\js\src\Debug\s_finite.obj
+\users\green\projects\js\src\Debug\s_matherr.obj
+]
+Creating command line "link.exe -lib @C:\DOCUME~1\GREEN~1.OFF\LOCALS~1\Temp\RSPED4.tmp"
+<h3>Output Window</h3>
+Compiling...
+w_atan2.c
+s_copysign.c
+w_pow.c
+e_pow.c
+k_standard.c
+e_atan2.c
+s_isnan.c
+s_fabs.c
+w_sqrt.c
+s_scalbn.c
+e_sqrt.c
+s_rint.c
+s_atan.c
+s_finite.c
+s_matherr.c
+Creating library...
+
+
+
+<h3>Results</h3>
+fdlibm.lib - 0 error(s), 0 warning(s)
+</pre>
+</body>
+</html>
