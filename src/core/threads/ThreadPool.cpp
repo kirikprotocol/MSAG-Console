@@ -31,8 +31,9 @@ int PooledThread::Execute()
     __warning__("failed to set thread signal mask!");
   };
 
+  smsc::logger::Logger* log=smsc::logger::Logger::getInstance("tp");
 
-  trace2("Pooled thread %p ready for tasks",this);
+  smsc_log_debug(log,"Pooled thread %p ready for tasks",this);
   if(!task)owner->releaseThread(this);
   for(;;)
   {
@@ -58,13 +59,13 @@ int PooledThread::Execute()
     }
     catch(exception& e)
     {
-      trace2("Exception in task %s:%s",task->taskName(),e.what());
+      smsc_log_warn(log,"Exception in task %s:%s",task->taskName(),e.what());
     }
     catch(...)
     {
-      trace2("Unknown exception in task:%s",task->taskName());
+      smsc_log_warn(log,"Unknown exception in task:%s",task->taskName());
     }
-    trace2("Execution of task %s finished",task->taskName());
+    smsc_log_info(log,"Execution of task %s finished",task->taskName());
     //task->releaseHeap();
     delete task;
     task=NULL;
