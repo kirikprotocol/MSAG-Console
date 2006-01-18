@@ -23,6 +23,7 @@ public:
     virtual int Execute();
     void init(PerformanceServer * perfServer);
     void InitServer(std::string perfHost_, int perfGenPort_, int perfSvcPort_, int perfScPort_);
+    void reinitLogger();
     void Stop();
     void Start();
 protected:

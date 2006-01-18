@@ -119,8 +119,10 @@ StatisticsManager::~StatisticsManager()
 {
   Logger::Init();
   logger = Logger::getInstance("scag.stat.StatisticsManager");
+  sender.reinitPrfSrvLogger();
 
   file.Close();
+  httpFile.Close();
   Stop();
   WaitFor();
 }
@@ -428,16 +430,14 @@ void StatisticsManager::registerEvent(const HttpStatEvent& se)
 
 int StatisticsManager::Execute()
 {
-    smsc_log_debug(logger, "PerformanceServer is starting...");
+    /*smsc_log_debug(logger, "PerformanceServer is starting...");
     sender.Start();
-    smsc_log_debug(logger, "PerformanceServer is started");
+    smsc_log_debug(logger, "PerformanceServer is started");*/
 
     {
         MutexGuard mg(stopLock);
         isStarted = true; 
     }
-
-    bExternalFlush = false;
 
     while (started())
     {
@@ -453,8 +453,8 @@ int StatisticsManager::Execute()
         flushTraffic();
         flushHttpTraffic();
 
+        if(bExternalFlush) isStarted = false;
         bExternalFlush = false;
-        doneEvent.Signal();
         smsc_log_debug(logger, "Execute() >> Flushed");
     }
 
@@ -463,11 +463,9 @@ int StatisticsManager::Execute()
         isStarted = false;
     }
 
-    //exitEvent.Signal();
-
-    smsc_log_debug(logger, "PerformanceServer is shutdowninig...");
+    /*smsc_log_debug(logger, "PerformanceServer is shutdowninig...");
     sender.Stop();
-    smsc_log_debug(logger, "PerformanceServer is shutdowned");
+    smsc_log_debug(logger, "PerformanceServer is shutdowned");*/
 
     smsc_log_debug(logger, "Execute() exited");
     return 0;
@@ -477,16 +475,28 @@ void StatisticsManager::Stop()
 {
     MutexGuard guard(stopLock);
 
-    //smsc_log_debug(logger, "stop() called, started=%d", isStarted);
+    smsc_log_debug(logger, "PerformanceServer is shutdowninig...");
+    sender.Stop();
+    smsc_log_debug(logger, "PerformanceServer is shutdowned");
+
     if (isStarted)
     {
-        isStarted = false;
         bExternalFlush = true;
         awakeEvent.Signal();
-        //smsc_log_debug(logger, "stop() waiting finish ...");
-        //exitEvent.Wait();
     }
-    //smsc_log_debug(logger, "stop() exited");
+}
+
+void StatisticsManager::Start()
+{
+    
+    MutexGuard guard(stopLock);
+
+    smsc_log_debug(logger, "PerformanceServer is starting...");
+    sender.Start();
+    smsc_log_debug(logger, "PerformanceServer is started");
+
+    isStarted = true;
+    Thread::Start();
 }
 
 bool StatisticsManager::started()

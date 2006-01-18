@@ -22,11 +22,13 @@ int PerfSocketServer::Execute()
     smsc::core::network::Multiplexer::SockArray ready, err;
     printf("Execute is starting...\n");
 
-    if( genSocket.StartServer() )
+    if(!isStopping) return 1;
+
+    if( genSocket.StartServer())
         smsc_log_warn(logger, "General statistics socket can't start");
-    if( svcSocket.StartServer() )
+    if( svcSocket.StartServer())
         smsc_log_warn(logger, "Services statistics socket can't start");;
-    if( scSocket.StartServer() )
+    if( scSocket.StartServer())
         smsc_log_warn(logger, "Service center statistics socket can't start");;
 
     printf("Wait for a socket to write...\n");
@@ -68,6 +70,8 @@ int PerfSocketServer::Execute()
         }
     }
 
+    printf("Execute() exit\n");
+
     return 1;
 }
 
@@ -101,12 +105,17 @@ void PerfSocketServer::InitServer(std::string perfHost_, int perfGenPort_, int p
         throw Exception("Failed to init PerfSocketServer");
 }
 
+void PerfSocketServer::reinitLogger()
+{
+    logger = Logger::getInstance("prfsrv"); 
+}
+
 void PerfSocketServer::Stop()
 {
-    genSocket.Abort();
-    svcSocket.Abort();
-    scSocket.Abort();
     isStopping = true;
+    if(genSocket.getSocket() != INVALID_SOCKET) genSocket.Abort();
+    if(svcSocket.getSocket() != INVALID_SOCKET) svcSocket.Abort();
+    if(scSocket.getSocket() != INVALID_SOCKET) scSocket.Abort();
 }
 
 void PerfSocketServer::Start()

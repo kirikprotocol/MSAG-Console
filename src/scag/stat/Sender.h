@@ -8,12 +8,14 @@
 #include <sys/types.h>
 #include "Performance.h"
 #include "PerfSocketServer.h"
+#include "logger/Logger.h"
 
 namespace scag {
 namespace stat {
 
 using smsc::core::network::Socket;
 using smsc::core::threads::Thread;
+using smsc::logger::Logger;
 
 class Sender : public Thread {
 public:
@@ -24,6 +26,7 @@ public:
     void Start();
     void init(PerformanceListener* pl, PerformanceServer* ps);
     void InitServer(std::string perfHost, int genPort, int svcPort, int scPort);
+    void reinitPrfSrvLogger();
 protected:
 	PerfSocketServer perfServer;
     int smppPerfCnt[PERF_CNT_COUNT][60];
@@ -33,6 +36,7 @@ protected:
     timespec start;
     PerformanceListener* perfListener;
     bool isStopping;
+    //Logger * logger;
 };
 
 }

@@ -7,6 +7,7 @@ namespace scag {
 namespace stat {
 
 using smsc::core::threads::Thread;
+using smsc::logger::Logger;
 
 class Registrator : public Thread {
 public:
@@ -90,7 +91,7 @@ int Registrator::Execute()
 }
 
 Sender::Sender()
-	: perfListener(0), isStopping(false)
+	: perfListener(0), isStopping(false)/*, logger(Logger::getInstance("Sender"))*/
 {
 }
 
@@ -121,13 +122,13 @@ int Sender::Execute()
 
     // Makes statistics
     using namespace Counters;
-    StatisticsManager * sm = dynamic_cast<StatisticsManager*>(perfListener);
+    /*StatisticsManager * sm = dynamic_cast<StatisticsManager*>(perfListener);
     Registrator registrator;
     printf("Registrator is initing...\n");
     registrator.init(sm);
     printf("Registrator is inited\n");
     registrator.Start();
-    printf("Registrator is started\n");
+    printf("Registrator is started\n");*/
     
 
 
@@ -273,15 +274,15 @@ int Sender::Execute()
     }
 
     //Statistics is made
-    printf("Registrator stoping...\n");
-    registrator.Stop();
-    printf("Registrator stoped\n");
+    //printf("Registrator stoping...\n");
+    //registrator.Stop();
+    //printf("Registrator stoped\n");
     return 1;
 }
 
 void Sender::Start()
-{
-    perfServer.Start();
+{    
+    perfServer.Start();    
     isStopping = false;
     Thread::Start();
 }
@@ -290,7 +291,7 @@ void Sender::Stop()
 {
     isStopping = true;
     perfServer.Stop();
-    perfServer.WaitFor();
+    perfServer.WaitFor(); 
     WaitFor();
 }
 
@@ -304,6 +305,12 @@ void Sender::InitServer(std::string perfHost, int genPort, int svcPort, int scPo
 {
     printf("sender, svcPort: %d\n", svcPort);
     perfServer.InitServer(perfHost, genPort, svcPort, scPort);
+}
+
+void Sender::reinitPrfSrvLogger()
+{
+    printf("sender, reinitPrfSrvLogger\n");
+    perfServer.reinitLogger();
 }
 
 }

@@ -145,7 +145,7 @@ namespace stat {
         bool    bExternalFlush;
 
         Mutex   stopLock, switchLock, flushLock;
-        Event   awakeEvent, exitEvent, doneEvent;
+        Event   awakeEvent, exitEvent;
         bool    isStarted;
 
         int   switchCounters();
@@ -220,6 +220,7 @@ namespace stat {
         bool createStorageDir(const std::string loc);
         bool started();
         void Stop();
+        void Start();
 
         inline TimeSlotCounter<int>* newSlotCounter() {
             return new TimeSlotCounter<int>(3600, 1000);
