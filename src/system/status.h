@@ -70,6 +70,9 @@ static const int TRANSACTIONTIMEDOUT=1035; //
 static const int LOCKEDBYMO=1036; //MT should wait MO
 static const int LICENSELIMITREJECT=1037;//sms rejected due to license limit
 static const int USSDDLGREFMISM=1038; // USSD dialog exists but reference mismatch (PSSR_RESP) !
+static const int DENIEDBYINMAN=1039; // inman return charge resp with CHARGE NOT POSSIBLE
+static const int DEFERREDDELIVERY=1040; // deferred sms with charge on delivery policy
+
 
 static const int MAP_UR_NO_REASON=1109;
 static const int MAP_USER_REASON_BASE=1110;
@@ -1180,8 +1183,8 @@ static const bool errorStatus[1280] = {
 0, // LOCKEDBYMO=1036
 1, // LICENSELIMITREJECT=1037
 1, // USSDDLGREFMISM=1038
-1,
-1,
+1, // DENIEDBYINMAN=1039
+0, // DEFERREDDELIVERY=1040
 1,
 1,
 1,

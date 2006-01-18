@@ -2132,7 +2132,7 @@ StateType StateMachine::submitChargeResp(Tuple& t)
 
   if(!resp->result)
   {
-    submitResp(t,sms,Status::SYSERR);
+    submitResp(t,sms,Status::DENIEDBYINMAN);
     warn2(smsLog, "SBM: denied by inman Id=%lld;seq=%d;oa=%s;%s;srcprx=%s",
       t.msgId,dialogId,
       sms->getOriginatingAddress().toString().c_str(),
@@ -2181,17 +2181,13 @@ StateType StateMachine::submitChargeResp(Tuple& t)
     {
       __warning2__("failed to create sms with id %lld",t.msgId);
       submitResp(t,sms,Status::SYSERR);
+      smsc->ReportDelivery(resp->cntx.inDlgId,*sms,true,Smsc::chargeAlways);
       return ERROR_STATE;
     }
   }
 
 
-  try{
-    smsc->ReportDelivery(resp->cntx.inDlgId,*sms,true,Smsc::chargeOnSubmit);
-  }catch(std::exception& e)
-  {
-    smsc_log_warn(smsLog,"ReportDelivery failed:'%s'",e.what());
-  }
+  smsc->ReportDelivery(resp->cntx.inDlgId,*sms,true,Smsc::chargeOnSubmit);
 
   //
   // stored
@@ -2239,6 +2235,8 @@ StateType StateMachine::submitChargeResp(Tuple& t)
   if(!isDatagram && !isTransaction && stime>now)
   {
     smsc->getScheduler()->AddScheduledSms(t.msgId,*sms,dest_proxy_index);
+    sms->setLastResult(Status::DEFERREDDELIVERY);
+    smsc->ReportDelivery(resp->cntx.inDlgId,*sms,true,Smsc::chargeOnDelivery);
     return ENROUTE_STATE;
   }
 
@@ -2299,7 +2297,29 @@ StateType StateMachine::submitChargeResp(Tuple& t)
       }
     }
   };
+
   ResponseGuard respguard(sms,src_proxy,this,t.msgId);
+
+  struct DeliveryReportGuard{
+    Smsc* smsc;
+    SMS* sms;
+    INSmsChargeResponse::SubmitContext* cntx;
+    bool final;
+    bool active;
+    DeliveryReportGuard():active(true){}
+    ~DeliveryReportGuard()
+    {
+      if(active)
+      {
+        smsc->ReportDelivery(cntx->inDlgId,*sms,final,Smsc::chargeOnDelivery);
+      }
+    }
+  };
+  DeliveryReportGuard repGuard;
+  repGuard.smsc=smsc;
+  repGuard.sms=sms;
+  repGuard.cntx=&resp->cntx;
+  repGuard.final=isDatagram || isTransaction;
 
   if ( !dest_proxy )
   {
@@ -2574,6 +2594,7 @@ StateType StateMachine::submitChargeResp(Tuple& t)
         if(Status::isErrorPermanent(err))
         {
           store->changeSmsStateToUndeliverable(t.msgId,d,err);
+          repGuard.final=true;
         }
         else
           changeSmsStateToEnroute(*sms,t.msgId,d,err,rescheduleSms(*sms));
@@ -2590,6 +2611,8 @@ StateType StateMachine::submitChargeResp(Tuple& t)
   {
     tg.active=false;
   }
+  repGuard.active=false;
+
   sms->lastResult=Status::OK;
   info2(smsLog, "SBM: submit ok, seqnum=%d Id=%lld;seq=%d;%s;%s;srcprx=%s;dstprx=%s",
     dialogId2,
