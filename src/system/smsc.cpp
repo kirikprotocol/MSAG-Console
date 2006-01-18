@@ -107,98 +107,103 @@ public:
     int i;
     for(;;)
     {
-      //sleep(1);
-      //timeval tv;
-      //tv.tv_sec=1;
-      //tv.tv_usec=0;
-      //select(0,0,0,0,&tv);
-      while(now.tv_sec==time(NULL))ev.Wait(10);
-      cnt=queue.getCounter();
-      int eqhash,equnl;
-      queue.getStats(eqhash,equnl);
-      clock_gettime(CLOCK_REALTIME,&now);
-      ut=((now.tv_sec*1000.0+now.tv_nsec/1000000.0)-
-         (start.tv_sec*1000.0+start.tv_nsec/1000000.0))/1000.0;
-      tm=((now.tv_sec*1000.0+now.tv_nsec/1000000.0)-
-         (lasttime.tv_sec*1000.0+lasttime.tv_nsec/1000000.0))/1000;
-      rate=(cnt-last)/tm;
-      avg=cnt/ut;
-      printf("UT:%.3lf AVG:%.3lf LAST:%.3lf (%llu)[%d,%d]         \r",ut,avg,rate,cnt,eqhash,equnl);
-      fflush(stdout);
-      last=cnt;
-      lasttime=now;
-      if(isStopping)break;
-      uint64_t perf[performance::performanceCounters];
-      // success, error, reschedule
-      smsc->getPerfData(perf);
-      performance::PerformanceData d;
-      d.countersNumber=performance::performanceCounters;
-      for(i=0;i<performance::performanceCounters;i++)
-      {
-        d.counters[i].lastSecond=(int)(perf[i]-lastPerfCnt[i]);
-        d.counters[i].total=perf[i];
-      }
-
-      int secs=now.tv_sec-perfStart;
-      int mcnt=secs/60;
-      int curIdx=mcnt%60;
-      if(lastIdx!=curIdx)
-      {
-        lastIdx=curIdx;
-        for(i=0;i<performance::performanceCounters;i++)perfCnt[i][curIdx]=0;
-      }
-      if(mcnt>=60)
-      {
-        mcnt=59;
-        secs=60*60-(60-secs%60);
-      }
-      for(int j=0;j<performance::performanceCounters;j++)
-      {
-        d.counters[j].average=0;
-      }
-      int idx=curIdx;
-
-      for(int j=0;j<performance::performanceCounters;j++)
-      {
-        perfCnt[j][curIdx]+=d.counters[j].lastSecond;
-      }
-      for(i=0;i<=mcnt;i++,idx--)
-      {
-        if(idx<0)idx=59;
-        for(int j=0;j<performance::performanceCounters;j++)
-        {
-          d.counters[j].average+=perfCnt[j][idx];
-        }
-      }
-
-      if(secs)
-      {
+      try{
+        //sleep(1);
+        //timeval tv;
+        //tv.tv_sec=1;
+        //tv.tv_usec=0;
+        //select(0,0,0,0,&tv);
+        while(now.tv_sec==time(NULL))ev.Wait(10);
+        cnt=queue.getCounter();
+        int eqhash,equnl;
+        queue.getStats(eqhash,equnl);
+        clock_gettime(CLOCK_REALTIME,&now);
+        ut=((now.tv_sec*1000.0+now.tv_nsec/1000000.0)-
+           (start.tv_sec*1000.0+start.tv_nsec/1000000.0))/1000.0;
+        tm=((now.tv_sec*1000.0+now.tv_nsec/1000000.0)-
+           (lasttime.tv_sec*1000.0+lasttime.tv_nsec/1000000.0))/1000;
+        rate=(cnt-last)/tm;
+        avg=cnt/ut;
+        printf("UT:%.3lf AVG:%.3lf LAST:%.3lf (%llu)[%d,%d]         \r",ut,avg,rate,cnt,eqhash,equnl);
+        fflush(stdout);
+        last=cnt;
+        lasttime=now;
+        if(isStopping)break;
+        uint64_t perf[performance::performanceCounters];
+        // success, error, reschedule
+        smsc->getPerfData(perf);
+        performance::PerformanceData d;
+        d.countersNumber=performance::performanceCounters;
         for(i=0;i<performance::performanceCounters;i++)
         {
-          d.counters[i].average/=secs;
+          d.counters[i].lastSecond=(int)(perf[i]-lastPerfCnt[i]);
+          d.counters[i].total=perf[i];
         }
-      }
 
-      d.now=now.tv_sec;
-      d.uptime=now.tv_sec-start.tv_sec;
+        int secs=now.tv_sec-perfStart;
+        int mcnt=secs/60;
+        int curIdx=mcnt%60;
+        if(lastIdx!=curIdx)
+        {
+          lastIdx=curIdx;
+          for(i=0;i<performance::performanceCounters;i++)perfCnt[i][curIdx]=0;
+        }
+        if(mcnt>=60)
+        {
+          mcnt=59;
+          secs=60*60-(60-secs%60);
+        }
+        for(int j=0;j<performance::performanceCounters;j++)
+        {
+          d.counters[j].average=0;
+        }
+        int idx=curIdx;
 
-      d.eventQueueSize=equnl;
-      d.inProcessingCount=eqhash-equnl;
+        for(int j=0;j<performance::performanceCounters;j++)
+        {
+          perfCnt[j][curIdx]+=d.counters[j].lastSecond;
+        }
+        for(i=0;i<=mcnt;i++,idx--)
+        {
+          if(idx<0)idx=59;
+          for(int j=0;j<performance::performanceCounters;j++)
+          {
+            d.counters[j].average+=perfCnt[j][idx];
+          }
+        }
 
-      Scheduler::SchedulerCounts cnts;
-      smsc->getScheduler()->getCounts(cnts);
-      d.inScheduler=cnts.timeLineCount+cnts.firstTimeCount;
+        if(secs)
+        {
+          for(i=0;i<performance::performanceCounters;i++)
+          {
+            d.counters[i].average/=secs;
+          }
+        }
 
-      perfListener->reportGenPerformance(&d);
+        d.now=now.tv_sec;
+        d.uptime=now.tv_sec-start.tv_sec;
 
-      for(i=0;i<performance::performanceCounters;i++)
+        d.eventQueueSize=equnl;
+        d.inProcessingCount=eqhash-equnl;
+
+        Scheduler::SchedulerCounts cnts;
+        smsc->getScheduler()->getCounts(cnts);
+        d.inScheduler=cnts.timeLineCount+cnts.firstTimeCount;
+
+        perfListener->reportGenPerformance(&d);
+
+        for(i=0;i<performance::performanceCounters;i++)
+        {
+          lastPerfCnt[i]=perf[i];
+        }
+
+        uint32_t smePerfDataSize = 0;
+        std::auto_ptr<uint8_t> smePerfData(smsc->getSmePerfData(smePerfDataSize));
+        perfSmeListener->reportSmePerformance(smePerfData.get(), smePerfDataSize);
+      }catch(std::exception& e)
       {
-        lastPerfCnt[i]=perf[i];
+        warn2(smsc::logger::Logger::getInstance("speedmon"),"Exception in speed monitor:%s",e.what());
       }
-
-      uint32_t smePerfDataSize = 0;
-      std::auto_ptr<uint8_t> smePerfData(smsc->getSmePerfData(smePerfDataSize));
-      perfSmeListener->reportSmePerformance(smePerfData.get(), smePerfDataSize);
     }
     return 0;
   }
