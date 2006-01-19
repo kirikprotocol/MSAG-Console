@@ -19,7 +19,7 @@
 #include <scag/re/CommandBrige.h>
 #include "scag/config/sessn/SessionManagerConfig.h"
 
-namespace scag { namespace sessions 
+namespace scag { namespace sessions
 {
     using scag::config::SessionManagerConfig;
     using namespace smsc::sms::BufOps;
@@ -54,10 +54,10 @@ namespace scag { namespace sessions
 
             str = scb;
             return *this;
-        };       
+        };
     public:
        SessionBuffer() : smsc::sms::BufOps::SmsBuffer(2048) {}
-
+       SessionBuffer(int size):smsc::sms::BufOps::SmsBuffer(size){}
     };
 
 
@@ -66,11 +66,11 @@ namespace scag { namespace sessions
         int16_t             USR; // User Session Reference
         smsc::sms::Address  abonentAddr;
 
-        bool operator ==(const CSessionKey& sk) const 
+        bool operator ==(const CSessionKey& sk) const
         {
             return ((this->abonentAddr == sk.abonentAddr) && (this->USR == sk.USR));
         }
-    };    
+    };
 
  /*   struct COperationKey
     {
@@ -78,7 +78,7 @@ namespace scag { namespace sessions
         int key;
 
         bool operator == (const COperationKey& operationKey) const
-        { 
+        {
             return ((this->destAddress == operationKey.destAddress)&&(this->key == operationKey.key));
         }
 
@@ -106,7 +106,7 @@ namespace scag { namespace sessions
         std::list <int> BillList;
     public:
         uint8_t type;
-        void attachBill(int BillId); 
+        void attachBill(int BillId);
         void detachBill(int BillId);
         void rollbackAll();
 
@@ -167,14 +167,14 @@ namespace scag { namespace sessions
 
         Session(const CSessionKey& key);
         virtual ~Session();
-        
+
         CSessionKey getSessionKey() const  { return m_SessionKey; }
         void setSessionKey(CSessionKey& key) { m_SessionKey = key; }
 
 
         inline time_t getLastAccessTime() const { return lastAccessTime; }
         inline bool isChanged() const { return bChanged; }
-        
+
         virtual void changed(AdapterProperty& property);
         virtual Property* getProperty(const std::string& name);
 
@@ -194,7 +194,7 @@ namespace scag { namespace sessions
 
         friend class Comparator;
     };
-/* 
+/*
     class Comparator
     {
         bool compare_properties(Session * s1,Session * s2)
@@ -222,7 +222,7 @@ namespace scag { namespace sessions
             if (s1->OperationHash.Count() != s2->OperationHash.Count()) return false;
 
             for (;it.Next(key, operation);)
-            {              
+            {
                 if (!s2->OperationHash.Exists(key)) return false;
                 Operation * op2 = s2->OperationHash.Get(key);
 
@@ -237,7 +237,7 @@ namespace scag { namespace sessions
 
                 if (operation->type != op2->type) return false;
                 if (operation->validityTime != op2->validityTime) return false;
-                
+
             }
             return true;
         }
@@ -290,6 +290,6 @@ namespace scag { namespace sessions
     };
   */
 }}
-  
+
 #endif // SCAG_SESSIONS_SESSION
 
