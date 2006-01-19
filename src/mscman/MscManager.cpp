@@ -316,7 +316,7 @@ try {
   }
 } catch (std::exception& e) {
     smsc_log_error(log,"Exception occured :'%s'",e.what());
-    throw InitException(e.what());
+    throw InitException("%s", e.what());
 } catch (...) {
     smsc_log_error(log,"Unexpected exception during MSCMgr init");
     throw InitException("Unexpected exception");
