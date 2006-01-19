@@ -13,7 +13,7 @@
 #include <util/signal.hpp>
 #include <util/xml/init.h>
 #include <util/findConfigFile.h>
-#include <scag/smscsignalhandlers.h>
+#include <scag/scagsignalhandlers.h>
 #include <core/threads/Thread.hpp>
 
 #include "license/check/license.hpp"

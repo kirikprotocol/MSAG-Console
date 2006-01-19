@@ -1,4 +1,4 @@
-#include "scag/smscsignalhandlers.h"
+#include "scag/scagsignalhandlers.h"
 
 #include "scag/scag.h"
 #include "admin/service/ServiceSocketListener.h"
