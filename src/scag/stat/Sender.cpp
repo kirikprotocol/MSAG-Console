@@ -122,13 +122,13 @@ int Sender::Execute()
 
     // Makes statistics
     using namespace Counters;
-    /*StatisticsManager * sm = dynamic_cast<StatisticsManager*>(perfListener);
+    StatisticsManager * sm = dynamic_cast<StatisticsManager*>(perfListener);
     Registrator registrator;
     printf("Registrator is initing...\n");
     registrator.init(sm);
     printf("Registrator is inited\n");
     registrator.Start();
-    printf("Registrator is started\n");*/
+    printf("Registrator is started\n");
     
 
 
@@ -274,9 +274,9 @@ int Sender::Execute()
     }
 
     //Statistics is made
-    //printf("Registrator stoping...\n");
-    //registrator.Stop();
-    //printf("Registrator stoped\n");
+    printf("Registrator stoping...\n");
+    registrator.Stop();
+    printf("Registrator stoped\n");
     return 1;
 }
 
