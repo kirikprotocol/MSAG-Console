@@ -59,7 +59,7 @@ public:
 
   File::offset_type Read(RecordType& rec)
   {
-    if(filePos==fileSize)return 0;
+    if(filePos==fileSize || filePos+RecordType::Size()>fileSize)return 0;
     bool used;
     File::offset_type rv=0;
     do{
