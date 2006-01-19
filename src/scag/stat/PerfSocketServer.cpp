@@ -47,7 +47,8 @@ int PerfSocketServer::Execute()
                         Socket * sock = new Socket(s,addrin);
                         performanceServer->addGenSocket(sock);
                     }
-                }if(ready[i] == &svcSocket){
+                }
+                if(ready[i] == &svcSocket){
                     smsc_log_info(logger, "Servives Stat Socket is ready");
                     sockaddr_in addrin;
                     int sz=sizeof(addrin);
@@ -56,7 +57,8 @@ int PerfSocketServer::Execute()
                         Socket * sock = new Socket(s,addrin);
                         performanceServer->addSvcSocket(sock);
                     }
-                }if(ready[i] == &scSocket){
+                }
+                if(ready[i] == &scSocket){
                     smsc_log_info(logger, "Srvice center Socket is ready");
                     sockaddr_in addrin;
                     int sz=sizeof(addrin);
@@ -113,9 +115,9 @@ void PerfSocketServer::reinitLogger()
 void PerfSocketServer::Stop()
 {
     isStopping = true;
-    if(genSocket.getSocket() != INVALID_SOCKET) genSocket.Abort();
-    if(svcSocket.getSocket() != INVALID_SOCKET) svcSocket.Abort();
-    if(scSocket.getSocket() != INVALID_SOCKET) scSocket.Abort();
+    /*if(genSocket.getSocket() != INVALID_SOCKET)*/ genSocket.Abort();
+    /*if(svcSocket.getSocket() != INVALID_SOCKET)*/ svcSocket.Abort();
+    /*if(scSocket.getSocket() != INVALID_SOCKET)*/ scSocket.Abort();
 }
 
 void PerfSocketServer::Start()
