@@ -298,7 +298,7 @@ void MscManagerImpl::init(Manager& config)
         throw InitException(exc.what());
     }
     */
-
+try {
   string fileName=config.getString("MscManager.storeFile");
   try{
     storeFile.Open(fileName.c_str());
@@ -314,6 +314,13 @@ void MscManagerImpl::init(Manager& config)
   {
     mscs.Insert(info.mscNum, new MscInfo(info));
   }
+} catch (std::exception& e) {
+    smsc_log_error(log,"Exception occured :'%s'",e.what());
+    throw InitException(e.what());
+} catch (...) {
+    smsc_log_error(log,"Unexpected exception during MSCMgr init");
+    throw InitException("Unexpected exception");
+}
 }
 
 void MscManagerImpl::processChange(const MscInfoChange& change)
