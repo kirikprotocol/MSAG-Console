@@ -1,12 +1,7 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ page import="ru.novosoft.smsc.jsp.smsc.aliases.Index,
-                 ru.novosoft.smsc.jsp.util.tables.DataItem,
-                 java.net.URLEncoder,
-                 ru.novosoft.smsc.jsp.SMSCJspException,
-                 ru.novosoft.smsc.jsp.SMSCErrors,
-                 ru.novosoft.smsc.jsp.PageBean,
-                 java.util.*,
-                 ru.novosoft.smsc.util.StringEncoderDecoder"%>
+<%@ page import="ru.novosoft.smsc.jsp.PageBean,
+                 ru.novosoft.smsc.jsp.smsc.aliases.Index,
+                 ru.novosoft.smsc.jsp.util.tables.DataItem"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.aliases.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -48,7 +43,7 @@ page_menu_end(out);
 <input type=hidden name=editAlias id=editAlias>
 <input type=hidden name=editAddress id=editAddress>
 <input type=hidden name=editHide id=editHide>
-<input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
+<input type=hidden name=totalSize value="<%=bean.getTotalSize()%>">
 <input type=hidden name=sort>
 
 <script>
@@ -71,6 +66,7 @@ function setSort(sorting)
 	return false;
 }
 </script>
+    
 <table class=list cellspacing=1>
 <col width="1%">
 <col width="60%" align=left>
@@ -81,7 +77,7 @@ function setSort(sorting)
 	<th>&nbsp;</th>
 	<th><a href="javascript:setSort('Alias')" <%=bean.getSort().endsWith("Alias") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.aliasHint")%>"><%=getLocString("common.sortmodes.alias")%></a></th>
 	<th><a href="javascript:setSort('Address')" <%=bean.getSort().endsWith("Address") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.addressHint")%>"><%=getLocString("common.sortmodes.address")%></a></th>
-	<th><a href="javascripr:setSort('Hide')" <%=bean.getSort().endsWith("Hide") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.hideHint")%>"><%=getLocString("common.sortmodes.hide")%></a></th>
+	<th><a href="javascript:setSort('Hide')" <%=bean.getSort().endsWith("Hide") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.hideHint")%>"><%=getLocString("common.sortmodes.hide")%></a></th>
 </tr>
 </thead>
 <tbody>

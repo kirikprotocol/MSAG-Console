@@ -11,6 +11,7 @@ import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.route.SmeStatus;
+import ru.novosoft.smsc.admin.route.SME;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.jsp.SMSCErrors;
@@ -245,17 +246,18 @@ public class Index extends PageBean
     }
   }
 
-  public boolean isServiceDisabled(final String serviceId)
-  {
-    try {
-      return appContext.getSmeManager().get(serviceId).isDisabled();
-    } catch (AdminException e) {
-      error(SMSCErrors.error.services.couldntGetServiceInfo, serviceId);
-      return false;
+    public boolean isServiceDisabled(final String serviceId) {
+        try {
+            SME sme = appContext.getSmeManager().get(serviceId);
+            if (sme != null) return sme.isDisabled();
+            else throw new AdminException("SME is not found");
+        } catch (AdminException e) {
+            error(SMSCErrors.error.services.couldntGetServiceInfo, serviceId);
+            return false;
+        }
     }
-  }
 
-  public boolean isServiceConnected(final String serviceId)
+    public boolean isServiceConnected(final String serviceId)
   {
     try {
       final SmeStatus smeStatus = appContext.getSmeManager().smeStatus(serviceId);

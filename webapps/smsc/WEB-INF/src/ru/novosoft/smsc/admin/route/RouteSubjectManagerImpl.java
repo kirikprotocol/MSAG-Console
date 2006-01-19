@@ -139,14 +139,14 @@ public class RouteSubjectManagerImpl implements RouteSubjectManager
     if (tempConfFile.exists()) {
       final long lastModified = tempConfFile.lastModified();
       if (lastModified != 0) {
-        System.out.println("lastModified = " + lastModified);
+        logger.debug("RouteSubjectManagerImpl.getRestoreFileDate(): lastModified = " + lastModified);
         return new Date(lastModified);
       }
       else
-        System.out.println("tempConfFile.lastModified() == 0");
+        logger.debug("RouteSubjectManagerImpl.getRestoreFileDate(): tempConfFile.lastModified() == 0");
     }
     else
-      System.out.println("!tempConfFile.exists(), \"" + tempConfFile.getAbsolutePath() + '"');
+      logger.debug("RouteSubjectManagerImpl.getRestoreFileDate(): !tempConfFile.exists(), \"" + tempConfFile.getAbsolutePath() + '"');
     return null;
   }
 

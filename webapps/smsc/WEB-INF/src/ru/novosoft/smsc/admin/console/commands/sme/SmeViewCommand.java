@@ -20,6 +20,7 @@ public class SmeViewCommand extends SmeGenCommand
             SmeManager manager = ctx.getSmeManager();
             if (!manager.contains(smeId)) throw new Exception("SME not exists");
             SME sme = manager.get(smeId);
+            if (sme == null) throw new Exception("Sme " + smeId + " is not found");
             type = sme.getType();
             ctx.setMessage("SME info");
             ctx.setStatus(CommandContext.CMD_LIST);

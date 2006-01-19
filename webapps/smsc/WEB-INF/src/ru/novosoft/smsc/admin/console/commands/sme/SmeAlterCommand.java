@@ -43,6 +43,7 @@ public class SmeAlterCommand extends SmeGenCommand
             }
             if (!disconnectOnly) {
                 SME sme = manager.get(smeId);
+                if (sme == null) throw new Exception("Sme " + smeId + " is not found");
                 SME newSme = new SME(smeId, isPriority ? priority:sme.getPriority(), isType ? type:sme.getType(),
                         isTON ? TON:sme.getTypeOfNumber(), isNPI ? NPI:sme.getNumberingPlan(),
                         isInterfaceVersion ? interfaceVersion:sme.getInterfaceVersion(),
