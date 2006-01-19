@@ -390,7 +390,7 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
         uint8_t idx,num;
         bool havemoreudh;
         bool haveconcat=smsc::util::findConcatInfo(body,mr,idx,num,havemoreudh);
-        if(haveconcat)
+        if(haveconcat && num>1)
         {
           __trace2__("sms from %s have concat info:mr=%u, %u/%u",sms.getOriginatingAddress().toString().c_str(),(unsigned)mr,(unsigned)idx,(unsigned)num);
           MergeCacheItem mci;
@@ -425,7 +425,8 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
       if(
           sms.hasIntProperty(Tag::SMPP_SAR_MSG_REF_NUM) &&
           sms.hasIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS) &&
-          sms.hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM)
+          sms.hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM) &&
+          sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS)>1
         )
       {
         uint16_t mr=sms.getIntProperty(Tag::SMPP_SAR_MSG_REF_NUM);

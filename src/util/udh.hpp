@@ -253,6 +253,7 @@ inline bool convertSarToUdh(SMS& sms)
   {
     return true;
   }
+  if(sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS)==1)return true;
   unsigned char userdata[256];
   unsigned int len;
   unsigned int udhilen=0;
