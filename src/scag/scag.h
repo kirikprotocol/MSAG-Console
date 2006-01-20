@@ -257,7 +257,7 @@ protected:
 
   int eventQueueLimit;
 
-  smsc::core::threads::ThreadPool tp,tp2;
+  //smsc::core::threads::ThreadPool tp,tp2;
 
   Mutex routerSwitchMutex;
   Reffer<RouteManager>* testRouter_;

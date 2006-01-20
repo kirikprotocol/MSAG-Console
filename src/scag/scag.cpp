@@ -277,7 +277,7 @@ public:
       {
         lastPerfCnt[i]=perf[i];
       }
-    }
+    } 
     return 0;
   }
   void setStartTime(time_t t)
@@ -306,7 +306,7 @@ void Scag::init()
 
   try{
   InitLicense(*cfg.getLicConfig());
-  tp.preCreateThreads(15);
+  //tp.preCreateThreads(15);
     
     //********************************************************
     //************** SmppManager initialization **************
@@ -401,21 +401,6 @@ void Scag::init()
   scagHost=cfg.getConfig()->getString("smpp.host");
   scagPort=cfg.getConfig()->getInt("smpp.port");
 
-  
-
-  //*****************************************************
-  // Its will be not such class Performance server
-  //*****************************************************
-  {
-    scag::performance::PerformanceServer *perfSrv=new scag::performance::PerformanceServer
-    (
-      cfg.getConfig()->getString("core.performance.host"),
-      cfg.getConfig()->getInt("core.performance.port"),
-      &perfDataDisp
-    );
-    tp2.startTask(perfSrv);
-    smsc_log_info(log, "Performance server started" );
-  }
 
   eventQueueLimit=1000;
   try{
@@ -463,7 +448,7 @@ void Scag::run()
   smsc::logger::Logger *log = smsc::logger::Logger::getInstance("smsc.run");
 
   //TODO: report performance on Speed Monitor
-    SpeedMonitor *sm=new SpeedMonitor(&perfDataDisp,this);
+    /*SpeedMonitor *sm=new SpeedMonitor(&perfDataDisp,this);
     FILE *f=fopen("stats.txt","rt");
     if(f)
     {
@@ -482,16 +467,20 @@ void Scag::run()
       fclose(f);
       remove("stats.txt");
     }
-    sm->run();
-    smsc_log_info(log, "Speedmonitor started" );
+    sm->run();*/
+  while(!stopFlag)
+  {
+      sleep(1);
+  }
+    smsc_log_info(log, "Scag stoped" );
 }
 
 void Scag::shutdown()
 {
   __trace__("shutting down");
 
-  tp.shutdown();
-  tp2.shutdown();
+  //tp.shutdown();
+  //tp2.shutdown();
 }
 
 void Scag::reloadTestRoutes(const RouteConfig& rcfg)

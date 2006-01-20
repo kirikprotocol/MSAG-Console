@@ -27,7 +27,7 @@
 extern "C" void atExitHandler(void)
 {
     smsc::util::xml::TerminateXerces();
-    smsc::logger::Logger::Shutdown();
+    //smsc::logger::Logger::Shutdown();
 }
 
 int main(int argc,char* argv[])

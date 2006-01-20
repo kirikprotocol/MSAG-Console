@@ -117,9 +117,9 @@ StatisticsManager::StatisticsManager()
 }
 StatisticsManager::~StatisticsManager()
 {
-  Logger::Init();
+  /*Logger::Init();
   logger = Logger::getInstance("scag.stat.StatisticsManager");
-  sender.reinitPrfSrvLogger();
+  sender.reinitPrfSrvLogger();*/
 
   file.Close();
   httpFile.Close();
@@ -458,10 +458,10 @@ int StatisticsManager::Execute()
         smsc_log_debug(logger, "Execute() >> Flushed");
     }
 
-    {
+    /*{
         MutexGuard guard(stopLock);
         isStarted = false;
-    }
+    }*/
 
     /*smsc_log_debug(logger, "PerformanceServer is shutdowninig...");
     sender.Stop();

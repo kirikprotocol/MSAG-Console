@@ -21,6 +21,7 @@
 
 #include "scag/admin/SCAGCommandReader.h"
 #include "scag/admin/SCAGCommand.h"
+#include "logger/Logger.h"
 
 namespace scag {
 namespace admin {
@@ -31,10 +32,12 @@ using namespace scag;
 using smsc::admin::AdminException;
 using smsc::core::network::Socket;
 using namespace scag::admin::Actions;
+using smsc::logger::Logger;
 
 class SCAGCommandDispatcher : public CommandDispatcherTempl<SCAGCommandReader, ResponseWriter>
 {
 public:
+  static Logger * getLogger();
   SCAGCommandDispatcher(Socket * admSocket);
   virtual ~SCAGCommandDispatcher();
   virtual Response *handle(const Command * const command) throw (AdminException);

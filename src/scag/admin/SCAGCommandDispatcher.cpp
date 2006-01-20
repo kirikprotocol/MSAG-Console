@@ -23,6 +23,7 @@ namespace admin {
 using namespace smsc::core::synchronization;
 using namespace scag;
 using scag::config::ConfigManager;
+using smsc::logger::Logger;
 
 class GwRunner : public smsc::core::threads::Thread
 {
@@ -113,15 +114,25 @@ void SCAGCommandDispatcher::startGw()
   }
 }
 
+Logger * SCAGCommandDispatcher::getLogger()
+{
+    static Logger * logger = Logger::getInstance("CmdDsp");
+    return logger;
+}
+
 void SCAGCommandDispatcher::stopGw()
 {
+  Logger * logger = getLogger();
+  smsc_log_info(logger, "Scag stopping...");
   MutexGuard guard(runnerMutex);
   if (runner != 0 && runner->isRunning()) {
     runner->Stop();
     runner->WaitFor();
     delete runner;
     runner = 0;
-  }
+    smsc_log_info(logger, "Scag stopped ok");
+  }else
+    smsc_log_warn(logger, "Can't stop Scag");
 }
 
 void SCAGCommandDispatcher::abortGw()
@@ -176,7 +187,7 @@ Response * SCAGCommandDispatcher::handle(const Command * const command) throw (A
 
 void SCAGCommandDispatcher::shutdown()
 {
-  stopGw();
+    stopGw();
 }
 
 void SCAGCommandDispatcher::DoActions(Actions::CommandActions actions)

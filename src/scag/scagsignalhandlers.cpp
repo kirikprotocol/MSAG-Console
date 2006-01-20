@@ -56,9 +56,9 @@ extern "C" void sigDumpDispatcher(int sig)
 extern "C" void sigShutdownHandler(int signo)
 {
   fprintf(stderr, "Signal %i received, shutdown\n", signo);
-  if (_scag != 0)
+  if (_scag != 0){
     _scag->shutdown();
-  else
+  }else
   {
     if (_socketListener != 0)
       _socketListener->shutdown();
@@ -87,10 +87,10 @@ void registerSignalHandlers_internal()
     __warning__("Faield to update signal mask");
   }
   sigset(17,      sigAbortDispatcher);
-  sigset(SIGBUS,  sigDumpDispatcher);
+  //sigset(SIGBUS,  sigDumpDispatcher);
   sigset(SIGFPE,  sigDumpDispatcher);
   sigset(SIGILL,  sigDumpDispatcher);
-  sigset(SIGSEGV, sigDumpDispatcher);
+  //sigset(SIGSEGV, sigDumpDispatcher);
   signal(SIGABRT, sigDumpDispatcher);
   sigset(SIGALRM, sigDumpDispatcher);
   sigset(SHUTDOWN_SIGNAL,  sigShutdownHandler);
