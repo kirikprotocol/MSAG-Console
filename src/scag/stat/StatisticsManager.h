@@ -218,7 +218,6 @@ namespace stat {
 
         static bool createDir(const std::string& dir);
         bool createStorageDir(const std::string loc);
-        bool started();
         void Stop();
         void Start();
 

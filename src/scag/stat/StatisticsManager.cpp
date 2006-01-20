@@ -121,10 +121,10 @@ StatisticsManager::~StatisticsManager()
   logger = Logger::getInstance("scag.stat.StatisticsManager");
   sender.reinitPrfSrvLogger();*/
 
-  file.Close();
-  httpFile.Close();
   Stop();
   WaitFor();
+  file.Close();
+  httpFile.Close();
 }
 
 void StatisticsManager::incError(IntHash<int>& hash, int errcode)
@@ -430,16 +430,11 @@ void StatisticsManager::registerEvent(const HttpStatEvent& se)
 
 int StatisticsManager::Execute()
 {
-    /*smsc_log_debug(logger, "PerformanceServer is starting...");
-    sender.Start();
-    smsc_log_debug(logger, "PerformanceServer is started");*/
 
-    {
-        MutexGuard mg(stopLock);
-        isStarted = true; 
-    }
+    
+    isStarted = true;     
 
-    while (started())
+    while (isStarted)
     {
         int toSleep = calculateToSleep();
         smsc_log_debug(logger, "Execute() >> Start wait %d", toSleep);
@@ -458,22 +453,12 @@ int StatisticsManager::Execute()
         smsc_log_debug(logger, "Execute() >> Flushed");
     }
 
-    /*{
-        MutexGuard guard(stopLock);
-        isStarted = false;
-    }*/
-
-    /*smsc_log_debug(logger, "PerformanceServer is shutdowninig...");
-    sender.Stop();
-    smsc_log_debug(logger, "PerformanceServer is shutdowned");*/
-
     smsc_log_debug(logger, "Execute() exited");
     return 0;
 }
 
 void StatisticsManager::Stop()
 {
-    MutexGuard guard(stopLock);
 
     smsc_log_debug(logger, "PerformanceServer is shutdowninig...");
     sender.Stop();
@@ -489,24 +474,12 @@ void StatisticsManager::Stop()
 void StatisticsManager::Start()
 {
     
-    MutexGuard guard(stopLock);
-
     smsc_log_debug(logger, "PerformanceServer is starting...");
     sender.Start();
     smsc_log_debug(logger, "PerformanceServer is started");
 
     isStarted = true;
     Thread::Start();
-}
-
-bool StatisticsManager::started()
-{
-    bool isStart = false;
-    {
-        MutexGuard guard(stopLock);
-        isStart = isStarted;
-    }
-    return isStart;
 }
 
 int StatisticsManager::switchCounters()
