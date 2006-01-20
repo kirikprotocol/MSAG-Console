@@ -209,6 +209,7 @@ SmppManager::SmppManager():sm(this,this)
 
 SmppManager::~SmppManager()
 {
+  StopProcessing();
   tp.shutdown();
   sm.shutdown();
 }
