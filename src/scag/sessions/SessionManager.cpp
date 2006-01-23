@@ -43,8 +43,9 @@ namespace scag { namespace sessions
             time_t nextWakeTime;
             bool bOpened;
             bool hasPending;
+            bool hasOperations;
 
-            CSessionAccessData() : nextWakeTime(0), bOpened(false) {}
+            CSessionAccessData() : nextWakeTime(0), bOpened(false), hasPending(false), hasOperations(false) {}
         };
 
         class XSessionHashFunc {
@@ -159,6 +160,7 @@ void SessionManagerImpl::AddRestoredSession(Session * session)
     accessData->nextWakeTime = time;
     accessData->hasPending = session->hasPending();
     accessData->SessionKey = sessionKey;
+    accessData->hasOperations = session->hasOperations();
 
 
     smsc_log_debug(logger,"SessionManager: Session restored from store with UMR='%d', Address='%s'",sessionKey.USR,sessionKey.abonentAddr.toString().c_str());
@@ -304,21 +306,25 @@ int SessionManagerImpl::processExpire()
         if (iPeriod > 0) return iPeriod;
 
         //expire pending operations
-        SessionPtr sessionPtr = store.getSession((*it)->SessionKey);
-        Session * session = sessionPtr.Get();
+        //SessionPtr sessionPtr = store.getSession((*it)->SessionKey);
+        //Session * session = sessionPtr.Get();
 
-        if (!session) 
-        {
-            smsc_log_debug(logger,"SessionManager: Session UMR='%d', Address='%s' cannot be found in store",(*it)->SessionKey.USR,(*it)->SessionKey.abonentAddr.toString().c_str());
-            SessionHash.Delete((*it)->SessionKey);
-            SessionExpirePool.erase(it);
-            delete (*it);
-            return 0;
-        }
             //throw SCAGException("SessionManager:: Fatal error - session cannot be found in store");
 
-        while ((iPeriod <= 0)&&(session->hasPending()))
+        while ((iPeriod <= 0)&&((*it)->hasPending))
         {
+            SessionPtr sessionPtr = store.getSession((*it)->SessionKey);
+            Session * session = sessionPtr.Get();
+
+            if (!session) 
+            {
+                smsc_log_debug(logger,"SessionManager: Session UMR='%d', Address='%s' cannot be found in store",(*it)->SessionKey.USR,(*it)->SessionKey.abonentAddr.toString().c_str());
+                SessionHash.Delete((*it)->SessionKey);
+                SessionExpirePool.erase(it);
+                delete (*it);
+                return 0;
+            }
+
             session->expirePendingOperation();
             store.updateSession(sessionPtr);
 
@@ -329,7 +335,7 @@ int SessionManagerImpl::processExpire()
         }
 
         // Session expired
-        if (!session->hasOperations()) 
+        if ((*it)->hasOperations) 
         {
             SessionHash.Delete((*it)->SessionKey);
             SessionExpirePool.erase(it);
@@ -396,6 +402,8 @@ SessionPtr SessionManagerImpl::newSession(CSessionKey& sessionKey)
     accessData->bOpened = true;
     accessData->nextWakeTime = time;
     accessData->hasPending = session->hasPending();
+    accessData->SessionKey = sessionKey;
+    accessData->hasOperations = session->hasOperations();
 
     CSessionSetIterator it;
     std::pair<CSessionSetIterator, bool> pr;
@@ -422,6 +430,8 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
 
     (*it)->bOpened = false;
     (*it)->hasPending = session->hasPending();
+    (*it)->hasOperations = session->hasOperations();
+
 
     std::list<PendingOperation>::iterator itPending;
 
