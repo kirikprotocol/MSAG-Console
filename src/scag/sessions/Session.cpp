@@ -224,6 +224,7 @@ void Session::changed(AdapterProperty& property)
 {
     AdapterProperty * oldProperty = PropertyHash.Get(property.GetName().c_str());
     oldProperty->setPureStr(property.getStr());
+    bChanged = true;
 }
 
 Property* Session::getProperty(const std::string& name)

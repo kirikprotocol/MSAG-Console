@@ -443,6 +443,7 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
         }
         (*it)->nextWakeTime = session->getWakeUpTime();
         session->PrePendingOperationList.clear();
+        session->bChanged = true;
     }
 
     if (!session->hasOperations()) 
@@ -456,8 +457,7 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
         return;
     }
 
-    //TODO: check if session is changed...
-    store.updateSession(session);
+    if (session->isChanged()) store.updateSession(session);
     inUseMonitor.notifyAll();
     smsc_log_debug(logger,"SessionManager: session released");
 }
