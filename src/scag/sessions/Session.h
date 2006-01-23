@@ -18,6 +18,9 @@
 #include <scag/re/RuleStatus.h>
 #include <scag/re/CommandBrige.h>
 #include "scag/config/sessn/SessionManagerConfig.h"
+#include "core/buffers/RefPtr.hpp"
+
+#include <iostream>
 
 namespace scag { namespace sessions
 {
@@ -92,6 +95,8 @@ namespace scag { namespace sessions
 
     class PendingOperation
     {
+        friend class Session;
+        friend class Comparator;
     public:
         uint8_t type;
         time_t validityTime;
@@ -100,6 +105,7 @@ namespace scag { namespace sessions
     class Operation
     {
         friend class Session;
+        friend class Comparator;
 
         Logger * logger;
         Operation(const Operation& operation);
@@ -127,6 +133,7 @@ namespace scag { namespace sessions
     class Session : public PropertyManager
     {
         friend class SessionManagerImpl;
+        friend class Comparator;
 
         Logger * logger;
         std::list<PendingOperation> PendingOperationList;
@@ -192,12 +199,13 @@ namespace scag { namespace sessions
         void Serialize(SessionBuffer& buff);
         void Deserialize(SessionBuffer& buff);
 
-        friend class Comparator;
     };
-/*
+
+    typedef smsc::core::buffers::RefPtr<Session,smsc::core::synchronization::Mutex> SessionPtr;
+
     class Comparator
     {
-        bool compare_properties(Session * s1,Session * s2)
+        bool compare_properties(SessionPtr s1,SessionPtr s2)
         {
             if (s1->PropertyHash.GetCount() != s2->PropertyHash.GetCount()) return false;
 
@@ -211,20 +219,19 @@ namespace scag { namespace sessions
             return true;
         }
 
-        bool compare_operations(Session * s1,Session * s2)
+        bool compare_operations(SessionPtr s1,SessionPtr s2)
         {
             Operation * operation;
-            COperationKey key;
+            int key;
 
-            s1->OperationHash.First();
-            XHash <COperationKey,Operation *,XOperationHashFunc>::Iterator it = s1->OperationHash.getIterator();
+            IntHash <Operation *>::Iterator it = s1->OperationsHash.First();
 
-            if (s1->OperationHash.Count() != s2->OperationHash.Count()) return false;
+            if (s1->OperationsHash.Count() != s2->OperationsHash.Count()) return false;
 
             for (;it.Next(key, operation);)
             {
-                if (!s2->OperationHash.Exists(key)) return false;
-                Operation * op2 = s2->OperationHash.Get(key);
+                if (!s2->OperationsHash.Exist(key)) return false;
+                Operation * op2 = s2->OperationsHash.Get(key);
 
                 if (operation->BillList.size() != op2->BillList.size()) return false;
 
@@ -234,16 +241,12 @@ namespace scag { namespace sessions
                     if ((*billIt)!=(*billIt2)) return false;
                     ++billIt2;
                 }
-
-                if (operation->type != op2->type) return false;
-                if (operation->validityTime != op2->validityTime) return false;
-
             }
             return true;
         }
 
 
-        bool compare_pending(Session * s1,Session * s2)
+        bool compare_pending(SessionPtr s1,SessionPtr s2)
         {
             std::list<PendingOperation>::iterator it;
             std::list<PendingOperation>::iterator it2;
@@ -255,6 +258,7 @@ namespace scag { namespace sessions
             {
                 if (it->type != it2->type) return false;
                 if (it->validityTime != it2->validityTime) return false;
+                std::cout << "++++" << std::endl;
 
                 ++it2;
             }
@@ -263,32 +267,34 @@ namespace scag { namespace sessions
 
 
     public:
-        bool compare(Session * s1,Session * s2)
+        bool compare(SessionPtr s1,SessionPtr s2)
         {
             if (!(compare_properties(s1,s2)&&compare_operations(s1,s2)&&(compare_pending(s1,s2)))) return false;
 
-            return (s1->currentOperationKey == s2->currentOperationKey);
+            if (s1->currentOperationId != s2->currentOperationId) return false;
+            if (s1->lastOperationId != s2->lastOperationId) return false;
 
-            bool hasOp1 = (s1->m_pCurrentOperation != 0);
-            bool hasOp2 = (s2->m_pCurrentOperation != 0);
+            bool hasOp1 = (s1->currentOperationId != 0);
+            bool hasOp2 = (s2->currentOperationId != 0);
 
             if (hasOp1 != hasOp2) return false;
 
-            if (s1->m_pCurrentOperation != 0)
+            /*if (s1->m_pCurrentOperation != 0)
             {
-                if (s1->currentOperationKey == s2->currentOperationKey); else return false;
-            }
+                if (s1->currentOperationId != s2->currentOperationId) return false;
+            } */
 
-            if (s1->needReleaseCurrentOperation != s2->needReleaseCurrentOperation) return false;
             if (s1->m_SessionKey == s2->m_SessionKey); return false;
+            std::cout << "!!!!!!!!!!!!!!!!!!!!!" << std::endl;
 
             if (s1->lastAccessTime != s2->lastAccessTime) return false;
+            std::cout << "!!!!!!!!!!!!!!!!!!!!!" << std::endl;
 
             return true;
 
         }
     };
-  */
+  
 }}
 
 #endif // SCAG_SESSIONS_SESSION

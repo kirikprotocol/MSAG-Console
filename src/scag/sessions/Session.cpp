@@ -261,7 +261,8 @@ Session::~Session()
         if (value) delete value;
 
     ClearOperations();
-    smsc_log_debug(logger,"Session: session destroyed");
+
+    smsc_log_debug(logger,"Session: session destroyed USR='%d' Address = '%s'",m_SessionKey.USR,m_SessionKey.abonentAddr.toString().c_str());
 }
 
 
@@ -303,15 +304,15 @@ int Session::getNewOperationId()
 
 bool Session::hasPending()
 {
-    return !(PendingOperationList.empty());
+    return (PendingOperationList.size() > 0);
 }
 
 void Session::expirePendingOperation()
 {
-    if (!(PendingOperationList.empty())) 
+    if (PendingOperationList.size() > 0) 
     {
-        PendingOperationList.pop_front();
         smsc_log_debug(logger,"Session: pending operation has expiried");
+        PendingOperationList.pop_front();
     }
 }
 
