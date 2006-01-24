@@ -808,12 +808,14 @@ bool Task::finalizeMessage(uint64_t msgId, MessageState state, Connection* conne
         Statement* finalizeMessage = 0;
         if (info.keepHistory)
         {
-            std::auto_ptr<char> changeStateId(prepareSqlCall(DO_STATE_MESSAGE_STATEMENT_ID));
-            std::auto_ptr<char> changeStateSql(prepareSqlCall(DO_STATE_MESSAGE_STATEMENT_SQL));
+            // Was DO_STATE_MESSAGE_STATEMENT
+            std::auto_ptr<char> changeStateId(prepareSqlCall(DO_RETRY_MESSAGE_STATEMENT_ID));
+            std::auto_ptr<char> changeStateSql(prepareSqlCall(DO_RETRY_MESSAGE_STATEMENT_SQL));
             finalizeMessage = connection->getStatement(changeStateId.get(), changeStateSql.get());
             if (finalizeMessage) {
-                finalizeMessage->setUint8 (1, state);
-                finalizeMessage->setUint64(2, msgId);
+                finalizeMessage->setUint8   (1, state);
+                finalizeMessage->setDateTime(2, time(NULL));
+                finalizeMessage->setUint64  (3, msgId);
             }
         }
         else
