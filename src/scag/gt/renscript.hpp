@@ -13,6 +13,7 @@
 #include <scag/re/RuleStatus.h>
 #include <scag/transport/smpp/SmppCommand.h>
 #include <scag/sessions/SessionManager.h>
+#include <scag/sessions/SessionStore.h>
 #include <scag/sessions/Session.h>
 #include <scag/bill/BillingManager.h>
 #include <scag/config/ConfigManager.h>
@@ -33,11 +34,10 @@
 
 using scag::re::RuleEngine;
 using scag::re::RuleStatus;
-
 using scag::sessions::SessionManager;
 using scag::sessions::SessionManagerConfig;
 using scag::sessions::CSessionKey;
-
+using scag::sessions::SessionPtr;
 using scag::transport::smpp::SmppCommand;
 
 using namespace scag::transport::smpp;
@@ -469,13 +469,13 @@ if(argc<8)
  cmd->set_ruleId(ruleid);
 
 
- scag::sessions::Session* session =  smanager->newSession(key);;//smanager->getSession(cmd);
+ scag::sessions::SessionPtr session =  smanager->newSession(key);;//smanager->getSession(cmd);
 
      if (!session) 
-     {
+     { 
               smsc_log_error(logger,"RuleRun():getSession('%s')==0 !",cmd_name.c_str());
 
-  *rval=BOOLEAN_TO_JSVAL(false); 
+              *rval=BOOLEAN_TO_JSVAL(false); 
        return JS_TRUE;
      }
 
@@ -483,7 +483,7 @@ if(argc<8)
       {
        smsc_log_debug(logger,"getSession for OA='%s'ok",str_oa.c_str());
 
-       RuleStatus rs = engine->process(cmd,*session);
+       RuleStatus rs = engine->process(cmd,(Session*)session);
 
               char buff[128];
               sprintf(buff,"cmd:%s %s%d",cmd_name.c_str(),"result = ",rs.result);
