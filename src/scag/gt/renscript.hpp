@@ -470,8 +470,8 @@ if(argc<8)
 
 
  scag::sessions::SessionPtr session =  smanager->newSession(key);;//smanager->getSession(cmd);
-
-     if (!session) 
+ 
+     if (session==NULL) 
      { 
               smsc_log_error(logger,"RuleRun():getSession('%s')==0 !",cmd_name.c_str());
 
