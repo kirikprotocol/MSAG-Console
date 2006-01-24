@@ -483,7 +483,7 @@ if(argc<8)
       {
        smsc_log_debug(logger,"getSession for OA='%s'ok",str_oa.c_str());
 
-       RuleStatus rs = engine->process(cmd,session.Get());
+       RuleStatus rs = engine->process(cmd,*session.Get());
 
               char buff[128];
               sprintf(buff,"cmd:%s %s%d",cmd_name.c_str(),"result = ",rs.result);
