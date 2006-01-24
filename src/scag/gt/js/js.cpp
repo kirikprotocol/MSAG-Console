@@ -40,7 +40,7 @@
 /*
  * JS shell.
  */
-//#define SOLARIS
+#define SOLARIS
 //#define JS_THREADSAFE
 
 #include "jsstddef.h"
