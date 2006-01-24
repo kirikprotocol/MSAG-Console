@@ -80,14 +80,14 @@ static JSBool _puts(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 
 //------------------------
 /*
-JSVAL_IS_BOOLEAN 	 
-JSVAL_IS_DOUBLE 	 
-JSVAL_IS_GCTHING 	 
-JSVAL_IS_INT 	 
-JSVAL_IS_NULL 	 
-JSVAL_IS_NUMBER 	 
-JSVAL_IS_OBJECT 	 
-JSVAL_IS_PRIMITIVE 	 
+JSVAL_IS_BOOLEAN   
+JSVAL_IS_DOUBLE   
+JSVAL_IS_GCTHING   
+JSVAL_IS_INT   
+JSVAL_IS_NULL   
+JSVAL_IS_NUMBER   
+JSVAL_IS_OBJECT   
+JSVAL_IS_PRIMITIVE   
 JSVAL_IS_STRING
 
 JSTYPE_VOID, JSTYPE_OBJECT, JSTYPE_FUNCTION, 
@@ -101,13 +101,13 @@ static JSBool _int2str(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 /*switch(JS_TypeOfValue(argv[0]))
 {
   case JSTYPE_STRING:
-	stt="string";	
+ stt="string"; 
     break;
   case JSTYPE_NUMBER :
     break;
 
   default:
-			
+   
     break;
 }
 
@@ -115,10 +115,10 @@ static JSBool _int2str(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
    {
         stt="string";
    }
-	else
+ else
    {
      
-   }	
+   } 
 */ 
   smsc_log_debug(logger,"TEST TEST DEBUG: type is: %s",JS_GetTypeName(cx,JS_TypeOfValue(cx,argv[0])));
 
@@ -126,18 +126,18 @@ static JSBool _int2str(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     return JS_TRUE;
 
 
-/* 	int count = JSVAL_TO_INT(argv[0]);
-	 int value = JSVAL_TO_INT(argv[1]);
+/*  int count = JSVAL_TO_INT(argv[0]);
+  int value = JSVAL_TO_INT(argv[1]);
 
-	 char fmtstr[10];
+  char fmtstr[10];
 
  sprintf(fmtstr,"%s%dd","%.",count);
  
-	char str[17];
+ char str[17];
 
  sprintf(str,fmtstr,value);
 
-	JSString jsstr;
+ JSString jsstr;
 
 
  if(js_SetStringBytes(&jsstr, str, strlen(str))==JS_TRUE)
@@ -166,14 +166,14 @@ static JSBool write_file(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
  
  if(pFile)
  {
-	fprintf(pFile,"%s",text.c_str());
+ fprintf(pFile,"%s",text.c_str());
 
-	fclose(pFile);
+ fclose(pFile);
   
-	return JS_TRUE;
+ return JS_TRUE;
  }
  else
-	return JS_FALSE;
+ return JS_FALSE;
 
 }
 
@@ -274,7 +274,7 @@ static JSBool delayMs(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 }
 /*********************************************/
 /* routines for RuleEngine interface working */
-/*					                         */
+/*                              */ 
 /*                                           */
 /*                                           */
 /*********************************************/
@@ -292,23 +292,23 @@ static JSBool _initReInstance(JSContext *cx, JSObject *obj, uintN argc, jsval *a
      RuleEngine::Init(dir_name);
      RuleEngine& re2=RuleEngine::Instance();
          engine=&re2;
-   	if(engine==0)
-   	{
-	  smsc_log_error(logger,"RE == 0 !");
-	    return 0;
-	}
+    if(engine==0)
+    {
+   smsc_log_error(logger,"RE == 0 !");
+     return 0;
+ }
     }
     catch(...)
     {
 
-	  smsc_log_error(logger,"can't init RE instance !");
+   smsc_log_error(logger,"can't init RE instance !");
 
     }
 
   if(engine)
-	*rval=BOOLEAN_TO_JSVAL(true); 
+ *rval=BOOLEAN_TO_JSVAL(true); 
   else
-	*rval=BOOLEAN_TO_JSVAL(false);	   
+ *rval=BOOLEAN_TO_JSVAL(false);    
 
   return JS_TRUE;
 }
@@ -321,20 +321,20 @@ static JSBool _initSessionManagerInstance(JSContext *cx, JSObject *obj, uintN ar
 try{
 
 
-	 cfg.expireInterval=tmint;
+  cfg.expireInterval=tmint;
          cfg.dir=dir_name;
-	 SessionManager::Init(cfg);
-	 SessionManager& sm2=SessionManager::Instance();
+  SessionManager::Init(cfg);
+  SessionManager& sm2=SessionManager::Instance();
          smanager=&sm2;
-	
-	 if(smanager==0)
-	  {
-      		smsc_log_error(logger," SessionManager==0  !");
+ 
+  if(smanager==0)
+   {
+        smsc_log_error(logger," SessionManager==0  !");
 
-		*rval=BOOLEAN_TO_JSVAL(false); 
+  *rval=BOOLEAN_TO_JSVAL(false); 
 
 
-	  }
+   }
   
    }
    catch(...)
@@ -350,9 +350,9 @@ try{
 
 static JSBool _initBillInstance(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-	scag::bill::BillingManagerConfig bcfg;
-	scag::bill::BillingManager::Init(bcfg);
-	scag::config::ConfigManager::Init();
+ scag::bill::BillingManagerConfig bcfg;
+ scag::bill::BillingManager::Init(bcfg);
+ scag::config::ConfigManager::Init();
 
   return JS_TRUE;
 }
@@ -393,12 +393,12 @@ static JSBool _deleterule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 static JSBool _rulerun(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
 
-#ifdef NEXTVERSION
+//#ifdef NEXTVERSION
 
  CSessionKey key;
 
 if(argc<8)
-	return JS_FALSE;
+ return JS_FALSE;
 
   std::string cmd_name=JS_GetStringBytes(JS_ValueToString(cx, argv[0]));
   std::string str_oa  =JS_GetStringBytes(JS_ValueToString(cx, argv[1])); 
@@ -418,50 +418,50 @@ if(argc<8)
   
 
   smsc_log_debug(logger,"RuleRun(%s,%s,%d,%d,%s,%d,%d,%d)",
-				cmd_name.c_str(),
-				str_oa.c_str(),
-				oa_tn,
-				oa_np,
-				str_da.c_str(),
-				da_tn,
-				da_np,
-				dialogid);
+    cmd_name.c_str(),
+    str_oa.c_str(),
+    oa_tn,
+    oa_np,
+    str_da.c_str(),
+    da_tn,
+    da_np,
+    dialogid);
 
  scag::transport::smpp::SmppCommand cmd;
 
 
  String2SCAGCommang(cmd,cmd_name,str_oa,oa_tn,oa_np,str_da,da_tn,da_np,dialogid);
 
-	bool bdump=false;
-	int ruleid=0;
-	/***********/
-	if(argc>=9)
-		 bdump=(bool)(JSVAL_TO_INT(argv[8])==1);
+ bool bdump=false;
+ int ruleid=0;
+ /***********/
+ if(argc>=9)
+   bdump=(bool)(JSVAL_TO_INT(argv[8])==1);
 
-	if(argc==10)
- 		ruleid =JSVAL_TO_INT(argv[9]); 	 
+ if(argc==10)
+   ruleid =JSVAL_TO_INT(argv[9]);   
 
 
 /*
 
-	if(cmd->cmdid==CommandId::DELIVERY || cmd->cmdid==CommandId::SUBMIT)
-	{
-		SMS sms;*/
-		smsc::sms::Address oa,da ;
+ if(cmd->cmdid==CommandId::DELIVERY || cmd->cmdid==CommandId::SUBMIT)
+ {
+  SMS sms;*/
+  smsc::sms::Address oa,da ;
 
-	 	oa.setNumberingPlan(oa_np);
-	 	oa.setTypeOfNumber(oa_tn);
-	 	oa.setValue(str_oa.length(),str_oa.c_str());
-		
-/*	 	da.setNumberingPlan(da_np);
-	 	da.setTypeOfNumber(da_tn);
-	 	da.setValue(str_da.length(),str_da.c_str());
-	
-		sms.setDestinationAddress(da);
-		sms.setOriginatingAddress(oa);
-		
+   oa.setNumberingPlan(oa_np);
+   oa.setTypeOfNumber(oa_tn);
+   oa.setValue(str_oa.length(),str_oa.c_str());
+  
+/*   da.setNumberingPlan(da_np);
+   da.setTypeOfNumber(da_tn);
+   da.setValue(str_da.length(),str_da.c_str());
+ 
+  sms.setDestinationAddress(da);
+  sms.setOriginatingAddress(oa);
+  
 
-	}
+ }
 */
 
  key.abonentAddr = oa;
@@ -475,57 +475,57 @@ if(argc<8)
      {
               smsc_log_error(logger,"RuleRun():getSession('%s')==0 !",cmd_name.c_str());
 
-		*rval=BOOLEAN_TO_JSVAL(false); 
-	      return JS_TRUE;
+  *rval=BOOLEAN_TO_JSVAL(false); 
+       return JS_TRUE;
      }
 
     try
       {
-	      smsc_log_debug(logger,"getSession for OA='%s'ok",str_oa.c_str());
+       smsc_log_debug(logger,"getSession for OA='%s'ok",str_oa.c_str());
 
-	      RuleStatus rs = engine->process(cmd,*session);
+       RuleStatus rs = engine->process(cmd,*session);
 
               char buff[128];
               sprintf(buff,"cmd:%s %s%d",cmd_name.c_str(),"result = ",rs.result);
               smsc_log_debug(logger,buff);
 
-	 if(bdump)
-	 {
-	     for(int i=0;i<SMS_LAST_TAG;i++)
-	     {
-  		if(Tag::tagNames[i])	
-     		 {
-			switch(Tag::tagTypes[i])	
-			{
-			  case SMS_INT_TAG:
-  				smsc_log_debug(logger,"%s :int: %d",Tag::tagNames[i],cmd->get_sms()->getIntProperty(i|((SMS_INT_TAG)<<8)));	
-				break;
-			  case SMS_BIN_TAG:
-  				//smsc_log_debug(logger,"%s type : %d",Tag::tagNames[i],);	
-				break;
-			  case SMS_STR_TAG:		
-  				smsc_log_debug(logger,"%s :string: '%s'",Tag::tagNames[i],cmd->get_sms()->getStrProperty(i|((SMS_STR_TAG)<<8)).c_str());	
-				break;
+  if(bdump)
+  {
+      for(int i=0;i<SMS_LAST_TAG;i++)
+      {
+    if(Tag::tagNames[i]) 
+        {
+   switch(Tag::tagTypes[i]) 
+   {
+     case SMS_INT_TAG:
+      smsc_log_debug(logger,"%s :int: %d",Tag::tagNames[i],cmd->get_sms()->getIntProperty(i|((SMS_INT_TAG)<<8))); 
+    break;
+     case SMS_BIN_TAG:
+      //smsc_log_debug(logger,"%s type : %d",Tag::tagNames[i],); 
+    break;
+     case SMS_STR_TAG:  
+      smsc_log_debug(logger,"%s :string: '%s'",Tag::tagNames[i],cmd->get_sms()->getStrProperty(i|((SMS_STR_TAG)<<8)).c_str()); 
+    break;
 
-			}
-		 }
-	      }
-	  }
-	      smanager->closeSession(session);		
+   }
+   }
+       }
+   }
+       smanager->closeSession(session);  
 
       }
       catch (Exception& e)
       {
               smsc_log_error(logger,"cmd:%s:",cmd_name.c_str());
               smsc_log_error(logger,std::string("Process aborted: ") + e.what());
-	      
-		*rval=BOOLEAN_TO_JSVAL(false); 
-	      return JS_TRUE;
+       
+  *rval=BOOLEAN_TO_JSVAL(false); 
+       return JS_TRUE;
       }
-	*rval=BOOLEAN_TO_JSVAL(true); 
+ *rval=BOOLEAN_TO_JSVAL(true); 
 
-
-#endif
+ 
+//#endif
 
   return JS_TRUE;
 
@@ -596,12 +596,12 @@ public:
     
     if (!logger) 
     {
-	printf("error:can`t create logger\n");
-	fflush(stdout);
-	return 0;
+ printf("error:can`t create logger\n");
+ fflush(stdout);
+ return 0;
     }
     //engine = new RuleEngine("./rules");
-					 
+      
     return 1;
  }
 /**/
@@ -610,9 +610,9 @@ public:
  {
   
   if(!initre())
-	return 0;
+ return 0;
 
-  	
+   
     runScript();
    
   return 1;
