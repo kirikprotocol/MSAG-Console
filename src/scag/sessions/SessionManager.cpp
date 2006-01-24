@@ -57,15 +57,15 @@ namespace scag { namespace sessions
         };
 
 
-        struct FAccessDataLess 
+        struct FAccessDataCompare 
         {
             bool operator () (const CSessionAccessData* x,const CSessionAccessData* y) const
             {
-                return (x->nextWakeTime < y->nextWakeTime);
+                return !(x->SessionKey == y->SessionKey);
             }
         };
 
-        typedef std::set<CSessionAccessData*,FAccessDataLess> CSessionSet;
+        typedef std::set<CSessionAccessData*,FAccessDataCompare> CSessionSet;
         typedef std::set<CSessionAccessData*>::iterator CSessionSetIterator;
         typedef XHash<CSessionKey,CSessionSetIterator,XSessionHashFunc> CSessionHash;
 
@@ -163,11 +163,20 @@ void SessionManagerImpl::AddRestoredSession(Session * session)
     accessData->hasOperations = session->hasOperations();
 
 
-    smsc_log_debug(logger,"SessionManager: Session restored from store with UMR='%d', Address='%s'",sessionKey.USR,sessionKey.abonentAddr.toString().c_str());
+    smsc_log_debug(logger,"SessionManager: Session restored from store with UMR='%d', Address='%s', has pending: %d",accessData->SessionKey.USR,accessData->SessionKey.abonentAddr.toString().c_str(),accessData->hasPending);
 
     std::pair<CSessionSetIterator, bool> pr;
 
     pr = SessionExpirePool.insert(accessData);
+
+    if (!pr.second) 
+    {
+        delete accessData;
+
+        smsc_log_debug(logger,"SessionManager: Error - session cannot be inserted");
+        return;
+    }
+
     SessionHash.Insert(sessionKey,pr.first);
 }
 
@@ -230,6 +239,14 @@ void SessionManagerImpl::init(const SessionManagerConfig& _config) // possible t
       logger = Logger::getInstance("scag.re.SessionManager");
 
     store.init(config.dir,SessionManagerCallback,this);
+
+    CSessionSetIterator it;
+    for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();++it)
+    {
+        smsc_log_debug(logger,"SessionManager:: URM = '%d', Address = '%s', has pending = '%d'",(*it)->SessionKey.USR,(*it)->SessionKey.abonentAddr.toString().c_str(),(*it)->hasPending);
+    }
+
+
     smsc_log_debug(logger,"SessionManager::initialized");
 }
 
@@ -305,16 +322,12 @@ int SessionManagerImpl::processExpire()
         iPeriod = (*it)->nextWakeTime - now;
         if (iPeriod > 0) return iPeriod;
 
-        //expire pending operations
-        //SessionPtr sessionPtr = store.getSession((*it)->SessionKey);
-        //Session * session = sessionPtr.Get();
-
-            //throw SCAGException("SessionManager:: Fatal error - session cannot be found in store");
-
         while ((iPeriod <= 0)&&((*it)->hasPending))
         {
             SessionPtr sessionPtr = store.getSession((*it)->SessionKey);
             Session * session = sessionPtr.Get();
+
+            smsc_log_debug(logger,"SessionManager: try to expire session UMR='%d', Address='%s', has pending: %d-%d",(*it)->SessionKey.USR,(*it)->SessionKey.abonentAddr.toString().c_str(),session->hasPending(),(*it)->hasPending);
 
             if (!session) 
             {
@@ -326,16 +339,18 @@ int SessionManagerImpl::processExpire()
             }
 
             session->expirePendingOperation();
-            store.updateSession(sessionPtr);
 
             (*it)->hasPending = session->hasPending();
             (*it)->nextWakeTime = session->getWakeUpTime();
+            (*it)->hasOperations = session->hasOperations();
 
             iPeriod = (*it)->nextWakeTime - now;
+            store.updateSession(sessionPtr);
+
         }
 
         // Session expired
-        if ((*it)->hasOperations) 
+        if (!(*it)->hasOperations) 
         {
             SessionHash.Delete((*it)->SessionKey);
             SessionExpirePool.erase(it);
@@ -379,6 +394,7 @@ SessionPtr SessionManagerImpl::getSession(const CSessionKey& sessionKey)
     (*it)->bOpened = true;
 
     session = store.getSession(sessionKey);
+    
     return session;
 }
 
@@ -409,6 +425,17 @@ SessionPtr SessionManagerImpl::newSession(CSessionKey& sessionKey)
     std::pair<CSessionSetIterator, bool> pr;
 
     pr = SessionExpirePool.insert(accessData);
+
+    if (!pr.second) 
+    {
+        delete accessData;
+        store.deleteSession(sessionKey);
+
+        smsc_log_debug(logger,"SessionManager: cannot create a new session - session with such sessionId already exists");
+        session = SessionPtr(0);
+        return session;
+    }
+
     SessionHash.Insert(sessionKey,pr.first);
     return session;
 }
@@ -421,16 +448,12 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
     CSessionKey sessionKey = session->getSessionKey();
 
     MutexGuard guard(inUseMonitor);
-    if (session->isChanged()) store.updateSession(session);
+    //if (session->isChanged()) store.updateSession(session);
     
     CSessionSetIterator * itPtr = SessionHash.GetPtr(sessionKey);
 
     if (!itPtr) throw SCAGException("SessionManager: Fatal error 0");
     CSessionSetIterator it = (*itPtr);
-
-    (*it)->bOpened = false;
-    (*it)->hasPending = session->hasPending();
-    (*it)->hasOperations = session->hasOperations();
 
 
     std::list<PendingOperation>::iterator itPending;
@@ -442,9 +465,14 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
             session->DoAddPendingOperation(*itPending);
         }
         (*it)->nextWakeTime = session->getWakeUpTime();
+
         session->PrePendingOperationList.clear();
         session->bChanged = true;
     }
+
+    (*it)->bOpened = false;
+    (*it)->hasPending = session->hasPending();
+    (*it)->hasOperations = session->hasOperations();
 
     if (!session->hasOperations()) 
     {
@@ -458,6 +486,7 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
     }
 
     if (session->isChanged()) store.updateSession(session);
+
     inUseMonitor.notifyAll();
     smsc_log_debug(logger,"SessionManager: session released");
 }

@@ -279,6 +279,7 @@ void Session::ClearOperations()
         delete value;
     }
 
+
     OperationsHash.Empty();
     PendingOperationList.clear();
     PrePendingOperationList.clear();
@@ -289,7 +290,25 @@ void Session::ClearOperations()
 
 void Session::abort()
 {
-    ClearOperations();
+    int key;
+    Operation * value;
+
+    COperationsHash::Iterator it = OperationsHash.First();
+
+    for (;it.Next(key, value);)
+    {              
+        value->rollbackAll();
+        delete value;
+    }
+
+    OperationsHash.Empty();
+    PendingOperationList.clear();
+    PrePendingOperationList.clear();
+
+    m_pCurrentOperation = 0;
+    lastOperationId = 0;
+    bChanged = true;
+
     smsc_log_error(logger,"Session: session aborted");
 }
 
@@ -323,6 +342,8 @@ void Session::closeCurrentOperation()
     delete m_pCurrentOperation;
     m_pCurrentOperation = 0;
     OperationsHash.Delete(currentOperationId);
+
+    bChanged = true;
     smsc_log_debug(logger,"Session: close current operation");
 }
 
@@ -389,6 +410,8 @@ void Session::AddNewOperationToHash(SCAGCommand& cmd, int type)
     OperationsHash.Insert(cmd.getOperationId(),operation);
     currentOperationId = cmd.getOperationId();
     m_pCurrentOperation = operation;
+
+    bChanged = true;
 }
 
 bool Session::startOperation(SCAGCommand& cmd)
@@ -421,6 +444,7 @@ bool Session::startOperation(SCAGCommand& cmd)
 
                 currentOperationId = cmd.getOperationId();
                 m_pCurrentOperation = operation;
+                bChanged = true;
             }
                 
             break;
@@ -434,6 +458,7 @@ bool Session::startOperation(SCAGCommand& cmd)
             //TODO: check what to do if there are no session?
             //if (!operation) ...
 
+            bChanged = true;
             currentOperationId = cmd.getOperationId();
             m_pCurrentOperation = operation;
 
@@ -480,6 +505,7 @@ bool Session::startOperation(SCAGCommand& cmd)
                 currentOperationId = cmd.getOperationId();
                 m_pCurrentOperation = operation;
                 operation->setStatus(m_SmppDiscriptor.currentIndex,m_SmppDiscriptor.lastIndex);
+                bChanged = true;
             }
             break;
         }
@@ -493,6 +519,7 @@ bool Session::startOperation(SCAGCommand& cmd)
             currentOperationId = cmd.getOperationId();
             m_pCurrentOperation = operation;
 
+            bChanged = true;
             if (m_SmppDiscriptor.lastIndex == 0) break; //single response
 
             operation->setStatus(m_SmppDiscriptor.currentIndex,m_SmppDiscriptor.lastIndex);

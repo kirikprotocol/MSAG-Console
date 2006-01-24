@@ -121,7 +121,7 @@ namespace scag { namespace sessions
             //TODO: Implement
         }
 
-        ~Operation() {rollbackAll();}
+        ~Operation() {}
         Operation() :logger(0) {logger = Logger::getInstance("scag.re");};
     };
 
