@@ -1,14 +1,13 @@
 package ru.sibinco.scag.beans.routing.routes;
 
-import ru.sibinco.lib.bean.TabledBean;
 import ru.sibinco.lib.SibincoException;
-import ru.sibinco.lib.backend.protocol.Proxy;
 import ru.sibinco.lib.backend.users.User;
 import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.scag.beans.TabledBeanImpl;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.SCAGAppContext;
+import ru.sibinco.scag.backend.daemon.Proxy;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -144,7 +143,7 @@ public class Index extends TabledBeanImpl {
             try {
                 appContext.getGateway().apply("routes");
             } catch (SibincoException e) {
-                if (Proxy.StatusConnected == appContext.getGateway().getStatus()) {
+                if (Proxy.STATUS_CONNECTED == appContext.getGateway().getStatus()) {
                     logger.debug("Couldn't apply routes", e);
                     throw new SCAGJspException(Constants.errors.routing.routes.COULDNT_APPLY_ROUTES, e);
                 }

@@ -1,13 +1,11 @@
 package ru.sibinco.scag.beans.gw.status;
 
 import ru.sibinco.lib.SibincoException;
-import ru.sibinco.lib.backend.daemon.Daemon;
-import ru.sibinco.lib.backend.service.ServiceInfo;
-import ru.sibinco.lib.backend.protocol.Proxy;
 import ru.sibinco.lib.backend.util.config.Config;
-import ru.sibinco.lib.backend.service.ServiceInfo;
 import ru.sibinco.scag.Constants;
-import ru.sibinco.scag.backend.Gateway;
+import ru.sibinco.scag.backend.daemon.Daemon;
+import ru.sibinco.scag.backend.daemon.Proxy;
+import ru.sibinco.scag.backend.service.ServiceInfo;
 import ru.sibinco.scag.beans.SCAGBean;
 import ru.sibinco.scag.beans.SCAGJspException;
 
@@ -19,246 +17,222 @@ import java.io.IOException;
 /**
  * Created by IntelliJ IDEA. User: igork Date: 03.03.2004 Time: 18:39:37
  */
-public class Index extends SCAGBean
-{
-  private String mbApply;
-  private String mbRestore;
-  private String mbStart;
-  private String mbStop;
-  private String[] subj;
-  private boolean gwRunning;
-  private boolean gwStopped;
-  public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException
-  {
-    super.process(request, response);
-    final Daemon gwDaemon = appContext.getGwDaemon();
-    try {
-      gwDaemon.refreshServices(appContext.getGwSmeManager());
-    } catch (SibincoException e) {
-      logger.error("Could not refresh services", e);
-   //   throw new SCAGJspException(Constants.errors.status.COULDNT_REFRESH_SERVICES);
-    } catch (NullPointerException e) {
-      logger.error("Could not get GW daemon");
-     // throw new SCAGJspException(Constants.errors.status.COULDNT_GET_DAEMON);
-    }
-    final ServiceInfo info = gwDaemon.getServiceInfo(appContext.getGateway().getId());
-    if (null != info) {
-      final byte gwStatus = info.getStatus();
-      gwRunning = ServiceInfo.STATUS_RUNNING == gwStatus;
-      gwStopped = ServiceInfo.STATUS_STOPPED == gwStatus;
-    }
+public class Index extends SCAGBean {
 
-    if (null != mbStart)
-      start();
-    if (null != mbStop)
-      stop();
-    if (null != mbRestore)
-      restore();
-    else if (null != mbApply)
-      apply();
-  }
+    private String mbApply;
+    private String mbRestore;
+    private String mbStart;
+    private String mbStop;
+    private String[] subj;
+    private boolean gwRunning;
+    private boolean gwStopped;
 
-  private void stop() throws SCAGJspException
-  {
-    try {
-      appContext.getGwDaemon().shutdownService(appContext.getGateway().getId());
-    } catch (SibincoException e) {
-      logger.error("Could not stop Gateway", e);
-      throw new SCAGJspException(Constants.errors.status.COULDNT_STOP_GATEWAY, e);
-    }
-  }
+    public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
 
-  private void start() throws SCAGJspException
-  {
-    try {
-      appContext.getGwDaemon().startService(appContext.getGateway().getId());
-    } catch (SibincoException e) {
-      logger.error("Could not start Gateway", e);
-      throw new SCAGJspException(Constants.errors.status.COULDNT_START_GATEWAY, e);
-    }
-  }
+        super.process(request, response);
+        final Daemon scagDaemon = appContext.getScagDaemon();
 
-  private void restore()
-  {
-    if (null != subj && 0 < subj.length)
-      for (int i = 0; i < subj.length; i++) {
-        final String s = subj[i];
-        if ("config".equals(s))
-          restoreConfig();
-      }
-  }
-
-  private void restoreConfig()
-  {
-  }
-
-  private void apply() throws SCAGJspException
-  {
-    if (null != subj && 0 < subj.length)
-      for (int i = 0; i < subj.length; i++) {
-        final String s = subj[i];
-        if ("config".equals(s))
-          applyConfig();
-        if ("routes".equals(s))
-          applyRoutes();
-        if ("users".equals(s))
-          applyUsers();
-        if ("billing".equals(s))
-          applyBilling();
-      }
-  }
-
-  private void applyBilling() throws SCAGJspException
-  {
-    try {
-      appContext.getBillingManager().save();
-      appContext.getStatuses().setBillingChanged(false);
-    } catch (Throwable e) {
-      logger.debug("Couldn't apply Route billing rules", e);
-      throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_BILLING, e);
-    }
-  }
-
-  private void applyUsers() throws SCAGJspException
-  {
-    try {
-      appContext.getUserManager().apply();
-      appContext.getStatuses().setUsersChanged(false);
-    } catch (Throwable e) {
-      logger.debug("Couldn't apply users", e);
-      throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_USERS, e);
-    }
-  }
-
-  private void applyRoutes() throws SCAGJspException
-  {
-    try {
-      appContext.getScagRoutingManager().apply();
-      try {
-        appContext.getGateway().apply("routes");
-      } catch (SibincoException e) {
-        if (Proxy.StatusConnected == appContext.getGateway().getStatus()) {
-          logger.debug("Couldn't apply routes", e);
-          throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_ROUTES, e);
+        try {
+            scagDaemon.refreshServices(appContext.getSmppManager());
+        } catch (SibincoException e) {
+            logger.error("Could not refresh services", e);
+            throw new SCAGJspException(Constants.errors.status.COULDNT_REFRESH_SERVICES);
+        } catch (NullPointerException e) {
+            logger.error("Could not get GW daemon");
+            throw new SCAGJspException(Constants.errors.status.COULDNT_GET_DAEMON);
         }
-      }
-      appContext.getStatuses().setRoutesChanged(false);
-    } catch (SibincoException e) {
-      logger.debug("Couldn't apply routes", e);
-      throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_ROUTES, e);
-    }
-  }
 
-  private void applyConfig() throws SCAGJspException
-  {
-    try {
-      appContext.getSmscsManager().store(appContext.getGwConfig());
-      appContext.getGwSmeManager().store();
-      appContext.getGwConfig().save();
+        final ServiceInfo info = scagDaemon.getServiceInfo(appContext.getGateway().getId());
 
-      try {
-        appContext.getGateway().apply("config");
-      } catch (SibincoException e) {
-        if (Proxy.StatusConnected == appContext.getGateway().getStatus()) {
-          logger.debug("Couldn't apply config", e);
-          throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_CONFIG, e);
+        if (null != info) {
+            final byte gwStatus = info.getStatus();
+            gwRunning = ServiceInfo.STATUS_RUNNING == gwStatus;
+            gwStopped = ServiceInfo.STATUS_STOPPED == gwStatus;
         }
-      }
-      appContext.getStatuses().setConfigChanged(false);
-    } catch (SibincoException e) {
-      logger.debug("Couldn't apply config", e);
-      throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_CONFIG, e);
-    } catch (Config.WrongParamTypeException e) {
-      logger.debug("Couldn't save config", e);
-      throw new SCAGJspException(Constants.errors.status.COULDNT_SAVE_CONFIG, e);
-    } catch (IOException e) {
-      logger.debug("Couldn't save config", e);
-      throw new SCAGJspException(Constants.errors.status.COULDNT_SAVE_CONFIG, e);
+
+        if (null != mbStart)
+            start();
+        if (null != mbStop)
+            stop();
+        if (null != mbRestore)
+            restore();
+        else if (null != mbApply)
+            apply();
     }
-  }
 
-  public String getMbApply()
-  {
-    return mbApply;
-  }
+    private void stop() throws SCAGJspException {
+        try {
+            appContext.getScagDaemon().shutdownService(appContext.getGateway().getId());
+        } catch (SibincoException e) {
+            logger.error("Could not stop Gateway", e);
+            throw new SCAGJspException(Constants.errors.status.COULDNT_STOP_GATEWAY, e);
+        }
+    }
 
-  public void setMbApply(final String mbApply)
-  {
-    this.mbApply = mbApply;
-  }
+    private void start() throws SCAGJspException {
+        try {
+            appContext.getScagDaemon().startService(appContext.getGateway().getId());
+        } catch (SibincoException e) {
+            logger.error("Could not start Gateway", e);
+            throw new SCAGJspException(Constants.errors.status.COULDNT_START_GATEWAY, e);
+        }
+    }
 
-  public String getMbRestore()
-  {
-    return mbRestore;
-  }
+    private void restore() {
+        if (null != subj && 0 < subj.length)
+            for (int i = 0; i < subj.length; i++) {
+                final String s = subj[i];
+                if ("config".equals(s))
+                    restoreConfig();
+            }
+    }
 
-  public void setMbRestore(final String mbRestore)
-  {
-    this.mbRestore = mbRestore;
-  }
+    private void restoreConfig() {
+    }
 
-  public String[] getSubj()
-  {
-    return subj;
-  }
+    private void apply() throws SCAGJspException {
+        if (null != subj && 0 < subj.length)
+            for (int i = 0; i < subj.length; i++) {
+                final String s = subj[i];
+                if ("config".equals(s))
+                    applyConfig();
+                if ("routes".equals(s))
+                    applyRoutes();
+                if ("users".equals(s))
+                    applyUsers();
+                if ("billing".equals(s))
+                    applyBilling();
+            }
+    }
 
-  public void setSubj(final String[] subj)
-  {
-    this.subj = subj;
-  }
+    private void applyBilling() throws SCAGJspException {
+        try {
+            appContext.getBillingManager().save();
+            appContext.getStatuses().setBillingChanged(false);
+        } catch (Throwable e) {
+            logger.debug("Couldn't apply Route billing rules", e);
+            throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_BILLING, e);
+        }
+    }
 
-  public boolean isConfigChanged()
-  {
-    return appContext.getStatuses().isConfigChanged();
-  }
+    private void applyUsers() throws SCAGJspException {
+        try {
+            appContext.getUserManager().apply();
+            appContext.getStatuses().setUsersChanged(false);
+        } catch (Throwable e) {
+            logger.debug("Couldn't apply users", e);
+            throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_USERS, e);
+        }
+    }
 
-  public boolean isRoutesChanged()
-  {
-    return appContext.getStatuses().isRoutesChanged();
-  }
+    private void applyRoutes() throws SCAGJspException {
+        try {
+            appContext.getScagRoutingManager().apply();
+            try {
+                appContext.getGateway().apply("routes");
+            } catch (SibincoException e) {
+                if (Proxy.STATUS_CONNECTED == appContext.getGateway().getStatus()) {
+                    logger.debug("Couldn't apply routes", e);
+                    throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_ROUTES, e);
+                }
+            }
+            appContext.getStatuses().setRoutesChanged(false);
+        } catch (SibincoException e) {
+            logger.debug("Couldn't apply routes", e);
+            throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_ROUTES, e);
+        }
+    }
 
-  public boolean isBillingChanged()
-  {
-    return appContext.getStatuses().isBillingChanged();
-  }
+    private void applyConfig() throws SCAGJspException {
+        try {
+            appContext.getGwConfig().save();
 
-  public boolean isSmscsChanged()
-  {
-    return appContext.getStatuses().isSmscsChanged();
-  }
+            try {
+                appContext.getGateway().apply("config");
+            } catch (SibincoException e) {
+                if (Proxy.STATUS_CONNECTED == appContext.getGateway().getStatus()) {
+                    logger.debug("Couldn't apply config", e);
+                    throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_CONFIG, e);
+                }
+            }
+            appContext.getStatuses().setConfigChanged(false);
+        } catch (SibincoException e) {
+            logger.debug("Couldn't apply config", e);
+            throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_CONFIG, e);
+        } catch (Config.WrongParamTypeException e) {
+            logger.debug("Couldn't save config", e);
+            throw new SCAGJspException(Constants.errors.status.COULDNT_SAVE_CONFIG, e);
+        } catch (IOException e) {
+            logger.debug("Couldn't save config", e);
+            throw new SCAGJspException(Constants.errors.status.COULDNT_SAVE_CONFIG, e);
+        }
+    }
 
-  public boolean isUsersChanged()
-  {
-    return appContext.getStatuses().isUsersChanged();
-  }
+    public String getMbApply() {
+        return mbApply;
+    }
 
-  public boolean isGwRunning()
-  {
-    return gwRunning;
-  }
+    public void setMbApply(final String mbApply) {
+        this.mbApply = mbApply;
+    }
 
-  public boolean isGwStopped()
-  {
-    return gwStopped;
-  }
+    public String getMbRestore() {
+        return mbRestore;
+    }
 
-  public String getMbStart()
-  {
-    return mbStart;
-  }
+    public void setMbRestore(final String mbRestore) {
+        this.mbRestore = mbRestore;
+    }
 
-  public void setMbStart(final String mbStart)
-  {
-    this.mbStart = mbStart;
-  }
+    public String[] getSubj() {
+        return subj;
+    }
 
-  public String getMbStop()
-  {
-    return mbStop;
-  }
+    public void setSubj(final String[] subj) {
+        this.subj = subj;
+    }
 
-  public void setMbStop(final String mbStop)
-  {
-    this.mbStop = mbStop;
-  }
+    public boolean isConfigChanged() {
+        return appContext.getStatuses().isConfigChanged();
+    }
+
+    public boolean isRoutesChanged() {
+        return appContext.getStatuses().isRoutesChanged();
+    }
+
+    public boolean isBillingChanged() {
+        return appContext.getStatuses().isBillingChanged();
+    }
+
+    public boolean isSmscsChanged() {
+        return appContext.getStatuses().isSmscsChanged();
+    }
+
+    public boolean isUsersChanged() {
+        return appContext.getStatuses().isUsersChanged();
+    }
+
+    public boolean isGwRunning() {
+        return gwRunning;
+    }
+
+    public boolean isGwStopped() {
+        return gwStopped;
+    }
+
+    public String getMbStart() {
+        return mbStart;
+    }
+
+    public void setMbStart(final String mbStart) {
+        this.mbStart = mbStart;
+    }
+
+    public String getMbStop() {
+        return mbStop;
+    }
+
+    public void setMbStop(final String mbStop) {
+        this.mbStop = mbStop;
+    }
 }
