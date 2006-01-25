@@ -20,7 +20,7 @@ public class DateCountersSet extends CountersSet {
         this.date = date;
     }
 
-    public void addHourStat(HourCountersSet set) {
+    public void addSMPPHourStat(HourCountersSet set) {
         byHours.addElement(set);
         super.incrementFullForSMPPTransport(set);
     }
