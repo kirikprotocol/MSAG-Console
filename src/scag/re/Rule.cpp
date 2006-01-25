@@ -40,7 +40,8 @@ RuleStatus Rule::process(SCAGCommand& command,Session& session)
 
     smsc_log_debug(logger,"Process Rule...");
 
-    int handlerType = ExtractHandlerType(command);
+    EventHandlerType handlerType = CommandBrige::getHandlerType(command);
+
     if (!Handlers.Exist(handlerType)) 
     {
         rs.status = false;
@@ -65,20 +66,6 @@ RuleStatus Rule::process(SCAGCommand& command,Session& session)
     }
     return rs;
 }
-
-int Rule::ExtractHandlerType(SCAGCommand& command)
-{
-    SmppCommand * smpp = dynamic_cast<SmppCommand*>(&command);
-    if (smpp) 
-    {
-        _SmppCommand * cmd = smpp->operator ->();
-        if (!cmd) return 0;
-        return cmd->get_commandId();
-    }
-
-    return 0;
-}
-
 
 EventHandler * Rule::CreateEventHandler()
 {
@@ -109,9 +96,10 @@ IParserHandler * Rule::StartXMLSubSection(const std::string& name,const SectionP
         if (!eh) throw SCAGException("Rule: unknown RuleTransport to create EventHandler");
 
         nHId = eh->StrToHandlerId(name);
+
         PropertyObject propertyObject;
-        propertyObject.HandlerId = nHId;
         propertyObject.transport = transportType;
+        propertyObject.HandlerId = nHId;
 
         eh->init(params,propertyObject);
     } catch (SCAGException& e)

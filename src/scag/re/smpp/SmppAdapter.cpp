@@ -1,7 +1,7 @@
 #include "SmppAdapter.h"
 #include "scag/re/CommandAdapter.h"
+#include "scag/re/CommandBrige.h"
 
-#include <iostream>
 
 namespace scag { namespace re { namespace smpp 
 {
@@ -23,21 +23,21 @@ AccessType SmppCommandAdapter::CheckAccess(int handlerType,const std::string& na
 
     switch (handlerType) 
     {
-    case DELIVERY:
+    case EH_DELIVER_SM:
         if (!DeliverFieldNames.Exists(name.c_str())) return atNoAccess;
         FieldId = DeliverFieldNames[name.c_str()];
         if (DeliverFieldsAccess.Exist(FieldId)) return DeliverFieldsAccess.Get(FieldId);
         return atRead;
         break;
-    case SUBMIT:
+    case EH_SUBMIT_SM:
         if (!SubmitFieldNames.Exists(name.c_str())) return atNoAccess;
         FieldId = SubmitFieldNames[name.c_str()];
         if (SubmitFieldsAccess.Exist(FieldId)) return SubmitFieldsAccess.Get(FieldId);
         return atRead;
-    case DELIVERY_RESP:
+    case EH_DELIVER_SM_RESP:
         if (name!="status") return atNoAccess;
         else return atReadWrite;
-    case SUBMIT_RESP:
+    case EH_SUBMIT_SM_RESP:
         if (name == "status") return atReadWrite;
         if (name == "message_id") return atRead;
         return atNoAccess;

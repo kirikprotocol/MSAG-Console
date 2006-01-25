@@ -20,6 +20,16 @@ enum CommandOperations
     CO_RECEIPT_DELIVER_SM_RESP
 };
 
+enum EventHandlerType
+{
+    EH_UNKNOWN,
+    EH_DELIVER_SM,
+    EH_DELIVER_SM_RESP,
+    EH_SUBMIT_SM,
+    EH_SUBMIT_SM_RESP,
+    EH_RECEIPT
+};
+
 struct CSmppDiscriptor
 {
     CommandOperations cmdType;
@@ -27,9 +37,81 @@ struct CSmppDiscriptor
     int lastIndex;
 };
 
+
+
 class CommandBrige
 {
 public:
+
+    static int ExtractCommandType(SCAGCommand& command)
+    {
+        SmppCommand * smpp = dynamic_cast<SmppCommand*>(&command);
+        if (smpp) 
+        {
+            _SmppCommand * cmd = smpp->operator ->();
+            if (!cmd) return 0;
+            return cmd->get_commandId();
+        }
+    
+        return 0;
+    }     
+
+
+    static EventHandlerType getHandlerType(const SCAGCommand& command)
+    {
+        EventHandlerType handlerType = EH_UNKNOWN;
+
+        SCAGCommand& _command = const_cast<SCAGCommand&>(command);
+
+        SmppCommand * smppCommand = dynamic_cast<SmppCommand *>(&_command);
+        if (!smppCommand) throw SCAGException("Command Bridge Error: SCAGCommand is not smpp-type");
+
+
+        _SmppCommand& cmd = *smppCommand->operator ->();
+
+        CommandId cmdid = cmd.get_commandId();
+        void * dta = cmd.dta;
+        SMS * sms = 0;
+        CSmppDiscriptor SmppDiscriptor;
+        int receiptMessageId = 0;
+
+        if (!dta) throw SCAGException("Command Bridge Error: SCAGCommand data is invalid");
+
+        switch (cmdid) 
+        {
+        case DELIVERY:
+            sms = (SMS*)dta;
+            receiptMessageId = atoi(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
+
+            if (receiptMessageId) handlerType = EH_RECEIPT;
+            else handlerType = EH_DELIVER_SM;
+            break;
+
+        case SUBMIT:
+            sms = (SMS*)dta;
+
+            handlerType = EH_SUBMIT_SM;
+            break;
+
+        case DELIVERY_RESP:
+            sms = ((SmsResp*)dta)->get_sms();
+
+            if (sms) receiptMessageId = atoi(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
+            else throw SCAGException("Command Bridge Error: SCAGCommand SMS data for DELIVERY_RESP is invalid");
+
+            if (receiptMessageId) handlerType = EH_RECEIPT;
+            else handlerType = EH_DELIVER_SM_RESP;
+            break;
+
+        case SUBMIT_RESP:
+            handlerType = EH_SUBMIT_SM_RESP;
+            break;
+        }
+
+        return handlerType;
+    }
+
+
 
     static CSmppDiscriptor getSmppDiscriptor(const SCAGCommand& command)
     {

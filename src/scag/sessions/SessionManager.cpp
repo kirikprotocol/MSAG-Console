@@ -303,13 +303,14 @@ int SessionManagerImpl::processExpire()
         CSessionSetIterator it;
         for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();++it)
         {
+            smsc_log_debug(logger,"SessionManager: check session UMR='%d', Address='%s', has pending: %d, Opened: %d",(*it)->SessionKey.USR,(*it)->SessionKey.abonentAddr.toString().c_str(),(*it)->hasPending,(*it)->bOpened);
+
             if ((!(*it)->bOpened)&&((*it)->hasPending)) break;
         }
 
         time_t now;
         time(&now);
         int iPeriod;
-
 
         if (it == SessionExpirePool.end())
         {
@@ -320,14 +321,17 @@ int SessionManagerImpl::processExpire()
         }
 
         iPeriod = (*it)->nextWakeTime - now;
+
+        smsc_log_debug(logger,"SessionManager: session UMR='%d', Address='%s' has period: %d",(*it)->SessionKey.USR,(*it)->SessionKey.abonentAddr.toString().c_str(),iPeriod);
+
         if (iPeriod > 0) return iPeriod;
+
+        SessionPtr sessionPtr(0);
 
         while ((iPeriod <= 0)&&((*it)->hasPending))
         {
-            SessionPtr sessionPtr = store.getSession((*it)->SessionKey);
+            sessionPtr = store.getSession((*it)->SessionKey);
             Session * session = sessionPtr.Get();
-
-            smsc_log_debug(logger,"SessionManager: try to expire session UMR='%d', Address='%s', has pending: %d-%d",(*it)->SessionKey.USR,(*it)->SessionKey.abonentAddr.toString().c_str(),session->hasPending(),(*it)->hasPending);
 
             if (!session) 
             {
@@ -338,15 +342,14 @@ int SessionManagerImpl::processExpire()
                 return 0;
             }
 
+            smsc_log_debug(logger,"SessionManager: try to expire session UMR='%d', Address='%s', has pending: %d-%d",(*it)->SessionKey.USR,(*it)->SessionKey.abonentAddr.toString().c_str(),session->hasPending(),(*it)->hasPending);
             session->expirePendingOperation();
 
             (*it)->hasPending = session->hasPending();
-            (*it)->nextWakeTime = session->getWakeUpTime();
             (*it)->hasOperations = session->hasOperations();
+            (*it)->nextWakeTime = session->getWakeUpTime();
 
             iPeriod = (*it)->nextWakeTime - now;
-            store.updateSession(sessionPtr);
-
         }
 
         // Session expired
@@ -358,7 +361,11 @@ int SessionManagerImpl::processExpire()
             delete (*it);
             smsc_log_debug(logger,"SessionManager: session expired");
         } 
-        else if (iPeriod > 0) return iPeriod;
+        else
+        {
+            store.updateSession(sessionPtr);
+            if (iPeriod > 0) return iPeriod;
+        }
 
     }
 }

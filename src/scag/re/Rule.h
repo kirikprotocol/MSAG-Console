@@ -20,8 +20,6 @@ class EventHandler;
 
 class Rule : public IParserHandler
 {
-    int ExtractHandlerType(SCAGCommand& command);
-
     Rule(const Rule &);
     IntHash <EventHandler *> Handlers;
     Mutex ruleLock;
