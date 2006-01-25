@@ -6,11 +6,11 @@ package ru.sibinco.scag.beans.endpoints.centers;
 import ru.sibinco.scag.beans.TabledBeanImpl;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.backend.Gateway;
+import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.backend.endpoints.centers.Center;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.lib.bean.TabledBean;
 import ru.sibinco.lib.SibincoException;
-import ru.sibinco.lib.backend.protocol.Proxy;
 
 import java.util.Collection;
 import java.util.Map;
@@ -41,7 +41,7 @@ public class Index extends TabledBeanImpl implements TabledBean {
                 gateway.deleteCenter(center);
                 centers.remove(centerId);
             } catch (SibincoException e) {
-                if (Proxy.StatusConnected == gateway.getStatus()) {
+                if (Proxy.STATUS_CONNECTED == gateway.getStatus()) {
                     logger.error("Couldn't delete Smsc \"" + centerId + '"', e);
                     throw new SCAGJspException(Constants.errors.sme.COULDNT_DELETE, centerId, e);
                 } else

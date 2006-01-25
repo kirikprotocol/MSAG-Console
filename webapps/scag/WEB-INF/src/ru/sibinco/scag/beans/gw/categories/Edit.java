@@ -25,6 +25,7 @@ import java.io.IOException;
  * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
  */
 public class Edit extends EditBean {
+
     private long id = -1;
     private String name;
 
@@ -44,6 +45,7 @@ public class Edit extends EditBean {
     }
 
     protected void save() throws SCAGJspException {
+
         final CategoryManager categoryManager = appContext.getCategoryManager();
 
         if (isAdd()) {

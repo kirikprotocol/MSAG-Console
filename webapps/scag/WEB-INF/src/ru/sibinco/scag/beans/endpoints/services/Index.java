@@ -6,11 +6,10 @@ package ru.sibinco.scag.beans.endpoints.services;
 import ru.sibinco.scag.beans.TabledBeanImpl;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.backend.Gateway;
-import ru.sibinco.scag.backend.endpoints.svc.Svc;
+import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.lib.bean.TabledBean;
 import ru.sibinco.lib.SibincoException;
-import ru.sibinco.lib.backend.protocol.Proxy;
 
 import java.util.Collection;
 import java.util.Map;
@@ -40,7 +39,7 @@ public class Index extends TabledBeanImpl implements TabledBean {
                 gateway.deleteSvc(svcId);
                 svcs.remove(svcId);
             } catch (SibincoException e) {
-                if (Proxy.StatusConnected == gateway.getStatus()) {
+                if (Proxy.STATUS_CONNECTED == gateway.getStatus()) {
                     logger.error("Couldn't delete sme \"" + svcId + '"', e);
                     throw new SCAGJspException(Constants.errors.sme.COULDNT_DELETE, svcId, e);
                 } else

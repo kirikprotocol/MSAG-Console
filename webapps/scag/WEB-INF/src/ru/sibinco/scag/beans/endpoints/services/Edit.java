@@ -10,10 +10,10 @@ import ru.sibinco.scag.backend.endpoints.svc.Svc;
 import ru.sibinco.scag.backend.sme.Provider;
 import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.Gateway;
+import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.backend.transport.Transport;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.lib.backend.users.User;
-import ru.sibinco.lib.backend.protocol.Proxy;
 import ru.sibinco.lib.SibincoException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -145,7 +145,7 @@ public class Edit extends EditBean {
             appContext.getSmppManager().store();
         } catch (SibincoException e) {
             e.printStackTrace();
-            if (Proxy.StatusConnected == gateway.getStatus()) {
+            if (Proxy.STATUS_CONNECTED == gateway.getStatus()) {
                 throw new SCAGJspException(Constants.errors.sme.COULDNT_APPLY, id, e);
             }
         }
