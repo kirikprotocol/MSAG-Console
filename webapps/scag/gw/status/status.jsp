@@ -3,7 +3,7 @@
  />status
 <%
   bean.process(request, response);
-  switch(bean.getGwStatus())
+  switch(bean.getScagStatus())
   {
     case ServiceInfo.STATUS_RUNNING:
       out.print("<img src='/images/ic_running.gif' width=10 height=10 title='running'> running");
