@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.TimeZone;
 import java.util.TreeMap;
+import java.util.ArrayList;
 
 /**
  * Created by IntelliJ IDEA.
@@ -259,10 +260,11 @@ public class Stat {
                             }
                             haveValues = true; // read and increase counters
 
-                            scanRoutesAndGeneralStat(countersForRoute, lastHourCounter, is, query.getTransport());
-                            scanSmes(countersForSme, is, query.getTransport());
+                            scanRoutesAndGeneralStat(countersForRoute, lastHourCounter, is,
+                                    query.getTransport(), query.getProviderId());
+                            scanSmes(countersForSme, is, query.getTransport(), query.getProviderId());
                             if (query.getTransport() == Transport.SMPP_TRANSPORT_ID) {
-                                scanSmsc(countersForSmsc, is);
+                                scanSmsc(countersForSmsc, is, query.getProviderId());
                             }
                         } catch (EOFException exc) {
                             logger.warn("Incomplete record #" + recordNum + " in " + path + "");
@@ -304,20 +306,33 @@ public class Stat {
                 localCaledar.set(Calendar.SECOND, 0);
                 localCaledar.set(Calendar.MILLISECOND, 0);
                 lastDate = localCaledar.getTime();
-                if (dateCounters != null) stat.addDateStat(dateCounters);
+                if (dateCounters != null) {
+                    if (query.getTransport() == Transport.SMPP_TRANSPORT_ID) {
+                        stat.addSMPPDateStat(dateCounters);
+                    } else if (query.getTransport() == Transport.HTTP_TRANSPORT_ID) {
+                        stat.addHttpDateStat(dateCounters);
+                    }
+                }
                 dateCounters = new DateCountersSet(lastDate);
             }
 
             HourCountersSet set = new HourCountersSet(hour);
             if (query.getTransport() == Transport.SMPP_TRANSPORT_ID) {
                 set.incrementFullForSMPPTransport(hourCounter);
+                dateCounters.addSMPPHourStat(set);
             } else if (query.getTransport() == Transport.HTTP_TRANSPORT_ID) {
                 set.incrementFullForHttpTransport(hourCounter);
+                dateCounters.addHttpHourStat(set);
             }
-            dateCounters.addHourStat(set);
+
         }
-        if (dateCounters != null)
-            stat.addDateStat(dateCounters);
+        if (dateCounters != null) {
+            if (query.getTransport() == Transport.SMPP_TRANSPORT_ID) {
+                stat.addSMPPDateStat(dateCounters);
+            } else if (query.getTransport() == Transport.HTTP_TRANSPORT_ID) {
+                stat.addHttpDateStat(dateCounters);
+            }
+        }
 
         Collection countersSme = countersForSme.values();
         if (countersSme != null)
@@ -331,7 +346,9 @@ public class Stat {
         return stat;
     }
 
-    private void scanRouteAndGeneralStatCounters(CountersSet set, CountersSet countersSet, InputStream is) throws IOException {
+    private void scanSMPPRouteAndGeneralStatCounters(CountersSet set,
+                                                     CountersSet countersSet,
+                                                     InputStream is, boolean isNeedToCount) throws IOException {
         int accepted = (int) readUInt32(is);
         int rejected = (int) readUInt32(is);
         int delivered = (int) readUInt32(is);
@@ -341,12 +358,16 @@ public class Stat {
         int billingFailed = (int) readUInt32(is);
         int recieptOk = (int) readUInt32(is);
         int recieptFailed = (int) readUInt32(is);
-        set.incrementFullForSMPPTransport(accepted, rejected, delivered, gw_rejected, failed, billingOk, billingFailed, recieptOk, recieptFailed);
-        countersSet.incrementFullForSMPPTransport(accepted, rejected, delivered, gw_rejected, failed, billingOk, billingFailed, recieptOk, recieptFailed);
+        if (isNeedToCount) {
+            set.incrementFullForSMPPTransport(accepted, rejected, delivered, gw_rejected, failed, billingOk, billingFailed, recieptOk, recieptFailed);
+            countersSet.incrementFullForSMPPTransport(accepted, rejected, delivered, gw_rejected, failed, billingOk, billingFailed, recieptOk, recieptFailed);
+        }
     }
 
 
-    private void scanHttpRouteAndGeneralStatCounters(CountersSet set, CountersSet countersSet, InputStream is) throws IOException {
+    private void scanHttpRouteAndGeneralStatCounters(CountersSet set,
+                                                     CountersSet countersSet,
+                                                     InputStream is, boolean isNeedToCount) throws IOException {
         int request = (int) readUInt32(is);
         int requestRejected = (int) readUInt32(is);
         int response = (int) readUInt32(is);
@@ -355,110 +376,133 @@ public class Stat {
         int failed = (int) readUInt32(is);
         int billingOk = (int) readUInt32(is);
         int billingFailed = (int) readUInt32(is);
-
-        set.incrementFullForHttpTransport(request, requestRejected, response, responseRejected,
-                delivered, failed, billingOk, billingFailed);
-        countersSet.incrementFullForHttpTransport(request, requestRejected, response, responseRejected,
-                delivered, failed, billingOk, billingFailed);
+        if (isNeedToCount) {
+            set.incrementFullForHttpTransport(request, requestRejected, response, responseRejected,
+                    delivered, failed, billingOk, billingFailed);
+            countersSet.incrementFullForHttpTransport(request, requestRejected, response, responseRejected,
+                    delivered, failed, billingOk, billingFailed);
+        }
     }
 
-    private void scanSmeCounters(CountersSet set, InputStream is) throws IOException {
+    private void scanSMPPSmeCounters(CountersSet set, InputStream is, boolean isNeedToCount) throws IOException {
         int accepted = (int) readUInt32(is);
         int rejected = (int) readUInt32(is);
         int delivered = (int) readUInt32(is);
         int gw_rejected = (int) readUInt32(is);
         int failed = (int) readUInt32(is);
-        set.incrementForSMPPTransport(accepted, rejected, delivered, gw_rejected, failed);
+        if (isNeedToCount)
+            set.incrementForSMPPTransport(accepted, rejected, delivered, gw_rejected, failed);
     }
 
-    private void scanHttpSmeCounters(CountersSet set, InputStream is) throws IOException {
+    private void scanHttpSmeCounters(CountersSet set, InputStream is, boolean isNeedToCount) throws IOException {
         int request = (int) readUInt32(is);
         int requestRejected = (int) readUInt32(is);
         int response = (int) readUInt32(is);
         int responseRejected = (int) readUInt32(is);
         int delivered = (int) readUInt32(is);
         int failed = (int) readUInt32(is);
-        set.incrementForHttpTransport(request, requestRejected, response, responseRejected, delivered, failed);
+        if (isNeedToCount)
+            set.incrementForHttpTransport(request, requestRejected, response, responseRejected, delivered, failed);
     }
 
-    private void scanSmscCounters(CountersSet set, InputStream is) throws IOException {
+    private void scanSmscCounters(CountersSet set, InputStream is, boolean isNeedToCount) throws IOException {
         int accepted = (int) readUInt32(is);
         int rejected = (int) readUInt32(is);
         int delivered = (int) readUInt32(is);
         int gw_rejected = (int) readUInt32(is);
         int failed = (int) readUInt32(is);
-        set.incrementForSMPPTransport(accepted, rejected, delivered, gw_rejected, failed);
+        if (isNeedToCount)
+            set.incrementForSMPPTransport(accepted, rejected, delivered, gw_rejected, failed);
     }
 
-    private void scanErrors(ExtendedCountersSet set, InputStream is) throws IOException {
+    private void scanErrors(ExtendedCountersSet set, InputStream is, boolean isNeedToCount) throws IOException {
         int counter = (int) readUInt32(is);
         while (counter-- > 0) {
             int errcode = (int) readUInt32(is);
             int count = (int) readUInt32(is);
-            set.incError(errcode, count);
+            if (isNeedToCount)
+                set.incError(errcode, count);
         }
     }
 
-    private void scanSmes(HashMap map, InputStream is, long transport) throws IOException {
+    private void scanSmes(HashMap map, InputStream is, long transport, long providerId) throws IOException {
         int counter = (int) readUInt32(is);
+
         while (counter-- > 0) {
+            boolean isNeedToCount = true;
             int sme_id_len = readUInt8(is);
             String smeId = readString(is, sme_id_len);
-            int providerId = (int) readUInt32(is);
+            int currentProviderId = (int) readUInt32(is);
+            if (currentProviderId != providerId && providerId != -1) {
+                isNeedToCount = false;
+            }
             SmeIdCountersSet set = (SmeIdCountersSet) map.get(smeId);
             if (set == null) {
                 set = new SmeIdCountersSet(smeId);
-                map.put(smeId, set);
+                if (isNeedToCount)
+                    map.put(smeId, set);
             }
-            set.setProviderId(providerId);
+
+            set.setProviderId(currentProviderId);
             if (transport == Transport.SMPP_TRANSPORT_ID) {
-                scanSmeCounters(set, is);
+                scanSMPPSmeCounters(set, is, isNeedToCount);
             } else if (transport == Transport.HTTP_TRANSPORT_ID) {
-                scanHttpSmeCounters(set, is);
+                scanHttpSmeCounters(set, is, isNeedToCount);
             }
-            scanErrors(set, is);
+            scanErrors(set, is, isNeedToCount);
         }
     }
 
-    private void scanSmsc(HashMap map, InputStream is) throws IOException {
+    private void scanSmsc(HashMap map, InputStream is, long providerId) throws IOException {
         int counter = (int) readUInt32(is);
+
         while (counter-- > 0) {
+            boolean isNeedToCount = true;
             int smsc_id_len = readUInt8(is);
             String smscId = readString(is, smsc_id_len);
 
-            int providerId = (int) readUInt32(is);
+            int currentProviderId = (int) readUInt32(is);
+            if (currentProviderId != providerId && providerId != -1) {
+                isNeedToCount = false;
+            }
 
             SmscIdCountersSet set = (SmscIdCountersSet) map.get(smscId);
             if (set == null) {
                 set = new SmscIdCountersSet(smscId);
-                map.put(smscId, set);
+                if (isNeedToCount)
+                    map.put(smscId, set);
             }
-            set.setProviderId(providerId);
-            scanSmscCounters(set, is);
-            scanErrors(set, is);
+            set.setProviderId(currentProviderId);
+            scanSmscCounters(set, is, isNeedToCount);
+            scanErrors(set, is, isNeedToCount);
         }
     }
 
-    private void scanRoutesAndGeneralStat(HashMap map, CountersSet lastHourCounter, InputStream is, long transport) throws IOException {
+    private void scanRoutesAndGeneralStat(HashMap map, CountersSet lastHourCounter,
+                                          InputStream is, long transport, long providerId) throws IOException {
         int counter = (int) readUInt32(is);
         while (counter-- > 0) {
+            boolean isNeedToCount = true;
             int route_id_len = readUInt8(is);
             String routeId = readString(is, route_id_len);
 
-            int providerId = (int) readUInt32(is);
-
+            int currentProviderId = (int) readUInt32(is);
+            if (currentProviderId != providerId && providerId != -1) {
+                isNeedToCount = false;
+            }
             RouteIdCountersSet set = (RouteIdCountersSet) map.get(routeId);
             if (set == null) {
                 set = new RouteIdCountersSet(routeId);
-                map.put(routeId, set);
+                if (isNeedToCount)
+                    map.put(routeId, set);
             }
-            set.setProviderId(providerId);
+            set.setProviderId(currentProviderId);
             if (transport == Transport.SMPP_TRANSPORT_ID) {
-                scanRouteAndGeneralStatCounters(set, lastHourCounter, is);
+                scanSMPPRouteAndGeneralStatCounters(set, lastHourCounter, is, isNeedToCount);
             } else if (transport == Transport.HTTP_TRANSPORT_ID) {
-                scanHttpRouteAndGeneralStatCounters(set, lastHourCounter, is);
+                scanHttpRouteAndGeneralStatCounters(set, lastHourCounter, is, isNeedToCount);
             }
-            scanErrors(set, is);
+            scanErrors(set, is, isNeedToCount);
         }
     }
 
@@ -493,5 +537,6 @@ public class Stat {
         }
         return new String(buff);
     }
+
 }
 

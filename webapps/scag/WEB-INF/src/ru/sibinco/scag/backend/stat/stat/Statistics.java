@@ -28,9 +28,14 @@ public class Statistics {
         return total;
     }
 
-    public void addDateStat(DateCountersSet set) {
+    public void addSMPPDateStat(DateCountersSet set) {
         byDates.add(set);
         total.incrementFullForSMPPTransport(set);
+    }
+
+    public void addHttpDateStat(DateCountersSet set) {
+        byDates.add(set);
+        total.incrementFullForHttpTransport(set);
     }
 
     public Collection getDateStat() {
