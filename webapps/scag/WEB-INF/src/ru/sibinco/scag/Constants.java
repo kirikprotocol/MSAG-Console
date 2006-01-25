@@ -10,7 +10,7 @@ public class Constants
 {
   public static final String TomcatRealmName = "SMSC.SmscRealm";
   private final String id;
-  public static final String SCAG_SME_ID = "SCAG";
+  public static final String SCAG_SME_ID = "scag";
   public static final String SCAG_ERROR_MESSAGES_ATTRIBUTE_NAME = "SCAG_ERROR_MESSAGES_ATTRIBUTE";
   public interface errors
   {

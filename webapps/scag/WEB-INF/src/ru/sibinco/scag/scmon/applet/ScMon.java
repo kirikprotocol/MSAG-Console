@@ -200,7 +200,7 @@ public class ScMon extends JApplet implements Runnable, MouseListener, ActionLis
         gg.drawImage(screen, 0, 0, null);
         g.dispose();
 
-    }
+    }                           
 
     public void mouseClicked(MouseEvent e) {
 
