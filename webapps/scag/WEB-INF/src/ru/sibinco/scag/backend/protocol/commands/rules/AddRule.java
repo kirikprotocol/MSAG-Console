@@ -4,8 +4,7 @@
 package ru.sibinco.scag.backend.protocol.commands.rules;
 
 import ru.sibinco.lib.SibincoException;
-import ru.sibinco.lib.backend.protocol.Command;
-import ru.sibinco.scag.backend.rules.Rule;
+import ru.sibinco.scag.backend.daemon.Command;
 
 /**
  * The <code>AddRule</code> class represents

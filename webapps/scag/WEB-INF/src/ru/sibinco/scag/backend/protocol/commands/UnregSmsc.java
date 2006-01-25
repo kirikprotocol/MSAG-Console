@@ -1,8 +1,7 @@
 package ru.sibinco.scag.backend.protocol.commands;
 
-import ru.sibinco.lib.backend.protocol.Command;
 import ru.sibinco.lib.SibincoException;
-import ru.sibinco.scag.backend.sme.SmscInfo;
+import ru.sibinco.scag.backend.daemon.Command;
 
 /**
  * Created by IntelliJ IDEA.
@@ -11,12 +10,11 @@ import ru.sibinco.scag.backend.sme.SmscInfo;
  * Time: 15:32:14
  * To change this template use File | Settings | File Templates.
  */
-public class UnregSmsc extends Command
-{
-  public UnregSmsc(String smscId) throws SibincoException
+public class UnregSmsc extends Command {
 
-  {
-    super("unregSme", "file:///command_gw.dtd");
-    createStringParam("id", smscId);
-  }
+    public UnregSmsc(String smscId) throws SibincoException {
+
+        super("unregSme", "file:///command_gw.dtd");
+        createStringParam("id", smscId);
+    }
 }

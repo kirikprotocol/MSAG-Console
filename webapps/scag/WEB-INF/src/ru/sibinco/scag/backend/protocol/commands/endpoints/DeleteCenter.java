@@ -3,9 +3,9 @@
  */
 package ru.sibinco.scag.backend.protocol.commands.endpoints;
 
-import ru.sibinco.lib.backend.protocol.Command;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.scag.backend.endpoints.centers.Center;
+import ru.sibinco.scag.backend.daemon.Command;
 
 /**
  * The <code>DeleteCenter</code> class represents

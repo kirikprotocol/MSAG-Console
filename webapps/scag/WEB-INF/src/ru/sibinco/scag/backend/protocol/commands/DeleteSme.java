@@ -1,8 +1,7 @@
 package ru.sibinco.scag.backend.protocol.commands;
 
 import ru.sibinco.lib.SibincoException;
-import ru.sibinco.lib.backend.protocol.Command;
-
+import ru.sibinco.scag.backend.daemon.Command;
 
 /**
  * Created by igork Date: 01.09.2004 Time: 14:38:41
