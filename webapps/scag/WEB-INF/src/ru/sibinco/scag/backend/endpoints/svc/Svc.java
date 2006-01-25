@@ -9,7 +9,6 @@ import org.apache.log4j.Category;
 
 import java.io.PrintWriter;
 
-import ru.sibinco.lib.backend.sme.SmeStatus;
 import ru.sibinco.lib.backend.util.StringEncoderDecoder;
 import ru.sibinco.scag.backend.sme.Provider;
 import ru.sibinco.scag.backend.sme.ProviderManager;
@@ -43,8 +42,6 @@ public class Svc {
     private String transport = "SMPP";
     
     private byte type = SMPP;
-
-    private SmeStatus status = null;
 
     private Category logger = Category.getInstance(this.getClass());
 
@@ -216,14 +213,6 @@ public class Svc {
 
     public void setMode(final byte mode) {
         this.mode = mode;
-    }
-
-    public SmeStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(final SmeStatus status) {
-        this.status = status;
     }
 
     public Provider getProvider() {
