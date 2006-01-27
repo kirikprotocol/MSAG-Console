@@ -238,10 +238,9 @@ static JSBool _system(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 }
 static JSBool _exit_process(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-
  
  stopProcess=true;
-
+ thr_yield();
  return JS_TRUE;
 
 }
@@ -343,6 +342,7 @@ try{
       *rval=BOOLEAN_TO_JSVAL(false); 
 
    } 
+    smsc_log_debug(logger,"SessionManager Init success, cfg=%s, timeout=%d",dir_name.c_str(),tmint);
      
    *rval=BOOLEAN_TO_JSVAL(true); 
    return JS_TRUE;
@@ -674,25 +674,25 @@ public:
      else
      {
      
-        smsc_log_error(logger,"Error in JavaScript file");
+        smsc_log_error(logger,"JS:Error in JavaScript file");
      
      }
     }
     else
     {
-     smsc_log_error(logger,"Unable to create the global object");
+     smsc_log_error(logger,"JS:Unable to create the global object");
     }
     JS_DestroyContext(cx);
    }
    else
    {
-    smsc_log_error(logger,"Unable to create a context");
+    smsc_log_error(logger,"JS:Unable to create a context");
    }
    JS_Finish(rt);
   }
   else
   {
-   smsc_log_error(logger,"Unable to initialize the JavaScript Engine");
+   smsc_log_error(logger,"JS:Unable to initialize the JavaScript Engine");
   }
    return 0;
  }
