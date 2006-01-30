@@ -262,6 +262,14 @@ int  main(int argc,char ** argv)
 {
 
 	std:string dn="./rules";
+	smsc::logger::Logger::Init();    
+	logger = smsc::logger::Logger::getInstance("scag.retst");        
+
+	if (!logger)     
+	{
+		printf("error:can`t create logger\n"); 
+		return 0;    
+	}
 
 	if(!initReInstance(dn))
 	{
