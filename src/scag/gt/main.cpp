@@ -49,7 +49,7 @@ class commandChecker:public Thread
         return 1;
    }
  
-    thr_yield();
+    Sleep(1);
   }  
  }
    
