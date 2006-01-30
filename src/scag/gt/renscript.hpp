@@ -7,6 +7,8 @@
 
 //#define NEXTVERSION
 
+#define JS_THREADSAFE
+
 #include <core/threads/Thread.hpp>
 #include <scag/re/RuleEngine.h>
 #include <logger/Logger.h>
@@ -512,6 +514,8 @@ if(argc<8)
        }
    }
        smanager->closeSession(session);  
+
+    smanager->deleteSession(key);
 
       }
       catch (Exception& e)
