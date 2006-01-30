@@ -513,9 +513,10 @@ if(argc<8)
    }
        }
    }
-       smanager->closeSession(session);  
+       //smanager->closeSession(session);  
+       //smanager->deleteSession(key);
 
-    smanager->deleteSession(key);
+       smanager->releaseSession(session);
 
       }
       catch (Exception& e)
