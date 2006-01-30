@@ -164,7 +164,7 @@ static JSBool _deleterule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
        uint32_t dialogid);
    
 */
-int _rulerun(   std::string cmd_name,  
+int ruleRun(   std::string cmd_name,  
 		std::string str_oa,  
   		uint8_t oa_tn   ,
   		uint8_t oa_np   ,
@@ -284,6 +284,8 @@ int  main(int argc,char ** argv)
 
 	return 0;
 	}
+
+	ruleRun("deliver_sm","81234567",0,1,"89765432",0,1,51,0,1);
 
 return 1;
 }
