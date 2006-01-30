@@ -61,7 +61,7 @@ SmppCommand command;
 
 /**Create rules from directory */
 
-int  initReInstance( std::string dir_name)
+int  initReInstance( std::string& dir_name)
 {
 
  try{
@@ -90,7 +90,7 @@ int  initReInstance( std::string dir_name)
 return 1;
 }
 
-int  initSessionManagerInstance(std::string dir_name,time_t tmint)
+int  initSessionManagerInstance(std::string &dir_name,time_t tmint)
 {
 
 try{
