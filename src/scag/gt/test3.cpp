@@ -261,13 +261,17 @@ int _rulerun(   std::string cmd_name,
 int  main(int argc,char ** argv)
 {
 
-	if(!initReInstance("./rules"))
+	std:string dn="./rules";
+
+	if(!initReInstance(dn))
 	{
 
 	return 0;
 	}
 
-	if(!initSessionManagerInstance("./store",10))
+	dn ="./store";
+
+	if(!initSessionManagerInstance(dn,10))
 	{
 
 	return 0;
