@@ -5,6 +5,9 @@
     
 */
 
+#include <fstream>
+#include <time.h>
+
 #include "renscript.hpp"
 #include <core/threads/Thread.hpp>
 #include <thread.h>
