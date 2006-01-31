@@ -88,17 +88,11 @@ int StatisticsManager::Execute()
 
     while (isStarted)
     {
-        int toSleep = calculateToSleep();
+        
         smsc_log_debug(logger, "Execute() >> Start wait %d", toSleep);
-        awakeEvent.Wait(toSleep); // Wait for next hour begins ...
+        awakeEvent.Wait(100); // Wait for next hour begins ...
         smsc_log_debug(logger, "Execute() >> End wait");
 
-        int flushIndex = switchCounters();
-        flushCounters(flushIndex);
-        flushHttpCounters(flushIndex);
-
-        flushTraffic();
-        flushHttpTraffic();
 
         if(bExternalFlush) isStarted = false;
         bExternalFlush = false;

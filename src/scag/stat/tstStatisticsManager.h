@@ -61,7 +61,8 @@ namespace statx {
         smsc::logger::Logger    *logger;
 
         bool    isStarted;
-
+        Event   awakeEvent, exitEvent;
+        bool    bExternalFlush;
     private:
 
         void Stop();
