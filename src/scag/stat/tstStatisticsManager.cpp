@@ -22,6 +22,8 @@
 namespace scag { 
 namespace statx {
 
+using namespace scag::stat;
+
 bool  StatisticsManager::inited = false;
 using namespace scag::util::singleton;
 using scag::config::StatManConfig;
