@@ -19,15 +19,16 @@
 #include <scag/util/singleton/Singleton.h>
 #include "tstStatisticsManager.h"
 
-namespace scag { 
-namespace statx {
 
-using namespace scag::stat;
+namespace scag { 
+namespace stat {
+
+
 
 bool  StatisticsManager::inited = false;
 using namespace scag::util::singleton;
 using scag::config::StatManConfig;
-
+ 
 
 typedef SingletonHolder<StatisticsManager> SingleSM;
 
@@ -71,16 +72,9 @@ StatisticsManager::~StatisticsManager()
 }
  
 void StatisticsManager::incError(IntHash<int>& hash, int errcode){}
-
 void StatisticsManager::registerEvent(const SmppStatEvent& se){}
-
 void StatisticsManager::registerEvent(const HttpStatEvent& se){}
-    
-bool StatisticsManager::checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value)
-{
-      
-    return false;
-}
+bool StatisticsManager::checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value){return false;}
 
 int StatisticsManager::Execute()
 {
@@ -122,10 +116,7 @@ void StatisticsManager::Stop()
 void StatisticsManager::Start()
 {
     
-    //smsc_log_debug(logger, "PerformanceServer is starting...");
-    //sender.Start();
     smsc_log_debug(logger, "PerformanceServer is started");
-
     isStarted = true;
     Thread::Start();
 }
@@ -143,5 +134,5 @@ void StatisticsManager::addGenSocket(Socket * socket){}
 
 
 
-}//namespace statx
+}//namespace stat
 }//namespace scag
