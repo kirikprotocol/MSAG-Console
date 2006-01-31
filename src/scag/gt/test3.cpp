@@ -45,7 +45,7 @@ using namespace scag::transport::smpp;
 using namespace smsc::sms;
 using namespace smsc::logger;
 using namespace scag::util;
-using namespace scag::statx;
+using namespace scag::stat;
 
 extern bool stopProcess;
 smsc::logger::Logger *logger;
