@@ -11,14 +11,19 @@
 #include <logger/Logger.h>
 #include <scag/re/RuleStatus.h>
 #include <scag/transport/smpp/SmppCommand.h>
+
 #include <scag/sessions/SessionManager.h>
 #include <scag/sessions/SessionStore.h>
 #include <scag/sessions/Session.h>
+
 #include <scag/bill/BillingManager.h>
 #include <scag/config/ConfigManager.h>
 #include <sms/sms.h>
 #include <scag/transport/SCAGCommand.h>
 #include <scag/exc/SCAGExceptions.h>
+
+#include <scag/stat/tstStatisticsManager.h>
+
 
 #include <fstream>
 #include <time.h>
@@ -40,6 +45,7 @@ using namespace scag::transport::smpp;
 using namespace smsc::sms;
 using namespace smsc::logger;
 using namespace scag::util;
+using namespace scag::statx;
 
 extern bool stopProcess;
 smsc::logger::Logger *logger;
@@ -265,27 +271,27 @@ int  main(int argc,char ** argv)
 	smsc::logger::Logger::Init();    
 	logger = smsc::logger::Logger::getInstance("scag.retst");        
 
-	if (!logger)     
+	Statistics::Init(0,0);
+
+	if(!logger)     
 	{
-		printf("error:can`t create logger\n"); 
-		return 0;    
+	  printf("error:can`t create logger\n"); 
+  	  return 0;    
 	}
 
 	if(!initReInstance(dn))
 	{
-
-	return 0;
+	  return 0;
 	}
 
 	dn ="./store";
 
 	if(!initSessionManagerInstance(dn,10))
 	{
-
-	return 0;
+	  return 0;
 	}
 
-	ruleRun("deliver_sm","81234567",0,1,"89765432",0,1,51,0,1);
+   ruleRun("deliver_sm","81234567",0,1,"89765432",0,1,51,0,1);
 
-return 1;
+  return 1;
 }
