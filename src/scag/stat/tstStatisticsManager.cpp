@@ -24,7 +24,7 @@ namespace scag {
 namespace stat {
 
 
-
+Mutex StatisticsManager::initLock;
 bool  StatisticsManager::inited = false;
 using namespace scag::util::singleton;
 using scag::config::StatManConfig;
