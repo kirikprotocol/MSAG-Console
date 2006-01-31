@@ -108,8 +108,8 @@ int StatisticsManager::Execute()
 void StatisticsManager::Stop()
 {
 
-    smsc_log_debug(logger, "PerformanceServer is shutdowninig...");
-    sender.Stop();
+    //smsc_log_debug(logger, "PerformanceServer is shutdowninig...");
+    //sender.Stop();
     smsc_log_debug(logger, "PerformanceServer is shutdowned");
 
     if (isStarted)
@@ -122,8 +122,8 @@ void StatisticsManager::Stop()
 void StatisticsManager::Start()
 {
     
-    smsc_log_debug(logger, "PerformanceServer is starting...");
-    sender.Start();
+    //smsc_log_debug(logger, "PerformanceServer is starting...");
+    //sender.Start();
     smsc_log_debug(logger, "PerformanceServer is started");
 
     isStarted = true;
