@@ -5,6 +5,7 @@
     Javascript engine based
 */
 
+#define GT_STAT_EMULATION
 
 #include <core/threads/Thread.hpp>
 #include <scag/re/RuleEngine.h>
@@ -24,7 +25,7 @@
 
 #include <scag/stat/tstStatisticsManager.h>
 
-
+#include <stddef.h>
 #include <fstream>
 #include <time.h>
 #include <thread.h>
