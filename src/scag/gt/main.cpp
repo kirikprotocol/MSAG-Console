@@ -52,7 +52,6 @@ class commandChecker:public Thread
         return 1;
    }
  
-    Sleep(1);
   }  
  }
    
