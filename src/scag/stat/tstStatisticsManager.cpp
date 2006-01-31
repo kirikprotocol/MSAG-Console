@@ -31,6 +31,7 @@ using scag::config::StatManConfig;
  
 
 typedef SingletonHolder<StatisticsManager> SingleSM;
+inline unsigned GetLongevity(StatisticsManager*) { return 5; }
 
 Statistics& Statistics::Instance()
 {

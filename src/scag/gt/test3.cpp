@@ -271,7 +271,8 @@ int  main(int argc,char ** argv)
 	smsc::logger::Logger::Init();    
 	logger = smsc::logger::Logger::getInstance("scag.retst");        
 
-	Statistics::Init(0,0);
+
+	Statistics::Init(0);
 
 	if(!logger)     
 	{
