@@ -27,11 +27,11 @@
 
 namespace scag {
 
-namespace statx {
+namespace stat {
 
     using namespace smsc::core::threads;
     using namespace smsc::core::synchronization;
-    using namespace scag::stat;
+ 
 
     using smsc::core::buffers::File;
     using smsc::core::buffers::Array;
@@ -55,7 +55,7 @@ namespace statx {
  
         static bool  inited;
         static Mutex initLock;
-
+ 
     protected:
 
         smsc::logger::Logger    *logger;
@@ -64,6 +64,7 @@ namespace statx {
         Event   awakeEvent, exitEvent;
         bool    bExternalFlush;
     private:
+
 
         void Stop();
         void Start();

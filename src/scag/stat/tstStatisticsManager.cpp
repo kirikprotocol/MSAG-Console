@@ -61,7 +61,7 @@ void StatisticsManager::init(const StatManConfig& statManConfig)
 StatisticsManager::StatisticsManager()
     : Statistics(), Thread(), 
       logger(Logger::getInstance("scag.stat.StatisticsManager")),
-      currentIndex(0), bExternalFlush(false), isStarted(false) 
+      bExternalFlush(false), isStarted(false) 
 {
 }
 StatisticsManager::~StatisticsManager()
@@ -70,8 +70,7 @@ StatisticsManager::~StatisticsManager()
   WaitFor();
 
 }
- 
-void StatisticsManager::incError(IntHash<int>& hash, int errcode){}
+  
 void StatisticsManager::registerEvent(const SmppStatEvent& se){}
 void StatisticsManager::registerEvent(const HttpStatEvent& se){}
 bool StatisticsManager::checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value){return false;}
@@ -85,7 +84,7 @@ int StatisticsManager::Execute()
     while (isStarted)
     {
         
-        smsc_log_debug(logger, "Execute() >> Start wait %d", toSleep);
+        smsc_log_debug(logger, "Execute() >> Start wait %d", 100);
         awakeEvent.Wait(100); // Wait for next hour begins ...
         smsc_log_debug(logger, "Execute() >> End wait");
 
