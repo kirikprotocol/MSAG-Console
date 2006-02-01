@@ -11,6 +11,30 @@ StatManConfig::StatManConfig()
     perfSvcPort = 0;
     perfScPort = 0;
 }
+#ifdef TESTING
+/*
+for testing only!
+created by 
+Gregory Panin green@sbingo.com
+*/
+StatManConfig::StatManConfig(std::string& directory,std::string& host,int genp,int svcp,int scp) throw(ConfigException)
+{	    
+	try{
+	if(directory.length()==0)
+	                    throw ConfigException("StatManConfig.StatManConfig, stat dir. length ==0! ");
+	if(host.length()==0)
+                	    throw ConfigException("StatManConfig.StatManConfig, host. length ==0! ");			    
+	    dir = directory;
+	    perfHost = host;
+	    perfGenPort = genp;
+	    perfSvcPort = svcp;
+	    perfScPort  = scp;	
+	}
+	catch(ConfigException& e)
+	{
+	    throw(ConfigException(e.what()));
+	}
+#endif
 
 StatManConfig::StatManConfig(ConfigView& cv)  throw(ConfigException)
 {
