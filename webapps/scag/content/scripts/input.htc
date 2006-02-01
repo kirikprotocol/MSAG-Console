@@ -1,0 +1,17 @@
+<PUBLIC:ATTACH EVENT="onkeypress" ONEVENT="keyPressed()" />
+<SCRIPT LANGUAGE="JScript">
+function keyPressed()
+{
+	if (this.disabled)
+	{
+		return false;
+	}
+  if (event.keyCode == 13)
+  {
+    if (opForm.onsubmit() == false)
+      return false;
+    opForm.submit();
+    return false;
+  }
+}
+</SCRIPT>
