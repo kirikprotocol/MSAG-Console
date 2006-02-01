@@ -264,6 +264,8 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
     return;
   }
 
+  cmd->get_resp()->set_sms(orgCmd->get_sms());
+
   scag::sessions::CSessionKey key;
   key.USR=orgCmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
   key.abonentAddr=orgCmd->get_sms()->getDestinationAddress();
