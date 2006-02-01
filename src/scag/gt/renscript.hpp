@@ -432,7 +432,7 @@ if(argc<8)
  scag::transport::smpp::SmppCommand cmd;
 
 
- String2SCAGCommang(cmd,cmd_name,str_oa,oa_tn,oa_np,str_da,da_tn,da_np,dialogid);
+ String2SCAGCommang(&cmd,cmd_name,str_oa,oa_tn,oa_np,str_da,da_tn,da_np,dialogid);
 
  bool bdump=false;
  int ruleid=0;

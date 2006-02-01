@@ -4,7 +4,7 @@
 #define SMPP_COMMANDS_COUNT 9
 
 
-void  String2SCAGCommang(scag::transport::smpp::SmppCommand &cmd, 
+void  String2SCAGCommang(scag::transport::smpp::SmppCommand *cmd, 
        std::string cmname,
        std::string str_oa,
        uint8_t oa_tn,

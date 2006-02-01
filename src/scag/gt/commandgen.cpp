@@ -13,7 +13,7 @@ using namespace std;
 using namespace smsc::sms;
 using namespace scag;
 
-
+ 
 #include <sms/sms.h>
 #include <scag/transport/SCAGCommand.h>
 
@@ -41,7 +41,7 @@ const char* SMPP_COMMANDS[SMPP_COMMANDS_COUNT]={
 #define SMPPCI_query_sm_resp  8
 
 
-void  String2SCAGCommang(scag::transport::smpp::SmppCommand &cmd, 
+void  String2SCAGCommang(scag::transport::smpp::SmppCommand *cmd, 
        std::string cmname,
        std::string str_oa,
        uint8_t oa_tn,
@@ -76,10 +76,10 @@ void  String2SCAGCommang(scag::transport::smpp::SmppCommand &cmd,
  {
 
  case SMPPCI_deliver_sm:  
-  cmd =  scag::transport::smpp::SmppCommand::makeDeliverySm(sms,dialogid);
+  *cmd =  scag::transport::smpp::SmppCommand::makeDeliverySm(sms,dialogid);
   break;
  case SMPPCI_deliver_sm_resp: 
-  cmd =  scag::transport::smpp::SmppCommand::makeDeliverySmResp("12345",dialogid,1);
+  *cmd =  scag::transport::smpp::SmppCommand::makeDeliverySmResp("12345",dialogid,1);
   break;
  case SMPPCI_data_sm:   
   //
@@ -88,10 +88,10 @@ void  String2SCAGCommang(scag::transport::smpp::SmppCommand &cmd,
   //
   break;
  case SMPPCI_submit_sm:  
-  cmd =  scag::transport::smpp::SmppCommand::makeSubmitSm(sms,dialogid);
+  *cmd =  scag::transport::smpp::SmppCommand::makeSubmitSm(sms,dialogid);
   break;
  case SMPPCI_submit_sm_resp: 
- cmd =  scag::transport::smpp::SmppCommand::makeSubmitSmResp("54321",dialogid,1);
+ *cmd =  scag::transport::smpp::SmppCommand::makeSubmitSmResp("54321",dialogid,1);
   break;
  case SMPPCI_submit_multi:  
   //cmd =  scag::transport::smpp::SmppCommand::makeSubmitMultiResp(sms,dialogid);

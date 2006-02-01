@@ -4,8 +4,7 @@
     created by Green: green@sibinco.ru
     Javascript engine based
 */
-
-#define GT_STAT_EMULATION
+#define TESTING
 
 #include <core/threads/Thread.hpp>
 #include <scag/re/RuleEngine.h>
@@ -23,7 +22,7 @@
 #include <scag/transport/SCAGCommand.h>
 #include <scag/exc/SCAGExceptions.h>
 
-#include <scag/stat/tstStatisticsManager.h>
+#include <scag/stat/StatisticsManager.h>
 
 #include <stddef.h>
 #include <fstream>
@@ -195,9 +194,11 @@ int ruleRun(   std::string cmd_name,
     dialogid);
 
  scag::transport::smpp::SmppCommand cmd;
+smsc_log_debug(logger,"//////////////////1");
 
-
- String2SCAGCommang(cmd,cmd_name,str_oa,oa_tn,oa_np,str_da,da_tn,da_np,dialogid);
+ String2SCAGCommang(&cmd,cmd_name,str_oa,oa_tn,oa_np,str_da,da_tn,da_np,dialogid);
+ 
+smsc_log_debug(logger,"//////////////////2");
 
   smsc::sms::Address oa,da ;
 
@@ -206,9 +207,13 @@ int ruleRun(   std::string cmd_name,
    oa.setValue(str_oa.length(),str_oa.c_str());
   
  key.abonentAddr = oa;
+ smsc_log_debug(logger,"//////////////////2.1");
  cmd->set_ruleId(ruleid);
+ smsc_log_debug(logger,"//////////////////2.2");
+ 
  scag::sessions::SessionPtr session =  smanager->newSession(key);;//smanager->getSession(cmd);
  
+ smsc_log_debug(logger,"//////////////////3");
      if (!session.Get()) 
      { 
        smsc_log_error(logger,"RuleRun():getSession('%s')==0 !",cmd_name.c_str());
@@ -219,8 +224,9 @@ int ruleRun(   std::string cmd_name,
       {
        smsc_log_debug(logger,"getSession for OA='%s'ok",str_oa.c_str());
 
+smsc_log_debug(logger,"//////////////////4");
        RuleStatus rs = engine->process(cmd,*session.Get());
-
+smsc_log_debug(logger,"//////////////////5");
        char buff[128];
        sprintf(buff,"cmd:%s %s%d",cmd_name.c_str(),"result = ",rs.result);
        smsc_log_debug(logger,buff);
@@ -258,7 +264,7 @@ int ruleRun(   std::string cmd_name,
        
        return 0;
       }
-
+smsc_log_debug(logger,"//////////////////6");
   return 1;
 
 }  
@@ -272,7 +278,10 @@ int  main(int argc,char ** argv)
 	smsc::logger::Logger::Init();    
 	logger = smsc::logger::Logger::getInstance("scag.retst");        
 
-	StatManConfig smcfg;
+	std::string dir="/export/home/green/install/bin/stat";
+        std::string host="127.0.0.1";
+	
+	StatManConfig smcfg(dir,host,54000,54300,54400);
 
 	StatisticsManager::init(smcfg);
 
@@ -294,7 +303,14 @@ int  main(int argc,char ** argv)
 	  return 0;
 	}
 
-   ruleRun("deliver_sm","81234567",0,1,"89765432",0,1,51,0,1);
-
+          /* Emulation for transport events */
+	  
+/*	  for(int i=0;i<100;i++)    */
+	  {
+        	    ruleRun("deliver_sm","812345671",0,1,"897654326",0,1,51,0,1);
+		    ruleRun("deiver_sm_resp","812345676",0,1,"897654321",0,1,52,0,1);
+	  }
+   
+   
   return 1;
 }
