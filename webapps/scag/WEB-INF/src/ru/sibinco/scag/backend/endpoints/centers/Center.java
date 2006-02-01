@@ -3,15 +3,14 @@
  */
 package ru.sibinco.scag.backend.endpoints.centers;
 
+import org.apache.log4j.Category;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-import org.apache.log4j.Category;
-
-import java.io.PrintWriter;
-
 import ru.sibinco.lib.backend.util.StringEncoderDecoder;
 import ru.sibinco.scag.backend.sme.Provider;
 import ru.sibinco.scag.backend.sme.ProviderManager;
+
+import java.io.PrintWriter;
 
 /**
  * The <code>Center</code> class represents of

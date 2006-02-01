@@ -1,7 +1,7 @@
 <%@ page import="java.io.IOException,
 					  java.util.Collection,
 					  java.util.Iterator,
-                 ru.sibinco.lib.backend.util.StringEncoderDecoder"%><script src="/scripts/collapsing_tree.js" type="text/javascript"></script><%!
+                 ru.sibinco.lib.backend.util.StringEncoderDecoder"%><script src="content/scripts/collapsing_tree.js" type="text/javascript"></script><%!
 	int row = 0;
 	void startSection(JspWriter out, String sectionId, String sectionName, boolean opened) throws IOException
 	{

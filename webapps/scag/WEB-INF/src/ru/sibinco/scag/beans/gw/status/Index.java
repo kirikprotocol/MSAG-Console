@@ -8,16 +8,18 @@ import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.backend.service.ServiceInfo;
 import ru.sibinco.scag.beans.SCAGBean;
 import ru.sibinco.scag.beans.SCAGJspException;
+import ru.sibinco.scag.beans.TabledBeanImpl;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Collection;
 
 
 /**
  * Created by IntelliJ IDEA. User: igork Date: 03.03.2004 Time: 18:39:37
  */
-public class Index extends SCAGBean {
+public class Index extends TabledBeanImpl {
 
     private String mbApply;
     private String mbRestore;
@@ -26,6 +28,10 @@ public class Index extends SCAGBean {
     private String[] subj;
     private boolean gwRunning;
     private boolean gwStopped;
+
+    protected Collection getDataSource() {
+        return appContext.getStatusManager().getStatuses().values();
+    }
 
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
 
@@ -58,6 +64,11 @@ public class Index extends SCAGBean {
             restore();
         else if (null != mbApply)
             apply();
+    }
+
+
+    protected void delete() throws SCAGJspException {
+        //To change body of implemented methods use File | Settings | File Templates.
     }
 
     private void stop() throws SCAGJspException {

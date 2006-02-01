@@ -14,9 +14,9 @@
 
 <table class=page_menu_background cellspacing=0px cellpadding=0px>
 <tr>
-  <td width=80px background="/images/smsc_20.jpg">&nbsp;</td>
-  <td background="/images/smsc_21.jpg">&nbsp;</td>
-  <td width=80px background="/images/smsc_23.jpg">&nbsp;</td>
+  <td width=80px background="content/images/smsc_20.jpg">&nbsp;</td>
+  <td background="content/images/smsc_21.jpg">&nbsp;</td>
+  <td width=80px background="content/images/smsc_23.jpg">&nbsp;</td>
 </tr>
 </table>
 </div>

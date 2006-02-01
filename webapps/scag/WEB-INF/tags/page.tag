@@ -54,27 +54,27 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
 <head>
   <title>SCA Gateway Administration Console<c:if test="${!empty title}">: ${title}</c:if></title>
   <base href="<%=request.getScheme()%>://<%=request.getServerName()%>:<%=request.getServerPort()+request.getContextPath()%>/">
-  <link rel="STYLESHEET" type="text/css" href="/styles/colors.css">
-  <link rel="STYLESHEET" type="text/css" href="/styles/common.css">
-  <link rel="STYLESHEET" type="text/css" href="/styles/list.css">
-  <link rel="STYLESHEET" type="text/css" href="/styles/properties_list.css">
-  <link rel="STYLESHEET" type="text/css" href="/styles/main_menu.css">
-  <link rel="STYLESHEET" type="text/css" href="/styles/collapsing_tree.css">
-  <link rel="STYLESHEET" type="text/css" href="/styles/collapsing_list.css">
-  <link rel="STYLESHEET" type="text/css" href="/styles/navbar.css">
-  <link rel="STYLESHEET" type="text/css" href="/styles/messages.css">
-  <link rel="STYLESHEET" type="text/css" href="/styles/page_menu.css">
-  <link rel="STYLESHEET" type="text/css" href="/styles/sme_menu.css">
-  <link rel="STYLESHEET" type="text/css" href="/styles/calendar.css">
+  <link rel="STYLESHEET" type="text/css" href="content/styles/colors.css">
+  <link rel="STYLESHEET" type="text/css" href="content/styles/common.css">
+  <link rel="STYLESHEET" type="text/css" href="content/styles/list.css">
+  <link rel="STYLESHEET" type="text/css" href="content/styles/properties_list.css">
+  <link rel="STYLESHEET" type="text/css" href="content/styles/main_menu.css">
+  <link rel="STYLESHEET" type="text/css" href="content/styles/collapsing_tree.css">
+  <link rel="STYLESHEET" type="text/css" href="content/styles/collapsing_list.css">
+  <link rel="STYLESHEET" type="text/css" href="content/styles/navbar.css">
+  <link rel="STYLESHEET" type="text/css" href="content/styles/messages.css">
+  <link rel="STYLESHEET" type="text/css" href="content/styles/page_menu.css">
+  <link rel="STYLESHEET" type="text/css" href="content/styles/sme_menu.css">
+  <link rel="STYLESHEET" type="text/css" href="content/styles/calendar.css">
 
   <link rel="STYLESHEET" type="text/css" href="collapsing_tree.css">
 
-  <script src="/scripts/scripts.js" type="text/javascript"></script>
-  <script src="/scripts/calendar.js" type="text/javascript"></script>
+  <script src="content/scripts/scripts.js" type="text/javascript"></script>
+  <script src="content/scripts/calendar.js" type="text/javascript"></script>
 </head>
 <body onload="initjsDOMenu(); ${onLoad}">
   <!--calendar-->
-  <iframe id=calendarIFrame class=calendarHiddenLayer2 src="/images/blank.html"></iframe>
+  <iframe id=calendarIFrame class=calendarHiddenLayer2 src="content/images/blank.html"></iframe>
   <div id=calendarPanel class=calendarHiddenLayer
     oncontextmenu="return false;"
     onselectstart="return false;"
@@ -182,23 +182,23 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
 
   <table height="100%" cellspacing=0 cellpadding=0 class=main_table>
   <tr>
-    <td width=50 background="/images/smsc_02.jpg" rowspan=3></td>
-    <td width=30 background="/images/smsc_03.jpg" rowspan=3></td>
+    <td width=50 background="content/images/smsc_02.jpg" rowspan=3></td>
+    <td width=30 background="content/images/smsc_03.jpg" rowspan=3></td>
     <td bgcolor="#F3F0E3" style="position: relative; top:0; left:0;">
       <!-- background -->
       <table cellspacing=0 cellpadding=0 height="100%" style="position: absolute; top:0; left:0; z-index: -1;">
       <tr>
-        <td width=12px background="/images/smsc_24.jpg"></td>
+        <td width=12px background="content/images/smsc_24.jpg"></td>
         <td>&nbsp;</td>
-        <td width=12px background="/images/smsc_26.jpg"></td>
+        <td width=12px background="content/images/smsc_26.jpg"></td>
       </tr>
       </table>
       <!-- "SMS Service Center" header -->
       <table cellspacing=0 cellpadding=0>
       <tr>
-        <td width=236><IMG SRC="/images/smsc_04.jpg" WIDTH=236 HEIGHT=45 ALT=""></td>
+        <td width=236><IMG SRC="content/images/smsc_04.jpg" WIDTH=236 HEIGHT=45 ALT=""></td>
         <td bgcolor="#161E49"><span style="color: #6F77A3; font: bold 11px; vertical-align: -10px;">Version&nbsp;1.0</span></td>
-        <td width=12 background="/images/smsc_06.jpg"></td>
+        <td width=12 background="content/images/smsc_06.jpg"></td>
       </tr>
       </table>
       <!-- main menu -->
@@ -206,24 +206,24 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
 
       <table width="100%" id="MAIN_MENU_TABLE" border="0"  cellspacing="0" cellpadding="0" class="main_menu">
 		<tr>
-			<td background="/images/smsc_13.jpg" width="26"></td>
-			<td background="/images/smsc_14.jpg" width="100%">&nbsp;</td>
+			<td background="content/images/smsc_13.jpg" width="26"></td>
+			<td background="content/images/smsc_14.jpg" width="100%">&nbsp;</td>
             <%
                 if (request != null && request.getUserPrincipal() != null) {
             %>
-                   <td background="/images/smsc_14.jpg"><a ID="MENU0_LOGOUT" href="logout.jsp">Logout&nbsp;"<%=request.getUserPrincipal().getName()%>"</a></td>
+                   <td background="content/images/smsc_14.jpg"><a ID="MENU0_LOGOUT" href="logout.jsp">Logout&nbsp;"<%=request.getUserPrincipal().getName()%>"</a></td>
             <%
                 }
             %>
-			<td background="/images/smsc_16.jpg" width="52"></td>
+			<td background="content/images/smsc_16.jpg" width="52"></td>
 		</tr>
 		</table>
 		<span id="MENU0_NONE"></span>
         <table cellpadding=0 cellspacing=0 height=30px class=smsc_status>
            <tr>
-             <th background="/images/smsc_17.jpg" nowrap>${title}</th>
+             <th background="content/images/smsc_17.jpg" nowrap>${title}</th>
              <td align="right">&nbsp;<%if (request.getUserPrincipal() != null) {%><span id="SCAGStatusSpan" datasrc="#tdcSCAGStatusObject" DATAFORMATAS="html" datafld="status"/><%}%></td>
-             <td width=12px background="/images/smsc_19.jpg" style="padding-right:0px;"></td>
+             <td width=12px background="content/images/smsc_19.jpg" style="padding-right:0px;"></td>
            </tr>
         </table>
 
@@ -274,14 +274,14 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
         </c:choose>
       </form>
     </td>
-    <td width=30 background="/images/smsc_07.jpg" rowspan=3></td>
-    <td width=50 background="/images/smsc_02.jpg" rowspan=3></td>
+    <td width=30 background="content/images/smsc_07.jpg" rowspan=3></td>
+    <td width=50 background="content/images/smsc_02.jpg" rowspan=3></td>
   </tr>
   <tr height="100%"><td style="position:relative;"><table cellspacing="0" cellpadding="0" height="100%" style="position: absolute; top:0; left:0; z-index: -1;">
       <tr>
-        <td height="1px" width="12px" background="/images/smsc_24.jpg"></td>
+        <td height="1px" width="12px" background="content/images/smsc_24.jpg"></td>
         <td height="1px"><img height=0px width="1px"></td>
-        <td height="1px" width="12px" background="/images/smsc_26.jpg"></td>
+        <td height="1px" width="12px" background="content/images/smsc_26.jpg"></td>
       </tr>
       </table>
     </td>
@@ -290,9 +290,9 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
     <td>
       <table cellpadding="0" cellspacing="0">
         <tr>
-          <td width="12" background="/images/smsc_30.jpg"></td>
+          <td width="12" background="content/images/smsc_30.jpg"></td>
           <td align="right" bgcolor="#161E49"><span style="color: #6F77A3;">Copyright&nbsp;&copy;&nbsp;2003.&nbsp;All&nbsp;rights&nbsp;reserved</span></td>
-          <td width="12" background="/images/smsc_32.jpg"></td>
+          <td width="12" background="content/images/smsc_32.jpg"></td>
         </tr>
       </table>
     </td>

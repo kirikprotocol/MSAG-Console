@@ -35,6 +35,8 @@ import java.security.Principal;
  * Created by igork Date: 20.04.2004 Time: 15:51:47
  */
 public class Edit extends EditBean {
+
+    public static final long ALL_PROVIDERS = -1;
     private String name;
     private String[] srcMasks = new String[0];
     private String[] srcSubjs = new String[0];
@@ -52,8 +54,12 @@ public class Edit extends EditBean {
     private long ruleId;
     private String rule;
 
-    private String provider;
     private long providerId;
+    private String providerName = null;
+    private String[] providerIds = null;
+    private String[] providerNames = null;
+    private long userProviderId = ALL_PROVIDERS;
+    private boolean administrator = false;
 
     private Set srcMasksSet = new HashSet();
     private Set srcSubjsSet = new HashSet();
@@ -77,6 +83,7 @@ public class Edit extends EditBean {
         if(appContext == null){
             appContext = (SCAGAppContext) request.getAttribute("appContext");
         }
+
         destinations = new HashMap();
         for (Iterator i = request.getParameterMap().entrySet().iterator(); i.hasNext();) {
             final Map.Entry entry = (Map.Entry) i.next();
@@ -164,6 +171,35 @@ public class Edit extends EditBean {
             }
         }
         super.process(request, response);
+        userProviderId = getUser(appContext).getProviderId();
+        administrator = (userProviderId == ALL_PROVIDERS);
+
+        if(administrator){
+            Map providers = appContext.getProviderManager().getProviders();
+            List ids = new ArrayList();
+            List names = new ArrayList();
+
+            for(Iterator i = providers.values().iterator(); i.hasNext();){
+                Object obj = i.next();
+                if(obj != null && obj instanceof Provider){
+                    Provider provider = (Provider) obj;
+                    ids.add(Long.toString(provider.getId()));
+                    names.add(provider.getName());
+                }
+            }
+            providerIds = (String[]) (ids.toArray(new String[ids.size()]));
+            providerNames = (String[]) (names.toArray(new String[names.size()]));
+
+        }else{
+            setProviderId(userProviderId);
+            Object obj = appContext.getProviderManager().getProviders().get(new Long(userProviderId));
+            if(obj == null || !(obj instanceof Provider))
+                throw new SCAGJspException(Constants.errors.providers.PROVIDER_NOT_FOUND,
+                        "Failed to locate provider for id=" + userProviderId);
+            providerName = ((Provider) obj).getName();
+
+
+        }
     }
 
     protected void load(final String loadId) throws SCAGJspException {
@@ -212,7 +248,7 @@ public class Edit extends EditBean {
             notes = route.getNotes();
 
             if (null != route.getProvider()) {
-                provider = route.getProvider().getName();
+                providerName = route.getProvider().getName();
                 providerId = route.getProvider().getId();
             }
             if (null != route.getRule()) {
@@ -287,22 +323,30 @@ public class Edit extends EditBean {
     }
 
     public String[] getProviderIds() {
-        final Map providers = new TreeMap(appContext.getProviderManager().getProviders());
-        final List result = new ArrayList(providers.size());
-        for (Iterator i = providers.keySet().iterator(); i.hasNext();) {
-            result.add(String.valueOf(((Long) i.next()).longValue()));
-        }
-        return (String[]) result.toArray(new String[0]);
+        return providerIds;
     }
 
-    public String[] getProviders() {
-        final Map providers = new TreeMap(appContext.getProviderManager().getProviders());
-        final List result = new ArrayList(providers.size());
-        for (Iterator i = providers.values().iterator(); i.hasNext();) {
-            result.add(((Provider) i.next()).getName());
-        }
-        return (String[]) result.toArray(new String[0]);
+    public String[] getProviderNames() {
+        return providerNames;
     }
+
+//    public String[] getProviderIds() {
+//        final Map providers = new TreeMap(appContext.getProviderManager().getProviders());
+//        final List result = new ArrayList(providers.size());
+//        for (Iterator i = providers.keySet().iterator(); i.hasNext();) {
+//            result.add(String.valueOf(((Long) i.next()).longValue()));
+//        }
+//        return (String[]) result.toArray(new String[0]);
+//    }
+//
+//    public String[] getProviders() {
+//        final Map providers = new TreeMap(appContext.getProviderManager().getProviders());
+//        final List result = new ArrayList(providers.size());
+//        for (Iterator i = providers.values().iterator(); i.hasNext();) {
+//            result.add(((Provider) i.next()).getName());
+//        }
+//        return (String[]) result.toArray(new String[0]);
+//    }
 
     public String[] getRuleIds() {
         final Map rules = new TreeMap(appContext.getRuleManager().getRules());
@@ -410,14 +454,6 @@ public class Edit extends EditBean {
 
     public void setNotes(final String notes) {
         this.notes = notes;
-    }
-
-    public String getProvider() {
-        return provider;
-    }
-
-    public void setProvider(final String provider) {
-        this.provider = provider;
     }
 
     public long getProviderId() {
@@ -539,6 +575,14 @@ public class Edit extends EditBean {
         if (user == null)
             throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userPrincipal.getName() + "'");
         return user;
+    }
+
+    public boolean isAdministrator() {
+        return administrator;
+    }
+
+    public String getProviderName() {
+        return providerName;
     }
 
 }

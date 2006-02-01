@@ -11,7 +11,7 @@
   onMouseOut='${submenuId}.runtimeStyle.visibility="hidden";
               document.all.${submenuId}_h.runtimeStyle.visibility="hidden";'>
 <a ID="${menuId}">${name}</a>
-<iframe id="${submenuId}_h" class=hiddenLayer src='/images/blank.html' width='100%' height='0px'></iframe>
+<iframe id="${submenuId}_h" class=hiddenLayer src='content/images/blank.html' width='100%' height='0px'></iframe>
 <table class=submenu cellspacing=0 cellpadding=0 id="${submenuId}"
   onMouseOver='${submenuId}.runtimeStyle.visibility="visible";
                document.all.${submenuId}_h.runtimeStyle.visibility="visible";

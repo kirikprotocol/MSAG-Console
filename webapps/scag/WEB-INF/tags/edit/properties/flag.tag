@@ -7,7 +7,7 @@
  attribute name="name"        required="true"%>
 <sm-ep:property title="${title}">
   <c:choose>
-    <c:when test="${bean[name]}"><img src="/images/ic_checked.gif"></c:when>
+    <c:when test="${bean[name]}"><img src="content/images/ic_checked.gif"></c:when>
     <c:otherwise>&nbsp;</c:otherwise>
   </c:choose>
   <input type=hidden name="${name}" value="<c:choose><c:when test='${bean[name]}'>true</c:when><c:otherwise>false</c:otherwise></c:choose>">

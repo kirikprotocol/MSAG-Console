@@ -60,7 +60,7 @@
                 </table>
                 <br/>
                 <sm:table columns="checkbox,name,providerName,categoryName,active,enabled,archived,notes"
-                          names="c,name,provider,category,active,enabled,archived,notes" widths="1,39,39,20,20,20,39,39"
+                          names="c,name,providerName,category,active,enabled,archived,notes" widths="1,39,39,20,20,20,39,39"
                           edit="name"/>
                 <c:choose>
                     <c:when test="${bean.currentUser}">
@@ -71,7 +71,7 @@
             </c:when>
             <c:otherwise>
                 <sm:table columns="checkbox,name,providerName,categoryName,active,enabled,archived,notes"
-                          names="c,name,provider,category,active,enabled,archived,notes" widths="1,39,39,20,20,20,39,39"
+                          names="c,name,providerName,category,active,enabled,archived,notes" widths="1,39,39,20,20,20,39,39"
                           edit="name"/>
             </c:otherwise>
         </c:choose>

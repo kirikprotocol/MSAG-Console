@@ -8,13 +8,13 @@ String showSmeStatus(SmeStatus status)
 	{
 		if (status.isInternal())
 		{
-			result += "><img src=\"/images/ic_internal.gif\" width=10 height=10 title='internal'></span>";
+			result += "><img src=\"content/images/ic_internal.gif\" width=10 height=10 title='internal'></span>";
 		}
 		else
 		{
 			if (!status.isConnected())
 			{
-				result += "><img src=\"/images/ic_disconnct.gif\" width=10 height=10 title='disconnected'></span>";
+				result += "><img src=\"content/images/ic_disconnct.gif\" width=10 height=10 title='disconnected'></span>";
 			}
 			else
 			{

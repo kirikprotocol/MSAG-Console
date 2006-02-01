@@ -20,15 +20,15 @@
   </jsp:attribute>
 
   <jsp:body>
-    <script>
-    var global_counter = 0;
-    function removeRow(tbl, rowId)
-    {
+  <script>
+  var global_counter = 0;
+  function removeRow(tbl, rowId)
+  {
       var rowElem = tbl.rows(rowId);
       tbl.deleteRow(rowElem.rowIndex);
-    }
-    function removeSrcSubj(rowId)
-    {
+  }
+  function removeSrcSubj(rowId)
+  {
       var selectElem = opForm.all.srcSubjSelect;
       var tbl = opForm.all.sources_table;
       var rowElem = tbl.rows(rowId);
@@ -39,170 +39,169 @@
       oOption.value = subjValue;
       selectElem.disabled = false;
       tbl.deleteRow(rowElem.rowIndex);
-    }
-    function addSourceMask(valueElem) {
+  }
+  function addSourceMask(valueElem) {
       if (validateField(valueElem)) {
-        var tbl = opForm.all.sources_table;
-        var newRow = tbl.insertRow(tbl.rows.length);
-        newRow.className = "row" + ((tbl.rows.length+1) & 1);
-        newRow.id = "srcRow_" + (global_counter++);
-        newCell = document.createElement("td");
-        newCell.innerHTML = '<img src="/images/mask.gif">';
-        newRow.appendChild(newCell);
-        newCell = document.createElement("td");
-        newCell.innerHTML = valueElem.value + '<input type=hidden name=srcMasks value="' + valueElem.value + '">';
-        newRow.appendChild(newCell);
-        newCell = document.createElement("td");
-        newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeRow(opForm.all.sources_table, \'' + newRow.id + '\')" style="cursor: hand;">';
-        newRow.appendChild(newCell);
-        valueElem.value = "";
-        valueElem.focus();
-        return true;
+          var tbl = opForm.all.sources_table;
+          var newRow = tbl.insertRow(tbl.rows.length);
+          newRow.className = "row" + ((tbl.rows.length + 1) & 1);
+          newRow.id = "srcRow_" + (global_counter++);
+          newCell = document.createElement("td");
+          newCell.innerHTML = '<img src="content/images/mask.gif">';
+          newRow.appendChild(newCell);
+          newCell = document.createElement("td");
+          newCell.innerHTML = valueElem.value + '<input type=hidden name=srcMasks value="' + valueElem.value + '">';
+          newRow.appendChild(newCell);
+          newCell = document.createElement("td");
+          newCell.innerHTML = '<img src="content/images/but_del.gif" onClick="removeRow(opForm.all.sources_table, \'' + newRow.id + '\')" style="cursor: hand;">';
+          newRow.appendChild(newCell);
+          valueElem.value = "";
+          valueElem.focus();
+          return true;
       } else
-        return false;
-    }
-    function addSourceSubj() {
+          return false;
+  }
+  function addSourceSubj() {
       var selectElem = opForm.all.srcSubjSelect;
       if (selectElem.options.length > 0) {
-        var subjValue = selectElem.options[selectElem.selectedIndex].value;
-        var tbl = opForm.all.sources_table;
-        var newRow = tbl.insertRow(tbl.rows.length);
-        newRow.className = "row" + ((tbl.rows.length+1) & 1);
-        newRow.id = "srcRow_" + (global_counter++);
-        newCell = document.createElement("td");
-        newCell.innerHTML = '<img src="/images/subject.gif">';
-        newRow.appendChild(newCell);
-        newCell = document.createElement("td");
-        newCell.innerHTML = subjValue + '<input id=subjSrc type=hidden name=srcSubjs value="' + subjValue + '">';
-        newRow.appendChild(newCell);
-        newCell = document.createElement("td");
-        newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeSrcSubj(\'' + newRow.id + '\');" style="cursor: hand;">';
-        newRow.appendChild(newCell);
-        selectElem.options[selectElem.selectedIndex] = null;
-        selectElem.focus();
-        if (selectElem.options.length == 0)
-          selectElem.disabled = true;
+          var subjValue = selectElem.options[selectElem.selectedIndex].value;
+          var tbl = opForm.all.sources_table;
+          var newRow = tbl.insertRow(tbl.rows.length);
+          newRow.className = "row" + ((tbl.rows.length + 1) & 1);
+          newRow.id = "srcRow_" + (global_counter++);
+          newCell = document.createElement("td");
+          newCell.innerHTML = '<img src="content/images/subject.gif">';
+          newRow.appendChild(newCell);
+          newCell = document.createElement("td");
+          newCell.innerHTML = subjValue + '<input id=subjSrc type=hidden name=srcSubjs value="' + subjValue + '">';
+          newRow.appendChild(newCell);
+          newCell = document.createElement("td");
+          newCell.innerHTML = '<img src="content/images/but_del.gif" onClick="removeSrcSubj(\'' + newRow.id + '\');" style="cursor: hand;">';
+          newRow.appendChild(newCell);
+          selectElem.options[selectElem.selectedIndex] = null;
+          selectElem.focus();
+          if (selectElem.options.length == 0)
+              selectElem.disabled = true;
       }
-    }
+  }
 
-    function srcSmeIdChanged()
-    {
+  function srcSmeIdChanged()
+  {
       var rowDisabled = opForm.all.srcSmeId.options[opForm.all.srcSmeId.selectedIndex] == null || opForm.all.srcSmeId.options[opForm.all.srcSmeId.selectedIndex].value != 'MAP_PROXY';
       opForm.all.forwardTo_row.disabled = rowDisabled;
       opForm.all.forwardTo.disabled = rowDisabled;
-    }
+  }
 
 
 
-			var smesSelectText = "<select name=fake_dst_mask_sme_ id=newSmesSelect><c:forEach items="${bean.allSmes}" var="i"><option value=\"${fn:escapeXml(i)}\" id=\"option_${fn:escapeXml(i)}\">${fn:escapeXml(i)}</option></c:forEach></select>";
-				
-			function addDestMask() {
-				if (validateField(opForm.all.newDstMask)) {
-					var mask = opForm.all.newDstMask.value;
-					var smeSelect = opForm.all.newDstMaskSme;
-					var sme = smeSelect.options[smeSelect.selectedIndex].value;
-					var tbl = opForm.all.destinations_table;
+  var smesSelectText = "<select name=fake_dst_mask_sme_ id=newSmesSelect><c:forEach items="${bean.allSmes}" var="i"><option value=\"${fn:escapeXml(i)}\" id=\"option_${fn:escapeXml(i)}\">${fn:escapeXml(i)}</option></c:forEach></select>";
 
-					var newRow = tbl.insertRow(tbl.rows.length);
-					newRow.className = "row" + ((tbl.rows.length+1) & 1);
-					newRow.id = "srcRow_" + (global_counter++);
+  function addDestMask() {
+      if (validateField(opForm.all.newDstMask)) {
+          var mask = opForm.all.newDstMask.value;
+          var smeSelect = opForm.all.newDstMaskSme;
+          var sme = smeSelect.options[smeSelect.selectedIndex].value;
+          var tbl = opForm.all.destinations_table;
 
-					newCell = document.createElement("td");
-					newCell.innerHTML = '<img src="/images/mask.gif">';
-					newRow.appendChild(newCell);
+          var newRow = tbl.insertRow(tbl.rows.length);
+          newRow.className = "row" + ((tbl.rows.length + 1) & 1);
+          newRow.id = "srcRow_" + (global_counter++);
 
-					newCell = document.createElement("td");
-					newCell.innerHTML = mask + '<input type=hidden name=dstMasks value="' + mask + '">';
-					newRow.appendChild(newCell);
+          newCell = document.createElement("td");
+          newCell.innerHTML = '<img src="content/images/mask.gif">';
+          newRow.appendChild(newCell);
 
-					newCell = document.createElement("td");
-					newCell.innerHTML = smesSelectText;
-					newSelect = newCell.all.newSmesSelect;
-					newSelect.name = "dst_mask_sme_" + mask;
-					newSelect.all["option_" + sme].selected = true;
-					newRow.appendChild(newCell);
+          newCell = document.createElement("td");
+          newCell.innerHTML = mask + '<input type=hidden name=dstMasks value="' + mask + '">';
+          newRow.appendChild(newCell);
 
-					newCell = document.createElement("td");
-					newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeRow(opForm.all.destinations_table, \'' + newRow.id + '\')" style="cursor: hand;">';
-					newRow.appendChild(newCell);
-					opForm.all.newDstMask.value = "";
-					opForm.all.newDstMask.focus();
-					return true;
-				} else
-					return false;
-			}
-      function selectDefaultSme(){
-        var selectElem = opForm.all.dstSubjSelect;
-        var smeSelectElem = opForm.all.dstSubjSmeSelect;
-        if (selectElem.options.length > 0)
-        {
+          newCell = document.createElement("td");
+          newCell.innerHTML = smesSelectText;
+          newSelect = newCell.all.newSmesSelect;
+          newSelect.name = "dst_mask_sme_" + mask;
+          newSelect.all["option_" + sme].selected = true;
+          newRow.appendChild(newCell);
+
+          newCell = document.createElement("td");
+          newCell.innerHTML = '<img src="content/images/but_del.gif" onClick="removeRow(opForm.all.destinations_table, \'' + newRow.id + '\')" style="cursor: hand;">';
+          newRow.appendChild(newCell);
+          opForm.all.newDstMask.value = "";
+          opForm.all.newDstMask.focus();
+          return true;
+      } else
+          return false;
+  }
+  function selectDefaultSme() {
+      var selectElem = opForm.all.dstSubjSelect;
+      var smeSelectElem = opForm.all.dstSubjSmeSelect;
+      if (selectElem.options.length > 0) {
           var defaultSme = selectElem.options[selectElem.selectedIndex].defaultSme;
           if (defaultSme != null) {
-            var optionElem = smeSelectElem.options(defaultSme, 0);
-            if (optionElem != null)
-            optionElem.selected = true;
+              var optionElem = smeSelectElem.options(defaultSme, 0);
+              if (optionElem != null)
+                  optionElem.selected = true;
           }
-        }
-        return true;
       }
-			function removeDestSubj(rowId)
-			{
-				var selectElem = opForm.all.dstSubjSelect;
-				var tbl = opForm.all.destinations_table;
-				var rowElem = tbl.rows(rowId);
-				var subjValue = rowElem.all.subjDst.value;
-        var subjDefaultSme = rowElem.all.subjDst.defaultSme;
-				var oOption = document.createElement("OPTION");
-				selectElem.options.add(oOption);
-				oOption.innerText = subjValue;
-				oOption.value = subjValue;
-        oOption.defaultSme = subjDefaultSme;
-				selectElem.disabled = false;
-				tbl.deleteRow(rowElem.rowIndex);
-        return selectDefaultSme();
-			}
-			function addDestSubj() {
-				var selectElem = opForm.all.dstSubjSelect;
-				if (selectElem.options.length > 0) {
-					var subjValue = selectElem.options[selectElem.selectedIndex].value;
+      return true;
+  }
+  function removeDestSubj(rowId)
+  {
+      var selectElem = opForm.all.dstSubjSelect;
+      var tbl = opForm.all.destinations_table;
+      var rowElem = tbl.rows(rowId);
+      var subjValue = rowElem.all.subjDst.value;
+      var subjDefaultSme = rowElem.all.subjDst.defaultSme;
+      var oOption = document.createElement("OPTION");
+      selectElem.options.add(oOption);
+      oOption.innerText = subjValue;
+      oOption.value = subjValue;
+      oOption.defaultSme = subjDefaultSme;
+      selectElem.disabled = false;
+      tbl.deleteRow(rowElem.rowIndex);
+      return selectDefaultSme();
+  }
+  function addDestSubj() {
+      var selectElem = opForm.all.dstSubjSelect;
+      if (selectElem.options.length > 0) {
+          var subjValue = selectElem.options[selectElem.selectedIndex].value;
           var subjDefaultSme = selectElem.options[selectElem.selectedIndex].defaultSme;
-					var tbl = opForm.all.destinations_table;
-					var smeSelect = opForm.all.dstSubjSmeSelect;
-					var sme = smeSelect.options[smeSelect.selectedIndex].value;
-					var newRow = tbl.insertRow(tbl.rows.length);
-					newRow.className = "row" + ((tbl.rows.length+1) & 1);
-					newRow.id = "srcRow_" + (global_counter++);
+          var tbl = opForm.all.destinations_table;
+          var smeSelect = opForm.all.dstSubjSmeSelect;
+          var sme = smeSelect.options[smeSelect.selectedIndex].value;
+          var newRow = tbl.insertRow(tbl.rows.length);
+          newRow.className = "row" + ((tbl.rows.length + 1) & 1);
+          newRow.id = "srcRow_" + (global_counter++);
 
-					newCell = document.createElement("td");
-					newCell.innerHTML = '<img src="/images/subject.gif">';
-					newRow.appendChild(newCell);
+          newCell = document.createElement("td");
+          newCell.innerHTML = '<img src="content/images/subject.gif">';
+          newRow.appendChild(newCell);
 
-					newCell = document.createElement("td");
-					newCell.innerHTML = subjValue + '<input id=subjDst type=hidden name=checkedDestinations value="' + subjValue + '">';
+          newCell = document.createElement("td");
+          newCell.innerHTML = subjValue + '<input id=subjDst type=hidden name=checkedDestinations value="' + subjValue + '">';
           newCell.all.subjDst.defaultSme = subjDefaultSme;
-					newRow.appendChild(newCell);
+          newRow.appendChild(newCell);
 
-					newCell = document.createElement("td");
-					newCell.innerHTML = smesSelectText;
-					newSelect = newCell.all.newSmesSelect;
-					newSelect.name = "dst_sme_" + subjValue;
-					newSelect.all["option_" + sme].selected = true;
-					newRow.appendChild(newCell);
+          newCell = document.createElement("td");
+          newCell.innerHTML = smesSelectText;
+          newSelect = newCell.all.newSmesSelect;
+          newSelect.name = "dst_sme_" + subjValue;
+          newSelect.all["option_" + sme].selected = true;
+          newRow.appendChild(newCell);
 
-					newCell = document.createElement("td");
-					newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeDestSubj(\'' + newRow.id + '\');" style="cursor: hand;">';
-					newRow.appendChild(newCell);
-					selectElem.options[selectElem.selectedIndex] = null;
-					selectElem.focus();
-					if (selectElem.options.length == 0)
-						selectElem.disabled = true;
+          newCell = document.createElement("td");
+          newCell.innerHTML = '<img src="content/images/but_del.gif" onClick="removeDestSubj(\'' + newRow.id + '\');" style="cursor: hand;">';
+          newRow.appendChild(newCell);
+          selectElem.options[selectElem.selectedIndex] = null;
+          selectElem.focus();
+          if (selectElem.options.length == 0)
+              selectElem.disabled = true;
 
           return selectDefaultSme();
-				}
-			}
-    </script>
+      }
+  }
+  </script>
     <c:set var="smes" value="${fn:join(bean.smeIds, ',')}"/>
-    <c:set var="providers" value="${fn:join(bean.providers, ',')}"/>
+    <c:set var="providers" value="${fn:join(bean.providerNames, ',')}"/>
     <c:set var="providerIds" value="${fn:join(bean.providerIds, ',')}"/>
     <table cellpadding="5">
       <col width="50%">
@@ -213,7 +212,7 @@
             <sm-ep:txt title="name" name="name" readonly="${!bean.add}" validation="nonEmpty"/>
             <sm-ep:txt title="notes" name="notes"/>
             <sm-ep:list title="source SME ID" name="srcSmeId" values="${smes}" valueTitles="${smes}" onChange="srcSmeIdChanged();"/>
-            <sm-ep:list emptyOption="true" title="provider" name="providerId" values="${providerIds}" valueTitles="${providers}"/>
+            <sm-ep:list emptyOption="true" title="provider" name="providerId" values="${providerIds}" valueTitles="${providerNames}"/>
             <sm-ep:list  title="rule" name="ruleId"
                        values="${fn:join(bean.ruleIds, ',')}"
                        valueTitles="${fn:join(bean.rules, ',')}"/>
@@ -252,12 +251,12 @@
                 <option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>
               </c:forEach></select>
             </td>
-            <td><img src="/images/but_add.gif" onclick="addSourceSubj()" style="cursor:hand;"></td>
+            <td><img src="content/images/but_add.gif" onclick="addSourceSubj()" style="cursor:hand;"></td>
           </tr>
           <tr>
             <td>Mask</td>
             <td><input id=newSrcMask class=txt name=srcMasks validation="routeMask" onkeyup="resetValidation(this)"></td>
-            <td><img src="/images/but_add.gif" onclick="addSourceMask(opForm.all.newSrcMask)" style="cursor:hand;"></td>
+            <td><img src="content/images/but_add.gif" onclick="addSourceMask(opForm.all.newSrcMask)" style="cursor:hand;"></td>
           </tr>
           </table>
 
@@ -270,18 +269,18 @@
           <c:forEach items="${bean.srcSubjs}" var="i">
             <c:set var="esubj" value="${fn:escapeXml(i)}"/>
             <tr class="row${rowN%2}" id="subjRow_${esubj}">
-              <td><img src="/images/subject.gif"></td>
+              <td><img src="content/images/subject.gif"></td>
               <td>${esubj}<input id=subjSrc type=hidden name=srcSubjs value="${esubj}"></td>
-              <td><img src="/images/but_del.gif" onClick="removeSrcSubj('subjRow_${esubj}');" style="cursor: hand;"></td>
+              <td><img src="content/images/but_del.gif" onClick="removeSrcSubj('subjRow_${esubj}');" style="cursor: hand;"></td>
             </tr>
             <c:set var="rowN" value="${rowN+1}"/>
           </c:forEach>
           <c:forEach items="${bean.srcMasks}" var="i">
             <c:set var="emask" value="${fn:escapeXml(i)}"/>
             <tr class="row${rowN%2}" id="maskRow_${emask}">
-              <td><img src="/images/mask.gif"></td>
+              <td><img src="content/images/mask.gif"></td>
               <td>${emask}<input type=hidden name=srcMasks value="${emask}"></td>
-              <td><img src="/images/but_del.gif" onClick="removeRow(opForm.all.sources_table, 'maskRow_${emask}')" style="cursor: hand;"></td>
+              <td><img src="content/images/but_del.gif" onClick="removeRow(opForm.all.sources_table, 'maskRow_${emask}')" style="cursor: hand;"></td>
             </tr>
             <c:set var="rowN" value="${rowN+1}"/>
           </c:forEach>
@@ -306,7 +305,7 @@
                 <option id="${fn:escapeXml(i)}" value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>
               </c:forEach>
             </select></td>
-            <td><img src="/images/but_add.gif" onclick="addDestSubj()" style="cursor:hand;"></td>
+            <td><img src="content/images/but_add.gif" onclick="addDestSubj()" style="cursor:hand;"></td>
           </tr>
           <tr>
             <td>Mask</td>
@@ -317,7 +316,7 @@
               </c:forEach>
               </select>
             </td>
-            <td><img src="/images/but_add.gif" onclick="addDestMask()" style="cursor:hand;"></td>
+            <td><img src="content/images/but_add.gif" onclick="addDestMask()" style="cursor:hand;"></td>
           </tr>
           </table>
           <hr>
@@ -329,7 +328,7 @@
           <c:set var="rowN" value="0"/>
           <c:forEach items="${bean.dstSubjPairs}" var="i">
             <tr class="row${rowN%2}" id="subjRow_${fn:escapeXml(i.key)}">
-              <td><img src="/images/subject.gif"></td>
+              <td><img src="content/images/subject.gif"></td>
               <td>${fn:escapeXml(i.key)}<input id=subjDst type=hidden name=dstSubjs value="${fn:escapeXml(i.key)}" defaultSme="< %=StringEncoderDecoder.encode(bean.getDefaultSubjectSme(${fn:escapeXml(i.key)}))% >"></td>
               <td><select name="dst_sme_${fn:escapeXml(i.key)}">
                 <c:forEach items="${bean.allSmes}" var="j">
@@ -337,13 +336,13 @@
                 </c:forEach>
                 </select>
               </td>
-              <td><img src="/images/but_del.gif" onClick="removeDestSubj('subjRow_${fn:escapeXml(i.key)}');" style="cursor: hand;"></td>
+              <td><img src="content/images/but_del.gif" onClick="removeDestSubj('subjRow_${fn:escapeXml(i.key)}');" style="cursor: hand;"></td>
             </tr>
             <c:set var="rowN" value="${rowN+1}"/>
           </c:forEach>
           <c:forEach items="${bean.dstMaskPairs}" var="i">
             <tr class="row${rowN%2}" id="maskRow_${fn:escapeXml(i.key)}">
-              <td><img src="/images/mask.gif"></td>
+              <td><img src="content/images/mask.gif"></td>
               <td>${fn:escapeXml(i.key)}<input type=hidden name=dstMasks value="${fn:escapeXml(i.key)}"></td>
               <td><select name="dst_mask_sme_${fn:escapeXml(i.key)}" onkeyup="resetValidation(this)">
                 <c:forEach items="${bean.allSmes}" var="j">
@@ -351,7 +350,7 @@
                 </c:forEach>
                 </select>
               </td>
-              <td><img src="/images/but_del.gif" onClick="removeRow(opForm.all.destinations_table, 'maskRow_${fn:escapeXml(i.key)}')" style="cursor: hand;"></td>
+              <td><img src="content/images/but_del.gif" onClick="removeRow(opForm.all.destinations_table, 'maskRow_${fn:escapeXml(i.key)}')" style="cursor: hand;"></td>
             </tr>
             <c:set var="rowN" value="${rowN+1}"/>
           </c:forEach>

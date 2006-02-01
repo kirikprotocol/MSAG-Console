@@ -1,10 +1,10 @@
 
 <jsp:useBean id="topMenu" class="ru.sibinco.scag.beans.menu.TopMenu" scope="session"/>
 
-<!--link rel="stylesheet" type="text/css" href="<%=request.getContextPath()%>/styles/main_menu.css" /-->
+<!--link rel="stylesheet" type="text/css" href="<%=request.getContextPath()%>content/styles/main_menu.css" /-->
 
-<script type="text/javascript" language="javascript" src="/scripts/menu/jsdomenu.js"></script>
-<script type="text/javascript" language="javascript" src="/scripts/menu/jsdomenubar.js"></script>
+<script type="text/javascript" language="javascript" src="content/scripts/menu/jsdomenu.js"></script>
+<script type="text/javascript" language="javascript" src="content/scripts/menu/jsdomenubar.js"></script>
 
 <SCRIPT type="text/javascript">
   <%renderTopMenu(session, request, out, "createjsDOMenu", getTopMenu());%>

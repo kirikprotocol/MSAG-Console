@@ -18,6 +18,7 @@ import ru.sibinco.scag.backend.sme.CategoryManager;
 import ru.sibinco.scag.backend.sme.SmscsManager;
 import ru.sibinco.scag.backend.daemon.Daemon;
 import ru.sibinco.scag.backend.service.ServiceInfo;
+import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.perfmon.PerfServer;
 import ru.sibinco.scag.svcmon.SvcMonServer;
 import ru.sibinco.scag.scmon.ScServer;
@@ -41,7 +42,7 @@ public class SCAGAppContext {
     private final Config gwConfig;
     private final Config idsConfig;
     private final UserManager userManager;
-    private final GwSmeManager gwSmeManager;      //ToDo to delete
+    private final GwSmeManager gwSmeManager;      //    ToDo to delete
     private final SmppManager smppManager;
     private final RuleManager ruleManager;
     private final ProviderManager providerManager;
@@ -50,6 +51,7 @@ public class SCAGAppContext {
     private final GwRoutingManager gwRoutingManager; //ToDo to delete
     private final ScagRoutingManager scagRoutingManager;
     private final ResourceManager resourceManager;
+    private final StatusManager statusManager;
     private final PerfServer perfServer;
     private final SvcMonServer svcMonServer;
     private final ScServer scServer;
@@ -60,7 +62,7 @@ public class SCAGAppContext {
     private final BillingManager billingManager;
     private Journal journal = new Journal();
     private SCAG scag = null;
-    protected static File scagConfFolder = null;
+    private static File scagConfFolder = null;
 
     private SCAGAppContext(final String config_filename) throws Throwable, ParserConfigurationException, SAXException, Config.WrongParamTypeException,
             Config.ParamNotFoundException, SibincoException {
@@ -101,6 +103,9 @@ public class SCAGAppContext {
             ruleManager.init();
             scagRoutingManager = new ScagRoutingManager(scagConfFolder, smppManager, providerManager, ruleManager, categoryManager);
             scagRoutingManager.init();
+            String statusFolder = config.getString("status_folder");
+            statusManager = new StatusManager(new File(statusFolder));
+            statusManager.init();
             statuses = new Statuses();
             perfServer = new PerfServer(config);
             perfServer.start();
@@ -179,6 +184,10 @@ public class SCAGAppContext {
 
     public ResourceManager getResourceManager() {
         return resourceManager;
+    }
+
+    public StatusManager getStatusManager() {
+        return statusManager;
     }
 
     public Daemon getScagDaemon() {

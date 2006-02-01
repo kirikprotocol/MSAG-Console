@@ -38,7 +38,7 @@ import java.util.Iterator;
  *
  * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
  */
-public class SmppManager {
+public class SmppManager{
 
     private static final String PARAM_NAME_LAST_UID_ID = "last used uid";
 
@@ -127,7 +127,7 @@ public class SmppManager {
         return out;
     }
 
-    public Map getSvcs() {
+    public synchronized Map getSvcs() {
         return svcs;
     }
 
@@ -135,11 +135,11 @@ public class SmppManager {
         return new SortedList(svcs.keySet());
     }
 
-    public Map getCenters() {
+    public synchronized Map getCenters() {
         return centers;
     }
 
-    public PrintWriter storeUid(final PrintWriter out, int lastUid) {
+    private PrintWriter storeUid(final PrintWriter out, int lastUid) {
         out.println("<param_conf name=\"last used uid\" type=\"int\">" + lastUid + "</param_conf>");
         return out;
     }
@@ -148,7 +148,7 @@ public class SmppManager {
         return new SortedList(centers.keySet());
     }
 
-    public void store() throws SibincoException {
+    public synchronized void store() throws SibincoException {
         try {
             store(new PrintWriter(new FileWriter(configFilename))).close();
         } catch (IOException e) {
@@ -157,11 +157,11 @@ public class SmppManager {
         }
     }
 
-    public int getLastUidId() {
+    public synchronized int getLastUidId() {
         return lastUidId;
     }
 
-    public void setLastUidId(int lastUidId) {
+    public synchronized void setLastUidId(int lastUidId) {
         this.lastUidId = lastUidId;
     }
 }

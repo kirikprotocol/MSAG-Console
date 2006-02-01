@@ -6,19 +6,19 @@
   switch(bean.getScagStatus())
   {
     case ServiceInfo.STATUS_RUNNING:
-      out.print("<img src='/images/ic_running.gif' width=10 height=10 title='running'> running");
+      out.print("<img src='content/images/ic_running.gif' width=10 height=10 title='running'> running");
       break;
     case ServiceInfo.STATUS_STOPPING:
-      out.print("<img src='/images/ic_stopping.gif' width=10 height=10 title='stopping'> stopping");
+      out.print("<img src='content/images/ic_stopping.gif' width=10 height=10 title='stopping'> stopping");
       break;
     case ServiceInfo.STATUS_STOPPED:
-      out.print("<img src='/images/ic_stopped.gif' width=10 height=10 title='stopped'> stopped");
+      out.print("<img src='content/images/ic_stopped.gif' width=10 height=10 title='stopped'> stopped");
       break;
     case ServiceInfo.STATUS_STARTING:
-      out.print("<img src='/images/ic_starting.gif' width=10 height=10 title='starting'> starting");
+      out.print("<img src='content/images/ic_starting.gif' width=10 height=10 title='starting'> starting");
       break;
     default:
-      out.print("<img src='/images/ic_unknown.gif' width=10 height=10 title='unknown'> unknown");
+      out.print("<img src='content/images/ic_unknown.gif' width=10 height=10 title='unknown'> unknown");
       break;
   }
 %>

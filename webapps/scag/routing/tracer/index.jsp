@@ -61,7 +61,7 @@
               </c:forEach>
               </select>
             </td>
-            <td><img src="/images/but_add.gif" onclick="addDestMask()" style="cursor:hand;"></td>
+            <td><img src="content/images/but_add.gif" onclick="addDestMask()" style="cursor:hand;"></td>
           </tr>
 </table>
 --%>

@@ -1,6 +1,6 @@
 <%@ page import="ru.sibinco.scag.backend.SCAGAppContext"%><html>
 <head>
-	<link rel="STYLESHEET" type="text/css" href="/styles/common.css">
+	<link rel="STYLESHEET" type="text/css" href="content/styles/common.css">
 </head>
 <body style="margin: 0px 0px 0px 0px;">
 <%

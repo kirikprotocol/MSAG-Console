@@ -85,7 +85,7 @@ function edit(idToEdit,goal)
       <c:set var="column" value="${fn:trim(_column)}"/>
       <c:choose>
         <c:when test="${column == 'checkbox'}">
-          <th class=ico width="${widths[status.count-1]}%"><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
+          <th class=ico width="${widths[status.count-1]}%"><img src="content/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
         </c:when>
         <c:otherwise>
           <th width="${widths[status.count-1]}%"><a href="#" onclick="return tableTag_sort('${column}')"
@@ -118,7 +118,7 @@ function edit(idToEdit,goal)
               <c:choose >
                 <c:when test="${smf:isBoolean(user[column])}">
                   <c:choose>
-                    <c:when test="${itemValue}"><span style="width:100%; text-align:center;"><img align="center" src="/images/ic_checked.gif"></span></c:when>
+                    <c:when test="${itemValue}"><span style="width:100%; text-align:center;"><img align="center" src="content/images/ic_checked.gif"></span></c:when>
                      <c:otherwise>&nbsp;</c:otherwise>
                  </c:choose>
                 </c:when>
@@ -162,7 +162,7 @@ function edit(idToEdit,goal)
   <option value="500" <c:if test="${bean.pageSize == 500}">selected</c:if>>500</option>
 </select></td>
 <c:if test="${filter==true}">
-    <td class=filter><img src="/images/but_filter.gif" class=button jbuttonName="mbFilter" jbuttonValue="Filter" title="Filter" jbuttonOnclick="return filter()"></td>
+    <td class=filter><img src="content/images/but_filter.gif" class=button jbuttonName="mbFilter" jbuttonValue="Filter" title="Filter" jbuttonOnclick="return filter()"></td>
 </c:if>
 <%--td class=filter><%button(out, "but_filter.gif", "mbFilter", "Filter", "Filter", "return clickFilter()");%></td--%>
 </tr>
