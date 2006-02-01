@@ -34,6 +34,7 @@ StatManConfig::StatManConfig(std::string& directory,std::string& host,int genp,i
 	{
 	    throw(ConfigException(e.what()));
 	}
+}
 #endif
 
 StatManConfig::StatManConfig(ConfigView& cv)  throw(ConfigException)

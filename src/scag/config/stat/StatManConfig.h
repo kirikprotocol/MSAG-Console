@@ -12,6 +12,11 @@ public:
     StatManConfig(ConfigView& cv)  throw(ConfigException);
     void init(ConfigView& cv)  throw(ConfigException);   
     bool check(ConfigView& cv)  throw(ConfigException);
+    
+#ifdef TESTING    
+    StatManConfig::StatManConfig(std::string& directory,std::string& host,int genp,int svcp,int scp)  throw(ConfigException);
+#endif
+
     std::string getDir() const;
     std::string getPerfHost() const;
     int getPerfGenPort() const;
