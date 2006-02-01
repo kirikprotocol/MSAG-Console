@@ -86,4 +86,18 @@
   <param name="receiptSchemeName" value="default"/>
   <param name="priority" value="16384"/>
 </smerecord>
+<smerecord type="smpp" uid="INMANCOMM">
+  <param name="typeOfNumber" value="1"/>
+  <param name="numberingPlan" value="1"/>
+  <param name="interfaceVersion" value="34"/>
+  <param name="systemType" value="internal"/>
+  <param name="password" value=""/>
+  <param name="addrRange" value=".*"/>
+  <param name="smeN" value="-1"/>
+  <param name="wantAlias" value="no"/>
+  <param name="forceDC" value="false"/>
+  <param name="timeout" value="20"/>
+  <param name="receiptSchemeName" value="default"/>
+  <param name="priority" value="16384"/>
+</smerecord>
 </records>
