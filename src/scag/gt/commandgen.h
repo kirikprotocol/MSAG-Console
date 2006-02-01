@@ -1,6 +1,6 @@
 #ifndef __COMMAND_GEN_H__
 #define __COMMAND_GEN_H__
-
+  
 #define SMPP_COMMANDS_COUNT 9
 
 
