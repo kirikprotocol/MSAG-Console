@@ -19,7 +19,7 @@
 
 
   <section name="categories">
-   <param name="1" type="string">category1</param>
+    <param name="1" type="string">category1</param>
     <param name="2" type="string">supercategory</param>
     <param name="3" type="string">super puper category mega giga</param>
     <param name="last used category id" type="int">3</param>
@@ -55,6 +55,8 @@
       <param name="user" type="string">@db.user@</param>
       <param name="password" type="string">@db.password@</param>
     </section>
+    
+    <param name="storeFile" type="string">@store.file@</param>
   </section>
   
   <section name="providers">
