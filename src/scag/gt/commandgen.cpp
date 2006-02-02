@@ -97,7 +97,7 @@ void  String2SCAGCommang(scag::transport::smpp::SmppCommand *cmd,
 		}
 		else
 		{
-			_cmd->get_resp()->set_sms(&sms);
+			_cmd.get_resp()->set_sms(&sms);
 		}
 		
 
