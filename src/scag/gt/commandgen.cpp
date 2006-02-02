@@ -12,7 +12,7 @@
 using namespace std;
 using namespace smsc::sms;
 using namespace scag;
-
+using namespace scag::transport::smpp;
  
 #include <sms/sms.h>
 #include <scag/transport/SCAGCommand.h>
@@ -85,7 +85,7 @@ void  String2SCAGCommang(scag::transport::smpp::SmppCommand *cmd,
 	 {
 		 *cmd =  scag::transport::smpp::SmppCommand::makeDeliverySmResp("12345",dialogid,1);
   
-		_SmppCommand& _cmd = cmd.cmd;
+		_SmppCommand& _cmd = *cmd.cmd;
 		_cmd.dta = new SMS;
 		*_cmd.get_sms() = sms;
 		
