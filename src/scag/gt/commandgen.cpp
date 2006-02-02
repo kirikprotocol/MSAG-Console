@@ -83,7 +83,7 @@ void  String2SCAGCommang(scag::transport::smpp::SmppCommand *cmd,
 
  case SMPPCI_deliver_sm_resp: 
   *cmd =  scag::transport::smpp::SmppCommand::makeDeliverySmResp("12345",dialogid,1);
-  *cmd.cmd->get_sms()=sms;
+  cmd->cmd->get_sms()=sms;
   break;
 
  case SMPPCI_data_sm:   
