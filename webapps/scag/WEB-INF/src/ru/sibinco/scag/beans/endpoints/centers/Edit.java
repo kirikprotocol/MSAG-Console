@@ -147,7 +147,7 @@ public class Edit extends EditBean {
                 if (center.isEnabled()) {
                     gateway.addCenter(center);
                 }
-                appContext.getSmppManager().setLastUidId(center.getUid());
+                appContext.getSmppManager().setLastUsedId(center.getUid());
             } else {
                 if (oldCenter.isEnabled() == center.isEnabled()) {
                     if(isEnabled())
@@ -172,7 +172,7 @@ public class Edit extends EditBean {
     }
 
     private int getLastUid() {
-        uid = appContext.getSmppManager().getLastUidId();
+        uid = appContext.getSmppManager().getLastUsedId();
         uid++;
         return uid;
     }

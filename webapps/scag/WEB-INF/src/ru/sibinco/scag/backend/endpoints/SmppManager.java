@@ -7,7 +7,6 @@ import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.lib.backend.util.Functions;
@@ -49,7 +48,7 @@ public class SmppManager{
     private final String configFilename;
     private final ProviderManager providerManager;
 
-    private int lastUidId = -1;
+    private int lastUsedId = -1;
 
 
     public SmppManager(String configFilename, ProviderManager providerManager) {
@@ -69,11 +68,11 @@ public class SmppManager{
                 final String name = paramElem.getAttribute("name");
                 try {
                     if (PARAM_NAME_LAST_UID_ID.equals(name)) {
-                        lastUidId = Integer.decode(Utils.getNodeText(paramConfs.item(i))).intValue();
+                        lastUsedId = Integer.decode(Utils.getNodeText(paramConfs.item(i))).intValue();
                     }
                 } catch (NumberFormatException e) {
                     e.printStackTrace();
-                    logger.error("Int parameter \"" + name + "\" misformatted: " + lastUidId + ", skipped", e);
+                    logger.error("Int parameter \"" + name + "\" misformatted: " + lastUsedId + ", skipped", e);
                 }                
             }
 
@@ -118,7 +117,7 @@ public class SmppManager{
             }
         });
         Functions.storeConfigHeader(out, "records", "smpp.dtd", "ISO-8859-1");
-        storeUid(out, getLastUidId());
+        storeUid(out, getLastUsedId());
         for (Iterator iterator = svcsValues.iterator(); iterator.hasNext();)
             ((Svc) iterator.next()).store(out);
         for (Iterator iterator = ceterValues.iterator(); iterator.hasNext();)
@@ -157,11 +156,11 @@ public class SmppManager{
         }
     }
 
-    public synchronized int getLastUidId() {
-        return lastUidId;
+    public synchronized int getLastUsedId() {
+        return lastUsedId;
     }
 
-    public synchronized void setLastUidId(int lastUidId) {
-        this.lastUidId = lastUidId;
+    public synchronized void setLastUsedId(int lastUsedId) {
+        this.lastUsedId = lastUsedId;
     }
 }

@@ -201,35 +201,36 @@
   }
   </script>
     <c:set var="smes" value="${fn:join(bean.smeIds, ',')}"/>
-    <c:set var="providers" value="${fn:join(bean.providerNames, ',')}"/>
-    <c:set var="providerIds" value="${fn:join(bean.providerIds, ',')}"/>
     <table cellpadding="5">
       <col width="50%">
       <col width="50%">
       <tr>
-        <td valign="top">
-          <sm-ep:properties title="Route information" noColoredLines="false">
-            <sm-ep:txt title="name" name="name" readonly="${!bean.add}" validation="nonEmpty"/>
-            <sm-ep:txt title="notes" name="notes"/>
-            <sm-ep:list title="source SME ID" name="srcSmeId" values="${smes}" valueTitles="${smes}" onChange="srcSmeIdChanged();"/>
-            <sm-ep:list emptyOption="true" title="provider" name="providerId" values="${providerIds}" valueTitles="${providerNames}"/>
-            <sm-ep:list  title="rule" name="ruleId"
-                       values="${fn:join(bean.ruleIds, ',')}"
-                       valueTitles="${fn:join(bean.rules, ',')}"/>
-            <sm-ep:list emptyOption="true" title="category" name="categoryId"
-                       values="${fn:join(bean.categoryIds, ',')}"
-                       valueTitles="${fn:join(bean.categories, ',')}"/>
-            <sm-pm:space/>
-          </sm-ep:properties>
-        </td>
-        <td valign="top">
-          <sm-ep:properties title="Route options" noColoredLines="false" noHeaders="false">
-            <sm-ep:check title="active" name="active"/>
-            <sm-ep:check title="allowed" name="enabled"/>
-            <sm-ep:check title="archived" name="archived"/>
-            <sm-pm:space/>
-          </sm-ep:properties>
-        </td>
+          <td valign="top">
+              <sm-ep:properties title="Route information" noColoredLines="false">
+                  <sm-ep:txt title="name" name="name" readonly="${!bean.add}" validation="nonEmpty"/>
+                  <sm-ep:txt title="notes" name="notes"/>
+                  <sm-ep:list title="source SME ID" name="srcSmeId"
+                              values="${smes}" valueTitles="${smes}" onChange="srcSmeIdChanged();"/>
+                  <sm-ep:list emptyOption="true" title="provider" name="providerId"
+                              values="${fn:join(bean.providerIds, ',')}"
+                              valueTitles="${fn:join(bean.providerNames, ',')}"/>
+                  <sm-ep:list title="rule" name="ruleId"
+                              values="${fn:join(bean.ruleIds, ',')}"
+                              valueTitles="${fn:join(bean.rules, ',')}"/>
+                  <sm-ep:list emptyOption="true" title="category" name="categoryId"
+                              values="${fn:join(bean.categoryIds, ',')}"
+                              valueTitles="${fn:join(bean.categories, ',')}"/>
+                  <sm-pm:space/>
+              </sm-ep:properties>
+          </td>
+          <td valign="top">
+              <sm-ep:properties title="Route options" noColoredLines="false" noHeaders="false">
+                  <sm-ep:check title="active" name="active"/>
+                  <sm-ep:check title="allowed" name="enabled"/>
+                  <sm-ep:check title="archived" name="archived"/>
+                  <sm-pm:space/>
+              </sm-ep:properties>
+          </td>
       </tr>
       <tr><td colspan="2"><hr></td></tr>
     </table>
