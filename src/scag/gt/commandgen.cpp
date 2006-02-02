@@ -85,7 +85,7 @@ void  String2SCAGCommang(scag::transport::smpp::SmppCommand *cmd,
 	 {
 		 *cmd =  scag::transport::smpp::SmppCommand::makeDeliverySmResp("12345",dialogid,1);
   
-		_SmppCommand& _cmd = cmd->cmd;
+		_SmppCommand& _cmd = cmd->operator ->();
 		_cmd.dta = new SMS;
 		*_cmd.get_sms() = sms;
 		
@@ -110,7 +110,7 @@ void  String2SCAGCommang(scag::transport::smpp::SmppCommand *cmd,
   break;
 
  case SMPPCI_submit_multi:  
-  cmd =  scag::transport::smpp::SmppCommand::makeSubmitMultiResp("9865",dialogid,1);
+  *cmd =  scag::transport::smpp::SmppCommand::makeSubmitMultiResp("9865",dialogid,1);
   break;
 
  case SMPPCI_query_sm:   
