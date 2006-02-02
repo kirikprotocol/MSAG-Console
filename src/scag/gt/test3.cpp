@@ -246,6 +246,8 @@ int ruleRun(   std::string cmd_name,
 			   }
 	       }
    	}
+	_SmppCommand& _cmd = *cmd->operator ->();
+	_cmd.get_resp()->set_sms(smrsp);	
 	
        smanager->releaseSession(session);
 
