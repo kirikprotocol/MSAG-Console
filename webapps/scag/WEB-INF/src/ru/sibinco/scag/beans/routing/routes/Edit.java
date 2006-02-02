@@ -80,7 +80,7 @@ public class Edit extends EditBean {
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
 
         appContext = getAppContext();
-        if(appContext == null){
+        if (appContext == null) {
             appContext = (SCAGAppContext) request.getAttribute("appContext");
         }
 
@@ -148,7 +148,8 @@ public class Edit extends EditBean {
                 }
             }
         }
-        if (null != new_dstMask && null != new_dst_mask_sme_ && 0 < new_dstMask.length() && 0 < new_dst_mask_sme_.length()) {
+        if (null != new_dstMask && null != new_dst_mask_sme_ && 0 < new_dstMask.length() && 0 < new_dst_mask_sme_.length())
+        {
             final Mask mask;
             try {
                 mask = new Mask(new_dstMask);
@@ -173,15 +174,13 @@ public class Edit extends EditBean {
         super.process(request, response);
         userProviderId = getUser(appContext).getProviderId();
         administrator = (userProviderId == ALL_PROVIDERS);
-
-        if(administrator){
+        List ids = new ArrayList();
+        List names = new ArrayList();
+        if (administrator) {
             Map providers = appContext.getProviderManager().getProviders();
-            List ids = new ArrayList();
-            List names = new ArrayList();
-
-            for(Iterator i = providers.values().iterator(); i.hasNext();){
+            for (Iterator i = providers.values().iterator(); i.hasNext();) {
                 Object obj = i.next();
-                if(obj != null && obj instanceof Provider){
+                if (obj != null && obj instanceof Provider) {
                     Provider provider = (Provider) obj;
                     ids.add(Long.toString(provider.getId()));
                     names.add(provider.getName());
@@ -190,20 +189,21 @@ public class Edit extends EditBean {
             providerIds = (String[]) (ids.toArray(new String[ids.size()]));
             providerNames = (String[]) (names.toArray(new String[names.size()]));
 
-        }else{
-            setProviderId(userProviderId);
+        } else {
             Object obj = appContext.getProviderManager().getProviders().get(new Long(userProviderId));
-            if(obj == null || !(obj instanceof Provider))
+            if (obj == null || !(obj instanceof Provider))
                 throw new SCAGJspException(Constants.errors.providers.PROVIDER_NOT_FOUND,
                         "Failed to locate provider for id=" + userProviderId);
-            providerName = ((Provider) obj).getName();
-
-
+            Provider provider = (Provider) obj;
+            ids.add(Long.toString(provider.getId()));
+            names.add(provider.getName());
+            providerIds = (String[]) (ids.toArray(new String[ids.size()]));
+            providerNames = (String[]) (names.toArray(new String[names.size()]));
         }
     }
 
     protected void load(final String loadId) throws SCAGJspException {
-           if (null == new_dst_mask_sme_ && 0 < appContext.getSmppManager().getSvcs().size())
+        if (null == new_dst_mask_sme_ && 0 < appContext.getSmppManager().getSvcs().size())
             new_dst_mask_sme_ = (String) appContext.getSmppManager().getSvcs().keySet().iterator().next();
 
         final Route route = (Route) appContext.getScagRoutingManager().getRoutes().get(loadId);
@@ -329,24 +329,6 @@ public class Edit extends EditBean {
     public String[] getProviderNames() {
         return providerNames;
     }
-
-//    public String[] getProviderIds() {
-//        final Map providers = new TreeMap(appContext.getProviderManager().getProviders());
-//        final List result = new ArrayList(providers.size());
-//        for (Iterator i = providers.keySet().iterator(); i.hasNext();) {
-//            result.add(String.valueOf(((Long) i.next()).longValue()));
-//        }
-//        return (String[]) result.toArray(new String[0]);
-//    }
-//
-//    public String[] getProviders() {
-//        final Map providers = new TreeMap(appContext.getProviderManager().getProviders());
-//        final List result = new ArrayList(providers.size());
-//        for (Iterator i = providers.values().iterator(); i.hasNext();) {
-//            result.add(((Provider) i.next()).getName());
-//        }
-//        return (String[]) result.toArray(new String[0]);
-//    }
 
     public String[] getRuleIds() {
         final Map rules = new TreeMap(appContext.getRuleManager().getRules());
