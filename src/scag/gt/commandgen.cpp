@@ -90,7 +90,7 @@ void  String2SCAGCommang(scag::transport::smpp::SmppCommand *cmd,
   
 		_SmppCommand& _cmd = *cmd->operator ->();
 		
-		if(!(*_cmd).get_sms())
+		if(!_cmd.get_sms())
 		smsc_log_error(logger,"error sms is <null> for deliver_sm_resp");
 		
 
