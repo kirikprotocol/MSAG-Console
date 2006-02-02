@@ -292,6 +292,7 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
     smsc_log_warn(log,"DeliveryResp:Failed to put command into %s:%s",dst->getSystemId(),e.what());
   }
   if(session.Get())scag::sessions::SessionManager::Instance().releaseSession(session);
+  cmd->get_resp()->set_sms(0);
 }
 
 void StateMachine::SubmitResp(SmppCommand& cmd,int status)
