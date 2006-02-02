@@ -13,9 +13,12 @@ using namespace std;
 using namespace smsc::sms;
 using namespace scag;
 using namespace scag::transport::smpp;
+using namespace smsc::logger;
+extern smsc::logger::Logger *logger;
  
 #include <sms/sms.h>
 #include <scag/transport/SCAGCommand.h>
+#include <logger/Logger.h>
 
 const char* SMPP_COMMANDS[SMPP_COMMANDS_COUNT]={
 "deliver_sm",
@@ -86,8 +89,9 @@ void  String2SCAGCommang(scag::transport::smpp::SmppCommand *cmd,
 		 *cmd =  scag::transport::smpp::SmppCommand::makeDeliverySmResp("12345",dialogid,1);
   
 		_SmppCommand& _cmd = *cmd->operator ->();
-		_cmd.dta = new SMS;
-		*_cmd.get_sms() = sms;
+		
+		if(!*_cmd.get_sms())
+		smsc_log_error(logger,"error sms is <null> for deliver_sm_resp");
 		
 
 	 }
