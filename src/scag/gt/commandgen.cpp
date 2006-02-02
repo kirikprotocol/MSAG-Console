@@ -89,18 +89,13 @@ void  String2SCAGCommang(scag::transport::smpp::SmppCommand *cmd,
 		 *cmd =  scag::transport::smpp::SmppCommand::makeDeliverySmResp("12345",dialogid,1);
   
 		_SmppCommand& _cmd = *cmd->operator ->();
-		
 
-		if(!_cmd.get_sms())
-		{
-			smsc_log_error(logger,"error sms is <null> for deliver_sm_resp");
-		}
-		else
-		{
-			_cmd.get_resp()->set_sms(&sms);
-		}
+		SMS * smrsp = new SMS;
 		
+		smrsp->setDestinationAddress(da);
+		smrsp->setOriginatingAddress(oa);
 
+		_cmd.get_resp()->set_sms(smrsp);
 
 	 }
   break;
