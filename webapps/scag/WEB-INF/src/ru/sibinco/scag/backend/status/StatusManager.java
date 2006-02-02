@@ -11,6 +11,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.util.Map;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Date;
 import java.io.IOException;
 import java.io.File;
 
@@ -28,7 +29,7 @@ public class StatusManager {
 
     private final File statusFolder;
 
-    private final Map statuses = Collections.synchronizedMap(new HashMap());
+    private final Map statMessages = Collections.synchronizedMap(new HashMap());
 
     public StatusManager(final File statusFolder) {
         if(!statusFolder.exists()){
@@ -38,11 +39,11 @@ public class StatusManager {
     }
 
     public synchronized void init() throws IOException, ParserConfigurationException, SAXException {
-        statuses.clear();
+        statMessages.clear();
     }
 
-    public synchronized Map getStatuses() {
-        return statuses;
+    public synchronized Map getStatMessages() {
+        return statMessages;
     }
 
 }

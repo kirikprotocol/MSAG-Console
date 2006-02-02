@@ -170,7 +170,7 @@ public class PerformanceGraph extends Canvas {
         }
         //draw deliver graphs
         if( PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE || (PerfMon.viewMode == PerfMon.VIEWMODE_IO && PerfMon.viewOutputEnabled) ) {
-          if(PerfMon.viewMode == PerfMon.VIEWMODE_IO || (PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE && PerfMon.viewDeliverErrEnabled))
+          if(PerfMon.viewMode == PerfMon.VIEWMODE_IO || (PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE && PerfMon.viewGwRejectedEnabled))
           drawGraphLine(g, posy, posx,
                   (int) snap.last[PerfSnap.IDX_GW_REJECTED], (int) prevSnap.last[PerfSnap.IDX_GW_REJECTED],
                   0, 0,
@@ -184,7 +184,7 @@ public class PerformanceGraph extends Canvas {
         }
         // draw transaction graphs
         if( PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE || (PerfMon.viewMode == PerfMon.VIEWMODE_IO && PerfMon.viewTransactionEnabled) ) {
-          if(PerfMon.viewMode == PerfMon.VIEWMODE_IO || (PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE && PerfMon.viewTransokEnabled))
+          if(PerfMon.viewMode == PerfMon.VIEWMODE_IO || (PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE && PerfMon.viewFailedEnabled))
           drawGraphLine(g, posy, posx,
                   (int) snap.last[PerfSnap.IDX_FAILED], (int) prevSnap.last[PerfSnap.IDX_FAILED],
                   (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) snap.last[PerfSnap.IDX_GW_REJECTED]:0,

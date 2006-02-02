@@ -17,15 +17,24 @@
     <jsp:body>
         <sm-ep:properties title="User info">
             <sm-ep:txt title="login" name="login" validation="nonEmpty" readonly="${!bean.add}"/>
-            <sm-ep:txt title="password" name="password" type="password"/>
-            <sm-ep:txt title="confirm password" name="confirmPassword" type="password"/>
+            <c:choose>
+                <c:when test="${bean.add}">
+                    <sm-ep:txt title="password" name="password" validation="nonEmpty" type="password"/>
+                    <sm-ep:txt title="confirm password" name="confirmPassword" validation="nonEmpty" type="password"/>
+                </c:when>
+                <c:otherwise>
+                    <sm-ep:txt title="password" name="password" type="password"/>
+                    <sm-ep:txt title="confirm password" name="confirmPassword" type="password"/>
+                </c:otherwise>
+            </c:choose>
+
             <sm-ep:list title="provider" name="providerId" values="${fn:join(bean.providerIds, ',')}"
                         valueTitles="${fn:join(bean.providerNames, ',')}" rowId="id_Providers_list"/>
             <sm-ep:checks title="roles" name="roles" values="gw,routing,services,stat"
                           valueTitles="Gateway configuration,Routes configuration,Services,Statistics"/>
             <sm-ep:txt title="first name" name="firstName" validation="nonEmpty"/>
             <sm-ep:txt title="last name" name="lastName" validation="nonEmpty"/>
-            <sm-ep:txt title="departament" name="dept" validation="nonEmpty"/>
+            <sm-ep:txt title="departament" name="dept"/>
             <sm-ep:txt title="work phone" name="workPhone" validation="nonEmpty"/>
             <sm-ep:txt title="home phone" name="homePhone"/>
             <sm-ep:txt title="cellular phone" name="cellPhone"/>

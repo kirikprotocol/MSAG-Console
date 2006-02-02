@@ -71,6 +71,7 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
 
   <script src="content/scripts/scripts.js" type="text/javascript"></script>
   <script src="content/scripts/calendar.js" type="text/javascript"></script>
+  <script src="content/scripts/scripts_msg_en.js" type="text/javascript"></script>
 </head>
 <body onload="initjsDOMenu(); ${onLoad}">
   <!--calendar-->
