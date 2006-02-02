@@ -61,6 +61,8 @@ void  String2SCAGCommang(scag::transport::smpp::SmppCommand *cmd,
  }
  SMS sms;
  smsc::sms::Address oa,da ;
+
+
  oa.setNumberingPlan(oa_np);
  oa.setTypeOfNumber(oa_tn);
 
@@ -78,28 +80,38 @@ void  String2SCAGCommang(scag::transport::smpp::SmppCommand *cmd,
  case SMPPCI_deliver_sm:  
   *cmd =  scag::transport::smpp::SmppCommand::makeDeliverySm(sms,dialogid);
   break;
+
  case SMPPCI_deliver_sm_resp: 
   *cmd =  scag::transport::smpp::SmppCommand::makeDeliverySmResp("12345",dialogid,1);
+  *cmd.cmd->get_sms()=sms;
   break;
+
  case SMPPCI_data_sm:   
   //
   break;
+
  case SMPPCI_data_sm_resp:  
   //
   break;
+
  case SMPPCI_submit_sm:  
   *cmd =  scag::transport::smpp::SmppCommand::makeSubmitSm(sms,dialogid);
   break;
+
  case SMPPCI_submit_sm_resp: 
  *cmd =  scag::transport::smpp::SmppCommand::makeSubmitSmResp("54321",dialogid,1);
   break;
+
  case SMPPCI_submit_multi:  
-  //cmd =  scag::transport::smpp::SmppCommand::makeSubmitMultiResp(sms,dialogid);
+  cmd =  scag::transport::smpp::SmppCommand::makeSubmitMultiResp("9865",dialogid,1);
   break;
+
  case SMPPCI_query_sm:   
   break;
+
  case SMPPCI_query_sm_resp: 
   break;
+
  default:
   break;
  }
