@@ -19,8 +19,6 @@
 #include "scag/util/sms/HashUtil.h"
 #include "scag/re/CommandBrige.h"
 
-#include <iostream>
-
 namespace scag { namespace sessions 
 {
     using namespace smsc::core::threads;
@@ -61,12 +59,12 @@ namespace scag { namespace sessions
         {
             bool operator () (const CSessionAccessData* x,const CSessionAccessData* y) const
             {
-                return !(x->SessionKey == y->SessionKey);
+                return (x->nextWakeTime > y->nextWakeTime);
             }
         };
 
-        typedef std::set<CSessionAccessData*,FAccessDataCompare> CSessionSet;
-        typedef std::set<CSessionAccessData*>::iterator CSessionSetIterator;
+        typedef std::multiset<CSessionAccessData*,FAccessDataCompare> CSessionSet;
+        typedef std::multiset<CSessionAccessData*>::iterator CSessionSetIterator;
         typedef XHash<CSessionKey,CSessionSetIterator,XSessionHashFunc> CSessionHash;
 
         typedef XHash<Address,int,XAddrHashFunc> CUMRHash;
@@ -88,6 +86,9 @@ namespace scag { namespace sessions
         void Stop();
         bool isStarted();
         int  processExpire();
+        CSessionSetIterator DeleteSession(CSessionSetIterator it);
+
+
         int16_t getNewUSR(Address& address);
         int16_t getLastUSR(Address& address);
 
@@ -167,17 +168,17 @@ void SessionManagerImpl::AddRestoredSession(Session * session)
 
     std::pair<CSessionSetIterator, bool> pr;
 
-    pr = SessionExpirePool.insert(accessData);
+    CSessionSetIterator it = SessionExpirePool.insert(accessData);
 
-    if (!pr.second) 
+/*    if (!pr.second) 
     {
         delete accessData;
 
         smsc_log_debug(logger,"SessionManager: Error - session cannot be inserted");
         return;
-    }
+    }*/
 
-    SessionHash.Insert(sessionKey,pr.first);
+    SessionHash.Insert(sessionKey,it);
 }
 
 SessionManagerImpl::~SessionManagerImpl() 
@@ -292,6 +293,24 @@ int SessionManagerImpl::Execute()
 }
 
 
+SessionManagerImpl::CSessionSetIterator SessionManagerImpl::DeleteSession(CSessionSetIterator it)
+{
+    CSessionSetIterator res;
+
+    SessionHash.Delete((*it)->SessionKey);
+
+    res = it;
+    res++;
+
+    SessionExpirePool.erase(it);
+
+    store.deleteSession((*it)->SessionKey);
+    delete (*it);
+    smsc_log_debug(logger,"SessionManager: session expired");
+
+    return res;
+}
+
 int SessionManagerImpl::processExpire()
 {
     MutexGuard guard(inUseMonitor);
@@ -303,9 +322,10 @@ int SessionManagerImpl::processExpire()
         CSessionSetIterator it;
         for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();++it)
         {
-            smsc_log_debug(logger,"SessionManager: check session UMR='%d', Address='%s', has pending: %d, Opened: %d",(*it)->SessionKey.USR,(*it)->SessionKey.abonentAddr.toString().c_str(),(*it)->hasPending,(*it)->bOpened);
-
+            smsc_log_debug(logger,"SessionManager: check session UMR='%d', Address='%s', has pending: %d, has operations: %d, Opened: %d",(*it)->SessionKey.USR,(*it)->SessionKey.abonentAddr.toString().c_str(),(*it)->hasPending,(*it)->hasOperations,(*it)->bOpened);
+            
             if ((!(*it)->bOpened)&&((*it)->hasPending)) break;
+            if ((!(*it)->bOpened)&&(!(*it)->hasPending)&&(!(*it)->hasOperations)) it = DeleteSession(it);
         }
 
         time_t now;
@@ -339,7 +359,7 @@ int SessionManagerImpl::processExpire()
                 SessionHash.Delete((*it)->SessionKey);
                 SessionExpirePool.erase(it);
                 delete (*it);
-                return 0;
+                return 1;
             }
 
             smsc_log_debug(logger,"SessionManager: try to expire session UMR='%d', Address='%s', has pending: %d-%d",(*it)->SessionKey.USR,(*it)->SessionKey.abonentAddr.toString().c_str(),session->hasPending(),(*it)->hasPending);
@@ -355,11 +375,7 @@ int SessionManagerImpl::processExpire()
         // Session expired
         if (!(*it)->hasOperations) 
         {
-            SessionHash.Delete((*it)->SessionKey);
-            SessionExpirePool.erase(it);
-            store.deleteSession((*it)->SessionKey);
-            delete (*it);
-            smsc_log_debug(logger,"SessionManager: session expired");
+            DeleteSession(it);
         } 
         else
         {
@@ -428,12 +444,9 @@ SessionPtr SessionManagerImpl::newSession(CSessionKey& sessionKey)
     accessData->SessionKey = sessionKey;
     accessData->hasOperations = session->hasOperations();
 
-    CSessionSetIterator it;
-    std::pair<CSessionSetIterator, bool> pr;
+    CSessionSetIterator it = SessionExpirePool.insert(accessData);
 
-    pr = SessionExpirePool.insert(accessData);
-
-    if (!pr.second) 
+/*    if (!pr.second) 
     {
         delete accessData;
         store.deleteSession(sessionKey);
@@ -441,9 +454,9 @@ SessionPtr SessionManagerImpl::newSession(CSessionKey& sessionKey)
         smsc_log_debug(logger,"SessionManager: cannot create a new session - session with such sessionId already exists");
         session = SessionPtr(0);
         return session;
-    }
+    }*/
 
-    SessionHash.Insert(sessionKey,pr.first);
+    SessionHash.Insert(sessionKey,it);
     return session;
 }
 

@@ -53,7 +53,7 @@ void Session::DeserializeProperty(SessionBuffer& buff)
         buff >> name;
         buff >> value;
 
-        AdapterProperty * property = new AdapterProperty(name,this,value);
+        AdapterProperty * property = new AdapterProperty(name,this,UnformatWStr(value));
         PropertyHash.Insert(name.c_str(),property);
     }
 }
@@ -117,7 +117,8 @@ void Session::SerializeProperty(SessionBuffer& buff)
     for (Hash <AdapterProperty *>::Iterator it = PropertyHash.getIterator(); it.Next(key, value);)
     {
         buff << key;
-        buff << value->getStr().c_str();
+        std::wstring wstr = value->getStr();
+        buff << FormatWStr(wstr).c_str();
     }
 }
 
@@ -233,7 +234,7 @@ Property* Session::getProperty(const std::string& name)
 
     if (!propertyPTR) 
     {
-        AdapterProperty * property = new AdapterProperty(name,this,"");
+        AdapterProperty * property = new AdapterProperty(name,this,std::wstring());
         PropertyHash.Insert(name.c_str(),property);
         return property;
     }
@@ -309,7 +310,7 @@ void Session::abort()
     lastOperationId = 0;
     bChanged = true;
 
-    smsc_log_error(logger,"Session: session aborted");
+    smsc_log_debug(logger,"Session: session aborted");
 }
 
 bool Session::hasOperations() 

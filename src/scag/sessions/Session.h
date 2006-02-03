@@ -20,8 +20,6 @@
 #include "scag/config/sessn/SessionManagerConfig.h"
 #include "core/buffers/RefPtr.hpp"
 
-#include <iostream>
-
 namespace scag { namespace sessions
 {
     using scag::config::SessionManagerConfig;
@@ -258,7 +256,6 @@ namespace scag { namespace sessions
             {
                 if (it->type != it2->type) return false;
                 if (it->validityTime != it2->validityTime) return false;
-                std::cout << "++++" << std::endl;
 
                 ++it2;
             }
@@ -285,10 +282,8 @@ namespace scag { namespace sessions
             } */
 
             if (s1->m_SessionKey == s2->m_SessionKey); return false;
-            std::cout << "!!!!!!!!!!!!!!!!!!!!!" << std::endl;
 
             if (s1->lastAccessTime != s2->lastAccessTime) return false;
-            std::cout << "!!!!!!!!!!!!!!!!!!!!!" << std::endl;
 
             return true;
 
