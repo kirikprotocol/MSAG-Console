@@ -460,7 +460,8 @@ USHORT_T EINSS7_I96SccpBindConf(UCHAR_T ssn,
   if ( state == SCCPBINDING )
   {
     cancelTimer(&conftimer);
-    if (result == EINSS7_I96SCCP_NB_SUCCESS)
+    if (result == EINSS7_I96SCCP_NB_SUCCESS ||
+        result == EINSS7_I96SCCP_SSN_ALREADY_IN_USE)
     {
       changeState(WORKING);
     }
