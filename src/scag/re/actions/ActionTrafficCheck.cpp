@@ -63,9 +63,10 @@ void ActionTrafficCheck::init(const SectionParams& params, PropertyObject _prope
     if (!params.Exists("max")) throw SCAGException("Action 'traffic:check': missing 'max' parameter");
     if (!params.Exists("period")) throw SCAGException("Action 'traffic:check': missing 'period' parameter");
 
-    sMax = params["max"];
+    sMax = ConvertWStrToStr(params["max"]);
 
-    std::string sPeriod = params["period"];
+    std::string sPeriod = ConvertWStrToStr(params["period"]);
+
     if (!StrToPeriod(period,sPeriod)) SCAGException("Action 'traffic:check': invalid value '%s' for 'period' parameter",sPeriod.c_str());
     propertyObject = _propertyObject;
 }

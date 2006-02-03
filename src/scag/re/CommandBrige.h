@@ -75,7 +75,7 @@ public:
         CSmppDiscriptor SmppDiscriptor;
         int receiptMessageId = 0;
 
-        if (!dta) throw SCAGException("Command Bridge Error: SCAGCommand data is invalid");
+        if (!dta) throw SCAGException("Command Bridge Error: Cannot get HandlerType - SCAGCommand data is invalid");
 
         switch (cmdid) 
         {
@@ -97,7 +97,7 @@ public:
             sms = ((SmsResp*)dta)->get_sms();
 
             if (sms) receiptMessageId = atoi(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
-            else throw SCAGException("Command Bridge Error: SCAGCommand SMS data for DELIVERY_RESP is invalid");
+            else throw SCAGException("Command Bridge Error: Cannot get HandlerType - SCAGCommand SMS data for DELIVERY_RESP is invalid");
 
             if (receiptMessageId) handlerType = EH_RECEIPT;
             else handlerType = EH_DELIVER_SM_RESP;
@@ -119,7 +119,7 @@ public:
         SCAGCommand& _command = const_cast<SCAGCommand&>(command);
 
         SmppCommand * smppCommand = dynamic_cast<SmppCommand *>(&_command);
-        if (!smppCommand) throw SCAGException("Command Bridge Error: SCAGCommand is not smpp-type");
+        if (!smppCommand) throw SCAGException("Command Bridge Error: Cannot get SmppDiscriptor - SCAGCommand is not smpp-type");
         
         
         _SmppCommand& cmd = *smppCommand->operator ->();
@@ -130,7 +130,7 @@ public:
         CSmppDiscriptor SmppDiscriptor;
         int receiptMessageId = 0;
 
-        if (!dta) throw SCAGException("Command Bridge Error: SCAGCommand data is invalid");
+        if (!dta) throw SCAGException("Command Bridge Error: Cannot get SmppDiscriptor - SCAGCommand data is invalid");
 
         switch (cmdid) 
         {
@@ -160,7 +160,7 @@ public:
             sms = ((SmsResp*)dta)->get_sms();
 
             if (sms) receiptMessageId = atoi(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
-            else throw SCAGException("Command Bridge Error: SCAGCommand SMS data for DELIVERY_RESP is invalid");
+            else throw SCAGException("Command Bridge Error: Cannot get SmppDiscriptor - SCAGCommand SMS data for DELIVERY_RESP is invalid");
 
             SmppDiscriptor.lastIndex = sms->getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
             SmppDiscriptor.currentIndex = sms->getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
@@ -220,7 +220,7 @@ public:
         void * dta = cmd.dta;
         SMS * sms = 0;
 
-        if (!dta) throw SCAGException("Command Bridge Error: SCAGCommand data is invalid");
+        if (!dta) throw SCAGException("Command Bridge Error: Cannot get AbonentAddress - SCAGCommand data is invalid");
 
         switch (cmdid) 
         {

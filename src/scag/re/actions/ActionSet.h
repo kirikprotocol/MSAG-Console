@@ -10,7 +10,10 @@ class ActionSet : public Action
 {
     ActionSet(const ActionSet &);
     std::string Variable;
-    std::string Value;
+
+    std::string s_Value;
+    std::wstring w_Value;
+
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);

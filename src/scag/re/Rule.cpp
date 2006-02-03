@@ -1,4 +1,4 @@
-    #include "Rule.h"
+#include "Rule.h"
 #include "scag/transport/smpp/SmppCommand.h"
 #include "scag/re/smpp/SmppEventHandler.h"
 
@@ -127,13 +127,15 @@ void Rule::init(const SectionParams& params, PropertyObject propertyObject)
 {
     if (!params.Exists("transport")) throw SCAGException("Rule: missing 'transport' parameter");
 
-    std::string sTransport = params["transport"];
+    std::wstring sTransport = params["transport"];
 
-    if (sTransport == "SMPP") transportType = SMPP;
-    else if (sTransport == "WAP") transportType = WAP;
-    else if (sTransport == "MMS") transportType = MMS;
+    //std:: cout << "^^^^^^^^^^^^" << ConvertWStrToStr(sTransport.c_str()) << "^^" << sTransport.size() << std::endl;
+
+    if (sTransport == ConvertStrToWStr("SMPP")) transportType = SMPP;
+    else if (sTransport == ConvertStrToWStr("WAP")) transportType = WAP;
+    else if (sTransport == ConvertStrToWStr("MMS")) transportType = MMS;
     else 
-        throw SCAGException("Rule: invalid value '%s' for 'transport' parameter",sTransport.c_str());
+        throw SCAGException("Rule: invalid value '%s' for 'transport' parameter",ConvertWStrToStr(sTransport).c_str());
 
     smsc_log_debug(logger,"Rule::Init");
 

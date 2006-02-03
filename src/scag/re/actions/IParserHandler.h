@@ -17,7 +17,7 @@ using namespace scag::exceptions;
 using scag::transport::TransportType;
 using scag::re::actions::ActionFactory;
 
-typedef smsc::core::buffers::Hash<std::string> SectionParams;
+typedef smsc::core::buffers::Hash<std::wstring> SectionParams;
 
 
 struct PropertyObject

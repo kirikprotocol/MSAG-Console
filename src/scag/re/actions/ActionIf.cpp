@@ -25,7 +25,7 @@ void ActionIf::init(const SectionParams& params,PropertyObject _propertyObject)
     FieldType ft;
     AccessType at;
 
-    ft = ActionContext::Separate(singleparam.Operand1,name); 
+    ft = ActionContext::Separate(ConvertWStrToStr(singleparam.Operand1),name); 
     if (ft==ftUnknown) throw InvalidPropertyException("Action 'if': unrecognized variable prefix '%s' for 'test' parameter",singleparam.Operand1.c_str());
 
     if (ft == ftField) 
@@ -42,19 +42,19 @@ void ActionIf::init(const SectionParams& params,PropertyObject _propertyObject)
 
     if (hasOP&&hasValue) 
     {
-        singleparam.Operation = GetOperationFromSTR(params["op"]);
+        singleparam.Operation = GetOperationFromSTR(ConvertWStrToStr(params["op"]));
         singleparam.Operand2 = params["value"];
 
-        ft = ActionContext::Separate(singleparam.Operand2,name); 
+        ft = ActionContext::Separate(ConvertWStrToStr(singleparam.Operand2),name); 
 
         if (ft == ftField) 
         {
             at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
             if (!(at&atRead)) 
-                throw InvalidPropertyException("Action 'if': cannot read property '%s' - no access",singleparam.Operand2.c_str());
+                throw InvalidPropertyException("Action 'if': cannot read property '%s' - no access",ConvertWStrToStr(singleparam.Operand2).c_str());
         }
 
-        if (singleparam.Operation == opUnknown) throw InvalidPropertyException("Action 'if': unrecognized operation '%s'",params["op"].c_str());
+        if (singleparam.Operation == opUnknown) throw InvalidPropertyException("Action 'if': unrecognized operation '%s'",ConvertWStrToStr(params["op"]).c_str());
         if (singleparam.Operand2.size()==0) throw SCAGException("Action 'if': invalid 'value' parameter");
     } else 
     {
@@ -168,13 +168,13 @@ bool ActionIf::run(ActionContext& context)
 
     bool isValidCondition = true;
 
-    Property * property = context.getProperty(singleparam.Operand1);
+    Property * property = context.getProperty(ConvertWStrToStr(singleparam.Operand1));
     if (!property) return true;
 
-    if (singleparam.Operand2!="") 
-        smsc_log_debug(logger,"Testing "+singleparam.Operand1+"='"+property->getStr()+"'"+" vs "+singleparam.Operand2);
+    if (singleparam.Operand2.size() > 0) 
+        smsc_log_debug(logger,"Testing "+ConvertWStrToStr(singleparam.Operand1)+"='"+ConvertWStrToStr((property->getStr()))+"'"+" vs "+ConvertWStrToStr(singleparam.Operand2));
     else 
-        smsc_log_debug(logger,"Testing "+singleparam.Operand1+"='"+property->getStr()+"' for bool");
+        smsc_log_debug(logger,"Testing "+ConvertWStrToStr(singleparam.Operand1)+"='"+ConvertWStrToStr(property->getStr())+"' for bool");
 
 
     if ((singleparam.Operation == opUnknown) && singleparam.Operand2.empty()) 
@@ -204,18 +204,18 @@ bool ActionIf::run(ActionContext& context)
             break;
         }                
  
-        if (ftUnknown == ActionContext::Separate(singleparam.Operand2,name)) 
+        if (ftUnknown == ActionContext::Separate(ConvertWStrToStr(singleparam.Operand2),name)) 
         {
             if (pt == pt_str)
                 result = property->Compare(singleparam.Operand2);
             else
-                result = property->Compare(atoi(singleparam.Operand2.c_str())); 
+                result = property->Compare(atoi(ConvertWStrToStr(singleparam.Operand2).c_str())); 
         } 
         else
         {
-            Property * valproperty = context.getProperty(singleparam.Operand2);
+            Property * valproperty = context.getProperty(ConvertWStrToStr(singleparam.Operand2));
             if (valproperty) result = property->Compare(*valproperty,pt);
-            else smsc_log_warn(logger,"Action 'if': Invalid property " + singleparam.Operand2);
+            else smsc_log_warn(logger,"Action 'if': Invalid property " + FormatWStr(singleparam.Operand2));
         } 
     
         isValidCondition = CompareResultToBool(singleparam.Operation,result);

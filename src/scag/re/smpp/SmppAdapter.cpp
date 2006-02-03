@@ -487,7 +487,7 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
             break;
         case Tag::SMPP_SHORT_MESSAGE:
         case Tag::SMPP_MESSAGE_PAYLOAD:
-            data.setStrProperty(FieldId,property.getStr().c_str());
+            data.setStrProperty(FieldId,ConvertWStrToStr(property.getStr()).c_str());
             break;
         }
 
@@ -525,7 +525,7 @@ Property * SmppCommandAdapter::getSubmitRespProperty(const std::string& name,int
     switch (FieldId) 
     {
     case 0:
-        property = new AdapterProperty(name,this,"");
+        property = new AdapterProperty(name,this,std::wstring());
         property->setPureInt(command->get_status());
     }
 
@@ -543,10 +543,11 @@ Property * SmppCommandAdapter::getSubmitRespProperty(const std::string& name,int
 
 AdapterProperty * SmppCommandAdapter::GetStrBitFromMask(SMS& data,const std::string& name,int tag,int mask)
 {
-    char buff[100];
+
     int num = data.getIntProperty(tag);
-    sprintf(buff,"%d",((num&mask)==mask));
-    AdapterProperty * property = new AdapterProperty(name,this,buff);
+//    sprintf(buff,"%d",((num&mask)==mask));
+
+    AdapterProperty * property = new AdapterProperty(name,this,((num&mask)==mask));
     return property;
 }
 
@@ -633,7 +634,7 @@ AdapterProperty * SmppCommandAdapter::Get_RD_BIT_Property(SMS& data, const std::
 AdapterProperty * SmppCommandAdapter::Get_DC_BIT_Property(SMS& data, const std::string& name,int FieldId)
 {
     AdapterProperty * property = 0;
-    char buff[100];
+    char buff[2] = {0,0};
     int num = 0;
 
     switch (FieldId) 
@@ -680,8 +681,7 @@ AdapterProperty * SmppCommandAdapter::Get_DC_BIT_Property(SMS& data, const std::
         break;
     case DC_GSM_MWI:
         num = data.getIntProperty(Tag::SMPP_DATA_CODING);
-        sprintf(buff,"%d",(((num&192)==192)||(num&208)==208));
-        property = new AdapterProperty(name,this,buff);
+        property = new AdapterProperty(name,this,(((num&192)==192)||(num&208)==208));
         break;
     case DC_GSM_MSG_CC:
         property = GetStrBitFromMask(data,name,Tag::SMPP_DATA_CODING,240);
@@ -732,7 +732,7 @@ Property * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::string& na
     if (PropertyPul.Exist(FieldId)) return PropertyPul.Get(FieldId);
 
     AdapterProperty * property = 0;
-    char buff[100];
+    char buff[20];
     int num = 0;
 
 
@@ -750,17 +750,17 @@ Property * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::string& na
         property = Get_USSD_BIT_Property(data,name,FieldId);
     } else if (FieldId = Tag::SMPP_MESSAGE_PAYLOAD) 
     {
-        property = new AdapterProperty(name,this,"");
+        property = new AdapterProperty(name,this,0);
         property->setPureInt(data.getState());
     } else
 
     switch (FieldId) 
     {
     case OA:
-        property = new AdapterProperty(name,this,data.getOriginatingAddress().toString());
+        property = new AdapterProperty(name,this,ConvertStrToWStr((data.getOriginatingAddress().toString()).c_str()));
         break;
     case DA:
-        property = new AdapterProperty(name,this,data.getDestinationAddress().toString());
+        property = new AdapterProperty(name,this,ConvertStrToWStr((data.getDestinationAddress().toString()).c_str()));
         break;
     }
 
@@ -782,14 +782,12 @@ Property * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::string& na
         return property;
     } else if (FieldId == SMS_STR_TAG) 
     {
-        std::string str = data.getStrProperty(FieldId);
-        property = new AdapterProperty(name,this,str);
+        property = new AdapterProperty(name,this,ConvertStrToWStr(data.getStrProperty(FieldId).c_str()));
         PropertyPul.Insert(FieldId, property);
     } else if (FieldId == SMS_INT_TAG) 
     {
         num = data.getIntProperty(FieldId);
-        sprintf(buff,"%d",num);
-        property = new AdapterProperty(name,this,buff);
+        property = new AdapterProperty(name,this,num);
         PropertyPul.Insert(FieldId, property);
     }
           
@@ -816,17 +814,17 @@ Property * SmppCommandAdapter::getDeliverProperty(SMS& data,const std::string& n
         property = Get_DC_BIT_Property(data,name,FieldId);
     } else if (((FieldId >= ST_ENROUTE)&&(FieldId <= ST_REJECTED))||(FieldId == Tag::SMPP_MESSAGE_PAYLOAD)) 
     {
-        property = new AdapterProperty(name,this,"");
+        property = new AdapterProperty(name,this,0);
         property->setPureInt(data.getState());
     } else
 
     switch (FieldId) 
     {
     case OA:
-        property = new AdapterProperty(name,this,data.getOriginatingAddress().toString());
+        property = new AdapterProperty(name,this,ConvertStrToWStr(data.getOriginatingAddress().toString().c_str()));
         break;
     case DA:
-        property = new AdapterProperty(name,this,data.getDestinationAddress().toString());
+        property = new AdapterProperty(name,this,ConvertStrToWStr(data.getDestinationAddress().toString().c_str()));
         break;
     }
 
@@ -843,14 +841,12 @@ Property * SmppCommandAdapter::getDeliverProperty(SMS& data,const std::string& n
         return property;
     } else if (tagType == SMS_STR_TAG) 
     {
-        std::string str = data.getStrProperty(FieldId);
-        property = new AdapterProperty(name,this,str);
+        property = new AdapterProperty(name,this,ConvertStrToWStr(data.getStrProperty(FieldId).c_str()));
         PropertyPul.Insert(FieldId, property);
     } else if (tagType == SMS_INT_TAG) 
     {
         num = data.getIntProperty(FieldId);
-        sprintf(buff,"%d",num);
-        property = new AdapterProperty(name,this,buff);
+        property = new AdapterProperty(name,this,num);
         PropertyPul.Insert(FieldId, property);
     }
           
@@ -904,7 +900,7 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
         {
             return PropertyPul.Get(0);
         }
-        property = new AdapterProperty(name,this,"");
+        property = new AdapterProperty(name,this,0);
         property->setPureInt(command->status);
         PropertyPul.Insert(0,property);
         return property;

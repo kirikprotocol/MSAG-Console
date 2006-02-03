@@ -15,6 +15,7 @@
 #include <scag/re/actions/MainActionFactory.h>
 #include <scag/util/singleton/Singleton.h>
 #include <logger/Logger.h>
+#include <locale.h>
 
 
 #include "Rule.h"
@@ -206,7 +207,7 @@ Rule * RuleEngineImpl::ParseFile(const std::string& xmlFile)
     int errorCode = 0;
 
     SAXParser* parser = new SAXParser;
-    XMLBasicHandler handler(factory);
+    XMLBasicHandler handler(factory,"KOI8-R");
 
     try
     {
@@ -326,6 +327,9 @@ void RuleEngineImpl::ProcessInit(const std::string& dir)
 
     smsc_log_info(logger,"");
     smsc_log_info(logger,"Rule Engine initialization...");
+    
+    setlocale(LC_ALL,"ru_RU.KOI8-R");
+    //setlocale(LC_ALL,"UTF-8");
 
     RegExp::InitLocale();
 
@@ -333,7 +337,7 @@ void RuleEngineImpl::ProcessInit(const std::string& dir)
 
     try
     {
-        XMLPlatformUtils::Initialize();
+        XMLPlatformUtils::Initialize("ru_RU.KOI8-R");
     }
     catch (const XMLException& toCatch)
     {

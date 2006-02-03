@@ -1,7 +1,6 @@
 #include "ActionLog.h"
 #include "scag/re/CommandAdapter.h"
 
-
 namespace scag { namespace re { namespace actions {
 
 IParserHandler * ActionLog::StartXMLSubSection(const std::string& name, const SectionParams& params,const ActionFactory& factory)
@@ -24,7 +23,7 @@ void ActionLog::init(const SectionParams& params,PropertyObject propertyObject)
     if (!params.Exists("message")) throw SCAGException("Action 'log': missing 'message' parameter");
 
 
-    std::string sLevel = params["level"];
+    std::string sLevel = ConvertWStrToStr(params["level"]);
 
     if (sLevel == "error") level = lgError;
     else if (sLevel == "warn") level = lgWarning;
@@ -34,30 +33,32 @@ void ActionLog::init(const SectionParams& params,PropertyObject propertyObject)
 
 
     const char * name = 0;
+    w_Category = params["category"].c_str();
+    s_Category = ConvertWStrToStr(w_Category);
 
-    sCategory = params["category"];
-    msg = params["message"];
+    w_msg = params["message"];
+    s_msg = ConvertWStrToStr(w_msg);
 
     AccessType at;
 
-    ftCategory = ActionContext::Separate(sCategory,name); 
+    ftCategory = ActionContext::Separate(s_Category,name); 
     //if (ft == ftUnknown) throw InvalidPropertyException("Action 'log': unrecognized variable prefix '%s' for 'category' parameter",sCategory.c_str());
 
     if (ftCategory == ftField) 
     {
         at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
         if (!(at&atRead)) 
-            throw InvalidPropertyException("Action 'log': cannot read property '%s' - no access",sCategory.c_str());
+            throw InvalidPropertyException("Action 'log': cannot read property '%s' - no access",s_Category.c_str());
     }
 
-    ftMessage = ActionContext::Separate(msg,name); 
+    ftMessage = ActionContext::Separate(s_msg,name); 
     //if (ft == ftUnknown) throw InvalidPropertyException("Action 'log': unrecognized variable prefix '%s' for 'message' parameter",msg.c_str());
 
     if (ftMessage == ftField) 
     {
         at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
         if (!(at&atRead)) 
-            throw InvalidPropertyException("Action 'log': cannot read property '%s' - no access",msg.c_str());
+            throw InvalidPropertyException("Action 'log': cannot read property '%s' - no access",s_msg.c_str());
     }
 
     smsc_log_debug(logger,"Action 'log':: init...");
@@ -69,31 +70,34 @@ bool ActionLog::run(ActionContext& context)
     Property * p2 = 0;
 
     std::string s1,s2;
+    std::wstring wstr;
 
     if (ftCategory != ftUnknown) 
     {
-        p1 = context.getProperty(sCategory);
+        p1 = context.getProperty(s_Category);
         if (!p1) 
         {
-            smsc_log_warn(logger,"Action 'log': invalid property '%s' to log",sCategory.c_str());
+            smsc_log_warn(logger,"Action 'log': invalid property '%s' to log", s_Category.c_str());
             return true;
         }
-        s1 = p1->getStr();
-    } else s1 = sCategory;
+        wstr = p1->getStr();
+        s1 = FormatWStr(wstr);
+    } else s1 = FormatWStr(w_Category);
 
     if (ftMessage!=ftUnknown)  
     {
-        p2 = context.getProperty(msg);
+        p2 = context.getProperty(s_msg);
         if (!p2) 
         {
-            smsc_log_warn(logger,"Action 'log': invalid property '%s' to log", msg.c_str());
+            smsc_log_warn(logger,"Action 'log': invalid property '%s' to log", s_msg.c_str());
             return true;
         }
-        s2 = p2->getStr();
-    } else s2 = msg;
+        wstr = p2->getStr();
+        s2 = FormatWStr(wstr);
+
+    } else s2 = FormatWStr(w_msg);
 
     std::string logstr = s1 + ": " + s2;
-
 
     switch (level) 
     {

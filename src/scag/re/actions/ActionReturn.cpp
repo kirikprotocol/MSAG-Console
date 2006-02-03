@@ -17,7 +17,8 @@ void ActionReturn::init(const SectionParams& params,PropertyObject propertyObjec
 
     if (params.Exists("result")) 
     {
-        ReturnValue = params["result"];
+        ReturnValue = ConvertWStrToStr(params["result"]);
+
         if (ReturnValue.empty()) throw SCAGException("Action 'return': missing variable to return");
     }
     else 

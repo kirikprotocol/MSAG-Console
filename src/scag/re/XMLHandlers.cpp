@@ -5,12 +5,14 @@
 #include <xercesc/sax/SAXParseException.hpp>
 #include <xercesc/sax/SAXException.hpp>
 #include <xercesc/sax/Locator.hpp>
-
+#include <xercesc/util/TransService.hpp>
 
 namespace scag { namespace re { 
 
-static const char*  encodingName    = "LATIN1";
+//static const char*  encodingName    = "LATIN1";
 static XMLFormatter::UnRepFlags unRepFlags  = XMLFormatter::UnRep_CharRef;
+static XMLTranscoder::UnRepOpts unRepOpts = XMLTranscoder::UnRep_Throw;
+
 static const XMLCh  gEndElement[] = { chOpenAngle, chForwardSlash, chNull };
 
 using namespace smsc::util;
@@ -110,7 +112,10 @@ Rule * XMLBasicHandler::ReturnFinalObject()
 
 /////////////////////////////////////////////XMLBasicHandler/////////////////////////////
 
-XMLBasicHandler::XMLBasicHandler(const ActionFactory& obj) : analyser(obj),CanReturnFinalObject(false),logger(0)
+XMLBasicHandler::XMLBasicHandler(const ActionFactory& obj,const char* const encodingName) : 
+    analyser(obj),CanReturnFinalObject(false),logger(0),
+    fFormatter(encodingName, 0, this, XMLFormatter::NoEscapes)
+
 {
     logger = Logger::getInstance("scag.re");
 }
@@ -120,25 +125,94 @@ XMLBasicHandler::~XMLBasicHandler()
 }
 
 
+void XMLBasicHandler::writeChars(const XMLByte* const toWrite)
+{
+}
+
+void XMLBasicHandler::writeChars(const XMLByte* const toWrite, const unsigned int count, XMLFormatter* const formatter)
+{
+//    XERCES_STD_QUALIFIER cout.write((char *) toWrite, (int) count);
+//    XERCES_STD_QUALIFIER cout.flush();
+}
+
+
+void XMLBasicHandler::characters(const XMLCh* const chars, const unsigned int length)
+{
+    //fFormatter.formatBuf(chars, length, XMLFormatter::CharEscapes);
+}
+
 
 void XMLBasicHandler::startElement(const XMLCh* const qname, AttributeList& attributes)
 {
     StrX XMLQName(qname);
     SectionParams attr;
+    XMLByte buff[10000];
 
     unsigned int len = attributes.getLength();
     for (unsigned int index = 0; index < len; index++)
     {
-        StrX * AttrName = new StrX(attributes.getName(index));
-        StrX * AttrValue = new StrX(attributes.getValue(index));
+        //StrX * AttrName = new StrX(attributes.getName(index));
+        //StrX * AttrValue = new StrX(attributes.getValue(index));
 
-        attr[AttrName->localForm()] = AttrValue->localForm();
+       /* fFormatter  << XMLFormatter::NoEscapes
+                    << chSpace << attributes.getName(index)
+                    << chEqual << chDoubleQuote
+                    << XMLFormatter::AttrEscapes
+                    << attributes.getValue(index)
+                    << XMLFormatter::NoEscapes
+                    << chDoubleQuote;*/
 
-        delete AttrName;
-        delete AttrValue;
+        const XMLTranscoder * transcoder = fFormatter.getTranscoder();
+
+        unsigned int charsEaten;
+
+        XMLTranscoder * _transcoder = const_cast <XMLTranscoder *>(transcoder);
+
+        XMLCh const * XMLValue = attributes.getValue(index);
+        XMLCh const * XMLName = attributes.getName(index);
+
+        std::wstring value;
+
+        //value.append((wchar_t *)XMLValue, XMLString::stringLen(XMLValue));
+
+        const char * XMLPtr = (char *)XMLValue;
+
+        char temp[1024];
+
+        for(int j=0; j < XMLString::stringLen(XMLValue); j++) 
+        {
+            temp[j*4] = 0;
+            temp[j*4+1] = 0;
+            temp[j*4+2] = XMLPtr[j*2];
+            temp[j*4+3] = XMLPtr[j*2+1];
+        }
+        value.append((wchar_t*)temp,XMLString::stringLen(XMLValue));
+
+        const char * aa = (char *)value.c_str();
+        /*
+        if (XMLString::stringLen(XMLValue) == 14)
+        {
+            std::string str =  FormatWStr(value);
+            value = UnformatWStr(str);
+
+            for (int j=0; j < 14;j++) 
+            {
+                char chr;
+                wctomb(&chr,value[j]);
+
+                //std::cout << "?" << (int)chr << std::endl;
+                std::cout << "--" << (int)XMLPtr[j*2] << "--" << (int)XMLPtr[j*2+1] << std::endl;
+            }
+
+        }   */
+  
+        _transcoder->transcodeTo(XMLName, XMLString::stringLen(XMLName), buff, 1024, charsEaten,unRepOpts);
+
+        attr[(char *)buff] = value;
     }
 
     analyser.DeliverBeginTag(XMLQName.localForm(),attr,m_pLocator->getLineNumber());
+
 }
 
 

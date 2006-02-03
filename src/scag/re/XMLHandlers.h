@@ -6,6 +6,8 @@
 
 
 #include <xercesc/sax/HandlerBase.hpp>
+#include <xercesc/framework/XMLFormatter.hpp>
+
 #include <util/Exception.hpp>
 
 
@@ -29,7 +31,7 @@ XERCES_CPP_NAMESPACE_BEGIN
 class AttributeList;
 XERCES_CPP_NAMESPACE_END
 
-typedef smsc::core::buffers::Hash<std::string> SectionParams;
+//typedef smsc::core::buffers::Hash<std::string> SectionParams;
 
 
 class XMLBasicHandler;
@@ -52,12 +54,18 @@ public:
 };
 
 
-class XMLBasicHandler : public HandlerBase
+class XMLBasicHandler : public HandlerBase, private XMLFormatTarget
 {
     SemanticAnalyser analyser;
     bool CanReturnFinalObject;
     const Locator * m_pLocator;
     Logger * logger;
+    XMLFormatter  fFormatter;
+
+    void writeChars(const XMLByte* const toWrite);
+    void writeChars(const XMLByte* const toWrite, const unsigned int count, XMLFormatter* const formatter);
+    void characters(const XMLCh* const chars, const unsigned int length);
+
 protected:
 public:
     Rule * ReturnFinalObject();
@@ -65,7 +73,7 @@ public:
     // -----------------------------------------------------------------------
     //  Constructors
     // -----------------------------------------------------------------------
-    XMLBasicHandler(const ActionFactory& obj);
+    XMLBasicHandler(const ActionFactory& obj, const char* const encodingName);
     ~XMLBasicHandler();
 
     void startElement(const XMLCh* const qname, AttributeList& attributes);
@@ -83,7 +91,12 @@ public:
     void fatalError(const SAXParseException& exc);
     void endDocument();
 };
+/*
+class XMLBasicTranscoder : public XMLTranscoder
+{
+public:
 
+};  */
 
 class StrX
 {
@@ -119,6 +132,13 @@ private :
     // -----------------------------------------------------------------------
     char*   fLocalForm;
 };
+/*
+inline XERCES_STD_QUALIFIER ostream& operator<<(XERCES_STD_QUALIFIER ostream& target, const StrX& toDump)
+{
+    //target << toDump.localForm();
+    return target;
+}        */
+
 
 }}
 

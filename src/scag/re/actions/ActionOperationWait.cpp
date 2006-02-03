@@ -23,11 +23,11 @@ void ActionOperationWait::init(const SectionParams& params,PropertyObject proper
     if (!params.Exists("time")) throw SCAGException("Action 'operation:wait': missing 'time' parameter");
 
 
-    std::string sType = params["type"];
+    std::string sType = ConvertWStrToStr(params["type"]);
 
     const char * name = 0;
 
-    sTime = params["time"];
+    sTime = ConvertWStrToStr(params["time"]);
 
     FieldType ft;
     AccessType at;

@@ -87,8 +87,9 @@ BillKey ActionContext::CreateBillKey()
 
     if ((!property1)||(property2)) throw SCAGException("ActionContext error : cannto create BillKey");
 
-    billKey.DA = property2->getStr();
-    billKey.OA = property1->getStr();
+    billKey.DA = ConvertWStrToStr(property2->getStr());
+
+    billKey.OA = ConvertWStrToStr(property1->getStr());
     return billKey;
 }
 
