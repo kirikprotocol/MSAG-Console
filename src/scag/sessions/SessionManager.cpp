@@ -166,8 +166,6 @@ void SessionManagerImpl::AddRestoredSession(Session * session)
 
     smsc_log_debug(logger,"SessionManager: Session restored from store with UMR='%d', Address='%s', has pending: %d",accessData->SessionKey.USR,accessData->SessionKey.abonentAddr.toString().c_str(),accessData->hasPending);
 
-    std::pair<CSessionSetIterator, bool> pr;
-
     CSessionSetIterator it = SessionExpirePool.insert(accessData);
 
 /*    if (!pr.second) 
@@ -365,17 +363,27 @@ int SessionManagerImpl::processExpire()
             smsc_log_debug(logger,"SessionManager: try to expire session UMR='%d', Address='%s', has pending: %d-%d",(*it)->SessionKey.USR,(*it)->SessionKey.abonentAddr.toString().c_str(),session->hasPending(),(*it)->hasPending);
             session->expirePendingOperation();
 
-            (*it)->hasPending = session->hasPending();
-            (*it)->hasOperations = session->hasOperations();
-            (*it)->nextWakeTime = session->getWakeUpTime();
+            CSessionAccessData * data = (*it);
 
-            iPeriod = (*it)->nextWakeTime - now;
+            data->hasPending = session->hasPending();
+            data->hasOperations = session->hasOperations();
+            data->nextWakeTime = session->getWakeUpTime();
+
+            //TODO: delete it and insert a new one, updated
+            SessionExpirePool.erase(it);
+            it = SessionExpirePool.insert(data);
+            SessionHash.Delete(data->SessionKey);
+            SessionHash.Insert(data->SessionKey,it);
+
+            iPeriod = data->nextWakeTime - now;
+
         }
 
         // Session expired
         if (!(*it)->hasOperations) 
         {
             DeleteSession(it);
+            return 1;
         } 
         else
         {
