@@ -445,6 +445,7 @@ int main(void)
     shutdownThread.Start();
 
     int resultCode = 0;
+    int requestProcessorCode = 0;
     try
     {
         smsc_log_info(logger, getStrVersion());
@@ -496,8 +497,9 @@ int main(void)
             smsc_log_info(logger, "Connected.");
 
             smsc_log_info(logger, "Running RequestProcessor ...");
-            requestProcessor->Run();
-            smsc_log_info(logger, "RequestProcessor exited");
+            requestProcessorCode = requestProcessor->Run();
+            smsc_log_info(logger, "RequestProcessor exited with code=%d", requestProcessorCode);
+            if (requestProcessorCode != 0) setNeedStop();
 
             clearSignalMask();
             smsc_log_info(logger, "Disconnecting from SMSC ...");
