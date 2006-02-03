@@ -179,7 +179,7 @@ int ruleRun(   std::string cmd_name,
   		uint8_t da_np    ,
   		uint32_t dialogid,
 		int bdump,
-		uint32_t ruleid,scag::sessions::SessionPtr session)
+		uint32_t ruleid,scag::sessions::SessionPtr& session)
 {
  CSessionKey key;
 
@@ -206,8 +206,9 @@ int ruleRun(   std::string cmd_name,
   
  key.abonentAddr = oa;
  cmd->set_ruleId(ruleid);
- 
- scag::sessions::SessionPtr session =  smanager->newSession(key);;//smanager->getSession(cmd);
+
+ if(session.Get()==0)
+	session =  smanager->newSession(key);;//smanager->getSession(cmd);
  
   
      if (!session.Get()) 
@@ -307,9 +308,13 @@ int  main(int argc,char ** argv)
 	  
 /*	  for(int i=0;i<100;i++)    */
 	  {
-        	    ruleRun("submit_sm","812345671",0,1,"897654326",0,1,51,0,1);
+		  scag::sessions::SessionPtr sess;
+		  
+        	ruleRun("submit_sm","812345671",0,1,"897654326",0,1,51,0,1,sess);
 		    
-		    ruleRun("submit_sm_resp","812345676",0,1,"897654321",0,1,52,0,1);
+		    ruleRun("submit_sm_resp","812345676",0,1,"897654321",0,1,52,0,1,sess);
+
+			smanager->releaseSession(sess);
 	  }
    
    
