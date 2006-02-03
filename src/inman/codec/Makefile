@@ -3,7 +3,7 @@
 #
 
 CFLAGS := -I. -I../asn1rt -DASN1_XER_NOT_USED $(CFLAGS)
-CXXFLAGS := $(CXXFLAGS)
+CXXFLAGS := -I. -I../asn1rt -DASN1_XER_NOT_USED $(CXXFLAGS)
 PACKAGE := inman.codec
 
 ifndef SMSC_SRCDIR

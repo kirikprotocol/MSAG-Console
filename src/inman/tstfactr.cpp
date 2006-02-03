@@ -1,7 +1,7 @@
 static char const ident[] = "$Id$";
 #include <stdlib.h>
 #include <assert.h>
-#include <typeinfo.h>
+#include <typeinfo>
 
 #include "inman/comp/acdefs.hpp"
 #include "inman/comp/operfactory.hpp"

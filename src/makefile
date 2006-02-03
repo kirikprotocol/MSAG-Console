@@ -156,24 +156,18 @@ endif
 
 #ifneq ($(NOMAP),YES)
 #endif
-
-ifeq ($(HOSTTYPE),sparc)
+PROC_TYPE := $(shell uname -p)
+ifeq ($(PROC_TYPE),sparc)
 CXXFLAGS := $(CXXFLAGS) -DSPARC
 CFLAGS := $(CFLAGS) -DSPARC
 endif
-
 
 CXXFLAGS := $(CXXFLAGS) -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/rdbms/public -I$(ORACLE_HOME)/network/public
 CFLAGS := $(CFLAGS) -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/rdbms/public -I$(ORACLE_HOME)/network/public
 
 ifneq ("$(NOMAP)","YES")
-
-MTYPE:=$(shell perl -e '$$x=$$ENV{MACHTYPE};$$x=~s/[\d.]//g;print $$x;')
-
-ifeq ("$(MTYPE)","sparc-sun-solaris")
 MAP_LIBRARIES := -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) -lsystem-mapio
 CXXFLAGS := $(CXXFLAGS) -DUSE_MAP
-endif
 endif
 
 export CXXFLAGS
