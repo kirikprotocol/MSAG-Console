@@ -306,15 +306,15 @@ int  main(int argc,char ** argv)
 
           /* Emulation for transport events */
 	  
-/*	  for(int i=0;i<100;i++)    */
+	  for(int i=0;i<10;i++)    
 	  {
-		  scag::sessions::SessionPtr sess;
+	        scag::sessions::SessionPtr sess;
 		  
-        	ruleRun("submit_sm","812345671",0,1,"897654326",0,1,51,0,1,sess);
+        	ruleRun("deliver_sm","812345671",0,1,"897654326",0,1,51,0,1,sess);
+  	        ruleRun("deliver_sm_resp","812345676",0,1,"897654321",0,1,52,0,1,sess);
+		printf(".");
 		    
-		    ruleRun("submit_sm_resp","812345676",0,1,"897654321",0,1,52,0,1,sess);
-
-			smanager->releaseSession(sess);
+		smanager->releaseSession(sess);
 	  }
    
    
