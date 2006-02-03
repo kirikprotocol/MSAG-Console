@@ -5,6 +5,7 @@
   <section name="MessageStore">
     <param name="archiveDir" type="string">@smsc.arcnew.dir@</param>
     <param name="archiveInterval" type="int">60</param>
+    <param name="statisticsDir" type="string"@smsc.stats.dir@</param>
 
     <section name="LocalStore">
       <param name="filename" type="string">@localstore.dir@/store.bin</param>
@@ -76,7 +77,7 @@
       <param name="dir" type="string">@profiler.notify.dir@</param>
     </section>
 
-
+    <param name="storeFile" type="string">@localstore.dir@/profiles.bin</param>
     <param name="defaultDataCoding" type="string">DEFAULT</param>
     <param name="defaultReport" type="string">NONE</param>
     <param name="defaultHide" type="bool">true</param>

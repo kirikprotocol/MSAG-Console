@@ -49,7 +49,7 @@
   </section>
 
   <section name="profiler">
-    <param name="storeFile" type="string">@store.file@</param>
+    <param name="storeFile" type="string">@localstore.dir@/profiles.bin</param>
   </section>
   
   <section name="providers">
