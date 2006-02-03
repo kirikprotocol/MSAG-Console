@@ -179,7 +179,7 @@ int ruleRun(   std::string cmd_name,
   		uint8_t da_np    ,
   		uint32_t dialogid,
 		int bdump,
-		uint32_t ruleid)
+		uint32_t ruleid,scag::sessions::SessionPtr session)
 {
  CSessionKey key;
 
@@ -209,6 +209,7 @@ int ruleRun(   std::string cmd_name,
  
  scag::sessions::SessionPtr session =  smanager->newSession(key);;//smanager->getSession(cmd);
  
+  
      if (!session.Get()) 
      { 
        smsc_log_error(logger,"RuleRun():getSession('%s')==0 !",cmd_name.c_str());
@@ -246,10 +247,15 @@ int ruleRun(   std::string cmd_name,
 			   }
 	       }
    	}
+	
+	smsc_log_debug(logger," SMPP_SAR_TOTAL_SEGMENTS=%d SMPP_SAR_SEGMENT_SEQNUM)=%d", cmd->get_sms()->getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS),	  cmd->get_sms()->getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM));
+	    
+	
 	_SmppCommand& _cmd = *cmd.operator ->();
+	smsc_log_debug(logger,"operation id == %d",cmd.getOperationId());
 	_cmd.get_resp()->set_sms(0);	
 	
-       smanager->releaseSession(session);
+       //smanager->releaseSession(session);
 
       }
       catch (Exception& e)
@@ -301,8 +307,9 @@ int  main(int argc,char ** argv)
 	  
 /*	  for(int i=0;i<100;i++)    */
 	  {
-        	    ruleRun("deliver_sm","812345671",0,1,"897654326",0,1,51,0,1);
-		    ruleRun("deliver_sm_resp","812345676",0,1,"897654321",0,1,52,0,1);
+        	    ruleRun("submit_sm","812345671",0,1,"897654326",0,1,51,0,1);
+		    
+		    ruleRun("submit_sm_resp","812345676",0,1,"897654321",0,1,52,0,1);
 	  }
    
    
