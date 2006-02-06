@@ -4,7 +4,6 @@
 
 package ru.sibinco.scag.backend.daemon;
 
-import ru.sibinco.scag.backend.service.ServiceInfo;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.util.StringEncoderDecoder;
 import org.w3c.dom.Element;

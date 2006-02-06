@@ -4,7 +4,6 @@ import ru.sibinco.lib.backend.util.StringEncoderDecoder;
 import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.scag.backend.daemon.Command;
-import ru.sibinco.scag.backend.service.Type;
 
 import java.util.Map;
 import java.util.Iterator;

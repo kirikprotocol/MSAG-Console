@@ -4,7 +4,6 @@
 package ru.sibinco.scag.backend.daemon;
 
 import ru.sibinco.scag.backend.endpoints.SmppManager;
-import ru.sibinco.scag.backend.service.ServiceInfo;
 import ru.sibinco.scag.backend.protocol.response.Response;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.lib.SibincoException;
