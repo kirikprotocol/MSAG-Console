@@ -28,8 +28,6 @@ public class CommandCall extends Command {
 
         super(commandName, "file:///command_gw.dtd");
         Element callElem = document.getDocumentElement();
-        //callElem.setAttribute("component", StringEncoderDecoder.encode(componentName));
-        //callElem.setAttribute("method", StringEncoderDecoder.encode(methodName));
         callElem.setAttribute("returnType", returnType.getName());
 
         for (Iterator i = args.keySet().iterator(); i.hasNext();) {
