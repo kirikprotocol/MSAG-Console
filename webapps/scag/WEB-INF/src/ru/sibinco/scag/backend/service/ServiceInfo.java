@@ -6,6 +6,7 @@ package ru.sibinco.scag.backend.service;
 
 import ru.sibinco.scag.backend.endpoints.svc.Svc;
 import ru.sibinco.scag.backend.endpoints.SmppManager;
+import ru.sibinco.scag.backend.protocol.commands.Component;
 import ru.sibinco.lib.SibincoException;
 
 import java.io.File;
