@@ -6,8 +6,6 @@
                     xmlns:operation="http://www.sibinco.com/SCAG/OPERATIONS"
                     transport="SMPP">
 <deliver_sm>
-<log level="debug" category="FROMRULELOG" message="#svc_type" />
-
 <log level="debug" category="FROMRULELOG" message="#OA" />
 
 <log level="debug" category="FROMRULELOG" message="#DA" />
@@ -38,10 +36,6 @@
 
 <log level="debug" category="FROMRULELOG" message="#priority_flag" />
 
-<log level="debug" category="FROMRULELOG" message="#Schedule_delivery_time" />
-
-<log level="debug" category="FROMRULELOG" message="#validity_period" />
-
 <log level="debug" category="FROMRULELOG" message="#rd_receipt_off" />
 
 <log level="debug" category="FROMRULELOG" message="#rd_receipt_on" />
@@ -57,8 +51,6 @@
 <log level="debug" category="FROMRULELOG" message="#rd_ack_both_on" />
 
 <log level="debug" category="FROMRULELOG" message="#rd_i_notification" />
-
-<log level="debug" category="FROMRULELOG" message="#replace_if_present_flag" />
 
 <log level="debug" category="FROMRULELOG" message="#dc_binary" />
 
@@ -90,21 +82,13 @@
 
 <log level="debug" category="FROMRULELOG" message="#dc_gsm_msg_cc" />
 
-<log level="debug" category="FROMRULELOG" message="#sm_default_msg_id" />
-
 <log level="debug" category="FROMRULELOG" message="#sm_length" />
 
 <log level="debug" category="FROMRULELOG" message="#short_message" />
 
-<log level="debug" category="FROMRULELOG" message="#user_message_reference" />
-
 <log level="debug" category="FROMRULELOG" message="#source_port" />
 
-<log level="debug" category="FROMRULELOG" message="#source_addr_subunit" />
-
 <log level="debug" category="FROMRULELOG" message="#destination_port" />
-
-<log level="debug" category="FROMRULELOG" message="#dest_addr_subunit" />
 
 <log level="debug" category="FROMRULELOG" message="#sar_msg_ref_num" />
 
@@ -112,63 +96,11 @@
 
 <log level="debug" category="FROMRULELOG" message="#sar_segment_seqnum" />
 
-<log level="debug" category="FROMRULELOG" message="#more_messages_to_send" />
-
-<log level="debug" category="FROMRULELOG" message="#pt_default" />
-
-<log level="debug" category="FROMRULELOG" message="#pt_wcmp" />
-
 <log level="debug" category="FROMRULELOG" message="#message_payload" />
-
-<log level="debug" category="FROMRULELOG" message="#privacy_indicator" />
-
-<log level="debug" category="FROMRULELOG" message="#callback_num" />
-
-<log level="debug" category="FROMRULELOG" message="#callback_num_pres_ind" />
-
-<log level="debug" category="FROMRULELOG" message="#callback_num_atag" />
-
-<log level="debug" category="FROMRULELOG" message="#source_subaddress" />
-
-<log level="debug" category="FROMRULELOG" message="#dest_subaddress" />
 
 <log level="debug" category="FROMRULELOG" message="#user_response_code" />
 
-<log level="debug" category="FROMRULELOG" message="#display_time" />
-
-<log level="debug" category="FROMRULELOG" message="#sms_signal" />
-
-<log level="debug" category="FROMRULELOG" message="#ms_validity" />
-
-<log level="debug" category="FROMRULELOG" message="#ms_msg_wait_facilities" />
-
-<log level="debug" category="FROMRULELOG" message="#number_of_messages" />
-
-<log level="debug" category="FROMRULELOG" message="#alert_on_msg_delivery" />
-
 <log level="debug" category="FROMRULELOG" message="#language_indicator" />
-
-<log level="debug" category="FROMRULELOG" message="#its_reply_type" />
-
-<log level="debug" category="FROMRULELOG" message="#its_session_info" />
-
-<log level="debug" category="FROMRULELOG" message="#ussd_pssd_ind" />
-
-<log level="debug" category="FROMRULELOG" message="#ussd_pssr_ind" />
-
-<log level="debug" category="FROMRULELOG" message="#ussd_pssr_req" />
-
-<log level="debug" category="FROMRULELOG" message="#ussd_ussn_req" />
-
-<log level="debug" category="FROMRULELOG" message="#ussd_pssd_resp" />
-
-<log level="debug" category="FROMRULELOG" message="#ussd_pssr_resp" />
-
-<log level="debug" category="FROMRULELOG" message="#ussd_ussr_conf" />
-
-<log level="debug" category="FROMRULELOG" message="#ussd_ussn_conf" />
-
-<log level="debug" category="FROMRULELOG" message="#status" />
 
 </deliver_sm>
 </scag:rule>
