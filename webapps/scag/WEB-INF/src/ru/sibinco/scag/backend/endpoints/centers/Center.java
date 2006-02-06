@@ -14,7 +14,7 @@ import java.io.PrintWriter;
 
 /**
  * The <code>Center</code> class represents of
- * <p>SMS centers, HTTP and MMS gateway<p/>
+ * <p>SMS centers, HTTP and MMS scag<p/>
  * Date: 15.07.2005
  * Time: 12:43:26
  *

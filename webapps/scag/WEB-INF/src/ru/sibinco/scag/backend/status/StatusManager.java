@@ -41,6 +41,7 @@ public class StatusManager {
     public synchronized void init() throws IOException, ParserConfigurationException, SAXException {
         statMessages.clear();
     }
+    
 
     public synchronized Map getStatMessages() {
         return statMessages;

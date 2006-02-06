@@ -6,16 +6,13 @@ import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.util.config.Config;
 import ru.sibinco.scag.backend.resources.ResourceManager;
 import ru.sibinco.scag.backend.routing.BillingManager;
-import ru.sibinco.scag.backend.routing.GwRoutingManager;
 import ru.sibinco.scag.backend.routing.ScagRoutingManager;
 import ru.sibinco.scag.backend.users.UserManager;
 import ru.sibinco.scag.backend.protocol.journal.Journal;
 import ru.sibinco.scag.backend.endpoints.SmppManager;
 import ru.sibinco.scag.backend.rules.RuleManager;
-import ru.sibinco.scag.backend.sme.GwSmeManager;
 import ru.sibinco.scag.backend.sme.ProviderManager;
 import ru.sibinco.scag.backend.sme.CategoryManager;
-import ru.sibinco.scag.backend.sme.SmscsManager;
 import ru.sibinco.scag.backend.daemon.Daemon;
 import ru.sibinco.scag.backend.service.ServiceInfo;
 import ru.sibinco.scag.backend.status.StatusManager;
@@ -42,13 +39,10 @@ public class SCAGAppContext {
     private final Config gwConfig;
     private final Config idsConfig;
     private final UserManager userManager;
-    private final GwSmeManager gwSmeManager;      //    ToDo to delete
     private final SmppManager smppManager;
     private final RuleManager ruleManager;
     private final ProviderManager providerManager;
     private final CategoryManager categoryManager;
-    private final SmscsManager smscsManager;        //ToDo to delete
-    private final GwRoutingManager gwRoutingManager; //ToDo to delete
     private final ScagRoutingManager scagRoutingManager;
     private final ResourceManager resourceManager;
     private final StatusManager statusManager;
@@ -56,12 +50,11 @@ public class SCAGAppContext {
     private final SvcMonServer svcMonServer;
     private final ScServer scServer;
     private final Daemon scagDaemon;
-    private final Gateway gateway;
+    private final Scag scag;
     private final Statuses statuses;
     private final DataSource connectionPool;
     private final BillingManager billingManager;
     private Journal journal = new Journal();
-    private SCAG scag = null;
     private static File scagConfFolder = null;
 
     private SCAGAppContext(final String config_filename) throws Throwable, ParserConfigurationException, SAXException, Config.WrongParamTypeException,
@@ -79,27 +72,20 @@ public class SCAGAppContext {
             userManager = new UserManager(config.getString("users_config_file"));
             providerManager = new ProviderManager(idsConfig);
             categoryManager = new CategoryManager(idsConfig);
-            gwSmeManager = new GwSmeManager(config.getString("sme_file"), gwConfig, providerManager);
-            gwSmeManager.init();
             smppManager = new SmppManager(config.getString("smpp_file"), providerManager);
             smppManager.init();
             String rulesFolder = config.getString("rules_folder");
             String xsdFolder = config.getString("xsd_folder");
-            smscsManager = new SmscsManager(gwConfig, gwSmeManager);
             resourceManager = new ResourceManager(scagConfFolder);
-            scag = new SCAG(gwDaemonHost, (int) config.getInt("gw daemon.port"), gwConfigFolder, this);
             billingManager = new BillingManager(new File(gwConfigFolder, "billing-rules.xml"));
-            gwRoutingManager = new GwRoutingManager(scagConfFolder, gwSmeManager, providerManager, billingManager);
-            //gwRoutingManager.init();
-            //gateway = new Gateway(gwDaemonHost, (int) gwConfig.getInt("admin.port"));
             scagDaemon = new Daemon(gwDaemonHost, (int) config.getInt("gw daemon.port"), smppManager, config.getString("gw daemon.folder"));
             final ServiceInfo scagServiceInfo = (ServiceInfo) scagDaemon.getServices().get(config.getString("gw name"));
             if (scagServiceInfo != null) {
-                gateway = new Gateway(scagServiceInfo, (int) gwConfig.getInt("admin.port"));
+                scag = new Scag(scagServiceInfo, (int) gwConfig.getInt("admin.port"));
             } else {
-                gateway = new Gateway(gwDaemonHost, (int) gwConfig.getInt("admin.port"));
+                scag = new Scag(gwDaemonHost, (int) gwConfig.getInt("admin.port"));
             }
-            ruleManager = new RuleManager(new File(rulesFolder), new File(xsdFolder), providerManager, idsConfig, gateway);
+            ruleManager = new RuleManager(new File(rulesFolder), new File(xsdFolder), providerManager, idsConfig, scag);
             ruleManager.init();
             scagRoutingManager = new ScagRoutingManager(scagConfFolder, smppManager, providerManager, ruleManager, categoryManager);
             scagRoutingManager.init();
@@ -158,24 +144,12 @@ public class SCAGAppContext {
         return userManager;
     }
 
-    public GwSmeManager getGwSmeManager() {
-        return gwSmeManager;
-    }
-
     public ProviderManager getProviderManager() {
         return providerManager;
     }
 
     public CategoryManager getCategoryManager() {
         return categoryManager;
-    }
-
-    public SmscsManager getSmscsManager() {
-        return smscsManager;
-    }
-
-    public GwRoutingManager getGwRoutingManager() {
-        return gwRoutingManager;
     }
 
     public ScagRoutingManager getScagRoutingManager() {
@@ -194,8 +168,8 @@ public class SCAGAppContext {
         return scagDaemon;
     }
 
-    public Gateway getGateway() {
-        return gateway;
+    public Scag getScag() {
+        return scag;
     }
 
     public Statuses getStatuses() {
@@ -212,10 +186,6 @@ public class SCAGAppContext {
 
     public Journal getJournal() {
         return journal;
-    }
-
-    public SCAG getSCAG() {
-        return scag;
     }
 
     public SmppManager getSmppManager() {

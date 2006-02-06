@@ -3,8 +3,6 @@ package ru.sibinco.scag.backend.rules;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 import ru.sibinco.lib.Constants;
 import ru.sibinco.lib.SibincoException;
@@ -13,7 +11,7 @@ import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.scag.backend.sme.Provider;
 import ru.sibinco.scag.backend.sme.ProviderManager;
-import ru.sibinco.scag.backend.Gateway;
+import ru.sibinco.scag.backend.Scag;
 
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
@@ -38,16 +36,16 @@ public class RuleManager
   private final File xsdFolder;
   private long lastRuleId;
   private final ProviderManager providerManager;
-  private final Gateway gateway;
+  private final Scag scag;
   private static final String PARAM_NAME_LAST_USED_ID = "last used rule id";
 
-  public RuleManager(final File rulesFolder,final File xsdFolder,final ProviderManager providerManager, final Config idsConfig,final Gateway gateway) throws Config.WrongParamTypeException, Config.ParamNotFoundException {
+  public RuleManager(final File rulesFolder,final File xsdFolder,final ProviderManager providerManager, final Config idsConfig,final Scag scag) throws Config.WrongParamTypeException, Config.ParamNotFoundException {
 
     this.lastRuleId = idsConfig.getInt(PARAM_NAME_LAST_USED_ID);
     this.rulesFolder = rulesFolder;
     this.xsdFolder = xsdFolder;
     this.providerManager = providerManager;
-    this.gateway=gateway;
+    this.scag =scag;
   }
 
   public void init()
@@ -231,7 +229,7 @@ public class RuleManager
  public synchronized void AddRule(BufferedReader r, final String ruleId,Rule newRule) throws SibincoException
 {
   System.out.println("AddNewRule ruleId= "+ruleId);
-  //gateway.addRule(ruleId);
+  //scag.addRule(ruleId);
   Long Id=Long.valueOf(ruleId);
   rules.put(Id,newRule);
   lastRuleId++;
@@ -244,7 +242,7 @@ public class RuleManager
    System.out.println("updateRule ruleId= "+ruleId);
    LinkedList li=new LinkedList();
 /*   try {
-     li=(LinkedList) gateway.updateRule(ruleId);
+     li=(LinkedList) scag.updateRule(ruleId);
    } catch (SibincoException e) {
      e.printStackTrace();//logger.warn(e.getMessage());  //To change body of catch statement use File | Settings | File Templates.
 
@@ -280,7 +278,7 @@ public class RuleManager
     }
     public synchronized void removeRule(String ruleId, String transport) throws SibincoException
     {
-        //gateway.removeRule(ruleId);
+        //scag.removeRule(ruleId);
           final File folder = new File(rulesFolder, transport);
           String filename="rule_"+ruleId+".xml";
           File fileForDeleting= new File(folder,filename);

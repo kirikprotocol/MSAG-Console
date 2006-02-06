@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.TimeZone;
 import java.util.TreeMap;
-import java.util.ArrayList;
 
 /**
  * Created by IntelliJ IDEA.
@@ -86,7 +85,7 @@ public class Stat {
             File gwConfFile = SCAGAppContext.getScagConfFolder();
             String gwDirFile = gwConfFile.getParent();
             statPath = new File(gwDirFile, statstorePath + File.separatorChar + Transport.getTransportName((int) transport));
-            logger.debug("Stat path: by gateway conf '" + statPath.getAbsolutePath() + "'");
+            logger.debug("Stat path: by scag conf '" + statPath.getAbsolutePath() + "'");
         } else {
             logger.debug("Stat path: is absolute '" + statPath.getAbsolutePath() + "'");
         }
