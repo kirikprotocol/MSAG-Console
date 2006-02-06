@@ -329,24 +329,15 @@ inline void mkRP_OA_Address( ET96MAP_SM_RP_OA_T *addr, const char *saddr, unsign
 inline void ConvAddrMSISDN2Smc(const ET96MAP_SM_RP_OA_T* ma,Address* sa){
   sa->setTypeOfNumber((ma->addr[0]>>4)&0x7);
   sa->setNumberingPlan(ma->addr[0]&0xf);
-  if ( ma->addrLen != 0 ){
+  if ( ma->addrLen > 1 ){
     char sa_val[21] = {0,};
-    int i = 0;
-    for ( i=0; i<(ma->addrLen-1)*2;){
-      if ( (ma->addr[(i>>1)+1]&0x0f) == 0xf ) break;
-      sa_val[i]=(ma->addr[(i>>1)+1]&0x0f)+0x30;
-      ++i;
-      if ( i<(ma->addrLen-1)*2 ){
-        if ( (ma->addr[(i>>1)+1]>>4) == 0xf ) break;
-        sa_val[i] = (ma->addr[(i>>1)+1]>>4)+0x30;
-        ++i;
-      }else break;
+    int i = 1, len=0;
+    for( i = 1; i < ma->addrLen;i++) {
+      sa_val[len++]=(ma->addr[i]&0x0f)+0x30;
+      if ( (ma->addr[i]&0xf0) == 0xf0 ) break;
+      sa_val[len++]=((ma->addr[i]&0xf0)>>4)+0x30;
     }
-    {
-      char b[256] = {0,};
-      memcpy(b,sa_val,i);
-    }
-    sa->setValue(i,sa_val);
+    sa->setValue(len,sa_val);
   }else{
     throw runtime_error("MAP::ConvAddrMSISDN2Smc  ET96MAP_SM_RP_OA_T length should be greater than 0");
   }
@@ -366,10 +357,6 @@ inline void ConvAddrMSISDN2Smc(const ET96MAP_ADDRESS_T* ma,Address* sa)
         sa_val[i] = (ma->address[i/2]>>4)+0x30;
       }
       if(sa_val[i] > 0x39 ) throw runtime_error("MAP::ConvAddrMSISDN2Smc numeric address contains not digit.");
-    }
-    {
-      char b[256] = {0,};
-      memcpy(b,sa_val,i);
     }
     sa->setValue(i,sa_val);
   }else{
@@ -410,10 +397,6 @@ inline void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
       }else break;
     }
     sa->setValue(i,sa_val);
-    {
-      char b[256] = {0,};
-      memcpy(b,sa_val,ma->len);
-    }
   }else{
     throw runtime_error("MAP::ConvAddrMap2Smc  MAP_SMS_ADDRESS length should be greater than 0");
   }
