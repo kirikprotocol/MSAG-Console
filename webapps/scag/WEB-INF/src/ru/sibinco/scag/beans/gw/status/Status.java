@@ -16,7 +16,6 @@ import javax.servlet.http.HttpServletResponse;
 public class Status extends SCAGBean {
 
     private byte scagStatus = ServiceInfo.STATUS_UNKNOWN;
-
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
         super.process(request, response);
         final Daemon scagDaemon = appContext.getScagDaemon();
