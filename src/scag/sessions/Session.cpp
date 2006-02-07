@@ -375,9 +375,12 @@ void Session::endOperation(RuleStatus& ruleStatus)
 
         if (!m_isTransact) 
         {
+            time_t now;
+            time(&now);
+
             PendingOperation pendingOperation;
             pendingOperation.type = CO_RECEIPT_DELIVER_SM;
-            pendingOperation.validityTime = SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
+            pendingOperation.validityTime = now + SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
 
             PrePendingOperationList.push_back(pendingOperation);
         }
@@ -399,7 +402,7 @@ void Session::endOperation(RuleStatus& ruleStatus)
         break;
 
     }
-
+    smsc_log_error(logger,"** Session: operation end, pendinding count = %d - %d",PendingOperationList.size(),PrePendingOperationList.size());
 }
 
 void Session::AddNewOperationToHash(SCAGCommand& cmd, int type)
@@ -437,9 +440,19 @@ bool Session::startOperation(SCAGCommand& cmd)
                 AddNewOperationToHash(cmd, m_SmppDiscriptor.cmdType);
             } else if (m_SmppDiscriptor.lastIndex > 0) 
             {
-                operation = OperationsHash.Get(cmd.getOperationId());
+
+                Operation ** operationPtr = OperationsHash.GetPtr(cmd.getOperationId());
+
                 //TODO: check what to do if there are no session?
                 //if (!operation) ...
+                if (!operationPtr) 
+                {
+                    smsc_log_debug(logger,"Session: no operation matched to CO_DELIVER_SM has been detected");
+                    return false;
+                }
+
+                operation = *operationPtr;
+
                 operation->setStatus(m_SmppDiscriptor.currentIndex,m_SmppDiscriptor.lastIndex);
 
 
@@ -455,11 +468,20 @@ bool Session::startOperation(SCAGCommand& cmd)
         {
             smsc_log_debug(logger,"Session: !! CO_DELIVER_SM_RESP detected !!");
 
-            operation = OperationsHash.Get(cmd.getOperationId());
+            Operation ** operationPtr;
+
+            operationPtr = OperationsHash.GetPtr(cmd.getOperationId());
             //TODO: check what to do if there are no session?
             //if (!operation) ...
+            if (!operationPtr) 
+            {
+                smsc_log_debug(logger,"Session: no operation matched to CO_DELIVER_SM_RESP has been detected");
+                return false;
+            }
+            operation = *operationPtr;
 
             bChanged = true;
+
             currentOperationId = cmd.getOperationId();
             m_pCurrentOperation = operation;
 
@@ -467,6 +489,7 @@ bool Session::startOperation(SCAGCommand& cmd)
 
             //multipart response
             operation->setStatus(m_SmppDiscriptor.currentIndex,m_SmppDiscriptor.lastIndex);
+
             break;
         }
 
@@ -499,9 +522,16 @@ bool Session::startOperation(SCAGCommand& cmd)
             //multipart command
             if (m_SmppDiscriptor.lastIndex > 0) 
             {
-                operation = OperationsHash.Get(cmd.getOperationId());
+                Operation ** operationPtr = OperationsHash.GetPtr(cmd.getOperationId());
                 //TODO: check what to do if there are no session?
                 //if (!operation) ...
+                if (!operationPtr) 
+                {
+                    smsc_log_debug(logger,"Session: no operation matched to CO_SUBMIT_SM has been detected");
+                    return false;
+                }
+
+                operation = *operationPtr;
 
                 currentOperationId = cmd.getOperationId();
                 m_pCurrentOperation = operation;
@@ -513,10 +543,18 @@ bool Session::startOperation(SCAGCommand& cmd)
 
     case CO_SUBMIT_SM_RESP:
         {
+            Operation ** operationPtr = OperationsHash.GetPtr(cmd.getOperationId());
 
-            operation = OperationsHash.Get(cmd.getOperationId());
             //TODO: check what to do if there are no session?
             //if (!operation) ...
+            if (!operationPtr) 
+            {
+                smsc_log_debug(logger,"Session: no operation matched to CO_SUBMIT_SM_RESP has been detected");
+                return false;
+            }
+
+            operation = *operationPtr;
+            
             currentOperationId = cmd.getOperationId();
             m_pCurrentOperation = operation;
 
@@ -533,7 +571,7 @@ bool Session::startOperation(SCAGCommand& cmd)
 
 
     }
-    smsc_log_error(logger,"** Session: operation started");
+    smsc_log_error(logger,"** Session: operation started, pending count = %d-%d",PendingOperationList.size(),PrePendingOperationList.size());
    
     return true;
 }

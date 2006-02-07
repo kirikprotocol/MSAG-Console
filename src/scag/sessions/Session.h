@@ -169,6 +169,7 @@ namespace scag { namespace sessions
         void DeserializeOperations(SessionBuffer& buff);
         void DeserializePendingOperations(SessionBuffer& buff);
     public:
+        int getPendingAmount() {return PendingOperationList.size();}
 
         Session(const CSessionKey& key);
         virtual ~Session();

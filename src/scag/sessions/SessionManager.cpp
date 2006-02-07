@@ -59,7 +59,7 @@ namespace scag { namespace sessions
         {
             bool operator () (const CSessionAccessData* x,const CSessionAccessData* y) const
             {
-                return (x->nextWakeTime > y->nextWakeTime);
+                return (x->nextWakeTime < y->nextWakeTime);
             }
         };
 
@@ -164,7 +164,7 @@ void SessionManagerImpl::AddRestoredSession(Session * session)
     accessData->hasOperations = session->hasOperations();
 
 
-    smsc_log_debug(logger,"SessionManager: Session restored from store with UMR='%d', Address='%s', has pending: %d",accessData->SessionKey.USR,accessData->SessionKey.abonentAddr.toString().c_str(),accessData->hasPending);
+    smsc_log_debug(logger,"SessionManager: Session restored from store with UMR='%d', Address='%s', pending: %d-%d",accessData->SessionKey.USR,accessData->SessionKey.abonentAddr.toString().c_str(),session->PendingOperationList.size(),session->PrePendingOperationList.size());
 
     CSessionSetIterator it = SessionExpirePool.insert(accessData);
 
@@ -315,7 +315,7 @@ int SessionManagerImpl::processExpire()
 
     while (1) 
     {
-        if (SessionExpirePool.empty()) return 1;//SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
+        if (SessionExpirePool.empty()) return SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
 
         CSessionSetIterator it;
         for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();++it)
@@ -332,10 +332,14 @@ int SessionManagerImpl::processExpire()
 
         if (it == SessionExpirePool.end())
         {
-            it = SessionExpirePool.begin();
-            iPeriod = ((*it)->nextWakeTime - now);
-            if (iPeriod <= 0) return 1;
-            else return iPeriod;
+            if (!SessionExpirePool.empty()) 
+            {
+                it = SessionExpirePool.begin();
+                iPeriod = ((*it)->nextWakeTime - now);
+                if (iPeriod <= 0) return 1;
+                else return iPeriod;
+            }
+            else return SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
         }
 
         iPeriod = (*it)->nextWakeTime - now;
@@ -376,7 +380,6 @@ int SessionManagerImpl::processExpire()
             SessionHash.Insert(data->SessionKey,it);
 
             iPeriod = data->nextWakeTime - now;
-
         }
 
         // Session expired
@@ -398,7 +401,7 @@ int SessionManagerImpl::processExpire()
 SessionPtr SessionManagerImpl::getSession(const CSessionKey& sessionKey)
 {
 
-    SessionPtr session;
+    SessionPtr session(0);
 
     MutexGuard guard(inUseMonitor);
 
@@ -425,6 +428,7 @@ SessionPtr SessionManagerImpl::getSession(const CSessionKey& sessionKey)
     (*it)->bOpened = true;
 
     session = store.getSession(sessionKey);
+    smsc_log_debug(logger,"SessionManager: get session - pending count = %d",session->PendingOperationList.size());
     
     return session;
 }
@@ -463,6 +467,7 @@ SessionPtr SessionManagerImpl::newSession(CSessionKey& sessionKey)
         session = SessionPtr(0);
         return session;
     }*/
+    smsc_log_debug(logger,"SessionManager: new session - pending count = %d-%d",session->PendingOperationList.size(),session->PrePendingOperationList.size());
 
     SessionHash.Insert(sessionKey,it);
     return session;
@@ -509,6 +514,8 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
         delete (*it);
 
         store.deleteSession(sessionKey);
+
+        inUseMonitor.notifyAll();
         smsc_log_debug(logger,"SessionManager: session released");
         return;
     }
@@ -516,7 +523,7 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
     if (session->isChanged()) store.updateSession(session);
 
     inUseMonitor.notifyAll();
-    smsc_log_debug(logger,"SessionManager: session released");
+    smsc_log_debug(logger,"SessionManager: session released, Pending Operations Count = %d",session->PendingOperationList.size());
 }
 
 
