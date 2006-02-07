@@ -320,7 +320,7 @@ void sessionsClose(int scnt)
  }
 }
 
-void sessionsDeliverSM(int cnt)
+void sessionsDeliverSM(int scnt)
 {
 	char number[20];
 
