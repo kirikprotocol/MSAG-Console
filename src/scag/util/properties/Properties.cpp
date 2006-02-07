@@ -2,6 +2,7 @@
 #include "Properties.h"
 #include <stdlib.h>
 #include "scag/exc/SCAGExceptions.h"
+#include <memory.h>
 
 namespace scag { namespace util { namespace properties 
 {
@@ -26,7 +27,7 @@ int64_t Property::convertToInt()
     case pt_bool: 
         break;
     case pt_str:
-        i_val = atoi(s_val.c_str());
+        i_val = atoi(ConvertWStrToStr(s_val).c_str());
         break;
 /*    case PTYPE_DATE:
         throw ConvertException("date","int");
@@ -37,7 +38,7 @@ int64_t Property::convertToInt()
     sync = true;
     return val;
 }
-const std::string& Property::convertToStr() 
+const std::wstring& Property::convertToStr() 
 {
     if (sync) return s_val;
 
@@ -47,8 +48,12 @@ const std::string& Property::convertToStr()
     case pt_int:
         char * buff;
         buff = new char(128);
-        buff = lltostr(i_val,buff+128);
-        s_val = buff;
+        buff[127] = 0;
+
+        char * temp = lltostr(i_val,buff+127);
+
+        s_val = ConvertStrToWStr(temp);
+
         delete buff;
         break;
 /*    case PTYPE_DATE:
@@ -70,7 +75,7 @@ bool Property::convertToBool()
     switch (type) 
     {
     case pt_str: 
-        i_val = atoi(s_val.c_str());
+        i_val = atoi(ConvertWStrToStr(s_val).c_str());
         break;
 /*    case PTYPE_DATE:
         throw ConvertException("date","bool");
@@ -90,7 +95,7 @@ time_t Property::convertToDate()
     {
     case pt_str: 
         tm time;
-        strptime(s_val.c_str(),TimeFormat,&time);
+        strptime(ConvertWStrToStr(s_val).c_str(),TimeFormat,&time);
         i_val = mktime(&time);
         break;
 /*    case pt_int:
@@ -114,7 +119,7 @@ int64_t Property::getInt()
     if (type == pt_int) return i_val;
     else return convertToInt();
 }
-const std::string& Property::getStr()
+const std::wstring& Property::getStr()
 {
     if (type == pt_str) return s_val;
     else return convertToStr();
@@ -140,21 +145,21 @@ void Property::setInt(int64_t val)
     i_val = val;
     type = pt_int;
 }
-void Property::setStr(const std::string& val)
+
+void Property::setStr(const std::wstring& val)
 {
     if (constant) throw ConstantSetException();
     sync = false;
     s_val = val;
     type = pt_str;
-
 }
+
 void Property::setBool(bool val)
 {
     if (constant) throw ConstantSetException();
     sync = false; 
     i_val = val;
     type = pt_bool;
-
 }
 void Property::setDate(time_t val) 
 {
@@ -167,7 +172,7 @@ void Property::setDate(time_t val)
 
 /////////////////////////////////////////////////COMPARE///////////////////////////////////////
 
-int Property::Compare(const std::string& val)
+int Property::Compare(const std::wstring& val)
 {
     return getStr().compare(val);
 }
@@ -214,7 +219,7 @@ int Property::Compare(Property& val,PropertyType pt)
 
 // NamedProperty wraps Property's set methods to notify patron (if defined)
 
-void AdapterProperty::setStr(const std::string& val)
+void AdapterProperty::setStr(const std::wstring& val)
 {
     Property::setStr(val);
     if (patron) patron->changed(*this);
@@ -235,7 +240,7 @@ void AdapterProperty::setDate(time_t val)
     if (patron) patron->changed(*this);
 }
 
-void AdapterProperty::setPureStr(const std::string& val)
+void AdapterProperty::setPureStr(const std::wstring& val)
 {
     Property::setStr(val);
 }
@@ -258,5 +263,115 @@ void AdapterProperty::setPureDate(time_t val)
 {
     return 0;
 } */
+
+
+std::wstring ConvertStrToWStr(const char * str)
+{
+    std::wstring wstr;
+    wchar_t buff[1024];
+
+    int i;
+    for (i=0; str[i]!=0; i++) 
+    {
+        wchar_t wchar;
+
+        int res = mbtowc(&wchar,&str[i],MB_CUR_MAX);
+        if (res <= 0) return wstr;
+
+        buff[i] = wchar;
+    }
+    wstr.append(buff,i);
+    return wstr;
+}
+
+
+std::string ConvertWStrToStr(std::wstring wstr)
+{
+    std::string str;
+    char buff[1024];
+
+    int i;
+
+    for (i=0; i < wstr.size();i++) 
+    {
+        char chr;
+
+        int res = wctomb(&chr,wstr[i]);
+
+        if (res <= 0) 
+        {
+            return str;
+        }
+
+        buff[i] = chr;
+    }
+    str.append(buff,i);
+
+    return str;
+}
+
+
+std::string FormatWStr(std::wstring& wstr)
+{
+    std::string str;
+
+    const char * wStrPtr = (char *)wstr.c_str();
+    char buff[1024];
+    int i;
+
+    if (wstr.size() > 0) str.append("U::");
+
+    for (i=0; i<wstr.size(); i++) 
+    {
+        sprintf(buff,"%d/%d/",wStrPtr[i*4+2],wStrPtr[i*4+3]);
+        str.append(buff);
+    }
+
+    return str;
+}
+
+std::wstring UnformatWStr(std::string& str)
+{
+    std::wstring wstr;
+    if (str.size()<3) return wstr;
+    if (str.substr(0,3)!="U::") return wstr;
+
+    char buff[1024];
+    memset(buff,0,1024);
+
+    char temp[32];
+
+    int offset = 0;
+    int size = 0;
+    int nByte = 0;
+
+    for (int i=3;i<str.size();i++) 
+    {
+        if (str[i]!='/') 
+        {
+            temp[offset] = str[i];
+            offset++;
+        }
+        else 
+        {
+            temp[offset] = 0;
+            offset = 0;
+
+            buff[size*4+2+nByte] = (char)atoi(temp);
+
+            if (nByte == 1) 
+            {
+                nByte = 0;
+                size++;
+            } else
+                nByte = 1;
+        }
+    }
+
+    wstr.append((wchar_t *)buff,size);
+
+    return wstr;
+}
+
 
 }}}

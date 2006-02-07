@@ -20,6 +20,7 @@ namespace scag { namespace util { namespace properties
     };
 
     struct Changeable;
+
     class Property
     {
     protected:
@@ -28,29 +29,29 @@ namespace scag { namespace util { namespace properties
         bool       sync, constant;
 
         int64_t     i_val;
-        std::string s_val;
+        std::wstring s_val;
 
-        const std::string& convertToStr();
+        const std::wstring& convertToStr();
         int64_t convertToInt ();
         bool    convertToBool();
         time_t  convertToDate();
     
     public:
 
-        Property(): type(pt_str), sync(true), constant(false),i_val(0) {};
+        Property(): type(pt_str), sync(false), constant(false),i_val(0) {};
         ~Property() {};
 
-        const std::string& getStr();
+        const std::wstring& getStr();
         int64_t getInt ();
         bool    getBool();
         time_t  getDate();
 
-        virtual void setStr(const std::string& val);
+        virtual void setStr(const std::wstring& val);
         virtual void setInt(int64_t val);
         virtual void setBool(bool val);
         virtual void setDate(time_t val);
 
-        int Compare(const std::string& val);
+        int Compare(const std::wstring& val);
         int Compare(bool val);
         int Compare(int val);
         int Compare(Property& val,PropertyType pt);
@@ -67,18 +68,18 @@ namespace scag { namespace util { namespace properties
     public:
 
         AdapterProperty(const std::string& _name,Changeable* _patron,int InitValue) 
-            : patron(_patron), name(_name) { i_val = InitValue; type = pt_int;};
+            : patron(_patron), name(_name) {i_val = InitValue; type = pt_int;};
 
-        AdapterProperty(const std::string& _name,Changeable* _patron,const std::string& InitValue) 
+        AdapterProperty(const std::string& _name,Changeable* _patron,const std::wstring& InitValue) 
             : patron(_patron), name(_name) {s_val = InitValue; type = pt_str;};
 
-        virtual void setStr(const std::string& val);
+        virtual void setStr(const std::wstring& val);
         virtual void setInt(int64_t val);
         virtual void setBool(bool val);
         virtual void setDate(time_t val);
         const std::string& GetName() const {return name;}
 
-        virtual void setPureStr(const std::string& val);
+        virtual void setPureStr(const std::wstring& val);
         virtual void setPureInt(int64_t val);
         virtual void setPureBool(bool val);
         virtual void setPureDate(time_t val);
@@ -116,6 +117,11 @@ namespace scag { namespace util { namespace properties
         PropertyManager() {};
     };
 
+    std::wstring ConvertStrToWStr(const char * str);
+    std::string ConvertWStrToStr(std::wstring wstr);
+
+    std::string FormatWStr(std::wstring& wstr);
+    std::wstring UnformatWStr(std::string& str);
 }}}
 
 #endif // SCAG_UTIL_PROPERTIES
