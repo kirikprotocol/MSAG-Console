@@ -24,6 +24,9 @@
 
 #include <scag/stat/StatisticsManager.h>
 
+//inthash
+#include <core/buffers/IntHash.hpp>
+
 #include <stddef.h>
 #include <fstream>
 #include <time.h>
@@ -46,6 +49,9 @@ using namespace smsc::sms;
 using namespace smsc::logger;
 using namespace scag::util;
 using namespace scag::stat;
+
+//inthash
+using namespace smsc::core::buffers;
 
 extern bool stopProcess;
 smsc::logger::Logger *logger;
@@ -272,14 +278,37 @@ int ruleRun(   std::string cmd_name,
 }  
 /**********************************************/  
 
-void sessionOpenTest(int scnt)
+IntHash <SessionPtr> sessions_list;
+
+void sessionsOpen(int scnt)
 {
  for(int i=0;i<scnt;i++)
  {
-        session =  smanager->newSession(key);
+        sessions_list.Insert(i,smanager->newSession(key));
 	
  }
 }
+
+void sessionsClose(int scnt)
+{
+ for(int i=0;i<scnt;i++)
+ {
+
+	 if(sessions_list.GetPtr(i))
+	 {
+		 smanager->releaseSession(sessions_list.Get(i));
+		 sessions_list.Delete(i);
+	 }
+	 else
+	 {
+		 smsc_log_error(logger,"Error sessions wrong %d",i);
+	 }
+        
+	
+ }
+}
+
+
 
 int  main(int argc,char ** argv)
 {
@@ -317,9 +346,11 @@ int  main(int argc,char ** argv)
 	  
 //	  for(;;)    
 	  {
-	        scag::sessions::SessionPtr sess;
+
+		  sessionsOpen(1024);
+		  sessionsClose(1024);
 //		  
-        	ruleRun("deliver_sm","812345671",0,1,"897654326",0,1,51,0,1,sess);
+//        	ruleRun("deliver_sm","812345671",0,1,"897654326",0,1,51,0,1,sess);
 		
 //		engine->removeRule(10);
 //		engine->updateRule(10);
@@ -328,12 +359,12 @@ int  main(int argc,char ** argv)
 		  
   	        //ruleRun("deliver_sm_resp","812345676",0,1,"897654321",0,1,51,0,1,sess);
 		
-                ruleRun("submit_sm","812345676",0,1,"897654321",0,1,51,0,1,sess);
+//                ruleRun("submit_sm","812345676",0,1,"897654321",0,1,51,0,1,sess);
 //		ruleRun("submit_sm_resp","812345671",0,1,"897654326",0,1,51,0,1,sess);
 						
 		//smsc_log_debug(logger,"\n\n");
 		//printf(".");		    
-		smanager->releaseSession(sess);
+//		smanager->releaseSession(sess);
 	  }
    
    
