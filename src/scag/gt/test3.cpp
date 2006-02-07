@@ -282,9 +282,21 @@ IntHash <SessionPtr> sessions_list;
 
 void sessionsOpen(int scnt)
 {
+ CSessionKey key;
+ char number[20];
+ 
  for(int i=0;i<scnt;i++)
  {
-        sessions_list.Insert(i,smanager->newSession(i));
+	 smsc::sms::Address oa;
+	 sprintf(number,"8%.7d",i);
+	 //std::string str_oa=number;
+	 
+     oa.setNumberingPlan(0);//numberingplan
+     oa.setTypeOfNumber(1);//typeofnumber
+     oa.setValue(8,number);
+
+	 key.abonentAddr = oa; 
+     sessions_list.Insert(i,smanager->newSession(key));
 	
  }
 }
@@ -350,7 +362,7 @@ int  main(int argc,char ** argv)
 		  sessionsOpen(1024);
 		  sessionsClose(1024);
 //		  
-//        	ruleRun("deliver_sm","812345671",0,1,"897654326",0,1,51,0,1,sess);
+//         	ruleRun("deliver_sm","812345671",0,1,"897654326",0,1,51,0,1,sess);
 		
 //		engine->removeRule(10);
 //		engine->updateRule(10);
