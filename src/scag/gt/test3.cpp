@@ -289,8 +289,6 @@ void sessionsOpen(int scnt)
  {
 	 smsc::sms::Address oa;
 	 sprintf(number,"8%.7d",i);
-	 //std::string str_oa=number;
-	 
      oa.setNumberingPlan(0);//numberingplan
      oa.setTypeOfNumber(1);//typeofnumber
      oa.setValue(8,number);
@@ -385,7 +383,7 @@ int  main(int argc,char ** argv)
 
 	dn ="./store";
 
-	if(!initSessionManagerInstance(dn,10))
+	if(!initSessionManagerInstance(dn,100))
 	{
 	  return 0;
 	}
