@@ -259,10 +259,10 @@ int ruleRun(   std::string cmd_name,
 	smsc_log_debug(logger," SMPP_SAR_TOTAL_SEGMENTS=%d SMPP_SAR_SEGMENT_SEQNUM)=%d", cmd->get_sms()->getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS),	  cmd->get_sms()->getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM));
 	    
 	
-	_SmppCommand& _cmd = *cmd.operator ->();
+	/*_SmppCommand& _cmd = *cmd.operator ->();
 	smsc_log_debug(logger,"operation id == %d",cmd.getOperationId());
 	_cmd.get_resp()->set_sms(0);	
-	
+	*/
        //smanager->releaseSession(session);
 
       }
@@ -308,7 +308,15 @@ void sessionsClose(int scnt)
 
 	 if(sessions_list.GetPtr(i))
 	 {
-		 smanager->releaseSession(sessions_list.Get(i));
+		 if(sessions_list.Get(i).Get())
+		 {
+		 	smanager->releaseSession(sessions_list.Get(i));
+		 }
+		 else
+		 {
+			smsc_log_error(logger,"Error sessions for %d session is 0",i);
+		 }
+		 
 		 sessions_list.Delete(i);
 	 }
 	 else
@@ -332,7 +340,15 @@ void sessionsDeliverSM(int scnt)
 		sessions_list.Delete(i);
 	 	sprintf(number,"8%.7d",i);
 		std::string num = number;
-		ruleRun("deliver_sm",num,0,1,"897654326",0,1,51,0,1,sessions_list.Get(i));
+		
+		if(sessions_list.Get(i).Get())
+		{
+			ruleRun("deliver_sm",num,0,1,"897654326",0,1,51,0,1,sessions_list.Get(i));
+		}
+		else
+		{
+			smsc_log_error(logger,"sessionsDeliverSM:Error getting sessions %d session is 0",i);
+		}
 
 	 }
 	 else
@@ -379,7 +395,7 @@ int  main(int argc,char ** argv)
 	  
 //	  for(;;)    
 	  {
-		  int scnt=1024;
+		  int scnt=100;
 
 		  sessionsOpen(scnt);
 		  sessionsDeliverSM(scnt);
