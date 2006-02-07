@@ -233,7 +233,7 @@ int ruleRun(   std::string cmd_name,
        smsc_log_debug(logger,buff);
 
 	
-	 // if(bdump)
+	 if(bdump)
 	  {
 	      for(int i=0;i<SMS_LAST_TAG;i++)
       		{
@@ -320,7 +320,28 @@ void sessionsClose(int scnt)
  }
 }
 
+void sessionsDeliverSM(int cnt)
+{
+	char number[20];
 
+	for(int i=0;i<scnt;i++)
+	{
+	if(sessions_list.GetPtr(i))
+	 {
+		 
+		sessions_list.Delete(i);
+	 	sprintf(number,"8%.7d",i);
+		std::string num = number;
+		ruleRun("deliver_sm",num,0,1,"897654326",0,1,51,0,1,sessions_list.Get(i));
+
+	 }
+	 else
+	 {
+		 smsc_log_error(logger,"sessionsDeliverSM:Error sessions wrong %d",i);
+	 }
+	
+	}
+}
 
 int  main(int argc,char ** argv)
 {
@@ -358,9 +379,11 @@ int  main(int argc,char ** argv)
 	  
 //	  for(;;)    
 	  {
+		  int scnt=1024;
 
-		  sessionsOpen(1024);
-		  sessionsClose(1024);
+		  sessionsOpen(scnt);
+		  sessionDeliverSM(scnt);
+		  sessionsClose(scnt);
 //		  
 //         	ruleRun("deliver_sm","812345671",0,1,"897654326",0,1,51,0,1,sess);
 		
