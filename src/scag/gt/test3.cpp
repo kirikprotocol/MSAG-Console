@@ -337,8 +337,7 @@ void sessionsDeliverSM(int scnt)
 	if(sessions_list.GetPtr(i))
 	 {
 		 
-		sessions_list.Delete(i);
-	 	sprintf(number,"8%.7d",i);
+		sprintf(number,"8%.7d",i);
 		std::string num = number;
 		
 		if(sessions_list.Get(i).Get())
