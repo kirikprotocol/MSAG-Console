@@ -226,7 +226,8 @@ int ruleRun(   std::string cmd_name,
        sprintf(buff,"cmd:%s %s%d",cmd_name.c_str(),"result = ",rs.result);
        smsc_log_debug(logger,buff);
 
-	  if(bdump)
+	
+	 // if(bdump)
 	  {
 	      for(int i=0;i<SMS_LAST_TAG;i++)
       		{
@@ -271,6 +272,14 @@ int ruleRun(   std::string cmd_name,
 }  
 /**********************************************/  
 
+void sessionOpenTest(int scnt)
+{
+ for(int i=0;i<scnt;i++)
+ {
+        session =  smanager->newSession(key);
+	
+ }
+}
 
 int  main(int argc,char ** argv)
 {
@@ -306,14 +315,24 @@ int  main(int argc,char ** argv)
 
           /* Emulation for transport events */
 	  
-	  for(int i=0;i<10;i++)    
+//	  for(;;)    
 	  {
 	        scag::sessions::SessionPtr sess;
-		  
+//		  
         	ruleRun("deliver_sm","812345671",0,1,"897654326",0,1,51,0,1,sess);
-  	        ruleRun("deliver_sm_resp","812345676",0,1,"897654321",0,1,52,0,1,sess);
-		printf(".");
-		    
+		
+//		engine->removeRule(10);
+//		engine->updateRule(10);
+		
+//		ruleRun("deliver_sm","812345671",0,1,"897654326",0,1,51,0,1,sess);
+		  
+  	        //ruleRun("deliver_sm_resp","812345676",0,1,"897654321",0,1,51,0,1,sess);
+		
+                ruleRun("submit_sm","812345676",0,1,"897654321",0,1,51,0,1,sess);
+//		ruleRun("submit_sm_resp","812345671",0,1,"897654326",0,1,51,0,1,sess);
+						
+		//smsc_log_debug(logger,"\n\n");
+		//printf(".");		    
 		smanager->releaseSession(sess);
 	  }
    
