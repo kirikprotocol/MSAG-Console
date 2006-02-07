@@ -83,8 +83,9 @@ namespace scag { namespace re { namespace smpp
             ST_UNDELIVERABLE        = 148,
             ST_ACCEPTED             = 149,
             ST_UNKNOWN              = 150,
-            ST_REJECTED             = 151
+            ST_REJECTED             = 151,
 
+            SMS_VALIDITY_PERIOD     = 152
         };
 
         Property * getSubmitProperty(SMS& data,const std::string& name,int FieldId);

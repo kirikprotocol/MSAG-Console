@@ -78,20 +78,25 @@ bool ActionSet::run(ActionContext& context)
     if (ft == ftUnknown) 
     {
         property->setStr(w_Value);
+
+        smsc_log_debug(logger,"Action 'set': property '%s' set to '%s'",Variable.c_str(),FormatWStr(w_Value).c_str());
     }
     else
     {
         Property * val = context.getProperty(s_Value);
+
+   
         if (val) 
         {
             property->setStr(val->getStr());
+            std::wstring wstr = val->getStr();
+            smsc_log_debug(logger,"Action 'set': property '%s' set to '%s'",Variable.c_str(),s_Value.c_str());
         }
         else 
             smsc_log_warn(logger,"Action 'set': cannot initialize '%s' with '%s' value - no such property",Variable.c_str(),s_Value.c_str());
+            
     }
 
-    std::wstring wstr = property->getStr();
-    smsc_log_debug(logger,"Action 'set': property '%s' set to '%s'",Variable.c_str(),s_Value.c_str());
     return true;
 }
 

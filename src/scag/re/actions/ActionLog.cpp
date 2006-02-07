@@ -87,11 +87,13 @@ bool ActionLog::run(ActionContext& context)
     if (ftMessage!=ftUnknown)  
     {
         p2 = context.getProperty(s_msg);
+
         if (!p2) 
         {
             smsc_log_warn(logger,"Action 'log': invalid property '%s' to log", s_msg.c_str());
             return true;
         }
+
         wstr = p2->getStr();
         s2 = FormatWStr(wstr);
 

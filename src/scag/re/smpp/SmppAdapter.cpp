@@ -2,7 +2,6 @@
 #include "scag/re/CommandAdapter.h"
 #include "scag/re/CommandBrige.h"
 
-
 namespace scag { namespace re { namespace smpp 
 {
 
@@ -19,20 +18,30 @@ IntHash<AccessType> SmppCommandAdapter::DeliverFieldsAccess = SmppCommandAdapter
 
 AccessType SmppCommandAdapter::CheckAccess(int handlerType,const std::string& name)
 {
-    int FieldId;
+    int * pFieldId;
 
     switch (handlerType) 
     {
     case EH_DELIVER_SM:
-        if (!DeliverFieldNames.Exists(name.c_str())) return atNoAccess;
-        FieldId = DeliverFieldNames[name.c_str()];
-        if (DeliverFieldsAccess.Exist(FieldId)) return DeliverFieldsAccess.Get(FieldId);
+        pFieldId = DeliverFieldNames.GetPtr(name.c_str());
+        if (!pFieldId) return atNoAccess;
+
+        AccessType * actype;
+        actype = DeliverFieldsAccess.GetPtr(*pFieldId);
+
+        if (actype) return *actype;
+
         return atRead;
         break;
     case EH_SUBMIT_SM:
-        if (!SubmitFieldNames.Exists(name.c_str())) return atNoAccess;
-        FieldId = SubmitFieldNames[name.c_str()];
-        if (SubmitFieldsAccess.Exist(FieldId)) return SubmitFieldsAccess.Get(FieldId);
+        pFieldId = SubmitFieldNames.GetPtr(name.c_str());
+
+        if (!pFieldId) return atNoAccess;
+
+        AccessType * ac_type;
+        actype = SubmitFieldsAccess.GetPtr(*pFieldId);
+
+        if (actype) return *actype;
         return atRead;
     case EH_DELIVER_SM_RESP:
         if (name!="status") return atNoAccess;
@@ -201,8 +210,8 @@ Hash<int> SmppCommandAdapter::InitSubmitFieldNames()
     hs["ussd_ussr_conf"]                = USSD_USSR_CONF;
     hs["ussd_ussn_conf"]                = USSD_USSN_CONF;
 
-
-
+    hs["validity_period"]               = SMS_VALIDITY_PERIOD;
+                                          
 
 /*
 Tag::SMPP_ESM_CLASS //mask +
@@ -518,9 +527,10 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
 
 Property * SmppCommandAdapter::getSubmitRespProperty(const std::string& name,int FieldId)
 {
-    if (PropertyPul.Exist(FieldId)) return PropertyPul.Get(FieldId);
+    AdapterProperty ** propertyPtr = PropertyPul.GetPtr(FieldId);
+    if (propertyPtr) return *propertyPtr;
 
-    AdapterProperty * property = 0;
+    AdapterProperty * property;
 
     switch (FieldId) 
     {
@@ -545,7 +555,6 @@ AdapterProperty * SmppCommandAdapter::GetStrBitFromMask(SMS& data,const std::str
 {
 
     int num = data.getIntProperty(tag);
-//    sprintf(buff,"%d",((num&mask)==mask));
 
     AdapterProperty * property = new AdapterProperty(name,this,((num&mask)==mask));
     return property;
@@ -698,28 +707,28 @@ AdapterProperty * SmppCommandAdapter::Get_USSD_BIT_Property(SMS& data, const std
     switch (FieldId) 
     {
     case USSD_PSSD_IND:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_USSD_SERVICE_OP,0);
-        break;
-    case USSD_PSSR_IND:
         property = GetStrBitFromMask(data,name,Tag::SMPP_USSD_SERVICE_OP,1);
         break;
-    case USSD_PSSR_REQ:
+    case USSD_PSSR_IND:
         property = GetStrBitFromMask(data,name,Tag::SMPP_USSD_SERVICE_OP,2);
         break;
+    case USSD_PSSR_REQ:
+        property = GetStrBitFromMask(data,name,Tag::SMPP_USSD_SERVICE_OP,4);
+        break;
     case USSD_USSN_REQ:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_USSD_SERVICE_OP,3);
+        property = GetStrBitFromMask(data,name,Tag::SMPP_USSD_SERVICE_OP,8); 
         break;
     case USSD_PSSD_RESP:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_USSD_SERVICE_OP,16);
+        property = GetStrBitFromMask(data,name,Tag::SMPP_USSD_SERVICE_OP,65536); //2^16
         break;
     case USSD_PSSR_RESP:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_USSD_SERVICE_OP,17);
+        property = GetStrBitFromMask(data,name,Tag::SMPP_USSD_SERVICE_OP,131072); //2^17
         break;
     case USSD_USSR_CONF:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_USSD_SERVICE_OP,18);
+        property = GetStrBitFromMask(data,name,Tag::SMPP_USSD_SERVICE_OP,262144); //2^18
         break;
     case USSD_USSN_CONF:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_USSD_SERVICE_OP,19);
+        property = GetStrBitFromMask(data,name,Tag::SMPP_USSD_SERVICE_OP,524288); //2^16
         break;
     }
 
@@ -729,7 +738,8 @@ AdapterProperty * SmppCommandAdapter::Get_USSD_BIT_Property(SMS& data, const std
 
 Property * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::string& name,int FieldId)
 {
-    if (PropertyPul.Exist(FieldId)) return PropertyPul.Get(FieldId);
+    AdapterProperty ** propertyPtr = PropertyPul.GetPtr(FieldId);
+    if (propertyPtr) return *propertyPtr;
 
     AdapterProperty * property = 0;
     char buff[20];
@@ -762,6 +772,9 @@ Property * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::string& na
     case DA:
         property = new AdapterProperty(name,this,ConvertStrToWStr((data.getDestinationAddress().toString()).c_str()));
         break;
+    case SMS_VALIDITY_PERIOD:
+        property = new AdapterProperty(name,this,data.validTime);
+        break;
     }
 
    /* if (data.hasBinProperty(FieldId))
@@ -780,11 +793,11 @@ Property * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::string& na
     {
         PropertyPul.Insert(FieldId, property);
         return property;
-    } else if (FieldId == SMS_STR_TAG) 
+    } else if (tagType == SMS_STR_TAG) 
     {
         property = new AdapterProperty(name,this,ConvertStrToWStr(data.getStrProperty(FieldId).c_str()));
         PropertyPul.Insert(FieldId, property);
-    } else if (FieldId == SMS_INT_TAG) 
+    } else if (tagType == SMS_INT_TAG) 
     {
         num = data.getIntProperty(FieldId);
         property = new AdapterProperty(name,this,num);
@@ -797,7 +810,8 @@ Property * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::string& na
 
 Property * SmppCommandAdapter::getDeliverProperty(SMS& data,const std::string& name,int FieldId)
 {
-    if (PropertyPul.Exist(FieldId)) return PropertyPul.Get(FieldId);
+    AdapterProperty ** propertyPtr = PropertyPul.GetPtr(FieldId);
+    if (propertyPtr) return *propertyPtr;
 
     AdapterProperty * property = 0;
     char buff[100];
@@ -881,20 +895,21 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
 
     if (!dta) return 0;
 
-    int FieldId = -1;
+    int * pFieldId = 0;
     AdapterProperty * property = 0;
 
     switch (cmdid) 
     {
     case DELIVERY:
-        if (!DeliverFieldNames.Exists(name.c_str())) return 0;
+        pFieldId = DeliverFieldNames.GetPtr(name.c_str());
+        if (!pFieldId) return 0;
 
-        FieldId = DeliverFieldNames[name.c_str()];
-        return getDeliverProperty(*(SMS*)dta,name,FieldId);
+        return getDeliverProperty(*(SMS*)dta,name,*pFieldId);
     case SUBMIT:
-        if (!SubmitFieldNames.Exists(name.c_str())) return 0;
-        FieldId = SubmitFieldNames[name.c_str()];
-        return getSubmitProperty(*(SMS*)dta,name,FieldId);
+        pFieldId = SubmitFieldNames.GetPtr(name.c_str());
+        if (!pFieldId) return 0;
+
+        return getSubmitProperty(*(SMS*)dta,name,*pFieldId);
     case DELIVERY_RESP:
         if (PropertyPul.Count()) 
         {
@@ -906,9 +921,11 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
         return property;
 
     case SUBMIT_RESP:
-        if (!SubmitRespFieldNames.Exists(name.c_str())) return 0;
-        FieldId = SubmitRespFieldNames[name.c_str()];
-        return getSubmitRespProperty(name,FieldId);
+
+        pFieldId = SubmitRespFieldNames.GetPtr(name.c_str());
+        if (!pFieldId) return 0;
+
+        return getSubmitRespProperty(name,*pFieldId);
     }
     return 0;
 }
@@ -921,6 +938,7 @@ void SmppCommandAdapter::changed(AdapterProperty& property)
     if (!cmd) return;
     
     CommandId cmdid = cmd->get_commandId();
+    int * pFieldId = 0;
     int FieldId;
 
     SMS * data = (SMS *) cmd->dta;
@@ -930,30 +948,37 @@ void SmppCommandAdapter::changed(AdapterProperty& property)
     switch (cmdid) 
     {
     case DELIVERY:
-        if (!DeliverFieldNames.Exists(name.c_str())) return;
-        FieldId = DeliverFieldNames[name.c_str()];
-        WriteDeliveryField(*data,FieldId,property);
+        pFieldId = DeliverFieldNames.GetPtr(name.c_str());
+        if (!pFieldId) return;
+
+        WriteDeliveryField(*data,*pFieldId,property);
+        FieldId = *pFieldId;
         break;
     case SUBMIT:
-        if (!SubmitFieldNames.Exists(name.c_str())) return;
-        FieldId = SubmitFieldNames[name.c_str()];
-        WriteSubmitField(*data,FieldId,property);
+        pFieldId = SubmitFieldNames.GetPtr(name.c_str());
+        if (!pFieldId) return;
+
+        WriteSubmitField(*data,*pFieldId,property);
+        FieldId = *pFieldId;
         break;
     case DELIVERY_RESP:
         if (name!="status") return;
         cmd->set_status(property.getInt());
+        FieldId = 0;
+
         break;
     case SUBMIT_RESP:
         if (name!="status") return;
         cmd->set_status(property.getInt());
+        FieldId = 0;
         break;
+
+    default:
+        return;
     }
 
-    if (PropertyPul.Exist(FieldId)) 
-    {
-        (PropertyPul.Get(FieldId))->setPureStr(property.getStr());
-    }
-
+    AdapterProperty ** propertyPtr = PropertyPul.GetPtr(FieldId);
+    if (propertyPtr) (*propertyPtr)->setPureStr(property.getStr());
 }
 
 

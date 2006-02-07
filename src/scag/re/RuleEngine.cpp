@@ -384,7 +384,7 @@ void RuleEngineImpl::updateRule(int ruleId)
     MutexGuard mg(changeLock);
 
     Rule* newRule = ParseFile(CreateRuleFileName(RulesDir,ruleId));
-    if (!newRule) throw SCAGException("Cannod load rule %d",ruleId);
+    if (!newRule) throw SCAGException("Cannod load rule %d from file",ruleId);
 
 
 
@@ -396,9 +396,6 @@ void RuleEngineImpl::updateRule(int ruleId)
         (*rulePtr)->unref();
         newRules->rules.Delete(ruleId);
     }
-    else 
-        throw SCAGException("Invalid rule id %d to update",ruleId);
-
 
     newRules->rules.Insert(ruleId, newRule);
     changeRules(newRules);      
