@@ -284,7 +284,7 @@ void sessionsOpen(int scnt)
 {
  for(int i=0;i<scnt;i++)
  {
-        sessions_list.Insert(i,smanager->newSession(key));
+        sessions_list.Insert(i,smanager->newSession(i));
 	
  }
 }
