@@ -382,7 +382,7 @@ int  main(int argc,char ** argv)
 		  int scnt=1024;
 
 		  sessionsOpen(scnt);
-		  sessionDeliverSM(scnt);
+		  sessionsDeliverSM(scnt);
 		  sessionsClose(scnt);
 //		  
 //         	ruleRun("deliver_sm","812345671",0,1,"897654326",0,1,51,0,1,sess);
