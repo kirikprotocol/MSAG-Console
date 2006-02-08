@@ -99,6 +99,9 @@
         sprintf(desc, msg_ " RuleEngineException exception: %s. Error in rule_%d.xml in line %d", e.what(), ruleId, e.getLineNumber());   \
         Variant res((const char *)desc);                        \
         smsc_log_info(logger, desc);                            \
+	char buff[32];						\
+	sprintf(buff,"%d",e.getLineNumber());			\
+	res.appendValueToStringList(buff);			\
         return new Response(Response::Error, res);
 #define END_EXCEPTION }
 
