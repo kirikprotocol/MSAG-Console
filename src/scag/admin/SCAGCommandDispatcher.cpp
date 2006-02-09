@@ -14,7 +14,13 @@
 
 #include "core/synchronization/Mutex.hpp"
 #include "scag/config/ConfigManager.h"
-#include "scag/scag.h"
+
+#ifndef TESTING
+	#include "scag/scag.h"
+#else
+	#include "scag/gt/scag/scag.h"
+#endif
+
 #include "logger/Logger.h"
 
 namespace scag {
