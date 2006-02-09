@@ -20,7 +20,7 @@
 #include <stdlib.h>
 #include "commandgen.h"
 #include <unistd.h>
-
+smsc::logger::Logger *logger;
     
 void testAdmin(std::string admin_host,int admin_port)
 {
@@ -54,5 +54,8 @@ void testAdmin(std::string admin_host,int admin_port)
 }
 void main()
 {
+	smsc::logger::Logger::Init();    
+	logger = smsc::logger::Logger::getInstance("scag.retst");        
+
 testAdmin("localhost",29992);
 }
