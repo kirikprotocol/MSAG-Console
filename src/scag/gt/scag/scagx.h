@@ -61,7 +61,7 @@ void run()
   }  ;
 
   void dumpScag(){  abort();};
-  void shutdiwn(){};
+  void shutdown(){};
 
      protected:
        bool stopFlag;
