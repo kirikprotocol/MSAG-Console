@@ -1,4 +1,4 @@
-yy#ifndef SCAG_X_H
+#ifndef SCAG_X_H
 #define SCAG_X_H
 #include <sys/types.h>
 
