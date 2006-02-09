@@ -78,7 +78,7 @@ void Dialog::beginDialog(UCHAR_T* ui/* = NULL*/, USHORT_T uilen/* = 0*/) throw (
                     "  App. context: %s\n"
                     "  User info[%u]: %s\n"
                     "}",
-                   dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId, priority, qSrvc, 
+                   dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId, priority, qSrvc,
                    dump(remoteAddr.addrLen, remoteAddr.addr).c_str(),
                    dump(ownAddr.addrLen, ownAddr.addr).c_str(),
                    dump(ac.acLen, ac.ac).c_str(),
@@ -100,7 +100,7 @@ void Dialog::beginDialog(UCHAR_T* ui/* = NULL*/, USHORT_T uilen/* = 0*/) throw (
 void Dialog::beginDialog(const SCCP_ADDRESS_T& remote_addr, UCHAR_T* ui/* = NULL*/,
                          USHORT_T uilen/* = 0*/) throw (CustomException)
 {
-    remoteAddr = remote_addr;    
+    remoteAddr = remote_addr;
     beginDialog(ui, uilen);
 }
 
@@ -114,14 +114,14 @@ void Dialog::continueDialog(void) throw (CustomException)
                     "  Org. address: %s\n"
                     "  App. context[%u]: %s\n"
                     "}",
-                   dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId, priority, qSrvc, 
+                   dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId, priority, qSrvc,
 //                   dump(ownAddr.addrLen, ownAddr.addr).c_str(),
-		   "",
+       "",
                    ac.acLen, dump(ac.acLen, ac.ac).c_str()
 /*
                    (_state < Dialog::dlgConfirmed) ? ac.acLen : 0,
                    (_state < Dialog::dlgConfirmed) ? dump(ac.acLen, ac.ac).c_str() : ""
-*/                   
+*/
                    );
 
     USHORT_T result =
@@ -131,8 +131,8 @@ void Dialog::continueDialog(void) throw (CustomException)
                                ac.acLen, ac.ac,
 /*
                                (_state < Dialog::dlgConfirmed) ? ac.acLen : 0,
-                               (_state < Dialog::dlgConfirmed) ? ac.ac : NULL, 
-*/                               
+                               (_state < Dialog::dlgConfirmed) ? ac.ac : NULL,
+*/
                                0, NULL);
 
     if (result != 0)
@@ -187,8 +187,8 @@ void Dialog::sendInvoke(Invoke * inv) throw (CustomException)
                 op.size(), dump(op.size(), &op[0]).c_str(),
                 params.size(), dump(params.size(), &params[0]).c_str());
 
-    UCHAR_T result = 
-        EINSS7_I97TInvokeReq(dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId, inv->getId(), 
+    USHORT_T result =
+        EINSS7_I97TInvokeReq(dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId, inv->getId(),
             linked ? EINSS7_I97TCAP_LINKED_ID_USED : EINSS7_I97TCAP_LINKED_ID_NOT_USED,
             linked ? linked->getId() : 0,
             EINSS7_I97TCAP_OP_CLASS_1, invTimeout, inv->getTag(),
@@ -208,14 +208,14 @@ void Dialog::sendResultLast(InvokeResultLast* res) throw (CustomException)
                 "ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
                 "invokeId=%d, tag=\"%s\", opcode[%d]={%s}, parameters[%d]={%s})",
                 dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId,
-                res->getId(), 
+                res->getId(),
                 (res->getTag() == EINSS7_I97TCAP_OPERATION_TAG_LOCAL) ? "LOCAL" : "GLOBAL",
                 op.size(), dump(op.size(), &op[0]).c_str(),
                 params.size(), dump(params.size(), &params[0]).c_str());
 
     UCHAR_T result =
         EINSS7_I97TResultLReq(dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId,
-    	res->getId(), res->getTag(),
+      res->getId(), res->getTag(),
         op.size(), &op[0], params.size(), &params[0]);
 
     if (result != 0)
@@ -232,7 +232,7 @@ void Dialog::sendResultNotLast(InvokeResultNotLast* res) throw (CustomException)
                 "ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
                 "invokeId=%d, tag=\"%s\", opcode[%d]={%s}, parameters[%d]={%s})",
                 dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId,
-                res->getId(), 
+                res->getId(),
                 (res->getTag() == EINSS7_I97TCAP_OPERATION_TAG_LOCAL) ? "LOCAL" : "GLOBAL",
                 op.size(), dump(op.size(), &op[0]).c_str(),
                 params.size(), dump(params.size(), &params[0]).c_str());
@@ -257,7 +257,7 @@ void Dialog::sendResultError(InvokeResultError* res) throw (CustomException)
                 "ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
                 "invokeId=%d, tag=\"%s\", opcode[%d]={%s}, parameters[%d]={%s})",
                 dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId,
-                res->getId(), 
+                res->getId(),
                 (res->getTag() == EINSS7_I97TCAP_OPERATION_TAG_LOCAL) ? "LOCAL" : "GLOBAL",
                 op.size(), dump(op.size(), &op[0]).c_str(),
                 params.size(), dump(params.size(), &params[0]).c_str());
@@ -281,7 +281,7 @@ void Dialog::resetInvokeTimer(UCHAR_T invokeId) throw (CustomException)
     smsc_log_debug(logger," DialogID: 0x%X", _dId );
     smsc_log_debug(logger," InvokeID: 0x%X", invokeId );
 
-    USHORT_T result = 
+    USHORT_T result =
         EINSS7_I97TTimerResetReq(dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId, invokeId);
 
     if (result != 0)
@@ -382,7 +382,7 @@ USHORT_T Dialog::handlePAbortDialog(UCHAR_T abortCause)
         DialogListener* ptr = *it;
         ptr->onDialogPAbort(abortCause);
     }
-    
+
     return MSG_OK;
 }
 

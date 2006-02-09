@@ -514,6 +514,7 @@ const char* getModuleName(USHORT_T moduleId)
 
 const char* getTcapReasonDescription(USHORT_T code)
 {
+  if (code > 1000) return getReturnCodeDescription(code);
   switch(code)
   {
     case EINSS7_I97TCAP_INV_INVOKE_ID_USED: return "Invalid Invoke Id Used";
@@ -692,4 +693,3 @@ const char* getTcapBindErrorMessage(UCHAR_T bindResult)
 }//namespace inap
 }//namespace inman
 }//namespace smsc
-
