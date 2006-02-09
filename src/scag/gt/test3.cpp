@@ -23,7 +23,7 @@
 #include <scag/exc/SCAGExceptions.h>
 
 #include <scag/stat/StatisticsManager.h>
-//#include <scag/scagsignalhandlers.h>
+
 #include "scag/admin/SCAGCommandDispatcher.h"
 #include "scag/admin/SCAGSocketListener.h"
 
@@ -67,12 +67,36 @@ SessionManager * smanager=0;
 SessionManagerConfig cfg;   
 
 SmppCommand command;
+
+namespace scag{
+class Scag
+{
+public:
+  Scag():stopFlag(false){};
+  ~Scag();
+  void init(){};
+  void run()
+  {
+   while(!stopFlag)
+   {
+      sleep(1);
+   }
+
+  };
+  void stop(){stopFlag=true;}
+protected:
+  bool stopFlag;
+
+};
+
+}//scag
+
     
 void testAdmin(std::string admin_host,int admin_port)
 {
 	
-	  scag::admin::SCAGCommandDispatcher::startGw();
-      smsc_log_debug(logger,"SMPP GW started\n");
+	 scag::admin::SCAGCommandDispatcher::startGw();
+     smsc_log_debug(logger,"SMPP GW started\n");
 
 
       scag::admin::SCAGSocketListener listener;
@@ -89,13 +113,13 @@ void testAdmin(std::string admin_host,int admin_port)
 
       listener.WaitFor();
 
-      smsc_log_debug(logger,"SCAG shutdown...\n");
-      scag::admin::SCAGCommandDispatcher::stopGw();
-      smsc_log_debug(logger,"SCAG stopped\n");
+      //smsc_log_debug(logger,"SCAG shutdown...\n");
+     scag::admin::SCAGCommandDispatcher::stopGw();
+     smsc_log_debug(logger,"SCAG stopped\n");
 
       //smsc::util::config::Manager::deinit();
 
-      smsc_log_debug(logger,"all finished\n");
+      //smsc_log_debug(logger,"all finished\n");
 
 }
 /*********************************************/
