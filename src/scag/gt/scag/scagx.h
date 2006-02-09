@@ -4,9 +4,15 @@ namespace scag{
 class Scag
 {
 public:
-  Scag():stopFlag(false){};
+  Scag():stopFlag(false)
+  {
+  
+  };
+  
   ~Scag();
+  
   void init(){};
+  
   void run()
   {
    while(!stopFlag)
@@ -17,7 +23,7 @@ public:
   };
   void stop(){stopFlag=true;}
 protected:
-  bool stopFlag;
+ bool stopFlag;
 
 };
 

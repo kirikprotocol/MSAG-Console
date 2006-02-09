@@ -7,7 +7,13 @@
 #include "admin/service/Variant.h"
 #include "admin/protocol/ResponseWriter.h"
 #include "CommandActions.h"
-#include "scag/scag.h"
+
+#ifndef TESTING
+	#include "scag/scag.h"
+#else
+	#include "scag/gt/scag/scag.h"
+#endif
+
 
 #include "CommandIds.h"
 
