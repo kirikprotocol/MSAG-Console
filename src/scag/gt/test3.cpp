@@ -23,7 +23,7 @@
 #include <scag/exc/SCAGExceptions.h>
 
 #include <scag/stat/StatisticsManager.h>
-
+#include <scag/scagsignalhandlers.h>
 #include "scag/admin/SCAGCommandDispatcher.h"
 #include "scag/admin/SCAGSocketListener.h"
 
@@ -76,7 +76,7 @@ void testAdmin(std::string admin_host,int admin_port)
 
 
       scag::admin::SCAGSocketListener listener;
-      listener.init(admin_host, admin_port);
+      listener.init(admin_host.c_str(), admin_port);
 
       scag::registerScagSignalHandlers(&listener);
       listener.Start();
@@ -416,7 +416,7 @@ int  main(int argc,char ** argv)
 				printf("errors in command line\n");
 				return 0;
 			}
-
+			
 			return;
 		}
 	}
