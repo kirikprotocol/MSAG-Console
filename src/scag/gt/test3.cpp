@@ -24,6 +24,10 @@
 
 #include <scag/stat/StatisticsManager.h>
 
+#include "scag/admin/SCAGCommandDispatcher.h"
+#include "scag/admin/SCAGSocketListener.h"
+
+
 //inthash
 #include <core/buffers/IntHash.hpp>
 
@@ -64,6 +68,35 @@ SessionManagerConfig cfg;
 
 SmppCommand command;
     
+void testAdmin(std::string admin_host,int admin_port)
+{
+	
+	  scag::admin::SCAGCommandDispatcher::startGw();
+      smsc_log_debug(logger,"SMPP GW started\n");
+
+
+      scag::admin::SCAGSocketListener listener;
+      listener.init(admin_host, admin_port);
+
+      scag::registerScagSignalHandlers(&listener);
+      listener.Start();
+
+      smsc_log_debug(logger,"SMPP GW admin listener started\n");
+
+      //running...
+      smsc_log_debug(logger,"running...\n");
+
+      listener.WaitFor();
+
+      smsc_log_debug(logger,"SCAG shutdown...\n");
+      scag::admin::SCAGCommandDispatcher::stopGw();
+      smsc_log_debug(logger"SCAG stopped\n");
+
+      //smsc::util::config::Manager::deinit();
+
+      smsc_log_debug(logger,"all finished\n");
+
+}
 /*********************************************/
 /* routines for RuleEngine interface working */
 /*                              */ 
@@ -359,6 +392,7 @@ void sessionsDeliverSM(int scnt)
 int  main(int argc,char ** argv)
 {
 
+
 	std:string dn="./rules";
 	smsc::logger::Logger::Init();    
 	logger = smsc::logger::Logger::getInstance("scag.retst");        
@@ -366,6 +400,27 @@ int  main(int argc,char ** argv)
 	std::string dir="/export/home/green/install/bin/stat";
         std::string host="127.0.0.1";
 	
+	
+	if(argc>1)	
+	{
+		if(strcmp(argv[1],"-a")==0)
+		{
+			if(argc>3)
+			{
+				std::string adminhost=argv[2];
+				int adminport=atoi(argv[3]);
+				testAdmin(adminhost,adminport);
+			}
+			else
+			{
+				printf("errors in command line\n");
+				return 0;
+			}
+
+			return;
+		}
+	}
+		
 	StatManConfig smcfg(dir,host,54000,54300,54400);
 
 	StatisticsManager::init(smcfg);
@@ -393,7 +448,7 @@ int  main(int argc,char ** argv)
 //	  for(;;)    
 	  {
 		  int scnt=100;
-
+  
 		  sessionsOpen(scnt);
 		  sessionsDeliverSM(scnt);
 		  sessionsClose(scnt);
