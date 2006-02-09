@@ -90,7 +90,7 @@ void testAdmin(std::string admin_host,int admin_port)
 
       smsc_log_debug(logger,"SCAG shutdown...\n");
       scag::admin::SCAGCommandDispatcher::stopGw();
-      smsc_log_debug(logger"SCAG stopped\n");
+      smsc_log_debug(logger,"SCAG stopped\n");
 
       //smsc::util::config::Manager::deinit();
 
@@ -417,7 +417,7 @@ int  main(int argc,char ** argv)
 				return 0;
 			}
 			
-			return;
+			return 0;
 		}
 	}
 		
