@@ -54,6 +54,15 @@ void run()
 		 
 	   };
      void stop(){stopFlag=true;}
+
+  void abortScag()
+  {
+    kill(getpid(),9);
+  }  ;
+
+  void dumpScag(){  abort();};
+  void shutdiwn(){};
+
      protected:
        bool stopFlag;
 			       
