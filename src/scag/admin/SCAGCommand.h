@@ -11,7 +11,7 @@
 #ifndef TESTING
 	#include "scag/scag.h"
 #else
-	#include "scag/gt/scag/scag.h"
+	#include "scag/gt/scag/scagx.h"
 #endif
 
 
