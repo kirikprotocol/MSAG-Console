@@ -63,9 +63,20 @@ void run()
   void dumpScag(){  abort();};
   void shutdown(){};
 
+  scag::transport::smpp::SmppManagerAdmin * getSmppManagerAdmin()
+  {
+      scag::transport::smpp::SmppManagerAdmin * smppManAdmin = &smppMan;
+
+      if(!smppManAdmin)
+          throw Exception("Failed casting of SmppManger to SmppManagerAdmin from Scag::getSmppManagerAdmin");
+
+      return smppManAdmin;
+  }
+
      protected:
        bool stopFlag;
-			       
+       scag::transport::smpp::SmppManager smppMan;			       
+
        };
    
    }//scag
