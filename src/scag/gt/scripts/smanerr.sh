@@ -1,0 +1,1 @@
+./gt smanerr.js
