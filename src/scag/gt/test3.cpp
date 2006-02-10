@@ -24,7 +24,7 @@
 #include <scag/exc/SCAGExceptions.h>
 
 #include <scag/stat/StatisticsManager.h>
-
+#include <scag/admin/SCAGSocketListener.h>
 
 //inthash
 #include <core/buffers/IntHash.hpp>
@@ -105,7 +105,6 @@ void testAdmin(std::string admin_host,int admin_port)
         pause();
 
      
-    return 0;
 
 }
 /*********************************************/
