@@ -9,10 +9,10 @@ namespace scag { namespace re { namespace actions {
 class ActionSet : public Action
 {
     ActionSet(const ActionSet &);
-    std::string Variable;
+    std::string strVariable;
 
-    std::string s_Value;
-    std::wstring w_Value;
+    std::string strValue;
+    std::string wstrValue;
 
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);

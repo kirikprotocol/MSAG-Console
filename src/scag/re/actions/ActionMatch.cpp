@@ -31,40 +31,41 @@ void ActionMatch::init(const SectionParams& params,PropertyObject propertyObject
 
     const char * name = 0;
 
-    w_Regexp = params["regexp"];
+    wstrRegexp = params["regexp"];
+    wstrValue = params["value"];
 
-    w_Value = params["value"];
+    strValue = ConvertWStrToStr(wstrValue);
 
-    w_Result = params["result"];
-    s_Result = ConvertWStrToStr(w_Result);
+    std::string wstrResult = params["result"];
+    strResult = ConvertWStrToStr(wstrResult);
 
 
     AccessType at;
 
-    ftValue = ActionContext::Separate(s_Value,name); 
+    ftValue = ActionContext::Separate(strValue,name); 
 
     if (ftValue == ftField) 
     {
         at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
         if (!(at&atRead)) 
-            throw InvalidPropertyException("Action 'match': cannot read property '%s' - no access", s_Value.c_str());
+            throw InvalidPropertyException("Action 'match': cannot read property '%s' - no access", FormatWStr(wstrValue).c_str());
     }
 
-    FieldType ftResult = ActionContext::Separate(s_Result,name); 
+    FieldType ftResult = ActionContext::Separate(strResult,name); 
 
     if (ftResult == ftField) 
     {
         at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
         if (!(at&atWrite)) 
-            throw InvalidPropertyException("Action 'match': cannot read property '%s' - no access",s_Result.c_str());
+            throw InvalidPropertyException("Action 'match': cannot read property '%s' - no access",strResult.c_str());
     }
 
-    if (ftResult == ftUnknown) throw InvalidPropertyException("Action 'match': unrecognized variable prefix '%s' for 'result' parameter",FormatWStr(w_Result).c_str());
+    if (ftResult == ftUnknown) throw InvalidPropertyException("Action 'match': unrecognized variable prefix '%s' for 'result' parameter",FormatWStr(wstrResult).c_str());
 
 
     re = new RegExp();
 
-    if(!re->Compile((char *)w_Regexp.c_str(),OP_OPTIMIZE|OP_STRICT))
+    if(!re->Compile((char *)wstrRegexp.data(),OP_OPTIMIZE|OP_STRICT))
     {
         throw SCAGException("Action 'match' Failed to compile regexp");
         //smsc_log_error(logger, "Action 'match' Failed to compile regexp");
@@ -84,28 +85,26 @@ bool ActionMatch::run(ActionContext& context)
 
     if (ftValue != ftUnknown) 
     {
-        pValue = context.getProperty(s_Value);
+        pValue = context.getProperty(strValue);
         if (!pValue) 
         {
-            smsc_log_warn(logger,"Action 'match': invalid property '%s'", s_Value.c_str());
+            smsc_log_warn(logger,"Action 'match': invalid property '%s'", strValue.c_str());
             return true;
         }
-        std::wstring wstr = pValue->getStr();
+        value = pValue->getStr();
+    } else value = wstrValue;
 
-        value = FormatWStr(wstr);
-    } else value = FormatWStr(w_Value);
-
-    pResult = context.getProperty(s_Result);
+    pResult = context.getProperty(strResult);
 
     if (!pResult) 
     {
-        smsc_log_warn(logger,"Action 'match': invalid property '%s'", s_Result.c_str());
+        smsc_log_warn(logger,"Action 'match': invalid property '%s'", strResult.c_str());
         return true;
     }
 
   SMatch m[10];
   int n=10;
-  bool flag = re->Match(value.c_str(),m,n);
+  bool flag = re->Match(value.data(),m,n);
 
   pResult->setBool(flag);
 

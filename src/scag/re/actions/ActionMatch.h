@@ -14,13 +14,14 @@ class ActionMatch : public Action
 {
     ActionMatch(const ActionMatch&);
 
-    std::string s_Regexp;
-    std::string s_Value;
-    std::wstring w_Regexp;
-    std::wstring w_Value;
+    std::string strRegexp;
+    std::string wstrRegexp;
+
+    std::string strValue;
+    std::string wstrValue;
 
 
-    std::string s_Result;
+    std::string strResult;
     std::wstring w_Result;
 
     RegExp *re;

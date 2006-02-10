@@ -31,8 +31,6 @@ XERCES_CPP_NAMESPACE_BEGIN
 class AttributeList;
 XERCES_CPP_NAMESPACE_END
 
-//typedef smsc::core::buffers::Hash<std::string> SectionParams;
-
 
 class XMLBasicHandler;
 class Rule;

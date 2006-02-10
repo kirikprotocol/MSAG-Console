@@ -11,11 +11,11 @@ class ActionLog : public Action
 {
     ActionLog(const ActionLog&);
 
-    std::string s_Category;
-    std::wstring w_Category;
+    std::string wstrCategory;
+    std::string wstrMsg;
 
-    std::wstring w_msg;
-    std::string s_msg;
+    std::string strCategory;
+    std::string strMsg;
 
 
     enum LogLevel

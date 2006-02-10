@@ -1,6 +1,7 @@
 #include "SmppAdapter.h"
 #include "scag/re/CommandAdapter.h"
 #include "scag/re/CommandBrige.h"
+#include "util/recoder/recode_dll.h"
 
 namespace scag { namespace re { namespace smpp 
 {
@@ -78,10 +79,15 @@ IntHash<AccessType> SmppCommandAdapter::InitSubmitAccess()
     hs.Insert(DC_GSM_MSG_CC, atReadWrite);
 
     hs.Insert(Tag::SMPP_SM_LENGTH, atReadWrite);
+/*
     hs.Insert(Tag::SMPP_SHORT_MESSAGE, atReadWrite);
-    hs.Insert(Tag::SMPP_MESSAGE_PAYLOAD, atReadWrite);
+    hs.Insert(Tag::SMPP_MESSAGE_PAYLOAD, atReadWrite);*/
+    hs.Insert(SMS_MESSAGE_BODY, atReadWrite);
+
     hs.Insert(Tag::SMPP_USER_RESPONSE_CODE, atReadWrite);
     hs.Insert(Tag::SMPP_LANGUAGE_INDICATOR, atReadWrite);
+
+    hs.Insert(SMS_SVC_TYPE, atReadWrite);
 
     return hs;
 }
@@ -107,12 +113,16 @@ IntHash<AccessType> SmppCommandAdapter::InitDeliverAccess()
     hs.Insert(DC_GSM_MSG_CC, atReadWrite);
 
     hs.Insert(Tag::SMPP_SM_LENGTH, atReadWrite);
-    hs.Insert(Tag::SMPP_SHORT_MESSAGE, atReadWrite);
-    hs.Insert(Tag::SMPP_MESSAGE_PAYLOAD, atReadWrite);
+
+/*    hs.Insert(Tag::SMPP_SHORT_MESSAGE, atReadWrite);
+    hs.Insert(Tag::SMPP_MESSAGE_PAYLOAD, atReadWrite);*/
+    hs.Insert(SMS_MESSAGE_BODY, atReadWrite);
+
     hs.Insert(Tag::SMPP_USER_RESPONSE_CODE, atReadWrite);
     hs.Insert(Tag::SMPP_LANGUAGE_INDICATOR, atReadWrite);
 
-
+    hs.Insert(SMS_SVC_TYPE, atReadWrite);
+    
     return hs;
 }
 
@@ -183,7 +193,11 @@ Hash<int> SmppCommandAdapter::InitSubmitFieldNames()
     
 
     hs["sm_length"]                     = Tag::SMPP_SM_LENGTH; //*
-    hs["short_message"]                 = Tag::SMPP_SHORT_MESSAGE; //*
+
+/*    hs["short_message"]                 = Tag::SMPP_SHORT_MESSAGE; //*
+    hs["message_payload"]               = Tag::SMPP_MESSAGE_PAYLOAD; //**/
+    hs["message_body"]                  = SMS_MESSAGE_BODY;
+
     hs["source_port"]                   = Tag::SMPP_SOURCE_PORT; 
     hs["destination_port"]              = Tag::SMPP_DESTINATION_PORT; 
     hs["dest_addr_subunit"]             = Tag::SMPP_DEST_ADDR_SUBUNIT; 
@@ -192,7 +206,6 @@ Hash<int> SmppCommandAdapter::InitSubmitFieldNames()
     hs["sar_segment_seqnum"]            = Tag::SMPP_SAR_SEGMENT_SEQNUM; 
     hs["more_messages_to_send"]         = Tag::SMPP_MORE_MESSAGES_TO_SEND; 
     hs["payload_type"]                  = Tag::SMPP_PAYLOAD_TYPE; 
-    hs["message_payload"]               = Tag::SMPP_MESSAGE_PAYLOAD; //*
     hs["user_response_code"]            = Tag::SMPP_USER_RESPONSE_CODE; //*
     hs["ms_validity"]                   = Tag::SMPP_MS_VALIDITY; 
     hs["number_of_messages"]            = Tag::SMPP_NUMBER_OF_MESSAGES; 
@@ -211,6 +224,7 @@ Hash<int> SmppCommandAdapter::InitSubmitFieldNames()
     hs["ussd_ussn_conf"]                = USSD_USSN_CONF;
 
     hs["validity_period"]               = SMS_VALIDITY_PERIOD;
+    hs["svc_type"]                      = SMS_SVC_TYPE;
                                           
 
 /*
@@ -342,7 +356,11 @@ Hash<int> SmppCommandAdapter::InitDeliverFieldNames()
 
 
     hs["sm_length"]                     = Tag::SMPP_SM_LENGTH; //*
-    hs["short_message"]                 = Tag::SMPP_SHORT_MESSAGE; //*
+
+/*    hs["short_message"]                 = Tag::SMPP_SHORT_MESSAGE; //*
+    hs["message_payload"]               = Tag::SMPP_MESSAGE_PAYLOAD; //**/
+    hs["message_body"]                  = SMS_MESSAGE_BODY;
+
     hs["source_port"]                   = Tag::SMPP_SOURCE_PORT; 
     hs["destination_port"]              = Tag::SMPP_DESTINATION_PORT; 
     hs["sar_msg_ref_num"]               = Tag::SMPP_SAR_MSG_REF_NUM; 
@@ -350,7 +368,6 @@ Hash<int> SmppCommandAdapter::InitDeliverFieldNames()
     hs["sar_segment_seqnum"]            = Tag::SMPP_SAR_SEGMENT_SEQNUM; 
     hs["user_response_code"]            = Tag::SMPP_USER_RESPONSE_CODE; //*
     hs["payload_type"]                  = Tag::SMPP_PAYLOAD_TYPE; 
-    hs["message_payload"]               = Tag::SMPP_MESSAGE_PAYLOAD; //*
     hs["language_indicator"]            = Tag::SMPP_LANGUAGE_INDICATOR; //*
 
     //mask
@@ -363,6 +380,7 @@ Hash<int> SmppCommandAdapter::InitDeliverFieldNames()
     hs["st_unknown"]                    = ST_UNKNOWN;
     hs["st_rejected"]                   = ST_REJECTED;
 
+    hs["svc_type"]                      = SMS_SVC_TYPE;
 
     return hs;
 }
@@ -481,6 +499,8 @@ void SmppCommandAdapter::WriteSubmitField(SMS& data,int FieldId,AdapterProperty&
 
 void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterProperty& property)
 {
+    int len = 0;
+    std::string str;
 
     if ((FieldId >= DC_BINARY)&&(FieldId <= DC_GSM_MSG_CC)) 
     {
@@ -494,10 +514,60 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
         case Tag::SMPP_LANGUAGE_INDICATOR:
             data.setIntProperty(FieldId,property.getInt());
             break;
-        case Tag::SMPP_SHORT_MESSAGE:
-        case Tag::SMPP_MESSAGE_PAYLOAD:
-            data.setStrProperty(FieldId,ConvertWStrToStr(property.getStr()).c_str());
+        case SMS_SVC_TYPE:
+            str = ConvertWStrToStr(property.getStr());
+
+            if (str.size() >= MAX_ESERVICE_TYPE_LENGTH) 
+                len = MAX_ESERVICE_TYPE_LENGTH;
+            else
+                len = str.size();
+
+             memcpy(data.eServiceType, str.c_str(),str.size()); 
+             data.eServiceType[str.size()] = 0;
+
             break;
+
+        case SMS_MESSAGE_BODY:
+            str = property.getStr();
+
+            char buff[2048];
+
+            int code = data.getIntProperty(Tag::SMPP_DATA_CODING);
+
+            switch (code) 
+            {
+            case smsc::smpp::DataCoding::SMSC7BIT:
+                ConvertUCS2To7Bit((short *)str.data(), str.size(), buff, 2048); 
+                str.assign(buff,str.size()/2);
+                break;
+            case smsc::smpp::DataCoding::LATIN1:
+                ConvertUCS2ToMultibyte((short *)str.data(), str.size(), buff, 2048, CONV_ENCODING_LATIN1);
+                str.assign(buff,str.size()/2);
+                break;
+            }
+  
+
+            if (IsShortSize(str.size())) 
+            {
+
+                if (m_hasPayloadText) 
+                    data.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,str.data(),str.size());
+                else 
+                    data.setBinProperty(Tag::SMPP_SHORT_MESSAGE,str.data(),str.size());
+            }
+            else
+            {
+                if (!m_hasPayloadText) data.setBinProperty(Tag::SMPP_SHORT_MESSAGE,0,0);
+                data.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,str.data(),str.size());
+            }
+            break;
+
+/*        case Tag::SMPP_SHORT_MESSAGE:
+        case Tag::SMPP_MESSAGE_PAYLOAD:
+            //Жопа ->
+            std::string str = property.getStr();
+            data.setBinProperty(FieldId,str.data(),str.size());
+            break;*/
         }
 
 
@@ -535,7 +605,7 @@ Property * SmppCommandAdapter::getSubmitRespProperty(const std::string& name,int
     switch (FieldId) 
     {
     case 0:
-        property = new AdapterProperty(name,this,std::wstring());
+        property = new AdapterProperty(name,this,0);
         property->setPureInt(command->get_status());
     }
 
@@ -736,6 +806,48 @@ AdapterProperty * SmppCommandAdapter::Get_USSD_BIT_Property(SMS& data, const std
 }
 
 
+AdapterProperty * SmppCommandAdapter::getMessageBodyProperty(SMS& data, std::string name)
+{
+    unsigned len;
+    const char * buff;
+    std::string str;
+    char ucs2buff[2048];
+/*
+    static const uint8_t SMSC7BIT             = 0;
+    static const uint8_t LATIN1               = 3;
+    static const uint8_t BINARY               = BIT(2);
+    static const uint8_t UCS2                 = BIT(3);
+*/
+    
+    if (m_hasPayloadText) 
+        buff = data.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+    else
+        buff = data.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+
+    int code = data.getIntProperty(Tag::SMPP_DATA_CODING);
+
+    //Convert7BitToUCS2(const char* bit7buf, int bit7buf_size, short* ucs2, int ucs2buff_size);
+
+
+    switch (code) 
+    {
+    case smsc::smpp::DataCoding::SMSC7BIT:
+        Convert7BitToUCS2(buff, len, (short *)ucs2buff, len*2); 
+        str.assign(ucs2buff,len*2);
+        break;
+    case smsc::smpp::DataCoding::LATIN1:
+        ConvertMultibyteToUCS2(buff, len, (short *)ucs2buff, len*2, CONV_ENCODING_KOI8R);
+        str.assign(ucs2buff,len*2);
+        break;
+    default:
+//        memcpy(ucs2buff, buff, len);
+        str.assign(buff,len);
+    }
+
+    return new AdapterProperty(name,this,str);
+}
+
+
 Property * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::string& name,int FieldId)
 {
     AdapterProperty ** propertyPtr = PropertyPul.GetPtr(FieldId);
@@ -775,17 +887,13 @@ Property * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::string& na
     case SMS_VALIDITY_PERIOD:
         property = new AdapterProperty(name,this,data.validTime);
         break;
+    case SMS_MESSAGE_BODY:
+        property = getMessageBodyProperty(data,name);
+        break;
+    case SMS_SVC_TYPE:
+        property = new AdapterProperty(name, this, ConvertStrToWStr(data.eServiceType));
+        break;
     }
-
-   /* if (data.hasBinProperty(FieldId))
-    {
-        unsigned int len = 0;
-        std::string str = data.getBinProperty(FieldId,&len);
-        return new AdapterProperty(name,this,str);
-    } else if (data.hasIntProperty(FieldId)) 
-    {
-
-    } else*/ 
 
     int tagType = (FieldId >> 8);
 
@@ -840,8 +948,14 @@ Property * SmppCommandAdapter::getDeliverProperty(SMS& data,const std::string& n
     case DA:
         property = new AdapterProperty(name,this,ConvertStrToWStr(data.getDestinationAddress().toString().c_str()));
         break;
+    case SMS_MESSAGE_BODY:
+        property = getMessageBodyProperty(data, name);
+        break;
+    case SMS_SVC_TYPE:
+        property = new AdapterProperty(name, this, ConvertStrToWStr(data.eServiceType));
+        break;
     }
-
+    
     /*
     #define SMS_INT_TAG 0
     #define SMS_STR_TAG 1

@@ -146,7 +146,7 @@ void XMLBasicHandler::startElement(const XMLCh* const qname, AttributeList& attr
 {
     StrX XMLQName(qname);
     SectionParams attr;
-    XMLByte buff[10000];
+    XMLByte buff[1024];
 
     unsigned int len = attributes.getLength();
     for (unsigned int index = 0; index < len; index++)
@@ -171,41 +171,12 @@ void XMLBasicHandler::startElement(const XMLCh* const qname, AttributeList& attr
         XMLCh const * XMLValue = attributes.getValue(index);
         XMLCh const * XMLName = attributes.getName(index);
 
-        std::wstring value;
+        std::string value;
 
         //value.append((wchar_t *)XMLValue, XMLString::stringLen(XMLValue));
 
-        const char * XMLPtr = (char *)XMLValue;
+        value.assign((char *)XMLValue,XMLString::stringLen(XMLValue)*2);
 
-        char temp[1024];
-
-        for(int j=0; j < XMLString::stringLen(XMLValue); j++) 
-        {
-            temp[j*4] = 0;
-            temp[j*4+1] = 0;
-            temp[j*4+2] = XMLPtr[j*2];
-            temp[j*4+3] = XMLPtr[j*2+1];
-        }
-        value.append((wchar_t*)temp,XMLString::stringLen(XMLValue));
-
-        const char * aa = (char *)value.c_str();
-        /*
-        if (XMLString::stringLen(XMLValue) == 14)
-        {
-            std::string str =  FormatWStr(value);
-            value = UnformatWStr(str);
-
-            for (int j=0; j < 14;j++) 
-            {
-                char chr;
-                wctomb(&chr,value[j]);
-
-                //std::cout << "?" << (int)chr << std::endl;
-                std::cout << "--" << (int)XMLPtr[j*2] << "--" << (int)XMLPtr[j*2+1] << std::endl;
-            }
-
-        }   */
-  
         _transcoder->transcodeTo(XMLName, XMLString::stringLen(XMLName), buff, 1024, charsEaten,unRepOpts);
 
         attr[(char *)buff] = value;

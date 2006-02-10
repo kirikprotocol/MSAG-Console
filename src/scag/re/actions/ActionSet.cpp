@@ -20,17 +20,17 @@ void ActionSet::init(const SectionParams& params,PropertyObject propertyObject)
     if ((!params.Exists("var"))|| (!params.Exists("value"))) throw SCAGException("Action 'set': missing 'var' and 'value' parameters");
 
 
-    Variable = ConvertWStrToStr(params["var"]);
+    strVariable = ConvertWStrToStr(params["var"]);
 
-    w_Value = params["value"];
-    s_Value = ConvertWStrToStr(w_Value);
+    wstrValue = params["value"];
+    strValue = ConvertWStrToStr(wstrValue);
 
     FieldType ft;
     const char * name = 0;
 
-    ft = ActionContext::Separate(Variable,name); 
+    ft = ActionContext::Separate(strVariable,name); 
     if (ft==ftUnknown) 
-        throw InvalidPropertyException("Action 'set': unrecognized variable prefix '%s' for 'var' parameter",Variable.c_str());
+        throw InvalidPropertyException("Action 'set': unrecognized variable prefix '%s' for 'var' parameter",strVariable.c_str());
 
     AccessType at;
     std::string msg = "Action 'set': cannot set property '";
@@ -39,15 +39,15 @@ void ActionSet::init(const SectionParams& params,PropertyObject propertyObject)
     {
         at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
         if (!(at&atWrite)) 
-            throw InvalidPropertyException("Action 'set': cannot set property '%s' - no access to write",Variable.c_str());
+            throw InvalidPropertyException("Action 'set': cannot set property '%s' - no access to write",strVariable.c_str());
     }
 
-    ft = ActionContext::Separate(s_Value,name);
+    ft = ActionContext::Separate(strValue,name);
     if (ft == ftField) 
     {
         at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
         if (!(at&atRead)) 
-            throw InvalidPropertyException("Action 'set': cannot read property '%s' - no access",s_Value.c_str());
+            throw InvalidPropertyException("Action 'set': cannot read property '%s' - no access",strValue.c_str());
     }
 
 
@@ -58,42 +58,36 @@ void ActionSet::init(const SectionParams& params,PropertyObject propertyObject)
 bool ActionSet::run(ActionContext& context)
 {
     smsc_log_debug(logger,"Run Action 'set'");
-    Property * property = context.getProperty(Variable);
+    Property * property = context.getProperty(strVariable);
 
     if (!property) 
     {
-        smsc_log_warn(logger,"Action 'set':: invalid property '%s'",Variable.c_str());
+        smsc_log_warn(logger,"Action 'set':: invalid property '%s'",strVariable.c_str());
         return true;
     }
 
     FieldType ft;
     const char * name = 0;
-    ft = ActionContext::Separate(s_Value,name);
+    ft = ActionContext::Separate(strValue,name);
 
-    /*std::cout << "===" << std::endl;
-    std::cout << w_Value.size() << std::endl;
-    std::cout << s_Value.size() << std::endl;
-    std::cout << "===" << std::endl;*/
 
     if (ft == ftUnknown) 
     {
-        property->setStr(w_Value);
+        property->setStr(wstrValue);
 
-        smsc_log_debug(logger,"Action 'set': property '%s' set to '%s'",Variable.c_str(),FormatWStr(w_Value).c_str());
+        smsc_log_debug(logger,"Action 'set': property '%s' set to '%s'",strVariable.c_str(),FormatWStr(wstrValue).c_str());
     }
     else
     {
-        Property * val = context.getProperty(s_Value);
+        Property * val = context.getProperty(strValue);
 
-   
         if (val) 
         {
             property->setStr(val->getStr());
-            std::wstring wstr = val->getStr();
-            smsc_log_debug(logger,"Action 'set': property '%s' set to '%s'",Variable.c_str(),s_Value.c_str());
+            smsc_log_debug(logger,"Action 'set': property '%s' set to '%s'",strVariable.c_str(),strValue.c_str());
         }
         else 
-            smsc_log_warn(logger,"Action 'set': cannot initialize '%s' with '%s' value - no such property",Variable.c_str(),s_Value.c_str());
+            smsc_log_warn(logger,"Action 'set': cannot initialize '%s' with '%s' value - no such property",strVariable.c_str(),FormatWStr(strValue).c_str());
             
     }
 

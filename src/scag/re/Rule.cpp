@@ -1,8 +1,7 @@
 #include "Rule.h"
 #include "scag/transport/smpp/SmppCommand.h"
 #include "scag/re/smpp/SmppEventHandler.h"
-
-//#include "scag/SAX2Print.hpp"
+#include "util/recoder/recode_dll.h"
 
 namespace scag { namespace re 
 {
@@ -127,15 +126,21 @@ void Rule::init(const SectionParams& params, PropertyObject propertyObject)
 {
     if (!params.Exists("transport")) throw SCAGException("Rule: missing 'transport' parameter");
 
-    std::wstring sTransport = params["transport"];
+    std::string sTransport = params["transport"];
+
+    char buff[1024];
+    int len = ConvertUCS2ToMultibyte((short *)sTransport.data(),sTransport.size(),buff,1024,CONV_ENCODING_ANSI);
+
+    std::string str;
+    str.assign(buff,len);
 
     //std:: cout << "^^^^^^^^^^^^" << ConvertWStrToStr(sTransport.c_str()) << "^^" << sTransport.size() << std::endl;
 
-    if (sTransport == ConvertStrToWStr("SMPP")) transportType = SMPP;
-    else if (sTransport == ConvertStrToWStr("WAP")) transportType = WAP;
-    else if (sTransport == ConvertStrToWStr("MMS")) transportType = MMS;
+    if (str == "SMPP") transportType = SMPP;
+    else if (str == "WAP") transportType = WAP;
+    else if (str == "MMS") transportType = MMS;
     else 
-        throw SCAGException("Rule: invalid value '%s' for 'transport' parameter",ConvertWStrToStr(sTransport).c_str());
+        throw SCAGException("Rule: invalid value '%s' for 'transport' parameter",str.c_str());
 
     smsc_log_debug(logger,"Rule::Init");
 

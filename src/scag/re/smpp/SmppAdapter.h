@@ -85,8 +85,16 @@ namespace scag { namespace re { namespace smpp
             ST_UNKNOWN              = 150,
             ST_REJECTED             = 151,
 
-            SMS_VALIDITY_PERIOD     = 152
+            SMS_VALIDITY_PERIOD     = 152,
+            SMS_MESSAGE_BODY        = 153,
+            SMS_SVC_TYPE            = 154
         };
+
+        bool m_hasPayloadText;
+
+        bool IsShortSize(int size) {return true;}
+        AdapterProperty * getMessageBodyProperty(SMS& data, std::string name);
+
 
         Property * getSubmitProperty(SMS& data,const std::string& name,int FieldId);
         Property * getDeliverProperty(SMS& data,const std::string& name,int FieldId);
@@ -128,7 +136,10 @@ namespace scag { namespace re { namespace smpp
     public:
 
         SmppCommandAdapter(SmppCommand& _command) 
-            : PropertyManager(), command(_command) {};
+            : PropertyManager(), command(_command) 
+        {
+            m_hasPayloadText = true;
+        }
 
         // TODO: Implement PropertyManager interface (Access to command fields)
         virtual void changed(AdapterProperty& property);
