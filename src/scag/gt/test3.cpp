@@ -68,58 +68,47 @@ SessionManagerConfig cfg;
 
 SmppCommand command;
 
-namespace scag{
-class Scag
+
+using scag::admin::SCAGSocketListener;
+
+class Runner
 {
 public:
-  Scag():stopFlag(false){};
-  ~Scag();
-  void init(){};
-  void run()
-  {
-   while(!stopFlag)
-   {
-      sleep(1);
-   }
+	Runner()
+	{
 
-  };
-  void stop(){stopFlag=true;}
+	}
+	
+    Runner(const char * admin_host,int admin_port)
+    {
+        printf("Listener is starting...\n");
+        listener.init(admin_host, admin_port);
+        listener.Start();
+        printf("Listener is started.\n");
+    };
+
+    ~Runner()
+    {
+        listener.abort();
+        printf("Listener is aborted\n");
+    };
+
 protected:
-  bool stopFlag;
-
+    scag::admin::SCAGSocketListener listener;
 };
-
-}//scag
 
     
 void testAdmin(std::string admin_host,int admin_port)
 {
 	
-	 scag::admin::SCAGCommandDispatcher::startGw();
-     smsc_log_debug(logger,"SMPP GW started\n");
+	
+    Runner runner(admin_host.c_str(),admin_port);
 
+    for( ;; )
+        pause();
 
-      scag::admin::SCAGSocketListener listener;
-      listener.init(admin_host.c_str(), admin_port);
-
-      //scag::registerScagSignalHandlers(&listener);
-
-      listener.Start();
-
-      smsc_log_debug(logger,"SMPP GW admin listener started\n");
-
-      //running...
-      smsc_log_debug(logger,"running...\n");
-
-      listener.WaitFor();
-
-      //smsc_log_debug(logger,"SCAG shutdown...\n");
-     scag::admin::SCAGCommandDispatcher::stopGw();
-     smsc_log_debug(logger,"SCAG stopped\n");
-
-      //smsc::util::config::Manager::deinit();
-
-      //smsc_log_debug(logger,"all finished\n");
+     
+    return 0;
 
 }
 /*********************************************/

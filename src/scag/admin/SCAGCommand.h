@@ -8,11 +8,7 @@
 #include "admin/protocol/ResponseWriter.h"
 #include "CommandActions.h"
 
-#ifndef TESTING
-	#include "scag/scag.h"
-#else
-	#include "scag/gt/scag/scagx.h"
-#endif
+#include "scag/scag.h"
 
 
 #include "CommandIds.h"
