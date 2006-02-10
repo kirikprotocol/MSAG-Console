@@ -213,7 +213,7 @@ void Dialog::sendResultLast(InvokeResultLast* res) throw (CustomException)
                 op.size(), dump(op.size(), &op[0]).c_str(),
                 params.size(), dump(params.size(), &params[0]).c_str());
 
-    UCHAR_T result =
+    USHORT_T result =
         EINSS7_I97TResultLReq(dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId,
       res->getId(), res->getTag(),
         op.size(), &op[0], params.size(), &params[0]);
@@ -237,7 +237,7 @@ void Dialog::sendResultNotLast(InvokeResultNotLast* res) throw (CustomException)
                 op.size(), dump(op.size(), &op[0]).c_str(),
                 params.size(), dump(params.size(), &params[0]).c_str());
 
-    UCHAR_T result =
+    USHORT_T result =
         EINSS7_I97TResultNLReq(dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId,
         res->getId(), res->getTag(),
         op.size(), &op[0], params.size(), &params[0]);
@@ -262,7 +262,7 @@ void Dialog::sendResultError(InvokeResultError* res) throw (CustomException)
                 op.size(), dump(op.size(), &op[0]).c_str(),
                 params.size(), dump(params.size(), &params[0]).c_str());
 
-    UCHAR_T result =
+    USHORT_T result =
         EINSS7_I97TUErrorReq(dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId,
         res->getId(), res->getTag(),
         op.size(), &op[0], params.size(), &params[0]);
