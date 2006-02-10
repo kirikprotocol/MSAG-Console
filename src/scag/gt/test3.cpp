@@ -372,6 +372,27 @@ int  main(int argc,char ** argv)
 	
 	StatManConfig smcfg(dir,host,54000,54300,54400);
 
+
+	if(argc>1)	
+	{
+	    if(strcmp(argv[1],"-a")==0)
+	    {
+		if(argc>3)
+    		{
+//		    std::string adminhost=argv[2];
+//		    int adminport=atoi(argv[3]);
+//		    testAdmin(adminhost,adminport);
+		}
+		else
+		{
+		    printf("errors in command line\n");
+		    return 0;
+		}
+		return 0;
+	    }
+	}
+																									    
+
 	StatisticsManager::init(smcfg);
 
 	if(!logger)     
