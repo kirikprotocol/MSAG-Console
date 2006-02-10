@@ -24,7 +24,6 @@
 #include <scag/exc/SCAGExceptions.h>
 
 #include <scag/stat/StatisticsManager.h>
-#include <scag/admin/SCAGSocketListener.h>
 
 //inthash
 #include <core/buffers/IntHash.hpp>
@@ -67,46 +66,6 @@ SessionManagerConfig cfg;
 SmppCommand command;
 
 
-using scag::admin::SCAGSocketListener;
-
-class Runner
-{
-public:
-	Runner()
-	{
-
-	}
-	
-    Runner(const char * admin_host,int admin_port)
-    {
-        printf("Listener is starting...\n");
-        listener.init(admin_host, admin_port);
-        listener.Start();
-        printf("Listener is started.\n");
-    };
-
-    ~Runner()
-    {
-        listener.abort();
-        printf("Listener is aborted\n");
-    };
-
-protected:
-    scag::admin::SCAGSocketListener listener;
-};
-
-void testAdmin(std::string admin_host,int admin_port)
-{
-	
-	
-    Runner runner(admin_host.c_str(),admin_port);
-
-    for( ;; )
-        pause();
-
-     
-
-}
 /*********************************************/
 /* routines for RuleEngine interface working */
 /*                              */ 
