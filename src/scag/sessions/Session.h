@@ -73,6 +73,12 @@ namespace scag { namespace sessions
         }
     };
 
+    struct CSessionPrimaryKey
+    {
+        smsc::sms::Address abonentAddr;
+        tm BornMicrotime;
+    };
+
  /*   struct COperationKey
     {
         smsc::sms::Address destAddress;
@@ -145,7 +151,9 @@ namespace scag { namespace sessions
         CSmppDiscriptor m_SmppDiscriptor;
         bool m_isTransact;
 
-        CSessionKey             m_SessionKey;
+        CSessionKey             m_SessionKey;           //Ключ для SessionManager
+        CSessionPrimaryKey      m_SessionPrimaryKey;    //Уникальный ключ для модуля статистики
+
         time_t                  lastAccessTime;
         bool                    bChanged, bDestroy;
         EventMonitor            accessMonitor;
@@ -170,6 +178,7 @@ namespace scag { namespace sessions
         void DeserializePendingOperations(SessionBuffer& buff);
     public:
         int getPendingAmount() {return PendingOperationList.size();}
+
 
         Session(const CSessionKey& key);
         virtual ~Session();
@@ -197,7 +206,7 @@ namespace scag { namespace sessions
         time_t Session::getWakeUpTime();
         void Serialize(SessionBuffer& buff);
         void Deserialize(SessionBuffer& buff);
-
+        CSessionPrimaryKey& getPrimaryKey() {return m_SessionPrimaryKey;}
     };
 
     typedef smsc::core::buffers::RefPtr<Session,smsc::core::synchronization::Mutex> SessionPtr;

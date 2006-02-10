@@ -1,5 +1,6 @@
 #include "Session.h"
 #include "scag/exc/SCAGExceptions.h"
+#include <time.h>
 
 namespace scag { namespace sessions {
 
@@ -117,7 +118,7 @@ void Session::SerializeProperty(SessionBuffer& buff)
     for (Hash <AdapterProperty *>::Iterator it = PropertyHash.getIterator(); it.Next(key, value);)
     {
         buff << key;
-        std::wstring wstr = value->getStr();
+        std::string wstr = value->getStr();
         buff << FormatWStr(wstr).c_str();
     }
 }
@@ -234,7 +235,7 @@ Property* Session::getProperty(const std::string& name)
 
     if (!propertyPTR) 
     {
-        AdapterProperty * property = new AdapterProperty(name,this,std::wstring());
+        AdapterProperty * property = new AdapterProperty(name,this,"");
         PropertyHash.Insert(name.c_str(),property);
         return property;
     }
@@ -248,6 +249,11 @@ Session::Session(const CSessionKey& key)
 {
     logger = Logger::getInstance("scag.re");
     m_SessionKey = key;
+
+    timeval tv;
+
+    m_SessionPrimaryKey.abonentAddr = key.abonentAddr;
+    m_SessionPrimaryKey.BornMicrotime = (*localtime(&tv.tv_sec));
 }
 
 Session::~Session()
