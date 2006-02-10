@@ -6,6 +6,7 @@
 */
 #define TESTING
 
+
 #include <core/threads/Thread.hpp>
 #include <scag/re/RuleEngine.h>
 #include <logger/Logger.h>
@@ -23,9 +24,6 @@
 #include <scag/exc/SCAGExceptions.h>
 
 #include <scag/stat/StatisticsManager.h>
-
-#include "scag/admin/SCAGCommandDispatcher.h"
-#include "scag/admin/SCAGSocketListener.h"
 
 
 //inthash
@@ -97,7 +95,6 @@ protected:
     scag::admin::SCAGSocketListener listener;
 };
 
-    
 void testAdmin(std::string admin_host,int admin_port)
 {
 	
@@ -415,26 +412,6 @@ int  main(int argc,char ** argv)
         std::string host="127.0.0.1";
 	
 	
-	if(argc>1)	
-	{
-		if(strcmp(argv[1],"-a")==0)
-		{
-			if(argc>3)
-			{
-				std::string adminhost=argv[2];
-				int adminport=atoi(argv[3]);
-				testAdmin(adminhost,adminport);
-			}
-			else
-			{
-				printf("errors in command line\n");
-				return 0;
-			}
-			
-			return 0;
-		}
-	}
-		
 	StatManConfig smcfg(dir,host,54000,54300,54400);
 
 	StatisticsManager::init(smcfg);
