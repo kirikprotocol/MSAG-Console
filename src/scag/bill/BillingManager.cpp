@@ -20,8 +20,6 @@
 
 #include "scag/re/actions/ActionFactory.h"
 
-#include <iostream>
-
 
 namespace scag { namespace bill
 {
