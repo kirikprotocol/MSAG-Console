@@ -409,9 +409,9 @@ public class GUIUtilities
    * @param name The toolbar name
    * @since jEdit 4.2pre2
    */
-  public static Box loadTextBar(String name)
+  public static Box loadTextBar(String name, View view)
   {
-   return loadTextBar(jEdit.getActionContext(),name,true);
+   return loadTextBar(jEdit.getActionContext(),name,true,view);
   } //}}}
 
   //{{{ loadSaveBar() method
@@ -423,7 +423,7 @@ public class GUIUtilities
   * @param name The toolbar name
   * @since jEdit 4.2pre2
   */
-public static Box loadTextBar(ActionContext context, String name,boolean haveIcon)
+public static Box loadTextBar(ActionContext context, String name,boolean haveIcon,View view)
  {
   Box toolBar = new Box(BoxLayout.LINE_AXIS);
   toolBar.add(Box.createVerticalStrut(25));
@@ -438,7 +438,7 @@ public static Box loadTextBar(ActionContext context, String name,boolean haveIco
      toolBar.add(Box.createHorizontalStrut(12));
     else
     {
-     JButton b = loadTextButton(context,button,haveIcon);
+     JButton b = loadTextButton(context,button,haveIcon,view);
      // int fontSize=b.getFont().getSize();//b.setSize(new Dimension(50,50));//.setSize(50,50);
      // int x=button.length()*fontSize+32;
      // b.setPreferredSize(new Dimension(x,25));
@@ -455,7 +455,7 @@ public static Box loadTextBar(ActionContext context, String name,boolean haveIco
   return toolBar;
  } //}}}
 public static EnhancedButton loadTextButton(ActionContext context,
-  String name,boolean haveIcon)
+  String name,boolean haveIcon,View view)
  {
   String label = jEdit.getProperty(name + ".label");
 
@@ -488,6 +488,9 @@ public static EnhancedButton loadTextButton(ActionContext context,
      if(icon == null)
       icon = loadIcon("BrokenImage.png");
     }
+  boolean enhanced = jEdit.getBooleanProperty(name + ".enhanced");
+  if (enhanced)
+     return new EnhancedOKButton(label,icon,toolTip,name,context,view);
   return new EnhancedButton(label,icon,toolTip,name,context);
  }
   return new EnhancedButton(label,toolTip,name,context);
