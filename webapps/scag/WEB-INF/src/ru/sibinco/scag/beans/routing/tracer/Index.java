@@ -4,12 +4,9 @@ import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.bean.TabledBean;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.beans.TabledBeanImpl;
-import ru.sibinco.scag.backend.routing.GwRoutingManager;
 import ru.sibinco.scag.backend.routing.ScagRoutingManager;
-import ru.sibinco.scag.backend.sme.GwSmeManager;
-import ru.sibinco.scag.backend.Gateway;
+import ru.sibinco.scag.backend.Scag;
 import ru.sibinco.scag.backend.endpoints.SmppManager;
-import ru.sibinco.scag.Constants;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -43,7 +40,7 @@ public class Index extends TabledBeanImpl implements TabledBean
     protected ScagRoutingManager scagRoutingManager = null;
     protected SmppManager smppManager = null;
    // protected SCAG scag = null;
-    protected Gateway gateway = null;
+    protected Scag scag = null;
 
   public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException
     {
@@ -51,7 +48,7 @@ public class Index extends TabledBeanImpl implements TabledBean
       scagRoutingManager = appContext.getScagRoutingManager();
       smppManager = appContext.getSmppManager();
     //  scag=appContext.getSCAG();
-      gateway=appContext.getGateway();
+      scag =appContext.getScag();
       if (null != mbCheck)
          loadAndCheck();
       else if (null != mbTrace && null != dstAddress && null != srcAddress)
@@ -61,7 +58,7 @@ public class Index extends TabledBeanImpl implements TabledBean
     private void loadAndCheck() throws SCAGJspException
     {
       try {
-        traceResults = gateway.loadRoutes(scagRoutingManager);
+        traceResults = scag.loadRoutes(scagRoutingManager);
         if (null == traceResults || 0 >= traceResults.size())
           throw new SibincoException("Transport error, invalid responce.");
         message = (String) traceResults.get(0);
@@ -132,7 +129,7 @@ public class Index extends TabledBeanImpl implements TabledBean
          throw new SibincoException(Constants.errors.routing.tracer.srcAddressIsAlias
                     +dstAddress + " -> " + appContext.getSCAG().getAliases().getAddressByAlias(dstAddressMask).getAddress().getMask());
        */
-       traceResults = appContext.getGateway().traceRoute(dstAddress, srcAddress, srcSysId);
+       traceResults = appContext.getScag().traceRoute(dstAddress, srcAddress, srcSysId);
         if (null == traceResults || 1 >= traceResults.size())
           throw new SibincoException("Transport error, invalid responce.");
         message = (String) traceResults.get(0);
@@ -252,14 +249,14 @@ public class Index extends TabledBeanImpl implements TabledBean
     this.add = add;
   }
 
-  public Gateway getGateway()
+  public Scag getScag()
   {
-    return gateway;
+    return scag;
   }
 
-  public void setGateway(Gateway gateway)
+  public void setScag(Scag scag)
   {
-    this.gateway = gateway;
+    this.scag = scag;
   }
 
   public  int getTraceRouteFound()
