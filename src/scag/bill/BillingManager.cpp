@@ -7,46 +7,108 @@
 
 #include "scag/exc/SCAGExceptions.h"
 
+#include "logger/Logger.h"
+#include "core/network/Socket.hpp"
+//#include "inman/common/console.hpp"
+#include "inman/interaction/serializer.hpp"
+#include "inman/interaction/messages.hpp"
+
 namespace scag { namespace bill {
 
 using namespace smsc::core::threads;
 using namespace scag::util::singleton;
 using namespace scag::exceptions;
 
+//using smsc::core::threads::Thread;
+using smsc::core::network::Socket;
+using smsc::logger::Logger;
+//using smsc::inman::common::Console;
+using namespace smsc::inman::interaction;
+//using smsc::inman::interaction::ObjectPipe;
+//using smsc::inman::interaction::Serializer;
+//using smsc::inman::interaction::ChargeSms;
+//using smsc::inman::interaction::ChargeSmsResult;
+//using smsc::inman::interaction::DeliverySmsResult;
+//using smsc::inman::interaction::SmscHandler;
+//using smsc::inman::interaction::SmscCommand;
+//using smsc::inman::interaction::DeliverySmsResult_t;
 
 
-class BillingManagerImpl : public BillingManager, public Thread
+class BillingManagerImpl : public BillingManager, public Thread, public SmscHandler
 {
     struct BillTransaction
     {
         CTransportId transportId;
-        EventMonitor eventMonitor;
-        int status;
+        int EventMonitorIndex;
+        TransactionStatus status;
 
-        BillTransaction() : status(0) { /*pthread_cond_init(&cond, NULL);*/ }
+        BillTransaction() : status(TRANSACTION_NOT_STARTED), EventMonitorIndex(-1) { }
+    };
+
+    struct EventMonitorEntity
+    {
+        EventMonitor eventMonitor;
+        bool inUse;
+
+        EventMonitorEntity() : inUse(false) {}
     };
 
     IntHash <BillTransaction> BillTransactionHash;
 
 
     Mutex stopLock;
+    Mutex inUseLock;
     Event exitEvent;
 
     bool m_bStarted;
+    Logger * logger;
+
+    Socket * socket;
+    ObjectPipe * pipe;
+
+    EventMonitorEntity * EventMonitorArray;
+
+    int m_MaxEventMonitors;
+    int m_lastBillId; 
 
     void Stop();
     bool isStarted();
 public:
-    void init();
+    void init(int maxMonitors);
 
     virtual int Execute();
     virtual void Start();
 
     virtual int ChargeBill(CTransportId& transportId);
-    virtual bool CheckBill(int billId, EventMonitor& eventMonitor);
-    virtual void CommitBill(int billId);
+    virtual TransactionStatus CheckBill(int billId, EventMonitor * eventMonitor);
+    virtual TransactionStatus GetStatus(int billId);
 
-    BillingManagerImpl() : m_bStarted(false) {}
+    virtual void commit(int billId);
+    virtual void rollback(int billId);
+
+    virtual void onChargeSmsResult(ChargeSmsResult* result);
+
+    BillingManagerImpl() : 
+        m_bStarted(false), 
+        EventMonitorArray(0), 
+        socket(0), 
+        pipe(0), 
+        logger(Logger::getInstance("scag.BM")),
+        m_lastBillId(0)
+    {
+        //TODO: Initialize socket
+        socket = new Socket();
+        pipe = new ObjectPipe(socket);
+    }
+
+    ~BillingManagerImpl()
+    {
+        if (EventMonitorArray) delete EventMonitorArray;
+
+        if (socket) delete socket;
+        if (pipe) delete pipe;
+    }
+
 };
 
 static bool  bBillingManagerInited = false;
@@ -58,14 +120,14 @@ typedef SingletonHolder<BillingManagerImpl> SingleBM;
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 
-void BillingManager::Init()
+void BillingManager::Init(int maxMonitors)
 {
     if (!bBillingManagerInited)
     {
         MutexGuard guard(initBillingManagerLock);
         if (!bBillingManagerInited) {
             BillingManagerImpl& bm = SingleBM::Instance();
-            bm.init(); bm.Start();
+            bm.init(maxMonitors); bm.Start();
             bBillingManagerInited = true;
         }
     }
@@ -89,10 +151,9 @@ void BillingManagerImpl::Stop()
     if (m_bStarted) 
     {
         m_bStarted = false;
-        //awakeEvent.Signal();
         exitEvent.Wait(); 
     }
-    //smsc_log_info(logger,"BillingManager::stop");
+    smsc_log_info(logger,"BillingManager::stop");
 }
 
 bool BillingManagerImpl::isStarted()
@@ -100,22 +161,37 @@ bool BillingManagerImpl::isStarted()
     return m_bStarted;
 }
 
-void BillingManagerImpl::init()
+void BillingManagerImpl::init(int maxMonitors)
 {
+    m_MaxEventMonitors = maxMonitors;
+    EventMonitorArray = new EventMonitorEntity[m_MaxEventMonitors];
 }
 
 
 int BillingManagerImpl::Execute()
 {
-    //smsc_log_info(logger,"BillingManager::start executing");
+    smsc_log_info(logger,"BillingManager::start executing");
 
     while (isStarted())
     {
-        //int secs = processExpire();
-        //smsc_log_debug(logger,"SessionManager::----------- ping %d",secs);
-        //awakeEvent.Wait(secs*1000);
+/*
+            fd_set read;
+            FD_ZERO( &read );
+            FD_SET( socket->getSocket(), &read );
+
+            int n = select(  socket->getSocket()+1, &read, 0, 0, 0 );
+
+            if( n > 0 )
+            {
+                SmscCommand* cmd = static_cast<SmscCommand*>(pipe->receive());
+                assert( cmd );
+                cmd->handle( this );
+            }
+*/
+
     }
-    //smsc_log_info(logger,"BillingManager::stop executing");
+
+    smsc_log_info(logger,"BillingManager::stop executing");
     exitEvent.Signal();
     return 0;
 }
@@ -132,19 +208,121 @@ void BillingManagerImpl::Start()
 
 int BillingManagerImpl::ChargeBill(CTransportId& transportId)
 {
-    return 0;
+    MutexGuard guard(inUseLock);
+
+    m_lastBillId++;
+
+    BillTransaction billTransaction;
+
+    billTransaction.transportId = transportId;
+    billTransaction.status = TRANSACTION_WAIT_ANSWER;
+
+    BillTransactionHash.Insert(m_lastBillId, billTransaction);
+
+    //TODO: send charge command with "m_lastBillId" dialod identifier
+
+    return m_lastBillId;
 }
 
-bool BillingManagerImpl::CheckBill(int billId, EventMonitor& eventMonitor)
+TransactionStatus BillingManagerImpl::CheckBill(int billId, EventMonitor * eventMonitor)
 {
-    return false;
+    MutexGuard guard(inUseLock);
+
+    BillTransaction * pBillTransaction = BillTransactionHash.GetPtr(billId);
+    eventMonitor = 0;
+
+    if (!pBillTransaction) return TRANSACTION_NOT_STARTED;
+
+    int index = -1;
+    for (int i = 0; i < m_MaxEventMonitors; i++) 
+        if (!EventMonitorArray[i].inUse) 
+        {
+            EventMonitorArray[i].inUse = true;
+            index = i;
+            break;
+        }
+
+    //TODO: do what we must to do without throw exception
+    if (index == -1) throw SCAGException("BillingManager error - cannot find not in use EventMonitor");
+
+    pBillTransaction->EventMonitorIndex = index;
+
+
+    eventMonitor = &(EventMonitorArray[pBillTransaction->EventMonitorIndex].eventMonitor);
+
+    return pBillTransaction->status;
 }
 
-void BillingManagerImpl::CommitBill(int billId)
+TransactionStatus BillingManagerImpl::GetStatus(int billId)
 {
+    MutexGuard guard(inUseLock);
 
+    BillTransaction * pBillTransaction = BillTransactionHash.GetPtr(billId);
+
+    if (!pBillTransaction) return TRANSACTION_NOT_STARTED;
+    return pBillTransaction->status;
 }
 
+
+void BillingManagerImpl::commit(int billId)
+{
+    MutexGuard guard(inUseLock);
+
+    BillTransaction * pBillTransaction = BillTransactionHash.GetPtr(billId);
+
+    if (!pBillTransaction) 
+    {
+        //TODO: do what we must to do
+        return;
+    }
+
+
+    //TODO: send commit
+
+    BillTransactionHash.Delete(billId);
+}
+
+
+void BillingManagerImpl::rollback(int billId)
+{
+    MutexGuard guard(inUseLock);
+
+    BillTransaction * pBillTransaction = BillTransactionHash.GetPtr(billId);
+
+    if (!pBillTransaction) 
+    {
+        //TODO: do what we must to do
+        return;
+    }
+
+    BillTransactionHash.Delete(billId);
+}
+
+void BillingManagerImpl::onChargeSmsResult(ChargeSmsResult* result)
+{
+    if (!result) return;
+
+    MutexGuard guard(inUseLock);
+
+    int billId = result->getDialogId();
+
+    BillTransaction * pBillTransaction = BillTransactionHash.GetPtr(billId);
+
+    if (!pBillTransaction) 
+    {
+        //TODO: do what we must to do
+        return;
+    }
+
+    if( result->GetValue() == smsc::inman::interaction::CHARGING_POSSIBLE ) 
+        pBillTransaction->status = TRANSACTION_VALID;
+    else 
+        pBillTransaction->status = TRANSACTION_INVALID;
+
+    EventMonitorArray[pBillTransaction->EventMonitorIndex].inUse = false;
+    EventMonitorArray[pBillTransaction->EventMonitorIndex].eventMonitor.notify();
+
+}
 
 
 }}

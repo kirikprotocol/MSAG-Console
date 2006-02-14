@@ -16,6 +16,15 @@ struct CTransportId
     Address DA;
 };
 
+enum TransactionStatus
+{
+    TRANSACTION_NOT_STARTED = 0,
+    TRANSACTION_WAIT_ANSWER = 1,
+    TRANSACTION_VALID       = 2,
+    TRANSACTION_INVALID     = 3
+};
+
+
 class BillingManager
 {
     BillingManager(const BillingManager& bm);
@@ -25,12 +34,15 @@ protected:
     BillingManager() {};
 
 public:
-    virtual int ChargeBill(CTransportId& transportId) = 0;
-    virtual bool CheckBill(int billId, EventMonitor& eventMonitor) = 0;
-    virtual void CommitBill(int billId) = 0;
+    virtual int ChargeBill(CTransportId& transportId) = 0;  //¬озвращ€ет billId
+    virtual TransactionStatus CheckBill(int billId, EventMonitor * eventMonitor) = 0; //”станавливает eventMonitor и возвращ€ет статус транзакции
+    virtual TransactionStatus GetStatus(int billId) = 0; //¬озвращ€ет статус транзакции
+
+    virtual void commit(int billId) = 0;
+    virtual void rollback(int billId) = 0;
 
     static BillingManager& Instance();
-    static void Init();
+    static void Init(int maxMonitors);
 
 
 
