@@ -265,14 +265,48 @@ public class DisplayManager
     }
    }
   } //}}}
-
+  folds.savesubfoldstate(start,end,start,end,false);
+  savesubfolders(start,end);
   // Collapse the fold...
-  hideLineRange(start,end);
 
+  hideLineRange(start,end);
   notifyScreenLineChanges();
   textArea.foldStructureChanged();
  } //}}}
-
+ public void savesubfolders(int start, int end)
+ {
+  int j;
+  int tempstart;
+  boolean flag1;
+  boolean flag2;
+  int initialFoldLevel=buffer.getFoldLevel(start);
+  for (int i=start+1;i<=end; i++)
+  {
+      if (buffer.getFoldLevel(i)>initialFoldLevel)
+      {
+          //System.out.println("i = "+i);
+          flag1=true;
+          flag2=false;
+          tempstart=i;
+          for (j=i;j<=end;j++)
+          {
+              if (buffer.getFoldLevel(j)<=initialFoldLevel && (flag1))
+              {
+                 folds.savesubfoldstate(start,end,tempstart,j-1,!isLineVisible(i));
+                 initialFoldLevel = buffer.getFoldLevel(j);
+                 flag2=true;
+                 flag1=false;
+              }
+              if (buffer.getFoldLevel(j)>initialFoldLevel && (flag2))
+              {
+                 tempstart = j;
+                 flag1=true;
+                 flag2=false;
+              }
+          }
+      }
+  }
+ }
  //{{{ expandFold() method
  /**
   * Expands the fold at the specified physical line index.
@@ -288,7 +322,7 @@ public class DisplayManager
   int lineCount = buffer.getLineCount();
   int start = 0;
   int end = lineCount - 1;
-
+  int index;
   int initialFoldLevel = buffer.getFoldLevel(line);
 
   //{{{ Find fold start and fold end...
@@ -299,7 +333,8 @@ public class DisplayManager
   {
    // this line is the start of a fold
 
-   int index = folds.search(line + 1);
+   index = folds.search(line + 1);
+   //System.out.println(" index = " + index);
    if(index == -1)
    {
     expandAllFolds();
@@ -326,7 +361,8 @@ public class DisplayManager
   }
   else
   {
-   int index = folds.search(line);
+   index = folds.search(line);
+   //System.out.println(" index = " + index);
    if(index == -1)
    {
     expandAllFolds();
@@ -351,8 +387,11 @@ public class DisplayManager
     }
    }
   } //}}}
-
+  //System.out.println(" folds.count() = " + folds.count());
+  //System.out.println(" start = " + start);
+  //System.out.println(" end = " + end);
   //{{{ Expand the fold...
+
   if(fully)
   {
    showLineRange(start,end);
@@ -360,8 +399,23 @@ public class DisplayManager
   else
   {
    // we need a different value of initialFoldLevel here!
+   RangeMap.SubfoldState startendstate = null;
+   Vector subfolders = folds.getsubfolders(start,end);
+   if (subfolders == null)
+   //something goes wrong!!!
+   {
+     subfolders = new Vector();
+     subfolders.addElement(new RangeMap.SubfoldState(start,end,false));
+   }
+   for (Iterator iterator=subfolders.iterator(); iterator.hasNext();)
+   {
+   startendstate = (RangeMap.SubfoldState)iterator.next();
+   if (!startendstate.collapsed)
+   {
+   start = startendstate.subfoldstart;
+   end = startendstate.subfoldend;
    initialFoldLevel = buffer.getFoldLevel(start);
-
+   //System.out.println(" initialFoldLevel = buffer.getFoldLevel(start) = " + initialFoldLevel);
    int firstVisible = start;
 
    for(int i = start; i <= end; i++)
@@ -382,7 +436,7 @@ public class DisplayManager
      firstVisible = i + 1;
     }
    }
-
+   //System.out.println(" firstVisible = " + firstVisible);
    if(firstVisible == end + 1)
     returnValue = -1;
    else
@@ -393,6 +447,8 @@ public class DisplayManager
     // this is a hack, and really needs to be done better.
     expandFold(line,false);
     return returnValue;
+   }
+   }
    }
   } //}}}
 

@@ -25,6 +25,9 @@ package org.gjt.sp.jedit.textarea;
 import org.gjt.sp.jedit.Debug;
 import org.gjt.sp.util.Log;
 
+import java.util.HashMap;
+import java.util.Vector;
+import java.util.Iterator;
 /**
  * The fold visibility map.
  *
@@ -47,6 +50,7 @@ class RangeMap
  {
   fvm = new int[2];
   lastfvmget = -1;
+  subfoldstateMap = new HashMap();
  } //}}}
 
  //{{{ RangeMap constructor
@@ -54,6 +58,7 @@ class RangeMap
  {
   this.fvm = (int[])copy.fvm.clone();
   this.fvmcount = copy.fvmcount;
+  this.subfoldstateMap.putAll(copy.subfoldstateMap);
  } //}}}
 
  //{{{ reset() method
@@ -164,6 +169,7 @@ loop:  for(;;)
    buf.append("}");
    Log.log(Log.DEBUG,this,"fvmput(" + start + ","
     + end + "," + buf + ")");
+   //System.out.println("fvmput(" + start + "," + end + "," + buf + ")");
   }
   int putl = (put == null ? 0 : put.length);
 
@@ -204,6 +210,7 @@ loop:  for(;;)
   {
    Log.log(Log.DEBUG,this,"*fvmput2(" + starti + ","
     + endi + "," + start + "," + end + ")");
+    //System.out.println("*fvmput2(" + starti + "," + endi + "," + start + "," + end + ")");
   }
   if(starti != -1 && fvm[starti] == start)
   {
@@ -393,6 +400,7 @@ loop:  for(;;)
    }
    buf.append("}");
    Log.log(Log.DEBUG,this,"fvm = " + buf);
+   //System.out.println("fvm = " + buf);
   }
  } //}}}
 
@@ -401,6 +409,7 @@ loop:  for(;;)
  {
   if(numLines != 0)
   {
+   updatefoldstate(startLine, numLines);
    int index = search(startLine);
    int start = index + 1;
 
@@ -421,7 +430,7 @@ loop:  for(;;)
   boolean returnValue = false;
 
   int endLine = startLine + numLines;
-
+  updatefoldstate(startLine, (0 - numLines));
   /* update fold visibility map. */
   int starti = search(startLine);
   int endi = search(endLine);
@@ -475,10 +484,70 @@ loop:  for(;;)
 
   return returnValue;
  } //}}}
-
+ void updatefoldstate(int startLine, int numLines)
+ {
+    Vector subfolders = null;
+    int index = 0;
+    if (subfoldstateMap!=null && subfoldstateMap.size()>0)
+     for(Iterator i = (new Vector(subfoldstateMap.keySet()).iterator());  i.hasNext();)
+     {
+        String startend = (String)i.next();
+        String[] arr = startend.split(" ");
+        int start = Integer.parseInt(arr[0]);
+        if (start >=startLine)
+        {
+           start = start + numLines;
+           int end = Integer.parseInt(arr[1]) + numLines;
+           //System.out.println("new end = " + end);
+           subfolders = ((Vector)subfoldstateMap.remove(startend));
+           for (Iterator ii =subfolders.iterator() ;ii.hasNext();)
+           {
+             ((SubfoldState)ii.next()).offSet(numLines);
+             index=index+1;
+           }
+           index = 0;
+           subfoldstateMap.put(start+" "+end,subfolders);
+        }
+     }
+     //System.out.println("subfoldstateMap.size() = " + subfoldstateMap.size());
+ }
+ public void savesubfoldstate(int start, int end, int subfoldstart, int subfoldend, boolean collapsed)
+ {
+    //System.out.println("Putting to  subfoldstate: start = "+start+", end = "+end+ ", subfoldstart = " + subfoldstart + ", subfoldend = " + subfoldend + ", collapsed = "+collapsed);
+    Vector v = (Vector)subfoldstateMap.get(new String(start+" "+end));
+    if (v==null) v=new Vector();
+    v.addElement(new SubfoldState(subfoldstart,  subfoldend, collapsed));
+    subfoldstateMap.put(new String(start+" "+end),v);
+ }
+ public Vector getsubfolders(int start, int end)
+ {
+     //System.out.println("Removing subfolders for start = " +start+ ", end = "+end);
+     Vector v = (Vector)subfoldstateMap.get(new String(start+" "+end));
+     subfoldstateMap.remove(new String(start+" "+end));
+     //System.out.println("subfoldstate contains "+subfoldstateMap.size()+" elements");
+     return  v;
+ }
  //{{{ Private members
  private int[] fvm;
  private int fvmcount;
  private int lastfvmget;
+ private HashMap subfoldstateMap = new HashMap();
  //}}}
+  static class SubfoldState
+  {
+     int subfoldstart;
+     int subfoldend;
+     boolean collapsed;
+     SubfoldState(int subfoldstart, int subfoldend, boolean collapsed)
+     {
+         this.subfoldstart = subfoldstart;
+         this.subfoldend = subfoldend;
+         this.collapsed = collapsed;
+     }
+     void offSet(int offset)
+     {
+         subfoldstart = subfoldstart + offset;
+         subfoldend = subfoldend + offset;         
+     }
+  }
 }
