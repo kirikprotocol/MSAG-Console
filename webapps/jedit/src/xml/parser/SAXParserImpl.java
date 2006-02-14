@@ -229,11 +229,24 @@ public class SAXParserImpl extends XmlParser
     String value = decl.getConstraintValue();
      // TODO: possible values
     String type = decl.getTypeDefinition().getName();
+    StringList sl = decl.getTypeDefinition().getLexicalEnumeration();
+    ArrayList enumeration = null;
+    if (sl!=null)
+    {
+      enumeration = new ArrayList();
+      for(int ii=0;ii<sl.getLength();ii++)
+      {
+          enumeration.add(sl.item(ii));
+          //System.out.println(sl.item(ii));
+      }
+    }
     if(type == null)
      type = "CDATA";
-    elementDecl.addAttribute(new ElementDecl.AttributeDecl(attrName,value,null,type,required));
+     //System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1");
+    elementDecl.addAttribute(new ElementDecl.AttributeDecl(attrName,value,null,type,required,enumeration));
    }
   }
+  //System.out.println(elementDecl);
  } //}}}
 
  //{{{ xsTermToElementDecl() method
