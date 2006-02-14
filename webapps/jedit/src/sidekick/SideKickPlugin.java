@@ -307,7 +307,7 @@ public class SideKickPlugin extends EBPlugin
  private void uninitView(View view)
  {
   SideKick sidekick = (SideKick)sidekicks.get(view);
-  sidekick.dispose();
+  if (sidekick!=null) sidekick.dispose();
   sidekicks.remove(view);
   ErrorSource.unregisterByView(view);
  } //}}}
@@ -315,7 +315,7 @@ public class SideKickPlugin extends EBPlugin
  private void closeView(View view)
  {
   SideKick sidekick = (SideKick)sidekicks.get(view);
-  sidekick.closeView();
+  if (sidekick!=null) sidekick.closeView();
   sidekicks.remove(view);
   ErrorSource.unregisterByView(view);
  } //}}}

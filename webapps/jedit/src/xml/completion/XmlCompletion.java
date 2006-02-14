@@ -151,13 +151,19 @@ public class XmlCompletion extends SideKickCompletion
     }
     else
     {
-     buf.append(" >");
-
+     if (element.content == null || element.content.size()==0)
+     {
+       buf.append("/>");
+     }
+     else
+     {
+         buf.append(">");
+     }
      int start = buf.length();
 
      if(jEdit.getBooleanProperty(
-      "xml.close-complete-open"))
-     {
+      "xml.close-complete-open") && element.content != null && element.content.size()>0 )
+     {      
       buf.append("</");
       buf.append(element.name);
       buf.append(">");
@@ -206,9 +212,10 @@ public class XmlCompletion extends SideKickCompletion
 
   if(recorder != null)
    recorder.recordInput(insert,false);
+   textArea.getBuffer().setBooleanProperty("sidekick.keystroke-parse",true);
    textArea.setSelectedText(insert);
    int _caret=textArea.getCaretPosition();
-   textArea.setCaretPosition(_caret-1);
+   textArea.setCaretPosition(_caret/*-1*/);
   if(caret != 0)
   {
    String code = "textArea.setCaretPosition("

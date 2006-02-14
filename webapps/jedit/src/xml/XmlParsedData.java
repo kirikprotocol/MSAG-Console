@@ -66,11 +66,13 @@ public class XmlParsedData extends SideKickParsedData
 
   String prefix = getElementNamePrefix(name);
   CompletionInfo info = (CompletionInfo)mappings.get(prefix);
-
-  if(info == null)
-   return null;
-  else
-  {
+  ElementDecl decl = null;
+  //if(info == null)
+  //{
+   //return null;
+  //}
+  //else
+  //{
    String lName;
    int prefixLen = prefix.length();
    if(prefixLen == 0)
@@ -78,7 +80,7 @@ public class XmlParsedData extends SideKickParsedData
    else
     lName = name.substring(prefixLen + 1);
 
-   ElementDecl decl = (ElementDecl)info.elementHash.get(lName);
+    if (info!=null) decl = (ElementDecl)info.elementHash.get(lName);
      if(decl == null && prefix=="") {
        for (Iterator it = mappings.keySet().iterator(); it.hasNext();) {
          String key = (String) it.next();
@@ -92,7 +94,7 @@ public class XmlParsedData extends SideKickParsedData
        } //for (Iterator it
      } //if(decl == null && prefix=="")
      return decl;//.withPrefix(prefix);
-   }
+   //}
  } //}}}
 
  //{{{ getAllowedElements() method
@@ -119,6 +121,8 @@ public class XmlParsedData extends SideKickParsedData
       String parentPrefix = getElementNamePrefix(parentTag.tag);
    ElementDecl parentDecl = getElementDecl(parentTag.tag);
    if(parentDecl != null) returnValue.addAll(parentDecl.getChildElements(parentPrefix));
+   else
+   {
    // add everything but the parent's prefix now
    Iterator iter = mappings.keySet().iterator();
    while(iter.hasNext())
@@ -129,6 +133,7 @@ public class XmlParsedData extends SideKickParsedData
      CompletionInfo info = (CompletionInfo)mappings.get(prefix);
           info.getAllElements(prefix,returnValue);
     }
+   }
    }
   }
 

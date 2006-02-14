@@ -23,6 +23,7 @@ public class ElementDecl
  public CompletionInfo completionInfo;
 
  public String name;
+ //public int maxOccurs = 0;
 // public String shortName;
  public boolean empty;
  public boolean any;
@@ -99,7 +100,7 @@ public class ElementDecl
    return this;
   else
   {
-   return new ElementDecl(completionInfo,prefix + ':' + name,
+   return new ElementDecl(completionInfo, /*prefix + ':' + */name,
     empty,any,attributes,attributeHash,content);
   }
  } //}}}
@@ -240,6 +241,7 @@ public class ElementDecl
   public String name;
   public String value;
   public ArrayList values;
+  public ArrayList enumeration;
   public String type;
   public boolean required;
 
@@ -251,6 +253,12 @@ public class ElementDecl
    this.values = values;
    this.type = type;
    this.required = required;
+  }
+  public AttributeDecl(String name, String value, ArrayList values,
+                       String type, boolean required, ArrayList enumeration)
+  {
+      this(name,value,values,type,required);
+      this.enumeration = enumeration;
   }
 
   public String toString()
@@ -264,6 +272,13 @@ public class ElementDecl
     buf.append(" value=\"");
     buf.append(value);
     buf.append('"');
+   }
+
+   if(enumeration !=null && !enumeration.isEmpty())
+   {
+   buf.append(" enumeration=\"");
+   buf.append(enumeration.toString());
+   buf.append('"');
    }
 
    buf.append(" type=\"");

@@ -96,6 +96,30 @@ public abstract class XmlParser extends SideKickParser
   String text = buffer.getText(0,caret);
   int lineStart = buffer.getLineStartOffset(caretLine);
 
+  boolean attrComplete=false;
+  String attrName="";
+  for(int i = caret-1; i >= lineStart; i--)
+  {
+      int attrstart=0;
+      int attrend=0;
+      if (!Character.isWhitespace(text.charAt(i)))
+      {
+          if (text.charAt(i) == '=')
+          {
+           attrComplete = true;
+           int index ;
+           for (index= i-1;index>0;index--)
+             if (!Character.isWhitespace(text.charAt(index))) {attrend=index+1;  break;}
+           for (index= attrend-1;index>0;index--)
+             if (Character.isWhitespace(text.charAt(index))) {attrstart=index;  break;}
+           attrName = text.substring(attrstart,attrend);
+           System.out.println("attrName : "+attrName);
+           break;
+          }
+          else break;
+      }
+  }
+
   int mode = -1;
   int wordStart = -1;
   for(int i = caret - 1; i >= lineStart; i--)
@@ -118,8 +142,36 @@ public abstract class XmlParser extends SideKickParser
   if(wordStart != -1 && mode != -1)
   {
    word = text.substring(wordStart + 1,caret);
-
+   System.out.println("word: "+word);
    List completions;
+   if (attrComplete)
+   {
+    ElementDecl element =  data.getElementDecl(word.substring(0,word.indexOf(' ')).trim().toLowerCase());
+    //System.out.println("word.substring - "+word.substring(0,word.indexOf(' ')).trim().toLowerCase()+ " elem");
+    //System.out.println(element);
+     if (element !=null)
+     {
+       //System.out.println(element);
+       for(Iterator it= element.attributes.iterator();it.hasNext();)
+       {
+          ElementDecl.AttributeDecl temp = (ElementDecl.AttributeDecl)it.next();
+          //System.out.println(temp.name);
+          if (temp.name.equalsIgnoreCase(attrName.trim()) && temp.enumeration!=null && temp.enumeration.size()>0)
+          {
+             //System.out.println(temp.name+" enumeration: "+temp.enumeration);
+             return new SideKickCompletion(editPane.getView(), "", temp.enumeration){
+                 public void insert(int index)
+                 {
+                   String selected = String.valueOf(get(index));
+                   String insert = selected.substring(text.length());
+                   textArea.setSelectedText("\""+insert+"\"");
+                 }};
+          }
+       }
+     }
+    //}
+    return null;
+   }
    if(mode == ELEMENT_COMPLETE)
    {
     // Try to only list elements that are valid at the caret
@@ -134,9 +186,9 @@ public abstract class XmlParser extends SideKickParser
    if(mode == ELEMENT_COMPLETE)
    {
     TagParser.Tag tag = TagParser.findLastOpenTag(text,caret - 2,data);
-    if(tag != null)
+    if(tag != null && TagParser.getMatchingTag( buffer.getText(caret, buffer.getLength()- caret - 1),tag)==null )
      closingTag = tag.tag;
-
+    //System.out.println(" closingTag = "+  closingTag);
     if("!--".startsWith(word))
      allowedCompletions.add(new XmlListCellRenderer.Comment());
     if(!data.html && "![CDATA[".startsWith(word))

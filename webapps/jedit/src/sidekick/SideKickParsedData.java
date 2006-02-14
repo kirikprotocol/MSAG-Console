@@ -90,6 +90,7 @@ public class SideKickParsedData
  //{{{ getTreePathForPosition() method
  public TreePath getTreePathForPosition(int dot)
  {
+  //if (DEBUG) System.out.println("     dot = " + dot);
   if(root.getChildCount() == 0)
    return null;
 
@@ -100,6 +101,7 @@ public class SideKickParsedData
     root.getChildAt(i);
    if(getTreePathForPosition(node,dot,_path))
    {
+     //if (DEBUG) System.out.println(" _path.add(node) node: " + node);
     _path.add(node);
     break;
    }
@@ -132,7 +134,8 @@ public class SideKickParsedData
    return false;
 
   Asset asset = (Asset)userObject;
-
+  //if (DEBUG) System.out.println(" asset.start.getOffset(): " + asset.start.getOffset());
+  //if (DEBUG) System.out.println(" asset.end.getOffset(): " + asset.end.getOffset());
   // check if the caret in inside this tag
   if(dot >= asset.start.getOffset() && dot <= asset.end.getOffset())
   {
@@ -142,6 +145,7 @@ public class SideKickParsedData
     TreeNode _node = node.getChildAt(i);
     if(getTreePathForPosition(_node,dot,path))
     {
+     //if (DEBUG) System.out.println(" path.add(node) node: " + _node);
      path.add(_node);
      return true;
     }

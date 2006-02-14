@@ -107,6 +107,7 @@ public class XmlTag extends Asset
  //{{{ toString() method
  public String toString()
  {
-  return attributeString;
+  return "name = " + name + " start = "+start.getOffset()+" end = "+end.getOffset();
+  //return attributeString;
  } //}}}
 }

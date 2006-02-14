@@ -51,7 +51,7 @@ public class SideKickFoldHandler extends FoldHandler
   if(data == null)
    return 0;
   TreePath path = data.getTreePathForPosition(
-   buffer.getLineStartOffset(lineIndex) - 1);
+   buffer.getLineStartOffset(lineIndex));
   if(path == null)
    return 0;
   else
