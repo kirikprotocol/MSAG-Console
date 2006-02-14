@@ -204,26 +204,27 @@ class SideKick implements EBComponent
   System.out.println();
   System.out.println("setErrorSource of SideKick "+SideKickPlugin.getSideKickNumber(this.view)+" is invoked");
   System.out.println("from place number "+loc);
-  if (this.errorSource != null)
+  /*if (this.errorSource != null)
   {
-   ErrorSource.unregisterErrorSource(this.view,this.errorSource);
-   this.errorSource.clear();
+   ErrorSource.unregisterErrorSource(this.view);
+   //this.errorSource.clear();
   }
   else
   {
-      System.out.println("errorsource=null of SideKick " +SideKickPlugin.getSideKickNumber(this.view));
-  }
+      System.out.println("errorsource=null of SideKick " + SideKickPlugin.getSideKickNumber(this.view));*/
+  ErrorSource.unregisterErrorSource(this.view);
+  //}
   if (SideKickPlugin.getSideKickNumber(this.view)==-1){System.out.println("This SideKick is removed!!!"); return;}
   this.errorSource = errorSource;
-
   if(errorSource != null)
   {
-   int errorCount = errorSource.getErrorCount();
-   if(errorCount != 0)
-   { ErrorSource.registerErrorSource(this.view, errorSource);
+    //int errorCount = errorSource.getErrorCount();
+    //if(errorCount != 0)
+    //{
+     ErrorSource.registerErrorSource(this.view, errorSource);
     // buffer.setProperty(SideKickPlugin.ERROR_SOURCE_PROPERTY,errorSource);
-   }
-   }
+    //}
+  }
  } //}}}
 
    //{{{ setErrorSource() method

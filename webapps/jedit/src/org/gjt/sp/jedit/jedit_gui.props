@@ -63,6 +63,8 @@ ok.label=OK
 cancel.label=Cancel
 ok.icon=Ok.gif
 cancel.icon=Cancel.gif
+###set true if we need enhanced OK button!!!
+ok.enhanced=true
 #}}}
 #{{{ Tool bar
 view.toolbar=undo redo cut copy paste - find find-next - unsplit \
@@ -2050,13 +2052,13 @@ plugin-manager.remove-failed.message=The plugin {0}\n\
 #}}}
 
 #{{{ Saving while parsing
-     saving-rule-while-parsing.title=Buffer parsing is not complete
-     saving-rule-while-parsing.message=Can't save while buffer parsing.
+     saving-rule-while-parsing.title=Data parsing is not complete
+     saving-rule-while-parsing.message=Can't apply changes while data parsing.
 #}}}
 
 #{{{ Close window dialog
-     closewindow.title=Buffer was changed
-     closewindow.message=Are you sure to exit without saving?
+     closewindow.title=Data was changed
+     closewindow.message=Are you sure to exit without changes applying?
 #}}}
 
 #}}}
