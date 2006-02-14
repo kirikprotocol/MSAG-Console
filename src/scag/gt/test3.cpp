@@ -78,14 +78,14 @@ SmppCommand command;
 int  initReInstance( std::string& dir_name)
 {
 
- try{
+// try{
 
      smsc_log_debug(logger,"RuleEngine::Init('%s')",dir_name.c_str());
 
      RuleEngine::Init(dir_name);
      RuleEngine& re2=RuleEngine::Instance();
          engine=&re2;
-    if(engine==0)
+/*    if(engine==0)
     {
      smsc_log_error(logger,"RE == 0 !");
      return 0;
@@ -100,7 +100,7 @@ int  initReInstance( std::string& dir_name)
 
   if(!engine)
   return 0;
-
+*/
 return 1;
 }
 
@@ -363,6 +363,7 @@ int  main(int argc,char ** argv)
 
 
 	std:string dn="./rules";
+	
 	smsc::logger::Logger::Init();    
 	logger = smsc::logger::Logger::getInstance("scag.retst");        
 
@@ -412,18 +413,16 @@ int  main(int argc,char ** argv)
 	{
 	  return 0;
 	}
-
-          /* Emulation for transport events */
 	  
 //	  for(;;)    
 	  {
-		  int scnt=100;
+		  int scnt=1;
   
-		  sessionsOpen(scnt);
-		  sessionsDeliverSM(scnt);
-		  sessionsClose(scnt);
+//		  sessionsOpen(scnt);
+//		  sessionsDeliverSM(scnt);
+//		  sessionsClose(scnt);
 //		  
-//         	ruleRun("deliver_sm","812345671",0,1,"897654326",0,1,51,0,1,sess);
+         	ruleRun("deliver_sm","812345671",0,1,"897654326",0,1,51,0,1,sess);
 		
 //		engine->removeRule(10);
 //		engine->updateRule(10);
@@ -437,7 +436,7 @@ int  main(int argc,char ** argv)
 						
 		//smsc_log_debug(logger,"\n\n");
 		//printf(".");		    
-//		smanager->releaseSession(sess);
+		smanager->releaseSession(sess);
 	  }
    
    
