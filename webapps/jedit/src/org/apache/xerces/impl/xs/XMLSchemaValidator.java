@@ -119,6 +119,7 @@ import java.util.Stack;
 import java.util.Vector;
 import java.io.IOException;
 import org.apache.xerces.impl.xs.models.CMNodeFactory;
+import org.apache.xerces.impl.xs.util.SimpleLocator;
 
 /**
  * The XML Schema validator. The validator implements a document
@@ -460,10 +461,17 @@ public class XMLSchemaValidator
 
     protected XMLDocumentSource fDocumentSource;
 
+    protected ContentLocator contentLocator;
+
+    protected Stack contentLocators = new Stack();
     //
     // XMLComponent methods
     //
-
+    public void setContentLocator(String lsid, String esid, int line, int column, String content)
+    {
+         contentLocator = new ContentLocator(new SimpleLocator(lsid, esid, line, column), content);
+         contentLocators.push(contentLocator);
+    }
     /**
      * Returns a list of feature identifiers that are recognized by
      * this component. This method may return null if no features
@@ -1163,6 +1171,11 @@ public class XMLSchemaValidator
     /** Did we see non-whitespace character data? */
     boolean fSawCharacters = false;
 
+    public boolean getfSawCharacters()
+    {
+        return fSawCharacters;
+    }
+
     /** Stack to record if we saw character data outside of element content*/
     boolean[] fStringContent = new boolean[INITIAL_STACK_SIZE];
 
@@ -1544,7 +1557,7 @@ public class XMLSchemaValidator
     // handle character contents
     // returns the normalized string if possible, otherwise the original string
     XMLString handleCharacters(XMLString text) {
-
+        //System.out.println("!!!!!!!!! INSIDE handleCharacters TEXT: "+text);
         if (fSkipValidationDepth >= 0)
             return text;
 
@@ -1569,6 +1582,7 @@ public class XMLSchemaValidator
                 // data outside of element content
                 for (int i=text.offset; i< text.offset+text.length; i++) {
                     if (!XMLChar.isSpace(text.ch[i])) {
+                        //System.out.println("!!!!!!!!! INSIDE handleCharacters! fSawCharacters = true ");
                         fSawCharacters = true;
                         break;
                     }
@@ -2960,7 +2974,14 @@ public class XMLSchemaValidator
             // 2.3 If the {content type} is element-only, then the element information item has no character information item [children] other than those whose [character code] is defined as a white space in [XML 1.0 (Second Edition)].
             else if (ctype.fContentType == XSComplexTypeDecl.CONTENTTYPE_ELEMENT) {
                 if (fSawCharacters) {
-                    reportSchemaError("cvc-complex-type.2.3", new Object[]{element.rawname});
+                     //System.out.println("XMLSchemaValidator cvc-complex-type.2.3");
+                     if (contentLocators.size()>0)
+                     {
+                        contentLocator = (ContentLocator)contentLocators.pop();
+                        reportSchemaError(contentLocator.fContentLocator , "cvc-complex-type.2.3",  new Object[]{element.rawname, contentLocator.content});
+                     }
+                     else
+                     reportSchemaError("cvc-complex-type.2.3", new Object[]{element.rawname});
                 }
             }
             // 2.4 If the {content type} is element-only or mixed, then the sequence of the element information item's element information item [children], if any, taken in order, is valid with respect to the {content type}'s particle, as defined in Element Sequence Locally Valid (Particle) (3.9.4).
@@ -2983,6 +3004,14 @@ public class XMLSchemaValidator
     void reportSchemaError(String key, Object[] arguments) {
         if (fDoValidation)  {
            fXSIErrorReporter.reportError(XSMessageFormatter.SCHEMA_DOMAIN,
+                    key, arguments,
+                    XMLErrorReporter.SEVERITY_ERROR);
+        }
+    }
+
+    void reportSchemaError(XMLLocator locator,String key, Object[] arguments) {
+        if (fDoValidation)  {
+           fXSIErrorReporter.reportError(locator, XSMessageFormatter.SCHEMA_DOMAIN,
                     key, arguments,
                     XMLErrorReporter.SEVERITY_ERROR);
         }
@@ -3935,5 +3964,20 @@ public class XMLSchemaValidator
             return false;
         }
     } // class LocalIDKey
+
+    static class ContentLocator
+    {
+       XMLLocator fContentLocator = null;
+       String content = null;
+       public ContentLocator(XMLLocator fContentLocator, String content)
+       {
+          this.fContentLocator = fContentLocator;
+          this.content = content;
+       }
+       public String getContent()
+       {
+           return content;
+       }
+    } // class ContentLocator
 
 } // class SchemaValidator
