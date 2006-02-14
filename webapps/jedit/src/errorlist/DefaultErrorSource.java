@@ -43,6 +43,17 @@ public class DefaultErrorSource extends ErrorSource implements EBComponent
  public DefaultErrorSource(String name, View view)
  {
   errors = new Hashtable();
+  // do we have errors from service associated with this view?
+  Hashtable hash = (Hashtable)serviceErrors.get(view);
+  if (hash != null)
+  {
+     this.errorsService = hash;
+  }
+  else
+  {
+     this.errorsService = new Hashtable();
+     //System.out.println("++++++++this.errorsService = new Hashtable();  ");
+  }
   this.name = name;
   this.view = view;
   this.registered=false;
@@ -72,6 +83,7 @@ public class DefaultErrorSource extends ErrorSource implements EBComponent
   */
  public ErrorSource.Error[] getAllErrors()
  {
+  copyFromErrorsServiseToErrors();
   if(errors.size() == 0)
    return null;
 
@@ -99,6 +111,7 @@ public class DefaultErrorSource extends ErrorSource implements EBComponent
   */
  public int getFileErrorCount(String path)
  {
+  copyFromErrorsServiseToErrors();
   ArrayList list = (ArrayList)errors.get(path);
   if(list == null)
    return 0;
@@ -113,6 +126,7 @@ public class DefaultErrorSource extends ErrorSource implements EBComponent
   */
  public ErrorSource.Error[] getFileErrors(String path)
  {
+  copyFromErrorsServiseToErrors();
   ArrayList list = (ArrayList)errors.get(path);
   if(list == null || list.size() == 0)
    return null;
@@ -132,6 +146,7 @@ public class DefaultErrorSource extends ErrorSource implements EBComponent
  public ErrorSource.Error[] getLineErrors(String path,
   int startLineIndex, int endLineIndex)
  {
+  copyFromErrorsServiseToErrors();
   if(errors.size() == 0)
    return null;
 
@@ -176,7 +191,50 @@ public class DefaultErrorSource extends ErrorSource implements EBComponent
     new ErrorSource.Error[errorList.size()]);
   }
  } //}}}
+ // move all errors from errorsService to errors
+ protected void copyFromErrorsServiseToErrors()
+ {
+     String path;
+     List temp;
+     List temp1;
+     List temp2;
+     if (errorsService!=null && errorsService.size()>0)
+     {
+        for (Enumeration e = errorsService.keys(); e.hasMoreElements();)
+        {
+           path = (String)e.nextElement();
+           temp1 = (List)errors.get(path);
+           temp2 = (List)errorsService.get(path);
+           if (temp2.size()>0)
+           {
+             if (temp1!=null)
+             {
+                  temp1.addAll(temp2);
+                  temp = temp1;
+             }
+             else
+             {
+               temp = temp2;
+             }
 
+             Collections.sort(temp, new Comparator()
+             {
+                   public int compare(Object o1, Object o2)
+                   {
+                     Error e1 = (Error)o1;
+                     Error e2 = (Error)o2;
+                     return (new Integer(e1.getLineNumber())).compareTo(new Integer(e2.getLineNumber()));
+                   }
+             }
+             );
+
+             errors.put(path,temp);             
+           }
+        }
+        // to avoid repeated coping
+        errorsService = null;//this.errorsService.clear();
+     }
+ }
  //{{{ clear() method
  /**
   * Removes all errors from this error source. This method is thread
@@ -244,7 +302,7 @@ public class DefaultErrorSource extends ErrorSource implements EBComponent
   * Adds an error to this error source. This method is thread-safe.
   * @param error The error
   */
- public synchronized void addError(final DefaultError error)
+ public synchronized void addError(final DefaultError error, Map errors, boolean type)
  {
   List list = (List)errors.get(error.getFilePath());
   if(list == null)
@@ -268,6 +326,8 @@ public class DefaultErrorSource extends ErrorSource implements EBComponent
 
   if(!added)
    list.add(error);
+  if (type)
+  {
   errorCount++;
   removeOrAddToBus();
 
@@ -282,6 +342,7 @@ public class DefaultErrorSource extends ErrorSource implements EBComponent
      EditBus.send(message);
     }
    });
+  }
   }
  } //}}}
 
@@ -299,13 +360,83 @@ public class DefaultErrorSource extends ErrorSource implements EBComponent
  public void addError(int errorType, String path,
   int lineIndex, int start, int end, String error)
  {
-  DefaultError newError = new DefaultError(this,errorType,path,lineIndex,
-   start,end,error);
-   System.out.println("DefaultErrorSource.AddError line 301");
-   if (SideKickPlugin.getSideKickNumber(view)!=-1) ErrorSource.registerAndCheckErrorSource(view,this);
-  addError(newError);
+    System.out.println("DefaultErrorSource.AddError line 301 line = " + lineIndex);
+    addError(errorType, path, lineIndex,  start,  end,  error,  ERORR_WARNING_LOCAL);
  } //}}}
 
+    public void addError(int errorType, String path,
+     int lineIndex, int start, int end, String error, int errorSource)
+    {
+      DefaultError newError = new DefaultError(this,errorType,path,lineIndex, start,end,error);
+      if (SideKickPlugin.getSideKickNumber(view)!=-1) ErrorSource.registerAndCheckErrorSource(view,this);
+      if (errorSource == ERORR_WARNING_LOCAL)
+      {
+          addError(newError, errors, true);
+      }
+      else if (errorSource == ERORR_WARNING_REMOTE)
+      {
+          //do we have this error?
+          if (!isErrorExists((Hashtable)serviceErrors.get(view), newError))
+          {                          
+             //if we can't add new error without fixing previous then
+             // errorsService allways contains one error in the list for this path!!!
+             errorsService = clearErrorsService(newError.getFilePath());
+             // we don't really need to store error from service in map,
+             // but we are doing so for common way of different type(local and remote) errors storing
+             addError(newError, errorsService , false);
+             errorsServiceCopy.putAll(errorsService);             
+             serviceErrors.put(view, errorsServiceCopy);
+          }
+      }
+    } //}}}
+
+    //method is called when status returned from service is "ok" and for local clearing
+    public synchronized Hashtable clearErrorsService(String path)
+    {
+       final ArrayList list;
+       Hashtable errorsService = (Hashtable)serviceErrors.get(view);
+       if (errorsService != null)
+          list = (ArrayList)errorsService.remove(path);
+       else list = null;
+       if(list == null)
+       {
+         return new Hashtable();
+       }
+       if(registered)
+       {
+         SwingUtilities.invokeLater(new Runnable()
+         {
+          public void run()
+          {
+           for(int i = 0; i < list.size(); i++)
+           {
+            DefaultError error = (DefaultError)list.get(i);
+            ErrorSourceUpdate message = new ErrorSourceUpdate(DefaultErrorSource.this,
+             ErrorSourceUpdate.ERROR_REMOVED,error);
+            EditBus.send(message);
+           }
+          }
+         });
+       }
+       return errorsService;
+    }
+    private boolean isErrorExists(Hashtable errorsService, DefaultError de)
+    {
+        List l = null;
+        if (errorsService!=null)
+        {
+          l = (List)errorsService.get(de.getFilePath());
+        }
+        if (l!=null)
+        for (Iterator i = l.iterator();i.hasNext();)
+        {
+            DefaultError err = (DefaultError)i.next();
+            //System.out.println("!!!!! "+err.toString());
+            if (de.equals(err)) return true;
+        }
+        //System.out.println("   isErrorExists !!!!");
+        return false;
+    }
  //{{{ handleMessage() method
  public void handleMessage(EBMessage message)
  {
@@ -324,6 +455,8 @@ public class DefaultErrorSource extends ErrorSource implements EBComponent
  protected String name;
  protected int errorCount;
  protected Hashtable errors;
+ protected Hashtable errorsService;
+ protected Hashtable errorsServiceCopy = new Hashtable();
  //}}}
 
  //{{{ Private members
@@ -467,7 +600,18 @@ public class DefaultErrorSource extends ErrorSource implements EBComponent
    if(buffer != null && buffer.isLoaded())
     openNotify(buffer);
   } //}}}
-
+  public boolean equals(Object o)
+  {
+      DefaultError err = (DefaultError)o;
+      if (err.getErrorType() == getErrorType() && err.getLineNumber() == getLineNumber()
+           && err.getStartOffset() == getStartOffset() && err.getEndOffset() == getEndOffset()
+           && err.getErrorMessage().equals(getErrorMessage()) )
+      {
+          //System.out.println("   equals - true !!!!");
+          return true;
+      }
+      return false;
+  }
   //{{{ getErrorSource() method
   /**
    * Returns the error source.
@@ -601,7 +745,7 @@ public class DefaultErrorSource extends ErrorSource implements EBComponent
    */
   public String toString()
   {
-   return getFileName() + ":" + (getLineNumber() + 1)
+   return getFileName() + ": lineNumber = " + (getLineNumber() + 1)
     + ":" + getErrorMessage();
   } //}}}
 

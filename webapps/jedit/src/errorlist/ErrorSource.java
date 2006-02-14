@@ -24,8 +24,10 @@ package errorlist;
 
 //{{{ Imports
 import org.gjt.sp.jedit.*;
-import java.util.Vector;
 import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.ArrayList;
+import java.util.Enumeration;
 //}}}
 
 /**
@@ -41,9 +43,9 @@ public abstract class ErrorSource implements EBComponent
   * Registers an error source.
   * @param errorSource The error source
   */
- public static void registerErrorSource(View view,ErrorSource errorSource)
+ public static void registerErrorSource(View view, final ErrorSource errorSource)
  {
-  if(errorSource.isRegistered() )
+  if(errorSource.registered )
   {
     System.out.println("ErrorSource "+errorSource.getName()+" is registered!!!");
     return;
@@ -52,11 +54,10 @@ public abstract class ErrorSource implements EBComponent
   {
    System.out.println("REGISTERED in registerErrorSource "+errorSource.getName()+" ErrorSource with errors quantity: "+errorSource.getErrorCount());
    errorSources.put(view,errorSource);
-   //errorSource.registered=true;
-   errorSource.register(true);
+   errorSource.registered=true;
    cachedErrorSources = null;
    System.out.println("ErrorSource.registerErrorSource line 53 EditBus.send(new ErrorSourceUpdate(errorSource,ErrorSourceUpdate.ERROR_SOURCE_ADDED,null)) errorSources.size= "+errorSources.size());
-   EditBus.send(new ErrorSourceUpdate(errorSource,ErrorSourceUpdate.ERROR_SOURCE_ADDED,null));
+   EditBus.send(new ErrorSourceUpdate(errorSource,ErrorSourceUpdate.ERROR_SOURCE_ADDED,null,view, errorSource.getErrorCount()>0 ? false : true));
   }
  } //}}}
 
@@ -65,54 +66,112 @@ public abstract class ErrorSource implements EBComponent
   * Registers an error source.
   * @param errorSource The error source
   */
-  public static void registerAndCheckErrorSource(View view,ErrorSource errorSource)
+  public static void registerAndCheckErrorSource(View view, final ErrorSource errorSource)
   {
-    if(errorSource.isRegistered())
+    if(errorSource.registered)
      return;
   synchronized(errorSources)
   {
    if (errorSources.size()>0) return;
    System.out.println("REGISTERED in registerAndCheckErrorSource "+errorSource.getName()+" ErrorSource with errors quantity: "+errorSource.getErrorCount());
    errorSources.put(view, errorSource);
-   //errorSource.registered=true;
-   errorSource.register(true);
+   errorSource.registered=true;
    cachedErrorSources = null;
    System.out.println("ErrorSource.registerAndCheckErrorSource line 53 EditBus.send(new ErrorSourceUpdate(errorSource,ErrorSourceUpdate.ERROR_SOURCE_ADDED,null)) errorSources.size= "+errorSources.size());
-   EditBus.send(new ErrorSourceUpdate(errorSource,ErrorSourceUpdate.ERROR_SOURCE_ADDED,null));
+   EditBus.send(new ErrorSourceUpdate(errorSource,ErrorSourceUpdate.ERROR_SOURCE_ADDED,null,view,false));
   }
   } //}}}
 
+  public static void unregisterErrorSource(View view)
+  {
+    ErrorSource errorSource = (ErrorSource)errorSources.remove(view);
+    unregisterErrorSource(view,errorSource);
+  }
  //{{{ unregisterErrorSource() method
  /**
   * Unregisters an error source.
   * @param errorSource The error source
   */
- public static void unregisterErrorSource(View view,ErrorSource errorSource)
+ public static void unregisterErrorSource(View view,final ErrorSource errorSource)
  {
-  if(!errorSource.isRegistered())
-  {
-    System.out.println("erroSource "+ errorSource.getName()+" is registered so return from unregisterErrorSource");
-    return;
-  }
-  EditBus.removeFromBus(errorSource);
+    if (errorSource == null ) return;
+    /*if(!errorSource.registered)
+    {
+      System.out.println("erroSource "+ errorSource.getName()+" is unregistered so return from unregisterErrorSource");
+      return;
+    }  */
+    EditBus.removeFromBus(errorSource);
 
-  synchronized(errorSources)
-  {
-    System.out.println("UNREGISTERED "+errorSource.getName()+" ErrorSource");
-    errorSources.remove(view);
-    errorSource.register(false);
+   synchronized(errorSources)
+   {
+    System.out.println("UNREGISTERED "+errorSource.getName()+" ErrorSource  with errors quantity: "+errorSource.getErrorCount());
+    //errorSources.remove(view);
+    errorSource.registered=false;
     cachedErrorSources = null;
     System.out.println("ErrorSource.unregisterErrorSource line 95 EditBus.send(new ErrorSourceUpdate(errorSource,ErrorSourceUpdate.ERROR_SOURCE_REMOVED,null)) errorSources.size= "+errorSources.size());
     System.out.println();
-    EditBus.send(new ErrorSourceUpdate(errorSource,ErrorSourceUpdate.ERROR_SOURCE_REMOVED,null));
+    EditBus.send(new ErrorSourceUpdate(errorSource,ErrorSourceUpdate.ERROR_SOURCE_REMOVED,null,view,true));
+    synchronized(serviceErrors)
+    {
+      serviceErrorsClear(view);
+    }
   }
  } //}}}
- public static void unregisterByView(View view)
+ public static void unregisterByView(final View view)
  {
   synchronized(errorSources)
   {
     errorSources.remove(view);
   }
+  unregisterServiceErrors(view);
+ }
+
+ private static void unregisterServiceErrors(View view)
+ {
+  synchronized(serviceErrors)
+  {
+    //System.out.println("unregisterServiceErrors(view)  ^^^^^^^^^^^^^");
+    serviceErrorsClear(view);
+    serviceErrors.remove(view);//.getBuffer().getSymlinkPath());
+  }
+ }
+
+ private static void serviceErrorsClear(View view)
+ {
+     Hashtable hash = (Hashtable)serviceErrors.get(view);
+     if (hash!=null)
+     {
+       //System.out.println(" hash != null ^^^^^^^^^^^^^");
+       //System.out.println(" view = " + view);
+       //System.out.println(" view.getBuffer().getSymlinkPath() = " + view.getBuffer().getSymlinkPath());
+
+     // this in not quite correct way for service errors cleaning
+     // it would work better if we could extract list of errors from map by path in that way:
+     //final ArrayList list = (ArrayList)(hash.get(view.getBuffer().getSymlinkPath()));
+     //but view.getBuffer() return null, so we have to iterate over all list from hash  
+     for (Enumeration e = hash.elements();e.hasMoreElements();)
+     {
+       ArrayList list = (ArrayList)e.nextElement();
+       if(list != null)
+       {
+              for(int i = 0; i < list.size(); i++)
+              {
+                      //System.out.println(" !!!!!!!!sending!!!!!!!!!!!!!!");
+                      ErrorSource.Error error = (ErrorSource.Error)list.get(i);
+                      ErrorSourceUpdate message = new ErrorSourceUpdate(new DefaultErrorSource("",view), ErrorSourceUpdate.ERROR_REMOVED,error);
+                      EditBus.send(message);
+              }
+       }
+       else
+       {
+         // System.out.println(" list is null!!!!");
+       }
+     }
+    }
+    else
+    {
+       //System.out.println(" hash == null is true _------------");
+    }
  }
  //{{{ getErrorSources() method
  /**
@@ -148,6 +207,12 @@ public abstract class ErrorSource implements EBComponent
   * A warning.
   */
  public static final int WARNING = 1;
+
+ //local
+ public static final int ERORR_WARNING_LOCAL = 2;
+
+ //remote
+ public static final int ERORR_WARNING_REMOTE = 3;
  //}}}
 
  //{{{ getName() method
@@ -198,18 +263,11 @@ public abstract class ErrorSource implements EBComponent
  public abstract ErrorSource.Error[] getLineErrors(String path,
   int startLineIndex, int endLineIndex);
  //}}}
-  public synchronized void register(boolean registered)
-  {
-     this.registered=registered;
-  }
-  public boolean isRegistered()
-  {
-      return this.registered;
-  }
 
     public static void unregisterAll()
     {
       errorSources =  new HashMap();
+      serviceErrors = new Hashtable();
     }
 
  //{{{ Private members
@@ -220,6 +278,7 @@ public abstract class ErrorSource implements EBComponent
  protected boolean registered;
 
  private static HashMap errorSources = new HashMap();
+ protected static Hashtable serviceErrors = new Hashtable();
  private static ErrorSource[] cachedErrorSources;
  //}}}
 

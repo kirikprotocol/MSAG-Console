@@ -77,7 +77,13 @@ public class ErrorSourceUpdate extends EBMessage
   this.errorSource = errorSource;
   this.error = error;
  } //}}}
-
+ public ErrorSourceUpdate(ErrorSource errorSource, Object what,
+  ErrorSource.Error error, View view, boolean okbuttonvisible)
+ {
+    this(errorSource, what, error);
+    this.view = view;
+    this.okbuttonvisible = okbuttonvisible;
+ }
  //{{{ getWhat() method
  /**
   * Returns what changed.
@@ -112,8 +118,18 @@ public class ErrorSourceUpdate extends EBMessage
    + ",errorSource=" + errorSource
    + ",error=" + error;
  } //}}}
-
+ public Boolean getEnabled(View view)
+ {
+     if (view!=null && this.view == view )
+     {
+         //System.out.println(" view == view  !!!!!!!!!!!!!!!      ");
+          return new Boolean(okbuttonvisible);
+     }
+     else return null;
+ }
  //{{{ Private members
+ private boolean okbuttonvisible;
+ private View view;
  private Object what;
  private ErrorSource errorSource;
  private ErrorSource.Error error;
