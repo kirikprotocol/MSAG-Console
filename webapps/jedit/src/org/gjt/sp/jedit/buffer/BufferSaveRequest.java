@@ -38,6 +38,7 @@ import org.gjt.sp.jedit.io.*;
 import org.gjt.sp.jedit.*;
 import org.gjt.sp.util.*;
 import errorlist.DefaultErrorSource;
+import errorlist.ErrorSource;
 import sidekick.SideKickPlugin;
 //}}}
 
@@ -149,7 +150,7 @@ public class BufferSaveRequest extends BufferIORequest
     if (buffer!=null && buffer.getBooleanProperty("newRule")) command=jEdit.getAddRule();
     URL url; HttpURLConnection c=null;
     String content="?username="+jEdit.username+"&password="+jEdit.password+"&command="+command+"&file="+savePath;
-    System.out.println("BufferSaveRequest command=SaveRule comnent= "+content);
+    System.out.println("BufferSaveRequest command=SaveRule content= "+content);
     try {
           url=new URL(jEdit.servletUrl,content);
           c=(HttpURLConnection) url.openConnection();
@@ -181,15 +182,20 @@ public class BufferSaveRequest extends BufferIORequest
           _in = c.getInputStream(); // _in = new FileInputStream(path);
       in = new BufferedReader(new InputStreamReader(_in));//new FileReader(fileName));
           String status=c.getHeaderField("status");
-      if (!status.equals("ok")) {
-        if (jEdit.getBooleanProperty("bufferWorkWithId")) {
-                DefaultErrorSource errorSource= SideKickPlugin.getErrorSource(view);
-                int errorType=c.getHeaderFieldInt("errorType",0);
-                int lineIndex=c.getHeaderFieldInt("lineIndex",0); int start=c.getHeaderFieldInt("start",0);
-                int end=c.getHeaderFieldInt("end",0);String error=c.getHeaderField("error");
-                errorSource.addError(errorType,path,lineIndex,start,end,error);
-              }
-
+      if (jEdit.getBooleanProperty("bufferWorkWithId"))
+      {
+        DefaultErrorSource errorSource= (DefaultErrorSource)ErrorSource.getErrorSourceByView(view);
+        if (!status.equals("ok"))
+        {
+              int errorType=c.getHeaderFieldInt("errorType",0);
+              int lineIndex=c.getHeaderFieldInt("lineIndex",0); int start=c.getHeaderFieldInt("start",0);
+              int end=c.getHeaderFieldInt("end",0);String error=c.getHeaderField("error");
+              errorSource.addError(errorType,path,lineIndex,start,end,error, ErrorSource.ERORR_WARNING_REMOTE);
+        }
+        else
+        {
+            errorSource.clearErrorsService(path);
+        }
       }
        String status1=in.readLine();
   // else throw new FileNotFoundException(status);
