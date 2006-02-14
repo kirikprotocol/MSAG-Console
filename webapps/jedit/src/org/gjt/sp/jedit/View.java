@@ -1344,7 +1344,17 @@ public void setEdittag(boolean edit)
 
   // save dockable window geometry, and close 'em
   dockableWindowManager.close();
-
+  Component c;
+  for (int i = 0; i<textToolBar.getComponentCount();i++)
+  {
+      c = textToolBar.getComponent(i);
+      if (c instanceof EnhancedOKButton)
+          if (((EnhancedOKButton)c).getView() == this)
+          {
+              EditBus.removeFromBus((EnhancedOKButton)c);
+              //System.out.println("!!!!!!!!!!!!!!!!!!!! removed !!!!!!!!!!!!!!!!!!");
+          }
+  }
   EditBus.removeFromBus(this);
   dispose();
 
@@ -1655,7 +1665,7 @@ loop:  for(;;)
    addToolBar(TOP_GROUP, SYSTEM_BAR_LAYER, toolBar);
     if(textToolBar != null)
         toolBarManager.removeToolBar(textToolBar);
-   textToolBar = GUIUtilities.loadTextBar("view.savebar");
+   textToolBar = GUIUtilities.loadTextBar("view.savebar", this);
    addToolBar(BOTTOM_GROUP, SYSTEM_BAR_LAYER, textToolBar);
   }
   else if(toolBar != null)

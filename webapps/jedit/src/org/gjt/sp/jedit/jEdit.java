@@ -190,6 +190,7 @@ public class jEdit extends Applet
     viewsLast=null;
     activeView=null;
     System.out.println("exit zakomentirovan!!!...");
+    if (getBooleanProperty("newRule")) InvalidateNewRule();
    //  jEdit.exit(activeView,true);
   }
   //{{{ main() method
@@ -2429,7 +2430,7 @@ public class jEdit extends Applet
       // Byebye...
      // System.exit(0);
     }
-
+    if (getBooleanProperty("newRule")) InvalidateNewRule();
   } //}}}
   //{{{ exitView() method
   /**
@@ -2502,8 +2503,18 @@ public class jEdit extends Applet
       // Byebye...
      // System.exit(0);
     }
-
+    if (getBooleanProperty("newRule")) InvalidateNewRule();
   } //}}}
+  /*invalidate "newRule" attribute in session to prevent call of jEdit.newRule() method
+    from page   ...scag/rules/rules/index.jsp*/
+  private static void InvalidateNewRule()
+  {
+    //System.out.println("Right exit!!!!!!!!!!!!!!!!!!!!!!!!!!...");
+    HashMap h = new HashMap();
+    h.put("file","");
+    HttpGet(h,RuleNameReset);
+  }
+
   //{{{ getEditServer() method
   /**
    * Returns the edit server instance. You can use this to find out the
@@ -3093,6 +3104,7 @@ public class jEdit extends Applet
   protected static final int AddRule = 30;
   protected static final int RootElement = 31;
   protected static final int RuleName = 32;
+  protected static final int RuleNameReset = 33;
 
   public static int getRootElement()
   {
