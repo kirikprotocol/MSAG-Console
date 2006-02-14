@@ -64,6 +64,7 @@ import java.util.Stack;
 import org.apache.xerces.impl.XMLEntityManager;
 import org.apache.xerces.impl.XMLEntityScanner;
 import org.apache.xerces.impl.XMLErrorReporter;
+import org.apache.xerces.impl.xs.XMLSchemaValidator;
 import org.apache.xerces.impl.msg.XMLMessageFormatter;
 
 import org.apache.xerces.util.XMLAttributesImpl;
@@ -897,6 +898,7 @@ public class XMLDocumentFragmentScannerImpl
     protected int scanContent() throws IOException, XNIException {
 
         XMLString content = fTempString;
+        //System.out.println("scanContent() in XMLDocumentFragmentScannerImpl!");
         int c = fEntityScanner.scanContent(content);
         if (c == '\r') {
             // happens when there is the character reference &#13;
@@ -908,7 +910,17 @@ public class XMLDocumentFragmentScannerImpl
             c = -1;
         }
         if (fDocumentHandler != null && content.length > 0) {
+            //System.out.println("fDocumentHandler.getClass().getName() - " + fDocumentHandler.getClass().getName());
             fDocumentHandler.characters(content, null);
+            // this hack done to provide more sufficient information on content location within element
+            if (fDocumentHandler instanceof XMLSchemaValidator)
+            {
+               if (((XMLSchemaValidator)fDocumentHandler).getfSawCharacters() && content.toString().trim().length()>0)
+               {
+                   //System.out.println("^^^^^^^^^setting up Locator^^^^^^^^^ with line number: " + fEntityScanner.getLineNumber() + "with content :" + content.toString().trim());
+                   ((XMLSchemaValidator)fDocumentHandler).setContentLocator(fEntityScanner.getLiteralSystemId(),fEntityScanner.getExpandedSystemId(),fEntityScanner.getLineNumber(),fEntityScanner.getColumnNumber()-content.length, content.toString().trim());
+               }
+            }
         }
 
         if (c == ']' && fTempString.length == 0) {
