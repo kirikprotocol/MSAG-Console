@@ -1,5 +1,5 @@
 <%@ include file="/WEB-INF/inc/header.jspf" %>
-<sm:page title="Rules">
+<sm:page title="SCAG Rules">
     <jsp:attribute name="menu">
         <sm-pm:menu>
             <sm-pm:item name="mbAdd" value="Add" title="Add new rule" onclick="clearForm()"/>
@@ -15,15 +15,41 @@
           document.jedit.newRule();
           return false;
         }
+        function changeTransportId() {
+              var transport = opForm.all.transportId.options[opForm.all.transportId.selectedIndex].value;
+              opForm.submit();
+              return true;
+         }
+        function changeProviderId() {
+              var provider = opForm.all.providerId.options[opForm.all.providerId.selectedIndex].value;
+              opForm.submit();
+              return true;
+         }
       </script>
       <applet code="org.gjt.sp.jedit.jEdit.class" codebase="rules/rules" width="1" height="1" archive="jedit.jar" name=jedit ID=jedit>
             <param name="noplugins" value="-noplugins">
             <param name="homedir" value="applet">
             <param name="username" value="rules">
             <param name="servletUrl" value="/scag/applet/myServlet">
-       </applet>
-        <sm:table columns="checkbox,id,name,providerName,transport" names="c,id,name,provider,transport"
-                  widths="1,15,28,28,28" edit="id" goal="jedit"/>
+      </applet>
+
+      <sm-ep:properties title="Filter(s)" noEdit="true">
+
+         <sm-ep:list title="Transport" onChange="changeTransportId();" name="transportId"
+                          values="${fn:join(bean.transportIds, ',')}"
+                          valueTitles="${fn:join(bean.transportTitles, ',')}"/>
+
+         <c:choose>
+           <c:when test="${bean.administrator}">
+             <sm-ep:list title="Provider" onChange="changeProviderId();" name="providerId"
+                             values="${fn:join(bean.providerIds, ',')}"
+                             valueTitles="${fn:join(bean.providerNames, ',')}"/>
+           </c:when>
+         </c:choose>
+      </sm-ep:properties>
+      <br>
+      <sm:table columns="checkbox,id,name,providerName,transport" names="c,id,name,provider,transport"
+                widths="1,15,28,28,28" edit="id" goal="jedit"/>
       <c:choose>
             <c:when test="${bean.newRule}">
              <script>newRule();</script>

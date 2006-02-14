@@ -56,6 +56,7 @@ public class myServlet extends HttpServlet
   protected static final int AddRule = 30;
   protected static final int RootElement = 31;
   protected static final int RuleName = 32;
+  protected static final int RuleNameReset = 33;
   protected HttpSession session = null;
 
   // public static String userdir=null;
@@ -81,6 +82,7 @@ public class myServlet extends HttpServlet
        case ExistRule:  ExistRule(req,file ,res); break;
        case Transport : list=getTransport(file,req);break;
        case SaveBackup: list=SaveBackup(new File(file), req); break;
+       case RuleNameReset: if (session !=null) session.removeAttribute("newRule"); break;
        default:
         if (req.getParameter("renameto")!=null) list=RenameTo(new File(file),new File(req.getParameter("renameto")));
         else if (req.getParameter("intparam")!=null) list=FilesCommand(file,command,Integer.parseInt(req.getParameter("intparam")));
@@ -160,12 +162,17 @@ public class myServlet extends HttpServlet
     BufferedReader r=req.getReader();
     try {
       li=appContext.getRuleManager().updateRule(r,file);
-    /*  errorType=Integer.parseInt((String)li.get(0));  res.setIntHeader("errorType",errorType);
-      lineIndex=Integer.parseInt((String)li.get(1));  res.setIntHeader("lineIndex",lineIndex);
-      start=Integer.parseInt((String)li.get(2));      res.setIntHeader("start",start);
-      end=Integer.parseInt((String)li.get(3));        res.setIntHeader("end",end);
-      error=(String)li.get(4);res.setHeader("error",error);
-    */  res.setHeader("status","ok");
+      if (li != null && li.size() >0)
+      {
+      /*errorType=Integer.parseInt((String)li.get(0));*/  res.setIntHeader("errorType",errorType);
+      lineIndex=Integer.parseInt((String)li.get(0));      res.setIntHeader("lineIndex",lineIndex);
+      /*start=Integer.parseInt((String)li.get(2));*/      res.setIntHeader("start",start);
+      /*end=Integer.parseInt((String)li.get(3)); */       res.setIntHeader("end",end);
+      error=(String)li.get(1);                            res.setHeader("error",error);
+      res.setHeader("status","error");
+      }
+      else
+      res.setHeader("status","ok");
 
     } catch (SibincoException e) {
       e.printStackTrace();//logger.warn(e.getMessage());  //To change body of catch statement use File | Settings | File Templates.
