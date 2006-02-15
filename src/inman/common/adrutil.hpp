@@ -28,6 +28,7 @@ struct TonNpiAddress {
     unsigned char    value[CAP_MAX_SMS_AddressStringLength*2 + 1];
 
     inline void clear(void) { length = typeOfNumber  = numPlanInd = value[0] = 0; }
+    inline const char * getSignals(void) const { return (const char*)&value[0]; }
 
     TonNpiAddress() { clear(); }
 
