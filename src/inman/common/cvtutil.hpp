@@ -58,10 +58,21 @@ inline unsigned packNumString2BCD(unsigned char* bcd, const char* str, unsigned 
 }
 
 /* GVR:
- *
+ * Unpacks TBCD coded numeric string. Returns number of digits.
  */
 inline unsigned unpackBCD2NumString(const unsigned char* bcd, char* str, unsigned bcdLen)
 {
+    unsigned i, k;
+    for (i = k = 0; i < bcdLen; i++) {
+        str[k++] = '0' + (char)(bcd[i] & 0x0f); // low semioctet
+        if (!(bcd[i] ^ 0xf0)) // high semioctet, check for possible filler 
+            break;
+        str[k++] = '0' + (char)((bcd[i] >> 4) & 0x0f);
+    }
+    str[k++] = 0;
+    return k;
+
+#ifdef OLD_CODE
     unsigned i = 0;
     for (; i < bcdLen*2; i++) {
 	if (i & 0x01) {		// high semioctet
@@ -74,6 +85,7 @@ inline unsigned unpackBCD2NumString(const unsigned char* bcd, char* str, unsigne
     if (str[i])
 	str[i++] = 0;
     return i - 1;
+#endif /* OLD_CODE */
 }
 /* GVR:
  * Adds symbol to buffer containing packed 7bit chars
