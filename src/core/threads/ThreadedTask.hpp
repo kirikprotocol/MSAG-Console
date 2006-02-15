@@ -9,9 +9,9 @@ namespace threads{
 
 using namespace smsc::core::buffers;
 
-class ThreadedTask{
+class ThreadedTask {
 public:
-  ThreadedTask():/*heap(NULL),*/isStopping(false){}
+  ThreadedTask():/*heap(NULL),*/isStopping(false), isReleased(false) {}
   virtual ~ThreadedTask(){}
   virtual int Execute()=0;
   virtual const char* taskName()=0;
@@ -67,10 +67,12 @@ public:
   */
 
   virtual void stop(){isStopping=true;}
+  virtual void onRelease(void) { isReleased = true; }
 
 protected:
   //smsc::core::buffers::MemoryHeap *heap;
   volatile bool isStopping;
+  volatile bool isReleased;
 };//ThreadedTask
 
 }//threads

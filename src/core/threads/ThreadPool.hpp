@@ -25,13 +25,13 @@ class ThreadPool;
 
 class PooledThread:public Thread{
 public:
-  PooledThread(ThreadPool* newowner):Thread(),owner(newowner),task(NULL){}
+  PooledThread(ThreadPool* newowner):Thread(),owner(newowner),task(NULL),delTask(false) {}
 
   virtual int Execute();
 
-  void assignTask(ThreadedTask* newtask)
+  void assignTask(ThreadedTask* newtask, bool delOnCompletion = true)
   {
-    task=newtask;
+    task=newtask; delTask = delOnCompletion;
   }
   void processTask()
   {
@@ -49,6 +49,7 @@ protected:
   Event taskEvent;
   ThreadPool *owner;
   ThreadedTask* task;
+  bool          delTask; //indicates that task should be deleted on completion
 };//PooledThread
 
 
@@ -67,7 +68,7 @@ public:
     maxThreads=count;
   }
 
-  void startTask(ThreadedTask* task);
+  void startTask(ThreadedTask* task, bool delOnCompletion = true);
 
   void releaseThread(PooledThread* thread);
 

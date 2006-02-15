@@ -67,7 +67,10 @@ int PooledThread::Execute()
     }
     smsc_log_info(log,"Execution of task %s finished",task->taskName());
     //task->releaseHeap();
-    delete task;
+    if (delTask)
+        delete task;
+    else
+        task->onRelease();
     task=NULL;
     owner->releaseThread(this);
   }
@@ -167,7 +170,7 @@ void ThreadPool::preCreateThreads(int count)
   Unlock();
 }
 
-void ThreadPool::startTask(ThreadedTask* task)
+void ThreadPool::startTask(ThreadedTask* task, bool delOnCompletion/* = true*/)
 {
   Lock();
   PooledThread* t;
@@ -175,7 +178,7 @@ void ThreadPool::startTask(ThreadedTask* task)
   {
     trace("use free thread for new task");
     freeThreads.Pop(t);
-    t->assignTask(task);
+    t->assignTask(task, delOnCompletion);
     t->processTask();
     usedThreads.Push(t);
   }else
