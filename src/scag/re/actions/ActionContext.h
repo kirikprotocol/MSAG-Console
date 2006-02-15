@@ -61,7 +61,7 @@ namespace scag { namespace re { namespace actions
         void abortSession();
         void AddPendingOperation(uint8_t type, time_t pendingTime);
         Operation * GetCurrentOperation() {return session.GetCurrentOperation();}
-        BillKey CreateBillKey();
+        //BillKey CreateBillKey();
     };
 
 }}}

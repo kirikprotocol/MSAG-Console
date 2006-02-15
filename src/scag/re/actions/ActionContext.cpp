@@ -75,7 +75,7 @@ bool ActionContext::checkTraffic(std::string routeId, CheckTrafficPeriod period,
 {
     return statistics.checkTraffic(routeId, period, value);
 }
-
+/*
 BillKey ActionContext::CreateBillKey()
 {
     BillKey billKey;
@@ -91,7 +91,7 @@ BillKey ActionContext::CreateBillKey()
 
     billKey.OA = ConvertWStrToStr(property1->getStr());
     return billKey;
-}
+}            */
 
 
 
