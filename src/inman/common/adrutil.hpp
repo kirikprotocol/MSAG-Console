@@ -61,6 +61,7 @@ struct TonNpiAddress {
         numPlanInd = (unsigned char)iplan;
         typeOfNumber = (unsigned char)itype;
         memcpy(value, addr_value, length = strlen((const char*)addr_value));
+        value[length] = 0; //sscanf makes length <= sizeof(value)
         return true;
     }
 
