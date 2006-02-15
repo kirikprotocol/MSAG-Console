@@ -9,9 +9,12 @@
 
 #include "logger/Logger.h"
 #include "core/network/Socket.hpp"
-//#include "inman/common/console.hpp"
-#include "inman/interaction/serializer.hpp"
+
 #include "inman/interaction/messages.hpp"
+#include "inman/common/console.hpp"
+#include "inman/common/util.hpp"
+#include "inman/interaction/connect.hpp"
+
 
 namespace scag { namespace bill {
 
@@ -24,14 +27,11 @@ using smsc::core::network::Socket;
 using smsc::logger::Logger;
 //using smsc::inman::common::Console;
 using namespace smsc::inman::interaction;
-//using smsc::inman::interaction::ObjectPipe;
-//using smsc::inman::interaction::Serializer;
-//using smsc::inman::interaction::ChargeSms;
-//using smsc::inman::interaction::ChargeSmsResult;
-//using smsc::inman::interaction::DeliverySmsResult;
-//using smsc::inman::interaction::SmscHandler;
-//using smsc::inman::interaction::SmscCommand;
-//using smsc::inman::interaction::DeliverySmsResult_t;
+
+using smsc::core::threads::Thread;
+using smsc::inman::common::Console;
+using smsc::inman::common::format;
+
 
 
 class BillingManagerImpl : public BillingManager, public Thread, public SmscHandler
@@ -64,7 +64,7 @@ class BillingManagerImpl : public BillingManager, public Thread, public SmscHand
     Logger * logger;
 
     Socket * socket;
-    ObjectPipe * pipe;
+    Connect * pipe;
 
     EventMonitorEntity * EventMonitorArray;
 
@@ -96,9 +96,21 @@ public:
         logger(Logger::getInstance("scag.BM")),
         m_lastBillId(0)
     {
+        std::string msg;
         //TODO: Initialize socket
-        socket = new Socket();
-        pipe = new ObjectPipe(socket);
+        if (socket->Init(0, 0, 1000)) {
+            msg = format("InFacade: can't init socket: %s (%d)\n", strerror(errno), errno);
+            smsc_log_error(logger, msg.c_str());
+            throw std::runtime_error(msg.c_str());
+        }
+
+        if (socket->Connect()) {
+            msg = format("InFacade: can't connect socket: %s (%d)\n", strerror(errno), errno);
+            smsc_log_error(logger, msg.c_str());
+            throw std::runtime_error(msg.c_str());
+        }
+        pipe = new Connect(socket, SerializerInap::getInstance(),
+                                        Connect::frmLengthPrefixed, logger);
     }
 
     ~BillingManagerImpl()
@@ -323,7 +335,6 @@ void BillingManagerImpl::onChargeSmsResult(ChargeSmsResult* result)
     EventMonitorArray[pBillTransaction->EventMonitorIndex].eventMonitor.notify();
 
 }
-
-
+   
 }}
 
