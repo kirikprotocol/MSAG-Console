@@ -849,7 +849,13 @@ public:
 
       char buf[65535];
       SMS s;
-      fetchSmsFromSmppPdu((PduXSm*)pdu,&s);
+      if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
+      {
+        fetchSmsFromSmppPdu((PduXSm*)pdu,&s);
+      }else
+      {
+        fetchSmsFromDataSmPdu((PduDataSm*)pdu,&s);
+      }
 
       unsigned msgsmlen,msgpllen;
       s.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&msgsmlen);
@@ -1741,7 +1747,7 @@ int main(int argc,char* argv[])
           ptr+=n;
         }
         s.setIntProperty(Tag::SMPP_DATA_CODING,dataCoding);
-        if(tmp.length()>140)
+        if(tmp.length()>140 || dataSm)
         {
           s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),tmp.length());
         }else
