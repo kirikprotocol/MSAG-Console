@@ -414,7 +414,7 @@ public:
     }
     Check();
     if(flags&FLG_WRBUF)Flush();
-    if((flags&FLG_BUFFERED) && (flags&FLG_RDBUF)!=FLG_RDBUF && sz<bufferSize)
+    if((flags&FLG_BUFFERED) && (flags&FLG_RDBUF)!=FLG_RDBUF && sz<(size_t)bufferSize)
     {
       bufferUsed=read(fd,buffer,bufferSize);
       bufferPosition=0;
@@ -628,7 +628,11 @@ public:
     if(isInMemory())return fileSize;
     Check();
     Flush();
+#ifdef __GNUC__
+    struct stat st;
+#else
     struct ::stat st;
+#endif
     fstat(fd,&st);
     return st.st_size;
   }
@@ -821,7 +825,11 @@ public:
     struct _stat st;
     return _stat(file,&st)==0;
 #else
+#ifdef __GNUC__
+    struct stat st;
+#else
     struct ::stat st;
+#endif
     return ::stat(file,&st)==0;
 #endif
   }
