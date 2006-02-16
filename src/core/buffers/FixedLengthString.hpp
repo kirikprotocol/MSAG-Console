@@ -30,6 +30,14 @@ struct FixedLengthString{
     return *this;
   }
 
+  template <int M>
+  FixedLengthString& operator=(const char (&argStr)[M])
+  {
+    strncpy(str,argStr,N);
+    str[N-1]=0;
+    return *this;
+  }
+
   template <class StdString>
   FixedLengthString& operator=(const StdString& argStr)
   {
@@ -78,9 +86,18 @@ struct FixedLengthString{
     return str[index];
   }
 
+  operator std::string()const
+  {
+    return str;
+  }
+
   const char* c_str()const
   {
     return str;
+  }
+  size_t length()const
+  {
+    return strlen(str);
   }
 };
 
