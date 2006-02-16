@@ -165,10 +165,10 @@ public class myServlet extends HttpServlet
       if (li != null && li.size() >0)
       {
       /*errorType=Integer.parseInt((String)li.get(0));*/  res.setIntHeader("errorType",errorType);
-      lineIndex=Integer.parseInt((String)li.get(0));      res.setIntHeader("lineIndex",lineIndex);
+      lineIndex=Integer.parseInt((String)li.get(1));      res.setIntHeader("lineIndex",lineIndex);
       /*start=Integer.parseInt((String)li.get(2));*/      res.setIntHeader("start",start);
       /*end=Integer.parseInt((String)li.get(3)); */       res.setIntHeader("end",end);
-      error=(String)li.get(1);                            res.setHeader("error",error);
+      error=(String)li.get(0);                            res.setHeader("error",error);
       res.setHeader("status","error");
       }
       else
