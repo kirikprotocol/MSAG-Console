@@ -352,8 +352,8 @@ try{
 
 static JSBool _initBillInstance(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
- scag::bill::BillingManagerConfig bcfg;
- scag::bill::BillingManager::Init(bcfg);
+// scag::bill::BillingManagerConfig bcfg;
+ scag::bill::BillingManager::Init(100);
  scag::config::ConfigManager::Init();
 
   return JS_TRUE;
