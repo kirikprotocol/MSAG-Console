@@ -230,7 +230,8 @@ int AbonentInfoSme::Execute()
           OutputFormatter* f=ResourceManager::getInstance()->getFormatter(pr.locale,"abonentinfo.mobileFormat");
           if(!f)
           {
-            answ="Unknown formatter abonentinfo.mobileFormat for locale "+pr.locale;
+            answ="Unknown formatter abonentinfo.mobileFormat for locale ";
+            answ+=pr.locale.c_str();
           }else
           {
             f->format(answ,ga,ce);
@@ -249,7 +250,8 @@ int AbonentInfoSme::Execute()
           __trace2__("AbonentInfo: formatter=%p",f);
           if(!f)
           {
-            answ="Unknown formatter abonentinfo.smeFormat for locale "+pr.locale;
+            answ="Unknown formatter abonentinfo.smeFormat for locale ";
+            answ+=pr.locale.c_str();
           }else
           {
             f->format(answ,ga,ce);
