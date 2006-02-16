@@ -16,18 +16,7 @@ bool BillActionRollback::run(ActionContext& context)
         return false;
     }
 
-    try
-    {
-        BillKey billKey = context.CreateBillKey();
-        //BillId = BillingManager::GetBill(billKey);
-    } 
-    catch (...)
-    {
-        smsc_log_error(logger,"Action: '[CDR]BillActionRollback' - cannot build bill for billKey");
-        return true;
-    }
-
-    operation->detachBill(BillId);
+  operation->detachBill(BillId);
 
     return true;
 }

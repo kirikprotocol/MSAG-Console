@@ -22,10 +22,8 @@ using namespace smsc::core::threads;
 using namespace scag::util::singleton;
 using namespace scag::exceptions;
 
-//using smsc::core::threads::Thread;
 using smsc::core::network::Socket;
 using smsc::logger::Logger;
-//using smsc::inman::common::Console;
 using namespace smsc::inman::interaction;
 
 using smsc::core::threads::Thread;
@@ -74,7 +72,7 @@ class BillingManagerImpl : public BillingManager, public Thread, public SmscHand
     void Stop();
     bool isStarted();
 public:
-    void init(int maxMonitors);
+    void init(BillingManagerConfig& cfg);
 
     virtual int Execute();
     virtual void Start();
@@ -94,24 +92,7 @@ public:
         socket(0), 
         pipe(0), 
         logger(Logger::getInstance("scag.BM")),
-        m_lastBillId(0)
-    {
-        std::string msg;
-        //TODO: Initialize socket
-        if (socket->Init(0, 0, 1000)) {
-            msg = format("InFacade: can't init socket: %s (%d)\n", strerror(errno), errno);
-            smsc_log_error(logger, msg.c_str());
-            throw std::runtime_error(msg.c_str());
-        }
-
-        if (socket->Connect()) {
-            msg = format("InFacade: can't connect socket: %s (%d)\n", strerror(errno), errno);
-            smsc_log_error(logger, msg.c_str());
-            throw std::runtime_error(msg.c_str());
-        }
-        pipe = new Connect(socket, SerializerInap::getInstance(),
-                                        Connect::frmLengthPrefixed, logger);
-    }
+        m_lastBillId(0) {}
 
     ~BillingManagerImpl()
     {
@@ -132,14 +113,14 @@ typedef SingletonHolder<BillingManagerImpl> SingleBM;
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 
-void BillingManager::Init(int maxMonitors)
+void BillingManager::Init(BillingManagerConfig& cfg)
 {
     if (!bBillingManagerInited)
     {
         MutexGuard guard(initBillingManagerLock);
         if (!bBillingManagerInited) {
             BillingManagerImpl& bm = SingleBM::Instance();
-            bm.init(maxMonitors); bm.Start();
+            bm.init(cfg); bm.Start();
             bBillingManagerInited = true;
         }
     }
@@ -173,10 +154,27 @@ bool BillingManagerImpl::isStarted()
     return m_bStarted;
 }
 
-void BillingManagerImpl::init(int maxMonitors)
+void BillingManagerImpl::init(BillingManagerConfig& cfg)
 {
-    m_MaxEventMonitors = maxMonitors;
+    m_MaxEventMonitors = cfg.MaxThreads;
     EventMonitorArray = new EventMonitorEntity[m_MaxEventMonitors];
+    
+    std::string msg;
+
+    if (socket->Init(cfg.BillingHost.c_str(), cfg.BillingPort, 1000)) {
+        msg = format("BillingManager error - can't init socket: %s (%d)\n", strerror(errno), errno);
+
+        smsc_log_error(logger, msg.c_str());
+        throw SCAGException(msg.c_str());
+    }
+
+    if (socket->Connect()) {
+        msg = format("BillingManager error - can't connect socket: %s (%d)\n", strerror(errno), errno);
+        smsc_log_error(logger, msg.c_str());
+        throw SCAGException(msg.c_str());
+    }
+    pipe = new Connect(socket, SerializerInap::getInstance(), Connect::frmLengthPrefixed, logger);
+
 }
 
 

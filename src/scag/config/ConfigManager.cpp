@@ -36,6 +36,7 @@ using smsc::util::findConfigFile;
 class ConfigManagerImpl : public ConfigManager
 {
 public:
+    virtual ~ConfigManagerImpl() {cout << "ConfigManager released" << endl;}
     ConfigManagerImpl() throw(ConfigException);
 
     virtual void registerListener(ConfigType type, ConfigListener* listener);

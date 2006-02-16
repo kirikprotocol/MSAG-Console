@@ -10,8 +10,14 @@ namespace config {
 class BillingManagerConfig
 {
 public:
-    std::string cfg_dir;
     std::string so_dir;
+
+    std::string BillingHost;
+    int BillingPort;
+
+    int MaxThreads;
+
+
     BillingManagerConfig() { };
     BillingManagerConfig(ConfigView& cv) throw(ConfigException);
     void init(ConfigView& cv) throw(ConfigException);   

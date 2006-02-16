@@ -3,12 +3,15 @@
 
 #include "sms/sms.h"
 #include <core/synchronization/EventMonitor.hpp>
+#include "scag/config/bill/BillingManagerConfig.h"
 
 
 namespace scag { namespace bill {
 
 using namespace smsc::sms;
 using namespace smsc::core::synchronization;
+using namespace scag::config;
+
 
 struct CTransportId
 {
@@ -42,7 +45,7 @@ public:
     virtual void rollback(int billId) = 0;
 
     static BillingManager& Instance();
-    static void Init(int maxMonitors);
+    static void Init(BillingManagerConfig& cfg);
 
 
 
