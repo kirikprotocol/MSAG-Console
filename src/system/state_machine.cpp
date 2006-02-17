@@ -690,9 +690,9 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
   {
     int pos=0;
     int fix=0;
-    for(int i=0;i<len;i++)
+    for(int j=0;j<len;j++)
     {
-      if(strchr(escchars,buf[i]))lastDirectiveSymbol++;
+      if(strchr(escchars,buf[j]))lastDirectiveSymbol++;
     }
   }
   if(sms.getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
@@ -1480,6 +1480,10 @@ StateType StateMachine::submit(Tuple& t)
         submitResp(t,sms,Status::SUBMITFAIL);
         return ERROR_STATE;
       }
+      if(sms->hasIntProperty(Tag::SMPP_REGISTRED_DELIVERY) && !newsms.hasIntProperty(Tag::SMPP_REGISTRED_DELIVERY))
+      {
+        newsms.setIntProperty(Tag::SMPP_REGISTRED_DELIVERY,sms->getIntProperty(Tag::SMPP_REGISTRED_DELIVERY));
+      }
       unsigned int newlen;
       unsigned char *newbody;
       unsigned int cilen;
@@ -1525,11 +1529,11 @@ StateType StateMachine::submit(Tuple& t)
       {
         if(newsms.hasBinProperty(Tag::SMSC_DC_LIST))
         {
-          unsigned len;
-          newsms.getBinProperty(Tag::SMSC_DC_LIST,&len);
-          if(len!=num)
+          unsigned dclen;
+          newsms.getBinProperty(Tag::SMSC_DC_LIST,&dclen);
+          if(dclen!=num)
           {
-            warn2(smsLog, "smsId=%lld: different number of parts detected %d!=%d.",t.msgId,len,num);
+            warn2(smsLog, "smsId=%lld: different number of parts detected %d!=%d.",t.msgId,dclen,num);
             submitResp(t,sms,Status::INVOPTPARAMVAL);
             return ERROR_STATE;
           }
@@ -1550,24 +1554,23 @@ StateType StateMachine::submit(Tuple& t)
 
       if(newsms.hasBinProperty(Tag::SMSC_UMR_LIST))
       {
-        unsigned len;
-        unsigned char* umrList=(unsigned char*)newsms.getBinProperty(Tag::SMSC_UMR_LIST,&len);
-        if(idx<=len)
+        unsigned ulen;
+        unsigned char* umrList=(unsigned char*)newsms.getBinProperty(Tag::SMSC_UMR_LIST,&ulen);
+        if(idx<=ulen)
         {
           umrList[idx-1]=sms->getMessageReference();
-          newsms.setBinProperty(Tag::SMSC_UMR_LIST,(const char*)umrList,len);
+          newsms.setBinProperty(Tag::SMSC_UMR_LIST,(const char*)umrList,ulen);
 
           if(newsms.hasBinProperty(Tag::SMSC_UMR_LIST_MASK))
           {
             unsigned mlen;
             char* mask=(char*)newsms.getBinProperty(Tag::SMSC_UMR_LIST_MASK,&mlen);
-            if(idx<=len)
+            if(idx<=mlen)
             {
               mask[idx-1]=1;
               sms->setBinProperty(Tag::SMSC_UMR_LIST_MASK,mask,mlen);
             }
           }
-
         }
       }
 
@@ -2209,7 +2212,7 @@ StateType StateMachine::submitChargeResp(Tuple& t)
     // то бишь мы приняли sms в обработку, можно слать ok.
     char buf[64];
     sprintf(buf,"%lld",t.msgId);
-    SmscCommand resp = SmscCommand::makeSubmitSmResp
+    SmscCommand response = SmscCommand::makeSubmitSmResp
                          (
                            buf,
                            dialogId,
@@ -2217,7 +2220,7 @@ StateType StateMachine::submitChargeResp(Tuple& t)
                            sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
                          );
     try{
-      src_proxy->putCommand(resp);
+      src_proxy->putCommand(response);
     }catch(...)
     {
       warn2(smsLog, "SBM: failed to put response command SUBMIT_OK Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
@@ -3862,9 +3865,9 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
         if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
         {
-          uint32_t len;
-          ConcatInfo *ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,&len);
-          if(sms.getConcatSeqNum()<ci->num-1)
+          uint32_t clen;
+          ConcatInfo *nci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,&clen);
+          if(sms.getConcatSeqNum()<nci->num-1)
           {
             sms.setIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND,1);
           }else
