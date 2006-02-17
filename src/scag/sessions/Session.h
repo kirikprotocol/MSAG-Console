@@ -76,7 +76,7 @@ namespace scag { namespace sessions
     struct CSessionPrimaryKey
     {
         smsc::sms::Address abonentAddr;
-        tm BornMicrotime;
+        timeval BornMicrotime;
     };
 
  /*   struct COperationKey

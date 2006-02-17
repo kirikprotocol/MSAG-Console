@@ -42,6 +42,39 @@ void Operation::rollbackAll()
 
 //////////////////////////////////////////////Session////////////////////////////////////////////
 
+Session::Session(const CSessionKey& key) 
+    : PropertyManager(), lastAccessTime(-1), 
+        bChanged(false), bDestroy(false), accessCount(0), m_pCurrentOperation(0),
+        logger(0), lastOperationId(0), m_isTransact(false)
+{
+    logger = Logger::getInstance("scag.re");
+    m_SessionKey = key;
+
+    timeval tv;
+    gettimeofday(&tv,0);
+
+    m_SessionPrimaryKey.abonentAddr = key.abonentAddr;
+    m_SessionPrimaryKey.BornMicrotime = tv;
+}
+
+Session::~Session()
+{
+    // rollback all pending billing transactions & destroy session
+
+
+    char * key;
+    AdapterProperty * value = 0;
+
+    PropertyHash.First();
+    for (Hash <AdapterProperty *>::Iterator it = PropertyHash.getIterator(); it.Next(key, value);)
+        if (value) delete value;
+
+    ClearOperations();
+
+    smsc_log_debug(logger,"Session: session destroyed USR='%d' Address = '%s'",m_SessionKey.USR,m_SessionKey.abonentAddr.toString().c_str());
+}
+
+
 void Session::DeserializeProperty(SessionBuffer& buff)
 {
     std::string name, value;
@@ -179,6 +212,7 @@ void Session::Serialize(SessionBuffer& buff)
    
     buff << m_SessionKey.abonentAddr << (uint32_t)m_SessionKey.USR << lastAccessTime << lastOperationId << m_isTransact;
     buff << m_SmppDiscriptor.cmdType << m_SmppDiscriptor.currentIndex << m_SmppDiscriptor.lastIndex;
+    buff << m_SessionPrimaryKey.abonentAddr << m_SessionPrimaryKey.BornMicrotime.tv_sec << m_SessionPrimaryKey.BornMicrotime.tv_usec;
 }
 
 
@@ -218,6 +252,11 @@ void Session::Deserialize(SessionBuffer& buff)
 
     buff >> tmp;
     m_SmppDiscriptor.lastIndex = tmp;
+
+    buff >> m_SessionPrimaryKey.abonentAddr;
+    buff >> m_SessionPrimaryKey.BornMicrotime.tv_sec;
+    buff >> m_SessionPrimaryKey.BornMicrotime.tv_usec;
+
 }
 
 
@@ -240,37 +279,6 @@ Property* Session::getProperty(const std::string& name)
         return property;
     }
     return (*propertyPTR);
-}
-
-Session::Session(const CSessionKey& key) 
-    : PropertyManager(), lastAccessTime(-1), 
-        bChanged(false), bDestroy(false), accessCount(0), m_pCurrentOperation(0),
-        logger(0), lastOperationId(0), m_isTransact(false)
-{
-    logger = Logger::getInstance("scag.re");
-    m_SessionKey = key;
-
-    timeval tv;
-
-    m_SessionPrimaryKey.abonentAddr = key.abonentAddr;
-    m_SessionPrimaryKey.BornMicrotime = (*localtime(&tv.tv_sec));
-}
-
-Session::~Session()
-{
-    // rollback all pending billing transactions & destroy session
-
-
-    char * key;
-    AdapterProperty * value = 0;
-
-    PropertyHash.First();
-    for (Hash <AdapterProperty *>::Iterator it = PropertyHash.getIterator(); it.Next(key, value);)
-        if (value) delete value;
-
-    ClearOperations();
-
-    smsc_log_debug(logger,"Session: session destroyed USR='%d' Address = '%s'",m_SessionKey.USR,m_SessionKey.abonentAddr.toString().c_str());
 }
 
 
