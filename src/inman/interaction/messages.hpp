@@ -85,6 +85,14 @@ typedef enum
 } 
 ChargeSmsResult_t;
 
+//Short message data specific for CAP3 interaction
+struct SMCAPSpecificInfo {
+    std::string   smscAddress;
+    unsigned char tpShortMessageSpecificInfo;
+    unsigned char tpProtocolIdentifier;
+    unsigned char tpDataCodingScheme;
+    time_t        tpValidityPeriod;
+};
 
 class ChargeSms : public InmanCommand
 {
@@ -92,38 +100,36 @@ public:
     ChargeSms();
     virtual ~ChargeSms();
 
-    void setDestinationSubscriberNumber(const std::string& dst_adr);
-    void setCallingPartyNumber(const std::string& src_adr);
-    void setCallingIMSI(const std::string& imsi);
+    //data for CDR generation & CAP interaction
+    void setDestinationSubscriberNumber(const std::string& dst_adr)
+    { dstSubscriberNumber = dst_adr; }
+    void setCallingPartyNumber(const std::string& src_adr)
+    { callingPartyNumber = src_adr; }
+    void setCallingIMSI(const std::string& imsi)
+    { callingImsi = imsi; }
+    void setSubmitTimeTZ(time_t tmVal)
+    { submitTimeTZ = tmVal; }
+    void setLocationInformationMSC(const std::string& src_msc)
+    { locationInformationMSC = src_msc; }
+    void setCallingSMEid(const std::string & sme_id)
+    { callingSMEid = sme_id; }
+    void setRouteId(const std::string & route_id)
+    { routeId = route_id; }
+    void setServiceId(int32_t service_id)   { serviceId = service_id; }
+    void setUserMsgRef(uint32_t msg_ref)    { userMsgRef = msg_ref; }
+    void setMsgId(uint64_t msg_id)          { msgId = msg_id; }
+    void setServiceOp(int32_t service_op)   { ussdServiceOp = service_op; }
+    void setPartsNum(uint8_t parts_num)     { partsNum = parts_num; }
+    void setMsgLength(uint16_t msg_len)     { msgLen = msg_len; }
+    //data for CAP3 InitialDP OPERATION
     void setSMSCAddress(const std::string& smsc_adr);
-    void setSubmitTimeTZ(time_t tmVal);
     void setTPShortMessageSpecificInfo(unsigned char sm_info);
     void setTPProtocolIdentifier(unsigned char prot_id);
     void setTPDataCodingScheme(unsigned char dcs);
     void setTPValidityPeriod(time_t vpVal);
-    void setLocationInformationMSC(const std::string& src_msc);
-    //data for CDR generation
-    void setCallingSMEid(const std::string & sme_id);
-    void setRouteId(const std::string & route_id);
-    void setServiceId(int32_t service_id);
-    void setUserMsgRef(uint32_t msg_ref);
-    void setMsgId(uint64_t msg_id);
-    void setServiceOp(int32_t service_op);
-    void setPartsNum(uint8_t parts_num);
-    void setMsgLength(uint16_t msg_len) { msgLen = msg_len; }
-    //data for InitialDP OPERATION
-    const std::string & getDestinationSubscriberNumber(void) const;
-    const std::string & getCallingPartyNumber(void) const;
-    const std::string & getCallingIMSI(void) const;
-    const std::string & getSMSCAddress(void) const;
-    const std::string & getLocationInformationMSC(void) const;
-    time_t              getSubmitTimeTZ(void) const;
-    time_t              getTPValidityPeriod(void) const;
-    unsigned char       getTPShortMessageSpecificInfo(void) const;
-    unsigned char       getTPProtocolIdentifier(void) const;
-    unsigned char       getTPDataCodingScheme(void) const;
 
     void export2CDR(CDRRecord & cdr) const;
+    void exportCAPInfo(SMCAPSpecificInfo & csi) const { csi = csInfo; }
     //InmanCommand interface
     void handle(InmanHandler*);
 
@@ -133,17 +139,12 @@ protected:
     void save(ObjectBuffer& out);
 
 private:
-    std::string   destinationSubscriberNumber;
+    //data for CDR generation
+    std::string   dstSubscriberNumber;
     std::string   callingPartyNumber;
     std::string   callingImsi;
-    std::string   smscAddress;
     time_t        submitTimeTZ;
-    unsigned char tpShortMessageSpecificInfo;
-    unsigned char tpProtocolIdentifier;
-    unsigned char tpDataCodingScheme;
-    time_t        tpValidityPeriod;
     std::string   locationInformationMSC; //keeps SRC_MSC
-    //data for CDR generation
     std::string   callingSMEid; //"MAP_PROXY"
     std::string   routeId;      //"sibinco.sms > plmn.kem"
     int32_t       serviceId;    //
@@ -152,6 +153,7 @@ private:
     int32_t       ussdServiceOp; //see sms_const.h
     uint8_t       partsNum;     //number of parts if packet was conjoined.
     uint16_t      msgLen;       //total length of message(including multipart case)
+    SMCAPSpecificInfo csInfo;
 };
 
 //NOTE: in case of CAP3 error, this command ends the TCP dialog.

@@ -144,154 +144,44 @@ ChargeSms::~ChargeSms()
 {
 }
 
-void ChargeSms::setDestinationSubscriberNumber(const std::string& value)
-{
-    destinationSubscriberNumber = value;
-}
-
-void ChargeSms::ChargeSms::setCallingPartyNumber(const std::string& value)
-{
-    callingPartyNumber = value;
-}
-
-void ChargeSms::setCallingIMSI(const std::string& value)
-{
-    callingImsi = value;
-}
-
+//data for CAP3 InitialDP OPERATION
 void ChargeSms::setSMSCAddress(const std::string& value)
 {
-    smscAddress = value;
-}
-
-void ChargeSms::setSubmitTimeTZ(time_t value)
-{
-    submitTimeTZ = value;
+    csInfo.smscAddress = value;
 }
 
 void ChargeSms::setTPShortMessageSpecificInfo(unsigned char value)
 {
-    tpShortMessageSpecificInfo = value;
+    csInfo.tpShortMessageSpecificInfo = value;
 }
 
 void ChargeSms::setTPProtocolIdentifier(unsigned char value)
 {
-    tpProtocolIdentifier = value;
+    csInfo.tpProtocolIdentifier = value;
 }
 
 void ChargeSms::setTPDataCodingScheme(unsigned char value)
 {
-    tpDataCodingScheme = value;
+    csInfo.tpDataCodingScheme = value;
 }
 
 void ChargeSms::setTPValidityPeriod(time_t value)
 {
-    tpValidityPeriod = value;
+    csInfo.tpValidityPeriod = value;
 }
 
-void ChargeSms::setLocationInformationMSC(const std::string& value)
-{
-    locationInformationMSC = value;
-}
-
-//data for CDR generation
-
-void ChargeSms::setCallingSMEid(const std::string & sme_id)
-{
-    callingSMEid = sme_id;
-}
-
-void ChargeSms::setRouteId(const std::string & route_id)
-{
-    routeId = route_id;
-}
-
-void ChargeSms::setServiceId(int32_t service_id)
-{
-    serviceId = service_id;
-}
-
-void ChargeSms::setUserMsgRef(uint32_t msg_ref)
-{
-    userMsgRef = msg_ref;
-}
-
-void ChargeSms::setMsgId(uint64_t msg_id)
-{
-    msgId = msg_id;
-}
-
-void ChargeSms::setServiceOp(int32_t service_op)
-{
-    ussdServiceOp = service_op;
-}
-
-void ChargeSms::setPartsNum(uint8_t parts_num)
-{
-    partsNum = parts_num;
-}
-
-
-const std::string& ChargeSms::getDestinationSubscriberNumber(void) const
-{
-    return destinationSubscriberNumber;
-}
-
-const std::string& ChargeSms::getCallingPartyNumber(void) const
-{
-    return callingPartyNumber;
-}
-
-const std::string& ChargeSms::getCallingIMSI(void) const
-{
-    return callingImsi;
-}
-
-const std::string& ChargeSms::getSMSCAddress(void) const
-{
-    return smscAddress;
-}
-
-time_t ChargeSms::getSubmitTimeTZ(void) const
-{
-    return submitTimeTZ;
-}
-
-unsigned char ChargeSms::getTPShortMessageSpecificInfo(void) const
-{
-    return tpShortMessageSpecificInfo;
-}
-
-unsigned char ChargeSms::getTPProtocolIdentifier(void) const
-{
-    return tpProtocolIdentifier;
-}
-
-unsigned char ChargeSms::getTPDataCodingScheme(void) const
-{
-    return tpDataCodingScheme;
-}
-time_t ChargeSms::getTPValidityPeriod(void) const
-{
-    return tpValidityPeriod;
-}
-
-const std::string&  ChargeSms::getLocationInformationMSC(void) const
-{
-    return locationInformationMSC;
-}
 
 void ChargeSms::load(ObjectBuffer& in) throw(CustomException)
 {
-    in >> destinationSubscriberNumber;
+    in >> dstSubscriberNumber;
     in >> callingPartyNumber;
     in >> callingImsi;
-    in >> smscAddress;
+    in >> csInfo.smscAddress;
     in >> submitTimeTZ;
-    in >> tpShortMessageSpecificInfo;
-    in >> tpProtocolIdentifier;
-    in >> tpDataCodingScheme;
-    in >> tpValidityPeriod;
+    in >> csInfo.tpShortMessageSpecificInfo;
+    in >> csInfo.tpProtocolIdentifier;
+    in >> csInfo.tpDataCodingScheme;
+    in >> csInfo.tpValidityPeriod;
     in >> locationInformationMSC;
     //data for CDR generation
     in >> callingSMEid;
@@ -306,15 +196,15 @@ void ChargeSms::load(ObjectBuffer& in) throw(CustomException)
 
 void ChargeSms::save(ObjectBuffer& out)
 {
-    out << destinationSubscriberNumber;
+    out << dstSubscriberNumber;
     out << callingPartyNumber;
     out << callingImsi;
-    out << smscAddress;
+    out << csInfo.smscAddress;
     out << submitTimeTZ;
-    out << tpShortMessageSpecificInfo;
-    out << tpProtocolIdentifier;
-    out << tpDataCodingScheme;
-    out << tpValidityPeriod;
+    out << csInfo.tpShortMessageSpecificInfo;
+    out << csInfo.tpProtocolIdentifier;
+    out << csInfo.tpDataCodingScheme;
+    out << csInfo.tpValidityPeriod;
     out << locationInformationMSC;
     //data for CDR generation
     out << callingSMEid;
@@ -331,7 +221,7 @@ void ChargeSms::save(ObjectBuffer& out)
 void ChargeSms::export2CDR(CDRRecord & cdr) const
 {
     cdr._msgId = msgId;
-    cdr._mediaType = (parseCBS_DCS(tpDataCodingScheme) == CBS_DCS::dcBINARY8) ?
+    cdr._mediaType = (parseCBS_DCS(csInfo.tpDataCodingScheme) == CBS_DCS::dcBINARY8) ?
                         CDRRecord::dpBinary : CDRRecord::dpText ;
     cdr._bearer = (ussdServiceOp < 0) ? CDRRecord::dpSMS : CDRRecord::dpUSSD;
     cdr._submitTime = submitTimeTZ;
@@ -346,7 +236,7 @@ void ChargeSms::export2CDR(CDRRecord & cdr) const
     cdr._serviceId = serviceId;
     cdr._userMsgRef = userMsgRef;
 
-    cdr._dstAdr = destinationSubscriberNumber;
+    cdr._dstAdr = dstSubscriberNumber;
     cdr._dpLength = (uint32_t)msgLen;
 }
 
