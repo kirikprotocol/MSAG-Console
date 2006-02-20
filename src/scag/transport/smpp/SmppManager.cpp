@@ -277,12 +277,12 @@ void SmppManager::addSmppEntity(const SmppEntityInfo& info)
   if(info.type==etSmsc)
   {
     SmscConnectInfo ci;
-    ci.regSysId=info.systemId;
-    ci.sysId=info.bindSystemId;
-    ci.pass=info.bindPassword;
-    ci.hosts[0]=info.host;
+    ci.regSysId=info.systemId.c_str();
+    ci.sysId=info.bindSystemId.c_str();
+    ci.pass=info.bindPassword.c_str();
+    ci.hosts[0]=info.host.c_str();
     ci.ports[0]=info.port;
-    ci.hosts[1]=info.altHost;
+    ci.hosts[1]=info.altHost.c_str();
     ci.ports[1]=info.altPort;
 
     sm.getSmscConnectorAdmin()->addSmscConnect(ci);
