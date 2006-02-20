@@ -1,6 +1,78 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
 
+<!-- INMan interacts the IN node -->
+<config>
+  <param name="host" type="string">@inman.host@</param>
+  <param name="port" type="int">@inman.port@</param>     <!-- InMan service port -->
+
+  <section name="Billing">
+    <param name="billMode" type="string">all</param>       <!-- options: [none, all, ussd, sms]
+      none: don't request IN platform write CDR instead
+      all:     always reqiest IN platform
+      ussd: request IN platform in case of USSD only, bill SMS to CDR
+      sms:  request IN platform in case of SMS only, bill USSD to CDR
+    -->
+    <param name="billingDir" type="string">./cdrs</param>  <!-- directory to store CDRs -->
+    <param name="billingInterval" type="int">120</param>   <!-- CDR storage rolling interval, units: seconds -->
+    <param name="cdrMode" type="string">all</param>        <!-- options: [none, all, postpaid]
+      none:  don't write CDR at all
+      all:      always write CDR
+      postpaid:  write CDR either for POSTPAID abonents or in case of IN platform interaction error
+    -->
+    <param name="cacheRAMl" type="int">40</param>   <!-- abonents cache RAM buffer size, units: Mb -->
+    <param name="cacheInterval" type="int">1440</param>   <!-- abonent info refreshing interval, units: minutes -->
+    <param name="SMSC_Timeout" type="int">120</param>   <!--
+     timeout on TCP operations, units: seconds, max: 65535, default 30 -->
+    <param name="maxBillings" type="int">20</param>           <!-- 
+     maximium simultaneous billing requests per SMSC connect, max:10000, default 500  -->
+  </section>
+
+  <section name="IN_interaction"> <!-- IN platform interaction parameters -->
+    <param name="ssfAddress" type="string">@inman.ssfAddress@</param>  <!-- InMan address -->
+    <param name="ssn" type="int">146</param>
+    <param name="scfAddress" type="string">@inman.scfAddress@</param>  <!-- IN point address -->
+    <param name="serviceKey" type="int">11</param>         <!-- IN service key: uint32_t -->
+    <!-- OPTIONAL PARAMETERS follow:: -->
+    <param name="ss7UserId" type="int">03</param>     <!-- PortSS7 user id [1..20], default: 03  -->
+    <param name="IN_Timeout" type="int">20</param>   <!-- timeout on CAP operations, units: seconds, max: 65535, default 20 -->
+
+    <param name="RPCList_reject" type="string">16</param> <!--
+     comma separated list of extra (in addition to 21) RP MO causes returned by IN platform (if supported) to forbid DP processing, 
+     format: rpc1,rpc2,rpc3,.. 
+     example(Alcatel): 16
+    -->
+    <param name="RPCList_postpaid" type="string">41</param> <!--
+     comma separated list of RP MO causes returned by IN platform for postpaid abonents (if supported),
+     format: rpc1,rpc2,rpc3,.. 
+     example (Huawei): 41
+    -->
+ </section>
+
+<!-- OPTIONAL PARAMETERS follow: -->
+    <section name="DataProvider"> <!--  Abonent type is provided by DB, not HLR -->
+         <section name="DataSource">
+            <param name="type" type="string">OCI</param>  <!-- Oracle DB --> 
+            <param name="dbInstance" type="string">DBS_ORCL</param>
+            <param name="dbUserName" type="string">@inman.db.userid@</param>
+            <param name="dbUserPassword" type="string">@inman.db.PasSword@</param>
+            <param name="connections" type="int">5</param>  <!--  max allowed db connections -->
+            <param name="maxQueries" type="int">15</param>  <!--  max allowed db queries -->
+           <!--  SQL function returning Abonent type has following prototype:
+                  FUNCTION abonentQueryFunc (iqueryFuncArg  IN VARCHAR2) RETURN NUMBER
+            -->
+            <param name="abonentQueryFunc" type="string">@inman.db.abonentQueryFunc@</param>
+            <param name="queryFuncArg" type="string">@inman.db.queryFuncArg@</param> 
+         </section>
+        <section name="DataSourceDrivers">
+            <section name="OCIDataSourceDriver">
+                <param name="type" type="string">OCI</param>
+                <param name="loadup" type="string">libdb_oci.so</param>
+            </section>
+        </section>
+   </section>
+</config>
+
 <!--
 SCCP configuration
 
@@ -12,58 +84,4 @@ GT           =  SSN
 79139869998  =   6
 79139869999  =   8
 -->
-<!-- INMan make request to IN node -->
-<config>
-  <param name="ssfAddress" type="string">@inman.ssfAddress@</param>  <!-- InMan address -->
-  <param name="ssn" type="int">146</param>
-  <param name="scfAddress" type="string">@inman.scfAddress@</param>  <!-- IN point address -->
 
-  <param name="host" type="string">@inman.host@</param>
-  <param name="port" type="int">@inman.port@</param>     <!-- InMan service port -->
-
-  <param name="billMode" type="string">all</param>       <!-- options: none, all, ussd, sms
-                                                          none: don't request IN platform write CDR instead
-                                                          all:  always reqiest IN platform
-                                                          ussd: request IN platform in case of USSD only, bill SMS to CDR
-                                                          sms:  request IN platform in case of SMS only, bill USSD to CDR
-                                                         -->
-  <param name="cdrMode" type="string">all</param>        <!-- options: none, all, postpaid
-                                                          none: don't write CDR at all
-                                                          all:  always write CDR
-                                                          pospaid: write CDR either for POSTPAID abonents or in case of IN platform interaction error
-                                                         -->
-  <param name="billingDir" type="string">./cdrs</param>  <!-- directory to store CDRs -->
-  <param name="billingInterval" type="int">120</param>   <!-- rolling interval, units: seconds -->
-  <param name="serviceKey" type="int">11</param>         <!-- IN service key: uint32_t -->
-  <!-- OPTIONAL PARAMETERS: -->
-  <param name="IN_Timeout" type="int">20</param>      <!-- timeout on CAP operations, units: seconds, max: 65535 -->
-  <param name="SMSC_Timeout" type="int">180</param>   <!-- timeout on TCP operations, units: seconds, max: 65535 -->
-  <param name="ss7UserId" type="int">03</param>       <!-- PortSS7 user id [1..20], default: 03  -->
-  <param name="RPCausesList" type="string">16</param> <!-- comma separated list of extra (in addition to 21) RP MO causes,
-                                                           which forbid processing, format: rpc1,rpc2,rpc3,..
-                                                      -->
-
-<!-- unknown VLR make request to HLR
-  <param name="vlrAddress" type="string">791398699810</param>
-  <param name="vlrSSN" type="int">7</param>
-  <param name="inAddress" type="string">79139860005</param>
-  <param name="inSSN" type="int">6</param>
-  <param name="userSSN" type="int">7</param>
-  <param name="host" type="string">@ussman.host@</param>
-  <param name="port" type="int">@ussman.port@</param>
---->
-
-<!-- unknown point make ussd reguest to IN point
-  <param name="vlrAddress" type="string">791398699811</param>
-  <param name="vlrSSN" type="int">6</param>
-  <param name="inAddress" type="string">79139860005</param>
-  <param name="inSSN" type="int">6</param>
-  <param name="userSSN" type="int">160</param>
--->
-
-<!-- unknown HLR make ussd request to HLR
-  <param name="vlrAddress" type="string">79139869998</param>
-  <param name="vlrSSN" type="int">6</param>
--->
-
-</config>
