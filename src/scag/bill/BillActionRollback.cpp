@@ -7,12 +7,12 @@ bool BillActionRollback::run(ActionContext& context)
 {
     int BillId = 9;
 
-    smsc_log_error(logger,"Run Action '[CDR]BillActionRollback'...");
+    smsc_log_error(logger,"Run Action 'BillActionRollback'...");
 
     Operation * operation = context.GetCurrentOperation();
     if (!operation) 
     {
-        smsc_log_error(logger,"Fatal error in action: '[CDR]BillActionRollback' - operation from ActionContext is invalid");
+        smsc_log_error(logger,"BillActionRollback: Fatal error in action - operation from ActionContext is invalid");
         return false;
     }
 
