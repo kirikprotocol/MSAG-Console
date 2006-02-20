@@ -2,6 +2,7 @@
 #define __SMSC_CORE_BUFFERS_FIXEDLENGTHSTRING_HPP__
 
 #include <string.h>
+#include <string>
 
 namespace smsc{
 namespace core{
