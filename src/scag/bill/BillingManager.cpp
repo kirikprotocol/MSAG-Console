@@ -6,15 +6,7 @@
 #include <core/buffers/IntHash.hpp>
 
 #include "scag/exc/SCAGExceptions.h"
-
-#include "logger/Logger.h"
-#include "core/network/Socket.hpp"
-
-#include "inman/interaction/messages.hpp"
-#include "inman/common/console.hpp"
-#include "inman/common/util.hpp"
-#include "inman/interaction/connect.hpp"
-
+#include "BillingManagerWrapper.h"
 
 namespace scag { namespace bill {
 
@@ -22,17 +14,11 @@ using namespace smsc::core::threads;
 using namespace scag::util::singleton;
 using namespace scag::exceptions;
 
-using smsc::core::network::Socket;
 using smsc::logger::Logger;
-using namespace smsc::inman::interaction;
-
-using smsc::core::threads::Thread;
-using smsc::inman::common::Console;
-using smsc::inman::common::format;
 
 
 
-class BillingManagerImpl : public BillingManager, public Thread, public SmscHandler
+class BillingManagerImpl : public BillingManager, public Thread, public BillingManagerWrapper
 {
     struct BillTransaction
     {
@@ -59,10 +45,6 @@ class BillingManagerImpl : public BillingManager, public Thread, public SmscHand
     Event exitEvent;
 
     bool m_bStarted;
-    Logger * logger;
-
-    Socket * socket;
-    Connect * pipe;
 
     EventMonitorEntity * EventMonitorArray;
 
@@ -89,17 +71,11 @@ public:
     BillingManagerImpl() : 
         m_bStarted(false), 
         EventMonitorArray(0), 
-        socket(0), 
-        pipe(0), 
-        logger(Logger::getInstance("scag.BM")),
         m_lastBillId(0) {}
 
     ~BillingManagerImpl()
     {
         if (EventMonitorArray) delete EventMonitorArray;
-
-        if (socket) delete socket;
-        if (pipe) delete pipe;
     }
 
 };
@@ -132,7 +108,7 @@ BillingManager& BillingManager::Instance()
     {
         MutexGuard guard(initBillingManagerLock);
         if (!bBillingManagerInited) 
-            throw std::runtime_error("BillingManager not inited!");
+            throw SCAGException("BillingManager not inited!");
     }
     return SingleBM::Instance();
 }
@@ -156,25 +132,23 @@ bool BillingManagerImpl::isStarted()
 
 void BillingManagerImpl::init(BillingManagerConfig& cfg)
 {
+    smsc_log_info(logger,"BillingManager start initing...");
+
     m_MaxEventMonitors = cfg.MaxThreads;
+
+    try
+    {
+        initConnection(cfg.BillingHost.c_str(),cfg.BillingPort);
+    }
+    catch (SCAGException& e)
+    {
+        smsc_log_error(logger,"BillingManager error: %s", e.what());
+        throw;
+    }
+
     EventMonitorArray = new EventMonitorEntity[m_MaxEventMonitors];
-    
-    std::string msg;
 
-    if (socket->Init(cfg.BillingHost.c_str(), cfg.BillingPort, 1000)) {
-        msg = format("BillingManager error - can't init socket: %s (%d)\n", strerror(errno), errno);
-
-        smsc_log_error(logger, msg.c_str());
-        throw SCAGException(msg.c_str());
-    }
-
-    if (socket->Connect()) {
-        msg = format("BillingManager error - can't connect socket: %s (%d)\n", strerror(errno), errno);
-        smsc_log_error(logger, msg.c_str());
-        throw SCAGException(msg.c_str());
-    }
-    pipe = new Connect(socket, SerializerInap::getInstance(), Connect::frmLengthPrefixed, logger);
-
+    smsc_log_info(logger,"BillingManager inited...");
 }
 
 
@@ -184,39 +158,15 @@ int BillingManagerImpl::Execute()
 
     while (isStarted())
     {
-
-            fd_set read;
-            FD_ZERO( &read );
-            FD_SET( socket->getSocket(), &read );
-
-            struct timeval tv;
-            tv.tv_sec = 0; 
-            tv.tv_usec = 500;
-
-            int n = select(  socket->getSocket()+1, &read, 0, 0, &tv );
-
-            if( n > 0 )
-            {
-                SmscCommand* cmd = static_cast<SmscCommand*>(pipe->receiveObj());
-
-                if (cmd) 
-                {
-                     if (cmd->getObjectId() == smsc::inman::interaction::CHARGE_SMS_RESULT_TAG) 
-                     {
-                         try { 
-                             cmd->loadDataBuf(); 
-                             cmd->handle(this);
-                         } catch (SerializerException& exc) 
-                         {
-                             smsc_log_error(logger, "BillingManager error: corrupted cmd %u (dlgId: %u): %s",cmd->getObjectId(), cmd->getDialogId(),exc.what());
-                         }
-                     } else smsc_log_error(logger, "BillingManager error: unknown command recieved: %u",cmd->getObjectId());
-
-                } else 
-                    m_bStarted = false;
-             }
+        try
+        {
+            receiveCommand();
+        } catch (SCAGException& e)
+        {
+            smsc_log_error(logger, "BillingManager error: %s", e.what());
+        }
     }
-
+ 
     smsc_log_info(logger,"BillingManager::stop executing");
     exitEvent.Signal();
     return 0;
