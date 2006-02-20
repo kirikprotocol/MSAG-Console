@@ -22,8 +22,7 @@ class ActionMatch : public Action
 
 
     std::string strResult;
-    std::wstring w_Result;
-
+    
     RegExp *re;
     FieldType ftValue;
 

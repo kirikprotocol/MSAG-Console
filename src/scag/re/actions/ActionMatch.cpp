@@ -65,6 +65,8 @@ void ActionMatch::init(const SectionParams& params,PropertyObject propertyObject
 
     re = new RegExp();
 
+
+
     if(!re->Compile((char *)wstrRegexp.data(),OP_OPTIMIZE|OP_STRICT))
     {
         throw SCAGException("Action 'match' Failed to compile regexp");
