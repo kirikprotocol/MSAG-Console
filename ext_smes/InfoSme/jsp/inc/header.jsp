@@ -1,3 +1,4 @@
+<%@ page import="ru.novosoft.smsc.infosme.beans.InfoSmeBean"%>
 <%@ include file="/WEB-INF/inc/sme_menu.jsp"%>
 <%
 	sme_menu_begin(out);
@@ -7,7 +8,9 @@
     sme_menu_button(out, "mbMenu",  "shedules",   "Schedules",  "Schedules");
     sme_menu_button(out, "mbMenu",  "providers",  "Providers",  "Providers");
     sme_menu_button(out, "mbMenu",  "drivers",    "Drivers",    "DB drivers");
+    if (request.isUserInRole(InfoSmeBean.INFOSME_MARKET_ROLE)) {
     sme_menu_button(out, "mbMenu",  "deliveries", "Deliveries", "Message deliveries");
+    }
     sme_menu_space(out);
     sme_menu_button(out, "mbMenu",  "messages",  "Messages",  "Messages set");
     sme_menu_button(out, "mbMenu",  "stat",      "Statistics","");

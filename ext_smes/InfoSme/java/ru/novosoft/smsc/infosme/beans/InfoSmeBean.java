@@ -30,7 +30,8 @@ public class InfoSmeBean extends PageBean
 
   private String mbMenu = null;
 
-  public static final String INFOSME_ADMIN_ROLE = "infosme-admin";
+  public static final String INFOSME_ADMIN_ROLE  = "infosme-admin";
+  public static final String INFOSME_MARKET_ROLE = "infosme-market";
 
   private String smeId = "InfoSme";
   private Config config = null;
@@ -70,27 +71,18 @@ public class InfoSmeBean extends PageBean
     if (result != RESULT_OK)
       return result;
 
-    if ("apply".equals(mbMenu))
-      return RESULT_APPLY;
-    else if ("stat".equals(mbMenu))
-      return RESULT_STAT;
-    else if ("statuses".equals(mbMenu))
-      return RESULT_STATUSES;
-    else if ("options".equals(mbMenu))
-      return RESULT_OPTIONS;
-    else if ("drivers".equals(mbMenu))
-      return RESULT_DRIVERS;
-    else if ("providers".equals(mbMenu))
-      return RESULT_PROVIDERS;
-    else if ("tasks".equals(mbMenu))
-      return RESULT_TASKS;
-    else if ("shedules".equals(mbMenu))
-      return RESULT_SHEDULES;
-    else if ("messages".equals(mbMenu))
-      return RESULT_MESSAGES;
-    else if ("deliveries".equals(mbMenu))
-      return RESULT_DELIVERIES;
-    else
+    if ("apply".equals(mbMenu))           result = RESULT_APPLY;
+    else if ("stat".equals(mbMenu))       result = RESULT_STAT;
+    else if ("statuses".equals(mbMenu))   result = RESULT_STATUSES;
+    else if ("options".equals(mbMenu))    result = RESULT_OPTIONS;
+    else if ("drivers".equals(mbMenu))    result = RESULT_DRIVERS;
+    else if ("providers".equals(mbMenu))  result = RESULT_PROVIDERS;
+    else if ("tasks".equals(mbMenu))      result = RESULT_TASKS;
+    else if ("shedules".equals(mbMenu))   result = RESULT_SHEDULES;
+    else if ("messages".equals(mbMenu))   result = RESULT_MESSAGES;
+    else if ("deliveries".equals(mbMenu)) result = RESULT_DELIVERIES;
+
+      mbMenu = null;
       return result;
   }
 

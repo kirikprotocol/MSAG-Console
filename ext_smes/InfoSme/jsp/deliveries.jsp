@@ -3,7 +3,9 @@
                  ru.novosoft.smsc.jsp.SMSCJspException, ru.novosoft.smsc.jsp.SMSCErrors,
                  ru.novosoft.smsc.util.StringEncoderDecoder,
                  ru.novosoft.smsc.infosme.beans.InfoSmeBean, ru.novosoft.smsc.jsp.PageBean,
-                 ru.novosoft.util.jsp.MultipartServletRequest"%><jsp:useBean id="deliveries_bean" scope="session" class="ru.novosoft.smsc.infosme.beans.Deliveries" /><jsp:setProperty name="deliveries_bean" property="*"/><%
+                 ru.novosoft.util.jsp.MultipartServletRequest"%>
+<jsp:useBean id="deliveries_bean" scope="session" class="ru.novosoft.smsc.infosme.beans.Deliveries" />
+<jsp:setProperty name="deliveries_bean" property="*"/><%
 
     TITLE=getLocString("infosme.title");
     ru.novosoft.smsc.infosme.beans.Deliveries bean = deliveries_bean;
@@ -13,10 +15,12 @@
     if (bean.getStage() == 2 && request.getParameter("jsp") != null)
 	    FORM_URI = CPATH + request.getParameter("jsp");
 
-    switch(bean.process(request))
+    int beanResult = bean.process(request);
+    switch(beanResult)
     {
     case PageBean.RESULT_OK:
     case PageBean.RESULT_ERROR:
+    case InfoSmeBean.RESULT_DELIVERIES:
         break;
     case InfoSmeBean.RESULT_STAT:
         response.sendRedirect("stat.jsp");
@@ -32,11 +36,12 @@
         }
         return;
     default:
-        errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction,
-                                               SMSCJspException.ERROR_CLASS_ERROR));
-    }
-    if (request.isUserInRole(InfoSmeBean.INFOSME_ADMIN_ROLE)) {%>
-      <%@ include file="inc/menu_switch.jsp"%><%
+        if (request.isUserInRole(InfoSmeBean.INFOSME_ADMIN_ROLE)) {%>
+          <%@ include file="inc/menu_switch.jsp"%><%
+        } else {
+            errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction,
+                                                   SMSCJspException.ERROR_CLASS_ERROR));
+        }
     }
 System.out.println("Stage="+bean.getStage()+", multi="+(multi == null ? "null":multi.toString()));
 if (bean.getStage() == 1 && multi != null) {
@@ -175,16 +180,23 @@ else {
 <div class=page_subtitle><%= getLocString("infosme.subtitle.stage3")%></div><br/>
 <div class=secInfo><%= getLocString("infosme.label.status")%>&nbsp;<span id=tdcStatus datasrc=#tdcProgress DATAFORMATAS=html datafld="status" style='color:blue;'><%= bean.getStatusStr()%></span></div>
 <div class=secInfo><%= getLocString("infosme.label.messages_generated")%>&nbsp;<span datasrc=#tdcProgress DATAFORMATAS=html datafld="messages"><%= bean.getMessages()%></span></div>
-<div class=secInfo><%= getLocString("infosme.label.total_progress")%>&nbsp;<span datasrc=#tdcProgress DATAFORMATAS=html datafld="progress"><%= bean.getProgress()%></span>%</div>
+<div class=secInfo><%= getLocString("infosme.label.total_progress")%>&nbsp;<span id=tdcProcents datasrc=#tdcProgress DATAFORMATAS=html datafld="progress"><%= bean.getProgress()%></span>%</div>
 <script type="text/javascript">
 function refreshProgressStatus()
 {
 	document.getElementById('tdcProgress').DataURL = document.getElementById('tdcProgress').DataURL;
 	document.getElementById('tdcProgress').reset();
     if (document.getElementById('tdcStatus').innerText != null &&
-        document.getElementById('tdcStatus').innerText == 'Finished') document.getElementById('mbNext').disabled = false;
+        document.getElementById('tdcStatus').innerText == 'Finished')
+    {
+        document.getElementById('tdcProcents').innerText = '100';
+        document.getElementById('mbNext').disabled = false;
+    }
     else if (document.getElementById('tdcStatus').innerText != null &&
-        document.getElementById('tdcStatus').innerText.match('Error') != null) document.getElementById('mbCancel').innerText = 'Abort';
+        document.getElementById('tdcStatus').innerText.match('Error') != null)
+    {
+        document.getElementById('mbCancel').innerText = 'Abort';
+    }
 	else window.setTimeout(refreshProgressStatus, 500);
 }
 refreshProgressStatus();

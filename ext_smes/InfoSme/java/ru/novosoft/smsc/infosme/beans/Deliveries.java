@@ -49,7 +49,6 @@ public class Deliveries extends InfoSmeBean
       if (result != RESULT_OK)
         return result;
 
-      resetTask();
       return RESULT_OK;
     }
 
@@ -97,6 +96,7 @@ public class Deliveries extends InfoSmeBean
       transliterate = false;
       taskTableName = null;
       task = new Task();
+      resetTask();
     }
 
     private int cleanup()
@@ -156,11 +156,13 @@ public class Deliveries extends InfoSmeBean
     }
 
     private Object countersSync = new Object();
+    private boolean finalized = false;
     private long fileSize = 1;
     private long filePos  = 0;
     private long msgCount = 0;
 
     public int getProgress() {
+        if (finalized) return 100;
         double fPos = 0;
         synchronized(countersSync) { fPos = filePos; }
         return ((int)((fPos/fileSize)*100))%101;
@@ -170,7 +172,7 @@ public class Deliveries extends InfoSmeBean
     }
     private void resetCounters(long fs) {
         synchronized(countersSync) {
-            msgCount = 0; filePos = 0; fileSize = fs;
+            msgCount = 0; filePos = 0; fileSize = fs; finalized = false;
         }
     }
 
@@ -192,7 +194,7 @@ public class Deliveries extends InfoSmeBean
         private void incProgress(boolean fin) {
             synchronized(countersSync) {
                 if (!fin) msgCount++;
-                else filePos = fileSize+1;
+                else finalized = true;
             }
         }
 

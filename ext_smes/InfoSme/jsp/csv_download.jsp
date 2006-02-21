@@ -3,11 +3,11 @@
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.infosme.beans.TasksStatistics"/><jsp:setProperty name="bean" property="*"/><%
 
     ru.novosoft.smsc.infosme.beans.TasksStatistics sbean = bean;
-    int result = sbean.process(request);
-    if (result == PageBean.RESULT_OK)
-        result = sbean.exportStatistics(out);
+    int beanResult = sbean.process(request);
+    if (beanResult == PageBean.RESULT_OK)
+        beanResult = sbean.exportStatistics(out);
 
-    switch(result)
+    switch(beanResult)
     {
     case PageBean.RESULT_ERROR:
     case InfoSmeBean.RESULT_DLSTAT:
@@ -17,6 +17,9 @@
         response.sendRedirect("deliveries.jsp");
         return;
     default:
+        if (request.isUserInRole(InfoSmeBean.INFOSME_ADMIN_ROLE)) {%>
+          <%@ include file="inc/menu_switch_int.jsp"%><%
+        }
         break;
     }
 
