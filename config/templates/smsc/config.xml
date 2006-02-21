@@ -5,7 +5,7 @@
   <section name="MessageStore">
     <param name="archiveDir" type="string">@smsc.arcnew.dir@</param>
     <param name="archiveInterval" type="int">60</param>
-    <param name="statisticsDir" type="string"@smsc.stats.dir@</param>
+    <param name="statisticsDir" type="string">@smsc.stats.dir@</param>
 
     <section name="LocalStore">
       <param name="filename" type="string">@localstore.dir@/store.bin</param>
