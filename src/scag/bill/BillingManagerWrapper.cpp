@@ -19,11 +19,11 @@ void BillingManagerWrapper::initConnection(const char * host, int port)
     socket = new Socket();
 
     if (socket->Init(host, port, 1000)) {
-        throw SCAGException("can't init socket: %s (%d)\n", strerror(errno), errno);
+        throw SCAGException("can't init socket to BillingServer on host '%s', port '%d': error %s (%d)\n", host, port, strerror(errno), errno);
     }
 
     if (socket->Connect()) {
-        throw SCAGException("can't connect socket: %s (%d)\n", strerror(errno), errno);
+        throw SCAGException("can't connect socket to BillingServer on host '%s', port '%d' : %s (%d)\n", host, port, strerror(errno), errno);
     }
 
     pipe = new Connect(socket, SerializerInap::getInstance(), Connect::frmLengthPrefixed, logger);

@@ -20,10 +20,15 @@ BillingManagerConfig::BillingManagerConfig(ConfigView& cv) throw(ConfigException
 void BillingManagerConfig::init(ConfigView& cv) throw(ConfigException)
 {
     try {
-        //std::auto_ptr<char> cfg_dir_( cv.getString("configDir") );
         std::auto_ptr<char> so_dir_( cv.getString("soDir") );
-        //cfg_dir = cfg_dir_.get();
+        std::auto_ptr<char> host_(cv.getString("BillingServerHost"));
+        int port_(cv.getInt("BillingServerPort"));
+
         so_dir = so_dir_.get();
+        BillingHost = host_.get();
+        BillingPort = port_;
+
+
     }catch(ConfigException& e){
         throw ConfigException(e.what());
     }catch(...){

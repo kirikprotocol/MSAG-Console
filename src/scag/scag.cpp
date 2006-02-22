@@ -299,15 +299,22 @@ Scag* SpeedMonitor::scag=NULL;
 
 void Scag::init()
 {
-  ConfigManager & cfg = ConfigManager::Instance();
+    smsc::logger::Logger *log=smsc::logger::Logger::getInstance("scag.init");
 
-  smsc::util::regexp::RegExp::InitLocale();
-  smsc::logger::Logger *log=smsc::logger::Logger::getInstance("scag.init");
+    smsc_log_info(log, "SCAG start initialisation...");
 
-  try{
-  InitLicense(*cfg.getLicConfig());
-  //tp.preCreateThreads(15);
-    
+
+    ConfigManager & cfg = ConfigManager::Instance();
+
+    smsc::util::regexp::RegExp::InitLocale();
+
+
+ /*   try {
+        InitLicense(*cfg.getLicConfig());
+    } catch (exception& e) {
+        smsc_log_error(log, "Cannot initialize license. Initialization stopped. %s", e.what());
+        throw;
+    }*/
     //********************************************************
     //************** SmppManager initialization **************
     try {
@@ -429,17 +436,6 @@ void Scag::init()
 
   smsc_log_info(log, "SCAG init complete" );
 
-  }
-  catch(exception& e)
-  {
-    smsc_log_warn(log, "Scag::init exception:%s",e.what());
-    throw;
-  }
-  catch(...)
-  {
-    smsc_log_warn(log, "Scag::init exception:unknown");
-    throw;
-  }
   __trace__("Smsc::init completed");
 }
 
