@@ -661,7 +661,7 @@ Response * CommandAddRule::CreateResponse(scag::Scag * SmscApp)
         char buff[32];
         sprintf(buff,"%d",e.getLineNumber());			
         res.appendValueToStringList(buff);			
-        return new Response(Response::Error, res);
+        return new Response(Response::Ok, res);
     } catch(Exception& e) {                                     
         char msg[1024];                                         
         sprintf(msg, "Failed to add new Rule. Details: %s", e.what());            
@@ -716,7 +716,7 @@ Response * CommandRemoveRule::CreateResponse(scag::Scag * SmscApp)
         char buff[32];						
         sprintf(buff,"%d",e.getLineNumber());			
         res.appendValueToStringList(buff);			
-        return new Response(Response::Error, res);
+        return new Response(Response::Ok, res);
 
     } catch (SCAGException& e) {
         char desc[512];                                         
@@ -773,7 +773,7 @@ Response * CommandUpdateRule::CreateResponse(scag::Scag * ScagApp)
         char buff[32];						
         sprintf(buff,"%d",e.getLineNumber());			
         res.appendValueToStringList(buff);			
-        return new Response(Response::Error, res);
+        return new Response(Response::Ok, res);
 
     } catch (SCAGException& e) {
         char desc[512];                                         
