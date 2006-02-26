@@ -771,7 +771,7 @@ Response * CommandUpdateRule::CreateResponse(scag::Scag * ScagApp)
     }
 
     smsc_log_info(logger, "CommandUpdateRule is processed ok.");
-    return new Response(Response::Ok, "Failed to update rule. Unknown error.");
+    return new Response(Response::Ok, "CommandUpdateRule is processed ok.");
 }
 
 //================================================================
