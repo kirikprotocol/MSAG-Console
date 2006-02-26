@@ -656,7 +656,9 @@ Response * CommandAddRule::CreateResponse(scag::Scag * SmscApp)
     } catch(RuleEngineException& e){                             
         char desc[512];                                         
         sprintf(desc, "Failed to add rule. RuleEngineException exception: %s. Error in rule_%d.xml in line %d", e.what(), ruleId, e.getLineNumber());
-        Variant res((const char *)desc);                        
+        Variant res(smsc::admin::service::StringListType); 
+
+        res.appendValueToStringList(desc);
         smsc_log_info(logger, desc);                            
         char buff[32];
         sprintf(buff,"%d",e.getLineNumber());			
@@ -672,7 +674,7 @@ Response * CommandAddRule::CreateResponse(scag::Scag * SmscApp)
         throw AdminException("Failed to add new Rule. Unknown exception");
     }
 
-    Variant okRes;
+    Variant okRes("");
     smsc_log_info(logger, "CommandAddRule is processed ok");
     return new Response(Response::Ok, okRes);
 }
@@ -711,7 +713,10 @@ Response * CommandRemoveRule::CreateResponse(scag::Scag * SmscApp)
     } catch(RuleEngineException& e) {                             
         char desc[512];                                         
         sprintf(desc, "Failed to remove rule. %s. Error in rule_%d.xml in line %d", e.what(), ruleId, e.getLineNumber());   
-        Variant res((const char *)desc);                        
+
+        Variant res(smsc::admin::service::StringListType);
+
+        res.appendValueToStringList(desc);
         smsc_log_info(logger, desc);                            
         char buff[32];						
         sprintf(buff,"%d",e.getLineNumber());			
@@ -730,7 +735,7 @@ Response * CommandRemoveRule::CreateResponse(scag::Scag * SmscApp)
         throw AdminException("Failed to remove rule. Unknown exception");
     }
 
-    Variant okRes;
+    Variant okRes("");
     smsc_log_info(logger, "CommandRemoveRule is processed ok");
     return new Response(Response::Ok, okRes);
 }
@@ -793,7 +798,7 @@ Response * CommandUpdateRule::CreateResponse(scag::Scag * ScagApp)
         throw AdminException("Failed to update rule. Unknown exception");
     }
 
-    Variant okRes;
+    Variant okRes("");
 
     smsc_log_info(logger, "CommandUpdateRule is processed ok.");
     return new Response(Response::Ok, okRes);
