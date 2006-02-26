@@ -46,6 +46,7 @@ public:
 
     static BillingManager& Instance();
     static void Init(BillingManagerConfig& cfg);
+    //static const ActionFactory * getActionFactory() {return &factory;}
 
 
 

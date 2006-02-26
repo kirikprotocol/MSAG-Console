@@ -75,6 +75,7 @@ public:
 
     ~BillingManagerImpl()
     {
+        Stop();
         if (EventMonitorArray) delete EventMonitorArray;
     }
 
@@ -196,6 +197,11 @@ int BillingManagerImpl::ChargeBill(CTransportId& transportId)
     BillTransactionHash.Insert(m_lastBillId, billTransaction);
 
     //TODO: send charge command with "m_lastBillId" dialod identifier
+
+    ChargeSms op;
+    op.setDialogId(m_lastBillId);
+
+    sendChargeBillCommand(op);
 
     return m_lastBillId;
 }

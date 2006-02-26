@@ -772,8 +772,12 @@ Response * CommandUpdateRule::CreateResponse(scag::Scag * ScagApp)
         smsc_log_info(logger, desc);                            
         char buff[32];						
         sprintf(buff,"%d",e.getLineNumber());			
-        res.appendValueToStringList(buff);			
-        return new Response(Response::Ok, res);
+        res.appendValueToStringList(buff);
+        
+        Response * response = new Response(Response::Ok, res);
+        smsc_log_info(logger, response->getText()); 
+
+        return response;
 
     } catch (SCAGException& e) {
         char desc[512];                                         

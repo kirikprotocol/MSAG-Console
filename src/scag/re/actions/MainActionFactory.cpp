@@ -9,6 +9,7 @@
 #include "scag/re/actions/ActionTrafficCheck.h"
 #include "scag/re/actions/ActionOperationWait.h"
 #include "scag/re/actions/ActionMatch.h"
+#include "scag/bill/BillActionOpen.h"
 
 
 //#include "scag/SAX2Print.hpp"
@@ -16,6 +17,7 @@
 namespace scag { namespace re { namespace actions {
 
 using namespace scag::re::actions;
+using namespace scag::bill;
 
 
 Action * MainActionFactory::CreateAction(const std::string& name) const
@@ -29,6 +31,7 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
     if (name=="operation:wait") return new ActionOperationWait();
     if (name=="match") return new ActionMatch();
 
+    if (name=="bill:open") return new BillActionOpen();
 
     Action * action = 0;
 

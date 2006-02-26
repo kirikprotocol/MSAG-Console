@@ -5,7 +5,7 @@ namespace scag { namespace bill {
 
 bool BillActionOpen::run(ActionContext& context)
 {
-    smsc_log_error(logger,"Run Action 'BillActionOpen'...");
+    smsc_log_debug(logger,"Run Action 'BillActionOpen'...");
 
     Operation * operation = context.GetCurrentOperation();
     if (!operation) 

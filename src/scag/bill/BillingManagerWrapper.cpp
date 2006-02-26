@@ -39,7 +39,7 @@ void BillingManagerWrapper::receiveCommand()
     tv.tv_sec = 0; 
     tv.tv_usec = 500;
 
-    int n = select(  socket->getSocket()+1, &read, 0, 0, &tv );
+    int n = select(socket->getSocket()+1, &read, 0, 0, &tv);
 
     if( n > 0 )
     {
@@ -58,9 +58,15 @@ void BillingManagerWrapper::receiveCommand()
                  }
              } else throw SCAGException("Unknown command recieved: %u",cmd->getObjectId());
 
-        } else 
-            throw SCAGException("Invalid command recieved");
+        } //else 
+            //throw SCAGException("Invalid command recieved");
      }
+}
+
+
+void BillingManagerWrapper::sendChargeBillCommand(ChargeSms& op)
+{
+    pipe->sendObj(&op);
 }
 
 }}
