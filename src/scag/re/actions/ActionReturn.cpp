@@ -36,7 +36,9 @@ void ActionReturn::init(const SectionParams& params,PropertyObject propertyObjec
             throw InvalidPropertyException("Action 'return': cannot read property '%s' - no acces",ReturnValue.c_str());
     }
 
+    smsc_log_debug(logger,"Action 'return':: init...");
 }
+
 
 bool ActionReturn::run(ActionContext& context)
 {
@@ -57,6 +59,8 @@ bool ActionReturn::run(ActionContext& context)
         else smsc_log_warn(logger,"Action 'return': invalid property '%s' to return", ReturnValue.c_str());
     }
     context.SetRuleStatus(rs);
+    smsc_log_debug(logger,"Action 'return': return status %d",rs.status);
+
     return false;
 }
 

@@ -206,52 +206,57 @@ Rule * RuleEngineImpl::ParseFile(const std::string& xmlFile)
     int errorCount = 0;
     int errorCode = 0;
 
-    SAXParser* parser = new SAXParser;
+    SAXParser parser;
     XMLBasicHandler handler(factory,"KOI8-R");
 
     try
     {
-        parser->setValidationScheme(SAXParser::Val_Always);
-        parser->setDoSchema(true);
-        parser->setValidationSchemaFullChecking(true);
-        parser->setDoNamespaces(true);
+        parser.setValidationScheme(SAXParser::Val_Always);
+        parser.setDoSchema(true);
+        parser.setValidationSchemaFullChecking(true);
+        parser.setDoNamespaces(true);
 
-        parser->setValidateAnnotations(false);   
+        parser.setValidateAnnotations(false);   
 
-        parser->setValidationConstraintFatal(true);
+        parser.setValidationConstraintFatal(true);
 
-        parser->setDocumentHandler(&handler);
-        parser->setErrorHandler(&handler);
+        parser.setDocumentHandler(&handler);
+        parser.setErrorHandler(&handler);
 
 
-        parser->parse(xmlFile.c_str());
-        errorCount = parser->getErrorCount();
+        parser.parse(xmlFile.c_str());
+        errorCount = parser.getErrorCount();
     }
     catch (const OutOfMemoryException&)
     {
-        smsc_log_error(logger,"XMLPlatform: OutOfMemoryException");
+        smsc_log_error(logger,"Terminate parsing Rule: XMLPlatform: OutOfMemoryException");
+        throw SCAGException("Terminate parsing Rule: XMLPlatform: OutOfMemoryException");
     }
     catch (const XMLException& toCatch)
     {
         StrX msg(toCatch.getMessage());
 
-        smsc_log_error(logger,"An error occurred. Error: %s", msg.localForm());
+        smsc_log_error(logger,"Terminate parsing Rule: An error occurred. Error: %s", msg.localForm());
+        throw SCAGException("Terminate parsing Rule: An error occurred. Error: %s", msg.localForm());
     }
     catch (RuleEngineException& e)
     {
         if (e.getLineNumber()>0) smsc_log_error(logger,"Error at line %d: %s",e.getLineNumber(), e.what());
         else smsc_log_error(logger,"Error: %s",e.what());
+        throw e;
     }
     catch (SCAGException& e)
     {
         smsc_log_error(logger,"Terminate parsing Rule: %s",e.what());
+        throw e;
     }
     catch (...)
     {
         smsc_log_error(logger,"Terminate parsing Rule: unknown fatal error");
+        throw SCAGException("Terminate parsing Rule: unknown fatal error");
     }
 
-    delete parser;
+    //delete parser;
 
     if (errorCount > 0) 
     {
@@ -384,7 +389,7 @@ void RuleEngineImpl::updateRule(int ruleId)
     MutexGuard mg(changeLock);
 
     Rule* newRule = ParseFile(CreateRuleFileName(RulesDir,ruleId));
-    if (!newRule) throw SCAGException("Cannod load rule %d from file",ruleId);
+    if (!newRule) throw SCAGException("Cannod load rule %d from file", ruleId);
 
 
 

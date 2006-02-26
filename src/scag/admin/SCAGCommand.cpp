@@ -84,6 +84,7 @@ namespace admin {
 using namespace smsc::util::xml;
 using namespace smsc::sms;
 using namespace smsc::util::config;
+using namespace scag::exceptions;
 
 
 SCAGCommand::SCAGCommand(Command::Id id) :Command(id),
@@ -709,7 +710,7 @@ Response * CommandRemoveRule::CreateResponse(scag::Scag * SmscApp)
 
     } catch(RuleEngineException& e) {                             
         char desc[512];                                         
-        sprintf(desc, "Failed to remove rule. RuleEngineException exception: %s. Error in rule_%d.xml in line %d", e.what(), ruleId, e.getLineNumber());   
+        sprintf(desc, "Failed to remove rule. %s. Error in rule_%d.xml in line %d", e.what(), ruleId, e.getLineNumber());   
         Variant res((const char *)desc);                        
         smsc_log_info(logger, desc);                            
         char buff[32];						
@@ -717,6 +718,13 @@ Response * CommandRemoveRule::CreateResponse(scag::Scag * SmscApp)
         res.appendValueToStringList(buff);			
         return new Response(Response::Error, res);
 
+    } catch (SCAGException& e) {
+        char desc[512];                                         
+        sprintf(desc, "Failed to remove rule. %s.", e.what(), ruleId);   
+
+        Variant res((const char *)desc);                        
+        smsc_log_info(logger, desc);                            
+        return new Response(Response::Error, res);
     } catch (...) {
         smsc_log_warn(logger, "Failed to remove rule. Unknown exception");
         throw AdminException("Failed to remove rule. Unknown exception");
@@ -759,7 +767,7 @@ Response * CommandUpdateRule::CreateResponse(scag::Scag * ScagApp)
 
     } catch(RuleEngineException& e) {
         char desc[512];                                         
-        sprintf(desc, "Failed to update rule. RuleEngineException exception: %s. Error in rule_%d.xml in line %d", e.what(), ruleId, e.getLineNumber());   
+        sprintf(desc, "Failed to update rule. %s. Error in rule_%d.xml in line %d", e.what(), ruleId, e.getLineNumber());   
         Variant res((const char *)desc);                        
         smsc_log_info(logger, desc);                            
         char buff[32];						
@@ -767,6 +775,13 @@ Response * CommandUpdateRule::CreateResponse(scag::Scag * ScagApp)
         res.appendValueToStringList(buff);			
         return new Response(Response::Error, res);
 
+    } catch (SCAGException& e) {
+        char desc[512];                                         
+        sprintf(desc, "Failed to update rule. %s.", e.what(), ruleId);   
+
+        Variant res((const char *)desc);                        
+        smsc_log_info(logger, desc);                            
+        return new Response(Response::Error, res);
     } catch (...) {
         smsc_log_warn(logger, "Failed to update rule. Unknown exception");
         throw AdminException("Failed to update rule. Unknown exception");
