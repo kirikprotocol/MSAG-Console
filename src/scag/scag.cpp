@@ -20,9 +20,11 @@
 #include "util/findConfigFile.h"
 #include "scag/re/RuleEngine.h"
 
+
 namespace scag
 {
 
+    using namespace scag::exceptions;
     using namespace scag::transport::smpp::router;
     using scag::config::RouteConfig;
     using scag::config::Route;
@@ -33,9 +35,9 @@ namespace scag
     using scag::config::Mask;
     using scag::config::MaskVector;
     using smsc::sms::Address;
-
+    
     extern void loadRoutes(RouteManager* rm, const scag::config::RouteConfig& rc,bool traceit=false);
-
+                     
 static inline void makeAddress_(Address& addr,const string& mask)
 {
   addr=Address(mask.c_str());
@@ -356,15 +358,14 @@ void Scag::init()
 
   //********************************************************
   //************** RuleEngine initialization ***************
-  try{
+  try {
       smsc_log_info(log, "Rule Engine is starting..." );
 
       using scag::config::ConfigView;
       std::auto_ptr<ConfigView> cv(new ConfigView(*cfg.getConfig(),"RuleEngine"));
 
       auto_ptr <char> loc(cv->getString("location", 0, false));
-      if(!loc.get())
-          throw Exception("RuleEngine.location not found");
+      if (!loc.get()) throw Exception("RuleEngine.location not found");
 
       std::string location = loc.get();
 
@@ -372,11 +373,11 @@ void Scag::init()
       re.Init(location);
 
       smsc_log_info(log, "Rule Engine started" );
-  }catch(exception& e){
-      smsc_log_warn(log, "Scag.init exception: %s", e.what());
+  } catch (SCAGException& e) {
+      smsc_log_warn(log, "%s", e.what());
       __warning__("Rule Engine is not started.");
   }catch(...){
-      __warning__("Rule Engine is not started.");
+      __warning__("Unknown error: rule Engine is not started.");
   }
   //********************************************************
 

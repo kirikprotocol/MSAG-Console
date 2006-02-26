@@ -671,8 +671,9 @@ Response * CommandAddRule::CreateResponse(scag::Scag * SmscApp)
         throw AdminException("Failed to add new Rule. Unknown exception");
     }
 
+    Variant okRes;
     smsc_log_info(logger, "CommandAddRule is processed ok");
-    return new Response(Response::Ok, "none");
+    return new Response(Response::Ok, okRes);
 }
 
 //================================================================
@@ -721,8 +722,9 @@ Response * CommandRemoveRule::CreateResponse(scag::Scag * SmscApp)
         throw AdminException("Failed to remove rule. Unknown exception");
     }
 
+    Variant okRes;
     smsc_log_info(logger, "CommandRemoveRule is processed ok");
-    return new Response(Response::Ok, "none");
+    return new Response(Response::Ok, okRes);
 }
 
 //================================================================
@@ -770,8 +772,10 @@ Response * CommandUpdateRule::CreateResponse(scag::Scag * ScagApp)
         throw AdminException("Failed to update rule. Unknown exception");
     }
 
+    Variant okRes;
+
     smsc_log_info(logger, "CommandUpdateRule is processed ok.");
-    return new Response(Response::Ok, "CommandUpdateRule is processed ok.");
+    return new Response(Response::Ok, okRes);
 }
 
 //================================================================
