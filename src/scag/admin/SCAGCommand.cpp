@@ -768,14 +768,16 @@ Response * CommandUpdateRule::CreateResponse(scag::Scag * ScagApp)
     } catch(RuleEngineException& e) {
         char desc[512];                                         
         sprintf(desc, "Failed to update rule. %s. Error in rule_%d.xml in line %d", e.what(), ruleId, e.getLineNumber());   
-        Variant res((const char *)desc);                        
+        Variant res(smsc::admin::service::StringListType);
+        res.appendValueToStringList(desc);
+
         smsc_log_info(logger, desc);                            
         char buff[32];						
-        /*sprintf(buff,"%d",e.getLineNumber());			
-        res.appendValueToStringList(buff);*/
+        sprintf(buff,"%d",e.getLineNumber());			
+        res.appendValueToStringList(buff);
         
         Response * response = new Response(Response::Ok, res);
-        smsc_log_info(logger, response->getText()); 
+        //smsc_log_info(logger, response->getText()); 
 
         return response;
 
