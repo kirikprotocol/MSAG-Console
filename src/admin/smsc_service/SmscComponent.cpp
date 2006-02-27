@@ -13,6 +13,7 @@
 #include <algorithm>
 #include "cluster/Interconnect.h"
 #include "cluster/Commands.h"
+#include "closedgroups/ClosedGroupsInterface.hpp"
 
 namespace smsc {
 namespace admin {
@@ -207,6 +208,9 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
   cgmDelAbonentParams["id"]=Parameter("id",LongType);
   cgmDelAbonentParams["addr"]=Parameter("addr",StringType);
 
+  Parameters cgmListAbonentsParams;
+  cgmListAbonentsParams["id"]=Parameter("id",LongType);
+
   /**************************** method declarations *************************/
   Method apply_routes          ((unsigned)applyRoutesMethod,         "apply_routes",          empty_params, StringType);
   Method apply_aliases         ((unsigned)applyAliasesMethod,        "apply_aliases",         empty_params, StringType);
@@ -284,11 +288,12 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
 
   Method cgm_addgroup((unsigned)cgmAddGroupMethod,"cgm_addgroup",cgmAddGroupParams,StringType);
   Method cgm_deletegroup((unsigned)cgmDeleteGroupMethod,"cgm_deletegroup",cgmDeleteGroupParams,StringType);
-  Method cgm_addaddrtogroup((unsigned)cgmAddAddrMethod,"cgm_addaddrtogroup",cgmAddAddrParams,StringType);
+  Method cgm_addaddr((unsigned)cgmAddAddrMethod,"cgm_addaddr",cgmAddAddrParams,StringType);
   Method cgm_check((unsigned)cgmCheckMethod,"cgm_check",cgmCheckParams,StringType);
   Method cgm_deladdr((unsigned)cgmDelAddrMethod,"cgm_deladdr",cgmDelAddrParams,StringType);
   Method cgm_addabonent((unsigned)cgmAddAbonentMethod,"cgm_addabonent",cgmAddAbonentParams,StringType);
   Method cgm_delabonent((unsigned)cgmDelAbonentMethod,"cgm_delabonent",cgmDelAbonentParams,StringType);
+  Method cgm_listabonents((unsigned)cgmListAbonentsMethod,"cgm_listabonents",cgmListAbonentsParams,StringListType);
 
 
   /***************************** method assigns *****************************/
@@ -363,7 +368,7 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
 
   methods[cgm_addgroup.getName()] = cgm_addgroup;
   methods[cgm_deletegroup.getName()] = cgm_deletegroup;
-  methods[cgm_addaddrtogroup.getName()] = cgm_addaddrtogroup;
+  methods[cgm_addaddr.getName()] = cgm_addaddr;
   methods[cgm_check.getName()] = cgm_check;
   methods[cgm_deladdr.getName()] = cgm_deladdr;
   methods[cgm_addabonent.getName()] = cgm_addabonent;
@@ -530,6 +535,22 @@ throw (AdminException)
       case dlAlterMethod:
         return dlAlterList(args);
 
+      case cgmAddGroupMethod:
+        return cgmAddGroup(args);
+      case cgmDeleteGroupMethod:
+        return cgmDeleteGroup(args);
+      case cgmAddAddrMethod:
+        return cgmAddAddr(args);
+      case cgmCheckMethod:
+        return cgmCheck(args);
+      case cgmDelAddrMethod:
+        return cgmDelAddr(args);
+      case cgmAddAbonentMethod:
+        return cgmAddAbonent(args);
+      case cgmDelAbonentMethod:
+        return cgmDelAbonent(args);
+      case cgmListAbonentsMethod:
+        return cgmListAbonents(args);
 
 
       default:
@@ -2324,6 +2345,123 @@ Variant SmscComponent::getRole() throw (AdminException)
 
     return Variant("UNKNOWN");
 
+}
+
+#define CGMPROLOGUE \
+  info2(logger,"cgm call %s",__func__); \
+  smsc::closedgroups::ClosedGroupsInterface* cgm=smsc::closedgroups::ClosedGroupsInterface::getInstance();\
+  const char* lastArg=0; \
+  try{
+
+
+Variant SmscComponent::cgmAddGroup(const Arguments & args)
+{
+  CGMPROLOGUE
+    INTARG(id);
+    STRARG(name);
+  BEGINMETHOD
+  {
+    cgm->AddGroup(id,name);
+  }
+  ENDMETHOD
+    return Variant("group added");
+  EPILOGUE
+}
+Variant SmscComponent::cgmDeleteGroup(const Arguments & args)
+{
+  CGMPROLOGUE
+    INTARG(id);
+  BEGINMETHOD
+  {
+    cgm->DeleteGroup(id);
+  }
+  ENDMETHOD
+    return Variant("group deleted");
+  EPILOGUE
+}
+Variant SmscComponent::cgmAddAddr(const Arguments & args)
+{
+  CGMPROLOGUE
+    INTARG(id);
+    STRARG(addr);
+  BEGINMETHOD
+  {
+    cgm->AddAddrToGroup(id,addr);
+  }
+  ENDMETHOD
+    return Variant("address added");
+  EPILOGUE
+}
+Variant SmscComponent::cgmCheck(const Arguments & args)
+{
+  CGMPROLOGUE
+    INTARG(id);
+    STRARG(addr);
+    bool result;
+  BEGINMETHOD
+  {
+    result=cgm->Check(id,addr);
+  }
+  ENDMETHOD
+    return Variant(result);
+  EPILOGUE
+}
+Variant SmscComponent::cgmDelAddr(const Arguments & args)
+{
+  CGMPROLOGUE
+    INTARG(id);
+    STRARG(addr);
+  BEGINMETHOD
+  {
+    cgm->RemoveAddrFromGroup(id,addr);
+  }
+  ENDMETHOD
+    return Variant("address removed");
+  EPILOGUE
+}
+Variant SmscComponent::cgmAddAbonent(const Arguments & args)
+{
+  CGMPROLOGUE
+    INTARG(id);
+    STRARG(addr);
+  BEGINMETHOD
+  {
+    cgm->AddAbonent(id,addr);
+  }
+  ENDMETHOD
+    return Variant("abonent added");
+  EPILOGUE
+}
+Variant SmscComponent::cgmDelAbonent(const Arguments & args)
+{
+  CGMPROLOGUE
+    INTARG(id);
+    STRARG(addr);
+  BEGINMETHOD
+  {
+    cgm->RemoveAbonent(id,addr);
+  }
+  ENDMETHOD
+    return Variant("abonent removed");
+  EPILOGUE
+}
+Variant SmscComponent::cgmListAbonents(const Arguments & args)
+{
+  CGMPROLOGUE
+    INTARG(id);
+    Variant result(service::StringListType);
+  BEGINMETHOD
+  {
+    std::vector<Address> list;
+    cgm->ListAbonents(id,list);
+    for(std::vector<Address>::iterator it=list.begin();it!=list.end();it++)
+    {
+      result.appendValueToStringList(it->toString());
+    }
+  }
+  ENDMETHOD
+    return result;
+  EPILOGUE
 }
 
 }

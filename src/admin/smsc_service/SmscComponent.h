@@ -129,6 +129,7 @@ protected:
   Variant cgmDelAddr(const Arguments & args);
   Variant cgmAddAbonent(const Arguments & args);
   Variant cgmDelAbonent(const Arguments & args);
+  Variant cgmListAbonents(const Arguments & args);
 
 
   SmscConfigs &configs;
@@ -150,7 +151,7 @@ protected:
     sbmDeleteSubmiterMethod, sbmListSubmitersMethod,
     dlAddMethod, dlDeleteMethod, dlGetMethod, dlListMethod, dlAlterMethod, setRoleMethod, getRoleMethod,
     cgmAddGroupMethod,cgmDeleteGroupMethod,cgmAddAddrMethod,cgmCheckMethod,
-    cgmDelAddrMethod,cgmAddAbonentMethod,cgmDelAbonentMethod
+    cgmDelAddrMethod,cgmAddAbonentMethod,cgmDelAbonentMethod,cgmListAbonentsMethod
   };
 
   smsc::core::synchronization::Mutex mutex;
