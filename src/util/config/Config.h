@@ -1,3 +1,4 @@
+#ident "$Id$"
 #ifndef SMSC_UTIL_CONFIG_CONFIG
 #define SMSC_UTIL_CONFIG_CONFIG
 
@@ -161,6 +162,10 @@ public:
 
     void removeSection(const char * const sectionName);
 
+    //checks does the section with given absolute name exist having parameters defined
+    bool    findSection(const char * const sectionName);
+    //returns all nonempty root sections
+    CStrSet *getRootSectionNames(void);
     CStrSet *getChildSectionNames(const char * const sectionName);
   CStrSet* getChildShortSectionNames(const char * const sectionName);
     CStrSet *getChildIntParamNames(const char * const sectionName);

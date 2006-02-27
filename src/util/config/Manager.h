@@ -1,3 +1,4 @@
+#ident "$Id$"
 #ifndef CONFIGURATIONMANAGER_H_INCLUDED_C3A81BD4
 #define CONFIGURATIONMANAGER_H_INCLUDED_C3A81BD4
 
@@ -167,6 +168,15 @@ public:
     config.removeSection(sectionName);
   }
 
+  //checks does the section with given absolute name exist having parameters defined
+  bool    findSection(const char * const sectionName)
+  {
+      return config.findSection(sectionName);
+  }
+  CStrSet *getRootSectionNames(void)
+  {
+    return config.getRootSectionNames();
+  }
   CStrSet *getChildSectionNames(const char * const sectionName)
   {
     return config.getChildSectionNames(sectionName);
