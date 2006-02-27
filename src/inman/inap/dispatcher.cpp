@@ -184,8 +184,9 @@ int TCAPDispatcher::Listen(void)
         
         result = MsgRecvEvent(&msg, NULL, NULL, /*MSG_INFTIM*/ 100 ); //ms
         _mutex.Lock();
-        if (!running)
-            break;
+        if (!running) {
+            result = 0; break;
+        }
         if (MSG_TIMEOUT == result)
             continue;
         if (result != 0)
