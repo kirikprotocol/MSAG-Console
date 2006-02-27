@@ -182,9 +182,16 @@ int DistrListProcess::Execute()
       string reason;
       char addr[32];
       sms.getOriginatingAddress().getValue(addr);
-      string fullarg=addr;
-      fullarg+='/';
-      fullarg+=arg;
+      string fullarg;
+      if(arg.find('/')==std::string::npos)
+      {
+        fullarg=addr;
+        fullarg+='/';
+        fullarg+=arg;
+      }else
+      {
+        fullarg=arg;
+      }
       if(arg.length()>0 && arg[0]=='/')
       {
         fullarg=arg.substr(1);
