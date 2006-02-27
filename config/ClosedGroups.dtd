@@ -5,6 +5,7 @@
 
 <!ELEMENT group (address | mask)*>
 <!ATTLIST group
+    desc CDATA #REQUIRED 
     name CDATA #REQUIRED 
     id CDATA #REQUIRED>
 

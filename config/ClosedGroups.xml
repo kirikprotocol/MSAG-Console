@@ -3,7 +3,7 @@
 
 <records>
   <lastId value="2"/>
-  <group  name="test" id="1">
+  <group  name="test" id="1" desc="">
     <address value="+79131111111"/>
     <mask value="+79132222???"/>
   </group>
