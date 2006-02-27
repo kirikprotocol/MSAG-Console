@@ -2,6 +2,7 @@
 #define __SMSC_CLOSEDGROUPS_CLOSEDGROUPSINTERFACE_HPP__
 
 #include "sms/sms.h"
+#include <vector>
 
 namespace smsc{
 namespace closedgroups{
@@ -17,6 +18,8 @@ public:
 
   virtual void AddAbonent(int id,const smsc::sms::Address& addr)=0;
   virtual void RemoveAbonent(int id,const smsc::sms::Address& addr)=0;
+
+  virtual void ListAbonents(int id,std::vector<smsc::sms::Address>& list)=0;
 
   virtual void Load(const char* filename)=0;
 

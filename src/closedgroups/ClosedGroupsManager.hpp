@@ -121,6 +121,16 @@ public:
     }
     it->second->abonents.erase(ait);
   }
+  virtual void ListAbonents(int id,std::vector<smsc::sms::Address>& list)
+  {
+    sync::MutexGuard mg(mtx);
+    GroupsMap::iterator it=groups.find(id);
+    if(it==groups.end())
+    {
+      throw smsc::util::Exception("ListAbonents: Group with id=%d doesn't exists",id);
+    }
+    list.insert(list.begin(),it->second->abonents.begin(),it->second->abonents.end());
+  }
 protected:
   struct MaskComparator{
     bool operator()(const smsc::sms::Address& addra,const smsc::sms::Address& addrb)const
