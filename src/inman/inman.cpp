@@ -9,6 +9,7 @@ static char const ident[] = "$Id$";
 #include "service.hpp"
 #include "util/config/ConfigView.h"
 using smsc::util::config::ConfigView;
+using smsc::util::config::CStrSet;
 
 #include "db/DataSourceLoader.h"
 using smsc::db::DataSourceLoader;
@@ -95,7 +96,14 @@ public:
         bill.rejectRPC.push_back(RP_MO_SM_transfer_rejected);
     }
 
-    ~INBillConfig() { if (cacheDb) delete cacheDb; }
+    ~INBillConfig()
+    {
+        if (cacheDb) {
+             if (cacheDb->ds)
+                 delete cacheDb->ds;
+             delete cacheDb;
+        }
+    }
 
     void read(Manager& manager) throw(ConfigException)
     {
@@ -112,13 +120,14 @@ public:
             throw ConfigException("INMan host or port missing");
         }
 
+        
         /* ******************** *
          * Billing parameters:  *
          * ******************** */
-        ConfigView billCfg(manager, "Billing");
-        if (!billCfg.getInstance())
+        if (!manager.findSection("Billing"))
             throw ConfigException("\'Billing\' section is missed");
 
+        ConfigView billCfg(manager, "Billing");
         cstr = NULL;
         try { cstr = billCfg.getString("billMode");
         } catch (ConfigException& exc) {
@@ -207,10 +216,10 @@ public:
         /* ************************** *
          * IN interaction parameters: *
          * ************************** */
-        ConfigView inss7Cfg(manager, "IN_interaction");
-        if (!inss7Cfg.getInstance())
+        if (!manager.findSection("IN_interaction"))
             throw ConfigException("\'IN_interaction\' section is missed");
 
+        ConfigView inss7Cfg(manager, "IN_interaction");
         try {
             bill.ssf_addr = inss7Cfg.getString("ssfAddress");
             bill.ssn = inss7Cfg.getInt("ssn");
@@ -243,7 +252,7 @@ public:
                 throw ConfigException("'ss7UserId' should fall into the range [1..20]");
             bill.userId = (unsigned char)tmo;
         }
-        smsc_log_info(inapLogger, "'ss7UserId': %s%u", !tmo ? "default ":"", bill.userId);
+        smsc_log_info(inapLogger, "ss7UserId: %s%u", !tmo ? "default ":"", bill.userId);
 
         tmo = 0;    //IN_Timeout
         try { tmo = (uint32_t)inss7Cfg.getInt("IN_Timeout"); }
@@ -286,41 +295,35 @@ public:
         /* *********************** *
          * DB sources parameters:  *
          * *********************** */
-        ConfigView dbCfg(manager, "DataProvider");
-        if (dbCfg.getInstance()) {
+        if (!manager.findSection("DataProvider")) {
+            smsc_log_info(inapLogger, "DataProvider: not in use");
+        } else {
+            ConfigView dbCfg(manager, "DataProvider");
+            //load drivers first
             try { DataSourceLoader::loadup(&dbCfg);
             } catch (Exception& exc) {  //ConfigException or LoadupException
                 throw ConfigException(exc.what());
             }
+            //read DB connection parameters
+            if (!manager.findSection("DataProvider.DataSource"))
+                throw ConfigException("'DataProvider.DataSource' section is missed");
+
             ConfigView* dsCfg = dbCfg.getSubConfig("DataSource");
-            if (!dsCfg->getInstance())
-                throw ConfigException("'DataSource' section is missed");
-            
-            try {
-                for (int i = 0; i < 3; i++) {
-                    if (!(_dsParm[i].prmVal = dsCfg->getString(_dsParm[i].prmId)))
-                        throw ConfigException("'%s' isn't set!", _dsParm[i].prmId);
-                }
-                DataSource * ds = DataSourceFactory::getDataSource(_DS_IDENT_VAL);
-                if (!ds)
-                    throw ConfigException("'%s' 'DataSource' isn't registered!", _DS_IDENT_VAL);
-                ds->init(dsCfg);
-
-                cacheDb = new DBSourceCFG;
-                cacheDb->ds = ds;
-                cacheDb->rtId = _dsParm[1].prmVal;
-                cacheDb->rtKey = _dsParm[2].prmVal;
-                cacheDb->max_queries = (unsigned)dsCfg->getInt("maxQueries");
-                cacheDb->init_threads = 1;
-
-            } catch (ConfigException& exc) {
-                if (cacheDb && cacheDb->ds) {
-                    delete cacheDb->ds;
-                    delete cacheDb;
-                    cacheDb = NULL;
-                }
-                throw exc;
+            for (int i = 0; i < 3; i++) {
+                if (!(_dsParm[i].prmVal = dsCfg->getString(_dsParm[i].prmId)))
+                    throw ConfigException("'%s' isn't set!", _dsParm[i].prmId);
             }
+            cacheDb = new DBSourceCFG;
+            cacheDb->rtId = _dsParm[1].prmVal;
+            cacheDb->rtKey = _dsParm[2].prmVal;
+
+            cacheDb->ds = DataSourceFactory::getDataSource(_DS_IDENT_VAL);
+            if (!cacheDb->ds)
+                throw ConfigException("'%s' 'DataSource' isn't registered!", _DS_IDENT_VAL);
+            cacheDb->ds->init(dsCfg);
+
+            cacheDb->max_queries = (unsigned)dsCfg->getInt("maxQueries");
+            cacheDb->init_threads = 1;
         } //dbCfg
     }
 };
@@ -370,15 +373,18 @@ int main(int argc, char** argv)
 
         g_pService->stop();
         delete g_pService;
-        if (cfg.cacheDb)
-            delete cfg.cacheDb;
-
+        if (cfg.bill.cache) {
+            delete cfg.bill.cache;
+            cfg.bill.cache = NULL;
+        }
     } catch(const std::exception& error) {
         smsc_log_fatal(inapLogger, "%s", error.what() );
         fprintf( stderr, "Fatal error: %s\n", error.what() );
         delete g_pService;
-        if (cfg.cacheDb)
-            delete cfg.cacheDb;
+        if (cfg.bill.cache) {
+            delete cfg.bill.cache;
+            cfg.bill.cache = NULL;
+        }
         exit(1);
     }
     smsc_log_info(inapLogger, "IN MANAGER shutdown complete");
