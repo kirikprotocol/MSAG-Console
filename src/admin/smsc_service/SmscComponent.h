@@ -122,6 +122,14 @@ protected:
   Variant setRole(const Arguments & args) throw (AdminException);
   Variant getRole() throw (AdminException);
 
+  Variant cgmAddGroup(const Arguments & args);
+  Variant cgmDeleteGroup(const Arguments & args);
+  Variant cgmAddAddr(const Arguments & args);
+  Variant cgmCheck(const Arguments & args);
+  Variant cgmDelAddr(const Arguments & args);
+  Variant cgmAddAbonent(const Arguments & args);
+  Variant cgmDelAbonent(const Arguments & args);
+
 
   SmscConfigs &configs;
   Methods methods;
@@ -140,7 +148,9 @@ protected:
     prcListPrincipalsMethod, prcAddPrincipalMethod, prcDeletePrincipalMethod, prcGetPrincipalMethod, prcAlterPrincipalMethod,
     memAddMemberMethod, memDeleteMemberMethod, memGetMemberMethod, sbmAddSubmiterMethod,
     sbmDeleteSubmiterMethod, sbmListSubmitersMethod,
-    dlAddMethod, dlDeleteMethod, dlGetMethod, dlListMethod, dlAlterMethod, setRoleMethod, getRoleMethod
+    dlAddMethod, dlDeleteMethod, dlGetMethod, dlListMethod, dlAlterMethod, setRoleMethod, getRoleMethod,
+    cgmAddGroupMethod,cgmDeleteGroupMethod,cgmAddAddrMethod,cgmCheckMethod,
+    cgmDelAddrMethod,cgmAddAbonentMethod,cgmDelAbonentMethod
   };
 
   smsc::core::synchronization::Mutex mutex;

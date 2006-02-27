@@ -180,6 +180,32 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
   dl_alter_params["maxElements"] = Parameter("maxElements", LongType);
 
 
+  Parameters cgmAddGroupParams;
+  cgmAddGroupParams["id"]=Parameter("id",LongType);
+  cgmAddGroupParams["name"]=Parameter("name",StringType);
+
+  Parameters cgmDeleteGroupParams;
+  cgmDeleteGroupParams["id"]=Parameter("id",LongType);
+
+  Parameters cgmAddAddrParams;
+  cgmAddAddrParams["id"]=Parameter("id",LongType);
+  cgmAddAddrParams["addr"]=Parameter("addr",StringType);
+
+  Parameters cgmCheckParams;
+  cgmCheckParams["id"]=Parameter("id",LongType);
+  cgmCheckParams["addr"]=Parameter("addr",StringType);
+
+  Parameters cgmDelAddrParams;
+  cgmDelAddrParams["id"]=Parameter("id",LongType);
+  cgmDelAddrParams["addr"]=Parameter("addr",StringType);
+
+  Parameters cgmAddAbonentParams;
+  cgmAddAbonentParams["id"]=Parameter("id",LongType);
+  cgmAddAbonentParams["addr"]=Parameter("addr",StringType);
+
+  Parameters cgmDelAbonentParams;
+  cgmDelAbonentParams["id"]=Parameter("id",LongType);
+  cgmDelAbonentParams["addr"]=Parameter("addr",StringType);
 
   /**************************** method declarations *************************/
   Method apply_routes          ((unsigned)applyRoutesMethod,         "apply_routes",          empty_params, StringType);
@@ -255,6 +281,16 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
   Method set_role        ((unsigned)setRoleMethod,             "set_role",           setRole_params,               StringType);
   Method get_role        ((unsigned)getRoleMethod,             "get_role",           empty_params,                 StringType);
 
+
+  Method cgm_addgroup((unsigned)cgmAddGroupMethod,"cgm_addgroup",cgmAddGroupParams,StringType);
+  Method cgm_deletegroup((unsigned)cgmDeleteGroupMethod,"cgm_deletegroup",cgmDeleteGroupParams,StringType);
+  Method cgm_addaddrtogroup((unsigned)cgmAddAddrMethod,"cgm_addaddrtogroup",cgmAddAddrParams,StringType);
+  Method cgm_check((unsigned)cgmCheckMethod,"cgm_check",cgmCheckParams,StringType);
+  Method cgm_deladdr((unsigned)cgmDelAddrMethod,"cgm_deladdr",cgmDelAddrParams,StringType);
+  Method cgm_addabonent((unsigned)cgmAddAbonentMethod,"cgm_addabonent",cgmAddAbonentParams,StringType);
+  Method cgm_delabonent((unsigned)cgmDelAbonentMethod,"cgm_delabonent",cgmDelAbonentParams,StringType);
+
+
   /***************************** method assigns *****************************/
   methods[apply_routes         .getName()] = apply_routes;
   methods[apply_aliases        .getName()] = apply_aliases;
@@ -324,6 +360,14 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
   methods[dl_get.getName()] = dl_get;
   methods[dl_list.getName()] = dl_list;
   methods[dl_alter.getName()] = dl_alter;
+
+  methods[cgm_addgroup.getName()] = cgm_addgroup;
+  methods[cgm_deletegroup.getName()] = cgm_deletegroup;
+  methods[cgm_addaddrtogroup.getName()] = cgm_addaddrtogroup;
+  methods[cgm_check.getName()] = cgm_check;
+  methods[cgm_deladdr.getName()] = cgm_deladdr;
+  methods[cgm_addabonent.getName()] = cgm_addabonent;
+  methods[cgm_delabonent.getName()] = cgm_delabonent;
 
 
   smsc_app_runner.reset(0);
@@ -2231,7 +2275,7 @@ Variant SmscComponent::setRole(const Arguments & args) throw (AdminException)
     Interconnect *icon = 0;
 
     try {
-  
+
         icon = Interconnect::getInstance();
 
         const char * const role = args.Get("role").getStringValue();
@@ -2243,7 +2287,7 @@ Variant SmscComponent::setRole(const Arguments & args) throw (AdminException)
         }else if(strcmp(role, "SINGLE") == 0){
             icon->changeRole(smsc::cluster::SINGLE);
         }
-      
+
     }catch(...){
         throw Exception("Exception during setRole method");
     }
@@ -2258,7 +2302,7 @@ Variant SmscComponent::getRole() throw (AdminException)
     Interconnect *icon = 0;
 
     try {
-  
+
         icon = Interconnect::getInstance();
 
         smsc::cluster::Role role = icon->getRole();
@@ -2273,7 +2317,7 @@ Variant SmscComponent::getRole() throw (AdminException)
         default:
             return Variant("UNKNOWN");
         }
-      
+
     }catch(...){
         throw Exception("Exception during getRole method");
     }
