@@ -22,7 +22,7 @@
 #include <sms/sms.h>
 #include <scag/transport/SCAGCommand.h>
 #include <scag/exc/SCAGExceptions.h>
-
+#include <util/Exception.hpp>
 #include <fstream>
 #include <jsapi.h>
 #include <jsstr.h>
@@ -42,6 +42,8 @@ using scag::sessions::CSessionKey;
 using scag::sessions::SessionPtr;
 using scag::transport::smpp::SmppCommand;
 
+using smsc::util::Exception;
+
 using namespace scag::transport::smpp;
 using namespace smsc::sms;
 using namespace smsc::logger;
@@ -57,6 +59,13 @@ SessionManager * smanager=0;
 SessionManagerConfig cfg;   
 
 SmppCommand command;
+
+#define SCAG_TRY try{
+
+#define SCAG_CATCH 	catch (Exception e)\
+			{smsc_log_error(logger,"Error: %s",e.what());\
+			return JS_FALSE;}\
+
     
 JSClass globalClass = 
 {
@@ -350,13 +359,26 @@ try{
    return JS_TRUE;
 }
 
+/*
+JavaScript desciption:
+InitBillIntance(string host,int port,int max_threads,string so_dir)
+*/
 static JSBool _initBillInstance(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
- scag::bill::BillingManagerConfig bcfg;
- 
- scag::bill::BillingManager::Init(bcfg);
- scag::config::ConfigManager::Init();
+	if(argc<4)
+		return JS_FALSE;
 
+	SCAG_TRY 
+		 scag::bill::BillingManagerConfig bcfg;
+		 bcfg.BillingHost=JS_GetStringBytes(JS_ValueToString(cx, argv[0]));
+		 bcfg.BillingPort=JSVAL_TO_INT(argv[1]);
+		 bcfg.MaxThreads=JSVAL_TO_INT(argv[2]);
+		 bcfg.so_dir=JS_GetStringBytes(JS_ValueToString(cx, argv[3]));
+
+		 scag::bill::BillingManager::Init(bcfg);
+		 scag::config::ConfigManager::Init();
+	SCAG_CATCH
+			
   return JS_TRUE;
 }
 
@@ -373,9 +395,11 @@ static JSBool _deleterule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 {
      int ruleId=JSVAL_TO_INT(argv[0]);
 
+	SCAG_TRY  
      engine->removeRule(ruleId);
      *rval=BOOLEAN_TO_JSVAL(true);
- 
+	SCAG_CATCH 
+
  return JS_TRUE;
 }
 
@@ -551,6 +575,7 @@ static JSFunctionSpec Global_functions[] = {
  {"fputs",write_file,1},
  
  {"InitReInstance",_initReInstance,1},
+ {"InitBillInstance",_initBillInstance,1},
  {"InitSessionManagerInstance",_initSessionManagerInstance,1},
  {"UpdateRule",_updaterule,1},
  {"DeleteRule",_deleterule,1},
