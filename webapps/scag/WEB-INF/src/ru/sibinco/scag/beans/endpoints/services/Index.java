@@ -5,7 +5,7 @@ package ru.sibinco.scag.beans.endpoints.services;
 
 import ru.sibinco.scag.beans.TabledBeanImpl;
 import ru.sibinco.scag.beans.SCAGJspException;
-import ru.sibinco.scag.backend.Gateway;
+import ru.sibinco.scag.backend.Scag;
 import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.lib.bean.TabledBean;
@@ -30,16 +30,16 @@ public class Index extends TabledBeanImpl implements TabledBean {
     }
 
     protected void delete() throws SCAGJspException {
-        final Gateway gateway = appContext.getGateway();
+        final Scag scag = appContext.getScag();
         final Map svcs = appContext.getSmppManager().getSvcs();
         for (Iterator iterator = checkedSet.iterator(); iterator.hasNext();) {
             final String svcId = (String) iterator.next();
 
             try {
-                gateway.deleteSvc(svcId);
+                scag.deleteSvc(svcId);
                 svcs.remove(svcId);
             } catch (SibincoException e) {
-                if (Proxy.STATUS_CONNECTED == gateway.getStatus()) {
+                if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
                     logger.error("Couldn't delete sme \"" + svcId + '"', e);
                     throw new SCAGJspException(Constants.errors.sme.COULDNT_DELETE, svcId, e);
                 } else

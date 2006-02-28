@@ -24,11 +24,15 @@ public class TopMenu  extends ArrayList {
             Collection scagItems = new ArrayList();
             scagItems.add(new MenuItem("menu.scag.status", "/gw/status/index.jsp"));
             scagItems.add(new MenuItem("menu.scag.config", "/gw/config/index.jsp"));
-            scagItems.add(new MenuItem("menu.scag.providers", "/gw/providers/index.jsp"));
             scagItems.add(new MenuItem("menu.scag.categories", "/gw/categories/index.jsp"));
             scagItems.add(new MenuItem("menu.scag.logging", "/gw/logging/index.jsp"));
             scagItems.add(new MenuItem("menu.scag.users", "/gw/users/index.jsp"));
             add(new MenuItem("menu.scag", "", scagItems));
+
+            Collection scagServices = new ArrayList();
+            scagServices.add(new MenuItem("menu.services.providers", "/services/index.jsp"));
+            scagServices.add(new MenuItem("menu.scag.providers", "/gw/providers/index.jsp"));
+            add(new MenuItem("menu.services", "", scagServices));
 
             Collection endpointItems = new ArrayList();
             endpointItems.add(new MenuItem("menu.endpoint.services","/endpoints/services/index.jsp"));

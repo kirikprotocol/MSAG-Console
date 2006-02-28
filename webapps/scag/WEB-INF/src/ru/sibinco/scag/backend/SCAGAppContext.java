@@ -14,8 +14,9 @@ import ru.sibinco.scag.backend.rules.RuleManager;
 import ru.sibinco.scag.backend.sme.ProviderManager;
 import ru.sibinco.scag.backend.sme.CategoryManager;
 import ru.sibinco.scag.backend.daemon.Daemon;
-import ru.sibinco.scag.backend.service.ServiceInfo;
+import ru.sibinco.scag.backend.daemon.ServiceInfo;
 import ru.sibinco.scag.backend.status.StatusManager;
+import ru.sibinco.scag.backend.service.ServiceProvidersManager;
 import ru.sibinco.scag.perfmon.PerfServer;
 import ru.sibinco.scag.svcmon.SvcMonServer;
 import ru.sibinco.scag.scmon.ScServer;
@@ -42,6 +43,7 @@ public class SCAGAppContext {
     private final SmppManager smppManager;
     private final RuleManager ruleManager;
     private final ProviderManager providerManager;
+    private final ServiceProvidersManager serviceProvidersManager;
     private final CategoryManager categoryManager;
     private final ScagRoutingManager scagRoutingManager;
     private final ResourceManager resourceManager;
@@ -71,6 +73,8 @@ public class SCAGAppContext {
             connectionPool = null;
             userManager = new UserManager(config.getString("users_config_file"));
             providerManager = new ProviderManager(idsConfig);
+            serviceProvidersManager = new ServiceProvidersManager(config.getString("services_file"));
+            serviceProvidersManager.init();
             categoryManager = new CategoryManager(idsConfig);
             smppManager = new SmppManager(config.getString("smpp_file"), providerManager);
             smppManager.init();
@@ -146,6 +150,10 @@ public class SCAGAppContext {
 
     public ProviderManager getProviderManager() {
         return providerManager;
+    }
+
+    public ServiceProvidersManager getServiceProviderManager() {
+        return serviceProvidersManager;
     }
 
     public CategoryManager getCategoryManager() {

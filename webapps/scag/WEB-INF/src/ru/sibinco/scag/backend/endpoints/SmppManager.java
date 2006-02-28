@@ -82,9 +82,9 @@ public class SmppManager{
                 final Svc service = createSvc(svcRecords);
                 svcs.put(service.getId(), service);
             }
-            final NodeList ceterRecords = document.getDocumentElement().getElementsByTagName("smscrecord");
-            for (int i = 0; i < ceterRecords.getLength(); i++) {
-                final Element centersRecords = (Element) ceterRecords.item(i);
+            final NodeList centerRecords = document.getDocumentElement().getElementsByTagName("smscrecord");
+            for (int i = 0; i < centerRecords.getLength(); i++) {
+                final Element centersRecords = (Element) centerRecords.item(i);
                 final Center center = createCenter(centersRecords);
                 centers.put(center.getId(), center);
             }

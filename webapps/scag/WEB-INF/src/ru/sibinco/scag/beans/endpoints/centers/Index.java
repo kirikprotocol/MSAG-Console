@@ -5,11 +5,10 @@ package ru.sibinco.scag.beans.endpoints.centers;
 
 import ru.sibinco.scag.beans.TabledBeanImpl;
 import ru.sibinco.scag.beans.SCAGJspException;
-import ru.sibinco.scag.backend.Gateway;
+import ru.sibinco.scag.backend.Scag;
 import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.backend.endpoints.centers.Center;
 import ru.sibinco.scag.Constants;
-import ru.sibinco.lib.bean.TabledBean;
 import ru.sibinco.lib.SibincoException;
 
 import java.util.Collection;
@@ -24,7 +23,7 @@ import java.util.Iterator;
  *
  * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
  */
-public class Index extends TabledBeanImpl implements TabledBean {
+public class Index extends TabledBeanImpl{
 
 
     protected Collection getDataSource() {
@@ -32,16 +31,16 @@ public class Index extends TabledBeanImpl implements TabledBean {
     }
 
     protected void delete() throws SCAGJspException {
-        final Gateway gateway = appContext.getGateway();
+        final Scag scag = appContext.getScag();
         final Map centers = appContext.getSmppManager().getCenters();
         for (Iterator iterator = checkedSet.iterator(); iterator.hasNext();) {
             final String centerId = (String) iterator.next();
             Center center = (Center) centers.get(centerId);
             try {
-                gateway.deleteCenter(center);
+                scag.deleteCenter(center);
                 centers.remove(centerId);
             } catch (SibincoException e) {
-                if (Proxy.STATUS_CONNECTED == gateway.getStatus()) {
+                if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
                     logger.error("Couldn't delete Smsc \"" + centerId + '"', e);
                     throw new SCAGJspException(Constants.errors.sme.COULDNT_DELETE, centerId, e);
                 } else

@@ -5,8 +5,7 @@ import ru.sibinco.lib.backend.util.config.Config;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.daemon.Daemon;
 import ru.sibinco.scag.backend.daemon.Proxy;
-import ru.sibinco.scag.backend.service.ServiceInfo;
-import ru.sibinco.scag.beans.SCAGBean;
+import ru.sibinco.scag.backend.daemon.ServiceInfo;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.beans.TabledBeanImpl;
 
@@ -48,7 +47,7 @@ public class Index extends TabledBeanImpl {
             throw new SCAGJspException(Constants.errors.status.COULDNT_GET_DAEMON);
         }
 
-        final ServiceInfo info = scagDaemon.getServiceInfo(appContext.getGateway().getId());
+        final ServiceInfo info = scagDaemon.getServiceInfo(appContext.getScag().getId());
 
         if (null != info) {
             final byte gwStatus = info.getStatus();
@@ -73,18 +72,18 @@ public class Index extends TabledBeanImpl {
 
     private void stop() throws SCAGJspException {
         try {
-            appContext.getScagDaemon().shutdownService(appContext.getGateway().getId());
+            appContext.getScagDaemon().shutdownService(appContext.getScag().getId());
         } catch (SibincoException e) {
-            logger.error("Could not stop Gateway", e);
+            logger.error("Could not stop Scag", e);
             throw new SCAGJspException(Constants.errors.status.COULDNT_STOP_GATEWAY, e);
         }
     }
 
     private void start() throws SCAGJspException {
         try {
-            appContext.getScagDaemon().startService(appContext.getGateway().getId());
+            appContext.getScagDaemon().startService(appContext.getScag().getId());
         } catch (SibincoException e) {
-            logger.error("Could not start Gateway", e);
+            logger.error("Could not start Scag", e);
             throw new SCAGJspException(Constants.errors.status.COULDNT_START_GATEWAY, e);
         }
     }
@@ -140,9 +139,9 @@ public class Index extends TabledBeanImpl {
         try {
             appContext.getScagRoutingManager().apply();
             try {
-                appContext.getGateway().apply("routes");
+                appContext.getScag().apply("routes");
             } catch (SibincoException e) {
-                if (Proxy.STATUS_CONNECTED == appContext.getGateway().getStatus()) {
+                if (Proxy.STATUS_CONNECTED == appContext.getScag().getStatus()) {
                     logger.debug("Couldn't apply routes", e);
                     throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_ROUTES, e);
                 }
@@ -159,9 +158,9 @@ public class Index extends TabledBeanImpl {
             appContext.getGwConfig().save();
 
             try {
-                appContext.getGateway().apply("config");
+                appContext.getScag().apply("config");
             } catch (SibincoException e) {
-                if (Proxy.STATUS_CONNECTED == appContext.getGateway().getStatus()) {
+                if (Proxy.STATUS_CONNECTED == appContext.getScag().getStatus()) {
                     logger.debug("Couldn't apply config", e);
                     throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_CONFIG, e);
                 }

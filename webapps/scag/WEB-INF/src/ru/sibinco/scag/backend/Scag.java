@@ -3,17 +3,13 @@ package ru.sibinco.scag.backend;
 import org.w3c.dom.Element;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.util.xml.Utils;
-import ru.sibinco.lib.backend.sme.SmeStatus;
+import ru.sibinco.scag.backend.daemon.Proxy;
+import ru.sibinco.scag.backend.daemon.ServiceInfo;
 import ru.sibinco.scag.backend.endpoints.centers.Center;
 import ru.sibinco.scag.backend.endpoints.svc.Svc;
 import ru.sibinco.scag.backend.protocol.commands.Apply;
 import ru.sibinco.scag.backend.protocol.commands.CommandCall;
-import ru.sibinco.scag.backend.protocol.commands.DeleteSme;
-import ru.sibinco.scag.backend.protocol.commands.ModifySmsc;
-import ru.sibinco.scag.backend.protocol.commands.RegSmsc;
-import ru.sibinco.scag.backend.protocol.commands.UnregSmsc;
-import ru.sibinco.scag.backend.protocol.commands.UpdateSmeInfo;
-import ru.sibinco.scag.backend.protocol.commands.AddSme;
+import ru.sibinco.scag.backend.protocol.commands.Type;
 import ru.sibinco.scag.backend.protocol.commands.endpoints.AddCenter;
 import ru.sibinco.scag.backend.protocol.commands.endpoints.AddSvc;
 import ru.sibinco.scag.backend.protocol.commands.endpoints.DeleteCenter;
@@ -24,17 +20,11 @@ import ru.sibinco.scag.backend.protocol.commands.rules.AddRule;
 import ru.sibinco.scag.backend.protocol.commands.rules.RemoveRule;
 import ru.sibinco.scag.backend.protocol.response.Response;
 import ru.sibinco.scag.backend.routing.ScagRoutingManager;
-import ru.sibinco.scag.backend.sme.SmscInfo;
-import ru.sibinco.scag.backend.sme.GwSme;
-import ru.sibinco.scag.backend.daemon.Proxy;
-import ru.sibinco.scag.backend.service.ServiceInfo;
-import ru.sibinco.scag.backend.service.Type;
 
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Iterator;
 
 
 /**

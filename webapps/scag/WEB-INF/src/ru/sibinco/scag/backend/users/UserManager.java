@@ -2,6 +2,7 @@ package ru.sibinco.scag.backend.users;
 
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
+import org.apache.log4j.Logger;
 import ru.sibinco.lib.backend.users.User;
 import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.lib.backend.util.SortedList;
@@ -16,65 +17,65 @@ import java.util.*;
 /**
  * Created by igork Date: 03.03.2004 Time: 19:20:19
  */
-public class UserManager
-{
-  private Map users = Collections.synchronizedMap(new HashMap());
-  private final File configFile;
+public class UserManager {
 
-  public UserManager(String config) throws IOException, ParserConfigurationException, SAXException
-  {
-    this.configFile = new File(config);
-    try {
-      load();
-    } catch (IOException e) {
-      e.printStackTrace();//logger.warn(e.getMessage());  //To change body of catch statement use File | Settings | File Templates.
-      throw new IOException(e.getMessage());
-    } catch (ParserConfigurationException e) {
-      e.printStackTrace();//logger.warn(e.getMessage());  //To change body of catch statement use File | Settings | File Templates.
-     throw new ParserConfigurationException(e.getMessage());
-    } catch (SAXException e) {
-      e.printStackTrace();//logger.warn(e.getMessage());  //To change body of catch statement use File | Settings | File Templates.
-      throw new SAXException(e.getMessage());
+    private Logger logger = Logger.getLogger(this.getClass());
+
+    private Map users = Collections.synchronizedMap(new HashMap());
+    private final File configFile;
+
+    public UserManager(String config) throws IOException, ParserConfigurationException, SAXException {
+        this.configFile = new File(config);
+        try {
+            load();
+        } catch (IOException e) {
+            e.printStackTrace();
+            logger.warn(e.getMessage());
+            throw new IOException(e.getMessage());
+        } catch (ParserConfigurationException e) {
+            e.printStackTrace();
+            logger.warn(e.getMessage());
+            throw new ParserConfigurationException(e.getMessage());
+        } catch (SAXException e) {
+            e.printStackTrace();
+            logger.warn(e.getMessage());
+            throw new SAXException(e.getMessage());
+        }
+
     }
 
-  }
-
-  private void load() throws IOException, ParserConfigurationException, SAXException
-  {
-    Document document = Utils.parse(new FileReader(configFile));
-    NodeList userNodes = document.getElementsByTagName("user");
-    for (int i = 0; i < userNodes.getLength(); i++) {
-      User user = new User((Element) userNodes.item(i));
-      users.put(user.getLogin(), user);
+    private void load() throws IOException, ParserConfigurationException, SAXException {
+        Document document = Utils.parse(new FileReader(configFile));
+        NodeList userNodes = document.getElementsByTagName("user");
+        for (int i = 0; i < userNodes.getLength(); i++) {
+            User user = new User((Element) userNodes.item(i));
+            users.put(user.getLogin(), user);
+        }
     }
-  }
 
-  public synchronized void apply() throws IOException, ParserConfigurationException, SAXException
-  {
-    store();
-    XmlAuthenticator.init(configFile);
-  }
-
-  protected void store() throws IOException
-  {
-    File configNew = Functions.createNewFilenameForSave(configFile);
-
-    PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(configNew), Functions.getLocaleEncoding()));
-    Functions.storeConfigHeader(out, "users", "users.dtd", System.getProperty("file.encoding"));
-    for (Iterator i = new SortedList(users.keySet()).iterator(); i.hasNext();) {
-      String userLogin = (String) i.next();
-      User user = (User) users.get(userLogin);
-      out.print(user.getXmlText());
+    public synchronized void apply() throws IOException, ParserConfigurationException, SAXException {
+        store();
+        XmlAuthenticator.init(configFile);
     }
-    Functions.storeConfigFooter(out, "users");
-    out.flush();
-    out.close();
 
-    Functions.renameNewSavedFileToOriginal(configNew, configFile);
-  }
+    protected void store() throws IOException {
+        File configNew = Functions.createNewFilenameForSave(configFile);
 
-  public synchronized Map getUsers()
-  {
-    return users;
-  }
+        PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(configNew), Functions.getLocaleEncoding()));
+        Functions.storeConfigHeader(out, "users", "users.dtd", System.getProperty("file.encoding"));
+        for (Iterator i = new SortedList(users.keySet()).iterator(); i.hasNext();) {
+            String userLogin = (String) i.next();
+            User user = (User) users.get(userLogin);
+            out.print(user.getXmlText());
+        }
+        Functions.storeConfigFooter(out, "users");
+        out.flush();
+        out.close();
+
+        Functions.renameNewSavedFileToOriginal(configNew, configFile);
+    }
+
+    public synchronized Map getUsers() {
+        return users;
+    }
 }

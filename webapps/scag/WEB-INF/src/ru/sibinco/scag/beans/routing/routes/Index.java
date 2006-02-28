@@ -141,9 +141,9 @@ public class Index extends TabledBeanImpl {
         try {
             appContext.getScagRoutingManager().apply();
             try {
-                appContext.getGateway().apply("routes");
+                appContext.getScag().apply("routes");
             } catch (SibincoException e) {
-                if (Proxy.STATUS_CONNECTED == appContext.getGateway().getStatus()) {
+                if (Proxy.STATUS_CONNECTED == appContext.getScag().getStatus()) {
                     logger.debug("Couldn't apply routes", e);
                     throw new SCAGJspException(Constants.errors.routing.routes.COULDNT_APPLY_ROUTES, e);
                 }

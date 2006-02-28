@@ -17,7 +17,7 @@
 
     <jsp:body>
         <sm-ep:properties title="Category info">
-            <c:if test="${!bean.add}"><sm-ep:txt title="id" name="id" readonly="true"/></c:if>
+            <c:if test="${!bean.add}"><input type="hidden" name="id" id="id" value="${fn:escapeXml(bean.id)}"></c:if>
             <sm-ep:txt title="name" name="name" validation="nonEmpty"/>
         </sm-ep:properties>
     </jsp:body>

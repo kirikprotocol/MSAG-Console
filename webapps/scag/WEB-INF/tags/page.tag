@@ -34,7 +34,7 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
 
     for (int i = 0; i < buffer.length(); i++)
       if (buffer.charAt(i) == '/')
-        buffer.setCharAt(i, '.');
+        buffer.setCharAt(i, '.');                                   
 
     final int cnp = buffer.lastIndexOf(".")+1;
     buffer.setCharAt(cnp, Character.toUpperCase(buffer.charAt(cnp)));

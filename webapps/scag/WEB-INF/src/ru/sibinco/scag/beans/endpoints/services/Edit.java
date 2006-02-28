@@ -9,7 +9,7 @@ import ru.sibinco.scag.beans.DoneException;
 import ru.sibinco.scag.backend.endpoints.svc.Svc;
 import ru.sibinco.scag.backend.sme.Provider;
 import ru.sibinco.scag.backend.SCAGAppContext;
-import ru.sibinco.scag.backend.Gateway;
+import ru.sibinco.scag.backend.Scag;
 import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.backend.transport.Transport;
 import ru.sibinco.scag.Constants;
@@ -123,21 +123,21 @@ public class Edit extends EditBean {
         svc = new Svc(id, password, timeout, enabled, mode, providerObj);
         svcs.put(id, svc);
 
-        final Gateway gateway = appContext.getGateway();
+        final Scag scag = appContext.getScag();
         try {
             if (isAdd()) {
                 if (svc.isEnabled()) {
-                    gateway.addSvc(svc);
+                    scag.addSvc(svc);
                 }
             } else {
                 if ((oldSvc.isEnabled() == svc.isEnabled())) {
                     if(isEnabled())
-                    gateway.updateSvcInfo(svc);
+                    scag.updateSvcInfo(svc);
                 } else {
                     if (svc.isEnabled()) {
-                        gateway.addSvc(svc);
+                        scag.addSvc(svc);
                     } else {
-                        gateway.deleteSvc(svc.getId());
+                        scag.deleteSvc(svc.getId());
                     }
                 }
             }
@@ -145,7 +145,7 @@ public class Edit extends EditBean {
             appContext.getSmppManager().store();
         } catch (SibincoException e) {
             e.printStackTrace();
-            if (Proxy.STATUS_CONNECTED == gateway.getStatus()) {
+            if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
                 throw new SCAGJspException(Constants.errors.sme.COULDNT_APPLY, id, e);
             }
         }

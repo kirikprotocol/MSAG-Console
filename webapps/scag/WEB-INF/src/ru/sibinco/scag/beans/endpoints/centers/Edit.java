@@ -10,7 +10,7 @@ import ru.sibinco.scag.backend.endpoints.svc.Svc;
 import ru.sibinco.scag.backend.endpoints.centers.Center;
 import ru.sibinco.scag.backend.transport.Transport;
 import ru.sibinco.scag.backend.SCAGAppContext;
-import ru.sibinco.scag.backend.Gateway;
+import ru.sibinco.scag.backend.Scag;
 import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.backend.sme.Provider;
 import ru.sibinco.scag.Constants;
@@ -54,7 +54,6 @@ public class Edit extends EditBean {
     private String[] providerNames = null;
     private boolean administrator = false;
     private int uid = -1;
-    private int lastUid = 0;
     private long userProviderId = ALL_PROVIDERS;
 
     private void init() throws SCAGJspException {
@@ -140,23 +139,23 @@ public class Edit extends EditBean {
                 enabled, providerObj, uid, bindSystemId, bindPassword);
         centers.put(id, center);
 
-        final Gateway gateway = appContext.getGateway();
+        final Scag scag = appContext.getScag();
         try {
             if (isAdd()) {
                 center.setUid(getLastUid());
                 if (center.isEnabled()) {
-                    gateway.addCenter(center);
+                    scag.addCenter(center);
                 }
                 appContext.getSmppManager().setLastUsedId(center.getUid());
             } else {
                 if (oldCenter.isEnabled() == center.isEnabled()) {
                     if(isEnabled())
-                    gateway.updateCenter(center);
+                    scag.updateCenter(center);
                 }else{
                     if(center.isEnabled()){
-                       gateway.addCenter(center);
+                       scag.addCenter(center);
                     }else{
-                        gateway.deleteCenter(center);
+                        scag.deleteCenter(center);
                     }
                 }
             }
@@ -164,7 +163,7 @@ public class Edit extends EditBean {
             appContext.getSmppManager().store();
         } catch (SibincoException e) {
             e.printStackTrace();
-            if (Proxy.STATUS_CONNECTED == gateway.getStatus()) {
+            if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
                 throw new SCAGJspException(Constants.errors.sme.COULDNT_APPLY, id, e);
             }
         }
@@ -180,7 +179,7 @@ public class Edit extends EditBean {
 
     public String[] getSmes() {
         final SortedList smes = new SortedList(appContext.getSmppManager().getSvcs().keySet());
-        for (Iterator i = appContext.getSmscsManager().getSmscs().keySet().iterator(); i.hasNext();) {
+        for (Iterator i = appContext.getSmppManager().getSvcs().keySet().iterator(); i.hasNext();) {
             final String smscId = (String) i.next();
             if (!smscId.equals(id))
                 smes.remove(smscId);

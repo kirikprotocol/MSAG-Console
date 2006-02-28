@@ -3,7 +3,7 @@ package ru.sibinco.scag.beans.gw.status;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.scag.beans.SCAGBean;
 import ru.sibinco.scag.beans.SCAGJspException;
-import ru.sibinco.scag.backend.service.ServiceInfo;
+import ru.sibinco.scag.backend.daemon.ServiceInfo;
 import ru.sibinco.scag.backend.daemon.Daemon;
 
 import javax.servlet.http.HttpServletRequest;
@@ -21,7 +21,7 @@ public class Status extends SCAGBean {
         final Daemon scagDaemon = appContext.getScagDaemon();
         try {
             scagDaemon.refreshServices(appContext.getSmppManager());
-            final Object gwService = scagDaemon.getServiceInfo(appContext.getGateway().getId());
+            final Object gwService = scagDaemon.getServiceInfo(appContext.getScag().getId());
             if (gwService instanceof ServiceInfo) {
                 final ServiceInfo info = (ServiceInfo) gwService;
                 scagStatus = info.getStatus();

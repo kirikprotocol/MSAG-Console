@@ -1,23 +1,14 @@
 <%@include file="/WEB-INF/inc/header.jspf"%>
-
-<sm:page title="Services">
+<sm:page title="Service Providers">
+  <jsp:attribute name="menu">
+    <sm-pm:menu>
+      <sm-pm:item name="mbAdd" value="Add" title="Add new Service Providers"/>
+      <sm-pm:item name="mbDelete" value="Delete" title="Delete Service Providers" onclick="return confirm('Are you sure to delete this object?')" isCheckSensible="true"/>
+      <sm-pm:space/>
+    </sm-pm:menu>
+  </jsp:attribute>
 
   <jsp:body>
- <OBJECT id="tdcConnStatuses" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
-  	<PARAM NAME="DataURL" VALUE="services/services/connected_statuses.jsp">
-  	<PARAM NAME="UseHeader" VALUE="True">
-  	<PARAM NAME="TextQualifier" VALUE='"'>
-  </OBJECT>
-
-<script>
-  function refreshStatus()
-  {
-  	document.all.tdcConnStatuses.DataURL = document.all.tdcConnStatuses.DataURL;
-  	document.all.tdcConnStatuses.reset();
-  	window.setTimeout(refreshStatus, 5000);
-  }
-  refreshStatus();
-  </script>
-    <sm:table columns="id,providerName,smsc,status" names="id,provider,is SMSC,status" widths="30,30,30,10" />
+    <sm:table columns="checkbox,name,servicesSize" names="c,name,services num" widths="1,20,48,48" edit="name"/>
   </jsp:body>
 </sm:page>
