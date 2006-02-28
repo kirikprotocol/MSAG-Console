@@ -62,7 +62,7 @@ SmppCommand command;
 
 #define SCAG_TRY try{
 
-#define SCAG_CATCH 	catch (Exception e)\
+#define SCAG_CATCH 	}catch (Exception& e)\
 			{smsc_log_error(logger,"Error: %s",e.what());\
 			return JS_FALSE;}\
 
@@ -573,7 +573,6 @@ static JSFunctionSpec Global_functions[] = {
  {"yield",a_Yield,1},
  {"Clock",getClock,1},
  {"fputs",write_file,1},
- 
  {"InitReInstance",_initReInstance,1},
  {"InitBillInstance",_initBillInstance,1},
  {"InitSessionManagerInstance",_initSessionManagerInstance,1},
