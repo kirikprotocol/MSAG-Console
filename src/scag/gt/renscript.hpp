@@ -589,10 +589,8 @@ public:
 public:
 
 
-/**/ 
  int initre()
  {
- 
     int errorCount;
     int errorCode;
     SmppCommand command;
@@ -601,32 +599,28 @@ public:
     
     if (!logger) 
     {
- printf("error:can`t create logger\n");
- fflush(stdout);
- return 0;
+		printf("error:can`t create logger\n");
+		fflush(stdout);
+		return 0;
     }
-    //engine = new RuleEngine("./rules");
-      
+         
     return 1;
  }
-/**/
+
 
  int Execute()
  {
   
   if(!initre())
- return 0;
-
+		 return 0;
    
     runScript();
    
   return 1;
  };
-/**/
 
  int runScript()
  {
-  
 
   std::string script;
   std::string buffer;
