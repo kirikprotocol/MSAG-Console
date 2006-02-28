@@ -42,13 +42,15 @@ protected:
     AbonentId           abonent;
     AbonentBillType     abType;
     InAbonentQueryListenerITF * _fcbDone;
+    unsigned            timeOut;
 
 public:
     AbonentQuery(DBQueryManager * owner, DataSource * ds, 
+                            //SQL function name and argument name
                             const char * rt_id, const char * rt_key);
     ~AbonentQuery();
 
-    void init(AbonentId ab_number, InAbonentQueryListenerITF * fcb_done);
+    void init(AbonentId ab_number, InAbonentQueryListenerITF * fcb_done, unsigned timeout = 0);
 
     AbonentId   getAbonent(void) const { return  abonent; }
     const AbonentBillType getAbonentType(void) const { return  abType; }
@@ -65,8 +67,11 @@ struct DBSourceCFG {
     const char *    rtKey;
     unsigned        max_queries;
     unsigned        init_threads;
+    unsigned        timeout;
 
-    DBSourceCFG() { ds = NULL; rtId = rtKey = NULL; max_queries = init_threads = 0; }
+    DBSourceCFG() {
+        ds = NULL; rtId = rtKey = NULL; max_queries = init_threads = timeout = 0;
+    }
 };
 
 

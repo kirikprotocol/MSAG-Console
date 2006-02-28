@@ -58,6 +58,9 @@
             <param name="dbUserPassword" type="string">@inman.db.PasSword@</param>
             <param name="connections" type="int">5</param>  <!--  max allowed db connections -->
             <param name="maxQueries" type="int">15</param>  <!--  max allowed db queries -->
+            <param name="watchdog" type="bool">true</param>  <!--  turn on timeouts handling -->
+            <param name="timeout" type="int">15</param>  <!--  timeout on connection queries, units: secs  [1..65535] -->
+
            <!--  SQL function returning Abonent type has following prototype:
                   FUNCTION abonentQueryFunc (iqueryFuncArg  IN VARCHAR2) RETURN NUMBER
             -->

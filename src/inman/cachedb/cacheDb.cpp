@@ -15,10 +15,10 @@ namespace db {
 AbonentQuery::AbonentQuery(DBQueryManager * owner, DataSource * ds,
                            const char * rt_id, const char * rt_key)
     : ThreadedTask()
-    , _owner(owner), _ds(ds), rtId(rt_id), rtKey(rt_key), _fcbDone(NULL)
+    , _owner(owner), _ds(ds), rtId(rt_id), rtKey(rt_key), _fcbDone(NULL), timeOut(0)
 {
     callStr += rtId; callStr += "(:";
-    callStr += rt_key; callStr += ");";
+    callStr += rtKey; callStr += ");";
 }
 
 AbonentQuery::~AbonentQuery()
@@ -27,7 +27,8 @@ AbonentQuery::~AbonentQuery()
         onRelease();
 }
 
-void AbonentQuery::init(AbonentId ab_number, InAbonentQueryListenerITF * fcb_done)
+void AbonentQuery::init(AbonentId ab_number, InAbonentQueryListenerITF * fcb_done,
+                        unsigned timeout/* = 0*/)
 {
     mutex.Lock();
     signaled = 0;
@@ -35,6 +36,7 @@ void AbonentQuery::init(AbonentId ab_number, InAbonentQueryListenerITF * fcb_don
     abType = btUnknown;
     _fcbDone = fcb_done;
     isReleased = false;
+    timeOut = timeout;
     mutex.Unlock();
 }
 void AbonentQuery::onRelease(void)
@@ -56,8 +58,13 @@ int AbonentQuery::Execute(void)
     catch (...) { status = -1; }
     if (rtq) {
         try {
+            int timerId = -1;
             rtq->setString(rtKey, abonent);
+            if (timeOut)
+                timerId = _ds->startTimer(dcon, timeOut);
             rtq->execute();
+            if (timerId >= 0)
+                _ds->stopTimer(timerId);
             res = rtq->getInt16("RETURN"); //FUNCTION_RETURN_ATTR_NAME
         } catch (Exception& exc) {
             status = -2; 
@@ -128,7 +135,7 @@ AbonentQuery * DBQueryManager::initQuery(AbonentId ab_number,
             return NULL;
     }
     queries.insert(QueriesMap::value_type(ab_number, ntask));
-    ntask->init(ab_number, pf_cb);
+    ntask->init(ab_number, pf_cb, _cfg.timeout);
     return ntask;
 }
 

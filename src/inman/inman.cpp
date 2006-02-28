@@ -170,7 +170,7 @@ public:
                                       _in_CFG_MIN_BILLING_INTERVAL);
             }
             smsc_log_info(inapLogger, "billingDir: %s", bill.billingDir);
-            smsc_log_info(inapLogger, "billingInterval: %d", bill.billingInterval);
+            smsc_log_info(inapLogger, "billingInterval: %d secs", bill.billingInterval);
         }
         //cache parameters
         try {
@@ -211,7 +211,7 @@ public:
                 throw ConfigException("'SMSC_Timeout' should fall into the range [1 ..65535] seconds");
             bill.tcpTimeout = (unsigned short)tmo;
         }
-        smsc_log_info(inapLogger, "SMSC_Timeout: %s%u", !tmo ? "default ":"", bill.tcpTimeout);
+        smsc_log_info(inapLogger, "SMSC_Timeout: %s%u secs", !tmo ? "default ":"", bill.tcpTimeout);
 
         /* ************************** *
          * IN interaction parameters: *
@@ -261,9 +261,8 @@ public:
             if (tmo >= 65535)
                 throw ConfigException("'IN_Timeout' should be less than 65535 seconds");
             bill.capTimeout = (unsigned short)tmo;
-            smsc_log_info(inapLogger, "IN_Timeout: %u", bill.capTimeout);
-        } else
-            smsc_log_info(inapLogger, "IN_Timeout: default %u", bill.capTimeout);
+        }
+        smsc_log_info(inapLogger, "IN_Timeout: %s%u secs", !tmo ? "default ":"", bill.capTimeout);
 
         cstr = NULL; cppStr = "RPCList_reject: ";
         try { cstr = inss7Cfg.getString("RPCList_reject"); }
@@ -324,6 +323,13 @@ public:
 
             cacheDb->max_queries = (unsigned)dsCfg->getInt("maxQueries");
             cacheDb->init_threads = 1;
+            bool wdog = false;
+            try { wdog = dsCfg->getBool("watchdog"); }
+            catch (ConfigException & exc) { }
+
+            if (wdog)
+                cacheDb->timeout = (unsigned)dsCfg->getInt("timeout");
+            smsc_log_info(inapLogger, "Query timeout: %u secs", cacheDb->timeout);
         } //dbCfg
     }
 };
