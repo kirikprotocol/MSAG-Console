@@ -3,7 +3,6 @@ package ru.sibinco.scag.beans;
 import ru.sibinco.lib.backend.util.SortByPropertyComparator;
 import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.lib.bean.TabledBean;
-import ru.sibinco.lib.bean.TableFilter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -15,7 +14,7 @@ import java.util.*;
  * Date: 09.03.2004
  * Time: 14:29:00
  */
-public abstract class TabledBeanImpl extends SCAGBean implements TabledBean, TableFilter
+public abstract class TabledBeanImpl extends SCAGBean implements TabledBean
 {
   protected List tabledItems = new ArrayList();
   protected String sort = null;
@@ -41,20 +40,13 @@ public abstract class TabledBeanImpl extends SCAGBean implements TabledBean, Tab
 
     if (sort == null)
       sort = getDefaultSort();
-    SortedList results = new SortedList(getDataSource(), new SortByPropertyComparator(sort));
-    results = filter(results);
+    final SortedList results = new SortedList(getDataSource(), new SortByPropertyComparator(sort));
     totalSize = results.size();
     if (totalSize > startPosition)        
       tabledItems = results.subList(startPosition, Math.min(totalSize, startPosition + pageSize));
     else
       tabledItems = new LinkedList();
 
-  }
-
-  //dummy TableFilter implementation, should be rewriten in subclasses if necessary
-  public SortedList filter(SortedList s)
-  {
-    return s;
   }
 
   protected abstract Collection getDataSource();
