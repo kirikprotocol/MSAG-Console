@@ -2442,7 +2442,7 @@ public class jEdit extends Applet
    *                   is true, then jEdit will close all open views instead of exiting
    *                   entirely.
    */
-  public static void exitView(View view, boolean reallyExit)
+  public static void exitView(View view, boolean reallyExit, String path)
   {
     // Close dialog, view.close() call need a view...
     if (view == null)
@@ -2487,7 +2487,7 @@ public class jEdit extends Applet
          PluginJAR jar=(PluginJAR) jars.elementAt(i);
          jar.WindowClose(view);
        }
-       EditBus.send(new ViewUpdate(view,ViewUpdate.CLOSED));// Send EditorExiting
+       EditBus.send(new ViewUpdate(view,ViewUpdate.CLOSED, path));// Send EditorExiting
        if (view != null) view.close();
       Autosave.stop();// Stop autosave timer
       // Stop all plugins
@@ -4034,9 +4034,9 @@ loop:  for(int i = 0; i < list.length; i++)
     if (viewsFirst == viewsLast && callExit) {
       System.out.println("before exit !!!!");
     //  EditBus.send(new ViewUpdate(view, ViewUpdate.CLOSED));
-      exitView(view, false); /* exit does editor event & save */  }
+      exitView(view, false, view.getBuffer().getSymlinkPath() ); /* exit does editor event & save */  }
     else {
-       exitView(view, false);
+       exitView(view, false, view.getBuffer().getSymlinkPath());
      /* EditBus.send(new ViewUpdate(view, ViewUpdate.CLOSED));
       view.close();
       removeViewFromList(view);

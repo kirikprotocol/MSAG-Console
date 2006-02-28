@@ -113,45 +113,39 @@ public abstract class ErrorSource implements EBComponent
     EditBus.send(new ErrorSourceUpdate(errorSource,ErrorSourceUpdate.ERROR_SOURCE_REMOVED,null,view,true));
     synchronized(serviceErrors)
     {
-      serviceErrorsClear(view);
+      serviceErrorsClear(view, view.getBuffer().getSymlinkPath());
     }
-  }
+   }
  } //}}}
- public static void unregisterByView(final View view)
+ /*public static void unregisterByView(final View view, final String path)
  {
   synchronized(errorSources)
   {
     errorSources.remove(view);
   }
-  unregisterServiceErrors(view);
- }
+  unregisterServiceErrors(view, path);
+ } */
 
- private static void unregisterServiceErrors(View view)
+ public static void unregisterServiceErrors(final View view, final String path)
  {
   synchronized(serviceErrors)
   {
-    //System.out.println("unregisterServiceErrors(view)  ^^^^^^^^^^^^^");
-    serviceErrorsClear(view);
-    serviceErrors.remove(view);//.getBuffer().getSymlinkPath());
+    //System.out.println("MUST clear service errors from closed view   ^^^^^^^^^^^^^");
+    if (path!=null) serviceErrorsClear(view, path);
+    if (serviceErrors.remove(view) == null) System.out.println("There is no match for this view in serviceErrors");;
   }
  }
 
- private static void serviceErrorsClear(View view)
+ private static void serviceErrorsClear(View view, String path)
  {
      Hashtable hash = (Hashtable)serviceErrors.get(view);
      if (hash!=null)
      {
-       //System.out.println(" hash != null ^^^^^^^^^^^^^");
-       //System.out.println(" view = " + view);
-       //System.out.println(" view.getBuffer().getSymlinkPath() = " + view.getBuffer().getSymlinkPath());
-
-     // this in not quite correct way for service errors cleaning
-     // it would work better if we could extract list of errors from map by path in that way:
-     //final ArrayList list = (ArrayList)(hash.get(view.getBuffer().getSymlinkPath()));
-     //but view.getBuffer() return null, so we have to iterate over all list from hash  
-     for (Enumeration e = hash.elements();e.hasMoreElements();)
-     {
-       ArrayList list = (ArrayList)e.nextElement();
+       /*System.out.println(" hash != null ^^^^^^^^^^^^^");
+       System.out.println(" view = " + view);
+       System.out.println(" view.getBuffer().getSymlinkPath() = " + view.getBuffer().getSymlinkPath());
+       System.out.println(" external path = " + path);*/
+       final ArrayList list = (ArrayList)(hash.get(path));
        if(list != null)
        {
               for(int i = 0; i < list.size(); i++)
@@ -164,13 +158,12 @@ public abstract class ErrorSource implements EBComponent
        }
        else
        {
-         // System.out.println(" list is null!!!!");
+          //System.out.println(" list is null!!!!");
        }
-     }
     }
     else
     {
-       //System.out.println(" hash == null is true _------------");
+       //System.out.println(" hash = null ");
     }
  }
  //{{{ getErrorSources() method

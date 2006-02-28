@@ -65,6 +65,12 @@ public class ViewUpdate extends EBMessage
   this.what = what;
  } //}}}
 
+  public ViewUpdate(View view, Object what, String path)
+  {
+    this(view,what);
+    this.path = path;
+  } //}}}
+
  //{{{ getWhat() method
  /**
   * Returns what caused this view update.
@@ -83,6 +89,10 @@ public class ViewUpdate extends EBMessage
   return (View)getSource();
  } //}}}
 
+ public String getPath()
+ {
+   return path;
+ }
  //{{{ paramString() method
  public String paramString()
  {
@@ -91,5 +101,6 @@ public class ViewUpdate extends EBMessage
 
  //{{{ Private members
  private Object what;
+ private String path;
  //}}}
 }

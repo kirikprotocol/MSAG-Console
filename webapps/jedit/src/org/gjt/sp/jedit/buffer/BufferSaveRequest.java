@@ -182,26 +182,30 @@ public class BufferSaveRequest extends BufferIORequest
           _in = c.getInputStream(); // _in = new FileInputStream(path);
       in = new BufferedReader(new InputStreamReader(_in));//new FileReader(fileName));
           String status=c.getHeaderField("status");
-      if (jEdit.getBooleanProperty("bufferWorkWithId"))
+          int servicestatus = c.getHeaderFieldInt("servicestatus",1);
+      if (jEdit.getBooleanProperty("bufferWorkWithId") || buffer.getBooleanProperty("newRule"))
       {
         DefaultErrorSource errorSource= (DefaultErrorSource)ErrorSource.getErrorSourceByView(view);
-        if (!status.equals("ok"))
+        if (!status.equals("ok") && servicestatus == 1)
         {
               int errorType=c.getHeaderFieldInt("errorType",0);
               int lineIndex=c.getHeaderFieldInt("lineIndex",0); int start=c.getHeaderFieldInt("start",0);
               int end=c.getHeaderFieldInt("end",0);String error=c.getHeaderField("error");
-              errorSource.addError(errorType,path,lineIndex,start,end,error, ErrorSource.ERORR_WARNING_REMOTE);
+              errorSource.addError(errorType,path,lineIndex - 1,start,end,error, ErrorSource.ERORR_WARNING_REMOTE);
         }
-        else
+        else if (status.equals("ok") || servicestatus == 0)
         {
             errorSource.clearErrorsService(path);
+            //jEdit.closeView(view);          
         }
       }
-       String status1=in.readLine();
+       String statusException=in.readLine();
   // else throw new FileNotFoundException(status);
-     System.out.println("BufferSaveRequest run line 178 status= "+status1);
-
-    if (status1.equals("false")) {
+     System.out.println("BufferSaveRequest run line 178 status= "+statusException);
+     System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!BufferSaveRequest run line 178 servicestatus= "+ servicestatus);
+     if (servicestatus == 0)
+        GUIUtilities.message(view,"service-is-not-running",null);
+    if (statusException.equals("false")) {
        String[] pp = { in.readLine() };
        VFSManager.error(view,path,"ioerror.write-error",pp);
     }

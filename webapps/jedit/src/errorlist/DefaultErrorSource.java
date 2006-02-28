@@ -586,7 +586,7 @@ public class DefaultErrorSource extends ErrorSource implements EBComponent
     }
    }
 
-   this.lineIndex = lineIndex;
+   this.lineIndex = (lineIndex<0)?0:lineIndex;
    this.start = start;
    this.end = end;
    this.error = error;

@@ -68,7 +68,7 @@ public class SideKickPlugin extends EBPlugin
   View view = jEdit.getFirstView();
   while(view != null)
   {
-   closeView(view);
+   closeView(view, view.getBuffer().getSymlinkPath());
    SideKickParsedData.setParsedData(view,null);
 
    EditPane[] panes = view.getEditPanes();
@@ -96,7 +96,7 @@ public class SideKickPlugin extends EBPlugin
    if(vu.getWhat() == ViewUpdate.CREATED)
     initView(view);
    else if(vu.getWhat() == ViewUpdate.CLOSED)
-    closeView(view);
+    closeView(view, vu.getPath());
   }
   else if(msg instanceof EditPaneUpdate)
   {
@@ -180,8 +180,8 @@ public class SideKickPlugin extends EBPlugin
  public static void parse(View view, boolean showParsingMessage)
  {
   SideKick sidekick = (SideKick)sidekicks.get(view);
-  sidekick.setParser();
-  sidekick.parse(showParsingMessage);
+  sidekick.setParser(31);
+  sidekick.parse(showParsingMessage, 10);
  } //}}}
 
  //{{{ getErrorSource() method
@@ -279,8 +279,8 @@ public class SideKickPlugin extends EBPlugin
    public void WindowOpen(View view) {
      initView(view);
      SideKick sidekick = (SideKick)sidekicks.get(view);
-     sidekick.setParser();
-     sidekick.parse(false);
+     sidekick.setParser(32);
+     sidekick.parse(false, 11);
 /*   EditPane[] panes = view.getEditPanes();
   for(int i = 0; i < panes.length; i++)
    initTextArea(panes[i].getTextArea());
@@ -297,6 +297,7 @@ public class SideKickPlugin extends EBPlugin
  //{{{ initView() method
  private void initView(View view)
  {
+  System.out.println(" ++++ Putting into sidekicks key view = " + view);
   sidekicks.put(view,new SideKick(view));
    if (jEdit.getLastView()!=jEdit.getFirstView()) {
       SideKickActions.clear();
@@ -306,18 +307,30 @@ public class SideKickPlugin extends EBPlugin
  //{{{ uninitView() method
  private void uninitView(View view)
  {
+  System.out.println(" ---- Uniniting from sidekicks by key view = " + view);
   SideKick sidekick = (SideKick)sidekicks.get(view);
-  if (sidekick!=null) sidekick.dispose();
-  sidekicks.remove(view);
-  ErrorSource.unregisterByView(view);
+
+  if (sidekick!=null)
+  {
+    System.out.println(" ---- Uniniting is successful!!!");
+    sidekick.dispose();
+  }
+   sidekicks.remove(view);
+  ErrorSource.unregisterServiceErrors(view, view.getBuffer().getSymlinkPath());
  } //}}}
     //{{{ uninitView() method
- private void closeView(View view)
+ private void closeView(View view, String path)
  {
+  System.out.println(" ---- Removing from sidekicks by key view = " + view);
   SideKick sidekick = (SideKick)sidekicks.get(view);
-  if (sidekick!=null) sidekick.closeView();
+
+  if (sidekick!=null)
+  {
+    System.out.println(" ---- Removing is successful!!!");
+    sidekick.closeView();
+  }
   sidekicks.remove(view);
-  ErrorSource.unregisterByView(view);
+  ErrorSource.unregisterServiceErrors(view, path);
  } //}}}
  //{{{ initTextArea() method
  private void initTextArea(JEditTextArea textArea)

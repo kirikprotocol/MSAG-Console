@@ -1224,14 +1224,17 @@ public void setEdittag(boolean edit)
  } //}}}
 
  //{{{ toString() method
- public String toString()
+ /*public String toString()
  {
   return getClass().getName() + "["
    + (jEdit.getActiveView() == this
    ? "active" : "inactive")
    + "]";
  } //}}}
-
+  */
+   public String toString() {
+    return "@" + Integer.toHexString(hashCode());
+   }
  //{{{ updateTitle() method
  /**
   * Updates the title bar.

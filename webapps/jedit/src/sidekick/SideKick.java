@@ -51,12 +51,12 @@ class SideKick implements EBComponent
   {
    public void actionPerformed(ActionEvent evt)
    {
-        parse(false);
+        parse(false, 0);
    }
   });
 
   buffer = view.getBuffer();
-  autoParse();
+  autoParse(1);
   EditBus.addToBus(this);
  } //}}}
 
@@ -66,7 +66,7 @@ class SideKick implements EBComponent
   * @param showParsingMessage Clear the tree and show a status message
   * there?
   */
- void parse(final boolean showParsingMessage)
+ void parse(final boolean showParsingMessage, int num)
  {
    if(keystrokeTimer.isRunning())
    keystrokeTimer.stop();
@@ -106,24 +106,25 @@ class SideKick implements EBComponent
  // if (errorSource==null)
   DefaultErrorSource  errorSource = new DefaultErrorSource("SideKick "+SideKickPlugin.getSideKickNumber(this.view),view);
   SideKickParsedData[] data = new SideKickParsedData[1];
-    SideKickPlugin.addWorkRequest(new ParseRequest(
-   parser,buffer,errorSource,data),false);
+  System.out.println("CREATING NEW WORK REQUESTS!!!! from place number "+ num);
+  SideKickPlugin.addWorkRequest(new ParseRequest(
+   parser,buffer,errorSource,data, SideKickPlugin.getSideKickNumber(this.view)),false);
   SideKickPlugin.addWorkRequest(new ParseAWTRequest(
-   parser,buffer,errorSource,data),true);
+   parser,buffer,errorSource,data, SideKickPlugin.getSideKickNumber(this.view)),true);
  } //}}}
 
  //{{{ dispose() method
  void dispose()
  {
-  setErrorSource(null, 2);
   EditBus.removeFromBus(this);
+  setErrorSource(null, 2);
   removeBufferChangeListener(buffer);
  } //}}}
    //{{{ dispose() method
  void closeView()
  {
-  setErrorSource(null, 3);
   EditBus.removeFromBus(this);
+  setErrorSource(null, 3);
   removeBufferChangeListener(buffer);
  } //}}}
  //{{{ getParser() method
@@ -133,12 +134,13 @@ class SideKick implements EBComponent
  } //}}}
 
  //{{{ setParser() method
- void setParser()
+ void setParser(int num)
  {
+  System.out.println(" setParser is invoked from place number "+num);
   deactivateParser();
   parser = SideKickPlugin.getParserForBuffer(buffer);
   activateParser();
-  autoParse();
+  autoParse(2);
  } //}}}
 
  //{{{ handleMessage() method
@@ -160,7 +162,7 @@ class SideKick implements EBComponent
    {
     /* Pick a parser again in case our parser
     plugin was loaded or unloaded. */
-    setParser();
+    setParser(21);
    }
   }
  } //}}}
@@ -186,11 +188,11 @@ class SideKick implements EBComponent
  //}}}
  
  //{{{ autoParse() method
- private void autoParse()
+ private void autoParse(int num)
  {
   if(buffer.getBooleanProperty("sidekick.buffer-change-parse")
    || buffer.getBooleanProperty("sidekick.keystroke-parse"))
-  { parse(true);
+  { parse(true, num);
   }
   else
   {
@@ -213,8 +215,13 @@ class SideKick implements EBComponent
   {
       System.out.println("errorsource=null of SideKick " + SideKickPlugin.getSideKickNumber(this.view));*/
   ErrorSource.unregisterErrorSource(this.view);
-  //}
-  if (SideKickPlugin.getSideKickNumber(this.view)==-1){System.out.println("This SideKick is removed!!!"); return;}
+  System.out.println("!!!Trying to get SideKick for view = " + this.view + "!!!");
+  if (SideKickPlugin.getSideKickNumber(this.view)==-1)
+  {
+    System.out.println("!!!This SideKick is removed!!!");
+    return;
+  }
+
   this.errorSource = errorSource;
   if(errorSource != null)
   {
@@ -324,9 +331,9 @@ class SideKick implements EBComponent
   }
   else if(bmsg.getWhat() == BufferUpdate.SAVED
    || bmsg.getWhat() == BufferUpdate.LOADED)   {
-   autoParse();                                 }
+   autoParse(3);                                 }
   else if(bmsg.getWhat() == BufferUpdate.PROPERTIES_CHANGED) {
-   setParser();                                               }
+   setParser(22);                                               }
   else if(bmsg.getWhat() == BufferUpdate.CLOSED) {
      System.out.println("SideKick.handleBufferUpdate BufferUpdate.CLOSED setErrorSource(null);");
    setErrorSource(null,5);/*clearErrorForBuffer(buffer);  */                        }
@@ -361,7 +368,7 @@ class SideKick implements EBComponent
     parser = SideKickPlugin.getParserForBuffer(buffer);
     activateParser();
 
-    autoParse();
+    autoParse(4);
    }
   }
  } //}}}
@@ -381,7 +388,7 @@ class SideKick implements EBComponent
    parser = SideKickPlugin.getParserForBuffer(buffer);
    activateParser();
 
-   autoParse();
+   autoParse(5);
   }
  } //}}}
 
@@ -423,19 +430,21 @@ class SideKick implements EBComponent
   Buffer buffer;
   DefaultErrorSource errorSource;
   SideKickParsedData[] data;
-
+  final int number;
   ParseRequest(SideKickParser parser, Buffer buffer,
-   DefaultErrorSource errorSource, SideKickParsedData[] data)
+   DefaultErrorSource errorSource, SideKickParsedData[] data,int number)
   {
    this.parser = parser;
    this.buffer = buffer;
    this.errorSource = errorSource;
    this.data = data;
+   this.number = number;
   }
 
   public void run()
   {
    data[0] = parser.parse(buffer,errorSource);
+    System.out.println("ParseRequest # " + number);
     System.out.println("SideKick.parse path= "+buffer.getPath()+" finished errors added line 426");
   }
  } //}}}
@@ -447,14 +456,15 @@ class SideKick implements EBComponent
   Buffer buffer;
   SideKickParsedData[] data;
   DefaultErrorSource errorSource;
-
+  final int number;
   ParseAWTRequest(SideKickParser parser, Buffer buffer,
-   DefaultErrorSource errorSource, SideKickParsedData[] data)
+   DefaultErrorSource errorSource, SideKickParsedData[] data, int number)
   {
    this.parser = parser;
    this.buffer = buffer;
    this.data = data;
    this.errorSource = errorSource;
+   this.number = number;
   }
 
   public void run()
@@ -462,7 +472,7 @@ class SideKick implements EBComponent
    try
    {
     Log.log(Log.DEBUG,this,"ParseAWTRequest");
-
+    System.out.println("ParseAWTRequest # "+number);
     setErrorSource(errorSource,6);
 
     int errorCount = errorSource.getErrorCount();

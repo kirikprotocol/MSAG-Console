@@ -2762,6 +2762,7 @@ public class Buffer
    */
   public int getFoldLevel(int line)
   {
+    boolean debug = false;
     if(line < 0 || line >= lineMgr.getLineCount())
       throw new ArrayIndexOutOfBoundsException(line);
 
@@ -2771,6 +2772,7 @@ public class Buffer
     int firstInvalidFoldLevel = lineMgr.getFirstInvalidFoldLevel();
     if(firstInvalidFoldLevel == -1 || line < firstInvalidFoldLevel)
     {
+     // if (line == 7)    System.out.println("       ]]]]]]]]]]]]]]]]]           lineMgr.getFoldLevel(line) = " + lineMgr.getFoldLevel(line) + " line = " + line);
       return lineMgr.getFoldLevel(line);
     }
     else
@@ -2780,10 +2782,11 @@ public class Buffer
 
       int newFoldLevel = 0;
       boolean changed = false;
-
+      //System.out.println("+++++++++++++++ line = "+line+" firstInvalidFoldLevel = "+ firstInvalidFoldLevel);
       for(int i = firstInvalidFoldLevel; i <= line; i++)
       {
         newFoldLevel = foldHandler.getFoldLevel(this,i,seg);
+        //System.out.println("---------  getFoldLevel(...) i = "+i+" newFoldLevel = " + newFoldLevel);
         if(newFoldLevel != lineMgr.getFoldLevel(i))
         {
           if(Debug.FOLD_DEBUG)
@@ -2804,7 +2807,7 @@ public class Buffer
           Log.log(Log.DEBUG,this,"fold level changed: " + firstInvalidFoldLevel + "," + line);
         fireFoldLevelChanged(firstInvalidFoldLevel,line);
       }
-
+     // if (line == 5 || line == 6 || line == 7) System.out.println("       ]]]]]]]]]]]]]]]]]           newFoldLevel = " + newFoldLevel  + "line= " + line);
       return newFoldLevel;
     }
   } //}}}

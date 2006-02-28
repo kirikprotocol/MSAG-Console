@@ -580,6 +580,7 @@ public class Gutter extends JComponent implements SwingConstants
   //{{{ Paint fold triangles
   if(info.firstSubregion && buffer.isFoldStart(physicalLine))
   {
+   //System.out.println("       ]]]]]]]]]]]]]]]]]           FoldStart = " + physicalLine);
    int _y = y + lineHeight / 2;
    gfx.setColor(foldColor);
    if(textArea.displayManager
@@ -602,6 +603,7 @@ public class Gutter extends JComponent implements SwingConstants
   }
   else if(info.lastSubregion && buffer.isFoldEnd(physicalLine))
   {
+   //System.out.println("       ]]]]]]]]]]]]]]]]]           FoldEnd = " + physicalLine);
    gfx.setColor(foldColor);
    int _y = y + lineHeight / 2;
    gfx.drawLine(4,_y,4,_y + 3);

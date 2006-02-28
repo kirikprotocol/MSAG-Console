@@ -82,7 +82,7 @@ class Reflect
      interpreter == null ? null : interpreter.getClassManager();
     Class clas = object.getClass();
         if ( (object instanceof Buffer) && (methodName.equals("save") || methodName.equals("saveAs") ) ) {
-          System.out.println("Reflect invokeObjectMethod: object is instanceof Buffer and method is save");
+          System.out.println("Reflect invokeObjectMethod: object is instanceof Buffer");
           Buffer buf=(Buffer)object; View view=null; boolean val=false;String str=null;
           for (int i = 0; i < args.length; i++) {
           Object arg = args[i];
@@ -90,14 +90,15 @@ class Reflect
           if (arg instanceof String)  str=(String)arg;
           if (arg.toString().equals("true")) val=true;
           }
-         if (methodName.equals("save") ) {
+         if (methodName.equals("save") ) { System.out.println("and method is save and view = " + view);
          switch (args.length) {
           case 2 : val=buf.save(view,str);
           case 3 : val=buf.save(view,str,val);
          }
         }
-         if (methodName.equals("saveAs") && args.length==2)
+         if (methodName.equals("saveAs") && args.length==2) {System.out.println("and method is saveAs and view = " + view);
           val=buf.saveAs(view,val);
+         }
 
           return  new Boolean(val);
         } else if ( object instanceof String && methodName.equals("equals")) { String o=(String)object; boolean val=false;
