@@ -109,15 +109,9 @@
     <copy todir="${CATALINA_BASE}/webapps/scag" preservelastmodified="yes">
       <fileset dir="${exploded}" excludes="WEB-INF/config.xml WEB-INF/users.xml" />
     </copy>
-  </target>
-
-  <target name="update" depends="build" description="update existing installation">
     <copy todir="${CATALINA_BASE}/webapps/scag" preservelastmodified="yes">
       <fileset dir="${exploded}" excludes="WEB-INF/services.xml WEB-INF/services.xml" />
     </copy>
-  </target>
-
-  <target name="update" depends="build" description="update existing installation">
     <copy todir="${CATALINA_BASE}/webapps/scag" preservelastmodified="yes">
       <fileset dir="${exploded}" excludes="WEB-INF/ids.xml WEB-INF/ids.xml" />
     </copy>
