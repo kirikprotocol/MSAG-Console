@@ -88,7 +88,7 @@
        <fileset dir="${JEDIT_DIR}/build" includes="jedit.jar" />
      </copy>
     <copy todir="${exploded}" preservelastmodified="yes">
-       <fileset dir="." includes="**/*.jsp **/*.jspf **/*.tld **/*.tag **/*.xml **/*.css **/*.htc **/*.xsd"/>
+       <fileset dir="." includes="**/*.jsp **/*.js **/*.html **/*.htm **/*.gif **/*.jpg **/*.jspf **/*.tld **/*.tag **/*.xml **/*.css **/*.htc **/*.xsd"/>
     </copy>
      
 			   

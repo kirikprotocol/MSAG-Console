@@ -24,7 +24,7 @@
         <description>Some other information about Sibinco Ural provider</description>
         <services>
             <service id="3">
-                <name>Service 3</name>
+                <name>Service 3</name>                                                      
                 <description>Some other information about Service 3service</description>
             </service>
             <service id="4">
