@@ -22,6 +22,7 @@
 #include <sms/sms.h>
 #include <scag/transport/SCAGCommand.h>
 #include <scag/exc/SCAGExceptions.h>
+#include <scag/stat/StatisticsManager.h>
 #include <util/Exception.hpp>
 #include <fstream>
 #include <jsapi.h>
@@ -41,6 +42,7 @@ using scag::sessions::SessionManagerConfig;
 using scag::sessions::CSessionKey;
 using scag::sessions::SessionPtr;
 using scag::transport::smpp::SmppCommand;
+using scag::stat::StatisticsManager;
 
 using smsc::util::Exception;
 
@@ -361,6 +363,21 @@ try{
    return JS_TRUE;
 }
 
+static JSBool _initStatInstance(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+
+	*rval=BOOLEAN_TO_JSVAL(false); 
+
+	SCAG_TRY
+	scag::config::StatManConfig smcfg;
+
+	scag::stat::StatisticsManager::init(); 
+
+	SCAG_CATCH
+	*rval=BOOLEAN_TO_JSVAL(true); 
+
+	return JS_TRUE;
+}
 /*
 JavaScript desciption:
 InitBillIntance(string host,int port,int max_threads,string so_dir)
