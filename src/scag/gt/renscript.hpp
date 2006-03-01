@@ -371,7 +371,7 @@ static JSBool _initStatInstance(JSContext *cx, JSObject *obj, uintN argc, jsval 
 	SCAG_TRY
 	scag::config::StatManConfig smcfg;
 
-	scag::stat::StatisticsManager::init(); 
+	scag::stat::StatisticsManager::init(smcfg); 
 
 	SCAG_CATCH
 	*rval=BOOLEAN_TO_JSVAL(true); 
