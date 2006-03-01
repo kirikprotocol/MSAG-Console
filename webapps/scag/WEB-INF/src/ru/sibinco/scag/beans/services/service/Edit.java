@@ -107,7 +107,7 @@ public class Edit extends TabledEditBeanImpl {
         if (id != -1) {
             throw new EditChildException(Long.toString(id), getParentId());
         } else {
-            path = path.substring(0, (path.length() - (dirName.length() + 1))) + "/edit.jsp?editId=" + (editChild ? getEditId() : getParentId());
+            path = path.substring(0, (path.length() - (dirName.length() + 1))) + "edit.jsp?editId=" + (editChild ? getEditId() : getParentId());
             throw new CancelChildException(path);
         }
 
