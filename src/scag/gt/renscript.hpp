@@ -64,6 +64,8 @@ SmppCommand command;
 
 #define SCAG_CATCH 	}catch (Exception& e)\
 			{smsc_log_error(logger,"Error: %s",e.what());\
+			printf("Error: %s\n",e.what());\
+			fflush(stdout);\
 			return JS_FALSE;}\
 
     
@@ -396,8 +398,10 @@ static JSBool _deleterule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
      int ruleId=JSVAL_TO_INT(argv[0]);
 
 	SCAG_TRY  
+		
      engine->removeRule(ruleId);
      *rval=BOOLEAN_TO_JSVAL(true);
+
 	SCAG_CATCH 
 
  return JS_TRUE;
@@ -516,30 +520,26 @@ if(argc<8)
               sprintf(buff,"cmd:%s %s%d",cmd_name.c_str(),"result = ",rs.result);
               smsc_log_debug(logger,buff);
 
-  if(bdump)
-  {
-      for(int i=0;i<SMS_LAST_TAG;i++)
-      {
-    if(Tag::tagNames[i]) 
-        {
-   switch(Tag::tagTypes[i]) 
-   {
-     case SMS_INT_TAG:
-      smsc_log_debug(logger,"%s :int: %d",Tag::tagNames[i],cmd->get_sms()->getIntProperty(i|((SMS_INT_TAG)<<8))); 
-    break;
-     case SMS_BIN_TAG:
-      //smsc_log_debug(logger,"%s type : %d",Tag::tagNames[i],); 
-    break;
-     case SMS_STR_TAG:  
-      smsc_log_debug(logger,"%s :string: '%s'",Tag::tagNames[i],cmd->get_sms()->getStrProperty(i|((SMS_STR_TAG)<<8)).c_str()); 
-    break;
-
-   }
-   }
-       }
-   }
-       //smanager->closeSession(session);  
-       //smanager->deleteSession(key);
+		  if(bdump)
+		  {
+			  for(int i=0;i<SMS_LAST_TAG;i++)
+			  {
+				if(Tag::tagNames[i]) 
+				{
+				   switch(Tag::tagTypes[i]) 
+				   {
+					 case SMS_INT_TAG:
+					  smsc_log_debug(logger,"%s :int: %d",Tag::tagNames[i],cmd->get_sms()->getIntProperty(i|((SMS_INT_TAG)<<8))); 
+					break;
+					 case SMS_BIN_TAG:
+					break;
+					 case SMS_STR_TAG:  
+					  smsc_log_debug(logger,"%s :string: '%s'",Tag::tagNames[i],cmd->get_sms()->getStrProperty(i|((SMS_STR_TAG)<<8)).c_str()); 
+					break;
+					}
+				 }
+			}
+	   }
 
        smanager->releaseSession(session);
 
