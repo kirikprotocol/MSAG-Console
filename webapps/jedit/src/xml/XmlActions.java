@@ -90,7 +90,7 @@ public class XmlActions
        }
        String text = buffer.getText(0,buffer.getLength());
        int caret = textArea.getCaretPosition();
-       TagParser.Tag tag = TagParser.getTagForOffsetAndProlog(text,caret+1);
+       TagParser.Tag tag = TagParser.getTagForOffsetAndProlog(text,caret);
        if(tag == null /*|| tag.type == TagParser.T_END_TAG*/)
          { //view.getToolkit().beep();
          return false;
