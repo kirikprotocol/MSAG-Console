@@ -24,7 +24,8 @@ svcmon.applet.port=14822
 svcmon.scag.port=14862
 
 scmon.applet.port=14823
-scnon.scag.port=14863
+scmon.scag.port=14863
+
 jdbc.driver=oracle.jdbc.driver.OracleDriver
 jdbc.source=jdbc:oracle:thin:@max:1521:ORCL
 db.user=smsc_makar
