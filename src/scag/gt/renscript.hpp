@@ -370,6 +370,8 @@ static JSBool _initBillInstance(JSContext *cx, JSObject *obj, uintN argc, jsval 
 	if(argc<4)
 		return JS_FALSE;
 
+	*rval=BOOLEAN_TO_JSVAL(false);
+
 	SCAG_TRY 
 		 scag::bill::BillingManagerConfig bcfg;
 		 bcfg.BillingHost=JS_GetStringBytes(JS_ValueToString(cx, argv[0]));
@@ -381,6 +383,8 @@ static JSBool _initBillInstance(JSContext *cx, JSObject *obj, uintN argc, jsval 
 		 scag::config::ConfigManager::Init();
 	SCAG_CATCH
 			
+	*rval=BOOLEAN_TO_JSVAL(true);
+
   return JS_TRUE;
 }
 
