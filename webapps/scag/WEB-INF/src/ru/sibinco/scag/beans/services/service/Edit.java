@@ -1,0 +1,214 @@
+/*
+ * Copyright (c) 2006 SibInco Inc. All Rights Reserved.
+ */
+
+package ru.sibinco.scag.beans.services.service;
+
+import ru.sibinco.scag.Constants;
+import ru.sibinco.scag.backend.SCAGAppContext;
+import ru.sibinco.scag.backend.service.Service;
+import ru.sibinco.scag.backend.service.ServiceProvider;
+import ru.sibinco.scag.backend.service.ServiceProvidersManager;
+import ru.sibinco.scag.beans.CancelChildException;
+import ru.sibinco.scag.beans.EditChildException;
+import ru.sibinco.scag.beans.SCAGJspException;
+import ru.sibinco.scag.beans.TabledEditBeanImpl;
+import ru.sibinco.scag.util.Utils;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Map;
+
+/**
+ * The <code>Edit</code> class represents
+ * <p><p/>
+ * Date: 22.02.2006
+ * Time: 15:15:03
+ *
+ * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
+ */
+public class Edit extends TabledEditBeanImpl {
+
+    private long id = -1;
+    private String name;
+    private String description;
+    private boolean add = false;
+    private String editId = null;
+    private String mbSave = null;
+    private String mbCancel = null;
+    private String parentId;
+    private String dirName = "service";
+    private boolean editChild = false;
+    String path = "";
+
+    protected Collection getDataSource() {
+        return appContext.getScagRoutingManager().getRoutes().values();
+    }
+
+    public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
+        if (appContext == null) {
+            appContext = (SCAGAppContext) request.getAttribute("appContext");
+        }
+        path = Utils.getPath(request);
+        if (getMbCancel() != null) {
+            String path = Utils.getPath(request);
+            path = path.substring(0, (path.length() - (dirName.length() + 1))) + "/edit.jsp?editId=" + (editChild ? getEditId() : getParentId());
+            throw new CancelChildException(path);
+        } else if (getMbSave() != null) {
+            save();
+        }
+
+        load();
+        if (getEditId() != null && !editChild) {
+            super.process(request, response);
+        }
+    }
+
+    protected void load(final String loadId) throws SCAGJspException {
+
+    }
+
+
+    protected void delete() throws SCAGJspException {
+
+    }
+
+
+    protected void save() throws SCAGJspException {
+        final ServiceProvidersManager serviceProvidersManager = appContext.getServiceProviderManager();
+
+        if (getEditId() == null) {
+            Service service = new Service(name, description);
+            id = serviceProvidersManager.createService(Long.decode(getParentId()).longValue(), service);
+        } else {
+            if (editChild) {
+                ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(Long.decode(getEditId()));
+                Service service = (Service) serviceProvider.getServices().get(Long.decode(getParentId()));
+                service.setName(name);
+                service.setDescription(description);
+                serviceProvidersManager.updateService(Long.decode(getEditId()).longValue(), service);
+            } else {
+                ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(Long.decode(getParentId()));
+                Service service = (Service) serviceProvider.getServices().get(Long.decode(getEditId()));
+                service.setName(name);
+                service.setDescription(description);
+                serviceProvidersManager.updateService(Long.decode(getParentId()).longValue(), service);
+            }
+        }
+
+        try {
+            serviceProvidersManager.store();
+        } catch (IOException e) {
+            logger.debug("Couldn't save config", e);
+            throw new SCAGJspException(Constants.errors.status.COULDNT_SAVE_CONFIG, e);
+        }
+        if (id != -1) {
+            throw new EditChildException(Long.toString(id), getParentId());
+        } else {
+            path = path.substring(0, (path.length() - (dirName.length() + 1))) + "/edit.jsp?editId=" + (editChild ? getEditId() : getParentId());
+            throw new CancelChildException(path);
+        }
+
+    }
+
+    protected void load() throws SCAGJspException {
+        if (!isAdd() && getTabledItems() != null) {
+            final Map serviceProviders = appContext.getServiceProviderManager().getServiceProviders();
+            if (editChild) {
+                if (!serviceProviders.containsKey(Long.decode(getEditId())))
+                    throw new SCAGJspException(Constants.errors.serviceProviders.SERVICE_PROVIDER_NOT_FOUND, getEditId());
+                ServiceProvider serviceProvider = (ServiceProvider) serviceProviders.get(Long.decode(getEditId()));
+                if (getParentId() != null) {
+                    final Long longLoadId = Long.decode(getParentId());
+                    Service service = (Service) serviceProvider.getServices().get(longLoadId);
+                    if (service != null) {
+                        this.id = service.getId().longValue();
+                        this.name = service.getName();
+                        this.description = service.getDescription();
+                    }
+                }
+            } else {
+                if (!serviceProviders.containsKey(Long.decode(getParentId())))
+                    throw new SCAGJspException(Constants.errors.serviceProviders.SERVICE_PROVIDER_NOT_FOUND, getParentId());
+                ServiceProvider serviceProvider = (ServiceProvider) serviceProviders.get(Long.decode(getParentId()));
+                if (getParentId() != null) {
+                    final Long longLoadId = Long.decode(getParentId());
+                    Service service = (Service) serviceProvider.getServices().get(longLoadId);
+                    if (service != null) {
+                        this.id = service.getId().longValue();
+                        this.name = service.getName();
+                        this.description = service.getDescription();
+                    }
+                }
+            }
+        }
+    }
+
+
+    public String getId() {
+        return -1 == id ? null : String.valueOf(id);
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getEditId() {
+        return editId;
+    }
+
+    public void setEditId(String editId) {
+        this.editId = editId;
+    }
+
+    public String getMbSave() {
+        return mbSave;
+    }
+
+    public void setMbSave(String mbSave) {
+        this.mbSave = mbSave;
+    }
+
+    public String getMbCancel() {
+        return mbCancel;
+    }
+
+    public void setMbCancel(String mbCancel) {
+        this.mbCancel = mbCancel;
+    }
+
+    public boolean isAdd() {
+        return add;
+    }
+
+    public String getParentId() {
+        return parentId;
+    }
+
+    public void setParentId(String parentId) {
+        this.parentId = parentId;
+    }
+
+    public boolean isEditChild() {
+        return editChild;
+    }
+
+    public void setEditChild(boolean editChild) {
+        this.editChild = editChild;
+    }
+
+}
