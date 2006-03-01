@@ -66,7 +66,8 @@ public class ServiceInfo
     this.serviceFolder = new File(serviceFolder);
   }
 
-  public ServiceInfo(final String id, final String host, final String serviceFolder, final String args, final boolean autostart, final Sme sme,
+  public ServiceInfo(final String id, final String host, final String serviceFolder,
+                     final String args, final boolean autostart, final Sme sme,
                      final byte status)
   {
     this(id, host, serviceFolder, args, autostart, 0, sme, status);

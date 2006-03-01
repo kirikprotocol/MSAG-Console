@@ -29,7 +29,7 @@ void sme_menu_button(JspWriter out, String name, String value, String visibleNam
 	out.print("<a id=\"" + name + "\" jbuttonName=\"" + name + "\" jbuttonValue=\"" + value + "\""
 				+ (enabled ? "" : " class=disabled")
 				+ ((title != null && title.length() > 0) ? " title=\"" + title + "\"" : "")
-				+ ((onclick != null && onclick.length() > 0) ? (" jbuttonOnclick=\"" + onclick + '"') : "" ) 
+				+ ((onclick != null && onclick.length() > 0) ? (" jbuttonOnclick=\"" + onclick + '"') : "" )
 				+">" + visibleName + "</a>");
 	out.print("</td>");
 	sme_menu_delimiter_needed = true;
