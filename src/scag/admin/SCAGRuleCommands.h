@@ -18,7 +18,7 @@ protected:
     bool readParams(const xercesc::DOMDocument * document);
     virtual void processRuleCommand() = 0;
 public:
-    CommandRuleBase(const Command::Id ID, const xercesc::DOMDocument * doc);
+    CommandRuleBase(const CommandIds::IDS ID, const xercesc::DOMDocument * doc);
     virtual Response * CreateResponse(scag::Scag * SmscApp);
 };
 

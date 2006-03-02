@@ -9,8 +9,8 @@ using namespace smsc::util::xml;
 using namespace scag::exceptions;
 
 
-CommandRuleBase::CommandRuleBase(const Command::Id ID, const xercesc::DOMDocument * doc) 
-    : SCAGCommand(ID), serviceId(-1), hasErrors(false)
+CommandRuleBase::CommandRuleBase(const CommandIds::IDS ID, const xercesc::DOMDocument * doc) 
+    : SCAGCommand((Command::Id)ID), serviceId(-1), hasErrors(false)
 
 {
     smsc_log_info(logger, "Command got parameters:");
@@ -25,7 +25,7 @@ CommandRuleBase::CommandRuleBase(const Command::Id ID, const xercesc::DOMDocumen
         m_ProcessName = "update";
         break;
     case CommandIds::removeRule:
-        m_ProcessName = "update";
+        m_ProcessName = "remove";
         break;
     }
 }
@@ -41,13 +41,13 @@ bool CommandRuleBase::readParams(const xercesc::DOMDocument * document)
     scag::transport::TransportType * ttype;
     ttype = scag::transport::SCAGCommand::TransportTypeHash.GetPtr(strTransport.c_str());
 
-    if (!ttype) 
+    if (!scag::transport::SCAGCommand::TransportTypeHash.Exists(strTransport.c_str())) 
     {
         smsc_log_error(logger,"Unknown transport parameter '%s'", strTransport.c_str());
         return false;
     }  
 
-    transport = (*ttype);
+    transport = scag::transport::SCAGCommand::TransportTypeHash.Get(strTransport.c_str());
 
       
 
@@ -109,7 +109,7 @@ using smsc::admin::service::Variant;
 using scag::exceptions::RuleEngineException;
 
 CommandAddRule::CommandAddRule(const xercesc::DOMDocument * document)
-    : CommandRuleBase((Command::Id)CommandIds::addRule, document)
+    : CommandRuleBase(CommandIds::addRule, document)
 {
 
 
@@ -128,7 +128,7 @@ void CommandAddRule::processRuleCommand()
 //================================================================
 
 CommandRemoveRule::CommandRemoveRule(const xercesc::DOMDocument * document)
-    : CommandRuleBase((Command::Id)CommandIds::removeRule, document)
+    : CommandRuleBase(CommandIds::removeRule, document)
 {
 
 }
@@ -146,7 +146,7 @@ void CommandRemoveRule::processRuleCommand()
 //================================================================
 
 CommandUpdateRule::CommandUpdateRule(const xercesc::DOMDocument * document)
-    : CommandRuleBase((Command::Id)CommandIds::updateRule, document)
+    : CommandRuleBase(CommandIds::updateRule, document)
 {
 }
 
