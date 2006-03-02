@@ -2,18 +2,28 @@
 #define SCAG_TRANSPORT_COMMAND
 
 #include "util/int.h"
+#include <core/buffers/Hash.hpp>
 
 namespace scag { namespace transport
 {
+
+using smsc::core::buffers::Hash;
+
     enum TransportType
     {
         SMPP = 1, HTTP = 2, MMS = 3, WAP = 4
     };
 
+
+	    
+    
     class SCAGCommand
     {
     public:
 
+      static Hash<TransportType> TransportTypeHash;
+      static Hash<TransportType> InitTransportTypeHash();
+      
       virtual TransportType getType() const = 0;
 
       virtual int getRuleId() const = 0;

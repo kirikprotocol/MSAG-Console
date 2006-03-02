@@ -9,12 +9,43 @@
 #include "CommandActions.h"
 
 #include "scag/scag.h"
+#include "scag/transport/SCAGCommand.h"
 
 
 #include "CommandIds.h"
 
 namespace scag {
 namespace admin {
+
+#define GETSTRPARAM(param, name_)                           \
+    if (::strcmp(name_, name) == 0){                        \
+        strcpy(param, value.get());                         \
+        smsc_log_info(logger, name_ ": %s", param);         \
+    }                                                   
+
+#define GETSTRPARAM_(param, name_)                          \
+    if (::strcmp(name_, name) == 0){                        \
+        param = value.get();                                \
+        smsc_log_info(logger, name_ ": %s", param.c_str()); \
+    }                                                   
+
+#define GETINTPARAM(param, name_)                           \
+    if (::strcmp(name_, name) == 0){                        \
+        param = atoi(value.get());                          \
+        smsc_log_info(logger, name_ ": %d", param);         \
+    }
+
+#define BEGIN_SCAN_PARAMS                                               \
+    DOMElement *elem = document->getDocumentElement();                  \
+    DOMNodeList *list = elem->getElementsByTagName(XmlStr("param"));    \
+    for (int i=0; i<list->getLength(); i++) {                           \
+      DOMElement *paramElem = (DOMElement*) list->item(i);              \
+      XmlStr name(paramElem->getAttribute(XmlStr("name")));             \
+      std::auto_ptr<char> value(getNodeText(*paramElem));
+      
+#define END_SCAN_PARAMS }
+
+
 
 using namespace smsc::admin::protocol;
 using namespace scag;
@@ -149,47 +180,6 @@ public:
   CommandLoadRoutes(const xercesc::DOMDocument * document);
   virtual ~CommandLoadRoutes();
   virtual Response * CreateResponse(scag::Scag * SmscApp);
-};
-
-//========================================================================
-//==================== Rule commands =====================================
-class CommandAddRule : public scag::admin::SCAGCommand
-{
-public:
-  
-  CommandAddRule(const xercesc::DOMDocument * doc);
-  virtual ~CommandAddRule();
-  virtual Response * CreateResponse(scag::Scag * SmscApp);
-
-protected:
-    int ruleId;
-  
-};
-
-class CommandUpdateRule : public scag::admin::SCAGCommand
-{
-public:
-  
-  CommandUpdateRule(const xercesc::DOMDocument * doc);
-  virtual ~CommandUpdateRule();
-  virtual Response * CreateResponse(scag::Scag * SmscApp);
-
-protected:
-    int ruleId;
-  
-};
-
-class CommandRemoveRule : public scag::admin::SCAGCommand
-{
-public:
-  
-  CommandRemoveRule(const xercesc::DOMDocument * doc);
-  virtual ~CommandRemoveRule();
-  virtual Response * CreateResponse(scag::Scag * SmscApp);
-
-protected:
-    int ruleId;
-  
 };
 
 //========================================================================

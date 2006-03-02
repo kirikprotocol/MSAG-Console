@@ -270,3 +270,4 @@ protected:
 
 
 #endif // __SCAG_SYSTEM_CORE__
+

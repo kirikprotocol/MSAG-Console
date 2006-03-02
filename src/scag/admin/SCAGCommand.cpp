@@ -16,7 +16,6 @@
 #include "util/xml/utilFunctions.h"
 #include "CommandIds.h"
 
-#include "scag/re/RuleEngine.h"
 #include "admin/service/Variant.h"
 #include "scag/exc/SCAGExceptions.h"
 #include "scag/transport/smpp/SmppManagerAdmin.h"
@@ -25,38 +24,9 @@
 #include <sms/sms_const.h>
 #include "util/Exception.hpp"
 #include "admin/service/Type.h"
-#include "scag/exc/SCAGExceptions.h"
 
 #include "scag/config/route/RouteStructures.h"
 
-#define GETSTRPARAM(param, name_)                           \
-    if (::strcmp(name_, name) == 0){                        \
-        strcpy(param, value.get());                         \
-        smsc_log_info(logger, name_ ": %s", param);         \
-    }                                                   
-
-#define GETSTRPARAM_(param, name_)                          \
-    if (::strcmp(name_, name) == 0){                        \
-        param = value.get();                                \
-        smsc_log_info(logger, name_ ": %s", param.c_str()); \
-    }                                                   
-
-#define GETINTPARAM(param, name_)                           \
-    if (::strcmp(name_, name) == 0){                        \
-        param = atoi(value.get());                          \
-        smsc_log_info(logger, name_ ": %d", param);         \
-    }
-
-
-#define BEGIN_SCAN_PARAMS                                               \
-    DOMElement *elem = document->getDocumentElement();                  \
-    DOMNodeList *list = elem->getElementsByTagName(XmlStr("param"));    \
-    for (int i=0; i<list->getLength(); i++) {                           \
-      DOMElement *paramElem = (DOMElement*) list->item(i);              \
-      XmlStr name(paramElem->getAttribute(XmlStr("name")));             \
-      std::auto_ptr<char> value(getNodeText(*paramElem));
-      
-#define END_SCAN_PARAMS }
 
 
 #define CATCH_ADMINEXC(msg_)                                    \
@@ -617,191 +587,6 @@ Response * CommandTraceRoute::CreateResponse(scag::Scag * ScagApp)
   CATCH_STDEXC("Failed to trace route")
   CATCH("Failed to trace route.")
   }*/
-}
-
-//================================================================
-//================ Rule commands =================================
-
-using smsc::admin::service::Variant;
-using scag::exceptions::RuleEngineException;
-
-CommandAddRule::CommandAddRule(const xercesc::DOMDocument * document)
-    : SCAGCommand((Command::Id)CommandIds::addRule),
-      ruleId( -1 )
-{
-    smsc_log_info(logger, "CommandAddRule got parameters:");
-
-    try {
-
-        BEGIN_SCAN_PARAMS
-        GETINTPARAM(ruleId, "ruleId")
-        END_SCAN_PARAMS
-    } catch (...)
-    {
-        smsc_log_error(logger,"Failed to read parametrs during new add Rule.");
-    }
-}
-
-CommandAddRule::~CommandAddRule()
-{
-}
-
-Response * CommandAddRule::CreateResponse(scag::Scag * SmscApp)
-{
-    smsc_log_info(logger, "CommandAddRule is processing...");
-    try {
-        scag::re::RuleEngine& re = scag::re::RuleEngine::Instance();
-        re.updateRule(ruleId);
-
-    } catch(RuleEngineException& e){                             
-        char desc[512];                                         
-        sprintf(desc, "Failed to add rule. RuleEngineException exception: %s. Error in rule_%d.xml in line %d", e.what(), ruleId, e.getLineNumber());
-        Variant res(smsc::admin::service::StringListType); 
-
-        res.appendValueToStringList(desc);
-        smsc_log_info(logger, desc);                            
-        char buff[32];
-        sprintf(buff,"%d",e.getLineNumber());			
-        res.appendValueToStringList(buff);			
-        return new Response(Response::Ok, res);
-    } catch(Exception& e) {                                     
-        char msg[1024];                                         
-        sprintf(msg, "Failed to add new Rule. Details: %s", e.what());            
-        smsc_log_error(logger, msg);                            
-        return new Response(Response::Error, msg);
-    } catch (...) {
-        smsc_log_warn(logger, "Failed to add new Rule. Unknown exception");
-        throw AdminException("Failed to add new Rule. Unknown exception");
-    }
-
-    Variant okRes("");
-    smsc_log_info(logger, "CommandAddRule is processed ok");
-    return new Response(Response::Ok, okRes);
-}
-
-//================================================================
-
-CommandRemoveRule::CommandRemoveRule(const xercesc::DOMDocument * document)
-    : SCAGCommand((Command::Id)CommandIds::updateRule),
-      ruleId( -1 )
-{
-
-    smsc_log_info(logger, "CommandRemoveRule got parameters:");
-
-    try {
-
-        BEGIN_SCAN_PARAMS
-        GETINTPARAM(ruleId, "ruleId")
-        END_SCAN_PARAMS
-
-    } catch (...) {
-        smsc_log_warn(logger, "Failed to read parameters of remove rule command. Unknown exception");
-    }
-}
-
-CommandRemoveRule::~CommandRemoveRule()
-{
-}
-
-Response * CommandRemoveRule::CreateResponse(scag::Scag * SmscApp)
-{
-    smsc_log_info(logger, "CommandRemoveRule is processing...");
-    try {
-        scag::re::RuleEngine& re = scag::re::RuleEngine::Instance();
-        re.removeRule(ruleId);
-
-    } catch(RuleEngineException& e) {                             
-        char desc[512];                                         
-        sprintf(desc, "Failed to remove rule. %s. Error in rule_%d.xml in line %d", e.what(), ruleId, e.getLineNumber());   
-
-        Variant res(smsc::admin::service::StringListType);
-
-        res.appendValueToStringList(desc);
-        smsc_log_info(logger, desc);                            
-        char buff[32];						
-        sprintf(buff,"%d",e.getLineNumber());			
-        res.appendValueToStringList(buff);			
-        return new Response(Response::Ok, res);
-
-    } catch (SCAGException& e) {
-        char desc[512];                                         
-        sprintf(desc, "Failed to remove rule. %s.", e.what(), ruleId);   
-
-        Variant res((const char *)desc);                        
-        smsc_log_info(logger, desc);                            
-        return new Response(Response::Error, res);
-    } catch (...) {
-        smsc_log_warn(logger, "Failed to remove rule. Unknown exception");
-        throw AdminException("Failed to remove rule. Unknown exception");
-    }
-
-    Variant okRes("");
-    smsc_log_info(logger, "CommandRemoveRule is processed ok");
-    return new Response(Response::Ok, okRes);
-}
-
-//================================================================
-
-CommandUpdateRule::CommandUpdateRule(const xercesc::DOMDocument * document)
-    : SCAGCommand((Command::Id)CommandIds::updateRule),
-      ruleId( -1 )
-{
-    smsc_log_info(logger, "CommandUpdateRule got parameters:");
-
-    try {
-
-        BEGIN_SCAN_PARAMS           
-        GETINTPARAM(ruleId, "ruleId")
-        END_SCAN_PARAMS
-    } catch (...) {
-        smsc_log_warn(logger, "Failed to read parameters of Update Rule command. Unknown exception");
-    }
-
-}
-
-CommandUpdateRule::~CommandUpdateRule()
-{
-}
-
-Response * CommandUpdateRule::CreateResponse(scag::Scag * ScagApp)
-{
-    smsc_log_info(logger, "CommandUpdateRule is processing...");
-    try {
-        scag::re::RuleEngine& re = scag::re::RuleEngine::Instance();
-        re.updateRule(ruleId);
-
-    } catch(RuleEngineException& e) {
-        char desc[512];                                         
-        sprintf(desc, "Failed to update rule. %s. Error in rule_%d.xml in line %d", e.what(), ruleId, e.getLineNumber());   
-        Variant res(smsc::admin::service::StringListType);
-        res.appendValueToStringList(desc);
-
-        smsc_log_info(logger, desc);                            
-        char buff[32];						
-        sprintf(buff,"%d",e.getLineNumber());			
-        res.appendValueToStringList(buff);
-        
-        Response * response = new Response(Response::Ok, res);
-        //smsc_log_info(logger, response->getText()); 
-
-        return response;
-
-    } catch (SCAGException& e) {
-        char desc[512];                                         
-        sprintf(desc, "Failed to update rule. %s.", e.what(), ruleId);   
-
-        Variant res((const char *)desc);                        
-        smsc_log_info(logger, desc);                            
-        return new Response(Response::Error, res);
-    } catch (...) {
-        smsc_log_warn(logger, "Failed to update rule. Unknown exception");
-        throw AdminException("Failed to update rule. Unknown exception");
-    }
-
-    Variant okRes("");
-
-    smsc_log_info(logger, "CommandUpdateRule is processed ok.");
-    return new Response(Response::Ok, okRes);
 }
 
 //================================================================
