@@ -54,7 +54,7 @@ public class Edit extends TabledEditBeanImpl {
         path = Utils.getPath(request);
         if (getMbCancel() != null) {
             String path = Utils.getPath(request);
-            path = path.substring(0, (path.length() - (dirName.length() + 1))) + "/edit.jsp?editId=" + (editChild ? getEditId() : getParentId());
+            path = path.substring(0, (path.length() - (dirName.length() + 1))) + "edit.jsp?editId=" + (editChild ? getEditId() : getParentId());
             throw new CancelChildException(path);
         } else if (getMbSave() != null) {
             save();
@@ -72,44 +72,6 @@ public class Edit extends TabledEditBeanImpl {
 
 
     protected void delete() throws SCAGJspException {
-
-    }
-
-
-    protected void save() throws SCAGJspException {
-        final ServiceProvidersManager serviceProvidersManager = appContext.getServiceProviderManager();
-
-        if (getEditId() == null) {
-            Service service = new Service(name, description);
-            id = serviceProvidersManager.createService(Long.decode(getParentId()).longValue(), service);
-        } else {
-            if (editChild) {
-                ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(Long.decode(getEditId()));
-                Service service = (Service) serviceProvider.getServices().get(Long.decode(getParentId()));
-                service.setName(name);
-                service.setDescription(description);
-                serviceProvidersManager.updateService(Long.decode(getEditId()).longValue(), service);
-            } else {
-                ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(Long.decode(getParentId()));
-                Service service = (Service) serviceProvider.getServices().get(Long.decode(getEditId()));
-                service.setName(name);
-                service.setDescription(description);
-                serviceProvidersManager.updateService(Long.decode(getParentId()).longValue(), service);
-            }
-        }
-
-        try {
-            serviceProvidersManager.store();
-        } catch (IOException e) {
-            logger.debug("Couldn't save config", e);
-            throw new SCAGJspException(Constants.errors.status.COULDNT_SAVE_CONFIG, e);
-        }
-        if (id != -1) {
-            throw new EditChildException(Long.toString(id), getParentId());
-        } else {
-            path = path.substring(0, (path.length() - (dirName.length() + 1))) + "edit.jsp?editId=" + (editChild ? getEditId() : getParentId());
-            throw new CancelChildException(path);
-        }
 
     }
 
@@ -133,8 +95,8 @@ public class Edit extends TabledEditBeanImpl {
                 if (!serviceProviders.containsKey(Long.decode(getParentId())))
                     throw new SCAGJspException(Constants.errors.serviceProviders.SERVICE_PROVIDER_NOT_FOUND, getParentId());
                 ServiceProvider serviceProvider = (ServiceProvider) serviceProviders.get(Long.decode(getParentId()));
-                if (getParentId() != null) {
-                    final Long longLoadId = Long.decode(getParentId());
+                if (getEditId() != null) {
+                    final Long longLoadId = Long.decode(getEditId());
                     Service service = (Service) serviceProvider.getServices().get(longLoadId);
                     if (service != null) {
                         this.id = service.getId().longValue();
@@ -145,6 +107,44 @@ public class Edit extends TabledEditBeanImpl {
             }
         }
     }
+
+    protected void save() throws SCAGJspException {
+            final ServiceProvidersManager serviceProvidersManager = appContext.getServiceProviderManager();
+
+            if (getEditId() == null) {
+                Service service = new Service(name, description);
+                id = serviceProvidersManager.createService(Long.decode(getParentId()).longValue(), service);
+            } else {
+                if (editChild) {
+                    ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(Long.decode(getEditId()));
+                    Service service = (Service) serviceProvider.getServices().get(Long.decode(getParentId()));
+                    service.setName(name);
+                    service.setDescription(description);
+                    serviceProvidersManager.updateService(Long.decode(getEditId()).longValue(), service);
+                } else {
+                    ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(Long.decode(getParentId()));
+                    Service service = (Service) serviceProvider.getServices().get(Long.decode(getEditId()));
+                    service.setName(name);
+                    service.setDescription(description);
+                    serviceProvidersManager.updateService(Long.decode(getParentId()).longValue(), service);
+                }
+            }
+
+            try {
+                serviceProvidersManager.store();
+            } catch (IOException e) {
+                logger.debug("Couldn't save config", e);
+                throw new SCAGJspException(Constants.errors.status.COULDNT_SAVE_CONFIG, e);
+            }
+            if (id != -1) {
+                throw new EditChildException(Long.toString(id), getParentId());
+            } else {
+                path = path.substring(0, (path.length() - (dirName.length() + 1))) + "edit.jsp?editId=" + (editChild ? getEditId() : getParentId());
+                throw new CancelChildException(path);
+            }
+
+        }
+
 
 
     public String getId() {
