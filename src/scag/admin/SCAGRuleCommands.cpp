@@ -38,7 +38,8 @@ bool CommandRuleBase::readParams(const xercesc::DOMDocument * document)
     GETSTRPARAM_(strTransport, "transport")
     END_SCAN_PARAMS
 
-    scag::transport::TransportType * ttype = scag::transport::TransportTypeHash.GetPtr(strTransport.c_str());
+    scag::transport::TransportType * ttype;
+    ttype = scag::transport::SCAGCommand::TransportTypeHash.GetPtr(strTransport.c_str());
 
     if (!ttype) 
     {
