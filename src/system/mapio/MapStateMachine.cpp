@@ -331,7 +331,7 @@ static void StartDialogProcessing(MapDialog* dialog,const SmscCommand& cmd)
     AbonentStatus& as = dialog->QueryAbonentCommand->get_abonentStatus();
     __map_trace2__("%s: Abonent Status cmd dlg 0x%x (%d.%d.%s)",__func__,dialog->dialogid_map,(unsigned)as.addr.type,(unsigned)as.addr.plan,as.addr.value);
     mkMapAddress( &dialog->m_msAddr, as.addr.value, as.addr.length );
-    mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), 11 );
+    mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), SC_ADDRESS().length() );
     mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, SSN );
     mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
   }
@@ -2812,7 +2812,7 @@ static void PauseOnImsiReq(MapDialog* map)
       }
 */
     }
-    mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), 11 );
+    mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), SC_ADDRESS().length() );
     mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, 8 );
     mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
 //    __map_trace2__("MAP::%s: Query HLR AC version",__func__);
@@ -3087,7 +3087,7 @@ static void SendAlertToSMSC(MapDialog* dialog,ET96MAP_ADDRESS_T *mapAddr)
 
   mkMapAddress( &dialog->m_msAddr, addr.value, addr.length );
   __map_trace2__("%s: addr len=%d val=%s", __func__, addr.length, addr.value );
-  mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), 11 );
+  mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), SC_ADDRESS().length() );
   mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, 8 );
   mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
   SmscCommand cmd = SmscCommand::makeHLRAlert(addr);
