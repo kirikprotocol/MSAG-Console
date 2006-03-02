@@ -2,6 +2,7 @@ package ru.sibinco.scag.backend;
 
 import org.w3c.dom.Element;
 import ru.sibinco.lib.SibincoException;
+import ru.sibinco.lib.StatusDisconnectedException;
 import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.backend.daemon.ServiceInfo;
@@ -36,6 +37,7 @@ public class Scag extends Proxy {
     private static final String SCAG_COMPONENT_ID = "scag";
     private static final String LOAD_ROUTES_METHOD_ID = "loadRoutes";
     private static final String TRACE_ROUTE_METHOD_ID = "traceRoute";
+    private static final String ADD_RULE_METHOD_ID = "addRule";
     private static final String UPDATE_RULE_METHOD_ID = "updateRule";
 
     public Scag(final ServiceInfo gwServiceInfo, final int port) {
@@ -100,20 +102,33 @@ public class Scag extends Proxy {
     }
 
     public void removeRule(final String ruleId) throws SibincoException {
+        try {
         final Response response = super.runCommand(new RemoveRule(ruleId));
         if (Response.STATUS_OK != response.getStatus())
             throw new SibincoException("Couldn't delete Rule, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+        } catch (SibincoException se) {
+          if (getStatus() == STATUS_DISCONNECTED)
+            throw new StatusDisconnectedException(host,port);
+          else throw se;
+        }
     }
 
-    public void addRule(final String ruleId) throws SibincoException {
-        final Response response = super.runCommand(new AddRule(ruleId));
-        if (Response.STATUS_OK != response.getStatus())
-            throw new SibincoException("Couldn't register Rule, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
-    }
 
-    public synchronized List updateRule(final String ruleId) throws SibincoException {
+    public synchronized List addRule(final String ruleId, final String transport) throws SibincoException {
+       String err = "Couldn't add rule , nested: ";
+       HashMap args = new HashMap();
+       args.put("ruleId",ruleId);
+       args.put("transport",transport);
+       final Object res = call(ADD_RULE_METHOD_ID, err, Type.Types[Type.STRING_LIST_TYPE], args);
+       return res instanceof List ? (List) res : null;
+   }
+
+    public synchronized List updateRule(final String ruleId, final String transport) throws SibincoException {
         String err = "Couldn't update rule , nested: ";
-        final Object res = call(UPDATE_RULE_METHOD_ID, err, Type.Types[Type.STRING_LIST_TYPE], new HashMap());
+        HashMap args = new HashMap();
+        args.put("ruleId",ruleId);
+        args.put("transport",transport);
+        final Object res = call(UPDATE_RULE_METHOD_ID, err, Type.Types[Type.STRING_LIST_TYPE], args);
         return res instanceof List ? (List) res : null;
     }
 
@@ -131,10 +146,10 @@ public class Scag extends Proxy {
         //if (info.status != ServiceInfo.STATUS_RUNNING)
         // throw new SibincoException("Service \"" + info.getId() + "\" is not running");
         // refreshComponents();
+        try {
         final Response r = runCommand(new CommandCall(commandId, returnType, arguments));
         if (Response.STATUS_OK != r.getStatus())
             throw new SibincoException("Error occured: " + err + r.getDataAsString());
-        System.out.println("recived sme status in runCommand");
         final Element resultElem = (Element) r.getData().getElementsByTagName("variant").item(0);
         final Type resultType = Type.getInstance(resultElem.getAttribute("type"));
         switch (resultType.getId()) {
@@ -148,7 +163,12 @@ public class Scag extends Proxy {
                 return translateStringList(Utils.getNodeText(resultElem));
             default:
                 throw new SibincoException("Unknown result type");
-        }
+         }
+        } catch (SibincoException se) {
+           if (getStatus() == STATUS_DISCONNECTED)
+             throw new StatusDisconnectedException(host,port);
+           else throw se;
+         }
     }
 
 

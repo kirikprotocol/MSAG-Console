@@ -65,7 +65,7 @@ public class Proxy {
                 disconnect();
                 throw new SibincoException("Couldn't write command or read response", e1);
             }
-        }
+        } catch (NullPointerException npe) {throw new SibincoException("CommandWriter or ResponseReader is null");}
     }
 
 

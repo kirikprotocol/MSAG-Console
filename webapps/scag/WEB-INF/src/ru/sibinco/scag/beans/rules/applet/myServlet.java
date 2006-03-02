@@ -4,6 +4,7 @@ package ru.sibinco.scag.beans.rules.applet;
 import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.rules.Rule;
 import ru.sibinco.lib.SibincoException;
+import ru.sibinco.lib.StatusDisconnectedException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -152,37 +153,32 @@ public class myServlet extends HttpServlet
   {
     System.out.println("myServlet updateRule");
     SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
-
     //transport
-    LinkedList li;//=new LinkedList();
-    int errorType=0;
-    int lineIndex=0;
-    int start=0;
-    int end=0;String error;
+    LinkedList li;
+    PrintWriter out = res.getWriter();
     BufferedReader r=req.getReader();
     try {
       li=appContext.getRuleManager().updateRule(r,file);
-      if (li != null && li.size() >0)
-      {
-      /*errorType=Integer.parseInt((String)li.get(0));*/  res.setIntHeader("errorType",errorType);
-      lineIndex=Integer.parseInt((String)li.get(1));      res.setIntHeader("lineIndex",lineIndex);
-      /*start=Integer.parseInt((String)li.get(2));*/      res.setIntHeader("start",start);
-      /*end=Integer.parseInt((String)li.get(3)); */       res.setIntHeader("end",end);
-      error=(String)li.get(0);                            res.setHeader("error",error);
-      res.setHeader("status","error");
-      }
-      else
-      res.setHeader("status","ok");
-
-    } catch (SibincoException e) {
-      e.printStackTrace();//logger.warn(e.getMessage());  //To change body of catch statement use File | Settings | File Templates.
+      res = checkError(li, res);
+      out.print("true");out.flush();out.close();
+    }  catch (SibincoException e) {
       res.setHeader("status",e.getMessage());
+      if (e instanceof StatusDisconnectedException)   {
+        res.setHeader("servicestatus","0");
+        out.println("true");
+      } else {
+        out.println("false");
+        out.println(e.getMessage());
+      }
+        out.flush();out.close();
+    }    finally {
+      if (r!=null)
+        try {
+          r.close();
+        } catch (IOException e)  { e.printStackTrace(); }
     }
-  PrintWriter out = res.getWriter();
-  out.print("true");out.flush();out.close();
-
  }
-     private void AddRule(HttpServletRequest req,final String file,HttpServletResponse res) throws IOException
+  private void AddRule(HttpServletRequest req,final String file,HttpServletResponse res) throws IOException
   {
     System.out.println("myServlet AddRule");
     session = req.getSession(false);
@@ -190,24 +186,48 @@ public class myServlet extends HttpServlet
     SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
     PrintWriter out = res.getWriter();
     //transport
-    OutputStream _out=null;
+    LinkedList li;
     BufferedReader r=req.getReader();
     try {
-      appContext.getRuleManager().AddRule(r,file,newRule);
+       li = appContext.getRuleManager().AddRule(r,file,newRule);
+       res = checkError(li, res);
        out.print("true");out.flush();out.close();
     } catch (SibincoException e) {
-      e.printStackTrace();//logger.warn(e.getMessage());  //To change body of catch statement use File | Settings | File Templates.
-      out.println("false");
-      out.println(e.getMessage());
+      res.setHeader("status",e.getMessage());
+      if (e instanceof StatusDisconnectedException) {
+        res.setHeader("servicestatus","0");
+        out.println("true");
+      } else {
+        out.println("false");
+        out.println(e.getMessage());
+      }
       out.flush();out.close();
+    } finally {
+      try {
+        if (r!=null) r.close();
+      } catch (IOException e) { e.printStackTrace(); }
     }
-     finally{
-           try {
-             if (r!=null) r.close();
-           } catch (IOException e) { e.printStackTrace(); }
-         }
   }
 
+  private HttpServletResponse checkError(LinkedList li, HttpServletResponse res)
+  {
+    int errorType=0;
+    int lineIndex=0;
+    int start=0;
+    int end=0;String error;
+    if (li != null && li.size() > 0)
+    {
+         /*errorType=Integer.parseInt((String)li.get(0));*/  res.setIntHeader("errorType",errorType);
+         lineIndex=Integer.parseInt((String)li.get(1));      res.setIntHeader("lineIndex",lineIndex);
+         /*start=Integer.parseInt((String)li.get(2));*/      res.setIntHeader("start",start);
+         /*end=Integer.parseInt((String)li.get(3)); */       res.setIntHeader("end",end);
+         error=(String)li.get(0);                            res.setHeader("error",error);
+         res.setHeader("status","error");
+     }
+     else
+     res.setHeader("status","ok");
+     return res;
+  }
  private LinkedList RuleName(HttpServletRequest req,final String file,HttpServletResponse res) throws IOException
     {
       System.out.println("RuleName id= "+file);

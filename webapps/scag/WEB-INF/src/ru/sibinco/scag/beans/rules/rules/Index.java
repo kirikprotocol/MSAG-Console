@@ -10,6 +10,7 @@ import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.lib.bean.TabledBean;
 import ru.sibinco.lib.SibincoException;
+import ru.sibinco.lib.StatusDisconnectedException;
 import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.lib.backend.users.User;
 
@@ -181,10 +182,12 @@ public class Index extends TabledBeanImpl implements TabledBean {
       Rule rule = (Rule) rules.get(Long.decode(ruleId));
       try {
         if (rule != null) ruleManager.removeRule(ruleId, rule.getTransport().toLowerCase());
-      } catch (SibincoException e) {
-        e.printStackTrace();
+        rules.remove(Long.decode(ruleId));
+      } catch (SibincoException se) {
+          if (se instanceof StatusDisconnectedException) rules.remove(Long.decode(ruleId));
+          else /*PRINT ERROR ON THE SCREEN*/;
+        //se.printStackTrace();
       }
-      rules.remove(Long.decode(ruleId));
     }
   }
 }
