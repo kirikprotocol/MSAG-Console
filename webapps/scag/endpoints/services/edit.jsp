@@ -10,8 +10,8 @@
 
   <jsp:attribute name="menu">
     <sm-pm:menu>
-      <sm-pm:item name="mbSave" value="Save" title="Save user info"/>
-      <sm-pm:item name="mbCancel" value="Cancel" title="Cancel user editing" onclick="clickCancel()"/>
+      <sm-pm:item name="mbSave" value="Save" title="Save Service info"/>
+      <sm-pm:item name="mbCancel" value="Cancel" title="Cancel Service editing" onclick="clickCancel()"/>
       <sm-pm:space/>
     </sm-pm:menu>
   </jsp:attribute>

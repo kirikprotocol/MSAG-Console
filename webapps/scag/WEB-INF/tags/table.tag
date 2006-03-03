@@ -67,7 +67,7 @@ function edit(idToEdit,goal, child)
 {
   opForm.mbEdit.value = idToEdit;
   opForm.editId.value = idToEdit;
-    var addPath = child == null ? "/edit.jsp" : (child + "/edit.jsp?parentId=" + idToEdit + "&editChild=true");
+    var addPath = (child == null || child == '') ? "/edit.jsp" : (child + "/edit.jsp?parentId=" + idToEdit + "&editChild=true");
   if (goal=="jedit") {
     document.jedit.openRule(idToEdit);
   } else {
