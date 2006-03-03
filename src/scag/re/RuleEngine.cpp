@@ -359,9 +359,11 @@ std::string RuleEngineImpl::CreateRuleFileName(const std::string& dir,const Rule
         if (value == key.transport) break;
     }
 
-    sprintf(buff,"%s/%d",transportkey, key.serviceId);
+    sprintf(buff,"%d", key.serviceId);
     std::string result = dir;
 
+    result.append("/");
+    result.append(transportkey);
     result.append("/rule_");
     result.append(buff);
     result.append(".xml");
@@ -437,7 +439,9 @@ void RuleEngineImpl::ProcessInit(const std::string& dir)
         currentDir.append("/");
         currentDir.append(transportkey);
 
+        smsc_log_info(logger,"Rule Engine: Init transport %s...", transportkey);
         ReadRulesFromDir(value, currentDir.c_str());
+        smsc_log_info(logger,"Rule Engine: Transport %s inited", transportkey);
     }
 
     smsc_log_info(logger,"Rule Engine inited successfully...");
@@ -449,8 +453,9 @@ void RuleEngineImpl::updateRule(RuleKey& key)
 {
     MutexGuard mg(changeLock);
 
-    Rule* newRule = ParseFile(CreateRuleFileName(RulesDir,key));
-    if (!newRule) throw SCAGException("Cannod load rule %d from file", key.serviceId);
+    std::string filename = CreateRuleFileName(RulesDir,key);
+    Rule* newRule = ParseFile(filename);
+    if (!newRule) throw SCAGException("Cannod load rule %d from file %s", key.serviceId, filename.c_str());
 
 
 
