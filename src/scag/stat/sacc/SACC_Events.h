@@ -71,7 +71,6 @@ typedef struct
 
 }SACC_BILLING_INFO_EVENT_t;
 
-
 typedef struct
 {
 	SACC_EVENT_HEADER_t Header;
