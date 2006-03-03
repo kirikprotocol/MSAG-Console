@@ -139,6 +139,7 @@ void BillingManagerImpl::init(BillingManagerConfig& cfg)
 
     try
     {
+        smsc_log_info(logger,"BillingManager connecting to host '%s', port %d", cfg.BillingHost.c_str(),cfg.BillingPort);
         initConnection(cfg.BillingHost.c_str(),cfg.BillingPort);
     }
     catch (SCAGException& e)

@@ -380,7 +380,7 @@ void Scag::init()
       __warning__("Unknown error: rule Engine is not started.");
   }
 
-
+ /*
   scag::transport::TransportType * ttype;
   ttype = scag::transport::SCAGCommand::TransportTypeHash.GetPtr("SMPP");
 
@@ -402,7 +402,7 @@ void Scag::init()
   if (!ttype) 
   {
       return;
-  }  
+  }            */
 
 
   //********************************************************

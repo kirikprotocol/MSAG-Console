@@ -2,6 +2,7 @@
 #define _SCAG_RULE_COMMANDS_H_
 
 #include "SCAGCommand.h"
+#include "scag/re/RuleEngine.h"
 
 
 namespace scag { namespace admin {
@@ -9,7 +10,7 @@ namespace scag { namespace admin {
 class CommandRuleBase : public scag::admin::SCAGCommand
 {
 protected:
-    int serviceId;
+    scag::re::RuleKey key;
     scag::transport::TransportType transport;
     bool hasErrors;
     std::string m_ProcessName;

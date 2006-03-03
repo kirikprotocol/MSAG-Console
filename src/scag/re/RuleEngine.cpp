@@ -10,6 +10,7 @@
 
 #include <core/synchronization/Mutex.hpp>
 #include <core/buffers/IntHash.hpp>
+#include <core/buffers/XHash.hpp>
 
 #include <util/debug.h>
 #include <scag/re/actions/MainActionFactory.h>
@@ -43,8 +44,22 @@ struct RulesReference;
 struct Rules;
 
 
+
+struct HashFunc{
+  static unsigned int CalcHash(const RuleKey& key)
+  {
+    return key.serviceId + key.transport;
+  }
+};
+
+
+
+
+
 class RuleEngineImpl : RuleEngine
 {
+
+    typedef XHash <RuleKey, Rule*, HashFunc> CRulesHash;
 
     MainActionFactory factory;
     std::string RulesDir;
@@ -54,15 +69,17 @@ class RuleEngineImpl : RuleEngine
     struct Rules
     {
         Mutex           rulesLock;
-        IntHash<Rule*>  rules;
+        CRulesHash  rules;
         int             useCounter;
 
         Rules() : useCounter(1) {}
         ~Rules() 
          {
-             IntHash<Rule*>::Iterator it = rules.First();
-             int ruleId; Rule* rule = 0;
-             while (it.Next(ruleId, rule))
+             rules.First();
+
+             CRulesHash::Iterator it = rules.getIterator();
+             RuleKey key; Rule* rule = 0;
+             while (it.Next(key, rule))
              {
                  if (!rule) continue;
                  rule->unref();
@@ -108,7 +125,7 @@ class RuleEngineImpl : RuleEngine
             rules->unref();
         }
 
-        IntHash<Rule*>& operator->() 
+        CRulesHash& operator->() 
         {
             __require__(rules);
             return rules->rules;
@@ -137,13 +154,15 @@ class RuleEngineImpl : RuleEngine
     Rules* copyReference()
     {
         Rules* newRules = new Rules();
-        IntHash<Rule*>::Iterator it = rules->rules.First();
-        int oldRuleId; Rule* rule = 0;
-        while (it.Next(oldRuleId, rule))
+        rules->rules.First();
+
+        CRulesHash::Iterator it = rules->rules.getIterator();
+        RuleKey oldKey; Rule* rule = 0;
+        while (it.Next(oldKey, rule))
         {
             if (!rule) continue;
             rule->ref();
-            newRules->rules.Insert(oldRuleId, rule);
+            newRules->rules.Insert(oldKey, rule);
         }
 
         return newRules;
@@ -151,15 +170,18 @@ class RuleEngineImpl : RuleEngine
 
     Rule * ParseFile(const std::string& xmlFile);
     bool isValidFileName(std::string fname,int& ruleId);
-    std::string CreateRuleFileName(const std::string& dir,const int ruleId) const;
+    std::string CreateRuleFileName(const std::string& dir,const RuleKey& key) const;
+
+    void ReadRulesFromDir(TransportType transport, const char * dir);
+
 public:
     RuleEngineImpl();
     ~RuleEngineImpl();
 
     virtual ActionFactory& getActionFactory() {return factory;}
     void ProcessInit(const std::string& dir);
-    virtual void updateRule(int ruleId);
-    virtual void removeRule(int ruleId);
+    virtual void updateRule(RuleKey& key);
+    virtual void removeRule(RuleKey& key);
     virtual RuleStatus process(SCAGCommand& command, Session& session);
 
 };
@@ -198,6 +220,41 @@ void RuleEngine::Init(const std::string& dir)
             bRuleEngineInited = true;
         }
     }
+}
+
+
+void RuleEngineImpl::ReadRulesFromDir(TransportType transport, const char * dir)
+{
+    DIR * pDir = 0;
+    dirent * pDirEnt = 0;
+    int serviceId = 0;
+
+    pDir = opendir(dir);
+    if (!pDir) throw RuleEngineException(0,"Invalid directory %s", dir);
+
+    while (pDir) 
+    {
+        pDirEnt = readdir(pDir);
+        if (pDirEnt) 
+        {
+            if (isValidFileName(pDirEnt->d_name, serviceId)) 
+            {
+                smsc_log_debug(logger,"Rule ID is %d", serviceId);
+                RuleKey key;
+                key.transport = transport;
+                key.serviceId = serviceId;
+                updateRule(key);
+            }
+            else if ((strcmp(pDirEnt->d_name,".")!=0)&&(strcmp(pDirEnt->d_name,"..")!=0)) 
+            {
+                smsc_log_error(logger,"Skipped '%s' file: Invalid file name",pDirEnt->d_name);
+            }
+        } 
+        else 
+            break;
+    }
+
+    closedir(pDir);
 }
 
 
@@ -270,7 +327,7 @@ Rule * RuleEngineImpl::ParseFile(const std::string& xmlFile)
 
 }
 
-bool RuleEngineImpl::isValidFileName(std::string fname, int& ruleId)
+bool RuleEngineImpl::isValidFileName(std::string fname, int& serviceId)
 {
     if (fname.substr(0,5).compare("rule_")) return false;
     if (fname.substr(fname.size()-4,4).compare(".xml")) return false;
@@ -284,15 +341,25 @@ bool RuleEngineImpl::isValidFileName(std::string fname, int& ruleId)
         if ((str[i] < '0')||(str[i] > '9')) return false;
     }
 
-    ruleId = atoi(str.c_str());
+    serviceId = atoi(str.c_str());
 
-    return (ruleId >= 0);
+    return (serviceId >= 0);
 }
 
-std::string RuleEngineImpl::CreateRuleFileName(const std::string& dir,const int ruleId) const
+std::string RuleEngineImpl::CreateRuleFileName(const std::string& dir,const RuleKey& key) const
 {
     char buff[100];
-    sprintf(buff,"%d",ruleId);
+
+    char * transportkey = 0;
+    scag::transport::TransportType value;
+
+    scag::transport::SCAGCommand::TransportTypeHash.First();
+    for (Hash <scag::transport::TransportType>::Iterator it = scag::transport::SCAGCommand::TransportTypeHash.getIterator(); it.Next(transportkey, value);)
+    {
+        if (value == key.transport) break;
+    }
+
+    sprintf(buff,"%s/%d",transportkey, key.serviceId);
     std::string result = dir;
 
     result.append("/rule_");
@@ -312,13 +379,18 @@ RuleStatus RuleEngineImpl::process(SCAGCommand& command, Session& session)
 
     smsc_log_debug(logger,"Process RuleEngine with ruleId: %d",ruleId);
 
-    if (rulesRef.rules->rules.Exist(ruleId)) 
+    RuleKey key;
+    key.transport = command.getType();
+    key.serviceId = command.getRuleId();
+
+    Rule ** rulePtr = rulesRef.rules->rules.GetPtr(key);
+
+    if (rulePtr) 
     {
-        Rule * rule = rulesRef.rules->rules.Get(ruleId);
-        rs = rule->process(command, session);
+        rs = (*rulePtr)->process(command, session);
     } 
     else
-        throw RuleEngineException(0,"Cannot process Rule with ID = %d : Rule not fond%s",ruleId);
+        throw RuleEngineException(0,"Cannot process Rule with ID = %d : Rule not found%s", key.serviceId);
 
         
     return rs;
@@ -352,77 +424,66 @@ void RuleEngineImpl::ProcessInit(const std::string& dir)
 
     RulesDir = dir;
 
-    DIR * pDir = 0;
-    dirent * pDirEnt = 0;
-    int ruleId = 0;
 
-    pDir = opendir(dir.c_str());
-    if (!pDir) throw RuleEngineException(0,"Invalid directory %s",dir.c_str());
+    char * transportkey = 0;
+    scag::transport::TransportType value;
 
-    while (pDir) 
+    std::string currentDir;
+
+    scag::transport::SCAGCommand::TransportTypeHash.First();
+    for (Hash <scag::transport::TransportType>::Iterator it = scag::transport::SCAGCommand::TransportTypeHash.getIterator(); it.Next(transportkey, value);)
     {
-         pDirEnt = readdir(pDir);
-         if (pDirEnt) 
-         {
-             if (isValidFileName(pDirEnt->d_name,ruleId)) 
-             {
-                 smsc_log_debug(logger,"Rule ID is %d",ruleId);
-                 updateRule(ruleId);
-             }
-             else if ((strcmp(pDirEnt->d_name,".")!=0)&&(strcmp(pDirEnt->d_name,"..")!=0)) 
-             {
-                 smsc_log_error(logger,"Skipped '%s' file: Invalid file name",pDirEnt->d_name);
-             }
-         } 
-         else 
-             break;
+        currentDir = dir;
+        currentDir.append("/");
+        currentDir.append(transportkey);
+
+        ReadRulesFromDir(value, currentDir.c_str());
     }
 
-    closedir(pDir);
     smsc_log_info(logger,"Rule Engine inited successfully...");
     smsc_log_info(logger,"");
 }
 
 
-void RuleEngineImpl::updateRule(int ruleId)
+void RuleEngineImpl::updateRule(RuleKey& key)
 {
     MutexGuard mg(changeLock);
 
-    Rule* newRule = ParseFile(CreateRuleFileName(RulesDir,ruleId));
-    if (!newRule) throw SCAGException("Cannod load rule %d from file", ruleId);
+    Rule* newRule = ParseFile(CreateRuleFileName(RulesDir,key));
+    if (!newRule) throw SCAGException("Cannod load rule %d from file", key.serviceId);
 
 
 
     Rules *newRules = copyReference();
-    Rule** rulePtr = newRules->rules.GetPtr(ruleId);
+    Rule** rulePtr = newRules->rules.GetPtr(key);
 
     if (rulePtr) 
     {
         (*rulePtr)->unref();
-        newRules->rules.Delete(ruleId);
+        newRules->rules.Delete(key);
     }
 
-    newRules->rules.Insert(ruleId, newRule);
+    newRules->rules.Insert(key, newRule);
     changeRules(newRules);      
 }
 
 
-void RuleEngineImpl::removeRule(int ruleId)
+void RuleEngineImpl::removeRule(RuleKey& key)
 {
     MutexGuard mg(changeLock);
 
-    Rule** rulePtr = rules->rules.GetPtr(ruleId);  // Can we do such direct access? TODO: Ensure
+    Rule** rulePtr = rules->rules.GetPtr(key);  // Can we do such direct access? TODO: Ensure
     if (!rulePtr) 
     {
-        throw SCAGException("Invalid rule id %d to remove",ruleId);
+        throw SCAGException("Invalid rule id %d to remove", key.serviceId);
         //smsc_log_warn(logger,"Invalid rule id %d to remove",ruleId);
         //return;
     }
             
     Rules *newRules = copyReference();
-    rulePtr = newRules->rules.GetPtr(ruleId);
+    rulePtr = newRules->rules.GetPtr(key);
     (*rulePtr)->unref();
-    newRules->rules.Delete(ruleId);
+    newRules->rules.Delete(key);
     changeRules(newRules);
 }
 

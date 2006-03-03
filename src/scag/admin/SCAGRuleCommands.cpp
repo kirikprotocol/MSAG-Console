@@ -1,7 +1,6 @@
 #include "SCAGRuleCommands.h"
 #include "util/xml/utilFunctions.h"
 #include "scag/exc/SCAGExceptions.h"
-#include "scag/re/RuleEngine.h"
 
 namespace scag { namespace admin {
 
@@ -10,7 +9,7 @@ using namespace scag::exceptions;
 
 
 CommandRuleBase::CommandRuleBase(const CommandIds::IDS ID, const xercesc::DOMDocument * doc) 
-    : SCAGCommand((Command::Id)ID), serviceId(-1), hasErrors(false)
+    : SCAGCommand((Command::Id)ID), hasErrors(false)
 
 {
     switch (ID) 
@@ -35,15 +34,16 @@ CommandRuleBase::CommandRuleBase(const CommandIds::IDS ID, const xercesc::DOMDoc
 
 bool CommandRuleBase::readParams(const xercesc::DOMDocument * document)
 {
+    
     BEGIN_SCAN_PARAMS
-    GETINTPARAM(serviceId, "serviceId")
+    GETINTPARAM(key.serviceId, "serviceId")
     GETSTRPARAM_(strTransport, "transport")
     END_SCAN_PARAMS
 
     scag::transport::TransportType * ttype;
     ttype = scag::transport::SCAGCommand::TransportTypeHash.GetPtr(strTransport.c_str());
 
-    if (scag::transport::SCAGCommand::TransportTypeHash.GetCount() == 0) 
+  /*  if (scag::transport::SCAGCommand::TransportTypeHash.GetCount() == 0) 
     {
         smsc_log_error(logger,"Achtung!!! :))");
     }
@@ -55,7 +55,7 @@ bool CommandRuleBase::readParams(const xercesc::DOMDocument * document)
     for (Hash <scag::transport::TransportType>::Iterator it = scag::transport::SCAGCommand::TransportTypeHash.getIterator(); it.Next(key, value);)
     {
         smsc_log_error(logger,"%d %s",value, key);
-    }
+    }   */
 
 
     if (!ttype) 
@@ -64,15 +64,14 @@ bool CommandRuleBase::readParams(const xercesc::DOMDocument * document)
         return false;
     }  
 
-    transport = *ttype;
+    key.transport = *ttype;
 
-      
-
-    if (serviceId == -1) 
+    if (key.serviceId == -1) 
     {
         smsc_log_error(logger,"Missing serviceId parameter");
         return false;
     }
+
 
     return true;
 }
@@ -93,7 +92,7 @@ Response * CommandRuleBase::CreateResponse(scag::Scag * SmscApp)
 
     } catch (RuleEngineException& e){                             
         char desc[512];                                         
-        sprintf(desc, "Failed to %s rule (%s transport). RuleEngineException exception: %s. Error in rule_%d.xml in line %d.", m_ProcessName.c_str(), strTransport.c_str(), e.what(), serviceId, e.getLineNumber());
+        sprintf(desc, "Failed to %s rule (%s transport). RuleEngineException exception: %s. Error in rule_%d.xml in line %d.", m_ProcessName.c_str(), strTransport.c_str(), e.what(), key.serviceId, e.getLineNumber());
         Variant res(smsc::admin::service::StringListType); 
 
         res.appendValueToStringList(desc);
@@ -137,7 +136,7 @@ void CommandAddRule::processRuleCommand()
     smsc_log_info(logger, "CommandAddRule is processing...");
 
     scag::re::RuleEngine& re = scag::re::RuleEngine::Instance();
-    re.updateRule(serviceId);
+    re.updateRule(key);
 
     smsc_log_info(logger, "CommandAddRule is processed ok");
 }
@@ -155,7 +154,7 @@ void CommandRemoveRule::processRuleCommand()
     smsc_log_info(logger, "CommandRemoveRule is processing...");
 
     scag::re::RuleEngine& re = scag::re::RuleEngine::Instance();
-    re.removeRule(serviceId);
+    re.removeRule(key);
 
     smsc_log_info(logger, "CommandRemoveRule is processed ok");
 }
@@ -172,7 +171,7 @@ void CommandUpdateRule::processRuleCommand()
     smsc_log_info(logger, "CommandUpdateRule is processing...");
 
     scag::re::RuleEngine& re = scag::re::RuleEngine::Instance();
-    re.updateRule(serviceId);
+    re.updateRule(key);
 
     smsc_log_info(logger, "CommandUpdateRule is processed ok.");
 }
