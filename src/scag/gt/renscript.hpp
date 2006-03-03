@@ -390,8 +390,9 @@ static JSBool _deleteSession(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
   
 	skey.abonentAddr = oa;
 	
+	SCAG_TRY
 	store.deleteSession(skey);
-	
+	SCAG_CATCH
 	
 	return JS_TRUE;
 }
