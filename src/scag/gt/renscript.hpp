@@ -327,7 +327,7 @@ static JSBool _initReInstance(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   return JS_TRUE;
 }
 
-static void sesionHandler(void * dataPtr,Session * session)
+static void sesionHandler(void * dataPtr,scag::sessions::Session * session)
 {
 
 }
@@ -335,8 +335,8 @@ static void sesionHandler(void * dataPtr,Session * session)
 static JSBool _initSessionStore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
 	std::string dir_name=JS_GetStringBytes(JS_ValueToString(cx, argv[0]));
-
-	scag::sessions::SessionStore::init(dir_name,sesionHandler,null);
+	
+	scag::sessions::SessionStore::init(dir_name,sesionHandler,0);
 
 	return JS_TRUE;
 }
