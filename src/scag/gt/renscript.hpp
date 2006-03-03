@@ -327,6 +327,20 @@ static JSBool _initReInstance(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   return JS_TRUE;
 }
 
+static void sesionHandler(void * dataPtr,Session * session)
+{
+
+}
+// SessionLoadCallback ;
+static JSBool _initSessionStore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+	std::string dir_name=JS_GetStringBytes(JS_ValueToString(cx, argv[0]));
+
+	scag::sessions::SessionStore::init(dir_name,sesionHandler,null);
+
+	return JS_TRUE;
+}
+
 static JSBool _initSessionManagerInstance(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
  std::string dir_name=JS_GetStringBytes(JS_ValueToString(cx, argv[0]));
@@ -579,7 +593,7 @@ if(argc<8)
 //#endif
 
   return JS_TRUE;
-
+  
 }  
 /**********************************************/  
 
