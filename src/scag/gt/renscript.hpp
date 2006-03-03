@@ -611,6 +611,7 @@ static JSFunctionSpec Global_functions[] = {
  {"InitReInstance",_initReInstance,1},
  {"InitBillInstance",_initBillInstance,1},
  {"InitSessionManagerInstance",_initSessionManagerInstance,1},
+ {"InitSessionStore",_initSessionStore,1},
  {"InitStatisticsInstance",_initStatInstance,1},
  {"UpdateRule",_updaterule,1},
  {"DeleteRule",_deleterule,1},
