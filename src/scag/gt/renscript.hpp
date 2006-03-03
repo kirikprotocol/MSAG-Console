@@ -396,6 +396,16 @@ static JSBool _deleteSession(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 	
 	return JS_TRUE;
 }
+// UpdateSession(Address,TON,NP);
+static JSBool _updateSession(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+	
+	SCAG_TRY
+	store.updateSession(psession);
+	SCAG_CATCH
+	
+	return JS_TRUE;
+}
 
 
 static JSBool _initSessionManagerInstance(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
@@ -671,6 +681,7 @@ static JSFunctionSpec Global_functions[] = {
  {"InitSessionStore",_initSessionStore,1},
  {"NewSession",_newSession,1},
  {"DeleteSession",_deleteSession,1},
+ {"UpdateSession",_updateSession,1},
  {"InitStatisticsInstance",_initStatInstance,1},
  {"UpdateRule",_updaterule,1},
  {"DeleteRule",_deleterule,1},
