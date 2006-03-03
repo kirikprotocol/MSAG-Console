@@ -400,9 +400,14 @@ static JSBool _deleteSession(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 static JSBool _updateSession(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
 	
+	
 	SCAG_TRY
 	store.updateSession(psession);
 	SCAG_CATCH
+	catch (exception &e) 
+	{
+		smsc_log_error(logger,"%s",e.what());
+	}
 	
 	return JS_TRUE;
 }
