@@ -379,6 +379,32 @@ void Scag::init()
   }catch(...){
       __warning__("Unknown error: rule Engine is not started.");
   }
+
+
+  scag::transport::TransportType * ttype;
+  ttype = scag::transport::SCAGCommand::TransportTypeHash.GetPtr("SMPP");
+
+  if (scag::transport::SCAGCommand::TransportTypeHash.GetCount() == 0) 
+  {
+      smsc_log_error(log,"Achtung!!! :))");
+  }
+
+  char * key = 0;
+  scag::transport::TransportType value;
+
+  scag::transport::SCAGCommand::TransportTypeHash.First();
+  for (Hash <scag::transport::TransportType>::Iterator it = scag::transport::SCAGCommand::TransportTypeHash.getIterator(); it.Next(key, value);)
+  {
+      smsc_log_error(log,"%d %s",value, key);
+  }
+
+
+  if (!ttype) 
+  {
+      return;
+  }  
+
+
   //********************************************************
 
 
