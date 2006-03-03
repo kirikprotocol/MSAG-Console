@@ -13,9 +13,6 @@ CommandRuleBase::CommandRuleBase(const CommandIds::IDS ID, const xercesc::DOMDoc
     : SCAGCommand((Command::Id)ID), serviceId(-1), hasErrors(false)
 
 {
-    smsc_log_info(logger, "Command got parameters:");
-    hasErrors = (!readParams(doc));
-
     switch (ID) 
     {
     case CommandIds::addRule:
@@ -28,6 +25,11 @@ CommandRuleBase::CommandRuleBase(const CommandIds::IDS ID, const xercesc::DOMDoc
         m_ProcessName = "remove";
         break;
     }
+
+
+    smsc_log_info(logger, "SCAGCommand '%s' rule got parameters:", m_ProcessName.c_str());
+    hasErrors = (!readParams(doc));
+
 }
 
 
@@ -41,13 +43,28 @@ bool CommandRuleBase::readParams(const xercesc::DOMDocument * document)
     scag::transport::TransportType * ttype;
     ttype = scag::transport::SCAGCommand::TransportTypeHash.GetPtr(strTransport.c_str());
 
-    if (!scag::transport::SCAGCommand::TransportTypeHash.Exists(strTransport.c_str())) 
+    if (scag::transport::SCAGCommand::TransportTypeHash.GetCount() == 0) 
+    {
+        smsc_log_error(logger,"Achtung!!! :))");
+    }
+
+    char * key = 0;
+    scag::transport::TransportType value;
+
+    scag::transport::SCAGCommand::TransportTypeHash.First();
+    for (Hash <scag::transport::TransportType>::Iterator it = scag::transport::SCAGCommand::TransportTypeHash.getIterator(); it.Next(key, value);)
+    {
+        smsc_log_error(logger,"%d %s",value, key);
+    }
+
+
+    if (!ttype) 
     {
         smsc_log_error(logger,"Unknown transport parameter '%s'", strTransport.c_str());
         return false;
     }  
 
-    transport = scag::transport::SCAGCommand::TransportTypeHash.Get(strTransport.c_str());
+    transport = *ttype;
 
       
 
@@ -65,7 +82,7 @@ Response * CommandRuleBase::CreateResponse(scag::Scag * SmscApp)
     if (hasErrors) 
     {
         char msg[1024];                                         
-        sprintf(msg, "CommandAddRule: cannot process command - parameters is invalid");
+        sprintf(msg, "SCAGCommand '%s' rule: cannot process command - parameters is invalid", m_ProcessName.c_str());
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     }
