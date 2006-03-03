@@ -404,7 +404,7 @@ static JSBool _updateSession(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 	SCAG_TRY
 	store.updateSession(psession);
 	SCAG_CATCH
-	catch (exception &e) 
+		catch (std::exception &e) 
 	{
 		smsc_log_error(logger,"%s",e.what());
 	}
