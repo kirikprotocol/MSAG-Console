@@ -59,7 +59,7 @@ static FILE*pFile;
 RuleEngine * engine=0;
 SessionManager * smanager=0;
 SessionManagerConfig cfg;   
-
+scag::sessions::SessionStore store;
 SmppCommand command;
 
 #define SCAG_TRY try{
@@ -336,8 +336,8 @@ static JSBool _initSessionStore(JSContext *cx, JSObject *obj, uintN argc, jsval 
 {
 	std::string dir_name=JS_GetStringBytes(JS_ValueToString(cx, argv[0]));
 	
-	scag::sessions::SessionStore::init(dir_name,sesionHandler,0);
-
+	store.init(dir_name,sesionHandler,0);
+	
 	return JS_TRUE;
 }
 
