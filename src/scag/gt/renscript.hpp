@@ -60,6 +60,8 @@ RuleEngine * engine=0;
 SessionManager * smanager=0;
 SessionManagerConfig cfg;   
 scag::sessions::SessionStore store;
+scag::sessions::SessionPtr psession;
+
 SmppCommand command;
 
 #define SCAG_TRY try{
@@ -361,7 +363,35 @@ static JSBool _newSession(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   
 	skey.abonentAddr = oa;
 	
-	store.newSession(skey);
+	psession  = store.newSession(skey);
+	
+	
+	return JS_TRUE;
+}
+
+// DeleteSession(Address,TON,NP);
+static JSBool _deleteSession(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+	std::string dir_name=JS_GetStringBytes(JS_ValueToString(cx, argv[0]));
+	
+	scag::sessions::CSessionKey skey;
+	
+	smsc::sms::Address oa,da ;
+
+	
+	std::string str_oa  =JS_GetStringBytes(JS_ValueToString(cx, argv[0])); 
+
+	uint8_t oa_tn =JSVAL_TO_INT(argv[1]); 
+	uint8_t oa_np =JSVAL_TO_INT(argv[2]); 
+
+	oa.setNumberingPlan(oa_np);
+	oa.setTypeOfNumber(oa_tn);
+	oa.setValue(str_oa.length(),str_oa.c_str());
+  
+	skey.abonentAddr = oa;
+	
+	store.deleteSession(skey);
+	
 	
 	return JS_TRUE;
 }
@@ -639,6 +669,7 @@ static JSFunctionSpec Global_functions[] = {
  {"InitSessionManagerInstance",_initSessionManagerInstance,1},
  {"InitSessionStore",_initSessionStore,1},
  {"NewSession",_newSession,1},
+ {"DeleteSession",_deleteSession,1},
  {"InitStatisticsInstance",_initStatInstance,1},
  {"UpdateRule",_updaterule,1},
  {"DeleteRule",_deleterule,1},
