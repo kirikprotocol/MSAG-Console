@@ -374,7 +374,8 @@ void cmd_reportOk(Console&, const std::vector<std::string> &args)
             did = (unsigned int)atoi(args[1].c_str());
 
         if (!did) {
-            fprintf(stdout, "ERR: bad dialog id specified (%s)!\n", args[1].c_str());
+            fprintf(stdout, "ERR: dialog id %s is bad or missed!\n",
+                    (args.size() > 1) ? args[1].c_str() : "");
             return;
         }
 
@@ -395,7 +396,8 @@ void cmd_reportErr(Console&, const std::vector<std::string> &args)
             did = (unsigned int)atoi(args[1].c_str());
 
         if (!did) {
-            fprintf(stdout, "ERR: bad dialog id specified (%s)!\n", args[1].c_str());
+            fprintf(stdout, "ERR: dialog id %s is bad or missed!\n",
+                    (args.size() > 1) ? args[1].c_str() : "");
             return;
         }
 
