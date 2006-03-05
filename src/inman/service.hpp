@@ -9,6 +9,7 @@
 #include "inman/interaction/server.hpp"
 #include "inman/inap/session.hpp"
 #include "inman/storage/FileStorages.hpp"
+#include "inman/common/TimeWatcher.hpp"
 #include "inman/billing.hpp"
 
 using smsc::inman::inap::TCAPDispatcher;
@@ -19,6 +20,7 @@ using smsc::inman::filestore::InBillingFileStorage;
 using smsc::inman::filestore::InFileStorageRoller;
 using smsc::inman::BillingCFG;
 using smsc::inman::BillingConnect;
+using smsc::inman::sync::TimeWatcher;
 
 #define INMAN_TCP_RESTART_ATTEMPTS  2
 
@@ -28,6 +30,7 @@ namespace inman {
 struct InService_CFG {
     const char*     host;
     int             port;
+    unsigned int    maxConn;
     BillingCFG      bill;
 };
 
@@ -39,7 +42,7 @@ public:
     Service(const InService_CFG * in_cfg, Logger * uselog = NULL);
     virtual ~Service();
 
-    void start();
+    bool start();
     void stop();
     void writeCDR(unsigned int bcId, unsigned int bilId, const CDRRecord & cdr);
 
@@ -61,6 +64,7 @@ private:
     InService_CFG   _cfg;
     InBillingFileStorage*    bfs;
     InFileStorageRoller *    roller;
+    TimeWatcher*    tmWatcher;
     unsigned        tcpRestartCount;
 };
 

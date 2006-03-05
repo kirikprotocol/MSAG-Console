@@ -25,11 +25,12 @@ using smsc::inman::cache::db::AbonentCacheDB;
 static const UCHAR_T VER_HIGH    = 0;
 static const UCHAR_T VER_LOW     = 1;
 
+static const unsigned int _in_CFG_DFLT_CLIENT_CONNS = 3;
 static const long _in_CFG_MIN_BILLING_INTERVAL = 10; //in seconds
 static const unsigned int _in_CFG_MAX_BILLINGS = 10000;
 static const unsigned int _in_CFG_DFLT_BILLINGS = 500;
 static const unsigned short _in_CFG_DFLT_CAP_TIMEOUT = 20;
-static const unsigned short _in_CFG_DFLT_TCP_TIMEOUT = 30;
+static const unsigned short _in_CFG_DFLT_BILL_TIMEOUT = 120;
 static const unsigned char _in_CFG_DFLT_SS7_USER_ID = 3; //USER03_ID
 static const long _in_CFG_DFLT_CACHE_INTERVAL = 1440;
 #define RP_MO_SM_transfer_rejected 21       //3GPP TS 24.011 Annex E-2
@@ -82,17 +83,18 @@ public:
     INBillConfig()
     {
         cacheDb = NULL; bill.cache = NULL;
-        host = bill.ssf_addr = bill.scf_addr = bill.billingDir = NULL;
-        port = bill.ssn = bill.billingInterval = bill.cacheInterval = bill.cacheRAM = 0;
+        host = bill.ssf_addr = bill.scf_addr = bill.cdrDir = NULL;
+        port = bill.ssn = bill.serviceKey = 0;
+        bill.cdrInterval = bill.cacheInterval = bill.cacheRAM = 0;
         bill.billMode = smsc::inman::BILL_ALL;
         bill.cdrMode =  BillingCFG::CDR_ALL;
-        bill.serviceKey = bill.capTimeout = bill.tcpTimeout = 0;
         
         //OPTIONAL PARAMETERS:
+        maxConn = _in_CFG_DFLT_CLIENT_CONNS;
         bill.userId = _in_CFG_DFLT_SS7_USER_ID;
         bill.maxBilling = _in_CFG_DFLT_BILLINGS;
         bill.capTimeout = _in_CFG_DFLT_CAP_TIMEOUT;
-        bill.tcpTimeout = _in_CFG_DFLT_TCP_TIMEOUT;
+        bill.maxTimeout = _in_CFG_DFLT_BILL_TIMEOUT;
         bill.rejectRPC.push_back(RP_MO_SM_transfer_rejected);
     }
 
@@ -111,6 +113,10 @@ public:
         char *   cstr = NULL;
         std::string cppStr;
 
+        /* ********************* *
+         * InService parameters: *
+         * ********************* */
+
         try {
             host = manager.getString("host");
             port = manager.getInt("port");
@@ -119,7 +125,12 @@ public:
             host = 0; port = 0;
             throw ConfigException("INMan host or port missing");
         }
-
+        tmo = 0;
+        try { tmo = (uint32_t)manager.getInt("maxClients"); }
+        catch (ConfigException& exc) { }
+        if (tmo)
+            maxConn = (unsigned short)tmo;
+        smsc_log_info(inapLogger, "maxClients: %s%u", !tmo ? "default ":"", maxConn);
         
         /* ******************** *
          * Billing parameters:  *
@@ -158,19 +169,19 @@ public:
 
         if (bill.cdrMode != BillingCFG::CDR_NONE) {
             try {
-                bill.billingDir = billCfg.getString("billingDir");
-                bill.billingInterval = billCfg.getInt("billingInterval");
+                bill.cdrDir = billCfg.getString("cdrDir");
+                bill.cdrInterval = billCfg.getInt("cdrInterval");
             } catch (ConfigException& exc) {
-                bill.billingDir = NULL; bill.billingInterval = 0;
-                throw ConfigException("'billingDir' or 'billingInterval' is invalid or missing");
+                bill.cdrDir = NULL; bill.cdrInterval = 0;
+                throw ConfigException("'cdrDir' or 'cdrInterval' is invalid or missing");
             }
-            if (bill.billingInterval < _in_CFG_MIN_BILLING_INTERVAL) {
-                bill.billingDir = NULL; bill.billingInterval = 0;
-                throw ConfigException("'billingInterval' should be grater than %ld seconds",
+            if (bill.cdrInterval < _in_CFG_MIN_BILLING_INTERVAL) {
+                bill.cdrDir = NULL; bill.cdrInterval = 0;
+                throw ConfigException("'cdrInterval' should be grater than %ld seconds",
                                       _in_CFG_MIN_BILLING_INTERVAL);
             }
-            smsc_log_info(inapLogger, "billingDir: %s", bill.billingDir);
-            smsc_log_info(inapLogger, "billingInterval: %d secs", bill.billingInterval);
+            smsc_log_info(inapLogger, "cdrDir: %s", bill.cdrDir);
+            smsc_log_info(inapLogger, "cdrInterval: %d secs", bill.cdrInterval);
         }
         //cache parameters
         try {
@@ -203,15 +214,15 @@ public:
         }
         smsc_log_info(inapLogger, "maxBillings: %s%u per connect", !tmo ? "default ":"", bill.maxBilling);
 
-        tmo = 0;    //SMSC_Timeout
-        try { tmo = (uint32_t)billCfg.getInt("SMSC_Timeout"); }
+        tmo = 0;    //maxTimeout
+        try { tmo = (uint32_t)billCfg.getInt("maxTimeout"); }
         catch (ConfigException& exc) { }
         if (tmo) {
-            if (tmo >= 65535)
-                throw ConfigException("'SMSC_Timeout' should fall into the range [1 ..65535] seconds");
-            bill.tcpTimeout = (unsigned short)tmo;
+            if ((tmo >= 65535) || (tmo < 5))
+                throw ConfigException("'maxTimeout' should fall into the range [5 ..65535] seconds");
+            bill.maxTimeout = (unsigned short)tmo;
         }
-        smsc_log_info(inapLogger, "SMSC_Timeout: %s%u secs", !tmo ? "default ":"", bill.tcpTimeout);
+        smsc_log_info(inapLogger, "maxTimeout: %s%u secs", !tmo ? "default ":"", bill.maxTimeout);
 
         /* ************************** *
          * IN interaction parameters: *
@@ -370,10 +381,15 @@ int main(int argc, char** argv)
         g_pService = new Service(&cfg, inapLogger);
         assert(g_pService);
         _runService = 1;
-        g_pService->start();
+        if (g_pService->start()) {
+            //handle SIGTERM only in main thread
+            sigset(SIGTERM, sighandler);
+        } else {
+            smsc_log_fatal(inapLogger, "InmanSrv: startup failure. Exiting.");
+            _runService = 0;
+        }
 
-        //handle SIGTERM only in main thread
-        sigset(SIGTERM, sighandler);
+
         while(_runService)
             usleep(1000 * 200); //sleep 200 ms
 

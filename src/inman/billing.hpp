@@ -20,6 +20,7 @@ ChargeSmsResult     <-   | bilProcessed:     SSF <- ContinueSMS ]
 #include "inman/inap/inap.hpp"
 #include "inman/interaction/messages.hpp"
 #include "inman/interaction/connect.hpp"
+#include "inman/common/TimeWatcher.hpp"
 #include "inman/incache.hpp"
 
 using smsc::inman::inap::Inap;
@@ -32,7 +33,12 @@ using smsc::inman::interaction::InmanHandler;
 using smsc::inman::interaction::SMCAPSpecificInfo;
 using smsc::inman::interaction::ChargeSms;
 using smsc::inman::interaction::DeliverySmsResult;
-using smsc::core::synchronization::Mutex;
+//using smsc::core::synchronization::Mutex;
+using smsc::inman::sync::StopWatch;
+using smsc::inman::sync::TimeWatcher;
+using smsc::inman::sync::TimerListenerITF;
+using smsc::inman::sync::TimersLIST;
+using smsc::inman::sync::OPAQUE_OBJ;
 
 using smsc::inman::cache::InAbonentQueryListenerITF;
 using smsc::inman::cache::AbonentCacheITF;
@@ -81,13 +87,12 @@ struct BillingCFG {
 //billing parameters
     BILL_MODE       billMode;
     CDR_MODE        cdrMode;
-    const char *    billingDir;      //location to store CDR files
-    long            billingInterval; //rolling interval for CDR files
+    const char *    cdrDir;      //location to store CDR files
+    long            cdrInterval; //rolling interval for CDR files
     AbonentCacheITF * cache;         //
     long            cacheInterval;   //abonent info refreshing interval, units: seconds
     long            cacheRAM;        //abonents cache RAM buffer size, units: Mb
-//TCP interaction:
-    unsigned short  tcpTimeout;      //optional timeout for TCP interaction with SMSC
+    unsigned short  maxTimeout;      //maximum timeout for TCP & DB operations
     unsigned short  maxBilling;      //maximum number of Billings per connect
 //SS7 interaction:
     unsigned char   userId;          //PortSS7 user id [1..20]
@@ -110,13 +115,13 @@ class BillingConnect: public ConnectListener
 
 public: 
     BillingConnect(BillingCFG * cfg, Session* ss7_sess, Connect* conn,
-                   Service * in_srvc, Logger * uselog = NULL);
+                   TimeWatcher* tm_watcher, Service * in_srvc, Logger * uselog = NULL);
     ~BillingConnect();
 
     unsigned int bConnId(void) const { return _bcId; }
     //sends command, and optionally turn on timer for response waiting
     //returns true on success
-    bool sendCmd(SerializableObject* cmd, bool timerOn = false);
+    bool sendCmd(SerializableObject* cmd);
     //releases completed Billing, writting CDR if required
     void billingDone(Billing* bill);
     //
@@ -136,25 +141,28 @@ protected:
     Connect*    _conn;
     Service *   _inSrvc;
     Session*    _ss7Sess;
+    TimeWatcher* _tmWatcher;
 };
 
-class Billing : public SSFhandler, public InmanHandler, public InAbonentQueryListenerITF
+class Billing : public SSFhandler, public InmanHandler,
+                public InAbonentQueryListenerITF, public TimerListenerITF
 {
 public:
+    typedef std::map<unsigned, StopWatch*> TimersMAP;
     typedef enum {
-        bilIdle, bilStarted, bilInited, bilReleased, bilProcessed, 
+        bilIdle, bilStarted, bilQueried, bilInited, bilReleased, bilProcessed, 
         bilApproved, bilComplete, bilAborted
     } BillingState;
 
     Billing(BillingConnect* bconn, unsigned int b_id, 
-            BillingCFG * cfg, Logger * uselog = NULL);
+            BillingCFG * cfg, TimeWatcher* tm_watcher, Logger * uselog = NULL);
     virtual ~Billing();
 
     unsigned int getId() const { return _bId; }
     
     void     handleCommand(InmanCommand* cmd);
-    //stops billing due to external error
-    void     Stop(CustomException * exc);
+    //aborts billing due to fatal error
+    void     Abort(const char * reason);
     //
     bool     isPostpaidBill(void) const { return postpaidBill; }
     //retuns false if CDR was not complete
@@ -164,25 +172,30 @@ public:
     //    
     const CDRRecord & getCDRRecord(void) const;
 
-    //SSF interface
-    virtual void onChargeSms(ChargeSms*);
-    virtual void onDeliverySmsResult(DeliverySmsResult*);
-    //InmanHandler interface
-    virtual void onConnectSMS(ConnectSMSArg* arg);
-    virtual void onContinueSMS();
-    virtual void onFurnishChargingInformationSMS(FurnishChargingInformationSMSArg* arg);
-    virtual void onReleaseSMS(ReleaseSMSArg* arg);
-    virtual void onRequestReportSMSEvent(RequestReportSMSEventArg* arg);
-    virtual void onResetTimerSMS(ResetTimerSMSArg* arg);
-    virtual void onAbortSMS(unsigned char errcode, bool tcapLayer);
+    //InmanHandler interface methods:
+    void onChargeSms(ChargeSms*);
+    void onDeliverySmsResult(DeliverySmsResult*);
 
-    //InAbonentQueryListenerITF
+    //SSFHandler interface methods:
+    void onConnectSMS(ConnectSMSArg* arg);
+    void onContinueSMS(uint32_t inmanErr = 0);
+    void onFurnishChargingInformationSMS(FurnishChargingInformationSMSArg* arg);
+    void onReleaseSMS(ReleaseSMSArg* arg);
+    void onRequestReportSMSEvent(RequestReportSMSEventArg* arg);
+    void onResetTimerSMS(ResetTimerSMSArg* arg);
+    void onAbortSMS(unsigned char errcode, bool tcapLayer);
+
+    //InAbonentQueryListenerITF interface methods:
     void abonentQueryCB(AbonentId ab_number, AbonentBillType ab_type);
+    //TimerListenerITF interface methods:
+    void onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj);
 
 protected:
+    Session * activateSSN(void);
     void abortBilling(InmanErrorType errType, uint16_t errCode);
     bool startCAPDialog(void);
-    Session * activateSSN(void);
+    void StartTimer(bool locked = false);
+    void StopTimer(BillingState bilState, bool locked = false);
 
     Mutex           bilMutex;
     BillingCFG      _cfg;
@@ -197,6 +210,8 @@ protected:
     CDRRecord       cdr;        //data for CDR record creation & CAP3 interaction
     SMCAPSpecificInfo csInfo;   //data for CAP3 interaction
     bool            postpaidBill;
+    TimeWatcher*    tmWatcher;
+    TimersMAP       timers;
 };
 
 } //inman

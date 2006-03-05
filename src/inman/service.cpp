@@ -15,7 +15,7 @@ namespace inman {
 Service::Service(const InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
     : logger(uselog), _cfg(*in_cfg)
     , session(0), disp(0), server(0), bfs(0)
-    , tcpRestartCount(0)
+    , tcpRestartCount(0), tmWatcher(NULL)
 {
     if (!logger)
         logger = Logger::getInstance("smsc.inman.Service");
@@ -34,32 +34,35 @@ Service::Service(const InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
     }
 
     server = new Server(_cfg.host, _cfg.port, SerializerInap::getInstance(),
-                        _cfg.bill.tcpTimeout, 10, logger);
+                        _cfg.bill.maxTimeout, _cfg.maxConn, logger);
+    assert(server);
     server->addListener(this);
     smsc_log_debug(logger, "InmanSrv: TCP server inited");
 
     if (_cfg.bill.cdrMode) {
-        bfs = new InBillingFileStorage(_cfg.bill.billingDir, 0, logger);
+        bfs = new InBillingFileStorage(_cfg.bill.cdrDir, 0, logger);
         assert(bfs);
         int oldfs = bfs->RFSOpen(true);
         assert(oldfs >= 0);
         smsc_log_debug(logger, "InmanSrv: Billing storage opened%s",
                        oldfs > 0 ? ", old files rolled": "");
 
-        if (_cfg.bill.billingInterval) { //use external storage roller
-            roller = new InFileStorageRoller(bfs, (unsigned long)_cfg.bill.billingInterval);
+        if (_cfg.bill.cdrInterval) { //use external storage roller
+            roller = new InFileStorageRoller(bfs, (unsigned long)_cfg.bill.cdrInterval);
             assert(roller);
             smsc_log_debug(logger, "InmanSrv: BillingStorage roller inited");
         }
     }
+    tmWatcher = new TimeWatcher(logger);
+    assert(tmWatcher);
+    smsc_log_debug(logger, "InmanSrv: TimeWatcher inited");
 }
 
 Service::~Service()
 {
+    smsc_log_debug( logger, "InmanSrv: Releasing .." );
     if (running)
       stop();
-
-    smsc_log_debug( logger, "InmanSrv: Releasing .." );
 
     smsc_log_debug( logger, "InmanSrv: Releasing TCAP Sessions" );
     disp->closeAllSessions();
@@ -79,6 +82,8 @@ Service::~Service()
             delete roller;
         delete bfs;
     }
+    if (tmWatcher)
+        delete tmWatcher;
     smsc_log_debug( logger, "InmanSrv: Released." );
 }
 
@@ -91,8 +96,13 @@ void Service::writeCDR(unsigned int bcId, unsigned int bilId, const CDRRecord & 
 }
 
 
-void Service::start()
+bool Service::start()
 {
+    smsc_log_debug(logger, "InmanSrv: Starting TimeWatcher ..");
+    tmWatcher->Start();
+    if (!tmWatcher->isRunning())
+        return false;
+
     smsc_log_debug(logger, "InmanSrv: Starting TCP server ..");
     server->Start();
     
@@ -106,6 +116,7 @@ void Service::start()
     }
     running = true;
     smsc_log_debug(logger, "InmanSrv: Started.");
+    return running;
 }
 
 void Service::stop()
@@ -116,6 +127,10 @@ void Service::stop()
         server->WaitFor();
     }
 
+    smsc_log_debug(logger, "InmanSrv: Stopping TimeWatcher ..");
+    tmWatcher->Stop();
+    tmWatcher->WaitFor();
+
     smsc_log_debug( logger, "InmanSrv: Stopping TCAP dispatcher ..");
     disp->Stop();
     disp->WaitFor();
@@ -125,6 +140,7 @@ void Service::stop()
         roller->Stop();
         roller->WaitFor();
     }
+
     running = false;
     smsc_log_debug(logger, "InmanSrv: Stopped.");
 }
@@ -152,7 +168,8 @@ void Service::onConnectOpened(Server* srv, Connect* conn)
 {
     assert(conn);
     conn->setConnectFormat(Connect::frmLengthPrefixed);
-    BillingConnect *bcon = new BillingConnect(&_cfg.bill, session, conn, this, logger);
+    BillingConnect *bcon = new BillingConnect(&_cfg.bill, session, conn, 
+                                              tmWatcher, this, logger);
     if (bcon) {
         _mutex.Lock();
         bConnects.insert(BillingConnMap::value_type(conn->getSocketId(), bcon));
@@ -197,7 +214,7 @@ void Service::onServerShutdown(Server* srv, Server::ShutdownReason reason)
             smsc_log_debug(logger, "InmanSrv: Restarting TCP server ..");
             try {
                 server = new Server(_cfg.host, _cfg.port, SerializerInap::getInstance(),
-                                    _cfg.bill.tcpTimeout, 10, logger);
+                                    _cfg.bill.maxTimeout, _cfg.maxConn, logger);
                 server->addListener(this);
                 smsc_log_debug(logger, "InmanSrv: TCP server inited");
                 server->Start();

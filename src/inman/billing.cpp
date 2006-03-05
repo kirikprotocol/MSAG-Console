@@ -17,16 +17,16 @@ namespace inman {
 /* ************************************************************************** *
  * class BillingService implementation:
  * ************************************************************************** */
-BillingConnect::BillingConnect(BillingCFG * cfg, Session* ss7_sess, Connect* conn, Service * in_srvc,
-               Logger * uselog/* = NULL*/)
-    : logger(uselog), _cfg(*cfg), _ss7Sess(ss7_sess)
-    , _conn(conn), _inSrvc(in_srvc)
+BillingConnect::BillingConnect(BillingCFG * cfg, Session* ss7_sess, Connect* conn, 
+            TimeWatcher* tm_watcher, Service * in_srvc, Logger * uselog/* = NULL*/)
+    : _cfg(*cfg), _ss7Sess(ss7_sess), _conn(conn)
+    , _inSrvc(in_srvc), _tmWatcher(tm_watcher)
 {
-    assert(conn && in_srvc && cfg);
+    assert(conn && in_srvc && cfg && tm_watcher);
     logger = uselog ? uselog : Logger::getInstance("smsc.inman.BillConn");
     _bcId = _conn->getSocketId();
     if (!_cfg.maxBilling)
-        _cfg.maxBilling = 10;
+        _cfg.maxBilling = 20;
 }
 
 BillingConnect::~BillingConnect()
@@ -35,12 +35,12 @@ BillingConnect::~BillingConnect()
     BillingMap  cpMap = workers;
     for (BillingMap::const_iterator it = cpMap.begin(); it != cpMap.end(); it++) {
         Billing * bill = (*it).second;
-        bill->Stop(NULL);
+        bill->Abort("BillingConnect destroyed");
     }
 }
 
 //returns true on success, false on closed connect(possibly due to error)
-bool BillingConnect::sendCmd(SerializableObject* cmd, bool timerOn)
+bool BillingConnect::sendCmd(SerializableObject* cmd)
 {
     if (_conn)
         return (_conn->sendObj(cmd) > 0) ? true : false;
@@ -95,13 +95,13 @@ void BillingConnect::onCommandReceived(Connect* conn, SerializableObject* recvCm
     BillingMap::iterator it = workers.find(dlgId);
     if (it == workers.end()) {
         if (workers.size() < _cfg.maxBilling) {
-            bill = new Billing(this, dlgId, &_cfg, logger);
+            bill = new Billing(this, dlgId, &_cfg, _tmWatcher, logger);
             workers.insert(BillingMap::value_type(dlgId, bill));
         } else {
             ChargeSmsResult res(InErrINprotocol, InProtocol_ResourceLimitation,
                                 smsc::inman::interaction::CHARGING_NOT_POSSIBLE);
             res.setDialogId(dlgId);
-            sendCmd(&res, false);
+            sendCmd(&res);
         }
     } else
         bill = (*it).second;
@@ -124,7 +124,7 @@ void BillingConnect::onConnectError(Connect* conn, bool fatal/* = false*/)
 
         for (BillingMap::const_iterator it = cpMap.begin(); it != cpMap.end(); it++) {
             Billing * bill = (*it).second;
-            bill->Stop(exc);
+            bill->Abort(exc->what());
         }
     }
 }
@@ -133,28 +133,34 @@ void BillingConnect::onConnectError(Connect* conn, bool fatal/* = false*/)
  * class Billing implementation:
  * ************************************************************************** */
 Billing::Billing(BillingConnect* bconn, unsigned int b_id, 
-            BillingCFG * cfg, Logger * uselog/* = NULL*/)
+            BillingCFG * cfg, TimeWatcher* tm_watcher, Logger * uselog/* = NULL*/)
         : _bconn(bconn), _bId(b_id), _cfg(*cfg), _ss7Sess(NULL)
-        , logger(uselog), state(bilIdle), inap(NULL), postpaidBill(false)
+        , state(bilIdle), inap(NULL), postpaidBill(false), tmWatcher(tm_watcher)
 {
-    assert( bconn && cfg );
-    if (!logger)
-        logger = Logger::getInstance("smsc.inman.Billing");
+    assert(bconn && cfg && tm_watcher);
+    logger = uselog ? uselog : Logger::getInstance("smsc.inman.Billing");
 }
 
 
 Billing::~Billing()
 {
+    if (timers.size()) {
+        for (TimersMAP::iterator it = timers.begin(); it != timers.end(); it++) {
+            StopWatch * timer = (*it).second;
+            timer->release();
+            smsc_log_debug(logger, "Billing[%u.%u]: Stopped timer[%u] at state %u",
+                        _bconn->bConnId(), _bId, timer->getId(), state);
+        }
+    }
     if (inap)
         delete inap;
 }
 
-void Billing::Stop(CustomException * exc)
+void Billing::Abort(const char * exc)
 {
     bilMutex.Lock();
-    smsc_log_debug(logger, "Billing[%u.%u]: Stopping%s%s",
-                   _bconn->bConnId(), _bId,
-                   exc ? ", reason " : "", exc ? exc->what() : "");
+    smsc_log_debug(logger, "Billing[%u.%u]: Aborting%s%s",
+                   _bconn->bConnId(), _bId, exc ? ", reason " : "", exc ? exc : "");
     state = Billing::bilAborted;
 
     if (inap) { //todo: send U_ABORT to SCF and close TCAP dialog
@@ -169,28 +175,27 @@ void Billing::handleCommand(InmanCommand* cmd)
 {
     unsigned short  cmdId = cmd->getObjectId();
 
+    smsc_log_debug(logger, "Billing[%u.%u]: got Cmd 0x%X at state %u",
+                                _bconn->bConnId(), _bId, cmdId, state);
     bilMutex.Lock();
     switch (state) {
     case Billing::bilIdle: {
         if (cmdId == CHARGE_SMS_TAG) {
             state = Billing::bilStarted;
             bilMutex.Unlock();
-            bool goon = true;
             //complete the command deserialization
             try { cmd->loadDataBuf(); }
             catch (SerializerException & exc) {
                 smsc_log_fatal(logger, "Billing[%u.%u]: %s",
                                 _bconn->bConnId(), _bId, exc.what());
-                goon = false;
-            }
-            if (!goon) {
                 ChargeSmsResult res(InErrINprotocol, InProtocol_GeneralError,
                                     smsc::inman::interaction::CHARGING_NOT_POSSIBLE);
                 res.setDialogId(_bId);
-                _bconn->sendCmd(&res, false);
+                _bconn->sendCmd(&res);
                 _bconn->billingDone(this);
-            } else
-                onChargeSms(static_cast<ChargeSms*>(cmd));
+                return;
+            }
+            onChargeSms(static_cast<ChargeSms*>(cmd));
         } else {
             bilMutex.Unlock();
             smsc_log_error(logger, "Billing[%u.%u]: protocol error: cmd %u, state %u",
@@ -201,20 +206,18 @@ void Billing::handleCommand(InmanCommand* cmd)
 
     case Billing::bilProcessed: {
         if (cmdId == DELIVERY_SMS_RESULT_TAG) {
+            StopTimer(state, true);
             state = Billing::bilApproved;
             bilMutex.Unlock();
-            bool goon = true;
             //complete the command deserialization
             try { cmd->loadDataBuf(); }
             catch (SerializerException & exc) {
                 smsc_log_fatal(logger, "Billing[%u.%u]: %s",
                                 _bconn->bConnId(), _bId, exc.what());
-                goon = false;
+                Abort(exc.what());
+                return;
             }
-            if (goon)
-                onDeliverySmsResult(static_cast<DeliverySmsResult*>(cmd));
-            else
-                Stop(NULL);
+            onDeliverySmsResult(static_cast<DeliverySmsResult*>(cmd));
             break;
         }
     } //no break, fall into default !!!
@@ -265,6 +268,92 @@ Session * Billing::activateSSN(void)
 
     return _ss7Sess;
 }
+
+//NOTE: requires the Mutex being unlocked before call !
+void Billing::StartTimer(bool locked/* = false*/)
+{
+    OPAQUE_OBJ  timerArg;
+
+    timerArg.setUInt((unsigned)state);
+    StopWatch * timer = tmWatcher->createTimer(this, &timerArg);
+    smsc_log_debug(logger, "Billing[%u.%u]: Starting timer[%u]:%u",
+                _bconn->bConnId(), _bId, timer->getId(), state);
+    if (!locked)
+        bilMutex.Lock();
+    timers.insert(TimersMAP::value_type((unsigned)state, timer));
+    if (!locked)
+        bilMutex.Unlock();
+    timer->start((long)_cfg.maxTimeout, false);
+    return;
+}
+
+//NOTE: requires the Mutex being unlocked before call !
+void Billing::StopTimer(Billing::BillingState bilState, bool locked/* = false */)
+{
+    if (!locked)
+        bilMutex.Lock();
+
+    TimersMAP::iterator it = timers.find((unsigned)bilState);
+    if (it != timers.end()) {
+        StopWatch * timer = (*it).second;
+        timer->release();
+        timers.erase(it);
+        smsc_log_debug(logger, "Billing[%u.%u]: Stopped timer[%u]:%u at state %u",
+                    _bconn->bConnId(), _bId, timer->getId(), bilState, state);
+    } else
+        smsc_log_debug(logger, "Billing[%u.%u]: no active timer for state: %u",
+                    _bconn->bConnId(), _bId, bilState);
+    if (!locked)
+        bilMutex.Unlock();
+    return;
+}
+
+/* -------------------------------------------------------------------------- *
+ * TimerListenerITF interface implementation:
+ * -------------------------------------------------------------------------- */
+void Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
+{
+    MutexGuard  tmpGrd(bilMutex);
+    assert (opaque_obj);
+    smsc_log_debug(logger, "Billing[%u.%u]: timer[%u] signaled, states: %u -> %u",
+        _bconn->bConnId(), _bId, timer->getId(), opaque_obj->val.ui, (unsigned)state);
+
+    if (opaque_obj->val.ui != (unsigned)state)
+        return; //operation already finished
+
+    //target operation doesn't complete yet.
+    smsc_log_debug(logger, "Billing[%u.%u]: operation is timed out at state: %u",
+                _bconn->bConnId(), _bId, (unsigned)state);
+    switch (state) {
+    case Billing::bilStarted: {
+        //abonent type query is expired, process in postpaid mode.
+//        TonNpiAddress   ab_number;
+//        ab_number.fromText(cdr._srcAdr.c_str());
+//        abonentQueryCB(ab_number.getSignals(), smsc::inman::cache::btUnknown);
+//        postpaidBill = true;
+//        smsc_log_debug(logger, "Billing[%u.%u]: abonent type query is expired",
+//                    _bconn->bConnId(), _bId);
+        return;
+    } break;
+
+    case Billing::bilInited:
+    case Billing::bilReleased: {
+    } break;
+
+    case Billing::bilProcessed: { //SMSC doesn't respond with DeliveryResult
+        bilMutex.Unlock();
+        Abort("TCP dialog is timed out");
+    } break;
+
+    case Billing::bilApproved:
+    case Billing::bilComplete:
+    default:;
+    }
+    bilMutex.Unlock();
+    return;
+}
+
+
 /* -------------------------------------------------------------------------- *
  * SSF interface implementation:
  * -------------------------------------------------------------------------- */
@@ -308,6 +397,10 @@ bool Billing::startCAPDialog(void)
 
 void Billing::abonentQueryCB(AbonentId ab_number, AbonentBillType ab_type)
 {
+    bilMutex.Lock();
+    state = bilQueried;
+    bilMutex.Unlock();
+
     smsc_log_debug(logger, "Billing[%u.%u]: abonent type: %u",
                     _bconn->bConnId(), _bId, (unsigned)ab_type);
 
@@ -348,6 +441,8 @@ void Billing::onChargeSms(ChargeSms* sms)
         && !_cfg.postpaidRPC.size()) {
         //IN point unable to tell abonent billing type, request cache to retrieve it
         _cfg.cache->queryAbonentInfo(ab_number.getSignals(), this);
+
+        //StartTimer();
         return; //execution will continue in abonentQueryCB() by another thread.
     }
     abonentQueryCB(ab_number.getSignals(), ab_type);
@@ -356,6 +451,7 @@ void Billing::onChargeSms(ChargeSms* sms)
 
 void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes)
 {
+    bilMutex.Lock();
     EventTypeSMS_e eventType = smsRes->GetValue() ? EventTypeSMS_o_smsFailure :
                                                     EventTypeSMS_o_smsSubmission;
 
@@ -382,6 +478,7 @@ void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes)
         }
     }
     state = Billing::bilComplete;
+    bilMutex.Unlock();
     _bconn->billingDone(this);
 }
 
@@ -394,22 +491,29 @@ void Billing::onConnectSMS(ConnectSMSArg* arg)
                    _bconn->bConnId(), _bId);
 }
 
-void Billing::onContinueSMS(void)
+void Billing::onContinueSMS(uint32_t inmanErr /* = 0*/)
 {
+    bilMutex.Lock();
     smsc_log_debug(logger, "Billing[%u.%u]: %s", _bconn->bConnId(), _bId,
                    postpaidBill ? "<-- CHARGING_POSSIBLE" : "SSF <-- SCF ContinueSMS");
-    ChargeSmsResult res;
+    ChargeSmsResult res(inmanErr, smsc::inman::interaction::CHARGING_POSSIBLE);
+
     res.setDialogId(_bId);
 
-    if (_bconn->sendCmd(&res, true))
+    if (_bconn->sendCmd(&res)) {
         state = Billing::bilProcessed;
-    else      //TCP connect fatal failure
-        Stop(_bconn->getConnectError());
+        bilMutex.Unlock();
+        StartTimer();
+    } else {     //TCP connect fatal failure
+        bilMutex.Unlock();
+        Abort(_bconn->getConnectError()->what());
+    }
 }
 
 #define POSTPAID_RPCause 41     //RP Cause: 'Temporary Failure'
 void Billing::onReleaseSMS(ReleaseSMSArg* arg)
 {
+    bilMutex.Lock();
     smsc_log_debug(logger, "Billing[%u.%u]: SSF <-- SCF ReleaseSMS, RP cause: %u",
                    _bconn->bConnId(), _bId, (unsigned)arg->rPCause);
 
@@ -427,13 +531,12 @@ void Billing::onReleaseSMS(ReleaseSMSArg* arg)
                         smsc::inman::interaction::CHARGING_NOT_POSSIBLE);
     res.setDialogId(_bId);
 
-    if (_bconn->sendCmd(&res, false)) {
+    if (_bconn->sendCmd(&res)) {
     //NOTE: it's safe to free 'arg' here, TCAP dialog may be closed
         if (postpaidBill) {
             state = Billing::bilProcessed;
             smsc_log_debug(logger, "Billing[%u.%u]: switched to billing via CDR", 
                            _bconn->bConnId(), _bId);
-            bilMutex.Lock();
             delete inap;
             inap = NULL;
             bilMutex.Unlock();
@@ -441,10 +544,13 @@ void Billing::onReleaseSMS(ReleaseSMSArg* arg)
             state = Billing::bilReleased;
             smsc_log_debug(logger, "Billing[%u.%u]: cancelling billing.",
                            _bconn->bConnId(), _bId);
+            bilMutex.Unlock();
             _bconn->billingDone(this);
         }
-    } else      //TCP connect fatal failure
-        Stop(_bconn->getConnectError());
+    } else {      //TCP connect fatal failure
+        bilMutex.Unlock();
+        Abort(_bconn->getConnectError()->what());
+    }
 }
 
 //Called by Inap if CAP dialog with IN-platform is aborted.
@@ -453,30 +559,17 @@ void Billing::onAbortSMS(unsigned char errCode, bool tcapLayer)
 {
     bilMutex.Lock();
     smsc_log_error(logger, "Billing[%u.%u]: SSF <-- SCF Error, code: %u, layer %s",
-                   _bconn->bConnId(), _bId,
-                   (unsigned)errCode, tcapLayer ? "TCAP" : "CAP3");
+                   _bconn->bConnId(), _bId, (unsigned)errCode, tcapLayer ? "TCAP" : "CAP3");
 
+    bool  doCharge = false;
     switch (state) {
-    case Billing::bilInited: {
-        //continue dialog with MSC despite of CAP error, switch to CDR mode
-        ChargeSmsResult res(tcapLayer ? InErrTCAP : InErrCAP3, (uint16_t)errCode,
-                            smsc::inman::interaction::CHARGING_POSSIBLE);
-        res.setDialogId(_bId);
-
-        if (_bconn->sendCmd(&res, true) < 0) {
-            bilMutex.Unlock();
-            Stop(_bconn->getConnectError());
-        } else {
-            state = Billing::bilProcessed;
-            postpaidBill = true;
-            smsc_log_warn(logger, "Billing[%u.%u]: switched to billing via CDR (because of SCF error).",
-                          _bconn->bConnId(), _bId);
-        }
-    } break;
-
     case Billing::bilReleased: {
         //dialog with MSC already cancelled, just release CAP dialog
     } break;
+
+    case Billing::bilInited: {
+        doCharge = true;
+    } // no break specially !
     case Billing::bilProcessed:
         //dialog with MSC is in process, release CAP dialog, switch to CDR mode
     case Billing::bilApproved:
@@ -489,6 +582,9 @@ void Billing::onAbortSMS(unsigned char errCode, bool tcapLayer)
     delete inap;
     inap = NULL;
     bilMutex.Unlock();
+    if (doCharge)
+        onContinueSMS(InmanErrorCode::GetCombinedError(
+            tcapLayer ? InErrTCAP : InErrCAP3, (uint16_t)errCode));
 }
 
 
