@@ -5,6 +5,7 @@
 <config>
   <param name="host" type="string">@inman.host@</param>
   <param name="port" type="int">@inman.port@</param>     <!-- InMan service port -->
+  <param name="maxClients" type="int" optional="true">3</param>  <!--  max allowed INMan client connections -->
 
   <section name="Billing">
     <param name="billMode" type="string">all</param>       <!-- options: [none, all, ussd, sms]
@@ -13,19 +14,20 @@
       ussd: request IN platform in case of USSD only, bill SMS to CDR
       sms:  request IN platform in case of SMS only, bill USSD to CDR
     -->
-    <param name="billingDir" type="string">./cdrs</param>  <!-- directory to store CDRs -->
-    <param name="billingInterval" type="int">120</param>   <!-- CDR storage rolling interval, units: seconds -->
+    <param name="maxBillings" type="int">500</param>   <!--  [1 .. 10000] , default 500 
+     maximium simultaneous billing requests per INMan client  connect -->
+    <param name="maxTimeout" type="int">120</param>  <!-- units: seconds, [5 .. 65535], default 120 
+    maximum allowed value for billing suspending time (TCP & DB interaction), billing aborts on its expiration  -->
+
+    <param name="cdrDir" type="string">./cdrs</param>  <!-- directory to store CDRs -->
+    <param name="cdrInterval" type="int">120</param>   <!-- CDR storage rolling interval, units: seconds -->
     <param name="cdrMode" type="string">all</param>        <!-- options: [none, all, postpaid]
       none:  don't write CDR at all
       all:      always write CDR
       postpaid:  write CDR either for POSTPAID abonents or in case of IN platform interaction error
     -->
-    <param name="cacheRAMl" type="int">40</param>   <!-- abonents cache RAM buffer size, units: Mb -->
+    <param name="cacheRAM" type="int">40</param>   <!-- abonents cache RAM buffer size, units: Mb -->
     <param name="cacheInterval" type="int">1440</param>   <!-- abonent info refreshing interval, units: minutes -->
-    <param name="SMSC_Timeout" type="int">120</param>   <!--
-     timeout on TCP operations, units: seconds, max: 65535, default 30 -->
-    <param name="maxBillings" type="int">20</param>           <!-- 
-     maximium simultaneous billing requests per SMSC connect, max:10000, default 500  -->
   </section>
 
   <section name="IN_interaction"> <!-- IN platform interaction parameters -->
