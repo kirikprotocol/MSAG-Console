@@ -33,6 +33,7 @@
 #include "cluster/listeners/ProfileCommandListener.h"
 #include "cluster/listeners/SbmCommandListener.h"
 #include "cluster/listeners/SmeCommandListener.h"
+#include "closedgroups/ClosedGroupsManager.hpp"
 
 #include <unistd.h>
 
@@ -497,6 +498,9 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     }
     delete params;
   }
+
+  smsc::closedgroups::ClosedGroupsManager::Init();
+  smsc::closedgroups::ClosedGroupsManager::getInstance()->Load(findConfigFile("ClosedGroups.xml"));
 
   {
     smsc_log_info(log, "Starting statemachines" );
@@ -1204,6 +1208,7 @@ void Smsc::shutdown()
 
   tp2.shutdown();
 
+  smsc::closedgroups::ClosedGroupsManager::Shutdown();
 
 
   delete distlstman;
