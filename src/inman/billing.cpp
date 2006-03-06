@@ -102,6 +102,16 @@ void BillingConnect::onCommandReceived(Connect* conn, SerializableObject* recvCm
                                 smsc::inman::interaction::CHARGING_NOT_POSSIBLE);
             res.setDialogId(dlgId);
             sendCmd(&res);
+
+            std::string dump;
+            format(dump, "BillConn[%u]: Workers [%u of %u]: ", _bcId,
+                   workers.size(), _cfg.maxBilling);
+            for (it = workers.begin(); it != workers.end(); it++) {
+                Billing* worker = (*it).second;
+                format(dump, "[%u].%u, ", worker->getId(), worker->getState());
+            }
+            smsc_log_debug(logger, dump.c_str());
+
         }
     } else
         bill = (*it).second;

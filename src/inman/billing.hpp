@@ -159,6 +159,7 @@ public:
     virtual ~Billing();
 
     unsigned int getId() const { return _bId; }
+    BillingState getState(void) const { return state; }
     
     void     handleCommand(InmanCommand* cmd);
     //aborts billing due to fatal error
