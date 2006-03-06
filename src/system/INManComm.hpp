@@ -41,6 +41,7 @@ public:
 
   ~INManComm()
   {
+    debug1(log,"Calling stop on packetWriter");
     packetWriter.Stop();
     smeReg->unregisterSmeProxy(systemId.c_str());
   }
@@ -188,7 +189,7 @@ protected:
 
     smsc::logger::Logger* log;
 
-    bool isStopping;
+    volatile bool isStopping;
 
     struct Packet{
       char* buf;
