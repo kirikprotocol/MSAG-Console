@@ -328,12 +328,12 @@ static JSBool _initReInstance(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 
   return JS_TRUE;
 }
-
+// SessionLoadCallback ;
 static void sesionHandler(void * dataPtr,scag::sessions::Session * session)
 {
-
+	smsc_log_debug(logger,"sesionHandler: session=%x dataPtr=%x",session,dataPtr);
 }
-// SessionLoadCallback ;
+// InitSessionStore(dir);
 static JSBool _initSessionStore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
 	std::string dir_name=JS_GetStringBytes(JS_ValueToString(cx, argv[0]));
@@ -342,7 +342,7 @@ static JSBool _initSessionStore(JSContext *cx, JSObject *obj, uintN argc, jsval 
 	
 	return JS_TRUE;
 }
-// NewSession(Address,TON,NP);
+// NewSession(Address,TypeOfNumber,NumberingPlan);
 static JSBool _newSession(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
 	std::string dir_name=JS_GetStringBytes(JS_ValueToString(cx, argv[0]));
@@ -360,7 +360,7 @@ static JSBool _newSession(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	oa.setNumberingPlan(oa_np);
 	oa.setTypeOfNumber(oa_tn);
 	oa.setValue(str_oa.length(),str_oa.c_str());
-  
+	
 	skey.abonentAddr = oa;
 	
 	psession  = store.newSession(skey);
@@ -404,7 +404,7 @@ static JSBool _updateSession(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 	SCAG_TRY
 	store.updateSession(psession);
 	SCAG_CATCH
-		catch (std::exception &e) 
+	catch (std::exception &e) 
 	{
 		smsc_log_error(logger,"%s",e.what());
 	}
@@ -420,21 +420,17 @@ static JSBool _initSessionManagerInstance(JSContext *cx, JSObject *obj, uintN ar
 
 try{
 
-
-  cfg.expireInterval=tmint;
-         cfg.dir=dir_name;
-  SessionManager::Init(cfg);
-  SessionManager& sm2=SessionManager::Instance();
-         smanager=&sm2;
+	  cfg.expireInterval=tmint;
+ 	  cfg.dir=dir_name;
+	  SessionManager::Init(cfg);
+	  SessionManager& sm2=SessionManager::Instance();
+	  smanager=&sm2;
  
-  if(smanager==0)
-   {
-        smsc_log_error(logger," SessionManager==0  !");
-
-  *rval=BOOLEAN_TO_JSVAL(false); 
-
-
-   }
+	  if(smanager==0)
+	  {
+			smsc_log_error(logger," SessionManager==0  !");
+			*rval=BOOLEAN_TO_JSVAL(false); 
+	  }
   
    }
    catch(...)
@@ -453,15 +449,11 @@ static JSBool _initStatInstance(JSContext *cx, JSObject *obj, uintN argc, jsval 
 {
 
 	*rval=BOOLEAN_TO_JSVAL(false); 
-
 	SCAG_TRY
 	scag::config::StatManConfig smcfg;
-
 	scag::stat::StatisticsManager::init(smcfg); 
-
 	SCAG_CATCH
 	*rval=BOOLEAN_TO_JSVAL(true); 
-
 	return JS_TRUE;
 }
 /*
