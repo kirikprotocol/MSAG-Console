@@ -111,7 +111,6 @@ void BillingConnect::onCommandReceived(Connect* conn, SerializableObject* recvCm
                 format(dump, "[%u].%u, ", worker->getId(), worker->getState());
             }
             smsc_log_debug(logger, dump.c_str());
-
         }
     } else
         bill = (*it).second;
@@ -279,6 +278,44 @@ Session * Billing::activateSSN(void)
     return _ss7Sess;
 }
 
+bool Billing::startCAPDialog(void)
+{
+    if (!activateSSN()) {
+        smsc_log_error(logger, "Billing[%u.%u]: TCAP Session is not available",
+                       _bconn->bConnId(), _bId);
+        return false;
+    }
+
+    try { //Initiate CAP3 dialog
+        inap = new Inap(_ss7Sess, this, _cfg.capTimeout, logger); //initialize TCAP dialog
+        assert(inap);
+
+        InitialDPSMSArg arg(smsc::inman::comp::DeliveryMode_Originating, _cfg.serviceKey);
+
+        arg.setDestinationSubscriberNumber(cdr._dstAdr.c_str());
+        arg.setCallingPartyNumber(cdr._srcAdr.c_str());
+        arg.setIMSI(cdr._srcIMSI.c_str());
+        arg.setLocationInformationMSC(cdr._srcMSC.c_str());
+        arg.setTimeAndTimezone(cdr._submitTime);
+
+        arg.setSMSCAddress(csInfo.smscAddress.c_str());
+        arg.setTPShortMessageSpecificInfo(csInfo.tpShortMessageSpecificInfo);
+        arg.setTPValidityPeriod(csInfo.tpValidityPeriod, smsc::inman::comp::tp_vp_relative);
+        arg.setTPProtocolIdentifier(csInfo.tpProtocolIdentifier);
+        arg.setTPDataCodingScheme(csInfo.tpDataCodingScheme);
+
+        smsc_log_debug(logger, "Billing[%u.%u]: SSF --> SCF InitialDPSMS",
+                        _bconn->bConnId(), _bId);
+        state = Billing::bilInited;
+        inap->initialDPSMS(&arg); //begins TCAP dialog
+        return true;
+    } catch (std::exception& exc) {
+        smsc_log_error(logger, "Billing[%u.%u]: %s",
+                       _bconn->bConnId(), _bId, exc.what());
+        return false;
+    }
+}
+
 //NOTE: requires the Mutex being unlocked before call !
 void Billing::StartTimer(bool locked/* = false*/)
 {
@@ -328,6 +365,13 @@ void Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
     smsc_log_debug(logger, "Billing[%u.%u]: timer[%u] signaled, states: %u -> %u",
         _bconn->bConnId(), _bId, timer->getId(), opaque_obj->val.ui, (unsigned)state);
 
+    TimersMAP::iterator it = timers.find(opaque_obj->val.ui);
+    if (it == timers.end())
+        smsc_log_warn(logger, "Billing[%u.%u]: timer[%u] is not registered!",
+                    _bconn->bConnId(), _bId);
+    else
+        timers.erase(it);
+
     if (opaque_obj->val.ui != (unsigned)state)
         return; //operation already finished
 
@@ -337,12 +381,15 @@ void Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
     switch (state) {
     case Billing::bilStarted: {
         //abonent type query is expired, process in postpaid mode.
-//        TonNpiAddress   ab_number;
-//        ab_number.fromText(cdr._srcAdr.c_str());
-//        abonentQueryCB(ab_number.getSignals(), smsc::inman::cache::btUnknown);
-//        postpaidBill = true;
-//        smsc_log_debug(logger, "Billing[%u.%u]: abonent type query is expired",
-//                    _bconn->bConnId(), _bId);
+        if (!postpaidBill)
+            smsc_log_debug(logger, "Billing[%u.%u]: switched to billing via CDR",
+                    _bconn->bConnId(), _bId);
+        postpaidBill = true;
+        TonNpiAddress   ab_number;
+        ab_number.fromText(cdr._srcAdr.c_str());
+        _cfg.abProvider->cancelQuery(ab_number.getSignals(), this);
+        bilMutex.Unlock();
+        ChargeAbonent(ab_number.getSignals(), smsc::inman::cache::btUnknown);
         return;
     } break;
 
@@ -363,54 +410,8 @@ void Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
     return;
 }
 
-
-/* -------------------------------------------------------------------------- *
- * SSF interface implementation:
- * -------------------------------------------------------------------------- */
-bool Billing::startCAPDialog(void)
+void Billing::ChargeAbonent(AbonentId ab_number, AbonentBillType ab_type)
 {
-    if (!activateSSN()) {
-        smsc_log_error(logger, "Billing[%u.%u]: TCAP Session is not available",
-                       _bconn->bConnId(), _bId);
-        return false;
-    }
-
-    try { //Initiate CAP3 dialog
-        inap = new Inap(_ss7Sess, this, _cfg.capTimeout, logger); //initialize TCAP dialog
-        assert(inap);
-
-        InitialDPSMSArg arg(smsc::inman::comp::DeliveryMode_Originating, _cfg.serviceKey);
-
-        arg.setDestinationSubscriberNumber(cdr._dstAdr.c_str());
-        arg.setCallingPartyNumber(cdr._srcAdr.c_str());
-        arg.setIMSI(cdr._srcIMSI.c_str());
-        arg.setLocationInformationMSC(cdr._srcMSC.c_str());
-        arg.setTimeAndTimezone(cdr._submitTime);
-
-        arg.setSMSCAddress(csInfo.smscAddress.c_str());
-        arg.setTPShortMessageSpecificInfo(csInfo.tpShortMessageSpecificInfo);
-        arg.setTPValidityPeriod(csInfo.tpValidityPeriod, smsc::inman::comp::tp_vp_relative);
-        arg.setTPProtocolIdentifier(csInfo.tpProtocolIdentifier);
-        arg.setTPDataCodingScheme(csInfo.tpDataCodingScheme);
-
-        smsc_log_debug(logger, "Billing[%u.%u]: SSF --> SCF InitialDPSMS",
-                        _bconn->bConnId(), _bId);
-        state = Billing::bilInited;
-        inap->initialDPSMS(&arg); //begins TCAP dialog
-        return true;
-    } catch (std::exception& exc) {
-        smsc_log_error(logger, "Billing[%u.%u]: %s",
-                       _bconn->bConnId(), _bId, exc.what());
-        return false;
-    }
-}
-
-void Billing::abonentQueryCB(AbonentId ab_number, AbonentBillType ab_type)
-{
-    bilMutex.Lock();
-    state = bilQueried;
-    bilMutex.Unlock();
-
     smsc_log_debug(logger, "Billing[%u.%u]: abonent type: %u",
                     _bconn->bConnId(), _bId, (unsigned)ab_type);
 
@@ -425,9 +426,23 @@ void Billing::abonentQueryCB(AbonentId ab_number, AbonentBillType ab_type)
                         _bconn->bConnId(), _bId);
         onContinueSMS();
     }
+
+}
+/* -------------------------------------------------------------------------- *
+ * InAbonentQueryListenerITF interface implementation:
+ * -------------------------------------------------------------------------- */
+void Billing::onAbonentQueried(AbonentId ab_number, AbonentBillType ab_type)
+{
+    bilMutex.Lock();
+    StopTimer(state, true);
+    state = bilQueried;
+    bilMutex.Unlock();
+    ChargeAbonent(ab_number, ab_type);
 }
 
-
+/* -------------------------------------------------------------------------- *
+ * SSF interface implementation:
+ * -------------------------------------------------------------------------- */
 void Billing::onChargeSms(ChargeSms* sms)
 {
     sms->export2CDR(cdr);
@@ -446,16 +461,16 @@ void Billing::onChargeSms(ChargeSms* sms)
     //ask AbonentsCache for abonent type
     TonNpiAddress   ab_number;
     ab_number.fromText(cdr._srcAdr.c_str());
-    AbonentBillType ab_type = _cfg.cache->getAbonentInfo(ab_number.getSignals());
+    AbonentBillType ab_type = _cfg.abCache->getAbonentInfo(ab_number.getSignals());
     if (!postpaidBill && (ab_type == smsc::inman::cache::btUnknown)
         && !_cfg.postpaidRPC.size()) {
         //IN point unable to tell abonent billing type, request cache to retrieve it
-        _cfg.cache->queryAbonentInfo(ab_number.getSignals(), this);
+        _cfg.abProvider->startQuery(ab_number.getSignals(), this);
 
-        //StartTimer();
+        StartTimer();
         return; //execution will continue in abonentQueryCB() by another thread.
     }
-    abonentQueryCB(ab_number.getSignals(), ab_type);
+    onAbonentQueried(ab_number.getSignals(), ab_type);
     return;
 }
 
@@ -545,7 +560,7 @@ void Billing::onReleaseSMS(ReleaseSMSArg* arg)
     //NOTE: it's safe to free 'arg' here, TCAP dialog may be closed
         if (postpaidBill) {
             state = Billing::bilProcessed;
-            smsc_log_debug(logger, "Billing[%u.%u]: switched to billing via CDR", 
+            smsc_log_debug(logger, "Billing[%u.%u]: switched to billing via CDR",
                            _bconn->bConnId(), _bId);
             delete inap;
             inap = NULL;

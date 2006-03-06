@@ -40,10 +40,12 @@ using smsc::inman::sync::TimerListenerITF;
 using smsc::inman::sync::TimersLIST;
 using smsc::inman::sync::OPAQUE_OBJ;
 
+using smsc::inman::cache::InAbonentProviderITF;
 using smsc::inman::cache::InAbonentQueryListenerITF;
 using smsc::inman::cache::AbonentCacheITF;
 using smsc::inman::cache::AbonentBillType;
 using smsc::inman::cache::AbonentId;
+
 
 namespace smsc    {
 namespace inman   {
@@ -84,14 +86,13 @@ public:
 
 struct BillingCFG {
     typedef enum { CDR_NONE = 0, CDR_ALL = 1, CDR_POSTPAID = 2} CDR_MODE;
+    AbonentCacheITF * abCache;
+    InAbonentProviderITF * abProvider;
 //billing parameters
     BILL_MODE       billMode;
     CDR_MODE        cdrMode;
     const char *    cdrDir;      //location to store CDR files
     long            cdrInterval; //rolling interval for CDR files
-    AbonentCacheITF * cache;         //
-    long            cacheInterval;   //abonent info refreshing interval, units: seconds
-    long            cacheRAM;        //abonents cache RAM buffer size, units: Mb
     unsigned short  maxTimeout;      //maximum timeout for TCP & DB operations
     unsigned short  maxBilling;      //maximum number of Billings per connect
 //SS7 interaction:
@@ -160,6 +161,7 @@ public:
 
     unsigned int getId() const { return _bId; }
     BillingState getState(void) const { return state; }
+
     
     void     handleCommand(InmanCommand* cmd);
     //aborts billing due to fatal error
@@ -187,7 +189,7 @@ public:
     void onAbortSMS(unsigned char errcode, bool tcapLayer);
 
     //InAbonentQueryListenerITF interface methods:
-    void abonentQueryCB(AbonentId ab_number, AbonentBillType ab_type);
+    void onAbonentQueried(AbonentId ab_number, AbonentBillType ab_type);
     //TimerListenerITF interface methods:
     void onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj);
 
@@ -197,6 +199,7 @@ protected:
     bool startCAPDialog(void);
     void StartTimer(bool locked = false);
     void StopTimer(BillingState bilState, bool locked = false);
+    void ChargeAbonent(AbonentId ab_number, AbonentBillType ab_type);
 
     Mutex           bilMutex;
     BillingCFG      _cfg;

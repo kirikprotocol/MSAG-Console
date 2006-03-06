@@ -17,13 +17,13 @@ using smsc::db::DataSourceFactory;
 
 #include "inman/cachedb/cacheDb.hpp"
 using smsc::inman::cache::db::DBSourceCFG;
-using smsc::inman::cache::db::AbonentCacheDB;
+using smsc::inman::cache::db::DBAbonentProvider;
 
 
 
 
 static const UCHAR_T VER_HIGH    = 0;
-static const UCHAR_T VER_LOW     = 1;
+static const UCHAR_T VER_LOW     = 2;
 
 static const unsigned int _in_CFG_DFLT_CLIENT_CONNS = 3;
 static const long _in_CFG_MIN_BILLING_INTERVAL = 10; //in seconds
@@ -78,14 +78,15 @@ static struct _DS_PARMS {
 
 
 struct INBillConfig : public InService_CFG {
-    DBSourceCFG *cacheDb;
+    DBSourceCFG *dbProvPrm;
 public:
     INBillConfig()
     {
-        cacheDb = NULL; bill.cache = NULL;
+        dbProvPrm = NULL; bill.abCache = NULL; bill.abProvider = NULL;
         host = bill.ssf_addr = bill.scf_addr = bill.cdrDir = NULL;
         port = bill.ssn = bill.serviceKey = 0;
-        bill.cdrInterval = bill.cacheInterval = bill.cacheRAM = 0;
+        bill.cdrInterval = cachePrm.interval = cachePrm.RAM = 0;
+        cachePrm.nmFile = NULL;
         bill.billMode = smsc::inman::BILL_ALL;
         bill.cdrMode =  BillingCFG::CDR_ALL;
         
@@ -100,10 +101,10 @@ public:
 
     ~INBillConfig()
     {
-        if (cacheDb) {
-             if (cacheDb->ds)
-                 delete cacheDb->ds;
-             delete cacheDb;
+        if (dbProvPrm) {
+             if (dbProvPrm->ds)
+                 delete dbProvPrm->ds;
+             delete dbProvPrm;
         }
     }
 
@@ -185,18 +186,18 @@ public:
         }
         //cache parameters
         try {
-            if (!(bill.cacheInterval = (long)billCfg.getInt("cacheInterval")))
-                bill.cacheInterval = _in_CFG_DFLT_CACHE_INTERVAL;
-            smsc_log_info(inapLogger, "cacheInterval: %d minutes", bill.cacheInterval);
+            if (!(cachePrm.interval = (long)billCfg.getInt("cacheInterval")))
+                cachePrm.interval = _in_CFG_DFLT_CACHE_INTERVAL;
+            smsc_log_info(inapLogger, "cacheInterval: %d minutes", cachePrm.interval);
             //convert minutes to seconds
-            bill.cacheInterval *= 60;
+            cachePrm.interval *= 60;
         } catch (ConfigException& exc) {
             throw ConfigException("'cacheInterval' is missing");
         }
         try {
-            if (!(bill.cacheRAM = (long)billCfg.getInt("cacheRAM")))
+            if (!(cachePrm.RAM = (long)billCfg.getInt("cacheRAM")))
                 throw ConfigException("'cacheRAM' is missing or invalid");
-            smsc_log_info(inapLogger, "cacheRAM: %d Mb", bill.cacheRAM);
+            smsc_log_info(inapLogger, "cacheRAM: %d Mb", cachePrm.RAM);
         } catch (ConfigException& exc) {
             throw ConfigException("'cacheRAM' is missing or invalid");
         }
@@ -323,30 +324,31 @@ public:
                 if (!(_dsParm[i].prmVal = dsCfg->getString(_dsParm[i].prmId)))
                     throw ConfigException("'%s' isn't set!", _dsParm[i].prmId);
             }
-            cacheDb = new DBSourceCFG;
-            cacheDb->rtId = _dsParm[1].prmVal;
-            cacheDb->rtKey = _dsParm[2].prmVal;
+            dbProvPrm = new DBSourceCFG;
+            dbProvPrm->rtId = _dsParm[1].prmVal;
+            dbProvPrm->rtKey = _dsParm[2].prmVal;
 
-            cacheDb->ds = DataSourceFactory::getDataSource(_DS_IDENT_VAL);
-            if (!cacheDb->ds)
+            dbProvPrm->ds = DataSourceFactory::getDataSource(_DS_IDENT_VAL);
+            if (!dbProvPrm->ds)
                 throw ConfigException("'%s' 'DataSource' isn't registered!", _DS_IDENT_VAL);
-            cacheDb->ds->init(dsCfg);
+            dbProvPrm->ds->init(dsCfg);
 
-            cacheDb->max_queries = (unsigned)dsCfg->getInt("maxQueries");
-            cacheDb->init_threads = 1;
+            dbProvPrm->max_queries = (unsigned)dsCfg->getInt("maxQueries");
+            dbProvPrm->init_threads = 1;
             bool wdog = false;
             try { wdog = dsCfg->getBool("watchdog"); }
             catch (ConfigException & exc) { }
 
             if (wdog)
-                cacheDb->timeout = (unsigned)dsCfg->getInt("timeout");
-            smsc_log_info(inapLogger, "Query timeout: %u secs", cacheDb->timeout);
+                dbProvPrm->timeout = (unsigned)dsCfg->getInt("timeout");
+            smsc_log_info(inapLogger, "Query timeout: %u secs", dbProvPrm->timeout);
         } //dbCfg
     }
 };
 
 int main(int argc, char** argv)
 {
+    int     rval = 0;
     char *  cfgFile = (char*)"config.xml";
 
     tzset();
@@ -374,9 +376,10 @@ int main(int argc, char** argv)
     }
 
     try {
-        if (cfg.cacheDb) {
-            cfg.bill.cache = new AbonentCacheDB(cfg.cacheDb, cfg.bill.cacheInterval, inapLogger);
-            assert(cfg.bill.cache);
+        if (cfg.dbProvPrm) {
+            cfg.bill.abProvider = new DBAbonentProvider(cfg.dbProvPrm, inapLogger);
+            assert(cfg.bill.abProvider);
+            smsc_log_info(inapLogger, "AbonentsProvider inited.");
         }
         g_pService = new Service(&cfg, inapLogger);
         assert(g_pService);
@@ -389,26 +392,17 @@ int main(int argc, char** argv)
             _runService = 0;
         }
 
-
         while(_runService)
             usleep(1000 * 200); //sleep 200 ms
-
         g_pService->stop();
-        delete g_pService;
-        if (cfg.bill.cache) {
-            delete cfg.bill.cache;
-            cfg.bill.cache = NULL;
-        }
+
     } catch(const std::exception& error) {
         smsc_log_fatal(inapLogger, "%s", error.what() );
         fprintf( stderr, "Fatal error: %s\n", error.what() );
-        delete g_pService;
-        if (cfg.bill.cache) {
-            delete cfg.bill.cache;
-            cfg.bill.cache = NULL;
-        }
-        exit(1);
+        rval = 1;
     }
+    if (g_pService)
+        delete g_pService;
     smsc_log_info(inapLogger, "IN MANAGER shutdown complete");
-    return(0);
+    return rval;
 }

@@ -56,34 +56,48 @@ Service::Service(const InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
     tmWatcher = new TimeWatcher(logger);
     assert(tmWatcher);
     smsc_log_debug(logger, "InmanSrv: TimeWatcher inited");
+
+    _cfg.bill.abCache = new AbonentCache(&_cfg.cachePrm, logger);
+    assert(_cfg.bill.abCache);
+    _cfg.bill.abProvider->bindCache(_cfg.bill.abCache);
+    smsc_log_debug(logger, "InmanSrv: AbonentCache inited");
 }
 
 Service::~Service()
 {
-    smsc_log_debug( logger, "InmanSrv: Releasing .." );
+    smsc_log_debug(logger, "InmanSrv: Releasing ..");
     if (running)
       stop();
 
-    smsc_log_debug( logger, "InmanSrv: Releasing TCAP Sessions" );
+    smsc_log_debug(logger, "InmanSrv: Releasing TCAP Sessions ..");
     disp->closeAllSessions();
-    smsc_log_debug( logger, "InmanSrv: Disconnecting SS7 stack");
+    smsc_log_debug(logger, "InmanSrv: Disconnecting SS7 stack ..");
     disp->disconnect();
 
     if (server) {
         server->removeListener(this);
-        smsc_log_debug( logger, "InmanSrv: Deleting TCP server" );
+        smsc_log_debug( logger, "InmanSrv: Deleting TCP server ..");
         delete server;
     }
-
     if (bfs) {
-        smsc_log_debug( logger, "InmanSrv: Closing Billing storage");
+        smsc_log_debug(logger, "InmanSrv: Closing Billing storage ..");
         bfs->RFSClose();
         if (roller)
             delete roller;
         delete bfs;
     }
-    if (tmWatcher)
+    if (tmWatcher) {
+        smsc_log_debug(logger, "InmanSrv: Deleting TimeWatcher ..");
         delete tmWatcher;
+    }
+    if (_cfg.bill.abProvider) {
+        smsc_log_debug(logger, "InmanSrv: Deleting AbonentsProvider ..");
+        delete _cfg.bill.abProvider;
+    }
+    if (_cfg.bill.abCache) {
+        smsc_log_debug(logger, "InmanSrv: Closing AbonentsCache ..");
+        delete _cfg.bill.abCache;
+    }
     smsc_log_debug( logger, "InmanSrv: Released." );
 }
 

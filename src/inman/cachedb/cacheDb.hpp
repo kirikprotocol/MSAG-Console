@@ -20,7 +20,7 @@ using smsc::db::DataSource;
 using smsc::db::Routine;
 
 using smsc::inman::cache::AbonentBillType;
-using smsc::inman::cache::InAbonentQueryManagerITF;
+using smsc::inman::cache::InAbonentProviderITF;
 using smsc::inman::cache::AbonentCacheITF;
 using smsc::inman::cache::InAbonentQueryListenerITF;
 
@@ -30,34 +30,34 @@ namespace cache {
 namespace db { 
 
 
-class DBQueryManager;
+class DBAbonentProvider;
 
 class AbonentQuery : public ThreadedTask, public Event {
 protected:
-    DBQueryManager *    _owner;
+    DBAbonentProvider*  _owner;
     DataSource *        _ds;
     const char *        rtId;  //SQL function name
     const char *        rtKey; //SQL function argument name
     std::string         callStr;
-    AbonentId           abonent;
+    std::string         abonent;
     AbonentBillType     abType;
-    InAbonentQueryListenerITF * _fcbDone;
     unsigned            timeOut;
 
 public:
-    AbonentQuery(DBQueryManager * owner, DataSource * ds, 
+    AbonentQuery(DBAbonentProvider * owner, DataSource * ds, 
                             //SQL function name and argument name
                             const char * rt_id, const char * rt_key);
     ~AbonentQuery();
 
-    void init(AbonentId ab_number, InAbonentQueryListenerITF * fcb_done, unsigned timeout = 0);
+    void init(AbonentId ab_number, unsigned timeout = 0);
 
-    AbonentId   getAbonent(void) const { return  abonent; }
+    AbonentId   getAbonent(void) const { return  abonent.c_str(); }
     const AbonentBillType getAbonentType(void) const { return  abType; }
 
     int Execute(void);
     void onRelease(void);
     const char * taskName() { return "AbonentQuery"; }
+    void stop();
 };
 
 
@@ -74,86 +74,45 @@ struct DBSourceCFG {
     }
 };
 
+typedef std::list<InAbonentQueryListenerITF *> QueryCBList;
 
-class DBQueryManager : public InAbonentQueryManagerITF {
+class DBAbonentProvider : public InAbonentProviderITF {
 private:
     typedef std::list<AbonentQuery*> QueriesList;
-    typedef std::map<AbonentId, AbonentQuery*> QueriesMap;
+    typedef struct {
+        AbonentQuery*   qryDb;
+        QueryCBList     cbList;
+    } CachedQuery;
+    typedef Hash<CachedQuery> QueriesHash;
 
-    Logger *        logger;
-    DBSourceCFG    _cfg;
-    ThreadPool      pool;
+    Logger *            logger;
+    DBSourceCFG         _cfg;
+    ThreadPool          pool;
 
-    Mutex           qrsGuard;
-    QueriesMap      queries;
-    QueriesList     freeQueries;
+    Mutex               qrsGuard;
+    QueriesList         qryPool;
+    QueriesHash         qryCache;
+    AbonentCacheITF *   cache;
 
 protected:
     friend class AbonentQuery;
     void releaseQuery(AbonentQuery * query);
-    AbonentQuery * initQuery(AbonentId ab_number, InAbonentQueryListenerITF * pf_cb = NULL);
 
 public:
-    DBQueryManager(const DBSourceCFG *in_cfg, Logger * uselog = NULL);
-    ~DBQueryManager();
+    DBAbonentProvider(const DBSourceCFG *in_cfg, Logger * uselog = NULL);
+    ~DBAbonentProvider();
 
     // ****************************************
-    // InAbonentQueryManagerITF implementation:
+    // InAbonentProviderITF implementation:
     // ****************************************
-    bool isQuering(AbonentId ab_number);
+    void bindCache(AbonentCacheITF * use_cache); 
+    //Starts query and binds listener to it. If AbonentCache is bound, the abonent info
+    //will be stored in it on query completion. 
+    //Returns true if query succesfully started, false otherwise
     bool startQuery(AbonentId ab_number, InAbonentQueryListenerITF * pf_cb = NULL);
-    int  cancelQuery(AbonentId ab_number, bool wait = false);
-    int  execQuery(AbonentId ab_number, AbonentBillType & result,
-                                             unsigned short timeout_secs = 0);
-};
-
-
-struct AbonentRecord {
-    typedef std::list<InAbonentQueryListenerITF *> CallBacksList;
-
-    AbonentBillType     ab_type;
-    time_t          tm_expired;
-    CallBacksList   cb_list; //functions to call on info update
-
-    AbonentRecord()
-        : ab_type(smsc::inman::cache::btUnknown), tm_expired(0) {}
-    AbonentRecord(AbonentBillType type, time_t tmex)
-        : ab_type(type), tm_expired(tmex) {}
-};
-
-class AbonentCacheDB : public AbonentCacheITF, InAbonentQueryListenerITF {
-protected:
-
-    Logger *              logger;
-    time_t                cacheInterval;
-    DBQueryManager        *qMgr;
-    Mutex                 cacheGuard;
-    Hash<AbonentRecord>   cache;
-
-    // ****************************************
-    // InAbonentQueryListenerITF implementation:
-    // ****************************************
-
-    //NOTE: this callback is called from ThreadedTask, on calling the AbonentRecord
-    //always exists for given ab_number
-    void abonentQueryCB(AbonentId ab_number, AbonentBillType ab_type);
-
-public:
-    AbonentCacheDB(DBSourceCFG * cfg, time_t cache_interval, Logger * uselog = NULL);
-    ~AbonentCacheDB();
-
-    // ****************************************
-    // AbonentCacheITF implementation:
-    // ****************************************
-    void setAbonentInfo(AbonentId ab_number, AbonentBillType ab_type, time_t expired = 0);
-    AbonentBillType getAbonentInfo(AbonentId ab_number);
-
-    //deprecated!!!
-    //starts thread updating AbonentInfo and waits for its completion
-    AbonentBillType waitAbonentInfoUpdate(AbonentId ab_number, unsigned short timeout_secs = 0);
-
-    //starts thread updating AbonentInfo, that will call the callback upon completion
-    bool queryAbonentInfo(AbonentId ab_number, InAbonentQueryListenerITF * pf_cb);
+    //Unbinds query listener, cancels query if no listeners remain.
+    void cancelQuery(AbonentId ab_number, InAbonentQueryListenerITF * pf_cb);
+    void cancelAllQueries(void);
 };
 
 } //db

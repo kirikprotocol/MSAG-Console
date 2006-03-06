@@ -21,6 +21,8 @@ using smsc::inman::filestore::InFileStorageRoller;
 using smsc::inman::BillingCFG;
 using smsc::inman::BillingConnect;
 using smsc::inman::sync::TimeWatcher;
+using smsc::inman::cache::AbonentCacheCFG;
+using smsc::inman::cache::AbonentCache;
 
 #define INMAN_TCP_RESTART_ATTEMPTS  2
 
@@ -32,6 +34,7 @@ struct InService_CFG {
     int             port;
     unsigned int    maxConn;
     BillingCFG      bill;
+    AbonentCacheCFG cachePrm;
 };
 
 class Service : public ServerListener
