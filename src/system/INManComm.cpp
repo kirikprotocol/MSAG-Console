@@ -102,6 +102,7 @@ void INManComm::ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INSmsChargeRespo
   rd->sbmCtx=new smsc::smeman::INSmsChargeResponse::SubmitContext(ctx);
   ReqDataMap::iterator it=reqDataMap.insert(ReqDataMap::value_type(dlgId,rd)).first;
   it->second->tmIt=timeMap.insert(TimeMap::value_type(time(NULL)+reqTimeOut,it));
+  debug2(log,"ChargeSms: reqDataMap.size()=%d",reqDataMap.size());
 
   //smsc::smeman::SmscCommand cmd=smsc::smeman::SmscCommand::makeINSmsChargeResponse(id,sms,ctx);
   //sync::MutexGuard mg(queueMtx);
@@ -138,6 +139,7 @@ void INManComm::ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INFwdSmsChargeRe
   rd->fwdCtx=new smsc::smeman::INFwdSmsChargeResponse::ForwardContext(ctx);
   ReqDataMap::iterator it=reqDataMap.insert(ReqDataMap::value_type(dlgId,rd)).first;
   it->second->tmIt=timeMap.insert(TimeMap::value_type(time(NULL)+reqTimeOut,it));
+  debug2(log,"ChargeSmsFwd: reqDataMap.size()=%d",reqDataMap.size());
   /*
   smsc::smeman::SmscCommand cmd=smsc::smeman::SmscCommand::makeINFwdSmsChargeResponse(id,sms,contex);
   sync::MutexGuard mg(queueMtx);
@@ -191,6 +193,7 @@ void INManComm::ProcessExpiration()
           *it->second->second->sbmCtx,
           0
         );
+      delete it->second->second->sbmCtx;
     }else
     {
       cmd=smsc::smeman::SmscCommand::makeINFwdSmsChargeResponse
@@ -200,7 +203,10 @@ void INManComm::ProcessExpiration()
           *it->second->second->fwdCtx,
           0
         );
+      delete it->second->second->fwdCtx;
     }
+    reqDataMap.erase(it->second);
+    delete it->second->second;
     timeMap.erase(it);
     sync::MutexGuard mg2(queueMtx);
     queue.Push(cmd);
@@ -294,6 +300,7 @@ int INManComm::Execute()
             *it->second->sbmCtx,
             result->GetValue()==smsc::inman::interaction::CHARGING_POSSIBLE
           );
+        delete it->second->sbmCtx;
       }else
       {
         cmd=smsc::smeman::SmscCommand::makeINFwdSmsChargeResponse
@@ -303,8 +310,10 @@ int INManComm::Execute()
             *it->second->fwdCtx,
             result->GetValue()==smsc::inman::interaction::CHARGING_POSSIBLE
           );
+        delete it->second->fwdCtx;
       }
       timeMap.erase(it->second->tmIt);
+      delete it->second;
       reqDataMap.erase(it);
     }
     {
