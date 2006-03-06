@@ -12,7 +12,7 @@
  * Purpose:			
  * ========
  *
- *                      Header File for SACC_Commands.cpp
+ *                      Header File for SACC_Events.cpp
  *			
  * Author(s) & Creation Date:	
  * ==========================
@@ -28,12 +28,7 @@ namespace scag{
 namespace stat{
 namespace sacc{
 
-#define MAX_ABONENT_NUMBER_LENGTH 	25
-#define MAX_SESSION_KEY_LENGTH 		45
-#define MAX_TEXT_MESSAGE_LENGTH 	1024
-#define MAX_BILLING_CURRENCY_LENGTH	20
-#define MAX_NUMBERS_TEXT_LENGTH 	MAX_TEXT_MESSAGE_LENGTH
-#define MAX_EMAIL_ADDRESS_LENGTH	MAX_TEXT_MESSAGE_LENGTH
+#include "SACC_defs.h"
 
 typedef struct
 {
