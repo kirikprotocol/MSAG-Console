@@ -2835,6 +2835,32 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     return UNDELIVERABLE_STATE;
   }
 
+  if(!t.command->get_fwdChargeSmsResp()->result)
+  {
+    char bufsrc[64],bufdst[64];
+    sms.getOriginatingAddress().toString(bufsrc,sizeof(bufsrc));
+    sms.getDestinationAddress().toString(bufdst,sizeof(bufdst));
+    smsc_log_warn(smsLog, "FWD: msgId=%lld denied by inman(%s->%s)",t.msgId,bufsrc,bufdst);
+    sms.setLastResult(Status::DENIEDBYINMAN);
+    smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
+    try{
+      sendNotifyReport(sms,t.msgId,"destination unavailable");
+    }catch(...)
+    {
+      __warning__("FORWARD: failed to send intermediate notification");
+    }
+    try{
+      //time_t now=time(NULL);
+      Descriptor d;
+      __trace__("FORWARD: change state to enroute");
+      changeSmsStateToEnroute(sms,t.msgId,d,Status::DENIEDBYINMAN,rescheduleSms(sms));
+
+    }catch(...)
+    {
+      __warning__("FORWARD: failed to change state to enroute");
+    }
+    return ENROUTE_STATE;
+  }
 
   ////
   //
@@ -2938,7 +2964,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
       sendNotifyReport(sms,t.msgId,"destination unavailable");
     }catch(...)
     {
-      __trace__("FORWARD: failed to send intermediate notification");
+      __warning__("FORWARD: failed to send intermediate notification");
     }
     try{
       //time_t now=time(NULL);
@@ -3414,7 +3440,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         }
       }
     }
-    if(!multiPart || lastPart)
+    if(!multiPart || lastPart || !final)
     {
       try{
         sms.setLastResult(GET_STATUS_CODE(t.command->get_resp()->get_status()));
@@ -3848,6 +3874,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         Address src;
         if(smsc->getSmeInfo(dest_proxy->getIndex()).wantAlias &&
            sms.getIntProperty(Tag::SMSC_HIDE)==HideOption::hoEnabled &&
+           ri.hide &&
            smsc->AddressToAlias(sms.getOriginatingAddress(),src))
         {
           sms.setOriginatingAddress(src);
