@@ -5,10 +5,9 @@ namespace scag { namespace transport {
     Hash<TransportType> SCAGCommand::InitTransportTypeHash()
     {
         Hash<TransportType> res;
-        res["SMPP"] = SMPP;
-        res["HTTP"] = HTTP;
-        res["MMS"] = MMS;
-        res["WAP"] = WAP;
+        res["smpp"] = SMPP;
+        res["http"] = HTTP;
+        res["mms"] = MMS;
         return res;
     }
 

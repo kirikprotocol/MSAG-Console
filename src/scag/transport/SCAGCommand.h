@@ -11,7 +11,7 @@ using smsc::core::buffers::Hash;
 
     enum TransportType
     {
-        SMPP = 1, HTTP = 2, MMS = 3, WAP = 4
+        SMPP = 1, HTTP = 2, MMS = 3
     };
 
 
