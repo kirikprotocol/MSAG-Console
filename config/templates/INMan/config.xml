@@ -5,7 +5,7 @@
 <config>
   <param name="host" type="string">@inman.host@</param>
   <param name="port" type="int">@inman.port@</param>     <!-- InMan service port -->
-  <param name="maxClients" type="int" optional="true">3</param>  <!--  max allowed INMan client connections -->
+  <param name="maxClients" type="int">3</param>  <!--  max allowed INMan client connections -->
 
   <section name="Billing">
     <param name="billMode" type="string">all</param>       <!-- options: [none, all, ussd, sms]
