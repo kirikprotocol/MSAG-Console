@@ -12,6 +12,7 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 #include <string.h>
 #include <string>
@@ -545,8 +546,12 @@ struct OptionalProperty{
     string* bValue;
   };
   OptionalProperty():isSetVal(0),type(SMS_INT_TAG),iValue(0){}
-  OptionalProperty(const OptionalProperty& prop):isSetVal(0),iValue(0)
+  OptionalProperty(const OptionalProperty& prop):isSetVal(0),type(SMS_INT_TAG),iValue(0)
   {
+    if(prop.isSetVal==1 && prop.type==SMS_BIN_TAG)
+    {
+      //fprintf(stderr,"constructor:%p\n",this);
+    }
     *this=prop;
   }
   bool isSet()
@@ -555,7 +560,10 @@ struct OptionalProperty{
   }
   OptionalProperty& operator=(const OptionalProperty& src)
   {
-    //printf("isSetVal:%d->%d, type: %d->%d\n",isSetVal,src.isSetVal,type,src.type);
+    if(type==SMS_BIN_TAG || src.type==SMS_BIN_TAG)
+    {
+      //fprintf(stderr,"isSetVal:%d->%d, type: %d->%d\n",isSetVal,src.isSetVal,type,src.type);
+    }
     if(src.isSetVal==0 || src.isSetVal==2)
     {
       if(isSetVal==1)isSetVal=2;
@@ -563,9 +571,10 @@ struct OptionalProperty{
     {
       isSetVal=1;
     }
-    type=src.type;
+
     if(src.isSetVal==1)
     {
+      type=src.type;
       switch(type)
       {
         case SMS_INT_TAG:iValue=src.iValue;break;
@@ -583,7 +592,10 @@ struct OptionalProperty{
           if(!bValue)
           {
             bValue=new string;
-            //printf("allocBin:%p\n",sValue);
+            //fprintf(stderr,"op=:allocBin(%p):%p, len=%d\n",this,bValue,src.bValue->length());
+          }else
+          {
+            //fprintf(stderr,"op=:reuse(%p):%p, len=%d\n",this,bValue,src.bValue->length());
           }
           bValue->assign(src.bValue->data(),src.bValue->length());
         }break;
@@ -593,6 +605,7 @@ struct OptionalProperty{
   }
   ~OptionalProperty()
   {
+    //fprintf(stderr,"~OptionalProperty:%p\n",this);
     if(isSetVal)
     {
       if(type==SMS_STR_TAG)
@@ -602,9 +615,14 @@ struct OptionalProperty{
       }
       else if(type==SMS_BIN_TAG)
       {
+        //fprintf(stderr,"del bin(%p):%p\n",this,bValue);
         delete bValue;
         bValue=0;
       }
+    }
+    if(type==SMS_BIN_TAG && bValue!=0)
+    {
+      //fprintf(stderr,"del bin FUCK(%p):%p\n",this,bValue);
     }
   }
   void setInt(int value)
@@ -632,11 +650,12 @@ struct OptionalProperty{
     type=SMS_BIN_TAG;
     if(!isSetVal)
     {
+      string* old=bValue;
       bValue=new string;
-      //printf("allocBin(%p):%p\n",this,bValue);
+      //fprintf(stderr,"setBin:allocBin(%p):%p,old=%p, len=%d\n",this,bValue,old,len);
     }else
     {
-      //printf("setBin(%p):%p\n",this,sValue);
+      //fprintf(stderr,"setBin:reuse(%p):%p, len=%d\n",this,bValue,len);
     }
     bValue->assign(bin,len);
     isSetVal=1;
@@ -664,7 +683,14 @@ struct OptionalProperty{
   }
   void Unset()
   {
-    if(isSetVal)isSetVal=2;
+    if(isSetVal)
+    {
+      isSetVal=2;
+      if(type==SMS_BIN_TAG)
+      {
+        //fprintf(stderr,"Unset(%p):%p\n",this,bValue);
+      }
+    }
   }
 };
 
