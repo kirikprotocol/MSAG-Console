@@ -518,6 +518,9 @@ struct _SmscCommand
     {
     case DELIVERY:
     case SUBMIT:
+      if(dta)delete (SMS*)dta;
+      break;
+
     case ALERT:
       if(dta)delete ( (AlertData*)dta );
       break;
