@@ -184,8 +184,8 @@ Server::ShutdownReason Server::Listen()
             SOCKET socket = conn->getSocketId();
 
             if (FD_ISSET(socket, &readSet)) {
-                smsc_log_debug(logger, "TCPSrv: Event on socket[%u]", socket);
                 if (!conn->process()) {
+                    smsc_log_debug(logger, "TCPSrv: Unprocessed Event on socket[%u]", socket);
                     CustomException * exc = conn->hasException();
                     if (exc) {
                         smsc_log_error(logger, "TCPSrv: %s", exc->what());
