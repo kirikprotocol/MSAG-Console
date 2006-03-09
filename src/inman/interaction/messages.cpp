@@ -135,7 +135,7 @@ void SerializerInap::serialize(SerializableObject* obj, ObjectBuffer& out)
  * ************************************************************************** */
 
 ChargeSms::ChargeSms()
-    : partsNum(1)
+    : partsNum(1), forwarded(false)
 {
     setObjectId((unsigned short)CHARGE_SMS_TAG);
 }
@@ -192,6 +192,7 @@ void ChargeSms::load(ObjectBuffer& in) throw(CustomException)
     in >> ussdServiceOp;
     in >> partsNum;
     in >> msgLen;
+    in >> forwarded;
 }
 
 void ChargeSms::save(ObjectBuffer& out)
@@ -215,6 +216,7 @@ void ChargeSms::save(ObjectBuffer& out)
     out << ussdServiceOp;
     out << partsNum;
     out << msgLen;
+    out << forwarded;
 }
 
 

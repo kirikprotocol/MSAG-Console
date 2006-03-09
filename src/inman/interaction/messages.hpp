@@ -100,6 +100,8 @@ public:
     ChargeSms();
     virtual ~ChargeSms();
 
+    void setForwarded(bool isFwd = true)
+    { forwarded = isFwd; }
     //data for CDR generation & CAP interaction
     void setDestinationSubscriberNumber(const std::string& dst_adr)
     { dstSubscriberNumber = dst_adr; }
@@ -131,7 +133,7 @@ public:
     void export2CDR(CDRRecord & cdr) const;
     void exportCAPInfo(SMCAPSpecificInfo & csi) const { csi = csInfo; }
     //InmanCommand interface
-    void handle(InmanHandler*);
+    void handle(InmanHandler* handler);
 
 protected:
     //SerializableObject interface
@@ -139,6 +141,7 @@ protected:
     void save(ObjectBuffer& out);
 
 private:
+    bool          forwarded;    //rescheduled delivery attempt
     //data for CDR generation
     std::string   dstSubscriberNumber;
     std::string   callingPartyNumber;
