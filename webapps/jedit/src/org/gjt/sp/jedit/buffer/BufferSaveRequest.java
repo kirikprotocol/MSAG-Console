@@ -149,7 +149,7 @@ public class BufferSaveRequest extends BufferIORequest
     if (jEdit.getBooleanProperty("bufferWorkWithId")) command=jEdit.getUpdateRule();
     if (buffer!=null && buffer.getBooleanProperty("newRule")) command=jEdit.getAddRule();
     URL url; HttpURLConnection c=null;
-    String content="?username="+jEdit.username+"&password="+jEdit.password+"&command="+command+"&file="+savePath;
+    String content="?username="+jEdit.username+"&password="+jEdit.password+"&command="+command+"&file="+savePath+"&transport="+buffer.getProperty("transport");
     System.out.println("BufferSaveRequest command=SaveRule content= "+content);
     try {
           url=new URL(jEdit.servletUrl,content);
@@ -183,10 +183,11 @@ public class BufferSaveRequest extends BufferIORequest
       in = new BufferedReader(new InputStreamReader(_in));//new FileReader(fileName));
           String status=c.getHeaderField("status");
           int servicestatus = c.getHeaderFieldInt("servicestatus",1);
+          String statusException=in.readLine();
+          DefaultErrorSource errorSource= (DefaultErrorSource)ErrorSource.getErrorSourceByView(view);
       if (jEdit.getBooleanProperty("bufferWorkWithId") || buffer.getBooleanProperty("newRule"))
       {
-        DefaultErrorSource errorSource= (DefaultErrorSource)ErrorSource.getErrorSourceByView(view);
-        if (!status.equals("ok") && servicestatus == 1)
+        if (!status.equals("ok") && servicestatus == 1 && !statusException.equals("false"))
         {
               int errorType=c.getHeaderFieldInt("errorType",0);
               int lineIndex=c.getHeaderFieldInt("lineIndex",0); int start=c.getHeaderFieldInt("start",0);
@@ -195,18 +196,17 @@ public class BufferSaveRequest extends BufferIORequest
         }
         else if (status.equals("ok") || servicestatus == 0)
         {
+           if (servicestatus == 0)
+             GUIUtilities.message(view,"service-is-not-running",null);
             errorSource.clearErrorsService(path);
-            //jEdit.closeView(view);          
         }
       }
-       String statusException=in.readLine();
+
   // else throw new FileNotFoundException(status);
      System.out.println("BufferSaveRequest run line 178 status= "+statusException);
      System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!BufferSaveRequest run line 178 servicestatus= "+ servicestatus);
-     if (servicestatus == 0)
-        GUIUtilities.message(view,"service-is-not-running",null);
     if (statusException.equals("false")) {
-       String[] pp = { in.readLine() };
+       String[] pp = { in.readLine() + ((in.readLine()!=null || in.readLine()!="null")?in.readLine():"")  };
        VFSManager.error(view,path,"ioerror.write-error",pp);
     }
            if(_in != null) _in.close();

@@ -72,7 +72,7 @@ public class BufferLoadRequest extends BufferIORequest
     int command=jEdit.getParseXml();
     if (jEdit.getBooleanProperty("bufferWorkWithId")) command=jEdit.getLoadRule();
     if (buffer!=null && buffer.getBooleanProperty("newRule")) command=jEdit.getLoadNewRule();
-    String content="?username="+jEdit.username+"&password="+jEdit.password+"&command="+command+"&file="+path;
+    String content="?username="+jEdit.username+"&password="+jEdit.password+"&command="+command+"&file="+path+"&transport="+buffer.getProperty("transport");
     System.out.println("BufferLoadRequest _createInputStream content= "+content);
     try {
       url=new URL(jEdit.servletUrl,content);
@@ -81,6 +81,11 @@ public class BufferLoadRequest extends BufferIORequest
       /* if (jEdit.getBooleanProperty("bufferWorkWithId")) {
 
         } */
+      //this is hack!!! trying to get c.getHeaderField("status") again if its's null
+      for (int i=10000;i<30000;i++){
+        if (((i%10000)==0) && status != null) break;
+          else if (i%10000==0) status = c.getHeaderField("status");
+      }
       System.out.println("BufferLoadRequest _createInputStream status= "+status);
       if (!status.equals("ok")) throw new FileNotFoundException(status);
       _in=c.getInputStream();

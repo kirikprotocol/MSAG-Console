@@ -297,7 +297,7 @@ public class SideKickPlugin extends EBPlugin
  //{{{ initView() method
  private void initView(View view)
  {
-  System.out.println(" ++++ Putting into sidekicks key view = " + view);
+  //System.out.println(" ++++ Putting into sidekicks key view = " + view);
   sidekicks.put(view,new SideKick(view));
    if (jEdit.getLastView()!=jEdit.getFirstView()) {
       SideKickActions.clear();
@@ -307,12 +307,12 @@ public class SideKickPlugin extends EBPlugin
  //{{{ uninitView() method
  private void uninitView(View view)
  {
-  System.out.println(" ---- Uniniting from sidekicks by key view = " + view);
+  //System.out.println(" ---- Uniniting from sidekicks by key view = " + view);
   SideKick sidekick = (SideKick)sidekicks.get(view);
 
   if (sidekick!=null)
   {
-    System.out.println(" ---- Uniniting is successful!!!");
+    //System.out.println(" ---- Uniniting is successful!!!");
     sidekick.dispose();
   }
    sidekicks.remove(view);
@@ -321,12 +321,12 @@ public class SideKickPlugin extends EBPlugin
     //{{{ uninitView() method
  private void closeView(View view, String path)
  {
-  System.out.println(" ---- Removing from sidekicks by key view = " + view);
+  //System.out.println(" ---- Removing from sidekicks by key view = " + view);
   SideKick sidekick = (SideKick)sidekicks.get(view);
 
   if (sidekick!=null)
   {
-    System.out.println(" ---- Removing is successful!!!");
+    //System.out.println(" ---- Removing is successful!!!");
     sidekick.closeView();
   }
   sidekicks.remove(view);

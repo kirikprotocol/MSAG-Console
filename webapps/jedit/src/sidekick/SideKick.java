@@ -106,7 +106,7 @@ class SideKick implements EBComponent
  // if (errorSource==null)
   DefaultErrorSource  errorSource = new DefaultErrorSource("SideKick "+SideKickPlugin.getSideKickNumber(this.view),view);
   SideKickParsedData[] data = new SideKickParsedData[1];
-  System.out.println("CREATING NEW WORK REQUESTS!!!! from place number "+ num);
+  //System.out.println("CREATING NEW WORK REQUESTS!!!! from place number "+ num);
   SideKickPlugin.addWorkRequest(new ParseRequest(
    parser,buffer,errorSource,data, SideKickPlugin.getSideKickNumber(this.view)),false);
   SideKickPlugin.addWorkRequest(new ParseAWTRequest(
@@ -136,7 +136,7 @@ class SideKick implements EBComponent
  //{{{ setParser() method
  void setParser(int num)
  {
-  System.out.println(" setParser is invoked from place number "+num);
+  //System.out.println(" setParser is invoked from place number "+num);
   deactivateParser();
   parser = SideKickPlugin.getParserForBuffer(buffer);
   activateParser();
@@ -444,7 +444,7 @@ class SideKick implements EBComponent
   public void run()
   {
    data[0] = parser.parse(buffer,errorSource);
-    System.out.println("ParseRequest # " + number);
+    //System.out.println("ParseRequest # " + number);
     System.out.println("SideKick.parse path= "+buffer.getPath()+" finished errors added line 426");
   }
  } //}}}
@@ -472,7 +472,7 @@ class SideKick implements EBComponent
    try
    {
     Log.log(Log.DEBUG,this,"ParseAWTRequest");
-    System.out.println("ParseAWTRequest # "+number);
+    //System.out.println("ParseAWTRequest # "+number);
     setErrorSource(errorSource,6);
 
     int errorCount = errorSource.getErrorCount();

@@ -3494,8 +3494,8 @@ public class Buffer
       if(session == null)
         return false;
       if (jEdit.getBooleanProperty("bufferWorkWithId")) {
-        if (!jEdit.BoolGet(path,jEdit.getExistRule()) && !jEdit.getBooleanProperty("newRule")) {
-            VFSManager.error(view,path,"ioerror",new String[] { "Rule: "+path+" not exist !" });
+        if (!jEdit.BoolGet(path,jEdit.getExistRule(),(String)getProperty("transport")) && !jEdit.getBooleanProperty("newRule")) {
+            VFSManager.error(view,path,"ioerror",new String[] { "Rule: "+(String)getProperty("transport")+"/"+path+" not exist !" });
             return false;
        }
        return true;

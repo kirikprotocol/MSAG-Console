@@ -35,6 +35,7 @@ import java.text.MessageFormat;
 import java.util.*;
 import java.util.List;
 import java.applet.Applet;
+import java.applet.AppletContext;
 
 import org.gjt.sp.jedit.buffer.BufferIORequest;
 import org.gjt.sp.jedit.buffer.KillRing;
@@ -80,13 +81,12 @@ public class jEdit extends Applet
 
   public static URL baseUrl = null;
   public static URL servletUrl = null;
- // public static String userfile = null;
-  //public static String userDir = null;
-  // public static String osname=null;
+  // targetUrl - URL to be forwarded on when buffer is successfully saved
+  public static URL targetUrl =null;
   public static String username = null;
   public static String password = null;
   public static char separatorChar ;
-
+  public static AppletContext jEditContext = null;
   public void init()
   {
     System.out.println("Initing...");
@@ -100,7 +100,7 @@ public class jEdit extends Applet
     // args[0]=getParameter("noplugins");
     baseUrl = getCodeBase();
     //userfile=baseUrl.toString();
-
+    jEditContext = getAppletContext();
     username = getParameter("username");
     password = getParameter("password");
     jEditHome =getParameter("homedir");
@@ -114,10 +114,12 @@ public class jEdit extends Applet
     String path = baseUrl.getPath();
     try {
       servletUrl = new URL(baseUrl, getParameter("servleturl"));
+      targetUrl = new URL(baseUrl, getParameter("targetUrl"));
     } catch (MalformedURLException e) { e.printStackTrace();
     }
     System.out.println("baseUrl= " + baseUrl.toString());
     System.out.println("servletUrl= " + servletUrl.toString());
+    System.out.println("targetUrl= " + targetUrl);
     this.main(args);
     isNotReload=true;
   }
@@ -132,28 +134,30 @@ public class jEdit extends Applet
     args[0]=getParameter("file");
 
   }
-  public void openRule(final String userFile)
+  public void openRule(final String userFile, final String transport)
    {
      System.out.println("openRule... "+userFile);
      super.start();
      String[] args = new String[5];
      args[0]=userFile;
+     args[1]=transport;
      setBooleanProperty("newRule",false);
      this.main2(args);
      isNotReload=true;
      //}
    }
 
-  public void newRule()
+  public void newRule(final String userFile, final String transport)
     {
       System.out.println("newRule... ");
       super.start();
       String[] args = new String[5];
-      args[0]="";
+      args[0]=userFile;
+      args[1]=transport;
       setBooleanProperty("newRule",true);
       this.main2(args);
       isNotReload=true;
-      //}
+      //}      
     }
 
   public void stop()
@@ -468,19 +472,13 @@ public class jEdit extends Applet
       BeanShell.runScript(null, scriptFile, null, false);
     } //}}}
     GUIUtilities.advanceSplashProgress();
-    String transport;
-    if (getBooleanProperty("newRule")) {
-     LinkedList li=GetNewRuleInfo("",NewRule);
-     userFile=(String)li.get(0);
-     transport=(String) li.get(1);
-    }
-    else transport=StringGet(userFile,Transport);
+    String transport = args[1];
     userDir = MiscUtilities.constructPath(userDir, transport);//jEditHome+"\\"+jEdit.username;//null;
     if (!BoolGet(userDir, Exists)) BoolGet(userDir, MkDir);
     System.out.println("userDir+transport= "+userDir);
     if (!jEdit.getBooleanProperty("bufferWorkWithId")) userFile="rule_"+userFile+".xml";
     // Open files, create the view and hide the splash screen.
-    finishStartupNext(gui, restore,userDir, args,userFile);
+    finishStartupNext(gui, restore,userDir, args,userFile,transport);
 
   } //}}}
   public static final String IdToFileName(final String Id)
@@ -2430,7 +2428,11 @@ public class jEdit extends Applet
       // Byebye...
      // System.exit(0);
     }
-    if (getBooleanProperty("newRule")) InvalidateNewRule();
+    if (getBooleanProperty("newRule"))
+    {
+      InvalidateNewRule();
+      jEdit.jEditContext.showDocument(jEdit.targetUrl);
+    }
   } //}}}
   //{{{ exitView() method
   /**
@@ -2503,7 +2505,11 @@ public class jEdit extends Applet
       // Byebye...
      // System.exit(0);
     }
-    if (getBooleanProperty("newRule")) InvalidateNewRule();
+    if (getBooleanProperty("newRule"))
+    {
+      InvalidateNewRule();
+      jEdit.jEditContext.showDocument(jEdit.targetUrl);
+    }
   } //}}}
   /*invalidate "newRule" attribute in session to prevent call of jEdit.newRule() method
     from page   ...scag/rules/rules/index.jsp*/
@@ -3291,8 +3297,13 @@ public class jEdit extends Applet
    */
   public static boolean BoolGet(final String file, final int command)
   {
+    return BoolGet(file,command,null);
+  }
+  public static boolean BoolGet(final String file, final int command, final String transport)
+  {
     HashMap args = new HashMap();
     args.put("file", file);
+    if (transport!=null) args.put("transport",transport);
     LinkedList list = (LinkedList) HttpGet(args, command);
     boolean result = false;
     String inputLine;
@@ -3621,7 +3632,7 @@ public class jEdit extends Applet
   } //}}}
   //{{{ finishStartup() method
   private static void finishStartupNext(final boolean gui, final boolean restore,
-                                        final String userDir,final String[] args,final String userFile)
+                                        final String userDir,final String[] args,final String userFile, final String transport)
   {
     SwingUtilities.invokeLater(new Runnable()
     {
@@ -3652,7 +3663,9 @@ public class jEdit extends Applet
 
       } //if (buffer != null)
       else {
-       buffer=openFile(null, userDir, userFile , false, null);
+       Hashtable props = new Hashtable();
+       props.put("transport",transport);
+       buffer=openFile(null, userDir, userFile , false, props);
       //  todo end
         View view = null;
         boolean restoreFiles = restore
