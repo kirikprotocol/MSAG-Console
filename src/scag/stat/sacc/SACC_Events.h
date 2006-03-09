@@ -28,10 +28,19 @@ namespace scag{
 namespace stat{
 namespace sacc{
 
+#ifdef _WIN32
+#include <stdint.h>
+#else
+#include <inttypes.h>
+#endif
+
+
 #include "SACC_defs.h"
+
 
 typedef struct
 {
+	uint16_t sEventType;
 	uint8_t  pAbonentNumber[MAX_ABONENT_NUMBER_LENGTH];	
 	uint8_t  cCommandId;		
 	uint8_t  cProtocolId;		
@@ -45,11 +54,10 @@ typedef struct
 typedef struct
 {
 	SACC_EVENT_HEADER_t Header;
-
+	
 	uint32_t iOperatorId;
+	uint16_t pMessageText[MAX_TEXT_MESSAGE_LENGTH];//512*32
 	uint8_t  pSessionKey[MAX_SESSION_KEY_LENGTH];
-	uint16_t pMessageText[MAX_TEXT_MESSAGE_LENGTH];
-			 
 
 }SACC_TRAFFIC_INFO_EVENT_t;
 
@@ -70,7 +78,7 @@ typedef struct
 {
 	SACC_EVENT_HEADER_t Header;
 
-	uint16_t sEventType;					
+	//uint16_t sEventType;					
 	uint8_t  pSessionKey[MAX_SESSION_KEY_LENGTH];
 	uint16_t pMessageText[MAX_TEXT_MESSAGE_LENGTH];
 
@@ -78,10 +86,11 @@ typedef struct
 
 typedef struct
 {
+
 	SACC_EVENT_HEADER_t Header;
 
 	uint32_t iOperatorId;
-	uint16_t sEventType;					
+	//uint16_t sEventType;					
 	uint8_t  pSessionKey[MAX_SESSION_KEY_LENGTH];
 	uint16_t pMessageText[MAX_TEXT_MESSAGE_LENGTH];
 

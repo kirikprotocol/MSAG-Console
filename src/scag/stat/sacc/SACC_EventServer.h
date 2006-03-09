@@ -23,6 +23,9 @@
  * 			All rights reserved.
  */
 
+#include "SACC_SyncQueue.h"
+#include "SACC_EventSender.h"
+
 namespace scag{
 namespace stat{
 namespace sacc{
@@ -31,6 +34,7 @@ class EventServer : public Thread
 {
 
 public:
+	void pushEvent(void* ev);
     EventServer();
     virtual ~EventServer();
     virtual int Execute();
@@ -46,8 +50,12 @@ protected:
     int  Port;
     Socket evSocket;
     EventServer* eventServer;
-    bool  isStopping;
+    bool  bStarted;
     Multiplexer  listener;
+
+	SyncQeuue eQueue;
+	EventSender * eSender;
+	 
 };
 
   }//sacc namespace
