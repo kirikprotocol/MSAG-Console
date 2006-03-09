@@ -207,6 +207,7 @@ protected:
       sync::MutexGuard mg(mon);
       queue.Push(pkt);
       mon.notify();
+      debug2(log,"queue.Count()=%d",queue.Count());
     }
 
     PacketWriter()

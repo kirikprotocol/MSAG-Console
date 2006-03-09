@@ -91,18 +91,19 @@ void INManComm::ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INSmsChargeRespo
 
   smsc::inman::interaction::ObjectBuffer buf(16);
   smsc::inman::interaction::SerializerInap::getInstance()->serialize(&op,buf);
+
+  {
+    sync::MutexGuard mg(reqMtx);
+    ReqData* rd=new ReqData;
+    rd->id=id;
+    rd->chargeType=ReqData::ctSubmit;
+    rd->sms=sms;
+    rd->sbmCtx=new smsc::smeman::INSmsChargeResponse::SubmitContext(ctx);
+    ReqDataMap::iterator it=reqDataMap.insert(ReqDataMap::value_type(dlgId,rd)).first;
+    it->second->tmIt=timeMap.insert(TimeMap::value_type(time(NULL)+reqTimeOut,it));
+    debug2(log,"ChargeSms: reqDataMap.size()=%d",reqDataMap.size());
+  }
   packetWriter.enqueue((const char*)buf.get(),buf.getDataSize());
-
-
-  sync::MutexGuard mg(reqMtx);
-  ReqData* rd=new ReqData;
-  rd->id=id;
-  rd->chargeType=ReqData::ctSubmit;
-  rd->sms=sms;
-  rd->sbmCtx=new smsc::smeman::INSmsChargeResponse::SubmitContext(ctx);
-  ReqDataMap::iterator it=reqDataMap.insert(ReqDataMap::value_type(dlgId,rd)).first;
-  it->second->tmIt=timeMap.insert(TimeMap::value_type(time(NULL)+reqTimeOut,it));
-  debug2(log,"ChargeSms: reqDataMap.size()=%d",reqDataMap.size());
 
   //smsc::smeman::SmscCommand cmd=smsc::smeman::SmscCommand::makeINSmsChargeResponse(id,sms,ctx);
   //sync::MutexGuard mg(queueMtx);
@@ -123,23 +124,25 @@ void INManComm::ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INFwdSmsChargeRe
   smsc::inman::interaction::ChargeSms op;
 
   op.setDialogId(dlgId);
+  op.setForwarded();
 
   FillChargeOp(id,op,sms);
 
   smsc::inman::interaction::ObjectBuffer buf(16);
   smsc::inman::interaction::SerializerInap::getInstance()->serialize(&op,buf);
+
+  {
+    sync::MutexGuard mg(reqMtx);
+    ReqData* rd=new ReqData;
+    rd->id=id;
+    rd->chargeType=ReqData::ctForward;
+    rd->sms=sms;
+    rd->fwdCtx=new smsc::smeman::INFwdSmsChargeResponse::ForwardContext(ctx);
+    ReqDataMap::iterator it=reqDataMap.insert(ReqDataMap::value_type(dlgId,rd)).first;
+    it->second->tmIt=timeMap.insert(TimeMap::value_type(time(NULL)+reqTimeOut,it));
+    debug2(log,"ChargeSmsFwd: reqDataMap.size()=%d",reqDataMap.size());
+  }
   packetWriter.enqueue((const char*)buf.get(),buf.getDataSize());
-
-
-  sync::MutexGuard mg(reqMtx);
-  ReqData* rd=new ReqData;
-  rd->id=id;
-  rd->chargeType=ReqData::ctForward;
-  rd->sms=sms;
-  rd->fwdCtx=new smsc::smeman::INFwdSmsChargeResponse::ForwardContext(ctx);
-  ReqDataMap::iterator it=reqDataMap.insert(ReqDataMap::value_type(dlgId,rd)).first;
-  it->second->tmIt=timeMap.insert(TimeMap::value_type(time(NULL)+reqTimeOut,it));
-  debug2(log,"ChargeSmsFwd: reqDataMap.size()=%d",reqDataMap.size());
   /*
   smsc::smeman::SmscCommand cmd=smsc::smeman::SmscCommand::makeINFwdSmsChargeResponse(id,sms,contex);
   sync::MutexGuard mg(queueMtx);
