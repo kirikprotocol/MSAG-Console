@@ -2630,6 +2630,7 @@ StateType StateMachine::submitChargeResp(Tuple& t)
 
 StateType StateMachine::forward(Tuple& t)
 {
+  debug2(smsLog,"FWD: id=%lld",t.msgId);
   SMS sms;
   try{
     store->retriveSms((SMSId)t.msgId,sms);
@@ -2667,7 +2668,6 @@ StateType StateMachine::forward(Tuple& t)
 
 StateType StateMachine::forwardChargeResp(Tuple& t)
 {
-  __trace2__("FWD: id=%lld",t.msgId);
   SMS& sms=t.command->get_fwdChargeSmsResp()->sms;
   int  inDlgId=t.command->get_fwdChargeSmsResp()->cntx.inDlgId;
   bool allowDivert=t.command->get_fwdChargeSmsResp()->cntx.allowDivert;
