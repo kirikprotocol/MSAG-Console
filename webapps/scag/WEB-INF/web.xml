@@ -21,6 +21,11 @@
         </init-param>
          <load-on-startup>5</load-on-startup>
     </servlet>
+   <servlet>
+     <servlet-name>xsdProxy</servlet-name>
+     <servlet-class>ru.sibinco.scag.beans.rules.applet.XSDProxy</servlet-class>
+   </servlet>
+
   <filter>
     <filter-name>SCAG</filter-name>
     <filter-class>ru.sibinco.scag.beans.SCAGFilter</filter-class>
@@ -171,7 +176,11 @@
        <servlet-name>applet</servlet-name>
        <url-pattern>/applet/*</url-pattern>
     </servlet-mapping>
- 
+   <servlet-mapping>
+     <servlet-name>xsdProxy</servlet-name>
+     <url-pattern>/rules/rules/xsd/*</url-pattern>
+   </servlet-mapping>
+     
   <filter-mapping>
     <filter-name>SCAG</filter-name>
     <url-pattern>/*</url-pattern>
