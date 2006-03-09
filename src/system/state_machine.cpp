@@ -3440,12 +3440,13 @@ StateType StateMachine::deliveryResp(Tuple& t)
       {
         unsigned len;
         ConcatInfo *ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,&len);
-        if(sms.getConcatSeqNum()<ci->num-1)
+        if(sms.getConcatSeqNum()==ci->num-1)
         {
           lastPart=true;
         }
       }
     }
+    smsc_log_debug(smsLog,"multiPart=%s, lastPart=%s, final=%s",multiPart?"true":"false",lastPart?"true":"false",final?"true":"false");
     if(!multiPart || lastPart || !final)
     {
       try{
@@ -3699,9 +3700,9 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
   if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
   {
-    debug2(smsLog, "DLVRSP: sms has concatinfo, csn=%d;msgId=%lld",sms.getConcatSeqNum(),t.msgId);
     unsigned int len;
     ConcatInfo *ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,&len);
+    info2(smsLog, "DLVRSP: sms has concatinfo, csn=%d/%d;msgId=%lld",sms.getConcatSeqNum(),ci->num,t.msgId);
     if(sms.getConcatSeqNum()<ci->num-1)
     {
       {
