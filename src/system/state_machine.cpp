@@ -2677,6 +2677,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
   {
     smsc_log_warn(smsLog, "Invalidate of %lld failed",t.msgId);
     smsc->getScheduler()->InvalidSms(t.msgId);
+    sms.setLastResult(Status::INVOPTPARAMVAL);
     try{
       smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
     }catch(std::exception& e)
@@ -2689,6 +2690,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
   if(sms.getState()==EXPIRED_STATE)
   {
     smsc_log_warn(smsLog, "FWD: sms in expired state msgId=%lld",t.msgId);
+    sms.setLastResult(Status::EXPIRED);
     smsc->getScheduler()->InvalidSms(t.msgId);
     try{
       smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
@@ -2767,6 +2769,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     debug2(smsLog, "FWD: nextTime>now (%d>%d)",sms.getNextTime(),now);
     SmeIndex idx=smsc->getSmeIndex(sms.dstSmeId);
     smsc->getScheduler()->AddScheduledSms(t.msgId,sms,idx);
+    sms.setLastResult(Status::SYSERR);
     try{
       smsc->ReportDelivery(inDlgId,sms,false,Smsc::chargeOnDelivery);
     }catch(std::exception& e)
@@ -2786,6 +2789,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
       smsc_log_warn(smsLog,"FORWARD: Failed to change state of USSD request to undeliverable. msgId=%lld",t.msgId);
     }
     smsc->getScheduler()->InvalidSms(t.msgId);
+    sms.setLastResult(Status::EXPIRED);
     try{
       smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
     }catch(std::exception& e)
@@ -2826,6 +2830,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
       smsc_log_warn(smsLog,"FORWARD: Failed to change state of fwd/dgm sms to undeliverable. msgId=%lld",t.msgId);
     }
     smsc->getScheduler()->InvalidSms(t.msgId);
+    sms.setLastResult(Status::EXPIRED);
     try{
       smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
     }catch(std::exception& e)
@@ -3031,6 +3036,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     {
       debug2(smsLog,"FWD: divert failed - cannot concat, msgId=%lld",t.msgId);
     try{
+      sms.setLastResult(Status::SYSERR);
       smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
     }catch(std::exception& e)
     {
