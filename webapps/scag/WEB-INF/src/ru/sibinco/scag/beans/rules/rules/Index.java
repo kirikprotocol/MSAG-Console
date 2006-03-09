@@ -181,7 +181,7 @@ public class Index extends TabledBeanImpl implements TabledBean {
       final String ruleId = (String) iterator.next();
       Rule rule = (Rule) rules.get(Long.decode(ruleId));
       try {
-        if (rule != null) ruleManager.removeRule(ruleId, rule.getTransport().toLowerCase());
+        if (rule != null) ruleManager.removeRule(ruleId, rule.getTransport());
         rules.remove(Long.decode(ruleId));
       } catch (SibincoException se) {
           if (se instanceof StatusDisconnectedException) rules.remove(Long.decode(ruleId));

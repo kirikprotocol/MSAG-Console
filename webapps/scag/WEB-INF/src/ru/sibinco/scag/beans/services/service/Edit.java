@@ -6,6 +6,7 @@ package ru.sibinco.scag.beans.services.service;
 
 import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.SCAGAppContext;
+import ru.sibinco.scag.backend.transport.Transport;
 import ru.sibinco.scag.backend.service.Service;
 import ru.sibinco.scag.backend.service.ServiceProvider;
 import ru.sibinco.scag.backend.service.ServiceProvidersManager;
@@ -14,6 +15,8 @@ import ru.sibinco.scag.beans.EditChildException;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.beans.TabledEditBeanImpl;
 import ru.sibinco.scag.util.Utils;
+import ru.sibinco.lib.SibincoException;
+import ru.sibinco.lib.StatusDisconnectedException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -38,9 +41,13 @@ public class Edit extends TabledEditBeanImpl {
     private String editId = null;
     private String mbSave = null;
     private String mbCancel = null;
+    private String deleteRuleSMPP = null;
+    private String deleteRuleHTTP = null;
+    private String deleteRuleMMS = null;
     private String parentId;
     private String dirName = "service";
     private boolean editChild = false;
+    private Map serviceRules = null;
     String path = "";
 
     protected Collection getDataSource() {
@@ -61,6 +68,10 @@ public class Edit extends TabledEditBeanImpl {
         }
 
         load();
+        if (serviceRules==null) serviceRules = appContext.getRuleManager().getRules(new Long(id));
+        if (deleteRuleSMPP!=null) deleteRule(Transport.SMPP_TRANSPORT_NAME);
+        if (deleteRuleHTTP!=null) deleteRule(Transport.HTTP_TRANSPORT_NAME);
+        if (deleteRuleMMS!=null) deleteRule(Transport.MMS_TRANSPORT_NAME);
         if (getEditId() != null && !editChild) {
             super.process(request, response);
         }
@@ -146,7 +157,16 @@ public class Edit extends TabledEditBeanImpl {
         }
 
 
-
+    private void deleteRule(String transport) {
+       try {
+        appContext.getRuleManager().removeRule(Long.toString(id), transport);
+        serviceRules.remove(transport);
+      } catch (SibincoException se) {
+          if (se instanceof StatusDisconnectedException)
+            serviceRules.remove(transport);
+          else se.printStackTrace();/*PRINT ERROR ON THE SCREEN;*/
+      }
+    }
     public String getId() {
         return -1 == id ? null : String.valueOf(id);
     }
@@ -183,6 +203,29 @@ public class Edit extends TabledEditBeanImpl {
         this.mbSave = mbSave;
     }
 
+    public String getDeleteRuleSMPP() {
+        return deleteRuleSMPP;
+    }
+
+    public void setDeleteRuleSMPP(String deleteRuleSMPP) {
+        this.deleteRuleSMPP = deleteRuleSMPP;
+    }
+
+    public String getDeleteRuleHTTP() {
+       return deleteRuleHTTP;
+    }
+
+    public void setDeleteRuleHTTP(String deleteRuleHTTP) {
+       this.deleteRuleHTTP = deleteRuleHTTP;
+    }
+    public String getDeleteRuleMMS() {
+        return deleteRuleMMS;
+    }
+
+    public void setDeleteRuleMMS(String deleteRuleMMS) {
+        this.deleteRuleMMS = deleteRuleMMS;
+    }
+
     public String getMbCancel() {
         return mbCancel;
     }
@@ -211,4 +254,18 @@ public class Edit extends TabledEditBeanImpl {
         this.editChild = editChild;
     }
 
+    public boolean isSmppRuleExists() {
+    if (serviceRules==null) serviceRules = appContext.getRuleManager().getRules(new Long(id));
+        return (serviceRules.get(Transport.SMPP_TRANSPORT_NAME)==null)?false:true;
+    }
+    public boolean isHttpRuleExists() {
+
+       return (serviceRules.get(Transport.HTTP_TRANSPORT_NAME)==null)?false:true;
+
+    }
+    public boolean isMmsRuleExists() {
+
+       return (serviceRules.get(Transport.MMS_TRANSPORT_NAME)==null)?false:true;
+
+    }
 }

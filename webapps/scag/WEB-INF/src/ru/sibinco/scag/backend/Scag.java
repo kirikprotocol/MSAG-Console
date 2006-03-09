@@ -101,9 +101,9 @@ public class Scag extends Proxy {
             throw new SibincoException("Couldn't delete Smsc, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
     }
 
-    public void removeRule(final String ruleId) throws SibincoException {
+    public void removeRule(final String ruleId, final String transport) throws SibincoException {
         try {
-        final Response response = super.runCommand(new RemoveRule(ruleId));
+        final Response response = super.runCommand(new RemoveRule(ruleId,transport));
         if (Response.STATUS_OK != response.getStatus())
             throw new SibincoException("Couldn't delete Rule, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
         } catch (SibincoException se) {
@@ -117,7 +117,7 @@ public class Scag extends Proxy {
     public synchronized List addRule(final String ruleId, final String transport) throws SibincoException {
        String err = "Couldn't add rule , nested: ";
        HashMap args = new HashMap();
-       args.put("ruleId",ruleId);
+       args.put("serviceId",ruleId);
        args.put("transport",transport);
        final Object res = call(ADD_RULE_METHOD_ID, err, Type.Types[Type.STRING_LIST_TYPE], args);
        return res instanceof List ? (List) res : null;
@@ -126,7 +126,7 @@ public class Scag extends Proxy {
     public synchronized List updateRule(final String ruleId, final String transport) throws SibincoException {
         String err = "Couldn't update rule , nested: ";
         HashMap args = new HashMap();
-        args.put("ruleId",ruleId);
+        args.put("serviceId",ruleId);
         args.put("transport",transport);
         final Object res = call(UPDATE_RULE_METHOD_ID, err, Type.Types[Type.STRING_LIST_TYPE], args);
         return res instanceof List ? (List) res : null;

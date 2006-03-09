@@ -16,8 +16,9 @@ import ru.sibinco.scag.backend.daemon.Command;
  */
 public class RemoveRule extends Command {
 
-    public RemoveRule(final String ruleId) throws SibincoException {
+    public RemoveRule(final String ruleId, final String transport) throws SibincoException {
         super("removeRule", "file:///command_gw.dtd");
-        createStringParam("ruleId", ruleId);
+        createStringParam("serviceId", ruleId);
+        createStringParam("transport", transport);      
     }
 }

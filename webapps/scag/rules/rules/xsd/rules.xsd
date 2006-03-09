@@ -111,8 +111,6 @@
     <complexType name="RuleType" abstract="true">
         <attribute name="transport" type="scag:Transport" use="required"/>
         <attribute name="id" type="string" use="required"/>
-        <attribute name="provider" type="string" use="required"/>
-        <attribute name="name" type="string" use="required"/>
     </complexType>
 
     <element name="rule" type="scag:RuleType"/>

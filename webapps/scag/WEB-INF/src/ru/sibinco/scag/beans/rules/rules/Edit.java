@@ -114,7 +114,7 @@ public class Edit extends EditBean {
   //  String schema=schemaNames[id];
     Provider provider=(Provider) appContext.getProviderManager().getProviders().get(new Long(providerId));
     if (provider==null)  error("Provider with id= "+providerId+" not found",null);
-    Rule newRule=Rule.createNewRule(ruleId,transport,provider,name);
+    Rule newRule=Rule.createNewRule(ruleId,transport);
 
    /* try {
       appContext.getRuleManager().createNewRule(newRule);
@@ -124,7 +124,7 @@ public class Edit extends EditBean {
     }  */
     LinkedList li=new LinkedList();
     li.add(String.valueOf(ruleId));
-    li.add(transport.toLowerCase()); //send transport dir for newRule
+    li.add(transport); //send transport dir for newRule
     session.setAttribute("newRule",newRule);
     session.setAttribute("newRuleList",li);
     throw new DoneException();

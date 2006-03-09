@@ -69,18 +69,17 @@ public class myServlet extends HttpServlet
     String[] list=null;
     LinkedList li;
     int command=Integer.parseInt(req.getParameter("command"));
+    String transport=req.getParameter("transport");
    // System.out.println("myServlet Get file= "+file+" command= "+command);
     res.setContentType("text/html; charset=windows-1251");
     if(file!=null) {
        switch (command)
     {
        case ParseXml:   li=ParseXml(file); SendResult(li,res); break;
-       case NewRule:    li=NewRule(req);   SendResult(li,res); break;
        case RootElement:li=RootElement(req);   SendResult(li,res); break;
-       case LoadRule:   li=LoadRule(req,file,res); SendResult(li,res); break;
-       case RuleName:   li=RuleName(req,file,res); SendResult(li,res); break;
-       case LoadNewRule:li=LoadNewRule(req,file,res); SendResult(li,res); break;
-       case ExistRule:  ExistRule(req,file ,res); break;
+       case LoadRule:   li=LoadRule(req,file,transport,res); SendResult(li,res); break;
+       case LoadNewRule:li=LoadNewRule(req,file,transport,res); SendResult(li,res); break;
+       case ExistRule:  ExistRule(req,file,transport,res); break;
        case Transport : list=getTransport(file,req);break;
        case SaveBackup: list=SaveBackup(new File(file), req); break;
        case RuleNameReset: if (session !=null) session.removeAttribute("newRule"); break;
@@ -113,11 +112,12 @@ public class myServlet extends HttpServlet
           throws ServletException,IOException
   { String file=req.getParameter("file");
     int command=Integer.parseInt(req.getParameter("command"));
+    String transport = req.getParameter("transport");
    // System.out.println("myServlet PUT file= "+file+" command= "+command);
     PrintWriter out = res.getWriter();
     res.setContentType("text/html; charset=windows-1251");
     if (command==Write) Write(req,file,res);
-    if (command==UpdateRule) updateRule(req,file,res);
+    if (command==UpdateRule) updateRule(req,file,transport,res);
     if (command==AddRule) AddRule(req,file,res);
     //out.print("true");out.flush();out.close();
     //doRequest(req, res);
@@ -149,7 +149,7 @@ public class myServlet extends HttpServlet
    PrintWriter out = res.getWriter();
    out.print("true");out.flush();out.close();
  }
-  private void updateRule(HttpServletRequest req,final String file,HttpServletResponse res) throws IOException
+  private void updateRule(HttpServletRequest req,final String file, final String transport, HttpServletResponse res) throws IOException
   {
     System.out.println("myServlet updateRule");
     SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
@@ -158,7 +158,7 @@ public class myServlet extends HttpServlet
     PrintWriter out = res.getWriter();
     BufferedReader r=req.getReader();
     try {
-      li=appContext.getRuleManager().updateRule(r,file);
+      li=appContext.getRuleManager().updateRule(r,file,transport);
       res = checkError(li, res);
       out.print("true");out.flush();out.close();
     }  catch (SibincoException e) {
@@ -168,7 +168,7 @@ public class myServlet extends HttpServlet
         out.println("true");
       } else {
         out.println("false");
-        out.println(e.getMessage());
+        out.print(e.getMessage());
       }
         out.flush();out.close();
     }    finally {
@@ -199,7 +199,7 @@ public class myServlet extends HttpServlet
         out.println("true");
       } else {
         out.println("false");
-        out.println(e.getMessage());
+        out.print(e.getMessage());
       }
       out.flush();out.close();
     } finally {
@@ -228,56 +228,39 @@ public class myServlet extends HttpServlet
      res.setHeader("status","ok");
      return res;
   }
- private LinkedList RuleName(HttpServletRequest req,final String file,HttpServletResponse res) throws IOException
+  private LinkedList LoadRule(HttpServletRequest req,final String file, final String transport, HttpServletResponse res) throws IOException
     {
-      System.out.println("RuleName id= "+file);
-      SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
-      Rule rule=appContext.getRuleManager().getRule(Long.valueOf(file));
-      String name; LinkedList li= new LinkedList();
-      if (rule!=null) {
-        name=rule.getName();
-        li.add("ok");li.add(name);
-      }
-      else {
-        session = req.getSession(false);
-        Rule newRule =(Rule)session.getAttribute("newRule");
-        if (newRule!=null) {name=newRule.getName(); li.add("ok");li.add(name);}
-        else li.add("Error : Not such Rule with id= "+file);
-      }
-      return li;
-    }
-  private LinkedList LoadRule(HttpServletRequest req,final String file,HttpServletResponse res) throws IOException
-    {
-      System.out.println("LoadRule id= "+file);
+      System.out.println("LoadRule id= "+file+" transport="+transport);
       SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
       /*Map ruleMap=appContext.getRuleManager().getRuleMap(Long.valueOf(file));
        Long length=(Long) ruleMap.get("length");
       res.setHeader("length",String.valueOf(length));
       LinkedList li=(LinkedList) ruleMap.get("body"); */
-      return appContext.getRuleManager().getRuleBody(Long.valueOf(file));
+      return appContext.getRuleManager().getRuleBody(Long.valueOf(file),transport);
     }
 
-  private LinkedList LoadNewRule(HttpServletRequest req,final String file,HttpServletResponse res) throws IOException
+  private LinkedList LoadNewRule(HttpServletRequest req,final String file, final String transport, HttpServletResponse res) throws IOException
   {
-    System.out.println("LoaNewdRule id= "+file);
-    LinkedList li;
+    System.out.println("LoaNewdRule id= "+file + " transport = "+transport);
+    Rule newRule=Rule.createNewRule(Long.parseLong(file),transport);
     session = req.getSession(false);
-    Rule newRule =(Rule)session.getAttribute("newRule");
-    /*long length= newRule.getLength();
-    res.setHeader("length",String.valueOf(length));
-    */
+    session.setAttribute("newRule",newRule);
+    LinkedList li;
+    //session = req.getSession(false);
+    //Rule newRule =(Rule)session.getAttribute("newRule");
     li=newRule.getBody();
+    System.out.println("body size = " + li.size());
     if(li.size()>0) li.addFirst("ok");
     else li.add("error: newRule is null!");
     return li;
   }
 
-   private void ExistRule(HttpServletRequest req,final String file,HttpServletResponse res) throws IOException
+   private void ExistRule(HttpServletRequest req,final String file, final String transport, HttpServletResponse res) throws IOException
   {
-    System.out.println("ExistRule id= "+file);
+    System.out.println("ExistRule id= "+file + " transport="+transport);
     SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
     PrintWriter out = res.getWriter();
-    if (appContext.getRuleManager().getRule(Long.valueOf(file))!=null)
+    if (appContext.getRuleManager().getRule(Long.valueOf(file),transport)!=null)
         out.print("true");
     else  out.print("false");
     out.flush();out.close();
@@ -309,17 +292,7 @@ public class myServlet extends HttpServlet
     else li.add("error: Root Element is not specified !");
     return li;
   }
-  private LinkedList NewRule(HttpServletRequest req)
-  {
-    LinkedList li;
-    session = req.getSession(false);
-    li=(LinkedList)session.getAttribute("newRuleList");
-    //SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
-    //li=appContext.getRuleManager().newRuleAsList();
-    if(li.size()>0) li.addFirst("ok");
-    else li.add("error: newRule is null!");
-    return li;
-  }
+
   private void SendResult(LinkedList li,HttpServletResponse res) throws IOException
   {
   String  status=(String)li.get(0);res.setHeader("status",status);
