@@ -253,7 +253,7 @@ class SerializableObject
 {
 public:
     SerializableObject() : dialogId(0), objectId(0), dataBuf(NULL), ownBuf(false) { }
-    ~SerializableObject() {  if (dataBuf && ownBuf) delete dataBuf; }
+    virtual ~SerializableObject() {  if (dataBuf && ownBuf) delete dataBuf; }
 
     void setDialogId(unsigned int id) { dialogId = id;  }
     unsigned int getDialogId() const { return dialogId; }
