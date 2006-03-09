@@ -252,7 +252,7 @@ public class Edit extends EditBean {
                 providerId = route.getProvider().getId();
             }
             if (null != route.getRule()) {
-                rule = route.getRule().getName();
+                rule = "CHANGE ME!!!";//TODO change - route.getRule().getName();
                 ruleId = route.getRule().getId().longValue();
             }
 
@@ -269,7 +269,7 @@ public class Edit extends EditBean {
         try {
             final Map sources = createSources();
             final Provider providerObj = (Provider) appContext.getProviderManager().getProviders().get(new Long(providerId));
-            final Rule ruleObj = (Rule) appContext.getRuleManager().getRules().get(new Long(ruleId));
+            final Rule ruleObj = null; //TODO - CHANGE (Rule) appContext.getRuleManager().getRules().get(new Long(ruleId));
             final Category categoryObj = (Category) appContext.getCategoryManager().getCategories().get(new Long(categoryId));
 
             if (isAdd()) {
@@ -331,7 +331,7 @@ public class Edit extends EditBean {
     }
 
     public String[] getRuleIds() {
-        final Map rules = new TreeMap(appContext.getRuleManager().getRules());
+        final Map rules = null; //TODO: change - new TreeMap(appContext.getRuleManager().getRules());
         final List result = new ArrayList(rules.size());
         for (Iterator i = rules.keySet().iterator(); i.hasNext();) {
             result.add(String.valueOf(((Long) i.next()).longValue()));
@@ -340,10 +340,10 @@ public class Edit extends EditBean {
     }
 
     public String[] getRules() {
-        final Map rules = new TreeMap(appContext.getRuleManager().getRules());
+        final Map rules = null; //TODO: change - new TreeMap(appContext.getRuleManager().getRules());
         final List result = new ArrayList(rules.size());
         for (Iterator i = rules.values().iterator(); i.hasNext();) {
-            result.add(((Rule) i.next()).getName());
+            result.add("CHANGE ME!!!" /* TODO: change - ((Rule) i.next()).getName()*/);
         }
         return (String[]) result.toArray(new String[result.size()]);
     }

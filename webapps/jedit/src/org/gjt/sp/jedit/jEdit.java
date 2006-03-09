@@ -3101,7 +3101,6 @@ public class jEdit extends Applet
   protected static final int LineSeparator = 21;
   protected static final int SeparatorChar = 22;
   protected static final int OsName = 23;
-  protected static final int Transport = 24;
   protected static final int NewRule = 25;
   protected static final int UpdateRule = 26;
   protected static final int ExistRule = 27;
@@ -3718,77 +3717,6 @@ public class jEdit extends Applet
     });
   } //}}}
   //{{{ finishStartup() method
-   public static void openRule1(final String userfile)
-   {
-     String userDir = MiscUtilities.constructPath(jEditHome, jEdit.username);//jEditHome+"\\"+jEdit.username;//null;
-     if (!BoolGet(userDir, Exists)) BoolGet(userDir, MkDir);
-
-     String transport=StringGet(userfile,Transport);
-     userDir = MiscUtilities.constructPath(userDir, transport);//jEditHome+"\\"+jEdit.username;//null;
-     if (!BoolGet(userDir, Exists)) BoolGet(userDir, MkDir);
-     System.out.println("userDir+transport= "+userDir);
-     final String userdir=userDir;
-     String userFile="rule_"+userfile+".xml";
-     SwingUtilities.invokeLater(new Runnable()
-     {
-       public void run()
-       {
-         System.out.println("start Thread in openRule");
-         Buffer buffer =null;// openFiles(null, userDir, args);
-         int count = getBufferCount();
-       //todo this changed for cutting FileBrowser dialog
-       /*  if (count == 0)
-           newFile(null, userDir);    */
-         buffer=openFile(null, userdir, userfile , false, null);
-       //  todo end
-          System.out.println("start Thread in openRule recive buffer");
-         View view = null;
-
-     /*      boolean restoreFiles = restore
-                 && jEdit.getBooleanProperty("restore")
-                 && (getBufferCount() == 0 ||
-                 jEdit.getBooleanProperty("restore.cli"));
-
-       if (gui || count != 0) {
-           view = PerspectiveManager
-                   .loadPerspective(restoreFiles);
-
-           if (view == null)
-         */    view = newView(null, buffer);
-          // else if (buffer != null) view.setBuffer(buffer);
-       //  }
-          System.out.println("start Thread in openRule recive view");
-         // Start I/O threads
-       //  EditBus.send(new EditorStarted(null));
-
-      //   VFSManager.start();
-
-         // Start edit server
-     //    if (server != null)
-       //    server.start();
-           System.out.println("start Thread in openRule VFSManager.start()");
-         GUIUtilities.hideSplashScreen();
-
-         Log.log(Log.MESSAGE, jEdit.class, "Startup " + "complete");
-
-         //{{{ Report any plugin errors
-         if (pluginErrors != null) {
-           showPluginErrorDialog();
-         } //}}}
-
-         startupDone = true;
-
-         // in one case not a single AWT class will
-         // have been touched (splash screen off +
-         // -nogui -nobackground switches on command
-         // line)
-         Toolkit.getDefaultToolkit();
-          System.out.println("start Thread in openRule end1");
-      }
-    });
-     System.out.println("start Thread in openRule end2");
-   } //}}}
-
 
   //{{{ showPluginErrorDialog() method
   private static void showPluginErrorDialog()

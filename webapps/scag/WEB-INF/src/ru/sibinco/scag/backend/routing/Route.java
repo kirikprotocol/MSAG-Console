@@ -115,7 +115,7 @@ public class Route {
         final Long categoryId = Long.decode(routeElem.getAttribute("categoryId"));
         this.category = (Category) categoryManager.getCategories().get(categoryId);
         final Long ruleId = Long.decode(routeElem.getAttribute("ruleId"));
-        this.rule = (Rule) ruleManager.getRules().get(ruleId);
+        this.rule = null; //TODO: change - (Rule) ruleManager.getRules().get(ruleId);
         notes = "";
         NodeList notesList = routeElem.getElementsByTagName("notes");
         for (int i = 0; i < notesList.getLength(); i++)
@@ -332,12 +332,13 @@ public class Route {
         this.rule = rule;
     }
 
-    public String getRuleName() {
+  /* TODO: USE ID INSTEAD OF NAME
+   public String getRuleName() {
         if (null != rule)
             return rule.getName();
         else
             return null;
-    }
+    }*/
 
     public String getNotes() {
         return notes;

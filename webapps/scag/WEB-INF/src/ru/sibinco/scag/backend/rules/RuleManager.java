@@ -33,25 +33,22 @@ import java.util.*;
 
 public class RuleManager
 {
-  private final Map rules = Collections.synchronizedMap(new HashMap());
   private final Map smpprules = Collections.synchronizedMap(new HashMap());
   private final Map httprules = Collections.synchronizedMap(new HashMap());
   private final Map mmsrules = Collections.synchronizedMap(new HashMap());
-  private final Map subjects = Collections.synchronizedMap(new HashMap());
-  private final Logger logger = Logger.getLogger(this.getClass());
+  private final LinkedList baseSchema = new LinkedList();
+  private final LinkedList smppSchema = new LinkedList();
+  private final LinkedList httpSchema = new LinkedList();
+  private final LinkedList mmsSchema = new LinkedList();
   private final File rulesFolder;
   private final File xsdFolder;
-  private long lastRuleId;
-  private final ProviderManager providerManager;
   private final Scag scag;
-  private static final String PARAM_NAME_LAST_USED_ID = "last used rule id";
+  private final Logger logger = Logger.getLogger(this.getClass());
   private final static boolean DEBUG = false;
-  public RuleManager(final File rulesFolder,final File xsdFolder,final ProviderManager providerManager, final Config idsConfig,final Scag scag) throws Config.WrongParamTypeException, Config.ParamNotFoundException {
 
-    this.lastRuleId = idsConfig.getInt(PARAM_NAME_LAST_USED_ID);
+  public RuleManager(final File rulesFolder,final File xsdFolder, final Scag scag) {
     this.rulesFolder = rulesFolder;
     this.xsdFolder = xsdFolder;
-    this.providerManager = providerManager;
     this.scag =scag;
   }
 
@@ -61,10 +58,6 @@ public class RuleManager
     load();
   }
 
-  public Map getRules()
-  {
-    return rules;
-  }
 
   public Map getRules(Long serviceId)
   {
@@ -74,20 +67,6 @@ public class RuleManager
     result.put(Transport.MMS_TRANSPORT_NAME,mmsrules.get(serviceId));
     return result;
   }
-
-  public Map getSubjects()
-  {
-    return subjects;
-  }
-  public Rule getRule(Long ruleId)
-  {
-    return (Rule) rules.get(ruleId);
-  }
-  public LinkedList getRuleBody(Long ruleId)
- {
-   Rule rule= (Rule) rules.get(ruleId);
-   return rule.getBody();
- }
 
   public Rule getRule(Long ruleId, String transport)
   {
@@ -107,25 +86,47 @@ public class RuleManager
    return rule.getBody();
  }
 
-  public String getRuleTransportDir(String ruleId)
-  {       Rule r=(Rule) rules.get(Long.decode(ruleId));
-    return r.getTransport();
-  }
-
   public synchronized void load() throws SibincoException
   {
     try {
       loadFromFolder(Transport.SMPP_TRANSPORT_NAME, smpprules);
       loadFromFolder(Transport.HTTP_TRANSPORT_NAME, httprules);
       loadFromFolder(Transport.MMS_TRANSPORT_NAME, mmsrules);
+      loadSchema("rules.xsd", baseSchema);
+      loadSchema(Transport.SMPP_SCHEMA_NAME, smppSchema);
+      loadSchema(Transport.HTTP_SCHEMA_NAME, httpSchema);
+      loadSchema(Transport.MMS_SCHEMA_NAME, mmsSchema);
     } catch (SibincoException e) {
       e.printStackTrace();
       System.out.println("error on init RuleManager in method load(): "+e.getMessage());
       throw new SibincoException(e.getMessage());
     }
   }
+  private void loadSchema(String schemaname, LinkedList schema)
+  {
+     InputStream in = null; BufferedReader br = null;
+     try {
+     in = new FileInputStream(new File(xsdFolder,schemaname));
+     br = new BufferedReader(new InputStreamReader(in));
+     String line;
+     while ((line=br.readLine())!=null)
+       schema.add(line);
+     } catch (FileNotFoundException e) {
+       e.printStackTrace();
+     } catch (IOException io) {
+       io.printStackTrace();
+     } finally {
+       try {
+        if (in!=null) in.close();
+        if (br!=null) br.close();
+       }
+       catch (IOException e) {
+         e.printStackTrace();
+       }
+     }
+  }
 
-  public synchronized void loadFromFolder(String _transportDir, Map transportMap) throws SibincoException
+  public void loadFromFolder(String _transportDir, Map transportMap) throws SibincoException
   {
      File folder=new File(rulesFolder,_transportDir);
       if(!folder.exists())
@@ -156,22 +157,12 @@ public class RuleManager
           throw new SibincoException("FileId "+fileId+" in name of file : "+fileName+" do not math with rule id:"+ruleId);
         if (ruleId.length() > Constants.ROUTE_ID_MAXLENGTH)
           throw new SibincoException("Rule id is too long: " + ruleId.length() + " chars \"" + ruleId + '"');
-       //NodeList child=el.getElementsByTagName("note");
         String notes="";
-        /*  for (int j = 0; j < child.getLength(); j++) { Node node= child.item(j); notes+=Utils.getNodeText(node);
-        }
-        child=el.getElementsByTagName("provider");
-         if (child.getLength() > 1) throw new SibincoException("Rule contains more then one provider");
-          Node node = child.item(0); providerId=Long.decode(Utils.getNodeText(node));
-        */
-
         Long id=Long.decode(ruleId);
 
-        Rule temp = new Rule(id,notes,transport,body/*,length*/);
+        Rule temp = new Rule(id,notes,transport,body);
         transportMap.put(id,temp);
-        rules.put(id, temp);
         logger.debug("exit " + this.getClass().getName() + ".loadFromFile(\"" + fileName + "\")");
-
 
     } catch (FactoryConfigurationError error) {
       logger.error("Couldn't configure xml parser factory", error);
@@ -185,7 +176,6 @@ public class RuleManager
       String notes="Load Error "+e.getMessage();
       Rule temp = new Rule(id, notes, _transportDir,body/*,length*/);
       transportMap.put(id, temp);
-      rules.put(id, temp);
       logger.error("Couldn't parse", e);
       System.out.println("RuleManager LoadFromFile fileName= "+fileName+" SAXException e= "+e.getMessage());
           // throw new SibincoException("Couldn't parse", e);
@@ -198,10 +188,6 @@ public class RuleManager
     }
   }
  }
-
-  public long getLastRuleId() {
-    return lastRuleId;
-  }
 
   private LinkedList LoadXml(final String fileName)
    {
@@ -223,9 +209,16 @@ public class RuleManager
      return li;
    }
 
+   public LinkedList getSchema(String requestedScheme)
+   {
+    if (requestedScheme.indexOf(Transport.SMPP_SCHEMA_NAME)!=-1) return smppSchema;
+    else if (requestedScheme.indexOf(Transport.HTTP_SCHEMA_NAME)!=-1) return httpSchema;
+    else if (requestedScheme.indexOf(Transport.MMS_SCHEMA_NAME)!=-1) return mmsSchema;
+    else return baseSchema;
+   }
 
-public synchronized LinkedList AddRule(BufferedReader r, final String ruleId,Rule newRule) throws SibincoException, IOException
-{
+ public synchronized LinkedList AddRule(BufferedReader r, final String ruleId,Rule newRule) throws SibincoException, IOException
+ {
   String transport = newRule.getTransport();
   System.out.println("AddNewRule ruleId= "+ruleId + " ,transport = "+transport);
   LinkedList errorInfo=new LinkedList();
@@ -248,7 +241,6 @@ public synchronized LinkedList AddRule(BufferedReader r, final String ruleId,Rul
     if (e instanceof StatusDisconnectedException) {
        newRule.updateBody(newbody);
        addRuleToMap(Id,transport,newRule);
-       //rules.put(Id,newRule);
     } else {
       removeRuleFile(ruleId, newRule.getTransport());
     }
@@ -262,7 +254,7 @@ public synchronized LinkedList AddRule(BufferedReader r, final String ruleId,Rul
     addRuleToMap(Id,transport,newRule);
   }
   else  {
-    if (rules.remove(Id) != null) lastRuleId--;
+
     removeRuleFile(ruleId, newRule.getTransport());
   }
   return errorInfo;
@@ -317,42 +309,9 @@ public synchronized LinkedList AddRule(BufferedReader r, final String ruleId,Rul
    return errorInfo;
  }
 
-  private String buffertostring(BufferedReader r) throws IOException
-  {
-      String temp = "";
-      String line;
-      while ((line = r.readLine())!=null)
-      {
-          temp= temp + line +"\n";
-      }
-      return temp;
-  }
-
-  private LinkedList errorsImitator(BufferedReader r) throws IOException
-  {
-      LinkedList error=new LinkedList();
-
-      //search for forbidden constants, e.g. @dummy, @foo...
-      String[] forbiddenconsts = {"@dummy","@foo"};
-      int tt=-1;
-      String line;
-      while ((line = r.readLine())!=null)
-      {
-          tt++;
-          for (int ii = 0;ii<forbiddenconsts.length;++ii)
-          if (line.indexOf(forbiddenconsts[ii])!=-1)
-          {
-             error.add("RuleEngineException exception: Wrong constant: "+forbiddenconsts[ii]);
-             error.add(""+tt);
-             return error;
-          }
-      }
-      return null;
-  }
   private void saveRule(LinkedList li,String ruleId, Rule rule) throws SibincoException
   {
     System.out.println("RESAVING current rule body to disc!!!!");
-    //Rule rule=(Rule)rules.get(Long.valueOf(ruleId));
 
     try {
       String filename="rule_"+ruleId+".xml";
@@ -364,8 +323,6 @@ public synchronized LinkedList AddRule(BufferedReader r, final String ruleId,Rul
         out.println(i.next());
       out.flush();
       out.close();
-      //long length=newFile.length();
-      //rule.updateBody(li/*,length*/);
     } catch (FileNotFoundException e) {
       throw new SibincoException("Couldn't save new rule : Couldn't write to destination config filename: " + e.getMessage());
     } catch (IOException e) {
@@ -377,7 +334,6 @@ public synchronized LinkedList AddRule(BufferedReader r, final String ruleId,Rul
 
   private LinkedList saveRule(BufferedReader r,String ruleId, Rule rule) throws SibincoException
   {
-      //if (rule == null) rule=(Rule)rules.get(Long.valueOf(ruleId));
       LinkedList li=new LinkedList();
       try {
         String filename="rule_"+ruleId+".xml";
@@ -388,13 +344,10 @@ public synchronized LinkedList AddRule(BufferedReader r, final String ruleId,Rul
         final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), Functions.getLocaleEncoding()));
         String s; li.addFirst("ok");
         while((s=r.readLine())!=null) { li.add(s);
-          //System.out.println(s);
           out.println(s);
         }
         out.flush();
         out.close();
-        //long length=newFile.length();
-        //rule.updateBody(li/*,length*/);
       } catch (FileNotFoundException e) {
         throw new SibincoException("Couldn't save new rule : Couldn't write to destination config filename: " + e.getMessage());
       } catch (IOException e) {
@@ -437,5 +390,39 @@ public synchronized LinkedList AddRule(BufferedReader r, final String ruleId,Rul
         if (fileForDeleting.exists())
           if (fileForDeleting.delete()!=true) throw new SibincoException("Couldn't delete rule " + fileForDeleting.getAbsolutePath());
     }
+
+  private String buffertostring(BufferedReader r) throws IOException
+  {
+      String temp = "";
+      String line;
+      while ((line = r.readLine())!=null)
+      {
+          temp= temp + line +"\n";
+      }
+      return temp;
+  }
+
+  private LinkedList errorsImitator(BufferedReader r) throws IOException
+  {
+      LinkedList error=new LinkedList();
+
+      //search for forbidden constants, e.g. @dummy, @foo...
+      String[] forbiddenconsts = {"@dummy","@foo"};
+      int tt=-1;
+      String line;
+      while ((line = r.readLine())!=null)
+      {
+          tt++;
+          for (int ii = 0;ii<forbiddenconsts.length;++ii)
+          if (line.indexOf(forbiddenconsts[ii])!=-1)
+          {
+             error.add("RuleEngineException exception: Wrong constant: "+forbiddenconsts[ii]);
+             error.add(""+tt);
+             return error;
+          }
+      }
+      return null;
+  }
+
 }
 

@@ -89,7 +89,7 @@ public class SCAGAppContext {
             } else {
                 scag = new Scag(gwDaemonHost, (int) gwConfig.getInt("admin.port"));
             }
-            ruleManager = new RuleManager(new File(rulesFolder), new File(xsdFolder), providerManager, idsConfig, scag);
+            ruleManager = new RuleManager(new File(rulesFolder), new File(xsdFolder), scag);
             ruleManager.init();
             scagRoutingManager = new ScagRoutingManager(scagConfFolder, smppManager, providerManager, ruleManager, categoryManager);
             scagRoutingManager.init();

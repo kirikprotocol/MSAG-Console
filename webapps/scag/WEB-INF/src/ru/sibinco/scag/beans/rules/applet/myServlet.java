@@ -48,7 +48,6 @@ public class myServlet extends HttpServlet
   protected static final int LineSeparator = 21;
   protected static final int SeparatorChar = 22;
   protected static final int OsName = 23;
-  protected static final int Transport = 24;
   protected static final int NewRule = 25;
   protected static final int UpdateRule = 26;
   protected static final int ExistRule = 27;
@@ -80,7 +79,6 @@ public class myServlet extends HttpServlet
        case LoadRule:   li=LoadRule(req,file,transport,res); SendResult(li,res); break;
        case LoadNewRule:li=LoadNewRule(req,file,transport,res); SendResult(li,res); break;
        case ExistRule:  ExistRule(req,file,transport,res); break;
-       case Transport : list=getTransport(file,req);break;
        case SaveBackup: list=SaveBackup(new File(file), req); break;
        case RuleNameReset: if (session !=null) session.removeAttribute("newRule"); break;
        default:
@@ -394,14 +392,6 @@ public class myServlet extends HttpServlet
     list[0]=result; System.out.println("result= "+result);return list;
   }
 
-  private String[] getTransport(String id,HttpServletRequest req) {
-    String result="false";
-    String[] list=new String[1];
-    list[0]=result;
-    SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
-    list[0]=appContext.getRuleManager().getRuleTransportDir(id); //transport
-    return list;
-  }
   private String[] SaveBackup(final File source, HttpServletRequest req)
   {
     String result="false";

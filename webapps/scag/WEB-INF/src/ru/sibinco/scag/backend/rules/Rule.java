@@ -23,9 +23,7 @@ import java.util.HashMap;
  */
 public class Rule
 {
-  private Provider provider;
   private String transport;
-  private String name;
   private Long id;
   private String notes;
   private LinkedList body;
@@ -56,30 +54,6 @@ public class Rule
     return new Rule(new Long(id),"",transport,body);
   }
 
-/*  public static Rule createNewRule(long id,String transport,Provider provider,String name) {
-    String lineSeparator=System.getProperty("line.separator");
-    int sep=lineSeparator.length();
-    String schema=Transport.getSchemaByTransport(transport);
-    System.out.println("XML_LINE length= "+XML_LINE.length());
-    LinkedList body=new LinkedList();
-    long length=0;
-
-    String Line1="<"+ROOT_ELEMENT+" xmlns:xsi=\""+XMLNS_XSI+"\"";
-    String Line2="           xsi:schemaLocation=\""+XSI_SCHEMALOCATION+schema+"\"";
-    String Line3="           xmlns:scag=\""+XMLNS_SCAG+"\"";
-    String Line4="           transport=\"" + transport + "\" id=\"" + id + "\" provider=\"" + provider.getId()
-                + "\" name=\"" + name + "\">"+"\n"+"\n";
-    String Line5="</"+ROOT_ELEMENT+">";
-    length+=XML_LINE.length();length+=Line1.length();length+=Line2.length();
-    length+=Line3.length();length+=Line4.length();length+=Line5.length();length+=sep*6;
-    body.add(XML_LINE);body.add(Line1);body.add(Line2);body.add(Line3);body.add(Line4);body.add(Line5);
-    return new Rule(new Long(id),name,"",provider,transport,body,length);
-  } */
-    public Provider getProvider()
-  {
-    return provider;
-  }
-
   public String getNotes()
   {
     return notes;
@@ -98,53 +72,18 @@ public class Rule
     {
       this.id=id;
     }
-   public String getName()
-  {
-    return name;
-  }
 
-  public void setName(String ruleName)
-  {
-    this.name = ruleName;
-  }
 
-  public void setProvider(final Provider provider)
-  {
-    this.provider = provider;
-  }
-
-  public String getProviderName()
-  {
-    if (null != provider)
-      return provider.getName();
-    else
-      return null;
-  }
-
- /* public Map getRuleMap()
-  {
-    return ruleMap;
-  }
-   */
   public LinkedList getBody()
   {
     return body;
   }
 
-  public void updateBody(LinkedList body/*,long length*/)
+  public void updateBody(LinkedList body)
   {
     this.body = body;
-   /* this.length=length;
-    ruleMap.put("body",body);
-    ruleMap.put("length",new Long(length));
-  */
   }
 
-/*  public long getLength()
-  {
-    return length;
-  }
-  */
   public String getTransport()
   {
     return transport;
