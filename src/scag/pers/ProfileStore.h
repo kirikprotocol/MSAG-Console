@@ -122,7 +122,7 @@ public:
 
 	void init(const string& storeName, uint32_t _max_cache_size)
 	{
-		log = smsc::logger::Logger::getInstance("scag.pers.store");
+		log = smsc::logger::Logger::getInstance("persstor");
 
 		MutexGuard mt(mtx);
 

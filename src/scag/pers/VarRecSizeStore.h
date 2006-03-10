@@ -10,6 +10,7 @@
 #include "core/buffers/DiskHash.hpp"
 #include "core/buffers/PageFile.hpp"
 #include "core/buffers/TmpBuf.hpp"
+#include "SerialBuffer.h"
 
 namespace scag{ namespace pers{
 
@@ -17,39 +18,6 @@ using namespace std;
 
 using namespace smsc::core::buffers;
 using namespace smsc::core::synchronization;
-
-
-typedef TmpBuf<char, 2048> _SerialBuffer;
-class SerialBuffer : public _SerialBuffer
-{
-public:
-	SerialBuffer() : _SerialBuffer(2048) {};
-	SerialBuffer(int size) : _SerialBuffer(size) {};
-	string toString()
-	{
-		string str;
-		int i = 0, j = GetPos();
-		char buf[10];
-
-		uint8_t b;
-		SetPos(0);
-		while(i++ < j)
-		{
-			Read((char*)&b, 1);
-			sprintf(buf, "%02x(%c)", (int)b, (b > 32 && b < 128 ? b : '*'));
-			str += buf;
-		}
-		SetPos(j);
-		return str;
-	}
-};
-
-class Serializable
-{
-public:
-	virtual void Serialize(SerialBuffer &sb) = 0;
-	virtual void Deserialize(SerialBuffer &sb) = 0;
-};
 
 /*class DiskHashKey{
 public:

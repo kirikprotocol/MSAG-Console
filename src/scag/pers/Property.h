@@ -6,14 +6,12 @@
 #include <list>
 #include <string>
 
-#include "VarRecSizeStore.h"
+#include "SerialBuffer.h"
 
 namespace scag{ namespace pers{
 
 using namespace std;
 using namespace smsc::core::buffers;
-
-#define MAX_STRING_LEN	255
 
 enum TimePolicy{
 	INFINIT = 1,
@@ -48,11 +46,10 @@ protected:
 	static void StringFromBuf(SerialBuffer& buf, wstring &str);
 	void ReadAccess();
 	void WriteAccess();
-	smsc::logger::Logger* log;
 
 public:
 
-	Property() : type(INT), i_val(0), time_policy(INFINIT){log = smsc::logger::Logger::getInstance("scag.pers.profile");};
+	Property() : type(INT), i_val(0), time_policy(INFINIT){};
 	Property(const Property& cp);
 	Property& operator=(const Property& cp);
 

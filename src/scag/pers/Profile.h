@@ -8,8 +8,7 @@
 
 #include <core/buffers/Hash.hpp>
 #include <core/buffers/TmpBuf.hpp>
-
-#include "VarRecSizeStore.h"
+#include "logger/Logger.h"
 
 #include "Property.h"
 

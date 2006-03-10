@@ -1,12 +1,11 @@
 /* $Id$ */
 
-#include "Profile.h"
+#include "Property.h"
 
 namespace scag{ namespace pers{
 
 void Property::copy(const Property& cp)
 {
-	log = smsc::logger::Logger::getInstance("scag.pers.profile");
 	name = cp.name;
 	type = cp.type;
 	time_policy = cp.time_policy;
