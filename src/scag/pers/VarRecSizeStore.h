@@ -1,3 +1,5 @@
+/* $Id$ */
+
 #ifndef SCAG_PERS_VARRECSIZE_STORE
 #define SCAG_PERS_VARRECSIZE_STORE
 

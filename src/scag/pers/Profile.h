@@ -1,3 +1,5 @@
+/* $Id$ */
+
 #ifndef SCAG_PERS_STORE_PROFILE
 #define SCAG_PERS_STORE_PROFILE
 
