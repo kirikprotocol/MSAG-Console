@@ -121,6 +121,7 @@ protected:
     Session*    session;    //TCAP dialogs factory
     Logger*     logger;
     SSFhandler* ssfHdl;
+    Mutex             resGrd;
     ResultHandlersMAP resHdls;
     CAP3State   _capState;  //current state of cap3SMS CONTRACT
     TCAPState   _dlgState;  //current state of TCAP Dialog
@@ -130,7 +131,7 @@ class InapOpResListener: public InvokeListener
 {
 public:
     InapOpResListener(Invoke * op, Inap * pInap);
-    ~InapOpResListener() {}
+    virtual ~InapOpResListener() {}
 
     Invoke * getOrgInv() const;
     //Gets result from TCAP 

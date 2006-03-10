@@ -170,6 +170,7 @@ void TCAPDispatcher::Stop(void)
     _mutex.Unlock();
 }
 
+#define RECV_TIMEOUT 100 //millisecs
 int TCAPDispatcher::Listen(void)
 {
     USHORT_T result = 0;
@@ -182,21 +183,20 @@ int TCAPDispatcher::Listen(void)
         memset(&msg, 0, sizeof( MSG_T ));
         msg.receiver = MSG_USER_ID;
         
-        result = MsgRecvEvent(&msg, NULL, NULL, /*MSG_INFTIM*/ 100 ); //ms
-        _mutex.Lock();
-        if (!running) {
-            result = 0; break;
+        result = MsgRecvEvent(&msg, NULL, NULL, RECV_TIMEOUT);
+        if (MSG_TIMEOUT != result) {
+            if (result)
+                smsc_log_error(logger, "TCAPDsp: MsgRecv() failed with code %d (%s)",
+                               result, getReturnCodeDescription(result));
+            else
+                EINSS7_I97THandleInd(&msg);
+            EINSS7CpReleaseMsgBuffer(&msg);
         }
-        if (MSG_TIMEOUT == result)
-            continue;
-        if (result != 0)
-            smsc_log_error(logger, "TCAPDsp: MsgRecv() failed with code %d (%s)",
-                           result, getReturnCodeDescription(result));
-        else
-            EINSS7_I97THandleInd(&msg);
-        EINSS7CpReleaseMsgBuffer(&msg);
+        _mutex.Lock();
     }
     _mutex.Unlock();
+    if (MSG_TIMEOUT == result)
+        result = 0;
     return (int)result;
 }
 
@@ -238,18 +238,29 @@ Session* TCAPDispatcher::openSession(UCHAR_T ownssn, const char* ownaddr,
     }
     smsc_log_debug(logger, "TCAPDsp: Opening session (oSSN=%u, oGT=%s, rSSN=%d, rGT=%s)",
                    ownssn, ownaddr, remotessn, remoteaddr);
+    
+    _mutex.Lock();
+    bool exists = (bool)(sessions.find(ownssn) != sessions.end());
+    _mutex.Unlock();
 
     Session* pSession = NULL;
-    if (sessions.find(ownssn) != sessions.end()) {
+    if (exists) {
         smsc_log_error(logger, "TCAPDsp: Session (oSSN=%d) is already opened", ownssn);
     } else {
-        USHORT_T  result = EINSS7_I97TBindReq(ownssn, userId, TCAP_INSTANCE_ID, EINSS7_I97TCAP_WHITE_USER);
+        _mutex.Lock();
+        pSession = new Session(ownssn, ownaddr, remotessn, remoteaddr, logger);
+        sessions.insert(SessionsMap_T::value_type(ownssn, pSession));
+        _mutex.Unlock();
+        //TBindReq() will call confirmSession()
+        USHORT_T  result = EINSS7_I97TBindReq(ownssn, userId, TCAP_INSTANCE_ID,
+                                                        EINSS7_I97TCAP_WHITE_USER);
         if (result != 0) {
+            _mutex.Lock();
             smsc_log_error(logger, "TCAPDsp: BindReq(oSSN=%u) failed with code %d (%s)",
                             ownssn, result, getTcapReasonDescription(result));
-        } else {
-            pSession = new Session(ownssn, ownaddr, remotessn, remoteaddr, logger);
-            sessions.insert(SessionsMap_T::value_type(ownssn, pSession));
+            sessions.erase(ownssn);
+            delete pSession;
+            _mutex.Unlock();
         }
     }
     return pSession;
@@ -281,6 +292,7 @@ bool TCAPDispatcher::confirmSession(UCHAR_T ssn, UCHAR_T bindResult)
 
 Session* TCAPDispatcher::findSession(UCHAR_T SSN)
 {
+    MutexGuard tmp(_mutex);
     SessionsMap_T::const_iterator it = sessions.find(SSN);
     return (it == sessions.end()) ? NULL : (*it).second;
 }
@@ -292,28 +304,31 @@ void TCAPDispatcher::closeSession(Session* pSession)
         return;
     }
 
+    MutexGuard tmp(_mutex);
     UCHAR_T ssn = pSession->getSSN();
     smsc_log_debug(logger, "TCAPDsp: Closing session (SSN=%u)", ssn);
 
     if (sessions.find(ssn) == sessions.end())
         smsc_log_error(logger, "TCAPDsp: Session (SSN=%u) doesn't exist", ssn);
-    else
+    else {
+        Session::SessionState sesState = pSession->getState();
         sessions.erase(ssn);
+        if (sesState == Session::BOUND) {
+            USHORT_T  result = EINSS7_I97TUnBindReq(ssn, userId, TCAP_INSTANCE_ID);
+            if (result)
+                smsc_log_error(logger, "TCAPDsp: UnBindReq(oSSN=%u) failed with code %d (%s)",
+                               ssn, result, getTcapReasonDescription(result));
+        }
+    }
     delete pSession;
-
-    USHORT_T  result = EINSS7_I97TUnBindReq(ssn, userId, TCAP_INSTANCE_ID);
-    if (result != 0)
-        smsc_log_error(logger, "TCAPDsp: UnBindReq(oSSN=%u) failed with code %d (%s)",
-                       ssn, result, getTcapReasonDescription(result));
 }
 
 void TCAPDispatcher::closeAllSessions()
 {
     smsc_log_debug(logger,"TCAPDsp: Closing all sessions ..");
 
-    SessionsMap_T  cpmap = sessions;
-    sessions.clear();
-    for (SessionsMap_T::iterator it = cpmap.begin(); it != cpmap.end(); it++) {
+    MutexGuard tmp(_mutex);
+    for (SessionsMap_T::iterator it = sessions.begin(); it != sessions.end(); it++) {
         Session* pSession = (*it).second;
         UCHAR_T  ssn = pSession->getSSN();
         smsc_log_debug(logger, "TCAPDsp: Closing session (SSN=%u)", ssn);
@@ -324,6 +339,7 @@ void TCAPDispatcher::closeAllSessions()
             smsc_log_error(logger, "TCAPDsp: UnBindReq(oSSN=%u) failed with code %d (%s)",
                            ssn, result, getTcapReasonDescription(result));
     }
+    sessions.clear();
 }
 
 } // namespace inap

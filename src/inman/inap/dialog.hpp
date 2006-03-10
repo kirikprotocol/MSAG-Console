@@ -5,15 +5,14 @@
 #define __SMSC_INMAN_INAP_DIALOG__
 
 #include <map>
+#include <list>
 
 #include "logger/Logger.h"
 #include "inman/common/types.hpp"
 #include "inman/inap/invoke.hpp"
 #include "inman/inap/results.hpp"
-#include "inman/common/observable.hpp"
 #include "inman/common/errors.hpp"
 
-using smsc::inman::common::ObservableT;
 using smsc::logger::Logger;
 using smsc::inman::common::CustomException;
 
@@ -22,8 +21,6 @@ namespace inman {
 namespace inap {
 
 class Session;
-
-typedef std::map< UCHAR_T, Invoke* > InvokeMap;
 
 class DialogListener
 {
@@ -36,8 +33,7 @@ class DialogListener
 
 static const USHORT_T   _DEFAULT_INVOKE_TIMER = 30; //seconds
 
-class Dialog : public ObservableT< DialogListener >
-{
+class Dialog {
 public:
     typedef enum {
         dlgIdle = 0, dlgInited, dlgContinued, dlgConfirmed, dlgEnded
@@ -45,6 +41,11 @@ public:
 
     Dialog(Session* session, USHORT_T id, unsigned dialog_ac_idx, Logger * uselog = NULL);
     virtual ~Dialog();
+    //reinitializes Dialog to be reused with other id
+    void reset(USHORT_T new_id, unsigned dialog_ac_idx);
+
+    void addListener(DialogListener* pListener);
+    void removeListener(DialogListener* pListener);
 
     //sets the default timeout for Invoke result waiting
     void    setInvokeTimeout(USHORT_T timeout);
@@ -53,6 +54,8 @@ public:
     //zero as timeout value sets Invoke timer equal to the Dialog default timeout value
     Invoke* initInvoke(UCHAR_T opcode, USHORT_T timeout = 0);
     void    releaseInvoke(UCHAR_T invId);
+    //returns true is dialog has some Invokes pending (awaiting Result or LCancel)
+    unsigned  pendingInvokes(void);
     //resets the Invoke timer, extending its lifetime (response waiting)
     void    resetInvokeTimer(UCHAR_T invokeId) throw (CustomException);
 
@@ -88,16 +91,21 @@ public:
                                 const UCHAR_T *op, USHORT_T pmlen,  const UCHAR_T *pm);
 
     //own methods
-    void     setId(USHORT_T did){ _dId = did; } //do not use this manually !
     USHORT_T getId()      const { return _dId;       }
-    UCHAR_T  getNextInvokeId()  { return _lastInvId++;}
+    UCHAR_T  getNextInvokeId()  { return _lastInvId++; }
     USHORT_T getQSrv()    const { return qSrvc;     }
     USHORT_T getTimeout() const { return _timeout;  }
     Session* getSession() const { return session;   }
 
 protected:
+    typedef std::list<DialogListener*> ListenerList;
+    typedef std::map<UCHAR_T, Invoke*> InvokeMap;
+
+    Mutex           invGrd;      //invokes and listeners guard
     InvokeMap       originating; //Invokes, which have result/errors defined
     InvokeMap       terminating; //
+    ListenerList    listeners;   //
+
     Session*        session;
     SCCP_ADDRESS_T  ownAddr;
     SCCP_ADDRESS_T  remoteAddr;
@@ -111,6 +119,9 @@ protected:
     UCHAR_T         _lastInvId;
     Logger*         logger;
     DialogState     _state;
+//protected:
+//    friend class Session;
+//    void   setId(USHORT_T did){ _dId = did; }
 };
 
 } //inap

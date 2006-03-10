@@ -74,15 +74,15 @@ Inap::~Inap()
         delete ires;
     }
     //All remaining Invokes will be deleted by ~Dialog()
-    delete dialog;
+    session->releaseDialog(dialog);
 }
 
 Invoke* Inap::initOperation(UCHAR_T opcode)
 {
     Invoke* op = dialog->initInvoke(opcode);
-    assert( op );
     InapOpResListener * ires = new InapOpResListener(op, this);
     assert(ires);
+    MutexGuard tmp(resGrd);
     op->setListener(ires);
     resHdls.insert(ResultHandlersMAP::value_type(op->getId(), ires));
     smsc_log_debug(logger, "Inap: initiated Invoke[%u] (opcode = %u), respType: %d",
@@ -92,6 +92,7 @@ Invoke* Inap::initOperation(UCHAR_T opcode)
 
 void Inap::releaseAllOperations(void)
 {
+    MutexGuard tmp(resGrd);
     ResultHandlersMAP::const_iterator it;
     for (it = resHdls.begin(); it != resHdls.end(); it++) {
         InapOpResListener * ires = (*it).second;
@@ -107,6 +108,8 @@ void Inap::releaseAllOperations(void)
 
 void Inap::releaseOperation(Invoke * inv)
 {
+    MutexGuard tmp(resGrd);
+    inv->setListener(NULL);
     USHORT_T invId = inv->getId();
     UCHAR_T  opcode = inv->getOpcode();
     smsc_log_debug(logger, "Inap: releasing Invoke[%u] (opcode = %u), respType: %d, status: %d",
@@ -131,9 +134,7 @@ void Inap::onOperationError(Invoke *op, TcapEntity * resE)
 
     //call operation errors handler
     switch (opcode) {
-    case InapOpCode::InitialDPSMS: {
-        ssfHdl->onAbortSMS(resE->getOpcode(), false);
-    } break;
+    case InapOpCode::InitialDPSMS:
     case InapOpCode::EventReportSMS: {
         ssfHdl->onAbortSMS(resE->getOpcode(), false);
     } break;
