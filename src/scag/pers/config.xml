@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE config SYSTEM "file://configuration.dtd">
+
+<config>
+
+  <section name="pers">
+    <param name="host" type="string">localhost</param>
+    <param name="port" type="int">9999</param>
+    <param name="connections" type="int">100</param>
+    <param name="storage_dir" type="string">/home/firs/store</param>
+  </section>
+
+</config>
