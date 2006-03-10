@@ -360,8 +360,8 @@ void Billing::StopTimer(Billing::BillingState bilState, bool locked/* = false */
  * -------------------------------------------------------------------------- */
 void Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
 {
-    MutexGuard  tmpGrd(bilMutex);
     assert (opaque_obj);
+    bilMutex.Lock();
     smsc_log_debug(logger, "Billing[%u.%u]: timer[%u] signaled, states: %u -> %u",
         _bconn->bConnId(), _bId, timer->getId(), opaque_obj->val.ui, (unsigned)state);
 
@@ -372,42 +372,32 @@ void Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
     else
         timers.erase(it);
 
-    if (opaque_obj->val.ui != (unsigned)state)
-        return; //operation already finished
-
-    //target operation doesn't complete yet.
-    smsc_log_debug(logger, "Billing[%u.%u]: operation is timed out at state: %u",
-                _bconn->bConnId(), _bId, (unsigned)state);
-    switch (state) {
-    case Billing::bilStarted: {
-        //abonent type query is expired, process in postpaid mode.
-        if (!postpaidBill)
-            smsc_log_debug(logger, "Billing[%u.%u]: switched to billing via CDR",
-                    _bconn->bConnId(), _bId);
-        postpaidBill = true;
-        TonNpiAddress   ab_number;
-        ab_number.fromText(cdr._srcAdr.c_str());
-        _cfg.abProvider->cancelQuery(ab_number.getSignals(), this);
-        bilMutex.Unlock();
-        ChargeAbonent(ab_number.getSignals(), smsc::inman::cache::btUnknown);
-        return;
-    } break;
-
-    case Billing::bilInited:
-    case Billing::bilReleased: {
-    } break;
-
-    case Billing::bilProcessed: { //SMSC doesn't respond with DeliveryResult
-        bilMutex.Unlock();
-        Abort("TCP dialog is timed out");
-    } break;
-
-    case Billing::bilApproved:
-    case Billing::bilComplete:
-    default:;
+    if (opaque_obj->val.ui == (unsigned)state) {
+        //target operation doesn't complete yet.
+        smsc_log_debug(logger, "Billing[%u.%u]: operation is timed out at state: %u",
+                    _bconn->bConnId(), _bId, (unsigned)state);
+        if (state == Billing::bilStarted) {
+            //abonent type query is expired, process in postpaid mode.
+            if (!postpaidBill)
+                smsc_log_debug(logger, "Billing[%u.%u]: switched to billing via CDR",
+                        _bconn->bConnId(), _bId);
+            postpaidBill = true;
+            TonNpiAddress   ab_number;
+            ab_number.fromText(cdr._srcAdr.c_str());
+            _cfg.abProvider->cancelQuery(ab_number.getSignals(), this);
+            bilMutex.Unlock();
+            ChargeAbonent(ab_number.getSignals(), smsc::inman::cache::btUnknown);
+            return;
+        }
+        if (state == Billing::bilProcessed) {
+            //SMSC doesn't respond with DeliveryResult
+            bilMutex.Unlock();
+            Abort("TCP dialog is timed out");
+            return;
+        }
     }
     bilMutex.Unlock();
-    return;
+    return; //operation already finished
 }
 
 void Billing::ChargeAbonent(AbonentId ab_number, AbonentBillType ab_type)
@@ -470,7 +460,7 @@ void Billing::onChargeSms(ChargeSms* sms)
         StartTimer();
         return; //execution will continue in abonentQueryCB() by another thread.
     }
-    onAbonentQueried(ab_number.getSignals(), ab_type);
+    ChargeAbonent(ab_number.getSignals(), ab_type);
     return;
 }
 
