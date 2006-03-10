@@ -99,6 +99,14 @@ public class Constants {
             public static final Constants COULDNT_DELETE_PROVIDER = new Constants("error.providers.couldnt_delete_provider");
         }
 
+        public interface operators {
+            public static final Constants OPERATOR_NOT_FOUND = new Constants("error.operators.operator_not_found");
+            public static final Constants COULDNT_DELETE_OPERATOR = new Constants("error.operators.couldnt_delete_operator");
+            public static final Constants COULD_NOT_CREATE_MASK = new Constants("error.operators.couldnt_create_mask");
+            public static final Constants COULD_NOT_CREATE_OPERATOR = new Constants("error.operators.couldnt_create_operator");
+            public static final Constants COULD_NOT_UPDATE_OPERATOR = new Constants("error.operators.couldnt_update_operator");
+        }
+
         public interface serviceProviders {
             public static final Constants SERVICE_PROVIDER_NOT_FOUND = new Constants("error.serviceproviders.provider_not_found");
             public static final Constants COULDNT_DELETE_SERVICE_PROVIDER = new Constants("error.serviceproviders.couldnt_delete_provider");
