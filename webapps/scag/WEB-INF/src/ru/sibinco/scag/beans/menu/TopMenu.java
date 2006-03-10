@@ -31,7 +31,7 @@ public class TopMenu  extends ArrayList {
 
             Collection scagServices = new ArrayList();
             scagServices.add(new MenuItem("menu.services.providers", "/services/index.jsp"));
-            scagServices.add(new MenuItem("menu.scag.providers", "/gw/providers/index.jsp"));
+            scagServices.add(new MenuItem("menu.scag.operators", "/operators/index.jsp"));
             add(new MenuItem("menu.services", "", scagServices));
 
             Collection endpointItems = new ArrayList();
