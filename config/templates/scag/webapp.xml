@@ -9,8 +9,8 @@
   <param name="gw_config" type="string">services/scag/conf/config.xml</param>
   <param name="status_folder" type="string">statistics/status</param> 
   <param name="gw_config_folder" type="string">services/scag/conf</param>
-  <param name="rules_folder" type="string">applet/rules</param>
-  <param name="xsd_folder" type="string">webapps/scag/rules/rules</param> 
+  <param name="rules_folder" type="string">conf/rules</param>
+  <param name="xsd_folder" type="string">conf/rules/xsd</param> 
   <param name="ids_file" type="string">conf/ids.xml</param>
   <param name="gw name" type="string">scag</param>
   <param name="ids_file" type="string">webapps/scag/WEB-INF/ids.xml</param>

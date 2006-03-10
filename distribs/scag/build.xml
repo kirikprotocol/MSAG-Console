@@ -155,6 +155,31 @@ Targets:
     <copy tofile="${DISTR_DIR}/conf/webconfig.xml" file="${TEMPL_DIR}/scag/webapp.xml">
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
+    <copy tofile="${DISTR_DIR}/conf/webconfig.xml" file="${TEMPL_DIR}/scag/webapp.xml">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <copy todir="${DISTR_DIR}/conf/rules/xsd" flatten="yes" >
+      <fileset dir="${TEMPL_DIR}">
+               <include name="scag/rules/xsd/*"/>
+      </fileset>
+    </copy>
+    <copy todir="${DISTR_DIR}/conf/rules/SMPP" flatten="yes" >
+      <fileset dir="${TEMPL_DIR}">
+               <include name="scag/rules/SMPP/*"/>
+      </fileset>
+    </copy>
+    <copy todir="${DISTR_DIR}/conf/rules/HTTP" flatten="yes" >
+      <fileset dir="${TEMPL_DIR}">
+               <include name="scag/rules/HTTP/*"/>
+      </fileset>
+    </copy>
+    <copy todir="${DISTR_DIR}/conf/rules/MMS" flatten="yes" >
+      <fileset dir="${TEMPL_DIR}">
+               <include name="scag/rules/MMS/*"/>
+      </fileset>
+    </copy>
+
+
 
     <!-- daemon configuration-->
     <copy tofile="${DISTR_DIR}/daemon/logger.properties" file="${TEMPL_DIR}/logger/daemon.logger">
