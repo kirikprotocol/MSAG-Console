@@ -2643,6 +2643,23 @@ StateType StateMachine::forward(Tuple& t)
   INFwdSmsChargeResponse::ForwardContext ctx;
   ctx.allowDivert=t.command->get_forwardAllowDivert();
   ctx.reschedulingForward=t.command->is_reschedulingForward();
+  if(sms.billingRecord && !sms.hasIntProperty(Tag::SMSC_CHARGINGPOLICY))
+  {
+    if(strcmp(sms.getSourceSmeId(),"MAP_PROXY")==0 && strcmp(sms.getDestinationSmeId(),"MAP_PROXY")==0)
+    {
+      sms.setIntProperty(Tag::SMSC_CHARGINGPOLICY,smsc->p2pChargePolicy);
+    }else
+    {
+      sms.setIntProperty(Tag::SMSC_CHARGINGPOLICY,smsc->otherChargePolicy);
+    }
+    try{
+      store->replaceSms(t.msgId,sms);
+    }catch(std::exception& e)
+    {
+      warn2(smsLog,"Failed to replace sms with msgId=%lld in store:%s",t.msgId,e.what());
+    }
+  }
+
   if(sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnDelivery  && sms.billingRecord)
   {
     try{
