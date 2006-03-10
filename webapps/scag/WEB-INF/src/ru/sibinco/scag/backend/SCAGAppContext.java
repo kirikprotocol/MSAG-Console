@@ -17,6 +17,7 @@ import ru.sibinco.scag.backend.daemon.Daemon;
 import ru.sibinco.scag.backend.daemon.ServiceInfo;
 import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.backend.service.ServiceProvidersManager;
+import ru.sibinco.scag.backend.operators.OperatorManager;
 import ru.sibinco.scag.perfmon.PerfServer;
 import ru.sibinco.scag.svcmon.SvcMonServer;
 import ru.sibinco.scag.scmon.ScServer;
@@ -44,6 +45,7 @@ public class SCAGAppContext {
     private final RuleManager ruleManager;
     private final ProviderManager providerManager;
     private final ServiceProvidersManager serviceProvidersManager;
+    private final OperatorManager operatorManager;
     private final CategoryManager categoryManager;
     private final ScagRoutingManager scagRoutingManager;
     private final ResourceManager resourceManager;
@@ -75,6 +77,8 @@ public class SCAGAppContext {
             providerManager = new ProviderManager(idsConfig);
             serviceProvidersManager = new ServiceProvidersManager(config.getString("services_file"));
             serviceProvidersManager.init();
+            operatorManager = new OperatorManager(config.getString("operators_file"));
+            operatorManager.init();
             categoryManager = new CategoryManager(idsConfig);
             smppManager = new SmppManager(config.getString("smpp_file"), providerManager);
             smppManager.init();
@@ -154,6 +158,10 @@ public class SCAGAppContext {
 
     public ServiceProvidersManager getServiceProviderManager() {
         return serviceProvidersManager;
+    }
+
+    public OperatorManager getOperatorManager() {
+        return operatorManager;
     }
 
     public CategoryManager getCategoryManager() {
