@@ -185,13 +185,14 @@ Server::ShutdownReason Server::Listen()
 
             if (FD_ISSET(socket, &readSet)) {
                 if (!conn->process()) {
-                    smsc_log_debug(logger, "TCPSrv: Unprocessed Event on socket[%u]", socket);
                     CustomException * exc = conn->hasException();
                     if (exc) {
                         smsc_log_error(logger, "TCPSrv: %s", exc->what());
                         conn->resetException();
-                    } else //remote point ends connection
+                    } else { //remote point ends connection
+                        smsc_log_debug(logger, "TCPSrv: client ends connection[%u]", socket);
                         closeConnect(conn);
+                    }
                 }
             }
             if (FD_ISSET(socket, &errorSet)) {
