@@ -15,6 +15,7 @@
   <param name="gw name" type="string">scag</param>
   <param name="ids_file" type="string">webapps/scag/WEB-INF/ids.xml</param>
   <param name="services_file" type="string">webapps/scag/WEB-INF/services.xml</param>
+  <param name="operators_file" type="string">webapps/scag/WEB-INF/operators.xml</param>
   <section name="gw daemon">
     <param name="host" type="string">@connect.host@</param>
     <param name="port" type="int">@daemon.admin.port@</param>
