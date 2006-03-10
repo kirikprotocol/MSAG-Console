@@ -47,10 +47,6 @@ public class TopMenu  extends ArrayList {
             routingItems.add(new MenuItem("menu.routing.tracer", "/routing/tracer/index.jsp"));
             add(new MenuItem("menu.routing", "", routingItems));
 
-            Collection rulesItems = new ArrayList();
-            rulesItems.add(new MenuItem("menu.rules.rules", "/rules/rules/index.jsp"));
-            add(new MenuItem("menu.rules", "", rulesItems));
-
             Collection statisticItems = new ArrayList();
             statisticItems.add(new MenuItem("menu.stat.monitor","", "/stat/monitor/index.jsp','perfmon', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=580');"));
             statisticItems.add(new MenuItem("menu.stat.stat","/stat/stat/index.jsp"));
