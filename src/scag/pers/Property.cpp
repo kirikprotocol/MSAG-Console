@@ -42,7 +42,7 @@ string Property::toString() const
 			str += buf;
 			break;
 		case STRING:
-			str += " STRING: " + s_val;
+			str += " STRING: ";// + s_val;
 			break;
 		case BOOL:
 			str += " BOOL: ";
@@ -132,7 +132,7 @@ void Property::setBool(const char *nm, bool b, TimePolicy policy, time_t fd, uin
 	setTimePolicy(policy, fd, lt);
 }
 
-void Property::setString(const char *nm, const char* str, TimePolicy policy, time_t fd, uint32_t lt)
+void Property::setString(const char *nm, const wchar_t* str, TimePolicy policy, time_t fd, uint32_t lt)
 {
 	name = nm;
 	setStringValue(str);
@@ -148,7 +148,7 @@ void Property::setDate(const char *nm, time_t t, TimePolicy policy, time_t fd, u
 
 void Property::Serialize(SerialBuffer& buf)
 {
-	uint8_t len = name.length();
+	uint16_t len = name.length();
 
 	uint8_t t = type;
 	buf.Append((char*)&t, sizeof(uint8_t));
@@ -156,7 +156,7 @@ void Property::Serialize(SerialBuffer& buf)
 	buf.Append((char*)&t, sizeof(uint8_t));
 	buf.Append((char*)&final_date, sizeof(time_t));
 	buf.Append((char*)&life_time, sizeof(uint32_t));
-	buf.Append((char*)&len, sizeof(uint8_t));
+	buf.Append((char*)&len, sizeof(len));
 	buf.Append(name.c_str(), len);
 
 	switch(type) {
@@ -166,8 +166,8 @@ void Property::Serialize(SerialBuffer& buf)
 
 		case STRING:
 			len = s_val.length();
-			buf.Append((char*)&len, sizeof(uint8_t));
-			buf.Append(s_val.c_str(), len);
+			buf.Append((char*)&len, sizeof(len));
+			buf.Append((char*)s_val.c_str(), sizeof(wchar_t) * len);
 			break;
 
 		case BOOL:
@@ -182,14 +182,46 @@ void Property::Serialize(SerialBuffer& buf)
 
 void Property::StringFromBuf(SerialBuffer& buf, string &str)
 {
-	uint8_t len;
-	char scb[MAX_STRING_LEN + 1];
+	uint16_t len;
+	char scb[255];
 
-	buf.Read((char*)&len, sizeof(uint8_t));
-	buf.Read(scb,len);
-	scb[len] = 0;
+	buf.Read((char*)&len, sizeof(len));
+	str[0] = 0;
+	while(len > 254)
+	{
+		buf.Read(scb, 254);
+		scb[254] = 0;
+		str += scb;
+		len -= 254;
+	}
+	if(len)
+	{
+		buf.Read((char*)scb, len);
+		scb[len] = 0;
+		str += scb;
+	}
+}
 
-	str = scb;
+void Property::StringFromBuf(SerialBuffer& buf, wstring &str)
+{
+	uint16_t len;
+	wchar_t scb[255];
+
+	buf.Read((char*)&len, sizeof(len));
+	str[0] = 0;
+	while(len > 254)
+	{
+		buf.Read((char*)scb, sizeof(wchar_t) * 254);
+		scb[254] = 0;
+		str += scb;
+		len -= 254;
+	}
+	if(len)
+	{
+		buf.Read((char*)scb, sizeof(wchar_t) * len);
+		scb[len] = 0;
+		str += scb;
+	}
 }
 
 void Property::Deserialize(SerialBuffer& buf)

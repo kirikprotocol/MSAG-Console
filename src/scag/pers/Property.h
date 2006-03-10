@@ -34,7 +34,7 @@ class Property {
 protected:
 	PropertyType type;
 	string name;
-	string s_val;
+	wstring s_val;
 	uint32_t i_val;
 	time_t d_val;
 	bool b_val;
@@ -45,6 +45,7 @@ protected:
 
 	void copy(const Property& cp);
 	static void StringFromBuf(SerialBuffer& buf, string &str);
+	static void StringFromBuf(SerialBuffer& buf, wstring &str);
 	void ReadAccess();
 	void WriteAccess();
 	smsc::logger::Logger* log;
@@ -60,7 +61,7 @@ public:
 		setInt(nm, i, policy, fd, lt);
 	};
 
-	Property(const char *nm, const char* str, TimePolicy policy, time_t fd, uint32_t lt)
+	Property(const char *nm, const wchar_t* str, TimePolicy policy, time_t fd, uint32_t lt)
 	{
 		setString(nm, str, policy, fd, lt);
 	};
@@ -71,11 +72,11 @@ public:
 	uint32_t getIntValue() { ReadAccess(); return i_val; };
 	bool getBoolValue() { ReadAccess(); return b_val; };
 	time_t getDateValue() { ReadAccess(); return d_val; };
-	const string& getStringValue() { ReadAccess(); return s_val; };
+	const wstring& getStringValue() { ReadAccess(); return s_val; };
 	void setIntValue(uint32_t i) { WriteAccess(); i_val = i; type = INT; };
 	void setBoolValue(bool b) { WriteAccess(); b_val = b; type = BOOL; };
 	void setDateValue(time_t d) { WriteAccess(); d_val = d; type = DATE; };
-	void setStringValue(const string& s) { WriteAccess(); s_val = s; type = STRING; };
+	void setStringValue(const wchar_t* s) { WriteAccess(); s_val = s; type = STRING; };
 	uint8_t getType() { return type; };
 	void setTimePolicy(TimePolicy policy, time_t fd, uint32_t lt);
 	bool isExpired();
@@ -83,7 +84,7 @@ public:
 
 	void setInt(const char *nm, uint32_t i, TimePolicy policy, time_t fd, uint32_t lt);
 	void setBool(const char *nm, bool b, TimePolicy policy, time_t fd, uint32_t lt);
-	void setString(const char *nm, const char* str, TimePolicy policy, time_t fd, uint32_t lt);
+	void setString(const char *nm, const wchar_t* str, TimePolicy policy, time_t fd, uint32_t lt);
 	void setDate(const char *nm, time_t t, TimePolicy policy, time_t fd, uint32_t lt);
 
 	void Serialize(SerialBuffer& buf);
