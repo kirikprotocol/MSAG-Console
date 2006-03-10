@@ -91,19 +91,23 @@ struct BillingCFG {
 //billing parameters
     BILL_MODE       billMode;
     CDR_MODE        cdrMode;
-    const char *    cdrDir;      //location to store CDR files
-    long            cdrInterval; //rolling interval for CDR files
-    unsigned short  maxTimeout;      //maximum timeout for TCP & DB operations
-    unsigned short  maxBilling;      //maximum number of Billings per connect
+    const char *    cdrDir;         //location to store CDR files
+    long            cdrInterval;    //rolling interval for CDR files
+    unsigned short  maxTimeout;     //maximum timeout for TCP operations,
+                                    //billing aborts on its expiration
+    unsigned short  abtTimeout;     //maximum timeout on abonent type requets,
+                                    //(HLR & DB interaction), on expiration billing
+                                    //continues in CDR mode 
+    unsigned short  maxBilling;     //maximum number of Billings per connect
 //SS7 interaction:
-    unsigned char   userId;          //PortSS7 user id [1..20]
-    unsigned short  capTimeout;      //optional timeout for operations with IN platform
-    const char*     ssf_addr;        //
-    const char*     scf_addr;        //IN platform address
-    int             ssn;             //
-    unsigned int    serviceKey;      //service id for InitialDP operation
-    RPCList         rejectRPC;       //list of RP causes forcing charging denial
-    RPCList         postpaidRPC;     //list of RP causes returned for postpaid abonents
+    unsigned char   userId;         //PortSS7 user id [1..20]
+    unsigned short  capTimeout;     //optional timeout for operations with IN platform
+    const char*     ssf_addr;       //
+    const char*     scf_addr;       //IN platform address
+    int             ssn;            //
+    unsigned int    serviceKey;     //service id for InitialDP operation
+    RPCList         rejectRPC;      //list of RP causes forcing charging denial
+    RPCList         postpaidRPC;    //list of RP causes returned for postpaid abonents
 };
 
 class Billing;
@@ -197,7 +201,7 @@ protected:
     Session * activateSSN(void);
     void abortBilling(InmanErrorType errType, uint16_t errCode);
     bool startCAPDialog(void);
-    void StartTimer(bool locked = false);
+    void StartTimer(unsigned short timeout, bool locked = false);
     void StopTimer(BillingState bilState, bool locked = false);
     void ChargeAbonent(AbonentId ab_number, AbonentBillType ab_type);
 

@@ -31,6 +31,7 @@ static const unsigned int _in_CFG_MAX_BILLINGS = 10000;
 static const unsigned int _in_CFG_DFLT_BILLINGS = 500;
 static const unsigned short _in_CFG_DFLT_CAP_TIMEOUT = 20;
 static const unsigned short _in_CFG_DFLT_BILL_TIMEOUT = 120;
+static const unsigned short _in_CFG_DFLT_ABTYPE_TIMEOUT = 5;
 static const unsigned char _in_CFG_DFLT_SS7_USER_ID = 3; //USER03_ID
 static const long _in_CFG_DFLT_CACHE_INTERVAL = 1440;
 #define RP_MO_SM_transfer_rejected 21       //3GPP TS 24.011 Annex E-2
@@ -96,6 +97,7 @@ public:
         bill.maxBilling = _in_CFG_DFLT_BILLINGS;
         bill.capTimeout = _in_CFG_DFLT_CAP_TIMEOUT;
         bill.maxTimeout = _in_CFG_DFLT_BILL_TIMEOUT;
+        bill.abtTimeout = _in_CFG_DFLT_ABTYPE_TIMEOUT;
         bill.rejectRPC.push_back(RP_MO_SM_transfer_rejected);
     }
 
@@ -224,6 +226,16 @@ public:
             bill.maxTimeout = (unsigned short)tmo;
         }
         smsc_log_info(inapLogger, "maxTimeout: %s%u secs", !tmo ? "default ":"", bill.maxTimeout);
+
+        tmo = 0;    //abtTimeout
+        try { tmo = (uint32_t)billCfg.getInt("abonentTypeTimeout"); }
+        catch (ConfigException& exc) { }
+        if (tmo) {
+            if (tmo >= 65535)
+                throw ConfigException("'abonentTypeTimeout' should fall into the range [1 ..65535] seconds");
+            bill.abtTimeout = (unsigned short)tmo;
+        }
+        smsc_log_info(inapLogger, "abonentTypeTimeout: %s%u secs", !tmo ? "default ":"", bill.abtTimeout);
 
         /* ************************** *
          * IN interaction parameters: *

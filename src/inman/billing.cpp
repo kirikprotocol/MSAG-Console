@@ -316,8 +316,7 @@ bool Billing::startCAPDialog(void)
     }
 }
 
-//NOTE: requires the Mutex being unlocked before call !
-void Billing::StartTimer(bool locked/* = false*/)
+void Billing::StartTimer(unsigned short timeout, bool locked/* = false*/)
 {
     OPAQUE_OBJ  timerArg;
 
@@ -330,7 +329,7 @@ void Billing::StartTimer(bool locked/* = false*/)
     timers.insert(TimersMAP::value_type((unsigned)state, timer));
     if (!locked)
         bilMutex.Unlock();
-    timer->start((long)_cfg.maxTimeout, false);
+    timer->start((long)timeout, false);
     return;
 }
 
@@ -457,7 +456,7 @@ void Billing::onChargeSms(ChargeSms* sms)
         //IN point unable to tell abonent billing type, request cache to retrieve it
         _cfg.abProvider->startQuery(ab_number.getSignals(), this);
 
-        StartTimer();
+        StartTimer(_cfg.abtTimeout);
         return; //execution will continue in abonentQueryCB() by another thread.
     }
     ChargeAbonent(ab_number.getSignals(), ab_type);
@@ -517,8 +516,8 @@ void Billing::onContinueSMS(uint32_t inmanErr /* = 0*/)
 
     if (_bconn->sendCmd(&res)) {
         state = Billing::bilProcessed;
+        StartTimer(_cfg.maxTimeout, true);
         bilMutex.Unlock();
-        StartTimer();
     } else {     //TCP connect fatal failure
         bilMutex.Unlock();
         Abort(_bconn->getConnectError()->what());
