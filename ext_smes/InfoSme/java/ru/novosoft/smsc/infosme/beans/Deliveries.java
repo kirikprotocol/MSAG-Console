@@ -40,6 +40,8 @@ public class Deliveries extends InfoSmeBean
     private File incomingFile = null;
 
     private boolean transliterate = false;
+    private boolean transactionMode = true;
+
     private Task task = new Task();
     private String taskTableName = null;
 
@@ -504,7 +506,7 @@ public class Deliveries extends InfoSmeBean
         task.setSvcType("dlvr");
         task.setActivePeriodStart("09:00:00");
         task.setActivePeriodEnd("21:00:00");
-        task.setTransactionMode(true);
+        task.setTransactionMode(false);
         task.setValidityPeriod("12:00:00");
     }
     private boolean checkAndPrepareTask()
@@ -586,7 +588,8 @@ public class Deliveries extends InfoSmeBean
     }
 
     public boolean isTransactionMode() {
-      return task.isTransactionMode();
+      //return task.isTransactionMode();
+      return transactionMode;
     }
     public void setTransactionMode(boolean transactionMode) {
       this.task.setTransactionMode(transactionMode);
