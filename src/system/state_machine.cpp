@@ -1402,9 +1402,13 @@ StateType StateMachine::submit(Tuple& t)
         tmp.assign((const char*)body,len);
       }else
       {
-        unsigned len2;
-        const char *body2=sms->getBinProperty(Tag::SMSC_MO_PDU,&len);
-        tmp.assign(body2,len2);
+        unsigned lenMo;
+        const char *bodyMo=sms->getBinProperty(Tag::SMSC_MO_PDU,&lenMo);
+        if(lenMo>512)
+        {
+          warn2(smsLog,"MO LEN=%d",lenMo);
+        }
+        tmp.assign(bodyMo,lenMo);
         sms->setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::BINARY);
         dc=DataCoding::BINARY;
       }
