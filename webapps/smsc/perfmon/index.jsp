@@ -1,3 +1,4 @@
+<%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="ru.novosoft.smsc.admin.preferences.UserPreferences,
                  java.util.HashMap"%><html>
 <head>
@@ -32,3 +33,4 @@
 	</applet>
 </body>
 </html>
+<%@ include file="/WEB-INF/inc/code_footer.jsp"%>
