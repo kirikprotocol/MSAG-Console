@@ -135,14 +135,15 @@ int main(int argc,char* argv[])
       //printf("sz2=%d\n",sz,sz2);fflush(stdout);
     }
   }
-  //
+  int count=0;
   for(LoadUpVector::iterator it=luVector.begin();it!=luVector.end();it++)
   {
     if((*it)->final)continue;
+    count++;
     using namespace smsc::sms::BufOps;
     BufOps::SmsBuffer smsbuf(0);
     uint32_t sz=0;
-    smsbuf<<sz<<(*it)->id<<(*it)->seq<<(*it)->final;
+    smsbuf<<sz<<(*it)->id<<(*it)->seq<<(uint8_t)(*it)->final;
     //printf("%d\n",smsbuf.GetPos());
     Serialize((*it)->sms,smsbuf);
     sz=smsbuf.GetPos()-sizeof(sz);
@@ -152,6 +153,6 @@ int main(int argc,char* argv[])
     smsbuf<<sz;
     g.Write(smsbuf.get(),smsbuf.GetPos());
   }
-  printf("%d sms recovered\n",luVector.size());
+  printf("%d sms recovered\n",count);
   return 0;
 }
