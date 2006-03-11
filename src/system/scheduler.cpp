@@ -122,6 +122,11 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
               __warning2__("Incomplete record detected, fPos=%lld, fSize=%lld, recSize=%d",fPos,fSize,sz);
               break;
             }
+            if(sz<=8+4+1)
+            {
+              __warning2__("Store broken at fPos=%lld, fSize=%lld, recSize=%d",fPos,fSize,sz);
+              abort();
+            }
             item.id=pf->ReadNetInt64();
             fPos+=8;
             item.seq=pf->ReadNetInt32();
