@@ -18,6 +18,7 @@ class SerialBuffer : public _SerialBuffer
 public:
 	SerialBuffer() : _SerialBuffer(2048) {};
 	SerialBuffer(int size) : _SerialBuffer(size) {};
+	void* operator new(size_t sz) { return ::operator new(sz); };
 	string toString()
 	{
 		string str;

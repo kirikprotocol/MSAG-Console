@@ -13,6 +13,7 @@
 
 #include "ProfileStore.h"
 #include "PersServer.h"
+#include "CmdDispatcher.h"
 
 using namespace scag::pers;
 using namespace smsc::util::config;
@@ -71,64 +72,32 @@ int main(int argc, char* argv[])
 		if( len > 0 && storageDir[len - 1] != '\\' && storageDir[len - 1] != '/')
 			storageDir += '/';
 
-		AbonentStore.init(storageDir + "abonent", 1);
-		ServiceStore.init(storageDir + "service", 1);
-		OperatorStore.init(storageDir + "operator", 1);
-		ProviderStore.init(storageDir + "provider", 1);
+		uint32_t cm;
+        try { cm = persConfig.getInt("abonent_cache_max"); } catch (...) { cm = 1000; };
+		AbonentStore.init(storageDir + "abonent", cm);
+
+        try { cm = persConfig.getInt("service_cache_max"); } catch (...) { cm = 1000; };
+		ServiceStore.init(storageDir + "service", cm);
+
+        try { cm = persConfig.getInt("operator_cache_max"); } catch (...) { cm = 1000; };
+		OperatorStore.init(storageDir + "operator", cm);
+
+        try { cm = persConfig.getInt("provider_cache_max"); } catch (...) { cm = 1000; };
+		ProviderStore.init(storageDir + "provider", cm);
 
         try { host = persConfig.getString("host"); } catch (...) {};
         try { port = persConfig.getInt("port"); } catch (...) {};
         try { maxClientCount = persConfig.getInt("connections"); } catch (...) {};
 
-		auto_ptr<PersServer> pps(new PersServer());
-		ps = pps.get();
+		auto_ptr<PersServer> pp(new PersServer(host.c_str(), port, maxClientCount, 
+			new CommandDispatcher(&AbonentStore, &ServiceStore, &OperatorStore, &ProviderStore)));
 
-		ps->InitServer(host.c_str(), port, maxClientCount);
-
-		ps->Execute();
+		pp.get()->Execute();
 
 /*		sigemptyset(&set);
 		sigaddset(&set, SIGINT);
 		sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
 		sigprocmask(SIG_SETMASK, &set, &old);*/
-
-/*		Property prop;
-		prop.setInt("test_val", 234567, FIXED, -1, 20);
-		smsc_log_debug(logger,  "setProperty: %s", prop.toString().c_str());
-		StringProfileKey spk("+79232446251");
-		AbonentStore.setProperty(spk, &prop);
-		prop.setBool("test_val_bool", false, R_ACCESS, -1, 25);
-		AbonentStore.setProperty(spk, &prop);
-		prop.setString("test_val_string", L"test_string", W_ACCESS, -1, 25);
-		AbonentStore.setProperty(spk, &prop);
-		prop.setDate("test_val_string1", 111111, INFINIT, -1, 25);
-		AbonentStore.setProperty(spk, &prop);
-		auto_ptr<Property> pp( AbonentStore.getProperty(spk, "test_val"));
-		if(pp.get() != NULL)
-			smsc_log_debug(logger,  "pers %s", pp.get()->toString().c_str());
-		smsc_log_debug(logger,  "end");
-
-		prop.setInt("test_val", 234567, FIXED, -1, 20);
-		smsc_log_debug(logger,  "setProperty: %s", prop.toString().c_str());
-		IntProfileKey ipk(12);
-		ServiceStore.setProperty(ipk, &prop);
-		prop.setBool("test_val_bool", false, R_ACCESS, -1, 25);
-		ServiceStore.setProperty(ipk, &prop);
-		prop.setString("test_val_string", L"test_string", W_ACCESS, -1, 25);
-		ServiceStore.setProperty(ipk, &prop);
-		prop.setDate("test_val_string1", 111111, INFINIT, -1, 25);
-		ServiceStore.setProperty(ipk, &prop);
-		auto_ptr<Property> pp1( ServiceStore.getProperty(ipk, "test_val"));
-		if(pp1.get() != NULL)
-			smsc_log_debug(logger,  ">>pers int %s", pp1.get()->toString().c_str());
-		auto_ptr<Property> pp2( ServiceStore.getProperty(ipk, "test_val_string"));
-		if(pp2.get() != NULL && pp2.get()->getStringValue() == L"test_string")
-			smsc_log_debug(logger,  "####>>pers int %s", pp1.get()->toString().c_str());
-		smsc_log_debug(logger,  "end");*/
-/*		AbonentStore.shutdown();
-		ServiceStore.shutdown();
-		OperatorStore.shutdown();
-		ProviderStore.shutdown();*/
     }
     catch (ConfigException& exc) 
     {

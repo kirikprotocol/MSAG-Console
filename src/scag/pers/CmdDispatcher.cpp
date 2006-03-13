@@ -1,3 +1,5 @@
+/* $id$ */
+
 #include "CmdDispatcher.h"
 
 namespace scag { namespace pers {

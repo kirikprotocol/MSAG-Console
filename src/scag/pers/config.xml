@@ -8,6 +8,10 @@
     <param name="port" type="int">9999</param>
     <param name="connections" type="int">100</param>
     <param name="storage_dir" type="string">/home/firs/store</param>
+    <param name="abonent_cache_max" type="int">1000</param>
+    <param name="service_cache_max" type="int">1000</param>
+    <param name="provider_cache_max" type="int">1000</param>
+    <param name="operator_max" type="int">1000</param>
   </section>
 
 </config>

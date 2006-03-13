@@ -3,3 +3,4 @@
 
 # binary name        source name	libraries         
 scag/pers       pers           -lscag-pers -llogger -lcore-buffers -lcore-network -lrt -lutil -lutil-config -lutil-xml $(XERCES_LIB) -lsocket -lnsl
+scag/pers_client_test       client_test           -lscag-pers -llogger -lcore-buffers -lcore-network -lrt -lutil -lutil-config -lutil-xml $(XERCES_LIB) -lsocket -lnsl
