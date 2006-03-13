@@ -19,7 +19,7 @@
 
 #include "scag/config/ConfigView.h"
 #include "ConfigListener.h"
-#include <typeinfo.h>
+#include <typeinfo>
 #include "logger/Logger.h"
 
 namespace scag   {
