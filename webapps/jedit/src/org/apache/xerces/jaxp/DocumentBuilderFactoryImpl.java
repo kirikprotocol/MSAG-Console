@@ -163,4 +163,12 @@ public class DocumentBuilderFactoryImpl extends DocumentBuilderFactory {
             }
         }
     }
+
+    public void setFeature(String name,
+                                boolean value)
+                         throws ParserConfigurationException {}
+    public boolean getFeature(String name)
+                            throws ParserConfigurationException {
+      return true;
+    }
 }
