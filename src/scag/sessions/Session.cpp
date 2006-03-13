@@ -242,7 +242,9 @@ void Session::Deserialize(SessionBuffer& buff)
     buff >> tmp;
     m_SessionKey.USR = tmp;
 
-    buff >> lastAccessTime >> lastOperationId >> ((uint8_t)m_isTransact);     
+	uint8_t c;
+    buff >> lastAccessTime >> lastOperationId >> c;
+	m_isTransact=(bool)c;     
 
     buff >> tmp;
     m_SmppDiscriptor.cmdType = (CommandOperations)tmp;
