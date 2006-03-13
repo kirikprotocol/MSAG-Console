@@ -47,6 +47,10 @@
     <param name="BillingServerHost" type="string">@bill.server_host@</param>
     <param name="BillingServerPort" type="int">@bill.server_port@</param>
   </section>
+  
+  <section name="SessionManager">
+    <param name="location" type="string">@session.location@</param>
+  </section>
 		        
   <section name="smpp">
     <param name="host" type="string">@listen.host@</param>
