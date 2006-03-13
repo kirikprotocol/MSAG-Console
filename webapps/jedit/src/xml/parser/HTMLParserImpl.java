@@ -183,11 +183,11 @@ public class HTMLParserImpl extends XmlParser
     ElementDecl elementDecl = data.getElementDecl(element);
 
     AttributesImpl attrs = new AttributesImpl();
-    Enumeration enum = a.keys();
+    Enumeration enumeration = a.keys();
 
-    while (enum.hasMoreElements())
+    while (enumeration.hasMoreElements())
     {
-     Object attr = enum.nextElement();
+     Object attr = enumeration.nextElement();
      String name = attr.toString().toLowerCase();
 
      if (name.startsWith("$"))

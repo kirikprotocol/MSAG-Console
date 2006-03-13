@@ -89,10 +89,10 @@ public class DefaultErrorSource extends ErrorSource implements EBComponent
 
   List errorList = new LinkedList();
 
-  Enumeration enum = errors.elements();
-  while(enum.hasMoreElements())
+  Enumeration enumeration = errors.elements();
+  while(enumeration.hasMoreElements())
   {
-   ArrayList list = (ArrayList)enum.nextElement();
+   ArrayList list = (ArrayList)enumeration.nextElement();
 
    for(int i = 0; i < list.size(); i++)
    {

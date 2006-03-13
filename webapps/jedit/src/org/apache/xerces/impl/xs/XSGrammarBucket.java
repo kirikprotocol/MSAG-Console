@@ -180,10 +180,10 @@ public class XSGrammarBucket {
         int count = fGrammarRegistry.size() + (fNoNSGrammar==null ? 0 : 1);
         SchemaGrammar[] grammars = new SchemaGrammar[count];
         // get grammars with target namespace
-        Enumeration enum = fGrammarRegistry.elements();
+        Enumeration enumeration = fGrammarRegistry.elements();
         int i = 0;
-        while (enum.hasMoreElements())
-            grammars[i++] = (SchemaGrammar)enum.nextElement();
+        while (enumeration.hasMoreElements())
+            grammars[i++] = (SchemaGrammar)enumeration.nextElement();
         // add the grammar without target namespace, if any
         if (fNoNSGrammar != null)
             grammars[count-1] = fNoNSGrammar;

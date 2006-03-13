@@ -346,12 +346,12 @@ public class HTMLSerializer
                 preserveSpace = true;
 
             if ( addNSAttr ) {
-                Enumeration enum;
+                Enumeration enumeration;
 
-                enum = _prefixes.keys();
-                while ( enum.hasMoreElements() ) {
+                enumeration = _prefixes.keys();
+                while ( enumeration.hasMoreElements() ) {
                     _printer.printSpace();
-                    value = (String) enum.nextElement();
+                    value = (String) enumeration.nextElement();
                     name = (String) _prefixes.get( value );
                     if ( name.length() == 0 ) {
                         _printer.printText( "xmlns=\"" );

@@ -311,10 +311,10 @@ public class AugmentationsImpl implements Augmentations{
         public String toString() {
             StringBuffer buff = new StringBuffer();
             buff.append("LargeContainer");
-            Enumeration enum = fAugmentations.keys();
+            Enumeration enumeration = fAugmentations.keys();
 
-            while (enum.hasMoreElements()) {
-                Object key = enum.nextElement();
+            while (enumeration.hasMoreElements()) {
+                Object key = enumeration.nextElement();
                 buff.append("\nkey == ");
                 buff.append(key);
                 buff.append("; value == ");
