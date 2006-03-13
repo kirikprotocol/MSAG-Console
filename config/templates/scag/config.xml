@@ -41,6 +41,13 @@
     <param name="module" type="string">libsimplebilling.so</param>
   </section>
 
+  <section name="BillingManager">
+    <param name="configDir" type="string">@bill.config_dir@</param>
+    <param name="soDir" type="string">@bill.so_dir@</param>
+    <param name="BillingServerHost" type="string">@bill.server_host@</param>
+    <param name="BillingServerPort" type="int">@bill.server_port@</param>
+  </section>
+		        
   <section name="smpp">
     <param name="host" type="string">@listen.host@</param>
     <param name="inactivityTime" type="int">30</param>
