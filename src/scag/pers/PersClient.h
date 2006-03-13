@@ -1,3 +1,5 @@
+/* $Id$ */
+
 #ifndef SCAG_PERS_CLIENT
 #define SCAG_PERS_CLIENT
 
