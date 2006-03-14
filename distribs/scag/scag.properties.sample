@@ -31,9 +31,9 @@ bill.so_dir=bill_so
 bill.server_host=127.0.0.1
 bill.server_port=14999
 
-session.location=/opt/home/msag_test/install/msag_distr/store
+session.location=/opt/home/msag_test/build/msag_distr/store
 
-stat.dir=/opt/home/msag_test/install/msag_distr/statistics
+stat.dir=/opt/home/msag_test/build/msag_distr/statistics
 stat.perf_host=14998
 stat.perf_port=14997
 stat,perf_svc_port=14996

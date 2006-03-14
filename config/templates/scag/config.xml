@@ -40,7 +40,12 @@
   <section name="billing">
     <param name="module" type="string">libsimplebilling.so</param>
   </section>
-
+  
+  <section name="MessageStorage">
+       <param name="statisticsDir" type="string">@storage.statistics_dir@</param>
+        <param name="trafficDir" type="string">@storage.traffic_dir@</param>
+  </section>
+  
   <section name="BillingManager">
     <param name="configDir" type="string">@bill.config_dir@</param>
     <param name="soDir" type="string">@bill.so_dir@</param>
