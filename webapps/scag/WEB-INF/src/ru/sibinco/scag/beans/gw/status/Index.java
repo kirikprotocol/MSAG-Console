@@ -109,21 +109,10 @@ public class Index extends TabledBeanImpl {
                 if ("routes".equals(s))
                     applyRoutes();
                 if ("users".equals(s))
-                    applyUsers();
-                if ("billing".equals(s))
-                    applyBilling();
+                    applyUsers();                
             }
     }
 
-    private void applyBilling() throws SCAGJspException {
-        try {
-            appContext.getBillingManager().save();
-            appContext.getStatuses().setBillingChanged(false);
-        } catch (Throwable e) {
-            logger.debug("Couldn't apply Route billing rules", e);
-            throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_BILLING, e);
-        }
-    }
 
     private void applyUsers() throws SCAGJspException {
         try {

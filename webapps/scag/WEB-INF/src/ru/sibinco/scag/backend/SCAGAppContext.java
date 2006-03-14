@@ -5,7 +5,6 @@ import org.xml.sax.SAXException;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.util.config.Config;
 import ru.sibinco.scag.backend.resources.ResourceManager;
-import ru.sibinco.scag.backend.routing.BillingManager;
 import ru.sibinco.scag.backend.routing.ScagRoutingManager;
 import ru.sibinco.scag.backend.users.UserManager;
 import ru.sibinco.scag.backend.protocol.journal.Journal;
@@ -57,7 +56,6 @@ public class SCAGAppContext {
     private final Scag scag;
     private final Statuses statuses;
     private final DataSource connectionPool;
-    private final BillingManager billingManager;
     private Journal journal = new Journal();
     private static File scagConfFolder = null;
 
@@ -85,7 +83,6 @@ public class SCAGAppContext {
             String rulesFolder = config.getString("rules_folder");
             String xsdFolder = config.getString("xsd_folder");
             resourceManager = new ResourceManager(scagConfFolder);
-            billingManager = new BillingManager(new File(gwConfigFolder, "billing-rules.xml"));
             scagDaemon = new Daemon(gwDaemonHost, (int) config.getInt("gw daemon.port"), smppManager, config.getString("gw daemon.folder"));
             final ServiceInfo scagServiceInfo = (ServiceInfo) scagDaemon.getServices().get(config.getString("gw name"));
             if (scagServiceInfo != null) {
@@ -95,7 +92,7 @@ public class SCAGAppContext {
             }
             ruleManager = new RuleManager(new File(rulesFolder), new File(xsdFolder), scag);
             ruleManager.init();
-            scagRoutingManager = new ScagRoutingManager(scagConfFolder, smppManager, providerManager, ruleManager, categoryManager);
+            scagRoutingManager = new ScagRoutingManager(scagConfFolder, smppManager, providerManager, categoryManager);
             scagRoutingManager.init();
             String statusFolder = config.getString("status_folder");
             statusManager = new StatusManager(new File(statusFolder));
@@ -190,10 +187,6 @@ public class SCAGAppContext {
 
     public Statuses getStatuses() {
         return statuses;
-    }
-
-    public BillingManager getBillingManager() {
-        return billingManager;
     }
 
     public DataSource getDataSource() {

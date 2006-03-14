@@ -214,9 +214,6 @@
                   <sm-ep:list emptyOption="true" title="provider" name="providerId"
                               values="${fn:join(bean.providerIds, ',')}"
                               valueTitles="${fn:join(bean.providerNames, ',')}"/>
-                  <sm-ep:list title="rule" name="ruleId"
-                              values="${fn:join(bean.ruleIds, ',')}"
-                              valueTitles="${fn:join(bean.rules, ',')}"/>
                   <sm-ep:list emptyOption="true" title="category" name="categoryId"
                               values="${fn:join(bean.categoryIds, ',')}"
                               valueTitles="${fn:join(bean.categories, ',')}"/>

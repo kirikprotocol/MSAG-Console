@@ -12,7 +12,6 @@ import ru.sibinco.scag.backend.routing.Source;
 import ru.sibinco.scag.backend.routing.Subject;
 import ru.sibinco.scag.backend.sme.Provider;
 import ru.sibinco.scag.backend.sme.Category;
-import ru.sibinco.scag.backend.rules.Rule;
 import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.beans.DoneException;
 import ru.sibinco.scag.beans.EditBean;
@@ -50,9 +49,6 @@ public class Edit extends EditBean {
 
     private String category;
     private long categoryId;
-
-    private long ruleId;
-    private String rule;
 
     private long providerId;
     private String providerName = null;
@@ -251,10 +247,6 @@ public class Edit extends EditBean {
                 providerName = route.getProvider().getName();
                 providerId = route.getProvider().getId();
             }
-            if (null != route.getRule()) {
-                rule = "CHANGE ME!!!";//TODO change - route.getRule().getName();
-                ruleId = route.getRule().getId().longValue();
-            }
 
             if (null != route.getCategory()) {
                 category = route.getCategory().getName();
@@ -269,7 +261,6 @@ public class Edit extends EditBean {
         try {
             final Map sources = createSources();
             final Provider providerObj = (Provider) appContext.getProviderManager().getProviders().get(new Long(providerId));
-            final Rule ruleObj = null; //TODO - CHANGE (Rule) appContext.getRuleManager().getRules().get(new Long(ruleId));
             final Category categoryObj = (Category) appContext.getCategoryManager().getCategories().get(new Long(categoryId));
 
             if (isAdd()) {
@@ -277,14 +268,14 @@ public class Edit extends EditBean {
                     throw new SCAGJspException(Constants.errors.routing.routes.ROUTE_ALREADY_EXISTS, name);
                 routes.put(name,
                         new Route(name, sources, destinations, archived, enabled, active, srcSmeId,
-                                providerObj, categoryObj, ruleObj, notes));
+                                providerObj, categoryObj, notes));
             } else {
                 if (!getEditId().equals(name) && routes.containsKey(name))
                     throw new SCAGJspException(Constants.errors.routing.subjects.SUBJECT_ALREADY_EXISTS, name);
                 routes.remove(getEditId());
                 routes.put(name,
                         new Route(name, sources, destinations, archived, enabled, active, srcSmeId,
-                                providerObj, categoryObj, ruleObj, notes));
+                                providerObj, categoryObj, notes));
             }
         } catch (SibincoException e) {
             logger.error("Could not create new subject", e);
@@ -330,24 +321,6 @@ public class Edit extends EditBean {
         return providerNames;
     }
 
-    public String[] getRuleIds() {
-        final Map rules = null; //TODO: change - new TreeMap(appContext.getRuleManager().getRules());
-        final List result = new ArrayList(rules.size());
-        for (Iterator i = rules.keySet().iterator(); i.hasNext();) {
-            result.add(String.valueOf(((Long) i.next()).longValue()));
-        }
-        return (String[]) result.toArray(new String[result.size()]);
-    }
-
-    public String[] getRules() {
-        final Map rules = null; //TODO: change - new TreeMap(appContext.getRuleManager().getRules());
-        final List result = new ArrayList(rules.size());
-        for (Iterator i = rules.values().iterator(); i.hasNext();) {
-            result.add("CHANGE ME!!!" /* TODO: change - ((Rule) i.next()).getName()*/);
-        }
-        return (String[]) result.toArray(new String[result.size()]);
-    }
-
     public String[] getCategoryIds() {
         final Map categories = new TreeMap(appContext.getCategoryManager().getCategories());
         final List result = new ArrayList(categories.size());
@@ -358,9 +331,9 @@ public class Edit extends EditBean {
     }
 
     public String[] getCategories() {
-        final Map rules = new TreeMap(appContext.getCategoryManager().getCategories());
-        final List result = new ArrayList(rules.size());
-        for (Iterator i = rules.values().iterator(); i.hasNext();) {
+        final Map catecories = new TreeMap(appContext.getCategoryManager().getCategories());
+        final List result = new ArrayList(catecories.size());
+        for (Iterator i = catecories.values().iterator(); i.hasNext();) {
             result.add(((Category) i.next()).getName());
         }
         return (String[]) result.toArray(new String[result.size()]);
@@ -460,22 +433,6 @@ public class Edit extends EditBean {
 
     public void setArchived(boolean archived) {
         this.archived = archived;
-    }
-
-    public long getRuleId() {
-        return ruleId;
-    }
-
-    public void setRuleId(long ruleId) {
-        this.ruleId = ruleId;
-    }
-
-    public String getRule() {
-        return rule;
-    }
-
-    public void setRule(String rule) {
-        this.rule = rule;
     }
 
     public long getCategoryId() {

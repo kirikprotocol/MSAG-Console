@@ -18,8 +18,6 @@ import ru.sibinco.scag.backend.sme.Provider;
 import ru.sibinco.scag.backend.sme.ProviderManager;
 import ru.sibinco.scag.backend.sme.Category;
 import ru.sibinco.scag.backend.sme.CategoryManager;
-import ru.sibinco.scag.backend.rules.Rule;
-import ru.sibinco.scag.backend.rules.RuleManager;
 
 import java.io.PrintWriter;
 import java.util.HashMap;
@@ -48,12 +46,11 @@ public class Route {
     private String srcSmeId;
     private Provider provider;
     private Category category;
-    private Rule rule;
     private String notes;
 
     public Route(final String routeName, final Map sources, final Map destinations, final boolean archived,
                  final boolean enabled, final boolean active, final String srcSmeId, final Provider provider,
-                 final Category category, final Rule rule, final String notes) {
+                 final Category category, final String notes) {
         if (routeName == null)
             throw new NullPointerException("Route name is null");
         if (routeName.length() > Constants.ROUTE_ID_MAXLENGTH)
@@ -72,7 +69,6 @@ public class Route {
         this.srcSmeId = srcSmeId;
         this.provider = provider;
         this.category = category;
-        this.rule = rule;
         this.notes = notes;
     }
 
@@ -91,13 +87,12 @@ public class Route {
         this.srcSmeId = "";
         this.provider = null;
         this.category = null;
-        this.rule = null;
         this.notes = "";
     }
 
 
     public Route(Element routeElem, Map subjects, SmppManager smppManager,
-                 RuleManager ruleManager, ProviderManager providerManager,
+                 ProviderManager providerManager,
                  CategoryManager categoryManager) throws SibincoException {
 
         name = StringEncoderDecoder.encode(routeElem.getAttribute("id"));
@@ -114,8 +109,6 @@ public class Route {
         this.provider = (Provider) providerManager.getProviders().get(providerId);
         final Long categoryId = Long.decode(routeElem.getAttribute("categoryId"));
         this.category = (Category) categoryManager.getCategories().get(categoryId);
-        final Long ruleId = Long.decode(routeElem.getAttribute("ruleId"));
-        this.rule = null; //TODO: change - (Rule) ruleManager.getRules().get(ruleId);
         notes = "";
         NodeList notesList = routeElem.getElementsByTagName("notes");
         for (int i = 0; i < notesList.getLength(); i++)
@@ -194,7 +187,6 @@ public class Route {
                     + "\" srcSmeId=\"" + StringEncoderDecoder.encode(getSrcSmeId())
                     + "\" providerId=\"" + getProvider().getId()
                     + "\" categoryId=\"" + getCategory().getId()
-                    + "\" ruleId=\"" + getRule().getId()
                     + "\">");
             if (notes != null)
                 out.println("    <notes>" + notes + "</notes>");
@@ -323,22 +315,6 @@ public class Route {
         else
             return null;
     }
-
-    public Rule getRule() {
-        return rule;
-    }
-
-    public void setRule(final Rule rule) {
-        this.rule = rule;
-    }
-
-  /* TODO: USE ID INSTEAD OF NAME
-   public String getRuleName() {
-        if (null != rule)
-            return rule.getName();
-        else
-            return null;
-    }*/
 
     public String getNotes() {
         return notes;

@@ -12,7 +12,6 @@ import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.scag.backend.endpoints.SmppManager;
-import ru.sibinco.scag.backend.rules.RuleManager;
 import ru.sibinco.scag.backend.sme.CategoryManager;
 import ru.sibinco.scag.backend.sme.ProviderManager;
 
@@ -47,7 +46,6 @@ public class ScagRoutingManager {
     private final File smscConfFolder;
     private SmppManager smppManager;
     private ProviderManager providerManager;
-    private RuleManager ruleManager;
     private CategoryManager categoryManager;
     private boolean routesChanged = false;
     private String changedByUser = "";
@@ -61,11 +59,10 @@ public class ScagRoutingManager {
 
 
     public ScagRoutingManager(File smscConfFolder, SmppManager smppManager,
-                              ProviderManager providerManager, RuleManager ruleManager, CategoryManager categoryManager) {
+                              ProviderManager providerManager, CategoryManager categoryManager) {
         this.smscConfFolder = smscConfFolder;
         this.smppManager = smppManager;
         this.providerManager = providerManager;
-        this.ruleManager = ruleManager;
         this.categoryManager = categoryManager;
     }
 
@@ -129,7 +126,7 @@ public class ScagRoutingManager {
     }
 
     protected Route createRoute(final Element routeElem, final Map subjects) throws SibincoException {
-        return new Route(routeElem, subjects, smppManager, ruleManager, providerManager, categoryManager);
+        return new Route(routeElem, subjects, smppManager, providerManager, categoryManager);
     }
 
     private void loadSubjects(final NodeList subjList) throws SibincoException {
