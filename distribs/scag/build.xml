@@ -114,11 +114,18 @@ Targets:
 
   <target name="create_update" depends="create_distr_tree_update, makegw, makeweb">
     <copy file="${BUILD_BIN}/liblogger.so" todir="${DISTR_DIR}/lib"/>
-    <copy file="${BUILD_BIN}/db/exceptions/libdb_exc.so" todir="${DISTR_DIR}/lib"/>
-    <copy file="${BUILD_BIN}/db/oci/libdb_oci.so" todir="${DISTR_DIR}/lib"/>
-    <!--copy file="${BUILD_BIN}/libsimplebilling.so" todir="${DISTR_DIR}/lib"/>
-    <copy file="${BUILD_BIN}/scag/scag" todir="${DISTR_DIR}/services/scag/bin"/>
-    <chmod file="${DISTR_DIR}/services/scag/bin/scag" perm="755"/-->
+    
+    <!--copy file="${BUILD_BIN}/scag/exc/libscag_exc.so" todir="${DISTR_DIR}/lib"/-->
+    
+    <!--copy file="${BUILD_BIN}/db/exceptions/libdb_exc.so" todir="${DISTR_DIR}/lib"/-->
+    <!--copy file="${BUILD_BIN}/db/oci/libdb_oci.so" todir="${DISTR_DIR}/lib"/--><!-- G Panin Zakomital -->
+    <!--copy file="${BUILD_BIN}/libsimplebilling.so" todir="${DISTR_DIR}/lib"/-->
+    <!--copy file="${BUILD_BIN}/scag/scag" todir="${DISTR_DIR}/services/scag/bin"/-->
+    <!--chmod file="${DISTR_DIR}/services/scag/bin/scag" perm="755"/-->
+    
+    <symlink resource="${BUILD_BIN}/scag/scag" link="${DISTR_DIR}/services/scag/bin/scag" overwrite="yes"/>
+    <symlink resource="${BUILD_BIN}/scag/exc/libscag_exc.so" link="${DISTR_DIR}/lib/libscag_exc.so" overwrite="yes"/>
+    
     <copy file="${BUILD_BIN}/admin/daemon/smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>
     <chmod file="${DISTR_DIR}/daemon/bin/smsc_ssdaemon" perm="755"/>
     <chmod perm="755">
@@ -132,6 +139,8 @@ Targets:
 
   <target name="update" depends="create_update">
     <ant antfile="${WEBSRC_DIR}/build-scag.xml" dir="${WEBSRC_DIR}" target="update"/>
+    <copy file="${BUILD_BIN}/scag/scag" todir="${DISTR_DIR}/services/scag/bin"/>
+    <chmod file="${DISTR_DIR}/services/scag/bin/scag" perm="755"/>
   </target>
 
   <target name="configure" depends="create_distr_tree" >
@@ -252,7 +261,7 @@ Targets:
              source="1.4"
              target="1.4"
              classpath="${JEDIT_DIR}/build"
-	     
+	        	     
              >
              <include name="bsh/**/*.java"/>
              <include name="com/microstar/xml/*.java"/>
