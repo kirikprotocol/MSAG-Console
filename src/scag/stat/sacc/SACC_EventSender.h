@@ -26,28 +26,36 @@
  */
 
 #include "SACC_SyncQueue.h"
+#include <logger/Logger.h>
 
 namespace scag{
 namespace stat{
 namespace sacc{
 
+using namespace smsc::logger;
+using smsc::util::Exception;
+
 class EventSender: public Thread 
 {
 public:
+	bool performTrafficEvent(SACC_TRAFFIC_INFO_EVENT_t * pTraffic);
 
 	EventSender();
-	EventSender(SyncQeuue * q,bool * bf);
+	EventSender(SyncQeuue * q,bool * bf,smsc::logger::Logger * lg);
 	virtual ~EventSender();
 	int Execute();
 	bool checkQueue();
 	bool processEvent(void * ev);
+	void Stop();
+	void Start();
 
 private:
 
 	SyncQeuue * pQueue;
-	bool * bStop;
+	bool * bStarted;
 	Socket SaccSocket;
-	bool connect(string host,int port);
+	bool connect(std::string host,int port);
+	smsc::logger::Logger * logger;
 };
 
   }//sacc namespace

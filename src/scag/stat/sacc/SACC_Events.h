@@ -105,8 +105,8 @@ typedef struct
 
 }SACC_ALARM_MESSAGE_t;
 
-  }//sacc namespace
- }//stat namespace 
+}//sacc namespace
+}//stat namespace 
 }//scag namesoace
 
 #endif

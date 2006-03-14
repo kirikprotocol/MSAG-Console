@@ -9,7 +9,8 @@ using smsc::util::Exception;
 using smsc::logger::Logger;
 
 
-EventServer::EventServer():logger(Logger::getInstance("evtsvr")), Host(""), Port(0), bStarted(false), eSender(0)
+
+EventServer::EventServer():logger(Logger::getInstance(EV_SERVER_LOGGER_CATHEGORY_NAME)), Host(""), Port(0), bStarted(false), eSender(0)
 {
 }
 
@@ -70,14 +71,18 @@ void EventServer::InitServer(std::string esHost, int esPort)
 
 void EventServer::reinitLogger()
 {
+	    logger = Logger::getInstance(LOGGER_CATHEGORY_NAME); 
 }
 
 void EventServer::Stop()
 {
+	bStarted=false;
 }
 
 void EventServer::Start()
 {
+	bStarted=true;
+	Thread::Start();
 }
 
 // note: delete events into sender thread, after sending

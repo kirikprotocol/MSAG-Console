@@ -42,11 +42,11 @@ namespace sacc{
 #define SACC_SEND_SESSION_EXPIRATION_TIME_ALARM 0x0005
 
 #define SACC_SEND_ALARM_MESSAGE	  		0x0101
-
+#define EV_SERVER_LOGGER_CATHEGORY_NAME  "evtsvr"
 
 	
-}
-}
-}
+}//sacc
+}//stat
+}//scag
 
 #endif
