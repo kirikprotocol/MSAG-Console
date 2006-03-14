@@ -101,7 +101,7 @@ bool EventSender::processEvent(void *ev)
 bool EventSender::checkQueue()
 {
 	void * ev;
-	if(pQueue.Pop(ev,1000))
+	if(pQueue->Pop(ev,1000))
 	{
 		processEvent(ev);
 		return true;
