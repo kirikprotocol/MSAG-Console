@@ -6,6 +6,7 @@
 #include "logger/Logger.h"
 #include "SerialBuffer.h"
 #include "ProfileStore.h"
+#include "Types.h"
 
 namespace scag { namespace pers {
 
@@ -17,12 +18,23 @@ class CommandDispatcher {
 	IntProfileStore* OperatorStore; 
 	IntProfileStore* ServiceStore;
 public:
-    CommandDispatcher(StringProfileStore *abonent, IntProfileStore *service, IntProfileStore *oper, IntProfileStore *provider) :
-		log(Logger::getInstance("cmd")), AbonentStore(abonent), ServiceStore(service), ProviderStore(provider), OperatorStore(oper) {};
+    CommandDispatcher(StringProfileStore *abonent, IntProfileStore *service, IntProfileStore *oper, IntProfileStore *provider);
     ~CommandDispatcher() {};
-    int Execute(SerialBuffer* sb);
+    void Execute(SerialBuffer* sb);
 protected:
+	typedef struct {
+		ProfileType pt;
+		IntProfileStore* store;
+	} IntStore;
+
+	void SendResponse(SerialBuffer *sb, PersServerResponseType r);
+	void SetPacketSize(SerialBuffer *sb);
+	void DelCmdHandler(ProfileType pt, uint32_t int_key, string& str_key, string& name, SerialBuffer *sb);
+	void GetCmdHandler(ProfileType pt, uint32_t int_key, string& str_key, string& name, SerialBuffer *sb);
+	void SetCmdHandler(ProfileType pt, uint32_t int_key, string& str_key, Property& prop, SerialBuffer *sb);
     Logger * log;
+#define INT_STORE_CNT 3
+	IntStore int_store[INT_STORE_CNT];
 };
 
 }

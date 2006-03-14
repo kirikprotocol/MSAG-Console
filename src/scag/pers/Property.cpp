@@ -179,50 +179,6 @@ void Property::Serialize(SerialBuffer& buf)
 	}
 }
 
-void Property::StringFromBuf(SerialBuffer& buf, string &str)
-{
-	uint16_t len;
-	char scb[255];
-
-	buf.Read((char*)&len, sizeof(len));
-	str[0] = 0;
-	while(len > 254)
-	{
-		buf.Read(scb, 254);
-		scb[254] = 0;
-		str += scb;
-		len -= 254;
-	}
-	if(len)
-	{
-		buf.Read((char*)scb, len);
-		scb[len] = 0;
-		str += scb;
-	}
-}
-
-void Property::StringFromBuf(SerialBuffer& buf, wstring &str)
-{
-	uint16_t len;
-	wchar_t scb[255];
-
-	buf.Read((char*)&len, sizeof(len));
-	str[0] = 0;
-	while(len > 254)
-	{
-		buf.Read((char*)scb, sizeof(wchar_t) * 254);
-		scb[254] = 0;
-		str += scb;
-		len -= 254;
-	}
-	if(len)
-	{
-		buf.Read((char*)scb, sizeof(wchar_t) * len);
-		scb[len] = 0;
-		str += scb;
-	}
-}
-
 void Property::Deserialize(SerialBuffer& buf)
 {
 	string str;
@@ -236,7 +192,7 @@ void Property::Deserialize(SerialBuffer& buf)
 	buf.Read((char*)&final_date, sizeof(time_t));
 	buf.Read((char*)&life_time, sizeof(uint32_t));
 
-	Property::StringFromBuf(buf, name);
+	buf.ReadString(name);
 
 	switch(type) {
 		case INT:
@@ -244,7 +200,7 @@ void Property::Deserialize(SerialBuffer& buf)
 			break;
 
 		case STRING:
-			StringFromBuf(buf, s_val);
+			buf.ReadString(s_val);
 			break;
 
 		case BOOL:

@@ -21,7 +21,7 @@ using namespace std;
 
 static smsc::logger::Logger *logger;
 
-static PersServer *ps;
+//static PersServer *ps;
 
 /*extern "C" static void appSignalHandler(int sig)
 {
@@ -89,10 +89,10 @@ int main(int argc, char* argv[])
         try { port = persConfig.getInt("port"); } catch (...) {};
         try { maxClientCount = persConfig.getInt("connections"); } catch (...) {};
 
-		auto_ptr<PersServer> pp(new PersServer(host.c_str(), port, maxClientCount, 
-			new CommandDispatcher(&AbonentStore, &ServiceStore, &OperatorStore, &ProviderStore)));
+		PersServer pp(host.c_str(), port, maxClientCount, 
+			new CommandDispatcher(&AbonentStore, &ServiceStore, &OperatorStore, &ProviderStore));
 
-		pp.get()->Execute();
+		pp.Execute();
 
 /*		sigemptyset(&set);
 		sigaddset(&set, SIGINT);

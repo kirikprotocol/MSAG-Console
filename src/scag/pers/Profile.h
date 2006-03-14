@@ -48,7 +48,7 @@ public:
 	uint32_t GetCount() { return properties.GetCount(); };
 
 	void Serialize(SerialBuffer& buf);
-	void Deserialize(SerialBuffer& buf) throw(SerializableException);
+	void Deserialize(SerialBuffer& buf);
 };
 
 }}

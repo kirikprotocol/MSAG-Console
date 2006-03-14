@@ -156,14 +156,14 @@ public:
 		smsc_log_debug(log, "profile %s, setProperty: %s", key.toString().c_str(), prop.toString().c_str());
 	};
 
-	void delProperty(Key& key, const char* name)
+	void delProperty(Key& key, const char* nm)
 	{
 		MutexGuard mt(mtx);
 		Profile *pf = getProfile(key, false);
 
 		if(pf != NULL)
 		{
-			pf->DeleteProperty(name);
+			pf->DeleteProperty(nm);
 			storeProfile(key, pf);
 		}
 	};
@@ -236,6 +236,10 @@ public:
 				} else
 					return NULL;
 			}
+			catch(SerialBufferOutOfBounds &f) {
+				smsc_log_error(log, "Seems storage is corrupted. Profile %s.", key.toString().c_str());
+				return NULL;
+			}
 		}
 		else
 		{
@@ -251,6 +255,11 @@ public:
 				}
 				else
 					smsc_log_debug(log, "Profile %s in cache created.", key.toString().c_str());
+			}
+			catch(SerialBufferOutOfBounds &f) {
+				delete pf;
+				smsc_log_error(log, "Seems storage is corrupted. Profile %s.", key.toString().c_str());
+				return NULL;
 			}
 			cache[i] = new CacheItem<Key>(key, pf);
 			return pf;

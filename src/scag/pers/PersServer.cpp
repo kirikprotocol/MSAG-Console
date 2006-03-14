@@ -39,13 +39,13 @@ void PersServer::process_read_socket(Socket* s)
 	uint32_t k, j;
 	SerialBuffer *sb = (SerialBuffer*)s->getData(0);
 
-	if(sb->GetPos() < sizeof(uint32_t))
+	if(sb->GetSize() < sizeof(uint32_t))
 	{
-		j = s->Read(tmp_buf, sizeof(uint32_t) - sb->GetPos());
+		j = s->Read(tmp_buf, sizeof(uint32_t) - sb->GetSize());
 		if(j > 0)
 		{
 			sb->Append(tmp_buf, j);
-			if(sb->GetPos() >= sizeof(uint32_t))
+			if(sb->GetSize() >= sizeof(uint32_t))
 			{
 				j = sb->GetPos();
 				sb->SetPos(0);
@@ -55,24 +55,24 @@ void PersServer::process_read_socket(Socket* s)
 			}
 		}
 		else if(j == -1)
-			smsc_log_error(log, "socket.Read failed: %s", strerror(errno));
+			smsc_log_debug(log, "socket.Read failed: %s", strerror(errno));
 	}
 	else
 	{
 		k = (uint32_t)s->getData(1);
-		j = k - sb->GetPos();
+		j = k - sb->GetSize();
 		j = s->Read(tmp_buf, j > 1024 ? 1024 : j);
 		if(j > 0)
 			sb->Append(tmp_buf, j);
 		else if(j == -1)
 		{
-			smsc_log_error(log, "socket.Read failed: %s", strerror(errno));
+			smsc_log_debug(log, "socket.Read failed: %s", strerror(errno));
 			return;
 		}
-		if(sb->GetPos() >= k)
+		if(sb->GetSize() >= k)
 		{
-			sb->SetPos(0);
 			CmdDispatcher->Execute(sb);
+			sb->SetPos(0);
 			listener.addW(s);
 		}
 	}
@@ -80,8 +80,9 @@ void PersServer::process_read_socket(Socket* s)
 
 void PersServer::process_write_socket(Socket* s)
 {
-	uint32_t i, j, len = (uint32_t)s->getData(1);
+	uint32_t i, j, len;
 	SerialBuffer *sb = (SerialBuffer*)s->getData(0);
+	len = sb->GetSize();
 
 	smsc_log_info(log, "Write Socket is ready");
 
@@ -96,7 +97,7 @@ void PersServer::process_write_socket(Socket* s)
 	}
 	if(sb->GetPos() >= len)
 	{
-		sb->SetPos(0);
+		sb->Empty();
 		listener.addR(s);
 	}
 }

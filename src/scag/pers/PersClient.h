@@ -7,23 +7,11 @@
 #include "SerialBuffer.h"
 #include "Property.h"
 #include "core/network/Socket.hpp"
+#include "Types.h"
 
 namespace scag { namespace pers { namespace client {
 
 using smsc::core::network::Socket;
-
-enum ProfileType{
-	PT_ABONENT = 1,
-	PT_OPERATOR,
-	PT_PROVIDER,
-	PT_SERVICE
-};
-
-enum PersCmd{
-	PC_DEL = 1,
-	PC_SET,
-	PC_GET
-};
 
 using smsc::logger::Logger;
 using scag::pers;
@@ -38,14 +26,8 @@ enum PersClientExceptionType{
 	NOT_CONNECTED,
 	BAD_RESPONSE,
 	SERVER_ERROR,
-	PROPERTY_NOT_FOUND
-};
-
-enum PersServerResponseType{
-	RESPONSE_OK = 1,
-	RESPONSE_ERROR,
-	RESPONSE_PROPERTY_NOT_FOUND,
-	RESPONSE_BAD_REQUEST
+	PROPERTY_NOT_FOUND,
+	INVALID_KEY
 };
 
 class PersClientException{

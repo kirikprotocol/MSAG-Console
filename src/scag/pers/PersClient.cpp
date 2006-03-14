@@ -8,6 +8,107 @@ using smsc::util::Exception;
 using smsc::logger::Logger;
 using scag::pers;
 
+void PersClient::SetProperty(ProfileType pt, const char* key, Property& prop) throw(PersClientException)
+{
+	if(pt != PT_ABONENT)
+		throw PersClientException(INVALID_KEY);
+
+	MutexGuard mt(mtx);
+
+	FillStringHead(PC_SET, pt, key);
+	prop.Serialize(sb);
+	SetPacketSize();
+	SendPacket();
+	ReadPacket();
+	if(GetServerResponse() != RESPONSE_OK)
+		throw PersClientException(SERVER_ERROR);
+}
+void PersClient::SetProperty(ProfileType pt, uint32_t key, Property& prop) throw(PersClientException)
+{
+	if(pt == PT_ABONENT)
+		throw PersClientException(INVALID_KEY);
+
+	MutexGuard mt(mtx);
+
+	FillIntHead(PC_SET, pt, key);
+	prop.Serialize(sb);
+	SetPacketSize();
+	SendPacket();
+	ReadPacket();
+	if(GetServerResponse() != RESPONSE_OK)
+		throw PersClientException(SERVER_ERROR);
+}
+
+void PersClient::GetProperty(ProfileType pt, const char* key, const char *property_name, Property& prop) throw(PersClientException)
+{
+	if(pt != PT_ABONENT)
+		throw PersClientException(INVALID_KEY);
+
+
+	MutexGuard mt(mtx);
+
+	FillStringHead(PC_GET, pt, key);
+	AppendString(property_name);
+	SetPacketSize();
+	SendPacket();
+	ReadPacket();
+	ParseProperty(prop);
+}
+void PersClient::GetProperty(ProfileType pt, uint32_t key, const char *property_name, Property& prop) throw(PersClientException)
+{
+	if(pt == PT_ABONENT)
+		throw PersClientException(INVALID_KEY);
+
+	MutexGuard mt(mtx);
+
+	FillIntHead(PC_GET, pt, key);
+	AppendString(property_name);
+	SetPacketSize();
+	SendPacket();
+	ReadPacket();
+	ParseProperty(prop);
+}
+
+void PersClient::DelProperty(ProfileType pt, const char* key, const char *property_name) throw(PersClientException)
+{
+	if(pt != PT_ABONENT)
+		throw PersClientException(INVALID_KEY);
+
+	MutexGuard mt(mtx);
+
+	FillStringHead(PC_DEL, pt, key);
+	AppendString(property_name);
+	SetPacketSize();
+	SendPacket();
+	ReadPacket();
+	if(GetServerResponse() == RESPONSE_ERROR)
+		throw PersClientException(SERVER_ERROR);
+}
+void PersClient::DelProperty(ProfileType pt, uint32_t key, const char *property_name) throw(PersClientException)
+{
+	if(pt == PT_ABONENT)
+		throw PersClientException(INVALID_KEY);
+
+	MutexGuard mt(mtx);
+
+	FillIntHead(PC_DEL, pt, key);
+	AppendString(property_name);
+	SetPacketSize();
+	SendPacket();
+	ReadPacket();
+	if(GetServerResponse() == RESPONSE_ERROR)
+		throw PersClientException(SERVER_ERROR);
+}
+
+void PersClient::init(const char *_host, int _port, int _timeout) throw(PersClientException)
+{
+	host = _host;
+	port = _port;
+	timeout = _timeout;
+	init();
+}
+
+
 void PersClient::init()
 {
 	char resp[3];
@@ -33,25 +134,6 @@ void PersClient::init()
 		throw PersClientException(UNKNOWN_RESPONSE);
 	}
 	connected = true;
-}
-
-void PersClient::init(const char *_host, int _port, int _timeout) throw(PersClientException)
-{
-	host = _host;
-	port = _port;
-	timeout = _timeout;
-	init();
-}
-
-void PersClient::SendPacket()
-{
-	init();
-	if(sock.WriteAll(sb.get(), sb.GetPos()) == -1)
-	{
-		connected = false;
-		sock.Close();
-		throw PersClientException(SEND_FAILED);
-	}
 }
 
 void PersClient::ReadAllTO(char* buf, uint32_t sz)
@@ -90,6 +172,17 @@ void PersClient::WriteAllTO(char* buf, uint32_t sz)
 	}
 }
 
+void PersClient::SendPacket()
+{
+	init();
+	if(sock.WriteAll(sb.get(), sb.GetSize()) == -1)
+	{
+		connected = false;
+		sock.Close();
+		throw PersClientException(SEND_FAILED);
+	}
+}
+
 void PersClient::ReadPacket()
 {
 	char tmp_buf[1024];
@@ -98,7 +191,9 @@ void PersClient::ReadPacket()
 	if(!connected)
 		throw PersClientException(NOT_CONNECTED);
 
-	ReadAllTO(sb.get(), sizeof(uint32_t));
+	sb.Empty();
+	ReadAllTO(tmp_buf, sizeof(uint32_t));
+	sb.Append(tmp_buf, sizeof(uint32_t));
 	sb.SetPos(0);
 	sb.Read((char*)&sz, sizeof(uint32_t));
 	sb.SetPos(sizeof(uint32_t));
@@ -182,83 +277,10 @@ void PersClient::ParseProperty(Property& prop)
 	sb.SetPos(sizeof(uint32_t) + 1);
 	try{
 		prop.Deserialize(sb);	
-	} catch(PropertyParseException &e)
+	} catch(SerialBufferOutOfBounds &e)
 	{
 		throw PersClientException(BAD_RESPONSE);
 	}
-}
-
-void PersClient::SetProperty(ProfileType pt, const char* key, Property& prop) throw(PersClientException)
-{
-	MutexGuard mt(mtx);
-
-	FillStringHead(PC_SET, pt, key);
-	prop.Serialize(sb);
-	SetPacketSize();
-	SendPacket();
-	ReadPacket();
-	if(GetServerResponse() != RESPONSE_OK)
-		throw PersClientException(SERVER_ERROR);
-}
-void PersClient::SetProperty(ProfileType pt, uint32_t key, Property& prop) throw(PersClientException)
-{
-	MutexGuard mt(mtx);
-
-	FillIntHead(PC_SET, pt, key);
-	prop.Serialize(sb);
-	SetPacketSize();
-	SendPacket();
-	ReadPacket();
-	if(GetServerResponse() != RESPONSE_OK)
-		throw PersClientException(SERVER_ERROR);
-}
-
-void PersClient::GetProperty(ProfileType pt, const char* key, const char *property_name, Property& prop) throw(PersClientException)
-{
-	MutexGuard mt(mtx);
-
-	FillStringHead(PC_GET, pt, key);
-	AppendString(property_name);
-	SetPacketSize();
-	SendPacket();
-	ReadPacket();
-	ParseProperty(prop);
-}
-void PersClient::GetProperty(ProfileType pt, uint32_t key, const char *property_name, Property& prop) throw(PersClientException)
-{
-	MutexGuard mt(mtx);
-
-	FillIntHead(PC_GET, pt, key);
-	AppendString(property_name);
-	SetPacketSize();
-	SendPacket();
-	ReadPacket();
-	ParseProperty(prop);
-}
-
-void PersClient::DelProperty(ProfileType pt, const char* key, const char *property_name) throw(PersClientException)
-{
-	MutexGuard mt(mtx);
-
-	FillStringHead(PC_DEL, pt, key);
-	AppendString(property_name);
-	SetPacketSize();
-	SendPacket();
-	ReadPacket();
-	if(GetServerResponse() == RESPONSE_ERROR)
-		throw PersClientException(SERVER_ERROR);
-}
-void PersClient::DelProperty(ProfileType pt, uint32_t key, const char *property_name) throw(PersClientException)
-{
-	MutexGuard mt(mtx);
-
-	FillIntHead(PC_DEL, pt, key);
-	AppendString(property_name);
-	SetPacketSize();
-	SendPacket();
-	ReadPacket();
-	if(GetServerResponse() == RESPONSE_ERROR)
-		throw PersClientException(SERVER_ERROR);
 }
 
 }}}
