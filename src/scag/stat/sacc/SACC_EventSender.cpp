@@ -126,13 +126,13 @@ int EventSender::Execute()
 
 bool EventSender::connect(std::string host, int port)
 {
-	if(gSocket.Init(host,port,timeout)==-1)
+	if(SaccSocket.Init(host,port,timeout)==-1)
 	{
 		smsc_log_error(logger,"EventSender::connect Failed to init socket\n");
 		return false;
 	}
 		  
-	if(gSocket.Connect()==-1)
+	if(SaccSocket.Connect()==-1)
 	{
 		smsc_log_error(logger,"EventSender::connect Failed to connect\n");
 		return false;
