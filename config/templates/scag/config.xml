@@ -64,6 +64,10 @@
       <param name="perfScPort" type="int">@stat.perf_sc_port@</param>
   </section>
 		        
+  <section name="RuleEngine">
+      <param name="location" type="string">@rules.path@</param>
+  </section>
+	
   <section name="smpp">
     <param name="host" type="string">@listen.host@</param>
     <param name="inactivityTime" type="int">30</param>
