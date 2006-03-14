@@ -27,6 +27,12 @@
 
 #include "SACC_SyncQueue.h"
 #include <logger/Logger.h>
+#include "SACC_Events.h"
+#include "core/threads/Thread.hpp"
+#include "core/network/Multiplexer.hpp"
+#include "core/network/Socket.hpp"
+#include "logger/Logger.h"
+#include <string>
 
 namespace scag{
 namespace stat{

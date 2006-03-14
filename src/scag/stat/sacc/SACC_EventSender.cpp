@@ -1,6 +1,7 @@
 #include "SACC_Defs.h"
 #include "SACC_SyncQueue.h"
 #include "SACC_EventSender.h"
+#include "SACC_Events.h"
 
 #include <logger/Logger.h>
 
