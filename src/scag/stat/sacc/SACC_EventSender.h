@@ -60,7 +60,7 @@ public:
 
 private:
 
-	SyncQeuue * pQueue;
+	SyncQueue<void*> * pQueue;
 	bool * bStarted;
 	Socket SaccSocket;
 	bool connect(std::string host,int port);

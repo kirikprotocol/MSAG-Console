@@ -35,7 +35,7 @@ namespace stat{
 namespace sacc{
 
 template <class T>
-class SyncQeuue{
+class SyncQueue{
 public:
  void Push(const T& item)
  {

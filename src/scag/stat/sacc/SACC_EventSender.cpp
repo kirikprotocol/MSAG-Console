@@ -20,7 +20,7 @@ EventSender::~EventSender()
 
 }
 
-EventSender::EventSender(SyncQeuue * q,bool * bf,smsc::logger::Logger * lg)
+EventSender::EventSender(SyncQueue<void*> * q,bool * bf,smsc::logger::Logger * lg)
 {
 	pQueue = q;
 	bStarted  = bf;

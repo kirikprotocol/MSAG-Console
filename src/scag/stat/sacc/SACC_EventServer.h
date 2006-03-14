@@ -61,7 +61,7 @@ protected:
     bool  bStarted;
     Multiplexer  listener;
 
-	SyncQeuue<void *> eQueue;
+	SyncQueue<void *> eQueue;
 	EventSender * eSender;
 	 
 };
