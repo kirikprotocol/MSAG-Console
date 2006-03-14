@@ -33,6 +33,9 @@ bill.server_port=14999
 
 session.location=/opt/home/msag_test/build/msag_distr/store
 
+storage.statistics_dir=/opt/home/msag_test/build/msag_distr/storage/stat
+storgae.traffic_dir=/opt/home/msag_test/build/msag_distr/storage/traffic
+
 stat.dir=/opt/home/msag_test/build/msag_distr/statistics
 stat.perf_host=14998
 stat.perf_port=14997
