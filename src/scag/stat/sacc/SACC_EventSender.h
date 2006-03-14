@@ -39,7 +39,8 @@ namespace stat{
 namespace sacc{
 
 using namespace smsc::core::threads;
-
+using smsc::core::network::Socket;
+using smsc::core::network::Multiplexer;
 using namespace smsc::logger;
 using smsc::util::Exception;
 
@@ -49,7 +50,7 @@ public:
 	bool performTrafficEvent(SACC_TRAFFIC_INFO_EVENT_t * pTraffic);
 
 	EventSender();
-	EventSender(SyncQeuue * q,bool * bf,smsc::logger::Logger * lg);
+	EventSender(SyncQeuue * q,bool * bf, Logger * lg);
 	virtual ~EventSender();
 	int Execute();
 	bool checkQueue();
