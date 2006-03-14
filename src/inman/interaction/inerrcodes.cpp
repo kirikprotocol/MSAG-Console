@@ -28,6 +28,7 @@ InmanErrorCode::InmanErrorCode(uint32_t ercode)
 }
 InmanErrorCode::InmanErrorCode(InmanErrorType range, uint16_t ercode)
 {
+    assert(range <= MAX_RANGE);
     _errcode = _ranges[range].base + ercode;
     assert(_errcode <= _ranges[range].limit);
 }
@@ -36,8 +37,7 @@ InmanErrorCode::InmanErrorCode(InmanErrorType range, uint16_t ercode)
 uint32_t  InmanErrorCode::GetCombinedError(InmanErrorType range, uint16_t ercode)
 {
     uint32_t errCode = _ranges[range].base + ercode;
-    if (errCode > _ranges[range].limit)
-        return 0;
+    return (errCode > _ranges[range].limit) ? 0 : errCode;
 }
 
 //returns class of error
@@ -48,6 +48,7 @@ InmanErrorType InmanErrorCode::GetErrorType(void) const
             && (_errcode <= _ranges[range].limit))
             return (InmanErrorType)range;
     }
+    return InErrOk; //should never be reached (checked in constructor)
 }
 
 //returns combined nonzero code holding RP cause or CAP3 error, or protocol error
