@@ -38,6 +38,8 @@ namespace scag{
 namespace stat{
 namespace sacc{
 
+using namespace smsc::core::threads;
+
 using namespace smsc::logger;
 using smsc::util::Exception;
 
