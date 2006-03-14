@@ -26,14 +26,14 @@ svcmon.scag.port=14862
 scmon.applet.port=14823
 scmon.scag.port=14863
 
-bill.config_dir="conf"
-bill.so_dir="bill_so"
-bill.server_host="127.0.0.1"
-bill.server_port="14999"
+bill.config_dir=conf
+bill.so_dir=bill_so
+bill.server_host=127.0.0.1
+bill.server_port=14999
 
-session.location="conf"
+session.location=conf
 
-stat.dir="/opt/home/msag_test/install/msag_distr/statistics"
+stat.dir=/opt/home/msag_test/install/msag_distr/statistics
 stat.perf_host=14998
 stat.perf_port=14997
 stat,perf_svc_port=14996
