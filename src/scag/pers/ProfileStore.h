@@ -142,18 +142,18 @@ public:
 		smsc_log_debug(log, "Halted: %s", name.c_str());
 	}*/
 
-	void setProperty(Key& key, Property* prop)
+	void setProperty(Key& key, Property& prop)
 	{
 		MutexGuard mt(mtx);
 		Profile *pf;
 
-		if(prop->isExpired())
+		if(prop.isExpired())
 			return;
 
 		pf = getProfile(key, true);
 		pf->AddProperty(prop);
 		storeProfile(key, pf);
-		smsc_log_debug(log, "profile %s, setProperty: %s", key.toString().c_str(), prop->toString().c_str());
+		smsc_log_debug(log, "profile %s, setProperty: %s", key.toString().c_str(), prop.toString().c_str());
 	};
 
 	void delProperty(Key& key, const char* name)
@@ -168,29 +168,29 @@ public:
 		}
 	};
 
-	Property* getProperty(Key& key, const char* nm)
+	bool getProperty(Key& key, const char* nm, Property& prop)
 	{
 		MutexGuard mt(mtx);
 		Profile *pf;
-		Property *prop = NULL;
+		bool exists;
 
 		pf = getProfile(key, false);
 
 		if(pf != NULL)
 		{
-			prop = pf->GetProperty(nm);
+			exists = pf->GetProperty(nm, prop);
 
-			if(prop && prop->isExpired())
+			if(exists && prop.isExpired())
 			{
 				pf->DeleteProperty(nm);
-				return NULL;
+				return false;
 			}
 
-			if(prop)
-				smsc_log_debug(log, "profile %s, getProperty: %s", key.toString().c_str(), prop->toString().c_str());
+			if(exists)
+				smsc_log_debug(log, "profile %s, getProperty: %s", key.toString().c_str(), prop.toString().c_str());
 		}
 
-		return prop;
+		return true;
 	};
 
 	void storeProfile(Key& key, Profile *pf)

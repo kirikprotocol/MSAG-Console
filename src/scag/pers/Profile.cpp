@@ -56,15 +56,16 @@ bool Profile::PropertyExists(const char* str)
 	return properties.Exists(str);
 }
 
-Property* Profile::GetProperty(const char* str)
+bool Profile::GetProperty(const char* str, Property& prop)
 {
 	try{
-		Property *prop = properties.Get(str);
-		return new Property(*prop);
+		Property *p = properties.Get(str);
+		prop = *p;
+		return true;
 	} 
 	catch(HashInvalidKeyException &k)
 	{
-		return NULL;
+		return false;
 	}
 }
 
@@ -108,17 +109,17 @@ void Profile::Empty()
 	properties.Empty();
 }
 
-void Profile::AddProperty(Property* prop)
+void Profile::AddProperty(Property& prop)
 {
-	if(properties.Exists(prop->getName().c_str()))
+	if(properties.Exists(prop.getName().c_str()))
 	{
-		Property* p = properties.Get(prop->getName().c_str());
+		Property* p = properties.Get(prop.getName().c_str());
 		delete p;
-		properties.Delete(prop->getName().c_str());
+		properties.Delete(prop.getName().c_str());
 	}
 
-	if(!prop->isExpired())
-		properties.Insert(prop->getName().c_str(), new Property(*prop));
+	if(!prop.isExpired())
+		properties.Insert(prop.getName().c_str(), new Property(prop));
 }
 
 }}
