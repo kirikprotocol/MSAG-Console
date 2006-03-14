@@ -124,9 +124,9 @@ int EventSender::Execute()
 
 }
 
-bool EventSender::connect(std::string host, int port)
+bool EventSender::connect(std::string host, int port,int timeout)
 {
-	if(SaccSocket.Init(host,port,timeout)==-1)
+	if(SaccSocket.Init(host.c_str(),port,timeout)==-1)
 	{
 		smsc_log_error(logger,"EventSender::connect Failed to init socket\n");
 		return false;

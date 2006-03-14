@@ -50,7 +50,7 @@ public:
 	bool performTrafficEvent(SACC_TRAFFIC_INFO_EVENT_t * pTraffic);
 
 	EventSender();
-	EventSender(SyncQueue<void*> * q,bool * bf, Logger * lg);
+	EventSender(SyncQueue<void*> * q,bool * bf, smsc::logger::Logger * lg);
 	virtual ~EventSender();
 	int Execute();
 	bool checkQueue();
@@ -63,7 +63,7 @@ private:
 	SyncQueue<void*> * pQueue;
 	bool * bStarted;
 	Socket SaccSocket;
-	bool connect(std::string host,int port);
+	bool connect(std::string host,int port,int timeout);
 	smsc::logger::Logger * logger;
 };
 

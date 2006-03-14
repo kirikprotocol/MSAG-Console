@@ -26,7 +26,7 @@ int EventServer::Execute()
 
     if(!bStarted) return 1;
 
-    if( Socket.StartServer())
+    if( evSocket.StartServer())
         smsc_log_warn(logger, "EventServer:Failed to start socket ");
 
     while(bStarted)
