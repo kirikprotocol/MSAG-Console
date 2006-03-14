@@ -38,7 +38,7 @@ int EventServer::Execute()
 
 			for(int i=0; i<= ready.Count() - 1; i++)
 			{
-					if(ready[i] == &Socket)
+					if(ready[i] == &evSocket)
 					{
 						smsc_log_info(logger, "EventServer:Socket ready");
 						sockaddr_in addrin;
