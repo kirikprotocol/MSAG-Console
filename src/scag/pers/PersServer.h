@@ -38,6 +38,7 @@ protected:
     bool isStopping;
     RWMultiplexer listener;
     Mutex mtx;
+	char tmp_buf[1024];
 };
 
 }

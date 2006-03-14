@@ -19,7 +19,7 @@ void Profile::Serialize(SerialBuffer& buf)
 		prop->Serialize(buf);
 }
 
-void Profile::Deserialize(SerialBuffer& buf)
+void Profile::Deserialize(SerialBuffer& buf) throw(SerializableException)
 {
 	const char *key;
 	uint16_t cnt;

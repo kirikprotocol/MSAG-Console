@@ -36,7 +36,6 @@ void PersServer::InitServer(const char *persHost_, int persPort_, int maxClientC
 
 void PersServer::process_read_socket(Socket* s)
 {
-	static char tmp_buf[1024];
 	uint32_t k, j;
 	SerialBuffer *sb = (SerialBuffer*)s->getData(0);
 

@@ -28,6 +28,8 @@ enum PropertyType{
 	DATE
 };
 
+class PropertyParseException: public SerializableException{};
+
 class Property {
 protected:
 	PropertyType type;

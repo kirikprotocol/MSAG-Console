@@ -38,11 +38,13 @@ public:
 	}
 };
 
+class SerializableException{};
+
 class Serializable
 {
 public:
 	virtual void Serialize(SerialBuffer &sb) = 0;
-	virtual void Deserialize(SerialBuffer &sb) = 0;
+	virtual void Deserialize(SerialBuffer &sb) throw(SerializableException) = 0;
 };
 
 }}
