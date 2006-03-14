@@ -2,7 +2,7 @@
 #define SCAG_PERS_SOCKETSERVER
 
 #include <string>
-#include "core/network/Multiplexer.hpp"
+#include "RWMultiplexer.hpp"
 #include "core/network/Socket.hpp"
 #include "logger/Logger.h"
 #include "SerialBuffer.h"
@@ -11,7 +11,6 @@
 namespace scag { namespace pers {
 
 using smsc::core::network::Socket;
-using smsc::core::network::Multiplexer;
 using smsc::logger::Logger;
 
 class PersServer {
@@ -37,7 +36,7 @@ protected:
 	int clientCount;
     Socket sock;
     bool isStopping;
-    Multiplexer listener;
+    RWMultiplexer listener;
     Mutex mtx;
 };
 
