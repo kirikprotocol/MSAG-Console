@@ -26,9 +26,6 @@ extern "C" static void atExitHandler(void)
 int main(int argc, char* argv[])
 {
 	int resultCode = 0;
-	string host;
-	int port = 9988;
-	int maxClientCount = 100;
 
 	Logger::Init();
 	logger = Logger::getInstance("persc");
@@ -37,7 +34,7 @@ int main(int argc, char* argv[])
 
 	try{
 		PersClient pc;
-		pc.init("localhost", 9999, 60);
+		pc.init("localhost", 1200, 60);
 		Property prop;
 
 		prop.setInt("test_val", 234567, FIXED, -1, 20);
@@ -49,7 +46,7 @@ int main(int argc, char* argv[])
 		prop.setString("test_val_string", L"test_string", W_ACCESS, -1, 25);
 		pc.SetProperty(PT_ABONENT, "+79232446251", prop);
 
-		prop.setDate("test_val_string1", 111111, INFINIT, -1, 25);
+		prop.setDate("test_val_date", 111111, INFINIT, -1, 25);
 		pc.SetProperty(PT_ABONENT, "+79232446251", prop);
 
 		pc.GetProperty(PT_ABONENT, "+79232446251", "test_val", prop);
@@ -61,7 +58,7 @@ int main(int argc, char* argv[])
 		pc.GetProperty(PT_ABONENT, "+79232446251", "test_val_string", prop);
 		smsc_log_debug(logger,  ">>ABONENT: get string %s", prop.toString().c_str());
 
-		pc.GetProperty(PT_ABONENT, "+79232446251", "test_val_string1", prop);
+		pc.GetProperty(PT_ABONENT, "+79232446251", "test_val_date", prop);
 		smsc_log_debug(logger,  ">>ABONENT: get string1 %s", prop.toString().c_str());
 
 
@@ -74,15 +71,20 @@ int main(int argc, char* argv[])
 		prop.setString("test_val_string", L"test_string", W_ACCESS, -1, 25);
 		pc.SetProperty(PT_OPERATOR, 12, prop);
 
-		prop.setDate("test_val_string1", 111111, INFINIT, -1, 25);
+		prop.setDate("test_val_date", 111111, INFINIT, -1, 25);
 		pc.SetProperty(PT_OPERATOR, 12, prop);
 
 		pc.GetProperty(PT_SERVICE, 12, "test_val", prop);
 		smsc_log_debug(logger,  ">>SERVICE: get int %s", prop.toString().c_str());
+
+		pc.GetProperty(PT_PROVIDER, 12, "test_val_bool", prop);
+		smsc_log_debug(logger,  ">>OPERATOR: get bool %s", prop.toString().c_str());
+
 		pc.GetProperty(PT_OPERATOR, 12, "test_val_string", prop);
 		smsc_log_debug(logger,  ">>OPERATOR: get string %s", prop.toString().c_str());
-		pc.GetProperty(PT_PROVIDER, 12, "test_val_bool", prop);
-		smsc_log_debug(logger,  ">>OPERATOR: get string %s", prop.toString().c_str());
+
+		pc.GetProperty(PT_OPERATOR, 12, "test_val_date", prop);
+		smsc_log_debug(logger,  ">>OPERATOR: get date %s", prop.toString().c_str());
 		smsc_log_debug(logger,  "end");
 
     }

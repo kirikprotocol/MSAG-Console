@@ -11,7 +11,7 @@ using namespace smsc::core::buffers;
 string SerialBuffer::toString()
 {
 	string str;
-	int i = 0, j = GetPos();
+	int i = 0, j = GetSize(), k = GetPos();
 	char buf[10];
 
 	uint8_t b;
@@ -22,7 +22,7 @@ string SerialBuffer::toString()
 		sprintf(buf, "%02x(%c)", (int)b, (b > 32 && b < 128 ? b : '*'));
 		str += buf;
 	}
-	SetPos(j);
+	SetPos(k);
 	return str;
 }
 
@@ -36,7 +36,7 @@ void SerialBuffer::ReadString(string &str)
 	if(pos + len > size)
 		throw SerialBufferOutOfBounds();
 
-	str[0] = 0;
+	str = "";
 	while(len > 254)
 	{
 		Read(scb, 254);
@@ -46,7 +46,7 @@ void SerialBuffer::ReadString(string &str)
 	}
 	if(len)
 	{
-		Read((char*)scb, len);
+		Read(scb, len);
 		scb[len] = 0;
 		str += scb;
 	}
@@ -62,7 +62,7 @@ void SerialBuffer::ReadString(wstring &str)
 	if(pos + len > size)
 		throw SerialBufferOutOfBounds();
 
-	str[0] = 0;
+	str = L"";
 	while(len > 254)
 	{
 		Read((char*)scb, sizeof(wchar_t) * 254);

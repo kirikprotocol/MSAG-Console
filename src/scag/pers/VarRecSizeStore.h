@@ -41,7 +41,7 @@ public:
 
 	void init(const string& storeName)
 	{
-		log = smsc::logger::Logger::getInstance("scag.VarRecSizeStore");
+		log = smsc::logger::Logger::getInstance("VarStore");
 
 		string idxFile;
 		string binFile;

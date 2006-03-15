@@ -83,6 +83,7 @@ void Profile::DeleteProperty(const char* str)
 
 void Profile::DeleteExpired()
 {
+	int i = 0;
 	char *key = 0;
 	Property* prop;
 
@@ -91,9 +92,11 @@ void Profile::DeleteExpired()
 	while(it.Next(key, prop))
 		if(prop->isExpired())
 		{
+			i++;
 			delete prop;
 			properties.Delete(key);
 		}
+	smsc_log_debug(log, "Delete %d expired properties.", i);
 }
 
 void Profile::Empty()

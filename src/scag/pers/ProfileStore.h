@@ -122,7 +122,7 @@ public:
 
 	void init(const string& storeName, uint32_t _max_cache_size)
 	{
-		log = smsc::logger::Logger::getInstance("persstor");
+		log = smsc::logger::Logger::getInstance("store");
 
 		MutexGuard mt(mtx);
 
@@ -190,7 +190,7 @@ public:
 				smsc_log_debug(log, "profile %s, getProperty: %s", key.toString().c_str(), prop.toString().c_str());
 		}
 
-		return true;
+		return exists;
 	};
 
 	void storeProfile(Key& key, Profile *pf)

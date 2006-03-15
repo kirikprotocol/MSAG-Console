@@ -14,9 +14,6 @@ using smsc::logger::Logger;
 
 class CommandDispatcher {
 	StringProfileStore* AbonentStore;
-	IntProfileStore	*ProviderStore;
-	IntProfileStore* OperatorStore; 
-	IntProfileStore* ServiceStore;
 public:
     CommandDispatcher(StringProfileStore *abonent, IntProfileStore *service, IntProfileStore *oper, IntProfileStore *provider);
     ~CommandDispatcher() {};

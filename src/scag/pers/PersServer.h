@@ -28,6 +28,7 @@ protected:
     void InitServer(const char* persHost_, int persPort_, int maxClientCount_);
 	void process_read_socket(Socket* sock);
 	void process_write_socket(Socket* sock);
+	void remove_socket(Socket* s);
 
     Logger * log;
     std::string persHost;

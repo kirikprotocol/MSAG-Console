@@ -138,7 +138,8 @@ void PersClient::init()
 
 void PersClient::ReadAllTO(char* buf, uint32_t sz)
 {
-	uint32_t cnt, rd = 0;
+	int cnt;
+	uint32_t rd = 0;
 
 	while(sz)
 	{
@@ -156,7 +157,8 @@ void PersClient::ReadAllTO(char* buf, uint32_t sz)
 
 void PersClient::WriteAllTO(char* buf, uint32_t sz)
 {
-	uint32_t cnt, wr = 0;
+	int cnt;
+	uint32_t wr = 0;
 
 	while(sz)
 	{
@@ -198,7 +200,7 @@ void PersClient::ReadPacket()
 	ReadAllTO(tmp_buf, sizeof(uint32_t));
 	sb.Append(tmp_buf, sizeof(uint32_t));
 	sb.SetPos(0);
-	sz = sb.ReadInt32();
+	sz = sb.ReadInt32() - sizeof(uint32_t);
 
 	while(sz > 1024)
 	{
@@ -266,9 +268,10 @@ void PersClient::ParseProperty(Property& prop)
 	if(ss != RESPONSE_OK)
 		throw PersClientException(SERVER_ERROR);
 
+
 	sb.SetPos(sizeof(uint32_t) + 1);
 	try{
-		prop.Deserialize(sb);	
+		prop.Deserialize(sb);
 	} catch(SerialBufferOutOfBounds &e)
 	{
 		throw PersClientException(BAD_RESPONSE);

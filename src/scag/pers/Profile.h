@@ -37,7 +37,7 @@ class Profile : public Serializable
 
 public:
 	~Profile();
-	Profile() {log = smsc::logger::Logger::getInstance("scag.pers.profile");};
+	Profile() {log = smsc::logger::Logger::getInstance("profile");};
 
 	bool GetProperty(const char* name, Property& prop);
 	bool PropertyExists(const char* str);

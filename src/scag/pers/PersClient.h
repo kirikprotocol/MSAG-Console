@@ -17,7 +17,7 @@ using smsc::logger::Logger;
 using scag::pers;
 
 enum PersClientExceptionType{
-	CANT_CONNECT = 1,
+	CANT_CONNECT,
 	SERVER_BUSY,
 	UNKNOWN_RESPONSE,
 	SEND_FAILED,
@@ -55,7 +55,7 @@ public:
 
 class PersClient {
 public:
-    PersClient() : connected(false), log(Logger::getInstance("persclient")) {};
+    PersClient() : connected(false), log(Logger::getInstance("client")) {};
     ~PersClient() { if(connected) sock.Close(); };
 
 	void init(const char *_host, int _port, int timeout) throw(PersClientException);

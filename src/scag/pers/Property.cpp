@@ -165,10 +165,8 @@ void Property::Serialize(SerialBuffer& buf)
 
 void Property::Deserialize(SerialBuffer& buf)
 {
-	string str;
 	uint8_t len;
 	uint8_t t;
-
 	type = (PropertyType)buf.ReadInt8();
 	time_policy = (TimePolicy)buf.ReadInt8();
 	final_date = (time_t)buf.ReadInt32();

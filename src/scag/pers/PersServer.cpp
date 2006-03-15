@@ -7,7 +7,7 @@ using smsc::util::Exception;
 using smsc::logger::Logger;
 
 PersServer::PersServer(const char *persHost_, int persPort_, int maxClientCount_, CommandDispatcher *d)
-    : log(Logger::getInstance("perssrv")), persHost(""), persPort(0), isStopping(false), CmdDispatcher(d)
+    : log(Logger::getInstance("server")), persHost(""), persPort(0), isStopping(false), CmdDispatcher(d)
 {
 	InitServer(persHost_, persPort_, maxClientCount_);
 }
@@ -36,7 +36,8 @@ void PersServer::InitServer(const char *persHost_, int persPort_, int maxClientC
 
 void PersServer::process_read_socket(Socket* s)
 {
-	uint32_t k, j;
+	int j;
+	uint32_t k;
 	SerialBuffer *sb = (SerialBuffer*)s->getData(0);
 
 	if(sb->GetSize() < sizeof(uint32_t))
@@ -53,19 +54,23 @@ void PersServer::process_read_socket(Socket* s)
 				sb->SetPos(j);
 			}
 		}
-		else if(j == -1)
-			smsc_log_debug(log, "socket.Read failed: %s", strerror(errno));
+		else
+		{
+			if(errno != EWOULDBLOCK)
+				remove_socket(s);
+			return;
+		}
 	}
-	else
+	if(sb->GetSize() >= sizeof(uint32_t))
 	{
 		k = (uint32_t)s->getData(1);
 		j = k - sb->GetSize();
 		j = s->Read(tmp_buf, j > 1024 ? 1024 : j);
 		if(j > 0)
 			sb->Append(tmp_buf, j);
-		else if(j == -1)
+		else  if(errno != EWOULDBLOCK)
 		{
-			smsc_log_debug(log, "socket.Read failed: %s", strerror(errno));
+			remove_socket(s);
 			return;
 		}
 		if(sb->GetSize() >= k)
@@ -79,19 +84,18 @@ void PersServer::process_read_socket(Socket* s)
 
 void PersServer::process_write_socket(Socket* s)
 {
-	uint32_t i, j, len;
+	int j;
+	uint32_t i, len;
 	SerialBuffer *sb = (SerialBuffer*)s->getData(0);
 	len = sb->GetSize();
-
-	smsc_log_info(log, "Write Socket is ready");
 
 	j = len - sb->GetPos();
 	j = s->Write(sb->GetCurPtr(), j);
 	if(j > 0)
 		sb->SetPos(sb->GetPos() + j);
-	else if(j == -1 && errno != EWOULDBLOCK)
+	else if(errno != EWOULDBLOCK)
 	{
-		smsc_log_error(log, "socket.write failed: %s", strerror(errno));
+		remove_socket(s);
 		return;
 	}
 	if(sb->GetPos() >= len)
@@ -99,6 +103,18 @@ void PersServer::process_write_socket(Socket* s)
 		sb->Empty();
 		listener.addR(s);
 	}
+}
+
+void PersServer::remove_socket(Socket* s)
+{
+	char b[256];
+	s->GetPeer(b);
+	smsc_log_info(log, "Socket disconnected: %s", b);
+	SerialBuffer *sb = (SerialBuffer*)s->getData(0);
+	if(sb) delete sb;
+	listener.remove(s);
+	s->Close();
+	delete s;
 }
 
 int PersServer::Execute()
@@ -117,23 +133,26 @@ int PersServer::Execute()
 			if(isStopped())
 				break;
 
-            smsc_log_info(log, "There are ready sockets");
-
             for(int i = 0; i <= read.Count() - 1; i++)
 			{
                 if(read[i] == &sock)
 				{
-                    smsc_log_info(log, "Listen Socket is ready");
                     sockaddr_in addrin;
                     int sz = sizeof(addrin);
                     SOCKET s = accept(sock.getSocket(), (sockaddr*)&addrin, &sz);
                     if(s != -1)
 					{
                         Socket *sock1 = new Socket(s, addrin);
+
+						char b[256];
+						sock1->GetPeer(b);
+						smsc_log_info(log, "Client connected: %s", b);
+
 						if(clientCount >= maxClientCount)
 						{
 							sock1->Write("SB", 2);
 							delete sock1;
+							smsc_log_info(log, "Server busy sent. Disconnected.");
 						}
 						else
 						{
@@ -154,15 +173,7 @@ int PersServer::Execute()
 				process_write_socket(write[i]);
 
             for(int i = 0; i <= err.Count() - 1; i++)
-			{
-				char b[256];
-				err[i]->GetPeer(b);
-				smsc_log_info(log, "Socket error: %s", b);
-				SerialBuffer *sb = (SerialBuffer*)err[i]->getData(0);
-				if(sb) delete sb;
-				listener.remove(err[i]);
-				delete err[i];
-            }
+				remove_socket(err[i]);
         }
     }
 
