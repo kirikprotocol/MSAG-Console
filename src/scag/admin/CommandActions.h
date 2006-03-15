@@ -21,7 +21,7 @@ struct CommandActions
   bool reloadconfig;
   bool reloadroutes;
   bool reloadsmscs;
-  CommandActions();
+  CommandActions() : restart(false), reloadconfig(false), reloadroutes(false), reloadsmscs(false) {};
 };
 
 

@@ -112,25 +112,23 @@ private:
   bool enabling;
   bool active;
   std::string srcSmeSystemId;
-  const signed long providerId;
-  const signed long categoryId;
-  int ruleId;
 
+  int serviceId;
 
   friend class scag::config::RouteConfig;
 
 public:
   Route()
-    : id(), sources(), destinations(), archiving(false), enabling(true), active(false), srcSmeSystemId(), providerId(-1),categoryId(-1),ruleId(-1)
+    : id(), sources(), destinations(), archiving(false), enabling(true), active(false), srcSmeSystemId(), serviceId(-1)
   {}
   Route(const Route &r)
     : id(r.id), sources(r.sources), destinations(r.destinations),
     archiving(r.archiving), enabling(r.enabling), active(r.active),
-    srcSmeSystemId(r.srcSmeSystemId), providerId(r.providerId), ruleId(r.ruleId),categoryId(r.categoryId)
+    srcSmeSystemId(r.srcSmeSystemId), serviceId(r.serviceId)
   {}
-  Route(std::string routeId, bool archiving_, bool enabling_, bool active_, std::string srcSmeSystemId_, int32_t providerId_, int32_t ruleId_, int32_t categoryId_)
+  Route(std::string routeId, bool archiving_, bool enabling_, bool active_, std::string srcSmeSystemId_, int32_t serviceId_)
     : id(routeId), sources(), destinations(),
-    archiving(archiving_), enabling(enabling_), active(active_), srcSmeSystemId(srcSmeSystemId_), providerId(providerId_), ruleId(ruleId_), categoryId(categoryId_)
+    archiving(archiving_), enabling(enabling_), active(active_), srcSmeSystemId(srcSmeSystemId_), serviceId(serviceId_)
   {}
 
   ~Route()
@@ -148,9 +146,7 @@ public:
   //int getPriority() {return priority;}
   const std::string & getIdString() const {return id;}
   const std::string & getSrcSmeSystemId() const { return srcSmeSystemId; }
-  const signed long getProviderId() const {return this->providerId;}
-  const int getRuleId() const {return this->ruleId;}
-  const signed long getCategoryId()const{return this->categoryId;}
+  const int getServiceId() const {return this->serviceId;}
   //const bool isTransit(){return this->transit;}
 };
 //typedef std::vector<Route> RouteVector;

@@ -377,13 +377,13 @@ RuleStatus RuleEngineImpl::process(SCAGCommand& command, Session& session)
     RulesReference rulesRef = getRules();
     RuleStatus rs;
 
-    int ruleId = command.getRuleId();
+    //int ruleId = command.getRuleId();
 
-    smsc_log_debug(logger,"Process RuleEngine with ruleId: %d",ruleId);
+    smsc_log_debug(logger,"Process RuleEngine with serviceId: %d", command.getServiceId());
 
     RuleKey key;
     key.transport = command.getType();
-    key.serviceId = command.getRuleId();
+    key.serviceId = command.getServiceId();
 
     Rule ** rulePtr = rulesRef.rules->rules.GetPtr(key);
 

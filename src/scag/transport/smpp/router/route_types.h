@@ -46,7 +46,7 @@ struct RouteInfo
 
   int32_t providerId;
   int32_t categoryId;
-  int32_t ruleId;
+  int32_t serviceId;
 };
 
 }//namespace scag

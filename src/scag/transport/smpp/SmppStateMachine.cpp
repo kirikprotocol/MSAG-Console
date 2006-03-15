@@ -119,7 +119,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
   sms.setSourceSmeId(src->getSystemId());
   sms.setDestinationSmeId(dst->getSystemId());
 
-  cmd->set_ruleId(ri.ruleId);
+  cmd->set_serviceId(ri.serviceId);
 
 
   scag::sessions::CSessionKey key;
@@ -217,7 +217,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
   sms.setSourceSmeId(src->getSystemId());
   sms.setDestinationSmeId(dst->getSystemId());
 
-  cmd->set_ruleId(ri.ruleId);
+  cmd->set_serviceId(ri.serviceId);
 
 
   scag::sessions::CSessionKey key;

@@ -356,7 +356,7 @@ struct _SmppCommand
   int status;
   Mutex mutex;
   SmppEntity *ent;
-  int ruleId;
+  int serviceId;
   int priority;
   uint64_t opId;
   _SmppCommand() : ref_count(0), dta(0), ent(0),priority(ScagCommandDefaultPriority)
@@ -449,13 +449,13 @@ struct _SmppCommand
     return (int)dta;
   }
 
-  void set_ruleId(int argRuleId)
+  void set_serviceId(int argServiceId)
   {
-    ruleId=argRuleId;
+    serviceId=argServiceId;
   }
-  int get_ruleId()
+  int get_serviceId()
   {
-    return ruleId;
+    return serviceId;
   }
   void set_operationId(uint64_t id)
   {
@@ -1188,14 +1188,14 @@ public:
     return SMPP;
   }
 
-  int getRuleId()const
+  int getServiceId()const
   {
-    return cmd->get_ruleId();
+    return cmd->get_serviceId();
   }
 
-  void setRuleId(int ruleId)
+  void setServiceId(int serviceId)
   {
-    cmd->set_ruleId(ruleId);
+    cmd->set_serviceId(serviceId);
   }
 
   int64_t getOperationId() const

@@ -5,8 +5,6 @@ namespace scag { namespace bill {
 
 bool BillActionRollback::run(ActionContext& context)
 {
-    int BillId = 9;
-
     smsc_log_error(logger,"Run Action 'BillActionRollback'...");
 
     Operation * operation = context.GetCurrentOperation();
@@ -16,7 +14,10 @@ bool BillActionRollback::run(ActionContext& context)
         return false;
     }
 
-  operation->detachBill(BillId);
+    BillingManager& bm = BillingManager::Instance();
+    bm.rollback(operation->getBillId());
+
+    operation->detachBill();
 
     return true;
 }

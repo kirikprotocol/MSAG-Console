@@ -208,9 +208,7 @@ throw (SubjectNotFoundException)
                                     getAttribBool(elem, "enabled"),
                                     getAttribBool(elem, "active"),
                                     getAttribStr(elem, "srcSmeId"),
-                                    getAttribInt(elem, "providerId"),
-                                    getAttribInt(elem, "ruleId"),
-                                    getAttribInt(elem, "categoryId") )
+                                    getAttribInt(elem, "serviceId") )
                          );
 
 

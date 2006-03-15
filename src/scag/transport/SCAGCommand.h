@@ -26,8 +26,8 @@ using smsc::core::buffers::Hash;
       
       virtual TransportType getType() const = 0;
 
-      virtual int getRuleId() const = 0;
-      virtual void setRuleId(int ruleId) = 0;
+      virtual int getServiceId() const = 0;
+      virtual void setServiceId(int serviceId) = 0;
 
       virtual int64_t getOperationId() const = 0;
       virtual void setOperationId(int64_t op) = 0;

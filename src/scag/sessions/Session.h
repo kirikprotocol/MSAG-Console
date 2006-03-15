@@ -104,6 +104,9 @@ namespace scag { namespace sessions
     public:
         uint8_t type;
         time_t validityTime;
+        bool bStartBillingOperation;
+
+        PendingOperation() : bStartBillingOperation(false) {};
     };
 
     class Operation
@@ -113,12 +116,15 @@ namespace scag { namespace sessions
 
         Logger * logger;
         Operation(const Operation& operation);
-        std::list <int> BillList;
+        bool m_hasBill;
+        int billId;
     public:
         uint8_t type;
         void attachBill(int BillId);
-        void detachBill(int BillId);
+        void detachBill();
         void rollbackAll();
+        bool hasBill() {return m_hasBill;}
+        int getBillId() {return billId;}
 
         void setStatus(int currentIndex,int lastIndex)
         {
@@ -126,7 +132,7 @@ namespace scag { namespace sessions
         }
 
         ~Operation() {}
-        Operation() :logger(0) {logger = Logger::getInstance("scag.re");};
+        Operation() :logger(0), m_hasBill(false) {logger = Logger::getInstance("scag.re");};
     };
 
 
@@ -241,14 +247,12 @@ namespace scag { namespace sessions
                 if (!s2->OperationsHash.Exist(key)) return false;
                 Operation * op2 = s2->OperationsHash.Get(key);
 
-                if (operation->BillList.size() != op2->BillList.size()) return false;
+                if (operation->hasBill() != op2->hasBill()) return false;
 
-                std::list<int>::iterator billIt2 = op2->BillList.begin();
-                for (std::list<int>::iterator billIt = operation->BillList.begin();billIt!=operation->BillList.end(); ++billIt)
-                {
-                    if ((*billIt)!=(*billIt2)) return false;
-                    ++billIt2;
-                }
+                if (operation->hasBill())
+                    if (operation->billId != op2->billId) return false;
+
+
             }
             return true;
         }

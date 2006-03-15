@@ -262,6 +262,7 @@ void BillingManagerImpl::commit(int billId)
 
     //TODO: send commit
 
+    EventMonitorArray[pBillTransaction->EventMonitorIndex].inUse = false;
     BillTransactionHash.Delete(billId);
 }
 
@@ -278,6 +279,7 @@ void BillingManagerImpl::rollback(int billId)
         return;
     }
 
+    EventMonitorArray[pBillTransaction->EventMonitorIndex].inUse = false;
     BillTransactionHash.Delete(billId);
 }
 

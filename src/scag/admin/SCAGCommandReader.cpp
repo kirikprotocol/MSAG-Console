@@ -26,6 +26,7 @@ SCAGCommandReader::SCAGCommandReader(Socket * admSocket)
   commandlist["addSmsc"] = CommandIds::addSmsc;
   commandlist["deleteSmsc"] = CommandIds::deleteSmsc;
   commandlist["updateSmsc"] = CommandIds::updateSmsc;
+
   commandlist["updateRule"] = CommandIds::updateRule;
   commandlist["removeRule"] = CommandIds::removeRule;
   commandlist["addRule"] = CommandIds::addRule;

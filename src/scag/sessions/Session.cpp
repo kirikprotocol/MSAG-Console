@@ -7,23 +7,24 @@ namespace scag { namespace sessions {
 using namespace scag::exceptions;
 using namespace scag::re;
 
-void Operation::detachBill(int BillId)
+void Operation::detachBill()
 {
-    for (std::list<int>::iterator it = BillList.begin();it!=BillList.end(); ++it)
+    if (!m_hasBill) 
     {
-        if ((*it)==BillId) 
-        {
-            BillList.erase(it);
-            
-            smsc_log_debug(logger,"Operation: Bill %d detached",BillId);
-            return;
-        }
+        smsc_log_warn(logger,"Operation: No bill to detach");
+        return;
     }
+
+    m_hasBill = false;
 }
 
 void Operation::attachBill(int BillId)
 { 
-    BillList.push_front(BillId);
+    if (hasBill) throw SCAGException("Operation: Cannot attach bill - bill already attached!");
+
+    m_hasBill = true;
+    billId = BillId;
+
     smsc_log_debug(logger,"Operation: Bill %d attached",BillId);
 }
 
@@ -33,11 +34,12 @@ void Operation::rollbackAll()
     smsc_log_debug(logger,"Operation: Rollback all");
     
     BillingManager& bm = BillingManager::Instance();
-    for (std::list<int>::iterator it = BillList.begin();it!=BillList.end(); ++it)
+
+    if (m_hasBill) 
     {
-        bm.rollback(*it);
-    }     
-    BillList.clear();
+        bm.rollback(billId);
+        m_hasBill = false;
+    }
 }
 
 //////////////////////////////////////////////Session////////////////////////////////////////////
@@ -108,13 +110,9 @@ void Session::DeserializeOperations(SessionBuffer& buff)
     {
         operation = new Operation();
 
-        buff >> BillCount;
+        buff >> operation->m_hasBill;
+        if (operation->m_hasBill) buff >> operation->billId;
 
-        for (int j=0; j < BillCount; j++) 
-        {
-            buff >> BillId;
-            operation->BillList.push_back(BillId);
-        }
 
         buff >> operation->type;
         buff >> key;
@@ -133,7 +131,7 @@ void Session::DeserializePendingOperations(SessionBuffer& buff)
 
     for (int i=0; i<Count; i++) 
     {
-        buff >> p.type >> p.validityTime;
+        buff >> p.type >> p.validityTime >> p.bStartBillingOperation;
         PendingOperationList.push_back(p);
     }
 
@@ -167,12 +165,8 @@ void Session::SerializeOperations(SessionBuffer& buff)
 
     for (;it.Next(key, operation);)
     {              
-        buff << operation->BillList.size();
-
-        for (std::list<int>::iterator billIt = operation->BillList.begin();billIt!=operation->BillList.end(); ++billIt)
-        {
-            buff << (*billIt);
-        }
+        buff << operation->m_hasBill;
+        if (operation->m_hasBill) buff << operation->billId;
 
         buff << operation->type;
         buff << key;
@@ -187,7 +181,7 @@ void Session::SerializePendingOperations(SessionBuffer& buff)
 
     for (it = PendingOperationList.begin(); it!=PendingOperationList.end(); ++it)
     {
-        buff << it->type << it->validityTime;
+        buff << it->type << it->validityTime << it->bStartBillingOperation;
     }
 }
 

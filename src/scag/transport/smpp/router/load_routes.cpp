@@ -66,9 +66,7 @@ void loadRoutes(RouteManager* rm,const scag::config::RouteConfig& rc,bool tracei
               rinfo.srcSmeSystemId = route->getSrcSmeSystemId();
               rinfo.archived=route->isArchiving();
               rinfo.routeId=route->getId();
-              rinfo.providerId=route->getProviderId();
-              rinfo.categoryId=route->getCategoryId();
-              rinfo.ruleId=route->getRuleId();
+              rinfo.serviceId=route->getServiceId();
               rinfo.enabled=route->isEnabling();
               try{
                 rm->addRoute(rinfo);
