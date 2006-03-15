@@ -26,7 +26,8 @@
 #include "Performance.h"
 
 #ifdef SACC_SENDER
-#include "sacc/SACC_EventSender.h"
+	#include "sacc/SACC_EventSender.h"
+	#include "sacc/SACC_SyncQueue.h"
 #endif
 
 namespace scag {
@@ -48,9 +49,11 @@ namespace stat {
 
     using smsc::util::TimeSlotCounter;
     using smsc::core::network::Socket;
+
 #ifdef SACC_SENDER
 	using namespace scag::stat::sacc;
 #endif
+
     struct CommonStat
     {
       int providerId;
@@ -150,8 +153,10 @@ namespace stat {
 		
 	
 #ifdef SACC_SENDER
+
 		IntHash<std::string>    saccEventFiler;
 		EventSender thrSaccSender;
+		SyncQueue    saccEventQueuue;		
 #endif
         int     currentIndex;
         bool    bExternalFlush;

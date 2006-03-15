@@ -113,7 +113,7 @@ void StatisticsManager::configure(const StatManConfig& statManConfig)
 #ifdef SACC_SENDER	
 	int saccPort = statManConfig.getSaccPort();
 	std::string saccHost = statManConfig.getSaccHost();
-
+	thrSaccSender.init(saccHost,saccPort,100,&saccEventQueue,&isStarted,&logger);
 #endif	
 	
     printf("StatisticsManager, perfSvcPort: %d\n", perfSvcPort);

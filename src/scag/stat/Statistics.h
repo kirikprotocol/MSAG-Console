@@ -8,6 +8,10 @@
 #include "scag/transport/smpp/router/route_types.h"
 #include "scag/transport/smpp/SmppManagerAdmin.h"
 
+#ifdef SACC_SENDER
+	#include <inttypes.h>
+#endif
+
 namespace scag {
 namespace stat {
 
@@ -47,11 +51,13 @@ using smsc::smeman::SmeRecord;
     {
       char smeId[smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1];
       char routeId[smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH+1];
-      int  smeProviderId;
+      int  smeProviderId;//serviceProviderId ?
       int  routeProviderId;
       int counter;
       int errCode;
       bool internal;
+
+	  
 
       SmppStatEvent()
       {
