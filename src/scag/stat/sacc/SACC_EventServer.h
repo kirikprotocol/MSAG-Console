@@ -38,7 +38,7 @@ namespace sacc{
 
 
 
-class EventServer : public Thread 
+class EventServer 
 {
 
 public:
