@@ -57,7 +57,7 @@ public:
 	bool processEvent(void * ev);
 	void Stop();
 	void Start();
-
+	void init(std::string &host,int port,int timeout) throw Exception;
 private:
 
 	SyncQueue<void*> * pQueue;
