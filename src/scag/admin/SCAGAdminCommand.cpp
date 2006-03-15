@@ -1,11 +1,11 @@
 // 
-// File:   SCAGCommand.cpp
+// File:   SCAGAdminCommand.cpp
 // Author: loomox
 //
 // Created on 24 march 2005 
 //
 
-#include "SCAGCommand.h"
+#include "SCAGAdminCommand.h"
 #include "CommandIds.h"
 #include "util/xml/utilFunctions.h"
 
@@ -57,67 +57,59 @@ using namespace smsc::util::config;
 using namespace scag::exceptions;
 
 
-SCAGCommand::SCAGCommand(Command::Id id) :Command(id),
-    logger(smsc::logger::Logger::getInstance("admin.command"))
-{
-}
-
-SCAGCommand::~SCAGCommand()
-{
-}
-
-Response * SCAGCommand::CreateResponse(scag::Scag * ScagApp)
-{
-  smsc_log_info(logger, "SCAGCommand::CreateResponse has processed");
-  return new Response(Response::Ok, "none");
-}
-
-Actions::CommandActions SCAGCommand::GetActions()
-{
-  Actions::CommandActions result;
-  return result;
-}
 
 //================================================================
 //================ Sme commands ==================================
 
 using namespace smsc::util::xml;
 
-Abstract_CommandSmeInfo::Abstract_CommandSmeInfo(const Command::Id id, const xercesc::DOMDocument * const document)
-  : SCAGCommand(id)
+
+void Abstract_CommandSmeInfo::init()
 {
+
     smsc_log_info(logger, "Abstract_CommandSmeInfo got parameters:");
 
-    try {
-  
-        BEGIN_SCAN_PARAMS
-        GETSTRPARAM((char*)smppEntityInfo.systemId,      "systemId")
-        GETSTRPARAM((char*)smppEntityInfo.password,      "password")
-        GETINTPARAM(smppEntityInfo.timeOut,              "timeout")
-        GETINTPARAM(smppEntityInfo.providerId,           "providerId")           
+    smppEntityInfo.systemId = "";
+    smppEntityInfo.password = "";
+    smppEntityInfo.timeOut = -1;
+    smppEntityInfo.providerId = -1;
 
-        if (::strcmp("mode", name) == 0) 
-        {
-            if (::strcmp("trx", value.get()) == 0) smppEntityInfo.bindType = scag::transport::smpp::btTransceiver;
-            else if(::strcmp("tx", value.get()) == 0) smppEntityInfo.bindType = scag::transport::smpp::btTransmitter;
-            else if(::strcmp("rx", value.get()) == 0) smppEntityInfo.bindType = scag::transport::smpp::btReceiver;
-            else smppEntityInfo.bindType = scag::transport::smpp::btTransceiver;
+    BEGIN_SCAN_PARAMS
+    GETSTRPARAM((char*)smppEntityInfo.systemId,      "systemId")
+    GETSTRPARAM((char*)smppEntityInfo.password,      "password")
+    GETINTPARAM(smppEntityInfo.timeOut,              "timeout")
+    GETINTPARAM(smppEntityInfo.providerId,           "providerId")           
 
-            smsc_log_info(logger, "mode: %s, %d", value.get(), smppEntityInfo.timeOut);
-        }
-        END_SCAN_PARAMS
+    if (::strcmp("mode", name) == 0) 
+    {
+        if (::strcmp("trx", value.get()) == 0) smppEntityInfo.bindType = scag::transport::smpp::btTransceiver;
+        else if(::strcmp("tx", value.get()) == 0) smppEntityInfo.bindType = scag::transport::smpp::btTransmitter;
+        else if(::strcmp("rx", value.get()) == 0) smppEntityInfo.bindType = scag::transport::smpp::btReceiver;
+        else smppEntityInfo.bindType = scag::transport::smpp::btTransceiver;
 
-        smppEntityInfo.type = scag::transport::smpp::etService;
-    } catch (...) {
-        smsc_log_warn(logger, "Failed to tead Sme parameters. Unknown exception");        
+        smsc_log_info(logger, "mode: %s, %d", value.get(), smppEntityInfo.timeOut);
+    }
+    END_SCAN_PARAMS
+
+    smppEntityInfo.type = scag::transport::smpp::etService;
+
+    std::string errorStr;
+
+    if (smppEntityInfo.systemId == "") errorStr = "Failed to tead Sme parameter 'systemId'";
+    if (smppEntityInfo.password == "") errorStr = "Failed to tead Sme parameter 'password'";
+    if (smppEntityInfo.timeOut == -1) errorStr = "Failed to tead Sme parameter 'timeout'";
+    if (smppEntityInfo.providerId == -1) errorStr = "Failed to tead Sme parameter 'providerId'";
+
+    if (errorStr.size() > 0) 
+    {
+        smsc_log_warn(logger, errorStr.c_str());
+        throw AdminException(errorStr.c_str());
     }
 }
 
-Abstract_CommandSmeInfo::~Abstract_CommandSmeInfo()
-{
-}
 
 //================================================================
+
 
 Response * CommandAddSme::CreateResponse(scag::Scag * ScagApp)
 {
@@ -149,20 +141,20 @@ Response * CommandAddSme::CreateResponse(scag::Scag * ScagApp)
 
 using namespace xercesc;
 
-CommandDeleteSme::CommandDeleteSme(const xercesc::DOMDocument * const document)
-  : SCAGCommand((Command::Id)CommandIds::deleteSme)
+void CommandDeleteSme::init()
 {
     smsc_log_info(logger, "CommandDeleteSme got parameters:");
 
-    try {
+    systemId = "";
 
-        BEGIN_SCAN_PARAMS
-        GETSTRPARAM_(systemId, "systemId")
-        END_SCAN_PARAMS
+    BEGIN_SCAN_PARAMS
+    GETSTRPARAM_(systemId, "systemId")
+    END_SCAN_PARAMS
 
-    } catch (...) 
+    if (systemId == "") 
     {
-        smsc_log_warn(logger, "Failed to read parameters of Delete Sme command. Unknown exception");        
+        smsc_log_warn(logger, "Failed to read parameter 'systemId' of CommandDeleteSme.");
+        throw AdminException("Failed to read parameter 'systemId' of CommandDeleteSme.");
     }
 }
 
@@ -205,12 +197,6 @@ Response * CommandStatusSme::CreateResponse(scag::Scag * ScagApp)
 
 //================================================================
 
-CommandUpdateSmeInfo::CommandUpdateSmeInfo(const xercesc::DOMDocument * const document)
-  : Abstract_CommandSmeInfo((Command::Id)CommandIds::updateSmeInfo, document)
-{
-  smsc_log_info(logger, "UpdateSmeInfo command");
-}
-
 Response * CommandUpdateSmeInfo::CreateResponse(scag::Scag * ScagApp)
 {
     smsc_log_info(logger, "CommandUpdateSmeInfo is processing...");
@@ -236,149 +222,6 @@ Response * CommandUpdateSmeInfo::CreateResponse(scag::Scag * ScagApp)
     return new Response(Response::Ok, "CommandUpdateSmeInfo processed ok.");
 }
 
-//================================================================
-//================ Smsc commands =================================
-
-Abstract_CommandSmscInfo::Abstract_CommandSmscInfo(const Command::Id id, const xercesc::DOMDocument * const document)
-  : SCAGCommand(id)
-{
-
-    smsc_log_info(logger, "Abstract_CommandSmscInfo got parameters:");
-    try {
-
-        BEGIN_SCAN_PARAMS
-
-        GETSTRPARAM((char*)smppEntityInfo.systemId,      "systemId")
-        GETSTRPARAM((char*)smppEntityInfo.password,      "password")
-        GETSTRPARAM((char*)smppEntityInfo.bindSystemId,  "bindSystemId")
-        GETSTRPARAM((char*)smppEntityInfo.bindPassword,  "bindPassword")
-        GETINTPARAM(smppEntityInfo.timeOut,               "timeout")
-        GETINTPARAM(smppEntityInfo.providerId,            "providerId")
-        GETINTPARAM(smppEntityInfo.uid,                   "uid")
-            
-        if (::strcmp("mode", name) == 0) 
-        {
-            if (::strcmp("trx", value.get()) == 0) smppEntityInfo.bindType = scag::transport::smpp::btTransceiver;
-            else if(::strcmp("tx", value.get()) == 0) smppEntityInfo.bindType = scag::transport::smpp::btTransmitter;
-            else if(::strcmp("rx", value.get()) == 0) smppEntityInfo.bindType = scag::transport::smpp::btReceiver;
-            else smppEntityInfo.bindType = scag::transport::smpp::btTransceiver;
-            smsc_log_info(logger, "mode: %s, %d", value.get(), smppEntityInfo.bindType);
-        }
-
-        GETSTRPARAM((char*)smppEntityInfo.host,       "host")
-        GETINTPARAM(smppEntityInfo.port,              "port")
-        GETSTRPARAM((char*)smppEntityInfo.altHost,    "altHost")
-        GETINTPARAM(smppEntityInfo.altPort,           "altPort")
-
-        END_SCAN_PARAMS
-
-        smppEntityInfo.type = scag::transport::smpp::etSmsc;
-    } catch (...) {
-      smsc_log_error(logger, "Some exception occured");
-    }
-}
-
-Abstract_CommandSmscInfo::~Abstract_CommandSmscInfo()
-{
-}
-
-//================================================================
-
-CommandDeleteSmsc::CommandDeleteSmsc(const xercesc::DOMDocument * const document)
-  : SCAGCommand((Command::Id)CommandIds::deleteSmsc)
-{
-    smsc_log_info(logger, "CommandDeleteSme got parameters:");
-
-    try {
-
-        BEGIN_SCAN_PARAMS
-        GETSTRPARAM_(systemId, "systemId")
-        END_SCAN_PARAMS
-
-    } catch (...) {
-      smsc_log_error(logger, "Failed to read parameters of Delete Sme command.");
-    }
-}
-
-Response * CommandDeleteSmsc::CreateResponse(scag::Scag * ScagApp)
-{
-    smsc_log_info(logger, "CommandDeleteSmsc is processing");
-    if(!ScagApp) throw Exception("Scag undefined");
-    scag::transport::smpp::SmppManagerAdmin * smppMan = ScagApp->getSmppManagerAdmin();
-
-    if(!smppMan) throw Exception("SmppManager undefined");
-
-    try {
-        smppMan->deleteSmppEntity(systemId.c_str());
-    }
-    catch(Exception& e) {                                     
-        char msg[1024];                                         
-        sprintf(msg, "Failed to delete smsc. Details: %s", e.what());            \
-        smsc_log_error(logger, msg);                            \
-        return new Response(Response::Error, msg);
-    } catch (...) {
-        smsc_log_warn(logger, "Failed to delete smsc. Unknown exception");        
-        throw AdminException("Failed to delete smsc. Unknown exception");
-    }
-
-    smsc_log_info(logger, "CommandDeleteSmsc is processed ok");
-    return new Response(Response::Ok, "CommandDeleteSmsc is processed ok");
-}
-
-//================================================================
-
-Response * CommandAddSmsc::CreateResponse(scag::Scag * ScagApp)
-{
-    smsc_log_info(logger, "CommandAddSmsc is processing...");
-    if(!ScagApp) throw Exception("Scag undefined");
-
-    scag::transport::smpp::SmppManagerAdmin * smppMan = ScagApp->getSmppManagerAdmin();
-    if(!smppMan) throw Exception("SmppManager undefined");
-
-    try {
-        smppMan->addSmppEntity(getSmppEntityInfo());
-    }
-    catch(exception& e) {                                     
-        char msg[1024];                                         
-        sprintf(msg, "Failed to add smsc. Details: %s", e.what());            
-        smsc_log_error(logger, msg);                            
-        return new Response(Response::Error, msg);
-    } catch (...) {
-        smsc_log_warn(logger, "Failed to add smsc. Unknown exception");        
-        throw AdminException("Failed to add smsc. Unknown exception");
-    }
-
-    smsc_log_info(logger, "CommandAddSmsc is processed ok");
-    return new Response(Response::Ok, "none");
-}
-
-//================================================================
-
-Response * CommandUpdateSmsc::CreateResponse(scag::Scag * ScagApp)
-{ 
-    smsc_log_info(logger, "CommandUnregSmsc is processing...");
-
-    if (!ScagApp) throw Exception("Scag undefined");
-
-    scag::transport::smpp::SmppManagerAdmin * smppMan = ScagApp->getSmppManagerAdmin();
-    if (!smppMan) throw Exception("SmppManager undefined");
-
-    try {
-        smppMan->updateSmppEntity(getSmppEntityInfo());
-    }
-    catch(Exception& e) {                                     
-        char msg[1024];                                         
-        sprintf(msg, "Failed to update smsc. Details: %s", e.what());            
-        smsc_log_error(logger, msg);                            
-        return new Response(Response::Error, msg);
-    } catch (...) {
-        smsc_log_warn(logger, "Failed to update smsc. Unknown exception");        
-        throw AdminException("Failed to update smsc. Unknown exception");
-    }
-
-    smsc_log_info(logger, "CommandUpdateSmsc is processed");
-    return new Response(Response::Ok, "none");
-}
 
 //================================================================
 //================ Route commands ================================
@@ -386,13 +229,6 @@ Response * CommandUpdateSmsc::CreateResponse(scag::Scag * ScagApp)
 using namespace smsc::sms;
 using scag::config::ConfigManager;
 
-
-
-CommandLoadRoutes::CommandLoadRoutes(const xercesc::DOMDocument * doc)
-  : SCAGCommand((Command::Id)CommandIds::loadRoutes)
-{
-  smsc_log_debug(logger, "LoadRoutes command");
-}
 
 
 Response * CommandLoadRoutes::CreateResponse(scag::Scag * ScagApp)
@@ -475,26 +311,31 @@ inline char* getEncodedString(const char* const src)
 
 
 
-CommandTraceRoute::CommandTraceRoute(const xercesc::DOMDocument * document)  
-  : SCAGCommand((Command::Id)CommandIds::traceRoute)
+void CommandTraceRoute::init()
 {
     smsc_log_info(logger, "CommandStatusSme got parameters:");
 
-    try {
+    srcAddr = "";
+    dstAddr = "";
+    srcSysId = "";
 
-        BEGIN_SCAN_PARAMS
-        GETSTRPARAM_(srcAddr,     "srcAddress")
-        GETSTRPARAM_(dstAddr,     "dstAddress")
-        GETSTRPARAM_(srcSysId,    "srcSysId")
-        END_SCAN_PARAMS
-    } catch (...) {
-        smsc_log_warn(logger, "Failed to read parameters of Status Sme command. Unknown exception");
+    BEGIN_SCAN_PARAMS
+    GETSTRPARAM_(srcAddr,     "srcAddress")
+    GETSTRPARAM_(dstAddr,     "dstAddress")
+    GETSTRPARAM_(srcSysId,    "srcSysId")
+    END_SCAN_PARAMS
+
+    std::string errorStr;
+
+    if (srcAddr == "") errorStr = "Failed to read parameter 'srcAddress' of CommandTraceRoute";
+    if (dstAddr == "") errorStr = "Failed to read parameter 'dstAddress' of CommandTraceRoute";
+    if (srcSysId == "") errorStr = "Failed to read parameter 'srcSysId' of CommandTraceRoute";
+
+    if (errorStr.size() > 0) 
+    {
+        smsc_log_warn(logger, errorStr.c_str());
+        throw AdminException(errorStr.c_str());
     }
-}
-
-CommandTraceRoute::~CommandTraceRoute()
-{
-  id = undefined;
 }
 
 Response * CommandTraceRoute::CreateResponse(scag::Scag * ScagApp)
@@ -592,38 +433,33 @@ Response * CommandTraceRoute::CreateResponse(scag::Scag * ScagApp)
 //================================================================
 //================ Apply commands ================================
 
-CommandApply::CommandApply(const xercesc::DOMDocument * document)  
-  : SCAGCommand((Command::Id)CommandIds::apply)
+
+void CommandApply::init()
 {
     smsc_log_info(logger, "CommandApply got parameters:");
+
     subj = CommandApply::unknown;
 
-    try {
+    BEGIN_SCAN_PARAMS
+    if (::strcmp("subj", name) == 0) 
+    {
+        if (strcmp("config", value.get()) == 0) subj = CommandApply::config;
+        else if (strcmp("routes", value.get()) == 0) subj = CommandApply::routes;
+        else if (strcmp("providers", value.get()) == 0) subj = CommandApply::providers;
+        else if (strcmp("smscs", value.get()) == 0) subj = CommandApply::smscs;
+        else subj = CommandApply::unknown;
 
-        BEGIN_SCAN_PARAMS
-        if (::strcmp("subj", name) == 0) 
-        {
-            if (strcmp("config", value.get()) == 0) subj = CommandApply::config;
-            else if (strcmp("routes", value.get()) == 0) subj = CommandApply::routes;
-            else if (strcmp("providers", value.get()) == 0) subj = CommandApply::providers;
-            else if (strcmp("smscs", value.get()) == 0) subj = CommandApply::smscs;
-            else subj = CommandApply::unknown;
-
-            smsc_log_info(logger, "subj: %s, %d", value.get(), subj);
+        smsc_log_info(logger, "subj: %s, %d", value.get(), subj);
           
-        }
-        END_SCAN_PARAMS
+    }
+    END_SCAN_PARAMS
 
-    } catch (...) {
-        smsc_log_warn(logger, "Failed to read parameters of Apply command. Unknown exception");
+    if (subj == CommandApply::unknown) 
+    {
+        smsc_log_warn(logger, "Failed to read parameters of Apply command. Unknown parameter.");
+        throw AdminException("Failed to read parameters of Apply command. Unknown parameter.");
     }
 
-}
-
-CommandApply::~CommandApply()
-{
-    id = undefined;
-    subj = CommandApply::unknown;
 }
 
 Response * CommandApply::CreateResponse(scag::Scag * SmscApp)

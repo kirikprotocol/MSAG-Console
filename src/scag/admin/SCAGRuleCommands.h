@@ -1,22 +1,22 @@
 #ifndef _SCAG_RULE_COMMANDS_H_
 #define _SCAG_RULE_COMMANDS_H_
 
-#include "SCAGCommand.h"
+#include "AdminCommand.h"
 #include "scag/re/RuleEngine.h"
 
 
 namespace scag { namespace admin {
 
-class CommandRuleBase : public scag::admin::SCAGCommand
+class CommandRuleBase : public AdminCommand
 {
 protected:
     scag::re::RuleKey key;
     scag::transport::TransportType transport;
-    bool hasErrors;
+
     std::string m_ProcessName;
     std::string strTransport;
 
-    bool readParams(const xercesc::DOMDocument * document);
+    void init();
     virtual void processRuleCommand() = 0;
 public:
     CommandRuleBase(const CommandIds::IDS ID, const xercesc::DOMDocument * doc);

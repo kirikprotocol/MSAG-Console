@@ -172,11 +172,12 @@ Response * SCAGCommandDispatcher::handle(const Command * const command) throw (A
 {
   try
   {
-    SCAGCommand * scagcommand;
-    scagcommand = (SCAGCommand *)command;
-    
-    Response * result = scagcommand->CreateResponse(runner->getApp());
-    DoActions(scagcommand->GetActions());
+    AdminCommand * adminCommand;
+    adminCommand = (AdminCommand *)command;
+
+    adminCommand->init();
+    Response * result = adminCommand->CreateResponse(runner->getApp());
+    DoActions(adminCommand->GetActions());
     return result;
   } catch (AdminException &e) {
     return new Response(Response::Error, e.what());

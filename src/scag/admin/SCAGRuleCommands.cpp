@@ -9,7 +9,7 @@ using namespace scag::exceptions;
 
 
 CommandRuleBase::CommandRuleBase(const CommandIds::IDS ID, const xercesc::DOMDocument * doc) 
-    : SCAGCommand((Command::Id)ID), hasErrors(false)
+    : AdminCommand((Command::Id)ID, doc)
 
 {
     switch (ID) 
@@ -24,16 +24,12 @@ CommandRuleBase::CommandRuleBase(const CommandIds::IDS ID, const xercesc::DOMDoc
         m_ProcessName = "remove";
         break;
     }
-
-
-    smsc_log_info(logger, "SCAGCommand '%s' rule got parameters:", m_ProcessName.c_str());
-    hasErrors = (!readParams(doc));
-
 }
 
 
-bool CommandRuleBase::readParams(const xercesc::DOMDocument * document)
+void CommandRuleBase::init()
 {
+    smsc_log_info(logger, "SCAGCommand '%s' rule got parameters:", m_ProcessName.c_str());
     
     BEGIN_SCAN_PARAMS
     GETINTPARAM(key.serviceId, "serviceId")
@@ -58,10 +54,11 @@ bool CommandRuleBase::readParams(const xercesc::DOMDocument * document)
     }   */
 
 
+    
     if (!ttype) 
     {
         smsc_log_error(logger,"Unknown transport parameter '%s'", strTransport.c_str());
-        return false;
+        throw AdminException("Unknown transport parameter '%s'", strTransport.c_str());
     }  
 
     key.transport = *ttype;
@@ -69,22 +66,20 @@ bool CommandRuleBase::readParams(const xercesc::DOMDocument * document)
     if (key.serviceId == -1) 
     {
         smsc_log_error(logger,"Missing serviceId parameter");
-        return false;
+        throw AdminException("Missing serviceId parameter");
     }
 
-
-    return true;
 }
 
 Response * CommandRuleBase::CreateResponse(scag::Scag * SmscApp)
 {
-    if (hasErrors) 
+   /* if (hasErrors) 
     {
         char msg[1024];                                         
         sprintf(msg, "SCAGCommand '%s' rule: cannot process command - parameters is invalid", m_ProcessName.c_str());
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
-    }
+    }        */
 
     try {
 

@@ -20,7 +20,7 @@
 //#include "scag/scag.h"
 
 #include "scag/admin/SCAGCommandReader.h"
-#include "scag/admin/SCAGCommand.h"
+#include "scag/admin/AdminCommand.h"
 #include "logger/Logger.h"
 
 namespace scag {

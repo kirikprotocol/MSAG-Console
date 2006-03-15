@@ -7,7 +7,9 @@
 
 #include "SCAGCommandReader.h"
 #include "CommandIds.h"
-#include "SCAGCommand.h"
+
+#include "SCAGAdminCommand.h"
+#include "SMSCAdminCommands.h"
 #include "SCAGRuleCommands.h"
 
 namespace scag {
