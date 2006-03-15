@@ -1,7 +1,7 @@
 /* $Id$ */
 
-#ifndef SCAG_PERS_CLIENT
-#define SCAG_PERS_CLIENT
+#ifndef SCAG_PERS_CLIENT_H
+#define SCAG_PERS_CLIENT_H
 
 #include "logger/Logger.h"
 #include "SerialBuffer.h"
@@ -30,11 +30,27 @@ enum PersClientExceptionType{
 	INVALID_KEY
 };
 
+	static const char* strs[] = {
+		"Cant connect to persserver",
+		"Server busy",
+		"Unknown server response",
+		"Send failed",
+		"Read failed",
+		"Read/write timeout",
+		"Not connected",
+		"Bad response",
+		"Server error",
+		"Property not found",
+		"Invalid key"
+	};
+
 class PersClientException{
+protected:
 	PersClientExceptionType et;
 public:
 	PersClientException(PersClientExceptionType e) { et = e; };
 	PersClientExceptionType getType() { return et; };
+	const char* toString() { return strs[et]; };
 };
 
 class PersClient {
