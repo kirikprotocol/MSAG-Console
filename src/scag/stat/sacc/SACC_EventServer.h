@@ -23,14 +23,14 @@
  * 			All rights reserved.
  */
 
-#include "SACC_SyncQueue.h"
-#include "SACC_EventSender.h"
-
-#include "core/threads/Thread.hpp"
-#include "core/network/Multiplexer.hpp"
-#include "core/network/Socket.hpp"
-#include "logger/Logger.h"
-#include <string>
+//#include "SACC_SyncQueue.h"
+//#include "SACC_EventSender.h"
+//
+//#include "core/threads/Thread.hpp"
+//#include "core/network/Multiplexer.hpp"
+//#include "core/network/Socket.hpp"
+//#include "logger/Logger.h"
+//#include <string>
 
 namespace scag{
 namespace stat{
@@ -42,27 +42,27 @@ class EventServer : public Thread
 {
 
 public:
-	void pushEvent(void* ev);
+	//void pushEvent(void* ev);
     EventServer();
     virtual ~EventServer();
-    virtual int Execute();
-    void init(EventServer * eServer);
-    void InitServer(std::string esHost, int esPort);
-    void reinitLogger();
-    void Stop();
-    void Start();
+    //virtual int Execute();
+    //void init(EventServer * eServer);
+    //void InitServer(std::string esHost, int esPort);
+    //void reinitLogger();
+    //void Stop();
+    //void Start();
 
 protected:
-    Logger *  logger;
-    std::string  Host;
-    int  Port;
-    Socket evSocket;
-    EventServer* eventServer;
-    bool  bStarted;
-    Multiplexer  listener;
+    //Logger *  logger;
+    //std::string  Host;
+    //int  Port;
+    //Socket evSocket;
+    //EventServer* eventServer;
+    //bool  bStarted;
+    //Multiplexer  listener;
 
-	SyncQueue<void *> eQueue;
-	EventSender * eSender;
+	//SyncQueue<void *> eQueue;
+	//EventSender * eSender;
 	 
 };
 

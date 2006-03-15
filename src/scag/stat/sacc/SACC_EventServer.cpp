@@ -1,22 +1,24 @@
-#include "SACC_Defs.h"
+// #include "SACC_Defs.h"
 #include "SACC_EventServer.h"
 
 namespace scag{
 namespace stat{
 namespace sacc{
 
-using smsc::util::Exception;
-using smsc::logger::Logger;
+//using smsc::util::Exception;
+//using smsc::logger::Logger;
 
 
 
-EventServer::EventServer():logger(Logger::getInstance(EV_SERVER_LOGGER_CATHEGORY_NAME)), Host(""), Port(0), bStarted(false), eSender(0)
+EventServer::EventServer()
+//:logger(Logger::getInstance(EV_SERVER_LOGGER_CATHEGORY_NAME)), Host(""), Port(0), bStarted(false), eSender(0)
 {
 }
 
 EventServer::~EventServer()
 {
 }
+/*
 
 int EventServer::Execute()
 {
@@ -135,7 +137,8 @@ void EventServer::pushEvent(void *ev)
 		default:
 			break;
 	}
-}
+}*/
+
 
 
 }
