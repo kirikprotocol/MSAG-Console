@@ -45,7 +45,7 @@ void EventSender::init(std::string& host,int port,int timeout,
 bool EventSender::processEvent(void *ev)
 {
 
-
+return true;
 }
 
 bool EventSender::checkQueue()
@@ -93,10 +93,6 @@ bool EventSender::connect(std::string host, int port,int timeout)
 }
 
 
-void EventSender::Stop()
-{
-	Thread::Stop();
-}
 
 void EventSender::Start()
 {
