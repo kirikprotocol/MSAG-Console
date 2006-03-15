@@ -25,7 +25,9 @@
 #include "Sender.h"
 #include "Performance.h"
 
+#ifdef SACC_SENDER
 #include "sacc/SACC_EventSender.h"
+#endif
 
 namespace scag {
 

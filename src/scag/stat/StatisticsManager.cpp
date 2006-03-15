@@ -19,9 +19,13 @@
 #include <scag/util/singleton/Singleton.h>
 #include "StatisticsManager.h"
 
+#ifdef SACC_SENDER
+
 #include "sacc/SACC_Defs.h"
 #include "sacc/SACC_Events.h"
 #include "sacc/SACC_EventSender.h"
+
+#endif
 
 namespace scag { 
 namespace stat {
