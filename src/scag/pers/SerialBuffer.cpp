@@ -18,7 +18,7 @@ string SerialBuffer::toString()
 	SetPos(0);
 	while(i++ < j)
 	{
-		Read((char*)&b, 1);
+		b = ReadInt8();
 		sprintf(buf, "%02x(%c)", (int)b, (b > 32 && b < 128 ? b : '*'));
 		str += buf;
 	}
@@ -31,7 +31,7 @@ void SerialBuffer::ReadString(string &str)
 	uint16_t len;
 	char scb[255];
 
-	Read((char*)&len, sizeof(len));
+	len = ReadInt16();
 
 	if(pos + len > size)
 		throw SerialBufferOutOfBounds();
@@ -57,7 +57,7 @@ void SerialBuffer::ReadString(wstring &str)
 	uint16_t len;
 	wchar_t scb[255];
 
-	Read((char*)&len, sizeof(len));
+	len = ReadInt16();
 
 	if(pos + len > size)
 		throw SerialBufferOutOfBounds();
@@ -103,6 +103,56 @@ void SerialBuffer::Empty()
 uint32_t SerialBuffer::GetSize()
 {
 	return size;
+}
+
+uint32_t SerialBuffer::ReadInt32()
+{
+	uint32_t i;
+	Read((char*)&i, sizeof(i));
+	return i;
+}
+
+uint16_t SerialBuffer::ReadInt16()
+{
+	uint16_t i;
+	Read((char*)&i, sizeof(i));
+	return i;
+}
+
+uint8_t SerialBuffer::ReadInt8()
+{
+	uint8_t i;
+	Read((char*)&i, sizeof(i));
+	return i;
+}
+
+void SerialBuffer::WriteInt32(uint32_t i)
+{
+	Append((char*)&i, sizeof(i));
+}
+
+void SerialBuffer::WriteInt16(uint16_t i)
+{
+	Append((char*)&i, sizeof(i));
+}
+
+void SerialBuffer::WriteInt8(uint8_t i)
+{
+	Append((char*)&i, sizeof(i));
+}
+
+void SerialBuffer::WriteString(const char *str)
+{
+	uint16_t len = strlen(str);
+	WriteInt16(len);
+	Append(str, len);
+}
+
+void SerialBuffer::WriteString(const wchar_t *str)
+{
+	uint16_t len = wcslen(str);
+	WriteInt16(len);
+	Append((char*)str, sizeof(wchar_t) * len);
 }
 
 }}

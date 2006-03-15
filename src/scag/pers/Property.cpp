@@ -149,33 +149,17 @@ void Property::Serialize(SerialBuffer& buf)
 {
 	uint16_t len = name.length();
 
-	uint8_t t = type;
-	buf.Append((char*)&t, sizeof(uint8_t));
-	t = time_policy;
-	buf.Append((char*)&t, sizeof(uint8_t));
-	buf.Append((char*)&final_date, sizeof(time_t));
-	buf.Append((char*)&life_time, sizeof(uint32_t));
-	buf.Append((char*)&len, sizeof(len));
-	buf.Append(name.c_str(), len);
+	buf.WriteInt8((uint8_t)type);
+	buf.WriteInt8((uint8_t)time_policy);
+	buf.WriteInt32((uint32_t)final_date);
+	buf.WriteInt32(life_time);
+	buf.WriteString(name.c_str());
 
 	switch(type) {
-		case INT:
-			buf.Append((char*)&i_val, sizeof(uint32_t));
-			break;
-
-		case STRING:
-			len = s_val.length();
-			buf.Append((char*)&len, sizeof(len));
-			buf.Append((char*)s_val.c_str(), sizeof(wchar_t) * len);
-			break;
-
-		case BOOL:
-			buf.Append((char*)&b_val, sizeof(bool));
-			break;
-
-		case DATE:
-			buf.Append((char*)&d_val, sizeof(time_t));
-			break;
+		case INT:	buf.WriteInt32(i_val);			break;
+		case STRING:buf.WriteString(s_val.c_str());	break;
+		case BOOL:	buf.WriteInt8((uint8_t)b_val);	break;
+		case DATE:	buf.WriteInt32((uint32_t)d_val);break;
 	}
 }
 
@@ -185,31 +169,17 @@ void Property::Deserialize(SerialBuffer& buf)
 	uint8_t len;
 	uint8_t t;
 
-	buf.Read((char*)&t, sizeof(uint8_t));
-	type = (PropertyType)t;
-	buf.Read((char*)&t, sizeof(uint8_t));
-	time_policy = (TimePolicy)t;
-	buf.Read((char*)&final_date, sizeof(time_t));
-	buf.Read((char*)&life_time, sizeof(uint32_t));
-
+	type = (PropertyType)buf.ReadInt8();
+	time_policy = (TimePolicy)buf.ReadInt8();
+	final_date = (time_t)buf.ReadInt32();
+	life_time = buf.ReadInt32();
 	buf.ReadString(name);
 
 	switch(type) {
-		case INT:
-			buf.Read((char*)&i_val, sizeof(uint32_t));
-			break;
-
-		case STRING:
-			buf.ReadString(s_val);
-			break;
-
-		case BOOL:
-			buf.Read((char*)&b_val, sizeof(bool));
-			break;
-
-		case DATE:
-			buf.Read((char*)&d_val, sizeof(time_t));
-			break;
+		case INT:	i_val = buf.ReadInt32();		break;
+		case STRING:buf.ReadString(s_val);			break;
+		case BOOL:	b_val = (bool)buf.ReadInt8();	break;
+		case DATE:	d_val = (time_t)buf.ReadInt32();break;
 	}
 }
 

@@ -48,7 +48,7 @@ void PersClient::GetProperty(ProfileType pt, const char* key, const char *proper
 	MutexGuard mt(mtx);
 
 	FillStringHead(PC_GET, pt, key);
-	AppendString(property_name);
+	sb.WriteString(property_name);
 	SetPacketSize();
 	SendPacket();
 	ReadPacket();
@@ -62,7 +62,7 @@ void PersClient::GetProperty(ProfileType pt, uint32_t key, const char *property_
 	MutexGuard mt(mtx);
 
 	FillIntHead(PC_GET, pt, key);
-	AppendString(property_name);
+	sb.WriteString(property_name);
 	SetPacketSize();
 	SendPacket();
 	ReadPacket();
@@ -77,7 +77,7 @@ void PersClient::DelProperty(ProfileType pt, const char* key, const char *proper
 	MutexGuard mt(mtx);
 
 	FillStringHead(PC_DEL, pt, key);
-	AppendString(property_name);
+	sb.WriteString(property_name);
 	SetPacketSize();
 	SendPacket();
 	ReadPacket();
@@ -92,7 +92,7 @@ void PersClient::DelProperty(ProfileType pt, uint32_t key, const char *property_
 	MutexGuard mt(mtx);
 
 	FillIntHead(PC_DEL, pt, key);
-	AppendString(property_name);
+	sb.WriteString(property_name);
 	SetPacketSize();
 	SendPacket();
 	ReadPacket();
@@ -175,11 +175,14 @@ void PersClient::WriteAllTO(char* buf, uint32_t sz)
 void PersClient::SendPacket()
 {
 	init();
-	if(sock.WriteAll(sb.get(), sb.GetSize()) == -1)
+	try{
+		WriteAllTO(sb.get(), sb.GetSize());
+	}
+	catch(PersClientException &e)
 	{
 		connected = false;
 		sock.Close();
-		throw PersClientException(SEND_FAILED);
+		throw e;
 	}
 }
 
@@ -195,13 +198,13 @@ void PersClient::ReadPacket()
 	ReadAllTO(tmp_buf, sizeof(uint32_t));
 	sb.Append(tmp_buf, sizeof(uint32_t));
 	sb.SetPos(0);
-	sb.Read((char*)&sz, sizeof(uint32_t));
-	sb.SetPos(sizeof(uint32_t));
+	sz = sb.ReadInt32();
 
 	while(sz > 1024)
 	{
 		ReadAllTO(tmp_buf, 1024);
 		sb.Append(tmp_buf, 1024);
+		sz -= 1024;
 	}
 	if(sz)
 	{
@@ -212,57 +215,46 @@ void PersClient::ReadPacket()
 
 void PersClient::SetPacketSize()
 {
-	uint32_t len = sb.GetPos();
+	uint32_t len = sb.GetSize();
 	sb.SetPos(0);
-	sb.Append((char*)&len, sizeof(len));
+	sb.WriteInt32(len);
 	sb.SetPos(len);
 }
 
 uint32_t PersClient::GetPacketSize()
 {
-	uint32_t sz;
 	sb.SetPos(0);
-	sb.Read((char*)&sz, sizeof(sz));
-	return sz;
+	return sb.ReadInt32();
 }
 
 PersServerResponseType PersClient::GetServerResponse()
 {
-	uint8_t t;
-	if(GetPacketSize() < sizeof(uint32_t) + 1)
+	try{
+		sb.SetPos(sizeof(uint32_t));
+		return (PersServerResponseType)sb.ReadInt8();
+	}
+	catch(SerialBufferOutOfBounds &e)
+	{
 		throw PersClientException(BAD_RESPONSE);
-	sb.SetPos(sizeof(uint32_t));
-	sb.Read((char*)&t, sizeof(t));
-	return (PersServerResponseType)t;
-}
-
-void PersClient::AppendString(const char *str)
-{
-	uint8_t t = strlen(str);
-	sb.Append((char*)&t, 1);
-	sb.Append(str, t);
+	}
 }
 
 void PersClient::FillIntHead(PersCmd pc, ProfileType pt, uint32_t key)
 {
-	uint8_t t;
+	sb.Empty();
 	sb.SetPos(4);
-	t = pc;
-	sb.Append((char*)&t, 1);
-	t = pt;
-	sb.Append((char*)&t, 1);
-	sb.Append((char*)&key, sizeof(key));
+	sb.WriteInt8((uint8_t)pc);
+	sb.WriteInt8((uint8_t)pt);
+	sb.WriteInt32(key);
 }
 
 void PersClient::FillStringHead(PersCmd pc, ProfileType pt, const char *key)
 {
-	uint8_t t;
+	sb.Empty();
 	sb.SetPos(4);
-	t = pc;
-	sb.Append((char*)&t, 1);
-	t = pt;
-	sb.Append((char*)&t, 1);
-	AppendString(key);
+	sb.WriteInt8((uint8_t)pc);
+	sb.WriteInt8((uint8_t)pt);
+	sb.WriteString(key);
 }
 
 void PersClient::ParseProperty(Property& prop)

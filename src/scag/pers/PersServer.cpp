@@ -49,8 +49,7 @@ void PersServer::process_read_socket(Socket* s)
 			{
 				j = sb->GetPos();
 				sb->SetPos(0);
-				sb->Read((char*)&k, sizeof(uint32_t));
-				s->setData(1, (void*)k);
+				s->setData(1, (void*)sb->ReadInt32());
 				sb->SetPos(j);
 			}
 		}
@@ -87,7 +86,7 @@ void PersServer::process_write_socket(Socket* s)
 	smsc_log_info(log, "Write Socket is ready");
 
 	j = len - sb->GetPos();
-	j = s->Write(sb->GetCurPtr(), j > 1024 ? 1024 : j);
+	j = s->Write(sb->GetCurPtr(), j);
 	if(j > 0)
 		sb->SetPos(sb->GetPos() + j);
 	else if(j == -1 && errno != EWOULDBLOCK)

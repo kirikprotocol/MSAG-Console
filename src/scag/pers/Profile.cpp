@@ -13,7 +13,7 @@ void Profile::Serialize(SerialBuffer& buf)
 	PropertyHash::Iterator it = properties.getIterator();
 	cnt = properties.GetCount();
 	smsc_log_debug(log, "before store profile size: %d", (int)cnt);
-	buf.Append((char*)&cnt, sizeof(uint16_t));
+	buf.WriteInt16(cnt);
 
 	while(it.Next(key, prop))
 		prop->Serialize(buf);
@@ -26,7 +26,7 @@ void Profile::Deserialize(SerialBuffer& buf)
 	Property* prop;
 
 	Empty();
-	buf.Read((char*)&cnt, sizeof(uint16_t));
+	cnt = buf.ReadInt16();
 	smsc_log_debug(log, "profile size: %d", (int)cnt);
 
 	while(cnt--) {

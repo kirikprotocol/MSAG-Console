@@ -28,6 +28,14 @@ public:
 	void Append(const char* data,int count);
 	void Empty();
 	uint32_t GetSize();
+	uint32_t ReadInt32();
+	uint16_t ReadInt16();
+	uint8_t ReadInt8();
+	void WriteInt32(uint32_t);
+	void WriteInt16(uint16_t);
+	void WriteInt8(uint8_t);
+	void WriteString(const char *str);
+	void WriteString(const wchar_t *str);
 
 protected:
 	uint32_t size;

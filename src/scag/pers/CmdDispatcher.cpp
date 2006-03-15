@@ -20,18 +20,15 @@ CommandDispatcher::CommandDispatcher(StringProfileStore *abonent, IntProfileStor
 
 void CommandDispatcher::SendResponse(SerialBuffer *sb, PersServerResponseType r)
 {
-	uint32_t sz = 5;
 	sb->Empty();
-	sb->Append((char*)&sz, sizeof(sz));
-	uint8_t t = r;
-	sb->Append((char*)&t, sizeof(t));	
+	sb->WriteInt32(5);
+	sb->WriteInt8((uint8_t)r);
 }
 
 void CommandDispatcher::SetPacketSize(SerialBuffer *sb)
 {
-	uint32_t sz = sb->GetSize();
 	sb->SetPos(0);
-	sb->Append((char*)&sz, sizeof(sz));
+	sb->WriteInt32(sb->GetSize());
 }
 
 void CommandDispatcher::DelCmdHandler(ProfileType pt, uint32_t int_key, string& str_key, string& name, SerialBuffer *sb)
@@ -79,22 +76,17 @@ void CommandDispatcher::Execute(SerialBuffer* sb)
 {
 	PersCmd cmd;
 	ProfileType pt;
-	uint8_t t;
-	uint32_t sz;
 	uint32_t int_key;
 	string str_key;
 	string name;
 	Property prop;
 
 	try{
-		sb->SetPos(0);
-		sb->Read((char*)&sz, sizeof(sz));
-		sb->Read((char*)&t, sizeof(t));
-		cmd = (PersCmd)t;
-		sb->Read((char*)t, sizeof(t));		
-		pt = (ProfileType)t;
+		sb->SetPos(4);
+		cmd = (PersCmd)sb->ReadInt8();
+		pt = (ProfileType)sb->ReadInt8();
 		if(pt != PT_ABONENT)
-			sb->Read((char*)&int_key, sizeof(int_key));
+			int_key = sb->ReadInt32();
 		else
 			sb->ReadString(str_key);
 		switch(cmd)
