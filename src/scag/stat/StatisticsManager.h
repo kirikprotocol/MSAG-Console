@@ -48,8 +48,9 @@ namespace stat {
 
     using smsc::util::TimeSlotCounter;
     using smsc::core::network::Socket;
+#ifdef SACC_SENDER
 	using namespace scag::stat::sacc;
-
+#endif
     struct CommonStat
     {
       int providerId;

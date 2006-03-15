@@ -37,7 +37,10 @@ using smsc::core::buffers::TmpBuf;
 using namespace scag::util::singleton;
 using smsc::core::buffers::File;
 using scag::config::StatManConfig;
+
+#ifdef SACC_SENDER
 using namespace scag::stat::sacc;
+#endif
 
 const uint16_t SCAG_STAT_DUMP_INTERVAL = 60; // in seconds
 const uint16_t SCAG_STAT_VERSION_INFO  = 0x0001;
