@@ -54,7 +54,7 @@ public:
 	bool checkQueue();
 	bool processEvent(void * ev);
 	void Start();
-	void init(std::string &host,int port,int timeout);
+	void init(std::string& host,int port,int timeout,SyncQueue<void*> * q,bool * bf,smsc::logger::Logger * lg);
 private:
 
 	SyncQueue<void*> * pQueue;

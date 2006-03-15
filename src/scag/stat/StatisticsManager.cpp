@@ -41,7 +41,6 @@ using scag::config::StatManConfig;
 #ifdef SACC_SENDER
 using namespace scag::stat::sacc;
 #endif
-
 const uint16_t SCAG_STAT_DUMP_INTERVAL = 60; // in seconds
 const uint16_t SCAG_STAT_VERSION_INFO  = 0x0001;
 const char*    SCAG_STAT_HEADER_TEXT   = "SCAG.STAT";
@@ -484,7 +483,7 @@ void StatisticsManager::Stop()
     smsc_log_debug(logger, "PerformanceServer is shutdowned");
 
 #ifdef SACC_SENDER
-	thrSaccSender.Stop`();
+	//thrSaccSender.Stop();
 #endif
 
     if (isStarted)
