@@ -26,7 +26,8 @@ EventSender::EventSender(SyncQueue<void*> * q,bool * bf,smsc::logger::Logger * l
 	bStarted  = bf;
 	logger = lg;
 }
-void EventSender::init(std::string& host,int port,int timeout);
+
+void EventSender::init(std::string& host,int port,int timeout)
 {
 	if(!connect(host,port,timeout))
 		throw Exception("Cannot connect to SACC ");
