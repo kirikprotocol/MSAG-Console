@@ -47,10 +47,8 @@ using smsc::util::Exception;
 class EventSender: public Thread 
 {
 public:
-	bool performTrafficEvent(SACC_TRAFFIC_INFO_EVENT_t * pTraffic);
 
 	EventSender();
-	EventSender(SyncQueue<void*> * q,bool * bf, smsc::logger::Logger * lg);
 	virtual ~EventSender();
 	int Execute();
 	bool checkQueue();
