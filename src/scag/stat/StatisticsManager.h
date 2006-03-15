@@ -25,6 +25,8 @@
 #include "Sender.h"
 #include "Performance.h"
 
+#include "sacc/SACC_EventSender.h"
+
 namespace scag {
 
 namespace stat {
@@ -44,6 +46,7 @@ namespace stat {
 
     using smsc::util::TimeSlotCounter;
     using smsc::core::network::Socket;
+	using namespace scag::stat::sacc;
 
     struct CommonStat
     {
@@ -140,7 +143,13 @@ namespace stat {
         Hash<HttpStat>          httpStatByServiceId[2];
         IntHash<HttpStat>       httpStatByProviderId[2];
         IntHash<TrafficRecord>  httpTrafficByRouteId;
-
+		
+		
+	
+#ifdef SACC_SENDER
+		IntHash<std::string>    saccEventFiler;
+		EventSender thrSaccSender;
+#endif
         int     currentIndex;
         bool    bExternalFlush;
 
@@ -259,6 +268,7 @@ namespace stat {
         virtual void addScSocket(Socket * socket);
         virtual void addGenSocket(Socket * socket);
 
+			
         StatisticsManager();
         virtual ~StatisticsManager();
     };
