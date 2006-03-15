@@ -121,7 +121,7 @@ int PersServer::Execute()
 {
     Multiplexer::SockArray read, write, err;
 
-    if(isStopping) return 1;
+    if(isStopped()) return 1;
 
     if( sock.StartServer())
         smsc_log_warn(log, "Server socket can't start");

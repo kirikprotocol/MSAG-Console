@@ -5,6 +5,8 @@
 #include <exception>
 #include <sys/stat.h>
 
+#include <signal.h>
+
 #include <logger/Logger.h>
 #include <util/config/Manager.h>
 #include <util/config/ConfigView.h>
@@ -19,18 +21,19 @@ using namespace scag::pers;
 using namespace smsc::util::config;
 using namespace std;
 
+static PersServer *ps = NULL;
+
 static smsc::logger::Logger *logger;
 
-//static PersServer *ps;
-
-/*extern "C" static void appSignalHandler(int sig)
+extern "C" static void appSignalHandler(int sig)
 {
     smsc_log_debug(logger, "Signal %d handled !", sig);
-    if (sig==smsc::system::SHUTDOWN_SIGNAL || sig==SIGINT)
+    if (sig==SIGTERM || sig==SIGINT)
     {
+		if(ps) ps->Stop();
         smsc_log_info(logger, "Stopping ...");
     }
-}*/
+}
 
 extern "C" static void atExitHandler(void)
 {
@@ -53,11 +56,11 @@ int main(int argc, char* argv[])
 
 	atexit(atExitHandler);
 
-/*    sigset_t set, old;
+    sigset_t set, old;
     sigemptyset(&set);
     sigprocmask(SIG_SETMASK, &set, &old);
-	sigset(smsc::system::SHUTDOWN_SIGNAL, appSignalHandler);
-    sigset(SIGINT, appSignalHandler);*/
+	sigset(SIGTERM, appSignalHandler);
+    sigset(SIGINT, appSignalHandler);
 
 	try{
 		smsc_log_info(logger,  "Starting up %s", getStrVersion());
@@ -89,14 +92,19 @@ int main(int argc, char* argv[])
         try { port = persConfig.getInt("port"); } catch (...) {};
         try { maxClientCount = persConfig.getInt("connections"); } catch (...) {};
 
-		PersServer pp(host.c_str(), port, maxClientCount, 
+		ps = new PersServer(host.c_str(), port, maxClientCount, 
 			new CommandDispatcher(&AbonentStore, &ServiceStore, &OperatorStore, &ProviderStore));
 
-		pp.Execute();
+		auto_ptr<PersServer> pp(ps);
+
+/*		PersServer pp(host.c_str(), port, maxClientCount, 
+			new CommandDispatcher(&AbonentStore, &ServiceStore, &OperatorStore, &ProviderStore));*/
+
+		ps->Execute();
 
 /*		sigemptyset(&set);
 		sigaddset(&set, SIGINT);
-		sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
+		sigaddset(&set, SIGTERM);
 		sigprocmask(SIG_SETMASK, &set, &old);*/
     }
     catch (ConfigException& exc) 
