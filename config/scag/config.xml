@@ -19,6 +19,8 @@
   <section name="BillingManager">
     <param name="configDir" type="string">conf</param>
     <param name="soDir" type="string">bill_so</param>
+    <param name="BillingServerHost" type="string">127.0.0.1</param>
+    <param name="BillingServerPort" type="int">10021</param>    
   </section>
   
   <section name="StatisticsManager">
