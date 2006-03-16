@@ -13,7 +13,7 @@
 
 using namespace std;
 using namespace smsc::logger;
-using namespace scag::pers::client;
+//using namespace scag::pers::client;
 using namespace scag::pers;
 
 static Logger *logger;
@@ -33,8 +33,8 @@ int main(int argc, char* argv[])
 	atexit(atExitHandler);
 
 	try{
-		PersClient pc;
-		pc.init("localhost", 1200, 60);
+		PersClient::Init("localhost", 1200, 60);
+		PersClient& pc = PersClient::Instance();
 		Property prop;
 
 		prop.setInt("test_val", 234567, FIXED, -1, 20);

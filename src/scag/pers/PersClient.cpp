@@ -1,12 +1,55 @@
 /* $Id$ */
 
+#include <scag/util/singleton/Singleton.h>
+
 #include "PersClient.h"
 
-namespace scag { namespace pers { namespace client {
+namespace scag { namespace pers {
 
+using namespace scag::util::singleton;
 using smsc::util::Exception;
 using smsc::logger::Logger;
 using scag::pers;
+
+bool  PersClient::inited = false;
+Mutex PersClient::initLock;
+
+inline unsigned GetLongevity(PersClient*) { return 5; }
+typedef SingletonHolder<PersClient> SinglePC;
+
+PersClient& PersClient::Instance()
+{
+    if (!PersClient::inited) 
+    {
+        MutexGuard guard(PersClient::initLock);
+        if (!PersClient::inited) 
+            throw std::runtime_error("PersClient not inited!");
+    }
+    return SinglePC::Instance();
+}
+
+void PersClient::Init(const char *_host, int _port, int _timeout) throw(PersClientException)
+{
+    if (!PersClient::inited)
+    {
+        MutexGuard guard(PersClient::initLock);
+        if(!PersClient::inited) {
+            PersClient& pc = SinglePC::Instance();
+			pc.init_internal(_host, _port, _timeout);
+            PersClient::inited = true;
+        }
+    }
+}
+
+void PersClient::init_internal(const char *_host, int _port, int _timeout) throw(PersClientException)
+{
+	log = Logger::getInstance("client");
+	connected = false;
+	host = _host;
+	port = _port;
+	timeout = _timeout;
+	init();
+}
 
 void PersClient::SetProperty(ProfileType pt, const char* key, Property& prop) throw(PersClientException)
 {
@@ -99,15 +142,6 @@ void PersClient::DelProperty(ProfileType pt, uint32_t key, const char *property_
 	if(GetServerResponse() == RESPONSE_ERROR)
 		throw PersClientException(SERVER_ERROR);
 }
-
-void PersClient::init(const char *_host, int _port, int _timeout) throw(PersClientException)
-{
-	host = _host;
-	port = _port;
-	timeout = _timeout;
-	init();
-}
-
 
 void PersClient::init()
 {
@@ -278,4 +312,4 @@ void PersClient::ParseProperty(Property& prop)
 	}
 }
 
-}}}
+}}

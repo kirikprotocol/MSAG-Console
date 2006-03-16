@@ -9,7 +9,7 @@
 #include "core/network/Socket.hpp"
 #include "Types.h"
 
-namespace scag { namespace pers { namespace client {
+namespace scag { namespace pers { //namespace client {
 
 using smsc::core::network::Socket;
 
@@ -55,10 +55,11 @@ public:
 
 class PersClient {
 public:
-    PersClient() : connected(false), log(Logger::getInstance("client")) {};
+    PersClient(): connected(false) {};
     ~PersClient() { if(connected) sock.Close(); };
 
-	void init(const char *_host, int _port, int timeout) throw(PersClientException);
+	static PersClient& Instance();
+	static void Init(const char *_host, int _port, int timeout) throw(PersClientException);
 
 	void SetProperty(ProfileType pt, const char* key, Property& prop) throw(PersClientException);
 	void SetProperty(ProfileType pt, uint32_t key, Property& prop) throw(PersClientException);
@@ -70,7 +71,11 @@ public:
 	void DelProperty(ProfileType pt, uint32_t key, const char *property_name) throw(PersClientException);
 
 protected:
+	static bool  inited;
+	static Mutex initLock;
+
 	void init();
+	void init_internal(const char *_host, int _port, int timeout) throw(PersClientException);
 	void SetPacketSize();
 	void FillStringHead(PersCmd pc, ProfileType pt, const char *key);
 	void FillIntHead(PersCmd pc, ProfileType pt, uint32_t key);
@@ -93,7 +98,7 @@ protected:
 	SerialBuffer sb;
 };
 
-}}}
+}}
 
 #endif
 
