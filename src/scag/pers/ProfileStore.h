@@ -146,12 +146,20 @@ public:
 	{
 		MutexGuard mt(mtx);
 		Profile *pf;
+		Property *p;
 
 		if(prop.isExpired())
 			return;
 
 		pf = getProfile(key, true);
-		pf->AddProperty(prop);
+		p = pf->GetProperty(prop.getName().c_str());
+		if(p != NULL)
+		{
+			p->setValue(prop);
+			p->WriteAccess();
+		}
+		else
+			pf->AddProperty(prop);
 		storeProfile(key, pf);
 		smsc_log_debug(log, "profile %s, setProperty: %s", key.toString().c_str(), prop.toString().c_str());
 	};

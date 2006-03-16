@@ -5,13 +5,17 @@
 
   <section name="pers">
     <param name="host" type="string">localhost</param>
-    <param name="port" type="int">9999</param>
+    <param name="port" type="int">1200</param>
     <param name="connections" type="int">100</param>
     <param name="storage_dir" type="string">/home/firs/store</param>
-    <param name="abonent_cache_max" type="int">1000</param>
-    <param name="service_cache_max" type="int">1000</param>
-    <param name="provider_cache_max" type="int">1000</param>
-    <param name="operator_cache_max" type="int">1000</param>
+
+	<section name="cache_max">
+	    <param name="abonent" type="int">1000</param>
+	    <param name="service" type="int">1000</param>
+	    <param name="provider" type="int">1000</param>
+	    <param name="operator" type="int">1000</param>
+	</section>
+
   </section>
 
 </config>

@@ -59,26 +59,26 @@ public:
     ~PersClient() { if(connected) sock.Close(); };
 
 	static PersClient& Instance();
-	static void Init(const char *_host, int _port, int timeout) throw(PersClientException);
+	static void Init(const char *_host, int _port, int timeout);// throw(PersClientException);
 
-	void SetProperty(ProfileType pt, const char* key, Property& prop) throw(PersClientException);
-	void SetProperty(ProfileType pt, uint32_t key, Property& prop) throw(PersClientException);
+	void SetProperty(ProfileType pt, const char* key, Property& prop);// throw(PersClientException);
+	void SetProperty(ProfileType pt, uint32_t key, Property& prop);// throw(PersClientException);
 
-	void GetProperty(ProfileType pt, const char* key, const char *property_name, Property& prop) throw(PersClientException);
-	void GetProperty(ProfileType pt, uint32_t key, const char *property_name, Property& prop) throw(PersClientException);
+	void GetProperty(ProfileType pt, const char* key, const char *property_name, Property& prop);// throw(PersClientException);
+	void GetProperty(ProfileType pt, uint32_t key, const char *property_name, Property& prop);// throw(PersClientException);
 
-	void DelProperty(ProfileType pt, const char* key, const char *property_name) throw(PersClientException);
-	void DelProperty(ProfileType pt, uint32_t key, const char *property_name) throw(PersClientException);
+	void DelProperty(ProfileType pt, const char* key, const char *property_name);// throw(PersClientException);
+	void DelProperty(ProfileType pt, uint32_t key, const char *property_name);// throw(PersClientException);
 
-	void IncProperty(ProfileType pt, const char* key, const char *property_name, int32_t inc) throw(PersClientException);
-	void IncProperty(ProfileType pt, uint32_t key, const char *property_name, int32_t inc) throw(PersClientException);
+	void IncProperty(ProfileType pt, const char* key, const char *property_name, int32_t inc);// throw(PersClientException);
+	void IncProperty(ProfileType pt, uint32_t key, const char *property_name, int32_t inc);// throw(PersClientException);
 
 protected:
 	static bool  inited;
 	static Mutex initLock;
 
 	void init();
-	void init_internal(const char *_host, int _port, int timeout) throw(PersClientException);
+	void init_internal(const char *_host, int _port, int timeout); //throw(PersClientException);
 	void SetPacketSize();
 	void FillStringHead(PersCmd pc, ProfileType pt, const char *key);
 	void FillIntHead(PersCmd pc, ProfileType pt, uint32_t key);

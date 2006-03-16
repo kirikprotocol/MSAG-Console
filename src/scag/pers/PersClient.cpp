@@ -28,7 +28,7 @@ PersClient& PersClient::Instance()
     return SinglePC::Instance();
 }
 
-void PersClient::Init(const char *_host, int _port, int _timeout) throw(PersClientException)
+void PersClient::Init(const char *_host, int _port, int _timeout) //throw(PersClientException)
 {
     if (!PersClient::inited)
     {
@@ -41,7 +41,7 @@ void PersClient::Init(const char *_host, int _port, int _timeout) throw(PersClie
     }
 }
 
-void PersClient::init_internal(const char *_host, int _port, int _timeout) throw(PersClientException)
+void PersClient::init_internal(const char *_host, int _port, int _timeout) //throw(PersClientException)
 {
 	log = Logger::getInstance("client");
 	connected = false;
@@ -51,7 +51,7 @@ void PersClient::init_internal(const char *_host, int _port, int _timeout) throw
 	init();
 }
 
-void PersClient::SetProperty(ProfileType pt, const char* key, Property& prop) throw(PersClientException)
+void PersClient::SetProperty(ProfileType pt, const char* key, Property& prop) //throw(PersClientException)
 {
 	if(pt != PT_ABONENT)
 		throw PersClientException(INVALID_KEY);
@@ -66,7 +66,7 @@ void PersClient::SetProperty(ProfileType pt, const char* key, Property& prop) th
 	if(GetServerResponse() != RESPONSE_OK)
 		throw PersClientException(SERVER_ERROR);
 }
-void PersClient::SetProperty(ProfileType pt, uint32_t key, Property& prop) throw(PersClientException)
+void PersClient::SetProperty(ProfileType pt, uint32_t key, Property& prop) //throw(PersClientException)
 {
 	if(pt == PT_ABONENT)
 		throw PersClientException(INVALID_KEY);
@@ -82,7 +82,7 @@ void PersClient::SetProperty(ProfileType pt, uint32_t key, Property& prop) throw
 		throw PersClientException(SERVER_ERROR);
 }
 
-void PersClient::GetProperty(ProfileType pt, const char* key, const char *property_name, Property& prop) throw(PersClientException)
+void PersClient::GetProperty(ProfileType pt, const char* key, const char *property_name, Property& prop) //throw(PersClientException)
 {
 	if(pt != PT_ABONENT)
 		throw PersClientException(INVALID_KEY);
@@ -97,7 +97,7 @@ void PersClient::GetProperty(ProfileType pt, const char* key, const char *proper
 	ReadPacket();
 	ParseProperty(prop);
 }
-void PersClient::GetProperty(ProfileType pt, uint32_t key, const char *property_name, Property& prop) throw(PersClientException)
+void PersClient::GetProperty(ProfileType pt, uint32_t key, const char *property_name, Property& prop) //throw(PersClientException)
 {
 	if(pt == PT_ABONENT)
 		throw PersClientException(INVALID_KEY);
@@ -112,7 +112,7 @@ void PersClient::GetProperty(ProfileType pt, uint32_t key, const char *property_
 	ParseProperty(prop);
 }
 
-void PersClient::DelProperty(ProfileType pt, const char* key, const char *property_name) throw(PersClientException)
+void PersClient::DelProperty(ProfileType pt, const char* key, const char *property_name) //throw(PersClientException)
 {
 	if(pt != PT_ABONENT)
 		throw PersClientException(INVALID_KEY);
@@ -127,7 +127,7 @@ void PersClient::DelProperty(ProfileType pt, const char* key, const char *proper
 	if(GetServerResponse() == RESPONSE_ERROR)
 		throw PersClientException(SERVER_ERROR);
 }
-void PersClient::DelProperty(ProfileType pt, uint32_t key, const char *property_name) throw(PersClientException)
+void PersClient::DelProperty(ProfileType pt, uint32_t key, const char *property_name) //throw(PersClientException)
 {
 	if(pt == PT_ABONENT)
 		throw PersClientException(INVALID_KEY);
@@ -143,7 +143,7 @@ void PersClient::DelProperty(ProfileType pt, uint32_t key, const char *property_
 		throw PersClientException(SERVER_ERROR);
 }
 
-void PersClient::IncProperty(ProfileType pt, const char* key, const char *property_name, int32_t inc) throw(PersClientException)
+void PersClient::IncProperty(ProfileType pt, const char* key, const char *property_name, int32_t inc) //throw(PersClientException)
 {
 	if(pt != PT_ABONENT)
 		throw PersClientException(INVALID_KEY);
@@ -159,7 +159,7 @@ void PersClient::IncProperty(ProfileType pt, const char* key, const char *proper
 	if(GetServerResponse() != RESPONSE_OK)
 		throw PersClientException(PROPERTY_NOT_FOUND);
 }
-void PersClient::IncProperty(ProfileType pt, uint32_t key, const char *property_name, int32_t inc) throw(PersClientException)
+void PersClient::IncProperty(ProfileType pt, uint32_t key, const char *property_name, int32_t inc) //throw(PersClientException)
 {
 	if(pt == PT_ABONENT)
 		throw PersClientException(INVALID_KEY);

@@ -4,13 +4,9 @@
 
 namespace scag{ namespace pers{
 
-void Property::copy(const Property& cp)
+void Property::setValue(const Property &cp)
 {
-	name = cp.name;
 	type = cp.type;
-	time_policy = cp.time_policy;
-	final_date = cp.final_date;
-	life_time = cp.life_time;
 
 	switch(type) {
 		case INT:
@@ -26,6 +22,16 @@ void Property::copy(const Property& cp)
 			d_val = cp.d_val;
 			break;
 	}
+}
+
+void Property::copy(const Property& cp)
+{
+	name = cp.name;
+	time_policy = cp.time_policy;
+	final_date = cp.final_date;
+	life_time = cp.life_time;
+
+	setValue(cp);
 }
 
 string Property::toString() const

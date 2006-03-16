@@ -75,17 +75,19 @@ int main(int argc, char* argv[])
 		if( len > 0 && storageDir[len - 1] != '\\' && storageDir[len - 1] != '/')
 			storageDir += '/';
 
+		ConfigView cacheConfig(manager, "pers.cache_max");
+
 		uint32_t cm;
-        try { cm = persConfig.getInt("abonent_cache_max"); } catch (...) { cm = 1000; };
+        try { cm = cacheConfig.getInt("abonent"); } catch (...) { cm = 1000; };
 		AbonentStore.init(storageDir + "abonent", cm);
 
-        try { cm = persConfig.getInt("service_cache_max"); } catch (...) { cm = 1000; };
+        try { cm = cacheConfig.getInt("service"); } catch (...) { cm = 1000; };
 		ServiceStore.init(storageDir + "service", cm);
 
-        try { cm = persConfig.getInt("operator_cache_max"); } catch (...) { cm = 1000; };
+        try { cm = cacheConfig.getInt("operator"); } catch (...) { cm = 1000; };
 		OperatorStore.init(storageDir + "operator", cm);
 
-        try { cm = persConfig.getInt("provider_cache_max"); } catch (...) { cm = 1000; };
+        try { cm = cacheConfig.getInt("provider"); } catch (...) { cm = 1000; };
 		ProviderStore.init(storageDir + "provider", cm);
 
         try { host = persConfig.getString("host"); } catch (...) {};

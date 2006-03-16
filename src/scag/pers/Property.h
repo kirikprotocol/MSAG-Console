@@ -70,6 +70,7 @@ public:
 	bool getBoolValue() { return b_val; };
 	time_t getDateValue() { return d_val; };
 	const wstring& getStringValue() { return s_val; };
+	void setValue(const Property& cp);
 	void setIntValue(int32_t i) { i_val = i; type = INT; };
 	void setBoolValue(bool b) { b_val = b; type = BOOL; };
 	void setDateValue(time_t d) { d_val = d; type = DATE; };
