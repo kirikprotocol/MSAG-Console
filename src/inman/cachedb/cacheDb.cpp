@@ -39,7 +39,7 @@ void AbonentQuery::init(AbonentId ab_number, unsigned timeout/* = 0*/)
     signaled = 0;
     abonent = ab_number;
     abType = btUnknown;
-    isReleased = false;
+    isReleased = isStopping = false;
     timeOut = timeout;
 }
 
