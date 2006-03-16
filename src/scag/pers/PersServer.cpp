@@ -113,6 +113,7 @@ void PersServer::remove_socket(Socket* s)
 	SerialBuffer *sb = (SerialBuffer*)s->getData(0);
 	if(sb) delete sb;
 	listener.remove(s);
+	if(clientCount) clientCount--;
 	s->Close();
 	delete s;
 }
