@@ -25,6 +25,7 @@ EventSender::~EventSender()
 void EventSender::init(std::string& host,int port,int timeout, 
 					   SyncQueue<void*> * q,bool * bf,smsc::logger::Logger * lg)
 {
+
 	if(!q)
 		throw Exception("EventSender::init Event queue is 0!");
 
@@ -38,8 +39,11 @@ void EventSender::init(std::string& host,int port,int timeout,
 	bStarted  = bf;
 	logger = lg;
 
+	smsc_log_debug(logger,"...connecting to SACC server host:%s port%d",host.c_str(),port)
 	if(!connect(host,port,timeout))
+	{
 		throw Exception("Cannot connect to SACC ");
+	}
 
 	smsc_log_debug(logger,"EventSender::init confuration and connection succsess.");
 }
