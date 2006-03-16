@@ -19,7 +19,34 @@
       </section>
     </section>
   </section>
-
+  <section name="MessageStorage">
+     <param name="statisticsDir" type="string">@ms.statdir@</param>
+     <param name="trafficDir" type="string">@ms.trafficdir@</param>
+  </section>
+  
+  <section name="BillingManager">
+    <param name="configDir" type="string">@bill.config_dir@</param>
+    <param name="soDir" type="string">@bill.so_dir@</param>
+    <param name="BillingServerHost" type="string">@bill.server_host@</param>
+    <param name="BillingServerPort" type="int">@bill.server_port@</param>
+  </section>
+  
+  <section name="SessionManager">
+    <param name="location" type="string">@session.location@</param>
+  </section>
+  
+  <section name="StatisticsManager">
+     <param name="statisticsDir" type="string">@stat.dir@</param>
+     <param name="perfHost" type="string">@stat.perf_host@</param>
+     <param name="perfGenPort" type="int">@stat.perf_port@</param>
+     <param name="perfSvcPort" type="int">@stat,perf_svc_port@</param>
+     <param name="perfScPort" type="int">@stat.perf_sc_port@</param>
+  </section>
+				       	    
+  <section name="RuleEngine">
+    <param name="location" type="string">@rules.path@</param>
+  </section>
+  
   <section name="admin">
     <param name="host" type="string">@listen.host@</param>
     <param name="port" type="int">@gateway.admin.port@</param>
