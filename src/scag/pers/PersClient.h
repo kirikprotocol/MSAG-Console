@@ -9,7 +9,7 @@
 #include "core/network/Socket.hpp"
 #include "Types.h"
 
-namespace scag { namespace pers { //namespace client {
+namespace scag { namespace pers { namespace client {
 
 using smsc::core::network::Socket;
 
@@ -50,7 +50,7 @@ protected:
 public:
 	PersClientException(PersClientExceptionType e) { et = e; };
 	PersClientExceptionType getType() { return et; };
-	const char* toString() { return strs[et]; };
+	const char* what() const { return strs[et]; };
 };
 
 class PersClient {
@@ -101,7 +101,7 @@ protected:
 	SerialBuffer sb;
 };
 
-}}
+}}}
 
 #endif
 

@@ -17,17 +17,6 @@ namespace scag{ namespace pers{
 using namespace std;
 using namespace smsc::core::buffers;
 
-/*struct ProfileKey
-{
-	smsc::sms::Address  abonentAddr;
-
-	bool operator ==(const ProfileKey& sk) const
-	{
-		return this->abonentAddr == sk.abonentAddr;
-	}
-};*/
-
-
 typedef Hash<Property*> PropertyHash;
 
 class Profile : public Serializable

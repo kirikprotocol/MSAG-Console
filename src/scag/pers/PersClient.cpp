@@ -4,7 +4,7 @@
 
 #include "PersClient.h"
 
-namespace scag { namespace pers {
+namespace scag { namespace pers { namespace client {
 
 using namespace scag::util::singleton;
 using smsc::util::Exception;
@@ -345,4 +345,4 @@ void PersClient::ParseProperty(Property& prop)
 	}
 }
 
-}}
+}}}

@@ -136,12 +136,6 @@ public:
 		smsc_log_debug(log, "Inited: %s", name.c_str());
 	};
 
-/*	void shutdown() {
-		store.shutdown();
-
-		smsc_log_debug(log, "Halted: %s", name.c_str());
-	}*/
-
 	void setProperty(Key& key, Property& prop)
 	{
 		MutexGuard mt(mtx);

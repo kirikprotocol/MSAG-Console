@@ -13,7 +13,7 @@
 
 using namespace std;
 using namespace smsc::logger;
-//using namespace scag::pers::client;
+using namespace scag::pers::client;
 using namespace scag::pers;
 
 static Logger *logger;
@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
     }
     catch (PersClientException& exc) 
     {
-        smsc_log_error(logger, "PersClientException: %s Exiting.", exc.toString());
+        smsc_log_error(logger, "PersClientException: %s Exiting.", exc.what());
         resultCode = -2;
     }
     catch (Exception& exc) 

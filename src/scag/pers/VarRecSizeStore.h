@@ -19,16 +19,6 @@ using namespace std;
 using namespace smsc::core::buffers;
 using namespace smsc::core::synchronization;
 
-/*class DiskHashKey{
-public:
-    virtual bool operator==(const DiskHashKey& that)const = 0;
-    virtual string toString();
-    virtual uint32_t Size();
-    virtual void Read(File& f);
-    virtual void Write(File& f)const;
-    virtual uint32_t HashCode(uint32_t attempt)const;
-};*/
-
 class VarRecordNotFound{};
 
 template<class DiskKey>
@@ -59,11 +49,6 @@ public:
 		else
 			pfile.Open(binFile.c_str());
 	}
-
-/*	void shutdown() {
-		pfile.Close();
-		dhash.Close();
-	}*/
 
 	void getRecord(const DiskKey& key, Serializable *rec)
 	{
