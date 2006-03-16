@@ -34,10 +34,10 @@ void Property::copy(const Property& cp)
 	setValue(cp);
 }
 
-string Property::toString() const
+std::string Property::toString() const
 {
 	char buf[32];
-	string str;
+	std::string str;
 
 	str = name;
 	switch(type)

@@ -91,7 +91,7 @@ protected:
 	PersServerResponseType GetServerResponse();
 	void ParseProperty(Property& prop);
 
-	string host;
+	std::string host;
 	int port;
 	int timeout;
 	Socket sock;

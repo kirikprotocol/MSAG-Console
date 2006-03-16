@@ -8,8 +8,6 @@
 
 namespace scag{ namespace pers{
 
-using namespace std;
-
 using namespace smsc::core::buffers;
 
 class SerialBufferOutOfBounds{};
@@ -21,9 +19,9 @@ public:
 	SerialBuffer() : _SerialBuffer(2048), size(0) {};
 	SerialBuffer(int size) : _SerialBuffer(size), size(0) {};
 	void* operator new(size_t sz) { return ::operator new(sz); };
-	string toString();
-	void ReadString(string &str);
-	void ReadString(wstring &str);
+	std::string toString();
+	void ReadString(std::string &str);
+	void ReadString(std::wstring &str);
 	void Read(char* dst, int count);
 	void Append(const char* data,int count);
 	void Empty();

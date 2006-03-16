@@ -19,7 +19,6 @@
 
 using namespace scag::pers;
 using namespace smsc::util::config;
-using namespace std;
 
 static PersServer *ps = NULL;
 
@@ -42,9 +41,9 @@ extern "C" static void atExitHandler(void)
 
 int main(int argc, char* argv[])
 {
-	string storageDir;
+	std::string storageDir;
 	int resultCode = 0;
-	string host;
+	std::string host;
 	int port = 9988;
 	int maxClientCount = 100;
 

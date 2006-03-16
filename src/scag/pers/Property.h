@@ -10,7 +10,6 @@
 
 namespace scag{ namespace pers{
 
-using namespace std;
 using namespace smsc::core::buffers;
 
 enum TimePolicy{
@@ -31,8 +30,8 @@ enum PropertyType{
 class Property {
 protected:
 	PropertyType type;
-	string name;
-	wstring s_val;
+	std::string name;
+	std::wstring s_val;
 	int32_t i_val;
 	time_t d_val;
 	bool b_val;
@@ -42,8 +41,8 @@ protected:
 	uint32_t life_time;
 
 	void copy(const Property& cp);
-	static void StringFromBuf(SerialBuffer& buf, string &str);
-	static void StringFromBuf(SerialBuffer& buf, wstring &str);
+	static void StringFromBuf(SerialBuffer& buf, std::string &str);
+	static void StringFromBuf(SerialBuffer& buf, std::wstring &str);
 
 public:
 
@@ -64,12 +63,12 @@ public:
 	void ReadAccess();
 	void WriteAccess();
 
-	const string& getName() { return name; };
-	void setName(const string& nm) { name = nm; };
+	const std::string& getName() { return name; };
+	void setName(const std::string& nm) { name = nm; };
 	uint32_t getIntValue() { return i_val; };
 	bool getBoolValue() { return b_val; };
 	time_t getDateValue() { return d_val; };
-	const wstring& getStringValue() { return s_val; };
+	const std::wstring& getStringValue() { return s_val; };
 	void setValue(const Property& cp);
 	void setIntValue(int32_t i) { i_val = i; type = INT; };
 	void setBoolValue(bool b) { b_val = b; type = BOOL; };
@@ -79,7 +78,7 @@ public:
 	void setTimePolicy(TimePolicy policy, time_t fd, uint32_t lt);
 	TimePolicy getTimePolicy() { return time_policy; };
 	bool isExpired();
-	string toString() const;
+	std::string toString() const;
 
 	void setInt(const char *nm, int32_t i, TimePolicy policy, time_t fd, uint32_t lt);
 	void setBool(const char *nm, bool b, TimePolicy policy, time_t fd, uint32_t lt);

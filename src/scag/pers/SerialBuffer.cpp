@@ -4,13 +4,11 @@
 
 namespace scag{ namespace pers{
 
-using namespace std;
-
 using namespace smsc::core::buffers;
 
-string SerialBuffer::toString()
+std::string SerialBuffer::toString()
 {
-	string str;
+	std::string str;
 	int i = 0, j = GetSize(), k = GetPos();
 	char buf[10];
 
@@ -26,7 +24,7 @@ string SerialBuffer::toString()
 	return str;
 }
 
-void SerialBuffer::ReadString(string &str)
+void SerialBuffer::ReadString(std::string &str)
 {
 	uint16_t len;
 	char scb[255];
@@ -52,7 +50,7 @@ void SerialBuffer::ReadString(string &str)
 	}
 }
 
-void SerialBuffer::ReadString(wstring &str)
+void SerialBuffer::ReadString(std::wstring &str)
 {
 	uint16_t len;
 	wchar_t scb[255];
@@ -143,14 +141,14 @@ void SerialBuffer::WriteInt8(uint8_t i)
 
 void SerialBuffer::WriteString(const char *str)
 {
-	uint16_t len = strlen(str);
+	uint16_t len = std::strlen(str);
 	WriteInt16(len);
 	Append(str, len);
 }
 
 void SerialBuffer::WriteString(const wchar_t *str)
 {
-	uint16_t len = wcslen(str);
+	uint16_t len = std::wcslen(str);
 	WriteInt16(len);
 	Append((char*)str, sizeof(wchar_t) * len);
 }

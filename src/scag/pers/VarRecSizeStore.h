@@ -14,8 +14,6 @@
 
 namespace scag{ namespace pers{
 
-using namespace std;
-
 using namespace smsc::core::buffers;
 using namespace smsc::core::synchronization;
 
@@ -29,12 +27,12 @@ public:
 	VarRecSizeStore() {};
 	~VarRecSizeStore() {};
 
-	void init(const string& storeName)
+	void init(const std::string& storeName)
 	{
 		log = smsc::logger::Logger::getInstance("VarStore");
 
-		string idxFile;
-		string binFile;
+		std::string idxFile;
+		std::string binFile;
 
 		idxFile = storeName + ".idx";
 		binFile = storeName + ".bin";

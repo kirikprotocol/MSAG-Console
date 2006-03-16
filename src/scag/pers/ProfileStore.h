@@ -29,11 +29,11 @@ class IntProfileKey
 
     bool operator==(const IntProfileKey& that)const { return key==that.key; }
 
-    string toString() const
+    std::string toString() const
     {
       char buf[16];
       sprintf(buf,":%hu", key);
-      string str = buf;
+      std::string str = buf;
       return str;
     }
 
@@ -68,9 +68,9 @@ class StringProfileKey
 
 	bool operator==(const StringProfileKey& that)const { return !strcmp(key, that.key); }
 
-	string toString() const
+	std::string toString() const
 	{
-		string str(key);
+		std::string str(key);
 		return str;
     }
 
@@ -120,7 +120,7 @@ public:
 		}
 	};
 
-	void init(const string& storeName, uint32_t _max_cache_size)
+	void init(const std::string& storeName, uint32_t _max_cache_size)
 	{
 		log = smsc::logger::Logger::getInstance("store");
 
@@ -321,7 +321,7 @@ protected:
 	Mutex mtx;
 	uint32_t max_cache_size;
 	VarRecSizeStore<Key> store;
-	string name;
+	std::string name;
 	CacheItem<Key> **cache;
 };
 
