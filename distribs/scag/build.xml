@@ -95,8 +95,6 @@ Targets:
     <symlink resource="${SERVICE2HOME_PATH}/../conf/command.dtd"          link="${DISTR_DIR}/services/scag/conf"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/configuration.dtd"    link="${DISTR_DIR}/services/scag/conf"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/response.dtd"         link="${DISTR_DIR}/services/scag/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/AliasRecords.dtd"     link="${DISTR_DIR}/services/scag/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/SmeRecords.dtd"       link="${DISTR_DIR}/services/scag/conf"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/command_gw.dtd"       link="${DISTR_DIR}/services/scag/conf"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/locale_resources.dtd" link="${DISTR_DIR}/services/scag/conf"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/routes.dtd"           link="${DISTR_DIR}/services/scag/conf"/>
@@ -132,7 +130,7 @@ Targets:
     </chmod>
     <copy todir="${DISTR_DIR}/conf" preservelastmodified="yes" flatten="yes" >
       <fileset dir="${SMSC_DIR}/config"
-               includes="command.dtd configuration.dtd response.dtd smpp.dtd AliasRecords.dtd SmeRecords.dtd scag/command_gw.dtd resourcemanager/locale_resources.dtd scag/routes.dtd"/>
+               includes="command.dtd configuration.dtd response.dtd smpp.dtd scag/command_gw.dtd resourcemanager/locale_resources.dtd scag/routes.dtd"/>
     </copy>
   </target>
 
