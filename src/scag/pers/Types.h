@@ -15,7 +15,8 @@ enum ProfileType{
 enum PersCmd{
 	PC_DEL = 1,
 	PC_SET,
-	PC_GET
+	PC_GET,
+	PC_INC
 };
 
 enum PersServerResponseType{

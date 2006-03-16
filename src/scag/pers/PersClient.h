@@ -70,6 +70,9 @@ public:
 	void DelProperty(ProfileType pt, const char* key, const char *property_name) throw(PersClientException);
 	void DelProperty(ProfileType pt, uint32_t key, const char *property_name) throw(PersClientException);
 
+	void IncProperty(ProfileType pt, const char* key, const char *property_name, int32_t inc) throw(PersClientException);
+	void IncProperty(ProfileType pt, uint32_t key, const char *property_name, int32_t inc) throw(PersClientException);
+
 protected:
 	static bool  inited;
 	static Mutex initLock;

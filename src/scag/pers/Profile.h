@@ -39,7 +39,7 @@ public:
 	~Profile();
 	Profile() {log = smsc::logger::Logger::getInstance("profile");};
 
-	bool GetProperty(const char* name, Property& prop);
+	Property* GetProperty(const char* name);
 	bool PropertyExists(const char* str);
 	void AddProperty(Property& prop);
 	void DeleteProperty(const char* str);

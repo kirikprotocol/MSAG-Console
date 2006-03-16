@@ -61,6 +61,13 @@ int main(int argc, char* argv[])
 		pc.GetProperty(PT_ABONENT, "+79232446251", "test_val_date", prop);
 		smsc_log_debug(logger,  ">>ABONENT: get string1 %s", prop.toString().c_str());
 
+		pc.IncProperty(PT_ABONENT, "+79232446251", "test_val", -123);
+		pc.GetProperty(PT_ABONENT, "+79232446251", "test_val", prop);
+		smsc_log_debug(logger,  ">>ABONENT: get int(after inc) %s", prop.toString().c_str());
+
+		pc.DelProperty(PT_ABONENT, "+79232446251", "test_val");
+		smsc_log_debug(logger,  ">>ABONENT: del int");
+
 
 		prop.setInt("test_val", 234567, FIXED, -1, 20);
 		pc.SetProperty(PT_SERVICE, 12, prop);
@@ -85,6 +92,14 @@ int main(int argc, char* argv[])
 
 		pc.GetProperty(PT_OPERATOR, 12, "test_val_date", prop);
 		smsc_log_debug(logger,  ">>OPERATOR: get date %s", prop.toString().c_str());
+
+		pc.IncProperty(PT_SERVICE, 12, "test_val", -123);
+		pc.GetProperty(PT_SERVICE, 12, "test_val", prop);
+		smsc_log_debug(logger,  ">>SERVICE: get int(after inc) %s", prop.toString().c_str());
+
+		pc.DelProperty(PT_SERVICE, 12, "test_val");
+		smsc_log_debug(logger,  ">>ABONENT: del int(int)");
+
 		smsc_log_debug(logger,  "end");
 
     }

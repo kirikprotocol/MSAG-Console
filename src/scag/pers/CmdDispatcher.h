@@ -29,6 +29,7 @@ protected:
 	void DelCmdHandler(ProfileType pt, uint32_t int_key, string& str_key, string& name, SerialBuffer *sb);
 	void GetCmdHandler(ProfileType pt, uint32_t int_key, string& str_key, string& name, SerialBuffer *sb);
 	void SetCmdHandler(ProfileType pt, uint32_t int_key, string& str_key, Property& prop, SerialBuffer *sb);
+	void IncCmdHandler(ProfileType pt, uint32_t int_key, string& str_key, string& name, int32_t inc, SerialBuffer *sb);
     Logger * log;
 #define INT_STORE_CNT 3
 	IntStore int_store[INT_STORE_CNT];

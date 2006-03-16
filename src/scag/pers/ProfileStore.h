@@ -172,25 +172,72 @@ public:
 	{
 		MutexGuard mt(mtx);
 		Profile *pf;
-		bool exists;
+		Property *p;
 
 		pf = getProfile(key, false);
 
 		if(pf != NULL)
 		{
-			exists = pf->GetProperty(nm, prop);
+			p = pf->GetProperty(nm);
 
-			if(exists && prop.isExpired())
+			if(p != NULL)
 			{
-				pf->DeleteProperty(nm);
-				return false;
-			}
-
-			if(exists)
+				if(p->getTimePolicy() == R_ACCESS)
+				{
+					p->ReadAccess();
+					storeProfile(key, pf);
+				}
+				prop = *p;
 				smsc_log_debug(log, "profile %s, getProperty: %s", key.toString().c_str(), prop.toString().c_str());
+				return true;
+			}
 		}
 
-		return exists;
+		return false;
+	};
+
+	bool incProperty(Key& key, const char* nm, int32_t inc)
+	{
+		MutexGuard mt(mtx);
+
+		Profile *pf;
+		Property *prop;
+
+		pf = getProfile(key, false);
+
+		if(pf != NULL)
+		{
+			prop = pf->GetProperty(nm);
+			if(prop != NULL)
+			{
+				smsc_log_debug(log, "profile %s, getProperty: %s", key.toString().c_str(), prop->toString().c_str());
+				switch(prop->getType())
+				{
+					case INT:
+					{
+						int32_t i = prop->getIntValue();
+						i += inc;
+						prop->setIntValue(i);
+						prop->WriteAccess();
+						storeProfile(key, pf);
+						return true;
+					}
+					case DATE:
+					{
+						time_t i = prop->getDateValue();
+						i += inc;
+						prop->setDateValue(i);
+						prop->WriteAccess();
+						storeProfile(key, pf);
+						return true;
+					}
+					default:
+						return false;
+				}
+			}
+		}
+
+		return false;
 	};
 
 	void storeProfile(Key& key, Profile *pf)

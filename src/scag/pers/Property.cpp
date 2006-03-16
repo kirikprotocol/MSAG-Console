@@ -117,7 +117,7 @@ bool Property::isExpired()
 	return time_policy != INFINIT && final_date <= time(NULL);
 }
 
-void Property::setInt(const char *nm, uint32_t i, TimePolicy policy, time_t fd, uint32_t lt)
+void Property::setInt(const char *nm, int32_t i, TimePolicy policy, time_t fd, uint32_t lt)
 {
 	name = nm;
 	setIntValue(i);

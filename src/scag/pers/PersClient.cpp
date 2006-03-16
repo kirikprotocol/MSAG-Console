@@ -143,6 +143,39 @@ void PersClient::DelProperty(ProfileType pt, uint32_t key, const char *property_
 		throw PersClientException(SERVER_ERROR);
 }
 
+void PersClient::IncProperty(ProfileType pt, const char* key, const char *property_name, int32_t inc) throw(PersClientException)
+{
+	if(pt != PT_ABONENT)
+		throw PersClientException(INVALID_KEY);
+
+	MutexGuard mt(mtx);
+
+	FillStringHead(PC_INC, pt, key);
+	sb.WriteString(property_name);
+	sb.WriteInt32(inc);
+	SetPacketSize();
+	SendPacket();
+	ReadPacket();
+	if(GetServerResponse() != RESPONSE_OK)
+		throw PersClientException(PROPERTY_NOT_FOUND);
+}
+void PersClient::IncProperty(ProfileType pt, uint32_t key, const char *property_name, int32_t inc) throw(PersClientException)
+{
+	if(pt == PT_ABONENT)
+		throw PersClientException(INVALID_KEY);
+
+	MutexGuard mt(mtx);
+
+	FillIntHead(PC_INC, pt, key);
+	sb.WriteString(property_name);
+	sb.WriteInt32((uint32_t)inc);
+	SetPacketSize();
+	SendPacket();
+	ReadPacket();
+	if(GetServerResponse() != RESPONSE_OK)
+		throw PersClientException(PROPERTY_NOT_FOUND);
+}
+
 void PersClient::init()
 {
 	char resp[3];
