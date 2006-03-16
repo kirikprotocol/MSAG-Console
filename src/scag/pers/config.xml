@@ -11,7 +11,7 @@
     <param name="abonent_cache_max" type="int">1000</param>
     <param name="service_cache_max" type="int">1000</param>
     <param name="provider_cache_max" type="int">1000</param>
-    <param name="operator_max" type="int">1000</param>
+    <param name="operator_cache_max" type="int">1000</param>
   </section>
 
 </config>
