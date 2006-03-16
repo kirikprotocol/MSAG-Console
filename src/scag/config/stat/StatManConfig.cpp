@@ -56,7 +56,7 @@ StatManConfig::StatManConfig(ConfigView& cv)  throw(ConfigException)
         perfScPort  = cv.getInt("perfScPort");
 
 #ifdef SACC_SENDER		
-		std::auto_ptr<char> sch=cv.getString("saccHost");
+		std::auto_ptr<char> sch(cv.getString("saccHost"));
 		saccHost    = sch.get();
 		saccPort    = cv.getInt("saccPort");
 		
@@ -91,7 +91,7 @@ void StatManConfig::init(ConfigView& cv) throw(ConfigException)
 
 #ifdef SACC_SENDER
 
-		std::auto_ptr<char> sch=cv.getString("saccHost");
+		std::auto_ptr<char> sch (cv.getString("saccHost"));
 		saccHost    = sch.get();
 		saccPort    = cv.getInt("saccPort");
 
@@ -147,9 +147,9 @@ int StatManConfig::getPerfScPort() const { return perfScPort; }
 
 #ifdef SACC_SENDER
 
-int getSaccPort() {return saccPort;}
-std::string getSaccHost(){return saccHost;}
-IntHash<std::string> getEventFiler(){return eventFilter;}
+		    int StatManConfig::getSaccPort() const {return saccPort;}
+	    std::string StatManConfig::getSaccHost() const {return saccHost;}
+IntHash<std::string>	StatManConfig::getEventFiler() const {return eventFilter;}
 
 #endif
 

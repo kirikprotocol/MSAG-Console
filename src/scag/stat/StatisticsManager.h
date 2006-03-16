@@ -156,7 +156,7 @@ namespace stat {
 
 		IntHash<std::string>    saccEventFiler;
 		EventSender thrSaccSender;
-		SyncQueue<void *>    saccEventQueuue;		
+		SyncQueue<void *>    saccEventQueue;		
 #endif
         int     currentIndex;
         bool    bExternalFlush;

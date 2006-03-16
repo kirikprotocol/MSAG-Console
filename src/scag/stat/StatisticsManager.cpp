@@ -114,7 +114,7 @@ void StatisticsManager::configure(const StatManConfig& statManConfig)
 	smsc_log_debug(logger,"SACC configuration perfom to start");
 	int saccPort = statManConfig.getSaccPort();
 	std::string saccHost = statManConfig.getSaccHost();
-	thrSaccSender.init(saccHost,saccPort,100,&saccEventQueue,&isStarted,&logger);
+	thrSaccSender.init(saccHost,saccPort,100,&saccEventQueue,&isStarted,logger);
 	
 #endif	
 	
