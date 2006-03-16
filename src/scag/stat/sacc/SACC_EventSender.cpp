@@ -39,7 +39,7 @@ void EventSender::init(std::string& host,int port,int timeout,
 	bStarted  = bf;
 	logger = lg;
 
-	smsc_log_debug(logger,"...connecting to SACC server host:%s port%d",host.c_str(),port)
+	smsc_log_debug(logger,"...connecting to SACC server host:%s port%d",host.c_str(),port);
 	if(!connect(host,port,timeout))
 	{
 		throw Exception("Cannot connect to SACC ");
