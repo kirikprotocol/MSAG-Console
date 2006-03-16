@@ -102,8 +102,6 @@ public:
   {
   }
 
-
-  virtual ~CommandLoadRoutes();
   virtual Response * CreateResponse(scag::Scag * SmscApp);
 };
 

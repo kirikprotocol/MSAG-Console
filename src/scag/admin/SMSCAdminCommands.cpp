@@ -12,7 +12,7 @@ using namespace smsc::util::xml;
 void Abstract_CommandSmsc::init()
 {
 
-    smsc_log_info(logger, "Abstract_CommandSmscInfo got parameters:");
+    smsc_log_info(logger, "Abstract_CommandSmsc got parameters:");
 
     smppEntityInfo.timeOut = -1;
     smppEntityInfo.providerId = -1;

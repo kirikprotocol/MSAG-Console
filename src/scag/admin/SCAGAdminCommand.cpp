@@ -145,8 +145,6 @@ void CommandDeleteSme::init()
 {
     smsc_log_info(logger, "CommandDeleteSme got parameters:");
 
-    systemId = "";
-
     BEGIN_SCAN_PARAMS
     GETSTRPARAM_(systemId, "systemId")
     END_SCAN_PARAMS
@@ -277,10 +275,6 @@ Response * CommandLoadRoutes::CreateResponse(scag::Scag * ScagApp)
   return new Response(Response::Ok, result);
 }
 
-CommandLoadRoutes::~CommandLoadRoutes()
-{
-  id = undefined;
-}
 
 //================================================================
 
