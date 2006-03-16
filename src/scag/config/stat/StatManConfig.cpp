@@ -10,6 +10,12 @@ StatManConfig::StatManConfig()
     perfGenPort = 0;
     perfSvcPort = 0;
     perfScPort = 0;
+#ifdef SACC_SENDER
+	saccPort=0;
+	saccHost="";
+	eventFilter.Empty();
+#endif
+
 }
 #ifdef TESTING
 /*
@@ -39,7 +45,7 @@ StatManConfig::StatManConfig(std::string& directory,std::string& host,int genp,i
 
 StatManConfig::StatManConfig(ConfigView& cv)  throw(ConfigException)
 {
-    try {
+    try{
         std::auto_ptr<char> dir_( cv.getString("statisticsDir") );
         dir = dir_.get();
 
@@ -48,9 +54,25 @@ StatManConfig::StatManConfig(ConfigView& cv)  throw(ConfigException)
         perfGenPort = cv.getInt("perfGenPort");
         perfSvcPort = cv.getInt("perfSvcPort");
         perfScPort  = cv.getInt("perfScPort");
-    }catch(ConfigException& e){
+
+#ifdef SACC_SENDER		
+		std::auto_ptr<char> sch=cv.getString("saccHost");
+		saccHost    = sch.get();
+		saccPort    = cv.getInt("saccPort");
+		
+		//zalipa
+		eventFilter.Insert(0,"deliver");
+		eventFilter.Insert(1,"submit");
+		eventFilter.Insert(3,"billing");
+
+#endif		
+    }
+	catch(ConfigException& e)
+	{
         throw ConfigException(e.what());
-    }catch(...){
+    }
+	catch(...)
+	{
         throw ConfigException("StatManConfig.StatManConfig, Unknown exception.");
     }
 }
@@ -66,9 +88,22 @@ void StatManConfig::init(ConfigView& cv) throw(ConfigException)
         perfGenPort = cv.getInt("perfGenPort");
         perfSvcPort = cv.getInt("perfSvcPort");
         perfScPort  = cv.getInt("perfScPort");
-    }catch(ConfigException& e){
+
+#ifdef SACC_SENDER
+
+		std::auto_ptr<char> sch=cv.getString("saccHost");
+		saccHost    = sch.get();
+		saccPort    = cv.getInt("saccPort");
+
+#endif
+
+    }
+	catch(ConfigException& e)
+	{
         throw ConfigException(e.what());
-    }catch(...){
+    }
+	catch(...)
+	{
         throw ConfigException("StatManConfig.init, Unknown exception.");
     }
 }
@@ -93,9 +128,13 @@ bool StatManConfig::check(ConfigView& cv)  throw(ConfigException)
 
         return true;
 
-    }catch(ConfigException& e){
+    }
+	catch(ConfigException& e)
+	{
         throw ConfigException(e.what());
-    }catch(...){
+    }
+	catch(...)
+	{
         throw ConfigException("StatManConfig.check, Unknown exception.");
     }
 }
@@ -105,6 +144,14 @@ std::string StatManConfig::getPerfHost() const { return perfHost; }
 int StatManConfig::getPerfGenPort() const { return perfGenPort; }
 int StatManConfig::getPerfSvcPort() const { return perfSvcPort; }
 int StatManConfig::getPerfScPort() const { return perfScPort; }
+
+#ifdef SACC_SENDER
+
+int getSaccPort() {return saccPort;}
+std::string getSaccHost(){return saccHost;}
+IntHash<std::string> getEventFiler(){return eventFilter;}
+
+#endif
 
 }
 }

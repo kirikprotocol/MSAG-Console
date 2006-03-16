@@ -24,10 +24,6 @@
  * 			All rights reserved.
  */
 
-namespace scag{
-namespace stat{
-namespace sacc{
-
 #ifdef _WIN32
 #include <stdint.h>
 #else
@@ -36,6 +32,11 @@ namespace sacc{
 
 
 #include "SACC_Defs.h"
+
+
+namespace scag{
+namespace stat{
+namespace sacc{
 
 
 typedef struct

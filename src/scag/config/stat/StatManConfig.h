@@ -2,7 +2,7 @@
 #define StatManConf_dot_h
 
 #include "scag/config/ConfigView.h"
-
+#include <core/buffers/IntHash.hpp>
 namespace scag {
 namespace config {
 
@@ -22,12 +22,31 @@ public:
     int getPerfGenPort() const;
     int getPerfSvcPort() const;
     int getPerfScPort() const;
+
+	
+	
 protected:
         std::string dir;
         std::string perfHost;
+		
+
         int perfGenPort;
         int perfSvcPort;
         int perfScPort;
+
+#ifdef SACC_SENDER
+		
+public:
+		int getSaccPort() const;
+		std::string getSaccHost() const;
+		IntHash<std::string> getEventFiler() const;
+
+protected:
+		std::string saccHost;
+		int saccPort;
+		IntHash<std::string> eventFilter;
+#endif 		
+
 };
 
 }

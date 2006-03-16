@@ -23,12 +23,13 @@
  * 			EyeLine Communications
  * 			All rights reserved.
  */
+#include "SACC_Defs.h"
+
 
 namespace scag{
 namespace stat{
 namespace sacc{
 
-#include "SACC_Defs.h"
 
 #define SEND_TRANSPORT_EVENT 	0x0001
 #define SEND_ BILL_EVENT    	0x0002

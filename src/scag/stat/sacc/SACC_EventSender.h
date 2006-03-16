@@ -33,16 +33,17 @@
 #include "core/network/Socket.hpp"
 #include "logger/Logger.h"
 #include <string>
-
-namespace scag{
-namespace stat{
-namespace sacc{
-
 using namespace smsc::core::threads;
 using smsc::core::network::Socket;
 using smsc::core::network::Multiplexer;
 using namespace smsc::logger;
 using smsc::util::Exception;
+
+
+namespace scag{
+namespace stat{
+namespace sacc{
+
 
 class EventSender: public Thread 
 {
