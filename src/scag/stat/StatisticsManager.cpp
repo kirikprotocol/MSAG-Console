@@ -260,7 +260,7 @@ void StatisticsManager::registerEvent(const SmppStatEvent& se)
       }
   }
 
-  thrSaccSender.Put(se.sacc_stat);
+  //thrSaccSender.Put(se.sacc_stat);
 }
 
 void StatisticsManager::registerEvent(const HttpStatEvent& se)
@@ -371,7 +371,7 @@ void StatisticsManager::registerEvent(const HttpStatEvent& se)
         }
     }
 
-	thrSaccSender.Put(se.sacc_stat);
+	//thrSaccSender.Put(se.sacc_stat);
 }
     
     bool StatisticsManager::checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value)
@@ -504,7 +504,7 @@ void StatisticsManager::Start()
     sender.Start();
     smsc_log_debug(logger, "PerformanceServer is started");
 
-	//thrSaccSender.Start();
+	thrSaccSender.Start();
 
     isStarted = true;
     Thread::Start();
