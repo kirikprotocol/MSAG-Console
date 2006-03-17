@@ -59,7 +59,8 @@ Service::Service(const InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
 
     _cfg.bill.abCache = new AbonentCache(&_cfg.cachePrm, logger);
     assert(_cfg.bill.abCache);
-    _cfg.bill.abProvider->bindCache(_cfg.bill.abCache);
+    if (_cfg.bill.abProvider)
+        _cfg.bill.abProvider->bindCache(_cfg.bill.abCache);
     smsc_log_debug(logger, "InmanSrv: AbonentCache inited");
 }
 
