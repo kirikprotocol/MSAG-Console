@@ -3,7 +3,6 @@
 
 <operators>
     <param name="last used operator id" type="int">3</param>
-
     <operator id="1">
         <name>Sibinco operator</name>
         <description>Some other information about Sibinco operator</description>
