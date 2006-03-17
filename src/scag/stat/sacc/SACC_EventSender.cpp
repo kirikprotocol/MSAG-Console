@@ -80,7 +80,7 @@ int EventSender::Execute()
 	while( *bStarted)
 	{
 	 	checkQueue();
-		smsc_log_debug("EventSender::Execute Sacc stat event pop from Queue");
+		smsc_log_debug(logger,"EventSender::Execute Sacc stat event pop from Queue");
 	}
 	return 1;
 

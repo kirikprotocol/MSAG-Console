@@ -35,7 +35,7 @@ using smsc::smeman::SmeRecord;
 		typedef enum
 		{
 			pci_smppSubmitSm=1,
-			pci_smppSubmitSmResp=,
+			pci_smppSubmitSmResp,
 			pci_smppDeliverSm,
 			pci_smppDeliverSmResp,
 			pci_smppReceived,
