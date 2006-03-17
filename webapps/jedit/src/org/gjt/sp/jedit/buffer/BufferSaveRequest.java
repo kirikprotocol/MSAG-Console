@@ -206,7 +206,11 @@ public class BufferSaveRequest extends BufferIORequest
      System.out.println("BufferSaveRequest run line 178 status= "+statusException);
      System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!BufferSaveRequest run line 178 servicestatus= "+ servicestatus);
     if (statusException.equals("false")) {
-       String[] pp = { in.readLine() + ((in.readLine()!=null || in.readLine()!="null")?in.readLine():"")  };
+       String description="";
+       String line;
+       while((line=in.readLine())!=null)
+         description = description + line + "\n";
+       String[] pp = { description };
        VFSManager.error(view,path,"ioerror.write-error",pp);
     }
            if(_in != null) _in.close();
