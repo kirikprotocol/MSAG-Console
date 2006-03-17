@@ -106,7 +106,9 @@ Command* CommandReader::parseCommand(DOMInputSource &source)
       throw AdminException("Unknown command");
     }
 
-    return createCommand(id,data);
+    Command * command = createCommand(id,data);
+    if (command) command->init();
+    return command;
   }
   catch (const ParseException &e)
   {

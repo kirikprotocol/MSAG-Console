@@ -55,6 +55,8 @@ public:
     id = undefined;
   }
 
+  virtual void init() {}
+
   const Id getId() const  throw ()             {return id;}
   const char * const getName() const  throw () {return names[id].name;}
 
