@@ -97,6 +97,7 @@ private:
 protected:
     friend class AbonentQuery;
     void releaseQuery(AbonentQuery * query);
+    bool hasListeners(AbonentId ab_number);
 
 public:
     DBAbonentProvider(const DBSourceCFG *in_cfg, Logger * uselog = NULL);

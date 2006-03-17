@@ -53,12 +53,11 @@ void AbonentQuery::onRelease(void)
 
 int AbonentQuery::Execute(void)
 { 
-    mutex.Lock();
-    if (isStopping) {
-        mutex.Unlock();
-        return 0;
+    {
+        MutexGuard tmp(mutex);
+        if (isStopping || !_owner->hasListeners(abonent.c_str()))
+            return 0; //query was cancelled by either QueryManager or ThreadPool
     }
-    mutex.Unlock();
     //sleep(24); //for debugging
 
     int    status = 0;
@@ -66,16 +65,25 @@ int AbonentQuery::Execute(void)
     Routine * rtq = NULL;
     int16_t res = -1;
 
-    //may throw SQLException
-    try { rtq = dcon->getRoutine(rtId, callStr.c_str(), true); }
-    catch (...) { status = -1; }
+    try { //throws SQLException, connects to DB, large delay possible
+        rtq = dcon->getRoutine(rtId, callStr.c_str(), true); 
+    } catch (...) {
+        status = -1; 
+    }
+
+    {
+        MutexGuard tmp(mutex);
+        if (isStopping || !_owner->hasListeners(abonent.c_str()))
+            rtq = NULL; //query was cancelled by either QueryManager or ThreadPool
+    }
+
     if (rtq) {
         try {
             int timerId = -1;
             rtq->setString(rtKey, abonent.c_str());
             if (timeOut)
                 timerId = _ds->startTimer(dcon, timeOut);
-            rtq->execute(); //make query
+            rtq->execute();  //executes query, large delay possible
             if (timerId >= 0)
                 _ds->stopTimer(timerId);
             res = rtq->getInt16("RETURN"); //FUNCTION_RETURN_ATTR_NAME
@@ -110,10 +118,9 @@ DBAbonentProvider::DBAbonentProvider(const DBSourceCFG *in_cfg, Logger * uselog/
 
 DBAbonentProvider::~DBAbonentProvider()
 { 
-    MutexGuard  guard(qrsGuard);
     cache = NULL;
     cancelAllQueries();
-    pool.shutdown();
+    pool.shutdown(); //waits or kills threads
     for (QueriesList::iterator it = qryPool.begin(); it != qryPool.end(); it++) {
         delete *it;
     }
@@ -141,6 +148,13 @@ void DBAbonentProvider::cancelAllQueries(void)
 }
 
 
+bool DBAbonentProvider::hasListeners(AbonentId ab_number)
+{
+    MutexGuard  guard(qrsGuard);
+    CachedQuery * ab_rec = qryCache.GetPtr(ab_number);
+    return (ab_rec && ab_rec->cbList.size()) ? true : false;
+}
+
 //This one is called from ThreadedTask on DB query completion.
 //Notifies query listeners and releases query.
 void DBAbonentProvider::releaseQuery(AbonentQuery * query)
@@ -149,16 +163,17 @@ void DBAbonentProvider::releaseQuery(AbonentQuery * query)
     AbonentBillType ab_type = query->getAbonentType();
     QueryCBList     cb_list;
 
-    qrsGuard.Lock();
-    CachedQuery * ab_rec = qryCache.GetPtr(ab_number);
-    if (ab_rec) {
-        if (ab_rec->cbList.size())
-            cb_list = ab_rec->cbList;
-        qryCache.Delete(ab_number);
-    } else
-        smsc_log_debug(logger, "AbProvider: no listeners for query(%s)", ab_number);
-    qryPool.push_back(query);
-    qrsGuard.Unlock();
+    {
+        MutexGuard  guard(qrsGuard);
+        CachedQuery * ab_rec = qryCache.GetPtr(ab_number);
+        if (ab_rec) {
+            if (ab_rec->cbList.size())
+                cb_list = ab_rec->cbList;
+            qryCache.Delete(ab_number);
+        } else
+            smsc_log_debug(logger, "AbProvider: no listeners for query(%s)", ab_number);
+        qryPool.push_back(query);
+    }
 
     if (cache) //update cache
         cache->setAbonentInfo(ab_number, ab_type);
@@ -222,15 +237,11 @@ void DBAbonentProvider::cancelQuery(AbonentId ab_number, InAbonentQueryListenerI
 
     QueryCBList::iterator it = std::find(ab_rec->cbList.begin(),
                                          ab_rec->cbList.end(), pf_cb);
-    if (it != ab_rec->cbList.end()) {
+    if (it != ab_rec->cbList.end())
         ab_rec->cbList.erase(it);
-        if (!ab_rec->cbList.size()) { //cancel DB query
-            ab_rec->qryDb->stop();
-            qryCache.Delete(ab_number);
-        } else
-            smsc_log_debug(logger, "AbProvider: %u listeners remain for query(%s)",
-                           ab_rec->cbList.size(), ab_number);
-    }
+    if (ab_rec->cbList.size())
+        smsc_log_debug(logger, "AbProvider: %u listeners remain for query(%s)",
+                       ab_rec->cbList.size(), ab_number);
     return;
 }
 
