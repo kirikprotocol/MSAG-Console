@@ -128,6 +128,31 @@ using smsc::smeman::SmeRecord;
 	  char receiver_phones[1024];
 	  char receiver_emails[1024];
 
+	  SaccStatistics()
+      {
+		command_id	=0;
+		timestamp	=0;
+		operator_id	=0;
+		provider_id	=0;
+		service_id=	0;
+		protocol_id	=0;
+		protocol_command_id=0;
+		protocol_command_status=0;
+		direction	=0;
+		billing_command_id    =0;	
+		billing_command_status=0;	
+		media_type  =0;	
+		category_id =0;	
+		bill_value	=0;	
+		event_id	=0;
+
+		memset(abonent_addr,0,sizeof(abonent_addr));
+		memset(session_id,0,sizeof(session_id));
+		memset(bill_currency,0,sizeof(bill_currency));
+		memset(message,0,sizeof(message));
+		memset(receiver_phones,0,sizeof(receiver_phones));
+		memset(receiver_emails,0,sizeof(receiver_emails));
+	  }
 	  SaccStatistics(const SaccStatistics& src)
       {
 		command_id	=	command_id;

@@ -56,7 +56,7 @@ public:
 	EventSender();
 	virtual ~EventSender();
 	int Execute();
-	void Put(SaccStatistics& ev);
+	void Put(const SaccStatistics& ev);
 
 	void Start();
 	void init(std::string& host,int port,int timeout,bool * bf,smsc::logger::Logger * lg);

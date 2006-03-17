@@ -158,7 +158,7 @@ void EventSender::Start()
 	Thread::Start();
 }
 
-void EventSender::Put(SaccStatistics& ev)
+void EventSender::Put(const SaccStatistics& ev)
 {
 	SaccStatistics * pSt= new SaccStatistics(ev);
 	eventsQueue.Push(pSt); 
