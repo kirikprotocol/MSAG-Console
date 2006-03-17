@@ -23,42 +23,43 @@ using smsc::smeman::SmeRecord;
 		
 		typedef enum
 		{
-			SACC_SEND_TRANSPORT_EVENT=0x0001,
-			SACC_SEND_BILL_EVENT=0x0002,	
-			SACC_SEND_ALARM_EVENT=0x0003,
-			SACC_SEND_OPERATOR_NOT_FOUND_ALARM=0x0004,
-			SACC_SEND_SESSION_EXPIRATION_TIME_ALARM=0x0005,
-			SACC_SEND_ALARM_MESSAGE=0x0101
+			sec_transport = 0x0001,
+			sec_bill = 0x0002,	
+			sec_alarm= 0x0003,
+			sec_operator_not_found = 0x0004,
+			sec_session_expired= 0x0005,
+			sec_alarm_message = 0x0101
 
-		}SaccEvents;
+		}SaccEventsCommandIds;
+		
 		typedef enum
 		{
 			pci_smppSubmitSm=1,
-			pci_smppSubmitSmResp=2,
-			pci_smppDeliverSm=3,
-			pci_smppDeliverSmResp=4,
-			pci_smppReceived=5,
+			pci_smppSubmitSmResp=,
+			pci_smppDeliverSm,
+			pci_smppDeliverSmResp,
+			pci_smppReceived,
 			
-			pci_httpRequest=6,
-			pci_httpResponse=7,
-			pci_httpDeliver=8
+			pci_httpRequest,
+			pci_httpResponse,
+			pci_httpDeliver
 
 		}SaccProtocolCommandIds;
 
 		typedef enum
 		{
 			pid_smpp_sms=1,
-			pid_smpp_ussd=2,
-			pid_http=3,
-			pid_mms=4
+			pid_smpp_ussd,
+			pid_http,
+			pid_mms
 		}SaccProtocolIds;
 		
 		typedef enum
 		{
 			bci_open=1,
-			bci_commit=2,
-			bci_rollback=3,
-			bci_rollback_by_timeout=4
+			bci_commit,
+			bci_rollback,
+			bci_rollback_by_timeout
 
 		}SaccBillCommandIds;
 
