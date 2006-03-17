@@ -7,6 +7,8 @@
 #include <logger/Logger.h>
 
 using namespace scag::stat;
+using namespace scag::stat::Counters;
+
 namespace scag{
 namespace stat{
 namespace sacc{

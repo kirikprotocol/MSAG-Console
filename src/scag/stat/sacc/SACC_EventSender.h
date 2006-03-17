@@ -41,7 +41,7 @@ using smsc::core::network::Multiplexer;
 using namespace smsc::logger;
 using smsc::util::Exception;
 using namespace scag::stat;
-
+using namespace scag::stat::Counters;
 namespace scag{
 namespace stat{
 namespace sacc{
