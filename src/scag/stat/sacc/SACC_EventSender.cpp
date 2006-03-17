@@ -19,6 +19,7 @@ EventSender::EventSender()
 	pQueue = 0;
 	bStarted  = 0;
 	logger = 0;
+	bConnected=false;
 }
 
 EventSender::~EventSender()
@@ -95,7 +96,7 @@ int EventSender::Execute()
 
 bool EventSender::connect(std::string host, int port,int timeout)
 {
-/*	if(SaccSocket.Init(host.c_str(),port,timeout)==-1)
+	if(SaccSocket.Init(host.c_str(),port,timeout)==-1)
 	{
 		smsc_log_error(logger,"EventSender::connect Failed to init socket\n");
 		return false;
@@ -107,10 +108,16 @@ bool EventSender::connect(std::string host, int port,int timeout)
 		return false;
 	}
 
-*/	
+	bConnected=true;
+
+	smsc_log_debug(logger,"EventSender::connect succsess to %s:%d\n",host.c_str(),port);
 	return true;
 }
 
+bool EventSender::isActive()
+{
+   return bConnected;
+}
 
 
 void EventSender::Start()
@@ -121,5 +128,6 @@ void EventSender::Start()
 }//sacc
 }//stat
 }//scag
+
 
 

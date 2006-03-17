@@ -51,6 +51,7 @@ namespace sacc{
 class EventSender: public Thread 
 {
 public:
+	bool isActive();
 
 	EventSender();
 	virtual ~EventSender();
@@ -63,6 +64,7 @@ private:
 
 	SyncQueue<SaccStatistics *> * pQueue;
 	bool * bStarted;
+	bool bConnected;
 	Socket SaccSocket;
 	bool connect(std::string host,int port,int timeout);
 	smsc::logger::Logger * logger;

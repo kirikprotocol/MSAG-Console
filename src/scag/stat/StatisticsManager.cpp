@@ -701,6 +701,7 @@ void StatisticsManager::flushHttpCounters(int index)
                    flushTM.tm_hour, flushTM.tm_min, flushTM.tm_sec);
 
 	SaccStatistics * st = new SaccStatistics;
+	memset(st,0,sizeof(SaccStatistics));
 	
 	st->abonent_addr[0]='1';
 	st->abonent_addr[1]='.';
@@ -709,6 +710,7 @@ void StatisticsManager::flushHttpCounters(int index)
 	st->abonent_addr[4]='2';
 
 	saccEventQueue.Push(st);
+	
     try
     {
         TmpBuf<uint8_t, 4096> buff(4096);
