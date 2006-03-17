@@ -19,13 +19,11 @@
 #include <scag/util/singleton/Singleton.h>
 #include "StatisticsManager.h"
 
-#ifdef SACC_SENDER
 
 #include "sacc/SACC_Defs.h"
 #include "sacc/SACC_Events.h"
 #include "sacc/SACC_EventSender.h"
 
-#endif
 
 namespace scag { 
 namespace stat {
@@ -38,9 +36,9 @@ using namespace scag::util::singleton;
 using smsc::core::buffers::File;
 using scag::config::StatManConfig;
 
-#ifdef SACC_SENDER
+
 using namespace scag::stat::sacc;
-#endif
+
 const uint16_t SCAG_STAT_DUMP_INTERVAL = 60; // in seconds
 const uint16_t SCAG_STAT_VERSION_INFO  = 0x0001;
 const char*    SCAG_STAT_HEADER_TEXT   = "SCAG.STAT";
@@ -110,13 +108,13 @@ void StatisticsManager::configure(const StatManConfig& statManConfig)
     int perfSvcPort = statManConfig.getPerfSvcPort();
     int perfScPort = statManConfig.getPerfScPort();
 
-#ifdef SACC_SENDER	
+
 	smsc_log_debug(logger,"SACC configuration perfom to start");
 	int saccPort = statManConfig.getSaccPort();
 	std::string saccHost = statManConfig.getSaccHost();
 	thrSaccSender.init(saccHost,saccPort,100,&saccEventQueue,&isStarted,logger);
 	
-#endif	
+
 	
     printf("StatisticsManager, perfSvcPort: %d\n", perfSvcPort);
 
@@ -484,9 +482,9 @@ void StatisticsManager::Stop()
     sender.Stop();
     smsc_log_debug(logger, "PerformanceServer is shutdowned");
 
-#ifdef SACC_SENDER
+
 	//thrSaccSender.Stop();
-#endif
+
 
     if (isStarted)
     {
@@ -502,9 +500,8 @@ void StatisticsManager::Start()
     sender.Start();
     smsc_log_debug(logger, "PerformanceServer is started");
 
-#ifdef SACC_SENDER
 	thrSaccSender.Start();
-#endif
+
     isStarted = true;
     Thread::Start();
 }

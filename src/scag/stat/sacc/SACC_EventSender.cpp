@@ -2,9 +2,11 @@
 #include "SACC_SyncQueue.h"
 #include "SACC_EventSender.h"
 #include "SACC_Events.h"
+#include "stat/Statistics.h"
 
 #include <logger/Logger.h>
 
+using namespace scag::stat;
 namespace scag{
 namespace stat{
 namespace sacc{
@@ -23,7 +25,7 @@ EventSender::~EventSender()
 }
 
 void EventSender::init(std::string& host,int port,int timeout, 
-					   SyncQueue<void*> * q,bool * bf,smsc::logger::Logger * lg)
+					   SyncQueue<SaccStatistics*> * q,bool * bf,smsc::logger::Logger * lg)
 {
 
 	if(!q)
@@ -40,6 +42,7 @@ void EventSender::init(std::string& host,int port,int timeout,
 	logger = lg;
 
 	smsc_log_debug(logger,"...connecting to SACC server host:%s port%d",host.c_str(),port);
+	
 	if(!connect(host,port,timeout))
 	{
 		throw Exception("Cannot connect to SACC ");
@@ -56,7 +59,7 @@ return true;
 
 bool EventSender::checkQueue()
 {
-	void * ev;
+	SaccStatistics * ev;
 	if(pQueue->Pop(ev,1000))
 	{
 		processEvent(ev);
@@ -75,6 +78,7 @@ int EventSender::Execute()
 	while( *bStarted)
 	{
 	 	checkQueue();
+		smsc_log_debug("EventSender::Execute Sacc stat event pop from Queue");
 	}
 	return 1;
 
@@ -82,7 +86,7 @@ int EventSender::Execute()
 
 bool EventSender::connect(std::string host, int port,int timeout)
 {
-	if(SaccSocket.Init(host.c_str(),port,timeout)==-1)
+/*	if(SaccSocket.Init(host.c_str(),port,timeout)==-1)
 	{
 		smsc_log_error(logger,"EventSender::connect Failed to init socket\n");
 		return false;
@@ -94,7 +98,7 @@ bool EventSender::connect(std::string host, int port,int timeout)
 		return false;
 	}
 
-	
+*/	
 	return true;
 }
 

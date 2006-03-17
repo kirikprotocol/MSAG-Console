@@ -32,13 +32,15 @@
 #include "core/network/Multiplexer.hpp"
 #include "core/network/Socket.hpp"
 #include "logger/Logger.h"
+#include "stat/Statistics.h"
+
 #include <string>
 using namespace smsc::core::threads;
 using smsc::core::network::Socket;
 using smsc::core::network::Multiplexer;
 using namespace smsc::logger;
 using smsc::util::Exception;
-
+using namespace scag::stat;
 
 namespace scag{
 namespace stat{
@@ -55,10 +57,10 @@ public:
 	bool checkQueue();
 	bool processEvent(void * ev);
 	void Start();
-	void init(std::string& host,int port,int timeout,SyncQueue<void*> * q,bool * bf,smsc::logger::Logger * lg);
+	void init(std::string& host,int port,int timeout,SyncQueue<SaccStatistics*> * q,bool * bf,smsc::logger::Logger * lg);
 private:
 
-	SyncQueue<void*> * pQueue;
+	SyncQueue<SaccStatistics *> * pQueue;
 	bool * bStarted;
 	Socket SaccSocket;
 	bool connect(std::string host,int port,int timeout);
