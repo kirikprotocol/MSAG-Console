@@ -56,7 +56,8 @@ void EventSender::init(std::string& host,int port,int timeout,
 bool EventSender::processEvent(void *ev)
 {
 
-	smsc_log_debug(logger,"EventSender::Execute Sacc stat event processed from queue");
+	
+	smsc_log_debug(logger,"EventSender::Execute Sacc stat event processed from queue addr=%s",ev->abonent_addr);
 
 return true;
 }
@@ -66,7 +67,12 @@ bool EventSender::checkQueue()
 	SaccStatistics * ev;
 	if(pQueue->Pop(ev,1000))
 	{
-		processEvent(ev);
+		if(ev)
+		
+			processEvent(ev);
+		
+		delete ev;
+
 		return true;
 	}
 	else
