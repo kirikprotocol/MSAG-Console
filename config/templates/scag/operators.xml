@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE operators SYSTEM "file://operators.dtd">
+
+<operators>
+    <param name="last used operator id" type="int">3</param>
+
+    <operator id="1">
+        <name>Sibinco operator</name>
+        <description>Some other information about Sibinco operator</description>
+        <masks>
+            <mask>+7913906??????</mask>
+            <mask>+79139??????</mask>
+        </masks>
+    </operator>
+    <operator id="2">
+        <name>Sibinco Ural operator</name>
+        <description>Some other information about Sibinco Ural operator</description>
+        <masks>
+            <mask>+7912906??????</mask>
+            <mask>+79129??????</mask>
+        </masks>
+    </operator>
+</operators>
