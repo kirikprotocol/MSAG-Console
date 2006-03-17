@@ -41,12 +41,12 @@ MENU0_SELECTION = "MENU0_PROFILES";
 
 <input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
 <input type=hidden name=profileMask>
-<input type="hidden" name="runQuery">
-<input type="hidden" name="closeQuery">
 <input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
 <input type=hidden name=sort>
 <input type=hidden name=initialized value=true>
 <input type=hidden name=jbutton id=jbutton>
+<input type=hidden name=runQuery id=runQuery>
+<input type=hidden name=closeQuery id=closeQuery>
 
 <script>
 function editProfile(profileMask)
@@ -78,7 +78,7 @@ function closeQuery(){
 </div>
 <%
 	page_menu_begin(out);
-	page_menu_button(session, out, "mbQuery",  "common.buttons.query",  "common.buttons.query", "onClick=runQuery()");
+	page_menu_button(session, out, "mbQuery",  "common.buttons.query",  "common.buttons.query", "runQuery(); clickSubmit('mbQuery','Query')");
 	page_menu_space(out);
 	page_menu_end(out);
     if (bean.isQueried())
@@ -168,7 +168,7 @@ function closeQuery(){
 </div>
 <%      if (bean.isQueried()){
             page_menu_begin(out);
-            page_menu_button(session, out, "mbClose",  "common.buttons.close",  "profiles.closeHint", "onClick=closeQuery()");
+            page_menu_button(session, out, "mbClose",  "common.buttons.close",  "profiles.closeHint", "closeQuery(); clickSubmit('mbClose','Close')");
             page_menu_space(out);
 	        page_menu_end(out);
         }
