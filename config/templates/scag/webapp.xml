@@ -13,8 +13,8 @@
   <param name="xsd_folder" type="string">conf/rules/xsd</param> 
   <param name="gw name" type="string">scag</param>
   <param name="ids_file" type="string">webapps/scag/WEB-INF/ids.xml</param>
-  <param name="services_file" type="string">webapps/scag/WEB-INF/services.xml</param>
-  <param name="operators_file" type="string">webapps/scag/WEB-INF/operators.xml</param>
+  <param name="services_file" type="string">services/scag/conf/services.xml</param>
+  <param name="operators_file" type="string">services/scag/scag/conf/operators.xml</param>
   <section name="gw daemon">
     <param name="host" type="string">@connect.host@</param>
     <param name="port" type="int">@daemon.admin.port@</param>
