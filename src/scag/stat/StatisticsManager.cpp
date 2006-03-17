@@ -504,7 +504,7 @@ void StatisticsManager::Start()
     sender.Start();
     smsc_log_debug(logger, "PerformanceServer is started");
 
-	thrSaccSender.Start();
+	//thrSaccSender.Start();
 
     isStarted = true;
     Thread::Start();

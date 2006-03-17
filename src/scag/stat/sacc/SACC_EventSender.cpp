@@ -120,6 +120,10 @@ int EventSender::Execute()
 		{
 			checkQueue();
 		}
+		else
+		{
+			sleep(500);
+		}
 	}
 	return 1;
 
