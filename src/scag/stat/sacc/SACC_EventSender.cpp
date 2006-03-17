@@ -56,6 +56,8 @@ void EventSender::init(std::string& host,int port,int timeout,
 bool EventSender::processEvent(void *ev)
 {
 
+	smsc_log_debug(logger,"EventSender::Execute Sacc stat event processed from queue");
+
 return true;
 }
 
@@ -80,7 +82,6 @@ int EventSender::Execute()
 	while( *bStarted)
 	{
 	 	checkQueue();
-		smsc_log_debug(logger,"EventSender::Execute Sacc stat event pop from Queue");
 	}
 	return 1;
 
