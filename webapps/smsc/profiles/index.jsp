@@ -46,6 +46,7 @@ MENU0_SELECTION = "MENU0_PROFILES";
 <input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
 <input type=hidden name=sort>
 <input type=hidden name=initialized value=true>
+<input type=hidden name=jbutton id=jbutton>
 
 <script>
 function editProfile(profileMask)
