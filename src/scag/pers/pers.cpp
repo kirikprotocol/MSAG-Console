@@ -55,9 +55,13 @@ int main(int argc, char* argv[])
 
 	atexit(atExitHandler);
 
-    sigset_t set, old;
-    sigemptyset(&set);
-    sigprocmask(SIG_SETMASK, &set, &old);
+    sigset_t set;
+    sigfillset(&set);
+	sigdelset(&set, SIGTERM);
+	sigdelset(&set, SIGINT);
+	sigdelset(&set, SIGSEGV);
+	sigdelset(&set, SIGBUS);
+    sigprocmask(SIG_SETMASK, &set, NULL);
 	sigset(SIGTERM, appSignalHandler);
     sigset(SIGINT, appSignalHandler);
 
@@ -98,15 +102,7 @@ int main(int argc, char* argv[])
 
 		auto_ptr<PersServer> pp(ps);
 
-/*		PersServer pp(host.c_str(), port, maxClientCount, 
-			new CommandDispatcher(&AbonentStore, &ServiceStore, &OperatorStore, &ProviderStore));*/
-
 		ps->Execute();
-
-/*		sigemptyset(&set);
-		sigaddset(&set, SIGINT);
-		sigaddset(&set, SIGTERM);
-		sigprocmask(SIG_SETMASK, &set, &old);*/
     }
     catch (ConfigException& exc) 
     {

@@ -153,8 +153,6 @@ void Property::setDate(const char *nm, time_t t, TimePolicy policy, time_t fd, u
 
 void Property::Serialize(SerialBuffer& buf)
 {
-	uint16_t len = name.length();
-
 	buf.WriteInt8((uint8_t)type);
 	buf.WriteInt8((uint8_t)time_policy);
 	buf.WriteInt32((uint32_t)final_date);
@@ -171,8 +169,6 @@ void Property::Serialize(SerialBuffer& buf)
 
 void Property::Deserialize(SerialBuffer& buf)
 {
-	uint8_t len;
-	uint8_t t;
 	type = (PropertyType)buf.ReadInt8();
 	time_policy = (TimePolicy)buf.ReadInt8();
 	final_date = (time_t)buf.ReadInt32();

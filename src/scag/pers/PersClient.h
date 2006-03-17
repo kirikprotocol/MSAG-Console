@@ -80,8 +80,9 @@ protected:
 	void init();
 	void init_internal(const char *_host, int _port, int timeout); //throw(PersClientException);
 	void SetPacketSize();
-	void FillStringHead(PersCmd pc, ProfileType pt, const char *key);
-	void FillIntHead(PersCmd pc, ProfileType pt, uint32_t key);
+	void _SetProperty(ProfileType pt, const char* skey, uint32_t ikey, Property& prop); //throw(PersClientException)
+	void FillHead(PersCmd pc, ProfileType pt, const char *key);
+	void FillHead(PersCmd pc, ProfileType pt, uint32_t key);
 	void AppendString(const char *str);
 	void SendPacket();
 	void ReadPacket();

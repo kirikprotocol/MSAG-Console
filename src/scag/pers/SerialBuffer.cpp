@@ -52,7 +52,7 @@ void SerialBuffer::ReadString(std::string &str)
 
 void SerialBuffer::ReadString(std::wstring &str)
 {
-	uint16_t len;
+	uint16_t len, i, c;
 	wchar_t scb[255];
 
 	len = ReadInt16();
@@ -63,14 +63,20 @@ void SerialBuffer::ReadString(std::wstring &str)
 	str = L"";
 	while(len > 254)
 	{
-		Read((char*)scb, sizeof(wchar_t) * 254);
+		i = 0;
+		while(i < 254)
+			scb[i++] = (wchar_t)ReadInt16();
+//		Read((char*)scb, sizeof(wchar_t) * 254);
 		scb[254] = 0;
 		str += scb;
 		len -= 254;
 	}
 	if(len)
 	{
-		Read((char*)scb, sizeof(wchar_t) * len);
+		i = 0;
+		while(i < len)
+			scb[i++] = (wchar_t)ReadInt16();
+//		Read((char*)scb, sizeof(wchar_t) * len);
 		scb[len] = 0;
 		str += scb;
 	}
@@ -107,14 +113,14 @@ uint32_t SerialBuffer::ReadInt32()
 {
 	uint32_t i;
 	Read((char*)&i, sizeof(i));
-	return i;
+	return ntohl(i);
 }
 
 uint16_t SerialBuffer::ReadInt16()
 {
 	uint16_t i;
 	Read((char*)&i, sizeof(i));
-	return i;
+	return ntohs(i);
 }
 
 uint8_t SerialBuffer::ReadInt8()
@@ -126,11 +132,13 @@ uint8_t SerialBuffer::ReadInt8()
 
 void SerialBuffer::WriteInt32(uint32_t i)
 {
+	i = htonl(i);
 	Append((char*)&i, sizeof(i));
 }
 
 void SerialBuffer::WriteInt16(uint16_t i)
 {
+	i = htons(i);
 	Append((char*)&i, sizeof(i));
 }
 
@@ -150,7 +158,9 @@ void SerialBuffer::WriteString(const wchar_t *str)
 {
 	uint16_t len = std::wcslen(str);
 	WriteInt16(len);
-	Append((char*)str, sizeof(wchar_t) * len);
+	while(len--)
+		WriteInt16((uint16_t)*(str++));
+//	Append((char*)str, sizeof(wchar_t) * len);
 }
 
 }}

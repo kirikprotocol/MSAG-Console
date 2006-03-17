@@ -3,9 +3,6 @@
 #ifndef SCAG_PERS_VARRECSIZE_STORE
 #define SCAG_PERS_VARRECSIZE_STORE
 
-#include <inttypes.h>
-#include <string>
-
 #include "core/synchronization/Mutex.hpp"
 #include "core/buffers/DiskHash.hpp"
 #include "core/buffers/PageFile.hpp"

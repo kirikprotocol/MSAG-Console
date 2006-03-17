@@ -51,35 +51,34 @@ void PersClient::init_internal(const char *_host, int _port, int _timeout) //thr
 	init();
 }
 
+void PersClient::_SetProperty(ProfileType pt, const char* skey, uint32_t ikey, Property& prop) //throw(PersClientException)
+{
+	MutexGuard mt(mtx);
+
+	if(pt == PT_ABONENT)
+		FillHead(PC_SET, pt, skey);
+	else
+		FillHead(PC_SET, pt, ikey);
+	prop.Serialize(sb);
+	SendPacket();
+	ReadPacket();
+	if(GetServerResponse() != RESPONSE_OK)
+		throw PersClientException(SERVER_ERROR);
+}
+
 void PersClient::SetProperty(ProfileType pt, const char* key, Property& prop) //throw(PersClientException)
 {
 	if(pt != PT_ABONENT)
 		throw PersClientException(INVALID_KEY);
 
-	MutexGuard mt(mtx);
-
-	FillStringHead(PC_SET, pt, key);
-	prop.Serialize(sb);
-	SetPacketSize();
-	SendPacket();
-	ReadPacket();
-	if(GetServerResponse() != RESPONSE_OK)
-		throw PersClientException(SERVER_ERROR);
+	_SetProperty(pt, key, 0, prop);
 }
 void PersClient::SetProperty(ProfileType pt, uint32_t key, Property& prop) //throw(PersClientException)
 {
 	if(pt == PT_ABONENT)
 		throw PersClientException(INVALID_KEY);
 
-	MutexGuard mt(mtx);
-
-	FillIntHead(PC_SET, pt, key);
-	prop.Serialize(sb);
-	SetPacketSize();
-	SendPacket();
-	ReadPacket();
-	if(GetServerResponse() != RESPONSE_OK)
-		throw PersClientException(SERVER_ERROR);
+	_SetProperty(pt, NULL, key, prop);
 }
 
 void PersClient::GetProperty(ProfileType pt, const char* key, const char *property_name, Property& prop) //throw(PersClientException)
@@ -90,9 +89,8 @@ void PersClient::GetProperty(ProfileType pt, const char* key, const char *proper
 
 	MutexGuard mt(mtx);
 
-	FillStringHead(PC_GET, pt, key);
+	FillHead(PC_GET, pt, key);
 	sb.WriteString(property_name);
-	SetPacketSize();
 	SendPacket();
 	ReadPacket();
 	ParseProperty(prop);
@@ -104,9 +102,8 @@ void PersClient::GetProperty(ProfileType pt, uint32_t key, const char *property_
 
 	MutexGuard mt(mtx);
 
-	FillIntHead(PC_GET, pt, key);
+	FillHead(PC_GET, pt, key);
 	sb.WriteString(property_name);
-	SetPacketSize();
 	SendPacket();
 	ReadPacket();
 	ParseProperty(prop);
@@ -119,9 +116,8 @@ void PersClient::DelProperty(ProfileType pt, const char* key, const char *proper
 
 	MutexGuard mt(mtx);
 
-	FillStringHead(PC_DEL, pt, key);
+	FillHead(PC_DEL, pt, key);
 	sb.WriteString(property_name);
-	SetPacketSize();
 	SendPacket();
 	ReadPacket();
 	if(GetServerResponse() == RESPONSE_ERROR)
@@ -134,9 +130,8 @@ void PersClient::DelProperty(ProfileType pt, uint32_t key, const char *property_
 
 	MutexGuard mt(mtx);
 
-	FillIntHead(PC_DEL, pt, key);
+	FillHead(PC_DEL, pt, key);
 	sb.WriteString(property_name);
-	SetPacketSize();
 	SendPacket();
 	ReadPacket();
 	if(GetServerResponse() == RESPONSE_ERROR)
@@ -150,10 +145,9 @@ void PersClient::IncProperty(ProfileType pt, const char* key, const char *proper
 
 	MutexGuard mt(mtx);
 
-	FillStringHead(PC_INC, pt, key);
+	FillHead(PC_INC, pt, key);
 	sb.WriteString(property_name);
 	sb.WriteInt32(inc);
-	SetPacketSize();
 	SendPacket();
 	ReadPacket();
 	if(GetServerResponse() != RESPONSE_OK)
@@ -166,10 +160,9 @@ void PersClient::IncProperty(ProfileType pt, uint32_t key, const char *property_
 
 	MutexGuard mt(mtx);
 
-	FillIntHead(PC_INC, pt, key);
+	FillHead(PC_INC, pt, key);
 	sb.WriteString(property_name);
 	sb.WriteInt32((uint32_t)inc);
-	SetPacketSize();
 	SendPacket();
 	ReadPacket();
 	if(GetServerResponse() != RESPONSE_OK)
@@ -245,6 +238,7 @@ void PersClient::SendPacket()
 {
 	init();
 	try{
+		SetPacketSize();
 		WriteAllTO(sb.get(), sb.GetSize());
 	}
 	catch(PersClientException &e)
@@ -284,10 +278,8 @@ void PersClient::ReadPacket()
 
 void PersClient::SetPacketSize()
 {
-	uint32_t len = sb.GetSize();
 	sb.SetPos(0);
-	sb.WriteInt32(len);
-	sb.SetPos(len);
+	sb.WriteInt32(sb.GetSize());
 }
 
 uint32_t PersClient::GetPacketSize()
@@ -308,7 +300,7 @@ PersServerResponseType PersClient::GetServerResponse()
 	}
 }
 
-void PersClient::FillIntHead(PersCmd pc, ProfileType pt, uint32_t key)
+void PersClient::FillHead(PersCmd pc, ProfileType pt, uint32_t key)
 {
 	sb.Empty();
 	sb.SetPos(4);
@@ -317,7 +309,7 @@ void PersClient::FillIntHead(PersCmd pc, ProfileType pt, uint32_t key)
 	sb.WriteInt32(key);
 }
 
-void PersClient::FillStringHead(PersCmd pc, ProfileType pt, const char *key)
+void PersClient::FillHead(PersCmd pc, ProfileType pt, const char *key)
 {
 	sb.Empty();
 	sb.SetPos(4);

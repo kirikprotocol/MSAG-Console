@@ -4,6 +4,7 @@
 #define SCAG_PERS_SERIAL_BUFFER
 
 #include <string>
+#include <netinet/in.h>
 #include "core/buffers/TmpBuf.hpp"
 
 namespace scag{ namespace pers{
