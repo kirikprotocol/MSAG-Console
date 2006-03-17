@@ -16,7 +16,6 @@ namespace sacc{
 
 EventSender::EventSender()
 {
-	pQueue = 0;
 	bStarted  = 0;
 	logger = 0;
 	bConnected=false;

@@ -69,6 +69,7 @@ private:
 	std::string Host;
 	int Port;
 	bool checkQueue();
+	bool retrieveConnect();
 	bool connect(std::string host,int port,int timeout);
 	bool processEvent(SaccStatistics * ev);
 	void makeTransportEvent(SaccStatistics * st,SACC_TRAFFIC_INFO_EVENT_t * ev);
