@@ -53,7 +53,7 @@ void EventSender::init(std::string& host,int port,int timeout,
 	smsc_log_debug(logger,"EventSender::init confuration and connection succsess.");
 }
 
-bool EventSender::processEvent(void *ev)
+bool EventSender::processEvent(SaccStatistics *ev)
 {
 
 	

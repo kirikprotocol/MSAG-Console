@@ -56,7 +56,7 @@ public:
 	virtual ~EventSender();
 	int Execute();
 	bool checkQueue();
-	bool processEvent(void * ev);
+	bool processEvent(SaccStatistics * ev);
 	void Start();
 	void init(std::string& host,int port,int timeout,SyncQueue<SaccStatistics*> * q,bool * bf,smsc::logger::Logger * lg);
 private:
