@@ -34,7 +34,6 @@ protected:
         int perfSvcPort;
         int perfScPort;
 
-#ifdef SACC_SENDER
 		
 public:
 		int getSaccPort() const;
@@ -45,7 +44,6 @@ protected:
 		std::string saccHost;
 		int saccPort;
 		IntHash<std::string> eventFilter;
-#endif 		
 
 };
 

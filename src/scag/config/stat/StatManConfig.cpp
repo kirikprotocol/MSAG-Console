@@ -10,11 +10,9 @@ StatManConfig::StatManConfig()
     perfGenPort = 0;
     perfSvcPort = 0;
     perfScPort = 0;
-#ifdef SACC_SENDER
 	saccPort=0;
 	saccHost="";
 	eventFilter.Empty();
-#endif
 
 }
 #ifdef TESTING
@@ -55,7 +53,6 @@ StatManConfig::StatManConfig(ConfigView& cv)  throw(ConfigException)
         perfSvcPort = cv.getInt("perfSvcPort");
         perfScPort  = cv.getInt("perfScPort");
 
-#ifdef SACC_SENDER		
 		std::auto_ptr<char> sch(cv.getString("saccHost"));
 		saccHost    = sch.get();
 		saccPort    = cv.getInt("saccPort");
@@ -65,7 +62,6 @@ StatManConfig::StatManConfig(ConfigView& cv)  throw(ConfigException)
 		eventFilter.Insert(1,"submit");
 		eventFilter.Insert(3,"billing");
 
-#endif		
     }
 	catch(ConfigException& e)
 	{
@@ -89,13 +85,11 @@ void StatManConfig::init(ConfigView& cv) throw(ConfigException)
         perfSvcPort = cv.getInt("perfSvcPort");
         perfScPort  = cv.getInt("perfScPort");
 
-#ifdef SACC_SENDER
 
 		std::auto_ptr<char> sch (cv.getString("saccHost"));
 		saccHost    = sch.get();
 		saccPort    = cv.getInt("saccPort");
 
-#endif
 
     }
 	catch(ConfigException& e)
@@ -145,13 +139,10 @@ int StatManConfig::getPerfGenPort() const { return perfGenPort; }
 int StatManConfig::getPerfSvcPort() const { return perfSvcPort; }
 int StatManConfig::getPerfScPort() const { return perfScPort; }
 
-#ifdef SACC_SENDER
 
 		    int StatManConfig::getSaccPort() const {return saccPort;}
 	    std::string StatManConfig::getSaccHost() const {return saccHost;}
 IntHash<std::string>	StatManConfig::getEventFiler() const {return eventFilter;}
-
-#endif
 
 }
 }
