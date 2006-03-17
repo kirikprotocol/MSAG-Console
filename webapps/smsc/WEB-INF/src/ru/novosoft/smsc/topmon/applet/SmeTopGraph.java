@@ -43,6 +43,10 @@ public class SmeTopGraph extends Canvas implements MouseListener, MouseMotionLis
   private static final Color colorGraphSubmit = Color.blue;
   private static final Color colorGraphSubmitErr = Color.white;
 
+  private static final int  scrollerWidth = 8;
+  int scrollPageRows = 10;
+  int scrollPos = 0;
+
   Image offscreen;
   int bottomSpace = pad;
   int topSpace = pad;
@@ -138,6 +142,7 @@ public class SmeTopGraph extends Canvas implements MouseListener, MouseMotionLis
                 headerHeight + rowHeight * 6 + pad);
 
         graphTextWidth = fmg.stringWidth("0000");
+        scrollPageRows = (sz.height-split)/rowHeight - 1;
       }
     }
     offscreen = null;
@@ -199,6 +204,7 @@ public class SmeTopGraph extends Canvas implements MouseListener, MouseMotionLis
     g.setColor(headColor);
     g.drawLine(pad, pad + fh + 1, size.width - pad, pad + fh + 1);
 
+    g.setClip(0, 0, size.width-scrollerWidth, size.height - split);
     // draw counters
     int y = headerHeight;
     x = 0;
@@ -212,7 +218,7 @@ public class SmeTopGraph extends Canvas implements MouseListener, MouseMotionLis
     }
     y = pad + fh + 3;
     x = smeListStart;
-    for (int i = 0; i < snap.smeCount; i++) {
+    for (int i = scrollPos; i < snap.smeCount && y < size.height-split; i++) {
       if ((i % 2) == 0) {
         g.setColor(colorHiBackground);
         g.fillRect(x + pad, y, size.width - x - 2 * pad, rowHeight);
@@ -225,6 +231,7 @@ public class SmeTopGraph extends Canvas implements MouseListener, MouseMotionLis
       drawGraph(g, size);
     }
     g.setClip(0, 0, size.width, size.height);
+    drawScroller(g, size);
     drawSeparator(g, size);
     drawErrTip(g, fm);
     gg.drawImage(offscreen, 0, 0, null);
@@ -245,6 +252,15 @@ public class SmeTopGraph extends Canvas implements MouseListener, MouseMotionLis
     g.setColor(SystemColor.controlShadow);
     g.drawLine(vp, pad, vp, size.height - pad - 1);
     if (split > 0) g.drawLine(pad, hp, size.width - pad, hp);
+  }
+
+  void drawScroller(Graphics g, Dimension size) {
+    g.setColor(smeColor);
+    g.drawLine(size.width-scrollerWidth, headerHeight, size.width-scrollerWidth, size.height-split);
+    g.setColor(graphHiGridColor);
+    int drowerSize = (scrollPageRows*(size.height-headerHeight-split))/snap.smeCount;
+    int drowerPos = (scrollPos*(size.height-headerHeight-split))/snap.smeCount;
+    g.fillRect(size.width-scrollerWidth+2, headerHeight+drowerPos, 4, drowerSize);
   }
 
   void drawErrSnap(Graphics g, int i, int x, int y, FontMetrics fm)
@@ -526,6 +542,7 @@ public class SmeTopGraph extends Canvas implements MouseListener, MouseMotionLis
     int y = e.getY();
     int x = e.getX();
     if (y < headerHeight) {
+      // clickedon header
       if (x < errListWidth) {
         // sort err list
         int sortid = x / (counterWidth + pad);
@@ -546,6 +563,7 @@ public class SmeTopGraph extends Canvas implements MouseListener, MouseMotionLis
         }
       }
       else if (x > smeListStart && x < smeGraphStart) {
+        // clicked on sme list header
         x -= smeListStart;
         int sortid = -1;
         if (x < smeNameWidth) {
@@ -576,8 +594,8 @@ public class SmeTopGraph extends Canvas implements MouseListener, MouseMotionLis
       if (x > smeListStart && x < smeListStart + smeNameWidth) {
         // click on sme name
         int idx = (y - headerHeight) / rowHeight;
-        if (idx < snap.smeCount) {
-          snapHistory.setCurrentSme(snap.smeSnap[idx].smeId);
+        if (idx+scrollPos < snap.smeCount) {
+          snapHistory.setCurrentSme(snap.smeSnap[idx+scrollPos].smeId);
           if (split == -1) split = maxSpeed * graphScale + rowHeight + separatorWidth + 2 * pad;
           invalidate();
           repaint();
@@ -645,10 +663,28 @@ public class SmeTopGraph extends Canvas implements MouseListener, MouseMotionLis
 //    System.out.println("Key pressed: "+e.getKeyCode());
     switch (e.getKeyCode()) {
       case KeyEvent.VK_UP:
-        shiftUp();
+        if( (e.getModifiers() & KeyEvent.SHIFT_MASK) != 0)
+          shiftUp();
+        else
+          scrollUp();
         break;
       case KeyEvent.VK_DOWN:
-        shiftDown();
+        if( (e.getModifiers() & KeyEvent.SHIFT_MASK) != 0)
+          shiftDown();
+        else
+          scrollDown();
+        break;
+      case KeyEvent.VK_PAGE_UP:
+        scrollPageUp();
+        break;
+      case KeyEvent.VK_PAGE_DOWN:
+        scrollPageDown();
+        break;
+      case KeyEvent.VK_HOME:
+        scrollHome();
+        break;
+      case KeyEvent.VK_END:
+        scrollEnd();
         break;
       default:
         break;
@@ -664,7 +700,6 @@ public class SmeTopGraph extends Canvas implements MouseListener, MouseMotionLis
     Dimension sz = getSize();
     if (sz.height - split < headerHeight + rowHeight * 6) return;
     split += shiftStep;
-    System.out.println("Split = " + split);
     invalidate();
     repaint();
   }
@@ -674,7 +709,56 @@ public class SmeTopGraph extends Canvas implements MouseListener, MouseMotionLis
     if (split <= 0) return;
     split -= shiftStep;
     if (split < 0) split = 0;
-    System.out.println("Split = " + split);
+    invalidate();
+    repaint();
+  }
+
+  public void scrollUp()
+  {
+    if( scrollPos <= 0 ) return;
+    scrollPos--;
+    invalidate();
+    repaint();
+  }
+
+  public void scrollDown()
+  {
+    if (scrollPos >= (snap.smeCount - scrollPageRows) ) return;
+    scrollPos++;
+    invalidate();
+    repaint();
+  }
+
+  public void scrollPageUp()
+  {
+    if( scrollPos <= 0 ) return;
+    scrollPos-=scrollPageRows;
+    if( scrollPos < 0 ) scrollPos=0;
+    invalidate();
+    repaint();
+  }
+
+  public void scrollPageDown()
+  {
+    if (scrollPos >= (snap.smeCount - scrollPageRows) ) return;
+    scrollPos+=scrollPageRows;
+    if (scrollPos > (snap.smeCount - scrollPageRows) ) scrollPos = snap.smeCount - scrollPageRows;
+    invalidate();
+    repaint();
+  }
+
+  public void scrollHome()
+  {
+    if( scrollPos <= 0 ) return;
+    scrollPos = 0;
+    invalidate();
+    repaint();
+  }
+
+  public void scrollEnd()
+  {
+    if (scrollPos >= (snap.smeCount - scrollPageRows) ) return;
+    scrollPos = snap.smeCount - scrollPageRows;
     invalidate();
     repaint();
   }
