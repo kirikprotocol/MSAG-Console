@@ -26,8 +26,7 @@
 #include "Performance.h"
 
 
-	#include "sacc/SACC_EventSender.h"
-	#include "sacc/SACC_SyncQueue.h"
+#include "sacc/SACC_EventSender.h"
 
 
 namespace scag {
@@ -156,7 +155,6 @@ namespace stat {
 
 		IntHash<std::string>       saccEventFiler;
 		EventSender thrSaccSender;
-		SyncQueue<SaccStatistics*> saccEventQueue;		
 
         int     currentIndex;
         bool    bExternalFlush;

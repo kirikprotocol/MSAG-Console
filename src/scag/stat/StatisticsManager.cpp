@@ -112,7 +112,7 @@ void StatisticsManager::configure(const StatManConfig& statManConfig)
 	smsc_log_debug(logger,"SACC configuration perfom to start");
 	int saccPort = statManConfig.getSaccPort();
 	std::string saccHost = statManConfig.getSaccHost();
-	thrSaccSender.init(saccHost,saccPort,100,&saccEventQueue,&isStarted,logger);
+	thrSaccSender.init(saccHost,saccPort,100,&isStarted,logger);
 	
 
 	
@@ -259,6 +259,8 @@ void StatisticsManager::registerEvent(const SmppStatEvent& se)
           }
       }
   }
+
+  thrSaccSender.Put(se.sacc_stat);
 }
 
 void StatisticsManager::registerEvent(const HttpStatEvent& se)
@@ -368,6 +370,8 @@ void StatisticsManager::registerEvent(const HttpStatEvent& se)
               }
         }
     }
+
+	thrSaccSender.Put(se.sacc_stat);
 }
     
     bool StatisticsManager::checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value)
@@ -700,16 +704,7 @@ void StatisticsManager::flushHttpCounters(int index)
                    flushTM.tm_mday, flushTM.tm_mon+1, flushTM.tm_year+1900,
                    flushTM.tm_hour, flushTM.tm_min, flushTM.tm_sec);
 
-	SaccStatistics * st = new SaccStatistics;
-	memset(st,0,sizeof(SaccStatistics));
-	
-	st->abonent_addr[0]='1';
-	st->abonent_addr[1]='.';
-	st->abonent_addr[2]='1';
-	st->abonent_addr[3]='.';
-	st->abonent_addr[4]='2';
 
-	saccEventQueue.Push(st);
 	
     try
     {
@@ -1104,6 +1099,8 @@ void StatisticsManager::flushTraffic()
 
     std::string path = traffloc + std::string("/SMPP/"); 
     dumpTraffic(traff, path);
+
+ 
 }
 
 void StatisticsManager::flushHttpTraffic()
@@ -1116,6 +1113,8 @@ void StatisticsManager::flushHttpTraffic()
 
     std::string path = traffloc + std::string("/HTTP/"); 
     dumpTraffic(traff, path);
+
+	
 }
 
 void StatisticsManager::dumpTraffic(const IntHash<TrafficRecord>& traff, const std::string& path)

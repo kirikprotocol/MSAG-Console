@@ -127,6 +127,32 @@ using smsc::smeman::SmeRecord;
 
 	  char receiver_phones[1024];
 	  char receiver_emails[1024];
+
+	  SaccStatistics(const SaccStatistics& src)
+      {
+		command_id	=	command_id;
+		timestamp	=	timestamp;
+		operator_id	=	operator_id;
+		provider_id	=	provider_id;
+		service_id=	service_id;
+		protocol_id	=	protocol_id;
+		protocol_command_id=	protocol_command_id;
+		protocol_command_status=	protocol_command_status;
+		direction	=	direction;
+		billing_command_id    =		billing_command_id;	
+		billing_command_status=		billing_command_status;	
+		media_type  =	media_type;	
+		category_id =	category_id;	
+		bill_value	=	bill_value;	
+		event_id	=	event_id;
+
+		memcpy(abonent_addr,src.abonent_addr,sizeof(abonent_addr));
+		memcpy(session_id,src.session_id,sizeof(session_id));
+		memcpy(bill_currency,src.bill_currency,sizeof(bill_currency));
+		memcpy(message,src.message,sizeof(message));
+		memcpy(receiver_phones,src.receiver_phones,sizeof(receiver_phones));
+		memcpy(receiver_emails,src.receiver_emails,sizeof(receiver_emails));
+	  }
 	};
 	
     struct SmppStatEvent

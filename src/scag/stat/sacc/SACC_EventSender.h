@@ -56,17 +56,22 @@ public:
 	EventSender();
 	virtual ~EventSender();
 	int Execute();
-	bool checkQueue();
-	bool processEvent(SaccStatistics * ev);
+	void Put(SaccStatistics& ev);
+
 	void Start();
-	void init(std::string& host,int port,int timeout,SyncQueue<SaccStatistics*> * q,bool * bf,smsc::logger::Logger * lg);
+	void init(std::string& host,int port,int timeout,bool * bf,smsc::logger::Logger * lg);
 private:
 
-	SyncQueue<SaccStatistics *> * pQueue;
+	SyncQueue<SaccStatistics *> eventsQueue;
 	bool * bStarted;
 	bool bConnected;
 	Socket SaccSocket;
+	std::string Host;
+	int Port;
+	bool checkQueue();
 	bool connect(std::string host,int port,int timeout);
+	bool processEvent(SaccStatistics * ev);
+	void makeTransportEvent(SaccStatistics * st,SACC_TRAFFIC_INFO_EVENT_t * ev);
 	smsc::logger::Logger * logger;
 };
 

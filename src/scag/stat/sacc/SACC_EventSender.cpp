@@ -20,6 +20,8 @@ EventSender::EventSender()
 	bStarted  = 0;
 	logger = 0;
 	bConnected=false;
+	Host="";
+	Port=0;
 }
 
 EventSender::~EventSender()
@@ -27,12 +29,12 @@ EventSender::~EventSender()
 
 }
 
-void EventSender::init(std::string& host,int port,int timeout, 
-					   SyncQueue<SaccStatistics*> * q,bool * bf,smsc::logger::Logger * lg)
+void EventSender::makeTransportEvent(SaccStatistics * st,SACC_TRAFFIC_INFO_EVENT_t * ev)
 {
 
-	if(!q)
-		throw Exception("EventSender::init Event queue is 0!");
+}
+void EventSender::init(std::string& host,int port,int timeout,bool * bf,smsc::logger::Logger * lg)
+{
 
 	if(!lg)
 		throw Exception("EventSender::init logger is 0");
@@ -40,25 +42,19 @@ void EventSender::init(std::string& host,int port,int timeout,
 	if(!bf)
 		throw Exception("EventSender::init start-stop flag is 0");
 
-	pQueue = q;
 	bStarted  = bf;
 	logger = lg;
-
-	smsc_log_debug(logger,"...connecting to SACC server host:%s port%d",host.c_str(),port);
-	
-	if(!connect(host,port,timeout))
-	{
-		throw Exception("Cannot connect to SACC ");
-	}
-
-	smsc_log_debug(logger,"EventSender::init confuration and connection succsess.");
+	Host = host;
+	Port= port;
+	bConnected=false;
+	smsc_log_debug(logger,"EventSender::init confuration succsess.");
 }
 
 bool EventSender::processEvent(SaccStatistics *ev)
 {
 
-	
 	smsc_log_debug(logger,"EventSender::Execute Sacc stat event processed from queue addr=%s",ev->abonent_addr);
+	SaccSocket.Write((char*)&ev->command_id,2);
 
 return true;
 }
@@ -66,13 +62,13 @@ return true;
 bool EventSender::checkQueue()
 {
 	SaccStatistics * ev;
-	if(pQueue->Pop(ev,1000))
+	if(eventsQueue.Pop(ev,1000))
 	{
 		if(ev)
-		
+		{	
 			processEvent(ev);
-		
-		delete ev;
+			delete ev;
+		}
 
 		return true;
 	}
@@ -84,11 +80,47 @@ bool EventSender::checkQueue()
 
 }
 
+bool EventSender::retrieveConnect()
+{
+	fd_set read;
+    FD_ZERO( &read );
+    FD_SET( SaccSocket.getSocket(), &read );
+
+    struct timeval tv;
+    tv.tv_sec = 0; 
+    tv.tv_usec = 500;
+
+    int n = select(  SaccSocket.getSocket()+1, &read, 0, 0, &tv );
+	
+	if(n>0)
+	{
+		bConnected=true;
+		return true;
+	}
+	else
+	{
+
+		if(connect(Host,Port,100))
+		{
+			bConnected=true;
+			return true;
+		}
+	}
+
+	bConnected=false;
+	return false;
+
+		
+}
+
 int EventSender::Execute()
 {
 	while( *bStarted)
 	{
-	 	checkQueue();
+		if(retrieveConnect())
+		{
+			checkQueue();
+		}
 	}
 	return 1;
 
@@ -96,6 +128,7 @@ int EventSender::Execute()
 
 bool EventSender::connect(std::string host, int port,int timeout)
 {
+
 	if(SaccSocket.Init(host.c_str(),port,timeout)==-1)
 	{
 		smsc_log_error(logger,"EventSender::connect Failed to init socket\n");
@@ -124,6 +157,13 @@ void EventSender::Start()
 {
 	Thread::Start();
 }
+
+void EventSender::Put(SaccStatistics& ev)
+{
+	SaccStatistics * pSt= new SaccStatistics(ev);
+	eventsQueue.Push(pSt); 
+}
+
 
 }//sacc
 }//stat
