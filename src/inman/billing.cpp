@@ -404,7 +404,8 @@ void Billing::ChargeAbonent(AbonentId ab_number, AbonentBillType ab_type)
     smsc_log_debug(logger, "Billing[%u.%u]: abonent type: %u",
                     _bconn->bConnId(), _bId, (unsigned)ab_type);
 
-    if (ab_type != smsc::inman::cache::btPrepaid)
+    if ((ab_type != smsc::inman::cache::btPrepaid)
+        && !_cfg.postpaidRPC.size())
         postpaidBill = true;
 
     if (!postpaidBill)
@@ -437,8 +438,10 @@ void Billing::onChargeSms(ChargeSms* sms)
     sms->export2CDR(cdr);
     sms->exportCAPInfo(csInfo);
 
-    smsc_log_debug(logger, "Billing[%u.%u]: Call.Adr <%s>, Dest.Adr <%s>",
-                    _bconn->bConnId(), _bId, cdr._srcAdr.c_str(), cdr._dstAdr.c_str());
+    smsc_log_debug(logger, "Billing[%u.%u]: %s: Call.Adr <%s>, Dest.Adr <%s>",
+                    _bconn->bConnId(), _bId, 
+                   (cdr._bearer == CDRRecord::dpUSSD) ? "dpUSSD" : "dpSMS",
+                   cdr._srcAdr.c_str(), cdr._dstAdr.c_str());
 
     postpaidBill = ( (_cfg.billMode == smsc::inman::BILL_ALL)
                     || ((_cfg.billMode == smsc::inman::BILL_USSD)
@@ -452,7 +455,7 @@ void Billing::onChargeSms(ChargeSms* sms)
     ab_number.fromText(cdr._srcAdr.c_str());
     AbonentBillType ab_type = _cfg.abCache->getAbonentInfo(ab_number.getSignals());
     if (!postpaidBill && (ab_type == smsc::inman::cache::btUnknown)
-        && !_cfg.postpaidRPC.size()) {
+        && !_cfg.postpaidRPC.size() && _cfg.abProvider) {
         //IN point unable to tell abonent billing type, request cache to retrieve it
         _cfg.abProvider->startQuery(ab_number.getSignals(), this);
 
@@ -524,22 +527,33 @@ void Billing::onContinueSMS(uint32_t inmanErr /* = 0*/)
     }
 }
 
-#define POSTPAID_RPCause 41     //RP Cause: 'Temporary Failure'
+//Huawei: #define POSTPAID_RPCause 41     //RP Cause: 'Temporary Failure'
 void Billing::onReleaseSMS(ReleaseSMSArg* arg)
 {
     bilMutex.Lock();
     smsc_log_debug(logger, "Billing[%u.%u]: SSF <-- SCF ReleaseSMS, RP cause: %u",
                    _bconn->bConnId(), _bId, (unsigned)arg->rPCause);
 
-    postpaidBill = true;
-    //check for RejectSMS causes:
-    for (RPCList::iterator it = _cfg.rejectRPC.begin();
-                            it != _cfg.rejectRPC.end(); it++) {
+    //check for RejectSMS causes for postpaid abonents:
+    for (RPCList::iterator it = _cfg.postpaidRPC.begin();
+                            it != _cfg.postpaidRPC.end(); it++) {
         if ((*it) == arg->rPCause) {
-            postpaidBill = false;
+            postpaidBill = true;
+            //to do: update cache
             break;
         }
     }
+    if (!postpaidBill) { //check for RejectSMS causes:
+        postpaidBill = true;
+        for (RPCList::iterator it = _cfg.rejectRPC.begin();
+                                it != _cfg.rejectRPC.end(); it++) {
+            if ((*it) == arg->rPCause) {
+                postpaidBill = false; //not the technical failure, abonent can't be charged
+                break;
+            }
+        }
+    }
+    
     ChargeSmsResult res(InErrRPCause, (uint16_t)arg->rPCause, postpaidBill ?
                         smsc::inman::interaction::CHARGING_POSSIBLE : 
                         smsc::inman::interaction::CHARGING_NOT_POSSIBLE);
