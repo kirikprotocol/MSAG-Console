@@ -32,7 +32,7 @@
 #include "core/network/Multiplexer.hpp"
 #include "core/network/Socket.hpp"
 #include "logger/Logger.h"
-#include "stat/Statistics.h"
+#include <scag/stat/Statistics.h>
 
 #include <string>
 using namespace smsc::core::threads;
@@ -42,6 +42,7 @@ using namespace smsc::logger;
 using smsc::util::Exception;
 using namespace scag::stat;
 using namespace scag::stat::Counters;
+
 namespace scag{
 namespace stat{
 namespace sacc{
