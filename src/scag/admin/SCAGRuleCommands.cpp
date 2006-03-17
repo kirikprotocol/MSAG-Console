@@ -29,13 +29,14 @@ CommandRuleBase::CommandRuleBase(const CommandIds::IDS ID, const xercesc::DOMDoc
 
 void CommandRuleBase::init()
 {
-    smsc_log_info(logger, "SCAGCommand '%s' rule got parameters:", m_ProcessName.c_str());
+    smsc_log_info(logger, "AdminCommand '%s' rule got parameters:", m_ProcessName.c_str());
+
     
     BEGIN_SCAN_PARAMS
     GETINTPARAM(key.serviceId, "serviceId")
     GETSTRPARAM_(strTransport, "transport")
     END_SCAN_PARAMS
-
+     
     scag::transport::TransportType * ttype;
     ttype = scag::transport::SCAGCommand::TransportTypeHash.GetPtr(strTransport.c_str());
 
@@ -52,7 +53,6 @@ void CommandRuleBase::init()
     {
         smsc_log_error(logger,"%d %s",value, key);
     }   */
-
 
     
     if (!ttype) 
@@ -80,7 +80,6 @@ Response * CommandRuleBase::CreateResponse(scag::Scag * SmscApp)
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     }        */
-
     try {
 
         processRuleCommand();
@@ -108,6 +107,7 @@ Response * CommandRuleBase::CreateResponse(scag::Scag * SmscApp)
         throw AdminException("Failed to %s rule. Unknown exception", m_ProcessName.c_str());
     }
 
+    smsc_log_error(logger,"Dvigaemsya dalshe, stadiya 5");
     Variant okRes("");
     return new Response(Response::Ok, okRes);
 }
@@ -119,8 +119,8 @@ Response * CommandRuleBase::CreateResponse(scag::Scag * SmscApp)
 using smsc::admin::service::Variant;
 using scag::exceptions::RuleEngineException;
 
-CommandAddRule::CommandAddRule(const xercesc::DOMDocument * document)
-    : CommandRuleBase(CommandIds::addRule, document)
+CommandAddRule::CommandAddRule(const xercesc::DOMDocument * doc)
+    : CommandRuleBase(CommandIds::addRule, doc)
 {
 
 
@@ -138,8 +138,8 @@ void CommandAddRule::processRuleCommand()
 
 //================================================================
 
-CommandRemoveRule::CommandRemoveRule(const xercesc::DOMDocument * document)
-    : CommandRuleBase(CommandIds::removeRule, document)
+CommandRemoveRule::CommandRemoveRule(const xercesc::DOMDocument * doc)
+    : CommandRuleBase(CommandIds::removeRule, doc)
 {
 
 }
@@ -156,8 +156,8 @@ void CommandRemoveRule::processRuleCommand()
 
 //================================================================
 
-CommandUpdateRule::CommandUpdateRule(const xercesc::DOMDocument * document)
-    : CommandRuleBase(CommandIds::updateRule, document)
+CommandUpdateRule::CommandUpdateRule(const xercesc::DOMDocument * doc)
+    : CommandRuleBase(CommandIds::updateRule, doc)
 {
 }
 

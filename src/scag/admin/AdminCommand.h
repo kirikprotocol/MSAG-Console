@@ -59,19 +59,19 @@ public:
   virtual ~AdminCommand(){}
 
 
-  virtual Response * AdminCommand::CreateResponse(scag::Scag * ScagApp)
+  virtual Response * CreateResponse(scag::Scag * ScagApp)
   {
       smsc_log_info(logger, "AdminCommand::CreateResponse has processed");
       return new Response(Response::Ok, "none");
   }
 
-  virtual Actions::CommandActions AdminCommand::GetActions()
+  virtual Actions::CommandActions GetActions()
   {
       Actions::CommandActions result;
       return result;
   }
 
-  virtual void AdminCommand::init() {}
+  virtual void init() {}
 
 protected:
     smsc::logger::Logger *logger;

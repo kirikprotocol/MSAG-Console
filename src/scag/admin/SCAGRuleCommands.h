@@ -16,11 +16,11 @@ protected:
     std::string m_ProcessName;
     std::string strTransport;
 
-    void init();
     virtual void processRuleCommand() = 0;
 public:
     CommandRuleBase(const CommandIds::IDS ID, const xercesc::DOMDocument * doc);
     virtual Response * CreateResponse(scag::Scag * SmscApp);
+    virtual void init();
 };
 
 

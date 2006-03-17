@@ -125,8 +125,8 @@ Response * CommandAddSme::CreateResponse(scag::Scag * ScagApp)
         smppMan->addSmppEntity(getSmppEntityInfo());
     } catch(Exception& e) {                                     
         char msg[1024];                                         
-        sprintf(msg, "Failed to add new SME. Details: %s", e.what());            \
-        smsc_log_error(logger, msg);                            \
+        sprintf(msg, "Failed to add new SME. Details: %s", e.what());
+        smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
         smsc_log_warn(logger, "Failed to add new SME. Unknown exception");        
@@ -167,8 +167,8 @@ Response * CommandDeleteSme::CreateResponse(scag::Scag * ScagApp)
         ScagApp->getSmppManagerAdmin()->deleteSmppEntity(systemId.c_str());
     } catch(Exception& e) {                                     
         char msg[1024];                                         
-        sprintf(msg, "Failed to delete SME. Details: %s", e.what());            \
-        smsc_log_error(logger, msg);                            \
+        sprintf(msg, "Failed to delete SME. Details: %s", e.what());
+        smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
         smsc_log_warn(logger, "Failed to delete SME. Unknown exception");        
@@ -208,8 +208,8 @@ Response * CommandUpdateSmeInfo::CreateResponse(scag::Scag * ScagApp)
         smppMan->updateSmppEntity(getSmppEntityInfo());  
     } catch(Exception& e) {                                     
         char msg[1024];                                         
-        sprintf(msg, "Failed to update SME. Details: %s", e.what());            \
-        smsc_log_error(logger, msg);                            \
+        sprintf(msg, "Failed to update SME. Details: %s", e.what());
+        smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
         smsc_log_warn(logger, "Failed to update SME. Unknown exception");        

@@ -167,22 +167,23 @@ SCAGCommandDispatcher::~SCAGCommandDispatcher()
 
 Response * SCAGCommandDispatcher::handle(const Command * const command) throw (AdminException)
 {
-  try
-  {
-    AdminCommand * adminCommand;
-    adminCommand = (AdminCommand *)command;
+    AdminCommand * adminCommand = 0;
+    Command * _command = const_cast<Command *>(command);
+    adminCommand = dynamic_cast<AdminCommand *>(_command);
 
-    adminCommand->init();
-    Response * result = adminCommand->CreateResponse(runner->getApp());
-    DoActions(adminCommand->GetActions());
-    return result;
-  } catch (AdminException &e) {
-    return new Response(Response::Error, e.what());
-  } catch (const char * const e) {
-    return new Response(Response::Error, e);
-  } catch (...) {
-    return new Response(Response::Error, "Unknown exception");
-  }
+    if (!adminCommand) throw AdminException("Fatal Error: Command is not a 'command' type");
+
+    try {
+        Response * result = adminCommand->CreateResponse(runner->getApp());
+        DoActions(adminCommand->GetActions());
+        return result;
+    } catch (AdminException &e) {
+        return new Response(Response::Error, e.what());
+    } catch (const char * const e) {
+        return new Response(Response::Error, e);
+    } catch (...) {
+        return new Response(Response::Error, "Unknown exception");
+    }
 }
 
 void SCAGCommandDispatcher::shutdown()

@@ -51,6 +51,11 @@ int SCAGCommandReader::getCommandIdByName(const char * const command_name)
 Command * SCAGCommandReader::createCommand(int id, const DOMDocument *data)
 {
   fprintf(stderr,"---- Create command \n");
+  if (!data) 
+  {
+      smsc_log_warn(logger, "Command document is invalid");
+      throw AdminException("Command document is invalid");
+  }
 
   switch (id)
   {
