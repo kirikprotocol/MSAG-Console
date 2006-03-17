@@ -53,7 +53,9 @@ bool EventSender::processEvent(SaccStatistics *ev)
 {
 
 	smsc_log_debug(logger,"EventSender::Execute Sacc stat event processed from queue addr=%s",ev->abonent_addr);
-	SaccSocket.Write((char*)&ev->command_id,2);
+
+	SaccSocket.Write((char *)ev,sizeof(SaccStatistics));
+
 
 return true;
 }
@@ -81,24 +83,16 @@ bool EventSender::checkQueue()
 
 bool EventSender::retrieveConnect()
 {
-	fd_set read;
-    FD_ZERO( &read );
-    FD_SET( SaccSocket.getSocket(), &read );
-
-    struct timeval tv;
-    tv.tv_sec = 0; 
-    tv.tv_usec = 500;
-
-    int n = select(  SaccSocket.getSocket()+1, &read, 0, 0, &tv );
 	
-	if(n>0)
+	if(SaccSocket.canWrite())
 	{
 		bConnected=true;
 		return true;
 	}
 	else
 	{
-
+		SaccSocket.Abort();
+		
 		if(connect(Host,Port,100))
 		{
 			bConnected=true;
