@@ -253,10 +253,10 @@ public:
     if(cached)f.OpenInMemory(0);
     DiskHashHeader h;
     h.Read(f);
-    if(h.magic!=_dh_magic)throw RTERROR("invalid file magic");
-    if(h.ver!=_dh_ver)throw RTERROR("incompatible version!");
+    if(h.magic!=_dh_magic)RTERROR("invalid file magic");
+    if(h.ver!=_dh_ver)RTERROR("incompatible version!");
     uint32_t crc=h.CalcHdrCrc();
-    if(crc!=h.hdrcrc32)throw RTERROR("header crc failire");
+    if(crc!=h.hdrcrc32)RTERROR("header crc failire");
     size=h.size;
     count=h.count;
   }
@@ -414,6 +414,10 @@ public:
     }
   }
   int Count(){return count;}
+  File& GetFile()
+  {
+    return f;
+  }
 };
 
 } //namespace buffers

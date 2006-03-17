@@ -50,7 +50,7 @@ namespace buffers{
 #define _TO_STR2_(x) #x
 #define _TO_STR_(x) _TO_STR2_(x)
 
-#define RTERROR(txt) runtime_error(txt " at " __FILE__ ":" _TO_STR_(__LINE__))
+#define RTERROR(txt) throw runtime_error(txt " at " __FILE__ ":" _TO_STR_(__LINE__))
 
 class FileException:public std::exception{
 public:
@@ -138,13 +138,21 @@ protected:
   mutable std::string errbuf;
 };
 
+class FileEventHandler{
+public:
+  virtual ~FileEventHandler(){}
+  enum{
+    openRead,openWrite,openRW,openCreate,openAppend
+  };
+  virtual void onOpen(int mode,const char* fileName)=0;
+  virtual void onRead(const void* data,size_t sz)=0;
+  virtual void onWrite(const void* data,size_t sz)=0;
+  virtual void onSeek(int whence,int64_t offset)=0;
+};
+
 class File{
 public:
-#ifdef _WIN32
   typedef int64_t offset_type;
-#else
-  typedef long long offset_type;
-#endif
   File():fd(-1)
   {
     flags=FLG_BUFFERED;
@@ -152,6 +160,7 @@ public:
     bufferSize=sizeof(initBuffer);
     bufferPosition=0;
     fileSize=0;
+    eventHandler=0;
   }
   ~File()
   {
@@ -176,6 +185,11 @@ public:
     std::swap(bufferPosition,swp.bufferPosition);
     std::swap(filename,swp.filename);
     std::swap(flags,swp.flags);
+  }
+
+  void SetEventHandler(FileEventHandler* handler)
+  {
+    eventHandler=handler;
   }
 
   void SwapBuffers(File& swp)
@@ -314,6 +328,7 @@ public:
     filename=fn;
     fd=open(fn,O_RDONLY|O_LARGEFILE,0644);
     if(fd==-1)throw FileException(FileException::errOpenFailed,fn);
+    if(eventHandler)eventHandler->onOpen(FileEventHandler::openRead,fn);
   }
   void WOpen(const char* fn)
   {
@@ -321,6 +336,7 @@ public:
     filename=fn;
     fd=open(fn,O_WRONLY|O_LARGEFILE|O_CREAT,0644);
     if(fd==-1)throw FileException(FileException::errOpenFailed,fn);
+    if(eventHandler)eventHandler->onOpen(FileEventHandler::openWrite,fn);
   }
   void RWOpen(const char* fn)
   {
@@ -328,6 +344,7 @@ public:
     filename=fn;
     fd=open(fn,O_RDWR|O_LARGEFILE,0644);
     if(fd==-1)throw FileException(FileException::errOpenFailed,fn);
+    if(eventHandler)eventHandler->onOpen(FileEventHandler::openRW,fn);
   }
   void RWCreate(const char* fn)
   {
@@ -335,6 +352,7 @@ public:
     filename=fn;
     fd=open(fn,O_CREAT|O_RDWR|O_TRUNC|O_LARGEFILE,0644);
     if(fd==-1)throw FileException(FileException::errOpenFailed,fn);
+    if(eventHandler)eventHandler->onOpen(FileEventHandler::openCreate,fn);
   }
   void Append(const char* fn)
   {
@@ -342,6 +360,7 @@ public:
     filename=fn;
     fd=open(fn,O_CREAT|O_WRONLY|O_APPEND|O_LARGEFILE,0644);
     if(fd==-1)throw FileException(FileException::errOpenFailed,fn);
+    if(eventHandler)eventHandler->onOpen(FileEventHandler::openAppend,fn);
   }
 
   void SetUnbuffered()
@@ -417,6 +436,7 @@ public:
     if((flags&FLG_BUFFERED) && (flags&FLG_RDBUF)!=FLG_RDBUF && sz<(size_t)bufferSize)
     {
       bufferUsed=read(fd,buffer,bufferSize);
+      if(eventHandler)eventHandler->onRead(buffer,bufferSize);
       bufferPosition=0;
       flags|=FLG_RDBUF;
     }
@@ -440,6 +460,7 @@ public:
         bufferUsed=read(fd,buffer,bufferSize);
         if(bufferUsed<sz)
           throw FileException(FileException::errEndOfFile,filename.c_str());
+        if(eventHandler)eventHandler->onRead(buffer,bufferUsed);
         memcpy(buf,buffer,sz);
         bufferPosition=sz;
         return sz+avail;
@@ -459,6 +480,7 @@ public:
         throw FileException(FileException::errEndOfFile,filename.c_str());
       }
     }
+    if(eventHandler)eventHandler->onRead(buf,sz);
     return rv;
   }
 
@@ -484,6 +506,7 @@ public:
     if(flags&FLG_RDBUF)
     {
       lseek(fd,-(bufferUsed-bufferPosition),SEEK_CUR);
+      if(eventHandler)eventHandler->onSeek(SEEK_CUR,-(bufferUsed-bufferPosition));
       flags&=~FLG_RDBUF;
     }
 
@@ -515,12 +538,14 @@ public:
         {
           throw FileException(FileException::errWriteFailed,filename.c_str());
         }
+        if(eventHandler)eventHandler->onWrite(buffer,bufferSize);
         if(sz>bufferSize)
         {
           if(write(fd,buf,sz)!=sz)
           {
             throw FileException(FileException::errWriteFailed,filename.c_str());
           }
+          if(eventHandler)eventHandler->onWrite(buf,sz);
         }else
         {
           memcpy(buffer,buf,sz);
@@ -534,6 +559,7 @@ public:
     }else
     {
       if(write(fd,buf,sz)!=sz)throw FileException(FileException::errWriteFailed,filename.c_str());
+      if(eventHandler)eventHandler->onWrite(buf,sz);
     }
 
   }
@@ -610,6 +636,7 @@ public:
 
       }
       if(lseek(fd,off,whence)==-1)throw FileException(FileException::errSeekFailed,filename.c_str());
+      if(eventHandler)eventHandler->onSeek(whence,off);
     }
   }
 
@@ -741,6 +768,7 @@ public:
       {
         if(write(fd,buffer,bufferPosition)!=bufferPosition)
           throw FileException(FileException::errWriteFailed,filename.c_str());
+        if(eventHandler)eventHandler->onWrite(buffer,bufferPosition);
         bufferPosition=0;
       }
       flags&=~FLG_WRBUF;
@@ -862,6 +890,7 @@ protected:
   int   flags;
   offset_type fileSize;
   std::string filename;
+  FileEventHandler* eventHandler;
 
   bool isBuffered()
   {
