@@ -26,8 +26,8 @@ public class TopMon extends Applet implements Runnable, MouseListener, ActionLis
   private ScrollPane pane;
   private SnapHistory snapHistory;
   private SmeTopGraph smeTopGraph;
-  private ErrTopGraph errTopGraph;
-  private ScreenSplitter screenSplitter;
+//  private ErrTopGraph errTopGraph;
+//  private ScreenSplitter screenSplitter;
   private int maxSpeed = 100;
   private int graphScale = 2;
   private int graphGrid = 5;
@@ -117,6 +117,7 @@ public class TopMon extends Applet implements Runnable, MouseListener, ActionLis
           gotFirstSnap(snap);
           while (!isStopping) {
             snap.read(is);
+            smeTopGraph.setSnap(snap);
 //              System.out.println("Got snap: ls="+snap.last[PerfSnap.IDX_DELIVER]+" le="+snap.last[PerfSnap.IDX_DELIVERERR]+" upt="+snap.uptime+" tm="+(new Date(snap.sctime*1000)).toString());
           }
         } catch (IOException ex) {
@@ -127,7 +128,7 @@ public class TopMon extends Applet implements Runnable, MouseListener, ActionLis
           validate();
           invalidate();
           try {
-            Thread.currentThread().sleep(10000);
+            Thread.sleep(10000);
           } catch (InterruptedException e1) {
           }
           ex.printStackTrace(System.out);
