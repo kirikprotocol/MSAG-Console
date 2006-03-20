@@ -29,7 +29,8 @@
 #include "sacc/SACC_EventSender.h"
 #include "sacc/SACC_Events.h"
 
-using namespace scag::stat:sacc;
+using namespace scag::stat::sacc;
+
 namespace scag {
 
 namespace stat {
