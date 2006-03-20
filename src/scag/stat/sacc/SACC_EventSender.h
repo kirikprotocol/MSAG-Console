@@ -59,7 +59,6 @@ public:
 	int Execute();
 	void Put(const SACC_TRAFFIC_INFO_EVENT_t& ev);
 	void Put(const SACC_BILLING_INFO_EVENT_t& ev);
-	void Put(const SACC_TRAFFIC_INFO_EVENT_t& ev);
 	void Put(const SACC_ALARM_MESSAGE_t & ev);
 	void Put(const SACC_SESSION_EXPIRATION_TIME_ALARM_t& ev);
 	void Put(const SACC_OPERATOR_NOT_FOUND_ALARM_t& ev);
