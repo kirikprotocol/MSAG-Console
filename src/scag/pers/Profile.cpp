@@ -62,8 +62,8 @@ Property* Profile::GetProperty(const char* str)
 		Property *p = properties.Get(str);
 		if(p->isExpired())
 		{
+			properties.Delete(str);
 			delete p;
-			properties.Delete(p->getName().c_str());
 			return NULL;
 		}
 		return p;
@@ -118,7 +118,7 @@ void Profile::Empty()
 void Profile::AddProperty(Property& prop)
 {
 	try{
-		Property* p = properties.Get(prop.getName().c_str());
+		Property *p = properties.Get(prop.getName().c_str());
 		*p = prop;
 		return;
 	}
