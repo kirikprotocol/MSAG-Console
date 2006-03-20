@@ -5,6 +5,7 @@
 #include "smpp/smpp.h"
 #include "core/buffers/File.hpp"
 #include <algorithm>
+#include "core/buffers/FixedLengthString.hpp"
 
 namespace smsc{
 namespace profiler{
@@ -63,22 +64,22 @@ inline const char* HideOptionToText(int ho)
 }
 
 struct Profile{
-  int codepage;
-  int reportoptions;
-  int hide;
-  std::string locale;
-  bool hideModifiable;
-
   std::string divert;
-  bool divertActive;
-  bool divertActiveAbsent;
-  bool divertActiveBlocked;
-  bool divertActiveBarred;
-  bool divertActiveCapacity;
-  bool divertModifiable;
-
-  bool udhconcat;
-  bool translit;
+  smsc::core::buffers::FixedLengthString<6> locale;
+  uint8_t codepage;
+  uint8_t reportoptions;
+  uint8_t hide;
+  bool hideModifiable:1;
+  bool divertActive:1;
+  bool divertActiveAbsent:1;
+  bool divertActiveBlocked:1;
+  bool divertActiveBarred:1;
+  bool divertActiveCapacity:1;
+  bool divertModifiable:1;
+  bool udhconcat:1;
+  bool translit:1;
+  uint32_t closedGroupId;
+  uint32_t accessMaskIn,accessMaskOut;
 
   File::offset_type offset;
 
@@ -158,6 +159,8 @@ struct Profile{
 
   void Write(File& f)const
   {
+
+
     f.WriteNetInt32(codepage);
     f.WriteNetInt32(reportoptions);
     f.WriteNetInt32(hide);
@@ -180,9 +183,11 @@ struct Profile{
     f.WriteByte(divertModifiable);
     f.WriteByte(udhconcat);
     f.WriteByte(translit);
+
   }
   void Read(File& f)
   {
+
     offset=f.Pos();
     codepage=f.ReadNetInt32();
     reportoptions=f.ReadNetInt32();
@@ -205,6 +210,7 @@ struct Profile{
     divertModifiable=f.ReadByte();
     udhconcat=f.ReadByte();
     translit=f.ReadByte();
+
   }
   static uint32_t Size()
   {
