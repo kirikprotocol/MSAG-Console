@@ -98,6 +98,7 @@ using smsc::smeman::SmeRecord;
 		SACC_EVENT_HEADER_t Header;
 		
 		uint32_t iOperatorId;
+		uint8_t  cDirection;
 		uint16_t pMessageText[MAX_TEXT_MESSAGE_LENGTH];//512*32
 		uint8_t  pSessionKey[MAX_SESSION_KEY_LENGTH];
 
@@ -107,6 +108,7 @@ using smsc::smeman::SmeRecord;
 			memset(pMessageText,0,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
 			memset(pSessionKey,0,MAX_SESSION_KEY_LENGTH);
 			iOperatorId=0;
+			cDirection=0;
 		};
 
 		SACC_TRAFFIC_INFO_EVENT_t(const SACC_TRAFFIC_INFO_EVENT_t & src)
@@ -115,6 +117,7 @@ using smsc::smeman::SmeRecord;
 			memcpy(pMessageText,src.pMessageText,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
 			memcpy(pSessionKey,src.pSessionKey,MAX_SESSION_KEY_LENGTH);
 			iOperatorId=src.iOperatorId;
+			cDirection=src.cDirection;
 		}
 
 	};

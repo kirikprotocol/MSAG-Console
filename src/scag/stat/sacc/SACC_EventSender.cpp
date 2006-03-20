@@ -271,7 +271,7 @@ void EventSender::performTransportEvent(const SACC_TRAFFIC_INFO_EVENT_t& e)
 
 	memcpy(buffer,&e.cDirection,sizeof(uint8_t));
 	
-	SaccSocket.Write(buffer,sizeof(SACC_TRAFFIC_INFO_EVENT_t));
+	SaccSocket.Write((char *)buffer,sizeof(SACC_TRAFFIC_INFO_EVENT_t));
 
 }
 void EventSender::performBillingEvent(const SACC_BILLING_INFO_EVENT_t& e)
