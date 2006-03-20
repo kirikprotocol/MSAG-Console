@@ -1271,7 +1271,7 @@ static int RsAsHide(smsc::db::ResultSet* rs,int idx)
 void Profiler::load(const char* filename)
 {
   const char sig[]="SMSCPROF";
-  const uint32_t ver=0x00010000;
+  const uint32_t ver=0x00010001;
   storeFileName=filename;
   hrtime_t st=gethrtime();
 
@@ -1423,7 +1423,7 @@ void Profiler::load(const char* filename)
 void Profiler::CreateOrOpenFileIfNeeded()
 {
   const char sig[]="SMSCPROF";
-  const uint32_t ver=0x00010000;
+  const uint32_t ver=0x00010001;
 
   if(storeFile.isOpened())return;
   using namespace smsc::cluster;

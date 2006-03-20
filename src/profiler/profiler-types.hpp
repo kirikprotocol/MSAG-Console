@@ -101,6 +101,10 @@ struct Profile{
     udhconcat=true;
     translit=true;
 
+    closedGroupId=0;
+    accessMaskIn=0xFFFFFFFF;
+    accessMaskOut=0xFFFFFFFF;
+
     offset=-1;
   }
 
@@ -127,6 +131,9 @@ struct Profile{
 
     udhconcat=src.udhconcat;
     translit=src.translit;
+    closedGroupId=src.closedGroupId;
+    accessMaskIn=src.accessMaskIn;
+    accessMaskOut=src.accessMaskOut;
     offset=src.offset;
     return *this;
   }
@@ -146,7 +153,10 @@ struct Profile{
            divertActiveBarred==src.divertActiveBarred &&
            divertActiveCapacity==src.divertActiveCapacity &&
            udhconcat==src.udhconcat &&
-           translit==src.translit
+           translit==src.translit &&
+           closedGroupId==src.closedGroupId &&
+           accessMaskIn==src.accessMaskIn &&
+           accessMaskOut==src.accessMaskOut
            ;
   }
 
@@ -183,6 +193,9 @@ struct Profile{
     f.WriteByte(divertModifiable);
     f.WriteByte(udhconcat);
     f.WriteByte(translit);
+    f.WriteNetInt32(closedGroupId);
+    f.WriteNetInt32(accessMaskIn);
+    f.WriteNetInt32(accessMaskOut);
 
   }
   void Read(File& f)
@@ -210,11 +223,14 @@ struct Profile{
     divertModifiable=f.ReadByte();
     udhconcat=f.ReadByte();
     translit=f.ReadByte();
+    closedGroupId=f.ReadNetInt32();
+    accessMaskIn=f.ReadNetInt32();
+    accessMaskOut=f.ReadNetInt32();
 
   }
   static uint32_t Size()
   {
-    return 4+4+4+32+1+32+1+1+1+1+1+1+1+1;
+    return 4+4+4+32+1+32+1+1+1+1+1+1+1+1+4+4+4;
   }
 
   string toString()const
@@ -236,6 +252,12 @@ struct Profile{
     sprintf(buf,"da=%c;",divertActive?'Y':'N');
     rv+=buf;
     sprintf(buf,"dm=%c;",divertModifiable?'Y':'N');
+    rv+=buf;
+    sprintf(buf,"cgId=%u;",closedGroupId);
+    rv+=buf;
+    sprintf(buf,"amI=%08x;",accessMaskIn);
+    rv+=buf;
+    sprintf(buf,"amO=%08x;",accessMaskOut);
     rv+=buf;
     return rv;
   }

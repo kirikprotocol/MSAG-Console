@@ -14,6 +14,7 @@
 #include "resourcemanager/ResourceManager.hpp"
 #include "util/udh.hpp"
 #include "core/buffers/FixedLengthString.hpp"
+#include "closedgroups/ClosedGroupsInterface.hpp"
 
 // строчка по русски, что б сработал autodetect :)
 
@@ -1012,6 +1013,13 @@ StateType StateMachine::submit(Tuple& t)
   __trace2__("SUBMIT_SM: lookup %s, result: %d,%d",sms->getOriginatingAddress().toString().c_str(),
     profile.reportoptions,profile.codepage);
 
+  if(profile.closedGroupId!=0 && !smsc::closedgroups::ClosedGroupsInterface::getInstance()->Check(profile.closedGroupId,sms->getDealiasedDestinationAddress()))
+  {
+    info2(smsLog,"SBM: msgId=%lld, denied by closed group(%d) check",t.msgId,profile.closedGroupId);
+    submitResp(t,sms,Status::SUBMITFAIL);
+    return ERROR_STATE;
+  }
+
   smsc::profiler::Profile orgprofile=profile;
 
   __trace2__("SUBMIT_SM: profile options=%d",profile.reportoptions);
@@ -1107,14 +1115,20 @@ StateType StateMachine::submit(Tuple& t)
     smsc::router::RouteInfo ri2;
     SmeProxy* prx;
     int idx;
-    if(smsc->routeSms(sms->getOriginatingAddress(),divDst,idx,prx,&ri2,src_proxy->getSmeIndex()))
-    {
-      if(prx && strcmp(prx->getSystemId(),"MAP_PROXY")!=0)
+    try{
+      if(smsc->routeSms(sms->getOriginatingAddress(),divDst,idx,prx,&ri2,src_proxy->getSmeIndex()))
       {
-        warn2(smsLog,"attempt to divert to non-map address:%s->%s",
-          sms->getOriginatingAddress().toString().c_str(),divDst.toString().c_str());
-        goto divert_failed;
+        if(prx && strcmp(prx->getSystemId(),"MAP_PROXY")!=0)
+        {
+          warn2(smsLog,"attempt to divert to non-map address:%s->%s",
+            sms->getOriginatingAddress().toString().c_str(),divDst.toString().c_str());
+          goto divert_failed;
+        }
       }
+    }catch(std::exception& e)
+    {
+      warn2(smsLog,"routing failed during divert check:%s",e.what());
+      goto divert_failed;
     }
     sms->setStrProperty(Tag::SMSC_DIVERTED_TO,divDst.toString().c_str());
     if(divertFlags&DF_UNCOND)
@@ -1151,9 +1165,17 @@ StateType StateMachine::submit(Tuple& t)
   //  Routing here
   //
 
-  bool has_route = smsc->routeSms(sms->getOriginatingAddress(),
-                          dst,
-                          dest_proxy_index,dest_proxy,&ri,src_proxy->getSmeIndex());
+  bool has_route = false;
+
+  try{
+    has_route=smsc->routeSms(sms->getOriginatingAddress(),
+                            dst,
+                            dest_proxy_index,dest_proxy,&ri,src_proxy->getSmeIndex());
+  }catch(std::exception& e)
+  {
+    warn2(smsLog,"Routing %s->%s failed:%s",sms->getOriginatingAddress().toString().c_str(),
+      dst.toString().c_str(),e.what());
+  }
 
   __trace2__("hide=%s, forceRP=%d",ri.hide?"true":"false",ri.replyPath);
 
@@ -2970,7 +2992,9 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
   }
 
   smsc::router::RouteInfo ri;
-  bool has_route = smsc->routeSms
+  bool has_route = false;
+  try{
+    has_route=smsc->routeSms
                     (
                       sms.getOriginatingAddress(),
                       dst,
@@ -2979,6 +3003,11 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
                       &ri,
                       smsc->getSmeIndex(sms.getSourceSmeId())
                     );
+  }catch(std::exception& e)
+  {
+    warn2(smsLog,"Routing %s->%s failed:%s",sms.getOriginatingAddress().toString().c_str(),
+     dst.toString().c_str(),e.what());
+  }
   if ( !has_route )
   {
     char from[32],to[32];
@@ -3775,7 +3804,14 @@ StateType StateMachine::deliveryResp(Tuple& t)
       }
 
       smsc::router::RouteInfo ri;
-      bool has_route = smsc->routeSms(sms.getOriginatingAddress(),dst,dest_proxy_index,dest_proxy,&ri,smsc->getSmeIndex(sms.getSourceSmeId()));
+      bool has_route = false;
+      try{
+        has_route=smsc->routeSms(sms.getOriginatingAddress(),dst,dest_proxy_index,dest_proxy,&ri,smsc->getSmeIndex(sms.getSourceSmeId()));
+      }catch(std::exception& e)
+      {
+        warn2(smsLog,"Routing %s->%s failed:%s",sms.getOriginatingAddress().toString().c_str(),
+          dst.toString().c_str(),e.what());
+      }
       if ( !has_route )
       {
         __warning__("CONCAT: No route");
@@ -4944,7 +4980,18 @@ void StateMachine::submitReceipt(SMS& sms,int type)
     int dest_proxy_index;
     SmeProxy *dest_proxy;
     smsc::router::RouteInfo ri;
-    if(smsc->routeSms(sms.getOriginatingAddress(),sms.getDealiasedDestinationAddress(),dest_proxy_index,dest_proxy,&ri))
+    bool has_route=false;
+    try{
+      has_route=smsc->routeSms(sms.getOriginatingAddress(),sms.getDealiasedDestinationAddress(),dest_proxy_index,dest_proxy,&ri);
+    }catch(std::exception& e)
+    {
+      warn2(smsLog,"Routing %s->%s failed:%s",sms.getOriginatingAddress().toString().c_str(),
+        sms.getDealiasedDestinationAddress().toString().c_str(),
+        e.what());
+    }
+
+
+    if(has_route)
     {
       sms.setRouteId(ri.routeId.c_str());
       int prio=sms.getPriority()+ri.priority;
