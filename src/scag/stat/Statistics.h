@@ -153,7 +153,6 @@ using smsc::smeman::SmeRecord;
 	{
 		SACC_EVENT_HEADER_t Header;
 
-		//uint16_t sEventType;					
 		uint8_t  pSessionKey[MAX_SESSION_KEY_LENGTH];
 		uint16_t pMessageText[MAX_TEXT_MESSAGE_LENGTH];
 
@@ -180,7 +179,6 @@ using smsc::smeman::SmeRecord;
 		SACC_EVENT_HEADER_t Header;
 
 		uint32_t iOperatorId;
-		//uint16_t sEventType;					
 		uint8_t  pSessionKey[MAX_SESSION_KEY_LENGTH];
 		uint16_t pMessageText[MAX_TEXT_MESSAGE_LENGTH];
 		SACC_SESSION_EXPIRATION_TIME_ALARM_t()
@@ -316,11 +314,11 @@ using smsc::smeman::SmeRecord;
 		
 		virtual bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value) = 0;
 
-        virtual void registerSaccEvent(const SACC_TRAFFIC_INFO_EVENT_t& ev) = 0;
-        virtual void registerSaccEvent(const SACC_BILLING_INFO_EVENT_t& ev) = 0;
-        virtual void registerSaccEvent(const SACC_OPERATOR_NOT_FOUND_ALARM_t& ev) = 0;
-        virtual void registerSaccEvent(const SACC_SESSION_EXPIRATION_TIME_ALARM_t& ev) = 0;
-        virtual void registerSaccEvent(const SACC_ALARM_MESSAGE_t& ev) = 0;
+        virtual void registerSaccEvent(const scag::stat::SACC_TRAFFIC_INFO_EVENT_t& ev) = 0;
+        virtual void registerSaccEvent(const scag::stat::SACC_BILLING_INFO_EVENT_t& ev) = 0;
+        virtual void registerSaccEvent(const scag::stat::SACC_OPERATOR_NOT_FOUND_ALARM_t& ev) = 0;
+        virtual void registerSaccEvent(const scag::stat::SACC_SESSION_EXPIRATION_TIME_ALARM_t& ev) = 0;
+        virtual void registerSaccEvent(const scag::stat::SACC_ALARM_MESSAGE_t& ev) = 0;
 
     protected:
 
