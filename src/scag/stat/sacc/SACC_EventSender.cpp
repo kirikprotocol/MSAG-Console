@@ -225,7 +225,7 @@ void EventSender::Put(const   SACC_OPERATOR_NOT_FOUND_ALARM_t& ev)
 {
 	SACC_OPERATOR_NOT_FOUND_ALARM_t* pEv = new SACC_OPERATOR_NOT_FOUND_ALARM_t(ev);
 		smsc_log_debug(logger,"EventSender::put SACC_OPERATOR_NOT_FOUND_ALARM_t addr=0x%X",pEv);
-	eventsQueue.Push(pEv)
+	eventsQueue.Push(pEv);
 }
 
 
