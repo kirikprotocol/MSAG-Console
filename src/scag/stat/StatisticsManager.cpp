@@ -1111,7 +1111,7 @@ void StatisticsManager::flushHttpTraffic()
     std::string path = traffloc + std::string("/HTTP/"); 
     dumpTraffic(traff, path);
 
-	for(int i=0;i<100;i++)
+	/*for(int i=0;i<100;i++)
 	{
 		SACC_TRAFFIC_INFO_EVENT_t ev1;
 		SACC_BILLING_INFO_EVENT_t ev2;
@@ -1125,7 +1125,7 @@ void StatisticsManager::flushHttpTraffic()
 		thrSaccSender.Put(ev4);
 		thrSaccSender.Put(ev5);
 
-	}
+	}*/
 	
 }
 
@@ -1938,31 +1938,31 @@ int StatisticsManager::indexByHttpCounter(int counter)
 
 void StatisticsManager::registerSaccEvent(const scag::stat::SACC_TRAFFIC_INFO_EVENT_t& ev)
 {
-	    MutexGuard  switchGuard(switchLock);
+	  //  MutexGuard  switchGuard(switchLock);
 
 	thrSaccSender.Put(ev);
 }
 void StatisticsManager::registerSaccEvent(const scag::stat::SACC_BILLING_INFO_EVENT_t& ev)
 {
-	    MutexGuard  switchGuard(switchLock);
+	  //  MutexGuard  switchGuard(switchLock);
 
 	thrSaccSender.Put(ev);
 }
 void StatisticsManager::registerSaccEvent(const scag::stat::SACC_OPERATOR_NOT_FOUND_ALARM_t& ev)
 {
-	    MutexGuard  switchGuard(switchLock);
+	  //  MutexGuard  switchGuard(switchLock);
 
 	thrSaccSender.Put(ev);
 }
 void StatisticsManager::registerSaccEvent(const scag::stat::SACC_SESSION_EXPIRATION_TIME_ALARM_t& ev)
 {
-	    MutexGuard  switchGuard(switchLock);
+	  //  MutexGuard  switchGuard(switchLock);
 
 	thrSaccSender.Put(ev);
 }
 void StatisticsManager::registerSaccEvent(const scag::stat::SACC_ALARM_MESSAGE_t& ev)
 {
-	    MutexGuard  switchGuard(switchLock);
+	  //  MutexGuard  switchGuard(switchLock);
 
 	thrSaccSender.Put(ev);
 }
