@@ -18,7 +18,7 @@ namespace scag { namespace transport { namespace http
          * @return  true if request was successfuly processed and
          *          accepted to forward to service
          */
-        bool processRequest(HttpRequest& request) = 0;
+        virtual bool processRequest(HttpRequest& request) = 0;
         
         /**
          * Should be called on HttpResponse comes from service.
@@ -28,7 +28,7 @@ namespace scag { namespace transport { namespace http
          * @return  true if response was successfuly processed and
          *          accepted to return to abonent
          */
-        bool processResponse(HttpResponse& response) = 0;
+        virtual bool processResponse(HttpResponse& response) = 0;
 
         /**
          * Should be called on HttpResponse delivery (ok or failed).
@@ -36,7 +36,7 @@ namespace scag { namespace transport { namespace http
          * @param   response - HttpResponse tried to deliver
          * @param   delivered - packet delivery outcome status (ok or failed).
          */
-        void statusResponse(const HttpResponse& response, bool delivered=true) = 0;
+        virtual void statusResponse(const HttpResponse& response, bool delivered=true) = 0;
 
     protected:
 
