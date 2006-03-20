@@ -151,6 +151,11 @@ public:
 
   bool haveDpf;
   int dpfResult;
+  bool haveDeliveryFailureReason;
+  uint8_t deliveryFailureReason;
+  bool haveNetworkErrorCode;
+  uint8_t networkErrorCode[3];
+  std::string additionalStatusInfoText;
 
 
   void set_messageId(const char* msgid)
@@ -229,7 +234,10 @@ public:
   }
 
   SmsResp() : messageId(0), status(0),dataSm(false),delay(-1),sms(0),diverted(false),
-    haveDpf(false),dpfResult(0),inDlgId(0) {};
+    haveDpf(false),dpfResult(0),inDlgId(0),
+    haveDeliveryFailureReason(false),deliveryFailureReason(0),
+    haveNetworkErrorCode(false)
+    {};
   ~SmsResp()
   {
     if ( messageId ) delete messageId;
@@ -1282,7 +1290,23 @@ public:
       }
       if(pdu->commandId==SmppCommandSet::DATA_SM_RESP)
       {
-        ((SmsResp*)_cmd->dta)->set_dataSm();
+        SmsResp* resp=((SmsResp*)_cmd->dta);
+        resp->set_dataSm();
+        PduDataSmResp* dsmResp=reinterpret_cast<PduDataSmResp*>(pdu);
+        if(dsmResp->get_optional().has_deliveryFailureReason())
+        {
+          resp->deliveryFailureReason=dsmResp->get_optional().get_deliveryFailureReason();
+          resp->haveDeliveryFailureReason=true;
+        }
+        if(dsmResp->get_optional().has_networkErrorCode())
+        {
+          memcpy(resp->networkErrorCode,dsmResp->get_optional().get_networkErrorCode(),3);
+          resp->haveNetworkErrorCode=true;
+        }
+        if(dsmResp->get_optional().has_additionalStatusInfoText())
+        {
+          resp->additionalStatusInfoText=dsmResp->get_optional().get_additionalStatusInfoText();
+        }
       }
       goto end_construct;
     }
@@ -1365,6 +1389,18 @@ public:
           if(c.get_resp()->haveDpf)
           {
             xsm->get_optional().set_dpfResult(c.get_resp()->dpfResult);
+          }
+          if(c.get_resp()->haveDeliveryFailureReason)
+          {
+            xsm->get_optional().set_deliveryFailureReason(c.get_resp()->deliveryFailureReason);
+          }
+          if(c.get_resp()->haveNetworkErrorCode)
+          {
+            xsm->get_optional().set_networkErrorCode(c.get_resp()->networkErrorCode);
+          }
+          if(c.get_resp()->additionalStatusInfoText.length())
+          {
+            xsm->get_optional().set_additionalStatusInfoText(c.get_resp()->additionalStatusInfoText.c_str());
           }
           return reinterpret_cast<SmppHeader*>(xsm.release());
         }else
