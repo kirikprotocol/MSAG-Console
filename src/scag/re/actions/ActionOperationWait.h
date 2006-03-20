@@ -19,8 +19,6 @@ public:
     virtual bool run(ActionContext& context);
     ActionOperationWait (){};
 
-    virtual ~ActionOperationWait();
-
 };
 
 }}}

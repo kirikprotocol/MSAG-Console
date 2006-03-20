@@ -24,7 +24,6 @@ struct SmppEntityInfo{
   buf::FixedLengthString<32> altHost;
   int  altPort;
   uint8_t uid;
-  int providerId;
 
   SmppEntityInfo()
   {

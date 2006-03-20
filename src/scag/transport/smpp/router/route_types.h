@@ -44,8 +44,6 @@ struct RouteInfo
   smsc::sms::Address source;
   smsc::sms::Address dest;
 
-  int32_t providerId;
-  int32_t categoryId;
   int32_t serviceId;
 };
 

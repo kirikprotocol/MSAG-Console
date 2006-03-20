@@ -15,7 +15,6 @@ void Abstract_CommandSmsc::init()
     smsc_log_info(logger, "Abstract_CommandSmsc got parameters:");
 
     smppEntityInfo.timeOut = -1;
-    smppEntityInfo.providerId = -1;
     smppEntityInfo.uid = -1;
     smppEntityInfo.port = -1;
     smppEntityInfo.altPort = -1;
@@ -27,7 +26,6 @@ void Abstract_CommandSmsc::init()
     GETSTRPARAM((char*)smppEntityInfo.bindSystemId,  "bindSystemId")
     GETSTRPARAM((char*)smppEntityInfo.bindPassword,  "bindPassword")
     GETINTPARAM(smppEntityInfo.timeOut,               "timeout")
-    GETINTPARAM(smppEntityInfo.providerId,            "providerId")
     GETINTPARAM(smppEntityInfo.uid,                   "uid")
             
     if (::strcmp("mode", name) == 0) 
@@ -57,7 +55,6 @@ void Abstract_CommandSmsc::init()
     if (smppEntityInfo.bindPassword == "") errorStr = "Unknown 'bindPassword' parameter";
         
     if (smppEntityInfo.timeOut == -1) errorStr = "Unknown 'timeOut' parameter";
-    if (smppEntityInfo.providerId == -1) errorStr = "Unknown 'providerId' parameter";
     if (smppEntityInfo.uid == -1) errorStr = "Unknown 'uid' parameter";
 
     if (smppEntityInfo.host == "") errorStr = "Unknown 'host' parameter";
@@ -103,8 +100,8 @@ Response * CommandDeleteSmsc::CreateResponse(scag::Scag * ScagApp)
     }
     catch(Exception& e) {                                     
         char msg[1024];                                         
-        sprintf(msg, "Failed to delete smsc. Details: %s", e.what());            \
-        smsc_log_error(logger, msg);                            \
+        sprintf(msg, "Failed to delete smsc. Details: %s", e.what());            
+        smsc_log_error(logger, msg);                            
         return new Response(Response::Error, msg);
     } catch (...) {
         smsc_log_warn(logger, "Failed to delete smsc. Unknown exception");        

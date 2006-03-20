@@ -166,9 +166,6 @@ static void ParseTag(SmppManager* smppMan,DOMNodeList* list,SmppEntityType et)
         case tag_mode:
           entity.bindType=GetBindType(attrs);
           break;
-        case tag_providerId:
-          entity.providerId=GetIntValue(attrs);
-          break;
         case tag_host:
           FillStringValue(attrs,entity.host);
           break;

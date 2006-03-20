@@ -309,12 +309,12 @@ void Scag::init()
     smsc::util::regexp::RegExp::InitLocale();
 
 
- /*   try {
+    try {
         InitLicense(*cfg.getLicConfig());
     } catch (exception& e) {
         smsc_log_error(log, "Cannot initialize license. Initialization stopped. %s", e.what());
         throw;
-    }*/
+    }
     //********************************************************
     //************** SmppManager initialization **************
     try {

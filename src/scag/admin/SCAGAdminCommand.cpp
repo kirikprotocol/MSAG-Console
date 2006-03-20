@@ -72,13 +72,13 @@ void Abstract_CommandSmeInfo::init()
     smppEntityInfo.systemId = "";
     smppEntityInfo.password = "";
     smppEntityInfo.timeOut = -1;
-    smppEntityInfo.providerId = -1;
+    //smppEntityInfo.providerId = -1;
 
     BEGIN_SCAN_PARAMS
     GETSTRPARAM((char*)smppEntityInfo.systemId,      "systemId")
     GETSTRPARAM((char*)smppEntityInfo.password,      "password")
     GETINTPARAM(smppEntityInfo.timeOut,              "timeout")
-    GETINTPARAM(smppEntityInfo.providerId,           "providerId")           
+    //GETINTPARAM(smppEntityInfo.providerId,           "providerId")           
 
     if (::strcmp("mode", name) == 0) 
     {
@@ -98,7 +98,6 @@ void Abstract_CommandSmeInfo::init()
     if (smppEntityInfo.systemId == "") errorStr = "Failed to tead Sme parameter 'systemId'";
     if (smppEntityInfo.password == "") errorStr = "Failed to tead Sme parameter 'password'";
     if (smppEntityInfo.timeOut == -1) errorStr = "Failed to tead Sme parameter 'timeout'";
-    if (smppEntityInfo.providerId == -1) errorStr = "Failed to tead Sme parameter 'providerId'";
 
     if (errorStr.size() > 0) 
     {

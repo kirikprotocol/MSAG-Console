@@ -113,8 +113,8 @@ void StateMachine::processSubmit(SmppCommand& cmd)
     return;
   }
 
-  sms.setIntProperty(Tag::SMSC_PROVIDERID,ri.providerId);
-  sms.setIntProperty(Tag::SMSC_CATEGORYID,ri.categoryId);
+  //sms.setIntProperty(Tag::SMSC_PROVIDERID,ri.providerId);
+  //sms.setIntProperty(Tag::SMSC_CATEGORYID,ri.categoryId);
   sms.setRouteId(ri.routeId);
   sms.setSourceSmeId(src->getSystemId());
   sms.setDestinationSmeId(dst->getSystemId());
@@ -211,8 +211,8 @@ void StateMachine::processDelivery(SmppCommand& cmd)
     return;
   }
 
-  sms.setIntProperty(Tag::SMSC_PROVIDERID,ri.providerId);
-  sms.setIntProperty(Tag::SMSC_CATEGORYID,ri.categoryId);
+  //sms.setIntProperty(Tag::SMSC_PROVIDERID,ri.providerId);
+  //sms.setIntProperty(Tag::SMSC_CATEGORYID,ri.categoryId);
   sms.setRouteId(ri.routeId);
   sms.setSourceSmeId(src->getSystemId());
   sms.setDestinationSmeId(dst->getSystemId());

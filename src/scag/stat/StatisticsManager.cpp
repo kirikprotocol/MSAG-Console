@@ -208,8 +208,6 @@ void StatisticsManager::registerEvent(const SmppStatEvent& se)
     if(routeSt) incError(routeSt->errors, se.errCode);
   }
 
-  if(smeSt && se.smeProviderId!=-1)smeSt->providerId=se.smeProviderId;
-  if(srvSt && se.smeProviderId!=-1)srvSt->providerId=se.smeProviderId;
   if(routeSt && se.routeProviderId!=-1)routeSt->providerId=se.routeProviderId;
 
   int c;

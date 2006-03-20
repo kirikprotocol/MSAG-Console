@@ -31,14 +31,11 @@ int Registrator::Execute()
 
     int counter = 0;
     int httpCounter = 0;
-    int providerId = 1;
 
     while(!isStopping)
     {
         SmppStatEvent si;
         HttpStatEvent hs;
-
-        if(++providerId == 5) providerId = 1;
 
         //=============== sme1 =====================
         if(++counter == 5) counter = 0;
@@ -46,7 +43,6 @@ int Registrator::Execute()
         for(int i = 0; i<= count - 1; i++){
             strcpy(si.smeId, "sme1");
             strcpy(si.routeId, "route1");
-            si.smeProviderId = providerId;
             si.routeProviderId = 1;
             si.counter = counter;
             si.internal = false;
@@ -59,7 +55,6 @@ int Registrator::Execute()
         for(int i = 0; i <= count - 1; i++){
             strcpy(si.smeId, "sme2");
             strcpy(si.routeId, "route3");
-            si.smeProviderId = providerId;
             si.routeProviderId = 3;
             si.counter = counter;
             si.internal = true;
@@ -71,7 +66,6 @@ int Registrator::Execute()
         if(++httpCounter == 6) httpCounter = 0;
         hs.routeId = "route1";
         hs.serviceId = "http1";
-        hs.serviceProviderId = providerId;
         hs.counter = httpCounter;
         hs.errCode = 1;
         count =  7. * ( (double)random() / 2147483648. ) + 1;

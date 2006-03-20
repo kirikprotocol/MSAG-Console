@@ -73,13 +73,6 @@ void CommandRuleBase::init()
 
 Response * CommandRuleBase::CreateResponse(scag::Scag * SmscApp)
 {
-   /* if (hasErrors) 
-    {
-        char msg[1024];                                         
-        sprintf(msg, "SCAGCommand '%s' rule: cannot process command - parameters is invalid", m_ProcessName.c_str());
-        smsc_log_error(logger, msg);
-        return new Response(Response::Error, msg);
-    }        */
     try {
 
         processRuleCommand();
@@ -107,7 +100,6 @@ Response * CommandRuleBase::CreateResponse(scag::Scag * SmscApp)
         throw AdminException("Failed to %s rule. Unknown exception", m_ProcessName.c_str());
     }
 
-    smsc_log_error(logger,"Dvigaemsya dalshe, stadiya 5");
     Variant okRes("");
     return new Response(Response::Ok, okRes);
 }

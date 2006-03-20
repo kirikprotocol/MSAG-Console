@@ -166,23 +166,31 @@ public:
     t.tm_year=y-1900;
     t.tm_mon=m;
     t.tm_mday=d;
-    license.expdate=mktime(&t);
+    license.expdate = mktime(&t);
     long hostid;
     std::string ids=lic["Hostids"];
     std::string::size_type pos=0;
-    bool ok=false;
-    do{
-      sscanf(ids.c_str()+pos,"%x",&hostid);
-      if(hostid==gethostid())
+    bool ok = false;
+
+    do {
+      sscanf(ids.c_str() + pos,"%x", &hostid);
+
+      if (hostid == gethostid())
       {
-        ok=true;break;
+        ok = true;
+        break;
       }
-      pos=ids.find(',',pos);
-      if(pos!=std::string::npos)pos++;
-    }while(pos!=std::string::npos);
-    if(!ok)throw runtime_error("");
-    if(smsc::util::crc32(0,lic["Product"].c_str(),lic["Product"].length())!=0x1D5DA434)throw runtime_error("");
-    if(license.expdate<time(NULL))
+
+      pos = ids.find(',', pos);
+      if (pos!=std::string::npos) pos++;
+
+    } while(pos!=std::string::npos);
+
+    if (!ok) throw runtime_error("code 1");
+
+    if (smsc::util::crc32(0,lic["Product"].c_str(),lic["Product"].length())!=0x1D5DA434) throw runtime_error("code 2");
+
+    if(license.expdate < time(NULL))
     {
       char x[]=
       {

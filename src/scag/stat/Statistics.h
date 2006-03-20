@@ -227,7 +227,6 @@ using smsc::smeman::SmeRecord;
     {
       char smeId[smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1];
       char routeId[smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH+1];
-      int  smeProviderId;
       int  routeProviderId;
 
       int counter;
@@ -239,7 +238,6 @@ using smsc::smeman::SmeRecord;
       {
         smeId[0]=0;
         routeId[0]=0;
-        smeProviderId=-1;
         routeProviderId=-1;
         counter = -1;
         errCode = -1;
@@ -248,9 +246,9 @@ using smsc::smeman::SmeRecord;
       }
       SmppStatEvent(scag::transport::smpp::SmppEntityInfo& smppEntity, int cnt, int errcode)
       {
-		strncpy(smeId, smppEntity.systemId, sizeof(smeId));
-        smeProviderId = smppEntity.providerId;
-		routeId[0]=0;
+        strncpy(smeId, smppEntity.systemId, sizeof(smeId));
+        routeId[0]=0;
+
         routeProviderId=-1;
         counter = cnt;
         errCode = errcode;
@@ -259,9 +257,7 @@ using smsc::smeman::SmeRecord;
       SmppStatEvent(scag::transport::smpp::SmppEntityInfo& smppEntity, scag::transport::smpp::router::RouteInfo& ri, int cnt, int errcode)
       {
         strncpy(smeId, smppEntity.systemId, sizeof(smeId));
-        smeProviderId = smppEntity.providerId;
         strncpy(routeId, (char*)ri.routeId, sizeof(routeId));
-        routeProviderId=ri.providerId;
         counter = cnt;
         errCode = errcode;
         internal = ( smppEntity.type == scag::transport::smpp::etSmsc );
@@ -270,7 +266,6 @@ using smsc::smeman::SmeRecord;
       {
         memcpy(smeId,src.smeId,sizeof(smeId));
         memcpy(routeId,src.routeId,sizeof(routeId));
-        smeProviderId=src.smeProviderId;
         routeProviderId=src.routeProviderId;
         counter = src.counter;
         errCode = src.errCode;
