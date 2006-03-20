@@ -17,7 +17,6 @@
 #endif
 
 #define RE_STATIC_LOCALE
-#define UNICODE
 
 #ifdef RE_SPINOZA_MODE
   #define RE_EXTERNAL_CTYPE
