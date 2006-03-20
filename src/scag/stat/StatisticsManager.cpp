@@ -1958,7 +1958,7 @@ void StatisticsManager::registerSaccEvent(const scag::stat::sacc::SACC_SESSION_E
 }
 void StatisticsManager::registerSaccEvent(const scag::stat::sacc::SACC_ALARM_MESSAGE_t& ev)
 {
-
+	thrSaccSender.Put(ev);
 }
 
 }//namespace stat
