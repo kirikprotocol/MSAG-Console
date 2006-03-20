@@ -262,15 +262,15 @@ namespace stat {
 
         virtual void registerEvent(const SmppStatEvent& se);
         virtual void registerEvent(const HttpStatEvent& se);
+       bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value);
 
-		virtual void registerSaccEvent(SACC_TRAFFIC_INFO_EVENT_t& ev);
-		virtual void registerSaccEvent(SACC_BILLING_INFO_EVENT_t& ev);
-		virtual void registerSaccEvent(SACC_OPERATOR_NOT_FOUND_ALARM_t& ev);
-		virtual void registerSaccEvent(SACC_SESSION_EXPIRATION_TIME_ALARM_t& ev);
-		virtual void registerSaccEvent(SACC_ALARM_MESSAGE_t& ev);
+		virtual void registerSaccEvent(const SACC_TRAFFIC_INFO_EVENT_t& ev);
+		virtual void registerSaccEvent(const SACC_BILLING_INFO_EVENT_t& ev);
+		virtual void registerSaccEvent(const SACC_OPERATOR_NOT_FOUND_ALARM_t& ev);
+		virtual void registerSaccEvent(const SACC_SESSION_EXPIRATION_TIME_ALARM_t& ev);
+		virtual void registerSaccEvent(const SACC_ALARM_MESSAGE_t& ev);
 
-        bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value);
-
+ 
         virtual void getSmppPerfData(uint64_t *cnt);
         //virtual void getHttpPerfData(uint64_t *cnt);
         virtual void reportGenPerformance(PerformanceData * data);

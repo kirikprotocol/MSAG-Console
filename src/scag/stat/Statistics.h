@@ -7,6 +7,7 @@
 #include <sms/sms.h>
 #include "scag/transport/smpp/router/route_types.h"
 #include "scag/transport/smpp/SmppManagerAdmin.h"
+#include "sacc/SACC_Events.h"
 
 #include <inttypes.h>
 
@@ -141,6 +142,12 @@ using smsc::smeman::SmeRecord;
         virtual void registerEvent(const HttpStatEvent& se) = 0;
 		
         virtual bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value) = 0;
+
+		virtual void registerSaccEvent(const SACC_TRAFFIC_INFO_EVENT_t& ev)=0;
+		virtual void registerSaccEvent(const SACC_BILLING_INFO_EVENT_t& ev)=0;
+		virtual void registerSaccEvent(const SACC_OPERATOR_NOT_FOUND_ALARM_t& ev)=0;
+		virtual void registerSaccEvent(const SACC_SESSION_EXPIRATION_TIME_ALARM_t& ev)=0;
+		virtual void registerSaccEvent(const SACC_ALARM_MESSAGE_t& ev)=0;
 
     protected:
 
