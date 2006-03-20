@@ -11,11 +11,12 @@
 
 #include <inttypes.h>
 
-
+using namespace smsc::stat::sacc;
 namespace scag {
 namespace stat {
 
 using smsc::smeman::SmeRecord;
+
 
     namespace Counters
     {

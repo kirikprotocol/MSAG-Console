@@ -107,15 +107,14 @@ int EventSender::Execute()
 {
 	while( *bStarted)
 	{
-		//if(retrieveConnect())
+		if(retrieveConnect())
 		{
 			checkQueue();
 
 		}
-		//else
+		else
 		{
-		//	sleep(100);
-			
+			sleep(100);
 		}
 	}
 	return 1;
