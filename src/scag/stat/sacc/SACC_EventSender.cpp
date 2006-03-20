@@ -61,13 +61,16 @@ bool EventSender::processEvent(void *ev)
 		{
 			SACC_TRAFFIC_INFO_EVENT_t e;
 			memcpy(&e,ev,sizeof(SACC_TRAFFIC_INFO_EVENT_t));
+			delete (SACC_TRAFFIC_INFO_EVENT_t*)ev;
 			performTransportEvent(e);
+			
 		}
  		break;
 	case SaccEventsCommandIds::sec_bill:
 		{
 			SACC_BILLING_INFO_EVENT_t e;
 			memcpy(&e,ev,sizeof(SACC_BILLING_INFO_EVENT_t));
+			delete (SACC_BILLING_INFO_EVENT_t*)ev;
 			performBillingEvent(e);
 		}
  		break;
@@ -75,6 +78,7 @@ bool EventSender::processEvent(void *ev)
 		{
 			SACC_ALARM_MESSAGE_t e;
 			memcpy(&e,ev,sizeof(SACC_ALARM_MESSAGE_t));
+			delete (SACC_ALARM_MESSAGE_t*)ev;
 			performAlarmEvent(e);
 		}
 		break;
@@ -82,6 +86,7 @@ bool EventSender::processEvent(void *ev)
 		{
 			SACC_SESSION_EXPIRATION_TIME_ALARM_t e;
 			memcpy(&e,ev,sizeof(SACC_SESSION_EXPIRATION_TIME_ALARM_t));
+			delete (SACC_SESSION_EXPIRATION_TIME_ALARM_t*)ev;
 			performSessionExpiredEvent(e);
 		}
  		break;
@@ -89,6 +94,7 @@ bool EventSender::processEvent(void *ev)
 		{
 			SACC_OPERATOR_NOT_FOUND_ALARM_t e;
 			memcpy(&e,ev,sizeof(SACC_OPERATOR_NOT_FOUND_ALARM_t));
+			delete (SACC_OPERATOR_NOT_FOUND_ALARM_t*)ev;
 			performOperatorNotFoundEvent(e);
 		}
  		break;
@@ -107,7 +113,7 @@ bool EventSender::checkQueue()
 		if(ev)
 		{	
 			processEvent(ev);
-		   	delete ev;
+		   	
 		}
 
 		return true;
@@ -231,8 +237,42 @@ void EventSender::Put(const   SACC_OPERATOR_NOT_FOUND_ALARM_t& ev)
 
 void EventSender::performTransportEvent(const SACC_TRAFFIC_INFO_EVENT_t& e)
 {
-	//std::basic_ostream buff;
-	//buff << e.Header.sEventType << e.Header.pAbonentNumber;
+	uint8_t * buffer = new uint8_t[sizeof(SACC_TRAFFIC_INFO_EVENT_t)];
+	memcpy(buffer,&e.Header.sEventType,sizeof(uint16_t));
+	buffer+=sizeof(uint16_t);
+	memcpy(buffer,e.Header.pAbonentNumber,MAX_ABONENT_NUMBER_LENGTH);
+	buffer+=MAX_ABONENT_NUMBER_LENGTH;
+	memcpy(buffer,e.Header.lDateTime,sizeof(uint64_t));
+	buffer+=sizeof(uint64_t);
+
+	memcpy(buffer,e.iOperatorId,sizeof(uint32_t));
+	buffer+=sizeof(uint32_t);
+
+	memcpy(buffer,e.Header.iServiceProviderId,sizeof(uint32_t));
+	buffer+=sizeof(uint32_t);
+	
+	memcpy(buffer,e.Header.iServiceId,sizeof(uint32_t));
+	buffer+=sizeof(uint32_t);
+
+	memcpy(buffer,e.pSessionKey,MAX_SESSION_KEY_LENGTH);
+	buffer+=MAX_SESSION_KEY_LENGTH;
+
+	memcpy(buffer,e.Header.cProtocolId,sizeof(uint8_t));
+	buffer+=sizeof(uint8_t);
+
+	memcpy(buffer,e.Header.cCommandId,sizeof(uint8_t));
+	buffer+=sizeof(uint8_t);
+
+	memcpy(buffer,e.Header.sCommandStatus,sizeof(uint16_t));
+	buffer+=sizeof(uint16_t);
+
+	memcpy(buffer,e.pMessageText,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
+	buffer+=MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t);
+
+	memcpy(buffer,e.cDirection,sizeof(uint8_t));
+	
+	SaccSocket.Write(buffer,sizeof(SACC_TRAFFIC_INFO_EVENT_t));
+
 }
 void EventSender::performBillingEvent(const SACC_BILLING_INFO_EVENT_t& e)
 {
