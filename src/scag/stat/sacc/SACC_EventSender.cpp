@@ -242,34 +242,34 @@ void EventSender::performTransportEvent(const SACC_TRAFFIC_INFO_EVENT_t& e)
 	buffer+=sizeof(uint16_t);
 	memcpy(buffer,e.Header.pAbonentNumber,MAX_ABONENT_NUMBER_LENGTH);
 	buffer+=MAX_ABONENT_NUMBER_LENGTH;
-	memcpy(buffer,e.Header.lDateTime,sizeof(uint64_t));
+	memcpy(buffer,&e.Header.lDateTime,sizeof(uint64_t));
 	buffer+=sizeof(uint64_t);
 
-	memcpy(buffer,e.iOperatorId,sizeof(uint32_t));
+	memcpy(buffer,&e.iOperatorId,sizeof(uint32_t));
 	buffer+=sizeof(uint32_t);
 
-	memcpy(buffer,e.Header.iServiceProviderId,sizeof(uint32_t));
+	memcpy(buffer,&e.Header.iServiceProviderId,sizeof(uint32_t));
 	buffer+=sizeof(uint32_t);
 	
-	memcpy(buffer,e.Header.iServiceId,sizeof(uint32_t));
+	memcpy(buffer,&e.Header.iServiceId,sizeof(uint32_t));
 	buffer+=sizeof(uint32_t);
 
 	memcpy(buffer,e.pSessionKey,MAX_SESSION_KEY_LENGTH);
 	buffer+=MAX_SESSION_KEY_LENGTH;
 
-	memcpy(buffer,e.Header.cProtocolId,sizeof(uint8_t));
+	memcpy(buffer,&e.Header.cProtocolId,sizeof(uint8_t));
 	buffer+=sizeof(uint8_t);
 
-	memcpy(buffer,e.Header.cCommandId,sizeof(uint8_t));
+	memcpy(buffer,&e.Header.cCommandId,sizeof(uint8_t));
 	buffer+=sizeof(uint8_t);
 
-	memcpy(buffer,e.Header.sCommandStatus,sizeof(uint16_t));
+	memcpy(buffer,&e.Header.sCommandStatus,sizeof(uint16_t));
 	buffer+=sizeof(uint16_t);
 
 	memcpy(buffer,e.pMessageText,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
 	buffer+=MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t);
 
-	memcpy(buffer,e.cDirection,sizeof(uint8_t));
+	memcpy(buffer,&e.cDirection,sizeof(uint8_t));
 	
 	SaccSocket.Write(buffer,sizeof(SACC_TRAFFIC_INFO_EVENT_t));
 
