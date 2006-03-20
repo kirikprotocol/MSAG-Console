@@ -1,3 +1,5 @@
+/* $Id$ */
+
 #include <xercesc/util/XMLUniDefs.hpp>
 #include <xercesc/sax/AttributeList.hpp>
 #include <xercesc/sax/SAXParseException.hpp>
