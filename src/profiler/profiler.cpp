@@ -28,6 +28,8 @@
 
 #include "cluster/Interconnect.h"
 
+#include "closedgroups/ClosedGroupsInterface.hpp"
+
 namespace smsc{
 namespace profiler{
 
@@ -224,21 +226,30 @@ int Profiler::update(const Address& address,const Profile& profile)
   if(prof==profile)return pusUnchanged;
 
   if(notifier)notifier->AddChange(address,profile);
+  uint32_t oldClGroupId=prof.closedGroupId;
 
   try{
-  if(exact)
-  {
-    prof.assign(profile);
-    fileUpdate(address,prof);
-    debug2(log,"update %s/%#llx",address.toString().c_str(),prof.offset);
-    return pusUpdated;
-  }else
-  {
-    Profile& profRef=profiles->add(address,profile);
-    fileInsert(address,profRef);
-    debug2(log,"insert %s/%#llx",address.toString().c_str(),profRef.offset);
-    return pusInserted;
-  }
+    int rv;
+    if(exact)
+    {
+      prof.assign(profile);
+      fileUpdate(address,prof);
+      debug2(log,"update %s/%#llx",address.toString().c_str(),prof.offset);
+      rv=pusUpdated;
+    }else
+    {
+      Profile& profRef=profiles->add(address,profile);
+      fileInsert(address,profRef);
+      debug2(log,"insert %s/%#llx",address.toString().c_str(),profRef.offset);
+      rv=pusInserted;
+    }
+    if(prof.closedGroupId!=oldClGroupId)
+    {
+      smsc::closedgroups::ClosedGroupsInterface *cgi=smsc::closedgroups::ClosedGroupsInterface::getInstance();
+      if(oldClGroupId!=0)cgi->RemoveAbonent(oldClGroupId,address);
+      if(prof.closedGroupId!=0)cgi->AddAbonent(prof.closedGroupId,address);
+    }
+    return rv;
   }catch(std::exception& e)
   {
     smsc_log_error(log, "exception during profile update/insert:%s",e.what());
@@ -1304,6 +1315,8 @@ void Profiler::load(const char* filename)
 
   char magic[9]={0,};
 
+  smsc::closedgroups::ClosedGroupsInterface *cgi=smsc::closedgroups::ClosedGroupsInterface::getInstance();
+
   while(pos<sz)
   {
     bool used=storeFile.ReadByte();
@@ -1318,6 +1331,7 @@ void Profiler::load(const char* filename)
       ReadAddress(storeFile,addr);
       p.Read(storeFile);
       profiles->add(addr,p);
+      if(p.closedGroupId!=0)cgi->AddAbonent(p.closedGroupId,addr);
     }else
     {
       holes.push_back(pos);
