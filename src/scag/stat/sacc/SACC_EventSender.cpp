@@ -50,11 +50,53 @@ bool EventSender::processEvent(void *ev)
 {
 
  smsc_log_debug(logger,"EventSender::Execute Sacc stat event processed from queue addr=0x%X",ev);
+	
+ uint16_t evType=0;
 
-//	SaccSocket.Write((char *)ev,sizeof(SaccStatistics));
+ memcpy(&evType,ev,sizeof(uint16_t)); 		
+
+	switch(evType) 
+	{
+	case SaccEventsCommandIds::sec_transport:
+		{
+			SACC_TRAFFIC_INFO_EVENT_t e;
+			memcpy(&e,ev,sizeof(SACC_TRAFFIC_INFO_EVENT_t));
+			performTransportEvent(e);
+		}
+ 		break;
+	case SaccEventsCommandIds::sec_bill:
+		{
+			SACC_BILLING_INFO_EVENT_t e;
+			memcpy(&e,ev,sizeof(SACC_BILLING_INFO_EVENT_t));
+			performBillingEvent(e);
+		}
+ 		break;
+	case SaccEventsCommandIds::sec_alarm:
+		{
+			SACC_ALARM_MESSAGE_t e;
+			memcpy(&e,ev,sizeof(SACC_ALARM_MESSAGE_t));
+			performAlarmEvent(e);
+		}
+		break;
+	case SaccEventsCommandIds::sec_session_expired:
+		{
+			SACC_SESSION_EXPIRATION_TIME_ALARM_t e;
+			memcpy(&e,ev,sizeof(SACC_SESSION_EXPIRATION_TIME_ALARM_t));
+			performSessionExpiredEvent(e);
+		}
+ 		break;
+	case SaccEventsCommandIds::sec_operator_not_found:
+		{
+			SACC_OPERATOR_NOT_FOUND_ALARM_t e;
+			memcpy(&e,ev,sizeof(SACC_OPERATOR_NOT_FOUND_ALARM_t));
+			performOperatorNotFoundEvent(e);
+		}
+ 		break;
 
 
-return true;
+	 default:
+	 }
+ return true;
 }
 
 bool EventSender::checkQueue()
@@ -183,9 +225,27 @@ void EventSender::Put(const   SACC_OPERATOR_NOT_FOUND_ALARM_t& ev)
 {
 	SACC_OPERATOR_NOT_FOUND_ALARM_t* pEv = new SACC_OPERATOR_NOT_FOUND_ALARM_t(ev);
 		smsc_log_debug(logger,"EventSender::put SACC_OPERATOR_NOT_FOUND_ALARM_t addr=0x%X",pEv);
-	eventsQueue.Push(pEv);
+	eventsQueue.Push(pEv)
 }
 
+
+void EventSender::performTransportEvent(const SACC_TRAFFIC_INFO_EVENT_t& e)
+{
+	//std::basic_ostream buff;
+	//buff << e.Header.sEventType << e.Header.pAbonentNumber;
+}
+void EventSender::performBillingEvent(const SACC_BILLING_INFO_EVENT_t& e)
+{
+}
+void EventSender::performAlarmEvent(const SACC_ALARM_MESSAGE_t& e)
+{
+}
+void EventSender::performSessionExpiredEvent(const SACC_SESSION_EXPIRATION_TIME_ALARM_t& e)
+{
+}
+void EventSender::performOperatorNotFoundEvent(const SACC_OPERATOR_NOT_FOUND_ALARM_t& e)
+{
+}
 
 }//sacc
 }//stat
