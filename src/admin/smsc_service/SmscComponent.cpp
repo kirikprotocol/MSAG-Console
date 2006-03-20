@@ -1295,6 +1295,13 @@ throw (AdminException)
       result.appendValueToStringList((profile.codepage & 0x80) != 0 ? "true" : "false");
       result.appendValueToStringList(profile.udhconcat ? "true" : "false");
       result.appendValueToStringList(profile.translit ? "true" : "false");
+      char numBuf[32];
+      sprintf(numBuf,"%u",profile.closedGroupId);
+      result.appendValueToStringList(numBuf);
+      sprintf(numBuf,"%u",profile.accessMaskIn);
+      result.appendValueToStringList(numBuf);
+      sprintf(numBuf,"%u",profile.accessMaskOut);
+      result.appendValueToStringList(numBuf);
       return result;
     }
     else
@@ -1320,7 +1327,10 @@ throw (AdminException)
   const char* divertModifiable  = *i++;
   const char* ussd7bit          = *i++;
   const char* udhConcat         = *i++;
-  const char* translit          = *i;
+  const char* translit          = *i++;
+  const char* closedGroupId     = *i++;
+  const char* accessMaskIn      = *i++;
+  const char* accessMaskOut     = *i;
 
   if (!codepageStr || !reportStr || !localeStr || !hideStr || !hideModifiableStr
     || !divert || !divertActive || !divertModifiable || !ussd7bit)
@@ -1390,6 +1400,10 @@ throw (AdminException)
 
   profile.udhconcat = (strcmp("true", udhConcat) == 0) ? true : false;
   profile.translit = (strcmp("true", translit) == 0) ? true : false;
+
+  sscanf(closedGroupId,"%u",profile.closedGroupId);
+  sscanf(accessMaskIn,"%u",&profile.accessMaskIn);
+  sscanf(accessMaskOut,"%u",&profile.accessMaskOut);
 }
 
 bool isMask(const Address & address)
