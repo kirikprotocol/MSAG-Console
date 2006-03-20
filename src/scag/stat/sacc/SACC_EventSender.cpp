@@ -49,7 +49,7 @@ void EventSender::init(std::string& host,int port,int timeout,bool * bf,smsc::lo
 bool EventSender::processEvent(void *ev)
 {
 
-	//smsc_log_debug(logger,"EventSender::Execute Sacc stat event processed from queue addr=%s",ev->abonent_addr);
+ smsc_log_debug(logger,"EventSender::Execute Sacc stat event processed from queue addr=0x%X",ev);
 
 //	SaccSocket.Write((char *)ev,sizeof(SaccStatistics));
 
@@ -65,7 +65,7 @@ bool EventSender::checkQueue()
 		if(ev)
 		{	
 			processEvent(ev);
-			delete ev;
+		   	delete ev;
 		}
 
 		return true;
@@ -157,26 +157,33 @@ void EventSender::Start()
 void EventSender::Put(const SACC_TRAFFIC_INFO_EVENT_t& ev)
 {
 	SACC_TRAFFIC_INFO_EVENT_t* pEv = new SACC_TRAFFIC_INFO_EVENT_t(ev);
+		smsc_log_debug(logger,"EventSender::put SACC_TRAFFIC_INFO_EVENT_t addr=0x%X",pEv);
 	eventsQueue.Push(pEv); 
 }
 void EventSender::Put(const SACC_BILLING_INFO_EVENT_t& ev)
 {
+
+
 	SACC_BILLING_INFO_EVENT_t* pEv = new SACC_BILLING_INFO_EVENT_t(ev);
+		smsc_log_debug(logger,"EventSender::put SACC_BILLING_INFO_EVENT_t addr=0x%X",pEv);
 	eventsQueue.Push(pEv);
 }
 void EventSender::Put(const SACC_ALARM_MESSAGE_t & ev)
 {
 	SACC_ALARM_MESSAGE_t* pEv = new SACC_ALARM_MESSAGE_t(ev);
+		smsc_log_debug(logger,"EventSender::put SACC_ALARM_MESSAGE_t addr=0x%X",pEv);
 	eventsQueue.Push(pEv);
 }
 void EventSender::Put(const  SACC_SESSION_EXPIRATION_TIME_ALARM_t& ev)
 {
 	SACC_SESSION_EXPIRATION_TIME_ALARM_t* pEv = new SACC_SESSION_EXPIRATION_TIME_ALARM_t(ev);
+		smsc_log_debug(logger,"EventSender::put SACC_SESSION_EXPIRATION_TIME_ALARM_t addr=0x%X",pEv);
 	eventsQueue.Push(pEv);
 }
 void EventSender::Put(const   SACC_OPERATOR_NOT_FOUND_ALARM_t& ev)
 {
 	SACC_OPERATOR_NOT_FOUND_ALARM_t* pEv = new SACC_OPERATOR_NOT_FOUND_ALARM_t(ev);
+		smsc_log_debug(logger,"EventSender::put SACC_OPERATOR_NOT_FOUND_ALARM_t addr=0x%X",pEv);
 	eventsQueue.Push(pEv);
 }
 

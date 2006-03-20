@@ -1115,6 +1115,21 @@ void StatisticsManager::flushHttpTraffic()
     std::string path = traffloc + std::string("/HTTP/"); 
     dumpTraffic(traff, path);
 
+	for(int i=0;i<100;i++)
+	{
+		SACC_TRAFFIC_INFO_EVENT_t ev1;
+		SACC_BILLING_INFO_EVENT_t ev2;
+		SACC_OPERATOR_NOT_FOUND_ALARM_t ev3;
+		SACC_SESSION_EXPIRATION_TIME_ALARM_t ev4;
+		SACC_ALARM_MESSAGE_t ev5;
+
+		thrSaccSender.Put(ev1);
+		thrSaccSender.Put(ev2);
+		thrSaccSender.Put(ev3);
+		thrSaccSender.Put(ev4);
+		thrSaccSender.Put(ev5);
+
+	}
 	
 }
 
