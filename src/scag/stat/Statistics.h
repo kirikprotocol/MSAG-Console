@@ -66,7 +66,31 @@ using smsc::smeman::SmeRecord;
 		uint64_t lDateTime;
 		uint32_t iServiceProviderId;
 		uint32_t iServiceId;
+		
+		SACC_EVENT_HEADER_t()
+		{
+			memset(pAbonentNumber,0,MAX_ABONENT_NUMBER_LENGTH);
 
+			sEventType=0;
+			cCommandId=0;		
+			cProtocolId=0;		
+			sCommandStatus=0;
+			lDateTime=0;
+			iServiceProviderId=0;
+			iServiceId=0;
+		}
+		SACC_EVENT_HEADER_t(const SACC_EVENT_HEADER_t& src)
+		{
+			memcpy(pAbonentNumber,src.pAbonentNumber,MAX_ABONENT_NUMBER_LENGTH);
+
+			sEventType=src.sEventType;
+			cCommandId=src.cCommandId;		
+			cProtocolId=src.cProtocolId;		
+			sCommandStatus=src.sCommandStatus;
+			lDateTime=src.lDateTime;
+			iServiceProviderId=src.iServiceProviderId;
+			iServiceId=src.iServiceId;
+		}
 	};
 
 	struct SACC_TRAFFIC_INFO_EVENT_t
@@ -290,13 +314,13 @@ using smsc::smeman::SmeRecord;
         virtual void registerEvent(const SmppStatEvent& se) = 0;
         virtual void registerEvent(const HttpStatEvent& se) = 0;
 		
-        virtual bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value) = 0;
+		virtual bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value) = 0;
 
-		virtual void registerSaccEvent(const SACC_TRAFFIC_INFO_EVENT_t& ev) = 0;
-		virtual void registerSaccEvent(const SACC_BILLING_INFO_EVENT_t& ev) = 0;
-		virtual void registerSaccEvent(const SACC_OPERATOR_NOT_FOUND_ALARM_t& ev) = 0;
-		virtual void registerSaccEvent(const SACC_SESSION_EXPIRATION_TIME_ALARM_t& ev) = 0;
-		virtual void registerSaccEvent(const SACC_ALARM_MESSAGE_t& ev) = 0;
+        virtual void registerSaccEvent(const SACC_TRAFFIC_INFO_EVENT_t& ev) = 0;
+        virtual void registerSaccEvent(const SACC_BILLING_INFO_EVENT_t& ev) = 0;
+        virtual void registerSaccEvent(const SACC_OPERATOR_NOT_FOUND_ALARM_t& ev) = 0;
+        virtual void registerSaccEvent(const SACC_SESSION_EXPIRATION_TIME_ALARM_t& ev) = 0;
+        virtual void registerSaccEvent(const SACC_ALARM_MESSAGE_t& ev) = 0;
 
     protected:
 
