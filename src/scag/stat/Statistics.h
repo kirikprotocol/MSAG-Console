@@ -11,7 +11,7 @@
 
 #include <inttypes.h>
 
-using namespace smsc::stat::sacc;
+using namespace scag::stat::sacc;
 namespace scag {
 namespace stat {
 

@@ -29,6 +29,7 @@
 #include "sacc/SACC_EventSender.h"
 #include "sacc/SACC_Events.h"
 
+using namespace scag::stat:sacc;
 namespace scag {
 
 namespace stat {
@@ -262,7 +263,7 @@ namespace stat {
 
         virtual void registerEvent(const SmppStatEvent& se);
         virtual void registerEvent(const HttpStatEvent& se);
-       bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value);
+                bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value);
 
 		virtual void registerSaccEvent(const SACC_TRAFFIC_INFO_EVENT_t& ev);
 		virtual void registerSaccEvent(const SACC_BILLING_INFO_EVENT_t& ev);
