@@ -161,7 +161,22 @@ bool isType(rechar chr,int type)
   return false;
 }
 
-#define strlen wcslen
+
+int ushlen(const rechar* str)
+{
+  rechar ch;
+  int len = -1;
+  
+  do
+  {
+    ch = str[len+1];
+    len++;
+  } while (ch!=0);
+
+  return len;
+}
+
+#define strlen ushlen
 
 struct UniSet{
 unsigned char* high[256];
@@ -209,6 +224,7 @@ UniSet& operator=(const UniSet& src)
   types=src.types;
   nottypes=src.nottypes;
   negative=src.negative;
+  return (*this);
 }
 
 void Reset()
