@@ -19,11 +19,7 @@
 #include <scag/util/singleton/Singleton.h>
 #include "StatisticsManager.h"
 
-
-#include "sacc/SACC_Defs.h"
-#include "sacc/SACC_Events.h"
-#include "sacc/SACC_EventSender.h"
-
+using namespace scag::stat::sacc;
 
 namespace scag { 
 namespace stat {
@@ -37,7 +33,7 @@ using smsc::core::buffers::File;
 using scag::config::StatManConfig;
 
 
-using namespace scag::stat::sacc;
+
 
 const uint16_t SCAG_STAT_DUMP_INTERVAL = 60; // in seconds
 const uint16_t SCAG_STAT_VERSION_INFO  = 0x0001;
