@@ -21,56 +21,7 @@ using smsc::smeman::SmeRecord;
 
 /* additions for sacc */
 		
-		typedef enum
-		{
-			sec_transport = 0x0001,
-			sec_bill = 0x0002,	
-			sec_alarm= 0x0003,
-			sec_operator_not_found = 0x0004,
-			sec_session_expired= 0x0005,
-			sec_alarm_message = 0x0101
-
-		}SaccEventsCommandIds;
-		
-		typedef enum
-		{
-			pci_smppSubmitSm=1,
-			pci_smppSubmitSmResp,
-			pci_smppDeliverSm,
-			pci_smppDeliverSmResp,
-			pci_smppReceived,
-			
-			pci_httpRequest,
-			pci_httpResponse,
-			pci_httpDeliver
-
-		}SaccProtocolCommandIds;
-
-		typedef enum
-		{
-			pid_smpp_sms=1,
-			pid_smpp_ussd,
-			pid_http,
-			pid_mms
-		}SaccProtocolIds;
-		
-		typedef enum
-		{
-			bci_open=1,
-			bci_commit,
-			bci_rollback,
-			bci_rollback_by_timeout
-
-		}SaccBillCommandIds;
-
-		typedef enum
-		{
-			eid_operatorNotFound=1,
-			eid_routeNotFound=2,
-			eid_sessionExpared=3
-			
-		}SaccEventsIds;
-/**/
+	
         typedef enum 
         {
           cntAccepted,
@@ -99,86 +50,6 @@ using smsc::smeman::SmeRecord;
         } HttpStatCounter;
     }
 
-	struct SaccStatistics
-	{
-	  uint16_t 	command_id;
-	  char		abonent_addr[25];
-	  uint64_t	timestamp;
-	  uint32_t	operator_id;
-	  uint32_t	provider_id;
-	  uint32_t	service_id;
-	  uint8_t	session_id[45];
-	  
-	  uint8_t	protocol_id;
-	  uint8_t	protocol_command_id;
-	  uint16_t	protocol_command_status;
-	  uint16_t	message[1024];
-	  char		direction;
-
-
-	  uint8_t	billing_command_id;	
-	  uint16_t	billing_command_status;	
-	  uint32_t	media_type;	
-	  uint32_t	category_id;	
-	  uint32_t	bill_value;	
-	  char		bill_currency[10];
-
-	  uint32_t  event_id;
-
-	  char receiver_phones[1024];
-	  char receiver_emails[1024];
-
-	  SaccStatistics()
-      {
-		command_id	=0;
-		timestamp	=0;
-		operator_id	=0;
-		provider_id	=0;
-		service_id=	0;
-		protocol_id	=0;
-		protocol_command_id=0;
-		protocol_command_status=0;
-		direction	=0;
-		billing_command_id    =0;	
-		billing_command_status=0;	
-		media_type  =0;	
-		category_id =0;	
-		bill_value	=0;	
-		event_id	=0;
-
-		memset(abonent_addr,0,sizeof(abonent_addr));
-		memset(session_id,0,sizeof(session_id));
-		memset(bill_currency,0,sizeof(bill_currency));
-		memset(message,0,sizeof(message));
-		memset(receiver_phones,0,sizeof(receiver_phones));
-		memset(receiver_emails,0,sizeof(receiver_emails));
-	  }
-	  SaccStatistics(const SaccStatistics& src)
-      {
-		command_id	=	command_id;
-		timestamp	=	timestamp;
-		operator_id	=	operator_id;
-		provider_id	=	provider_id;
-		service_id=	service_id;
-		protocol_id	=	protocol_id;
-		protocol_command_id=	protocol_command_id;
-		protocol_command_status=	protocol_command_status;
-		direction	=	direction;
-		billing_command_id    =		billing_command_id;	
-		billing_command_status=		billing_command_status;	
-		media_type  =	media_type;	
-		category_id =	category_id;	
-		bill_value	=	bill_value;	
-		event_id	=	event_id;
-
-		memcpy(abonent_addr,src.abonent_addr,sizeof(abonent_addr));
-		memcpy(session_id,src.session_id,sizeof(session_id));
-		memcpy(bill_currency,src.bill_currency,sizeof(bill_currency));
-		memcpy(message,src.message,sizeof(message));
-		memcpy(receiver_phones,src.receiver_phones,sizeof(receiver_phones));
-		memcpy(receiver_emails,src.receiver_emails,sizeof(receiver_emails));
-	  }
-	};
 	
     struct SmppStatEvent
     {
@@ -186,12 +57,6 @@ using smsc::smeman::SmeRecord;
       char routeId[smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH+1];
       int  smeProviderId;
       int  routeProviderId;
-
-	  /**/
-
-	  SaccStatistics sacc_stat;
-	  
-	  /**/	
 
       int counter;
       int errCode;
@@ -206,7 +71,6 @@ using smsc::smeman::SmeRecord;
         routeProviderId=-1;
         counter = -1;
         errCode = -1;
-		memset(&sacc_stat,0,sizeof(SaccStatistics));
 		
         internal = false;
       }
@@ -234,7 +98,6 @@ using smsc::smeman::SmeRecord;
       {
         memcpy(smeId,src.smeId,sizeof(smeId));
         memcpy(routeId,src.routeId,sizeof(routeId));
-		memcpy(&sacc_stat,&src.sacc_stat,sizeof(SaccStatistics));
         smeProviderId=src.smeProviderId;
         routeProviderId=src.routeProviderId;
         counter = src.counter;
@@ -252,7 +115,7 @@ using smsc::smeman::SmeRecord;
       int counter;
       int errCode;
       
-  	  SaccStatistics sacc_stat;
+  	 
 
       HttpStatEvent(int cnt=-1, const std::string& rId="", const std::string& sId="", int spId=-1, int err=0)
         : routeId(rId), serviceId(sId), serviceProviderId(spId), counter(cnt), errCode(err) {};
@@ -276,6 +139,7 @@ using smsc::smeman::SmeRecord;
 
         virtual void registerEvent(const SmppStatEvent& se) = 0;
         virtual void registerEvent(const HttpStatEvent& se) = 0;
+		
         virtual bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value) = 0;
 
     protected:

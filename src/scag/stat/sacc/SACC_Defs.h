@@ -44,7 +44,58 @@ namespace sacc{
 #define SACC_SEND_ALARM_MESSAGE	  		0x0101
 #define EV_SERVER_LOGGER_CATHEGORY_NAME  "evtsvr"
 
+typedef enum
+{
+	sec_transport = 0x0001,
+	sec_bill = 0x0002,	
+	sec_alarm= 0x0003,
+	sec_operator_not_found = 0x0004,
+	sec_session_expired= 0x0005,
+	sec_alarm_message = 0x0101
+
+}SaccEventsCommandIds;
+
+typedef enum
+{
+	pci_smppSubmitSm=1,
+	pci_smppSubmitSmResp,
+	pci_smppDeliverSm,
+	pci_smppDeliverSmResp,
+	pci_smppReceived,
 	
+	pci_httpRequest,
+	pci_httpResponse,
+	pci_httpDeliver
+
+}SaccProtocolCommandIds;
+
+typedef enum
+{
+	pid_smpp_sms=1,
+	pid_smpp_ussd,
+	pid_http,
+	pid_mms
+}SaccProtocolIds;
+
+typedef enum
+{
+	bci_open=1,
+	bci_commit,
+	bci_rollback,
+	bci_rollback_by_timeout
+
+}SaccBillCommandIds;
+
+typedef enum
+{
+	eid_operatorNotFound=1,
+	eid_routeNotFound=2,
+	eid_sessionExpared=3
+	
+}SaccEventsIds;
+/**/
+	
+
 }//sacc
 }//stat
 }//scag

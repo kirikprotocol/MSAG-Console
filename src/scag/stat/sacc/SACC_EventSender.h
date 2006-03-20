@@ -33,6 +33,7 @@
 #include "core/network/Socket.hpp"
 #include "logger/Logger.h"
 #include <scag/stat/Statistics.h>
+#include "SACC_Events.h"
 
 #include <string>
 using namespace smsc::core::threads;
@@ -56,13 +57,18 @@ public:
 	EventSender();
 	virtual ~EventSender();
 	int Execute();
-	void Put(const SaccStatistics& ev);
+	void Put(const SACC_TRAFFIC_INFO_EVENT_t& ev);
+	void Put(const SACC_BILLING_INFO_EVENT_t& ev);
+	void Put(const SACC_TRAFFIC_INFO_EVENT_t& ev);
+	void Put(const SACC_ALARM_MESSAGE_t & ev);
+	void Put(const SACC_SESSION_EXPIRATION_TIME_ALARM_t& ev);
+	void Put(const SACC_OPERATOR_NOT_FOUND_ALARM_t& ev);
 
 	void Start();
 	void init(std::string& host,int port,int timeout,bool * bf,smsc::logger::Logger * lg);
 private:
 
-	SyncQueue<SaccStatistics *> eventsQueue;
+	SyncQueue<void *> eventsQueue;
 	bool * bStarted;
 	bool bConnected;
 	Socket SaccSocket;
@@ -71,8 +77,7 @@ private:
 	bool checkQueue();
 	bool retrieveConnect();
 	bool connect(std::string host,int port,int timeout);
-	bool processEvent(SaccStatistics * ev);
-	void makeTransportEvent(SaccStatistics * st,SACC_TRAFFIC_INFO_EVENT_t * ev);
+	bool processEvent(void * ev);
 	smsc::logger::Logger * logger;
 };
 

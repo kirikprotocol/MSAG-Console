@@ -374,6 +374,7 @@ void StatisticsManager::registerEvent(const HttpStatEvent& se)
 	//thrSaccSender.Put(se.sacc_stat);
 }
     
+
     bool StatisticsManager::checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value)
     {
             MutexGuard mg(switchLock);
@@ -1921,6 +1922,28 @@ int StatisticsManager::indexByHttpCounter(int counter)
   }
 
   return -1;
+}
+
+
+void registerSaccEvent(SACC_TRAFFIC_INFO_EVENT_t& ev)
+{
+	thrSaccSender.Put(ev);
+}
+void registerSaccEvent(SACC_BILLING_INFO_EVENT_t& ev)
+{
+	thrSaccSender.Put(ev);
+}
+void registerSaccEvent(SACC_OPERATOR_NOT_FOUND_ALARM_t& ev)
+{
+	thrSaccSender.Put(ev);
+}
+void registerSaccEvent(SACC_SESSION_EXPIRATION_TIME_ALARM_t& ev)
+{
+	thrSaccSender.Put(ev);
+}
+void registerSaccEvent(SACC_ALARM_MESSAGE_t& ev)
+{
+
 }
 
 }//namespace stat

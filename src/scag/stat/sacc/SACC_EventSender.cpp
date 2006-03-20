@@ -28,10 +28,7 @@ EventSender::~EventSender()
 
 }
 
-void EventSender::makeTransportEvent(SaccStatistics * st,SACC_TRAFFIC_INFO_EVENT_t * ev)
-{
 
-}
 void EventSender::init(std::string& host,int port,int timeout,bool * bf,smsc::logger::Logger * lg)
 {
 
@@ -49,12 +46,12 @@ void EventSender::init(std::string& host,int port,int timeout,bool * bf,smsc::lo
 	smsc_log_debug(logger,"EventSender::init confuration succsess.");
 }
 
-bool EventSender::processEvent(SaccStatistics *ev)
+bool EventSender::processEvent(void *ev)
 {
 
-	smsc_log_debug(logger,"EventSender::Execute Sacc stat event processed from queue addr=%s",ev->abonent_addr);
+	//smsc_log_debug(logger,"EventSender::Execute Sacc stat event processed from queue addr=%s",ev->abonent_addr);
 
-	SaccSocket.Write((char *)ev,sizeof(SaccStatistics));
+//	SaccSocket.Write((char *)ev,sizeof(SaccStatistics));
 
 
 return true;
@@ -62,8 +59,8 @@ return true;
 
 bool EventSender::checkQueue()
 {
-	SaccStatistics * ev;
-	if(eventsQueue.Pop(ev,1000))
+	void * ev;
+	if(eventsQueue.Pop(ev,100))
 	{
 		if(ev)
 		{	
@@ -110,13 +107,15 @@ int EventSender::Execute()
 {
 	while( *bStarted)
 	{
-		if(retrieveConnect())
+		//if(retrieveConnect())
 		{
 			checkQueue();
+
 		}
-		else
+		//else
 		{
-			sleep(500);
+		//	sleep(100);
+			
 		}
 	}
 	return 1;
@@ -154,11 +153,36 @@ void EventSender::Start()
 {
 	Thread::Start();
 }
-
-void EventSender::Put(const SaccStatistics& ev)
+ 
+void EventSender::Put(const SACC_TRAFFIC_INFO_EVENT_t& ev)
 {
-	SaccStatistics * pSt= new SaccStatistics(ev);
-	eventsQueue.Push(pSt); 
+	SACC_TRAFFIC_INFO_EVENT_t* pEv = new SACC_TRAFFIC_INFO_EVENT_t(ev);
+	eventsQueue.Push(pEv); 
+}
+void EventSender::Put(const SACC_BILLING_INFO_EVENT_t& ev)
+{
+	SACC_BILLING_INFO_EVENT_t* pEv = new SACC_BILLING_INFO_EVENT_t(ev);
+	eventsQueue.Push(pEv);
+}
+void EventSender::Put(const SACC_TRAFFIC_INFO_EVENT_t& ev)
+{
+	SACC_TRAFFIC_INFO_EVENT_t* pEv = new SACC_TRAFFIC_INFO_EVENT_t(ev);
+	eventsQueue.Push(pEv);
+}
+void EventSender::Put(const SACC_ALARM_MESSAGE_t & ev)
+{
+	SACC_ALARM_MESSAGE_t* pEv = new SACC_ALARM_MESSAGE_t(ev);
+	eventsQueue.Push(pEv);
+}
+void EventSender::Put(const  SACC_SESSION_EXPIRATION_TIME_ALARM_t& ev)
+{
+	SACC_SESSION_EXPIRATION_TIME_ALARM_t* pEv = new SACC_SESSION_EXPIRATION_TIME_ALARM_t(ev);
+	eventsQueue.Push(pEv);
+}
+void EventSender::Put(const   SACC_OPERATOR_NOT_FOUND_ALARM_t& ev)
+{
+	SACC_OPERATOR_NOT_FOUND_ALARM_t* pEv = new SACC_OPERATOR_NOT_FOUND_ALARM_t(ev);
+	eventsQueue.Push(pEv);
 }
 
 
