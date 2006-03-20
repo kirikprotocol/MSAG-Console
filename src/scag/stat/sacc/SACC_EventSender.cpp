@@ -93,8 +93,8 @@ bool EventSender::processEvent(void *ev)
 		}
  		break;
 
-
 	 default:
+		 break;
 	 }
  return true;
 }
