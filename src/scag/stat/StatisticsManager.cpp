@@ -1940,23 +1940,23 @@ int StatisticsManager::indexByHttpCounter(int counter)
 }
 
 
-void StatisticsManager::registerSaccEvent(const scag::stat::sacc::SACC_TRAFFIC_INFO_EVENT_t& ev)
+void StatisticsManager::registerSaccEvent(const SACC_TRAFFIC_INFO_EVENT_t& ev)
 {
 	thrSaccSender.Put(ev);
 }
-void StatisticsManager::registerSaccEvent(const scag::stat::sacc::SACC_BILLING_INFO_EVENT_t& ev)
+void StatisticsManager::registerSaccEvent(const SACC_BILLING_INFO_EVENT_t& ev)
 {
 	thrSaccSender.Put(ev);
 }
-void StatisticsManager::registerSaccEvent(const scag::stat::sacc::SACC_OPERATOR_NOT_FOUND_ALARM_t& ev)
+void StatisticsManager::registerSaccEvent(const SACC_OPERATOR_NOT_FOUND_ALARM_t& ev)
 {
 	thrSaccSender.Put(ev);
 }
-void StatisticsManager::registerSaccEvent(const scag::stat::sacc::SACC_SESSION_EXPIRATION_TIME_ALARM_t& ev)
+void StatisticsManager::registerSaccEvent(const SACC_SESSION_EXPIRATION_TIME_ALARM_t& ev)
 {
 	thrSaccSender.Put(ev);
 }
-void StatisticsManager::registerSaccEvent(const scag::stat::sacc::SACC_ALARM_MESSAGE_t& ev)
+void StatisticsManager::registerSaccEvent(const SACC_ALARM_MESSAGE_t& ev)
 {
 	thrSaccSender.Put(ev);
 }
