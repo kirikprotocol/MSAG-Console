@@ -89,6 +89,9 @@
       <param name="perfGenPort" type="int">@stat.perf_port@</param>
       <param name="perfSvcPort" type="int">@stat,perf_svc_port@</param>
       <param name="perfScPort" type="int">@stat.perf_sc_port@</param>
+      <param name="saccPort" type="int">@stat,sacc_port@</param>
+      <param name="saccHost" type="string">@stat.sacc_host@</param>
+		 
   </section>
 		        
   <section name="RuleEngine">
