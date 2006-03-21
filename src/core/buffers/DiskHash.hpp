@@ -259,6 +259,7 @@ public:
     if(crc!=h.hdrcrc32)RTERROR("header crc failire");
     size=h.size;
     count=h.count;
+    isFileOpen=true;
   }
 
   void Create(const char* file,int prealloc,bool cached)
