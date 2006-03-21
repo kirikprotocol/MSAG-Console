@@ -18,7 +18,6 @@
 #include <sms/sms_const.h>
 
 #include "XMLHandlers.h"
-#include "util/regexp/RegExp.hpp"
 
 #include "Infrastructure.h"
 
@@ -31,7 +30,6 @@ using smsc::core::synchronization::MutexGuard;
 using smsc::core::synchronization::Mutex;
 using namespace smsc::util;
 using namespace scag::util::singleton;
-using namespace smsc::util::regexp;
 using smsc::logger::Logger;
 using smsc::sms;
 
@@ -166,7 +164,11 @@ InfrastructureImpl::InfrastructureImpl()
 {
     XMLPlatformUtils::Initialize("ru_RU.KOI8-R");
     logger = Logger::getInstance("bill.i");
-	service_hash = new ServiceHash();
+
+    smsc_log_debug(logger,"Provider/Operator Mapper allocated");
+
+	service_hash = new IntHash<uint32_t>();
+	mask_hash = new Hash<uint32_t>();
 }
 
 InfrastructureImpl::~InfrastructureImpl()
@@ -175,17 +177,23 @@ InfrastructureImpl::~InfrastructureImpl()
 		delete service_hash;
 	if(mask_hash != NULL)
 		delete mask_hash;
-    smsc_log_debug(logger,"Service Mapper released");
+
+    smsc_log_debug(logger,"Provider/Operator Mapper released");
+
     XMLPlatformUtils::Terminate();
 }
 
 void InfrastructureImpl::ReloadProviderMap()
 {
 	MutexGuard mt(ProviderReloadMutex);
+
+	smsc_log_info(logger, "ReloadProviderMap Started");
+
 	IntHash<uint32_t> *hash = new IntHash<uint32_t>();
 	try{
-	    XMLBasicHandler handler("KOI8-R", hash);
+	    XMLBasicHandler handler(hash);
 		ParseFile(ProviderFile.c_str(), &handler);
+
 		MutexGuard mt1(ProviderMapMutex);
 		delete service_hash;
 		service_hash = hash;
@@ -195,15 +203,21 @@ void InfrastructureImpl::ReloadProviderMap()
 		smsc_log_info(logger, "Provider Map reload was not successful");
 		delete hash;
 	}
+
+	smsc_log_info(logger, "ReloadProviderMap Finished");
 }
 
 void InfrastructureImpl::ReloadOperatorMap()
 {
 	MutexGuard mt(OperatorReloadMutex);
+
+	smsc_log_info(logger, "ReloadOperatorMap Started");
+
 	Hash<uint32_t> *hash = new Hash<uint32_t>();
 	try{
-	    XMLBasicHandler handler("KOI8-R", hash);
+	    XMLBasicHandler handler(hash);
 		ParseFile(OperatorFile.c_str(), &handler);
+
 		MutexGuard mt1(OperatorMapMutex);
 		delete mask_hash;
 		mask_hash = hash;
@@ -213,6 +227,8 @@ void InfrastructureImpl::ReloadOperatorMap()
 		smsc_log_info(logger, "Operator Map reload was not successful");
 		delete hash;
 	}
+
+	smsc_log_info(logger, "ReloadOperatorMap Finished");
 }
 
 uint32_t InfrastructureImpl::GetProviderID(uint32_t service_id)
@@ -230,7 +246,7 @@ uint32_t InfrastructureImpl::GetProviderID(uint32_t service_id)
 uint32_t InfrastructureImpl::GetOperatorID(Address addr)
 {
 	MutexGuard mt(OperatorMapMutex);
-
+	
 	uint8_t mask_ptr, addr_len;
 	char a[smsc::sms::MAX_ADDRESS_VALUE_LENGTH + 2];
 

@@ -4,13 +4,10 @@
 #define __SCAG_BILL_INFRA_XMLHANDLERS_H__
 
 #include <xercesc/sax/HandlerBase.hpp>
-#include <xercesc/framework/XMLFormatter.hpp>
 
 #include <util/Exception.hpp>
 
-#include <core/buffers/Array.hpp>
 #include <core/buffers/IntHash.hpp>
-
 #include <logger/Logger.h>
 
 namespace scag { namespace bill { namespace infrastruct {
@@ -21,8 +18,7 @@ using smsc::core::buffers::Hash;
 
 XERCES_CPP_NAMESPACE_USE
 
-class XMLBasicHandler;
-class XMLBasicHandler : public HandlerBase, private XMLFormatTarget
+class XMLBasicHandler : public HandlerBase
 {
 	int type;
     Logger * logger;
@@ -34,7 +30,6 @@ class XMLBasicHandler : public HandlerBase, private XMLFormatTarget
 	XMLCh mask_chars[200];
 	uint32_t mask_len;
 
-    void writeChars(const XMLByte* const toWrite, const unsigned int count, XMLFormatter* const formatter) {};
 	void characters(const XMLCh *const chars, const unsigned int length);
 
 protected:
@@ -42,8 +37,8 @@ protected:
 	void OperatorMapStartElement(const char* qname, AttributeList& attrs);
 
 public:
-    XMLBasicHandler(const char* const encodingName, IntHash<uint32_t>* h);
-    XMLBasicHandler(const char* const encodingName, Hash<uint32_t>* h);
+    XMLBasicHandler(IntHash<uint32_t>* h);
+    XMLBasicHandler(Hash<uint32_t>* h);
     ~XMLBasicHandler() {};
 
     void startElement(const XMLCh* const qname, AttributeList& attributes);
@@ -73,7 +68,7 @@ public :
     }
 
 private :
-    char*   fLocalForm;
+    char* fLocalForm;
 };
 
 }}}
