@@ -167,6 +167,10 @@ Targets:
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
 
+    <copy tofile="${DISTR_DIR}/webapps/scag/WEB-INF/web.xml" file="${TEMPL_DIR}/scag/web.xml">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+
     <copy todir="${DISTR_DIR}/conf/rules/" flatten="yes" >
       <fileset dir="${TEMPL_DIR}">
                <include name="scag/rules/*"/>

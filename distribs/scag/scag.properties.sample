@@ -3,6 +3,7 @@ catalina.connector.port=14801
 logger.default.category=DEBUG
 logs.dir=logs
 
+WHOISD.url-pattern=/WHOISD/*
 
 scag.service.name=scag
 scag.service.args=SCAG
