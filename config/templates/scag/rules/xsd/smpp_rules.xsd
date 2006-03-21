@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://www.sibinco.com/SCAG"
+    xmlns="http://www.w3.org/2001/XMLSchema"
+    xmlns:scag="http://www.sibinco.com/SCAG">
+    
+    <annotation>
+        <documentation>
+            SMPP rules schema detalization for Sibinco.com.
+            Copyright 2005 Sibinco.com. All rights reserved.
+        </documentation>
+    </annotation>
+    
+    <redefine schemaLocation="xsd/rules.xsd">
+        
+        <simpleType name="Transport">
+            <restriction base="scag:Transport">
+                <enumeration value="SMPP"/>
+            </restriction>
+        </simpleType>
+        
+        <simpleType name="Command">
+            <restriction base="scag:Command">
+                <enumeration value="#aaa"/>
+                <enumeration value="#bbb"/>
+                <enumeration value="#ccc"/>
+                <enumeration value="#ddd"/>
+            </restriction>    
+        </simpleType>
+        
+        <complexType name="RuleType">
+            <complexContent>
+                <extension base="scag:RuleType">
+                    <all>
+                        <element name="submit_sm"            type="scag:Handler" minOccurs="0" maxOccurs="1"/>
+                        <element name="submit_sm_resp" type="scag:Handler" minOccurs="0" maxOccurs="1"/>
+                        <element name="deliver_sm"            type="scag:Handler" minOccurs="0" maxOccurs="1"/>
+                        <element name="deliver_sm_resp" type="scag:Handler" minOccurs="0" maxOccurs="1"/>
+                    </all>
+                </extension>
+            </complexContent>
+        </complexType>
+        
+    </redefine>
+    
+</schema>
