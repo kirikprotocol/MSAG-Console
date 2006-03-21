@@ -254,8 +254,8 @@ public class Edit extends TabledEditBeanImpl {
         this.editChild = editChild;
     }
 
-    public boolean isSmppRuleExists() {
-    if (serviceRules==null) serviceRules = appContext.getRuleManager().getRules(new Long(id));
+    public boolean isSmppRuleExists() {        
+        serviceRules = appContext.getRuleManager().getRules(new Long(id));
         return (serviceRules.get(Transport.SMPP_TRANSPORT_NAME)==null)?false:true;
     }
     public boolean isHttpRuleExists() {

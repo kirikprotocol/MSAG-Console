@@ -78,6 +78,7 @@ public class Edit extends TabledEditBeanImpl {
             final String serviceIdStr = checked[i];
             final Long serviceId = Long.decode(serviceIdStr);
             toRemove.add(serviceId);
+            appContext.getRuleManager().removeRulesForService(serviceIdStr);
         }
         serviceProvider.getServices().keySet().removeAll(toRemove);
         try {

@@ -82,6 +82,7 @@ public class SCAGAppContext {
             smppManager.init();
             String rulesFolder = config.getString("rules_folder");
             String xsdFolder = config.getString("xsd_folder");
+            String xslFolder = config.getString("xsl_folder");
             resourceManager = new ResourceManager(scagConfFolder);
             scagDaemon = new Daemon(gwDaemonHost, (int) config.getInt("gw daemon.port"), smppManager, config.getString("gw daemon.folder"));
             final ServiceInfo scagServiceInfo = (ServiceInfo) scagDaemon.getServices().get(config.getString("gw name"));
@@ -90,7 +91,7 @@ public class SCAGAppContext {
             } else {
                 scag = new Scag(gwDaemonHost, (int) gwConfig.getInt("admin.port"));
             }
-            ruleManager = new RuleManager(new File(rulesFolder), new File(xsdFolder), scag);
+            ruleManager = new RuleManager(new File(rulesFolder), new File(xsdFolder), new File(xslFolder), scag);
             ruleManager.init();
             scagRoutingManager = new ScagRoutingManager(scagConfFolder, smppManager, providerManager, categoryManager);
             scagRoutingManager.init();
