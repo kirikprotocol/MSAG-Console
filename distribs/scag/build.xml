@@ -166,24 +166,22 @@ Targets:
     <copy tofile="${DISTR_DIR}/conf/webconfig.xml" file="${TEMPL_DIR}/scag/webapp.xml">
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
+
+    <copy todir="${DISTR_DIR}/conf/rules/" flatten="yes" >
+      <fileset dir="${TEMPL_DIR}">
+               <include name="scag/rules/*"/>
+      </fileset>
+    </copy>
+
     <copy todir="${DISTR_DIR}/conf/rules/xsd" flatten="yes" >
       <fileset dir="${TEMPL_DIR}">
                <include name="scag/rules/xsd/*"/>
       </fileset>
     </copy>
-    <copy todir="${DISTR_DIR}/conf/rules/SMPP" flatten="yes" >
+
+    <copy todir="${DISTR_DIR}/conf/rules/xsl" flatten="yes" >
       <fileset dir="${TEMPL_DIR}">
-               <include name="scag/rules/SMPP/*"/>
-      </fileset>
-    </copy>
-    <copy todir="${DISTR_DIR}/conf/rules/HTTP" flatten="yes" >
-      <fileset dir="${TEMPL_DIR}">
-               <include name="scag/rules/HTTP/*"/>
-      </fileset>
-    </copy>
-    <copy todir="${DISTR_DIR}/conf/rules/MMS" flatten="yes" >
-      <fileset dir="${TEMPL_DIR}">
-               <include name="scag/rules/MMS/*"/>
+               <include name="scag/rules/xsl/*"/>
       </fileset>
     </copy>
 
