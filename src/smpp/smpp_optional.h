@@ -123,6 +123,9 @@ inline void fillSmppOptional(SmppStream* stream,SmppOptional* opt)
   macroFillCOctetStr( imsi_address, -1 );
   macroFillCOctetStr( msc_address, -1 );
   macroFillField( supported_codeset );
+  macroFillField(charging);
+  macroFillField(message_type);
+  macroFillField(expected_message_type);
 
 #undef macroFillField
 #undef macroFillOctetStr
@@ -261,6 +264,9 @@ inline void fetchSmppOptional(SmppStream* stream,SmppOptional* opt)
       macroFetchCOctetStr( imsi_address, length );
       macroFetchCOctetStr( msc_address, length );
       macroFetchField( supported_codeset );
+      macroFetchField(charging);
+      macroFetchField(message_type);
+      macroFetchField(expected_message_type);
       default:
         __warning2__("Skipped optional tag:%x(%d)",tag,tag);
         uint8_t x;

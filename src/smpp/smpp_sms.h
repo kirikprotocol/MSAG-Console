@@ -133,6 +133,18 @@ inline void fillOptional(SmppOptional& optional,SMS* sms,bool forceDC=false)
 
   if ( sms->hasIntProperty(Tag::SMSC_SUPPORTED_CODESET) )
     optional.set_supported_codeset( sms->getIntProperty(Tag::SMSC_SUPPORTED_CODESET) );
+
+  if(sms->hasIntProperty(Tag::SCAG_CHARGING))
+  {
+    optional.set_charging(sms->getIntProperty(Tag::SCAG_CHARGING));
+  }
+  if(sms->hasIntProperty(Tag::SCAG_MSG_TYPES))
+  {
+    uint32_t types=sms->getIntProperty(Tag::SCAG_MSG_TYPES);
+    optional.set_message_type(types&0xffff);
+    optional.set_expected_message_type((types>>16)&0xffff);
+  }
+
 }
 
 inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms,bool forceDC=false)
@@ -342,7 +354,18 @@ inline void fetchOptionals(SmppOptional& optional,SMS* sms,bool forceDC=false)
 
   if ( optional.has_supported_codeset() )
     sms->setIntProperty( Tag::SMSC_SUPPORTED_CODESET, optional.get_supported_codeset() );
-
+  if( optional.has_charging())
+  {
+    sms->setIntProperty(Tag::SCAG_CHARGING,optional.get_charging());
+  }
+  if(optional.has_message_type())
+  {
+    sms->setIntProperty(Tag::SCAG_MSG_TYPES,(sms->getIntProperty(Tag::SCAG_MSG_TYPES)&0xffff0000)|optional.get_message_type());
+  }
+  if(optional.has_expected_message_type())
+  {
+    sms->setIntProperty(Tag::SCAG_MSG_TYPES,(sms->getIntProperty(Tag::SCAG_MSG_TYPES)&0xffff)|(optional.get_expected_message_type()<<16));
+  }
 }
 
 inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms,bool forceDC=false)
