@@ -19,6 +19,7 @@
       </section>
     </section>
   </section>
+  
   <section name="MessageStorage">
      <param name="statisticsDir" type="string">@ms.statdir@</param>
      <param name="trafficDir" type="string">@ms.trafficdir@</param>
@@ -39,8 +40,10 @@
      <param name="statisticsDir" type="string">@stat.dir@</param>
      <param name="perfHost" type="string">@stat.perf_host@</param>
      <param name="perfGenPort" type="int">@stat.perf_port@</param>
-     <param name="perfSvcPort" type="int">@stat,perf_svc_port@</param>
+     <param name="perfSvcPort" type="int">@stat.perf_svc_port@</param>
      <param name="perfScPort" type="int">@stat.perf_sc_port@</param>
+     <param name="saccPort" type="int">@stat.sacc_port@</param>
+     <param name="saccHost" type="string">@stat.sacc_host@</param>
   </section>
 				       	    
   <section name="RuleEngine">
@@ -64,10 +67,6 @@
     </section>
   </section>
 
-  <section name="billing">
-    <param name="module" type="string">libsimplebilling.so</param>
-  </section>
-  
   <section name="MessageStorage">
        <param name="statisticsDir" type="string">@storage.statistics_dir@</param>
         <param name="trafficDir" type="string">@storage.traffic_dir@</param>
@@ -80,20 +79,6 @@
     <param name="BillingServerPort" type="int">@bill.server_port@</param>
   </section>
   
-  <section name="SessionManager">
-    <param name="location" type="string">@session.location@</param>
-  </section>
-  <section name="StatisticsManager">
-      <param name="statisticsDir" type="string">@stat.dir@</param>
-      <param name="perfHost" type="string">@stat.perf_host@</param>
-      <param name="perfGenPort" type="int">@stat.perf_port@</param>
-      <param name="perfSvcPort" type="int">@stat,perf_svc_port@</param>
-      <param name="perfScPort" type="int">@stat.perf_sc_port@</param>
-      <param name="saccPort" type="int">@stat,sacc_port@</param>
-      <param name="saccHost" type="string">@stat.sacc_host@</param>
-		 
-  </section>
-		        
   <section name="RuleEngine">
       <param name="location" type="string">@rules.path@</param>
   </section>
