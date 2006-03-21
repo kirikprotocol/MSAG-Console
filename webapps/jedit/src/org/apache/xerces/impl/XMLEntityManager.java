@@ -1977,7 +1977,7 @@ public class XMLEntityManager
         }
         if (str.startsWith("../"))
           str = str.substring(3,str.length());
-        if (str.endsWith(".xsd") && !str.startsWith("xsd")) str = "xsd" + str;
+        if (str.endsWith(".xsd") && !str.startsWith("xsd")) str = "xsd/" + str;
       // done
         return str;
 

@@ -152,7 +152,10 @@ public class myServlet extends HttpServlet
 
   private void unlockRule(HttpServletRequest req,final String file, final String transport) {
     SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
-    if (file.equals("")) appContext.getRuleManager().unlockAllRules();
+    if (file.equals("")) {
+      appContext.getRuleManager().unlockAllRules();
+      return;
+    }
     Rule rule = appContext.getRuleManager().getRule(Long.valueOf(file) ,transport);
     rule.unlock();
   }

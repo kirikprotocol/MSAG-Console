@@ -195,6 +195,7 @@ public class jEdit extends Applet
     activeView=null;
     System.out.println("exit zakomentirovan!!!...");
     if (getBooleanProperty("newRule")) InvalidateNewRule();
+    unlockAllRules();
    //  jEdit.exit(activeView,true);
   }
   //{{{ main() method
@@ -2374,6 +2375,8 @@ public class jEdit extends Applet
     // Close dialog, view.close() call need a view...
     if (view == null)
       view = activeView;
+    String path = view.getBuffer().getSymlinkPath();
+    String transport = (String)view.getBuffer().getProperty("transport");
      for (int i = 0; i < jars.size(); i++) {
        PluginJAR jar=(PluginJAR) jars.elementAt(i);
        jar.WindowClose(view);
@@ -2433,6 +2436,7 @@ public class jEdit extends Applet
       InvalidateNewRule();
       jEdit.jEditContext.showDocument(jEdit.targetUrl);
     }
+    unlockRule(path,transport);
   } //}}}
   //{{{ exitView() method
   /**
@@ -2449,7 +2453,7 @@ public class jEdit extends Applet
     // Close dialog, view.close() call need a view...
     if (view == null)
       view = activeView;
-
+    String transport = (String)view.getBuffer().getProperty("transport");
    // jEdit.closeBuffer(view,view.getBuffer());
     // Wait for pending I/O requests
     VFSManager.waitForRequests();
@@ -2510,6 +2514,7 @@ public class jEdit extends Applet
       InvalidateNewRule();
       jEdit.jEditContext.showDocument(jEdit.targetUrl);
     }
+    unlockRule(path,transport);
   } //}}}
   /*invalidate "newRule" attribute in session to prevent call of jEdit.newRule() method
     from page   ...scag/rules/rules/index.jsp*/
@@ -2521,6 +2526,15 @@ public class jEdit extends Applet
     HttpGet(h,RuleNameReset);
   }
 
+  private static void unlockAllRules() {
+    unlockRule("","");
+  }
+  private static void unlockRule(String file, String transport) {
+    HashMap h = new HashMap();
+    h.put("file",file);
+    h.put("transport",transport);
+    HttpGet(h,UnLockServiceRule);
+  }
   //{{{ getEditServer() method
   /**
    * Returns the edit server instance. You can use this to find out the
@@ -3110,6 +3124,7 @@ public class jEdit extends Applet
   protected static final int RootElement = 31;
   protected static final int RuleName = 32;
   protected static final int RuleNameReset = 33;
+  protected static final int UnLockServiceRule = 34;
 
   public static int getRootElement()
   {

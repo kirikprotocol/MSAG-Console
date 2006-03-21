@@ -90,7 +90,7 @@ public class XmlActions
        }
        String text = buffer.getText(0,buffer.getLength());
        int caret = textArea.getCaretPosition();
-       TagParser.Tag tag = TagParser.getTagForOffsetAndProlog(text,caret);
+       TagParser.Tag tag = TagParser.getTagForOffsetAndProlog(text,caret+1);
        if(tag == null /*|| tag.type == TagParser.T_END_TAG*/)
          { //view.getToolkit().beep();
          return false;
@@ -98,7 +98,7 @@ public class XmlActions
        else {  //System.out.println("XMLActions.checkRootTag start tag.tag= "+tag.tag);
           String Root=jEdit.getProperty("RootElement");
          //System.out.println("RootElement= "+Root);
-         if (tag.tag.equals(jEdit.getProperty("RootElement")) || tag.tag.equals("?xml"))
+         if (tag.tag.equals(jEdit.getProperty("RootElement")) || tag.tag.equals("?xml") ||tag.tag.startsWith("whoisd"))
                  return true;
        }
       return false;
