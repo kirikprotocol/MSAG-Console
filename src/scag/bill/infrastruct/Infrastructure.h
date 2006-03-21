@@ -19,8 +19,8 @@ protected:
 
 public:
 
-    static void Init(const std::string& filename);
-    static Infrastructure& Instance();
+    static void Init(const char* ProviderFile, const char* OperatorFile);
+	static Infrastructure& Instance();
 
 	virtual uint32_t GetProviderID(uint32_t service_id) = 0;
 	virtual uint32_t GetOperatorID(struct Address addr) = 0;

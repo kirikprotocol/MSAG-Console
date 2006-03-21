@@ -1,7 +1,7 @@
 /* $Id$ */
 
-#ifndef __SCAG_ENV_XMLHANDLERS_H__
-#define __SCAG_ENV_XMLHANDLERS_H__
+#ifndef __SCAG_BILL_INFRA_XMLHANDLERS_H__
+#define __SCAG_BILL_INFRA_XMLHANDLERS_H__
 
 #include <xercesc/sax/HandlerBase.hpp>
 #include <xercesc/framework/XMLFormatter.hpp>
@@ -21,30 +21,33 @@ using smsc::core::buffers::Hash;
 
 XERCES_CPP_NAMESPACE_USE
 
-XERCES_CPP_NAMESPACE_BEGIN
-class AttributeList;
-XERCES_CPP_NAMESPACE_END
-
 class XMLBasicHandler;
 class XMLBasicHandler : public HandlerBase, private XMLFormatTarget
 {
+	int type;
     Logger * logger;
-    XMLFormatter  fFormatter;
-	IntHash<uint32_t> *hash;
+	IntHash<uint32_t> *service_hash;
+	Hash<uint32_t>	*abonent_hash;
+	uint32_t cur_provider_id;
+	uint32_t cur_operator_id;
+	bool in_mask;
+	XMLCh mask_chars[200];
+	uint32_t mask_len;
 
-    void writeChars(const XMLByte* const toWrite);
-    void writeChars(const XMLByte* const toWrite, const unsigned int count, XMLFormatter* const formatter);
-    void characters(const XMLCh* const chars, const unsigned int length);
+    void writeChars(const XMLByte* const toWrite, const unsigned int count, XMLFormatter* const formatter) {};
+	void characters(const XMLCh *const chars, const unsigned int length);
 
 protected:
-public:
-    XMLBasicHandler(const char* const encodingName, IntHash<uint32_t>* hash);
-    ~XMLBasicHandler();
+	void ProviderMapStartElement(const char* qname, AttributeList& attrs);
+	void OperatorMapStartElement(const char* qname, AttributeList& attrs);
 
-    void startDocument();
+public:
+    XMLBasicHandler(const char* const encodingName, IntHash<uint32_t>* h);
+    XMLBasicHandler(const char* const encodingName, Hash<uint32_t>* h);
+    ~XMLBasicHandler() {};
+
     void startElement(const XMLCh* const qname, AttributeList& attributes);
     void endElement(const XMLCh* const qname);
-    void endDocument();
 
     void warning(const SAXParseException& exc);
     void error(const SAXParseException& exc);
@@ -76,4 +79,3 @@ private :
 }}}
 
 #endif
-

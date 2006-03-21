@@ -8,7 +8,6 @@
 #include <xercesc/sax2/XMLReaderFactory.hpp>
 #include <xercesc/util/OutOfMemoryException.hpp>
 #include <xercesc/framework/MemBufInputSource.hpp>
-#include <xercesc/parsers/SAXParser.hpp>
 #include <locale.h>
 
 #include <core/synchronization/Mutex.hpp>
@@ -38,13 +37,14 @@ class InfrastructureImpl : public Infrastructure
 {
 	typedef IntHash<uint32_t> ServiceHash;
 
-	ServiceHash* service_hash;
-    std::string xmlFile;
+	IntHash<uint32_t>* service_hash;
+	Hash<uint32_t>*	mask_hash;
+    std::string ProviderFile, OperatorFile;
     Logger * logger;
 	Mutex ProviderReloadMutex, ProviderMapMutex;
 	Mutex OperatorReloadMutex, OperatorMapMutex;
 
-    void ParseFile(const std::string& xmlFile, IntHash<uint32_t>*);
+    void ParseFile(const char *, XMLBasicHandler*);
 
 public:
     InfrastructureImpl();
@@ -54,11 +54,10 @@ public:
     virtual void ReloadOperatorMap();
     virtual uint32_t GetProviderID(uint32_t service_id);
     virtual uint32_t GetOperatorID(Address addr);
+
+	void _Init(const char *, const char *);
+protected:
 };
-
-/////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////
-
 
 static bool  bInfrastructureInited = false;
 static Mutex initInfrastructureLock;
@@ -78,38 +77,44 @@ Infrastructure& Infrastructure::Instance()
 }
 
 
-void Infrastructure::Init(const std::string& _xmlFile)
+void Infrastructure::Init(const char* _ProviderFile, const char* _OperatorFile)
 {
     if (!bInfrastructureInited)
     {
         MutexGuard guard(initInfrastructureLock);
         if (!bInfrastructureInited) {
             InfrastructureImpl& sm = SingleSM::Instance();
-//			sm.xmlFile = _xmlFile;
-//		    logger = Logger::getInstance("bill.i");
-//            sm.Reload(); 
+			sm._Init(_ProviderFile, _OperatorFile);
+            sm.ReloadProviderMap(); 
+            sm.ReloadOperatorMap(); 
             bInfrastructureInited = true;
         }
     }
 }
 
+void InfrastructureImpl::_Init(const char* _ProviderFile, const char* _OperatorFile)
+{
+	MutexGuard mt(ProviderReloadMutex);
+	MutexGuard mt1(OperatorReloadMutex);
+	ProviderFile = _ProviderFile;
+	OperatorFile = _OperatorFile;
+}
 
-void InfrastructureImpl::ParseFile(const std::string& _xmlFile, ServiceHash* h)
+void InfrastructureImpl::ParseFile(const char* _xmlFile, XMLBasicHandler* handler)
 {
     int errorCount = 0;
     int errorCode = 0;
 
-    SAXParser parser;
-    XMLBasicHandler handler("KOI8-R", h);
+//    setlocale(LC_ALL,"ru_RU.KOI8-R");
+//    XMLPlatformUtils::Initialize("ru_RU.KOI8-R");
 
-    setlocale(LC_ALL,"ru_RU.KOI8-R");
+    SAXParser parser;
+
     //setlocale(LC_ALL,"UTF-8");
-    RegExp::InitLocale();
+//    RegExp::InitLocale();
 
     try
     {
-        XMLPlatformUtils::Initialize("ru_RU.KOI8-R");
-
         parser.setValidationScheme(SAXParser::Val_Always);
         parser.setDoSchema(true);
         parser.setValidationSchemaFullChecking(true);
@@ -119,46 +124,47 @@ void InfrastructureImpl::ParseFile(const std::string& _xmlFile, ServiceHash* h)
 
         parser.setValidationConstraintFatal(true);
 
-        parser.setDocumentHandler(&handler);
-        parser.setErrorHandler(&handler);
+        parser.setDocumentHandler(handler);
+        parser.setErrorHandler(handler);
 
-
-        parser.parse(xmlFile.c_str());
+        parser.parse(_xmlFile);
         errorCount = parser.getErrorCount();
-
-	    XMLPlatformUtils::Terminate();
     }
     catch (const OutOfMemoryException&)
     {
-        smsc_log_error(logger,"Terminate parsing Rule: XMLPlatform: OutOfMemoryException");
-        throw Exception("Terminate parsing Rule: XMLPlatform: OutOfMemoryException");
+        smsc_log_error(logger,"Terminate parsing: XMLPlatform: OutOfMemoryException");
+        throw Exception("Terminate parsing: XMLPlatform: OutOfMemoryException");
     }
     catch (const XMLException& toCatch)
     {
         StrX msg(toCatch.getMessage());
 
-        smsc_log_error(logger,"Terminate parsing Rule: An error occurred. Error: %s", msg.localForm());
-        throw Exception("Terminate parsing Rule: An error occurred. Error: %s", msg.localForm());
+        smsc_log_error(logger,"Terminate parsing: An error occurred. Error: %s", msg.localForm());
+        throw Exception("Terminate parsing: An error occurred. Error: %s", msg.localForm());
     }
     catch (Exception& e)
     {
-        smsc_log_error(logger,"Terminate parsing Rule: %s",e.what());
+        smsc_log_error(logger,"Terminate parsing: %s",e.what());
         throw e;
     }
     catch (...)
     {
-        smsc_log_error(logger,"Terminate parsing Rule: unknown fatal error");
-        throw Exception("Terminate parsing Rule: unknown fatal error");
+        smsc_log_error(logger,"Terminate parsing: unknown fatal error");
+        throw Exception("Terminate parsing: unknown fatal error");
     }
 
-    //delete parser;
+//    delete parser;
+  //  XMLPlatformUtils::Terminate();
 
     if (errorCount > 0) 
-        smsc_log_error(logger,"Error parsing Rule: some errors occured");
+        smsc_log_error(logger,"Error parsing: some errors occured");
 }
 
-InfrastructureImpl::InfrastructureImpl() : service_hash(NULL)
+InfrastructureImpl::InfrastructureImpl()
 {
+    XMLPlatformUtils::Initialize("ru_RU.KOI8-R");
+    logger = Logger::getInstance("bill.i");
+	service_hash = new ServiceHash();
 }
 
 InfrastructureImpl::~InfrastructureImpl()
@@ -166,28 +172,43 @@ InfrastructureImpl::~InfrastructureImpl()
 	if(service_hash != NULL)
 		delete service_hash;
     smsc_log_debug(logger,"Service Mapper released");
+    XMLPlatformUtils::Terminate();
 }
 
 void InfrastructureImpl::ReloadProviderMap()
 {
 	MutexGuard mt(ProviderReloadMutex);
-	ServiceHash *h = new ServiceHash();
+	IntHash<uint32_t> *hash = new IntHash<uint32_t>();
 	try{
-		ParseFile(xmlFile, h);
+	    XMLBasicHandler handler("KOI8-R", hash);
+		ParseFile(ProviderFile.c_str(), &handler);
 		MutexGuard mt1(ProviderMapMutex);
 		delete service_hash;
-		service_hash = h;
+		service_hash = hash;
 	}
-	catch(Exception e)
+	catch(Exception& e)
 	{
 		smsc_log_info(logger, "Service Map reload was not successful");
-		delete h;
+		delete hash;
 	}
 }
 
 void InfrastructureImpl::ReloadOperatorMap()
 {
 	MutexGuard mt(OperatorReloadMutex);
+	Hash<uint32_t> *hash = new Hash<uint32_t>();
+	try{
+	    XMLBasicHandler handler("KOI8-R", hash);
+		ParseFile(OperatorFile.c_str(), &handler);
+		MutexGuard mt1(OperatorMapMutex);
+		delete mask_hash;
+		mask_hash = hash;
+	}
+	catch(Exception& e)
+	{
+		smsc_log_info(logger, "Service Map reload was not successful");
+		delete hash;
+	}
 }
 
 uint32_t InfrastructureImpl::GetProviderID(uint32_t service_id)
@@ -196,7 +217,7 @@ uint32_t InfrastructureImpl::GetProviderID(uint32_t service_id)
 	try{
 		return service_hash->Get(service_id);
 	}
-	catch(HashInvalidKeyException e)
+	catch(...)
 	{
 		return 0;
 	}
@@ -204,6 +225,7 @@ uint32_t InfrastructureImpl::GetProviderID(uint32_t service_id)
 
 uint32_t InfrastructureImpl::GetOperatorID(Address addr)
 {
+	MutexGuard mt(OperatorMapMutex);
 	return 0;
 }
 
