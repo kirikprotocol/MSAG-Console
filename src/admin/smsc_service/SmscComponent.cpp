@@ -1401,7 +1401,7 @@ throw (AdminException)
   profile.udhconcat = (strcmp("true", udhConcat) == 0) ? true : false;
   profile.translit = (strcmp("true", translit) == 0) ? true : false;
 
-  sscanf(closedGroupId,"%u",profile.closedGroupId);
+  sscanf(closedGroupId,"%u",&profile.closedGroupId);
   sscanf(accessMaskIn,"%u",&profile.accessMaskIn);
   sscanf(accessMaskOut,"%u",&profile.accessMaskOut);
 }
