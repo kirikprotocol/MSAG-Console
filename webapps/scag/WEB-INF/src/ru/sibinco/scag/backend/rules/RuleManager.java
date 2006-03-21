@@ -42,13 +42,15 @@ public class RuleManager
   private final LinkedList mmsSchema = new LinkedList();
   private final File rulesFolder;
   private final File xsdFolder;
+  private final File xslFolder;
   private final Scag scag;
   private final Logger logger = Logger.getLogger(this.getClass());
   private final static boolean DEBUG = false;
 
-  public RuleManager(final File rulesFolder,final File xsdFolder, final Scag scag) {
+  public RuleManager(final File rulesFolder,final File xsdFolder, final File xslFolder, final Scag scag) {
     this.rulesFolder = rulesFolder;
     this.xsdFolder = xsdFolder;
+    this.xslFolder = xslFolder;
     this.scag =scag;
   }
 
@@ -58,6 +60,10 @@ public class RuleManager
     load();
   }
 
+  public File getXslFolder()
+  {
+    return xslFolder;
+  }
 
   public Map getRules(Long serviceId)
   {
@@ -214,10 +220,10 @@ public class RuleManager
     if (requestedScheme.indexOf(Transport.SMPP_SCHEMA_NAME)!=-1) return smppSchema;
     else if (requestedScheme.indexOf(Transport.HTTP_SCHEMA_NAME)!=-1) return httpSchema;
     else if (requestedScheme.indexOf(Transport.MMS_SCHEMA_NAME)!=-1) return mmsSchema;
-    else return baseSchema;
+    return baseSchema;
    }
 
- public synchronized LinkedList AddRule(BufferedReader r, final String ruleId,Rule newRule) throws SibincoException, IOException
+ public synchronized LinkedList AddRule(BufferedReader r, final String ruleId, final Rule newRule) throws SibincoException, IOException
  {
   String transport = newRule.getTransport();
   System.out.println("AddNewRule ruleId= "+ruleId + " ,transport = "+transport);
@@ -232,7 +238,7 @@ public class RuleManager
     r = new BufferedReader(new StringReader(buffer));
   }
 
-  LinkedList newbody = saveRule(r,ruleId, newRule);
+  LinkedList newbody = saveRule(r,ruleId, newRule.getTransport());
 
   if (!DEBUG) {
   try {
@@ -244,7 +250,7 @@ public class RuleManager
     } else {
       removeRuleFile(ruleId, newRule.getTransport());
     }
-    e.printStackTrace();
+    System.out.println(e.getMessage());// e.printStackTrace();
     throw e;
    }
   }
@@ -285,7 +291,7 @@ public class RuleManager
    }
 
    LinkedList curbody = rule.getBody();
-   LinkedList newbody = saveRule(r,ruleId, rule);
+   LinkedList newbody = saveRule(r,ruleId, rule.getTransport());
 
    if (!DEBUG)  {
    try    {
@@ -295,27 +301,27 @@ public class RuleManager
        rule.updateBody(newbody);
      }
      else {
-     saveRule(curbody,ruleId,rule);
+     saveRule(curbody,ruleId,rule.getTransport());
      }
-     e.printStackTrace();
+     System.out.println(e.getMessage());// e.printStackTrace();
      throw e;
     }
    }
     if (errorInfo == null || errorInfo.size()==0) {
        rule.updateBody(newbody);
     } else {
-       saveRule(curbody,ruleId,rule);
+       saveRule(curbody,ruleId,rule.getTransport());
     }
    return errorInfo;
  }
 
-  private void saveRule(LinkedList li,String ruleId, Rule rule) throws SibincoException
+  public void saveRule(LinkedList li,String ruleId, String transport) throws SibincoException
   {
     System.out.println("RESAVING current rule body to disc!!!!");
 
     try {
       String filename="rule_"+ruleId+".xml";
-      String transport= rule.getTransport();
+      //String transport= rule.getTransport();
       final File folder = new File(rulesFolder, transport);
       File newFile= new File(folder,filename);
       final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), Functions.getLocaleEncoding()));
@@ -332,12 +338,12 @@ public class RuleManager
 
   }
 
-  private LinkedList saveRule(BufferedReader r,String ruleId, Rule rule) throws SibincoException
+  private LinkedList saveRule(BufferedReader r,String ruleId, String transport) throws SibincoException
   {
       LinkedList li=new LinkedList();
       try {
         String filename="rule_"+ruleId+".xml";
-        String transport= rule.getTransport();
+        //String transport= rule.getTransport();
         final File folder = new File(rulesFolder, transport);
         File newFile= new File(folder,filename);
         System.out.print("Saving rule to disc!!!! file : " + newFile);
@@ -357,7 +363,7 @@ public class RuleManager
       return li;
     }
 
-    public synchronized void removeRule(String ruleId, String transport) throws SibincoException
+    public synchronized void removeRule(final String ruleId, final String transport) throws SibincoException
     {
           try {
             scag.removeRule(ruleId,transport);
@@ -372,6 +378,17 @@ public class RuleManager
               throw se;
           }
     }
+
+    public void removeRulesForService(final String ruleId)
+    {
+      try {
+      String[] transports=Transport.transportTitles;
+      for (byte i=0;i<transports.length;i++)
+          removeRule(ruleId,transports[i]);
+      } catch(SibincoException se) { //TODO: ???
+         }
+    }
+
     private void removeRuleFromMap(String ruleId, String transport)
     {
       if (transport.equals(Transport.SMPP_TRANSPORT_NAME))
@@ -390,6 +407,17 @@ public class RuleManager
         if (fileForDeleting.exists())
           if (fileForDeleting.delete()!=true) throw new SibincoException("Couldn't delete rule " + fileForDeleting.getAbsolutePath());
     }
+
+  public void unlockAllRules() {
+     Collection allRule = new ArrayList();
+     allRule.addAll(smpprules.values());
+     allRule.addAll(httprules.values());
+     allRule.addAll(mmsrules.values());
+     for(Iterator i = allRule.iterator();i.hasNext();) {
+       Rule rule = (Rule)i.next();
+       rule.unlock();
+     }
+  }
 
   private String buffertostring(BufferedReader r) throws IOException
   {

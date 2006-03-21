@@ -57,6 +57,7 @@ public class myServlet extends HttpServlet
   protected static final int RootElement = 31;
   protected static final int RuleName = 32;
   protected static final int RuleNameReset = 33;
+  protected static final int UnLockServiceRule = 34;
   protected HttpSession session = null;
 
   // public static String userdir=null;
@@ -81,6 +82,7 @@ public class myServlet extends HttpServlet
        case ExistRule:  ExistRule(req,file,transport,res); break;
        case SaveBackup: list=SaveBackup(new File(file), req); break;
        case RuleNameReset: if (session !=null) session.removeAttribute("newRule"); break;
+       case UnLockServiceRule: unlockRule(req,file,transport); break;
        default:
         if (req.getParameter("renameto")!=null) list=RenameTo(new File(file),new File(req.getParameter("renameto")));
         else if (req.getParameter("intparam")!=null) list=FilesCommand(file,command,Integer.parseInt(req.getParameter("intparam")));
@@ -147,6 +149,14 @@ public class myServlet extends HttpServlet
    PrintWriter out = res.getWriter();
    out.print("true");out.flush();out.close();
  }
+
+  private void unlockRule(HttpServletRequest req,final String file, final String transport) {
+    SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
+    if (file.equals("")) appContext.getRuleManager().unlockAllRules();
+    Rule rule = appContext.getRuleManager().getRule(Long.valueOf(file) ,transport);
+    rule.unlock();
+  }
+
   private void updateRule(HttpServletRequest req,final String file, final String transport, HttpServletResponse res) throws IOException
   {
     System.out.println("myServlet updateRule");
@@ -166,7 +176,7 @@ public class myServlet extends HttpServlet
         out.println("true");
       } else {
         out.println("false");
-        out.print(e.getMessage());
+        out.println(e.getMessage());
       }
         out.flush();out.close();
     }    finally {
@@ -182,8 +192,7 @@ public class myServlet extends HttpServlet
     session = req.getSession(false);
     Rule newRule =(Rule)session.getAttribute("newRule");
     SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
-    PrintWriter out = res.getWriter();
-    //transport
+    PrintWriter out = res.getWriter();    
     LinkedList li;
     BufferedReader r=req.getReader();
     try {
@@ -230,11 +239,9 @@ public class myServlet extends HttpServlet
     {
       System.out.println("LoadRule id= "+file+" transport="+transport);
       SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
-      /*Map ruleMap=appContext.getRuleManager().getRuleMap(Long.valueOf(file));
-       Long length=(Long) ruleMap.get("length");
-      res.setHeader("length",String.valueOf(length));
-      LinkedList li=(LinkedList) ruleMap.get("body"); */
-      return appContext.getRuleManager().getRuleBody(Long.valueOf(file),transport);
+      Rule rule = appContext.getRuleManager().getRule(Long.valueOf(file) ,transport);
+      rule.lock();
+      return rule.getBody();
     }
 
   private LinkedList LoadNewRule(HttpServletRequest req,final String file, final String transport, HttpServletResponse res) throws IOException
