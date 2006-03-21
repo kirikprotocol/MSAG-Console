@@ -10,7 +10,7 @@
         </documentation>
     </annotation>
     
-    <redefine schemaLocation="xsd/rules.xsd">
+    <redefine schemaLocation="rules.xsd">
         
         <simpleType name="Transport">
             <restriction base="scag:Transport">
