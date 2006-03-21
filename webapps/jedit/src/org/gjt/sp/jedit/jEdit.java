@@ -2435,7 +2435,7 @@ public class jEdit extends Applet
     {
       InvalidateNewRule();
       jEdit.jEditContext.showDocument(jEdit.targetUrl);
-    }
+    } else
     unlockRule(path,transport);
   } //}}}
   //{{{ exitView() method
@@ -2513,7 +2513,7 @@ public class jEdit extends Applet
     {
       InvalidateNewRule();
       jEdit.jEditContext.showDocument(jEdit.targetUrl);
-    }
+    } else
     unlockRule(path,transport);
   } //}}}
   /*invalidate "newRule" attribute in session to prevent call of jEdit.newRule() method
