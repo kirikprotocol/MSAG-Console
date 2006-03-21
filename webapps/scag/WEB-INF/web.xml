@@ -25,7 +25,10 @@
      <servlet-name>xsdProxy</servlet-name>
      <servlet-class>ru.sibinco.scag.beans.rules.applet.XSDProxy</servlet-class>
    </servlet>
-
+   <servlet>
+     <servlet-name>WHOISD</servlet-name>
+     <servlet-class>ru.sibinco.WHOISDIntegrator.WHOISDServlet</servlet-class>     
+   </servlet>
   <filter>
     <filter-name>SCAG</filter-name>
     <filter-class>ru.sibinco.scag.beans.SCAGFilter</filter-class>
@@ -180,7 +183,12 @@
      <servlet-name>xsdProxy</servlet-name>
      <url-pattern>/rules/rules/xsd/*</url-pattern>
    </servlet-mapping>
-     
+
+   <servlet-mapping>
+     <servlet-name>WHOISD</servlet-name>
+     <url-pattern>/WHOISD/*</url-pattern>
+   </servlet-mapping>
+
   <filter-mapping>
     <filter-name>SCAG</filter-name>
     <url-pattern>/*</url-pattern>
