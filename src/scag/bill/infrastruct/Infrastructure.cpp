@@ -15,6 +15,7 @@
 
 #include <scag/util/singleton/Singleton.h>
 #include <logger/Logger.h>
+#include <sms/sms_const.h>
 
 #include "XMLHandlers.h"
 #include "util/regexp/RegExp.hpp"
@@ -32,6 +33,7 @@ using namespace smsc::util;
 using namespace scag::util::singleton;
 using namespace smsc::util::regexp;
 using smsc::logger::Logger;
+using smsc::sms;
 
 class InfrastructureImpl : public Infrastructure
 {
@@ -171,6 +173,8 @@ InfrastructureImpl::~InfrastructureImpl()
 {
 	if(service_hash != NULL)
 		delete service_hash;
+	if(mask_hash != NULL)
+		delete mask_hash;
     smsc_log_debug(logger,"Service Mapper released");
     XMLPlatformUtils::Terminate();
 }
@@ -188,7 +192,7 @@ void InfrastructureImpl::ReloadProviderMap()
 	}
 	catch(Exception& e)
 	{
-		smsc_log_info(logger, "Service Map reload was not successful");
+		smsc_log_info(logger, "Provider Map reload was not successful");
 		delete hash;
 	}
 }
@@ -206,7 +210,7 @@ void InfrastructureImpl::ReloadOperatorMap()
 	}
 	catch(Exception& e)
 	{
-		smsc_log_info(logger, "Service Map reload was not successful");
+		smsc_log_info(logger, "Operator Map reload was not successful");
 		delete hash;
 	}
 }
@@ -226,6 +230,27 @@ uint32_t InfrastructureImpl::GetProviderID(uint32_t service_id)
 uint32_t InfrastructureImpl::GetOperatorID(Address addr)
 {
 	MutexGuard mt(OperatorMapMutex);
+
+	uint8_t mask_ptr, addr_len;
+	char a[smsc::sms::MAX_ADDRESS_VALUE_LENGTH + 2];
+
+	a[0] = '+';
+	addr_len = addr.getValue(a + 1);
+
+	if(!addr_len)
+		return 0;
+
+	addr_len++;
+
+	mask_ptr = addr_len - 1;
+
+	bool found;
+	while(!(found = mask_hash->Exists(a)) && mask_ptr > 1)
+		a[mask_ptr--] = '?';
+
+	if(found)
+		return mask_hash->Get(a);
+
 	return 0;
 }
 

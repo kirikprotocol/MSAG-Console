@@ -7,6 +7,8 @@
 
 namespace scag { namespace bill { namespace infrastruct {
 
+using namespace smsc::sms;
+
 class Infrastructure
 {
     Infrastructure(const Infrastructure& sm);
@@ -23,7 +25,7 @@ public:
 	static Infrastructure& Instance();
 
 	virtual uint32_t GetProviderID(uint32_t service_id) = 0;
-	virtual uint32_t GetOperatorID(struct Address addr) = 0;
+	virtual uint32_t GetOperatorID(Address addr) = 0;
 	virtual void ReloadProviderMap() = 0;
 	virtual void ReloadOperatorMap() = 0;
 };
