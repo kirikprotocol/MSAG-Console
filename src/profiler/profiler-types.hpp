@@ -102,8 +102,8 @@ struct Profile{
     translit=true;
 
     closedGroupId=0;
-    accessMaskIn=0xFFFFFFFF;
-    accessMaskOut=0xFFFFFFFF;
+    accessMaskIn=1;
+    accessMaskOut=1;
 
     offset=-1;
   }
