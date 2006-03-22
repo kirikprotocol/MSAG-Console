@@ -38,6 +38,26 @@ SCAGCommandReader::SCAGCommandReader(Socket * admSocket)
   commandlist["reloadTariffMatrix"] = CommandIds::reloadTariffMatrix;
 }
 
+/*
+    addSme
+    statusSme
+    apply
+    deleteSme
+    loadRoutes
+    traceRoute
+    updateSmeInfo
+    addSmsc
+    deleteSmsc
+    updateSmsc
+    addRule
+    updateRule
+    removeRule
+    reloadOperators
+    reloadServices
+    reloadTariffMatrix
+    
+*/
+
 SCAGCommandReader::~SCAGCommandReader()
 {
 }

@@ -50,6 +50,7 @@ class BillingManagerImpl : public BillingManager, public Thread, public BillingM
 
     int m_MaxEventMonitors;
     int m_lastBillId; 
+    int m_TimeOut;
 
     void Stop();
     bool isStarted();
@@ -141,6 +142,7 @@ void BillingManagerImpl::init(BillingManagerConfig& cfg)
     smsc_log_info(logger,"BillingManager start initing...");
 
     m_MaxEventMonitors = cfg.MaxThreads;
+    m_TimeOut = cfg.BillingTimeOut;
 
     try
     {

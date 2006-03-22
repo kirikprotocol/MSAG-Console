@@ -30,12 +30,18 @@ enum TransactionStatus
 
 enum BillingTransactionEvent
 {
-    TRANSACTION_COMMITED        = 0,
-    TRANSACTION_TIME_OUT        = 1,
-    TRANSACTION_REFUSED         = 2,
+    TRANSACTION_OPEN            = 1,
+    TRANSACTION_COMMITED        = 2,
     TRANSACTION_CALL_ROLLBACK   = 3,
-    TRANSACTION_OPEN            = 4
+    TRANSACTION_TIME_OUT        = 4,
+    TRANSACTION_REFUSED         = 5
 };
+/*
+1-open
+2-commit
+3-rollback
+4-rollback_by_timeout */
+
 
 class BillingManager
 {

@@ -14,7 +14,7 @@ public:
 
     std::string BillingHost;
     int BillingPort;
-
+    int BillingTimeOut;
     int MaxThreads;
 
 
