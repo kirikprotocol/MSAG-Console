@@ -190,14 +190,14 @@ void InfrastructureImpl::ParseFile(const char* _xmlFile, XMLBasicHandler* handle
     catch (const OutOfMemoryException&)
     {
         smsc_log_error(logger,"Terminate parsing: XMLPlatform: OutOfMemoryException");
-        throw Exception("Terminate parsing: XMLPlatform: OutOfMemoryException");
+        throw Exception("XMLPlatform: OutOfMemoryException");
     }
     catch (const XMLException& toCatch)
     {
         StrX msg(toCatch.getMessage());
 
-        smsc_log_error(logger,"Terminate parsing: An error occurred. Error: %s", msg.localForm());
-        throw Exception("Terminate parsing: An error occurred. Error: %s", msg.localForm());
+        smsc_log_error(logger,"Terminate parsing: XMLException: %s", msg.localForm());
+        throw Exception("XMLException: %s", msg.localForm());
     }
     catch (Exception& e)
     {
@@ -207,7 +207,7 @@ void InfrastructureImpl::ParseFile(const char* _xmlFile, XMLBasicHandler* handle
     catch (...)
     {
         smsc_log_error(logger,"Terminate parsing: unknown fatal error");
-        throw Exception("Terminate parsing: unknown fatal error");
+        throw Exception("unknown fatal error");
     }
 
 //    delete parser;
