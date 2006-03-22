@@ -222,7 +222,7 @@ private:
 class InmanHandler
 {
 public:
-    virtual void onChargeSms(ChargeSms* sms) = 0;
+    virtual bool onChargeSms(ChargeSms* sms) = 0;
     virtual void onDeliverySmsResult(DeliverySmsResult* sms) = 0;
 };
 
