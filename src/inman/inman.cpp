@@ -87,7 +87,7 @@ public:
         host = bill.ssf_addr = bill.scf_addr = bill.cdrDir = NULL;
         port = bill.ssn = bill.serviceKey = 0;
         bill.cdrInterval = cachePrm.interval = cachePrm.RAM = 0;
-        cachePrm.nmFile = NULL;
+        cachePrm.nmDir = NULL;
         bill.billMode = smsc::inman::BILL_ALL;
         bill.cdrMode =  BillingCFG::CDR_ALL;
         
@@ -202,6 +202,11 @@ public:
             smsc_log_info(inapLogger, "cacheRAM: %d Mb", cachePrm.RAM);
         } catch (ConfigException& exc) {
             throw ConfigException("'cacheRAM' is missing or invalid");
+        }
+        try {
+            cachePrm.nmDir = billCfg.getString("cacheDir");
+        } catch (ConfigException& exc) {
+            throw ConfigException("'cacheDir' is missing");
         }
 
         /*  optional Billing parameters */
