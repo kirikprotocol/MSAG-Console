@@ -131,6 +131,37 @@ private:
   subjects subj;
 };
 
+//------------------------ Bill infrastructure commands ------------------------
+class CommandReloadOperators : public AdminCommand
+{
+public:
+	CommandReloadOperators(const xercesc::DOMDocument * const doc) :
+        AdminCommand((Command::Id)CommandIds::reloadOperators, doc)
+    {
+    }
+    virtual Response * CreateResponse(scag::Scag * SmscApp);
+};
+
+class CommandReloadServices : public AdminCommand
+{
+public:
+	CommandReloadServices(const xercesc::DOMDocument * const doc) :
+        AdminCommand((Command::Id)CommandIds::reloadServices, doc)
+    {
+    }
+    virtual Response * CreateResponse(scag::Scag * SmscApp);
+};
+
+class CommandReloadTariffMatrix : public AdminCommand
+{
+public:
+	CommandReloadTariffMatrix(const xercesc::DOMDocument * const doc) :
+        AdminCommand((Command::Id)CommandIds::reloadTariffMatrix, doc)
+    {
+    }
+    virtual Response * CreateResponse(scag::Scag * SmscApp);
+};
+
 }
 }
 

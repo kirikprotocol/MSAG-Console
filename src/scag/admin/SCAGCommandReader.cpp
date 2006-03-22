@@ -32,6 +32,10 @@ SCAGCommandReader::SCAGCommandReader(Socket * admSocket)
   commandlist["updateRule"] = CommandIds::updateRule;
   commandlist["removeRule"] = CommandIds::removeRule;
   commandlist["addRule"] = CommandIds::addRule;
+
+  commandlist["reloadOperators"] = CommandIds::reloadOperators;
+  commandlist["reloadServices"] = CommandIds::reloadServices;
+  commandlist["reloadTariffMatrix"] = CommandIds::reloadTariffMatrix;
 }
 
 SCAGCommandReader::~SCAGCommandReader()
@@ -72,6 +76,10 @@ Command * SCAGCommandReader::createCommand(int id, const DOMDocument *data)
     case CommandIds::updateRule: return new CommandUpdateRule(data);
     case CommandIds::removeRule: return new CommandRemoveRule(data);
     case CommandIds::addRule: return new CommandAddRule(data);
+
+    case CommandIds::reloadOperators: return new CommandReloadOperators(data);
+    case CommandIds::reloadServices: return new CommandReloadServices(data);
+    case CommandIds::reloadTariffMatrix: return new CommandReloadTariffMatrix(data);
 
     default: 
       smsc_log_warn(logger, "Unknown command id \"%i\"", id);

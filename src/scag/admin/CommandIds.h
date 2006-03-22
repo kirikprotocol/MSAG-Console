@@ -28,7 +28,10 @@ namespace CommandIds {
     updateSmsc,
     updateRule,
     removeRule,
-    addRule
+    addRule,
+	reloadOperators,
+	reloadServices,
+	reloadTariffMatrix
   };
 }
 
