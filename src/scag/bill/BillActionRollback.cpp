@@ -7,6 +7,17 @@ bool BillActionRollback::run(ActionContext& context)
 {
     smsc_log_error(logger,"Run Action 'BillActionRollback'...");
 
+    /////////////////////////////////////////////
+
+    Statistics& statistics = Statistics::Instance();
+
+    SACC_BILLING_INFO_EVENT_t ev;
+
+
+    /////////////////////////////////////////////
+
+
+
     Operation * operation = context.GetCurrentOperation();
     if (!operation) 
     {
@@ -18,6 +29,10 @@ bool BillActionRollback::run(ActionContext& context)
     bm.rollback(operation->getBillId());
 
     operation->detachBill();
+
+    CommandBrige::makeBillEvent(context.getServiceId(), context.getAbonentAddr().toString(), TRANSACTION_CALL_ROLLBACK, ev);
+    statistics.registerSaccEvent(ev);
+
 
     return true;
 }

@@ -3,12 +3,24 @@
 
 #include <scag/transport/smpp/SmppCommand.h>
 #include <scag/exc/SCAGExceptions.h>
+#include "util/recoder/recode_dll.h"
+#include "scag/stat/Statistics.h"
+
+namespace scag { namespace sessions {
+
+struct CSessionPrimaryKey;
+
+}}
+
 
 namespace scag { namespace re {
 
 using namespace scag::transport;
 using namespace scag::transport::smpp;
 using namespace scag::exceptions;
+
+using namespace scag::stat;
+
 
 enum CommandOperations
 {
@@ -23,10 +35,10 @@ enum CommandOperations
 enum EventHandlerType
 {
     EH_UNKNOWN,
-    EH_DELIVER_SM,
-    EH_DELIVER_SM_RESP,
     EH_SUBMIT_SM,
     EH_SUBMIT_SM_RESP,
+    EH_DELIVER_SM,
+    EH_DELIVER_SM_RESP,
     EH_RECEIPT
 };
 
@@ -43,6 +55,74 @@ class CommandBrige
 {
 public:
 
+    static std::string getMessageBody(SmppCommand& command)
+    {
+        unsigned len1, len2, len;
+
+        const char * buff1;
+        const char * buff2;
+        const char * buff;
+
+        std::string str;
+        char ucs2buff[2048];
+    /*
+        static const uint8_t SMSC7BIT             = 0;
+        static const uint8_t LATIN1               = 3;
+        static const uint8_t BINARY               = BIT(2);
+        static const uint8_t UCS2                 = BIT(3);
+    */
+        SMS& data = getSMS(command);
+        
+        buff1 = data.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len1);
+        buff2 = data.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len2);
+
+        if (len1>len2) {
+            len = len1;
+            buff = buff1;
+        } 
+        else {
+            len = len2;
+            buff = buff2;
+        }
+
+        int code = data.getIntProperty(Tag::SMPP_DATA_CODING);
+
+        switch (code) 
+        {
+        case smsc::smpp::DataCoding::SMSC7BIT:
+            Convert7BitToUCS2(buff, len, (short *)ucs2buff, len*2); 
+            str.assign(ucs2buff,len*2);
+
+            ucs2buff[0] = 0;
+            ucs2buff[1] = 0;
+            str.append(ucs2buff,2);
+            break;
+        case smsc::smpp::DataCoding::LATIN1:
+            ConvertMultibyteToUCS2(buff, len, (short *)ucs2buff, len*2, CONV_ENCODING_KOI8R);
+            str.assign(ucs2buff,len*2);
+
+            ucs2buff[0] = 0;
+            ucs2buff[1] = 0;
+            str.append(ucs2buff,2);
+            break;
+        default:
+    //        memcpy(ucs2buff, buff, len);
+            str.assign(buff,len);
+            ucs2buff[0] = 0;
+            ucs2buff[1] = 0;
+            str.append(ucs2buff,2);
+        }
+
+        return str;
+    }
+
+
+    static void makeTrafficEvent(SmppCommand& command, int handlerType, scag::sessions::CSessionPrimaryKey& sessionPrimaryKey, SACC_TRAFFIC_INFO_EVENT_t& ev);
+    static void makeBillEvent(int serviceId, std::string& abonentAddr, int billCommand, SACC_BILLING_INFO_EVENT_t& ev);
+
+
+
+    /*
     static int ExtractCommandType(SCAGCommand& command)
     {
         SmppCommand * smpp = dynamic_cast<SmppCommand*>(&command);
@@ -54,7 +134,7 @@ public:
         }
     
         return 0;
-    }     
+    }            */
 
 
     static EventHandlerType getHandlerType(const SCAGCommand& command)
@@ -204,6 +284,35 @@ public:
         return sms->getDestinationAddress();
     }
 
+    static SMS& getSMS(SmppCommand& command)
+    {
+        _SmppCommand& cmd = *command.operator->();
+
+        CommandId cmdid = cmd.get_commandId();
+        void * dta = cmd.dta;
+        SMS * sms = 0;
+
+        if (!dta) throw SCAGException("Command Bridge Error: Cannot get SMS from SmppCommand");
+
+        switch (cmdid) 
+        {
+        case DELIVERY:
+            sms = (SMS*)dta;
+            break;
+        case SUBMIT:
+            sms = (SMS*)dta;
+            break;
+        case DELIVERY_RESP:
+            sms = ((SmsResp*)dta)->get_sms();
+            break;
+        case SUBMIT_RESP:
+            sms = ((SmsResp*)dta)->get_sms();
+            break;
+        }
+
+        return *sms;
+    }
+
     static Address getAbonentAddr(const SCAGCommand& command)  
     {
         Address resultAddr;
@@ -241,7 +350,7 @@ public:
             resultAddr = sms->originatingAddress;
             break;
         }
-
+  
         return resultAddr;
 
     }

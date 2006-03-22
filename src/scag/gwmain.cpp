@@ -37,7 +37,7 @@ int main(int argc,char* argv[])
   atexit(atExitHandler);
   scag::clearThreadSignalMask();
 
-  try{
+  try {
     smsc::logger::Logger *logger = Logger::getInstance("scagmain");
 
     smsc_log_info(logger,  "SCAG configuration loading..." );
@@ -49,7 +49,7 @@ int main(int argc,char* argv[])
     {
       string lf=findConfigFile("license.ini");
       string sig=findConfigFile("license.sig");
-      if(!smsc::license::check::CheckLicense(lf.c_str(),sig.c_str(),lic))
+      if (!smsc::license::check::CheckLicense(lf.c_str(),sig.c_str(),lic))
       {
         smsc_log_error(logger, "Invalid license\n");
         return -1;
@@ -80,8 +80,8 @@ int main(int argc,char* argv[])
     Inst inst(filename);
     // Shutdown if there is instance allready.
     if(!inst.run()) {
-        exit(-1);
         fprintf(stderr, "Instance is runing allready.\n");
+        exit(-1);
     }
 
 
@@ -91,9 +91,14 @@ int main(int argc,char* argv[])
       scag::Scag *app=new scag::Scag;
 
       scag::registerScagSignalHandlers(app);
+
+      smsc_log_info(logger,  "Start initialization");
       app->init();
+
+      smsc_log_info(logger,  "Run application");
       app->run();
-//      SmscRunner runner(app);
+
+      //      SmscRunner runner(app);
 //      runner.Start();
 //      runner.WaitFor();
 

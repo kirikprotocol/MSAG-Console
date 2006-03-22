@@ -17,6 +17,7 @@ IntHash<AccessType> SmppCommandAdapter::SubmitFieldsAccess = SmppCommandAdapter:
 IntHash<AccessType> SmppCommandAdapter::DeliverFieldsAccess = SmppCommandAdapter::InitDeliverAccess();
 
 
+
 AccessType SmppCommandAdapter::CheckAccess(int handlerType,const std::string& name)
 {
     int * pFieldId;
@@ -537,12 +538,12 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
             switch (code) 
             {
             case smsc::smpp::DataCoding::SMSC7BIT:
-                ConvertUCS2To7Bit((short *)str.data(), str.size(), buff, 2048); 
-                str.assign(buff,str.size()/2);
+                ConvertUCS2To7Bit((short *)str.data(), str.size()-2, buff, 2048); 
+                str.assign(buff,str.size()/2-1);
                 break;
             case smsc::smpp::DataCoding::LATIN1:
-                ConvertUCS2ToMultibyte((short *)str.data(), str.size(), buff, 2048, CONV_ENCODING_LATIN1);
-                str.assign(buff,str.size()/2);
+                ConvertUCS2ToMultibyte((short *)str.data(), str.size()-2, buff, 2048, CONV_ENCODING_LATIN1);
+                str.assign(buff,str.size()/2-1);
                 break;
             }
   
@@ -834,14 +835,26 @@ AdapterProperty * SmppCommandAdapter::getMessageBodyProperty(SMS& data, std::str
     case smsc::smpp::DataCoding::SMSC7BIT:
         Convert7BitToUCS2(buff, len, (short *)ucs2buff, len*2); 
         str.assign(ucs2buff,len*2);
+
+        ucs2buff[0] = 0;
+        ucs2buff[1] = 0;
+        str.append(ucs2buff,2);
         break;
     case smsc::smpp::DataCoding::LATIN1:
         ConvertMultibyteToUCS2(buff, len, (short *)ucs2buff, len*2, CONV_ENCODING_KOI8R);
         str.assign(ucs2buff,len*2);
+
+        ucs2buff[0] = 0;
+        ucs2buff[1] = 0;
+        str.append(ucs2buff,2);
         break;
     default:
 //        memcpy(ucs2buff, buff, len);
         str.assign(buff,len);
+
+        ucs2buff[0] = 0;
+        ucs2buff[1] = 0;
+        str.append(ucs2buff,2);
     }
 
     return new AdapterProperty(name,this,str);
@@ -1003,6 +1016,7 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
 {
     _SmppCommand * cmd = command.operator ->();
     if (!cmd) return 0;
+
 
     CommandId cmdid = cmd->get_commandId();
     void * dta = cmd->dta;

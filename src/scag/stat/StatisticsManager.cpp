@@ -507,6 +507,7 @@ void StatisticsManager::Start()
 	thrSaccSender.Start();
     isStarted = true;
 
+
     Thread::Start();
 }
 

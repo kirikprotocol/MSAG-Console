@@ -66,8 +66,9 @@ void ActionMatch::init(const SectionParams& params,PropertyObject propertyObject
     re = new RegExp();
 
 
+    std::string regexpStr = ConvertWStrToStr(wstrRegexp);
 
-    if(!re->Compile((char *)wstrRegexp.data(),OP_OPTIMIZE|OP_STRICT))
+    if(!re->Compile((unsigned short *)regexpStr.c_str(),OP_OPTIMIZE|OP_STRICT))
     {
         throw SCAGException("Action 'match' Failed to compile regexp");
         //smsc_log_error(logger, "Action 'match' Failed to compile regexp");
@@ -106,7 +107,7 @@ bool ActionMatch::run(ActionContext& context)
 
   SMatch m[10];
   int n=10;
-  bool flag = re->Match(value.data(),m,n);
+  bool flag = re->Match((unsigned short *)value.data(),m,n);
 
   pResult->setBool(flag);
 

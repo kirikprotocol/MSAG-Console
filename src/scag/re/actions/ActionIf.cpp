@@ -176,7 +176,7 @@ bool ActionIf::run(ActionContext& context)
     if (singleparam.wstrOperand2.size() > 0) 
         smsc_log_debug(logger,"Testing "+singleparam.strOperand1+"='"+ConvertWStrToStr((property->getStr()))+"'"+" vs "+ConvertWStrToStr(singleparam.wstrOperand2));
     else 
-        smsc_log_debug(logger,"Testing "+singleparam.strOperand1+"='"+ConvertWStrToStr(property->getStr())+"' for bool");
+        smsc_log_debug(logger,"Testing %s = '%d' for bool", singleparam.strOperand1.c_str(), property->getInt());
 
 
     if ((singleparam.Operation == opUnknown) && singleparam.wstrOperand2.empty()) 

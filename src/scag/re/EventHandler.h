@@ -17,8 +17,8 @@ using smsc::logger::Logger;
 class EventHandler : public IParserHandler
 {
     EventHandler(const EventHandler &);
-    PropertyObject propertyObject;
 protected:
+    PropertyObject propertyObject;
     Logger * logger;
     std::list<Action *> actions;
 //////////////IParserHandler Interfase///////////////////////

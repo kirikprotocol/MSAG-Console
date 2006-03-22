@@ -28,6 +28,14 @@ enum TransactionStatus
     TRANSACTION_INVALID     = 3
 };
 
+enum BillingTransactionEvent
+{
+    TRANSACTION_COMMITED        = 0,
+    TRANSACTION_TIME_OUT        = 1,
+    TRANSACTION_REFUSED         = 2,
+    TRANSACTION_CALL_ROLLBACK   = 3,
+    TRANSACTION_OPEN            = 4
+};
 
 class BillingManager
 {

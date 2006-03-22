@@ -13,6 +13,9 @@ enum SmppHandlerType
 
 using namespace scag::re::smpp;
 
+
+
+
 RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
 {
     Hash<Property> _constants;
@@ -35,12 +38,28 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
 
     SmppCommandAdapter _command(*smppcommand);
 
+    /////////////////////////////////////////
+
+    SACC_TRAFFIC_INFO_EVENT_t ev;
+
+    _SmppCommand * cmd = smppcommand->operator ->();
+    
+    CommandBrige::makeTrafficEvent(*smppcommand, (int)propertyObject.HandlerId, session.getPrimaryKey(), ev);
+
+    _statistics->Instance().registerSaccEvent(ev);
+
+
+
+    /////////////////////////////////////////
+    
+   
+
     if (!session.startOperation(command))
     {
         //TODO: направить отлуп в стейт-машину
     }
 
-    ActionContext context(_constants, session, _command,*_statistics);
+    ActionContext context(_constants, session, _command,*_statistics, command.getServiceId(), CommandBrige::getAbonentAddr(command));
 
     smsc_log_debug(logger, "Process EventHandler...");
 
@@ -48,14 +67,14 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
 
     //TODO: Fill default rs fields
     rs.status = true;
-    context.SetRuleStatus(rs);
+    context.setRuleStatus(rs);
 
     for (it = actions.begin(); it!=actions.end(); ++it)
     {
         if (!(*it)->run(context)) break;
     }
 
-    rs = context.getStatus();
+    rs = context.getRuleStatus();
     session.endOperation(rs);
     return rs;
 }

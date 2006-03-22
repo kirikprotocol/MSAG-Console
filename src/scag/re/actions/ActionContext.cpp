@@ -32,7 +32,6 @@ FieldType ActionContext::Separate(const std::string& var,const char *& name)
     return ftUnknown;
 }
 
-
 Property* ActionContext::getProperty(const std::string& var)
 {
     FieldType prefix;

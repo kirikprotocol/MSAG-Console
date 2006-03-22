@@ -374,12 +374,13 @@ std::string RuleEngineImpl::CreateRuleFileName(const std::string& dir,const Rule
 
 RuleStatus RuleEngineImpl::process(SCAGCommand& command, Session& session)
 {
+    smsc_log_debug(logger,"TEST");
+    smsc_log_debug(logger,"Process RuleEngine with serviceId: %d", command.getServiceId());
+
     RulesReference rulesRef = getRules();
     RuleStatus rs;
 
     //int ruleId = command.getRuleId();
-
-    smsc_log_debug(logger,"Process RuleEngine with serviceId: %d", command.getServiceId());
 
     RuleKey key;
     key.transport = command.getType();
@@ -410,7 +411,7 @@ void RuleEngineImpl::ProcessInit(const std::string& dir)
     setlocale(LC_ALL,"ru_RU.KOI8-R");
     //setlocale(LC_ALL,"UTF-8");
 
-    RegExp::InitLocale();
+    //RegExp::InitLocale();
 
     rules = new Rules();
 

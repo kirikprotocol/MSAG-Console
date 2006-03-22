@@ -7,6 +7,18 @@ bool BillActionOpen::run(ActionContext& context)
 {
     smsc_log_debug(logger,"Run Action 'BillActionOpen'...");
 
+    /////////////////////////////////////////////
+
+    Statistics& statistics = Statistics::Instance();
+
+    SACC_BILLING_INFO_EVENT_t ev;
+
+
+    /////////////////////////////////////////////
+
+
+
+
     Operation * operation = context.GetCurrentOperation();
     if (!operation) 
     {
@@ -19,6 +31,9 @@ bool BillActionOpen::run(ActionContext& context)
     CTransportId transportId;
     int BillId = bm.ChargeBill(transportId);
     operation->attachBill(BillId);
+
+    CommandBrige::makeBillEvent(context.getServiceId(), context.getAbonentAddr().toString(), TRANSACTION_OPEN, ev);
+    statistics.registerSaccEvent(ev);
 
     return true;
 }

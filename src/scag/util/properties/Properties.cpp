@@ -33,16 +33,23 @@ int64_t Property::ConvertUCS2ToInt64(std::string& wstr)
 
 std::string Property::ConvertUCS2ToStr(std::string& wstr)
 {
-    char buff[128];
-    int nmax = 128;
-    if (wstr.size()/2<128) nmax = wstr.size()/2;
+    std::string res;
+
+    char buff[256];
+    int nmax = 256;
+    if (wstr.size()/2<256) nmax = wstr.size()/2;
+
+    if (nmax < 2) return res;
 
     for (int i = 0; i < nmax; i++) buff[i] = wstr[i*2+1];
 
     buff[nmax] = 0;
 
-    std::string res;
     res.assign(buff,nmax);
+    buff[0] = 0;
+    buff[1] = 1;
+
+    res.append(buff,2);
 
     return res;
 }
@@ -64,6 +71,9 @@ std::string Property::ConvertInt64ToUCS2(int64_t val)
 
     std::string res;
     res.assign(resbuff,size*2);
+    resbuff[0] = 0;
+    resbuff[1] = 0;
+    res.append(resbuff,2);
 
     //std::cout << "???" << size << std::endl;
     return res;
@@ -324,22 +334,29 @@ std::string ConvertStrToWStr(const char * str)
     }
 
     wstr.append(buff,i*2);
+    buff[0] = 0;
+    buff[1] = 0;
+    wstr.append(buff,2);
+
     return wstr;
 }
 
       
 std::string ConvertWStrToStr(std::string wstr)
 {
-    char buff[128];
-    int nmax = 128;
+    char buff[256];
+    int nmax = 256;
+    std::string res;
 
-    if (wstr.size()/2<128) nmax = wstr.size()/2;
+    if (wstr.size()/2<256) nmax = wstr.size()/2;
+
+    if (nmax < 2) return res;
+    nmax = nmax - 1;
 
     for (int i = 0; i < nmax; i++) buff[i] = wstr[i*2+1];
 
     buff[nmax] = 0;
 
-    std::string res;
     res.assign(buff,nmax);
 
     return res;
@@ -358,7 +375,7 @@ std::string FormatWStr(std::string& wstr)
 
     if (wstr.size() > 0) str.append("U::");
 
-    for (i=0; i< wstr.size() / 2; i++) 
+    for (i=0; i< (wstr.size() / 2) - 1; i++) 
     {
         sprintf(temp,"%d/%d/",wStrPtr[i*2],wStrPtr[i*2+1]);
         str.append(temp);
@@ -408,6 +425,9 @@ std::string UnformatWStr(std::string& str)
     }
 
     wstr.append((char *)buff,size);
+    buff[0] = 0;
+    buff[1] = 0;
+    wstr.append(buff,2);
 
     return wstr;
 }

@@ -306,7 +306,7 @@ void Scag::init()
 
     ConfigManager & cfg = ConfigManager::Instance();
 
-    smsc::util::regexp::RegExp::InitLocale();
+    //smsc::util::regexp::RegExp::InitLocale();
 
 
     try {
@@ -371,10 +371,11 @@ void Scag::init()
       re.Init(location);
 
       smsc_log_info(log, "Rule Engine started" );
+
   } catch (SCAGException& e) {
       smsc_log_warn(log, "%s", e.what());
       __warning__("Rule Engine is not started.");
-  }catch(...){
+  } catch(...){
       __warning__("Unknown error: rule Engine is not started.");
   }
 
@@ -462,6 +463,28 @@ void Scag::init()
   smsc_log_info(log, "SCAG init complete" );
 
   __trace__("Smsc::init completed");
+
+
+ 
+  ////////////////////////// FOR TEST 
+  scag::sessions::CSessionKey key;
+
+
+  SMS sms;
+  scag::transport::smpp::SmppCommand command = scag::transport::smpp::SmppCommand::makeDeliverySm(sms,1);
+
+  SessionManager& sm = SessionManager::Instance();
+  scag::sessions::SessionPtr sessionPtr = sm.newSession(key);
+  scag::sessions::Session * session = sessionPtr.Get();
+
+  if (session) smsc_log_warn(log, "SESSION IS VALID");
+  command.setServiceId(1);
+
+  scag::re::RuleEngine::Instance().process(command, *session);
+
+  ////////////////////////// FOR TEST 
+  
+
 }
 
 void Scag::run()

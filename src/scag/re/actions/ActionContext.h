@@ -38,18 +38,32 @@ namespace scag { namespace re { namespace actions
         Session&                session;
         PropertyManager&        command;
         Statistics&             statistics;
+
+        int                     m_ServiceId;
+        //int                     m_handlerType;
+        Address                 m_AbonentAddr;
     public:
 
         ActionContext(Hash<Property>& _constants,
-                      Session& _session, PropertyManager& _command,Statistics& _statistics)
-            : constants(_constants), session(_session), command(_command), statistics(_statistics) {};
+                      Session& _session, PropertyManager& _command,Statistics& _statistics, int serviceId, Address AbonentAddr)
+            : constants(_constants), session(_session), command(_command), statistics(_statistics) 
+        {
+            m_ServiceId = serviceId;
+            m_AbonentAddr = AbonentAddr;
+            //m_handlerType = handlerType;
+        };
+
         ~ActionContext() {};
         
-        inline RuleStatus& getStatus() {
+        inline RuleStatus& getRuleStatus() {
             return status;
         }
 
-        void SetRuleStatus(RuleStatus rs) {status = rs;};
+        void setRuleStatus(RuleStatus rs) {status = rs;};
+        int getServiceId() {return m_ServiceId;}
+        //int getHandlerType() {return m_handlerType;}
+
+        Address& getAbonentAddr() {return m_AbonentAddr;}
 
         //Comment: 'name' is valid until 'var' is valid
         static FieldType Separate(const std::string& var, const char *& name);
