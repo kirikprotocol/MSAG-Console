@@ -14,15 +14,19 @@ import ru.sibinco.scag.beans.CancelChildException;
 import ru.sibinco.scag.beans.EditChildException;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.beans.TabledEditBeanImpl;
+import ru.sibinco.scag.beans.AddChildException;
 import ru.sibinco.scag.util.Utils;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.StatusDisconnectedException;
+import ru.sibinco.lib.backend.util.SortedList;
+import ru.sibinco.lib.backend.util.SortByPropertyComparator;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
+import java.util.LinkedList;
 
 /**
  * The <code>Edit</code> class represents
@@ -48,16 +52,22 @@ public class Edit extends TabledEditBeanImpl {
     private String dirName = "service";
     private boolean editChild = false;
     private Map serviceRules = null;
-    String path = "";
+    private String path = "";
+    private String mbAddChild;
+    private Map routes = null;
+    private Map serviceProviders;
+    private String childEitId;
 
     protected Collection getDataSource() {
-        return appContext.getScagRoutingManager().getRoutes().values();
+        return routes.values();
     }
 
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
         if (appContext == null) {
             appContext = (SCAGAppContext) request.getAttribute("appContext");
         }
+        serviceProviders = appContext.getServiceProviderManager().getServiceProviders();
+        routes = appContext.getServiceProviderManager().getRoutesByServiceId(appContext.getScagRoutingManager().getRoutes(), Long.decode(getParentId()));
         path = Utils.getPath(request);
         if (getMbCancel() != null) {
             String path = Utils.getPath(request);
@@ -65,22 +75,25 @@ public class Edit extends TabledEditBeanImpl {
             throw new CancelChildException(path);
         } else if (getMbSave() != null) {
             save();
+        } else if (getMbAddChild() != null) {
+            throw new AddChildException(request.getContextPath() + "/routing/routes", getParentId());
         }
-
+        final SortedList results = new SortedList(getDataSource(), new SortByPropertyComparator("name"));
+        totalSize = results.size();
+        if (totalSize > startPosition)
+            tabledItems = results.subList(startPosition, Math.min(totalSize, startPosition + pageSize));
+        else
+            tabledItems = new LinkedList();
         load();
-        if (serviceRules==null) serviceRules = appContext.getRuleManager().getRules(new Long(id));
-        if (deleteRuleSMPP!=null) deleteRule(Transport.SMPP_TRANSPORT_NAME);
-        if (deleteRuleHTTP!=null) deleteRule(Transport.HTTP_TRANSPORT_NAME);
-        if (deleteRuleMMS!=null) deleteRule(Transport.MMS_TRANSPORT_NAME);
+        if (serviceRules == null) serviceRules = appContext.getRuleManager().getRules(new Long(id));
+        if (deleteRuleSMPP != null) deleteRule(Transport.SMPP_TRANSPORT_NAME);
+        if (deleteRuleHTTP != null) deleteRule(Transport.HTTP_TRANSPORT_NAME);
+        if (deleteRuleMMS != null) deleteRule(Transport.MMS_TRANSPORT_NAME);
         if (getEditId() != null && !editChild) {
             super.process(request, response);
         }
-    }
-
-    protected void load(final String loadId) throws SCAGJspException {
 
     }
-
 
     protected void delete() throws SCAGJspException {
 
@@ -88,7 +101,7 @@ public class Edit extends TabledEditBeanImpl {
 
     protected void load() throws SCAGJspException {
         if (!isAdd() && getTabledItems() != null) {
-            final Map serviceProviders = appContext.getServiceProviderManager().getServiceProviders();
+
             if (editChild) {
                 if (!serviceProviders.containsKey(Long.decode(getEditId())))
                     throw new SCAGJspException(Constants.errors.serviceProviders.SERVICE_PROVIDER_NOT_FOUND, getEditId());
@@ -120,53 +133,52 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     protected void save() throws SCAGJspException {
-            final ServiceProvidersManager serviceProvidersManager = appContext.getServiceProviderManager();
+        final ServiceProvidersManager serviceProvidersManager = appContext.getServiceProviderManager();
 
-            if (getEditId() == null) {
-                Service service = new Service(name, description);
-                id = serviceProvidersManager.createService(Long.decode(getParentId()).longValue(), service);
+        if (getEditId() == null) {
+            Service service = new Service(name, description);
+            id = serviceProvidersManager.createService(Long.decode(getParentId()).longValue(), service);
+        } else {
+            if (editChild) {
+                ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(Long.decode(getEditId()));
+                Service service = (Service) serviceProvider.getServices().get(Long.decode(getParentId()));
+                service.setName(name);
+                service.setDescription(description);
+                serviceProvidersManager.updateService(Long.decode(getEditId()).longValue(), service);
             } else {
-                if (editChild) {
-                    ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(Long.decode(getEditId()));
-                    Service service = (Service) serviceProvider.getServices().get(Long.decode(getParentId()));
-                    service.setName(name);
-                    service.setDescription(description);
-                    serviceProvidersManager.updateService(Long.decode(getEditId()).longValue(), service);
-                } else {
-                    ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(Long.decode(getParentId()));
-                    Service service = (Service) serviceProvider.getServices().get(Long.decode(getEditId()));
-                    service.setName(name);
-                    service.setDescription(description);
-                    serviceProvidersManager.updateService(Long.decode(getParentId()).longValue(), service);
-                }
+                ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(Long.decode(getParentId()));
+                Service service = (Service) serviceProvider.getServices().get(Long.decode(getEditId()));
+                service.setName(name);
+                service.setDescription(description);
+                serviceProvidersManager.updateService(Long.decode(getParentId()).longValue(), service);
             }
-
-            try {
-                serviceProvidersManager.store();
-            } catch (IOException e) {
-                logger.debug("Couldn't save config", e);
-                throw new SCAGJspException(Constants.errors.status.COULDNT_SAVE_CONFIG, e);
-            }
-            if (id != -1) {
-                throw new EditChildException(Long.toString(id), getParentId());
-            } else {
-                path = path.substring(0, (path.length() - (dirName.length() + 1))) + "edit.jsp?editId=" + (editChild ? getEditId() : getParentId());
-                throw new CancelChildException(path);
-            }
-
         }
 
+        try {
+            serviceProvidersManager.store();
+        } catch (IOException e) {
+            logger.debug("Couldn't save config", e);
+            throw new SCAGJspException(Constants.errors.status.COULDNT_SAVE_CONFIG, e);
+        }
+        if (id != -1) {
+            throw new EditChildException(Long.toString(id), getParentId());
+        } else {
+            path = path.substring(0, (path.length() - (dirName.length() + 1))) + "edit.jsp?editId=" + (editChild ? getEditId() : getParentId());
+            throw new CancelChildException(path);
+        }
+    }
 
     private void deleteRule(String transport) {
-       try {
-        appContext.getRuleManager().removeRule(Long.toString(id), transport);
-        serviceRules.remove(transport);
-      } catch (SibincoException se) {
-          if (se instanceof StatusDisconnectedException)
+        try {
+            appContext.getRuleManager().removeRule(Long.toString(id), transport);
             serviceRules.remove(transport);
-          else se.printStackTrace();/*PRINT ERROR ON THE SCREEN;*/
-      }
+        } catch (SibincoException se) {
+            if (se instanceof StatusDisconnectedException)
+                serviceRules.remove(transport);
+            else se.printStackTrace();/*PRINT ERROR ON THE SCREEN;*/
+        }
     }
+
     public String getId() {
         return -1 == id ? null : String.valueOf(id);
     }
@@ -212,12 +224,13 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public String getDeleteRuleHTTP() {
-       return deleteRuleHTTP;
+        return deleteRuleHTTP;
     }
 
     public void setDeleteRuleHTTP(String deleteRuleHTTP) {
-       this.deleteRuleHTTP = deleteRuleHTTP;
+        this.deleteRuleHTTP = deleteRuleHTTP;
     }
+
     public String getDeleteRuleMMS() {
         return deleteRuleMMS;
     }
@@ -254,18 +267,36 @@ public class Edit extends TabledEditBeanImpl {
         this.editChild = editChild;
     }
 
-    public boolean isSmppRuleExists() {        
+    public boolean isSmppRuleExists() {
         serviceRules = appContext.getRuleManager().getRules(new Long(id));
-        return (serviceRules.get(Transport.SMPP_TRANSPORT_NAME)==null)?false:true;
+        return (serviceRules.get(Transport.SMPP_TRANSPORT_NAME)!=null);
     }
+
     public boolean isHttpRuleExists() {
 
-       return (serviceRules.get(Transport.HTTP_TRANSPORT_NAME)==null)?false:true;
+       return (serviceRules.get(Transport.HTTP_TRANSPORT_NAME)!=null);
 
     }
+
     public boolean isMmsRuleExists() {
 
-       return (serviceRules.get(Transport.MMS_TRANSPORT_NAME)==null)?false:true;
+       return (serviceRules.get(Transport.MMS_TRANSPORT_NAME)!=null);
 
+    }
+
+    public String getMbAddChild() {
+        return mbAddChild;
+    }
+
+    public void setMbAddChild(String mbAddChild) {
+        this.mbAddChild = mbAddChild;
+    }
+
+    public String getChildEitId() {
+        return childEitId;
+    }
+
+    public void setChildEitId(String childEitId) {
+        this.childEitId = childEitId;
     }
 }
