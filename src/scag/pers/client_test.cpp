@@ -37,6 +37,8 @@ int main(int argc, char* argv[])
 		PersClient& pc = PersClient::Instance();
 		Property prop;
 
+		for(int i = 0; i< 1000; i++)
+		{
 		prop.setInt("test_val", 234567, FIXED, -1, 20);
 		pc.SetProperty(PT_ABONENT, "+79232446251", prop);
 
@@ -101,7 +103,7 @@ int main(int argc, char* argv[])
 		smsc_log_debug(logger,  ">>ABONENT: del int(int)");
 
 		smsc_log_debug(logger,  "end");
-
+		}
     }
     catch (PersClientException& exc) 
     {

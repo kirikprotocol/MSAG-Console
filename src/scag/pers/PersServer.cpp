@@ -9,7 +9,10 @@ using smsc::logger::Logger;
 PersServer::PersServer(const char *persHost_, int persPort_, int maxClientCount_, CommandDispatcher *d)
     : log(Logger::getInstance("server")), persHost(""), persPort(0), isStopping(false), CmdDispatcher(d)
 {
-	InitServer(persHost_, persPort_, maxClientCount_);
+    persHost = persHost_;
+    persPort = persPort_;
+	maxClientCount = maxClientCount_;
+	clientCount = 0;
 }
 
 PersServer::~PersServer()
@@ -18,13 +21,8 @@ PersServer::~PersServer()
 	delete CmdDispatcher;
 }
 
-void PersServer::InitServer(const char *persHost_, int persPort_, int maxClientCount_)
+void PersServer::InitServer()
 {
-    persHost = persHost_;
-    persPort = persPort_;
-	maxClientCount = maxClientCount_;
-	clientCount = 0;
-
     if(sock.InitServer(persHost.c_str(), persPort, 10))
         throw Exception("Failed to init socket server by host: %s, port: %d", persHost.c_str(), persPort);
 

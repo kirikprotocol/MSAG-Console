@@ -102,6 +102,7 @@ int main(int argc, char* argv[])
 
 		auto_ptr<PersServer> pp(ps);
 
+		ps->InitServer();
 		ps->Execute();
     }
     catch (ConfigException& exc) 

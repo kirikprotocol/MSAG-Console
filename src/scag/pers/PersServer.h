@@ -20,12 +20,12 @@ class PersServer {
 public:
     PersServer(const char* persHost_, int persPort_, int maxClientCount_, CommandDispatcher *d);
     ~PersServer();
+    void InitServer();
     int Execute();
 	void Stop() { MutexGuard mt(mtx); isStopping = true; };
 	bool isStopped() { MutexGuard mt(mtx); return isStopping; };
 
 protected:
-    void InitServer(const char* persHost_, int persPort_, int maxClientCount_);
 	void process_read_socket(Socket* sock);
 	void process_write_socket(Socket* sock);
 	void remove_socket(Socket* s);

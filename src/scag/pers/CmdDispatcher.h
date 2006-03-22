@@ -35,8 +35,7 @@ protected:
 	IntStore int_store[INT_STORE_CNT];
 };
 
-}
-}
+}}
 
 #endif
 
