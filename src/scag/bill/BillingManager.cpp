@@ -53,6 +53,9 @@ class BillingManagerImpl : public BillingManager, public Thread, public BillingM
 
     void Stop();
     bool isStarted();
+
+	InfrastructureImpl infrastruct;
+
 public:
     void init(BillingManagerConfig& cfg);
 
@@ -67,6 +70,8 @@ public:
     virtual void rollback(int billId);
 
     virtual void onChargeSmsResult(ChargeSmsResult* result);
+
+    virtual Infrastructure& getInfrastructure() { return infrastruct; };
 
     BillingManagerImpl() : 
         m_bStarted(false), 
@@ -149,6 +154,10 @@ void BillingManagerImpl::init(BillingManagerConfig& cfg)
     }
 
     EventMonitorArray = new EventMonitorEntity[m_MaxEventMonitors];
+
+	std::string prov_fn = cfg.so_dir + "/services.xml";
+	std::string op_fn = cfg.so_dir + "/operators.xml";
+	infrastruct.init(prov_fn.c_str(), op_fn.c_str());
 
     smsc_log_info(logger,"BillingManager inited...");
 }
@@ -308,6 +317,6 @@ void BillingManagerImpl::onChargeSmsResult(ChargeSmsResult* result)
     EventMonitorArray[pBillTransaction->EventMonitorIndex].eventMonitor.notify();
 
 }
-   
+
 }}
 

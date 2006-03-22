@@ -5,13 +5,14 @@
 #include <core/synchronization/EventMonitor.hpp>
 #include "scag/config/bill/BillingManagerConfig.h"
 
+#include "infrastruct/Infrastructure.h"
 
 namespace scag { namespace bill {
 
 using namespace smsc::sms;
 using namespace smsc::core::synchronization;
 using namespace scag::config;
-
+using namespace scag::bill::infrastruct;
 
 struct CTransportId
 {
@@ -48,9 +49,7 @@ public:
     static void Init(BillingManagerConfig& cfg);
     //static const ActionFactory * getActionFactory() {return &factory;}
 
-
-
-
+    virtual Infrastructure& getInfrastructure() = 0;
 };
 
 
