@@ -20,43 +20,46 @@ class Service
 {
 public:
   enum run_status { stopped, starting, running, stopping };
+  enum service_type { failover, standalone };
 
   Service(const char * const services_dir,
     const char * const serviceId,
     const char * const serviceArgs,
+    const service_type serviceType,
     const bool autostartFlag = true,
     const pid_t servicePID = 0,
-    const run_status serviceStatus = stopped)
-    : logger(Logger::getInstance("smsc.admin.daemon.Service")), autostart(autostartFlag)
+    const run_status serviceStatus = stopped
+    )
+    : logger(Logger::getInstance("admdmn.Svc")), autoStart(autostartFlag)
   {
-    init(services_dir, serviceId, serviceArgs, servicePID, serviceStatus);
+    init(services_dir, serviceId, serviceArgs, serviceType,servicePID, serviceStatus);
   }
 
   Service()
-    : logger(Logger::getInstance("smsc.admin.daemon.Service")), autostart(true)
+    : logger(Logger::getInstance("admdmn.Svc")), autoStart(true)
   {
-    init(0, 0, 0, 0, stopped);
+    init(0, 0, 0, failover, 0,stopped);
   }
 
   Service(const Service & copy)
-    : logger(Logger::getInstance("smsc.admin.daemon.Service")), autostart(copy.autostart)
+    : logger(Logger::getInstance("admdmn.Svc")), autoStart(copy.autoStart)
   {
-    init(copy.service_dir.get(), copy.id.get(), copy.args.get(), copy.pid);
+    init(copy.serviceDir.c_str(), copy.id.c_str(), copy.args.c_str(),copy.svcType, copy.pid);
   }
 
   pid_t start() throw (AdminException);
   void kill() throw (AdminException);
   void shutdown() throw (AdminException);
 
-  const char * const getId() const {return id.get();}
+  const char * const getId() const {return id.c_str();}
   //const char * const getName() const {return name.get();}
   const pid_t getPid() const {return pid;}
   void setPid(const pid_t newPid) {pid = newPid; status = pid == 0 ? stopped : running;}
-  const char * const getArgs() const {return args.get();}
+  const char * const getArgs() const {return args.c_str();}
 
-  Service &operator = (Service &copy)
+  Service &operator = (const Service &copy)
   {
-    init(copy.service_dir.get(), copy.id.get(), copy.args.get(), copy.pid, copy.status);
+    init(copy.serviceDir.c_str(), copy.id.c_str(), copy.args.c_str(), copy.svcType, copy.pid, copy.status);
     return *this;
   }
 
@@ -66,36 +69,55 @@ public:
     {
       throw AdminException("Changing service arguments not permitted: service is running");
     }
-    args.reset(cStringCopy(serviceArgs));
+    args=serviceArgs;
+  }
+
+  void setHost(const char* host)
+  {
+    hostName=host;
+  }
+  const char* getHost()
+  {
+    return hostName.c_str();
   }
 
   const char * const getServiceDir()
   {
-    return service_dir.get();
+    return serviceDir.c_str();
   }
 
   run_status getStatus() {return status;}
   void setStatus(run_status newStatus) { status = newStatus;}
-  bool isAutostart() {return autostart;}
+  bool isAutostart() {return autoStart;}
 
+
+  static const char* hostUp;
+  static const char* hostDown;
 
 protected:
-  char ** createArguments();
-  std::auto_ptr<char> id;
-  pid_t pid;
-  std::auto_ptr<char> args;
+
   static const char * const service_exe;
-  std::auto_ptr<char> service_dir;
-  bool autostart;
+
+  char ** createArguments();
+
+  pid_t pid;
+  std::string id;
+  std::string args;
+  std::string serviceDir;
+  std::string hostName;
+  bool autoStart;
   Logger *logger;
 
   run_status status;
+  service_type svcType;
 
   void init(const char * const services_dir,
-    const char * const serviceId,
-    const char * const serviceArgs,
-    const pid_t servicePID = 0,
-    const run_status serviceStatus = stopped);
+  const char * const serviceId,
+  const char * const serviceArgs,
+  const service_type serviceType,
+  const pid_t servicePID = 0,
+  const run_status serviceStatus = stopped
+  );
 };
 
 }

@@ -6,7 +6,7 @@
 #include <admin/protocol/Command.h>
 #include <admin/protocol/CommandStartService.h>
 #include <admin/protocol/CommandKillService.h>
-#include <admin/protocol/CommandAddService.h>
+#include <admin/protocol/CommandAddHSService.h>
 #include <admin/protocol/CommandRemoveService.h>
 #include <admin/protocol/CommandListServices.h>
 #include <admin/protocol/CommandSetServiceStartupParameters.h>
@@ -86,8 +86,8 @@ Response * DaemonCommandDispatcher::handle(const Command * const command)
       return kill_service((CommandKillService*)command);
     case Command::shutdown_service:
       return shutdown_service((CommandShutdown*)command);
-    case Command::add_service:
-      return add_service((CommandAddService*)command);
+    case Command::add_hsservice:
+      return add_hsservice((CommandAddHSService*)command);
     case Command::remove_service:
       return remove_service((CommandRemoveService*)command);
     case Command::list_services:
@@ -113,7 +113,7 @@ Response * DaemonCommandDispatcher::handle(const Command * const command)
 }
 
 /// commands
-Response * DaemonCommandDispatcher::add_service(const CommandAddService * const command)
+Response * DaemonCommandDispatcher::add_hsservice(const CommandAddHSService * const command)
   throw (AdminException)
 {
   /*  smsc_log_debug(logger, "add service \"%s\" (%s) %u %s",
@@ -127,9 +127,11 @@ Response * DaemonCommandDispatcher::add_service(const CommandAddService * const 
     {
       {
         MutexGuard guard(servicesListMutex);
-        services.add(new Service(configManager->getString(CONFIG_SERVICES_FOLDER_PARAMETER), command->getServiceId(), command->getArgs(), command->isAutostart()));
+        Service* svc=new Service(configManager->getString(CONFIG_SERVICES_FOLDER_PARAMETER), command->getServiceId(), command->getArgs(), command->getServiceType(),command->isAutostart());
+        svc->setHost(command->getHostName());
+        services.add(svc);
       }
-      putServiceToConfig(command->getServiceId(), command->getArgs(), command->isAutostart());
+      putServiceToConfig(command->getServiceId(), command->getArgs(), command->isAutostart(),command->getHostName());
       return new Response(Response::Ok, 0);
     }
     else
@@ -188,7 +190,10 @@ Response * DaemonCommandDispatcher::set_service_startup_parameters(const Command
     {
       MutexGuard guard(servicesListMutex);
       Service *s = services[command->getServiceId()];
-      putServiceToConfig(command->getServiceId(), command->getArgs(), command->isAutostart());
+
+      ///!!!!!!!!!!!!!!! TODO !!!!!!!!!!!!!!!!!!!!!
+
+      putServiceToConfig(command->getServiceId(), command->getArgs(), command->isAutostart(),command->getHostName(),"");
       if (s->getStatus() == Service::stopped)
       {
         s->setArgs(command->getArgs());
@@ -335,10 +340,40 @@ void DaemonCommandDispatcher::addServicesFromConfig()
         //skip
       }
 
-      services.add(new Service(configManager->getString(CONFIG_SERVICES_FOLDER_PARAMETER), serviceId.get(), serviceArgs, autostart));
+      Service::service_type type;
+      tmp=prefix+"serviceType";
+
+      if(strcmp(configManager->getString(tmp.c_str()),"failover")==0)
+      {
+        type=Service::failover;
+      }else if(strcmp(configManager->getString(tmp.c_str()),"standalone")==0)
+      {
+        type=Service::standalone;
+      }else
+      {
+        throw AdminException("Invalid service type:%s",configManager->getString(tmp.c_str()));
+      }
+
+      Service* svc=new Service(configManager->getString(CONFIG_SERVICES_FOLDER_PARAMETER), serviceId.get(), serviceArgs, type,autostart);
+      try{
+        tmp=prefix+"hostName";
+        svc->setHost(configManager->getString(tmp.c_str()));
+      }catch(std::exception& e)
+      {
+        smsc_log_warn(Logger::getInstance("admdmn.Ini"),"hostName not found for service %s, hostname switching disabled",serviceId.get());
+      }
+      catch(HashInvalidKeyException& e)
+      {
+        smsc_log_warn(Logger::getInstance("admdmn.Ini"),"hostName not found for service %s, hostname switching disabled",serviceId.get());
+      }
+      services.add(svc);
     }
   }
   catch (AdminException &e)
+  {
+    smsc_log_error(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "Exception on adding services, nested: %s", e.what());
+  }
+  catch(std::exception& e)
   {
     smsc_log_error(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "Exception on adding services, nested: %s", e.what());
   }
@@ -367,6 +402,9 @@ void DaemonCommandDispatcher::updateServiceFromConfig(Service * service)
     const char * const serviceArgs = configManager->getString(tmpName.c_str());
 
     service->setArgs(serviceArgs);
+    tmpName=serviceSectionName;
+    tmpName+=".hostName";
+    service->setHost(configManager->getString(tmpName.c_str()));
   }
   catch (smsc::core::buffers::HashInvalidKeyException &e)
   {
@@ -374,7 +412,7 @@ void DaemonCommandDispatcher::updateServiceFromConfig(Service * service)
   }
 }
 
-void DaemonCommandDispatcher::putServiceToConfig(const char * const serviceId, const char * const serviceArgs, const bool autostart)
+void DaemonCommandDispatcher::putServiceToConfig(const char * const serviceId, const char * const serviceArgs, const bool autostart,const char* hostName)
 {
   MutexGuard lock(configManagerMutex);
   std::string serviceSectionName = CONFIG_SERVICES_SECTION;
@@ -383,6 +421,7 @@ void DaemonCommandDispatcher::putServiceToConfig(const char * const serviceId, c
 
   configManager->setString((serviceSectionName + ".args").c_str(), serviceArgs);
   configManager->setBool((serviceSectionName + ".autostart").c_str(), autostart);
+  configManager->setString((serviceSectionName + ".hostName").c_str(), hostName);
   configManager->save();
   smsc_log_debug(logger, "new config saved");
 }

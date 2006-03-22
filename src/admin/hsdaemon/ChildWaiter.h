@@ -92,7 +92,16 @@ public:
         __trace2__("CHILD %u is finished", chldpid);
 #endif
         MutexGuard a(DaemonCommandDispatcher::servicesListMutex);
-        if(DaemonCommandDispatcher::services.get(serviceId)->getStatus()!=Service::stopping)
+        Service* svc=DaemonCommandDispatcher::services.get(serviceId);
+        std::string cmd=svc->getServiceDir();
+        cmd+='/';
+        cmd+=Service::hostDown;
+        cmd+=' ';
+        cmd+=svc->getHost();
+        __trace2__("try to exec '%s'",cmd.c_str());
+        std::system(cmd.c_str());
+
+        if(svc->getStatus()!=Service::stopping)
         {
           __trace2__("restarting service %s at another node", serviceId);
           try{

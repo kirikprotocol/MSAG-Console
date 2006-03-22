@@ -8,7 +8,7 @@
 #include <admin/protocol/CommandStartService.h>
 #include <admin/protocol/CommandKillService.h>
 #include <admin/protocol/CommandShutdown.h>
-#include <admin/protocol/CommandAddService.h>
+#include <admin/protocol/CommandAddHSService.h>
 #include <admin/protocol/CommandRemoveService.h>
 #include <admin/protocol/CommandListServices.h>
 #include <admin/protocol/CommandSetServiceStartupParameters.h>
@@ -61,7 +61,7 @@ protected:
   friend class ChildShutdownWaiter;
   friend class Interconnect;
 
-  Response * add_service                    (const CommandAddService                  * const command) throw (AdminException);
+  Response * add_hsservice                  (const CommandAddHSService                  * const command) throw (AdminException);
   Response * remove_service                 (const CommandRemoveService               * const command) throw (AdminException);
   Response * set_service_startup_parameters (const CommandSetServiceStartupParameters * const command) throw (AdminException);
   Response * list_services                  (const CommandListServices                * const command) throw (AdminException);
@@ -72,7 +72,7 @@ protected:
 
   static void addServicesFromConfig() throw ();
   static void updateServiceFromConfig(Service * service) throw (AdminException);
-  void putServiceToConfig(const char * const serviceId, const char * const serviceArgs, const bool autostart);
+  void putServiceToConfig(const char * const serviceId, const char * const serviceArgs, const bool autostart,const char* hostName);
   void removeServiceFromConfig(const char * const serviceId);
 
 };

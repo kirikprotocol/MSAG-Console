@@ -4,6 +4,7 @@
 #define __EXTENSIONS__
 #endif
 
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <signal.h>
@@ -20,13 +21,15 @@ namespace admin {
 namespace hsdaemon {
 
 const char * const Service::service_exe = "bin/service";
+const char * Service::hostUp = "bin/hostup";
+const char * Service::hostDown = "bin/hostdown";
 
 pid_t Service::start()
   throw (AdminException)
 {
-  __trace2__("Service::start(%s)",id.get());
+  __trace2__("Service::start(%s)",id.c_str());
   try{
-    run_status st=icon->remoteGetServiceStatus(id.get());
+    run_status st=icon->remoteGetServiceStatus(id.c_str());
     __trace2__("remote service status=%d",st);
     switch (st)
     {
@@ -43,7 +46,7 @@ pid_t Service::start()
   }
   catch(std::exception& e)
   {
-    __trace2__("Failed to get remote status of service '%s':%s",id.get(),e.what());
+    __trace2__("Failed to get remote status of service '%s':%s",id.c_str(),e.what());
   }
   switch (status)
   {
@@ -62,7 +65,7 @@ pid_t Service::start()
       }
       else
       { // child process
-        chdir(service_dir.get());
+        chdir(serviceDir.c_str());
         chmod(service_exe, S_IRWXU | S_IRGRP | S_IXGRP);
 
         // close all (parent) streams
@@ -92,12 +95,20 @@ pid_t Service::start()
         sigaddset(&set, SIGSEGV);
         sigaddset(&set, SIGALRM);
         sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
-        if(pthread_sigmask(SIG_UNBLOCK,&set,NULL)!=0) {
+        if(pthread_sigmask(SIG_UNBLOCK,&set,NULL)!=0)
+        {
                 __warning__("Faield to update signal mask");
+        }
+        if(hostName.length()>0)
+        {
+          std::string cmd=hostUp;
+          cmd+=" ";
+          cmd+=hostName;
+          std::system(cmd.c_str());
         }
         execv(service_exe, createArguments());
         smsc_log_error(logger, "Couldn't start service (\"%s/%s\"), nested: %u: %s",
-                     service_dir.get(), service_exe, errno, strerror(errno));
+                     serviceDir.c_str(), service_exe, errno, strerror(errno));
         exit(-1);
         return 0;
       }
@@ -170,18 +181,20 @@ void Service::shutdown()
 void Service::init(const char * const services_dir,
            const char * const serviceId,
            const char * const serviceArgs,
+           const service_type serviceType,
            const pid_t servicePID,
-                   const run_status serviceStatus)
+           const run_status serviceStatus
+           )
 {
-  service_dir.reset(new char[strlen(services_dir) + 1 + strlen(serviceId) + 1]);
-  strcpy(service_dir.get(), services_dir);
-  strcat(service_dir.get(), "/");
-  strcat(service_dir.get(), serviceId);
+  serviceDir=services_dir;
+  serviceDir+='/';
+  serviceDir+=serviceId;
+  id=serviceId;
 
-  id.reset(cStringCopy(serviceId));
   pid = servicePID;
   status = serviceStatus;
-  args.reset(cStringCopy(serviceArgs));
+  svcType=serviceType;
+  args=serviceArgs;
 }
 
 char * substr(const char * from, const char * to)
@@ -202,7 +215,7 @@ char ** Service::createArguments()
   // parse arguments
   ///////////////////////////////////////
   {
-    const char *p1 = args.get(), *p2 = args.get();
+    const char *p1 = args.c_str(), *p2 = args.c_str();
     while (*p1!= 0)
     {
       if (isspace(*p1))

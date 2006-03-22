@@ -31,6 +31,7 @@ public:
     shutdown_service,
     kill_service,
     add_service,
+    add_hsservice,
     remove_service,
     list_services,
     list_components,
