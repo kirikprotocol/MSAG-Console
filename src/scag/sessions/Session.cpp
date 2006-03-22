@@ -110,7 +110,10 @@ void Session::DeserializeOperations(SessionBuffer& buff)
     {
         operation = new Operation();
 
-        buff >> operation->m_hasBill;
+        int temp;
+        buff >> temp;
+        operation->m_hasBill = temp;
+
         if (operation->m_hasBill) buff >> operation->billId;
 
 
@@ -131,7 +134,11 @@ void Session::DeserializePendingOperations(SessionBuffer& buff)
 
     for (int i=0; i<Count; i++) 
     {
-        buff >> p.type >> p.validityTime >> p.bStartBillingOperation;
+        int temp;
+
+        buff >> p.type >> p.validityTime >> temp;
+
+        p.bStartBillingOperation = temp;
         PendingOperationList.push_back(p);
     }
 
@@ -165,7 +172,8 @@ void Session::SerializeOperations(SessionBuffer& buff)
 
     for (;it.Next(key, operation);)
     {              
-        buff << operation->m_hasBill;
+        int temp = operation->m_hasBill;
+        buff << temp;
         if (operation->m_hasBill) buff << operation->billId;
 
         buff << operation->type;
@@ -181,7 +189,8 @@ void Session::SerializePendingOperations(SessionBuffer& buff)
 
     for (it = PendingOperationList.begin(); it!=PendingOperationList.end(); ++it)
     {
-        buff << it->type << it->validityTime << it->bStartBillingOperation;
+        int temp = it->bStartBillingOperation;
+        buff << it->type << it->validityTime << temp;
     }
 }
 
