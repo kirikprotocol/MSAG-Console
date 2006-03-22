@@ -30,6 +30,7 @@
     -->
     <param name="cacheRAM" type="int">40</param>   <!-- abonents cache RAM buffer size, units: Mb -->
     <param name="cacheInterval" type="int">1440</param>   <!-- abonent info refreshing interval, units: minutes -->
+    <param name="cacheDir" type="string">./cache</param>  <!-- directory to store abonents cache -->
   </section>
 
   <section name="IN_interaction"> <!-- IN platform interaction parameters -->
