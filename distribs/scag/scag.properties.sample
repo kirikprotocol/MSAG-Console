@@ -46,6 +46,9 @@ stat,perf_svc_port=14996
 stat.perf_sc_port=14995
 stat.sacc_port=3100
 stat.sacc_host=niagara
+stat.sacc_connect_timeout=60000
+stat.sacc_queue_length=1000
+
 
 jdbc.driver=oracle.jdbc.driver.OracleDriver
 jdbc.source=jdbc:oracle:thin:@max:1521:ORCL

@@ -34,11 +34,15 @@ protected:
         int perfSvcPort;
         int perfScPort;
 
+		int connect_timeout;
+		int queue_length;
 		
 public:
 		int getSaccPort() const;
 		std::string getSaccHost() const;
 		IntHash<std::string> getEventFiler() const;
+		int getReconnectTimeout()const;
+		int getMaxQueueLength()const;
 
 protected:
 		std::string saccHost;

@@ -62,16 +62,19 @@ public:
 	void Put(const SACC_ALARM_MESSAGE_t & ev);
 	void Put(const SACC_SESSION_EXPIRATION_TIME_ALARM_t& ev);
 	void Put(const SACC_OPERATOR_NOT_FOUND_ALARM_t& ev);
+	void Put(const SACC_ALARM_t & ev);
 
 	void Start();
-	void init(std::string& host,int port,int timeout,bool * bf,smsc::logger::Logger * lg);
+	void init(std::string& host,int port,int timeout,int queuelen,bool * bf,smsc::logger::Logger * lg);
 private:
 
 	SyncQueue<void *> eventsQueue;
 	bool * bStarted;
 	bool bConnected;
+	int Timeout;
 	Socket SaccSocket;
 	std::string Host;
+	int QueueLength;
 	int Port;
 	bool checkQueue();
 	bool retrieveConnect();
@@ -80,10 +83,12 @@ private:
 	
 	void performTransportEvent(const SACC_TRAFFIC_INFO_EVENT_t& e);
 	void performBillingEvent(const SACC_BILLING_INFO_EVENT_t& e);
-	void performAlarmEvent(const SACC_ALARM_MESSAGE_t& e);
+	void performAlarmMessageEvent(const SACC_ALARM_MESSAGE_t& e);
+	void performAlarmEvent(const SACC_ALARM_t& e);
 	void performSessionExpiredEvent(const SACC_SESSION_EXPIRATION_TIME_ALARM_t& e);
 	void performOperatorNotFoundEvent(const SACC_OPERATOR_NOT_FOUND_ALARM_t& e);
 
+	void makeAlarmEvent(uint32_t evtype);
 	smsc::logger::Logger * logger;
 };
 

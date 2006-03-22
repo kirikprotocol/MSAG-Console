@@ -44,6 +44,9 @@
      <param name="perfScPort" type="int">@stat.perf_sc_port@</param>
      <param name="saccPort" type="int">@stat.sacc_port@</param>
      <param name="saccHost" type="string">@stat.sacc_host@</param>
+     <param name="connect_timeout" type="int">@stat.sacc_connect_timeout@</param>
+     <param name="queue_length" type="string">@stat.sacc_queue_length@</param>
+
   </section>
 				       	    
   <section name="RuleEngine">

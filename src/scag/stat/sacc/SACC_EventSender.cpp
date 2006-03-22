@@ -6,6 +6,8 @@
 
 #include <logger/Logger.h>
 
+
+
 using namespace scag::stat;
 using namespace scag::stat::Counters;
 
@@ -21,6 +23,8 @@ EventSender::EventSender()
 	bConnected=false;
 	Host="";
 	Port=0;
+	Timeout=100;
+	QueueLength=10000;
 }
 
 EventSender::~EventSender()
@@ -29,7 +33,7 @@ EventSender::~EventSender()
 }
 
 
-void EventSender::init(std::string& host,int port,int timeout,bool * bf,smsc::logger::Logger * lg)
+void EventSender::init(std::string& host,int port,int timeout,int queuelen,bool * bf,smsc::logger::Logger * lg)
 {
 
 	if(!lg)
@@ -38,22 +42,24 @@ void EventSender::init(std::string& host,int port,int timeout,bool * bf,smsc::lo
 	if(!bf)
 		throw Exception("EventSender::init start-stop flag is 0");
 
+	QueueLength=queuelen;
 	bStarted  = bf;
 	logger = lg;
 	Host = host;
 	Port= port;
 	bConnected=false;
+	Timeout=timeout;
 	smsc_log_debug(logger,"EventSender::init confuration succsess.");
 }
 
 bool EventSender::processEvent(void *ev)
 {
-
- smsc_log_debug(logger,"EventSender::Execute Sacc stat event processed from queue addr=0x%X",ev);
 	
  uint16_t evType=0;
 
  memcpy(&evType,ev,sizeof(uint16_t)); 		
+
+ smsc_log_debug(logger,"EventSender::Execute Sacc stat event (%d) processed from queue addr=0x%X",evType,ev);
 
 	switch(evType) 
 	{
@@ -74,12 +80,12 @@ bool EventSender::processEvent(void *ev)
 			performBillingEvent(e);
 		}
  		break;
-	case SaccEventsCommandIds::sec_alarm:
+	case SaccEventsCommandIds::sec_alarm_message:
 		{
 			SACC_ALARM_MESSAGE_t e;
 			memcpy(&e,ev,sizeof(SACC_ALARM_MESSAGE_t));
 			delete (SACC_ALARM_MESSAGE_t*)ev;
-			performAlarmEvent(e);
+			performAlarmMessageEvent(e);
 		}
 		break;
 	case SaccEventsCommandIds::sec_session_expired:
@@ -98,7 +104,14 @@ bool EventSender::processEvent(void *ev)
 			performOperatorNotFoundEvent(e);
 		}
  		break;
-
+	case SaccEventsCommandIds::sec_alarm:
+		{
+			SACC_ALARM_t e;
+			memcpy(&e,ev,sizeof(SACC_ALARM_t));
+			delete (SACC_ALARM_t*)ev;
+			performAlarmEvent(e);
+		}
+			
 	 default:
 		 break;
 	 }
@@ -143,6 +156,7 @@ bool EventSender::retrieveConnect()
 			bConnected=true;
 			return true;
 		}
+		
 	}
 
 	bConnected=false;
@@ -153,17 +167,23 @@ bool EventSender::retrieveConnect()
 
 int EventSender::Execute()
 {
+	EventMonitor e;
 	while( *bStarted)
 	{
-		if(retrieveConnect())
+		if(!bConnected)
 		{
-			checkQueue();
+			SaccSocket.Abort();
+			
+			e.wait(Timeout);
+			if(connect(Host,Port,100))
+			{
+				bConnected=true;
+			}
+		}
+		
+		checkQueue();
 
-		}
-		else
-		{
-			sleep(100);
-		}
+		
 	}
 	return 1;
 
@@ -201,90 +221,277 @@ void EventSender::Start()
 	Thread::Start();
 }
  
+void EventSender::Put (const SACC_ALARM_t& ev)
+{
+	SACC_ALARM_t* pEv = new SACC_ALARM_t(ev);
+	//	smsc_log_debug(logger,"EventSender::put SACC_TRAFFIC_INFO_EVENT_t addr=0x%X",pEv);
+	if(eventsQueue.Push(pEv,QueueLength)==-1)
+	{
+		smsc_log_error(logger,"Error push to QOEUE for SACC EVENT? queue is Overflow!"); 
+		delete pEv;
+	}
+}
+
 void EventSender::Put(const SACC_TRAFFIC_INFO_EVENT_t& ev)
 {
 	SACC_TRAFFIC_INFO_EVENT_t* pEv = new SACC_TRAFFIC_INFO_EVENT_t(ev);
-		smsc_log_debug(logger,"EventSender::put SACC_TRAFFIC_INFO_EVENT_t addr=0x%X",pEv);
-	eventsQueue.Push(pEv); 
+	//	smsc_log_debug(logger,"EventSender::put SACC_TRAFFIC_INFO_EVENT_t addr=0x%X",pEv);
+	if(eventsQueue.Push(pEv,QueueLength)==-1)
+	{
+		smsc_log_error(logger,"Error push to QOEUE for SACC EVENT? queue is Overflow!"); 
+		delete pEv;
+	}
 }
 void EventSender::Put(const SACC_BILLING_INFO_EVENT_t& ev)
 {
 
-
 	SACC_BILLING_INFO_EVENT_t* pEv = new SACC_BILLING_INFO_EVENT_t(ev);
-		smsc_log_debug(logger,"EventSender::put SACC_BILLING_INFO_EVENT_t addr=0x%X",pEv);
-	eventsQueue.Push(pEv);
+	//	smsc_log_debug(logger,"EventSender::put SACC_BILLING_INFO_EVENT_t addr=0x%X",pEv);
+	if(eventsQueue.Push(pEv,QueueLength)==-1)
+	{
+		smsc_log_error(logger,"Error push to QOEUE for SACC EVENT? queue is Overflow!"); 
+		delete pEv;
+	}
 }
 void EventSender::Put(const SACC_ALARM_MESSAGE_t & ev)
 {
 	SACC_ALARM_MESSAGE_t* pEv = new SACC_ALARM_MESSAGE_t(ev);
-		smsc_log_debug(logger,"EventSender::put SACC_ALARM_MESSAGE_t addr=0x%X",pEv);
-	eventsQueue.Push(pEv);
+	//	smsc_log_debug(logger,"EventSender::put SACC_ALARM_MESSAGE_t addr=0x%X",pEv);
+	if(eventsQueue.Push(pEv,QueueLength)==-1)
+	{
+		smsc_log_error(logger,"Error push to QOEUE for SACC EVENT? queue is Overflow!"); 
+		delete pEv;
+	}
 }
 void EventSender::Put(const  SACC_SESSION_EXPIRATION_TIME_ALARM_t& ev)
 {
 	SACC_SESSION_EXPIRATION_TIME_ALARM_t* pEv = new SACC_SESSION_EXPIRATION_TIME_ALARM_t(ev);
-		smsc_log_debug(logger,"EventSender::put SACC_SESSION_EXPIRATION_TIME_ALARM_t addr=0x%X",pEv);
-	eventsQueue.Push(pEv);
+	//	smsc_log_debug(logger,"EventSender::put SACC_SESSION_EXPIRATION_TIME_ALARM_t addr=0x%X",pEv);
+	if(eventsQueue.Push(pEv,QueueLength)==-1)
+	{
+		smsc_log_error(logger,"Error push to QOEUE for SACC EVENT? queue is Overflow!"); 
+		delete pEv;
+	}
 }
 void EventSender::Put(const   SACC_OPERATOR_NOT_FOUND_ALARM_t& ev)
 {
 	SACC_OPERATOR_NOT_FOUND_ALARM_t* pEv = new SACC_OPERATOR_NOT_FOUND_ALARM_t(ev);
-		smsc_log_debug(logger,"EventSender::put SACC_OPERATOR_NOT_FOUND_ALARM_t addr=0x%X",pEv);
-	eventsQueue.Push(pEv);
+	//	smsc_log_debug(logger,"EventSender::put SACC_OPERATOR_NOT_FOUND_ALARM_t addr=0x%X",pEv);
+	if(eventsQueue.Push(pEv,QueueLength)==-1)
+	{
+		smsc_log_error(logger,"Error push to QOEUE for SACC EVENT? queue is Overflow!"); 
+		delete pEv;
+	}
 }
 
-
+ 
 void EventSender::performTransportEvent(const SACC_TRAFFIC_INFO_EVENT_t& e)
 {
-	uint8_t * buffer = new uint8_t[sizeof(SACC_TRAFFIC_INFO_EVENT_t)];
-	memcpy(buffer,&e.Header.sEventType,sizeof(uint16_t));
-	buffer+=sizeof(uint16_t);
-	memcpy(buffer,e.Header.pAbonentNumber,MAX_ABONENT_NUMBER_LENGTH);
-	buffer+=MAX_ABONENT_NUMBER_LENGTH;
-	memcpy(buffer,&e.Header.lDateTime,sizeof(uint64_t));
-	buffer+=sizeof(uint64_t);
 
-	memcpy(buffer,&e.iOperatorId,sizeof(uint32_t));
-	buffer+=sizeof(uint32_t);
+	SaccPDU pdu;
+	pdu.insertPDUString8((uint8_t*)e.Header.pAbonentNumber,MAX_ABONENT_NUMBER_LENGTH);
+	pdu.insertSegment((uint8_t*)&e.Header.lDateTime,sizeof(uint64_t));
+	pdu.insertSegment((uint8_t*)&e.iOperatorId,sizeof(uint32_t));
+	pdu.insertSegment((uint8_t*)&e.Header.iServiceProviderId,sizeof(uint32_t));
+	pdu.insertSegment((uint8_t*)&e.Header.iServiceId,sizeof(uint32_t));
+	pdu.insertPDUString8((uint8_t*)e.pSessionKey,MAX_SESSION_KEY_LENGTH);
+	pdu.insertSegment((uint8_t*)&e.Header.cProtocolId,sizeof(uint8_t));
+	pdu.insertSegment((uint8_t*)&e.Header.cCommandId,sizeof(uint8_t));
+	pdu.insertSegment((uint8_t*)&e.Header.sCommandStatus,sizeof(uint16_t));
 
-	memcpy(buffer,&e.Header.iServiceProviderId,sizeof(uint32_t));
-	buffer+=sizeof(uint32_t);
+	uint32_t sz =0;
+	while(e.pMessageText[sz]!=0)
+	{
+		sz++;
+	}
+
+	pdu.insertSegment((uint8_t*)e.pMessageText,sz*sizeof(uint16_t));
+	pdu.insertSegment((uint8_t*)&e.cDirection,sizeof(uint8_t));
+	pdu.insertPDUHeader(e.Header.sEventType);
+
+	uint8_t * buffer = new uint8_t[pdu.getallsize()];
+	pdu.getAll(buffer) ;
 	
-	memcpy(buffer,&e.Header.iServiceId,sizeof(uint32_t));
-	buffer+=sizeof(uint32_t);
+	int b =SaccSocket.WriteAll((char*)buffer,pdu.getallsize());
+		
+	if(b<=0)
+		bConnected=false;
+	pdu.free();
+	delete buffer;
 
-	memcpy(buffer,e.pSessionKey,MAX_SESSION_KEY_LENGTH);
-	buffer+=MAX_SESSION_KEY_LENGTH;
-
-	memcpy(buffer,&e.Header.cProtocolId,sizeof(uint8_t));
-	buffer+=sizeof(uint8_t);
-
-	memcpy(buffer,&e.Header.cCommandId,sizeof(uint8_t));
-	buffer+=sizeof(uint8_t);
-
-	memcpy(buffer,&e.Header.sCommandStatus,sizeof(uint16_t));
-	buffer+=sizeof(uint16_t);
-
-	memcpy(buffer,e.pMessageText,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
-	buffer+=MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t);
-
-	memcpy(buffer,&e.cDirection,sizeof(uint8_t));
-	
-	SaccSocket.Write((char *)buffer,sizeof(SACC_TRAFFIC_INFO_EVENT_t));
 
 }
 void EventSender::performBillingEvent(const SACC_BILLING_INFO_EVENT_t& e)
 {
+	
+	SaccPDU pdu;
+	pdu.insertPDUString8((uint8_t*)e.Header.pAbonentNumber,MAX_ABONENT_NUMBER_LENGTH);
+	pdu.insertSegment((uint8_t*)&e.Header.lDateTime,sizeof(uint64_t));
+	pdu.insertSegment((uint8_t*)&e.iOperatorId,sizeof(uint32_t));
+	pdu.insertSegment((uint8_t*)&e.Header.iServiceProviderId,sizeof(uint32_t));
+	pdu.insertSegment((uint8_t*)&e.Header.iServiceId,sizeof(uint32_t));
+	pdu.insertPDUString8((uint8_t*)e.pSessionKey,MAX_SESSION_KEY_LENGTH);
+	pdu.insertSegment((uint8_t*)&e.Header.cProtocolId,sizeof(uint8_t));
+	pdu.insertSegment((uint8_t*)&e.Header.cCommandId,sizeof(uint8_t));
+	pdu.insertSegment((uint8_t*)&e.Header.sCommandStatus,sizeof(uint16_t));
+
+	pdu.insertSegment((uint8_t*)&e.iMediaResourceType,sizeof(uint32_t));
+	pdu.insertSegment((uint8_t*)&e.iPriceCatId,sizeof(uint32_t));
+	pdu.insertSegment((uint8_t*)&e.fBillingSumm,sizeof(float));
+	pdu.insertPDUString8((uint8_t*)e.pBillingCurrency ,MAX_BILLING_CURRENCY_LENGTH);
+
+	pdu.insertPDUHeader(e.Header.sEventType);
+
+	uint8_t * buffer = new uint8_t[pdu.getallsize()];
+	pdu.getAll(buffer) ;
+	
+	int b =SaccSocket.WriteAll((char*)buffer,pdu.getallsize());
+		
+	if(b<=0)
+		bConnected=false;
+	pdu.free();
+	delete buffer;	
+
 }
-void EventSender::performAlarmEvent(const SACC_ALARM_MESSAGE_t& e)
+void EventSender::performAlarmMessageEvent(const SACC_ALARM_MESSAGE_t& e)
 {
+	SaccPDU pdu;
+	pdu.insertPDUString8((uint8_t*)e.pAbonentsNumbers,MAX_NUMBERS_TEXT_LENGTH);
+	pdu.insertPDUString8((uint8_t*)e.pAddressEmail ,MAX_EMAIL_ADDRESS_LENGTH);
+	
+	uint32_t sz =0;
+	while(e.pMessageText[sz]!=0)
+	{
+		sz++;
+	}
+	pdu.insertSegment((uint8_t*)e.pMessageText,sz*sizeof(uint16_t));
+	pdu.insertPDUHeader(e.sEventType);
+
+	uint8_t * buffer = new uint8_t[pdu.getallsize()];
+	pdu.getAll(buffer) ;
+	
+	int b =SaccSocket.WriteAll((char*)buffer,pdu.getallsize());
+		
+	if(b<=0)
+		bConnected=false;
+	pdu.free();
+	delete buffer;	
+}
+
+void makeAlarmEvent(uint32_t evtype,void * ev)
+{
+
+}
+
+void EventSender::performAlarmEvent(const SACC_ALARM_t& e)
+{
+	SaccPDU pdu;
+
+	pdu.insertPDUString8((uint8_t*)e.Header.pAbonentNumber,MAX_ABONENT_NUMBER_LENGTH);
+	pdu.insertSegment((uint8_t*)&e.Header.lDateTime,sizeof(uint64_t));
+	pdu.insertSegment((uint8_t*)&e.iOperatorId,sizeof(uint32_t));
+	pdu.insertSegment((uint8_t*)&e.Header.iServiceProviderId,sizeof(uint32_t));
+	pdu.insertSegment((uint8_t*)&e.Header.iServiceId,sizeof(uint32_t));
+	pdu.insertPDUString8((uint8_t*)e.pSessionKey,MAX_SESSION_KEY_LENGTH);
+	pdu.insertSegment((uint8_t*)&e.Header.cProtocolId,sizeof(uint8_t));
+	pdu.insertSegment((uint8_t*)&e.Header.cCommandId,sizeof(uint8_t));
+	pdu.insertSegment((uint8_t*)&e.Header.sCommandStatus,sizeof(uint16_t));
+
+	uint32_t sz =0;
+	while(e.pMessageText[sz]!=0)
+	{
+		sz++;
+	}
+
+	pdu.insertSegment((uint8_t*)e.pMessageText,sz*sizeof(uint16_t));
+	pdu.insertSegment((uint8_t*)&e.cDirection,sizeof(uint8_t));
+	pdu.insertSegment((uint8_t*)&e.iAlarmEventId,sizeof(uint32_t));
+
+	pdu.insertPDUHeader(e.Header.sEventType);
+
+	uint8_t * buffer = new uint8_t[pdu.getallsize()];
+	pdu.getAll(buffer) ;
+	
+	int b =SaccSocket.WriteAll((char*)buffer,pdu.getallsize());
+		
+	if(b<=0)
+		bConnected=false;
+	pdu.free();
+	delete buffer;
 }
 void EventSender::performSessionExpiredEvent(const SACC_SESSION_EXPIRATION_TIME_ALARM_t& e)
 {
+	uint32_t et=3;
+	SaccPDU pdu;
+
+	pdu.insertPDUString8((uint8_t*)e.Header.pAbonentNumber,MAX_ABONENT_NUMBER_LENGTH);
+	pdu.insertSegment((uint8_t*)&e.Header.lDateTime,sizeof(uint64_t));
+	pdu.insertSegment((uint8_t*)&e.iOperatorId,sizeof(uint32_t));
+	pdu.insertSegment((uint8_t*)&e.Header.iServiceProviderId,sizeof(uint32_t));
+	pdu.insertSegment((uint8_t*)&e.Header.iServiceId,sizeof(uint32_t));
+	pdu.insertPDUString8((uint8_t*)e.pSessionKey,MAX_SESSION_KEY_LENGTH);
+	pdu.insertSegment((uint8_t*)&e.Header.cProtocolId,sizeof(uint8_t));
+	pdu.insertSegment((uint8_t*)&e.Header.cCommandId,sizeof(uint8_t));
+	pdu.insertSegment((uint8_t*)&e.Header.sCommandStatus,sizeof(uint16_t));
+
+	uint32_t sz =0;
+	while(e.pMessageText[sz]!=0)
+	{
+		sz++;
+	}
+
+	pdu.insertSegment((uint8_t*)e.pMessageText,sz*sizeof(uint16_t));
+	pdu.insertSegment((uint8_t*)&e.cDirection,sizeof(uint8_t));
+	pdu.insertSegment((uint8_t*)&et,sizeof(uint32_t));
+
+	pdu.insertPDUHeader(0x0003);
+
+	uint8_t * buffer = new uint8_t[pdu.getallsize()];
+	pdu.getAll(buffer) ;
+	
+	int b =SaccSocket.WriteAll((char*)buffer,pdu.getallsize());
+		
+	if(b<=0)
+		bConnected=false;
+	pdu.free();
+	delete buffer;
 }
 void EventSender::performOperatorNotFoundEvent(const SACC_OPERATOR_NOT_FOUND_ALARM_t& e)
 {
+	uint32_t et=1;
+	SaccPDU pdu;
+
+	pdu.insertPDUString8((uint8_t*)e.Header.pAbonentNumber,MAX_ABONENT_NUMBER_LENGTH);
+	pdu.insertSegment((uint8_t*)&e.Header.lDateTime,sizeof(uint64_t));
+	pdu.insertSegment((uint8_t*)&e.iOperatorId,sizeof(uint32_t));
+	pdu.insertSegment((uint8_t*)&e.Header.iServiceProviderId,sizeof(uint32_t));
+	pdu.insertSegment((uint8_t*)&e.Header.iServiceId,sizeof(uint32_t));
+	pdu.insertPDUString8((uint8_t*)e.pSessionKey,MAX_SESSION_KEY_LENGTH);
+	pdu.insertSegment((uint8_t*)&e.Header.cProtocolId,sizeof(uint8_t));
+	pdu.insertSegment((uint8_t*)&e.Header.cCommandId,sizeof(uint8_t));
+	pdu.insertSegment((uint8_t*)&e.Header.sCommandStatus,sizeof(uint16_t));
+
+	uint32_t sz =0;
+	while(e.pMessageText[sz]!=0)
+	{
+		sz++;
+	}
+
+	pdu.insertSegment((uint8_t*)e.pMessageText,sz*sizeof(uint16_t));
+	pdu.insertSegment((uint8_t*)&e.cDirection,sizeof(uint8_t));
+	pdu.insertSegment((uint8_t*)&et,sizeof(uint32_t));
+
+	pdu.insertPDUHeader(0x0003);
+
+	uint8_t * buffer = new uint8_t[pdu.getallsize()];
+	pdu.getAll(buffer) ;
+	
+	int b =SaccSocket.WriteAll((char*)buffer,pdu.getallsize());
+		
+	if(b<=0)
+		bConnected=false;
+	pdu.free();
+	delete buffer;	
 }
 
 }//sacc

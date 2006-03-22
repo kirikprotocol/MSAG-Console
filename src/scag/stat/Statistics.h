@@ -107,6 +107,7 @@ using smsc::smeman::SmeRecord;
 			memset(&Header,0,sizeof(SACC_EVENT_HEADER_t));
 			memset(pMessageText,0,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
 			memset(pSessionKey,0,MAX_SESSION_KEY_LENGTH);
+			Header.sEventType = SaccEventsCommandIds::sec_transport;
 			iOperatorId=0;
 			cDirection=0;
 		};
@@ -131,11 +132,14 @@ using smsc::smeman::SmeRecord;
 		uint32_t iPriceCatId;
 		float    fBillingSumm; 
 		uint8_t  pBillingCurrency[MAX_BILLING_CURRENCY_LENGTH];
-				 
+		uint8_t  pSessionKey[MAX_SESSION_KEY_LENGTH];
+	 
 		SACC_BILLING_INFO_EVENT_t()
 		{
 			memset(&Header,0,sizeof(SACC_EVENT_HEADER_t));
 			memset(pBillingCurrency,0,MAX_BILLING_CURRENCY_LENGTH);
+			memset(pSessionKey,0,MAX_SESSION_KEY_LENGTH);
+			Header.sEventType = SaccEventsCommandIds::sec_bill;
 			iOperatorId=0;
 			iMediaResourceType=0;
 			iPriceCatId=0;
@@ -145,6 +149,7 @@ using smsc::smeman::SmeRecord;
 		{
 			memcpy(&Header,&src.Header,sizeof(SACC_EVENT_HEADER_t));
 			memcpy(pBillingCurrency,src.pBillingCurrency,MAX_BILLING_CURRENCY_LENGTH);
+			memcpy(pSessionKey,src.pSessionKey,MAX_SESSION_KEY_LENGTH);
 			iOperatorId=src.iOperatorId ;
 			iMediaResourceType=src.iMediaResourceType;
 			iPriceCatId=src.iPriceCatId;
@@ -155,7 +160,8 @@ using smsc::smeman::SmeRecord;
 	struct SACC_OPERATOR_NOT_FOUND_ALARM_t
 	{
 		SACC_EVENT_HEADER_t Header;
-
+		uint32_t iOperatorId;
+		uint8_t  cDirection;
 		uint8_t  pSessionKey[MAX_SESSION_KEY_LENGTH];
 		uint16_t pMessageText[MAX_TEXT_MESSAGE_LENGTH];
 
@@ -164,6 +170,9 @@ using smsc::smeman::SmeRecord;
 			memset(&Header,0,sizeof(SACC_EVENT_HEADER_t));
 			memset(pSessionKey,0,MAX_SESSION_KEY_LENGTH);
 			memset(pMessageText,0,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
+			Header.sEventType = SaccEventsCommandIds::sec_operator_not_found;
+			cDirection=0;
+			iOperatorId=0;
 
 		}
 
@@ -172,7 +181,8 @@ using smsc::smeman::SmeRecord;
 			memcpy(&Header, &src.Header,sizeof(SACC_EVENT_HEADER_t));
 			memcpy(pSessionKey,src.pSessionKey ,MAX_SESSION_KEY_LENGTH);
 			memcpy(pMessageText,src.pMessageText ,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
-
+			cDirection=src.cDirection;
+			iOperatorId=src.iOperatorId;
 		}
 	};
 
@@ -180,7 +190,7 @@ using smsc::smeman::SmeRecord;
 	{
 
 		SACC_EVENT_HEADER_t Header;
-
+		uint8_t  cDirection;
 		uint32_t iOperatorId;
 		uint8_t  pSessionKey[MAX_SESSION_KEY_LENGTH];
 		uint16_t pMessageText[MAX_TEXT_MESSAGE_LENGTH];
@@ -190,6 +200,9 @@ using smsc::smeman::SmeRecord;
 			memset(pSessionKey,0,MAX_SESSION_KEY_LENGTH);
 			memset(pMessageText,0,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
 			iOperatorId=0;
+			Header.sEventType = SaccEventsCommandIds::sec_session_expired;
+			cDirection=0;
+
 		}
 		SACC_SESSION_EXPIRATION_TIME_ALARM_t(const SACC_SESSION_EXPIRATION_TIME_ALARM_t& src)
 		{
@@ -197,6 +210,39 @@ using smsc::smeman::SmeRecord;
 			memcpy(pSessionKey,src.pSessionKey ,MAX_SESSION_KEY_LENGTH);
 			memcpy(pMessageText,src.pMessageText ,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
 			iOperatorId=src.iOperatorId;
+			cDirection=src.cDirection;
+
+		}
+
+	};
+	struct SACC_ALARM_t
+	{
+
+		SACC_EVENT_HEADER_t Header;
+		uint8_t  cDirection;
+		uint32_t iOperatorId;
+		uint32_t iAlarmEventId;
+		uint8_t  pSessionKey[MAX_SESSION_KEY_LENGTH];
+		uint16_t pMessageText[MAX_TEXT_MESSAGE_LENGTH];
+		SACC_ALARM_t()
+		{
+			memset(&Header,0,sizeof(SACC_EVENT_HEADER_t));
+			memset(pSessionKey,0,MAX_SESSION_KEY_LENGTH);
+			memset(pMessageText,0,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
+			iOperatorId=0;
+			Header.sEventType = 0x0003;
+			cDirection=0;
+
+		}
+		SACC_ALARM_t(const SACC_ALARM_t& src)
+		{
+			memcpy(&Header, &src.Header,sizeof(SACC_EVENT_HEADER_t));
+			memcpy(pSessionKey,src.pSessionKey ,MAX_SESSION_KEY_LENGTH);
+			memcpy(pMessageText,src.pMessageText ,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
+			iOperatorId=src.iOperatorId;
+			cDirection=src.cDirection;
+			iAlarmEventId = src.iAlarmEventId; 
+
 		}
 
 	};
@@ -214,6 +260,7 @@ using smsc::smeman::SmeRecord;
 			memset(pAddressEmail,0,MAX_EMAIL_ADDRESS_LENGTH*sizeof(uint16_t));
 			memset(pMessageText,0,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
 			sEventType=0;
+			sEventType = SaccEventsCommandIds::sec_alarm;
 		}
 		SACC_ALARM_MESSAGE_t(const SACC_ALARM_MESSAGE_t & src)
 		{
