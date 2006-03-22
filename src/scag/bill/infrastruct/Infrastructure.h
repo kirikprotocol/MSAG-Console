@@ -26,6 +26,7 @@ public:
 	virtual uint32_t GetOperatorID(Address addr) = 0;
 	virtual void ReloadProviderMap() = 0;
 	virtual void ReloadOperatorMap() = 0;
+	virtual void ReloadTariffMatrix() = 0;
 };
 
 class InfrastructureImpl : public Infrastructure
@@ -36,6 +37,7 @@ class InfrastructureImpl : public Infrastructure
     smsc::logger::Logger * logger;
 	Mutex ProviderReloadMutex, ProviderMapMutex;
 	Mutex OperatorReloadMutex, OperatorMapMutex;
+	Mutex TariffMatrixReloadMutex, TariffMatrixMapMutex;
 
     void ParseFile(const char *, XMLBasicHandler*);
 	void SetFileNames(const char *, const char *);
@@ -48,6 +50,7 @@ public:
 
     virtual void ReloadProviderMap();
     virtual void ReloadOperatorMap();
+    virtual void ReloadTariffMatrix();
     virtual uint32_t GetProviderID(uint32_t service_id);
     virtual uint32_t GetOperatorID(Address addr);
 };

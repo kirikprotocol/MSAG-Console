@@ -7,7 +7,6 @@
 #include <xercesc/sax2/SAX2XMLReader.hpp>
 #include <xercesc/sax2/XMLReaderFactory.hpp>
 #include <xercesc/util/OutOfMemoryException.hpp>
-//#include <xercesc/framework/MemBufInputSource.hpp>
 #include <locale.h>
 
 #include <core/synchronization/Mutex.hpp>
@@ -117,6 +116,28 @@ void InfrastructureImpl::ReloadOperatorMap()
 	}
 
 	smsc_log_info(logger, "ReloadOperatorMap Finished");
+}
+
+void InfrastructureImpl::ReloadTariffMatrix()
+{
+	MutexGuard mt(TariffMatrixReloadMutex);
+
+	smsc_log_info(logger, "ReloadTariffMatrix Started");
+
+	try{
+//	    XMLBasicHandler handler(hash);
+//		ParseFile(OperatorFile.c_str(), &handler);
+
+		MutexGuard mt1(TariffMatrixMapMutex);
+	}
+	catch(Exception& e)
+	{
+		smsc_log_info(logger, "Tariff Matrix reload was not successful");
+//		delete hash;
+		throw e;
+	}
+
+	smsc_log_info(logger, "ReloadTariffMatrix Finished");
 }
 
 uint32_t InfrastructureImpl::GetProviderID(uint32_t service_id)
