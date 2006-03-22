@@ -7,14 +7,14 @@ package ru.sibinco.scag.backend.service;
 import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.lib.backend.util.SortedList;
+import ru.sibinco.scag.backend.routing.Route;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.util.Map;
 import java.util.Collections;
 import java.util.TreeMap;
-import java.util.List;
-import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.HashMap;
 import java.io.IOException;
 import java.io.File;
 import java.io.PrintWriter;
@@ -195,14 +195,14 @@ public class ServiceProvidersManager {
     }
 
     public synchronized long updateService(final long serviceProviderId, final Service service) throws NullPointerException {
-           final ServiceProvider serviceProvider = (ServiceProvider) serviceProviders.get(new Long(serviceProviderId));
-           if (null == serviceProvider)
-               throw new NullPointerException("Service Provider \"" + serviceProvider + "\" not found.");
-           serviceProvider.getServices().keySet().remove(service.getId());
-           serviceProvider.getServices().put(service.getId(), service);
-           serviceProviders.put(serviceProvider.getId(), serviceProvider);
-           return service.getId().longValue();
-       }
+        final ServiceProvider serviceProvider = (ServiceProvider) serviceProviders.get(new Long(serviceProviderId));
+        if (null == serviceProvider)
+            throw new NullPointerException("Service Provider \"" + serviceProvider + "\" not found.");
+        serviceProvider.getServices().keySet().remove(service.getId());
+        serviceProvider.getServices().put(service.getId(), service);
+        serviceProviders.put(serviceProvider.getId(), serviceProvider);
+        return service.getId().longValue();
+    }
 
 
     public synchronized Map getServiceProviders() {
@@ -217,4 +217,37 @@ public class ServiceProvidersManager {
         return lastUsedServiceId;
     }
 
+    public synchronized Service getServiceById(Long id) {
+        Service service = null;
+        for (Iterator i = new SortedList(serviceProviders.keySet()).iterator(); i.hasNext();) {
+            Long serviceProviderId = (Long) i.next();
+            ServiceProvider serviceProvider = (ServiceProvider) serviceProviders.get(serviceProviderId);
+            if (serviceProvider.getServices().get(id) != null)
+                return (Service) serviceProvider.getServices().get(id);
+        }
+        return service;
+    }
+    
+    public synchronized ServiceProvider getServiceProviderByServiceId(Long id) {
+        ServiceProvider service = null;
+        for (Iterator i = new SortedList(serviceProviders.keySet()).iterator(); i.hasNext();) {
+            Long serviceProviderId = (Long) i.next();
+            ServiceProvider serviceProvider = (ServiceProvider) serviceProviders.get(serviceProviderId);
+            if (serviceProvider.getServices().get(id) != null)
+                return serviceProvider;
+        }
+        return service;
+    }
+
+    public synchronized Map getRoutesByServiceId(final Map routes, Long serviceId){
+        Map result = Collections.synchronizedMap(new HashMap());
+        for (Iterator i = new SortedList(routes.keySet()).iterator(); i.hasNext();) {
+            String id = (String) i.next();
+            Route route = (Route) routes.get(id);
+            if(route.getService().getId().equals(serviceId)){
+                result.put(route.getId(), route);
+            }
+        }
+        return result;
+    }
 }
