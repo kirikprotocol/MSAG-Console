@@ -87,25 +87,29 @@ public class jEdit extends Applet
   public static String password = null;
   public static char separatorChar ;
   public static AppletContext jEditContext = null;
-  public void init()
-  {
+  private boolean initialized = false;
+  private void initialize() {
+    String[] args = new String[5];
+    String userFile = getParameter("file"); //"applet";//+username;
+    args[0]=userFile;
+    this.main(args);
+  }
+  public void init() {
     System.out.println("Initing...");
-    super.init();
+    //super.init();
     setFont(new Font("dialog", Font.BOLD, 12));
     setLayout(new GridBagLayout());
     setBackground(SystemColor.control);
     GridBagConstraints gbc = new GridBagConstraints();
     gbc.fill = GridBagConstraints.BOTH;
-    String[] args = new String[5];
-    // args[0]=getParameter("noplugins");
+    //String[] args = new String[5];
     baseUrl = getCodeBase();
-    //userfile=baseUrl.toString();
     jEditContext = getAppletContext();
     username = getParameter("username");
     password = getParameter("password");
     jEditHome =getParameter("homedir");
-    String userFile = getParameter("file"); //"applet";//+username;
-    args[0]=userFile;
+    //String userFile = getParameter("file"); //"applet";//+username;
+    //args[0]=userFile;
     //System.out.println("userfile= "+userfile);
     String protocol = baseUrl.getProtocol();
     String host = baseUrl.getHost();
@@ -120,7 +124,9 @@ public class jEdit extends Applet
     System.out.println("baseUrl= " + baseUrl.toString());
     System.out.println("servletUrl= " + servletUrl.toString());
     System.out.println("targetUrl= " + targetUrl);
-    this.main(args);
+    initSystemProperties();
+    VFSManager.init();
+    //this.main(args);
     isNotReload=true;
   }
 
@@ -136,19 +142,27 @@ public class jEdit extends Applet
   }
   public void openRule(final String userFile, final String transport)
    {
+     if(!initialized) {
+       initialize();
+       initialized = true;
+     };
      System.out.println("openRule... "+userFile);
      super.start();
      String[] args = new String[5];
      args[0]=userFile;
      args[1]=transport;
      setBooleanProperty("newRule",false);
-     this.main2(args);
+      this.main2(args);
      isNotReload=true;
      //}
    }
 
   public void newRule(final String userFile, final String transport)
     {
+      if(!initialized) {
+        initialize();
+        initialized = true;
+      };
       System.out.println("newRule... ");
       super.start();
       String[] args = new String[5];
@@ -164,6 +178,7 @@ public class jEdit extends Applet
   {
     System.out.println("Stopping...");
    //  isNotReload=true;
+    initialized = false;
     super.stop();
   }
 
@@ -177,7 +192,7 @@ public class jEdit extends Applet
     System.out.println("Destroying...");
     destroyed=true;
     startupDone=false;
-
+    initialized = false;
     DockableWindowFactory.getInstance().clear();
     KillRing.getInstance().clear();
      //{{{ Clear static variables in plugins that must be cleared at destroy
@@ -326,7 +341,7 @@ public class jEdit extends Applet
     //{{{ Get things rolling
 
     initMisc();
-    initSystemProperties();
+    //initSystemProperties();
 
     //GUIUtilities.advanceSplashProgress();
     GUIUtilities.init();
@@ -337,7 +352,7 @@ public class jEdit extends Applet
     //}}}
     //{{{ Do more stuff
     initPLAF();
-    VFSManager.init();
+    //VFSManager.init();
 
     initResources();
     SearchAndReplace.load();
