@@ -1763,7 +1763,7 @@ int main(int argc,char* argv[])
         ConvertMultibyteToUCS2(message,len,msg.get(),len*2,ansi1251?CONV_ENCODING_CP1251:CONV_ENCODING_KOI8R);
         s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::UCS2);
         len*=2;
-        if(len>140)
+        if(len>140 || dataSm)
         {
           s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,(char*)msg.get(),len);
         }else
@@ -1776,7 +1776,7 @@ int main(int argc,char* argv[])
         auto_ptr<char> msg(new char[len*3+1]);
         len=ConvertLatin1ToSMSC7Bit(message,len,msg.get());
         s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::SMSC7BIT);
-        if(len>140)
+        if(len>140 || dataSm)
         {
           s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,(char*)msg.get(),len);
         }else
@@ -1787,7 +1787,7 @@ int main(int argc,char* argv[])
       }else //latin1
       {
         s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
-        if(len>140)
+        if(len>140 || dataSm)
         {
           s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,message,len);
         }else
