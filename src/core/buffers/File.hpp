@@ -1,3 +1,4 @@
+#ident "$Id$"
 #ifndef __FILE_HPP__
 #define __FILE_HPP__
 
@@ -50,7 +51,7 @@ namespace buffers{
 #define _TO_STR2_(x) #x
 #define _TO_STR_(x) _TO_STR2_(x)
 
-#define RTERROR(txt) throw runtime_error(txt " at " __FILE__ ":" _TO_STR_(__LINE__))
+#define RTERROR(txt) throw std::runtime_error(txt " at " __FILE__ ":" _TO_STR_(__LINE__))
 
 class FileException:public std::exception{
 public:
