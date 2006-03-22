@@ -465,7 +465,7 @@ void Scag::init()
   __trace__("Smsc::init completed");
 
 
- 
+ /*
   ////////////////////////// FOR TEST 
   scag::sessions::CSessionKey key;
 
@@ -484,7 +484,7 @@ void Scag::init()
 
   ////////////////////////// FOR TEST 
   
-
+  */
 }
 
 void Scag::run()
