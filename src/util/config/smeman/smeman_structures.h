@@ -79,6 +79,7 @@ struct SmppSmeRecord
   bool disabled;
   ModeType mode;
   signed long providerId;
+  uint32_t accessMask;
 };
 
 struct Ss7SmeRecord

@@ -369,6 +369,8 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
           case MODE_TRX:si.bindMode=smeTRX;break;
         };
 
+        si.accessMask=rec->recdata.smppSme.accessMask;
+
         try{
           smeman.addSme(si);
         }catch(...)

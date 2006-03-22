@@ -143,6 +143,10 @@ public:
   {
     return info.providerId;
   };
+  virtual uint32_t getAccessMask()const
+  {
+    return info.accessMask;
+  }
   virtual SmeIndex getSmeIndex()
   {
     return idx;

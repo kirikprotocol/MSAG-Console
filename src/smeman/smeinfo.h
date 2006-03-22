@@ -35,6 +35,7 @@ struct SmeInfo
   uint32_t proclimit;
   uint32_t schedlimit;
   uint32_t providerId;
+  uint32_t accessMask;
   ~SmeInfo(){}
   SmeInfo(){}
 };

@@ -138,6 +138,11 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
               }
             } else if (strcmp(name.c_str(), "providerId") == 0) {
               record->recdata.smppSme.providerId = strtoll(value.c_str(), (char**)0, 0);
+            } else if (strcmp(name.c_str(), "accessMask") == 0) {
+              if(sscanf(value.c_str(),"0x%x",&record->recdata.smppSme.accessMask)!=1)
+              {
+                record->recdata.smppSme.accessMask = strtoll(value.c_str(), (char**)0, 0);
+              }
             } else {
               smsc_log_warn(logger, "unknown param name \"%s\"", name.c_str());
             }

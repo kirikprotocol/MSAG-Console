@@ -108,6 +108,7 @@ public:
   virtual const std::string& getSourceAddressRange(){return nullstr;};
   virtual const char * getSystemId() const = 0;
   virtual int getProviderId() const {return -1;};
+  virtual uint32_t getAccessMask()const{return 0;}
 
   virtual void updateSmeInfo(const SmeInfo& _smeInfo){}
 
