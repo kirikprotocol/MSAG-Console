@@ -169,7 +169,7 @@ public:
     
     void     handleCommand(InmanCommand* cmd);
     //aborts billing due to fatal error
-    void     Abort(const char * reason);
+    void     Abort(const char * reason = NULL);
     //
     bool     isPostpaidBill(void) const { return postpaidBill; }
     //retuns false if CDR was not complete
@@ -180,7 +180,7 @@ public:
     const CDRRecord & getCDRRecord(void) const;
 
     //InmanHandler interface methods:
-    void onChargeSms(ChargeSms*);
+    bool onChargeSms(ChargeSms*);
     void onDeliverySmsResult(DeliverySmsResult*);
 
     //SSFHandler interface methods:
@@ -193,7 +193,7 @@ public:
     void onAbortSMS(unsigned char errcode, bool tcapLayer);
 
     //InAbonentQueryListenerITF interface methods:
-    void onAbonentQueried(AbonentId ab_number, AbonentBillType ab_type);
+    void onAbonentQueried(const AbonentId & ab_number, AbonentBillType ab_type);
     //TimerListenerITF interface methods:
     void onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj);
 
@@ -203,7 +203,7 @@ protected:
     bool startCAPDialog(void);
     void StartTimer(unsigned short timeout, bool locked = false);
     void StopTimer(BillingState bilState, bool locked = false);
-    void ChargeAbonent(AbonentId ab_number, AbonentBillType ab_type);
+    void ChargeAbonent(AbonentBillType ab_type);
 
     Mutex           bilMutex;
     BillingCFG      _cfg;

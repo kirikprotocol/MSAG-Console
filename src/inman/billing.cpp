@@ -192,19 +192,21 @@ void Billing::handleCommand(InmanCommand* cmd)
         if (cmdId == CHARGE_SMS_TAG) {
             state = Billing::bilStarted;
             bilMutex.Unlock();
+            bool goon = true;
             //complete the command deserialization
             try { cmd->loadDataBuf(); }
             catch (SerializerException & exc) {
-                smsc_log_fatal(logger, "Billing[%u.%u]: %s",
+                smsc_log_error(logger, "Billing[%u.%u]: %s",
                                 _bconn->bConnId(), _bId, exc.what());
-                ChargeSmsResult res(InErrINprotocol, InProtocol_GeneralError,
+                goon = false;
+            }
+            if (!goon || !onChargeSms(static_cast<ChargeSms*>(cmd))) {
+                ChargeSmsResult res(InErrINprotocol, InProtocol_InvalidData,
                                     smsc::inman::interaction::CHARGING_NOT_POSSIBLE);
                 res.setDialogId(_bId);
                 _bconn->sendCmd(&res);
                 _bconn->billingDone(this);
-                return;
             }
-            onChargeSms(static_cast<ChargeSms*>(cmd));
         } else {
             bilMutex.Unlock();
             smsc_log_error(logger, "Billing[%u.%u]: protocol error: cmd %u, state %u",
@@ -221,7 +223,7 @@ void Billing::handleCommand(InmanCommand* cmd)
             //complete the command deserialization
             try { cmd->loadDataBuf(); }
             catch (SerializerException & exc) {
-                smsc_log_fatal(logger, "Billing[%u.%u]: %s",
+                smsc_log_error(logger, "Billing[%u.%u]: %s",
                                 _bconn->bConnId(), _bId, exc.what());
                 Abort(exc.what());
                 return;
@@ -383,9 +385,9 @@ void Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
             postpaidBill = true;
             TonNpiAddress   ab_number;
             ab_number.fromText(cdr._srcAdr.c_str());
-            _cfg.abProvider->cancelQuery(ab_number.getSignals(), this);
+            _cfg.abProvider->cancelQuery(ab_number, this);
             bilMutex.Unlock();
-            ChargeAbonent(ab_number.getSignals(), smsc::inman::cache::btUnknown);
+            ChargeAbonent(smsc::inman::cache::btUnknown);
             return;
         }
         if (state == Billing::bilProcessed) {
@@ -399,7 +401,7 @@ void Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
     return; //operation already finished
 }
 
-void Billing::ChargeAbonent(AbonentId ab_number, AbonentBillType ab_type)
+void Billing::ChargeAbonent(AbonentBillType ab_type)
 {
     smsc_log_debug(logger, "Billing[%u.%u]: abonent type: %u",
                     _bconn->bConnId(), _bId, (unsigned)ab_type);
@@ -421,23 +423,30 @@ void Billing::ChargeAbonent(AbonentId ab_number, AbonentBillType ab_type)
 /* -------------------------------------------------------------------------- *
  * InAbonentQueryListenerITF interface implementation:
  * -------------------------------------------------------------------------- */
-void Billing::onAbonentQueried(AbonentId ab_number, AbonentBillType ab_type)
+void Billing::onAbonentQueried(const AbonentId & ab_number, AbonentBillType ab_type)
 {
-    bilMutex.Lock();
-    StopTimer(state, true);
-    state = bilQueried;
-    bilMutex.Unlock();
-    ChargeAbonent(ab_number, ab_type);
+    {
+        MutexGuard grd(bilMutex);
+        StopTimer(state, true);
+        state = bilQueried;
+    }
+    ChargeAbonent(ab_type);
 }
 
 /* -------------------------------------------------------------------------- *
- * SSF interface implementation:
+ * InmanHandler interface implementation:
  * -------------------------------------------------------------------------- */
-void Billing::onChargeSms(ChargeSms* sms)
+bool Billing::onChargeSms(ChargeSms* sms)
 {
     sms->export2CDR(cdr);
     sms->exportCAPInfo(csInfo);
 
+    TonNpiAddress   ab_number;
+    if (!ab_number.fromText(cdr._srcAdr.c_str())) {
+        smsc_log_error(logger, "Billing[%u.%u]: invalid Call.Adr <%s>",
+                       _bconn->bConnId(), _bId, cdr._srcAdr.c_str());
+        return false;
+    }
     smsc_log_debug(logger, "Billing[%u.%u]: %s: Call.Adr <%s>, Dest.Adr <%s>",
                     _bconn->bConnId(), _bId, 
                    (cdr._bearer == CDRRecord::dpUSSD) ? "dpUSSD" : "dpSMS",
@@ -451,19 +460,17 @@ void Billing::onChargeSms(ChargeSms* sms)
                    ) ? false : true;
 
     //ask AbonentsCache for abonent type
-    TonNpiAddress   ab_number;
-    ab_number.fromText(cdr._srcAdr.c_str());
-    AbonentBillType ab_type = _cfg.abCache->getAbonentInfo(ab_number.getSignals());
+    AbonentBillType ab_type = _cfg.abCache->getAbonentInfo(ab_number);
     if (!postpaidBill && (ab_type == smsc::inman::cache::btUnknown)
         && !_cfg.postpaidRPC.size() && _cfg.abProvider) {
         //IN point unable to tell abonent billing type, request cache to retrieve it
-        _cfg.abProvider->startQuery(ab_number.getSignals(), this);
+        _cfg.abProvider->startQuery(ab_number, this);
 
         StartTimer(_cfg.abtTimeout);
-        return; //execution will continue in abonentQueryCB() by another thread.
+        return true; //execution will continue in abonentQueryCB() by another thread.
     }
-    ChargeAbonent(ab_number.getSignals(), ab_type);
-    return;
+    ChargeAbonent(ab_type);
+    return true;
 }
 
 void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes)
@@ -500,7 +507,7 @@ void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes)
 }
 
 /* -------------------------------------------------------------------------- *
- * InmanHandler(SSF) interface implementation:
+ * SSFhandler interface implementation:
  * -------------------------------------------------------------------------- */
 void Billing::onConnectSMS(ConnectSMSArg* arg)
 {
@@ -526,7 +533,6 @@ void Billing::onContinueSMS(uint32_t inmanErr /* = 0*/)
         Abort(_bconn->getConnectError()->what());
     }
 }
-
 //Huawei: #define POSTPAID_RPCause 41     //RP Cause: 'Temporary Failure'
 void Billing::onReleaseSMS(ReleaseSMSArg* arg)
 {
@@ -553,7 +559,6 @@ void Billing::onReleaseSMS(ReleaseSMSArg* arg)
             }
         }
     }
-    
     ChargeSmsResult res(InErrRPCause, (uint16_t)arg->rPCause, postpaidBill ?
                         smsc::inman::interaction::CHARGING_POSSIBLE : 
                         smsc::inman::interaction::CHARGING_NOT_POSSIBLE);
