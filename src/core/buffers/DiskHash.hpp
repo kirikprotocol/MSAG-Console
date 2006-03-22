@@ -1,13 +1,11 @@
+#ident "$Id$"
 #ifndef __DISKHASH_HPP__
 #define __DISKHASH_HPP__
 
+//Hint: define NOLOGGERPLEASE to exclude __warning2__() calls
+
 #include "File.hpp"
 #include "util/crc32.h"
-#include <string>
-#ifndef NOLOGGERPLEASE
-#include "util/debug.h"
-#endif
-#include <exception>
 
 namespace smsc{
 namespace core{
@@ -27,7 +25,8 @@ Key interface:
 void Read(File&)throw(exception)
 void Write(File&)throw(exception)
 static uint32_t Size() //0 in case of variable length
-uint32_t HashCode()
+uint32_t HashCode() const
+int operator== (const Key & )
 
 Value interface:
 void Read(File&)throw(exception)
@@ -326,7 +325,10 @@ public:
     if(isCached)f.DiscardCache();
   }
 
-  void Insert(const K& key,const V& value)
+  //Inserts/Updates record.
+  //In case of insertion checks that key is not already used, otherwise
+  //throws DiskHashDuplicateKeyException 
+  void Insert(const K& key, const V& value, bool update = false)
   {
     if(!isFileOpen)RTERROR("Attempt to insert into not opened hash file");
     if(!inplacekey || !inplaceval)RTERROR("Non inplace kv not implemented yet");
@@ -353,8 +355,11 @@ public:
         f.ReadNetInt32();
         K k;
         k.Read(f);
-        if(k==key)throw DiskHashDuplicateKeyException();
-        continue;
+        if (k == key) {
+            if (!update)
+                throw DiskHashDuplicateKeyException();
+        } else
+            continue;
       }
       f.Seek(DiskHashHeader::Size()+idx);
       fl=flagUsed;
@@ -369,7 +374,7 @@ public:
   }
   bool LookUp(const K& key,V& value)
   {
-    if(!isFileOpen)RTERROR("Attempt to insert into not opened hash file");
+    if(!isFileOpen)RTERROR("Attempt to look up into not opened hash file");
     int attempt=0;
     for(;;attempt++)
     {
