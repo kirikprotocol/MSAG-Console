@@ -62,6 +62,13 @@ namespace scag { namespace sessions
     };
 
 
+    struct CSessionPrimaryKey
+    {
+        smsc::sms::Address abonentAddr;
+        timeval BornMicrotime;
+    };
+
+
     struct CSessionKey
     {
         int16_t             USR; // User Session Reference
@@ -71,12 +78,6 @@ namespace scag { namespace sessions
         {
             return ((this->abonentAddr == sk.abonentAddr) && (this->USR == sk.USR));
         }
-    };
-
-    struct CSessionPrimaryKey
-    {
-        smsc::sms::Address abonentAddr;
-        timeval BornMicrotime;
     };
 
  /*   struct COperationKey

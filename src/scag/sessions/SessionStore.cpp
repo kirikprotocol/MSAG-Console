@@ -80,14 +80,21 @@ void SessionStore::deleteSession(const CSessionKey& sessionKey)
 {
   sync::MutexGuard mg(mtx);
   OffsetValue off;
+
+  smsc_log_debug(log, "perform lookup");
   if(!dhash.LookUp(sessionKey,off))
   {
     smsc_log_info(log,"Attempt to delete session that doesn't exists:%s",DiskSessionKey(sessionKey).toString().c_str());
     return;
   }
   smsc_log_debug(log,"delSession:%s:%08llx",DiskSessionKey(sessionKey).toString().c_str(),off.value);
+
   pfile.Delete(off.value);
+  smsc_log_debug(log, "pfile.Delete() - passed");
+
   dhash.Delete(sessionKey);
+  smsc_log_debug(log, "dhash.Delete() - passed");
+
 }
 
 void SessionStore::updateSession(SessionPtr session)

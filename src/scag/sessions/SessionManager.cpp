@@ -293,17 +293,26 @@ int SessionManagerImpl::Execute()
 
 SessionManagerImpl::CSessionSetIterator SessionManagerImpl::DeleteSession(CSessionSetIterator it)
 {
+    smsc_log_debug(logger,"SessionManager: TEST 1");
+
     CSessionSetIterator res;
 
     SessionHash.Delete((*it)->SessionKey);
+    smsc_log_debug(logger,"SessionManager: TEST 2");
+
+    CSessionAccessData * accessData = (*it);
 
     res = it;
     res++;
 
-    SessionExpirePool.erase(it);
 
-    store.deleteSession((*it)->SessionKey);
-    delete (*it);
+    SessionExpirePool.erase(it);
+    smsc_log_debug(logger,"SessionManager: TEST 3");
+
+    store.deleteSession(accessData->SessionKey);
+    smsc_log_debug(logger,"SessionManager: TEST 4");
+
+    delete accessData;
     smsc_log_debug(logger,"SessionManager: session expired");
 
     return res;
