@@ -268,9 +268,10 @@ namespace stat {
 
 		virtual void registerSaccEvent(const scag::stat::SACC_TRAFFIC_INFO_EVENT_t& ev);
 		virtual void registerSaccEvent(const scag::stat::SACC_BILLING_INFO_EVENT_t& ev);
-		virtual void registerSaccEvent(const scag::stat::SACC_OPERATOR_NOT_FOUND_ALARM_t& ev);
-		virtual void registerSaccEvent(const scag::stat::SACC_SESSION_EXPIRATION_TIME_ALARM_t& ev);
+//		virtual void registerSaccEvent(const scag::stat::SACC_OPERATOR_NOT_FOUND_ALARM_t& ev);
+//		virtual void registerSaccEvent(const scag::stat::SACC_SESSION_EXPIRATION_TIME_ALARM_t& ev);
 		virtual void registerSaccEvent(const scag::stat::SACC_ALARM_MESSAGE_t& ev);
+		virtual void registerSaccEvent(const scag::stat::SACC_ALARM_t& ev);
 
 
         virtual void getSmppPerfData(uint64_t *cnt);

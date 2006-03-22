@@ -1938,7 +1938,7 @@ void StatisticsManager::registerSaccEvent(const scag::stat::SACC_BILLING_INFO_EV
 
 	thrSaccSender.Put(ev);
 }
-void StatisticsManager::registerSaccEvent(const scag::stat::SACC_OPERATOR_NOT_FOUND_ALARM_t& ev)
+/*void StatisticsManager::registerSaccEvent(const scag::stat::SACC_OPERATOR_NOT_FOUND_ALARM_t& ev)
 {
 	  //  MutexGuard  switchGuard(switchLock);
 
@@ -1949,8 +1949,16 @@ void StatisticsManager::registerSaccEvent(const scag::stat::SACC_SESSION_EXPIRAT
 	  //  MutexGuard  switchGuard(switchLock);
 
 	thrSaccSender.Put(ev);
-}
+}*/
+
 void StatisticsManager::registerSaccEvent(const scag::stat::SACC_ALARM_MESSAGE_t& ev)
+{
+	  //  MutexGuard  switchGuard(switchLock);
+
+	thrSaccSender.Put(ev);
+}
+
+void StatisticsManager::registerSaccEvent(const scag::stat::SACC_ALARM_t& ev)
 {
 	  //  MutexGuard  switchGuard(switchLock);
 

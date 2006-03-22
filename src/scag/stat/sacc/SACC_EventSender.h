@@ -60,8 +60,8 @@ public:
 	void Put(const SACC_TRAFFIC_INFO_EVENT_t& ev);
 	void Put(const SACC_BILLING_INFO_EVENT_t& ev);
 	void Put(const SACC_ALARM_MESSAGE_t & ev);
-	void Put(const SACC_SESSION_EXPIRATION_TIME_ALARM_t& ev);
-	void Put(const SACC_OPERATOR_NOT_FOUND_ALARM_t& ev);
+//	void Put(const SACC_SESSION_EXPIRATION_TIME_ALARM_t& ev);
+//	void Put(const SACC_OPERATOR_NOT_FOUND_ALARM_t& ev);
 	void Put(const SACC_ALARM_t & ev);
 
 	void Start();
@@ -85,8 +85,8 @@ private:
 	void performBillingEvent(const SACC_BILLING_INFO_EVENT_t& e);
 	void performAlarmMessageEvent(const SACC_ALARM_MESSAGE_t& e);
 	void performAlarmEvent(const SACC_ALARM_t& e);
-	void performSessionExpiredEvent(const SACC_SESSION_EXPIRATION_TIME_ALARM_t& e);
-	void performOperatorNotFoundEvent(const SACC_OPERATOR_NOT_FOUND_ALARM_t& e);
+//	void performSessionExpiredEvent(const SACC_SESSION_EXPIRATION_TIME_ALARM_t& e);
+//	void performOperatorNotFoundEvent(const SACC_OPERATOR_NOT_FOUND_ALARM_t& e);
 
 	void makeAlarmEvent(uint32_t evtype);
 	smsc::logger::Logger * logger;

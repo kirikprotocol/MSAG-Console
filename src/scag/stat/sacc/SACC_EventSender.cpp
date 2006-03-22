@@ -88,7 +88,7 @@ bool EventSender::processEvent(void *ev)
 			performAlarmMessageEvent(e);
 		}
 		break;
-	case SaccEventsCommandIds::sec_session_expired:
+	/*case SaccEventsCommandIds::sec_session_expired:
 		{
 			SACC_SESSION_EXPIRATION_TIME_ALARM_t e;
 			memcpy(&e,ev,sizeof(SACC_SESSION_EXPIRATION_TIME_ALARM_t));
@@ -103,7 +103,7 @@ bool EventSender::processEvent(void *ev)
 			delete (SACC_OPERATOR_NOT_FOUND_ALARM_t*)ev;
 			performOperatorNotFoundEvent(e);
 		}
- 		break;
+ 		break;*/
 	case SaccEventsCommandIds::sec_alarm:
 		{
 			SACC_ALARM_t e;
@@ -227,7 +227,7 @@ void EventSender::Put (const SACC_ALARM_t& ev)
 	//	smsc_log_debug(logger,"EventSender::put SACC_TRAFFIC_INFO_EVENT_t addr=0x%X",pEv);
 	if(eventsQueue.Push(pEv,QueueLength)==-1)
 	{
-		smsc_log_error(logger,"Error push to QOEUE for SACC EVENT? queue is Overflow!"); 
+		smsc_log_error(logger,"Error push alarm_event to QOEUE for SACC EVENT queue is Overflow!"); 
 		delete pEv;
 	}
 }
@@ -238,7 +238,7 @@ void EventSender::Put(const SACC_TRAFFIC_INFO_EVENT_t& ev)
 	//	smsc_log_debug(logger,"EventSender::put SACC_TRAFFIC_INFO_EVENT_t addr=0x%X",pEv);
 	if(eventsQueue.Push(pEv,QueueLength)==-1)
 	{
-		smsc_log_error(logger,"Error push to QOEUE for SACC EVENT? queue is Overflow!"); 
+		smsc_log_error(logger,"Error push traffic_event to QOEUE for SACC EVENT queue is Overflow!"); 
 		delete pEv;
 	}
 }
@@ -249,7 +249,7 @@ void EventSender::Put(const SACC_BILLING_INFO_EVENT_t& ev)
 	//	smsc_log_debug(logger,"EventSender::put SACC_BILLING_INFO_EVENT_t addr=0x%X",pEv);
 	if(eventsQueue.Push(pEv,QueueLength)==-1)
 	{
-		smsc_log_error(logger,"Error push to QOEUE for SACC EVENT? queue is Overflow!"); 
+		smsc_log_error(logger,"Error push billing_event to QOEUE for SACC EVENT? queue is Overflow!"); 
 		delete pEv;
 	}
 }
@@ -259,10 +259,11 @@ void EventSender::Put(const SACC_ALARM_MESSAGE_t & ev)
 	//	smsc_log_debug(logger,"EventSender::put SACC_ALARM_MESSAGE_t addr=0x%X",pEv);
 	if(eventsQueue.Push(pEv,QueueLength)==-1)
 	{
-		smsc_log_error(logger,"Error push to QOEUE for SACC EVENT? queue is Overflow!"); 
+		smsc_log_error(logger,"Error push Alarm_Message to QOEUE for SACC EVENT queue is Overflow!"); 
 		delete pEv;
 	}
 }
+/*
 void EventSender::Put(const  SACC_SESSION_EXPIRATION_TIME_ALARM_t& ev)
 {
 	SACC_SESSION_EXPIRATION_TIME_ALARM_t* pEv = new SACC_SESSION_EXPIRATION_TIME_ALARM_t(ev);
@@ -284,7 +285,7 @@ void EventSender::Put(const   SACC_OPERATOR_NOT_FOUND_ALARM_t& ev)
 	}
 }
 
- 
+ */
 void EventSender::performTransportEvent(const SACC_TRAFFIC_INFO_EVENT_t& e)
 {
 
@@ -419,7 +420,7 @@ void EventSender::performAlarmEvent(const SACC_ALARM_t& e)
 	pdu.free();
 	delete buffer;
 }
-void EventSender::performSessionExpiredEvent(const SACC_SESSION_EXPIRATION_TIME_ALARM_t& e)
+/*void EventSender::performSessionExpiredEvent(const SACC_SESSION_EXPIRATION_TIME_ALARM_t& e)
 {
 	uint32_t et=3;
 	SaccPDU pdu;
@@ -492,7 +493,7 @@ void EventSender::performOperatorNotFoundEvent(const SACC_OPERATOR_NOT_FOUND_ALA
 		bConnected=false;
 	pdu.free();
 	delete buffer;	
-}
+}*/
 
 }//sacc
 }//stat
