@@ -76,11 +76,12 @@ void InfrastructureImpl::ReloadProviderMap()
 {
 	MutexGuard mt(ProviderReloadMutex);
 
+	smsc_log_info(logger, "ReloadProviderMap Started");
+
 	IntHash<uint32_t> *hash = new IntHash<uint32_t>();
 	try{
 	    XMLBasicHandler handler(hash);
 		ParseFile(ProviderFile.c_str(), &handler);
-
 		MutexGuard mt1(ProviderMapMutex);
 		delete service_hash;
 		service_hash = hash;
@@ -205,8 +206,8 @@ void InfrastructureImpl::ParseFile(const char* _xmlFile, XMLBasicHandler* handle
 //	setlocale(LC_ALL,"UTF-8");
 //    RegExp::InitLocale();
     SAXParser parser;
-
-    try
+    
+	try
     {
         parser.setValidationScheme(SAXParser::Val_Always);
         parser.setDoSchema(true);
@@ -219,7 +220,6 @@ void InfrastructureImpl::ParseFile(const char* _xmlFile, XMLBasicHandler* handle
 
         parser.setDocumentHandler(handler);
         parser.setErrorHandler(handler);
-
         parser.parse(_xmlFile);
         errorCount = parser.getErrorCount();
     }

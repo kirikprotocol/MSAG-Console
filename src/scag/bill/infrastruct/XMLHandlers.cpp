@@ -14,6 +14,8 @@ XMLBasicHandler::XMLBasicHandler(IntHash<uint32_t> *h)
     logger = Logger::getInstance("xmlhndlr");
 	cur_provider_id = 0;
 	service_hash = h;
+	in_mask = false;
+	mask_len = 0;
 	type = 0;
 }
 
@@ -31,7 +33,7 @@ XMLBasicHandler::XMLBasicHandler(Hash<uint32_t> *h)
 void XMLBasicHandler::characters(const XMLCh *const chars, const unsigned int length) 
 {
 	uint32_t cnt = length;
-	if(in_mask)
+	if(type == 1 && in_mask)
 	{
 		if(mask_len + cnt >= 200)
 			cnt = 200 - mask_len - 1;
