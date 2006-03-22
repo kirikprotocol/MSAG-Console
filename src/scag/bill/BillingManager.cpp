@@ -155,9 +155,7 @@ void BillingManagerImpl::init(BillingManagerConfig& cfg)
 
     EventMonitorArray = new EventMonitorEntity[m_MaxEventMonitors];
 
-	std::string prov_fn = cfg.so_dir + "/services.xml";
-	std::string op_fn = cfg.so_dir + "/operators.xml";
-	infrastruct.init(prov_fn.c_str(), op_fn.c_str());
+	infrastruct.init(cfg.so_dir);
 
     smsc_log_info(logger,"BillingManager inited...");
 }
