@@ -231,6 +231,7 @@ void LoadConfig(const char* filename)
 
 int main(int argc,char* argv[])
 {
+  srand(time(NULL));
   if(argc==1)
   {
     printf("usage: %s inifile [param=arg ...]\n",argv[0]);
