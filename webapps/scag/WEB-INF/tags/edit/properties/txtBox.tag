@@ -11,6 +11,5 @@
 <sm-ep:property title="${title}">
     <textarea cols="${cols}" rows="${rows}" name="${fn:escapeXml(name)}" <c:if test="${readonly}">readonly</c:if>
             <c:if test="${!empty validation}">validation="${validation}"
-                onkeyup="resetValidation(this)"</c:if>>${fn:escapeXml(bean[name])}
-    </textarea>
+                onkeyup="resetValidation(this)"</c:if>>${fn:escapeXml(bean[name])}</textarea>
 </sm-ep:property>

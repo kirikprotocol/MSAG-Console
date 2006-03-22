@@ -22,7 +22,7 @@ public abstract class EditBean extends SCAGBean
   {
     super.process(request, response);
 
-    if (getId() == null && !isAdd())
+     if (getId() == null && !isAdd())
       load(getEditId());
 
     if (getMbCancel() != null)

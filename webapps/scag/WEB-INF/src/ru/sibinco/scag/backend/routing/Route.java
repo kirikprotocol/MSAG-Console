@@ -14,10 +14,8 @@ import ru.sibinco.lib.backend.util.StringEncoderDecoder;
 import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.scag.backend.endpoints.SmppManager;
 import ru.sibinco.scag.backend.endpoints.svc.Svc;
-import ru.sibinco.scag.backend.sme.Provider;
-import ru.sibinco.scag.backend.sme.ProviderManager;
-import ru.sibinco.scag.backend.sme.Category;
-import ru.sibinco.scag.backend.sme.CategoryManager;
+import ru.sibinco.scag.backend.service.Service;
+import ru.sibinco.scag.backend.service.ServiceProvidersManager;
 
 import java.io.PrintWriter;
 import java.util.HashMap;
@@ -44,13 +42,12 @@ public class Route {
     private boolean enabled;
     private boolean active;
     private String srcSmeId;
-    private Provider provider;
-    private Category category;
+    private Service service;
     private String notes;
 
     public Route(final String routeName, final Map sources, final Map destinations, final boolean archived,
-                 final boolean enabled, final boolean active, final String srcSmeId, final Provider provider,
-                 final Category category, final String notes) {
+                 final boolean enabled, final boolean active, final String srcSmeId, final Service service,
+                 final String notes) {
         if (routeName == null)
             throw new NullPointerException("Route name is null");
         if (routeName.length() > Constants.ROUTE_ID_MAXLENGTH)
@@ -67,8 +64,7 @@ public class Route {
         this.enabled = enabled;
         this.active = active;
         this.srcSmeId = srcSmeId;
-        this.provider = provider;
-        this.category = category;
+        this.service = service;
         this.notes = notes;
     }
 
@@ -85,15 +81,13 @@ public class Route {
         this.enabled = false;
         this.active = false;
         this.srcSmeId = "";
-        this.provider = null;
-        this.category = null;
+        this.service = null;
         this.notes = "";
     }
 
 
     public Route(Element routeElem, Map subjects, SmppManager smppManager,
-                 ProviderManager providerManager,
-                 CategoryManager categoryManager) throws SibincoException {
+                 ServiceProvidersManager serviceProvidersManager) throws SibincoException {
 
         name = StringEncoderDecoder.encode(routeElem.getAttribute("id"));
         if (name.length() > Constants.ROUTE_ID_MAXLENGTH) {
@@ -105,10 +99,8 @@ public class Route {
         enabled = routeElem.getAttribute("enabled").equalsIgnoreCase("true");
         active = routeElem.getAttribute("active").equalsIgnoreCase("true");
         srcSmeId = routeElem.getAttribute("srcSmeId");
-        final Long providerId = Long.decode(routeElem.getAttribute("providerId"));
-        this.provider = (Provider) providerManager.getProviders().get(providerId);
-        final Long categoryId = Long.decode(routeElem.getAttribute("categoryId"));
-        this.category = (Category) categoryManager.getCategories().get(categoryId);
+        final Long serviceId = Long.decode(routeElem.getAttribute("serviceId"));
+        this.service = serviceProvidersManager.getServiceById(serviceId);
         notes = "";
         NodeList notesList = routeElem.getElementsByTagName("notes");
         for (int i = 0; i < notesList.getLength(); i++)
@@ -185,8 +177,7 @@ public class Route {
                     + "\" enabled=\"" + isEnabled()
                     + "\" active=\"" + isActive()
                     + "\" srcSmeId=\"" + StringEncoderDecoder.encode(getSrcSmeId())
-                    + "\" providerId=\"" + getProvider().getId()
-                    + "\" categoryId=\"" + getCategory().getId()
+                    + "\" serviceId=\"" + getService().getId()
                     + "\">");
             if (notes != null)
                 out.println("    <notes>" + notes + "</notes>");
@@ -286,32 +277,17 @@ public class Route {
         this.srcSmeId = srcSmeId;
     }
 
-    public Provider getProvider() {
-        return provider;
+    public Service getService() {
+        return service;
     }
 
-    public void setProvider(final Provider provider) {
-        this.provider = provider;
+    public void setService(Service service) {
+        this.service = service;
     }
 
-    public String getProviderName() {
-        if (null != provider)
-            return provider.getName();
-        else
-            return null;
-    }
-
-    public Category getCategory() {
-        return category;
-    }
-
-    public void setCategory(final Category category) {
-        this.category = category;
-    }
-
-    public String getCategoryName() {
-        if (null != category)
-            return category.getName();
+    public String getServiceName() {
+        if (null != service)
+            return service.getName();
         else
             return null;
     }

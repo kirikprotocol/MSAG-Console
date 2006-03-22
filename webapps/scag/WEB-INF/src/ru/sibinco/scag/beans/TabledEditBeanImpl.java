@@ -27,8 +27,6 @@ public abstract class TabledEditBeanImpl extends TabledBeanImpl {
     public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException {
         super.process(request, response);
 
-        if (getId() == null && !isAdd())
-            load(getEditId());
 
         if (getMbCancel() != null)
             throw new CancelException();
@@ -36,10 +34,7 @@ public abstract class TabledEditBeanImpl extends TabledBeanImpl {
             save();
     }
 
-    protected abstract void load(final String loadId) throws SCAGJspException;
-
     protected abstract void save() throws SCAGJspException;
-
 
     public String getEditId() {
         return editId;

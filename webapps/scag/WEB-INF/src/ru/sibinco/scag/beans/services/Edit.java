@@ -68,9 +68,7 @@ public class Edit extends TabledEditBeanImpl {
         }
     }
 
-    protected void load(final String loadId) throws SCAGJspException {
-
-    }
+    
 
     protected void delete() throws SCAGJspException {
         final List toRemove = new ArrayList(checked.length);
@@ -118,7 +116,7 @@ public class Edit extends TabledEditBeanImpl {
             throw new SCAGJspException(Constants.errors.status.COULDNT_SAVE_CONFIG, e);
         }
         if (isAdd()) {
-            throw new EditException(new Long(id).toString());
+            throw new EditException(Long.toString(id));
         } else {
             throw new DoneException();
         }

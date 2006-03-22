@@ -9,12 +9,16 @@
 
     <jsp:attribute name="menu">
         <sm-pm:menu>
-            <c:if test="${true}">
+            <c:if test="${!param.add}">
                 <sm-pm:item name="mbAddChild" value="Add Service" title="Add new Service"/>
             </c:if>
             <c:if test="${!param.add}">
                 <sm-pm:item name="mbDelete" value="Delete Service" title="Delete Service"
                             onclick="return confirm('Are you sure to delete this object?')" isCheckSensible="true"/>
+            </c:if>
+            <c:if test="${param.add}">
+                <sm-pm:item name="mbSave" value="Create" title="Create provider info"/>
+                <sm-pm:item name="mbCancel" value="Cancel" title="Cancel provider editing" onclick="clickCancel()"/>
             </c:if>
             <sm-pm:space/>
         </sm-pm:menu>
@@ -26,16 +30,13 @@
             <sm-ep:txtBox title="description" cols="0" rows="0" name="description"/>
         </sm-ep:properties>
         <div class=page_subtitle>&nbsp;</div>
+        <c:if test="${!param.add}">
         <sm-pm:menu>
-            <c:if test="${!param.add}">
                 <sm-pm:item name="mbSave" value="Done" title="Save provider info"/>
-            </c:if>
-            <c:if test="${param.add}">
-                <sm-pm:item name="mbSave" value="Create" title="Create provider info"/>
-            </c:if>
-            <sm-pm:item name="mbCancel" value="Cancel" title="Cancel provider editing" onclick="clickCancel()"/>
+                <sm-pm:item name="mbCancel" value="Cancel" title="Cancel provider editing" onclick="clickCancel()"/>
             <sm-pm:space/>
         </sm-pm:menu>
+        </c:if>
         <c:if test="${!param.add}">
             <div class=page_subtitle>&nbsp;</div>
 

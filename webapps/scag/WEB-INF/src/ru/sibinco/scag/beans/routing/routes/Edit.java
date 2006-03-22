@@ -10,12 +10,11 @@ import ru.sibinco.scag.backend.routing.Destination;
 import ru.sibinco.scag.backend.routing.Route;
 import ru.sibinco.scag.backend.routing.Source;
 import ru.sibinco.scag.backend.routing.Subject;
-import ru.sibinco.scag.backend.sme.Provider;
-import ru.sibinco.scag.backend.sme.Category;
 import ru.sibinco.scag.backend.SCAGAppContext;
-import ru.sibinco.scag.beans.DoneException;
+import ru.sibinco.scag.backend.service.Service;
 import ru.sibinco.scag.beans.EditBean;
 import ru.sibinco.scag.beans.SCAGJspException;
+import ru.sibinco.scag.beans.CancelChildException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -27,16 +26,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.Collection;
+import java.util.LinkedList;
 import java.security.Principal;
 
 
 /**
  * Created by igork Date: 20.04.2004 Time: 15:51:47
  */
-public class Edit extends EditBean {
+public class Edit extends EditBean{//TabledEditBeanImpl {
 
     public static final long ALL_PROVIDERS = -1;
-    private String name;
+    private String id;
     private String[] srcMasks = new String[0];
     private String[] srcSubjs = new String[0];
     private String[] dstMasks = new String[0];
@@ -46,15 +47,9 @@ public class Edit extends EditBean {
     private boolean active;
     private String srcSmeId;
     private String notes;
-
-    private String category;
-    private long categoryId;
-
-    private long providerId;
-    private String providerName = null;
-    private String[] providerIds = null;
-    private String[] providerNames = null;
-    private long userProviderId = ALL_PROVIDERS;
+    private String path = "";
+    private String parentId;
+    private String serviceName = null;
     private boolean administrator = false;
 
     private Set srcMasksSet = new HashSet();
@@ -70,16 +65,22 @@ public class Edit extends EditBean {
 
 
     public String getId() {
-        return name;
+        return id;
     }
 
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
-
+        path = request.getContextPath();
         appContext = getAppContext();
         if (appContext == null) {
             appContext = (SCAGAppContext) request.getAttribute("appContext");
         }
 
+        if (getMbCancel() != null) {
+            throw new CancelChildException(path + "/services/service/edit.jsp?parentId=" + getParentId() + "&editId=" +
+                appContext.getServiceProviderManager().getServiceProviderByServiceId(
+                        Long.decode(getParentId())).getId() + "&editChild=true");
+        }
+        id = getEditId();
         destinations = new HashMap();
         for (Iterator i = request.getParameterMap().entrySet().iterator(); i.hasNext();) {
             final Map.Entry entry = (Map.Entry) i.next();
@@ -167,44 +168,31 @@ public class Edit extends EditBean {
                 throw new SCAGJspException(Constants.errors.routing.routes.COULD_NOT_CREATE_DESTINATION, e);
             }
         }
-        super.process(request, response);
-        userProviderId = getUser(appContext).getProviderId();
-        administrator = (userProviderId == ALL_PROVIDERS);
-        List ids = new ArrayList();
-        List names = new ArrayList();
-        if (administrator) {
-            Map providers = appContext.getProviderManager().getProviders();
-            for (Iterator i = providers.values().iterator(); i.hasNext();) {
-                Object obj = i.next();
-                if (obj != null && obj instanceof Provider) {
-                    Provider provider = (Provider) obj;
-                    ids.add(Long.toString(provider.getId()));
-                    names.add(provider.getName());
-                }
-            }
-            providerIds = (String[]) (ids.toArray(new String[ids.size()]));
-            providerNames = (String[]) (names.toArray(new String[names.size()]));
-
-        } else {
-            Object obj = appContext.getProviderManager().getProviders().get(new Long(userProviderId));
-            if (obj == null || !(obj instanceof Provider))
-                throw new SCAGJspException(Constants.errors.providers.PROVIDER_NOT_FOUND,
-                        "Failed to locate provider for id=" + userProviderId);
-            Provider provider = (Provider) obj;
-            ids.add(Long.toString(provider.getId()));
-            names.add(provider.getName());
-            providerIds = (String[]) (ids.toArray(new String[ids.size()]));
-            providerNames = (String[]) (names.toArray(new String[names.size()]));
+        if (getMbSave() != null){
+            super.process(request, response);
+            save();
         }
+        load(id);
+        super.process(request, response);
+
+    }
+
+
+    protected Collection getDataSource() {
+        return new LinkedList();
+    }
+
+    protected void delete() throws SCAGJspException {
+
     }
 
     protected void load(final String loadId) throws SCAGJspException {
         if (null == new_dst_mask_sme_ && 0 < appContext.getSmppManager().getSvcs().size())
             new_dst_mask_sme_ = (String) appContext.getSmppManager().getSvcs().keySet().iterator().next();
 
-        final Route route = (Route) appContext.getScagRoutingManager().getRoutes().get(loadId);
+        final Route route = (Route) appContext.getScagRoutingManager().getRoutes().get(getEditId());
         if (null != route) {
-            name = route.getName();
+            id = route.getName();
 
             final List subjList = new ArrayList();
             final List maskList = new ArrayList();
@@ -243,14 +231,8 @@ public class Edit extends EditBean {
             srcSmeId = route.getSrcSmeId();
             notes = route.getNotes();
 
-            if (null != route.getProvider()) {
-                providerName = route.getProvider().getName();
-                providerId = route.getProvider().getId();
-            }
-
-            if (null != route.getCategory()) {
-                category = route.getCategory().getName();
-                categoryId = route.getCategory().getId();
+            if (null != route.getService()) {
+                serviceName = route.getService().getName();
             }
         }
     }
@@ -260,22 +242,20 @@ public class Edit extends EditBean {
         final Map routes = appContext.getScagRoutingManager().getRoutes();
         try {
             final Map sources = createSources();
-            final Provider providerObj = (Provider) appContext.getProviderManager().getProviders().get(new Long(providerId));
-            final Category categoryObj = (Category) appContext.getCategoryManager().getCategories().get(new Long(categoryId));
-
+            final Service serviceObj = appContext.getServiceProviderManager().getServiceById(Long.decode(getParentId()));
             if (isAdd()) {
-                if (routes.containsKey(name))
-                    throw new SCAGJspException(Constants.errors.routing.routes.ROUTE_ALREADY_EXISTS, name);
-                routes.put(name,
-                        new Route(name, sources, destinations, archived, enabled, active, srcSmeId,
-                                providerObj, categoryObj, notes));
+                if (routes.containsKey(id))
+                    throw new SCAGJspException(Constants.errors.routing.routes.ROUTE_ALREADY_EXISTS, id);
+                routes.put(id,
+                        new Route(id, sources, destinations, archived, enabled, active, srcSmeId,
+                                serviceObj, notes));
             } else {
-                if (!getEditId().equals(name) && routes.containsKey(name))
-                    throw new SCAGJspException(Constants.errors.routing.subjects.SUBJECT_ALREADY_EXISTS, name);
+                if (!getEditId().equals(id) && routes.containsKey(id))
+                    throw new SCAGJspException(Constants.errors.routing.subjects.SUBJECT_ALREADY_EXISTS, id);
                 routes.remove(getEditId());
-                routes.put(name,
-                        new Route(name, sources, destinations, archived, enabled, active, srcSmeId,
-                                providerObj, categoryObj, notes));
+                routes.put(id,
+                        new Route(id, sources, destinations, archived, enabled, active, srcSmeId,
+                                serviceObj, notes));
             }
         } catch (SibincoException e) {
             logger.error("Could not create new subject", e);
@@ -285,7 +265,10 @@ public class Edit extends EditBean {
         appContext.getScagRoutingManager().setChangedByUser(getUser(appContext).getName());
         appContext.getScagRoutingManager().setRoutesSaved(true);
 
-        throw new DoneException();
+        //throw new DoneException();
+        throw new CancelChildException(path + "/services/service/edit.jsp?parentId=" + getParentId() + "&editId=" +
+                appContext.getServiceProviderManager().getServiceProviderByServiceId(
+                        Long.decode(getParentId())).getId() + "&editChild=true");
     }
 
     private Map createSources() throws SibincoException {
@@ -313,14 +296,6 @@ public class Edit extends EditBean {
         return (String[]) new SortedList(appContext.getSmppManager().getSvcs().keySet()).toArray(new String[0]);
     }
 
-    public String[] getProviderIds() {
-        return providerIds;
-    }
-
-    public String[] getProviderNames() {
-        return providerNames;
-    }
-
     public String[] getCategoryIds() {
         final Map categories = new TreeMap(appContext.getCategoryManager().getCategories());
         final List result = new ArrayList(categories.size());
@@ -330,21 +305,11 @@ public class Edit extends EditBean {
         return (String[]) result.toArray(new String[result.size()]);
     }
 
-    public String[] getCategories() {
-        final Map catecories = new TreeMap(appContext.getCategoryManager().getCategories());
-        final List result = new ArrayList(catecories.size());
-        for (Iterator i = catecories.values().iterator(); i.hasNext();) {
-            result.add(((Category) i.next()).getName());
-        }
-        return (String[]) result.toArray(new String[result.size()]);
-    }
 
-    public String getName() {
-        return name;
-    }
 
-    public void setName(final String name) {
-        this.name = name;
+
+    public void setId(final String id) {
+        this.id = id;
     }
 
     public String[] getSrcMasks() {
@@ -411,36 +376,12 @@ public class Edit extends EditBean {
         this.notes = notes;
     }
 
-    public long getProviderId() {
-        return providerId;
-    }
-
-    public void setProviderId(final long providerId) {
-        this.providerId = providerId;
-    }
-
-    public String getCategory() {
-        return category;
-    }
-
-    public void setCategory(String category) {
-        this.category = category;
-    }
-
     public boolean isArchived() {
         return archived;
     }
 
     public void setArchived(boolean archived) {
         this.archived = archived;
-    }
-
-    public long getCategoryId() {
-        return categoryId;
-    }
-
-    public void setCategoryId(long categoryId) {
-        this.categoryId = categoryId;
     }
 
     public List getAllSmes() {
@@ -520,8 +461,16 @@ public class Edit extends EditBean {
         return administrator;
     }
 
-    public String getProviderName() {
-        return providerName;
+    public String getServiceName() {
+        return serviceName;
+    }
+
+    public String getParentId() {
+        return parentId;
+    }
+
+    public void setParentId(String parentId) {
+        this.parentId = parentId;
     }
 
 }

@@ -12,8 +12,7 @@ import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.scag.backend.endpoints.SmppManager;
-import ru.sibinco.scag.backend.sme.CategoryManager;
-import ru.sibinco.scag.backend.sme.ProviderManager;
+import ru.sibinco.scag.backend.service.ServiceProvidersManager;
 
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
@@ -43,10 +42,9 @@ public class ScagRoutingManager {
     private Map routes = null;//Collections.synchronizedMap(new HashMap());
     private Map subjects = null;//Collections.synchronizedMap(new HashMap());
     private Logger logger = Logger.getLogger(this.getClass());
-    private final File smscConfFolder;
+    private final File scagConfFolder;
     private SmppManager smppManager;
-    private ProviderManager providerManager;
-    private CategoryManager categoryManager;
+    private ServiceProvidersManager serviceProvidersManager;
     private boolean routesChanged = false;
     private String changedByUser = "";
     private boolean routesRestored = false;
@@ -59,11 +57,10 @@ public class ScagRoutingManager {
 
 
     public ScagRoutingManager(File smscConfFolder, SmppManager smppManager,
-                              ProviderManager providerManager, CategoryManager categoryManager) {
-        this.smscConfFolder = smscConfFolder;
+                              ServiceProvidersManager serviceProvidersManager) {
+        this.scagConfFolder = smscConfFolder;
         this.smppManager = smppManager;
-        this.providerManager = providerManager;
-        this.categoryManager = categoryManager;
+        this.serviceProvidersManager = serviceProvidersManager;
     }
 
     public void init() throws SibincoException {
@@ -89,13 +86,13 @@ public class ScagRoutingManager {
     }
 
     public synchronized boolean hasSavedConfiguration() {
-        return new File(smscConfFolder, SMSC_ROUTES_TEMPORAL_CONFIG).exists();
+        return new File(scagConfFolder, SMSC_ROUTES_TEMPORAL_CONFIG).exists();
     }
 
     public synchronized void loadFromFile(final String fileName) throws SibincoException {
 
         logger.debug("enter " + this.getClass().getName() + ".loadFromFile(\"" + fileName + "\")");
-        final File config = new File(smscConfFolder, fileName);
+        final File config = new File(scagConfFolder, fileName);
 
         try {
             final Document routesDocument = Utils.parse(config.getAbsolutePath());
@@ -126,7 +123,7 @@ public class ScagRoutingManager {
     }
 
     protected Route createRoute(final Element routeElem, final Map subjects) throws SibincoException {
-        return new Route(routeElem, subjects, smppManager, providerManager, categoryManager);
+        return new Route(routeElem, subjects, smppManager, serviceProvidersManager);
     }
 
     private void loadSubjects(final NodeList subjList) throws SibincoException {
@@ -148,7 +145,7 @@ public class ScagRoutingManager {
 
     private void saveToFile(final String filename) throws SibincoException {
 
-        final File file = new File(smscConfFolder, filename);
+        final File file = new File(scagConfFolder, filename);
         final File newFile = Functions.createNewFilenameForSave(file);
         try {
             String localEncoding = Functions.getLocaleEncoding();
@@ -185,7 +182,7 @@ public class ScagRoutingManager {
      * @throws SibincoException if exception will be occurred
      */
     public Date getRestoreFileDate() throws SibincoException {
-        File tempConfFile = new File(smscConfFolder, SMSC_ROUTES_TEMPORAL_CONFIG);
+        File tempConfFile = new File(scagConfFolder, SMSC_ROUTES_TEMPORAL_CONFIG);
         if (tempConfFile.exists()) {
             final long lastModified = tempConfFile.lastModified();
             if (lastModified != 0) {
@@ -205,7 +202,7 @@ public class ScagRoutingManager {
      * @throws SibincoException if exception will be occurred
      */
     public Date getLoadFileDate() throws SibincoException {
-        File tempConfFile = new File(smscConfFolder, SMSC_ROUTES_PRIMARY_CONFIG);
+        File tempConfFile = new File(scagConfFolder, SMSC_ROUTES_PRIMARY_CONFIG);
         if (tempConfFile.exists()) {
             final long lastModified = tempConfFile.lastModified();
             if (lastModified != 0)

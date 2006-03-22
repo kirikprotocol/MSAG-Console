@@ -7,6 +7,7 @@
  attribute name="widths" required="true"%><%@
  attribute name="edit" required="false"%><%@
  attribute name="child" required="false"%><%@
+ attribute name="parentId" required="false"%><%@
  attribute name="goal" required="false" %>
 <%@attribute name="filter" required="false"%>
 <c:set var="columns" value="${fn:split(columns, ',')}"/>
@@ -63,20 +64,21 @@ function clearForm() {
 }
 
 
-function edit(idToEdit,goal, child)
-{
-  opForm.mbEdit.value = idToEdit;
-  opForm.editId.value = idToEdit;
+function edit(idToEdit, child, parentId) {
+    opForm.mbEdit.value = idToEdit;
+    opForm.editId.value = idToEdit;
     var addPath = (child == null || child == '') ? "/edit.jsp" : (child + "/edit.jsp?parentId=" + idToEdit + "&editChild=true");
-  if (goal=="jedit") {
-    document.jedit.openRule(idToEdit);
-  } else {
-    opForm.action="<%=request.getContextPath() + (request.getServletPath().endsWith(".jsp")
+    var actions = '';
+    if ((parentId == undefined || parentId == '')) {
+        actions = "<%=request.getContextPath() + (request.getServletPath().endsWith(".jsp")
                           ? request.getServletPath().substring(0, request.getServletPath().lastIndexOf('/'))
                           : request.getServletPath())%>" + addPath;
-
+    } else {
+        actions = "<%=request.getContextPath()%>" + child + "/edit.jsp?editId=" + idToEdit + "&parentId=" + parentId;
+    }
+    opForm.action = actions;
     opForm.submit();
-  }
+
     return false;
 }
 </script>
@@ -120,7 +122,7 @@ function edit(idToEdit,goal, child)
             <td>
                 <c:choose>
                     <c:when test="${edit == column}">
-                        <a href="#" onClick="return edit('${Id}','${goal}','${child}');">${itemValue}</a>
+                        <a href="#" onClick="return edit('${Id}','${child}','${parentId}');">${itemValue}</a>
                     </c:when>
                     <c:otherwise>
                         ${itemValue}
@@ -130,7 +132,7 @@ function edit(idToEdit,goal, child)
           </c:when>
           <c:otherwise>
             <c:set var="itemValue" value="${empty user[column] ? '&nbsp;' : fn:escapeXml(user[column])}"/>
-            <td><c:if test="${edit == column}"><a href="#" onClick="return edit('${itemValue}','${goal}','${child}');"></c:if>
+            <td><c:if test="${edit == column}"><a href="#" onClick="return edit('${itemValue}','${child}','${parentId}');"></c:if>
               <c:choose >
                 <c:when test="${smf:isBoolean(user[column])}">
                   <c:choose>

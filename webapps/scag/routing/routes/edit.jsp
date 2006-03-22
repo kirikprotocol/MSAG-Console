@@ -1,8 +1,5 @@
-<%@ page import="java.util.Iterator,
-                 ru.sibinco.lib.backend.util.StringEncoderDecoder"%>
 <%@include file="/WEB-INF/inc/header.jspf"%><%@
  taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
-<!--jsp:useBean id="bean" beanName="bean"  class="ru.sibinco.scag.beans.routing.routes.Edit"/-->
 <sm:page>
   <jsp:attribute name="title">
     <c:choose>
@@ -14,7 +11,7 @@
   <jsp:attribute name="menu">
     <sm-pm:menu>
       <sm-pm:item name="mbSave" value="Save" title="Save route"/>
-      <sm-pm:item name="mbCancel" value="Cancel" title="Cancel route editing" onclick="clickCancel()"/>
+      <sm-pm:item name="mbCancel" value="Cancel" title="Cancel route editing" onclick="clickCancel()"/><%--onclick="history.back();"/>--%>
       <sm-pm:space/>
     </sm-pm:menu>
   </jsp:attribute>
@@ -207,16 +204,10 @@
       <tr>
           <td valign="top">
               <sm-ep:properties title="Route information" noColoredLines="false">
-                  <sm-ep:txt title="name" name="name" readonly="${!bean.add}" validation="nonEmpty"/>
+                  <sm-ep:txt title="name" name="id" readonly="${!bean.add}" validation="nonEmpty"/>
                   <sm-ep:txt title="notes" name="notes"/>
                   <sm-ep:list title="source SME ID" name="srcSmeId"
                               values="${smes}" valueTitles="${smes}" onChange="srcSmeIdChanged();"/>
-                  <sm-ep:list emptyOption="true" title="provider" name="providerId"
-                              values="${fn:join(bean.providerIds, ',')}"
-                              valueTitles="${fn:join(bean.providerNames, ',')}"/>
-                  <sm-ep:list emptyOption="true" title="category" name="categoryId"
-                              values="${fn:join(bean.categoryIds, ',')}"
-                              valueTitles="${fn:join(bean.categories, ',')}"/>
                   <sm-pm:space/>
               </sm-ep:properties>
           </td>

@@ -9,28 +9,36 @@
 
     <jsp:attribute name="menu">
         <sm-pm:menu>
+            <c:if test="${true}">
+                <sm-pm:item name="mbAddChild" value="Add Route" title="Add new Route"/>
+            </c:if>
             <c:if test="${!param.add}">
-                <sm-pm:item name="mbSave" value="Done" title="Save Service info"/>
-            </c:if>
-            <c:if test="${param.add}">
-                <sm-pm:item name="mbSave" value="Create" title="Create Service info"/>
-            </c:if>
-            <sm-pm:item name="mbCancel" value="Cancel" title="Cancel Service editing" onclick="clickCancel()"/>
-            <c:if test="${!param.add && bean.delete}">
-                <sm-pm:item name="mbDelete" value="Delete" title="Delete Service"
+                <sm-pm:item name="mbDelete" value="Delete Route" title="Delete Route"
                             onclick="return confirm('Are you sure to delete this object?')" isCheckSensible="true"/>
             </c:if>
             <sm-pm:space/>
         </sm-pm:menu>
     </jsp:attribute>
+
     <jsp:body>
         <sm-ep:properties title="Service info">
             <c:if test="${!bean.add}"><input type="hidden" name="id" id="id" value="${fn:escapeXml(bean.id)}"></c:if>
             <sm-ep:txt title="name" name="name" validation="nonEmpty"/>
             <sm-ep:txtBox title="description" cols="0" rows="0" name="description"/>
             <input type="hidden" id="parentId" name="parentId" value="${fn:escapeXml(bean.parentId)}">
-
         </sm-ep:properties>
+
+        <div class=page_subtitle>&nbsp;</div>
+        <sm-pm:menu>
+            <c:if test="${!param.add}">
+                <sm-pm:item name="mbSave" value="Done" title="Save provider info"/>
+            </c:if>
+            <c:if test="${param.add}">
+                <sm-pm:item name="mbSave" value="Create" title="Create provider info"/>
+            </c:if>
+            <sm-pm:item name="mbCancel" value="Cancel" title="Cancel provider editing" onclick="clickCancel()"/>
+            <sm-pm:space/>
+        </sm-pm:menu>
 
         <applet code="org.gjt.sp.jedit.jEdit.class" codebase="rules/rules" width="1" height="1" archive="jedit.jar" name=jedit ID=jedit>
             <param name="noplugins" value="-noplugins">
@@ -40,18 +48,18 @@
             <param name="targetUrl" value="/scag/services/service/edit.jsp?editId=${bean.editId}&parentId=${bean.parentId}&editChild=true">
         </applet>
 
-        <hr/>
           <sm-ep:properties title="Service rule">
             <sm:rule transport="SMPP" exists="${bean.smppRuleExists}" />
-
             <sm:rule transport="HTTP" exists="${bean.httpRuleExists}" />
-
             <sm:rule transport="MMS" exists="${bean.mmsRuleExists}" />
           </sm-ep:properties>
-       <hr/>
 
+        <div class=page_subtitle>&nbsp;</div>
+        <div class=page_subtitle>Routes List</div>
         <c:if test="${!param.add}">
-            <sm:table columns="checkbox,name" names="c,name" widths="1,20" edit="name"/>
+            <sm:table columns="checkbox,id,active,enabled,archived,notes"
+                          names="c,name,active,enabled,archived,notes" widths="1,10,20,20,39,59"
+                          child="/routing/routes" parentId="${bean.parentId}" edit="id"/>
         </c:if>
     </jsp:body>
 </sm:page>

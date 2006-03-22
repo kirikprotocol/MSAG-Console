@@ -93,7 +93,7 @@ public class SCAGAppContext {
             }
             ruleManager = new RuleManager(new File(rulesFolder), new File(xsdFolder), new File(xslFolder), scag);
             ruleManager.init();
-            scagRoutingManager = new ScagRoutingManager(scagConfFolder, smppManager, providerManager, categoryManager);
+            scagRoutingManager = new ScagRoutingManager(scagConfFolder, smppManager, serviceProvidersManager);
             scagRoutingManager.init();
             String statusFolder = config.getString("status_folder");
             statusManager = new StatusManager(new File(statusFolder));
