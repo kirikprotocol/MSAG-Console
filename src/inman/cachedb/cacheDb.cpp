@@ -12,7 +12,7 @@ namespace db {
 /* ************************************************************************** *
  * class AbonentQuery implementation:
  * ************************************************************************** */
-AbonentQuery::AbonentQuery(DBAbonentProvider * owner, DataSource * ds,
+AbonentQuery::AbonentQuery(DBQueryManagerITF * owner, DataSource * ds,
                            const char * rt_id, const char * rt_key)
     : ThreadedTask()
     , _owner(owner), _ds(ds), rtId(rt_id), rtKey(rt_key), timeOut(0)
@@ -33,7 +33,7 @@ void AbonentQuery::stop()
     isStopping = true;
 }
 
-void AbonentQuery::init(AbonentId ab_number, unsigned timeout/* = 0*/)
+void AbonentQuery::init(const AbonentId & ab_number, unsigned timeout/* = 0*/)
 {
     MutexGuard tmp(mutex);
     signaled = 0;
@@ -55,7 +55,7 @@ int AbonentQuery::Execute(void)
 { 
     {
         MutexGuard tmp(mutex);
-        if (isStopping || !_owner->hasListeners(abonent.c_str()))
+        if (isStopping || !_owner->hasListeners(abonent))
             return 0; //query was cancelled by either QueryManager or ThreadPool
     }
     //sleep(24); //for debugging
@@ -65,6 +65,7 @@ int AbonentQuery::Execute(void)
     Routine * rtq = NULL;
     int16_t res = -1;
 
+    
     try { //throws SQLException, connects to DB, large delay possible
         rtq = dcon->getRoutine(rtId, callStr.c_str(), true); 
     } catch (...) {
@@ -73,17 +74,17 @@ int AbonentQuery::Execute(void)
 
     {
         MutexGuard tmp(mutex);
-        if (isStopping || !_owner->hasListeners(abonent.c_str()))
+        if (isStopping || !_owner->hasListeners(abonent))
             rtq = NULL; //query was cancelled by either QueryManager or ThreadPool
     }
 
     if (rtq) {
         try {
             int timerId = -1;
-            rtq->setString(rtKey, abonent.c_str());
+            rtq->setString(rtKey, abonent.getSignals());
             if (timeOut)
                 timerId = _ds->startTimer(dcon, timeOut);
-            rtq->execute();  //executes query, large delay possible
+            rtq->execute(); //executes query, large delay possible
             if (timerId >= 0)
                 _ds->stopTimer(timerId);
             res = rtq->getInt16("RETURN"); //FUNCTION_RETURN_ATTR_NAME
@@ -134,7 +135,7 @@ void DBAbonentProvider::cancelAllQueries(void)
 {
     MutexGuard  guard(qrsGuard);
 
-    char*       ab_number = NULL; //AbonentId !!!
+    char*       ab_number = NULL; //AbonentId.value !!!
     CachedQuery *   ab_rec = NULL;
 
     QueriesHash::Iterator cit = qryCache.getIterator();
@@ -148,10 +149,10 @@ void DBAbonentProvider::cancelAllQueries(void)
 }
 
 
-bool DBAbonentProvider::hasListeners(AbonentId ab_number)
+bool DBAbonentProvider::hasListeners(AbonentId & ab_number)
 {
     MutexGuard  guard(qrsGuard);
-    CachedQuery * ab_rec = qryCache.GetPtr(ab_number);
+    CachedQuery * ab_rec = qryCache.GetPtr(ab_number.getSignals());
     return (ab_rec && ab_rec->cbList.size()) ? true : false;
 }
 
@@ -164,14 +165,15 @@ void DBAbonentProvider::releaseQuery(AbonentQuery * query)
     QueryCBList     cb_list;
 
     {
-        MutexGuard  guard(qrsGuard);
-        CachedQuery * ab_rec = qryCache.GetPtr(ab_number);
+        MutexGuard guard(qrsGuard);
+        CachedQuery * ab_rec = qryCache.GetPtr(ab_number.getSignals());
         if (ab_rec) {
             if (ab_rec->cbList.size())
                 cb_list = ab_rec->cbList;
-            qryCache.Delete(ab_number);
+            qryCache.Delete(ab_number.getSignals());
         } else
-            smsc_log_debug(logger, "AbProvider: no listeners for query(%s)", ab_number);
+            smsc_log_debug(logger, "AbProvider: no listeners for query(%s)",
+                           ab_number.getSignals());
         qryPool.push_back(query);
     }
 
@@ -181,7 +183,7 @@ void DBAbonentProvider::releaseQuery(AbonentQuery * query)
     for (QueryCBList::iterator it = cb_list.begin(); it != cb_list.end(); it++) {
         (*it)->onAbonentQueried(ab_number, ab_type);
     }
-    smsc_log_debug(logger, "AbProvider: query(%s) is finished", ab_number);
+    smsc_log_debug(logger, "AbProvider: query(%s) is finished", ab_number.getSignals());
     return;
 }
 
@@ -196,14 +198,15 @@ void DBAbonentProvider::bindCache(AbonentCacheITF * use_cache)
 //Starts query and binds listener to it.
 //Returns true if query succesfully started, false otherwise
 //NOTE: the AbonentId is copied into AbonentQuery
-bool DBAbonentProvider::startQuery(AbonentId ab_number, 
+bool DBAbonentProvider::startQuery(const AbonentId & ab_number, 
                                    InAbonentQueryListenerITF * pf_cb/* = NULL*/)
 {
     MutexGuard  guard(qrsGuard);
-    CachedQuery * ab_rec = qryCache.GetPtr(ab_number);
+    CachedQuery * ab_rec = qryCache.GetPtr(ab_number.getSignals());
     if (ab_rec) { //allocated query exists, just add callback to list
         ab_rec->cbList.push_back(pf_cb);
-        smsc_log_debug(logger, "AbProvider: listener is added to query(%s)", ab_number);
+        smsc_log_debug(logger, "AbProvider: listener is added to query(%s)",
+                       ab_number.getSignals());
         return true;
     }
 
@@ -218,22 +221,23 @@ bool DBAbonentProvider::startQuery(AbonentId ab_number,
     }
     qryRec.cbList.push_back(pf_cb);
     qryRec.qryDb->init(ab_number, _cfg.timeout);
-    qryCache.Insert(ab_number, qryRec);
+    qryCache.Insert(ab_number.getSignals(), qryRec);
     pool.startTask(qryRec.qryDb, false); //do not delete task on completion !!!
-    smsc_log_debug(logger, "AbProvider: query(%s) is added to queue", ab_number);
+    smsc_log_debug(logger, "AbProvider: query(%s) is added to queue",
+                   ab_number.getSignals());
     return true;
 }
 
 //Unbinds query listener and cancels query
-void DBAbonentProvider::cancelQuery(AbonentId ab_number, InAbonentQueryListenerITF * pf_cb)
+void DBAbonentProvider::cancelQuery(const AbonentId & ab_number, InAbonentQueryListenerITF * pf_cb)
 {
     MutexGuard  guard(qrsGuard);
-    CachedQuery * ab_rec = qryCache.GetPtr(ab_number);
+    CachedQuery * ab_rec = qryCache.GetPtr(ab_number.getSignals());
     if (!ab_rec) {
         smsc_log_warn(logger, "AbProvider: attempt to cancel unexisting query!");
         return;
     }
-    smsc_log_debug(logger, "AbProvider: cancelling query(%s)", ab_number);
+    smsc_log_debug(logger, "AbProvider: cancelling query(%s)", ab_number.getSignals());
 
     QueryCBList::iterator it = std::find(ab_rec->cbList.begin(),
                                          ab_rec->cbList.end(), pf_cb);
@@ -241,7 +245,7 @@ void DBAbonentProvider::cancelQuery(AbonentId ab_number, InAbonentQueryListenerI
         ab_rec->cbList.erase(it);
     if (ab_rec->cbList.size())
         smsc_log_debug(logger, "AbProvider: %u listeners remain for query(%s)",
-                       ab_rec->cbList.size(), ab_number);
+                       ab_rec->cbList.size(), ab_number.getSignals());
     return;
 }
 

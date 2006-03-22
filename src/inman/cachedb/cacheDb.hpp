@@ -30,28 +30,34 @@ namespace cache {
 namespace db { 
 
 
-class DBAbonentProvider;
+class AbonentQuery;
+
+class DBQueryManagerITF {
+public:
+    virtual void releaseQuery(AbonentQuery * query) = 0;
+    virtual bool hasListeners(AbonentId & ab_number) = 0;
+};
 
 class AbonentQuery : public ThreadedTask, public Event {
 protected:
-    DBAbonentProvider*  _owner;
+    DBQueryManagerITF*  _owner;
     DataSource *        _ds;
     const char *        rtId;  //SQL function name
     const char *        rtKey; //SQL function argument name
     std::string         callStr;
-    std::string         abonent;
+    AbonentId           abonent;
     AbonentBillType     abType;
     unsigned            timeOut;
 
 public:
-    AbonentQuery(DBAbonentProvider * owner, DataSource * ds, 
+    AbonentQuery(DBQueryManagerITF * owner, DataSource * ds, 
                             //SQL function name and argument name
                             const char * rt_id, const char * rt_key);
     ~AbonentQuery();
 
-    void init(AbonentId ab_number, unsigned timeout = 0);
+    void init(const AbonentId & ab_number, unsigned timeout = 0);
 
-    AbonentId   getAbonent(void) const { return  abonent.c_str(); }
+    const AbonentId &     getAbonent(void) const { return abonent; }
     const AbonentBillType getAbonentType(void) const { return  abType; }
 
     int Execute(void);
@@ -76,7 +82,7 @@ struct DBSourceCFG {
 
 typedef std::list<InAbonentQueryListenerITF *> QueryCBList;
 
-class DBAbonentProvider : public InAbonentProviderITF {
+class DBAbonentProvider : public InAbonentProviderITF, public DBQueryManagerITF {
 private:
     typedef std::list<AbonentQuery*> QueriesList;
     typedef struct {
@@ -96,8 +102,9 @@ private:
 
 protected:
     friend class AbonentQuery;
+    //DBQueryManagerITF interface methods
     void releaseQuery(AbonentQuery * query);
-    bool hasListeners(AbonentId ab_number);
+    bool hasListeners(AbonentId & ab_number);
 
 public:
     DBAbonentProvider(const DBSourceCFG *in_cfg, Logger * uselog = NULL);
@@ -110,9 +117,9 @@ public:
     //Starts query and binds listener to it. If AbonentCache is bound, the abonent info
     //will be stored in it on query completion. 
     //Returns true if query succesfully started, false otherwise
-    bool startQuery(AbonentId ab_number, InAbonentQueryListenerITF * pf_cb = NULL);
+    bool startQuery(const AbonentId & ab_number, InAbonentQueryListenerITF * pf_cb = NULL);
     //Unbinds query listener, cancels query if no listeners remain.
-    void cancelQuery(AbonentId ab_number, InAbonentQueryListenerITF * pf_cb);
+    void cancelQuery(const AbonentId & ab_number, InAbonentQueryListenerITF * pf_cb);
     void cancelAllQueries(void);
 };
 
