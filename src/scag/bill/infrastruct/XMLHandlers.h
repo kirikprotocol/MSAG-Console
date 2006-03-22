@@ -49,6 +49,34 @@ public:
     void fatalError(const SAXParseException& exc);
 };
 
+/*class XMLTariffMatrixHandler : public HandlerBase
+{
+    Logger * logger;
+	Hash<uint32_t>	*category_hash;
+	Hash<uint32_t>	*media_type_hash;
+	uint32_t category_level, media_type_level;
+	bool in_category_id, in_category_name;
+	bool in_media_type_id, in_media_type_name;
+	uint32_t category_id;
+	uint32_t media_type_id;
+	std::string media_type_name, category_name;
+
+	void characters(const XMLCh *const chars, const unsigned int length);
+
+protected:
+
+public:
+    XMLTariffMatrixHandler(Hash<uint32_t>*, Hash<uint32_t>*);
+    ~XMLTariffMatrixHandler() {};
+
+    void startElement(const XMLCh* const qname, AttributeList& attributes);
+    void endElement(const XMLCh* const qname);
+
+    void warning(const SAXParseException& exc);
+    void error(const SAXParseException& exc);
+    void fatalError(const SAXParseException& exc);
+};*/
+
 class StrX
 {
 public :

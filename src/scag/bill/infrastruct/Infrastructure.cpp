@@ -46,7 +46,7 @@ InfrastructureImpl::~InfrastructureImpl()
     XMLPlatformUtils::Terminate();
 }
 
-void InfrastructureImpl::init(const char* _ProviderFile, const char* _OperatorFile)
+void InfrastructureImpl::init(const std::string& dir)
 {
     XMLPlatformUtils::Initialize("ru_RU.KOI8-R");
     logger = Logger::getInstance("bill.i");
@@ -56,18 +56,20 @@ void InfrastructureImpl::init(const char* _ProviderFile, const char* _OperatorFi
 	service_hash = new IntHash<uint32_t>();
 	mask_hash = new Hash<uint32_t>();
 
-	SetFileNames(_ProviderFile, _OperatorFile);
+	SetFileNames(dir);
 
 	ReloadProviderMap();
 	ReloadOperatorMap();
 }
 
-void InfrastructureImpl::SetFileNames(const char* _ProviderFile, const char* _OperatorFile)
+void InfrastructureImpl::SetFileNames(const std::string& dir)
 {
 	MutexGuard mt(ProviderReloadMutex);
 	MutexGuard mt1(OperatorReloadMutex);
-	ProviderFile = _ProviderFile;
-	OperatorFile = _OperatorFile;
+	
+	ProviderFile = dir + "/services.xml";
+	OperatorFile = dir + "/operators.xml";
+	TariffMatrixFile = dir + "/tariffs.xml";
 }
 
 void InfrastructureImpl::ReloadProviderMap()
@@ -120,24 +122,29 @@ void InfrastructureImpl::ReloadOperatorMap()
 
 void InfrastructureImpl::ReloadTariffMatrix()
 {
-	MutexGuard mt(TariffMatrixReloadMutex);
+/*	MutexGuard mt(TariffMatrixReloadMutex);
 
 	smsc_log_info(logger, "ReloadTariffMatrix Started");
 
-	try{
-//	    XMLBasicHandler handler(hash);
-//		ParseFile(OperatorFile.c_str(), &handler);
+	Hash<uint32_t> *cat_hash = new Hash<uint32_t>();
+	Hash<uint32_t> *mt_hash = new Hash<uint32_t>();
 
+	try{
+	    XMLTariffMatrixHandler handler(cat_hash, mt_hash);
+		ParseFile(TariffMatrixFile.c_str(), &handler);
+		delete cat_hash;
+		delete mt_hash;
 		MutexGuard mt1(TariffMatrixMapMutex);
 	}
 	catch(Exception& e)
 	{
 		smsc_log_info(logger, "Tariff Matrix reload was not successful");
-//		delete hash;
+		delete cat_hash;
+		delete mt_hash;
 		throw e;
 	}
 
-	smsc_log_info(logger, "ReloadTariffMatrix Finished");
+	smsc_log_info(logger, "ReloadTariffMatrix Finished");*/
 }
 
 uint32_t InfrastructureImpl::GetProviderID(uint32_t service_id)
@@ -179,18 +186,26 @@ uint32_t InfrastructureImpl::GetOperatorID(Address addr)
 	return 0;
 }
 
+uint32_t InfrastructureImpl::GetTariff(uint32_t operator_id, const char* category, const char* mt)
+{
+//	MutexGuard mt(TariffMatrixMapMutex);
+	try{
+		return 0;
+	}
+	catch(...)
+	{
+		return 0;
+	}
+}
+
 void InfrastructureImpl::ParseFile(const char* _xmlFile, XMLBasicHandler* handler)
 {
     int errorCount = 0;
-    int errorCode = 0;
-
 //    setlocale(LC_ALL,"ru_RU.KOI8-R");
-//    XMLPlatformUtils::Initialize("ru_RU.KOI8-R");
-
+//	setlocale(LC_ALL,"UTF-8");
+//    RegExp::InitLocale();
     SAXParser parser;
 
-    //setlocale(LC_ALL,"UTF-8");
-//    RegExp::InitLocale();
     try
     {
         parser.setValidationScheme(SAXParser::Val_Always);
@@ -230,9 +245,6 @@ void InfrastructureImpl::ParseFile(const char* _xmlFile, XMLBasicHandler* handle
         smsc_log_error(logger,"Terminate parsing: unknown fatal error");
         throw Exception("unknown fatal error");
     }
-
-//    delete parser;
-//    XMLPlatformUtils::Terminate();
 
     if (errorCount > 0) 
         smsc_log_error(logger,"Error parsing: some errors occured");
