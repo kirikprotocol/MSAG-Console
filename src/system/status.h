@@ -72,6 +72,8 @@ static const int LICENSELIMITREJECT=1037;//sms rejected due to license limit
 static const int USSDDLGREFMISM=1038; // USSD dialog exists but reference mismatch (PSSR_RESP) !
 static const int DENIEDBYINMAN=1039; // inman return charge resp with CHARGE NOT POSSIBLE
 static const int DEFERREDDELIVERY=1040; // deferred sms with charge on delivery policy
+static const int DENIEDBYCLOSEDGROUP=1041; // member of closed group tried to send sms to restricted address
+static const int DENIEDBYACCESSMASK=1042;  // access mask prohibited submit
 
 
 static const int MAP_UR_NO_REASON=1109;
