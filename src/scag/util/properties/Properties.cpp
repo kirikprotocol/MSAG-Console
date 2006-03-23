@@ -97,6 +97,8 @@ int64_t Property::convertToInt()
     }
 
     sync = true;
+
+
     return i_val;
 }
 const std::string& Property::convertToStr() 
@@ -214,7 +216,9 @@ void Property::setBool(bool val)
 {
     if (constant) throw ConstantSetException();
     sync = false; 
+
     i_val = val;
+
     type = pt_bool;
 }
 void Property::setDate(time_t val) 

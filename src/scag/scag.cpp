@@ -460,31 +460,33 @@ void Scag::init()
   }
   //*****************************************************
 
-  smsc_log_info(log, "SCAG init complete" );
-
-  __trace__("Smsc::init completed");
-
-
  /*
   ////////////////////////// FOR TEST 
   scag::sessions::CSessionKey key;
 
-
+  smsc_log_warn(log, "1");
   SMS sms;
   scag::transport::smpp::SmppCommand command = scag::transport::smpp::SmppCommand::makeDeliverySm(sms,1);
 
   SessionManager& sm = SessionManager::Instance();
   scag::sessions::SessionPtr sessionPtr = sm.newSession(key);
   scag::sessions::Session * session = sessionPtr.Get();
+  smsc_log_warn(log, "2");
 
   if (session) smsc_log_warn(log, "SESSION IS VALID");
   command.setServiceId(1);
 
+  smsc_log_warn(log, "3");
   scag::re::RuleEngine::Instance().process(command, *session);
+  smsc_log_warn(log, "4");
 
   ////////////////////////// FOR TEST 
+*/
+  smsc_log_info(log, "SCAG init complete" );
+
+  __trace__("Smsc::init completed");
   
-  */
+  
 }
 
 void Scag::run()
