@@ -106,8 +106,8 @@ Service::~Service()
 void Service::writeCDR(unsigned int bcId, unsigned int bilId, const CDRRecord & cdr)
 {
     bfs->bill(cdr);
-    smsc_log_debug(logger, "InmanSrv: CDR written for Billing[%u.%u]",
-                   bcId, bilId);
+    smsc_log_info(logger, "InmanSrv: CDR written: msgId = %llu, Billing[%u.%u]",
+                    cdr._msgId, bcId, bilId);
 }
 
 

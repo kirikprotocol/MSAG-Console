@@ -150,14 +150,16 @@ protected:
 };
 
 class Billing : public SSFhandler, public InmanHandler,
-                public InAbonentQueryListenerITF, public TimerListenerITF
-{
+                public InAbonentQueryListenerITF, public TimerListenerITF {
 public:
     typedef std::map<unsigned, StopWatch*> TimersMAP;
     typedef enum {
         bilIdle, bilStarted, bilQueried, bilInited, bilReleased, bilProcessed, 
         bilApproved, bilComplete, bilAborted
     } BillingState;
+    typedef enum {
+        doCont = 0, doEnd, doAbort
+    } BillAction;
 
     Billing(BillingConnect* bconn, unsigned int b_id, 
             BillingCFG * cfg, TimeWatcher* tm_watcher, Logger * uselog = NULL);

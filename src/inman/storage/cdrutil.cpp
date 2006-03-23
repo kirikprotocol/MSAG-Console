@@ -16,6 +16,7 @@ CDRRecord::CDRRecord()
 {
     _serviceId = _userMsgRef = _dpLength = 0;
     _submitTime = _finalTime = 0;
+    _inBilled = false;
 }
 
 void CDRRecord::csvEncode(const CDRRecord & cdr, std::string & rec)
@@ -51,7 +52,8 @@ void CDRRecord::csvEncode(const CDRRecord & cdr, std::string & rec)
         CSVFileEncoder::addUint32(rec, (uint32_t)(cdr._userMsgRef));
         
     CSVFileEncoder::addUint32(rec, cdr._dpLength);
-    CSVFileEncoder::addUint8 (rec, cdr._partsNum, true);
+    CSVFileEncoder::addUint8 (rec, cdr._partsNum, false);
+    CSVFileEncoder::addUint8 (rec, cdr._inBilled ? 0x01 : 0x00, true);
 }
 
 

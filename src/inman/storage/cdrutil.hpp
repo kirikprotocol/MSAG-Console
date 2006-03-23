@@ -46,6 +46,7 @@ struct CDRRecord {
     //not processed by Inman for now:                                    
     uint32_t        _dpLength;      //DATA_LENGTH: message length: in chars for dpText,
                                     //in bytes for dpBinary.
+    bool            _inBilled;      //message was billed by IN platform                                    
 //private:
     bool            _finalized;  //all fields are fullfilled;
 };
