@@ -114,7 +114,7 @@ public class Svc {
         out.println("    <param name=\"timeout\"          value=\"" + timeout + "\"/>");
         out.println("    <param name=\"mode\"             value=\"" + getModeStr() + "\"/>");
         out.println("    <param name=\"enabled\"          value=\"" + enabled + "\"/>");
-        out.println("    <param name=\"providerId\"       value=\"" + provider.getId() + "\"/>");
+        out.println("    <param name=\"providerId\"       value=\"" + -1/*provider.getId()*/ + "\"/>");
 
         return out;
     }

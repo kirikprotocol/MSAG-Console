@@ -35,8 +35,8 @@
         <c:when test="${bean.transportId == 1}">
     <sm-ep:properties title="SMPP Service (SME) info">
     <br>
-      <sm-ep:txt title="ID" name="id" readonly="${!bean.add}" validation="id"/>
-        <c:choose>
+      <sm-ep:txt title="ID" name="id"  validation="id"/>
+        <%--c:choose>
             <c:when test="${bean.administrator}">
                 <sm-ep:list  title="provider" name="providerId"
                        values="${fn:join(bean.providerIds, ',')}"
@@ -45,7 +45,7 @@
         <c:otherwise>
           <sm-ep:const title="provider" name="providerName" value="${bean.providerName}"/>
         </c:otherwise>
-      </c:choose>
+      </c:choose--%>
       <sm-ep:txt title="timeout" name="timeout" validation="unsigned"/>
       <sm-ep:txt title="password" name="password"/>
       <sm-ep:check title="enabled" name="enabled"/>

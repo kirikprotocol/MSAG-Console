@@ -148,7 +148,7 @@ public class Center {
         out.println("    <param name=\"altport\"        value=\"" + altPort + "\"/>");
         out.println("    <param name=\"enabled\"        value=\"" + enabled + "\"/>");
         out.println("    <param name=\"uid\"            value=\"" + uid + "\"/>");
-        out.println("    <param name=\"providerId\"     value=\"" + provider.getId() + "\"/>");
+        out.println("    <param name=\"providerId\"     value=\"" + -1/*provider.getId()*/ + "\"/>");
 
         return out;
     }

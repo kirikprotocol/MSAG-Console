@@ -99,7 +99,7 @@ public class Edit extends EditBean {
         this.id = svc.getId();
         this.mode = svc.getMode();
         this.password = svc.getPassword();
-        this.providerId = svc.getProvider().getId();
+        this.providerId = -1;//svc.getProvider().getId();
         this.timeout = svc.getTimeout();
         this.enabled = svc.isEnabled();
     }
@@ -108,9 +108,9 @@ public class Edit extends EditBean {
         if (null == id || 0 == id.length() || !isAdd() && (null == getEditId() || 0 == getEditId().length()))
             throw new SCAGJspException(Constants.errors.sme.SME_ID_NOT_SPECIFIED);
 
-        if (null == password)
+        if (null == password || password.trim().length()==0)
             password = "";
-        final Provider providerObj = (Provider) appContext.getProviderManager().getProviders().get(new Long(providerId));
+        final Provider providerObj = null;//(Provider) appContext.getProviderManager().getProviders().get(new Long(providerId));
         final Map svcs = appContext.getSmppManager().getSvcs();
         if (svcs.containsKey(id) && (isAdd() || !id.equals(getEditId())))
             throw new SCAGJspException(Constants.errors.sme.SME_ALREADY_EXISTS, id);

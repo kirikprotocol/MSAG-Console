@@ -33,10 +33,10 @@
                 <c:set var="smes" value="${fn:join(bean.smes, ',')}"/>
                 <sm-ep:properties title="SMPP Service Center info">
                     <br>
-                    <sm-ep:txt title="name" name="id" validation="nonEmpty" readonly="${!bean.add}"/>
-                    <sm-ep:txt title="bind system Id" name="bindSystemId"/>
+                    <sm-ep:txt title="name" name="id" validation="nonEmpty"/>
+                    <sm-ep:txt title="bind system Id" name="bindSystemId" validation="nonEmpty"/>
                     <sm-ep:txt title="bind password" name="bindPassword"/>
-                    <c:choose>
+                    <%--c:choose>
                         <c:when test="${bean.administrator}">
                             <sm-ep:list title="provider" name="providerId"
                                         values="${fn:join(bean.providerIds, ',')}"
@@ -45,7 +45,7 @@
                         <c:otherwise>
                             <sm-ep:const title="provider" name="providerName" value="${bean.providerName}"/>
                         </c:otherwise>
-                    </c:choose>
+                    </c:choose--%>
                     <sm-ep:txt title="host" name="host" validation="nonEmpty"/>
                     <sm-ep:txt title="port" name="port" validation="port"/>
                     <sm-ep:txt title="alternate host" name="altHost"/>

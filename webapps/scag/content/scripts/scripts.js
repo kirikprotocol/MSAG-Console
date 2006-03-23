@@ -203,15 +203,15 @@ function validateField_address_prefix(elem)
 
 function validateField_id(elem)
 {
-	if (elem.value == null || elem.value.length == 0)
-	{
-		return true;
-	}
+	//if (elem.value == null || elem.value.length == 0)
+	//{
+	//	return true;
+	//}
 	//var r1 = RegExp("^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+))?\\d{1,20}$");
 	//var r2 = RegExp("^\\.5\\.0\\.[ _\\-0-9A-Za-z]{1,20}$");
 	var r = /^[a-zA-Z_0-9]+$/
 
-	return elem.value == null || elem.value.match(r) == null
+	return elem.value == null || elem.value.length == 0 || elem.value.match(r) == null
 		? validationError(elem, idErrorMsg)
 		: true;
 }

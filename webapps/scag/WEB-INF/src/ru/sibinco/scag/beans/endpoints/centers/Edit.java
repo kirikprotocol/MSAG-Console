@@ -112,7 +112,7 @@ public class Edit extends EditBean {
         this.altHost = center.getAltHost();
         this.altPort = center.getAltPort();
         this.enabled = center.isEnabled();
-        this.providerId = center.getProvider().getId();
+        this.providerId = -1;//center.getProvider().getId();
         this.uid = center.getUid();
         this.bindSystemId = center.getBindSystemId();
         this.bindPassword = center.getBindPassword();
@@ -125,7 +125,7 @@ public class Edit extends EditBean {
         if (null == password)
             password = "";
 
-        final Provider providerObj = (Provider) appContext.getProviderManager().getProviders().get(new Long(providerId));
+        final Provider providerObj = null;//(Provider) appContext.getProviderManager().getProviders().get(new Long(providerId));
         final Map centers = appContext.getSmppManager().getCenters();
         if (centers.containsKey(id) && (isAdd() || !id.equals(getEditId())))
             throw new SCAGJspException(Constants.errors.sme.SME_ALREADY_EXISTS, id);
@@ -135,8 +135,10 @@ public class Edit extends EditBean {
         }
         centers.remove(getEditId());
         final Center center;
+        if (altHost==null || altHost.trim().length() == 0) altHost = "";
+        if (bindPassword==null || bindPassword.trim().length() == 0) bindPassword = "";      
         center = new Center(id, timeout, mode, host, port, altHost, altPort,
-                enabled, providerObj, uid, bindSystemId, bindPassword);
+                enabled, providerObj, uid, bindSystemId, (bindPassword==null)?"":bindPassword);
         centers.put(id, center);
 
         final Scag scag = appContext.getScag();

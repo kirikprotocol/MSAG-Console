@@ -32,6 +32,6 @@ public class CenterCommand  extends Command {
         createStringParam("altHost", center.getAltHost());
         createIntParam("altPort", center.getAltPort());
         createIntParam("uid", center.getUid());
-        createIntParam("providerId", center.getProvider().getId());
+        createIntParam("providerId", -1/*center.getProvider().getId()*/);
    }
 }

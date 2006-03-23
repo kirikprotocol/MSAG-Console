@@ -8,6 +8,6 @@
     </sm-pm:menu>
   </jsp:attribute>
   <jsp:body>
-    <sm:table columns="checkbox,id,providerName,enabled,transport" names="c,id,provider,enabled,transport" widths="1,48,48,48,48" edit="id"/>
+    <sm:table columns="checkbox,id,enabled,transport" names="c,id,enabled,transport" widths="1,48,48,48,48" edit="id"/>
   </jsp:body>
 </sm:page>

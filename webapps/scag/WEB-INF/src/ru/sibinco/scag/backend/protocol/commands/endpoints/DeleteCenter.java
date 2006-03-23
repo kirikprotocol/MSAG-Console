@@ -23,6 +23,6 @@ public class DeleteCenter extends Command {
         createStringParam("bindPassword", center.getBindPassword());
         createIntParam("timeout", center.getTimeout());
         createStringParam("mode", center.getModeStr());
-        createIntParam("providerId", center.getProvider().getId());
+        createIntParam("providerId", -1/*center.getProvider().getId()*/);
     }
 }
