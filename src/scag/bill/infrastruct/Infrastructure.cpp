@@ -41,16 +41,11 @@ InfrastructureImpl::InfrastructureImpl()
 
 InfrastructureImpl::~InfrastructureImpl()
 {
-    if(service_hash != NULL)
-        delete service_hash;
-    if(mask_hash != NULL)
-        delete mask_hash;
-    if(category_hash != NULL)
-        delete category_hash;
-    if(media_type_hash != NULL)
-        delete media_type_hash;
-    if(tariff_hash != NULL)
-        delete tariff_hash;
+    delete service_hash;
+    delete mask_hash;
+    delete category_hash;
+    delete media_type_hash;
+    delete tariff_hash;
 
     smsc_log_debug(logger,"Provider/Operator Mapper released");
 
@@ -100,8 +95,7 @@ void InfrastructureImpl::ReloadProviderMap()
         ParseFile(ProviderFile.c_str(), &handler);
 
         MutexGuard mt1(ProviderMapMutex);
-        if(service_hash != NULL)
-            delete service_hash;
+        delete service_hash;
         service_hash = hash;
     }
     catch(Exception& e)
@@ -126,8 +120,7 @@ void InfrastructureImpl::ReloadOperatorMap()
         ParseFile(OperatorFile.c_str(), &handler);
 
         MutexGuard mt1(OperatorMapMutex);
-        if(mask_hash != NULL)
-            delete mask_hash;
+        delete mask_hash;
         mask_hash = hash;
     }
     catch(Exception& e)
@@ -155,12 +148,9 @@ void InfrastructureImpl::ReloadTariffMatrix()
         ParseFile(TariffMatrixFile.c_str(), &handler);
 
         MutexGuard mt1(TariffMatrixMapMutex);
-        if(category_hash != NULL)
-            delete category_hash;
-        if(media_type_hash != NULL)
-            delete media_type_hash;
-        if(tariff_hash != NULL)
-            delete tariff_hash;
+        delete category_hash;
+        delete media_type_hash;
+        delete tariff_hash;
         category_hash = cat_hash;
         media_type_hash = mt_hash;
         tariff_hash = t_hash;
@@ -241,8 +231,7 @@ TariffRec* InfrastructureImpl::GetTariff(uint32_t operator_id, const char* categ
     }
     catch(...)
     {
-        if(tr != NULL)
-            delete tr;
+        delete tr;
         return NULL;
     }
 }
