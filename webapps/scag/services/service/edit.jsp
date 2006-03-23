@@ -48,7 +48,7 @@
             <param name="targetUrl" value="/scag/services/service/edit.jsp?editId=${bean.editId}&parentId=${bean.parentId}&editChild=true">
         </applet>
 
-          <sm-ep:properties title="Service rule">
+          <sm-ep:properties title="Service rules">
             <sm:rule transport="SMPP" exists="${bean.smppRuleExists}" />
             <sm:rule transport="HTTP" exists="${bean.httpRuleExists}" />
             <sm:rule transport="MMS" exists="${bean.mmsRuleExists}" />

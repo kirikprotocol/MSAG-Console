@@ -170,7 +170,7 @@ public class OperatorManager {
 
         buffer.append("   <operator id=\"").append(operator.getId()).append("\">").append("\n");
         buffer.append("       <name>").append(StringEncoderDecoder.encode(operator.getName().trim())).append("</name>").append("\n");
-        buffer.append("       <description>").append(StringEncoderDecoder.encode(operator.getDescription().trim())).append("</description>").append("\n");
+        buffer.append("       <description>").append(StringEncoderDecoder.encode((operator.getDescription()==null)?"":operator.getDescription().trim())).append("</description>").append("\n");
         buffer.append("       <masks>").append("\n");
         if (masks != null) {
             for (Iterator i = new SortedList(masks.keySet()).iterator(); i.hasNext();) {
