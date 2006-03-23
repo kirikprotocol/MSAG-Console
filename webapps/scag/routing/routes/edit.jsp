@@ -1,5 +1,5 @@
-<%@include file="/WEB-INF/inc/header.jspf"%><%@
- taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
+<%@include file="/WEB-INF/inc/header.jspf"%>
+<%@taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
 <sm:page>
   <jsp:attribute name="title">
     <c:choose>
