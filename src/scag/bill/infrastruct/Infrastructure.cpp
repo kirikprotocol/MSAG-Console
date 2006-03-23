@@ -32,14 +32,25 @@ using smsc::sms;
 
 InfrastructureImpl::InfrastructureImpl()
 {
+    service_hash = NULL;
+    mask_hash = NULL;
+    category_hash = NULL;
+    media_type_hash = NULL;
+    tariff_hash = NULL;
 }
 
 InfrastructureImpl::~InfrastructureImpl()
 {
-	if(service_hash != NULL)
-		delete service_hash;
-	if(mask_hash != NULL)
-		delete mask_hash;
+    if(service_hash != NULL)
+        delete service_hash;
+    if(mask_hash != NULL)
+        delete mask_hash;
+    if(category_hash != NULL)
+        delete category_hash;
+    if(media_type_hash != NULL)
+        delete media_type_hash;
+    if(tariff_hash != NULL)
+        delete tariff_hash;
 
     smsc_log_debug(logger,"Provider/Operator Mapper released");
 
@@ -53,161 +64,196 @@ void InfrastructureImpl::init(const std::string& dir)
 
     smsc_log_debug(logger,"Provider/Operator Mapper allocated");
 
-	service_hash = new IntHash<uint32_t>();
-	mask_hash = new Hash<uint32_t>();
+    service_hash = new IntHash<uint32_t>();
+    mask_hash = new Hash<uint32_t>();
+    category_hash = new Hash<uint32_t>();
+    media_type_hash = new Hash<uint32_t>();
+    tariff_hash = new IntHash<TariffRec>();
 
-	SetFileNames(dir);
 
-	ReloadProviderMap();
-	ReloadOperatorMap();
+    SetFileNames(dir);
+
+    ReloadProviderMap();
+    ReloadOperatorMap();
+    ReloadTariffMatrix();
 }
 
 void InfrastructureImpl::SetFileNames(const std::string& dir)
 {
-	MutexGuard mt(ProviderReloadMutex);
-	MutexGuard mt1(OperatorReloadMutex);
-	
-	ProviderFile = dir + "/services.xml";
-	OperatorFile = dir + "/operators.xml";
-	TariffMatrixFile = dir + "/tariffs.xml";
+    MutexGuard mt(ProviderReloadMutex);
+    MutexGuard mt1(OperatorReloadMutex);
+    
+    ProviderFile = dir + "/services.xml";
+    OperatorFile = dir + "/operators.xml";
+    TariffMatrixFile = dir + "/tariffs.xml";
 }
 
 void InfrastructureImpl::ReloadProviderMap()
 {
-	MutexGuard mt(ProviderReloadMutex);
+    MutexGuard mt(ProviderReloadMutex);
 
-	smsc_log_info(logger, "ReloadProviderMap Started");
+    smsc_log_info(logger, "ReloadProviderMap Started");
 
-	IntHash<uint32_t> *hash = new IntHash<uint32_t>();
-	try{
-	    XMLBasicHandler handler(hash);
-		ParseFile(ProviderFile.c_str(), &handler);
-		MutexGuard mt1(ProviderMapMutex);
-		delete service_hash;
-		service_hash = hash;
-	}
-	catch(Exception& e)
-	{
-		smsc_log_info(logger, "Provider Map reload was not successful");
-		delete hash;
-		throw e;
-	}
+    IntHash<uint32_t> *hash = new IntHash<uint32_t>();
+    try{
+        XMLBasicHandler handler(hash);
+        ParseFile(ProviderFile.c_str(), &handler);
 
-	smsc_log_info(logger, "ReloadProviderMap Finished");
+        MutexGuard mt1(ProviderMapMutex);
+        if(service_hash != NULL)
+            delete service_hash;
+        service_hash = hash;
+    }
+    catch(Exception& e)
+    {
+        smsc_log_info(logger, "Provider Map reload was not successful");
+        delete hash;
+        throw e;
+    }
+
+    smsc_log_info(logger, "ReloadProviderMap Finished");
 }
 
 void InfrastructureImpl::ReloadOperatorMap()
 {
-	MutexGuard mt(OperatorReloadMutex);
+    MutexGuard mt(OperatorReloadMutex);
 
-	smsc_log_info(logger, "ReloadOperatorMap Started");
+    smsc_log_info(logger, "ReloadOperatorMap Started");
 
-	Hash<uint32_t> *hash = new Hash<uint32_t>();
-	try{
-	    XMLBasicHandler handler(hash);
-		ParseFile(OperatorFile.c_str(), &handler);
+    Hash<uint32_t> *hash = new Hash<uint32_t>();
+    try{
+        XMLBasicHandler handler(hash);
+        ParseFile(OperatorFile.c_str(), &handler);
 
-		MutexGuard mt1(OperatorMapMutex);
-		delete mask_hash;
-		mask_hash = hash;
-	}
-	catch(Exception& e)
-	{
-		smsc_log_info(logger, "Operator Map reload was not successful");
-		delete hash;
-		throw e;
-	}
+        MutexGuard mt1(OperatorMapMutex);
+        if(mask_hash != NULL)
+            delete mask_hash;
+        mask_hash = hash;
+    }
+    catch(Exception& e)
+    {
+        smsc_log_info(logger, "Operator Map reload was not successful");
+        delete hash;
+        throw e;
+    }
 
-	smsc_log_info(logger, "ReloadOperatorMap Finished");
+    smsc_log_info(logger, "ReloadOperatorMap Finished");
 }
 
 void InfrastructureImpl::ReloadTariffMatrix()
 {
-/*	MutexGuard mt(TariffMatrixReloadMutex);
+    MutexGuard mt(TariffMatrixReloadMutex);
 
-	smsc_log_info(logger, "ReloadTariffMatrix Started");
+    smsc_log_info(logger, "ReloadTariffMatrix Started");
 
-	Hash<uint32_t> *cat_hash = new Hash<uint32_t>();
-	Hash<uint32_t> *mt_hash = new Hash<uint32_t>();
+    Hash<uint32_t> *cat_hash = new Hash<uint32_t>();
+    Hash<uint32_t> *mt_hash = new Hash<uint32_t>();
+    IntHash<TariffRec> *t_hash = new IntHash<TariffRec>();
 
-	try{
-	    XMLTariffMatrixHandler handler(cat_hash, mt_hash);
-		ParseFile(TariffMatrixFile.c_str(), &handler);
-		delete cat_hash;
-		delete mt_hash;
-		MutexGuard mt1(TariffMatrixMapMutex);
-	}
-	catch(Exception& e)
-	{
-		smsc_log_info(logger, "Tariff Matrix reload was not successful");
-		delete cat_hash;
-		delete mt_hash;
-		throw e;
-	}
+    try{
+        XMLTariffMatrixHandler handler(cat_hash, mt_hash, t_hash);
+        ParseFile(TariffMatrixFile.c_str(), &handler);
 
-	smsc_log_info(logger, "ReloadTariffMatrix Finished");*/
+        MutexGuard mt1(TariffMatrixMapMutex);
+        if(category_hash != NULL)
+            delete category_hash;
+        if(media_type_hash != NULL)
+            delete media_type_hash;
+        if(tariff_hash != NULL)
+            delete tariff_hash;
+        category_hash = cat_hash;
+        media_type_hash = mt_hash;
+        tariff_hash = t_hash;
+    }
+    catch(Exception& e)
+    {
+        smsc_log_info(logger, "Tariff Matrix reload was not successful");
+        delete cat_hash;
+        delete mt_hash;
+        delete t_hash;
+        throw e;
+    }
+
+    smsc_log_info(logger, "ReloadTariffMatrix Finished");
 }
 
 uint32_t InfrastructureImpl::GetProviderID(uint32_t service_id)
 {
-	MutexGuard mt(ProviderMapMutex);
-	try{
-		return service_hash->Get(service_id);
-	}
-	catch(...)
-	{
-		return 0;
-	}
+    MutexGuard mt(ProviderMapMutex);
+    try{
+        if(service_hash == NULL)
+            return 0;
+
+        return service_hash->Get(service_id);
+    }
+    catch(...)
+    {
+        return 0;
+    }
 }
 
 uint32_t InfrastructureImpl::GetOperatorID(Address addr)
 {
-	MutexGuard mt(OperatorMapMutex);
-	
-	uint8_t mask_ptr, addr_len;
-	char a[smsc::sms::MAX_ADDRESS_VALUE_LENGTH + 2];
+    MutexGuard mt(OperatorMapMutex);
+    
+    if(mask_hash == NULL)
+        return 0;
 
-	a[0] = '+';
-	addr_len = addr.getValue(a + 1);
+    uint8_t mask_ptr, addr_len;
+    char a[smsc::sms::MAX_ADDRESS_VALUE_LENGTH + 2];
 
-	if(!addr_len)
-		return 0;
+    a[0] = '+';
+    addr_len = addr.getValue(a + 1);
 
-	addr_len++;
+    if(!addr_len)
+        return 0;
 
-	mask_ptr = addr_len - 1;
+    addr_len++;
 
-	bool found;
-	while(!(found = mask_hash->Exists(a)) && mask_ptr > 1)
-		a[mask_ptr--] = '?';
+    mask_ptr = addr_len - 1;
 
-	if(found)
-		return mask_hash->Get(a);
+    bool found;
+    while(!(found = mask_hash->Exists(a)) && mask_ptr > 1)
+        a[mask_ptr--] = '?';
 
-	return 0;
+    if(found)
+        return mask_hash->Get(a);
+
+    return 0;
 }
 
-uint32_t InfrastructureImpl::GetTariff(uint32_t operator_id, const char* category, const char* mt)
+TariffRec* InfrastructureImpl::GetTariff(uint32_t operator_id, const char* category, const char* mt)
 {
-//	MutexGuard mt(TariffMatrixMapMutex);
-	try{
-		return 0;
-	}
-	catch(...)
-	{
-		return 0;
-	}
+    MutexGuard mt1(TariffMatrixMapMutex);
+    TariffRec *tr = NULL;
+    try{
+        if(category_hash == NULL || media_type_hash == NULL || tariff_hash == NULL)
+            return 0;
+
+        uint32_t id = (category_hash->Get(category) & 0x1ff) << 23;
+           id |= (media_type_hash->Get(mt) & 0x1FF) << 14;
+           id |= operator_id & 0xFFF;
+
+        tr = new TariffRec();
+        *tr = tariff_hash->Get(id);
+
+        return tr;
+    }
+    catch(...)
+    {
+        if(tr != NULL)
+            delete tr;
+        return NULL;
+    }
 }
 
-void InfrastructureImpl::ParseFile(const char* _xmlFile, XMLBasicHandler* handler)
+void InfrastructureImpl::ParseFile(const char* _xmlFile, HandlerBase* handler)
 {
     int errorCount = 0;
-//    setlocale(LC_ALL,"ru_RU.KOI8-R");
-//	setlocale(LC_ALL,"UTF-8");
-//    RegExp::InitLocale();
+
     SAXParser parser;
     
-	try
+    try
     {
         parser.setValidationScheme(SAXParser::Val_Always);
         parser.setDoSchema(true);
