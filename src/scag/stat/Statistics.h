@@ -143,7 +143,7 @@ using smsc::smeman::SmeRecord;
 			iOperatorId=0;
 			iMediaResourceType=0;
 			iPriceCatId=0;
-			fBillingSumm=0; 
+			fBillingSumm=0.00000; 
 		}	
 		SACC_BILLING_INFO_EVENT_t(const SACC_BILLING_INFO_EVENT_t & src)
 		{
@@ -261,7 +261,7 @@ using smsc::smeman::SmeRecord;
 			memset(pAddressEmail,0,MAX_EMAIL_ADDRESS_LENGTH*sizeof(uint16_t));
 			memset(pMessageText,0,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
 			sEventType=0;
-			sEventType = SaccEventsCommandIds::sec_alarm;
+			sEventType = SaccEventsCommandIds::sec_alarm_message;
 		}
 		SACC_ALARM_MESSAGE_t(const SACC_ALARM_MESSAGE_t & src)
 		{
