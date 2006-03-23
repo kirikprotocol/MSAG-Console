@@ -190,6 +190,8 @@ public class jEdit extends Applet
   public void destroy()
   {
     System.out.println("Destroying...");
+    if (getBooleanProperty("newRule")) InvalidateNewRule();
+    unlockAllRules();
     destroyed=true;
     startupDone=false;
     initialized = false;

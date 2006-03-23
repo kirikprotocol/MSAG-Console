@@ -199,6 +199,11 @@ public class BufferSaveRequest extends BufferIORequest
            if (servicestatus == 0)
              GUIUtilities.message(view,"service-is-not-running",null);
             errorSource.clearErrorsService(path);
+            VFSManager.runInAWTThread(new Runnable(){
+             public void run() {
+               jEdit.closeView(view);
+             }
+           } );
         }
       }
 
