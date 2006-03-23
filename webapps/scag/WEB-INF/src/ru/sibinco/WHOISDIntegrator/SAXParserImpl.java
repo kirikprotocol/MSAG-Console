@@ -44,7 +44,8 @@ public class SAXParserImpl
     //e.printStackTrace();
     if (e instanceof SAXParseExceptionEnhanced) {
       SAXParseException spe = (SAXParseException)e.getException();
-      throw new WHOISDException(e.getMessage()+" while parsing rule ["+transport+"] at line number "+spe.getLineNumber()+ " - "+spe.getMessage());
+      //System.out.println("spe.getLineNumber() = " + spe.getLineNumber());
+      throw new WHOISDException(e.getMessage()+" while parsing rule ["+transport+"] at line number {0} - "+spe.getMessage(), spe.getLineNumber());
     } else
       throw e;
    }

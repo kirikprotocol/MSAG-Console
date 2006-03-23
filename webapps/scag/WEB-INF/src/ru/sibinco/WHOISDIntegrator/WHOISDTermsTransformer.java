@@ -23,7 +23,7 @@ public class WHOISDTermsTransformer {
   private final static String EndingToWHOISDTerms = "</whoisd:terms> \n -->";
   private final static boolean DEBUG = false;
 
-  public static Map buildRules(String service, Reader reader, File xslFolder) throws Exception {
+  public static Map buildRules(LinkedList WHOISDpart,String service, Reader reader, File xslFolder) throws Exception {
     String content = "";
     String line;
     BufferedReader br = new BufferedReader(reader);
@@ -35,10 +35,10 @@ public class WHOISDTermsTransformer {
     finally {
       if (br!=null) br.close();
     }
-    return buildRules(service,content,xslFolder);
+    return buildRules(WHOISDpart,service,content,xslFolder);
   }
 
-  public static Map buildRules(String service, String content, File xslFolder) throws Exception  {    
+  public static Map buildRules(LinkedList WHOISDpart,String service, String content, File xslFolder) throws Exception  {
     HashMap rules = new HashMap(3);
     Rule newRule;
     String stylesheet = "terms.xsl";
@@ -48,6 +48,7 @@ public class WHOISDTermsTransformer {
     addBody(termsresult,content, stylesheet, xslFolder);
     termsresult.add(1,HeaderToWHOISDTerms);
     termsresult.add(EndingToWHOISDTerms);
+    WHOISDpart.addAll(termsresult);
     Vector transports = new Vector(transportToXSl.keySet()) ;
 
     for (Iterator i = transports.iterator() ;i.hasNext();) {

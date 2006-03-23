@@ -7,6 +7,7 @@ import ru.sibinco.scag.backend.transport.Transport;
 import javax.servlet.http.*;
 import java.io.*;
 import java.util.*;
+import java.text.MessageFormat;
 
 /**
  * Created by IntelliJ IDEA.
@@ -97,18 +98,20 @@ public class WHOISDServlet extends HttpServlet {
      Reader reader = null;
      Map rulesWHOISD = null;
      Rule ruleWHOISD = null;
+     LinkedList WHOISDpart = new LinkedList();
      if (isMultipartFormat) {
        int[] dataSlice = extractData(req);
        String content = new String();
        for (int i =0 ;i<dataSlice.length;i++)
          content = content +(char)dataSlice[i];
-       rulesWHOISD = WHOISDTermsTransformer.buildRules(service, content, rulemanager.getXslFolder());
+       rulesWHOISD = WHOISDTermsTransformer.buildRules(WHOISDpart,service, content, rulemanager.getXslFolder());
      } else {
        InputStream in = req.getInputStream();
        reader = new BufferedReader(new InputStreamReader(in));
-       rulesWHOISD = WHOISDTermsTransformer.buildRules(service, reader, rulemanager.getXslFolder());
+       rulesWHOISD = WHOISDTermsTransformer.buildRules(WHOISDpart,service, reader, rulemanager.getXslFolder());
      }
      String[] transports = Transport.transportTitles;
+     int termoffset = 0;
      if (rulesWHOISD.size()>0)
      for (byte i =0 ;i<transports.length;i++) {
        ruleWHOISD = (Rule)rulesWHOISD.get(transports[i]);
@@ -119,7 +122,14 @@ public class WHOISDServlet extends HttpServlet {
          continue;
        }
        String ruleSystemId = appContext.getConfig().getString("rules_folder")+"/"+ transports[i] + "/"+ruleWHOISD.getId().toString();
-       parser.parse(rulemanager.getRuleContentAsString(ruleWHOISD), ruleSystemId, transports[i]);
+       try {
+        parser.parse(rulemanager.getRuleContentAsString(ruleWHOISD), ruleSystemId, transports[i]);
+       } catch(WHOISDException e) {
+         int linenumberinterm = termoffset + e.getLineNumber();
+         //System.out.println("linenumberinterm: " + linenumberinterm);
+         String message = MessageFormat.format(e.getMessage(), new Object[]{new Integer(linenumberinterm)});
+         throw new WHOISDException(message);
+       }
        if (ruleWHOISD != null && curRule!=null) {
           LinkedList error = rulemanager.updateRule(ruleWHOISD,service,transports[i]);
           if (error != null && error.size()>0)
@@ -129,6 +139,7 @@ public class WHOISDServlet extends HttpServlet {
           if (error != null && error.size()>0)
             throw new WHOISDException(composeErrorMessage(error));
        }
+       termoffset = termoffset+ruleWHOISD.getBody().size() - WHOISDpart.size();
      }
    }
 
