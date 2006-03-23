@@ -983,6 +983,10 @@ public:
         Address oa=s.getOriginatingAddress();
         s.setOriginatingAddress(s.getDestinationAddress());
         s.setDestinationAddress(oa);
+        if(s.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+        {
+          s.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_PSSR_RESP);
+        }
         PduSubmitSm sm;
         sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
         fillSmppPduFromSms(&sm,&s);
