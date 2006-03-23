@@ -22,7 +22,7 @@ void Abstract_CommandSmsc::init()
     BEGIN_SCAN_PARAMS
 
     GETSTRPARAM((char*)smppEntityInfo.systemId,      "systemId")
-    GETSTRPARAM((char*)smppEntityInfo.password,      "password")
+//    GETSTRPARAM((char*)smppEntityInfo.password,      "password")
     GETSTRPARAM((char*)smppEntityInfo.bindSystemId,  "bindSystemId")
     GETSTRPARAM((char*)smppEntityInfo.bindPassword,  "bindPassword")
     GETINTPARAM(smppEntityInfo.timeOut,               "timeout")
@@ -50,7 +50,7 @@ void Abstract_CommandSmsc::init()
     std::string errorStr;
 
     if (smppEntityInfo.systemId == "") errorStr = "Unknown 'systemId' parameter";
-    if (smppEntityInfo.password == "") errorStr = "Unknown 'password' parameter";
+//    if (smppEntityInfo.password == "") errorStr = "Unknown 'password' parameter";
     if (smppEntityInfo.bindSystemId == "") errorStr = "Unknown 'bindSystemId' parameter";
     if (smppEntityInfo.bindPassword == "") errorStr = "Unknown 'bindPassword' parameter";
         
@@ -58,9 +58,9 @@ void Abstract_CommandSmsc::init()
     if (smppEntityInfo.uid == -1) errorStr = "Unknown 'uid' parameter";
 
     if (smppEntityInfo.host == "") errorStr = "Unknown 'host' parameter";
-    if (smppEntityInfo.port == -1) errorStr = "Unknown 'port' parameter";
-    if (smppEntityInfo.altHost == "") errorStr = "Unknown 'altHost' parameter";
-    if (smppEntityInfo.altPort == -1) errorStr = "Unknown 'altPort' parameter";
+    if (smppEntityInfo.port <= 0) errorStr = "Invalid 'port' parameter";
+//    if (smppEntityInfo.altHost == "") errorStr = "Unknown 'altHost' parameter";
+//    if (smppEntityInfo.altPort == -1) errorStr = "Unknown 'altPort' parameter";
 
     if (errorStr.size() > 0) 
     {
