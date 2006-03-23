@@ -232,6 +232,7 @@ using smsc::smeman::SmeRecord;
 			iOperatorId=0;
 			Header.sEventType = 0x0003;
 			cDirection=0;
+			iAlarmEventId =0;
 
 		}
 		SACC_ALARM_t(const SACC_ALARM_t& src)
