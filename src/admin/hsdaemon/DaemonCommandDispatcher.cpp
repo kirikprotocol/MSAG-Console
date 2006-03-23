@@ -193,7 +193,7 @@ Response * DaemonCommandDispatcher::set_service_startup_parameters(const Command
 
       ///!!!!!!!!!!!!!!! TODO !!!!!!!!!!!!!!!!!!!!!
 
-      putServiceToConfig(command->getServiceId(), command->getArgs(), command->isAutostart(),command->getHostName(),"");
+      putServiceToConfig(command->getServiceId(), command->getArgs(), command->isAutostart(),"");
       if (s->getStatus() == Service::stopped)
       {
         s->setArgs(command->getArgs());
