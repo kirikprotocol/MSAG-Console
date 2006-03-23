@@ -66,8 +66,6 @@ public class Edit extends TabledEditBeanImpl {
         if (appContext == null) {
             appContext = (SCAGAppContext) request.getAttribute("appContext");
         }
-        serviceProviders = appContext.getServiceProviderManager().getServiceProviders();
-        routes = appContext.getServiceProviderManager().getRoutesByServiceId(appContext.getScagRoutingManager().getRoutes(), Long.decode(getParentId()));
         path = Utils.getPath(request);
         if (getMbCancel() != null) {
             String path = Utils.getPath(request);
@@ -77,7 +75,11 @@ public class Edit extends TabledEditBeanImpl {
             save();
         } else if (getMbAddChild() != null) {
             throw new AddChildException(request.getContextPath() + "/routing/routes", getParentId());
+        }if (mbDelete != null){
+            delete();
         }
+        serviceProviders = appContext.getServiceProviderManager().getServiceProviders();
+        routes = appContext.getServiceProviderManager().getRoutesByServiceId(appContext.getScagRoutingManager().getRoutes(), Long.decode(getParentId()));
         final SortedList results = new SortedList(getDataSource(), new SortByPropertyComparator("name"));
         totalSize = results.size();
         if (totalSize > startPosition)
@@ -96,7 +98,8 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     protected void delete() throws SCAGJspException {
-
+        appContext.getScagRoutingManager().getRoutes().keySet().removeAll(checkedSet);
+        appContext.getStatuses().setRoutesChanged(true);
     }
 
     protected void load() throws SCAGJspException {

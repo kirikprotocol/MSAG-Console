@@ -80,6 +80,8 @@ public class Edit extends EditBean{//TabledEditBeanImpl {
                 appContext.getServiceProviderManager().getServiceProviderByServiceId(
                         Long.decode(getParentId())).getId() + "&editChild=true");
         }
+        
+        if(getEditId() != null)
         id = getEditId();
         destinations = new HashMap();
         for (Iterator i = request.getParameterMap().entrySet().iterator(); i.hasNext();) {
