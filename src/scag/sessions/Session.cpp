@@ -504,7 +504,11 @@ bool Session::startOperation(SCAGCommand& cmd)
             currentOperationId = cmd.getOperationId();
             m_pCurrentOperation = operation;
 
-            if (m_SmppDiscriptor.lastIndex == 0) break; //single response
+            if (m_SmppDiscriptor.lastIndex == 0) 
+            {
+                OperationsHash.Delete(cmd.getOperationId());
+                break; //single response
+            }
 
             //multipart response
             operation->setStatus(m_SmppDiscriptor.currentIndex,m_SmppDiscriptor.lastIndex);

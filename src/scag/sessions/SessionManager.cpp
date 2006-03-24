@@ -407,7 +407,7 @@ SessionPtr SessionManagerImpl::getSession(const CSessionKey& sessionKey)
 
     MutexGuard guard(inUseMonitor);
 
-    smsc_log_debug(logger,"SessionManager: get session");
+    smsc_log_debug(logger,"SessionManager: get session Addr: %s, USR: %d",sessionKey.abonentAddr().toString().c_str(),sessionKey.USR);
 
     CSessionSetIterator * itPtr = SessionHash.GetPtr(sessionKey);
     
