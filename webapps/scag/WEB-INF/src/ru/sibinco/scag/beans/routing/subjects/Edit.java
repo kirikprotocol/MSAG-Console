@@ -15,132 +15,122 @@ import ru.sibinco.scag.beans.SCAGJspException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 
 
 /**
  * Created by igork Date: 20.04.2004 Time: 15:51:47
  */
-public class Edit extends EditBean
-{
-  private String name;
-  private String defaultSme;
-  private String[] masks;
-  private String notes;
+public class Edit extends EditBean {
+    private String name;
+    private String defaultSme;
+    private String[] masks = new String[0];
+    private String description;
 
-  public String getId()
-  {
-    return name;
-  }
-
-  protected void load(final String loadId) throws SCAGJspException
-  {
-    final Subject subject = (Subject) appContext.getScagRoutingManager().getSubjects().get(loadId);
-    if (null != subject) {
-      name = subject.getName();
-      defaultSme = null != subject.getDefaultSme() ? subject.getDefaultSme().getId() : null;
-      masks = new String[subject.getMasks().size()];
-      int counter = 0;
-      for (Iterator i = subject.getMasks().iterator(); i.hasNext();) {
-        final Mask mask = (Mask) i.next();
-        masks[counter++] = mask.getMask();
-      }
-      notes = subject.getNotes();
+    public String getId() {
+        return name;
     }
-  }
 
-  protected void save() throws SCAGJspException
-  {
-    masks = Functions.trimStrings(masks);
-    final Map subjects = appContext.getScagRoutingManager().getSubjects();
-    final Svc defSme = (Svc) appContext.getSmppManager().getSvcs().get(defaultSme);
-    if (null == defSme)
-      throw new SCAGJspException(Constants.errors.routing.subjects.DEFAULT_SME_NOT_FOUND, defaultSme);
+    protected void load(final String loadId) throws SCAGJspException {
+        final Subject subject = (Subject) appContext.getScagRoutingManager().getSubjects().get(loadId);
+        if (null != subject) {
+            name = subject.getName();
+            defaultSme = null != subject.getDefaultSme() ? subject.getDefaultSme().getId() : null;
+            description = subject.getNotes();
 
-    if (isAdd()) {
-      if (subjects.containsKey(name))
-        throw new SCAGJspException(Constants.errors.routing.subjects.SUBJECT_ALREADY_EXISTS, name);
-      try {
-        subjects.put(name, new Subject(name, defSme, masks, notes));
-      } catch (SibincoException e) {
-        logger.debug("Could not create new subject", e);
-        throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_CREATE, e);
-      }
-    } else {
-      if (!getEditId().equals(name)) {
-        if (subjects.containsKey(name))
-          throw new SCAGJspException(Constants.errors.routing.subjects.SUBJECT_ALREADY_EXISTS, name);
-        subjects.remove(getEditId());
-        try {
-          subjects.put(name, new Subject(name, defSme, masks, notes));
-        } catch (SibincoException e) {
-          logger.debug("Could not create new subject", e);
-          throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_CREATE, e);
+            final List maskList = new ArrayList();
+            for (Iterator i = subject.getMasks().iterator(); i.hasNext();) {
+                final Mask mask = (Mask) i.next();
+                maskList.add(mask.getMask());
+            }
+            masks = (String[]) maskList.toArray(new String[0]);
+            maskList.clear();
         }
-      } else {
-        final Subject subject = (Subject) subjects.get(name);
-        subject.setDefaultSme(defSme);
-        try {
-          subject.setMasks(new MaskList(masks));
-        } catch (SibincoException e) {
-          logger.debug("Could not set masks list for subject", e);
-          throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_SET_MASKS, e);
+    }
+
+    protected void save() throws SCAGJspException {
+        masks = Functions.trimStrings(masks);
+        final Map subjects = appContext.getScagRoutingManager().getSubjects();
+        final Svc defSme = (Svc) appContext.getSmppManager().getSvcs().get(defaultSme);
+        if (null == defSme)
+            throw new SCAGJspException(Constants.errors.routing.subjects.DEFAULT_SME_NOT_FOUND, defaultSme);
+
+        if (isAdd()) {
+            if (subjects.containsKey(name))
+                throw new SCAGJspException(Constants.errors.routing.subjects.SUBJECT_ALREADY_EXISTS, name);
+            try {
+                subjects.put(name, new Subject(name, defSme, masks, description));
+            } catch (SibincoException e) {
+                logger.debug("Could not create new subject", e);
+                throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_CREATE, e);
+            }
+        } else {
+            if (!getEditId().equals(name)) {
+                if (subjects.containsKey(name))
+                    throw new SCAGJspException(Constants.errors.routing.subjects.SUBJECT_ALREADY_EXISTS, name);
+                subjects.remove(getEditId());
+                try {
+                    subjects.put(name, new Subject(name, defSme, masks, description));
+                } catch (SibincoException e) {
+                    logger.debug("Could not create new subject", e);
+                    throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_CREATE, e);
+                }
+            } else {
+                final Subject subject = (Subject) subjects.get(name);
+                subject.setDefaultSme(defSme);
+                try {
+                    subject.setMasks(new MaskList(masks));
+                } catch (SibincoException e) {
+                    logger.debug("Could not set masks list for subject", e);
+                    throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_SET_MASKS, e);
+                }
+                subject.setNotes(description);
+            }
         }
-        subject.setNotes(notes);
-      }
+        appContext.getStatuses().setRoutesChanged(true);
+        throw new DoneException();
     }
-    appContext.getStatuses().setRoutesChanged(true);
-    throw new DoneException();
-  }
 
-  public String getSmeIds()
-  {
-    final StringBuffer result = new StringBuffer();
-    final List smes = new SortedList(appContext.getSmppManager().getSvcs().keySet());
-    for (Iterator i = smes.iterator(); i.hasNext();) {
-      result.append((String) i.next());
-      if (i.hasNext())
-        result.append(",");
+    public String getSmeIds() {
+        final StringBuffer result = new StringBuffer();
+        final List smes = new SortedList(appContext.getSmppManager().getSvcs().keySet());
+        for (Iterator i = smes.iterator(); i.hasNext();) {
+            result.append((String) i.next());
+            if (i.hasNext())
+                result.append(",");
+        }
+        return result.toString();
     }
-    return result.toString();
-  }
 
-  public String getName()
-  {
-    return name;
-  }
+    public String getName() {
+        return name;
+    }
 
-  public void setName(final String name)
-  {
-    this.name = name;
-  }
+    public void setName(final String name) {
+        this.name = name;
+    }
 
-  public String getDefaultSme()
-  {
-    return defaultSme;
-  }
+    public String getDefaultSme() {
+        return defaultSme;
+    }
 
-  public void setDefaultSme(final String defaultSme)
-  {
-    this.defaultSme = defaultSme;
-  }
+    public void setDefaultSme(final String defaultSme) {
+        this.defaultSme = defaultSme;
+    }
 
-  public String[] getMasks()
-  {
-    return masks;
-  }
+    public String[] getMasks() {
+        return masks;
+    }
 
-  public void setMasks(final String[] masks)
-  {
-    this.masks = masks;
-  }
+    public void setMasks(final String[] masks) {
+        this.masks = masks;
+    }
 
-  public String getNotes()
-  {
-    return notes;
-  }
+    public String getDescription() {
+        return description;
+    }
 
-  public void setNotes(final String notes)
-  {
-    this.notes = notes;
-  }
+    public void setDescription(final String description) {
+        this.description = description;
+    }
 }
