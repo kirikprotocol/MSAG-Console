@@ -453,6 +453,8 @@ bool Session::startOperation(SCAGCommand& cmd)
     {
     case CO_DELIVER_SM:
         {
+            smsc_log_debug(logger,"Session: creating DELIVER operation");
+
             AddNewOperationToHash(cmd, m_SmppDiscriptor.cmdType);
 
 /*            if (m_SmppDiscriptor.currentIndex == 0)
