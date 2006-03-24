@@ -48,7 +48,7 @@
             <div class=page_subtitle>&nbsp;</div>
             <div class=page_subtitle>Routes List</div>
             <sm:table columns="checkbox,id,active,enabled,archived,notes"
-                      names="c,name,active,enabled,archived,notes" widths="1,10,20,20,39,59"
+                      names="c,name,active,enabled,archived,notes" widths="1,60,20,20,39,59"
                       child="/routing/routes" parentId="${bean.parentId}" edit="id"/>
             <div class=page_subtitle>&nbsp;</div>
             <sm-pm:menu>
