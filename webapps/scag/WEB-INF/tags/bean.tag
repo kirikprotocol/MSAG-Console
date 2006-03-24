@@ -42,7 +42,36 @@
                 java.net.URLEncoder.encode(e.getParentId(),
                 ru.sibinco.lib.backend.util.Functions.getLocaleEncoding()));
     } catch (ru.sibinco.scag.beans.SCAGJspException e) {
-        throw e;
+            String message = null;
+            String messageresult = e.getMessage();
+            String messagecause = null;
+            String messagecauseresult = null;
+            if (e.getCode() != null)
+              message = ru.sibinco.lib.LocaleMessages.getInstance().getMessage(request.getLocale(), e.getCode().getId());
+            if (message == null)
+              message = (e.getCode()==null)?"Unknown exception":e.getCode().getId();
+            messageresult = java.text.MessageFormat.format(messageresult,new Object[]{message});
+
+            ru.sibinco.scag.beans.SCAGJspException cause = null;
+            if (e.getCause() instanceof ru.sibinco.scag.beans.SCAGJspException)
+               cause = (ru.sibinco.scag.beans.SCAGJspException)e.getCause();
+            if (cause!=null) {
+               messagecauseresult = cause.getMessage();
+            if (cause.getCode()!=null) {
+              messagecause = ru.sibinco.lib.LocaleMessages.getInstance().getMessage(request.getLocale(), cause.getCode().getId());
+            }
+            if (messagecause == null)
+                 messagecause = (cause.getCode()==null)?"Unknown exception":cause.getCode().getId();
+            messagecauseresult = java.text.MessageFormat.format(messagecauseresult,new Object[]{messagecause});
+            }
+            %>
+              <div class=error>
+                <div class=header><%=messageresult%></div>
+             <% if (messagecauseresult!=null) { %>
+                <div class=header>Nested: <%=messagecauseresult%></div>
+              </div>
+            <%   }
+       // throw e;
     } catch (Throwable t) {
         out.print("<h1 color=red>bean tag exception: " + (t.getMessage() != null ? '"' +
                 t.getMessage() + '"' : "") + "</h1><pre>");
