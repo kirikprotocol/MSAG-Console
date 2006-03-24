@@ -148,8 +148,10 @@ AbonentBillType AbonentCache::getAbonentInfo(AbonentId & ab_number)
         AbonentHashData     ab_rec;
         try {
             if (flCache.LookUp(AbonentHashKey(ab_number), ab_rec)) {
-                ramInsert(ab_number, ab_rec.ab_type, ab_rec.tm_queried);
-                return ab_rec.ab_type;
+                if (time(NULL) < (ab_rec.tm_queried + _cfg.interval)) {
+                    ramInsert(ab_number, ab_rec.ab_type, ab_rec.tm_queried);
+                    return ab_rec.ab_type;
+                }
             }
         } catch (std::exception & exc) {
             smsc_log_error(logger, "InCache: abonent %s: %s",
