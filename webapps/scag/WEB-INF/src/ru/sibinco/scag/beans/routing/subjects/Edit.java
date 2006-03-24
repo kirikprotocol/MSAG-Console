@@ -5,9 +5,11 @@ import ru.sibinco.lib.backend.route.Mask;
 import ru.sibinco.lib.backend.route.MaskList;
 import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.lib.backend.util.SortedList;
+import ru.sibinco.lib.backend.users.User;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.endpoints.svc.Svc;
 import ru.sibinco.scag.backend.routing.Subject;
+import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.beans.DoneException;
 import ru.sibinco.scag.beans.EditBean;
 import ru.sibinco.scag.beans.SCAGJspException;
@@ -16,6 +18,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
+import java.security.Principal;
 
 
 /**
@@ -88,6 +91,8 @@ public class Edit extends EditBean {
             }
         }
         appContext.getStatuses().setRoutesChanged(true);
+        appContext.getScagRoutingManager().setRoutesChanged(true);
+        appContext.getScagRoutingManager().setChangedByUser(getUser(appContext).getName());
         throw new DoneException();
     }
 
@@ -100,6 +105,16 @@ public class Edit extends EditBean {
                 result.append(",");
         }
         return result.toString();
+    }
+
+    private User getUser(SCAGAppContext appContext) throws SCAGJspException {
+        Principal userPrincipal = super.getLoginedPrincipal();
+        if (userPrincipal == null)
+            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user principal(s)");
+        User user = (User) appContext.getUserManager().getUsers().get(userPrincipal.getName());
+        if (user == null)
+            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userPrincipal.getName() + "'");
+        return user;
     }
 
     public String getName() {
