@@ -73,7 +73,7 @@ Session::~Session()
 
     ClearOperations();
 
-    smsc_log_debug(logger,"Session: session destroyed USR='%d' Address = '%s'",m_SessionKey.USR,m_SessionKey.abonentAddr.toString().c_str());
+    //smsc_log_debug(logger,"Session: session destroyed USR='%d' Address = '%s'",m_SessionKey.USR,m_SessionKey.abonentAddr.toString().c_str());
 }
 
 
@@ -421,7 +421,7 @@ void Session::endOperation(RuleStatus& ruleStatus)
         break;
 
     }
-    smsc_log_error(logger,"** Session: operation end, pendinding count = %d - %d",PendingOperationList.size(),PrePendingOperationList.size());
+    //smsc_log_error(logger,"** Session: operation end, pendinding count = %d - %d",PendingOperationList.size(),PrePendingOperationList.size());
 }
 
 void Session::AddNewOperationToHash(SCAGCommand& cmd, int type)
@@ -466,14 +466,14 @@ bool Session::startOperation(SCAGCommand& cmd)
                 Operation ** operationPtr = OperationsHash.GetPtr(cmd.getOperationId());
 
                 //TODO: check what to do if there are no session?
-                //if (!operation) ...
                 if (!operationPtr) 
                 {
-                    smsc_log_debug(logger,"Session: no operation matched to CO_DELIVER_SM has been detected");
-                    return false;
-                }
+                    operation = AddNewOperationToHash(cmd, m_SmppDiscriptor.cmdType);
 
-                operation = *operationPtr;
+                    //smsc_log_debug(logger,"Session: no operation matched to CO_DELIVER_SM has been detected");
+                    //return false;
+                } else 
+                    operation = *operationPtr;
 
                 operation->setStatus(m_SmppDiscriptor.currentIndex,m_SmppDiscriptor.lastIndex);
 
@@ -597,7 +597,7 @@ bool Session::startOperation(SCAGCommand& cmd)
 
 
     }
-    smsc_log_error(logger,"** Session: operation started, pending count = %d-%d",PendingOperationList.size(),PrePendingOperationList.size());
+    smsc_log_error(logger,"** Session: operation started, Pending: %d-%d, Operations: %s",PendingOperationList.size(),PrePendingOperationList.size(), OperationHash.Count());
    
     return true;
 }

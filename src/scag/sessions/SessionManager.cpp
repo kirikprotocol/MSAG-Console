@@ -518,14 +518,14 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
         store.deleteSession(sessionKey);
 
         inUseMonitor.notifyAll();
-        smsc_log_debug(logger,"SessionManager: session released");
+        smsc_log_debug(logger,"SessionManager: session closed");
         return;
     }
 
     if (session->isChanged()) store.updateSession(session);
 
     inUseMonitor.notifyAll();
-    smsc_log_debug(logger,"SessionManager: session released, Pending Operations Count = %d",session->PendingOperationList.size());
+    //smsc_log_debug(logger,"SessionManager: session released, Pending Operations Count = %d",session->PendingOperationList.size());
 }
 
 
