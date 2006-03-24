@@ -34,7 +34,6 @@ public class Index extends TabledBeanImpl implements TabledBean {
         final Map svcs = appContext.getSmppManager().getSvcs();
         for (Iterator iterator = checkedSet.iterator(); iterator.hasNext();) {
             final String svcId = (String) iterator.next();
-
             try {
                 scag.deleteSvc(svcId);
                 svcs.remove(svcId);

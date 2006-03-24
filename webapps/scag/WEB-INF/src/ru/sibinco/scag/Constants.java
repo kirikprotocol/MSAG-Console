@@ -83,6 +83,7 @@ public class Constants {
             public static final Constants SME_ALREADY_EXISTS = new Constants("error.sme.sme_already_exists");
             public static final Constants COULDNT_APPLY = new Constants("error.sme.couldnt_apply");
             public static final Constants COULDNT_DELETE = new Constants("error.sme.couldnt_delete");
+            public static final Constants COULDNT_SAVE_CONFIG = new Constants("error.sme.couldnt_save_config");
         }
 
         public interface services {

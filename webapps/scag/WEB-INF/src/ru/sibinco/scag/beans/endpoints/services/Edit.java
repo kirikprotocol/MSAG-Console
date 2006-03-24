@@ -108,7 +108,7 @@ public class Edit extends EditBean {
         if (null == id || 0 == id.length() || !isAdd() && (null == getEditId() || 0 == getEditId().length()))
             throw new SCAGJspException(Constants.errors.sme.SME_ID_NOT_SPECIFIED);
 
-        if (null == password || password.trim().length()==0)
+        if (null == password || password.trim().length() == 0)
             password = "";
         final Provider providerObj = null;//(Provider) appContext.getProviderManager().getProviders().get(new Long(providerId));
         final Map svcs = appContext.getSmppManager().getSvcs();
@@ -122,7 +122,6 @@ public class Edit extends EditBean {
         final Svc svc;
         svc = new Svc(id, password, timeout, enabled, mode, providerObj);
         svcs.put(id, svc);
-
         final Scag scag = appContext.getScag();
         try {
             if (isAdd()) {
@@ -131,8 +130,8 @@ public class Edit extends EditBean {
                 }
             } else {
                 if ((oldSvc.isEnabled() == svc.isEnabled())) {
-                    if(isEnabled())
-                    scag.updateSvcInfo(svc);
+                    if (isEnabled())
+                        scag.updateSvcInfo(svc);
                 } else {
                     if (svc.isEnabled()) {
                         scag.addSvc(svc);
@@ -141,12 +140,17 @@ public class Edit extends EditBean {
                     }
                 }
             }
-            oldSvc = null;
-            appContext.getSmppManager().store();
         } catch (SibincoException e) {
-            e.printStackTrace();
             if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
+                if (isAdd()) svcs.remove(id);
                 throw new SCAGJspException(Constants.errors.sme.COULDNT_APPLY, id, e);
+            }
+        } finally {
+            oldSvc = null;
+            try {
+                appContext.getSmppManager().store();
+            } catch (SibincoException e) {
+                logger.error("Couldn't store smes ", e);
             }
         }
         throw new DoneException();
@@ -224,7 +228,7 @@ public class Edit extends EditBean {
     }
 
     public String[] getProviderIds() {
-            return providerIds;
+        return providerIds;
     }
 
     public boolean isAdministrator() {

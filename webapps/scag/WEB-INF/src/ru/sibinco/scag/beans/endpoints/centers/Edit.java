@@ -57,7 +57,7 @@ public class Edit extends EditBean {
     private long userProviderId = ALL_PROVIDERS;
 
     private void init() throws SCAGJspException {
-            SCAGAppContext appContext = getAppContext();
+        SCAGAppContext appContext = getAppContext();
         Principal userPrincipal = super.getLoginedPrincipal();
         if (userPrincipal == null)
             throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user principal(s)");
@@ -135,10 +135,10 @@ public class Edit extends EditBean {
         }
         centers.remove(getEditId());
         final Center center;
-        if (altHost==null || altHost.trim().length() == 0) altHost = "";
-        if (bindPassword==null || bindPassword.trim().length() == 0) bindPassword = "";      
+        if (altHost == null || altHost.trim().length() == 0) altHost = "";
+        if (bindPassword == null || bindPassword.trim().length() == 0) bindPassword = "";
         center = new Center(id, timeout, mode, host, port, altHost, altPort,
-                enabled, providerObj, uid, bindSystemId, (bindPassword==null)?"":bindPassword);
+                enabled, providerObj, uid, bindSystemId, (bindPassword == null) ? "" : bindPassword);
         centers.put(id, center);
 
         final Scag scag = appContext.getScag();
@@ -151,22 +151,30 @@ public class Edit extends EditBean {
                 appContext.getSmppManager().setLastUsedId(center.getUid());
             } else {
                 if (oldCenter.isEnabled() == center.isEnabled()) {
-                    if(isEnabled())
-                    scag.updateCenter(center);
-                }else{
-                    if(center.isEnabled()){
-                       scag.addCenter(center);
-                    }else{
+                    if (isEnabled())
+                        scag.updateCenter(center);
+                } else {
+                    if (center.isEnabled()) {
+                        scag.addCenter(center);
+                    } else {
                         scag.deleteCenter(center);
                     }
                 }
             }
-            oldCenter = null;
+
             appContext.getSmppManager().store();
         } catch (SibincoException e) {
-            e.printStackTrace();
             if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
+                if (isAdd()) centers.remove(id);
+                logger.error("Couldn't applay Centers " + id + " ", e);
                 throw new SCAGJspException(Constants.errors.sme.COULDNT_APPLY, id, e);
+            }
+        } finally {
+            oldCenter = null;
+            try {
+                appContext.getSmppManager().store();
+            } catch (SibincoException e) {
+                logger.error("Couldn't store smes ", e);
             }
         }
         throw new DoneException();

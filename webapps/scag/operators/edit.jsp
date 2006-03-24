@@ -26,7 +26,7 @@
             tbl.deleteRow(rowElem.rowIndex);
         }
 
-        function addSourceMask(valueElem) {
+        function addMask(valueElem) {
             if (validateField(valueElem)) {
                 var tbl = opForm.all.sources_table;
                 var newRow = tbl.insertRow(tbl.rows.length);
@@ -75,10 +75,10 @@
                     <col width="100%" align="right">
                     <col width="100%" align="left">
                     <tr>
-                        <td>Mask</td>
+                        <td>mask</td>
                         <td><input id="newSrcMask" class="txt" name="srcMasks" validation="routeMask"
                                    onkeyup="resetValidation(this)"></td>
-                        <td><img src="content/images/but_add.gif" onclick="addSourceMask(opForm.all.newSrcMask)"
+                        <td><img src="content/images/but_add.gif" onclick="addMask(opForm.all.newSrcMask)"
                                  style="cursor:hand;"></td>
                     </tr>
                 </table>
