@@ -453,8 +453,9 @@ bool Session::startOperation(SCAGCommand& cmd)
     {
     case CO_DELIVER_SM:
         {
+            AddNewOperationToHash(cmd, m_SmppDiscriptor.cmdType);
 
-            if (m_SmppDiscriptor.currentIndex == 0)
+/*            if (m_SmppDiscriptor.currentIndex == 0)
             {
                 AddNewOperationToHash(cmd, m_SmppDiscriptor.cmdType);
             } else if (m_SmppDiscriptor.lastIndex > 0) 
@@ -478,7 +479,7 @@ bool Session::startOperation(SCAGCommand& cmd)
                 currentOperationId = cmd.getOperationId();
                 m_pCurrentOperation = operation;
                 bChanged = true;
-            }
+            }*/
                 
             break;
         }
@@ -590,7 +591,6 @@ bool Session::startOperation(SCAGCommand& cmd)
 
     case CO_RECEIPT_DELIVER_SM:
         {
-            AddNewOperationToHash(cmd, m_SmppDiscriptor.cmdType);
         }
 
 
