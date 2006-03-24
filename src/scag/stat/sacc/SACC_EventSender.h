@@ -34,6 +34,7 @@
 #include "logger/Logger.h"
 #include <scag/stat/Statistics.h>
 #include "SACC_Events.h"
+#include <core/synchronization/EventMonitor.hpp>
 
 #include <string>
 using namespace smsc::core::threads;
@@ -43,6 +44,7 @@ using namespace smsc::logger;
 using smsc::util::Exception;
 using namespace scag::stat;
 using namespace scag::stat::Counters;
+using namespace smsc::core::synchronization;
 
 namespace scag{
 namespace stat{
@@ -76,6 +78,9 @@ private:
 	std::string Host;
 	int QueueLength;
 	int Port;
+	
+	EventMonitor evReconnect;
+
 	bool checkQueue();
 	bool connect(std::string host,int port,int timeout);
 	bool processEvent(void * ev);

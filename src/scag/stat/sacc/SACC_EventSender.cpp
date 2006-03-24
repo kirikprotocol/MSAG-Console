@@ -29,7 +29,8 @@ EventSender::EventSender()
 
 EventSender::~EventSender()
 {
-
+	evReconnect.notify();
+	bStarted =false;
 }
 
 
@@ -143,14 +144,14 @@ bool EventSender::checkQueue()
 
 int EventSender::Execute()
 {
-	EventMonitor e;
+	
 	while( *bStarted)
 	{
 		if(!bConnected)
 		{
 			SaccSocket.Abort();
 			
-			e.wait(Timeout);
+			evReconnect.wait(Timeout);
 			if(connect(Host,Port,100))
 			{
 				bConnected=true;
@@ -161,7 +162,7 @@ int EventSender::Execute()
 
 		
 	}
-	smsc_log_debug("EventSender stopped.");
+	smsc_log_debug(logger,"EventSender stopped.");
 	return 1;
 
 }
