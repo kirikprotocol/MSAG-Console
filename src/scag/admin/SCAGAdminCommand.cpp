@@ -323,7 +323,7 @@ void CommandTraceRoute::init()
 
     if (srcAddr == "") errorStr = "Failed to read parameter 'srcAddress' of CommandTraceRoute";
     if (dstAddr == "") errorStr = "Failed to read parameter 'dstAddress' of CommandTraceRoute";
-    if (srcSysId == "") errorStr = "Failed to read parameter 'srcSysId' of CommandTraceRoute";
+//    if (srcSysId == "") errorStr = "Failed to read parameter 'srcSysId' of CommandTraceRoute";
 
     if (errorStr.size() > 0) 
     {
