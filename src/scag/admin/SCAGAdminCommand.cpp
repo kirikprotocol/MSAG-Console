@@ -97,7 +97,7 @@ void Abstract_CommandSmeInfo::init()
     std::string errorStr;
 
     if (smppEntityInfo.systemId == "") errorStr = "Failed to tead Sme parameter 'systemId'";
-    if (smppEntityInfo.password == "") errorStr = "Failed to tead Sme parameter 'password'";
+    //if (smppEntityInfo.password == "") errorStr = "Failed to tead Sme parameter 'password'";
     if (smppEntityInfo.timeOut == -1) errorStr = "Failed to tead Sme parameter 'timeout'";
 
     if (errorStr.size() > 0) 
