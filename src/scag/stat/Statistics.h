@@ -107,7 +107,7 @@ using smsc::smeman::SmeRecord;
 			memset(&Header,0,sizeof(SACC_EVENT_HEADER_t));
 			memset(pMessageText,0,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
 			memset(pSessionKey,0,MAX_SESSION_KEY_LENGTH);
-			Header.sEventType = SaccEventsCommandIds::sec_transport;
+			Header.sEventType = sec_transport;
 			iOperatorId=0;
 			cDirection=0;
 		};
@@ -139,7 +139,7 @@ using smsc::smeman::SmeRecord;
 			memset(&Header,0,sizeof(SACC_EVENT_HEADER_t));
 			memset(pBillingCurrency,0,MAX_BILLING_CURRENCY_LENGTH);
 			memset(pSessionKey,0,MAX_SESSION_KEY_LENGTH);
-			Header.sEventType = SaccEventsCommandIds::sec_bill;
+			Header.sEventType = sec_bill;
 			iOperatorId=0;
 			iMediaResourceType=0;
 			iPriceCatId=0;
@@ -261,7 +261,7 @@ using smsc::smeman::SmeRecord;
 			memset(pAddressEmail,0,MAX_EMAIL_ADDRESS_LENGTH*sizeof(uint16_t));
 			memset(pMessageText,0,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
 			sEventType=0;
-			sEventType = SaccEventsCommandIds::sec_alarm_message;
+			sEventType = sec_alarm_message;
 		}
 		SACC_ALARM_MESSAGE_t(const SACC_ALARM_MESSAGE_t & src)
 		{

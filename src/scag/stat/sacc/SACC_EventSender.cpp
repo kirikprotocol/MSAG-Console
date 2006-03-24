@@ -64,7 +64,7 @@ bool EventSender::processEvent(void *ev)
 
 	switch(evType) 
 	{
-	case SaccEventsCommandIds::sec_transport:
+	case sec_transport:
 		{
 			SACC_TRAFFIC_INFO_EVENT_t e;
 			memcpy(&e,ev,sizeof(SACC_TRAFFIC_INFO_EVENT_t));
@@ -73,7 +73,7 @@ bool EventSender::processEvent(void *ev)
 			
 		}
  		break;
-	case SaccEventsCommandIds::sec_bill:
+	case sec_bill:
 		{
 			SACC_BILLING_INFO_EVENT_t e;
 			memcpy(&e,ev,sizeof(SACC_BILLING_INFO_EVENT_t));
@@ -81,7 +81,7 @@ bool EventSender::processEvent(void *ev)
 			performBillingEvent(e);
 		}
  		break;
-	case SaccEventsCommandIds::sec_alarm_message:
+	case sec_alarm_message:
 		{
 			SACC_ALARM_MESSAGE_t e;
 			memcpy(&e,ev,sizeof(SACC_ALARM_MESSAGE_t));
@@ -105,7 +105,7 @@ bool EventSender::processEvent(void *ev)
 			performOperatorNotFoundEvent(e);
 		}
  		break;*/
-	case SaccEventsCommandIds::sec_alarm:
+	case sec_alarm:
 		{
 			SACC_ALARM_t e;
 			memcpy(&e,ev,sizeof(SACC_ALARM_t));
