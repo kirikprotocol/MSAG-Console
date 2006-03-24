@@ -66,6 +66,7 @@ extern "C" {
 
 void MapIoTask::connect(unsigned timeout) {
   USHORT_T result;
+  __map_warn__("Connecting to MAP stack");
   result = MsgOpen(MY_USER_ID);
   if ( result != MSG_OK ) {
     __map_warn2__("Error at MsgOpen, code 0x%hx",result);
@@ -88,11 +89,11 @@ void MapIoTask::connect(unsigned timeout) {
     kill(getpid(),17);
   }
   if( timeout > 0 ) {
-    __map_trace__("pause self and wait map initialization");
+    __map_warn__("pause self and wait map initialization");
     sleep(timeout);
   }
 
-  __map_trace__("Binding subsystems");
+  __map_warn__("Binding subsystems");
   
   result = Et96MapBindReq(MY_USER_ID, SSN);
   if (result!=ET96MAP_E_OK) {
@@ -127,17 +128,17 @@ void MapIoTask::init(unsigned timeout)
 void MapIoTask::disconnect()
 {
   USHORT_T result;
-  __map_trace__("disconnect from MAP stack");
+  __map_warn__("disconnect from MAP stack");
   __global_bind_counter = 0;
   
   result = Et96MapUnbindReq(SSN);
   if ( result != ET96MAP_E_OK) {
-    __map_trace2__("error at Et96MapUnbindReq SSN=%d errcode 0x%hx",SSN,result);
+    __map_warn2__("error at Et96MapUnbindReq SSN=%d errcode 0x%hx",SSN,result);
   }
   
   result = Et96MapUnbindReq(USSD_SSN);
   if ( result != ET96MAP_E_OK) {
-    __map_trace2__("error at Et96MapUnbindReq SSN=%d errcode 0x%hx",USSD_SSN,result);
+    __map_warn2__("error at Et96MapUnbindReq SSN=%d errcode 0x%hx",USSD_SSN,result);
   }
   
   result = MsgRel(MY_USER_ID,ETSIMAP_ID);
@@ -158,7 +159,7 @@ void MapIoTask::disconnect()
 void MapIoTask::deinit( bool connected )
 {
   USHORT_T result;
-  __map_trace__("deinitialize MAP_PROXY");
+  __map_warn__("deinitialize MAP_PROXY");
   {
     MutexGuard mapMutexGuard(mapMutex);
     MapDialogContainer::destroyInstance();
@@ -202,7 +203,7 @@ void MapIoTask::dispatcher()
     
     if ( result == MSG_TIMEOUT ) {
       if ( __global_bind_counter == CORRECT_BIND_COUNTER ) continue;
-      __map_trace2__("MAP:: check binders %d", bindTimer);
+      __map_warn2__("MAP:: check binders %d", bindTimer);
       if ( ++bindTimer <= MAX_BIND_TIMEOUT ) continue;
       __map_warn2__("MAP:: not all binders binded in %d seconds. Restarting...", MAX_BIND_TIMEOUT);
       if ( !isStopping ) {
@@ -317,22 +318,22 @@ void MapIoTask::dispatcher()
 #else
 void MapIoTask::connect(unsigned)
 {
-  __map_trace__("MapIoTask::connect: no map stack on this platform");
+  __map_warn__("MapIoTask::connect: no map stack on this platform");
 }
 
 void MapIoTask::init(unsigned)
 {
-  __map_trace__("MapIoTask::init: no map stack on this platform");
+  __map_warn__("MapIoTask::init: no map stack on this platform");
 }
 
 void MapIoTask::disconnect()
 {
-  __map_trace__("MapIoTask::disconnect: no map stack on this platform");
+  __map_warn__("MapIoTask::disconnect: no map stack on this platform");
 }
 
 void MapIoTask::deinit(bool)
      {
-  __map_trace__("MapIoTask::deinit: no map stack on this platform");
+  __map_warn__("MapIoTask::deinit: no map stack on this platform");
 }
 
 void MapIoTask::dispatcher()
