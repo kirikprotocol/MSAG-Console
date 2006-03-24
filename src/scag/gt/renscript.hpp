@@ -486,19 +486,30 @@ static JSBool _initBillInstance(JSContext *cx, JSObject *obj, uintN argc, jsval 
 
 static JSBool _updaterule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-     int ruleId=JSVAL_TO_INT(argv[0]);
-     engine->updateRule(ruleId);
+     int serviceid=JSVAL_TO_INT(argv[0]);
+	 RuleKey rk;
+	 rk.serviceId=serviceid;
+	 rk.transport=1;//smpp
+	 
+	 SCAG_TRY 
+     
+	 engine->updateRule(rk);
+
+	 SCAG_CATCH
  
  return JS_TRUE;
 }  
 
 static JSBool _deleterule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-     int ruleId=JSVAL_TO_INT(argv[0]);
+     int serviceid=JSVAL_TO_INT(argv[0]);
+	 RuleKey rk;
+	 rk.serviceId=serviceid;
+	 rk.transport=1;//smpp
 
 	SCAG_TRY  
 		
-     engine->removeRule(ruleId);
+     engine->removeRule(rk);
      *rval=BOOLEAN_TO_JSVAL(true);
 
 	SCAG_CATCH 

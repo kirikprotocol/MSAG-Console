@@ -77,7 +77,6 @@ private:
 	int QueueLength;
 	int Port;
 	bool checkQueue();
-	bool retrieveConnect();
 	bool connect(std::string host,int port,int timeout);
 	bool processEvent(void * ev);
 	

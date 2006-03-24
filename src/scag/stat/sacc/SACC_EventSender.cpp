@@ -121,49 +121,25 @@ bool EventSender::processEvent(void *ev)
 bool EventSender::checkQueue()
 {
 	void * ev;
-	if(eventsQueue.Pop(ev,100))
+	if(!bConnected)
 	{
-		if(ev)
-		{	
-			processEvent(ev);
-		   	
-		}
-
-		return true;
-	}
-	else
-	{
-		return false;
-	}
-	
-
-}
-
-bool EventSender::retrieveConnect()
-{
-	
-	if(SaccSocket.canWrite())
-	{
-		bConnected=true;
-		return true;
-	}
-	else
-	{
-		SaccSocket.Abort();
-		
-		if(connect(Host,Port,100))
+		if(eventsQueue.Pop(ev,100))
 		{
-			bConnected=true;
-			return true;
+			if(ev)
+			{	
+				processEvent(ev);
+		   	
+			}
+
+		return true;
 		}
-		
+	
 	}
-
-	bConnected=false;
+	
 	return false;
-
-		
 }
+
+
 
 int EventSender::Execute()
 {
@@ -185,6 +161,7 @@ int EventSender::Execute()
 
 		
 	}
+	smsc_log_debug("EventSender stopped.");
 	return 1;
 
 }
