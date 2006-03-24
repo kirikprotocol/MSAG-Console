@@ -586,6 +586,7 @@ bool Session::startOperation(SCAGCommand& cmd)
 
     case CO_RECEIPT_DELIVER_SM:
         {
+            AddNewOperationToHash(cmd, m_SmppDiscriptor.cmdType);
         }
 
 
