@@ -36,10 +36,7 @@ public class RuleManager
   private final Map smpprules = Collections.synchronizedMap(new HashMap());
   private final Map httprules = Collections.synchronizedMap(new HashMap());
   private final Map mmsrules = Collections.synchronizedMap(new HashMap());
-  private final LinkedList baseSchema = new LinkedList();
-  private final LinkedList smppSchema = new LinkedList();
-  private final LinkedList httpSchema = new LinkedList();
-  private final LinkedList mmsSchema = new LinkedList();
+  private final Map schemas = Collections.synchronizedMap(new HashMap());
   private final File rulesFolder;
   private final File xsdFolder;
   private final File xslFolder;
@@ -98,25 +95,31 @@ public class RuleManager
       loadFromFolder(Transport.SMPP_TRANSPORT_NAME, smpprules);
       loadFromFolder(Transport.HTTP_TRANSPORT_NAME, httprules);
       loadFromFolder(Transport.MMS_TRANSPORT_NAME, mmsrules);
-      loadSchema("rules.xsd", baseSchema);
-      loadSchema(Transport.SMPP_SCHEMA_NAME, smppSchema);
-      loadSchema(Transport.HTTP_SCHEMA_NAME, httpSchema);
-      loadSchema(Transport.MMS_SCHEMA_NAME, mmsSchema);
+      loadSchemas();
     } catch (SibincoException e) {
       e.printStackTrace();
       System.out.println("error on init RuleManager in method load(): "+e.getMessage());
       throw new SibincoException(e.getMessage());
     }
   }
-  private void loadSchema(String schemaname, LinkedList schema)
+  private void loadSchemas()
   {
+     String[] schemasfiles = xsdFolder.list(new FilenameFilter(){
+       public boolean accept(File dir, String name){
+         return (name.endsWith(".xsd") || name.endsWith(".dtd"));
+       }
+     });
+     //System.out.println("schemasfiles: "+Arrays.asList(schemasfiles));
      InputStream in = null; BufferedReader br = null;
+     for(int i = 0; i<schemasfiles.length;i++) {
      try {
-     in = new FileInputStream(new File(xsdFolder,schemaname));
+     LinkedList schema = new LinkedList();
+     in = new FileInputStream(new File(xsdFolder,schemasfiles[i]));
      br = new BufferedReader(new InputStreamReader(in));
      String line;
      while ((line=br.readLine())!=null)
        schema.add(line);
+       schemas.put(schemasfiles[i],schema);
      } catch (FileNotFoundException e) {
        e.printStackTrace();
      } catch (IOException io) {
@@ -130,6 +133,7 @@ public class RuleManager
          e.printStackTrace();
        }
      }
+    }
   }
 
   public void loadFromFolder(String _transportDir, Map transportMap) throws SibincoException
@@ -217,10 +221,7 @@ public class RuleManager
 
    public LinkedList getSchema(String requestedScheme)
    {
-    if (requestedScheme.indexOf(Transport.SMPP_SCHEMA_NAME)!=-1) return smppSchema;
-    else if (requestedScheme.indexOf(Transport.HTTP_SCHEMA_NAME)!=-1) return httpSchema;
-    else if (requestedScheme.indexOf(Transport.MMS_SCHEMA_NAME)!=-1) return mmsSchema;
-    return baseSchema;
+     return (LinkedList)schemas.get(requestedScheme);
    }
 
  public synchronized LinkedList AddRule(BufferedReader r, final String ruleId, final Rule newRule) throws SibincoException, IOException

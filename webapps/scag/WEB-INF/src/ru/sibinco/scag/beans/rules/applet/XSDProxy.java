@@ -20,7 +20,9 @@ public class XSDProxy extends HttpServlet{
     PrintWriter out = resp.getWriter();
     SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
     //System.out.println("req.getRequestURI() = " + req.getRequestURI());
-    LinkedList xsd = appContext.getRuleManager().getSchema(req.getRequestURI());
+    String[] parsedURI = req.getRequestURI().split("/");
+    String requestedFile = parsedURI[parsedURI.length-1];
+    LinkedList xsd = appContext.getRuleManager().getSchema(requestedFile);
     for (Iterator i = xsd.iterator();i.hasNext();) {
     out.println(i.next());
     }
