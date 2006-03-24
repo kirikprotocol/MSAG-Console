@@ -597,7 +597,7 @@ bool Session::startOperation(SCAGCommand& cmd)
 
 
     }
-    smsc_log_error(logger,"** Session: operation started, Pending: %d-%d, Operations: %s",PendingOperationList.size(),PrePendingOperationList.size(), OperationsHash.Count());
+    smsc_log_error(logger,"** Session: operation started, Pending: %d-%d, Operations: %d",PendingOperationList.size(),PrePendingOperationList.size(), OperationsHash.Count());
    
     return true;
 }
