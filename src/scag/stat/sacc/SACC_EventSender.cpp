@@ -30,7 +30,7 @@ EventSender::EventSender()
 EventSender::~EventSender()
 {
 	evReconnect.notify();
-	bStarted =false;
+	 
 }
 
 
@@ -199,6 +199,10 @@ void EventSender::Start()
 	Thread::Start();
 }
  
+void EventSender::Stop()
+{
+	evReconnect.notify();
+}
 void EventSender::Put (const SACC_ALARM_t& ev)
 {
 	SACC_ALARM_t* pEv = new SACC_ALARM_t(ev);

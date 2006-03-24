@@ -67,6 +67,7 @@ public:
 	void Put(const SACC_ALARM_t & ev);
 
 	void Start();
+	void Stop();
 	void init(std::string& host,int port,int timeout,int queuelen,bool * bf,smsc::logger::Logger * lg);
 private:
 

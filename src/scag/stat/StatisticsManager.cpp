@@ -487,7 +487,7 @@ void StatisticsManager::Stop()
     smsc_log_debug(logger, "PerformanceServer is shutdowned");
 
 
-	//thrSaccSender.Stop();
+    thrSaccSender.Stop();
 
 
     if (isStarted)
