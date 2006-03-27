@@ -487,6 +487,8 @@ void DaemonCommandDispatcher::putServiceToConfig(const ServiceInfo& info)
   configManager->setString((serviceSectionName + ".args").c_str(), info.args.c_str());
   configManager->setBool((serviceSectionName + ".autostart").c_str(), info.autoStart);
   configManager->setString((serviceSectionName + ".hostName").c_str(), info.hostName.c_str());
+  configManager->setString((serviceSectionName + ".preferedNode").c_str(),info.preferedNode.c_str());
+  configManager->setString((serviceSectionName + ".serviceType").c_str(),info.serviceType==ServiceInfo::failover?"failover":"standalone");
   configManager->save();
   smsc_log_debug(logger, "new config saved");
 }
