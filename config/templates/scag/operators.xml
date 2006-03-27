@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<!DOCTYPE operators SYSTEM "file://operators.dtd">
+<!DOCTYPE operators SYSTEM "operators.dtd">
 
 <operators>
     <param name="last used operator id" type="int">3</param>
