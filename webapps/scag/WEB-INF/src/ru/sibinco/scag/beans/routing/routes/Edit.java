@@ -387,7 +387,10 @@ public class Edit extends EditBean{//TabledEditBeanImpl {
     }
 
     public List getAllSmes() {
-        return new SortedList(appContext.getSmppManager().getSvcs().keySet());
+        SortedList list = new SortedList();
+        list.addAll(appContext.getSmppManager().getSvcs().keySet());
+        list.addAll(appContext.getSmppManager().getCenters().keySet());
+        return list;
     }
 
     public List getAllUncheckedSrcSubjects() {
