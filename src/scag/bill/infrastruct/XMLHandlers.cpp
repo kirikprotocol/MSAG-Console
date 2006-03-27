@@ -4,6 +4,7 @@
 #include <xercesc/sax/SAXParseException.hpp>
 
 #include "XMLHandlers.h"
+#include <locale.h>
 
 namespace scag { namespace bill { namespace infrastruct {
 
@@ -194,7 +195,7 @@ void XMLTariffMatrixHandler::characters(const XMLCh *const chrs, const unsigned 
     memcpy(chars, chrs, cnt * sizeof(XMLCh));
     chars[cnt] = 0;
     StrX q(chars);
-    const char *str = q.localForm();
+    char *str = (char*)q.localForm();
 
     if(media_type_tag == 2)
         media_type_id = atoi(str);
@@ -211,8 +212,7 @@ void XMLTariffMatrixHandler::characters(const XMLCh *const chrs, const unsigned 
     else if(bill_tag == 5)
         bill_service_number = atoi(str);
     else if(bill_tag == 6)
-        bill_price = atoi(str);
-//        bill_price = atof(str);
+        bill_price = atof(str);
     else if(bill_tag == 7)
         bill_currency = str;
 }
@@ -299,7 +299,7 @@ void XMLTariffMatrixHandler::endElement(const XMLCh* const nm)
                     !bill_service_number || bill_currency.length() == 0 || !bill_operator_id)
                     throw Exception("Invalid XML <billing> record");
             
-                TariffRec tr(bill_price, bill_service_number, bill_currency);
+                TariffRec tr(bill_service_number, bill_price, bill_currency);
 
                 uint32_t id = (bill_category_id & 0x1ff) << 23;
                 id |= (bill_media_type_id & 0x1FF) << 14;
@@ -339,6 +339,10 @@ void XMLTariffMatrixHandler::warning(const SAXParseException& e)
     StrX msg(e.getMessage());
     smsc_log_error(logger,"Warning at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
 }
+
+#undef CATEGORY_TAGS_SZ
+#undef MEDIA_TYPE_TAGS_SZ
+#undef BILL_TAGS_SZ
 
 }}}
 

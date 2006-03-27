@@ -20,11 +20,12 @@ XERCES_CPP_NAMESPACE_USE
 
 class TariffRec{
 public:
-    uint32_t Price, ServiceNumber;
+    double Price;
+    uint32_t ServiceNumber;
     std::string Currency;
 
     TariffRec() {};
-    TariffRec(uint32_t pr, uint32_t sn, const std::string& c):Price(pr), ServiceNumber(sn), Currency(c) {};
+    TariffRec(uint32_t sn, double pr, const std::string& c):Price(pr), ServiceNumber(sn), Currency(c) {};
 
     TariffRec& operator=(const TariffRec& sm)
     {
@@ -79,7 +80,8 @@ class XMLTariffMatrixHandler : public HandlerBase
     std::string media_type_name, category_name;
     XMLCh chars[1024];
     uint8_t media_type_tag, category_tag, bill_tag;
-    uint32_t bill_service_number, bill_price, bill_category_id, bill_media_type_id, bill_operator_id;
+    uint32_t bill_service_number, bill_category_id, bill_media_type_id, bill_operator_id;
+    double bill_price;
     std::string bill_currency;
 
     void characters(const XMLCh *const chrs, const unsigned int length);
