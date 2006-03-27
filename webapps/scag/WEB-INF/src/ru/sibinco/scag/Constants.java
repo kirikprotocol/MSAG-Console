@@ -45,6 +45,7 @@ public class Constants {
 
             public interface routes {
                 public static final Constants ROUTE_ALREADY_EXISTS = new Constants("error.routing.routes.route_already_exists");
+                public static final Constants COULD_NOT_CREATE = new Constants("error.routing.routes.could_not_create");
                 public static final Constants DEST_SUBJ_NOT_FOUND = new Constants("error.routing.routes.dest_subj_not_found");
                 public static final Constants SME_NOT_FOUND = new Constants("error.routing.routes.sme_not_found");
                 public static final Constants COULD_NOT_CREATE_DESTINATION = new Constants("error.routing.routes.could_not_create_destination");

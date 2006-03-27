@@ -6,6 +6,7 @@ import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.lib.backend.users.User;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.endpoints.svc.Svc;
+import ru.sibinco.scag.backend.endpoints.centers.Center;
 import ru.sibinco.scag.backend.routing.Destination;
 import ru.sibinco.scag.backend.routing.Route;
 import ru.sibinco.scag.backend.routing.Source;
@@ -102,12 +103,15 @@ public class Edit extends EditBean{//TabledEditBeanImpl {
 
                 final String smeId = smeName.toString();
 
-                final Svc sme = (Svc) appContext.getSmppManager().getSvcs().get(smeId);
-                if (null == sme)
+                final Svc svc = (Svc) appContext.getSmppManager().getSvcs().get(smeId);
+                final Center center = (Center) appContext.getSmppManager().getCenters().get(smeId);
+                if (svc == null && center == null ){
                     throw new SCAGJspException(Constants.errors.routing.routes.SME_NOT_FOUND, smeId);
+                }
+
 
                 try {
-                    final Destination destination = new Destination(subj, sme);
+                    final Destination destination = svc == null ? new Destination(subj, center) : new Destination(subj, svc);
                     destinations.put(destination.getName(), destination);
                 } catch (SibincoException e) {
                     logger.debug("Could not create destination", e);
@@ -133,12 +137,13 @@ public class Edit extends EditBean{//TabledEditBeanImpl {
 
                     final String smeId = smeName.toString();
 
-                    final Svc sme = (Svc) appContext.getSmppManager().getSvcs().get(smeId);
-                    if (null == sme)
+                    final Svc svc = (Svc) appContext.getSmppManager().getSvcs().get(smeId);
+                    final Center center = (Center) appContext.getSmppManager().getCenters().get(smeId);
+                    if (null == svc && center == null)
                         throw new SCAGJspException(Constants.errors.routing.routes.SME_NOT_FOUND, smeId);
 
                     try {
-                        final Destination destination = new Destination(mask, sme);
+                        final Destination destination = svc == null ? new Destination(mask, center) : new Destination(mask, svc);
                         destinations.put(destination.getName(), destination);
                     } catch (SibincoException e) {
                         logger.debug("Could not create destination", e);
@@ -156,11 +161,12 @@ public class Edit extends EditBean{//TabledEditBeanImpl {
                 logger.debug("Could not create destination mask", e);
                 throw new SCAGJspException(Constants.errors.routing.routes.COULD_NOT_CREATE_DESTINATION_MASK, new_dstMask, e);
             }
-            final Svc sme = (Svc) appContext.getSmppManager().getSvcs().get(new_dst_mask_sme_);
-            if (null == sme)
+            final Svc svc = (Svc) appContext.getSmppManager().getSvcs().get(new_dst_mask_sme_);
+            final Center center = (Center) appContext.getSmppManager().getCenters().get(new_dst_mask_sme_);
+            if (null == svc && center == null)
                 throw new SCAGJspException(Constants.errors.routing.routes.SME_NOT_FOUND, new_dst_mask_sme_);
             try {
-                final Destination destination = new Destination(mask, sme);
+                final Destination destination = svc == null ? new Destination(mask, center) : new Destination(mask, svc);
                 destinations.put(destination.getName(), destination);
                 if (0 < appContext.getSmppManager().getSvcs().size())
                     new_dst_mask_sme_ = (String) appContext.getSmppManager().getSvcs().keySet().iterator().next();
@@ -260,8 +266,8 @@ public class Edit extends EditBean{//TabledEditBeanImpl {
                                 serviceObj, notes));
             }
         } catch (SibincoException e) {
-            logger.error("Could not create new subject", e);
-            throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_CREATE, e);
+            logger.error("Could not create new route", e);
+            throw new SCAGJspException(Constants.errors.routing.routes.COULD_NOT_CREATE, e);
         }
         appContext.getScagRoutingManager().setRoutesChanged(true);
         appContext.getScagRoutingManager().setChangedByUser(getUser(appContext).getName());
@@ -415,7 +421,7 @@ public class Edit extends EditBean{//TabledEditBeanImpl {
             for (Iterator i = route.getDestinations().values().iterator(); i.hasNext();) {
                 final Destination destination = (Destination) i.next();
                 if (destination.isSubject())
-                    result.put(destination.getName(), destination.getSvc().getId());
+                    result.put(destination.getName(), destination.getSvc() == null ? destination.getCenter().getId() : destination.getSvc().getId());
             }
             return result;
         }
@@ -429,7 +435,7 @@ public class Edit extends EditBean{//TabledEditBeanImpl {
             for (Iterator i = route.getDestinations().values().iterator(); i.hasNext();) {
                 final Destination destination = (Destination) i.next();
                 if (!destination.isSubject())
-                    result.put(destination.getName(), destination.getSvc().getId());
+                    result.put(destination.getName(), destination.getSvc() == null ? destination.getCenter().getId() : destination.getSvc().getId());
             }
             return result;
         }
