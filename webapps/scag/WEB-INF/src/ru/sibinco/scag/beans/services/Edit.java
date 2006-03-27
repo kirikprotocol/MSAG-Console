@@ -104,7 +104,7 @@ public class Edit extends TabledEditBeanImpl {
     protected void save() throws SCAGJspException {
         final ServiceProvidersManager serviceProvidersManager = appContext.getServiceProviderManager();
         if (isAdd()) {
-            id = serviceProvidersManager.createServiceProvider(name, description);
+            id = serviceProvidersManager.createServiceProvider(name, description = (description==null)?"":description);
         } else {
             serviceProvidersManager.updateServiceProvider(id, name, description);
         }

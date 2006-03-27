@@ -137,7 +137,7 @@ public class Edit extends TabledEditBeanImpl {
 
     protected void save() throws SCAGJspException {
         final ServiceProvidersManager serviceProvidersManager = appContext.getServiceProviderManager();
-
+        if (description==null) description = "";
         if (getEditId() == null) {
             Service service = new Service(name, description);
             id = serviceProvidersManager.createService(Long.decode(getParentId()).longValue(), service);
