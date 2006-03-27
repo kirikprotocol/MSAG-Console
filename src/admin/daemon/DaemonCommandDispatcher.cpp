@@ -119,10 +119,10 @@ public:
     __trace2__("ChildShutdownWaiter : waiter \"%s\" %d FINISHED", serviceId, pid);
     return 0;
   }
-  
+
   const char * const getServiceId() const {return serviceId;}
   const bool isStopped() const {return isStopped_;}
-  
+
   static void startService(const char * const serviceId)
   {
     __trace2__("ChildShutdownWaiter : start service \"%s\"", serviceId);
@@ -134,7 +134,7 @@ public:
     newWaiter->Start();
     __trace2__("ChildShutdownWaiter : start service \"%s\" finished", serviceId);
   }
-  
+
   static void cleanStoppedWaiters()
   {
     struct __local__ {
@@ -154,7 +154,7 @@ public:
     if ( new_end != startedWaiters.end() ) startedWaiters.erase( new_end, startedWaiters.end() );
     __trace__("ChildShutdownWaiter : clean stopped waiters finished");
   }
-  
+
   static void stopWaiters()
   {
     __trace__("ChildShutdownWaiter::stopWaiters");
@@ -450,7 +450,7 @@ void DaemonCommandDispatcher::addServicesFromConfig()
       const char * fullServiceSection = i->c_str();
       const char * dotpos = strrchr(fullServiceSection, '.');
       //const size_t serviceNameBufLen = strlen(dotpos+1) +1;
-      std::auto_ptr<char> serviceId(decodeDot(cStringCopy(dotpos+1)));
+      std::auto_ptr<char> serviceId(cStringCopy(decodeDot(dotpos+1).c_str()));
 
       std::string prefix(fullServiceSection);
       prefix += '.';
@@ -589,7 +589,7 @@ void DaemonCommandDispatcher::stopAllServices(unsigned int timeoutInSecs)
       services.First();
       while (services.Next(serviceId, servicePtr) != 0)
       {
-        if ((servicePtr != NULL) && (servicePtr->getStatus() != Service::stopped)) 
+        if ((servicePtr != NULL) && (servicePtr->getStatus() != Service::stopped))
           allShutdowned = false;
       }
     }
