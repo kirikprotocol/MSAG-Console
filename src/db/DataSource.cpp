@@ -444,7 +444,13 @@ int WatchDog::startTimer(Connection* connection, uint32_t timeout)
     }
     
     MutexGuard  guard(timersLock);
-    int timer = (timers.empty()) ? 0:(timers.end()->first+1);
+    int timer = 0;
+    if(!timers.empty())
+    {
+      TimersMap::iterator it=timers.end();
+      it--;
+      timer = it->first+1;
+    }
     timers.insert(TimersPair(timer, 
                     ConnectionDeadline(connection, time(NULL)+timeout)));
     __trace2__("DS WatchDog> Timer #%u start for connection %x timeout=%d",
