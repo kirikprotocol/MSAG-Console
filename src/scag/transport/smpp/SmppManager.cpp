@@ -221,6 +221,8 @@ void SmppManager::Init(const char* cfgFile)
   ParseTag(this,list,etService);
   list = elem->getElementsByTagName(XmlStr("smscrecord"));
   ParseTag(this,list,etSmsc);
+  
+  LoadRoutes("conf/routes.xml");
   running=true;
 
   int stmCnt=scag::config::ConfigManager::Instance().getConfig()->getInt("core.state_machines_count");
