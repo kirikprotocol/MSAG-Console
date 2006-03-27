@@ -3,7 +3,6 @@
 #
 #
 #
-
 # to compile with sun compiler, use CXX=CC
 ifndef CXX
 CXX:=CC
@@ -147,6 +146,12 @@ CXXFLAGS := $(CXXFLAGS) -O2 -finline-limit=2048 -DDISABLE_ANY_CHECKS
 endif
 endif
 endif
+endif
+
+ifeq ($(UNICODE),YES)
+CFLAGS := $(CFLAGS) -DUNICODE
+CXXFLAGS := $(CXXFLAGS) -DUNICODE
+export UNICODE
 endif
 
 ifdef ASSERT
