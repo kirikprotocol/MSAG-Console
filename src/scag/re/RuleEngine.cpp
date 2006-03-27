@@ -393,7 +393,7 @@ RuleStatus RuleEngineImpl::process(SCAGCommand& command, Session& session)
         rs = (*rulePtr)->process(command, session);
     } 
     else
-        throw RuleEngineException(0,"Cannot process Rule with ID = %d : Rule not found%s", key.serviceId);
+        throw RuleEngineException(0,"Cannot process Rule with ID=%d: Rule not found", key.serviceId);
 
         
     return rs;
