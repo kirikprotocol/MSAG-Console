@@ -77,12 +77,14 @@ inline char * encode(const char * const src)
   return result;
 }
 
-inline char* decodeDot(char * str)
+inline std::string decodeDot(std::string str)
 {
-  for (char *p = str; *p != 0; p++)
+  for (int i=0;i<str.length();i++)
   {
-    if (*p == ENCODE_DECODE_ESCAPE_CHAR)
-      *p = '.';
+    if (str.at(i) == ENCODE_DECODE_ESCAPE_CHAR)
+    {
+      str[i]='.';
+    }
   }
   return str;
 }
