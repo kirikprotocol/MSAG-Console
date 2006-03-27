@@ -106,7 +106,7 @@ char * ServicesList::getText() const
       result += "unknown";
     }
     result += "\"";
-    result+="node=\""+(localStatus?icon->getLocalNode():icon->getRemoteNode())+"\"";
+    result+=" node=\""+(localStatus?icon->getLocalNode():icon->getRemoteNode())+"\"";
     result+="/>\n";
   }
   return cStringCopy(result.c_str());
