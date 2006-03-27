@@ -2,8 +2,7 @@
                  java.util.List" %><%@
     include file="/WEB-INF/inc/localization.jsp" %><jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.services.Statuses" /><%!
     String CPATH = "/smsc";
-%><%@
-    include file="/WEB-INF/inc/show_sme_status.jsp" %><%
+%><%@ include file="/WEB-INF/inc/show_sme_status.jsp" %><%
 
   CPATH = request.getContextPath() + "/smsc";
 

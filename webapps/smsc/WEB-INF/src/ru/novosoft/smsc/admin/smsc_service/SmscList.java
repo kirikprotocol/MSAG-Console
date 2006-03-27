@@ -23,65 +23,66 @@ import java.util.Set;
  */
 
 public final class SmscList {
-	private final Category logger = Category.getInstance(this.getClass());
-	private Smsc smsc = null;
-	public static final Map nodeName2Id = new HashMap();
-	public static final Map id2NodeName = new HashMap();
+    private final Category logger = Category.getInstance(this.getClass());
+    private Smsc smsc = null;
+    public static final Map nodeName2Id = new HashMap();
+    public static final Map id2NodeName = new HashMap();
 
-	public static byte getNodeId(String nodename) {
-		String idStr = (String) nodeName2Id.get(nodename);
-		return Byte.parseByte(idStr);
-	}
+    public static byte getNodeId(String nodename) {
+        String idStr = (String) nodeName2Id.get(nodename);
+        if (idStr != null) return Byte.parseByte(idStr);
+        else return 0;
+    }
 
-	public static String getNodeFromId(byte nodeId) {
-		return (String) id2NodeName.get(String.valueOf(nodeId));
-	}
+    public static String getNodeFromId(byte nodeId) {
+        return (String) id2NodeName.get(String.valueOf(nodeId));
+    }
 
-	public SmscList(final Config webappConfig, SMSCAppContext smscAppContext) throws AdminException {
-		Set nodeNames = webappConfig.getSectionChildSectionNames("nodes");
-		logger.debug("Initializing SMSC list ");
+    public SmscList(final Config webappConfig, SMSCAppContext smscAppContext) throws AdminException {
+        Set nodeNames = webappConfig.getSectionChildSectionNames("nodes");
+        logger.debug("Initializing SMSC list ");
 
-		try {
-			for (Iterator i = nodeNames.iterator(); i.hasNext();) {
-				String encodedName = (String) i.next();
-				String nodeName = StringEncoderDecoder.decodeDot(encodedName.substring(encodedName.lastIndexOf('.') + 1));
-				String nodeId = webappConfig.getString(encodedName + ".id");
-				nodeName2Id.put(nodeName, nodeId);
-				id2NodeName.put(nodeId, nodeName);
-			}
-			String smscConfFolder = webappConfig.getString("smsc.config folder");
-			WebAppFolders.setSmscConfFolder(new File(smscConfFolder));
-			smsc = new Smsc(Constants.SMSC_SME_ID, webappConfig.getString("smsc.host"), webappConfig.getInt("smsc.port"), smscConfFolder, smscAppContext);
-			logger.debug("SMSC added");
-		}
-		catch (AdminException e) {
-			logger.error("Couldn't add SMSC \"", e);
-			throw e;
-		}
-		catch (Config.ParamNotFoundException e) {
-			logger.debug("Misconfigured SMSC \"", e);
-			throw new AdminException("Miscofigured SMSC");
-		}
-		catch (Config.WrongParamTypeException e) {
-			logger.debug("Misconfigured SMSC \"", e);
-			throw new AdminException("Miscofigured SMSC");
-		}
-		logger.debug("SMSC list initialized");
-		smscAppContext.setSmsc(smsc);
-	}
+        try {
+            for (Iterator i = nodeNames.iterator(); i.hasNext();) {
+                String encodedName = (String) i.next();
+                String nodeName = StringEncoderDecoder.decodeDot(encodedName.substring(encodedName.lastIndexOf('.') + 1));
+                String nodeId = webappConfig.getString(encodedName + ".id");
+                nodeName2Id.put(nodeName, nodeId);
+                id2NodeName.put(nodeId, nodeName);
+            }
+            String smscConfFolder = webappConfig.getString("smsc.config folder");
+            WebAppFolders.setSmscConfFolder(new File(smscConfFolder));
+            smsc = new Smsc(Constants.SMSC_SME_ID, webappConfig.getString("smsc.host"), webappConfig.getInt("smsc.port"), smscConfFolder, smscAppContext);
+            logger.debug("SMSC added");
+        }
+        catch (AdminException e) {
+            logger.error("Couldn't add SMSC \"", e);
+            throw e;
+        }
+        catch (Config.ParamNotFoundException e) {
+            logger.debug("Misconfigured SMSC \"", e);
+            throw new AdminException("Miscofigured SMSC");
+        }
+        catch (Config.WrongParamTypeException e) {
+            logger.debug("Misconfigured SMSC \"", e);
+            throw new AdminException("Miscofigured SMSC");
+        }
+        logger.debug("SMSC list initialized");
+        smscAppContext.setSmsc(smsc);
+    }
 
-	public final Smsc getSmsc() {
-		return smsc;
-	}
+    public final Smsc getSmsc() {
+        return smsc;
+    }
 
-	public final void applyConfig() throws AdminException {
-		try {
-			getSmsc().getSmscConfig().save();
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-			throw new AdminException("Couldn't save Smsc config");
-		}
-	}
+    public final void applyConfig() throws AdminException {
+        try {
+            getSmsc().getSmscConfig().save();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            throw new AdminException("Couldn't save Smsc config");
+        }
+    }
 
 }

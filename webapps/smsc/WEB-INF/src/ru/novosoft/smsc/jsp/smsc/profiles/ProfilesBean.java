@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.jsp.smsc.profiles;
 
 import ru.novosoft.smsc.admin.profiler.Profile;
+import ru.novosoft.smsc.admin.closedgroups.ClosedGroupList;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
@@ -11,250 +12,262 @@ import java.util.List;
 /**
  * Created by igork Date: 11.03.2003 Time: 18:38:02
  */
-public class ProfilesBean extends SmscBean
-{
-  protected String mask = "";
-  protected byte report = Profile.REPORT_OPTION_None;
-  protected byte codepage = Profile.CODEPAGE_Default;
-  protected boolean ussd7bit = false;
-  protected String locale = "";
-  protected List registeredLocales = new LinkedList();
-  protected String returnPath = null;
+public class ProfilesBean extends SmscBean {
+    protected String mask = "";
+    protected byte report = Profile.REPORT_OPTION_None;
+    protected byte codepage = Profile.CODEPAGE_Default;
+    protected boolean ussd7bit = false;
+    protected String locale = "";
+    protected List registeredLocales = new LinkedList();
+    protected ClosedGroupList closedGroups = new ClosedGroupList();
+    protected String returnPath = null;
 
-  protected byte aliasHide = Profile.ALIAS_HIDE_false;
-  protected boolean aliasModifiable = false;
+    protected byte aliasHide = Profile.ALIAS_HIDE_false;
+    protected boolean aliasModifiable = false;
 
-  protected String divert = "";
-  protected boolean divertActiveUnconditional;
-  protected boolean divertActiveAbsent;
-  protected boolean divertActiveBlocked;
-  protected boolean divertActiveBarred;
-  protected boolean divertActiveCapacity;
-  protected boolean divertModifiable = false;
-  protected boolean udhConcat = false;
-  protected boolean translit = false;
+    protected String divert = "";
+    protected boolean divertActiveUnconditional;
+    protected boolean divertActiveAbsent;
+    protected boolean divertActiveBlocked;
+    protected boolean divertActiveBarred;
+    protected boolean divertActiveCapacity;
+    protected boolean divertModifiable = false;
+    protected boolean udhConcat = false;
+    protected boolean translit = false;
 
-  protected int init(final List errors)
-  {
-    final int result = super.init(errors);
-    if (RESULT_OK != result)
-      return result;
+    protected int groupId = 0;
+    protected long inputAccessMask = 4294967295L;
+    protected long outputAccessMask = 4294967295L;
 
-    try {
-      registeredLocales = smsc.getRegisteredLocales();
-    } catch (Throwable e) {
-      logger.error("Couldn't get registered profiles", e);
-      return error(SMSCErrors.error.profiles.couldntGetRegisteredLocales, e);
+    protected String groupName = "";
+
+    protected int init(final List errors) {
+        final int result = super.init(errors);
+        if (RESULT_OK != result)
+            return result;
+
+        try {
+            registeredLocales = smsc.getRegisteredLocales();
+        } catch (Throwable e) {
+            logger.error("Couldn't get registered profiles", e);
+            return error(SMSCErrors.error.profiles.couldntGetRegisteredLocales, e);
+        }
+        try {
+            closedGroups = appContext.getClosedGroupManager().getClosedGroups();
+        } catch (Throwable e) {
+            logger.error("Couldn't get closed group list", e);
+            return error(SMSCErrors.error.profiles.couldntGetRegisteredLocales, e);
+        }
+        return result;
     }
-    return result;
-  }
 
-  public String getMask()
-  {
-    return mask;
-  }
-
-  public void setMask(final String mask)
-  {
-    this.mask = mask;
-  }
-
-  public String getReport()
-  {
-    return Byte.toString(report);
-  }
-
-  public byte getByteReport()
-  {
-    return report;
-  }
-
-  public void setReport(final String report)
-  {
-    try {
-      this.report = Byte.decode(report).byteValue();
-    } catch (NumberFormatException e) {
-      this.report = Profile.REPORT_OPTION_None;
+    public String getMask() {
+        return mask;
     }
-  }
 
-
-  public String getCodepage()
-  {
-    return Byte.toString(codepage);
-  }
-
-  public byte getByteCodepage()
-  {
-    return codepage;
-  }
-
-  public void setCodepage(final String codepage)
-  {
-    try {
-      this.codepage = Byte.decode(codepage).byteValue();
-    } catch (NumberFormatException e) {
-      this.codepage = Profile.CODEPAGE_Default;
+    public void setMask(final String mask) {
+        this.mask = mask;
     }
-  }
 
-  public String getLocale()
-  {
-    return locale;
-  }
+    public String getReport() {
+        return Byte.toString(report);
+    }
 
-  public void setLocale(final String locale)
-  {
-    this.locale = locale;
-  }
+    public byte getByteReport() {
+        return report;
+    }
 
-  public List getRegisteredLocales()
-  {
-    return registeredLocales;
-  }
+    public void setReport(final String report) {
+        try {
+            this.report = Byte.parseByte(report);
+        } catch (NumberFormatException e) {
+            this.report = Profile.REPORT_OPTION_None;
+        }
+    }
 
-  public byte getAliasHideByte()
-  {
-    return aliasHide;
-  }
 
-  public String getAliasHide()
-  {
-    return Profile.getAliasHideString(aliasHide);
-  }
+    public String getCodepage() {
+        return Byte.toString(codepage);
+    }
 
-  public void setAliasHide(final String aliasHide)
-  {
-    if ("true".equalsIgnoreCase(aliasHide) || "hide".equalsIgnoreCase(aliasHide))
-      this.aliasHide = Profile.ALIAS_HIDE_true;
-    else if ("false".equalsIgnoreCase(aliasHide))
-      this.aliasHide = Profile.ALIAS_HIDE_false;
-    else if ("substitute".equalsIgnoreCase(aliasHide))
-      this.aliasHide = Profile.ALIAS_HIDE_substitute;
-  }
+    public byte getByteCodepage() {
+        return codepage;
+    }
 
-  public boolean isAliasModifiable()
-  {
-    return aliasModifiable;
-  }
+    public void setCodepage(final String codepage) {
+        try {
+            this.codepage = Byte.decode(codepage).byteValue();
+        } catch (NumberFormatException e) {
+            this.codepage = Profile.CODEPAGE_Default;
+        }
+    }
 
-  public void setAliasModifiable(final boolean aliasModifiable)
-  {
-    this.aliasModifiable = aliasModifiable;
-  }
+    public String getLocale() {
+        return locale;
+    }
 
-  public void setAliasModifiable(final String aliasModifiable)
-  {
-    this.aliasModifiable = "true".equalsIgnoreCase(aliasModifiable) || "modifiable".equalsIgnoreCase(aliasModifiable);
-  }
+    public void setLocale(final String locale) {
+        this.locale = locale;
+    }
 
-  public String getReturnPath()
-  {
-    return returnPath;
-  }
+    public List getRegisteredLocales() {
+        return registeredLocales;
+    }
 
-  public void setReturnPath(final String returnPath)
-  {
-    this.returnPath = returnPath;
-  }
+    public byte getAliasHideByte() {
+        return aliasHide;
+    }
 
-  public String getDivert()
-  {
-    return divert;
-  }
+    public String getAliasHide() {
+        return Profile.getAliasHideString(aliasHide);
+    }
 
-  public void setDivert(final String divert)
-  {
-    this.divert = divert;
-  }
+    public void setAliasHide(final String aliasHide) {
+        if ("true".equalsIgnoreCase(aliasHide) || "hide".equalsIgnoreCase(aliasHide))
+            this.aliasHide = Profile.ALIAS_HIDE_true;
+        else if ("false".equalsIgnoreCase(aliasHide))
+            this.aliasHide = Profile.ALIAS_HIDE_false;
+        else if ("substitute".equalsIgnoreCase(aliasHide))
+            this.aliasHide = Profile.ALIAS_HIDE_substitute;
+    }
 
-  public boolean isDivertModifiable()
-  {
-    return divertModifiable;
-  }
+    public boolean isAliasModifiable() {
+        return aliasModifiable;
+    }
 
-  public void setDivertModifiable(final boolean divertModifiable)
-  {
-    this.divertModifiable = divertModifiable;
-  }
+    public void setAliasModifiable(final boolean aliasModifiable) {
+        this.aliasModifiable = aliasModifiable;
+    }
 
-  public boolean isUssd7bit()
-  {
-    return ussd7bit;
-  }
+    public void setAliasModifiable(final String aliasModifiable) {
+        this.aliasModifiable = "true".equalsIgnoreCase(aliasModifiable) || "modifiable".equalsIgnoreCase(aliasModifiable);
+    }
 
-  public void setUssd7bit(final boolean ussd7bit)
-  {
-    this.ussd7bit = ussd7bit;
-  }
+    public String getReturnPath() {
+        return returnPath;
+    }
 
-  public boolean isDivertActiveUnconditional()
-  {
-    return divertActiveUnconditional;
-  }
+    public void setReturnPath(final String returnPath) {
+        this.returnPath = returnPath;
+    }
 
-  public void setDivertActiveUnconditional(final boolean divertActiveUnconditional)
-  {
-    this.divertActiveUnconditional = divertActiveUnconditional;
-  }
+    public String getDivert() {
+        return divert;
+    }
 
-  public boolean isDivertActiveAbsent()
-  {
-    return divertActiveAbsent;
-  }
+    public void setDivert(final String divert) {
+        this.divert = divert;
+    }
 
-  public void setDivertActiveAbsent(final boolean divertActiveAbsent)
-  {
-    this.divertActiveAbsent = divertActiveAbsent;
-  }
+    public boolean isDivertModifiable() {
+        return divertModifiable;
+    }
 
-  public boolean isDivertActiveBlocked()
-  {
-    return divertActiveBlocked;
-  }
+    public void setDivertModifiable(final boolean divertModifiable) {
+        this.divertModifiable = divertModifiable;
+    }
 
-  public void setDivertActiveBlocked(final boolean divertActiveBlocked)
-  {
-    this.divertActiveBlocked = divertActiveBlocked;
-  }
+    public boolean isUssd7bit() {
+        return ussd7bit;
+    }
 
-  public boolean isDivertActiveBarred()
-  {
-    return divertActiveBarred;
-  }
+    public void setUssd7bit(final boolean ussd7bit) {
+        this.ussd7bit = ussd7bit;
+    }
 
-  public void setDivertActiveBarred(final boolean divertActiveBarred)
-  {
-    this.divertActiveBarred = divertActiveBarred;
-  }
+    public boolean isDivertActiveUnconditional() {
+        return divertActiveUnconditional;
+    }
 
-  public boolean isDivertActiveCapacity()
-  {
-    return divertActiveCapacity;
-  }
+    public void setDivertActiveUnconditional(final boolean divertActiveUnconditional) {
+        this.divertActiveUnconditional = divertActiveUnconditional;
+    }
 
-  public void setDivertActiveCapacity(final boolean divertActiveCapacity)
-  {
-    this.divertActiveCapacity = divertActiveCapacity;
-  }
+    public boolean isDivertActiveAbsent() {
+        return divertActiveAbsent;
+    }
 
-  public boolean isUdhConcat()
-  {
-    return udhConcat;
-  }
+    public void setDivertActiveAbsent(final boolean divertActiveAbsent) {
+        this.divertActiveAbsent = divertActiveAbsent;
+    }
 
-  public void setUdhConcat(final boolean udhConcat)
-  {
-    this.udhConcat = udhConcat;
-  }
+    public boolean isDivertActiveBlocked() {
+        return divertActiveBlocked;
+    }
 
-  public boolean isTranslit()
-  {
-    return translit;
-  }
+    public void setDivertActiveBlocked(final boolean divertActiveBlocked) {
+        this.divertActiveBlocked = divertActiveBlocked;
+    }
 
-  public void setTranslit(final boolean translit)
-  {
-    this.translit = translit;
-  }
+    public boolean isDivertActiveBarred() {
+        return divertActiveBarred;
+    }
+
+    public void setDivertActiveBarred(final boolean divertActiveBarred) {
+        this.divertActiveBarred = divertActiveBarred;
+    }
+
+    public boolean isDivertActiveCapacity() {
+        return divertActiveCapacity;
+    }
+
+    public void setDivertActiveCapacity(final boolean divertActiveCapacity) {
+        this.divertActiveCapacity = divertActiveCapacity;
+    }
+
+    public boolean isUdhConcat() {
+        return udhConcat;
+    }
+
+    public void setUdhConcat(final boolean udhConcat) {
+        this.udhConcat = udhConcat;
+    }
+
+    public boolean isTranslit() {
+        return translit;
+    }
+
+    public void setTranslit(final boolean translit) {
+        this.translit = translit;
+    }
+
+    public String getInputAccessMask() {
+        return Long.toHexString(inputAccessMask);
+    }
+
+    public void setInputAccessMask(String inputAccessMask) {
+        try {
+            this.inputAccessMask = Long.parseLong(inputAccessMask, 16);
+        } catch (NumberFormatException e) {
+            this.inputAccessMask = 4294967295L;
+        }
+    }
+
+    public String getOutputAccessMask() {
+        return Long.toHexString(outputAccessMask);
+    }
+
+    public void setOutputAccessMask(String outputAccessMask) {
+        try {
+            this.outputAccessMask = Long.parseLong(outputAccessMask, 16);
+        } catch (NumberFormatException e) {
+            this.outputAccessMask = 4294967295L;
+        }
+    }
+
+    public String getGroupId() {
+        return Integer.toString(groupId);
+    }
+
+    public void setGroupId(String groupId) {
+        try {
+            this.groupId = Integer.parseInt(groupId);
+        } catch (NumberFormatException e) {
+            this.groupId = 0;
+        }
+    }
+
+    public ClosedGroupList getClosedGroups() {
+        return closedGroups;
+    }
 }

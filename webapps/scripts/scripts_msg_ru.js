@@ -10,6 +10,8 @@ var valueErrorMsg = "Value must be a positive integer";
 var valueSignErrorMsg = "Value must be decimal without sign";
 var policyErrorMsg = "Invalid reschedule policy";
 var nonLanguageErrorMsg = "Language is incorrect. Set to default.";
+var binaryErrorMsg = "Final value can not be binary integer";
+var valueHexErrorMsg = "Value must be hex integer (4 or less bytes)";
 
 var priorityErrorMsg = "Priority must be positive integer less than ";
 // priorityErrorMsg + (0x10000/2)

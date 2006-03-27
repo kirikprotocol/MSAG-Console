@@ -8,15 +8,9 @@ import ru.novosoft.smsc.jsp.util.tables.impl.dl.PrincipalsFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.dl.PrincipalsQuery;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
-import ru.novosoft.smsc.admin.dl.DistributionListManager;
-import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.smsc_service.Smsc;
 
 import javax.servlet.http.HttpServletRequest;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -80,7 +74,7 @@ public class Principals extends IndexBean
 
     checkedSet.addAll(Arrays.asList(checked));
     if (initialized)
-      principals = new PrincipalsDataSource(appContext).query(new PrincipalsQuery(pageSize, filter, sort, startPosition),admin);
+      principals = new PrincipalsDataSource().query(new PrincipalsQuery(pageSize, filter, sort, startPosition),admin);
     totalSize = principals.getTotalSize();
 
     return result;

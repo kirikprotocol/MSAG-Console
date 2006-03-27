@@ -23,12 +23,13 @@ public class TopMenu extends ArrayList {
             smsItems.add(new MenuItem("menu.smsc.users", "/smsc/users/index.jsp", MenuItem.VISIBLE_IN_ALL));
             smsItems.add(new MenuItem("menu.smsc.resources", "/smsc/locale_resources/index.jsp", MenuItem.VISIBLE_IN_ALL));
             smsItems.add(new MenuItem("menu.smsc.journal", "/smsc/journal/index.jsp", MenuItem.VISIBLE_IN_ALL));
-			smsItems.add(new MenuItem("menu.smsc.switch", "/smsc/smsc_service/switch.jsp", MenuItem.VISIBLE_IN_HA));
+            smsItems.add(new MenuItem("menu.smsc.closedgroups", "/smsc/closed_groups/index.jsp", MenuItem.VISIBLE_IN_ALL));            
+            smsItems.add(new MenuItem("menu.smsc.switch", "/smsc/smsc_service/switch.jsp", MenuItem.VISIBLE_IN_HA));
             add(new MenuItem("menu.smsc", "", smsItems));
 
             Collection statisticItems = new ArrayList();
-            statisticItems.add(new MenuItem("menu.stat.perfmon","", "/smsc/perfmon/index.jsp','perfmon', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=580');"));
-            statisticItems.add(new MenuItem("menu.stat.topmon","", "/smsc/topmon/index.jsp', 'topmon', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=640');"));
+            statisticItems.add(new MenuItem("menu.stat.perfmon", "", "/smsc/perfmon/index.jsp','perfmon', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=580');"));
+            statisticItems.add(new MenuItem("menu.stat.topmon", "", "/smsc/topmon/index.jsp', 'topmon', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=640');"));
             statisticItems.add(new MenuItem("menu.stat.smsstat", "/smsc/smsstat/index.jsp", MenuItem.VISIBLE_IN_ALL));
             statisticItems.add(new MenuItem("menu.stat.statexport", "/smsc/smsstat/export.jsp", MenuItem.VISIBLE_IN_ALL));
             statisticItems.add(new MenuItem("menu.stat.statcsv", "/smsc/smsstat/index.jsp?csv=true", MenuItem.VISIBLE_IN_ALL));
@@ -56,7 +57,7 @@ public class TopMenu extends ArrayList {
             Collection serviceItems = new ArrayList();
             serviceItems.add(new MenuItem("menu.services.hosts", "/smsc/hosts/index.jsp", MenuItem.VISIBLE_IN_ALL));
             serviceItems.add(new MenuItem("menu.services.services", "/smsc/services/index.jsp", MenuItem.VISIBLE_IN_SINGLE));
-			serviceItems.add(new MenuItem("menu.services.services", "/smsc/services/resourceGroups.jsp", MenuItem.VISIBLE_IN_HA));
+            serviceItems.add(new MenuItem("menu.services.services", "/smsc/services/resourceGroups.jsp", MenuItem.VISIBLE_IN_HA));
             add(new MenuItem("menu.services", "", serviceItems));
 
             Collection optionItems = new ArrayList();

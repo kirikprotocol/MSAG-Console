@@ -156,7 +156,7 @@ public abstract class Message
       if (cnt == -1) throw new EOFException();
       pos += cnt;
     }
-    return new String(buff);
+    return new String(buff).trim();
   }
 
   public static String readString8(InputStream is) throws IOException

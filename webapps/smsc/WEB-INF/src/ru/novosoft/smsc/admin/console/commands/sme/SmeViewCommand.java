@@ -39,6 +39,7 @@ public class SmeViewCommand extends SmeGenCommand
             ctx.addResult("flags: " + (sme.isDisabled() ? "disabled":"enabled") +
                            ", wantAlias " + (sme.isWantAlias() ? "yes":"no") +
                            ", forceDC " + (sme.isForceDC() ? "yes":"no"));
+            ctx.addResult("accessMask: " + sme.getAccessMask());
             String connected = "unknown";
             try { connected = ctx.getSmsc().getSmeStatus(smeId).isConnected() ? "connected":"disconnected"; }
             catch (Exception exc) { exc.printStackTrace(); }

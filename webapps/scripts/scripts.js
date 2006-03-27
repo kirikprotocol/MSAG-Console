@@ -165,6 +165,14 @@ function validateField_positive(elem)
             : true;
 }
 
+function validateField_hex(elem)
+{
+    var r = /^[abcdefABCDEF_0-9]+$/;
+    return elem.value == null || elem.value.match(r) == null || elem.length > 8
+            ? validationError(elem, valueHexErrorMsg)
+            : true;
+}
+
 function validateField_int_range(elem)
 {
     var intValue = elem.value / 1;
@@ -215,6 +223,11 @@ function validateField_address_prefix(elem)
     return elem.value == null || (elem.value.match(r1) == null && elem.value.match(r2) == null)
             ? validationError(elem, addrPreErrorMsg)
             : true;
+}
+
+function validateField_binary(elem)
+{
+    return validationError(elem, binaryErrorMsg);
 }
 
 function validateField_id(elem)
@@ -303,6 +316,7 @@ function validateField(elem)
     case "release_cause": return validateField_release_cause(elem);
     case "language": return validateField_language(elem);
     case "ruleName": return validateField_ruleName(elem);
+    case "hex": return validateField_hex(elem);
     }
     alert(unknownValidationTypeErrorMsg + ": " + elem.validation);
     return false;
@@ -518,14 +532,19 @@ function findChildById(elem, id) {
     return null;
 }
 
-function clickSubmit(name, value)
+function opFormSubmit()
 {
     if (opForm.onsubmit() == false)
         return false;
-    opForm.jbutton.value = value;
-    opForm.jbutton.name = name;
     opForm.submit();
     return false;
+}
+
+function clickSubmit(name, value)
+{
+    opForm.jbutton.value = value;
+    opForm.jbutton.name = name;
+    return opFormSubmit();
 }
 
 function clickConfirmSubmit( name, value, conf) {

@@ -3,57 +3,57 @@
                  ru.novosoft.smsc.jsp.smsc.smsc_service.Index,
                  java.util.LinkedList,
                  java.util.List" %>
-<jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.smsc_service.Index" />
-<jsp:setProperty name="bean" property="*" />
+<jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.smsc_service.Index"/>
+<jsp:setProperty name="bean" property="*"/>
 <%
-  ServiceIDForShowStatus = Constants.SMSC_SME_ID;
-  FORM_METHOD = "POST";
-  TITLE = getLocString("smsc.title");
-  MENU0_SELECTION = "MENU0_SMSC";
+    ServiceIDForShowStatus = Constants.SMSC_SME_ID;
+    FORM_METHOD = "POST";
+    TITLE = getLocString("smsc.title");
+    MENU0_SELECTION = "MENU0_SMSC";
 
-  switch (bean.process(request)) {
-    case Index.RESULT_DONE :
-      response.sendRedirect("index.jsp");
-      return;
-    case Index.RESULT_OK :
-      break;
-    case Index.RESULT_ERROR :
-      break;
-    default :
-      errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
-  }
+    switch (bean.process(request)) {
+        case Index.RESULT_DONE :
+            response.sendRedirect("index.jsp");
+            return;
+        case Index.RESULT_OK :
+            break;
+        case Index.RESULT_ERROR :
+            break;
+        default :
+            errorMessages.add(new SMSCJspException(ru.novosoft.smsc.jsp.SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
+    }
 %>
-  <%@ include file="/WEB-INF/inc/html_3_header.jsp" %>
-  <%@ include file="/WEB-INF/inc/collapsing_tree.jsp" %>
+<%@ include file="/WEB-INF/inc/html_3_header.jsp" %>
+<%@ include file="/WEB-INF/inc/collapsing_tree.jsp" %>
 <%
-  page_menu_begin(out);
-  page_menu_button(session, out, "mbSave", "common.buttons.save", "common.buttons.saveConfig");
-  page_menu_button(session, out, "mbReset", "common.buttons.reset", "common.buttons.reset", "clickCancel()");
-  page_menu_space(out);
-  page_menu_button(session, out, "mbStart", "common.buttons.start", "smsc.start", false);
-  page_menu_button(session, out, "mbStop", "common.buttons.stop", "smsc.stop", false);
+    page_menu_begin(out);
+    page_menu_button(session, out, "mbSave", "common.buttons.save", "common.buttons.saveConfig");
+    page_menu_button(session, out, "mbReset", "common.buttons.reset", "common.buttons.reset", "clickCancel()");
+    page_menu_space(out);
+    page_menu_button(session, out, "mbStart", "common.buttons.start", "smsc.start", false);
+    page_menu_button(session, out, "mbStop", "common.buttons.stop", "smsc.stop", false);
 
-          //page_menu_button(session, out, "mbStart", "common.buttons.start", "smsc.start", bean.getStatus() == ServiceInfo.STATUS_STOPPED);
-  //page_menu_button(session, out, "mbStop",  "common.buttons.stop",  "smsc.stop", bean.getStatus() == ServiceInfo.STATUS_RUNNING);
-  page_menu_end(out);
+    //page_menu_button(session, out, "mbStart", "common.buttons.start", "smsc.start", bean.getStatus() == ServiceInfo.STATUS_STOPPED);
+    //page_menu_button(session, out, "mbStop",  "common.buttons.stop",  "smsc.stop", bean.getStatus() == ServiceInfo.STATUS_RUNNING);
+    page_menu_end(out);
 %>
-  <script>
+<script>
     function refreshStartStopButtonsStatus() {
-      document.getElementById('mbStart').disabled = (document.getElementById(
-              'RUNNING_STATUSERVICE_<%= Constants.SMSC_SME_ID %>').innerText != "<%= getLocString("common.statuses.offline") %>");
-      document.getElementById('mbStop').disabled = (document.getElementById(
-              'RUNNING_STATUSERVICE_<%= Constants.SMSC_SME_ID %>').innerText == "<%= getLocString("common.statuses.offline") %>");
+        document.getElementById('mbStart').disabled = (document.getElementById(
+                'RUNNING_STATUSERVICE_<%= Constants.SMSC_SME_ID %>').innerText != "<%= getLocString("common.statuses.offline") %>");
+        document.getElementById('mbStop').disabled = (document.getElementById(
+                'RUNNING_STATUSERVICE_<%= Constants.SMSC_SME_ID %>').innerText == "<%= getLocString("common.statuses.offline") %>");
 
-      window.setTimeout(refreshStartStopButtonsStatus, 500);
+        window.setTimeout(refreshStartStopButtonsStatus, 500);
     }
 
     refreshStartStopButtonsStatus();
-  </script>
-  <%-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~ SMSC Config ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-  <div class=content>
-    <div class=secSmsc>
-      <%= getLocString("smsc.configuration") %>
-    </div>
+</script>
+<%-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~ SMSC Config ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
+<div class=content>
+<div class=secSmsc>
+    <%= getLocString("smsc.configuration") %>
+</div>
 <%
     //################################## admin #############################
     startSection(out, "admin", "smsc.admin", false);
@@ -162,17 +162,17 @@
     startSection(out, "connectionsLimitsForIps", "smsc.smpp.connectionsLimitsForIps", false);
 
     if (bean.getConnectionsLimitsForIps().size() > 0) {
-      startParams(out);
+        startParams(out);
 
-      //---------------------------------- smpp.connectionsLimitsForIps.%name% -----------------------------
-      for (Iterator i = bean.getConnectionsLimitsForIps().iterator(); i.hasNext(); ) {
-        String name = (String)i.next();
+        //---------------------------------- smpp.connectionsLimitsForIps.%name% -----------------------------
+        for (Iterator i = bean.getConnectionsLimitsForIps().iterator(); i.hasNext();) {
+            String name = (String) i.next();
 
-        param(out, "smsc.smpp.connectionsLimitsForIps.Ip", "smpp.connectionsLimitsForIps.Ip", bean.getStringParam(
-                "smpp.connectionsLimitsForIps." + name));
-      }
+            param(out, "smsc.smpp.connectionsLimitsForIps.Ip", "smpp.connectionsLimitsForIps.Ip", bean.getStringParam(
+                    "smpp.connectionsLimitsForIps." + name));
+        }
 
-      finishParams(out);
+        finishParams(out);
     }
 
     finishSection(out);
@@ -322,7 +322,7 @@
     startSection(out, "inman.chargingPolicy", "smsc.inman.chargingPolicy", false);
     startParams(out);
     param(out, "smsc.inman.peer2peer", "inman.chargingPolicy.peer2peer", bean.getStringParam("inman.chargingPolicy.peer2peer"
-            ));
+    ));
     param(out, "smsc.inman.other", "inman.chargingPolicy.other", bean.getStringParam("inman.chargingPolicy.other"));
     finishParams(out);
     finishSection(out);
@@ -340,13 +340,13 @@
     finishParams(out);
     finishSection(out);
 %>
-  </div>
+</div>
 <%
-  page_menu_begin(out);
-  page_menu_button(session, out, "mbSave", "common.buttons.save", "common.buttons.saveConfig");
-  page_menu_button(session, out, "mbReset", "common.buttons.reset", "common.buttons.reset", "clickCancel()");
-  page_menu_space(out);
-  page_menu_end(out);
+    page_menu_begin(out);
+    page_menu_button(session, out, "mbSave", "common.buttons.save", "common.buttons.saveConfig");
+    page_menu_button(session, out, "mbReset", "common.buttons.reset", "common.buttons.reset", "clickCancel()");
+    page_menu_space(out);
+    page_menu_end(out);
 %>
-  <%@ include file="/WEB-INF/inc/html_3_footer.jsp" %>
-  <%@ include file="/WEB-INF/inc/code_footer.jsp" %>
+<%@ include file="/WEB-INF/inc/html_3_footer.jsp" %>
+<%@ include file="/WEB-INF/inc/code_footer.jsp" %>

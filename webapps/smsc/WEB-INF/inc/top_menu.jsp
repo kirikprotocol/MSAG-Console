@@ -5,12 +5,12 @@
                  ru.novosoft.util.menu.Menu,
                  ru.novosoft.util.menu.MenuItem,
                  javax.servlet.http.Cookie,
-                 javax.servlet.http.HttpServletRequest" %>
-<%@ page import="javax.servlet.http.HttpSession"%>
-<%@ page import="javax.servlet.jsp.JspWriter"%>
-<%@ page import="java.io.IOException"%>
-<%@ page import="java.util.Collection"%>
-<%@ page import="java.util.Iterator"%>
+                 javax.servlet.http.HttpServletRequest,
+                 javax.servlet.http.HttpSession,
+                 javax.servlet.jsp.JspWriter,
+                 java.io.IOException,
+                 java.util.Iterator,
+                 java.util.Collection"%>
 <jsp:useBean id="topMenu" class="ru.novosoft.util.menu.TopMenu" scope="session"/>
 
 <!--link rel="stylesheet" type="text/css" href="<%=request.getContextPath()%>/styles/main_menu.css" /-->
@@ -72,18 +72,15 @@
         int i = 0;
         for (Iterator it = menu.iterator(); it.hasNext(); i++) {
             MenuItem menuItem = (MenuItem) it.next();
-            if (isNeedToBeDrawn(menuItem))
-            {
+            if (isNeedToBeDrawn(menuItem)) {
                 if (menuItem.getSubMenu() == null) {
                     String url = menuItem.getUri();
                     if (menuItem.getUri().equals("")) {
                         out.println(menuName + ".addMenuItem(new menuItem(\"" + menuItem.getCaption() + "\", \"\", \"" + "code:window.open('" + request.getContextPath() + menuItem.getTarget() + "\" ));");
-                    }
-                    else {
+                    } else {
                         out.println(menuName + ".addMenuItem(new menuItem(\"" + menuItem.getCaption() + "\", \"\", \"" + request.getContextPath() + ((url != null) ? url : "") + "\" ));");
                     }
-                }
-                else {
+                } else {
                     String subMenuName = menuName + "_" + i;
                     createMenu(request, out, subMenuName, "" + menuItem.getSubMenuWidth(), menuItem.getSubMenu());
                     out.println(menuName + ".addMenuItem(new menuItem(\"" + menuItem.getCaption() + "\", \"" + ("item" + i) + "\", \"\" ));");
@@ -97,10 +94,12 @@
         if (menuItem.getVisibleMask() == MenuItem.VISIBLE_IN_ALL) return true;
         SMSCAppContext appContext = (SMSCAppContext) req.getAttribute("appContext");
         if (appContext == null) return true;
-        if ((appContext.getInstallType() == ResourceGroupConstants.RESOURCEGROUP_TYPE_HA) &&
-           (menuItem.getVisibleMask() == MenuItem.VISIBLE_IN_HA)) return true;
         if ((appContext.getInstallType() == ResourceGroupConstants.RESOURCEGROUP_TYPE_SINGLE) &&
-           (menuItem.getVisibleMask() == MenuItem.VISIBLE_IN_SINGLE)) return true;
+                (menuItem.getVisibleMask() == MenuItem.VISIBLE_IN_SINGLE)) return true;
+        if ((appContext.getInstallType() == ResourceGroupConstants.RESOURCEGROUP_TYPE_HA) &&
+                (menuItem.getVisibleMask() == MenuItem.VISIBLE_IN_HA)) return true;
+        if ((appContext.getInstallType() == ResourceGroupConstants.RESOURCEGROUP_TYPE_HS) &&
+                (menuItem.getVisibleMask() == MenuItem.VISIBLE_IN_HA)) return true;
         return false;
     }
 

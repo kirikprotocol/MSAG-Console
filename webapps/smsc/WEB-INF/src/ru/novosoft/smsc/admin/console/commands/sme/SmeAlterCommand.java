@@ -23,7 +23,7 @@ public class SmeAlterCommand extends SmeGenCommand
         boolean disconnectOnly = false;
         if (!isAddressRange && !isDisabled && !isForceDC && !isInterfaceVersion && !isMode &&
             !isNPI && !isTON && !isPassword && !isPriority && !isProclimit && !isSchedlimit && !isType &&
-            !isReceiptScheme && !isSmeN && !isSystemType && !isTimeout && !isWantAlias)
+            !isReceiptScheme && !isSmeN && !isSystemType && !isTimeout && !isWantAlias && !isAccessMask)
         {
             if (!disconnect) {
                 ctx.setMessage("No one alter option specified");
@@ -52,7 +52,8 @@ public class SmeAlterCommand extends SmeGenCommand
                         isWantAlias ? wantAlias:sme.isWantAlias(), isForceDC ? forceDC:sme.isForceDC(),
                         isTimeout ? timeout:sme.getTimeout(), isReceiptScheme ? receiptScheme:sme.getReceiptSchemeName(),
                         isDisabled ? disabled:sme.isDisabled(), isMode ? mode:sme.getMode(),
-                        isProclimit ? proclimit:sme.getProclimit(), isSchedlimit ? schedlimit:sme.getSchedlimit());
+                        isProclimit ? proclimit:sme.getProclimit(), isSchedlimit ? schedlimit:sme.getSchedlimit(),
+                        isAccessMask ? accessMask:sme.getAccessMask());
                 manager.update(newSme);
             }
             ctx.setMessage(out+" altered");

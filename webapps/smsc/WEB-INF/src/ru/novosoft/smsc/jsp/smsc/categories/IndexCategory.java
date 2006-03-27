@@ -240,29 +240,4 @@ public class IndexCategory extends IndexBean
   {
     this.categories = categories;
   }
-/*  protected void load(final String loadId) throws SMSCJspException
-  {
-    final Map providers = appContext.getProviderManager().getProviders();
-    final Long longLoadId = Long.decode(loadId);
-    if (!providers.containsKey(longLoadId))
-    //  throw new SMSCJspException(Constants.errors.providers.PROVIDER_NOT_FOUND, loadId);
-        error(SMSCErrors.error.providers.provider_not_found, String.valueOf(longLoadId));
-    final Provider info = (Provider) providers.get(longLoadId);
-    this.id = info.getId();
-    this.name = info.getName();
-  }
-  */
-
-/*  protected void save() throws SMSCJspException
-  {
-    final ProviderManager providerManager = appContext.getProviderManager();
-    if (isAdd()) {
-      providerManager.createProvider(name);
-    } else {
-      providerManager.setProviderName(id, name);
-    }
-    appContext.getStatuses().setProvidersChanged(true);
-   // throw new DoneException();
-  }
-  */
 }

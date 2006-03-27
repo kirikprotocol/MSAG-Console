@@ -45,7 +45,8 @@ public class Response
 			logger.debug("setting entity resolver for response");
 			builder.setEntityResolver(new DtdsEntityResolver());
       //!!!
-			Reader in = new StringReader(new String(text));
+            String a = new String(text);
+            Reader in = new StringReader(a);
 			InputSource source = new InputSource(in);
 			doc = builder.parse(source);
 			Element main = doc.getDocumentElement();

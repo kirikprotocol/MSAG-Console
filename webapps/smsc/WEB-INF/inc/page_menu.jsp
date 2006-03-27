@@ -121,5 +121,4 @@
     //out.print("</div>");
     page_menu_delimiter_needed = false;
   }
-
 %>

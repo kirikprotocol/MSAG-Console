@@ -15,54 +15,59 @@ import java.util.Map;
  * Created by igork Date: Jan 20, 2003 Time: 6:23:33 PM
  */
 public interface HostsManager {
-	//only single
-	public List getHostNames();
-	public Daemon addHost(final String host, final int port, final String hostServicesFolder) throws AdminException;
-	public Daemon removeHost(final String host) throws AdminException;
-	public void applyHosts() throws IOException, AdminException, Config.WrongParamTypeException;
-	public int getHostPort(final String name) throws AdminException;
-	public void deployAdministrableService(final File incomingZip, final ServiceInfo serviceInfo) throws AdminException;
+    //only single
+    public List getHostNames();
 
-	//only HA
-	public void switchOver(final String serviceId) throws AdminException;
+    public Daemon addHost(final String host, final int port, final String hostServicesFolder) throws AdminException;
 
-	/* **************************************** services ************************************************/
-	public List getServiceIds() throws AdminException;
+    public Daemon removeHost(final String host) throws AdminException;
 
-	public Map getServices(final String hostName) throws AdminException;
+    public void applyHosts() throws IOException, AdminException, Config.WrongParamTypeException;
 
-	public Service removeService(final String serviceId) throws AdminException;
+    public int getHostPort(final String name) throws AdminException;
 
-	public void startService(final String serviceId) throws AdminException;
+    public void deployAdministrableService(final File incomingZip, final ServiceInfo serviceInfo) throws AdminException;
 
-	public void killService(final String serviceId) throws AdminException;
+    //only HA
+    public void switchOver(final String serviceId) throws AdminException;
 
-	public void shutdownService(final String serviceId) throws AdminException;
+    /* **************************************** services ************************************************/
+    public List getServiceIds() throws AdminException;
 
-	public int getCountRunningServices(final String hostName) throws AdminException;
+    public Map getServices(final String hostName) throws AdminException;
 
-	public int getCountServices(final String hostName) throws AdminException;
+    public Service removeService(final String serviceId) throws AdminException;
 
-	public void refreshServices() throws AdminException;
+    public void startService(final String serviceId) throws AdminException;
 
-	/* ***************************************** smes **************************************************/
+    public void killService(final String serviceId) throws AdminException;
 
-	public List getSmeIds();
+    public void shutdownService(final String serviceId) throws AdminException;
 
-	public SME addSme(final String id, final int priority, final byte type, final int typeOfNumber, final int numberingPlan,
-					  final int interfaceVersion, final String systemType, final String password, final String addrRange, final int smeN,
-					  final boolean wantAlias, final boolean forceDC, final int timeout, final String receiptSchemeName, final boolean disabled,
-					  final byte mode, final int proclimit, final int schedlimit) throws AdminException;
+    public int getCountRunningServices(final String hostName) throws AdminException;
 
-	public void removeSme(final String smeId) throws AdminException;
+    public int getCountServices(final String hostName) throws AdminException;
 
-	public boolean isService(final String smeId);
+    public void refreshServices() throws AdminException;
 
-	public boolean isServiceAdministrable(final String smeId);
+    /* ***************************************** smes **************************************************/
 
-	public ServiceInfo getServiceInfo(final String serviceId) throws AdminException;
+    public List getSmeIds();
 
-	public String getDaemonServicesFolder(final String resGroupName) throws AdminException;
+    public SME addSme(final String id, final int priority, final byte type, final int typeOfNumber, final int numberingPlan,
+                      final int interfaceVersion, final String systemType, final String password, final String addrRange, final int smeN,
+                      final boolean wantAlias, final boolean forceDC, final int timeout, final String receiptSchemeName, final boolean disabled,
+                      final byte mode, final int proclimit, final int schedlimit, final int accessMask) throws AdminException;
 
-	public byte getServiceStatus(final String serviceId) throws AdminException;
+    public void removeSme(final String smeId) throws AdminException;
+
+    public boolean isService(final String smeId);
+
+    public boolean isServiceAdministrable(final String smeId);
+
+    public ServiceInfo getServiceInfo(final String serviceId) throws AdminException;
+
+    public String getDaemonServicesFolder(final String resGroupName) throws AdminException;
+
+    public byte getServiceStatus(final String serviceId) throws AdminException;
 }

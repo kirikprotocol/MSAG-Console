@@ -22,7 +22,7 @@ public class SmeAddCommand extends SmeGenCommand
             if (manager.contains(smeId)) throw new Exception("SME already exists");
             manager.add(smeId, priority, type, TON, NPI, interfaceVersion, systemType, password,
                         addressRange, smeN, wantAlias, forceDC, timeout, receiptScheme,
-                        disabled, mode, proclimit, schedlimit);
+                        disabled, mode, proclimit, schedlimit, accessMask);
             ctx.setMessage(out+" added");
             ctx.setStatus(CommandContext.CMD_OK);
         } catch (Exception e) {

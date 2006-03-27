@@ -20,8 +20,8 @@ import java.util.*;
 
 public class Daemon extends Proxy
 {
-  private Map services = new HashMap();
-  private String daemonServicesFolder;
+  protected Map services = new HashMap();
+  protected String daemonServicesFolder;
 
   public Daemon(final String host, final int port, final SmeManager smeManager, final String daemonServicesFolder)
   {

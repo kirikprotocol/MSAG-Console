@@ -241,18 +241,20 @@ function showCalendar(calendarInputText, us, showTime) {
     calendarPanel.setCapture();
     return false;
 }
+
 function isCalendarOwner(o) {
     while (o != null) {
-        //alert("o:" + o + " tag:" + o.tagName + " id:" + o.id);
+//        alert("o:" + o + " tag:" + o.tagName + " id:" + o.id);
         if (o == calendarPanel) return true;
         o = o.parentElement;
     }
     return false;
 }
+
 function calendarMD() {
     calendarPanel.setCapture();
     var a = window.event.srcElement;
-    //alert("owner:" + isCalendarOwner(a) + " pt:" + calendarPressedTime);
+//    alert("owner:" + isCalendarOwner(a) + " pt:" + calendarPressedTime);
     if (!isCalendarOwner(a) && !calendarPressedTime) return calendarClose();
     var b = window.event.button;
     if (a != null && a.name != null && b == 1) {
@@ -332,6 +334,7 @@ function calendarMD() {
         }
     }
 }
+
 function calendarMU() {
     var a = window.event.srcElement;
     if (calendarTime && calendarPressedTime) {
@@ -361,6 +364,7 @@ function calendarMU() {
     }
     calendarMouseDown = false;
 }
+
 function calendarMM() {
     var a = window.event.srcElement;
     var b = window.event.button;

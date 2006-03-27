@@ -94,7 +94,7 @@ public class Mask
 
   public PrintWriter store(PrintWriter out)
   {
-    out.println("    <mask value=\"" + StringEncoderDecoder.encode(getNormalizedMask()) + "\"/>");
+    out.println("       <mask value=\"" + StringEncoderDecoder.encode(getNormalizedMask()) + "\"/>");
     return out;
   }
 

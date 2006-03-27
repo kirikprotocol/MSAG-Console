@@ -12,54 +12,21 @@ import ru.novosoft.smsc.jsp.SMSCErrors;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
-public class ProvidersEdit extends ProvidersEditBean
-{
-  protected int init(List errors)
-  {
-    int result = super.init(errors);
-    if (result != RESULT_OK)
-      return result;
+public class ProvidersEdit extends ProvidersEditBean {
 
-    if (name == null || name.trim().length() == 0) {
-      //  setRoles(new String[0]);
-      name = "";
-      return error(SMSCErrors.error.providers.nameNotDefined);
-    }
-    else {
-/*        Provider provider = providerManager.getProviderByName(name);
-        id=String.valueOf(provider.getId());
-        if ((provider == null) && (mbSave == null)) {
-          return error(SMSCErrors.error.providers.providerNotFound, name);
+    protected int save(final HttpServletRequest request) {
+        if (name == null || name.trim().length() == 0)
+            return error(SMSCErrors.error.providers.nameNotDefined);
+        Long idl = Long.decode(id);
+        Provider provider = providerManager.getProvider(idl);
+        if (provider == null) { // add new provider
+            return error(SMSCErrors.error.providers.providerNotFound, name);
+        } else {
+            provider.setName(name);
+            request.getSession().setAttribute("PROVIDER_NAME", name);
+            journalAppend(SubjectTypes.TYPE_provider, name, Actions.ACTION_MODIFY);
+            appContext.getStatuses().setProvidersChanged(true);
+            return RESULT_DONE;
         }
-*/
     }
-
-    return RESULT_OK;
-  }
-
-  protected int save(final HttpServletRequest request)
-  {
-    if (name == null || name.trim().length() == 0)
-      return error(SMSCErrors.error.providers.nameNotDefined);
-    //Long idl = Long.getLong(id);
-	Long idl = Long.decode(id);  
-    Provider provider = providerManager.getProvider(idl);
-    if (provider == null) { // add new provider
-      return error(SMSCErrors.error.providers.providerNotFound, name);
-    }
-    else {
-
-      provider.setName(name);
-        request.getSession().setAttribute("PROVADER_NAME", name);
-      journalAppend(SubjectTypes.TYPE_provider, name, Actions.ACTION_MODIFY);
-      appContext.getStatuses().setProvidersChanged(true);
-      return RESULT_DONE;
-    }
-  }
-
-  public boolean isNew()
-  {
-    return false;
-  }
-
 }

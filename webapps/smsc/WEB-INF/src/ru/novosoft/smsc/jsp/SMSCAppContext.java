@@ -18,6 +18,7 @@ import ru.novosoft.smsc.admin.smsc_service.SmeManager;
 import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.admin.smsc_service.SmscList;
 import ru.novosoft.smsc.admin.users.UserManager;
+import ru.novosoft.smsc.admin.closedgroups.ClosedGroupManager;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.xml.WebXml;
 import ru.novosoft.util.jsp.AppContext;
@@ -26,57 +27,58 @@ import java.util.Locale;
 import java.util.Set;
 
 
-public interface SMSCAppContext extends AppContext
-{
-  Config getConfig();
+public interface SMSCAppContext extends AppContext {
+    Config getConfig();
 
-  HostsManager getHostsManager();
+    HostsManager getHostsManager();
 
-  UserManager getUserManager();
+    UserManager getUserManager();
 
-  Smsc getSmsc();
+    Smsc getSmsc();
 
-  void setSmsc(Smsc newSmsc);
+    void setSmsc(Smsc newSmsc);
 
 //	DataSource getConnectionPool();
 
 //	UserPreferences getUserPreferences(java.security.Principal loginedPrincipal);
 
-  Statuses getStatuses();
+    Statuses getStatuses();
 
-  void destroy();
+    void destroy();
 
-  String getInitErrorCode();
+    String getInitErrorCode();
 
-  Locale getLocale();
+    Locale getLocale();
 
-  String getLocaleString(String key);
+    String getLocaleString(String key);
 
-  Set getLocaleStrings(String prefix);
+    Set getLocaleStrings(String prefix);
 
-  SmeManager getSmeManager();
+    SmeManager getSmeManager();
 
-  ProviderManager getProviderManager();
+    ProviderManager getProviderManager();
 
-  CategoryManager getCategoryManager();
+    CategoryManager getCategoryManager();
 
-  RouteSubjectManager getRouteSubjectManager();
+    RouteSubjectManager getRouteSubjectManager();
 
-  ResourcesManager getResourcesManager();
+    ResourcesManager getResourcesManager();
 
-  Journal getJournal();
+    ClosedGroupManager getClosedGroupManager();
 
-  WebXml getWebXmlConfig();
+    Journal getJournal();
 
-  AclManager getAclManager();
+    WebXml getWebXmlConfig();
 
-  SmscList getSmscList();
+    AclManager getAclManager();
 
-  ServiceManager getServiceManager();
+    SmscList getSmscList();
 
-  byte getInstallType();
+    ServiceManager getServiceManager();
 
-  Long registerSMEContext(SMEAppContext smeContext);
+    byte getInstallType();
 
-  void unregisterSMEContext(Long contextId);
+    Long registerSMEContext(SMEAppContext smeContext);
+
+    void unregisterSMEContext(Long contextId);
 }

@@ -2,36 +2,37 @@
 <%@ page import="ru.novosoft.smsc.jsp.smsc.services.Index,
                  java.util.Arrays,
                  java.util.List" %>
+<%@ page import="java.net.URLEncoder"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.services.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
     TITLE = getLocString("services.title");
     isServiceStatusNeeded = true;
     switch (bean.process(request)) {
-    case Index.RESULT_DONE:
-        response.sendRedirect("index.jsp");
-        return;
-    case Index.RESULT_OK:
+        case Index.RESULT_DONE:
+            response.sendRedirect("index.jsp");
+            return;
+        case Index.RESULT_OK:
 
-        break;
-    case Index.RESULT_ERROR:
+            break;
+        case Index.RESULT_ERROR:
 
-        break;
-    case Index.RESULT_VIEW:
-        response.sendRedirect(CPATH + "/esme_" + URLEncoder.encode(bean.getServiceId()) + "/index.jsp");
-        return;
-    case Index.RESULT_VIEW_HOST:
-        response.sendRedirect(CPATH + "/hosts/hostView.jsp?hostName=" + bean.getHostId());
-        return;
-    case Index.RESULT_ADD:
-        response.sendRedirect("serviceAdd.jsp" + (bean.getHostId() != null ? ("?hostName=" + bean.getHostId()) : ""));
-        return;
-    case Index.RESULT_EDIT:
-        response.sendRedirect(CPATH + "/services/serviceEditSme.jsp?serviceId=" + URLEncoder.encode(bean.getServiceId()));
-        return;
-    default:
+            break;
+        case Index.RESULT_VIEW:
+            response.sendRedirect(CPATH + "/esme_" + URLEncoder.encode(bean.getServiceId()) + "/index.jsp");
+            return;
+        case Index.RESULT_VIEW_HOST:
+            response.sendRedirect(CPATH + "/hosts/hostView.jsp?hostName=" + bean.getHostId());
+            return;
+        case Index.RESULT_ADD:
+            response.sendRedirect("serviceAdd.jsp" + (bean.getHostId() != null ? ("?hostName=" + bean.getHostId()) : ""));
+            return;
+        case Index.RESULT_EDIT:
+            response.sendRedirect(CPATH + "/services/serviceEditSme.jsp?serviceId=" + URLEncoder.encode(bean.getServiceId()));
+            return;
+        default:
 
-        errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
+            errorMessages.add(new SMSCJspException(ru.novosoft.smsc.jsp.SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
     }
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
     MENU0_SELECTION = "MENU0_SERVICES";
@@ -116,8 +117,7 @@
                 if (bean.isServiceAdministrable(serviceId) && request.isUserInRole("services")) {
             %><a href="javascript:viewService('<%=encodedServiceId%>')"
                  title="<%=getLocString("host.viewServInfo")%>"><%=encodedServiceId%></a><%
-            }
-            else {
+            } else {
             %><%=encodedServiceId%><%
                 }
             %></td>
@@ -126,8 +126,7 @@
             if (bean.isService(serviceId)) {
         %><a href="javascript:viewHost('<%=bean.getHost(serviceId)%>')"
              title="<%=getLocString("host.viewTitle")%>"><%=bean.getHost(serviceId)%></a><%
-        }
-        else {
+        } else {
         %>&nbsp;<%
             }
         %></td>
@@ -142,8 +141,7 @@
             <td class=name><%
                 if (bean.isService(serviceId)) {
             %><%=serviceStatus(bean.getAppContext(), serviceId)%><%
-            }
-            else {
+            } else {
             %>&nbsp;<%
                 }
             %></td>

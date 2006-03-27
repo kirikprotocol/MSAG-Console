@@ -6,68 +6,72 @@ package ru.novosoft.smsc.jsp;
  * Time: 16:37:50
  */
 
-public interface Statuses
-{
+public interface Statuses {
 
-	boolean isSomethingChanged(); 
+    boolean isSomethingChanged();
 
-  boolean isRoutesChanged();
+    boolean isRoutesChanged();
 
-  void setRoutesChanged(boolean routesChanged);
+    void setRoutesChanged(boolean routesChanged);
 
-  boolean isSubjectsChanged();
+    boolean isSubjectsChanged();
 
-  void setSubjectsChanged(boolean subjectsChanged);
+    void setSubjectsChanged(boolean subjectsChanged);
 
-  boolean isRoutesSaved();
+    boolean isRoutesSaved();
 
-  void setRoutesSaved(boolean routesSaved);
+    void setRoutesSaved(boolean routesSaved);
 
-  public boolean isRoutesRestored();
+    public boolean isRoutesRestored();
 
-  public void setRoutesRestored(boolean routesRestored);
+    public void setRoutesRestored(boolean routesRestored);
 
-  public boolean isRoutesLoaded();
+    public boolean isRoutesLoaded();
 
-  public void setRoutesLoaded(boolean routesLoaded);
+    public void setRoutesLoaded(boolean routesLoaded);
 
-  boolean isAliasesChanged();
+    boolean isAliasesChanged();
 
-  void setAliasesChanged(boolean aliasesChanged);
+    void setAliasesChanged(boolean aliasesChanged);
 
-  boolean isProfilesChanged();
+    boolean isProfilesChanged();
 
-  void setProfilesChanged(boolean profilesChanged);
+    void setProfilesChanged(boolean profilesChanged);
 
-  boolean isHostsChanged();
+    boolean isHostsChanged();
 
-  void setHostsChanged(boolean hostsChanged);
+    void setHostsChanged(boolean hostsChanged);
 
 /*
   boolean isServicesChanged();
 	void setServicesChanged(boolean servicesChanged);
 */
-  boolean isUsersChanged();
 
-  void setUsersChanged(boolean usersChanged);
+    boolean isUsersChanged();
 
-  boolean isSmscChanged();
+    void setUsersChanged(boolean usersChanged);
 
-  void setSmscChanged(boolean smscChanged);
+    boolean isSmscChanged();
 
-  boolean isWebXmlChanged();
+    void setSmscChanged(boolean smscChanged);
 
-  void setWebXmlChanged(boolean webXmlChanged);
+    boolean isWebXmlChanged();
 
-  boolean isProvidersChanged();
+    void setWebXmlChanged(boolean webXmlChanged);
 
-  void setProvidersChanged(boolean providersChanged);
+    boolean isProvidersChanged();
 
-  boolean isCategoriesChanged();
+    void setProvidersChanged(boolean providersChanged);
 
-  void setCategoriesChanged(boolean providersChanged);
+    boolean isCategoriesChanged();
 
-  boolean isScheduleChanged();
+    void setCategoriesChanged(boolean providersChanged);
 
-  void setScheduleChanged(boolean scheduleChanged);
+    boolean isScheduleChanged();
+
+    void setScheduleChanged(boolean scheduleChanged);
+
+    boolean isClosedGroupChanged();
+
+    void setClosedGroupChanged(boolean closedGroupChanged);
 }

@@ -30,7 +30,7 @@ public class SMEList {
             try {
                 add(new SME((Element) list.item(i)));
             } catch (AdminException e) {
-                logger.error("Error inc SME config", e);
+                logger.error("Error in SME config", e);
             }
         }
     }

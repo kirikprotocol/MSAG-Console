@@ -2,6 +2,7 @@ package ru.novosoft.smsc.admin.console.commands.sme;
 
 import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.route.SME;
+import antlr.RecognitionException;
 
 /**
  * Created by IntelliJ IDEA.
@@ -34,6 +35,7 @@ public abstract class SmeGenCommand extends CommandClass
     protected String receiptScheme = "";
     protected int proclimit = 0;
     protected int schedlimit = 0;
+    protected int accessMask = 1;
     protected boolean wantAlias = false;
     protected boolean forceDC = false;
     protected boolean disabled = false;
@@ -56,6 +58,7 @@ public abstract class SmeGenCommand extends CommandClass
     protected boolean isWantAlias = false;
     protected boolean isForceDC = false;
     protected boolean isDisabled = false;
+    protected boolean isAccessMask = false;
 
     public void setSmeId(String smeId) {
         this.smeId = smeId;
@@ -113,5 +116,15 @@ public abstract class SmeGenCommand extends CommandClass
     }
     public void setDisconnect() {
         this.disconnect = true;
+    }
+    public void setAccessMask(int accessMask) {
+        this.accessMask = accessMask; isAccessMask = true;
+    }
+
+    public void setAccessBit(boolean value, int bitNum) throws RecognitionException {
+        if (bitNum < 0 && bitNum > 31) throw new RecognitionException("incorrect bit value");
+        if (value) accessMask = accessMask | (1 << bitNum);
+              else accessMask = accessMask & ~(1 << bitNum);
+        this.isAccessMask = true;
     }
 }

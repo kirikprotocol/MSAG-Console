@@ -7,118 +7,101 @@ package ru.novosoft.smsc.jsp;
  */
 
 
-public class StatusesImpl implements Statuses
-{
-  private boolean routesChanged = false;
-  private boolean routesSaved = false;
-  private boolean routesRestored = false;
-  private boolean routesLoaded = false;
-  private boolean subjectsChanged = false;
-  private boolean aliasesChanged = false;
-  private boolean profilesChanged = false;
-  private boolean hostsChanged = false;
-  //private boolean servicesChanged = false;
-  private boolean usersChanged = false;
-  private boolean smscChanged = false;
-  private boolean webXmlChanged = false;
-  private boolean providersChanged = false;
-  private boolean categoriesChanged = false;
-  private boolean scheduleChanged = false;
+public class StatusesImpl implements Statuses {
+    private boolean routesChanged = false;
+    private boolean routesSaved = false;
+    private boolean routesRestored = false;
+    private boolean routesLoaded = false;
+    private boolean subjectsChanged = false;
+    private boolean aliasesChanged = false;
+    private boolean profilesChanged = false;
+    private boolean hostsChanged = false;
+    //private boolean servicesChanged = false;
+    private boolean usersChanged = false;
+    private boolean smscChanged = false;
+    private boolean webXmlChanged = false;
+    private boolean providersChanged = false;
+    private boolean categoriesChanged = false;
+    private boolean scheduleChanged = false;
+    private boolean closedGroupChanged = false;
 
-	public boolean isSomethingChanged()
-	{
-	return isAliasesChanged() || isHostsChanged() || isProfilesChanged() || isRoutesChanged()
-			|| isSmscChanged() || isSubjectsChanged() || isUsersChanged() || isWebXmlChanged()
-			|| isProvidersChanged() || isCategoriesChanged() || isScheduleChanged();
-	}
-
-  public boolean isRoutesChanged()
-  {
-    return routesChanged;
-  }
-
-  public void setRoutesChanged(boolean routesChanged)
-  {
-    this.routesChanged = routesChanged;
-    if (routesChanged) {
-      routesRestored = false;
-      routesLoaded = false;
+    public boolean isSomethingChanged() {
+        return isAliasesChanged() || isHostsChanged() || isProfilesChanged() || isRoutesChanged()
+                || isSmscChanged() || isSubjectsChanged() || isUsersChanged() || isWebXmlChanged()
+                || isProvidersChanged() || isCategoriesChanged() || isScheduleChanged();
     }
-  }
 
-  public boolean isSubjectsChanged()
-  {
-    return subjectsChanged;
-  }
-
-  public void setSubjectsChanged(boolean subjectsChanged)
-  {
-    this.subjectsChanged = subjectsChanged;
-    if (subjectsChanged) {
-      routesRestored = false;
-      routesLoaded = false;
+    public boolean isRoutesChanged() {
+        return routesChanged;
     }
-  }
 
-  public boolean isRoutesSaved()
-  {
-    return routesSaved;
-  }
+    public void setRoutesChanged(boolean routesChanged) {
+        this.routesChanged = routesChanged;
+        if (routesChanged) {
+            routesRestored = false;
+            routesLoaded = false;
+        }
+    }
 
-  public void setRoutesSaved(boolean routesSaved)
-  {
-    this.routesSaved = routesSaved;
-  }
+    public boolean isSubjectsChanged() {
+        return subjectsChanged;
+    }
 
-  public boolean isRoutesRestored()
-  {
-    return routesRestored;
-  }
+    public void setSubjectsChanged(boolean subjectsChanged) {
+        this.subjectsChanged = subjectsChanged;
+        if (subjectsChanged) {
+            routesRestored = false;
+            routesLoaded = false;
+        }
+    }
 
-  public void setRoutesRestored(boolean routesRestored)
-  {
-    this.routesRestored = routesRestored;
-  }
+    public boolean isRoutesSaved() {
+        return routesSaved;
+    }
 
-  public boolean isRoutesLoaded()
-  {
-    return routesLoaded;
-  }
+    public void setRoutesSaved(boolean routesSaved) {
+        this.routesSaved = routesSaved;
+    }
 
-  public void setRoutesLoaded(boolean routesLoaded)
-  {
-    this.routesLoaded = routesLoaded;
-  }
+    public boolean isRoutesRestored() {
+        return routesRestored;
+    }
 
-  public boolean isAliasesChanged()
-  {
-    return aliasesChanged;
-  }
+    public void setRoutesRestored(boolean routesRestored) {
+        this.routesRestored = routesRestored;
+    }
 
-  public void setAliasesChanged(boolean aliasesChanged)
-  {
-    this.aliasesChanged = aliasesChanged;
-  }
+    public boolean isRoutesLoaded() {
+        return routesLoaded;
+    }
 
-  public boolean isProfilesChanged()
-  {
-    return profilesChanged;
-  }
+    public void setRoutesLoaded(boolean routesLoaded) {
+        this.routesLoaded = routesLoaded;
+    }
 
-  public void setProfilesChanged(boolean profilesChanged)
-  {
-    this.profilesChanged = profilesChanged;
-  }
+    public boolean isAliasesChanged() {
+        return aliasesChanged;
+    }
 
-  public boolean isHostsChanged()
-  {
-    return hostsChanged;
-  }
+    public void setAliasesChanged(boolean aliasesChanged) {
+        this.aliasesChanged = aliasesChanged;
+    }
 
-  public void setHostsChanged(boolean hostsChanged)
-  {
-    this.hostsChanged = hostsChanged;
-  }
+    public boolean isProfilesChanged() {
+        return profilesChanged;
+    }
+
+    public void setProfilesChanged(boolean profilesChanged) {
+        this.profilesChanged = profilesChanged;
+    }
+
+    public boolean isHostsChanged() {
+        return hostsChanged;
+    }
+
+    public void setHostsChanged(boolean hostsChanged) {
+        this.hostsChanged = hostsChanged;
+    }
 
 /*
 	public boolean isServicesChanged()
@@ -132,63 +115,60 @@ public class StatusesImpl implements Statuses
 	}
 */
 
-  public boolean isUsersChanged()
-  {
-    return usersChanged;
-  }
+    public boolean isUsersChanged() {
+        return usersChanged;
+    }
 
-  public void setUsersChanged(boolean usersChanged)
-  {
-    this.usersChanged = usersChanged;
-  }
+    public void setUsersChanged(boolean usersChanged) {
+        this.usersChanged = usersChanged;
+    }
 
-  public boolean isSmscChanged()
-  {
-    return smscChanged;
-  }
+    public boolean isSmscChanged() {
+        return smscChanged;
+    }
 
-  public void setSmscChanged(boolean smscChanged)
-  {
-    this.smscChanged = smscChanged;
-  }
+    public void setSmscChanged(boolean smscChanged) {
+        this.smscChanged = smscChanged;
+    }
 
-  public boolean isWebXmlChanged()
-  {
-    return webXmlChanged;
-  }
+    public boolean isWebXmlChanged() {
+        return webXmlChanged;
+    }
 
-  public void setProvidersChanged(boolean providersChanged)
-  {
-    this.providersChanged = providersChanged;
-  }
+    public void setProvidersChanged(boolean providersChanged) {
+        this.providersChanged = providersChanged;
+    }
 
-  public void setCategoriesChanged(boolean categoriesChanged)
-  {
-    this.categoriesChanged = categoriesChanged;
-  }
+    public void setCategoriesChanged(boolean categoriesChanged) {
+        this.categoriesChanged = categoriesChanged;
+    }
 
-  public boolean isProvidersChanged()
-  {
-    return providersChanged;
-  }
+    public boolean isProvidersChanged() {
+        return providersChanged;
+    }
 
-  public boolean isCategoriesChanged()
-  {
-    return categoriesChanged;
-  }
+    public boolean isCategoriesChanged() {
+        return categoriesChanged;
+    }
 
-  public void setWebXmlChanged(boolean webXmlChanged)
-  {
-    this.webXmlChanged = webXmlChanged;
-  }
+    public void setWebXmlChanged(boolean webXmlChanged) {
+        this.webXmlChanged = webXmlChanged;
+    }
 
-	public boolean isScheduleChanged()
-	{
-		return scheduleChanged;
-	}
+    public boolean isScheduleChanged() {
+        return scheduleChanged;
+    }
 
-	public void setScheduleChanged(boolean scheduleChanged)
-	{
-		this.scheduleChanged = scheduleChanged;
-	}
+    public void setScheduleChanged(boolean scheduleChanged) {
+        this.scheduleChanged = scheduleChanged;
+    }
+
+    public boolean isClosedGroupChanged() {
+        return closedGroupChanged;
+    }
+
+    public void setClosedGroupChanged(boolean closedGroupChanged) {
+        this.closedGroupChanged = closedGroupChanged;
+    }
+
 }

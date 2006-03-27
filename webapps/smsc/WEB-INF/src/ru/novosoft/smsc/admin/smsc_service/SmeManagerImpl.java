@@ -42,7 +42,7 @@ public class SmeManagerImpl implements SmeManager {
         } catch (ParserConfigurationException e) {
             logger.error("Couldn't configure xml parser", e);
             throw new AdminException("Couldn't configure xml parser: " + e.getMessage());
-        } catch (SAXException e) {
+        } catch (SAXException e) {                                      
             logger.error("Couldn't parse", e);
             throw new AdminException("Couldn't parse: " + e.getMessage());
         } catch (IOException e) {
@@ -79,8 +79,8 @@ public class SmeManagerImpl implements SmeManager {
         return smes.get(id);
     }
 
-    public synchronized SME add(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType, String password, String addrRange, int smeN, boolean wantAlias, boolean forceDC, int timeout, String receiptSchemeName, boolean disabled, byte mode, int proclimit, int schedlimit) throws AdminException {
-        return add(new SME(id, priority, type, typeOfNumber, numberingPlan, interfaceVersion, systemType, password, addrRange, smeN, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode, proclimit, schedlimit));
+    public synchronized SME add(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType, String password, String addrRange, int smeN, boolean wantAlias, boolean forceDC, int timeout, String receiptSchemeName, boolean disabled, byte mode, int proclimit, int schedlimit, int accessMask) throws AdminException {
+        return add(new SME(id, priority, type, typeOfNumber, numberingPlan, interfaceVersion, systemType, password, addrRange, smeN, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode, proclimit, schedlimit, accessMask));
     }
 
     public synchronized SME add(SME newSme) throws AdminException {

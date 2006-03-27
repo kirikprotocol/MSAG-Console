@@ -1,10 +1,9 @@
-<%@page import="java.util.*,
-                ru.novosoft.smsc.jsp.SMSCJspException,
-                ru.novosoft.smsc.jsp.SMSCAppContext,
-                java.io.PrintStream"%><%
+<%@ page import="ru.novosoft.smsc.jsp.SMSCJspException,
+                 java.io.PrintStream,
+                 java.util.Iterator" %><%
 if (errorMessages.size() > 0)
 {
-	%><div class=content><%
+    %><div class=content><%
 	for(Iterator it = errorMessages.iterator(); it.hasNext();)
 	{
 		SMSCJspException exc = (SMSCJspException) it.next();

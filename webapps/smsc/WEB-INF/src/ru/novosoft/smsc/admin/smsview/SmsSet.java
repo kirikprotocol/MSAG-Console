@@ -86,7 +86,7 @@ public class SmsSet
 
   public boolean isHasMore()
   {
-    return (rows.size() > 0) ? hasMore : false;
+    return (rows.size() > 0) && hasMore;
   }
 
   public void setHasMore(boolean hasMore)

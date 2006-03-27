@@ -3,7 +3,8 @@
                  ru.novosoft.smsc.admin.route.SourceList,
                  ru.novosoft.smsc.jsp.smsc.routes.Index,
                  ru.novosoft.smsc.jsp.util.tables.DataItem,
-                 java.text.DateFormat" %>
+                 java.text.DateFormat,
+                 java.util.*" %>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.routes.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%@ taglib uri="http://jakarta.apache.org/taglibs/input-1.0" prefix="input" %>
@@ -11,24 +12,24 @@
     TITLE = getLocString("routes.title");
 
     switch (bean.process(request)) {
-    case Index.RESULT_DONE :
-        response.sendRedirect("index.jsp");
-        return;
-    case Index.RESULT_OK :
-        break;
-    case Index.RESULT_ERROR :
-        break;
-    case Index.RESULT_FILTER :
-        response.sendRedirect("routesFilter.jsp");
-        return;
-    case Index.RESULT_ADD :
-        response.sendRedirect("routesAdd.jsp");
-        return;
-    case Index.RESULT_EDIT :
-        response.sendRedirect("routesEdit.jsp?routeId=" + URLEncoder.encode(bean.getEditRouteId()));
-        return;
-    default :
-        errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
+        case Index.RESULT_DONE :
+            response.sendRedirect("index.jsp");
+            return;
+        case Index.RESULT_OK :
+            break;
+        case Index.RESULT_ERROR :
+            break;
+        case Index.RESULT_FILTER :
+            response.sendRedirect("routesFilter.jsp");
+            return;
+        case Index.RESULT_ADD :
+            response.sendRedirect("routesAdd.jsp");
+            return;
+        case Index.RESULT_EDIT :
+            response.sendRedirect("routesEdit.jsp?routeId=" + URLEncoder.encode(bean.getEditRouteId()));
+            return;
+        default :
+            errorMessages.add(new SMSCJspException(ru.novosoft.smsc.jsp.SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
     }
 %>
 <%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
@@ -62,7 +63,7 @@
 <input type=hidden name=initialized value=true>
 <input type=hidden name=startPosition value="<%= bean.getStartPosition() %>">
 <input type=hidden name=editRouteId id=editRouteId>
-<input type=hidden name=totalSize value=<%= bean.getTotalSize() %>>
+<input type=hidden name=totalSize value="<%= bean.getTotalSize() %>">
 <input type=hidden name=sort>
 <script>
     function edit(name_to_edit) {
@@ -122,21 +123,21 @@
         }
     }
 </script>
-<table class=page_menu with="100%">
+<table class=page_menu width="100%">
     <%--<tr>
 	<td><input:select name="filterSelect" default="1"
 		attributes="<%= as %>" options="<%= o %>"  /></td></tr> --%>
     <tr>
-        <td align="left" with="10%">
+        <td align="left" width="10%">
             <%= getLocString("common.util.FilterBy") %>:
         </td>
-        <td align="left" with="90%">
+        <td align="left" width="90%">
             &nbsp;
         </td>
         <%
             page_small_menu_begin(out);
             page_menu_button(session, out, "mbQuickFilter", "common.buttons.apply", "common.buttons.applyFilter",
-                             "clickFilterSelect()", true);
+                    "clickFilterSelect()", true);
             page_menu_button(session, out, "mbClear", "common.buttons.clear", "common.buttons.clearFilter", "clickClear()");
 
             //page_menu_button(out, "mbCancel", "common.buttons.cancel", "common.buttons.cancelFilterEditing", "clickCancel()");
@@ -147,26 +148,22 @@
 </table>
 <hr>
 <%
-    java.util.HashMap as = new java.util.HashMap();
+    //java.util.HashMap as = new java.util.HashMap();
+    //as.put("multiple", null);
+    //as.put("onchange", "return setSort('Route ID')");
+    //as.put("size", "10");
+    //java.util.HashMap aq = new java.util.HashMap();
+    //aq.put("multiple", null);
+    //aq.put("onenter", "return setSort('Route ID')");
 
-    // as.put("multiple", null);
-    // as.put("onchange", "return setSort('Route ID')");
-    as.put("size", "10");
-
-    java.util.HashMap aq = new java.util.HashMap();
-
-    // aq.put("multiple", null);
-    aq.put("onenter", "return setSort('Route ID')");
-
-    java.util.TreeMap o = new java.util.TreeMap();
-
+    /*java.util.TreeMap o = new java.util.TreeMap();
     o.put("Sources Subj", "1");
     o.put("Sources Mask", "2");
     o.put("Dest Subj", "3");
     o.put("Dest Mask", "4");
-    o.put("SMEs", "5");
+    o.put("SMEs", "5");*/
 %>
-<table with="100%">
+<table width="100%">
     <%--<tr>
 	<td><input:select name="filterSelect" default="1"
 		attributes="<%= as %>" options="<%= o %>"  /></td></tr> --%>
@@ -306,8 +303,7 @@
             if (isActive) {
         %>
         <img src="/images/ic_checked.gif"><%
-    }
-    else {
+    } else {
     %>
         &nbsp;
         <%
@@ -319,8 +315,7 @@
             if (isEnabling) {
         %>
         <img src="/images/ic_checked.gif"><%
-    }
-    else {
+    } else {
     %>
         &nbsp;
         <%
@@ -332,8 +327,7 @@
             if (isBilling) {
         %>
         <img src="/images/ic_checked.gif"><%
-    }
-    else {
+    } else {
     %>
         &nbsp;
         <%
@@ -345,8 +339,7 @@
             if (isArchiving) {
         %>
         <img src="/images/ic_checked.gif"><%
-    }
-    else {
+    } else {
     %>
         &nbsp;
         <%
@@ -358,8 +351,7 @@
             if (isSuppressDeliveryReports) {
         %>
         <img src="/images/ic_checked.gif"><%
-    }
-    else {
+    } else {
     %>
         &nbsp;
         <%
@@ -371,8 +363,7 @@
             if (isTransit) {
         %>
         <img src="/images/ic_checked.gif"><%
-    }
-    else {
+    } else {
     %>
         &nbsp;
         <%
@@ -398,7 +389,7 @@
 </div>
 <%
     final Locale locale = getLoc();
-    Calendar restoreCalendar = new GregorianCalendar(locale);
+    java.util.Calendar restoreCalendar = new GregorianCalendar(locale);
     DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM, locale);
     String restoreDate = null;
     final Date restoreFileDate = bean.getRestoreFileDate();

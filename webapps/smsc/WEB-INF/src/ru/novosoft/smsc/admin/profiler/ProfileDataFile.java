@@ -57,8 +57,9 @@ public class ProfileDataFile {
         try {
             input = new FileInputStream(profilerStorePath);
         } catch (FileNotFoundException e) {
+            logger.error("Profiler store file is not found");
             e.printStackTrace();
-            throw new AdminException(e.getMessage());
+//            throw new AdminException(e.getMessage());
         }
     }
 
@@ -78,10 +79,11 @@ public class ProfileDataFile {
             fis = new FileInputStream(profilerStorePath);
             byte buf[] = new byte[256 * 1024];
 
+            //todo поддержку новой версии формата датафайла
             String FileName = Message.readString(fis, 8);
             int version = (int) Message.readUInt32(fis);
             while (true) {
-                int msgSize1 = 117;
+                int msgSize1 = 129; // 1+8+1+1+21+4+4+4+32+1+32+1+1+1+1+1+1+1+1+4+4+4
                 readBuffer(fis, buf, msgSize1);
                 InputStream bis = new ByteArrayInputStream(buf, 0, msgSize1);
 
@@ -109,6 +111,14 @@ public class ProfileDataFile {
                 short divertModifiable = (short) Message.readUInt8(bis);//f.WriteByte(divertModifiable);
                 short udhconcat = (short) Message.readUInt8(bis);//f.WriteByte(udhconcat);
                 short translit = (short) Message.readUInt8(bis);//f.WriteByte(translit);
+                int groupId = 0;
+                int inputAccessMask = 0;
+                int outputAccessMask = 0;
+                if (version > 0x00010000) { //todo подставить нужный номер версии
+                    groupId = (int) Message.readUInt32(bis);
+                    inputAccessMask = (int) Message.readUInt32(bis);
+                    outputAccessMask = (int) Message.readUInt32(bis);
+                }
 
                 if (used == 1 && isAddProfile(mask, queryFilter, show)) {
                     String divertActiveStr = String.valueOf(divertActive != 0);
@@ -125,7 +135,7 @@ public class ProfileDataFile {
 
                     Profile profile = setProfile(mask, codepage, reportoptions,
                             locale, hide, hideModifiable, divert, divertResult,
-                            divertModifiable, udhconcat, translit);
+                            divertModifiable, udhconcat, translit, groupId, inputAccessMask, outputAccessMask);
 
                     results.add(new ProfileDataItem(profile));
                     totalCount++;
@@ -228,13 +238,15 @@ public class ProfileDataFile {
         return result.toString();
     }
 
-    private Profile setProfile(Mask mask, int codepage,
-                               int reportoptions,
-                               String locale, int hide,
-                               short hideModifiable, String divert,
-                               String divertResult, short divertModifiable,
-                               short udhconcat, short translit) throws AdminException {
-        Profile profile = new Profile(mask,
+    private Profile setProfile(final Mask mask, final int codepage,
+                               final int reportoptions,
+                               final String locale, final int hide,
+                               final short hideModifiable, final String divert,
+                               final String divertResult, final short divertModifiable,
+                               final short udhconcat, final short translit,
+                               final int groupId,
+                               final int inputAccessMask, final int outputAccessMask) throws AdminException {
+        return new Profile(mask,
                 Profile.getCodepageString((byte) ((byte) codepage & 0x7F)),
                 String.valueOf((codepage & 0x80) != 0),
                 Profile.getReportOptionsString((byte) reportoptions),
@@ -245,8 +257,10 @@ public class ProfileDataFile {
                 divertResult,
                 String.valueOf((divertModifiable) != 0),
                 String.valueOf((udhconcat) != 0),
-                String.valueOf((translit) != 0));
-        return profile;
+                String.valueOf((translit) != 0),
+                groupId,
+                inputAccessMask,
+                outputAccessMask);
     }
 
 

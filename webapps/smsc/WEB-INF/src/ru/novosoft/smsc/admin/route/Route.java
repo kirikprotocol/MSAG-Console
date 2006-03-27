@@ -137,7 +137,7 @@ public class Route
     srcSmeId = routeElem.getAttribute("srcSmeId");
     deliveryMode = routeElem.getAttribute("deliveryMode");
     forwardTo = routeElem.getAttribute("forwardTo");
-    hide = routeElem.getAttribute("hide").length() > 0 ? routeElem.getAttribute("hide").equalsIgnoreCase("true") : true;
+    hide = routeElem.getAttribute("hide").length() <= 0 || routeElem.getAttribute("hide").equalsIgnoreCase("true");
     replayPath = getReplayPathValue(routeElem.getAttribute("replayPath"));
     notes = "";
     final NodeList notesList = routeElem.getElementsByTagName("notes");

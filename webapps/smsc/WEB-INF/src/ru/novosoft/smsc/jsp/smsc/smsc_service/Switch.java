@@ -27,7 +27,7 @@ public class Switch extends SmscBean
     int result = super.process(request);
     if (result != RESULT_OK)
       return result;
-    if (appContext.getInstallType() != ResourceGroupConstants.RESOURCEGROUP_TYPE_HA) return error(SMSCErrors.error.smsc.contextInitFailed);
+    if (appContext.getInstallType() == ResourceGroupConstants.RESOURCEGROUP_TYPE_SINGLE) return error(SMSCErrors.error.smsc.contextInitFailed);
 
     if (mbOnline != null)
       return processOnline();

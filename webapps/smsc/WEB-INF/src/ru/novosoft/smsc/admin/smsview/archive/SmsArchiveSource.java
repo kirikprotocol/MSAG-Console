@@ -42,7 +42,7 @@ public class SmsArchiveSource extends SmsSource
     try {
       QueryMessage request = new QueryMessage(query);
 
-      socket = new Socket(context.getHost(), context.getPort());
+      socket = new Socket("sunfire"/*context.getHost()*/, context.getPort());
       input = socket.getInputStream();
       output = socket.getOutputStream();
 
@@ -121,7 +121,7 @@ public class SmsArchiveSource extends SmsSource
     try {
       CountMessage request = new CountMessage(query);
 
-      socket = new Socket(context.getHost(), context.getPort());
+      socket = new Socket("sunfire"/*context.getHost()*/, context.getPort()); //todo remove hardcode
       input = socket.getInputStream();
       output = socket.getOutputStream();
 
