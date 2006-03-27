@@ -48,11 +48,16 @@ public:
 
   virtual int Execute()
   {
+    Service* svc=0;
     try {
-      MutexGuard servicesGuard(DaemonCommandDispatcher::servicesListMutex);
-      MutexGuard configGuard(DaemonCommandDispatcher::configManagerMutex);
-      DaemonCommandDispatcher::updateServiceFromConfig(DaemonCommandDispatcher::services[serviceId]);
-      pid = DaemonCommandDispatcher::services[serviceId]->start();
+      {
+        MutexGuard servicesGuard(DaemonCommandDispatcher::servicesListMutex);
+        MutexGuard configGuard(DaemonCommandDispatcher::configManagerMutex);
+        DaemonCommandDispatcher::updateServiceFromConfig(DaemonCommandDispatcher::services[serviceId]);
+        svc=DaemonCommandDispatcher::services[serviceId];
+      }
+      svc->autoDelay();
+      pid = svc->start();
     } catch (AdminException& e) {
       smsc_log_error(logger, "Couldn't start service \"%s\", nested: %s", serviceId, e.what());
       return -1;
@@ -92,7 +97,7 @@ public:
         __trace2__("CHILD %u is finished", chldpid);
 #endif
         MutexGuard a(DaemonCommandDispatcher::servicesListMutex);
-        Service* svc=DaemonCommandDispatcher::services.get(serviceId);
+        svc=DaemonCommandDispatcher::services.get(serviceId);
         std::string cmd=svc->getServiceDir();
         cmd+='/';
         cmd+=Service::hostDown;
@@ -101,20 +106,32 @@ public:
         __trace2__("try to exec '%s'",cmd.c_str());
         std::system(cmd.c_str());
 
+        bool needRestart=false;
+        bool restartOk=false;
+
         if(svc->getStatus()!=Service::stopping)
         {
-          __trace2__("restarting service %s at another node", serviceId);
-          try{
-            icon->remoteStartService(serviceId);
-          }catch(std::exception& e)
+          needRestart=true;
+          if(svc->getType()==ServiceInfo::failover)
           {
-            __trace2__("failed to start remote service '%s':%s", serviceId,e.what());
+            __trace2__("restarting service %s at another node", serviceId);
+            try{
+              icon->remoteStartService(serviceId);
+              restartOk=true;
+            }catch(std::exception& e)
+            {
+              __trace2__("failed to start remote service '%s':%s", serviceId,e.what());
+            }
           }
         }
         if (const char * const serviceId = DaemonCommandDispatcher::services.markServiceAsStopped(chldpid))
         {
           MutexGuard lock(DaemonCommandDispatcher::configManagerMutex);
           DaemonCommandDispatcher::updateServiceFromConfig(DaemonCommandDispatcher::services[serviceId]);
+        }
+        if(needRestart && !restartOk)
+        {
+          ChildShutdownWaiter::startService(svc->getId());
         }
         isStopping = true;
       }

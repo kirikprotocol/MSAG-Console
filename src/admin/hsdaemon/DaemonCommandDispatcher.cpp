@@ -38,6 +38,9 @@ Mutex DaemonCommandDispatcher::configManagerMutex;
 Mutex ChildShutdownWaiter::startedWaitersMutex;
 WAITERS ChildShutdownWaiter::startedWaiters;
 unsigned int DaemonCommandDispatcher::shutdownTimeout;
+int DaemonCommandDispatcher::retryTimeout;
+int DaemonCommandDispatcher::retryCount;
+int DaemonCommandDispatcher::stayAliveTimeout;
 
 
 ///<summary>daemon command dispatcher implementation</summary>
@@ -48,13 +51,34 @@ void DaemonCommandDispatcher::init(config::Manager * confManager) throw ()
   MutexGuard lock(configManagerMutex);
   configManager = confManager;
   shutdownTimeout = 10;
+  retryTimeout=5;
+  retryCount=3;
+  stayAliveTimeout=60;
+  Logger* log=Logger::getInstance("hsadmini");
   try {
     shutdownTimeout = configManager->getInt(CONFIG_SHUTDOWN_TIMEOUT);
-  } catch (ConfigException &e) {
-    smsc_log_warn(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "Couldn't get shutdown timeout from config. Shutdown timeout setted to %i seconds. Please define \"%s\" properly in daemon config.\nNested: %s", shutdownTimeout, CONFIG_SHUTDOWN_TIMEOUT, e.what());
-  } catch (...) {
-    smsc_log_warn(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "Couldn't get shutdown timeout from config. Shutdown timeout setted to %i seconds. Please define \"%s\" properly in daemon config.\nNested: Unknown exception", shutdownTimeout, CONFIG_SHUTDOWN_TIMEOUT);
+  } catch (std::exception& e) {
+    smsc_log_warn(log, "Couldn't get shutdown timeout from config. Shutdown timeout setted to %i seconds. Please define \"%s\" properly in daemon config.\nNested: %s", shutdownTimeout, CONFIG_SHUTDOWN_TIMEOUT, e.what());
   }
+  try{
+    retryTimeout=configManager->getInt(CONFIG_RETRY_TIMEOUT);
+  }catch(std::exception& e)
+  {
+    smsc_log_warn(log,"Config parameter not found:%s",CONFIG_RETRY_TIMEOUT);
+  }
+  try{
+    retryCount=configManager->getInt(CONFIG_RETRY_COUNT);
+  }catch(std::exception& e)
+  {
+    smsc_log_warn(log,"Config parameter not found:%s",CONFIG_RETRY_COUNT);
+  }
+  try{
+    stayAliveTimeout=configManager->getInt(CONFIG_STAY_ALIVE_TIMEOUT);
+  }catch(std::exception& e)
+  {
+    smsc_log_warn(log,"Config parameter not found:%s",CONFIG_STAY_ALIVE_TIMEOUT);
+  }
+
   addServicesFromConfig();
 }
 void DaemonCommandDispatcher::shutdown()
@@ -92,13 +116,17 @@ Response * DaemonCommandDispatcher::handle(const Command * const command)
       return remove_service((CommandRemoveService*)command);
     case Command::list_services:
       return list_services((CommandListServices*)command);
-    case Command::set_service_startup_parameters:
-      return set_service_startup_parameters((CommandSetServiceStartupParameters*)command);
+    case Command::set_hsservice_startup_parameters:
+      return set_hsservice_startup_parameters((CommandSetHSServiceStartupParameters*)command);
     default:
       return new Response(Response::Error, "Unknown command");
     }
   }
   catch (AdminException &e)
+  {
+    return new Response(Response::Error, e.what());
+  }
+  catch(std::exception& e)
   {
     return new Response(Response::Error, e.what());
   }
@@ -127,11 +155,9 @@ Response * DaemonCommandDispatcher::add_hsservice(const CommandAddHSService * co
     {
       {
         MutexGuard guard(servicesListMutex);
-        Service* svc=new Service(configManager->getString(CONFIG_SERVICES_FOLDER_PARAMETER), command->getServiceId(), command->getArgs(), command->getServiceType(),command->isAutostart());
-        svc->setHost(command->getHostName());
-        services.add(svc);
+        services.add(new Service(configManager->getString(CONFIG_SERVICES_FOLDER_PARAMETER), command->getServiceInfo()));
       }
-      putServiceToConfig(command->getServiceId(), command->getArgs(), command->isAutostart(),command->getHostName());
+      putServiceToConfig(command->getServiceInfo());
       return new Response(Response::Ok, 0);
     }
     else
@@ -180,7 +206,7 @@ Response * DaemonCommandDispatcher::remove_service(const CommandRemoveService * 
 }
 
 
-Response * DaemonCommandDispatcher::set_service_startup_parameters(const CommandSetServiceStartupParameters * const command)
+Response * DaemonCommandDispatcher::set_hsservice_startup_parameters(const CommandSetHSServiceStartupParameters * const command)
   throw (AdminException)
 {
   smsc_log_debug(logger, "set service startup parameters");
@@ -191,12 +217,10 @@ Response * DaemonCommandDispatcher::set_service_startup_parameters(const Command
       MutexGuard guard(servicesListMutex);
       Service *s = services[command->getServiceId()];
 
-      ///!!!!!!!!!!!!!!! TODO !!!!!!!!!!!!!!!!!!!!!
-
-      putServiceToConfig(command->getServiceId(), command->getArgs(), command->isAutostart(),"");
+      putServiceToConfig(command->getServiceInfo());
       if (s->getStatus() == Service::stopped)
       {
-        s->setArgs(command->getArgs());
+        s->setArgs(command->getServiceInfo().args.c_str());
       }
       return new Response(Response::Ok, 0);
     }
@@ -235,6 +259,27 @@ Response * DaemonCommandDispatcher::start_service(const CommandStartService * co
   {
     if (command->getServiceId() != 0)
     {
+      MutexGuard guard(servicesListMutex);
+      Service* svc=services[command->getServiceId()];
+      if(!svc)throw AdminException("Unknown serviceId='%s'",command->getServiceId());
+      if(svc->getType()!=ServiceInfo::standalone)
+      {
+        if(svc->getInfo().preferedNode.length()>0 && svc->getInfo().preferedNode!=icon->getLocalNode())
+        {
+          try{
+            if(icon->remoteStartService(command->getServiceId()))
+            {
+              return new Response(Response::Ok,"");
+            }else
+            {
+              smsc_log_warn(logger,"failed to start service '%s' on prefered node",command->getServiceId());
+            }
+          }catch(std::exception& e)
+          {
+            smsc_log_warn(logger,"failed to start service '%s' on prefered node '%s'",command->getServiceId(),e.what());
+          }
+        }
+      }
       ChildShutdownWaiter::startService(command->getServiceId());
       return new Response(Response::Ok, "");
     }
@@ -262,7 +307,18 @@ Response * DaemonCommandDispatcher::shutdown_service(const CommandShutdown * con
       smsc_log_debug(logger, "shutdown service \"%s\"", command->getServiceId());
       {
         MutexGuard guard(servicesListMutex);
-        services[command->getServiceId()]->shutdown();
+        Service* svc=services[command->getServiceId()];
+        if(!svc)throw AdminException("Unknown serviceId='%s'",command->getServiceId());
+        if(svc->getType()==ServiceInfo::standalone)
+        {
+          svc->shutdown();
+        }else
+        {
+          if(svc->getStatus()==Service::stopped)
+          {
+            icon->remoteShutdownService(command->getServiceId());
+          }
+        }
       }
       return new Response(Response::Ok, 0);
     }
@@ -313,59 +369,68 @@ Response * DaemonCommandDispatcher::kill_service(const CommandKillService * cons
 void DaemonCommandDispatcher::addServicesFromConfig()
   throw ()
 {
+  Logger* log=Logger::getInstance("hsadm.add");
   try
   {
     std::auto_ptr<CStrSet> childs(configManager->getChildSectionNames(CONFIG_SERVICES_SECTION));
     for (CStrSet::iterator i = childs.get()->begin(); i != childs.get()->end(); i++)
     {
+      ServiceInfo info;
       const char * fullServiceSection = i->c_str();
       const char * dotpos = strrchr(fullServiceSection, '.');
-      //const size_t serviceNameBufLen = strlen(dotpos+1) +1;
-      std::auto_ptr<char> serviceId(decodeDot(cStringCopy(dotpos+1)));
+      info.id=decodeDot(dotpos+1);
+      smsc_log_info(log,"Loading service '%s'",info.id.c_str());
+
 
       std::string prefix(fullServiceSection);
       prefix += '.';
 
       std::string tmp = prefix;
       tmp += "args";
-      const char * const serviceArgs = configManager->getString(tmp.c_str());
+      info.args = configManager->getString(tmp.c_str());
 
-      bool autostart = true;
+      info.autoStart = true;
       try {
-        autostart = configManager->getBool((prefix+"autostart").c_str());
+        info.autoStart = configManager->getBool((prefix+"autostart").c_str());
       } catch (AdminException &e) {
-        smsc_log_warn(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "Could not get autostart flag for service \"%s\", nested: %s", serviceId.get(), e.what());
+        smsc_log_warn(log, "Could not get autostart flag for service \"%s\", nested: %s", info.id.c_str(), e.what());
       } catch (...)
       {
         //skip
       }
 
-      Service::service_type type;
       tmp=prefix+"serviceType";
 
       if(strcmp(configManager->getString(tmp.c_str()),"failover")==0)
       {
-        type=Service::failover;
+        info.serviceType=ServiceInfo::failover;
       }else if(strcmp(configManager->getString(tmp.c_str()),"standalone")==0)
       {
-        type=Service::standalone;
+        info.serviceType=ServiceInfo::standalone;
       }else
       {
         throw AdminException("Invalid service type:%s",configManager->getString(tmp.c_str()));
       }
-
-      Service* svc=new Service(configManager->getString(CONFIG_SERVICES_FOLDER_PARAMETER), serviceId.get(), serviceArgs, type,autostart);
       try{
         tmp=prefix+"hostName";
-        svc->setHost(configManager->getString(tmp.c_str()));
+        const char* val=configManager->getString(tmp.c_str());
+        if(val && *val)info.hostName=val;
       }catch(std::exception& e)
       {
-        smsc_log_warn(Logger::getInstance("admdmn.Ini"),"hostName not found for service %s, hostname switching disabled",serviceId.get());
+        smsc_log_warn(Logger::getInstance("admdmn.Ini"),"hostName not found for service %s, hostname switching disabled",info.id.c_str());
       }
       catch(HashInvalidKeyException& e)
       {
-        smsc_log_warn(Logger::getInstance("admdmn.Ini"),"hostName not found for service %s, hostname switching disabled",serviceId.get());
+        smsc_log_warn(Logger::getInstance("admdmn.Ini"),"hostName not found for service %s, hostname switching disabled",info.id.c_str());
       }
+      try{
+        info.autostartDelay=configManager->getInt((prefix+"autostartDelay").c_str());
+      }catch(...)
+      {
+        //ignore exception if optional parameter not present
+      }
+
+      Service* svc=new Service(configManager->getString(CONFIG_SERVICES_FOLDER_PARAMETER), info);
       services.add(svc);
     }
   }
@@ -412,16 +477,16 @@ void DaemonCommandDispatcher::updateServiceFromConfig(Service * service)
   }
 }
 
-void DaemonCommandDispatcher::putServiceToConfig(const char * const serviceId, const char * const serviceArgs, const bool autostart,const char* hostName)
+void DaemonCommandDispatcher::putServiceToConfig(const ServiceInfo& info)
 {
   MutexGuard lock(configManagerMutex);
   std::string serviceSectionName = CONFIG_SERVICES_SECTION;
-  std::auto_ptr<char> tmpServiceId(encodeDot(cStringCopy(serviceId)));
+  std::auto_ptr<char> tmpServiceId(encodeDot(cStringCopy(info.id.c_str())));
   serviceSectionName += tmpServiceId.get();
 
-  configManager->setString((serviceSectionName + ".args").c_str(), serviceArgs);
-  configManager->setBool((serviceSectionName + ".autostart").c_str(), autostart);
-  configManager->setString((serviceSectionName + ".hostName").c_str(), hostName);
+  configManager->setString((serviceSectionName + ".args").c_str(), info.args.c_str());
+  configManager->setBool((serviceSectionName + ".autostart").c_str(), info.autoStart);
+  configManager->setString((serviceSectionName + ".hostName").c_str(), info.hostName.c_str());
   configManager->save();
   smsc_log_debug(logger, "new config saved");
 }
@@ -446,14 +511,17 @@ void DaemonCommandDispatcher::startAllServices()
   char * serviceId = NULL;
   Service *servicePtr = NULL;
   services.First();
+  Logger* log=Logger::getInstance("hsa.start");
   while (services.Next(serviceId, servicePtr) != 0)
   {
     if (servicePtr != NULL && servicePtr->isAutostart()) {
       try {
+        smsc_log_info(log,"Autostarting service:%s",servicePtr->getId());
+        servicePtr->autostartNotify();
         ChildShutdownWaiter::startService(servicePtr->getId());
       } catch (...) {
         if (serviceId != NULL)
-          smsc_log_error(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "Couldn't start service \"%s\", skipped", serviceId);
+          smsc_log_error(log, "Couldn't start service \"%s\", skipped", serviceId);
       }
     }
   }

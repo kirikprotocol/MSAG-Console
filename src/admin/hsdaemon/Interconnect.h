@@ -49,6 +49,16 @@ public:
   void sendSyncCommand();
   Service::run_status remoteGetServiceStatus(const char* svc);
   bool remoteStartService(const char* svc);
+  bool remoteShutdownService(const char* svc);
+
+  std::string getLocalNode()
+  {
+    return host;
+  }
+  std::string getRemoteNode()
+  {
+    return otherHost;
+  }
 
 protected:
   net::Socket srvSck;
@@ -66,7 +76,8 @@ protected:
   enum Commands{
     cmdSynchronizeServices=1,
     cmdGetServiceStatus,
-    cmdStartService
+    cmdStartService,
+    cmdShutdownService
   };
 };
 

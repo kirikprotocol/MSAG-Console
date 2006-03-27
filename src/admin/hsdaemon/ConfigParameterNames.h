@@ -13,7 +13,10 @@ static const char * const CONFIG_PORT_PARAMETER = "admin.daemon.port";
 static const char * const CONFIG_STDERR_PARAMETER = "admin.daemon.stderr";
 static const char * const CONFIG_LOGGER_SECTION = "admin.daemon.logger.";
 static const char * const CONFIG_LOGGER_CONFIG_PARAMETER = "admin.daemon.logger.configFile";
-static const char * const CONFIG_SHUTDOWN_TIMEOUT = "admin.daemon.shutdown timeout";
+static const char * const CONFIG_SHUTDOWN_TIMEOUT = "admin.daemon.shutdownTimeout";
+static const char * const CONFIG_RETRY_TIMEOUT = "admin.daemon.retryTimeout";
+static const char * const CONFIG_RETRY_COUNT = "admin.daemon.retryCount";
+static const char * const CONFIG_STAY_ALIVE_TIMEOUT = "admin.daemon.stayAliveTimeout";
 
 static const char * const CONFIG_ICON_HOST="admin.daemon.icon.host";
 static const char * const CONFIG_ICON_PORT="admin.daemon.icon.port";

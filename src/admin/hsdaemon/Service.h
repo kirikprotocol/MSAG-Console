@@ -5,6 +5,8 @@
 #include <admin/AdminException.h>
 #include <logger/Logger.h>
 #include <util/cstrings.h>
+#include "ServiceInfo.h"
+#include "util/sleep.h"
 
 namespace smsc {
 namespace admin {
@@ -20,48 +22,28 @@ class Service
 {
 public:
   enum run_status { stopped, starting, running, stopping };
-  enum service_type { failover, standalone };
 
   Service(const char * const services_dir,
-    const char * const serviceId,
-    const char * const serviceArgs,
-    const service_type serviceType,
-    const bool autostartFlag = true,
+    const ServiceInfo& svcInfo,
     const pid_t servicePID = 0,
     const run_status serviceStatus = stopped
     )
-    : logger(Logger::getInstance("admdmn.Svc")), autoStart(autostartFlag)
+    : logger(Logger::getInstance("admdmn.Svc")),autostarted(false)
   {
-    init(services_dir, serviceId, serviceArgs, serviceType,servicePID, serviceStatus);
-  }
-
-  Service()
-    : logger(Logger::getInstance("admdmn.Svc")), autoStart(true)
-  {
-    init(0, 0, 0, failover, 0,stopped);
-  }
-
-  Service(const Service & copy)
-    : logger(Logger::getInstance("admdmn.Svc")), autoStart(copy.autoStart)
-  {
-    init(copy.serviceDir.c_str(), copy.id.c_str(), copy.args.c_str(),copy.svcType, copy.pid);
+    init(services_dir, svcInfo,servicePID, serviceStatus);
+    lastStart=0;
+    restartRetryCount=0;
   }
 
   pid_t start() throw (AdminException);
   void kill() throw (AdminException);
   void shutdown() throw (AdminException);
 
-  const char * const getId() const {return id.c_str();}
+  const char * const getId() const {return info.id.c_str();}
   //const char * const getName() const {return name.get();}
   const pid_t getPid() const {return pid;}
   void setPid(const pid_t newPid) {pid = newPid; status = pid == 0 ? stopped : running;}
-  const char * const getArgs() const {return args.c_str();}
-
-  Service &operator = (const Service &copy)
-  {
-    init(copy.serviceDir.c_str(), copy.id.c_str(), copy.args.c_str(), copy.svcType, copy.pid, copy.status);
-    return *this;
-  }
+  const char * const getArgs() const {return info.args.c_str();}
 
   void setArgs(const char * const serviceArgs) throw (AdminException)
   {
@@ -69,16 +51,16 @@ public:
     {
       throw AdminException("Changing service arguments not permitted: service is running");
     }
-    args=serviceArgs;
+    info.args=serviceArgs;
   }
 
   void setHost(const char* host)
   {
-    hostName=host;
+    info.hostName=host;
   }
   const char* getHost()
   {
-    return hostName.c_str();
+    return info.hostName.c_str();
   }
 
   const char * const getServiceDir()
@@ -86,9 +68,28 @@ public:
     return serviceDir.c_str();
   }
 
-  run_status getStatus() {return status;}
+  void autostartNotify()
+  {
+    autostarted=true;
+  }
+
+  void autoDelay()
+  {
+    smsc_log_info(logger,"autodelay:%s,%d",autostarted?"true":"false",info.autostartDelay);
+    if(autostarted && info.autostartDelay!=0)
+    {
+      millisleep(info.autostartDelay*1000);
+      autostarted=false;
+    }
+  }
+
+  ServiceInfo getInfo()const{return info;}
+
+  run_status getStatus()const {return status;}
   void setStatus(run_status newStatus) { status = newStatus;}
-  bool isAutostart() {return autoStart;}
+  bool isAutostart()const {return info.autoStart;}
+
+  ServiceInfo::ServiceType getType()const{return info.serviceType;}
 
 
   static const char* hostUp;
@@ -96,25 +97,28 @@ public:
 
 protected:
 
+  Service(const Service & copy);
+  Service& operator = (const Service &copy);
+
+
   static const char * const service_exe;
 
   char ** createArguments();
 
   pid_t pid;
-  std::string id;
-  std::string args;
   std::string serviceDir;
-  std::string hostName;
-  bool autoStart;
+
+  ServiceInfo info;
   Logger *logger;
 
   run_status status;
-  service_type svcType;
+  time_t lastStart;
+  int restartRetryCount;
+
+  bool autostarted;
 
   void init(const char * const services_dir,
-  const char * const serviceId,
-  const char * const serviceArgs,
-  const service_type serviceType,
+  const ServiceInfo& svcInfo,
   const pid_t servicePID = 0,
   const run_status serviceStatus = stopped
   );

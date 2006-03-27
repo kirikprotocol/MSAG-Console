@@ -1,6 +1,7 @@
 #include "ServicesList.h"
 #include <admin/hsdaemon/Service.h>
 #include <util/cstrings.h>
+#include "Interconnect.h"
 
 namespace smsc {
 namespace admin {
@@ -72,7 +73,22 @@ char * ServicesList::getText() const
     result += "\" autostart=\"";
     result += s->isAutostart() ? "true" : "false";
     result += "\" status=\"";
-    switch (s->getStatus())
+    int st=s->getStatus();
+    bool localStatus=true;
+    if(st==Service::stopped && s->getType()==ServiceInfo::failover)
+    {
+      try{
+        st=icon->remoteGetServiceStatus(s->getId());
+        if(st!=Service::stopped)
+        {
+          localStatus=false;
+        }
+      }catch(std::exception& e)
+      {
+        //remove status unavialable
+      }
+    }
+    switch (st)
     {
     case Service::running:
       result += "running";
@@ -89,7 +105,9 @@ char * ServicesList::getText() const
     default:
       result += "unknown";
     }
-    result += "\"/>\n";
+    result += "\"";
+    result+="node=\""+(localStatus?icon->getLocalNode():icon->getRemoteNode())+"\"";
+    result+="/>\n";
   }
   return cStringCopy(result.c_str());
 }

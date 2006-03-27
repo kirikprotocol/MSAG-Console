@@ -15,6 +15,8 @@
 #include <system/smscsignalhandlers.h>
 #include <sys/resource.h>
 #include "Interconnect.h"
+#include "DaemonCommandDispatcher.h"
+#include "util/sleep.h"
 
 namespace smsc {
 namespace admin {
@@ -24,12 +26,32 @@ const char * const Service::service_exe = "bin/service";
 const char * Service::hostUp = "bin/hostup";
 const char * Service::hostDown = "bin/hostdown";
 
+bool checkExec(const char* binFile)
+{
+  struct stat st;
+  if(stat(binFile,&st)!=0)return false;
+  return (st.st_mode&(S_IXUSR|S_IXGRP|S_IXOTH))!=0;
+}
+
 pid_t Service::start()
   throw (AdminException)
 {
-  __trace2__("Service::start(%s)",id.c_str());
+  __trace2__("Service::start(%s)",info.id.c_str());
+  time_t now=time(NULL);
+  if(now-lastStart<DaemonCommandDispatcher::stayAliveTimeout)
+  {
+    smsc_log_info(logger,"Delay service start after crash restart for %d seconds",1000*DaemonCommandDispatcher::retryTimeout*(1+restartRetryCount));
+    smsc::util::millisleep(1000*DaemonCommandDispatcher::retryTimeout*(1+restartRetryCount));
+    restartRetryCount++;
+  }else
+  {
+    restartRetryCount=0;
+  }
+  lastStart=time(NULL);
+
+  if(info.id.length()==0)throw AdminException("Service with empty name detected!");
   try{
-    run_status st=icon->remoteGetServiceStatus(id.c_str());
+    run_status st=icon->remoteGetServiceStatus(info.id.c_str());
     __trace2__("remote service status=%d",st);
     switch (st)
     {
@@ -46,8 +68,9 @@ pid_t Service::start()
   }
   catch(std::exception& e)
   {
-    __trace2__("Failed to get remote status of service '%s':%s",id.c_str(),e.what());
+    __trace2__("Failed to get remote status of service '%s':%s",info.id.c_str(),e.what());
   }
+
   switch (status)
   {
   case starting:
@@ -58,6 +81,17 @@ pid_t Service::start()
     throw AdminException("Service stopping");
   case stopped:
     {
+      if(!checkExec((serviceDir+'/'+service_exe).c_str()))
+      {
+        throw AdminException("service binary '%s' is not executable",(serviceDir+'/'+service_exe).c_str());
+      }
+      if(info.hostName.length()>0)
+      {
+        if(!checkExec((serviceDir+"/"+hostUp).c_str()))
+        {
+          throw AdminException("Logical hostname specified, but 'hostup' script not found at '%s'",(serviceDir+"/"+hostUp).c_str());
+        }
+      }
       if (pid_t p = fork())
       { // parent process
         status = running;
@@ -66,7 +100,7 @@ pid_t Service::start()
       else
       { // child process
         chdir(serviceDir.c_str());
-        chmod(service_exe, S_IRWXU | S_IRGRP | S_IXGRP);
+        //chmod(service_exe, S_IRWXU | S_IRGRP | S_IXGRP);
 
         // close all (parent) streams
         struct rlimit flim;
@@ -99,11 +133,11 @@ pid_t Service::start()
         {
                 __warning__("Faield to update signal mask");
         }
-        if(hostName.length()>0)
+        if(info.hostName.length()>0)
         {
           std::string cmd=hostUp;
           cmd+=" ";
-          cmd+=hostName;
+          cmd+=info.hostName;
           std::system(cmd.c_str());
         }
         execv(service_exe, createArguments());
@@ -158,6 +192,8 @@ void Service::shutdown()
 
   smsc_log_debug(logger, "sending %i signal to %u", smsc::system::SHUTDOWN_SIGNAL, pid);
   //int result = sigsend(P_PID, pid, smsc::system::SHUTDOWN_SIGNAL);
+  lastStart=0;
+  restartRetryCount=0;
   int result = ::kill(pid, smsc::system::SHUTDOWN_SIGNAL);
   if (result != 0)
   {
@@ -179,22 +215,19 @@ void Service::shutdown()
 }
 
 void Service::init(const char * const services_dir,
-           const char * const serviceId,
-           const char * const serviceArgs,
-           const service_type serviceType,
+           const ServiceInfo& svcInfo,
            const pid_t servicePID,
            const run_status serviceStatus
            )
 {
+  info=svcInfo;
+
   serviceDir=services_dir;
   serviceDir+='/';
-  serviceDir+=serviceId;
-  id=serviceId;
+  serviceDir+=info.id;
 
   pid = servicePID;
   status = serviceStatus;
-  svcType=serviceType;
-  args=serviceArgs;
 }
 
 char * substr(const char * from, const char * to)
@@ -215,7 +248,7 @@ char ** Service::createArguments()
   // parse arguments
   ///////////////////////////////////////
   {
-    const char *p1 = args.c_str(), *p2 = args.c_str();
+    const char *p1 = info.args.c_str(), *p2 = info.args.c_str();
     while (*p1!= 0)
     {
       if (isspace(*p1))

@@ -49,7 +49,7 @@ void daemonInit()
   getrlimit(RLIMIT_NOFILE, &flim);
   for (rlim_t i=0; i<flim.rlim_max; i++)
   {
-    close(i);
+    close((int)i);
   }
   /*close(STDIN_FILENO);
   close(STDOUT_FILENO);

@@ -11,7 +11,7 @@
 #include <admin/protocol/CommandAddHSService.h>
 #include <admin/protocol/CommandRemoveService.h>
 #include <admin/protocol/CommandListServices.h>
-#include <admin/protocol/CommandSetServiceStartupParameters.h>
+#include <admin/protocol/CommandSetHSServiceStartupParameters.h>
 #include <admin/protocol/Response.h>
 #include <admin/util/CommandDispatcher.h>
 #include <core/synchronization/Mutex.hpp>
@@ -49,6 +49,10 @@ public:
 
   static ServicesList& getServicesList(){return services;}
 
+  static int retryTimeout;
+  static int retryCount;
+  static int stayAliveTimeout;
+
 protected:
   smsc::logger::Logger *logger;
   static ServicesList services;
@@ -63,7 +67,7 @@ protected:
 
   Response * add_hsservice                  (const CommandAddHSService                  * const command) throw (AdminException);
   Response * remove_service                 (const CommandRemoveService               * const command) throw (AdminException);
-  Response * set_service_startup_parameters (const CommandSetServiceStartupParameters * const command) throw (AdminException);
+  Response * set_hsservice_startup_parameters (const CommandSetHSServiceStartupParameters * const command) throw (AdminException);
   Response * list_services                  (const CommandListServices                * const command) throw (AdminException);
   Response * start_service                  (const CommandStartService                * const command) throw (AdminException);
   Response * shutdown_service               (const CommandShutdown                    * const command) throw (AdminException);
@@ -72,7 +76,7 @@ protected:
 
   static void addServicesFromConfig() throw ();
   static void updateServiceFromConfig(Service * service) throw (AdminException);
-  void putServiceToConfig(const char * const serviceId, const char * const serviceArgs, const bool autostart,const char* hostName);
+  void putServiceToConfig(const ServiceInfo& info);
   void removeServiceFromConfig(const char * const serviceId);
 
 };
