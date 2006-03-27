@@ -52,18 +52,19 @@
               message = (e.getCode()==null)?"Unknown exception":e.getCode().getId();
             messageresult = java.text.MessageFormat.format(messageresult,new Object[]{message});
 
-            ru.sibinco.scag.beans.SCAGJspException cause = null;
-            if (e.getCause() instanceof ru.sibinco.scag.beans.SCAGJspException)
-               cause = (ru.sibinco.scag.beans.SCAGJspException)e.getCause();
-            if (cause!=null) {
+            Throwable cause = null;
+            //if (e.getCause() instanceof ru.sibinco.scag.beans.SCAGJspException)
+               cause = e.getCause();
+            if (cause!=null && cause instanceof ru.sibinco.scag.beans.SCAGJspException) {
+               cause = (ru.sibinco.scag.beans.SCAGJspException)cause;
                messagecauseresult = cause.getMessage();
-            if (cause.getCode()!=null) {
-              messagecause = ru.sibinco.lib.LocaleMessages.getInstance().getMessage(request.getLocale(), cause.getCode().getId());
+            if (((ru.sibinco.scag.beans.SCAGJspException)cause).getCode()!=null) {
+              messagecause = ru.sibinco.lib.LocaleMessages.getInstance().getMessage(request.getLocale(), ((ru.sibinco.scag.beans.SCAGJspException)cause).getCode().getId());
             }
             if (messagecause == null)
-                 messagecause = (cause.getCode()==null)?"Unknown exception":cause.getCode().getId();
+                 messagecause = (((ru.sibinco.scag.beans.SCAGJspException)cause).getCode()==null)?"Unknown exception":((ru.sibinco.scag.beans.SCAGJspException)cause).getCode().getId();
             messagecauseresult = java.text.MessageFormat.format(messagecauseresult,new Object[]{messagecause});
-            }
+            } else if (cause!=null) messagecauseresult = cause.getMessage();
             %>
               <div class=error>
                 <div class=header><%=messageresult%></div>

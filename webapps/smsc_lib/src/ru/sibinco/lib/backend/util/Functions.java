@@ -83,7 +83,7 @@ public class Functions
   public static PrintWriter storeConfigHeader(PrintWriter out, String docType, String dtdFile, String encoding)
   {
     out.println("<?xml version=\"1.0\" encoding=\"" + (encoding == null || encoding.length() == 0 ? Functions.getLocaleEncoding() : encoding) + "\"?>");
-    out.println("<!DOCTYPE " + docType + " SYSTEM \"file://" + dtdFile + "\">");
+    out.println("<!DOCTYPE " + docType + " SYSTEM \"" + dtdFile + "\">");
     out.println();
     out.println("<" + docType + ">");
     return out;

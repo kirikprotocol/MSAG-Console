@@ -171,14 +171,17 @@ public class Edit extends TabledEditBeanImpl {
         }
     }
 
-    private void deleteRule(String transport) {
+    private void deleteRule(String transport) throws SCAGJspException {
         try {
             appContext.getRuleManager().removeRule(Long.toString(id), transport);
             serviceRules.remove(transport);
         } catch (SibincoException se) {
             if (se instanceof StatusDisconnectedException)
                 serviceRules.remove(transport);
-            else se.printStackTrace();/*PRINT ERROR ON THE SCREEN;*/
+            else {
+              se.printStackTrace();/*PRINT ERROR ON THE SCREEN;*/
+              throw new SCAGJspException(Constants.errors.rules.COULD_NOT_REMOVE_RULE, se);
+            }
         }
     }
 
