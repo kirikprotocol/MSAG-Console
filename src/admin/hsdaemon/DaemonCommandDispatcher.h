@@ -43,7 +43,7 @@ public:
 
   DaemonCommandDispatcher(Socket * admSocket);
 
-  virtual Response * handle(const Command * const command) throw (AdminException);
+  virtual Response * handle(const Command * const command);
 
   static void shutdown();
 
@@ -65,17 +65,17 @@ protected:
   friend class ChildShutdownWaiter;
   friend class Interconnect;
 
-  Response * add_hsservice                  (const CommandAddHSService                  * const command) throw (AdminException);
-  Response * remove_service                 (const CommandRemoveService               * const command) throw (AdminException);
-  Response * set_hsservice_startup_parameters (const CommandSetHSServiceStartupParameters * const command) throw (AdminException);
-  Response * list_services                  (const CommandListServices                * const command) throw (AdminException);
-  Response * start_service                  (const CommandStartService                * const command) throw (AdminException);
-  Response * shutdown_service               (const CommandShutdown                    * const command) throw (AdminException);
-  Response * kill_service                   (const CommandKillService                 * const command) throw (AdminException);
+  Response * add_hsservice                  (const CommandAddHSService                  * const command);
+  Response * remove_service                 (const CommandRemoveService               * const command);
+  Response * set_hsservice_startup_parameters (const CommandSetHSServiceStartupParameters * const command);
+  Response * list_services                  (const CommandListServices                * const command);
+  Response * start_service                  (const CommandStartService                * const command);
+  Response * shutdown_service               (const CommandShutdown                    * const command);
+  Response * kill_service                   (const CommandKillService                 * const command);
 
 
-  static void addServicesFromConfig() throw ();
-  static void updateServiceFromConfig(Service * service) throw (AdminException);
+  static void addServicesFromConfig();
+  static void updateServiceFromConfig(Service * service);
   void putServiceToConfig(const ServiceInfo& info);
   void removeServiceFromConfig(const char * const serviceId);
 

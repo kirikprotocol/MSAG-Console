@@ -97,7 +97,6 @@ DaemonCommandDispatcher::DaemonCommandDispatcher(Socket * admSocket)
 
 /// main command handler
 Response * DaemonCommandDispatcher::handle(const Command * const command)
-  throw (AdminException)
 {
   ChildShutdownWaiter::cleanStoppedWaiters();
   try
@@ -142,7 +141,6 @@ Response * DaemonCommandDispatcher::handle(const Command * const command)
 
 /// commands
 Response * DaemonCommandDispatcher::add_hsservice(const CommandAddHSService * const command)
-  throw (AdminException)
 {
   /*  smsc_log_debug(logger, "add service \"%s\" (%s) %u %s",
   command->getServiceName(),
@@ -173,7 +171,7 @@ Response * DaemonCommandDispatcher::add_hsservice(const CommandAddHSService * co
   }
 }
 
-Response * DaemonCommandDispatcher::remove_service(const CommandRemoveService * const command) throw (AdminException)
+Response * DaemonCommandDispatcher::remove_service(const CommandRemoveService * const command)
 {
   if (command != 0)
   {
@@ -207,7 +205,6 @@ Response * DaemonCommandDispatcher::remove_service(const CommandRemoveService * 
 
 
 Response * DaemonCommandDispatcher::set_hsservice_startup_parameters(const CommandSetHSServiceStartupParameters * const command)
-  throw (AdminException)
 {
   smsc_log_debug(logger, "set service startup parameters");
   if (command != 0)
@@ -238,7 +235,6 @@ Response * DaemonCommandDispatcher::set_hsservice_startup_parameters(const Comma
 }
 
 Response * DaemonCommandDispatcher::list_services(const CommandListServices * const command)
-  throw (AdminException)
 {
   smsc_log_debug(logger, "list services");
   std::auto_ptr<char> text(0);
@@ -252,7 +248,6 @@ Response * DaemonCommandDispatcher::list_services(const CommandListServices * co
 
 
 Response * DaemonCommandDispatcher::start_service(const CommandStartService * const command)
-  throw (AdminException)
 {
   smsc_log_debug(logger, "start service");
   if (command != 0)
@@ -297,7 +292,6 @@ Response * DaemonCommandDispatcher::start_service(const CommandStartService * co
 }
 
 Response * DaemonCommandDispatcher::shutdown_service(const CommandShutdown * const command)
-  throw (AdminException)
 {
   smsc_log_debug(logger, "shutdown service");
   if (command != 0)
@@ -336,7 +330,6 @@ Response * DaemonCommandDispatcher::shutdown_service(const CommandShutdown * con
 }
 
 Response * DaemonCommandDispatcher::kill_service(const CommandKillService * const command)
-  throw (AdminException)
 {
   smsc_log_debug(logger, "kill service");
   if (command != 0)
@@ -367,7 +360,6 @@ Response * DaemonCommandDispatcher::kill_service(const CommandKillService * cons
 
 /// global helper methods
 void DaemonCommandDispatcher::addServicesFromConfig()
-  throw ()
 {
   Logger* log=Logger::getInstance("hsadm.add");
   try
@@ -449,7 +441,6 @@ void DaemonCommandDispatcher::addServicesFromConfig()
 }
 
 void DaemonCommandDispatcher::updateServiceFromConfig(Service * service)
-  throw (AdminException)
 {
   const char * const serviceId = service->getId();
 
@@ -469,7 +460,12 @@ void DaemonCommandDispatcher::updateServiceFromConfig(Service * service)
     service->setArgs(serviceArgs);
     tmpName=serviceSectionName;
     tmpName+=".hostName";
-    service->setHost(configManager->getString(tmpName.c_str()));
+    try{
+      service->setHost(configManager->getString(tmpName.c_str()));
+    }catch(...)
+    {
+      //host not specified
+    }
   }
   catch (smsc::core::buffers::HashInvalidKeyException &e)
   {
