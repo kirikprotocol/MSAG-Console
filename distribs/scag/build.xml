@@ -44,6 +44,7 @@ Targets:
   </target>
 
   <target name="makegw">
+    <echo message="${MAKE_ARGS}"/>
     <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="scag"/>
     <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="admin"/>
   </target>
