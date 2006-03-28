@@ -36,8 +36,8 @@ public class ProfilesBean extends SmscBean {
     protected boolean translit = false;
 
     protected int groupId = 0;
-    protected long inputAccessMask = 4294967295L;
-    protected long outputAccessMask = 4294967295L;
+    protected long inputAccessMask = 1;
+    protected long outputAccessMask = 1;
 
     protected String groupName = "";
 
@@ -239,7 +239,7 @@ public class ProfilesBean extends SmscBean {
         try {
             this.inputAccessMask = Long.parseLong(inputAccessMask, 16);
         } catch (NumberFormatException e) {
-            this.inputAccessMask = 4294967295L;
+            this.inputAccessMask = 1;
         }
     }
 
@@ -251,7 +251,7 @@ public class ProfilesBean extends SmscBean {
         try {
             this.outputAccessMask = Long.parseLong(outputAccessMask, 16);
         } catch (NumberFormatException e) {
-            this.outputAccessMask = 4294967295L;
+            this.outputAccessMask = 1;
         }
     }
 

@@ -152,6 +152,18 @@
         <th nowrap><%=getLocString("profiles.translit")%></th>
         <td><img src="/images/ic_<%=bean.isTranslit() ? "" : "not_"%>checked.gif"></td>
     </tr>
+    <tr class=row<%=(rowN++) & 1%>>
+        <th nowrap><%=getLocString("profiles.closedgroup")%></th>
+        <td><%=bean.getClosedGroup()%></td>
+    </tr>
+    <tr class=row<%=(rowN++) & 1%>>
+        <th nowrap><%=getLocString("profiles.inputAccessMask")%></th>
+        <td><%=bean.getInputAccessMask()%></td>
+    </tr>
+    <tr class=row<%=(rowN++) & 1%>>
+        <th nowrap><%=getLocString("profiles.outputAccessMask")%></th>
+        <td><%=bean.getOutputAccessMask()%></td>
+    </tr>
 </table>
 </div>
 <%

@@ -103,7 +103,7 @@ public class Index extends IndexBean {
             for (int i = 0; i < checkedClosedGroupsNames.length; i++) {
                 String checkedProviderName = checkedClosedGroupsNames[i];
                 manager.removeGroup(checkedProviderName);
-                journalAppend(SubjectTypes.TYPE_provider, checkedProviderName, Actions.ACTION_DEL);
+                journalAppend(SubjectTypes.TYPE_closedgroup, checkedProviderName, Actions.ACTION_DEL);
             }
         }
         catch (AdminException e) {

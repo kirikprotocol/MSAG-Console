@@ -61,7 +61,7 @@ public class ClosedGroupEdit extends ClosedGroupEditBean {
                 }
                 manager.alter(cg, newName, newDef, add, del);
                 request.getSession().setAttribute("CLOSEDGROUP_NAME", name);
-                journalAppend(SubjectTypes.TYPE_provider, name, Actions.ACTION_MODIFY);
+                journalAppend(SubjectTypes.TYPE_closedgroup, name, Actions.ACTION_MODIFY);
                 appContext.getStatuses().setProvidersChanged(true);
             }
             catch (Exception e) {

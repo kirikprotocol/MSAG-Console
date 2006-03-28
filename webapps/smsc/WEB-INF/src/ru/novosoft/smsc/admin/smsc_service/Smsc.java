@@ -596,14 +596,14 @@ public class Smsc extends Service {
         final Map params = new HashMap();
         params.put("id", new Long(groupId));
         params.put("name", groupName);
-        //call(SMSC_COMPONENT_ID, CG_ADD_GROUP, Type.Types[Type.StringType], params);
+        call(SMSC_COMPONENT_ID, CG_ADD_GROUP, Type.Types[Type.StringType], params);
         cgUpdateGroupMasks(groupId, masks.getNames(), new LinkedList());
     }
 
     public void cgRemoveGroup(final long groupId) throws AdminException {
         final Map params = new HashMap();
         params.put("id", new Long(groupId));
-        //call(SMSC_COMPONENT_ID, CG_REMOVE_GROUP, Type.Types[Type.StringType], params);
+        call(SMSC_COMPONENT_ID, CG_REMOVE_GROUP, Type.Types[Type.StringType], params);
     }
 
     public void cgUpdateGroupMasks(final long groupId, final Collection masksToAdd, final Collection masksToDelete) throws AdminException {
@@ -612,14 +612,14 @@ public class Smsc extends Service {
             final Map params = new HashMap();
             params.put("id", new Long(groupId));
             params.put("addr", mask);
-         //   call(SMSC_COMPONENT_ID, CG_ADD_MASK, Type.Types[Type.StringType], params);
+            call(SMSC_COMPONENT_ID, CG_ADD_MASK, Type.Types[Type.StringType], params);
         }
         for (Iterator i = masksToDelete.iterator(); i.hasNext();) {
             final String mask = (String) i.next();
             final Map params = new HashMap();
             params.put("id", new Long(groupId));
             params.put("addr", mask);
-         //   call(SMSC_COMPONENT_ID, CG_DEL_MASK, Type.Types[Type.StringType], params);
+            call(SMSC_COMPONENT_ID, CG_DEL_MASK, Type.Types[Type.StringType], params);
         }
     }
 

@@ -47,8 +47,8 @@ public class Profile {
     private boolean translit;
 
     private int groupId = 0;
-    private long inputAccessMask = 4294967295L;
-    private long outputAccessMask = 4294967295L;
+    private long inputAccessMask = 1;
+    private long outputAccessMask = 1;
 
 
     public Profile(final Mask mask, final byte codepage, final boolean ussd7bit, final byte reportOptions, final String locale, final byte aliasHide,
@@ -444,7 +444,7 @@ public class Profile {
         try {
             this.inputAccessMask = Long.parseLong(InputAccessMask);
         } catch (NumberFormatException e) {
-            this.inputAccessMask = 4294967295L;
+            this.inputAccessMask = 1;
         }
     }
 
@@ -460,7 +460,7 @@ public class Profile {
         try {
             this.outputAccessMask = Long.parseLong(outputAccessMask);
         } catch (NumberFormatException e) {
-            this.outputAccessMask = 4294967295L;
+            this.outputAccessMask = 1;
         }
     }
 }
