@@ -809,17 +809,14 @@ AdapterProperty * SmppCommandAdapter::Get_USSD_BIT_Property(SMS& data, const std
 
 AdapterProperty * SmppCommandAdapter::getMessageBodyProperty(SMS& data, std::string name)
 {
-    unsigned len;
-    const char * buff;
-    std::string str;
-    char ucs2buff[2048];
 /*
     static const uint8_t SMSC7BIT             = 0;
     static const uint8_t LATIN1               = 3;
     static const uint8_t BINARY               = BIT(2);
     static const uint8_t UCS2                 = BIT(3);
 */
-    
+
+    /*
     if (m_hasPayloadText) 
         buff = data.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
     else
@@ -856,7 +853,8 @@ AdapterProperty * SmppCommandAdapter::getMessageBodyProperty(SMS& data, std::str
         ucs2buff[1] = 0;
         str.append(ucs2buff,2);
     }
-
+*/
+    std::string str = CommandBrige::getMessageBody(command);
     return new AdapterProperty(name,this,str);
 }
 

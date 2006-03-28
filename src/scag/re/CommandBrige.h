@@ -5,7 +5,6 @@
 #include <scag/exc/SCAGExceptions.h>
 #include "util/recoder/recode_dll.h"
 #include "scag/stat/Statistics.h"
-//#include "smpp/smpp_structure.h"
 
 namespace scag { namespace sessions {
 
@@ -63,68 +62,12 @@ class CommandBrige
 {
 public:
 
-    static std::string getMessageBody(SmppCommand& command)
-    {
-        unsigned len = 0;
-
-        const char * buff = 0;
-
-        std::string str;
-        char ucs2buff[2048];
-    /*
-        static const uint8_t SMSC7BIT             = 0;
-        static const uint8_t LATIN1               = 3;
-        static const uint8_t BINARY               = BIT(2);
-        static const uint8_t UCS2                 = BIT(3);
-    */
-        SMS& data = getSMS(command);
-
-        if (data.hasBinProperty(Tag::SMPP_SHORT_MESSAGE))
-        {
-            buff = data.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
-        } else if (data.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD)) 
-        {
-            buff = data.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
-        } 
-
-        if (buff == 0) return str;
-
-        int code = data.getIntProperty(Tag::SMPP_DATA_CODING);
-
-        switch (code) 
-        {
-        case smsc::smpp::DataCoding::SMSC7BIT:
-            Convert7BitToUCS2(buff, len, (short *)ucs2buff, len*2); 
-            str.assign(ucs2buff,len*2);
-
-            ucs2buff[0] = 0;
-            ucs2buff[1] = 0;
-            str.append(ucs2buff,2);
-            break;
-        case smsc::smpp::DataCoding::LATIN1:
-            ConvertMultibyteToUCS2(buff, len, (short *)ucs2buff, len*2, CONV_ENCODING_KOI8R);
-            str.assign(ucs2buff,len*2);
-
-            ucs2buff[0] = 0;
-            ucs2buff[1] = 0;
-            str.append(ucs2buff,2);
-            break;
-        default:
-    //        memcpy(ucs2buff, buff, len);
-            str.assign(buff,len);
-            ucs2buff[0] = 0;
-            ucs2buff[1] = 0;
-            str.append(ucs2buff,2);
-        }
-
-        return str;
-    }
-
-
+    static std::string getMessageBody(SmppCommand& command);
     static void makeTrafficEvent(SmppCommand& command, int handlerType, scag::sessions::CSessionPrimaryKey& sessionPrimaryKey, SACC_TRAFFIC_INFO_EVENT_t& ev);
+    static EventHandlerType getHandlerType(const SCAGCommand& command);
+    static CSmppDiscriptor getSmppDiscriptor(const SCAGCommand& command);
+
     //static void makeBillEvent(int serviceId, std::string& abonentAddr, int billCommand, SACC_BILLING_INFO_EVENT_t& ev);
-
-
 
     /*
     static int ExtractCommandType(SCAGCommand& command)
@@ -141,148 +84,6 @@ public:
     }            */
 
 
-    static EventHandlerType getHandlerType(const SCAGCommand& command)
-    {
-        EventHandlerType handlerType = EH_UNKNOWN;
-
-        SCAGCommand& _command = const_cast<SCAGCommand&>(command);
-
-        SmppCommand * smppCommand = dynamic_cast<SmppCommand *>(&_command);
-        if (!smppCommand) throw SCAGException("Command Bridge Error: SCAGCommand is not smpp-type");
-
-
-        _SmppCommand& cmd = *smppCommand->operator ->();
-
-        CommandId cmdid = cmd.get_commandId();
-        void * dta = cmd.dta;
-        SMS * sms = 0;
-        CSmppDiscriptor SmppDiscriptor;
-        int receiptMessageId = 0;
-
-        if (!dta) throw SCAGException("Command Bridge Error: Cannot get HandlerType - SCAGCommand data is invalid");
-
-        switch (cmdid) 
-        {
-        case DELIVERY:
-            sms = (SMS*)dta;
-            receiptMessageId = atoi(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
-
-            if (receiptMessageId) handlerType = EH_RECEIPT;
-            else handlerType = EH_DELIVER_SM;
-            break;
-
-        case SUBMIT:
-            sms = (SMS*)dta;
-
-            handlerType = EH_SUBMIT_SM;
-            break;
-
-        case DELIVERY_RESP:
-            sms = ((SmsResp*)dta)->get_sms();
-
-            if (sms) receiptMessageId = atoi(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
-            else throw SCAGException("Command Bridge Error: Cannot get HandlerType - SCAGCommand SMS data for DELIVERY_RESP is invalid");
-
-            if (receiptMessageId) handlerType = EH_RECEIPT;
-            else handlerType = EH_DELIVER_SM_RESP;
-            break;
-
-        case SUBMIT_RESP:
-            handlerType = EH_SUBMIT_SM_RESP;
-            break;
-        }
-
-        return handlerType;
-    }
-
-
-
-    static CSmppDiscriptor getSmppDiscriptor(const SCAGCommand& command)
-    {
-
-        SCAGCommand& _command = const_cast<SCAGCommand&>(command);
-
-        SmppCommand * smppCommand = dynamic_cast<SmppCommand *>(&_command);
-        if (!smppCommand) throw SCAGException("Command Bridge Error: Cannot get SmppDiscriptor - SCAGCommand is not smpp-type");
-        
-        
-        _SmppCommand& cmd = *smppCommand->operator ->();
-
-        CommandId cmdid = cmd.get_commandId();
-        void * dta = cmd.dta;
-        SMS * sms = 0;
-        CSmppDiscriptor SmppDiscriptor;
-        int receiptMessageId = 0;
-        SmppDiscriptor.isUSSDClosed = false;
-
-        if (!dta) throw SCAGException("Command Bridge Error: Cannot get SmppDiscriptor - SCAGCommand data is invalid");
-
-        switch (cmdid) 
-        {
-        case DELIVERY:
-            sms = (SMS*)dta;
-            receiptMessageId = atoi(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
-
-            if (receiptMessageId) SmppDiscriptor.cmdType = CO_RECEIPT_DELIVER_SM;
-            else if (sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) 
-            {
-                SmppDiscriptor.cmdType = CO_USSD_DELIVER;
-                SmppDiscriptor.isUSSDClosed = (sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == USSR_REQUEST);
-            }
-            else SmppDiscriptor.cmdType = CO_DELIVER_SM;
-
-            
-            SmppDiscriptor.lastIndex = sms->getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
-            SmppDiscriptor.currentIndex = sms->getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
-            
-            break;
-        case SUBMIT:
-            sms = (SMS*)dta;
-
-            if (sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) 
-            {
-                SmppDiscriptor.cmdType = CO_USSD_DELIVER_RESP;
-                SmppDiscriptor.isUSSDClosed = (sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == PSSR_RESPONSE);
-            }
-            else SmppDiscriptor.cmdType = CO_SUBMIT_SM;
-
-            SmppDiscriptor.lastIndex = sms->getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
-            SmppDiscriptor.currentIndex = sms->getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
-
-            break;
-        case DELIVERY_RESP:
-            
-            sms = ((SmsResp*)dta)->get_sms();
-
-            if (sms) receiptMessageId = atoi(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
-            else throw SCAGException("Command Bridge Error: Cannot get SmppDiscriptor - SCAGCommand SMS data for DELIVERY_RESP is invalid");
-
-            SmppDiscriptor.lastIndex = sms->getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
-            SmppDiscriptor.currentIndex = sms->getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
-
-            if (receiptMessageId) SmppDiscriptor.cmdType = CO_RECEIPT_DELIVER_SM_RESP;
-            else if (sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) SmppDiscriptor.cmdType = CO_USSD_DELIVER_RESP;
-            else SmppDiscriptor.cmdType = CO_DELIVER_SM_RESP;
-
-            break;
-        case SUBMIT_RESP:
-            if (sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) SmppDiscriptor.cmdType = CO_USSD_DELIVER_RESP;
-            else SmppDiscriptor.cmdType = CO_SUBMIT_SM_RESP;
-
-            SmppDiscriptor.lastIndex = sms->getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
-            SmppDiscriptor.currentIndex = sms->getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
-            break;
-        }
-        /*
-        if (sms == 0) throw SCAGException("Command Bridge Error: Unknown SCAGCommand data");
-
-        SmppDiscriptor.lastIndex = sms->getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
-        SmppDiscriptor.currentIndex = sms->getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
-          */
-
-        return SmppDiscriptor;
-    }
-
 
     static Address getDestAddr(const SCAGCommand& command)  
     {
@@ -290,15 +91,10 @@ public:
 
         SCAGCommand& _command = const_cast<SCAGCommand&>(command);
         SmppCommand * smppCommand = dynamic_cast<SmppCommand *>(&_command);
-        if (!smppCommand) return resultAddr;
+        if (!smppCommand) throw SCAGException("Command Bridge Error: command is not SmppCommand type");
 
-        _SmppCommand& cmd = *smppCommand->operator ->();
-
-        CommandId cmdid = cmd.get_commandId();
-        void * dta = cmd.dta;
-        SMS * sms = 0;
-        sms = (SMS*)dta;
-        return sms->getDestinationAddress();
+        SMS& sms = getSMS(*smppCommand);
+        return sms.getDestinationAddress();
     }
 
     static SMS& getSMS(SmppCommand& command)
@@ -319,31 +115,22 @@ public:
         if (!smppCommand) throw SCAGException("Command Bridge Error: SCAGCommand is not smpp-type");
 
 
-        _SmppCommand& cmd = *smppCommand->operator ->();
-
-        CommandId cmdid = cmd.get_commandId();
-        void * dta = cmd.dta;
-        SMS * sms = 0;
-
-        if (!dta) throw SCAGException("Command Bridge Error: Cannot get AbonentAddress - SCAGCommand data is invalid");
+        SMS& sms = getSMS(*smppCommand);
+        CommandId cmdid = (*smppCommand)->get_commandId();
 
         switch (cmdid) 
         {
         case DELIVERY:
-            sms = (SMS*)dta;
-            resultAddr = sms->originatingAddress;
+            resultAddr = sms.originatingAddress;
             break;
         case SUBMIT:
-            sms = (SMS*)dta;
-            resultAddr = sms->destinationAddress;
+            resultAddr = sms.destinationAddress;
             break;
         case DELIVERY_RESP:
-            sms = ((SmsResp*)dta)->get_sms();
-            resultAddr = sms->destinationAddress;
+            resultAddr = sms.destinationAddress;
             break;
         case SUBMIT_RESP:
-            sms = ((SmsResp*)dta)->get_sms();
-            resultAddr = sms->originatingAddress;
+            resultAddr = sms.originatingAddress;
             break;
         }
   
@@ -361,33 +148,9 @@ public:
         if (!smppCommand) throw SCAGException("Command Bridge Error: SCAGCommand is not smpp-type");
 
 
-        _SmppCommand& cmd = *smppCommand->operator ->();
+        SMS& sms = getSMS(*smppCommand);
 
-        CommandId cmdid = cmd.get_commandId();
-        void * dta = cmd.dta;
-        SMS * sms = 0;
-
-        if (!dta) throw SCAGException("Command Bridge Error: SCAGCommand data is invalid");
-
-        switch (cmdid) 
-        {
-        case DELIVERY:
-            sms = (SMS*)dta;
-            break;
-        case SUBMIT:
-            sms = (SMS*)dta;
-            break;
-        case DELIVERY_RESP:
-            sms = ((SmsResp*)dta)->get_sms();
-            break;
-        case SUBMIT_RESP:
-            sms = ((SmsResp*)dta)->get_sms();
-            break;
-        default:
-            throw SCAGException("Command Bridge Error: Unknown cmdid for SCAGCommand");
-        }
-
-        return sms->getIntProperty(Tag::SMPP_SAR_MSG_REF_NUM);
+        return sms.getIntProperty(Tag::SMPP_SAR_MSG_REF_NUM);
     }
 };
 
