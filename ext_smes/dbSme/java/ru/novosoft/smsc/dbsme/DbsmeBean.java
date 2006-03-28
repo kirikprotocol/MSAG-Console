@@ -230,7 +230,7 @@ public class DbsmeBean extends IndexBean
   }
 
   protected boolean isProviderEquals(String providerName, String oldProviderName, String address, int connections,
-                                     String dbInstance, String dbUserName, String dbUserPassword, String type, boolean watchdog,
+                                     String dbInstance, String dbUserName, String dbUserPassword, String type, boolean watchdog, boolean needPing,
                                      String service_not_available, String job_not_found, String ds_failure, String ds_connection_lost, String ds_statement_fail,
                                      String query_null, String input_parse, String output_format, String invalid_config)
   {
@@ -243,6 +243,7 @@ public class DbsmeBean extends IndexBean
       logger.debug("dbUserPassword (\"" + dbUserPassword + "\"):" + config.isStringParamEquals(prefix + ".DataSource.dbUserPassword", dbUserPassword));
       logger.debug("type (\"" + type + "\"):" + config.isStringParamEquals(prefix + ".DataSource.type", type));
       logger.debug("watchdog (\"" + watchdog + "\"):" + config.isBooleanParamEquals(prefix + ".DataSource.watchdog", watchdog));
+      logger.debug("needPing (\"" + needPing + "\"):" + config.isBooleanParamEquals(prefix + ".DataSource.needPing", needPing));
       logger.debug("service_not_available (\"" + service_not_available + "\"):" + config.isStringParamEquals(prefix + ".MessageSet.SERVICE_NOT_AVAIL", service_not_available));
       logger.debug("job_not_found (\"" + job_not_found + "\"):" + config.isStringParamEquals(prefix + ".MessageSet.JOB_NOT_FOUND", job_not_found));
       logger.debug("ds_failure (\"" + ds_failure + "\"):" + config.isStringParamEquals(prefix + ".MessageSet.DS_FAILURE", ds_failure));
@@ -261,6 +262,7 @@ public class DbsmeBean extends IndexBean
            && config.isStringParamEquals(prefix + ".DataSource.dbUserPassword", dbUserPassword)
            && config.isStringParamEquals(prefix + ".DataSource.type", type)
            && config.isBooleanParamEquals(prefix + ".DataSource.watchdog", watchdog)
+           && config.isBooleanParamEquals(prefix + ".DataSource.needPing", needPing)
 
            && config.isStringParamEquals(prefix + ".MessageSet.SERVICE_NOT_AVAIL", service_not_available)
            && config.isStringParamEquals(prefix + ".MessageSet.JOB_NOT_FOUND", job_not_found)
@@ -283,6 +285,7 @@ public class DbsmeBean extends IndexBean
            && config.isParamEquals(originalConfig, prefix + ".DataSource.dbUserPassword")
            && config.isParamEquals(originalConfig, prefix + ".DataSource.type")
            && config.isParamEquals(originalConfig, prefix + ".DataSource.watchdog")
+           && config.isParamEquals(originalConfig, prefix + ".DataSource.needPing")
 
            && config.isParamEquals(originalConfig, prefix + ".MessageSet.JOB_NOT_FOUND")
            && config.isParamEquals(originalConfig, prefix + ".MessageSet.DS_FAILURE")

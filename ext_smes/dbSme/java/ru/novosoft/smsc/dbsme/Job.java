@@ -39,6 +39,7 @@ public class Job extends DbsmeBean
   private String invalid_config = null;
 
   private boolean providerWatchdog = false;
+  private boolean providerNeedPing = false;
   private String mbCancel = null;
   private String mbDone = null;
   private boolean creating = false;
@@ -118,6 +119,7 @@ public class Job extends DbsmeBean
     if (invalid_config == null) invalid_config = "";
 
     providerWatchdog = getOptionalBool("DBSme.DataProviders." + StringEncoderDecoder.encodeDot(providerName) + ".DataSource.watchdog");
+    providerNeedPing = getOptionalBool("DBSme.DataProviders." + StringEncoderDecoder.encodeDot(providerName) + ".DataSource.needPing");
     return result;
   }
 
@@ -339,6 +341,11 @@ public class Job extends DbsmeBean
   public boolean isProviderWatchdog()
   {
     return providerWatchdog;
+  }
+
+  public boolean isProviderNeedPing()
+  {
+    return providerNeedPing;
   }
 
   public String getMbCancel()

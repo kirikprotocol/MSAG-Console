@@ -71,6 +71,7 @@ startSection(out, "provider_properties", "Properties", true);
 		param(out, "dbUserName", "dbUserName", bean.getDbUserName());
 		param(out, "dbUserPassword", "dbUserPassword", bean.getDbUserPassword());
 		param(out, "watchdog", "watchdog", bean.isWatchdog());
+		param(out, "need ping", "needPing", bean.isNeedPing());
 	finishParams(out);
 finishSection(out);
 startSection(out, "Messages", "Messages", false);
