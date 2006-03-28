@@ -374,7 +374,6 @@ std::string RuleEngineImpl::CreateRuleFileName(const std::string& dir,const Rule
 
 RuleStatus RuleEngineImpl::process(SCAGCommand& command, Session& session)
 {
-    smsc_log_debug(logger,"TEST");
     smsc_log_debug(logger,"Process RuleEngine with serviceId: %d", command.getServiceId());
 
     RulesReference rulesRef = getRules();

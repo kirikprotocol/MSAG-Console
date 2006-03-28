@@ -32,32 +32,6 @@ void CommandBrige::makeTrafficEvent(SmppCommand& command, int handlerType, scag:
     sprintf((char *)ev.pSessionKey,"%s/%d", sessionPrimaryKey.abonentAddr.toString().c_str(),sessionPrimaryKey.BornMicrotime);
 }
 
-void CommandBrige::makeBillEvent(int serviceId, std::string& abonentAddr, int billCommand, SACC_BILLING_INFO_EVENT_t& ev)
-{
-    ev.Header.cCommandId = billCommand;
-
-    ev.Header.cProtocolId = 1;
-    ev.Header.iServiceId = serviceId;
-    ev.Header.iServiceProviderId = 1;
-
-    long now;
-    time(&now);
-
-    ev.Header.lDateTime = now;
-
-    sprintf((char *)ev.Header.pAbonentNumber,"%s",abonentAddr.c_str());
-
-    ev.Header.sCommandStatus = 1;
-    ev.Header.sEventType = 1;
-
-
-    ev.fBillingSumm = 100;
-    ev.iMediaResourceType = 100;
-    ev.iOperatorId = 1;
-    ev.iPriceCatId = 1;
-    sprintf((char *)ev.pBillingCurrency,"%s","$");
-}
-
 
 }}
 

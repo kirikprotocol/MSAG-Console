@@ -5,6 +5,7 @@
 #include <scag/exc/SCAGExceptions.h>
 #include "util/recoder/recode_dll.h"
 #include "scag/stat/Statistics.h"
+//#include "smpp/smpp_structure.h"
 
 namespace scag { namespace sessions {
 
@@ -20,7 +21,7 @@ using namespace scag::transport::smpp;
 using namespace scag::exceptions;
 
 using namespace scag::stat;
-
+using namespace smsc::smpp::UssdServiceOpValue;
 
 enum CommandOperations
 {
@@ -29,7 +30,13 @@ enum CommandOperations
     CO_SUBMIT_SM,
     CO_SUBMIT_SM_RESP,
     CO_RECEIPT_DELIVER_SM,
-    CO_RECEIPT_DELIVER_SM_RESP
+    CO_RECEIPT_DELIVER_SM_RESP,
+
+    CO_USSD_DELIVER,
+    CO_USSD_DELIVER_RESP,
+
+    CO_USSD_SUBMIT,
+    CO_USSD_SUBMIT_RESP
 };
 
 enum EventHandlerType
@@ -47,6 +54,7 @@ struct CSmppDiscriptor
     CommandOperations cmdType;
     int currentIndex;
     int lastIndex;
+    bool isUSSDClosed;
 };
 
 
@@ -118,7 +126,7 @@ public:
 
 
     static void makeTrafficEvent(SmppCommand& command, int handlerType, scag::sessions::CSessionPrimaryKey& sessionPrimaryKey, SACC_TRAFFIC_INFO_EVENT_t& ev);
-    static void makeBillEvent(int serviceId, std::string& abonentAddr, int billCommand, SACC_BILLING_INFO_EVENT_t& ev);
+    //static void makeBillEvent(int serviceId, std::string& abonentAddr, int billCommand, SACC_BILLING_INFO_EVENT_t& ev);
 
 
 
@@ -209,6 +217,7 @@ public:
         SMS * sms = 0;
         CSmppDiscriptor SmppDiscriptor;
         int receiptMessageId = 0;
+        SmppDiscriptor.isUSSDClosed = false;
 
         if (!dta) throw SCAGException("Command Bridge Error: Cannot get SmppDiscriptor - SCAGCommand data is invalid");
 
@@ -219,6 +228,11 @@ public:
             receiptMessageId = atoi(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
 
             if (receiptMessageId) SmppDiscriptor.cmdType = CO_RECEIPT_DELIVER_SM;
+            else if (sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) 
+            {
+                SmppDiscriptor.cmdType = CO_USSD_DELIVER;
+                SmppDiscriptor.isUSSDClosed = (sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == USSR_REQUEST);
+            }
             else SmppDiscriptor.cmdType = CO_DELIVER_SM;
 
             
@@ -229,7 +243,12 @@ public:
         case SUBMIT:
             sms = (SMS*)dta;
 
-            SmppDiscriptor.cmdType = CO_SUBMIT_SM;
+            if (sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) 
+            {
+                SmppDiscriptor.cmdType = CO_USSD_DELIVER_RESP;
+                SmppDiscriptor.isUSSDClosed = (sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == PSSR_RESPONSE);
+            }
+            else SmppDiscriptor.cmdType = CO_SUBMIT_SM;
 
             SmppDiscriptor.lastIndex = sms->getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
             SmppDiscriptor.currentIndex = sms->getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
@@ -246,11 +265,13 @@ public:
             SmppDiscriptor.currentIndex = sms->getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
 
             if (receiptMessageId) SmppDiscriptor.cmdType = CO_RECEIPT_DELIVER_SM_RESP;
+            else if (sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) SmppDiscriptor.cmdType = CO_USSD_DELIVER_RESP;
             else SmppDiscriptor.cmdType = CO_DELIVER_SM_RESP;
 
             break;
         case SUBMIT_RESP:
-            SmppDiscriptor.cmdType = CO_SUBMIT_SM_RESP;
+            if (sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) SmppDiscriptor.cmdType = CO_USSD_DELIVER_RESP;
+            else SmppDiscriptor.cmdType = CO_SUBMIT_SM_RESP;
 
             SmppDiscriptor.lastIndex = sms->getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
             SmppDiscriptor.currentIndex = sms->getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);

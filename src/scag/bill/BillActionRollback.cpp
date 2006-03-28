@@ -30,7 +30,8 @@ bool BillActionRollback::run(ActionContext& context)
 
     operation->detachBill();
 
-    CommandBrige::makeBillEvent(context.getServiceId(), context.getAbonentAddr().toString(), TRANSACTION_CALL_ROLLBACK, ev);
+    
+    context.makeBillEvent(TRANSACTION_CALL_ROLLBACK, ev);
     statistics.registerSaccEvent(ev);
 
 

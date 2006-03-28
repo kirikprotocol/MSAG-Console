@@ -75,6 +75,9 @@ namespace scag { namespace re { namespace actions
         void abortSession();
         void AddPendingOperation(uint8_t type, time_t pendingTime);
         Operation * GetCurrentOperation() {return session.GetCurrentOperation();}
+
+        void makeBillEvent(int billCommand, SACC_BILLING_INFO_EVENT_t& ev);
+
         //BillKey CreateBillKey();
     };
 

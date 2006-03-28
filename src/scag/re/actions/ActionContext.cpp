@@ -93,6 +93,38 @@ BillKey ActionContext::CreateBillKey()
 }            */
 
 
+void ActionContext::makeBillEvent(int billCommand, SACC_BILLING_INFO_EVENT_t& ev)
+{
+    //Infrastructure& istr = BillingManager::Instance().getInfrastructure();
+
+    ev.Header.cCommandId = billCommand;
+
+    ev.Header.cProtocolId = 1;
+    ev.Header.iServiceId = m_ServiceId;
+    ev.Header.iServiceProviderId = 1;//istr.GetProviderID(m_ServiceId);
+
+    long now;
+    time(&now);
+
+    ev.Header.lDateTime = now;
+
+    sprintf((char *)ev.Header.pAbonentNumber,"%s",m_AbonentAddr.toString().c_str());
+
+    ev.Header.sCommandStatus = 1;
+    ev.Header.sEventType = 1;
+
+    ev.iOperatorId = 1;
+    ev.iPriceCatId = 1;
+
+
+    ev.fBillingSumm = 100;//m_TarifRec.Price;
+    ev.iMediaResourceType = 100;
+
+
+    sprintf((char *)ev.pBillingCurrency,"%s","$");
+}
+
+
 
 }}}
 

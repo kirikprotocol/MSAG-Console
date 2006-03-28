@@ -52,7 +52,8 @@ bool BillActionCommit::run(ActionContext& context)
             bm.rollback(operation->getBillId());
             operation->detachBill();
 
-            CommandBrige::makeBillEvent(context.getServiceId(), context.getAbonentAddr().toString(), TRANSACTION_REFUSED, ev);
+
+            context.makeBillEvent(TRANSACTION_REFUSED, ev);
             statistics.registerSaccEvent(ev);
 
             return true;
@@ -66,7 +67,7 @@ bool BillActionCommit::run(ActionContext& context)
             bm.rollback(operation->getBillId());
             operation->detachBill();
 
-            CommandBrige::makeBillEvent(context.getServiceId(), context.getAbonentAddr().toString(), TRANSACTION_TIME_OUT, ev);
+            context.makeBillEvent(TRANSACTION_TIME_OUT, ev);
             statistics.registerSaccEvent(ev);
 
             return true;
@@ -74,7 +75,7 @@ bool BillActionCommit::run(ActionContext& context)
         }
 
 
-        CommandBrige::makeBillEvent(context.getServiceId(), context.getAbonentAddr().toString(), TRANSACTION_COMMITED, ev);
+        context.makeBillEvent(TRANSACTION_COMMITED, ev);
         statistics.registerSaccEvent(ev);
 
         bm.commit(operation->getBillId());

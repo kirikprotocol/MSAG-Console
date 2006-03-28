@@ -119,6 +119,11 @@ namespace scag { namespace sessions
         Operation(const Operation& operation);
         bool m_hasBill;
         int billId;
+        int m_receivedParts;
+        bool m_receivedAll;
+
+        int m_receivedResp;
+        bool m_receivedAllResp;
     public:
         uint8_t type;
         void attachBill(int BillId);
@@ -127,13 +132,15 @@ namespace scag { namespace sessions
         bool hasBill() {return m_hasBill;}
         int getBillId() {return billId;}
 
-        void setStatus(int currentIndex,int lastIndex)
-        {
-            //TODO: Implement
-        }
+        void receiveNewPart(int currentIndex,int lastIndex);
+        bool hasReceivedAllParts() {return m_receivedParts;}
+
+        void receiveNewResp(int currentIndex,int lastIndex);
+        bool hasReceivedAllResp() {return m_receivedResp;}
+
 
         ~Operation() {}
-        Operation() :logger(0), m_hasBill(false) {logger = Logger::getInstance("scag.re");};
+        Operation() :logger(0), m_hasBill(false), m_receivedParts(0), m_receivedAll(false) {logger = Logger::getInstance("scag.re");};
     };
 
 
@@ -172,7 +179,7 @@ namespace scag { namespace sessions
 
         void closeCurrentOperation();
         int getNewOperationId();
-        void AddNewOperationToHash(SCAGCommand& cmd, int type);
+        Operation * AddNewOperationToHash(SCAGCommand& cmd, int type);
         void DoAddPendingOperation(PendingOperation& pendingOperation);
 
 
