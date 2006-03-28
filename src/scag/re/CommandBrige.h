@@ -303,29 +303,8 @@ public:
 
     static SMS& getSMS(SmppCommand& command)
     {
-        _SmppCommand& cmd = *command.operator->();
-
-        CommandId cmdid = cmd.get_commandId();
-        void * dta = cmd.dta;
-        SMS * sms = 0;
-
-        if (!dta) throw SCAGException("Command Bridge Error: Cannot get SMS from SmppCommand");
-
-        switch (cmdid) 
-        {
-        case DELIVERY:
-            sms = (SMS*)dta;
-            break;
-        case SUBMIT:
-            sms = (SMS*)dta;
-            break;
-        case DELIVERY_RESP:
-            sms = ((SmsResp*)dta)->get_sms();
-            break;
-        case SUBMIT_RESP:
-            sms = ((SmsResp*)dta)->get_sms();
-            break;
-        }
+        SMS * sms = command->get_sms();
+        if (!sms) throw SCAGException("Command Bridge Error: Cannot get SMS from SmppCommand");
 
         return *sms;
     }
