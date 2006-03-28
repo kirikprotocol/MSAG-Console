@@ -393,12 +393,13 @@ void Session::expirePendingOperation()
 
 void Session::closeCurrentOperation()
 {
+    smsc_log_debug(logger,"Session: close current operation (id=%d)", currentOperationId);
+
     delete m_pCurrentOperation;
     m_pCurrentOperation = 0;
     OperationsHash.Delete(currentOperationId);
 
     bChanged = true;
-    smsc_log_debug(logger,"Session: close current operation");
 }
 
 
@@ -454,12 +455,12 @@ void Session::endOperation(RuleStatus& ruleStatus)
 
 
     case CO_USSD_DELIVER_RESP:
-            smsc_log_debug(logger,"Session: USSD_DELIVER_RESP");
+            smsc_log_debug(logger,"Session: finish process USSD_DELIVER_RESP");
             if (m_SmppDiscriptor.isUSSDClosed) closeCurrentOperation();
             break;
 
     case CO_USSD_SUBMIT_RESP:
-            smsc_log_debug(logger,"Session: USSD_SUBMIT_RESP");
+            smsc_log_debug(logger,"Session: finish process USSD_SUBMIT_RESP");
 
             if (m_SmppDiscriptor.isUSSDClosed) closeCurrentOperation();
             break;
@@ -470,6 +471,8 @@ void Session::endOperation(RuleStatus& ruleStatus)
 
 Operation * Session::AddNewOperationToHash(SCAGCommand& cmd, int type)
 {
+    smsc_log_debug(logger,"Session: create new operation");
+
     Operation * operation = new Operation();
     operation->type = type;
 
@@ -498,7 +501,7 @@ bool Session::startOperation(SCAGCommand& cmd)
     {
     case CO_DELIVER_SM:
         {
-            smsc_log_debug(logger,"Session: DELIVER operation, currIndex %d, lastIndex %d",m_SmppDiscriptor.currentIndex,m_SmppDiscriptor.lastIndex);
+            //smsc_log_debug(logger,"Session: DELIVER operation, currIndex %d, lastIndex %d",m_SmppDiscriptor.currentIndex,m_SmppDiscriptor.lastIndex);
 
             Operation ** operationPtr;
 
@@ -526,7 +529,7 @@ bool Session::startOperation(SCAGCommand& cmd)
 
     case CO_DELIVER_SM_RESP:
         {
-            smsc_log_debug(logger,"Session: DELIVER_RESP operation, currIndex %d, lastIndex %d",m_SmppDiscriptor.currentIndex,m_SmppDiscriptor.lastIndex);
+            //smsc_log_debug(logger,"Session: DELIVER_RESP operation, currIndex %d, lastIndex %d",m_SmppDiscriptor.currentIndex,m_SmppDiscriptor.lastIndex);
 
             Operation ** operationPtr;
 
@@ -551,7 +554,7 @@ bool Session::startOperation(SCAGCommand& cmd)
 
     case CO_SUBMIT_SM:
         {
-            smsc_log_debug(logger,"Session: SUBMIT operation, currIndex %d, lastIndex %d",m_SmppDiscriptor.currentIndex,m_SmppDiscriptor.lastIndex);
+            //smsc_log_debug(logger,"Session: SUBMIT operation, currIndex %d, lastIndex %d",m_SmppDiscriptor.currentIndex,m_SmppDiscriptor.lastIndex);
 
             int UMR = CommandBrige::getUMR(cmd);
             Operation ** operationPtr = 0;
@@ -609,7 +612,7 @@ bool Session::startOperation(SCAGCommand& cmd)
 
     case CO_SUBMIT_SM_RESP:
         {
-            smsc_log_debug(logger,"Session: SUBMIT_RESP operation, currIndex %d, lastIndex %d",m_SmppDiscriptor.currentIndex,m_SmppDiscriptor.lastIndex);
+            //smsc_log_debug(logger,"Session: SUBMIT_RESP operation, currIndex %d, lastIndex %d",m_SmppDiscriptor.currentIndex,m_SmppDiscriptor.lastIndex);
 
             Operation ** operationPtr = OperationsHash.GetPtr(cmd.getOperationId());
 
@@ -659,7 +662,7 @@ bool Session::startOperation(SCAGCommand& cmd)
 
     case CO_USSD_DELIVER:
         {
-            smsc_log_debug(logger,"Session: USSD_DELIVER");
+            smsc_log_debug(logger,"Session: process USSD_DELIVER");
 
             AddNewOperationToHash(cmd, CO_USSD_DELIVER);
             break;
@@ -667,7 +670,7 @@ bool Session::startOperation(SCAGCommand& cmd)
 
     case CO_USSD_SUBMIT:
         {
-            smsc_log_debug(logger,"Session: USSD_SUBMIT");
+            smsc_log_debug(logger,"Session: process USSD_SUBMIT");
 
             AddNewOperationToHash(cmd, CO_USSD_SUBMIT);
             break;

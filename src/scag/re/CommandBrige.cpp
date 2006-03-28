@@ -1,6 +1,7 @@
 
 #include "CommandBrige.h"
 #include <scag/sessions/Session.h>
+#include "util/recoder/recode_dll.h"
 
 namespace scag { namespace re {
 
@@ -169,7 +170,7 @@ CSmppDiscriptor CommandBrige::getSmppDiscriptor(const SCAGCommand& command)
 
         break;
     case SUBMIT_RESP:
-        if (sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) SmppDiscriptor.cmdType = CO_USSD_DELIVER_RESP;
+        if (sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) SmppDiscriptor.cmdType = CO_USSD_SUBMIT_RESP;
         else SmppDiscriptor.cmdType = CO_SUBMIT_SM_RESP;
 
         SmppDiscriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);

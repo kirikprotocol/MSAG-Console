@@ -809,51 +809,6 @@ AdapterProperty * SmppCommandAdapter::Get_USSD_BIT_Property(SMS& data, const std
 
 AdapterProperty * SmppCommandAdapter::getMessageBodyProperty(SMS& data, std::string name)
 {
-/*
-    static const uint8_t SMSC7BIT             = 0;
-    static const uint8_t LATIN1               = 3;
-    static const uint8_t BINARY               = BIT(2);
-    static const uint8_t UCS2                 = BIT(3);
-*/
-
-    /*
-    if (m_hasPayloadText) 
-        buff = data.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
-    else
-        buff = data.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
-
-    int code = data.getIntProperty(Tag::SMPP_DATA_CODING);
-
-    //Convert7BitToUCS2(const char* bit7buf, int bit7buf_size, short* ucs2, int ucs2buff_size);
-
-
-    switch (code) 
-    {
-    case smsc::smpp::DataCoding::SMSC7BIT:
-        Convert7BitToUCS2(buff, len, (short *)ucs2buff, len*2); 
-        str.assign(ucs2buff,len*2);
-
-        ucs2buff[0] = 0;
-        ucs2buff[1] = 0;
-        str.append(ucs2buff,2);
-        break;
-    case smsc::smpp::DataCoding::LATIN1:
-        ConvertMultibyteToUCS2(buff, len, (short *)ucs2buff, len*2, CONV_ENCODING_KOI8R);
-        str.assign(ucs2buff,len*2);
-
-        ucs2buff[0] = 0;
-        ucs2buff[1] = 0;
-        str.append(ucs2buff,2);
-        break;
-    default:
-//        memcpy(ucs2buff, buff, len);
-        str.assign(buff,len);
-
-        ucs2buff[0] = 0;
-        ucs2buff[1] = 0;
-        str.append(ucs2buff,2);
-    }
-*/
     std::string str = CommandBrige::getMessageBody(command);
     return new AdapterProperty(name,this,str);
 }

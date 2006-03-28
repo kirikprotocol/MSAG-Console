@@ -3,7 +3,6 @@
 
 #include <scag/transport/smpp/SmppCommand.h>
 #include <scag/exc/SCAGExceptions.h>
-#include "util/recoder/recode_dll.h"
 #include "scag/stat/Statistics.h"
 
 namespace scag { namespace sessions {
@@ -91,7 +90,7 @@ public:
 
         SCAGCommand& _command = const_cast<SCAGCommand&>(command);
         SmppCommand * smppCommand = dynamic_cast<SmppCommand *>(&_command);
-        if (!smppCommand) throw SCAGException("Command Bridge Error: command is not SmppCommand type");
+        if (!smppCommand) throw SCAGException("Command Bridge Error: Cannot get DestAddress - SCAGCommand is not smpp-type");
 
         SMS& sms = getSMS(*smppCommand);
         return sms.getDestinationAddress();
