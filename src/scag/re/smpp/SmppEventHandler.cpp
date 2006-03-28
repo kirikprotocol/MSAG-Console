@@ -23,9 +23,6 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
 
     smsc::util::config::Config config;
 
-    Statistics& _statistics = Statistics::Instance();
-
-    
     
     SmppCommand * smppcommand = dynamic_cast<SmppCommand *>(&command);
     if (!smppcommand) throw SCAGException("SmppEventHandler: command is not 'smpp-type'");
@@ -40,7 +37,7 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     
     CommandBrige::makeTrafficEvent(*smppcommand, (int)propertyObject.HandlerId, session.getPrimaryKey(), ev);
 
-    _statistics.registerSaccEvent(ev);
+    Statistics::Instance().registerSaccEvent(ev);
 
 
 
@@ -53,7 +50,7 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
         //TODO: направить отлуп в стейт-машину
     }
 
-    ActionContext context(_constants, session, _command,_statistics, command.getServiceId(), CommandBrige::getAbonentAddr(*smppcommand));
+    ActionContext context(_constants, session, _command, command.getServiceId(), CommandBrige::getAbonentAddr(*smppcommand));
 
     smsc_log_debug(logger, "Process EventHandler...");
 

@@ -3,7 +3,6 @@
 #include "scag/stat/Statistics.h"
 
 
-
 namespace scag { namespace re { namespace actions {
 
 bool ActionTrafficCheck::StrToPeriod(CheckTrafficPeriod& _period, std::string& str)
@@ -99,7 +98,7 @@ bool ActionTrafficCheck::run(ActionContext& context)
     }
 
 
-    if (!context.checkTraffic(routeId,period,nMaxValue)) return true;
+    if (!Statistics::Instance().checkTraffic(routeId,period,nMaxValue)) return true;
 
     for (it = Actions.begin(); it!=Actions.end(); ++it)
     {

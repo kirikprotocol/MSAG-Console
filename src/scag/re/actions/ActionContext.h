@@ -5,7 +5,6 @@
 #include <core/buffers/Hash.hpp>
 #include <scag/re/RuleStatus.h>
 //#include <scag/util/properties/Properties.h>
-#include "scag/stat/Statistics.h"
 #include "scag/sessions/Session.h"
 
 
@@ -37,20 +36,17 @@ namespace scag { namespace re { namespace actions
 
         Session&                session;
         PropertyManager&        command;
-        Statistics&             statistics;
 
         int                     m_ServiceId;
-        //int                     m_handlerType;
         Address                 m_AbonentAddr;
     public:
 
         ActionContext(Hash<Property>& _constants,
-                      Session& _session, PropertyManager& _command,Statistics& _statistics, int serviceId, Address AbonentAddr)
-            : constants(_constants), session(_session), command(_command), statistics(_statistics) 
+                      Session& _session, PropertyManager& _command, int serviceId, Address AbonentAddr)
+            : constants(_constants), session(_session), command(_command) 
         {
             m_ServiceId = serviceId;
             m_AbonentAddr = AbonentAddr;
-            //m_handlerType = handlerType;
         };
 
         ~ActionContext() {};
@@ -77,8 +73,6 @@ namespace scag { namespace re { namespace actions
         Operation * GetCurrentOperation() {return session.GetCurrentOperation();}
 
         void makeBillEvent(int billCommand, SACC_BILLING_INFO_EVENT_t& ev);
-
-        //BillKey CreateBillKey();
     };
 
 }}}

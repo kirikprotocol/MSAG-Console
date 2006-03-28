@@ -61,6 +61,7 @@ void BillingManagerWrapper::receiveCommand()
         } //else 
             //throw SCAGException("Invalid command recieved");
      }*/
+    sleep(10);
 }
 
 

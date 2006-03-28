@@ -70,29 +70,6 @@ void ActionContext::abortSession()
 }
 
 
-bool ActionContext::checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value)
-{
-    return statistics.checkTraffic(routeId, period, value);
-}
-/*
-BillKey ActionContext::CreateBillKey()
-{
-    BillKey billKey;
-    Property * property1 = 0;
-    Property * property2 = 0;
-
-    property1 = command.getProperty("OA");
-    property2 = command.getProperty("DA");
-
-    if ((!property1)||(property2)) throw SCAGException("ActionContext error : cannto create BillKey");
-
-    billKey.DA = ConvertWStrToStr(property2->getStr());
-
-    billKey.OA = ConvertWStrToStr(property1->getStr());
-    return billKey;
-}            */
-
-
 void ActionContext::makeBillEvent(int billCommand, SACC_BILLING_INFO_EVENT_t& ev)
 {
     //Infrastructure& istr = BillingManager::Instance().getInfrastructure();
