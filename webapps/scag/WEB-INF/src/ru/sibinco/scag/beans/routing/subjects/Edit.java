@@ -8,6 +8,7 @@ import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.lib.backend.users.User;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.endpoints.svc.Svc;
+import ru.sibinco.scag.backend.endpoints.centers.Center;
 import ru.sibinco.scag.backend.routing.Subject;
 import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.beans.DoneException;
@@ -38,7 +39,10 @@ public class Edit extends EditBean {
         final Subject subject = (Subject) appContext.getScagRoutingManager().getSubjects().get(loadId);
         if (null != subject) {
             name = subject.getName();
-            defaultSme = null != subject.getDefaultSme() ? subject.getDefaultSme().getId() : null;
+            defaultSme = null != subject.getSvc() ? subject.getSvc().getId() : null;
+            if(defaultSme == null){
+                defaultSme = null != subject.getCenter() ? subject.getCenter().getId() : null;
+            }
             description = subject.getNotes();
 
             final List maskList = new ArrayList();
@@ -54,15 +58,16 @@ public class Edit extends EditBean {
     protected void save() throws SCAGJspException {
         masks = Functions.trimStrings(masks);
         final Map subjects = appContext.getScagRoutingManager().getSubjects();
-        final Svc defSme = (Svc) appContext.getSmppManager().getSvcs().get(defaultSme);
-        if (null == defSme)
+        final Svc defSvc = (Svc) appContext.getSmppManager().getSvcs().get(defaultSme);
+        final Center defCenter = (Center) appContext.getSmppManager().getCenters().get(defaultSme);
+        if (defSvc == null && defCenter == null)
             throw new SCAGJspException(Constants.errors.routing.subjects.DEFAULT_SME_NOT_FOUND, defaultSme);
 
         if (isAdd()) {
             if (subjects.containsKey(name))
                 throw new SCAGJspException(Constants.errors.routing.subjects.SUBJECT_ALREADY_EXISTS, name);
             try {
-                subjects.put(name, new Subject(name, defSme, masks, description));
+                subjects.put(name, defSvc == null ? new Subject(name, defCenter, masks, description) : new Subject(name, defSvc, masks, description));
             } catch (SibincoException e) {
                 logger.debug("Could not create new subject", e);
                 throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_CREATE, e);
@@ -73,14 +78,18 @@ public class Edit extends EditBean {
                     throw new SCAGJspException(Constants.errors.routing.subjects.SUBJECT_ALREADY_EXISTS, name);
                 subjects.remove(getEditId());
                 try {
-                    subjects.put(name, new Subject(name, defSme, masks, description));
+                    subjects.put(name, defSvc == null ? new Subject(name, defCenter, masks, description) : new Subject(name, defSvc, masks, description));
                 } catch (SibincoException e) {
                     logger.debug("Could not create new subject", e);
                     throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_CREATE, e);
                 }
             } else {
                 final Subject subject = (Subject) subjects.get(name);
-                subject.setDefaultSme(defSme);
+                if (defSvc != null) {
+                    subject.setSvc(defSvc);
+                } else {
+                    subject.setCenter(defCenter);
+                }
                 try {
                     subject.setMasks(new MaskList(masks));
                 } catch (SibincoException e) {
@@ -98,7 +107,9 @@ public class Edit extends EditBean {
 
     public String getSmeIds() {
         final StringBuffer result = new StringBuffer();
-        final List smes = new SortedList(appContext.getSmppManager().getSvcs().keySet());
+        SortedList smes = new SortedList();
+        smes.addAll(appContext.getSmppManager().getSvcs().keySet());
+        smes.addAll(appContext.getSmppManager().getCenters().keySet());
         for (Iterator i = smes.iterator(); i.hasNext();) {
             result.append((String) i.next());
             if (i.hasNext())

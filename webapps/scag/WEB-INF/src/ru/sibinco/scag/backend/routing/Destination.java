@@ -28,7 +28,7 @@ public class Destination extends Source {
     private Center center = null;
 
     public Destination(Subject subject) throws SibincoException {
-        this(subject, subject.getDefaultSme());
+        this(subject, subject.getSvc());
     }
 
     public Destination(Subject subject, Center center) throws SibincoException {

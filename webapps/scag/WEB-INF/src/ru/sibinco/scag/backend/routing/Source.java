@@ -82,7 +82,7 @@ public class Source {
 
     public String getDefaultSmeId() {
         if (subject != null)
-            return subject.getDefaultSme().getId();
+            return subject.getSvc().getId();
         else
             return null;
     }

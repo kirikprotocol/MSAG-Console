@@ -301,7 +301,12 @@ public class Edit extends EditBean{//TabledEditBeanImpl {
     }
 
     public String[] getSmeIds() {
-        return (String[]) new SortedList(appContext.getSmppManager().getSvcs().keySet()).toArray(new String[0]);
+        String[] svcs = (String[]) new SortedList(appContext.getSmppManager().getSvcs().keySet()).toArray(new String[0]);
+        String[] centers = (String[]) new SortedList(appContext.getSmppManager().getCenters().keySet()).toArray(new String[0]);
+        String[] result = new String[svcs.length + centers.length];
+        System.arraycopy(svcs, 0, result, 0, svcs.length);
+        System.arraycopy(centers, 0, result, svcs.length, centers.length);
+        return   result;
     }
 
     public String[] getCategoryIds() {
@@ -409,8 +414,8 @@ public class Edit extends EditBean{//TabledEditBeanImpl {
         final Map result = new TreeMap();
         for (Iterator i = appContext.getScagRoutingManager().getSubjects().values().iterator(); i.hasNext();) {
             final Subject subject = (Subject) i.next();
-            result.put(subject.getName(), subject.getDefaultSme().getId());
-        }
+            result.put(subject.getName(), subject.getSvc() == null ? subject.getCenter().getId() : subject.getSvc().getId());
+        }        
         return result;
     }
 

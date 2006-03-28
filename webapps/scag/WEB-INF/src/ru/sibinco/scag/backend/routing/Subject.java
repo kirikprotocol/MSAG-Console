@@ -5,6 +5,7 @@ package ru.sibinco.scag.backend.routing;
 
 import ru.sibinco.scag.backend.endpoints.svc.Svc;
 import ru.sibinco.scag.backend.endpoints.SmppManager;
+import ru.sibinco.scag.backend.endpoints.centers.Center;
 import ru.sibinco.lib.backend.route.MaskList;
 import ru.sibinco.lib.backend.route.Mask;
 import ru.sibinco.lib.backend.util.xml.Utils;
@@ -27,7 +28,8 @@ import java.io.PrintWriter;
 public class Subject {
 
     private String name = null;
-    private Svc defaultSme = null;
+    private Svc svc = null;
+    private Center center = null;
     private MaskList masks;
     private String notes = "";
 
@@ -41,8 +43,9 @@ public class Subject {
             Element maskElem = (Element) masksList.item(i);
             masks.add(new Mask(maskElem.getAttribute("value").trim()));
         }
-        defaultSme = (Svc) smppManager.getSvcs().get(subjElement.getAttribute("defSme"));
-        if (defaultSme == null)
+        svc = (Svc) smppManager.getSvcs().get(subjElement.getAttribute("defSme"));
+        center = (Center) smppManager.getCenters().get(subjElement.getAttribute("defSme"));
+        if (svc == null && center == null)
             throw new SibincoException("Unknown default Sme \"" + subjElement.getAttribute("defSme") + "\" for subject \"" + name + "\"");
 
         NodeList notesList = subjElement.getElementsByTagName("notes");
@@ -51,7 +54,7 @@ public class Subject {
         }
     }
 
-    public Subject(String name, Svc defaultSme, String[] masksStrings, String notes) throws SibincoException {
+    public Subject(String name, Object defaultSme, String[] masksStrings, String notes) throws SibincoException {
         if (name == null)
             throw new NullPointerException("Name is null");
         if (masksStrings == null)
@@ -60,14 +63,18 @@ public class Subject {
             throw new NullPointerException("DefaultSme is null");
         this.name = name;
 
-        this.defaultSme = defaultSme;
+        if(defaultSme instanceof Svc){
+            this.svc = (Svc)defaultSme;
+        }else if(defaultSme instanceof Center){
+            this.center = (Center)defaultSme;
+        }
         this.masks = new MaskList(masksStrings);
         if (masks.size() == 0)
             throw new SibincoException("Masks is empty");
         this.notes = notes;
     }
 
-    public Subject(String name, Collection masksStrings, Svc defaultSme, String notes) throws SibincoException {
+    public Subject(String name, Collection masksStrings, Object defaultSme, String notes) throws SibincoException {
         this.notes = notes;
         if (name == null)
             throw new NullPointerException("Name is null");
@@ -80,11 +87,17 @@ public class Subject {
         masks = new MaskList(masksStrings);
         if (masks.size() == 0)
             throw new NullPointerException("Masks is empty");
-        this.defaultSme = defaultSme;
+
+        if(defaultSme instanceof Svc){
+            this.svc = (Svc)defaultSme;
+        }else if(defaultSme instanceof Center){
+            this.center = (Center)defaultSme;
+        }
     }
 
     public PrintWriter store(PrintWriter out) {
-        out.println("  <subject_def id=\"" + StringEncoderDecoder.encode(getName()) + "\" defSme=\"" + StringEncoderDecoder.encode(getDefaultSme().getId()) + "\">");
+        out.println("  <subject_def id=\"" + StringEncoderDecoder.encode(getName()) + "\" defSme=\"" +
+                StringEncoderDecoder.encode(getSvc() == null ? getCenter().getId() : getSvc().getId()) + "\">");
         if (notes != null)
             out.println("    <notes>" + notes + "</notes>");
         getMasks().store(out);
@@ -108,12 +121,20 @@ public class Subject {
         this.name = name;
     }
 
-    public Svc getDefaultSme() {
-        return defaultSme;
+    public Svc getSvc() {
+        return svc;
     }
 
-    public void setDefaultSme(final Svc defaultSme) {
-        this.defaultSme = defaultSme;
+    public void setSvc(final Svc svc) {
+        this.svc = svc;
+    }
+
+    public Center getCenter() {
+        return center;
+    }
+
+    public void setCenter(Center center) {
+        this.center = center;
     }
 
     public MaskList getMasks() {
@@ -131,6 +152,4 @@ public class Subject {
     public void setNotes(final String notes) {
         this.notes = notes;
     }
-
-
 }
