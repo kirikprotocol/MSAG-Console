@@ -35,7 +35,7 @@
         <c:when test="${bean.transportId == 1}">
     <sm-ep:properties title="SMPP Service (SME) info">
     <br>
-      <sm-ep:txt title="ID" name="id"  validation="id"/>
+      <sm-ep:txt title="ID" name="id" maxlength="60" validation="id"/>
         <%--c:choose>
             <c:when test="${bean.administrator}">
                 <sm-ep:list  title="provider" name="providerId"

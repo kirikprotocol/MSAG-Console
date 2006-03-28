@@ -56,7 +56,7 @@
         <tr>
             <td valign="top">
                 <sm-ep:properties title="Subject info">
-                    <sm-ep:txt title="name" name="name" readonly="${!bean.add}" validation="nonEmpty"/>
+                    <sm-ep:txt title="name" name="name" maxlength="60" readonly="${!bean.add}" validation="nonEmpty"/>
                     <sm-ep:list title="default SME" name="defaultSme" values="${smes}" valueTitles="${smes}"/>
                     <sm-ep:txtBox title="description" cols="0" rows="0" name="description"/>
                 </sm-ep:properties>

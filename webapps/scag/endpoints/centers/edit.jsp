@@ -33,7 +33,7 @@
                 <c:set var="smes" value="${fn:join(bean.smes, ',')}"/>
                 <sm-ep:properties title="SMPP Service Center info">
                     <br>
-                    <sm-ep:txt title="name" name="id" validation="nonEmpty"/>
+                    <sm-ep:txt title="name" name="id" maxlength="60" validation="nonEmpty"/>
                     <sm-ep:txt title="bind system Id" name="bindSystemId" validation="nonEmpty"/>
                     <sm-ep:txt title="bind password" name="bindPassword"/>
                     <%--c:choose>
