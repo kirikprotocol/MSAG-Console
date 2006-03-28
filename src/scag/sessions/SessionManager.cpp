@@ -148,7 +148,7 @@ void SessionManagerImpl::AddRestoredSession(Session * session)
     if (sessionKey.USR > lastUSR) maxUSR = sessionKey.USR;
     else maxUSR = lastUSR;
 
-    sessionKey.USR = lastUSR;
+    sessionKey.USR = maxUSR;
     UMRHash.Insert(sessionKey.abonentAddr,maxUSR);
 
     session->setSessionKey(sessionKey);
@@ -322,7 +322,7 @@ int SessionManagerImpl::processExpire()
         CSessionSetIterator it;
         for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();++it)
         {
-            smsc_log_debug(logger,"SessionManager: check session UMR='%d', Address='%s', has pending: %d, has operations: %d, Opened: %d",(*it)->SessionKey.USR,(*it)->SessionKey.abonentAddr.toString().c_str(),(*it)->hasPending,(*it)->hasOperations,(*it)->bOpened);
+            //smsc_log_debug(logger,"SessionManager: check session UMR='%d', Address='%s', has pending: %d, has operations: %d, Opened: %d",(*it)->SessionKey.USR,(*it)->SessionKey.abonentAddr.toString().c_str(),(*it)->hasPending,(*it)->hasOperations,(*it)->bOpened);
             
             if ((!(*it)->bOpened)&&((*it)->hasPending)) break;
             if ((!(*it)->bOpened)&&(!(*it)->hasPending)&&(!(*it)->hasOperations)) it = DeleteSession(it);
