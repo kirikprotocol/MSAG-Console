@@ -40,7 +40,7 @@ pid_t Service::start()
   time_t now=time(NULL);
   if(now-lastStart<DaemonCommandDispatcher::stayAliveTimeout)
   {
-    smsc_log_info(logger,"Delay service start after crash restart for %d seconds",1000*DaemonCommandDispatcher::retryTimeout*(1+restartRetryCount));
+    smsc_log_info(logger,"Delay service start after crash restart for %d seconds",DaemonCommandDispatcher::retryTimeout*(1+restartRetryCount));
     smsc::util::millisleep(1000*DaemonCommandDispatcher::retryTimeout*(1+restartRetryCount));
     restartRetryCount++;
   }else
