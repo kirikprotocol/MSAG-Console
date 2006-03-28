@@ -23,7 +23,7 @@
                                              status == "<%= getLocString("common.statuses.unknown" )%>" );
             document.getElementById('mbStop').disabled  = (status == "<%= getLocString("common.statuses.offline") %>" ||
                                              status == "<%= getLocString("common.statuses.unknown") %>" );
-            window.setTimeout(refreshDBSmeStartStopButtonsStatus, 500);
+            window.setTimeout(refreshDBSmeStartStopButtonsStatus, 5000);
         }
         refreshDBSmeStartStopButtonsStatus();
     </script><%

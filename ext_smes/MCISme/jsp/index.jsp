@@ -22,7 +22,7 @@ function refreshMCISmeTdcStatuses()
 {
 	document.getElementById('tdcMCISmeStatuses').DataURL = document.getElementById('tdcMCISmeStatuses').DataURL;
 	document.getElementById('tdcMCISmeStatuses').reset();
-	window.setTimeout(refreshMCISmeTdcStatuses, 2000);
+	window.setTimeout(refreshMCISmeTdcStatuses, 5000);
 }
 refreshMCISmeTdcStatuses();
 </script>
@@ -142,7 +142,7 @@ function checkStartStop()
   document.getElementById('mbStart').disabled = !start;
   document.getElementById('mbStop').disabled = !stop;
 
-  window.setTimeout(checkStartStop, 500);
+  window.setTimeout(checkStartStop, 5000);
 }
 checkStartStop();
 </script><%

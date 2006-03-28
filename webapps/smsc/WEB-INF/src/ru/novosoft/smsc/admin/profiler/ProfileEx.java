@@ -23,9 +23,9 @@ public class ProfileEx extends Profile
   public ProfileEx(Mask mask, List profileProperties) throws AdminException
   {
     super(mask, profileProperties);
-    setMatchType((String) profileProperties.get(11));
+    setMatchType((String) profileProperties.get(14));
     if (matchType != MATCH_DEFAULT)
-      setMatchAddress(new Mask((String) profileProperties.get(12)));
+      setMatchAddress(new Mask((String) profileProperties.get(15)));
   }
 
   public byte getMatchType()

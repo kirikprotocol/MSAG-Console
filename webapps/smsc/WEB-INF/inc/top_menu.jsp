@@ -93,7 +93,9 @@
     boolean isNeedToBeDrawn(MenuItem menuItem) {
         if (menuItem.getVisibleMask() == MenuItem.VISIBLE_IN_ALL) return true;
         SMSCAppContext appContext = (SMSCAppContext) req.getAttribute("appContext");
-        if (appContext == null) return true;
+        if (appContext == null)
+            if (menuItem.getVisibleMask() == MenuItem.VISIBLE_IN_SINGLE) return true;
+                else return false;
         if ((appContext.getInstallType() == ResourceGroupConstants.RESOURCEGROUP_TYPE_SINGLE) &&
                 (menuItem.getVisibleMask() == MenuItem.VISIBLE_IN_SINGLE)) return true;
         if ((appContext.getInstallType() == ResourceGroupConstants.RESOURCEGROUP_TYPE_HA) &&

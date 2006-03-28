@@ -44,7 +44,7 @@
         document.getElementById('mbStop').disabled = (document.getElementById(
                 'RUNNING_STATUSERVICE_<%= Constants.SMSC_SME_ID %>').innerText == "<%= getLocString("common.statuses.offline") %>");
 
-        window.setTimeout(refreshStartStopButtonsStatus, 500);
+        window.setTimeout(refreshStartStopButtonsStatus, 10000);
     }
 
     refreshStartStopButtonsStatus();

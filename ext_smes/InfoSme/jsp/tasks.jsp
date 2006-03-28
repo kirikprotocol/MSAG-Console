@@ -45,7 +45,7 @@
     {
       document.getElementById('tdcTasksStatuses').DataURL = document.getElementById('tdcTasksStatuses').DataURL;
       document.getElementById('tdcTasksStatuses').reset();
-      window.setTimeout(refreshTaskStatuses, 1000);
+      window.setTimeout(refreshTaskStatuses, 5000);
     }
     refreshTaskStatuses();
   </script>

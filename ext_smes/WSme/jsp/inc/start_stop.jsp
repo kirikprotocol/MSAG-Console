@@ -10,7 +10,7 @@ function refreshWSmeStartStopButtonsStatus()
 {
 	document.getElementById('btnStart').disabled = (document.getElementById('RUNNING_STATUSERVICE_<%=bean.getSmeId()%>').innerText != "stopped");
 	document.getElementById('btnStop').disabled = (document.getElementById('RUNNING_STATUSERVICE_<%=bean.getSmeId()%>').innerText != "running");
-	window.setTimeout(refreshWSmeStartStopButtonsStatus, 500);
+	window.setTimeout(refreshWSmeStartStopButtonsStatus, 5000);
 }
 refreshWSmeStartStopButtonsStatus();
 </script>

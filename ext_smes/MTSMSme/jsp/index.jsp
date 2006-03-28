@@ -27,7 +27,7 @@ function checkStartStop()
                                      status == "<%= getLocString("common.statuses.unknown" )%>" );
     document.getElementById('mbStop').disabled  = (status == "<%= getLocString("common.statuses.offline") %>" ||
                                      status == "<%= getLocString("common.statuses.unknown") %>" );
-    window.setTimeout(checkStartStop, 500);
+    window.setTimeout(checkStartStop, 5000);
 }
 checkStartStop();
 </script>

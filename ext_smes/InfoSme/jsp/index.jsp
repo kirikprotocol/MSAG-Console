@@ -154,7 +154,7 @@ function checkStartStop()
   document.getElementById('toStartProcessor').disabled = smeChecked;
   document.getElementById('toStartScheduler').disabled = smeChecked;
 
-  window.setTimeout(checkStartStop, 500);
+  window.setTimeout(checkStartStop, 5000);
 }
 checkStartStop();
 

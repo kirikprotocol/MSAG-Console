@@ -197,7 +197,7 @@ function refreshProgressStatus()
     {
         document.getElementById('mbCancel').innerText = 'Abort';
     }
-	else window.setTimeout(refreshProgressStatus, 500);
+	else window.setTimeout(refreshProgressStatus, 5000);
 }
 refreshProgressStatus();
 </script>
@@ -208,7 +208,7 @@ refreshProgressStatus();
     case 4:
         {%>
 <div class=page_subtitle><%= getLocString("infosme.subtitle.stage4")%></div><br/>
-<div class=secInfo><%= ((bean.getStatus() == bean.STATUS_OK) ? 
+<div class=secInfo><%= ((bean.getStatus() == Deliveries.STATUS_OK) ?
                          getLocString("infosme.msg.task_add_success"):
                          getLocString("infosme.msg.task_add_failure"))%>'<%= bean.getId()%>'</div>
 <div class=secInfo><%= getLocString("infosme.msg.to_main")%></div>

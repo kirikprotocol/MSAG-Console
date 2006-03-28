@@ -169,7 +169,7 @@
         document.getElementById('tdcSmscStatuses').reset();
         document.getElementById('tdcConnStatuses').DataURL = document.getElementById('tdcConnStatuses').DataURL;
         document.getElementById('tdcConnStatuses').reset();
-        window.setTimeout(refreshStatus, 5000);
+        window.setTimeout(refreshStatus, 10000);
     }
     refreshStatus();
 </script>
