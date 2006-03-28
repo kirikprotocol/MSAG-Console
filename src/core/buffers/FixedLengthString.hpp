@@ -57,6 +57,11 @@ struct FixedLengthString{
     return !strcmp(str,argStr);
   }
 
+  bool operator!=(const char* argStr)const
+  {
+    return strcmp(str,argStr)!=0;
+  }
+
   template <int M>
   bool operator<(const FixedLengthString<M>& argStr)const
   {
