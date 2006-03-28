@@ -11,7 +11,7 @@
 
     byte status = ServiceInfo.STATUS_UNKNOWN;
     String result = Constants.SMSC_SME_ID;
-    for (Iterator i = SmscList.id2NodeName.keySet().iterator(); i.hasNext();) {
+    for (Iterator i = SmscList.id2NodeName.values().iterator(); i.hasNext();) {
         result += " ," + (String) i.next();
     }
     result += "\r\n";
@@ -44,7 +44,7 @@
         result += "&nbsp;&nbsp;&nbsp;";
     }
 
-    for (Iterator i = SmscList.id2NodeName.values().iterator(); i.hasNext();) {
+    for (Iterator i = SmscList.id2NodeName.keySet().iterator(); i.hasNext();) {
         byte nodeId = Byte.parseByte((String) i.next());
         result += " ," + bean.smscServStatusString(Constants.SMSC_SME_ID, nodeId);
     }
