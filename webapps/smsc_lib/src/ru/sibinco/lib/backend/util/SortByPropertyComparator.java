@@ -55,7 +55,6 @@ public final class SortByPropertyComparator implements Comparator
                ? s2.compareToIgnoreCase(s1)
                : s1.compareToIgnoreCase(s2);
       } else if ((Comparable.class.isAssignableFrom(method.getReturnType()))
-                 || (method.getReturnType() == boolean.class)
                  || (method.getReturnType() == int.class)
                  || (method.getReturnType() == long.class)) {
         Comparable c1 = (Comparable) method.invoke(o1, new Object[0]);
@@ -63,7 +62,15 @@ public final class SortByPropertyComparator implements Comparator
         return negativeSort
                ? c2.compareTo(c1)
                : c1.compareTo(c2);
-      } else
+      } else if ((Comparable.class.isAssignableFrom(method.getReturnType()))
+                  ||(method.getReturnType() == boolean.class)) {
+        String s1 = ((Boolean)method.invoke(o1, new Object[0])).toString();
+        String s2 = ((Boolean)method.invoke(o2, new Object[0])).toString();
+        return negativeSort
+               ? s2.compareTo(s1)
+               : s1.compareTo(s2);
+      }
+      else
         return 0;
     } catch (Throwable e) {
       logger.debug("Could not compare two objects [\"" + o1 + "\", \"" + o2 + "\"] of type \"" + o1.getClass().getName() + "\" by field \"" + sort + "\"", e);
