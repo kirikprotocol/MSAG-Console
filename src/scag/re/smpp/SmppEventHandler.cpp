@@ -22,15 +22,9 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     RuleStatus rs;
 
     smsc::util::config::Config config;
-    Statistics * _statistics = 0;
 
-    try
-    {
-        *_statistics = Statistics::Instance();
-    } catch (...)
-    {
-        throw SCAGException("EventHandler: Cannot get Statistics instance");
-    }
+    Statistics& _statistics = Statistics::Instance();
+
     
     
     SmppCommand * smppcommand = dynamic_cast<SmppCommand *>(&command);
@@ -42,11 +36,11 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
 
     SACC_TRAFFIC_INFO_EVENT_t ev;
 
-    _SmppCommand * cmd = smppcommand->operator ->();
+    //_SmppCommand * cmd = smppcommand->operator ->();
     
     CommandBrige::makeTrafficEvent(*smppcommand, (int)propertyObject.HandlerId, session.getPrimaryKey(), ev);
 
-    _statistics->Instance().registerSaccEvent(ev);
+    _statistics.registerSaccEvent(ev);
 
 
 
@@ -59,7 +53,7 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
         //TODO: направить отлуп в стейт-машину
     }
 
-    ActionContext context(_constants, session, _command,*_statistics, command.getServiceId(), CommandBrige::getAbonentAddr(command));
+    ActionContext context(_constants, session, _command,_statistics, command.getServiceId(), CommandBrige::getAbonentAddr(*smppcommand));
 
     smsc_log_debug(logger, "Process EventHandler...");
 

@@ -104,18 +104,12 @@ public:
         return *sms;
     }
 
-    static Address getAbonentAddr(const SCAGCommand& command)  
+    static Address getAbonentAddr(SmppCommand& command)  
     {
         Address resultAddr;
 
-        SCAGCommand& _command = const_cast<SCAGCommand&>(command);
-
-        SmppCommand * smppCommand = dynamic_cast<SmppCommand *>(&_command);
-        if (!smppCommand) throw SCAGException("Command Bridge Error: SCAGCommand is not smpp-type");
-
-
-        SMS& sms = getSMS(*smppCommand);
-        CommandId cmdid = (*smppCommand)->get_commandId();
+        SMS& sms = getSMS(command);
+        CommandId cmdid = command->get_commandId();
 
         switch (cmdid) 
         {
@@ -136,6 +130,8 @@ public:
         return resultAddr;
 
     }
+
+
 
     static int16_t getUMR(const SCAGCommand& command)  
     {
