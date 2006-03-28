@@ -1012,14 +1012,10 @@ SmppCommandAdapter::~SmppCommandAdapter()
 
 Property* SmppCommandAdapter::getProperty(const std::string& name)
 {
-    _SmppCommand * cmd = command.operator ->();
-    if (!cmd) return 0;
+    SMS * sms = command->get_sms();
+    if (!sms) return 0;
 
-
-    CommandId cmdid = cmd->get_commandId();
-    void * dta = cmd->dta;
-
-    if (!dta) return 0;
+    CommandId cmdid = command->get_commandId();
 
     int * pFieldId = 0;
     AdapterProperty * property = 0;
@@ -1030,12 +1026,12 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
         pFieldId = DeliverFieldNames.GetPtr(name.c_str());
         if (!pFieldId) return 0;
 
-        return getDeliverProperty(*(SMS*)dta,name,*pFieldId);
+        return getDeliverProperty(*sms,name,*pFieldId);
     case SUBMIT:
         pFieldId = SubmitFieldNames.GetPtr(name.c_str());
         if (!pFieldId) return 0;
 
-        return getSubmitProperty(*(SMS*)dta,name,*pFieldId);
+        return getSubmitProperty(*sms,name,*pFieldId);
     case DELIVERY_RESP:
         if (PropertyPul.Count()) 
         {
@@ -1060,14 +1056,14 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
 void SmppCommandAdapter::changed(AdapterProperty& property)
 {
 
-    _SmppCommand * cmd = command.operator ->();
-    if (!cmd) return;
-    
-    CommandId cmdid = cmd->get_commandId();
+    SMS * sms = command->get_sms();
+
+    if (sms == 0) return;
+
+    CommandId cmdid = command->get_commandId();
+
     int * pFieldId = 0;
     int FieldId;
-
-    SMS * data = (SMS *) cmd->dta;
 
     const std::string name = property.GetName();  
 
@@ -1077,25 +1073,25 @@ void SmppCommandAdapter::changed(AdapterProperty& property)
         pFieldId = DeliverFieldNames.GetPtr(name.c_str());
         if (!pFieldId) return;
 
-        WriteDeliveryField(*data,*pFieldId,property);
+        WriteDeliveryField(*sms,*pFieldId,property);
         FieldId = *pFieldId;
         break;
     case SUBMIT:
         pFieldId = SubmitFieldNames.GetPtr(name.c_str());
         if (!pFieldId) return;
 
-        WriteSubmitField(*data,*pFieldId,property);
+        WriteSubmitField(*sms,*pFieldId,property);
         FieldId = *pFieldId;
         break;
     case DELIVERY_RESP:
         if (name!="status") return;
-        cmd->set_status(property.getInt());
+        command->set_status(property.getInt());
         FieldId = 0;
 
         break;
     case SUBMIT_RESP:
         if (name!="status") return;
-        cmd->set_status(property.getInt());
+        command->set_status(property.getInt());
         FieldId = 0;
         break;
 
