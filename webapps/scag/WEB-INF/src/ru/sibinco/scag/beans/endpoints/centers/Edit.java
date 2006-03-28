@@ -145,10 +145,11 @@ public class Edit extends EditBean {
         try {
             if (isAdd()) {
                 center.setUid(getLastUid());
+                appContext.getSmppManager().setLastUsedId(center.getUid());
                 if (center.isEnabled()) {
                     scag.addCenter(center);
                 }
-                appContext.getSmppManager().setLastUsedId(center.getUid());
+
             } else {
                 if (oldCenter.isEnabled() == center.isEnabled()) {
                     if (isEnabled())
@@ -161,8 +162,6 @@ public class Edit extends EditBean {
                     }
                 }
             }
-
-            appContext.getSmppManager().store();
         } catch (SibincoException e) {
             if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
                 if (isAdd()) centers.remove(id);
