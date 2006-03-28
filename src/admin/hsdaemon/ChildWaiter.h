@@ -109,15 +109,15 @@ public:
         bool needRestart=false;
         bool restartOk=false;
 
-        if(svc->getStatus()!=Service::stopping)
+        if(svc->getStatus()!=Service::stopping || svc->getSwitchover())
         {
           needRestart=true;
           if(svc->getType()==ServiceInfo::failover)
           {
             __trace2__("restarting service %s at another node", serviceId);
             try{
-              icon->remoteStartService(serviceId);
-              restartOk=true;
+              svc->setSwitchover(false);
+              restartOk=icon->remoteStartService(serviceId);
             }catch(std::exception& e)
             {
               __trace2__("failed to start remote service '%s':%s", serviceId,e.what());

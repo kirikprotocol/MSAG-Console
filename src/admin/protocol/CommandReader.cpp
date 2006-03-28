@@ -12,6 +12,7 @@
 #include <admin/protocol/CommandCall.h>
 #include <admin/protocol/CommandListServices.h>
 #include <admin/protocol/CommandListComponents.h>
+#include <admin/protocol/CommandSwitchOver.h>
 #include <admin/protocol/CommandSetServiceStartupParameters.h>
 #include <admin/protocol/CommandSetHSServiceStartupParameters.h>
 #include <core/network/Socket.hpp>
@@ -187,6 +188,8 @@ Command * CommandReader::createCommand(int id, const DOMDocument *data) {
     return new CommandSetServiceStartupParameters(data);
   case Command::set_hsservice_startup_parameters:
     return new CommandSetHSServiceStartupParameters(data);
+  case Command::switchover_service:
+    return new CommandSwitchOver(data);
   default:
     smsc_log_warn(logger, "Unknown command id \"%i\"", id);
     throw AdminException("Unknown command");

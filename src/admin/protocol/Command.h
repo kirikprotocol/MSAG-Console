@@ -37,7 +37,8 @@ public:
     list_components,
     call,
     set_service_startup_parameters,
-    set_hsservice_startup_parameters
+    set_hsservice_startup_parameters,
+    switchover_service
   };
 
   Command(Id newId) throw ()
@@ -73,7 +74,7 @@ protected:
   Id id;
   const xercesc::DOMDocument * data;
   smsc::logger::Logger *logger;
-  static const uint8_t commands_quantity = 11;
+  static const uint8_t commands_quantity = 12;
   static const _Command names[commands_quantity];
 
   void setId(Id newId) throw () {id = newId;}

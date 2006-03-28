@@ -12,6 +12,7 @@
 #include <admin/protocol/CommandRemoveService.h>
 #include <admin/protocol/CommandListServices.h>
 #include <admin/protocol/CommandSetHSServiceStartupParameters.h>
+#include <admin/protocol/CommandSwitchOver.h>
 #include <admin/protocol/Response.h>
 #include <admin/util/CommandDispatcher.h>
 #include <core/synchronization/Mutex.hpp>
@@ -72,6 +73,7 @@ protected:
   Response * start_service                  (const CommandStartService                * const command);
   Response * shutdown_service               (const CommandShutdown                    * const command);
   Response * kill_service                   (const CommandKillService                 * const command);
+  Response * switchover_service             (const CommandSwitchOver                  * const command);
 
 
   static void addServicesFromConfig();

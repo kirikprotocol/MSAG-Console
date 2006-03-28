@@ -21,7 +21,8 @@ const Command::_Command Command::names[commands_quantity] = {
   {"list_components",  Command::list_components},
   {"call",             Command::call},
   {"set_service_startup_parameters", Command::set_service_startup_parameters},
-  {"set_hsservice_startup_parameters",Command::set_hsservice_startup_parameters}
+  {"set_hsservice_startup_parameters",Command::set_hsservice_startup_parameters},
+  {"switchover_service",Command::switchover_service}
 };
 
 Command::Id Command::getCommandIdByName(const char * const name) throw ()

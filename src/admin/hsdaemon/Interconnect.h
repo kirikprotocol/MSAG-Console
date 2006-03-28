@@ -49,7 +49,7 @@ public:
   void sendSyncCommand();
   Service::run_status remoteGetServiceStatus(const char* svc);
   bool remoteStartService(const char* svc);
-  bool remoteShutdownService(const char* svc);
+  bool remoteShutdownService(const char* svc,bool switchOver);
 
   std::string getLocalNode()
   {

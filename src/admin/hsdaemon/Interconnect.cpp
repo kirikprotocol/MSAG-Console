@@ -132,10 +132,12 @@ void Interconnect::ProcessRequest(net::Socket* sck)
     case cmdShutdownService:
     {
       std::string svcName=readString(sck);
+      bool switchOver=readUInt16(sck);
       smsc_log_info(log,"remote request to shutdown service '%s'",svcName.c_str());
       Service* svc=lst.get(svcName.c_str());
       uint16_t status=0;
       try{
+        svc->setSwitchover(switchOver);
         svc->shutdown();
         status=1;
       }catch(std::exception& e)
@@ -198,12 +200,13 @@ bool Interconnect::remoteStartService(const char* svc)
   return rv!=0;
 }
 
-bool Interconnect::remoteShutdownService(const char* svc)
+bool Interconnect::remoteShutdownService(const char* svc,bool switchOver)
 {
   sync::MutexGuard mg(clntMtx);
   if(clntSck.Connect()==-1)throw Exception("Failed to connect to %s:%d",otherHost.c_str(),otherPort);
   writeUInt16(&clntSck,cmdShutdownService);
   writeString(&clntSck,svc);
+  writeUInt16(&clntSck,switchOver?1:0);
   uint16_t rv=readUInt16(&clntSck);
   clntSck.Close();
   return rv!=0;

@@ -311,7 +311,7 @@ Response * DaemonCommandDispatcher::shutdown_service(const CommandShutdown * con
           if(svc->getStatus()==Service::stopped)
           {
             try{
-              icon->remoteShutdownService(command->getServiceId());
+              icon->remoteShutdownService(command->getServiceId(),false);
             }catch(std::exception& e)
             {
               smsc_log_warn(logger,"Failed to remote shutdown service '%s':%s",command->getServiceId(),e.what());
@@ -336,6 +336,56 @@ Response * DaemonCommandDispatcher::shutdown_service(const CommandShutdown * con
     throw AdminException("null command received");
   }
 }
+
+Response * DaemonCommandDispatcher::switchover_service(const CommandSwitchOver * const command)
+{
+  smsc_log_debug(logger, "switchover service");
+  if (command != 0)
+  {
+    if (command->getServiceId() != 0)
+    {
+      smsc_log_info(logger, "switchover service \"%s\"", command->getServiceId());
+      {
+        MutexGuard guard(servicesListMutex);
+        Service* svc=services[command->getServiceId()];
+        if(!svc)throw AdminException("Unknown serviceId='%s'",command->getServiceId());
+        if(svc->getType()==ServiceInfo::standalone)
+        {
+          return new Response(Response::Error,"Attempt to switchover standalone service");
+        }else
+        {
+          bool localStart=true;
+          if(svc->getStatus()==Service::stopped)
+          {
+            try{
+              icon->remoteShutdownService(command->getServiceId(),true);
+            }catch(std::exception& e)
+            {
+              smsc_log_warn(logger,"Failed to remote shutdown service '%s':%s",command->getServiceId(),e.what());
+            }
+          }else
+          {
+            svc->setSwitchover(true);
+            svc->shutdown();
+            localStart=false;
+          }
+        }
+      }
+      return new Response(Response::Ok, 0);
+    }
+    else
+    {
+      smsc_log_warn(logger, "service id not specified");
+      throw AdminException("service id not specified");
+    }
+  }
+  else
+  {
+    smsc_log_warn(logger, "null command received");
+    throw AdminException("null command received");
+  }
+}
+
 
 Response * DaemonCommandDispatcher::kill_service(const CommandKillService * const command)
 {

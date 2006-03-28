@@ -33,6 +33,7 @@ public:
     init(services_dir, svcInfo,servicePID, serviceStatus);
     lastStart=0;
     restartRetryCount=0;
+    switchOver=false;
   }
 
   pid_t start() throw (AdminException);
@@ -92,6 +93,10 @@ public:
   ServiceInfo::ServiceType getType()const{return info.serviceType;}
 
 
+  void setSwitchover(bool value){switchOver=value;}
+  bool getSwitchover()const{return switchOver;}
+
+
   static const char* hostUp;
   static const char* hostDown;
 
@@ -116,6 +121,8 @@ protected:
   int restartRetryCount;
 
   bool autostarted;
+
+  bool switchOver;
 
   void init(const char * const services_dir,
   const ServiceInfo& svcInfo,
