@@ -98,9 +98,24 @@ public:
 
     static SMS& getSMS(SmppCommand& command)
     {
-        SMS * sms = command->get_sms();
-        if (!sms) throw SCAGException("Command Bridge Error: Cannot get SMS from SmppCommand");
+        CommandId cmdid = command->get_commandId();
 
+        SMS * sms = 0;
+
+        switch (cmdid) 
+        {
+        case DELIVERY:
+        case SUBMIT:
+            sms = command->get_sms();
+            break;
+        case DELIVERY_RESP:
+        case SUBMIT_RESP:
+            SmsResp * resp = command->get_resp();
+            if (resp) sms = resp->get_sms();
+            break;
+        }
+
+        if (!sms) throw SCAGException("Command Bridge Error: Cannot get SMS from SmppCommand");
         return *sms;
     }
 

@@ -460,13 +460,14 @@ void Scag::init()
   }
   //*****************************************************
 
- /*
+ 
   ////////////////////////// FOR TEST 
   scag::sessions::CSessionKey key;
-
+ /*
   smsc_log_warn(log, "1");
-  SMS sms;
-  scag::transport::smpp::SmppCommand command = scag::transport::smpp::SmppCommand::makeDeliverySm(sms,1);
+  //SMS sms;
+  char buff[128];
+  scag::transport::smpp::SmppCommand command = scag::transport::smpp::SmppCommand::makeDeliverySmResp(buff,1,1);
 
   SessionManager& sm = SessionManager::Instance();
   smsc_log_warn(log, "2");
