@@ -5,7 +5,6 @@
 #include "SmppRouter.h"
 #include "SmppCommand.h"
 #include "core/threads/ThreadedTask.hpp"
-#include "core/buffers/IntHash.hpp"
 #include "logger/Logger.h"
 
 namespace scag{
@@ -13,7 +12,6 @@ namespace transport{
 namespace smpp{
 
 namespace thr=smsc::core::threads;
-using namespace smsc::core::buffers;
 
 class StateMachine:public thr::ThreadedTask{
 public:
@@ -42,9 +40,6 @@ protected:
 
   struct ResponseRegistry;
   static ResponseRegistry reg;
-  
-  static IntHash<int> UMRtoUSR;
-  static IntHash<int> USRtoUMR;
 };
 
 }//smpp

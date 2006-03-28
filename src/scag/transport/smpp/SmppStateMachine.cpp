@@ -68,8 +68,6 @@ struct StateMachine::ResponseRegistry{
 };
 
 StateMachine::ResponseRegistry StateMachine::reg;
-IntHash<int> StateMachine::UMRtoUSR;
-IntHash<int> StateMachine::USRtoUMR;
 
 int StateMachine::Execute()
 {
@@ -114,7 +112,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
     SubmitResp(cmd,smsc::system::Status::NOROUTE);
     return;
   }
-
+  
   sms.setRouteId(ri.routeId);
   sms.setSourceSmeId(src->getSystemId());
   sms.setDestinationSmeId(dst->getSystemId());
@@ -166,11 +164,11 @@ void StateMachine::processSubmit(SmppCommand& cmd)
     }
     else if (ussd_op == smsc::smpp::UssdServiceOpValue::PSSR_RESPONSE) { // End user USSD dialog
 	smsc_log_warn(log, "USSD Submit: End user dialog, UMR=%d", umr);
-	// TODO: end dialog & empty mappings
+	if (dst) dst->delUMRMapping(umr);
     }
     else { // Continue USSD dialog
 	key.USR = umr;
-	umr = USRtoUMR.Get(key.USR); // TODO: add smsc_id
+	umr = dst->getUMR(key.USR);
 	smsc_log_debug(log, "USSD Submit: Continue, UMR=%d", umr);
 	session=scag::sessions::SessionManager::Instance().getSession(key);
 	if (!session.Get()) {
@@ -315,17 +313,21 @@ void StateMachine::processDelivery(SmppCommand& cmd)
 	session=scag::sessions::SessionManager::Instance().newSession(key);
 	sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
 	smsc_log_warn(log, "USSD Delivery: Creating mappings USR=%d, UMR=%d", key.USR, umr);
-	USRtoUMR.Insert(key.USR, umr); // TODO: add smsc_id
-	UMRtoUSR.Insert(umr, key.USR); // TODO: add smsc_id
+	if (src) src->setMapping(key.USR, umr);
     }
     else if (ussd_op == smsc::smpp::UssdServiceOpValue::USSN_CONFIRM) { // End service USSD dialog
 	smsc_log_debug(log, "USSD Delivery: End service dialog, UMR=%d", umr);
-	// TODO: end dialog & empty mappings
+	if (src) src->delUMRMapping(umr);
     }
     else {
-	key.USR = UMRtoUSR.Get(umr);   // TODO: add smsc_id
+	key.USR = src->getUSR(umr);
 	smsc_log_debug(log, "USSD Delivery: Continue USR=%d", key.USR);
 	session=scag::sessions::SessionManager::Instance().getSession(key); // TODO: check session exists
+	if (!session.Get()) {
+	    smsc_log_warn(log, "USSD Delivery: USR=%d is invalid, no session", key.USR);
+	    DeliveryResp(cmd,smsc::system::Status::USSDDLGREFMISM);
+	    return;
+	}
 	sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
     }
   }
