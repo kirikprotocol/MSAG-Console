@@ -148,7 +148,7 @@ CSmppDiscriptor CommandBrige::getSmppDiscriptor(const SCAGCommand& command)
 
         if (sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) 
         {
-            SmppDiscriptor.cmdType = CO_USSD_SUBMIT_RESP;
+            SmppDiscriptor.cmdType = CO_USSD_SUBMIT;
             SmppDiscriptor.isUSSDClosed = (sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == PSSR_RESPONSE);
         }
         else SmppDiscriptor.cmdType = CO_SUBMIT_SM;
