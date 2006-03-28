@@ -6,6 +6,7 @@ package ru.sibinco.scag.beans.endpoints.services;
 import ru.sibinco.scag.beans.TabledBeanImpl;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.backend.Scag;
+import ru.sibinco.scag.backend.endpoints.svc.Svc;
 import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.lib.bean.TabledBean;
@@ -34,8 +35,11 @@ public class Index extends TabledBeanImpl implements TabledBean {
         final Map svcs = appContext.getSmppManager().getSvcs();
         for (Iterator iterator = checkedSet.iterator(); iterator.hasNext();) {
             final String svcId = (String) iterator.next();
+            Svc svc = (Svc)appContext.getSmppManager().getSvcs().get(svcId);
             try {
-                scag.deleteSvc(svcId);
+                if (svc.isEnabled()) {
+                    scag.deleteSvc(svcId);
+                }
                 svcs.remove(svcId);
             } catch (SibincoException e) {
                 if (Proxy.STATUS_CONNECTED == scag.getStatus()) {

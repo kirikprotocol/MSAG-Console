@@ -37,7 +37,9 @@ public class Index extends TabledBeanImpl{
             final String centerId = (String) iterator.next();
             Center center = (Center) centers.get(centerId);
             try {
-                scag.deleteCenter(center);
+                if (center.isEnabled()) {
+                    scag.deleteCenter(center);
+                }
                 centers.remove(centerId);
             } catch (SibincoException e) {
                 if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
