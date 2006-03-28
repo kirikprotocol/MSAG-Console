@@ -51,7 +51,7 @@
                     <sm-ep:txt title="alternate host" name="altHost"/>
                     <sm-ep:txt title="alternate port" name="altPort" validation="port"/>
                     <sm-ep:list title="mode" name="mode" values="1,2,3" valueTitles="TX,RX,TRX"/>
-                    <sm-ep:txt title="timeout" name="timeout" validation="unsigned"/>
+                    <sm-ep:txt title="timeout" name="timeout" maxlength="6" validation="unsigned"/>
                     <sm-ep:check title="enabled" name="enabled"/>
                     <c:choose>
                         <c:when test="${!param.add}">

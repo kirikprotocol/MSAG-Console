@@ -46,7 +46,7 @@
           <sm-ep:const title="provider" name="providerName" value="${bean.providerName}"/>
         </c:otherwise>
       </c:choose--%>
-      <sm-ep:txt title="timeout" name="timeout" validation="unsigned"/>
+      <sm-ep:txt title="timeout" name="timeout" maxlength="6" validation="unsigned"/>
       <sm-ep:txt title="password" name="password"/>
       <sm-ep:check title="enabled" name="enabled"/>
       <sm-ep:list title="mode" name="mode" values="1,2,3" valueTitles="TX,RX,TRX"/>
