@@ -11,7 +11,7 @@
 
     byte status = ServiceInfo.STATUS_UNKNOWN;
     String result = Constants.SMSC_SME_ID;
-    for (Iterator i = SmscList.id2NodeName.values().iterator(); i.hasNext();) {
+    for (Iterator i = SmscList.id2NodeName.keySet().iterator(); i.hasNext();) {
         result += " ," + (String) i.next();
     }
     result += "\r\n";
