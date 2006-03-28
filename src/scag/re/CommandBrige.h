@@ -65,11 +65,9 @@ public:
 
     static std::string getMessageBody(SmppCommand& command)
     {
-        unsigned len1, len2, len;
+        unsigned len = 0;
 
-        const char * buff1;
-        const char * buff2;
-        const char * buff;
+        const char * buff = 0;
 
         std::string str;
         char ucs2buff[2048];
@@ -80,18 +78,16 @@ public:
         static const uint8_t UCS2                 = BIT(3);
     */
         SMS& data = getSMS(command);
-        
-        buff1 = data.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len1);
-        buff2 = data.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len2);
 
-        if (len1>len2) {
-            len = len1;
-            buff = buff1;
+        if (data.hasBinProperty(Tag::SMPP_SHORT_MESSAGE))
+        {
+            buff = data.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+        } else if (data.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD)) 
+        {
+            buff = data.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
         } 
-        else {
-            len = len2;
-            buff = buff2;
-        }
+
+        if (buff == 0) return str;
 
         int code = data.getIntProperty(Tag::SMPP_DATA_CODING);
 
