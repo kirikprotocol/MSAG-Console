@@ -460,6 +460,7 @@ namespace smsc { namespace db
         Event                pingEvent;
         bool                 pingStarted;
         Mutex                pingStartLock;
+	bool		     needPing;
         
         struct ConnectionQueue
         {

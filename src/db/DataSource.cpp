@@ -177,6 +177,13 @@ ConnectionPool::ConnectionPool(DataSource& _ds, ConfigView* config)
             idleHead(0), idleTail(0), idleCount(0), head(0), tail(0), queueLen(0)
 {
     loadPoolSize(config);
+    try {
+        needPing = config->getBool("needPing");
+    } catch (ConfigException& exc) {
+        needPing = true;
+        smsc_log_warn(log, "needPing conpool parameter wasn't specified ! "
+                 "Using default: %s", needPing ? "true" : "false" );
+    }
 }
 
 void ConnectionPool::push(Connection* connection)
@@ -215,7 +222,7 @@ ConnectionPool::~ConnectionPool()
 void ConnectionPool::Start()
 {
     MutexGuard guard(pingStartLock);
-    if (!pingStarted) {
+    if (needPing && !pingStarted) {
         pingStarted = true;
         Thread::Start();
     }
@@ -223,7 +230,7 @@ void ConnectionPool::Start()
 void ConnectionPool::Stop()
 {
     MutexGuard guard(pingStartLock);
-    if (pingStarted) {
+    if (needPing && pingStarted) {
         pingStarted = false;
         pingEvent.Signal();
     }
