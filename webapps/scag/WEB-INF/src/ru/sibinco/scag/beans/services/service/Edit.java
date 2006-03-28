@@ -80,7 +80,7 @@ public class Edit extends TabledEditBeanImpl {
         }
         serviceProviders = appContext.getServiceProviderManager().getServiceProviders();
         routes = appContext.getServiceProviderManager().getRoutesByServiceId(appContext.getScagRoutingManager().getRoutes(), Long.decode(getParentId()));
-        final SortedList results = new SortedList(getDataSource(), new SortByPropertyComparator("name"));
+        final SortedList results = new SortedList(getDataSource(), new SortByPropertyComparator(sort=(sort==null)?"id":sort));
         totalSize = results.size();
         if (totalSize > startPosition)
             tabledItems = results.subList(startPosition, Math.min(totalSize, startPosition + pageSize));
