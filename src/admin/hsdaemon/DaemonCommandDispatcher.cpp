@@ -310,7 +310,15 @@ Response * DaemonCommandDispatcher::shutdown_service(const CommandShutdown * con
         {
           if(svc->getStatus()==Service::stopped)
           {
-            icon->remoteShutdownService(command->getServiceId());
+            try{
+              icon->remoteShutdownService(command->getServiceId());
+            }catch(std::exception& e)
+            {
+              smsc_log_warn(logger,"Failed to remote shutdown service '%s':%s",command->getServiceId(),e.what());
+            }
+          }else
+          {
+            svc->shutdown();
           }
         }
       }
