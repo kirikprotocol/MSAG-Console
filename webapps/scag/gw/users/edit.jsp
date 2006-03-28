@@ -28,8 +28,9 @@
                 </c:otherwise>
             </c:choose>
 
-            <sm-ep:list title="provider" name="providerId" values="${fn:join(bean.providerIds, ',')}"
-                        valueTitles="${fn:join(bean.providerNames, ',')}" rowId="id_Providers_list"/>
+            <%--sm-ep:list title="provider" name="providerId" values="${fn:join(bean.providerIds, ',')}"
+                        valueTitles="${fn:join(bean.providerNames, ',')}" rowId="id_Providers_list"/--%>
+
             <sm-ep:checks title="roles" name="roles" values="gw,routing,services,stat"
                           valueTitles="Scag configuration,Routes configuration,Services,Statistics"/>
             <sm-ep:txt title="first name" name="firstName" validation="nonEmpty"/>
