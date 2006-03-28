@@ -50,7 +50,7 @@ function validationError(elem, txt)
 function validateField_port(elem)
 {
 	var intValue = elem.value/1;   
-	return isNaN(intValue) || intValue >= 0xFFFF
+	return isNaN(intValue) || intValue >= 0xFFFF || intValue < 0
 		//? validationError(elem, "Port must be integer less than " + 0xFFFF)
 		? validationError(elem, portErrorMsg + 0xFFFF)
 		: true;

@@ -1,4 +1,4 @@
-var portErrorMsg = "Port must be integer less than ";   //portErrorMsg+0xFFFF
+var portErrorMsg = "Port must be integer more than -1 and less than ";   //portErrorMsg+0xFFFF
 var maskErrorMsg = "Invalid mask";
 var idErrorMsg   = "Invalid id";
 var addressErrorMsg = "Invalid address";
