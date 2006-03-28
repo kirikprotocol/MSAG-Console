@@ -1243,8 +1243,19 @@ Variant SmscComponent::profileLookupEx(const Arguments &args) throw (AdminExcept
       result.appendValueToStringList(profile.udhconcat ? "true" : "false");
       result.appendValueToStringList(profile.translit ? "true" : "false");
 
+      char numBuf[32];
+      sprintf(numBuf,"%u",profile.closedGroupId);
+      result.appendValueToStringList(numBuf);
+      sprintf(numBuf,"%u",profile.accessMaskIn);
+      result.appendValueToStringList(numBuf);
+      sprintf(numBuf,"%u",profile.accessMaskOut);
+      result.appendValueToStringList(numBuf);
+
+
       result.appendValueToStringList(getProfileMatchTypeStr(matchType));
       result.appendValueToStringList(matchAddress.c_str());
+
+
       return result;
     }
     else
