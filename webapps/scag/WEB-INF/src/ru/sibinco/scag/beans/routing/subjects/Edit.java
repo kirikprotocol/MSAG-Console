@@ -87,8 +87,10 @@ public class Edit extends EditBean {
                 final Subject subject = (Subject) subjects.get(name);
                 if (defSvc != null) {
                     subject.setSvc(defSvc);
+                    subject.setCenter(null);
                 } else {
                     subject.setCenter(defCenter);
+                    subject.setSvc(null);
                 }
                 try {
                     subject.setMasks(new MaskList(masks));
