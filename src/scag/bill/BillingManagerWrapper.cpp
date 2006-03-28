@@ -58,9 +58,9 @@ void BillingManagerWrapper::receiveCommand()
                  }
              } else throw SCAGException("Unknown command recieved: %u",cmd->getObjectId());
 
-        } //else 
-            //throw SCAGException("Invalid command recieved");
-     }*/
+        } 
+     } else 
+        Reconnect();*/
     
 }
 

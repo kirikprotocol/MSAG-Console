@@ -664,7 +664,7 @@ bool Session::startOperation(SCAGCommand& cmd)
         {
             smsc_log_debug(logger,"Session: process USSD_DELIVER");
 
-            AddNewOperationToHash(cmd, CO_USSD_DELIVER);
+            if (m_SmppDiscriptor.wantOpenUSSD) AddNewOperationToHash(cmd, CO_USSD_DELIVER);
             break;
         }
 
@@ -672,7 +672,7 @@ bool Session::startOperation(SCAGCommand& cmd)
         {
             smsc_log_debug(logger,"Session: process USSD_SUBMIT");
 
-            AddNewOperationToHash(cmd, CO_USSD_SUBMIT);
+            if (m_SmppDiscriptor.wantOpenUSSD) AddNewOperationToHash(cmd, CO_USSD_SUBMIT);
             break;
         }
 

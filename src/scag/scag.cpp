@@ -460,14 +460,32 @@ void Scag::init()
   }
   //*****************************************************
 
- 
+  /*
   ////////////////////////// FOR TEST 
   scag::sessions::CSessionKey key;
- /*
+ 
   smsc_log_warn(log, "1");
-  //SMS sms;
+  SMS sms;
+  sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, 100);
+
   char buff[128];
-  scag::transport::smpp::SmppCommand command = scag::transport::smpp::SmppCommand::makeDeliverySmResp(buff,1,1);
+  scag::transport::smpp::SmppCommand commandDeliver = scag::transport::smpp::SmppCommand::makeDeliverySm(sms,1);
+  scag::transport::smpp::SmppCommand commandDeliverResp = scag::transport::smpp::SmppCommand::makeDeliverySmResp(buff,1,1);
+  scag::transport::smpp::SmppCommand commandSubmit = scag::transport::smpp::SmppCommand::makeSubmitSm(sms,1);
+  scag::transport::smpp::SmppCommand commandSubmitResp = scag::transport::smpp::SmppCommand::makeSubmitSmResp(buff,1,1);
+
+  commandDeliverResp->dta = &sms;
+  commandSubmitResp->dta = &sms;
+
+  commandDeliver.setServiceId(1);
+  commandDeliverResp.setServiceId(1);
+  commandSubmit.setServiceId(1);
+  commandSubmitResp.setServiceId(1);
+
+  //SMS& testSMS = CommandBrige::getSMS(commandSubmit);
+  SMS * testSMS = commandSubmit->get_sms();
+  if (!testSMS->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) return;
+
 
   SessionManager& sm = SessionManager::Instance();
   smsc_log_warn(log, "2");
@@ -476,14 +494,18 @@ void Scag::init()
   smsc_log_warn(log, "3");
 
   if (session) smsc_log_warn(log, "SESSION IS VALID");
-  command.setServiceId(1);
+  //command.setServiceId(1);
 
   smsc_log_warn(log, "4");
-  scag::re::RuleEngine::Instance().process(command, *session);
+  scag::re::RuleEngine::Instance().process(commandSubmit, *session);
+  scag::re::RuleEngine::Instance().process(commandSubmitResp, *session);
+
+  scag::re::RuleEngine::Instance().process(commandDeliver, *session);
+  scag::re::RuleEngine::Instance().process(commandDeliverResp, *session);
   smsc_log_warn(log, "5");
 
   ////////////////////////// FOR TEST 
-  */
+*/  
   smsc_log_info(log, "SCAG init complete" );
 
   __trace__("Smsc::init completed");
