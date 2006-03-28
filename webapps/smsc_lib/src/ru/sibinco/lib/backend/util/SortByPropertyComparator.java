@@ -50,7 +50,9 @@ public final class SortByPropertyComparator implements Comparator
       }
       if (method.getReturnType() == String.class) {
         String s1 = (String) method.invoke(o1, new Object[0]);
+        s1 = (s1==null)?"":s1;
         String s2 = (String) method.invoke(o2, new Object[0]);
+        s2 = (s2==null)?"":s2;        
         return negativeSort
                ? s2.compareToIgnoreCase(s1)
                : s1.compareToIgnoreCase(s2);
