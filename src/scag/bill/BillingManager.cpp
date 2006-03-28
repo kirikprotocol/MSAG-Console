@@ -39,7 +39,7 @@ class BillingManagerImpl : public BillingManager, public Thread, public BillingM
 
     IntHash <BillTransaction> BillTransactionHash;
 
-
+    Event connectEvent;
     Mutex stopLock;
     Mutex inUseLock;
     Event exitEvent;
@@ -127,6 +127,8 @@ void BillingManagerImpl::Stop()
     if (m_bStarted) 
     {
         m_bStarted = false;
+        connectEvent.Signal();
+
         exitEvent.Wait(); 
     }
     smsc_log_info(logger,"BillingManager::stop");
@@ -172,6 +174,7 @@ int BillingManagerImpl::Execute()
         try
         {
             receiveCommand();
+            connectEvent.Wait(1000);
         } catch (SCAGException& e)
         {
             smsc_log_error(logger, "BillingManager error: %s", e.what());
