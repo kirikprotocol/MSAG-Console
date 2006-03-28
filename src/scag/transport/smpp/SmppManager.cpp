@@ -350,7 +350,7 @@ int SmppManager::registerSmeChannel(const char* sysId,const char* pwd,SmppBindTy
     return rarFailed;
   }
   SmppEntity& ent=**ptr;
-  if(ent.info.password!=pwd)
+  if(!(ent.info.password == pwd))
   {
     smsc_log_info(log,"Failed to register sme with sysId='%s' - password mismatch:'%s'!='%s'",sysId,ent.info.password.c_str(),pwd);
     return rarFailed;
