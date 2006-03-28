@@ -103,6 +103,7 @@ public class HostsManagerHSImpl implements HostsManager {
     }
 
     public synchronized void switchOver(final String serviceId) throws AdminException {
+        daemonManager.getDaemon().switchOver(serviceId);
     }
 
     public synchronized int getCountRunningServices(final String hostName) throws AdminException {

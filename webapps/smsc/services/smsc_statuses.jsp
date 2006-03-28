@@ -44,8 +44,9 @@
         result += "&nbsp;&nbsp;&nbsp;";
     }
 
-    for (byte i = 1; i <= SmscList.id2NodeName.size(); i++) {
-        result += " ," + bean.smscServStatusString(Constants.SMSC_SME_ID, i);
+    for (Iterator i = SmscList.id2NodeName.values().iterator(); i.hasNext();) {
+        byte nodeId = Byte.parseByte((String) i.next());
+        result += " ," + bean.smscServStatusString(Constants.SMSC_SME_ID, nodeId);
     }
 
     out.print(result);%>
