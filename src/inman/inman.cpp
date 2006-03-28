@@ -8,6 +8,7 @@ static char const ident[] = "$Id$";
 
 #include "service.hpp"
 #include "util/config/ConfigView.h"
+#include "util/mirrorfile/mirrorfile.h"
 using smsc::util::config::ConfigView;
 using smsc::util::config::CStrSet;
 
@@ -90,7 +91,7 @@ public:
         cachePrm.nmDir = NULL;
         bill.billMode = smsc::inman::BILL_ALL;
         bill.cdrMode =  BillingCFG::CDR_ALL;
-        
+
         //OPTIONAL PARAMETERS:
         maxConn = _in_CFG_DFLT_CLIENT_CONNS;
         bill.userId = _in_CFG_DFLT_SS7_USER_ID;
@@ -134,7 +135,7 @@ public:
         if (tmo)
             maxConn = (unsigned short)tmo;
         smsc_log_info(inapLogger, "maxClients: %s%u", !tmo ? "default ":"", maxConn);
-        
+
         /* ******************** *
          * Billing parameters:  *
          * ******************** */
@@ -272,7 +273,7 @@ public:
             throw ConfigException("serviceKey is invalid or missing");
         }
         /*  optional IN interaction parameters */
-        
+
         tmo = 0;    //ss7UserId
         try { tmo = (uint32_t)inss7Cfg.getInt("ss7UserId"); }
         catch (ConfigException& exc) { }

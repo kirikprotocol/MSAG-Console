@@ -139,6 +139,38 @@ protected:
   mutable std::string errbuf;
 };
 
+class File;
+
+class GlobalFileEventHandler{
+public:
+  virtual void onCreateFileObject(File*)=0;
+  virtual void onDestroyFileObject(File*)=0;
+  virtual void onRename(const char* oldName,const char* newName)=0;
+  virtual void onUnlink(const char* fileName)=0;
+
+  virtual ~GlobalFileEventHandler(){}
+  static void setGlobalFileEventHandler(GlobalFileEventHandler* hnd)
+  {
+    StaticHolder<0>::handler=hnd;
+  }
+  static GlobalFileEventHandler* getGlobalFileEventHandler()
+  {
+    return StaticHolder<0>::handler;
+  }
+
+protected:
+  template <int N=0>
+  struct StaticHolder
+  {
+    static GlobalFileEventHandler* handler;
+  };
+};
+
+template <int N>
+GlobalFileEventHandler* GlobalFileEventHandler::StaticHolder<N>::handler=0;
+
+
+
 class FileEventHandler{
 public:
   virtual ~FileEventHandler(){}
@@ -149,6 +181,7 @@ public:
   virtual void onRead(const void* data,size_t sz)=0;
   virtual void onWrite(const void* data,size_t sz)=0;
   virtual void onSeek(int whence,int64_t offset)=0;
+  virtual void onRename(const char* newName)=0;
 };
 
 class File{
@@ -162,10 +195,18 @@ public:
     bufferPosition=0;
     fileSize=0;
     eventHandler=0;
+    if(GlobalFileEventHandler::getGlobalFileEventHandler())
+    {
+      GlobalFileEventHandler::getGlobalFileEventHandler()->onCreateFileObject(this);
+    }
   }
   ~File()
   {
     Close();
+    if(GlobalFileEventHandler::getGlobalFileEventHandler())
+    {
+      GlobalFileEventHandler::getGlobalFileEventHandler()->onDestroyFileObject(this);
+    }
   }
 
   void Swap(File& swp)
@@ -186,12 +227,19 @@ public:
     std::swap(bufferPosition,swp.bufferPosition);
     std::swap(filename,swp.filename);
     std::swap(flags,swp.flags);
+    std::swap(eventHandler,swp.eventHandler);
   }
 
   void SetEventHandler(FileEventHandler* handler)
   {
     eventHandler=handler;
   }
+
+  FileEventHandler* GetEventHandler()
+  {
+    return eventHandler;
+  }
+
 
   void SwapBuffers(File& swp)
   {
@@ -846,6 +894,10 @@ public:
   {
     if(rename(filename.c_str(),newname)!=0)throw FileException(FileException::errRenameFailed,filename.c_str());
     filename=newname;
+    if(eventHandler)
+    {
+      eventHandler->onRename(newname);
+    }
   }
 
   static bool Exists(const char* file)
@@ -866,11 +918,19 @@ public:
   static void Rename(const char* oldname,const char* newname)
   {
     if(rename(oldname,newname)!=0)throw FileException(FileException::errRenameFailed,oldname);
+    if(GlobalFileEventHandler::getGlobalFileEventHandler())
+    {
+      GlobalFileEventHandler::getGlobalFileEventHandler()->onRename(oldname,newname);
+    }
   }
 
   static void Unlink(const char* fn)
   {
     if(unlink(fn)!=0)throw FileException(FileException::errUnlinkFailed,fn);
+    if(GlobalFileEventHandler::getGlobalFileEventHandler())
+    {
+      GlobalFileEventHandler::getGlobalFileEventHandler()->onUnlink(fn);
+    }
   }
 
 protected:

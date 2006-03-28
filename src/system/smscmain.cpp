@@ -19,6 +19,7 @@
 #include "system/version.inc"
 
 #include "license/check/license.hpp"
+#include "util/mirrorfile/mirrorfile.h"
 
 class SmscRunner : public smsc::core::threads::Thread
 {
