@@ -85,7 +85,7 @@ struct SmppEntity
     sync::MutexGuard guard(mappingLock);
     UMRUSR* umrusr = mapping.GetPtr(ab);
     if (!umrusr) {
-	mappings.Insert(ab, UMRUSR());
+	mapping.Insert(ab, UMRUSR());
 	umrusr = mapping.GetPtr(ab);
     }
     int* ptr = umrusr->USRtoUMR.GetPtr(usr);
