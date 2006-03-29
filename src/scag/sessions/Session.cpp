@@ -54,7 +54,7 @@ void Operation::receiveNewResp(int currentIndex,int lastIndex)
 
 void Operation::attachBill(int BillId)
 { 
-    if (hasBill) throw SCAGException("Operation: Cannot attach bill - bill already attached!");
+    if (m_hasBill) throw SCAGException("Operation: Cannot attach bill - bill already attached!");
 
     m_hasBill = true;
     billId = BillId;
@@ -471,7 +471,7 @@ void Session::endOperation(RuleStatus& ruleStatus)
 
 Operation * Session::AddNewOperationToHash(SCAGCommand& cmd, int type)
 {
-    smsc_log_debug(logger,"Session: create new operation");
+    smsc_log_debug(logger,"** Session: create new operation");
 
     Operation * operation = new Operation();
     operation->type = type;
@@ -689,7 +689,7 @@ bool Session::startOperation(SCAGCommand& cmd)
         }
 
     }
-    smsc_log_error(logger,"** Session: operation started, Pending: %d-%d, Operations: %d",PendingOperationList.size(),PrePendingOperationList.size(), OperationsHash.Count());
+    //smsc_log_error(logger,"** Session: operation started, Pending: %d-%d, Operations: %d",PendingOperationList.size(),PrePendingOperationList.size(), OperationsHash.Count());
    
     return true;
 }

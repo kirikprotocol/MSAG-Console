@@ -18,6 +18,8 @@ using namespace scag::re::smpp;
 
 RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
 {
+    smsc_log_debug(logger, "Process EventHandler...");
+
     Hash<Property> _constants;
     RuleStatus rs;
 
@@ -33,13 +35,8 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
 
     SACC_TRAFFIC_INFO_EVENT_t ev;
 
-    //_SmppCommand * cmd = smppcommand->operator ->();
-    
     CommandBrige::makeTrafficEvent(*smppcommand, (int)propertyObject.HandlerId, session.getPrimaryKey(), ev);
-
     Statistics::Instance().registerSaccEvent(ev);
-
-
 
     /////////////////////////////////////////
     
@@ -51,8 +48,6 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     }
 
     ActionContext context(_constants, session, _command, command.getServiceId(), CommandBrige::getAbonentAddr(*smppcommand));
-
-    smsc_log_debug(logger, "Process EventHandler...");
 
     std::list<Action *>::const_iterator it;
 
@@ -72,11 +67,11 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
 
 int SmppEventHandler::StrToHandlerId(const std::string& str)
 {
-    if (str == "submit_sm")             return EventHandlerType::EH_SUBMIT_SM;
-    if (str == "submit_sm_resp")        return EventHandlerType::EH_SUBMIT_SM_RESP;
-    if (str == "deliver_sm")            return EventHandlerType::EH_DELIVER_SM;
-    if (str == "deliver_sm_resp")       return EventHandlerType::EH_DELIVER_SM_RESP;
-    if (str == "receipt")               return EventHandlerType::EH_RECEIPT;
+    if (str == "submit_sm")             return EH_SUBMIT_SM;
+    if (str == "submit_sm_resp")        return EH_SUBMIT_SM_RESP;
+    if (str == "deliver_sm")            return EH_DELIVER_SM;
+    if (str == "deliver_sm_resp")       return EH_DELIVER_SM_RESP;
+    if (str == "receipt")               return EH_RECEIPT;
     return UNKNOWN; 
 }
 

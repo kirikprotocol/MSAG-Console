@@ -23,8 +23,10 @@ void BillingManagerConfig::init(ConfigView& cv) throw(ConfigException)
         std::auto_ptr<char> so_dir_( cv.getString("soDir") );
         std::auto_ptr<char> host_(cv.getString("BillingServerHost"));
         int port_(cv.getInt("BillingServerPort"));
+        
 
         BillingTimeOut = cv.getInt("BillingTimeOut");
+        MaxThreads = cv.getInt("MaxThreads");
 
         so_dir = so_dir_.get();
         BillingHost = host_.get();

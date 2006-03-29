@@ -143,6 +143,8 @@ void BillingManagerImpl::init(BillingManagerConfig& cfg)
 {
     smsc_log_info(logger,"BillingManager start initing...");
 
+    if (cfg.MaxThreads < 1) throw SCAGException("BillingManager: cant start service with %d allowed threads", cfg.MaxThreads);
+
     m_MaxEventMonitors = cfg.MaxThreads;
     m_TimeOut = cfg.BillingTimeOut;
 
@@ -158,6 +160,8 @@ void BillingManagerImpl::init(BillingManagerConfig& cfg)
     }
 
     EventMonitorArray = new EventMonitorEntity[m_MaxEventMonitors];
+
+    smsc_log_info(logger,"BillingManager: allowed %d threads", m_MaxEventMonitors);
 
 	infrastruct.init(cfg.so_dir);
 
