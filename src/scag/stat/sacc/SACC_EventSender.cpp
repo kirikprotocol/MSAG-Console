@@ -71,10 +71,10 @@ void EventSender::init(std::string& host,int port,int timeout,int queuelen,bool 
 	Timeout=timeout*1000;
 	smsc_log_debug(logger,"EventSender::init confuration succsess.");
 
-	if(connect(Host,Port,100))
+/*	if(connect(Host,Port,100))
 	{
 		bConnected=true;
-	}
+	}*/
 
 }
 
@@ -189,17 +189,14 @@ bool EventSender::processEvent(void *ev)
 
 
 bool EventSender::checkQueue()
-
 {
 
 	void * ev;
 
-	if(!bConnected)
-
+	if(bConnected)
 	{
 
-		if(eventsQueue.Pop(ev,100))
-
+		if(eventsQueue.Pop(ev,Timeout*1000))
 		{
 
 			if(ev)
@@ -208,21 +205,13 @@ bool EventSender::checkQueue()
 
 				processEvent(ev);
 
-		   	
-
 			}
-
-
 
 		return true;
 
 		}
 
-	
-
 	}
-
-	
 
 	return false;
 
@@ -238,28 +227,34 @@ int EventSender::Execute()
 
 {
 
-	
+bool first = true;	
 
 	while( *bStarted)
-
 	{
 
-		if(!bConnected)
-
+		if(!bConnected )
 		{
-
-			SaccSocket.Abort();
-
-			
-
-			evReconnect.wait(Timeout);
-
-			if(connect(Host,Port,100))
-
+			if(first)
 			{
+				if(connect(Host,Port,100))
+				{
 
-				bConnected=true;
+					bConnected=true;
 
+				}
+				first=false;
+			}
+			else
+			{
+				SaccSocket.Abort();
+				evReconnect.wait(Timeout);
+
+				if(connect(Host,Port,100))
+				{
+
+					bConnected=true;
+
+				}
 			}
 
 		}
@@ -270,7 +265,7 @@ int EventSender::Execute()
 
 
 
-		
+		first=false;
 
 	}
 
