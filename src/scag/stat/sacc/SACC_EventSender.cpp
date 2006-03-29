@@ -35,11 +35,9 @@ EventSender::EventSender()
 EventSender::~EventSender()
 
 {
-
+	evQueue.notify();
 	evReconnect.notify();
-
-
-}
+ }
 
 
 
@@ -91,11 +89,6 @@ bool EventSender::processEvent(void *ev)
 
 
  memcpy(&evType,ev,sizeof(uint16_t)); 		
-
-
-
-
-
 
 	switch(evType) 
 
@@ -196,11 +189,10 @@ bool EventSender::checkQueue()
 	if(bConnected)
 	{
 
-		if(eventsQueue.Pop(ev,Timeout*1000))
+		if(eventsQueue.Pop(ev,100))
 		{
 
 			if(ev)
-
 			{	
 
 				processEvent(ev);
@@ -227,14 +219,14 @@ int EventSender::Execute()
 
 {
 
-bool first = true;	
+//bool first = true;	
 
 	while( *bStarted)
 	{
 
 		if(!bConnected )
 		{
-			if(first)
+/*			if(first)
 			{
 				if(connect(Host,Port,100))
 				{
@@ -245,17 +237,19 @@ bool first = true;
 				first=false;
 			}
 			else
-			{
+			{*/
 				SaccSocket.Abort();
-				evReconnect.wait(Timeout);
-
+			
 				if(connect(Host,Port,100))
 				{
 
 					bConnected=true;
 
 				}
-			}
+
+				evReconnect.wait(Timeout);
+
+			//}
 
 		}
 
