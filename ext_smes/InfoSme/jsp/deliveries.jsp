@@ -114,10 +114,6 @@ else {
   <td><input class=txt name=name value="<%=StringEncoderDecoder.encode(bean.getName())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th><label for=transactionMode><%= getLocString("infosme.label.transaction_mode")%></label></th>
-  <td><input class=check type=checkbox id=transactionMode name=transactionMode value=true <%=bean.isTransactionMode() ? "checked" : ""%>></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.active_period")%></th>
   <td>
     <input class=timeField id=activePeriodStart name=activePeriodStart value="<%=StringEncoderDecoder.encode(bean.getActivePeriodStart())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(activePeriodStart, false, true);">...</button>
@@ -160,6 +156,14 @@ else {
   <th><%= getLocString("infosme.label.end_date")%></th>
   <td nowrap>
     <input class=calendarField id=endDate name=endDate value="<%=StringEncoderDecoder.encode(bean.getEndDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(endDate, false, true);">...</button>
+  </td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th><label for=retryOnFail><%= getLocString("infosme.label.retry_on_fail")%></label></th>
+  <td nowrap>
+    <input class=check type=checkbox id=retryOnFail name=retryOnFail value=true <%=bean.isRetryOnFail() ? "checked" : ""%> onClick="document.getElementById('retryTime').disabled = document.getElementById('retryTimeButton').disabled = !this.checked;">
+    <input class=timeField id=retryTime name=retryTime value="<%=StringEncoderDecoder.encode(bean.getRetryTime())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button id=retryTimeButton onclick="return showTime(retryTime, false, true);">...</button>
+    <script>document.getElementById('retryTime').disabled = document.getElementById('retryTimeButton').disabled = !document.getElementById('retryOnFail').checked;</script>
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>

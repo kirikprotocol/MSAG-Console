@@ -40,7 +40,7 @@ public class Deliveries extends InfoSmeBean
     private File incomingFile = null;
 
     private boolean transliterate = false;
-    private boolean transactionMode = true;
+    private boolean retryOnFail = true;
 
     private Task task = new Task();
     private String taskTableName = null;
@@ -501,7 +501,7 @@ public class Deliveries extends InfoSmeBean
         task.setEnabled(true);
         task.setKeepHistory(true);
         task.setReplaceMessage(false);
-        task.setRetryOnFail(true);
+        task.setRetryOnFail(false);
         task.setRetryTime("01:00:00");
         task.setSvcType("dlvr");
         task.setActivePeriodStart("09:00:00");
@@ -587,12 +587,18 @@ public class Deliveries extends InfoSmeBean
       this.transliterate = transliterate;
     }
 
-    public boolean isTransactionMode() {
-      //return task.isTransactionMode();
-      return transactionMode;
+    public boolean isRetryOnFail() {
+      return retryOnFail;
     }
-    public void setTransactionMode(boolean transactionMode) {
-      this.task.setTransactionMode(transactionMode);
+    public void setRetryOnFail(boolean retryOnFail) {
+      this.task.setRetryOnFail(retryOnFail);
+    }
+
+    public String getRetryTime() {
+      return task.getRetryTime();
+    }
+    public void setRetryTime(String retryTime) {
+      task.setRetryTime(retryTime);
     }
 
     public String getEndDate() {
