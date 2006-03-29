@@ -469,7 +469,7 @@ SessionPtr SessionManagerImpl::newSession(CSessionKey& sessionKey)
         session = SessionPtr(0);
         return session;
     }*/
-    smsc_log_debug(logger,"SessionManager: new session - pending count = %d-%d",session->PendingOperationList.size(),session->PrePendingOperationList.size());
+    smsc_log_debug(logger,"SessionManager: new session (%s USR=%d)",sessionKey.abonentAddr.toString().c_str(),sessionKey.USR);
 
     SessionHash.Insert(sessionKey,it);
     return session;
@@ -518,7 +518,7 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
         store.deleteSession(sessionKey);
 
         inUseMonitor.notifyAll();
-        smsc_log_debug(logger,"SessionManager: session closed");
+        smsc_log_debug(logger,"SessionManager: session closed (%s USR=%d)",sessionKey.abonentAddr.toString().c_str(), sessionKey.USR);
         return;
     }
 

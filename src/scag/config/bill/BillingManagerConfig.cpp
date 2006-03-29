@@ -26,7 +26,9 @@ void BillingManagerConfig::init(ConfigView& cv) throw(ConfigException)
         
 
         BillingTimeOut = cv.getInt("BillingTimeOut");
-        MaxThreads = cv.getInt("MaxThreads");
+        //MaxThreads = cv.getInt("MaxThreads");
+        MaxThreads = 10;
+
 
         so_dir = so_dir_.get();
         BillingHost = host_.get();
