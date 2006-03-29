@@ -74,7 +74,7 @@ public class Edit extends TabledEditBeanImpl {
         } else if (getMbSave() != null) {
             save();
         } else if (getMbAddChild() != null) {
-            throw new AddChildException(request.getContextPath() + "/routing/routes", getParentId());
+            throw new AddChildException(request.getContextPath() + "/routing/routes", (!editChild ? getEditId() : getParentId()));
         }if (mbDelete != null){
             delete();
         }

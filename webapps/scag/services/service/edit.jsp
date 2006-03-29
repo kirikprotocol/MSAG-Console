@@ -22,12 +22,12 @@
         <div class=page_subtitle>&nbsp;</div>
         <sm-pm:menu>
             <c:if test="${!param.add}">
-                <sm-pm:item name="mbSave" value="Done" title="Save provider info"/>
+                <sm-pm:item name="mbSave" value="Done" title="Save service info"/>
             </c:if>
             <c:if test="${param.add}">
-                <sm-pm:item name="mbSave" value="Create" title="Create provider info"/>
+                <sm-pm:item name="mbSave" value="Create" title="Create service info"/>
             </c:if>
-            <sm-pm:item name="mbCancel" value="Cancel" title="Cancel provider editing" onclick="clickCancel()"/>
+            <sm-pm:item name="mbCancel" value="Cancel" title="Cancel service editing" onclick="clickCancel()"/>
             <sm-pm:space/>
         </sm-pm:menu>
         <c:if test="${!param.add}">

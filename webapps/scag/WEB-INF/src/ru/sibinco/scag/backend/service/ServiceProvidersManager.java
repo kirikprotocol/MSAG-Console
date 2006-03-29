@@ -244,8 +244,10 @@ public class ServiceProvidersManager {
         for (Iterator i = new SortedList(routes.keySet()).iterator(); i.hasNext();) {
             String id = (String) i.next();
             Route route = (Route) routes.get(id);
-            if(route.getService().getId().equals(serviceId)){
-                result.put(route.getId(), route);
+            if (route.getService() != null) {
+                if (route.getService().getId().equals(serviceId)) {
+                    result.put(route.getId(), route);
+                }
             }
         }
         return result;
