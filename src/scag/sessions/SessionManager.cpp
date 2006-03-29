@@ -88,7 +88,7 @@ namespace scag { namespace sessions
         int  processExpire();
         CSessionSetIterator DeleteSession(CSessionSetIterator it);
 
-
+        
         int16_t getNewUSR(Address& address);
         int16_t getLastUSR(Address& address);
 
@@ -313,6 +313,8 @@ SessionManagerImpl::CSessionSetIterator SessionManagerImpl::DeleteSession(CSessi
 
 int SessionManagerImpl::processExpire()
 {
+    //smsc_log_debug(logger,"SessionManager: process expire");
+
     MutexGuard guard(inUseMonitor);
 
     while (1) 
@@ -322,15 +324,20 @@ int SessionManagerImpl::processExpire()
         CSessionSetIterator it;
         for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();++it)
         {
-            //smsc_log_debug(logger,"SessionManager: check session UMR='%d', Address='%s', has pending: %d, has operations: %d, Opened: %d",(*it)->SessionKey.USR,(*it)->SessionKey.abonentAddr.toString().c_str(),(*it)->hasPending,(*it)->hasOperations,(*it)->bOpened);
-            
             if ((!(*it)->bOpened)&&((*it)->hasPending)) break;
-            if ((!(*it)->bOpened)&&(!(*it)->hasPending)&&(!(*it)->hasOperations)) it = DeleteSession(it);
+            if ((!(*it)->bOpened)&&(!(*it)->hasPending)&&(!(*it)->hasOperations)) 
+            {
+                it = DeleteSession(it);
+                return 1;
+            }
         }
 
         time_t now;
         time(&now);
         int iPeriod;
+
+        //smsc_log_debug(logger,"SessionManager: process expire - check session");
+
 
         if (it == SessionExpirePool.end())
         {
@@ -441,8 +448,11 @@ SessionPtr SessionManagerImpl::newSession(CSessionKey& sessionKey)
     SessionPtr session;
     CSessionAccessData * accessData = 0;
 
+    smsc_log_debug(logger,"SessionManager: new session");
+
     MutexGuard guard(inUseMonitor);
 
+    smsc_log_debug(logger,"SessionManager: new session - get new USR");
     sessionKey.USR = getNewUSR(sessionKey.abonentAddr);
 
     session = store.newSession(sessionKey);

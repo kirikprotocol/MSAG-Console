@@ -462,6 +462,8 @@ void Scag::init()
 
    /*
   ////////////////////////// FOR TEST 
+  sleep(2);
+
   scag::sessions::CSessionKey key;
  
   smsc_log_warn(log, "1");
