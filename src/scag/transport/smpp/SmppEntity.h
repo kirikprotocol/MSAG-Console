@@ -60,10 +60,7 @@ struct SmppEntity
     __require__(ab);
     sync::MutexGuard guard(mappingLock);
     UMRUSR* umrusr = mapping.GetPtr(ab);
-    if (!umrusr) {
-	smsc_log_warn(logger, "No abonent %s mapping", ab);
-	return -1;
-    }
+    if (!umrusr) return -1;
     int* usr = umrusr->UMRtoUSR.GetPtr(umr);
     return ((usr) ? *usr:-1);
   }
