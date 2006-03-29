@@ -93,7 +93,7 @@ private:
 //	void performSessionExpiredEvent(const SACC_SESSION_EXPIRATION_TIME_ALARM_t& e);
 //	void performOperatorNotFoundEvent(const SACC_OPERATOR_NOT_FOUND_ALARM_t& e);
 
-	void makeAlarmEvent(uint32_t evtype);
+	//void makeAlarmEvent(uint32_t evtype);
 	smsc::logger::Logger * logger;
 };
 

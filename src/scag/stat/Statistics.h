@@ -58,7 +58,9 @@ using smsc::smeman::SmeRecord;
 
 	struct SACC_EVENT_HEADER_t
 	{
+	private:
 		uint16_t sEventType;
+	public:
 		uint8_t  pAbonentNumber[MAX_ABONENT_NUMBER_LENGTH];	
 		uint8_t  cCommandId;		
 		uint8_t  cProtocolId;		
@@ -91,6 +93,9 @@ using smsc::smeman::SmeRecord;
 			iServiceProviderId=src.iServiceProviderId;
 			iServiceId=src.iServiceId;
 		}
+		 uint16_t getEventType()const{return sEventType;} ;
+		
+		 void setEventType(uint16_t et){sEventType = et;};
 	};
 
 	struct SACC_TRAFFIC_INFO_EVENT_t
@@ -107,7 +112,7 @@ using smsc::smeman::SmeRecord;
 			memset(&Header,0,sizeof(SACC_EVENT_HEADER_t));
 			memset(pMessageText,0,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
 			memset(pSessionKey,0,MAX_SESSION_KEY_LENGTH);
-			Header.sEventType = sec_transport;
+			Header.setEventType(sec_transport);
 			iOperatorId=0;
 			cDirection=0;
 		};
@@ -121,6 +126,7 @@ using smsc::smeman::SmeRecord;
 			cDirection=src.cDirection;
 		}
 
+		uint16_t getEventType()const{return Header.getEventType();} ;
 	};
 
 	struct SACC_BILLING_INFO_EVENT_t
@@ -139,7 +145,7 @@ using smsc::smeman::SmeRecord;
 			memset(&Header,0,sizeof(SACC_EVENT_HEADER_t));
 			memset(pBillingCurrency,0,MAX_BILLING_CURRENCY_LENGTH);
 			memset(pSessionKey,0,MAX_SESSION_KEY_LENGTH);
-			Header.sEventType = sec_bill;
+			Header.setEventType(sec_bill);
 			iOperatorId=0;
 			iMediaResourceType=0;
 			iPriceCatId=0;
@@ -154,67 +160,11 @@ using smsc::smeman::SmeRecord;
 			iMediaResourceType=src.iMediaResourceType;
 			iPriceCatId=src.iPriceCatId;
 			fBillingSumm=src.fBillingSumm; 
-		}	
+		}
+		uint16_t getEventType()const{return Header.getEventType();}; 
 	};
 
-/*	struct SACC_OPERATOR_NOT_FOUND_ALARM_t
-	{
-		SACC_EVENT_HEADER_t Header;
-		uint32_t iOperatorId;
-		uint8_t  cDirection;
-		uint8_t  pSessionKey[MAX_SESSION_KEY_LENGTH];
-		uint16_t pMessageText[MAX_TEXT_MESSAGE_LENGTH];
 
-		SACC_OPERATOR_NOT_FOUND_ALARM_t()
-		{
-			memset(&Header,0,sizeof(SACC_EVENT_HEADER_t));
-			memset(pSessionKey,0,MAX_SESSION_KEY_LENGTH);
-			memset(pMessageText,0,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
-			Header.sEventType = SaccEventsCommandIds::sec_operator_not_found;
-			cDirection=0;
-			iOperatorId=0;
-
-		}
-
-		SACC_OPERATOR_NOT_FOUND_ALARM_t(const SACC_OPERATOR_NOT_FOUND_ALARM_t& src)
-		{
-			memcpy(&Header, &src.Header,sizeof(SACC_EVENT_HEADER_t));
-			memcpy(pSessionKey,src.pSessionKey ,MAX_SESSION_KEY_LENGTH);
-			memcpy(pMessageText,src.pMessageText ,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
-			cDirection=src.cDirection;
-			iOperatorId=src.iOperatorId;
-		}
-	};
-
-	struct SACC_SESSION_EXPIRATION_TIME_ALARM_t
-	{
-
-		SACC_EVENT_HEADER_t Header;
-		uint8_t  cDirection;
-		uint32_t iOperatorId;
-		uint8_t  pSessionKey[MAX_SESSION_KEY_LENGTH];
-		uint16_t pMessageText[MAX_TEXT_MESSAGE_LENGTH];
-		SACC_SESSION_EXPIRATION_TIME_ALARM_t()
-		{
-			memset(&Header,0,sizeof(SACC_EVENT_HEADER_t));
-			memset(pSessionKey,0,MAX_SESSION_KEY_LENGTH);
-			memset(pMessageText,0,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
-			iOperatorId=0;
-			Header.sEventType = SaccEventsCommandIds::sec_session_expired;
-			cDirection=0;
-
-		}
-		SACC_SESSION_EXPIRATION_TIME_ALARM_t(const SACC_SESSION_EXPIRATION_TIME_ALARM_t& src)
-		{
-			memcpy(&Header, &src.Header,sizeof(SACC_EVENT_HEADER_t));
-			memcpy(pSessionKey,src.pSessionKey ,MAX_SESSION_KEY_LENGTH);
-			memcpy(pMessageText,src.pMessageText ,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
-			iOperatorId=src.iOperatorId;
-			cDirection=src.cDirection;
-
-		}
-
-	};*/
 	struct SACC_ALARM_t
 	{
 
@@ -230,7 +180,7 @@ using smsc::smeman::SmeRecord;
 			memset(pSessionKey,0,MAX_SESSION_KEY_LENGTH);
 			memset(pMessageText,0,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
 			iOperatorId=0;
-			Header.sEventType = 0x0003;
+			Header.setEventType(0x0003);
 			cDirection=0;
 			iAlarmEventId =0;
 
@@ -245,12 +195,15 @@ using smsc::smeman::SmeRecord;
 			iAlarmEventId = src.iAlarmEventId; 
 
 		}
+		uint16_t getEventType()const{return Header.getEventType();} ;
 
 	};
 
 	struct SACC_ALARM_MESSAGE_t
 	{
+	private:
 		uint16_t sEventType;
+	public:
 		uint8_t  pAbonentsNumbers[MAX_NUMBERS_TEXT_LENGTH];
 		uint16_t pAddressEmail[MAX_EMAIL_ADDRESS_LENGTH];
 		uint16_t pMessageText[MAX_TEXT_MESSAGE_LENGTH];
@@ -260,7 +213,6 @@ using smsc::smeman::SmeRecord;
 			memset(pAbonentsNumbers,0,MAX_NUMBERS_TEXT_LENGTH);
 			memset(pAddressEmail,0,MAX_EMAIL_ADDRESS_LENGTH*sizeof(uint16_t));
 			memset(pMessageText,0,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
-			sEventType=0;
 			sEventType = sec_alarm_message;
 		}
 		SACC_ALARM_MESSAGE_t(const SACC_ALARM_MESSAGE_t & src)
@@ -271,6 +223,7 @@ using smsc::smeman::SmeRecord;
 			sEventType=src.sEventType;
 
 		}
+		uint16_t getEventType()const{return sEventType;};
 
 	};
 
