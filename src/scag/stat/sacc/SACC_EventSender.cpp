@@ -71,6 +71,11 @@ void EventSender::init(std::string& host,int port,int timeout,int queuelen,bool 
 	Timeout=timeout*1000;
 	smsc_log_debug(logger,"EventSender::init confuration succsess.");
 
+	if(connect(Host,Port,100))
+	{
+		bConnected=true;
+	}
+
 }
 
 
