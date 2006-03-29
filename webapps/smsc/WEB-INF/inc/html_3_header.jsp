@@ -25,7 +25,7 @@
     <td>&nbsp;<%
         if (ServiceIDForShowStatus != null && ServiceIDForShowStatus.length() > 0)
         {
-            if (ServiceIDForShowStatus.equals(Constants.SMSC_SME_ID) && ((SMSCAppContext) request.getAttribute("appContext")).getInstallType() == ResourceGroupConstants.RESOURCEGROUP_TYPE_HA)
+            if (ServiceIDForShowStatus.equals(Constants.SMSC_SME_ID) && Constants.instType == ResourceGroupConstants.RESOURCEGROUP_TYPE_HA)
             { %>
                 <%=smscStatus((SMSCAppContext) request.getAttribute("appContext"))%>
                 <%

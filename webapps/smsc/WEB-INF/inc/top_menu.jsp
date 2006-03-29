@@ -11,6 +11,7 @@
                  java.io.IOException,
                  java.util.Iterator,
                  java.util.Collection"%>
+<%@ page import="ru.novosoft.smsc.admin.Constants"%>
 <jsp:useBean id="topMenu" class="ru.novosoft.util.menu.TopMenu" scope="session"/>
 
 <!--link rel="stylesheet" type="text/css" href="<%=request.getContextPath()%>/styles/main_menu.css" /-->
@@ -92,15 +93,11 @@
 
     boolean isNeedToBeDrawn(MenuItem menuItem) {
         if (menuItem.getVisibleMask() == MenuItem.VISIBLE_IN_ALL) return true;
-        SMSCAppContext appContext = (SMSCAppContext) req.getAttribute("appContext");
-        if (appContext == null)
-            if (menuItem.getVisibleMask() == MenuItem.VISIBLE_IN_SINGLE) return true;
-                else return false;
-        if ((appContext.getInstallType() == ResourceGroupConstants.RESOURCEGROUP_TYPE_SINGLE) &&
+        if ((Constants.instType == ResourceGroupConstants.RESOURCEGROUP_TYPE_SINGLE) &&
                 (menuItem.getVisibleMask() == MenuItem.VISIBLE_IN_SINGLE)) return true;
-        if ((appContext.getInstallType() == ResourceGroupConstants.RESOURCEGROUP_TYPE_HA) &&
+        if ((Constants.instType == ResourceGroupConstants.RESOURCEGROUP_TYPE_HA) &&
                 (menuItem.getVisibleMask() == MenuItem.VISIBLE_IN_HA)) return true;
-        if ((appContext.getInstallType() == ResourceGroupConstants.RESOURCEGROUP_TYPE_HS) &&
+        if ((Constants.instType == ResourceGroupConstants.RESOURCEGROUP_TYPE_HS) &&
                 (menuItem.getVisibleMask() == MenuItem.VISIBLE_IN_HA)) return true;
         return false;
     }

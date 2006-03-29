@@ -119,7 +119,7 @@ public class McismeStatReport {
             try {
                 prop = loadParams(fileName);
             } catch (IOException e) {
-                logger.error("Con't load property file" + fileName);
+                logger.error("Couldn't load property file" + fileName);
             }
 
             String currentDate = Utils.formatDate(new Date(), "yyyyMMdd");
@@ -214,7 +214,7 @@ public class McismeStatReport {
                 logger.info("You can see all details in file: " + fileStr + ";");
 
             } else {
-                logger.error("File " + fileStr + " dosn't exist!");
+                logger.error("File " + fileStr + " doesn't exist!");
             }
             if (isEmail) {// sending email
 

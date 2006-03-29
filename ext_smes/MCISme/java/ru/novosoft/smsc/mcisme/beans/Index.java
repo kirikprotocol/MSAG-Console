@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.mcisme.beans;
 
 import ru.novosoft.smsc.util.config.Config;
+import ru.novosoft.smsc.util.hsModeSupport.FileOutputStreamMirror;
 import ru.novosoft.smsc.admin.AdminException;
 
 import java.io.*;
@@ -143,7 +144,7 @@ public class Index extends IndexProperties
 
     OutputStream os = null;
     try {
-      os = new FileOutputStream(file);
+      os = new FileOutputStreamMirror(file);
       properties.store(os, comment);
     } catch(IOException e) {
       throw e;

@@ -6,7 +6,7 @@
     TITLE = getLocString("services.addTitle2");
     switch (bean.process(request)) {
         case ServiceAddInternal.RESULT_DONE:
-            if (bean.getAppContext().getInstallType() != ResourceGroupConstants.RESOURCEGROUP_TYPE_SINGLE)
+            if (Constants.instType != ResourceGroupConstants.RESOURCEGROUP_TYPE_SINGLE)
                 response.sendRedirect("resourceGroups.jsp");
             else
                 response.sendRedirect("index.jsp");

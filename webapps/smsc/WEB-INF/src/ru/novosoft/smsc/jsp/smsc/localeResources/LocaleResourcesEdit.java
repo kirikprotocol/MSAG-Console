@@ -25,239 +25,215 @@ import java.util.Map;
  * Date: 12.05.2003
  * Time: 18:39:59
  */
-public class LocaleResourcesEdit extends PageBean
-{
-  private final String SETTINGS_SECTION_NAME = "settings";
-  private final String RESOURCES_SECTION_NAME = "resources";
-  private String locale = null;
-  private boolean initialized = false;
-  private String mbSave = null;
-  private String mbCancel = null;
+public class LocaleResourcesEdit extends PageBean {
+    private final String SETTINGS_SECTION_NAME = "settings";
+    private final String RESOURCES_SECTION_NAME = "resources";
+    private String locale = null;
+    private boolean initialized = false;
+    private String mbSave = null;
+    private String mbCancel = null;
 
-  private Section settings = new Section(SETTINGS_SECTION_NAME, null);
-  private Section resources = new Section(RESOURCES_SECTION_NAME, null);
+    private Section settings = new Section(SETTINGS_SECTION_NAME, null);
+    private Section resources = new Section(RESOURCES_SECTION_NAME, null);
 
-  protected int init(List errors)
-  {
-    int result = super.init(errors);
-    if (result != RESULT_OK)
-      return result;
+    protected int init(List errors) {
+        int result = super.init(errors);
+        if (result != RESULT_OK)
+            return result;
 
-    if (!initialized) {
-      Document localeDom = null;
-      try {
-        localeDom = Utils.parse(appContext.getResourcesManager().getResource(locale));
-      } catch (Throwable e) {
-        logger.error("Couldn't parse locale \"" + locale + "\"", e);
-      }
-      Element rootElement = localeDom.getDocumentElement();
-      NodeList settingsNodeList = rootElement.getElementsByTagName("settings");
-      for (int i = 0; i < settingsNodeList.getLength(); i++) {
-        parseSection(settings, (Element) settingsNodeList.item(i));
-      }
-      NodeList resourcesNodeList = rootElement.getElementsByTagName("resources");
-      for (int i = 0; i < resourcesNodeList.getLength(); i++) {
-        parseSection(resources, (Element) resourcesNodeList.item(i));
-      }
-    }
-    return result;
-  }
-
-  private void parseSection(Section section, Element sectionElem)
-  {
-    NodeList childNodes = sectionElem.getChildNodes();
-    for (int i = 0; i < childNodes.getLength(); i++) {
-      Node childNode = childNodes.item(i);
-      if (childNode.getNodeType() == Node.ELEMENT_NODE) {
-        Element childElement = (Element) childNode;
-        if ("section".equalsIgnoreCase(childElement.getTagName())) {
-          String subSectionName = childElement.getAttribute("name");
-          Section subSection = section.findSection(subSectionName);
-          parseSection(subSection, childElement);
+        if (!initialized) {
+            Document localeDom = null;
+            try {
+                localeDom = Utils.parse(appContext.getResourcesManager().getResource(locale));
+            } catch (Throwable e) {
+                logger.error("Couldn't parse locale \"" + locale + "\"", e);
+            }
+            Element rootElement = localeDom.getDocumentElement();
+            NodeList settingsNodeList = rootElement.getElementsByTagName("settings");
+            for (int i = 0; i < settingsNodeList.getLength(); i++) {
+                parseSection(settings, (Element) settingsNodeList.item(i));
+            }
+            NodeList resourcesNodeList = rootElement.getElementsByTagName("resources");
+            for (int i = 0; i < resourcesNodeList.getLength(); i++) {
+                parseSection(resources, (Element) resourcesNodeList.item(i));
+            }
         }
-        else if ("param".equalsIgnoreCase(childElement.getTagName())) {
-          String paramName = childElement.getAttribute("name");
-          String paramValue = Utils.getNodeText(childElement);
-          section.setParam(paramName, paramValue);
+        return result;
+    }
+
+    private void parseSection(Section section, Element sectionElem) {
+        NodeList childNodes = sectionElem.getChildNodes();
+        for (int i = 0; i < childNodes.getLength(); i++) {
+            Node childNode = childNodes.item(i);
+            if (childNode.getNodeType() == Node.ELEMENT_NODE) {
+                Element childElement = (Element) childNode;
+                if ("section".equalsIgnoreCase(childElement.getTagName())) {
+                    String subSectionName = childElement.getAttribute("name");
+                    Section subSection = section.findSection(subSectionName);
+                    parseSection(subSection, childElement);
+                } else if ("param".equalsIgnoreCase(childElement.getTagName())) {
+                    String paramName = childElement.getAttribute("name");
+                    String paramValue = Utils.getNodeText(childElement);
+                    section.setParam(paramName, paramValue);
+                }
+            }
         }
-      }
     }
-  }
 
-  public int process(HttpServletRequest request)
-  {
-    int result = super.process(request);
-    if (result != RESULT_OK)
-      return result;
+    public int process(HttpServletRequest request) {
+        int result = super.process(request);
+        if (result != RESULT_OK)
+            return result;
 
-    processDataParams(request.getParameterMap());
-    if (mbCancel != null)
-      return RESULT_DONE;
-    else if (mbSave != null)
-      return save();
+        processDataParams(request.getParameterMap());
+        if (mbCancel != null)
+            return RESULT_DONE;
+        else if (mbSave != null)
+            return save();
 
-    return RESULT_OK;
-  }
-
-  private int save_resource_file()
-  {
-    try {
-      File tempFile = Functions.createNewFilenameForSave(new File(WebAppFolders.getSmscConfFolder(), "resources_" + locale + ".xml.new"));
-      PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(tempFile), Functions.getLocaleEncoding()));
-      Functions.storeConfigHeader(out, "locale_resources", "locale_resources.dtd");
-      out.println("<settings>");
-      storeSection(settings, out, "   ");
-      out.println("</settings>");
-      out.println("<resources>");
-      storeSection(resources, out, "   ");
-      out.println("</resources>");
-      Functions.storeConfigFooter(out, "locale_resources");
-      out.flush();
-      out.close();
-      appContext.getResourcesManager().add(locale, tempFile);
-      return RESULT_DONE;
-    } catch (IOException e) {
-      return error(SMSCErrors.error.localeResources.couldntStoreFile, e);
+        return RESULT_OK;
     }
-  }
 
-  private int save()
-  {
-    int result = save_resource_file();
-    if (result == RESULT_DONE)
-      try {
-        appContext.getSmsc().applyLocaleResources();
-        journalAppend(SubjectTypes.TYPE_locale, locale, Actions.ACTION_MODIFY);
-        return RESULT_DONE;
-      } catch (AdminException e) {
-        logger.debug("Couldn't apply locale resources: " + e.getMessage(), e);
-        return error(SMSCErrors.error.localeResources.couldntApplyResources, e);
-      }
-    else
-      return result;
-  }
-
-  private void storeSection(Section section, PrintWriter out, String prefix)
-  {
-    for (Iterator i = section.getSectionNames().iterator(); i.hasNext();) {
-      String sectionName = (String) i.next();
-      out.println(prefix + "<section name=\"" + StringEncoderDecoder.encode(sectionName) + "\">");
-      storeSection(section.getSection(sectionName), out, prefix + "   ");
-      out.println(prefix + "</section>");
+    private int save_resource_file() {
+        try {
+            File tempFile = Functions.createNewFilenameForSave(new File(WebAppFolders.getSmscConfFolder(), "resources_" + locale + ".xml.new"));
+            PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(tempFile), Functions.getLocaleEncoding()));
+            Functions.storeConfigHeader(out, "locale_resources", "locale_resources.dtd");
+            out.println("<settings>");
+            storeSection(settings, out, "   ");
+            out.println("</settings>");
+            out.println("<resources>");
+            storeSection(resources, out, "   ");
+            out.println("</resources>");
+            Functions.storeConfigFooter(out, "locale_resources");
+            out.flush();
+            out.close();
+            appContext.getResourcesManager().add(locale, tempFile);
+            return RESULT_DONE;
+        } catch (IOException e) {
+            return error(SMSCErrors.error.localeResources.couldntStoreFile, e);
+        }
     }
-    for (Iterator i = section.getParamNames().iterator(); i.hasNext();) {
-      String paramName = ((String) i.next()).trim();
-      String paramValue = section.getParam(paramName).trim();
-      if (paramValue != null && paramValue.length() > 0)
-        out.println(prefix + "<param name=\"" + StringEncoderDecoder.encode(paramName) + "\">" + StringEncoderDecoder.encode(paramValue) + "</param>");
-      else
-        out.println(prefix + "<param name=\"" + StringEncoderDecoder.encode(paramName) + "\"/>");
+
+    private int save() {
+        int result = save_resource_file();
+        if (result == RESULT_DONE)
+            try {
+                appContext.getSmsc().applyLocaleResources();
+                journalAppend(SubjectTypes.TYPE_locale, locale, Actions.ACTION_MODIFY);
+                return RESULT_DONE;
+            } catch (AdminException e) {
+                logger.debug("Couldn't apply locale resources: " + e.getMessage(), e);
+                return error(SMSCErrors.error.localeResources.couldntApplyResources, e);
+            }
+        else
+            return result;
     }
-  }
 
-  private void processDataParams(Map params)
-  {
-    for (Iterator i = params.keySet().iterator(); i.hasNext();) {
-      String paramName = (String) i.next();
-      Object param = params.get(paramName);
-      if (param instanceof String)
-        processDataParam(paramName, (String) param);
-      else if (param instanceof String[]) {
-        final String[] paramValues = (String[]) param;
-        for (int j = 0; j < paramValues.length; j++)
-          processDataParam(paramName, paramValues[j]);
-      }
-      else {
-        //skip this strange param
-        //logger.debug("processDataParams: skip param: \"" + paramName + "\"=\"" + param + "\"");
-      }
+    private void storeSection(Section section, PrintWriter out, String prefix) {
+        for (Iterator i = section.getSectionNames().iterator(); i.hasNext();) {
+            String sectionName = (String) i.next();
+            out.println(prefix + "<section name=\"" + StringEncoderDecoder.encode(sectionName) + "\">");
+            storeSection(section.getSection(sectionName), out, prefix + "   ");
+            out.println(prefix + "</section>");
+        }
+        for (Iterator i = section.getParamNames().iterator(); i.hasNext();) {
+            String paramName = ((String) i.next()).trim();
+            String paramValue = section.getParam(paramName).trim();
+            if (paramValue != null && paramValue.length() > 0)
+                out.println(prefix + "<param name=\"" + StringEncoderDecoder.encode(paramName) + "\">" + StringEncoderDecoder.encode(paramValue) + "</param>");
+            else
+                out.println(prefix + "<param name=\"" + StringEncoderDecoder.encode(paramName) + "\"/>");
+        }
     }
-  }
 
-  private void processDataParam(String fullName, String paramValue)
-  {
-    int dotPos = fullName.indexOf(Section.NAME_DELIMETER);
-    if (dotPos > 0) {
-      String rootSectionName = fullName.substring(0, dotPos);
-      String fullParamName = fullName.substring(dotPos + 1);
-      if (rootSectionName.equals(SETTINGS_SECTION_NAME))
-        aaa(fullParamName, paramValue, settings);
-      else if (rootSectionName.equals(RESOURCES_SECTION_NAME))
-        aaa(fullParamName, paramValue, resources);
-      else {
-        //logger.debug("processDataParam: skip param: \"" + fullName + "\"=\"" + paramValue + "\"");
-        //skip strange values
-      }
+    private void processDataParams(Map params) {
+        for (Iterator i = params.keySet().iterator(); i.hasNext();) {
+            String paramName = (String) i.next();
+            Object param = params.get(paramName);
+            if (param instanceof String)
+                processDataParam(paramName, (String) param);
+            else if (param instanceof String[]) {
+                final String[] paramValues = (String[]) param;
+                for (int j = 0; j < paramValues.length; j++)
+                    processDataParam(paramName, paramValues[j]);
+            } else {
+                //skip this strange param
+                //logger.debug("processDataParams: skip param: \"" + paramName + "\"=\"" + param + "\"");
+            }
+        }
     }
-    else {
-      //logger.debug("processDataParam: skip misformatted param: \"" + fullName + "\"=\"" + paramValue + "\"");
-      //skip strange values
+
+    private void processDataParam(String fullName, String paramValue) {
+        int dotPos = fullName.indexOf(Section.NAME_DELIMETER);
+        if (dotPos > 0) {
+            String rootSectionName = fullName.substring(0, dotPos);
+            String fullParamName = fullName.substring(dotPos + 1);
+            if (rootSectionName.equals(SETTINGS_SECTION_NAME))
+                aaa(fullParamName, paramValue, settings);
+            else if (rootSectionName.equals(RESOURCES_SECTION_NAME))
+                aaa(fullParamName, paramValue, resources);
+            else {
+                //logger.debug("processDataParam: skip param: \"" + fullName + "\"=\"" + paramValue + "\"");
+                //skip strange values
+            }
+        } else {
+            //logger.debug("processDataParam: skip misformatted param: \"" + fullName + "\"=\"" + paramValue + "\"");
+            //skip strange values
+        }
     }
-  }
 
-  private void aaa(String fullParamName, String paramValue, Section rootSection)
-  {
-    int dotPos = fullParamName.lastIndexOf(Section.NAME_DELIMETER);
-    Section section;
-    String paramName;
-    if (dotPos >= 0) {
-      section = rootSection.findSection(fullParamName.substring(0, dotPos));
-      paramName = fullParamName.substring(dotPos + 1);
+    private void aaa(String fullParamName, String paramValue, Section rootSection) {
+        int dotPos = fullParamName.lastIndexOf(Section.NAME_DELIMETER);
+        Section section;
+        String paramName;
+        if (dotPos >= 0) {
+            section = rootSection.findSection(fullParamName.substring(0, dotPos));
+            paramName = fullParamName.substring(dotPos + 1);
+        } else {
+            section = rootSection;
+            paramName = fullParamName;
+        }
+        section.setParam(paramName, paramValue);
     }
-    else {
-      section = rootSection;
-      paramName = fullParamName;
+
+    public String getLocale() {
+        return locale;
     }
-    section.setParam(paramName, paramValue);
-  }
 
-  public String getLocale()
-  {
-    return locale;
-  }
+    public void setLocale(String locale) {
+        this.locale = locale;
+    }
 
-  public void setLocale(String locale)
-  {
-    this.locale = locale;
-  }
+    public Section getSettings() {
+        return settings;
+    }
 
-  public Section getSettings()
-  {
-    return settings;
-  }
+    public Section getResources() {
+        return resources;
+    }
 
-  public Section getResources()
-  {
-    return resources;
-  }
+    public boolean isInitialized() {
+        return initialized;
+    }
 
-  public boolean isInitialized()
-  {
-    return initialized;
-  }
+    public void setInitialized(boolean initialized) {
+        this.initialized = initialized;
+    }
 
-  public void setInitialized(boolean initialized)
-  {
-    this.initialized = initialized;
-  }
+    public String getMbSave() {
+        return mbSave;
+    }
 
-  public String getMbSave()
-  {
-    return mbSave;
-  }
+    public void setMbSave(String mbSave) {
+        this.mbSave = mbSave;
+    }
 
-  public void setMbSave(String mbSave)
-  {
-    this.mbSave = mbSave;
-  }
+    public String getMbCancel() {
+        return mbCancel;
+    }
 
-  public String getMbCancel()
-  {
-    return mbCancel;
-  }
-
-  public void setMbCancel(String mbCancel)
-  {
-    this.mbCancel = mbCancel;
-  }
+    public void setMbCancel(String mbCancel) {
+        this.mbCancel = mbCancel;
+    }
 }

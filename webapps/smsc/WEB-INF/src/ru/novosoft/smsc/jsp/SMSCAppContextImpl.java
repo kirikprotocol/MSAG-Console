@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.jsp;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.acl.AclManager;
 import ru.novosoft.smsc.admin.category.CategoryManager;
 import ru.novosoft.smsc.admin.closedgroups.ClosedGroupManager;
@@ -54,7 +55,6 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
     private Console console = null;
 
     private String initErrorCode = null;
-    private byte instType = ResourceGroupConstants.RESOURCEGROUP_TYPE_UNKNOWN;
 
     public SMSCAppContextImpl(String configFileName) {
         super();
@@ -71,20 +71,28 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
                 throw new AdminException("Could not load web.xml - administration services access rights can not be changed");
             }
 
-            resourcesManager = new ResourcesManagerImpl();
             try {
-                this.instType = ResourceGroupConstants.getTypeFromString(webappConfig.getString(ResourceGroupConstants.RESOURCEGROUP_INSTALLTYPE_PARAM_NAME));
+                Constants.instType = ResourceGroupConstants.getTypeFromString(webappConfig.getString(ResourceGroupConstants.RESOURCEGROUP_INSTALLTYPE_PARAM_NAME));
+                try {
+                    if (Constants.instType == ResourceGroupConstants.RESOURCEGROUP_TYPE_HS)
+                        Constants.HSMODE_MIRRORFILES_PATH = webappConfig.getString(ResourceGroupConstants.RESOURCEGROUP_MIRRORPATH_PARAM_NAME);
+                }
+                catch (Exception e) {
+                    System.out.println("Installation mirrorpath is not defined in webconfig (installation.mirrorpath missed)");
+                    throw new AdminException("Installation mirrorpath is not defined in webconfig");
+                }
             }
             catch (Exception e) {
                 System.out.println("Installation type is not defined in webconfig (installation.type missed)");
                 throw new AdminException("Installation type is not defined in webconfig");
             }
+            resourcesManager = new ResourcesManagerImpl();
             smscList = new SmscList(webappConfig, this);
             smeManager = new SmeManagerImpl(smsc);
             serviceManager = new ServiceManagerImpl();
             serviceManager.add(smsc);
             routeSubjectManager = new RouteSubjectManagerImpl(smeManager);
-            switch (this.instType) {
+            switch (Constants.instType) {
                 case ResourceGroupConstants.RESOURCEGROUP_TYPE_SINGLE:
                     DaemonManager daemonManager = new DaemonManager(smeManager, webappConfig);
                     hostsManager = new HostsManagerSingleImpl(daemonManager, serviceManager, smeManager, routeSubjectManager);
@@ -293,10 +301,6 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 
     public void setPerfMonSmscHost(String smscHost) {
         perfServer.setSmscHost(smscHost);
-    }
-
-    public byte getInstallType() {
-        return instType;
     }
 
     public ClosedGroupManager getClosedGroupManager() {

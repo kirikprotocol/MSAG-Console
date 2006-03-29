@@ -5,6 +5,11 @@
  */
 package ru.novosoft.smsc.admin;
 
+import ru.novosoft.smsc.admin.resource_group.ResourceGroupConstants;
+
+import java.io.File;
+import java.io.IOException;
+
 public class Constants {
     public static final int ROUTE_ID_MAXLENGTH = 32;
     public static final int CLOSED_GROUP_NAME_MAXLENGTH = 64;
@@ -22,4 +27,23 @@ public class Constants {
     public static final String CONSOLE_SESSION_ID = "Console Session";
     public static final long Day = 86400000;
     public static final long Hour = 3600000;
+
+    public static int instType = ResourceGroupConstants.RESOURCEGROUP_TYPE_SINGLE;
+    public static String HSMODE_MIRRORFILES_PATH = null;
+
+    public static boolean isMirrorNeeded() {
+        if (instType == ResourceGroupConstants.RESOURCEGROUP_TYPE_HS)
+            return true;
+        else
+            return false;
+    }
+
+    public static File getMirrorFile(File file) throws IOException {
+        File result = new File(HSMODE_MIRRORFILES_PATH + file.getAbsolutePath());
+        if (!result.exists()) {
+            result.getParentFile().mkdirs();
+            result.createNewFile();
+        }
+        return result;
+    }
 }

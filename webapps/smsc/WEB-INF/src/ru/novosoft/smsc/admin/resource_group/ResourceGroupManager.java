@@ -76,8 +76,8 @@ public class ResourceGroupManager {
     public void save() {
     }
 
-    public byte getInstallType() {
-        return appContext.getInstallType();
+    public int getInstallType() {
+        return Constants.instType;
     }
 
     public boolean contains(String serviceId) {
@@ -101,7 +101,7 @@ public class ResourceGroupManager {
     }
 
     public void refreshResGroupList() throws AdminException {
-        switch (appContext.getInstallType()) {
+        switch (getInstallType()) {
             case ResourceGroupConstants.RESOURCEGROUP_TYPE_HA:
                 refreshHAResGroupList();
                 break;

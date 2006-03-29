@@ -76,8 +76,6 @@ public interface SMSCAppContext extends AppContext {
 
     ServiceManager getServiceManager();
 
-    byte getInstallType();
-
     Long registerSMEContext(SMEAppContext smeContext);
 
     void unregisterSMEContext(Long contextId);
