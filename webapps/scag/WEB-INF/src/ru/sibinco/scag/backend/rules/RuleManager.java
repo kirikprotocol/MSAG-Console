@@ -16,6 +16,7 @@ import ru.sibinco.scag.backend.sme.Provider;
 import ru.sibinco.scag.backend.sme.ProviderManager;
 import ru.sibinco.scag.backend.Scag;
 import ru.sibinco.scag.backend.transport.Transport;
+import ru.sibinco.scag.beans.SCAGJspException;
 
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
@@ -69,6 +70,10 @@ public class RuleManager
     result.put(Transport.HTTP_TRANSPORT_NAME,httprules.get(serviceId));
     result.put(Transport.MMS_TRANSPORT_NAME,mmsrules.get(serviceId));
     return result;
+  }
+
+  private Collection getRulesAsList(Long serviceId) {
+     return getRules(serviceId).values();
   }
 
   public Rule getRule(Long ruleId, String transport)
@@ -380,14 +385,17 @@ public class RuleManager
           }
     }
 
-    public void removeRulesForService(final String ruleId)
+    public void removeRulesForService(final String ruleId) throws SCAGJspException
     {
       try {
-      String[] transports=Transport.transportTitles;
-      for (byte i=0;i<transports.length;i++)
-          removeRule(ruleId,transports[i]);
-      } catch(SibincoException se) { //TODO: ???
-         }
+      for (Iterator i = (getRulesAsList(new Long(ruleId))).iterator(); i.hasNext();) {
+           Rule current = (Rule)i.next();
+           if (current!=null) removeRule(ruleId, current.getTransport());
+        }
+      } catch(SibincoException se) {
+              se.printStackTrace();/*PRINT ERROR ON THE SCREEN;*/
+              throw new SCAGJspException(ru.sibinco.scag.Constants.errors.rules.COULD_NOT_REMOVE_RULE, se);
+       }
     }
 
     private void removeRuleFromMap(String ruleId, String transport)
