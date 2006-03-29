@@ -5,6 +5,14 @@ use File::stat;
 if(@ARGV<3)
 {
   print STDERR "Usage $0 indir inregexp outmask\n";
+  print STDERR "outmask values (file creation time):\n";
+  print STDERR "\%yyyy - year\n";
+  print STDERR "\%yy - last 2 digits of year\n";
+  print STDERR "\%MM - month\n";
+  print STDERR "\%dd - day\n";
+  print STDERR "\%hh - hour\n";
+  print STDERR "\%mm - minute\n";
+  print STDERR "\%ss - seconds\n";
   exit;
 }
 
