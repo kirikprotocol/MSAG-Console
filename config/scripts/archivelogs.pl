@@ -29,7 +29,7 @@ for my $file(readdir(D))
   next unless $file=~/$rx/;
   $foundSomething=1;
   my $st=stat($dir.$file);
-  my $outfile=MakeFilename($outmask,$st->ctime);
+  my $outfile=MakeFilename($outmask,$st->mtime);
   my $tempfile=$dir.$file.'tmp'.time;
   rename($dir.$file,$tempfile) || die "Failed to rename $file to $tempfile";
   my $cnt=1;
