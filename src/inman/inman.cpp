@@ -6,6 +6,7 @@ static char const ident[] = "$Id$";
 #include <string.h>
 #include <string>
 
+#include "version.hpp"
 #include "service.hpp"
 #include "util/config/ConfigView.h"
 #include "util/mirrorfile/mirrorfile.h"
@@ -19,12 +20,6 @@ using smsc::db::DataSourceFactory;
 #include "inman/cachedb/cacheDb.hpp"
 using smsc::inman::cache::db::DBSourceCFG;
 using smsc::inman::cache::db::DBAbonentProvider;
-
-
-
-
-static const UCHAR_T VER_HIGH    = 0;
-static const UCHAR_T VER_LOW     = 2;
 
 static const unsigned int _in_CFG_DFLT_CLIENT_CONNS = 3;
 static const long _in_CFG_MIN_BILLING_INTERVAL = 10; //in seconds
@@ -374,13 +369,14 @@ int main(int argc, char** argv)
     inapLogger = Logger::getInstance("smsc.inman");
     _EINSS7_logger_DFLT = Logger::getInstance("smsc.inman.inap");
 
-    smsc_log_info(inapLogger,"***************************");
-    smsc_log_info(inapLogger,"* SIBINCO IN MANAGER v%d.%d *", VER_HIGH, VER_LOW);
-    smsc_log_info(inapLogger,"***************************");
+    smsc_log_info(inapLogger,"******************************");
+    smsc_log_info(inapLogger,"* SIBINCO IN MANAGER v%u.%u.%u *",
+                  INMAN_VER_HIGH, INMAN_VER_LOW, INMAN_VER_FIX);
+    smsc_log_info(inapLogger,"******************************");
     if (argc > 1)
         cfgFile = argv[1];
     smsc_log_info(inapLogger,"* Config file: %s", cfgFile);
-    smsc_log_info(inapLogger,"****************************");
+    smsc_log_info(inapLogger,"******************************");
 
     INBillConfig cfg;
     try {
