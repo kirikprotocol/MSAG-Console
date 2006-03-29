@@ -4,6 +4,7 @@
 <config>
   <section name="installation">
     <param name="type" type="string">HS</param>
+    <param name="mirrorpath" type="string">c:/temp/mirror/</param>
   </section>
 
   <section name="nodes">
