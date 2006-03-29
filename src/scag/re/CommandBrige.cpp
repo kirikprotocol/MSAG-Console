@@ -220,8 +220,6 @@ void CommandBrige::makeTrafficEvent(SmppCommand& command, int handlerType, scag:
     sprintf((char *)ev.Header.pAbonentNumber,"%s",str);
 
     ev.Header.sCommandStatus = 1;
-    ev.Header.sEventType = 1;
-
     ev.iOperatorId = 1;
 
     std::string unicodeSTR = getMessageBody(command);

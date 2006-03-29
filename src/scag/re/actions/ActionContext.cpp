@@ -88,8 +88,7 @@ void ActionContext::makeBillEvent(int billCommand, SACC_BILLING_INFO_EVENT_t& ev
     sprintf((char *)ev.Header.pAbonentNumber,"%s",m_AbonentAddr.toString().c_str());
 
     ev.Header.sCommandStatus = 1;
-    ev.Header.sEventType = 1;
-
+    
     ev.iOperatorId = 1;
     ev.iPriceCatId = 1;
 
