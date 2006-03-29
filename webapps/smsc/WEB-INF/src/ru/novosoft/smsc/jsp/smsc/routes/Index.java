@@ -198,6 +198,9 @@ public class Index extends IndexBean {
         QueryResultSet routes = null;
         while (!found) {
             routes = routeSubjectManager.getRoutes().query(new RouteQuery(pageSize, preferences.getRoutesFilter(appContext), preferences.getRoutesSortOrder(), startPosition));
+            if( routes.size() == 0 ) {
+              return routeSubjectManager.getRoutes().query(new RouteQuery(pageSize, preferences.getRoutesFilter(appContext), preferences.getRoutesSortOrder(), 0));
+            }
             for (Iterator i = routes.iterator(); i.hasNext();) {
                 DataItem item = (DataItem) i.next();
                 String al = (String) item.getValue("Route ID");
