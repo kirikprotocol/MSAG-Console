@@ -9,6 +9,7 @@ namespace mirrorfile{
 
 std::string prefix;
 std::string curDir;
+bool broken=false;
 
 std::string makeMirrorFilename(const char* filename)
 {
@@ -34,7 +35,7 @@ bool DirExists(const char* dir)
 bool MakePath(const std::string& path)
 {
   int idx=0;
-
+  if(DirExists(path.substr(0,path.rfind('/')).c_str()))return true;
   for(;;)
   {
     idx=path.find('/',idx);
@@ -52,7 +53,6 @@ struct DupeFile:smsc::core::buffers::FileEventHandler{
   {
     dupe.SetEventHandler(0);
   }
-  bool broken;
   void SetBroken()
   {
     broken=true;
@@ -60,7 +60,8 @@ struct DupeFile:smsc::core::buffers::FileEventHandler{
   }
   virtual void onOpen(int mode,const char* fileName)
   {
-    fprintf(stderr,"open:%s\n",fileName);
+    if(broken)return;
+    //fprintf(stderr,"open:%s\n",fileName);
     broken=false;
     std::string newFn;
     if(fileName && strlen(fileName)>0 && fileName[0]=='/')
@@ -140,6 +141,7 @@ struct DupeGlobalFileEventHandler:smsc::core::buffers::GlobalFileEventHandler{
   bool recursion;
   DupeGlobalFileEventHandler()
   {
+    if(broken)return;
     const char* var=getenv("HS_MIRROR_PATH");
     if(var)
     {
@@ -157,7 +159,7 @@ struct DupeGlobalFileEventHandler:smsc::core::buffers::GlobalFileEventHandler{
   }
   virtual void onCreateFileObject(File* f)
   {
-    if(recursion)return;
+    if(recursion || broken)return;
     recursion=true;
     f->SetEventHandler(new DupeFile());
     recursion=false;
@@ -168,11 +170,13 @@ struct DupeGlobalFileEventHandler:smsc::core::buffers::GlobalFileEventHandler{
   }
   virtual void onRename(const char* oldName,const char* newName)
   {
+    if(broken)return;
     MakePath(makeMirrorFilename(newName).c_str());
     rename(makeMirrorFilename(oldName).c_str(),makeMirrorFilename(newName).c_str());
   }
   virtual void onUnlink(const char* fileName)
   {
+    if(broken)return;
     unlink(makeMirrorFilename(fileName).c_str());
   }
 

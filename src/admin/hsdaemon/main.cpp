@@ -17,6 +17,7 @@
 #include <util/xml/init.h>
 #include <system/smscsignalhandlers.h>
 #include "Interconnect.h"
+#include "util/mirrorfile/mirrorfile.h"
 
 using smsc::admin::AdminException;
 using namespace smsc::admin::hsdaemon;

@@ -9,6 +9,7 @@
 #include "util/xml/utilFunctions.h"
 #include "util/debug.h"
 #include "util/xml/DOMTreeReader.h"
+#include "core/buffers/File.hpp"
 
 namespace smsc   {
 namespace util   {
@@ -26,7 +27,7 @@ Manager::Manager()
 {
   initXerces();
   findConfigFile();
-  try 
+  try
   {
     __trace__("reading config...");
     DOMTreeReader reader;
@@ -130,19 +131,50 @@ std::ostream & operator << (std::ostream & out, const XMLCh * const string)
 /**
  * Записывает конфигурацию системы.
  */
+
+
+class FileStreamBuf:public std::basic_streambuf<char>
+{
+public:
+  void Open(const char* fileName)
+  {
+    f.RWCreate(fileName);
+  }
+  int sync()
+  {
+    try{
+      f.Flush();
+    }catch(...)
+    {
+      return -1;
+    }
+    return 0;
+  }
+  std::streamsize xsputn(const char_type* s,std::streamsize n)
+  {
+    try{
+      f.Write(s,n);
+    }catch(...)
+    {
+      return -1;
+    }
+    return n;
+  }
+protected:
+  smsc::core::buffers::File f;
+};
+
+
 void Manager::save()
 {
-  std::ofstream *out = new std::ofstream(config_filename.get());
-  writeHeader(*out);
-  config.save(*out);
-  writeFooter(*out);
-  out->flush();
-  if (out->fail())
-  {
-    cerr << "Couldn't save config to \"" << config_filename.get() << "\"\n";
-  }
-  out->close();
-  delete out;
+  FileStreamBuf buf;
+  buf.Open(config_filename.get());
+  std::ofstream out;
+  ((std::basic_ios<char>&)out).rdbuf(&buf);
+  writeHeader(out);
+  config.save(out);
+  writeFooter(out);
+  buf.sync();
 }
 
 void Manager::writeHeader(std::ostream &out)

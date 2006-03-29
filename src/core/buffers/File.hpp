@@ -288,8 +288,12 @@ public:
     if(fd!=-1)
     {
       lseek(fd,0,SEEK_SET);
-      sz=read(fd,buffer,sz);
-      if(sz==-1)throw FileException(FileException::errReadFailed,filename.c_str());
+      int rdsz=read(fd,buffer,sz);
+      if(rdsz!=sz)throw FileException(FileException::errReadFailed,filename.c_str());
+      if(eventHandler)
+      {
+        eventHandler->onRead(buffer,sz);
+      }
     }
   }
 
@@ -310,7 +314,10 @@ public:
       blockSize=maxSpeed;
     }
     uint64_t writeTime;
-
+    if(eventHandler)
+    {
+      eventHandler->onSeek(SEEK_SET,0);
+    }
     do{
       if(maxSpeed>0)writeTime=smsc::util::getmillis();
       size_t piece=(size_t)(fileSize-written<blockSize?fileSize-written:blockSize);
@@ -320,6 +327,10 @@ public:
         close(g);
         remove(tmp.c_str());
         throw FileException(FileException::errWriteFailed,filename.c_str());
+      }
+      if(eventHandler)
+      {
+        eventHandler->onWrite(buffer+written,(size_t)piece);
       }
       written+=piece;
       if(maxSpeed>0)

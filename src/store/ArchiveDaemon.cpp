@@ -16,6 +16,7 @@
 
 #include "version.inc"
 #include "ArchiveProcessor.h"
+#include "util/mirrorfile/mirrorfile.h"
 
 using namespace smsc::util;
 
@@ -61,7 +62,7 @@ extern "C" void atExitHandler(void)
 extern "C" void setShutdownHandler(void)
 {
     sigset_t set;
-    sigemptyset(&set); 
+    sigemptyset(&set);
     sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
     if(pthread_sigmask(SIG_UNBLOCK, &set, NULL) != 0) {
         if (logger) smsc_log_error(logger, "Failed to set signal mask (shutdown handler)");
@@ -93,7 +94,7 @@ struct ShutdownThread : public Thread
         return 0;
     };
     void Stop() {
-        shutdownEvent.Signal();    
+        shutdownEvent.Signal();
     };
 } shutdownThread;
 
@@ -102,20 +103,20 @@ int main(void)
     using smsc::util::config::Manager;
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
-    
+
     Logger::Init();
     logger = Logger::getInstance("smsc.store.ArchiveDaemon");
 
     atexit(atExitHandler);
     clearSignalMask();
     shutdownThread.Start();
-    
+
     int resultCode = 0;
-    try 
+    try
     {
         smsc_log_info(logger, getStrVersion());
         Manager::init("daemon.xml");
-        
+
         ConfigView apConfig(Manager::getInstance(), "ArchiveDaemon");
         int daemonInterval = apConfig.getInt("interval");
         ArchiveProcessor processor(&apConfig);
