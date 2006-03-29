@@ -86,8 +86,6 @@ public class WHOISDServlet extends HttpServlet {
   }
 
    private void applyTerm(HttpServletRequest req, boolean isMultipartFormat) throws Exception {
-     RuleManagerWrapper rulemanager = new RuleManagerWrapper(appContext.getRuleManager());
-     SAXParserImpl parser = new SAXParserImpl();
      String service = req.getParameter("service");
      if (service == null) throw new WHOISDException("service parameter is missed!");
      try {
@@ -95,6 +93,8 @@ public class WHOISDServlet extends HttpServlet {
      } catch (NumberFormatException e) {
        throw new WHOISDException("service parameter must be an integer or long value");
      }
+     RuleManagerWrapper rulemanager = new RuleManagerWrapper(appContext.getRuleManager());
+     SAXParserImpl parser = new SAXParserImpl();
      Reader reader = null;
      Map rulesWHOISD = null;
      Rule ruleWHOISD = null;
