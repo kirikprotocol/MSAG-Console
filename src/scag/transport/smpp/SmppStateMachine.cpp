@@ -178,7 +178,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
     else if (ussd_op == smsc::smpp::UssdServiceOpValue::PSSR_RESPONSE) { // End user USSD dialog
 	key.USR = umr;
 	umr = dst->getUMR(key.USR);
-	smsc_log_warn(log, "USSD Submit: End user dialog, UMR=%d", umr);
+	smsc_log_debug(log, "USSD Submit: End user dialog, UMR=%d", umr);
 	//if (dst) dst->delUSRMapping(key.USR); Moved to resp processing
 	session=scag::sessions::SessionManager::Instance().getSession(key);
 	if (!session.Get()) {
@@ -189,7 +189,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
 	sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, umr);
     }
     else if (ussd_op == smsc::smpp::UssdServiceOpValue::USSN_REQUEST) { // End service USSD dialog
-	smsc_log_warn(log, "USSD Submit: End service dialog, UMR=%d", umr);
+	smsc_log_debug(log, "USSD Submit: End service dialog, UMR=%d", umr);
 	if (dst) dst->delUMRMapping(umr);
 	// TODO: implement it !!!
     }
@@ -266,9 +266,13 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
       ussd_op == smsc::smpp::UssdServiceOpValue::USSN_REQUEST)  
       src->delUSRMapping(key.USR); // Empty mapping on USSD dialog end
 
-  SmppEntity* dst=orgCmd.getEntity();
   cmd->set_dialogId(orgCmd->get_dialogId());
-   
+  if (!(cmd->get_resp()->get_messageId())) {
+    smsc_log_warn(log, "Submit resp: messageId is null");
+    cmd->get_resp()->set_messageId("");
+  }
+  
+  SmppEntity* dst=orgCmd.getEntity(); 
   try{
     dst->putCommand(cmd);
   }catch(std::exception& e)
@@ -337,10 +341,10 @@ void StateMachine::processDelivery(SmppCommand& cmd)
 	return;
     }
     else if (ussd_op == smsc::smpp::UssdServiceOpValue::PSSR_INDICATION) { // New user USSD dialog
-	smsc_log_warn(log, "USSD Delivery: Begin user dialog, UMR=%d", umr);
+	smsc_log_debug(log, "USSD Delivery: Begin user dialog, UMR=%d", umr);
 	session=scag::sessions::SessionManager::Instance().newSession(key);
 	sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
-	smsc_log_warn(log, "USSD Delivery: Creating mapping USR=%d, UMR=%d", key.USR, umr);
+	smsc_log_debug(log, "USSD Delivery: Creating mapping USR=%d, UMR=%d", key.USR, umr);
 	if (src) src->setMapping(umr, key.USR);
     }
     else if (ussd_op == smsc::smpp::UssdServiceOpValue::USSR_CONFIRM) { // Continue USSD dialog
@@ -424,8 +428,8 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
     smsc_log_debug(log, "Delivery resp: procesed.");
   }
 
+  cmd->set_dialogId(orgCmd->get_dialogId());
   cmd->get_resp()->set_messageId("");
-
   SmppEntity* dst=orgCmd.getEntity();
 
   try{
