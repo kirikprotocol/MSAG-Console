@@ -22,6 +22,7 @@
     <param name="BillingServerHost" type="string">127.0.0.1</param>
     <param name="BillingServerPort" type="int">10021</param>    
     <param name="BillingTimeOut" type="int">10</param>
+    <param name="MaxThreads" type="int">10</param>
   </section>
   
   <section name="StatisticsManager">
