@@ -30,6 +30,7 @@ static const unsigned short _in_CFG_DFLT_BILL_TIMEOUT = 120;
 static const unsigned short _in_CFG_DFLT_ABTYPE_TIMEOUT = 5;
 static const unsigned char _in_CFG_DFLT_SS7_USER_ID = 3; //USER03_ID
 static const long _in_CFG_DFLT_CACHE_INTERVAL = 1440;
+static const int  _in_CFG_DFLT_CACHE_RECORDS = 10000;
 #define RP_MO_SM_transfer_rejected 21       //3GPP TS 24.011 Annex E-2
 
 namespace smsc {
@@ -95,6 +96,7 @@ public:
         bill.maxTimeout = _in_CFG_DFLT_BILL_TIMEOUT;
         bill.abtTimeout = _in_CFG_DFLT_ABTYPE_TIMEOUT;
         bill.rejectRPC.push_back(RP_MO_SM_transfer_rejected);
+        cachePrm.fileRcrd = _in_CFG_DFLT_CACHE_RECORDS;
     }
 
     ~INBillConfig()
@@ -204,6 +206,12 @@ public:
         } catch (ConfigException& exc) {
             throw ConfigException("'cacheDir' is missing");
         }
+        tmo = 0;
+        try { tmo = (uint32_t)billCfg.getInt("cacheRecords"); }
+        catch (ConfigException& exc) { }
+        if (tmo)
+            cachePrm.fileRcrd = (int)tmo;
+        smsc_log_info(inapLogger, "cacheRecords: %s%d", !tmo ? "default ":"", cachePrm.fileRcrd);
 
         /*  optional Billing parameters */
 

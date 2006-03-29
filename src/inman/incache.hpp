@@ -67,6 +67,7 @@ struct AbonentRecord {
 struct AbonentCacheCFG {
     long    interval;   //abonent info refreshing interval, units: seconds
     long    RAM;        //abonents cache RAM buffer size, units: Mb
+    int     fileRcrd ;  //initial number of cache file records
     const char *nmDir;  //
 
     AbonentCacheCFG() {

@@ -21,7 +21,7 @@ AbonentCache::AbonentCache(AbonentCacheCFG * cfg, Logger * uselog/* = NULL*/)
     : _cfg(*cfg), useFile(false)
 {
     static const unsigned int DFLT_FACTOR = sizeof(AbonentRecordRAM) + sizeof(AbonentId)*4;
-    assert(_cfg.nmDir);
+    assert(_cfg.nmDir && _cfg.fileRcrd);
     logger = uselog ? uselog : Logger::getInstance("smsc.inman.InCache");
     maxRamIt = (((_cfg.RAM ? _cfg.RAM : DFLT_RAM)<<10)/DFLT_FACTOR)<<10;
     smsc_log_info(logger, "InCache: RAM cache: %u abonents.", maxRamIt);
@@ -40,7 +40,6 @@ AbonentCache::~AbonentCache()
     close();
 }
 
-static const int DFLT_CACHE_ELEM = 1; //500
 bool AbonentCache::load(const char * file_nm)
 {
     try {
@@ -48,7 +47,7 @@ bool AbonentCache::load(const char * file_nm)
         if (present)
             flCache.Open(file_nm, false, false);
         else
-            flCache.Create(file_nm, DFLT_CACHE_ELEM, false);
+            flCache.Create(file_nm, _cfg.fileRcrd, false);
         useFile = true;
         smsc_log_info(logger, "InCache: %s file cache %s.",
                       present ? "reading" : "creating", file_nm);
