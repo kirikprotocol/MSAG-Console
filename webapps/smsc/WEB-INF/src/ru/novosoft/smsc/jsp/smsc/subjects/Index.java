@@ -141,6 +141,9 @@ public final class Index extends IndexBean {
         while (!found) {
             SubjectQuery query = new SubjectQuery(pageSize, preferences.getSubjectsFilter(), preferences.getSubjectsSortOrder(), startPosition);
             subjects = routeSubjectManager.getSubjects().query(query);
+            if( subjects.size() == 0 ) {
+              return routeSubjectManager.getSubjects().query(new SubjectQuery(pageSize, preferences.getSubjectsFilter(), preferences.getSubjectsSortOrder(), 0));
+            }
             for (Iterator i = subjects.iterator(); i.hasNext();) {
                 DataItem item = (DataItem) i.next();
                 String al = (String) item.getValue("Name");
@@ -151,9 +154,6 @@ public final class Index extends IndexBean {
             if (!found) {
                 startPosition += pageSize;
             }
-
-            if (startPosition > routeSubjectManager.getSubjects().size())
-                return routeSubjectManager.getSubjects().query(new SubjectQuery(pageSize, preferences.getSubjectsFilter(), preferences.getSubjectsSortOrder(), 0));
         }
         return subjects;
     }
