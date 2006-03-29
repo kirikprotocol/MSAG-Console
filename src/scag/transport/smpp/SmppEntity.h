@@ -5,6 +5,7 @@
 #include "scag/transport/smpp/SmppTypes.h"
 #include "core/synchronization/Mutex.hpp"
 #include "core/buffers/IntHash.hpp"
+#include "core/buffers/Hash.hpp"
 #include "SmppManagerAdmin.h"
 
 namespace scag{
@@ -13,6 +14,12 @@ namespace smpp{
 
 namespace buff=smsc::core::buffers;
 namespace sync=smsc::core::synchronization;
+
+struct UMRUSR
+{
+  buff::IntHash<int> UMRtoUSR;
+  buff::IntHash<int> USRtoUMR;
+};
 
 struct SmppEntity
 {
@@ -40,55 +47,83 @@ struct SmppEntity
     recvChannel=0;
     transChannel=0;
     seq=0;
-    delMappings();
   }
   ~SmppEntity() 
   {
-    delMappings();
+    delMapping();
   }
   
-  int getUSR(int umr)
+  int getUSR(const Address& abonent, int umr)
   {
+    std::string abs = abonent.toString();
+    const char* ab = abs.c_str();
+    __require__(ab);
     sync::MutexGuard guard(mappingLock);
-    int* usr = UMRtoUSR.GetPtr(umr);
+    UMRUSR* umrusr = mapping.GetPtr(ab);
+    if (!umrusr) {
+	smsc_log_warn(logger, "No abonent %s mapping", ab);
+	return -1;
+    }
+    int* usr = umrusr->UMRtoUSR.GetPtr(umr);
     return ((usr) ? *usr:-1);
   }
-  int getUMR(int usr)
+  int getUMR(const Address& abonent, int usr)
   {
+    std::string abs = abonent.toString();
+    const char* ab = abs.c_str();
+    __require__(ab);
+    
     sync::MutexGuard guard(mappingLock);
-    int* umr = USRtoUMR.GetPtr(usr);
+    UMRUSR* umrusr = mapping.GetPtr(ab);
+    if (!umrusr) return -1;
+    int* umr = umrusr->USRtoUMR.GetPtr(usr);
     return ((umr) ? *umr:-1);
   }
-  void setMapping(int umr, int usr)
+  void setMapping(const Address& abonent, int umr, int usr)
   {
+    std::string abs = abonent.toString();
+    const char* ab = abs.c_str();
+    __require__(ab);
+    
     sync::MutexGuard guard(mappingLock);
-    int* ptr = USRtoUMR.GetPtr(usr);
+    UMRUSR* umrusr = mapping.GetPtr(ab);
+    if (!umrusr) umrusr = mapping.GetPtr(ab);
+    int* ptr = umrusr->USRtoUMR.GetPtr(usr);
     if (ptr) *ptr=umr;
-    else USRtoUMR.Insert(usr, umr);
-    ptr = UMRtoUSR.GetPtr(umr);
+    else umrusr->USRtoUMR.Insert(usr, umr);
+    ptr = umrusr->UMRtoUSR.GetPtr(umr);
     if (ptr) *ptr=usr;
-    else UMRtoUSR.Insert(umr, usr);
+    else umrusr->UMRtoUSR.Insert(umr, usr);
   }
-  bool delUSRMapping(int usr)
+  bool delUSRMapping(const Address& abonent, int usr)
   {
+    std::string abs = abonent.toString();
+    const char* ab = abs.c_str();
+    __require__(ab);
+    
     sync::MutexGuard guard(mappingLock);
-    int* ptr = USRtoUMR.GetPtr(usr);
+    UMRUSR* umrusr = mapping.GetPtr(ab);
+    if (!umrusr) return false;
+    int* ptr = umrusr->USRtoUMR.GetPtr(usr);
     if (!ptr) return false;
-    UMRtoUSR.Delete(*ptr); USRtoUMR.Delete(usr);
+    umrusr->UMRtoUSR.Delete(*ptr); umrusr->USRtoUMR.Delete(usr);
+    if ((umrusr->UMRtoUSR.Count() <= 0) && (umrusr->USRtoUMR.Count() <= 0)) mapping.Delete(ab); 
     return true;
   }
-  bool delUMRMapping(int umr)
+  bool delUMRMapping(const Address& abonent, int umr)
   {
+    std::string abs = abonent.toString();
+    const char* ab = abs.c_str();
+    __require__(ab);
+    
     sync::MutexGuard guard(mappingLock);
-    int* ptr = UMRtoUSR.GetPtr(umr);
+    UMRUSR* umrusr = mapping.GetPtr(ab);
+    if (!umrusr) return false;
+    int* ptr = umrusr->UMRtoUSR.GetPtr(umr);
     if (!ptr) return false;
-    USRtoUMR.Delete(*ptr); UMRtoUSR.Delete(umr);
+    umrusr->USRtoUMR.Delete(*ptr); umrusr->UMRtoUSR.Delete(umr);
+    if ((umrusr->UMRtoUSR.Count() <= 0) && (umrusr->USRtoUMR.Count() <= 0)) mapping.Delete(ab); 
     return true;
-  }
-  void delMappings()
-  {
-    sync::MutexGuard guard(mappingLock);
-    UMRtoUSR.Empty(); USRtoUMR.Empty();
   }
   
   SmppBindType getBindType()const
@@ -170,10 +205,14 @@ struct SmppEntity
 
 protected:
 
-  sync::Mutex  mappingLock;
-  buff::IntHash<int> UMRtoUSR;
-  buff::IntHash<int> USRtoUMR;
-  
+  inline void delMapping()
+  {
+    sync::MutexGuard guard(mappingLock);
+    mapping.Empty();
+  }
+
+  sync::Mutex    mappingLock;
+  buff::Hash<UMRUSR> mapping;
 };
 
 }//smpp
