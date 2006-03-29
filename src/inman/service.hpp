@@ -13,7 +13,7 @@
 #include "inman/billing.hpp"
 
 using smsc::inman::inap::TCAPDispatcher;
-using smsc::inman::inap::Session;
+using smsc::inman::inap::SSNSession;
 using smsc::inman::interaction::Server;
 using smsc::inman::interaction::ServerListener;
 using smsc::inman::filestore::InBillingFileStorage;
@@ -60,7 +60,7 @@ private:
     Mutex           _mutex;
     BillingConnMap  bConnects;
     Logger*         logger;
-    Session*        session;
+    SSNSession*     session;
     TCAPDispatcher* disp;
     Server*         server;
     volatile bool   running;

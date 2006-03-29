@@ -13,25 +13,26 @@ namespace inman {
 namespace inap  {
 
 /////////////////////////////////////////////////////////////////////////////////////
-// TCAP Session (dialogs factory)
+// TCAP Session (TCAP dialogs factory, one per SSN)
 /////////////////////////////////////////////////////////////////////////////////////
-
-Session::Session(UCHAR_T ownssn, const char* ownaddr, UCHAR_T remotessn, const char* remoteaddr, Logger *uselog/* = NULL*/)
-    : logger(uselog), SSN(ownssn), state( IDLE )
-    , lastDialogId( TCAP_DIALOG_MIN_ID ), _ac_idx (0)
+SSNSession::SSNSession(UCHAR_T ownssn, Logger * uselog/* = NULL*/)
+    : logger(uselog), SSN(ownssn), state(ssnIdle)
+    , lastDlgId(TCAP_DIALOG_MIN_ID), ac_idx(0)
 {
+    locAddr.addrLen = rmtAddr.addrLen = 0;
     if (!uselog)
         logger = Logger::getInstance("smsc.inman.inap.Session");
-    fillAddress(&ssfAddr, ownaddr, ownssn);
-    fillAddress(&scfAddr, remoteaddr, remotessn);
 }
 
-Session::Session(UCHAR_T ssn, const char* ssf, const char* scf, Logger *uselog/* = NULL*/)
+void SSNSession::init(const char* own_addr, /*UCHAR_T rmt_ssn,*/
+                    const char* rmt_addr, unsigned dialog_ac_idx)
 {
-    Session::Session(ssn, ssf, ssn, scf, uselog);
+    fillAddress(&locAddr, own_addr, SSN);
+    fillAddress(&rmtAddr, rmt_addr, SSN /*rmt_ssn*/);
+    ac_idx = dialog_ac_idx;
 }
 
-Session::~Session()
+SSNSession::~SSNSession()
 {
     releaseDialogs();
     MutexGuard tmp(dlgGrd);
@@ -40,33 +41,15 @@ Session::~Session()
     }
 }
 
-void    Session::setDialogsAC(const unsigned dialog_ac_idx)
+USHORT_T SSNSession::nextDialogId(void)
 {
-    _ac_idx = dialog_ac_idx;
-}
-
-void  Session::getRoute(SCCP_ADDRESS_T & ownAddr, SCCP_ADDRESS_T & rmtAddr) const
-{
-    ownAddr = ssfAddr;
-    rmtAddr = scfAddr;
-}
-
-
-void Session::setState(SessionState newState)
-{
-    state = newState;
-}
-
-USHORT_T Session::nextDialogId(void)
-{
-    USHORT_T id = lastDialogId;
-    if ( ++lastDialogId  > TCAP_DIALOG_MAX_ID )
-        lastDialogId = TCAP_DIALOG_MIN_ID;
-
+    USHORT_T id = lastDlgId;
+    if (++lastDlgId  > TCAP_DIALOG_MAX_ID)
+        lastDlgId = TCAP_DIALOG_MIN_ID;
     return id;
 }
 
-void Session::cleanUpDialogs(void)
+void SSNSession::cleanUpDialogs(void)
 {
     MutexGuard tmp(dlgGrd);
     DialogsMap_T::iterator it  = pending.begin();
@@ -80,38 +63,33 @@ void Session::cleanUpDialogs(void)
     }
 }
 
-Dialog* Session::openDialog(unsigned dialog_ac_idx)
+Dialog* SSNSession::openDialog(void)
 {
-    if (state != Session::BOUND) {
+    if (state != ssnBound) {
         smsc_log_error(logger, "SSN[%u]: not bounded!");
         return NULL;
     }
-    Dialog* pDlg = NULL;
-    USHORT_T id = nextDialogId();
-
     if (!pool.size())
         cleanUpDialogs();
+
+    Dialog* pDlg = NULL;
+    USHORT_T did = nextDialogId();
 
     MutexGuard tmp(dlgGrd);
     if (pool.size()) {
         pDlg = *(pool.begin());
         pool.pop_front();
-        pDlg->reset(id, dialog_ac_idx); 
+        pDlg->reset(did);
     } else
-        pDlg = new Dialog(this, id, dialog_ac_idx);
+        pDlg = new Dialog(did, ac_idx, locAddr, rmtAddr, logger);
 
-    smsc_log_debug(logger, "SSN[%u]: Opening dialog[%u]", (unsigned)SSN, id);
-    dialogs.insert(DialogsMap_T::value_type(id, pDlg));
+    smsc_log_debug(logger, "SSN[%u]: Opening dialog[%u]", (unsigned)SSN, did);
+    dialogs.insert(DialogsMap_T::value_type(did, pDlg));
     return pDlg;
 }
 
-Dialog* Session::openDialog(void)
-{
-    assert(_ac_idx);
-    return openDialog(_ac_idx);
-}
 
-Dialog* Session::findDialog(USHORT_T dId)
+Dialog* SSNSession::findDialog(USHORT_T dId)
 {
     Dialog* pDlg = NULL;
     MutexGuard tmp(dlgGrd);
@@ -124,7 +102,7 @@ Dialog* Session::findDialog(USHORT_T dId)
     return pDlg;
 }
 
-void Session::releaseDialog(Dialog* pDlg)
+void SSNSession::releaseDialog(Dialog* pDlg)
 {
     if (!pDlg)
         return;
@@ -148,7 +126,7 @@ void Session::releaseDialog(Dialog* pDlg)
     }
 }
 
-void Session::releaseDialogs(void)
+void SSNSession::releaseDialogs(void)
 {
     smsc_log_debug(logger, "SSN[%u]: Releasing all dialogs ..", (unsigned)SSN);
     MutexGuard tmp(dlgGrd);
@@ -168,22 +146,6 @@ void Session::releaseDialogs(void)
     }
     dialogs.clear();
 }
-
-// register dialog in session, it's ad hoc method for using
-// Session functionality for Dialog successors.
-// NOTE: forcedly sets dialogId
-//Dialog* Session::registerDialog(Dialog* pDlg)
-//{
-//    assert(pDlg);
-//    USHORT_T id = nextDialogId();
-//    smsc_log_debug(logger, "SSN[%u]: Opening dialog id=%u", (unsigned)SSN, id);
-//    dlgGrd.Lock();
-//    pDlg->setId(id);
-//    dialogs.insert( DialogsMap_T::value_type( id, pDlg ) );
-//    dlgGrd.Unlock();
-//    return pDlg;
-//}
-
 
 } // namespace inap
 } // namespace inman

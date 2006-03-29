@@ -119,7 +119,7 @@ class BillingConnect: public ConnectListener
     typedef std::map<unsigned int, Billing*> BillingMap;
 
 public: 
-    BillingConnect(BillingCFG * cfg, Session* ss7_sess, Connect* conn,
+    BillingConnect(BillingCFG * cfg, SSNSession* ss7_sess, Connect* conn,
                    TimeWatcher* tm_watcher, Service * in_srvc, Logger * uselog = NULL);
     ~BillingConnect();
 
@@ -145,7 +145,7 @@ protected:
     BillingMap  workers;
     Connect*    _conn;
     Service *   _inSrvc;
-    Session*    _ss7Sess;
+    SSNSession*    _ss7Sess;
     TimeWatcher* _tmWatcher;
 };
 
@@ -200,7 +200,7 @@ public:
     void onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj);
 
 protected:
-    Session * activateSSN(void);
+    SSNSession * activateSSN(void);
     void abortBilling(InmanErrorType errType, uint16_t errCode);
     bool startCAPDialog(void);
     void StartTimer(unsigned short timeout, bool locked = false);
@@ -214,7 +214,7 @@ protected:
     BillingConnect* _bconn;     //parent BillingConnect
     BillingState    state;
 
-    Session*        _ss7Sess;   //TCAP dialogs factory
+    SSNSession*     _ss7Sess;   //TCAP dialogs factory
     Inap*           inap;       //Inap wrapper for dialog
 
     CDRRecord       cdr;        //data for CDR record creation & CAP3 interaction

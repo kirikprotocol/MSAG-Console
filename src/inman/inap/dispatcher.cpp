@@ -5,8 +5,6 @@ static char const ident[] = "$Id$";
 
 using smsc::inman::common::format;
 
-static const USHORT_T MSG_INIT_MAX_ENTRIES = 512;
-
 namespace smsc  {
 namespace inman {
 namespace inap  {
@@ -14,8 +12,19 @@ namespace inap  {
 //assign this before calling TCAPDispatcher::getInstance()
 Logger * _EINSS7_logger_DFLT = NULL;
 
+/* ************************************************************************** *
+ * class TCAPDispatcher implementation:
+ * ************************************************************************** */
+static const USHORT_T MSG_INIT_MAX_ENTRIES = 512;
+
+#define MAX_BIND_SECS   5       //maximum timeout on SSN bind request, units: secs
+#define RECV_TIMEOUT    400     //message receiving timeout, units: millisecs
+#define RECONNECT_TIMEOUT 3000  //SS7 stack reconnection timeout, units: millisecs
+
+#define MAX_BIND_ATTEMPTS (MAX_BIND_SECS*1000/RECV_TIMEOUT)
+
 TCAPDispatcher::TCAPDispatcher()
-    : logger(_EINSS7_logger_DFLT), state(ss7None), userId(0), running(false)
+    : logger(_EINSS7_logger_DFLT), state(ss7None), userId(0), _status(dspStopped)
 {
     if (!_EINSS7_logger_DFLT)
         _EINSS7_logger_DFLT = logger = Logger::getInstance("smsc.inman.inap");
@@ -40,36 +49,220 @@ TCAPDispatcher* TCAPDispatcher::getInstance()
 
 TCAPDispatcher::~TCAPDispatcher()
 {
-    if (sessions.size())
-        closeAllSessions();
-    disconnect();
+    if (state > ss7None)
+        disconnect();
+    for (SSNmap_T::iterator it = sessions.begin(); it != sessions.end(); it++) {
+        SSNSession* pSession = (*it).second;
+        delete pSession;
+    }
 }
 
-bool TCAPDispatcher::reconnect(SS7State_T upTo/* = ss7CONNECTED*/)
+bool TCAPDispatcher::reconnect(UCHAR_T toSsn)
 {
-    if (!connect(userId, upTo)) { //try total reconnect
-        disconnect();
-        return connect(userId, upTo);
+    if (!connect(userId, toSsn)) { //starts MsgListener if necessary
+        disconnectCP(ss7None);
+        return connectCP(ss7CONNECTED) < 0 ? false : true;
     }
     return true;
 }
 
-bool TCAPDispatcher::connect(USHORT_T user_id/* = MSG_USER_ID*/, SS7State_T upTo/* = ss7CONNECTED*/)
+bool TCAPDispatcher::connect(USHORT_T user_id, UCHAR_T toSsn)
 {
-    USHORT_T result;
-    bool     rval = true;
-
-    smsc_log_debug(logger, "TCAPDsp: connecting SS7 stack up to state: %u ..", upTo);
+    MutexGuard grd(_mutex);
     userId = user_id; //assign here, to make possible future reconnect attempts
+    if (!thread) {
+        Start(); //starts Listen() that waits for _mutex
+        if (lstEvent.Wait(RECV_TIMEOUT)) {
+            smsc_log_error(logger, "TCAPDsp: unable to start MsgListener thread");
+            return false;
+        }
+    }
+    if (connectCP(ss7CONNECTED) < 0)
+        return false;
+    return bindSSN(toSsn);
+}
+
+void TCAPDispatcher::disconnect(void)
+{
+    unbindSSNs(); //unbind all SSNs
+    if (_status != dspStopped) //stop message listener
+        Stop();
+    WaitFor();
+    thread = 0;
+
+    MutexGuard grd(_mutex);
+    if (state > ss7None)
+        disconnectCP(ss7None);
+    smsc_log_info(logger, "TCAPDsp: SS7 stack disconnection complete");
+}
+
+/* ************************************************************************* *
+ * TCAP/SCCP message listener methods
+ * ************************************************************************* */
+void TCAPDispatcher::Stop(void)
+{
     _mutex.Lock();
-    while (rval && (state < upTo)) {
+    _status = dspStopped;
+    _mutex.Unlock();
+    WaitFor();
+    thread = 0;
+}
+
+void TCAPDispatcher::onDisconnect(void)
+{
+    MutexGuard grd(_mutex);
+    disconnectCP(ss7INITED);
+}
+
+int TCAPDispatcher::Listen(void)
+{
+    unsigned bindTimer = 0;
+    USHORT_T result = 0;
+
+    _mutex.Lock(); //waits here for connect()
+    _status = dspListening;
+    while (_status != dspStopped) {
+        if (state != ss7CONNECTED) {
+            _mutex.wait(RECONNECT_TIMEOUT);
+            if (connectCP(ss7CONNECTED) >= 0) {
+                bindSSNs();
+                bindTimer = 0;
+            }
+            continue;
+        }
+        _mutex.Unlock();
+        MSG_T msg;
+        memset(&msg, 0, sizeof( MSG_T ));
+        msg.receiver = userId;
+
+        result = MsgRecvEvent(&msg, NULL, NULL, RECV_TIMEOUT);
+        if (MSG_TIMEOUT != result) {
+            if (!result)
+                EINSS7_I97THandleInd(&msg); //calls callbacks.cpp::*()
+            EINSS7CpReleaseMsgBuffer(&msg);
+            if (result) {
+                smsc_log_error(logger, "TCAPDsp: MsgRecv() failed with code %d (%s)",
+                               result, getReturnCodeDescription(result));
+                if ((MSG_BROKEN_CONNECTION == result) || (MSG_NOT_CONNECTED == result))
+                    onDisconnect();
+            }
+        } else { //check for SSN bind state
+            if (unbindedSSNs())
+                bindTimer++;
+            if (bindTimer >= MAX_BIND_ATTEMPTS) {
+                smsc_log_error(logger, "TCAPDsp: not all SSNs binded, reconnecting");
+                disconnectCP(ss7INITED);
+            }
+        }
+        _mutex.Lock();
+    }
+    _mutex.Unlock();
+    if (MSG_TIMEOUT == result)
+        result = 0;
+    return (int)result;
+}
+
+// Listener thread entry point
+int TCAPDispatcher::Execute(void)
+{
+    int result = 0;
+    try {
+        lstEvent.Signal();
+        smsc_log_info(logger, "TCAPDsp: MsgListener thread started");
+        result = Listen();
+    } catch (const std::exception& exc) {
+        smsc_log_fatal(logger, "TCAPDsp: MsgListener thread got an exception: %s", exc.what() );
+        result = -2;
+    }
+    smsc_log_debug(logger, "TCAPDsp: MsgListener thread finished, reason %d", result);
+    return result;
+}
+
+/* -------------------------------------------------------------------------- *
+ * PRIVATE:
+ * -------------------------------------------------------------------------- */
+unsigned TCAPDispatcher::unbindedSSNs(void)
+{
+    unsigned rval = 0;
+    for (SSNmap_T::iterator it = sessions.begin(); it != sessions.end(); it++) {
+        SSNSession* pSession = (*it).second;
+        if (pSession->getState() != SSNSession::ssnBound)
+            rval++;
+    }
+    return rval;
+}
+
+bool TCAPDispatcher::bindSSN(UCHAR_T ssn)
+{
+    SSNSession* pSession;
+    SSNmap_T::iterator it = sessions.find(ssn);
+
+    if (it == sessions.end()) {
+        pSession = new SSNSession(ssn, logger);
+        sessions.insert(SSNmap_T::value_type(ssn, pSession));
+    } else
+        pSession = (*it).second;
+    //TBindReq() will call confirmSession()
+    smsc_log_debug(logger, "TCAPDsp: BindReq(SSN=%u, userId=%u) ..", ssn, userId);
+    USHORT_T  result = EINSS7_I97TBindReq(ssn, userId, TCAP_INSTANCE_ID,
+                                               EINSS7_I97TCAP_WHITE_USER);
+    if (result) {
+        smsc_log_error(logger, "TCAPDsp: BindReq(SSN=%u) failed with code %u (%s)",
+                        ssn, result, getTcapReasonDescription(result));
+        pSession->setState(SSNSession::ssnError);
+        return false;
+    }
+    pSession->setState(SSNSession::ssnIdle);
+    return true;
+}
+
+void TCAPDispatcher::unbindSSNs(void)
+{
+    for (SSNmap_T::iterator it = sessions.begin(); it != sessions.end(); it++) {
+        UCHAR_T ssn = (*it).first;
+        SSNSession* pSession = (*it).second;
+        EINSS7_I97TUnBindReq(ssn, userId, TCAP_INSTANCE_ID);
+        pSession->setState(SSNSession::ssnIdle);
+    }
+    return;
+}
+
+void TCAPDispatcher::bindSSNs(void)
+{
+    for (SSNmap_T::iterator it = sessions.begin(); it != sessions.end(); it++) {
+        UCHAR_T ssn = (*it).first;
+        SSNSession* pSession = (*it).second;
+        //TBindReq() will call confirmSession()
+        smsc_log_debug(logger, "TCAPDsp: BindReq(SSN=%u, userId=%u) ..", ssn, userId);
+        USHORT_T  result = EINSS7_I97TBindReq(ssn, userId, TCAP_INSTANCE_ID,
+                                                   EINSS7_I97TCAP_WHITE_USER);
+        if (result) {
+            smsc_log_error(logger, "TCAPDsp: BindReq(SSN=%u) failed with code %u (%s)",
+                            ssn, result, getTcapReasonDescription(result));
+            pSession->setState(SSNSession::ssnError);
+        } else
+            pSession->setState(SSNSession::ssnIdle);
+    }
+    return;
+}
+
+//Returns:  (-1) - failed to connect, 0 - already connected, 1 - successfully connected
+int TCAPDispatcher::connectCP(SS7State_T upTo/* = ss7CONNECTED*/)
+{
+    smsc_log_info(logger, "TCAPDsp: connecting SS7 stack: %u -> %u ..", state, upTo);
+    if (state >= upTo)
+        return 0;
+    
+    USHORT_T result;
+    int    rval = 1;
+    while ((rval > 0) && (state < upTo)) {
         switch (state) {
         case ss7None: { //reading cp.cnf, connecting to CP manager
             result = EINSS7CpMsgInitNoSig(MSG_INIT_MAX_ENTRIES);
             if (result != 0) {
                 smsc_log_fatal(logger, "TCAPDsp: CpMsgInitNoSig() failed: %s (code %u)",
                                      getReturnCodeDescription(result), result);
-                rval = false;
+                rval = -1;
             } else {
                 state = ss7INITED;
                 smsc_log_debug(logger, "TCAPDsp: state INITED");
@@ -79,9 +272,9 @@ bool TCAPDispatcher::connect(USHORT_T user_id/* = MSG_USER_ID*/, SS7State_T upTo
         case ss7INITED: {  //Opening of the input queue. //MsgOpen(userId)
             result = EINSS7CpMsgPortOpen(userId, TRUE);
             if (result != 0) {
-                smsc_log_fatal(logger, "TCAPDsp: CpMsgPortOpen(user = %u) failed: %s (code %u)",
-                                user_id, getReturnCodeDescription(result), result);
-                rval = false;
+                smsc_log_fatal(logger, "TCAPDsp: CpMsgPortOpen(userId = %u) failed: %s (code %u)",
+                                userId, getReturnCodeDescription(result), result);
+                rval = -1;
             } else {
                 state = ss7OPENED;
                 smsc_log_debug(logger, "TCAPDsp: state OPENED (userId = %u)", userId);
@@ -93,45 +286,29 @@ bool TCAPDispatcher::connect(USHORT_T user_id/* = MSG_USER_ID*/, SS7State_T upTo
             if (result != 0) {
                 smsc_log_fatal(logger, "TCAPDsp: MsgConn() failed: %s (code %u)", 
                              getReturnCodeDescription(result), result);
-                rval = false;
+                rval = -1;
             } else {
                 state = ss7CONNECTED;
+                _mutex.notify(); //awake MsgListener
                 smsc_log_debug(logger, "TCAPDsp: state CONNECTED (userId = %u)", userId);
-            }
-        } break;
-
-        case ss7CONNECTED: {
-            _mutex.Unlock();
-            Start();
-            if (!thread) {
-                smsc_log_error(logger, "TCAPDsp: unable to start Listener thread");
-                rval = false;
+                return 1;
             }
         } break;
 
         default:;
         } /* eosw */
     }
-    _mutex.Unlock();
     return rval;
 }
 
-void TCAPDispatcher::disconnect(void)
+void TCAPDispatcher::disconnectCP(SS7State_T downTo/* = ss7None*/)
 {
-    if (state == ss7None)
-        return;
-
-    smsc_log_debug(logger, "TCAPDsp: disconnecting SS7 stack ..");
-    //stop message listener first
-    if (running)
-        Stop();
-    WaitFor();
-
-    USHORT_T result;
-    _mutex.Lock();
-    while (state > ss7None) {
+    smsc_log_info(logger, "TCAPDsp: disconnecting SS7 stack: %u -> %u ..", state, downTo);
+    while (state > downTo) {
         switch (state) {
         case ss7CONNECTED: { //Releasing of connections to other users.
+            USHORT_T result;
+            unbindSSNs();
             if ((result = MsgRel(userId, TCAP_ID)) != 0)
                 smsc_log_error(logger, "TCAPDsp: MsgRel(%d,%d) failed: %s (code %d)",
                                userId, TCAP_ID, getReturnCodeDescription(result),
@@ -141,6 +318,7 @@ void TCAPDispatcher::disconnect(void)
         } break;
 
         case ss7OPENED: { //Closing of the input queue.
+            USHORT_T result;
             if ((result = MsgClose(userId)) != 0)
                 smsc_log_error(logger, "TCAPDsp: MsgClose(%d) failed: %s (code %d)",
                                userId, getReturnCodeDescription(result), result);
@@ -151,195 +329,55 @@ void TCAPDispatcher::disconnect(void)
         case ss7INITED: {
             MsgExit();
             state = ss7None;
-            smsc_log_info(logger, "TCAPDsp: SS7 stack disconnection complete");
         } break;
 
+        //case ss7None:
         default:;
         } /* eosw */
     }
-    _mutex.Unlock();
+    return;
 }
 
-/* ************************************************************************* *
- * TCAP/SCCP message listener methods
- * ************************************************************************* */
-void TCAPDispatcher::Stop(void)
-{
-    _mutex.Lock();
-    running = false;
-    _mutex.Unlock();
-}
-
-#define RECV_TIMEOUT 100 //millisecs
-int TCAPDispatcher::Listen(void)
-{
-    USHORT_T result = 0;
-
-    _mutex.Lock();
-    running = true;
-    while (running) {
-        _mutex.Unlock();
-        MSG_T msg;
-        memset(&msg, 0, sizeof( MSG_T ));
-        msg.receiver = MSG_USER_ID;
-        
-        result = MsgRecvEvent(&msg, NULL, NULL, RECV_TIMEOUT);
-        if (MSG_TIMEOUT != result) {
-            if (result)
-                smsc_log_error(logger, "TCAPDsp: MsgRecv() failed with code %d (%s)",
-                               result, getReturnCodeDescription(result));
-            else
-                EINSS7_I97THandleInd(&msg);
-            EINSS7CpReleaseMsgBuffer(&msg);
-        }
-        _mutex.Lock();
-    }
-    _mutex.Unlock();
-    if (MSG_TIMEOUT == result)
-        result = 0;
-    return (int)result;
-}
-
-
-// Listener thread entry point
-int TCAPDispatcher::Execute(void)
-{
-    int result = 0;
-    if (state < ss7CONNECTED) {
-        smsc_log_error(logger, "TCAPDsp: SS7 stack is not connected!");
-        return -1;
-    }
-    try {
-        state = ss7LISTEN;
-        smsc_log_debug(logger, "TCAPDsp: Listener thread started");
-        result = Listen();
-    } catch (const std::exception& exc) {
-        smsc_log_fatal(logger, "TCAPDsp: Listener thread got an exception: %s", exc.what() );
-        result = -2;
-    }
-    _mutex.Lock();
-    if (state == ss7LISTEN)
-        state = ss7CONNECTED;
-    _mutex.Unlock();
-    smsc_log_debug(logger, "TCAPDsp: Listener thread finished, reason %d", result);
-    return result;
-}
 
 /* ************************************************************************* *
  * TCAP sessions factory methods
  * ************************************************************************* */
-Session* TCAPDispatcher::openSession(UCHAR_T ownssn, const char* ownaddr,
-                              UCHAR_T remotessn, const char* remoteaddr)
+bool TCAPDispatcher::confirmSSN(UCHAR_T ssn, UCHAR_T bindResult)
 {
-    if (state < ss7CONNECTED) {
-        smsc_log_error(logger, "TCAPDsp: can't open session (oSSN=%u), factory state: %d",
-                        ownssn, state);
-        return NULL;
+    SSNSession* pSession = findSession(ssn);
+    if (!pSession) {
+        smsc_log_warn(logger, "TCAPDsp: BindConf for invalid/inactive session, SSN: %u", ssn);
+        return false;
     }
-    smsc_log_debug(logger, "TCAPDsp: Opening session (oSSN=%u, oGT=%s, rSSN=%d, rGT=%s)",
-                   ownssn, ownaddr, remotessn, remoteaddr);
-    
-    _mutex.Lock();
-    bool exists = (bool)(sessions.find(ownssn) != sessions.end());
-    _mutex.Unlock();
 
-    Session* pSession = NULL;
-    if (exists) {
-        smsc_log_error(logger, "TCAPDsp: Session (oSSN=%d) is already opened", ownssn);
-    } else {
-        _mutex.Lock();
-        pSession = new Session(ownssn, ownaddr, remotessn, remoteaddr, logger);
-        sessions.insert(SessionsMap_T::value_type(ownssn, pSession));
-        _mutex.Unlock();
-        //TBindReq() will call confirmSession()
-        USHORT_T  result = EINSS7_I97TBindReq(ownssn, userId, TCAP_INSTANCE_ID,
-                                                        EINSS7_I97TCAP_WHITE_USER);
-        if (result != 0) {
-            _mutex.Lock();
-            smsc_log_error(logger, "TCAPDsp: BindReq(oSSN=%u) failed with code %d (%s)",
-                            ownssn, result, getTcapReasonDescription(result));
-            sessions.erase(ownssn);
-            delete pSession;
-            _mutex.Unlock();
-        }
+    if ((bindResult == EINSS7_I97TCAP_BIND_OK)
+        || (bindResult == EINSS7_I97TCAP_BIND_SSN_IN_USE)) {
+        pSession->setState(SSNSession::ssnBound);
+        return true;
     }
+    smsc_log_error(logger, "TCAPDsp: SSN[%u] BindReq failed: '%s' (code 0x%X)",
+                       (unsigned)ssn, getTcapBindErrorMessage(bindResult), bindResult);
+    pSession->setState(SSNSession::ssnError);
+    return false;
+}
+
+//Opens or reinitializes SSNSession
+SSNSession* TCAPDispatcher::openSession(UCHAR_T ssn, const char* own_addr, /*UCHAR_T rmt_ssn, */
+                                     const char* rmt_addr, unsigned dialog_ac_idx)
+{
+    SSNSession* pSession = findSession(ssn);
+    if (!pSession) {
+        smsc_log_error(logger, "TCAPDsp: invalid/inactive session, SSN: %u", ssn);
+    } else
+        pSession->init(own_addr, rmt_addr, dialog_ac_idx);
     return pSession;
 }
 
-Session* TCAPDispatcher::openSession(UCHAR_T SSN, const char* ownaddr,
-                                         const char* remoteaddr)
-{
-    return openSession(SSN, ownaddr, SSN, remoteaddr);
-}
-
-bool TCAPDispatcher::confirmSession(UCHAR_T ssn, UCHAR_T bindResult)
-{
-    Session* pSession = findSession(ssn);
-    if (!pSession) {
-        smsc_log_warn(logger, "TCAPDsp: Invalid/inactive session, SSN: %u", ssn);
-        return false;
-    }
-
-    if (bindResult != EINSS7_I97TCAP_BIND_OK) {
-        smsc_log_error(logger, "TCAPDsp: SSN[%u] BindReq failed: '%s' (code 0x%X)",
-                       (unsigned)ssn, getTcapBindErrorMessage(bindResult), bindResult);
-        closeSession(pSession);
-        return false;
-    }
-    pSession->setState(Session::BOUND);
-    return true;
-}
-
-Session* TCAPDispatcher::findSession(UCHAR_T SSN)
+SSNSession* TCAPDispatcher::findSession(UCHAR_T ssn)
 {
     MutexGuard tmp(_mutex);
-    SessionsMap_T::const_iterator it = sessions.find(SSN);
+    SSNmap_T::const_iterator it = sessions.find(ssn);
     return (it == sessions.end()) ? NULL : (*it).second;
-}
-
-void TCAPDispatcher::closeSession(Session* pSession)
-{
-    if (!pSession) {
-        smsc_log_warn(logger, "TCAPDsp: Attemp to close NULL session");
-        return;
-    }
-
-    MutexGuard tmp(_mutex);
-    UCHAR_T ssn = pSession->getSSN();
-    smsc_log_debug(logger, "TCAPDsp: Closing session (SSN=%u)", ssn);
-
-    if (sessions.find(ssn) == sessions.end())
-        smsc_log_error(logger, "TCAPDsp: Session (SSN=%u) doesn't exist", ssn);
-    else {
-        Session::SessionState sesState = pSession->getState();
-        sessions.erase(ssn);
-        if (sesState == Session::BOUND) {
-            USHORT_T  result = EINSS7_I97TUnBindReq(ssn, userId, TCAP_INSTANCE_ID);
-            if (result)
-                smsc_log_error(logger, "TCAPDsp: UnBindReq(oSSN=%u) failed with code %d (%s)",
-                               ssn, result, getTcapReasonDescription(result));
-        }
-    }
-    delete pSession;
-}
-
-void TCAPDispatcher::closeAllSessions()
-{
-    smsc_log_debug(logger,"TCAPDsp: Closing all sessions ..");
-
-    MutexGuard tmp(_mutex);
-    for (SessionsMap_T::iterator it = sessions.begin(); it != sessions.end(); it++) {
-        Session* pSession = (*it).second;
-        UCHAR_T  ssn = pSession->getSSN();
-        smsc_log_debug(logger, "TCAPDsp: Closing session (SSN=%u)", ssn);
-        delete pSession;
-
-        USHORT_T  result = EINSS7_I97TUnBindReq(ssn, userId, TCAP_INSTANCE_ID);
-        if (result != 0)
-            smsc_log_error(logger, "TCAPDsp: UnBindReq(oSSN=%u) failed with code %d (%s)",
-                           ssn, result, getTcapReasonDescription(result));
-    }
-    sessions.clear();
 }
 
 } // namespace inap

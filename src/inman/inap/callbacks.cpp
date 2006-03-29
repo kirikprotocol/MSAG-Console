@@ -11,7 +11,7 @@ static char const ident[] = "$Id$";
 #include "inman/common/util.hpp"
 
 using smsc::inman::inap::Dialog;
-using smsc::inman::inap::Session;
+using smsc::inman::inap::SSNSession;
 using smsc::inman::inap::TCAPDispatcher;
 using smsc::inman::inap::getTcapBindErrorMessage;
 using smsc::inman::common::dump;
@@ -26,7 +26,7 @@ static Dialog* findDialog(UCHAR_T ssn, USHORT_T dialogueId)
     TCAPDispatcher *dsp = TCAPDispatcher::getInstance();
     assert(dsp);
 
-    Session* pSession = dsp->findSession(ssn);
+    SSNSession* pSession = dsp->findSession(ssn);
     if (!pSession) {
         smsc_log_warn( dsp->TCAPLogger(), "SS7CB: Invalid/inactive session, SSN: %u", ssn);
         return 0;
@@ -47,7 +47,7 @@ USHORT_T EINSS7_I97TBindConf(UCHAR_T ssn, USHORT_T userId,
                  "SS7_I97TBindConf(SSN=%u, UserId=%u, TcapInstanceId=%u, bindResult=%u(%s))",
                    ssn, userId, tcapInstanceId, bindResult, getTcapBindErrorMessage(bindResult));
 
-    dsp->confirmSession(ssn, bindResult);
+    dsp->confirmSSN(ssn, bindResult);
     return MSG_OK;
 }
 

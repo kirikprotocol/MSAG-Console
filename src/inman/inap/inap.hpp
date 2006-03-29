@@ -5,7 +5,7 @@
 #define __SMSC_INMAN_INAP_INAP__
 
 #include <map>
-
+#include "inman/comp/acdefs.hpp"
 #include "inman/inap/session.hpp"
 #include "inman/inap/dialog.hpp"
 #include "inman/comp/comps.hpp"
@@ -17,7 +17,7 @@ using smsc::inman::comp::RequestReportSMSEventArg;
 using smsc::inman::comp::ResetTimerSMSArg;
 using smsc::inman::comp::EventReportSMSArg;
 using smsc::inman::comp::InitialDPSMSArg;
-using smsc::inman::inap::Session;
+using smsc::inman::inap::SSNSession;
 
 namespace smsc {
 namespace inman {
@@ -94,7 +94,7 @@ class Inap : public DialogListener, public SCFcontractor
 {
 public:
     //NOTE: timeout is for OPERATIONs Invokes lifetime
-    Inap(Session* pSession, SSFhandler * ssfHandler,
+    Inap(SSNSession* pSession, SSFhandler * ssfHandler,
          USHORT_T timeout = 0, Logger * uselog = NULL);
     virtual ~Inap();
 
@@ -118,7 +118,7 @@ protected:
 
     typedef std::map<USHORT_T, InapOpResListener*> ResultHandlersMAP;
     Dialog*     dialog;     //TCAP dialog
-    Session*    session;    //TCAP dialogs factory
+    SSNSession* session;    //TCAP dialogs factory
     Logger*     logger;
     SSFhandler* ssfHdl;
     Mutex             resGrd;

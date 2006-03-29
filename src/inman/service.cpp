@@ -24,11 +24,12 @@ Service::Service(const InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
 
     disp = TCAPDispatcher::getInstance();
     _cfg.bill.userId += 39; //adjust USER_ID to PortSS7 units id
-    if (!disp->connect(_cfg.bill.userId, TCAPDispatcher::ss7CONNECTED))
+    if (!disp->connect(_cfg.bill.userId, _cfg.bill.ssn))
         smsc_log_error(logger, "InmanSrv: EINSS7 stack unavailable!!!");
     else {
         smsc_log_debug(logger, "InmanSrv: TCAP dispatcher has connected to SS7 stack");
-        session = disp->openSession(_cfg.bill.ssn, _cfg.bill.ssf_addr, _cfg.bill.scf_addr);
+        session = disp->openSession(_cfg.bill.ssn, _cfg.bill.ssf_addr,
+                                    _cfg.bill.scf_addr, id_ac_cap3_sms_AC);
         if (session)
             smsc_log_debug(logger, "InmanSrv: TCAP session inited");
     }
@@ -70,8 +71,6 @@ Service::~Service()
     if (running)
       stop();
 
-    smsc_log_debug(logger, "InmanSrv: Releasing TCAP Sessions ..");
-    disp->closeAllSessions();
     smsc_log_debug(logger, "InmanSrv: Disconnecting SS7 stack ..");
     disp->disconnect();
 
@@ -121,10 +120,6 @@ bool Service::start()
     smsc_log_debug(logger, "InmanSrv: Starting TCP server ..");
     server->Start();
     
-    if (session) {
-        smsc_log_debug(logger, "InmanSrv: Starting TCAP dispatcher ..");
-        disp->Start();
-    }
     if (roller) {
         smsc_log_debug(logger, "InmanSrv: Starting BillingStorage roller ..");
         roller->Start();
@@ -148,7 +143,6 @@ void Service::stop()
 
     smsc_log_debug( logger, "InmanSrv: Stopping TCAP dispatcher ..");
     disp->Stop();
-    disp->WaitFor();
 
     if (roller) {
         smsc_log_debug(logger, "InmanSrv: Stopping BillingStorage roller ..");

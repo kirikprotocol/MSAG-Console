@@ -2,7 +2,6 @@ static char const ident[] = "$Id$";
 #include <assert.h>
 #include <stdexcept>
 
-#include "billing.hpp"
 #include "service.hpp"
 
 using smsc::inman::interaction::ChargeSmsResult;
@@ -17,7 +16,7 @@ namespace inman {
 /* ************************************************************************** *
  * class BillingService implementation:
  * ************************************************************************** */
-BillingConnect::BillingConnect(BillingCFG * cfg, Session* ss7_sess, Connect* conn, 
+BillingConnect::BillingConnect(BillingCFG * cfg, SSNSession* ss7_sess, Connect* conn, 
             TimeWatcher* tm_watcher, Service * in_srvc, Logger * uselog/* = NULL*/)
     : _cfg(*cfg), _ss7Sess(ss7_sess), _conn(conn)
     , _inSrvc(in_srvc), _tmWatcher(tm_watcher)
@@ -261,37 +260,29 @@ const CDRRecord & Billing::getCDRRecord(void) const
     return cdr;
 }
 
-Session * Billing::activateSSN(void)
+SSNSession * Billing::activateSSN(void)
 {
     smsc_log_debug(logger, "Billing[%u.%u]: Searching for TCAP session [SSN=%u] ..",
                     _bconn->bConnId(), _bId, _cfg.ssn);
 
     TCAPDispatcher *disp = TCAPDispatcher::getInstance();
 
-    if ((_ss7Sess = disp->findSession(_cfg.ssn)) != NULL) {
-        if (disp->getState() != TCAPDispatcher::ss7LISTEN) {
-            if (!disp->reconnect(TCAPDispatcher::ss7LISTEN))
-                _ss7Sess = NULL;
-        }
-        return _ss7Sess;
-    }
-    if (disp->getState() != TCAPDispatcher::ss7LISTEN) {
-        if (!disp->reconnect(TCAPDispatcher::ss7LISTEN))
-            return (_ss7Sess = NULL);
-        _ss7Sess = disp->openSession(_cfg.ssn, _cfg.ssf_addr, _cfg.scf_addr);
-    }
-
+    if (disp->getState() != TCAPDispatcher::ss7CONNECTED)
+        return (_ss7Sess = NULL);
+    if (!(_ss7Sess = disp->findSession(_cfg.ssn)))
+        _ss7Sess = disp->openSession(_cfg.ssn, _cfg.ssf_addr,
+                                     _cfg.scf_addr, id_ac_cap3_sms_AC);
     return _ss7Sess;
 }
 
 bool Billing::startCAPDialog(void)
 {
-    if (!activateSSN()) {
-        smsc_log_error(logger, "Billing[%u.%u]: TCAP Session is not available",
+    if (!activateSSN()
+        || (_ss7Sess->getState() != SSNSession::ssnBound)) {
+        smsc_log_error(logger, "Billing[%u.%u]: SSNSession is not available/bounded",
                        _bconn->bConnId(), _bId);
         return false;
     }
-
     try { //Initiate CAP3 dialog
         inap = new Inap(_ss7Sess, this, _cfg.capTimeout, logger); //initialize TCAP dialog
         assert(inap);

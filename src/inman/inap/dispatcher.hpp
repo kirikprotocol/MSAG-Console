@@ -1,19 +1,22 @@
 #ident "$Id$"
 
-#ifndef __SMSC_INMAN_INAP_DISPATCHER__
-#define __SMSC_INMAN_INAP_DISPATCHER__
+#ifndef __SMSC_INMAN_TCAP_DISPATCHER__
+#define __SMSC_INMAN_TCAP_DISPATCHER__
 
 #include "logger/Logger.h"
 #include "core/threads/Thread.hpp"
-#include "core/synchronization/Mutex.hpp"
+#include "core/synchronization/Event.hpp"
+#include "core/synchronization/EventMonitor.hpp"
 
 #include "inman/inap/inss7util.hpp"
 #include "inman/inap/session.hpp"
 
 using smsc::logger::Logger;
 using smsc::core::threads::Thread;
+using smsc::core::synchronization::Event;
 using smsc::core::synchronization::Mutex;
-using smsc::inman::inap::Session;
+using smsc::core::synchronization::EventMonitor;
+using smsc::inman::inap::SSNSession;
 
 namespace smsc  {
 namespace inman {
@@ -22,12 +25,11 @@ namespace inap  {
 //assign this before calling TCAPDispatcher::getInstance()
 extern Logger * _EINSS7_logger_DFLT; //by default "smsc.inman.inap"
 
-//class Session;
+class SSNSession;
 
 //TCAPDispatcher: manages SS7 stack connecton, listens for TCAP/SCCP messages
-//maintains factory of TCAP sessions (1 session per SSN)
 //NOTE: this is a singleton, so initialization is not thread safe
-class TCAPDispatcher : public Thread
+class TCAPDispatcher : /*protected*/ Thread
 {
 protected:
     void* operator new(size_t);
@@ -35,9 +37,10 @@ protected:
     ~TCAPDispatcher();
 
 public:
-    typedef enum {
-        ss7None, ss7INITED, ss7OPENED, ss7CONNECTED, ss7LISTEN
+    typedef enum { ss7None = 0, ss7INITED, ss7OPENED, ss7CONNECTED //, ss7LISTEN
     } SS7State_T;
+    typedef enum { dspStopped = 0, dspListening
+    } DSPStatus_t;
 
     //Initializes TCAPDispatcher, returns NULL if SS7 stack is unavailable
     static TCAPDispatcher* getInstance();
@@ -45,65 +48,50 @@ public:
     Logger * TCAPLogger(void) const { return logger; }
 
     //Returns true on successfull connection to SS7 stack
-    bool    connect(USHORT_T user_id = MSG_USER_ID, SS7State_T upTo = ss7CONNECTED);
+    //starts TCAP/SCCP message listener
+    bool    connect(USHORT_T user_id, UCHAR_T toSsn);
     void    disconnect(void);
-    bool    reconnect(SS7State_T upTo = ss7CONNECTED);
-
-    /* TCAP sessions factory methods */
-    Session* openSession(UCHAR_T ssn, const char* ownaddr,
-                         const char* remoteaddr);
-    Session* openSession(UCHAR_T ownssn, const char* ownaddr,
-                         UCHAR_T remotessn, const char* remoteaddr);
-    bool     confirmSession(UCHAR_T ssn, UCHAR_T bindResult);
-
-    Session* findSession(UCHAR_T ssn);
-    void     closeSession(Session* sess);
-    void     closeAllSessions(void);
-
+    bool    reconnect(UCHAR_T ssn);
+    bool    confirmSSN(UCHAR_T ssn, UCHAR_T bindResult);
     /* TCAP/SCCP message listener methods */
+    void    Stop();     //stops  thread that listens for TCAP/SCCP messages
+    void    onDisconnect(void);
 
-    //void Start();  //starts thread that listens for TCAP/SCCP messages
-    void Stop();     //stops  thread that listens for TCAP/SCCP messages
-    int  Execute();  //Listener thread entry point
-        
     SS7State_T  getState(void) const { return state; }
 
+    //Opens or reinitializes SSNSession (TCAP dialogs factory)
+    SSNSession*  openSession(UCHAR_T ssn, const char* own_addr, /*UCHAR_T rmt_ssn,*/
+                     const char* rmt_addr, unsigned dialog_ac_idx);
+    SSNSession* findSession(UCHAR_T ssn);
+
 protected:
-    int Listen(); //listens for TCAP/SCCP messages
+    int  Execute();         //Listener thread entry point
+    int  Listen();          //listens for TCAP/SCCP messages
+    
+    int  connectCP(SS7State_T upTo = ss7CONNECTED);   //Returns:  (-1) - failed to connect,
+                            //0 - already connected, 1 - successfully connected
+    void disconnectCP(SS7State_T downTo = ss7None);
 
-    typedef std::map<UCHAR_T, Session*> SessionsMap_T;
+    bool bindSSN(UCHAR_T ssn);
+    void bindSSNs(void);
+    void unbindSSNs(void);
+    unsigned unbindedSSNs(void);
 
-    Mutex           _mutex;
-    volatile bool   running;
-    SessionsMap_T   sessions;
-    SS7State_T      state;
+
+    typedef std::map<UCHAR_T, SSNSession*> SSNmap_T;
+    EventMonitor    _mutex;
+    Event           lstEvent;
     USHORT_T        userId;
+    SSNmap_T        sessions;
+    SS7State_T      state;
+    volatile DSPStatus_t   _status;
+    time_t          lastBindReq;
     Logger*         logger;
 };
 
-
-/*
-class Dispatcher : public Thread
-{
-    public:
-        Dispatcher();
-        virtual ~Dispatcher();
-
-        virtual void Run();
-        virtual void Stop();
-        virtual int  Execute();
-
-
-    protected:
-        Event           started;
-        Event           stopped;
-        volatile bool   running;
-        Logger*         logger;
-};
-*/
 } //inap
 } //inman
 } //smsc
 
-#endif /* __SMSC_INMAN_INAP_DISPATCHER__ */
+#endif /* __SMSC_INMAN_TCAP_DISPATCHER__ */
 

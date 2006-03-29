@@ -20,8 +20,6 @@ namespace smsc {
 namespace inman {
 namespace inap {
 
-class Session;
-
 class DialogListener
 {
   public:
@@ -39,10 +37,13 @@ public:
         dlgIdle = 0, dlgInited, dlgContinued, dlgConfirmed, dlgEnded
     } DialogState;
 
-    Dialog(Session* session, USHORT_T id, unsigned dialog_ac_idx, Logger * uselog = NULL);
+    Dialog(USHORT_T dlgId, unsigned dialog_ac_idx, const SCCP_ADDRESS_T & loc_addr,
+           const SCCP_ADDRESS_T & rmt_addr, Logger * uselog = NULL);
     virtual ~Dialog();
     //reinitializes Dialog to be reused with other id
-    void reset(USHORT_T new_id, unsigned dialog_ac_idx);
+    void reset(USHORT_T new_id);
+//    void reset(USHORT_T new_id, unsigned dialog_ac_idx,
+//               const SCCP_ADDRESS_T & loc_addr, const SCCP_ADDRESS_T & rmt_addr);
 
     void addListener(DialogListener* pListener);
     void removeListener(DialogListener* pListener);
@@ -90,14 +91,14 @@ public:
     USHORT_T handleUserError(UCHAR_T invokeId, UCHAR_T tag, USHORT_T oplen,
                                 const UCHAR_T *op, USHORT_T pmlen,  const UCHAR_T *pm);
 
-    //own methods
-    USHORT_T getId()      const { return _dId;       }
-    UCHAR_T  getNextInvokeId()  { return _lastInvId++; }
-    USHORT_T getQSrv()    const { return qSrvc;     }
-    USHORT_T getTimeout() const { return _timeout;  }
-    Session* getSession() const { return session;   }
+    
+    USHORT_T getId(void)      const { return _dId;     }
+    USHORT_T getTimeout(void) const { return _timeout; }
 
 protected:
+    void checkSS7res(const char * descr, USHORT_T result) throw(CustomException);
+    UCHAR_T  getNextInvokeId(void)  { return _lastInvId++; }
+
     typedef std::list<DialogListener*> ListenerList;
     typedef std::map<UCHAR_T, Invoke*> InvokeMap;
 
@@ -106,9 +107,8 @@ protected:
     InvokeMap       terminating; //
     ListenerList    listeners;   //
 
-    Session*        session;
     SCCP_ADDRESS_T  ownAddr;
-    SCCP_ADDRESS_T  remoteAddr;
+    SCCP_ADDRESS_T  rmtAddr;
     UCHAR_T         dSSN;   //SubSystemNumber dialog uses
     unsigned        _ac_idx; //ApplicationContext index, see acdefs.hpp
     APP_CONTEXT_T   ac;
@@ -119,9 +119,6 @@ protected:
     UCHAR_T         _lastInvId;
     Logger*         logger;
     DialogState     _state;
-//protected:
-//    friend class Session;
-//    void   setId(USHORT_T did){ _dId = did; }
 };
 
 } //inap

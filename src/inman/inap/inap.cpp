@@ -2,7 +2,6 @@ static char const ident[] = "$Id$";
 
 #include <assert.h>
 
-#include "inman/comp/acdefs.hpp"
 #include "inman/inap/inap.hpp"
 #include "inman/interaction/inerrcodes.hpp"
 
@@ -48,7 +47,7 @@ Invoke * InapOpResListener::getOrgInv() const
 /* ************************************************************************** *
  * class Inap implementation:
  * ************************************************************************** */
-Inap::Inap(Session* pSession, SSFhandler * ssfHandler,
+Inap::Inap(SSNSession* pSession, SSFhandler * ssfHandler,
            USHORT_T timeout/* = 0*/, Logger * uselog/* = NULL*/)
     : ssfHdl(ssfHandler), session(pSession), logger(uselog)
 {
@@ -56,7 +55,7 @@ Inap::Inap(Session* pSession, SSFhandler * ssfHandler,
     _capState.value = _dlgState.value = 0;
     if (!logger)
         logger = Logger::getInstance("smsc.inman.Inap");
-    dialog = session->openDialog(id_ac_cap3_sms_AC);
+    dialog = session->openDialog();
     assert(dialog);
     dialog->setInvokeTimeout(timeout);
     dialog->addListener(this);
