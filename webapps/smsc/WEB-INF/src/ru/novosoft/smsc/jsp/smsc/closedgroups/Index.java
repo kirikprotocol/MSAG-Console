@@ -80,11 +80,15 @@ public class Index extends IndexBean {
 
     private QueryResultSet getClosedGroupsByName(String name) {
         boolean found = false;
-        QueryResultSet providers = null;
+        QueryResultSet groups = null;
         while (!found) {
             ClosedGroupQuery query = new ClosedGroupQuery(pageSize, preferences.getClosedGroupFilter(), preferences.getClosedGroupsSortOrder(), startPosition);
-            providers = manager.getClosedGroups().query(query);
-            for (Iterator i = providers.iterator(); i.hasNext();) {
+            groups = manager.getClosedGroups().query(query);
+            if( groups.size() == 0 ) {
+              return manager.getClosedGroups().query(new ClosedGroupQuery(pageSize, preferences.getClosedGroupFilter(), preferences.getClosedGroupsSortOrder(), 0));
+            }
+
+            for (Iterator i = groups.iterator(); i.hasNext();) {
                 DataItem item = (DataItem) i.next();
                 String al = (String) item.getValue("name");
                 if (al.equals(name)) {
@@ -95,7 +99,7 @@ public class Index extends IndexBean {
                 startPosition += pageSize;
             }
         }
-        return providers;
+        return groups;
     }
 
     private int deleteClosedGroups() {

@@ -165,6 +165,10 @@ public class Index extends IndexBean {
         QueryResultSet profiles = null;
         while (!found) {
             profiles = smsc.profilesQueryFromFile(new ProfileQuery(pageSize, normalizeAddresPrefix(preferences.getProfilesFilter()), preferences.getProfilesSortOrder(), startPosition, ProfileQuery.SHOW_ADDRESSES));
+            if( profiles.size() == 0 ) {
+              return smsc.profilesQueryFromFile(new ProfileQuery(pageSize, normalizeAddresPrefix(preferences.getProfilesFilter()), preferences.getProfilesSortOrder(), 0, ProfileQuery.SHOW_ADDRESSES));
+            }
+
             for (Iterator i = profiles.iterator(); i.hasNext();) {
                 DataItem item = (DataItem) i.next();
                 String al = (String) item.getValue("mask");
@@ -180,18 +184,11 @@ public class Index extends IndexBean {
     }
 
     private QueryResultSet getProfilesEditByMask(String mask, QueryResultSet profiles) {
-        boolean found = false;
-        while (!found) {
-            for (Iterator i = profiles.iterator(); i.hasNext();) {
+        startPosition = 0;
+        for (Iterator i = profiles.iterator(); i.hasNext(); startPosition++) {
                 DataItem item = (DataItem) i.next();
                 String al = (String) item.getValue("mask");
-                if (al.equals(mask)) {
-                    found = true;
-                }
-            }
-            if (!found) {
-                startPosition += pageSize;
-            }
+                if (al.equals(mask)) break;
         }
         return profiles;
     }

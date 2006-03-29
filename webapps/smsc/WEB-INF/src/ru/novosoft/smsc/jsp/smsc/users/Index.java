@@ -98,6 +98,10 @@ public class Index extends IndexBean
         while (!found) {
             UserQuery query = new UserQuery(pageSize, preferences.getUserFilter(), preferences.getUsersSortOrder(), startPosition);
             users = appContext.getUserManager().query(query);
+            if( users.size() == 0 ) {
+              return appContext.getUserManager().query(new UserQuery(pageSize, preferences.getUserFilter(), preferences.getUsersSortOrder(), 0));
+            }
+
             for (Iterator i = users.iterator(); i.hasNext();) {
                 DataItem item = (DataItem) i.next();
                 String al = (String) item.getValue("login");

@@ -87,6 +87,10 @@ public class IndexProvider extends IndexBean {
         while (!found) {
             ProviderQuery query = new ProviderQuery(pageSize, preferences.getProviderFilter(), preferences.getProvidersSortOrder(), startPosition);
             providers = appContext.getProviderManager().query(query);
+            if( providers.size() == 0 ) {
+              return appContext.getProviderManager().query(new ProviderQuery(pageSize, preferences.getProviderFilter(), preferences.getProvidersSortOrder(), 0));
+            }
+
             for (Iterator i = providers.iterator(); i.hasNext();) {
                 DataItem item = (DataItem) i.next();
                 String al = (String) item.getValue("name");

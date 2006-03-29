@@ -94,6 +94,11 @@ public class IndexCategory extends IndexBean
         while (!found) {
             CategoryQuery query = new CategoryQuery(pageSize, preferences.getCategoryFilter(), preferences.getCategoriesSortOrder(), startPosition);
             categories = appContext.getCategoryManager().query(query);
+
+            if( categories.size() == 0 ) {
+              return appContext.getCategoryManager().query(new CategoryQuery(pageSize, preferences.getCategoryFilter(), preferences.getCategoriesSortOrder(), 0));
+            }
+
             for (Iterator i = categories.iterator(); i.hasNext();) {
                 DataItem item = (DataItem) i.next();
                 String al = (String) item.getValue("name");

@@ -94,6 +94,9 @@ public class Index extends IndexBean
         QueryResultSet aliases = null;
         while (!found) {
             aliases = smsc.getAliases().query(new AliasQuery(pageSize, preferences.getAliasesFilter(), preferences.getAliasesSortOrder(), startPosition));
+            if( aliases.size() == 0 ) {
+              return smsc.getAliases().query(new AliasQuery(pageSize, preferences.getAliasesFilter(), preferences.getAliasesSortOrder(), 0));
+            }
             for (Iterator i = aliases.iterator(); i.hasNext();) {
                 DataItem item = (DataItem) i.next();
                 String al = (String) item.getValue("Alias");
