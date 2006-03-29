@@ -30,7 +30,7 @@ for my $file(readdir(D))
     $outfile=~s/(.*)\./$1\.$cnt\./ unless $outfile=~s/(.*)\.(\d+\.)/$1\.$cnt\./;
     $cnt++;
   }
-  system("gzip -c $tempfile >$outfile")==0 || die "gzip failed:$!";
+  system("gzip -nc $tempfile >$outfile")==0 || die "gzip failed:$!";
   unlink($tempfile);
 }
 closedir(D);
