@@ -30,7 +30,7 @@
             <sm-pm:item name="mbCancel" value="Cancel" title="Cancel provider editing" onclick="clickCancel()"/>
             <sm-pm:space/>
         </sm-pm:menu>
-        <c:if test="${!param.add && param.editChild}">
+        <c:if test="${!param.add}">
             <applet code="org.gjt.sp.jedit.jEdit.class" codebase="rules/rules" width="1" height="1" archive="jedit.jar" name=jedit ID=jedit>
                 <param name="noplugins" value="-noplugins">
                 <param name="homedir" value="applet">
