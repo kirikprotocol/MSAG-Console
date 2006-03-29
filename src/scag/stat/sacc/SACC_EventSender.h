@@ -81,6 +81,7 @@ private:
 	int Port;
 	
 	EventMonitor evReconnect;
+	EventMonitor evQueue;
 
 	bool checkQueue();
 	bool connect(std::string host,int port,int timeout);

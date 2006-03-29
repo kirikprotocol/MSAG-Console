@@ -259,7 +259,7 @@ int EventSender::Execute()
 
 
 
-		first=false;
+	//	first=false;
 
 	}
 

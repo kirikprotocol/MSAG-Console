@@ -81,6 +81,10 @@ public:
   MutexGuard g(mtx);
   return q.Count();
  };
+ //void notify()
+ //{
+//	mtx.notify();
+// };
 protected:
  CyclicQueue<T> q;
  EventMonitor mtx;
