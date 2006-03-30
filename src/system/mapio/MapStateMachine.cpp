@@ -2910,6 +2910,7 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
     dialog->ussdMrRef = MakeMrRef();
     __map_trace2__("%s: dialogid 0x%x invokeid=%d request encoding 0x%x length %d subsystem %s mr=%x",__func__,dialogueId,invokeId,ussdDataCodingScheme,ussdString_s.ussdStrLen,subsystem.c_str(),dialog->ussdMrRef);
     subsystem.insert(0, ".5.0.ussd:");
+    dialog->subsystem = subsystem;
     Address dest_addr = Address(subsystem.c_str());
 //    dest_addr.type = 0;
 //    dest_addr.plan = 1;
@@ -2978,7 +2979,7 @@ USHORT_T Et96MapV2UnstructuredSSRequestConf(
     auto_ptr<SMS> _sms ( new SMS() );
     SMS& sms = *_sms.get();
     SMS* old_sms = dialog->sms.get();
-    Address originator = old_sms->getOriginatingAddress();
+    Address originator = Address(dialog->subsystem.c_str());
     Address src_addr;
     ConvAddrMap2Smc((const MAP_SMS_ADDRESS*)&dialog->m_msAddr,&src_addr);
     sms.setOriginatingAddress(src_addr);
@@ -3048,7 +3049,7 @@ USHORT_T Et96MapV2UnstructuredSSNotifyConf(
     auto_ptr<SMS> _sms ( new SMS() );
     SMS& sms = *_sms.get();
     SMS* old_sms = dialog->sms.get();
-    Address originator = old_sms->getOriginatingAddress();
+    Address originator = Address(dialog->subsystem.c_str());
     Address src_addr;
     ConvAddrMap2Smc((const MAP_SMS_ADDRESS*)&dialog->m_msAddr,&src_addr);
     sms.setOriginatingAddress(src_addr);
