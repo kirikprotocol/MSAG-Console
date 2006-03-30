@@ -102,6 +102,7 @@ struct SmeRecord
   {
     std::memset(this, 0, sizeof(*this));
     rectype = SMPP_SME;
+    recdata.smppSme.accessMask=1;
   }
 
   SmeRecord(const SmeRecord & copy)
