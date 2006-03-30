@@ -72,7 +72,7 @@ apply returns [Command cmd] {
 	: TGT_ALL	     { cmd = new ApplyAllCommand();        }
 	| TGT_ROUTES	 { cmd = new ApplyRoutesCommand();     }
 	| TGT_ALIASES	 { cmd = new ApplyAliasesCommand();    }
-	| TGT_PROVEDERS  { cmd = new ApplyProvidersCommand();  } 
+	| TGT_PROVIDERS  { cmd = new ApplyProvidersCommand();  } 
 	| TGT_CATEGORIES { cmd = new ApplyCategoriesCommand(); }
 	;
 

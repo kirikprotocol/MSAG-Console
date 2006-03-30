@@ -687,9 +687,9 @@ public CommandParser(ParserSharedInputState state) {
 			cmd = new ApplyAliasesCommand();
 			break;
 		}
-		case TGT_PROVEDERS:
+		case TGT_PROVIDERS:
 		{
-			match(TGT_PROVEDERS);
+			match(TGT_PROVIDERS);
 			cmd = new ApplyProvidersCommand();
 			break;
 		}
@@ -5407,7 +5407,7 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-			throw new RecognitionException("Sme alt option(s) invalid. Details: "+ex.getMessage());
+			throw new RecognitionException("closed group alt option(s) invalid. Details: "+ex.getMessage());
 			
 		}
 	}
@@ -5524,12 +5524,12 @@ public CommandParser(ParserSharedInputState state) {
 		"\"transit\"",
 		"\"rename\"",
 		"\"descr\"",
-		"\"inputAccessMask\"",
-		"\"inputAccessBit\"",
-		"\"outputAccessMask\"",
-		"\"outputAccessBit\"",
-		"\"accessMask\"",
-		"\"accessBit\"",
+		"\"inputaccessmask\"",
+		"\"inputaccessbit\"",
+		"\"outputaccessmask\"",
+		"\"outputaccessbit\"",
+		"\"accessmask\"",
+		"\"accessbit\"",
 		"\"force\"",
 		"\"suppress\"",
 		"\"pass\"",
@@ -5555,8 +5555,7 @@ public CommandParser(ParserSharedInputState state) {
 		"STR_CHR",
 		"comma character ','",
 		"ESC",
-		"DIGIT",
-		"TGT_PROVEDERS"
+		"DIGIT"
 	};
 	
 	

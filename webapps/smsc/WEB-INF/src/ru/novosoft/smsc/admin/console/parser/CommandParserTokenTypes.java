@@ -163,5 +163,4 @@ public interface CommandParserTokenTypes {
 	int COMMA = 139;
 	int ESC = 140;
 	int DIGIT = 141;
-	int TGT_PROVEDERS = 142;
 }

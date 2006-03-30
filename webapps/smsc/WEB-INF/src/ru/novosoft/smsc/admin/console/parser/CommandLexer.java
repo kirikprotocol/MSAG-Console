@@ -52,6 +52,7 @@ public CommandLexer(LexerSharedInputState state) {
 	literals.put(new ANTLRHashString("ton", this), new Integer(95));
 	literals.put(new ANTLRHashString("apply", this), new Integer(9));
 	literals.put(new ANTLRHashString("categories", this), new Integer(36));
+	literals.put(new ANTLRHashString("outputaccessbit", this), new Integer(113));
 	literals.put(new ANTLRHashString("udhconcat", this), new Integer(83));
 	literals.put(new ANTLRHashString("dst", this), new Integer(55));
 	literals.put(new ANTLRHashString("list", this), new Integer(7));
@@ -68,7 +69,6 @@ public CommandLexer(LexerSharedInputState state) {
 	literals.put(new ANTLRHashString("noarc", this), new Integer(49));
 	literals.put(new ANTLRHashString("grant", this), new Integer(11));
 	literals.put(new ANTLRHashString("alter", this), new Integer(5));
-	literals.put(new ANTLRHashString("inputAccessMask", this), new Integer(110));
 	literals.put(new ANTLRHashString("off", this), new Integer(86));
 	literals.put(new ANTLRHashString("src", this), new Integer(54));
 	literals.put(new ANTLRHashString("suppress", this), new Integer(117));
@@ -81,7 +81,6 @@ public CommandLexer(LexerSharedInputState state) {
 	literals.put(new ANTLRHashString("ucs2-latin1", this), new Integer(125));
 	literals.put(new ANTLRHashString("absent", this), new Integer(69));
 	literals.put(new ANTLRHashString("to", this), new Integer(19));
-	literals.put(new ANTLRHashString("outputAccessMask", this), new Integer(112));
 	literals.put(new ANTLRHashString("force", this), new Integer(116));
 	literals.put(new ANTLRHashString("srcsme", this), new Integer(79));
 	literals.put(new ANTLRHashString("locale", this), new Integer(66));
@@ -104,15 +103,14 @@ public CommandLexer(LexerSharedInputState state) {
 	literals.put(new ANTLRHashString("set", this), new Integer(80));
 	literals.put(new ANTLRHashString("messages", this), new Integer(40));
 	literals.put(new ANTLRHashString("sms", this), new Integer(39));
-	literals.put(new ANTLRHashString("inputAccessBit", this), new Integer(111));
 	literals.put(new ANTLRHashString("clear", this), new Integer(81));
+	literals.put(new ANTLRHashString("accessbit", this), new Integer(115));
 	literals.put(new ANTLRHashString("forceDC", this), new Integer(105));
 	literals.put(new ANTLRHashString("modifiable", this), new Integer(74));
-	literals.put(new ANTLRHashString("accessMask", this), new Integer(114));
+	literals.put(new ANTLRHashString("accessmask", this), new Integer(114));
 	literals.put(new ANTLRHashString("final", this), new Integer(120));
 	literals.put(new ANTLRHashString("notmodifiable", this), new Integer(75));
 	literals.put(new ANTLRHashString("access", this), new Integer(17));
-	literals.put(new ANTLRHashString("accessBit", this), new Integer(115));
 	literals.put(new ANTLRHashString("dm", this), new Integer(77));
 	literals.put(new ANTLRHashString("none", this), new Integer(121));
 	literals.put(new ANTLRHashString("ucs2", this), new Integer(123));
@@ -121,6 +119,7 @@ public CommandLexer(LexerSharedInputState state) {
 	literals.put(new ANTLRHashString("receiptScheme", this), new Integer(101));
 	literals.put(new ANTLRHashString("sme", this), new Integer(32));
 	literals.put(new ANTLRHashString("profile", this), new Integer(25));
+	literals.put(new ANTLRHashString("inputaccessbit", this), new Integer(111));
 	literals.put(new ANTLRHashString("deny", this), new Integer(51));
 	literals.put(new ANTLRHashString("SS7", this), new Integer(133));
 	literals.put(new ANTLRHashString("notes", this), new Integer(87));
@@ -131,6 +130,7 @@ public CommandLexer(LexerSharedInputState state) {
 	literals.put(new ANTLRHashString("dl", this), new Integer(28));
 	literals.put(new ANTLRHashString("cache", this), new Integer(90));
 	literals.put(new ANTLRHashString("npi", this), new Integer(96));
+	literals.put(new ANTLRHashString("inputaccessmask", this), new Integer(110));
 	literals.put(new ANTLRHashString("translit", this), new Integer(84));
 	literals.put(new ANTLRHashString("dlsubmitter", this), new Integer(29));
 	literals.put(new ANTLRHashString("TRX", this), new Integer(131));
@@ -140,6 +140,7 @@ public CommandLexer(LexerSharedInputState state) {
 	literals.put(new ANTLRHashString("inactive", this), new Integer(68));
 	literals.put(new ANTLRHashString("for", this), new Integer(18));
 	literals.put(new ANTLRHashString("revoke", this), new Integer(12));
+	literals.put(new ANTLRHashString("outputaccessmask", this), new Integer(112));
 	literals.put(new ANTLRHashString("addressRange", this), new Integer(94));
 	literals.put(new ANTLRHashString("descr", this), new Integer(109));
 	literals.put(new ANTLRHashString("default", this), new Integer(122));
@@ -165,7 +166,6 @@ public CommandLexer(LexerSharedInputState state) {
 	literals.put(new ANTLRHashString("statistics", this), new Integer(38));
 	literals.put(new ANTLRHashString("interfaceVersion", this), new Integer(97));
 	literals.put(new ANTLRHashString("mode", this), new Integer(91));
-	literals.put(new ANTLRHashString("outputAccessBit", this), new Integer(113));
 	literals.put(new ANTLRHashString("providers", this), new Integer(34));
 	literals.put(new ANTLRHashString("allow", this), new Integer(50));
 	literals.put(new ANTLRHashString("principal", this), new Integer(27));

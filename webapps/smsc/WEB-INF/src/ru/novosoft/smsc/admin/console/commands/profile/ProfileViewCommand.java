@@ -74,8 +74,8 @@ public class ProfileViewCommand extends CommandClass {
         if (profile.getGroupId() != 0)
             result += " group: " + ctx.getClosedGroupManager().getClosedGroups().get(profile.getGroupId()).getName();
         else result += " group: none";
-        result += " inputAccessMask: " + Long.toBinaryString(profile.getInputAccessMask());
-        result += " outputAccessMask: " + Long.toBinaryString(profile.getOutputAccessMask());
+        result += " inputAccessMask: 0x" + Long.toHexString(profile.getInputAccessMask()) + "(" + Long.toBinaryString(profile.getInputAccessMask()) + ")";
+        result += " outputAccessMask: 0x" + Long.toHexString(profile.getOutputAccessMask()) + "(" + Long.toBinaryString(profile.getOutputAccessMask()) + ")";
         return result;
     }
 
