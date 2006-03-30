@@ -15,6 +15,7 @@
   <param name="timeout" value="20"/>
   <param name="receiptSchemeName" value="default"/>
   <param name="priority" value="16384"/>
+  <param name="accessMask" value="1"/>
 </smerecord>
 <smerecord type="smpp" uid="abonentinfo">
   <param name="typeOfNumber" value="1"/>
@@ -29,6 +30,7 @@
   <param name="timeout" value="20"/>
   <param name="receiptSchemeName" value="default"/>
   <param name="priority" value="16384"/>
+  <param name="accessMask" value="1"/>
 </smerecord>
 <smerecord type="smpp" uid="MAP_PROXY">
   <param name="typeOfNumber" value="1"/>
@@ -43,6 +45,7 @@
   <param name="timeout" value="20"/>
   <param name="receiptSchemeName" value="default"/>
   <param name="priority" value="16384"/>
+  <param name="accessMask" value="1"/>
 </smerecord>
 <smerecord type="smpp" uid="smscsme">
   <param name="typeOfNumber" value="1"/>
@@ -57,6 +60,7 @@
   <param name="timeout" value="20"/>
   <param name="receiptSchemeName" value="default"/>
   <param name="priority" value="16384"/>
+  <param name="accessMask" value="1"/>
 </smerecord>
 <smerecord type="smpp" uid="scheduler">
   <param name="typeOfNumber" value="1"/>
@@ -71,6 +75,7 @@
   <param name="timeout" value="20"/>
   <param name="receiptSchemeName" value="default"/>
   <param name="priority" value="16384"/>
+  <param name="accessMask" value="1"/>
 </smerecord>
 <smerecord type="smpp" uid="DSTRLST">
   <param name="typeOfNumber" value="1"/>
@@ -85,6 +90,7 @@
   <param name="timeout" value="20"/>
   <param name="receiptSchemeName" value="default"/>
   <param name="priority" value="16384"/>
+  <param name="accessMask" value="1"/>
 </smerecord>
 <smerecord type="smpp" uid="INMANCOMM">
   <param name="priority"          value="4000"/>
@@ -101,5 +107,6 @@
   <param name="receiptSchemeName" value="default"/>
   <param name="disabled"          value="false"/>
   <param name="mode"              value="trx"/>
+  <param name="accessMask" value="1"/>
 </smerecord>
 </records>
