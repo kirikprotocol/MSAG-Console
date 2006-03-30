@@ -144,7 +144,11 @@ bool EventSender::checkQueue()
 
 int EventSender::Execute()
 {
- 
+ if(connect(Host,Port,Timeout))
+ {
+	   bConnected=true;
+ }
+
  while( bStarted)
  {
 
@@ -152,7 +156,7 @@ int EventSender::Execute()
 	  {
 		SaccSocket.Abort();
 
-			if(connect(Host,Port,100))
+			if(connect(Host,Port,Timeout))
 			{
 			   bConnected=true;
 			}
@@ -170,7 +174,7 @@ int EventSender::Execute()
 bool EventSender::connect(std::string host, int port,int timeout)
 {
  
- if(SaccSocket.Init(host.c_str(),port,timeout)!=0)
+ if(SaccSocket.Init(host.c_str(),port,timeout/1000)!=0)
  {
      smsc_log_error(logger,"EventSender::connect Failed to init socket");
   return false;
@@ -201,11 +205,7 @@ bool EventSender::isActive()
 void EventSender::Start()
 {
 
- if(connect(Host,Port,100))
- {
-	   bConnected=true;
- }
-
+ 
  bStarted=true;
  Thread::Start();
 
