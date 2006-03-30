@@ -218,7 +218,7 @@ TariffRec* InfrastructureImpl::GetTariff(uint32_t operator_id, const char* categ
     TariffRec *tr = NULL;
     try{
         if(category_hash == NULL || media_type_hash == NULL || tariff_hash == NULL)
-            return 0;
+            return NULL;
 
         uint32_t id = (category_hash->Get(category) & 0x1ff) << 23;
            id |= (media_type_hash->Get(mt) & 0x1FF) << 14;
