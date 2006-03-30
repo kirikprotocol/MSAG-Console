@@ -233,11 +233,14 @@ public:
 
     PDUPair mPair;
 
-	mPair.size = sizeof(uint64_t);
+	mPair.size = sizeof(uint64_t)+sizeof(uint16_t);
 	mPair.msg_p= new uint8_t[mPair.size];//(UCHAR_T*)malloc(size);
 
+    mPair.msg_p[0]=0;
+    mPair.msg_p[1]=sizeof(uint64_t);
+
     uint64_t hval = Uint64Converter::toNetworkOrder(data);
-    memcpy((void*)(mPair.msg_p), (const void*)&hval, sizeof(uint64_t));
+    memcpy((void*)(mPair.msg_p+2), (const void*)&hval, sizeof(uint64_t));
 	nodes.push_back(mPair);
 
  }
