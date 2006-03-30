@@ -5,8 +5,7 @@
 
 #include "HttpCommand.h"
 
-namespace scag { namespace transport { namespace http 
-{
+namespace scag { namespace transport { namespace http {
     class HttpProcessor 
     {
     public:
