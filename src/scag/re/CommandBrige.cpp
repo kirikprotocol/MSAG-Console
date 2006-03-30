@@ -227,10 +227,10 @@ void CommandBrige::makeTrafficEvent(SmppCommand& command, int handlerType, scag:
     ev.Header.iServiceId = command.getServiceId();
     ev.Header.iServiceProviderId = 1;
 
-    long now;
-    time(&now);
+    timeval tv;
+    gettimeofday(&tv,0);
 
-    ev.Header.lDateTime = now;
+    ev.Header.lDateTime = tv.tv_sec * 1000 + tv.tv_usec;
 
     const char * str = getAbonentAddr(command).toString().c_str();
     sprintf((char *)ev.Header.pAbonentNumber,"%s",str);

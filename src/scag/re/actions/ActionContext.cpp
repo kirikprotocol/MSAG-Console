@@ -86,10 +86,10 @@ bool ActionContext::makeBillEvent(int billCommand, std::string& category, std::s
     ev.Header.iServiceId = m_ServiceId;
     ev.Header.iServiceProviderId = istr.GetProviderID(m_ServiceId);
 
-    long now;
-    time(&now);
+    timeval tv;
+    gettimeofday(&tv,0);
 
-    ev.Header.lDateTime = now;
+    ev.Header.lDateTime = tv.tv_sec*1000 + tv.tv_usec;
 
     sprintf((char *)ev.Header.pAbonentNumber,"%s",m_AbonentAddr.toString().c_str());
 
