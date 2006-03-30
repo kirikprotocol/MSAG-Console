@@ -18,6 +18,7 @@ import java.text.MessageFormat;
  */
 public class WHOISDServlet extends HttpServlet {
   private SCAGAppContext appContext;
+  private HashMap schemaCash = new HashMap();
   private static final String SCAG_ERROR_PREFIX = "Internal MSAG error: ";
   private static final String WHOISD_ERROR_PREFIX = "WHOISD request error: ";
 
@@ -31,9 +32,12 @@ public class WHOISDServlet extends HttpServlet {
     try {
     switch (id) {
       case WHOISDRequest.OPERATORS: result = loadXml(appContext.getConfig().getString("operators_file")); SendResult(result, resp); break;
+      case WHOISDRequest.OPERATORS_SCHEMA: result = getSchema(WHOISDRequest.OPERATORS_SCHEMA, appContext.getConfig().getString("operators_file")); SendResult(result, resp); break;
       case WHOISDRequest.SERVICES:  result = loadXml(appContext.getConfig().getString("services_file")); SendResult(result, resp); break;
+      case WHOISDRequest.SERVICES_SCHEMA: result = getSchema(WHOISDRequest.SERVICES_SCHEMA, appContext.getConfig().getString("services_file")); SendResult(result, resp); break;
       case WHOISDRequest.RULE: result = getRule(req);  SendResult(result, resp); break;
       case WHOISDRequest.TARIFF_MATRIX: result = loadXml(appContext.getConfig().getString("tariffs_file"));  SendResult(result, resp); break;
+      case WHOISDRequest.TARIFF_MATRIX_SCHEMA: result = getSchema(WHOISDRequest.TARIFF_MATRIX_SCHEMA, appContext.getConfig().getString("tariffs_file"));  SendResult(result, resp); break;
       default:
         resp.setHeader("status","false");
         result.add(WHOISD_ERROR_PREFIX + "Wrong request for get method, available: " + Arrays.asList(WHOISDRequest.WHOISDRequests));
@@ -260,12 +264,16 @@ public class WHOISDServlet extends HttpServlet {
   }
 
   private LinkedList loadXml(String filepath) throws Exception {
-    LinkedList li = new LinkedList();
     File filetoread = new File(filepath);
+    return loadFile(filetoread);
+  }
+
+  private LinkedList loadFile(File file) throws Exception {
+    LinkedList li = new LinkedList();
     InputStream in = null;
     BufferedReader br = null;
     try {
-      in = new FileInputStream(filetoread);
+      in = new FileInputStream(file);
       br = new BufferedReader(new InputStreamReader(in));
       String line;
       while ((line=br.readLine())!=null)
@@ -276,6 +284,16 @@ public class WHOISDServlet extends HttpServlet {
        if (br!=null) br.close();
     }
     return li;
+  }
+
+  private LinkedList getSchema(int id, String xmlPath) throws Exception{
+    LinkedList schema = (LinkedList)schemaCash.get(xmlPath);
+    if (schema!=null)  return schema;
+    File filetoread = new File(xmlPath);
+    File schemaFile = new File(filetoread.getParent(), WHOISDRequest.getSchemaName(id));
+    schema = loadFile(schemaFile);
+    schemaCash.put(xmlPath,schema);
+    return schema;
   }
 
   private void validateTransportParameter(String transport) throws WHOISDException{

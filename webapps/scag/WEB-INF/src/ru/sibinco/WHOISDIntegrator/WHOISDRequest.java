@@ -17,7 +17,10 @@ public class WHOISDRequest {
   public static final byte SERVICES = 1;
   public static final byte RULE = 2;
   public static final byte TARIFF_MATRIX = 3;
-  public static final HashMap transportToXSl = new HashMap();  
+  public static final byte OPERATORS_SCHEMA = 4;
+  public static final byte SERVICES_SCHEMA = 5;
+  public static final byte TARIFF_MATRIX_SCHEMA = 6;
+  public static final HashMap transportToXSl = new HashMap();
   public static final String SMPP_XSL = "smpp_rule.xsl";
   public static final String HTTP_XSL = "http_rule.xsl";
   public static final String MMS_XSL = "mms_rule.xsl";
@@ -37,7 +40,10 @@ public class WHOISDRequest {
      new WHOISDRequest(OPERATORS,"operators.xml"),
      new WHOISDRequest(SERVICES,"providers.xml"),
      new WHOISDRequest(RULE,"rule.xml"),
-     new WHOISDRequest(TARIFF_MATRIX,"tariffs.xml")
+     new WHOISDRequest(TARIFF_MATRIX,"tariffs.xml"),
+     new WHOISDRequest(OPERATORS_SCHEMA,"operators.dtd"),
+     new WHOISDRequest(SERVICES_SCHEMA,"services.dtd"),
+     new WHOISDRequest(TARIFF_MATRIX_SCHEMA,"tariffs.dtd")
   };
 
   public WHOISDRequest(int id, String file) {
@@ -52,6 +58,12 @@ public class WHOISDRequest {
     return -1;
   }
 
+  public static String getSchemaName(int id) {
+    for (byte i = 0; i<WHOISDRequests.length; i++) {
+      if (WHOISDRequests[i].getId()==id) return WHOISDRequests[i].getName();
+    }
+    return null;
+  }
 
   public int getId() {
     return id;
