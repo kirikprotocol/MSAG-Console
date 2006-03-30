@@ -29,6 +29,7 @@
 
 #include "TaskProcessor.h"
 #include "InfoSmeComponent.h"
+#include "util/mirrorfile/mirrorfile.h"
 
 using namespace smsc::sme;
 using namespace smsc::smpp;
@@ -50,7 +51,7 @@ const int   MAX_ALLOWED_PAYLOAD_LENGTH = 65535;
 
 static smsc::logger::Logger *logger = 0;
 
-static ServiceSocketListener* adminListener = 0; 
+static ServiceSocketListener* adminListener = 0;
 static bool bAdminListenerInited = false;
 
 static Event infoSmeWaitEvent;
@@ -106,30 +107,30 @@ static int  maxMessagesPerSecond     = 50;
 
 class TrafficControl
 {
-    static EventMonitor   trafficMonitor; 
+    static EventMonitor   trafficMonitor;
     static TimeSlotCounter<int> incoming;
     static TimeSlotCounter<int> outgoing;
-    static bool                 stopped; 
+    static bool                 stopped;
 
 public:
 
     static void incOutgoing()
     {
         MutexGuard guard(trafficMonitor);
-        outgoing.Inc(); 
+        outgoing.Inc();
         if (TrafficControl::stopped) return;
 
         int out = outgoing.Get();
         int inc = incoming.Get();
         int difference = out-inc;
         bool trafficLimitReached = (out >= maxMessagesPerSecond);
-        
+
         if (difference >= unrespondedMessagesMax || trafficLimitReached) {
             if (trafficLimitReached) {
-                smsc_log_debug(logger, "wait limit (out=%d, max=%d)", 
+                smsc_log_debug(logger, "wait limit (out=%d, max=%d)",
                                out, maxMessagesPerSecond);
             } else {
-                smsc_log_debug(logger, "wait %d/%d (o=%d, i=%d)", 
+                smsc_log_debug(logger, "wait %d/%d (o=%d, i=%d)",
                                difference, difference*unrespondedMessagesSleep, out, inc);
             }
             trafficMonitor.wait((trafficLimitReached) ? 1000/maxMessagesPerSecond:
@@ -146,7 +147,7 @@ public:
         int out = outgoing.Get(); int inc = incoming.Get();
         int difference = out-inc;
         bool trafficLimitOk = (out < maxMessagesPerSecond);
-        
+
         if ((difference < unrespondedMessagesMax) && trafficLimitOk) {
             trafficMonitor.notifyAll();
         }
@@ -172,14 +173,14 @@ bool                 TrafficControl::stopped = false;
 class InfoSmeConfig : public SmeConfig
 {
 private:
-    
+
     char *strHost, *strSid, *strPassword, *strSysType, *strOrigAddr;
 
 public:
-    
+
     InfoSmeConfig(ConfigView* config)
         throw(ConfigException)
-            : SmeConfig(), strHost(0), strSid(0), strPassword(0), 
+            : SmeConfig(), strHost(0), strSid(0), strPassword(0),
                 strSysType(0), strOrigAddr(0)
     {
         // Mandatory fields
@@ -187,10 +188,10 @@ public:
         host = strHost;
         strSid = config->getString("sid", "InfoSme id wasn't defined !");
         sid = strSid;
-        
+
         port = config->getInt("port", "SMSC port wasn't defined !");
         timeOut = config->getInt("timeout", "Connect timeout wasn't defined !");
-        
+
         // Optional fields
         try
         {
@@ -201,14 +202,14 @@ public:
         catch (ConfigException& exc) { password = ""; strPassword = 0; }
         try
         {
-            strSysType = config->getString("systemType", 
+            strSysType = config->getString("systemType",
                                            "InfoSme system type wasn't defined !");
             systemType = strSysType;
         }
         catch (ConfigException& exc) { systemType = ""; strSysType = 0; }
         try
         {
-            strOrigAddr = config->getString("origAddress", 
+            strOrigAddr = config->getString("origAddress",
                                             "InfoSme originating address wasn't defined !");
             origAddr = strOrigAddr;
         }
@@ -228,14 +229,14 @@ public:
 class InfoSmeMessageSender: public MessageSender
 {
 private:
-    
+
     TaskProcessor&  processor;
     SmppSession*    session;
     Mutex           sendLock;
 
 public:
-    
-    InfoSmeMessageSender(TaskProcessor& processor, SmppSession* session) 
+
+    InfoSmeMessageSender(TaskProcessor& processor, SmppSession* session)
         : MessageSender(), processor(processor), session(session) {};
     virtual ~InfoSmeMessageSender() {
         MutexGuard guard(sendLock);
@@ -250,7 +251,7 @@ public:
     virtual bool send(std::string abonent, std::string message, TaskInfo info, int seqNum)
     {
         MutexGuard guard(sendLock);
-        
+
         if (!session) {
             smsc_log_error(logger, "Smpp session is undefined for MessageSender.");
             return false;
@@ -260,7 +261,7 @@ public:
             smsc_log_error(logger, "Smpp transmitter is undefined for MessageSender.");
             return false;
         }
-        
+
         Address oa, da;
         const char* oaStr = info.address.c_str();
         if (!oaStr || !oaStr[0]) oaStr = processor.getAddress();
@@ -273,20 +274,20 @@ public:
             smsc_log_error(logger, "Invalid destination address '%s'", daStr ? daStr:"-");
             return false;
         }
-        
-        SMS sms; 
+
+        SMS sms;
         sms.setOriginatingAddress(oa);
         sms.setDestinationAddress(da);
         sms.setArchivationRequested(false);
         sms.setDeliveryReport(1);
-        sms.setValidTime( (info.validityDate <= 0 || info.validityPeriod > 0) ? 
+        sms.setValidTime( (info.validityDate <= 0 || info.validityPeriod > 0) ?
                            time(NULL)+info.validityPeriod : info.validityDate );
-        
-        sms.setIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG, 
+
+        sms.setIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG,
                            (info.replaceIfPresent) ? 1:0);
-        sms.setEServiceType( (info.replaceIfPresent && info.svcType.length()>0) ? 
+        sms.setEServiceType( (info.replaceIfPresent && info.svcType.length()>0) ?
                               info.svcType.c_str():processor.getSvcType() );
-        
+
         sms.setIntProperty(Tag::SMPP_PROTOCOL_ID, processor.getProtocolId());
         sms.setIntProperty(Tag::SMPP_ESM_CLASS, (info.transactionMode) ? 2:0);
         sms.setIntProperty(Tag::SMPP_PRIORITY, 0);
@@ -298,7 +299,7 @@ public:
         if(hasHighBit(out,outLen)) {
             int msgLen = outLen*2;
             msgBuf = new char[msgLen];
-            ConvertMultibyteToUCS2(out, outLen, (short*)msgBuf, msgLen, 
+            ConvertMultibyteToUCS2(out, outLen, (short*)msgBuf, msgLen,
                                    CONV_ENCODING_CP1251);
             sms.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::UCS2);
             out = msgBuf; outLen = msgLen;
@@ -306,19 +307,19 @@ public:
             sms.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::LATIN1);
         }
 
-        try 
+        try
         {
             if (outLen <= MAX_ALLOWED_MESSAGE_LENGTH) {
                 sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, out, outLen);
                 sms.setIntProperty(Tag::SMPP_SM_LENGTH, outLen);
             } else {
-                sms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, out, 
-                                   (outLen <= MAX_ALLOWED_PAYLOAD_LENGTH) ? 
+                sms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, out,
+                                   (outLen <= MAX_ALLOWED_PAYLOAD_LENGTH) ?
                                     outLen :  MAX_ALLOWED_PAYLOAD_LENGTH);
             }
-        } 
+        }
         catch (...) {
-            smsc_log_error(logger, "Something is wrong with message body. Set/Get property failed"); 
+            smsc_log_error(logger, "Something is wrong with message body. Set/Get property failed");
             if (msgBuf) delete msgBuf; msgBuf = 0;
             return false;
         }
@@ -329,7 +330,7 @@ public:
         sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
         fillSmppPduFromSms(&sm, &sms);
         asyncTransmitter->sendPdu(&(sm.get_header()));
-        
+
         TrafficControl::incOutgoing();
         return true;
     }
@@ -338,14 +339,14 @@ public:
 class InfoSmePduListener: public SmppPduEventListener
 {
 protected:
-    
+
     TaskProcessor&          processor;
-    
+
     SmppTransmitter*    syncTransmitter;
     SmppTransmitter*    asyncTransmitter;
 
 public:
-    
+
     InfoSmePduListener(TaskProcessor& proc) : SmppPduEventListener(),
         processor(proc), syncTransmitter(0), asyncTransmitter(0) {};
     virtual ~InfoSmePduListener() {}; // ???
@@ -356,7 +357,7 @@ public:
     void setAsyncTransmitter(SmppTransmitter *transmitter) {
         asyncTransmitter = transmitter;
     }
-    
+
     void processReceipt (SmppHeader *pdu)
     {
         if (!pdu || !asyncTransmitter) return;
@@ -364,9 +365,9 @@ public:
 
         SMS sms;
         fetchSmsFromSmppPdu((PduXSm*)pdu, &sms);
-        bool isReceipt = (sms.hasIntProperty(Tag::SMPP_ESM_CLASS)) ? 
+        bool isReceipt = (sms.hasIntProperty(Tag::SMPP_ESM_CLASS)) ?
             ((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3C) == 0x4) : false;
-        
+
         if (isReceipt && ((PduXSm*)pdu)->get_optional().has_receiptedMessageId())
         {
             const char* msgid = ((PduXSm*)pdu)->get_optional().get_receiptedMessageId();
@@ -374,7 +375,7 @@ public:
             {
                 bool delivered = false;
                 bool retry = false;
-                
+
                 if (sms.hasIntProperty(Tag::SMPP_MSG_STATE))
                 {
                     int msgState = sms.getIntProperty(Tag::SMPP_MSG_STATE);
@@ -398,7 +399,7 @@ public:
                         break;
                     }
                 }
-                
+
                 bNeedResponce = processor.invokeProcessReceipt(msgid, delivered, retry);
             }
         }
@@ -416,10 +417,10 @@ public:
     void processResponce(SmppHeader *pdu)
     {
         if (!pdu) return;
-        
+
         int seqNum = pdu->get_sequenceNumber();
         int status = pdu->get_commandStatus();
-        
+
         bool accepted  = (status == Status::OK);
         bool retry     = (!Status::isErrorPermanent(status));
 
@@ -437,10 +438,10 @@ public:
         if (!trafficst) TrafficControl::incIncoming();
 
         const char* msgid = ((PduXSmResp*)pdu)->get_messageId();
-        std::string msgId = ""; 
+        std::string msgId = "";
         if (!msgid || msgid[0] == '\0') accepted = false;
         else msgId = msgid;
-        
+
         if (!accepted)
             smsc_log_info(logger, "SMS #%s seqNum=%d wasn't accepted, errcode=%d",
                           msgId.c_str(), seqNum, status);
@@ -472,10 +473,10 @@ public:
             smsc_log_debug(logger, "Received unsupported Pdu !");
             break;
         }
-        
+
         disposePdu(pdu);
     }
-    
+
     void handleError(int errorCode)
     {
         smsc_log_error(logger, "Transport error handled! Code is: %d", errorCode);
@@ -505,10 +506,10 @@ int main(void)
 
     Logger::Init();
     logger = Logger::getInstance("smsc.infosme.InfoSme");
-    
+
     std::auto_ptr<ServiceSocketListener> adml(new ServiceSocketListener());
     adminListener = adml.get();
-    
+
     sigset_t set, old;
     sigemptyset(&set);
     sigprocmask(SIG_SETMASK, &set, &old);
@@ -517,14 +518,14 @@ int main(void)
 
     atexit(atExitHandler);
 
-    try 
+    try
     {
         Manager::init("config.xml");
         Manager& manager = Manager::getInstance();
 
         ConfigView dsConfig(manager, "StartupLoader");
         DataSourceLoader::loadup(&dsConfig);
-        
+
         ConfigView tpConfig(manager, "InfoSme");
         maxMessagesPerSecond++;
 
@@ -558,17 +559,17 @@ int main(void)
             smsc_log_warn(logger, "Parameter 'unrespondedMessagesSleep' value '%d' is too big. "
                           "The preffered max value is 500ms", unrespondedMessagesSleep);
         }
-        
+
         ConfigView adminConfig(manager, "InfoSme.Admin");
-        adminListener->init(adminConfig.getString("host"), adminConfig.getInt("port"));               
+        adminListener->init(adminConfig.getString("host"), adminConfig.getInt("port"));
         bAdminListenerInited = true;
-        
+
         TaskProcessor processor(&tpConfig);
-        
-        InfoSmeComponent admin(processor);                   
-        ComponentManager::registerComponent(&admin); 
+
+        InfoSmeComponent admin(processor);
+        ComponentManager::registerComponent(&admin);
         adminListener->Start();
-        
+
         ConfigView smscConfig(manager, "InfoSme.SMSC");
         InfoSmeConfig cfg(&smscConfig);
 
@@ -577,13 +578,13 @@ int main(void)
             InfoSmePduListener      listener(processor);
             SmppSession             session(cfg, &listener);
             InfoSmeMessageSender    sender(processor, &session);
-            
+
             smsc_log_info(logger, "Connecting to SMSC ... ");
             try
             {
                 listener.setSyncTransmitter(session.getSyncTransmitter());
                 listener.setAsyncTransmitter(session.getAsyncTransmitter());
-                
+
                 bInfoSmeIsConnecting = true;
                 infoSmeReady.Wait(0);
                 TrafficControl::startControl();
@@ -596,7 +597,7 @@ int main(void)
             }
             catch (SmppConnectException& exc)
             {
-                const char* msg = exc.what(); 
+                const char* msg = exc.what();
                 smsc_log_error(logger, "Connect to SMSC failed. Cause: %s", (msg) ? msg:"unknown");
                 bInfoSmeIsConnecting = false;
                 setNeedReconnect(true);
@@ -606,12 +607,12 @@ int main(void)
                 continue;
             }
             smsc_log_info(logger, "Connected.");
-            
+
             sigemptyset(&set);
             //sigaddset(&set, SIGINT);
             sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
             sigprocmask(SIG_SETMASK, &set, &old);
-            
+
             infoSmeWaitEvent.Wait(0);
             while (!isNeedStop() && !isNeedReconnect())
             {
@@ -635,27 +636,27 @@ int main(void)
             smsc_log_error(logger, "Failed to bind InfoSme. Exiting.");
         resultCode = -1;
     }
-    catch (ConfigException& exc) 
+    catch (ConfigException& exc)
     {
         smsc_log_error(logger, "Configuration invalid. Details: %s Exiting.", exc.what());
         resultCode = -2;
     }
-    catch (Exception& exc) 
+    catch (Exception& exc)
     {
         smsc_log_error(logger, "Top level Exception: %s Exiting.", exc.what());
         resultCode = -3;
     }
-    catch (exception& exc) 
+    catch (exception& exc)
     {
         smsc_log_error(logger, "Top level exception: %s Exiting.", exc.what());
         resultCode = -4;
     }
-    catch (...) 
+    catch (...)
     {
         smsc_log_error(logger, "Unknown exception: '...' caught. Exiting.");
         resultCode = -5;
     }
-    
+
     if (bAdminListenerInited)
     {
         adminListener->shutdown();

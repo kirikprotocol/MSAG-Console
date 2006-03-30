@@ -28,6 +28,7 @@
 
 #include "DBSmeComponent.h"
 #include "CommandProcessor.h"
+#include "util/mirrorfile/mirrorfile.h"
 
 using namespace smsc::sme;
 using namespace smsc::smpp;
@@ -284,7 +285,7 @@ public:
     virtual int Execute()
     {
         __require__(pdu);
-        
+
         switch (pdu->get_commandId())
         {
         case SmppCommandSet::DELIVERY_SM:
@@ -508,10 +509,10 @@ static void initDataCoding(ConfigView* config)
 
     } catch (std::exception& exc) {
         uDBSmeDataCoding = DataCoding::LATIN1;
-        smsc_log_warn(logger, "DataCoding is not defined properly using default LATIN1. Details: %s", exc.what());        
+        smsc_log_warn(logger, "DataCoding is not defined properly using default LATIN1. Details: %s", exc.what());
     } catch (...) {
         uDBSmeDataCoding = DataCoding::LATIN1;
-        smsc_log_warn(logger, "DataCoding is not defined properly using default LATIN1.");        
+        smsc_log_warn(logger, "DataCoding is not defined properly using default LATIN1.");
     }
 }
 
