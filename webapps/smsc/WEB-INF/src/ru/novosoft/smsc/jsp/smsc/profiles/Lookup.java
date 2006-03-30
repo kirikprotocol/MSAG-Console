@@ -8,6 +8,7 @@ package ru.novosoft.smsc.jsp.smsc.profiles;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
+import ru.novosoft.smsc.admin.closedgroups.ClosedGroup;
 import ru.novosoft.smsc.admin.alias.Alias;
 import ru.novosoft.smsc.admin.alias.AliasSet;
 import ru.novosoft.smsc.admin.profiler.Profile;
@@ -104,10 +105,9 @@ public class Lookup extends PageBean {
                 translit = p.isTranslit();
                 inputAccessMask = Long.toString(p.getInputAccessMask());
                 outputAccessMask = Long.toString(p.getOutputAccessMask());
-                if (p.getGroupId() == 0)
-                    closedGroup = appContext.getLocaleString("profiles.groupIsNotDefined");
-                else
-                    closedGroup = appContext.getClosedGroupManager().getClosedGroups().get(p.getGroupId()).getName();
+                closedGroup = appContext.getLocaleString("profiles.groupIsNotDefined");
+                ClosedGroup cg = appContext.getClosedGroupManager().getClosedGroups().get(p.getGroupId());
+                if (cg != null) closedGroup = cg.getName();
             } catch (Exception e) {
                 logger.debug("Couldn't lookup profile \"" + profile + "\", nested: " + e.getMessage(), e);
                 reportOptions = codepage = "unknown";
