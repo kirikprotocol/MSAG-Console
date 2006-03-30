@@ -85,6 +85,7 @@ bool ActionContext::makeBillEvent(int billCommand, std::string& category, std::s
     ev.Header.cProtocolId = 1;
     ev.Header.iServiceId = m_ServiceId;
     ev.Header.iServiceProviderId = istr.GetProviderID(m_ServiceId);
+    if (ev.Header.iServiceProviderId == 0) return false;
 
     timeval tv;
     gettimeofday(&tv,0);
