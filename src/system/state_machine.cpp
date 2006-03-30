@@ -1022,7 +1022,7 @@ StateType StateMachine::submit(Tuple& t)
 
   if((src_proxy->getAccessMask()&profile.accessMaskOut)==0)
   {
-    info2(smsLog,"SBM: msgId=%lld, denied by access out mask",t.msgId);
+    info2(smsLog,"SBM: msgId=%lld, denied by access out mask(srcSme=%x,org=%x",t.msgId,src_proxy->getAccessMask(),profile.accessMaskOut);
     submitResp(t,sms,Status::DENIEDBYACCESSMASK);
     return ERROR_STATE;
   }
@@ -1299,7 +1299,7 @@ StateType StateMachine::submit(Tuple& t)
 
   if((dstSmeInfo.accessMask&srcprof.accessMaskIn)==0)
   {
-    info2(smsLog,"SBM: msgId=%lld, denied by access in mask",t.msgId);
+    info2(smsLog,"SBM: msgId=%lld, denied by access in mask (dstSme=%x,org=%x",t.msgId,dstSmeInfo.accessMask,srcprof.accessMaskIn);
     submitResp(t,sms,Status::DENIEDBYACCESSMASK);
     return ERROR_STATE;
   }
