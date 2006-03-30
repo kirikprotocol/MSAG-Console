@@ -1015,14 +1015,17 @@ StateType StateMachine::submit(Tuple& t)
 
   if(profile.closedGroupId!=0 && !smsc::closedgroups::ClosedGroupsInterface::getInstance()->Check(profile.closedGroupId,sms->getDealiasedDestinationAddress()))
   {
-    info2(smsLog,"SBM: msgId=%lld, denied by closed group(%d) check",t.msgId,profile.closedGroupId);
+    info2(smsLog,"SBM: msgId=%lld, denied by closed group(%d:'%s') check",
+      t.msgId,profile.closedGroupId,
+      smsc::closedgroups::ClosedGroupsInterface::getInstance()->GetClosedGroupName(profile.closedGroupId)
+    );
     submitResp(t,sms,Status::DENIEDBYCLOSEDGROUP);
     return ERROR_STATE;
   }
 
   if((src_proxy->getAccessMask()&profile.accessMaskOut)==0)
   {
-    info2(smsLog,"SBM: msgId=%lld, denied by access out mask(srcSme=%x,org=%x",t.msgId,src_proxy->getAccessMask(),profile.accessMaskOut);
+    info2(smsLog,"SBM: msgId=%lld, denied by access out mask(%s=%x,%s=%x",t.msgId,src_proxy->getSystemId(),src_proxy->getAccessMask(),sms->getOriginatingAddress().toString().c_str(),profile.accessMaskOut);
     submitResp(t,sms,Status::DENIEDBYACCESSMASK);
     return ERROR_STATE;
   }
@@ -1299,7 +1302,7 @@ StateType StateMachine::submit(Tuple& t)
 
   if((dstSmeInfo.accessMask&srcprof.accessMaskIn)==0)
   {
-    info2(smsLog,"SBM: msgId=%lld, denied by access in mask (dstSme=%x,org=%x",t.msgId,dstSmeInfo.accessMask,srcprof.accessMaskIn);
+    info2(smsLog,"SBM: msgId=%lld, denied by access in mask (%s=%x,%s=%x",t.msgId,dstSmeInfo.systemId.c_str(),dstSmeInfo.accessMask,sms->getOriginatingAddress().toString().c_str(),srcprof.accessMaskIn);
     submitResp(t,sms,Status::DENIEDBYACCESSMASK);
     return ERROR_STATE;
   }
