@@ -170,13 +170,13 @@ int EventSender::Execute()
 bool EventSender::connect(std::string host, int port,int timeout)
 {
  
- if(SaccSocket.Init(host.c_str(),port,timeout)==-1)
+ if(SaccSocket.Init(host.c_str(),port,timeout)!=0)
  {
      smsc_log_error(logger,"EventSender::connect Failed to init socket");
   return false;
  }
 
- if(SaccSocket.Connect()==-1)
+ if(SaccSocket.Connect()!=0)
  {
      smsc_log_error(logger,"EventSender::connect Failed to connect");
   return false;
@@ -200,6 +200,11 @@ bool EventSender::isActive()
 
 void EventSender::Start()
 {
+
+ if(connect(Host,Port,100))
+ {
+	   bConnected=true;
+ }
 
  bStarted=true;
  Thread::Start();
@@ -274,7 +279,8 @@ void EventSender::performTransportEvent(const SACC_TRAFFIC_INFO_EVENT_t& e)
 {
  SaccPDU pdu;
  pdu.insertPDUString8((uint8_t*)e.Header.pAbonentNumber,MAX_ABONENT_NUMBER_LENGTH);
- pdu.insertSegment((uint8_t*)&e.Header.lDateTime,sizeof(uint64_t));
+ //pdu.insertSegment((uint8_t*)&e.Header.lDateTime,sizeof(uint64_t));
+ pdu.insertUint64(e.Header.lDateTime);
  pdu.insertSegment((uint8_t*)&e.iOperatorId,sizeof(uint32_t));
  pdu.insertSegment((uint8_t*)&e.Header.iServiceProviderId,sizeof(uint32_t));
  pdu.insertSegment((uint8_t*)&e.Header.iServiceId,sizeof(uint32_t));
@@ -311,7 +317,8 @@ void EventSender::performBillingEvent(const SACC_BILLING_INFO_EVENT_t& e)
 {
  SaccPDU pdu;
  pdu.insertPDUString8((uint8_t*)e.Header.pAbonentNumber,MAX_ABONENT_NUMBER_LENGTH);
- pdu.insertSegment((uint8_t*)&e.Header.lDateTime,sizeof(uint64_t));
+ //pdu.insertSegment((uint8_t*)&e.Header.lDateTime,sizeof(uint64_t));
+ pdu.insertUint64(e.Header.lDateTime);
  pdu.insertSegment((uint8_t*)&e.iOperatorId,sizeof(uint32_t));
  pdu.insertSegment((uint8_t*)&e.Header.iServiceProviderId,sizeof(uint32_t));
  pdu.insertSegment((uint8_t*)&e.Header.iServiceId,sizeof(uint32_t));
@@ -370,7 +377,8 @@ void EventSender::performAlarmEvent(const SACC_ALARM_t& e)
 {
  SaccPDU pdu;
  pdu.insertPDUString8((uint8_t*)e.Header.pAbonentNumber,MAX_ABONENT_NUMBER_LENGTH);
- pdu.insertSegment((uint8_t*)&e.Header.lDateTime,sizeof(uint64_t));
+ //pdu.insertSegment((uint8_t*)&e.Header.lDateTime,sizeof(uint64_t));
+ pdu.insertUint64(e.Header.lDateTime);
  pdu.insertSegment((uint8_t*)&e.iOperatorId,sizeof(uint32_t));
  pdu.insertSegment((uint8_t*)&e.Header.iServiceProviderId,sizeof(uint32_t));
  pdu.insertSegment((uint8_t*)&e.Header.iServiceId,sizeof(uint32_t));

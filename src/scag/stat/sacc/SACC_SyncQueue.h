@@ -28,10 +28,12 @@
 #include <core/synchronization/Event.hpp>
 #include <vector>
 #include <stdio.h>
+#include <util/Uint64Converter.h>
 
 using namespace smsc::core::buffers;
 using namespace smsc::core::synchronization;
 using namespace std;
+using namespace smsc::util;
 
 namespace scag{
 namespace stat{
@@ -225,6 +227,20 @@ public:
 	nodes[0].msg_p[5]=(uint8_t)( cid &0x00ff);
  }
  
+ void insertUint64(uint64_t data)
+ {
+	MutexGuard g(mtx);
+
+    PDUPair mPair;
+
+	mPair.size = sizeof(uint64_t);
+	mPair.msg_p= new uint8_t[mPair.size];//(UCHAR_T*)malloc(size);
+
+    uint64_t hval = Uint64Converter::toNetworkOrder(data);
+    memcpy((void*)(mPair.msg_p), (const void*)&hval, sizeof(uint64_t));
+	nodes.push_back(mPair);
+
+ }
  void getAll(uint8_t *ptr)
  {
 	  MutexGuard g(mtx);
