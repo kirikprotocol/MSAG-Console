@@ -1,94 +1,231 @@
 #ifndef BUFFER_SERIALIZATION_DECLARATIONS
 #define BUFFER_SERIALIZATION_DECLARATIONS
 
-#ifdef _WIN32
-#include <stdint.h>
-#else
-#include <inttypes.h>
-#endif
-#include <exception>
+#include "util/int.h"
+#include <stdexcept>
 #include <string>
-#include "core/buffers/TmpBuf.hpp"
 #include "util/Uint64Converter.h"
 
-namespace smsc { 
+namespace smsc {
 namespace util {
 
-using smsc::core::buffers::TmpBuf;
-struct BufferSerializator
+class SerializationBuffer
 {
-  static void putByte( uint8_t* &buffer, uint8_t val ) {
-    *buffer = val;
-    buffer+=sizeof(val);
+public:
+  explicit SerializationBuffer(int size=0)
+  {
+    if(size>0)
+    {
+      buffer=new char[size];
+      bufferSize=size;
+    }else
+    {
+      buffer=0;
+      bufferSize=0;
+    }
+    bufferPos=0;
+    bufferOwned=true;
   }
-  
-  static void putInt( uint8_t* &buffer, uint32_t val ) {
-    uint32_t hval = htonl(val);
-    memcpy((void*)(buffer), (const void*)&hval, sizeof(val));
-    buffer += sizeof(val) ;
+  ~SerializationBuffer()
+  {
+    if(bufferOwned && buffer)
+    {
+      delete [] buffer;
+    }
   }
-  
-  static void putInt64( uint8_t* &buffer, uint64_t val ) {
-    uint64_t hval = Uint64Converter::toNetworkOrder(val);
-    memcpy((void*)(buffer), (const void*)&hval, sizeof(val));
-    buffer += sizeof(val) ;
+  void Write(const void* buf,size_t sz)
+  {
+    if(!bufferOwned)throw std::runtime_error("Attempt to write to released buffer");
+    resize(bufferPos+sz);
+    memcpy(buffer+bufferPos,buf,sz);
+    bufferPos+=sz;
   }
-  
-  static void putString(uint8_t* &buffer, const char* str, uint32_t len ) {
-    putInt( buffer, len );
-    memcpy((void*)(buffer), (const void*)str, len ); 
-    buffer += len;
+  void Read(void* buf,size_t sz)
+  {
+    if(bufferPos+sz>bufferSize)throw std::runtime_error("Attempt to read beyond buffer");
+    memcpy(buf,buffer+bufferPos,sz);
+    bufferPos+=sz;
   }
-
-  static void putString(uint8_t* &buffer, const std::string &str ) {
-    putInt( buffer, str.length() );
-    memcpy((void*)(buffer), (const void*)str.c_str(), str.length() ); 
-    buffer += str.length();
+  template <class T>
+  void XWrite(const T& t)
+  {
+    Write(&t,sizeof(T));
   }
-
-  static uint8_t getByte( uint8_t* &buffer) {
-    uint8_t tmp = *buffer;
-    buffer += sizeof(tmp);
-    return tmp;
+  template <class T>
+  void XRead(T& t)
+  {
+    return Read(&t,sizeof(T));
   }
-  
-  static uint32_t getInt( uint8_t* &buffer ) {
-    uint32_t nval = 0;
-    memcpy((void*)(&nval), (const void*)buffer, sizeof(nval));
-    buffer += sizeof(nval) ;
-    return ntohl(nval);
-  }
-  
-  static uint64_t getInt64( uint8_t* &buffer ) {
-    uint64_t nval;
-    memcpy((void*)(&nval), (const void*)buffer, sizeof(nval));
-    buffer += sizeof(nval) ;
-    return Uint64Converter::toHostOrder(nval);
-  }
-  
-  static int getString(uint8_t* &buffer, char* str, uint32_t maxlen ) {
-    int len;
-    len = getInt( buffer );
-    if( len > maxlen ) throw std::runtime_error("buffer too short");
-    memcpy((void*)(str), (const void*)buffer, len ); 
-    buffer += len;
-    return len;
+  uint64_t ReadInt64()
+  {
+    uint64_t t;
+    XRead(t);
+    return t;
   }
 
-  static std::string getString(uint8_t* &buffer ) {
-    int len;
-    len = getInt( buffer );
-    TmpBuf<char, 1024> buff(len+1);
-    char* buffStr = buff.get(); 
-    memcpy((void*)buffStr, (const void*)buffer, len);
-    buffStr[len] = 0;
-    buffer += len;
-    return buffStr;
+  uint64_t ReadNetInt64()
+  {
+    uint32_t h=ReadNetInt32();
+    uint32_t l=ReadNetInt32();
+    return (((uint64_t)h)<<32)|l;
   }
+
+  uint32_t ReadInt32()
+  {
+    uint32_t t;
+    XRead(t);
+    return t;
+  }
+
+  uint32_t ReadNetInt32()
+  {
+    return ntohl(ReadInt32());
+  }
+
+  uint16_t ReadInt16()
+  {
+    uint16_t t;
+    XRead(t);
+    return t;
+  }
+  uint16_t ReadNetInt16()
+  {
+    return ntohs(ReadInt16());
+  }
+
+  uint8_t ReadByte()
+  {
+    uint8_t b;
+    XRead(b);
+    return b;
+  }
+
+  void WriteInt32(uint32_t t)
+  {
+    XWrite(t);
+  }
+  void WriteNetInt32(uint32_t t)
+  {
+    WriteInt32(htonl(t));
+  }
+
+  void WriteInt16(uint16_t t)
+  {
+    XWrite(t);
+  }
+  void WriteNetInt16(uint16_t t)
+  {
+    WriteInt16(htons(t));
+  }
+
+  void WriteInt64(uint64_t t)
+  {
+    XWrite(t);
+  }
+  void WriteNetInt64(uint64_t t)
+  {
+    uint32_t h=htonl((uint32_t)((t>>32)&0xFFFFFFFFUL));
+    uint32_t l=htonl((uint32_t)(t&0xFFFFFFFFUL));
+    XWrite(h);
+    XWrite(l);
+  }
+
+  void WriteByte(uint8_t t)
+  {
+    XWrite(t);
+  }
+
+  template <size_t SZ>
+  void WriteFixedString(const char (&str)[SZ])
+  {
+    char buf[SZ]={0,};
+    memcpy(buf,str,std::min((size_t)SZ,strlen(str)));
+    Write(buf,SZ);
+  }
+
+  template <size_t SZ>
+  void WriteFixedString(const std::string& str)
+  {
+    char buf[SZ]={0,};
+    memcpy(buf,str.c_str(),std::min((size_t)SZ,str.length()));
+    Write(buf,SZ);
+  }
+
+  template <unsigned int SZ>
+  void ReadFixedString(char (&str)[SZ])
+  {
+    Read(str,SZ);
+    str[SZ-1]=0;
+  }
+
+  template <unsigned int SZ>
+  void ReadFixedString(std::string& str)
+  {
+    char buf[SZ+1];
+    buf[SZ-1]=0;
+    Read(buf,SZ);
+    str=buf;
+  }
+
+  void assign(void* buf,uint32_t sz)
+  {
+    resize(sz);
+    memcpy(buffer,buf,sz);
+  }
+
+  void setExternalBuffer(void* buf,uint32_t sz)
+  {
+    if(bufferOwned && buffer)
+    {
+      delete [] buffer;
+    }
+    bufferOwned=false;
+    buffer=(char*)buf;
+    bufferSize=sz;
+    bufferPos=0;
+  }
+
+  void* releaseBuffer()
+  {
+    bufferOwned=false;
+    return buffer;
+  }
+
+  void* getBuffer()
+  {
+    return buffer;
+  }
+
+  uint32_t getBufferSize()
+  {
+    return bufferSize;
+  }
+  uint32_t getPos()
+  {
+    return bufferPos;
+  }
+  void setPos(uint32_t newPos)
+  {
+    bufferPos=newPos;
+  }
+
+  void resize(uint32_t newSize)
+  {
+    if(newSize<bufferSize)return;
+    char* newBuf=new char[newSize];
+    memcpy(newBuf,buffer,bufferSize);
+    delete [] buffer;
+    buffer=newBuf;
+    bufferSize=newSize;
+  }
+
+protected:
+  char* buffer;
+  uint32_t bufferSize;
+  uint32_t bufferPos;
+  bool bufferOwned;
 };
 
 }
 }
 #endif // BUFFER_SERIALIZATION_DECLARATIONS
-
-

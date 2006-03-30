@@ -8,7 +8,8 @@
 namespace smsc{
 namespace sms{
 
-inline void ReadAddress(smsc::core::buffers::File& f,Address& addr)
+template <class T>
+inline void ReadAddress(T& f,Address& addr)
 {
   addr.type=f.ReadByte();
   addr.plan=f.ReadByte();
@@ -17,7 +18,8 @@ inline void ReadAddress(smsc::core::buffers::File& f,Address& addr)
   addr.length=strlen(addr.value);
 }
 
-inline void WriteAddress(smsc::core::buffers::File& f,const Address& addr)
+template <class T>
+inline void WriteAddress(T& f,const Address& addr)
 {
   f.WriteByte(addr.type);
   f.WriteByte(addr.plan);

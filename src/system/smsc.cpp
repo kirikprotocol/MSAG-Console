@@ -33,6 +33,7 @@
 #include "cluster/listeners/ProfileCommandListener.h"
 #include "cluster/listeners/SbmCommandListener.h"
 #include "cluster/listeners/SmeCommandListener.h"
+#include "cluster/listeners/CgmCommandListener.h"
 #include "closedgroups/ClosedGroupsManager.hpp"
 
 #include <unistd.h>
@@ -67,6 +68,7 @@ using smsc::cluster::PrcCommandListener;
 using smsc::cluster::ProfileCommandListener;
 using smsc::cluster::SbmCommandListener;
 using smsc::cluster::SmeCommandListener;
+using smsc::cluster::CgmCommandListener;
 
 using smsc::cluster::FakeInterconnect;
 
@@ -969,15 +971,17 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
          SmeCommandListener *smeCommandListener = new SmeCommandListener(&smeman);
          ProfileCommandListener *proCommandListener = new ProfileCommandListener(profiler);
          ApplyCommandListener *appCommandListener = new ApplyCommandListener(&cfg, this);
+         CgmCommandListener* cgmCommandListener=new CgmCommandListener();
 
-         icon->addListener(smsc::cluster::MSCREGISTRATE_CMD,     mscCommandListener);
-         icon->addListener(smsc::cluster::DLADD_CMD,             dlCommandListener);
-         icon->addListener(smsc::cluster::MEMADDMEMBER_CMD,      memCommandListener);
-         icon->addListener(smsc::cluster::PRCADDPRINCIPAL_CMD,   prcCommandListener);
-         icon->addListener(smsc::cluster::SBMADDSUBMITER_CMD,    sbmCommandListener);
-         icon->addListener(smsc::cluster::SMEADD_CMD,            smeCommandListener);
-         icon->addListener(smsc::cluster::PROFILEUPDATE_CMD,     proCommandListener);
-         icon->addListener(smsc::cluster::APPLYROUTES_CMD,       appCommandListener);
+         icon->addListener(smsc::cluster::MSCREGISTRATE_CMD,   mscCommandListener);
+         icon->addListener(smsc::cluster::DLADD_CMD,           dlCommandListener);
+         icon->addListener(smsc::cluster::MEMADDMEMBER_CMD,    memCommandListener);
+         icon->addListener(smsc::cluster::PRCADDPRINCIPAL_CMD, prcCommandListener);
+         icon->addListener(smsc::cluster::SBMADDSUBMITER_CMD,  sbmCommandListener);
+         icon->addListener(smsc::cluster::SMEADD_CMD,          smeCommandListener);
+         icon->addListener(smsc::cluster::PROFILEUPDATE_CMD,   proCommandListener);
+         icon->addListener(smsc::cluster::APPLYROUTES_CMD,     appCommandListener);
+         icon->addListener(smsc::cluster::CGM_COMMANDS,        cgmCommandListener);
          smsc_log_info(log, "The command listeners initialization and registration is completed successful" );
      }
   }catch(...){

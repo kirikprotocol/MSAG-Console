@@ -5,6 +5,8 @@
 #include "profiler/profiler-types.hpp"
 #include "smeman/smeinfo.h"
 #include "util/BufferSerialization.hpp"
+#include "core/buffers/TmpBuf.hpp"
+#include "sms/sms_util.h"
 
 #include "Commands.h"
 
@@ -13,7 +15,7 @@ namespace smsc { namespace cluster
     using namespace smsc::core::synchronization;
     using smsc::core::buffers::IntHash;
     using namespace smsc::logger;
-    using smsc::util::BufferSerializator;
+    using smsc::util::SerializationBuffer;
 
     class CommandFactory
     {
@@ -417,6 +419,34 @@ namespace smsc { namespace cluster
     };
     // TODO: Add more actual factories for particular commands
 
+    class CgmAddGrpCommandFactory: public CommandFactory
+    {
+    protected:
+      Command* create(){return new CgmAddGrpCommand();}
+    public:
+      CgmAddGrpCommandFactory():CommandFactory(CGM_ADDGRP_CMD){}
+    };
+    class CgmDelGrpCommandFactory: public CommandFactory
+    {
+    protected:
+      Command* create(){return new CgmDelGrpCommand();}
+    public:
+      CgmDelGrpCommandFactory():CommandFactory(CGM_DELGRP_CMD){}
+    };
+    class CgmAddAddrCommandFactory: public CommandFactory
+    {
+    protected:
+      Command* create(){return new CgmAddAddrCommand();}
+    public:
+      CgmAddAddrCommandFactory():CommandFactory(CGM_ADDADDR_CMD){}
+    };
+    class CgmDelAddrCommandFactory: public CommandFactory
+    {
+    protected:
+      Command* create(){return new CgmDelAddrCommand();}
+    public:
+      CgmDelAddrCommandFactory():CommandFactory(CGM_DELADDR_CMD){}
+    };
 
 /* ####################### General routines ####################### */
 
@@ -577,82 +607,87 @@ void ProfileUpdateCommand::getArgs(smsc::profiler::Profile &profile_, uint8_t &p
 
 void* ProfileUpdateCommand::serialize(uint32_t &len)
 {
-  uint8_t *buffer = 0;
-  try {
-    buffer = new uint8_t[1024];
-    uint8_t *buff = buffer;
-    BufferSerializator::putByte(buff, plan);
-    BufferSerializator::putByte(buff, type);
-    BufferSerializator::putString(buff, address, 21);
-    BufferSerializator::putInt( buff, profile.codepage );
-    BufferSerializator::putInt( buff, profile.reportoptions );
-    BufferSerializator::putInt( buff, profile.hide );
-    BufferSerializator::putByte( buff, profile.hideModifiable?1:0);
-    BufferSerializator::putByte( buff, profile.divertModifiable?1:0);
-    BufferSerializator::putByte( buff, profile.udhconcat?1:0);
-    BufferSerializator::putByte( buff, profile.translit?1:0);
-    //============= Puts divertActive in buffer ================
-    BufferSerializator::putByte( buff, profile.divertActive?1:0);
-    BufferSerializator::putByte( buff, profile.divertActiveAbsent?1:0);
-    BufferSerializator::putByte( buff, profile.divertActiveBlocked?1:0);
-    BufferSerializator::putByte( buff, profile.divertActiveBarred?1:0);
-    BufferSerializator::putByte( buff, profile.divertActiveCapacity?1:0);
-    //============= Puts offset =================================   
-    BufferSerializator::putInt64(buff, profile.offset);
+  SerializationBuffer buf(256);
+  buf.WriteByte( plan);
+  buf.WriteByte( type);
+  buf.Write( address, 21);
+  buf.WriteNetInt32( profile.codepage );
+  buf.WriteNetInt32( profile.reportoptions );
+  buf.WriteNetInt32( profile.hide );
+  buf.WriteByte( profile.hideModifiable?1:0);
+  buf.WriteByte( profile.divertModifiable?1:0);
+  buf.WriteByte( profile.udhconcat?1:0);
+  buf.WriteByte( profile.translit?1:0);
+  //============= Puts divertActive in buffer ================
+  buf.WriteByte( profile.divertActive?1:0);
+  buf.WriteByte( profile.divertActiveAbsent?1:0);
+  buf.WriteByte( profile.divertActiveBlocked?1:0);
+  buf.WriteByte( profile.divertActiveBarred?1:0);
+  buf.WriteByte( profile.divertActiveCapacity?1:0);
+  //============= Puts offset =================================
+  buf.WriteNetInt64(profile.offset);
 
-    //============= Puts local and divert in buffer =============
-    BufferSerializator::putString(buff, profile.locale);
-    BufferSerializator::putString(buff, profile.divert);
+  //============= Puts local and divert in buffer =============
+  buf.WriteNetInt32(profile.locale.length());
+  buf.Write(profile.locale.c_str(),profile.locale.length());
+  buf.WriteNetInt32(profile.divert.length());
+  buf.Write(profile.divert.c_str(),profile.divert.length());
 
-    len = buff-buffer;
+  buf.WriteNetInt32(profile.closedGroupId);
+  buf.WriteNetInt32(profile.accessMaskIn);
+  buf.WriteNetInt32(profile.accessMaskOut);
 
-    }catch(...){
-      if( buffer ) delete buffer;
-      return 0;
-    }
-    
-    return (void*)buffer;
+  len = buf.getPos();
+
+  return buf.releaseBuffer();
 }
+
 bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
 {
-    
-    if(!buffer){
-        smsc_log_warn(logger, "ProfileUpdateCommand, buffer undefined");
-        return false;
-    }
 
-    try {
-    
-    uint8_t *buff = (uint8_t*)buffer;
-    plan = BufferSerializator::getByte(buff);
-    type = BufferSerializator::getByte(buff);
-    BufferSerializator::getString(buff, address, 21);
-    profile.codepage = BufferSerializator::getInt( buff);
-    profile.reportoptions = BufferSerializator::getInt( buff);
-    profile.hide  = BufferSerializator::getInt( buff);
-    profile.hideModifiable = BufferSerializator::getByte( buff);
-    profile.divertModifiable = BufferSerializator::getByte( buff);
-    profile.udhconcat = BufferSerializator::getByte( buff);
-    profile.translit = BufferSerializator::getByte( buff);
-    //============= Gets divertActive in buffer ================
-    profile.divertActive = BufferSerializator::getByte( buff);
-    profile.divertActiveAbsent = BufferSerializator::getByte( buff);
-    profile.divertActiveBlocked = BufferSerializator::getByte( buff);
-    profile.divertActiveBarred = BufferSerializator::getByte( buff);
-    profile.divertActiveCapacity = BufferSerializator::getByte( buff);
-    //============= Gets offset =================================   
-    profile.offset = BufferSerializator::getInt64(buff);
+  if(!buffer)
+  {
+    smsc_log_warn(logger, "ProfileUpdateCommand, buffer undefined");
+    return false;
+  }
 
-    //============= Gets local and divert in buffer =============
-    profile.locale = BufferSerializator::getString(buff);
-    profile.divert = BufferSerializator::getString(buff);
+  SerializationBuffer buf;
+  buf.setExternalBuffer(buffer,len);
 
-    }catch(...){
-      if( buffer ) delete buffer;
-      return 0;
-    }
+  plan = buf.ReadByte();
+  type = buf.ReadByte();
+  buf.Read(address, 21);
+  profile.codepage = buf.ReadNetInt32();
+  profile.reportoptions = buf.ReadNetInt32();
+  profile.hide  = buf.ReadNetInt32();
+  profile.hideModifiable = buf.ReadByte();
+  profile.divertModifiable = buf.ReadByte();
+  profile.udhconcat = buf.ReadByte();
+  profile.translit = buf.ReadByte();
+  //============= Gets divertActive in buffer ================
+  profile.divertActive = buf.ReadByte();
+  profile.divertActiveAbsent = buf.ReadByte();
+  profile.divertActiveBlocked = buf.ReadByte();
+  profile.divertActiveBarred = buf.ReadByte();
+  profile.divertActiveCapacity = buf.ReadByte();
+  //============= Gets offset =================================
+  profile.offset = buf.ReadNetInt64();
 
-    return true;
+  //============= Gets local and divert in buffer =============
+  int tmplen=buf.ReadNetInt32();
+  smsc::core::buffers::TmpBuf<char,32> tmp(tmplen);
+  buf.Read(tmp.get(),tmplen);
+  profile.locale.assign(tmp.get(),len);
+  tmplen=buf.ReadNetInt32();
+  tmp.setSize(tmplen);
+  buf.Read(tmp.get(),tmplen);
+  profile.divert.assign(tmp.get(),len);
+
+  profile.closedGroupId=buf.ReadNetInt32();
+  profile.accessMaskIn=buf.ReadNetInt32();
+  profile.accessMaskOut=buf.ReadNetInt32();
+
+  return true;
 }
 
 //========== profileDelete ==========================
@@ -2813,6 +2848,91 @@ bool GetRoleCommand::deserialize(void *buffer, uint32_t len)
     return true;
 }
 
+template <class StringType>
+void ReadString(SerializationBuffer& buf,StringType& str)
+{
+  uint32_t len=buf.ReadNetInt32();
+  TmpBuf<char,64> tmp(len);
+  buf.Read(tmp.get(),len);
+  str.assign(tmp.get(),len);
+}
+
+template <class StringType>
+void WriteString(SerializationBuffer& buf,const StringType& str)
+{
+  buf.WriteNetInt32(str.length());
+  buf.Write(str.c_str(),str.length());
+}
+
+void* CgmAddGrpCommand::serialize(uint32_t& len)
+{
+  SerializationBuffer buf(64);
+  buf.WriteNetInt32(id);
+  WriteString(buf,name);
+  len=buf.getPos();
+  return buf.releaseBuffer();
+}
+
+bool CgmAddGrpCommand::deserialize(void* buffer,uint32_t len)
+{
+  SerializationBuffer buf;
+  buf.setExternalBuffer(buffer,len);
+  id=buf.ReadNetInt32();
+  ReadString(buf,name);
+  return true;
+}
+
+void* CgmDelGrpCommand::serialize(uint32_t& len)
+{
+  SerializationBuffer buf(64);
+  buf.WriteNetInt32(id);
+  len=buf.getPos();
+  return buf.releaseBuffer();
+}
+
+bool CgmDelGrpCommand::deserialize(void* buffer,uint32_t len)
+{
+  SerializationBuffer buf;
+  buf.setExternalBuffer(buffer,len);
+  id=buf.ReadNetInt32();
+  return true;
+}
+
+void* CgmAddAddrCommand::serialize(uint32_t& len)
+{
+  SerializationBuffer buf(64);
+  buf.WriteNetInt32(id);
+  WriteString(buf,addr);
+  len=buf.getPos();
+  return buf.releaseBuffer();
+}
+
+bool CgmAddAddrCommand::deserialize(void* buffer,uint32_t len)
+{
+  SerializationBuffer buf;
+  buf.setExternalBuffer(buffer,len);
+  id=buf.ReadNetInt32();
+  ReadString(buf,addr);
+  return true;
+}
+
+void* CgmDelAddrCommand::serialize(uint32_t& len)
+{
+  SerializationBuffer buf(64);
+  buf.WriteNetInt32(id);
+  WriteString(buf,addr);
+  len=buf.getPos();
+  return buf.releaseBuffer();
+}
+
+bool CgmDelAddrCommand::deserialize(void* buffer,uint32_t len)
+{
+  SerializationBuffer buf;
+  buf.setExternalBuffer(buffer,len);
+  id=buf.ReadNetInt32();
+  ReadString(buf,addr);
+  return true;
+}
 
 
 }}

@@ -92,6 +92,19 @@ struct FixedLengthString{
     return str[index];
   }
 
+  void assign(const char* argStr,int len)
+  {
+    if(len<N)
+    {
+      memcpy(str,argStr,len);
+      str[len]=0;
+    }else
+    {
+      memcpy(str,argStr,N-1);
+      str[N-1]=0;
+    }
+  }
+
   operator std::string()const
   {
     return str;

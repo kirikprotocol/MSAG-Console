@@ -56,7 +56,12 @@ namespace smsc { namespace cluster
         DLADD_CMD =                 0x00080000,
         DLDELETE_CMD =              0x00080001,
         DLALTER_CMD =               0x00080002,
-        GETROLE_CMD =               0x00090001
+        GETROLE_CMD =               0x00090001,
+        CGM_COMMANDS=               0x000a0000,
+        CGM_ADDGRP_CMD =            0x000A0001,
+        CGM_DELGRP_CMD =            0x000A0002,
+        CGM_ADDADDR_CMD =           0x000A0003,
+        CGM_DELADDR_CMD =           0x000A0004
         // TODO: Add other command types...
     } CommandType;
 
@@ -586,11 +591,58 @@ namespace smsc { namespace cluster
     };
 
 
+    class CgmAddGrpCommand: public Command
+    {
+    public:
 
+      int id;
+      std::string name;
 
+      CgmAddGrpCommand():Command(CGM_ADDGRP_CMD),id(0){}
+      CgmAddGrpCommand(int argId,const std::string& argName):Command(CGM_ADDGRP_CMD),id(argId),name(argName){}
 
+      void* serialize(uint32_t& len);
+      bool deserialize(void* buffer,uint32_t len);
+    };
 
+    class CgmDelGrpCommand: public Command
+    {
+    public:
+      int id;
+      CgmDelGrpCommand():Command(CGM_DELGRP_CMD),id(0){}
+      CgmDelGrpCommand(int argId):Command(CGM_DELGRP_CMD),id(argId){}
 
+      void* serialize(uint32_t& len);
+      bool deserialize(void* buffer,uint32_t len);
+    };
+
+    class CgmAddAddrCommand: public Command
+    {
+    public:
+
+      int id;
+      std::string addr;
+
+      CgmAddAddrCommand():Command(CGM_ADDADDR_CMD),id(0){}
+      CgmAddAddrCommand(int argId,const std::string& argAddr):Command(CGM_ADDADDR_CMD),id(argId),addr(argAddr){}
+
+      void* serialize(uint32_t& len);
+      bool deserialize(void* buffer,uint32_t len);
+    };
+
+    class CgmDelAddrCommand: public Command
+    {
+    public:
+
+      int id;
+      std::string addr;
+
+      CgmDelAddrCommand():Command(CGM_DELADDR_CMD),id(0){}
+      CgmDelAddrCommand(int argId,const std::string& argAddr):Command(CGM_DELADDR_CMD),id(argId),addr(argAddr){}
+
+      void* serialize(uint32_t& len);
+      bool deserialize(void* buffer,uint32_t len);
+    };
 
 
     // TODO: Add more commands ...

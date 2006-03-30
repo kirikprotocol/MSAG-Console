@@ -91,6 +91,14 @@ public:
     return it->second->addresses.find(addr)!=it->second->addresses.end();
   }
 
+  virtual const char* GetClosedGroupName(int id)const
+  {
+    sync::MutexGuard mg(mtx);
+    GroupsMap::const_iterator it=groups.find(id);
+    if(it==groups.end())return "<UNKNOWN CLOSEDGROUP>";
+    return it->second->name.c_str();
+  }
+
   virtual void AddAbonent(int id,const smsc::sms::Address& addr)
   {
     sync::MutexGuard mg(mtx);
