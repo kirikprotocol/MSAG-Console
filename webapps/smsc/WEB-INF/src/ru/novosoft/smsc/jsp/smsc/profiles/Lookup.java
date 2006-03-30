@@ -104,7 +104,10 @@ public class Lookup extends PageBean {
                 translit = p.isTranslit();
                 inputAccessMask = Long.toString(p.getInputAccessMask());
                 outputAccessMask = Long.toString(p.getOutputAccessMask());
-                closedGroup = appContext.getClosedGroupManager().getClosedGroups().get(p.getGroupId()).getName();
+                if (p.getGroupId() == 0)
+                    closedGroup = appContext.getLocaleString("profiles.groupIsNotDefined");
+                else
+                    closedGroup = appContext.getClosedGroupManager().getClosedGroups().get(p.getGroupId()).getName();
             } catch (Exception e) {
                 logger.debug("Couldn't lookup profile \"" + profile + "\", nested: " + e.getMessage(), e);
                 reportOptions = codepage = "unknown";
