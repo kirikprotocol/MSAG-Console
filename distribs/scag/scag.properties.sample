@@ -31,6 +31,7 @@ bill.config_dir=conf
 bill.so_dir=bill_so
 bill.server_host=127.0.0.1
 bill.server_port=14999
+bill.time_out=30
 
 session.location=/opt/home/msag_test/build/msag_distr/store
 
@@ -42,7 +43,7 @@ rules.path=/opt/home/msag_test/build/msag_distr/conf/rules
 stat.dir=/opt/home/msag_test/build/msag_distr/statistics
 stat.perf_host=127.0.0.1
 stat.perf_port=14997
-stat,perf_svc_port=14996
+stat.perf_svc_port=14996
 stat.perf_sc_port=14995
 stat.sacc_port=3100
 stat.sacc_host=niagara
