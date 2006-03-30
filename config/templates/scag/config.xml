@@ -3,28 +3,6 @@
 
 <config>
 
-  <section name="DataSource">
-    <param name="connections" type="int">5</param>
-    <param name="dbInstance" type="string">@db.instance@</param>
-    <param name="dbUserName" type="string">@db.user@</param>
-    <param name="dbUserPassword" type="string">@db.password@</param>
-    <param name="type" type="string">OCI</param>
-  </section>
-
-  <section name="StartupLoader">
-    <section name="DataSourceDrivers">
-      <section name="OCIDataSourceDriver">
-        <param name="loadup" type="string">libdb_oci.so</param>
-        <param name="type" type="string">OCI</param>
-      </section>
-    </section>
-  </section>
-  
-  <section name="MessageStorage">
-     <param name="statisticsDir" type="string">@ms.statdir@</param>
-     <param name="trafficDir" type="string">@ms.trafficdir@</param>
-  </section>
-  
   <section name="BillingManager">
     <param name="configDir" type="string">@bill.config_dir@</param>
     <param name="soDir" type="string">@bill.so_dir@</param>
@@ -75,34 +53,13 @@
         <param name="trafficDir" type="string">@storage.traffic_dir@</param>
   </section>
   
-  <section name="BillingManager">
-    <param name="configDir" type="string">@bill.config_dir@</param>
-    <param name="soDir" type="string">@bill.so_dir@</param>
-    <param name="BillingServerHost" type="string">@bill.server_host@</param>
-    <param name="BillingServerPort" type="int">@bill.server_port@</param>
-    <param name="BillingTimeOut" type="int">@bill.time_out@</param>
-  </section>
-  
-  <section name="RuleEngine">
-      <param name="location" type="string">@rules.path@</param>
-  </section>
-	
   <section name="smpp">
     <param name="host" type="string">@listen.host@</param>
     <param name="inactivityTime" type="int">30</param>
     <param name="inactivityTimeOut" type="int">30</param>
     <param name="port" type="int">@gateway.smpp.port@</param>
     <param name="readTimeout" type="int">60</param>
-  </section>
-
-  <section name="smsc-connections">
-  </section>
-
-  <section name="trafficControl">
     <param name="maxSmsPerSecond" type="int">1000</param>
   </section>
 
-  <section name="providers">
-    <param name="last used provider id" type="int">0</param>
-  </section>
 </config>
