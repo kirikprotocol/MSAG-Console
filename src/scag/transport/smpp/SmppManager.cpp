@@ -225,7 +225,7 @@ void SmppManager::Init(const char* cfgFile)
   LoadRoutes("conf/routes.xml");
   running=true;
 
-  int stmCnt=scag::config::ConfigManager::Instance().getConfig()->getInt("core.state_machines_count");
+  int stmCnt=scag::config::ConfigManager::Instance().getConfig()->getInt("smpp.core.state_machines_count");
   smsc_log_info(log,"Starting %d state machines",stmCnt);
   for(int i=0;i<stmCnt;i++)
   {

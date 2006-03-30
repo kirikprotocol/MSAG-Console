@@ -40,6 +40,7 @@ int HttpAcceptor::Execute()
     }
 
     //master_socket.setNonBlocking(1);
+    //smsc_log_debug(httpLogger, "HttpAcceptor started (smsc) %d", httpLogger->isDebugEnabled());
     http_log_debug("HttpAcceptor started");
 
     while (!isStopping) {

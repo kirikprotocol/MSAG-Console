@@ -36,16 +36,9 @@
     <param name="port" type="int">@gateway.admin.port@</param>
   </section>
 
-  <section name="core">
-    <param name="eventQueueLimit" type="int">1000</param>
-    <param name="protocol_id" type="int">34</param>
-    <param name="state_machines_count" type="int">10</param>
-    <param name="ussdTransactionTimeout" type="int">600</param>
-  </section>
-
   <section name="MessageStorage">
-       <param name="statisticsDir" type="string">@storage.statistics_dir@</param>
-        <param name="trafficDir" type="string">@storage.traffic_dir@</param>
+    <param name="statisticsDir" type="string">@storage.statistics_dir@</param>
+    <param name="trafficDir" type="string">@storage.traffic_dir@</param>
   </section>
   
   <section name="smpp">
@@ -55,6 +48,12 @@
     <param name="port" type="int">@gateway.smpp.port@</param>
     <param name="readTimeout" type="int">60</param>
     <param name="maxSmsPerSecond" type="int">1000</param>
+    <section name="core">
+	<param name="eventQueueLimit" type="int">1000</param>
+	<param name="protocol_id" type="int">34</param> <!-- ???? -->
+	<param name="state_machines_count" type="int">10</param>
+        <param name="ussdTransactionTimeout" type="int">600</param> <!-- ???? -->
+    </section>
   </section>
 
 </config>

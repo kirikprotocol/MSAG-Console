@@ -437,7 +437,7 @@ void Scag::init()
 
   eventQueueLimit=1000;
   try{
-    eventQueueLimit=cfg.getConfig()->getInt("core.eventQueueLimit");
+    eventQueueLimit=cfg.getConfig()->getInt("smpp.core.eventQueueLimit");
   }catch(...)
   {
     __warning__("eventQueueLimit not found, using default(1000)");

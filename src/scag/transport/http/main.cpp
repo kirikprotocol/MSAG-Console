@@ -9,10 +9,10 @@
 
 #define ICONV_BLOCK_SIZE 32
 
-//#define LOG_HEADERS
+#define LOG_HEADERS
 //#define LOG_CONTENT
 //#define LOG_TEXT
-//#define LOG_QUERY
+#define LOG_QUERY
 
 //void printHex(const char *buffer, long length);
 
@@ -173,6 +173,7 @@ int main() {
     Logger::Init();
     httpLogger = Logger::getInstance("scag.http");
 
+    smsc_log_debug(httpLogger, "Started");
 #if 0
     {
         Logger::LogLevels levels;
@@ -182,6 +183,7 @@ int main() {
 #endif    
 
     mg.init( p, cfg );
+    smsc_log_debug(httpLogger, "Inited");
 
     k = 0;
 #if 1
