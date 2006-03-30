@@ -68,22 +68,22 @@ public:
 
  void Start();
  void Stop();
- void init(std::string& host,int port,int timeout,int queuelen,bool * bf,smsc::logger::Logger * lg);
+ void init(std::string& host,int port,int timeout,int queuelen/*,bool * bf,*/,smsc::logger::Logger * lg);
 private:
 
  //SyncQueue<void *> eventsQueue;
  EventMonitor mtx;
  CyclicQueue<void *> eventsQueue;
- bool * bStarted;
+ bool bStarted;
  bool bConnected;
- int Timeout;
+ int  Timeout;
  Socket SaccSocket;
  std::string Host;
  int QueueLength;
  int Port;
  
- EventMonitor evReconnect;
- EventMonitor evQueue;
+// EventMonitor evReconnect;
+ //EventMonitor evQueue;
 
  bool checkQueue();
  bool PushEvent(void* item);

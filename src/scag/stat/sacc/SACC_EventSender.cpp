@@ -19,7 +19,7 @@ namespace sacc{
 EventSender::EventSender()
 {
 
- bStarted  = 0;
+ bStarted  = false;
  logger = 0;
  bConnected=false;
  Host="";
@@ -36,25 +36,23 @@ EventSender::~EventSender()
 
 	//smsc_log_debug(logger,"EventSender:: ~EventSender %d",*bStarted);
 	//evReconnect.notifyAll();
-    mtx.notifyAll();	
+    //mtx.notifyAll();	
 }
 
 
 
-
-
-void EventSender::init(std::string& host,int port,int timeout,int queuelen,bool * bf,smsc::logger::Logger * lg)
+void EventSender::init(std::string& host,int port,int timeout,int queuelen,/*,bool * bf,*/smsc::logger::Logger * lg)
 {
 
  if(!lg)
   throw Exception("EventSender::init logger is 0");
 
- if(!bf)
-  throw Exception("EventSender::init start-stop flag is 0");
+// if(!bf)
+ // throw Exception("EventSender::init start-stop flag is 0");
 
  QueueLength=queuelen;
 
- bStarted  = bf;
+ bStarted  = false;//bf;
  logger = lg;
  Host = host;
  Port= port;
@@ -147,7 +145,7 @@ bool EventSender::checkQueue()
 int EventSender::Execute()
 {
  
- while( *bStarted)
+ while( bStarted)
  {
 
 	  if(!bConnected )
@@ -203,6 +201,7 @@ bool EventSender::isActive()
 void EventSender::Start()
 {
 
+ bStarted=true;
  Thread::Start();
 
 }
@@ -213,6 +212,8 @@ void EventSender::Stop()
 {
 
  //evReconnect.notifyAll();
+ 
+ bStarted =false;
  mtx.notifyAll();
 
 }

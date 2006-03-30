@@ -113,7 +113,7 @@ void StatisticsManager::configure(const StatManConfig& statManConfig)
 	std::string saccHost = statManConfig.getSaccHost();
 	int reconnect_timeout = statManConfig.getReconnectTimeout();
 	int queuelen = statManConfig.getMaxQueueLength();
-	thrSaccSender.init(saccHost,saccPort,reconnect_timeout,queuelen,&isStarted,logger);
+	thrSaccSender.init(saccHost,saccPort,reconnect_timeout,queuelen,logger);
 	
 
 	
