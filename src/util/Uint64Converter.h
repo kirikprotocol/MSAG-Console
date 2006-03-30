@@ -24,14 +24,14 @@ namespace smsc { namespace util
         static uint64_t toHostOrder(uint64_t value)
         {
             unsigned char *ptr=(unsigned char *)&value;
-            return (((((uint64_t)ptr[0])<<56)&0xFF00000000000000)|
-                    ((((uint64_t)ptr[1])<<48)&0x00FF000000000000)|
-                    ((((uint64_t)ptr[2])<<40)&0x0000FF0000000000)|
-                    ((((uint64_t)ptr[3])<<32)&0x000000FF00000000)|
-                    ((((uint64_t)ptr[4])<<24)&0x00000000FF000000)|
-                    ((((uint64_t)ptr[5])<<16)&0x0000000000FF0000)|
-                    ((((uint64_t)ptr[6])<< 8)&0x000000000000FF00)|
-                    ((((uint64_t)ptr[7])    )&0x00000000000000FF));
+            return (((((uint64_t)ptr[0])<<56)&0xFF00000000000000ULL)|
+                    ((((uint64_t)ptr[1])<<48)&0x00FF000000000000ULL)|
+                    ((((uint64_t)ptr[2])<<40)&0x0000FF0000000000ULL)|
+                    ((((uint64_t)ptr[3])<<32)&0x000000FF00000000ULL)|
+                    ((((uint64_t)ptr[4])<<24)&0x00000000FF000000ULL)|
+                    ((((uint64_t)ptr[5])<<16)&0x0000000000FF0000ULL)|
+                    ((((uint64_t)ptr[6])<< 8)&0x000000000000FF00ULL)|
+                    ((((uint64_t)ptr[7])    )&0x00000000000000FFULL));
         };
     };
 
