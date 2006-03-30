@@ -31,7 +31,7 @@ bool BillActionRollback::run(ActionContext& context)
     operation->detachBill();
 
     
-    context.makeBillEvent(TRANSACTION_CALL_ROLLBACK, ev);
+    //context.makeBillEvent(TRANSACTION_CALL_ROLLBACK, ev);
     statistics.registerSaccEvent(ev);
 
 

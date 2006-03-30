@@ -70,15 +70,21 @@ void ActionContext::abortSession()
 }
 
 
-void ActionContext::makeBillEvent(int billCommand, SACC_BILLING_INFO_EVENT_t& ev)
+bool ActionContext::makeBillEvent(int billCommand, std::string& category, std::string& medyaType, SACC_BILLING_INFO_EVENT_t& ev)
 {
-    //Infrastructure& istr = BillingManager::Instance().getInfrastructure();
+    Infrastructure& istr = BillingManager::Instance().getInfrastructure();
+
+    int operatorId = istr.GetOperatorID(m_AbonentAddr);
+    if (operatorId == 0) return false;
+
+    auto_ptr<TariffRec> tariffRec(istr.GetTariff(operatorId, category.c_str(), medyaType.c_str()));
+    if (!tariffRec.get()) return false;
 
     ev.Header.cCommandId = billCommand;
 
     ev.Header.cProtocolId = 1;
     ev.Header.iServiceId = m_ServiceId;
-    ev.Header.iServiceProviderId = 1;//istr.GetProviderID(m_ServiceId);
+    ev.Header.iServiceProviderId = istr.GetProviderID(m_ServiceId);
 
     long now;
     time(&now);
@@ -89,15 +95,18 @@ void ActionContext::makeBillEvent(int billCommand, SACC_BILLING_INFO_EVENT_t& ev
 
     ev.Header.sCommandStatus = 1;
     
-    ev.iOperatorId = 1;
+    ev.iOperatorId = operatorId;
     ev.iPriceCatId = 1;
 
 
-    ev.fBillingSumm = 100;//m_TarifRec.Price;
-    ev.iMediaResourceType = 100;
+    ev.fBillingSumm = tariffRec->Price;
+    //ev.iMediaResourceType = 
 
+    int size = MAX_BILLING_CURRENCY_LENGTH;
+    if (size > tariffRec->Currency.size()) size = tariffRec->Currency.size();
 
-    sprintf((char *)ev.pBillingCurrency,"%s","$");
+    memcpy(ev.pBillingCurrency, tariffRec->Currency.c_str(), size);
+    
 }
 
 

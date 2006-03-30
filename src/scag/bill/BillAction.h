@@ -18,10 +18,12 @@ using smsc::logger::Logger;
     {
     protected:
         std::string m_sName;
-        std::string m_sServiceName;
-        std::string m_sStatus;
-        std::string m_sMessage;
+        //std::string m_sServiceName;
+        //std::string m_sStatus;
+        //std::string m_sMessage;
         static Logger * logger;
+        std::string m_category;
+        std::string m_mediaType;
 
         virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
         virtual bool FinishXMLSubSection(const std::string& name);

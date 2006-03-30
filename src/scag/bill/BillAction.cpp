@@ -11,6 +11,16 @@ void BillAction::init(const SectionParams& params,PropertyObject propertyObject)
     if (!logger) 
         logger = Logger::getInstance("scag.bill.actions");
 
+    if (params.Exists("category")) 
+        m_category = ConvertWStrToStr(params["category"]);
+    else 
+        throw SCAGException("BillAction '%s' : missing 'category' parameter",m_sName.c_str());
+
+    if (params.Exists("mediatype")) 
+        m_mediaType = ConvertWStrToStr(params["mediatype"]);
+    else 
+        throw SCAGException("BillAction '%s' : missing 'mediatype' parameter",m_sName.c_str());
+
 
 /*
     if (params.Exists("service")) 

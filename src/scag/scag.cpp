@@ -462,11 +462,9 @@ void Scag::init()
 
   /*
   ////////////////////////// FOR TEST 
-  sleep(2);
 
   scag::sessions::CSessionKey key;
  
-  smsc_log_warn(log, "1");
   SMS sms;
   sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, 100);
 
@@ -490,21 +488,17 @@ void Scag::init()
 
 
   SessionManager& sm = SessionManager::Instance();
-  smsc_log_warn(log, "2");
   scag::sessions::SessionPtr sessionPtr = sm.newSession(key);
   scag::sessions::Session * session = sessionPtr.Get();
-  smsc_log_warn(log, "3");
 
   if (session) smsc_log_warn(log, "SESSION IS VALID");
   //command.setServiceId(1);
 
-  smsc_log_warn(log, "4");
   scag::re::RuleEngine::Instance().process(commandSubmit, *session);
-  scag::re::RuleEngine::Instance().process(commandSubmitResp, *session);
+  //scag::re::RuleEngine::Instance().process(commandSubmitResp, *session);
 
-  scag::re::RuleEngine::Instance().process(commandDeliver, *session);
-  scag::re::RuleEngine::Instance().process(commandDeliverResp, *session);
-  smsc_log_warn(log, "5");
+  //scag::re::RuleEngine::Instance().process(commandDeliver, *session);
+  //scag::re::RuleEngine::Instance().process(commandDeliverResp, *session);
 
   ////////////////////////// FOR TEST 
   */                                  

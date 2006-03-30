@@ -32,7 +32,7 @@ bool BillActionOpen::run(ActionContext& context)
     int BillId = bm.ChargeBill(transportId);
     operation->attachBill(BillId);
 
-    context.makeBillEvent(TRANSACTION_OPEN, ev);
+    //context.makeBillEvent(TRANSACTION_OPEN, ev);
     statistics.registerSaccEvent(ev);
 
     return true;

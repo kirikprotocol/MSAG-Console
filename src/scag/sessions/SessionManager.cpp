@@ -235,7 +235,7 @@ void SessionManagerImpl::init(const SessionManagerConfig& _config) // possible t
     this->config = _config;
 
     if (!logger)
-      logger = Logger::getInstance("scag.re.SessionManager");
+      logger = Logger::getInstance("scag.SessionManager");
 
     store.init(config.dir,SessionManagerCallback,this);
 

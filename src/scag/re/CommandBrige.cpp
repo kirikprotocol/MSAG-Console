@@ -5,6 +5,14 @@
 
 namespace scag { namespace re {
 
+enum ProtocolForEvent
+{
+    SMPP_SMS = 1,
+    SMPP_USSD =2
+};
+
+
+
 EventHandlerType CommandBrige::getHandlerType(const SCAGCommand& command)
 {
     EventHandlerType handlerType = EH_UNKNOWN;
@@ -202,12 +210,20 @@ CSmppDiscriptor CommandBrige::getSmppDiscriptor(const SCAGCommand& command)
 }
 
 
+int CommandBrige::getProtocolForEvent(SmppCommand& command)
+{
+    SMS& sms = getSMS(command);
+    if (sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) return SMPP_USSD;
+    return SMPP_SMS;
+
+}
 
 void CommandBrige::makeTrafficEvent(SmppCommand& command, int handlerType, scag::sessions::CSessionPrimaryKey& sessionPrimaryKey, SACC_TRAFFIC_INFO_EVENT_t& ev)
 {
     ev.Header.cCommandId = handlerType;
         
-    ev.Header.cProtocolId = 1;
+    ev.Header.cProtocolId = getProtocolForEvent(command);
+
     ev.Header.iServiceId = command.getServiceId();
     ev.Header.iServiceProviderId = 1;
 
@@ -223,9 +239,17 @@ void CommandBrige::makeTrafficEvent(SmppCommand& command, int handlerType, scag:
     ev.iOperatorId = 1;
 
     std::string unicodeSTR = getMessageBody(command);
-    memcpy(ev.pMessageText, unicodeSTR.data(), unicodeSTR.size()); 
 
-    sprintf((char *)ev.pSessionKey,"%s/%d", sessionPrimaryKey.abonentAddr.toString().c_str(),sessionPrimaryKey.BornMicrotime);
+    if ((handlerType == EH_SUBMIT_SM)||(handlerType == EH_DELIVER_SM))
+    {
+        int size = MAX_TEXT_MESSAGE_LENGTH;
+        if (size > unicodeSTR.size()) size = unicodeSTR.size();
+
+        memcpy(ev.pMessageText, unicodeSTR.data(), size); 
+    }
+        
+
+    sprintf((char *)ev.pSessionKey,"%s/%d", sessionPrimaryKey.abonentAddr.toString().c_str(),(sessionPrimaryKey.BornMicrotime.tv_sec*1000 + sessionPrimaryKey.BornMicrotime.tv_usec));
 }
 
 

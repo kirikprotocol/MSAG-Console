@@ -63,6 +63,8 @@ struct CSmppDiscriptor
 
 class CommandBrige
 {
+private:
+    static int getProtocolForEvent(SmppCommand& command);
 public:
 
     static std::string getMessageBody(SmppCommand& command);
@@ -139,10 +141,10 @@ public:
             resultAddr = sms.destinationAddress;
             break;
         case DELIVERY_RESP:
-            resultAddr = sms.destinationAddress;
+            resultAddr = sms.originatingAddress;
             break;
         case SUBMIT_RESP:
-            resultAddr = sms.originatingAddress;
+            resultAddr = sms.destinationAddress;
             break;
         }
   
