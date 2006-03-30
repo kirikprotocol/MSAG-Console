@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE http_routes SYSTEM "http_routes.dtd">
+<routes>
+    <subject_def id="MTS_numbers">        <address value="+7902912????"/>
+        <address value="+7905985????"/>
+    </subject_def>
+
+    <route id="route1" serviceId="5">        <subject id="MTS_numbers"/>        <address value="+7913???????"/>        <address value="+7903???????"/>        <url value="yandex.ru"/>    </route>
+    <route id="route2" serviceId="6">
+        <address value="+7912???????"/>
+        <address value="+7906???????"/>
+        <url value="yandex.ru"/>
+    </route>
+
+</routes>
