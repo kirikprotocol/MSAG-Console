@@ -75,7 +75,7 @@ char * ServicesList::getText() const
     result += "\" status=\"";
     int st=s->getStatus();
     bool localStatus=true;
-    if(st==Service::stopped && s->getType()==ServiceInfo::failover)
+    if(st==Service::stopped /*&& s->getType()==ServiceInfo::failover*/)
     {
       try{
         st=icon->remoteGetServiceStatus(s->getId());
@@ -85,7 +85,7 @@ char * ServicesList::getText() const
         }
       }catch(std::exception& e)
       {
-        //remove status unavialable
+        //remote status unavialable
       }
     }
     switch (st)

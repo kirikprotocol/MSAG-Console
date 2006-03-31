@@ -35,7 +35,8 @@ bool DirExists(const char* dir)
 bool MakePath(const std::string& path)
 {
   int idx=0;
-  if(DirExists(path.substr(0,path.rfind('/')).c_str()))return true;
+  std::string purePath=path.substr(0,path.rfind('/'));
+  if(DirExists(purePath.c_str()))return true;
   for(;;)
   {
     idx=path.find('/',idx);
@@ -61,8 +62,7 @@ struct DupeFile:smsc::core::buffers::FileEventHandler{
   virtual void onOpen(int mode,const char* fileName)
   {
     if(broken)return;
-    //fprintf(stderr,"open:%s\n",fileName);
-    broken=false;
+    fprintf(stderr,"open:%s\n",fileName);
     std::string newFn;
     if(fileName && strlen(fileName)>0 && fileName[0]=='/')
     {
@@ -93,7 +93,14 @@ struct DupeFile:smsc::core::buffers::FileEventHandler{
         }break;
         case openAppend:
         {
-          dupe.Append(newFn.c_str());
+          if(File::Exists(newFn.c_str()))
+          {
+            dupe.Append(newFn.c_str());
+          }
+          else
+          {
+            dupe.RWCreate(newFn.c_str());
+          }
         }break;
       }
     }catch(...)
@@ -159,6 +166,7 @@ struct DupeGlobalFileEventHandler:smsc::core::buffers::GlobalFileEventHandler{
   }
   virtual void onCreateFileObject(File* f)
   {
+    fprintf(stderr,"onCreateFileObject\n");
     if(recursion || broken)return;
     recursion=true;
     f->SetEventHandler(new DupeFile());
