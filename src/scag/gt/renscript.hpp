@@ -37,6 +37,7 @@
 
 using scag::re::RuleEngine;
 using scag::re::RuleStatus;
+using scag::re::RuleKey;
 using scag::sessions::SessionManager;
 using scag::sessions::SessionManagerConfig;
 using scag::sessions::CSessionKey;
@@ -489,7 +490,7 @@ static JSBool _updaterule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
      int serviceid=JSVAL_TO_INT(argv[0]);
 	 RuleKey rk;
 	 rk.serviceId=serviceid;
-	 rk.transport=1;//smpp
+	 rk.transport= scag::transport::TransportType::SMPP ;//smpp
 	 
 	 SCAG_TRY 
      
@@ -505,8 +506,7 @@ static JSBool _deleterule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
      int serviceid=JSVAL_TO_INT(argv[0]);
 	 RuleKey rk;
 	 rk.serviceId=serviceid;
-	 rk.transport=1;//smpp
-
+	rk.transport= scag::transport::TransportType::SMPP ;//smpp
 	SCAG_TRY  
 		
      engine->removeRule(rk);
@@ -607,7 +607,7 @@ if(argc<8)
 
  key.abonentAddr = oa;
 
- cmd->set_ruleId(ruleid);
+ cmd->set_serviceId(ruleid);
 
 
  scag::sessions::SessionPtr session =  smanager->newSession(key);;//smanager->getSession(cmd);
