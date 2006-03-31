@@ -15,6 +15,7 @@
 
 #include "core/threads/Thread.hpp"
 #include "core/synchronization/EventMonitor.hpp"
+#include "util/mirrorfile/mirrorfile.h"
 
 using smsc::util::Exception;
 using smsc::util::config::ConfigException;
