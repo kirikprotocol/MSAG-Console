@@ -8,6 +8,8 @@ namespace scag { namespace re {
 
 class SmppEventHandler : public EventHandler
 {
+    void StartOperation(Session& session, SmppCommand& command);
+    void EndOperation(Session& session, SmppCommand& command);
 public:
     virtual RuleStatus process(SCAGCommand& command, Session& session); 
     //Method return HandlerId from hander type string

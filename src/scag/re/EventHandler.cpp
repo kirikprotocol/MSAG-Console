@@ -53,7 +53,21 @@ bool EventHandler::FinishXMLSubSection(const std::string& name)
     return true;
 }
 
+RuleStatus EventHandler::RunActions(ActionContext& context)
+{
+    std::list<Action *>::const_iterator it;
 
+    //TODO: Fill default rs fields
+    RuleStatus rs;
+    context.setRuleStatus(rs);
+
+    for (it = actions.begin(); it!=actions.end(); ++it)
+    {
+        if (!(*it)->run(context)) break;
+    }
+
+    return context.getRuleStatus();
+}
 
 
 }}

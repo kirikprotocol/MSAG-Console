@@ -25,6 +25,7 @@ protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);
 //////////////IParserHandler Interfase///////////////////////
+    RuleStatus RunActions(ActionContext& context);
 public:
     EventHandler() :logger(0)  { logger = Logger::getInstance("scag.re"); };
     virtual ~EventHandler();

@@ -54,8 +54,14 @@ struct CSmppDiscriptor
     int lastIndex;
     bool isUSSDClosed;
     bool wantOpenUSSD;
+    bool m_isTransact;
 
-    CSmppDiscriptor() : currentIndex(0), lastIndex(0), isUSSDClosed(false), wantOpenUSSD(false) {}
+    CSmppDiscriptor() : 
+        currentIndex(0), 
+        lastIndex(0), 
+        isUSSDClosed(false), 
+        wantOpenUSSD(false), 
+        m_isTransact(false) {}
     
 };
 

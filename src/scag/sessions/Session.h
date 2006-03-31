@@ -177,9 +177,7 @@ namespace scag { namespace sessions
 
         void ClearOperations();
 
-        void closeCurrentOperation();
         int getNewOperationId();
-        Operation * AddNewOperationToHash(SCAGCommand& cmd, int type);
         void DoAddPendingOperation(PendingOperation& pendingOperation);
 
 
@@ -209,14 +207,18 @@ namespace scag { namespace sessions
 
         bool hasOperations();
         bool hasPending();
-        bool startOperation(SCAGCommand& cmd);
-        void endOperation(RuleStatus& ruleStatus);
+        void closeCurrentOperation();
 
         void addPendingOperation(PendingOperation pendingOperation);
         void expirePendingOperation();
 
         void abort();
         Operation * GetCurrentOperation() const;
+        Operation * AddNewOperationToHash(SCAGCommand& cmd, int operationType);
+        Operation * setCurrentOperation(int operationId);
+        void setOperationFromPending(SCAGCommand& cmd, int operationType);
+
+
         time_t Session::getWakeUpTime();
         void Serialize(SessionBuffer& buff);
         void Deserialize(SessionBuffer& buff);
