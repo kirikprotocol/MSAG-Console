@@ -419,16 +419,21 @@ int Scheduler::Execute()
           if(c->dpfPresent)
           {
             if(c->CancelMsgId(c->dpfId))DecSme(c);
-            sendAlertNotification(c->dpfId,0);
-            changeSmsStateToDeleted(c->dpfId);
-          }
-          if(c->Count()==0)
-          {
-            debug2(log,"Try to delete chain %p/%s",c,c->addr.toString().c_str());
-            DeleteChain(c);
-          }else
-          {
-            RescheduleChain(c,time(NULL));
+            SMSId dpfId=c->dpfId;
+            if(c->Count()==0)
+            {
+              debug2(log,"Try to delete chain %p/%s",c,c->addr.toString().c_str());
+              DeleteChain(c);
+            }else
+            {
+              RescheduleChain(c,time(NULL));
+            }
+            mon.Unlock();
+            try{
+              sendAlertNotification(dpfId,0);
+            }catch(...){}
+            mon.Lock();
+            changeSmsStateToDeleted(dpfId);
           }
         }catch(std::exception& e)
         {
