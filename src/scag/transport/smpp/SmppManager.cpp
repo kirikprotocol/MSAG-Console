@@ -8,6 +8,7 @@
 #include "router/load_routes.h"
 #include "scag/config/ConfigManager.h"
 #include "SmppStateMachine.h"
+#include "scag/exc/SCAGExceptions.h"
 
 namespace scag{
 namespace transport{
@@ -15,6 +16,7 @@ namespace smpp{
 
 using namespace xercesc;
 using namespace smsc::util::xml;
+using namespace scag::exceptions;
 
 enum ParamTag{
 tag_systemId,
@@ -218,14 +220,25 @@ void SmppManager::Init(const char* cfgFile)
   DOMDocument* doc=reader.read(cfgFile);
   DOMElement *elem = doc->getDocumentElement();
   DOMNodeList *list = elem->getElementsByTagName(XmlStr("smerecord"));
+
   ParseTag(this,list,etService);
   list = elem->getElementsByTagName(XmlStr("smscrecord"));
+
   ParseTag(this,list,etSmsc);
   
   LoadRoutes("conf/routes.xml");
   running=true;
 
-  int stmCnt=scag::config::ConfigManager::Instance().getConfig()->getInt("smpp.core.state_machines_count");
+  int stmCnt = 0;
+  try
+  {
+      stmCnt = scag::config::ConfigManager::Instance().getConfig()->getInt("smpp.core.state_machines_count");
+  } catch (HashInvalidKeyException& e)
+  {
+      running=false;
+      throw SCAGException("Invalid parameter 'smpp.core.state_machines_count'");
+  }
+
   smsc_log_info(log,"Starting %d state machines",stmCnt);
   for(int i=0;i<stmCnt;i++)
   {

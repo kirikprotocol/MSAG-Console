@@ -89,6 +89,9 @@ Session::Session(const CSessionKey& key)
     timeval tv;
     gettimeofday(&tv,0);
 
+    smsc_log_debug(logger," *********** Session: msec %d", tv.tv_sec*1000 + tv.tv_usec);
+    
+
     m_SessionPrimaryKey.abonentAddr = key.abonentAddr;
     m_SessionPrimaryKey.BornMicrotime = tv;
 }

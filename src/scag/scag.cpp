@@ -20,9 +20,13 @@
 #include "util/findConfigFile.h"
 #include "scag/re/RuleEngine.h"
 
+#include "util/xml/utilFunctions.h"
+#include "scag/re/XMLHandlers.h"
+
 
 namespace scag
 {
+    using namespace xercesc;
 
     using namespace scag::exceptions;
     using namespace scag::transport::smpp::router;
@@ -35,6 +39,7 @@ namespace scag
     using scag::config::Mask;
     using scag::config::MaskVector;
     using smsc::sms::Address;
+ 
     
     extern void loadRoutes(RouteManager* rm, const scag::config::RouteConfig& rc,bool traceit=false);
                      
@@ -321,9 +326,17 @@ void Scag::init()
         smsc_log_info(log, "Smpp Manager is starting");
         smppMan.Init(findConfigFile("../conf/smpp.xml"));
         smsc_log_info(log, "Smpp Manager started");
-    }catch(...)
+    }catch(Exception& e)
     {
-        throw Exception("Exception during initialization of SmppManager");
+        throw Exception("Exception during initialization of SmppManager: %s", e.what());
+    }catch (XMLException& e)
+    {
+        scag::re::StrX msg(e.getMessage());
+
+        throw Exception("Exception during initialization of SmppManager: %s", msg.localForm());
+    }catch (...)
+    {
+        throw Exception("Exception during initialization of SmppManager: unknown error");
     }
   //********************************************************
     

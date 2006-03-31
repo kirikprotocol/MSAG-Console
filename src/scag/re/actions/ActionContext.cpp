@@ -91,7 +91,7 @@ bool ActionContext::makeBillEvent(int billCommand, std::string& category, std::s
     gettimeofday(&tv,0);
 
     ev.Header.lDateTime = tv.tv_sec*1000 + tv.tv_usec;
-
+    
     sprintf((char *)ev.Header.pAbonentNumber,"%s",m_AbonentAddr.toString().c_str());
 
     ev.Header.sCommandStatus = 1;
