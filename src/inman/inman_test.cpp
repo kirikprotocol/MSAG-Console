@@ -7,6 +7,7 @@ static char const ident[] = "$Id$";
 #include <string>
 
 #include "logger/Logger.h"
+#include "core/synchronization/Event.hpp"
 #include "core/threads/Thread.hpp"
 #include "inman/common/console.hpp"
 #include "inman/common/util.hpp"
@@ -14,6 +15,9 @@ static char const ident[] = "$Id$";
 #include "inman/interaction/connect.hpp"
 
 
+using smsc::core::synchronization::Event;
+using smsc::core::synchronization::Mutex;
+using smsc::core::synchronization::MutexGuard;
 using smsc::core::threads::Thread;
 using smsc::inman::common::Console;
 using smsc::inman::common::format;
@@ -77,6 +81,7 @@ protected:
     bool                ussdOp;
 };
 
+#define SELECT_TIMEOUT_STEP 400 //millisecs
 
 class Facade : public Thread, public SmscHandler
 {
@@ -92,6 +97,8 @@ protected:
     bool                _ussdOp;
     INDialogsMap        _Dialogs;
     AddressTypeInd      _adrType; //dafault destination address type
+    Event               lstEvent;
+    Mutex               _mutex;
 
 public:
     Facade(const char* host, int port)
@@ -121,8 +128,14 @@ public:
 
     virtual ~Facade()
     { 
+        _mutex.Lock();
         _running = false; //stop thread 
+        _mutex.Unlock();
+        lstEvent.Wait(1000L*SELECT_TIMEOUT_STEP*2);
+
         delete pipe;
+        if (socket->getSocket() != INVALID_SOCKET)
+            socket->Abort();
         delete socket; 
 
         INDialogsMap::const_iterator it;
@@ -280,36 +293,81 @@ public:
     // Thread entry point
     virtual int  Execute()
     {
+        SOCKET   sockId = socket->getSocket();
+        struct timeval tmo;
+        tmo.tv_sec = 0;
+        tmo.tv_usec = 1000L*SELECT_TIMEOUT_STEP;
+
+        _mutex.Lock();
         _running = true;
-        while(_running) {
-            fd_set  read;
-            FD_ZERO( &read );
-            FD_SET( socket->getSocket(), &read );
-            int n = select(  socket->getSocket()+1, &read, 0, 0, 0 );
-            if ( n > 0 ) {
-                SmscCommand* cmd = static_cast<SmscCommand*>(pipe->receiveObj());
-                if (cmd) {
-                    if (cmd->getObjectId() == smsc::inman::interaction::CHARGE_SMS_RESULT_TAG) {
-                        bool goon = true;
-                        try { cmd->loadDataBuf(); }
-                        catch (SerializerException& exc) {
-                            std::string msg = format("ERR: corrupted cmd %u (dlgId: %u): %s",
-                                                    cmd->getObjectId(), cmd->getDialogId(),
-                                                    exc.what());
-                            fprintf(stdout, msg.c_str());
-                            smsc_log_error(logger, msg.c_str());
-                            goon = false;
+        while (_running) {
+            fd_set  readSet;
+            fd_set  errorSet;
+
+            FD_ZERO(&readSet);
+            FD_ZERO(&errorSet);
+
+            FD_SET(sockId, &readSet);
+            FD_SET(sockId, &errorSet);
+
+            _mutex.Unlock();
+            int n = select(sockId + 1, &readSet, 0, &errorSet, &tmo);
+            if (n < 0) {
+                MutexGuard grd(_mutex);
+                std::string msg = format("TCPLst: select() failed, cause: %d (%s)",
+                                         errno, strerror(errno));
+                smsc_log_fatal(logger, msg.c_str());
+                fprintf(stdout, msg.c_str());
+                _running = false;
+            } else if (n > 0) {
+                if (FD_ISSET(sockId, &readSet)) {
+                    SmscCommand* cmd = static_cast<SmscCommand*>(pipe->receiveObj());
+                    if (!cmd) {
+                        CustomException * exc = pipe->hasException();
+                        if (exc) {
+                            smsc_log_error(logger, "TCPLst: %s", exc->what());
+                            pipe->resetException();
+                        } else { //remote point ends connection
+                            MutexGuard grd(_mutex);
+                            std::string msg = format("TCPLst: client ends connection", socket);
+                            prompt(msg);
+                            _running = false;
+                            socket->Close();
                         }
-                        if (goon)
-                            cmd->handle(this);
-                    } else
-                        fprintf(stdout, "ERR: unknown command recieved: %u\n",
-                                cmd->getObjectId());
-                } else { //socket closed or socket error
+                    } else {
+                        if (cmd->getObjectId() == smsc::inman::interaction::CHARGE_SMS_RESULT_TAG) {
+                            bool goon = true;
+                            try { cmd->loadDataBuf(); }
+                            catch (SerializerException& exc) {
+                                std::string msg = format("ERR: corrupted cmd %u (dlgId: %u): %s",
+                                                        cmd->getObjectId(), cmd->getDialogId(),
+                                                        exc.what());
+                                fprintf(stdout, msg.c_str());
+                                smsc_log_error(logger, msg.c_str());
+                                goon = false;
+                            }
+                            if (goon)
+                                cmd->handle(this);
+                        } else {
+                            std::string msg = format("TCPLst: unknown command recieved: %u\n",
+                                                    cmd->getObjectId());
+                            prompt(msg);
+                        }
+                    }
+                }
+                if (FD_ISSET(sockId, &errorSet)) {
+                    MutexGuard grd(_mutex);
+                    std::string msg = format("ERR: Error Event on socket[%u].", sockId);
+                    smsc_log_error(logger, msg.c_str());
+                    fprintf(stdout, msg.c_str());
                     _running = false;
+                    socket->Abort();
                 }
             }
-        }
+            _mutex.Lock();
+        } /* eow */
+        _mutex.Unlock();
+        lstEvent.Signal();
         return 0;
     }
 
@@ -545,11 +603,11 @@ void cmd_dlvrExc(Console&, const std::vector<std::string> &args)
 
 int main(int argc, char** argv)
 {
-    if ( argc != 3 ) {
-        fprintf(stderr, "Usage: %s <host> <port>\n", argv[0] );
+    if (argc != 3) {
+        fprintf(stderr, "Usage: %s <host> <port>\n", argv[0]);
         exit(1);
     }
-    int port = atoi( argv[2]);
+    int port = atoi(argv[2]);
     if (!port) {
         fprintf(stderr, "ERR: bad port specified (%s) !", argv[2]);
         exit(1);
@@ -561,15 +619,15 @@ int main(int argc, char** argv)
         _pFacade = new Facade(host, port);
 
         Console console;
-        console.addItem( "charge", cmd_charge ); //chargeSMS only
-        console.addItem( "chargeOk", cmd_chargeOk ); //chargeSMS -> reportOk
-        console.addItem( "chargeErr",  cmd_chargeErr );//chargeSMS -> reportErr
-        console.addItem( "reportOk",  cmd_reportOk );
-        console.addItem( "reportErr",  cmd_reportErr );
-        console.addItem( "prepaid",  cmd_prepaid );
-        console.addItem( "postpaid",  cmd_postpaid );
-        console.addItem( "dpsms",  cmd_dpsms );
-        console.addItem( "dpussd",  cmd_dpussd );
+        console.addItem( "charge", cmd_charge); //chargeSMS only
+        console.addItem( "chargeOk", cmd_chargeOk); //chargeSMS -> reportOk
+        console.addItem( "chargeErr",  cmd_chargeErr);//chargeSMS -> reportErr
+        console.addItem( "reportOk",  cmd_reportOk);
+        console.addItem( "reportErr",  cmd_reportErr);
+        console.addItem( "prepaid",  cmd_prepaid);
+        console.addItem( "postpaid",  cmd_postpaid);
+        console.addItem( "dpsms",  cmd_dpsms);
+        console.addItem( "dpussd",  cmd_dpussd);
         console.addItem( "config",  cmd_config);
         console.addItem( "adrnum",  cmd_adrNum);
         console.addItem( "adralpha",  cmd_adrAlpha);
