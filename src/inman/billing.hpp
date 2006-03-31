@@ -154,7 +154,7 @@ class Billing : public SSFhandler, public InmanHandler,
 public:
     typedef std::map<unsigned, StopWatch*> TimersMAP;
     typedef enum {
-        bilIdle, bilStarted, bilQueried, bilInited, bilReleased, bilProcessed, 
+        bilIdle, bilStarted, bilQueried, bilInited, bilReleased, bilContinued, 
         bilApproved, bilComplete, bilAborted
     } BillingState;
     typedef enum {

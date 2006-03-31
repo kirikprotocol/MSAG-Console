@@ -10,6 +10,8 @@ using smsc::inman::interaction::CHARGE_SMS_RESULT_TAG;
 using smsc::inman::interaction::DELIVERY_SMS_RESULT_TAG;
 using smsc::inman::BILL_MODE;
 
+using smsc::inman::comp::EventReportSMSArg;
+
 namespace smsc  {
 namespace inman {
 
@@ -173,12 +175,19 @@ void Billing::Abort(const char * exc)
     bilMutex.Lock();
     smsc_log_error(logger, "Billing[%u.%u]: Aborting%s%s",
                    _bconn->bConnId(), _bId, exc ? ", reason " : "", exc ? exc : "");
-    state = Billing::bilAborted;
-
-    if (inap) { //todo: send U_ABORT to SCF and close TCAP dialog
+    if (inap) {
+        if ((state >= bilContinued) && (state < bilComplete)) { //send sms_o_failure to SCF
+            smsc_log_debug(logger, "Billing[%u.%u]: SSF --> SCF EventReportSMS(o_smsFailure (0x%X))",
+                           _bconn->bConnId(), _bId, EventTypeSMS_o_smsFailure);
+            try {
+                EventReportSMSArg    report(EventTypeSMS_o_smsFailure, MessageType_notification);
+                inap->eventReportSMS(&report);
+            } catch (std::exception & exc) { }
+        }
         delete inap;
         inap = NULL;
     }
+    state = Billing::bilAborted;
     bilMutex.Unlock();
     _bconn->billingDone(this);
 }
@@ -218,7 +227,7 @@ void Billing::handleCommand(InmanCommand* cmd)
         }
     } break;
 
-    case Billing::bilProcessed: {
+    case Billing::bilContinued: {
         if (cmdId == DELIVERY_SMS_RESULT_TAG) {
             StopTimer(state, true);
             state = Billing::bilApproved;
@@ -385,7 +394,7 @@ void Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
             ChargeAbonent(smsc::inman::cache::btUnknown);
             return;
         }
-        if (state == Billing::bilProcessed) {
+        if (state == Billing::bilContinued) {
             //SMSC doesn't respond with DeliveryResult
             bilMutex.Unlock();
             Abort("TCP dialog is timed out");
@@ -487,7 +496,7 @@ void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes)
                        (eventType == EventTypeSMS_o_smsFailure) ? "Failure" : "Submission",
                        eventType, MessageType_notification);
         try {
-            smsc::inman::comp::EventReportSMSArg    report(eventType, MessageType_notification);
+            EventReportSMSArg    report(eventType, MessageType_notification);
             inap->eventReportSMS(&report);
             cdr._inBilled = true;
         } catch (std::exception & exc) {
@@ -521,7 +530,7 @@ void Billing::onContinueSMS(uint32_t inmanErr /* = 0*/)
         ChargeSmsResult res(inmanErr, smsc::inman::interaction::CHARGING_POSSIBLE);
         res.setDialogId(_bId);
         if (_bconn->sendCmd(&res)) {
-            state = Billing::bilProcessed;
+            state = Billing::bilContinued;
             StartTimer(_cfg.maxTimeout, true);
         } else     //TCP connect fatal failure
             action = Billing::doAbort;
@@ -569,7 +578,7 @@ void Billing::onReleaseSMS(ReleaseSMSArg* arg)
         if (_bconn->sendCmd(&res)) {
         //NOTE: it's safe to free 'arg' here, TCAP dialog may be closed
             if (postpaidBill) {
-                state = Billing::bilProcessed;
+                state = Billing::bilContinued;
                 smsc_log_warn(logger, "Billing[%u.%u]: switched to billing via CDR",
                                _bconn->bConnId(), _bId);
                 delete inap;
@@ -608,7 +617,7 @@ void Billing::onAbortSMS(unsigned char errCode, bool tcapLayer)
             //IN dialog initialization failed, release CAP dialog, switch to CDR mode 
             doCharge = true;
         } // no break specially !
-        case Billing::bilProcessed:
+        case Billing::bilContinued:
             //dialog with MSC is in process, release CAP dialog, switch to CDR mode
         case Billing::bilApproved:
         case Billing::bilComplete:
