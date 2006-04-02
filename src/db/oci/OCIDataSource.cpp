@@ -178,7 +178,7 @@ void OCIConnection::abort()
     throw(SQLException)
 {
     MutexGuard connectGuard(connectLock);
-    MutexGuard guard(getAccessMutex());
+//    MutexGuard guard(getAccessMutex());
 
     // TODO: check that operation is still active on this connection !!!
     if (isConnected && svchp && errhp) {
