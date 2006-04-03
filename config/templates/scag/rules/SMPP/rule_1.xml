@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scag:rule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://www.sibinco.com/SCAG ../xsd/smpp_rules.xsd"
+            xmlns:scag="http://www.sibinco.com/SCAG"
+            xmlns:bill="http://www.sibinco.com/SCAG/CDRBILL"
+            xmlns:session="http://www.sibinco.com/SCAG/SESSIONS"
+            xmlns:operation="http://www.sibinco.com/SCAG/OPERATIONS"
+            transport="SMPP">
+    
+	
+    <deliver_sm>
+	<match regexp=".*" value="test" result="%res"/>
+    
+	<if test="%res">
+	    <return result="0" />
+	</if>
+    </deliver_sm>
+    
+    <deliver_sm_resp>
+	<return result="1" />
+    </deliver_sm_resp>
+
+
+    <submit_sm>
+	<bill:open category="lala" mediatype="blabla" />
+	<bill:commit category="lala" mediatype="blabla" />
+	
+	<return result="1" />
+    </submit_sm>
+	
+
+    <submit_sm_resp>
+	<return result="1" />
+    </submit_sm_resp>
+															    								      
+</scag:rule>
