@@ -17,7 +17,6 @@ import ru.sibinco.scag.backend.protocol.commands.endpoints.DeleteCenter;
 import ru.sibinco.scag.backend.protocol.commands.endpoints.DeleteSvc;
 import ru.sibinco.scag.backend.protocol.commands.endpoints.UpdateCenter;
 import ru.sibinco.scag.backend.protocol.commands.endpoints.UpdateSvcInfo;
-import ru.sibinco.scag.backend.protocol.commands.rules.AddRule;
 import ru.sibinco.scag.backend.protocol.commands.rules.RemoveRule;
 import ru.sibinco.scag.backend.protocol.response.Response;
 import ru.sibinco.scag.backend.routing.ScagRoutingManager;
