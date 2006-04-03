@@ -162,9 +162,6 @@ namespace scag { namespace sessions
         int currentOperationId;
         int lastOperationId;
 
-        CSmppDiscriptor m_SmppDiscriptor;
-        bool m_isTransact;
-
         CSessionKey             m_SessionKey;           //Ключ для SessionManager
         CSessionPrimaryKey      m_SessionPrimaryKey;    //Уникальный ключ для модуля статистики
 

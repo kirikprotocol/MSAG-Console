@@ -81,7 +81,7 @@ void Operation::rollbackAll()
 Session::Session(const CSessionKey& key) 
     : PropertyManager(), lastAccessTime(-1), 
         bChanged(false), bDestroy(false), accessCount(0), m_pCurrentOperation(0),
-        logger(0), lastOperationId(0), m_isTransact(false)
+        logger(0), lastOperationId(0)
 {
     logger = Logger::getInstance("scag.re");
     m_SessionKey = key;
@@ -250,8 +250,8 @@ void Session::Serialize(SessionBuffer& buff)
     if (m_pCurrentOperation != 0) 
         buff << currentOperationId;
    
-    buff << m_SessionKey.abonentAddr << (uint32_t)m_SessionKey.USR << lastAccessTime << lastOperationId << m_isTransact;
-    buff << m_SmppDiscriptor.cmdType << m_SmppDiscriptor.currentIndex << m_SmppDiscriptor.lastIndex;
+    buff << m_SessionKey.abonentAddr << (uint32_t)m_SessionKey.USR << lastAccessTime << lastOperationId;
+    //buff << m_SmppDiscriptor.cmdType << m_SmppDiscriptor.currentIndex << m_SmppDiscriptor.lastIndex;
     buff << m_SessionPrimaryKey.abonentAddr << m_SessionPrimaryKey.BornMicrotime.tv_sec << m_SessionPrimaryKey.BornMicrotime.tv_usec;
 }
 
@@ -283,17 +283,18 @@ void Session::Deserialize(SessionBuffer& buff)
     m_SessionKey.USR = tmp;
 
 	uint8_t c;
-    buff >> lastAccessTime >> lastOperationId >> c;
-	m_isTransact = c;     
+    buff >> lastAccessTime >> lastOperationId;
+    // >> c;
+	//m_isTransact = c;     
 
-    buff >> tmp;
-    m_SmppDiscriptor.cmdType = (CommandOperations)tmp;
+    //buff >> tmp;
+    //m_SmppDiscriptor.cmdType = (CommandOperations)tmp;
 
-    buff >> tmp;
-    m_SmppDiscriptor.currentIndex = tmp;
+    //buff >> tmp;
+    //m_SmppDiscriptor.currentIndex = tmp;
 
-    buff >> tmp;
-    m_SmppDiscriptor.lastIndex = tmp;
+    //buff >> tmp;
+    //m_SmppDiscriptor.lastIndex = tmp;
 
     buff >> m_SessionPrimaryKey.abonentAddr;
     buff >> m_SessionPrimaryKey.BornMicrotime.tv_sec;
@@ -425,7 +426,7 @@ void Session::setOperationFromPending(SCAGCommand& cmd, int operationType)
 
     for (it = PendingOperationList.begin(); it!=PendingOperationList.end(); ++it)
     {
-        if (it->type == m_SmppDiscriptor.cmdType) 
+        if (it->type == operationType) 
         {
             AddNewOperationToHash(cmd, operationType);
             PendingOperationList.erase(it);

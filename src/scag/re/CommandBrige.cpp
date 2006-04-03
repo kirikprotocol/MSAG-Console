@@ -11,11 +11,14 @@ enum ProtocolForEvent
     SMPP_USSD =2
 };
 
-
-
-EventHandlerType CommandBrige::getHandlerType(const SCAGCommand& command)
+EventHandlerType CommandBrige::getHTTPHandlerType(const SCAGCommand& command)
 {
-    EventHandlerType handlerType = EH_UNKNOWN;
+    return EH_UNKNOWN;
+}
+
+EventHandlerType CommandBrige::getSMPPHandlerType(const SCAGCommand& command)
+{
+    EventHandlerType handlerType;
 
     SCAGCommand& _command = const_cast<SCAGCommand&>(command);
     SmppCommand * smppCommand = dynamic_cast<SmppCommand *>(&_command);
@@ -33,7 +36,7 @@ EventHandlerType CommandBrige::getHandlerType(const SCAGCommand& command)
     {
     case DELIVERY:
         receiptMessageId = atoi(sms.getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
-            
+
         if (receiptMessageId) handlerType = EH_RECEIPT;
         else handlerType = EH_DELIVER_SM;
         break;
@@ -52,6 +55,29 @@ EventHandlerType CommandBrige::getHandlerType(const SCAGCommand& command)
     case SUBMIT_RESP:
         handlerType = EH_SUBMIT_SM_RESP;
         break;
+
+    default:
+        handlerType = EH_UNKNOWN;
+    }
+
+    return handlerType;
+}
+
+
+EventHandlerType CommandBrige::getHandlerType(const SCAGCommand& command)
+{
+
+    TransportType ttype = command.getType();
+    EventHandlerType handlerType;
+
+    switch (ttype) 
+    {
+    case SMPP:
+        handlerType = getSMPPHandlerType(command);
+    case HTTP:
+        handlerType = getHTTPHandlerType(command);
+    default:
+        handlerType = EH_UNKNOWN;
     }
 
     return handlerType;

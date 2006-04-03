@@ -71,6 +71,9 @@ class CommandBrige
 {
 private:
     static int getProtocolForEvent(SmppCommand& command);
+    static EventHandlerType getSMPPHandlerType(const SCAGCommand& command);
+    static EventHandlerType getHTTPHandlerType(const SCAGCommand& command);
+
 public:
 
     static std::string getMessageBody(SmppCommand& command);
