@@ -1,6 +1,7 @@
 #include "HttpEventHandler.h"
 #include "HttpAdapter.h"
 #include "scag/re/actions/ActionContext.h"
+#include "scag/re/CommandBrige.h"
 
 namespace scag { namespace re { namespace http {
 
@@ -130,9 +131,9 @@ RuleStatus HttpEventHandler::process(SCAGCommand& command, Session& session)
 
 int HttpEventHandler::StrToHandlerId(const std::string& str)
 {
-    if (str == "request")   return HTTP_REQUEST;
-    if (str == "response")  return HTTP_RESPONSE;
-    if (str == "delivery")  return HTTP_DELIVERY;
+    if (str == "request")   return EH_HTTP_REQUEST;
+    if (str == "response")  return EH_HTTP_RESPONSE;
+    if (str == "delivery")  return EH_HTTP_DELIVERY;
     return UNKNOWN; 
 }
 

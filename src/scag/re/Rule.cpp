@@ -42,9 +42,7 @@ RuleStatus Rule::process(SCAGCommand& command,Session& session)
 
     smsc_log_debug(logger,"Process Rule... (%d Event Handlers registered)", Handlers.Count());
 
-    EventHandlerType handlerType;
-
-    handlerType = CommandBrige::getHandlerType(command);
+    EventHandlerType handlerType = CommandBrige::getHandlerType(command);
 
     smsc_log_debug(logger,"%d Event Handlers fond", handlerType);
 

@@ -5,16 +5,6 @@
 #include <scag/util/properties/Properties.h>
 #include <core/buffers/IntHash.hpp>
 
-namespace scag { namespace re {
-    enum AccessType 
-    {
-        atNoAccess = 0,
-        atRead  = 1,
-        atWrite = 2,
-        atReadWrite = 3
-    };
-}}
-  
 namespace scag { namespace re { namespace http {
     using namespace scag::util::properties;
     using namespace scag::transport::http;
@@ -23,7 +13,15 @@ namespace scag { namespace re { namespace http {
     class HttpCommandAdapter : public PropertyManager
     {
         HttpCommand& command;
+        Hash<AdapterProperty*> PropertyPool;
+
     public:
+
+        static Hash<AccessType> RequestFieldsAccess;
+        static Hash<AccessType> InitRequestAccess();
+
+        Property* getRequestProperty(const std::string& name);
+        Property* getResponseProperty(const std::string& name);
 
         HttpCommandAdapter(HttpCommand& _command) : PropertyManager(), command(_command)
         {

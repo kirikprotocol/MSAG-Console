@@ -2,8 +2,11 @@
 #include "CommandBrige.h"
 #include <scag/sessions/Session.h>
 #include "util/recoder/recode_dll.h"
+#include "scag/transport/http/HttpCommand.h"
 
 namespace scag { namespace re {
+
+using namespace scag::transport::http;
 
 enum ProtocolForEvent
 {
@@ -13,7 +16,17 @@ enum ProtocolForEvent
 
 EventHandlerType CommandBrige::getHTTPHandlerType(const SCAGCommand& command)
 {
-    return EH_UNKNOWN;
+    switch(((HttpCommand&)command).getCommandId())
+    {
+        case HTTP_REQUEST:
+            return EH_HTTP_REQUEST;
+        case HTTP_RESPONSE:
+            return EH_HTTP_RESPONSE;
+        case HTTP_DELIVERY:
+            return EH_HTTP_DELIVERY;
+        default:
+            return EH_UNKNOWN;
+    }
 }
 
 EventHandlerType CommandBrige::getSMPPHandlerType(const SCAGCommand& command)

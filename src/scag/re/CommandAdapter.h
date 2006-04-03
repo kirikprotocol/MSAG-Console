@@ -4,6 +4,7 @@
 
 #include <scag/transport/SCAGCommand.h>
 #include "scag/re/smpp/SmppAdapter.h"
+#include "scag/re/http/HttpAdapter.h"
 
 #include <string>
 
@@ -12,7 +13,7 @@ namespace scag { namespace re {
 
 using namespace scag::transport;
 using scag::re::smpp::SmppCommandAdapter;
-
+using scag::re::http::HttpCommandAdapter;
 
 class CommandAdapter
 {
@@ -25,6 +26,8 @@ public:
 
         case SMPP:
             return SmppCommandAdapter::CheckAccess(handlerType,PropertyName);
+        case HTTP:
+            return HttpCommandAdapter::CheckAccess(handlerType,PropertyName);
 
         }
         return atNoAccess;
