@@ -70,6 +70,8 @@ public class ProfileAlterCommand extends ProfileGenCommand
                         throw new Exception("Locale '" + locale + "' is not registered");
                     profile.setLocale(locale);
                 }
+                if (isInputAccessMask) profile.setInputAccessMask(inputAccessMask);
+                if (isOutputAccessMask) profile.setOutputAccessMask(outputAccessMask);
                 updateResult = ctx.getSmsc().profileUpdate(mask, profile);
                 switch (updateResult) {
                     case 1:    //pusUpdated
