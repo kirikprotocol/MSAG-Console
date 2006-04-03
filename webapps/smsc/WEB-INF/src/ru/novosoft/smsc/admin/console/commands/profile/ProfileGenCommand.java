@@ -40,8 +40,8 @@ public abstract class ProfileGenCommand extends CommandClass {
     protected boolean translit = true;
     protected int groupId = 0;
     protected String groupIdOrName = "";
-    protected int inputAccessMask = 0;
-    protected int outputAccessMask = 0;
+    protected int inputAccessMask = 1;
+    protected int outputAccessMask = 1;
 
     protected boolean isAliasOptions = false;
     protected boolean isDivertOptions = false;
