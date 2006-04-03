@@ -1,6 +1,8 @@
 #include "Rule.h"
 #include "scag/transport/smpp/SmppCommand.h"
+#include "scag/transport/http/HttpCommand.h"
 #include "scag/re/smpp/SmppEventHandler.h"
+#include "scag/re/http/HttpEventHandler.h"
 #include "util/recoder/recode_dll.h"
 
 namespace scag { namespace re 
@@ -8,7 +10,8 @@ namespace scag { namespace re
 
 using namespace scag::re::actions;
 using namespace scag::transport::smpp;
-
+using namespace scag::transport::http;
+using namespace scag::re::http;
 
 Rule::~Rule()
 {
@@ -39,7 +42,12 @@ RuleStatus Rule::process(SCAGCommand& command,Session& session)
 
     smsc_log_debug(logger,"Process Rule...");
 
-    EventHandlerType handlerType = CommandBrige::getHandlerType(command);
+    EventHandlerType handlerType;
+
+    if(transportType == SMPP)
+        handlerType = CommandBrige::getHandlerType(command);
+    else if(transportType == HTTP)
+        handlerType = (EventHandlerType)((HttpCommand&)command).getCommandId();
 
     if (!Handlers.Exist(handlerType)) 
     {
@@ -72,6 +80,9 @@ EventHandler * Rule::CreateEventHandler()
     {
     case SMPP:
         return new SmppEventHandler();
+
+    case HTTP:
+        return new HttpEventHandler();
 
     default:
         return 0;
