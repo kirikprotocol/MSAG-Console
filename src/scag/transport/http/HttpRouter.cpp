@@ -3,6 +3,8 @@
 #include <xercesc/parsers/SAXParser.hpp>
 #include <xercesc/util/OutOfMemoryException.hpp>
 
+#include <scag/bill/BillingManager.h>
+
 #include "HttpCommand.h"
 #include "HttpProcessor.h"
 #include "HttpRouter.h"
@@ -12,6 +14,8 @@
 namespace scag { namespace transport { namespace http {
 
 XERCES_CPP_NAMESPACE_USE
+
+using scag::bill::BillingManager;
 
 void HttpRouterImpl::init(std::string& cfg)
 {
@@ -57,6 +61,9 @@ void HttpRouterImpl::BuildMaps(RouteArray *r, RouteHash *rid, AddressURLHash *au
     for(int i = 0; i < r->Count(); i++)
     {
         rt = &(*r)[i];
+
+        rt->provider_id = BillingManager::Instance().getInfrastructure().GetProviderID(rt->service_id);
+
         rid->Insert(rt->id.c_str(), rt);
 
         for(int j = 0; j < rt->masks.Count(); j++)

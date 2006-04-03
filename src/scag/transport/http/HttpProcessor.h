@@ -4,6 +4,7 @@
 #include <string>
 
 #include "HttpCommand.h"
+#include "HttpRouter.h"
 
 namespace scag { namespace transport { namespace http {
     class HttpProcessor 
@@ -35,11 +36,27 @@ namespace scag { namespace transport { namespace http {
          * @param   response - HttpResponse tried to deliver
          * @param   delivered - packet delivery outcome status (ok or failed).
          */
-        virtual void statusResponse(const HttpResponse& response, bool delivered=true) = 0;
+        virtual void statusResponse(HttpResponse& response, bool delivered=true) = 0;
 
     protected:
 
         virtual ~HttpProcessor() {}
+    };
+
+    class HttpProcessorImpl : public HttpProcessor
+    {
+    public:
+        virtual bool processRequest(HttpRequest& request);
+        virtual bool processResponse(HttpResponse& response);
+        virtual void statusResponse(HttpResponse& response, bool delivered=true);
+
+        void init(std::string& cfg);
+    protected:
+        HttpRouterImpl router;
+
+        bool process(HttpCommand& cmd);
+
+        virtual ~HttpProcessorImpl() {}
     };
 }}}
 

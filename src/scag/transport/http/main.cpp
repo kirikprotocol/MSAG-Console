@@ -68,7 +68,7 @@ namespace scag { namespace transport { namespace http
 
             return true;
         }
-        virtual void statusResponse(const HttpResponse& response,
+        virtual void statusResponse(HttpResponse& response,
                 bool delivered = true)
         {
 #ifdef LOG_HEADERS

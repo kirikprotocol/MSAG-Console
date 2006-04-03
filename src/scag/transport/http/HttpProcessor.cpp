@@ -6,60 +6,78 @@
 
 #include "HttpCommand.h"
 #include "HttpProcessor.h"
-#include "HttpRouter.h"
 
 namespace scag { namespace transport { namespace http {
 
 using namespace scag::sessions;
 using namespace scag::re;
 
-//    Logger *httpLogger = NULL;
-    
-class HttpProcessorImpl : public HttpProcessor
+bool HttpProcessorImpl::processRequest(HttpRequest& request)
 {
-    HttpRouterImpl router;
-public:
-    virtual bool processRequest(HttpRequest& request)
+    HttpRoute r;
+    try{
+        r = router.findRoute(request.getAbonent(), request.getSite() + '/' + request.getSitePath());
+        request.setServiceId(r.service_id);
+        request.setRouteId(r.id);
+    }
+    catch(RouteNotFoundException& e)
     {
-        SessionManager& smgr = SessionManager::Instance();
-        CSessionKey sk = {request.getUSR(), request.getAbonent().c_str()};
-        SessionPtr se = smgr.getSession(sk);
-
-        if(!se.Get())
-            return false;
-
-        try{
-            HttpRoute r = router.findRoute(request.getAbonent(), request.getSite());
-            request.setServiceId(r.service_id);
-        }
-        catch(RouteNotFoundException& e)
-        {
-            return false;
-        }
-
-        RuleEngine& re = RuleEngine::Instance();
-        re.process(request, *se.Get());
-
-        return true;
+        return false;
     }
 
-    virtual bool processResponse(HttpResponse& response)
-    {
-        return true;
-    }
+    CSessionKey sk = {request.getUSR(), request.getAbonent().c_str()};
+    SessionPtr se = SessionManager::Instance().getSession(sk);
 
-    virtual void statusResponse(const HttpResponse& response, bool delivered = true)
-    {
-    }
+    if(!se.Get())
+        return false;
+//TODO: Add register event
+//    Statistics::Instance().registerEvent(HttpStatEvent(0, request.getRouteId(), r.service_id, r.provider_id));
+
+    RuleStatus rs = RuleEngine::Instance().process(request, *se.Get());
+
+//    Statistics::Instance().registerEvent(HttpStatEvent(0, request.getRouteId(), r.service_id, r.provider_id, rs.result));
+
+    if(rs.result < 0)
+        return false;
+
+    return true;
+}
+
+bool HttpProcessorImpl::processResponse(HttpResponse& response)
+{
+    CSessionKey sk = {response.getUSR(), response.getAbonent().c_str()};
+    SessionPtr se = SessionManager::Instance().getSession(sk);
+
+    if(!se.Get())
+        return false;
+
+//    Statistics::Instance().registerEvent(HttpStatEvent(0, response.getRouteId(), "", -1));
+
+    RuleStatus rs = RuleEngine::Instance().process(response, *se.Get());
+
+//    Statistics::Instance().registerEvent(HttpStatEvent(0, response.getRouteId(), "", -1, rs.result));
+
+    if(rs.result < 0)
+        return false;
+
+    return true;
+}
+
+void HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
+{
+    CSessionKey sk = {response.getUSR(), response.getAbonent().c_str()};
+    SessionPtr se = SessionManager::Instance().getSession(sk);
+
+//    Statistics::Instance().registerEvent(HttpStatEvent(0, response.getRouteId(), "", -1));
+
+    response.setCommandId(HTTP_DELIVERY);
+
+    RuleStatus rs = RuleEngine::Instance().process(response, *se.Get());
+}
         
-    virtual ~HttpProcessorImpl() {}
-        
-    HttpProcessorImpl() {}
-
-    void init(std::string& cfg)
-    {
-        router.init(cfg);
-    }
-};
+void HttpProcessorImpl::init(std::string& cfg)
+{
+    router.init(cfg);
+}
 
 }}}

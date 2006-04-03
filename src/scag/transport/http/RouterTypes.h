@@ -147,9 +147,20 @@ typedef Array<std::string> StringArray;
 struct HttpRoute
 {
     uint32_t service_id;
+    uint32_t provider_id;
     std::string id;
     std::string url;
     StringArray masks;
+
+    HttpRoute() {}
+
+    HttpRoute(const HttpRoute& cp)
+    {
+        service_id =cp.service_id;
+        id = cp.id;
+        url = cp.url;
+        masks = cp.masks;
+    }
 };
 
 typedef Array<HttpRoute> RouteArray;

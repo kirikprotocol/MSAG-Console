@@ -35,7 +35,7 @@ struct TransactionContext {
 
     TransactionContext() {
         operationId = -1;
-	serviceId = -1;
+    serviceId = -1;
         ruleId = -1;
         usr = 0;
     }
@@ -59,6 +59,12 @@ protected:
     StringHash &masterHash;
 };
 
+enum HttpCommandId {
+    HTTP_REQUEST = 1000,
+    HTTP_RESPONSE,
+    HTTP_DELIVERY
+};
+
 /**
  * Abstract class represents generic HttpCommand (Request or Response)
  * Defines basic command methods
@@ -69,7 +75,7 @@ class HttpCommand : public SCAGCommand {
 public:
     typedef StringHashIterator FieldIterator;
 
-    HttpCommand(TransactionContext& tcx) : trc(tcx), content(1),
+    HttpCommand(TransactionContext& tcx, uint8_t cmd) : trc(tcx), content(1), command_id(cmd),
         contentLength(-1), /* totalHeadersSize(0), */
         headerFieldsIterator(headerFields), charset(LATIN_1) {}
     virtual ~HttpCommand();
@@ -93,6 +99,8 @@ public:
     virtual void setOperationId(int64_t op);   // initialy -1
 
     virtual bool isResponse() = 0;
+    virtual uint8_t getCommandId() { return command_id; };
+    virtual void setCommandId(uint8_t cmd) { command_id = cmd; };
 
     uint16_t getUSR() {
         return trc.usr;
@@ -152,7 +160,8 @@ protected:
     std::string contentType;
     std::string httpVersion;
     wstring textContent;
-    
+    uint8_t command_id;
+        
     TransactionContext &trc;
     // unsigned int totalHeadersSize;
     int contentLength;
@@ -183,7 +192,7 @@ class HttpRequest : public HttpCommand {
 public:
     typedef StringHashIterator ParameterIterator;
 
-    HttpRequest(TransactionContext& tcx) : HttpCommand(tcx),
+    HttpRequest(TransactionContext& tcx) : HttpCommand(tcx, HTTP_REQUEST),
         queryParametersIterator(queryParameters), sitePort(80) {}
 
     HttpMethod getMethod() {
@@ -257,7 +266,7 @@ class HttpResponse : public HttpCommand {
     friend class HttpParser;
 
 public:
-    HttpResponse(TransactionContext& tcx) : HttpCommand(tcx) {};
+    HttpResponse(TransactionContext& tcx) : HttpCommand(tcx, HTTP_RESPONSE) {};
 
     int getStatus() {
         return status;
