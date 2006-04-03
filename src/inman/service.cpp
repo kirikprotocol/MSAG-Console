@@ -13,8 +13,7 @@ namespace smsc  {
 namespace inman {
 
 Service::Service(const InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
-    : logger(uselog), _cfg(*in_cfg)
-    , session(0), disp(0), server(0), bfs(0)
+    : logger(uselog), _cfg(*in_cfg), session(0), disp(0), server(0)
     , tcpRestartCount(0), tmWatcher(NULL)
 {
     if (!logger)
@@ -41,19 +40,21 @@ Service::Service(const InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
     smsc_log_debug(logger, "InmanSrv: TCP server inited");
 
     if (_cfg.bill.cdrMode) {
-        bfs = new InBillingFileStorage(_cfg.bill.cdrDir, 0, logger);
-        assert(bfs);
-        int oldfs = bfs->RFSOpen(true);
+        _cfg.bill.bfs = new InBillingFileStorage(_cfg.bill.cdrDir, 0, logger);
+        assert(_cfg.bill.bfs);
+        int oldfs = _cfg.bill.bfs->RFSOpen(true);
         assert(oldfs >= 0);
         smsc_log_debug(logger, "InmanSrv: Billing storage opened%s",
                        oldfs > 0 ? ", old files rolled": "");
 
         if (_cfg.bill.cdrInterval) { //use external storage roller
-            roller = new InFileStorageRoller(bfs, (unsigned long)_cfg.bill.cdrInterval);
+            roller = new InFileStorageRoller(_cfg.bill.bfs,
+                                             (unsigned long)_cfg.bill.cdrInterval);
             assert(roller);
             smsc_log_debug(logger, "InmanSrv: BillingStorage roller inited");
         }
-    }
+    } else
+        _cfg.bill.bfs = NULL;
     tmWatcher = new TimeWatcher(logger);
     assert(tmWatcher);
     smsc_log_debug(logger, "InmanSrv: TimeWatcher inited");
@@ -79,12 +80,12 @@ Service::~Service()
         smsc_log_debug( logger, "InmanSrv: Deleting TCP server ..");
         delete server;
     }
-    if (bfs) {
+    if (_cfg.bill.bfs) {
         smsc_log_debug(logger, "InmanSrv: Closing Billing storage ..");
-        bfs->RFSClose();
+        _cfg.bill.bfs->RFSClose();
         if (roller)
             delete roller;
-        delete bfs;
+        delete _cfg.bill.bfs;
     }
     if (tmWatcher) {
         smsc_log_debug(logger, "InmanSrv: Deleting TimeWatcher ..");
@@ -100,15 +101,6 @@ Service::~Service()
     }
     smsc_log_debug( logger, "InmanSrv: Released." );
 }
-
-
-void Service::writeCDR(unsigned int bcId, unsigned int bilId, const CDRRecord & cdr)
-{
-    bfs->bill(cdr);
-    smsc_log_info(logger, "InmanSrv: CDR written: msgId = %llu, Billing[%u.%u]",
-                    cdr._msgId, bcId, bilId);
-}
-
 
 bool Service::start()
 {
@@ -178,7 +170,7 @@ void Service::onConnectOpened(Server* srv, Connect* conn)
     assert(conn);
     conn->setConnectFormat(Connect::frmLengthPrefixed);
     BillingConnect *bcon = new BillingConnect(&_cfg.bill, session, conn, 
-                                              tmWatcher, this, logger);
+                                              tmWatcher, logger);
     if (bcon) {
         _mutex.Lock();
         bConnects.insert(BillingConnMap::value_type(conn->getSocketId(), bcon));
@@ -203,7 +195,7 @@ void Service::onConnectClosing(Server* srv, Connect* conn)
         _mutex.Unlock();
 
         delete bcon;
-        smsc_log_debug(logger, "InmanSrv: BillingConnect[%u] closed", connId);
+        smsc_log_info(logger, "InmanSrv: BillingConnect[%u] closed", connId);
     } else {
         _mutex.Unlock();
         smsc_log_warn(logger, "InmanSrv: attempt to close unknown connect[%u]", connId);

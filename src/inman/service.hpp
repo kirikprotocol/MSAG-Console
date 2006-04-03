@@ -7,16 +7,16 @@
 
 #include "inman/inap/dispatcher.hpp"
 #include "inman/interaction/server.hpp"
-#include "inman/inap/session.hpp"
-#include "inman/storage/FileStorages.hpp"
-#include "inman/common/TimeWatcher.hpp"
+//#include "inman/inap/session.hpp"
+//#include "inman/storage/FileStorages.hpp"
+//#include "inman/common/TimeWatcher.hpp"
 #include "inman/billing.hpp"
 
 using smsc::inman::inap::TCAPDispatcher;
-using smsc::inman::inap::SSNSession;
+//using smsc::inman::inap::SSNSession;
 using smsc::inman::interaction::Server;
 using smsc::inman::interaction::ServerListener;
-using smsc::inman::filestore::InBillingFileStorage;
+//using smsc::inman::filestore::InBillingFileStorage;
 using smsc::inman::filestore::InFileStorageRoller;
 using smsc::inman::BillingCFG;
 using smsc::inman::BillingConnect;
@@ -47,8 +47,6 @@ public:
 
     bool start();
     void stop();
-    void writeCDR(unsigned int bcId, unsigned int bilId, const CDRRecord & cdr);
-
     void onBillingConnectClosed(unsigned int connId);
     
     //ServerListener interface
@@ -65,7 +63,6 @@ private:
     Server*         server;
     volatile bool   running;
     InService_CFG   _cfg;
-    InBillingFileStorage*    bfs;
     InFileStorageRoller *    roller;
     TimeWatcher*    tmWatcher;
     unsigned        tcpRestartCount;

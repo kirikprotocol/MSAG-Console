@@ -19,11 +19,10 @@ namespace inman {
  * class BillingService implementation:
  * ************************************************************************** */
 BillingConnect::BillingConnect(BillingCFG * cfg, SSNSession* ss7_sess, Connect* conn, 
-            TimeWatcher* tm_watcher, Service * in_srvc, Logger * uselog/* = NULL*/)
-    : _cfg(*cfg), _ss7Sess(ss7_sess), _conn(conn)
-    , _inSrvc(in_srvc), _tmWatcher(tm_watcher)
+            TimeWatcher* tm_watcher, Logger * uselog/* = NULL*/)
+    : _cfg(*cfg), _ss7Sess(ss7_sess), _conn(conn), _tmWatcher(tm_watcher)
 {
-    assert(conn && in_srvc && cfg && tm_watcher);
+    assert(conn && cfg && tm_watcher);
     logger = uselog ? uselog : Logger::getInstance("smsc.inman.BillConn");
     _bcId = _conn->getSocketId();
     if (!_cfg.maxBilling)
@@ -71,7 +70,10 @@ void BillingConnect::billingDone(Billing* bill)
             if ((_cfg.cdrMode == BillingCFG::CDR_ALL)
                 || ((_cfg.cdrMode == BillingCFG::CDR_POSTPAID)
                     && bill->isPostpaidBill())) {
-                _inSrvc->writeCDR(_bcId, billId, bill->getCDRRecord());
+                _cfg.bfs->bill(bill->getCDRRecord());
+                smsc_log_info(logger, "Billing[%u.%u]: CDR written: msgId = %llu, billed by IN: %s",
+                              _bcId, billId, (bill->getCDRRecord())._msgId, 
+                              (bill->getCDRRecord())._inBilled ? "true": "false");
             }
         }
     }
@@ -410,7 +412,7 @@ void Billing::ChargeAbonent(AbonentBillType ab_type)
     smsc_log_debug(logger, "Billing[%u.%u]: charging, abonent type: %u",
                     _bconn->bConnId(), _bId, (unsigned)ab_type);
 
-    if ((ab_type != smsc::inman::cache::btPrepaid)
+    if (((abBillType = ab_type) != smsc::inman::cache::btPrepaid)
         && !_cfg.postpaidRPC.size())
         postpaidBill = true;
 
@@ -522,8 +524,9 @@ void Billing::onConnectSMS(ConnectSMSArg* arg)
 
 void Billing::onContinueSMS(uint32_t inmanErr /* = 0*/)
 {
-    smsc_log_info(logger, "Billing[%u.%u]: %s", _bconn->bConnId(), _bId,
-                   postpaidBill ? "<-- CHARGING_POSSIBLE" : "SSF <-- SCF ContinueSMS");
+    smsc_log_info(logger, "Billing[%u.%u]: %s, abonent type: %u", _bconn->bConnId(), _bId,
+                postpaidBill ? "<-- CHARGING_POSSIBLE (via CDR)" : "SSF <-- SCF ContinueSMS",
+                abBillType);
     BillAction  action = Billing::doCont;
     {
         MutexGuard grd(bilMutex);

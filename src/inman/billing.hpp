@@ -22,6 +22,7 @@ ChargeSmsResult     <-   | bilProcessed:     SSF <- ContinueSMS ]
 #include "inman/interaction/connect.hpp"
 #include "inman/common/TimeWatcher.hpp"
 #include "inman/incache.hpp"
+#include "inman/storage/FileStorages.hpp"
 
 using smsc::inman::inap::Inap;
 using smsc::inman::inap::Dialog;
@@ -33,7 +34,6 @@ using smsc::inman::interaction::InmanHandler;
 using smsc::inman::interaction::SMCAPSpecificInfo;
 using smsc::inman::interaction::ChargeSms;
 using smsc::inman::interaction::DeliverySmsResult;
-//using smsc::core::synchronization::Mutex;
 using smsc::inman::sync::StopWatch;
 using smsc::inman::sync::TimeWatcher;
 using smsc::inman::sync::TimerListenerITF;
@@ -46,6 +46,7 @@ using smsc::inman::cache::AbonentCacheITF;
 using smsc::inman::cache::AbonentBillType;
 using smsc::inman::cache::AbonentId;
 
+using smsc::inman::filestore::InBillingFileStorage;
 
 namespace smsc    {
 namespace inman   {
@@ -88,6 +89,7 @@ struct BillingCFG {
     typedef enum { CDR_NONE = 0, CDR_ALL = 1, CDR_POSTPAID = 2} CDR_MODE;
     AbonentCacheITF * abCache;
     InAbonentProviderITF * abProvider;
+    InBillingFileStorage * bfs;
 //billing parameters
     BILL_MODE       billMode;
     CDR_MODE        cdrMode;
@@ -111,7 +113,6 @@ struct BillingCFG {
 };
 
 class Billing;
-class Service;
 //Manages SMSC Requests on given Connect in parallel mode
 //(for each request initiates new Billing).
 class BillingConnect: public ConnectListener
@@ -120,7 +121,7 @@ class BillingConnect: public ConnectListener
 
 public: 
     BillingConnect(BillingCFG * cfg, SSNSession* ss7_sess, Connect* conn,
-                   TimeWatcher* tm_watcher, Service * in_srvc, Logger * uselog = NULL);
+                   TimeWatcher* tm_watcher, Logger * uselog = NULL);
     ~BillingConnect();
 
     unsigned int bConnId(void) const { return _bcId; }
@@ -144,7 +145,6 @@ protected:
     BillingCFG  _cfg;
     BillingMap  workers;
     Connect*    _conn;
-    Service *   _inSrvc;
     SSNSession*    _ss7Sess;
     TimeWatcher* _tmWatcher;
 };
@@ -222,6 +222,7 @@ protected:
     bool            postpaidBill;
     TimeWatcher*    tmWatcher;
     TimersMAP       timers;
+    AbonentBillType abBillType;
 };
 
 } //inman
