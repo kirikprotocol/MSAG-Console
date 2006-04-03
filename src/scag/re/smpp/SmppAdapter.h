@@ -5,11 +5,6 @@
 #include <scag/util/properties/Properties.h>
 #include <core/buffers/IntHash.hpp>
 
-namespace scag { namespace re {
-    enum AccessType;
-}};
-
-
   
 namespace scag { namespace re { namespace smpp 
 {

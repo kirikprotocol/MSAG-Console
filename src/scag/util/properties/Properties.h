@@ -9,6 +9,18 @@
 
 #include <string>
 
+namespace scag { namespace re {
+    enum AccessType 
+    {
+        atNoAccess = 0,
+        atRead  = 1,
+        atWrite = 2,
+        atReadWrite = 3
+    };
+
+}};
+
+
 namespace scag { namespace util { namespace properties 
 {
     enum PropertyType
