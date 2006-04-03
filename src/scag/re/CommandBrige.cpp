@@ -10,8 +10,8 @@ using namespace scag::transport::http;
 
 enum ProtocolForEvent
 {
-    SMPP_SMS = 1,
-    SMPP_USSD =2
+    SMPP_SMS =  1,
+    SMPP_USSD = 2
 };
 
 EventHandlerType CommandBrige::getHTTPHandlerType(const SCAGCommand& command)

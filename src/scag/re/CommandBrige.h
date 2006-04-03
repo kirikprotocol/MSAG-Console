@@ -45,6 +45,7 @@ enum EventHandlerType
     EH_DELIVER_SM,
     EH_DELIVER_SM_RESP,
     EH_RECEIPT,
+
     EH_HTTP_REQUEST,
     EH_HTTP_RESPONSE,
     EH_HTTP_DELIVERY

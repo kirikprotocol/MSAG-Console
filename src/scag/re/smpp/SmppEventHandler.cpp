@@ -4,12 +4,6 @@
 #include "scag/re/CommandBrige.h"
 
 namespace scag { namespace re {
-/*
-enum SmppHandlerType
-{
-    RECEIPT = 100
-};
-  */
 
 using namespace scag::re::smpp;
 
