@@ -74,8 +74,10 @@ EventHandlerType CommandBrige::getHandlerType(const SCAGCommand& command)
     {
     case SMPP:
         handlerType = getSMPPHandlerType(command);
+        break;
     case HTTP:
         handlerType = getHTTPHandlerType(command);
+        break;
     default:
         handlerType = EH_UNKNOWN;
     }

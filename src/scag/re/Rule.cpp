@@ -40,14 +40,13 @@ RuleStatus Rule::process(SCAGCommand& command,Session& session)
         //return rs;
     }
 
-    smsc_log_debug(logger,"Process Rule...");
+    smsc_log_debug(logger,"Process Rule... (%d Event Handlers registered)", Handlers.Count());
 
     EventHandlerType handlerType;
 
-    if(transportType == SMPP)
-        handlerType = CommandBrige::getHandlerType(command);
-    else if(transportType == HTTP)
-        handlerType = (EventHandlerType)((HttpCommand&)command).getCommandId();
+    handlerType = CommandBrige::getHandlerType(command);
+
+    smsc_log_debug(logger,"%d Event Handlers fond", handlerType);
 
     if (!Handlers.Exist(handlerType)) 
     {
