@@ -13,6 +13,13 @@ namespace scag { namespace re {
 using namespace scag::transport;
 using scag::re::smpp::SmppCommandAdapter;
 
+enum AccessType 
+{
+    atNoAccess = 0,
+    atRead  = 1,
+    atWrite = 2,
+    atReadWrite = 3
+};
 
 
 class CommandAdapter

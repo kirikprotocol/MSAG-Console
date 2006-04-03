@@ -5,16 +5,11 @@
 #include <scag/util/properties/Properties.h>
 #include <core/buffers/IntHash.hpp>
 
-
 namespace scag { namespace re {
-    enum AccessType 
-    {
-        atNoAccess = 0,
-        atRead  = 1,
-        atWrite = 2,
-        atReadWrite = 3
-    };
+    enum AccessType;
 }};
+
+
   
 namespace scag { namespace re { namespace smpp 
 {
