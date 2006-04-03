@@ -159,6 +159,8 @@ protected:
       return !*a && *b;
     }
   };
+  struct Group;
+  friend Group;
   struct Group{
     int id;
     buf::FixedLengthString<64> name;
