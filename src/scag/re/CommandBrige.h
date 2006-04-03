@@ -44,7 +44,10 @@ enum EventHandlerType
     EH_SUBMIT_SM_RESP,
     EH_DELIVER_SM,
     EH_DELIVER_SM_RESP,
-    EH_RECEIPT
+    EH_RECEIPT,
+    EH_HTTP_REQUEST,
+    EH_HTTP_RESPONSE,
+    EH_HTTP_DELIVERY
 };
 
 struct CSmppDiscriptor
