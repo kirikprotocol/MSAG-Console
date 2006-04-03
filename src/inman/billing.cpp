@@ -312,7 +312,7 @@ bool Billing::startCAPDialog(void)
         arg.setTPProtocolIdentifier(csInfo.tpProtocolIdentifier);
         arg.setTPDataCodingScheme(csInfo.tpDataCodingScheme);
 
-        smsc_log_info(logger, "Billing[%u.%u]: SSF --> SCF InitialDPSMS",
+        smsc_log_debug(logger, "Billing[%u.%u]: SSF --> SCF InitialDPSMS",
                         _bconn->bConnId(), _bId);
         state = Billing::bilInited;
         inap->initialDPSMS(&arg); //begins TCAP dialog
@@ -485,7 +485,7 @@ void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes)
     EventTypeSMS_e eventType = smsRes->GetValue() ? EventTypeSMS_o_smsFailure :
                                                     EventTypeSMS_o_smsSubmission;
 
-    smsc_log_info(logger, "Billing[%u.%u]: DELIVERY_%s (code: %u)",
+    smsc_log_info(logger, "Billing[%u.%u]: --> DELIVERY_%s (code: %u)",
                    _bconn->bConnId(), _bId,
                    (eventType == EventTypeSMS_o_smsFailure) ? "FAILED" : "SUCCEEDED",
                    smsRes->GetValue());
@@ -524,9 +524,8 @@ void Billing::onConnectSMS(ConnectSMSArg* arg)
 
 void Billing::onContinueSMS(uint32_t inmanErr /* = 0*/)
 {
-    smsc_log_info(logger, "Billing[%u.%u]: %s, abonent type: %u", _bconn->bConnId(), _bId,
-                postpaidBill ? "<-- CHARGING_POSSIBLE (via CDR)" : "SSF <-- SCF ContinueSMS",
-                abBillType);
+    smsc_log_info(logger, "Billing[%u.%u]: <-- CHARGING_POSSIBLE (via %s), abonent type: %u",
+                _bconn->bConnId(), _bId, postpaidBill ? "CDR" : "SCF", abBillType);
     BillAction  action = Billing::doCont;
     {
         MutexGuard grd(bilMutex);
@@ -546,7 +545,7 @@ void Billing::onContinueSMS(uint32_t inmanErr /* = 0*/)
 //Huawei: #define POSTPAID_RPCause 41     //RP Cause: 'Temporary Failure'
 void Billing::onReleaseSMS(ReleaseSMSArg* arg)
 {
-    smsc_log_info(logger, "Billing[%u.%u]: SSF <-- SCF ReleaseSMS, RP cause: %u",
+    smsc_log_debug(logger, "Billing[%u.%u]: SSF <-- SCF ReleaseSMS, RP cause: %u",
                    _bconn->bConnId(), _bId, (unsigned)arg->rPCause);
     BillAction  action = Billing::doEnd;
     {
@@ -574,25 +573,26 @@ void Billing::onReleaseSMS(ReleaseSMSArg* arg)
                 }
             }
         }
-        ChargeSmsResult res(InErrRPCause, (uint16_t)arg->rPCause, postpaidBill ?
+
+        uint32_t scfErr = InmanErrorCode::GetCombinedError(InErrRPCause, (uint16_t)arg->rPCause);
+        if (postpaidBill) {
+            smsc_log_info(logger, "Billing[%u.%u]: <-- CHARGING_POSSIBLE (via CDR), abonent type: %u",
+                          _bconn->bConnId(), _bId, abBillType);
+            state = Billing::bilContinued;
+            delete inap;
+            inap = NULL;
+            action = Billing::doCont;
+        } else {
+            smsc_log_info(logger, "Billing[%u.%u]: <-- CHARGING_NOT_POSSIBLE (code %u)",
+                          _bconn->bConnId(), _bId, scfErr);
+            state = Billing::bilReleased;
+        }
+
+        ChargeSmsResult res(scfErr, postpaidBill ?
                             smsc::inman::interaction::CHARGING_POSSIBLE : 
                             smsc::inman::interaction::CHARGING_NOT_POSSIBLE);
         res.setDialogId(_bId);
-        if (_bconn->sendCmd(&res)) {
-        //NOTE: it's safe to free 'arg' here, TCAP dialog may be closed
-            if (postpaidBill) {
-                state = Billing::bilContinued;
-                smsc_log_warn(logger, "Billing[%u.%u]: switched to billing via CDR",
-                               _bconn->bConnId(), _bId);
-                delete inap;
-                inap = NULL;
-                action = Billing::doCont;
-            } else {
-                state = Billing::bilReleased;
-                smsc_log_debug(logger, "Billing[%u.%u]: cancelling billing.",
-                               _bconn->bConnId(), _bId);
-            }
-        } else      //TCP connect fatal failure
+        if (!_bconn->sendCmd(&res)) //TCP connect fatal failure
             action = Billing::doAbort;
     }
     if (action == Billing::doEnd)
