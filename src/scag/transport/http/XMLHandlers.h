@@ -27,8 +27,10 @@ class XMLBasicHandler : public HandlerBase
     std::string route_id, url;
     uint32_t service_id;
     Array<std::string> addrs;
+    Array<std::string> urls;
 
     std::string subj_id;
+    std::string url_subj_id;
     RouteArray* routes;
     HttpRoute route;
 

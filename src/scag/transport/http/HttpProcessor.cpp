@@ -1,16 +1,66 @@
 #include <string>
 
+#include <scag/util/singleton/Singleton.h>
 #include <scag/re/RuleEngine.h>
 #include <scag/sessions/SessionManager.h>
 #include <scag/stat/Statistics.h>
 
 #include "HttpCommand.h"
 #include "HttpProcessor.h"
+#include "HttpRouter.h"
 
 namespace scag { namespace transport { namespace http {
 
+using namespace scag::util::singleton;
 using namespace scag::sessions;
 using namespace scag::re;
+
+class HttpProcessorImpl : public HttpProcessor
+{
+    public:
+        virtual bool processRequest(HttpRequest& request);
+        virtual bool processResponse(HttpResponse& response);
+        virtual void statusResponse(HttpResponse& response, bool delivered=true);
+        virtual void ReloadRoutes();
+
+        void init(const std::string& cfg);
+
+        virtual ~HttpProcessorImpl() {}
+    protected:
+        HttpRouterImpl router;
+
+        bool process(HttpCommand& cmd);
+};
+
+static bool  inited = false;
+static Mutex initLock;
+
+inline unsigned GetLongevity(HttpProcessor*) { return 5; }
+typedef SingletonHolder<HttpProcessorImpl> SingleHP;
+
+HttpProcessor& HttpProcessor::Instance()
+{
+    if (!inited) 
+    {
+        MutexGuard guard(initLock);
+        if (!inited) 
+            throw std::runtime_error("HttpProcessor not inited!");
+    }
+    return SingleHP::Instance();
+}
+
+void HttpProcessor::Init(const std::string& cfg)
+{
+    if (!inited)
+    {
+        MutexGuard guard(initLock);
+        if(!inited) {
+            HttpProcessorImpl& hp = SingleHP::Instance();
+            hp.init(cfg);
+            inited = true;
+        }
+    }
+}
 
 bool HttpProcessorImpl::processRequest(HttpRequest& request)
 {
@@ -75,9 +125,13 @@ void HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
     RuleStatus rs = RuleEngine::Instance().process(response, *se.Get());
 }
         
-void HttpProcessorImpl::init(std::string& cfg)
+void HttpProcessorImpl::init(const std::string& cfg)
 {
     router.init(cfg);
+}
+void HttpProcessorImpl::ReloadRoutes()
+{
+    router.ReloadRoutes();
 }
 
 }}}

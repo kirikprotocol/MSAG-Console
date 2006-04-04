@@ -144,6 +144,11 @@ public:
 
 typedef Array<std::string> StringArray;
 
+struct Site{
+    std::string url;
+    StringArray paths;
+};
+
 struct HttpRoute
 {
     uint32_t service_id;
@@ -151,6 +156,7 @@ struct HttpRoute
     std::string id;
     std::string url;
     StringArray masks;
+    Array<Site> sites;
 
     HttpRoute() {}
 
@@ -160,6 +166,7 @@ struct HttpRoute
         id = cp.id;
         url = cp.url;
         masks = cp.masks;
+        sites = cp.sites;
     }
 };
 

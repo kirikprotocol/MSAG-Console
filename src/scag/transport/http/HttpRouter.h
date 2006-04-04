@@ -11,6 +11,8 @@
 #include <core/buffers/XHash.hpp>
 #include <util/crc32.h>
 
+#include <logger/Logger.h>
+
 #include "HttpCommand.h"
 #include "RouterTypes.h"
 
@@ -39,7 +41,7 @@ protected:
 typedef XHash<AddressURLKey, HttpRoute*, AddressURLKey> AddressURLHash;
 typedef Hash<HttpRoute*> RouteHash;
 
-class HttpRouterImpl : public HttpRouter
+class HttpRouterImpl:public HttpRoute
 {
     Mutex ReloadMutex, GetRouteMutex;
 
@@ -54,16 +56,16 @@ class HttpRouterImpl : public HttpRouter
     void ParseFile(const char* _xmlFile, HandlerBase* handler);
     void BuildMaps(RouteArray*, RouteHash*, AddressURLHash*);
 public:
-    void init(std::string& cfg);
+    HttpRouterImpl();
 
-    virtual HttpRoute findRoute(const std::string& addr, const std::string& URL);
-    virtual HttpRoute getRoute(const std::string& routeId);
+    void init(const std::string& cfg);
+
+    HttpRoute findRoute(const std::string& addr, const std::string& URL);
+    HttpRoute getRoute(const std::string& routeId);
 
     void ReloadRoutes();
 
-    virtual ~HttpRouterImpl() {}
-protected:
-
+    ~HttpRouterImpl();
 };
 
 }}}

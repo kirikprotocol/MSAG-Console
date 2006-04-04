@@ -25,6 +25,8 @@ namespace scag { namespace transport { namespace http
     class MyHttpProcessor : public HttpProcessor
     {
     public:
+        virtual void ReloadRoutes() {}
+
         virtual bool processRequest(HttpRequest& request) {        
 #ifdef LOG_HEADERS        
             request.serialize();

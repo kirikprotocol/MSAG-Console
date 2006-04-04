@@ -1,15 +1,13 @@
-#include <string>
-
 #include <xercesc/parsers/SAXParser.hpp>
 #include <xercesc/util/OutOfMemoryException.hpp>
 
 #include <scag/bill/BillingManager.h>
 
+#include "XMLHandlers.h"
+
 #include "HttpCommand.h"
 #include "HttpProcessor.h"
 #include "HttpRouter.h"
-
-#include "XMLHandlers.h"
 
 namespace scag { namespace transport { namespace http {
 
@@ -17,13 +15,27 @@ XERCES_CPP_NAMESPACE_USE
 
 using scag::bill::BillingManager;
 
-void HttpRouterImpl::init(std::string& cfg)
+HttpRouterImpl::HttpRouterImpl()
 {
-    route_cfg_file = cfg + "/http_routes.xml";
-    ReloadRoutes();
-    routes = NULL;
+    logger = smsc::logger::Logger::getInstance("httprouter");
+    XMLPlatformUtils::Initialize();
 }
 
+HttpRouterImpl::~HttpRouterImpl()
+{
+    XMLPlatformUtils::Terminate();
+}
+
+void HttpRouterImpl::init(const std::string& cfg)
+{
+    route_cfg_file = cfg + "/http_routes.xml";
+    routes = NULL;
+    routeIdMap = NULL;
+    AddressURLMap = NULL;
+
+    ReloadRoutes();
+}
+                                                                        
 HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& URL)
 {
     MutexGuard mt(GetRouteMutex);
@@ -38,9 +50,10 @@ HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& 
         catch(HashInvalidKeyException &e)
         {
             len = k.mask.cut();
-            throw RouteNotFoundException();
         }
     }while(len > 1);
+
+    throw RouteNotFoundException();
 }
 
 HttpRoute HttpRouterImpl::getRoute(const std::string& routeId)
@@ -62,12 +75,13 @@ void HttpRouterImpl::BuildMaps(RouteArray *r, RouteHash *rid, AddressURLHash *au
     {
         rt = &(*r)[i];
 
-        rt->provider_id = BillingManager::Instance().getInfrastructure().GetProviderID(rt->service_id);
+//        rt->provider_id = BillingManager::Instance().getInfrastructure().GetProviderID(rt->service_id);
 
         rid->Insert(rt->id.c_str(), rt);
 
         for(int j = 0; j < rt->masks.Count(); j++)
         {
+            smsc_log_error(logger, "AddedMapping mask: %s, URL: %s", rt->masks[j].c_str(), rt->url.c_str());
             AddressURLKey auk(rt->masks[j].c_str(), rt->url.c_str());
             auh->Insert(auk, rt);
         }
@@ -84,6 +98,7 @@ void HttpRouterImpl::ReloadRoutes()
     RouteHash* h = new RouteHash;
     AddressURLHash* auh = new AddressURLHash;
     try{
+
         XMLBasicHandler handler(r);
         ParseFile(route_cfg_file.c_str(), &handler);
         BuildMaps(r, h, auh);
@@ -97,7 +112,7 @@ void HttpRouterImpl::ReloadRoutes()
     }
     catch(Exception& e)
     {
-        smsc_log_info(logger, "Routes reloading was not successful");
+        smsc_log_info(logger, "Routes reloading was not successful: %s", e.what());
         delete r;
         delete h;
         delete auh;
@@ -110,7 +125,7 @@ void HttpRouterImpl::ReloadRoutes()
 void HttpRouterImpl::ParseFile(const char* _xmlFile, HandlerBase* handler)
 {
     int errorCount = 0;
-
+    smsc_log_info(logger, "Routes reloading finished1");
     SAXParser parser;
     
     try
@@ -127,7 +142,6 @@ void HttpRouterImpl::ParseFile(const char* _xmlFile, HandlerBase* handler)
         parser.setDocumentHandler(handler);
         parser.setErrorHandler(handler);
         parser.parse(_xmlFile);
-        errorCount = parser.getErrorCount();
     }
     catch (const OutOfMemoryException&)
     {
@@ -151,9 +165,6 @@ void HttpRouterImpl::ParseFile(const char* _xmlFile, HandlerBase* handler)
         smsc_log_error(logger,"Terminate parsing: unknown fatal error");
         throw Exception("unknown fatal error");
     }
-
-    if (errorCount > 0) 
-        smsc_log_error(logger,"Error parsing: some errors occured");
 }
     
 }}}

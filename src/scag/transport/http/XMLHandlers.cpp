@@ -16,6 +16,7 @@ XMLBasicHandler::XMLBasicHandler(RouteArray* r)
     in_route = false;
     in_subj_def = false;
     routes = r;
+    smsc_log_debug(logger, "cons end");
 }
 
 void XMLBasicHandler::characters(const XMLCh *const chars, const unsigned int length) 
@@ -26,6 +27,8 @@ void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
 {
     StrX XMLQName(nm);
     const char *qname = XMLQName.localForm();
+
+    smsc_log_debug(logger, "Start element %s", qname);
 
     if(!strcmp(qname, "route"))
     {
@@ -43,7 +46,7 @@ void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
             route.masks.Push(str);
         else
         {
-            if(subj_id == 0)
+            if(subj_id == "")
                 throw Exception("Invalid XML subject id");
 
             try{
@@ -92,6 +95,7 @@ void XMLBasicHandler::endElement(const XMLCh* const nm)
     StrX XMLQName(nm);
     const char *qname = XMLQName.localForm();
 
+    smsc_log_debug(logger, "End element %s", qname);
     if(!strcmp(qname, "route"))
     {
         in_route = false;
@@ -116,22 +120,21 @@ void XMLBasicHandler::error(const SAXParseException& e)
 {
     StrX fname(e.getSystemId());
     StrX msg(e.getMessage());
-    smsc_log_error(logger,"Error at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
+    throw Exception("Error at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
 }
 
 void XMLBasicHandler::fatalError(const SAXParseException& e)
 {
     StrX fname(e.getSystemId());
     StrX msg(e.getMessage());
-    smsc_log_error(logger,"Fatal Error at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
-
+    throw Exception("Fatal Error at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
 }
 
 void XMLBasicHandler::warning(const SAXParseException& e)
 {
     StrX fname(e.getSystemId());
     StrX msg(e.getMessage());
-    smsc_log_error(logger,"Warning at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
+    smsc_log_error(logger, "Warning at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
 }
 
 }}}
