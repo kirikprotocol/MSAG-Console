@@ -91,8 +91,6 @@ public class Smsc extends Service {
     private static final String CG_REMOVE_GROUP = "cgm_deletegroup";
     private static final String CG_ADD_MASK = "cgm_addaddr";
     private static final String CG_DEL_MASK = "cgm_deladdr";
-    private static final String CG_ADD_ABONENT = "cgm_addabonent";
-    private static final String CG_DEL_ABONENT = "cgm_delabonent";
     private static final String CG_GET_ABONENT_LIST = "cgm_listabonents";
 
     private static final String CG_IS_GROUP_USED = "cg_is_group_used";
@@ -402,6 +400,7 @@ public class Smsc extends Service {
         params.put("mode", sme.getModeStr());
         params.put("proclimit", new Integer(sme.getProclimit()));
         params.put("schedlimit", new Integer(sme.getSchedlimit()));
+        params.put("accessmask", new Long(sme.getAccessMask()));
         return params;
     }
 
