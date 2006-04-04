@@ -157,7 +157,7 @@ AbonentBillType AbonentCache::getAbonentInfo(AbonentId & ab_number)
                             ab_number.getSignals(), exc.what());
         }
     }
-    return btUnknown;
+    return ab_type;
 }
 
 
