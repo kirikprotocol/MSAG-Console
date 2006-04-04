@@ -57,17 +57,18 @@ public class SMEList {
     }
 
     public SME get(String smeId) throws AdminException {
-//        require(smeId);
         if (smes.containsKey(smeId)) return (SME) smes.get(smeId);
         else {
-            logger.warn("SME \"" + smeId + "\" not found");
+//            logger.warn("SME \"" + smeId + "\" not found");
             return null;
         }
     }
 
     public SME remove(String smeId) throws AdminException {
-        require(smeId);
-        return (SME) smes.remove(smeId);
+        if (!smes.containsKey(smeId))
+            return (SME) smes.remove(smeId);
+        else
+            return null;
     }
 
     public PrintWriter store(PrintWriter out) {
@@ -86,12 +87,6 @@ public class SMEList {
 
     public boolean contains(String smeId) {
         return smes.containsKey(smeId);
-    }
-
-    private void require(String smeId) throws AdminException {
-        if (!smes.containsKey(smeId))
-            logger.warn("SME \"" + smeId + "\" not found");
-//      throw new AdminException("SME \"" + smeId + "\" not found");
     }
 
     public SME update(SME newSme) throws AdminException {
