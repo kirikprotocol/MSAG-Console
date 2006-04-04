@@ -11,22 +11,16 @@ namespace interaction  {
 
 //timeout for select()
 #define TIMEOUT_STEP 100 //millisecs
+#define LISTENER_RESTART_ATTEMPTS  2
 
-Server::Server(const char* host, int port, SerializerITF * serializer,
-               unsigned int timeout_secs/* = 20*/, unsigned short max_conn/* = 10*/,
-               Logger* uselog/* = NULL*/)
-        : ipSerializer(serializer), _maxConn(max_conn)
-        , _runState(Server::lstStopping), logger(uselog)
+Server::Server(const ServSocketCFG * in_cfg, SerializerITF * serializer,
+                                                Logger* uselog /*= NULL*/)
+    : _cfg(*in_cfg), ipSerializer(serializer), lstRestartCnt(0)
+    , _runState(Server::lstStopped), logger(uselog)
 {
-    assert(host && serializer);
+    assert(_cfg.host && ipSerializer);
     if (!logger)
         logger = Logger::getInstance("smsc.inman.TCPSrv");
-
-    if (serverSocket.InitServer(host, port, timeout_secs))
-        throw SystemError(format("TCPSrv: failed to init server socket %s:%d", host, port));
-
-    if(serverSocket.StartServer())
-        throw SystemError(format("TCPSrv: failed to start server socket %s:%d", host, port));
 }
 
 Server::~Server()
@@ -70,6 +64,7 @@ void Server::openConnect(Connect* connect)
     }
 }
 
+
 void Server::closeConnect(Connect* connect, bool abort/* = false*/)
 {
     assert(connect);
@@ -102,12 +97,7 @@ void Server::Stop(unsigned int timeOutMilliSecs/* = 400*/)
         _runState = Server::lstStopping;
     _mutex.Unlock();
 
-    for (timeOutMilliSecs += TIMEOUT_STEP;
-          timeOutMilliSecs > 0; timeOutMilliSecs -= TIMEOUT_STEP) {
-        if (_runState == Server::lstStopped)
-            break;
-        usleep(1000*TIMEOUT_STEP); //microsecs
-    }
+    lstEvent.Wait(timeOutMilliSecs);
 
     _mutex.Lock();
     if (_runState != Server::lstStopped) {
@@ -116,10 +106,11 @@ void Server::Stop(unsigned int timeOutMilliSecs/* = 400*/)
         _runState = Server::lstStopped;  //forcedly stop Listener thread
     }
     _mutex.Unlock();
+    WaitFor();
 }
 
 
-Server::ShutdownReason Server::Listen()
+Server::ShutdownReason Server::Listen(void)
 {
     struct timeval tmo;
     Server::ShutdownReason result = Server::srvStopped;
@@ -208,7 +199,7 @@ Server::ShutdownReason Server::Listen()
                 if (!clientSocket) {
                     smsc_log_error(logger, "TCPSrv: failed to accept client connection, cause: %d (%s)",
                                    errno, strerror(errno));
-                } else if (connects.size() < _maxConn) {
+                } else if (connects.size() < _cfg.maxConn) {
                     smsc_log_debug(logger, "TCPSrv: accepted new connect[%u]",
                                    clientSocket->getSocket());
                     Connect* connect = new Connect(clientSocket, ipSerializer,
@@ -235,25 +226,29 @@ Server::ShutdownReason Server::Listen()
         _mutex.Lock();
     } /* eow */
     _mutex.Unlock();
+    lstEvent.Signal();
     return result;
 }
-
 
 // Thread entry point
 int Server::Execute()
 {
+    lstEvent.Signal();
     Server::ShutdownReason result = Server::srvStopped;
-    try {
-        smsc_log_debug(logger, "TCPSrv: Listener thread started.");
-        result = Listen();
-    } catch (const std::exception& error) {
-        smsc_log_error(logger, "TCPSrv: Listener thread failure: %s", error.what());
-        result = Server::srvUnexpected;
-    }
-    smsc_log_debug(logger, "TCPSrv: Listener thread finished, cause %d", (int)result);
-
-    //forcedly close active connects
-    closeAllConnects(true);
+    do {
+        try {
+            smsc_log_debug(logger, "TCPSrv: Listener started.");
+            result = Listen();
+        } catch (const std::exception& error) {
+            smsc_log_error(logger, "TCPSrv: Listener unexpected failure: %s", error.what());
+            result = Server::srvUnexpected;
+            lstRestartCnt++;
+        }
+        smsc_log_debug(logger, "TCPSrv: Listener finished, cause %d", (int)result);
+        //forcedly close active connects
+        closeAllConnects(true);
+    } while ((result == Server::srvUnexpected)
+             && (lstRestartCnt < LISTENER_RESTART_ATTEMPTS));
     
     //notify ServerListeners about server shutdown
     ListenerList cplist = listeners;
@@ -262,6 +257,27 @@ int Server::Execute()
         ptr->onServerShutdown(this, result);
     }
     return result;
+}
+
+bool Server::Start(void)
+{
+    if (serverSocket.InitServer(_cfg.host, _cfg.port, _cfg.timeout)) {
+        smsc_log_fatal(logger, "TCPSrv: failed to init server socket %s:%d",
+                       _cfg.host, _cfg.port);
+        return false;
+    }
+    if (serverSocket.StartServer()) {
+        smsc_log_fatal(logger, "TCPSrv: failed to start server socket %s:%d",
+                       _cfg.host, _cfg.port);
+        return false;
+    }
+
+    Thread::Start();
+    if (lstEvent.Wait(TIMEOUT_STEP)) {
+        smsc_log_error(logger, "TCPSrv: unable to start Listener thread");
+        return false;
+    }
+    return true;
 }
 
 } // namespace interaction

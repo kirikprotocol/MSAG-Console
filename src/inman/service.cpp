@@ -13,8 +13,8 @@ namespace smsc  {
 namespace inman {
 
 Service::Service(const InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
-    : logger(uselog), _cfg(*in_cfg), session(0), disp(0), server(0)
-    , tcpRestartCount(0), tmWatcher(NULL)
+    : logger(uselog), _cfg(*in_cfg), session(0), disp(0)
+    , server(0), tmWatcher(NULL)
 {
     if (!logger)
         logger = Logger::getInstance("smsc.inman.Service");
@@ -33,8 +33,7 @@ Service::Service(const InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
             smsc_log_debug(logger, "InmanSrv: TCAP session inited");
     }
 
-    server = new Server(_cfg.host, _cfg.port, SerializerInap::getInstance(),
-                        _cfg.bill.maxTimeout, _cfg.maxConn, logger);
+    server = new Server(&_cfg.sock, SerializerInap::getInstance(), logger);
     assert(server);
     server->addListener(this);
     smsc_log_debug(logger, "InmanSrv: TCP server inited");
@@ -110,7 +109,8 @@ bool Service::start()
         return false;
 
     smsc_log_debug(logger, "InmanSrv: Starting TCP server ..");
-    server->Start();
+    if (!server->Start())
+        return false;
     
     if (roller) {
         smsc_log_debug(logger, "InmanSrv: Starting BillingStorage roller ..");
@@ -126,7 +126,6 @@ void Service::stop()
     if (server) {
         smsc_log_debug( logger, "InmanSrv: Stopping TCP server ..");
         server->Stop();
-        server->WaitFor();
     }
 
     smsc_log_debug(logger, "InmanSrv: Stopping TimeWatcher ..");
@@ -201,35 +200,16 @@ void Service::onConnectClosing(Server* srv, Connect* conn)
         smsc_log_warn(logger, "InmanSrv: attempt to close unknown connect[%u]", connId);
     }
 }
-
+//throws CustomException
 void Service::onServerShutdown(Server* srv, Server::ShutdownReason reason)
 {
-    smsc_log_debug(logger, "InmanSrv: TCP server shutdowned, reason %d", reason);
+    smsc_log_debug(logger, "InmanSrv: TCP server shutdowning, reason %d", reason);
+    srv->removeListener(this);
+    delete srv;
+    server = NULL;
 
-    if (reason != Server::srvStopped) { //try to restart
-        srv->removeListener(this);
-        delete srv;
-        server = NULL;
-
-        if (++tcpRestartCount <= INMAN_TCP_RESTART_ATTEMPTS) {
-            smsc_log_debug(logger, "InmanSrv: Restarting TCP server ..");
-            try {
-                server = new Server(_cfg.host, _cfg.port, SerializerInap::getInstance(),
-                                    _cfg.bill.maxTimeout, _cfg.maxConn, logger);
-                server->addListener(this);
-                smsc_log_debug(logger, "InmanSrv: TCP server inited");
-                server->Start();
-            } catch (CustomException & exc) {
-                smsc_log_error(logger, "InmanSrv: TCP server restart failure: %s",
-                               exc.what());
-                ++tcpRestartCount;
-                throw CustomException("InmanSrv: TCP server restart failure",
-                                      tcpRestartCount, exc.what());
-            }
-        } else {
-            throw CustomException("InmanSrv: TCP server continual failure, exiting.",
-                                  tcpRestartCount);
-        }
+    if (reason != Server::srvStopped) { //abnormal shutdown
+        throw CustomException("InmanSrv: TCP server fatal failure, exiting.");
     }
 }
 

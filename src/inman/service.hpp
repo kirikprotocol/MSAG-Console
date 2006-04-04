@@ -7,16 +7,12 @@
 
 #include "inman/inap/dispatcher.hpp"
 #include "inman/interaction/server.hpp"
-//#include "inman/inap/session.hpp"
-//#include "inman/storage/FileStorages.hpp"
-//#include "inman/common/TimeWatcher.hpp"
 #include "inman/billing.hpp"
 
 using smsc::inman::inap::TCAPDispatcher;
-//using smsc::inman::inap::SSNSession;
+using smsc::inman::interaction::ServSocketCFG;
 using smsc::inman::interaction::Server;
 using smsc::inman::interaction::ServerListener;
-//using smsc::inman::filestore::InBillingFileStorage;
 using smsc::inman::filestore::InFileStorageRoller;
 using smsc::inman::BillingCFG;
 using smsc::inman::BillingConnect;
@@ -24,15 +20,11 @@ using smsc::inman::sync::TimeWatcher;
 using smsc::inman::cache::AbonentCacheCFG;
 using smsc::inman::cache::AbonentCache;
 
-#define INMAN_TCP_RESTART_ATTEMPTS  2
-
 namespace smsc  {
 namespace inman {
 
 struct InService_CFG {
-    const char*     host;
-    int             port;
-    unsigned int    maxConn;
+    ServSocketCFG   sock;
     BillingCFG      bill;
     AbonentCacheCFG cachePrm;
 };
@@ -65,7 +57,6 @@ private:
     InService_CFG   _cfg;
     InFileStorageRoller *    roller;
     TimeWatcher*    tmWatcher;
-    unsigned        tcpRestartCount;
 };
 
 } //inman

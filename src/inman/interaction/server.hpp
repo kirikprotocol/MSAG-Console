@@ -5,22 +5,29 @@
 #include <list>
 
 #include "core/threads/Thread.hpp"
-#include "core/synchronization/Mutex.hpp"
+#include "core/synchronization/Event.hpp"
 #include "inman/interaction/connect.hpp"
 
 using smsc::core::threads::Thread;
 using smsc::core::synchronization::Mutex;
+using smsc::core::synchronization::Event;
 using smsc::inman::interaction::Connect;
 
 namespace smsc  {
 namespace inman {
 namespace interaction  {
 
+typedef struct {
+    const char*     host;
+    int             port;
+    unsigned int    maxConn;
+    unsigned int    timeout; //units: secs
+} ServSocketCFG;
+
 class ServerListener;
-class Server : public Thread, public ObservableT< ServerListener >
+class Server : /*protected*/ Thread, public ObservableT< ServerListener >
 {
 public:
-    typedef std::list<Connect*> ConnectsList;
     typedef enum { lstStopped = 0, lstStopping, lstRunning } ServerState;
     typedef enum {
         srvUnexpected = -1, //listener caught unexpected fatal exception
@@ -28,27 +35,30 @@ public:
         srvError = 1        //server socket fatal error
     } ShutdownReason;
 
-    Server(const char* szHost, int nPort, SerializerITF * serializer,
-            unsigned int timeout_secs = 20, unsigned short max_conn = 10,
-            Logger* uselog = NULL);
+    Server(const ServSocketCFG * in_cfg, SerializerITF * serializer,
+           Logger* uselog = NULL);
     virtual ~Server();
 
     void openConnect(Connect* connect);
     void closeConnect(Connect* connect, bool abort = false);
 
-    int  Execute(); //listener thread entry point
+    bool Start(void);
     void Stop(unsigned int timeOutMilliSecs = 400);
 
 protected:
-    ShutdownReason Listen();
+    typedef std::list<Connect*> ConnectsList;
+
+    int  Execute(); //listener thread entry point
+    ShutdownReason Listen(void);
     //Closes all client's connections
     void closeAllConnects(bool abort = false);
 
+    Event           lstEvent;
     Mutex           _mutex;
+    ServSocketCFG   _cfg;
     volatile
         ServerState _runState;
-    unsigned short  _maxConn;
-
+    unsigned        lstRestartCnt;
     SerializerITF * ipSerializer;
     Socket          serverSocket;
     ConnectsList    connects;
