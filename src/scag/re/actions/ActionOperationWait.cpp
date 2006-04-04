@@ -33,7 +33,7 @@ void ActionOperationWait::init(const SectionParams& params,PropertyObject proper
     AccessType at;
 
     ft = ActionContext::Separate(sTime,name); 
-    if (ft == ftUnknown) throw InvalidPropertyException("Action 'operation:wait': unrecognized variable prefix '%s' for 'category' parameter",sTime.c_str());
+    if (ft == ftUnknown) throw InvalidPropertyException("Action 'operation:wait': unrecognized variable prefix '%s' for 'time' parameter",sTime.c_str());
 
     if (ft == ftField) 
     {
@@ -42,12 +42,7 @@ void ActionOperationWait::init(const SectionParams& params,PropertyObject proper
             throw InvalidPropertyException("Action 'operation:wait': cannot read property '%s' - no access",sTime.c_str());
     }
 
-    try {
-        m_opType = Session::getOperationType(ConvertWStrToStr(sType));
-    } catch (SCAGException& e)
-    {
-        throw SCAGException("Action 'operation:wait': %s", e.what());
-    }
+    m_opType = Session::getOperationType(sType);
     
 
     smsc_log_debug(logger,"Action 'operation:wait':: init...");
