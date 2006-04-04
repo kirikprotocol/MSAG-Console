@@ -11,11 +11,9 @@ package ru.sibinco.scag.backend.rules;
 import ru.sibinco.scag.backend.sme.Provider;
 import ru.sibinco.scag.backend.transport.Transport;
 
-import java.io.PrintWriter;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Collections;
-import java.util.HashMap;
+import java.io.*;
+import java.util.*;
+import java.text.MessageFormat;
 
 
 /**
@@ -27,6 +25,7 @@ public class Rule
   private Long id;
   private String notes;
   private LinkedList body = new LinkedList();
+  public static String header;
   public static final LinkedList ending = new LinkedList();
   public static final String ROOT_ELEMENT="scag:rule";
   public static final String XML_LINE="<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
@@ -66,7 +65,7 @@ public class Rule
     return new Rule(new Long(id),"",transport,body);
   }
 
-  public static LinkedList getRuleHeader(long id,String transport) {
+ /* public static LinkedList getRuleHeader1(long id,String transport) {
     String schema=Transport.getSchemaByTransport(transport);
     LinkedList header=new LinkedList();
     header.add(XML_LINE);
@@ -74,6 +73,27 @@ public class Rule
     header.add("           xsi:schemaLocation=\""+XSI_SCHEMALOCATION+schema+"\"");
     header.add("           xmlns:scag=\""+XMLNS_SCAG+"\"");
     header.add("           transport=\"" + transport + "\" id=\"" + id+"\">"+"\n");
+    return header;
+  } */
+
+  public static LinkedList getRuleHeader(long id,String transport) {
+    String schema=Transport.getSchemaByTransport(transport);
+    LinkedList header= new LinkedList();
+    String headerAsString = MessageFormat.format(Rule.header,new Object[]{schema, transport, new Long(id)} );
+    BufferedReader br = new BufferedReader(new StringReader(headerAsString));
+    String line;
+    try {
+    while((line=br.readLine())!=null) {
+     header.add(line);
+     //System.out.println(line);
+     }
+    } catch (IOException e) {
+       e.printStackTrace();
+    } finally {
+      try {
+      if (br!=null) br.close();
+      } catch (IOException e) {e.printStackTrace();}
+    }
     return header;
   }
 

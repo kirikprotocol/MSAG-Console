@@ -101,12 +101,37 @@ public class RuleManager
       loadFromFolder(Transport.HTTP_TRANSPORT_NAME, httprules);
       loadFromFolder(Transport.MMS_TRANSPORT_NAME, mmsrules);
       loadSchemas();
+      Rule.header = loadRuleHeader();
     } catch (SibincoException e) {
       e.printStackTrace();
-      System.out.println("error on init RuleManager in method load(): "+e.getMessage());
       throw new SibincoException(e.getMessage());
     }
   }
+
+  private String loadRuleHeader() throws SibincoException {
+    File headerTemplatePath = new File(rulesFolder,"rule_header.template");
+    StringBuffer header = new StringBuffer();
+    FileInputStream fs = null;
+    BufferedReader br = null;
+    try {
+     fs = new FileInputStream(headerTemplatePath);
+     br = new BufferedReader(new InputStreamReader(fs));
+     String line;
+     while ((line = br.readLine())!=null) {
+      header.append(line).append('\n');
+     }
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new SibincoException(e.getMessage());
+    } finally {
+      try {
+      if (fs!=null)  fs.close();
+      if (br!=null)  br.close();
+      } catch(IOException e){e.printStackTrace();}
+    }
+    return header.toString();
+  }
+
   private void loadSchemas()
   {
      String[] schemasfiles = xsdFolder.list(new FilenameFilter(){

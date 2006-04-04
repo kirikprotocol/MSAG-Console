@@ -20,8 +20,8 @@ import java.util.*;
  */
 public class WHOISDTermsTransformer {
   private final static String HeaderToWHOISDTerms = "<!--whoisd-terms \n <whoisd:terms>";
-  private final static String EndingToWHOISDTerms = "</whoisd:terms> \n -->";
-  private final static boolean DEBUG = false;
+  private final static String EndingToWHOISDTerms = "-->";
+  public final static boolean DEBUG = false;
 
   public static Map buildRules(LinkedList WHOISDpart,String service, Reader reader, File xslFolder) throws Exception {
     String content = "";
@@ -46,6 +46,7 @@ public class WHOISDTermsTransformer {
     HashMap transportToXSl = WHOISDRequest.transportToXSl;
     LinkedList termsresult = new LinkedList();
     addBody(termsresult,content, stylesheet, xslFolder);
+    termsresult.remove(1);
     termsresult.add(1,HeaderToWHOISDTerms);
     termsresult.add(EndingToWHOISDTerms);
     WHOISDpart.addAll(termsresult);
@@ -91,7 +92,7 @@ public class WHOISDTermsTransformer {
     if (DEBUG) debugTransformation(result);
      if (result.size()>2) return true;
     } catch(TransformerException te) {
-      throw new WHOISDException("Can't build rules from term, reason: "+te.getMessage());
+      throw new Exception("Can't build rules from term, reason: "+te.getMessage());
     }
     finally {
       if (sw!=null) sw.close();
