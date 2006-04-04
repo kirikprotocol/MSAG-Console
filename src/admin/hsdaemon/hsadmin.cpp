@@ -110,6 +110,7 @@ int main(int argc,char* argv[])
           case Service::starting:printf("starting");break;
           case Service::running:printf("running");break;
           case Service::stopping:printf("stopping");break;
+          default: printf("Unknown");break;
         };
         if(idx<hosts.size())
         {
@@ -139,6 +140,7 @@ int main(int argc,char* argv[])
         if(idx>=hosts.size())
         {
           printf("Failed to detect service's preferred node:%s\n",prefNode.c_str());
+          idx=0;
         }
       }
 
