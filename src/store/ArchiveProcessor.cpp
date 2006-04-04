@@ -218,8 +218,16 @@ void ArchiveProcessor::commitTransaction(bool force /*= false*/)
             while (transactionSrcFiles.Next(srcFileNameStr, data))
             {
                 if (!srcFileNameStr || !srcFileNameStr[0]) continue;
-                smsc_log_debug(log, "Deleting source file '%s'", srcFileNameStr);
-                FileStorage::deleteFile(srcFileNameStr);
+        		if (File::Exists(srcFileNameStr)) 
+        		{
+        		    smsc_log_debug(log, "Deleting source file '%s'", srcFileNameStr);
+        		    try {
+                        FileStorage::deleteFile(srcFileNameStr);
+        		    } catch (std::exception& exc) {
+                        smsc_log_warn(log, "Source file '%s' delete failed. Details: %s", 
+                                      srcFileNameStr, exc.what());
+        		    }
+        		}
             }
             bTransactionOpen = false; cleanTransaction();
             smsc_log_debug(log, "Transaction commited.");
