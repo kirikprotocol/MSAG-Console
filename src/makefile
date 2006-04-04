@@ -86,6 +86,7 @@ ifeq ($(CXX),CC)
 LDFLAGS := -zrescan -L$(SMSC_BUILDDIR)/lib -L/usr/local/lib/CC -L/usr/local/lib -L$(SSL_DIR)/lib
 else
 LDFLAGS := -L$(SMSC_BUILDDIR)/lib -L/usr/local/lib -L$(SSL_DIR)/lib
+CXXFLAGS := $(CXXFLAGS) -fPIC
 endif
 
 ifneq ($(TRACE),YES)
