@@ -238,10 +238,12 @@ namespace smsc { namespace db
             throw(SQLException) = 0;
     };
 
+    class ExecutionGuard;
     class ConnectionPool;
     class Connection
     {
     friend class ConnectionPool;
+    friend class ExecutionGuard;
     private:
         
         Connection*         next;
@@ -278,15 +280,15 @@ namespace smsc { namespace db
             MutexGuard guard(executionLock);
             return inExecution;
         };
+        inline void setExecution(bool ex) {
+            MutexGuard guard(executionLock);
+            inExecution = ex;
+        };
     
     public:
         
         virtual ~Connection() {};
 
-        inline void setExecution(bool ex) {
-            MutexGuard guard(executionLock);
-            inExecution = ex;
-        };
         inline bool isAvailable() {
             return (isConnected && !isDead);
         };
@@ -321,6 +323,20 @@ namespace smsc { namespace db
             throw(SQLException) = 0;
     };
     
+    class ExecutionGuard
+    {
+        Connection* connection;
+
+    public:
+
+        ExecutionGuard(Connection* _connection) : connection(_connection) {
+            if (connection) connection->setExecution(true);
+        };
+        ~ExecutionGuard() {
+            if (connection) connection->setExecution(false);
+        };
+    };
+
     class DBDriver
     {
     protected:

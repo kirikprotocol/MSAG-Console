@@ -445,29 +445,27 @@ void OCIQuery::check(sword status)
 sword OCIQuery::execute(ub4 mode, ub4 iters, ub4 rowoff)
     throw(SQLException)
 {
-    sword status;
-    if (owner) owner->setExecution(true);
+    ExecutionGuard exGuard(owner);
+    sword status = 0;
     {
         MutexGuard guard(getAccessMutex());
         status = OCIStmtExecute(svchp, stmt, errhp, iters, rowoff,
                                 (CONST OCISnapshot *) NULL, 
                                 (OCISnapshot *) NULL, mode);
     }
-    if (owner) owner->setExecution(false);
     return status;
 }
 
 sword OCIQuery::fetch()
     throw(SQLException)
 {
-    sword status;
-    if (owner) owner->setExecution(true);
+    ExecutionGuard exGuard(owner);
+    sword status = 0;
     {
         MutexGuard guard(getAccessMutex());
         status = OCIStmtFetch(stmt, errhp, (ub4) 1, (ub4) OCI_FETCH_NEXT,
-                            (ub4) OCI_DEFAULT);
+                              (ub4) OCI_DEFAULT);
     }
-    if (owner) owner->setExecution(false);
     return status;
 }
 
