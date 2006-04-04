@@ -89,16 +89,16 @@ public class TopServerRunner extends Thread
     inbuf.fill(istream, len);
     snap.init(inbuf);
     if (logger.isDebugEnabled()) {
-      logger.debug("got snap: " + snap.smeCount);
+//      logger.debug("got snap: " + snap.smeCount);
       for (int i = 0; i < snap.smeCount; i++) {
         StringBuffer sb = new StringBuffer(128);
         for (int k = 0; k < SmeSnap.COUNTERS_NUM; k++) {
           sb.append(snap.smeSnap[i].speed[k]).append('/').append(snap.smeSnap[i].avgSpeed[k]).append(' ');
         }
-        logger.debug("     sme: " + snap.smeSnap[i].smeId + " " + sb.toString());
+//        logger.debug("     sme: " + snap.smeSnap[i].smeId + " " + sb.toString());
       }
       for (int i = 0; i < snap.errCount; i++) {
-        logger.debug("     err: " + snap.errSnap[i].code + " " + snap.errSnap[i].count + "/" + snap.errSnap[i].avgCount);
+//        logger.debug("     err: " + snap.errSnap[i].code + " " + snap.errSnap[i].count + "/" + snap.errSnap[i].avgCount);
       }
     }
   }
