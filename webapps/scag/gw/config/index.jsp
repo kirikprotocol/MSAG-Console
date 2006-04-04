@@ -1,81 +1,112 @@
-<%@include file="/WEB-INF/inc/header.jspf"%>
+<%@ include file="/WEB-INF/inc/header.jspf" %>
+
 <script src="tree.js"></script>
-<sm:page title="Edit SCAG configuration">
-  <jsp:attribute name="menu">
-    <sm-pm:menu>
-      <sm-pm:item name="mbSave" value="Save" title="Save user info"/>
-      <sm-pm:item name="mbCancel" value="Cancel" title="Cancel user editing" onclick="clickCancel()"/>
-      <sm-pm:space/>
-    </sm-pm:menu>
-  </jsp:attribute>
 
-  <jsp:body>
-      <sm-et:section title="Data Source" name="DataSource">
-        <sm-et:properties>
-          <sm-et:txt title="connections" name="connections" validation="positive"/>
-          <sm-et:txt title="DB instance" name="dbInstance" validation="nonEmpty"/>
-          <sm-et:txt title="DB user name" name="dbUserName" validation="nonEmpty"/>
-          <sm-et:txt title="DB user password" name="dbUserPassword"/>
-          <sm-et:txt title="type" name="type" validation="nonEmpty"/>
-        </sm-et:properties>
-      </sm-et:section>
+<sm:page title="Edit SCAG configuration" onLoad="enableDisableStartStopButtonsForSCAGStatusPage();">
+    <jsp:attribute name="menu">
+        <sm-pm:menu>
+            <sm-pm:item name="mbSave" value="Save" enabled="false" title="Save conig"/>
+            <sm-pm:item name="mbCancel" value="Cancel" title="Cancel config editing" onclick="clickCancel()"/>
+            <sm-pm:space/>
+            <sm-pm:item name="mbStart" value="Start"  title="Start SCAG" isCheckSensible="false"/>
+            <sm-pm:item name="mbStop" value="Stop"    title="Stop SCAG" isCheckSensible="false"/>
+        </sm-pm:menu>
+    </jsp:attribute>
 
-      <sm-et:section title="Message Storage" name="MessageStorage">
-              <sm-et:properties>
-                <sm-et:txt title="Statistics Dir" name="statisticsDir" type="string"/>
-              </sm-et:properties>
-            </sm-et:section>
+<jsp:body>
 
-      <sm-et:section title="Startup Loader" name="StartupLoader">
-        <sm-et:section title="Data Source Drivers" name="DataSourceDrivers">
-          <sm-et:section title="OCI Data Source Driver" name="OCIDataSourceDriver">
+        <script language="javaScript">
+            function enableDisableByIdFunction(itemId, isDisabled) {
+                var items = opForm.all[itemId];
+                for (var i = 0; i < items.length; i++) {
+                    items[i].disabled = isDisabled;
+                }
+            }
+            function configChanged(){
+
+                enableDisableByIdFunction('mbSave', false);
+            }
+            function enableDisableStartStopButtonsForSCAGStatusPage() {
+
+                if (document.all.SCAGStatusSpan.innerText == ' running') {
+                    enableDisableByIdFunction('mbStart', document.all.SCAGStatusSpan.innerText == ' running');
+                    enableDisableByIdFunction('mbStop', document.all.SCAGStatusSpan.innerText == ' stopped');
+                } else if (document.all.SCAGStatusSpan.innerText == ' stopped' || document.all.SCAGStatusSpan.innerText == ' stopping') {
+                    enableDisableByIdFunction('mbStop', document.all.SCAGStatusSpan.innerText == ' stopped');
+                    enableDisableByIdFunction('mbStart', document.all.SCAGStatusSpan.innerText == ' running');
+                } else if (document.all.SCAGStatusSpan.innerText == ' unknown') {
+                    enableDisableByIdFunction('mbStop', document.all.SCAGStatusSpan.innerText == ' unknown');
+                    enableDisableByIdFunction('mbStart', document.all.SCAGStatusSpan.innerText == ' unknown');
+                }
+            }
+        </script>
+        <sm-et:section title="Billing Manager" name="BillingManager">
             <sm-et:properties>
-              <sm-et:txt name="loadup" validation="nonEmpty"/>
-              <sm-et:txt name="type" validation="nonEmpty"/>
+                <sm-et:txt title="Config Dir" name="configDir" validation="nonEmpty" onchanged="configChanged();"/>
+                <sm-et:txt title="So Dir" name="soDir" validation="nonEmpty" onchanged="configChanged();"/>
+                <sm-et:txt title="Billing Server Host" name="BillingServerHost" validation="nonEmpty" onchanged="configChanged();"/>
+                <sm-et:txt title="Billing Server Port" name="BillingServerPort" validation="port" onchanged="configChanged();"/>
+                <sm-et:txt title="Billing Time Out" name="BillingTimeOut" validation="nonEmpty" onchanged="configChanged();"/>
             </sm-et:properties>
-          </sm-et:section>
         </sm-et:section>
-      </sm-et:section>
 
-
-      <sm-et:section title="Administration" name="admin">
-        <sm-et:properties>
-          <sm-et:txt name="host" type="string"/>
-          <sm-et:txt name="port" type="int" validation="port"/>
-        </sm-et:properties>
-      </sm-et:section>
-
-      <sm-et:section title="Core" name="core">
-        <sm-et:properties>
-          <sm-et:txt name="default_locale"/>
-          <sm-et:txt name="eventQueueLimit"/>
-          <sm-et:txt name="locales"/>
-          <sm-et:txt name="state_machines_count"/>
-        </sm-et:properties>
-
-        <sm-et:section title="Performance" name="performance">
-          <sm-et:properties>
-            <sm-et:txt name="host"/>
-            <sm-et:txt name="port" validation="port"/>
-          </sm-et:properties>
+        <sm-et:section title="Session Manager" name="SessionManager">
+            <sm-et:properties>
+                <sm-et:txt title="Location" name="location" type="string" onchanged="configChanged();"/>
+            </sm-et:properties>
         </sm-et:section>
-      </sm-et:section>
 
-      <sm-et:section title="Logger" name="logger">
-        <sm-et:properties>
-          <sm-et:txt title="init file" name="initFile"/>
-        </sm-et:properties>
-      </sm-et:section>
+        <sm-et:section title="Statistics Manager" name="StatisticsManager">
+            <sm-et:properties>
+                <sm-et:txt title="statistics Dir" name="statisticsDir" validation="nonEmpty" onchanged="configChanged();"/>
+                <sm-et:txt title="Perf. Host" name="perfHost" validation="nonEmpty" onchanged="configChanged();"/>
+                <sm-et:txt title="Perf. Gen Port" name="perfGenPort" validation="port" onchanged="configChanged();"/>
+                <sm-et:txt title="Perf. Svc Port" name="perfSvcPort" validation="port" onchanged="configChanged();"/>
+                <sm-et:txt title="Perf. Sc Port" name="perfScPort" validation="port" onchanged="configChanged();"/>
+                <sm-et:txt title="Sacc Port" name="saccPort" validation="port" onchanged="configChanged();"/>
+                <sm-et:txt title="Sacc Host" name="saccHost" validation="nonEmpty"/>
+                <sm-et:txt title="Connect Timeout" name="connect_timeout" validation="nonEmpty" onchanged="configChanged();"/>
+                <sm-et:txt title="Queue Length" name="queue_length" validation="nonEmpty" onchanged="configChanged();"/>
+            </sm-et:properties>
+        </sm-et:section>
 
-      <sm-et:section title="SMPP" name="smpp">
-        <sm-et:properties>
-          <sm-et:txt name="host"/>
-          <sm-et:txt name="inactivityTime"/>
-          <sm-et:txt name="inactivityTimeOut"/>
-          <sm-et:txt name="port"/>
-          <sm-et:txt name="readTimeout"/>
-        </sm-et:properties>
-      </sm-et:section>
+        <sm-et:section title="Rule Engine" name="RuleEngine">
+            <sm-et:properties>
+                <sm-et:txt title="Location" name="location" type="string" onchanged="configChanged();"/>
+            </sm-et:properties>
+        </sm-et:section>
 
-  </jsp:body>
+        <sm-et:section title="Administration" name="admin">
+            <sm-et:properties>
+                <sm-et:txt name="host" type="string" onchanged="configChanged();"/>
+                <sm-et:txt name="port" type="int" validation="port" onchanged="configChanged();"/>
+            </sm-et:properties>
+        </sm-et:section>
+
+        <sm-et:section title="Message Storage" name="MessageStorage">
+            <sm-et:properties>
+                <sm-et:txt title="Statistics Dir" name="statisticsDir" type="string" onchanged="configChanged();"/>
+                <sm-et:txt title="Traffic Dir" name="trafficDir" type="string" onchanged="configChanged();"/>
+            </sm-et:properties>
+        </sm-et:section>
+
+        <sm-et:section title="SMPP" name="smpp">
+            <sm-et:properties>
+                <sm-et:txt title="Host" name="host" type="string" onchanged="configChanged();"/>
+                <sm-et:txt title="Inactivity Time" name="inactivityTime" type="int" onchanged="configChanged();"/>
+                <sm-et:txt title="Inactivity Time Out" name="inactivityTimeOut" type="int" onchanged="configChanged();"/>
+                <sm-et:txt title="Port" name="port" type="int" validation="port" onchanged="configChanged();"/>
+                <sm-et:txt title="Read Timeout" name="readTimeout" type="int" onchanged="configChanged();"/>
+                <sm-et:txt title="Max Sms PerSecond" name="maxSmsPerSecond" type="int" onchanged="configChanged();"/>
+            </sm-et:properties>
+            <sm-et:section title="Core" name="core">
+                <sm-et:properties>
+                    <sm-et:txt title="Event Queue Limit" name="eventQueueLimit" type="int" onchanged="configChanged();"/>
+                    <sm-et:txt title="Protocol Id" name="protocol_id" type="int"/>
+                    <sm-et:txt title="State Machines Count" name="state_machines_count" type="int" onchanged="configChanged();"/>
+                    <sm-et:txt title="Ussd Transaction Timeout" name="ussdTransactionTimeout" type="int" onchanged="configChanged();"/>
+                </sm-et:properties>
+            </sm-et:section>
+        </sm-et:section>
+    </jsp:body>
 </sm:page>

@@ -12,26 +12,10 @@
         <table class="list" cellspacing="0">
             <col width="1px"/>
             <tr class="row0">
-                <td><input class="check" type="checkbox" name="subj" id="chk_cofig" value="config"
-                <c:if test="${!bean.configChanged}"> disabled</c:if>></td>
-                <td><label for="chk_cofig">GW config</label></td><td><sm:status changed="${bean.configChanged}"/></td>
-            </tr>
-            <tr class="row1">
-                <td><input class="check" type="checkbox" name="subj" id="chk_routes" value="routes"
-                <c:if test="${!bean.routesChanged}"> disabled</c:if>></td>
-                <td><label for="chk_routes">Routes and subjects</label></td><td><sm:status
-                    changed="${bean.routesChanged}"/></td>
-            </tr>
-            <tr class="row0">
                 <td><input class="check" type="checkbox" name="subj" id="chk_billing" value="billing"
                 <c:if test="${!bean.billingChanged}"> disabled</c:if>></td>
                 <td><label for="chk_billing">Route billing rules</label></td><td><sm:status
                     changed="${bean.billingChanged}"/></td>
-            </tr>
-            <tr class="row1">
-                <td><input class="check" type="checkbox" name="subj" id="chk_users" value="users"
-                <c:if test="${!bean.usersChanged}"> disabled</c:if>></td>
-                <td><label for="chk_users">Users</label></td><td><sm:status changed="${bean.usersChanged}"/></td>
             </tr>
         </table>
         <script>
