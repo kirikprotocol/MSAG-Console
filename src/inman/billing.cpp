@@ -412,8 +412,10 @@ void Billing::ChargeAbonent(AbonentBillType ab_type)
     smsc_log_debug(logger, "Billing[%u.%u]: charging, abonent type: %u",
                     _bconn->bConnId(), _bId, (unsigned)ab_type);
 
-    if (((abBillType = ab_type) != smsc::inman::cache::btPrepaid)
-        && !_cfg.postpaidRPC.size())
+    abBillType = ab_type;
+    if ((ab_type == smsc::inman::cache::btPostpaid)
+        || ((ab_type == smsc::inman::cache::btUnknown)
+            && !_cfg.postpaidRPC.size()))
         postpaidBill = true;
 
     if (!postpaidBill)
@@ -592,7 +594,9 @@ void Billing::onReleaseSMS(ReleaseSMSArg* arg)
                             smsc::inman::interaction::CHARGING_POSSIBLE : 
                             smsc::inman::interaction::CHARGING_NOT_POSSIBLE);
         res.setDialogId(_bId);
-        if (!_bconn->sendCmd(&res)) //TCP connect fatal failure
+        if (_bconn->sendCmd(&res)) //TCP connect fatal failure
+            StartTimer(_cfg.maxTimeout, true);
+        else
             action = Billing::doAbort;
     }
     if (action == Billing::doEnd)
