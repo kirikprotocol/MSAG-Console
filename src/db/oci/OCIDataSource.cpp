@@ -141,7 +141,7 @@ void OCIConnection::disconnect()
 void OCIConnection::ping()
 {
     MutexGuard connectGuard(connectLock);
-    if (!isConnected || !pingStmt) return;
+    if (!isConnected || !pingStmt || isExecution()) return;
 
     bool pingOk = true;
     try // Execute ping statement
@@ -443,18 +443,30 @@ void OCIQuery::check(sword status)
 sword OCIQuery::execute(ub4 mode, ub4 iters, ub4 rowoff)
     throw(SQLException)
 {
-    MutexGuard guard(getAccessMutex());
-    return OCIStmtExecute(svchp, stmt, errhp, iters, rowoff,
-                          (CONST OCISnapshot *) NULL,
-                          (OCISnapshot *) NULL, mode);
+    sword status;
+    if (owner) owner->setExecution(true);
+    {
+        MutexGuard guard(getAccessMutex());
+        status = OCIStmtExecute(svchp, stmt, errhp, iters, rowoff,
+                                (CONST OCISnapshot *) NULL, 
+                                (OCISnapshot *) NULL, mode);
+    }
+    if (owner) owner->setExecution(false);
+    return status;
 }
 
 sword OCIQuery::fetch()
     throw(SQLException)
 {
-    MutexGuard guard(getAccessMutex());
-    return OCIStmtFetch(stmt, errhp, (ub4) 1, (ub4) OCI_FETCH_NEXT,
-                        (ub4) OCI_DEFAULT);
+    sword status;
+    if (owner) owner->setExecution(true);
+    {
+        MutexGuard guard(getAccessMutex());
+        status = OCIStmtFetch(stmt, errhp, (ub4) 1, (ub4) OCI_FETCH_NEXT,
+                            (ub4) OCI_DEFAULT);
+    }
+    if (owner) owner->setExecution(false);
+    return status;
 }
 
 

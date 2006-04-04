@@ -274,7 +274,7 @@ namespace smsc { namespace db
         bool _registerRoutine(const char* id, Routine* routine);
 
         virtual void ping() = 0;
-        inline void isExecution() {
+        inline bool isExecution() {
             MutexGuard guard(executionLock);
             return inExecution;
         };
