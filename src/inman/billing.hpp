@@ -52,6 +52,7 @@ namespace smsc    {
 namespace inman   {
 
 typedef enum { BILL_NONE = 0, BILL_ALL, BILL_USSD, BILL_SMS } BILL_MODE;
+typedef enum { policyIN = 0, policyDB, policyHLR } BillPolicy;
 
 class RPCList : public std::list<unsigned char> {
 public:
@@ -92,6 +93,7 @@ struct BillingCFG {
     InBillingFileStorage * bfs;
 //billing parameters
     BILL_MODE       billMode;
+    BillPolicy      policy;
     CDR_MODE        cdrMode;
     const char *    cdrDir;         //location to store CDR files
     long            cdrInterval;    //rolling interval for CDR files

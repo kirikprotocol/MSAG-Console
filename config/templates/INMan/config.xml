@@ -14,6 +14,12 @@
       ussd: request IN platform in case of USSD only, bill SMS to CDR
       sms:  request IN platform in case of SMS only, bill USSD to CDR
     -->
+   <param name="abonentPolicy" type="string">IN</param>  <!-- abonent type determination policy, 
+    options: [IN, DB, HLR]
+    IN        determine abonent type while interacting IN,  requires IN_interaction.RPCList_postpaid defined
+    DB      determine abonent type quering DB, requires DataProvider defined
+    HLR -  determine abonent type asking HLR, not supported yet
+    -->
     <param name="maxBillings" type="int">500</param>   <!--  [1 .. 10000] , default 500 
      maximium simultaneous billing requests per INMan client  connect -->
     <param name="abonentTypeTimeout" type="int">5</param> <!-- units: seconds, [1 .. 65535], default 5 

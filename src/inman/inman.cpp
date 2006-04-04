@@ -21,6 +21,8 @@ using smsc::db::DataSourceFactory;
 using smsc::inman::cache::db::DBSourceCFG;
 using smsc::inman::cache::db::DBAbonentProvider;
 
+//using smsc::inman::BillPolicy;
+
 static const unsigned int _in_CFG_DFLT_CLIENT_CONNS = 3;
 static const long _in_CFG_MIN_BILLING_INTERVAL = 10; //in seconds
 static const unsigned int _in_CFG_MAX_BILLINGS = 10000;
@@ -64,6 +66,8 @@ static const char * const _CDRmodes[3] = {"none", "all", "postpaid"};
 //BILL_ALL = 0, BILL_USSD, BILL_SMS
 static const char * const _BILLmodes[4] = {"none", "all", "ussd", "sms"};
 
+static const char * const _PolicyModes[3] = {"IN", "DB", "HLR"};
+
 static struct _DS_PARMS {
     const char* prmId;
     char*       prmVal;
@@ -81,19 +85,20 @@ public:
     INBillConfig()
     {
         dbProvPrm = NULL; bill.abCache = NULL; bill.abProvider = NULL;
-        host = bill.ssf_addr = bill.scf_addr = bill.cdrDir = NULL;
-        port = bill.ssn = bill.serviceKey = 0;
+        sock.host = bill.ssf_addr = bill.scf_addr = bill.cdrDir = NULL;
+        sock.port = bill.ssn = bill.serviceKey = 0;
         bill.cdrInterval = cachePrm.interval = cachePrm.RAM = 0;
         cachePrm.nmDir = NULL;
         bill.billMode = smsc::inman::BILL_ALL;
+        bill.policy = smsc::inman::policyIN;
         bill.cdrMode =  BillingCFG::CDR_ALL;
 
         //OPTIONAL PARAMETERS:
-        maxConn = _in_CFG_DFLT_CLIENT_CONNS;
+        sock.maxConn = _in_CFG_DFLT_CLIENT_CONNS;
         bill.userId = _in_CFG_DFLT_SS7_USER_ID;
         bill.maxBilling = _in_CFG_DFLT_BILLINGS;
         bill.capTimeout = _in_CFG_DFLT_CAP_TIMEOUT;
-        bill.maxTimeout = _in_CFG_DFLT_BILL_TIMEOUT;
+        sock.timeout = bill.maxTimeout = _in_CFG_DFLT_BILL_TIMEOUT;
         bill.abtTimeout = _in_CFG_DFLT_ABTYPE_TIMEOUT;
         bill.rejectRPC.push_back(RP_MO_SM_transfer_rejected);
         cachePrm.fileRcrd = _in_CFG_DFLT_CACHE_RECORDS;
@@ -119,19 +124,19 @@ public:
          * ********************* */
 
         try {
-            host = manager.getString("host");
-            port = manager.getInt("port");
-            smsc_log_info(inapLogger, "INMan: %s:%d", host, port);
+            sock.host = manager.getString("host");
+            sock.port = manager.getInt("port");
+            smsc_log_info(inapLogger, "INMan: %s:%d", sock.host, sock.port);
         } catch (ConfigException& exc) {
-            host = 0; port = 0;
+            sock.host = 0; sock.port = 0;
             throw ConfigException("INMan host or port missing");
         }
         tmo = 0;
         try { tmo = (uint32_t)manager.getInt("maxClients"); }
         catch (ConfigException& exc) { }
         if (tmo)
-            maxConn = (unsigned short)tmo;
-        smsc_log_info(inapLogger, "maxClients: %s%u", !tmo ? "default ":"", maxConn);
+            sock.maxConn = (unsigned short)tmo;
+        smsc_log_info(inapLogger, "maxClients: %s%u", !tmo ? "default ":"", sock.maxConn);
 
         /* ******************** *
          * Billing parameters:  *
@@ -154,6 +159,20 @@ public:
         else if (strcmp(cstr, _BILLmodes[smsc::inman::BILL_ALL]))
             throw ConfigException("'billMode' is unknown or missing");
         smsc_log_info(inapLogger, "billMode: %s [%d]", cstr, bill.billMode);
+
+        cstr = NULL;
+        try { cstr = billCfg.getString("abonentPolicy");
+        } catch (ConfigException& exc) {
+            throw ConfigException("'abonentPolicy' is unknown or missing");
+        }
+        if (!strcmp(cstr, _PolicyModes[smsc::inman::policyDB]))
+            bill.policy = smsc::inman::policyDB;
+        else if (!strcmp(cstr, _PolicyModes[smsc::inman::policyHLR])) {
+            throw ConfigException("'abonentPolicy' HLR is not implemented");
+//            bill.policy = smsc::inman::policyHLR;
+        } else if (strcmp(cstr, _PolicyModes[smsc::inman::policyIN]))
+            throw ConfigException("'abonentPolicy' is unknown or missing");
+        smsc_log_info(inapLogger, "abonentPolicy: %s [%d]", cstr, bill.policy);
 
         cstr = NULL;
         try { cstr = billCfg.getString("cdrMode");
@@ -232,7 +251,7 @@ public:
         if (tmo) {
             if ((tmo >= 65535) || (tmo < 5))
                 throw ConfigException("'maxTimeout' should fall into the range [5 ..65535] seconds");
-            bill.maxTimeout = (unsigned short)tmo;
+            sock.timeout = bill.maxTimeout = (unsigned short)tmo;
         }
         smsc_log_info(inapLogger, "maxTimeout: %s%u secs", !tmo ? "default ":"", bill.maxTimeout);
 
@@ -318,7 +337,9 @@ public:
             catch (std::exception& exc) {
                 throw ConfigException(format("RPCList_postpaid: %s", exc.what()).c_str());
             }
-        }
+        } else if (bill.policy == smsc::inman::policyIN)
+            throw ConfigException("'RPCList_postpaid' must be defined for abonentPolicy: IN");
+
         if (!bill.postpaidRPC.print(cppStr))
             cppStr += "unsupported";
         smsc_log_info(inapLogger, cppStr.c_str());
@@ -327,43 +348,48 @@ public:
         /* *********************** *
          * DB sources parameters:  *
          * *********************** */
-        if (!manager.findSection("DataProvider")) {
-            smsc_log_info(inapLogger, "DataProvider: not in use");
-        } else {
-            ConfigView dbCfg(manager, "DataProvider");
-            //load drivers first
-            try { DataSourceLoader::loadup(&dbCfg);
-            } catch (Exception& exc) {  //ConfigException or LoadupException
-                throw ConfigException(exc.what());
-            }
-            //read DB connection parameters
-            if (!manager.findSection("DataProvider.DataSource"))
-                throw ConfigException("'DataProvider.DataSource' section is missed");
+        if (bill.policy != smsc::inman::policyDB) {
+            smsc_log_info(inapLogger, "DataProvider: not in use by abonentPolicy");
+            return;
+        }
+        if (!manager.findSection("DataProvider"))
+            throw ConfigException("'DataProvider' section is missed (abonentPolicy: DB)");
+        
+        ConfigView dbCfg(manager, "DataProvider");
+        //load drivers first
+        try { DataSourceLoader::loadup(&dbCfg);
+        } catch (Exception& exc) {  //ConfigException or LoadupException
+            throw ConfigException(exc.what());
+        }
+        //read DB connection parameters
+        if (!manager.findSection("DataProvider.DataSource"))
+            throw ConfigException("'DataProvider.DataSource' section is missed");
 
-            ConfigView* dsCfg = dbCfg.getSubConfig("DataSource");
-            for (int i = 0; i < 3; i++) {
-                if (!(_dsParm[i].prmVal = dsCfg->getString(_dsParm[i].prmId)))
-                    throw ConfigException("'%s' isn't set!", _dsParm[i].prmId);
-            }
-            dbProvPrm = new DBSourceCFG;
-            dbProvPrm->rtId = _dsParm[1].prmVal;
-            dbProvPrm->rtKey = _dsParm[2].prmVal;
+        ConfigView* dsCfg = dbCfg.getSubConfig("DataSource");
+        for (int i = 0; i < 3; i++) {
+            if (!(_dsParm[i].prmVal = dsCfg->getString(_dsParm[i].prmId)))
+                throw ConfigException("'%s' isn't set!", _dsParm[i].prmId);
+        }
+        dbProvPrm = new DBSourceCFG;
+        dbProvPrm->rtId = _dsParm[1].prmVal;
+        dbProvPrm->rtKey = _dsParm[2].prmVal;
 
-            dbProvPrm->ds = DataSourceFactory::getDataSource(_DS_IDENT_VAL);
-            if (!dbProvPrm->ds)
-                throw ConfigException("'%s' 'DataSource' isn't registered!", _DS_IDENT_VAL);
-            dbProvPrm->ds->init(dsCfg);
+        dbProvPrm->ds = DataSourceFactory::getDataSource(_DS_IDENT_VAL);
+        if (!dbProvPrm->ds)
+            throw ConfigException("'%s' 'DataSource' isn't registered!", _DS_IDENT_VAL);
+        dbProvPrm->ds->init(dsCfg);
 
-            dbProvPrm->max_queries = (unsigned)dsCfg->getInt("maxQueries");
-            dbProvPrm->init_threads = 1;
-            bool wdog = false;
-            try { wdog = dsCfg->getBool("watchdog"); }
-            catch (ConfigException & exc) { }
+        dbProvPrm->max_queries = (unsigned)dsCfg->getInt("maxQueries");
+        dbProvPrm->init_threads = 1;
+        bool wdog = false;
+        try { wdog = dsCfg->getBool("watchdog"); }
+        catch (ConfigException & exc) { }
 
-            if (wdog)
-                dbProvPrm->timeout = (unsigned)dsCfg->getInt("timeout");
-            smsc_log_info(inapLogger, "Query timeout: %u secs", dbProvPrm->timeout);
-        } //dbCfg
+        if (wdog)
+            dbProvPrm->timeout = (unsigned)dsCfg->getInt("timeout");
+        smsc_log_info(inapLogger, "Query timeout: %u secs", dbProvPrm->timeout);
+        /**/
+        return;
     }
 };
 
