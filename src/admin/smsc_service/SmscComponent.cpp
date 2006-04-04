@@ -1498,6 +1498,13 @@ void fillSmeInfo(SmeInfo & smeInfo, const Arguments & args)
   smeInfo.forceDC           = args.Get("forceDC").getBooleanValue();
   smeInfo.receiptSchemeName = args.Get("receiptSchemeName").getStringValue();
   smeInfo.timeout           = args.Get("timeout").getLongValue();
+  if(args.Exists("accessMask"))
+  {
+    smeInfo.accessMask=args.Get("accessMask").getLongValue();
+  }else
+  {
+    smeInfo.accessMask=1;
+  }
   if (args.Exists("proclimit"))
     smeInfo.proclimit         = args.Get("proclimit").getLongValue();
   if (args.Exists("schedlimit"))
