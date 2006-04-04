@@ -4,13 +4,6 @@ import java.util.Collection;
 import java.util.TreeMap;
 import java.util.Iterator;
 
-/**
- * Created by IntelliJ IDEA.
- * User: makar
- * Date: 24.10.2003
- * Time: 13:27:41
- * To change this template use Options | File Templates.
- */
 public class ExtendedCountersSet extends CountersSet {
     private TreeMap errors = new TreeMap();
 
