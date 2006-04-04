@@ -2,6 +2,7 @@ package ru.novosoft.smsc.admin.smsstat;
 
 import java.util.Collection;
 import java.util.TreeMap;
+import java.util.Iterator;
 
 /**
  * Created by IntelliJ IDEA.
@@ -10,43 +11,34 @@ import java.util.TreeMap;
  * Time: 13:27:41
  * To change this template use Options | File Templates.
  */
-public class ExtendedCountersSet extends CountersSet
-{
-    private TreeMap err=new TreeMap();
+public class ExtendedCountersSet extends CountersSet {
+    private TreeMap errors = new TreeMap();
 
-    public ExtendedCountersSet() {}
+    public ExtendedCountersSet() {
+    }
+
     public ExtendedCountersSet(long accepted, long rejected, long delivered,
-                               long failed, long rescheduled, long temporal, long i, long o)
-    {
+                               long failed, long rescheduled, long temporal, long i, long o) {
         super(accepted, rejected, delivered, failed, rescheduled, temporal, i, o);
     }
 
-    public void incError(int errcode, long count)
-    {
+    public void incError(int errcode, long count) {
         Integer key = new Integer(errcode);
-        ErrorCounterSet set = (ErrorCounterSet)err.get(key);
-        if (set == null) err.put(key, new ErrorCounterSet(errcode, count));
-        else set.increment(count);
-    }
-    public void putErr(int errcode, ErrorCounterSet set)
-    {
-        err.put(new Integer(errcode), set);
-    }
-    public void addAllErr(Collection err)
-    {
-        err.addAll(err);
-    }
-    public Collection getErrors()
-    {
-        return err.values();
-    }
-    public TreeMap getErrorsMap()
-    {
-        return err;
+        ErrorCounterSet set = (ErrorCounterSet) errors.get(key);
+        if (set == null)
+            errors.put(key, new ErrorCounterSet(errcode, count));
+        else
+            set.increment(count);
     }
 
-    public ErrorCounterSet getErr(int errcode)
-    {
-        return (ErrorCounterSet)err.get(new Integer(errcode));
+    public void addAllErr(Collection err) {
+        for (Iterator i = err.iterator(); i.hasNext();) {
+            ErrorCounterSet set = (ErrorCounterSet) i.next();
+            if (set != null) errors.put(new Integer(set.errcode), set);
+        }
+    }
+
+    public Collection getErrors() {
+        return errors.values();
     }
 }
