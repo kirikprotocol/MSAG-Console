@@ -62,7 +62,7 @@ struct DupeFile:smsc::core::buffers::FileEventHandler{
   virtual void onOpen(int mode,const char* fileName)
   {
     if(broken)return;
-    fprintf(stderr,"open:%s\n",fileName);
+    //fprintf(stderr,"open:%s\n",fileName);
     std::string newFn;
     if(fileName && strlen(fileName)>0 && fileName[0]=='/')
     {
@@ -166,7 +166,7 @@ struct DupeGlobalFileEventHandler:smsc::core::buffers::GlobalFileEventHandler{
   }
   virtual void onCreateFileObject(File* f)
   {
-    fprintf(stderr,"onCreateFileObject\n");
+    //fprintf(stderr,"onCreateFileObject\n");
     if(recursion || broken)return;
     recursion=true;
     f->SetEventHandler(new DupeFile());
