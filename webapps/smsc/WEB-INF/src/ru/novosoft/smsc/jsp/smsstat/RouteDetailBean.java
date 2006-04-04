@@ -131,13 +131,13 @@ public class RouteDetailBean extends IndexBean
     ByRouteId.clear();
     for (Iterator iterator = routesResult.iterator(); iterator.hasNext();) {
       StatRouteDataItem o = (StatRouteDataItem) iterator.next();
-      Provider   provider = providerManager.getProvider(new Long(o.getProviderId()));
-      Category   category = categoryManager.getCategory(new Long(o.getCategoryId()));
+      Provider   provider = o.getProvider();
+      Category   category = o.getCategory();
       if (provider == null) provider = new Provider(-1, "");
       if (category == null) category = new Category(-1, "");
 
       RouteIdCountersSet r = new RouteIdCountersSet(o.getAccepted(), o.getRejected(), o.getDelivered(), o.getFailed(), o.getRescheduled(),
-              o.getTemporal(), o.getPeak_i(), o.getPeak_o(), o.getRouteID(), o.getProviderId(), o.getCategoryId());
+              o.getTemporal(), o.getPeak_i(), o.getPeak_o(), o.getRouteID(), provider.getId(), category.getId());
       r.setProvider(provider);
       r.setCategory(category);
       Collection errors = o.getErrors();

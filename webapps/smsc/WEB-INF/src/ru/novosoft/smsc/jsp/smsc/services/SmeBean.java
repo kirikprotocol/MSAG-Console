@@ -26,7 +26,7 @@ public class SmeBean extends PageBean {
     protected int proclimit = 0;
     protected int schedlimit = 0;
 
-    protected int accessMask = 0;
+    protected int accessMask = 1;
 
 
     protected int convertInterfaceVersion(String version) {
@@ -54,7 +54,7 @@ public class SmeBean extends PageBean {
         mode = SME.MODE_TRX;
         proclimit = 0;
         schedlimit = 0;
-        accessMask = 0;
+        accessMask = 1;
     }
 
     /**
@@ -152,7 +152,7 @@ public class SmeBean extends PageBean {
         try {
             this.accessMask = Integer.decode(accessMask).intValue();
         } catch (NumberFormatException e) {
-            this.accessMask = 0;
+            this.accessMask = 1;
         }
     }
 

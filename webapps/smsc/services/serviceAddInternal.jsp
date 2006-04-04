@@ -3,7 +3,10 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.services.ServiceAddInternal"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-    TITLE = getLocString("services.addTitle2");
+    if (Constants.instType != ResourceGroupConstants.RESOURCEGROUP_TYPE_SINGLE)
+        TITLE = getLocString("services.add");
+    else
+        TITLE = getLocString("services.addTitle2");
     switch (bean.process(request)) {
         case ServiceAddInternal.RESULT_DONE:
             if (Constants.instType != ResourceGroupConstants.RESOURCEGROUP_TYPE_SINGLE)

@@ -5,6 +5,8 @@ package ru.novosoft.smsc.jsp.util.tables.impl.smcstat;
  */
 
 import ru.novosoft.smsc.admin.smsstat.RouteIdCountersSet;
+import ru.novosoft.smsc.admin.category.Category;
+import ru.novosoft.smsc.admin.provider.Provider;
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataItem;
 
 import java.util.Collection;
@@ -65,7 +67,6 @@ public class StatRouteDataItem extends AbstractDataItem {
         return ((Long) values.get("temporal")).longValue();
     }
 
-    /*
    public Provider getProvider()
    {
      return (Provider) values.get("provider");
@@ -75,28 +76,8 @@ public class StatRouteDataItem extends AbstractDataItem {
    {
      return (Category) values.get("category");
    }
-    */
+
     public Collection getErrors() {
         return (Collection) values.get("errors");
     }
-
-
-    public long getProviderId() {
-        return ((Long) values.get("providerId")).longValue();
-    }
-
-    public long getCategoryId() {
-        return ((Long) values.get("categoryId")).longValue();
-    }
-    /*
-     public String getProviderName()
-    {
-      return (String)values.get("providerName");
-    }
-    public String getCategoryName()
-     {
-       return (String)values.get("categoryName");
-     }
-
-    */
 }
