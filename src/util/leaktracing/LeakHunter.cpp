@@ -173,6 +173,7 @@ LeakHunter::~LeakHunter()
     fn=getenv("LEAK_HUNTER_LOG");
   }
   f=fopen(fn,"wt+");
+  if(!f)f=stderr;
   fprintf(f,"Peak mem usage:%d bytes\n",maxmem);
   if(alloc==0)return;
   fprintf(f,"Unallocated: %d bytes\n",alloc);
