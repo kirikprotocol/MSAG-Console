@@ -23,6 +23,7 @@ using namespace smsc::smpp::UssdServiceOpValue;
 
 enum CommandOperations
 {
+    //SMS
     CO_DELIVER_SM,
     CO_DELIVER_SM_RESP,
     CO_SUBMIT_SM,
@@ -30,11 +31,16 @@ enum CommandOperations
     CO_RECEIPT_DELIVER_SM,
     CO_RECEIPT_DELIVER_SM_RESP,
 
+    //USSD
     CO_USSD_DELIVER,
     CO_USSD_DELIVER_RESP,
-
     CO_USSD_SUBMIT,
-    CO_USSD_SUBMIT_RESP
+    CO_USSD_SUBMIT_RESP,
+
+    //HTTP
+    CO_HTTP_DELIVERY
+
+
 };
 
 enum EventHandlerType

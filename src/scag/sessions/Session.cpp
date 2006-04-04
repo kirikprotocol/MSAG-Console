@@ -7,6 +7,40 @@ namespace scag { namespace sessions {
 using namespace scag::exceptions;
 using namespace scag::re;
 
+Hash<int> Session::InitOperationTypesHash()
+{
+    Hash<int> hs;
+
+    hs["SMPP_DELIVER"] = CO_DELIVER_SM;
+    hs["SMPP_DELIVER_RESP"] = CO_DELIVER_SM_RESP;
+    hs["SMPP_SUBMIT"] = CO_SUBMIT_SM;
+    hs["SMPP_SUBMIT_RESP"] = CO_SUBMIT_SM_RESP;
+    hs["SMPP_RECEIPT_DELIVER"] = CO_RECEIPT_DELIVER_SM;
+    hs["SMPP_RECEIPT_DELIVER_RESP"] = CO_RECEIPT_DELIVER_SM_RESP;
+
+    hs["USSD_DELIVER"] = CO_USSD_DELIVER;
+    hs["USSD_DELIVER_RESP"] = CO_USSD_DELIVER_RESP;
+    hs["USSD_SUBMIT"] = CO_USSD_SUBMIT;
+    hs["USSD_SUBMIT_RESP"] = CO_USSD_SUBMIT_RESP;
+
+    hs["HTTP_DELIVERY"] = CO_HTTP_DELIVERY;
+
+    return hs;
+}
+
+Hash<int> Session::OperationTypesHash = Session::InitOperationTypesHash();
+
+int Session::getOperationType(std::string& str)
+{
+    int * pType = OperationTypesHash.GetPtr(str.c_str());
+    if (!pType) throw SCAGException("Unknown OperationType '%s'", str.c_str());
+
+    return (*pType);
+}
+
+
+
+
 void Operation::detachBill()
 {
     if (!m_hasBill) 
@@ -489,6 +523,7 @@ time_t Session::getWakeUpTime()
     if (!PendingOperationList.empty()) time = (PendingOperationList.begin())->validityTime;
     return time;
 }
+
 
 
 }}

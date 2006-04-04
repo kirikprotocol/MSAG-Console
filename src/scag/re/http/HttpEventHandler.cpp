@@ -22,13 +22,14 @@ RuleStatus HttpEventHandler::processRequest(HttpCommand& command, Session& sessi
    
     try{
 
-        session.setOperationFromPending(command, HTTP_DELIVERY);
+        session.setOperationFromPending(command, CO_HTTP_DELIVERY);
+        
 
         time_t now;
         time(&now);
 
         PendingOperation pendingOperation;
-        pendingOperation.type = HTTP_DELIVERY;
+        pendingOperation.type = CO_HTTP_DELIVERY;
         pendingOperation.validityTime = now + SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
         session.addPendingOperation(pendingOperation);
 

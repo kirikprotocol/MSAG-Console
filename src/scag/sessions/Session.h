@@ -171,6 +171,8 @@ namespace scag { namespace sessions
         int                     accessCount;
 
         Hash<AdapterProperty *> PropertyHash;
+        static Hash<int> OperationTypesHash;
+
 
         void ClearOperations();
 
@@ -215,11 +217,16 @@ namespace scag { namespace sessions
         Operation * setCurrentOperation(int operationId);
         void setOperationFromPending(SCAGCommand& cmd, int operationType);
 
-
+        
         time_t Session::getWakeUpTime();
         void Serialize(SessionBuffer& buff);
         void Deserialize(SessionBuffer& buff);
         CSessionPrimaryKey& getPrimaryKey() {return m_SessionPrimaryKey;}
+
+
+        static int getOperationType(std::string& str);
+        static Hash<int> Session::InitOperationTypesHash();
+
     };
 
     typedef smsc::core::buffers::RefPtr<Session,smsc::core::synchronization::Mutex> SessionPtr;

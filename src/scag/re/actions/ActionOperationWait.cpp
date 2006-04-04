@@ -42,6 +42,14 @@ void ActionOperationWait::init(const SectionParams& params,PropertyObject proper
             throw InvalidPropertyException("Action 'operation:wait': cannot read property '%s' - no access",sTime.c_str());
     }
 
+    try {
+        m_opType = Session::getOperationType(ConvertWStrToStr(sType));
+    } catch (SCAGException& e)
+    {
+        throw SCAGException("Action 'operation:wait': %s", e.what());
+    }
+    
+
     smsc_log_debug(logger,"Action 'operation:wait':: init...");
 }
 
@@ -59,12 +67,12 @@ bool ActionOperationWait::run(ActionContext& context)
     }
 
     time_t pendingTime,now;
-    uint8_t type = 0;
+ 
 
     time(&now);
     pendingTime = now + property->getInt();
 
-    context.AddPendingOperation(type,pendingTime);
+    context.AddPendingOperation(m_opType,pendingTime);
 
 
     return true;
