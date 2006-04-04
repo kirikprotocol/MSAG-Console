@@ -52,6 +52,8 @@ public:
     return services.Next(serviceId, servicePtr);
   }
 
+  int Count(){return services.GetCount();}
+
 protected:
   typedef Hash<Service*> _ServiceList;
 

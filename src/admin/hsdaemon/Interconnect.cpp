@@ -5,13 +5,13 @@
 #include "core/buffers/TmpBuf.hpp"
 #include "DaemonCommandDispatcher.h"
 #include "ChildWaiter.h"
+#include "InterconnectCommands.h"
 
 namespace smsc{
 namespace admin{
 namespace hsdaemon{
 
 namespace buf=smsc::core::buffers;
-
 
 int Interconnect::Execute()
 {
@@ -37,51 +37,10 @@ int Interconnect::Execute()
   return 0;
 }
 
-uint16_t readUInt16(net::Socket* sck)
-{
-  uint16_t rv;
-  if(sck->ReadAll(reinterpret_cast<char*>(&rv),sizeof(rv))==-1)throw Exception("Failed to read uint16_t from socket");
-  return ntohs(rv);
-}
-
-uint32_t readUInt32(net::Socket* sck)
-{
-  uint32_t rv;
-  if(sck->ReadAll(reinterpret_cast<char*>(&rv),sizeof(rv))==-1)throw Exception("Failed to read uint32_t from socket");
-  return ntohl(rv);
-}
-
-std::string readString(net::Socket* sck)
-{
-  uint16_t len=readUInt16(sck);
-  TmpBuf<char,64> buf(len);
-  if(sck->ReadAll(buf.get(),len)==-1)throw Exception("Failed to read string of length %d from socket",len);
-  std::string rv;
-  return std::string(buf.get(),len);
-}
-
-void writeUInt16(net::Socket* sck,uint16_t val)
-{
-  val=htons(val);
-  if(sck->WriteAll(reinterpret_cast<char*>(&val),sizeof(val))==-1)throw Exception("Failed to write uint16_t to socket");
-}
-
-void writeUInt32(net::Socket* sck,uint32_t val)
-{
-  val=htonl(val);
-  if(sck->WriteAll(reinterpret_cast<char*>(&val),sizeof(val))==-1)throw Exception("Failed to write uint32_t to socket");
-}
-
-void writeString(net::Socket* sck,const std::string& val)
-{
-  uint16_t len=static_cast<uint16_t>(val.length());
-  writeUInt16(sck,len);
-  if(sck->WriteAll(val.c_str(),len)==-1)throw Exception("Failed to write string of length %s to socket",len);
-}
-
 
 void Interconnect::ProcessRequest(net::Socket* sck)
 {
+  using namespace interconnect;
   uint16_t cmdId=readUInt16(sck);
   smsc_log_debug(log,"received cmd=%x",cmdId);
   sync::MutexGuard mg(DaemonCommandDispatcher::servicesListMutex);
@@ -110,17 +69,23 @@ void Interconnect::ProcessRequest(net::Socket* sck)
     case cmdGetServiceStatus:
     {
       std::string svcName=readString(sck);
-      Service* svc=lst.get(svcName.c_str());
-      uint16_t status=svc->getStatus();
+      uint16_t status=-1;
+      try{
+        Service* svc=lst.get(svcName.c_str());
+        status=svc->getStatus();
+      }catch(std::exception& e)
+      {
+        smsc_log_warn(log,"Failed to get service status:%s",e.what());
+      }
       writeUInt16(sck,status);
     }break;
     case cmdStartService:
     {
       std::string svcName=readString(sck);
       smsc_log_info(log,"remote request to start service '%s'",svcName.c_str());
-      Service* svc=lst.get(svcName.c_str());
       uint16_t status=0;
       try{
+        Service* svc=lst.get(svcName.c_str());
         ChildShutdownWaiter::startService(svcName.c_str());
         status=1;
       }catch(std::exception& e)
@@ -134,9 +99,9 @@ void Interconnect::ProcessRequest(net::Socket* sck)
       std::string svcName=readString(sck);
       bool switchOver=readUInt16(sck);
       smsc_log_info(log,"remote request to shutdown service '%s'",svcName.c_str());
-      Service* svc=lst.get(svcName.c_str());
       uint16_t status=0;
       try{
+        Service* svc=lst.get(svcName.c_str());
         svc->setSwitchover(switchOver);
         svc->shutdown();
         status=1;
@@ -146,11 +111,71 @@ void Interconnect::ProcessRequest(net::Socket* sck)
       }
       writeUInt16(sck,status);
     }break;
+    case cmdListServices:
+    {
+      writeUInt16(sck,lst.Count());
+      lst.First();
+      char* svcName;
+      Service* svc;
+      while(lst.Next(svcName,svc))
+      {
+        writeString(sck,svcName);
+      }
+    }break;
+    case cmdGetServiceProperty:
+    {
+      std::string svcName=readString(sck);
+      int prop=readUInt16(sck);
+      try{
+        Service* svc=lst.get(svcName.c_str());
+        switch(prop)
+        {
+          case propArgs:
+            writeString(sck,svc->getArgs());
+            break;
+          case propPreferredNode:
+            writeString(sck,svc->getInfo().preferredNode.c_str());
+            break;
+          case propLogicalHostname:
+            writeString(sck,svc->getInfo().hostName.c_str());
+            break;
+          case propServiceType:
+            switch(svc->getType())
+            {
+              case ServiceInfo::standalone:
+                writeString(sck,"standalone");
+                break;
+              case ServiceInfo::failover:
+                writeString(sck,"failover");
+                break;
+            }
+            break;
+          case propAutostartDelay:
+          {
+            char buf[32];
+            sprintf(buf,"%d",svc->getInfo().autostartDelay);
+            writeString(sck,buf);
+          }break;
+          default:
+          {
+            writeString(sck,"Unknown property");
+          }
+        };
+      }catch(std::exception& e)
+      {
+        writeString(sck,e.what());
+      }
+    }break;
+    default:
+    {
+      smsc_log_warn(log,"Unknown command:%d\n",cmdId);
+    }break;
   }
 }
 
 void Interconnect::sendSyncCommand()
 {
+  using namespace interconnect;
   sync::MutexGuard mg(clntMtx);
   if(clntSck.Connect()==-1)throw Exception("Failed to connect to %s:%d",otherHost.c_str(),otherPort);
   writeUInt16(&clntSck,cmdSynchronizeServices);
@@ -182,34 +207,21 @@ Service::run_status Interconnect::remoteGetServiceStatus(const char* svc)
 {
   sync::MutexGuard mg(clntMtx);
   if(clntSck.Connect()==-1)throw Exception("Failed to connect to %s:%d",otherHost.c_str(),otherPort);
-  writeUInt16(&clntSck,cmdGetServiceStatus);
-  writeString(&clntSck,svc);
-  uint16_t rv=readUInt16(&clntSck);
-  clntSck.Close();
-  return (Service::run_status)rv;
+  return interconnect::remoteGetServiceStatus(clntSck,svc);
 }
 
 bool Interconnect::remoteStartService(const char* svc)
 {
   sync::MutexGuard mg(clntMtx);
   if(clntSck.Connect()==-1)throw Exception("Failed to connect to %s:%d",otherHost.c_str(),otherPort);
-  writeUInt16(&clntSck,cmdStartService);
-  writeString(&clntSck,svc);
-  uint16_t rv=readUInt16(&clntSck);
-  clntSck.Close();
-  return rv!=0;
+  return interconnect::remoteStartService(clntSck,svc);
 }
 
 bool Interconnect::remoteShutdownService(const char* svc,bool switchOver)
 {
   sync::MutexGuard mg(clntMtx);
   if(clntSck.Connect()==-1)throw Exception("Failed to connect to %s:%d",otherHost.c_str(),otherPort);
-  writeUInt16(&clntSck,cmdShutdownService);
-  writeString(&clntSck,svc);
-  writeUInt16(&clntSck,switchOver?1:0);
-  uint16_t rv=readUInt16(&clntSck);
-  clntSck.Close();
-  return rv!=0;
+  return interconnect::remoteShutdownService(clntSck,svc,switchOver);
 }
 
 

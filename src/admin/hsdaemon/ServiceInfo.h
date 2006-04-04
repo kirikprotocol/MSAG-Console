@@ -46,8 +46,8 @@ struct ServiceInfo{
         {
           autostartDelay=atoi(autodelay.c_str());
         }
-        XmlStr prefNode(serviceElem->getAttribute(XmlStr("preferedNode")));
-        preferedNode=prefNode.c_str();
+        XmlStr prefNode(serviceElem->getAttribute(XmlStr("preferredNode")));
+        preferredNode=prefNode.c_str();
       }
     }
     catch (std::exception& e)
@@ -63,7 +63,7 @@ struct ServiceInfo{
   std::string id;
   std::string args;
   std::string hostName;
-  std::string preferedNode;
+  std::string preferredNode;
   bool autoStart;
   ServiceType serviceType;
   int autostartDelay;

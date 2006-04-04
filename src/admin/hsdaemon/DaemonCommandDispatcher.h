@@ -44,7 +44,7 @@ public:
 
   DaemonCommandDispatcher(Socket * admSocket);
 
-  virtual Response * handle(const Command * const command);
+  virtual Response * handle(const Command * const command)throw (AdminException);
 
   static void shutdown();
 

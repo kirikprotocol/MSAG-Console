@@ -73,12 +73,6 @@ protected:
 
   void ProcessRequest(net::Socket* sck);
 
-  enum Commands{
-    cmdSynchronizeServices=1,
-    cmdGetServiceStatus,
-    cmdStartService,
-    cmdShutdownService
-  };
 };
 
 

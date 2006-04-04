@@ -96,7 +96,7 @@ DaemonCommandDispatcher::DaemonCommandDispatcher(Socket * admSocket)
 }
 
 /// main command handler
-Response * DaemonCommandDispatcher::handle(const Command * const command)
+Response * DaemonCommandDispatcher::handle(const Command * const command)throw (AdminException)
 {
   ChildShutdownWaiter::cleanStoppedWaiters();
   try
@@ -259,7 +259,7 @@ Response * DaemonCommandDispatcher::start_service(const CommandStartService * co
       if(!svc)throw AdminException("Unknown serviceId='%s'",command->getServiceId());
       if(svc->getType()!=ServiceInfo::standalone)
       {
-        if(svc->getInfo().preferedNode.length()>0 && svc->getInfo().preferedNode!=icon->getLocalNode())
+        if(svc->getInfo().preferredNode.length()>0 && svc->getInfo().preferredNode!=icon->getLocalNode())
         {
           try{
             if(icon->remoteStartService(command->getServiceId()))
@@ -267,11 +267,11 @@ Response * DaemonCommandDispatcher::start_service(const CommandStartService * co
               return new Response(Response::Ok,"");
             }else
             {
-              smsc_log_warn(logger,"failed to start service '%s' on prefered node",command->getServiceId());
+              smsc_log_warn(logger,"failed to start service '%s' on preferred node",command->getServiceId());
             }
           }catch(std::exception& e)
           {
-            smsc_log_warn(logger,"failed to start service '%s' on prefered node '%s'",command->getServiceId(),e.what());
+            smsc_log_warn(logger,"failed to start service '%s' on preferred node '%s'",command->getServiceId(),e.what());
           }
         }
       }
@@ -479,6 +479,12 @@ void DaemonCommandDispatcher::addServicesFromConfig()
       {
         //ignore exception if optional parameter not present
       }
+      try{
+        info.preferredNode=configManager->getString((prefix+"preferredNode").c_str());
+      }catch(...)
+      {
+        //ignore exception if optional parameter not present
+      }
 
       Service* svc=new Service(configManager->getString(CONFIG_SERVICES_FOLDER_PARAMETER), info);
       services.add(svc);
@@ -541,7 +547,7 @@ void DaemonCommandDispatcher::putServiceToConfig(const ServiceInfo& info)
   configManager->setString((serviceSectionName + ".args").c_str(), info.args.c_str());
   configManager->setBool((serviceSectionName + ".autostart").c_str(), info.autoStart);
   configManager->setString((serviceSectionName + ".hostName").c_str(), info.hostName.c_str());
-  configManager->setString((serviceSectionName + ".preferedNode").c_str(),info.preferedNode.c_str());
+  configManager->setString((serviceSectionName + ".preferredNode").c_str(),info.preferredNode.c_str());
   configManager->setString((serviceSectionName + ".serviceType").c_str(),info.serviceType==ServiceInfo::failover?"failover":"standalone");
   configManager->save();
   smsc_log_debug(logger, "new config saved");

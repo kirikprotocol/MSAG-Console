@@ -37,17 +37,6 @@ pid_t Service::start()
   throw (AdminException)
 {
   __trace2__("Service::start(%s)",info.id.c_str());
-  time_t now=time(NULL);
-  if(now-lastStart<DaemonCommandDispatcher::stayAliveTimeout)
-  {
-    smsc_log_info(logger,"Delay service start after crash restart for %d seconds",DaemonCommandDispatcher::retryTimeout*(1+restartRetryCount));
-    smsc::util::millisleep(1000*DaemonCommandDispatcher::retryTimeout*(1+restartRetryCount));
-    restartRetryCount++;
-  }else
-  {
-    restartRetryCount=0;
-  }
-  lastStart=time(NULL);
 
   if(info.id.length()==0)throw AdminException("Service with empty name detected!");
   try{
@@ -81,6 +70,19 @@ pid_t Service::start()
     throw AdminException("Service stopping");
   case stopped:
     {
+      status=starting;
+      time_t now=time(NULL);
+      if(now-lastStart<DaemonCommandDispatcher::stayAliveTimeout)
+      {
+        smsc_log_info(logger,"Delay service start after crash restart for %d seconds",DaemonCommandDispatcher::retryTimeout*(1+restartRetryCount));
+        smsc::util::millisleep(1000*DaemonCommandDispatcher::retryTimeout*(1+restartRetryCount));
+        restartRetryCount++;
+      }else
+      {
+        restartRetryCount=0;
+      }
+      lastStart=time(NULL);
+
       if(!checkExec((serviceDir+'/'+service_exe).c_str()))
       {
         throw AdminException("service binary '%s' is not executable",(serviceDir+'/'+service_exe).c_str());
