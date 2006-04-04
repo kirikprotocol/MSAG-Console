@@ -25,7 +25,7 @@
                     <sm-ep:properties title="" noEdit="true">
                 </td></tr>
                 <tr><td>
-                    <c:choose>
+                    <%--c:choose>
                         <c:when test="${bean.administrator}">
                             <sm-ep:list title="Sme provider" name="providerId"
                                         values="${fn:join(bean.providerIds, ',')}"
@@ -34,7 +34,7 @@
                         <c:otherwise>
                             <sm-ep:const title="Sme provider" name="providerName" value="${bean.providerName}"/>
                         </c:otherwise>
-                    </c:choose>
+                    </c:choose--%>
                 </td></tr>
                 <tr><td>
                     <sm-ep:calendar title="Till date" name="tillDate"/>
