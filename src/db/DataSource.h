@@ -259,14 +259,14 @@ namespace smsc { namespace db
         
 		smsc::logger::Logger *log;
 
-        bool                isConnected, isDead;
+        bool                isConnected, isDead, inExecution;
         
-        Mutex               statementsRegistryLock, routinesRegistryLock;
+        Mutex               statementsRegistryLock, routinesRegistryLock, executionLock;
         Hash<Statement *>   statementsRegistry;
         Hash<Routine *>     routinesRegistry;
         
         Connection() : next(0), log(Logger::getInstance("smsc.db.Connection")), 
-            isConnected(false), isDead(false) {};
+            isConnected(false), isDead(false), inExecution(false) {};
 
         Statement* _getStatement(const char* id);
         bool _registerStatement(const char* id, Statement* statement);
@@ -274,11 +274,19 @@ namespace smsc { namespace db
         bool _registerRoutine(const char* id, Routine* routine);
 
         virtual void ping() = 0;
+        inline void isExecution() {
+            MutexGuard guard(executionLock);
+            return inExecution;
+        };
     
     public:
         
         virtual ~Connection() {};
 
+        inline void setExecution(bool ex) {
+            MutexGuard guard(executionLock);
+            inExecution = ex;
+        };
         inline bool isAvailable() {
             return (isConnected && !isDead);
         };
