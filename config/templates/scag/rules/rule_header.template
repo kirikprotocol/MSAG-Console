@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ <scag:rule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://www.sibinco.com/SCAG ../xsd/{0}"
+           xmlns:scag="http://www.sibinco.com/SCAG"
+           transport="{1}" id="{2}">
+
