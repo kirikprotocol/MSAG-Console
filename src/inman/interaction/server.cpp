@@ -217,7 +217,7 @@ Server::ShutdownReason Server::Listen()
                     if (!connect->hasListeners()) {
                         smsc_log_warn(logger, "TCPSrv: No listeners being set for connect[%u]!",
                                       connect->getSocketId());
-                        closeConnect(connect);
+                        closeConnect(connect, true);
                     }
                 } else { //connects number exceeded
                     delete clientSocket;
@@ -253,7 +253,7 @@ int Server::Execute()
     smsc_log_debug(logger, "TCPSrv: Listener thread finished, cause %d", (int)result);
 
     //forcedly close active connects
-    closeAllConnects(result == Server::srvStopped ? false : true);
+    closeAllConnects(true);
     
     //notify ServerListeners about server shutdown
     ListenerList cplist = listeners;
