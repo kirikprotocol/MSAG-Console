@@ -154,6 +154,8 @@ void OCIConnection::ping()
         check(OCIStmtExecute(svchp, pingStmt, errhp, 1, 0, 
                              (CONST OCISnapshot *) NULL,
                              (OCISnapshot *) NULL, OCI_DEFAULT));
+        check(OCIStmtFetch(pingStmt, errhp, (ub4) 1, (ub4) OCI_FETCH_NEXT,
+                           (ub4) OCI_DEFAULT));
     } 
     catch (...) {
         pingOk = false; // Do nothing
