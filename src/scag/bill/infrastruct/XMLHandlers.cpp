@@ -146,15 +146,14 @@ void XMLBasicHandler::error(const SAXParseException& e)
 {
     StrX fname(e.getSystemId());
     StrX msg(e.getMessage());
-    smsc_log_error(logger,"Error at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
+    throw Exception("Error at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
 }
 
 void XMLBasicHandler::fatalError(const SAXParseException& e)
 {
     StrX fname(e.getSystemId());
     StrX msg(e.getMessage());
-    smsc_log_error(logger,"Fatal Error at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
-
+    throw Exception("Fatal Error at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
 }
 
 void XMLBasicHandler::warning(const SAXParseException& e)
@@ -322,15 +321,14 @@ void XMLTariffMatrixHandler::error(const SAXParseException& e)
 {
     StrX fname(e.getSystemId());
     StrX msg(e.getMessage());
-    smsc_log_error(logger,"Error at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
+    throw Exception("Error at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
 }
 
 void XMLTariffMatrixHandler::fatalError(const SAXParseException& e)
 {
     StrX fname(e.getSystemId());
     StrX msg(e.getMessage());
-    smsc_log_error(logger,"Fatal Error at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
-
+    throw Exception("Fatal Error at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
 }
 
 void XMLTariffMatrixHandler::warning(const SAXParseException& e)

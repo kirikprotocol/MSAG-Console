@@ -280,9 +280,6 @@ void InfrastructureImpl::ParseFile(const char* _xmlFile, HandlerBase* handler)
         smsc_log_error(logger,"Terminate parsing: unknown fatal error");
         throw Exception("unknown fatal error");
     }
-
-    if (errorCount > 0) 
-        smsc_log_error(logger,"Error parsing: some errors occured");
 }
 
 }}}
