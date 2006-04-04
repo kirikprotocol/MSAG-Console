@@ -22,7 +22,7 @@ public class StatRouteDataItem extends AbstractDataItem {
         values.put("peak_i", new Long(r.peak_i));
         values.put("peak_o", new Long(r.peak_o));
         values.put("provider", r.getProvider());
-        values.put("category", r.getProvider());
+        values.put("category", r.getCategory());
         values.put("errors", r.getErrors());
     }
 
