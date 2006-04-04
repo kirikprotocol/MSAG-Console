@@ -136,6 +136,7 @@ rechar* RegExp::charbits=(rechar*)RegExp::icharbits;
 #endif
 
 #ifdef UNICODE
+#include <wchar.h>
 #define ISDIGIT(c) iswdigit(c)
 #define ISSPACE(c) iswspace(c)
 #define ISWORD(c)  (iswalnum(c) || c=='_')
@@ -161,12 +162,11 @@ bool isType(rechar chr,int type)
   return false;
 }
 
-
 int ushlen(const rechar* str)
 {
   rechar ch;
   int len = -1;
-  
+
   do
   {
     ch = str[len+1];
