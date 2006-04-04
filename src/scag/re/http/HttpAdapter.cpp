@@ -28,11 +28,11 @@ Hash<AccessType> HttpCommandAdapter::InitRequestAccess()
 {
     Hash<AccessType> hs;
 
-    hs.Insert("method",atReadWrite);
+    hs.Insert("abonent", atReadWrite);
     hs.Insert("site", atReadWrite);
     hs.Insert("path", atReadWrite);
     hs.Insert("port", atReadWrite);
-    hs.Insert("query", atReadWrite);
+    hs.Insert("message", atReadWrite);
 
     return hs;
 }
@@ -77,8 +77,38 @@ Property* HttpCommandAdapter::getRequestProperty(const std::string& name)
 
     AdapterProperty* prop = NULL;
 
+    HttpRequest& cmd = (HttpRequest&)command;
+
     if(!strncmp(name.c_str(), "header-", 7))
-        prop = new AdapterProperty(name, this, command.getHeaderField(name.c_str() + 7));
+        prop = new AdapterProperty(name, this, cmd.getHeaderField(name.c_str() + 7));
+    else if(!strncmp(name.c_str(), "param-", 6))
+        prop = new AdapterProperty(name, this, cmd.getQueryParameter(name.c_str() + 6));
+    else if(!strcmp(name.c_str(), "abonent"))
+        prop = new AdapterProperty(name, this, cmd.getAbonent());
+    else if(!strcmp(name.c_str(), "site"))
+        prop = new AdapterProperty(name, this, cmd.getSite());
+    else if(!strcmp(name.c_str(), "path"))
+        prop = new AdapterProperty(name, this, cmd.getSitePath());
+    else if(!strcmp(name.c_str(), "port"))
+        prop = new AdapterProperty(name, this, cmd.getSitePort());
+    else if(!strcmp(name.c_str(), "message"))
+    {
+        std::string str;
+        TmpBuf<char, 1024> buf(1024);
+        const std::wstring& wstr = cmd.getMessageText();
+        const wchar_t* wchrs  = wstr.c_str();
+
+        for(int i = 0; i < wstr.length(); i++)
+        {
+            char r = (*wchrs >> 8);
+            buf.Append(&r, 1);
+            r = *(wchrs++);
+            buf.Append(&r, 1);
+        }
+
+        str.assign(buf.get(), buf.GetPos());
+        prop = new AdapterProperty(name, this, str);
+    }
 
     if(prop)
         PropertyPool.Insert(name.c_str(), prop);
@@ -129,7 +159,32 @@ void HttpCommandAdapter::changed(AdapterProperty& property)
     }
     else if(command.getCommandId() == HTTP_REQUEST)
     {
-        //TODO: implement other request fields
+        HttpRequest& cmd = (HttpRequest&)command;
+
+        if(!strcmp(property.GetName().c_str(), "abonent"))
+            cmd.setAbonent(property.getStr());
+        else if(!strcmp(property.GetName().c_str(), "site"))
+            cmd.setSite(property.getStr());
+        else if(!strcmp(property.GetName().c_str(), "path"))
+            cmd.setSitePath(property.getStr());
+        else if(!strcmp(property.GetName().c_str(), "port"))
+            cmd.setSitePort(property.getInt());
+        else if(!strcmp(property.GetName().c_str(), "message"))
+        {
+            std::string str = property.getStr();
+            TmpBuf<wchar_t, 1024> buf(1024);
+            std::wstring wstr;
+            const char* chrs  = str.c_str();
+
+            for(int i = 0; i < str.length(); i+=2)
+            {
+                wchar_t r = (chrs[i] << 8) + chrs[i + 1];
+                buf.Append(&r, 1);
+            }
+
+            wstr.assign(buf.get(), buf.GetPos());
+            cmd.setMessageText(wstr);
+        }
     }
 }
 
