@@ -238,8 +238,6 @@ TariffRec* InfrastructureImpl::GetTariff(uint32_t operator_id, const char* categ
 
 void InfrastructureImpl::ParseFile(const char* _xmlFile, HandlerBase* handler)
 {
-    int errorCount = 0;
-
     SAXParser parser;
     
     try
@@ -256,7 +254,6 @@ void InfrastructureImpl::ParseFile(const char* _xmlFile, HandlerBase* handler)
         parser.setDocumentHandler(handler);
         parser.setErrorHandler(handler);
         parser.parse(_xmlFile);
-        errorCount = parser.getErrorCount();
     }
     catch (const OutOfMemoryException&)
     {
