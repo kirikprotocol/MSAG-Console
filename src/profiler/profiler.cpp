@@ -828,7 +828,7 @@ int Profiler::Execute()
             }
           }
         }else
-        if(profCmd=="DEFAULT")
+        if(profCmd=="DEFAULT" || profCmd=="ENG")
         {
           msg=msgDefault;
           internal_update(_update_charset,addr,ProfileCharsetOptions::Default);
@@ -843,7 +843,7 @@ int Profiler::Execute()
           msg=msgUCS2AndLat;
           internal_update(_update_charset,addr,ProfileCharsetOptions::Ucs2AndLat);
         }else
-        if(profCmd=="UCS2")
+        if(profCmd=="UCS2" || profCmd=="RUS")
         {
           msg=msgUCS2;
           internal_update(_update_charset,addr,ProfileCharsetOptions::Ucs2);
