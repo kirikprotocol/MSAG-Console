@@ -162,7 +162,7 @@ void BillingManagerImpl::init(BillingManagerConfig& cfg)
     EventMonitorArray = new EventMonitorEntity[m_MaxEventMonitors];
 
     smsc_log_info(logger,"BillingManager: allowed %d threads", m_MaxEventMonitors);
-    infrastruct.init(cfg.so_dir);
+    infrastruct.init(cfg.cfg_dir);
     smsc_log_info(logger,"BillingManager inited...");
 }
 

@@ -10,7 +10,7 @@ namespace config {
 class BillingManagerConfig
 {
 public:
-    std::string so_dir;
+    std::string cfg_dir;
 
     std::string BillingHost;
     int BillingPort;

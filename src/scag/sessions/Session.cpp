@@ -39,7 +39,10 @@ int Session::getOperationType(std::string& str)
 }
 
 
-
+ICCOperationStatus Operation::getOperationStatus()
+{
+    return OPERATION_INITED;
+}
 
 void Operation::detachBill()
 {

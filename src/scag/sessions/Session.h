@@ -38,6 +38,15 @@ namespace scag { namespace sessions
     using scag::re::RuleStatus;
 
 
+
+    enum ICCOperationStatus 
+    {
+        OPERATION_INITED,
+        OPERATION_CONTINUED,
+        OPERATION_COMPLETED 
+    };
+
+
     class SessionBuffer : public smsc::sms::BufOps::SmsBuffer
     {
     friend class Session;
@@ -137,7 +146,7 @@ namespace scag { namespace sessions
 
         void receiveNewResp(int currentIndex,int lastIndex);
         bool hasReceivedAllResp() {return m_receivedResp;}
-
+        ICCOperationStatus getOperationStatus();
 
         ~Operation() {}
         Operation() :logger(0), m_hasBill(false), m_receivedParts(0), m_receivedAll(false) {logger = Logger::getInstance("scag.re");};
