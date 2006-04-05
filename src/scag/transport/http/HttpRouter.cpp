@@ -36,18 +36,18 @@ void HttpRouterImpl::init(const std::string& cfg)
     ReloadRoutes();
 }
                                                                         
-HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& URL)
+HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& site, const std::string& path, uint32_t port)
 {
     MutexGuard mt(GetRouteMutex);
 
-    AddressURLKey k(addr.c_str(), URL.c_str());
+    AddressURLKey k(addr, site, path, port);
     uint8_t len;
     do{
         try{
-            HttpRoute *r = AddressURLMap->Get(k);
+            HttpRouteInt *r = AddressURLMap->Get(k);
             return *r;
         }
-        catch(HashInvalidKeyException &e)
+        catch(XHashInvalidKeyException &e)
         {
             len = k.mask.cut();
         }
@@ -70,7 +70,7 @@ HttpRoute HttpRouterImpl::getRoute(const std::string& routeId)
 
 void HttpRouterImpl::BuildMaps(RouteArray *r, RouteHash *rid, AddressURLHash *auh)
 {
-    HttpRoute *rt;
+    HttpRouteInt *rt;
     for(int i = 0; i < r->Count(); i++)
     {
         rt = &(*r)[i];
@@ -81,9 +81,15 @@ void HttpRouterImpl::BuildMaps(RouteArray *r, RouteHash *rid, AddressURLHash *au
 
         for(int j = 0; j < rt->masks.Count(); j++)
         {
-            smsc_log_error(logger, "AddedMapping mask: %s, URL: %s", rt->masks[j].c_str(), rt->url.c_str());
-            AddressURLKey auk(rt->masks[j].c_str(), rt->url.c_str());
-            auh->Insert(auk, rt);
+            for(int k = 0; k < rt->sites.Count(); k++)
+            {
+                for(int m = 0; m < rt->sites[k].paths.Count(); m++)
+                {
+                    smsc_log_error(logger, "AddedMapping mask: %s, URL: %s:%d/%s", rt->masks[j].c_str(), rt->sites[k].host.c_str(), rt->sites[k].port, rt->sites[k].paths[m].c_str());
+                    AddressURLKey auk(rt->masks[j], rt->sites[k].host, rt->sites[k].paths[m], rt->sites[k].port);
+                    auh->Insert(auk, rt);
+                }
+            }
         }
     }
 }
@@ -124,8 +130,6 @@ void HttpRouterImpl::ReloadRoutes()
 
 void HttpRouterImpl::ParseFile(const char* _xmlFile, HandlerBase* handler)
 {
-    int errorCount = 0;
-    smsc_log_info(logger, "Routes reloading finished1");
     SAXParser parser;
     
     try
@@ -145,24 +149,20 @@ void HttpRouterImpl::ParseFile(const char* _xmlFile, HandlerBase* handler)
     }
     catch (const OutOfMemoryException&)
     {
-        smsc_log_error(logger,"Terminate parsing: XMLPlatform: OutOfMemoryException");
         throw Exception("XMLPlatform: OutOfMemoryException");
     }
     catch (const XMLException& toCatch)
     {
         StrX msg(toCatch.getMessage());
 
-        smsc_log_error(logger,"Terminate parsing: XMLException: %s", msg.localForm());
         throw Exception("XMLException: %s", msg.localForm());
     }
     catch (Exception& e)
     {
-        smsc_log_error(logger,"Terminate parsing: %s",e.what());
         throw e;
     }
     catch (...)
     {
-        smsc_log_error(logger,"Terminate parsing: unknown fatal error");
         throw Exception("unknown fatal error");
     }
 }

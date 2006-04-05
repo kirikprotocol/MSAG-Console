@@ -13,10 +13,7 @@ using namespace smsc::util;
 XMLBasicHandler::XMLBasicHandler(RouteArray* r)
 {
     logger = Logger::getInstance("httpxml");
-    in_route = false;
-    in_subj_def = false;
     routes = r;
-    smsc_log_debug(logger, "cons end");
 }
 
 void XMLBasicHandler::characters(const XMLCh *const chars, const unsigned int length) 
@@ -28,27 +25,23 @@ void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
     StrX XMLQName(nm);
     const char *qname = XMLQName.localForm();
 
-    smsc_log_debug(logger, "Start element %s", qname);
+//    smsc_log_debug(logger, "Start element %s route_id=%s", qname, route.id.c_str());
 
     if(!strcmp(qname, "route"))
     {
-        in_route = true;
         StrX s = attrs.getValue("id");
         route.id = s.localForm();
         StrX s1 = attrs.getValue("serviceId");
         route.service_id = atoi(s1.localForm());
     }
-    else if((in_route || in_subj_def) && !strcmp(qname, "address"))
+    else if((route.id.length() || subj_id.length()) && !strcmp(qname, "address"))
     {
         StrX s = attrs.getValue("value");
         std::string str = s.localForm();
-        if(in_route)
+        if(route.id.length())
             route.masks.Push(str);
         else
         {
-            if(subj_id == "")
-                throw Exception("Invalid XML subject id");
-
             try{
                 Array<std::string>& masks = subj_hash.Get(subj_id.c_str());
                 masks.Push(str);
@@ -61,12 +54,7 @@ void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
             }
         }
     }
-    else if(in_route && !strcmp(qname, "url"))
-    {
-        StrX s = attrs.getValue("value");
-        route.url = s.localForm();
-    }
-    else if(in_route && !strcmp(qname, "subject"))
+    else if(route.id.length() && !strcmp(qname, "subject"))
     {
         StrX s = attrs.getValue("id");
 
@@ -79,6 +67,24 @@ void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
         {
             std::string str = "Invalid XML subject not found id=";
             str += s.localForm();
+            str += "route_id=" + route.id;
+            throw Exception(str.c_str());
+        }
+    }
+    else if(route.id.length() && !strcmp(qname, "site_subject"))
+    {
+        StrX s = attrs.getValue("id");
+
+        try{
+            SiteArray& st = site_subj_hash.Get(s.localForm());
+            for(int i = 0; i < st.Count(); i++)
+                route.sites.Push(st[i]);
+        }
+        catch(HashInvalidKeyException &e)
+        {
+            std::string str = "Invalid XML site_subject not found id=";
+            str += s.localForm();
+            str += "route_id=" + route.id;
             throw Exception(str.c_str());
         }
     }
@@ -86,7 +92,23 @@ void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
     {
         StrX s = attrs.getValue("id");
         subj_id = s.localForm();
-        in_subj_def = true;
+    }
+    else if(!strcmp(qname, "site_subject_def"))
+    {
+        StrX s = attrs.getValue("id");
+        site_subj_id = s.localForm();
+    }
+    else if((site_subj_id.length() || route.id.length()) && !strcmp(qname, "site"))
+    {
+        StrX s = attrs.getValue("host");
+        site.host = s.localForm();
+        StrX s1 = attrs.getValue("port");
+        site.port = atoi(s1.localForm());
+    }
+    else if(site.host.length() && !strcmp(qname, "path"))
+    {
+        StrX s = attrs.getValue("value");
+        site.paths.Push(s.localForm());
     }
 }
 
@@ -95,24 +117,43 @@ void XMLBasicHandler::endElement(const XMLCh* const nm)
     StrX XMLQName(nm);
     const char *qname = XMLQName.localForm();
 
-    smsc_log_debug(logger, "End element %s", qname);
+//    smsc_log_debug(logger, "End element %s", qname);
     if(!strcmp(qname, "route"))
     {
-        in_route = false;
-
-        if(route.id.length() == 0 || route.service_id == 0 || route.url.length() == 0 || route.masks.Count() == 0)
+        if(route.id.length() == 0 || route.service_id == 0 || route.sites.Count() == 0 || route.masks.Count() == 0)
             throw Exception("Invalid XML http_route record");
 
         routes->Push(route);
         route.id = "";
         route.service_id = 0;
-        route.url = "";
         route.masks.Empty();
+        route.sites.Empty();
     }
     else if(!strcmp(qname, "subject_def"))
-    {
         subj_id = "";
-        in_subj_def = false;
+    else if(!strcmp(qname, "site_subject_def"))
+    {
+        if(site_subj_id.length() == 0 || sites.Count() == 0)
+            throw Exception("Invalid XML site_subj_def record");
+
+        site_subj_hash.Insert(site_subj_id.c_str(), sites);
+
+        site_subj_id = "";
+        sites.Empty();
+    }
+    else if(!strcmp(qname, "site"))
+    {
+        if(site.host.length() == 0 || site.port == 0 || site.paths.Count() == 0)
+            throw Exception("Invalid XML site record");
+
+        if(route.id.length())
+            route.sites.Push(site);
+        else if(site_subj_id.length())
+            sites.Push(site);
+
+        site.host = "";
+        site.port = 0;
+        site.paths.Empty();
     }
 }
 

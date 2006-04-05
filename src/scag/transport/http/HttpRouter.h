@@ -31,17 +31,17 @@ class RouteNotFoundException{};
 class HttpRouter
 {
 public:
-    virtual HttpRoute findRoute(const std::string& addr, const std::string& URL) = 0;
+    virtual HttpRoute findRoute(const std::string& addr, const std::string& site, const std::string& path, uint32_t port) = 0;
     virtual HttpRoute getRoute(const std::string& routeId) = 0;
 
 protected:
     virtual ~HttpRouter() {}
 };
 
-typedef XHash<AddressURLKey, HttpRoute*, AddressURLKey> AddressURLHash;
-typedef Hash<HttpRoute*> RouteHash;
+typedef XHash<AddressURLKey, HttpRouteInt*, AddressURLKey> AddressURLHash;
+typedef Hash<HttpRouteInt*> RouteHash;
 
-class HttpRouterImpl:public HttpRoute
+class HttpRouterImpl:public HttpRouter
 {
     Mutex ReloadMutex, GetRouteMutex;
 
@@ -60,7 +60,7 @@ public:
 
     void init(const std::string& cfg);
 
-    HttpRoute findRoute(const std::string& addr, const std::string& URL);
+    HttpRoute findRoute(const std::string& addr, const std::string& site, const std::string& path, uint32_t port);
     HttpRoute getRoute(const std::string& routeId);
 
     void ReloadRoutes();

@@ -1,18 +1,40 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
-<!ELEMENT routes (subject_def*, route*)>
-<!ELEMENT route ((address|subject)*, url)>
+<!ELEMENT http_routes (subject_def*, site_subject_def*, route+)>
+<!ATTLIST http_routes EMPTY>
+
+<!ELEMENT route (abonents+, sites+)>
 <!ATTLIST route
     id CDATA #REQUIRED
     serviceId CDATA #REQUIRED
 >
+
+<!ELEMENT abonents (address|subject)*>
+<!ATTLIST abonents EMPTY>
+
+<!ELEMENT sites (site|site_subject)*>
+<!ATTLIST sites EMPTY>
+
+<!ELEMENT route ((address|subject)*, (site_subject|site)*)>
+<!ATTLIST route
+    id CDATA #REQUIRED
+    serviceId CDATA #REQUIRED
+>
+
 <!ELEMENT address EMPTY>
 <!ATTLIST address
     value CDATA #REQUIRED
 >
-<!ELEMENT url EMPTY>
-<!ATTLIST url
+
+<!ELEMENT path EMPTY>
+<!ATTLIST path
     value CDATA #REQUIRED
+>
+
+<!ELEMENT site (path+)>
+<!ATTLIST site
+    host CDATA #REQUIRED
+    port CDATA #REQUIRED
 >
 
 <!ELEMENT subject EMPTY>
@@ -20,7 +42,17 @@
     id CDATA #REQUIRED
 >
 
+<!ELEMENT site_subject EMPTY>
+<!ATTLIST site_subject
+    id CDATA #REQUIRED
+>
+
 <!ELEMENT subject_def (address+)>
-<!ATTLIST id
-    value CDATA #REQUIRED
+<!ATTLIST subject_def
+    id CDATA #REQUIRED
+>
+
+<!ELEMENT site_subject_def (site+)>
+<!ATTLIST site_subject_def
+    id CDATA #REQUIRED
 >

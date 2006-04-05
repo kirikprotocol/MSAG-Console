@@ -23,16 +23,16 @@ XERCES_CPP_NAMESPACE_USE
 class XMLBasicHandler : public HandlerBase
 {
     Hash<StringArray> subj_hash;
-    bool in_route, in_subj_def;
-    std::string route_id, url;
+    Hash<SiteArray> site_subj_hash;
     uint32_t service_id;
-    Array<std::string> addrs;
-    Array<std::string> urls;
+    Site site;
+    StringArray addrs;
+    SiteArray sites;
 
     std::string subj_id;
-    std::string url_subj_id;
+    std::string site_subj_id;
     RouteArray* routes;
-    HttpRoute route;
+    HttpRouteInt route;
 
     void characters(const XMLCh *const chars, const unsigned int length);
 

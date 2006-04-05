@@ -66,7 +66,7 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
 {
     HttpRoute r;
     try{
-        r = router.findRoute(request.getAbonent(), request.getSite() + '/' + request.getSitePath());
+        r = router.findRoute(request.getAbonent(), request.getSite(), request.getSitePath(), request.getSitePort());
         request.setServiceId(r.service_id);
         request.setRouteId(r.id);
     }

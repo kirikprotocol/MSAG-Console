@@ -104,36 +104,40 @@ public:
 class AddressURLKey
 {
 public:
-    std::string URL;
+    uint32_t port;
+    std::string site;
+    std::string path;
     AddressMask mask;
 
-    AddressURLKey() : URL(""), mask("")
+    AddressURLKey() : path(""), mask(""), site(""), port(0)
     {
     }
 
-    AddressURLKey(const char* _msk, const char* _URL) : URL(_URL), mask(_msk)
+    AddressURLKey(const std::string& _msk, const std::string& _site, const std::string& _path, uint32_t _port) : site(_site), path(_path), mask(_msk.c_str()), port(_port)
     {
     }
 
-    AddressURLKey(const AddressURLKey& cp) : URL(cp.URL), mask(cp.mask)
+    AddressURLKey(const AddressURLKey& cp) : site(cp.site), path(cp.path), port(cp.port), mask(cp.mask)
     {
     }
 
     AddressURLKey& operator=(const AddressURLKey& cp)
     {
-        URL = cp.URL;
+        site = cp.site;
+        path = cp.path;
+        port = cp.port;
         mask = cp.mask;
         return *this;
     }
 
     bool operator==(const AddressURLKey& cp)const
     {
-        return mask == cp.mask && URL == cp.URL;
+        return mask == cp.mask && site == cp.site && path == cp.path && port == cp.port;
     }
 
     uint32_t HashCode()const
     {
-        return crc32(mask.HashCode(), URL.c_str(), URL.length());
+        return crc32(crc32(crc32(mask.HashCode(), site.c_str(), site.length()), path.c_str(), path.length()), &port, sizeof(uint32_t));
     }
 
     static uint32_t CalcHash(const AddressURLKey& cp)
@@ -145,32 +149,53 @@ public:
 typedef Array<std::string> StringArray;
 
 struct Site{
-    std::string url;
+    std::string host;
+    uint32_t port;
     StringArray paths;
+
+    Site(): host(""), port(0) {};
+
+    Site(const Site& cp)
+    {
+        host = cp.host;
+        port = cp.port;
+        paths = cp.paths;
+    }
 };
+
+typedef Array<Site> SiteArray;
 
 struct HttpRoute
 {
     uint32_t service_id;
     uint32_t provider_id;
     std::string id;
-    std::string url;
-    StringArray masks;
-    Array<Site> sites;
 
-    HttpRoute() {}
+    HttpRoute(): service_id(0), provider_id(0) {}
 
     HttpRoute(const HttpRoute& cp)
     {
         service_id =cp.service_id;
+        provider_id =cp.provider_id;
         id = cp.id;
-        url = cp.url;
+    }
+};
+
+struct HttpRouteInt : public HttpRoute
+{
+    StringArray masks;
+    SiteArray sites;
+
+    HttpRouteInt(): HttpRoute() {};
+
+    HttpRouteInt(const HttpRouteInt& cp): HttpRoute(cp)
+    {
         masks = cp.masks;
         sites = cp.sites;
     }
 };
 
-typedef Array<HttpRoute> RouteArray;
+typedef Array<HttpRouteInt> RouteArray;
 
 }}}
 
