@@ -181,10 +181,10 @@ CSmppDiscriptor CommandBrige::getSmppDiscriptor(const SCAGCommand& command)
     case DELIVERY:
         receiptMessageId = atoi(sms.getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
 
-        if (receiptMessageId) SmppDiscriptor.cmdType = CO_RECEIPT_DELIVER_SM;
+        if (receiptMessageId) SmppDiscriptor.cmdType = CO_RECEIPT;
         else if (sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) 
         {
-            SmppDiscriptor.cmdType = CO_USSD_DELIVER;
+            SmppDiscriptor.cmdType = CO_USSD_DIALOG;
             //SmppDiscriptor.isUSSDClosed = (sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == USSN_REQUEST);
             /*SmppDiscriptor.bWantToOpen = (sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == PSSR_INDICATION)
                                              || (sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP));*/
@@ -192,7 +192,7 @@ CSmppDiscriptor CommandBrige::getSmppDiscriptor(const SCAGCommand& command)
             if (smsc::smpp::UssdServiceOpValue::PSSR_INDICATION == sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP))
                   SmppDiscriptor.wantOpenUSSD = true;
         }
-        else SmppDiscriptor.cmdType = CO_DELIVER_SM;
+        else SmppDiscriptor.cmdType = CO_DELIVER;
 
 
         SmppDiscriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
@@ -203,10 +203,10 @@ CSmppDiscriptor CommandBrige::getSmppDiscriptor(const SCAGCommand& command)
 
         if (sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) 
         {
-            SmppDiscriptor.cmdType = CO_USSD_SUBMIT;
+            SmppDiscriptor.cmdType = CO_USSD_DIALOG;
             //TODO: снять ремарку SmppDiscriptor.wantOpenUSSD = (sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == smsc::smpp::UssdServiceOpValue::USSR_REQUEST);
         }
-        else SmppDiscriptor.cmdType = CO_SUBMIT_SM;
+        else SmppDiscriptor.cmdType = CO_SUBMIT;
 
         SmppDiscriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
         SmppDiscriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
@@ -218,23 +218,26 @@ CSmppDiscriptor CommandBrige::getSmppDiscriptor(const SCAGCommand& command)
 
         SmppDiscriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
         SmppDiscriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
+        SmppDiscriptor.isResp = true;
 
-        if (receiptMessageId) SmppDiscriptor.cmdType = CO_RECEIPT_DELIVER_SM_RESP;
+        if (receiptMessageId) SmppDiscriptor.cmdType = CO_RECEIPT;
         else if (sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) 
         {
-            SmppDiscriptor.cmdType = CO_USSD_DELIVER_RESP;
+            SmppDiscriptor.cmdType = CO_USSD_DIALOG;
             SmppDiscriptor.isUSSDClosed = ((sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == PSSR_RESPONSE)||((sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == USSN_REQUEST)));
         }
-        else SmppDiscriptor.cmdType = CO_DELIVER_SM_RESP;
+        else SmppDiscriptor.cmdType = CO_DELIVER;
 
         break;
     case SUBMIT_RESP:
+        SmppDiscriptor.isResp = true;
+
         if (sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) 
         {
-            SmppDiscriptor.cmdType = CO_USSD_SUBMIT_RESP;
+            SmppDiscriptor.cmdType = CO_USSD_DIALOG;
             SmppDiscriptor.isUSSDClosed = ((sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == PSSR_RESPONSE)||((sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == USSN_REQUEST)));
         }
-        else SmppDiscriptor.cmdType = CO_SUBMIT_SM_RESP;
+        else SmppDiscriptor.cmdType = CO_SUBMIT;
 
         SmppDiscriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
         SmppDiscriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);

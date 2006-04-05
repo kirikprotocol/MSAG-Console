@@ -24,22 +24,15 @@ using namespace smsc::smpp::UssdServiceOpValue;
 enum CommandOperations
 {
     //SMS
-    CO_DELIVER_SM,
-    CO_DELIVER_SM_RESP,
-    CO_SUBMIT_SM,
-    CO_SUBMIT_SM_RESP,
-    CO_RECEIPT_DELIVER_SM,
-    CO_RECEIPT_DELIVER_SM_RESP,
+    CO_DELIVER,
+    CO_SUBMIT,
+    CO_RECEIPT,
 
     //USSD
-    CO_USSD_DELIVER,
-    CO_USSD_DELIVER_RESP,
-    CO_USSD_SUBMIT,
-    CO_USSD_SUBMIT_RESP,
+    CO_USSD_DIALOG,
 
     //HTTP
     CO_HTTP_DELIVERY
-
 
 };
 
@@ -62,16 +55,19 @@ struct CSmppDiscriptor
     CommandOperations cmdType;
     int currentIndex;
     int lastIndex;
+
     bool isUSSDClosed;
     bool wantOpenUSSD;
     bool m_isTransact;
+    bool isResp;
 
     CSmppDiscriptor() : 
         currentIndex(0), 
         lastIndex(0), 
         isUSSDClosed(false), 
         wantOpenUSSD(false), 
-        m_isTransact(false) {}
+        m_isTransact(false),
+        isResp(false) {}
     
 };
 

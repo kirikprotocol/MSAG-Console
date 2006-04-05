@@ -11,17 +11,11 @@ Hash<int> Session::InitOperationTypesHash()
 {
     Hash<int> hs;
 
-    hs["SMPP_DELIVER"] = CO_DELIVER_SM;
-    hs["SMPP_DELIVER_RESP"] = CO_DELIVER_SM_RESP;
-    hs["SMPP_SUBMIT"] = CO_SUBMIT_SM;
-    hs["SMPP_SUBMIT_RESP"] = CO_SUBMIT_SM_RESP;
-    hs["SMPP_RECEIPT_DELIVER"] = CO_RECEIPT_DELIVER_SM;
-    hs["SMPP_RECEIPT_DELIVER_RESP"] = CO_RECEIPT_DELIVER_SM_RESP;
+    hs["DELIVER"] = CO_DELIVER;
+    hs["SUBMIT"] = CO_SUBMIT;
+    hs["RECEIPT"] = CO_RECEIPT;
 
-    hs["USSD_DELIVER"] = CO_USSD_DELIVER;
-    hs["USSD_DELIVER_RESP"] = CO_USSD_DELIVER_RESP;
-    hs["USSD_SUBMIT"] = CO_USSD_SUBMIT;
-    hs["USSD_SUBMIT_RESP"] = CO_USSD_SUBMIT_RESP;
+    hs["USSD_DIALOG"] = CO_USSD_DIALOG;
 
     hs["HTTP_DELIVERY"] = CO_HTTP_DELIVERY;
 
@@ -39,9 +33,9 @@ int Session::getOperationType(std::string& str)
 }
 
 
-ICCOperationStatus Operation::getOperationStatus()
+ICCOperationStatus Operation::getStatus()
 {
-    return OPERATION_INITED;
+    return m_Status;
 }
 
 void Operation::detachBill()

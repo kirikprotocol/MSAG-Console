@@ -57,7 +57,7 @@ namespace scag { namespace sessions
             this->Read((char*)&len,1);
             char scb[256];
 
-            if (len>255)throw smsc::util::Exception("Attempt to read %d byte in buffer with size %d",(int)len,255);
+            if (len>255) throw smsc::util::Exception("Attempt to read %d byte in buffer with size %d",(int)len,255);
 
             this->Read(scb,len);
             scb[len] = 0;
@@ -133,6 +133,8 @@ namespace scag { namespace sessions
 
         int m_receivedResp;
         bool m_receivedAllResp;
+
+        ICCOperationStatus m_Status;
     public:
         uint8_t type;
         void attachBill(int BillId);
@@ -146,7 +148,8 @@ namespace scag { namespace sessions
 
         void receiveNewResp(int currentIndex,int lastIndex);
         bool hasReceivedAllResp() {return m_receivedResp;}
-        ICCOperationStatus getOperationStatus();
+        ICCOperationStatus getStatus();
+        void setStatus(ICCOperationStatus status) {m_Status = status;}
 
         ~Operation() {}
         Operation() :logger(0), m_hasBill(false), m_receivedParts(0), m_receivedAll(false) {logger = Logger::getInstance("scag.re");};

@@ -16,22 +16,32 @@ void SmppEventHandler::StartOperation(Session& session, SmppCommand& command)
 
     switch (smppDiscriptor.cmdType)
     {
-    case CO_DELIVER_SM:
-        if ((smppDiscriptor.currentIndex == 0)&&(smppDiscriptor.lastIndex == 0))
-            session.AddNewOperationToHash(command, smppDiscriptor.cmdType);
-        else
+    case CO_DELIVER:
+        if ((smppDiscriptor.currentIndex <= 1)&&(!smppDiscriptor.isResp))
         {
             operation = session.AddNewOperationToHash(command, smppDiscriptor.cmdType);
             operation->receiveNewPart(smppDiscriptor.currentIndex,smppDiscriptor.lastIndex);
+            operation->setStatus(OPERATION_INITED);
+        } 
+        else 
+        {
+            operation = session.setCurrentOperation(command.getOperationId());
+
+            if (!smppDiscriptor.isResp)
+                operation->receiveNewPart(smppDiscriptor.currentIndex,smppDiscriptor.lastIndex);
+            else 
+                operation->receiveNewResp(smppDiscriptor.currentIndex,smppDiscriptor.lastIndex);
+
+            operation->setStatus(OPERATION_CONTINUED);
         }
+
+        if ((operation->hasReceivedAllParts())&&(operation->hasReceivedAllResp())) 
+            operation->setStatus(OPERATION_COMPLETED);
+
         break;
 
-    case CO_DELIVER_SM_RESP:
-        operation = session.setCurrentOperation(command.getOperationId());
-        operation->receiveNewResp(smppDiscriptor.currentIndex, smppDiscriptor.lastIndex);
-        break;
-
-    case CO_SUBMIT_SM:
+/*
+    case CO_SUBMIT:
         UMR = CommandBrige::getUMR(command);
 
         if (UMR == 0)
@@ -60,29 +70,35 @@ void SmppEventHandler::StartOperation(Session& session, SmppCommand& command)
 
     case CO_RECEIPT_DELIVER_SM:
         session.setOperationFromPending(command, smppDiscriptor.cmdType);
+        break;   */
+
+    case CO_USSD_DIALOG:
+        smsc_log_debug(logger,"Session: process USSD_DIALOG operation");
+
+        if (smppDiscriptor.isResp)
+        {
+            operation = session.setCurrentOperation(command.getOperationId());
+
+            if (smppDiscriptor.isUSSDClosed) operation->setStatus(OPERATION_COMPLETED);
+            else operation->setStatus(OPERATION_CONTINUED);
+            break;
+        }
+
+        if (smppDiscriptor.wantOpenUSSD)
+        {
+             operation = session.AddNewOperationToHash(command, CO_USSD_DIALOG);
+             operation->setStatus(OPERATION_INITED);
+             break;
+        }
+
+        operation = session.setCurrentOperation(command.getOperationId());
+        operation->setStatus(OPERATION_CONTINUED);
+
         break;
-
-    case CO_USSD_DELIVER:
-        smsc_log_debug(logger,"Session: process USSD_DELIVER");
-
-        if (smppDiscriptor.wantOpenUSSD) session.AddNewOperationToHash(command, CO_USSD_DELIVER);
-        break;
-
-    case CO_USSD_SUBMIT:
-        smsc_log_debug(logger,"Session: process USSD_SUBMIT");
-
-        if (smppDiscriptor.wantOpenUSSD) 
-            session.AddNewOperationToHash(command, CO_USSD_SUBMIT);
-        break;
-
-    case CO_USSD_DELIVER_RESP:
-    case CO_USSD_SUBMIT_RESP:
-        break;
-
     }
 }
 
-void SmppEventHandler::EndOperation(Session& session, SmppCommand& command)
+void SmppEventHandler::EndOperation(Session& session, SmppCommand& command, RuleStatus& ruleStatus)
 {
     Operation * currentOperation = session.GetCurrentOperation();
     if (!currentOperation) throw SCAGException("Session: Fatal error - cannot end operation. Couse: current operation not found");
@@ -91,15 +107,11 @@ void SmppEventHandler::EndOperation(Session& session, SmppCommand& command)
 
     switch (smppDiscriptor.cmdType)
     {
-    case CO_DELIVER_SM:
+    case CO_DELIVER:
+        if ((currentOperation->getStatus() == OPERATION_COMPLETED)||(!ruleStatus.result)) session.closeCurrentOperation();
         break;
 
-    case CO_DELIVER_SM_RESP:
-        if ((smppDiscriptor.lastIndex == 0)||((smppDiscriptor.lastIndex > 0)&&(currentOperation->hasReceivedAllResp())))
-            session.closeCurrentOperation();
-        break;
-
-    case CO_SUBMIT_SM:
+/*    case CO_SUBMIT_SM:
 
         if (!smppDiscriptor.m_isTransact) 
         {
@@ -123,17 +135,12 @@ void SmppEventHandler::EndOperation(Session& session, SmppCommand& command)
     case CO_RECEIPT_DELIVER_SM:
         //TODO:: Нужно учесть политику для multipart
         session.closeCurrentOperation();
+        break;      */
+
+    case CO_USSD_DIALOG:
+        smsc_log_debug(logger,"Session: finish process USSD_DELIVER_RESP");
+        if ((smppDiscriptor.isUSSDClosed)&&(smppDiscriptor.isResp)) session.closeCurrentOperation();
         break;
-
-    case CO_USSD_DELIVER_RESP:
-            smsc_log_debug(logger,"Session: finish process USSD_DELIVER_RESP");
-            if (smppDiscriptor.isUSSDClosed) session.closeCurrentOperation();
-            break;
-
-    case CO_USSD_SUBMIT_RESP:
-            smsc_log_debug(logger,"Session: finish process USSD_SUBMIT_RESP");
-            if (smppDiscriptor.isUSSDClosed) session.closeCurrentOperation();
-            break;
     }
 }
 
@@ -177,7 +184,7 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
 
     rs = RunActions(context);
 
-    EndOperation(session, *smppcommand);
+    EndOperation(session, *smppcommand, rs);
 
     return rs;
 }
