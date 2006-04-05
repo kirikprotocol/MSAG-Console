@@ -8,6 +8,8 @@
 namespace scag { namespace transport { namespace http
 {
 
+Logger* httpLogger;
+
 HttpManager::HttpManager() : scags(*this),
     readers(*this), writers(*this), acceptor(*this)
 {
@@ -15,12 +17,12 @@ HttpManager::HttpManager() : scags(*this),
 
 void HttpManager::init(HttpProcessor& p, const HttpManagerConfig& _cfg)
 {
-    memcpy(&this->cfg, &_cfg, sizeof(HttpManagerConfig));
+    this->cfg = _cfg;
     
     readers.init(_cfg.readerPoolSize, _cfg.readerSockets);
     writers.init(_cfg.writerPoolSize, _cfg.writerSockets);    
     scags.init(_cfg.scagPoolSize, _cfg.scagQueueLimit, p);    
-    acceptor.init(_cfg.host, _cfg.port);
+    acceptor.init(_cfg.host.c_str(), _cfg.port);
 }
 
 void HttpManager::shutdown()
