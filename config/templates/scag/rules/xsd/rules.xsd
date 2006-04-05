@@ -70,6 +70,7 @@
     <!-- General actions elements group definition  -->
     <group name="Actions">
         <choice>
+            <group ref="bill:Actions"/>
             <group ref="session:Actions"/>
 	    <group ref="operation:Actions" />
             
