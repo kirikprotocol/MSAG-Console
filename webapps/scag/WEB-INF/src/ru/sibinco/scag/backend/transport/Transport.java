@@ -22,7 +22,7 @@ public class Transport {
     public static final int MMS_TRANSPORT_ID = 3;
 
     public static final String SMPP_SCHEMA_NAME = "smpp_rules.xsd";
-    public static final String HTTP_SCHEMA_NAME = "wap_rules.xsd";
+    public static final String HTTP_SCHEMA_NAME = "http_rules.xsd";
     public static final String MMS_SCHEMA_NAME = "mms_rules.xsd";
 
     public static String[] transportIds = {
