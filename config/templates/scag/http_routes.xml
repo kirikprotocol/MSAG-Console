@@ -3,52 +3,5 @@
 <!DOCTYPE http_routes SYSTEM "http_routes.dtd">
 
 <routes>
-
-    <subject_def id="MTS_numbers">
-        <address value="+7902912????"/>
-        <address value="+7905985????"/>
-    </subject_def>
-
-    <sites_subject_def id="Sites1">
-        <site host="yandex1.ru" port="8082">
-            <path value="/melodies"/>
-            <path value="/pictures"/>
-        </site>
-        <site host="mail1.ru" port="8081">
-            <path value="/melodies"/>
-            <path value="/pictures"/>
-        </site>
-    </sites_subject_def>
-
-    <route id="route1" serviceId="5">
-        <abonents>
-            <subject id="MTS_numbers"/>
-            <address value="+7913???????"/>
-            <address value="+7903???????"/>
-        </abonents>
-
-        <sites>
-            <site host="yandex.ru" port="8080">
-                <path value="/melodies"/>
-                <path value="/pictures"/>
-            </site>
-            <site host="mail.ru" port="8080">
-                <path value="/melodies"/>
-                <path value="/pictures"/>
-            </site>
-        </sites>
-    </route>
-
-    <route id="route2" serviceId="6">
-        <abonents>
-            <address value="+7912???????"/>
-            <address value="+7906???????"/>
-        </abonents>
-
-        <sites>
-            <sites_subject id="Sites1"/>
-        </sites>
-    </route>
-
 </routes>
 
