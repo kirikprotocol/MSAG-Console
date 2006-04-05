@@ -18,9 +18,9 @@
 
 using namespace scag::transport::http;
 
-namespace scag { namespace transport { namespace http 
-{
-    Logger *httpLogger = NULL;
+//namespace scag { namespace transport { namespace http 
+//{
+//    Logger *httpLogger = NULL;
     
     class MyHttpProcessor : public HttpProcessor
     {
@@ -141,14 +141,14 @@ void MyHttpProcessor::dumpText(HttpCommand &cmd)
     }
 }    
     
-}}}
+//}}}
 
 
 void http_mut_log(char *s, unsigned t, void *p) {
     http_log_debug(s, t, p);
 }
 
-HttpManagerConfig cfg = {
+HttpManagerConfig cfg(// = {
     5,  //int readerSockets;
     5,  //int writerSockets;
     2,  //int readerPoolSize;
@@ -158,8 +158,8 @@ HttpManagerConfig cfg = {
     20, //int connectionTimeout;
     //unsigned int maxHeaderLength;
     "0.0.0.0",  //const char *host;
-    5000,       //int port;
-};
+    5000       //int port;
+);
 
 int main() {
     HttpManager mg;
