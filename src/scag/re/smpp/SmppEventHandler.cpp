@@ -40,35 +40,40 @@ void SmppEventHandler::StartOperation(Session& session, SmppCommand& command)
 
         break;
 
-/*
+
     case CO_SUBMIT:
         UMR = CommandBrige::getUMR(command);
 
-        if (UMR == 0)
+        if ((UMR == 0)&&(!smppDiscriptor.isResp))
         {
             if (smppDiscriptor.currentIndex == 0) 
-                session.AddNewOperationToHash(command, smppDiscriptor.cmdType);
+                operation = session.AddNewOperationToHash(command, smppDiscriptor.cmdType);
             else
-                session.setCurrentOperation(command.getOperationId());
+                operation = session.setCurrentOperation(command.getOperationId());
+
+            operation->receiveNewPart(smppDiscriptor.currentIndex, smppDiscriptor.lastIndex);
+
+            break;
+        }
+
+        operation = session.setCurrentOperation(command.getOperationId());
+
+        if (smppDiscriptor.isResp) 
+        {
+            operation->receiveNewResp(smppDiscriptor.currentIndex, smppDiscriptor.lastIndex);
             break;
         }
         //TODO: проверить есть ли ожидаемая операция SUBMIT, если её нет, то что и как делать?
 
         if (smppDiscriptor.currentIndex == 0)
-            session.setOperationFromPending(command, smppDiscriptor.cmdType);
+            session.setOperationFromPending(command, CO_SUBMIT);
         else
-        {
             operation = session.setCurrentOperation(command.getOperationId());
-            operation->receiveNewPart(smppDiscriptor.currentIndex,smppDiscriptor.lastIndex);
-        }
+        operation->receiveNewPart(smppDiscriptor.currentIndex,smppDiscriptor.lastIndex);
+
         break;
 
-    case CO_SUBMIT_SM_RESP:
-        operation = session.setCurrentOperation(command.getOperationId());
-        operation->receiveNewResp(smppDiscriptor.currentIndex,smppDiscriptor.lastIndex);
-        break;
-
-    case CO_RECEIPT_DELIVER_SM:
+  /*  case CO_RECEIPT_DELIVER_SM:
         session.setOperationFromPending(command, smppDiscriptor.cmdType);
         break;   */
 
@@ -111,27 +116,26 @@ void SmppEventHandler::EndOperation(Session& session, SmppCommand& command, Rule
         if ((currentOperation->getStatus() == OPERATION_COMPLETED)||(!ruleStatus.result)) session.closeCurrentOperation();
         break;
 
-/*    case CO_SUBMIT_SM:
+    case CO_SUBMIT:
 
+        if ((currentOperation->hasReceivedAllParts())&&(currentOperation->hasReceivedAllResp())&&(smppDiscriptor.isResp)) 
+            session.closeCurrentOperation();
+
+        //TODO: узнать заказал ли сервис отчёт о доставке
         if (!smppDiscriptor.m_isTransact) 
         {
             time_t now;
             time(&now);
 
             PendingOperation pendingOperation;
-            pendingOperation.type = CO_RECEIPT_DELIVER_SM;
+            pendingOperation.type = CO_RECEIPT;
             pendingOperation.validityTime = now + SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
 
             session.addPendingOperation(pendingOperation);
         }
         break;
 
-    case CO_SUBMIT_SM_RESP:
-        
-        if ((smppDiscriptor.lastIndex = 0)||((smppDiscriptor.lastIndex > 0)&&(currentOperation->hasReceivedAllResp())))
-            session.closeCurrentOperation();
-        break;
-
+/*
     case CO_RECEIPT_DELIVER_SM:
         //TODO:: Нужно учесть политику для multipart
         session.closeCurrentOperation();
