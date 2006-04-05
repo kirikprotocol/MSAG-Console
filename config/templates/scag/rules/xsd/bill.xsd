@@ -19,6 +19,13 @@
                     <attribute name="mediatype" type="string" />
                 </complexType>
 	    </element>
+	    
+	    <element name="rollback">
+		<complexType>
+                    <attribute name="category" type="string" />
+                    <attribute name="mediatype" type="string" />
+		</complexType>
+	    </element>
         </choice>    
     </group>
     
