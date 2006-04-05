@@ -6,7 +6,7 @@
 //
 
 #ifndef _SCAG_ADMIN_CommandIds_H
-#define	_SCAG_ADMIN_CommandIds_H
+#define _SCAG_ADMIN_CommandIds_H
 
 #include "admin/protocol/Command.h"
 
@@ -29,9 +29,10 @@ namespace CommandIds {
     updateRule,
     removeRule,
     addRule,
-	reloadOperators,
-	reloadServices,
-	reloadTariffMatrix
+    reloadOperators,
+    reloadServices,
+    reloadTariffMatrix,
+    reloadHttpRoutes
   };
 }
 
@@ -39,5 +40,5 @@ namespace CommandIds {
 }
 
 
-#endif	/* _SCAG_ADMIN_CommandIds_H */
+#endif  /* _SCAG_ADMIN_CommandIds_H */
 

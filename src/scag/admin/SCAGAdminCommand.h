@@ -1,5 +1,5 @@
 #ifndef _SCAG_ADMIN_SCAGAdminCommand_H
-#define	_SCAG_ADMIN_SCAGAdminCommand_H
+#define _SCAG_ADMIN_SCAGAdminCommand_H
 
 #include "AdminCommand.h"
 
@@ -57,7 +57,7 @@ protected:
 class CommandStatusSme : public Abstract_CommandSmeInfo 
 {
 public:
-	CommandStatusSme(const xercesc::DOMDocument * const doc)
+    CommandStatusSme(const xercesc::DOMDocument * const doc)
     : Abstract_CommandSmeInfo((Command::Id)CommandIds::statusSme, doc)
   {
   }
@@ -68,7 +68,7 @@ public:
 class CommandUpdateSmeInfo : public Abstract_CommandSmeInfo
 {
 public:
-	CommandUpdateSmeInfo(const xercesc::DOMDocument * const doc) :
+    CommandUpdateSmeInfo(const xercesc::DOMDocument * const doc) :
         Abstract_CommandSmeInfo((Command::Id)CommandIds::updateSmeInfo, doc)
     {
     }
@@ -135,7 +135,7 @@ private:
 class CommandReloadOperators : public AdminCommand
 {
 public:
-	CommandReloadOperators(const xercesc::DOMDocument * const doc) :
+    CommandReloadOperators(const xercesc::DOMDocument * const doc) :
         AdminCommand((Command::Id)CommandIds::reloadOperators, doc)
     {
     }
@@ -145,7 +145,7 @@ public:
 class CommandReloadServices : public AdminCommand
 {
 public:
-	CommandReloadServices(const xercesc::DOMDocument * const doc) :
+    CommandReloadServices(const xercesc::DOMDocument * const doc) :
         AdminCommand((Command::Id)CommandIds::reloadServices, doc)
     {
     }
@@ -155,8 +155,18 @@ public:
 class CommandReloadTariffMatrix : public AdminCommand
 {
 public:
-	CommandReloadTariffMatrix(const xercesc::DOMDocument * const doc) :
+    CommandReloadTariffMatrix(const xercesc::DOMDocument * const doc) :
         AdminCommand((Command::Id)CommandIds::reloadTariffMatrix, doc)
+    {
+    }
+    virtual Response * CreateResponse(scag::Scag * SmscApp);
+};
+
+class CommandReloadHttpRoutes : public AdminCommand
+{
+public:
+    CommandReloadHttpRoutes(const xercesc::DOMDocument * const doc) :
+        AdminCommand((Command::Id)CommandIds::reloadHttpRoutes, doc)
     {
     }
     virtual Response * CreateResponse(scag::Scag * SmscApp);
@@ -165,5 +175,5 @@ public:
 }
 }
 
-#endif	/* _SCAG_ADMIN_SCAGCommand_H */
+#endif  /* _SCAG_ADMIN_SCAGCommand_H */
 

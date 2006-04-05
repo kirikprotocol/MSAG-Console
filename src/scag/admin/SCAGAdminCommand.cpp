@@ -28,6 +28,7 @@
 #include "scag/config/route/RouteStructures.h"
 
 #include "scag/bill/BillingManager.h"
+#include "scag/transport/http/HttpProcessor.h"
 
 
 #define CATCH_ADMINEXC(msg_)                                    \
@@ -494,8 +495,8 @@ Response * CommandReloadOperators::CreateResponse(scag::Scag * ScagApp)
 //    if(!ScagApp) throw Exception("Scag undefined");
 
     try {
-		scag::bill::BillingManager& bill_mgr = scag::bill::BillingManager::Instance();
-		bill_mgr.getInfrastructure().ReloadOperatorMap();
+        scag::bill::BillingManager& bill_mgr = scag::bill::BillingManager::Instance();
+        bill_mgr.getInfrastructure().ReloadOperatorMap();
     } catch(Exception& e) {                                     
         char msg[1024];                                         
         sprintf(msg, "Failed to reload operators. Details: %s", e.what());
@@ -517,8 +518,8 @@ Response * CommandReloadServices::CreateResponse(scag::Scag * ScagApp)
 //    if(!ScagApp) throw Exception("Scag undefined");
 
     try {
-		scag::bill::BillingManager& bill_mgr = scag::bill::BillingManager::Instance();
-		bill_mgr.getInfrastructure().ReloadProviderMap();
+        scag::bill::BillingManager& bill_mgr = scag::bill::BillingManager::Instance();
+        bill_mgr.getInfrastructure().ReloadProviderMap();
     } catch(Exception& e) {                                     
         char msg[1024];                                         
         sprintf(msg, "Failed to reload services. Details: %s", e.what());
@@ -540,8 +541,8 @@ Response * CommandReloadTariffMatrix::CreateResponse(scag::Scag * ScagApp)
 //    if(!ScagApp) throw Exception("Scag undefined");
 
     try {
-		scag::bill::BillingManager& bill_mgr = scag::bill::BillingManager::Instance();
-		bill_mgr.getInfrastructure().ReloadTariffMatrix();
+        scag::bill::BillingManager& bill_mgr = scag::bill::BillingManager::Instance();
+        bill_mgr.getInfrastructure().ReloadTariffMatrix();
     } catch(Exception& e) {                                     
         char msg[1024];                                         
         sprintf(msg, "Failed to reload TariffMatrix. Details: %s", e.what());
@@ -554,6 +555,28 @@ Response * CommandReloadTariffMatrix::CreateResponse(scag::Scag * ScagApp)
 
     smsc_log_info(logger, "CommandReloadTariffMatrix processed ok.");
     return new Response(Response::Ok, "CommandReloadTariffMatrix processed ok.");
+}
+
+Response * CommandReloadHttpRoutes::CreateResponse(scag::Scag * ScagApp)
+{
+    smsc_log_info(logger, "CommandReloadHttpRoutes is processing...");
+
+//    if(!ScagApp) throw Exception("Scag undefined");
+
+    try {
+        scag::transport::http::HttpProcessor::Instance().ReloadRoutes();
+    } catch(Exception& e) {                                     
+        char msg[1024];                                         
+        sprintf(msg, "Failed to reload HttpRoutes. Details: %s", e.what());
+        smsc_log_error(logger, msg);
+        return new Response(Response::Error, msg);
+    } catch (...) {
+        smsc_log_warn(logger, "Failed to reload HttpRoutes. Unknown exception");        
+        throw AdminException("Failed to reload HttpRoutes. Unknown exception");
+    }
+
+    smsc_log_info(logger, "CommandReloadHttpRoutes processed ok.");
+    return new Response(Response::Ok, "CommandReloadHttpRoutes processed ok.");
 }
 
 }
