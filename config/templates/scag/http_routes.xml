@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
+
 <!DOCTYPE http_routes SYSTEM "http_routes.dtd">
+
 <routes>
+
     <subject_def id="MTS_numbers">
         <address value="+7902912????"/>
         <address value="+7905985????"/>
@@ -17,7 +20,25 @@
         </site>
     </sites_subject_def>
 
-    <route id="route1" serviceId="5">        <abonents>            <subject id="MTS_numbers"/>            <address value="+7913???????"/>            <address value="+7903???????"/>        </abonents>        <sites>            <site host="yandex.ru" port="8080">                <path value="/melodies"/>                <path value="/pictures"/>            </site>            <site host="mail.ru" port="8080">                <path value="/melodies"/>                <path value="/pictures"/>            </site>        </sites>    </route>
+    <route id="route1" serviceId="5">
+        <abonents>
+            <subject id="MTS_numbers"/>
+            <address value="+7913???????"/>
+            <address value="+7903???????"/>
+        </abonents>
+
+        <sites>
+            <site host="yandex.ru" port="8080">
+                <path value="/melodies"/>
+                <path value="/pictures"/>
+            </site>
+            <site host="mail.ru" port="8080">
+                <path value="/melodies"/>
+                <path value="/pictures"/>
+            </site>
+        </sites>
+    </route>
+
     <route id="route2" serviceId="6">
         <abonents>
             <address value="+7912???????"/>
@@ -30,3 +51,4 @@
     </route>
 
 </routes>
+
