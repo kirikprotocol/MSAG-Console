@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://www.sibinco.com/SCAG/OPERATIONS" 
+    xmlns="http://www.w3.org/2001/XMLSchema"
+    xmlns:operation="http://www.sibinco.com/SCAG/OPERATIONS"
+    elementFormDefault="qualified">
+
+    <group name="Actions">
+        <choice>
+            <element name="wait">
+                <complexType>
+                    <attribute name="type" type="string" />
+		    <attribute name="time" type="string" />
+                </complexType>
+            </element>
+        </choice>    
+    </group>
+    
+</schema>

@@ -20,6 +20,7 @@
         
         <simpleType name="Command">
             <restriction base="scag:Command">
+		<!-- TODO: add http fields -->
                 <enumeration value="#aaa"/>
                 <enumeration value="#bbb"/>
                 <enumeration value="#ccc"/>
@@ -31,10 +32,9 @@
             <complexContent>
                 <extension base="scag:RuleType">
                     <all>
-                        <element name="submit_sm"            type="scag:Handler" minOccurs="0" maxOccurs="1"/>
-                        <element name="submit_sm_resp" type="scag:Handler" minOccurs="0" maxOccurs="1"/>
-                        <element name="deliver_sm"            type="scag:Handler" minOccurs="0" maxOccurs="1"/>
-                        <element name="deliver_sm_resp" type="scag:Handler" minOccurs="0" maxOccurs="1"/>
+                        <element name="request"  type="scag:Handler" minOccurs="0" maxOccurs="1"/>
+                        <element name="response" type="scag:Handler" minOccurs="0" maxOccurs="1"/>
+                        <element name="delivery" type="scag:Handler" minOccurs="0" maxOccurs="1"/>
                     </all>
                 </extension>
             </complexContent>

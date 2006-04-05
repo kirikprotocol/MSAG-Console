@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schema targetNamespace="http://www.sibinco.com/SCAG" 
    xmlns="http://www.w3.org/2001/XMLSchema"
-   xmlns:scag="http://www.sibinco.com/SCAG">
+   xmlns:scag="http://www.sibinco.com/SCAG"
+   xmlns:session="http://www.sibinco.com/SCAG/SESSIONS"
+   xmlns:operation="http://www.sibinco.com/SCAG/OPERATIONS"
+   xmlns:bill="http://www.sibinco.com/SCAG/BILL">
     
     <annotation>
         <documentation xml:lang="en">
@@ -10,13 +13,17 @@
         </documentation>
     </annotation>
    
-   <!-- General values types definition  -->
+    <import schemaLocation="bill.xsd"       namespace="http://www.sibinco.com/SCAG/BILL"/>
+    <import schemaLocation="sessions.xsd"   namespace="http://www.sibinco.com/SCAG/SESSIONS"/>
+    <import schemaLocation="operations.xsd" namespace="http://www.sibinco.com/SCAG/OPERATIONS"/>
+    
+    <!-- General values types definition  -->
     <simpleType name="Value">
         <restriction base="string"/>
     </simpleType>
     <simpleType name="Command">
         <restriction base="string">
-            <pattern value="#\p{L}+\w*"/>
+            <pattern value="#\p{L}+[\w_]*"/>
         </restriction>
     </simpleType>
     <simpleType name="Session">
@@ -63,12 +70,14 @@
     <!-- General actions elements group definition  -->
     <group name="Actions">
         <choice>
+            <group ref="session:Actions"/>
+	    <group ref="operation:Actions" />
             
             <element name="set">
                 <complexType>
                     <attribute name="var" type="scag:Var" use="required"/>
                     <attribute name="value" type="scag:Value" use="required"/>
-                </complexType>
+                </complexType>    
             </element>
             
             <element name="return">
@@ -107,11 +116,11 @@
             <enumeration value="MMS"/>
         </restriction>
     </simpleType>
+    
     <!-- Main element definition  -->
     <complexType name="RuleType" abstract="true">
-        <attribute name="transport" type="scag:Transport" use="required"/>
-        <attribute name="id" type="string" use="required"/>
+        <attribute name="transport" type="scag:Transport" use="required"/>   
     </complexType>
-
     <element name="rule" type="scag:RuleType"/>
+    
 </schema>
