@@ -6,8 +6,19 @@
 
     <group name="Actions">
         <choice>
-            <element name="open"></element>
-	    <element name="commit"></element>
+            <element name="open">
+                <complexType>
+                    <attribute name="category" type="string" />
+                    <attribute name="mediatype" type="string" />
+               </complexType>
+	    </element>
+	    
+	    <element name="commit">
+                <complexType>
+                    <attribute name="category" type="string" />
+                    <attribute name="mediatype" type="string" />
+                </complexType>
+	    </element>
         </choice>    
     </group>
     

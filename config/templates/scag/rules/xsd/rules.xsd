@@ -70,8 +70,8 @@
     <!-- General actions elements group definition  -->
     <group name="Actions">
         <choice>
-            <group ref="bill:Actions"/>
             <group ref="session:Actions"/>
+	    <group ref="bill:Actions" />
 	    <group ref="operation:Actions" />
             
             <element name="set">
@@ -87,6 +87,15 @@
                 </complexType>    
             </element>
             
+	    <element name="match">
+		<complexType>
+		    <attribute name="regexp" type="string" use="required" />
+		    <attribute name="value" type="scag:Value" use="required"/>
+		    <attribute name="result" type="scag:Var" use="required"/>
+		</complexType>
+	    </element>
+
+	    
             <element name="if">
                 <complexType>
                     <choice>
@@ -121,7 +130,6 @@
     <!-- Main element definition  -->
     <complexType name="RuleType" abstract="true">
         <attribute name="transport" type="scag:Transport" use="required"/>   
-        <attribute name="id" type="string" use="required"/>
     </complexType>
     <element name="rule" type="scag:RuleType"/>
     
