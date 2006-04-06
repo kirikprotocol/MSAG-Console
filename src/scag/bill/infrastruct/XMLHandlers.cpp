@@ -298,7 +298,7 @@ void XMLTariffMatrixHandler::endElement(const XMLCh* const nm)
                     !bill_service_number || bill_currency.length() == 0 || !bill_operator_id)
                     throw Exception("Invalid XML <billing> record");
             
-                TariffRec tr(bill_service_number, bill_price, bill_currency);
+                TariffRec tr(bill_service_number, bill_price, bill_currency, bill_category_id, bill_media_type_id);
 
                 uint32_t id = (bill_category_id & 0x1ff) << 23;
                 id |= (bill_media_type_id & 0x1FF) << 14;

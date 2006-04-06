@@ -23,15 +23,19 @@ public:
     double Price;
     uint32_t ServiceNumber;
     std::string Currency;
+    uint32_t MediaTypeId;
+    uint32_t CategoryId;
 
     TariffRec() {};
-    TariffRec(uint32_t sn, double pr, const std::string& c):Price(pr), ServiceNumber(sn), Currency(c) {};
+    TariffRec(uint32_t sn, double pr, const std::string& c, uint32_t ci, uint32_t mti):Price(pr), ServiceNumber(sn), Currency(c), CategoryId(ci), MediaTypeId(mti) {};
 
     TariffRec& operator=(const TariffRec& sm)
     {
         Price = sm.Price;
         ServiceNumber = sm.ServiceNumber;
         Currency = sm.Currency;
+        CategoryId = sm.CategoryId;
+        MediaTypeId = sm.MediaTypeId;
 
         return *this;
     };
