@@ -17,9 +17,10 @@ daemon.dir=daemon
 
 gateway.admin.port=14811
 gateway.smpp.port=14830
+gateway.http.port=14840
 
-perfmon.scag.port=14861
 perfmon.applet.port=14821
+perfmon.scag.port=14861
 
 svcmon.applet.port=14822
 svcmon.scag.port=14862
