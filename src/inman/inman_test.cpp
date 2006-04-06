@@ -133,10 +133,9 @@ public:
         _mutex.Unlock();
         lstEvent.Wait(1000L*SELECT_TIMEOUT_STEP*2);
 
-        delete pipe;
         if (socket->getSocket() != INVALID_SOCKET)
             socket->Abort();
-        delete socket; 
+        delete pipe; 
 
         INDialogsMap::const_iterator it;
         for (it = _Dialogs.begin(); it != _Dialogs.end(); it++) {
