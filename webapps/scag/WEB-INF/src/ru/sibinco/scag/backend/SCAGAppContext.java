@@ -65,24 +65,27 @@ public class SCAGAppContext {
             System.out.println("  **  config file:" + new File(config_filename).getAbsolutePath());
             System.out.flush();
             config = new Config(new File(config_filename));
-            gwConfig = new Config(new File(config.getString("gw_config")));
+            String gwConfigFolder = config.getString("gw location.gw_config_folder");
+            scagConfFolder = new File(gwConfigFolder);
+            gwConfigFolder = gwConfigFolder  + File.separatorChar;
+            gwConfig = new Config(new File(gwConfigFolder + File.separatorChar + config.getString("gw location.gw_config")));
             idsConfig = new Config(new File(config.getString("ids_file")));
             String gwDaemonHost = config.getString("gw daemon.host");
-            String gwConfigFolder = config.getString("gw_config_folder");
-            scagConfFolder = new File(gwConfigFolder);
+
+
             connectionPool = null;
             userManager = new UserManager(config.getString("users_config_file"));
             providerManager = new ProviderManager(idsConfig);
-            serviceProvidersManager = new ServiceProvidersManager(config.getString("services_file"));
+            serviceProvidersManager = new ServiceProvidersManager(gwConfigFolder + config.getString("gw location.services_file"));
             serviceProvidersManager.init();
-            operatorManager = new OperatorManager(config.getString("operators_file"));
+            operatorManager = new OperatorManager(gwConfigFolder + config.getString("gw location.operators_file"));
             operatorManager.init();
             categoryManager = new CategoryManager(idsConfig);
-            smppManager = new SmppManager(config.getString("smpp_file"), providerManager);
+            smppManager = new SmppManager(gwConfigFolder + config.getString("gw location.smpp_file"), providerManager);
             smppManager.init();
-            String rulesFolder = config.getString("rules_folder");
-            String xsdFolder = config.getString("xsd_folder");
-            String xslFolder = config.getString("xsl_folder");
+            String rulesFolder = gwConfigFolder + config.getString("gw location.rules_folder");
+            String xsdFolder = gwConfigFolder + config.getString("gw location.xsd_folder");
+            String xslFolder = gwConfigFolder + config.getString("gw location.xsl_folder");
             resourceManager = new ResourceManager(scagConfFolder);
             scagDaemon = new Daemon(gwDaemonHost, (int) config.getInt("gw daemon.port"), smppManager, config.getString("gw daemon.folder"));
             final ServiceInfo scagServiceInfo = (ServiceInfo) scagDaemon.getServices().get(config.getString("gw name"));

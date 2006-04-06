@@ -51,9 +51,9 @@ public class ScagRoutingManager {
     private boolean routesSaved = false;
     private boolean routesLoaded = false;
 
-    private static final String SMSC_ROUTES_PRIMARY_CONFIG = "routes.xml";
-    private static final String SMSC_ROUTES_TEMPORAL_CONFIG = "routes_.xml";
-    private static final String SMSC_ROUTES_TRACEABLE_CONFIG = "routes__.xml";
+    private static final String SMPP_ROUTES_PRIMARY_CONFIG = "smpp_routes.xml";
+    private static final String SMPP_ROUTES_TEMPORAL_CONFIG = "smpp_routes_.xml";
+    private static final String SMPP_ROUTES_TRACEABLE_CONFIG = "smpp_routes__.xml";
 
 
     public ScagRoutingManager(File smscConfFolder, SmppManager smppManager,
@@ -86,7 +86,7 @@ public class ScagRoutingManager {
     }
 
     public synchronized boolean hasSavedConfiguration() {
-        return new File(scagConfFolder, SMSC_ROUTES_TEMPORAL_CONFIG).exists();
+        return new File(scagConfFolder, SMPP_ROUTES_TEMPORAL_CONFIG).exists();
     }
 
     public synchronized void loadFromFile(final String fileName) throws SibincoException {
@@ -182,7 +182,7 @@ public class ScagRoutingManager {
      * @throws SibincoException if exception will be occurred
      */
     public Date getRestoreFileDate() throws SibincoException {
-        File tempConfFile = new File(scagConfFolder, SMSC_ROUTES_TEMPORAL_CONFIG);
+        File tempConfFile = new File(scagConfFolder, SMPP_ROUTES_TEMPORAL_CONFIG);
         if (tempConfFile.exists()) {
             final long lastModified = tempConfFile.lastModified();
             if (lastModified != 0) {
@@ -202,7 +202,7 @@ public class ScagRoutingManager {
      * @throws SibincoException if exception will be occurred
      */
     public Date getLoadFileDate() throws SibincoException {
-        File tempConfFile = new File(scagConfFolder, SMSC_ROUTES_PRIMARY_CONFIG);
+        File tempConfFile = new File(scagConfFolder, SMPP_ROUTES_PRIMARY_CONFIG);
         if (tempConfFile.exists()) {
             final long lastModified = tempConfFile.lastModified();
             if (lastModified != 0)
@@ -212,25 +212,25 @@ public class ScagRoutingManager {
     }
 
     public synchronized void save() throws SibincoException {
-        saveToFile(SMSC_ROUTES_TEMPORAL_CONFIG);
+        saveToFile(SMPP_ROUTES_TEMPORAL_CONFIG);
     }
 
     public synchronized void restore() throws SibincoException {
-        loadFromFile(SMSC_ROUTES_TEMPORAL_CONFIG);
+        loadFromFile(SMPP_ROUTES_TEMPORAL_CONFIG);
         setRoutesRestored(true);
     }
 
     public synchronized void apply() throws SibincoException {
-        saveToFile(SMSC_ROUTES_PRIMARY_CONFIG);
+        saveToFile(SMPP_ROUTES_PRIMARY_CONFIG);
     }
 
     public synchronized void load() throws SibincoException {
-        loadFromFile(SMSC_ROUTES_PRIMARY_CONFIG);
+        loadFromFile(SMPP_ROUTES_PRIMARY_CONFIG);
         setRoutesLoaded(true);
     }
 
     public synchronized void trace() throws SibincoException {
-        saveToFile(SMSC_ROUTES_TRACEABLE_CONFIG);
+        saveToFile(SMPP_ROUTES_TRACEABLE_CONFIG);
     }
 
 
