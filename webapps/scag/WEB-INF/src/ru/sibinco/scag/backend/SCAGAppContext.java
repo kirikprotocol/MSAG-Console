@@ -98,8 +98,7 @@ public class SCAGAppContext {
             ruleManager.init();
             scagRoutingManager = new ScagRoutingManager(scagConfFolder, smppManager, serviceProvidersManager);
             scagRoutingManager.init();
-            String statusFolder = config.getString("status_folder");
-            statusManager = new StatusManager(new File(statusFolder));
+            statusManager = new StatusManager(new File(config.getString("status_folder")));
             statusManager.init();
             statuses = new Statuses();
             perfServer = new PerfServer(config);
