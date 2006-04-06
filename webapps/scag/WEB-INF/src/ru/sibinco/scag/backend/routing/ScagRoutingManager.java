@@ -153,7 +153,7 @@ public class ScagRoutingManager {
                 localEncoding = "WINDOWS-1251";
             final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), localEncoding));
 
-            Functions.storeConfigHeader(out, "routes", "routes.dtd", localEncoding);
+            Functions.storeConfigHeader(out, "routes", "smpp_routes.dtd", localEncoding);
             for (Iterator it = subjects.values().iterator(); it.hasNext();) {
                 final Subject subject = (Subject) it.next();
                 subject.store(out);
