@@ -27,8 +27,8 @@ void Abstract_CommandSmsc::init()
     GETSTRPARAM((char*)smppEntityInfo.bindPassword,  "bindPassword")
     GETINTPARAM(smppEntityInfo.timeOut,               "timeout")
     GETINTPARAM(smppEntityInfo.uid,                   "uid")
-            
-    if (::strcmp("mode", name) == 0) 
+
+    if (::strcmp("mode", name) == 0)
     {
         if (::strcmp("trx", value.get()) == 0) smppEntityInfo.bindType = scag::transport::smpp::btTransceiver;
         else if(::strcmp("tx", value.get()) == 0) smppEntityInfo.bindType = scag::transport::smpp::btTransmitter;
@@ -41,6 +41,7 @@ void Abstract_CommandSmsc::init()
     GETINTPARAM(smppEntityInfo.port,              "port")
     GETSTRPARAM((char*)smppEntityInfo.altHost,    "altHost")
     GETINTPARAM(smppEntityInfo.altPort,           "altPort")
+    GETSTRPARAM((char*)smppEntityInfo.addressRange,    "addressRange")
 
     END_SCAN_PARAMS
 
@@ -53,7 +54,7 @@ void Abstract_CommandSmsc::init()
 //    if (smppEntityInfo.password == "") errorStr = "Unknown 'password' parameter";
     if (smppEntityInfo.bindSystemId == "") errorStr = "Unknown 'bindSystemId' parameter";
     if (smppEntityInfo.bindPassword == "") errorStr = "Unknown 'bindPassword' parameter";
-        
+
     if (smppEntityInfo.timeOut == -1) errorStr = "Unknown 'timeOut' parameter";
     if (smppEntityInfo.uid == -1) errorStr = "Unknown 'uid' parameter";
 
@@ -62,7 +63,7 @@ void Abstract_CommandSmsc::init()
 //    if (smppEntityInfo.altHost == "") errorStr = "Unknown 'altHost' parameter";
 //    if (smppEntityInfo.altPort == -1) errorStr = "Unknown 'altPort' parameter";
 
-    if (errorStr.size() > 0) 
+    if (errorStr.size() > 0)
     {
         smsc_log_error(logger, errorStr.c_str());
         throw AdminException(errorStr.c_str());
@@ -80,7 +81,7 @@ void CommandDeleteSmsc::init()
     GETSTRPARAM_(systemId, "systemId")
     END_SCAN_PARAMS
 
-    if (systemId == "") 
+    if (systemId == "")
     {
         smsc_log_error(logger, "Unknown 'systemId' parameter");
         throw AdminException("Unknown 'systemId' parameter");
@@ -98,13 +99,13 @@ Response * CommandDeleteSmsc::CreateResponse(scag::Scag * ScagApp)
     try {
         smppMan->deleteSmppEntity(systemId.c_str());
     }
-    catch(Exception& e) {                                     
-        char msg[1024];                                         
-        sprintf(msg, "Failed to delete smsc. Details: %s", e.what());            
-        smsc_log_error(logger, msg);                            
+    catch(Exception& e) {
+        char msg[1024];
+        sprintf(msg, "Failed to delete smsc. Details: %s", e.what());
+        smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
-        smsc_log_warn(logger, "Failed to delete smsc. Unknown exception");        
+        smsc_log_warn(logger, "Failed to delete smsc. Unknown exception");
         throw AdminException("Failed to delete smsc. Unknown exception");
     }
 
@@ -125,13 +126,13 @@ Response * CommandAddSmsc::CreateResponse(scag::Scag * ScagApp)
     try {
         smppMan->addSmppEntity(getSmppEntityInfo());
     }
-    catch(exception& e) {                                     
-        char msg[1024];                                         
-        sprintf(msg, "Failed to add smsc. Details: %s", e.what());            
-        smsc_log_error(logger, msg);                            
+    catch(exception& e) {
+        char msg[1024];
+        sprintf(msg, "Failed to add smsc. Details: %s", e.what());
+        smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
-        smsc_log_warn(logger, "Failed to add smsc. Unknown exception");        
+        smsc_log_warn(logger, "Failed to add smsc. Unknown exception");
         throw AdminException("Failed to add smsc. Unknown exception");
     }
 
@@ -142,7 +143,7 @@ Response * CommandAddSmsc::CreateResponse(scag::Scag * ScagApp)
 //================================================================
 
 Response * CommandUpdateSmsc::CreateResponse(scag::Scag * ScagApp)
-{ 
+{
     smsc_log_info(logger, "CommandUnregSmsc is processing...");
 
     if (!ScagApp) throw Exception("Scag undefined");
@@ -153,13 +154,13 @@ Response * CommandUpdateSmsc::CreateResponse(scag::Scag * ScagApp)
     try {
         smppMan->updateSmppEntity(getSmppEntityInfo());
     }
-    catch(Exception& e) {                                     
-        char msg[1024];                                         
-        sprintf(msg, "Failed to update smsc. Details: %s", e.what());            
-        smsc_log_error(logger, msg);                            
+    catch(Exception& e) {
+        char msg[1024];
+        sprintf(msg, "Failed to update smsc. Details: %s", e.what());
+        smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
-        smsc_log_warn(logger, "Failed to update smsc. Unknown exception");        
+        smsc_log_warn(logger, "Failed to update smsc. Unknown exception");
         throw AdminException("Failed to update smsc. Unknown exception");
     }
 
@@ -169,5 +170,3 @@ Response * CommandUpdateSmsc::CreateResponse(scag::Scag * ScagApp)
 
 
 }}
-
-
