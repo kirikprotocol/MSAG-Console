@@ -6,5 +6,5 @@
 <!ELEMENT param (#PCDATA)>
 <!ATTLIST param 
 name (systemId|password|timeout|mode|enabled|host|port|althost|altport|uid|
-      bindSystemId|bindPassword|providerId) #REQUIRED
+      bindSystemId|bindPassword|providerId|addressRange) #REQUIRED
 value CDATA #REQUIRED>

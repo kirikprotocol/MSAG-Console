@@ -22,5 +22,6 @@
     <param name="enabled"           value="true"/>
     <param name="uid"               value="1"/><!--0-255, unique-->
     <param name="providerId"        value="-1"/>
+    <param name="addressRange"      value=".0.1..*"/>
   </smscrecord>
 </records>
