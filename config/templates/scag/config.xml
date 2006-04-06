@@ -26,7 +26,7 @@
      <param name="connect_timeout" type="int">@stat.sacc_connect_timeout@</param>
      <param name="queue_length" type="int">@stat.sacc_queue_length@</param>
   </section>
-				       	    
+                            
   <section name="RuleEngine">
     <param name="location" type="string">@rules.path@</param>
   </section>
@@ -49,11 +49,23 @@
     <param name="readTimeout" type="int">60</param>
     <param name="maxSmsPerSecond" type="int">1000</param>
     <section name="core">
-	<param name="eventQueueLimit" type="int">1000</param>
-	<param name="protocol_id" type="int">34</param> <!-- ???? -->
-	<param name="state_machines_count" type="int">10</param>
+    <param name="eventQueueLimit" type="int">1000</param>
+    <param name="protocol_id" type="int">34</param> <!-- ???? -->
+    <param name="state_machines_count" type="int">10</param>
         <param name="ussdTransactionTimeout" type="int">600</param> <!-- ???? -->
     </section>
   </section>
+
+    <section name="HttpTransport">
+        <param name="host" type="string">@listen.host@</param>
+        <param name="port" type="int">@gateway.http.port@</param>
+        <param name="readerSockets" type="int">10</param>
+        <param name="writerSockets" type="int">10</param>
+        <param name="readerPoolSize" type="int">10</param>
+        <param name="writerPoolSize" type="int">10</param>
+        <param name="scagPoolSize" type="int">10</param>
+        <param name="scagQueueLimit" type="int">10</param>
+        <param name="connectionTimeout" type="int">100</param>
+    </section>
 
 </config>
