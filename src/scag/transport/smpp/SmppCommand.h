@@ -1133,7 +1133,7 @@ public:
         BindCommand& bnd=c.get_bindCommand();
         pdu->set_systemId(bnd.sysId.c_str());
         pdu->set_password(bnd.pass.c_str());
-        int ton,npi;
+        int ton=0,npi=0;
         char addr[64];
         sscanf(bnd.addrRange.c_str(),".%d.%d.%*s",&ton,&npi,64,addr);
         pdu->get_addressRange().set_typeOfNumber(ton);
