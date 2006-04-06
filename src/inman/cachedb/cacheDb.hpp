@@ -49,9 +49,11 @@ protected:
     AbonentId           abonent;
     AbonentBillType     abType;
     unsigned            timeOut;
+    unsigned            _qId;  //query unique id
+    unsigned long       usage; //counter of runs
 
 public:
-    AbonentQuery(DBQueryManagerITF * owner, DataSource * ds, 
+    AbonentQuery(unsigned q_id, DBQueryManagerITF * owner, DataSource * ds, 
                             //SQL function name and argument name
                             const char * rt_id, const char * rt_key);
     ~AbonentQuery();
@@ -65,6 +67,9 @@ public:
     void onRelease(void);
     const char * taskName() { return "AbonentQuery"; }
     void stop();
+
+    unsigned getId(void) const { return _qId; }
+    unsigned long Usage(void) const { return usage; }
 };
 
 
@@ -100,6 +105,7 @@ private:
     QueriesList         qryPool;
     QueriesHash         qryCache;
     AbonentCacheITF *   cache;
+    unsigned            _lastQId;
 
 protected:
     friend class AbonentQuery;
