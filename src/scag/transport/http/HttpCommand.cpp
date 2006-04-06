@@ -63,7 +63,7 @@ int64_t HttpCommand::getOperationId() const
 }
 void HttpCommand::setOperationId(int64_t id)
 {
-    trc.routeId = id;
+    trc.operationId = id;
 }
 const std::string& HttpCommand::getRouteId() const
 {

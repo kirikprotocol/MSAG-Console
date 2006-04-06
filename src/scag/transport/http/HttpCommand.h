@@ -35,7 +35,7 @@ struct TransactionContext {
 
     TransactionContext() {
         operationId = -1;
-    serviceId = -1;
+	serviceId = -1;
         ruleId = -1;
         usr = 0;
     }
