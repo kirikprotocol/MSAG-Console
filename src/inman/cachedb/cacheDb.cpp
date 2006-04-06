@@ -36,7 +36,6 @@ void AbonentQuery::stop()
 void AbonentQuery::init(const AbonentId & ab_number, unsigned timeout/* = 0*/)
 {
     MutexGuard tmp(mutex);
-    signaled = 0;
     abonent = ab_number;
     abType = btUnknown;
     isReleased = isStopping = false;

@@ -38,8 +38,9 @@ public:
     virtual bool hasListeners(AbonentId & ab_number) = 0;
 };
 
-class AbonentQuery : public ThreadedTask, public Event {
+class AbonentQuery : public ThreadedTask {
 protected:
+    Mutex               mutex;
     DBQueryManagerITF*  _owner;
     DataSource *        _ds;
     const char *        rtId;  //SQL function name
