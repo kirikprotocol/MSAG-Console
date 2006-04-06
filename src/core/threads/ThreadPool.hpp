@@ -1,3 +1,4 @@
+#ident "$Id$"
 #ifndef __CORE_THREADS_THREADPOOL_HPP__
 #define __CORE_THREADS_THREADPOOL_HPP__
 
@@ -25,13 +26,13 @@ class ThreadPool;
 
 class PooledThread:public Thread{
 public:
-  PooledThread(ThreadPool* newowner):Thread(),owner(newowner),task(NULL),delTask(false) {}
+  PooledThread(ThreadPool* newowner):Thread(),owner(newowner),task(NULL) {}
 
   virtual int Execute();
 
-  void assignTask(ThreadedTask* newtask, bool delOnCompletion = true)
+  void assignTask(ThreadedTask* newtask)
   {
-    task=newtask; delTask = delOnCompletion;
+    task=newtask;
   }
   void processTask()
   {
@@ -49,7 +50,6 @@ protected:
   Event taskEvent;
   ThreadPool *owner;
   ThreadedTask* task;
-  bool          delTask; //indicates that task should be deleted on completion
 };//PooledThread
 
 

@@ -1,3 +1,5 @@
+static const char ident[] = "$Id$";
+
 #include "ThreadPool.hpp"
 #include <exception>
 #include <signal.h>
@@ -34,7 +36,8 @@ int PooledThread::Execute()
   smsc::logger::Logger* log=smsc::logger::Logger::getInstance("tp");
 
   smsc_log_debug(log,"Pooled thread %p ready for tasks",this);
-  if(!task)owner->releaseThread(this);
+  if (!task)
+      owner->releaseThread(this);
   for(;;)
   {
     trace2("Thread %p waiting for task",this);
@@ -67,7 +70,7 @@ int PooledThread::Execute()
     }
     smsc_log_info(log,"Execution of task %s finished",task->taskName());
     //task->releaseHeap();
-    if (delTask)
+    if (task->delOnCompletion())
         delete task;
     else
         task->onRelease();
@@ -173,12 +176,13 @@ void ThreadPool::preCreateThreads(int count)
 void ThreadPool::startTask(ThreadedTask* task, bool delOnCompletion/* = true*/)
 {
   Lock();
+  task->setDelOnCompletion(delOnCompletion);
   PooledThread* t;
   if(freeThreads.Count()>0)
   {
     trace("use free thread for new task");
     freeThreads.Pop(t);
-    t->assignTask(task, delOnCompletion);
+    t->assignTask(task);
     t->processTask();
     usedThreads.Push(t);
   }else

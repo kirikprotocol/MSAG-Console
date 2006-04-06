@@ -1,3 +1,4 @@
+#ident "$Id$"
 #ifndef __CORE_THREADS_THREADEDTASK_HPP__
 #define __CORE_THREADS_THREADEDTASK_HPP__
 
@@ -11,8 +12,14 @@ using namespace smsc::core::buffers;
 
 class ThreadedTask {
 public:
-  ThreadedTask():/*heap(NULL),*/isStopping(false), isReleased(false) {}
+  ThreadedTask():/*heap(NULL),*/isStopping(false), isReleased(false), delTask(true) {}
   virtual ~ThreadedTask(){}
+
+  //set task completion mode: deleting or callback calling
+  void setDelOnCompletion(bool del_task = true) { delTask = del_task; }
+  //tells whether the task destructor or onRelease() callback should be called on completion 
+  bool delOnCompletion(void) const { return delTask; }
+
   virtual int Execute()=0;
   virtual const char* taskName()=0;
 
@@ -73,6 +80,9 @@ protected:
   //smsc::core::buffers::MemoryHeap *heap;
   volatile bool isStopping;
   volatile bool isReleased;
+
+private:
+  bool          delTask; //indicates that task should be deleted on completion
 };//ThreadedTask
 
 }//threads
