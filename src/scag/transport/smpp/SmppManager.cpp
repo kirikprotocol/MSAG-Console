@@ -25,13 +25,14 @@ tag_timeout,
 tag_mode,
 tag_enabled,
 tag_providerId,
-tag_host=tag_enabled|1024,
+tag_host=tag_providerId|1024,
 tag_port,
 tag_althost,
 tag_altport,
 tag_uid,
 tag_bindSystemId,
-tag_bindPassword
+tag_bindPassword,
+tag_addressRange
 };
 
 struct Param{
@@ -55,7 +56,8 @@ TAGDEF(altport),
 TAGDEF(enabled),
 TAGDEF(uid),
 TAGDEF(bindSystemId),
-TAGDEF(bindPassword)
+TAGDEF(bindPassword),
+TAGDEF(addressRange)
 };
 
 struct ParamsHash:public smsc::core::buffers::Hash<ParamTag>{
@@ -186,6 +188,9 @@ static void ParseTag(SmppManager* smppMan,DOMNodeList* list,SmppEntityType et)
         case tag_uid:
           entity.uid=GetIntValue(attrs);
           break;
+        case tag_addressRange:
+          FillStringValue(attrs,entity.addressRange);
+          break;
       }
     }
     if(enabled)
@@ -225,8 +230,8 @@ void SmppManager::Init(const char* cfgFile)
   list = elem->getElementsByTagName(XmlStr("smscrecord"));
 
   ParseTag(this,list,etSmsc);
-  
-  LoadRoutes("conf/routes.xml");
+
+  LoadRoutes("conf/smpp_routes.xml");
   running=true;
 
   int stmCnt = 0;
@@ -296,6 +301,7 @@ void SmppManager::addSmppEntity(const SmppEntityInfo& info)
     ci.ports[0]=info.port;
     ci.hosts[1]=info.altHost.c_str();
     ci.ports[1]=info.altPort;
+    ci.addressRange=info.addressRange.c_str();
 
     sm.getSmscConnectorAdmin()->addSmscConnect(ci);
   }
