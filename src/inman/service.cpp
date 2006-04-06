@@ -205,8 +205,6 @@ void Service::onServerShutdown(Server* srv, Server::ShutdownReason reason)
 {
     smsc_log_debug(logger, "InmanSrv: TCP server shutdowning, reason %d", reason);
     srv->removeListener(this);
-    delete srv;
-    server = NULL;
 
     if (reason != Server::srvStopped) { //abnormal shutdown
         throw CustomException("InmanSrv: TCP server fatal failure, exiting.");
