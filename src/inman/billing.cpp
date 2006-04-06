@@ -15,6 +15,8 @@ using smsc::inman::comp::EventReportSMSArg;
 namespace smsc  {
 namespace inman {
 
+static const char * _sabType[] = {"Unknown", "Postpaid", "Prepaid" };
+
 /* ************************************************************************** *
  * class BillingService implementation:
  * ************************************************************************** */
@@ -409,8 +411,8 @@ void Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
 
 void Billing::ChargeAbonent(AbonentBillType ab_type)
 {
-    smsc_log_debug(logger, "Billing[%u.%u]: charging, abonent type: %u",
-                    _bconn->bConnId(), _bId, (unsigned)ab_type);
+    smsc_log_debug(logger, "Billing[%u.%u]: charging, abonent type: %s (%u)",
+                    _bconn->bConnId(), _bId, _sabType[ab_type], (unsigned)ab_type);
 
     abBillType = ab_type;
     if ((ab_type == smsc::inman::cache::btPostpaid)
@@ -526,8 +528,11 @@ void Billing::onConnectSMS(ConnectSMSArg* arg)
 
 void Billing::onContinueSMS(uint32_t inmanErr /* = 0*/)
 {
-    smsc_log_info(logger, "Billing[%u.%u]: <-- CHARGING_POSSIBLE (via %s), abonent type: %u",
-                _bconn->bConnId(), _bId, postpaidBill ? "CDR" : "SCF", abBillType);
+    smsc_log_info(logger,
+            "Billing[%u.%u]: <-- CHARGING_POSSIBLE (via %s), abonent type: %s (%u)",
+            _bconn->bConnId(), _bId, postpaidBill ? "CDR" : "SCF",
+            _sabType[abBillType], (unsigned)abBillType);
+
     BillAction  action = Billing::doCont;
     {
         MutexGuard grd(bilMutex);
@@ -578,8 +583,9 @@ void Billing::onReleaseSMS(ReleaseSMSArg* arg)
 
         uint32_t scfErr = InmanErrorCode::GetCombinedError(InErrRPCause, (uint16_t)arg->rPCause);
         if (postpaidBill) {
-            smsc_log_info(logger, "Billing[%u.%u]: <-- CHARGING_POSSIBLE (via CDR), abonent type: %u",
-                          _bconn->bConnId(), _bId, abBillType);
+            smsc_log_info(logger,
+                "Billing[%u.%u]: <-- CHARGING_POSSIBLE (via CDR), abonent type: %s (%u)",
+                _bconn->bConnId(), _bId, _sabType[abBillType], (unsigned)abBillType);
             state = Billing::bilContinued;
             delete inap;
             inap = NULL;
