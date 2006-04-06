@@ -2,14 +2,14 @@
 
 <!DOCTYPE http_routes SYSTEM "http_routes.dtd">
 
-<routes>
+<http_routes>
 
     <subject_def id="MTS_numbers">
         <address value="+7902912????"/>
         <address value="+7905985????"/>
     </subject_def>
 
-    <sites_subject_def id="Sites1">
+    <site_subject_def id="Sites1">
         <site host="yandex1.ru" port="8082">
             <path value="/melodies"/>
             <path value="/pictures"/>
@@ -18,7 +18,7 @@
             <path value="/melodies"/>
             <path value="/pictures"/>
         </site>
-    </sites_subject_def>
+    </site_subject_def>
 
     <route id="route1" serviceId="5">
         <abonents>
@@ -46,9 +46,9 @@
         </abonents>
 
         <sites>
-            <sites_subject id="Sites1"/>
+            <site_subject id="Sites1"/>
         </sites>
     </route>
 
-</routes>
+</http_routes>
 

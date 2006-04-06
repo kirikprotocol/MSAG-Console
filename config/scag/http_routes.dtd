@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
 <!ELEMENT http_routes (subject_def*, site_subject_def*, route+)>
-<!ATTLIST http_routes EMPTY>
 
 <!ELEMENT route (abonents+, sites+)>
 <!ATTLIST route
@@ -10,16 +9,8 @@
 >
 
 <!ELEMENT abonents (address|subject)*>
-<!ATTLIST abonents EMPTY>
 
 <!ELEMENT sites (site|site_subject)*>
-<!ATTLIST sites EMPTY>
-
-<!ELEMENT route ((address|subject)*, (site_subject|site)*)>
-<!ATTLIST route
-    id CDATA #REQUIRED
-    serviceId CDATA #REQUIRED
->
 
 <!ELEMENT address EMPTY>
 <!ATTLIST address
