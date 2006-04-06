@@ -3,6 +3,7 @@ package ru.sibinco.WHOISDIntegrator;
 import org.xml.sax.*;
 import org.xml.sax.helpers.DefaultHandler;
 import java.io.StringReader;
+import java.io.Reader;
 
 
 /**
@@ -16,11 +17,35 @@ import java.io.StringReader;
 public class SAXParserImpl
 {
 
- //{{{ parse() method
- public void parse(String ruleContent,String path, String transport) throws Exception
- {
-  //System.out.println("SAXParserImpl.parse started");
+ public void parseRule(String ruleContent,String path, String transport) throws Exception {
+    try {
+       parse(new StringReader(ruleContent), path);
+    } catch (SAXException e){
+    //e.printStackTrace();
+    if (e instanceof SAXParseExceptionEnhanced) {
+      SAXParseException spe = (SAXParseException)e.getException();
+      //System.out.println("spe.getLineNumber() = " + spe.getLineNumber());
+      throw new WHOISDException(e.getMessage()+" while parsing rule ["+transport+"] at line number {0} - "+spe.getMessage(), spe.getLineNumber());
+    } else
+      throw e;
+   }
+ }
 
+  public void parseTariffMatrix(String path) throws Exception {
+    try {
+       parse(null, path);
+    } catch (SAXException e){
+    if (e instanceof SAXParseExceptionEnhanced) {
+      SAXParseException spe = (SAXParseException)e.getException();
+      throw new WHOISDException(e.getMessage()+" while parsing tarrifMatrix at line number "+spe.getLineNumber()+ " - "+spe.getMessage());
+    } else
+      throw e;
+   }
+  }
+
+ //{{{ parse() method
+ private void parse(Reader contentReader,String path) throws Exception
+ {
   Handler handler = new Handler();
 
   XMLReader reader = new org.apache.xerces.parsers.SAXParser();
@@ -33,23 +58,9 @@ public class SAXParserImpl
   reader.setEntityResolver(handler);
 
   InputSource source = new InputSource();
-  source.setCharacterStream(new StringReader(ruleContent));
+  if (contentReader!=null) source.setCharacterStream(contentReader);
   source.setSystemId(path);
-
-  try
-  {
-   reader.parse(source);
-  }
-  catch (SAXException e){
-    //e.printStackTrace();
-    if (e instanceof SAXParseExceptionEnhanced) {
-      SAXParseException spe = (SAXParseException)e.getException();
-      //System.out.println("spe.getLineNumber() = " + spe.getLineNumber());
-      throw new WHOISDException(e.getMessage()+" while parsing rule ["+transport+"] at line number {0} - "+spe.getMessage(), spe.getLineNumber());
-    } else
-      throw e;
-   }
-  //System.out.println("SAXParserImpl.parse parse finished");
+  reader.parse(source);
  } //}}}
 
 

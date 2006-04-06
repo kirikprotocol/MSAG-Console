@@ -110,7 +110,7 @@ public class MiscUtilities
    *
    * @since jEdit 4.3pre1
    */
-	public static boolean moveFile(File source, File dest)
+	public static boolean moveFile(File source, File dest, boolean sourceDelete)
 	{
 		boolean ok = false;
 
@@ -149,11 +149,14 @@ public class MiscUtilities
 				}
 			}
 
-			if(ok)
+			if(ok && sourceDelete)
 				source.delete();
 		}
 		return ok;
 	}  //}}}
+  public static boolean moveFile(File source, File dest) {
+    return moveFile(source,dest,true);
+  }
 //{{{ getPermissions() method
   /**
    * Returns numeric permissions of a file. On non-Unix systems, always

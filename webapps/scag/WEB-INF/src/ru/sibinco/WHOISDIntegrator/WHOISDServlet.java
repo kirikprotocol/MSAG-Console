@@ -1,13 +1,18 @@
 package ru.sibinco.WHOISDIntegrator;
 
 import ru.sibinco.scag.backend.SCAGAppContext;
+import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.backend.rules.Rule;
 import ru.sibinco.scag.backend.transport.Transport;
+import ru.sibinco.scag.beans.rules.applet.MiscUtilities;
+import ru.sibinco.lib.SibincoException;
 
 import javax.servlet.http.*;
 import java.io.*;
 import java.util.*;
 import java.text.MessageFormat;
+import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
 
 /**
  * Created by IntelliJ IDEA.
@@ -31,12 +36,12 @@ public class WHOISDServlet extends HttpServlet {
     LinkedList result = new LinkedList();
     try {
     switch (id) {
-      case WHOISDRequest.OPERATORS: result = loadXml(appContext.getConfig().getString("operators_file")); SendResult(result, resp); break;
+      case WHOISDRequest.OPERATORS: result = loadXml(WHOISDRequest.OPERATORS, appContext.getConfig().getString("operators_file")); SendResult(result, resp); break;
       case WHOISDRequest.OPERATORS_SCHEMA: result = getSchema(WHOISDRequest.OPERATORS_SCHEMA, appContext.getConfig().getString("operators_file")); SendResult(result, resp); break;
-      case WHOISDRequest.SERVICES:  result = loadXml(appContext.getConfig().getString("services_file")); SendResult(result, resp); break;
+      case WHOISDRequest.SERVICES:  result = loadXml(WHOISDRequest.SERVICES, appContext.getConfig().getString("services_file")); SendResult(result, resp); break;
       case WHOISDRequest.SERVICES_SCHEMA: result = getSchema(WHOISDRequest.SERVICES_SCHEMA, appContext.getConfig().getString("services_file")); SendResult(result, resp); break;
       case WHOISDRequest.RULE: result = getRule(req);  SendResult(result, resp); break;
-      case WHOISDRequest.TARIFF_MATRIX: result = loadXml(appContext.getConfig().getString("tariffs_file"));  SendResult(result, resp); break;
+      case WHOISDRequest.TARIFF_MATRIX: result = loadXml(WHOISDRequest.TARIFF_MATRIX, appContext.getConfig().getString("tariffs_file"));  SendResult(result, resp); break;
       case WHOISDRequest.TARIFF_MATRIX_SCHEMA: result = getSchema(WHOISDRequest.TARIFF_MATRIX_SCHEMA, appContext.getConfig().getString("tariffs_file"));  SendResult(result, resp); break;
       default:
         resp.setHeader("status","false");
@@ -66,7 +71,7 @@ public class WHOISDServlet extends HttpServlet {
        try {
         switch (id) {
           case WHOISDRequest.RULE: applyTerm(req,isMultipartFormat(req));SendResult(result, resp); break;
-          case WHOISDRequest.TARIFF_MATRIX: saveFile(appContext.getConfig().getString("tariffs_file"),req,isMultipartFormat(req)); SendResult(result, resp); break;
+          case WHOISDRequest.TARIFF_MATRIX: applyTariffMatrix(appContext.getConfig().getString("tariffs_file"),req,isMultipartFormat(req)); SendResult(result, resp); break;
           default:
             resp.setHeader("status","false");
             result.add(WHOISD_ERROR_PREFIX+"Wrong request for post method");
@@ -127,7 +132,7 @@ public class WHOISDServlet extends HttpServlet {
        }
        String ruleSystemId = appContext.getConfig().getString("rules_folder")+"/"+ transports[i] + "/"+ruleWHOISD.getId().toString();
        try {
-        parser.parse(rulemanager.getRuleContentAsString(ruleWHOISD), ruleSystemId, transports[i]);
+        parser.parseRule(rulemanager.getRuleContentAsString(ruleWHOISD), ruleSystemId, transports[i]);
        } catch(WHOISDException e) {
          int linenumberinterm = termoffset + e.getLineNumber();
          //System.out.println("linenumberinterm: " + linenumberinterm);
@@ -152,6 +157,32 @@ public class WHOISDServlet extends HttpServlet {
      return error;
    }
 
+   private void applyTariffMatrix(String pathToWrite, HttpServletRequest req, boolean isMultipartFormat) throws Exception {
+     //backup current file "tariffs.xml" -> "tariffs.xml~"
+     File tariffMatrix = new File(pathToWrite);
+     File tariffMatrixbackup = new File(pathToWrite+'~');
+     boolean backupResult = false;
+     // do we have file to backup?
+     if (tariffMatrix.exists()) {
+      backupResult = MiscUtilities.moveFile(tariffMatrix,tariffMatrixbackup, false);
+      if (!backupResult) throw new Exception("Can't save backup of tariffs.xml");
+     }
+     saveFile(pathToWrite, req, isMultipartFormat);
+     SAXParserImpl parser = new SAXParserImpl();
+     try {
+     parser.parseTariffMatrix(pathToWrite);
+     //there are no exceptions -> just delete backup file
+     tariffMatrixbackup.delete();
+     } catch (Exception e) {
+       //excpiton occurs while parsing -> restore backup file(i.e. "tariffs.xml~" ->  "tariffs.xml") and delete backup file
+       if (tariffMatrixbackup.exists()) {
+         if (!MiscUtilities.moveFile(tariffMatrixbackup,tariffMatrix, true)) throw new Exception("Can't restore tariffs.xml from tariffs.xml~");
+       } else
+         if (!tariffMatrix.delete()) throw new Exception("TariffMatrix contains errors but can not be deleted");
+       throw e;
+     }
+   }
+
    private void saveFile(String pathToWrite, HttpServletRequest req, boolean isMultipartFormat) throws Exception {
      InputStream in = null;
      BufferedReader br = null;
@@ -173,16 +204,16 @@ public class WHOISDServlet extends HttpServlet {
      fos.flush();
      } finally {
        if(in!=null) in.close();
-       if(in!=null) br.close();
-       if(in!=null) fos.close();
+       if(br!=null) br.close();
+       if(fos!=null) fos.close();
      }
    }
 
   private boolean isMultipartFormat(HttpServletRequest req)
   {
-             String temptype=req.getContentType();
-             if(temptype.indexOf("multipart/form-data")!=-1) return true;
-             else return false;
+       String temptype=req.getContentType();
+       if(temptype.indexOf("multipart/form-data")!=-1) return true;
+       else return false;
   }
 
   private int[] extractData(HttpServletRequest request) throws IOException {
@@ -263,7 +294,15 @@ public class WHOISDServlet extends HttpServlet {
     return result;
   }
 
-  private LinkedList loadXml(String filepath) throws Exception {
+  private LinkedList loadXml(int commandId, String filepath) throws Exception {
+    String scagCommand = WHOISDRequest.getScagCommand(commandId);
+    Method command = appContext.getScag().getClass().getMethod(scagCommand, new Class[0]);
+    try {
+     command.invoke(appContext.getScag(), new Object[0]);
+    } catch(InvocationTargetException e) {
+      if (Proxy.STATUS_CONNECTED == appContext.getScag().getStatus())
+        throw (Exception)e.getTargetException();
+    }
     File filetoread = new File(filepath);
     return loadFile(filetoread);
   }

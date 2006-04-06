@@ -65,7 +65,8 @@ public class Response {
     }
 
     public String getDataAsString() {
-        return Utils.getNodeText(document.getDocumentElement());
+        String dataAsString = Utils.getNodeText(document.getDocumentElement());
+        return dataAsString.startsWith("\n")?dataAsString.substring("\n".length(),dataAsString.length()):dataAsString;
     }
 
     public byte getStatus() {

@@ -11,6 +11,9 @@ import ru.sibinco.scag.backend.endpoints.svc.Svc;
 import ru.sibinco.scag.backend.protocol.commands.Apply;
 import ru.sibinco.scag.backend.protocol.commands.CommandCall;
 import ru.sibinco.scag.backend.protocol.commands.Type;
+import ru.sibinco.scag.backend.protocol.commands.tariffmatrix.ReloadTariffMatrix;
+import ru.sibinco.scag.backend.protocol.commands.services.ReloadServices;
+import ru.sibinco.scag.backend.protocol.commands.operators.ReloadOperators;
 import ru.sibinco.scag.backend.protocol.commands.endpoints.AddCenter;
 import ru.sibinco.scag.backend.protocol.commands.endpoints.AddSvc;
 import ru.sibinco.scag.backend.protocol.commands.endpoints.DeleteCenter;
@@ -140,6 +143,26 @@ public class Scag extends Proxy {
         return res instanceof List ? (List) res : null;
     }
 
+    public void reloadOperators() throws SibincoException {
+       //System.out.println("invoked reloadOperators");
+       final Response response = super.runCommand(new ReloadOperators());
+       if (Response.STATUS_OK!=response.getStatus())
+         throw new SibincoException("Couldn't reload operators, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+    }
+
+    public void reloadServices() throws SibincoException {
+      //System.out.println("invoked reloadServices");
+      final Response response = super.runCommand(new ReloadServices());
+      if (Response.STATUS_OK!=response.getStatus())
+        throw new SibincoException("Couldn't reload services, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+    }
+
+    public void reloadTariffMatrix() throws SibincoException {
+      //System.out.println("invoked reloadTariffMatrix");
+      final Response response = super.runCommand(new ReloadTariffMatrix());
+      if (Response.STATUS_OK!=response.getStatus())
+        throw new SibincoException("Couldn't reload tariff matrix, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+    }
 
     public Object call(final String commandId, final String err, final Type returnType, final Map arguments) throws SibincoException {
         //if (info.status != ServiceInfo.STATUS_RUNNING)
