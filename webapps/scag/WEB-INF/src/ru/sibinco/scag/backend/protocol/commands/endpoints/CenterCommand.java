@@ -33,5 +33,6 @@ public class CenterCommand  extends Command {
         createIntParam("altPort", center.getAltPort());
         createIntParam("uid", center.getUid());
         createIntParam("providerId", -1/*center.getProvider().getId()*/);
+        createStringParam("addressRange", center.getAddressRange());
    }
 }

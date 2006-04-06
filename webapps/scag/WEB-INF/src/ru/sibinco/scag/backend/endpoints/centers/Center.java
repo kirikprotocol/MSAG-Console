@@ -44,13 +44,14 @@ public class Center {
     private String bindSystemId;
     private String bindPassword;
     private String transport = "SMPP";
+    private String addressRange;
 
     private Category logger = Category.getInstance(this.getClass());
 
     public Center(String id, int timeout,
                   byte mode, String host, int port, String altHost,
                   int altPort, boolean enabled, final Provider provider,
-                  final int uid, final String bindSystemId, final String bindPassword) throws NullPointerException {
+                  final int uid, final String bindSystemId, final String bindPassword, final String addressRange) throws NullPointerException {
         if (null == id || null == bindPassword || bindSystemId == null)
             throw new NullPointerException("SMSC ID or bind Password or bind SystemId  is null");
         this.id = id;
@@ -65,6 +66,7 @@ public class Center {
         this.uid = uid;
         this.bindSystemId = bindSystemId;
         this.bindPassword = bindPassword;
+        this.addressRange = addressRange;
     }
 
     public Center(final Element centersElement, final ProviderManager providerManager) throws NullPointerException {
@@ -98,6 +100,8 @@ public class Center {
                     bindSystemId = value;
                 } else if ("bindPassword".equals(name)) {
                     bindPassword = value;
+                }else if ("addressRange".equals(name)){
+                    addressRange = value;
                 }
 
             } catch (NumberFormatException e) {
@@ -120,6 +124,7 @@ public class Center {
         this.enabled = center.isEnabled();
         this.provider = center.getProvider();
         this.uid = center.getUid();
+        this.addressRange = center.getAddressRange();
     }
 
     protected PrintWriter storeHeader(final PrintWriter out) {
@@ -149,7 +154,7 @@ public class Center {
         out.println("    <param name=\"enabled\"        value=\"" + enabled + "\"/>");
         out.println("    <param name=\"uid\"            value=\"" + uid + "\"/>");
         out.println("    <param name=\"providerId\"     value=\"" + -1/*provider.getId()*/ + "\"/>");
-
+        out.println("    <param name=\"addressRange\"   value=\"" + addressRange.trim() + "\"/>");
         return out;
     }
 
@@ -322,5 +327,13 @@ public class Center {
 
     public void setBindPassword(final String bindPassword) {
         this.bindPassword = bindPassword;
+    }
+
+    public String getAddressRange() {
+        return addressRange;
+    }
+
+    public void setAddressRange(String addressRange) {
+        this.addressRange = addressRange;
     }
 }

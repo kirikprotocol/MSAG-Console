@@ -54,6 +54,7 @@ public class Edit extends EditBean {
     private String[] providerNames = null;
     private boolean administrator = false;
     private int uid = -1;
+    private String addressRange = "";
     private long userProviderId = ALL_PROVIDERS;
 
     private void init() throws SCAGJspException {
@@ -116,6 +117,7 @@ public class Edit extends EditBean {
         this.uid = center.getUid();
         this.bindSystemId = center.getBindSystemId();
         this.bindPassword = center.getBindPassword();
+        this.addressRange = center.getAddressRange();
     }
 
     protected void save() throws SCAGJspException {
@@ -138,7 +140,7 @@ public class Edit extends EditBean {
         if (altHost == null || altHost.trim().length() == 0) altHost = "";
         if (bindPassword == null || bindPassword.trim().length() == 0) bindPassword = "";
         center = new Center(id, timeout, mode, host, port, altHost, altPort,
-                enabled, providerObj, uid, bindSystemId, (bindPassword == null) ? "" : bindPassword);
+                enabled, providerObj, uid, bindSystemId, (bindPassword == null) ? "" : bindPassword, addressRange);
         centers.put(id, center);
 
         final Scag scag = appContext.getScag();
@@ -330,6 +332,14 @@ public class Edit extends EditBean {
 
     public void setBindPassword(String bindPassword) {
         this.bindPassword = bindPassword;
+    }
+
+    public String getAddressRange() {
+        return addressRange;
+    }
+
+    public void setAddressRange(String addressRange) {
+        this.addressRange = addressRange;
     }
 
 }

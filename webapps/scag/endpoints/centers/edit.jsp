@@ -50,6 +50,7 @@
                     <sm-ep:txt title="port" name="port" validation="port"/>
                     <sm-ep:txt title="alternate host" name="altHost"/>
                     <sm-ep:txt title="alternate port" name="altPort" validation="port"/>
+                    <sm-ep:txt title="address range" name="addressRange"/>
                     <sm-ep:list title="mode" name="mode" values="1,2,3" valueTitles="TX,RX,TRX"/>
                     <sm-ep:txt title="timeout" name="timeout" maxlength="6" validation="unsigned"/>
                     <sm-ep:check title="enabled" name="enabled"/>

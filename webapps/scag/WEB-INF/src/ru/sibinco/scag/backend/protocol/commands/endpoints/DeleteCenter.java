@@ -24,5 +24,6 @@ public class DeleteCenter extends Command {
         createIntParam("timeout", center.getTimeout());
         createStringParam("mode", center.getModeStr());
         createIntParam("providerId", -1/*center.getProvider().getId()*/);
+        createStringParam("addressRange", center.getAddressRange());
     }
 }
