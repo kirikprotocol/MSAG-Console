@@ -7,6 +7,7 @@ namespace smpp{
 
 int SmppReader::Execute()
 {
+  info1(log,"Starting SmppReader");
   net::Multiplexer::SockArray ready;
   net::Multiplexer::SockArray error;
   while(!isStopping)
@@ -45,6 +46,7 @@ int SmppReader::Execute()
       warn2(log,"!!! Exception in SmppReader:%s",e.what());
     }
   }
+  info1(log,"Execution of SmppReader finished");
   return 0;
 }
 
