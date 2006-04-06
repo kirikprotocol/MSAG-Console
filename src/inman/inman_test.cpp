@@ -51,8 +51,10 @@ static const char * const _dstAdr[] = {
 static const Abonent  _abonents[2] = {
     //Nezhinsky phone(prepaid):
      { abPrepaid, ".1.1.79139343290", "250013900405871" }
-    //Ryzhkov phone(postpaid:
+    //Ryzhkov phone(postpaid):
     ,{ abPostpaid, ".1.1.79139859489", "250013901464251" }
+    //Stupnik phone(postpaid):
+    ,{ abPostpaid, ".1.1.79139033669", "250013901464251" }
 };
 
 class INDialog {
@@ -133,6 +135,7 @@ public:
         _mutex.Unlock();
         lstEvent.Wait(1000L*SELECT_TIMEOUT_STEP*2);
 
+        socket->Close();
         if (socket->getSocket() != INVALID_SOCKET)
             socket->Abort();
         delete pipe; 
