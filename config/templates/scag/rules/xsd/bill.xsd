@@ -8,22 +8,22 @@
         <choice>
             <element name="open">
                 <complexType>
-                    <attribute name="category" type="string" />
-                    <attribute name="mediatype" type="string" />
+                    <attribute name="category" type="string" use="required"/>
+                    <attribute name="mediatype" type="string" use="required"/>
                </complexType>
 	    </element>
 	    
 	    <element name="commit">
                 <complexType>
-                    <attribute name="category" type="string" />
-                    <attribute name="mediatype" type="string" />
+                    <attribute name="category" type="string" use="required"/>
+                    <attribute name="mediatype" type="string" use="required"/>
                 </complexType>
 	    </element>
 	    
 	    <element name="rollback">
 		<complexType>
-                    <attribute name="category" type="string" />
-                    <attribute name="mediatype" type="string" />
+                    <attribute name="category" type="string" use="required"/>
+                    <attribute name="mediatype" type="string" use="required"/>
 		</complexType>
 	    </element>
         </choice>    
