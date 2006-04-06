@@ -625,7 +625,17 @@ void DaemonCommandDispatcher::stopAllServices(unsigned int timeoutInSecs)
       while (services.Next(serviceId, servicePtr) != 0)
       {
         if ((servicePtr != NULL) && (servicePtr->getStatus() != Service::stopped))
+        {
           allShutdowned = false;
+
+          try {
+            smsc_log_debug(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "send shutdown signal to service \"%s\"", servicePtr->getId());
+            servicePtr->shutdown();
+          } catch (...) {
+            smsc_log_error(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "Couldn't stop service \"%s\", skipped", serviceId == NULL ? "<unknown>" : serviceId);
+          }
+
+        }
       }
     }
   }

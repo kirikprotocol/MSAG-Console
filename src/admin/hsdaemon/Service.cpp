@@ -71,16 +71,18 @@ pid_t Service::start()
   case stopped:
     {
       status=starting;
+      autoDelay();
       time_t now=time(NULL);
       if(now-lastStart<DaemonCommandDispatcher::stayAliveTimeout)
       {
         smsc_log_info(logger,"Delay service start after crash restart for %d seconds",DaemonCommandDispatcher::retryTimeout*(1+restartRetryCount));
-        smsc::util::millisleep(1000*DaemonCommandDispatcher::retryTimeout*(1+restartRetryCount));
+        sleepEvent.Wait(1000*DaemonCommandDispatcher::retryTimeout*(1+restartRetryCount));
         restartRetryCount++;
       }else
       {
         restartRetryCount=0;
       }
+      if(status==stopping)return 0;
       lastStart=time(NULL);
 
       if(!checkExec((serviceDir+'/'+service_exe).c_str()))
@@ -108,7 +110,7 @@ pid_t Service::start()
         struct rlimit flim;
         getrlimit(RLIMIT_NOFILE, &flim);
         for (rlim_t i=0; i<flim.rlim_max; i++) {
-          close(i);
+          close((int)i);
         }
 
         FILE* tmpStream;
@@ -157,6 +159,7 @@ pid_t Service::start()
 void Service::kill()
   throw (AdminException)
 {
+  sleepEvent.Signal();
   if (status == stopped)
   {
     throw AdminException("Service is not running");
@@ -187,8 +190,10 @@ void Service::kill()
 void Service::shutdown()
   throw (AdminException)
 {
+  sleepEvent.Signal();
   if (status != running)
   {
+    if(status==starting)status=stopping;
     throw AdminException("Service is not running");
   }
 

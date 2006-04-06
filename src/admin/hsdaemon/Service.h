@@ -7,6 +7,7 @@
 #include <util/cstrings.h>
 #include "ServiceInfo.h"
 #include "util/sleep.h"
+#include "core/synchronization/Event.hpp"
 
 namespace smsc {
 namespace admin {
@@ -79,7 +80,7 @@ public:
     smsc_log_info(logger,"autodelay:%s,%d",autostarted?"true":"false",info.autostartDelay);
     if(autostarted && info.autostartDelay!=0)
     {
-      millisleep(info.autostartDelay*1000);
+      sleepEvent.Wait(info.autostartDelay*1000);
       autostarted=false;
     }
   }
@@ -123,6 +124,8 @@ protected:
   bool autostarted;
 
   bool switchOver;
+
+  smsc::core::synchronization::Event sleepEvent;
 
   void init(const char * const services_dir,
   const ServiceInfo& svcInfo,

@@ -56,7 +56,6 @@ public:
         DaemonCommandDispatcher::updateServiceFromConfig(DaemonCommandDispatcher::services[serviceId]);
         svc=DaemonCommandDispatcher::services[serviceId];
       }
-      svc->autoDelay();
       pid = svc->start();
     } catch (AdminException& e) {
       smsc_log_error(logger, "Couldn't start service \"%s\", nested: %s", serviceId, e.what());
