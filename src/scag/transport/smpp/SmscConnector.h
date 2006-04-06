@@ -67,7 +67,7 @@ struct SmscConnectTask:thr::ThreadedTask{
       conn->reportSmscDisconnect(sysId.c_str());
       return 0;
     }
-    sock->bind(regSysId.c_str(),sysId.c_str(),pass.c_str());
+    sock->bind(regSysId.c_str(),sysId.c_str(),pass.c_str(),addressRange.c_str());
     conn->registerSocket(sock.release());
     return 0;
   }
@@ -78,6 +78,7 @@ protected:
   std::string pass;
   std::string host;
   int port;
+  std::string addressRange;
   time_t lastFailure;
 };
 

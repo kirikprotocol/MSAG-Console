@@ -342,7 +342,8 @@ public:
 struct BindCommand{
   std::string sysId;
   std::string pass;
-  BindCommand(const char* id,const char* pwd):sysId(id),pass(pwd){}
+  std::string addrRange;
+  BindCommand(const char* id,const char* pwd,const char* rng):sysId(id),pass(pwd),addrRange(rng){}
 };
 
 struct SmppEntity;
@@ -681,14 +682,14 @@ public:
     return cmd;
   }
 
-  static SmppCommand makeBindCommand(const char* sysId,const char* pwd)
+  static SmppCommand makeBindCommand(const char* sysId,const char* pwd,const char* addrRange)
   {
     SmppCommand cmd;
     cmd.cmd = new _SmppCommand;
     _SmppCommand& _cmd = *cmd.cmd;
     _cmd.ref_count = 1;
     _cmd.cmdid = BIND_TRANSCEIVER;
-    _cmd.dta = new BindCommand(sysId,pwd);
+    _cmd.dta = new BindCommand(sysId,pwd,addrRange);
     _cmd.dialogId = 0;
     return cmd;
   }
@@ -1132,6 +1133,12 @@ public:
         BindCommand& bnd=c.get_bindCommand();
         pdu->set_systemId(bnd.sysId.c_str());
         pdu->set_password(bnd.pass.c_str());
+        int ton,npi;
+        char addr[64];
+        sscanf(bnd.addrRange.c_str(),".%d.%d.%*s",&ton,&npi,64,addr);
+        pdu->get_addressRange().set_typeOfNumber(ton);
+        pdu->get_addressRange().set_numberingPlan(npi);
+        pdu->get_addressRange().set_value(addr);
         return reinterpret_cast<SmppHeader*>(pdu.release());
       }
     case BIND_RECIEVER_RESP:

@@ -17,6 +17,7 @@ struct SmppEntityInfo{
   buf::FixedLengthString<smsc::sms::MAX_SMEPASSWD_TYPE_LENGTH+1> password;
   buf::FixedLengthString<smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1> bindSystemId;
   buf::FixedLengthString<smsc::sms::MAX_SMEPASSWD_TYPE_LENGTH+1> bindPassword;
+  buf::FixedLengthString<42> addressRange;
   int timeOut;
   SmppBindType bindType;
   buf::FixedLengthString<32> host;
