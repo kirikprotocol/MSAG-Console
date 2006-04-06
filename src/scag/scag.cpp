@@ -39,10 +39,10 @@ namespace scag
     using scag::config::Mask;
     using scag::config::MaskVector;
     using smsc::sms::Address;
- 
-    
+
+
     extern void loadRoutes(RouteManager* rm, const scag::config::RouteConfig& rc,bool traceit=false);
-                     
+
 static inline void makeAddress_(Address& addr,const string& mask)
 {
   addr=Address(mask.c_str());
@@ -136,7 +136,7 @@ using smsc::util::Exception;
 
 using scag::config::ConfigManager;
 using scag::bill::BillingManager;
-using scag::stat::StatisticsManager;    
+using scag::stat::StatisticsManager;
 using scag::config::BillingManagerConfig;
 using scag::sessions::SessionManager;
 using smsc::util::findConfigFile;
@@ -162,7 +162,7 @@ public:
   }
   int run()
   {
-    uint64_t cnt,last=0;
+    uint64_t cnt=0,last=0;
     timespec now={0,0},lasttime={0,0};
     double ut,tm,rate,avg;
     if(start.tv_sec==0)
@@ -190,7 +190,7 @@ public:
       // replace queue
       //cnt=queue.getCounter();
 
-      int eqhash,equnl;
+      int eqhash,equnl=0;
 
       //=======================
       // replace queue
@@ -282,7 +282,7 @@ public:
       {
         lastPerfCnt[i]=perf[i];
       }
-    } 
+    }
     return 0;
   }
   void setStartTime(time_t t)
@@ -339,16 +339,16 @@ void Scag::init()
         throw Exception("Exception during initialization of SmppManager: unknown error");
     }
   //********************************************************
-    
 
- 
+
+
     try {
         BillingManager::Init(cfg.getBillManConfig());
     }catch(...)
     {
         throw Exception("Exception during initialization of BillingManager");
     }
-  
+
 
   //********************************************************
   //*********** SessionManager initialization **************
@@ -396,7 +396,7 @@ void Scag::init()
   scag::transport::TransportType * ttype;
   ttype = scag::transport::SCAGCommand::TransportTypeHash.GetPtr("SMPP");
 
-  if (scag::transport::SCAGCommand::TransportTypeHash.GetCount() == 0) 
+  if (scag::transport::SCAGCommand::TransportTypeHash.GetCount() == 0)
   {
       smsc_log_error(log,"Achtung!!! :))");
   }
@@ -411,7 +411,7 @@ void Scag::init()
   }
 
 
-  if (!ttype) 
+  if (!ttype)
   {
       return;
   }            */
@@ -459,6 +459,7 @@ void Scag::init()
   //*****************************************************
   // test route instance initialization
   //*****************************************************
+  /*
   try {
       RouteConfig cfg;
       if (cfg.load("conf/smpp_routes__.xml") == RouteConfig::fail){
@@ -471,13 +472,14 @@ void Scag::init()
   {
       throw Exception("Exception during test route instance initialization");
   }
+  */
   //*****************************************************
 
   /*
-  ////////////////////////// FOR TEST 
+  ////////////////////////// FOR TEST
 
   scag::sessions::CSessionKey key;
- 
+
   SMS sms;
   sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, 100);
 
@@ -513,13 +515,13 @@ void Scag::init()
   //scag::re::RuleEngine::Instance().process(commandDeliver, *session);
   //scag::re::RuleEngine::Instance().process(commandDeliverResp, *session);
 
-  ////////////////////////// FOR TEST 
-  */                                  
+  ////////////////////////// FOR TEST
+  */
   smsc_log_info(log, "SCAG init complete" );
 
   __trace__("Smsc::init completed");
-  
-  
+
+
 }
 
 void Scag::run()
