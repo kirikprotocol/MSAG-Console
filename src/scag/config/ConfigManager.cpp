@@ -183,7 +183,7 @@ void ConfigManagerImpl::Init()
     // Inits subsystems configs
 
     //smppManCfg.load(smsc::util::findConfigFile("sme.xml"));
-    getRouteConfig_().load(smsc::util::findConfigFile("routes.xml"));
+    getRouteConfig_().load(smsc::util::findConfigFile("smpp_routes.xml"));
     getBillManConfig_().init(ConfigView(config, "BillingManager"));
     getSessionManConfig_().init(ConfigView(config, "SessionManager"));
     getStatManConfig_().init(ConfigView(config, "StatisticsManager"));
