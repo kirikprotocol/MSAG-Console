@@ -45,6 +45,7 @@ import org.apache.xerces.xni.parser.XMLParseException;
 
 public class SAXParserImpl extends XmlParser
 {
+ private HashMap activePrefixes;
  //{{{ SAXParserImpl constructor
  public SAXParserImpl()
  {
@@ -187,9 +188,21 @@ public class SAXParserImpl extends XmlParser
 
  //{{{ xsElementToElementDecl() method
  private void xsElementToElementDecl(CompletionInfo info,
-  XSElementDeclaration element, ElementDecl parent)
+  XSElementDeclaration element, ElementDecl parent, String targetNamespace)
  {
   String name = element.getName();
+
+  if (targetNamespace!=null && activePrefixes!=null) {
+    Set entries = activePrefixes.entrySet();
+    String prefix = "";
+    for (Iterator i = entries.iterator();i.hasNext();) {
+      Map.Entry entry = (Map.Entry)i.next();
+      if (entry.getValue().equals(targetNamespace)) {
+        prefix = (String)entry.getKey();
+      }
+    }
+    name = prefix+":"+name;
+  }
 
   if(parent != null)
   {
@@ -257,7 +270,7 @@ public class SAXParserImpl extends XmlParser
   {
    xsElementToElementDecl(info,
     (XSElementDeclaration)term,
-    parent);
+    parent, term.getNamespace());
   }
   else if(term instanceof XSModelGroup)
   {
@@ -338,7 +351,7 @@ public class SAXParserImpl extends XmlParser
    for(int i = 0; i < elements.getLength(); i++)
    {
     XSElementDeclaration element = (XSElementDeclaration)elements.item(i);
-     xsElementToElementDecl(info,element,null);
+     xsElementToElementDecl(info,element,null,null);
    }
 
    XSNamedMap attributes = model.getComponents(XSConstants.ATTRIBUTE_DECLARATION);
@@ -440,7 +453,7 @@ public class SAXParserImpl extends XmlParser
      return;
     }
    }
-
+   SAXParserImpl.this.activePrefixes = activePrefixes;
    Grammar grammar = getGrammarForNamespace(uri);
       if(grammar != null)
    {
