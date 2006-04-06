@@ -107,10 +107,8 @@ bool ActionContext::makeBillEvent(int billCommand, std::string& category, std::s
     if (size > tariffRec->Currency.size()) size = tariffRec->Currency.size();
 
     memcpy(ev.pBillingCurrency, tariffRec->Currency.c_str(), size);
-    
+    return true;
 }
-
-
 
 }}}
 
