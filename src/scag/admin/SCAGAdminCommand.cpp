@@ -239,7 +239,7 @@ Response * CommandLoadRoutes::CreateResponse(scag::Scag * ScagApp)
 
     if (!ScagApp) throw AdminException("ScagApp undefined");
     RouteConfig cfg;
-    if (cfg.load("conf/routes__.xml") == RouteConfig::fail) throw AdminException("Load routes config file failed.");
+    if (cfg.load("conf/smpp_routes__.xml") == RouteConfig::fail) throw AdminException("Load routes config file failed.");
 
     vector<std::string> traceBuff;
 

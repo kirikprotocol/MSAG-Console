@@ -461,7 +461,7 @@ void Scag::init()
   //*****************************************************
   try {
       RouteConfig cfg;
-      if (cfg.load("conf/routes__.xml") == RouteConfig::fail){
+      if (cfg.load("conf/smpp_routes__.xml") == RouteConfig::fail){
           smsc_log_warn(log, "Load routes config file failed.");
       }else{
           reloadTestRoutes(cfg);
