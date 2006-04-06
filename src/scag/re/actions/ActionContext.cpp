@@ -1,5 +1,6 @@
 #include "ActionContext.h"
 #include "scag/exc/SCAGExceptions.h"
+#include "scag/re/CommandBrige.h"
 
 namespace scag { namespace re { namespace actions 
 {
@@ -7,6 +8,19 @@ namespace scag { namespace re { namespace actions
     using scag::re::RuleStatus;
     using namespace scag::util::properties;
     using namespace scag::exceptions;
+
+
+CommandProperty::CommandProperty(SCAGCommand& command, int commandStatus, Address& addr)
+    : abonentAddr(addr)
+{
+    serviceId = command.getServiceId();
+    protocol = CommandBrige::getProtocolForEvent(command);
+
+    status = commandStatus;
+}
+
+
+
 
 void ActionContext::AddPendingOperation(uint8_t type, time_t pendingTime)
 {
@@ -74,7 +88,7 @@ bool ActionContext::makeBillEvent(int billCommand, std::string& category, std::s
 {
     Infrastructure& istr = BillingManager::Instance().getInfrastructure();
 
-    int operatorId = istr.GetOperatorID(m_AbonentAddr);
+    int operatorId = istr.GetOperatorID(commandProperty.abonentAddr);
     if (operatorId == 0) return false;
 
     auto_ptr<TariffRec> tariffRec(istr.GetTariff(operatorId, category.c_str(), medyaType.c_str()));
@@ -82,9 +96,9 @@ bool ActionContext::makeBillEvent(int billCommand, std::string& category, std::s
 
     ev.Header.cCommandId = billCommand;
 
-    ev.Header.cProtocolId = 1;
-    ev.Header.iServiceId = m_ServiceId;
-    ev.Header.iServiceProviderId = istr.GetProviderID(m_ServiceId);
+    ev.Header.cProtocolId = commandProperty.protocol;
+    ev.Header.iServiceId = commandProperty.serviceId;
+    ev.Header.iServiceProviderId = istr.GetProviderID(commandProperty.serviceId);
     if (ev.Header.iServiceProviderId == 0) return false;
 
     timeval tv;
@@ -92,16 +106,16 @@ bool ActionContext::makeBillEvent(int billCommand, std::string& category, std::s
 
     ev.Header.lDateTime = tv.tv_sec*1000 + tv.tv_usec;
     
-    sprintf((char *)ev.Header.pAbonentNumber,"%s",m_AbonentAddr.toString().c_str());
+    sprintf((char *)ev.Header.pAbonentNumber,"%s",commandProperty.abonentAddr.toString().c_str());
 
-    ev.Header.sCommandStatus = 1;
+    ev.Header.sCommandStatus = commandProperty.status;
     
     ev.iOperatorId = operatorId;
-    ev.iPriceCatId = 1;
-
-
+    ev.iPriceCatId = tariffRec->CategoryId;
+    
+    
     ev.fBillingSumm = tariffRec->Price;
-    //ev.iMediaResourceType = 
+    ev.iMediaResourceType = tariffRec->MediaTypeId;
 
     int size = MAX_BILLING_CURRENCY_LENGTH;
     if (size > tariffRec->Currency.size()) size = tariffRec->Currency.size();

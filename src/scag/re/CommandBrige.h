@@ -76,16 +76,19 @@ struct CSmppDiscriptor
 class CommandBrige
 {
 private:
-    static int getProtocolForEvent(SmppCommand& command);
+    //static int getProtocolForEvent(SmppCommand& command);
     static EventHandlerType getSMPPHandlerType(const SCAGCommand& command);
     static EventHandlerType getHTTPHandlerType(const SCAGCommand& command);
 
 public:
 
     static std::string getMessageBody(SmppCommand& command);
-    static void makeTrafficEvent(SmppCommand& command, int handlerType, scag::sessions::CSessionPrimaryKey& sessionPrimaryKey, SACC_TRAFFIC_INFO_EVENT_t& ev);
+    //static void makeTrafficEvent(SmppCommand& command, int handlerType, scag::sessions::CSessionPrimaryKey& sessionPrimaryKey, SACC_TRAFFIC_INFO_EVENT_t& ev);
     static EventHandlerType getHandlerType(const SCAGCommand& command);
     static CSmppDiscriptor getSmppDiscriptor(const SCAGCommand& command);
+
+    static int getProtocolForEvent(SCAGCommand& command);
+
 
     //static void makeBillEvent(int serviceId, std::string& abonentAddr, int billCommand, SACC_BILLING_INFO_EVENT_t& ev);
 

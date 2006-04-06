@@ -69,5 +69,44 @@ RuleStatus EventHandler::RunActions(ActionContext& context)
     return context.getRuleStatus();
 }
 
+void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, const CSessionPrimaryKey& sessionPrimaryKey, const std::string& messageBody)
+{
+    SACC_TRAFFIC_INFO_EVENT_t ev;
+
+    Infrastructure& istr = BillingManager::Instance().getInfrastructure();
+
+    int operatorId = istr.GetOperatorID(commandProperty.abonentAddr);
+
+
+    ev.Header.cCommandId = propertyObject.HandlerId;
+
+    ev.Header.cProtocolId = commandProperty.protocol;
+
+    ev.Header.iServiceId = commandProperty.serviceId;
+    ev.Header.iServiceProviderId = istr.GetProviderID(commandProperty.serviceId);
+
+    timeval tv;
+    gettimeofday(&tv,0);
+
+    ev.Header.lDateTime = tv.tv_sec * 1000 + tv.tv_usec;
+
+    const char * str = commandProperty.abonentAddr.toString().c_str();
+    sprintf((char *)ev.Header.pAbonentNumber,"%s",str);
+
+    ev.Header.sCommandStatus = commandProperty.status;
+    ev.iOperatorId = operatorId;
+
+    if ((propertyObject.HandlerId == EH_SUBMIT_SM)||(propertyObject.HandlerId == EH_DELIVER_SM))
+    {
+        int size = MAX_TEXT_MESSAGE_LENGTH;
+        if (size > messageBody.size()) size = messageBody.size();
+
+        memcpy(ev.pMessageText, messageBody.data(), size); 
+    }
+
+    sprintf((char *)ev.pSessionKey,"%s/%d", sessionPrimaryKey.abonentAddr.toString().c_str(),(sessionPrimaryKey.BornMicrotime.tv_sec*1000 + sessionPrimaryKey.BornMicrotime.tv_usec));
+
+    Statistics::Instance().registerSaccEvent(ev);
+}
 
 }}

@@ -33,7 +33,12 @@ RuleStatus HttpEventHandler::processRequest(HttpCommand& command, Session& sessi
         pendingOperation.validityTime = now + SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
         session.addPendingOperation(pendingOperation);
 
-        ActionContext context(_constants, session, _command, command.getServiceId(), Address(command.getAbonent().c_str()));
+        CommandProperty commandProperty(command, 0, Address(command.getAbonent().c_str()));
+
+        std::string str;
+        RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), str);
+
+        ActionContext context(_constants, session, _command, commandProperty);
 
         rs = RunActions(context);
         if(rs.result < 0)
@@ -67,7 +72,13 @@ RuleStatus HttpEventHandler::processResponse(HttpCommand& command, Session& sess
     try{
         session.setCurrentOperation(command.getOperationId());
 
-        ActionContext context(_constants, session, _command, command.getServiceId(), Address(command.getAbonent().c_str()));
+        CommandProperty commandProperty(command, 0, Address(command.getAbonent().c_str()));
+
+        std::string str;
+        RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), str);
+
+
+        ActionContext context(_constants, session, _command, commandProperty);
 
         rs = RunActions(context);
         if(rs.result < 0)

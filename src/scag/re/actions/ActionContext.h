@@ -25,6 +25,21 @@ namespace scag { namespace re { namespace actions
         ftField =   '#'
     };
 
+
+
+    struct CommandProperty
+    {
+        Address& abonentAddr;
+        int status;
+        int protocol;
+        int serviceId;
+
+        CommandProperty(SCAGCommand& command, int commandStatus, Address& addr);
+    };
+
+
+
+
     class ActionContext
     {
     private:
@@ -37,16 +52,13 @@ namespace scag { namespace re { namespace actions
         Session&                session;
         PropertyManager&        command;
 
-        int                     m_ServiceId;
-        Address                 m_AbonentAddr;
+        CommandProperty&        commandProperty;
     public:
 
         ActionContext(Hash<Property>& _constants,
-                      Session& _session, PropertyManager& _command, int serviceId, Address AbonentAddr)
-            : constants(_constants), session(_session), command(_command) 
+                      Session& _session, PropertyManager& _command, CommandProperty& _commandProperty)
+            : constants(_constants), session(_session), command(_command), commandProperty(_commandProperty) 
         {
-            m_ServiceId = serviceId;
-            m_AbonentAddr = AbonentAddr;
         };
 
         ~ActionContext() {};
@@ -56,10 +68,10 @@ namespace scag { namespace re { namespace actions
         }
 
         void setRuleStatus(RuleStatus rs) {status = rs;};
-        int getServiceId() {return m_ServiceId;}
+        //int getServiceId() {return commandProperty.serviceId;}
         //int getHandlerType() {return m_handlerType;}
 
-        Address& getAbonentAddr() {return m_AbonentAddr;}
+        //Address& getAbonentAddr() {return commandProperty.abonentAddr;}
 
         //Comment: 'name' is valid until 'var' is valid
         static FieldType Separate(const std::string& var, const char *& name);

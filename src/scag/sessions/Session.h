@@ -37,6 +37,13 @@ namespace scag { namespace sessions
     using namespace scag::bill;
     using scag::re::RuleStatus;
 
+    enum ProtocolForEvent
+    {
+        PROTOCOL_SMPP_SMS =  1,
+        PROTOCOL_SMPP_USSD = 2,
+        PROTOCOL_HTTP = 3,
+        PROTOCOL_MMS = 4
+    };
 
 
     enum ICCOperationStatus 
@@ -129,7 +136,7 @@ namespace scag { namespace sessions
         bool m_hasBill;
         int billId;
         int m_receivedParts;
-        bool m_receivedAll;
+        bool m_receivedAllParts;
 
         int m_receivedResp;
         bool m_receivedAllResp;
@@ -144,15 +151,13 @@ namespace scag { namespace sessions
         int getBillId() {return billId;}
 
         void receiveNewPart(int currentIndex,int lastIndex);
-        bool hasReceivedAllParts() {return m_receivedParts;}
-
         void receiveNewResp(int currentIndex,int lastIndex);
-        bool hasReceivedAllResp() {return m_receivedResp;}
+
         ICCOperationStatus getStatus();
         void setStatus(ICCOperationStatus status) {m_Status = status;}
 
         ~Operation() {}
-        Operation() :logger(0), m_hasBill(false), m_receivedParts(0), m_receivedAll(false) {logger = Logger::getInstance("scag.re");};
+        Operation() :logger(0), m_hasBill(false), m_receivedParts(0), m_receivedAllParts(false), m_receivedAllResp(false) {logger = Logger::getInstance("scag.re");};
     };
 
 

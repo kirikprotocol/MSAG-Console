@@ -3,16 +3,15 @@
 #include <scag/sessions/Session.h>
 #include "util/recoder/recode_dll.h"
 #include "scag/transport/http/HttpCommand.h"
+#include "scag/bill/BillingManager.h"
+#include "scag/sessions/Session.h"
+
 
 namespace scag { namespace re {
 
 using namespace scag::transport::http;
-
-enum ProtocolForEvent
-{
-    SMPP_SMS =  1,
-    SMPP_USSD = 2
-};
+using namespace scag::bill;
+using namespace scag::sessions;
 
 EventHandlerType CommandBrige::getHTTPHandlerType(const SCAGCommand& command)
 {
@@ -254,47 +253,27 @@ CSmppDiscriptor CommandBrige::getSmppDiscriptor(const SCAGCommand& command)
 }
 
 
-int CommandBrige::getProtocolForEvent(SmppCommand& command)
+int CommandBrige::getProtocolForEvent(SCAGCommand& command)
 {
-    SMS& sms = getSMS(command);
-    if (sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) return SMPP_USSD;
-    return SMPP_SMS;
+    TransportType cmdType = command.getType();
 
-}
-
-void CommandBrige::makeTrafficEvent(SmppCommand& command, int handlerType, scag::sessions::CSessionPrimaryKey& sessionPrimaryKey, SACC_TRAFFIC_INFO_EVENT_t& ev)
-{
-    ev.Header.cCommandId = handlerType;
-        
-    ev.Header.cProtocolId = getProtocolForEvent(command);
-
-    ev.Header.iServiceId = command.getServiceId();
-    ev.Header.iServiceProviderId = 1;
-
-    timeval tv;
-    gettimeofday(&tv,0);
-
-    ev.Header.lDateTime = tv.tv_sec * 1000 + tv.tv_usec;
-
-    const char * str = getAbonentAddr(command).toString().c_str();
-    sprintf((char *)ev.Header.pAbonentNumber,"%s",str);
-
-    ev.Header.sCommandStatus = 1;
-    ev.iOperatorId = 1;
-
-    std::string unicodeSTR = getMessageBody(command);
-
-    if ((handlerType == EH_SUBMIT_SM)||(handlerType == EH_DELIVER_SM))
+    if (cmdType == SMPP) 
     {
-        int size = MAX_TEXT_MESSAGE_LENGTH;
-        if (size > unicodeSTR.size()) size = unicodeSTR.size();
+        SmppCommand * smppCommand = dynamic_cast<SmppCommand *>(&command);
+        SMS& sms = getSMS(*smppCommand);
 
-        memcpy(ev.pMessageText, unicodeSTR.data(), size); 
-    }
-        
+        if (sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) return PROTOCOL_SMPP_USSD;
+        return PROTOCOL_SMPP_SMS;
+    } 
+    else if (cmdType == HTTP) return PROTOCOL_HTTP;
+    else if (cmdType == MMS) return PROTOCOL_MMS;
 
-    sprintf((char *)ev.pSessionKey,"%s/%d", sessionPrimaryKey.abonentAddr.toString().c_str(),(sessionPrimaryKey.BornMicrotime.tv_sec*1000 + sessionPrimaryKey.BornMicrotime.tv_usec));
-}
+    throw SCAGException("CommandBrige: Unknown command protocol");
+}                 
+
+/*void CommandBrige::makeTrafficEvent(SmppCommand& command, int handlerType, scag::sessions::CSessionPrimaryKey& sessionPrimaryKey, SACC_TRAFFIC_INFO_EVENT_t& ev)
+{
+} */
 
 
 }}

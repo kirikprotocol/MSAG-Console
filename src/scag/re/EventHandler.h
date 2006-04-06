@@ -26,6 +26,8 @@ protected:
     virtual bool FinishXMLSubSection(const std::string& name);
 //////////////IParserHandler Interfase///////////////////////
     RuleStatus RunActions(ActionContext& context);
+    void RegisterTrafficEvent(const CommandProperty& commandProperty, const CSessionPrimaryKey& sessionPrimaryKey, const std::string& messageBody);
+
 public:
     EventHandler() :logger(0)  { logger = Logger::getInstance("scag.re"); };
     virtual ~EventHandler();

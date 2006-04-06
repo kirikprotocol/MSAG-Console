@@ -21,7 +21,6 @@ void SmppEventHandler::StartOperation(Session& session, SmppCommand& command)
         {
             operation = session.AddNewOperationToHash(command, smppDiscriptor.cmdType);
             operation->receiveNewPart(smppDiscriptor.currentIndex,smppDiscriptor.lastIndex);
-            operation->setStatus(OPERATION_INITED);
         } 
         else 
         {
@@ -31,17 +30,14 @@ void SmppEventHandler::StartOperation(Session& session, SmppCommand& command)
                 operation->receiveNewPart(smppDiscriptor.currentIndex,smppDiscriptor.lastIndex);
             else 
                 operation->receiveNewResp(smppDiscriptor.currentIndex,smppDiscriptor.lastIndex);
-
-            operation->setStatus(OPERATION_CONTINUED);
         }
-
-        if ((operation->hasReceivedAllParts())&&(operation->hasReceivedAllResp())) 
-            operation->setStatus(OPERATION_COMPLETED);
 
         break;
 
 
     case CO_SUBMIT:
+        //TODO: разобаться с RECEIPT`ом и SUBMIT_RESP
+
         UMR = CommandBrige::getUMR(command);
 
         if ((UMR == 0)&&(!smppDiscriptor.isResp))
@@ -118,8 +114,7 @@ void SmppEventHandler::EndOperation(Session& session, SmppCommand& command, Rule
 
     case CO_SUBMIT:
 
-        if ((currentOperation->hasReceivedAllParts())&&(currentOperation->hasReceivedAllResp())&&(smppDiscriptor.isResp)) 
-            session.closeCurrentOperation();
+        if ((currentOperation->getStatus() == OPERATION_COMPLETED)||(!ruleStatus.result)) session.closeCurrentOperation();
 
         //TODO: узнать заказал ли сервис отчёт о доставке
         if (!smppDiscriptor.m_isTransact) 
@@ -167,11 +162,9 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
 
     /////////////////////////////////////////
 
-    SACC_TRAFFIC_INFO_EVENT_t ev;
-
-    CommandBrige::makeTrafficEvent(*smppcommand, (int)propertyObject.HandlerId, session.getPrimaryKey(), ev);
-    Statistics::Instance().registerSaccEvent(ev);
-
+    CommandProperty commandProperty(command, (*smppcommand)->status, CommandBrige::getAbonentAddr(*smppcommand));
+    RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), CommandBrige::getMessageBody(*smppcommand));
+    
     /////////////////////////////////////////
     
    
@@ -183,8 +176,7 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
         //TODO: отлуп в стейт-машину
     }
    
-
-    ActionContext context(_constants, session, _command, command.getServiceId(), CommandBrige::getAbonentAddr(*smppcommand));
+    ActionContext context(_constants, session, _command, commandProperty);
 
     rs = RunActions(context);
 

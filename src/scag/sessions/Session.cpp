@@ -54,14 +54,24 @@ void Operation::receiveNewPart(int currentIndex,int lastIndex)
     if ((currentIndex < 0)||(lastIndex < 0)||(currentIndex > lastIndex)) 
         throw SCAGException("Error: Invalid SMS index (currIndex %d, lastIndex %d)",currentIndex, lastIndex);
 
+    if (currentIndex == 0) 
+        m_Status = OPERATION_INITED;
+    else 
+        m_Status = OPERATION_CONTINUED;
+
+
     if (lastIndex == 0)
     {
-        m_receivedAll = true;
+        m_receivedAllParts = true;
+        if ((m_receivedAllResp)&&(m_receivedAllParts)) m_Status = OPERATION_COMPLETED;
+
         return;
     }
 
     m_receivedParts++;
-    if (lastIndex == m_receivedParts) m_receivedAll = true;
+    m_receivedAllParts = (lastIndex <= m_receivedParts);
+
+    if ((m_receivedAllResp)&&(m_receivedAllParts)) m_Status = OPERATION_COMPLETED;
 }
 
 
@@ -70,15 +80,20 @@ void Operation::receiveNewResp(int currentIndex,int lastIndex)
     if ((currentIndex < 0)||(lastIndex < 0)||(currentIndex > lastIndex)) 
         throw SCAGException("Error: Invalid SMS index (currIndex %d, lastIndex %d)",currentIndex, lastIndex);
 
+    m_Status = OPERATION_CONTINUED;
 
     if (lastIndex == 0)
     {
         m_receivedAllResp = true;
+        if ((m_receivedAllResp)&&(m_receivedAllParts)) m_Status = OPERATION_COMPLETED;
+
         return;
     }
 
     m_receivedResp++;
-    if (lastIndex == m_receivedResp) m_receivedAll = true;
+    m_receivedAllResp = (lastIndex <= m_receivedResp);
+
+    if ((m_receivedAllResp)&&(m_receivedAllParts)) m_Status = OPERATION_COMPLETED;
 
 }
 
