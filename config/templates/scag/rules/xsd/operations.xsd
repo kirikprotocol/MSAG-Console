@@ -8,8 +8,8 @@
         <choice>
             <element name="wait">
                 <complexType>
-                    <attribute name="type" type="string" />
-		    <attribute name="time" type="string" />
+                    <attribute name="type" type="string" use="required"/>
+		    <attribute name="time" type="string" use="required"/>
                 </complexType>
             </element>
         </choice>    
