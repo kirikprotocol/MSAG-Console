@@ -1633,8 +1633,13 @@
 				superclasses 	(list inheritance_relationship_list
 				    (object Inheritance_Relationship
 					quid       	"43E9DED501E6"
-					supplier   	"Logical View::VC++ Reverse Engineered::admin::CommandDispatcherTempl<SCAGCommandReader,ResponseWriter>"
+					supplier   	"Logical View::VC++ Reverse Engineered::admin::CommandDispatcherTempl <SCAGCommandReader,ResponseWriter>"
 					quidu      	"43E9DED501D6"))
+				used_nodes 	(list uses_relationship_list
+				    (object Uses_Relationship
+					quid       	"43E9E9B2037C"
+					supplier   	"Logical View::VC++ Reverse Engineered::admin::GwRunner"
+					quidu      	"43E9DED70030"))
 				operations 	(list Operations
 				    (object Operation "getLogger"
 					attributes 	(list Attribute_Set
@@ -1769,7 +1774,7 @@
 				module     	"Component View::admin"
 				quidu      	"43E9DEC601E5"
 				language   	"VC++")
-			    (object Instantiated_Class "CommandDispatcherTempl<SCAGCommandReader,ResponseWriter>"
+			    (object Instantiated_Class "CommandDispatcherTempl <SCAGCommandReader,ResponseWriter>"
 				attributes 	(list Attribute_Set
 				    (object Attribute
 					tool       	"VC++"
@@ -3081,7 +3086,19 @@
 					quid       	"43E9DED70081"
 					supplier   	"Logical View::VC++ Reverse Engineered::admin::GwRunner"
 					quidu      	"43E9DED70030"
-					is_aggregate 	TRUE))))
+					is_aggregate 	TRUE)))
+			    (object Association "startgw"
+				quid       	"43E9E9BD03D9"
+				roles      	(list role_list
+				    (object Role "$UNNAMED$33"
+					quid       	"43E9E9BF0011"
+					supplier   	"Logical View::VC++ Reverse Engineered::admin::GwRunner"
+					quidu      	"43E9DED70030"
+					is_navigable 	TRUE)
+				    (object Role "$UNNAMED$34"
+					quid       	"43E9E9BF0013"
+					supplier   	"Logical View::VC++ Reverse Engineered::admin::SCAGCommandDispatcher"
+					quidu      	"43E9DED501C6"))))
 			logical_presentations 	(list unit_reference_list
 			    (object ClassDiagram "admin Model Update Overview"
 				quid       	"43E9DED700AD"
@@ -3089,33 +3106,15 @@
 				zoom       	75
 				max_height 	28350
 				max_width  	21600
-				origin_x   	0
-				origin_y   	150
+				origin_x   	50
+				origin_y   	0
 				items      	(list diagram_item_list
-				    (object Label @45
-					font       	(object Font
-					    size       	9
-					    face       	"Arial"
-					    charSet    	204
-					    bold       	FALSE
-					    italics    	FALSE
-					    underline  	FALSE
-					    strike     	FALSE
-					    color      	0
-					    default_color 	TRUE)
-					nlines     	3
-					max_width  	1798
-					label      	
-|admin Model Update Overview
-|This diagram was automatically created by Rational Rose Model Update Tool.
-|8 Февраль 2006 г. 18:06:47
-					)
-				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::SCAGCommandReader" @46
+				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::SCAGCommandReader" @45
 					ShowCompartmentStereotypes 	TRUE
 					IncludeOperation 	TRUE
-					location   	(2416, 352)
+					location   	(3264, 288)
 					font       	(object Font
-					    size       	9
+					    size       	12
 					    face       	"Arial"
 					    charSet    	204
 					    bold       	FALSE
@@ -3125,11 +3124,11 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@46
-					    location   	(1987, 196)
+					    Parent_View 	@45
+					    location   	(2794, 96)
 					    fill_color 	13434879
 					    nlines     	1
-					    max_width  	858
+					    max_width  	940
 					    justify    	0
 					    label      	"SCAGCommandReader")
 					icon_style 	"Icon"
@@ -3137,10 +3136,10 @@
 					fill_color 	13434879
 					quidu      	"43E9DED5013A"
 					compartment 	(object Compartment
-					    Parent_View 	@46
-					    location   	(1987, 257)
+					    Parent_View 	@45
+					    location   	(2794, 170)
 					    font       	(object Font
-						size       	9
+						size       	12
 						face       	"Arial"
 						charSet    	204
 						bold       	FALSE
@@ -3153,19 +3152,49 @@
 					    fill_color 	13434879
 					    anchor     	2
 					    nlines     	5
-					    max_width  	730)
-					width      	876
-					height     	336
+					    max_width  	946)
+					width      	958
+					height     	414
 					annotation 	8
 					autoResize 	TRUE)
-				    (object ClassView "InstantiatedClass" "Logical View::VC++ Reverse Engineered::admin::CommandDispatcherTempl<SCAGCommandReader,ResponseWriter>" @47
+				    (object ClassView "InstantiatedClass" "Logical View::VC++ Reverse Engineered::admin::CommandDispatcherTempl <SCAGCommandReader,ResponseWriter>" @46
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
 					IncludeOperation 	TRUE
 					ShowOperationSignature 	TRUE
-					location   	(816, 256)
+					location   	(1424, 192)
 					font       	(object Font
-					    size       	9
+					    size       	12
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
+					label      	(object ItemLabel
+					    Parent_View 	@46
+					    location   	(896, 99)
+					    fill_color 	13434879
+					    nlines     	2
+					    max_width  	1057
+					    justify    	0
+					    label      	"CommandDispatcherTempl <SCAGCommandReader,ResponseWriter>")
+					icon_style 	"Decoration"
+					line_color 	3342489
+					fill_color 	13434879
+					quidu      	"43E9DED501D6"
+					width      	1075
+					height     	217
+					annotation 	8
+					autoResize 	TRUE)
+				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::SCAGCommand" @47
+					ShowCompartmentStereotypes 	TRUE
+					IncludeOperation 	TRUE
+					location   	(1664, 2048)
+					font       	(object Font
+					    size       	12
 					    face       	"Arial"
 					    charSet    	204
 					    bold       	FALSE
@@ -3176,95 +3205,10 @@
 					    default_color 	TRUE)
 					label      	(object ItemLabel
 					    Parent_View 	@47
-					    location   	(70, 206)
+					    location   	(1217, 1856)
 					    fill_color 	13434879
 					    nlines     	1
-					    max_width  	1492
-					    justify    	0
-					    label      	"CommandDispatcherTempl<SCAGCommandReader,ResponseWriter>")
-					icon_style 	"Decoration"
-					line_color 	3342489
-					fill_color 	13434879
-					quidu      	"43E9DED501D6"
-					width      	1510
-					height     	122
-					annotation 	8
-					autoResize 	TRUE)
-				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::SCAGCommandDispatcher" @48
-					ShowCompartmentStereotypes 	TRUE
-					IncludeOperation 	TRUE
-					location   	(528, 720)
-					font       	(object Font
-					    size       	9
-					    face       	"Arial"
-					    charSet    	204
-					    bold       	FALSE
-					    italics    	FALSE
-					    underline  	FALSE
-					    strike     	FALSE
-					    color      	0
-					    default_color 	TRUE)
-					label      	(object ItemLabel
-					    Parent_View 	@48
-					    location   	(62, 414)
-					    fill_color 	13434879
-					    nlines     	1
-					    max_width  	932
-					    justify    	0
-					    label      	"SCAGCommandDispatcher")
-					icon_style 	"Icon"
-					line_color 	3342489
-					fill_color 	13434879
-					quidu      	"43E9DED501C6"
-					compartment 	(object Compartment
-					    Parent_View 	@48
-					    location   	(62, 475)
-					    font       	(object Font
-						size       	9
-						face       	"Arial"
-						charSet    	204
-						bold       	FALSE
-						italics    	FALSE
-						underline  	FALSE
-						strike     	FALSE
-						color      	0
-						default_color 	TRUE)
-					    icon_style 	"Icon"
-					    fill_color 	13434879
-					    anchor     	2
-					    nlines     	11
-					    max_width  	792)
-					width      	950
-					height     	636
-					annotation 	8
-					autoResize 	TRUE)
-				    (object InheritView "" @49
-					stereotype 	TRUE
-					line_color 	3342489
-					quidu      	"43E9DED501E6"
-					client     	@48
-					supplier   	@47
-					line_style 	0)
-				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::SCAGCommand" @50
-					ShowCompartmentStereotypes 	TRUE
-					IncludeOperation 	TRUE
-					location   	(1680, 2048)
-					font       	(object Font
-					    size       	9
-					    face       	"Arial"
-					    charSet    	204
-					    bold       	FALSE
-					    italics    	FALSE
-					    underline  	FALSE
-					    strike     	FALSE
-					    color      	0
-					    default_color 	TRUE)
-					label      	(object ItemLabel
-					    Parent_View 	@50
-					    location   	(1324, 1892)
-					    fill_color 	13434879
-					    nlines     	1
-					    max_width  	712
+					    max_width  	894
 					    justify    	0
 					    label      	"SCAGCommand")
 					icon_style 	"Icon"
@@ -3272,10 +3216,10 @@
 					fill_color 	13434879
 					quidu      	"43E9DED50262"
 					compartment 	(object Compartment
-					    Parent_View 	@50
-					    location   	(1324, 1953)
+					    Parent_View 	@47
+					    location   	(1217, 1929)
 					    font       	(object Font
-						size       	9
+						size       	12
 						face       	"Arial"
 						charSet    	204
 						bold       	FALSE
@@ -3288,17 +3232,17 @@
 					    fill_color 	13434879
 					    anchor     	2
 					    nlines     	5
-					    max_width  	605)
-					width      	730
-					height     	336
+					    max_width  	775)
+					width      	912
+					height     	414
 					annotation 	8
 					autoResize 	TRUE)
-				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::Abstract_CommandSmeInfo" @51
+				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::Abstract_CommandSmeInfo" @48
 					ShowCompartmentStereotypes 	TRUE
 					IncludeOperation 	TRUE
-					location   	(1632, 1392)
+					location   	(1632, 1488)
 					font       	(object Font
-					    size       	9
+					    size       	12
 					    face       	"Arial"
 					    charSet    	204
 					    bold       	FALSE
@@ -3308,11 +3252,11 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@51
-					    location   	(1154, 1261)
+					    Parent_View 	@48
+					    location   	(1114, 1327)
 					    fill_color 	13434879
 					    nlines     	1
-					    max_width  	956
+					    max_width  	1036
 					    justify    	0
 					    label      	"Abstract_CommandSmeInfo")
 					icon_style 	"Icon"
@@ -3320,10 +3264,10 @@
 					fill_color 	13434879
 					quidu      	"43E9DED502B1"
 					compartment 	(object Compartment
-					    Parent_View 	@51
-					    location   	(1154, 1322)
+					    Parent_View 	@48
+					    location   	(1114, 1401)
 					    font       	(object Font
-						size       	9
+						size       	12
 						face       	"Arial"
 						charSet    	204
 						bold       	FALSE
@@ -3336,24 +3280,34 @@
 					    fill_color 	13434879
 					    anchor     	2
 					    nlines     	4
-					    max_width  	813)
-					width      	974
-					height     	286
+					    max_width  	1042)
+					width      	1054
+					height     	352
 					annotation 	8
 					autoResize 	TRUE)
-				    (object InheritView "" @52
+				    (object InheritView "" @49
+					font       	(object Font
+					    size       	12
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
 					stereotype 	TRUE
 					line_color 	3342489
 					quidu      	"43E9DED502C0"
-					client     	@51
-					supplier   	@50
+					client     	@48
+					supplier   	@47
 					line_style 	0)
-				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::CommandAddSme" @53
+				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::CommandAddSme" @50
 					ShowCompartmentStereotypes 	TRUE
 					IncludeOperation 	TRUE
-					location   	(1520, 944)
+					location   	(1648, 976)
 					font       	(object Font
-					    size       	9
+					    size       	12
 					    face       	"Arial"
 					    charSet    	204
 					    bold       	FALSE
@@ -3363,11 +3317,11 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@53
-					    location   	(1173, 838)
+					    Parent_View 	@50
+					    location   	(1272, 846)
 					    fill_color 	13434879
 					    nlines     	1
-					    max_width  	694
+					    max_width  	753
 					    justify    	0
 					    label      	"CommandAddSme")
 					icon_style 	"Icon"
@@ -3375,10 +3329,10 @@
 					fill_color 	13434879
 					quidu      	"43E9DED502EF"
 					compartment 	(object Compartment
-					    Parent_View 	@53
-					    location   	(1173, 899)
+					    Parent_View 	@50
+					    location   	(1272, 920)
 					    font       	(object Font
-						size       	9
+						size       	12
 						face       	"Arial"
 						charSet    	204
 						bold       	FALSE
@@ -3391,24 +3345,34 @@
 					    fill_color 	13434879
 					    anchor     	2
 					    nlines     	3
-					    max_width  	588)
-					width      	712
-					height     	236
+					    max_width  	759)
+					width      	771
+					height     	290
 					annotation 	8
 					autoResize 	TRUE)
-				    (object InheritView "" @54
+				    (object InheritView "" @51
+					font       	(object Font
+					    size       	12
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
 					stereotype 	TRUE
 					line_color 	3342489
 					quidu      	"43E9DED502FF"
-					client     	@53
-					supplier   	@51
+					client     	@50
+					supplier   	@48
 					line_style 	0)
-				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::CommandDeleteSme" @55
+				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::CommandDeleteSme" @52
 					ShowCompartmentStereotypes 	TRUE
 					IncludeOperation 	TRUE
 					location   	(3360, 2400)
 					font       	(object Font
-					    size       	9
+					    size       	12
 					    face       	"Arial"
 					    charSet    	204
 					    bold       	FALSE
@@ -3418,11 +3382,11 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@55
-					    location   	(3013, 2294)
+					    Parent_View 	@52
+					    location   	(2984, 2270)
 					    fill_color 	13434879
 					    nlines     	1
-					    max_width  	694
+					    max_width  	753
 					    justify    	0
 					    label      	"CommandDeleteSme")
 					icon_style 	"Icon"
@@ -3430,10 +3394,10 @@
 					fill_color 	13434879
 					quidu      	"43E9DED5032E"
 					compartment 	(object Compartment
-					    Parent_View 	@55
-					    location   	(3013, 2355)
+					    Parent_View 	@52
+					    location   	(2984, 2343)
 					    font       	(object Font
-						size       	9
+						size       	12
 						face       	"Arial"
 						charSet    	204
 						bold       	FALSE
@@ -3446,24 +3410,34 @@
 					    fill_color 	13434879
 					    anchor     	2
 					    nlines     	3
-					    max_width  	588)
-					width      	712
-					height     	236
+					    max_width  	759)
+					width      	771
+					height     	290
 					annotation 	8
 					autoResize 	TRUE)
-				    (object InheritView "" @56
+				    (object InheritView "" @53
+					font       	(object Font
+					    size       	12
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
 					stereotype 	TRUE
 					line_color 	3342489
 					quidu      	"43E9DED5032F"
-					client     	@55
-					supplier   	@50
+					client     	@52
+					supplier   	@47
 					line_style 	0)
-				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::CommandStatusSme" @57
+				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::CommandStatusSme" @54
 					ShowCompartmentStereotypes 	TRUE
 					IncludeOperation 	TRUE
-					location   	(448, 1360)
+					location   	(432, 1392)
 					font       	(object Font
-					    size       	9
+					    size       	12
 					    face       	"Arial"
 					    charSet    	204
 					    bold       	FALSE
@@ -3473,11 +3447,11 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@57
-					    location   	(101, 1254)
+					    Parent_View 	@54
+					    location   	(56, 1262)
 					    fill_color 	13434879
 					    nlines     	1
-					    max_width  	694
+					    max_width  	753
 					    justify    	0
 					    label      	"CommandStatusSme")
 					icon_style 	"Icon"
@@ -3485,10 +3459,10 @@
 					fill_color 	13434879
 					quidu      	"43E9DED5036C"
 					compartment 	(object Compartment
-					    Parent_View 	@57
-					    location   	(101, 1315)
+					    Parent_View 	@54
+					    location   	(56, 1336)
 					    font       	(object Font
-						size       	9
+						size       	12
 						face       	"Arial"
 						charSet    	204
 						bold       	FALSE
@@ -3501,24 +3475,34 @@
 					    fill_color 	13434879
 					    anchor     	2
 					    nlines     	3
-					    max_width  	588)
-					width      	712
-					height     	236
+					    max_width  	759)
+					width      	771
+					height     	290
 					annotation 	8
 					autoResize 	TRUE)
-				    (object InheritView "" @58
+				    (object InheritView "" @55
+					font       	(object Font
+					    size       	12
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
 					stereotype 	TRUE
 					line_color 	3342489
 					quidu      	"43E9DED5036D"
-					client     	@57
-					supplier   	@51
+					client     	@54
+					supplier   	@48
 					line_style 	0)
-				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::CommandUpdateSmeInfo" @59
+				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::CommandUpdateSmeInfo" @56
 					ShowCompartmentStereotypes 	TRUE
 					IncludeOperation 	TRUE
-					location   	(2304, 960)
+					location   	(2496, 976)
 					font       	(object Font
-					    size       	9
+					    size       	12
 					    face       	"Arial"
 					    charSet    	204
 					    bold       	FALSE
@@ -3528,11 +3512,11 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@59
-					    location   	(1957, 854)
+					    Parent_View 	@56
+					    location   	(2081, 846)
 					    fill_color 	13434879
 					    nlines     	1
-					    max_width  	694
+					    max_width  	830
 					    justify    	0
 					    label      	"CommandUpdateSmeInfo")
 					icon_style 	"Icon"
@@ -3540,10 +3524,10 @@
 					fill_color 	13434879
 					quidu      	"43E9DED5039B"
 					compartment 	(object Compartment
-					    Parent_View 	@59
-					    location   	(1957, 915)
+					    Parent_View 	@56
+					    location   	(2081, 920)
 					    font       	(object Font
-						size       	9
+						size       	12
 						face       	"Arial"
 						charSet    	204
 						bold       	FALSE
@@ -3556,24 +3540,34 @@
 					    fill_color 	13434879
 					    anchor     	2
 					    nlines     	3
-					    max_width  	588)
-					width      	712
-					height     	236
+					    max_width  	759)
+					width      	848
+					height     	290
 					annotation 	8
 					autoResize 	TRUE)
-				    (object InheritView "" @60
+				    (object InheritView "" @57
+					font       	(object Font
+					    size       	12
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
 					stereotype 	TRUE
 					line_color 	3342489
 					quidu      	"43E9DED503AB"
-					client     	@59
-					supplier   	@51
+					client     	@56
+					supplier   	@48
 					line_style 	0)
-				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::Abstract_CommandSmscInfo" @61
+				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::Abstract_CommandSmscInfo" @58
 					ShowCompartmentStereotypes 	TRUE
 					IncludeOperation 	TRUE
-					location   	(1680, 2544)
+					location   	(1680, 2624)
 					font       	(object Font
-					    size       	9
+					    size       	12
 					    face       	"Arial"
 					    charSet    	204
 					    bold       	FALSE
@@ -3583,11 +3577,11 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@61
-					    location   	(1189, 2413)
+					    Parent_View 	@58
+					    location   	(1150, 2463)
 					    fill_color 	13434879
 					    nlines     	1
-					    max_width  	982
+					    max_width  	1061
 					    justify    	0
 					    label      	"Abstract_CommandSmscInfo")
 					icon_style 	"Icon"
@@ -3595,10 +3589,383 @@
 					fill_color 	13434879
 					quidu      	"43E9DED503D9"
 					compartment 	(object Compartment
-					    Parent_View 	@61
-					    location   	(1189, 2474)
+					    Parent_View 	@58
+					    location   	(1150, 2537)
 					    font       	(object Font
-						size       	9
+						size       	12
+						face       	"Arial"
+						charSet    	204
+						bold       	FALSE
+						italics    	FALSE
+						underline  	FALSE
+						strike     	FALSE
+						color      	0
+						default_color 	TRUE)
+					    icon_style 	"Icon"
+					    fill_color 	13434879
+					    anchor     	2
+					    nlines     	4
+					    max_width  	1067)
+					width      	1079
+					height     	352
+					annotation 	8
+					autoResize 	TRUE)
+				    (object InheritView "" @59
+					font       	(object Font
+					    size       	12
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
+					stereotype 	TRUE
+					line_color 	3342489
+					quidu      	"43E9DED503DA"
+					client     	@58
+					supplier   	@47
+					line_style 	0)
+				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::CommandUpdateSmsc" @60
+					ShowCompartmentStereotypes 	TRUE
+					IncludeOperation 	TRUE
+					location   	(1200, 3248)
+					font       	(object Font
+					    size       	12
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
+					label      	(object ItemLabel
+					    Parent_View 	@60
+					    location   	(819, 3118)
+					    fill_color 	13434879
+					    nlines     	1
+					    max_width  	762
+					    justify    	0
+					    label      	"CommandUpdateSmsc")
+					icon_style 	"Icon"
+					line_color 	3342489
+					fill_color 	13434879
+					quidu      	"43E9DED60030"
+					compartment 	(object Compartment
+					    Parent_View 	@60
+					    location   	(819, 3191)
+					    font       	(object Font
+						size       	12
+						face       	"Arial"
+						charSet    	204
+						bold       	FALSE
+						italics    	FALSE
+						underline  	FALSE
+						strike     	FALSE
+						color      	0
+						default_color 	TRUE)
+					    icon_style 	"Icon"
+					    fill_color 	13434879
+					    anchor     	2
+					    nlines     	3
+					    max_width  	759)
+					width      	780
+					height     	290
+					annotation 	8
+					autoResize 	TRUE)
+				    (object InheritView "" @61
+					font       	(object Font
+					    size       	12
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
+					stereotype 	TRUE
+					line_color 	3342489
+					quidu      	"43E9DED60031"
+					client     	@60
+					supplier   	@58
+					line_style 	0)
+				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::CommandAddSmsc" @62
+					ShowCompartmentStereotypes 	TRUE
+					IncludeOperation 	TRUE
+					location   	(2208, 3248)
+					font       	(object Font
+					    size       	12
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
+					label      	(object ItemLabel
+					    Parent_View 	@62
+					    location   	(1832, 3118)
+					    fill_color 	13434879
+					    nlines     	1
+					    max_width  	753
+					    justify    	0
+					    label      	"CommandAddSmsc")
+					icon_style 	"Icon"
+					line_color 	3342489
+					fill_color 	13434879
+					quidu      	"43E9DED6005F"
+					compartment 	(object Compartment
+					    Parent_View 	@62
+					    location   	(1832, 3191)
+					    font       	(object Font
+						size       	12
+						face       	"Arial"
+						charSet    	204
+						bold       	FALSE
+						italics    	FALSE
+						underline  	FALSE
+						strike     	FALSE
+						color      	0
+						default_color 	TRUE)
+					    icon_style 	"Icon"
+					    fill_color 	13434879
+					    anchor     	2
+					    nlines     	3
+					    max_width  	759)
+					width      	771
+					height     	290
+					annotation 	8
+					autoResize 	TRUE)
+				    (object InheritView "" @63
+					font       	(object Font
+					    size       	12
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
+					stereotype 	TRUE
+					line_color 	3342489
+					quidu      	"43E9DED60060"
+					client     	@62
+					supplier   	@58
+					line_style 	0)
+				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::CommandDeleteSmsc" @64
+					ShowCompartmentStereotypes 	TRUE
+					IncludeOperation 	TRUE
+					location   	(432, 1776)
+					font       	(object Font
+					    size       	12
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
+					label      	(object ItemLabel
+					    Parent_View 	@64
+					    location   	(56, 1646)
+					    fill_color 	13434879
+					    nlines     	1
+					    max_width  	753
+					    justify    	0
+					    label      	"CommandDeleteSmsc")
+					icon_style 	"Icon"
+					line_color 	3342489
+					fill_color 	13434879
+					quidu      	"43E9DED6008E"
+					compartment 	(object Compartment
+					    Parent_View 	@64
+					    location   	(56, 1720)
+					    font       	(object Font
+						size       	12
+						face       	"Arial"
+						charSet    	204
+						bold       	FALSE
+						italics    	FALSE
+						underline  	FALSE
+						strike     	FALSE
+						color      	0
+						default_color 	TRUE)
+					    icon_style 	"Icon"
+					    fill_color 	13434879
+					    anchor     	2
+					    nlines     	3
+					    max_width  	759)
+					width      	771
+					height     	290
+					annotation 	8
+					autoResize 	TRUE)
+				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::CommandTraceRoute" @65
+					ShowCompartmentStereotypes 	TRUE
+					IncludeOperation 	TRUE
+					location   	(3424, 2768)
+					font       	(object Font
+					    size       	12
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
+					label      	(object ItemLabel
+					    Parent_View 	@65
+					    location   	(2975, 2607)
+					    fill_color 	13434879
+					    nlines     	1
+					    max_width  	899
+					    justify    	0
+					    label      	"CommandTraceRoute")
+					icon_style 	"Icon"
+					line_color 	3342489
+					fill_color 	13434879
+					quidu      	"43E9DED600DC"
+					compartment 	(object Compartment
+					    Parent_View 	@65
+					    location   	(2975, 2681)
+					    font       	(object Font
+						size       	12
+						face       	"Arial"
+						charSet    	204
+						bold       	FALSE
+						italics    	FALSE
+						underline  	FALSE
+						strike     	FALSE
+						color      	0
+						default_color 	TRUE)
+					    icon_style 	"Icon"
+					    fill_color 	13434879
+					    anchor     	2
+					    nlines     	4
+					    max_width  	905)
+					width      	917
+					height     	352
+					annotation 	8
+					autoResize 	TRUE)
+				    (object InheritView "" @66
+					font       	(object Font
+					    size       	12
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
+					stereotype 	TRUE
+					line_color 	3342489
+					quidu      	"43E9DED600EB"
+					client     	@65
+					supplier   	@47
+					line_style 	0)
+				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::CommandLoadRoutes" @67
+					ShowCompartmentStereotypes 	TRUE
+					IncludeOperation 	TRUE
+					location   	(3424, 1984)
+					font       	(object Font
+					    size       	12
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
+					label      	(object ItemLabel
+					    Parent_View 	@67
+					    location   	(2967, 1821)
+					    fill_color 	13434879
+					    nlines     	1
+					    max_width  	915
+					    justify    	0
+					    label      	"CommandLoadRoutes")
+					icon_style 	"Icon"
+					line_color 	3342489
+					fill_color 	13434879
+					quidu      	"43E9DED60149"
+					compartment 	(object Compartment
+					    Parent_View 	@67
+					    location   	(2967, 1895)
+					    font       	(object Font
+						size       	12
+						face       	"Arial"
+						charSet    	204
+						bold       	FALSE
+						italics    	FALSE
+						underline  	FALSE
+						strike     	FALSE
+						color      	0
+						default_color 	TRUE)
+					    icon_style 	"Icon"
+					    fill_color 	13434879
+					    anchor     	2
+					    nlines     	4
+					    max_width  	921)
+					width      	933
+					height     	356
+					annotation 	8
+					autoResize 	TRUE)
+				    (object InheritView "" @68
+					font       	(object Font
+					    size       	12
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
+					stereotype 	TRUE
+					line_color 	3342489
+					quidu      	"43E9DED60159"
+					client     	@67
+					supplier   	@47
+					line_style 	0)
+				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::CommandAddRule" @69
+					ShowCompartmentStereotypes 	TRUE
+					IncludeOperation 	TRUE
+					location   	(464, 2192)
+					font       	(object Font
+					    size       	12
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
+					label      	(object ItemLabel
+					    Parent_View 	@69
+					    location   	(50, 2029)
+					    fill_color 	13434879
+					    nlines     	1
+					    max_width  	828
+					    justify    	0
+					    label      	"CommandAddRule")
+					icon_style 	"Icon"
+					line_color 	3342489
+					fill_color 	13434879
+					quidu      	"43E9DED60188"
+					compartment 	(object Compartment
+					    Parent_View 	@69
+					    location   	(50, 2103)
+					    font       	(object Font
+						size       	12
 						face       	"Arial"
 						charSet    	204
 						bold       	FALSE
@@ -3612,23 +3979,13 @@
 					    anchor     	2
 					    nlines     	4
 					    max_width  	834)
-					width      	1000
-					height     	286
+					width      	846
+					height     	356
 					annotation 	8
 					autoResize 	TRUE)
-				    (object InheritView "" @62
-					stereotype 	TRUE
-					line_color 	3342489
-					quidu      	"43E9DED503DA"
-					client     	@61
-					supplier   	@50
-					line_style 	0)
-				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::CommandUpdateSmsc" @63
-					ShowCompartmentStereotypes 	TRUE
-					IncludeOperation 	TRUE
-					location   	(1200, 3248)
+				    (object InheritView "" @70
 					font       	(object Font
-					    size       	9
+					    size       	12
 					    face       	"Arial"
 					    charSet    	204
 					    bold       	FALSE
@@ -3637,321 +3994,18 @@
 					    strike     	FALSE
 					    color      	0
 					    default_color 	TRUE)
-					label      	(object ItemLabel
-					    Parent_View 	@63
-					    location   	(853, 3142)
-					    fill_color 	13434879
-					    nlines     	1
-					    max_width  	694
-					    justify    	0
-					    label      	"CommandUpdateSmsc")
-					icon_style 	"Icon"
-					line_color 	3342489
-					fill_color 	13434879
-					quidu      	"43E9DED60030"
-					compartment 	(object Compartment
-					    Parent_View 	@63
-					    location   	(853, 3203)
-					    font       	(object Font
-						size       	9
-						face       	"Arial"
-						charSet    	204
-						bold       	FALSE
-						italics    	FALSE
-						underline  	FALSE
-						strike     	FALSE
-						color      	0
-						default_color 	TRUE)
-					    icon_style 	"Icon"
-					    fill_color 	13434879
-					    anchor     	2
-					    nlines     	3
-					    max_width  	588)
-					width      	712
-					height     	236
-					annotation 	8
-					autoResize 	TRUE)
-				    (object InheritView "" @64
-					stereotype 	TRUE
-					line_color 	3342489
-					quidu      	"43E9DED60031"
-					client     	@63
-					supplier   	@61
-					line_style 	0)
-				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::CommandAddSmsc" @65
-					ShowCompartmentStereotypes 	TRUE
-					IncludeOperation 	TRUE
-					location   	(2208, 3248)
-					font       	(object Font
-					    size       	9
-					    face       	"Arial"
-					    charSet    	204
-					    bold       	FALSE
-					    italics    	FALSE
-					    underline  	FALSE
-					    strike     	FALSE
-					    color      	0
-					    default_color 	TRUE)
-					label      	(object ItemLabel
-					    Parent_View 	@65
-					    location   	(1861, 3142)
-					    fill_color 	13434879
-					    nlines     	1
-					    max_width  	694
-					    justify    	0
-					    label      	"CommandAddSmsc")
-					icon_style 	"Icon"
-					line_color 	3342489
-					fill_color 	13434879
-					quidu      	"43E9DED6005F"
-					compartment 	(object Compartment
-					    Parent_View 	@65
-					    location   	(1861, 3203)
-					    font       	(object Font
-						size       	9
-						face       	"Arial"
-						charSet    	204
-						bold       	FALSE
-						italics    	FALSE
-						underline  	FALSE
-						strike     	FALSE
-						color      	0
-						default_color 	TRUE)
-					    icon_style 	"Icon"
-					    fill_color 	13434879
-					    anchor     	2
-					    nlines     	3
-					    max_width  	588)
-					width      	712
-					height     	236
-					annotation 	8
-					autoResize 	TRUE)
-				    (object InheritView "" @66
-					stereotype 	TRUE
-					line_color 	3342489
-					quidu      	"43E9DED60060"
-					client     	@65
-					supplier   	@61
-					line_style 	0)
-				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::CommandDeleteSmsc" @67
-					ShowCompartmentStereotypes 	TRUE
-					IncludeOperation 	TRUE
-					location   	(448, 1728)
-					font       	(object Font
-					    size       	9
-					    face       	"Arial"
-					    charSet    	204
-					    bold       	FALSE
-					    italics    	FALSE
-					    underline  	FALSE
-					    strike     	FALSE
-					    color      	0
-					    default_color 	TRUE)
-					label      	(object ItemLabel
-					    Parent_View 	@67
-					    location   	(101, 1622)
-					    fill_color 	13434879
-					    nlines     	1
-					    max_width  	694
-					    justify    	0
-					    label      	"CommandDeleteSmsc")
-					icon_style 	"Icon"
-					line_color 	3342489
-					fill_color 	13434879
-					quidu      	"43E9DED6008E"
-					compartment 	(object Compartment
-					    Parent_View 	@67
-					    location   	(101, 1683)
-					    font       	(object Font
-						size       	9
-						face       	"Arial"
-						charSet    	204
-						bold       	FALSE
-						italics    	FALSE
-						underline  	FALSE
-						strike     	FALSE
-						color      	0
-						default_color 	TRUE)
-					    icon_style 	"Icon"
-					    fill_color 	13434879
-					    anchor     	2
-					    nlines     	3
-					    max_width  	588)
-					width      	712
-					height     	236
-					annotation 	8
-					autoResize 	TRUE)
-				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::CommandTraceRoute" @68
-					ShowCompartmentStereotypes 	TRUE
-					IncludeOperation 	TRUE
-					location   	(3424, 2768)
-					font       	(object Font
-					    size       	9
-					    face       	"Arial"
-					    charSet    	204
-					    bold       	FALSE
-					    italics    	FALSE
-					    underline  	FALSE
-					    strike     	FALSE
-					    color      	0
-					    default_color 	TRUE)
-					label      	(object ItemLabel
-					    Parent_View 	@68
-					    location   	(3014, 2637)
-					    fill_color 	13434879
-					    nlines     	1
-					    max_width  	820
-					    justify    	0
-					    label      	"CommandTraceRoute")
-					icon_style 	"Icon"
-					line_color 	3342489
-					fill_color 	13434879
-					quidu      	"43E9DED600DC"
-					compartment 	(object Compartment
-					    Parent_View 	@68
-					    location   	(3014, 2698)
-					    font       	(object Font
-						size       	9
-						face       	"Arial"
-						charSet    	204
-						bold       	FALSE
-						italics    	FALSE
-						underline  	FALSE
-						strike     	FALSE
-						color      	0
-						default_color 	TRUE)
-					    icon_style 	"Icon"
-					    fill_color 	13434879
-					    anchor     	2
-					    nlines     	4
-					    max_width  	696)
-					width      	838
-					height     	286
-					annotation 	8
-					autoResize 	TRUE)
-				    (object InheritView "" @69
-					stereotype 	TRUE
-					line_color 	3342489
-					quidu      	"43E9DED600EB"
-					client     	@68
-					supplier   	@50
-					line_style 	0)
-				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::CommandLoadRoutes" @70
-					ShowCompartmentStereotypes 	TRUE
-					IncludeOperation 	TRUE
-					location   	(3424, 1984)
-					font       	(object Font
-					    size       	9
-					    face       	"Arial"
-					    charSet    	204
-					    bold       	FALSE
-					    italics    	FALSE
-					    underline  	FALSE
-					    strike     	FALSE
-					    color      	0
-					    default_color 	TRUE)
-					label      	(object ItemLabel
-					    Parent_View 	@70
-					    location   	(3009, 1853)
-					    fill_color 	13434879
-					    nlines     	1
-					    max_width  	830
-					    justify    	0
-					    label      	"CommandLoadRoutes")
-					icon_style 	"Icon"
-					line_color 	3342489
-					fill_color 	13434879
-					quidu      	"43E9DED60149"
-					compartment 	(object Compartment
-					    Parent_View 	@70
-					    location   	(3009, 1914)
-					    font       	(object Font
-						size       	9
-						face       	"Arial"
-						charSet    	204
-						bold       	FALSE
-						italics    	FALSE
-						underline  	FALSE
-						strike     	FALSE
-						color      	0
-						default_color 	TRUE)
-					    icon_style 	"Icon"
-					    fill_color 	13434879
-					    anchor     	2
-					    nlines     	4
-					    max_width  	705)
-					width      	848
-					height     	286
-					annotation 	8
-					autoResize 	TRUE)
-				    (object InheritView "" @71
-					stereotype 	TRUE
-					line_color 	3342489
-					quidu      	"43E9DED60159"
-					client     	@70
-					supplier   	@50
-					line_style 	0)
-				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::CommandAddRule" @72
-					ShowCompartmentStereotypes 	TRUE
-					IncludeOperation 	TRUE
-					location   	(464, 2064)
-					font       	(object Font
-					    size       	9
-					    face       	"Arial"
-					    charSet    	204
-					    bold       	FALSE
-					    italics    	FALSE
-					    underline  	FALSE
-					    strike     	FALSE
-					    color      	0
-					    default_color 	TRUE)
-					label      	(object ItemLabel
-					    Parent_View 	@72
-					    location   	(86, 1933)
-					    fill_color 	13434879
-					    nlines     	1
-					    max_width  	756
-					    justify    	0
-					    label      	"CommandAddRule")
-					icon_style 	"Icon"
-					line_color 	3342489
-					fill_color 	13434879
-					quidu      	"43E9DED60188"
-					compartment 	(object Compartment
-					    Parent_View 	@72
-					    location   	(86, 1994)
-					    font       	(object Font
-						size       	9
-						face       	"Arial"
-						charSet    	204
-						bold       	FALSE
-						italics    	FALSE
-						underline  	FALSE
-						strike     	FALSE
-						color      	0
-						default_color 	TRUE)
-					    icon_style 	"Icon"
-					    fill_color 	13434879
-					    anchor     	2
-					    nlines     	4
-					    max_width  	642)
-					width      	774
-					height     	286
-					annotation 	8
-					autoResize 	TRUE)
-				    (object InheritView "" @73
 					stereotype 	TRUE
 					line_color 	3342489
 					quidu      	"43E9DED60197"
-					client     	@72
-					supplier   	@50
+					client     	@69
+					supplier   	@47
 					line_style 	0)
-				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::CommandUpdateRule" @74
+				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::CommandUpdateRule" @71
 					ShowCompartmentStereotypes 	TRUE
 					IncludeOperation 	TRUE
 					location   	(3408, 1568)
 					font       	(object Font
-					    size       	9
+					    size       	12
 					    face       	"Arial"
 					    charSet    	204
 					    bold       	FALSE
@@ -3961,11 +4015,11 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@74
-					    location   	(2996, 1437)
+					    Parent_View 	@71
+					    location   	(2955, 1405)
 					    fill_color 	13434879
 					    nlines     	1
-					    max_width  	824
+					    max_width  	907
 					    justify    	0
 					    label      	"CommandUpdateRule")
 					icon_style 	"Icon"
@@ -3973,10 +4027,10 @@
 					fill_color 	13434879
 					quidu      	"43E9DED601F5"
 					compartment 	(object Compartment
-					    Parent_View 	@74
-					    location   	(2996, 1498)
+					    Parent_View 	@71
+					    location   	(2955, 1479)
 					    font       	(object Font
-						size       	9
+						size       	12
 						face       	"Arial"
 						charSet    	204
 						bold       	FALSE
@@ -3989,24 +4043,34 @@
 					    fill_color 	13434879
 					    anchor     	2
 					    nlines     	4
-					    max_width  	700)
-					width      	842
-					height     	286
+					    max_width  	913)
+					width      	925
+					height     	356
 					annotation 	8
 					autoResize 	TRUE)
-				    (object InheritView "" @75
+				    (object InheritView "" @72
+					font       	(object Font
+					    size       	12
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
 					stereotype 	TRUE
 					line_color 	3342489
 					quidu      	"43E9DED601F6"
-					client     	@74
-					supplier   	@50
+					client     	@71
+					supplier   	@47
 					line_style 	0)
-				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::CommandRemoveRule" @76
+				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::CommandRemoveRule" @73
 					ShowCompartmentStereotypes 	TRUE
 					IncludeOperation 	TRUE
-					location   	(512, 2448)
+					location   	(512, 2624)
 					font       	(object Font
-					    size       	9
+					    size       	12
 					    face       	"Arial"
 					    charSet    	204
 					    bold       	FALSE
@@ -4016,11 +4080,11 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@76
-					    location   	(85, 2317)
+					    Parent_View 	@73
+					    location   	(46, 2461)
 					    fill_color 	13434879
 					    nlines     	1
-					    max_width  	854
+					    max_width  	932
 					    justify    	0
 					    label      	"CommandRemoveRule")
 					icon_style 	"Icon"
@@ -4028,10 +4092,10 @@
 					fill_color 	13434879
 					quidu      	"43E9DED60243"
 					compartment 	(object Compartment
-					    Parent_View 	@76
-					    location   	(85, 2378)
+					    Parent_View 	@73
+					    location   	(46, 2535)
 					    font       	(object Font
-						size       	9
+						size       	12
 						face       	"Arial"
 						charSet    	204
 						bold       	FALSE
@@ -4044,24 +4108,34 @@
 					    fill_color 	13434879
 					    anchor     	2
 					    nlines     	4
-					    max_width  	725)
-					width      	872
-					height     	286
+					    max_width  	938)
+					width      	950
+					height     	356
 					annotation 	8
 					autoResize 	TRUE)
-				    (object InheritView "" @77
+				    (object InheritView "" @74
+					font       	(object Font
+					    size       	12
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
 					stereotype 	TRUE
 					line_color 	3342489
 					quidu      	"43E9DED60244"
-					client     	@76
-					supplier   	@50
+					client     	@73
+					supplier   	@47
 					line_style 	0)
-				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::CommandApply" @78
+				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::CommandApply" @75
 					ShowCompartmentStereotypes 	TRUE
 					IncludeOperation 	TRUE
 					location   	(3344, 1040)
 					font       	(object Font
-					    size       	9
+					    size       	12
 					    face       	"Arial"
 					    charSet    	204
 					    bold       	FALSE
@@ -4071,11 +4145,11 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@78
-					    location   	(2993, 884)
+					    Parent_View 	@75
+					    location   	(2968, 845)
 					    fill_color 	13434879
 					    nlines     	1
-					    max_width  	702
+					    max_width  	753
 					    justify    	0
 					    label      	"CommandApply")
 					icon_style 	"Icon"
@@ -4083,10 +4157,10 @@
 					fill_color 	13434879
 					quidu      	"43E9DED602A1"
 					compartment 	(object Compartment
-					    Parent_View 	@78
-					    location   	(2993, 945)
+					    Parent_View 	@75
+					    location   	(2968, 919)
 					    font       	(object Font
-						size       	9
+						size       	12
 						face       	"Arial"
 						charSet    	204
 						bold       	FALSE
@@ -4099,24 +4173,116 @@
 					    fill_color 	13434879
 					    anchor     	2
 					    nlines     	5
-					    max_width  	596)
-					width      	720
-					height     	336
+					    max_width  	759)
+					width      	771
+					height     	420
 					annotation 	8
 					autoResize 	TRUE)
-				    (object InheritView "" @79
+				    (object InheritView "" @76
+					font       	(object Font
+					    size       	12
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
 					stereotype 	TRUE
 					line_color 	3342489
 					quidu      	"43E9DED602A2"
+					client     	@75
+					supplier   	@47
+					line_style 	0)
+				    (object InheritView "" @77
+					font       	(object Font
+					    size       	12
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
+					stereotype 	TRUE
+					line_color 	3342489
+					quidu      	"43E9DED6009D"
+					client     	@64
+					supplier   	@47
+					line_style 	0)
+				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::SCAGCommandDispatcher" @78
+					ShowCompartmentStereotypes 	TRUE
+					IncludeOperation 	TRUE
+					location   	(608, 784)
+					font       	(object Font
+					    size       	12
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
+					label      	(object ItemLabel
+					    Parent_View 	@78
+					    location   	(6, 400)
+					    fill_color 	13434879
+					    nlines     	1
+					    max_width  	1204
+					    justify    	0
+					    label      	"SCAGCommandDispatcher")
+					icon_style 	"Icon"
+					line_color 	3342489
+					fill_color 	16777088
+					quidu      	"43E9DED501C6"
+					compartment 	(object Compartment
+					    Parent_View 	@78
+					    location   	(6, 474)
+					    font       	(object Font
+						size       	12
+						face       	"Arial"
+						charSet    	204
+						bold       	FALSE
+						italics    	FALSE
+						underline  	FALSE
+						strike     	FALSE
+						color      	0
+						default_color 	TRUE)
+					    icon_style 	"Icon"
+					    fill_color 	13434879
+					    anchor     	2
+					    nlines     	11
+					    max_width  	1026)
+					width      	1222
+					height     	798
+					annotation 	8
+					autoResize 	TRUE)
+				    (object InheritView "" @79
+					font       	(object Font
+					    size       	12
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
+					stereotype 	TRUE
+					line_color 	3342489
+					quidu      	"43E9DED501E6"
 					client     	@78
-					supplier   	@50
+					supplier   	@46
 					line_style 	0)
 				    (object ClassView "Class" "Logical View::VC++ Reverse Engineered::admin::GwRunner" @80
 					ShowCompartmentStereotypes 	TRUE
 					IncludeOperation 	TRUE
-					location   	(3296, 464)
+					location   	(2336, 416)
 					font       	(object Font
-					    size       	9
+					    size       	12
 					    face       	"Arial"
 					    charSet    	204
 					    bold       	FALSE
@@ -4127,21 +4293,21 @@
 					    default_color 	TRUE)
 					label      	(object ItemLabel
 					    Parent_View 	@80
-					    location   	(3003, 208)
+					    location   	(2016, 95)
 					    fill_color 	13434879
 					    nlines     	1
-					    max_width  	586
+					    max_width  	640
 					    justify    	0
 					    label      	"GwRunner")
 					icon_style 	"Icon"
 					line_color 	3342489
-					fill_color 	13434879
+					fill_color 	12910591
 					quidu      	"43E9DED70030"
 					compartment 	(object Compartment
 					    Parent_View 	@80
-					    location   	(3003, 269)
+					    location   	(2016, 169)
 					    font       	(object Font
-						size       	9
+						size       	12
 						face       	"Arial"
 						charSet    	204
 						bold       	FALSE
@@ -4154,19 +4320,349 @@
 					    fill_color 	13434879
 					    anchor     	2
 					    nlines     	9
-					    max_width  	496)
-					width      	604
-					height     	536
+					    max_width  	638)
+					width      	658
+					height     	672
 					annotation 	8
 					autoResize 	TRUE)
-				    (object InheritView "" @81
+				    (object UsesView "" @81
+					font       	(object Font
+					    size       	12
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
 					stereotype 	TRUE
 					line_color 	3342489
-					quidu      	"43E9DED6009D"
-					client     	@67
-					supplier   	@50
+					quidu      	"43E9E9B2037C"
+					client     	@78
+					supplier   	@80
 					line_style 	0))))))
 		logical_presentations 	(list unit_reference_list)))
+	statemachine 	(object State_Machine "State/Activity Model"
+	    quid       	"43E9E87F0214"
+	    states     	(list States
+		(object State "start"
+		    quid       	"43E9E88D01F5"
+		    type       	"EndState")
+		(object ActivityState "SCAGCommandDispatcher::startGw()"
+		    quid       	"43E9E88F035C"
+		    transitions 	(list transition_list
+			(object State_Transition
+			    quid       	"43E9E8CC007E"
+			    supplier   	
+|SCAGSocketListener listener;
+|      listener.init(admin_host, servicePort);
+			    
+			    quidu      	"43E9E8C800BD"
+			    sendEvent  	(object sendEvent
+				quid       	"43E9E8CC0081"))))
+		(object State "$UNNAMED$35"
+		    quid       	"43E9E8AF013A"
+		    transitions 	(list transition_list
+			(object State_Transition
+			    quid       	"43E9E8B5006E"
+			    supplier   	"SCAGCommandDispatcher::startGw()"
+			    quidu      	"43E9E88F035C"
+			    sendEvent  	(object sendEvent
+				quid       	"43E9E8B50071")))
+		    type       	"StartState")
+		(object ActivityState "SCAGSocketListener listener;
+      listener.init(admin_host, servicePort);"
+		    quid       	"43E9E8C800BD"
+		    transitions 	(list transition_list
+			(object State_Transition
+			    quid       	"43E9E8F2030E"
+			    supplier   	"registerScagSignalHandlers(&listener);"
+			    quidu      	"43E9E8ED00FB"
+			    sendEvent  	(object sendEvent
+				quid       	"43E9E8F20311"))))
+		(object ActivityState "registerScagSignalHandlers(&listener);"
+		    quid       	"43E9E8ED00FB"
+		    transitions 	(list transition_list
+			(object State_Transition
+			    quid       	"43E9E91100CC"
+			    supplier   	"      listener.Start();       listener.WaitFor();"
+			    quidu      	"43E9E8F4007E"
+			    sendEvent  	(object sendEvent
+				quid       	"43E9E91100CF"))))
+		(object ActivityState "      listener.Start();       listener.WaitFor();"
+		    quid       	"43E9E8F4007E"
+		    transitions 	(list transition_list
+			(object State_Transition
+			    quid       	"43E9E9490011"
+			    supplier   	"SCAGCommandDispatcher::stopGw();"
+			    quidu      	"43E9E93F00CC"
+			    sendEvent  	(object sendEvent
+				quid       	"43E9E9490014"))))
+		(object ActivityState "SCAGCommandDispatcher::stopGw();"
+		    quid       	"43E9E93F00CC"))
+	    partitions 	(list Partitions)
+	    objects    	(list Objects)
+	    statediagrams 	(list StateDiagrams
+		(object ActivityDiagram "start"
+		    quid       	"43E9E87F0224"
+		    title      	"start"
+		    zoom       	100
+		    max_height 	28350
+		    max_width  	21600
+		    origin_x   	0
+		    origin_y   	0
+		    items      	(list diagram_item_list
+			(object Swimlane "" @82
+			    line_color 	3342489
+			    width      	450)
+			(object ActivityStateView "SCAGCommandDispatcher::startGw()" @83
+			    Parent_View 	@82
+			    location   	(752, 320)
+			    font       	(object Font
+				size       	9
+				face       	"Arial"
+				charSet    	204
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    label      	(object ItemLabel
+				Parent_View 	@83
+				location   	(752, 320)
+				fill_color 	13434879
+				anchor_loc 	1
+				nlines     	2
+				max_width  	762
+				justify    	0
+				label      	"SCAGCommandDispatcher::startGw()")
+			    icon_style 	"Icon"
+			    line_color 	3342489
+			    fill_color 	13434879
+			    quidu      	"43E9E88F035C"
+			    width      	868
+			    height     	107
+			    annotation 	1
+			    autoResize 	TRUE)
+			(object StateView "StartState" "$UNNAMED$35" @84
+			    Parent_View 	@82
+			    location   	(752, 144)
+			    font       	(object Font
+				size       	9
+				face       	"Arial"
+				charSet    	204
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    label      	(object ItemLabel
+				Parent_View 	@84
+				location   	(794, 114)
+				nlines     	2
+				max_width  	600
+				label      	"")
+			    icon_style 	"Icon"
+			    line_color 	3342489
+			    quidu      	"43E9E8AF013A"
+			    autoResize 	TRUE)
+			(object TransView "" @85
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    quidu      	"43E9E8B5006E"
+			    client     	@84
+			    supplier   	@83
+			    line_style 	0
+			    x_offset   	FALSE)
+			(object ActivityStateView "SCAGSocketListener listener;
+      listener.init(admin_host, servicePort);" @86
+			    Parent_View 	@82
+			    location   	(752, 512)
+			    font       	(object Font
+				size       	9
+				face       	"Arial"
+				charSet    	204
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    label      	(object ItemLabel
+				Parent_View 	@86
+				location   	(752, 504)
+				fill_color 	13434879
+				anchor_loc 	1
+				nlines     	2
+				max_width  	792
+				justify    	0
+				label      	
+|SCAGSocketListener listener;
+|      listener.init(admin_host, servicePort);
+				)
+			    icon_style 	"Icon"
+			    line_color 	3342489
+			    fill_color 	13434879
+			    quidu      	"43E9E8C800BD"
+			    width      	910
+			    height     	123
+			    annotation 	1
+			    autoResize 	TRUE)
+			(object TransView "" @87
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    quidu      	"43E9E8CC007E"
+			    client     	@83
+			    supplier   	@86
+			    line_style 	0
+			    x_offset   	FALSE)
+			(object ActivityStateView "registerScagSignalHandlers(&listener);" @88
+			    Parent_View 	@82
+			    location   	(752, 704)
+			    font       	(object Font
+				size       	9
+				face       	"Arial"
+				charSet    	204
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    label      	(object ItemLabel
+				Parent_View 	@88
+				location   	(752, 696)
+				fill_color 	13434879
+				anchor_loc 	1
+				nlines     	2
+				max_width  	374
+				justify    	0
+				label      	"registerScagSignalHandlers(&listener);")
+			    icon_style 	"Icon"
+			    line_color 	3342489
+			    fill_color 	13434879
+			    quidu      	"43E9E8ED00FB"
+			    width      	492
+			    height     	123
+			    annotation 	1
+			    autoResize 	TRUE)
+			(object TransView "" @89
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    quidu      	"43E9E8F2030E"
+			    client     	@86
+			    supplier   	@88
+			    line_style 	0
+			    x_offset   	FALSE)
+			(object ActivityStateView "      listener.Start();       listener.WaitFor();" @90
+			    Parent_View 	@82
+			    location   	(752, 865)
+			    font       	(object Font
+				size       	9
+				face       	"Arial"
+				charSet    	204
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    label      	(object ItemLabel
+				Parent_View 	@90
+				location   	(752, 862)
+				fill_color 	13434879
+				anchor_loc 	1
+				nlines     	2
+				max_width  	346
+				justify    	0
+				label      	"      listener.Start();       listener.WaitFor();")
+			    icon_style 	"Icon"
+			    line_color 	3342489
+			    fill_color 	13434879
+			    quidu      	"43E9E8F4007E"
+			    width      	456
+			    height     	113
+			    annotation 	1
+			    autoResize 	TRUE)
+			(object TransView "" @91
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    quidu      	"43E9E91100CC"
+			    client     	@88
+			    supplier   	@90
+			    line_style 	0
+			    x_offset   	FALSE)
+			(object ActivityStateView "SCAGCommandDispatcher::stopGw();" @92
+			    Parent_View 	@82
+			    location   	(752, 1040)
+			    font       	(object Font
+				size       	9
+				face       	"Arial"
+				charSet    	204
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    label      	(object ItemLabel
+				Parent_View 	@92
+				location   	(752, 1040)
+				fill_color 	13434879
+				anchor_loc 	1
+				nlines     	2
+				max_width  	732
+				justify    	0
+				label      	"SCAGCommandDispatcher::stopGw();")
+			    icon_style 	"Icon"
+			    line_color 	3342489
+			    fill_color 	13434879
+			    quidu      	"43E9E93F00CC"
+			    width      	838
+			    height     	107
+			    annotation 	1
+			    autoResize 	TRUE)
+			(object TransView "" @93
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    quidu      	"43E9E9490011"
+			    client     	@90
+			    supplier   	@92
+			    line_style 	0
+			    x_offset   	FALSE)
+			(object NoteView @94
+			    Parent_View 	@82
+			    location   	(320, 144)
+			    font       	(object Font
+				size       	9
+				face       	"Arial"
+				charSet    	204
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    label      	(object ItemLabel
+				Parent_View 	@94
+				location   	(182, 84)
+				fill_color 	13434879
+				nlines     	2
+				max_width  	240
+				label      	"main()")
+			    line_color 	3342489
+			    fill_color 	16777088
+			    width      	300
+			    height     	132)
+			(object AttachView "" @95
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    client     	@94
+			    supplier   	@84
+			    line_style 	0)))))
 	logical_presentations 	(list unit_reference_list
 	    (object ClassDiagram "Welcome"
 		quid       	"3512226B0028"
@@ -4188,7 +4684,7 @@
 		origin_x   	0
 		origin_y   	0
 		items      	(list diagram_item_list
-		    (object NoteView @82
+		    (object NoteView @96
 			location   	(768, 384)
 			font       	(object Font
 			    size       	9
@@ -4201,7 +4697,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@82
+			    Parent_View 	@96
 			    location   	(121, 96)
 			    fill_color 	13434879
 			    nlines     	14
@@ -4281,7 +4777,7 @@
 			origin_x   	0
 			origin_y   	0
 			items      	(list diagram_item_list
-			    (object NoteView @83
+			    (object NoteView @97
 				location   	(624, 160)
 				font       	(object Font
 				    size       	9
@@ -4294,7 +4790,7 @@
 				    color      	0
 				    default_color 	TRUE)
 				label      	(object ItemLabel
-				    Parent_View 	@83
+				    Parent_View 	@97
 				    location   	(21, 26)
 				    fill_color 	13434879
 				    nlines     	5
@@ -4320,7 +4816,7 @@
 		origin_x   	0
 		origin_y   	0
 		items      	(list diagram_item_list
-		    (object SubSysView "Component View::Implementation Model" @84
+		    (object SubSysView "Component View::Implementation Model" @98
 			location   	(736, 800)
 			font       	(object Font
 			    size       	9
@@ -4333,7 +4829,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@84
+			    Parent_View 	@98
 			    location   	(552, 713)
 			    fill_color 	13434879
 			    nlines     	2
@@ -4394,7 +4890,7 @@
 		origin_x   	0
 		origin_y   	0
 		items      	(list diagram_item_list
-		    (object ProcessorView "<processor name>" @85
+		    (object ProcessorView "<processor name>" @99
 			location   	(512, 1056)
 			font       	(object Font
 			    size       	9
@@ -4407,7 +4903,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@85
+			    Parent_View 	@99
 			    location   	(276, 900)
 			    nlines     	2
 			    max_width  	400
@@ -4418,7 +4914,7 @@
 			width      	475
 			height     	381
 			annotation 	3)
-		    (object DeviceView "<device name>" @86
+		    (object DeviceView "<device name>" @100
 			location   	(1040, 1056)
 			font       	(object Font
 			    size       	9
@@ -4431,7 +4927,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@86
+			    Parent_View 	@100
 			    location   	(867, 950)
 			    nlines     	2
 			    max_width  	275
@@ -4442,13 +4938,13 @@
 			width      	350
 			height     	282
 			annotation 	0)
-		    (object ConnectionView "" @87
+		    (object ConnectionView "" @101
 			stereotype 	TRUE
 			quidu      	"34DBBD4B008C"
-			client     	@85
-			supplier   	@86
+			client     	@99
+			supplier   	@100
 			line_style 	0)
-		    (object NoteView @88
+		    (object NoteView @102
 			location   	(816, 304)
 			font       	(object Font
 			    size       	9
@@ -4461,7 +4957,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@88
+			    Parent_View 	@102
 			    location   	(38, 29)
 			    fill_color 	13434879
 			    nlines     	11
