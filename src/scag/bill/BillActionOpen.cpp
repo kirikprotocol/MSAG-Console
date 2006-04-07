@@ -17,10 +17,22 @@ void BillActionOpen::init(const SectionParams& params,PropertyObject propertyObj
     else 
         throw SCAGException("BillAction 'bill:open' : missing 'category' parameter");
 
-    if (params.Exists("mediatype")) 
-        m_mediaType = ConvertWStrToStr(params["mediatype"]);
+    if (params.Exists("content-type")) 
+        m_mediaType = ConvertWStrToStr(params["content-type"]);
     else 
         throw SCAGException("BillAction 'bill:open' : missing 'mediatype' parameter");
+
+
+    ft = ActionContext::Separate(m_category,name);
+
+    if (ft!=ftUnknown) 
+        throw SCAGException("BillAction 'bill:open' : cannot use field for string parameter 'category'");
+
+
+    ft = ActionContext::Separate(m_mediaType,name);
+
+    if (ft!=ftUnknown) 
+        throw SCAGException("BillAction 'bill:open' : cannot use field for string parameter 'content-type'");
 
 
 /*
