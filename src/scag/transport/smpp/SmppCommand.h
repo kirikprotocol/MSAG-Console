@@ -360,7 +360,7 @@ struct _SmppCommand
   int serviceId;
   int priority;
   uint64_t opId;
-  _SmppCommand() : ref_count(0), dta(0), ent(0),priority(ScagCommandDefaultPriority)
+  _SmppCommand() : ref_count(0), dta(0), ent(0),status(0),priority(ScagCommandDefaultPriority)
   {
   }
   ~_SmppCommand()
@@ -1133,9 +1133,10 @@ public:
         BindCommand& bnd=c.get_bindCommand();
         pdu->set_systemId(bnd.sysId.c_str());
         pdu->set_password(bnd.pass.c_str());
+        pdu->set_interfaceVersion(0x34);
         int ton=0,npi=0;
-        char addr[64];
-        sscanf(bnd.addrRange.c_str(),".%d.%d.%*s",&ton,&npi,64,addr);
+        char addr[64]={0,};
+        sscanf(bnd.addrRange.c_str(),".%d.%d.%64s",&ton,&npi,addr);
         pdu->get_addressRange().set_typeOfNumber(ton);
         pdu->get_addressRange().set_numberingPlan(npi);
         pdu->get_addressRange().set_value(addr);

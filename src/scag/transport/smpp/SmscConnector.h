@@ -49,6 +49,7 @@ struct SmscConnectTask:thr::ThreadedTask{
     pass=info.pass;
     host=info.host();
     port=info.port();
+    addressRange=info.addressRange;
     lastFailure=info.lastFailure;
   }
   const char* taskName(){return "SmscConnectTask";}

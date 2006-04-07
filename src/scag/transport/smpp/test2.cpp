@@ -54,7 +54,8 @@ int main(int argc,char* argv[])
     se.altHost="sunfire";
     se.altPort=5002;
     se.uid=2;
-    se.providerId=5;
+    se.addressRange=".3.4.56789";
+    //se.serviceId=5;
 
     sm.addSmppEntity(se);
     sm.deleteSmppEntity(se.systemId);
