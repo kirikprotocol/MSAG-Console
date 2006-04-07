@@ -54,7 +54,7 @@ static const Abonent  _abonents[2] = {
     //Ryzhkov phone(postpaid):
     ,{ abPostpaid, ".1.1.79139859489", "250013901464251" }
     //Stupnik phone(postpaid):
-    ,{ abPostpaid, ".1.1.79139033669", "250013901464251" }
+//    ,{ abPostpaid, ".1.1.79139033669", "250013901464251" }
 };
 
 class INDialog {
