@@ -30,14 +30,14 @@
 	    <billing>
 		<category_id>1</category_id>
 		<media_type_id>1</media_type_id>
-		<service_number>1111</service_number>
+		<service_number>111</service_number>
 		<price>1.50</price>
 		<currency>DOLLAR</currency>
 	    </billing>
 	    <billing>
 		<category_id>1</category_id>
 		<media_type_id>2</media_type_id>
-		<service_number>1112</service_number>
+		<service_number>112</service_number>
 		<price>2</price>
 		<currency>DOLLAR</currency>
 	    </billing>
