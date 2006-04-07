@@ -4,26 +4,31 @@
     xmlns:bill="http://www.sibinco.com/SCAG/BILL"
     elementFormDefault="qualified">
 
+    <simpleType name="BillActions">
+        <restriction base="string">
+            <enumeration value="commit"/>
+            <enumeration value="rollback"/>
+        </restriction>
+    </simpleType>
+
+
     <group name="Actions">
         <choice>
             <element name="open">
                 <complexType>
                     <attribute name="category" type="string" use="required"/>
-                    <attribute name="mediatype" type="string" use="required"/>
+                    <attribute name="content-type" type="string" use="required"/>
+		    <attribute name="status" type="string" use="required" />
+		    <attribute name="msg" type="string" use="optional" />
+		    
                </complexType>
 	    </element>
 	    
-	    <element name="commit">
-                <complexType>
-                    <attribute name="category" type="string" use="required"/>
-                    <attribute name="mediatype" type="string" use="required"/>
-                </complexType>
-	    </element>
-	    
-	    <element name="rollback">
+	    <element name="close">
 		<complexType>
-                    <attribute name="category" type="string" use="required"/>
-                    <attribute name="mediatype" type="string" use="required"/>
+		    <attribute name="action" type="bill:BillActions" use="required" />
+                    <attribute name="status" type="string" use="optional"/>
+                    <attribute name="msg" type="string" use="optional"/>
 		</complexType>
 	    </element>
         </choice>    

@@ -59,6 +59,10 @@ RuleStatus EventHandler::RunActions(ActionContext& context)
 
     //TODO: Fill default rs fields
     RuleStatus rs;
+
+    rs.result = 1;
+    rs.status = true;
+
     context.setRuleStatus(rs);
 
     for (it = actions.begin(); it!=actions.end(); ++it)

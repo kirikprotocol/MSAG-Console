@@ -10,7 +10,7 @@ struct RuleStatus
     bool status;
     bool temporal;
     //RuleStatus() : result(false),hasErrors(false) {};
-    RuleStatus() : result(1), status(true),temporal(false) {};
+    RuleStatus() : result(0), status(false),temporal(false) {};
 };
 
 }}
