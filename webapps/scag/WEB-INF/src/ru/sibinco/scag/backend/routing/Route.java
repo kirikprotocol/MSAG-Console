@@ -89,7 +89,7 @@ public class Route {
     public Route(Element routeElem, Map subjects, SmppManager smppManager,
                  ServiceProvidersManager serviceProvidersManager) throws SibincoException {
 
-        name = StringEncoderDecoder.encode(routeElem.getAttribute("id"));
+        name = routeElem.getAttribute("id");
         if (name.length() > Constants.ROUTE_ID_MAXLENGTH) {
             throw new SibincoException("Route name is too long: " + name.length() + " chars \"" + name + '"');
         }

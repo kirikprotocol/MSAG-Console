@@ -178,20 +178,20 @@ public class ServiceProvidersManager {
     }
 
     public synchronized long createServiceProvider(final String name, final String description) throws NullPointerException {
-        final ServiceProvider serviceProvider = new ServiceProvider(new Long(lastUsedServiceProviderId++), name);
+        final ServiceProvider serviceProvider = new ServiceProvider(new Long(++lastUsedServiceProviderId), name);
         serviceProvider.setDescription(description);
         serviceProviders.put(serviceProvider.getId(), serviceProvider);
-        return getLastUsedServiceProviderId() - 1;
+        return getLastUsedServiceProviderId();
     }
 
     public synchronized long createService(final long serviceProviderId, final Service service) throws NullPointerException {
         final ServiceProvider serviceProvider = (ServiceProvider) serviceProviders.get(new Long(serviceProviderId));
         if (null == serviceProvider)
             throw new NullPointerException("Service Provider \"" + serviceProvider + "\" not found.");
-        service.setId(new Long(lastUsedServiceId++));
+        service.setId(new Long(++lastUsedServiceId));
         serviceProvider.getServices().put(service.getId(), service);
         serviceProviders.put(serviceProvider.getId(), serviceProvider);
-        return getLastUsedServiceId() - 1;
+        return getLastUsedServiceId();
     }
 
     public synchronized long updateService(final long serviceProviderId, final Service service) throws NullPointerException {
