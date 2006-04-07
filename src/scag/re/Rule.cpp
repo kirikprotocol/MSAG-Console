@@ -44,7 +44,7 @@ RuleStatus Rule::process(SCAGCommand& command,Session& session)
 
     EventHandlerType handlerType = CommandBrige::getHandlerType(command);
 
-    smsc_log_debug(logger,"%d Event Handlers fond", handlerType);
+    smsc_log_debug(logger,"Event Handlers found. (id=%d)", handlerType);
 
     if (!Handlers.Exist(handlerType)) 
     {

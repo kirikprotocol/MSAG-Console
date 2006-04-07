@@ -42,8 +42,8 @@ void ActionSet::init(const SectionParams& params,PropertyObject propertyObject)
             throw InvalidPropertyException("Action 'set': cannot set property '%s' - no access to write",strVariable.c_str());
     }
 
-    ft = ActionContext::Separate(strValue,name);
-    if (ft == ftField) 
+    valueFieldType = ActionContext::Separate(strValue,name);
+    if (valueFieldType == ftField) 
     {
         at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
         if (!(at&atRead)) 
@@ -66,12 +66,7 @@ bool ActionSet::run(ActionContext& context)
         return true;
     }
 
-    FieldType ft;
-    const char * name = 0;
-    ft = ActionContext::Separate(strValue,name);
-
-
-    if (ft == ftUnknown) 
+    if (valueFieldType == ftUnknown) 
     {
         property->setStr(wstrValue);
 
@@ -96,7 +91,7 @@ bool ActionSet::run(ActionContext& context)
 
 IParserHandler * ActionSet::StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory)
 {
-    throw SCAGException("Action 'return' cannot include child objects");
+    throw SCAGException("Action 'set' cannot include child objects");
 }
 
 bool ActionSet::FinishXMLSubSection(const std::string& name)

@@ -172,7 +172,8 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
         StartOperation(session, *smppcommand);
     } catch (SCAGException& e)
     {
-        smsc_log_debug(logger, "EventHandler: cannot process command - %s", e.what());
+        smsc_log_debug(logger, "EventHandler cannot process command. Details: %s", e.what());
+        return rs;
         //TODO: отлуп в стейт-машину
     }
    

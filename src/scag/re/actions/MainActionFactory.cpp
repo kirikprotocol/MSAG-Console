@@ -13,6 +13,8 @@
 #include "scag/bill/BillActionCommit.h"
 #include "scag/bill/BillActionRollback.h"
 
+#include "scag/re/actions/ActionBinOperations.h"
+
 
 //#include "scag/SAX2Print.hpp"
                  
@@ -36,6 +38,10 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
     if (name=="bill:open") return new BillActionOpen();
     if (name=="bill:commit") return new BillActionCommit();
     if (name=="bill:rollback") return new BillActionRollback();
+
+    if (name=="inc") return new ActionInc();
+    if (name=="dec") return new ActionDec();
+
 
     Action * action = 0;
 

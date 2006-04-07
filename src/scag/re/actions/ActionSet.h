@@ -13,7 +13,7 @@ class ActionSet : public Action
 
     std::string strValue;
     std::string wstrValue;
-
+    FieldType valueFieldType;
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);

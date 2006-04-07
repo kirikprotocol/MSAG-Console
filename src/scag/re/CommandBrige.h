@@ -90,24 +90,6 @@ public:
     static int getProtocolForEvent(SCAGCommand& command);
 
 
-    //static void makeBillEvent(int serviceId, std::string& abonentAddr, int billCommand, SACC_BILLING_INFO_EVENT_t& ev);
-
-    /*
-    static int ExtractCommandType(SCAGCommand& command)
-    {
-        SmppCommand * smpp = dynamic_cast<SmppCommand*>(&command);
-        if (smpp) 
-        {
-            _SmppCommand * cmd = smpp->operator ->();
-            if (!cmd) return 0;
-            return cmd->get_commandId();
-        }
-    
-        return 0;
-    }            */
-
-
-
     static Address getDestAddr(const SCAGCommand& command)  
     {
         Address resultAddr;
