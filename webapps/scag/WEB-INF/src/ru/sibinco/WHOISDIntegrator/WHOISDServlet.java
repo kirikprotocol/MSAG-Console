@@ -36,13 +36,13 @@ public class WHOISDServlet extends HttpServlet {
     LinkedList result = new LinkedList();
     try {
     switch (id) {
-      case WHOISDRequest.OPERATORS: result = loadXml(WHOISDRequest.OPERATORS, appContext.getConfig().getString("gw location.operators_file")); SendResult(result, resp); break;
-      case WHOISDRequest.OPERATORS_SCHEMA: result = getSchema(WHOISDRequest.OPERATORS_SCHEMA, appContext.getConfig().getString("gw location.operators_file")); SendResult(result, resp); break;
-      case WHOISDRequest.SERVICES:  result = loadXml(WHOISDRequest.SERVICES, appContext.getConfig().getString("gw location.services_file")); SendResult(result, resp); break;
-      case WHOISDRequest.SERVICES_SCHEMA: result = getSchema(WHOISDRequest.SERVICES_SCHEMA, appContext.getConfig().getString("gw location.services_file")); SendResult(result, resp); break;
+      case WHOISDRequest.OPERATORS: result = loadXml(WHOISDRequest.OPERATORS, composePath("gw location.operators_file")); SendResult(result, resp); break;
+      case WHOISDRequest.OPERATORS_SCHEMA: result = getSchema(WHOISDRequest.OPERATORS_SCHEMA, composePath("gw location.operators_file")); SendResult(result, resp); break;
+      case WHOISDRequest.SERVICES:  result = loadXml(WHOISDRequest.SERVICES, composePath("gw location.services_file")); SendResult(result, resp); break;
+      case WHOISDRequest.SERVICES_SCHEMA: result = getSchema(WHOISDRequest.SERVICES_SCHEMA, composePath("gw location.services_file")); SendResult(result, resp); break;
       case WHOISDRequest.RULE: result = getRule(req);  SendResult(result, resp); break;
-      case WHOISDRequest.TARIFF_MATRIX: result = loadXml(WHOISDRequest.TARIFF_MATRIX, appContext.getConfig().getString("gw location.tariffs_file"));  SendResult(result, resp); break;
-      case WHOISDRequest.TARIFF_MATRIX_SCHEMA: result = getSchema(WHOISDRequest.TARIFF_MATRIX_SCHEMA, appContext.getConfig().getString("gw location.tariffs_file"));  SendResult(result, resp); break;
+      case WHOISDRequest.TARIFF_MATRIX: result = loadXml(WHOISDRequest.TARIFF_MATRIX, composePath("gw location.tariffs_file"));  SendResult(result, resp); break;
+      case WHOISDRequest.TARIFF_MATRIX_SCHEMA: result = getSchema(WHOISDRequest.TARIFF_MATRIX_SCHEMA,composePath("gw location.tariffs_file"));  SendResult(result, resp); break;
       default:
         resp.setHeader("status","false");
         result.add(WHOISD_ERROR_PREFIX + "Wrong request for get method, available: " + Arrays.asList(WHOISDRequest.WHOISDRequests));
@@ -71,7 +71,7 @@ public class WHOISDServlet extends HttpServlet {
        try {
         switch (id) {
           case WHOISDRequest.RULE: applyTerm(req,isMultipartFormat(req));SendResult(result, resp); break;
-          case WHOISDRequest.TARIFF_MATRIX: applyTariffMatrix(appContext.getConfig().getString("gw location.tariffs_file"),req,isMultipartFormat(req)); SendResult(result, resp); break;
+          case WHOISDRequest.TARIFF_MATRIX: applyTariffMatrix(composePath("gw location.tariffs_file"),req,isMultipartFormat(req)); SendResult(result, resp); break;
           default:
             resp.setHeader("status","false");
             result.add(WHOISD_ERROR_PREFIX+"Wrong request for post method");
@@ -93,6 +93,10 @@ public class WHOISDServlet extends HttpServlet {
        }
 
   }
+
+   private final String composePath(String paramName) throws Exception {
+     return appContext.getConfig().getString("gw location.gw_config_folder") + File.separatorChar + appContext.getConfig().getString(paramName);
+   }
 
    private void applyTerm(HttpServletRequest req, boolean isMultipartFormat) throws Exception {
      String service = req.getParameter("service");
@@ -130,7 +134,7 @@ public class WHOISDServlet extends HttpServlet {
          if (curRule!=null) rulemanager.removeRule(service,transports[i]);
          continue;
        }
-       String ruleSystemId = appContext.getConfig().getString("gw location.rules_folder")+"/"+ transports[i] + "/"+ruleWHOISD.getId().toString();
+       String ruleSystemId = composePath("gw location.rules_folder")+"/"+ transports[i] + "/"+ruleWHOISD.getId().toString();
        try {
         parser.parseRule(rulemanager.getRuleContentAsString(ruleWHOISD), ruleSystemId, transports[i]);
        } catch(WHOISDException e) {
@@ -152,7 +156,7 @@ public class WHOISDServlet extends HttpServlet {
      }
    }
 
-   private String composeErrorMessage(LinkedList li) {
+   private final String composeErrorMessage(LinkedList li) {
      String error=(String)li.get(0);
      return error;
    }
@@ -209,7 +213,7 @@ public class WHOISDServlet extends HttpServlet {
      }
    }
 
-  private boolean isMultipartFormat(HttpServletRequest req)
+  private final boolean isMultipartFormat(HttpServletRequest req)
   {
        String temptype=req.getContentType();
        if(temptype.indexOf("multipart/form-data")!=-1) return true;
@@ -246,7 +250,7 @@ public class WHOISDServlet extends HttpServlet {
       return dataSlice;
   }
 
-  private String getBoundary(HttpServletRequest request) {
+  private final String getBoundary(HttpServletRequest request) {
     String cType = request.getContentType();
     return cType.substring(cType.indexOf("boundary=")+9);
   }
@@ -268,7 +272,7 @@ public class WHOISDServlet extends HttpServlet {
     }
   }
 
-  private int getRequestId(HttpServletRequest req) {
+  private final int getRequestId(HttpServletRequest req) {
     String[] parsedURI = req.getRequestURI().split("/");
     String requestedFile = parsedURI[parsedURI.length-1];
     return WHOISDRequest.getId(requestedFile);
@@ -335,7 +339,7 @@ public class WHOISDServlet extends HttpServlet {
     return schema;
   }
 
-  private void validateTransportParameter(String transport) throws WHOISDException{
+  private final void validateTransportParameter(String transport) throws WHOISDException{
     String[] transports = Transport.transportTitles;
     for (byte i =0 ;i<transports.length;i++) {
      if (transport.equals(transports[i])) return;

@@ -66,10 +66,36 @@ public class RuleManager
   public Map getRules(Long serviceId)
   {
     HashMap result = new HashMap();
-    result.put(Transport.SMPP_TRANSPORT_NAME,smpprules.get(serviceId));
-    result.put(Transport.HTTP_TRANSPORT_NAME,httprules.get(serviceId));
-    result.put(Transport.MMS_TRANSPORT_NAME,mmsrules.get(serviceId));
+
+    Rule smppRule = (Rule)smpprules.get(serviceId);
+    if (!(composeRuleFile(Transport.SMPP_TRANSPORT_NAME,serviceId).exists()))  {
+      smppRule = null;
+      smpprules.remove(serviceId);
+    }
+    result.put(Transport.SMPP_TRANSPORT_NAME, smppRule);
+
+    Rule httpRule = (Rule)httprules.get(serviceId);
+    if (!(composeRuleFile(Transport.HTTP_TRANSPORT_NAME,serviceId).exists()))  {
+      httpRule = null;
+      httprules.remove(httpRule);
+    }
+    result.put(Transport.HTTP_TRANSPORT_NAME,httpRule);
+
+    Rule mmsRule = (Rule)mmsrules.get(serviceId);
+    if (!(composeRuleFile(Transport.MMS_TRANSPORT_NAME,serviceId).exists()))  {
+      mmsRule = null;
+      mmsrules.remove(mmsRule);
+    }
+    result.put(Transport.MMS_TRANSPORT_NAME,mmsRule);
+
     return result;
+  }
+
+  private File composeRuleFile(String transport, Long serviceId) {
+      String filename="rule_"+ serviceId.toString()+".xml";
+      final File folder = new File(rulesFolder, transport);
+      File newFile= new File(folder,filename);
+      return newFile;
   }
 
   private Collection getRulesAsList(Long serviceId) {
@@ -85,6 +111,10 @@ public class RuleManager
       rule = (Rule) httprules.get(ruleId);
     else if (transport.equals(Transport.MMS_TRANSPORT_NAME))
       rule = (Rule) mmsrules.get(ruleId);
+    if (rule!=null) {
+      File ruleFile = composeRuleFile(rule.getTransport(), rule.getId());
+      rule.updateBody(LoadXml(ruleFile.getAbsolutePath()));
+    }
     return rule;
   }
 
@@ -139,7 +169,6 @@ public class RuleManager
          return (name.endsWith(".xsd") || name.endsWith(".dtd"));
        }
      });
-     //System.out.println("schemasfiles: "+Arrays.asList(schemasfiles));
      InputStream in = null; BufferedReader br = null;
      for(int i = 0; i<schemasfiles.length;i++) {
      try {
@@ -251,6 +280,7 @@ public class RuleManager
 
    public LinkedList getSchema(String requestedScheme)
    {
+     //loadSchemas();
      return (LinkedList)schemas.get(requestedScheme);
    }
 
