@@ -2,42 +2,45 @@
 <!DOCTYPE tariff_matrix SYSTEM "tariffs.dtd">
 
 <tariff_matrix>
-<categories>
-<category>
-<id>1</id>
-<name>Premium1</name>
-</category>
-<category>
-<id>2</id>
-<name>Premium2</name>
-</category>
-</categories>
-<media_types>
-<media_type>
-<id>1</id>
-<name>Melodies</name>
-</media_type>
-<media_type>
-<id>2</id>
-<name>Pictures</name>
-</media_type>
-</media_types>
-<billing_info>
-<operator id="105">
-<billing>
-<category_id>1</category_id>
-<media_type_id>1</media_type_id>
-<service_number>4018</service_number>
-<price>1.50</price>
-<currency>DOLLAR</currency>
-</billing>
-<billing>
-<category_id>1</category_id>
-<media_type_id>2</media_type_id>
-<service_number>5066</service_number>
-<price>2</price>
-<currency>DOLLAR</currency>
-</billing>
-</operator>
-</billing_info>
+
+    <categories>
+	<category>
+	    <id>1</id>
+	    <name>Premium1</name>
+	</category>
+	<category>
+	    <id>2</id>
+	    <name>Premium2</name>
+	</category>
+    </categories>
+    
+    <media_types>
+	<media_type>
+	    <id>1</id>
+	    <name>Melodies</name>
+	</media_type>
+	<media_type>
+	    <id>2</id>
+	    <name>Pictures</name>
+	</media_type>
+    </media_types>
+    
+    <billing_info>
+	<operator id="1">
+	    <billing>
+		<category_id>1</category_id>
+		<media_type_id>1</media_type_id>
+		<service_number>1111</service_number>
+		<price>1.50</price>
+		<currency>DOLLAR</currency>
+	    </billing>
+	    <billing>
+		<category_id>1</category_id>
+		<media_type_id>2</media_type_id>
+		<service_number>1112</service_number>
+		<price>2</price>
+		<currency>DOLLAR</currency>
+	    </billing>
+	</operator>
+    </billing_info>
 </tariff_matrix>
