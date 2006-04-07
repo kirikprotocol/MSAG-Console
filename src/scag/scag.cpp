@@ -23,6 +23,7 @@
 #include "util/xml/utilFunctions.h"
 #include "scag/re/XMLHandlers.h"
 
+#include "scag/transport/http/HttpLogger.h"
 
 namespace scag
 {
@@ -314,12 +315,12 @@ void Scag::init()
     //smsc::util::regexp::RegExp::InitLocale();
 
 
-    try {
+/*    try {
         InitLicense(*cfg.getLicConfig());
     } catch (exception& e) {
         smsc_log_error(log, "Cannot initialize license. Initialization stopped. %s", e.what());
         throw;
-    }
+    }*/
     //********************************************************
     //************** SmppManager initialization **************
     try {
@@ -515,8 +516,54 @@ void Scag::init()
   //scag::re::RuleEngine::Instance().process(commandDeliver, *session);
   //scag::re::RuleEngine::Instance().process(commandDeliverResp, *session);
 
-  ////////////////////////// FOR TEST
-  */
+  ////////////////////////// FOR TEST 
+  */                                  
+    //********************************************************
+    //************** HttpManager initialization **************
+/*    try {
+        smsc_log_info(log, "Http Manager is starting");
+
+        scag::transport::http::httpLogger = smsc::logger::Logger::getInstance("httpLogger");
+
+        scag::transport::http::HttpProcessor::Init("./conf");
+        scag::transport::http::HttpProcessor& hp = scag::transport::http::HttpProcessor::Instance();
+
+        using scag::config::ConfigView;
+
+        std::auto_ptr<ConfigView> cv(new ConfigView(*cfg.getConfig(), "HttpTransport"));
+
+        scag::transport::http::HttpManagerConfig http_cfg(10, 10, 10, 10, 10, 10, 100, "", 1234);
+
+        auto_ptr <char> host(cv->getString("host", NULL, false));
+        http_cfg.host = host.get();
+
+        http_cfg.readerSockets = cv->getInt("readerSockets", NULL);
+        http_cfg.writerSockets = cv->getInt("writerSockets", NULL);
+        http_cfg.readerPoolSize = cv->getInt("readerPoolSize", NULL);
+        http_cfg.writerPoolSize = cv->getInt("writerPoolSize", NULL);
+        http_cfg.scagPoolSize = cv->getInt("scagPoolSize", NULL);
+        http_cfg.scagQueueLimit = cv->getInt("scagQueueLimit", NULL);
+        http_cfg.connectionTimeout = cv->getInt("connectionTimeout", NULL);
+        http_cfg.port = cv->getInt("port", NULL);
+        smsc_log_error(log, "http_host=%s, http_port=%d", http_cfg.host.c_str(), http_cfg.port);
+
+        httpMan.init(hp, http_cfg);
+
+        smsc_log_info(log, "Http Manager started");
+    }catch(Exception& e)
+    {
+        throw Exception("Exception during initialization of HttpManager: %s", e.what());
+    }catch (XMLException& e)
+    {
+        scag::re::StrX msg(e.getMessage());
+
+        throw Exception("Exception during initialization of HttpManager: %s", msg.localForm());
+    }catch (...)
+    {
+        throw Exception("Exception during initialization of HttpManager: unknown error");
+    }*/
+  //********************************************************
+
   smsc_log_info(log, "SCAG init complete" );
 
   __trace__("Smsc::init completed");
@@ -560,6 +607,7 @@ void Scag::shutdown()
 {
   __trace__("shutting down");
 
+  //httpMan.shutdown();
   //tp.shutdown();
   //tp2.shutdown();
 }

@@ -19,6 +19,8 @@
 #include "sms/sms.h"
 #include "scag/transport/smpp/SmppManager.h"
 #include "scag/transport/smpp/SmppManagerAdmin.h"
+#include "scag/transport/http/Managers.h"
+#include "scag/transport/http/HttpProcessor.h"
 #include "util/crc32.h"
 #include "scag/util/Reffer.h"
 
@@ -241,6 +243,7 @@ protected:
   std::string scagHost;
   int scagPort;
   scag::transport::smpp::SmppManager smppMan;
+  scag::transport::http::HttpManager httpMan;
 
   scag::performance::PerformanceDataDispatcher perfDataDisp;
 
