@@ -20,7 +20,7 @@ StopWatch::StopWatch(TimeWatcher * owner, unsigned tm_id)
 void StopWatch::init(TimerListenerITF * listener, OPAQUE_OBJ * opaque_obj/* = NULL*/)
 {
     _cb_event = listener;
-    _tmrState = tmrIdle;
+    _tmrState = tmrInited;
     if (opaque_obj)
         _opaqueObj = *opaque_obj;
 }
@@ -119,9 +119,10 @@ void TimeNotifier::Stop(void)
     smsc_log_debug(logger, "TmNtfr: stopped");
 }
 
-int TimeNotifier::Execute()
+int TimeNotifier::Execute(void)
 {
     smsc_log_debug(logger, "TmNtfr: started.");
+    _sync.Lock();
     _running = true;
     awaked.Signal();
     while (_running || timers.size()) {
@@ -132,7 +133,7 @@ int TimeNotifier::Execute()
                 try {
                     smsc_log_debug(logger, "TmNtfr: signaling timer[%u]", tmr->getId());
                     tmr->signal();
-                } catch ( std::exception& exc ) {
+                } catch (std::exception& exc) {
                     smsc_log_error(logger, "TmNtfr: timer[%u] listener exception: %s", tmr->getId(), exc.what());
                 } catch (...) {
                     smsc_log_error(logger, "TmNtfr: timer[%u] listener unknown exception", tmr->getId());
@@ -217,6 +218,7 @@ int TimeWatcher::Execute(void)
         return tmwUnexpected;
 
     smsc_log_debug(logger, "TmWT: started.");
+    _sync.Lock();
     _running = true;
     awake.Signal();
     while (_running) {
@@ -270,21 +272,21 @@ TimerID TimeWatcher::createTimer(TimerListenerITF * listener/*= NULL*/,
     
     if (pool.size()) {
         tmr = *(pool.begin());
+        pool.pop_front();
     } else {
         tmr = new StopWatch(this, ++_lastId);
-        pool.push_back(tmr);
     }
     tmr->init(listener, opaque_obj);
+    assigned.push_back(tmr);
     return tmr;
 }
 
 void TimeWatcher::stopTimer(TimerID tmr)
 {
-    smsc_log_debug(logger, "TmWT: stopping timer[%u]", tmr->getId());
     //firstly set Stopped status, because of timer may be already passed to Notifier
     ((StopWatch*)tmr)->setStatus(StopWatch::tmrStopped);
+    smsc_log_debug(logger, "TmWT: stopping timer[%u]", tmr->getId());
     MutexGuard tmpGrd(_sync);
-
     TimersLIST::iterator it = std::find(signaled.begin(), signaled.end(), tmr);
     if (it != signaled.end()) {
         signaled.erase(it);
@@ -296,7 +298,8 @@ void TimeWatcher::stopTimer(TimerID tmr)
             started.erase(it);
             pool.push_back((StopWatch*)tmr);
             smsc_log_debug(logger, "TmWT: timer[%u] moved to pool (started)", tmr->getId());
-        } //else StopWatch is already in pool
+        } else
+            smsc_log_warn(logger, "TmWT: timer[%u] neither signaled nor started", tmr->getId());
     }
     return;
 }
@@ -317,17 +320,16 @@ StopWatch::TMError TimeWatcher::startTimer(TimerID tmr, struct timeval & abs_tim
     }
 
     MutexGuard tmpGrd(_sync);
-    TimersLIST::iterator it = std::find(pool.begin(), pool.end(), tmr);
-    if (it == pool.end()) {
+    TimersLIST::iterator it = std::find(assigned.begin(), assigned.end(), tmr);
+    if (it == assigned.end()) {
         it = std::find(started.begin(), started.end(), tmr);
         return (it != started.end()) ? 
             StopWatch::errActiveTimer : StopWatch::errBadTimer;
     }
-        
     ((StopWatch*)tmr)->activate(abs_time);
-    smsc_log_debug(logger, "TmWT: timer[%u] is activated.", tmr->getId());
-    pool.erase(it);
+    assigned.erase(it);
     started.push_back((StopWatch*)tmr);
+    smsc_log_debug(logger, "TmWT: timer[%u] is activated.", tmr->getId());
     _sync.notify();
     return StopWatch::noErr;
 }

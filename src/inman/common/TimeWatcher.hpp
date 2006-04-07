@@ -74,7 +74,7 @@ class TimeWatcher;
 class StopWatch {
 public:
     //NOTE: the order of states is important!!!
-    typedef enum { tmrIdle = 0, tmrActive, tmrAborted, tmrStopped, tmrExpired 
+    typedef enum { tmrIdle = 0, tmrInited, tmrActive, tmrAborted, tmrStopped, tmrExpired 
     } SWStatus;
     typedef enum { noErr = 0, errBadTimer = 1, errBadTimeVal = 2, errActiveTimer
     } TMError;
@@ -157,9 +157,10 @@ private:
     unsigned        _lastId;
     bool            _running;
     EventMonitorPSX _sync;
-    TimersLIST      started;
-    TimersLIST      signaled;
-    TimersLIST      pool;
+    TimersLIST      started;    //started timers
+    TimersLIST      signaled;   //timers are to signal
+    TimersLIST      pool;       //pool of idle timers
+    TimersLIST      assigned;   //initialized, but not started timers
     TimeNotifier *  ntfr;
     Logger *        logger;
 };
