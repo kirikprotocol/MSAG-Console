@@ -7,7 +7,7 @@
 #include "scag/transport/smpp/router/route_manager.h"
 #include "util/config/smeman/SmeManConfig.h"
 #include "scag/performance.hpp"
-#include "sme/SmppBase.hpp"
+//#include "sme/SmppBase.hpp"
 #include "smeman/smsccmd.h"
 #include "scag/stat/StatisticsManager.h"
 #include "core/buffers/XHash.hpp"
@@ -47,12 +47,12 @@ public:
  void init(){};
 void run()
   {
-	     while(!stopFlag)
-	        {
-		      sleep(1);
-	         }
-		 
-	   };
+       while(!stopFlag)
+          {
+          sleep(1);
+           }
+
+     };
      void stop(){stopFlag=true;}
 
   void abortScag()
@@ -75,11 +75,9 @@ void run()
 
      protected:
        bool stopFlag;
-       scag::transport::smpp::SmppManager smppMan;			       
+       scag::transport::smpp::SmppManager smppMan;
 
        };
-   
+
    }//scag
 #endif
- 
-			       

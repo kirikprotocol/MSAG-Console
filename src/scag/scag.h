@@ -8,7 +8,7 @@
 #include "scag/transport/smpp/router/route_manager.h"
 #include "util/config/smeman/SmeManConfig.h"
 #include "scag/performance.hpp"
-#include "sme/SmppBase.hpp"
+//#include "sme/SmppBase.hpp"
 #include "smeman/smsccmd.h"
 #include "scag/stat/StatisticsManager.h"
 #include "core/buffers/XHash.hpp"
@@ -281,4 +281,3 @@ protected:
 
 
 #endif // __SCAG_SYSTEM_CORE__
-
