@@ -22,7 +22,7 @@ class BillingManagerImpl : public BillingManager, public Thread, public BillingM
 {
     struct BillTransaction
     {
-        CTransportId transportId;
+        CTransactionData data;
         int EventMonitorIndex;
         TransactionStatus status;
 
@@ -63,7 +63,7 @@ public:
     virtual int Execute();
     virtual void Start();
 
-    virtual int ChargeBill(CTransportId& transportId);
+    virtual int ChargeBill(CTransactionData& data);
     virtual TransactionStatus CheckBill(int billId, EventMonitor * eventMonitor);
     virtual TransactionStatus GetStatus(int billId);
 
@@ -73,6 +73,8 @@ public:
     virtual void onChargeSmsResult(ChargeSmsResult* result);
 
     virtual Infrastructure& getInfrastructure() { return infrastruct; };
+    virtual CTransactionData getTransactionData(int billId);
+
 
     BillingManagerImpl() : 
         m_bStarted(false), 
@@ -198,7 +200,7 @@ void BillingManagerImpl::Start()
     }
 }
 
-int BillingManagerImpl::ChargeBill(CTransportId& transportId)
+int BillingManagerImpl::ChargeBill(CTransactionData& data)
 {
     MutexGuard guard(inUseLock);
 
@@ -206,7 +208,7 @@ int BillingManagerImpl::ChargeBill(CTransportId& transportId)
 
     BillTransaction billTransaction;
 
-    billTransaction.transportId = transportId;
+    billTransaction.data = data;
     billTransaction.status = TRANSACTION_WAIT_ANSWER;
 
     BillTransactionHash.Insert(m_lastBillId, billTransaction);
@@ -250,6 +252,8 @@ TransactionStatus BillingManagerImpl::CheckBill(int billId, EventMonitor * event
     return pBillTransaction->status;
 }
 
+
+
 TransactionStatus BillingManagerImpl::GetStatus(int billId)
 {
     MutexGuard guard(inUseLock);
@@ -259,6 +263,18 @@ TransactionStatus BillingManagerImpl::GetStatus(int billId)
     if (!pBillTransaction) return TRANSACTION_NOT_STARTED;
     return pBillTransaction->status;
 }
+
+CTransactionData BillingManagerImpl::getTransactionData(int billId)
+{
+    MutexGuard guard(inUseLock);
+
+    BillTransaction * pBillTransaction = BillTransactionHash.GetPtr(billId);
+
+    if (!pBillTransaction) throw SCAGException("Cannot find transaction for billId=%d", billId);
+
+    return pBillTransaction->data;
+}
+
 
 
 void BillingManagerImpl::commit(int billId)

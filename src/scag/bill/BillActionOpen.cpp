@@ -98,8 +98,14 @@ bool BillActionOpen::run(ActionContext& context)
 
     BillingManager& bm = BillingManager::Instance();
 
-    CTransportId transportId;
-    int BillId = bm.ChargeBill(transportId);
+    CTransactionData transactionData;
+
+    transactionData.category = m_category;
+    transactionData.mediatype = m_mediaType;
+
+
+    int BillId = bm.ChargeBill(transactionData);
+
     operation->attachBill(BillId);
 
     context.makeBillEvent(TRANSACTION_OPEN, m_category, m_mediaType, ev);

@@ -14,10 +14,13 @@ using namespace smsc::core::synchronization;
 using namespace scag::config;
 using namespace scag::bill::infrastruct;
 
-struct CTransportId
+struct CTransactionData
 {
     Address OA;
     Address DA;
+
+    std::string mediatype;
+    std::string category;
 };
 
 enum TransactionStatus
@@ -52,7 +55,7 @@ protected:
     BillingManager() {};
 
 public:
-    virtual int ChargeBill(CTransportId& transportId) = 0;  //¬озвращ€ет billId
+    virtual int ChargeBill(CTransactionData& data) = 0;  //¬озвращ€ет billId
     virtual TransactionStatus CheckBill(int billId, EventMonitor * eventMonitor) = 0; //”станавливает eventMonitor и возвращ€ет статус транзакции
     virtual TransactionStatus GetStatus(int billId) = 0; //¬озвращ€ет статус транзакции
 
@@ -64,6 +67,7 @@ public:
     //static const ActionFactory * getActionFactory() {return &factory;}
 
     virtual Infrastructure& getInfrastructure() = 0;
+    virtual CTransactionData getTransactionData(int billId) = 0;
 };
 
 

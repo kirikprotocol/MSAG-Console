@@ -66,13 +66,25 @@ bool BillActionClose::run(ActionContext& context)
 
     if (actionCommit) 
     {
-       /* if (!context.makeBillEvent(TRANSACTION_REFUSED, m_category, m_mediaType, ev))
+        Operation * operation = context.GetCurrentOperation();
+        if (!operation)
         {
-            smsc_log_error(logger,"Cannot read tariff matrix parameners for category '%s', mediatype '%s'", m_category.c_str(), m_mediaType.c_str());
+            smsc_log_error(logger,"BillAction 'bill:close': Fatal error in action - operation from ActionContext is invalid");
+            return false;
+        }
+
+        CTransactionData transactionData = bm.getTransactionData(operation->getBillId());
+
+        bm.commit(operation->getBillId());
+        operation->detachBill();
+
+        if (!context.makeBillEvent(TRANSACTION_REFUSED, transactionData.category, transactionData.mediatype, ev))
+        {
+            smsc_log_error(logger,"Cannot read tariff matrix parameners for category '%s', mediatype '%s'", transactionData.category.c_str(), transactionData.mediatype.c_str());
             return true;
         }
 
-        statistics.registerSaccEvent(ev);*/
+        statistics.registerSaccEvent(ev);
     }
     else
     {
@@ -83,11 +95,18 @@ bool BillActionClose::run(ActionContext& context)
             return false;
         }
 
+        CTransactionData transactionData = bm.getTransactionData(operation->getBillId());
+
         bm.rollback(operation->getBillId());
         operation->detachBill();
         
-        //context.makeBillEvent(TRANSACTION_CALL_ROLLBACK, ev);
-        //statistics.registerSaccEvent(ev);
+        if (!context.makeBillEvent(TRANSACTION_CALL_ROLLBACK, transactionData.category, transactionData.mediatype, ev))
+        {
+            smsc_log_error(logger,"Cannot read tariff matrix parameners for category '%s', mediatype '%s'", transactionData.category.c_str(), transactionData.mediatype.c_str());
+            return true;
+        }
+
+        statistics.registerSaccEvent(ev);
     }
 
  /*
