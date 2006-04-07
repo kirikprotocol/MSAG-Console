@@ -84,7 +84,7 @@ namespace scag { namespace re { namespace actions
         void AddPendingOperation(uint8_t type, time_t pendingTime);
         Operation * GetCurrentOperation() {return session.GetCurrentOperation();}
 
-        bool makeBillEvent(int billCommand, std::string& category, std::string& medyaType, SACC_BILLING_INFO_EVENT_t& ev);
+        void makeBillEvent(int billCommand, std::string& category, std::string& medyaType, SACC_BILLING_INFO_EVENT_t& ev);
     };
 
 }}}

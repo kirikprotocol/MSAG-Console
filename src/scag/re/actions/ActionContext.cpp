@@ -91,11 +91,11 @@ void ActionContext::makeBillEvent(int billCommand, std::string& category, std::s
     int operatorId = istr.GetOperatorID(commandProperty.abonentAddr);
     
     if (operatorId == 0) 
-        throw SCAGException("Cannot find OperatorID for %s abonent", commandProperty.abonentAddr.toString().c_str());
+        throw SCAGException("BillEvent: Cannot find OperatorID for %s abonent", commandProperty.abonentAddr.toString().c_str());
 
     auto_ptr<TariffRec> tariffRec(istr.GetTariff(operatorId, category.c_str(), medyaType.c_str()));
     if (!tariffRec.get()) 
-        throw SCAGException("Cannot find tariffRec for OID=%d, cat=%s, mtype=%s ", operatorId, category.c_str(), medyaType.c_str());
+        throw SCAGException("BillEvent: Cannot find tariffRec for OID=%d, cat=%s, mtype=%s ", operatorId, category.c_str(), medyaType.c_str());
 
     ev.Header.cCommandId = billCommand;
 
@@ -105,7 +105,7 @@ void ActionContext::makeBillEvent(int billCommand, std::string& category, std::s
     ev.Header.iServiceProviderId = istr.GetProviderID(commandProperty.serviceId);
 
     if (ev.Header.iServiceProviderId == 0) 
-        throw SCAGException("Cannot find ProviderID for ServiceID=%d", commandProperty.serviceId);
+        throw SCAGException("BillEvent: Cannot find ProviderID for ServiceID=%d", commandProperty.serviceId);
 
     timeval tv;
     gettimeofday(&tv,0);
