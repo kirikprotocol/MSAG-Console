@@ -16,10 +16,6 @@ RuleStatus HttpEventHandler::processRequest(HttpCommand& command, Session& sessi
 
     HttpCommandAdapter _command(command);
 
-//    SACC_TRAFFIC_INFO_EVENT_t ev;
-//    CommandBrige::makeTrafficEvent(*smppcommand, (int)propertyObject.HandlerId, session.getPrimaryKey(), ev);
-//    Statistics::Instance().registerSaccEvent(ev);
-   
     try{
 
         session.setOperationFromPending(command, CO_HTTP_DELIVERY);
@@ -65,10 +61,6 @@ RuleStatus HttpEventHandler::processResponse(HttpCommand& command, Session& sess
 
     HttpCommandAdapter _command(command);
 
-//    SACC_TRAFFIC_INFO_EVENT_t ev;
-//    CommandBrige::makeTrafficEvent(*smppcommand, (int)propertyObject.HandlerId, session.getPrimaryKey(), ev);
-//    Statistics::Instance().registerSaccEvent(ev);
-   
     try{
         session.setCurrentOperation(command.getOperationId());
 
@@ -76,7 +68,6 @@ RuleStatus HttpEventHandler::processResponse(HttpCommand& command, Session& sess
 
         std::string str;
         RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), str);
-
 
         ActionContext context(_constants, session, _command, commandProperty);
 
@@ -100,10 +91,6 @@ RuleStatus HttpEventHandler::processDelivery(HttpCommand& command, Session& sess
 {
     smsc_log_debug(logger, "Process HttpEventHandler Delivery...");
 
-//    SACC_TRAFFIC_INFO_EVENT_t ev;
-//    CommandBrige::makeTrafficEvent(*smppcommand, (int)propertyObject.HandlerId, session.getPrimaryKey(), ev);
-//    Statistics::Instance().registerSaccEvent(ev);
-   
     try{
         session.setCurrentOperation(command.getOperationId());
         session.closeCurrentOperation();            
@@ -125,6 +112,9 @@ RuleStatus HttpEventHandler::process(SCAGCommand& command, Session& session)
     smsc_log_debug(logger, "Process HttpEventHandler...");
 
     HttpCommand& hc = (HttpCommand&)command;
+
+//    CommandProperty commandProperty(command, 0, Address(command.getAbonent()));
+//    RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), "");
 
     switch(hc.getCommandId())
     {
