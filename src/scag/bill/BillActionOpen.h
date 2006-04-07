@@ -20,12 +20,10 @@ class BillActionOpen : public Action
     std::string m_category;
     std::string m_mediaType;
 protected:
-    virtual IParserHandler * StartXMLSubSection(const std::string& name,
-                                                const SectionParams& params,
-                                                const ActionFactory& factory);
+    virtual IParserHandler * StartXMLSubSection(const std::string& name, const SectionParams& params, const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);
 public:
-    BillActionOpen() {}
+    BillActionOpen() : logger(0) {}
     virtual bool run(ActionContext& context);
     virtual void init(const SectionParams& params,PropertyObject propertyObject);
 };

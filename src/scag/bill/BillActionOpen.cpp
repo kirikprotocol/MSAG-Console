@@ -108,7 +108,12 @@ bool BillActionOpen::run(ActionContext& context)
 
     operation->attachBill(BillId);
 
-    context.makeBillEvent(TRANSACTION_OPEN, m_category, m_mediaType, ev);
+    if (!context.makeBillEvent(TRANSACTION_OPEN, m_category, m_mediaType, ev))
+    {
+        smsc_log_error(logger,"Cannot read tariff matrix parameners for category '%s', mediatype '%s'", transactionData.category.c_str(), transactionData.mediatype.c_str());
+        return true;
+    }
+
     statistics.registerSaccEvent(ev);
 
     return true;
