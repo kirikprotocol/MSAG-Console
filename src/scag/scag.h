@@ -29,7 +29,7 @@ namespace scag
 
 using smsc::sms::SMS;
 using smsc::core::threads::ThreadedTask;
-using smsc::sme::SmeConfig;
+//using smsc::sme::SmeConfig;
 
 using smsc::smeman::SmscCommand;
 

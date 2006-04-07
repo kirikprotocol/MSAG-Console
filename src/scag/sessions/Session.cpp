@@ -443,7 +443,7 @@ void Session::expirePendingOperation()
 
 void Session::closeCurrentOperation()
 {
-    smsc_log_debug(logger,"Session: close current operation (id=%d)", currentOperationId);
+    smsc_log_debug(logger,"Session: close current operation (id=%lld)", currentOperationId);
 
     delete m_pCurrentOperation;
     m_pCurrentOperation = 0;
@@ -453,10 +453,10 @@ void Session::closeCurrentOperation()
 }
 
 
-Operation * Session::setCurrentOperation(int operationId)
+Operation * Session::setCurrentOperation(uint64_t operationId)
 {
     Operation ** operationPtr = OperationsHash.GetPtr(operationId);
-    if (!operationPtr) throw SCAGException("Cannot find operation (id=%d)", operationId);
+    if (!operationPtr) throw SCAGException("Cannot find operation (id=%lld)", operationId);
 
 
     currentOperationId = operationId;
@@ -486,7 +486,6 @@ void Session::setOperationFromPending(SCAGCommand& cmd, int operationType)
 
 Operation * Session::AddNewOperationToHash(SCAGCommand& cmd, int operationType)
 {
-    smsc_log_debug(logger,"** Session: create new operation");
 
     Operation * operation = new Operation();
     operation->type = operationType;
@@ -497,6 +496,9 @@ Operation * Session::AddNewOperationToHash(SCAGCommand& cmd, int operationType)
     m_pCurrentOperation = operation;
 
     bChanged = true;
+
+    smsc_log_debug(logger,"** Session: create new operation (id=%lld)", currentOperationId);
+
     return operation;
 }
 

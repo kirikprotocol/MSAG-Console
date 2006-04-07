@@ -157,7 +157,7 @@ namespace scag { namespace sessions
         void setStatus(ICCOperationStatus status) {m_Status = status;}
 
         ~Operation() {}
-        Operation() :logger(0), m_hasBill(false), m_receivedParts(0), m_receivedAllParts(false), m_receivedAllResp(false) {logger = Logger::getInstance("scag.re");};
+        Operation() :logger(0), m_hasBill(false), m_receivedResp(false), m_receivedParts(0), m_receivedAllParts(false), m_receivedAllResp(false) {logger = Logger::getInstance("scag.re");};
     };
 
 
@@ -176,7 +176,7 @@ namespace scag { namespace sessions
 
         COperationsHash OperationsHash;
         Operation * m_pCurrentOperation;
-        int currentOperationId;
+        uint64_t currentOperationId;
         int lastOperationId;
 
         CSessionKey             m_SessionKey;           //Ключ для SessionManager
@@ -231,7 +231,7 @@ namespace scag { namespace sessions
         void abort();
         Operation * GetCurrentOperation() const;
         Operation * AddNewOperationToHash(SCAGCommand& cmd, int operationType);
-        Operation * setCurrentOperation(int operationId);
+        Operation * setCurrentOperation(uint64_t operationId);
         void setOperationFromPending(SCAGCommand& cmd, int operationType);
 
         

@@ -163,11 +163,8 @@ public:
   }
   int run()
   {
-<<<<<<< scag.cpp
     uint64_t cnt = 0, last=0;
-=======
-    uint64_t cnt=0,last=0;
->>>>>>> 1.45
+
     timespec now={0,0},lasttime={0,0};
     double ut,tm,rate,avg;
     if(start.tv_sec==0)
@@ -195,11 +192,8 @@ public:
       // replace queue
       //cnt=queue.getCounter();
 
-<<<<<<< scag.cpp
+
       int eqhash,equnl = 0;
-=======
-      int eqhash,equnl=0;
->>>>>>> 1.45
 
       //=======================
       // replace queue
