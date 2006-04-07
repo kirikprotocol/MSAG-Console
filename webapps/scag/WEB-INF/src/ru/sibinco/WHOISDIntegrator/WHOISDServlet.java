@@ -36,13 +36,13 @@ public class WHOISDServlet extends HttpServlet {
     LinkedList result = new LinkedList();
     try {
     switch (id) {
-      case WHOISDRequest.OPERATORS: result = loadXml(WHOISDRequest.OPERATORS, appContext.getConfig().getString("operators_file")); SendResult(result, resp); break;
-      case WHOISDRequest.OPERATORS_SCHEMA: result = getSchema(WHOISDRequest.OPERATORS_SCHEMA, appContext.getConfig().getString("operators_file")); SendResult(result, resp); break;
-      case WHOISDRequest.SERVICES:  result = loadXml(WHOISDRequest.SERVICES, appContext.getConfig().getString("services_file")); SendResult(result, resp); break;
-      case WHOISDRequest.SERVICES_SCHEMA: result = getSchema(WHOISDRequest.SERVICES_SCHEMA, appContext.getConfig().getString("services_file")); SendResult(result, resp); break;
+      case WHOISDRequest.OPERATORS: result = loadXml(WHOISDRequest.OPERATORS, appContext.getConfig().getString("gw location.operators_file")); SendResult(result, resp); break;
+      case WHOISDRequest.OPERATORS_SCHEMA: result = getSchema(WHOISDRequest.OPERATORS_SCHEMA, appContext.getConfig().getString("gw location.operators_file")); SendResult(result, resp); break;
+      case WHOISDRequest.SERVICES:  result = loadXml(WHOISDRequest.SERVICES, appContext.getConfig().getString("gw location.services_file")); SendResult(result, resp); break;
+      case WHOISDRequest.SERVICES_SCHEMA: result = getSchema(WHOISDRequest.SERVICES_SCHEMA, appContext.getConfig().getString("gw location.services_file")); SendResult(result, resp); break;
       case WHOISDRequest.RULE: result = getRule(req);  SendResult(result, resp); break;
-      case WHOISDRequest.TARIFF_MATRIX: result = loadXml(WHOISDRequest.TARIFF_MATRIX, appContext.getConfig().getString("tariffs_file"));  SendResult(result, resp); break;
-      case WHOISDRequest.TARIFF_MATRIX_SCHEMA: result = getSchema(WHOISDRequest.TARIFF_MATRIX_SCHEMA, appContext.getConfig().getString("tariffs_file"));  SendResult(result, resp); break;
+      case WHOISDRequest.TARIFF_MATRIX: result = loadXml(WHOISDRequest.TARIFF_MATRIX, appContext.getConfig().getString("gw location.tariffs_file"));  SendResult(result, resp); break;
+      case WHOISDRequest.TARIFF_MATRIX_SCHEMA: result = getSchema(WHOISDRequest.TARIFF_MATRIX_SCHEMA, appContext.getConfig().getString("gw location.tariffs_file"));  SendResult(result, resp); break;
       default:
         resp.setHeader("status","false");
         result.add(WHOISD_ERROR_PREFIX + "Wrong request for get method, available: " + Arrays.asList(WHOISDRequest.WHOISDRequests));
@@ -71,7 +71,7 @@ public class WHOISDServlet extends HttpServlet {
        try {
         switch (id) {
           case WHOISDRequest.RULE: applyTerm(req,isMultipartFormat(req));SendResult(result, resp); break;
-          case WHOISDRequest.TARIFF_MATRIX: applyTariffMatrix(appContext.getConfig().getString("tariffs_file"),req,isMultipartFormat(req)); SendResult(result, resp); break;
+          case WHOISDRequest.TARIFF_MATRIX: applyTariffMatrix(appContext.getConfig().getString("gw location.tariffs_file"),req,isMultipartFormat(req)); SendResult(result, resp); break;
           default:
             resp.setHeader("status","false");
             result.add(WHOISD_ERROR_PREFIX+"Wrong request for post method");
@@ -130,7 +130,7 @@ public class WHOISDServlet extends HttpServlet {
          if (curRule!=null) rulemanager.removeRule(service,transports[i]);
          continue;
        }
-       String ruleSystemId = appContext.getConfig().getString("rules_folder")+"/"+ transports[i] + "/"+ruleWHOISD.getId().toString();
+       String ruleSystemId = appContext.getConfig().getString("gw location.rules_folder")+"/"+ transports[i] + "/"+ruleWHOISD.getId().toString();
        try {
         parser.parseRule(rulemanager.getRuleContentAsString(ruleWHOISD), ruleSystemId, transports[i]);
        } catch(WHOISDException e) {
