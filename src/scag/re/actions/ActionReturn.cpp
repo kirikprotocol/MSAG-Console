@@ -50,16 +50,21 @@ bool ActionReturn::run(ActionContext& context)
 
     if (ft==ftUnknown) 
     {
+        rs.result = atoi(ReturnValue.c_str());
         rs.status = atoi(ReturnValue.c_str());
     }
     else
     {
         Property * property = context.getProperty(ReturnValue);
-        if (property) rs.result = property->getBool();
+        if (property) 
+        {
+            rs.result = property->getBool();
+            rs.status = property->getBool();
+        }
         else smsc_log_warn(logger,"Action 'return': invalid property '%s' to return", ReturnValue.c_str());
     }
     context.setRuleStatus(rs);
-    smsc_log_debug(logger,"Action 'return': return status %d",rs.status);
+    smsc_log_debug(logger,"Action 'return': return status %d",rs.result);
 
     return false;
 }

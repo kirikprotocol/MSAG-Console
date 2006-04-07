@@ -108,7 +108,16 @@ bool BillActionOpen::run(ActionContext& context)
 
     operation->attachBill(BillId);
 
-    context.makeBillEvent(TRANSACTION_OPEN, m_category, m_mediaType, ev);
+    try 
+    {
+        context.makeBillEvent(TRANSACTION_OPEN, m_category, m_mediaType, ev);
+    } catch (SCAGException& e)
+    {
+        smsc_log_warn(logger,"BillAction 'bill:open' return false. Delails: %s", e.what());
+        //TODO: set to status - false
+        return true;
+    }
+
 
     statistics.registerSaccEvent(ev);
 

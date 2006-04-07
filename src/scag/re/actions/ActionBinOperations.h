@@ -75,7 +75,7 @@ protected:
     {
         if (value == 0) 
         {
-            smsc_log_debug(logger,"Action '%s' cannot process operation. Details: Devision by zero", m_ActionName.c_str());
+            smsc_log_warn(logger,"Action '%s' cannot process operation. Details: Devision by zero", m_ActionName.c_str());
             return variable;
         }
 
@@ -94,7 +94,7 @@ protected:
     {
         if (value == 0) 
         {
-            smsc_log_debug(logger,"Action '%s' cannot process operation. Details: Devision by zero", m_ActionName.c_str());
+            smsc_log_warn(logger,"Action '%s' cannot process operation. Details: Devision by zero", m_ActionName.c_str());
             return variable;
         }
         return (variable / value);

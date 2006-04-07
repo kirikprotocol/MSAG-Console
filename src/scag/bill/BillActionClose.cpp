@@ -78,7 +78,17 @@ bool BillActionClose::run(ActionContext& context)
         bm.commit(operation->getBillId());
         operation->detachBill();
 
-        context.makeBillEvent(TRANSACTION_REFUSED, transactionData.category, transactionData.mediatype, ev);
+        try 
+        {
+            context.makeBillEvent(TRANSACTION_REFUSED, transactionData.category, transactionData.mediatype, ev);
+        } catch (SCAGException& e)
+        {
+            smsc_log_warn(logger,"BillAction 'bill:close' return false. Delails: %s", e.what());
+            //TODO: set to status - false
+            return true;
+        }
+
+
         statistics.registerSaccEvent(ev);
     }
     else
@@ -95,7 +105,16 @@ bool BillActionClose::run(ActionContext& context)
         bm.rollback(operation->getBillId());
         operation->detachBill();
         
-        context.makeBillEvent(TRANSACTION_CALL_ROLLBACK, transactionData.category, transactionData.mediatype, ev);
+        try 
+        {
+            context.makeBillEvent(TRANSACTION_CALL_ROLLBACK, transactionData.category, transactionData.mediatype, ev);
+        } catch (SCAGException& e)
+        {
+            smsc_log_warn(logger,"BillAction 'bill:close' return false. Delails: %s", e.what());
+            //TODO: set to status - false
+            return true;
+        }
+
         statistics.registerSaccEvent(ev);
     }
 
