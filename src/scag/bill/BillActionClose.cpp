@@ -78,12 +78,7 @@ bool BillActionClose::run(ActionContext& context)
         bm.commit(operation->getBillId());
         operation->detachBill();
 
-        if (!context.makeBillEvent(TRANSACTION_REFUSED, transactionData.category, transactionData.mediatype, ev))
-        {
-            smsc_log_error(logger,"Cannot read tariff matrix parameners for category '%s', mediatype '%s'", transactionData.category.c_str(), transactionData.mediatype.c_str());
-            return true;
-        }
-
+        context.makeBillEvent(TRANSACTION_REFUSED, transactionData.category, transactionData.mediatype, ev);
         statistics.registerSaccEvent(ev);
     }
     else
@@ -100,12 +95,7 @@ bool BillActionClose::run(ActionContext& context)
         bm.rollback(operation->getBillId());
         operation->detachBill();
         
-        if (!context.makeBillEvent(TRANSACTION_CALL_ROLLBACK, transactionData.category, transactionData.mediatype, ev))
-        {
-            smsc_log_error(logger,"Cannot read tariff matrix parameners for category '%s', mediatype '%s'", transactionData.category.c_str(), transactionData.mediatype.c_str());
-            return true;
-        }
-
+        context.makeBillEvent(TRANSACTION_CALL_ROLLBACK, transactionData.category, transactionData.mediatype, ev);
         statistics.registerSaccEvent(ev);
     }
 

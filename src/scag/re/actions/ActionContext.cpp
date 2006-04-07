@@ -84,22 +84,28 @@ void ActionContext::abortSession()
 }
 
 
-bool ActionContext::makeBillEvent(int billCommand, std::string& category, std::string& medyaType, SACC_BILLING_INFO_EVENT_t& ev)
+void ActionContext::makeBillEvent(int billCommand, std::string& category, std::string& medyaType, SACC_BILLING_INFO_EVENT_t& ev)
 {
     Infrastructure& istr = BillingManager::Instance().getInfrastructure();
 
     int operatorId = istr.GetOperatorID(commandProperty.abonentAddr);
-    if (operatorId == 0) return false;
+    
+    if (operatorId == 0) 
+        throw SCAGException("Cannot find OperatorID for %s abonent", commandProperty.abonentAddr.toString().c_str());
 
     auto_ptr<TariffRec> tariffRec(istr.GetTariff(operatorId, category.c_str(), medyaType.c_str()));
-    if (!tariffRec.get()) return false;
+    if (!tariffRec.get()) 
+        throw SCAGException("Cannot find tariffRec for OID=%d, cat=%s, mtype=%s ", operatorId, category.c_str(), medyaType.c_str());
 
     ev.Header.cCommandId = billCommand;
 
     ev.Header.cProtocolId = commandProperty.protocol;
     ev.Header.iServiceId = commandProperty.serviceId;
+
     ev.Header.iServiceProviderId = istr.GetProviderID(commandProperty.serviceId);
-    if (ev.Header.iServiceProviderId == 0) return false;
+
+    if (ev.Header.iServiceProviderId == 0) 
+        throw SCAGException("Cannot find ProviderID for ServiceID=%d", commandProperty.serviceId);
 
     timeval tv;
     gettimeofday(&tv,0);
@@ -121,7 +127,6 @@ bool ActionContext::makeBillEvent(int billCommand, std::string& category, std::s
     if (size > tariffRec->Currency.size()) size = tariffRec->Currency.size();
 
     memcpy(ev.pBillingCurrency, tariffRec->Currency.c_str(), size);
-    return true;
 }
 
 }}}
