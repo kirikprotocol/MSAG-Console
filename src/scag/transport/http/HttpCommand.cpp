@@ -57,6 +57,14 @@ void HttpCommand::setServiceId(int serviceId)
 {
     trc.serviceId = serviceId;
 }
+int HttpCommand::getProviderId() const
+{
+    return trc.providerId;
+}
+void HttpCommand::setProviderId(int providerId)
+{
+    trc.providerId = providerId;
+}
 int64_t HttpCommand::getOperationId() const
 {
     return trc.operationId;
