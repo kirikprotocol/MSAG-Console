@@ -42,6 +42,9 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
     if (name=="inc") return new ActionInc();
     if (name=="dec") return new ActionDec();
 
+    if (name=="mod") return new ActionMod();
+    if (name=="mul") return new ActionMul();
+    if (name=="div") return new ActionDiv();
 
     Action * action = 0;
 

@@ -9,7 +9,7 @@ void ActionBinOperation::init(const SectionParams& params,PropertyObject propert
     logger = Logger::getInstance("scag.re");
 
     if (!params.Exists("var")) throw SCAGException("Action '%s': missing 'var' parameters", m_ActionName.c_str());
-
+    if ((m_valueRequired)&&(!params.Exists("value"))) throw SCAGException("Action '%s': missing 'value' parameters", m_ActionName.c_str());
 
     strVariable = ConvertWStrToStr(params["var"]);
 
