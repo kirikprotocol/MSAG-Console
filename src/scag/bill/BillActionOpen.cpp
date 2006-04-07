@@ -20,7 +20,7 @@ void BillActionOpen::init(const SectionParams& params,PropertyObject propertyObj
     if (params.Exists("content-type")) 
         m_mediaType = ConvertWStrToStr(params["content-type"]);
     else 
-        throw SCAGException("BillAction 'bill:open' : missing 'mediatype' parameter");
+        throw SCAGException("BillAction 'bill:open' : missing 'content-type' parameter");
 
 
     ft = ActionContext::Separate(m_category,name);
