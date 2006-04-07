@@ -66,29 +66,30 @@ bool ActionBinOperation::run(ActionContext& context)
     }
 
     if (!m_hasValue)
-    {
         property->setInt(processOperation(property->getInt(), 1));
-        return true;
-    }
-
-    if (valueFieldType == ftUnknown) 
+    else 
     {
-        property->setInt(processOperation(property->getInt(), atoi(strValue.c_str())));
-    }
-    else
-    {
-        Property * val = context.getProperty(strValue);
-
-        if (val) 
+            if (valueFieldType == ftUnknown) 
         {
-            property->setInt(processOperation(property->getInt(), val->getInt()));
-            //smsc_log_debug(logger,"Action '%s': property '%s' set to '%s'",strVariable.c_str(),strValue.c_str());
+            property->setInt(processOperation(property->getInt(), atoi(strValue.c_str())));
         }
-        else 
-            smsc_log_warn(logger,"Action '%s': cannot process binary operation with '%s' and '%s' value - no such property", m_ActionName.c_str(), strVariable.c_str(),FormatWStr(strValue).c_str());
-            
+        else
+        {
+            Property * val = context.getProperty(strValue);
+    
+            if (val) 
+            {
+                property->setInt(processOperation(property->getInt(), val->getInt()));
+                //smsc_log_debug(logger,"Action '%s': property '%s' set to '%s'",strVariable.c_str(),strValue.c_str());
+            }
+            else 
+                smsc_log_warn(logger,"Action '%s': cannot process binary operation with '%s' and '%s' value - no such property", m_ActionName.c_str(), strVariable.c_str(),FormatWStr(strValue).c_str());
+                
+        }
     }
 
+    int r = property->getInt();
+    smsc_log_debug(logger,"Action '%s': now result is '%d'",m_ActionName.c_str(),r);
     return true;
 }
 

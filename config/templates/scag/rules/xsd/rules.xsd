@@ -109,6 +109,20 @@
                 </complexType>    
             </element>
             
+	    <element name="inc">
+		<complexType>
+		    <attribute name="var" type="scag:Var" use="required" />
+		    <attribute name="value" type="scag:Value" use="optional" />
+		</complexType>
+	    </element>
+	    
+	    <element name="dec">
+		<complexType>
+		    <attribute name="var" type="scag:Var" use="required" />
+		    <attribute name="value" type="scag:Value" use="optional" />
+		</complexType>
+	    </element>
+
         </choice>
     </group>
     

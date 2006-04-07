@@ -51,7 +51,7 @@ protected:
         return variable - value;
     }
 public:
-    ActionDec() {m_ActionName = "inc";}
+    ActionDec() {m_ActionName = "dec";}
 };
 
 
