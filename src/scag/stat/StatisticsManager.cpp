@@ -108,15 +108,15 @@ void StatisticsManager::configure(const StatManConfig& statManConfig)
     int perfScPort = statManConfig.getPerfScPort();
 
 
-	smsc_log_debug(logger,"SACC configuration perfom to start");
-	int saccPort = statManConfig.getSaccPort();
-	std::string saccHost = statManConfig.getSaccHost();
-	int reconnect_timeout = statManConfig.getReconnectTimeout();
-	int queuelen = statManConfig.getMaxQueueLength();
-	thrSaccSender.init(saccHost,saccPort,reconnect_timeout,queuelen,logger);
-	
+    smsc_log_debug(logger,"SACC configuration perfom to start");
+    int saccPort = statManConfig.getSaccPort();
+    std::string saccHost = statManConfig.getSaccHost();
+    int reconnect_timeout = statManConfig.getReconnectTimeout();
+    int queuelen = statManConfig.getMaxQueueLength();
+    thrSaccSender.init(saccHost,saccPort,reconnect_timeout,queuelen,logger);
+    
 
-	
+    
     printf("StatisticsManager, perfSvcPort: %d\n", perfSvcPort);
 
     sender.init((PerformanceListener*)this, (PerformanceServer*)this);
@@ -275,10 +275,10 @@ void StatisticsManager::registerEvent(const HttpStatEvent& se)
     
     genCounters.incHttp(se.counter);
     
-    if (se.serviceProviderId != -1)
+    if (se.serviceProviderId)
     {
         if(se.counter < httpBillingOk){
-                providerSt = httpStatByProviderId[currentIndex].GetPtr(se.serviceProviderId);                
+                providerSt = httpStatByProviderId[currentIndex].GetPtr(se.serviceProviderId);
     
                 if(!providerSt)
                 {
@@ -301,18 +301,18 @@ void StatisticsManager::registerEvent(const HttpStatEvent& se)
         }
     }
 
-    if (se.serviceId.length())
+    if (se.serviceId > 0)
     {
         if(se.counter < httpBillingOk){
             //smsc_log_debug(logger, "routeId: '%s'", se.routeId);
-            srvSt = httpStatByServiceId[currentIndex].GetPtr(se.serviceId.c_str());
+            srvSt = httpStatByServiceId[currentIndex].GetPtr(se.serviceId);
             if(!srvSt)
             {
                 HttpStat newStat;
-                httpStatByServiceId[currentIndex].Insert(se.serviceId.c_str(), newStat);
-                srvSt=httpStatByServiceId[currentIndex].GetPtr(se.serviceId.c_str());
+                httpStatByServiceId[currentIndex].Insert(se.serviceId, newStat);
+                srvSt=httpStatByServiceId[currentIndex].GetPtr(se.serviceId);
             }
-            incSvcWapCounter(se.serviceId.c_str(), indexByHttpCounter(se.counter));
+            incSvcWapCounter(se.serviceId, indexByHttpCounter(se.counter));
         }
     }
     
@@ -323,9 +323,9 @@ void StatisticsManager::registerEvent(const HttpStatEvent& se)
         if(srvSt)       incError(srvSt->errors, se.errCode);
     }
     
-    if(providerSt && se.serviceProviderId != -1) providerSt->providerId = se.serviceProviderId;
-    if(routeSt    && se.serviceProviderId != -1) routeSt->providerId = se.serviceProviderId;
-    if(srvSt      && se.serviceProviderId != -1) srvSt->providerId = se.serviceProviderId;
+    if(providerSt && se.serviceProviderId) providerSt->providerId = se.serviceProviderId;
+    if(routeSt    && se.serviceProviderId) routeSt->providerId = se.serviceProviderId;
+    if(srvSt      && se.serviceProviderId) srvSt->providerId = se.serviceProviderId;
     
     int c;
     switch(se.counter)
@@ -370,7 +370,7 @@ void StatisticsManager::registerEvent(const HttpStatEvent& se)
         }
     }
 
-	//thrSaccSender.Put(se.sacc_stat);
+    //thrSaccSender.Put(se.sacc_stat);
 }
     
 
@@ -504,7 +504,7 @@ void StatisticsManager::Start()
     sender.Start();
     smsc_log_debug(logger, "PerformanceServer is started");
 
-	thrSaccSender.Start();
+    thrSaccSender.Start();
     isStarted = true;
 
 
@@ -706,7 +706,7 @@ void StatisticsManager::flushHttpCounters(int index)
                    flushTM.tm_hour, flushTM.tm_min, flushTM.tm_sec);
 
 
-	
+    
     try
     {
         TmpBuf<uint8_t, 4096> buff(4096);
@@ -763,21 +763,20 @@ void StatisticsManager::flushHttpCounters(int index)
         }
 
         // Service statistics
-        value32 = httpStatByServiceId[index].GetCount(); 
+        value32 = httpStatByServiceId[index].Count(); 
         value32 = htonl(value32); buff.Append((uint8_t *)&value32, sizeof(value32));
 
         httpStatByServiceId[index].First();
-        char* srvId = 0;
+        int srvId = 0;
         HttpStat* srvStat = 0;
-        while (httpStatByServiceId[index].Next(srvId, srvStat))
+        IntHash<HttpStat>::Iterator it = httpStatByServiceId[index].First();
+        while (it.Next(srvId, srvStat))
         {
-            if (!srvStat || !srvId || srvId[0] == '\0') continue;
+            if (!srvStat || !srvId) continue;
             
-            int cnt=2;
-            // Writes length of smeId and smeId
-            uint8_t srvIdLen = (uint8_t)strlen(srvId);
-            buff.Append((uint8_t *)&srvIdLen, sizeof(srvIdLen));
-            buff.Append((uint8_t *)srvId, srvIdLen);
+//            int cnt=2;
+            value32 = htonl(srvId);         buff.Append((uint8_t *)&value32, sizeof(value32));
+            smsc_log_info(logger, "serviceId: %d", srvId);
             smsc_log_info(logger, "providerId: %d", srvStat->providerId);
             smsc_log_info(logger, "request: %d", srvStat->request);
             smsc_log_info(logger, "requestRejected: %d", srvStat->requestRejected);
@@ -1116,7 +1115,7 @@ void StatisticsManager::flushHttpTraffic()
     dumpTraffic(traff, path);
 
 
-	
+    
 }
 
 void StatisticsManager::dumpTraffic(const IntHash<TrafficRecord>& traff, const std::string& path)
@@ -1439,9 +1438,9 @@ void StatisticsManager::incSvcSmppCounter(const char* systemId, int index)
     if (!smppCounter) svcSmppCounters.Insert(systemId, counter);
 }
 
-void StatisticsManager::incSvcWapCounter(const char* systemId, int index)
+void StatisticsManager::incSvcWapCounter(uint32_t systemId, int index)
 {
-    if (!systemId || !systemId[0] || index<0 || index>=PERF_HTTP_COUNT) return;
+    if (!systemId || index>=PERF_HTTP_COUNT) return;
 
     MutexGuard guard(svcCountersLock);
 
@@ -1667,7 +1666,7 @@ uint8_t* StatisticsManager::dumpSvcCounters(uint32_t& smePerfDataSize)
         uint32_t httpReclen = sizeof(char)*(smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1)+sizeof(uint16_t)*2*PERF_HTTP_COUNT;
         smePerfDataSize = sizeof(uint32_t)+sizeof(uint32_t)+3*sizeof(uint16_t)+ 
              smppReclen*svcSmppCounters.GetCount()+
-             httpReclen*svcWapCounters.GetCount()+
+             httpReclen*svcWapCounters.Count()+
              smppReclen*svcMmsCounters.GetCount();
 
         uint8_t* data = new uint8_t[smePerfDataSize];
@@ -1698,16 +1697,17 @@ uint8_t* StatisticsManager::dumpSvcCounters(uint32_t& smePerfDataSize)
             if (smppCounter) smppCounter->clear();
         }
 
-        *((uint16_t*)packet) = htons((uint16_t)svcWapCounters.GetCount()); packet += sizeof(uint16_t);
+        *((uint16_t*)packet) = htons((uint16_t)svcWapCounters.Count()); packet += sizeof(uint16_t);
 
-        svcWapCounters.First();
-        systemId = 0; HttpPerformanceCounter * httpCounter = 0;
-        while (svcWapCounters.Next(systemId, httpCounter))
+        IntHash<HttpPerformanceCounter*>::Iterator it = svcWapCounters.First();
+        int sysId = 0; HttpPerformanceCounter * httpCounter = 0;
+        while (it.Next(sysId, httpCounter))
         {
             // char[MAX_SMESYSID_TYPE_LENGTH+1], null terminated smeId
-            if (systemId) strncpy((char *)packet, systemId, smsc::sms::MAX_SMESYSID_TYPE_LENGTH);
-            packet += smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1;
-            
+
+//            if (systemId) strncpy((char *)packet, systemId, smsc::sms::MAX_SMESYSID_TYPE_LENGTH);
+  //          packet += smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1;
+            *((uint32_t*)packet) = htonl((uint32_t)sysId); packet += sizeof(uint32_t);
             for (int i=0; i<PERF_HTTP_COUNT; i++)
             {
                 // uint16_t(2)  xxx counter + avg (hour)
@@ -1928,41 +1928,41 @@ int StatisticsManager::indexByHttpCounter(int counter)
 
 void StatisticsManager::registerSaccEvent(const scag::stat::SACC_TRAFFIC_INFO_EVENT_t& ev)
 {
-	  //  MutexGuard  switchGuard(switchLock);
+      //  MutexGuard  switchGuard(switchLock);
 
-	thrSaccSender.Put(ev);
+    thrSaccSender.Put(ev);
 }
 void StatisticsManager::registerSaccEvent(const scag::stat::SACC_BILLING_INFO_EVENT_t& ev)
 {
-	  //  MutexGuard  switchGuard(switchLock);
+      //  MutexGuard  switchGuard(switchLock);
 
-	thrSaccSender.Put(ev);
+    thrSaccSender.Put(ev);
 }
 /*void StatisticsManager::registerSaccEvent(const scag::stat::SACC_OPERATOR_NOT_FOUND_ALARM_t& ev)
 {
-	  //  MutexGuard  switchGuard(switchLock);
+      //  MutexGuard  switchGuard(switchLock);
 
-	thrSaccSender.Put(ev);
+    thrSaccSender.Put(ev);
 }
 void StatisticsManager::registerSaccEvent(const scag::stat::SACC_SESSION_EXPIRATION_TIME_ALARM_t& ev)
 {
-	  //  MutexGuard  switchGuard(switchLock);
+      //  MutexGuard  switchGuard(switchLock);
 
-	thrSaccSender.Put(ev);
+    thrSaccSender.Put(ev);
 }*/
 
 void StatisticsManager::registerSaccEvent(const scag::stat::SACC_ALARM_MESSAGE_t& ev)
 {
-	  //  MutexGuard  switchGuard(switchLock);
+      //  MutexGuard  switchGuard(switchLock);
 
-	thrSaccSender.Put(ev);
+    thrSaccSender.Put(ev);
 }
 
 void StatisticsManager::registerSaccEvent(const scag::stat::SACC_ALARM_t& ev)
 {
-	  //  MutexGuard  switchGuard(switchLock);
+      //  MutexGuard  switchGuard(switchLock);
 
-	thrSaccSender.Put(ev);
+    thrSaccSender.Put(ev);
 }
 
 }//namespace stat

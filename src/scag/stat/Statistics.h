@@ -24,10 +24,10 @@ using smsc::smeman::SmeRecord;
     {
 
 /* additions for sacc */
-	
+    
 
 
-/**/	
+/**/    
         typedef enum 
         {
           cntAccepted,
@@ -56,176 +56,176 @@ using smsc::smeman::SmeRecord;
         } HttpStatCounter;
     }
 
-	struct SACC_EVENT_HEADER_t
-	{
-	private:
-		uint16_t sEventType;
-	public:
-		uint8_t  pAbonentNumber[MAX_ABONENT_NUMBER_LENGTH];	
-		uint8_t  cCommandId;		
-		uint8_t  cProtocolId;		
-		uint16_t sCommandStatus;
-		uint64_t lDateTime;
-		uint32_t iServiceProviderId;
-		uint32_t iServiceId;
-		
-		SACC_EVENT_HEADER_t()
-		{
-			memset(pAbonentNumber,0,MAX_ABONENT_NUMBER_LENGTH);
+    struct SACC_EVENT_HEADER_t
+    {
+    private:
+        uint16_t sEventType;
+    public:
+        uint8_t  pAbonentNumber[MAX_ABONENT_NUMBER_LENGTH]; 
+        uint8_t  cCommandId;        
+        uint8_t  cProtocolId;       
+        uint16_t sCommandStatus;
+        uint64_t lDateTime;
+        uint32_t iServiceProviderId;
+        uint32_t iServiceId;
+        
+        SACC_EVENT_HEADER_t()
+        {
+            memset(pAbonentNumber,0,MAX_ABONENT_NUMBER_LENGTH);
 
-			sEventType=0;
-			cCommandId=0;		
-			cProtocolId=0;		
-			sCommandStatus=0;
-			lDateTime=0;
-			iServiceProviderId=0;
-			iServiceId=0;
-		}
-		SACC_EVENT_HEADER_t(const SACC_EVENT_HEADER_t& src)
-		{
-			memcpy(pAbonentNumber,src.pAbonentNumber,MAX_ABONENT_NUMBER_LENGTH);
+            sEventType=0;
+            cCommandId=0;       
+            cProtocolId=0;      
+            sCommandStatus=0;
+            lDateTime=0;
+            iServiceProviderId=0;
+            iServiceId=0;
+        }
+        SACC_EVENT_HEADER_t(const SACC_EVENT_HEADER_t& src)
+        {
+            memcpy(pAbonentNumber,src.pAbonentNumber,MAX_ABONENT_NUMBER_LENGTH);
 
-			sEventType=src.sEventType;
-			cCommandId=src.cCommandId;		
-			cProtocolId=src.cProtocolId;		
-			sCommandStatus=src.sCommandStatus;
-			lDateTime=src.lDateTime;
-			iServiceProviderId=src.iServiceProviderId;
-			iServiceId=src.iServiceId;
-		}
-		 uint16_t getEventType()const{return sEventType;} ;
-		
-		 void setEventType(uint16_t et){sEventType = et;};
-	};
+            sEventType=src.sEventType;
+            cCommandId=src.cCommandId;      
+            cProtocolId=src.cProtocolId;        
+            sCommandStatus=src.sCommandStatus;
+            lDateTime=src.lDateTime;
+            iServiceProviderId=src.iServiceProviderId;
+            iServiceId=src.iServiceId;
+        }
+         uint16_t getEventType()const{return sEventType;} ;
+        
+         void setEventType(uint16_t et){sEventType = et;};
+    };
 
-	struct SACC_TRAFFIC_INFO_EVENT_t
-	{
-		SACC_EVENT_HEADER_t Header;
-		
-		uint32_t iOperatorId;
-		uint8_t  cDirection;
-		uint16_t pMessageText[MAX_TEXT_MESSAGE_LENGTH];//512*32
-		uint8_t  pSessionKey[MAX_SESSION_KEY_LENGTH];
+    struct SACC_TRAFFIC_INFO_EVENT_t
+    {
+        SACC_EVENT_HEADER_t Header;
+        
+        uint32_t iOperatorId;
+        uint8_t  cDirection;
+        uint16_t pMessageText[MAX_TEXT_MESSAGE_LENGTH];//512*32
+        uint8_t  pSessionKey[MAX_SESSION_KEY_LENGTH];
 
-		SACC_TRAFFIC_INFO_EVENT_t()
-		{
-			memset(&Header,0,sizeof(SACC_EVENT_HEADER_t));
-			memset(pMessageText,0,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
-			memset(pSessionKey,0,MAX_SESSION_KEY_LENGTH);
-			Header.setEventType(sec_transport);
-			iOperatorId=0;
-			cDirection=0;
-		};
+        SACC_TRAFFIC_INFO_EVENT_t()
+        {
+            memset(&Header,0,sizeof(SACC_EVENT_HEADER_t));
+            memset(pMessageText,0,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
+            memset(pSessionKey,0,MAX_SESSION_KEY_LENGTH);
+            Header.setEventType(sec_transport);
+            iOperatorId=0;
+            cDirection=0;
+        };
 
-		SACC_TRAFFIC_INFO_EVENT_t(const SACC_TRAFFIC_INFO_EVENT_t & src)
-		{
-			memcpy(&Header,&src.Header,sizeof(SACC_EVENT_HEADER_t));
-			memcpy(pMessageText,src.pMessageText,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
-			memcpy(pSessionKey,src.pSessionKey,MAX_SESSION_KEY_LENGTH);
-			iOperatorId=src.iOperatorId;
-			cDirection=src.cDirection;
-		}
+        SACC_TRAFFIC_INFO_EVENT_t(const SACC_TRAFFIC_INFO_EVENT_t & src)
+        {
+            memcpy(&Header,&src.Header,sizeof(SACC_EVENT_HEADER_t));
+            memcpy(pMessageText,src.pMessageText,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
+            memcpy(pSessionKey,src.pSessionKey,MAX_SESSION_KEY_LENGTH);
+            iOperatorId=src.iOperatorId;
+            cDirection=src.cDirection;
+        }
 
-		uint16_t getEventType()const{return Header.getEventType();} ;
-	};
+        uint16_t getEventType()const{return Header.getEventType();} ;
+    };
 
-	struct SACC_BILLING_INFO_EVENT_t
-	{
-		SACC_EVENT_HEADER_t Header;
+    struct SACC_BILLING_INFO_EVENT_t
+    {
+        SACC_EVENT_HEADER_t Header;
 
-		uint32_t iOperatorId;
-		uint32_t iMediaResourceType;
-		uint32_t iPriceCatId;
-		float    fBillingSumm; 
-		uint8_t  pBillingCurrency[MAX_BILLING_CURRENCY_LENGTH];
-		uint8_t  pSessionKey[MAX_SESSION_KEY_LENGTH];
-	 
-		SACC_BILLING_INFO_EVENT_t()
-		{
-			memset(&Header,0,sizeof(SACC_EVENT_HEADER_t));
-			memset(pBillingCurrency,0,MAX_BILLING_CURRENCY_LENGTH);
-			memset(pSessionKey,0,MAX_SESSION_KEY_LENGTH);
-			Header.setEventType(sec_bill);
-			iOperatorId=0;
-			iMediaResourceType=0;
-			iPriceCatId=0;
-			fBillingSumm=0.00000; 
-		}	
-		SACC_BILLING_INFO_EVENT_t(const SACC_BILLING_INFO_EVENT_t & src)
-		{
-			memcpy(&Header,&src.Header,sizeof(SACC_EVENT_HEADER_t));
-			memcpy(pBillingCurrency,src.pBillingCurrency,MAX_BILLING_CURRENCY_LENGTH);
-			memcpy(pSessionKey,src.pSessionKey,MAX_SESSION_KEY_LENGTH);
-			iOperatorId=src.iOperatorId ;
-			iMediaResourceType=src.iMediaResourceType;
-			iPriceCatId=src.iPriceCatId;
-			fBillingSumm=src.fBillingSumm; 
-		}
-		uint16_t getEventType()const{return Header.getEventType();}; 
-	};
+        uint32_t iOperatorId;
+        uint32_t iMediaResourceType;
+        uint32_t iPriceCatId;
+        float    fBillingSumm; 
+        uint8_t  pBillingCurrency[MAX_BILLING_CURRENCY_LENGTH];
+        uint8_t  pSessionKey[MAX_SESSION_KEY_LENGTH];
+     
+        SACC_BILLING_INFO_EVENT_t()
+        {
+            memset(&Header,0,sizeof(SACC_EVENT_HEADER_t));
+            memset(pBillingCurrency,0,MAX_BILLING_CURRENCY_LENGTH);
+            memset(pSessionKey,0,MAX_SESSION_KEY_LENGTH);
+            Header.setEventType(sec_bill);
+            iOperatorId=0;
+            iMediaResourceType=0;
+            iPriceCatId=0;
+            fBillingSumm=0.00000; 
+        }   
+        SACC_BILLING_INFO_EVENT_t(const SACC_BILLING_INFO_EVENT_t & src)
+        {
+            memcpy(&Header,&src.Header,sizeof(SACC_EVENT_HEADER_t));
+            memcpy(pBillingCurrency,src.pBillingCurrency,MAX_BILLING_CURRENCY_LENGTH);
+            memcpy(pSessionKey,src.pSessionKey,MAX_SESSION_KEY_LENGTH);
+            iOperatorId=src.iOperatorId ;
+            iMediaResourceType=src.iMediaResourceType;
+            iPriceCatId=src.iPriceCatId;
+            fBillingSumm=src.fBillingSumm; 
+        }
+        uint16_t getEventType()const{return Header.getEventType();}; 
+    };
 
 
-	struct SACC_ALARM_t
-	{
+    struct SACC_ALARM_t
+    {
 
-		SACC_EVENT_HEADER_t Header;
-		uint8_t  cDirection;
-		uint32_t iOperatorId;
-		uint32_t iAlarmEventId;
-		uint8_t  pSessionKey[MAX_SESSION_KEY_LENGTH];
-		uint16_t pMessageText[MAX_TEXT_MESSAGE_LENGTH];
-		SACC_ALARM_t()
-		{
-			memset(&Header,0,sizeof(SACC_EVENT_HEADER_t));
-			memset(pSessionKey,0,MAX_SESSION_KEY_LENGTH);
-			memset(pMessageText,0,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
-			iOperatorId=0;
-			Header.setEventType(0x0003);
-			cDirection=0;
-			iAlarmEventId =0;
+        SACC_EVENT_HEADER_t Header;
+        uint8_t  cDirection;
+        uint32_t iOperatorId;
+        uint32_t iAlarmEventId;
+        uint8_t  pSessionKey[MAX_SESSION_KEY_LENGTH];
+        uint16_t pMessageText[MAX_TEXT_MESSAGE_LENGTH];
+        SACC_ALARM_t()
+        {
+            memset(&Header,0,sizeof(SACC_EVENT_HEADER_t));
+            memset(pSessionKey,0,MAX_SESSION_KEY_LENGTH);
+            memset(pMessageText,0,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
+            iOperatorId=0;
+            Header.setEventType(0x0003);
+            cDirection=0;
+            iAlarmEventId =0;
 
-		}
-		SACC_ALARM_t(const SACC_ALARM_t& src)
-		{
-			memcpy(&Header, &src.Header,sizeof(SACC_EVENT_HEADER_t));
-			memcpy(pSessionKey,src.pSessionKey ,MAX_SESSION_KEY_LENGTH);
-			memcpy(pMessageText,src.pMessageText ,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
-			iOperatorId=src.iOperatorId;
-			cDirection=src.cDirection;
-			iAlarmEventId = src.iAlarmEventId; 
+        }
+        SACC_ALARM_t(const SACC_ALARM_t& src)
+        {
+            memcpy(&Header, &src.Header,sizeof(SACC_EVENT_HEADER_t));
+            memcpy(pSessionKey,src.pSessionKey ,MAX_SESSION_KEY_LENGTH);
+            memcpy(pMessageText,src.pMessageText ,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
+            iOperatorId=src.iOperatorId;
+            cDirection=src.cDirection;
+            iAlarmEventId = src.iAlarmEventId; 
 
-		}
-		uint16_t getEventType()const{return Header.getEventType();} ;
+        }
+        uint16_t getEventType()const{return Header.getEventType();} ;
 
-	};
+    };
 
-	struct SACC_ALARM_MESSAGE_t
-	{
-	private:
-		uint16_t sEventType;
-	public:
-		uint8_t  pAbonentsNumbers[MAX_NUMBERS_TEXT_LENGTH];
-		uint16_t pAddressEmail[MAX_EMAIL_ADDRESS_LENGTH];
-		uint16_t pMessageText[MAX_TEXT_MESSAGE_LENGTH];
+    struct SACC_ALARM_MESSAGE_t
+    {
+    private:
+        uint16_t sEventType;
+    public:
+        uint8_t  pAbonentsNumbers[MAX_NUMBERS_TEXT_LENGTH];
+        uint16_t pAddressEmail[MAX_EMAIL_ADDRESS_LENGTH];
+        uint16_t pMessageText[MAX_TEXT_MESSAGE_LENGTH];
 
-		SACC_ALARM_MESSAGE_t()
-		{
-			memset(pAbonentsNumbers,0,MAX_NUMBERS_TEXT_LENGTH);
-			memset(pAddressEmail,0,MAX_EMAIL_ADDRESS_LENGTH*sizeof(uint16_t));
-			memset(pMessageText,0,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
-			sEventType = sec_alarm_message;
-		}
-		SACC_ALARM_MESSAGE_t(const SACC_ALARM_MESSAGE_t & src)
-		{
-			memcpy(pAbonentsNumbers,src.pAbonentsNumbers ,MAX_NUMBERS_TEXT_LENGTH);
-			memcpy(pAddressEmail,src.pAddressEmail ,MAX_EMAIL_ADDRESS_LENGTH*sizeof(uint16_t));
-			memcpy(pMessageText,src.pMessageText ,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
-			sEventType=src.sEventType;
+        SACC_ALARM_MESSAGE_t()
+        {
+            memset(pAbonentsNumbers,0,MAX_NUMBERS_TEXT_LENGTH);
+            memset(pAddressEmail,0,MAX_EMAIL_ADDRESS_LENGTH*sizeof(uint16_t));
+            memset(pMessageText,0,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
+            sEventType = sec_alarm_message;
+        }
+        SACC_ALARM_MESSAGE_t(const SACC_ALARM_MESSAGE_t & src)
+        {
+            memcpy(pAbonentsNumbers,src.pAbonentsNumbers ,MAX_NUMBERS_TEXT_LENGTH);
+            memcpy(pAddressEmail,src.pAddressEmail ,MAX_EMAIL_ADDRESS_LENGTH*sizeof(uint16_t));
+            memcpy(pMessageText,src.pMessageText ,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
+            sEventType=src.sEventType;
 
-		}
-		uint16_t getEventType()const{return sEventType;};
+        }
+        uint16_t getEventType()const{return sEventType;};
 
-	};
+    };
 
     struct SmppStatEvent
     {
@@ -236,7 +236,7 @@ using smsc::smeman::SmeRecord;
       int counter;
       int errCode;
       bool internal;
-	  
+      
 
       SmppStatEvent()
       {
@@ -245,7 +245,7 @@ using smsc::smeman::SmeRecord;
         routeProviderId=-1;
         counter = -1;
         errCode = -1;
-		
+        
         internal = false;
       }
       SmppStatEvent(scag::transport::smpp::SmppEntityInfo& smppEntity, int cnt, int errcode)
@@ -281,17 +281,28 @@ using smsc::smeman::SmeRecord;
     struct HttpStatEvent
     {
       std::string routeId;
-      std::string serviceId;
-      int serviceProviderId;
+      uint32_t serviceId;
+      uint32_t serviceProviderId;
       int counter;
       int errCode;
       
-  	 
+     
 
-      HttpStatEvent(int cnt=-1, const std::string& rId="", const std::string& sId="", int spId=-1, int err=0)
+      HttpStatEvent(int cnt=-1, const std::string& rId="", const uint32_t sId=0, int spId=0, int err=0)
         : routeId(rId), serviceId(sId), serviceProviderId(spId), counter(cnt), errCode(err) {};
 
-      // TODO: add copy constructor & operator=
+      HttpStatEvent(const HttpStatEvent& cp)
+        : routeId(cp.routeId), serviceId(cp.serviceId), serviceProviderId(cp.serviceProviderId), counter(cp.counter), errCode(cp.errCode) {};
+
+        HttpStatEvent& operator=(const HttpStatEvent& cp)
+        {
+            routeId = cp.routeId;
+            serviceId = cp.serviceId;
+            serviceProviderId = cp.serviceProviderId;
+            counter = cp.counter;
+            errCode = cp.errCode;
+            return *this;
+        }
     };
 
     enum CheckTrafficPeriod
@@ -310,8 +321,8 @@ using smsc::smeman::SmeRecord;
 
         virtual void registerEvent(const SmppStatEvent& se) = 0;
         virtual void registerEvent(const HttpStatEvent& se) = 0;
-		
-		virtual bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value) = 0;
+        
+        virtual bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value) = 0;
 
         virtual void registerSaccEvent(const scag::stat::SACC_TRAFFIC_INFO_EVENT_t& ev) = 0;
         virtual void registerSaccEvent(const scag::stat::SACC_BILLING_INFO_EVENT_t& ev) = 0;

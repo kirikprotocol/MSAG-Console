@@ -52,7 +52,7 @@ namespace stat {
     using smsc::core::network::Socket;
 
 
-	using namespace scag::stat::sacc;
+    using namespace scag::stat::sacc;
 
 
     struct CommonStat
@@ -147,16 +147,16 @@ namespace stat {
         IntHash<TrafficRecord>  trafficByRouteId;
 
         Hash<HttpStat>          httpStatByRouteId[2];
-        Hash<HttpStat>          httpStatByServiceId[2];
+        IntHash<HttpStat>          httpStatByServiceId[2];
         IntHash<HttpStat>       httpStatByProviderId[2];
         IntHash<TrafficRecord>  httpTrafficByRouteId;
-		
-		
-	
+        
+        
+    
 
 
-		IntHash<std::string>       saccEventFiler;
-		EventSender thrSaccSender;
+        IntHash<std::string>       saccEventFiler;
+        EventSender thrSaccSender;
 
         int     currentIndex;
         bool    bExternalFlush;
@@ -192,7 +192,7 @@ namespace stat {
 
         Mutex                            svcCountersLock;
         Hash   <SmppPerformanceCounter*>  svcSmppCounters;
-        Hash   <HttpPerformanceCounter*>  svcWapCounters;
+        IntHash   <HttpPerformanceCounter*>  svcWapCounters;
         Hash   <SmppPerformanceCounter*>  svcMmsCounters;
 
         Array<Socket*> svcSockets;
@@ -242,7 +242,7 @@ namespace stat {
             return new TimeSlotCounter<int>(3600, 1000);
         }
         void incSvcSmppCounter(const char* systemId, int index);
-        void incSvcWapCounter(const char*  systemId, int index);
+        void incSvcWapCounter(uint32_t  systemId, int index);
         void incSvcMmsCounter(const char*  systemId, int index);
         uint8_t* StatisticsManager::dumpSvcCounters(uint32_t& smePerfDataSize);
 
@@ -266,12 +266,12 @@ namespace stat {
         virtual void registerEvent(const HttpStatEvent& se);
         virtual bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value);
 
-		virtual void registerSaccEvent(const scag::stat::SACC_TRAFFIC_INFO_EVENT_t& ev);
-		virtual void registerSaccEvent(const scag::stat::SACC_BILLING_INFO_EVENT_t& ev);
-//		virtual void registerSaccEvent(const scag::stat::SACC_OPERATOR_NOT_FOUND_ALARM_t& ev);
-//		virtual void registerSaccEvent(const scag::stat::SACC_SESSION_EXPIRATION_TIME_ALARM_t& ev);
-		virtual void registerSaccEvent(const scag::stat::SACC_ALARM_MESSAGE_t& ev);
-		virtual void registerSaccEvent(const scag::stat::SACC_ALARM_t& ev);
+        virtual void registerSaccEvent(const scag::stat::SACC_TRAFFIC_INFO_EVENT_t& ev);
+        virtual void registerSaccEvent(const scag::stat::SACC_BILLING_INFO_EVENT_t& ev);
+//      virtual void registerSaccEvent(const scag::stat::SACC_OPERATOR_NOT_FOUND_ALARM_t& ev);
+//      virtual void registerSaccEvent(const scag::stat::SACC_SESSION_EXPIRATION_TIME_ALARM_t& ev);
+        virtual void registerSaccEvent(const scag::stat::SACC_ALARM_MESSAGE_t& ev);
+        virtual void registerSaccEvent(const scag::stat::SACC_ALARM_t& ev);
 
 
         virtual void getSmppPerfData(uint64_t *cnt);
@@ -283,7 +283,7 @@ namespace stat {
         virtual void addScSocket(Socket * socket);
         virtual void addGenSocket(Socket * socket);
 
-			
+            
         StatisticsManager();
         virtual ~StatisticsManager();
     };

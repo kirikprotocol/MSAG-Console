@@ -65,7 +65,7 @@ int Registrator::Execute()
         //=================== http1 ====================
         if(++httpCounter == 6) httpCounter = 0;
         hs.routeId = "route1";
-        hs.serviceId = "http1";
+        hs.serviceId = 1;
         hs.counter = httpCounter;
         hs.errCode = 1;
         count =  7. * ( (double)random() / 2147483648. ) + 1;
