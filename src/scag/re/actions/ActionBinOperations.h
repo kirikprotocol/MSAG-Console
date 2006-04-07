@@ -74,6 +74,12 @@ class ActionMod : public ActionBinOperation
 protected:
     virtual int processOperation(int variable, int value)
     {
+        if (value == 0) 
+        {
+            smsc_log_debug(logger,"Action '%s' cannot process operation. Details: Devision by zero", m_ActionName.c_str());
+            return variable;
+        }
+
         return (variable % value);
     }
 public:
@@ -87,6 +93,11 @@ class ActionDiv : public ActionBinOperation
 protected:
     virtual int processOperation(int variable, int value)
     {
+        if (value == 0) 
+        {
+            smsc_log_debug(logger,"Action '%s' cannot process operation. Details: Devision by zero", m_ActionName.c_str());
+            return variable;
+        }
         return (variable / value);
     }
 public:
