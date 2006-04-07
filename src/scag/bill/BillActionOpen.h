@@ -1,21 +1,36 @@
 #ifndef _BILL_ACTION_OPEN_
 #define _BILL_ACTION_OPEN_
 
-#include "BillAction.h"
-#include <string>
+#include "scag/re/actions/Action.h"
 
 namespace scag { namespace bill {
 
 using namespace scag::re::actions;
+using namespace scag::re;
 
-    class BillActionOpen : public BillAction
-    {
-    protected:
-        std::string m_sName;
-    public:
-        BillActionOpen() : m_sName("bill:open") {}
-        virtual bool run(ActionContext& context);
-    };
+class BillActionOpen : public Action
+{
+    std::string m_sName;
+    //std::string m_sServiceName;
+
+    std::string m_sStatus;
+    std::string m_sMessage;
+
+    Logger * logger;
+    std::string m_category;
+    std::string m_mediaType;
+protected:
+    virtual IParserHandler * StartXMLSubSection(const std::string& name,
+                                                const SectionParams& params,
+                                                const ActionFactory& factory);
+    virtual bool FinishXMLSubSection(const std::string& name);
+public:
+    BillActionOpen() {}
+    virtual bool run(ActionContext& context);
+    virtual void init(const SectionParams& params,PropertyObject propertyObject);
+};
+
+
 
 }}
 

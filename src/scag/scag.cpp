@@ -163,7 +163,11 @@ public:
   }
   int run()
   {
+<<<<<<< scag.cpp
+    uint64_t cnt = 0, last=0;
+=======
     uint64_t cnt=0,last=0;
+>>>>>>> 1.45
     timespec now={0,0},lasttime={0,0};
     double ut,tm,rate,avg;
     if(start.tv_sec==0)
@@ -191,7 +195,11 @@ public:
       // replace queue
       //cnt=queue.getCounter();
 
+<<<<<<< scag.cpp
+      int eqhash,equnl = 0;
+=======
       int eqhash,equnl=0;
+>>>>>>> 1.45
 
       //=======================
       // replace queue
@@ -482,42 +490,42 @@ void Scag::init()
   scag::sessions::CSessionKey key;
 
   SMS sms;
-  sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, 100);
+  //sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, 100);
 
   char buff[128];
   scag::transport::smpp::SmppCommand commandDeliver = scag::transport::smpp::SmppCommand::makeDeliverySm(sms,1);
   scag::transport::smpp::SmppCommand commandDeliverResp = scag::transport::smpp::SmppCommand::makeDeliverySmResp(buff,1,1);
   scag::transport::smpp::SmppCommand commandSubmit = scag::transport::smpp::SmppCommand::makeSubmitSm(sms,1);
-  scag::transport::smpp::SmppCommand commandSubmitResp = scag::transport::smpp::SmppCommand::makeSubmitSmResp(buff,1,1);
-
-  commandDeliverResp->dta = &sms;
-  commandSubmitResp->dta = &sms;
+  scag::transport::smpp::SmppCommand commandSubmitResp = scag::transport::smpp::SmppCommand::makeSubmitSmResp(buff,1,1, true);
 
   commandDeliver.setServiceId(1);
   commandDeliverResp.setServiceId(1);
+
   commandSubmit.setServiceId(1);
   commandSubmitResp.setServiceId(1);
 
-  //SMS& testSMS = CommandBrige::getSMS(commandSubmit);
-  SMS * testSMS = commandSubmit->get_sms();
-  if (!testSMS->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) return;
+  commandDeliverResp->get_resp()->set_sms(&sms);
+  commandSubmitResp->get_resp()->set_sms(&sms);
 
+  commandDeliverResp.setOperationId(1);
+  commandSubmitResp.setOperationId(2);
 
   SessionManager& sm = SessionManager::Instance();
   scag::sessions::SessionPtr sessionPtr = sm.newSession(key);
   scag::sessions::Session * session = sessionPtr.Get();
 
   if (session) smsc_log_warn(log, "SESSION IS VALID");
-  //command.setServiceId(1);
+
+  scag::re::RuleEngine::Instance().process(commandDeliver, *session);
+  scag::re::RuleEngine::Instance().process(commandDeliverResp, *session);
 
   scag::re::RuleEngine::Instance().process(commandSubmit, *session);
-  //scag::re::RuleEngine::Instance().process(commandSubmitResp, *session);
-
-  //scag::re::RuleEngine::Instance().process(commandDeliver, *session);
-  //scag::re::RuleEngine::Instance().process(commandDeliverResp, *session);
+  scag::re::RuleEngine::Instance().process(commandSubmitResp, *session);
 
   ////////////////////////// FOR TEST 
-  */                                  
+   */                                
+
+                                    
     //********************************************************
     //************** HttpManager initialization **************
 /*    try {

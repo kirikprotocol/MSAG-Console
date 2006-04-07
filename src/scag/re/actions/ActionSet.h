@@ -1,7 +1,6 @@
 #ifndef __SCAG_RULE_ENGINE_ACTION_SET__
 #define __SCAG_RULE_ENGINE_ACTION_SET__
 
-#include "ActionContext.h"
 #include "Action.h"
 
 namespace scag { namespace re { namespace actions {
@@ -20,10 +19,8 @@ protected:
 public:
     virtual bool run(ActionContext& context);
 
-    ActionSet();
+    ActionSet() {};
     virtual void init(const SectionParams& params,PropertyObject propertyObject);
-    virtual ~ActionSet();
-
 };
 
 

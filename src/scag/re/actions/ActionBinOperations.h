@@ -1,7 +1,6 @@
 #ifndef __SCAG_RULE_ENGINE_ACTION_BINOPERATIONS__
 #define __SCAG_RULE_ENGINE_ACTION_BINOPERATIONS__
 
-#include "ActionContext.h"
 #include "Action.h"
 
 namespace scag { namespace re { namespace actions {

@@ -1,7 +1,67 @@
 #include "BillActionOpen.h"
-
+#include "scag/re/CommandAdapter.h"
 
 namespace scag { namespace bill {
+
+
+void BillActionOpen::init(const SectionParams& params,PropertyObject propertyObject)
+{
+    FieldType ft;
+    const char * name = 0;
+
+    if (!logger) 
+        logger = Logger::getInstance("scag.bill.actions");
+
+    if (params.Exists("category")) 
+        m_category = ConvertWStrToStr(params["category"]);
+    else 
+        throw SCAGException("BillAction 'bill:open' : missing 'category' parameter");
+
+    if (params.Exists("mediatype")) 
+        m_mediaType = ConvertWStrToStr(params["mediatype"]);
+    else 
+        throw SCAGException("BillAction 'bill:open' : missing 'mediatype' parameter");
+
+
+/*
+    if (params.Exists("service")) 
+    {
+        m_sServiceName = params["service"];
+        ft = ActionContext::Separate(m_sServiceName,name);
+        if (ft==ftUnknown) 
+            throw SCAGException("BillAction '%s' : unrecognized variable prefix '%s' for 'service' parameter",m_sName.c_str(),m_sServiceName.c_str());
+    }
+*/
+    if (params.Exists("status")) 
+    {
+        m_sStatus = ConvertWStrToStr(params["status"]);
+        ft = ActionContext::Separate(m_sStatus,name);
+        if (ft==ftUnknown) 
+            throw SCAGException("BillAction 'bill:open' : unrecognized variable prefix '%s' for 'status' parameter",m_sStatus.c_str());
+    }
+
+    if (params.Exists("msg")) 
+    {
+        m_sMessage = ConvertWStrToStr(params["msg"]);
+
+        ft = ActionContext::Separate(m_sMessage,name);
+        if (ft==ftUnknown) 
+            throw SCAGException("BillAction 'bill:open' : unrecognized variable prefix '%s' for 'msg' parameter",m_sMessage.c_str());
+    }
+
+    smsc_log_debug(logger,"Action 'bill:open' init...");
+}
+
+
+IParserHandler * BillActionOpen::StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory)
+{
+    throw SCAGException("BillAction 'bill:open' cannot include child objects");
+}
+
+bool BillActionOpen::FinishXMLSubSection(const std::string& name)
+{
+    return true;
+}
 
 bool BillActionOpen::run(ActionContext& context)
 {
@@ -15,8 +75,6 @@ bool BillActionOpen::run(ActionContext& context)
 
 
     /////////////////////////////////////////////
-
-
 
 
     Operation * operation = context.GetCurrentOperation();

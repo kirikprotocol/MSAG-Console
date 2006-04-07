@@ -3,15 +3,6 @@
 
 namespace scag { namespace re { namespace actions {
 
-ActionSet::ActionSet()
-{
-}
-        
-ActionSet::~ActionSet()
-{
-    //smsc_log_debug(logger,"Action 'set' released");
-}
-
 void ActionSet::init(const SectionParams& params,PropertyObject propertyObject)
 {
     logger = Logger::getInstance("scag.re");

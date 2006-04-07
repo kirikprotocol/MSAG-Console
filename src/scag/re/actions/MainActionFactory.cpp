@@ -10,8 +10,7 @@
 #include "scag/re/actions/ActionOperationWait.h"
 #include "scag/re/actions/ActionMatch.h"
 #include "scag/bill/BillActionOpen.h"
-#include "scag/bill/BillActionCommit.h"
-#include "scag/bill/BillActionRollback.h"
+#include "scag/bill/BillActionClose.h"
 
 #include "scag/re/actions/ActionBinOperations.h"
 
@@ -36,8 +35,7 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
     if (name=="match") return new ActionMatch();
 
     if (name=="bill:open") return new BillActionOpen();
-    if (name=="bill:commit") return new BillActionCommit();
-    if (name=="bill:rollback") return new BillActionRollback();
+    if (name=="bill:close") return new BillActionClose();
 
     if (name=="inc") return new ActionInc();
     if (name=="dec") return new ActionDec();

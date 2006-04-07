@@ -137,7 +137,7 @@ void SmppEventHandler::EndOperation(Session& session, SmppCommand& command, Rule
         break;      */
 
     case CO_USSD_DIALOG:
-        smsc_log_debug(logger,"Session: finish process USSD_DELIVER_RESP");
+        //smsc_log_debug(logger,"Session: finish process USSD_DIALOG");
         if ((smppDiscriptor.isUSSDClosed)&&(smppDiscriptor.isResp)) session.closeCurrentOperation();
         break;
     }

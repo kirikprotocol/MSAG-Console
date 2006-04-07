@@ -50,7 +50,7 @@ void ActionBinOperation::init(const SectionParams& params,PropertyObject propert
     }
 
 
-    smsc_log_debug(logger,"Action 'set':: init");
+    smsc_log_debug(logger,"Action '%s':: init", m_ActionName.c_str());
 }
 
 
