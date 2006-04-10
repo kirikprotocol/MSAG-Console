@@ -92,23 +92,7 @@ Property* HttpCommandAdapter::getRequestProperty(const std::string& name)
     else if(!strcmp(name.c_str(), "port"))
         prop = new AdapterProperty(name, this, cmd.getSitePort());
     else if(!strcmp(name.c_str(), "message"))
-    {
-        std::string str;
-        TmpBuf<char, 1024> buf(1024);
-        const std::wstring& wstr = cmd.getMessageText();
-        const wchar_t* wchrs  = wstr.c_str();
-
-        for(int i = 0; i < wstr.length(); i++)
-        {
-            char r = (*wchrs >> 8);
-            buf.Append(&r, 1);
-            r = *(wchrs++);
-            buf.Append(&r, 1);
-        }
-
-        str.assign(buf.get(), buf.GetPos());
-        prop = new AdapterProperty(name, this, str);
-    }
+        prop = new AdapterProperty(name, this, Convert_wstringToWStr(cmd.getMessageText()));
 
     if(prop)
         PropertyPool.Insert(name.c_str(), prop);
@@ -170,21 +154,7 @@ void HttpCommandAdapter::changed(AdapterProperty& property)
         else if(!strcmp(property.GetName().c_str(), "port"))
             cmd.setSitePort(property.getInt());
         else if(!strcmp(property.GetName().c_str(), "message"))
-        {
-            std::string str = property.getStr();
-            TmpBuf<wchar_t, 1024> buf(1024);
-            std::wstring wstr;
-            const char* chrs  = str.c_str();
-
-            for(int i = 0; i < str.length(); i+=2)
-            {
-                wchar_t r = (chrs[i] << 8) + chrs[i + 1];
-                buf.Append(&r, 1);
-            }
-
-            wstr.assign(buf.get(), buf.GetPos());
-            cmd.setMessageText(wstr);
-        }
+            cmd.setMessageText(ConvertWStrTo_wstring(property.getStr()));
     }
 }
 
