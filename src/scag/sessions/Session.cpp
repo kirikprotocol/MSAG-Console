@@ -466,6 +466,22 @@ Operation * Session::setCurrentOperation(uint64_t operationId)
     return (*operationPtr);
 }
 
+Operation * Session::setCurrentOperationByType(int operationType)
+{
+    Operation * operation;
+    int key;
+
+    COperationsHash::Iterator it = OperationsHash.First();
+
+    for (;it.Next(key, operation);)
+    {              
+        if (operation->type == operationType) return operation;
+    }
+
+    throw SCAGException("Session: Cannot find pending operation");
+}
+
+
 void Session::setOperationFromPending(SCAGCommand& cmd, int operationType)
 {
     std::list<PendingOperation>::iterator it;

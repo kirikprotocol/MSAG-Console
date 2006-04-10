@@ -78,7 +78,7 @@ void SmppEventHandler::StartOperation(Session& session, SmppCommand& command)
 
         if (smppDiscriptor.isResp)
         {
-            operation = session.setCurrentOperation(command.getOperationId());
+            operation = session.setCurrentOperationByType(CO_USSD_DIALOG);
 
             if (smppDiscriptor.isUSSDClosed) operation->setStatus(OPERATION_COMPLETED);
             else operation->setStatus(OPERATION_CONTINUED);
@@ -92,7 +92,7 @@ void SmppEventHandler::StartOperation(Session& session, SmppCommand& command)
              break;
         }
 
-        operation = session.setCurrentOperation(command.getOperationId());
+        operation = session.setCurrentOperationByType(CO_USSD_DIALOG);
         operation->setStatus(OPERATION_CONTINUED);
 
         break;

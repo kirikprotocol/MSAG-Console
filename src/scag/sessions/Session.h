@@ -20,6 +20,7 @@
 #include "scag/config/sessn/SessionManagerConfig.h"
 #include "core/buffers/RefPtr.hpp"
 
+
 namespace scag { namespace sessions
 {
     using scag::config::SessionManagerConfig;
@@ -232,6 +233,7 @@ namespace scag { namespace sessions
         Operation * GetCurrentOperation() const;
         Operation * AddNewOperationToHash(SCAGCommand& cmd, int operationType);
         Operation * setCurrentOperation(uint64_t operationId);
+        Operation * setCurrentOperationByType(int operationType);
         void setOperationFromPending(SCAGCommand& cmd, int operationType);
 
         

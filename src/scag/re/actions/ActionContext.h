@@ -38,7 +38,13 @@ namespace scag { namespace re { namespace actions
     };
 
 
+    struct InfrastructIDs
+    {
+        int operatorId;
+        int providerId;
 
+        InfrastructIDs() : operatorId(0), providerId(0) {}
+    };
 
     class ActionContext
     {
@@ -53,6 +59,7 @@ namespace scag { namespace re { namespace actions
         PropertyManager&        command;
 
         CommandProperty&        commandProperty;
+        InfrastructIDs          m_InfrastructIDs;
     public:
 
         ActionContext(Hash<Property>& _constants,
@@ -85,6 +92,11 @@ namespace scag { namespace re { namespace actions
         Operation * GetCurrentOperation() {return session.GetCurrentOperation();}
 
         void makeBillEvent(int billCommand, std::string& category, std::string& medyaType, SACC_BILLING_INFO_EVENT_t& ev);
+        CommandProperty& getCommandProperty() {return commandProperty;}
+
+        void setInfrastructIDs(InfrastructIDs& infrastructIDs) {m_InfrastructIDs = infrastructIDs;}
+        InfrastructIDs getInfrastructIDs() {return m_InfrastructIDs;}
+
     };
 
 }}}
