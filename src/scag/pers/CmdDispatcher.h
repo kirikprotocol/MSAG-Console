@@ -13,26 +13,26 @@ namespace scag { namespace pers {
 using smsc::logger::Logger;
 
 class CommandDispatcher {
-	StringProfileStore* AbonentStore;
+    StringProfileStore* AbonentStore;
 public:
     CommandDispatcher(StringProfileStore *abonent, IntProfileStore *service, IntProfileStore *oper, IntProfileStore *provider);
     ~CommandDispatcher() {};
     void Execute(SerialBuffer* sb);
 protected:
-	typedef struct {
-		ProfileType pt;
-		IntProfileStore* store;
-	} IntStore;
+    typedef struct {
+        ProfileType pt;
+        IntProfileStore* store;
+    } IntStore;
 
-	void SendResponse(SerialBuffer *sb, PersServerResponseType r);
-	void SetPacketSize(SerialBuffer *sb);
-	void DelCmdHandler(ProfileType pt, uint32_t int_key, string& str_key, string& name, SerialBuffer *sb);
-	void GetCmdHandler(ProfileType pt, uint32_t int_key, string& str_key, string& name, SerialBuffer *sb);
-	void SetCmdHandler(ProfileType pt, uint32_t int_key, string& str_key, Property& prop, SerialBuffer *sb);
-	void IncCmdHandler(ProfileType pt, uint32_t int_key, string& str_key, string& name, int32_t inc, SerialBuffer *sb);
+    void SendResponse(SerialBuffer *sb, PersServerResponseType r);
+    void SetPacketSize(SerialBuffer *sb);
+    void DelCmdHandler(ProfileType pt, uint32_t int_key, std::string& str_key, std::string& name, SerialBuffer *sb);
+    void GetCmdHandler(ProfileType pt, uint32_t int_key, std::string& str_key, std::string& name, SerialBuffer *sb);
+    void SetCmdHandler(ProfileType pt, uint32_t int_key, std::string& str_key, Property& prop, SerialBuffer *sb);
+    void IncCmdHandler(ProfileType pt, uint32_t int_key, std::string& str_key, Property& prop, SerialBuffer *sb);
     Logger * log;
 #define INT_STORE_CNT 3
-	IntStore int_store[INT_STORE_CNT];
+    IntStore int_store[INT_STORE_CNT];
 };
 
 }}

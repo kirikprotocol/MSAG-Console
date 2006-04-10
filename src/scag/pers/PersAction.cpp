@@ -215,9 +215,6 @@ bool PersAction::run(ActionContext& context)
 {
     smsc_log_error(logger,"Run Action 'PersAction'...");
 
-//    Statistics& statistics = Statistics::Instance();
-//    SACC_BILLING_INFO_EVENT_t ev;
-
     try{
         Property prop;
         PersClient& pc = PersClient::Instance();
@@ -231,20 +228,36 @@ bool PersAction::run(ActionContext& context)
                 else
                     pc.DelProperty(profile, getKey(cp, profile), var.c_str());
                 break;
+            case PC_INC:
             case PC_SET:
                 if(ftValue != ftUnknown)
                 {
                     REProperty *rp = context.getProperty(value_str);
-                    setPersPropFromREProp(prop, *rp);
-                    prop.setTimePolicy(policy, final_date, life_time);
+                    if(rp)
+                    {
+                        setPersPropFromREProp(prop, *rp);
+                        prop.setName(var);
+                        prop.setTimePolicy(policy, final_date, life_time);
+                    } else
+                        return false;
                 }
                 else
                     prop.assign(var.c_str(), value.c_str(), policy, final_date, life_time);
 
-                if(profile == PT_ABONENT)
-                    pc.SetProperty(profile, cp.abonentAddr.toString().c_str(), prop);
+                if(cmd == PC_SET)
+                {
+                    if(profile == PT_ABONENT)
+                        pc.SetProperty(profile, cp.abonentAddr.toString().c_str(), prop);
+                    else
+                        pc.SetProperty(profile, getKey(cp, profile), prop);
+                }
                 else
-                    pc.SetProperty(profile, getKey(cp, profile), prop);
+                {
+                    if(profile == PT_ABONENT)
+                        pc.IncProperty(profile, cp.abonentAddr.toString().c_str(), prop);
+                    else
+                        pc.IncProperty(profile, getKey(cp, profile), prop);
+                }
                 break;
             case PC_GET:
             {
@@ -257,12 +270,6 @@ bool PersAction::run(ActionContext& context)
                 setREPropFromPersProp(*rep, prop);
                 break;
             }
-            case PC_INC:
-                if(profile == PT_ABONENT)
-                    pc.IncProperty(profile, cp.abonentAddr.toString().c_str(), var.c_str(), 1);
-                else
-                    pc.IncProperty(profile, getKey(cp, profile), var.c_str(), 1);
-                break;
         }
     }
     catch(PersClientException& e)
@@ -270,8 +277,6 @@ bool PersAction::run(ActionContext& context)
         smsc_log_error(logger, "PersClientException catched, Reason: %s", e.what());
         return false;
     }
-
-//    statistics.registerSaccEvent(ev);
 
     return true;
 }

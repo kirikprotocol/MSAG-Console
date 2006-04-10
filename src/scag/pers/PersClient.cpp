@@ -138,35 +138,39 @@ void PersClient::DelProperty(ProfileType pt, uint32_t key, const char *property_
         throw PersClientException(SERVER_ERROR);
 }
 
-void PersClient::IncProperty(ProfileType pt, const char* key, const char *property_name, int32_t inc) //throw(PersClientException)
+void PersClient::IncProperty(ProfileType pt, const char* key, Property& prop) //throw(PersClientException)
 {
     if(pt != PT_ABONENT)
         throw PersClientException(INVALID_KEY);
 
+    if(prop.getType() != INT && prop.getType() != DATE)
+        throw PersClientException(INVALID_PROPERTY_TYPE);
+
     MutexGuard mt(mtx);
 
     FillHead(PC_INC, pt, key);
-    sb.WriteString(property_name);
-    sb.WriteInt32(inc);
+    prop.Serialize(sb);
     SendPacket();
     ReadPacket();
     if(GetServerResponse() != RESPONSE_OK)
-        throw PersClientException(PROPERTY_NOT_FOUND);
+        throw PersClientException(SERVER_ERROR);
 }
-void PersClient::IncProperty(ProfileType pt, uint32_t key, const char *property_name, int32_t inc) //throw(PersClientException)
+void PersClient::IncProperty(ProfileType pt, uint32_t key, Property& prop) //throw(PersClientException)
 {
     if(pt == PT_ABONENT)
         throw PersClientException(INVALID_KEY);
 
+    if(prop.getType() != INT && prop.getType() != DATE)
+        throw PersClientException(INVALID_PROPERTY_TYPE);
+
     MutexGuard mt(mtx);
 
     FillHead(PC_INC, pt, key);
-    sb.WriteString(property_name);
-    sb.WriteInt32((uint32_t)inc);
+    prop.Serialize(sb);
     SendPacket();
     ReadPacket();
     if(GetServerResponse() != RESPONSE_OK)
-        throw PersClientException(PROPERTY_NOT_FOUND);
+        throw PersClientException(SERVER_ERROR);
 }
 
 void PersClient::init()
