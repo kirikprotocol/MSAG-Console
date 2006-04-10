@@ -70,8 +70,15 @@ void SQLJob::process(Command& command, DataSource& ds)
     throw(CommandProcessException)
 {
     Connection* connection = ds.getConnection();
-    if (!connection) error(SQL_JOB_DS_FAILURE,
-                           "Failed to create DataSource connection!");
+    if (!connection) {
+        smsc_log_error(log, "DBSme failed to obtain connection. Killing service");
+        if (sigsend(P_PID, P_MYID, 9) != 0) {
+            smsc_log_fatal(log, "Failed to send kill signal. Cause: %s. Terminating process...",
+                           strerror(errno));
+            exit(errno);
+        }
+        //error(SQL_JOB_DS_CONNECTION_LOST, "Failed to create DataSource connection!");
+    }
 
     int wdTimerId = ds.startTimer(connection, dsOperationTimeout);
 
@@ -225,8 +232,15 @@ void PLSQLJob::process(Command& command, DataSource& ds)
     throw(CommandProcessException)
 {
     Connection* connection = ds.getConnection();
-    if (!connection) error(SQL_JOB_DS_FAILURE,
-                           "Failed to create DataSource connection!");
+    if (!connection) {
+        smsc_log_error(log, "DBSme failed to obtain connection. Killing service");
+        if (sigsend(P_PID, P_MYID, 9) != 0) {
+            smsc_log_fatal(log, "Failed to send kill signal. Cause: %s. Terminating process...",
+                           strerror(errno));
+            exit(errno);
+        }
+        //error(SQL_JOB_DS_CONNECTION_LOST, "Failed to create DataSource connection!");
+    }
 
     int wdTimerId = ds.startTimer(connection, dsOperationTimeout);
 
