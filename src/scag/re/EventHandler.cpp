@@ -87,7 +87,7 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, 
     timeval tv;
     gettimeofday(&tv,0);
 
-    ev.Header.lDateTime = tv.tv_sec * 1000 + tv.tv_usec;
+    ev.Header.lDateTime = tv.tv_sec * 1000 + tv.tv_usec / 1000;
 
     const char * str = commandProperty.abonentAddr.toString().c_str();
     sprintf((char *)ev.Header.pAbonentNumber,"%s",str);
@@ -102,8 +102,8 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, 
 
         memcpy(ev.pMessageText, messageBody.data(), size); 
     }
-
-    sprintf((char *)ev.pSessionKey,"%s/%d", sessionPrimaryKey.abonentAddr.toString().c_str(),(sessionPrimaryKey.BornMicrotime.tv_sec*1000 + sessionPrimaryKey.BornMicrotime.tv_usec));
+    uint64_t msec = sessionPrimaryKey.BornMicrotime.tv_sec*1000 + sessionPrimaryKey.BornMicrotime.tv_usec / 1000;
+    sprintf((char *)ev.pSessionKey,"%s/%llu", sessionPrimaryKey.abonentAddr.toString().c_str(), msec);
 
     Statistics::Instance().registerSaccEvent(ev);
 }

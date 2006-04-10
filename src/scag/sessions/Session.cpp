@@ -134,8 +134,9 @@ Session::Session(const CSessionKey& key)
 
     timeval tv;
     gettimeofday(&tv,0);
+    uint64_t msec = tv.tv_sec*1000 + (tv.tv_usec / 1000);
 
-    smsc_log_debug(logger," *********** Session: msec %d", tv.tv_sec*1000 + tv.tv_usec);
+    smsc_log_debug(logger," *********** Session: msec %llu", msec);
     
 
     m_SessionPrimaryKey.abonentAddr = key.abonentAddr;

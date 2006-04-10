@@ -105,7 +105,7 @@ void ActionContext::makeBillEvent(int billCommand, std::string& category, std::s
     timeval tv;
     gettimeofday(&tv,0);
 
-    ev.Header.lDateTime = tv.tv_sec*1000 + tv.tv_usec;
+    ev.Header.lDateTime = tv.tv_sec*1000 + (tv.tv_usec / 1000);
     
     sprintf((char *)ev.Header.pAbonentNumber,"%s",commandProperty.abonentAddr.toString().c_str());
 

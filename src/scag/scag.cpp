@@ -478,7 +478,7 @@ void Scag::init()
   */
   //*****************************************************
 
-   /*
+   
   ////////////////////////// FOR TEST
 
   scag::sessions::CSessionKey key;
@@ -517,7 +517,7 @@ void Scag::init()
   scag::re::RuleEngine::Instance().process(commandSubmitResp, *session);
 
   ////////////////////////// FOR TEST 
-   */                                
+                                   
 
                                     
     //********************************************************
