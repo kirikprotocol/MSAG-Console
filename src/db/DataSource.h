@@ -482,9 +482,9 @@ namespace smsc { namespace db
 
         EventMonitor         monitor;
         Event                pingEvent;
-        bool                 pingStarted;
         Mutex                pingStartLock;
-	bool		     needPing;
+        bool                 needPing, pingStarted;
+        int                  getConnectionTimeout;
         
         struct ConnectionQueue
         {

@@ -173,16 +173,24 @@ void ConnectionPool::loadPoolSize(ConfigView* config)
 
 ConnectionPool::ConnectionPool(DataSource& _ds, ConfigView* config)
     throw(ConfigException) : Thread(), ds(_ds), count(0),
-        log(Logger::getInstance("smsc.db.ConnectionPool")), pingStarted(false),
-            idleHead(0), idleTail(0), idleCount(0), head(0), tail(0), queueLen(0)
+        log(Logger::getInstance("smsc.db.ConnectionPool")), 
+            needPing(false), pingStarted(false), getConnectionTimeout(-1),
+                idleHead(0), idleTail(0), idleCount(0), head(0), tail(0), queueLen(0)
 {
     loadPoolSize(config);
     try {
         needPing = config->getBool("needPing");
     } catch (ConfigException& exc) {
         needPing = true;
-        smsc_log_warn(log, "needPing conpool parameter wasn't specified ! "
-                 "Using default: %s", needPing ? "true" : "false" );
+        smsc_log_warn(log, "'needPing' conpool parameter wasn't specified ! "
+                      "Using default: %s", needPing ? "true" : "false" );
+    }
+    try {
+        getConnectionTimeout = config->getInt("getConnectionTimeout");
+    } catch (ConfigException& exc) {
+        getConnectionTimeout = -1;
+        smsc_log_warn(log, "'getConnectionTimeout' conpool parameter wasn't specified ! "
+                      "Timeou is off by default.");
     }
 }
 
@@ -267,8 +275,14 @@ Connection* ConnectionPool::getConnection()
         pthread_cond_init(&queue.condition,NULL);
         if (!head) head = tail;
         queue.connection = 0L;
-        monitor.wait(&queue.condition);
+        int status = (getConnectionTimeout <= 0) ? 
+                      monitor.wait(&queue.condition) :
+                      monitor.wait(&queue.condition, getConnectionTimeout);
         pthread_cond_destroy(&queue.condition);
+        if ((getConnectionTimeout > 0) && (status == ETIMEDOUT)) {
+            __trace2__("Failed to obtain connection after %d msec: time out", getConnectionTimeout);
+            return 0; // throw exc?
+        }
         return queue.connection;
     }
     
