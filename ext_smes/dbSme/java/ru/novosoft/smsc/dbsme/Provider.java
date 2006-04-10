@@ -153,7 +153,7 @@ public class Provider extends DbsmeBean
         dbUserPassword = "";
         type = "";
         watchdog = false;
-	needPing = true;
+	      needPing = false;
 
         service_not_available = "";
         job_not_found = "";
