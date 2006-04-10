@@ -352,8 +352,9 @@ void Session::Deserialize(SessionBuffer& buff)
 
 void Session::changed(AdapterProperty& property)
 {
-    AdapterProperty * oldProperty = PropertyHash.Get(property.GetName().c_str());
-    oldProperty->setPureStr(property.getStr());
+ /*   AdapterProperty * oldProperty = PropertyHash.Get(property.GetName().c_str());
+
+    oldProperty->setPureStr(property.getStr());*/
     bChanged = true;
 }
 

@@ -606,8 +606,8 @@ Property * SmppCommandAdapter::getSubmitRespProperty(const std::string& name,int
     switch (FieldId) 
     {
     case 0:
-        property = new AdapterProperty(name,this,0);
-        property->setPureInt(command->get_status());
+        property = new AdapterProperty(name,this,command->get_status());
+        //property->setPureInt(command->get_status());
     }
 
     if (property) 
@@ -838,8 +838,8 @@ Property * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::string& na
         property = Get_USSD_BIT_Property(data,name,FieldId);
     } else if (FieldId = Tag::SMPP_MESSAGE_PAYLOAD) 
     {
-        property = new AdapterProperty(name,this,0);
-        property->setPureInt(data.getState());
+        property = new AdapterProperty(name,this,data.getState());
+        //property->setPureInt(data.getState());
     } else
 
     switch (FieldId) 
@@ -902,8 +902,8 @@ Property * SmppCommandAdapter::getDeliverProperty(SMS& data,const std::string& n
         property = Get_DC_BIT_Property(data,name,FieldId);
     } else if (((FieldId >= ST_ENROUTE)&&(FieldId <= ST_REJECTED))||(FieldId == Tag::SMPP_MESSAGE_PAYLOAD)) 
     {
-        property = new AdapterProperty(name,this,0);
-        property->setPureInt(data.getState());
+        property = new AdapterProperty(name,this,data.getState());
+        //property->setPureInt(data.getState());
     } else
 
     switch (FieldId) 
@@ -992,8 +992,8 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
         {
             return PropertyPul.Get(0);
         }
-        property = new AdapterProperty(name,this,0);
-        property->setPureInt(command->status);
+        property = new AdapterProperty(name,this,command->status);
+        //property->setPureInt(command->status);
         PropertyPul.Insert(0,property);
         return property;
 
@@ -1054,8 +1054,8 @@ void SmppCommandAdapter::changed(AdapterProperty& property)
         return;
     }
 
-    AdapterProperty ** propertyPtr = PropertyPul.GetPtr(FieldId);
-    if (propertyPtr) (*propertyPtr)->setPureStr(property.getStr());
+ /*   AdapterProperty ** propertyPtr = PropertyPul.GetPtr(FieldId);
+    if (propertyPtr) (*propertyPtr)->setPureStr(property.getStr());*/
 }
 
 
