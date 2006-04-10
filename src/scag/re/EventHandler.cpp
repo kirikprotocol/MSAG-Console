@@ -79,16 +79,13 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, 
 
     Infrastructure& istr = BillingManager::Instance().getInfrastructure();
 
-    int operatorId = istr.GetOperatorID(commandProperty.abonentAddr);
-
-
     ev.Header.cCommandId = propertyObject.HandlerId;
 
     ev.Header.cProtocolId = commandProperty.protocol;
 
     ev.Header.iServiceId = commandProperty.serviceId;
-    ev.Header.iServiceProviderId = istr.GetProviderID(commandProperty.serviceId);
-
+    ev.Header.iServiceProviderId = commandProperty.providerId; 
+    
     timeval tv;
     gettimeofday(&tv,0);
 
@@ -98,7 +95,7 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, 
     sprintf((char *)ev.Header.pAbonentNumber,"%s",str);
 
     ev.Header.sCommandStatus = commandProperty.status;
-    ev.iOperatorId = operatorId;
+    ev.iOperatorId = commandProperty.operatorId;
 
     if ((propertyObject.HandlerId == EH_SUBMIT_SM)||(propertyObject.HandlerId == EH_DELIVER_SM))
     {

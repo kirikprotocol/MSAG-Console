@@ -10,13 +10,16 @@ namespace scag { namespace re { namespace actions
     using namespace scag::exceptions;
 
 
-CommandProperty::CommandProperty(SCAGCommand& command, int commandStatus, Address& addr)
+CommandProperty::CommandProperty(SCAGCommand& command, int commandStatus, Address& addr, int ProviderId, int OperatorId)
     : abonentAddr(addr)
 {
     serviceId = command.getServiceId();
     protocol = CommandBrige::getProtocolForEvent(command);
 
     status = commandStatus;
+
+    providerId = ProviderId;
+    operatorId = OperatorId;
 }
 
 
@@ -88,22 +91,6 @@ void ActionContext::makeBillEvent(int billCommand, std::string& category, std::s
 {
     Infrastructure& istr = BillingManager::Instance().getInfrastructure();
 
-    if (m_InfrastructIDs.operatorId == 0) 
-    {
-        int operatorId = istr.GetOperatorID(commandProperty.abonentAddr);
-        if (operatorId == 0) 
-            throw SCAGException("BillEvent: Cannot find OperatorID for %s abonent", commandProperty.abonentAddr.toString().c_str());
-
-        int providerId = istr.GetProviderID(commandProperty.serviceId);
-
-        if (ev.Header.iServiceProviderId == 0) 
-            throw SCAGException("BillEvent: Cannot find ProviderID for ServiceID=%d", commandProperty.serviceId);
-
-        m_InfrastructIDs.operatorId = operatorId;
-        m_InfrastructIDs.providerId = providerId;
-    }
-
-
     auto_ptr<TariffRec> tariffRec(istr.GetTariff(m_InfrastructIDs.operatorId, category.c_str(), medyaType.c_str()));
     if (!tariffRec.get()) 
         throw SCAGException("BillEvent: Cannot find tariffRec for OID=%d, cat=%s, mtype=%s ", m_InfrastructIDs.operatorId, category.c_str(), medyaType.c_str());
@@ -113,10 +100,7 @@ void ActionContext::makeBillEvent(int billCommand, std::string& category, std::s
     ev.Header.cProtocolId = commandProperty.protocol;
     ev.Header.iServiceId = commandProperty.serviceId;
 
-    ev.Header.iServiceProviderId = m_InfrastructIDs.providerId;
-
-    if (ev.Header.iServiceProviderId == 0) 
-        throw SCAGException("BillEvent: Cannot find ProviderID for ServiceID=%d", commandProperty.serviceId);
+    ev.Header.iServiceProviderId = commandProperty.providerId;
 
     timeval tv;
     gettimeofday(&tv,0);
@@ -127,7 +111,7 @@ void ActionContext::makeBillEvent(int billCommand, std::string& category, std::s
 
     ev.Header.sCommandStatus = commandProperty.status;
     
-    ev.iOperatorId = m_InfrastructIDs.operatorId;
+    ev.iOperatorId = commandProperty.operatorId;
     ev.iPriceCatId = tariffRec->CategoryId;
     
     
