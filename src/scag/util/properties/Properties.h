@@ -63,6 +63,7 @@ namespace scag { namespace util { namespace properties
         int64_t getInt ();
         bool    getBool();
         time_t  getDate();
+        PropertyType getType() {return type;}
 
         virtual void setStr(const std::string& val);
         virtual void setInt(int64_t val);
@@ -140,6 +141,10 @@ namespace scag { namespace util { namespace properties
 
     std::string FormatWStr(std::string& wstr);
     std::string UnformatWStr(std::string& str);
+
+    // Functions for converting 2bytes strings to/from standard wstring type
+    std::wstring ConvertWStrTo_wstring(const std::string& str);
+    std::string Convert_wstringToWStr(const std::wstring& wstr);
 }}}
 
 #endif // SCAG_UTIL_PROPERTIES
