@@ -93,7 +93,7 @@ void ActionContext::makeBillEvent(int billCommand, std::string& category, std::s
 
     auto_ptr<TariffRec> tariffRec(istr.GetTariff(commandProperty.operatorId, category.c_str(), medyaType.c_str()));
     if (!tariffRec.get()) 
-        throw SCAGException("BillEvent: Cannot find tariffRec for OID=%d, cat=%s, mtype=%s ", m_InfrastructIDs.operatorId, category.c_str(), medyaType.c_str());
+        throw SCAGException("BillEvent: Cannot find tariffRec for OID=%d, cat=%s, mtype=%s ", commandProperty.operatorId, category.c_str(), medyaType.c_str());
 
     ev.Header.cCommandId = billCommand;
 

@@ -77,8 +77,6 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, 
 {
     SACC_TRAFFIC_INFO_EVENT_t ev;
 
-    Infrastructure& istr = BillingManager::Instance().getInfrastructure();
-
     ev.Header.cCommandId = propertyObject.HandlerId;
 
     ev.Header.cProtocolId = commandProperty.protocol;
