@@ -10,8 +10,8 @@ using namespace scag::transport::http;
 
 class HttpEventHandler : public EventHandler
 {
-    RuleStatus processRequest(HttpCommand& command, Session& session);
-    RuleStatus processResponse(HttpCommand& command, Session& session);
+    RuleStatus processRequest(HttpCommand& command, Session& session, CommandProperty& commandProperty);
+    RuleStatus processResponse(HttpCommand& command, Session& session, CommandProperty& commandProperty);
     RuleStatus processDelivery(HttpCommand& command, Session& session);
 public:
     virtual RuleStatus process(SCAGCommand& command, Session& session); 

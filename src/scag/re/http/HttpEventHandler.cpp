@@ -7,7 +7,7 @@ namespace scag { namespace re { namespace http {
 
 using namespace scag::transport::http;
 
-RuleStatus HttpEventHandler::processRequest(HttpCommand& command, Session& session)
+RuleStatus HttpEventHandler::processRequest(HttpCommand& command, Session& session, CommandProperty& commandProperty)
 {
     smsc_log_debug(logger, "Process HttpEventHandler Request...");
 
@@ -17,9 +17,7 @@ RuleStatus HttpEventHandler::processRequest(HttpCommand& command, Session& sessi
     HttpCommandAdapter _command(command);
 
     try{
-
         session.setOperationFromPending(command, CO_HTTP_DELIVERY);
-        
 
         time_t now;
         time(&now);
@@ -28,8 +26,6 @@ RuleStatus HttpEventHandler::processRequest(HttpCommand& command, Session& sessi
         pendingOperation.type = CO_HTTP_DELIVERY;
         pendingOperation.validityTime = now + SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
         session.addPendingOperation(pendingOperation);
-
-        CommandProperty commandProperty(command, 0, Address(command.getAbonent().c_str()));
 
         std::string str;
         RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), str);
@@ -52,7 +48,7 @@ RuleStatus HttpEventHandler::processRequest(HttpCommand& command, Session& sessi
     return rs;
 }
 
-RuleStatus HttpEventHandler::processResponse(HttpCommand& command, Session& session)
+RuleStatus HttpEventHandler::processResponse(HttpCommand& command, Session& session, CommandProperty& commandProperty)
 {
     smsc_log_debug(logger, "Process HttpEventHandler Response...");
 
@@ -63,8 +59,6 @@ RuleStatus HttpEventHandler::processResponse(HttpCommand& command, Session& sess
 
     try{
         session.setCurrentOperation(command.getOperationId());
-
-        CommandProperty commandProperty(command, 0, Address(command.getAbonent().c_str()));
 
         std::string str;
         RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), str);
@@ -116,12 +110,22 @@ RuleStatus HttpEventHandler::process(SCAGCommand& command, Session& session)
 //    CommandProperty commandProperty(command, 0, Address(command.getAbonent()));
 //    RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), "");
 
+    Infrastructure& istr = BillingManager::Instance().getInfrastructure();
+
+    Address abonentAddr(hc.getAbonent().c_str());
+
+    uint32_t operatorId = istr.GetOperatorID(abonentAddr);
+    if (operatorId == 0) 
+        throw SCAGException("HttpEventHandler: Cannot find OperatorID for %s abonent", abonentAddr.toString().c_str());
+
+    CommandProperty cp(command, 0, abonentAddr, operatorId, hc.getProviderId());
+
     switch(hc.getCommandId())
     {
         case HTTP_REQUEST:
-            return processRequest(hc, session);
+            return processRequest(hc, session, cp);
         case HTTP_RESPONSE:
-            return processResponse(hc, session);
+            return processResponse(hc, session, cp);
         case HTTP_DELIVERY:
             return processDelivery(hc, session);
         default:
