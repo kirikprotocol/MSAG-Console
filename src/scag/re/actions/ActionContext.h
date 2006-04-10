@@ -34,7 +34,10 @@ namespace scag { namespace re { namespace actions
         int protocol;
         int serviceId;
 
-        CommandProperty(SCAGCommand& command, int commandStatus, Address& addr);
+        int providerId;
+        int operatorId;
+
+        CommandProperty(SCAGCommand& command, int commandStatus, Address& addr, int ProviderId, int OperatorId);
     };
 
 
@@ -59,7 +62,6 @@ namespace scag { namespace re { namespace actions
         PropertyManager&        command;
 
         CommandProperty&        commandProperty;
-        InfrastructIDs          m_InfrastructIDs;
     public:
 
         ActionContext(Hash<Property>& _constants,
@@ -93,9 +95,6 @@ namespace scag { namespace re { namespace actions
 
         void makeBillEvent(int billCommand, std::string& category, std::string& medyaType, SACC_BILLING_INFO_EVENT_t& ev);
         CommandProperty& getCommandProperty() {return commandProperty;}
-
-        void setInfrastructIDs(InfrastructIDs& infrastructIDs) {m_InfrastructIDs = infrastructIDs;}
-        InfrastructIDs getInfrastructIDs() {return m_InfrastructIDs;}
 
     };
 

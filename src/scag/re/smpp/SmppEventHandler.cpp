@@ -153,7 +153,7 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     RuleStatus rs;
 
     smsc::util::config::Config config;
-
+    
     
     SmppCommand * smppcommand = dynamic_cast<SmppCommand *>(&command);
     if (!smppcommand) throw SCAGException("SmppEventHandler: command is not 'smpp-type'");
@@ -162,12 +162,25 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
 
     /////////////////////////////////////////
 
-    CommandProperty commandProperty(command, (*smppcommand)->status, CommandBrige::getAbonentAddr(*smppcommand));
+    Infrastructure& istr = BillingManager::Instance().getInfrastructure();
+
+    Address& abonentAddr = CommandBrige::getAbonentAddr(*smppcommand);
+
+    int operatorId = istr.GetOperatorID(abonentAddr);
+    if (operatorId == 0) 
+        throw SCAGException("SmppEventHandler: Cannot find OperatorID for %s abonent", abonentAddr.toString().c_str());
+
+    int providerId = istr.GetProviderID(command.getServiceId());
+
+    if (providerId == 0) 
+        throw SCAGException("SmppEventHandler: Cannot find ProviderID for ServiceID=%d", command.getServiceId());
+
+
+    CommandProperty commandProperty(command, (*smppcommand)->status, abonentAddr, operatorId, providerId);
     RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), CommandBrige::getMessageBody(*smppcommand));
     
     /////////////////////////////////////////
-    
-   
+
     try {
         StartOperation(session, *smppcommand);
     } catch (SCAGException& e)
