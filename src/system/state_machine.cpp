@@ -3553,25 +3553,33 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
   if(GET_STATUS_TYPE(t.command->get_resp()->get_status())!=CMD_OK)
   {
+    sms.setLastResult(GET_STATUS_CODE(t.command->get_resp()->get_status()));
+
     if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2 &&
        sms.getIntProperty(Tag::SMPP_SET_DPF))//forward/transaction mode
     {
-      try{
-        //sms.setNextTime(time(NULL)+60*60);//!!! TODO timeout from config !!!
-        sms.setNextTime(time(NULL)+60*2);
-        sms.needArchivate=false;
-        sms.billingRecord=0;
-        store->createSms(sms,t.msgId,smsc::store::CREATE_NEW);
-        int dest_proxy_index=smsc->getSmeIndex(sms.getDestinationSmeId());
+      if(GET_STATUS_TYPE(t.command->get_resp()->get_status())==CMD_ERR_TEMP)
+      {
         try{
-          smsc->getScheduler()->AddScheduledSms(t.msgId,sms,dest_proxy_index);
+          sms.lastTime=time(NULL);
+          sms.setNextTime(rescheduleSms(sms));
+          sms.needArchivate=false;
+          sms.billingRecord=0;
+          store->createSms(sms,t.msgId,smsc::store::CREATE_NEW);
+          int dest_proxy_index=smsc->getSmeIndex(sms.getDestinationSmeId());
+          try{
+            smsc->getScheduler()->AddScheduledSms(t.msgId,sms,dest_proxy_index);
+          }catch(std::exception& e)
+          {
+            store->changeSmsStateToDeleted(t.msgId);
+          }
         }catch(std::exception& e)
         {
-          store->changeSmsStateToDeleted(t.msgId);
+          warn2(smsLog,"Failed to create dpf sms:%s",e.what());
         }
-      }catch(std::exception& e)
+      }else
       {
-        warn2(smsLog,"Failed to create dpf sms:%s",e.what());
+        sms.setIntProperty(Tag::SMPP_SET_DPF,0);
       }
     }
 
@@ -3579,7 +3587,6 @@ StateType StateMachine::deliveryResp(Tuple& t)
     {
       case CMD_ERR_RESCHEDULENOW:
       {
-        sms.setLastResult(GET_STATUS_CODE(t.command->get_resp()->get_status()));
         try{
           time_t rt=time(NULL)+2;
           if(t.command->get_resp()->get_delay()!=-1)
@@ -3617,7 +3624,6 @@ StateType StateMachine::deliveryResp(Tuple& t)
           StateType st=DivertProcessing(t,sms);
           if(st!=UNKNOWN_STATE)return st;
         }
-        sms.setLastResult(GET_STATUS_CODE(t.command->get_resp()->get_status()));
         try{
           __trace__("DELIVERYRESP: change state to enroute");
           time_t rt;
@@ -3676,7 +3682,6 @@ StateType StateMachine::deliveryResp(Tuple& t)
           }
         }
 
-        sms.setLastResult(GET_STATUS_CODE(t.command->get_resp()->get_status()));
         sendFailureReport(sms,t.msgId,UNDELIVERABLE_STATE,"permanent error");
         smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
 
