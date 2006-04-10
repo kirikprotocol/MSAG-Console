@@ -4,8 +4,10 @@
 #include "scag/exc/SCAGExceptions.h"
 #include <memory.h>
 #include "util/recoder/recode_dll.h"
-
+#include <core/buffers/TmpBuf.hpp>
 #include <iostream>
+
+using smsc::core::buffers::TmpBuf;
 
 namespace scag { namespace util { namespace properties 
 {
