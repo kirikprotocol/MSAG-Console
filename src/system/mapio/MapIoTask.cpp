@@ -35,9 +35,15 @@ extern "C" {
 
   USHORT_T Et96MapBindConf(ET96MAP_LOCAL_SSN_T lssn, ET96MAP_BIND_STAT_T status)
   {
-    __map_trace2__("Et96MapBindConf confirmation received ssn=%d status=%d",lssn,status);
+    __map_warn2__("Et96MapBindConf confirmation received ssn=%d status=%d",lssn,status);
     if( status == 0 || status == 1 ) {
-      ++__global_bind_counter;
+      if( lssn == SSN || lssn == USSD_SSN ) { 
+        ++__global_bind_counter;
+      }
+    } else if( status == 9 ) {
+      if( lssn == SSN || lssn == USSD_SSN ) { 
+        --__global_bind_counter;
+      }
     }
     return ET96MAP_E_OK;
   }
@@ -49,7 +55,7 @@ extern "C" {
                            ULONG_T affectedSPC,
                            ULONG_T localSPC)
   {
-    __map_trace2__("Et96MapStateInd received ssn=%d user state=%d affected SSN=%d affected SPC=%ld local SPC=%ld",lssn,userState,affectedSSN,affectedSPC,localSPC);
+    __map_warn2__("Et96MapStateInd received ssn=%d user state=%d affected SSN=%d affected SPC=%ld local SPC=%ld",lssn,userState,affectedSSN,affectedSPC,localSPC);
     return ET96MAP_E_OK;
   }
 
@@ -97,13 +103,13 @@ void MapIoTask::connect(unsigned timeout) {
   
   result = Et96MapBindReq(MY_USER_ID, SSN);
   if (result!=ET96MAP_E_OK) {
-    __map_trace2__("SSN Bind error 0x%hx",result);
+    __map_warn2__("SSN Bind error 0x%hx",result);
     throw runtime_error("bind error sms");
   }
 
   result = Et96MapBindReq(MY_USER_ID, USSD_SSN);
   if (result!=ET96MAP_E_OK) {
-    __map_trace2__("USSD Bind error 0x%hx",result);
+    __map_warn2__("USSD Bind error 0x%hx",result);
     throw runtime_error("bind error ussd");
   }
 }
