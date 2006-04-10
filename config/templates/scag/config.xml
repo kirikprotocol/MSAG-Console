@@ -68,4 +68,10 @@
         <param name="connectionTimeout" type="int">100</param>
     </section>
 
+    <section name="Personalization">
+        <param name="host" type="string">@pers.host@</param>
+        <param name="port" type="int">@pers.port@</param>
+        <param name="timeout" type="int">100</param>
+    </section>
+
 </config>
