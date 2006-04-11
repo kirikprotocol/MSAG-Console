@@ -20,7 +20,7 @@
         </site>
     </site_subject_def>
 
-    <route id="route1" serviceId="5">
+    <route id="route1" serviceId="5" enabled="true">
         <abonents>
             <subject id="MTS_numbers"/>
             <address value="+7913???????"/>
@@ -39,7 +39,7 @@
         </sites>
     </route>
 
-    <route id="route2" serviceId="6">
+    <route id="route2" serviceId="6" enabled="false">
         <abonents>
             <address value="+7912???????"/>
             <address value="+7906???????"/>
