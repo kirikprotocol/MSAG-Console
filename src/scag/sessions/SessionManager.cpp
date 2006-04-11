@@ -373,7 +373,7 @@ int SessionManagerImpl::processExpire()
                 return 1;
             }
 
-            smsc_log_debug(logger,"SessionManager: try to expire session UMR='%d', Address='%s', has pending: %d-%d",(*it)->SessionKey.USR,(*it)->SessionKey.abonentAddr.toString().c_str(),session->hasPending(),(*it)->hasPending);
+            smsc_log_debug(logger,"SessionManager: try to expire session UMR='%d', Address='%s', has p: %d op: %d",(*it)->SessionKey.USR,(*it)->SessionKey.abonentAddr.toString().c_str(),session->hasPending(),session->hasOperations());
             session->expirePendingOperation();
 
             CSessionAccessData * data = (*it);
@@ -532,7 +532,8 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
         return;
     }
 
-    if (session->isChanged()) store.updateSession(session);
+    //if (session->isChanged()) 
+    store.updateSession(session);
 
     inUseMonitor.notifyAll();
     //smsc_log_debug(logger,"SessionManager: session released, Pending Operations Count = %d",session->PendingOperationList.size());

@@ -52,7 +52,7 @@ void BillActionClose::init(const SectionParams& params,PropertyObject propertyOb
 
 bool BillActionClose::run(ActionContext& context)
 {
-    smsc_log_error(logger,"Run Action 'BillActionCommit'...");
+    smsc_log_debug(logger,"Run Action 'BillActionClose'...");
 
     /////////////////////////////////////////////
 

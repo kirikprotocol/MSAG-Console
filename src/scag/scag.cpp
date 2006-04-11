@@ -513,26 +513,34 @@ void Scag::init()
 
   scag::sessions::CSessionKey key;
 
-  SMS sms;
-  //sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, 100);
+  SMS sms1, sms2;
+  //smsc::smpp::UssdServiceOpValue::PSSR_INDICATION == sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)
+  sms1.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, smsc::smpp::UssdServiceOpValue::PSSR_INDICATION);
+  sms2.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, 100);
 
   char buff[128];
-  scag::transport::smpp::SmppCommand commandDeliver = scag::transport::smpp::SmppCommand::makeDeliverySm(sms,1);
+  scag::transport::smpp::SmppCommand commandDeliver1 = scag::transport::smpp::SmppCommand::makeDeliverySm(sms1,1);
   scag::transport::smpp::SmppCommand commandDeliverResp = scag::transport::smpp::SmppCommand::makeDeliverySmResp(buff,1,1);
-  scag::transport::smpp::SmppCommand commandSubmit = scag::transport::smpp::SmppCommand::makeSubmitSm(sms,1);
+  scag::transport::smpp::SmppCommand commandSubmit = scag::transport::smpp::SmppCommand::makeSubmitSm(sms2,1);
   scag::transport::smpp::SmppCommand commandSubmitResp = scag::transport::smpp::SmppCommand::makeSubmitSmResp(buff,1,1, true);
 
-  commandDeliver.setServiceId(1);
+  scag::transport::smpp::SmppCommand commandDeliver2 = scag::transport::smpp::SmppCommand::makeDeliverySm(sms2,1);
+
+  commandDeliver1.setServiceId(1);
+  commandDeliver2.setServiceId(1);
+
   commandDeliverResp.setServiceId(1);
 
   commandSubmit.setServiceId(1);
   commandSubmitResp.setServiceId(1);
 
-  commandDeliverResp->get_resp()->set_sms(&sms);
-  commandSubmitResp->get_resp()->set_sms(&sms);
+  commandDeliverResp->get_resp()->set_sms(&sms2);
+  commandSubmitResp->get_resp()->set_sms(&sms2);
 
-  commandDeliverResp.setOperationId(1);
-  commandSubmitResp.setOperationId(2);
+  //commandDeliverResp.setOperationId(1);
+  //commandSubmitResp.setOperationId(1);
+
+
 
   SessionManager& sm = SessionManager::Instance();
   scag::sessions::SessionPtr sessionPtr = sm.newSession(key);
@@ -540,15 +548,33 @@ void Scag::init()
 
   if (session) smsc_log_warn(log, "SESSION IS VALID");
 
-  scag::re::RuleEngine::Instance().process(commandDeliver, *session);
+  scag::re::RuleEngine::Instance().process(commandDeliver1, *session);
+  sm.releaseSession(sessionPtr);
+
+  sessionPtr = sm.getSession(key);
+  session = sessionPtr.Get();
   scag::re::RuleEngine::Instance().process(commandDeliverResp, *session);
+  sm.releaseSession(sessionPtr);
 
+  sessionPtr = sm.getSession(key);
+  session = sessionPtr.Get();
   scag::re::RuleEngine::Instance().process(commandSubmit, *session);
+  sm.releaseSession(sessionPtr);
+
+
+  sessionPtr = sm.getSession(key);
+  session = sessionPtr.Get();
   scag::re::RuleEngine::Instance().process(commandSubmitResp, *session);
+  sm.releaseSession(sessionPtr);
 
-  ////////////////////////// FOR TEST 
-   */                                
+  sessionPtr = sm.getSession(key);
+  session = sessionPtr.Get();
+  scag::re::RuleEngine::Instance().process(commandDeliver2, *session);
+  sm.releaseSession(sessionPtr);
 
+ ////////////////////////// FOR TEST 
+                                   
+ */
                                     
     //********************************************************
     //************** HttpManager initialization **************

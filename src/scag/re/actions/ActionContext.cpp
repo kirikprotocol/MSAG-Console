@@ -122,6 +122,9 @@ void ActionContext::makeBillEvent(int billCommand, std::string& category, std::s
     if (size > tariffRec->Currency.size()) size = tariffRec->Currency.size();
 
     memcpy(ev.pBillingCurrency, tariffRec->Currency.c_str(), size);
+
+//    sprintf((char *)ev.pSessionKey,"%s/%ld%d", sessionPrimaryKey.abonentAddr.toString().c_str(), sessionPrimaryKey.BornMicrotime.tv_sec,sessionPrimaryKey.BornMicrotime.tv_usec / 1000);
+
 }
 
 }}}

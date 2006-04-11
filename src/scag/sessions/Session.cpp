@@ -46,6 +46,7 @@ void Operation::detachBill()
         return;
     }
 
+    smsc_log_debug(logger,"Operation: Bill (id=%d) dettached", billId);
     m_hasBill = false;
 }
 
@@ -105,7 +106,7 @@ void Operation::attachBill(int BillId)
     m_hasBill = true;
     billId = BillId;
 
-    smsc_log_debug(logger,"Operation: Bill %d attached",BillId);
+    smsc_log_debug(logger,"Operation: Bill (id=%d) attached",BillId);
 }
 
 
@@ -391,6 +392,7 @@ void Session::ClearOperations()
 
     m_pCurrentOperation = 0;
     lastOperationId = 0;
+    bChanged = true;
 }
 
 void Session::abort()
@@ -424,6 +426,7 @@ bool Session::hasOperations()
 
 int Session::getNewOperationId()
 {
+    bChanged = true;
     return ++lastOperationId;
 }
 
@@ -438,6 +441,7 @@ void Session::expirePendingOperation()
     {
         smsc_log_debug(logger,"Session: pending operation has expiried");
         PendingOperationList.pop_front();
+        bChanged = true;
     }
 }
 
@@ -476,7 +480,11 @@ Operation * Session::setCurrentOperationByType(int operationType)
 
     for (;it.Next(key, operation);)
     {              
-        if (operation->type == operationType) return operation;
+        if (operation->type == operationType) 
+        {
+            bChanged = true;
+            return operation;
+        }
     }
 
     throw SCAGException("Session: Cannot find pending operation");
@@ -493,6 +501,7 @@ void Session::setOperationFromPending(SCAGCommand& cmd, int operationType)
         {
             AddNewOperationToHash(cmd, operationType);
             PendingOperationList.erase(it);
+            bChanged = true;
             return;
         }
     }
@@ -534,6 +543,7 @@ void Session::DoAddPendingOperation(PendingOperation& pendingOperation)
         if (it->validityTime > pendingOperation.validityTime) 
         {
             PendingOperationList.insert(it,pendingOperation);
+            bChanged = true;
             return;
         }
     }
