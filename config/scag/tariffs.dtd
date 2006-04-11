@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!ELEMENT tariff_matrix (categories|media_types|billing_info)*>
 <!ELEMENT categories (category)*>
-<!ELEMENT category (id|name)*>
-<!ELEMENT id (#PCDATA)>
+<!ELEMENT category (name)>
+<!ATTLIST category
+    id CDATA #REQUIRED>
+
 <!ELEMENT name (#PCDATA)>
 
 <!ELEMENT media_types (media_type)*>
-<!ELEMENT media_type (id|name)*>
+<!ELEMENT media_type (name)>
+<!ATTLIST media_type
+    id CDATA #REQUIRED>
 
 <!ELEMENT billing_info (operator)*>
 <!ELEMENT operator (billing)*>
