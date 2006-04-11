@@ -77,6 +77,8 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
   sme_params["mode"              ] = Parameter("mode"              , StringType);
   sme_params["proclimit"         ] = Parameter("proclimit"         , LongType);
   sme_params["schedlimit"        ] = Parameter("schedlimit"        , LongType);
+  sme_params["accessMask"        ] = Parameter("accessMask"        , StringType);
+
   Parameters sme_id_params;
   sme_id_params["id"] = Parameter("id", StringType);
   Parameters sme_ids_params;
