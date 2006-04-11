@@ -12,6 +12,6 @@ import ru.sibinco.lib.SibincoException;
  */
 public class ReloadTariffMatrix extends Command {
   public ReloadTariffMatrix() throws SibincoException {
-    super("reloadTariffMatrix","file:///command_gw.dtd");
+    super("reloadTariffMatrix","command_gw.dtd");
   }
 }

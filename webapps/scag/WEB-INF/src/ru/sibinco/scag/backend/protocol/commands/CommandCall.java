@@ -25,7 +25,7 @@ public class CommandCall extends Command {
     public CommandCall(String commandName, Type returnType, Map args)
             throws SibincoException {
 
-        super(commandName, "file:///command_gw.dtd");
+        super(commandName, "command_gw.dtd");
         Element callElem = document.getDocumentElement();
         callElem.setAttribute("returnType", returnType.getName());
 

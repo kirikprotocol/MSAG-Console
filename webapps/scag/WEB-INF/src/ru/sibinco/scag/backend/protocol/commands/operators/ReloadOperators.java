@@ -12,6 +12,6 @@ import ru.sibinco.lib.SibincoException;
  */
 public class ReloadOperators extends Command {
   public ReloadOperators() throws SibincoException {
-    super("reloadOperators","file:///command_gw.dtd");
+    super("reloadOperators","command_gw.dtd");
   }
 }

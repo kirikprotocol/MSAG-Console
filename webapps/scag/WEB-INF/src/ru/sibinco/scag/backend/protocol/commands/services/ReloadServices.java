@@ -12,6 +12,6 @@ import ru.sibinco.lib.SibincoException;
  */
 public class ReloadServices extends Command {
   public ReloadServices() throws SibincoException {
-    super("reloadServices","file:///command_gw.dtd");
+    super("reloadServices","command_gw.dtd");
   }
 }
