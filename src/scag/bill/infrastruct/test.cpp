@@ -70,17 +70,17 @@ int main(int argc, char* argv[])
 
         smsc_log_info(logger, ">>>>>>Tariff test<<<<<<<<");
         TariffRec* tr;
-        tr = sm.GetTariff(105, "Premium1", "Melodies");
+        tr = sm.GetTariff(1, "Premium1", "Melodies");
         if(tr != NULL)
         {
             auto_ptr<TariffRec> pp(tr);
-            smsc_log_info(logger, "operator_id = 105, category_id=Premium1, media_type=Melodies. sn:%d, price:%lf, curr:%s", tr->ServiceNumber, tr->Price, tr->Currency.c_str());
+            smsc_log_info(logger, "operator_id = 1, category_id=Premium1, media_type=Melodies. sn:%d, price:%lf, curr:%s", tr->ServiceNumber, tr->Price, tr->Currency.c_str());
         }
-        tr = sm.GetTariff(105, "Premium1", "Pictures");
+        tr = sm.GetTariff(1, "Premium1", "Pictures");
         if(tr != NULL)
         {
             auto_ptr<TariffRec> pp(tr);
-            smsc_log_info(logger, "operator_id = 105, category_id=Premium1, media_type=Pictures. sn:%d, price:%lf, curr:%s", tr->ServiceNumber, tr->Price, tr->Currency.c_str());
+            smsc_log_info(logger, "operator_id = 1, category_id=Premium1, media_type=Pictures. sn:%d, price:%lf, curr:%s", tr->ServiceNumber, tr->Price, tr->Currency.c_str());
         }
 
         sm.ReloadProviderMap();
@@ -98,17 +98,17 @@ int main(int argc, char* argv[])
         smsc_log_info(logger, "abonent_id = +79129079876, op_id=%d", sm.GetOperatorID(Address("+79129079876")));
 
         smsc_log_info(logger, ">>>>>>Tariff test<<<<<<<<");
-        tr = sm.GetTariff(105, "Premium1", "Melodies");
+        tr = sm.GetTariff(1, "Premium1", "Melodies");
         if(tr != NULL)
         {
             auto_ptr<TariffRec> pp(tr);
-            smsc_log_info(logger, "operator_id = 105, category_id=Premium1, media_type=Melodies. sn:%d, price:%lf, curr:%s", tr->ServiceNumber, tr->Price, tr->Currency.c_str());
+            smsc_log_info(logger, "operator_id = 1, category_id=Premium1, media_type=Melodies. sn:%d, price:%lf, curr:%s", tr->ServiceNumber, tr->Price, tr->Currency.c_str());
         }
-        tr = sm.GetTariff(105, "Premium1", "Pictures");
+        tr = sm.GetTariff(1, "Premium1", "Pictures");
         if(tr != NULL)
         {
             auto_ptr<TariffRec> pp(tr);
-            smsc_log_info(logger, "operator_id = 105, category_id=Premium1, media_type=Pictures. sn:%d, price:%lf, curr:%s", tr->ServiceNumber, tr->Price, tr->Currency.c_str());
+            smsc_log_info(logger, "operator_id = 1, category_id=Premium1, media_type=Pictures. sn:%d, price:%lf, curr:%s", tr->ServiceNumber, tr->Price, tr->Currency.c_str());
         }
         }
 

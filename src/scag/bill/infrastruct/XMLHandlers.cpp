@@ -18,7 +18,6 @@ typedef struct{
 static tag_t category_tags[] = {
 {"categories", -1},
 {"category", 0},
-{"id", 1},
 {"name", 1},
 };
 #define CATEGORY_TAGS_SZ sizeof(category_tags) / sizeof(tag_t)
@@ -26,7 +25,6 @@ static tag_t category_tags[] = {
 static tag_t media_type_tags[] = {
 {"media_types", -1},
 {"media_type", 0},
-{"id", 1},
 {"name", 1},
 };
 
@@ -197,12 +195,8 @@ void XMLTariffMatrixHandler::characters(const XMLCh *const chrs, const unsigned 
     char *str = (char*)q.localForm();
 
     if(media_type_tag == 2)
-        media_type_id = atoi(str);
-    else if(media_type_tag == 3)
         media_type_name = str;
-    else if(category_tag == 2) 
-        category_id = atoi(str);
-    else if(category_tag == 3)
+    else if(category_tag == 2)
         category_name = str;
     else if(bill_tag == 3)
         bill_category_id = atoi(str);
@@ -225,6 +219,11 @@ void XMLTariffMatrixHandler::startElement(const XMLCh* const nm, AttributeList& 
         if(!strcmp(category_tags[i].name, qname) && category_tag == category_tags[i].top_tag)
         {
             category_tag = i;
+            if(i == 1)
+            {
+                StrX s = attrs.getValue("id");
+                category_id = atoi(s.localForm());
+            }
             return;
         }
 
@@ -232,6 +231,11 @@ void XMLTariffMatrixHandler::startElement(const XMLCh* const nm, AttributeList& 
         if(!strcmp(media_type_tags[i].name, qname) && media_type_tag == media_type_tags[i].top_tag)
         {
             media_type_tag = i;
+            if(i == 1)
+            {
+                StrX s = attrs.getValue("id");
+                media_type_id = atoi(s.localForm());
+            }
             return;
         }
 
@@ -252,7 +256,6 @@ void XMLTariffMatrixHandler::endElement(const XMLCh* const nm)
 {
     StrX XMLQName(nm);
     const char *qname = XMLQName.localForm();
-    int ended_tag = -1;
 
     for(int i = 0; i < CATEGORY_TAGS_SZ; i++)
         if(!strcmp(category_tags[i].name, qname) && category_tag == i)
@@ -261,7 +264,7 @@ void XMLTariffMatrixHandler::endElement(const XMLCh* const nm)
             if(i == 1)
             {
                 if(!category_id || category_name.length() == 0)
-                    throw Exception("Invalid XML <category> record");
+                    throw Exception("Invalid XML 'category' record");
 
                 category_hash->Insert(category_name.c_str(), category_id);
 
@@ -278,7 +281,7 @@ void XMLTariffMatrixHandler::endElement(const XMLCh* const nm)
             if(i == 1)
             {
                 if(!media_type_id || media_type_name.length() == 0)
-                    throw Exception("Invalid XML <media_type> record");
+                    throw Exception("Invalid XML 'media_type' record");
            
                 media_type_hash->Insert(media_type_name.c_str(), media_type_id);
 
@@ -288,6 +291,7 @@ void XMLTariffMatrixHandler::endElement(const XMLCh* const nm)
             }
             return;
         }
+
     for(int i = 0; i < BILL_TAGS_SZ; i++)
         if(!strcmp(bill_tags[i].name, qname) && bill_tag == i)
         {
@@ -296,15 +300,17 @@ void XMLTariffMatrixHandler::endElement(const XMLCh* const nm)
             {
                 if(!bill_category_id || !bill_media_type_id ||
                     !bill_service_number || bill_currency.length() == 0 || !bill_operator_id)
-                    throw Exception("Invalid XML <billing> record");
-            
+                    throw Exception("Invalid XML 'billing' record");
+
                 TariffRec tr(bill_service_number, bill_price, bill_currency, bill_category_id, bill_media_type_id);
 
                 uint32_t id = (bill_category_id & 0x1ff) << 23;
                 id |= (bill_media_type_id & 0x1FF) << 14;
                 id |= bill_operator_id & 0xFFF;
+
                 tariff_hash->Insert(id, tr);
-//                smsc_log_debug(logger,"end_billing: store is=%d, ci:%d, mt:%d, sn:%d, price:%d, op_id:%d, curr:%s", id, bill_category_id, bill_media_type_id, bill_service_number, bill_price, bill_operator_id, bill_currency.c_str());
+
+//                smsc_log_debug(logger,"end_billing: store is=%d, ci:%d, mt:%d, sn:%d, price:%lf, op_id:%d, curr:%s", id, bill_category_id, bill_media_type_id, bill_service_number, bill_price, bill_operator_id, bill_currency.c_str());
 
                 bill_category_id = 0;
                 bill_media_type_id = 0;
