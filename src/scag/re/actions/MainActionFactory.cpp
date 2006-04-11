@@ -12,8 +12,9 @@
 #include "scag/bill/BillActionOpen.h"
 #include "scag/bill/BillActionClose.h"
 
-#include "scag/re/actions/ActionBinOperations.h"
+#include "scag/pers/PersAction.h"
 
+#include "scag/re/actions/ActionBinOperations.h"
 
 //#include "scag/SAX2Print.hpp"
                  
@@ -21,6 +22,7 @@ namespace scag { namespace re { namespace actions {
 
 using namespace scag::re::actions;
 using namespace scag::bill;
+using namespace scag::pers;
 
 
 Action * MainActionFactory::CreateAction(const std::string& name) const
@@ -43,6 +45,11 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
     if (name=="mod") return new ActionMod();
     if (name=="mul") return new ActionMul();
     if (name=="div") return new ActionDiv();
+
+    if (name=="profile:set") return new PersAction(PC_SET);
+    if (name=="profile:get") return new PersAction(PC_GET);
+    if (name=="profile:del") return new PersAction(PC_DEL);
+    if (name=="profile:change") return new PersAction(PC_INC);
 
     Action * action = 0;
 
