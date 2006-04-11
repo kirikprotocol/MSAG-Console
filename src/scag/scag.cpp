@@ -24,6 +24,7 @@
 #include "scag/re/XMLHandlers.h"
 
 #include "scag/transport/http/HttpLogger.h"
+#include "scag/pers/PersClient.h"
 
 namespace scag
 {
@@ -370,6 +371,35 @@ void Scag::init()
   //********************************************************
 
 
+    //********************************************************
+    //************** Personalization client initialization **************
+/*    try {
+        smsc_log_info(log, "Personalization client initializing...");
+
+        using scag::config::ConfigView;
+
+        std::auto_ptr<ConfigView> cv(new ConfigView(*cfg.getConfig(), "Personalization"));
+
+        auto_ptr <char> host(cv->getString("host", NULL, false));
+
+        if(!host.get())
+            throw Exception("Empty host");
+
+        scag::pers::client::PersClient::Init(host.get(), cv->getInt("port", NULL), cv->getInt("timeout", NULL));
+
+        smsc_log_info(log, "Personalization client initialized");
+    }catch(Exception& e)
+    {
+        throw Exception("Exception during initialization of PersClient: %s", e.what());
+    }catch (scag::pers::client::PersClientException& e)
+    {
+        throw Exception("Exception during initialization of PersClient: %s", e.what());
+    }catch (...)
+    {
+        throw Exception("Exception during initialization of PersClient: unknown error");
+    }*/
+  //********************************************************
+
   //********************************************************
   //************** RuleEngine initialization ***************
   try {
@@ -565,6 +595,7 @@ void Scag::init()
         throw Exception("Exception during initialization of HttpManager: unknown error");
     }*/
   //********************************************************
+
 
   smsc_log_info(log, "SCAG init complete" );
 
