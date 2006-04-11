@@ -33,12 +33,7 @@ void HttpRouterImpl::init(const std::string& cfg)
     routeIdMap = NULL;
     AddressURLMap = NULL;
 
-    try{
-        ReloadRoutes();
-    }
-    catch(Exception& e)
-    {
-    }
+    ReloadRoutes();
 }
                                                                         
 HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& site, const std::string& path, uint32_t port)

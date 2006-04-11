@@ -70,7 +70,13 @@ void InfrastructureImpl::init(const std::string& dir)
 
     ReloadProviderMap();
     ReloadOperatorMap();
-    ReloadTariffMatrix();
+
+    try{
+        ReloadTariffMatrix();
+    }
+    catch(Exception& e)
+    {
+    }
 }
 
 void InfrastructureImpl::SetFileNames(const std::string& dir)
@@ -161,7 +167,7 @@ void InfrastructureImpl::ReloadTariffMatrix()
         delete cat_hash;
         delete mt_hash;
         delete t_hash;
-//        throw e;
+        throw e;
     }
 
     smsc_log_info(logger, "ReloadTariffMatrix Finished");
