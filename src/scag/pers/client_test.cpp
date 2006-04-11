@@ -37,6 +37,8 @@ int main(int argc, char* argv[])
         PersClient& pc = PersClient::Instance();
         Property prop;
 
+        time_t t = time(NULL);
+
         for(int i = 0; i< 1000; i++)
         {
         prop.setInt("test_val", 234567, FIXED, -1, 20);
@@ -106,6 +108,8 @@ int main(int argc, char* argv[])
 
         smsc_log_debug(logger,  "end");
         }
+        t = time(NULL) - t;
+        smsc_log_error(logger,  "timings: %d sec, %d req/s", t, 22000/t);
     }
     catch (PersClientException& exc) 
     {
