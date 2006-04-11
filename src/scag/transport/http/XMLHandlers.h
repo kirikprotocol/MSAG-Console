@@ -33,6 +33,7 @@ class XMLBasicHandler : public HandlerBase
     std::string site_subj_id;
     RouteArray* routes;
     HttpRouteInt route;
+    bool route_enabled;
 
     void characters(const XMLCh *const chars, const unsigned int length);
 

@@ -33,6 +33,10 @@ void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
         route.id = s.localForm();
         StrX s1 = attrs.getValue("serviceId");
         route.service_id = atoi(s1.localForm());
+        StrX s2 = attrs.getValue("enabled");
+        route_enabled = true;
+        if(s2.localForm() && !strcmp(s2.localForm(), "false"))
+            route_enabled = false;
     }
     else if((route.id.length() || subj_id.length()) && !strcmp(qname, "address"))
     {
@@ -117,13 +121,19 @@ void XMLBasicHandler::endElement(const XMLCh* const nm)
     StrX XMLQName(nm);
     const char *qname = XMLQName.localForm();
 
-//    smsc_log_debug(logger, "End element %s", qname);
+
     if(!strcmp(qname, "route"))
     {
         if(route.id.length() == 0 || route.service_id == 0 || route.sites.Count() == 0 || route.masks.Count() == 0)
             throw Exception("Invalid XML http_route record");
 
-        routes->Push(route);
+        if(route_enabled)
+        {
+            smsc_log_debug(logger, "Push route id=%s", route.id.c_str());
+            routes->Push(route);
+        }
+
+        route_enabled = true;
         route.id = "";
         route.service_id = 0;
         route.masks.Empty();
