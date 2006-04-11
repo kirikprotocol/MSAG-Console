@@ -6,6 +6,7 @@
 <!ATTLIST route
     id CDATA #REQUIRED
     serviceId CDATA #REQUIRED
+    enabled (true|false) #IMPLIED
 >
 
 <!ELEMENT abonents (address|subject)*>
