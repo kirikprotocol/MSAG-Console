@@ -12,6 +12,8 @@ using namespace scag::pers::client;
 
 typedef scag::util::properties::Property REProperty;
 
+smsc::logger::Logger* PersAction::logger;
+
 const char* PersAction::getStrCmd()
 {
     switch(cmd)
@@ -278,6 +280,16 @@ bool PersAction::run(ActionContext& context)
         return false;
     }
 
+    return true;
+}
+
+IParserHandler * PersAction::StartXMLSubSection(const std::string& name, const SectionParams& params,const ActionFactory& factory)
+{
+    throw SCAGException("Action 'profile:': cannot have a child object");
+}
+
+bool PersAction::FinishXMLSubSection(const std::string& name)
+{
     return true;
 }
 

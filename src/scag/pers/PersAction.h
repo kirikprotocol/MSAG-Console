@@ -38,6 +38,7 @@ using smsc::logger::Logger;
     public:
         PersAction() : cmd(PC_GET) {}
         PersAction(PersCmd c) : cmd(c) {}
+        ~PersAction() {}
         virtual bool run(ActionContext& context);
         virtual void init(const SectionParams& params,PropertyObject propertyObject);
     };
