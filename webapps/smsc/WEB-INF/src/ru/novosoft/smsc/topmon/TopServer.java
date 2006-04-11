@@ -100,7 +100,7 @@ public class TopServer extends Thread
       }
     }
     while (runners.size() > 0) {
-      ((PerfServerRunner) runners.get(0)).shutdown();
+      ((TopServerRunner) runners.get(0)).shutdown();
     }
   }
 
