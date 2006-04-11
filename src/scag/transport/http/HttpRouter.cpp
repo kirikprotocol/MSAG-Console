@@ -122,7 +122,7 @@ void HttpRouterImpl::ReloadRoutes()
         delete r;
         delete h;
         delete auh;
-        throw e;
+        throw e; 
     }
 
     smsc_log_info(logger, "Routes reloading finished");
