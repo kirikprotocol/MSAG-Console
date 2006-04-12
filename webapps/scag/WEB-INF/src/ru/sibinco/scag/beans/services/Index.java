@@ -7,10 +7,12 @@ package ru.sibinco.scag.beans.services;
 import ru.sibinco.scag.beans.TabledBeanImpl;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.Constants;
+import ru.sibinco.scag.backend.service.ServiceProvider;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.io.IOException;
 
 /**
@@ -33,6 +35,11 @@ public class Index extends TabledBeanImpl {
             final String serviceProviderIdStr = checked[i];
             final Long providerId = Long.decode(serviceProviderIdStr);
             toRemove.add(providerId);
+            ServiceProvider serviceProvider = (ServiceProvider)appContext.getServiceProviderManager().getServiceProviders().get(providerId);
+            for (Iterator iterator = serviceProvider.getServices().keySet().iterator();iterator.hasNext();) {
+              String serviceIdStr = ((Long)iterator.next()).toString();
+              appContext.getRuleManager().removeRulesForService(serviceIdStr);
+            }
         }
         appContext.getServiceProviderManager().getServiceProviders().keySet().removeAll(toRemove);
         try {
