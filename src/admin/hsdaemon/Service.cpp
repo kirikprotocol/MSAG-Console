@@ -71,6 +71,19 @@ pid_t Service::start()
   case stopped:
     {
       status=starting;
+      struct StatusGuard{
+        run_status& st;
+        bool released;
+        StatusGuard(run_status& st):st(st),released(false){}
+        void release()
+        {
+          released=true;
+        }
+        ~StatusGuard()
+        {
+          if(!released)st=stopped;
+        }
+      }stguard(status);
       autoDelay();
       time_t now=time(NULL);
       if(now-lastStart<DaemonCommandDispatcher::stayAliveTimeout)
@@ -98,6 +111,7 @@ pid_t Service::start()
       }
       if (pid_t p = fork())
       { // parent process
+        stguard.release();
         status = running;
         return pid = p;
       }
