@@ -513,9 +513,12 @@ SMSId Scheduler::createSms(SMS& sms, SMSId id,const smsc::store::CreateMode flag
       delStoreData(ptr);
     }
   }
-  sms.lastTime = 0;
-  sms.lastResult = 0;
-  sms.attempts = 0;
+  if(flag!=smsc::store::CREATE_NEW_NO_CLEAR)
+  {
+    sms.lastTime = 0;
+    sms.lastResult = 0;
+    sms.attempts = 0;
+  }
   StoreData* sd=newStoreData(sms);
   store.Insert(id,sd);
   sd->rit=replMap.insert(ReplaceIfPresentMap::value_type(&sd->sms,id));
