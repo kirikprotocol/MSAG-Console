@@ -79,7 +79,8 @@ namespace smsc { namespace store
      * @see MessageStore::createSMS()
      */
     typedef enum {
-        CREATE_NEW=0, SMPP_OVERWRITE_IF_PRESENT=1, ETSI_REJECT_IF_PRESENT=2
+        CREATE_NEW=0, SMPP_OVERWRITE_IF_PRESENT=1, ETSI_REJECT_IF_PRESENT=2,
+        CREATE_NEW_NO_CLEAR=3
     } CreateMode;
 
     /**
