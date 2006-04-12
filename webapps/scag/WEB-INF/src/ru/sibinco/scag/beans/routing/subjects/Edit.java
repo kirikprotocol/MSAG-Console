@@ -106,7 +106,6 @@ public class Edit extends EditBean {
                  messagetxt = "Changed subject: '" + subject.getName() + "'.";
             }
         }
-        appContext.getStatuses().setRoutesChanged(true);
         appContext.getScagRoutingManager().setRoutesChanged(true);
         appContext.getScagRoutingManager().setChangedByUser(getUser(appContext).getName());
         StatMessage message = new StatMessage(getUser(appContext).getName(), "Subject", messagetxt);

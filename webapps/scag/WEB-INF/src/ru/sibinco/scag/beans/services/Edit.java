@@ -4,24 +4,27 @@
 
 package ru.sibinco.scag.beans.services;
 
-import ru.sibinco.scag.beans.SCAGJspException;
-import ru.sibinco.scag.beans.DoneException;
-import ru.sibinco.scag.beans.CancelException;
-import ru.sibinco.scag.beans.EditException;
-import ru.sibinco.scag.beans.AddChildException;
-import ru.sibinco.scag.beans.TabledEditBeanImpl;
+import ru.sibinco.lib.backend.users.User;
 import ru.sibinco.scag.Constants;
+import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.service.ServiceProvider;
 import ru.sibinco.scag.backend.service.ServiceProvidersManager;
-import ru.sibinco.scag.backend.SCAGAppContext;
+import ru.sibinco.scag.backend.status.StatMessage;
+import ru.sibinco.scag.beans.AddChildException;
+import ru.sibinco.scag.beans.CancelException;
+import ru.sibinco.scag.beans.DoneException;
+import ru.sibinco.scag.beans.EditException;
+import ru.sibinco.scag.beans.SCAGJspException;
+import ru.sibinco.scag.beans.TabledEditBeanImpl;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Map;
+import java.io.IOException;
+import java.security.Principal;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.ArrayList;
-import java.io.IOException;
+import java.util.Map;
 
 /**
  * The <code>Edit</code> class represents
@@ -63,12 +66,14 @@ public class Edit extends TabledEditBeanImpl {
             throw new AddChildException("service", Long.toString(id));
         }
         load();
+        if (mbDelete != null) {
+            loginedPrincipal = request.getUserPrincipal();
+        }
         if (!isAdd()) {
             super.process(request, response);
         }
     }
 
-    
 
     protected void delete() throws SCAGJspException {
         final List toRemove = new ArrayList(checked.length);
@@ -78,6 +83,18 @@ public class Edit extends TabledEditBeanImpl {
             toRemove.add(serviceId);
             appContext.getRuleManager().removeRulesForService(serviceIdStr);
         }
+        final List toRemoveRoutes = appContext.getScagRoutingManager().getRoteIdsByServiceIds(checked);
+        appContext.getScagRoutingManager().getRoutes().keySet().removeAll(toRemoveRoutes);
+        appContext.getScagRoutingManager().setRoutesChanged(true);
+        String user = null;
+        try {
+            user = getUserName(appContext);
+        } catch (SCAGJspException e) {
+            logger.error("Failed to obtain user");
+        }
+        StatMessage message = new StatMessage(user, "Routes", "Deleted route(s): " + toRemoveRoutes.toString() + ".");
+        appContext.getScagRoutingManager().addStatMessages(message);
+
         serviceProvider.getServices().keySet().removeAll(toRemove);
         try {
             appContext.getServiceProviderManager().store();
@@ -104,7 +121,7 @@ public class Edit extends TabledEditBeanImpl {
     protected void save() throws SCAGJspException {
         final ServiceProvidersManager serviceProvidersManager = appContext.getServiceProviderManager();
         if (isAdd()) {
-            id = serviceProvidersManager.createServiceProvider(name, description = (description==null)?"":description);
+            id = serviceProvidersManager.createServiceProvider(name, description = (description == null) ? "" : description);
         } else {
             serviceProvidersManager.updateServiceProvider(id, name, description);
         }
@@ -120,6 +137,17 @@ public class Edit extends TabledEditBeanImpl {
         } else {
             throw new DoneException();
         }
+    }
+
+    private String getUserName(SCAGAppContext appContext) throws SCAGJspException {
+        Principal userPrincipal = loginedPrincipal;
+
+        if (userPrincipal == null)
+            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user principal(s)");
+        User user = (User) appContext.getUserManager().getUsers().get(userPrincipal.getName());
+        if (user == null)
+            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userPrincipal.getName() + "'");
+        return user.getName();
     }
 
     public String getId() {

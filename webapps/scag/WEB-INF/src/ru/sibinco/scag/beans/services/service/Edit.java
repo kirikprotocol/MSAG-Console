@@ -103,7 +103,7 @@ public class Edit extends TabledEditBeanImpl {
 
     protected void delete() throws SCAGJspException {
         appContext.getScagRoutingManager().getRoutes().keySet().removeAll(checkedSet);
-        appContext.getStatuses().setRoutesChanged(true);
+        appContext.getScagRoutingManager().setRoutesChanged(true);
         String user = null;
         try {
             user = getUserName(appContext);
@@ -291,7 +291,7 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public boolean isMmsRuleExists() {
-       return (appContext.getRuleManager().getRule(new Long(id),Transport.MMS_TRANSPORT_NAME)!=null);       
+       return (appContext.getRuleManager().getRule(new Long(id),Transport.MMS_TRANSPORT_NAME)!=null);
     }
 
     public String getMbAddChild() {

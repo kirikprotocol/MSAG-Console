@@ -22,7 +22,7 @@ public class Index extends TabledBeanImpl implements TabledBean {
 
     protected void delete() {
         appContext.getScagRoutingManager().getSubjects().keySet().removeAll(checkedSet);
-        appContext.getStatuses().setRoutesChanged(true);
+        appContext.getScagRoutingManager().setRoutesChanged(true);
         StatMessage message = null;
         try {
             message = new StatMessage(getUserName(appContext), "Subject", "Deleted subject(s): " + checkedSet.toString() + ".");

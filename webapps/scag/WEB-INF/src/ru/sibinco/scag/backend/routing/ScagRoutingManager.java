@@ -28,6 +28,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
 
 
 /**
@@ -85,6 +87,30 @@ public class ScagRoutingManager {
             }
         }
         return false;
+    }
+
+    public List getRoteIdsByServiceIds(String[] checked){
+        final List roteIds = new ArrayList();
+        for (int i = 0; i < checked.length; i++) {
+            final String serviceIdStr = checked[i];
+            final Long serviceId = Long.decode(serviceIdStr);
+            Route[] routes = getRoutesByServiceId(serviceId);
+            for (int j = 0; j < routes.length; j++) {
+                roteIds.add(routes[j].getId());
+            }
+        }
+        return roteIds;
+    }
+
+    public Route[] getRoutesByServiceId(final Long svcId) {
+        List result = new ArrayList();
+        for (Iterator it = routes.values().iterator(); it.hasNext();) {
+            final Route route = (Route) it.next();
+            if(route.getService().getId().equals(svcId)){
+               result.add(route);
+            }
+        }
+        return (Route[]) result.toArray(new Route[result.size()]);
     }
 
     public synchronized boolean hasSavedConfiguration() {
@@ -234,7 +260,6 @@ public class ScagRoutingManager {
     public synchronized void trace() throws SibincoException {
         saveToFile(SMPP_ROUTES_TRACEABLE_CONFIG);
     }
-
 
     public Map getRoutes() {
         return routes;
