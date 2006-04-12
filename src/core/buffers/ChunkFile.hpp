@@ -68,13 +68,18 @@ protected:
       return crc32(crc,&no,4);
     }
 
+    uint32_t CalcCrc()
+    {
+      uint32_t rv=fldcrc(0,magic);
+      rv=fldcrc(rv,version);
+      rv=fldcrc(rv,flags);
+      rv=fldcrc(rv,(uint64_t)lastRootOffset);
+      return rv;
+    }
 
     void Write(File& f)
     {
-      hdrcrc32=fldcrc(0,magic);
-      hdrcrc32=fldcrc(hdrcrc32,version);
-      hdrcrc32=fldcrc(hdrcrc32,flags);
-      hdrcrc32=fldcrc(hdrcrc32,(uint64_t)lastRootOffset);
+      hdrcrc32=CalcCrc();
       f.WriteNetInt32(magic);
       f.WriteNetInt32(version);
       f.WriteNetInt32(flags);
@@ -208,7 +213,7 @@ public:
     h.Read(f);
     if(h.magic!=_cf_magic)RTERROR("invalid file magic");
     if(h.version!=_cf_version)RTERROR("incompatible chunk file version");
-    uint32_t crc=crc32(0,&h,h.Size()-sizeof(uint32_t));
+    uint32_t crc=h.CalcCrc();
     if(crc!=h.hdrcrc32)RTERROR("header crc failure");
     fileSize=f.Size();
     lastRootOffset=h.lastRootOffset;
