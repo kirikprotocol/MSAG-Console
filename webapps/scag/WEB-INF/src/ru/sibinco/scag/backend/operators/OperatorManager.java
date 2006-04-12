@@ -125,7 +125,7 @@ public class OperatorManager {
 
     public synchronized long createOperator(final String name, final String description, final String[] srcMasks)
             throws NullPointerException, SibincoException {
-        final Operator operator = new Operator(new Long(lastUsedOperatorId++), name);
+        final Operator operator = new Operator(new Long(++lastUsedOperatorId), name);
         operator.setDescription(description);
         operators.put(operator.getId(), operator);
         operator.getMasks().clear();
@@ -136,7 +136,7 @@ public class OperatorManager {
                 operator.getMasks().put(mask.getMask(), mask);
             }
         }
-        return getLastUsedOperatorId() - 1;
+        return getLastUsedOperatorId();
     }
 
     private void storeOperators() throws IOException {
