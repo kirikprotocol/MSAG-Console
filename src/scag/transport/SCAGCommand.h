@@ -21,8 +21,8 @@ using smsc::core::buffers::Hash;
     {
     public:
 
-      static Hash<TransportType> TransportTypeHash;
-      static Hash<TransportType> InitTransportTypeHash();
+      //static Hash<TransportType> TransportTypeHash;
+      //static Hash<TransportType> InitTransportTypeHash();
       
       virtual TransportType getType() const = 0;
 

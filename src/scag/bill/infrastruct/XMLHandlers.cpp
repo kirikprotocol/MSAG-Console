@@ -222,6 +222,8 @@ void XMLTariffMatrixHandler::startElement(const XMLCh* const nm, AttributeList& 
             if(i == 1)
             {
                 StrX s = attrs.getValue("id");
+                if (s.localForm() == 0) throw Exception("Error parsing Tarif Matrix - attribute 'id' not found in '%s' section",qname);
+
                 category_id = atoi(s.localForm());
             }
             return;
@@ -234,6 +236,7 @@ void XMLTariffMatrixHandler::startElement(const XMLCh* const nm, AttributeList& 
             if(i == 1)
             {
                 StrX s = attrs.getValue("id");
+                if (s.localForm() == 0) throw Exception("Error parsing Tarif Matrix - attribute 'id' not found in '%s' section",qname);
                 media_type_id = atoi(s.localForm());
             }
             return;
@@ -246,6 +249,7 @@ void XMLTariffMatrixHandler::startElement(const XMLCh* const nm, AttributeList& 
             if(i == 1)
             {
                 StrX s = attrs.getValue("id");
+                if (s.localForm() == 0) throw Exception("Error parsing Tarif Matrix - attribute 'id' not found in '%s' section",qname);
                 bill_operator_id = atoi(s.localForm());
             }
             return;

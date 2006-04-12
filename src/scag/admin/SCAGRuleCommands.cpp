@@ -38,7 +38,7 @@ void CommandRuleBase::init()
     END_SCAN_PARAMS
      
     scag::transport::TransportType * ttype;
-    ttype = scag::transport::SCAGCommand::TransportTypeHash.GetPtr(strTransport.c_str());
+    ttype = scag::re::RuleEngine::Instance().getTransportTypeHash().GetPtr(strTransport.c_str());
 
   /*  if (scag::transport::SCAGCommand::TransportTypeHash.GetCount() == 0) 
     {

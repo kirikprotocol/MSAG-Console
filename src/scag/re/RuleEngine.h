@@ -45,6 +45,8 @@ public:
     virtual void updateRule(RuleKey& key) = 0;
     virtual void removeRule(RuleKey& key) = 0;
     virtual ActionFactory& getActionFactory() = 0;
+    virtual Hash<TransportType> getTransportTypeHash() = 0;
+//    virtual bool findTransport(const char * name, TransportType& transportType) = 0;
 
 };
 

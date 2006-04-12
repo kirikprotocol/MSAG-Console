@@ -1,7 +1,7 @@
 #include "SCAGCommand.h"
 
 namespace scag { namespace transport {
-
+    /*
     Hash<TransportType> SCAGCommand::InitTransportTypeHash()
     {
         Hash<TransportType> res;
@@ -10,8 +10,8 @@ namespace scag { namespace transport {
         res["MMS"] = MMS;
         return res;
     }
-
-    Hash<TransportType> SCAGCommand::TransportTypeHash = SCAGCommand::InitTransportTypeHash();
+    */
+    //Hash<TransportType> SCAGCommand::TransportTypeHash = SCAGCommand::InitTransportTypeHash();
 
 }}
 

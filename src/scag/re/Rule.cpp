@@ -4,6 +4,8 @@
 #include "scag/re/smpp/SmppEventHandler.h"
 #include "scag/re/http/HttpEventHandler.h"
 #include "util/recoder/recode_dll.h"
+#include "RuleEngine.h"
+
 
 namespace scag { namespace re 
 {
@@ -143,8 +145,8 @@ void Rule::init(const SectionParams& params, PropertyObject propertyObject)
     str.assign(buff,len);
 
     //std:: cout << "^^^^^^^^^^^^" << ConvertWStrToStr(sTransport.c_str()) << "^^" << sTransport.size() << std::endl;
-    TransportType * transportPTR = SCAGCommand::TransportTypeHash.GetPtr(str.c_str());
-
+    TransportType * transportPTR = RuleEngine::Instance().getTransportTypeHash().GetPtr(str.c_str());
+    
     if (!transportPTR) throw SCAGException("Rule: invalid value '%s' for 'transport' parameter",str.c_str());
 
     transportType = *transportPTR;

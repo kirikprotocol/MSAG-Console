@@ -64,6 +64,7 @@ class RuleEngineImpl : RuleEngine
     MainActionFactory factory;
     std::string RulesDir;
     Logger * logger;
+    Hash<TransportType> TransportTypeHash;
 
     friend struct RulesReference; 
     struct Rules
@@ -170,7 +171,7 @@ class RuleEngineImpl : RuleEngine
 
     Rule * ParseFile(const std::string& xmlFile);
     bool isValidFileName(std::string fname,int& ruleId);
-    std::string CreateRuleFileName(const std::string& dir,const RuleKey& key) const;
+    std::string CreateRuleFileName(const std::string& dir,const RuleKey& key);
 
     void ReadRulesFromDir(TransportType transport, const char * dir);
 
@@ -184,6 +185,8 @@ public:
     virtual void removeRule(RuleKey& key);
     virtual RuleStatus process(SCAGCommand& command, Session& session);
 
+    virtual Hash<TransportType> getTransportTypeHash() {return TransportTypeHash;}
+//    virtual bool findTransport(const char * name, TransportType& transportType);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -326,6 +329,17 @@ Rule * RuleEngineImpl::ParseFile(const std::string& xmlFile)
 
 
 }
+/*
+bool RuleEngineImpl::findTransport(const char * name, TransportType& transportType)
+{
+    TransportType * transportPTR = TransportTypeHash.GetPtr(name);
+    if (!transportPTR) return false;
+
+    transportType = *transportPTR;
+    return true;
+    
+}
+*/
 
 bool RuleEngineImpl::isValidFileName(std::string fname, int& serviceId)
 {
@@ -346,15 +360,15 @@ bool RuleEngineImpl::isValidFileName(std::string fname, int& serviceId)
     return (serviceId >= 0);
 }
 
-std::string RuleEngineImpl::CreateRuleFileName(const std::string& dir,const RuleKey& key) const
+std::string RuleEngineImpl::CreateRuleFileName(const std::string& dir,const RuleKey& key)
 {
     char buff[100];
 
     char * transportkey = 0;
     scag::transport::TransportType value;
 
-    scag::transport::SCAGCommand::TransportTypeHash.First();
-    for (Hash <scag::transport::TransportType>::Iterator it = scag::transport::SCAGCommand::TransportTypeHash.getIterator(); it.Next(transportkey, value);)
+    TransportTypeHash.First();
+    for (Hash <scag::transport::TransportType>::Iterator it = TransportTypeHash.getIterator(); it.Next(transportkey, value);)
     {
         if (value == key.transport) break;
     }
@@ -414,6 +428,10 @@ void RuleEngineImpl::ProcessInit(const std::string& dir)
 
     //RegExp::InitLocale();
 
+    TransportTypeHash["SMPP"] = SMPP;
+    TransportTypeHash["HTTP"] = HTTP;
+    TransportTypeHash["MMS"] = MMS;
+
     rules = new Rules();
 
     try
@@ -434,8 +452,8 @@ void RuleEngineImpl::ProcessInit(const std::string& dir)
 
     std::string currentDir;
 
-    scag::transport::SCAGCommand::TransportTypeHash.First();
-    for (Hash <scag::transport::TransportType>::Iterator it = scag::transport::SCAGCommand::TransportTypeHash.getIterator(); it.Next(transportkey, value);)
+    TransportTypeHash.First();
+    for (Hash <scag::transport::TransportType>::Iterator it = TransportTypeHash.getIterator(); it.Next(transportkey, value);)
     {
         currentDir = dir;
         currentDir.append("/");
