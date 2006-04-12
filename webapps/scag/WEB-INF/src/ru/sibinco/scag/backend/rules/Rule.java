@@ -25,7 +25,6 @@ public class Rule
   private Long id;
   private String notes;
   private LinkedList body = new LinkedList();
-  private long updateTime;
   public static String header;
   public static final LinkedList ending = new LinkedList();
   public static final String ROOT_ELEMENT="scag:rule";
@@ -58,15 +57,15 @@ public class Rule
   public static Rule createNewRule(long id,String transport)
   {
     LinkedList body=new LinkedList();
-    body.addAll(getRuleHeader(id,transport));
+    body.addAll(getRuleHeader(transport));
     body.addAll(ending);
     return new Rule(new Long(id),"",transport,body);
   }
 
-  public static LinkedList getRuleHeader(long id,String transport) {
+  public static LinkedList getRuleHeader(String transport) {
     String schema=Transport.getSchemaByTransport(transport);
     LinkedList header= new LinkedList();
-    String headerAsString = MessageFormat.format(Rule.header,new Object[]{schema, transport, new Long(id)} );
+    String headerAsString = MessageFormat.format(Rule.header,new Object[]{schema, transport} );
     BufferedReader br = new BufferedReader(new StringReader(headerAsString));
     String line;
     try {
@@ -129,12 +128,16 @@ public class Rule
     this.transport = transport;
   }
 
-  public long getUpdateTime() {
-    return updateTime;
+  public static String getRuleKey(Long id, String transport){
+    return getRuleKey(id.toString(), transport);
   }
 
-  public void setUpdateTime(long updateTime) {
-    this.updateTime = updateTime;
+  public static String getRuleKey(String id, String transport){
+    return transport+"/"+id;
+  }
+
+  public String getRuleKey() {
+    return getRuleKey(id, transport);
   }
 }
 

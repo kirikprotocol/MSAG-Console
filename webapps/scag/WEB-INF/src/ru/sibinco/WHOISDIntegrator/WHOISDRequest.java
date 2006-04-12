@@ -46,12 +46,6 @@ public class WHOISDRequest {
      new WHOISDRequest(TARIFF_MATRIX_SCHEMA,"tariffs.dtd")
   };
 
-  public static final WHOISDRequest[] scagCommands = {
-     new WHOISDRequest(OPERATORS,"reloadOperators"),
-     new WHOISDRequest(SERVICES,"reloadServices"),
-     new WHOISDRequest(TARIFF_MATRIX,"reloadTariffMatrix"),
-  };
-
   public WHOISDRequest(int id, String file) {
     this.id = id;
     this.name = file;
@@ -67,13 +61,6 @@ public class WHOISDRequest {
   public static String getSchemaName(int id) {
     for (byte i = 0; i<WHOISDRequests.length; i++) {
       if (WHOISDRequests[i].getId()==id) return WHOISDRequests[i].getName();
-    }
-    return null;
-  }
-
-  public static String getScagCommand(int id) {
-    for (byte i = 0; i<scagCommands.length; i++) {
-      if (scagCommands[i].getId()==id) return scagCommands[i].getName();
     }
     return null;
   }

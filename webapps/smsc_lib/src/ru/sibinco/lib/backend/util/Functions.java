@@ -179,6 +179,28 @@ public class Functions
     }
   }
 
+  public static final void SavedFileToBackup(File newCreatedFile, String suffixToDelete) throws IOException
+  {
+    final String suffix = suffixDateFormat.format(new Date());
+
+    // rename old config file to bakup file
+    String newCreated = newCreatedFile.getAbsolutePath();
+    if (newCreatedFile.exists()) {
+      File backupDir = new File(newCreatedFile.getParentFile(), backup_dir_name);
+      if (!backupDir.exists()) {
+        if (!backupDir.mkdirs()) {
+          logger.warn("Could not create backup directory \"" + backupDir.getAbsolutePath() + "\", using \"" + newCreatedFile.getParentFile().getAbsolutePath() + "\"");
+          backupDir = newCreatedFile.getParentFile();
+        }
+      }
+      final File backFile = Functions.createTempFilename(newCreatedFile.getName().substring(0,newCreatedFile.getName().length()-suffixToDelete.length()), suffix, backupDir);
+      if (!new File(newCreated).renameTo(backFile)) {
+        logger.error("Couldn't rename old file \"" + newCreated + "\" to backup file \"" + backFile.getAbsolutePath() + '"');
+        throw new IOException("Couldn't rename old file \"" + newCreated + "\" to backup file \"" + backFile.getAbsolutePath() + '"');
+      }
+    }
+  }
+
   public static Date truncateTime(Date dateTime)
   {
     Calendar calendar = new GregorianCalendar();

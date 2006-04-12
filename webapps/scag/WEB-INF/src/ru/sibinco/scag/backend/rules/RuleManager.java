@@ -34,9 +34,7 @@ import java.util.*;
 
 public class RuleManager
 {
-  private final Map smpprules = Collections.synchronizedMap(new HashMap());
-  private final Map httprules = Collections.synchronizedMap(new HashMap());
-  private final Map mmsrules = Collections.synchronizedMap(new HashMap());
+  private final Map rules = Collections.synchronizedMap(new HashMap());
   private final Map schemas = Collections.synchronizedMap(new HashMap());
   private final File rulesFolder;
   private final File xsdFolder;
@@ -63,33 +61,6 @@ public class RuleManager
     return xslFolder;
   }
 
-  public Map getRules(Long serviceId)
-  {
-    HashMap result = new HashMap();
-
-    Rule smppRule = (Rule)smpprules.get(serviceId);
-    if (!(composeRuleFile(Transport.SMPP_TRANSPORT_NAME,serviceId).exists()))  {
-      smppRule = null;
-      smpprules.remove(serviceId);
-    }
-    result.put(Transport.SMPP_TRANSPORT_NAME, smppRule);
-
-    Rule httpRule = (Rule)httprules.get(serviceId);
-    if (!(composeRuleFile(Transport.HTTP_TRANSPORT_NAME,serviceId).exists()))  {
-      httpRule = null;
-      httprules.remove(httpRule);
-    }
-    result.put(Transport.HTTP_TRANSPORT_NAME,httpRule);
-
-    Rule mmsRule = (Rule)mmsrules.get(serviceId);
-    if (!(composeRuleFile(Transport.MMS_TRANSPORT_NAME,serviceId).exists()))  {
-      mmsRule = null;
-      mmsrules.remove(mmsRule);
-    }
-    result.put(Transport.MMS_TRANSPORT_NAME,mmsRule);
-
-    return result;
-  }
 
   private File composeRuleFile(String transport, Long serviceId) {
       String filename="rule_"+ serviceId.toString()+".xml";
@@ -98,22 +69,27 @@ public class RuleManager
       return newFile;
   }
 
-  private Collection getRulesAsList(Long serviceId) {
-     return getRules(serviceId).values();
-  }
-
   public Rule getRule(Long ruleId, String transport)
   {
     Rule rule = null;
-    if (transport.equals(Transport.SMPP_TRANSPORT_NAME))
-      rule = (Rule) smpprules.get(ruleId);
-    else if (transport.equals(Transport.HTTP_TRANSPORT_NAME))
-      rule = (Rule) httprules.get(ruleId);
-    else if (transport.equals(Transport.MMS_TRANSPORT_NAME))
-      rule = (Rule) mmsrules.get(ruleId);
+    File ruleFile = composeRuleFile(transport, ruleId);
+    rule = (Rule) rules.get(Rule.getRuleKey(ruleId,transport));
     if (rule!=null) {
-      File ruleFile = composeRuleFile(rule.getTransport(), rule.getId());
-      rule.updateBody(LoadXml(ruleFile.getAbsolutePath()));
+      if (ruleFile.exists())
+        rule.updateBody(LoadXml(ruleFile.getAbsolutePath()));
+      else {
+        rules.remove(rule);
+        rule = null;
+      }
+    } else {
+      if (ruleFile.exists()) {
+         try {
+         LoadRule(transport, ruleFile, rules);
+         rule = (Rule) rules.get(Rule.getRuleKey(ruleId,transport));
+         } catch (SibincoException se) {
+           se.printStackTrace();
+         }
+      }
     }
     return rule;
   }
@@ -127,9 +103,9 @@ public class RuleManager
   public synchronized void load() throws SibincoException
   {
     try {
-      loadFromFolder(Transport.SMPP_TRANSPORT_NAME, smpprules);
-      loadFromFolder(Transport.HTTP_TRANSPORT_NAME, httprules);
-      loadFromFolder(Transport.MMS_TRANSPORT_NAME, mmsrules);
+      loadFromFolder(Transport.SMPP_TRANSPORT_NAME, rules);
+      loadFromFolder(Transport.HTTP_TRANSPORT_NAME, rules);
+      loadFromFolder(Transport.MMS_TRANSPORT_NAME, rules);
       loadSchemas();
       Rule.header = loadRuleHeader();
     } catch (SibincoException e) {
@@ -169,30 +145,38 @@ public class RuleManager
          return (name.endsWith(".xsd") || name.endsWith(".dtd"));
        }
      });
-     InputStream in = null; BufferedReader br = null;
      for(int i = 0; i<schemasfiles.length;i++) {
-     try {
-     LinkedList schema = new LinkedList();
-     in = new FileInputStream(new File(xsdFolder,schemasfiles[i]));
-     br = new BufferedReader(new InputStreamReader(in));
-     String line;
-     while ((line=br.readLine())!=null)
-       schema.add(line);
-       schemas.put(schemasfiles[i],schema);
-     } catch (FileNotFoundException e) {
-       e.printStackTrace();
-     } catch (IOException io) {
-       io.printStackTrace();
-     } finally {
-       try {
-        if (in!=null) in.close();
-        if (br!=null) br.close();
-       }
-       catch (IOException e) {
-         e.printStackTrace();
-       }
-     }
+      loadSchema(schemasfiles[i]);
     }
+  }
+
+  private Schema loadSchema(String schemaPath) {
+    InputStream in = null; BufferedReader br = null;
+    Schema schema = null;
+    try {
+    LinkedList schemaContent = new LinkedList();
+    File schemaFile =new File(xsdFolder,schemaPath);
+    in = new FileInputStream(schemaFile);
+    br = new BufferedReader(new InputStreamReader(in));
+    String line;
+    while ((line=br.readLine())!=null)
+      schemaContent.add(line);
+      schema = new Schema(schemaFile.lastModified(),schemaContent);
+      schemas.put(schemaPath, schema);
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
+    } catch (IOException io) {
+      io.printStackTrace();
+    } finally {
+      try {
+       if (in!=null) in.close();
+       if (br!=null) br.close();
+      }
+      catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+    return schema;
   }
 
   public void loadFromFolder(String _transportDir, Map transportMap) throws SibincoException
@@ -203,60 +187,58 @@ public class RuleManager
       File[] dir=folder.listFiles();
       for (int i = 0; i < dir.length; i++) {
         File file = dir[i];
-        String fileName=file.getName();
-        if (!fileName.endsWith(".xml")) continue;
-
-        logger.debug("enter " + this.getClass().getName() + ".loadFromFile(\"" + fileName + "\")");
-        LinkedList body=LoadXml(file.getAbsolutePath());
-        //long length=file.length();
-        //System.out.println("RuleManager.LoadFromFolder file.length= "+length);
-        try {
-        final Document ruleDoc = Utils.parse(file.getAbsolutePath());
-        Element el=ruleDoc.getDocumentElement();
-        if (!el.getTagName().equals(Rule.ROOT_ELEMENT))
-          throw new SibincoException("Root element "+el.getTagName()+" not math with "+Rule.ROOT_ELEMENT);
-        String transport=el.getAttribute("transport");
-        if (transport.equals(""))
-          throw new SibincoException("Root element "+el.getTagName()+" not contain attribute 'transport'");
-        String ruleId=el.getAttribute("id");
-        if (ruleId.equals(""))
-          throw new SibincoException("Root element "+el.getTagName()+" not contain attribute 'id'");
-        String fileId=fileName.substring(5,fileName.length()-4);
-        if (!fileId.equals(ruleId))
-          throw new SibincoException("FileId "+fileId+" in name of file : "+fileName+" do not math with rule id:"+ruleId);
-        if (ruleId.length() > Constants.ROUTE_ID_MAXLENGTH)
-          throw new SibincoException("Rule id is too long: " + ruleId.length() + " chars \"" + ruleId + '"');
-        String notes="";
-        Long id=Long.decode(ruleId);
-
-        Rule temp = new Rule(id,notes,transport,body);
-        transportMap.put(id,temp);
-        logger.debug("exit " + this.getClass().getName() + ".loadFromFile(\"" + fileName + "\")");
-
-    } catch (FactoryConfigurationError error) {
-      logger.error("Couldn't configure xml parser factory", error);
-      throw new SibincoException("Couldn't configure xml parser factory", error);
-    } catch (ParserConfigurationException e) {
-      logger.error("Couldn't configure xml parser", e);
-      throw new SibincoException("Couldn't configure xml parser", e);
-    } catch (SAXException e) {
-      String fileId=fileName.substring(5,fileName.length()-4);
-      Long id=Long.decode(fileId);
-      String notes="Load Error "+e.getMessage();
-      Rule temp = new Rule(id, notes, _transportDir,body/*,length*/);
-      transportMap.put(id, temp);
-      logger.error("Couldn't parse", e);
-      System.out.println("RuleManager LoadFromFile fileName= "+fileName+" SAXException e= "+e.getMessage());
-          // throw new SibincoException("Couldn't parse", e);
-    } catch (IOException e) {
-      logger.error("Couldn't perfmon IO operation", e);
-      throw new SibincoException("Couldn't perfmon IO operation", e);
-    } catch (NullPointerException e) {
-      logger.error("Couldn't parse", e);
-      throw new SibincoException("Couldn't parse", e);
-    }
+        LoadRule(_transportDir, file, transportMap);
   }
  }
+
+  private void LoadRule(String _transportDir, File file, Map transportMap) throws SibincoException {
+    String fileName=file.getName();
+    if (!fileName.endsWith(".xml")) return;
+
+    logger.debug("enter " + this.getClass().getName() + ".loadFromFile(\"" + fileName + "\")");
+    LinkedList body=LoadXml(file.getAbsolutePath());
+    //long length=file.length();
+    //System.out.println("RuleManager.LoadFromFolder file.length= "+length);
+    try {
+    final Document ruleDoc = Utils.parse(file.getAbsolutePath());
+    Element el=ruleDoc.getDocumentElement();
+    if (!el.getTagName().equals(Rule.ROOT_ELEMENT))
+      throw new SibincoException("Root element "+el.getTagName()+" not math with "+Rule.ROOT_ELEMENT);
+    String transport=el.getAttribute("transport");
+    if (transport.equals(""))
+      throw new SibincoException("Root element "+el.getTagName()+" not contain attribute 'transport'");
+    String ruleId=fileName.substring(5,fileName.length()-4);
+    String notes="";
+    Long id=Long.decode(ruleId);
+
+    Rule temp = new Rule(id,notes,transport,body);
+    transportMap.put(temp.getRuleKey(),temp);
+    logger.debug("exit " + this.getClass().getName() + ".loadFromFile(\"" + fileName + "\")");
+
+} catch (FactoryConfigurationError error) {
+  logger.error("Couldn't configure xml parser factory", error);
+  throw new SibincoException("Couldn't configure xml parser factory", error);
+} catch (ParserConfigurationException e) {
+  logger.error("Couldn't configure xml parser", e);
+  throw new SibincoException("Couldn't configure xml parser", e);
+} catch (SAXException e) {
+  String fileId=fileName.substring(5,fileName.length()-4);
+  Long id=Long.decode(fileId);
+  String notes="Load Error "+e.getMessage();
+  Rule temp = new Rule(id, notes, _transportDir,body/*,length*/);
+  transportMap.put(temp.getRuleKey(), temp);
+  logger.error("Couldn't parse", e);
+  System.out.println("RuleManager LoadFromFile fileName= "+fileName+" SAXException e= "+e.getMessage());
+      // throw new SibincoException("Couldn't parse", e);
+} catch (IOException e) {
+  logger.error("Couldn't perfmon IO operation", e);
+  throw new SibincoException("Couldn't perfmon IO operation", e);
+} catch (NullPointerException e) {
+  logger.error("Couldn't parse", e);
+  throw new SibincoException("Couldn't parse", e);
+}
+
+  }
 
   private LinkedList LoadXml(final String fileName)
    {
@@ -280,8 +262,12 @@ public class RuleManager
 
    public LinkedList getSchema(String requestedScheme)
    {
-     //loadSchemas();
-     return (LinkedList)schemas.get(requestedScheme);
+     File requestedSchemeFile = new File(xsdFolder,requestedScheme);
+     Schema schema = (Schema)schemas.get(requestedScheme);
+     if (requestedSchemeFile.lastModified() > schema.lastmodified) {
+      schema = loadSchema(requestedScheme);
+     }
+     return schema.schemaContent;
    }
 
  public synchronized LinkedList AddRule(BufferedReader r, final String ruleId, final Rule newRule) throws SibincoException, IOException
@@ -307,7 +293,7 @@ public class RuleManager
   } catch (SibincoException e) {
     if (e instanceof StatusDisconnectedException) {
        newRule.updateBody(newbody);
-       addRuleToMap(Id,transport,newRule);
+       rules.put(newRule.getRuleKey(), newRule);
     } else {
       removeRuleFile(ruleId, newRule.getTransport());
     }
@@ -318,7 +304,7 @@ public class RuleManager
 
   if (errorInfo == null || errorInfo.size() == 0) {
     newRule.updateBody(newbody);
-    addRuleToMap(Id,transport,newRule);
+    rules.put(newRule.getRuleKey(), newRule);
   }
   else  {
 
@@ -326,15 +312,6 @@ public class RuleManager
   }
   return errorInfo;
 }
-
-  private void addRuleToMap(Long ruleId, String transport,Rule newRule) {
-     if (transport.equals(Transport.SMPP_TRANSPORT_NAME))
-        smpprules.put(ruleId, newRule);
-    else if (transport.equals(Transport.HTTP_TRANSPORT_NAME))
-        httprules.put(ruleId, newRule);
-    else if (transport.equals(Transport.MMS_TRANSPORT_NAME))
-        mmsrules.put(ruleId, newRule);
-  }
 
   public synchronized LinkedList updateRule(BufferedReader r, final String ruleId, final String transport) throws SibincoException,  IOException
  {
@@ -352,6 +329,8 @@ public class RuleManager
    }
 
    LinkedList curbody = rule.getBody();
+   // rule_1.xml -> rule_1.xml.new(rule_1.xml.new contains current rule body)
+   File currentRuleFile = saveCurrentRule(curbody,ruleId, rule.getTransport());
    LinkedList newbody = saveRule(r,ruleId, rule.getTransport());
 
    if (!DEBUG)  {
@@ -360,9 +339,11 @@ public class RuleManager
    }    catch (SibincoException e)    {
      if (e instanceof StatusDisconnectedException) {
        rule.updateBody(newbody);
+       Functions.SavedFileToBackup(currentRuleFile,".new");
      }
      else {
      saveRule(curbody,ruleId,rule.getTransport());
+     currentRuleFile.delete();
      }
      System.out.println(e.getMessage());// e.printStackTrace();
      throw e;
@@ -370,21 +351,34 @@ public class RuleManager
    }
     if (errorInfo == null || errorInfo.size()==0) {
        rule.updateBody(newbody);
+       Functions.SavedFileToBackup(currentRuleFile, ".new");
     } else {
        saveRule(curbody,ruleId,rule.getTransport());
+       currentRuleFile.delete();
     }
    return errorInfo;
  }
+
+  private File saveCurrentRule(LinkedList li,String ruleId, String transport) {
+    File ruleFile = composeRuleFile(transport,new Long(ruleId));
+    File newFile = Functions.createNewFilenameForSave(ruleFile);
+    try {
+      PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), Functions.getLocaleEncoding()));
+      for (Iterator i = li.listIterator(1); i.hasNext();) {
+          out.println(i.next());
+      }
+      out.flush();
+      out.close();
+    } catch (Exception e) {e.printStackTrace();}
+    return newFile;
+  }
 
   public void saveRule(LinkedList li,String ruleId, String transport) throws SibincoException
   {
     System.out.println("RESAVING current rule body to disc!!!!");
 
     try {
-      String filename="rule_"+ruleId+".xml";
-      //String transport= rule.getTransport();
-      final File folder = new File(rulesFolder, transport);
-      File newFile= new File(folder,filename);
+      File newFile= composeRuleFile(transport,new Long(ruleId));
       final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), Functions.getLocaleEncoding()));
       for (Iterator i = li.listIterator(1); i.hasNext();)
         out.println(i.next());
@@ -403,10 +397,7 @@ public class RuleManager
   {
       LinkedList li=new LinkedList();
       try {
-        String filename="rule_"+ruleId+".xml";
-        //String transport= rule.getTransport();
-        final File folder = new File(rulesFolder, transport);
-        File newFile= new File(folder,filename);
+        File newFile= composeRuleFile(transport,new Long(ruleId));
         System.out.print("Saving rule to disc!!!! file : " + newFile);
         final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), Functions.getLocaleEncoding()));
         String s; li.addFirst("ok");
@@ -443,8 +434,9 @@ public class RuleManager
     public void removeRulesForService(final String ruleId) throws SCAGJspException
     {
       try {
-      for (Iterator i = (getRulesAsList(new Long(ruleId))).iterator(); i.hasNext();) {
-           Rule current = (Rule)i.next();
+      String[] transports = Transport.transportTitles;
+    for (byte i =0 ;i<transports.length;i++) {
+           Rule current = (Rule)rules.get(Rule.getRuleKey(ruleId,transports[i]));
            if (current!=null) removeRule(ruleId, current.getTransport());
         }
       } catch(SibincoException se) {
@@ -455,12 +447,7 @@ public class RuleManager
 
     private void removeRuleFromMap(String ruleId, String transport)
     {
-      if (transport.equals(Transport.SMPP_TRANSPORT_NAME))
-         smpprules.remove(new Long(ruleId));
-      else if (transport.equals(Transport.HTTP_TRANSPORT_NAME))
-         httprules.remove(new Long(ruleId));
-      else if (transport.equals(Transport.MMS_TRANSPORT_NAME))
-         mmsrules.remove(new Long(ruleId));
+         rules.remove(Rule.getRuleKey(ruleId,transport));
     }
     private void removeRuleFile(String ruleId, String transport) throws SibincoException
     {
@@ -473,11 +460,7 @@ public class RuleManager
     }
 
   public void unlockAllRules() {
-     Collection allRule = new ArrayList();
-     allRule.addAll(smpprules.values());
-     allRule.addAll(httprules.values());
-     allRule.addAll(mmsrules.values());
-     for(Iterator i = allRule.iterator();i.hasNext();) {
+     for(Iterator i = rules.values().iterator();i.hasNext();) {
        Rule rule = (Rule)i.next();
        rule.unlock();
      }
@@ -515,6 +498,13 @@ public class RuleManager
       }
       return null;
   }
-
+  public static class Schema {
+    public long lastmodified;
+    public LinkedList schemaContent;
+    public Schema(long lastmodified, LinkedList schemaContent) {
+      this.lastmodified = lastmodified;
+      this.schemaContent = schemaContent;
+    }
+  }
 }
 

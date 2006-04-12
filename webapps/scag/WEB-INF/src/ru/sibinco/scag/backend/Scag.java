@@ -159,9 +159,15 @@ public class Scag extends Proxy {
 
     public void reloadTariffMatrix() throws SibincoException {
       //System.out.println("invoked reloadTariffMatrix");
+      try {
       final Response response = super.runCommand(new ReloadTariffMatrix());
       if (Response.STATUS_OK!=response.getStatus())
         throw new SibincoException("Couldn't reload tariff matrix, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+      }  catch (SibincoException se) {
+           if (getStatus() == STATUS_DISCONNECTED)
+             throw new StatusDisconnectedException(host,port);
+           else throw se;
+      }
     }
 
     public Object call(final String commandId, final String err, final Type returnType, final Map arguments) throws SibincoException {

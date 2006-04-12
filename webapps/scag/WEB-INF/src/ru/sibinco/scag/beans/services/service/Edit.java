@@ -54,7 +54,6 @@ public class Edit extends TabledEditBeanImpl {
     private String parentId;
     private String dirName = "service";
     private boolean editChild = false;
-    private Map serviceRules = null;
     private String path = "";
     private String mbAddChild;
     private Map routes = null;
@@ -92,7 +91,7 @@ public class Edit extends TabledEditBeanImpl {
         else
             tabledItems = new LinkedList();
         load();
-        if (serviceRules == null) serviceRules = appContext.getRuleManager().getRules(new Long(id));
+
         if (deleteRuleSMPP != null) deleteRule(Transport.SMPP_TRANSPORT_NAME);
         if (deleteRuleHTTP != null) deleteRule(Transport.HTTP_TRANSPORT_NAME);
         if (deleteRuleMMS != null) deleteRule(Transport.MMS_TRANSPORT_NAME);
@@ -187,11 +186,8 @@ public class Edit extends TabledEditBeanImpl {
     private void deleteRule(String transport) throws SCAGJspException {
         try {
             appContext.getRuleManager().removeRule(Long.toString(id), transport);
-            serviceRules.remove(transport);
         } catch (SibincoException se) {
-            if (se instanceof StatusDisconnectedException)
-                serviceRules.remove(transport);
-            else {
+            if (!(se instanceof StatusDisconnectedException)) {
               se.printStackTrace();/*PRINT ERROR ON THE SCREEN;*/
               throw new SCAGJspException(Constants.errors.rules.COULD_NOT_REMOVE_RULE, se);
             }
@@ -287,20 +283,15 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public boolean isSmppRuleExists() {
-        serviceRules = appContext.getRuleManager().getRules(new Long(id));
-        return (serviceRules.get(Transport.SMPP_TRANSPORT_NAME)!=null);
+        return (appContext.getRuleManager().getRule(new Long(id),Transport.SMPP_TRANSPORT_NAME)!=null);
     }
 
     public boolean isHttpRuleExists() {
-
-       return (serviceRules.get(Transport.HTTP_TRANSPORT_NAME)!=null);
-
+       return (appContext.getRuleManager().getRule(new Long(id),Transport.HTTP_TRANSPORT_NAME)!=null);
     }
 
     public boolean isMmsRuleExists() {
-
-       return (serviceRules.get(Transport.MMS_TRANSPORT_NAME)!=null);
-
+       return (appContext.getRuleManager().getRule(new Long(id),Transport.MMS_TRANSPORT_NAME)!=null);       
     }
 
     public String getMbAddChild() {

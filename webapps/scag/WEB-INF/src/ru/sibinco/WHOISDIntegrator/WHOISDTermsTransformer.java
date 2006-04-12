@@ -58,7 +58,7 @@ public class WHOISDTermsTransformer {
         LinkedList body = new LinkedList();
         String transport = (String)i.next();
         stylesheet = (String)transportToXSl.get(transport);
-        header = Rule.getRuleHeader(id,transport);
+        header = Rule.getRuleHeader(transport);
         header.removeFirst();
         ruleresult.addAll(header);
         if (addBody(body,content, stylesheet, xslFolder)) {

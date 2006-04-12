@@ -1,18 +1,18 @@
 package ru.sibinco.WHOISDIntegrator;
 
 import ru.sibinco.scag.backend.SCAGAppContext;
-import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.backend.rules.Rule;
+import ru.sibinco.scag.backend.rules.RuleManager;
 import ru.sibinco.scag.backend.transport.Transport;
 import ru.sibinco.scag.beans.rules.applet.MiscUtilities;
 import ru.sibinco.lib.SibincoException;
+import ru.sibinco.lib.StatusDisconnectedException;
+import ru.sibinco.lib.backend.util.Functions;
 
 import javax.servlet.http.*;
 import java.io.*;
 import java.util.*;
 import java.text.MessageFormat;
-import java.lang.reflect.Method;
-import java.lang.reflect.InvocationTargetException;
 
 /**
  * Created by IntelliJ IDEA.
@@ -36,12 +36,12 @@ public class WHOISDServlet extends HttpServlet {
     LinkedList result = new LinkedList();
     try {
     switch (id) {
-      case WHOISDRequest.OPERATORS: result = loadXml(WHOISDRequest.OPERATORS, composePath("gw location.operators_file")); SendResult(result, resp); break;
+      case WHOISDRequest.OPERATORS: result = loadXml(composePath("gw location.operators_file")); SendResult(result, resp); break;
       case WHOISDRequest.OPERATORS_SCHEMA: result = getSchema(WHOISDRequest.OPERATORS_SCHEMA, composePath("gw location.operators_file")); SendResult(result, resp); break;
-      case WHOISDRequest.SERVICES:  result = loadXml(WHOISDRequest.SERVICES, composePath("gw location.services_file")); SendResult(result, resp); break;
+      case WHOISDRequest.SERVICES:  result = loadXml(composePath("gw location.services_file")); SendResult(result, resp); break;
       case WHOISDRequest.SERVICES_SCHEMA: result = getSchema(WHOISDRequest.SERVICES_SCHEMA, composePath("gw location.services_file")); SendResult(result, resp); break;
       case WHOISDRequest.RULE: result = getRule(req);  SendResult(result, resp); break;
-      case WHOISDRequest.TARIFF_MATRIX: result = loadXml(WHOISDRequest.TARIFF_MATRIX, composePath("gw location.tariffs_file"));  SendResult(result, resp); break;
+      case WHOISDRequest.TARIFF_MATRIX: result = loadXml(composePath("gw location.tariffs_file"));  SendResult(result, resp); break;
       case WHOISDRequest.TARIFF_MATRIX_SCHEMA: result = getSchema(WHOISDRequest.TARIFF_MATRIX_SCHEMA,composePath("gw location.tariffs_file"));  SendResult(result, resp); break;
       default:
         resp.setHeader("status","false");
@@ -94,7 +94,7 @@ public class WHOISDServlet extends HttpServlet {
 
   }
 
-   private final String composePath(String paramName) throws Exception {
+   private String composePath(String paramName) throws Exception {
      return appContext.getConfig().getString("gw location.gw_config_folder") + File.separatorChar + appContext.getConfig().getString(paramName);
    }
 
@@ -156,7 +156,7 @@ public class WHOISDServlet extends HttpServlet {
      }
    }
 
-   private final String composeErrorMessage(LinkedList li) {
+   private String composeErrorMessage(LinkedList li) {
      String error=(String)li.get(0);
      return error;
    }
@@ -164,23 +164,31 @@ public class WHOISDServlet extends HttpServlet {
    private void applyTariffMatrix(String pathToWrite, HttpServletRequest req, boolean isMultipartFormat) throws Exception {
      //backup current file "tariffs.xml" -> "tariffs.xml~"
      File tariffMatrix = new File(pathToWrite);
-     File tariffMatrixbackup = new File(pathToWrite+'~');
+     File tariffMatrixTemp = new File(pathToWrite+'~');
      boolean backupResult = false;
      // do we have file to backup?
      if (tariffMatrix.exists()) {
-      backupResult = MiscUtilities.moveFile(tariffMatrix,tariffMatrixbackup, false);
-      if (!backupResult) throw new Exception("Can't save backup of tariffs.xml");
+      backupResult = MiscUtilities.moveFile(tariffMatrix,tariffMatrixTemp, false);
+      if (!backupResult) throw new Exception("Can't make temporary file tariffs.xml~");
      }
      saveFile(pathToWrite, req, isMultipartFormat);
      SAXParserImpl parser = new SAXParserImpl();
      try {
      parser.parseTariffMatrix(pathToWrite);
-     //there are no exceptions -> just delete backup file
-     tariffMatrixbackup.delete();
+     try {
+       appContext.getScag().reloadTariffMatrix();
+     } catch (SibincoException se) {
+       if (!(se instanceof StatusDisconnectedException))
+         if (se.getMessage().startsWith("Couldn't reload tariff matrix"))
+           throw new WHOISDException(se.getMessage());
+         else throw se;
+      }
+      //there are no exceptions -> copy tariffMatrixTemp to backup folder
+      if (tariffMatrixTemp.exists()) Functions.SavedFileToBackup(tariffMatrixTemp,"~");
      } catch (Exception e) {
        //excpiton occurs while parsing -> restore backup file(i.e. "tariffs.xml~" ->  "tariffs.xml") and delete backup file
-       if (tariffMatrixbackup.exists()) {
-         if (!MiscUtilities.moveFile(tariffMatrixbackup,tariffMatrix, true)) throw new Exception("Can't restore tariffs.xml from tariffs.xml~");
+       if (tariffMatrixTemp.exists()) {
+         if (!MiscUtilities.moveFile(tariffMatrixTemp,tariffMatrix, true)) throw new Exception("Can't restore tariffs.xml from tariffs.xml~");
        } else
          if (!tariffMatrix.delete()) throw new Exception("TariffMatrix contains errors but can not be deleted");
        throw e;
@@ -213,7 +221,7 @@ public class WHOISDServlet extends HttpServlet {
      }
    }
 
-  private final boolean isMultipartFormat(HttpServletRequest req)
+  private boolean isMultipartFormat(HttpServletRequest req)
   {
        String temptype=req.getContentType();
        if(temptype.indexOf("multipart/form-data")!=-1) return true;
@@ -250,7 +258,7 @@ public class WHOISDServlet extends HttpServlet {
       return dataSlice;
   }
 
-  private final String getBoundary(HttpServletRequest request) {
+  private String getBoundary(HttpServletRequest request) {
     String cType = request.getContentType();
     return cType.substring(cType.indexOf("boundary=")+9);
   }
@@ -272,7 +280,7 @@ public class WHOISDServlet extends HttpServlet {
     }
   }
 
-  private final int getRequestId(HttpServletRequest req) {
+  private int getRequestId(HttpServletRequest req) {
     String[] parsedURI = req.getRequestURI().split("/");
     String requestedFile = parsedURI[parsedURI.length-1];
     return WHOISDRequest.getId(requestedFile);
@@ -298,15 +306,7 @@ public class WHOISDServlet extends HttpServlet {
     return result;
   }
 
-  private LinkedList loadXml(int commandId, String filepath) throws Exception {
-    String scagCommand = WHOISDRequest.getScagCommand(commandId);
-    Method command = appContext.getScag().getClass().getMethod(scagCommand, new Class[0]);
-    try {
-     command.invoke(appContext.getScag(), new Object[0]);
-    } catch(InvocationTargetException e) {
-      if (Proxy.STATUS_CONNECTED == appContext.getScag().getStatus())
-        throw (Exception)e.getTargetException();
-    }
+  private LinkedList loadXml(String filepath) throws Exception {
     File filetoread = new File(filepath);
     return loadFile(filetoread);
   }
@@ -330,16 +330,17 @@ public class WHOISDServlet extends HttpServlet {
   }
 
   private LinkedList getSchema(int id, String xmlPath) throws Exception{
-    LinkedList schema = (LinkedList)schemaCash.get(xmlPath);
-    if (schema!=null)  return schema;
+    RuleManager.Schema schema = (RuleManager.Schema)schemaCash.get(xmlPath);
     File filetoread = new File(xmlPath);
     File schemaFile = new File(filetoread.getParent(), WHOISDRequest.getSchemaName(id));
-    schema = loadFile(schemaFile);
-    schemaCash.put(xmlPath,schema);
-    return schema;
+    if (schema==null || schemaFile.lastModified() > schema.lastmodified) {
+       schema = new RuleManager.Schema(schemaFile.lastModified(),loadFile(schemaFile));
+       schemaCash.put(xmlPath,schema);
+    }
+    return schema.schemaContent;
   }
 
-  private final void validateTransportParameter(String transport) throws WHOISDException{
+  private void validateTransportParameter(String transport) throws WHOISDException{
     String[] transports = Transport.transportTitles;
     for (byte i =0 ;i<transports.length;i++) {
      if (transport.equals(transports[i])) return;
