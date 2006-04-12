@@ -11,6 +11,7 @@ import ru.sibinco.scag.backend.endpoints.svc.Svc;
 import ru.sibinco.scag.backend.endpoints.centers.Center;
 import ru.sibinco.scag.backend.routing.Subject;
 import ru.sibinco.scag.backend.SCAGAppContext;
+import ru.sibinco.scag.backend.status.StatMessage;
 import ru.sibinco.scag.beans.DoneException;
 import ru.sibinco.scag.beans.EditBean;
 import ru.sibinco.scag.beans.SCAGJspException;
@@ -56,6 +57,7 @@ public class Edit extends EditBean {
     }
 
     protected void save() throws SCAGJspException {
+        String messagetxt = "";
         masks = Functions.trimStrings(masks);
         final Map subjects = appContext.getScagRoutingManager().getSubjects();
         final Svc defSvc = (Svc) appContext.getSmppManager().getSvcs().get(defaultSme);
@@ -68,6 +70,7 @@ public class Edit extends EditBean {
                 throw new SCAGJspException(Constants.errors.routing.subjects.SUBJECT_ALREADY_EXISTS, name);
             try {
                 subjects.put(name, defSvc == null ? new Subject(name, defCenter, masks, description) : new Subject(name, defSvc, masks, description));
+                messagetxt = "Added new subject: '" + name + "'.";
             } catch (SibincoException e) {
                 logger.debug("Could not create new subject", e);
                 throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_CREATE, e);
@@ -79,6 +82,7 @@ public class Edit extends EditBean {
                 subjects.remove(getEditId());
                 try {
                     subjects.put(name, defSvc == null ? new Subject(name, defCenter, masks, description) : new Subject(name, defSvc, masks, description));
+
                 } catch (SibincoException e) {
                     logger.debug("Could not create new subject", e);
                     throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_CREATE, e);
@@ -99,11 +103,14 @@ public class Edit extends EditBean {
                     throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_SET_MASKS, e);
                 }
                 subject.setNotes(description);
+                 messagetxt = "Changed subject: '" + subject.getName() + "'.";
             }
         }
         appContext.getStatuses().setRoutesChanged(true);
         appContext.getScagRoutingManager().setRoutesChanged(true);
         appContext.getScagRoutingManager().setChangedByUser(getUser(appContext).getName());
+        StatMessage message = new StatMessage(getUser(appContext).getName(), "Subject", messagetxt);
+        appContext.getScagRoutingManager().addStatMessages(message);
         throw new DoneException();
     }
 

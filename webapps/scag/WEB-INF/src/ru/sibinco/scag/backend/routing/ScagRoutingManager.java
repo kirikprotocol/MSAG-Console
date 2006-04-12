@@ -13,6 +13,7 @@ import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.scag.backend.endpoints.SmppManager;
 import ru.sibinco.scag.backend.service.ServiceProvidersManager;
+import ru.sibinco.scag.backend.status.StatMessage;
 
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
@@ -41,6 +42,7 @@ public class ScagRoutingManager {
 
     private Map routes = null;//Collections.synchronizedMap(new HashMap());
     private Map subjects = null;//Collections.synchronizedMap(new HashMap());
+    private final Map statMessages = Collections.synchronizedMap(new HashMap());
     private Logger logger = Logger.getLogger(this.getClass());
     private final File scagConfFolder;
     private SmppManager smppManager;
@@ -280,6 +282,14 @@ public class ScagRoutingManager {
 
     public void setRoutesLoaded(boolean routesLoaded) {
         this.routesLoaded = routesLoaded;
+    }
+
+    public synchronized Map getStatMessages() {
+        return statMessages;
+    }
+
+    public synchronized void addStatMessages(StatMessage message) {
+        statMessages.put(message.getTime(), message);
     }
 
 }

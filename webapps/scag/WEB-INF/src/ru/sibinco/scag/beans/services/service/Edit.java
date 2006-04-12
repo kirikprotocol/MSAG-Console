@@ -6,6 +6,7 @@ package ru.sibinco.scag.beans.services.service;
 
 import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.SCAGAppContext;
+import ru.sibinco.scag.backend.status.StatMessage;
 import ru.sibinco.scag.backend.transport.Transport;
 import ru.sibinco.scag.backend.service.Service;
 import ru.sibinco.scag.backend.service.ServiceProvider;
@@ -20,6 +21,7 @@ import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.StatusDisconnectedException;
 import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.lib.backend.util.SortByPropertyComparator;
+import ru.sibinco.lib.backend.users.User;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -27,6 +29,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.LinkedList;
+import java.security.Principal;
 
 /**
  * The <code>Edit</code> class represents
@@ -66,6 +69,7 @@ public class Edit extends TabledEditBeanImpl {
         if (appContext == null) {
             appContext = (SCAGAppContext) request.getAttribute("appContext");
         }
+
         path = Utils.getPath(request);
         if (getMbCancel() != null) {
             String path = Utils.getPath(request);
@@ -76,6 +80,7 @@ public class Edit extends TabledEditBeanImpl {
         } else if (getMbAddChild() != null) {
             throw new AddChildException(request.getContextPath() + "/routing/routes", (!editChild ? getEditId() : getParentId()));
         }if (mbDelete != null){
+            loginedPrincipal = request.getUserPrincipal();
             delete();
         }
         serviceProviders = appContext.getServiceProviderManager().getServiceProviders();
@@ -100,6 +105,14 @@ public class Edit extends TabledEditBeanImpl {
     protected void delete() throws SCAGJspException {
         appContext.getScagRoutingManager().getRoutes().keySet().removeAll(checkedSet);
         appContext.getStatuses().setRoutesChanged(true);
+        String user = null;
+        try {
+            user = getUserName(appContext);
+        } catch (SCAGJspException e) {
+            logger.error("Failed to obtain user");
+        }
+        StatMessage message = new StatMessage(user, "Routes", "Deleted route(s): " + checkedSet.toString() + ".");
+        appContext.getScagRoutingManager().addStatMessages(message);
     }
 
     protected void load() throws SCAGJspException {
@@ -304,5 +317,16 @@ public class Edit extends TabledEditBeanImpl {
 
     public void setChildEitId(String childEitId) {
         this.childEitId = childEitId;
+    }
+
+    private String getUserName(SCAGAppContext appContext) throws SCAGJspException {
+        Principal userPrincipal = loginedPrincipal;
+
+        if (userPrincipal == null)
+            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user principal(s)");
+        User user = (User) appContext.getUserManager().getUsers().get(userPrincipal.getName());
+        if (user == null)
+            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userPrincipal.getName() + "'");
+        return user.getName();
     }
 }

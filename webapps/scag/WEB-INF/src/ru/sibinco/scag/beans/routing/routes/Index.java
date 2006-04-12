@@ -41,11 +41,12 @@ public class Index extends TabledBeanImpl {
 
 
     protected Collection getDataSource() {
-        return appContext.getScagRoutingManager().getRoutes().values();
+        return appContext.getScagRoutingManager().getStatMessages().values();//.getRoutes().values();
     }
 
 
     public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException {
+        sort = "time";
         super.process(request, response); // initializes bean values
         if (null != mbRestore)
             restoreRoutes();

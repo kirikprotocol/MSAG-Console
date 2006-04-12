@@ -7,18 +7,9 @@
             <sm-pm:item name="mbApply" value="Apply" title="Apply changes"/>
             <sm-pm:item name="mbLoad" value="Restore" title="Undo changes"/>
             <sm-pm:space/>
-            <sm-pm:space/>
-            <sm-pm:space/>
-            <sm-pm:space/>
-            <sm-pm:space/>
-            <sm-pm:space/>
-            <sm-pm:space/>
-            <sm-pm:space/>
-            <sm-pm:space/>
             <sm-pm:item name="mbSave" value="Save current" title="Save current routing configuration"/>
             <sm-pm:item name="mbLoadSaved" value="Load saved" title="Load saved routing configuration"
                         onclick="confirm(loadSaved());"/>
-            <sm-pm:space/>
         </sm-pm:menu>
     </jsp:attribute>
 
@@ -42,24 +33,9 @@
                 enableDisableButtonsById('mbLoad', ${(!bean.routesRestored)} );
             }
         </script>
-        <c:choose>
-            <c:when test="${bean.routesChanged}">
-                <table class="list" cellspacing="0">
-                    <col width="1px"/>
-                    <tr class="row1">
-                        <td>
-                        </td>
-                        <td><label>Routes and subjects</label>
-                        </td>
-                        <td>
-                            <span style="color:red">changed by user:</span> ${fn:escapeXml(bean.changeByUser)}
-                        </td>
-                    </tr>
-                </table>
-                <br/>
-            </c:when>
-            <c:otherwise>
-            </c:otherwise>
-        </c:choose>
+        <div class=page_subtitle>Status log</div>
+        <sm:scrolling columns="time, userLogin, category, message" names="time, user, category, description"
+                      widths="20,30,20,40"/>
+        <div class=page_subtitle>&nbsp;</div>
     </jsp:body>
 </sm:page>

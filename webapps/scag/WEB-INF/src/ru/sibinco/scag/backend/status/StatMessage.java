@@ -23,12 +23,13 @@ public class StatMessage {
     private String category;
     private String message;
 
-    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
+    SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
 
-    public StatMessage(String userLogin, String category, String message) {
+    public StatMessage(final String userLogin, final String category, final String message) {
         this.userLogin = userLogin;
         this.category = category;
         this.message = message;
+        this.time  = dateFormat.format(new Date());
     }
 
 
