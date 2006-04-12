@@ -5,8 +5,11 @@
 package ru.sibinco.scag.beans.services;
 
 import ru.sibinco.lib.backend.users.User;
+import ru.sibinco.lib.SibincoException;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.SCAGAppContext;
+import ru.sibinco.scag.backend.Scag;
+import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.backend.service.ServiceProvider;
 import ru.sibinco.scag.backend.service.ServiceProvidersManager;
 import ru.sibinco.scag.backend.status.StatMessage;
@@ -96,11 +99,20 @@ public class Edit extends TabledEditBeanImpl {
         appContext.getScagRoutingManager().addStatMessages(message);
 
         serviceProvider.getServices().keySet().removeAll(toRemove);
+
+        final Scag scag = appContext.getScag();
         try {
-            appContext.getServiceProviderManager().store();
-        } catch (IOException e) {
-            logger.debug("Couldn't save config", e);
-            throw new SCAGJspException(Constants.errors.status.COULDNT_SAVE_CONFIG, e);
+            scag.reloadServices();
+        } catch (SibincoException e) {
+            if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
+                throw new SCAGJspException(Constants.errors.serviceProviders.COULDNT_RELOAD_SERVICE_PROVIDER, e);
+            }
+        } finally {
+            try {
+                appContext.getServiceProviderManager().store();
+            } catch (IOException e) {
+                logger.debug("Couldn't save config", e);
+            }
         }
     }
 
@@ -125,12 +137,19 @@ public class Edit extends TabledEditBeanImpl {
         } else {
             serviceProvidersManager.updateServiceProvider(id, name, description);
         }
-
+        final Scag scag = appContext.getScag();
         try {
-            serviceProvidersManager.store();
-        } catch (IOException e) {
-            logger.debug("Couldn't save config", e);
-            throw new SCAGJspException(Constants.errors.status.COULDNT_SAVE_CONFIG, e);
+            scag.reloadServices();
+        } catch (SibincoException e) {
+            if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
+                throw new SCAGJspException(Constants.errors.serviceProviders.COULDNT_RELOAD_SERVICE_PROVIDER, Long.toString(id), e);
+            }
+        } finally {
+            try {
+                serviceProvidersManager.store();
+            } catch (IOException e) {
+                logger.debug("Couldn't save config", e);
+            }
         }
         if (isAdd()) {
             throw new EditException(Long.toString(id));

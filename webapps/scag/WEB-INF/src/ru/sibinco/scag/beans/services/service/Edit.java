@@ -6,6 +6,8 @@ package ru.sibinco.scag.beans.services.service;
 
 import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.SCAGAppContext;
+import ru.sibinco.scag.backend.Scag;
+import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.backend.status.StatMessage;
 import ru.sibinco.scag.backend.transport.Transport;
 import ru.sibinco.scag.backend.service.Service;
@@ -78,13 +80,14 @@ public class Edit extends TabledEditBeanImpl {
             save();
         } else if (getMbAddChild() != null) {
             throw new AddChildException(request.getContextPath() + "/routing/routes", (!editChild ? getEditId() : getParentId()));
-        }if (mbDelete != null){
+        }
+        if (mbDelete != null) {
             loginedPrincipal = request.getUserPrincipal();
             delete();
         }
         serviceProviders = appContext.getServiceProviderManager().getServiceProviders();
         routes = appContext.getServiceProviderManager().getRoutesByServiceId(appContext.getScagRoutingManager().getRoutes(), Long.decode(getParentId()));
-        final SortedList results = new SortedList(getDataSource(), new SortByPropertyComparator(sort=(sort==null)?"id":sort));
+        final SortedList results = new SortedList(getDataSource(), new SortByPropertyComparator(sort = (sort == null) ? "id" : sort));
         totalSize = results.size();
         if (totalSize > startPosition)
             tabledItems = results.subList(startPosition, Math.min(totalSize, startPosition + pageSize));
@@ -149,7 +152,7 @@ public class Edit extends TabledEditBeanImpl {
 
     protected void save() throws SCAGJspException {
         final ServiceProvidersManager serviceProvidersManager = appContext.getServiceProviderManager();
-        if (description==null) description = "";
+        if (description == null) description = "";
         if (getEditId() == null) {
             Service service = new Service(name, description);
             id = serviceProvidersManager.createService(Long.decode(getParentId()).longValue(), service);
@@ -169,11 +172,19 @@ public class Edit extends TabledEditBeanImpl {
             }
         }
 
+        final Scag scag = appContext.getScag();
         try {
-            serviceProvidersManager.store();
-        } catch (IOException e) {
-            logger.debug("Couldn't save config", e);
-            throw new SCAGJspException(Constants.errors.status.COULDNT_SAVE_CONFIG, e);
+            scag.reloadServices();
+        } catch (SibincoException e) {
+            if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
+                throw new SCAGJspException(Constants.errors.serviceProviders.COULDNT_RELOAD_SERVICE_PROVIDER, e);
+            }
+        } finally {
+            try {
+                appContext.getServiceProviderManager().store();
+            } catch (IOException e) {
+                logger.debug("Couldn't save config", e);
+            }
         }
         if (id != -1) {
             throw new EditChildException(Long.toString(id), getParentId());
@@ -188,8 +199,8 @@ public class Edit extends TabledEditBeanImpl {
             appContext.getRuleManager().removeRule(Long.toString(id), transport);
         } catch (SibincoException se) {
             if (!(se instanceof StatusDisconnectedException)) {
-              se.printStackTrace();/*PRINT ERROR ON THE SCREEN;*/
-              throw new SCAGJspException(Constants.errors.rules.COULD_NOT_REMOVE_RULE, se);
+                se.printStackTrace();/*PRINT ERROR ON THE SCREEN;*/
+                throw new SCAGJspException(Constants.errors.rules.COULD_NOT_REMOVE_RULE, se);
             }
         }
     }
@@ -283,15 +294,15 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public boolean isSmppRuleExists() {
-        return (appContext.getRuleManager().getRule(new Long(id),Transport.SMPP_TRANSPORT_NAME)!=null);
+        return (appContext.getRuleManager().getRule(new Long(id), Transport.SMPP_TRANSPORT_NAME) != null);
     }
 
     public boolean isHttpRuleExists() {
-       return (appContext.getRuleManager().getRule(new Long(id),Transport.HTTP_TRANSPORT_NAME)!=null);
+        return (appContext.getRuleManager().getRule(new Long(id), Transport.HTTP_TRANSPORT_NAME) != null);
     }
 
     public boolean isMmsRuleExists() {
-       return (appContext.getRuleManager().getRule(new Long(id),Transport.MMS_TRANSPORT_NAME)!=null);
+        return (appContext.getRuleManager().getRule(new Long(id), Transport.MMS_TRANSPORT_NAME) != null);
     }
 
     public String getMbAddChild() {
