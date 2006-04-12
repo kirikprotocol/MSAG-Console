@@ -5,5 +5,5 @@
            xmlns:session="http://www.sibinco.com/SCAG/SESSIONS"    
            xmlns:operation="http://www.sibinco.com/SCAG/OPERATIONS"
            xmlns:bill="http://www.sibinco.com/SCAG/BILL"
-           transport="{1}" id="{2}">
+           transport="{1}">
 
