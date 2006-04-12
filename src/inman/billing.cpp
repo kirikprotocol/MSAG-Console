@@ -80,7 +80,7 @@ void BillingConnect::billingDone(Billing* bill)
         }
     }
     delete bill;
-    smsc_log_debug(logger, "BillConn[%u]: Billing[%u] finished", _bcId, billId);
+    smsc_log_debug(logger, "Billing[%u:%u]: finished", _bcId, billId);
 }
 
 /* -------------------------------------------------------------------------- *
@@ -154,6 +154,7 @@ Billing::Billing(BillingConnect* bconn, unsigned int b_id,
             BillingCFG * cfg, TimeWatcher* tm_watcher, Logger * uselog/* = NULL*/)
         : _bconn(bconn), _bId(b_id), _cfg(*cfg), _ss7Sess(NULL)
         , state(bilIdle), inap(NULL), postpaidBill(false), tmWatcher(tm_watcher)
+        , abBillType(smsc::inman::cache::btUnknown), providerQueried(false)
 {
     assert(bconn && cfg && tm_watcher);
     logger = uselog ? uselog : Logger::getInstance("smsc.inman.Billing");
@@ -162,11 +163,17 @@ Billing::Billing(BillingConnect* bconn, unsigned int b_id,
 
 Billing::~Billing()
 {
+    MutexGuard grd(bilMutex);
+    //check for pending query to AbonentProvider
+    if (providerQueried) {
+        _cfg.abProvider->cancelQuery(abNumber, this);
+        providerQueried = false;
+    }
     if (timers.size()) {
         for (TimersMAP::iterator it = timers.begin(); it != timers.end(); it++) {
             StopWatch * timer = (*it).second;
             timer->release();
-            smsc_log_debug(logger, "Billing[%u.%u]: Stopped timer[%u] at state %u",
+            smsc_log_debug(logger, "Billing[%u.%u]: Released timer[%u] at state %u",
                         _bconn->bConnId(), _bId, timer->getId(), state);
         }
     }
@@ -357,7 +364,7 @@ void Billing::StopTimer(Billing::BillingState bilState, bool locked/* = false */
         smsc_log_debug(logger, "Billing[%u.%u]: Stopped timer[%u]:%u at state %u",
                     _bconn->bConnId(), _bId, timer->getId(), bilState, state);
     } else
-        smsc_log_debug(logger, "Billing[%u.%u]: no active timer for state: %u",
+        smsc_log_warn(logger, "Billing[%u.%u]: no active timer for state: %u",
                     _bconn->bConnId(), _bId, bilState);
     if (!locked)
         bilMutex.Unlock();
@@ -369,7 +376,7 @@ void Billing::StopTimer(Billing::BillingState bilState, bool locked/* = false */
  * -------------------------------------------------------------------------- */
 void Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
 {
-    assert (opaque_obj);
+    assert(opaque_obj);
     bilMutex.Lock();
     smsc_log_debug(logger, "Billing[%u.%u]: timer[%u] signaled, states: %u -> %u",
         _bconn->bConnId(), _bId, timer->getId(), opaque_obj->val.ui, (unsigned)state);
@@ -391,9 +398,8 @@ void Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
                 smsc_log_debug(logger, "Billing[%u.%u]: switched to billing via CDR",
                         _bconn->bConnId(), _bId);
             postpaidBill = true;
-            TonNpiAddress   ab_number;
-            ab_number.fromText(cdr._srcAdr.c_str());
-            _cfg.abProvider->cancelQuery(ab_number, this);
+            _cfg.abProvider->cancelQuery(abNumber, this);
+            providerQueried = false;
             bilMutex.Unlock();
             ChargeAbonent(smsc::inman::cache::btUnknown);
             return;
@@ -437,6 +443,13 @@ void Billing::onAbonentQueried(const AbonentId & ab_number, AbonentBillType ab_t
 {
     {
         MutexGuard grd(bilMutex);
+
+        providerQueried = false;
+        if (state > bilStarted) {
+            smsc_log_warn(logger, "Billing[%u.%u]: abonentQueried at state: %u",
+                          _bconn->bConnId(), _bId, state);
+            return;
+        }
         StopTimer(state, true);
         state = bilQueried;
     }
@@ -451,8 +464,7 @@ bool Billing::onChargeSms(ChargeSms* sms)
     sms->export2CDR(cdr);
     sms->exportCAPInfo(csInfo);
 
-    TonNpiAddress   ab_number;
-    if (!ab_number.fromText(cdr._srcAdr.c_str())) {
+    if (!abNumber.fromText(cdr._srcAdr.c_str())) {
         smsc_log_error(logger, "Billing[%u.%u]: invalid Call.Adr <%s>",
                        _bconn->bConnId(), _bId, cdr._srcAdr.c_str());
         return false;
@@ -470,14 +482,19 @@ bool Billing::onChargeSms(ChargeSms* sms)
                    ) ? false : true;
 
     //ask AbonentsCache for abonent type
-    AbonentBillType ab_type = _cfg.abCache->getAbonentInfo(ab_number);
+    AbonentBillType ab_type = _cfg.abCache->getAbonentInfo(abNumber);
     if (!postpaidBill && (ab_type == smsc::inman::cache::btUnknown)
         && !_cfg.postpaidRPC.size() && _cfg.abProvider) {
-        //IN point unable to tell abonent billing type, request cache to retrieve it
-        _cfg.abProvider->startQuery(ab_number, this);
-
-        StartTimer(_cfg.abtTimeout);
-        return true; //execution will continue in abonentQueryCB() by another thread.
+        //IN point unable to tell abonent billing type, request cache
+        //to retrieve it from AbonentProvider
+        if (_cfg.abProvider->startQuery(abNumber, this)) {
+            providerQueried = true;
+            StartTimer(_cfg.abtTimeout);
+            return true; //execution will continue in onAbonentQueried() by another thread.
+        }
+        smsc_log_error(logger, "Billing[%u.%u]: startQuery(%s) failed!",
+                       _bconn->bConnId(), _bId, abNumber.getSignals());
+        //continue with btUnknown
     }
     ChargeAbonent(ab_type);
     return true;
@@ -563,9 +580,7 @@ void Billing::onReleaseSMS(ReleaseSMSArg* arg)
             if ((*it) == arg->rPCause) {
                 postpaidBill = true;
                 //Update abonents cache
-                TonNpiAddress   ab_number;
-                ab_number.fromText(cdr._srcAdr.c_str());
-                _cfg.abCache->setAbonentInfo(ab_number, smsc::inman::cache::btPostpaid);
+                _cfg.abCache->setAbonentInfo(abNumber, smsc::inman::cache::btPostpaid);
                 break;
             }
         }

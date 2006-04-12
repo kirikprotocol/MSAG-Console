@@ -163,11 +163,11 @@ public:
         doCont = 0, doEnd, doAbort
     } BillAction;
 
-    Billing(BillingConnect* bconn, unsigned int b_id, 
+    Billing(BillingConnect* bconn, unsigned int b_id,
             BillingCFG * cfg, TimeWatcher* tm_watcher, Logger * uselog = NULL);
     virtual ~Billing();
 
-    unsigned int getId() const { return _bId; }
+    unsigned int getId(void) const { return _bId; }
     BillingState getState(void) const { return state; }
 
     
@@ -224,7 +224,9 @@ protected:
     bool            postpaidBill;
     TimeWatcher*    tmWatcher;
     TimersMAP       timers;
-    AbonentBillType abBillType;
+    AbonentBillType abBillType; //calling abonent billing type
+    TonNpiAddress   abNumber;   //calling abonent ISDN number
+    bool            providerQueried;
 };
 
 } //inman
