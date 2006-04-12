@@ -13,12 +13,12 @@ namespace scag{ namespace pers{
 //using namespace smsc::core::buffers;
 
 enum TimePolicy{
-    INFINIT = 1,
+    UNKNOWN,
+    INFINIT,
     FIXED,
     ACCESS,
     R_ACCESS,
-    W_ACCESS,
-    UNKNOWN
+    W_ACCESS
 };
 
 enum PropertyType{

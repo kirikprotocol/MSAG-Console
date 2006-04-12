@@ -36,8 +36,8 @@ using smsc::logger::Logger;
         TimePolicy getPolicyFromStr(std::string& str);
         uint32_t getKey(const CommandProperty& cp, ProfileType pt);
     public:
-        PersAction() : cmd(PC_GET) {}
-        PersAction(PersCmd c) : cmd(c) {}
+        PersAction() : cmd(PC_GET), final_date(-1), life_time(-1), policy(UNKNOWN) {}
+        PersAction(PersCmd c) : cmd(c), final_date(-1), life_time(-1), policy(UNKNOWN) {}
         ~PersAction() {}
         virtual bool run(ActionContext& context);
         virtual void init(const SectionParams& params,PropertyObject propertyObject);

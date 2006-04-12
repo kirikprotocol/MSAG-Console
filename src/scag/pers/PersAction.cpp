@@ -112,7 +112,10 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
     var = ConvertWStrToStr(params["var"]);
 
     if(cmd == PC_DEL)
+    {
+        smsc_log_debug(logger, "act params: cmd = %d, profile=%d, var=%s", cmd, profile, var.c_str());
         return;
+    }
 
     if(!params.Exists("value"))
         throw SCAGException("PersAction '%s' : missing 'value' parameter", getStrCmd());
@@ -132,7 +135,10 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
     }
 
     if(cmd == PC_GET)
+    {
+        smsc_log_debug(logger, "act params: cmd = %d, profile=%d, var=%s", cmd, profile, var.c_str());
         return;
+    }
 
     if(!params.Exists("policy") || (policy = getPolicyFromStr(ConvertWStrToStr(params["policy"]))) == UNKNOWN)
         throw SCAGException("PersAction '%s' : missing or unknown 'policy' parameter", getStrCmd());
@@ -144,9 +150,15 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
     {
         std::string dt = ConvertWStrToStr(params["finaldate"]);
 
-        tm time;
-        strptime(dt.c_str(), "%d.%m.%Y %T", &time);
+        struct tm time;
+        char *ptr;
+
+        ptr = strptime(dt.c_str(), "%d.%m.%Y %T", &time);
+        if(!ptr || *ptr)
+            throw SCAGException("PersAction '%s' : invalid 'finaldate' parameter", getStrCmd());
+
         final_date = mktime(&time);
+        smsc_log_debug(logger, "act params: cmd = %d, profile=%d, var=%s, policy=%d, final_date=%d(%s)", cmd, profile, var.c_str(), policy, final_date, dt.c_str());
         return;
     }
 
@@ -154,9 +166,17 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
         throw SCAGException("PersAction '%s' : missing 'finaldate' or 'lifetime' parameter", getStrCmd());
 
     std::string lt = ConvertWStrToStr(params["lifetime"]);
-    tm time;
-    strptime(lt.c_str(), "%T", &time);
-    life_time = mktime(&time);
+
+    struct tm time;
+    char *ptr;
+
+    ptr = strptime(lt.c_str(), "%H:%M:%S", &time);
+    if(!ptr || *ptr)
+        throw SCAGException("PersAction '%s' : invalid 'lifetime' parameter", getStrCmd());
+
+    life_time = time.tm_hour * 3600 + time.tm_min * 60 + time.tm_sec;
+
+    smsc_log_debug(logger, "act params: cmd = %d, profile=%d, var=%s, policy=%d, life_time=%d(%s)", cmd, profile, var.c_str(), policy, life_time, lt.c_str());
 }
 
 uint32_t PersAction::getKey(const CommandProperty& cp, ProfileType pt)
@@ -215,7 +235,7 @@ static void setREPropFromPersProp(REProperty& rep, Property& prop)
 
 bool PersAction::run(ActionContext& context)
 {
-    smsc_log_error(logger,"Run Action 'PersAction'...");
+    smsc_log_error(logger,"Run Action 'PersAction cmd=%d'...", cmd);
 
     try{
         Property prop;
