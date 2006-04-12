@@ -8,12 +8,10 @@ import ru.novosoft.smsc.jsp.util.tables.impl.closedgroups.ClosedGroupDataSource;
 import ru.novosoft.smsc.jsp.util.tables.impl.closedgroups.ClosedGroupQuery;
 
 import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 public class ClosedGroupList {
-    private Map map = new HashMap();
+    private SortedMap map = new TreeMap();
     private ClosedGroupDataSource dataSource = new ClosedGroupDataSource();
 
     public ClosedGroupList() {
@@ -23,7 +21,10 @@ public class ClosedGroupList {
         NodeList closedGroupsList = closedGroupElement.getElementsByTagName(ClosedGroupManager.SECTION_NAME_group);
         for (int i = 0; i < closedGroupsList.getLength(); i++) {
             Element closedGroupElem = (Element) closedGroupsList.item(i);
-            ClosedGroup cg = put(new ClosedGroup(closedGroupElem));
+            ClosedGroup newCg = new ClosedGroup(closedGroupElem);
+            ClosedGroup cg = get(newCg.getId());
+            if (cg != null) throw new AdminException("2 or more closed groups in closedgroups.xml with the same id="+cg.getId());
+            put(newCg);
         }
     }
 

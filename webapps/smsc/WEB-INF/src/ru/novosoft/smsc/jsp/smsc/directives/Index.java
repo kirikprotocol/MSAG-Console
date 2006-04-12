@@ -94,7 +94,6 @@ public class Index extends PageBean
 
     try {
       appContext.getSmsc().saveSmscConfig(config);
-      //todo journal
       journalAppend(SubjectTypes.TYPE_directive, null, Actions.ACTION_MODIFY);
       appContext.getStatuses().setSmscChanged(true);
     } catch (AdminException e) {
