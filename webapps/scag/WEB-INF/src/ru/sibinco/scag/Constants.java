@@ -112,6 +112,7 @@ public class Constants {
         public interface serviceProviders {
             public static final Constants SERVICE_PROVIDER_NOT_FOUND = new Constants("error.serviceproviders.provider_not_found");
             public static final Constants COULDNT_DELETE_SERVICE_PROVIDER = new Constants("error.serviceproviders.couldnt_delete_provider");
+            public static final Constants COULDNT_RELOAD_SERVICE_PROVIDER = new Constants("error.serviceproviders.couldnt_reload_provider");
         }
 
 

@@ -144,14 +144,12 @@ public class Scag extends Proxy {
     }
 
     public void reloadOperators() throws SibincoException {
-       //System.out.println("invoked reloadOperators");
        final Response response = super.runCommand(new ReloadOperators());
        if (Response.STATUS_OK!=response.getStatus())
          throw new SibincoException("Couldn't reload operators, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
     }
 
     public void reloadServices() throws SibincoException {
-      //System.out.println("invoked reloadServices");
       final Response response = super.runCommand(new ReloadServices());
       if (Response.STATUS_OK!=response.getStatus())
         throw new SibincoException("Couldn't reload services, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
@@ -232,7 +230,7 @@ public class Scag extends Proxy {
         if (0 < buffer.length())
             result.add(buffer.toString());
         else if (',' == listStr.charAt(listStr.length() - 1))
-            result.add(new String());
+            result.add("");
 
         return result;
     }
