@@ -3565,7 +3565,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
           sms.setNextTime(rescheduleSms(sms));
           sms.needArchivate=false;
           sms.billingRecord=0;
-          store->createSms(sms,t.msgId,smsc::store::CREATE_NEW);
+          store->createSms(sms,t.msgId,smsc::store::CREATE_NEW_NO_CLEAR);
           int dest_proxy_index=smsc->getSmeIndex(sms.getDestinationSmeId());
           try{
             smsc->getScheduler()->AddScheduledSms(t.msgId,sms,dest_proxy_index);
