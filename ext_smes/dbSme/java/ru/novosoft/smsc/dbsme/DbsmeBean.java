@@ -179,6 +179,15 @@ public class DbsmeBean extends IndexBean
     }
   }
 
+  public int getOptionalInt(String paramName)
+  {
+    try {
+      return config.getInt(paramName);
+    } catch (Exception e) {
+      return 0;
+    }
+  }
+
   public Object getParameter(String paramName)
   {
     return config.getParameter(paramName);
@@ -230,7 +239,8 @@ public class DbsmeBean extends IndexBean
   }
 
   protected boolean isProviderEquals(String providerName, String oldProviderName, String address, int connections,
-                                     String dbInstance, String dbUserName, String dbUserPassword, String type, boolean watchdog, boolean needPing,
+                                     String dbInstance, String dbUserName, String dbUserPassword, String type,
+                                     int getConnectionTimeout, boolean watchdog, boolean needPing,
                                      String service_not_available, String job_not_found, String ds_failure, String ds_connection_lost, String ds_statement_fail,
                                      String query_null, String input_parse, String output_format, String invalid_config)
   {
@@ -242,6 +252,7 @@ public class DbsmeBean extends IndexBean
       logger.debug("dbUserName (\"" + dbUserName + "\"):" + config.isStringParamEquals(prefix + ".DataSource.dbUserName", dbUserName));
       logger.debug("dbUserPassword (\"" + dbUserPassword + "\"):" + config.isStringParamEquals(prefix + ".DataSource.dbUserPassword", dbUserPassword));
       logger.debug("type (\"" + type + "\"):" + config.isStringParamEquals(prefix + ".DataSource.type", type));
+      logger.debug("getConnectionTimeout (\"" + getConnectionTimeout + "\"):" + config.isIntParamEquals(prefix + ".DataSource.getConnectionTimeout", getConnectionTimeout));
       logger.debug("watchdog (\"" + watchdog + "\"):" + config.isBooleanParamEquals(prefix + ".DataSource.watchdog", watchdog));
       logger.debug("needPing (\"" + needPing + "\"):" + config.isBooleanParamEquals(prefix + ".DataSource.needPing", needPing));
       logger.debug("service_not_available (\"" + service_not_available + "\"):" + config.isStringParamEquals(prefix + ".MessageSet.SERVICE_NOT_AVAIL", service_not_available));
@@ -261,6 +272,7 @@ public class DbsmeBean extends IndexBean
            && config.isStringParamEquals(prefix + ".DataSource.dbUserName", dbUserName)
            && config.isStringParamEquals(prefix + ".DataSource.dbUserPassword", dbUserPassword)
            && config.isStringParamEquals(prefix + ".DataSource.type", type)
+           && config.isIntParamEquals(prefix + ".DataSource.getConnectionTimeout", getConnectionTimeout)
            && config.isBooleanParamEquals(prefix + ".DataSource.watchdog", watchdog)
            && config.isBooleanParamEquals(prefix + ".DataSource.needPing", needPing)
 
@@ -284,6 +296,7 @@ public class DbsmeBean extends IndexBean
            && config.isParamEquals(originalConfig, prefix + ".DataSource.dbUserName")
            && config.isParamEquals(originalConfig, prefix + ".DataSource.dbUserPassword")
            && config.isParamEquals(originalConfig, prefix + ".DataSource.type")
+           && config.isParamEquals(originalConfig, prefix + ".DataSource.getConnectionTimeout")
            && config.isParamEquals(originalConfig, prefix + ".DataSource.watchdog")
            && config.isParamEquals(originalConfig, prefix + ".DataSource.needPing")
 

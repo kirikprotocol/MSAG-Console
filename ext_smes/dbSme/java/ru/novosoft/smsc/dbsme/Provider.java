@@ -31,8 +31,9 @@ public class Provider extends DbsmeBean
   private String dbUserName = "";
   private String dbUserPassword = "";
   private String type = "";
+  private int getConnectionTimeout = 0;
   private boolean watchdog = false;
-  private boolean needPing = true;
+  private boolean needPing = false;
   private boolean enabled = false;
   private String service_not_available = "";
   private String job_not_found = "";
@@ -152,8 +153,9 @@ public class Provider extends DbsmeBean
         dbUserName = "";
         dbUserPassword = "";
         type = "";
+        getConnectionTimeout = 0;
         watchdog = false;
-	      needPing = false;
+	    needPing = true;
 
         service_not_available = "";
         job_not_found = "";
@@ -174,6 +176,7 @@ public class Provider extends DbsmeBean
         dbUserName = getString(prefix + ".DataSource.dbUserName");
         dbUserPassword = getString(prefix + ".DataSource.dbUserPassword");
         type = getString(prefix + ".DataSource.type");
+        getConnectionTimeout = getOptionalInt(prefix + ".DataSource.getConnectionTimeout");
         watchdog = getOptionalBool(prefix + ".DataSource.watchdog");
         needPing = getOptionalBool(prefix + ".DataSource.needPing");
 
@@ -277,7 +280,7 @@ public class Provider extends DbsmeBean
   private int save(boolean forceSave)
   {
     final String newPrefix = createProviderPrefix(providerName);
-    final boolean providerEquals = isProviderEquals(providerName, oldProviderName, address, connections, dbInstance, dbUserName, dbUserPassword, type, watchdog,needPing,
+    final boolean providerEquals = isProviderEquals(providerName, oldProviderName, address, connections, dbInstance, dbUserName, dbUserPassword, type, getConnectionTimeout, watchdog, needPing,
                                                     service_not_available, job_not_found, ds_failure, ds_connection_lost, ds_statement_fail, query_null, input_parse, output_format, invalid_config);
     final boolean enabledEquals = enabled == getOptionalBool(newPrefix + ".enabled");
 
@@ -339,6 +342,11 @@ public class Provider extends DbsmeBean
     config.setString(providerPrefix + ".DataSource.dbUserName", dbUserName);
     config.setString(providerPrefix + ".DataSource.dbUserPassword", dbUserPassword);
 
+    if (getConnectionTimeout > 0)
+      config.setInt(providerPrefix + ".DataSource.getConnectionTimeout", getConnectionTimeout);
+    else
+      config.removeParam(providerPrefix + ".DataSource.getConnectionTimeout");
+
     if (watchdog)
       config.setBool(providerPrefix + ".DataSource.watchdog", watchdog);
     else
@@ -348,7 +356,7 @@ public class Provider extends DbsmeBean
       config.setBool(providerPrefix + ".DataSource.needPing", needPing);
     else
       config.removeParam(providerPrefix + ".DataSource.needPing");
-      
+
     if (service_not_available != null && service_not_available.length() > 0) config.setString(providerPrefix + ".MessageSet.SERVICE_NOT_AVAIL", service_not_available); else config.removeParam(providerPrefix + ".MessageSet.SERVICE_NOT_AVAIL");
     if (job_not_found != null && job_not_found.length() > 0) config.setString(providerPrefix + ".MessageSet.JOB_NOT_FOUND", job_not_found); else config.removeParam(providerPrefix + ".MessageSet.JOB_NOT_FOUND");
     if (ds_failure != null && ds_failure.length() > 0) config.setString(providerPrefix + ".MessageSet.DS_FAILURE", ds_failure); else config.removeParam(providerPrefix + ".MessageSet.DS_FAILURE");
@@ -507,6 +515,16 @@ public class Provider extends DbsmeBean
   public void setOldProviderName(String oldProviderName)
   {
     this.oldProviderName = oldProviderName;
+  }
+
+  public int getGetConnectionTimeout()
+  {
+    return getConnectionTimeout;
+  }
+
+  public void setGetConnectionTimeout(int getConnectionTimeout)
+  {
+    this.getConnectionTimeout = getConnectionTimeout;
   }
 
   public boolean isWatchdog()
