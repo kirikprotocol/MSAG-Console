@@ -46,8 +46,6 @@ namespace smsc { namespace db { namespace oci
         dvoid* getField(int pos)
             throw (InvalidArgumentException);
 
-        Mutex& getAccessMutex();
-
     public:
         
         OCIResultSet(OCIStatement* statement) : ResultSet(), owner(statement) {};
@@ -131,8 +129,6 @@ namespace smsc { namespace db { namespace oci
             throw(SQLException);
     
         OCIQuery(OCIConnection* connection);
-
-        Mutex& getAccessMutex();
 
     public:
 

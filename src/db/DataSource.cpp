@@ -251,12 +251,10 @@ int ConnectionPool::Execute()
         pingEvent.Wait(60000);
         if (!pingStarted) break;
 
-        {
-            MutexGuard guard(monitor);
-            for (int i=0; i<connections.Count(); i++) {
-                Connection* connection = connections[i];
-                if (connection) connection->ping();
-            }
+        MutexGuard guard(monitor);
+        for (int i=0; i<connections.Count(); i++) {
+            Connection* connection = connections[i];
+            if (connection && !connection->isInUse()) connection->ping();
         }
     }
     return 0;
@@ -283,6 +281,7 @@ Connection* ConnectionPool::getConnection()
             __trace2__("Failed to obtain connection after %d msec: time out", getConnectionTimeout);
             return 0; // throw exc?
         }
+        if (queue.connection) queue.connection->setInUse(true);
         return queue.connection;
     }
     
@@ -297,6 +296,7 @@ Connection* ConnectionPool::getConnection()
         (void) connections.Push(connection);
         count++;
     }
+    if (connection) connection->setInUse(true);
     return connection; 
 }
 
@@ -330,6 +330,7 @@ void ConnectionPool::freeConnection(Connection* connection)
     }
     else 
     {
+        if (connection) connection->setInUse(false);
         push(connection);
     }
 }

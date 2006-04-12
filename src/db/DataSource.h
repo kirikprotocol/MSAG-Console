@@ -238,37 +238,44 @@ namespace smsc { namespace db
             throw(SQLException) = 0;
     };
 
-    class ExecutionGuard;
     class ConnectionPool;
     class Connection
     {
     friend class ConnectionPool;
-    friend class ExecutionGuard;
     private:
         
-        Connection*         next;
-        Mutex        accessMutex;
+        Connection*    next;
+        bool           inUse;
+        Mutex          inUseLock;
 
         inline void setNextConnection(Connection* connection) {
             next = connection;
         };
-        
         inline Connection* getNextConnection(void) {
             return next;
+        };
+        inline bool isInUse() {
+            MutexGuard guard(inUseLock);
+            return inUse;
+        };
+        inline void setInUse(bool use) {
+            MutexGuard guard(inUseLock);
+            inUse = use;
         };
         
     protected:
         
 		smsc::logger::Logger *log;
 
-        bool                isConnected, isDead, inExecution;
+        bool                isConnected, isDead;
         
-        Mutex               statementsRegistryLock, routinesRegistryLock, executionLock;
+        Mutex               statementsRegistryLock, routinesRegistryLock;
         Hash<Statement *>   statementsRegistry;
         Hash<Routine *>     routinesRegistry;
         
-        Connection() : next(0), log(Logger::getInstance("smsc.db.Connection")), 
-            isConnected(false), isDead(false), inExecution(false) {};
+        Connection() : next(0), inUse(false), 
+            log(Logger::getInstance("smsc.db.Connection")), 
+                isConnected(false), isDead(false) {};
 
         Statement* _getStatement(const char* id);
         bool _registerStatement(const char* id, Statement* statement);
@@ -276,14 +283,6 @@ namespace smsc { namespace db
         bool _registerRoutine(const char* id, Routine* routine);
 
         virtual void ping() = 0;
-        inline bool isExecution() {
-            MutexGuard guard(executionLock);
-            return inExecution;
-        };
-        inline void setExecution(bool ex) {
-            MutexGuard guard(executionLock);
-            inExecution = ex;
-        };
     
     public:
         
@@ -293,10 +292,6 @@ namespace smsc { namespace db
             return (isConnected && !isDead);
         };
 
-        Mutex& getAccessMutex() {
-            return accessMutex;
-        }
-    
         bool registerStatement(const char* id, Statement* statement);
         bool unregisterStatement(const char* id);
         Statement* getStatement(const char* id);
@@ -323,20 +318,6 @@ namespace smsc { namespace db
             throw(SQLException) = 0;
     };
     
-    class ExecutionGuard
-    {
-        Connection* connection;
-
-    public:
-
-        ExecutionGuard(Connection* _connection) : connection(_connection) {
-            if (connection) connection->setExecution(true);
-        };
-        ~ExecutionGuard() {
-            if (connection) connection->setExecution(false);
-        };
-    };
-
     class DBDriver
     {
     protected:
@@ -491,6 +472,8 @@ namespace smsc { namespace db
             pthread_cond_t      condition;
             Connection*         connection;
             ConnectionQueue*    next;
+
+            ConnectionQueue() : connection(0), next(0) {};
         };
 
         ConnectionQueue    *head,*tail;
