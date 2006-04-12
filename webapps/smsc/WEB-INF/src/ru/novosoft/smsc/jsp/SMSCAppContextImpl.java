@@ -6,8 +6,8 @@ import ru.novosoft.smsc.admin.acl.AclManager;
 import ru.novosoft.smsc.admin.category.CategoryManager;
 import ru.novosoft.smsc.admin.closedgroups.ClosedGroupManager;
 import ru.novosoft.smsc.admin.console.Console;
-import ru.novosoft.smsc.admin.daemon.DaemonManager;
-import ru.novosoft.smsc.admin.daemon.DaemonManagerHS;
+import ru.novosoft.smsc.admin.daemon.DaemonManagerImpl;
+import ru.novosoft.smsc.admin.daemon.DaemonManagerHSImpl;
 import ru.novosoft.smsc.admin.journal.Journal;
 import ru.novosoft.smsc.admin.provider.ProviderManager;
 import ru.novosoft.smsc.admin.resource_group.ResourceGroupConstants;
@@ -94,12 +94,12 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
             routeSubjectManager = new RouteSubjectManagerImpl(smeManager);
             switch (Constants.instType) {
                 case ResourceGroupConstants.RESOURCEGROUP_TYPE_SINGLE:
-                    DaemonManager daemonManager = new DaemonManager(smeManager, webappConfig);
-                    hostsManager = new HostsManagerSingleImpl(daemonManager, serviceManager, smeManager, routeSubjectManager);
+                    DaemonManagerImpl daemonManagerImpl = new DaemonManagerImpl(smeManager, webappConfig);
+                    hostsManager = new HostsManagerSingleImpl(daemonManagerImpl, serviceManager, smeManager, routeSubjectManager);
                     break;
                 case ResourceGroupConstants.RESOURCEGROUP_TYPE_HS:
-                    DaemonManagerHS daemonManagerHS = new DaemonManagerHS(smeManager, webappConfig);
-                    hostsManager = new HostsManagerHSImpl(daemonManagerHS, serviceManager, smeManager, routeSubjectManager);
+                    DaemonManagerHSImpl daemonManagerHSImpl = new DaemonManagerHSImpl(smeManager, webappConfig);
+                    hostsManager = new HostsManagerHSImpl(daemonManagerHSImpl, serviceManager, smeManager, routeSubjectManager);
                     break;
                 case ResourceGroupConstants.RESOURCEGROUP_TYPE_HA:
                     WebAppFolders.setHAServicesFolder(webappConfig.getString("system.services folder"));

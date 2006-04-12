@@ -121,7 +121,7 @@ public class SmsArchiveSource extends SmsSource
     try {
       CountMessage request = new CountMessage(query);
 
-      socket = new Socket(context.getHost(), context.getPort()); //todo remove hardcode
+      socket = new Socket(context.getHost(), context.getPort());
       input = socket.getInputStream();
       output = socket.getOutputStream();
 

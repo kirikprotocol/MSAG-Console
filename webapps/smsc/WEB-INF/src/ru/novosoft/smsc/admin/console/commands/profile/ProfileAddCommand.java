@@ -46,11 +46,34 @@ public class ProfileAddCommand extends ProfileGenCommand {
             if (!ctx.getSmsc().isLocaleRegistered(locale))
                 throw new Exception("Locale '" + locale + "' is not registered");
 
+            //todo profiler-default properties
+            if (!isCodepage) {
+                codepage = Profile.convertCodepageStringToByte(ctx.getSmsc().getDefaultProfilePropString("DataCoding"));
+                ussd7bit = ctx.getSmsc().getDefaultProfilePropBoolean("UssdIn7Bit");
+            }
+            if (!isReport) report = Profile.convertReportOptionsStringToByte(ctx.getSmsc().getDefaultProfilePropString("Report"));
+            if (!isAliasHide) aliasHide = (ctx.getSmsc().getDefaultProfilePropBoolean("Hide") ? Profile.ALIAS_HIDE_true : Profile.ALIAS_HIDE_true );
+            if (!isAliasModifiable) aliasModifiable = ctx.getSmsc().getDefaultProfilePropBoolean("HideModifiable");
+            if (!isDivertModifiable) divertModifiable = ctx.getSmsc().getDefaultProfilePropBoolean("DivertModifiable");
+            if (!isUdhConcat) udhConcat = ctx.getSmsc().getDefaultProfilePropBoolean("UdhConcat");
+            if (!isLocale) locale = ctx.getSmsc().getDefaultProfilePropString("Locale");
+
+//            if (!isTranslit) translit = ctx.getSmsc().getDefaultProfilePropBoolean("Translit");
+//            if (!isInputAccessMask) inputAccessMask = ctx.getSmsc().getDefaultProfilePropInt("InputAccessMask");
+//            if (!isOutputAccessMask) outputAccessMask = ctx.getSmsc().getDefaultProfilePropInt("OutputAccessMask");
+//            if (!isDivert) divert = ctx.getSmsc().getDefaultProfilePropString("Divert");
+//            if (isDivertActiveAbsent) profile.setDivertActiveAbsent(divertActiveOn && divertActiveAbsent);
+//            if (isDivertActiveBarred) profile.setDivertActiveBarred(divertActiveOn && divertActiveBarred);
+//            if (isDivertActiveBlocked) profile.setDivertActiveBlocked(divertActiveOn && divertActiveBlocked);
+//            if (isDivertActiveCapacity) profile.setDivertActiveCapacity(divertActiveOn && divertActiveCapacity);
+//            if (isDivertActiveUnconditional) profile.setDivertActiveUnconditional(divertActiveOn && divertActiveUnconditional);
+
             Profile profile = new Profile(profileMask, codepage, ussd7bit, report, locale,
                     aliasHide, aliasModifiable,
                     divert, divertActiveUnconditional, divertActiveAbsent,
                     divertActiveBlocked, divertActiveBarred, divertActiveCapacity,
                     divertModifiable, udhConcat, translit, groupId, inputAccessMask, outputAccessMask);
+
             updateResult = ctx.getSmsc().profileUpdate(profileMask, profile);
             switch (updateResult) {
                 case 1:    //pusUpdated

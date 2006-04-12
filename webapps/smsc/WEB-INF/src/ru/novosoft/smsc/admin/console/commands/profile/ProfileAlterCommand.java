@@ -14,11 +14,10 @@ import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.profiler.Profile;
 import ru.novosoft.smsc.admin.route.Mask;
 
-public class ProfileAlterCommand extends ProfileGenCommand
-{
-	private String address;
-	private Mask mask;
-	private int updateResult;
+public class ProfileAlterCommand extends ProfileGenCommand {
+    private String address;
+    private Mask mask;
+    private int updateResult;
 
     public void setAddress(String address) {
         this.address = address;

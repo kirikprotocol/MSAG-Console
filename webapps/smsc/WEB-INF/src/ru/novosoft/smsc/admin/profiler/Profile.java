@@ -26,25 +26,25 @@ public class Profile {
     public static final byte ALIAS_HIDE_substitute = 2;
 
     private Mask mask;
-    private boolean ussd7bit;
-    private String divert;
+    private boolean ussd7bit = false;
+    private String divert = "";
 
     // unconditional, absent, blocked, barred, capacity
-    private boolean divertActiveUnconditional;
-    private boolean divertActiveAbsent;
-    private boolean divertActiveBlocked;
-    private boolean divertActiveBarred;
-    private boolean divertActiveCapacity;
-    private boolean divertModifiable;
+    private boolean divertActiveUnconditional = false;
+    private boolean divertActiveAbsent = false;
+    private boolean divertActiveBlocked = false;
+    private boolean divertActiveBarred = false;
+    private boolean divertActiveCapacity = false;
+    private boolean divertModifiable = false;
 
-    private byte codepage;
-    private byte reportOptions;
-    private String locale;
+    private byte codepage = CODEPAGE_Default;
+    private byte reportOptions = REPORT_OPTION_None;
+    private String locale/* = "en_en"*/;
 
-    private byte aliasHide = ALIAS_HIDE_false;
-    private boolean aliasModifiable = true;
-    private boolean udhConcat;
-    private boolean translit;
+    private byte aliasHide = ALIAS_HIDE_true;
+    private boolean aliasModifiable = false;
+    private boolean udhConcat = true;
+    private boolean translit = true;
 
     private int groupId = 0;
     private long inputAccessMask = 1;
@@ -182,16 +182,7 @@ public class Profile {
     }
 
     private void setCodepage(final String codepageString) throws AdminException {
-        if ("default".equalsIgnoreCase(codepageString))
-            codepage = CODEPAGE_Default;
-        else if ("UCS2".equalsIgnoreCase(codepageString))
-            codepage = CODEPAGE_UCS2;
-        else if ("Latin1".equalsIgnoreCase(codepageString))
-            codepage = CODEPAGE_Latin1;
-        else if ("UCS2&Latin1".equalsIgnoreCase(codepageString))
-            codepage = CODEPAGE_UCS2AndLatin1;
-        else
-            throw new AdminException("Unknown codepage: " + codepageString);
+        this.codepage = convertCodepageStringToByte(codepageString);
     }
 
     public byte getReportOptions() {
@@ -220,14 +211,7 @@ public class Profile {
     }
 
     private void setReportOptions(final String reportoptionsString) throws AdminException {
-        if ("full".equalsIgnoreCase(reportoptionsString))
-            reportOptions = REPORT_OPTION_Full;
-        else if ("final".equalsIgnoreCase(reportoptionsString))
-            reportOptions = REPORT_OPTION_Final;
-        else if ("none".equalsIgnoreCase(reportoptionsString))
-            reportOptions = REPORT_OPTION_None;
-        else
-            throw new AdminException("Unknown report option: " + reportoptionsString);
+        reportOptions = convertReportOptionsStringToByte(reportoptionsString);
     }
 
     public Mask getMask() {
@@ -253,16 +237,7 @@ public class Profile {
     }
 
     private void setAliasHide(final String aliasHide) {
-        if (null == aliasHide)
-            this.aliasHide = ALIAS_HIDE_false;
-        else if ("false".equalsIgnoreCase(aliasHide) || "N".equalsIgnoreCase(aliasHide))
-            this.aliasHide = ALIAS_HIDE_false;
-        else if ("true".equalsIgnoreCase(aliasHide) || "hide".equalsIgnoreCase(aliasHide) || "Y".equalsIgnoreCase(aliasHide))
-            this.aliasHide = ALIAS_HIDE_true;
-        else if ("substitute".equalsIgnoreCase(aliasHide) || "S".equalsIgnoreCase(aliasHide))
-            this.aliasHide = ALIAS_HIDE_substitute;
-        else
-            this.aliasHide = ALIAS_HIDE_false;
+        this.aliasHide = convertAliasHideStringToByte(aliasHide);
     }
 
     public String getAliasHideString() {
@@ -291,7 +266,7 @@ public class Profile {
     }
 
     private void setAliasModifiable(final String aliasModifiable) {
-        this.aliasModifiable = "true".equalsIgnoreCase(aliasModifiable) || "modifiable".equalsIgnoreCase(aliasModifiable);
+        this.aliasModifiable = convertAliasHideModifiableStringToBoolean(aliasModifiable);
     }
 
     public String getDivert() {
@@ -462,5 +437,46 @@ public class Profile {
         } catch (NumberFormatException e) {
             this.outputAccessMask = 1;
         }
+    }
+
+    public static byte convertReportOptionsStringToByte(String reportoptionsString) throws AdminException {
+        if ("full".equalsIgnoreCase(reportoptionsString))
+            return REPORT_OPTION_Full;
+        else if ("final".equalsIgnoreCase(reportoptionsString))
+            return REPORT_OPTION_Final;
+        else if ("none".equalsIgnoreCase(reportoptionsString))
+            return REPORT_OPTION_None;
+        else
+            throw new AdminException("Unknown report option: " + reportoptionsString);
+    }
+
+    public static byte convertAliasHideStringToByte(final String aliasHide) {
+        if (null == aliasHide)
+            return ALIAS_HIDE_false;
+        else if ("false".equalsIgnoreCase(aliasHide) || "N".equalsIgnoreCase(aliasHide))
+            return ALIAS_HIDE_false;
+        else if ("true".equalsIgnoreCase(aliasHide) || "hide".equalsIgnoreCase(aliasHide) || "Y".equalsIgnoreCase(aliasHide))
+            return ALIAS_HIDE_true;
+        else if ("substitute".equalsIgnoreCase(aliasHide) || "S".equalsIgnoreCase(aliasHide))
+            return ALIAS_HIDE_substitute;
+        else
+            return ALIAS_HIDE_false;
+    }
+
+    public static boolean convertAliasHideModifiableStringToBoolean(final String aliasModifiable) {
+       return "true".equalsIgnoreCase(aliasModifiable) || "modifiable".equalsIgnoreCase(aliasModifiable);
+    }
+
+    public static byte convertCodepageStringToByte(final String codepageString) throws AdminException {
+        if ("default".equalsIgnoreCase(codepageString))
+            return CODEPAGE_Default;
+        else if ("UCS2".equalsIgnoreCase(codepageString))
+            return CODEPAGE_UCS2;
+        else if ("Latin1".equalsIgnoreCase(codepageString))
+            return CODEPAGE_Latin1;
+        else if ("UCS2&Latin1".equalsIgnoreCase(codepageString))
+            return CODEPAGE_UCS2AndLatin1;
+        else
+            throw new AdminException("Unknown codepage: " + codepageString);
     }
 }

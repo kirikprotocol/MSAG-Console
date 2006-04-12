@@ -1,7 +1,7 @@
 package ru.novosoft.smsc.jsp.smsc.profiles;
 
-import ru.novosoft.smsc.admin.profiler.Profile;
 import ru.novosoft.smsc.admin.closedgroups.ClosedGroupList;
+import ru.novosoft.smsc.admin.profiler.Profile;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
@@ -22,18 +22,19 @@ public class ProfilesBean extends SmscBean {
     protected ClosedGroupList closedGroups = new ClosedGroupList();
     protected String returnPath = null;
 
-    protected byte aliasHide = Profile.ALIAS_HIDE_false;
+    protected byte aliasHide = Profile.ALIAS_HIDE_true;
     protected boolean aliasModifiable = false;
 
     protected String divert = "";
-    protected boolean divertActiveUnconditional;
-    protected boolean divertActiveAbsent;
-    protected boolean divertActiveBlocked;
-    protected boolean divertActiveBarred;
-    protected boolean divertActiveCapacity;
+    protected boolean divertActiveUnconditional = false;
+    protected boolean divertActiveAbsent = false;
+    protected boolean divertActiveBlocked = false;
+    protected boolean divertActiveBarred = false;
+    protected boolean divertActiveCapacity = false;
     protected boolean divertModifiable = false;
-    protected boolean udhConcat = false;
-    protected boolean translit = false;
+    
+    protected boolean udhConcat = true;
+    protected boolean translit = true;
 
     protected int groupId = 0;
     protected long inputAccessMask = 1;
@@ -48,6 +49,25 @@ public class ProfilesBean extends SmscBean {
 
         try {
             registeredLocales = smsc.getRegisteredLocales();
+            //todo profiler-default properties
+            codepage = Profile.convertCodepageStringToByte(smsc.getDefaultProfilePropString("DataCoding"));
+            ussd7bit = smsc.getDefaultProfilePropBoolean("UssdIn7Bit");
+            report = Profile.convertReportOptionsStringToByte(smsc.getDefaultProfilePropString("Report"));
+            aliasHide = (smsc.getDefaultProfilePropBoolean("Hide")? Profile.ALIAS_HIDE_true : Profile.ALIAS_HIDE_false);
+            aliasModifiable = smsc.getDefaultProfilePropBoolean("HideModifiable");
+            divertModifiable = smsc.getDefaultProfilePropBoolean("DivertModifiable");
+            udhConcat = smsc.getDefaultProfilePropBoolean("UdhConcat");
+            locale = smsc.getDefaultProfilePropString("Locale");
+
+//            if (!isTranslit) translit = ctx.getSmsc().getDefaultProfilePropBoolean("Translit");
+//            if (!isInputAccessMask) inputAccessMask = ctx.getSmsc().getDefaultProfilePropInt("InputAccessMask");
+//            if (!isOutputAccessMask) outputAccessMask = ctx.getSmsc().getDefaultProfilePropInt("OutputAccessMask");
+//            if (!isDivert) divert = ctx.getSmsc().getDefaultProfilePropString("Divert");
+//            if (isDivertActiveAbsent) profile.setDivertActiveAbsent(divertActiveOn && divertActiveAbsent);
+//            if (isDivertActiveBarred) profile.setDivertActiveBarred(divertActiveOn && divertActiveBarred);
+//            if (isDivertActiveBlocked) profile.setDivertActiveBlocked(divertActiveOn && divertActiveBlocked);
+//            if (isDivertActiveCapacity) profile.setDivertActiveCapacity(divertActiveOn && divertActiveCapacity);
+//            if (isDivertActiveUnconditional) profile.setDivertActiveUnconditional(divertActiveOn && divertActiveUnconditional);
         } catch (Throwable e) {
             logger.error("Couldn't get registered profiles", e);
             return error(SMSCErrors.error.profiles.couldntGetRegisteredLocales, e);

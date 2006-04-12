@@ -25,7 +25,7 @@ public abstract class ProfileGenCommand extends CommandClass {
     protected byte codepage = Profile.CODEPAGE_Default;
     protected boolean ussd7bit = false;
 
-    protected byte aliasHide = ALIAS_NOHIDE;
+    protected byte aliasHide = ALIAS_HIDE;
     protected boolean aliasModifiable = false;
 
     protected String divert = "";
@@ -36,7 +36,7 @@ public abstract class ProfileGenCommand extends CommandClass {
     protected boolean divertActiveCapacity = false;
     protected boolean divertActiveUnconditional = false;
     protected boolean divertModifiable = false;
-    protected boolean udhConcat = false;
+    protected boolean udhConcat = true;
     protected boolean translit = true;
     protected int groupId = 0;
     protected String groupIdOrName = "";
@@ -74,7 +74,6 @@ public abstract class ProfileGenCommand extends CommandClass {
                     break;
                 }
             }
-
     }
 
     public void setNoneReport() {

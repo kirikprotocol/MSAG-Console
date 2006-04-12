@@ -95,12 +95,16 @@ public class SmeManagerImpl implements SmeManager {
         return new SortedList(smes.getNames());
     }
 
-/*
-	public SMEList getSmes()
-	{
-		return smes;
-	}
-*/
+    public synchronized List getInternalSmeNames() throws AdminException {
+        SortedList result = new SortedList();
+        for (Iterator i = smes.iterator(); i.hasNext();) {
+            SME sme = (SME) i.next();
+            if (smsc.getSmeStatus(sme.getId()).isInternal()) {
+                result.add(sme.getId());
+            }
+        }
+        return result;
+    }
 
     public synchronized void save() throws AdminException {
         try {

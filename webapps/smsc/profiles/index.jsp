@@ -39,7 +39,6 @@
 <input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
 <input type=hidden name=sort>
 <input type=hidden name=initialized value=true>
-<input type=hidden name=jbutton id=jbutton>
 <input type=hidden name=runQuery id=runQuery>
 <input type=hidden name=closeQuery id=closeQuery>
 

@@ -1,11 +1,5 @@
 package ru.novosoft.smsc.admin.smsc_service;
 
-/*
- * Author: igork
- * Date: 27.05.2002
- * Time: 18:59:55
- */
-
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
@@ -18,15 +12,13 @@ import ru.novosoft.smsc.admin.profiler.Profile;
 import ru.novosoft.smsc.admin.profiler.ProfileDataFile;
 import ru.novosoft.smsc.admin.profiler.ProfileEx;
 import ru.novosoft.smsc.admin.route.Mask;
+import ru.novosoft.smsc.admin.route.MaskList;
 import ru.novosoft.smsc.admin.route.SME;
 import ru.novosoft.smsc.admin.route.SmeStatus;
-import ru.novosoft.smsc.admin.route.MaskList;
 import ru.novosoft.smsc.admin.service.Service;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.service.Type;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
-import ru.novosoft.smsc.jsp.Statuses;
-import ru.novosoft.smsc.jsp.StatusesImpl;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileQuery;
 import ru.novosoft.smsc.util.Functions;
@@ -95,6 +87,8 @@ public class Smsc extends Service {
 
     private static final String CG_IS_GROUP_USED = "cg_is_group_used";
 
+    public HashMap defaultProfileProps = new HashMap();
+
     private File configFolder = null;
     private Map smeStatuses = new HashMap();
     private DistributionListAdmin distributionListAdmin = null;
@@ -107,7 +101,6 @@ public class Smsc extends Service {
     private static final char LOGGER_DELIMITER = ',';
 
     private SMSCAppContext appContext = null;
-    private Statuses statuses = new StatusesImpl();
 
     public Smsc(final String SmscName, final String smscHost, final int smscPort, final String smscConfFolderString, SMSCAppContext smscAppContext) throws AdminException {
         super(new ServiceInfo(SmscName, smscHost, "", "", true, null, ServiceInfo.STATUS_OFFLINE), smscPort);
@@ -118,6 +111,7 @@ public class Smsc extends Service {
             aliases = new AliasSet(aliasesDoc.getDocumentElement());
             profileDataFile = new ProfileDataFile();
             profileDataFile.init(getSmscConfig(), getConfigFolder().getAbsolutePath());
+            initDefaultProfileProps();
         } catch (FactoryConfigurationError error) {
             logger.error("Couldn't configure xml parser factory", error);
             throw new AdminException("Couldn't configure xml parser factory: " + error.getMessage());
@@ -135,7 +129,7 @@ public class Smsc extends Service {
             throw new AdminException("Couldn't parse: " + e.getMessage());
         }
 
-        distributionListAdmin = new DistributionListManager(super.getInfo(), smscPort /*,connectionPool*/);
+        distributionListAdmin = new DistributionListManager(super.getInfo(), smscPort);
 
         appContext = smscAppContext;
     }
@@ -147,8 +141,7 @@ public class Smsc extends Service {
         return out;
     }
 
-    public synchronized List loadRoutes(final RouteSubjectManager routeSubjectManager)
-            throws AdminException {
+    public synchronized List loadRoutes(final RouteSubjectManager routeSubjectManager) throws AdminException {
         routeSubjectManager.trace();
         if (!getInfo().isOnline())
             throw new AdminException("SMSC is not running.");
@@ -643,7 +636,38 @@ public class Smsc extends Service {
         return ((Boolean) result).booleanValue();
     }
 
-    public Statuses getStatuses() {
-        return statuses;
+    public String getDefaultProfilePropString(final String paramName) {
+        return (String) defaultProfileProps.get(paramName);
+    }
+
+    public boolean getDefaultProfilePropBoolean(final String paramName) {
+        return ((Boolean) defaultProfileProps.get(paramName)).booleanValue();
+    }
+
+    public long getDefaultProfilePropLong(final String paramName) {
+        return ((Long) defaultProfileProps.get(paramName)).longValue();
+    }
+
+    public int getDefaultProfilePropInt(final String paramName) {
+        return ((Integer) defaultProfileProps.get(paramName)).intValue();
+    }
+
+    public void initDefaultProfileProps() throws AdminException {
+        Config config = getSmscConfig();
+        try {
+            HashSet set = (HashSet) config.getSectionChildParamsNames("profiler");
+            for (Iterator i = set.iterator(); i.hasNext();) {
+                String name = (String) i.next();
+                if (name.startsWith("profiler.default")) {
+                    Object param = config.getParameter(name);
+                    defaultProfileProps.put(name.substring(16), param);
+                }
+            }
+            defaultProfileProps.put("Locale", config.getString("core.default_locale"));
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            throw new AdminException("wrong profiler's default properties section");
+        }
     }
 }

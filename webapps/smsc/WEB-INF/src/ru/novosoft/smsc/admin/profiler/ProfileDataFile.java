@@ -79,7 +79,6 @@ public class ProfileDataFile {
             fis = new FileInputStream(profilerStorePath);
             byte buf[] = new byte[256 * 1024];
 
-            //todo поддержку новой версии формата датафайла
             String FileName = Message.readString(fis, 8);
             int version = (int) Message.readUInt32(fis);
             while (true) {
@@ -114,7 +113,7 @@ public class ProfileDataFile {
                 int groupId = 0;
                 int inputAccessMask = 0;
                 int outputAccessMask = 0;
-                if (version > 0x00010000) { //todo подставить нужный номер версии
+                if (version > 0x00010000) {
                     groupId = (int) Message.readUInt32(bis);
                     inputAccessMask = (int) Message.readUInt32(bis);
                     outputAccessMask = (int) Message.readUInt32(bis);
