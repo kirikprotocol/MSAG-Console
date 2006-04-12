@@ -3,7 +3,8 @@
    xmlns="http://www.w3.org/2001/XMLSchema"
    xmlns:scag="http://www.sibinco.com/SCAG"
    xmlns:session="http://www.sibinco.com/SCAG/SESSIONS"
-   xmlns:operation="http://www.sibinco.com/SCAG/OPERATIONS">
+   xmlns:operation="http://www.sibinco.com/SCAG/OPERATIONS"
+   xmlns:profile="http://www.sibinco.com/SCAG/PROFILE">
     
     <annotation>
         <documentation xml:lang="en">
@@ -14,6 +15,7 @@
    
     <import schemaLocation="sessions.xsd" namespace="http://www.sibinco.com/SCAG/SESSIONS"/>
     <import schemaLocation="operations.xsd" namespace="http://www.sibinco.com/SCAG/OPERATIONS"/>
+    <import schemaLocation="profile.xsd" namespace="http://www.sibinco.com/SCAG/PROFILE"/>  
     
     
    <!-- General values types definition  -->
@@ -70,7 +72,8 @@
     <group name="Actions">
         <choice>
             <group ref="session:Actions"/>
-	    <group ref="operation:Actions" />
+            <group ref="operation:Actions" />
+            <group ref="profile:Actions" />
             
             <element name="set">
                 <complexType>
