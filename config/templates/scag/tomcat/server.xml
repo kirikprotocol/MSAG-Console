@@ -6,7 +6,7 @@
       <Logger className="org.apache.catalina.logger.FileLogger" />
       <Realm className="ru.sibinco.tomcat_auth.SibincoRealm"/>
       <Host name="localhost" appBase="webapps">
-        <Context path="/scag" docBase="scag" debug="0" privileged="true">
+        <Context path="/msag" docBase="scag" debug="0" privileged="true">
         </Context>
       </Host>
     </Engine>
