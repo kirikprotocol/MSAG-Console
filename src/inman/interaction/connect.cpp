@@ -99,20 +99,17 @@ int  Connect::send(const unsigned char *buf, int bufSz)
 //returns -1 on error, or number of total bytes sent
 int  Connect::sendObj(SerializableObject* obj)
 {
-//    assert(obj);
-    int             n;
+    int             offs = 4;
     ObjectBuffer    buffer(_parms.bufSndSz);
 
+    buffer.setPos(offs);
     _objSerializer->serialize(obj, buffer);
-
     if (_frm == Connect::frmLengthPrefixed) {
-        uint32_t len = htonl((uint32_t)buffer.getPos());
-
-        int n = send((const unsigned char *)&len, sizeof(uint32_t));
-        if (n < 0)
-            return n;
+        uint32_t len = htonl((uint32_t)buffer.getPos() - 4);
+        memcpy(buffer.get(), (const void *)&len, 4);
+        offs = 0;
     }
-    return send(buffer.get(), buffer.getPos());
+    return send(buffer.get() + offs, buffer.getPos());
 }
 
 //receives bytes from socket,

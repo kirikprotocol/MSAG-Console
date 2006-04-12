@@ -23,7 +23,7 @@ namespace interaction {
 typedef struct {
     unsigned int  bufSndSz; //default buffer size for sending packet
     unsigned int  bufRcvSz; //default buffer size for receiving packet
-    unsigned int  maxPckSz; //maximum allowwed packet size = 32767
+    unsigned int  maxPckSz; //maximum allowed packet size = 32767
 } ConnectParms;
 
 extern const ConnectParms _ConnectParms_DFLT;
@@ -68,7 +68,7 @@ public:
     //Returns false if no data was red from socket
     bool    process(void);
     //passes Connect exception to connect listeners
-    void    handleConnectError(bool fatal/* = false*/);
+    void    handleConnectError(bool fatal = false);
 
 protected:
     void setException(const char * msg, int err_code = 0);
