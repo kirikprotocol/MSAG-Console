@@ -35,7 +35,7 @@
         </script>
         <div class=page_subtitle>Status log</div>
         <sm:scrolling columns="time, userLogin, category, message" names="time, user, category, description"
-                      widths="20,30,20,40"/>
+                      widths="20,10,30,40"/>
         <div class=page_subtitle>&nbsp;</div>
     </jsp:body>
 </sm:page>
