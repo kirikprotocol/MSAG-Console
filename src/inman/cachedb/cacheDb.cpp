@@ -161,29 +161,29 @@ bool DBAbonentProvider::hasListeners(AbonentId & ab_number)
 //Notifies query listeners and releases query.
 void DBAbonentProvider::releaseQuery(AbonentQuery * query)
 {
+    MutexGuard guard(qrsGuard);
     AbonentId       ab_number = query->getAbonent();
     AbonentBillType ab_type = query->getAbonentType();
-    QueryCBList     cb_list;
+    CachedQuery *   ab_rec = qryCache.GetPtr(ab_number.getSignals());
 
-    {
-        MutexGuard guard(qrsGuard);
-        CachedQuery * ab_rec = qryCache.GetPtr(ab_number.getSignals());
-        if (ab_rec) {
-            if (ab_rec->cbList.size())
-                cb_list = ab_rec->cbList;
-            qryCache.Delete(ab_number.getSignals());
+    if (ab_rec) {
+        if (ab_rec->cbList.size()) { //query wasn't cancelled
+            if (cache) //update cache
+                cache->setAbonentInfo(ab_number, ab_type);
+            //notify listeners
+            for (QueryCBList::iterator it = ab_rec->cbList.begin();
+                                        it != ab_rec->cbList.end(); it++)
+                (*it)->onAbonentQueried(ab_number, ab_type);
         } else
             smsc_log_debug(logger, "AbProvider: no listeners for query[%u:%lu](%s)",
                            query->getId(), query->Usage(), ab_number.getSignals());
-        qryPool.push_back(query);
-    }
 
-    if (cache) //update cache
-        cache->setAbonentInfo(ab_number, ab_type);
-    //notify listeners (if any)
-    for (QueryCBList::iterator it = cb_list.begin(); it != cb_list.end(); it++) {
-        (*it)->onAbonentQueried(ab_number, ab_type);
-    }
+        qryCache.Delete(ab_number.getSignals());
+    } else
+        smsc_log_warn(logger, "AbProvider: not in cache query[%u:%lu](%s)",
+                       query->getId(), query->Usage(), ab_number.getSignals());
+
+    qryPool.push_back(query);
     smsc_log_debug(logger, "AbProvider: query[%u:%lu](%s) is finished",
                    query->getId(), query->Usage(), ab_number.getSignals());
     return;
