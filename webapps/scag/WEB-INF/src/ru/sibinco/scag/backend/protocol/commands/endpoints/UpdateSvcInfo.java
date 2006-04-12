@@ -17,7 +17,7 @@ import ru.sibinco.scag.backend.endpoints.svc.Svc;
 public class UpdateSvcInfo extends SvcCommand {
 
     public UpdateSvcInfo(final Svc svc) throws SibincoException {
-        super("updateSmeInfo", "file:///command_gw.dtd");
+        super("updateSmeInfo", "command_gw.dtd");
         fillParams(svc);
     }
 }

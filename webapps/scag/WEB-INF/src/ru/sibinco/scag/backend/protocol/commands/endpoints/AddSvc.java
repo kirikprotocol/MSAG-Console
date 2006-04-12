@@ -17,7 +17,7 @@ import ru.sibinco.scag.backend.endpoints.svc.Svc;
 public class AddSvc extends SvcCommand{
 
     public AddSvc(final Svc svc) throws SibincoException {
-        super("addSme", "file:///command_gw.dtd");
+        super("addSme", "command_gw.dtd");
         fillParams(svc);
     }
 }

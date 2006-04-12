@@ -17,7 +17,7 @@ import ru.sibinco.lib.SibincoException;
 public class UpdateCenter  extends CenterCommand{
 
     public UpdateCenter(final Center center) throws SibincoException {
-        super("updateSmsc", "file:///command_gw.dtd");
+        super("updateSmsc", "command_gw.dtd");
         fillParams(center);
     }
 }

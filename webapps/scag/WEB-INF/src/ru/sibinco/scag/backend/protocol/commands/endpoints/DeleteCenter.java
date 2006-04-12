@@ -17,7 +17,7 @@ import ru.sibinco.scag.backend.daemon.Command;
  */
 public class DeleteCenter extends Command {
     public DeleteCenter(final Center center) throws SibincoException {
-        super("deleteSmsc", "file:///command_gw.dtd");
+        super("deleteSmsc", "command_gw.dtd");
         createStringParam("systemId", center.getId());
         createStringParam("bindSystemId", center.getBindSystemId());
         createStringParam("bindPassword", center.getBindPassword());

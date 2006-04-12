@@ -18,7 +18,7 @@ public class DeleteSvc extends Command
 {
   public DeleteSvc(final String svcId) throws SibincoException
   {
-    super("deleteSme", "file:///command_gw.dtd");
+    super("deleteSme", "command_gw.dtd");
     createStringParam("systemId", svcId);
   }
 }

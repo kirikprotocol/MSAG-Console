@@ -12,7 +12,7 @@ public class Apply extends Command {
     private final String applyTarget;
 
     public Apply(final String applyTarget) throws SibincoException {
-        super("apply", "file:///command_gw.dtd");
+        super("apply", "command_gw.dtd");
         this.applyTarget = applyTarget;
         createStringParam("subj", this.applyTarget);
     }

@@ -17,7 +17,7 @@ import ru.sibinco.scag.backend.endpoints.centers.Center;
 public class AddCenter  extends CenterCommand{
 
     public AddCenter(final Center center) throws SibincoException {
-        super("addSmsc", "file:///command_gw.dtd");
+        super("addSmsc", "command_gw.dtd");
         fillParams(center);
     }
 }
