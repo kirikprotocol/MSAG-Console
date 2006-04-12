@@ -25,6 +25,7 @@ void INManComm::Init(const char* argHost,int argPort)
 {
   host=argHost;
   port=argPort;
+  smsc::inman::interaction::SerializerInap::getInstance();
   if(socket->Init(host.c_str(),port,0)==-1)
   {
     throw smsc::util::Exception("Failed to resolve %s:%d",host.c_str(),port);
