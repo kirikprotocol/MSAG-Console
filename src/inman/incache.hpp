@@ -28,6 +28,8 @@ enum { MAX_ABONENT_ID_LEN =  11 }; //only isdn international numbers supported
 typedef enum { btUnknown = 0, btPostpaid, btPrepaid 
 } AbonentBillType;
 
+extern const char * _sabBillType[];
+
 class AbonentCacheITF {
 public:
     virtual AbonentBillType getAbonentInfo(AbonentId & ab_number) = 0;

@@ -1,21 +1,17 @@
 static char const ident[] = "$Id$";
 #include <assert.h>
-#include <stdexcept>
 
 #include "service.hpp"
-
 using smsc::inman::interaction::ChargeSmsResult;
 using smsc::inman::interaction::CHARGE_SMS_TAG;
 using smsc::inman::interaction::CHARGE_SMS_RESULT_TAG;
 using smsc::inman::interaction::DELIVERY_SMS_RESULT_TAG;
 using smsc::inman::BILL_MODE;
-
 using smsc::inman::comp::EventReportSMSArg;
+using smsc::inman::cache::_sabBillType;
 
 namespace smsc  {
 namespace inman {
-
-static const char * _sabType[] = {"Unknown", "Postpaid", "Prepaid" };
 
 /* ************************************************************************** *
  * class BillingService implementation:
@@ -418,7 +414,7 @@ void Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
 void Billing::ChargeAbonent(AbonentBillType ab_type)
 {
     smsc_log_debug(logger, "Billing[%u.%u]: charging, abonent type: %s (%u)",
-                    _bconn->bConnId(), _bId, _sabType[ab_type], (unsigned)ab_type);
+                    _bconn->bConnId(), _bId, _sabBillType[ab_type], (unsigned)ab_type);
 
     abBillType = ab_type;
     if ((ab_type == smsc::inman::cache::btPostpaid)
@@ -548,7 +544,7 @@ void Billing::onContinueSMS(uint32_t inmanErr /* = 0*/)
     smsc_log_info(logger,
             "Billing[%u.%u]: <-- CHARGING_POSSIBLE (via %s), abonent(%s) type: %s (%u)",
             _bconn->bConnId(), _bId, postpaidBill ? "CDR" : "SCF",
-            abNumber.getSignals(), _sabType[abBillType], (unsigned)abBillType);
+            abNumber.getSignals(), _sabBillType[abBillType], (unsigned)abBillType);
 
     BillAction  action = Billing::doCont;
     {
@@ -601,7 +597,7 @@ void Billing::onReleaseSMS(ReleaseSMSArg* arg)
             smsc_log_info(logger,
                 "Billing[%u.%u]: <-- CHARGING_POSSIBLE (via CDR), abonent(%s) type: %s (%u)",
                 _bconn->bConnId(), _bId, abNumber.getSignals(),
-                _sabType[abBillType], (unsigned)abBillType);
+                _sabBillType[abBillType], (unsigned)abBillType);
             state = Billing::bilContinued;
             delete inap;
             inap = NULL;
@@ -610,7 +606,7 @@ void Billing::onReleaseSMS(ReleaseSMSArg* arg)
             smsc_log_info(logger,
                 "Billing[%u.%u]: <-- CHARGING_NOT_POSSIBLE (code %u), abonent(%s) type: %s (%u)",
                 _bconn->bConnId(), _bId, scfErr, abNumber.getSignals(),
-                _sabType[abBillType], (unsigned)abBillType);
+                _sabBillType[abBillType], (unsigned)abBillType);
             state = Billing::bilReleased;
         }
 

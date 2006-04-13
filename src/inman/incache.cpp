@@ -8,6 +8,9 @@ static const char ident[] = "$Id$";
 namespace smsc {
 namespace inman {
 namespace cache {
+
+const char * _sabBillType[] = {"Unknown", "Postpaid", "Prepaid" };
+
 /* ************************************************************************** *
  * class AbonentCache implementation:
  * ************************************************************************** */
