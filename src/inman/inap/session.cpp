@@ -17,7 +17,7 @@ namespace inap  {
 /////////////////////////////////////////////////////////////////////////////////////
 SSNSession::SSNSession(UCHAR_T ownssn, Logger * uselog/* = NULL*/)
     : logger(uselog), SSN(ownssn), state(ssnIdle)
-    , lastDlgId(TCAP_DIALOG_MIN_ID), ac_idx(0)
+    , lastDlgId(TCAP_DIALOG_MIN_ID), ac_idx(ACOID::id_ac_NOT_AN_OID)
 {
     locAddr.addrLen = rmtAddr.addrLen = 0;
     if (!uselog)
@@ -25,7 +25,7 @@ SSNSession::SSNSession(UCHAR_T ownssn, Logger * uselog/* = NULL*/)
 }
 
 void SSNSession::init(const char* own_addr, /*UCHAR_T rmt_ssn,*/
-                    const char* rmt_addr, unsigned dialog_ac_idx)
+                    const char* rmt_addr, ACOID::DefinedOIDidx dialog_ac_idx)
 {
     fillAddress(&locAddr, own_addr, SSN);
     fillAddress(&rmtAddr, rmt_addr, SSN /*rmt_ssn*/);

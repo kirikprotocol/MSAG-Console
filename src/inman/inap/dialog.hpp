@@ -12,9 +12,12 @@
 #include "inman/inap/invoke.hpp"
 #include "inman/inap/results.hpp"
 #include "inman/common/errors.hpp"
-
+#include "inman/comp/acdefs.hpp"
+using smsc::ac::ACOID;
 using smsc::logger::Logger;
 using smsc::inman::common::CustomException;
+
+
 
 namespace smsc {
 namespace inman {
@@ -37,13 +40,11 @@ public:
         dlgIdle = 0, dlgInited, dlgContinued, dlgConfirmed, dlgEnded
     } DialogState;
 
-    Dialog(USHORT_T dlgId, unsigned dialog_ac_idx, const SCCP_ADDRESS_T & loc_addr,
+    Dialog(USHORT_T dlgId, ACOID::DefinedOIDidx dialog_ac_idx, const SCCP_ADDRESS_T & loc_addr,
            const SCCP_ADDRESS_T & rmt_addr, Logger * uselog = NULL);
     virtual ~Dialog();
     //reinitializes Dialog to be reused with other id
     void reset(USHORT_T new_id);
-//    void reset(USHORT_T new_id, unsigned dialog_ac_idx,
-//               const SCCP_ADDRESS_T & loc_addr, const SCCP_ADDRESS_T & rmt_addr);
 
     void addListener(DialogListener* pListener);
     void removeListener(DialogListener* pListener);
@@ -110,7 +111,6 @@ protected:
     SCCP_ADDRESS_T  ownAddr;
     SCCP_ADDRESS_T  rmtAddr;
     UCHAR_T         dSSN;   //SubSystemNumber dialog uses
-    unsigned        _ac_idx; //ApplicationContext index, see acdefs.hpp
     APP_CONTEXT_T   ac;
     USHORT_T        _dId;
     USHORT_T        _timeout;
@@ -119,6 +119,7 @@ protected:
     UCHAR_T         _lastInvId;
     Logger*         logger;
     DialogState     _state;
+    ACOID::DefinedOIDidx   _ac_idx; //ApplicationContext index, see acdefs.hpp
 };
 
 } //inap

@@ -7,6 +7,9 @@ static char const ident[] = "$Id$";
 #include <string>
 
 #include "version.hpp"
+#include "inman/comp/comfactory.hpp"
+using smsc::inman::comp::initCAP3SMSComponents;
+
 #include "service.hpp"
 #include "util/config/ConfigView.h"
 #include "util/mirrorfile/mirrorfile.h"
@@ -21,7 +24,21 @@ using smsc::db::DataSourceFactory;
 using smsc::inman::cache::db::DBSourceCFG;
 using smsc::inman::cache::db::DBAbonentProvider;
 
-//using smsc::inman::BillPolicy;
+namespace smsc {
+  namespace inman {
+    namespace inap {
+        Logger* inapLogger;
+        extern Logger * _EINSS7_logger_DFLT;
+    } //inap
+  }
+};
+using smsc::inman::inap::inapLogger;
+using smsc::inman::inap::_EINSS7_logger_DFLT;
+
+using smsc::inman::Service;
+using smsc::inman::InService_CFG;
+using smsc::util::config::Manager;
+using smsc::util::config::ConfigException;
 
 static const unsigned int _in_CFG_DFLT_CLIENT_CONNS = 3;
 static const long _in_CFG_MIN_BILLING_INTERVAL = 10; //in seconds
@@ -35,28 +52,11 @@ static const long _in_CFG_DFLT_CACHE_INTERVAL = 1440;
 static const int  _in_CFG_DFLT_CACHE_RECORDS = 10000;
 #define RP_MO_SM_transfer_rejected 21       //3GPP TS 24.011 Annex E-2
 
-namespace smsc {
-  namespace inman {
-    namespace inap {
-        Logger* inapLogger;
-        extern Logger * _EINSS7_logger_DFLT;
-    }
-  }
-};
-using smsc::inman::inap::inapLogger;
-using smsc::inman::inap::_EINSS7_logger_DFLT;
-
-using smsc::inman::Service;
-using smsc::inman::InService_CFG;
-using smsc::util::config::Manager;
-using smsc::util::config::ConfigException;
-
-
 static char     _runService = 0;
 static Service* g_pService = 0;
 
 
-extern "C" static void sighandler( int signal )
+extern "C" static void sighandler(int signal)
 {
     _runService = 0;
 }
@@ -422,6 +422,10 @@ int main(int argc, char** argv)
         smsc_log_error(inapLogger, "Configuration invalid. Exiting.");
         exit(-1);
     }
+    //INman uses the CAP3SMS application context for interaction with IN-point
+    assert(
+        ApplicationContextFactory::Init(ACOID::id_ac_cap3_sms_AC, initCAP3SMSComponents)/*;*/
+    );
 
     try {
         if (cfg.dbProvPrm) {

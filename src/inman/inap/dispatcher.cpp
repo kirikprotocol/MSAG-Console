@@ -363,7 +363,7 @@ bool TCAPDispatcher::confirmSSN(UCHAR_T ssn, UCHAR_T bindResult)
 
 //Opens or reinitializes SSNSession
 SSNSession* TCAPDispatcher::openSession(UCHAR_T ssn, const char* own_addr, /*UCHAR_T rmt_ssn, */
-                                     const char* rmt_addr, unsigned dialog_ac_idx)
+                                     const char* rmt_addr, ACOID::DefinedOIDidx dialog_ac_idx)
 {
     SSNSession* pSession = findSession(ssn);
     if (!pSession) {

@@ -5,7 +5,6 @@
 #define __SMSC_INMAN_INAP_INAP__
 
 #include <map>
-#include "inman/comp/acdefs.hpp"
 #include "inman/inap/session.hpp"
 #include "inman/inap/dialog.hpp"
 #include "inman/comp/comps.hpp"

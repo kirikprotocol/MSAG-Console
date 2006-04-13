@@ -2,25 +2,25 @@
 #ifndef __SMSC_INMAN_COMP_COMFACTORY__
 #define __SMSC_INMAN_COMP_COMFACTORY__
 
-#include <map>
-
-#include "inman/comp/comps.hpp"
 #include "inman/comp/acdefs.hpp"
 #include "inman/comp/operfactory.hpp"
-#include "logger/Logger.h"
 
+using smsc::ac::ACOID;
+using smsc::inman::comp::OperationFactory;
+using smsc::inman::comp::OperationFactoryInstanceT;
+using smsc::inman::comp::ApplicationContextFactory;
 
 namespace smsc {
 namespace inman {
 namespace comp {
 
-typedef smsc::ac::CAP3SMSFactory  ComponentFactory;
+typedef OperationFactoryInstanceT <ACOID::id_ac_cap3_sms_AC> CAP3SMSFactory;
 
 OperationFactory * initCAP3SMSComponents(OperationFactory * fact);
 
+} //comp
+} //inman
+} //smsc
 
-}
-}
-}
+#endif /* __SMSC_INMAN_COMP_COMFACTORY__ */
 
-#endif

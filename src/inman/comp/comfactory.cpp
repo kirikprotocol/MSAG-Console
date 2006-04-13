@@ -1,12 +1,10 @@
 static char const ident[] = "$Id$";
+
 #include "comfactory.hpp"
+#include "inman/comp/comps.hpp"
 
-using smsc::inman::comp::InapOpCode;
-
-using smsc::inman::comp::CompFactory;
-using smsc::inman::comp::OperationFactory;
-using smsc::inman::comp::OperationFactoryInstanceT;
-using smsc::inman::comp::ApplicationContextFactory;
+//using smsc::inman::comp::InapOpCode;
+//using smsc::inman::comp::CompFactory;
 
 namespace smsc {
 namespace inman {
@@ -15,10 +13,9 @@ namespace comp {
 OperationFactory * initCAP3SMSComponents(OperationFactory * fact)
 {
     if (!fact) { //called from ApplicationContextFactory::getFactory()
-        //getInstance() calls FIF in turn
-        fact = smsc::ac::CAP3SMSFactory::getInstance();
+        fact = CAP3SMSFactory::getInstance();   //getInstance() calls FIF in turn
     } else {
-        fact->setLogger(Logger::getInstance("smsc.inman.comp.ComponentFactory"));
+        fact->setLogger(Logger::getInstance("smsc.inman.comp.CAP3SMSFactory"));
         fact->registerArg(InapOpCode::RequestReportSMSEvent,
                 new CompFactory::ProducerT<smsc::inman::comp::RequestReportSMSEventArg>() );
         fact->registerArg(InapOpCode::ReleaseSMS,

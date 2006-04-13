@@ -6,10 +6,13 @@
 #include "logger/Logger.h"
 #include "compdefs.hpp"
 #include "acdefs.hpp"
+#include "inman/comp/operfactory.hpp"
 
 using smsc::logger::Logger;
 using smsc::inman::comp::Component;
 using smsc::inman::comp::OperationFactory;
+using smsc::inman::comp::OperationFactoryInstanceT;
+using smsc::ac::ACOID;
 
 #define MAP_MAX_USSD_StringLength   160 //encoded or GSM 7bit packed
 #define MAX_USSD_TEXT8_LENGTH        90
@@ -48,6 +51,7 @@ struct ERR_ProcessUSS_Request {
         unexpectedDataValue = 36, unknownAlphabet = 71
     };
 };
+typedef OperationFactoryInstanceT <ACOID::id_ac_map_networkUnstructuredSs_v2> MAPUSS2Factory;
 //FactoryInitFunction declaration
 OperationFactory * initMAPUSS2Components(OperationFactory * fact);
 

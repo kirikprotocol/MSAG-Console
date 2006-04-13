@@ -1,26 +1,21 @@
 static char const ident[] = "$Id$";
 
 #include <stdarg.h>
-#include "inman/comp/acdefs.hpp"
 #include "inman/comp/operfactory.hpp"
 
-
 using smsc::inman::comp::OperationFactory;
+/*
+//add here declarations of FactoryInitFunctions for preinitialized operation factories
 
-//add here declarations for FactoryInitFunctions
 namespace smsc { namespace inman {
-
 namespace comp {
 OperationFactory * initCAP3SMSComponents(OperationFactory * fact);
 } //comp
-
 namespace usscomp {
 OperationFactory * initMAPUSS2Components(OperationFactory * fact);
 } //usscomp
-
-} //inman 
-} //smsc
-
+}} //smsc.inman 
+*/
 
 namespace smsc {
 namespace inman {
@@ -34,16 +29,22 @@ namespace comp {
  * ************************************************************************** */
 ApplicationContextFactory::ApplicationContextFactory()
 {
-//calling rule:
-//   markFIF( my_id_ac_idx, FactoryInitFunc);
-    markFIF(id_ac_cap3_sms_AC, smsc::inman::comp::initCAP3SMSComponents);
-    markFIF(id_ac_map_networkUnstructuredSs_v2, smsc::inman::usscomp::initMAPUSS2Components);
+//add here initialization of predefined factories:
+//    markFIF(id_ac_cap3_sms_AC, smsc::inman::comp::initCAP3SMSComponents);
+//    markFIF(id_ac_map_networkUnstructuredSs_v2, smsc::inman::usscomp::initMAPUSS2Components);
 }
 
 ApplicationContextFactory* ApplicationContextFactory::getInstance()
 {
     static ApplicationContextFactory	ACFact;
     return &ACFact;
+}
+
+OperationFactory* ApplicationContextFactory::Init(unsigned ac_idx, FactoryInitFunc fif)
+{
+    ApplicationContextFactory * acf = ApplicationContextFactory::getInstance();
+    acf->markFIF(ac_idx, fif);
+    return acf->getFactory(ac_idx);
 }
 
 void ApplicationContextFactory::markFIF(unsigned ac_idx, FactoryInitFunc fif)

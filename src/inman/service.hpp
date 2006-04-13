@@ -5,6 +5,9 @@
 
 #include <map>
 
+#include "inman/comp/acdefs.hpp"
+using smsc::ac::ACOID;
+
 #include "inman/inap/dispatcher.hpp"
 #include "inman/interaction/server.hpp"
 #include "inman/billing.hpp"

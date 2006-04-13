@@ -1,51 +1,70 @@
 #ident "$Id$"
 /*
+NOTE: ApplicationContextFactory is not a threadsafe one!!!
+
 USAGE EXAMPLE: see inman/tstfactr.cpp
 
 1) add to acdefs.hpp application context index, for example:
 
-  #define id_ac_cap4_sms_AC  3U
+  #define id_ac_sample_v1   	4U
 2)  
-  add to acdefs.cpp::_OIDS[] encoded form of new AC OID 
+  add to acdefs.cpp::_OIDS[] encoded form of new AC OID
 
 3) implement the function type of FactoryInitFunc, that registers components in factory,
-   by following template (for ex.):
+   by following template:
+   
+//following operations defined in id_ac_sample_v1
+struct SampleAC_OpCode {
+    enum {
+	processRequest = 99
+    };
+};
 
-OperationFactory * initCAP4SMSComponents(OperationFactory * fact)
+//errors defined for  ProcessRequest OPERATION
+struct ERR_ProcessRequest {
+    enum {
+        callBarred, dataMissing, systemFailure,
+        unexpectedDataValue, unknownAlphabet         
+    };
+}
+
+OperationFactory * initSampleAComponents(OperationFactory * fact)
 {
     if (!fact) {
-        fact = smsc::inman::comp::OperationFactoryInstanceT<id_ac_cap4_sms_AC>::getInstance();
+        fact = smsc::inman::comp::OperationFactoryInstanceT<id_ac_sample_v1>::getInstance();
     } else {
-        fact->setLogger(Logger::getInstance("smsc.inman.comp.CAP4SMSFactory"));
-        fact->registerArg(InapOpCode::RequestReportSMSEvent,
-	    new CompFactory::ProducerT<smsc::inman::comp::RequestReportSMSEventArg>() );
-        // register other args ...
+        fact->setLogger(Logger::getInstance("smsc.inman.comp.SampleACFactory"));
+
+        //Register OPERATIONs: Argument type, Result type, Errors
+        fact->registerArg(SampleAC_OpCode::processRequest,
+	        new CompFactory::ProducerT<ProcessRequestArg>() );
+        fact->registerRes(SampleAC_OpCode::processRequest,
+	        new CompFactory::ProducerT<ProcessRequestRes>() );
+        fact->bindErrors(SampleAC_OpCode::processRequest, 5, 
+                         ERR_ProcessRequest::callBarred,
+                         ERR_ProcessRequest::dataMissing,
+                         ERR_ProcessRequest::systemFailure,
+                         ERR_ProcessRequest::unexpectedDataValue,
+                         ERR_ProcessRequest::unknownAlphabet
+                         );
+        //...
     }
     return fact;
 }    
 
-4)
-  a) [dynamical instantiation]
-   create factory instance by executing:
+4) The operation factory instance may be created either by executing:
 
-OperationFactoryInstanceT <id_ac_cap4_sms_AC>::getInstance()->Init(initCAP4SMSComponents);
+OperationFactoryInstanceT <id_ac_sample_v1>::getInstance()->Init(initSampleAComponents);
+    or by
+ApplicationContextFactory::Init(id_ac_sample_v1, initSampleAComponents);
 
-  b) [static instantiation]
-   add following line to ApplicationContextFactory constructor in operfactory.cpp
-
-   markFIF(id_ac_cap4_sms_AC, initCAP4SMSComponents);
-   
-   create factory instance by executing:
-
-   ApplicationContextFactory::getFactory(id_ac_cap4_sms_AC);
-      or 
-   OperationFactoryInstanceT <id_ac_cap4_sms_AC>::getInstance();
-
-4) now you may get components by calling
+5) The OPERATION components (arguments/results) may be created by calling
  either:
     OperationFactoryInstanceT <id_ac_cap4_sms_AC>::getInstance()->createArg(opcode);
+    OperationFactoryInstanceT <id_ac_cap4_sms_AC>::getInstance()->createRes(opcode);
  or:
     ApplicationContextFactory::getFactory(id_ac_cap4_sms_AC)->createArg(opcode);
+    ApplicationContextFactory::getFactory(id_ac_cap4_sms_AC)->createRes(opcode);
 */
 
 
@@ -68,8 +87,7 @@ namespace comp {
 typedef smsc::inman::common::FactoryT<unsigned, Component>  CompFactory; 
 typedef smsc::inman::common::FactoryT<unsigned, Component>::Producer  CompProducer; 
 
-class OperationFactory
-{
+class OperationFactory {
 public:
     //constructor registers factory in AppCtxFactory
     OperationFactory(unsigned ac_idx);
@@ -94,12 +112,12 @@ public:
     void registerErr(unsigned errcode, CompProducer* alloc);
     //binds error codes to OPERATION
     void OperationFactory::bindErrors(unsigned opcode, unsigned errNum, ...);
-
     void setLogger(Logger * logInst);
 
+protected:
     typedef std::vector<unsigned> OPERATION_ERRORS;
     typedef std::map<unsigned, OPERATION_ERRORS*> OPER_ERRORS_MAP;
-protected:
+
     CompFactory     argPlant; 
     CompFactory     resPlant; 
     CompFactory     errPlant; 
@@ -112,8 +130,7 @@ protected:
 typedef OperationFactory * (*FactoryInitFunc)(OperationFactory * fact);
 
 template < unsigned ac_idx >
-class OperationFactoryInstanceT : public OperationFactory
-{
+class OperationFactoryInstanceT : public OperationFactory {
 public:
     // this function is for dynamical factory initialization
     static void Init(FactoryInitFunc fif)
@@ -139,25 +156,34 @@ protected:
 };
 
 
-class ApplicationContextFactory
-{
+class ApplicationContextFactory {
 public:
     ApplicationContextFactory(); 
     static ApplicationContextFactory* getInstance();
 
-    typedef std::map<unsigned, OperationFactory*> AppCtxFactMap;
-    typedef std::map<unsigned, FactoryInitFunc>   FIFMap;
-
-    void markFactory(unsigned ac_idx, OperationFactory* fact);
-    void unmarkFactory(unsigned ac_idx);
-    OperationFactory* findFactory(unsigned ac_idx);
-
+    //creates, initializes and registers the Operation factory
+    static OperationFactory* Init(unsigned ac_idx, FactoryInitFunc fif);
+    //returns the operation factory for given AC, the factory should be
+    //initialized by preceeding call to ApplicationContextFactory::Init()
     static OperationFactory* getFactory(unsigned ac_idx);
 
-    void markFIF(unsigned ac_idx, FactoryInitFunc fif);
+    //searches for the FactoryInitializationFunction for given AC
     FactoryInitFunc findFIF(unsigned ac_idx);
 
 protected:
+    friend class OperationFactory;
+    //registers FactoryInitializationFunction in ApplicationContextFactory
+    void markFIF(unsigned ac_idx, FactoryInitFunc fif);
+    //registers OperationFactory in ApplicationContextFactory
+    void markFactory(unsigned ac_idx, OperationFactory* fact);
+    void unmarkFactory(unsigned ac_idx);
+
+private:
+    typedef std::map<unsigned, OperationFactory*> AppCtxFactMap;
+    typedef std::map<unsigned, FactoryInitFunc>   FIFMap;
+    //searches the instantiated operation factories for given AC
+    OperationFactory* findFactory(unsigned ac_idx);
+
     AppCtxFactMap    plants;
     FIFMap	     fifs;
     Logger*	     acLogger;

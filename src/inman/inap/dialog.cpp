@@ -1,21 +1,17 @@
 static char const ident[] = "$Id$";
 
 #include <assert.h>
-#include <string>
-#include <stdexcept>
 #include <memory>
 
-#include "inman/inap/inss7util.hpp"
 #include "inman/inap/dialog.hpp"
 #include "inman/inap/dispatcher.hpp"
-#include "inman/inap/session.hpp"
-#include "inman/comp/acdefs.hpp"
-#include "inman/common/util.hpp"
+#include "inman/comp/operfactory.hpp"
 
 using smsc::inman::common::format;
 using smsc::inman::common::dump;
 using smsc::inman::comp::ApplicationContextFactory;
 using smsc::inman::comp::OperationFactory;
+
 
 namespace smsc  {
 namespace inman {
@@ -24,7 +20,7 @@ namespace inap  {
 /////////////////////////////////////////////////////////////////////////////////////
 // Dialog class implementation
 /////////////////////////////////////////////////////////////////////////////////////
-Dialog::Dialog(USHORT_T dlgId, unsigned dialog_ac_idx, const SCCP_ADDRESS_T & loc_addr,
+Dialog::Dialog(USHORT_T dlgId, ACOID::DefinedOIDidx dialog_ac_idx, const SCCP_ADDRESS_T & loc_addr,
                 const SCCP_ADDRESS_T & rmt_addr, Logger * uselog/* = NULL*/)
   : logger(uselog), _dId(dlgId),  ownAddr(loc_addr), rmtAddr(rmt_addr)
   , qSrvc(EINSS7_I97TCAP_QLT_BOTH), priority(EINSS7_I97TCAP_PRI_HIGH_0)
@@ -34,7 +30,9 @@ Dialog::Dialog(USHORT_T dlgId, unsigned dialog_ac_idx, const SCCP_ADDRESS_T & lo
     dSSN = ownAddr.addr[1];
     if (!logger)
         logger = Logger::getInstance("smsc.inman.inap.Dialog");
-    ac = *smsc::ac::ACOID::OIDbyIdx(dialog_ac_idx);
+    APP_CONTEXT_T * acPtr = (APP_CONTEXT_T *)ACOID::OIDbyIdx(dialog_ac_idx);
+    assert(acPtr);
+    ac = *acPtr;
 }
 
 Dialog::~Dialog()

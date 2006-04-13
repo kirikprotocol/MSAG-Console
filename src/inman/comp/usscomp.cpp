@@ -9,7 +9,7 @@ static char const ident[] = "$Id$";
 
 
 using smsc::inman::comp::CompFactory;
-using smsc::inman::comp::OperationFactory;
+//using smsc::inman::comp::OperationFactory;
 
 using smsc::inman::common::format;
 using smsc::inman::comp::smsc_log_component;
@@ -28,8 +28,7 @@ namespace usscomp {
 OperationFactory * initMAPUSS2Components(OperationFactory * fact)
 {
     if (!fact) { //called from ApplicationContextFactory::getFactory()
-        //getInstance() calls FIF in turn
-        fact = smsc::ac::MAPUSS2Factory::getInstance();
+        fact = MAPUSS2Factory::getInstance(); //getInstance() calls FIF in turn
     } else {
         fact->setLogger(Logger::getInstance("smsc.inman.usscomp.ComponentFactory"));
         fact->registerArg(MAPUSS_OpCode::processUSS_Request,

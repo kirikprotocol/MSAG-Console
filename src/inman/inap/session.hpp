@@ -9,7 +9,8 @@
 
 #include "inman/common/types.hpp"
 #include "logger/Logger.h"
-
+#include "inman/comp/acdefs.hpp"
+using smsc::ac::ACOID;
 using smsc::logger::Logger;
 
 namespace smsc {
@@ -29,7 +30,7 @@ public:
     ~SSNSession();
 
     void    init(const char* own_addr, /*UCHAR_T rmt_ssn,*/
-                    const char* rmt_addr, unsigned dialog_ac_idx);
+                    const char* rmt_addr, ACOID::DefinedOIDidx dialog_ac_idx);
 
     SSNState getState(void) const { return state; }
 
@@ -60,7 +61,7 @@ private:
     UCHAR_T         SSN;
     SCCP_ADDRESS_T  locAddr;
     SCCP_ADDRESS_T  rmtAddr;
-    unsigned        ac_idx; //default APPLICATION-CONTEXT index for dialogs, see acdefs.hpp
+    ACOID::DefinedOIDidx  ac_idx; //default APPLICATION-CONTEXT index for dialogs, see acdefs.hpp
 
     SSNState        state;
     USHORT_T        lastDlgId;

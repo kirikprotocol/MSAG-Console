@@ -287,7 +287,7 @@ SSNSession * Billing::activateSSN(void)
         return (_ss7Sess = NULL);
     if (!(_ss7Sess = disp->findSession(_cfg.ssn)))
         _ss7Sess = disp->openSession(_cfg.ssn, _cfg.ssf_addr,
-                                     _cfg.scf_addr, id_ac_cap3_sms_AC);
+                                     _cfg.scf_addr, ACOID::id_ac_cap3_sms_AC);
     return _ss7Sess;
 }
 
