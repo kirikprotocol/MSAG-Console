@@ -8,6 +8,8 @@
 namespace scag { namespace transport { namespace http
 {
 
+Logger* scag::transport::http::httpLogger = 0;
+
 HttpManager::HttpManager() : scags(*this),
     readers(*this), writers(*this), acceptor(*this)
 {
@@ -21,6 +23,8 @@ void HttpManager::init(HttpProcessor& p, const HttpManagerConfig& _cfg)
     writers.init(cfg.writerPoolSize, cfg.writerSockets);    
     scags.init(cfg.scagPoolSize, cfg.scagQueueLimit, p);    
     acceptor.init(cfg.host, cfg.port);
+    
+    httpLogger = Logger::getInstance("scag.http");    
 }
 
 void HttpManager::shutdown()

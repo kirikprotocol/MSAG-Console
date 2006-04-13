@@ -20,7 +20,7 @@ using namespace scag::transport::http;
 
 namespace scag { namespace transport { namespace http 
 {
-    Logger *httpLogger = NULL;
+    //Logger *httpLogger = NULL;
     
     class MyHttpProcessor : public HttpProcessor
     {
@@ -191,7 +191,7 @@ int main() {
     pthread_sigmask(SIG_BLOCK, &set, &oset);
 
     Logger::Init();
-    httpLogger = Logger::getInstance("scag.http");
+    //httpLogger = Logger::getInstance("scag.http");
 
 #if 1
     {
