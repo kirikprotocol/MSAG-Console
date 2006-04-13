@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
 
     atexit(atExitHandler);
 
-    SCAGCommand::TransportTypeHash = SCAGCommand::InitTransportTypeHash();
+//    SCAGCommand::TransportTypeHash = SCAGCommand::InitTransportTypeHash();
 
     try{
         ConfigManager::Init();
