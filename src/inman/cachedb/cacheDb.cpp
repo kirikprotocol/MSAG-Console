@@ -40,6 +40,7 @@ void AbonentQuery::init(const AbonentId & ab_number, unsigned timeout/* = 0*/)
     abType = btUnknown;
     isReleased = isStopping = false;
     timeOut = timeout;
+    usage++;
 }
 
 //This one is called by ThreadPool on Exceute() completion
@@ -54,7 +55,6 @@ int AbonentQuery::Execute(void)
 { 
     {
         MutexGuard tmp(mutex);
-        usage++;
         if (isStopping || !_owner->hasListeners(abonent))
             return 0; //query was cancelled by either QueryManager or ThreadPool
     }
