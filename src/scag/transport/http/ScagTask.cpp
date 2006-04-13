@@ -14,13 +14,18 @@ int ScagTask::Execute()
 {
     HttpContext *cx;
 
+    http_log_debug( "Scag %p started", this );
+
     while (!isStopping) {
-        while ((cx = manager.scags.getFirst()) == NULL) {
+        while (!((cx = manager.scags.getFirst()) || isStopping)) {
             http_log_debug("Scag %p idle", this);
+            manager.scags.taskMon.Lock();
             manager.scags.taskMon.wait();
             manager.scags.taskMon.Unlock();
             http_log_debug("Scag %p notified", this);        
         }
+        if (isStopping)
+	    break;
 
         http_log_debug("Scag %p choosen for context %p", this, cx);
 
@@ -86,11 +91,20 @@ int ScagTask::Execute()
         }
     }
 
-    return 1;
+    http_log_debug( "Scag %p quit", this );
+
+    return 0;
 }
 
 const char* ScagTask::taskName() {
     return "ScagTask";
+}
+
+void ScagTask::stop() {
+    isStopping = true;
+    manager.scags.taskMon.Lock();
+    manager.scags.taskMon.notify();    
+    manager.scags.taskMon.Unlock();
 }
 
 }}}

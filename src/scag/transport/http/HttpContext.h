@@ -1,6 +1,7 @@
 #ifndef SCAG_TRANSPORT_HTTP_CONTEXT
 #define SCAG_TRANSPORT_HTTP_CONTEXT
 
+#include "core/synchronization/Mutex.hpp"
 #include "core/network/Socket.hpp"
 #include "core/buffers/TmpBuf.hpp"
 #include "HttpCommand.h"
@@ -11,6 +12,7 @@ namespace scag { namespace transport { namespace http
 {
 using smsc::core::network::Socket;
 using smsc::core::buffers::TmpBuf;
+using smsc::core::synchronization::Mutex;
 
 enum ActionID {
     NOP = -1,
@@ -34,9 +36,12 @@ public:
         unparsed(DFLT_BUF_SIZE)
     {
         setContext(user, this); 
+        cntMut.Lock();
+        count++;
+        cntMut.Unlock();
     }
 
-    ~HttpContext() {};
+    ~HttpContext();
 
     unsigned int loadUnparsed(char* buf) {
         unsigned int len = unparsed.GetPos();
@@ -68,6 +73,9 @@ public:
     static time_t getTimestamp(Socket* s) {
         return (time_t)s->getData(TIMESTAMP);
     }
+    static unsigned int getCount() {
+	return count;
+    }
     
     TransactionContext &getTransactionContext() {
         return trc;
@@ -89,7 +97,7 @@ public:
         getResponse().fillFakeResponse(status);
     }
     const char *getTaskName() {
-        return "???";//taskName[action];
+        return taskName[action];
     }
 
     HttpRequest &getRequest() {
@@ -116,7 +124,9 @@ protected:
     };
 
     static ActionID actionNext[8];
-    //static const char *taskName[8];
+    static const char *taskName[8];
+    static Mutex cntMut;
+    static unsigned int count;    
 
     TmpBuf<char, DFLT_BUF_SIZE> unparsed;
     TransactionContext trc;

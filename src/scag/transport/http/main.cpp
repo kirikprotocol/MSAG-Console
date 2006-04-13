@@ -9,24 +9,22 @@
 
 #define ICONV_BLOCK_SIZE 32
 
-#define LOG_HEADERS
+//#define LOG_HEADERS
 //#define LOG_CONTENT
 //#define LOG_TEXT
-#define LOG_QUERY
+//#define LOG_QUERY
 
 //void printHex(const char *buffer, long length);
 
 using namespace scag::transport::http;
 
-//namespace scag { namespace transport { namespace http 
-//{
-//    Logger *httpLogger = NULL;
+namespace scag { namespace transport { namespace http 
+{
+    Logger *httpLogger = NULL;
     
     class MyHttpProcessor : public HttpProcessor
     {
     public:
-        virtual void ReloadRoutes() {}
-
         virtual bool processRequest(HttpRequest& request) {        
 #ifdef LOG_HEADERS        
             request.serialize();
@@ -70,14 +68,18 @@ using namespace scag::transport::http;
 
             return true;
         }
-        virtual void statusResponse(HttpResponse& response,
-                bool delivered = true)
+
+        virtual void statusResponse(HttpResponse& response, bool delivered = true)
         {
 #ifdef LOG_HEADERS
             http_log_debug( "Response %s", delivered ? 
                 "delivered" : "not delivered" );
 #endif          
         }
+	virtual void ReloadRoutes()
+	{
+	    // Do nothing
+	}
         
         virtual ~MyHttpProcessor() {
         }
@@ -141,25 +143,41 @@ void MyHttpProcessor::dumpText(HttpCommand &cmd)
     }
 }    
     
-//}}}
+}}}
 
 
 void http_mut_log(char *s, unsigned t, void *p) {
     http_log_debug(s, t, p);
 }
 
-HttpManagerConfig cfg(// = {
+#if 1
+HttpManagerConfig cfg = {
     5,  //int readerSockets;
     5,  //int writerSockets;
     2,  //int readerPoolSize;
     2,  //int writerPoolSize;
     2,  //int scagPoolSize;    
     100,  //int scagQueueLimit;
+    10, //int connectionTimeout;
+    //unsigned int maxHeaderLength;
+    "0.0.0.0",  //const char *host;
+    5000,       //int port;
+};
+#else
+HttpManagerConfig cfg = {
+    1000,  //int readerSockets;
+    1000,  //int writerSockets;
+    5,  //int readerPoolSize;
+    5,  //int writerPoolSize;
+    5,  //int scagPoolSize;    
+    10000,  //int scagQueueLimit;
     20, //int connectionTimeout;
     //unsigned int maxHeaderLength;
     "0.0.0.0",  //const char *host;
-    5000       //int port;
-);
+    5000,       //int port;
+};
+#endif
+
 
 int main() {
     HttpManager mg;
@@ -175,8 +193,7 @@ int main() {
     Logger::Init();
     httpLogger = Logger::getInstance("scag.http");
 
-    smsc_log_debug(httpLogger, "Started");
-#if 0
+#if 1
     {
         Logger::LogLevels levels;
         levels["scag.http"] = Logger::LEVEL_FATAL;
@@ -184,17 +201,21 @@ int main() {
     }
 #endif    
 
+    try {
     mg.init( p, cfg );
-    smsc_log_debug(httpLogger, "Inited");
+    }
+    catch(Exception x) {
+	http_log_error( "Cannot init the HTTP transport: %s", x.what());	
+    }
 
     k = 0;
-#if 1
+#if 0
     do
          //k = getchar();
          sleep(10);
     while (!(k == 'q' || k == 'Q'));
 #else    
-    sleep(30);
+    sleep(60);
 #endif    
 
     mg.shutdown();

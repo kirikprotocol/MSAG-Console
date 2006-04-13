@@ -23,6 +23,7 @@ public:
         return socketCount;
     }
     virtual void registerContext(HttpContext* cx) = 0;    
+    virtual void stop();
 
 protected:
     class HttpMultiplexer : public Multiplexer {

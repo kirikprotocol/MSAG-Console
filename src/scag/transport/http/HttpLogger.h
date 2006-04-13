@@ -12,7 +12,11 @@
 #define http_log_error(...) if (!httpLogger->isErrorEnabled()) ;else httpLogger->log_(smsc::logger::Logger::LEVEL_ERROR, __VA_ARGS__)
 #define http_log_warn(...) if (!httpLogger->isWarnEnabled()) ;else httpLogger->log_(smsc::logger::Logger::LEVEL_WARN, __VA_ARGS__)
 #define http_log_info(...) if (!httpLogger->isInfoEnabled()) ;else httpLogger->log_(smsc::logger::Logger::LEVEL_INFO, __VA_ARGS__)
+#ifdef SMSC_DEBUG
 #define http_log_debug(...) if (!httpLogger->isDebugEnabled()) ;else httpLogger->log_(smsc::logger::Logger::LEVEL_DEBUG, __VA_ARGS__)
+#else
+#define http_log_debug(...)
+#endif // SMSC_DEBUG
 #endif // _WIN32
 
 #else 
@@ -30,9 +34,13 @@
 #define http_log_info(...) {if (httpLogger->isInfoEnabled()){\
     printf(__VA_ARGS__);printf("\n");fflush(stdout);\
     httpLogger->log_(smsc::logger::Logger::LEVEL_INFO, __VA_ARGS__);}}
+#ifdef SMSC_DEBUG
 #define http_log_debug(...) {if (httpLogger->isDebugEnabled()){\
     printf(__VA_ARGS__);printf("\n");fflush(stdout);\
     httpLogger->log_(smsc::logger::Logger::LEVEL_DEBUG, __VA_ARGS__);}}
+#else
+#define http_log_debug(...)
+#endif // SMSC_DEBUG
 
 #endif
 

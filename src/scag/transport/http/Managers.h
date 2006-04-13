@@ -30,6 +30,7 @@ public:
     void init(int maxThreads, int scagQueueLimit, HttpProcessor& p);
     HttpContext* getFirst();
     inline void fitQueueLimit();
+    inline void looseQueueLimit();
 
     EventMonitor taskMon;
 
@@ -111,37 +112,8 @@ struct HttpManagerConfig {
     int scagQueueLimit;
     int connectionTimeout;
     //unsigned int maxHeaderLength;
-    std::string host;
+    const char *host;
     int port;
-
-    HttpManagerConfig(int rs, int ws, int rps, int wps, int sps, int sql, int ct, const std::string h, int p):
-        readerSockets(rs), writerSockets(ws),
-        readerPoolSize(rps),writerPoolSize(wps),
-        scagPoolSize(sps), scagQueueLimit(sql),
-        connectionTimeout(ct), host(h), port(p)
-    {
-    }
-
-    HttpManagerConfig():
-        readerSockets(0), writerSockets(0),
-        readerPoolSize(0),writerPoolSize(0),
-        scagPoolSize(0), scagQueueLimit(0),
-        connectionTimeout(0), host(""), port(0)
-    {
-    }
-
-    HttpManagerConfig(const HttpManagerConfig& cp)
-    {
-        readerSockets = cp.readerSockets;
-        writerSockets = cp.writerSockets;
-        readerPoolSize = cp.readerPoolSize;
-        writerPoolSize = cp.writerPoolSize;
-        scagPoolSize = cp.scagPoolSize;
-        scagQueueLimit = cp.scagQueueLimit;
-        connectionTimeout = cp.connectionTimeout;
-        host = cp.host;
-        port = cp.port;
-    }
 };
 
 class HttpManager {

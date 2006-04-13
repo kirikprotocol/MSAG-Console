@@ -2,11 +2,13 @@
 #define SCAG_TRANSPORT_HTTP_ACCEPTOR
 
 #include "core/threads/Thread.hpp"
+#include "core/network/Socket.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 
 namespace scag { namespace transport { namespace http
 {
 using smsc::core::threads::Thread;
+using smsc::core::network::Socket;
 using smsc::core::synchronization::EventMonitor;
 
 class HttpManager;
@@ -22,12 +24,10 @@ public:
     void init(const char *host, int port);
 
 protected:
-    EventMonitor accMon;
     HttpManager &manager;    
+    Socket masterSocket;
 
 private:
-    const char *host;
-    int port;
     bool isStopping;  
 };
 

@@ -19,6 +19,7 @@ public:
 
     virtual int Execute();
     virtual const char* taskName();
+    virtual void stop();
     
 protected:
     HttpManager &manager;

@@ -106,6 +106,8 @@ int HttpReaderTask::Execute()
     unsigned int i;
     time_t now;    
 
+    http_log_debug( "Reader %p started", this );
+    
     //http_log_debug( "HttpReaderTask::sockMon == %p", &sockMon );
     
     while (!isStopping) {
@@ -225,7 +227,9 @@ int HttpReaderTask::Execute()
         sockMon.Unlock();
     }
     
-    return 1;
+    http_log_debug( "Reader %p quit", this );
+    
+    return 0;
 }
 
 void HttpReaderTask::registerContext(HttpContext* cx)
@@ -235,10 +239,10 @@ void HttpReaderTask::registerContext(HttpContext* cx)
     cx->flags = 0;
     cx->result = 0;
     
-    if (cx->action == READ_REQUEST)
-        s = cx->user;
-    else
+    if (cx->action == READ_RESPONSE)
         s = cx->site;   
+    else        
+        s = cx->user;
 
     HttpContext::updateTimestamp(s, time(NULL));
     
@@ -252,6 +256,8 @@ int HttpWriterTask::Execute()
     char buf[4];
     unsigned int i;
     time_t now;
+
+    http_log_debug( "Writer %p started", this );
 
     //http_log_debug( "HttpWriterTask::sockMon == %p", &sockMon );
     
@@ -426,7 +432,9 @@ int HttpWriterTask::Execute()
         sockMon.Unlock();
     }
     
-    return 1;
+    http_log_debug( "Writer %p quit", this );
+    
+    return 0;
 }
 
 void HttpWriterTask::registerContext(HttpContext* cx)
@@ -482,6 +490,13 @@ void HttpReaderTask::addSocket(Socket* s)
     sockMon.Lock();    
     multiplexer.add(s);
     sockMon.notify();
+    sockMon.Unlock();
+}
+
+void IOTask::stop() {
+    isStopping = true;
+    sockMon.Lock();
+    sockMon.notify();    
     sockMon.Unlock();
 }
 

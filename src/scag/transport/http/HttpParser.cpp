@@ -263,6 +263,7 @@ StatusCode HttpParser::parsePath(std::string &path, HttpRequest& cx)
 {
   const char    *pos = path.c_str(), *mid, *end;
   std::string   str;
+  unsigned int len;
    
   end = strchr(pos, '/');
   if (!end)
@@ -276,22 +277,31 @@ StatusCode HttpParser::parsePath(std::string &path, HttpRequest& cx)
       return ERROR;
   }
 
-  mid = strchr(pos, '_');
-  if (!mid || (mid > end))
+  mid = pos;
+  while (mid <= end && isalnum(*mid))
+    mid++;
+
+  len = mid - pos;
+  if (!(mid <= end && *mid == '_' && 1 <= len && len <= 20))
     return ERROR;
 
-  str.assign(pos, mid - pos);
+  str.assign(pos, len);
   cx.setAbonent(str);
   mid++;
-  str.assign(mid, end - mid);
+  len = end - mid;
+  str.assign(mid, len);
   
   pos = str.c_str();
   while (isdigit(*pos))
     pos++;
-  if (*pos)
+  if (*pos || !(1 <= len && len <= 5))
     return ERROR;
   
-  cx.setUSR(atoi(str.c_str()));
+  len = atoi(str.c_str());
+  if (len > USHRT_MAX)
+    return ERROR;
+  
+  cx.setUSR(len);
 #endif
  
   pos = end + 1;

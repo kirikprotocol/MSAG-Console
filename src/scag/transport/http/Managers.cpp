@@ -8,8 +8,6 @@
 namespace scag { namespace transport { namespace http
 {
 
-Logger* httpLogger;
-
 HttpManager::HttpManager() : scags(*this),
     readers(*this), writers(*this), acceptor(*this)
 {
@@ -17,20 +15,20 @@ HttpManager::HttpManager() : scags(*this),
 
 void HttpManager::init(HttpProcessor& p, const HttpManagerConfig& _cfg)
 {
-    this->cfg = _cfg;
+    memcpy(&this->cfg, &_cfg, sizeof(HttpManagerConfig));
     
-    readers.init(_cfg.readerPoolSize, _cfg.readerSockets);
-    writers.init(_cfg.writerPoolSize, _cfg.writerSockets);    
-    scags.init(_cfg.scagPoolSize, _cfg.scagQueueLimit, p);    
-    acceptor.init(_cfg.host.c_str(), _cfg.port);
+    readers.init(cfg.readerPoolSize, cfg.readerSockets);
+    writers.init(cfg.writerPoolSize, cfg.writerSockets);    
+    scags.init(cfg.scagPoolSize, cfg.scagQueueLimit, p);    
+    acceptor.init(cfg.host, cfg.port);
 }
 
 void HttpManager::shutdown()
 {
     acceptor.shutdown();
-    sleep(1);
+    while (HttpContext::getCount())
+        sleep(1);
     readers.shutdown();
-    sleep(1);
     writers.shutdown();
     sleep(1);
     scags.shutdown();
@@ -259,7 +257,7 @@ void IOTaskManager::assignTask(unsigned int i, IOTask *t)
     t->taskIndex = i;
 }
 
-void IOTaskManager::init(int maxThreads, int _maxSockets)
+void IOTaskManager::init(int _maxThreads, int _maxSockets)
 {
     int i;
 
@@ -269,14 +267,14 @@ void IOTaskManager::init(int maxThreads, int _maxSockets)
     tailCall.prev = &tailCall;
     headCall = &tailCall;
     this->maxSockets = _maxSockets;
-    pool.setMaxThreads(maxThreads);
+    pool.setMaxThreads(_maxThreads);
     
-    sortedTasks = new IOTask *[maxThreads + 2];
+    sortedTasks = new IOTask *[_maxThreads + 2];
 
     sortedTasks[0] = (IOTask *)&headTask;               // min socketCount
-    sortedTasks[maxThreads + 1] = (IOTask *)&tailTask;  // max socketCount
+    sortedTasks[_maxThreads + 1] = (IOTask *)&tailTask;  // max socketCount
 
-    for (i = 1; i <= maxThreads; i++) {
+    for (i = 1; i <= _maxThreads; i++) {
         IOTask *t = newTask();
 
         assignTask(i, t);

@@ -16,6 +16,11 @@ void ScagTaskManager::fitQueueLimit() {
     }
 }
 
+void ScagTaskManager::looseQueueLimit() {
+    waitQueueShrinkage = false;
+    queMon.Unlock();
+}
+
 HttpAcceptor::HttpAcceptor(HttpManager& m) : manager(m)
 {
 }
@@ -23,30 +28,14 @@ HttpAcceptor::HttpAcceptor(HttpManager& m) : manager(m)
 int HttpAcceptor::Execute()
 {
     Socket *user_socket;
-    Socket master_socket;
 
-    try {
-        if (master_socket.InitServer(host, port, 0, 0) == -1) {          
-            http_log_error("Failed to init HttpAcceptor master socket");
-            throw Exception("Socket::InitServer() failed");
-        }
-        if (master_socket.StartServer() == -1) {
-            http_log_error("Failed to start HttpAcceptor master socket");
-            throw Exception("Socket::StartServer() failed");
-        }
-    }
-    catch(...) {
-        throw;
-    }
-
-    //master_socket.setNonBlocking(1);
-    //smsc_log_debug(httpLogger, "HttpAcceptor started (smsc) %d", httpLogger->isDebugEnabled());
     http_log_debug("HttpAcceptor started");
 
-    while (!isStopping) {
-    manager.scags.fitQueueLimit();
+    while (!isStopping) 
+    {
+	manager.scags.fitQueueLimit();
     
-        user_socket = master_socket.Accept();
+        user_socket = masterSocket.Accept();
 
         if (!user_socket) {
             http_log_error("Failed to accept, error: %s", strerror(errno));
@@ -58,14 +47,9 @@ int HttpAcceptor::Execute()
         manager.readers.process(cx);
     }
 
-    master_socket.Close();
-
-    if (!isStopping)
-        throw Exception("Accept() failed");
-
     http_log_debug("HttpAcceptor quit");
 
-    return 0;
+    return isStopping == false;
 }
 
 const char* HttpAcceptor::taskName()
@@ -76,17 +60,29 @@ const char* HttpAcceptor::taskName()
 void HttpAcceptor::shutdown()
 {
     isStopping = true;
-
-    accMon.Lock();
-    accMon.notify();
-    accMon.Unlock();
+    manager.scags.looseQueueLimit();
+    WaitFor();
 }
 
-void HttpAcceptor::init(const char *_host, int _port)
+void HttpAcceptor::init(const char *host, int port)
 {
-    HttpAcceptor::host = _host;
-    HttpAcceptor::port = _port;
     isStopping = false;
+
+    try {
+        if (masterSocket.InitServer(host, port, 0, 0) == -1) {          
+            http_log_error("Failed to init HttpAcceptor master socket");
+            throw Exception("Socket::InitServer() failed");
+        }
+        if (masterSocket.StartServer() == -1) {
+            http_log_error("Failed to start HttpAcceptor master socket");
+            throw Exception("Socket::StartServer() failed");
+        }
+    }
+    catch(...) {
+        throw;
+    }
+
+    //masterSocket.setNonBlocking(1);
 
     Start();
 }
