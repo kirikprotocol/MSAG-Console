@@ -35,8 +35,8 @@
                 <param name="noplugins" value="-noplugins">
                 <param name="homedir" value="applet">
                 <param name="username" value="rules">
-                <param name="servletUrl" value="/scag/applet/myServlet">
-                <param name="targetUrl" value="/scag/services/service/edit.jsp?editId=${bean.editId}&parentId=${bean.parentId}&editChild=${param.editChild}">
+                <param name="servletUrl" value="${pageContext.request.contextPath}/applet/myServlet">
+                <param name="targetUrl" value="${pageContext.request.contextPath}/services/service/edit.jsp?editId=${bean.editId}&parentId=${bean.parentId}&editChild=${param.editChild}">
             </applet>
 
             <div class=page_subtitle>&nbsp;</div>
