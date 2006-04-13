@@ -546,9 +546,9 @@ void Billing::onConnectSMS(ConnectSMSArg* arg)
 void Billing::onContinueSMS(uint32_t inmanErr /* = 0*/)
 {
     smsc_log_info(logger,
-            "Billing[%u.%u]: <-- CHARGING_POSSIBLE (via %s), abonent type: %s (%u)",
+            "Billing[%u.%u]: <-- CHARGING_POSSIBLE (via %s), abonent(%s) type: %s (%u)",
             _bconn->bConnId(), _bId, postpaidBill ? "CDR" : "SCF",
-            _sabType[abBillType], (unsigned)abBillType);
+            abNumber.getSignals(), _sabType[abBillType], (unsigned)abBillType);
 
     BillAction  action = Billing::doCont;
     {
@@ -599,15 +599,18 @@ void Billing::onReleaseSMS(ReleaseSMSArg* arg)
         uint32_t scfErr = InmanErrorCode::GetCombinedError(InErrRPCause, (uint16_t)arg->rPCause);
         if (postpaidBill) {
             smsc_log_info(logger,
-                "Billing[%u.%u]: <-- CHARGING_POSSIBLE (via CDR), abonent type: %s (%u)",
-                _bconn->bConnId(), _bId, _sabType[abBillType], (unsigned)abBillType);
+                "Billing[%u.%u]: <-- CHARGING_POSSIBLE (via CDR), abonent(%s) type: %s (%u)",
+                _bconn->bConnId(), _bId, abNumber.getSignals(),
+                _sabType[abBillType], (unsigned)abBillType);
             state = Billing::bilContinued;
             delete inap;
             inap = NULL;
             action = Billing::doCont;
         } else {
-            smsc_log_info(logger, "Billing[%u.%u]: <-- CHARGING_NOT_POSSIBLE (code %u)",
-                          _bconn->bConnId(), _bId, scfErr);
+            smsc_log_info(logger,
+                "Billing[%u.%u]: <-- CHARGING_NOT_POSSIBLE (code %u), abonent(%s) type: %s (%u)",
+                _bconn->bConnId(), _bId, scfErr, abNumber.getSignals(),
+                _sabType[abBillType], (unsigned)abBillType);
             state = Billing::bilReleased;
         }
 
