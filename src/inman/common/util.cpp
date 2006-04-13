@@ -2,7 +2,7 @@ static char const ident[] = "$Id$";
 
 #include <assert.h>
 #include <vector>
-
+#include <stdarg.h>
 #include "inman/common/util.hpp"
 
 namespace smsc {

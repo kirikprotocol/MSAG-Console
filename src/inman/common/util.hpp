@@ -1,12 +1,9 @@
 #ident "$Id$"
 #ifndef __SMSC_INMAN_COMMON_UTIL_HPP__
 #define __SMSC_INMAN_COMMON_UTIL_HPP__
+
 #include <string>
-
 #include "inman/common/types.hpp"
-#include "logger/Logger.h"
-
-using smsc::logger::Logger;
 
 namespace smsc {
 namespace inman {
@@ -24,8 +21,6 @@ extern std::string format(const char* szFormat, ... );
 extern std::string dump(unsigned short len, unsigned char* udp, bool ascii = false);
 extern int         dump(std::string& fstr, unsigned short size,
                                             unsigned char* buff, bool ascii);
-
-extern void dumpToLog(Logger* logger, int len, const unsigned char* buffer );
 
 }//namespace common
 }//namespace inman
