@@ -1,7 +1,7 @@
 static const char ident[] = "$Id$";
 
 #include "inman/cachedb/cacheDb.hpp"
-
+using smsc::inman::cache::_sabBillType;
 using smsc::db::Connection;
 
 namespace smsc {
@@ -184,8 +184,9 @@ void DBAbonentProvider::releaseQuery(AbonentQuery * query)
                        query->getId(), query->Usage(), ab_number.getSignals());
 
     qryPool.push_back(query);
-    smsc_log_debug(logger, "AbProvider: query[%u:%lu](%s) is finished",
-                   query->getId(), query->Usage(), ab_number.getSignals());
+    smsc_log_debug(logger, "AbProvider: query[%u:%lu](%s) is finished, type: %s (%u)",
+                   query->getId(), query->Usage(), ab_number.getSignals(),
+                   _sabBillType[ab_type], ab_type);
     return;
 }
 
