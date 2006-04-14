@@ -117,18 +117,14 @@ struct BillingCFG {
 class Billing;
 //Manages SMSC Requests on given Connect in parallel mode
 //(for each request initiates new Billing).
-class BillingConnect: public ConnectListener
-{
-    typedef std::map<unsigned int, Billing*> BillingMap;
-
+class BillingConnect: public ConnectListener {
 public: 
     BillingConnect(BillingCFG * cfg, SSNSession* ss7_sess, Connect* conn,
                    TimeWatcher* tm_watcher, Logger * uselog = NULL);
     ~BillingConnect();
 
     unsigned int bConnId(void) const { return _bcId; }
-    //sends command, and optionally turn on timer for response waiting
-    //returns true on success
+    //sends command, returns true on success
     bool sendCmd(SerializableObject* cmd);
     //releases completed Billing, writting CDR if required
     void billingDone(Billing* bill);
@@ -141,20 +137,23 @@ public:
     void onConnectError(Connect* conn, bool fatal/* = false*/);
 
 protected:
+    typedef std::map<unsigned int, Billing*> BillingMap;
+    typedef std::list<Billing*> BillingList;
+
     Mutex       _mutex;
     Logger*     logger;
     unsigned int _bcId;
     BillingCFG  _cfg;
     BillingMap  workers;
+    BillingList corpses;
     Connect*    _conn;
-    SSNSession*    _ss7Sess;
+    SSNSession*  _ss7Sess;
     TimeWatcher* _tmWatcher;
 };
 
 class Billing : public SSFhandler, public InmanHandler,
                 public InAbonentQueryListenerITF, public TimerListenerITF {
 public:
-    typedef std::map<unsigned, StopWatch*> TimersMAP;
     typedef enum {
         bilIdle, bilStarted, bilQueried, bilInited, bilReleased, bilContinued, 
         bilApproved, bilComplete, bilAborted
@@ -173,7 +172,7 @@ public:
     
     void     handleCommand(InmanCommand* cmd);
     //aborts billing due to fatal error
-    void     Abort(const char * reason = NULL, bool doReport = true);
+    void     Abort(const char * reason = NULL);
     //
     bool     isPostpaidBill(void) const { return postpaidBill; }
     //retuns false if CDR was not complete
@@ -181,7 +180,7 @@ public:
     //returns true if all billing stages are completed
     bool     BillComplete(void) const;
     //    
-    const CDRRecord & getCDRRecord(void) const;
+    const CDRRecord & getCDRRecord(void) const { return cdr; }
 
     //InmanHandler interface methods:
     bool onChargeSms(ChargeSms*);
@@ -189,7 +188,7 @@ public:
 
     //SSFHandler interface methods:
     void onConnectSMS(ConnectSMSArg* arg);
-    void onContinueSMS(uint32_t inmanErr = 0);
+    void onContinueSMS(void);
     void onFurnishChargingInformationSMS(FurnishChargingInformationSMSArg* arg);
     void onReleaseSMS(ReleaseSMSArg* arg);
     void onRequestReportSMSEvent(RequestReportSMSEventArg* arg);
@@ -202,12 +201,15 @@ public:
     void onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj);
 
 protected:
+    typedef std::map<unsigned, StopWatch*> TimersMAP;
     SSNSession * activateSSN(void);
-    void abortBilling(InmanErrorType errType, uint16_t errCode);
+    void doFinalize(bool doReport = true);
+    void abortThis(const char * reason = NULL, bool doReport = true);
     bool startCAPDialog(void);
-    void StartTimer(unsigned short timeout, bool locked = false);
-    void StopTimer(BillingState bilState, bool locked = false);
+    void StartTimer(unsigned short timeout, bool locked = true);
+    void StopTimer(BillingState bilState, bool locked = true);
     void ChargeAbonent(AbonentBillType ab_type);
+    void DoCharge(uint32_t inmanErr = 0);
 
     Mutex           bilMutex;
     BillingCFG      _cfg;
