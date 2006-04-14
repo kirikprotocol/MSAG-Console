@@ -173,7 +173,7 @@ public:
     
     void     handleCommand(InmanCommand* cmd);
     //aborts billing due to fatal error
-    void     Abort(const char * reason = NULL);
+    void     Abort(const char * reason = NULL, bool doReport = true);
     //
     bool     isPostpaidBill(void) const { return postpaidBill; }
     //retuns false if CDR was not complete

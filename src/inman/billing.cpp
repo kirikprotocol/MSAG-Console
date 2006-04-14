@@ -29,12 +29,14 @@ BillingConnect::BillingConnect(BillingCFG * cfg, SSNSession* ss7_sess, Connect* 
 
 BillingConnect::~BillingConnect()
 {
+    MutexGuard grd(_mutex);
     //stop all Billings 
-    BillingMap  cpMap = workers;
-    for (BillingMap::const_iterator it = cpMap.begin(); it != cpMap.end(); it++) {
+    for (BillingMap::iterator it = workers.begin(); it != workers.end(); it++) {
         Billing * bill = (*it).second;
-        bill->Abort("BillingConnect destroyed");
+        bill->Abort("BillingConnect destroyed", false);
+        delete bill;
     }
+    workers.clear();
 }
 
 //returns true on success, false on closed connect(possibly due to error)
@@ -138,7 +140,7 @@ void BillingConnect::onConnectError(Connect* conn, bool fatal/* = false*/)
 
         for (BillingMap::const_iterator it = cpMap.begin(); it != cpMap.end(); it++) {
             Billing * bill = (*it).second;
-            bill->Abort(exc->what());
+            bill->Abort(exc->what(), true);
         }
     }
 }
@@ -177,11 +179,11 @@ Billing::~Billing()
         delete inap;
 }
 
-void Billing::Abort(const char * exc)
+void Billing::Abort(const char * reason/* = NULL*/, bool doReport/* = true*/)
 {
     bilMutex.Lock();
     smsc_log_error(logger, "Billing[%u.%u]: Aborting%s%s",
-                   _bconn->bConnId(), _bId, exc ? ", reason " : "", exc ? exc : "");
+                   _bconn->bConnId(), _bId, reason ? ", reason " : "", reason ? reason : "");
     if (inap) {
         if ((state >= bilContinued) && (state < bilComplete)) { //send sms_o_failure to SCF
             smsc_log_debug(logger, "Billing[%u.%u]: SSF --> SCF EventReportSMS(o_smsFailure (0x%X))",
@@ -196,7 +198,8 @@ void Billing::Abort(const char * exc)
     }
     state = Billing::bilAborted;
     bilMutex.Unlock();
-    _bconn->billingDone(this);
+    if (doReport)
+        _bconn->billingDone(this);
 }
 
 void Billing::handleCommand(InmanCommand* cmd)
@@ -244,7 +247,7 @@ void Billing::handleCommand(InmanCommand* cmd)
             catch (SerializerException & exc) {
                 smsc_log_error(logger, "Billing[%u.%u]: %s",
                                 _bconn->bConnId(), _bId, exc.what());
-                Abort(exc.what());
+                Abort(exc.what(), true);
                 return;
             }
             onDeliverySmsResult(static_cast<DeliverySmsResult*>(cmd));
@@ -403,7 +406,7 @@ void Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
         if (state == Billing::bilContinued) {
             //SMSC doesn't respond with DeliveryResult
             bilMutex.Unlock();
-            Abort("TCP dialog is timed out");
+            Abort("TCP dialog is timed out", true);
             return;
         }
     }
@@ -558,7 +561,7 @@ void Billing::onContinueSMS(uint32_t inmanErr /* = 0*/)
             action = Billing::doAbort;
     }
     if (action == Billing::doAbort)
-        Abort(_bconn->getConnectError()->what());
+        Abort(_bconn->getConnectError()->what(), true);
     return;
 }
 
@@ -622,7 +625,7 @@ void Billing::onReleaseSMS(ReleaseSMSArg* arg)
     if (action == Billing::doEnd)
         _bconn->billingDone(this);
     else if (action == Billing::doAbort)
-        Abort(_bconn->getConnectError()->what());
+        Abort(_bconn->getConnectError()->what(), true);
     return;
 }
 
