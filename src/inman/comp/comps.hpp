@@ -64,6 +64,14 @@ struct InapOpCode {
     };
 };
 
+struct CAP3SMSerrCode {
+    enum {
+        missingParameter = 7,  taskRefused = 12,
+        unexpectedComponentSequence = 14, 
+        unexpectedDataValue = 15, unexpectedParameter = 16,
+        parameterOutOfRange = 8, systemFailure = 11
+    };
+};
 enum TP_VP_format {
     tp_vp_none = 0,
     tp_vp_enhanced, // '01'
@@ -85,6 +93,10 @@ class InitialDPSMSArg: public Component //SSF -> SCF
 public:
     InitialDPSMSArg(DeliveryMode_e idpMode, unsigned int serviceKey);
     ~InitialDPSMSArg();
+
+    enum { //errors in addition to CAP3SMSerrCode
+        missingCustomerRecord = 6
+    } IDPErrCodes;
 
     void setDestinationSubscriberNumber(const TonNpiAddress& addr); // missing for MT
     void setDestinationSubscriberNumber(const char * text);
