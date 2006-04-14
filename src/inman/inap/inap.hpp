@@ -43,7 +43,7 @@ class SSFhandler
 {
   public: //operations:
     virtual void onConnectSMS(ConnectSMSArg* arg) = 0;
-    virtual void onContinueSMS(uint32_t inmanErr = 0) = 0;
+    virtual void onContinueSMS(void) = 0;
     virtual void onFurnishChargingInformationSMS(FurnishChargingInformationSMSArg* arg) = 0;
     virtual void onReleaseSMS(ReleaseSMSArg* arg) = 0;
     virtual void onRequestReportSMSEvent(RequestReportSMSEventArg* arg) = 0;
