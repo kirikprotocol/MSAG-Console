@@ -357,7 +357,7 @@ public:
 
   void DiscardCache()
   {
-    if(!isInMemory() || fd!=-1)throw FileException(FileException::errFileNotOpened,filename.c_str());
+    if(!isInMemory() || fd==-1)throw FileException(FileException::errFileNotOpened,filename.c_str());
     flags&=~FLG_INMEMORY;
     int sz=(int)Size();
 #ifndef NOLOGGERPLEASE
