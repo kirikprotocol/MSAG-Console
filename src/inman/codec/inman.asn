@@ -988,12 +988,10 @@ requestReportSMSEvent OPERATION ::= {
     CODE		opcode-requestReportSMSEvent
 }
 
--- Direction: gsmSCF -> smsSSF, Timer: Tcuesms 
--- This operation is used to request the smsSSF to proceed with
--- Short Message processing at the DP at which it previously suspended
--- Short Message processing to await gsmSCF instructions (i.e. proceed
--- to the next Point in Association in the SMS FSM). The smsSSF
--- continues SMS processing without substituting new data from the gsmSCF.
+--  Direction: gsmSSF or gprsSSF -> gsmSCF, Timer: Terbsms
+--  This operation is used to notify the gsmSCF of a Short Message related event (FSM events
+--  such as submission, delivery or failure) previously requested by the gsmSCF in a
+--  RequestReportSMSEvent operation.
 eventReportSMS OPERATION ::= {
   ARGUMENT		EventReportSMSArg
   RETURN RESULT		FALSE
