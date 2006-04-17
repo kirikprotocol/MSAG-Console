@@ -16,10 +16,10 @@
         <param name="tariffs_file" type="string">tariffs.xml</param>
     </section>
 
-    <param name="users_config_file" type="string">webapps/scag/WEB-INF/users.xml</param>
+    <param name="users_config_file" type="string">webapps/msag/WEB-INF/users.xml</param>
     <param name="status_folder" type="string">statistics/status</param>
     <param name="gw name" type="string">scag</param>
-    <param name="ids_file" type="string">webapps/scag/WEB-INF/ids.xml</param>
+    <param name="ids_file" type="string">webapps/msag/WEB-INF/ids.xml</param>
 
     <section name="gw daemon">
         <param name="host" type="string">@connect.host@</param>
