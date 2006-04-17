@@ -138,7 +138,7 @@ struct Profile{
     return *this;
   }
 
-  bool operator==(const Profile& src)
+  bool operator==(const Profile& src)const
   {
     return codepage==src.codepage &&
            reportoptions==src.reportoptions &&
