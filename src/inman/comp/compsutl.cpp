@@ -36,12 +36,15 @@ std::string printType2String(asn_TYPE_descriptor_t * def, void * tStruct) {
   return result;
 }
 
-TonNpiAddress OCTET_STRING_2_Addres(OCTET_STRING_t * octs)
+/*
+ * Returns number of signals in address, zero in case of error.
+ */
+unsigned OCTET_STRING_2_Address(OCTET_STRING_t * octs, TonNpiAddress & addr)
 {
-    TonNpiAddress addr;
+    addr.clear();
     if (octs && octs->size)
 	unpackOCTS2MAPAddress(addr, (TONNPI_ADDRESS_OCTS *)(octs->buf), octs->size - 1);
-    return addr;
+    return addr.length;
 }
 
 }//namespace comp

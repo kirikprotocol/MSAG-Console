@@ -25,9 +25,9 @@ void ConnectSMSArg::decode(const vector<unsigned char>& buf) throw(CustomExcepti
     drc = ber_decode(0, &asn_DEF_ConnectSMSArg, (void **)&dcmd, &buf[0], buf.size());
     INMAN_LOG_DEC(drc, asn_DEF_ConnectSMSArg);
 
-    dstSN  = OCTET_STRING_2_Addres(dcmd->destinationSubscriberNumber);
-    clngPN = OCTET_STRING_2_Addres(dcmd->callingPartysNumber);
-    sMSCAdr = OCTET_STRING_2_Addres(dcmd->sMSCAddress);
+    OCTET_STRING_2_Address(dcmd->destinationSubscriberNumber, dstSN);
+    OCTET_STRING_2_Address(dcmd->callingPartysNumber, clngPN);
+    OCTET_STRING_2_Address(dcmd->sMSCAddress, sMSCAdr);
 
     smsc_log_component(compLogger, &asn_DEF_ConnectSMSArg, dcmd);
     asn_DEF_ConnectSMSArg.free_struct(&asn_DEF_ConnectSMSArg, dcmd, 0);

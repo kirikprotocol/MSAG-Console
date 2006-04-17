@@ -13,12 +13,14 @@ using smsc::inman::comp::CompFactory;
 
 using smsc::inman::common::format;
 using smsc::inman::comp::smsc_log_component;
+using smsc::inman::comp::OCTET_STRING_2_Address;
 
 using smsc::cbs::CBS_DCS;
 using smsc::cbs::parseCBS_DCS;
 using smsc::cvtutil::unpack7BitPadded2Text;
 using smsc::cvtutil::packTextAs7BitPadded;
 using smsc::cvtutil::estimateTextAs7Bit;
+
 
 namespace smsc {
 namespace inman {
@@ -158,8 +160,7 @@ void ProcessUSSRequestArg::decode(const vector<unsigned char>& buf) throw(Custom
                         dcmd->ussd_String.buf, dcmd->ussd_String.size);
 
     if (dcmd->msisdn) {
-        _msAdr = smsc::inman::comp::OCTET_STRING_2_Addres(dcmd->msisdn);
-        if (!_msAdr.length)
+        if (!OCTET_STRING_2_Address(dcmd->msisdn, _msAdr))
             smsc_log_error(compLogger, "ProcessUSSRequestArg: bad msISDN adr");
     } else
         _msAdr.clear();

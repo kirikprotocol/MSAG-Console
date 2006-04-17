@@ -45,8 +45,10 @@ inline void smsc_log_component(Logger *lgi, asn_TYPE_descriptor_t * asnDef, void
     }
 }
 
-extern TonNpiAddress OCTET_STRING_2_Addres(OCTET_STRING_t * octs);
-
+/*
+ * Returns number of signals in address, zero in case of error.
+ */
+extern unsigned OCTET_STRING_2_Address(OCTET_STRING_t * octs, TonNpiAddress & addr);
 
 }//namespace comp
 }//namespace inman
