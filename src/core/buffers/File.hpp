@@ -288,11 +288,11 @@ public:
     if(fd!=-1)
     {
       lseek(fd,0,SEEK_SET);
-      int rdsz=read(fd,buffer,fileSize);
+      int rdsz=read(fd,buffer,(size_t)fileSize);
       if(rdsz!=fileSize)throw FileException(FileException::errReadFailed,filename.c_str());
       if(eventHandler)
       {
-        eventHandler->onRead(buffer,fileSize);
+        eventHandler->onRead(buffer,(size_t)fileSize);
       }
     }
   }
