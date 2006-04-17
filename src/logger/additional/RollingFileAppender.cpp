@@ -44,71 +44,81 @@ void rolloverFiles(const char * const filename, unsigned int maxBackupIndex)
 RollingFileAppender::RollingFileAppender(const char * const _name, const Properties & properties)
   :Appender(_name)
 {
-  maxFileSize = 1*1024*1024;
-  maxBackupIndex = 5;
+  try{
+    maxFileSize = 1*1024*1024;
+    maxBackupIndex = 5;
 
-  if(properties.Exists("maxsize")) {
-    const char * const tmp = properties["maxsize"];
-    const size_t tmpLen = strlen(tmp);
-    maxFileSize = atoi(tmp);
-    if (tmpLen > 2)
-    {
-      const char * const suffix = tmp + (tmpLen -2);
-      if (strcasecmp("mb", suffix) == 0)
+    if(properties.Exists("maxsize")) {
+      const char * const tmp = properties["maxsize"];
+      const size_t tmpLen = strlen(tmp);
+      maxFileSize = atoi(tmp);
+      if (tmpLen > 2)
       {
-        maxFileSize *= (1024 * 1024); // convert to megabytes
-      }
-      else if (strcasecmp("kb", suffix) == 0)
-      {
-        maxFileSize *= 1024; // convert to kilobytes
+        const char * const suffix = tmp + (tmpLen -2);
+        if (strcasecmp("mb", suffix) == 0)
+        {
+          maxFileSize *= (1024 * 1024); // convert to megabytes
+        }
+        else if (strcasecmp("kb", suffix) == 0)
+        {
+          maxFileSize *= 1024; // convert to kilobytes
+        }
       }
     }
+
+    if (properties.Exists("maxindex"))
+      maxBackupIndex = atoi(properties["maxindex"]);
+
+    if (properties.Exists("name"))
+      filename.reset(cStringCopy(properties["name"]));
+    else
+      filename.reset(cStringCopy("smsc.log"));
+
+    if(File::Exists(filename.get()))
+      file.Append(filename.get());
+    else
+      file.RWCreate(filename.get());
+    currentFilePos=file.Pos();
+    //file = fopen(filename.get(), "a");
+    //currentFilePos = ftell(file);
+  }catch(std::exception& e)
+  {
+    fprintf(stderr,"RollingFileAppender exception:%s\n",e.what());
   }
-
-  if (properties.Exists("maxindex"))
-    maxBackupIndex = atoi(properties["maxindex"]);
-
-  if (properties.Exists("name"))
-    filename.reset(cStringCopy(properties["name"]));
-  else
-    filename.reset(cStringCopy("smsc.log"));
-
-  if(File::Exists(filename.get()))
-    file.Append(filename.get());
-  else
-    file.RWCreate(filename.get());
-  currentFilePos=file.Pos();
-  //file = fopen(filename.get(), "a");
-  //currentFilePos = ftell(file);
 }
 
 void RollingFileAppender::rollover() throw()
 {
   // If maxBackups <= 0, then there is no file renaming to be done.
-  if(maxBackupIndex > 0) {
-    rolloverFiles(filename.get(), maxBackupIndex);
+  try{
+    if(maxBackupIndex > 0) {
+      rolloverFiles(filename.get(), maxBackupIndex);
 
-    // Close the current file
-    //fclose(file);
-    //file = NULL;
-    file.Close();
+      // Close the current file
+      //fclose(file);
+      //file = NULL;
+      file.Close();
 
-    // Rename fileName to fileName.1
-    const size_t max_filename_length = strlen(filename.get())+16;
-    std::auto_ptr<char> target(new char[max_filename_length+1]);
-    snprintf(target.get(), max_filename_length, "%s.1", filename.get());
-    target.get()[max_filename_length] = 0;
+      // Rename fileName to fileName.1
+      const size_t max_filename_length = strlen(filename.get())+16;
+      std::auto_ptr<char> target(new char[max_filename_length+1]);
+      snprintf(target.get(), max_filename_length, "%s.1", filename.get());
+      target.get()[max_filename_length] = 0;
 
-    rename(filename.get(), target.get());
+      rename(filename.get(), target.get());
 
-    // Open a new file
-    //file = fopen(filename.get(), "w");
-    file.WOpen(filename.get());
-  } else {
-    //fclose(file);
-    //file = fopen(filename.get(), "w");
-    file.Close();
-    file.WOpen(filename.get());
+      // Open a new file
+      //file = fopen(filename.get(), "w");
+      file.WOpen(filename.get());
+    } else {
+      //fclose(file);
+      //file = fopen(filename.get(), "w");
+      file.Close();
+      file.WOpen(filename.get());
+    }
+  }catch(std::exception& e)
+  {
+    fprintf(stderr,"RollingFileAppender::rollover exception:%s\n",e.what());
   }
 
   currentFilePos = 0;
