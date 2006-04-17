@@ -1,10 +1,11 @@
-#define NOLOGGERPLEASE 1
 #include <stdio.h>
 #include "profiler/profiler-types.hpp"
 #include "sms/sms_util.h"
 #include "core/buffers/File.hpp"
 #include <map>
 #include <vector>
+#include "util/config/Manager.h"
+#include "util/findConfigFile.h"
 
 using namespace smsc::sms;
 using namespace smsc::core::buffers;
@@ -83,13 +84,68 @@ void PatchProfile(Profile& p,const ArgsVector& args)
   }
 }
 
+smsc::profiler::Profile defProfile;
+
+void InitDefProfile(smsc::util::config::Manager* cfg)
+{
+  char *rep=cfg->getString("profiler.defaultReport");
+  char *dc=cfg->getString("profiler.defaultDataCoding");
+
+
+  char *str=rep;
+  while((*str=toupper(*str)))str++;
+  str=dc;
+  while((*str=toupper(*str)))str++;
+  defProfile.locale=cfg->getString("core.default_locale");
+
+  defProfile.hide=cfg->getBool("profiler.defaultHide");
+  defProfile.hideModifiable=cfg->getBool("profiler.defaultHideModifiable");
+  defProfile.divertModifiable=cfg->getBool("profiler.defaultDivertModifiable");
+
+  defProfile.udhconcat=cfg->getBool("profiler.defaultUdhConcat");
+
+  if(!strcmp(dc,"DEFAULT"))
+    defProfile.codepage=ProfileCharsetOptions::Default;
+  else if(!strcmp(dc,"UCS2"))
+    defProfile.codepage=ProfileCharsetOptions::Ucs2;
+  else
+  {
+    //smsc_log_warn(log, "Profiler:Unrecognized default data coding");
+  }
+
+  if(cfg->getBool("profiler.defaultUssdIn7Bit"))
+    defProfile.codepage|=ProfileCharsetOptions::UssdIn7Bit;
+
+  if(!strcmp(rep,"NONE"))
+    defProfile.reportoptions=ProfileReportOptions::ReportNone;
+  else if(!strcmp(rep,"FULL"))
+    defProfile.reportoptions=ProfileReportOptions::ReportFull;
+  else
+  {
+    //smsc_log_warn(log, "Profiler:Unrecognized default report options");
+  }
+}
+
+bool isDefault(const Profile& p)
+{
+  bool rv=p==defProfile;
+  if(!rv)
+  {
+    //rintf("%s  !=\n%s\n\n",p.toString().c_str(),defProfile.toString().c_str());
+  }
+  return rv;
+}
+
+
+
 int main(int argc,char* argv[])
 {
-  if(argc<4)
+  if(argc<3)
   {
     printf("Usage: %s infile outfile field1=value1 [field2=value2 ...]\n",argv[0]);
     return 0;
   }
+  smsc::logger::Logger::Init();
   ArgsVector argsVector;
   std::string n,v;
   for(int i=3;i<argc;i++)
@@ -110,6 +166,12 @@ int main(int argc,char* argv[])
   std::string inFileName=argv[1];
   std::string outFileName=argv[2];
   try{
+    smsc::util::config::Manager::init(findConfigFile("config.xml"));
+    smsc::util::config::Manager* cfg=&smsc::util::config::Manager::getInstance();
+
+    InitDefProfile(cfg);
+
+
     File inFile,outFile;
     inFile.ROpen(inFileName.c_str());
     outFile.RWCreate(outFileName.c_str());
@@ -138,6 +200,7 @@ int main(int argc,char* argv[])
 
     int cnt=0;
     int dup=0;
+    int skip=0;
 
     while(pos<sz)
     {
@@ -152,24 +215,31 @@ int main(int argc,char* argv[])
         ReadAddress(inFile,addr);
         p.Read(inFile);
 
-        PatchProfile(p,argsVector);
-
-
-        ProfilesMap::iterator it=pmap.find(addr);
-        if(it!=pmap.end())
+        if(isDefault(p))
         {
-          outFile.Seek(it->second);
-          dup++;
-        }else
-        {
-          pmap.insert(ProfilesMap::value_type(addr,outFile.Pos()));
+          skip++;
         }
-        cnt++;
-        outFile.WriteByte(1);
-        outFile.Write(profileMagic,8);
-        WriteAddress(outFile,addr);
-        p.Write(outFile);
-        outFile.SeekEnd(0);
+        else
+        {
+          PatchProfile(p,argsVector);
+
+
+          ProfilesMap::iterator it=pmap.find(addr);
+          if(it!=pmap.end())
+          {
+            outFile.Seek(it->second);
+            dup++;
+          }else
+          {
+            pmap.insert(ProfilesMap::value_type(addr,outFile.Pos()));
+          }
+          cnt++;
+          outFile.WriteByte(1);
+          outFile.Write(profileMagic,8);
+          WriteAddress(outFile,addr);
+          p.Write(outFile);
+          outFile.SeekEnd(0);
+        }
       }else
       {
         inFile.SeekCur(8+AddressSize()+Profile::Size());
@@ -181,7 +251,7 @@ int main(int argc,char* argv[])
       }
     }
     outFile.Flush();
-    printf("%d profiles processed, %d duplicates found\n",cnt,dup);
+    printf("%d profiles processed, %d duplicates found, %d matched default and skipped\n",cnt,dup,skip);
   }catch(std::exception& e)
   {
     printf("exception:%s\n",e.what());
