@@ -26,6 +26,8 @@ public abstract class SubjectTypes {
     public static final byte TYPE_provider = 16;        //
     public static final byte TYPE_category = 17;        //
     public static final byte TYPE_closedgroup = 18;
+    public static final byte TYPE_statview = 19;
+    public static final byte TYPE_smsview = 20;
 
 
     public final static String typeToString(byte subjectType) {
@@ -66,6 +68,10 @@ public abstract class SubjectTypes {
                 return "category";
             case TYPE_closedgroup:
                 return "closed group";
+            case TYPE_statview:
+                return "stat view";
+            case TYPE_smsview:
+                return "sms view";
             default:
                 return "unknown";
         }
@@ -108,6 +114,10 @@ public abstract class SubjectTypes {
             return TYPE_category;
         if ("closed group".equals(subjectType))
             return TYPE_closedgroup;
+        if ("stat view".equals(subjectType))
+            return TYPE_statview;
+        if ("sms view".equals(subjectType))
+            return TYPE_smsview;
         return TYPE_UNKNOWN;
     }
 }

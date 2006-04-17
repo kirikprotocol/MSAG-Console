@@ -7,6 +7,8 @@ import ru.novosoft.smsc.admin.smsstat.SmsStat;
 import ru.novosoft.smsc.admin.smsstat.ExportSettings;
 import ru.novosoft.smsc.admin.smsstat.ExportResults;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.util.Functions;
 
 import javax.servlet.http.HttpServletRequest;
@@ -90,6 +92,7 @@ public class StatExportBean extends IndexBean
                 message("Exported: total "+results.total.records+"/"+results.total.errors+
                         ", smes "+results.smes.records+"/"+results.smes.errors+
                         ", routes "+results.routes.records+"/"+results.routes.errors);
+                journalAppend(SubjectTypes.TYPE_statview, "Stat export", Actions.ACTION_EXPORT, "from date:" + fromDate.toString(), "till date:" + tillDate.toString());
             }
             catch (Exception exc) {
               logger.error("Failed to export stat", exc);

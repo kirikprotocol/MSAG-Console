@@ -2,6 +2,8 @@ package ru.novosoft.smsc.jsp.smsview;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.admin.smsview.SmsQuery;
 import ru.novosoft.smsc.admin.smsview.SmsRow;
 import ru.novosoft.smsc.admin.smsview.SmsSet;
@@ -131,6 +133,7 @@ public class SmsViewFormBean extends IndexBean {
                 response.setContentType("application/vnd.ms-excel");
                 response.setHeader("Content-Disposition", "attachment; filename=smsview.xls");
                 result = saveResultsToFile(response);
+                journalAppend(SubjectTypes.TYPE_smsview, "Save results to xls-file", Actions.ACTION_SAVE);
             } catch (Throwable t) {
                 mbSave = null;
                 return error(SMSCErrors.error.smsview.CouldntSave, t);
@@ -204,15 +207,21 @@ public class SmsViewFormBean extends IndexBean {
 
             if (!exactRowsCount) {
                 rows = view.getSmsSet(query);
+                if (query.getStorageType() == SmsQuery.SMS_OPERATIVE_STORAGE_TYPE)
+                    journalAppend(SubjectTypes.TYPE_smsview, "Query", Actions.ACTION_VIEW, "Operative storage", query.getJournalInfo());
+                else if (query.getStorageType() == SmsQuery.SMS_ARCHIVE_STORAGE_TYPE)
+                    journalAppend(SubjectTypes.TYPE_smsview, "Query", Actions.ACTION_VIEW, "Archive storage", query.getJournalInfo());
                 totalRowsCount = rows.getRowsCount();
             } else {
                 int storage = query.getStorageType();
                 if (storage == SmsQuery.SMS_OPERATIVE_STORAGE_TYPE) {
                     rows = view.getOperativeCount(query);
                     totalRowsCount = rows.getSmesRows();
+                    journalAppend(SubjectTypes.TYPE_smsview, "Query", Actions.ACTION_VIEW, "Operative storage", query.getJournalInfo());
                 } else if (storage == SmsQuery.SMS_ARCHIVE_STORAGE_TYPE) {
                     rows = view.getSmsSet(query);
-                    totalRowsCount = view.getArhiveCount(query);
+                    totalRowsCount = view.getArchiveCount(query);
+                    journalAppend(SubjectTypes.TYPE_smsview, "Query", Actions.ACTION_VIEW, "Archive storage", query.getJournalInfo());
                 } else
                     throw new AdminException("Unsupported storage type: " + storage);
                 // totalRowsCount = view.getSmsCount(query);
@@ -247,6 +256,7 @@ public class SmsViewFormBean extends IndexBean {
             row = rows.getRow(viewId);
             if (row == null)
                 throw new Exception("Message #" + viewId + " is not setected in main view");
+            journalAppend(SubjectTypes.TYPE_smsview, "Detailed view:" + row.getIdString(), Actions.ACTION_VIEW);
 
             return RESULT_OK;
         } catch (Exception ex) {
@@ -258,8 +268,10 @@ public class SmsViewFormBean extends IndexBean {
     public int processDeleteSet(SmsSet set) {
         try {
             int storage = getStorageType();
-            if (storage == SmsQuery.SMS_OPERATIVE_STORAGE_TYPE)
+            if (storage == SmsQuery.SMS_OPERATIVE_STORAGE_TYPE) {
                 deletedRowsCount = view.delOperativeSmsSet(set);
+                journalAppend(SubjectTypes.TYPE_smsview, deletedRowsCount + " deleted", Actions.ACTION_DEL);
+            }
             else if (storage == SmsQuery.SMS_ARCHIVE_STORAGE_TYPE)
                 throw new AdminException("Cancel is not suported for persistent archive storage!");
             else

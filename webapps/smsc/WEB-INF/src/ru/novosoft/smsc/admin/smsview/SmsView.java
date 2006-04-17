@@ -56,7 +56,7 @@ public class SmsView {
     }
 
 
-    public int getArhiveCount(SmsQuery query) throws AdminException {
+    public int getArchiveCount(SmsQuery query) throws AdminException {
         /* int storage = query.getStorageType();
        if (storage == SmsQuery.SMS_OPERATIVE_STORAGE_TYPE)
          return operative.getSmsCount(query);

@@ -12,7 +12,7 @@
     TITLE = getLocString("smsview.viewDetailTitle");
 
     int beanResult = bean.process(request, response);
-    System.out.print("view.jsp:" + beanResult);
+    
     switch (beanResult) {
         case SmsViewFormBean.RESULT_DONE:
             response.sendRedirect("index.jsp");

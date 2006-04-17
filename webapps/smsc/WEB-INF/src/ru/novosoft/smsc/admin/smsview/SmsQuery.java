@@ -15,307 +15,311 @@ import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.util.Functions;
 
 import java.util.Date;
+import java.util.Collection;
 
-public class SmsQuery
-{
-  Category logger = Category.getInstance(SmsQuery.class);
+public class SmsQuery {
+    Category logger = Category.getInstance(SmsQuery.class);
 
-  public final static int SMS_OPERATIVE_STORAGE_TYPE = 100;
-  public final static int SMS_ARCHIVE_STORAGE_TYPE = 200;
-  public final static int SMS_UNDEFINED_VALUE = -1;
+    public final static int SMS_OPERATIVE_STORAGE_TYPE = 100;
+    public final static int SMS_ARCHIVE_STORAGE_TYPE = 200;
+    public final static int SMS_UNDEFINED_VALUE = -1;
 
-  private int storageType = SMS_ARCHIVE_STORAGE_TYPE;
-  private int rowsMaximum = 500;
+    private int storageType = SMS_ARCHIVE_STORAGE_TYPE;
+    private int rowsMaximum = 500;
 
-  private String abonentAddress = "*";
-  private Mask   abonentAddressMask = null;
-  public boolean isFilterAbonentAddress = false;
+    private String abonentAddress = "*";
+    private Mask abonentAddressMask = null;
+    public boolean isFilterAbonentAddress = false;
 
-  private String fromAddress = "*";
-  private Mask   fromAddressMask = null;
-  public boolean isFilterFromAddress = false;
+    private String fromAddress = "*";
+    private Mask fromAddressMask = null;
+    public boolean isFilterFromAddress = false;
 
-  private String toAddress = "*";
-  private Mask   toAddressMask = null;
-  public boolean isFilterToAddress = false;
+    private String toAddress = "*";
+    private Mask toAddressMask = null;
+    public boolean isFilterToAddress = false;
 
-  private String smeId = "*";
-  public boolean isFilterSmeId = false;
+    private String smeId = "*";
+    public boolean isFilterSmeId = false;
 
-  private String srcSmeId = "*";
-  public boolean isFilterSrcSmeId = false;
+    private String srcSmeId = "*";
+    public boolean isFilterSrcSmeId = false;
 
-  private String dstSmeId = "*";
-  public boolean isFilterDstSmeId = false;
+    private String dstSmeId = "*";
+    public boolean isFilterDstSmeId = false;
 
-  private String routeId = "*";
-  public boolean isFilterRouteId = false;
+    private String routeId = "*";
+    public boolean isFilterRouteId = false;
 
-  private String smsId = "*";
-  public boolean isFilterSmsId = false;
-  public long    smsIdValue = -1;
+    private String smsId = "*";
+    public boolean isFilterSmsId = false;
+    public long smsIdValue = -1;
 
-  private Date fromDate = Functions.truncateTime(new Date());
-  public boolean isFilterFromDate = true;
+    private Date fromDate = Functions.truncateTime(new Date());
+    public boolean isFilterFromDate = true;
 
-  private Date tillDate = new Date();
-  public boolean isFilterTillDate = false;
+    private Date tillDate = new Date();
+    public boolean isFilterTillDate = false;
 
-  private int status = SMS_UNDEFINED_VALUE;
-  public boolean isFilterStatus = false;
+    private int status = SMS_UNDEFINED_VALUE;
+    public boolean isFilterStatus = false;
 
-  private int lastResult = SMS_UNDEFINED_VALUE;
-  public boolean isFilterLastResult = false;
+    private int lastResult = SMS_UNDEFINED_VALUE;
+    public boolean isFilterLastResult = false;
 
-  private String sortBy = "lastDate";
+    private String sortBy = "lastDate";
 
-  public int getStorageType()
-  {
-    return storageType;
-  }
-
-  public void setStorageType(int type)
-  {
-    storageType = type;
-  }
-
-  public int getRowsMaximum()
-  {
-    return rowsMaximum;
-  }
-
-  public void setRowsMaximum(int max)
-  {
-    rowsMaximum = max;
-  }
-
-  public String getAbonentAddress()
-  {
-    return abonentAddress;
-  }
-
-  public boolean isStringHaveValue(String str) {
-    if( str != null && str.length() > 0 && !str.equals("*") ) return true;
-    return false;
-  }
-
-  public void setAbonentAddress(String address)
-  {
-    abonentAddress = address;
-    if( isStringHaveValue(address) ) {
-      try {
-        abonentAddressMask = new Mask(address);
-        isFilterAbonentAddress = true;
-      } catch (AdminException e) {
-        logger.warn("Invalid address specified: "+address);
-        abonentAddressMask = null;
-        isFilterAbonentAddress = false;
-      }
-    } else {
-      abonentAddressMask = null;
-      isFilterAbonentAddress = false;
-
+    public int getStorageType() {
+        return storageType;
     }
-  }
 
-  public String getFromAddress()
-  {
-    return fromAddress;
-  }
-
-  public void setFromAddress(String address)
-  {
-    fromAddress = address;
-    if( isStringHaveValue(address) ) {
-      try {
-        fromAddressMask = new Mask(address);
-        isFilterFromAddress = true;
-      } catch (AdminException e) {
-        logger.warn("Invalid address specified: "+address);
-        fromAddressMask = null;
-        isFilterFromAddress = false;
-      }
-    } else {
-      fromAddressMask = null;
-      isFilterFromAddress = false;
+    public void setStorageType(int type) {
+        storageType = type;
     }
-  }
 
-  public String getToAddress()
-  {
-    return toAddress;
-  }
-
-  public void setToAddress(String address)
-  {
-    toAddress = address;
-    if( isStringHaveValue(address) ) {
-      try {
-        toAddressMask = new Mask(address);
-        isFilterToAddress = true;
-      } catch (AdminException e) {
-        logger.warn("Invalid address specified: "+address);
-        toAddressMask = null;
-        isFilterToAddress = false;
-      }
-    } else {
-      toAddressMask = null;
-      isFilterToAddress = false;
+    public int getRowsMaximum() {
+        return rowsMaximum;
     }
-  }
 
-  public String getSmeId()
-  {
-    return smeId;
-  }
+    public void setRowsMaximum(int max) {
+        rowsMaximum = max;
+    }
 
-  public void setSmeId(String id)
-  {
-    smeId = id;
-    isFilterSmeId = isStringHaveValue(id);
-  }
+    public String getAbonentAddress() {
+        return abonentAddress;
+    }
 
-  public String getSrcSmeId()
-  {
-    return srcSmeId;
-  }
+    public boolean isStringHaveValue(String str) {
+        if (str != null && str.length() > 0 && !str.equals("*")) return true;
+        return false;
+    }
 
-  public void setSrcSmeId(String id)
-  {
-    srcSmeId = id;
-    isFilterSrcSmeId = isStringHaveValue(id);
-  }
+    public void setAbonentAddress(String address) {
+        abonentAddress = address;
+        if (isStringHaveValue(address)) {
+            try {
+                abonentAddressMask = new Mask(address);
+                isFilterAbonentAddress = true;
+            } catch (AdminException e) {
+                logger.warn("Invalid address specified: " + address);
+                abonentAddressMask = null;
+                isFilterAbonentAddress = false;
+            }
+        } else {
+            abonentAddressMask = null;
+            isFilterAbonentAddress = false;
 
-  public String getDstSmeId()
-  {
-    return dstSmeId;
-  }
+        }
+    }
 
-  public void setDstSmeId(String id)
-  {
-    dstSmeId = id;
-    isFilterDstSmeId = isStringHaveValue(id);
-  }
+    public String getFromAddress() {
+        return fromAddress;
+    }
 
-  public String getRouteId()
-  {
-    return routeId;
-  }
+    public void setFromAddress(String address) {
+        fromAddress = address;
+        if (isStringHaveValue(address)) {
+            try {
+                fromAddressMask = new Mask(address);
+                isFilterFromAddress = true;
+            } catch (AdminException e) {
+                logger.warn("Invalid address specified: " + address);
+                fromAddressMask = null;
+                isFilterFromAddress = false;
+            }
+        } else {
+            fromAddressMask = null;
+            isFilterFromAddress = false;
+        }
+    }
 
-  public void setRouteId(String id)
-  {
-    routeId = id;
-    isFilterRouteId = isStringHaveValue(id);
-  }
+    public String getToAddress() {
+        return toAddress;
+    }
 
-  public String getSmsId()
-  {
-    return smsId;
-  }
+    public void setToAddress(String address) {
+        toAddress = address;
+        if (isStringHaveValue(address)) {
+            try {
+                toAddressMask = new Mask(address);
+                isFilterToAddress = true;
+            } catch (AdminException e) {
+                logger.warn("Invalid address specified: " + address);
+                toAddressMask = null;
+                isFilterToAddress = false;
+            }
+        } else {
+            toAddressMask = null;
+            isFilterToAddress = false;
+        }
+    }
 
-  public void setSmsId(String id) throws AdminException
-  {
-	smsId = id;
-	isFilterSmsId = false;
-	smsIdValue = -1;
-	if(isStringHaveValue(id))
-		try
-		{
-			isFilterSmsId = true;
-			smsIdValue = Long.valueOf(id).longValue();
-		}
-		catch(NumberFormatException e)
-		{
-			smsId = "*";
-			throw new AdminException("Invalid numeric format for sms id");
-		}
-  }
+    public String getSmeId() {
+        return smeId;
+    }
 
-  public void setFilterFromDate(boolean enabled)
-  {
-    isFilterFromDate = enabled;
-  }
+    public void setSmeId(String id) {
+        smeId = id;
+        isFilterSmeId = isStringHaveValue(id);
+    }
 
-  public boolean getFilterFromDate()
-  {
-    return isFilterFromDate;
-  }
+    public String getSrcSmeId() {
+        return srcSmeId;
+    }
 
-  public Date getFromDate()
-  {
-    return fromDate;
-  }
+    public void setSrcSmeId(String id) {
+        srcSmeId = id;
+        isFilterSrcSmeId = isStringHaveValue(id);
+    }
 
-  public void setFromDate(Date date)
-  {
-    fromDate = date;
-  }
+    public String getDstSmeId() {
+        return dstSmeId;
+    }
 
-  public void setFilterTillDate(boolean enabled)
-  {
-    isFilterTillDate = enabled;
-  }
+    public void setDstSmeId(String id) {
+        dstSmeId = id;
+        isFilterDstSmeId = isStringHaveValue(id);
+    }
 
-  public boolean getFilterTillDate()
-  {
-    return isFilterTillDate;
-  }
+    public String getRouteId() {
+        return routeId;
+    }
 
-  public Date getTillDate()
-  {
-    return tillDate;
-  }
+    public void setRouteId(String id) {
+        routeId = id;
+        isFilterRouteId = isStringHaveValue(id);
+    }
 
-  public void setTillDate(Date date)
-  {
-    tillDate = date;
-  }
+    public String getSmsId() {
+        return smsId;
+    }
 
-  public String getSortBy()
-  {
-    return sortBy;
-  }
+    public void setSmsId(String id) throws AdminException {
+        smsId = id;
+        isFilterSmsId = false;
+        smsIdValue = -1;
+        if (isStringHaveValue(id))
+            try {
+                isFilterSmsId = true;
+                smsIdValue = Long.valueOf(id).longValue();
+            }
+            catch (NumberFormatException e) {
+                smsId = "*";
+                throw new AdminException("Invalid numeric format for sms id");
+            }
+    }
 
-  public void setSortBy(String by)
-  {
-    sortBy = by;
-  }
+    public void setFilterFromDate(boolean enabled) {
+        isFilterFromDate = enabled;
+    }
 
-  public int getStatus()
-  {
-    return status;
-  }
+    public boolean getFilterFromDate() {
+        return isFilterFromDate;
+    }
 
-  public void setStatus(int status)
-  {
-    this.status = status;
-    isFilterStatus = status != SMS_UNDEFINED_VALUE;
-  }
+    public Date getFromDate() {
+        return fromDate;
+    }
 
-  public int getLastResult()
-  {
-    return lastResult;
-  }
+    public void setFromDate(Date date) {
+        fromDate = date;
+    }
 
-  public void setLastResult(int lastResult)
-  {
-    this.lastResult = lastResult;
-    isFilterLastResult = lastResult != SMS_UNDEFINED_VALUE;
-  }
+    public void setFilterTillDate(boolean enabled) {
+        isFilterTillDate = enabled;
+    }
 
-  public long getSmsIdValue() {
-    return smsIdValue;
-  }
+    public boolean getFilterTillDate() {
+        return isFilterTillDate;
+    }
 
-  public Mask getAbonentAddressMask() {
-    return abonentAddressMask;
-  }
+    public Date getTillDate() {
+        return tillDate;
+    }
 
-  public Mask getFromAddressMask() {
-    return fromAddressMask;
-  }
+    public void setTillDate(Date date) {
+        tillDate = date;
+    }
 
-  public Mask getToAddressMask() {
-    return toAddressMask;
-  }
+    public String getSortBy() {
+        return sortBy;
+    }
+
+    public void setSortBy(String by) {
+        sortBy = by;
+    }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+        isFilterStatus = status != SMS_UNDEFINED_VALUE;
+    }
+
+    public int getLastResult() {
+        return lastResult;
+    }
+
+    public void setLastResult(int lastResult) {
+        this.lastResult = lastResult;
+        isFilterLastResult = lastResult != SMS_UNDEFINED_VALUE;
+    }
+
+    public long getSmsIdValue() {
+        return smsIdValue;
+    }
+
+    public Mask getAbonentAddressMask() {
+        return abonentAddressMask;
+    }
+
+    public Mask getFromAddressMask() {
+        return fromAddressMask;
+    }
+
+    public Mask getToAddressMask() {
+        return toAddressMask;
+    }
+
+    public String getJournalInfo() {
+        String result = "";
+        if (isFilterAbonentAddress) result = result + "abonent address: " + abonentAddress + ", ";
+        if (isFilterFromAddress) result = result + "from address: " + fromAddress + ", ";
+        if (isFilterToAddress) result = result + "to address: " + toAddress + ", ";
+        if (isFilterSmeId) result = result + "sme id: " + smeId + ", ";
+        if (isFilterSrcSmeId) result = result + "src sme id: " + srcSmeId + ", ";
+        if (isFilterDstSmeId) result = result + "dst sme id: " + dstSmeId + ", ";
+        if (isFilterRouteId) result = result + "route id: " + routeId + ", ";
+        if (isFilterSmsId) result = result + "sms id: " + smsId + ", ";
+        if (isFilterFromDate) result = result + "from date: " + fromDate.toString() + ", ";
+        if (isFilterTillDate) result = result + "till date: " + tillDate.toString() + ", ";
+        if (isFilterStatus) {
+            String status = "";
+            switch (this.status) {
+                case 0:
+                    status = "ENROUTE";
+                    break;
+                case 1:
+                    status = "DELIVERED";
+                    break;
+                case 2:
+                    status = "EXPIRED";
+                    break;
+                case 3:
+                    status = "UNDELIVERABLE";
+                    break;
+                case 4:
+                    status = "DELETED";
+                    break;
+                default: status = "ALL";
+            }
+            result = result + "sms status: " + status + ", ";
+        }
+        if (isFilterLastResult) {
+            result = result + "last result: " + lastResult + ", ";
+        }
+        return result;
+    }
 }
