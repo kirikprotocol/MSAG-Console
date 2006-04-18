@@ -23,22 +23,23 @@ public class WHOISDTermsTransformer {
   private final static String EndingToWHOISDTerms = "-->";
   public final static boolean DEBUG = false;
 
-  public static Map buildRules(LinkedList WHOISDpart,String service, Reader reader, File xslFolder) throws Exception {
+  public static Map buildRules(LinkedList termAsList,String service, Reader reader, File xslFolder) throws Exception {
     String content = "";
     String line;
     BufferedReader br = new BufferedReader(reader);
     try {
      while((line=br.readLine()) != null) {
       content = content + line +"\n";
+      termAsList.add(line);
      }
     }
     finally {
       if (br!=null) br.close();
     }
-    return buildRules(WHOISDpart,service,content,xslFolder);
+    return buildRules(service,content,xslFolder);
   }
 
-  public static Map buildRules(LinkedList WHOISDpart,String service, String content, File xslFolder) throws Exception  {
+  public static Map buildRules(String service, String content, File xslFolder) throws Exception  {
     HashMap rules = new HashMap(3);
     Rule newRule;
     String stylesheet = "terms.xsl";
@@ -49,7 +50,6 @@ public class WHOISDTermsTransformer {
     termsresult.remove(1);
     termsresult.add(1,HeaderToWHOISDTerms);
     termsresult.add(EndingToWHOISDTerms);
-    WHOISDpart.addAll(termsresult);
     Vector transports = new Vector(transportToXSl.keySet()) ;
 
     for (Iterator i = transports.iterator() ;i.hasNext();) {
@@ -92,7 +92,7 @@ public class WHOISDTermsTransformer {
     if (DEBUG) debugTransformation(result);
      if (result.size()>2) return true;
     } catch(TransformerException te) {
-      throw new Exception("Can't build rules from term, reason: "+te.getMessage());
+      throw new WHOISDException("Can't build rules from term, reason: "+te.getMessage() + " " + te.getLocationAsString());
     }
     finally {
       if (sw!=null) sw.close();

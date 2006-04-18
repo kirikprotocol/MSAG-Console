@@ -21,6 +21,7 @@ import java.text.MessageFormat;
  */
 public class Rule
 {
+  private int whoisdPartOffset;
   private String transport;
   private Long id;
   private String notes;
@@ -115,6 +116,7 @@ public class Rule
 
   public void appendBody(LinkedList body)
   {
+    whoisdPartOffset = this.body.size();
     this.body.addAll(body);
   }
 
@@ -126,6 +128,11 @@ public class Rule
   public void setTransport(String transport)
   {
     this.transport = transport;
+  }
+
+  public int getWhoisdPartOffset()
+  {
+    return whoisdPartOffset;
   }
 
   public static String getRuleKey(Long id, String transport){

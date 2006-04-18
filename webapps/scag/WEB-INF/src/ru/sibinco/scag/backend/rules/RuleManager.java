@@ -228,7 +228,7 @@ public class RuleManager
   Rule temp = new Rule(id, notes, _transportDir,body/*,length*/);
   transportMap.put(temp.getRuleKey(), temp);
   logger.error("Couldn't parse", e);
-  System.out.println("RuleManager LoadFromFile fileName= "+fileName+" SAXException e= "+e.getMessage());
+  //System.out.println("RuleManager LoadFromFile fileName= "+fileName+" SAXException e= "+e.getMessage());
       // throw new SibincoException("Couldn't parse", e);
 } catch (IOException e) {
   logger.error("Couldn't perfmon IO operation", e);
@@ -256,7 +256,7 @@ public class RuleManager
          if (in!=null) in.close(); if (_in!=null) _in.close();
        } catch (IOException e) { e.printStackTrace(); }
      }
-     System.out.println("RuleManager.LoadXml length= "+length);
+     logger.debug("RuleManager.LoadXml length= "+length);
      return li;
    }
 
@@ -273,7 +273,7 @@ public class RuleManager
  public synchronized LinkedList AddRule(BufferedReader r, final String ruleId, final Rule newRule) throws SibincoException, IOException
  {
   String transport = newRule.getTransport();
-  System.out.println("AddNewRule ruleId= "+ruleId + " ,transport = "+transport);
+  logger.debug("AddNewRule ruleId= "+ruleId + " ,transport = "+transport);
   LinkedList errorInfo=new LinkedList();
   Long Id=Long.valueOf(ruleId);
 
@@ -297,7 +297,7 @@ public class RuleManager
     } else {
       removeRuleFile(ruleId, newRule.getTransport());
     }
-    System.out.println(e.getMessage());// e.printStackTrace();
+    logger.error(e.getMessage());// e.printStackTrace();
     throw e;
    }
   }
@@ -317,7 +317,7 @@ public class RuleManager
  {
    //String ruleId=fileName.substring(5,fileName.length()-4);
    Rule rule = getRule(new Long(ruleId),transport);
-   System.out.println("updateRule ruleId= "+ruleId+" ,transport = "+transport);
+   logger.debug("updateRule ruleId= "+ruleId+" ,transport = "+transport);
    LinkedList errorInfo = new LinkedList();
 
    //instead of scag.updateRule(ruleId, transport);
@@ -345,7 +345,7 @@ public class RuleManager
      saveRule(curbody,ruleId,rule.getTransport());
      currentRuleFile.delete();
      }
-     System.out.println(e.getMessage());// e.printStackTrace();
+     logger.error(e.getMessage());// e.printStackTrace();
      throw e;
     }
    }
@@ -375,7 +375,7 @@ public class RuleManager
 
   public void saveRule(LinkedList li,String ruleId, String transport) throws SibincoException
   {
-    System.out.println("RESAVING current rule body to disc!!!!");
+    logger.debug("RESAVING current rule body to disc!!!!");
 
     try {
       File newFile= composeRuleFile(transport,new Long(ruleId));
@@ -398,7 +398,7 @@ public class RuleManager
       LinkedList li=new LinkedList();
       try {
         File newFile= composeRuleFile(transport,new Long(ruleId));
-        System.out.print("Saving rule to disc!!!! file : " + newFile);
+        logger.debug("Saving rule to disc!!!! file : " + newFile);
         final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), Functions.getLocaleEncoding()));
         String s; li.addFirst("ok");
         while((s=r.readLine())!=null) { li.add(s);
@@ -419,11 +419,11 @@ public class RuleManager
     {
           try {
             scag.removeRule(ruleId,transport);
-            removeRuleFromMap(ruleId, transport);
+            rules.remove(Rule.getRuleKey(ruleId,transport));
             removeRuleFile(ruleId, transport);
           } catch (SibincoException se) {
             if (se instanceof StatusDisconnectedException) {
-               removeRuleFromMap(ruleId, transport);
+               rules.remove(Rule.getRuleKey(ruleId,transport));
                removeRuleFile(ruleId, transport);
             }
             else
@@ -445,16 +445,12 @@ public class RuleManager
        }
     }
 
-    private void removeRuleFromMap(String ruleId, String transport)
-    {
-         rules.remove(Rule.getRuleKey(ruleId,transport));
-    }
     private void removeRuleFile(String ruleId, String transport) throws SibincoException
     {
         final File folder = new File(rulesFolder, transport);
         String filename="rule_"+ruleId+".xml";
         File fileForDeleting= new File(folder,filename);
-        System.out.println("Trying to delete : " + fileForDeleting);
+        logger.debug("Trying to delete : " + fileForDeleting);
         if (fileForDeleting.exists())
           if (fileForDeleting.delete()!=true) throw new SibincoException("Couldn't delete rule " + fileForDeleting.getAbsolutePath());
     }

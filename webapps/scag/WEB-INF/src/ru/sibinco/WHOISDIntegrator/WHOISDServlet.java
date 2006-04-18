@@ -111,20 +111,19 @@ public class WHOISDServlet extends HttpServlet {
      Reader reader = null;
      Map rulesWHOISD = null;
      Rule ruleWHOISD = null;
-     LinkedList WHOISDpart = new LinkedList();
+     LinkedList termAsList = new LinkedList();
      if (isMultipartFormat) {
        int[] dataSlice = extractData(req);
        String content = new String();
        for (int i =0 ;i<dataSlice.length;i++)
          content = content +(char)dataSlice[i];
-       rulesWHOISD = WHOISDTermsTransformer.buildRules(WHOISDpart,service, content, rulemanager.getXslFolder());
+       rulesWHOISD = WHOISDTermsTransformer.buildRules(termAsList,service, new StringReader(content), rulemanager.getXslFolder());
      } else {
        InputStream in = req.getInputStream();
        reader = new BufferedReader(new InputStreamReader(in));
-       rulesWHOISD = WHOISDTermsTransformer.buildRules(WHOISDpart,service, reader, rulemanager.getXslFolder());
+       rulesWHOISD = WHOISDTermsTransformer.buildRules(termAsList,service, reader, rulemanager.getXslFolder());
      }
      String[] transports = Transport.transportTitles;
-     int termoffset = 0;
      if (rulesWHOISD.size()>0)
      for (byte i =0 ;i<transports.length;i++) {
        ruleWHOISD = (Rule)rulesWHOISD.get(transports[i]);
@@ -138,27 +137,57 @@ public class WHOISDServlet extends HttpServlet {
        try {
         parser.parseRule(rulemanager.getRuleContentAsString(ruleWHOISD), ruleSystemId, transports[i]);
        } catch(WHOISDException e) {
-         int linenumberinterm = termoffset + e.getLineNumber();
-         //System.out.println("linenumberinterm: " + linenumberinterm);
-         String message = MessageFormat.format(e.getMessage(), new Object[]{new Integer(linenumberinterm)});
-         throw new WHOISDException(message);
+         throw new WHOISDException(composeErrorMessage(ruleWHOISD,termAsList, e.getMessage(), e.getLineNumber()));
        }
        if (ruleWHOISD != null && curRule!=null) {
           LinkedList error = rulemanager.updateRule(ruleWHOISD,service,transports[i]);
           if (error != null && error.size()>0)
-            throw new WHOISDException(composeErrorMessage(error));
+            throw new WHOISDException(composeErrorMessage(ruleWHOISD,termAsList, (String)error.get(0) + " Line in term - {0}.", Integer.parseInt((String)error.get(1))) );
        } else if (ruleWHOISD != null && curRule==null) {
           LinkedList error = rulemanager.AddRule(ruleWHOISD,service);
           if (error != null && error.size()>0)
-            throw new WHOISDException(composeErrorMessage(error));
+            throw new WHOISDException(composeErrorMessage(ruleWHOISD,termAsList, (String)error.get(0) + " Line in term - {0}.", Integer.parseInt((String)error.get(1))) );
        }
-       termoffset = termoffset+ruleWHOISD.getBody().size() - WHOISDpart.size();
      }
    }
 
-   private String composeErrorMessage(LinkedList li) {
-     String error=(String)li.get(0);
-     return error;
+   private String composeErrorMessage(Rule ruleWHOISD, LinkedList termAsList, String errormessage, int linenumber) {
+     int ruleHeaderLength = Rule.getRuleHeader(ruleWHOISD.getTransport()).size();
+     LinkedList ruleBodyWithoutHeader = ruleWHOISD.getBody();
+     for (int ii=0;ii<(ruleHeaderLength+ruleWHOISD.getWhoisdPartOffset());ii++)
+       ruleBodyWithoutHeader.removeFirst();
+     int offset = 0;
+     int startindex = ruleBodyWithoutHeader.size()-1;
+     for (;startindex>1;startindex--){
+        ruleBodyWithoutHeader.removeLast();
+        offset = Collections.indexOfSubList(termAsList, ruleBodyWithoutHeader);
+        if (offset !=-1) break;
+     }
+
+     if (WHOISDTermsTransformer.DEBUG) {
+     System.out.println("!!!!!!!!!!!!!!! startindex="+startindex);
+     System.out.println("+++++++++++++++++++++++++++++++");
+     for (Iterator iter=termAsList.iterator();iter.hasNext();){
+        System.out.println(iter.next());
+     }
+     System.out.println("+++++++++++++++++++++++++++++++");
+
+     System.out.println("-------------------------------");
+     for (Iterator iter=ruleBodyWithoutHeader.iterator();iter.hasNext();){
+        System.out.println(iter.next());
+     }
+     System.out.println("-------------------------------");
+     System.out.println("offset: " + offset);
+
+     System.out.println("e.getLineNumber() - ruleWHOISD.getOffset() - ruleHeaderLength: " + (linenumber - ruleWHOISD.getWhoisdPartOffset() - ruleHeaderLength));
+     }
+
+     Object linenumberinterm = null;
+     if (offset!=-1)
+      linenumberinterm = new Integer(offset + linenumber - ruleWHOISD.getWhoisdPartOffset() - ruleHeaderLength - 1);
+     else linenumberinterm = new String("unknown");
+     String message = MessageFormat.format(errormessage, new Object[]{linenumberinterm});
+     return message;
    }
 
    private void applyTariffMatrix(String pathToWrite, HttpServletRequest req, boolean isMultipartFormat) throws Exception {
