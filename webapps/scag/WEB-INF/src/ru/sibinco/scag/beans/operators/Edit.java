@@ -6,8 +6,9 @@ package ru.sibinco.scag.beans.operators;
 
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.route.Mask;
-import ru.sibinco.lib.backend.util.config.Config;
 import ru.sibinco.scag.Constants;
+import ru.sibinco.scag.backend.Scag;
+import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.backend.operators.Operator;
 import ru.sibinco.scag.backend.operators.OperatorManager;
 import ru.sibinco.scag.beans.DoneException;
@@ -82,21 +83,19 @@ public class Edit extends EditBean {
                 throw new SCAGJspException(Constants.errors.operators.COULD_NOT_UPDATE_OPERATOR, e);
             }
         }
+        final Scag scag = appContext.getScag();
         try {
-            appContext.getOperatorManager().store();
-        } catch (IOException e) {
-            logger.debug("Couldn't save config", e);
-            throw new SCAGJspException(Constants.errors.status.COULDNT_SAVE_CONFIG, e);
-        }
-
-        try {
-            appContext.getIdsConfig().save();
-        } catch (Config.WrongParamTypeException e) {
-            logger.debug("Couldn't save config", e);
-            throw new SCAGJspException(Constants.errors.status.COULDNT_SAVE_CONFIG, e);
-        } catch (IOException e) {
-            logger.debug("Couldn't save config", e);
-            throw new SCAGJspException(Constants.errors.status.COULDNT_SAVE_CONFIG, e);
+            scag.reloadOperators();
+        } catch (SibincoException e) {
+            if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
+                throw new SCAGJspException(Constants.errors.serviceProviders.COULDNT_RELOAD_SERVICE_PROVIDER, e);
+            }
+        } finally {
+            try {
+                appContext.getOperatorManager().store();
+            } catch (IOException e) {
+                logger.debug("Couldn't save config", e);
+            }
         }
         throw new DoneException();
     }
@@ -105,6 +104,7 @@ public class Edit extends EditBean {
         return -1 == id ? null : String.valueOf(id);
     }
 
+    /** @noinspection JavaDoc*/
     public void setId(final String id) {
         this.id = Long.decode(id).longValue();
     }

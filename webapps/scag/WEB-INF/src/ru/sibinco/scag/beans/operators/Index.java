@@ -5,8 +5,11 @@
 package ru.sibinco.scag.beans.operators;
 
 import ru.sibinco.scag.Constants;
+import ru.sibinco.scag.backend.Scag;
+import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.beans.TabledBeanImpl;
+import ru.sibinco.lib.SibincoException;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,11 +38,19 @@ public class Index extends TabledBeanImpl {
             toRemove.add(operatorId);
         }
         appContext.getOperatorManager().getOperators().keySet().removeAll(toRemove);
+        final Scag scag = appContext.getScag();
         try {
-            appContext.getOperatorManager().store();
-        } catch (IOException e) {
-            logger.debug("Couldn't save config", e);
-            throw new SCAGJspException(Constants.errors.status.COULDNT_SAVE_CONFIG, e);
+            scag.reloadOperators();
+        } catch (SibincoException e) {
+            if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
+                throw new SCAGJspException(Constants.errors.serviceProviders.COULDNT_RELOAD_SERVICE_PROVIDER, e);
+            }
+        } finally {
+            try {
+                appContext.getOperatorManager().store();
+            } catch (IOException e) {
+                logger.debug("Couldn't save config", e);
+            }
         }
     }
 }
