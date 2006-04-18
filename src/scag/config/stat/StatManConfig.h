@@ -18,37 +18,36 @@ public:
 #endif
 
     std::string getDir() const;
-    std::string getTrafficDir() const;
     std::string getPerfHost() const;
     int getPerfGenPort() const;
     int getPerfSvcPort() const;
     int getPerfScPort() const;
 
-    
-    
+	
+	
 protected:
         std::string dir;
-        std::string trafficDir;
         std::string perfHost;
+		
 
         int perfGenPort;
         int perfSvcPort;
         int perfScPort;
 
-        int connect_timeout;
-        int queue_length;
-        
+		int connect_timeout;
+		int queue_length;
+		
 public:
-        int getSaccPort() const;
-        std::string getSaccHost() const;
-        IntHash<std::string> getEventFiler() const;
-        int getReconnectTimeout()const;
-        int getMaxQueueLength()const;
+		int getSaccPort() const;
+		std::string getSaccHost() const;
+		IntHash<std::string> getEventFiler() const;
+		int getReconnectTimeout()const;
+		int getMaxQueueLength()const;
 
 protected:
-        std::string saccHost;
-        int saccPort;
-        IntHash<std::string> eventFilter;
+		std::string saccHost;
+		int saccPort;
+		IntHash<std::string> eventFilter;
 
 };
 
