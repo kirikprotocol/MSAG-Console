@@ -32,7 +32,8 @@ class HttpProcessorImpl : public HttpProcessor
     protected:
         HttpRouterImpl router;
 
-        void registerEvent(int event, HttpCommand& cmd, RuleStatus& rs);
+        void registerEvent(int event, HttpRequest& cmd);
+        void registerEvent(int event, HttpResponse& cmd);
 };
 
 static bool  inited = false;
@@ -89,7 +90,7 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
 
             if(rs.result >= 0)
             {
-                registerEvent(httpRequest, request, rs);
+                registerEvent(httpRequest, request);
                 return true;
             }
 
@@ -101,7 +102,8 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
         http_log_debug("httproute not found");
     }
 
-    registerEvent(httpRequestRejected, request, rs);
+    registerEvent(httpRequestRejected, request);
+
     return false;
 }
 
@@ -119,13 +121,13 @@ bool HttpProcessorImpl::processResponse(HttpResponse& response)
         rs = RuleEngine::Instance().process(response, *se.Get());
         if(rs.result >= 0)
         {
-            registerEvent(httpRequest, response, rs);
+            registerEvent(httpRequest, response);
             return true;
         }
     } else
         http_log_debug("http_response session not found abonent=%s, USR=%d", response.getAbonent().c_str(), response.getUSR());
 
-    registerEvent(httpRequestRejected, response, rs);
+    registerEvent(httpRequestRejected, response);
 
     return false;
 }
@@ -145,13 +147,14 @@ void HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
         rs = RuleEngine::Instance().process(response, *se.Get());
         if(rs.result > 0)
         {
-            registerEvent(httpRequest, response, rs);
+            registerEvent(httpDelivered, response);
+            return;
         }
     }
     else
         http_log_debug("http_status_response session not found abonent=%s, USR=%d", response.getAbonent().c_str(), response.getUSR());
 
-    registerEvent(httpRequestRejected, response, rs);
+    registerEvent(httpFailed, response);
 }
         
 void HttpProcessorImpl::init(const std::string& cfg)
@@ -164,10 +167,19 @@ void HttpProcessorImpl::ReloadRoutes()
     router.ReloadRoutes();
 }
 
-void HttpProcessorImpl::registerEvent(int event, HttpCommand& cmd, RuleStatus& rs)
+void HttpProcessorImpl::registerEvent(int event, HttpRequest& cmd)
 {
-//TODO: Add http event registration
-    Statistics::Instance().registerEvent(HttpStatEvent(event, cmd.getRouteId(), cmd.getServiceId(), cmd.getProviderId(), rs.result));
+    char buf[15];
+    std::string s = cmd.getSite() + ":";
+    sprintf(buf, "%d", cmd.getSitePort());
+    s += buf;
+    s += "/" + cmd.getSitePath();
+    Statistics::Instance().registerEvent(HttpStatEvent(event, cmd.getRouteId(), cmd.getServiceId(), cmd.getProviderId(), s, 0));
+}
+
+void HttpProcessorImpl::registerEvent(int event, HttpResponse& cmd)
+{
+    Statistics::Instance().registerEvent(HttpStatEvent(event, cmd.getRouteId(), cmd.getServiceId(), cmd.getProviderId(), "", cmd.getStatus()));
 }
 
 }}}

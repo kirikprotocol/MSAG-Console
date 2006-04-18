@@ -76,10 +76,10 @@ namespace scag { namespace transport { namespace http
                 "delivered" : "not delivered" );
 #endif          
         }
-	virtual void ReloadRoutes()
-	{
-	    // Do nothing
-	}
+    virtual void ReloadRoutes()
+    {
+        // Do nothing
+    }
         
         virtual ~MyHttpProcessor() {
         }
@@ -151,7 +151,7 @@ void http_mut_log(char *s, unsigned t, void *p) {
 }
 
 #if 1
-HttpManagerConfig cfg = {
+HttpManagerConfig cfg(
     5,  //int readerSockets;
     5,  //int writerSockets;
     2,  //int readerPoolSize;
@@ -161,10 +161,10 @@ HttpManagerConfig cfg = {
     10, //int connectionTimeout;
     //unsigned int maxHeaderLength;
     "0.0.0.0",  //const char *host;
-    5000,       //int port;
-};
+    5000       //int port;
+);
 #else
-HttpManagerConfig cfg = {
+HttpManagerConfig cfg(
     1000,  //int readerSockets;
     1000,  //int writerSockets;
     5,  //int readerPoolSize;
@@ -174,8 +174,8 @@ HttpManagerConfig cfg = {
     20, //int connectionTimeout;
     //unsigned int maxHeaderLength;
     "0.0.0.0",  //const char *host;
-    5000,       //int port;
-};
+    5000       //int port;
+);
 #endif
 
 
@@ -205,7 +205,7 @@ int main() {
     mg.init( p, cfg );
     }
     catch(Exception x) {
-	http_log_error( "Cannot init the HTTP transport: %s", x.what());	
+    http_log_error( "Cannot init the HTTP transport: %s", x.what());    
     }
 
     k = 0;

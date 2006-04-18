@@ -17,12 +17,12 @@ HttpManager::HttpManager() : scags(*this),
 
 void HttpManager::init(HttpProcessor& p, const HttpManagerConfig& _cfg)
 {
-    memcpy(&this->cfg, &_cfg, sizeof(HttpManagerConfig));
-    
+    this->cfg = _cfg;
+        
     readers.init(cfg.readerPoolSize, cfg.readerSockets);
     writers.init(cfg.writerPoolSize, cfg.writerSockets);    
     scags.init(cfg.scagPoolSize, cfg.scagQueueLimit, p);    
-    acceptor.init(cfg.host, cfg.port);
+    acceptor.init(cfg.host.c_str(), cfg.port);
     
     httpLogger = Logger::getInstance("scag.http");    
 }
