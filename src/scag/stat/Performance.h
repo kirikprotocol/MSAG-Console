@@ -41,8 +41,8 @@ struct PerformanceData{
     uint32_t size;
     uint32_t smppCountersNumber;
     PerformanceCounter smppCounters[PERF_CNT_COUNT];
-    /*uint32_t httpCountersNumber;
-    PerformanceCounter httpCounters[PERF_HTTP_COUNT];*/
+    uint32_t httpCountersNumber;
+    PerformanceCounter httpCounters[PERF_HTTP_COUNT];
     uint32_t sessionCount;
     time_t uptime;
     time_t now;
@@ -50,50 +50,40 @@ struct PerformanceData{
     //uint32_t inScheduler;
 };
 
-struct SmppPerformanceCounter
+struct CommonPerformanceCounter
 {
-    uint16_t                counters[PERF_CNT_COUNT];
-    TimeSlotCounter<int>*   slots   [PERF_CNT_COUNT];
+    uint32_t count;
+    uint16_t*                counters;
+    TimeSlotCounter<int>**   slots;
 
-    SmppPerformanceCounter() { 
-        memset(counters, 0, sizeof(counters));
-        memset(slots, 0, sizeof(slots));
+    CommonPerformanceCounter(uint32_t cnt) { 
+        count = cnt;
+
+        counters = new uint16_t[cnt];
+        slots = new TimeSlotCounter<int>*[cnt];
+
+        memset(counters, 0, sizeof(uint16_t) * cnt);
+        memset(slots, 0, sizeof(TimeSlotCounter<int>*) * cnt);
     };
 
-    virtual ~SmppPerformanceCounter() {
-        for (int i=0; i<PERF_CNT_COUNT; i++) 
+    virtual ~CommonPerformanceCounter() {
+
+        for (int i = 0; i < count; i++) 
             if (slots[i]) delete slots[i];
+
+        delete counters;
+        delete slots;
     };
 
     inline void clear() {
-        memset(counters, 0, sizeof(counters));
-    };
-};
-
-struct HttpPerformanceCounter
-{
-    uint16_t                counters[PERF_HTTP_COUNT];
-    TimeSlotCounter<int>*   slots   [PERF_HTTP_COUNT];
-
-    HttpPerformanceCounter() { 
-        memset(counters, 0, sizeof(counters));
-        memset(slots, 0, sizeof(slots));
-    };
-
-    virtual ~HttpPerformanceCounter() {
-        for (int i=0; i<PERF_HTTP_COUNT; i++) 
-            if (slots[i]) delete slots[i];
-    };
-
-    inline void clear() {
-        memset(counters, 0, sizeof(counters));
+        memset(counters, 0, sizeof(uint16_t) * count);
     };
 };
 
 class PerformanceListener{
 public:
     virtual void getSmppPerfData(uint64_t *cnt)=0;
-    //virtual void getHttpPerfData(uint64_t *cnt)=0;
+    virtual void getHttpPerfData(uint64_t *cnt)=0;
     virtual void reportGenPerformance(PerformanceData * data)=0;
     virtual void reportSvcPerformance()=0;
     virtual void reportScPerformance()=0;
@@ -108,127 +98,44 @@ public:
 
 struct GenStatistics
 {
-    uint64_t accepted;
-    uint64_t rejected;
-    uint64_t delivered;
-    uint64_t gw_rejected;
-    uint64_t failed;
-
-    uint64_t cntHttpRequest;
-    uint64_t cntHttpRequestRejected;
-    uint64_t cntHttpResponse;
-    uint64_t cntHttpResponseRejected;
-    uint64_t cntHttpDelivered;
-    uint64_t cntHttpFailed;
+    uint32_t count;
+    uint64_t* counters;
 
     Mutex statLock;
-    GenStatistics()
-        : accepted(0),
-          rejected(0),
-          delivered(0),
-          gw_rejected(0),
-          failed(0),
 
-          cntHttpRequest(0),
-          cntHttpRequestRejected(0),
-          cntHttpResponse(0),
-          cntHttpResponseRejected(0),
-          cntHttpDelivered(0),
-          cntHttpFailed(0)
-    {}
+    GenStatistics(uint32_t cnt)
+    {
+        count = cnt;
+        counters = new uint64_t[cnt];
+        memset(counters, 0, sizeof(uint64_t) * count);
+    }
+
+    ~GenStatistics()
+    {
+        delete counters;
+    }
+
     void clear()
     {
         MutexGuard g(statLock);
-
-        accepted = 0;
-        rejected = 0;
-        delivered = 0;
-        gw_rejected = 0;
-        failed = 0;
-
-        cntHttpRequest = 0;
-        cntHttpRequestRejected = 0;
-        cntHttpResponse = 0;
-        cntHttpResponseRejected = 0;
-        cntHttpDelivered = 0;
-        cntHttpFailed = 0;
+        memset(counters, 0, sizeof(uint64_t) * count);
     }
-    void incSmpp(int counter)
+
+    void inc(int counter)
     {
         MutexGuard g(statLock);
 
-        using namespace Counters;
-        switch(counter)
-        {
-        case cntAccepted:
-            ++accepted;
-            break;
-        case cntRejected:
-            ++rejected;
-            break;
-        case cntDelivered:
-            ++delivered;
-            break;
-        case cntGw_Rejected:
-            ++gw_rejected;
-            break;
-        case cntFailed:
-            ++failed;
-            break;
-        }
+        if(counter >= count)
+            return;
+
+        counters[counter]++;
     }
 
-    void incHttp(int counter)
+    void getCounters(uint64_t * cnt)
     {
         MutexGuard g(statLock);
-
-        using namespace Counters;
-        switch(counter)
-        {
-        case httpRequest:
-            ++cntHttpRequest;
-            break;
-        case httpRequestRejected:
-            ++cntHttpRequestRejected;
-            break;
-        case httpResponse:
-            ++cntHttpResponse;
-            break;
-        case httpResponseRejected:
-            ++cntHttpResponseRejected;
-            break;
-        case httpDelivered:
-            ++cntHttpDelivered;
-            break;
-        case httpFailed:
-            ++cntHttpFailed;
-            break;
-        }
+        memcpy(cnt, counters, sizeof(uint64_t) * count);
     }
-
-    void getSmppCounters(uint64_t * cnt)
-    {
-        MutexGuard g(statLock);
-
-        cnt[0]=accepted;
-        cnt[1]=rejected;
-        cnt[2]=delivered;
-        cnt[3]=gw_rejected;
-        cnt[4]=failed;
-    }
-
-    void getHttpCounters(uint64_t * cnt)
-    {
-        MutexGuard g(statLock);
-
-        cnt[0]=cntHttpRequest;
-        cnt[1]=cntHttpRequestRejected;
-        cnt[2]=cntHttpResponse;
-        cnt[3]=cntHttpResponseRejected;
-        cnt[4]=cntHttpDelivered;
-        cnt[5]=cntHttpFailed;
-    }
-
 };
 
 }

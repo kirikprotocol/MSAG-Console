@@ -11,9 +11,9 @@ using smsc::logger::Logger;
 
 class Registrator : public Thread {
 public:
-	Registrator() : sm(0)
+    Registrator() : sm(0)
     {}
-	virtual ~Registrator()
+    virtual ~Registrator()
     {}
     virtual int Execute();
     void Stop() {isStopping = true; WaitFor();};
@@ -21,7 +21,7 @@ public:
     void init(StatisticsManager * sm_) { sm = sm_;};
     void InitServer(std::string perfHost, int genPort, int svcPort, int scPort);
 protected:
-	StatisticsManager * sm;
+    StatisticsManager * sm;
     bool isStopping;
 };
 
@@ -32,6 +32,7 @@ int Registrator::Execute()
     int counter = 0;
     int httpCounter = 0;
 
+    smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("reg");
     while(!isStopping)
     {
         SmppStatEvent si;
@@ -50,7 +51,6 @@ int Registrator::Execute()
             sm->registerEvent(si);
         }
         //==========================================
-
         count =  7. * ( (double)random() / 2147483648. ) + 1;
         for(int i = 0; i <= count - 1; i++){
             strcpy(si.smeId, "sme2");
@@ -61,10 +61,10 @@ int Registrator::Execute()
             si.errCode = 1;
             sm->registerEvent(si);
         }
-
         //=================== http1 ====================
         if(++httpCounter == 6) httpCounter = 0;
         hs.routeId = "route1";
+        hs.url = "yandex.ru/url1";
         hs.serviceId = 1;
         hs.counter = httpCounter;
         hs.errCode = 1;
@@ -73,9 +73,6 @@ int Registrator::Execute()
             sm->registerEvent(hs);
         }
         //==============================================
-
-        
-
         useconds_t pause = 50000. * ( (double)random() / 2147483648. );
         if(pause < 5000 ) pause = 5000; 
         //printf("pause: %d sec.\n", pause);
@@ -85,7 +82,7 @@ int Registrator::Execute()
 }
 
 Sender::Sender()
-	: perfListener(0), isStopping(false)/*, logger(Logger::getInstance("Sender"))*/
+    : perfListener(0), isStopping(false)/*, logger(Logger::getInstance("Sender"))*/
 {
 }
 
@@ -106,13 +103,12 @@ int Sender::Execute()
     for(int i=0;i<60;i++)times[i]=start.tv_sec;
     int lastscnt=0;
     memset(smppPerfCnt,0,sizeof(smppPerfCnt));
-    //memset(httpPerfCnt,0,sizeof(httpPerfCnt));
+    memset(httpPerfCnt,0,sizeof(httpPerfCnt));
     uint64_t lastSmppPerfCnt[PERF_CNT_COUNT]={0,};
-    //uint64_t lastHttpPerfCnt[PERF_HTTP_COUNT]={0,};
+    uint64_t lastHttpPerfCnt[PERF_HTTP_COUNT]={0,};
     //now.tv_sec=0;
     int i;
-
-   
+ 
 
     // Makes statistics
     using namespace Counters;
@@ -123,13 +119,11 @@ int Sender::Execute()
     printf("Registrator is inited\n");
     registrator.Start();
     printf("Registrator is started\n");
-    
 
 
     //for(;;)
     while(!isStopping)
     {
-      
       while(now.tv_sec==time(NULL))ev.Wait(10);
 
       //===========================
@@ -149,32 +143,31 @@ int Sender::Execute()
          (lasttime.tv_sec*1000.0+lasttime.tv_nsec/1000000.0))/1000;
       //rate=(cnt-last)/tm;
       //avg=cnt/ut;
-      printf("UT:%.3lf         \r",ut);
-      fflush(stdout);
+//      printf("UT:%.3lf         \r",ut);
+//      fflush(stdout);
       //last=cnt;
       lasttime=now;
-
       if(isStopping)break;
 
       uint64_t smppPerf[PERF_CNT_COUNT];
-      //uint64_t httpPerf[PERF_HTTP_COUNT];
+      uint64_t httpPerf[PERF_HTTP_COUNT];
       // success, error, reschedule
       perfListener->getSmppPerfData(smppPerf);
-      //perfListener->getHttpPerfData(httpPerf);
+      perfListener->getHttpPerfData(httpPerf);
       PerformanceData d;
       d.smppCountersNumber=PERF_CNT_COUNT;
+
       for(i=0;i<PERF_CNT_COUNT;i++)
       {
         d.smppCounters[i].lastSecond=(int)(smppPerf[i]-lastSmppPerfCnt[i]);
         d.smppCounters[i].total=smppPerf[i];
       }
-      /*d.httpCountersNumber=PERF_HTTP_COUNT;
+      d.httpCountersNumber=PERF_HTTP_COUNT;
       for(i=0;i<PERF_HTTP_COUNT;i++)
       {
         d.httpCounters[i].lastSecond=(int)(httpPerf[i]-lastHttpPerfCnt[i]);
         d.httpCounters[i].total=httpPerf[i];
-      }*/
-
+      }
 
       int scnt=(now.tv_sec-perfStart)/60;
       
@@ -190,7 +183,7 @@ int Sender::Execute()
         times[idx]=now.tv_sec;
 
         for(i=0;i<PERF_CNT_COUNT;i++)smppPerfCnt[i][idx]=0;
-        //for(i=0;i<PERF_HTTP_COUNT;i++)httpPerfCnt[i][idx]=0;
+        for(i=0;i<PERF_HTTP_COUNT;i++)httpPerfCnt[i][idx]=0;
       }
       if(scnt!=lastscnt)
       {
@@ -199,13 +192,10 @@ int Sender::Execute()
       }
 
       for(int j=0;j<PERF_CNT_COUNT;j++)
-      {
         d.smppCounters[j].average=0;
-      }
-      /*for(int j=0;j<PERF_HTTP_COUNT;j++)
-      {
+
+      for(int j=0;j<PERF_HTTP_COUNT;j++)
         d.httpCounters[j].average=0;
-      }*/
 
       int idx=timeshift;
       for(i=0;i<=scnt;i++,idx++)
@@ -215,37 +205,26 @@ int Sender::Execute()
         {
 
           for(int j=0;j<PERF_CNT_COUNT;j++)
-          {
             smppPerfCnt[j][idx]+=d.smppCounters[j].lastSecond;
-          }
-          /*for(int j=0;j<PERF_HTTP_COUNT;j++)
-          {
-            httpPerfCnt[j][idx]+=d.httpCounters[j].lastSecond;
-          }*/
 
+          for(int j=0;j<PERF_HTTP_COUNT;j++)
+            httpPerfCnt[j][idx]+=d.httpCounters[j].lastSecond;
         }
 
         for(int j=0;j<PERF_CNT_COUNT;j++)
-        {
           d.smppCounters[j].average+=smppPerfCnt[j][idx];
-        }
-        /*for(int j=0;j<PERF_HTTP_COUNT;j++)
-        {
+        for(int j=0;j<PERF_HTTP_COUNT;j++)
           d.httpCounters[j].average+=httpPerfCnt[j][idx];
-        }*/
 
       }
+
       int diff=now.tv_sec-times[timeshift];
       if(diff==0)diff=1;
 
       for(i=0;i<PERF_CNT_COUNT;i++)
-      {
         d.smppCounters[i].average/=diff;
-      }
-      /*for(i=0;i<PERF_HTTP_COUNT;i++)
-      {
+      for(i=0;i<PERF_HTTP_COUNT;i++)
         d.httpCounters[i].average/=diff;
-      }*/
 
       d.now=now.tv_sec;
       d.uptime=now.tv_sec-start.tv_sec;
@@ -255,13 +234,9 @@ int Sender::Execute()
       perfListener->reportGenPerformance(&d);
 
       for(i=0;i<PERF_CNT_COUNT;i++)
-      {
         lastSmppPerfCnt[i]=smppPerf[i];
-      }
-      /*for(i=0;i<PERF_HTTP_COUNT;i++)
-      {
+      for(i=0;i<PERF_HTTP_COUNT;i++)
         lastHttpPerfCnt[i]=httpPerf[i];
-      }*/
 
       perfListener->reportSvcPerformance();
       perfListener->reportScPerformance();

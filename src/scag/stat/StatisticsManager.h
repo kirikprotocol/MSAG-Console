@@ -15,7 +15,6 @@
 #include <util/config/Config.h>
 
 #include "Statistics.h"
-#include "routemap.h"
 #include "TrafficRecord.h"
 #include <core/buffers/File.hpp>
 #include "scag/config/stat/StatManConfig.h"
@@ -25,8 +24,9 @@
 #include "Sender.h"
 #include "Performance.h"
 
-
 #include "sacc/SACC_EventSender.h"
+
+#include <util/BufferSerialization.hpp>
 
 
 using namespace scag::stat::sacc;
@@ -63,8 +63,6 @@ namespace stat {
       int delivered;
       int gw_rejected;
       int failed;
-      int billingOk;
-      int billingFailed;
       int recieptOk;
       int recieptFailed;
 
@@ -82,8 +80,6 @@ namespace stat {
         delivered=0;
         gw_rejected=0;
         failed=0;
-        billingOk = 0;
-        billingFailed = 0;
         recieptOk = 0;
         recieptFailed = 0;
         providerId=-1;
@@ -93,16 +89,12 @@ namespace stat {
 
     struct HttpStat
     {
-      int providerId;
       int request;
       int requestRejected;
       int response;
       int responseRejected;
       int delivered;
       int failed;
-
-      int billingOk;
-      int billingFailed;
 
       IntHash<int> errors;
 
@@ -113,7 +105,6 @@ namespace stat {
 
       void Reset()
       {
-        providerId = -1;
         request = 0;
         requestRejected = 0;
         response = 0;
@@ -121,8 +112,6 @@ namespace stat {
         delivered = 0;
         failed = 0;
 
-        billingOk = 0;
-        billingFailed = 0;
         errors.Empty();
       }
     };
@@ -144,16 +133,11 @@ namespace stat {
         Hash<CommonStat>        statBySmeId[2];
         Hash<CommonStat>        statByRouteId[2];
         Hash<CommonStat>        srvStatBySmeId[2];
-        IntHash<TrafficRecord>  trafficByRouteId;
+        Hash<TrafficRecord>  smppTrafficByRouteId;
 
         Hash<HttpStat>          httpStatByRouteId[2];
-        IntHash<HttpStat>          httpStatByServiceId[2];
-        IntHash<HttpStat>       httpStatByProviderId[2];
-        IntHash<TrafficRecord>  httpTrafficByRouteId;
-        
-        
-    
-
+        Hash<HttpStat>          httpStatByUrl[2];
+        Hash<TrafficRecord>  httpTrafficByRouteId;
 
         IntHash<std::string>       saccEventFiler;
         EventSender thrSaccSender;
@@ -168,20 +152,19 @@ namespace stat {
         int   switchCounters();
         void  resetCounters(int index);
         void  flushCounters(int index);
-        void  dumpCounters(const uint8_t* buff, int buffLen, const tm& flushTM);
+        void  dumpCounters(const uint8_t* buff, int buffLen, const tm& flushTM, tm& fileTM, const char *dirNameFmt, File& file);
 
         void  resetHttpCounters(int index);
         void  flushHttpCounters(int index);
         void  dumpHttpCounters(const uint8_t* buff, int buffLen, const tm& flushTM);
 
         void flushTraffic();
-        void dumpTraffic(const IntHash<TrafficRecord>& traff, const std::string& path);
-        void resetTraffic(const tm& tmDate);
-        void incRouteTraffic(const int routeId, const tm& tmDate);
+        void dumpTraffic(Hash<TrafficRecord>& traff, const std::string& path);
+        void resetTraffic(Hash<TrafficRecord>& h, const tm& tmDate);
+        void incSmppRouteTraffic(const char* routeId);
 
         void flushHttpTraffic();
-        void resetHttpTraffic(const tm& tmDate);
-        void incHttpRouteTraffic(const int routeId, const tm& tmDate);
+        void incHttpRouteTraffic(const char* routeId);
 
         void  calculateTime(tm& flushTM);
         int   calculateToSleep();
@@ -191,17 +174,17 @@ namespace stat {
         Sender sender;
 
         Mutex                            svcCountersLock;
-        Hash   <SmppPerformanceCounter*>  svcSmppCounters;
-        IntHash   <HttpPerformanceCounter*>  svcWapCounters;
-        Hash   <SmppPerformanceCounter*>  svcMmsCounters;
+        Hash   <CommonPerformanceCounter*>  svcSmppCounters;
+        Hash   <CommonPerformanceCounter*>  svcWapCounters;
+        Hash   <CommonPerformanceCounter*>  svcMmsCounters;
 
         Array<Socket*> svcSockets;
         Mutex svcSocketsMutex;
 
         Mutex                             scCountersLock;
-        Hash   <SmppPerformanceCounter*>  scSmppCounters;
-        Hash   <HttpPerformanceCounter*>  scWapCounters;
-        Hash   <SmppPerformanceCounter*>  scMmsCounters;
+        Hash   <CommonPerformanceCounter*>  scSmppCounters;
+        Hash   <CommonPerformanceCounter*>  scWapCounters;
+        Hash   <CommonPerformanceCounter*>  scMmsCounters;
 
         Array<Socket*> scSockets;
         Mutex scSocketsMutex;
@@ -209,17 +192,16 @@ namespace stat {
         Array<Socket*> genSockets;
         Mutex genSocketsMutex;
 
-        GenStatistics genCounters;
+        GenStatistics genStatSmpp;
+        GenStatistics genStatHttp;
 
         //File storage
     private:
 
         std::string     location;
-        bool            bFileTM;
-        tm              fileTM;
-        File file;
+        tm              smppFileTM;
+        File smppFile;
 
-        bool            httpIsFileTM;
         tm              httpFileTM;
         File httpFile;
 
@@ -230,8 +212,7 @@ namespace stat {
         void Fflush(FILE* &cfPtr);
         void Fwrite(const void* data, size_t size, FILE* &cfPtr);
         size_t Fread(FILE* &cfPtr, void* data, size_t size);
-        void initTraffic();
-        void initHttpTraffic();
+        void initTraffic(Hash<TrafficRecord>& h, const std::string loc);
 
         static bool createDir(const std::string& dir);
         bool createStorageDir(const std::string loc);
@@ -242,22 +223,26 @@ namespace stat {
             return new TimeSlotCounter<int>(3600, 1000);
         }
         void incSvcSmppCounter(const char* systemId, int index);
-        void incSvcWapCounter(uint32_t  systemId, int index);
+        void incSvcWapCounter(const char*  systemId, int index);
         void incSvcMmsCounter(const char*  systemId, int index);
-        uint8_t* StatisticsManager::dumpSvcCounters(uint32_t& smePerfDataSize);
+        void StatisticsManager::dumpSvcCounters(SerializationBuffer& buf);
 
         void incScSmppCounter(const char* systemId, int index);
         void incScWapCounter(const char*  systemId, int index);
         void incScMmsCounter(const char*  systemId, int index);
-        uint8_t* StatisticsManager::dumpScCounters(uint32_t& smePerfDataSize);
+        void StatisticsManager::dumpScCounters(SerializationBuffer& buf);
 
         int indexByCounter(int counter);
         int indexByHttpCounter(int counter);
+
+        void SerializeSmppStat(Hash<CommonStat>& smppStat, SerializationBuffer& buf, bool add);
+        void SerializeHttpStat(Hash<HttpStat>& httpStat, SerializationBuffer& buf);
+        void incSvcScCounter(const char* systemId, int index, int max_cnt, Hash<CommonPerformanceCounter*>& svcCounters, Mutex& mt);
+        void dumpPerfCounters(SerializationBuffer& buf, Hash<CommonPerformanceCounter*>& h);
+        void reportPerformance(bool t, Mutex& mt, Array<Socket*>& socks);
+        void incRouteTraffic(Hash<TrafficRecord>& h,  const char* routeId);
+        void dumpTrafficHash(Hash<TrafficRecord>& traff, SerializationBuffer& buf);
     public:
-
-        static RouteMap routeMap;
-        static RouteMap httpRouteMap;
-
         static void init(const StatManConfig& statManCfg);    
         
         virtual int Execute();
@@ -275,14 +260,15 @@ namespace stat {
 
 
         virtual void getSmppPerfData(uint64_t *cnt);
-        //virtual void getHttpPerfData(uint64_t *cnt);
+        virtual void getHttpPerfData(uint64_t *cnt);
+
         virtual void reportGenPerformance(PerformanceData * data);
         virtual void reportSvcPerformance();
         virtual void reportScPerformance();
+
         virtual void addSvcSocket(Socket * socket);
         virtual void addScSocket(Socket * socket);
         virtual void addGenSocket(Socket * socket);
-
             
         StatisticsManager();
         virtual ~StatisticsManager();

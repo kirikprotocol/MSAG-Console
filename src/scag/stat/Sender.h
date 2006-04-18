@@ -19,8 +19,8 @@ using smsc::logger::Logger;
 
 class Sender : public Thread {
 public:
-	Sender();
-	virtual ~Sender();
+    Sender();
+    virtual ~Sender();
     virtual int Execute();
     void Stop();
     void Start();
@@ -28,9 +28,9 @@ public:
     void InitServer(std::string perfHost, int genPort, int svcPort, int scPort);
     void reinitPrfSrvLogger();
 protected:
-	PerfSocketServer perfServer;
+    PerfSocketServer perfServer;
     int smppPerfCnt[PERF_CNT_COUNT][60];
-    //int httpPerfCnt[PERF_HTTP_COUNT][60];
+    int httpPerfCnt[PERF_HTTP_COUNT][60];
     int timeshift;
     time_t times[60];
     timespec start;
