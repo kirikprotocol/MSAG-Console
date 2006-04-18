@@ -30,13 +30,28 @@ BillingConnect::BillingConnect(BillingCFG * cfg, SSNSession* ss7_sess, Connect* 
 BillingConnect::~BillingConnect()
 {
     MutexGuard grd(_mutex);
-    //abort all Billings
+
+    //delete died billings first
+    cleanUpBills();
+
+    //abort all active Billings
     for (BillingMap::iterator it = workers.begin(); it != workers.end(); it++) {
         Billing * bill = (*it).second;
         bill->Abort("BillingConnect destroyed");
         delete bill;
     }
     workers.clear();
+}
+
+//mutex shouldbe locked prior to calling this function
+void BillingConnect::cleanUpBills(void)
+{
+    if (corpses.size()) {
+        for (BillingList::iterator it = corpses.begin(); it != corpses.end(); it++)
+            delete (*it);
+        corpses.clear();
+    }
+    return;
 }
 
 //returns true on success, false on closed connect(possibly due to error)
@@ -50,17 +65,18 @@ bool BillingConnect::sendCmd(SerializableObject* cmd)
 void BillingConnect::billingDone(Billing* bill)
 {
     MutexGuard grd(_mutex);
-    unsigned int billId = bill->getId();
+    //delete died billings first
+    cleanUpBills();
 
+    unsigned int billId = bill->getId();
     BillingMap::iterator it = workers.find(billId);
-    if (it == workers.end()) {
+    if (it == workers.end())
         smsc_log_error(logger, "BillConn[%u]: Attempt to free unregistered Billing[%u]",
                         _bcId, billId);
-    } else {
+    else
         workers.erase(it); //billId
-        corpses.push_back(bill);
-    }
-    //smsc_log_debug(logger, "Billing[%u:%u]: released", _bcId, billId);
+    corpses.push_back(bill);
+    //smsc_log_debug(logger, "Billing[%u.%u]: released", _bcId, billId);
     return; //grd off
 }
 
@@ -75,10 +91,7 @@ void BillingConnect::onCommandReceived(Connect* conn, SerializableObject* recvCm
     {
         MutexGuard   grd(_mutex);
         //delete died billings first
-        for (BillingList::iterator it = corpses.begin(); it != corpses.end(); it++)
-            delete (*it);
-        corpses.clear();
-
+        cleanUpBills(); 
         //assign command to Billing
         unsigned int dlgId = cmd->getDialogId();
         smsc_log_debug(logger, "BillConn[%u]: Cmd 0x%X for Billing[%u] received",
@@ -145,21 +158,8 @@ Billing::Billing(BillingConnect* bconn, unsigned int b_id,
 Billing::~Billing()
 {
     MutexGuard grd(bilMutex);
-    //check for pending query to AbonentProvider
-    if (providerQueried) {
-        _cfg.abProvider->cancelQuery(abNumber, this);
-        providerQueried = false;
-    }
-    if (timers.size()) {
-        for (TimersMAP::iterator it = timers.begin(); it != timers.end(); it++) {
-            StopWatch * timer = (*it).second;
-            timer->release();
-            smsc_log_debug(logger, "Billing[%u.%u]: Released timer[%u] at state %u",
-                        _bconn->bConnId(), _bId, timer->getId(), state);
-        }
-    }
-    if (inap)
-        delete inap;
+    doCleanUp();
+    smsc_log_debug(logger, "Billing[%u.%u]: Deleted", _bconn->bConnId(), _bId);
 }
 
 //NOTE: it's the processing graph entry point, so locks bilMutex !!!
@@ -177,8 +177,32 @@ bool Billing::BillComplete(void) const
 
 /* ---------------------------------------------------------------------------------- *
  * Protected/Private methods:
- * NOTE: these methods are not the processing graph entries, so never lock bilMutex !
+ * NOTE: these methods are not the processing graph entries, so never lock bilMutex,
+ *       it's a caller responsibility to lock bilMutex !!!
  * ---------------------------------------------------------------------------------- */
+void Billing::doCleanUp(void)
+{
+    //check for pending query to AbonentProvider
+    if (providerQueried) {
+        _cfg.abProvider->cancelQuery(abNumber, this);
+        providerQueried = false;
+    }
+    if (timers.size()) {
+        for (TimersMAP::iterator it = timers.begin(); it != timers.end(); it++) {
+            StopWatch * timer = (*it).second;
+            timer->release();
+            smsc_log_debug(logger, "Billing[%u.%u]: Released timer[%u] at state %u",
+                        _bconn->bConnId(), _bId, timer->getId(), state);
+        }
+        timers.clear();
+    }
+    if (inap) {
+        delete inap;
+        inap = NULL;
+    }
+    return;
+}
+
 void Billing::doFinalize(bool doReport/* = true*/)
 {
     smsc_log_info(logger, "Billing[%u.%u]: %scomplete, CDR is %scomposed, "
@@ -194,8 +218,9 @@ void Billing::doFinalize(bool doReport/* = true*/)
         smsc_log_info(logger, "Billing[%u.%u]: CDR written: msgId = %llu, billed by IN: %s",
                     _bconn->bConnId(), _bId, cdr._msgId, cdr._inBilled ? "true": "false");
     }
-    smsc_log_debug(logger, "Billing[%u:%u]: finished, state: %u",
-                   _bconn->bConnId(), _bId, state);
+    smsc_log_debug(logger, "Billing[%u.%u]: %s, state: %u",
+                   _bconn->bConnId(), _bId, doReport ? "finished" : "cancelled", state);
+    doCleanUp();
     if (doReport)
         _bconn->billingDone(this);
     return;
@@ -204,7 +229,7 @@ void Billing::doFinalize(bool doReport/* = true*/)
 void Billing::abortThis(const char * reason/* = NULL*/, bool doReport/* = true*/)
 {
     smsc_log_error(logger, "Billing[%u.%u]: Aborting%s%s",
-                   _bconn->bConnId(), _bId, reason ? ", reason " : "", reason ? reason : "");
+                   _bconn->bConnId(), _bId, reason ? ", reason: " : "", reason ? reason : "");
     if (inap) {
         if ((state >= bilContinued) && (state < bilComplete)) { //send sms_o_failure to SCF
             smsc_log_debug(logger, "Billing[%u.%u]: SSF --> SCF EventReportSMS(o_smsFailure (0x%X))",
@@ -214,8 +239,6 @@ void Billing::abortThis(const char * reason/* = NULL*/, bool doReport/* = true*/
                 inap->eventReportSMS(&report);
             } catch (std::exception & exc) { }
         }
-        delete inap;
-        inap = NULL;
     }
     state = Billing::bilAborted;
     doFinalize(doReport);

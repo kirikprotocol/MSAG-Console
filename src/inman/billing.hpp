@@ -140,6 +140,8 @@ protected:
     typedef std::map<unsigned int, Billing*> BillingMap;
     typedef std::list<Billing*> BillingList;
 
+    void cleanUpBills(void);
+
     Mutex       _mutex;
     Logger*     logger;
     unsigned int _bcId;
@@ -203,6 +205,7 @@ public:
 protected:
     typedef std::map<unsigned, StopWatch*> TimersMAP;
     SSNSession * activateSSN(void);
+    void doCleanUp(void);
     void doFinalize(bool doReport = true);
     void abortThis(const char * reason = NULL, bool doReport = true);
     bool startCAPDialog(void);
