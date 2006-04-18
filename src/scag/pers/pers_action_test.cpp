@@ -42,19 +42,17 @@ int main(int argc, char* argv[])
 
     atexit(atExitHandler);
 
-//    SCAGCommand::TransportTypeHash = SCAGCommand::InitTransportTypeHash();
-
     try{
         ConfigManager::Init();
         ConfigManager & cfg = ConfigManager::Instance();
-
-        StatisticsManager::init(cfg.getStatManConfig());
 
         BillingManager::Init(cfg.getBillManConfig());
 
         SessionManager::Init(cfg.getSessionManConfig());
 
         PersClient::Init("127.0.0.1", 1200, 300);
+
+        StatisticsManager::init(cfg.getStatManConfig());
 
         RuleEngine::Init("./rules");
         RuleEngine& re=RuleEngine::Instance();

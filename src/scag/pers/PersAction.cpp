@@ -113,7 +113,7 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
 
     if(cmd == PC_DEL)
     {
-        smsc_log_debug(logger, "act params: cmd = %d, profile=%d, var=%s", cmd, profile, var.c_str());
+        smsc_log_debug(logger, "act params: cmd = %s, profile=%d, var=%s", getStrCmd(), profile, var.c_str());
         return;
     }
 
@@ -136,7 +136,7 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
 
     if(cmd == PC_GET)
     {
-        smsc_log_debug(logger, "act params: cmd = %d, profile=%d, var=%s", cmd, profile, var.c_str());
+        smsc_log_debug(logger, "act params: cmd = %s, profile=%d, var=%s", getStrCmd(), profile, var.c_str());
         return;
     }
 
@@ -158,7 +158,7 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
             throw SCAGException("PersAction '%s' : invalid 'finaldate' parameter", getStrCmd());
 
         final_date = mktime(&time);
-        smsc_log_debug(logger, "act params: cmd = %d, profile=%d, var=%s, policy=%d, final_date=%d(%s)", cmd, profile, var.c_str(), policy, final_date, dt.c_str());
+        smsc_log_debug(logger, "act params: cmd = %s, profile=%d, var=%s, policy=%d, final_date=%d(%s)", getStrCmd(), profile, var.c_str(), policy, final_date, dt.c_str());
         return;
     }
 
@@ -176,7 +176,7 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
 
     life_time = time.tm_hour * 3600 + time.tm_min * 60 + time.tm_sec;
 
-    smsc_log_debug(logger, "act params: cmd = %d, profile=%d, var=%s, policy=%d, life_time=%d(%s)", cmd, profile, var.c_str(), policy, life_time, lt.c_str());
+    smsc_log_debug(logger, "act params: cmd = %s, profile=%d, var=%s, policy=%d, life_time=%d(%s)", getStrCmd(), profile, var.c_str(), policy, life_time, lt.c_str());
 }
 
 uint32_t PersAction::getKey(const CommandProperty& cp, ProfileType pt)
@@ -235,7 +235,7 @@ static void setREPropFromPersProp(REProperty& rep, Property& prop)
 
 bool PersAction::run(ActionContext& context)
 {
-    smsc_log_error(logger,"Run Action 'PersAction cmd=%d'...", cmd);
+    smsc_log_error(logger,"Run Action 'PersAction cmd=%s'...", getStrCmd());
 
     try{
         Property prop;
