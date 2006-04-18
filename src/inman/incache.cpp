@@ -3,8 +3,10 @@ static const char ident[] = "$Id$";
 #include <assert.h>
 #include "inman/incache.hpp"
 
+using smsc::core::buffers::HashListLink;
+
 #define DIRECTORY_SEPARATOR '/'
-                            
+
 namespace smsc {
 namespace inman {
 namespace cache {
@@ -14,8 +16,10 @@ const char * _sabBillType[] = {"Unknown", "Postpaid", "Prepaid" };
 /* ************************************************************************** *
  * class AbonentCache implementation:
  * ************************************************************************** */
-// Hash<>:Node  +  AccessList:Node
-//sizeof(AbonentId)*2 + sizeof(AbonentRecordRAM) + sizeof(AbonentId)*2 
+// RAM usage per abonent:
+//     Hash<>:Node * 2 +  AccessList:Node =
+//     sizeof(void*) + ((sizeof(AbonentId) + sizeof(HashListLink<AbonentRecordRAM>))*2
+//      + (sizeof(AbonentId) + sizeof(void*)*2)
 
 static const unsigned int DFLT_RAM = 40; //Mb
 static const char _nmCch[] = "icache7.dat";
@@ -23,11 +27,15 @@ static const char _nmCch[] = "icache7.dat";
 AbonentCache::AbonentCache(AbonentCacheCFG * cfg, Logger * uselog/* = NULL*/)
     : _cfg(*cfg), useFile(false)
 {
-    static const unsigned int DFLT_FACTOR = sizeof(AbonentRecordRAM) + sizeof(AbonentId)*4;
+    static const unsigned int DFLT_FACTOR =
+        (sizeof(AbonentId) + sizeof(AbonentRecordRAM) + 4 + sizeof(void*))*2
+         + (sizeof(AbonentId) + sizeof(void*)*3);
+
     assert(_cfg.nmDir && _cfg.fileRcrd);
     logger = uselog ? uselog : Logger::getInstance("smsc.inman.InCache");
-    maxRamIt = (((_cfg.RAM ? _cfg.RAM : DFLT_RAM)<<10)/DFLT_FACTOR)<<10;
-    smsc_log_info(logger, "InCache: RAM cache: %u abonents.", maxRamIt);
+    maxRamIt = ((((_cfg.RAM ? _cfg.RAM : DFLT_RAM)<<10)-1)/DFLT_FACTOR)<<10;
+    smsc_log_info(logger, "InCache: RAM cache: %u abonents (factor: %u).",
+                  maxRamIt, DFLT_FACTOR);
 
     std::string nmFile(_cfg.nmDir);
     if (nmFile[nmFile.length()] != DIRECTORY_SEPARATOR)
