@@ -27,19 +27,19 @@
         <param name="folder" type="string">@daemon.dir@</param>
     </section>
     <section name="perfmon">
-        <param name="appletport" type="int">@perfmon.applet.port@</param>
+        <param name="appletport" type="int">@stat.perf_applet.port@</param>
         <param name="gwhost" type="string">@connect.host@</param>
-        <param name="gwport" type="int">@perfmon.scag.port@</param>
+        <param name="gwport" type="int">@stat.perf_port@</param>
     </section>
     <section name="svcmon">
-        <param name="appletport" type="int">@svcmon.applet.port@</param>
+        <param name="appletport" type="int">@stat.perf_svc_applet.port@</param>
         <param name="svcHost" type="string">@connect.host@</param>
-        <param name="svcPort" type="int">@svcmon.scag.port@</param>
+        <param name="svcPort" type="int">@stat.perf_svc_port@</param>
     </section>
     <section name="scmon">
-        <param name="appletport" type="int">@scmon.applet.port@</param>
+        <param name="appletport" type="int">@stat.perf_sc_applet.port@</param>
         <param name="schost" type="string">@connect.host@</param>
-        <param name="scport" type="int">@scmon.scag.port@</param>
+        <param name="scport" type="int">@stat.perf_sc_port@</param>
     </section>
     <section name="jdbc">
         <param name="driver" type="string">@jdbc.driver@</param>
