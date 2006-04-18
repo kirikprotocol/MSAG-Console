@@ -1,10 +1,47 @@
+
+Формат файла статистики SMPP:
+
 <header> = <head: 9 bytes> <version: uint16>
+<stat> = <hour: uint8><min: uint8>  <routeCount:      uint32><routeRecord:     1...routeCount>
+                    <servicesCount:   uint32><serviceRecord:   1...serviceCount>
+                    <smeCount:   uint32><smeRecord:   1...smeCount>
 
-<stat> = <len: uint32> <hour: uint8> <min: uint8> <routeCount:      uint32><routeRecord:     1...routeCount>
+<routeRecord> = <routeIdLength: uint16><routeId: routeIdLength bytes>
+            <accepted:           uint32>
+            <rejected:   uint32>
+            <gw_rejected:      uint32>
+            <delivered:         uint32>
+            <failed:        uint32>
+            <recieptOk:        uint32>
+            <recieptFailed:        uint32>
+        <errCount: uint32><errRecord: 1...errCount>
+<errRecord> = <errCode: uint32><errCounter: uint32>
 
+<serviceRecord> = <serviceIdLength: uint16><serviceId: serviceIdLength bytes>
+            <accepted:           uint32>
+            <rejected:   uint32>
+            <gw_rejected:      uint32>
+            <delivered:         uint32>
+            <failed:        uint32>
+        <errCount: uint32><errRecord: 1...errCount>
+<errRecord> = <errCode: uint32><errCounter: uint32>
+
+<smeRecord> = <smeIdLength: uint16><smeId: smeIdLength bytes>
+            <accepted:           uint32>
+            <rejected:   uint32>
+            <gw_rejected:      uint32>
+            <delivered:         uint32>
+            <failed:        uint32>
+        <errCount: uint32><errRecord: 1...errCount>
+<errRecord> = <errCode: uint32><errCounter: uint32>
+
+Формат файла статистики HTTP:
+
+<header> = <head: 9 bytes> <version: uint16>
+<stat> = <hour: uint8> <min: uint8> <routeCount:      uint32><routeRecord:     1...routeCount>
          <urlCount:   uint32><urlRecord:   1...urlCount>
 
-<routeRecord> = <routeIdLength: uint8><routeId: routeIdLength bytes>
+<routeRecord> = <routeIdLength: uint16><routeId: routeIdLength bytes>
             <request:           uint32>
             <requestRejected:   uint32>
             <response:      uint32>
@@ -13,20 +50,13 @@
             <failed:        uint32>
         <errCount: uint32><errRecord: 1...errCount>
 <errRecord> = <errCode: uint32><errCounter: uint32>
-<urlRecord> = <urlIdLength: uint8><urlId: urlIdLength bytes>
 
+<urlRecord> = <urlIdLength: uint16><urlId: urlIdLength bytes>
             <request:           uint32>
-
             <requestRejected:   uint32>
-
             <response:      uint32>
-
             <responseRejected:  uint32>
-
             <delivered:         uint32>
-
             <failed:        uint32>
-
         <errCount: uint32><errRecord: 1...errCount>
-
 <errRecord> = <errCode: uint32><errCounter: uint32>
