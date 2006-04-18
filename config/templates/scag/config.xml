@@ -37,8 +37,8 @@
   </section>
 
   <section name="MessageStorage">
-    <param name="statisticsDir" type="string">@storage.statistics_dir@</param>
-    <param name="trafficDir" type="string">@storage.traffic_dir@</param>
+    <param name="statisticsDir" type="string">@stat.dir@</param>
+    <param name="trafficDir" type="string">@stat.traffic_dir@</param>
   </section>
   
   <section name="smpp">

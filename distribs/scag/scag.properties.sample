@@ -39,12 +39,10 @@ pers.host=0.0.0.0
 
 session.location=/opt/home/msag_test/build/msag_distr/store
 
-storage.statistics_dir=/opt/home/msag_test/build/msag_distr/storage/stat
-storage.traffic_dir=/opt/home/msag_test/build/msag_distr/storage/traffic
-
 rules.path=/opt/home/msag_test/build/msag_distr/services/scag/conf/rules
 
 stat.dir=/opt/home/msag_test/build/msag_distr/statistics
+stat.traffic_dir=/opt/home/msag_test/build/msag_distr/statistics/traffic
 stat.perf_host=127.0.0.1
 stat.perf_port=14997
 stat.perf_svc_port=14996
