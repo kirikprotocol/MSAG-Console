@@ -452,8 +452,8 @@ void ConfigManagerImpl::reload(Array<int>& changedConfigs)
       throw ConfigException("Parse result is null");
     }
 
-    if(  getStatManConfig_().check(ConfigView(config, "MessageStorage"))  ){
-        getStatManConfig_().init(ConfigView(config, "MessageStorage"));
+    if(  getStatManConfig_().check(ConfigView(config, "StatisticsManager"))  ){
+        getStatManConfig_().init(ConfigView(config, "StatisticsManager"));
         changedConfigs.Push(STATMAN_CFG);
     }
 

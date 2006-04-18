@@ -393,7 +393,8 @@ void Scag::init()
         throw Exception("Exception during initialization of PersClient: %s", e.what());
     }catch (scag::pers::client::PersClientException& e)
     {
-        throw Exception("Exception during initialization of PersClient: %s", e.what());
+        smsc_log_error(logger, "Exception during initialization of PersClient: %s", e.what())
+//        throw Exception("Exception during initialization of PersClient: %s", e.what());
     }catch (...)
     {
         throw Exception("Exception during initialization of PersClient: unknown error");
@@ -433,15 +434,6 @@ void Scag::init()
   //********************************************************
   //********** Statistics manager initialization ***********
   try{
-      using scag::config::ConfigView;
-      std::auto_ptr<ConfigView> cv(new ConfigView(*cfg.getConfig(),"MessageStorage"));
-
-      auto_ptr <char> loc(cv->getString("statisticsDir", 0, false));
-      if(!loc.get())
-          throw Exception("MessageStorage.statisticsDir not found");
-
-      std::string location = loc.get();
-      //StatisticsManager::init(location);
       StatisticsManager::init(cfg.getStatManConfig());
 
       smsc_log_info(log, "Statistics manager started" );
@@ -580,7 +572,7 @@ void Scag::init()
         http_cfg.scagQueueLimit = cv->getInt("scagQueueLimit", NULL);
         http_cfg.connectionTimeout = cv->getInt("connectionTimeout", NULL);
         http_cfg.port = cv->getInt("port", NULL);
-        smsc_log_error(log, "http_host=%s, http_port=%d", http_cfg.host.c_str(), http_cfg.port);
+        smsc_log_debug(log, "http_host=%s, http_port=%d", http_cfg.host.c_str(), http_cfg.port);
 
         httpMan.init(hp, http_cfg);
 
