@@ -1,5 +1,6 @@
 <project name="SCA gateway" default="help">
   <property file="build.properties"/>
+  <property file="scag.properties"/>
   <condition property="INIT_FAILED" value="yes" >
     <not>
       <and>
@@ -226,19 +227,14 @@ Targets:
       <fileset dir="${TEMPL_DIR}/scag" includes="config.xml smpp.xml smpp_routes.xml http_routes.xml operators.xml tariffs.xml services.xml"/>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
-    <!--<symlink resource="../services/scag/conf/config.xml"        link="${DISTR_DIR}/conf/scag.xml" overwrite="yes"/>-->
-    <!--<symlink resource="../services/scag/conf/smpp.xml"       link="${DISTR_DIR}/conf/smpp.xml" overwrite="yes"/>-->
-    <!--<symlink resource="../services/scag/conf/operators.xml"       link="${DISTR_DIR}/conf/operators.xml" overwrite="yes"/>-->
-    <!--<symlink resource="../services/scag/conf/tariffs.xml"       link="${DISTR_DIR}/conf/tariffs.xml" overwrite="yes"/>-->
-    <!--<symlink resource="../services/scag/conf/services.xml"       link="${DISTR_DIR}/conf/services.xml" overwrite="yes"/>-->
-    <!--<symlink resource="../services/scag/conf/routes.xml"        link="${DISTR_DIR}/conf/routes.xml" overwrite="yes"/>-->
-    <!--<symlink resource="../services/scag/conf/routes_.xml"       link="${DISTR_DIR}/conf/routes_.xml" overwrite="yes"/>-->
-    <!--<symlink resource="../services/scag/conf/routes__.xml"      link="${DISTR_DIR}/conf/routes__.xml" overwrite="yes"/>-->
 
-    <!-- turn scripts be executable -->
+      <!-- turn scripts be executable -->
     <chmod perm="755">
       <fileset dir="${DISTR_DIR}" includes="**/*.sh"/>
     </chmod>
+      <mkdir dir="${session.location}" description="create sessions dir"/>
+      <mkdir dir="${stat.dir}" description="create statistics dir"/>
+      <mkdir dir="${stat.traffic_dir}" description="create traffic dir"/>
   </target>
 
   <target name="extra_libs" depends="">
