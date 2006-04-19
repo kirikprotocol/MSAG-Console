@@ -855,7 +855,6 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
-
   ////
   //
   //  SMS validity checks started
