@@ -25,7 +25,7 @@ struct OStr //: public MemoryManagerUnit
   uint16_t length;
   OStr() : text(0),length(0) {};
   //void dispose() {if ( text ) smartFree(text);}
-  void dispose() {if ( text ) delete text; text = 0; length = 0;}
+  void dispose() {if ( text ) delete [] text; text = 0; length = 0;}
   ~OStr() {/*__trace__(__PRETTY_FUNCTION__); __watch__(text);*/ dispose();}
   operator const char*(){__require__ (length==0 || text!=NULL); return text;}
   const char* cstr(){__require__ (length==0 || text!=NULL); return text;}
@@ -48,6 +48,19 @@ struct OStr //: public MemoryManagerUnit
     memcpy(text,src,src_length);
     length = src_length;
   }
+
+  void append(const char* src,int src_length)
+  {
+    if(src_length==0)return;
+    char* newtext=new char[length+src_length+1];
+    if(text)memcpy(newtext,text,length);
+    memcpy(newtext+length,src,src_length);
+    length+=src_length;
+    newtext[length]=0;
+    if(text)delete [] text;
+    text=newtext;
+  }
+
   OStr(const OStr& ostr) : text(0), length(0)
   {
     copy(ostr.text, ostr.length);

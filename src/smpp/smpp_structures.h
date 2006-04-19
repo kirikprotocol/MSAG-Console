@@ -69,10 +69,6 @@ namespace SmppOptionalTags{
   static const uint16_t supported_codeset   = 0x4101;
   static const uint16_t imsi_address        = 0x4102;
   static const uint16_t msc_address         = 0x4103;
-  /* msag specific*/
-  static const uint16_t charging              = 0x4901;
-  static const uint16_t message_type          = 0x4902;
-  static const uint16_t expected_message_type = 0x4903;
 }
 
 namespace SmppOptionalLength{
@@ -125,10 +121,6 @@ namespace SmppOptionalLength{
   static const uint16_t supported_codeset   = 2;
   static const uint16_t imsi_address        = 31;
   static const uint16_t msc_address         = 31;
-  /* msc specific */
-  static const uint16_t charging              = 1;
-  static const uint16_t message_type          = 2;
-  static const uint16_t expected_message_type = 2;
 }
 
 namespace SmppOptionalFields{
@@ -183,9 +175,7 @@ namespace SmppOptionalFields{
   static const uint64_t imsi_address        = BIT(46);
   static const uint64_t msc_address         = BIT(47);
 
-  static const uint64_t charging              = BIT(48);
-  static const uint64_t message_type          = BIT(49);
-  static const uint64_t expected_message_type = BIT(50);
+  static const uint64_t unknownFields       = BIT(48);
 #undef BIT
 }
 
@@ -619,9 +609,7 @@ struct SmppOptional //: public MemoryManagerUnit
   _o_cstr_property__(msc_address)
   _o_int_property__(uint16_t,supported_codeset)
 
-  _o_int_property__(uint8_t,charging)
-  _o_int_property__(uint16_t,message_type)
-  _o_int_property__(uint16_t,expected_message_type)
+  _o_ostr_property__(unknownFields)
 
 #undef _o_int_property__
 #undef _o_intarr_property__
@@ -687,9 +675,8 @@ struct SmppOptional //: public MemoryManagerUnit
   _o_cstr_property__(msc_address)
   _o_int_property__(uint16_t,supported_codeset)
 
-  _o_int_property__(uint8_t,charging)
-  _o_int_property__(uint16_t,message_type)
-  _o_int_property__(uint16_t,expected_message_type)
+  + (uint32_t)( has_unknownFields()  ?  unknownFields.size()  : 0 )
+
 
   ); }
 
@@ -758,9 +745,7 @@ struct SmppOptional //: public MemoryManagerUnit
     _o_cstr_property__(msc_address)
     _o_int_property__(uint16_t,supported_codeset)
 
-    _o_int_property__(uint8_t,charging)
-    _o_int_property__(uint16_t,message_type)
-    _o_int_property__(uint16_t,expected_message_type)
+    _o_ostr_property__(unknownFields)
 
     --align;
     dump_text1("} //SmppOptional");

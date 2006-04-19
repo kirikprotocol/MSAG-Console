@@ -8,6 +8,7 @@
 #include "smpp_structures.h"
 #include "smpp_stream.h"
 #include "util/int.h"
+#include "core/buffers/TmpBuf.hpp"
 
 #if !defined __Cxx_Header__smpp_optional_h__
 #define __Cxx_Header__smpp_optional_h__
@@ -123,9 +124,13 @@ inline void fillSmppOptional(SmppStream* stream,SmppOptional* opt)
   macroFillCOctetStr( imsi_address, -1 );
   macroFillCOctetStr( msc_address, -1 );
   macroFillField( supported_codeset );
-  macroFillField(charging);
-  macroFillField(message_type);
-  macroFillField(expected_message_type);
+
+  if(opt->has_unknownFields())
+  {
+    const char* val=opt->get_unknownFields();
+    int len=opt->size_unknownFields();
+    for ( int k=0; k<len; ++k )fillX(stream,(uint8_t)val[k]);
+  }
 
 #undef macroFillField
 #undef macroFillOctetStr
@@ -264,14 +269,26 @@ inline void fetchSmppOptional(SmppStream* stream,SmppOptional* opt)
       macroFetchCOctetStr( imsi_address, length );
       macroFetchCOctetStr( msc_address, length );
       macroFetchField( supported_codeset );
-      macroFetchField(charging);
-      macroFetchField(message_type);
-      macroFetchField(expected_message_type);
       default:
-        __warning2__("Skipped optional tag:%x(%d)",tag,tag);
-        uint8_t x;
-        for(int i=0;i<length;i++)fetchX(stream,x);
-        break;
+        {
+          opt->field_present |= SmppOptionalFields::unknownFields;
+          smsc::logger::Logger* log=smsc::logger::Logger::getInstance("smpp");
+          warn2(log,"Unknown optional tag:%x(%d), length=%d",tag,tag,length);
+          smsc::core::buffers::TmpBuf<uint8_t,128> buf(length);
+          uint16_t tmp=htons(tag);
+          buf.Append((uint8_t*)&tmp,2);
+          tmp=htons(length);
+          buf.Append((uint8_t*)&tmp,2);
+          uint8_t x;
+          for(int i=0;i<length;i++)
+          {
+            fetchX(stream,x);
+            buf.Append(&x,1);
+          }
+          info2(log,"added %d bytes to unknownFields",buf.GetPos());
+          opt->unknownFields.append((char*)buf.get(),buf.GetPos());
+          break;
+        }
       }
       __throw_if_fail__( nextDataOffset == stream->dataOffset,BadStreamException );
       /*
