@@ -43,6 +43,34 @@ Address answerAddress;
 
 int maxHistorySize=100;
 
+struct SmppOptionalTag{
+  uint16_t tag;
+  std::vector<uint8_t> data;
+};
+
+typedef std::map<int,SmppOptionalTag> OptionalTagsMap;
+OptionalTagsMap optionalTags;
+int lastTagId=0;
+
+template <class PDU>
+void AddOptionals(PDU& pdu)
+{
+  if(optionalTags.empty())return;
+  std::vector<uint8_t> dump;
+  for(OptionalTagsMap::iterator it=optionalTags.begin();it!=optionalTags.end();it++)
+  {
+    uint16_t tag=htons(it->second.tag);
+    dump.insert(dump.end(),(uint8_t*)&tag,(uint8_t*)&tag+2);
+    uint16_t len=htons(it->second.data.size());
+    dump.insert(dump.end(),(uint8_t*)&len,(uint8_t*)&len+2);
+    dump.insert(dump.end(),it->second.data.begin(),it->second.data.end());
+  }
+  printf("Dump:");
+  for(int i=0;i<dump.size();i++)printf("%02x",dump[i]);
+  printf("\n");
+  pdu.get_optional().set_unknownFields((char*)&dump[0],dump.size());
+}
+
 Hash<int> mrcache;
 
 int getmr(const char* addr)
@@ -667,6 +695,51 @@ void Answer(SmppSession& ss,const string& args)
   answerAddress=it->second.second;
 }
 
+void AddSmppOptional(SmppSession& ss,const string& args)
+{
+  std::string tagstr=args;
+  std::string dump;
+  if(!splitString(tagstr,dump))
+  {
+    printf("Usage: addsmppoptional tag hexdump\n");
+    return;
+  }
+  SmppOptionalTag so;
+  sscanf(tagstr.c_str(),"%hx",&so.tag);
+  for(int i=0;i<dump.length();i+=2)
+  {
+    int v;
+    sscanf(dump.c_str()+i,"%02x",&v);
+    so.data.push_back(v);
+  }
+  optionalTags.insert(OptionalTagsMap::value_type(lastTagId,so));
+  printf("Id of added tag:%d\n",lastTagId);
+  lastTagId++;
+}
+
+void RemoveSmppOptional(SmppSession& ss,const string& args)
+{
+  if(args.length()==0)
+  {
+    printf("Usage: removesmppoptional tagid\n");
+    printf("tagid printed when you add tag\n");
+    return;
+  }
+  int id=-1;
+  if(sscanf(args.c_str(),"%d",&id)!=1 || id<0)
+  {
+    printf("Invalid id\n");
+    return;
+  }
+  OptionalTagsMap::iterator it=optionalTags.find(id);
+  if(it==optionalTags.end())
+  {
+    printf("Tag with this id not found\n");
+    return;
+  }
+  optionalTags.erase(it);
+}
+
 CmdRec commands[]={
 {"query",QueryCmd},
 {"eq",EnquireLinkCmd},
@@ -681,6 +754,8 @@ CmdRec commands[]={
 {"sleep",SleepCmd},
 {"virtualclients",0},
 {"answer",Answer},
+{"addsmppoptional",AddSmppOptional},
+{"removesmppoptional",RemoveSmppOptional}
 };
 
 const int commandsCount=sizeof(commands)/sizeof(CmdRec);
@@ -920,6 +995,36 @@ public:
       if(s.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
       {
         printf("Ussd op:%d\n",s.getIntProperty(Tag::SMPP_USSD_SERVICE_OP));
+      }
+      if(s.hasBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS))
+      {
+        unsigned len;
+        const char* bin=s.getBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS,&len);
+        while(len!=0)
+        {
+          uint16_t tag;
+          memcpy(&tag,bin,2);
+          tag=ntohs(tag);
+          bin+=2;len-=2;
+          uint16_t length;
+          memcpy(&length,bin,2);
+          bin+=2;len-=2;
+          std::string dump;
+          if(length>len)
+          {
+            printf("Warning: Unknown tags contain incorrect data!\n");
+            length=len;
+          }
+          for(int i=0;i<length;i++)
+          {
+            char buf[8];
+            sprintf(buf,"%02x",(unsigned int)(unsigned char)(bin[i]));
+            dump+=buf;
+          }
+          bin+=length;
+          len-=length;
+          printf("Unknown smpp optional: tag=%04x dump: %s\n",tag,dump.c_str());
+        }
       }
       if(s.getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::BINARY)
       {
@@ -1838,6 +1943,7 @@ int main(int argc,char* argv[])
       if(!dataSm)
       {
         fillSmppPduFromSms(&sm,&s);
+        AddOptionals(sm);
         try{
           resp=(SmppHeader*)tr->submit(sm);
         }catch(SmppInvalidBindState& e)
@@ -1848,6 +1954,7 @@ int main(int argc,char* argv[])
       }else
       {
         fillDataSmFromSms(&dsm,&s);
+        AddOptionals(dsm);
         try{
           resp=(SmppHeader*)tr->data(dsm);
         }catch(SmppInvalidBindState& e)
