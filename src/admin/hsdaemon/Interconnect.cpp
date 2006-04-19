@@ -98,7 +98,7 @@ void Interconnect::ProcessRequest(net::Socket* sck)
     {
       std::string svcName=readString(sck);
       bool switchOver=readUInt16(sck);
-      smsc_log_info(log,"remote request to shutdown service '%s'",svcName.c_str());
+      smsc_log_info(log,"remote request to shutdown service '%s', switchover=%s",svcName.c_str(),switchOver?"true":"false");
       uint16_t status=0;
       try{
         Service* svc=lst.get(svcName.c_str());
