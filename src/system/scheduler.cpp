@@ -389,7 +389,7 @@ int Scheduler::Execute()
       {
         try{
           int idx=cmd->get_smeIndex();
-          debug2(log,"SMEALERT for %d",idx);
+          info2(log,"SMEALERT for %d",idx);
           int cnt=0;
           time_t sctime=time(NULL);
           SmeStatMap::iterator it=smeStatMap.find(idx);
@@ -412,6 +412,7 @@ int Scheduler::Execute()
         }
       }else if(cmd->cmdid==HLRALERT)
       {
+        info2(log,"HLRALERT: %s",cmd->get_address().toString().c_str());
         try{
           Chain* c=GetChain(cmd->get_address());
           if(!c)continue;
@@ -434,6 +435,9 @@ int Scheduler::Execute()
             }catch(...){}
             mon.Lock();
             changeSmsStateToDeleted(dpfId);
+          }else
+          {
+            RescheduleChain(c,time(NULL));
           }
         }catch(std::exception& e)
         {
