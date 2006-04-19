@@ -17,78 +17,115 @@ StopWatch::StopWatch(TimeWatcher * owner, unsigned tm_id)
     //logger = Logger::getInstance("smsc.inman.sync");
 }
 
-void StopWatch::init(TimerListenerITF * listener, OPAQUE_OBJ * opaque_obj/* = NULL*/)
-{
-    _cb_event = listener;
-    _tmrState = tmrInited;
-    if (opaque_obj)
-        _opaqueObj = *opaque_obj;
-}
-
-void StopWatch::reset(void)
-{
-    _cb_event = NULL;
-    _opaqueObj.kind = OPAQUE_OBJ::objNone;
-    _tmrState = tmrIdle;
-}
-
-void StopWatch::activate(const struct timeval & tm_val)
+StopWatch::TMError StopWatch::start(const struct timeval & abs_time)
 {
     MutexGuard  tmp(_sync);
-    tms = tm_val;
-    _tmrState = tmrActive;
-}
+    StopWatch::TMError  rval = errNoErr;
 
-void StopWatch::setStatus(SWStatus status)
-{
-    MutexGuard  tmp(_sync);
-    if ((status != tmrStopped) || (status > _tmrState))
-        _tmrState = status; 
-}
+    if (_tmrState > tmrInited)
+        return errActiveTimer;
 
-void StopWatch::signal(void)
-{
-    MutexGuard  tmp(_sync);
-//    smsc_log_debug(logger, "Timer[%u]: signaling state %u, argKind: %d", _id, _tmrState, _opaqueObj.kind);
-    if ((_tmrState != tmrStopped) && _cb_event) {
-        _sync.Unlock();
-        _cb_event->onTimerEvent(this,
-            (_opaqueObj.kind != OPAQUE_OBJ::objNone) ? &_opaqueObj : NULL);
+    _tms = abs_time;
+    //normalize timeval first
+    if (_tms.tv_usec > 1000000L) {
+        _tms.tv_sec += _tms.tv_usec / 1000000L;
+        _tms.tv_usec = _tms.tv_usec % 1000000L;
     }
+    if (!(rval = _owner->activateTimer(this)))
+        _tmrState = tmrActive;
+    return rval;
 }
 
-void StopWatch::signal(SWStatus status)
+//timeout is either in millisecs or in microsecs
+StopWatch::TMError StopWatch::start(long timeout, bool millisecs/* = true*/)
+{
+    struct timeval tms;
+    _owner->getTime(tms);
+    if (millisecs) {
+        tms.tv_sec += timeout/1000L;
+        tms.tv_usec += (timeout % 1000L)*1000L;
+    } else
+        tms.tv_sec += timeout;
+    return start(tms);
+}
+
+void StopWatch::stop(void)
 {
     MutexGuard  tmp(_sync);
-    if ((status != tmrStopped) || (status > _tmrState))
-        _tmrState = status; 
-    if ((_tmrState != tmrStopped) && _cb_event) {
-        _sync.Unlock();
-        _cb_event->onTimerEvent(this,
-            (_opaqueObj.kind != OPAQUE_OBJ::objNone) ? &_opaqueObj : NULL);
+     //set stopped status, so signal() does not call listener callback
+    _result = tmrStopped;
+    if (_tmrState == tmrSignaling)
+        _sigEvent.Wait();
+    if (_multiRun) {
+        _owner->deactivateTimer(this);
+        _tmrState = tmrInited;
+    } else {
+        _owner->dischargeTimer(this);
+        reset();
     }
+    return;
 }
 
 void StopWatch::release(void)
 {
-    _owner->releaseTimer(this);
+    MutexGuard  tmp(_sync);
+    //set stopped status, so signal() does not call listener callback
+    _result = tmrStopped;
+    if (_tmrState == tmrSignaling)
+        _sigEvent.Wait();
+    _owner->dischargeTimer(this);
+    reset();
 }
 
-//timeout is either in millisecs or in microsecs
-StopWatch::TMError    StopWatch::start(long timeout, bool millisecs/* = true*/)
+/* ---------------------------------------------------------------------------------- *
+ * StopWatch Protected methods:
+ * ---------------------------------------------------------------------------------- */
+void StopWatch::init(TimerListenerITF * listener, OPAQUE_OBJ * opaque_obj/* = NULL*/,
+                     bool multi_run/* = false*/)
 {
-    return _owner->startTimer(this, timeout, millisecs);
+    MutexGuard  tmp(_sync);
+    _multiRun = multi_run;
+    _cb_event = listener;
+    _tmrState = tmrInited;
+    _result = tmrNone;
+    if (opaque_obj)
+        _opaqueObj = *opaque_obj;
 }
 
-StopWatch::TMError    StopWatch::start(struct timeval & abs_time)
+void StopWatch::signalStatus(SWStatus status)
 {
-    return _owner->startTimer(this, abs_time);
+    MutexGuard  tmp(_sync);
+    if (status > _result)
+        _result = status;
+    _tmrState = tmrSignaling;
 }
 
-void       StopWatch::stop(void)
+void StopWatch::signal(void)
 {
-    _owner->stopTimer(this);
+//    smsc_log_debug(logger, "Timer[%u]: signaling at state %u, argKind: %d", _id, _tmrState, _opaqueObj.kind);
+    MutexGuard  tmp(_sync);
+    assert (_tmrState == tmrSignaling);
+
+    if ((_result != tmrStopped) && _cb_event)
+        _cb_event->onTimerEvent(this, (_opaqueObj.kind != OPAQUE_OBJ::objNone) ?
+                                &_opaqueObj : NULL);
+    _sigEvent.Signal();
+    return;
 }
+
+/* ---------------------------------------------------------------------------------- *
+ * StopWatch Private methods:
+ * ---------------------------------------------------------------------------------- */
+void StopWatch::reset(void)
+{
+    _multiRun = false;
+    _cb_event = NULL;
+    _opaqueObj.kind = OPAQUE_OBJ::objNone;
+    _tmrState = tmrIdle;
+    _result = tmrNone;
+}
+
+
 /* ************************************************************************** *
  * class TimeNotifier implementation:
  * ************************************************************************** */
@@ -126,25 +163,23 @@ int TimeNotifier::Execute(void)
     _running = true;
     awaked.Signal();
     while (_running || timers.size()) {
-        _sync.Unlock();
         if (timers.size()) {
             do {
                 StopWatch * tmr = *(timers.begin());
+                timers.pop_front();
+                _sync.Unlock();
                 try {
                     smsc_log_debug(logger, "TmNtfr: signaling timer[%u]", tmr->getId());
                     tmr->signal();
+                    tmr->stop();
                 } catch (std::exception& exc) {
                     smsc_log_error(logger, "TmNtfr: timer[%u] listener exception: %s", tmr->getId(), exc.what());
                 } catch (...) {
                     smsc_log_error(logger, "TmNtfr: timer[%u] listener unknown exception", tmr->getId());
                 }
-                watcher->releaseTimer(tmr);
                 _sync.Lock();
-                timers.pop_front();
-                _sync.Unlock();
             } while (timers.size());
         }
-        _sync.Lock();
         _sync.wait(TIMEOUT_STEP); //unlocks and waits
     }
     _sync.Unlock();
@@ -154,20 +189,19 @@ int TimeNotifier::Execute(void)
 
 void TimeNotifier::signalTimer(StopWatch* tmr)
 {
-    _sync.Lock();
+    MutexGuard grd(_sync);
+    tmr->signalStatus(StopWatch::tmrExpired);
     timers.push_back(tmr);
-    _sync.Unlock();
     _sync.notify();
 }
 
 void TimeNotifier::signalTimers(TimersLIST& tmm, StopWatch::SWStatus status)
 {
-    _sync.Lock();
+    MutexGuard grd(_sync);
     for (TimersLIST::iterator it = tmm.begin(); it != tmm.end(); it++) {
-        (*it)->setStatus(status);
+        (*it)->signalStatus(status);
     }
     timers.insert(timers.end(), tmm.begin(), tmm.end());
-    _sync.Unlock();
     _sync.notify();
 }
 
@@ -187,11 +221,16 @@ TimeWatcher::~TimeWatcher()
     if (_running)
         Stop();
     WaitFor();
+    MutexGuard tmpGrd(_sync);
     delete ntfr;
 
-    TimersLIST::iterator it = pool.begin();
-    for (; it != pool.end(); it++)
+    TimersLIST::iterator it;
+    for (it = pool.begin(); it != pool.end(); it++)
         delete *it;
+    pool.clear();
+    for (it = assigned.begin(); it != assigned.end(); it++)
+        delete *it;
+    assigned.clear();
 }
 
 bool TimeWatcher::isRunning(void)
@@ -238,7 +277,6 @@ int TimeWatcher::Execute(void)
             it++;
             if (tms >= tmr->targetTime()) {
                 smsc_log_debug(logger, "TmWT: timer[%u] is expired.", tmr->getId());
-                tmr->setStatus(StopWatch::tmrExpired);
                 signaled.push_back(tmr);
                 started.erase(curr);
                 ntfr->signalTimer(tmr);
@@ -246,13 +284,14 @@ int TimeWatcher::Execute(void)
                 tmNext = tmr->targetTime();
         }
 //        smsc_log_debug(logger, "TmWT: sleeping up to %lu:%lu.", tmNext.tv_sec, tmNext.tv_usec);
-        //unlocks mutex, awakes either by timeout or by event signaled by StartTimer()
+        //awakes either by timeout or by event signaled by StartTimer()
         _sync.wait(tmNext);
     } /* eow */
     if (started.size()) {
         smsc_log_debug(logger, "TmWT: aborting %u timers.", started.size());
-        ntfr->signalTimers(started, StopWatch::tmrAborted);
+        signaled.insert(signaled.end(), started.begin(), started.end());
         started.clear();
+        ntfr->signalTimers(started, StopWatch::tmrAborted);
     }
     _sync.Unlock();
     ntfr->Stop();
@@ -265,7 +304,8 @@ void TimeWatcher::getTime(struct timeval & abs_time)
 }
 
 TimerID TimeWatcher::createTimer(TimerListenerITF * listener/*= NULL*/,
-                                        OPAQUE_OBJ * opaque_obj/* = NULL*/)
+                                    OPAQUE_OBJ * opaque_obj/* = NULL*/,
+                                    bool multi_run/* = false*/)
 {
     MutexGuard tmpGrd(_sync);
     StopWatch * tmr = NULL;
@@ -274,51 +314,20 @@ TimerID TimeWatcher::createTimer(TimerListenerITF * listener/*= NULL*/,
         tmr = *(pool.begin());
         pool.pop_front();
     } else {
-        tmr = new StopWatch(this, ++_lastId);
+        if (!(++_lastId))
+            return tmr;
+        tmr = new StopWatch(this, _lastId);
     }
-    tmr->init(listener, opaque_obj);
+    tmr->init(listener, opaque_obj, multi_run);
     assigned.push_back(tmr);
     return tmr;
 }
 
-void TimeWatcher::stopTimer(TimerID tmr)
+/* ---------------------------------------------------------------------------------- *
+ * Protected/Private methods:
+ * ---------------------------------------------------------------------------------- */
+StopWatch::TMError TimeWatcher::activateTimer(TimerID tmr)
 {
-    //firstly set Stopped status, because of timer may be already passed to Notifier
-    ((StopWatch*)tmr)->setStatus(StopWatch::tmrStopped);
-    smsc_log_debug(logger, "TmWT: stopping timer[%u]", tmr->getId());
-    MutexGuard tmpGrd(_sync);
-    TimersLIST::iterator it = std::find(signaled.begin(), signaled.end(), tmr);
-    if (it != signaled.end()) {
-        signaled.erase(it);
-        pool.push_back((StopWatch*)tmr);
-        smsc_log_debug(logger, "TmWT: timer[%u] moved to pool (signaled)", tmr->getId());
-    } else {
-        it = std::find(started.begin(), started.end(), tmr);
-        if (it != started.end()) {
-            started.erase(it);
-            pool.push_back((StopWatch*)tmr);
-            smsc_log_debug(logger, "TmWT: timer[%u] moved to pool (started)", tmr->getId());
-        } else
-            smsc_log_warn(logger, "TmWT: timer[%u] neither signaled nor started", tmr->getId());
-    }
-    return;
-}
-
-void TimeWatcher::releaseTimer(TimerID tmr)
-{
-    stopTimer(tmr);
-    ((StopWatch*)tmr)->reset();
-    return;
-}
-
-StopWatch::TMError TimeWatcher::startTimer(TimerID tmr, struct timeval & abs_time)
-{
-    //normalize timeval first
-    if (abs_time.tv_usec > 1000000L) {
-        abs_time.tv_sec += abs_time.tv_usec / 1000000L;
-        abs_time.tv_usec = abs_time.tv_usec % 1000000L;
-    }
-
     MutexGuard tmpGrd(_sync);
     TimersLIST::iterator it = std::find(assigned.begin(), assigned.end(), tmr);
     if (it == assigned.end()) {
@@ -326,24 +335,62 @@ StopWatch::TMError TimeWatcher::startTimer(TimerID tmr, struct timeval & abs_tim
         return (it != started.end()) ? 
             StopWatch::errActiveTimer : StopWatch::errBadTimer;
     }
-    ((StopWatch*)tmr)->activate(abs_time);
     assigned.erase(it);
     started.push_back((StopWatch*)tmr);
     smsc_log_debug(logger, "TmWT: timer[%u] is activated.", tmr->getId());
     _sync.notify();
-    return StopWatch::noErr;
+    return StopWatch::errNoErr;
 }
 
-StopWatch::TMError TimeWatcher::startTimer(TimerID tmr, long timeout, bool millisecs/* = true*/)
+void TimeWatcher::deactivateTimer(TimerID tmr)
 {
-    struct timeval tms;
-    getTime(tms);
-    if (millisecs) {
-        tms.tv_sec += timeout/1000L;
-        tms.tv_usec += (timeout % 1000L)*1000L;
-    } else
-        tms.tv_sec += timeout;
-    return startTimer(tmr, tms); //normalizes 'tms' microsecs
+    MutexGuard tmpGrd(_sync);
+    smsc_log_debug(logger, "TmWT: stopping timer[%u]", tmr->getId());
+    TimersLIST::iterator it = std::find(signaled.begin(), signaled.end(), tmr);
+    if (it != signaled.end()) {
+        signaled.erase(it);
+        assigned.push_back((StopWatch*)tmr);
+        smsc_log_debug(logger, "TmWT: timer[%u] moved to assigned (was signaled)", tmr->getId());
+        return;
+    }
+    it = std::find(started.begin(), started.end(), tmr);
+    if (it != started.end()) {
+        started.erase(it);
+        assigned.push_back((StopWatch*)tmr);
+        smsc_log_debug(logger, "TmWT: timer[%u] moved to assigned (was started)", tmr->getId());
+        return;
+    }
+    smsc_log_error(logger, "TmWT: timer[%u] was neither started nor signaled!", tmr->getId());
+    return;
+}
+
+void TimeWatcher::dischargeTimer(TimerID tmr)
+{
+    MutexGuard tmpGrd(_sync);
+    smsc_log_debug(logger, "TmWT: releasing timer[%u]", tmr->getId());
+    TimersLIST::iterator it = std::find(signaled.begin(), signaled.end(), tmr);
+    if (it != signaled.end()) {
+        signaled.erase(it);
+        pool.push_back((StopWatch*)tmr);
+        smsc_log_debug(logger, "TmWT: timer[%u] moved to pool (was signaled)", tmr->getId());
+        return;
+    }
+    it = std::find(started.begin(), started.end(), tmr);
+    if (it != started.end()) {
+        started.erase(it);
+        pool.push_back((StopWatch*)tmr);
+        smsc_log_debug(logger, "TmWT: timer[%u] moved to pool (was started)", tmr->getId());
+        return;
+    }
+    it = std::find(assigned.begin(), assigned.end(), tmr);
+    if (it != started.end()) {
+        assigned.erase(it);
+        pool.push_back((StopWatch*)tmr);
+        smsc_log_debug(logger, "TmWT: timer[%u] moved to pool (was assigned)", tmr->getId());
+        return;
+    }
+    smsc_log_error(logger, "TmWT: timer[%u] is not assigned!", tmr->getId());
+    return;
 }
 
 } //sync

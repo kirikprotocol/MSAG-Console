@@ -74,44 +74,52 @@ class TimeWatcher;
 class StopWatch {
 public:
     //NOTE: the order of states is important!!!
-    typedef enum { tmrIdle = 0, tmrInited, tmrActive, tmrAborted, tmrStopped, tmrExpired 
+    typedef enum { tmrNone = 0, tmrExpired, tmrAborted, tmrStopped
     } SWStatus;
-    typedef enum { noErr = 0, errBadTimer = 1, errBadTimeVal = 2, errActiveTimer
+    typedef enum { tmrIdle = 0, tmrInited, tmrActive, tmrSignaling, tmrSignaled
+    } SWState;
+
+    typedef enum { errNoErr = 0, errBadTimer = 1, errBadTimeVal = 2, errActiveTimer
     } TMError;
 
-    void init(TimerListenerITF * listener, OPAQUE_OBJ * opaque_obj = NULL);
-    void release(void);
-
     //timeout is either in millisecs or in microsecs
-    TMError    start(long timeout, bool millisecs = true);
-    TMError    start(struct timeval & abs_time);
-    void       stop(void);
+    TMError start(long timeout, bool millisecs = true);
+    TMError start(const struct timeval & abs_time);
+    //stops timer (timer ready for reusing)
+    void    stop(void);
+    //releases timer
+    void    release(void);
 
-    const struct timeval & targetTime(void) const   { return tms;}
-    SWStatus getStatus(void) const                  { return _tmrState; }
+    const struct timeval & targetTime(void) const   { return _tms;}
+    SWStatus getStatus(void) const                  { return _result; }
     unsigned getId(void) const                      { return _id; }
 
 protected:
-    friend class TimeWatcher;
-    friend class TimeNotifier;
-
     StopWatch(TimeWatcher * owner, unsigned tm_id);
     ~StopWatch() {}
 
-    void activate(const struct timeval & tm_val);
-    void reset(void);
-    void setStatus(SWStatus status);
+    friend class TimeWatcher;
+    //if multi_run is set, then timer may be reused(started) several times
+    //otherwise timer is destoyed on signalling or stopping.
+    void init(TimerListenerITF * listener, OPAQUE_OBJ * opaque_obj = NULL,
+              bool multi_run = false);
+    void signalStatus(SWStatus status);
 
+    friend class TimeNotifier;
     void signal(void);
-    void signal(SWStatus status);
 
 private:
+    void reset(void);
+
     unsigned        _id;
+    bool            _multiRun;  //auto release on signalling
     TimerListenerITF * _cb_event;
     OPAQUE_OBJ      _opaqueObj;   //externally defined object that is passed to listeners
-    SWStatus        _tmrState;
-    struct timeval  tms;
+    SWStatus        _result;
+    SWState         _tmrState;
+    struct timeval  _tms;
     Mutex           _sync;
+    Event           _sigEvent;
     TimeWatcher *   _owner;
 //    Logger *        logger;
 };
@@ -127,7 +135,6 @@ typedef StopWatch * TimerID;
 
 class TimeWatcher : public Thread {
 public:
-
     typedef enum {
         tmwUnexpected = -1, //unexpected fatal exception was caught
         tmwStopped = 0,     //normal shutdown
@@ -144,13 +151,18 @@ public:
     void Stop(void);
     bool isRunning(void);
 
-    TimerID createTimer(TimerListenerITF * listener = NULL, OPAQUE_OBJ * opaque_obj = NULL);
-    void    releaseTimer(TimerID tmr);
+    //if multi_run is set, then timer may be reused(started) several times
+    //otherwise timer is destoyed on signalling or stopping.
+    TimerID createTimer(TimerListenerITF * listener = NULL, OPAQUE_OBJ * opaque_obj = NULL,
+                        bool multi_run = false);
 
-    //timeout is either in millisecs or in seconds
-    StopWatch::TMError    startTimer(TimerID tmr, long timeout, bool millisecs = true);
-    StopWatch::TMError    startTimer(TimerID tmr, struct timeval & abs_time);
-    void              stopTimer(TimerID tmr);
+protected:
+    friend class StopWatch;
+    StopWatch::TMError activateTimer(TimerID tmr);
+    //discharges timer, moving it to pool
+    void dischargeTimer(TimerID tmr);
+    //deactivates assigned timer
+    void deactivateTimer(TimerID tmr);
 
 private:
     Event           awake;
@@ -159,8 +171,8 @@ private:
     EventMonitorPSX _sync;
     TimersLIST      started;    //started timers
     TimersLIST      signaled;   //timers are to signal
-    TimersLIST      pool;       //pool of idle timers
     TimersLIST      assigned;   //initialized, but not started timers
+    TimersLIST      pool;       //pool of idle timers
     TimeNotifier *  ntfr;
     Logger *        logger;
 };
@@ -186,13 +198,7 @@ protected:
     TimersLIST      timers;
     Logger *        logger;
 };
-/*
 
-protected:
-    friend class TimeNotifier;
-    Event       awake;
-
-*/
 } //sync
 } //inman
 } //smsc
