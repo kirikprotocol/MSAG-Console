@@ -300,79 +300,32 @@ void StatisticsManager::registerEvent(const HttpStatEvent& se)
     //thrSaccSender.Put(se.sacc_stat);
 }
     
-
-    bool StatisticsManager::checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value)
+bool StatisticsManager::checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value)
+{
+    MutexGuard mg(switchLock);
+    
+    TrafficRecord *tr = smppTrafficByRouteId.GetPtr(routeId.c_str());
+    if(tr)
     {
-            MutexGuard mg(switchLock);
+        time_t now = time(0);
+        tm tmnow;
+        localtime_r(&now, &tmnow);
+        tr->reset(tmnow);
     
-            const char* id = routeId.c_str();
-    
-            TrafficRecord *tr = 0;
-    
-            switch(period){
-            case checkMinPeriod:
-                tr = smppTrafficByRouteId.GetPtr(id);
-                if(tr){
-                    time_t now = time(0);
-                    tm tmnow;   localtime_r(&now, &tmnow);
-                    tr->reset(tmnow);
-    
-                    long mincnt_, hourcnt_, daycnt_, monthcnt_;
-                    uint8_t year_, month_, day_, hour_, min_;
-                    tr->getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
-                                        year_, month_, day_, hour_, min_);
-                    if(mincnt_ <= value)
-                        return true;
-                }
-                break;
-            case checkHourPeriod:
-                tr = smppTrafficByRouteId.GetPtr(id);
-                if(tr){
-                    time_t now = time(0);
-                    tm tmnow;   localtime_r(&now, &tmnow);
-                    tr->reset(tmnow);
-    
-                    long mincnt_, hourcnt_, daycnt_, monthcnt_;
-                    uint8_t year_, month_, day_, hour_, min_;
-                    tr->getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
-                                        year_, month_, day_, hour_, min_);
-                    if(hourcnt_ <= value)
-                        return true;
-                }
-                break;
-            case checkDayPeriod:
-                tr = smppTrafficByRouteId.GetPtr(id);
-                if(tr){
-                    time_t now = time(0);
-                    tm tmnow;   localtime_r(&now, &tmnow);
-                    tr->reset(tmnow);
-    
-                    long mincnt_, hourcnt_, daycnt_, monthcnt_;
-                    uint8_t year_, month_, day_, hour_, min_;
-                    tr->getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
-                                        year_, month_, day_, hour_, min_);
-                    if(daycnt_ <= value)
-                        return true;
-                }
-                break;
-            case checkMonthPeriod:
-                tr = smppTrafficByRouteId.GetPtr(id);
-                if(tr){
-                    time_t now = time(0);
-                    tm tmnow;   localtime_r(&now, &tmnow);
-                    tr->reset(tmnow);
-    
-                    long mincnt_, hourcnt_, daycnt_, monthcnt_;
-                    uint8_t year_, month_, day_, hour_, min_;
-                    tr->getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
-                                        year_, month_, day_, hour_, min_);
-                    //printf("%04d-%02d-%02d %02d:%02d (m, h, d, M): %d, %d, %d, %d\n", year_ + 1900, month_ + 1, day_, hour_, min_, mincnt_, hourcnt_, daycnt_, monthcnt_);
-                    if(monthcnt_ <= value)
-                        return true;
-                }
-                break;
-            }
-            return false;
+        long mincnt_, hourcnt_, daycnt_, monthcnt_;
+        uint8_t year_, month_, day_, hour_, min_;
+
+        tr->getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, year_, month_, day_, hour_, min_);
+
+        switch(period)
+        {
+            case checkMinPeriod: return mincnt_ <= value;
+            case checkHourPeriod: return hourcnt_ <= value;
+            case checkDayPeriod: return daycnt_ <= value;
+            case checkMonthPeriod: return monthcnt_ <= value;
+        }
+    }
+    return false;
 }
 
 int StatisticsManager::Execute()
@@ -390,7 +343,6 @@ int StatisticsManager::Execute()
         flushCounters(flushIndex);
         flushHttpCounters(flushIndex);
 
-        
         dumpTraffic(smppTrafficByRouteId, traffloc + "/SMPP/");
         dumpTraffic(httpTrafficByRouteId, traffloc + "/HTTP/");
 
