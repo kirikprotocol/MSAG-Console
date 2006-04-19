@@ -187,7 +187,7 @@ void Billing::doCleanUp(void)
         _cfg.abProvider->cancelQuery(abNumber, this);
         providerQueried = false;
     }
-    if (timers.size()) {
+    if (timers.size()) { //release active timers
         for (TimersMAP::iterator it = timers.begin(); it != timers.end(); it++) {
             StopWatch * timer = (*it).second;
             timer->release();
@@ -296,45 +296,37 @@ bool Billing::startCAPDialog(void)
         return false;
     }
 }
-
-void Billing::StartTimer(unsigned short timeout, bool locked/* = true*/)
+//NOTE: bilMutex should be locked upon entry!
+//NOTE: Billing uses only those timers, which autorelease on signalling
+void Billing::StartTimer(unsigned short timeout)
 {
     OPAQUE_OBJ  timerArg;
-
     timerArg.setUInt((unsigned)state);
-    StopWatch * timer = tmWatcher->createTimer(this, &timerArg);
+    StopWatch * timer = tmWatcher->createTimer(this, &timerArg, false);
     smsc_log_debug(logger, "Billing[%u.%u]: Starting timer[%u]:%u",
                 _bconn->bConnId(), _bId, timer->getId(), state);
-    if (!locked)
-        bilMutex.Lock();
     timers.insert(TimersMAP::value_type((unsigned)state, timer));
-    if (!locked)
-        bilMutex.Unlock();
     timer->start((long)timeout, false);
     return;
 }
 
-void Billing::StopTimer(Billing::BillingState bilState, bool locked/* = true */)
+//NOTE: bilMutex should be locked upon entry!
+void Billing::StopTimer(Billing::BillingState bilState)
 {
-    if (!locked)
-        bilMutex.Lock();
-
     TimersMAP::iterator it = timers.find((unsigned)bilState);
     if (it != timers.end()) {
         StopWatch * timer = (*it).second;
         timer->release();
         timers.erase(it);
-        smsc_log_debug(logger, "Billing[%u.%u]: Stopped timer[%u]:%u at state %u",
+        smsc_log_debug(logger, "Billing[%u.%u]: Released timer[%u]:%u at state %u",
                     _bconn->bConnId(), _bId, timer->getId(), bilState, state);
     } else
         smsc_log_warn(logger, "Billing[%u.%u]: no active timer for state: %u",
                     _bconn->bConnId(), _bId, bilState);
-    if (!locked)
-        bilMutex.Unlock();
     return;
 }
 
-//NOTE: bilMutex should be locked upon entry
+//NOTE: bilMutex should be locked upon entry!
 bool Billing::onChargeSms(ChargeSms* sms)
 {
     sms->export2CDR(cdr);

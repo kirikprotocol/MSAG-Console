@@ -204,13 +204,14 @@ public:
 
 protected:
     typedef std::map<unsigned, StopWatch*> TimersMAP;
+
     SSNSession * activateSSN(void);
     void doCleanUp(void);
     void doFinalize(bool doReport = true);
     void abortThis(const char * reason = NULL, bool doReport = true);
     bool startCAPDialog(void);
-    void StartTimer(unsigned short timeout, bool locked = true);
-    void StopTimer(BillingState bilState, bool locked = true);
+    void StartTimer(unsigned short timeout);
+    void StopTimer(BillingState bilState);
     void ChargeAbonent(AbonentBillType ab_type);
     void DoCharge(uint32_t inmanErr = 0);
 
@@ -228,7 +229,7 @@ protected:
     SMCAPSpecificInfo csInfo;   //data for CAP3 interaction
     bool            postpaidBill;
     TimeWatcher*    tmWatcher;
-    TimersMAP       timers;
+    TimersMAP       timers;     //active timers
     AbonentBillType abBillType; //calling abonent billing type
     TonNpiAddress   abNumber;   //calling abonent ISDN number
     bool            providerQueried;
