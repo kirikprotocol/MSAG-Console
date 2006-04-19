@@ -28,7 +28,7 @@
 <div class=content><%
     if (defExpSett != null && !defExpSett.isEmpty())
     {%>
-    <div class=page_subtitle>Database Settings</div>
+    <div class=page_subtitle><%=getLocString("smsview.dbSettings")%></div>
     <script>
         function defaultSetting() {
             document.getElementById('source').value = "<%=defExpSett.getSource()%>";
@@ -74,24 +74,24 @@
             </td>
         </tr>
         <tr class=row<%= (rowN++) % 2%>>
-            <th>JDBC source</th>
+            <th><%=getLocString("smsview.JDBCsource")%></th>
             <td nowrap><input class=txt type=text id="source" name="source" value="<%=defExpSett.getSource()%>"></td>
         </tr>
         <tr class=row<%= (rowN++) % 2%>>
-            <th>JDBC driver</th>
+            <th><%=getLocString("smsview.JDBCdriver")%></th>
             <td nowrap><input class=txt type=text id="driver" name="driver" value="<%=defExpSett.getDriver()%>"></td>
         </tr>
         <tr class=row<%= (rowN++) % 2%>>
-            <th>User</th>
+            <th><%=getLocString("smsview.user")%></th>
             <td nowrap><input class=txt type=text id="user" name="user" value="<%=defExpSett.getUser()%>"></td>
         </tr>
         <tr class=row<%= (rowN++) % 2%>>
-            <th>Password</th>
+            <th><%=getLocString("smsview.password")%></th>
             <td nowrap><input class=txt type=password id="password" name="password"
                               value="<%=defExpSett.getPassword()%>"></td>
         </tr>
         <tr class=row<%= (rowN++) % 2%>>
-            <th>Table Name:</th>
+            <th><%=getLocString("smsview.tableName")%></th>
             <td nowrap><input class=txt type=text id="tablesPrefix" name="tablesPrefix"
                               value="<%=defExpSett.getTablesPrefix()%>"></td>
         </tr>
