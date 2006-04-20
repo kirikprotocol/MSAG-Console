@@ -70,13 +70,13 @@ bool BillActionClose::run(ActionContext& context)
         if (!operation)
         {
             smsc_log_error(logger,"BillAction 'bill:close': Fatal error in action - operation from ActionContext is invalid");
-            return false;
+            return true;
         }
 
         if (!operation->hasBill()) 
         {
             smsc_log_error(logger,"BillAction 'bill:close': Fatal error in action - no bill is attached");
-            return false;
+            return true;
         }
 
 

@@ -105,7 +105,7 @@ void SmppEventHandler::EndOperation(Session& session, SmppCommand& command, Rule
     Operation * currentOperation = session.GetCurrentOperation();
     if (!currentOperation) throw SCAGException("Session: Fatal error - cannot end operation. Couse: current operation not found");
 
-    if (!ruleStatus.result)) 
+    if (!ruleStatus.result) 
     {
         session.closeCurrentOperation(); 
         return;
@@ -174,9 +174,9 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     Infrastructure& istr = BillingManager::Instance().getInfrastructure();
 
     Address& abonentAddr = CommandBrige::getAbonentAddr(*smppcommand);
-   /*
-    int operatorId = 0;
-    int providerId = 0;*/
+/*   
+    int operatorId = 105;
+    int providerId = 1;*/
     
     int operatorId = istr.GetOperatorID(abonentAddr);
     if (operatorId == 0) 

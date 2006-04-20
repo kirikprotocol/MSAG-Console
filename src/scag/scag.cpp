@@ -542,8 +542,8 @@ void Scag::init()
   sm.releaseSession(sessionPtr);
 
   ////////////////////////// FOR TEST 
-                                   
-       */
+  */                                 
+       
                                     
     //********************************************************
     //************** HttpManager initialization **************

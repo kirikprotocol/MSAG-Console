@@ -131,6 +131,7 @@ void BillingManagerImpl::Stop()
     {
         m_bStarted = false;
         connectEvent.Signal();
+        //connectEvent.NotifyAll();
 
         exitEvent.Wait(); 
     }
