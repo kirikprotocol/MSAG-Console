@@ -89,11 +89,6 @@ void ActionContext::abortSession()
 
 void ActionContext::makeBillEvent(int billCommand, TariffRec& tariffRec, SACC_BILLING_INFO_EVENT_t& ev)
 {
-    /*
-    auto_ptr<TariffRec> tariffRec(istr.GetTariff(commandProperty.operatorId, category.c_str(), medyaType.c_str()));
-    if (!tariffRec.get()) 
-        throw SCAGException("BillEvent: Cannot find tariffRec for OID=%d, cat=%s, mtype=%s ", commandProperty.operatorId, category.c_str(), medyaType.c_str());
-    */
     ev.Header.cCommandId = billCommand;
 
     ev.Header.cProtocolId = commandProperty.protocol;
@@ -134,8 +129,8 @@ TariffRec * ActionContext::getTariffRec(std::string& category, std::string& medy
         Infrastructure& istr = BillingManager::Instance().getInfrastructure();
         m_TariffRec.reset(istr.GetTariff(commandProperty.operatorId, category.c_str(), medyaType.c_str()));
 
-        if (!m_TariffRec.get()) 
-            throw SCAGException("BillEvent: Cannot find tariffRec for OID=%d, cat=%s, mtype=%s ", commandProperty.operatorId, category.c_str(), medyaType.c_str());
+        //if (!m_TariffRec.get()) 
+          //  throw SCAGException("BillEvent: Cannot find tariffRec for OID=%d, cat=%s, mtype=%s ", commandProperty.operatorId, category.c_str(), medyaType.c_str());
     }
 
     return m_TariffRec.get();

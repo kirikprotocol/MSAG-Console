@@ -171,7 +171,12 @@ bool ActionIf::run(ActionContext& context)
     bool isValidCondition = true;
 
     Property * property = context.getProperty(singleparam.strOperand1);
-    if (!property) return true;
+    if (!property) 
+    {
+        smsc_log_debug(logger,"Action 'If' stopped. Details: Cannot find property '%s'", singleparam.strOperand1.c_str());
+        return true;
+    }
+
 
     if (singleparam.wstrOperand2.size() > 0) 
         smsc_log_debug(logger,"Testing "+singleparam.strOperand1+"='"+ConvertWStrToStr((property->getStr()))+"'"+" vs "+ConvertWStrToStr(singleparam.wstrOperand2));

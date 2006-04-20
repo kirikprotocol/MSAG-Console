@@ -169,7 +169,7 @@ bool BillActionClose::run(ActionContext& context)
 
             context.makeBillEvent(TRANSACTION_CALL_ROLLBACK, tariffRec, ev);
         } catch (SCAGException& e)
-        {
+        {        
             smsc_log_warn(logger,"BillAction 'bill:close' return false. Delails: %s", e.what());
             //TODO: set to status - false
             return true;

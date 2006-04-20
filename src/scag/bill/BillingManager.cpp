@@ -179,7 +179,7 @@ int BillingManagerImpl::Execute()
             } else
             {
                 m_Connected = Reconnect();
-                connectEvent.Wait(1000);
+                connectEvent.Wait(20000);
             }
             
         } catch (SCAGException& e)

@@ -55,7 +55,7 @@ AccessType SmppCommandAdapter::CheckAccess(int handlerType,const std::string& na
     case EH_SUBMIT_SM_RESP:
         if (name == "status") return atReadWrite;
         if (name == "message_id") return atRead;
-        if (name =="ussd_dialog") atRead;
+        if (name == "ussd_dialog") atRead;
         return atNoAccess;
     }
 
@@ -1093,17 +1093,23 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
         break;
     case DELIVERY_RESP:
 
-        pFieldId = SubmitRespFieldNames.GetPtr(name.c_str());
+        pFieldId = DeliverRespFieldNames.GetPtr(name.c_str());
         if (!pFieldId) return 0;
+
+        propertyPtr = PropertyPul.GetPtr(*pFieldId);
+        if (propertyPtr) return (*propertyPtr);
+
+        if (*pFieldId == STATUS) 
+        {
+            property = new AdapterProperty(name.c_str(),this,command->status);
+            break;
+        }
 
         smsResp = command->get_resp();
         if (!smsResp) return 0;
         sms = smsResp->get_sms();
 
         if (!sms) return 0;
-
-        propertyPtr = PropertyPul.GetPtr(*pFieldId);
-        if (propertyPtr) return (*propertyPtr);
 
         property = getDeliverRespProperty(*sms, name,*pFieldId);
         break;
@@ -1112,12 +1118,19 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
         pFieldId = SubmitRespFieldNames.GetPtr(name.c_str());
         if (!pFieldId) return 0;
 
+        propertyPtr = PropertyPul.GetPtr(*pFieldId);
+        if (propertyPtr) return (*propertyPtr);
+
+        if (*pFieldId == STATUS) 
+        {
+            property = new AdapterProperty(name.c_str(),this,command->status);
+            break;
+        }
+
         smsResp = command->get_resp();
         if (!smsResp) return 0;
         sms = smsResp->get_sms();
-
-        propertyPtr = PropertyPul.GetPtr(*pFieldId);
-        if (propertyPtr) return (*propertyPtr);
+        if (!sms) return false;
 
         property = getSubmitRespProperty(*sms, name,*pFieldId);
     }
