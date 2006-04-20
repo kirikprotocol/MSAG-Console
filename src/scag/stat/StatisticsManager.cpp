@@ -267,31 +267,28 @@ void StatisticsManager::registerEvent(const HttpStatEvent& se)
             httpStatByUrl[currentIndex].Insert(se.url.c_str(), newStat);
             urlSt=httpStatByUrl[currentIndex].GetPtr(se.url.c_str());
         }
-        incSvcWapCounter(se.url.c_str(), indexByHttpCounter(se.counter));
+        incSvcWapCounter(se.site.c_str(), indexByHttpCounter(se.counter));
     }
     
     if(routeSt)     incError(routeSt->errors, se.errCode);
     if(urlSt)       incError(urlSt->errors, se.errCode);
     
-    if(routeSt && urlSt)
+    switch(se.counter)
     {
-        switch(se.counter)
-        {
         #define INC_STAT(cnt,field) case cnt:{\
               if(routeSt)routeSt->field++; \
               if(urlSt)urlSt->field++; \
               }break;
     
-            INC_STAT(httpRequest,request)
-            INC_STAT(httpRequestRejected,requestRejected)
-            INC_STAT(httpResponse,response)
-            INC_STAT(httpResponseRejected,responseRejected)
-            INC_STAT(httpDelivered,delivered)
-            INC_STAT(httpFailed,failed)
+        INC_STAT(httpRequest,request)
+        INC_STAT(httpRequestRejected,requestRejected)
+        INC_STAT(httpResponse,response)
+        INC_STAT(httpResponseRejected,responseRejected)
+        INC_STAT(httpDelivered,delivered)
+        INC_STAT(httpFailed,failed)
 
         #undef INC_STAT
     
-        }
     }
     
     if (se.routeId.length() && se.counter == httpRequest)
@@ -431,7 +428,6 @@ void StatisticsManager::SerializeSmppStat(Hash<CommonStat>& smppStat, Serializat
         buf.WriteInt16(len);
         buf.Write(Id, len);
 
-        buf.WriteInt32(st->providerId);
         buf.WriteInt32(st->accepted);
         buf.WriteInt32(st->rejected);
         buf.WriteInt32(st->delivered);
@@ -510,8 +506,8 @@ void StatisticsManager::flushCounters(int index)
         buf.WriteByte(flushTM.tm_min);
 
         SerializeSmppStat(statByRouteId[index], buf, true);
-        SerializeSmppStat(statBySmeId[index], buf, false);
         SerializeSmppStat(srvStatBySmeId[index], buf, false);
+        SerializeSmppStat(statBySmeId[index], buf, false);
 
         dumpCounters((const unsigned char*)buf.getBuffer(), buf.getPos(), flushTM, smppFileTM, SCAG_SMPP_STAT_DIR_NAME_FORMAT, smppFile);
     }
