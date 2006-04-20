@@ -5,7 +5,8 @@
    xmlns:session="http://www.sibinco.com/SCAG/SESSIONS"
    xmlns:operation="http://www.sibinco.com/SCAG/OPERATIONS"
    xmlns:strings="http://www.sibinco.com/SCAG/STRINGS"
-   xmlns:bill="http://www.sibinco.com/SCAG/BILL">
+   xmlns:bill="http://www.sibinco.com/SCAG/BILL"
+   xmlns:profile="http://www.sibinco.com/SCAG/PROFILE">
     
     <annotation>
         <documentation xml:lang="en">
@@ -18,6 +19,7 @@
     <import schemaLocation="sessions.xsd"   namespace="http://www.sibinco.com/SCAG/SESSIONS"/>
     <import schemaLocation="operations.xsd" namespace="http://www.sibinco.com/SCAG/OPERATIONS"/>
     <import schemaLocation="strings.xsd"    namespace="http://www.sibinco.com/SCAG/STRINGS"/>
+    <import schemaLocation="profile.xsd"    namespace="http://www.sibinco.com/SCAG/PROFILE"/>
     
     <!-- General values types definition  -->
     <simpleType name="Value">
