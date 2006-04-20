@@ -13,8 +13,10 @@
         <profile:set type="SERVICE" var="var2" value="rrr" policy="FIXED" finaldate="31.12.2006 01:01:01"/>
         <profile:set type="PROVIDER" var="var3" value="%gg" policy="R_ACCESS" lifetime="01:01:01"/>
         <profile:get type="ABONENT" var="var1" value="%loc_var"/>
-        <profile:change type="ABONENT" var="var1" value="-12" policy="FIXED" lifetime="02:02:02"/>      
-        <profile:del type="ABONENT" var="var1"/>                
+        <profile:inc type="ABONENT" var="var1" inc="-12" policy="FIXED" lifetime="02:02:02"/>      
+        <profile:inc-mod type="ABONENT" var="var1" inc="-12" mod="10" result="%loc_var" policy="FIXED" lifetime="02:02:02"/>
+        <profile:del type="ABONENT" var="var1"/>
+        <profile:del type="ABONENT" var="var1"/>
     </deliver_sm>
     
 </scag:rule>
