@@ -383,6 +383,16 @@ Hash<int> SmppCommandAdapter::InitDeliverFieldNames()
 
     hs["svc_type"]                      = SMS_SVC_TYPE;
 
+    hs["ussd_pssd_ind"]                 = USSD_PSSD_IND;
+    hs["ussd_pssr_ind"]                 = USSD_PSSR_IND;
+    hs["ussd_pssr_req"]                 = USSD_PSSR_REQ;
+    hs["ussd_ussn_req"]                 = USSD_USSN_REQ;
+    hs["ussd_pssd_resp"]                = USSD_PSSD_RESP;
+    hs["ussd_pssr_resp"]                = USSD_PSSR_RESP;
+    hs["ussd_ussr_conf"]                = USSD_USSR_CONF;
+    hs["ussd_ussn_conf"]                = USSD_USSN_CONF;
+
+
     return hs;
 }
 
@@ -897,9 +907,12 @@ Property * SmppCommandAdapter::getDeliverProperty(SMS& data,const std::string& n
     } else if ((FieldId >= RD_RECEIPT_OFF)&&(FieldId <= RD_I_NOTIFICATION)) 
     {
         property = Get_RD_BIT_Property(data,name,FieldId);
-    } else if ((FieldId >= DC_BINARY)&&(FieldId <= DC_GSM_MSG_CC)) 
+    } else if ((FieldId >= DC_BINARY)&&(FieldId <= DC_GSM_MSG_CC))
     {
         property = Get_DC_BIT_Property(data,name,FieldId);
+    } else if ((FieldId >= USSD_PSSD_IND)&&(FieldId <= USSD_USSN_CONF)) 
+    {
+        property = Get_USSD_BIT_Property(data,name,FieldId);
     } else if (((FieldId >= ST_ENROUTE)&&(FieldId <= ST_REJECTED))||(FieldId == Tag::SMPP_MESSAGE_PAYLOAD)) 
     {
         property = new AdapterProperty(name,this,data.getState());
@@ -967,8 +980,8 @@ SmppCommandAdapter::~SmppCommandAdapter()
 
 Property* SmppCommandAdapter::getProperty(const std::string& name)
 {
-    SMS * sms = command->get_sms();
-    if (!sms) return 0;
+
+    SMS * sms = 0;
 
     CommandId cmdid = command->get_commandId();
 
@@ -978,11 +991,17 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
     switch (cmdid) 
     {
     case DELIVERY:
+        sms = command->get_sms();
+        if (!sms) return 0;
+
         pFieldId = DeliverFieldNames.GetPtr(name.c_str());
         if (!pFieldId) return 0;
 
         return getDeliverProperty(*sms,name,*pFieldId);
     case SUBMIT:
+        sms = command->get_sms();
+        if (!sms) return 0;
+
         pFieldId = SubmitFieldNames.GetPtr(name.c_str());
         if (!pFieldId) return 0;
 
@@ -1011,9 +1030,7 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
 void SmppCommandAdapter::changed(AdapterProperty& property)
 {
 
-    SMS * sms = command->get_sms();
-
-    if (sms == 0) return;
+    SMS * sms = 0;
 
     CommandId cmdid = command->get_commandId();
 
@@ -1025,6 +1042,9 @@ void SmppCommandAdapter::changed(AdapterProperty& property)
     switch (cmdid) 
     {
     case DELIVERY:
+        sms = command->get_sms();
+        if (sms == 0) return;
+
         pFieldId = DeliverFieldNames.GetPtr(name.c_str());
         if (!pFieldId) return;
 
@@ -1032,6 +1052,9 @@ void SmppCommandAdapter::changed(AdapterProperty& property)
         FieldId = *pFieldId;
         break;
     case SUBMIT:
+        sms = command->get_sms();
+        if (sms == 0) return;
+
         pFieldId = SubmitFieldNames.GetPtr(name.c_str());
         if (!pFieldId) return;
 
@@ -1056,6 +1079,48 @@ void SmppCommandAdapter::changed(AdapterProperty& property)
 
  /*   AdapterProperty ** propertyPtr = PropertyPul.GetPtr(FieldId);
     if (propertyPtr) (*propertyPtr)->setPureStr(property.getStr());*/
+}
+
+void SmppCommandAdapter::fillChargeOperation(smsc::inman::interaction::ChargeSms& op, TariffRec& tariffRec)
+{
+
+    SMS& sms = CommandBrige::getSMS(command);
+
+    char buff[128];
+    sprintf(buff,"%d", tariffRec.ServiceNumber);
+    std::string str(buff);
+    //op.setDestinationSubscriberNumber(sms.getDealiasedDestinationAddress().toString());
+    op.setDestinationSubscriberNumber(str);
+    op.setCallingPartyNumber(sms.getOriginatingAddress().toString());
+    op.setCallingIMSI(sms.getOriginatingDescriptor().imsi);
+    //op.setSMSCAddress(INManComm::scAddr.toString());
+    op.setSubmitTimeTZ(sms.getSubmitTime());
+    op.setTPShortMessageSpecificInfo(0x11);
+    op.setTPProtocolIdentifier(sms.getIntProperty(Tag::SMPP_PROTOCOL_ID));
+    op.setTPDataCodingScheme(sms.getIntProperty(Tag::SMPP_DATA_CODING));
+    op.setTPValidityPeriod(sms.getValidTime()-time(NULL));
+    op.setLocationInformationMSC(sms.getOriginatingDescriptor().msc);
+    op.setCallingSMEid(sms.getSourceSmeId());
+    op.setRouteId(sms.getRouteId());
+
+    op.setServiceId(command.getServiceId());
+
+    op.setUserMsgRef(sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)?sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE):-1);
+    //op.setMsgId(id);
+    op.setServiceOp(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)?sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP):-1);
+    op.setPartsNum(sms.getIntProperty(Tag::SMSC_ORIGINALPARTSNUM));
+
+    if(sms.hasBinProperty(Tag::SMPP_SHORT_MESSAGE))
+    {
+        unsigned len;
+        sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+        op.setMsgLength(len);
+    }else
+    {
+        unsigned len;
+        sms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+        op.setMsgLength(len);
+    }
 }
 
 

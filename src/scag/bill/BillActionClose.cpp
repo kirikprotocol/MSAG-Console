@@ -73,75 +73,26 @@ bool BillActionClose::run(ActionContext& context)
             return false;
         }
 
-        CTransactionData transactionData = bm.getTransactionData(operation->getBillId());
-
-        bm.commit(operation->getBillId());
-        operation->detachBill();
-
-        try 
+        if (!operation->hasBill()) 
         {
-            context.makeBillEvent(TRANSACTION_REFUSED, transactionData.category, transactionData.mediatype, ev);
-        } catch (SCAGException& e)
-        {
-            smsc_log_warn(logger,"BillAction 'bill:close' return false. Delails: %s", e.what());
-            //TODO: set to status - false
-            return true;
-        }
-
-
-        statistics.registerSaccEvent(ev);
-    }
-    else
-    {
-        Operation * operation = context.GetCurrentOperation();
-        if (!operation)
-        {
-            smsc_log_error(logger,"BillAction 'bill:close': Fatal error in action - operation from ActionContext is invalid");
+            smsc_log_error(logger,"BillAction 'bill:close': Fatal error in action - no bill is attached");
             return false;
         }
 
-        CTransactionData transactionData = bm.getTransactionData(operation->getBillId());
 
-        bm.rollback(operation->getBillId());
-        operation->detachBill();
         
-        try 
-        {
-            context.makeBillEvent(TRANSACTION_CALL_ROLLBACK, transactionData.category, transactionData.mediatype, ev);
-        } catch (SCAGException& e)
-        {
-            smsc_log_warn(logger,"BillAction 'bill:close' return false. Delails: %s", e.what());
-            //TODO: set to status - false
-            return true;
-        }
-
-        statistics.registerSaccEvent(ev);
-    }
-
- /*
-    int BillId = 0;
-
-    Operation * operation = context.GetCurrentOperation();
-    if (!operation) 
-    {
-        smsc_log_error(logger,"BillActionCommit: Fatal error in action - operation from ActionContext is invalid");
-        return false;
-    }
-  
-    if (operation->hasBill()) 
-    {
-        BillingManager& bm = BillingManager::Instance();
-
         EventMonitor eventMonitor;
 
-        TransactionStatus transactionStatus = bm.CheckBill(operation->getBillId(), &eventMonitor);
+        TariffRec tariffRec;
+        TransactionStatus transactionStatus = bm.CheckBill(operation->getBillId(), &eventMonitor, tariffRec);
+
+
         if (transactionStatus == TRANSACTION_WAIT_ANSWER) 
         {
             //TODO: Понять какое время нужно ждать до таймаута
             eventMonitor.wait(1000);
+            transactionStatus = bm.GetStatus(operation->getBillId());
         }
-
-        transactionStatus = bm.GetStatus(operation->getBillId());
 
         switch (transactionStatus) 
         {
@@ -152,10 +103,11 @@ bool BillActionClose::run(ActionContext& context)
             operation->detachBill();
 
 
-            if (!context.makeBillEvent(TRANSACTION_REFUSED, m_category, m_mediaType, ev))
+            try
             {
-                smsc_log_error(logger,"Cannot read tariff matrix parameners for category '%s', mediatype '%s'", m_category.c_str(), m_mediaType.c_str());
-                //statistics.registerSaccEvent(
+                context.makeBillEvent(TRANSACTION_REFUSED, tariffRec, ev);
+            } catch (SCAGException& e) {
+                smsc_log_warn(logger,"BillAction 'bill:close' return false. Delails: %s", e.what());
                 return true;
             }
 
@@ -172,41 +124,59 @@ bool BillActionClose::run(ActionContext& context)
             bm.rollback(operation->getBillId());
             operation->detachBill();
 
-            if (!context.makeBillEvent(TRANSACTION_TIME_OUT, m_category, m_mediaType, ev))
+            try 
             {
-                smsc_log_error(logger,"Cannot read tariff matrix parameners for category '%s', mediatype '%s'", m_category.c_str(), m_mediaType.c_str());
-                //statistics.registerSaccEvent(
+                context.makeBillEvent(TRANSACTION_TIME_OUT, tariffRec, ev);
+            } catch (SCAGException& e) 
+            {
+                smsc_log_warn(logger,"BillAction 'bill:close' return false. Delails: %s", e.what());
                 return true;
             }
-
-
-            statistics.registerSaccEvent(ev);
-
-            return true;
-            break;
         }
-
-
-        if (!context.makeBillEvent(TRANSACTION_COMMITED, m_category, m_mediaType, ev))
-        {
-            smsc_log_error(logger,"Cannot read tariff matrix parameners for category '%s', mediatype '%s'", m_category.c_str(), m_mediaType.c_str());
-            //statistics.registerSaccEvent(
-            return true;
-        }
-
-
-        statistics.registerSaccEvent(ev);
 
         bm.commit(operation->getBillId());
         operation->detachBill();
-        smsc_log_error(logger,"BillActionCommit: billing transaction commited successfully");
-    } 
+
+        try 
+        {
+            context.makeBillEvent(TRANSACTION_COMMITED, tariffRec, ev);
+        } catch (SCAGException& e)
+        {
+            smsc_log_warn(logger,"BillAction 'bill:close' return false. Delails: %s", e.what());
+            return true;
+        }
+
+
+        smsc_log_error(logger,"Action 'bill:close': Transaction commited");
+        statistics.registerSaccEvent(ev);
+    }
     else
-    {   
-        smsc_log_error(logger,"BillActionCommit: cannot commit bill - bill for current operation not found");
+    {
+        Operation * operation = context.GetCurrentOperation();
+        if (!operation)
+        {
+            smsc_log_error(logger,"BillAction 'bill:close': Fatal error in action - operation from ActionContext is invalid");
+            return false;
+        }
+
+        TariffRec tariffRec = bm.getTransactionData(operation->getBillId());
+
+        bm.rollback(operation->getBillId());
+        operation->detachBill();
+        
+        try 
+        {
+            context.makeBillEvent(TRANSACTION_CALL_ROLLBACK, tariffRec, ev);
+        } catch (SCAGException& e)
+        {
+            smsc_log_warn(logger,"BillAction 'bill:close' return false. Delails: %s", e.what());
+            //TODO: set to status - false
+            return true;
+        }
+
+        statistics.registerSaccEvent(ev);
     }
 
- */
     return true;
 }
 

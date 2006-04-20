@@ -26,6 +26,14 @@ namespace scag { namespace re { namespace actions
     };
 
 
+    class CommandAccessor : public PropertyManager
+    {
+    public:
+        virtual void fillChargeOperation(smsc::inman::interaction::ChargeSms& op, TariffRec& tariffRec) = 0;
+    };
+
+
+
 
     struct CommandProperty
     {
@@ -59,13 +67,14 @@ namespace scag { namespace re { namespace actions
         Hash<Property>&         constants;
 
         Session&                session;
-        PropertyManager&        command;
+        CommandAccessor&        command;
 
         CommandProperty&        commandProperty;
+        auto_ptr<TariffRec>     m_TariffRec;
     public:
 
         ActionContext(Hash<Property>& _constants,
-                      Session& _session, PropertyManager& _command, CommandProperty& _commandProperty)
+                      Session& _session, CommandAccessor& _command, CommandProperty& _commandProperty)
             : constants(_constants), session(_session), command(_command), commandProperty(_commandProperty) 
         {
         };
@@ -93,9 +102,10 @@ namespace scag { namespace re { namespace actions
         void AddPendingOperation(uint8_t type, time_t pendingTime);
         Operation * GetCurrentOperation() {return session.GetCurrentOperation();}
 
-        void makeBillEvent(int billCommand, std::string& category, std::string& medyaType, SACC_BILLING_INFO_EVENT_t& ev);
+        void makeBillEvent(int billCommand, TariffRec& tariffRec, SACC_BILLING_INFO_EVENT_t& ev);
         CommandProperty& getCommandProperty() {return commandProperty;}
-
+        void fillChargeOperation(smsc::inman::interaction::ChargeSms& op, TariffRec& tariffRec);
+        TariffRec * getTariffRec(std::string& category, std::string& mediaType);
     };
 
 }}}

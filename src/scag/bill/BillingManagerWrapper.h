@@ -31,7 +31,7 @@ protected:
     }
     virtual void initConnection(const char * host, int port);
     virtual void receiveCommand(); 
-    virtual void sendChargeBillCommand(ChargeSms& op);
+    virtual void BillingManagerWrapper::sendCommand(SerializableObject& op);
 };
 
 

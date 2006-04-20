@@ -15,6 +15,10 @@
 #include "scag/pers/PersAction.h"
 
 #include "scag/re/actions/ActionBinOperations.h"
+#include "scag/re/actions/ActionSubstr.h"
+#include "scag/re/actions/ActionConcat.h"
+#include "scag/re/actions/ActionIndexof.h"
+
 
 //#include "scag/SAX2Print.hpp"
                  
@@ -45,6 +49,11 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
     if (name=="mod") return new ActionMod();
     if (name=="mul") return new ActionMul();
     if (name=="div") return new ActionDiv();
+
+    if (name=="strings:substr") return new ActionSubstr();
+    if (name=="strings:concat") return new ActionConcat();
+    if (name=="strings:indexof") return new ActionIndexof();
+
 
     if (name=="profile:set") return new PersAction(PC_SET);
     if (name=="profile:get") return new PersAction(PC_GET);

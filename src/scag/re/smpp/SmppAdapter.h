@@ -2,7 +2,9 @@
 #define SCAG_RULE_ENGINE_SMPP_ADAPTER
 
 #include <scag/transport/smpp/SmppCommand.h> 
-#include <scag/util/properties/Properties.h>
+//#include <scag/util/properties/Properties.h>
+#include <scag/re/actions/ActionContext.h>
+
 #include <core/buffers/IntHash.hpp>
 
   
@@ -11,8 +13,11 @@ namespace scag { namespace re { namespace smpp
     using namespace scag::util::properties;
     using namespace scag::transport::smpp;
     using smsc::core::buffers::IntHash;
+    using scag::re::actions::CommandAccessor;
+    using scag::bill::infrastruct::TariffRec;
 
-    class SmppCommandAdapter : public PropertyManager
+
+    class SmppCommandAdapter : public CommandAccessor
     {
         enum AdditionTag
         {
@@ -121,12 +126,11 @@ namespace scag { namespace re { namespace smpp
         static IntHash<AccessType> InitSubmitAccess();
         static IntHash<AccessType> InitDeliverAccess();
 
-
                                                             
     public:
 
         SmppCommandAdapter(SmppCommand& _command) 
-            : PropertyManager(), command(_command) 
+            : CommandAccessor(), command(_command) 
         {
             m_hasPayloadText = true;
         }
@@ -134,6 +138,9 @@ namespace scag { namespace re { namespace smpp
         // TODO: Implement PropertyManager interface (Access to command fields)
         virtual void changed(AdapterProperty& property);
         virtual Property* getProperty(const std::string& name);
+        virtual void fillChargeOperation(smsc::inman::interaction::ChargeSms& op, TariffRec& tariffRec);
+
+
         virtual ~SmppCommandAdapter();
         static AccessType CheckAccess(int handlerType,const std::string& name);
     };

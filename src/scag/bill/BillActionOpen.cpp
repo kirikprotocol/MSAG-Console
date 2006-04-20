@@ -98,19 +98,26 @@ bool BillActionOpen::run(ActionContext& context)
 
     BillingManager& bm = BillingManager::Instance();
 
-    CTransactionData transactionData;
 
-    transactionData.category = m_category;
-    transactionData.mediatype = m_mediaType;
+    TariffRec * tariffRec;
+    try {
+        tariffRec = context.getTariffRec(m_category, m_mediaType);
+    } catch (SCAGException& e)
+    {
+        smsc_log_warn(logger,"BillAction 'bill:open' return false. Delails: %s", e.what()); 
+        return true;
+    }
 
+    smsc::inman::interaction::ChargeSms op;
 
-    int BillId = bm.ChargeBill(transactionData);
+    context.fillChargeOperation(op, *tariffRec);
+    int BillId = bm.ChargeBill(op, *tariffRec);
 
     operation->attachBill(BillId);
 
     try 
     {
-        context.makeBillEvent(TRANSACTION_OPEN, m_category, m_mediaType, ev);
+        context.makeBillEvent(TRANSACTION_OPEN, *tariffRec, ev);
     } catch (SCAGException& e)
     {
         smsc_log_warn(logger,"BillAction 'bill:open' return false. Delails: %s", e.what());

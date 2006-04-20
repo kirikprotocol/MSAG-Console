@@ -16,7 +16,7 @@ using scag::exceptions::SCAGException;
 
 void BillingManagerWrapper::initConnection(const char * host, int port)
 {
-/*    socket = new Socket();
+    socket = new Socket();
 
     if (socket->Init(host, port, 1000)) {
         throw SCAGException("can't init socket to BillingServer on host '%s', port '%d': error %s (%d)\n", host, port, strerror(errno), errno);
@@ -26,12 +26,12 @@ void BillingManagerWrapper::initConnection(const char * host, int port)
         throw SCAGException("can't connect socket to BillingServer on host '%s', port '%d' : %s (%d)\n", host, port, strerror(errno), errno);
     }
 
-    pipe = new Connect(socket, SerializerInap::getInstance(), Connect::frmLengthPrefixed, logger);*/
+    pipe = new Connect(socket, SerializerInap::getInstance(), Connect::frmLengthPrefixed, logger);
 }
 
 void BillingManagerWrapper::receiveCommand()
 {
-/*    fd_set read;
+    fd_set read;
     FD_ZERO( &read );
     FD_SET( socket->getSocket(), &read );
 
@@ -59,15 +59,15 @@ void BillingManagerWrapper::receiveCommand()
              } else throw SCAGException("Unknown command recieved: %u",cmd->getObjectId());
 
         } 
-     } else 
-        Reconnect();*/
+     } ///else 
+        //Reconnect();
     
 }
 
 
-void BillingManagerWrapper::sendChargeBillCommand(ChargeSms& op)
+void BillingManagerWrapper::sendCommand(SerializableObject& op)
 {
-    //pipe->sendObj(&op);
+    pipe->sendObj(&op);
 }
 
 }}

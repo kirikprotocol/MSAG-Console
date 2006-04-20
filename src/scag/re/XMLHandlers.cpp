@@ -172,12 +172,10 @@ void XMLBasicHandler::startElement(const XMLCh* const qname, AttributeList& attr
         XMLCh const * XMLName = attributes.getName(index);
 
         std::string value;
-        char end[2] = {0,0};
 
         //value.append((wchar_t *)XMLValue, XMLString::stringLen(XMLValue));
 
         value.assign((char *)XMLValue,XMLString::stringLen(XMLValue)*2);
-        value.append(end,2);
 
         _transcoder->transcodeTo(XMLName, XMLString::stringLen(XMLName), buff, 1024, charsEaten,unRepOpts);
 

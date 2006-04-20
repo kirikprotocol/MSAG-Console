@@ -31,7 +31,9 @@ void ActionSet::init(const SectionParams& params,PropertyObject propertyObject)
         at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
         if (!(at&atWrite)) 
             throw InvalidPropertyException("Action 'set': cannot set property '%s' - no access to write",strVariable.c_str());
-    }
+    } else
+        if (ft == ftConst) throw InvalidPropertyException("Action 'set': cannot modify constant variable '%s' - no access to write",strVariable.c_str());
+
 
     valueFieldType = ActionContext::Separate(strValue,name);
     if (valueFieldType == ftField) 

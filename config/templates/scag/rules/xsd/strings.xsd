@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://www.sibinco.com/SCAG/STRINGS" 
+    xmlns="http://www.w3.org/2001/XMLSchema"
+    xmlns:operation="http://www.sibinco.com/SCAG/STRINGS"
+    elementFormDefault="qualified">
+
+    <group name="Actions">
+        <choice>
+            <element name="indexof">
+                <complexType>
+                    <attribute name="var" type="string" use="required"/>
+		    <attribute name="str" type="string" use="required"/>
+
+		    <attribute name="result" type="string" use="required" />
+                </complexType>
+            </element>
+
+            <element name="substr">
+                <complexType>
+                    <attribute name="var" type="string" use="required"/>
+		    <attribute name="begin" type="string" use="optional"/>
+		    <attribute name="end" type="string" use="optional"/>
+		    
+		    <attribute name="result" type="string" use="required" />
+                </complexType>
+            </element>
+
+            <element name="concat">
+                <complexType>
+                    <attribute name="var" type="string" use="required"/>
+		    <attribute name="str" type="string" use="required"/>
+                </complexType>
+            </element>
+
+
+        </choice>    
+    </group>
+    
+</schema>

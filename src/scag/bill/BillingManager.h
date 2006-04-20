@@ -6,6 +6,7 @@
 #include "scag/config/bill/BillingManagerConfig.h"
 
 #include "infrastruct/Infrastructure.h"
+#include "inman/interaction/messages.hpp"
 
 namespace scag { namespace bill {
 
@@ -14,7 +15,7 @@ using namespace smsc::core::synchronization;
 using namespace scag::config;
 using namespace scag::bill::infrastruct;
 
-struct CTransactionData
+/*struct CTransactionData
 {
     Address OA;
     Address DA;
@@ -22,7 +23,7 @@ struct CTransactionData
     std::string mediatype;
     std::string category;
 };
-
+  */
 enum TransactionStatus
 {
     TRANSACTION_NOT_STARTED = 0,
@@ -55,8 +56,8 @@ protected:
     BillingManager() {};
 
 public:
-    virtual int ChargeBill(CTransactionData& data) = 0;  //¬озвращ€ет billId
-    virtual TransactionStatus CheckBill(int billId, EventMonitor * eventMonitor) = 0; //”станавливает eventMonitor и возвращ€ет статус транзакции
+    virtual int ChargeBill(smsc::inman::interaction::ChargeSms& op, TariffRec& tariffRec) = 0;  //¬озвращ€ет billId
+    virtual TransactionStatus CheckBill(int billId, EventMonitor * eventMonitor, TariffRec& tariffRec) = 0; //”станавливает eventMonitor и возвращ€ет статус транзакции
     virtual TransactionStatus GetStatus(int billId) = 0; //¬озвращ€ет статус транзакции
 
     virtual void commit(int billId) = 0;
@@ -67,7 +68,7 @@ public:
     //static const ActionFactory * getActionFactory() {return &factory;}
 
     virtual Infrastructure& getInfrastructure() = 0;
-    virtual CTransactionData getTransactionData(int billId) = 0;
+    virtual TariffRec& getTransactionData(int billId) = 0;
 };
 
 

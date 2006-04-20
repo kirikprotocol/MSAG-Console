@@ -17,7 +17,7 @@
 #include <scag/util/singleton/Singleton.h>
 #include <logger/Logger.h>
 #include <locale.h>
-
+#include "Constants.h"
 
 #include "Rule.h"
 #include "RuleEngine.h"
@@ -51,9 +51,6 @@ struct HashFunc{
     return key.serviceId + key.transport;
   }
 };
-
-
-
 
 
 class RuleEngineImpl : RuleEngine
@@ -174,7 +171,7 @@ class RuleEngineImpl : RuleEngine
     std::string CreateRuleFileName(const std::string& dir,const RuleKey& key);
 
     void ReadRulesFromDir(TransportType transport, const char * dir);
-
+    Hash<Property> ConstantsHash;
 public:
     RuleEngineImpl();
     ~RuleEngineImpl();
@@ -186,6 +183,8 @@ public:
     virtual RuleStatus process(SCAGCommand& command, Session& session);
 
     virtual Hash<TransportType> getTransportTypeHash() {return TransportTypeHash;}
+    virtual Hash<Property> getConstants();
+
 //    virtual bool findTransport(const char * name, TransportType& transportType);
 };
 
@@ -223,6 +222,11 @@ void RuleEngine::Init(const std::string& dir)
             bRuleEngineInited = true;
         }
     }
+}
+
+Hash<Property> RuleEngineImpl::getConstants()
+{
+    return ConstantsHash;
 }
 
 
@@ -431,6 +435,30 @@ void RuleEngineImpl::ProcessInit(const std::string& dir)
     TransportTypeHash["SMPP"] = SMPP;
     TransportTypeHash["HTTP"] = HTTP;
     TransportTypeHash["MMS"] = MMS;
+
+    Property property;
+
+    property.setBool(true);
+    ConstantsHash["TRUE"] = property;
+
+    property.setBool(false);
+    ConstantsHash["FALSE"] = property;
+
+    property.setInt(Const::USSD);
+    ConstantsHash["TT_USSD"] = property;
+
+    property.setInt(Const::SMS);
+    ConstantsHash["TT_SMS"] = property;
+
+    property.setInt(Const::MMS);
+    ConstantsHash["TT_MMS"] = property;
+
+    property.setInt(Const::WAP);
+    ConstantsHash["TT_WAP"] = property;
+
+    property.setInt(Const::HTTP);
+    ConstantsHash["TT_HTTP"] = property;
+
 
     rules = new Rules();
 

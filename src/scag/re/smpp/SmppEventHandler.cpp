@@ -2,6 +2,7 @@
 #include "scag/re/smpp/SmppAdapter.h"
 #include "scag/re/actions/ActionContext.h"
 #include "scag/re/CommandBrige.h"
+#include "scag/re/RuleEngine.h"
 
 namespace scag { namespace re {
 
@@ -149,8 +150,9 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
 {
     smsc_log_debug(logger, "Process EventHandler...");
 
-    Hash<Property> _constants;
+    Hash<Property>& _constants = RuleEngine::Instance().getConstants();
     RuleStatus rs;
+    
 
     smsc::util::config::Config config;
     
@@ -166,11 +168,11 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
 
     Address& abonentAddr = CommandBrige::getAbonentAddr(*smppcommand);
 
-    int operatorId = istr.GetOperatorID(abonentAddr);
+    int operatorId = 105;//istr.GetOperatorID(abonentAddr);
     if (operatorId == 0) 
         throw SCAGException("SmppEventHandler: Cannot find OperatorID for %s abonent", abonentAddr.toString().c_str());
     
-    int providerId = istr.GetProviderID(command.getServiceId());
+    int providerId = 1;//istr.GetProviderID(command.getServiceId());
     if (providerId == 0) 
         throw SCAGException("SmppEventHandler: Cannot find ProviderID for ServiceID=%d", command.getServiceId());
      

@@ -87,14 +87,13 @@ void ActionContext::abortSession()
 }
 
 
-void ActionContext::makeBillEvent(int billCommand, std::string& category, std::string& medyaType, SACC_BILLING_INFO_EVENT_t& ev)
+void ActionContext::makeBillEvent(int billCommand, TariffRec& tariffRec, SACC_BILLING_INFO_EVENT_t& ev)
 {
-    Infrastructure& istr = BillingManager::Instance().getInfrastructure();
-
+    /*
     auto_ptr<TariffRec> tariffRec(istr.GetTariff(commandProperty.operatorId, category.c_str(), medyaType.c_str()));
     if (!tariffRec.get()) 
         throw SCAGException("BillEvent: Cannot find tariffRec for OID=%d, cat=%s, mtype=%s ", commandProperty.operatorId, category.c_str(), medyaType.c_str());
-
+    */
     ev.Header.cCommandId = billCommand;
 
     ev.Header.cProtocolId = commandProperty.protocol;
@@ -112,20 +111,41 @@ void ActionContext::makeBillEvent(int billCommand, std::string& category, std::s
     ev.Header.sCommandStatus = commandProperty.status;
     
     ev.iOperatorId = commandProperty.operatorId;
-    ev.iPriceCatId = tariffRec->CategoryId;
+    ev.iPriceCatId = tariffRec.CategoryId;
     
     
-    ev.fBillingSumm = tariffRec->Price;
-    ev.iMediaResourceType = tariffRec->MediaTypeId;
+    ev.fBillingSumm = tariffRec.Price;
+    ev.iMediaResourceType = tariffRec.MediaTypeId;
 
     int size = MAX_BILLING_CURRENCY_LENGTH;
-    if (size > tariffRec->Currency.size()) size = tariffRec->Currency.size();
+    if (size > tariffRec.Currency.size()) size = tariffRec.Currency.size();
 
-    memcpy(ev.pBillingCurrency, tariffRec->Currency.c_str(), size);
+    memcpy(ev.pBillingCurrency, tariffRec.Currency.c_str(), size);
 
     CSessionPrimaryKey& sessionPrimaryKey = session.getPrimaryKey();
     sprintf((char *)ev.pSessionKey,"%s/%ld%d", sessionPrimaryKey.abonentAddr.toString().c_str(), sessionPrimaryKey.BornMicrotime.tv_sec,sessionPrimaryKey.BornMicrotime.tv_usec / 1000);
 
+}
+
+TariffRec * ActionContext::getTariffRec(std::string& category, std::string& medyaType)
+{
+    if (!m_TariffRec.get()) 
+    {
+        Infrastructure& istr = BillingManager::Instance().getInfrastructure();
+        m_TariffRec.reset(istr.GetTariff(commandProperty.operatorId, category.c_str(), medyaType.c_str()));
+
+        if (!m_TariffRec.get()) 
+            throw SCAGException("BillEvent: Cannot find tariffRec for OID=%d, cat=%s, mtype=%s ", commandProperty.operatorId, category.c_str(), medyaType.c_str());
+    }
+
+    return m_TariffRec.get();
+}
+
+
+void ActionContext::fillChargeOperation(smsc::inman::interaction::ChargeSms& op, TariffRec& tariffRec)
+{
+    
+    command.fillChargeOperation(op, tariffRec);
 }
 
 }}}

@@ -158,4 +158,9 @@ void HttpCommandAdapter::changed(AdapterProperty& property)
     }
 }
 
+void HttpCommandAdapter::fillChargeOperation(smsc::inman::interaction::ChargeSms& op, TariffRec& tariffRec)
+{
+}
+
+
 }}}
