@@ -393,7 +393,7 @@ public class Smsc extends Service {
         params.put("mode", sme.getModeStr());
         params.put("proclimit", new Integer(sme.getProclimit()));
         params.put("schedlimit", new Integer(sme.getSchedlimit()));
-        params.put("accessmask", new Long(sme.getAccessMask()));
+        params.put("accessMask", new Long(sme.getAccessMask()));
         return params;
     }
 
