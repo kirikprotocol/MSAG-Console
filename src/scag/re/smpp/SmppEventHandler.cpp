@@ -168,11 +168,11 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
 
     Address& abonentAddr = CommandBrige::getAbonentAddr(*smppcommand);
 
-    int operatorId = 105;//istr.GetOperatorID(abonentAddr);
+    int operatorId = istr.GetOperatorID(abonentAddr);
     if (operatorId == 0) 
         throw SCAGException("SmppEventHandler: Cannot find OperatorID for %s abonent", abonentAddr.toString().c_str());
     
-    int providerId = 1;//istr.GetProviderID(command.getServiceId());
+    int providerId = istr.GetProviderID(command.getServiceId());
     if (providerId == 0) 
         throw SCAGException("SmppEventHandler: Cannot find ProviderID for ServiceID=%d", command.getServiceId());
      

@@ -120,7 +120,7 @@ bool BillActionOpen::run(ActionContext& context)
         context.makeBillEvent(TRANSACTION_OPEN, *tariffRec, ev);
     } catch (SCAGException& e)
     {
-        smsc_log_warn(logger,"BillAction 'bill:open' return false. Delails: %s", e.what());
+        smsc_log_warn(logger,"BillAction 'bill:open' error. MAKAR, VSE PRODOLZHAET RABOTAT! :) Delails: %s", e.what());
         //TODO: set to status - false
         return true;
     }
