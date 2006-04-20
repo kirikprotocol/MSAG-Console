@@ -13,7 +13,7 @@ using smsc::inman::common::Console;
 using smsc::inman::common::format;
 using scag::exceptions::SCAGException;
 
-
+/*
 void BillingManagerWrapper::initConnection(const char * host, int port)
 {
     socket = new Socket();
@@ -25,8 +25,27 @@ void BillingManagerWrapper::initConnection(const char * host, int port)
     if (socket->Connect()) {
         throw SCAGException("can't connect socket to BillingServer on host '%s', port '%d' : %s (%d)\n", host, port, strerror(errno), errno);
     }
-
+  
     pipe = new Connect(socket, SerializerInap::getInstance(), Connect::frmLengthPrefixed, logger);
+}
+*/
+
+bool BillingManagerWrapper::Reconnect()
+{
+    if (socket->Init(m_Host.c_str(), m_Port, 1000)) 
+    {
+        smsc_log_warn(logger, "Can't init socket to BillingServer on host '%s', port '%d': error %s (%d)\n", m_Host.c_str(), m_Port, strerror(errno), errno);
+        return false;
+    }
+
+    if (socket->Connect())
+    {
+        smsc_log_warn(logger, "Can't connect socket to BillingServer on host '%s', port '%d' : %s (%d)\n", m_Host.c_str(), m_Port, strerror(errno), errno);
+        return false;
+    }        
+
+
+    return true;
 }
 
 void BillingManagerWrapper::receiveCommand()

@@ -20,18 +20,29 @@ class BillingManagerWrapper : public SmscHandler
     Socket * socket;
     Connect * pipe;
 
+    int m_Port;
+    std::string m_Host;
 protected:
     Logger * logger;
 
-    BillingManagerWrapper() : socket(0), pipe(0), logger(Logger::getInstance("scag.BM")) {};
+    BillingManagerWrapper() : socket(0), pipe(0), logger(Logger::getInstance("scag.BM")) 
+    {
+        socket = new Socket();
+        pipe = new Connect(socket, SerializerInap::getInstance(), Connect::frmLengthPrefixed, logger);
+    };
     ~BillingManagerWrapper()
     {
         if (socket) delete socket;
         if (pipe) delete pipe;
     }
-    virtual void initConnection(const char * host, int port);
+    virtual void InitConnection(std::string& host, int port)
+    {
+        m_Host = host;
+        m_Port = port;
+    }
     virtual void receiveCommand(); 
     virtual void BillingManagerWrapper::sendCommand(SerializableObject& op);
+    virtual bool Reconnect();
 };
 
 

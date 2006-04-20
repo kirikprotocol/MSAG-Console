@@ -51,6 +51,8 @@ class BillingManagerImpl : public BillingManager, public Thread, public BillingM
     int m_lastBillId; 
     int m_TimeOut;
 
+    bool m_Connected;
+
     void Stop();
     bool isStarted();
 
@@ -149,16 +151,10 @@ void BillingManagerImpl::init(BillingManagerConfig& cfg)
     m_MaxEventMonitors = cfg.MaxThreads;
     m_TimeOut = cfg.BillingTimeOut;
 
-    try
-    {
-        smsc_log_info(logger,"BillingManager connecting to host '%s', port %d", cfg.BillingHost.c_str(),cfg.BillingPort);
-        initConnection(cfg.BillingHost.c_str(),cfg.BillingPort);
-    }
-    catch (SCAGException& e)
-    {
-        smsc_log_error(logger,"BillingManager error: %s", e.what());
-        throw;
-    }
+    InitConnection(cfg.BillingHost, cfg.BillingPort);
+
+    smsc_log_info(logger,"BillingManager connecting to host '%s', port %d", cfg.BillingHost.c_str(),cfg.BillingPort);
+    m_Connected = Reconnect();
 
     EventMonitorArray = new EventMonitorEntity[m_MaxEventMonitors];
 
@@ -176,8 +172,16 @@ int BillingManagerImpl::Execute()
     {
         try
         {
-            receiveCommand();
-            connectEvent.Wait(100);
+            if (m_Connected) 
+            {
+                receiveCommand();
+                connectEvent.Wait(100);
+            } else
+            {
+                m_Connected = Reconnect();
+                connectEvent.Wait(1000);
+            }
+            
         } catch (SCAGException& e)
         {
             smsc_log_error(logger, "BillingManager error: %s", e.what());
