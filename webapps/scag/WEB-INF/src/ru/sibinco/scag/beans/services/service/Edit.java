@@ -7,6 +7,7 @@ package ru.sibinco.scag.beans.services.service;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.Scag;
+import ru.sibinco.scag.backend.rules.RuleManager;
 import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.backend.status.StatMessage;
 import ru.sibinco.scag.backend.transport.Transport;
@@ -196,7 +197,7 @@ public class Edit extends TabledEditBeanImpl {
 
     private void deleteRule(String transport) throws SCAGJspException {
         try {
-            appContext.getRuleManager().removeRule(Long.toString(id), transport);
+            appContext.getRuleManager().removeRule(Long.toString(id), transport, RuleManager.NON_TERM_MODE);
         } catch (SibincoException se) {
             if (!(se instanceof StatusDisconnectedException)) {
                 se.printStackTrace();/*PRINT ERROR ON THE SCREEN;*/

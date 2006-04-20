@@ -3,6 +3,7 @@ package ru.sibinco.scag.beans.rules.applet;
 
 import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.rules.Rule;
+import ru.sibinco.scag.backend.rules.RuleManager;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.StatusDisconnectedException;
 
@@ -118,7 +119,7 @@ public class myServlet extends HttpServlet
     res.setContentType("text/html; charset=windows-1251");
     if (command==Write) Write(req,file,res);
     if (command==UpdateRule) updateRule(req,file,transport,res);
-    if (command==AddRule) AddRule(req,file,res);
+    if (command==AddRule) AddRule(req,file,transport,res);
     //out.print("true");out.flush();out.close();
     //doRequest(req, res);
   }
@@ -169,7 +170,7 @@ public class myServlet extends HttpServlet
     PrintWriter out = res.getWriter();
     BufferedReader r=req.getReader();
     try {
-      li=appContext.getRuleManager().updateRule(r,file,transport);
+      li=appContext.getRuleManager().updateRule(r,file,transport, RuleManager.NON_TERM_MODE);
       res = checkError(li, res);
       out.print("true");out.flush();out.close();
     }  catch (SibincoException e) {
@@ -189,17 +190,17 @@ public class myServlet extends HttpServlet
         } catch (IOException e)  { e.printStackTrace(); }
     }
  }
-  private void AddRule(HttpServletRequest req,final String file,HttpServletResponse res) throws IOException
+  private void AddRule(HttpServletRequest req,final String file, final String transport, HttpServletResponse res) throws IOException
   {
     System.out.println("myServlet AddRule");
-    session = req.getSession(false);
-    Rule newRule =(Rule)session.getAttribute("newRule");
+    //session = req.getSession(false);
+    //Rule newRule =(Rule)session.getAttribute("newRule");
     SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
     PrintWriter out = res.getWriter();    
     LinkedList li;
     BufferedReader r=req.getReader();
     try {
-       li = appContext.getRuleManager().AddRule(r,file,newRule);
+       li = appContext.getRuleManager().AddRule(r,file,transport,RuleManager.NON_TERM_MODE);
        res = checkError(li, res);
        out.print("true");out.flush();out.close();
     } catch (SibincoException e) {
@@ -251,11 +252,9 @@ public class myServlet extends HttpServlet
   {
     System.out.println("LoaNewdRule id= "+file + " transport = "+transport);
     Rule newRule=Rule.createNewRule(Long.parseLong(file),transport);
-    session = req.getSession(false);
-    session.setAttribute("newRule",newRule);
-    LinkedList li;
     //session = req.getSession(false);
-    //Rule newRule =(Rule)session.getAttribute("newRule");
+    //session.setAttribute("newRule",newRule);
+    LinkedList li;
     li=newRule.getBody();
     System.out.println("body size = " + li.size());
     if(li.size()>0) li.addFirst("ok");

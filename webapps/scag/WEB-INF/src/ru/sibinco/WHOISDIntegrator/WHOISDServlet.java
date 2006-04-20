@@ -125,12 +125,15 @@ public class WHOISDServlet extends HttpServlet {
      }
      String[] transports = Transport.transportTitles;
      if (rulesWHOISD.size()>0)
+     try {
      for (byte i =0 ;i<transports.length;i++) {
        ruleWHOISD = (Rule)rulesWHOISD.get(transports[i]);
        Rule curRule = rulemanager.getRule(new Long(service),transports[i]);
        if (curRule!=null && curRule.isLocked()) throw new WHOISDException("Rule ["+transports[i]+"] is editing in MSAG web admin console right now");
        if (ruleWHOISD == null) {
-         if (curRule!=null) rulemanager.removeRule(service,transports[i]);
+         if (curRule!=null) {
+           rulemanager.removeRule(service,transports[i]);
+         }
          continue;
        }
        String ruleSystemId = composePath("gw location.rules_folder")+"/"+ transports[i] + "/"+ruleWHOISD.getId().toString();
@@ -144,21 +147,26 @@ public class WHOISDServlet extends HttpServlet {
           if (error != null && error.size()>0)
             throw new WHOISDException(composeErrorMessage(ruleWHOISD,termAsList, (String)error.get(0) + " Line in term - {0}.", Integer.parseInt((String)error.get(1))) );
        } else if (ruleWHOISD != null && curRule==null) {
-          LinkedList error = rulemanager.AddRule(ruleWHOISD,service);
+          LinkedList error = rulemanager.AddRule(ruleWHOISD,service, transports[i]);
           if (error != null && error.size()>0)
             throw new WHOISDException(composeErrorMessage(ruleWHOISD,termAsList, (String)error.get(0) + " Line in term - {0}.", Integer.parseInt((String)error.get(1))) );
        }
      }
+     } catch (Exception e) {
+       rulemanager.applyTerm(RuleManagerWrapper.TERM_ROLLBACK);
+       throw e;
+     }
+     rulemanager.applyTerm(RuleManagerWrapper.TERM_COMMIT);
    }
 
    private String composeErrorMessage(Rule ruleWHOISD, LinkedList termAsList, String errormessage, int linenumber) {
      int ruleHeaderLength = Rule.getRuleHeader(ruleWHOISD.getTransport()).size();
      LinkedList ruleBodyWithoutHeader = ruleWHOISD.getBody();
      for (int ii=0;ii<(ruleHeaderLength+ruleWHOISD.getWhoisdPartOffset());ii++)
-       ruleBodyWithoutHeader.removeFirst();
+       ruleBodyWithoutHeader.removeFirst();   
      int offset = 0;
      int startindex = ruleBodyWithoutHeader.size()-1;
-     for (;startindex>1;startindex--){
+     for (;startindex>0;startindex--){
         ruleBodyWithoutHeader.removeLast();
         offset = Collections.indexOfSubList(termAsList, ruleBodyWithoutHeader);
         if (offset !=-1) break;

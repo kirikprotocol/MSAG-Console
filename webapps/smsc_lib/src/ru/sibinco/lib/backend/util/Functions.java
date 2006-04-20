@@ -149,6 +149,15 @@ public class Functions
     return newFilename;
   }
 
+  public static synchronized File createNewFilename(final File filenameToSave) {
+    final File directory = filenameToSave.getParentFile();
+    final String filename = filenameToSave.getName() + ".new";
+
+    // create temp file for new config file
+    File newFilename = new File(directory, filename);
+    return newFilename;
+  }
+
   public static final void renameNewSavedFileToOriginal(File newCreatedFile, File oldFileRenameTo) throws IOException
   {
     final String suffix = suffixDateFormat.format(new Date());
