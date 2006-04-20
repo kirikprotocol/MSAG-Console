@@ -58,7 +58,8 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
     if (name=="profile:set") return new PersAction(PC_SET);
     if (name=="profile:get") return new PersAction(PC_GET);
     if (name=="profile:del") return new PersAction(PC_DEL);
-    if (name=="profile:change") return new PersAction(PC_INC);
+    if (name=="profile:inc") return new PersAction(PC_INC);
+    if (name=="profile:inc-mod") return new PersAction(PC_INC_MOD);
 
     Action * action = 0;
 
