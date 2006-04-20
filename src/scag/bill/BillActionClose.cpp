@@ -159,13 +159,14 @@ bool BillActionClose::run(ActionContext& context)
             return false;
         }
 
-        TariffRec tariffRec = bm.getTransactionData(operation->getBillId());
-
-        bm.rollback(operation->getBillId());
-        operation->detachBill();
         
         try 
         {
+            TariffRec tariffRec = bm.getTransactionData(operation->getBillId());
+
+            bm.rollback(operation->getBillId());
+            operation->detachBill();
+
             context.makeBillEvent(TRANSACTION_CALL_ROLLBACK, tariffRec, ev);
         } catch (SCAGException& e)
         {

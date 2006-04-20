@@ -139,7 +139,7 @@ void SmppEventHandler::EndOperation(Session& session, SmppCommand& command, Rule
 
     case CO_USSD_DIALOG:
         //smsc_log_debug(logger,"Session: finish process USSD_DIALOG");
-        if ((smppDiscriptor.isUSSDClosed)&&(smppDiscriptor.isResp)) session.closeCurrentOperation();
+        if (((smppDiscriptor.isUSSDClosed)&&(smppDiscriptor.isResp))||(!ruleStatus.result)) session.closeCurrentOperation();
         break;
     }
 }
@@ -193,10 +193,16 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
    
     ActionContext context(_constants, session, _command, commandProperty);
 
-    rs = RunActions(context);
+    try
+    {
+        rs = RunActions(context);
+    } catch (SCAGException& e)
+    {
+        smsc_log_debug(logger, "EventHandler: error in actions processing. Details: %s", e.what());
+        rs.result = 0;
+    }
 
     EndOperation(session, *smppcommand, rs);
-
     return rs;
 }
 
