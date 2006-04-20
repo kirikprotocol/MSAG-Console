@@ -65,7 +65,7 @@ public class SMEList {
     }
 
     public SME remove(String smeId) throws AdminException {
-        if (!smes.containsKey(smeId))
+        if (smes.containsKey(smeId))
             return (SME) smes.remove(smeId);
         else
             return null;
