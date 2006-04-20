@@ -443,7 +443,8 @@ static void SendErrToSmsc(unsigned dialogid,unsigned code)
   if ( dialogid == 0 ) return;
   __map_trace2__("Send error 0x%x to SMSC dialogid=%x",code,dialogid);
   SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",dialogid,code);
-  if ( GET_STATUS_CODE(code) == Status::SUBSCRBUSYMT ){
+  if ( GET_STATUS_CODE(code) == Status::SUBSCRBUSYMT 
+    && GET_STATUS_TYPE(code) == CMD_ERR_RESCHEDULENOW ){
     cmd->get_resp()->set_delay(GetBusyDelay());
   } else if( GET_STATUS_CODE(code) == Status::LOCKEDBYMO ) {
     cmd->get_resp()->set_delay(GetLockedByMODelay());
