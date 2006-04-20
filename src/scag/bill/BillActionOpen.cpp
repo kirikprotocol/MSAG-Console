@@ -107,7 +107,13 @@ bool BillActionOpen::run(ActionContext& context)
         smsc_log_warn(logger,"BillAction 'bill:open' cannot process. Delails: %s", e.what()); 
         return true;
     }
-        
+
+    if (!tariffRec) 
+    {
+        smsc_log_warn(logger,"BillAction 'bill:open' cannot process. Delails: Cannot find TariffRec"); 
+        return true;
+    }
+
     smsc::inman::interaction::ChargeSms op;
 
     try 

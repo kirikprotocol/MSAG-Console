@@ -132,6 +132,9 @@ bool BillActionClose::run(ActionContext& context)
                 smsc_log_warn(logger,"BillAction 'bill:close' return false. Delails: %s", e.what());
                 return true;
             }
+
+            return true;
+            break;
         }
 
         bm.commit(operation->getBillId());

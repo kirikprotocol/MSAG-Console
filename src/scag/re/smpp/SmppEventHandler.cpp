@@ -105,17 +105,24 @@ void SmppEventHandler::EndOperation(Session& session, SmppCommand& command, Rule
     Operation * currentOperation = session.GetCurrentOperation();
     if (!currentOperation) throw SCAGException("Session: Fatal error - cannot end operation. Couse: current operation not found");
 
+    if (!ruleStatus.result)) 
+    {
+        session.closeCurrentOperation(); 
+        return;
+    }
+    
+
     CSmppDiscriptor smppDiscriptor = CommandBrige::getSmppDiscriptor(command);
 
     switch (smppDiscriptor.cmdType)
     {
     case CO_DELIVER:
-        if ((currentOperation->getStatus() == OPERATION_COMPLETED)||(!ruleStatus.result)) session.closeCurrentOperation();
+        if (currentOperation->getStatus() == OPERATION_COMPLETED) session.closeCurrentOperation();
         break;
 
     case CO_SUBMIT:
 
-        if ((currentOperation->getStatus() == OPERATION_COMPLETED)||(!ruleStatus.result)) session.closeCurrentOperation();
+        if (currentOperation->getStatus() == OPERATION_COMPLETED) session.closeCurrentOperation();
 
         //TODO: узнать заказал ли сервис отчёт о доставке
         if (!smppDiscriptor.m_isTransact) 
@@ -139,7 +146,7 @@ void SmppEventHandler::EndOperation(Session& session, SmppCommand& command, Rule
 
     case CO_USSD_DIALOG:
         //smsc_log_debug(logger,"Session: finish process USSD_DIALOG");
-        if (((smppDiscriptor.isUSSDClosed)&&(smppDiscriptor.isResp))||(!ruleStatus.result)) session.closeCurrentOperation();
+        if ((smppDiscriptor.isUSSDClosed)&&(smppDiscriptor.isResp)) session.closeCurrentOperation();
         break;
     }
 }
@@ -167,7 +174,8 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     Infrastructure& istr = BillingManager::Instance().getInfrastructure();
 
     Address& abonentAddr = CommandBrige::getAbonentAddr(*smppcommand);
-    /*int operatorId = 0;
+   /*
+    int operatorId = 0;
     int providerId = 0;*/
     
     int operatorId = istr.GetOperatorID(abonentAddr);
