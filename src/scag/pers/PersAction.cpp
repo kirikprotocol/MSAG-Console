@@ -235,7 +235,7 @@ static void setREPropFromPersProp(REProperty& rep, Property& prop)
 
 bool PersAction::run(ActionContext& context)
 {
-    smsc_log_error(logger,"Run Action 'PersAction cmd=%s'...", getStrCmd());
+    smsc_log_debug(logger,"Run Action 'PersAction cmd=%s'...", getStrCmd());
 
     try{
         Property prop;
