@@ -106,10 +106,10 @@ namespace scag { namespace re { namespace smpp
         AdapterProperty * getMessageBodyProperty(SMS& data, std::string name);
 
 
-        Property * getSubmitProperty(SMS& data,const std::string& name,int FieldId);
-        Property * getDeliverProperty(SMS& data,const std::string& name,int FieldId);
-        Property * getSubmitRespProperty(const std::string& name,int FieldId);
-        Property * getDeliverRespProperty(const std::string& name,int FieldId);
+        AdapterProperty * getSubmitProperty(SMS& data,const std::string& name,int FieldId);
+        AdapterProperty * getDeliverProperty(SMS& data,const std::string& name,int FieldId);
+        AdapterProperty * getSubmitRespProperty(SMS& data, const std::string& name,int FieldId);
+        AdapterProperty * getDeliverRespProperty(SMS& data, const std::string& name,int FieldId);
 
         AdapterProperty * Get_ESM_BIT_Property(SMS& data, const std::string& name,int FieldId);
         AdapterProperty * Get_RD_BIT_Property(SMS& data, const std::string& name,int FieldId);
@@ -139,6 +139,7 @@ namespace scag { namespace re { namespace smpp
 
         static Hash<int> InitSubmitFieldNames();
         static Hash<int> InitSubmitRespFieldNames();
+        static Hash<int> InitDeliverRespFieldNames();
         static Hash<int> InitDeliverFieldNames();
 
         static IntHash<AccessType> InitSubmitAccess();

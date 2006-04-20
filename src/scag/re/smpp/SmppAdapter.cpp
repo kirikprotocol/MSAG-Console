@@ -632,7 +632,7 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
 
 
 
-Property * SmppCommandAdapter::getSubmitRespProperty(const std::string& name,int FieldId)
+AdapterProperty * SmppCommandAdapter::getSubmitRespProperty(SMS& data, const std::string& name,int FieldId)
 {
 
     AdapterProperty * property = 0;
@@ -653,7 +653,7 @@ Property * SmppCommandAdapter::getSubmitRespProperty(const std::string& name,int
     return 0;
 }
 
-Property * SmppCommandAdapter::getDeliveryRespProperty(const std::string& name,int FieldId)
+AdapterProperty * SmppCommandAdapter::getDeliverRespProperty(SMS& data, const std::string& name,int FieldId)
 {
 
     AdapterProperty * property = 0;
@@ -904,7 +904,7 @@ AdapterProperty * SmppCommandAdapter::getMessageBodyProperty(SMS& data, std::str
 }
 
 
-Property * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::string& name,int FieldId)
+AdapterProperty * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::string& name,int FieldId)
 {
     AdapterProperty * property = 0;
     char buff[20];
@@ -969,7 +969,7 @@ Property * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::string& na
 }
 
 
-Property * SmppCommandAdapter::getDeliverProperty(SMS& data,const std::string& name,int FieldId)
+AdapterProperty * SmppCommandAdapter::getDeliverProperty(SMS& data,const std::string& name,int FieldId)
 {
     AdapterProperty * property = 0;
     char buff[100];
@@ -1063,9 +1063,7 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
     AdapterProperty * property = 0;
 
     AdapterProperty ** propertyPtr;
-    propertyPtr = PropertyPul.GetPtr(name.c_str());
-
-    if (propertyPtr) return (*propertyPtr);
+    SmsResp * smsResp = 0;
 
     switch (cmdid) 
     {
@@ -1076,6 +1074,9 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
         pFieldId = DeliverFieldNames.GetPtr(name.c_str());
         if (!pFieldId) return 0;
 
+        propertyPtr = PropertyPul.GetPtr(*pFieldId);
+        if (propertyPtr) return (*propertyPtr);
+
         property = getDeliverProperty(*sms,name,*pFieldId);
         break;
     case SUBMIT:
@@ -1085,23 +1086,43 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
         pFieldId = SubmitFieldNames.GetPtr(name.c_str());
         if (!pFieldId) return 0;
 
+        propertyPtr = PropertyPul.GetPtr(*pFieldId);
+        if (propertyPtr) return (*propertyPtr);
+
         property = getSubmitProperty(*sms,name,*pFieldId);
         break;
     case DELIVERY_RESP:
+
         pFieldId = SubmitRespFieldNames.GetPtr(name.c_str());
         if (!pFieldId) return 0;
 
-        property = getDeliverRespProperty(name,*pFieldId);
+        smsResp = command->get_resp();
+        if (!smsResp) return 0;
+        sms = smsResp->get_sms();
+
+        if (!sms) return 0;
+
+        propertyPtr = PropertyPul.GetPtr(*pFieldId);
+        if (propertyPtr) return (*propertyPtr);
+
+        property = getDeliverRespProperty(*sms, name,*pFieldId);
         break;
     case SUBMIT_RESP:
 
         pFieldId = SubmitRespFieldNames.GetPtr(name.c_str());
         if (!pFieldId) return 0;
 
-        property = getSubmitRespProperty(name,*pFieldId);
+        smsResp = command->get_resp();
+        if (!smsResp) return 0;
+        sms = smsResp->get_sms();
+
+        propertyPtr = PropertyPul.GetPtr(*pFieldId);
+        if (propertyPtr) return (*propertyPtr);
+
+        property = getSubmitRespProperty(*sms, name,*pFieldId);
     }
 
-    if (property) PropertyPul.Insert(name.c_str(), property);
+    if ((property)&&(pFieldId)) PropertyPul.Insert(*pFieldId, property);
 
     return property;
 }
