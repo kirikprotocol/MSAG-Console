@@ -158,16 +158,19 @@ public:
         smsc_log_debug(log, "profile %s, setProperty: %s", key.toString().c_str(), prop.toString().c_str());
     };
 
-    void delProperty(Key& key, const char* nm)
+    bool delProperty(Key& key, const char* nm)
     {
         MutexGuard mt(mtx);
         Profile *pf = getProfile(key, false);
 
+        bool res = false;
+
         if(pf != NULL)
         {
-            pf->DeleteProperty(nm);
+            res = pf->DeleteProperty(nm);
             storeProfile(key, pf);
         }
+        return res;
     };
 
     bool getProperty(Key& key, const char* nm, Property& prop)
@@ -227,6 +230,38 @@ public:
         }
         else
         {
+            pf->AddProperty(prop);
+            storeProfile(key, pf);
+            return true;
+        }
+        return false;
+    };
+
+    bool incModProperty(Key& key, Property& prop, uint32_t mod, int& res)
+    {
+        MutexGuard mt(mtx);
+
+        Profile *pf;
+        Property *p;
+
+        pf = getProfile(key, true);
+        p = pf->GetProperty(prop.getName().c_str());
+        if(p != NULL)
+        {
+            smsc_log_debug(log, "profile %s, incProperty: %s", key.toString().c_str(), p->toString().c_str());
+            if(p->getType() == INT && prop.getType() == INT)
+            {
+                res = (p->getIntValue() + prop.getIntValue()) % mod;
+                p->setIntValue(res);
+                p->WriteAccess();
+                storeProfile(key, pf);
+                return true;
+            }
+        }
+        else
+        {
+            res = prop.getIntValue() % mod;
+            prop.setIntValue(res);
             pf->AddProperty(prop);
             storeProfile(key, pf);
             return true;

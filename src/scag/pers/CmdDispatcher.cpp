@@ -34,19 +34,20 @@ void CommandDispatcher::SetPacketSize(SerialBuffer *sb)
 
 void CommandDispatcher::DelCmdHandler(ProfileType pt, uint32_t int_key, std::string& str_key, std::string& name, SerialBuffer *sb)
 {
+    bool exists = false;
     if(pt == PT_ABONENT)
     {
         smsc_log_debug(log, "DelCmdHandler AbonetStore: key=%s, name=%s", str_key.c_str(), name.c_str());
-        AbonentStore->delProperty(StringProfileKey(str_key.c_str()), name.c_str());
+        exists = AbonentStore->delProperty(StringProfileKey(str_key.c_str()), name.c_str());
     }
     else
         for(int i = 0; i < INT_STORE_CNT; i++)
             if(pt == int_store[i].pt)
             {
                 smsc_log_debug(log, "DelCmdHandler store= %d, key=%d, name=%s", pt, int_key, name.c_str());
-                int_store[i].store->delProperty(IntProfileKey(int_key), name.c_str());
+                exists = int_store[i].store->delProperty(IntProfileKey(int_key), name.c_str());
             }
-    SendResponse(sb, RESPONSE_OK);
+    SendResponse(sb, exists ? RESPONSE_OK : RESPONSE_PROPERTY_NOT_FOUND);
 }
 
 void CommandDispatcher::GetCmdHandler(ProfileType pt, uint32_t int_key, std::string& str_key, std::string& name, SerialBuffer *sb)
@@ -113,6 +114,31 @@ void CommandDispatcher::IncCmdHandler(ProfileType pt, uint32_t int_key, std::str
         SendResponse(sb, RESPONSE_PROPERTY_NOT_FOUND);
 }
 
+void CommandDispatcher::IncModCmdHandler(ProfileType pt, uint32_t int_key, std::string& str_key, Property& prop, int mod, SerialBuffer *sb)
+{
+    bool exists = false;
+    int res = 0;
+    if(pt == PT_ABONENT)
+    {
+        smsc_log_debug(log, "IncModCmdHandler AbonentStore: key=%s, name=%s, mod=%d", str_key.c_str(), prop.getName().c_str(), mod);
+        exists = AbonentStore->incModProperty(StringProfileKey(str_key.c_str()), prop, mod, res);
+    }
+    else
+        for(int i = 0; i < INT_STORE_CNT; i++)
+            if(pt == int_store[i].pt)
+            {
+                smsc_log_debug(log, "IncCmdHandler store=%d, key=%d, name=%s, mod=%d", pt, int_key, prop.getName().c_str(), mod);
+                exists = int_store[i].store->incModProperty(IntProfileKey(int_key), prop, mod, res);
+            }
+    if(exists)
+    {
+        SendResponse(sb, RESPONSE_OK);
+        sb->WriteInt32(res);
+        SetPacketSize(sb);
+    }
+    else
+        SendResponse(sb, RESPONSE_PROPERTY_NOT_FOUND);
+}
 
 void CommandDispatcher::Execute(SerialBuffer* sb)
 {
@@ -148,6 +174,11 @@ void CommandDispatcher::Execute(SerialBuffer* sb)
             case PC_INC:
                 prop.Deserialize(*sb);
                 IncCmdHandler(pt, int_key, str_key, prop, sb);
+                return;
+            case PC_INC_MOD:
+                int inc = sb->ReadInt32();
+                prop.Deserialize(*sb);
+                IncModCmdHandler(pt, int_key, str_key, prop, inc, sb);
                 return;
         }
     }

@@ -235,7 +235,7 @@ static void setREPropFromPersProp(REProperty& rep, Property& prop)
 
 bool PersAction::run(ActionContext& context)
 {
-    smsc_log_debug(logger,"Run Action 'PersAction cmd=%s'...", getStrCmd());
+    smsc_log_debug(logger,"Run Action 'PersAction cmd=%s. var=%s'...", getStrCmd(), var.c_str());
 
     try{
         Property prop;
@@ -296,7 +296,12 @@ bool PersAction::run(ActionContext& context)
     }
     catch(PersClientException& e)
     {
-        smsc_log_error(logger, "PersClientException catched, Reason: %s", e.what());
+        if(cmd == PC_DEL && e.getType() == PROPERTY_NOT_FOUND)
+        {
+            smsc_log_warn(logger, "PersClientException: Property not found on deletion: %s", var.c_str());
+            return true;
+        }
+        smsc_log_error(logger, "PersClientException: var=%s, reason: %s", var.c_str(), e.what());
         return false;
     }
 

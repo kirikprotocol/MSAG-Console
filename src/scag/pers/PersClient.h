@@ -75,6 +75,9 @@ public:
     void IncProperty(ProfileType pt, const char* key, Property& prop);// throw(PersClientException);
     void IncProperty(ProfileType pt, uint32_t key, Property& prop);// throw(PersClientException);
 
+    int IncModProperty(ProfileType pt, const char* key, Property& prop, uint32_t mod); //throw(PersClientException)
+    int IncModProperty(ProfileType pt, uint32_t key, Property& prop, uint32_t mod); //throw(PersClientException)
+
 protected:
     static bool  inited;
     static Mutex initLock;
@@ -83,6 +86,9 @@ protected:
     void init_internal(const char *_host, int _port, int timeout); //throw(PersClientException);
     void SetPacketSize();
     void _SetProperty(ProfileType pt, const char* skey, uint32_t ikey, Property& prop); //throw(PersClientException)
+    void _DelProperty(ProfileType pt, const char* skey, uint32_t ikey, const char *property_name); //throw(PersClientException)
+    void _IncProperty(ProfileType pt, const char* key, uint32_t ikey, Property& prop); //throw(PersClientException)
+    int _IncModProperty(ProfileType pt, const char* key, uint32_t ikey, Property& prop, uint32_t mod); //throw(PersClientException)
     void FillHead(PersCmd pc, ProfileType pt, const char *key);
     void FillHead(PersCmd pc, ProfileType pt, uint32_t key);
     void AppendString(const char *str);

@@ -17,7 +17,8 @@ enum PersCmd{
     PC_DEL = 1,
     PC_SET,
     PC_GET,
-    PC_INC
+    PC_INC,
+    PC_INC_MOD
 };
 
 enum PersServerResponseType{

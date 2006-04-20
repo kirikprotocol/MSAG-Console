@@ -21,23 +21,23 @@ typedef Hash<Property*> PropertyHash;
 
 class Profile : public Serializable
 {
-	PropertyHash properties;
-	smsc::logger::Logger* log;
+    PropertyHash properties;
+    smsc::logger::Logger* log;
 
 public:
-	~Profile();
-	Profile() {log = smsc::logger::Logger::getInstance("profile");};
+    ~Profile();
+    Profile() {log = smsc::logger::Logger::getInstance("profile");};
 
-	Property* GetProperty(const char* name);
-	bool PropertyExists(const char* str);
-	void AddProperty(Property& prop);
-	void DeleteProperty(const char* str);
-	void DeleteExpired();
-	void Empty();
-	uint32_t GetCount() { return properties.GetCount(); };
+    Property* GetProperty(const char* name);
+    bool PropertyExists(const char* str);
+    void AddProperty(Property& prop);
+    bool DeleteProperty(const char* str);
+    void DeleteExpired();
+    void Empty();
+    uint32_t GetCount() { return properties.GetCount(); };
 
-	void Serialize(SerialBuffer& buf);
-	void Deserialize(SerialBuffer& buf);
+    void Serialize(SerialBuffer& buf);
+    void Deserialize(SerialBuffer& buf);
 };
 
 }}

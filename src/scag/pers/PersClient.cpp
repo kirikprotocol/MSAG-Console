@@ -109,68 +109,119 @@ void PersClient::GetProperty(ProfileType pt, uint32_t key, const char *property_
     ParseProperty(prop);
 }
 
+void PersClient::_DelProperty(ProfileType pt, const char* skey, uint32_t ikey, const char *property_name) //throw(PersClientException)
+{
+    MutexGuard mt(mtx);
+
+    if(pt == PT_ABONENT)
+        FillHead(PC_DEL, pt, skey);
+    else
+        FillHead(PC_DEL, pt, ikey);
+
+    sb.WriteString(property_name);
+    SendPacket();
+    ReadPacket();
+
+    int resp = GetServerResponse();
+
+    if(resp == RESPONSE_PROPERTY_NOT_FOUND)
+        throw PersClientException(PROPERTY_NOT_FOUND);
+    else if(resp != RESPONSE_OK)
+        throw PersClientException(SERVER_ERROR);
+}
+
 void PersClient::DelProperty(ProfileType pt, const char* key, const char *property_name) //throw(PersClientException)
 {
     if(pt != PT_ABONENT)
         throw PersClientException(INVALID_KEY);
 
-    MutexGuard mt(mtx);
-
-    FillHead(PC_DEL, pt, key);
-    sb.WriteString(property_name);
-    SendPacket();
-    ReadPacket();
-    if(GetServerResponse() == RESPONSE_ERROR)
-        throw PersClientException(SERVER_ERROR);
+    _DelProperty(pt, key, 0, property_name);
 }
+
 void PersClient::DelProperty(ProfileType pt, uint32_t key, const char *property_name) //throw(PersClientException)
 {
     if(pt == PT_ABONENT)
         throw PersClientException(INVALID_KEY);
 
-    MutexGuard mt(mtx);
-
-    FillHead(PC_DEL, pt, key);
-    sb.WriteString(property_name);
-    SendPacket();
-    ReadPacket();
-    if(GetServerResponse() == RESPONSE_ERROR)
-        throw PersClientException(SERVER_ERROR);
+    _DelProperty(pt, NULL, key, property_name);
 }
 
-void PersClient::IncProperty(ProfileType pt, const char* key, Property& prop) //throw(PersClientException)
+void PersClient::_IncProperty(ProfileType pt, const char* skey, uint32_t ikey, Property& prop) //throw(PersClientException)
 {
-    if(pt != PT_ABONENT)
-        throw PersClientException(INVALID_KEY);
-
     if(prop.getType() != INT && prop.getType() != DATE)
         throw PersClientException(INVALID_PROPERTY_TYPE);
 
     MutexGuard mt(mtx);
 
-    FillHead(PC_INC, pt, key);
+    if(pt == PT_ABONENT)
+        FillHead(PC_INC, pt, skey);
+    else
+        FillHead(PC_INC, pt, ikey);
+
     prop.Serialize(sb);
     SendPacket();
     ReadPacket();
     if(GetServerResponse() != RESPONSE_OK)
         throw PersClientException(SERVER_ERROR);
+}
+void PersClient::IncProperty(ProfileType pt, const char* key, Property& prop) //throw(PersClientException)
+{
+    if(pt != PT_ABONENT)
+        throw PersClientException(INVALID_KEY);
+
+    _IncProperty(pt, key, 0, prop);
 }
 void PersClient::IncProperty(ProfileType pt, uint32_t key, Property& prop) //throw(PersClientException)
 {
     if(pt == PT_ABONENT)
         throw PersClientException(INVALID_KEY);
 
+    _IncProperty(pt, NULL, key, prop);
+}
+
+int PersClient::_IncModProperty(ProfileType pt, const char* skey, uint32_t ikey, Property& prop, uint32_t mod) //throw(PersClientException)
+{
     if(prop.getType() != INT && prop.getType() != DATE)
         throw PersClientException(INVALID_PROPERTY_TYPE);
 
     MutexGuard mt(mtx);
 
-    FillHead(PC_INC, pt, key);
+    if(pt == PT_ABONENT)
+        FillHead(PC_INC_MOD, pt, skey);
+    else
+        FillHead(PC_INC_MOD, pt, ikey);
+
+    sb.WriteInt32(mod);
     prop.Serialize(sb);
     SendPacket();
     ReadPacket();
+
     if(GetServerResponse() != RESPONSE_OK)
         throw PersClientException(SERVER_ERROR);
+
+    try{
+        sb.SetPos(sizeof(uint32_t) + 1);
+        return sb.ReadInt32();
+    }
+    catch(SerialBufferOutOfBounds &e)
+    {
+        throw PersClientException(BAD_RESPONSE);
+    }
+
+}
+int PersClient::IncModProperty(ProfileType pt, const char* key, Property& prop, uint32_t mod) //throw(PersClientException)
+{
+    if(pt != PT_ABONENT)
+        throw PersClientException(INVALID_KEY);
+
+    return _IncModProperty(pt, key, 0, prop, mod);
+}
+int PersClient::IncModProperty(ProfileType pt, uint32_t key, Property& prop, uint32_t mod) //throw(PersClientException)
+{
+    if(pt == PT_ABONENT)
+        throw PersClientException(INVALID_KEY);
+
+    return _IncModProperty(pt, NULL, key, prop, mod);
 }
 
 void PersClient::init()
