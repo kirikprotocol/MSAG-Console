@@ -82,7 +82,22 @@ namespace scag { namespace re { namespace smpp
 
             SMS_VALIDITY_PERIOD     = 152,
             SMS_MESSAGE_BODY        = 153,
-            SMS_SVC_TYPE            = 154
+            SMS_SVC_TYPE            = 154,
+
+            USSD_DIALOG             = 155,
+            MESSAGE_ID              = 156,
+            STATUS                  = 157,
+
+            //Binary tags
+            OPTIONAL_CHARGING                           = 0x4901,
+            OPTIONAL_MESSAGE_TRANSPORT_TYPE             = 0x4902,
+            //String tags
+            OPTIONAL_MESSAGE_CONTENT_TYPE               = 0x4903,
+            //Binary tags
+            OPTIONAL_EXPECTED_MESSAGE_TRANSPORT_TYPE    = 0x4904,
+            //String tags
+            OPTIONAL_EXPECTED_MESSAGE_CONTENT_TYPE      = 0x4905
+
         };
 
         bool m_hasPayloadText;
@@ -94,11 +109,13 @@ namespace scag { namespace re { namespace smpp
         Property * getSubmitProperty(SMS& data,const std::string& name,int FieldId);
         Property * getDeliverProperty(SMS& data,const std::string& name,int FieldId);
         Property * getSubmitRespProperty(const std::string& name,int FieldId);
+        Property * getDeliverRespProperty(const std::string& name,int FieldId);
 
         AdapterProperty * Get_ESM_BIT_Property(SMS& data, const std::string& name,int FieldId);
         AdapterProperty * Get_RD_BIT_Property(SMS& data, const std::string& name,int FieldId);
         AdapterProperty * Get_DC_BIT_Property(SMS& data, const std::string& name,int FieldId);
         AdapterProperty * Get_USSD_BIT_Property(SMS& data, const std::string& name,int FieldId);
+        AdapterProperty * Get_Unknown_Property(SMS& data, const std::string& name,int FieldId);
 
         void Set_DC_BIT_Property(SMS& data, int FieldId, bool value);
 
@@ -118,6 +135,7 @@ namespace scag { namespace re { namespace smpp
         static Hash<int> SubmitFieldNames;
         static Hash<int> SubmitRespFieldNames;
         static Hash<int> DeliverFieldNames;
+        static Hash<int> DeliverRespFieldNames;
 
         static Hash<int> InitSubmitFieldNames();
         static Hash<int> InitSubmitRespFieldNames();

@@ -13,7 +13,7 @@ using namespace scag::transport::http;
 using namespace scag::bill;
 using namespace scag::sessions;
 
-
+ /*
 namespace SMSTags 
 {
     enum Tags
@@ -28,7 +28,7 @@ namespace SMSTags
         EXPECTED_MESSAGE_CONTENT_TYPE = 0x4905
     };
 }
-
+   */
 /*
 whoisd-charging	Byte	0x4901
 whoisd-message-transport-type	Byte	0x4902
@@ -40,9 +40,11 @@ whoisd-expected-message-content-type	String	0x4905
 /*
 bool CommandBrige::getBinProperty(SMS& sms, SMSTags::Tags tag)
 {
-    char * buff;
-    len;
-    //TODO: get buff from SMS
+    if (!sms.hasBinProperty) return 0;
+    
+    long len;
+    char * buff = sms.getBinProperty(SMSC_UNKNOWN_OPTIONALS, %len);
+    
     uint16_t value;
     uint16_t valueLen;
 
