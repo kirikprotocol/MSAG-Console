@@ -117,11 +117,15 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
         return;
     }
 
-    if(!params.Exists("value"))
-        throw SCAGException("PersAction '%s' : missing 'value' parameter", getStrCmd());
+    const char* vn = "value";
+    if(cmd == PC_INC_MOD || cmd == PC_INC)
+        vn = "inc";
 
-    value_str = ConvertWStrToStr(params["value"]);
-    value = ConvertWStrTo_wstring(params["value"]);
+    if(!params.Exists(vn))
+        throw SCAGException("PersAction '%s' : missing '%s' parameter", getStrCmd(), vn);
+
+    value_str = ConvertWStrToStr(params[vn]);
+    value = ConvertWStrTo_wstring(params[vn]);
 
     ftValue = ActionContext::Separate(value_str, name); 
     if(cmd == PC_GET && (ftValue == ftUnknown || ftValue == ftConst))
@@ -176,7 +180,36 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
 
     life_time = time.tm_hour * 3600 + time.tm_min * 60 + time.tm_sec;
 
-    smsc_log_debug(logger, "act params: cmd = %s, profile=%d, var=%s, policy=%d, life_time=%d(%s)", getStrCmd(), profile, var.c_str(), policy, life_time, lt.c_str());
+    if(cmd != PC_INC_MOD)
+    {
+        smsc_log_debug(logger, "act params: cmd = %s, profile=%d, var=%s, policy=%d, life_time=%d(%s)", getStrCmd(), profile, var.c_str(), policy, life_time, lt.c_str());
+        return;
+    }
+
+    if(!params.Exists("mod"))
+        throw SCAGException("PersAction '%s' : missing 'mod' parameter", getStrCmd());
+
+    std::string mod_str = ConvertWStrToStr(params["mod"]);
+
+    if(!(mod = atoi(mod_str.c_str())));
+        throw SCAGException("PersAction '%s' : 'mod' parameter not a number", getStrCmd());
+
+    if(!params.Exists("result"))
+        throw SCAGException("PersAction '%s' : missing 'result' parameter", getStrCmd());
+
+    result_str = ConvertWStrToStr(params["result"]);
+
+    ftValue = ActionContext::Separate(result_str, name); 
+    if(ftValue == ftUnknown || ftValue == ftConst)
+        throw InvalidPropertyException("PersAction '%s': 'result' parameter should be an lvalue. Got %s", getStrCmd(), value_str.c_str());
+
+    if(ftValue == ftField) 
+    {
+        AccessType at = CommandAdapter::CheckAccess(propertyObject.HandlerId, name, propertyObject.transport);
+        if(!(at & atWrite)) 
+            throw InvalidPropertyException("PersAction '%s': cannot modify property '%s' - no access", value_str.c_str());
+    }
+    smsc_log_debug(logger, "act params: cmd = %s, profile=%d, var=%s, policy=%d, life_time=%d(%s), mod=%d", getStrCmd(), profile, var.c_str(), policy, life_time, lt.c_str(), mod);
 }
 
 uint32_t PersAction::getKey(const CommandProperty& cp, ProfileType pt)
@@ -251,6 +284,7 @@ bool PersAction::run(ActionContext& context)
                     pc.DelProperty(profile, getKey(cp, profile), var.c_str());
                 break;
             case PC_INC:
+            case PC_INC_MOD:
             case PC_SET:
                 if(ftValue != ftUnknown)
                 {
@@ -273,13 +307,24 @@ bool PersAction::run(ActionContext& context)
                     else
                         pc.SetProperty(profile, getKey(cp, profile), prop);
                 }
-                else
+                else if(cmd == PC_INC)
                 {
                     if(profile == PT_ABONENT)
                         pc.IncProperty(profile, cp.abonentAddr.toString().c_str(), prop);
                     else
                         pc.IncProperty(profile, getKey(cp, profile), prop);
                 }
+                else if(cmd == PC_INC_MOD)
+                {
+                    int res;
+                    if(profile == PT_ABONENT)
+                        res = pc.IncModProperty(profile, cp.abonentAddr.toString().c_str(), prop, mod);
+                    else
+                        res = pc.IncModProperty(profile, getKey(cp, profile), prop, mod);
+                    REProperty *rep = context.getProperty(result_str);
+                    rep->setInt(res);
+                }
+
                 break;
             case PC_GET:
             {

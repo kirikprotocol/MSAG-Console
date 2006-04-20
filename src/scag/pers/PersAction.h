@@ -22,9 +22,11 @@ using smsc::logger::Logger;
         FieldType ftValue;
         std::wstring value;
         std::string value_str;
+        std::string result_str;
         TimePolicy policy;
         time_t final_date;
         time_t life_time;
+        uint32_t mod;
 
         static Logger * logger;
 
