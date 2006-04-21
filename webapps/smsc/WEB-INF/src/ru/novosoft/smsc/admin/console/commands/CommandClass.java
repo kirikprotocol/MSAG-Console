@@ -11,22 +11,19 @@ import ru.novosoft.smsc.admin.console.CommandContext;
  * Time: 15:12:21
  * To change this template use File | Settings | File Templates.
  */
-public abstract class CommandClass implements Command
-{
-	public abstract void process(CommandContext ctx);
-	public abstract String getId();
+public abstract class CommandClass implements Command {
+    public abstract void process(CommandContext ctx);
 
-	public void updateJournalAndStatuses(CommandContext ctx, String userName)
-	{
-	}
+    public abstract String getId();
 
-	protected void journalAppend(CommandContext ctx, String userName, final byte subjectType, final String subjectId, final byte action)
-	{
-		ctx.getJournal().append(userName, Constants.CONSOLE_SESSION_ID, subjectType, subjectId, action);
-	}
+    public void updateJournalAndStatuses(CommandContext ctx, String userName) {
+    }
 
-	protected void journalAppend(CommandContext ctx, String userName, final byte subjectType, final String subjectId, final byte action, final String additionalKey, final String additionalValue)
-	{
-		ctx.getJournal().append(userName, Constants.CONSOLE_SESSION_ID, subjectType, subjectId, action, additionalKey, additionalValue);
-	}
+    protected void journalAppend(CommandContext ctx, String userName, final byte subjectType, final String subjectId, final byte action) {
+        ctx.getJournal().append(userName, Constants.CONSOLE_SESSION_ID, subjectType, subjectId, action);
+    }
+
+    protected void journalAppend(CommandContext ctx, String userName, final byte subjectType, final String subjectId, final byte action, final String additionalKey, final String additionalValue) {
+        ctx.getJournal().append(userName, Constants.CONSOLE_SESSION_ID, subjectType, subjectId, action, additionalKey, additionalValue);
+    }
 }

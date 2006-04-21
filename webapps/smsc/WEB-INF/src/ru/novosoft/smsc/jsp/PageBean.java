@@ -20,135 +20,137 @@ import java.util.List;
 import java.util.Map;
 
 public abstract class PageBean {
-  public static final int RESULT_OK = 0;
-  public static final int RESULT_DONE = 1;
-  public static final int RESULT_ERROR = 2;
-  protected static final int PRIVATE_RESULT = 3;
+    public static final int RESULT_OK = 0;
+    public static final int RESULT_DONE = 1;
+    public static final int RESULT_ERROR = 2;
+    protected static final int PRIVATE_RESULT = 3;
 
-  protected Category logger = Category.getInstance(this.getClass());
+    protected Category logger = Category.getInstance(this.getClass());
 
-  protected List errors = null;
-  protected SMSCAppContext appContext = null;
-  protected HostsManager hostsManager = null;
-  protected UserManager userManager = null;
-  protected HttpSession session = null;
-  protected String sessionId = null;
-  protected UserPreferences preferences = null;
+    protected List errors = null;
+    protected SMSCAppContext appContext = null;
+    protected HostsManager hostsManager = null;
+    protected UserManager userManager = null;
+    protected HttpSession session = null;
+    protected String sessionId = null;
+    protected UserPreferences preferences = null;
+    protected String clientAddress = null;
 
-  public int process(final HttpServletRequest request) {
-    this.errors = (List) request.getAttribute(Constants.SMSC_ERROR_MESSAGES_ATTRIBUTE_NAME);
-    if (null == errors) {
-      this.errors = new ArrayList();
-      error(SMSCErrors.error.errorListNotInitialized);
+    public int process(final HttpServletRequest request) {
+        this.errors = (List) request.getAttribute(Constants.SMSC_ERROR_MESSAGES_ATTRIBUTE_NAME);
+        if (null == errors) {
+            this.errors = new ArrayList();
+            error(SMSCErrors.error.errorListNotInitialized);
+        }
+
+        this.appContext = (SMSCAppContext) request.getAttribute("appContext");
+        if (null == this.appContext)
+            return error(SMSCErrors.error.appContextNotInitialized);
+
+        if (this.appContext.getInitErrorCode() != null)
+            return error(this.appContext.getInitErrorCode());
+
+        this.preferences = new UserPreferences();
+        if (this.appContext != null) {
+            this.userManager = this.appContext.getUserManager();
+            if (this.userManager != null) {
+                this.userManager.setLoginedPrincipal(request.getUserPrincipal());
+                //this.preferences = this.appContext.getUserPreferences(this.getLoginedPrincipal());
+                if (this.userManager.getLoginedUser() != null) this.preferences = this.userManager.getLoginedUser().getPrefs();
+            }
+        }
+
+        session = request.getSession(false);
+        clientAddress = request.getRemoteAddr();
+        sessionId = null != session ? session.getId() : "unknown";
+
+        return init(errors);
     }
 
-    this.appContext = (SMSCAppContext) request.getAttribute("appContext");
-    if (null == this.appContext)
-      return error(SMSCErrors.error.appContextNotInitialized);
+    protected int init(final List errors) {
+        hostsManager = appContext.getHostsManager();
 
-    if (this.appContext.getInitErrorCode() != null)
-      return error(this.appContext.getInitErrorCode());
+        if (null == hostsManager)
+            return error(SMSCErrors.error.serviceManagerNotInitialized);
 
-    this.preferences = new UserPreferences();
-    if (this.appContext != null) {
-      this.userManager = this.appContext.getUserManager();
-      if (this.userManager != null) {
-        this.userManager.setLoginedPrincipal(request.getUserPrincipal());
-        //this.preferences = this.appContext.getUserPreferences(this.getLoginedPrincipal());
-        if (this.userManager.getLoginedUser() != null) this.preferences = this.userManager.getLoginedUser().getPrefs();
-      }
+        return RESULT_OK;
     }
 
-    session = request.getSession(false);
-    sessionId = null != session ? session.getId() : "unknown";
+    protected int error(final String errorCode) {
+        return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_ERROR));
+    }
 
-    return init(errors);
-  }
+    protected int error(final String errorCode, final String param) {
+        return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_ERROR, param));
+    }
 
-  protected int init(final List errors) {
-    hostsManager = appContext.getHostsManager();
+    protected int error(final String errorCode, final Throwable cause) {
+        return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_ERROR, cause));
+    }
 
-    if (null == hostsManager)
-      return error(SMSCErrors.error.serviceManagerNotInitialized);
+    protected int error(final String errorCode, final String param, final Throwable cause) {
+        return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_ERROR, param, cause));
+    }
 
-    return RESULT_OK;
-  }
-
-  protected int error(final String errorCode) {
-    return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_ERROR));
-  }
-
-  protected int error(final String errorCode, final String param) {
-    return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_ERROR, param));
-  }
-
-  protected int error(final String errorCode, final Throwable cause) {
-    return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_ERROR, cause));
-  }
-
-  protected int error(final String errorCode, final String param, final Throwable cause) {
-    return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_ERROR, param, cause));
-  }
-
-  protected int error(final String errorCode, final String param, final Throwable cause, final String prefix) {
-    return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_ERROR, param, cause, prefix));
-  }
+    protected int error(final String errorCode, final String param, final Throwable cause, final String prefix) {
+        return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_ERROR, param, cause, prefix));
+    }
 
 
-  protected int warning(final String errorCode) {
-    return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_WARNING));
-  }
+    protected int warning(final String errorCode) {
+        return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_WARNING));
+    }
 
-  protected int warning(final String errorCode, final String param) {
-    return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_WARNING, param));
-  }
+    protected int warning(final String errorCode, final String param) {
+        return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_WARNING, param));
+    }
 
-  protected int warning(final String errorCode, final Throwable cause) {
-    return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_WARNING, cause));
-  }
+    protected int warning(final String errorCode, final Throwable cause) {
+        return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_WARNING, cause));
+    }
 
-  protected int warning(final String errorCode, final String param, final Throwable cause) {
-    return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_WARNING, param, cause));
-  }
+    protected int warning(final String errorCode, final String param, final Throwable cause) {
+        return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_WARNING, param, cause));
+    }
 
-  protected int message(final String errorCode) {
-    return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_MESSAGE));
-  }
+    protected int message(final String errorCode) {
+        return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_MESSAGE));
+    }
 
-  protected int message(final String errorCode, final String param) {
-    return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_MESSAGE, param));
-  }
+    protected int message(final String errorCode, final String param) {
+        return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_MESSAGE, param));
+    }
 
-  protected int message(final String errorCode, final Throwable cause) {
-    return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_MESSAGE, cause));
-  }
+    protected int message(final String errorCode, final Throwable cause) {
+        return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_MESSAGE, cause));
+    }
 
-  protected int message(final String errorCode, final String param, final Throwable cause) {
-    return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_MESSAGE, param, cause));
-  }
+    protected int message(final String errorCode, final String param, final Throwable cause) {
+        return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_MESSAGE, param, cause));
+    }
 
-  protected int _error(final SMSCJspException e) {
-    errors.add(e);
-    return RESULT_ERROR;
-  }
+    protected int _error(final SMSCJspException e) {
+        errors.add(e);
+        return RESULT_ERROR;
+    }
 
-  public SMSCAppContext getAppContext() {
-    return appContext;
-  }
+    public SMSCAppContext getAppContext() {
+        return appContext;
+    }
 
-  public Principal getLoginedPrincipal() {
-    return userManager.getLoginedPrincipal();
-  }
+    public Principal getLoginedPrincipal() {
+        return userManager.getLoginedPrincipal();
+    }
 
-  public void journalAppend(final byte subjectType, final String subjectId, final byte action) {
-    appContext.getJournal().append(userManager.getLoginedPrincipal().getName(), sessionId, subjectType, subjectId, action);
-  }
+    public void journalAppend(final byte subjectType, final String subjectId, final byte action) {
+        appContext.getJournal().append(userManager.getLoginedPrincipal().getName(), sessionId + "/" + clientAddress, subjectType, subjectId, action);
+    }
 
-  public void journalAppend(final byte subjectType, final String subjectId, final byte action, final String additionalKey, final String additionalValue) {
-    appContext.getJournal().append(userManager.getLoginedPrincipal().getName(), sessionId, subjectType, subjectId, action, additionalKey, additionalValue);
-  }
+    public void journalAppend(final byte subjectType, final String subjectId, final byte action, final String additionalKey, final String additionalValue) {
+        appContext.getJournal().append(userManager.getLoginedPrincipal().getName(), sessionId + "/" + clientAddress, subjectType, subjectId, action, additionalKey, additionalValue);
+    }
 
-  public void journalAppend(final byte subjectType, final String subjectId, final byte action, final Map additional) {
-    appContext.getJournal().append(userManager.getLoginedPrincipal().getName(), sessionId, subjectType, subjectId, action, additional);
-  }
+    public void journalAppend(final byte subjectType, final String subjectId, final byte action, final Map additional) {
+        appContext.getJournal().append(userManager.getLoginedPrincipal().getName(), sessionId + "/" + clientAddress, subjectType, subjectId, action, additional);
+    }
 }
