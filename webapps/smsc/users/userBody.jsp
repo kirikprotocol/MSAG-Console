@@ -52,6 +52,7 @@
             paramCheck(out, "users.roles.dbsme-admin", "roles", "role25", "dbsme-admin", bean.isUserInRole("dbsme-admin"), null);
             paramCheck(out, "users.roles.mcisme-admin", "roles", "role26", "mcisme-admin", bean.isUserInRole("mcisme-admin"), null);
             paramCheck(out, "users.roles.mtsmsme-admin", "roles", "role27", "mtsmsme-admin", bean.isUserInRole("mtsmsme-admin"), null);
+            paramCheck(out, "users.roles.journal", "roles", "role28", "journal", bean.isUserInRole("journal"), null);            
 
             if (bean.getServiceRoles().size() > 0)
                 for (Iterator i = bean.getServiceRoles().iterator(); i.hasNext();) {
