@@ -201,11 +201,11 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
 
     result_str = ConvertWStrToStr(params["result"]);
 
-    ftValue = ActionContext::Separate(result_str, name); 
-    if(ftValue == ftUnknown || ftValue == ftConst)
+    FieldType ftResultValue = ActionContext::Separate(result_str, name); 
+    if(ftResultValue == ftUnknown || ftValue == ftConst)
         throw InvalidPropertyException("PersAction '%s': 'result' parameter should be an lvalue. Got %s", getStrCmd(), value_str.c_str());
 
-    if(ftValue == ftField) 
+    if(ftResultValue == ftField) 
     {
         AccessType at = CommandAdapter::CheckAccess(propertyObject.HandlerId, name, propertyObject.transport);
         if(!(at & atWrite)) 
@@ -277,6 +277,7 @@ bool PersAction::run(ActionContext& context)
         PersClient& pc = PersClient::Instance();
 
         CommandProperty& cp = context.getCommandProperty();
+
         switch(cmd)
         {
             case PC_DEL:
@@ -323,6 +324,7 @@ bool PersAction::run(ActionContext& context)
                         res = pc.IncModProperty(profile, cp.abonentAddr.toString().c_str(), prop, mod);
                     else
                         res = pc.IncModProperty(profile, getKey(cp, profile), prop, mod);
+
                     REProperty *rep = context.getProperty(result_str);
                     rep->setInt(res);
                 }

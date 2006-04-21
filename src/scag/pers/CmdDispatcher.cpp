@@ -127,7 +127,7 @@ void CommandDispatcher::IncModCmdHandler(ProfileType pt, uint32_t int_key, std::
         for(int i = 0; i < INT_STORE_CNT; i++)
             if(pt == int_store[i].pt)
             {
-                smsc_log_debug(log, "IncCmdHandler store=%d, key=%d, name=%s, mod=%d", pt, int_key, prop.getName().c_str(), mod);
+                smsc_log_debug(log, "IncModCmdHandler store=%d, key=%d, name=%s, mod=%d", pt, int_key, prop.getName().c_str(), mod);
                 exists = int_store[i].store->incModProperty(IntProfileKey(int_key), prop, mod, res);
             }
     if(exists)
