@@ -22,10 +22,11 @@ using namespace smsc::util;
 
 /////////////////////////////////////////////XMLBasicHandler/////////////////////////////
 
-XMLBasicHandler::XMLBasicHandler(IBillParserHandler& billParserHandler) : 
+XMLBasicHandler::XMLBasicHandler(IBillParserHandler * billParserHandler) : 
     logger(0), parent(billParserHandler)
 
 {
+    m_hasHandler = true;
     logger = Logger::getInstance("inmanemu");
 }
 
@@ -110,9 +111,11 @@ void XMLBasicHandler::startElement(const XMLCh* const qname, AttributeList& attr
     virtual void RegisterBillRecord(MattrixKey& key, int price) = 0;
     
     */
-                           
-    if (setBillRecord) parent.RegisterBillRecord(key, price);
-    if (setAccount) parent.RegisterAccount(abonentAddr, money);
+
+    if (!parent) return;
+
+    if (setBillRecord) parent->RegisterBillRecord(key, price);
+    if (setAccount) parent->RegisterAccount(abonentAddr, money);
 
 }
 

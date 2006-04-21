@@ -1,6 +1,5 @@
 <config>
 
-<account abonent="" money="100" />
-<bill service_number="5066" price="10" />
+<server host="localhost" port="10021" />
 
 </config>

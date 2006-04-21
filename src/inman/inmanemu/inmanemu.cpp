@@ -4,9 +4,11 @@
 
 #include <util/Exception.hpp>
 #include "BillingServer.h"
+#include "InmanemuConf.h"
 
 
 using namespace inmanemu::server;
+using inmanemu::util::InmanemuConfig;
 
 BillingServer * billingServer = 0;
 
@@ -25,9 +27,11 @@ int main(int argc,char* argv[])
   billingServer = new BillingServer();
   if (!billingServer) return 0;
 
+  InmanemuConfig cfg;
   try
   {
-      billingServer->Init("localhost", 10021);
+      cfg.Init();
+      billingServer->Init(cfg.host.c_str(), cfg.port);
   } catch (Exception& e)
   {
       printf("%s\n", e.what());

@@ -34,7 +34,7 @@ void BillingServer::Init(const char * host, int port)
     //delete new char;
 
     //"localhost",10021,0
-    if (socket.InitServer(host,port,0)==-1)
+    if (socket.InitServer(host, port ,0)==-1)
         throw Exception("Failed to initialize socket on host '%s', port '%d'", host, port);
 
     if (socket.StartServer()==-1)
@@ -49,6 +49,7 @@ void BillingServer::Init(const char * host, int port)
 */
 
     //ObjectBuffer buf(0);
+    smsc_log_debug(logger, "Server initialized of host '%s', port '%d'", host, port);
 
 }
 

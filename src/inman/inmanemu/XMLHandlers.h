@@ -31,12 +31,13 @@ class AttributeList;
 XERCES_CPP_NAMESPACE_END
 
 
-class XMLBasicHandler : public HandlerBase, private XMLFormatTarget
+class XMLBasicHandler : public HandlerBase//, public XMLFormatTarget
 {
     const Locator * m_pLocator;
     Logger * logger;
     //XMLFormatter  fFormatter;
-    IBillParserHandler& parent;
+    IBillParserHandler * parent;
+    bool m_hasHandler;
 
     void writeChars(const XMLByte* const toWrite);
     void writeChars(const XMLByte* const toWrite, const unsigned int count, XMLFormatter* const formatter);
@@ -47,8 +48,10 @@ public:
     // -----------------------------------------------------------------------
     //  Constructors
     // -----------------------------------------------------------------------
-    XMLBasicHandler(IBillParserHandler& billParserHandler);
-    ~XMLBasicHandler();
+    XMLBasicHandler(IBillParserHandler * billParserHandler);
+    XMLBasicHandler() : parent(0) {};
+
+    virtual ~XMLBasicHandler();
 
     virtual void startElement(const XMLCh* const qname, AttributeList& attributes);
     virtual void endElement(const XMLCh* const qname);

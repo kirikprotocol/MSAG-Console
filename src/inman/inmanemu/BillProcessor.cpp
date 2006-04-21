@@ -35,7 +35,7 @@ void BillProcessor::init()
 
     SAXParser parser;
 
-    XMLBasicHandler handler(*this);
+    XMLBasicHandler handler(this);
 
     try
     {
@@ -52,24 +52,24 @@ void BillProcessor::init()
         parser.setErrorHandler(&handler);
 
 
-        parser.parse("config.xml");
+        parser.parse("billing.xml");
 
         errorCount = parser.getErrorCount();
     }
     catch (const OutOfMemoryException&)
     {
         //smsc_log_error(logger,"Terminate parsing config: XMLPlatform: OutOfMemoryException");
-        throw Exception("Terminate parsing config: XMLPlatform: OutOfMemoryException");
+        throw Exception("Terminate parsing billing file: XMLPlatform: OutOfMemoryException");
     }
     catch (const XMLException& toCatch)
     {
         StrX msg(toCatch.getMessage());
 
         //smsc_log_error(logger,"Terminate parsing config: An error occurred. Error: %s", msg.localForm());
-        throw Exception("Terminate parsing Rule: An error occurred. Error: %s", msg.localForm());
+        throw Exception("Terminate parsing billing file: An error occurred. Error: %s", msg.localForm());
     }
 
-    if (errorCount > 0) throw Exception("Unknown error");
+    if (errorCount > 0) throw Exception("Terminate parsing billing file Unknown error");
     smsc_log_info(logger,"Billing processor initialized");
 }
 
