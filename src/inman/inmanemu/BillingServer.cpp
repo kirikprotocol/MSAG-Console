@@ -147,9 +147,9 @@ ChargeSmsResult * BillingServer::CreateRespOnCharge(SerializableObject * obj)
     ChargeSmsResult* res;
 
   if (processor.charge(key, addr, obj->getDialogId()))
-      res = new ChargeSmsResult(CHARGING_POSSIBLE);
+      res = new ChargeSmsResult(0, CHARGING_POSSIBLE);
   else
-      res = new ChargeSmsResult(CHARGING_NOT_POSSIBLE);
+      res = new ChargeSmsResult(0, CHARGING_NOT_POSSIBLE);
 
   res->setDialogId(obj->getDialogId());
   return res;
