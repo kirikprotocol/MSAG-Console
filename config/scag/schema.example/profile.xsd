@@ -50,6 +50,7 @@
                     <attribute name="type" type="string" use="required"/>
                     <attribute name="var" type="string" use="required"/>
                     <attribute name="inc" type="string" use="required" />
+                    <attribute name="mod" type="string" use="required" />
                     <attribute name="result" type="string" use="required" />
                     <attribute name="policy" type="string" use="optional" />
                     <attribute name="finaldate" type="string" use="optional" />
