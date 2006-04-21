@@ -16,7 +16,6 @@ using namespace smsc::util;
 BillingServer::BillingServer() : buff(0), clnt(0)
 {
     needToStop = false;
-    //buff = new ObjectBuffer(0);
 }
 
 BillingServer::~BillingServer()

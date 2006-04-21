@@ -50,8 +50,8 @@ public:
     XMLBasicHandler(IBillParserHandler& billParserHandler);
     ~XMLBasicHandler();
 
-    void startElement(const XMLCh* const qname, AttributeList& attributes);
-    void endElement(const XMLCh* const qname);
+    virtual void startElement(const XMLCh* const qname, AttributeList& attributes);
+    virtual void endElement(const XMLCh* const qname);
     virtual void setDocumentLocator(const Locator * const locator);
 
 
@@ -59,10 +59,10 @@ public:
     // -----------------------------------------------------------------------
     //  Implementations of the SAX ErrorHandler interface
     // -----------------------------------------------------------------------
-    void warning(const SAXParseException& exc);
-    void error(const SAXParseException& exc);
-    void fatalError(const SAXParseException& exc);
-    void endDocument();
+    virtual void warning(const SAXParseException& exc);
+    virtual void error(const SAXParseException& exc);
+    virtual void fatalError(const SAXParseException& exc);
+    virtual void endDocument();
 };
 /*
 class XMLBasicTranscoder : public XMLTranscoder

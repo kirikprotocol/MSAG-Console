@@ -1,4 +1,4 @@
-#include "inmanemu/XMLHandlers.h"
+#include "XMLHandlers.h"
 
 #include <xercesc/util/XMLUniDefs.hpp>
 #include <xercesc/sax/AttributeList.hpp>
@@ -10,13 +10,13 @@
 #include <iostream>
 
 namespace inmanemu { namespace util { 
-
+/*
 //static const char*  encodingName    = "LATIN1";
 static XMLFormatter::UnRepFlags unRepFlags  = XMLFormatter::UnRep_CharRef;
 static XMLTranscoder::UnRepOpts unRepOpts = XMLTranscoder::UnRep_Throw;
 
 static const XMLCh  gEndElement[] = { chOpenAngle, chForwardSlash, chNull };
-
+*/
 using namespace smsc::util;
 
 
