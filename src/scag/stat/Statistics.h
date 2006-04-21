@@ -277,16 +277,17 @@ using smsc::smeman::SmeRecord;
     {
       std::string routeId;
       std::string url;
+      std::string site;
       uint32_t serviceId;
       uint32_t serviceProviderId;
       int counter;
       int errCode;
       
-      HttpStatEvent(int cnt=-1, const std::string& rId="", const uint32_t sId=0, int spId=0, const std::string _url = "", int err=0)
-        : routeId(rId), serviceId(sId), serviceProviderId(spId), counter(cnt), errCode(err), url(_url) {};
+      HttpStatEvent(int cnt=-1, const std::string& rId="", const uint32_t sId=0, int spId=0, const std::string _url = "", const std::string _path = "", int err=0)
+        : routeId(rId), serviceId(sId), serviceProviderId(spId), counter(cnt), errCode(err), url(_url + "/" +_path), site(_url) {};
 
       HttpStatEvent(const HttpStatEvent& cp)
-        : routeId(cp.routeId), serviceId(cp.serviceId), serviceProviderId(cp.serviceProviderId), counter(cp.counter), errCode(cp.errCode), url(cp.url) {};
+        : routeId(cp.routeId), serviceId(cp.serviceId), serviceProviderId(cp.serviceProviderId), counter(cp.counter), errCode(cp.errCode), url(cp.url), site(cp.site) {};
 
         HttpStatEvent& operator=(const HttpStatEvent& cp)
         {
@@ -296,6 +297,7 @@ using smsc::smeman::SmeRecord;
             counter = cp.counter;
             errCode = cp.errCode;
             url = cp.url;
+            site = cp.site;
             return *this;
         }
     };
