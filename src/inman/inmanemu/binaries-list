@@ -1,0 +1,3 @@
+#binary name			source name			libraries
+inmanemu/inmanemu	a	 -linmanemu -llogger -lutil-leaktracing $(XERCES_LIB) -linman-storage -lcore-network -lsocket -linman-interaction -linman-common -lnsl
+
