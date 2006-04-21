@@ -51,6 +51,32 @@
   <security-constraint>
     <web-resource-collection>
       <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/closed_groups/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>closed_groups</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/journal/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>journal</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
       <url-pattern>/smsc/locale_resources/*</url-pattern>
     </web-resource-collection>
     <auth-constraint>
@@ -353,6 +379,12 @@
   </security-role>
   <security-role>
     <role-name>smsc_service</role-name>
+  </security-role>
+  <security-role>
+    <role-name>journal</role-name>
+  </security-role>
+  <security-role>
+    <role-name>closed_groups</role-name>
   </security-role>
   <security-role>
     <role-name>locale_resources</role-name>
