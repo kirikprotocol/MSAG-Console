@@ -70,6 +70,8 @@ public:
 
     virtual void commit(int billId);
     virtual void rollback(int billId);
+    //virtual void close(int billId);
+
 
     virtual void onChargeSmsResult(ChargeSmsResult* result);
 
@@ -126,6 +128,8 @@ BillingManager& BillingManager::Instance()
 void BillingManagerImpl::Stop()
 {
     MutexGuard guard(stopLock);
+
+    smsc_log_info(logger,"BillingManager::trying to stop");
 
     if (m_bStarted) 
     {
@@ -286,15 +290,15 @@ void BillingManagerImpl::commit(int billId)
 
     BillTransaction * pBillTransaction = BillTransactionHash.GetPtr(billId);
 
-    if (!pBillTransaction) 
-    {
-        //TODO: do what we must to do
-        return;
-    }
+    if (!pBillTransaction) throw SCAGException("Cannot find transaction for billId=%d", billId);
 
 
     //TODO: send commit
     DeliverySmsResult op;
+
+    op.setDialogId(billId);
+    op.setResultValue(0);
+
     sendCommand(op);
 
     EventMonitorArray[pBillTransaction->EventMonitorIndex].inUse = false;
@@ -308,15 +312,34 @@ void BillingManagerImpl::rollback(int billId)
 
     BillTransaction * pBillTransaction = BillTransactionHash.GetPtr(billId);
 
-    if (!pBillTransaction) 
+    if (!pBillTransaction) throw SCAGException("Cannot find transaction for billId=%d", billId);
+
+    if (pBillTransaction->status == TRANSACTION_VALID)
     {
-        //TODO: do what we must to do
-        return;
+        DeliverySmsResult op;
+
+        op.setDialogId(billId);
+        op.setResultValue(1);
+
+        sendCommand(op);
     }
+    
 
     EventMonitorArray[pBillTransaction->EventMonitorIndex].inUse = false;
     BillTransactionHash.Delete(billId);
 }
+/*
+void BillingManagerImpl::close(int billId)
+{
+    MutexGuard guard(inUseLock);
+
+    BillTransaction * pBillTransaction = BillTransactionHash.GetPtr(billId);
+
+    if (!pBillTransaction) throw SCAGException("Cannot find transaction for billId=%d", billId);
+
+    EventMonitorArray[pBillTransaction->EventMonitorIndex].inUse = false;
+    BillTransactionHash.Delete(billId);
+}   */
 
 void BillingManagerImpl::onChargeSmsResult(ChargeSmsResult* result)
 {

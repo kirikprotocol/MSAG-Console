@@ -174,8 +174,8 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     Infrastructure& istr = BillingManager::Instance().getInfrastructure();
 
     Address& abonentAddr = CommandBrige::getAbonentAddr(*smppcommand);
-/*   
-    int operatorId = 105;
+   
+/*    int operatorId = 105;
     int providerId = 1;*/
     
     int operatorId = istr.GetOperatorID(abonentAddr);

@@ -97,7 +97,7 @@ bool BillActionClose::run(ActionContext& context)
         switch (transactionStatus) 
         {
         case TRANSACTION_INVALID:
-            smsc_log_error(logger,"BillActionCommit: billing transaction refused");
+            smsc_log_error(logger,"BillAction 'bill:close': billing transaction deny");
 
             bm.rollback(operation->getBillId());
             operation->detachBill();

@@ -62,6 +62,7 @@ public:
 
     virtual void commit(int billId) = 0;
     virtual void rollback(int billId) = 0;
+    //virtual void close(int billId) = 0;
 
     static BillingManager& Instance();
     static void Init(BillingManagerConfig& cfg);
