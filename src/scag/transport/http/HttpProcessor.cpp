@@ -25,12 +25,14 @@ class HttpProcessorImpl : public HttpProcessor
         virtual bool processResponse(HttpResponse& response);
         virtual void statusResponse(HttpResponse& response, bool delivered=true);
         virtual void ReloadRoutes();
+        virtual void ReloadTraceRoutes();
 
         void init(const std::string& cfg);
 
         virtual ~HttpProcessorImpl() {}
     protected:
         HttpRouterImpl router;
+        HttpRouterImpl trace_router;
 
         void registerEvent(int event, HttpRequest& cmd);
         void registerEvent(int event, HttpResponse& cmd);
@@ -159,7 +161,8 @@ void HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
         
 void HttpProcessorImpl::init(const std::string& cfg)
 {
-    router.init(cfg);
+    router.init(cfg + "/http_routes.xml");
+    trace_router.init(cfg + "/http_trace_routes.xml");
 }
 
 void HttpProcessorImpl::ReloadRoutes()
@@ -167,19 +170,27 @@ void HttpProcessorImpl::ReloadRoutes()
     router.ReloadRoutes();
 }
 
+void HttpProcessorImpl::ReloadTraceRoutes()
+{
+    trace_router.ReloadRoutes();
+}
+
 void HttpProcessorImpl::registerEvent(int event, HttpRequest& cmd)
 {
     char buf[15];
-    std::string s = cmd.getSite() + ":";
-    sprintf(buf, "%d", cmd.getSitePort());
-    s += buf;
-    s += "/" + cmd.getSitePath();
-    Statistics::Instance().registerEvent(HttpStatEvent(event, cmd.getRouteId(), cmd.getServiceId(), cmd.getProviderId(), s, 0));
+    std::string s = cmd.getSite();
+    if(cmd.getSitePort() != 80)
+    {
+        s += ":";
+        sprintf(buf, "%d", cmd.getSitePort());
+        s += buf;
+    }
+    Statistics::Instance().registerEvent(HttpStatEvent(event, cmd.getRouteId(), cmd.getServiceId(), cmd.getProviderId(), s, cmd.getSitePath(), 0));
 }
 
 void HttpProcessorImpl::registerEvent(int event, HttpResponse& cmd)
 {
-    Statistics::Instance().registerEvent(HttpStatEvent(event, cmd.getRouteId(), cmd.getServiceId(), cmd.getProviderId(), "", cmd.getStatus()));
+    Statistics::Instance().registerEvent(HttpStatEvent(event, cmd.getRouteId(), cmd.getServiceId(), cmd.getProviderId(), "", "", cmd.getStatus()));
 }
 
 }}}

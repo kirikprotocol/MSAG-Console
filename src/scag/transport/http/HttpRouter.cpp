@@ -28,7 +28,7 @@ HttpRouterImpl::~HttpRouterImpl()
 
 void HttpRouterImpl::init(const std::string& cfg)
 {
-    route_cfg_file = cfg + "/http_routes.xml";
+    route_cfg_file = cfg;
     routes = NULL;
     routeIdMap = NULL;
     AddressURLMap = NULL;
