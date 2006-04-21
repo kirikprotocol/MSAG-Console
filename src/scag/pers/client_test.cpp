@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
 
         time_t t = time(NULL);
 
-        for(int i = 0; i< 1000; i++)
+//        for(int i = 0; i< 1000; i++)
         {
         prop.setInt("test_val", 234567, FIXED, -1, 20);
         pc.SetProperty(PT_ABONENT, "+79232446251", prop);
@@ -103,13 +103,28 @@ int main(int argc, char* argv[])
         pc.GetProperty(PT_SERVICE, 12, "test_val", prop);
         smsc_log_debug(logger,  ">>SERVICE: get int(after inc) %s", prop.toString().c_str());
 
+        prop.setInt("test_val", -123, FIXED, -1, 20);
+        pc.IncModProperty(PT_SERVICE, 12, prop, 10);
+        pc.GetProperty(PT_SERVICE, 12, "test_val", prop);
+        smsc_log_debug(logger,  ">>SERVICE: get int(after inc mod) %s", prop.toString().c_str());
+
         pc.DelProperty(PT_SERVICE, 12, "test_val");
         smsc_log_debug(logger,  ">>ABONENT: del int(int)");
+
+        try{
+        pc.DelProperty(PT_SERVICE, 12, "test_val");
+        smsc_log_debug(logger,  ">>ABONENT: del int(int)");
+        }
+        catch(PersClientException &e)
+        {
+            smsc_log_debug(logger, "property already deleted...");
+        }
 
         smsc_log_debug(logger,  "end");
         }
         t = time(NULL) - t;
-        smsc_log_error(logger,  "timings: %d sec, %d req/s", t, 22000/t);
+        if(t)
+            smsc_log_error(logger,  "timings: %d sec, %d req/s", t, 22000/t);
     }
     catch (PersClientException& exc) 
     {

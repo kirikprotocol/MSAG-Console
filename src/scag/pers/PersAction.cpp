@@ -25,7 +25,9 @@ const char* PersAction::getStrCmd()
         case PC_GET:
             return "profile:get";
         case PC_INC:
-            return "profile:change";
+            return "profile:inc";
+        case PC_INC_MOD:
+            return "profile:inc-mod";
         default:
             return "unknown";
     }
@@ -191,8 +193,8 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
 
     std::string mod_str = ConvertWStrToStr(params["mod"]);
 
-    if(!(mod = atoi(mod_str.c_str())));
-        throw SCAGException("PersAction '%s' : 'mod' parameter not a number", getStrCmd());
+    if(!(mod = atoi(mod_str.c_str())))
+        throw SCAGException("PersAction '%s' : 'mod' parameter not a number. mod=%s", getStrCmd(), mod_str.c_str());
 
     if(!params.Exists("result"))
         throw SCAGException("PersAction '%s' : missing 'result' parameter", getStrCmd());
