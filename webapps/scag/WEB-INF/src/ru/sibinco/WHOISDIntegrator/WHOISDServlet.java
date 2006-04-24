@@ -14,6 +14,8 @@ import java.io.*;
 import java.util.*;
 import java.text.MessageFormat;
 
+import org.apache.log4j.Logger;
+
 /**
  * Created by IntelliJ IDEA.
  * User: dym
@@ -22,6 +24,8 @@ import java.text.MessageFormat;
  * To change this template use File | Settings | File Templates.
  */
 public class WHOISDServlet extends HttpServlet {
+  protected final Logger logger = Logger.getLogger(this.getClass());
+
   private SCAGAppContext appContext;
   private HashMap schemaCash = new HashMap();
   private static final String SCAG_ERROR_PREFIX = "Internal MSAG error: ";
@@ -31,6 +35,7 @@ public class WHOISDServlet extends HttpServlet {
   private static final int LF = (int)'\n';
 
   public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    logRequest(req);
     appContext = (SCAGAppContext)req.getAttribute("appContext");
     int id = getRequestId(req);
     LinkedList result = new LinkedList();
@@ -65,6 +70,7 @@ public class WHOISDServlet extends HttpServlet {
   }
 
   public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException{
+       logRequest(req);
        appContext = (SCAGAppContext)req.getAttribute("appContext");
        int id = getRequestId(req);
        LinkedList result = new LinkedList();
@@ -91,8 +97,14 @@ public class WHOISDServlet extends HttpServlet {
          result.add(errorMessage);
          SendResult(result, resp);
        }
-
   }
+
+   private void logRequest(HttpServletRequest req) {
+     logger.debug("Start serving request from WHOISD platform");
+     logger.debug("from host - " + req.getRemoteAddr());
+     logger.debug("requested url: " + req.getRequestURL());
+     logger.debug("method = " + req.getMethod());
+   }
 
    private String composePath(String paramName) throws Exception {
      return appContext.getConfig().getString("gw location.gw_config_folder") + File.separatorChar + appContext.getConfig().getString(paramName);
@@ -302,8 +314,12 @@ public class WHOISDServlet extends HttpServlet {
 
   private void SendResult(LinkedList result, HttpServletResponse resp) throws IOException {
     if (!resp.containsHeader("status")) {
+      logger.debug("Request is served successfully");
       resp.setHeader("status","ok");
       if (result.size()>1) resp.setContentType("application/xml");
+    } else {
+      if (((String)result.get(0)).startsWith(SCAG_ERROR_PREFIX)) logger.error("Request is not served, reason: " + result.get(0));
+      else logger.debug("Request is not served, reason: " + result.get(0));
     }
     PrintWriter out = null;
     try {
