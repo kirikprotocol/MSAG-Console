@@ -347,7 +347,8 @@ bool TaskProcessor::processTask(Task* task)
             if (taskIdsBySeqNum.Exist(seqNum)) taskIdsBySeqNum.Delete(seqNum);
             return false;
         }
-        smsc_log_debug(logger, "Sent message #%lld for '%s'", message.id, message.abonent.c_str());
+        smsc_log_debug(logger, "Sent message #%lld seqNum=%d for '%s'", 
+                       message.id, seqNum, message.abonent.c_str());
     }
     else
     {
