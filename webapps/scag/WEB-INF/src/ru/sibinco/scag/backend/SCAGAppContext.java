@@ -48,7 +48,6 @@ public class SCAGAppContext {
     private final CategoryManager categoryManager;
     private final ScagRoutingManager scagRoutingManager;
     private final ResourceManager resourceManager;
-    private final StatusManager statusManager;
     private final PerfServer perfServer;
     private final SvcMonServer svcMonServer;
     private final ScServer scServer;
@@ -98,8 +97,7 @@ public class SCAGAppContext {
             ruleManager.init();
             scagRoutingManager = new ScagRoutingManager(scagConfFolder, smppManager, serviceProvidersManager);
             scagRoutingManager.init();
-            statusManager = new StatusManager(new File(config.getString("status_folder")));
-            statusManager.init();
+            StatusManager.getInstance().init(new File(config.getString("status_folder")));
             statuses = new Statuses();
             perfServer = new PerfServer(config);
             perfServer.start();
@@ -174,10 +172,6 @@ public class SCAGAppContext {
 
     public ResourceManager getResourceManager() {
         return resourceManager;
-    }
-
-    public StatusManager getStatusManager() {
-        return statusManager;
     }
 
     public Daemon getScagDaemon() {

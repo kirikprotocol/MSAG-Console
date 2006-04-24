@@ -13,6 +13,7 @@ import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.backend.service.ServiceProvider;
 import ru.sibinco.scag.backend.service.ServiceProvidersManager;
 import ru.sibinco.scag.backend.status.StatMessage;
+import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.beans.AddChildException;
 import ru.sibinco.scag.beans.CancelException;
 import ru.sibinco.scag.beans.DoneException;
@@ -40,7 +41,7 @@ import java.util.Map;
 public class Edit extends TabledEditBeanImpl {
     private long id = -1;
     private String name;
-    private String description;
+    private String description = "";
     private String editId = null;
     private boolean add = false;
     private boolean delete = false;
@@ -49,7 +50,7 @@ public class Edit extends TabledEditBeanImpl {
     private String mbCancel = null;
     private String mbAddChild;
     private String childEitId;
-
+    private String userLogin;
 
     ServiceProvider serviceProvider;
 
@@ -61,6 +62,7 @@ public class Edit extends TabledEditBeanImpl {
         if (appContext == null) {
             appContext = (SCAGAppContext) request.getAttribute("appContext");
         }
+        userLogin = request.getUserPrincipal().getName();
         if (getMbCancel() != null) {
             throw new CancelException();
         } else if (getMbSave() != null) {
@@ -95,9 +97,11 @@ public class Edit extends TabledEditBeanImpl {
         } catch (SCAGJspException e) {
             logger.error("Failed to obtain user");
         }
-        StatMessage message = new StatMessage(user, "Routes", "Deleted route(s): " + toRemoveRoutes.toString() + ".");
-        appContext.getScagRoutingManager().addStatMessages(message);
-
+        if (toRemoveRoutes.size() > 0) {
+            StatMessage message = new StatMessage(user, "Routes", "Deleted route(s): " + toRemoveRoutes.toString() + ".");
+            appContext.getScagRoutingManager().addStatMessages(message);
+            StatusManager.getInstance().addStatMessages(message);
+        }
         serviceProvider.getServices().keySet().removeAll(toRemove);
 
         final Scag scag = appContext.getScag();
@@ -133,9 +137,9 @@ public class Edit extends TabledEditBeanImpl {
     protected void save() throws SCAGJspException {
         final ServiceProvidersManager serviceProvidersManager = appContext.getServiceProviderManager();
         if (isAdd()) {
-            id = serviceProvidersManager.createServiceProvider(name, description = (description == null) ? "" : description);
+            id = serviceProvidersManager.createServiceProvider(userLogin, name, description);
         } else {
-            serviceProvidersManager.updateServiceProvider(id, name, description);
+            serviceProvidersManager.updateServiceProvider(userLogin, id, name, description);
         }
         final Scag scag = appContext.getScag();
         try {

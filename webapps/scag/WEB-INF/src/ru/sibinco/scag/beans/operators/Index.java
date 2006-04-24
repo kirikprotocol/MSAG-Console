@@ -5,16 +5,14 @@
 package ru.sibinco.scag.beans.operators;
 
 import ru.sibinco.scag.Constants;
-import ru.sibinco.scag.backend.Scag;
-import ru.sibinco.scag.backend.daemon.Proxy;
+import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.beans.TabledBeanImpl;
-import ru.sibinco.lib.SibincoException;
+import ru.sibinco.lib.backend.users.User;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.security.Principal;
 
 /**
  * The <code>Index</code> class represents
@@ -31,26 +29,23 @@ public class Index extends TabledBeanImpl {
     }
 
     protected void delete() throws SCAGJspException {
-        final List toRemove = new ArrayList(checked.length);
+        final ArrayList toRemove = new ArrayList(checked.length);
         for (int i = 0; i < checked.length; i++) {
             final String operatorIdStr = checked[i];
             final Long operatorId = Long.decode(operatorIdStr);
             toRemove.add(operatorId);
         }
-        appContext.getOperatorManager().getOperators().keySet().removeAll(toRemove);
-        final Scag scag = appContext.getScag();
-        try {
-            scag.reloadOperators();
-        } catch (SibincoException e) {
-            if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
-                throw new SCAGJspException(Constants.errors.serviceProviders.COULDNT_RELOAD_SERVICE_PROVIDER, e);
-            }
-        } finally {
-            try {
-                appContext.getOperatorManager().store();
-            } catch (IOException e) {
-                logger.debug("Couldn't save config", e);
-            }
-        }
+        appContext.getOperatorManager().delete(getUser(appContext).getLogin(), toRemove);
+        appContext.getOperatorManager().reloadOperators(appContext.getScag());
+    }
+
+    private User getUser(SCAGAppContext appContext) throws SCAGJspException {
+        Principal userPrincipal = super.getLoginedPrincipal();
+        if (userPrincipal == null)
+            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user principal(s)");
+        User user = (User) appContext.getUserManager().getUsers().get(userPrincipal.getName());
+        if (user == null)
+            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userPrincipal.getName() + "'");
+        return user;
     }
 }

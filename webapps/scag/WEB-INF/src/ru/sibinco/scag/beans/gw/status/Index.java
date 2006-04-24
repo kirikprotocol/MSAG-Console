@@ -6,6 +6,7 @@ import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.daemon.Daemon;
 import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.backend.daemon.ServiceInfo;
+import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.beans.TabledBeanImpl;
 
@@ -29,7 +30,7 @@ public class Index extends TabledBeanImpl {
     private boolean gwStopped;
 
     protected Collection getDataSource() {
-        return appContext.getStatusManager().getStatMessages().values();
+        return StatusManager.getInstance().getStatMessages().values();
     }
 
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {

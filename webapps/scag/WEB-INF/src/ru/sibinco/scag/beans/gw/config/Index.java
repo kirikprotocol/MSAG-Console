@@ -1,9 +1,13 @@
 package ru.sibinco.scag.beans.gw.config;
 
 import ru.sibinco.lib.backend.util.config.Config;
+import ru.sibinco.lib.backend.users.User;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.Statuses;
+import ru.sibinco.scag.backend.SCAGAppContext;
+import ru.sibinco.scag.backend.status.StatMessage;
+import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.beans.*;
 
@@ -11,6 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.*;
 import java.io.IOException;
+import java.security.Principal;
 
 
 /**
@@ -115,6 +120,8 @@ public class Index extends EditBean {
             logger.debug("Couldn't save config", e);
             throw new SCAGJspException(Constants.errors.status.COULDNT_SAVE_CONFIG, e);
         }
+        StatMessage message = new StatMessage(getUserName(appContext), "Configuration", "Changed configuration.");
+        StatusManager.getInstance().addStatMessages(message);
         throw new DoneException();
     }
 
@@ -155,6 +162,18 @@ public class Index extends EditBean {
             throw new SCAGJspException(Constants.errors.status.COULDNT_START_GATEWAY, e);
         }
     }
+
+    private String getUserName(SCAGAppContext appContext) throws SCAGJspException {
+            Principal userPrincipal = loginedPrincipal;
+
+            if (userPrincipal == null)
+                throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user principal(s)");
+            User user = (User) appContext.getUserManager().getUsers().get(userPrincipal.getName());
+            if (user == null)
+                throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userPrincipal.getName() + "'");
+            return user.getName();
+        }
+
 
 
     public Map getParams() {

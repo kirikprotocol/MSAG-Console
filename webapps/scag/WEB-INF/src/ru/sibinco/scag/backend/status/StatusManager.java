@@ -11,7 +11,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.util.Map;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Date;
 import java.io.IOException;
 import java.io.File;
 
@@ -26,25 +25,35 @@ import java.io.File;
 public class StatusManager {
 
     private Logger logger = Logger.getLogger(this.getClass());
-
-    private final File statusFolder;
+    private static StatusManager instanse;
+    private File statusFolder;
 
     private final Map statMessages = Collections.synchronizedMap(new HashMap());
 
-    public StatusManager(final File statusFolder) {
+    private StatusManager() {
+    }
+    public static synchronized StatusManager getInstance(){
+        if(instanse == null)
+           instanse = new StatusManager();
+        return instanse;
+    }
+    public synchronized void init(File statFolder) throws IOException, ParserConfigurationException, SAXException {
+        statusFolder = statFolder;
         if(!statusFolder.exists()){
             statusFolder.mkdirs();
         }
-        this.statusFolder = statusFolder;
     }
-
-    public synchronized void init() throws IOException, ParserConfigurationException, SAXException {
-        statMessages.clear();
-    }
-    
 
     public synchronized Map getStatMessages() {
         return statMessages;
+    }
+
+    public synchronized void addStatMessages(StatMessage message) {
+        statMessages.put(message.getTime(), message);
+    }
+
+    public File getStatusFolder() {
+        return statusFolder;
     }
 
 }

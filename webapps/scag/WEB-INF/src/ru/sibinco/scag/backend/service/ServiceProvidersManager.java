@@ -8,13 +8,11 @@ import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.scag.backend.routing.Route;
+import ru.sibinco.scag.backend.status.StatMessage;
+import ru.sibinco.scag.backend.status.StatusManager;
 
 import javax.xml.parsers.ParserConfigurationException;
-import java.util.Map;
-import java.util.Collections;
-import java.util.TreeMap;
-import java.util.Iterator;
-import java.util.HashMap;
+import java.util.*;
 import java.io.IOException;
 import java.io.File;
 import java.io.PrintWriter;
@@ -168,39 +166,47 @@ public class ServiceProvidersManager {
         return buffer.toString();
     }
 
-    public synchronized void updateServiceProvider(final long id, final String name, final String description) throws NullPointerException {
+    public synchronized void updateServiceProvider(final String user, final long id, final String name, final String description) throws NullPointerException {
         final ServiceProvider provider = (ServiceProvider) serviceProviders.get(new Long(id));
         if (null == provider)
             throw new NullPointerException("Service Provider \"" + id + "\" not found.");
         provider.setName(name);
         if (description != null)
             provider.setDescription(description);
+        StatMessage message = new StatMessage(user, "Service Provider", "Changed service provider: " + name + ".");
+        StatusManager.getInstance().addStatMessages(message);
     }
 
-    public synchronized long createServiceProvider(final String name, final String description) throws NullPointerException {
+    public synchronized long createServiceProvider(final String user, final String name, final String description) throws NullPointerException {
         final ServiceProvider serviceProvider = new ServiceProvider(new Long(++lastUsedServiceProviderId), name);
         serviceProvider.setDescription(description);
         serviceProviders.put(serviceProvider.getId(), serviceProvider);
+        StatMessage message = new StatMessage(user, "Service Provider", "Added new service provider: " + name + ".");
+        StatusManager.getInstance().addStatMessages(message);
         return getLastUsedServiceProviderId();
     }
 
-    public synchronized long createService(final long serviceProviderId, final Service service) throws NullPointerException {
+    public synchronized long createService(final String user, final long serviceProviderId, final Service service) throws NullPointerException {
         final ServiceProvider serviceProvider = (ServiceProvider) serviceProviders.get(new Long(serviceProviderId));
         if (null == serviceProvider)
             throw new NullPointerException("Service Provider \"" + serviceProvider + "\" not found.");
         service.setId(new Long(++lastUsedServiceId));
         serviceProvider.getServices().put(service.getId(), service);
         serviceProviders.put(serviceProvider.getId(), serviceProvider);
+        StatMessage message = new StatMessage(user, "Service", "Added new service: " + service.getName() + ".");
+        StatusManager.getInstance().addStatMessages(message);
         return getLastUsedServiceId();
     }
 
-    public synchronized long updateService(final long serviceProviderId, final Service service) throws NullPointerException {
+    public synchronized long updateService(final String user, final long serviceProviderId, final Service service) throws NullPointerException {
         final ServiceProvider serviceProvider = (ServiceProvider) serviceProviders.get(new Long(serviceProviderId));
         if (null == serviceProvider)
             throw new NullPointerException("Service Provider \"" + serviceProvider + "\" not found.");
         serviceProvider.getServices().keySet().remove(service.getId());
         serviceProvider.getServices().put(service.getId(), service);
         serviceProviders.put(serviceProvider.getId(), serviceProvider);
+        StatMessage message = new StatMessage(user, "Service", "Changed service: " + service.getName() + ".");
+        StatusManager.getInstance().addStatMessages(message);
         return service.getId().longValue();
     }
 

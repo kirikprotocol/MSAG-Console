@@ -12,6 +12,7 @@ import ru.sibinco.scag.backend.endpoints.centers.Center;
 import ru.sibinco.scag.backend.routing.Subject;
 import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.status.StatMessage;
+import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.beans.DoneException;
 import ru.sibinco.scag.beans.EditBean;
 import ru.sibinco.scag.beans.SCAGJspException;
@@ -110,6 +111,7 @@ public class Edit extends EditBean {
         appContext.getScagRoutingManager().setChangedByUser(getUser(appContext).getName());
         StatMessage message = new StatMessage(getUser(appContext).getName(), "Subject", messagetxt);
         appContext.getScagRoutingManager().addStatMessages(message);
+        StatusManager.getInstance().addStatMessages(message);
         throw new DoneException();
     }
 

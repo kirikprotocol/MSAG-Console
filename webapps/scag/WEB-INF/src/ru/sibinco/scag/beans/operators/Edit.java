@@ -6,9 +6,9 @@ package ru.sibinco.scag.beans.operators;
 
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.route.Mask;
+import ru.sibinco.lib.backend.users.User;
 import ru.sibinco.scag.Constants;
-import ru.sibinco.scag.backend.Scag;
-import ru.sibinco.scag.backend.daemon.Proxy;
+import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.operators.Operator;
 import ru.sibinco.scag.backend.operators.OperatorManager;
 import ru.sibinco.scag.beans.DoneException;
@@ -17,11 +17,11 @@ import ru.sibinco.scag.beans.SCAGJspException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.security.Principal;
 
 /**
  * The <code>Edit</code> class represents
@@ -70,41 +70,40 @@ public class Edit extends EditBean {
         final OperatorManager operatorManager = appContext.getOperatorManager();
         if (isAdd()) {
             try {
-                id = operatorManager.createOperator(name, description, srcMasks);
+                id = operatorManager.createOperator(getUser(appContext).getName(), name, description, srcMasks);
             } catch (SibincoException e) {
                 logger.debug("Couldn't create new operator", e);
                 throw new SCAGJspException(Constants.errors.operators.COULD_NOT_CREATE_OPERATOR, e);
             }
         } else {
             try {
-                operatorManager.updateOperator(id, name, description, srcMasks);
+                operatorManager.updateOperator(getUser(appContext).getName(), id, name, description, srcMasks);
             } catch (SibincoException e) {
                 logger.debug("Couldn't update operator", e);
                 throw new SCAGJspException(Constants.errors.operators.COULD_NOT_UPDATE_OPERATOR, e);
             }
         }
-        final Scag scag = appContext.getScag();
-        try {
-            scag.reloadOperators();
-        } catch (SibincoException e) {
-            if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
-                throw new SCAGJspException(Constants.errors.serviceProviders.COULDNT_RELOAD_SERVICE_PROVIDER, e);
-            }
-        } finally {
-            try {
-                appContext.getOperatorManager().store();
-            } catch (IOException e) {
-                logger.debug("Couldn't save config", e);
-            }
-        }
+        appContext.getOperatorManager().reloadOperators(appContext.getScag());
         throw new DoneException();
+    }
+
+    private User getUser(SCAGAppContext appContext) throws SCAGJspException {
+        Principal userPrincipal = super.getLoginedPrincipal();
+        if (userPrincipal == null)
+            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user principal(s)");
+        User user = (User) appContext.getUserManager().getUsers().get(userPrincipal.getName());
+        if (user == null)
+            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userPrincipal.getName() + "'");
+        return user;
     }
 
     public String getId() {
         return -1 == id ? null : String.valueOf(id);
     }
 
-    /** @noinspection JavaDoc*/
+    /**
+     * @noinspection JavaDoc
+     */
     public void setId(final String id) {
         this.id = Long.decode(id).longValue();
     }

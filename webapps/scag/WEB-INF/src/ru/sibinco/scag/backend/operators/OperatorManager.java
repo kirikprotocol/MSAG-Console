@@ -28,7 +28,6 @@ import ru.sibinco.lib.SibincoException;
 import ru.sibinco.scag.backend.status.StatMessage;
 import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.backend.Scag;
-import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.Constants;

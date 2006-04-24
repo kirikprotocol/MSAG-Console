@@ -5,6 +5,7 @@ import ru.sibinco.lib.backend.users.User;
 import ru.sibinco.scag.beans.TabledBeanImpl;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.backend.status.StatMessage;
+import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.Constants;
 
@@ -30,6 +31,7 @@ public class Index extends TabledBeanImpl implements TabledBean {
             logger.debug("Failed to obtain user", e);
         }
         appContext.getScagRoutingManager().addStatMessages(message);
+        StatusManager.getInstance().addStatMessages(message);
     }
 
     private String getUserName(SCAGAppContext appContext) throws SCAGJspException {

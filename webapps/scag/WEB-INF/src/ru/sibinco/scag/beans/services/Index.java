@@ -11,6 +11,7 @@ import ru.sibinco.scag.backend.service.ServiceProvider;
 import ru.sibinco.scag.backend.Scag;
 import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.status.StatMessage;
+import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.users.User;
@@ -55,8 +56,10 @@ public class Index extends TabledBeanImpl {
         appContext.getScagRoutingManager().setRoutesChanged(true);
         StatMessage message = new StatMessage(getUser(appContext).getLogin(), "Routes", "Deleted route(s): " + toRemoveRoutes.toString() + ".");
         appContext.getScagRoutingManager().addStatMessages(message);
-
+        StatusManager.getInstance().addStatMessages(message);
         appContext.getServiceProviderManager().getServiceProviders().keySet().removeAll(toRemove);
+        message = new StatMessage(getUser(appContext).getLogin(), "Routes", "Deleted service prvider(s): " + toRemove.toString() + ".");
+        StatusManager.getInstance().addStatMessages(message);
         final Scag scag = appContext.getScag();
         try {
             scag.reloadServices();

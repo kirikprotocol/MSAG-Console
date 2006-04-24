@@ -13,6 +13,7 @@ import ru.sibinco.scag.backend.routing.Source;
 import ru.sibinco.scag.backend.routing.Subject;
 import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.status.StatMessage;
+import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.backend.service.Service;
 import ru.sibinco.scag.beans.EditBean;
 import ru.sibinco.scag.beans.SCAGJspException;
@@ -280,6 +281,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
 
         StatMessage message = new StatMessage(getUser(appContext).getName(), "Routes", messagetxt);
         appContext.getScagRoutingManager().addStatMessages(message);
+        StatusManager.getInstance().addStatMessages(message);
 
         //throw new DoneException();
         throw new CancelChildException(path + "/services/service/edit.jsp?parentId=" + getParentId() + "&editId=" +
