@@ -129,13 +129,10 @@ void BillingManagerImpl::Stop()
 {
     MutexGuard guard(stopLock);
 
-    smsc_log_info(logger,"BillingManager::trying to stop");
-
     if (m_bStarted) 
     {
         m_bStarted = false;
-        if (!m_Connected) connectEvent.Signal();
-        //connectEvent.NotifyAll();
+        connectEvent.Signal();
 
         exitEvent.Wait(); 
     }
@@ -290,7 +287,11 @@ void BillingManagerImpl::commit(int billId)
 
     BillTransaction * pBillTransaction = BillTransactionHash.GetPtr(billId);
 
-    if (!pBillTransaction) throw SCAGException("Cannot find transaction for billId=%d", billId);
+    if (!pBillTransaction) 
+    {
+        smsc_log_warn(logger, "Cannot find transaction for billId=%d", billId);
+        return;
+    }
 
 
     if (pBillTransaction->status == TRANSACTION_VALID)
@@ -315,7 +316,11 @@ void BillingManagerImpl::rollback(int billId)
 
     BillTransaction * pBillTransaction = BillTransactionHash.GetPtr(billId);
 
-    if (!pBillTransaction) throw SCAGException("Cannot find transaction for billId=%d", billId);
+    if (!pBillTransaction) 
+    {
+        smsc_log_warn(logger, "Cannot find transaction for billId=%d", billId);
+        return;
+    }
 
     if (pBillTransaction->status == TRANSACTION_VALID)
     {
@@ -328,8 +333,11 @@ void BillingManagerImpl::rollback(int billId)
     }
     
 
+    smsc_log_debug(logger, "BillingManager rollback 4");
     EventMonitorArray[pBillTransaction->EventMonitorIndex].inUse = false;
     BillTransactionHash.Delete(billId);
+    smsc_log_debug(logger, "BillingManager rollback 5");
+
 }
 /*
 void BillingManagerImpl::close(int billId)
