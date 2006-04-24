@@ -19,7 +19,7 @@ extern "C" {
 typedef enum Code_PR {
 	Code_PR_NOTHING,	/* No components present */
 	Code_PR_local,
-	Code_PR_global,
+	Code_PR_global
 } Code_PR;
 
 /* Code */

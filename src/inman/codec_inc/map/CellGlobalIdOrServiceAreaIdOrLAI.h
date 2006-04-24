@@ -19,7 +19,7 @@ extern "C" {
 typedef enum CellGlobalIdOrServiceAreaIdOrLAI_PR {
 	CellGlobalIdOrServiceAreaIdOrLAI_PR_NOTHING,	/* No components present */
 	CellGlobalIdOrServiceAreaIdOrLAI_PR_cellGlobalIdOrServiceAreaIdFixedLength,
-	CellGlobalIdOrServiceAreaIdOrLAI_PR_laiFixedLength,
+	CellGlobalIdOrServiceAreaIdOrLAI_PR_laiFixedLength
 } CellGlobalIdOrServiceAreaIdOrLAI_PR;
 
 /* CellGlobalIdOrServiceAreaIdOrLAI */
