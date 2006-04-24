@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 namespace smsc {
+
 namespace cluster {
 
 using smsc::core::network::Socket;
