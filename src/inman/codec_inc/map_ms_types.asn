@@ -1,0 +1,146 @@
+/* $Id$ */
+/* ************************************************************************** *
+ * Module: MAP Mobile Service data types.                                     *
+ * -- 3GPP TS 29.002 V7.2.0 (2005-12)					      *
+ * ************************************************************************** *
+ * Author: R.V. Gerasimov                                                     *
+ * ************************************************************************** */
+
+-- 17.7	MAP constants and data types
+-- 17.7.1	Mobile Service data types
+MAP-MS-DataTypes {
+    itu-t(0) identified-organization(4) etsi(0) mobileDomain(0)
+    gsm-Network(1) modules(3) map-MS-DataTypes(11) version10 (10)}
+DEFINITIONS IMPLICIT TAGS ::=
+-- this is reduced version of original module containing only types required for IN-Manager
+BEGIN
+EXPORTS
+-- location registration types
+-- gprs location registration types
+-- handover types
+-- authentication management types
+-- security management types
+-- equipment management types
+-- subscriber management types
+    LSAIdentity,
+-- fault recovery types
+-- provide subscriber info types 
+    GeographicalInformation, 
+    MS-Classmark2,
+    GPRSMSClass,
+
+-- subscriber information enquiry types
+    LocationInformation,
+    LocationInformationGPRS,
+    RAIdentity
+
+-- any time information enquiry types
+-- any time information handling types
+-- subscriber data modification notification types
+-- gprs location information retrieval types
+-- failure reporting types
+-- gprs notification types
+-- Mobility Management types
+;
+
+IMPORTS
+    AddressString, ISDN-AddressString, CellGlobalIdOrServiceAreaIdOrLAI,
+    AgeOfLocationInformation
+FROM MAP-CommonDataTypes {itu-t(0) identified-organization(4) etsi(0)
+      mobileDomain(0) gsm-Network(1) modules(3) map-CommonDataTypes(18) version10(10)}
+
+    ExtensionContainer
+FROM MAP-ExtensionDataTypes {itu-t(0) identified-organization(4) etsi(0)
+      mobileDomain(0) gsm-Network(1) modules(3) map-ExtensionDataTypes(21) version10(10)}
+;
+
+LSAIdentity ::= OCTET STRING(SIZE (3))
+-- Octets are coded according to TS 3GPP TS 23.003 [17]
+
+MS-Classmark2 ::= OCTET STRING(SIZE (3))
+-- This parameter carries the value part of the MS Classmark 2 IE defined in 
+-- 3GPP TS 24.008 [35].
+
+GPRSMSClass ::= SEQUENCE {
+  mSNetworkCapability      [0]  MSNetworkCapability,
+  mSRadioAccessCapability  [1]  MSRadioAccessCapability OPTIONAL}
+
+MSNetworkCapability ::= OCTET STRING(SIZE (1..8))
+-- This parameter carries the value part of the MS Network Capability IE defined in 
+-- 3GPP TS 24.008 [35].
+
+MSRadioAccessCapability ::= OCTET STRING(SIZE (1..50))
+-- This parameter carries the value part of the MS Radio Access Capability IE defined in
+-- 3GPP TS 24.008 [35].
+
+LocationInformation ::= SEQUENCE {
+  ageOfLocationInformation          AgeOfLocationInformation OPTIONAL,
+  geographicalInformation           [0]  GeographicalInformation OPTIONAL,
+  vlr-number                        [1]  ISDN-AddressString OPTIONAL,
+  locationNumber                    [2]  LocationNumber OPTIONAL,
+  cellGlobalIdOrServiceAreaIdOrLAI
+				    [3]  CellGlobalIdOrServiceAreaIdOrLAI OPTIONAL,
+  extensionContainer                [4]  ExtensionContainer OPTIONAL,
+  ...,
+  selectedLSA-Id                    [5]  LSAIdentity OPTIONAL,
+  msc-Number                        [6]  ISDN-AddressString OPTIONAL,
+  geodeticInformation               [7]  GeodeticInformation OPTIONAL,
+  currentLocationRetrieved          [8]  NULL OPTIONAL,
+  sai-Present                       [9]  NULL OPTIONAL
+}
+-- sai-Present indicates that the cellGlobalIdOrServiceAreaIdOrLAI parameter contains
+-- a Service Area Identity.
+-- currentLocationRetrieved shall be present 
+-- if the location information were retrieved after a successfull paging.
+
+LocationInformationGPRS ::= SEQUENCE {
+  cellGlobalIdOrServiceAreaIdOrLAI
+				    [0]  CellGlobalIdOrServiceAreaIdOrLAI OPTIONAL,
+  routeingAreaIdentity              [1]  RAIdentity OPTIONAL,
+  geographicalInformation           [2]  GeographicalInformation OPTIONAL,
+  sgsn-Number                       [3]  ISDN-AddressString OPTIONAL,
+  selectedLSAIdentity               [4]  LSAIdentity OPTIONAL,
+  extensionContainer                [5]  ExtensionContainer OPTIONAL,
+  ...,
+  sai-Present                       [6]  NULL OPTIONAL,
+  geodeticInformation               [7]  GeodeticInformation OPTIONAL,
+  currentLocationRetrieved          [8]  NULL OPTIONAL,
+  ageOfLocationInformation          [9]  AgeOfLocationInformation OPTIONAL
+}
+-- sai-Present indicates that the cellGlobalIdOrServiceAreaIdOrLAI parameter contains
+-- a Service Area Identity.
+-- currentLocationRetrieved shall be present if the location information
+-- was retrieved after successful paging.
+
+RAIdentity ::= OCTET STRING(SIZE (6))
+-- Routing Area Identity is coded in accordance with 3GPP TS 29.060 [105].
+-- It shall contain the value part defined in 3GPP TS 29.060 only. I.e. the 3GPP TS 29.060
+-- type identifier octet shall not be included.
+
+GeographicalInformation ::= OCTET STRING(SIZE (8))
+--	Refers to geographical Information defined in 3GPP TS 23.032.
+--	Only the description of an ellipsoid point with uncertainty circle
+--	as specified in 3GPP TS 23.032 is allowed to be used
+--	The internal structure according to 3GPP TS 23.032 is as follows:
+--		Type of shape (ellipsoid point with uncertainty circle)	1 octet
+--		Degrees of Latitude				3 octets
+--		Degrees of Longitude				3 octets
+--		Uncertainty code				1 octet
+
+GeodeticInformation ::= OCTET STRING(SIZE (10))
+--	Refers to Calling Geodetic Location defined in Q.763 (1999).
+--	Only the description of an ellipsoid point with uncertainty circle
+--	as specified in Q.763 (1999) is allowed to be used
+--	The internal structure according to Q.763 (1999) is as follows:
+--		Screening and presentation indicators		1 octet
+--		Type of shape (ellipsoid point with uncertainty circle)	1 octet
+--		Degrees of Latitude				3 octets
+--		Degrees of Longitude				3 octets
+--		Uncertainty code				1 octet
+--		Confidence				1 octet
+
+LocationNumber ::= OCTET STRING(SIZE (2..10))
+-- the internal structure is defined in ITU-T Rec Q.763
+      
+END -- MAP-MS-DataTypes
+

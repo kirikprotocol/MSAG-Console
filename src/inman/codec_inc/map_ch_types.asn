@@ -1,0 +1,19 @@
+/* $Id$ */
+/* ************************************************************************** *
+ * Module: MAP Call handling data types.                                      *
+ * -- 3GPP TS 29.002 V7.2.0 (2005-12)					      *
+ * ************************************************************************** *
+ * Author: R.V. Gerasimov                                                     *
+ * ************************************************************************** */
+
+-- 17.7.3	Call handling data types
+MAP-CH-DataTypes {
+    itu-t(0) identified-organization(4) etsi(0) mobileDomain(0)
+    gsm-Network(1) modules(3) map-CH-DataTypes(13) version10(10) }
+DEFINITIONS IMPLICIT TAGS ::=
+BEGIN
+
+CallReferenceNumber ::= OCTET STRING(SIZE (1..8))
+
+END -- MAP-CH-DataTypes
+

@@ -1,0 +1,146 @@
+/* $Id$ */
+/* ************************************************************************** *
+ * Module: MAP Errors.                                                        *
+ * -- 3GPP TS 29.002 V7.2.0 (2005-12)					      *
+ * ************************************************************************** *
+ * Author: R.V. Gerasimov                                                     *
+ * ************************************************************************** */
+
+-- 17.6.6 Errors
+MAP-Errors {
+   itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
+   gsm-Network (1) modules (3) map-Errors (10) version10 (10)}
+
+DEFINITIONS ::= BEGIN 
+EXPORTS
+    -- generic errors
+    systemFailure,
+    dataMissing,
+    unexpectedDataValue,
+    -- identification and numbering errors
+    unknownSubscriber,
+    -- subscription errors
+    bearerServiceNotProvisioned,
+    teleserviceNotProvisioned,
+    -- call handling errors
+    callBarred,
+    -- any time information handling errors
+    atsi-NotAllowed,
+    informationNotAvailable,
+    -- supplementary service errors
+    illegalSS-Operation,
+    ss-NotAvailable,
+    unknownAlphabet
+;
+
+IMPORTS
+    ERROR
+FROM Remote-Operations-Information-Objects {joint-iso-itu-t remote-operations(4)
+  informationObjects(5) version1(0)}
+  
+    SS-Status
+FROM MAP-SS-DataTypes {
+   itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
+   gsm-Network (1) modules (3) map-SS-DataTypes (14) version10 (10)}
+
+    SystemFailureParam,
+    DataMissingParam,
+    UnexpectedDataParam,
+    UnknownSubscriberParam,
+    BearerServNotProvParam,
+    TeleservNotProvParam,
+    CallBarredParam,
+    ATSI-NotAllowedParam,
+    InformationNotAvailableParam,    
+    IllegalSS-OperationParam,
+    SS-NotAvailableParam
+FROM MAP-ER-DataTypes {
+   itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
+   gsm-Network (1) modules (3) map-ER-DataTypes (17) version10 (10)}
+;
+
+-- generic errors
+systemFailure  ERROR ::= {
+    PARAMETER	SystemFailureParam
+    -- optional
+    CODE	local:34 
+}
+
+dataMissing  ERROR ::= {
+    PARAMETER	DataMissingParam
+		-- optional
+		-- DataMissingParam must not be used in version <3
+    CODE	local:35 
+}
+
+unexpectedDataValue  ERROR ::= {
+    PARAMETER	UnexpectedDataParam
+		-- optional
+		-- UnexpectedDataParam must not be used in version <3
+	CODE	local:36 
+}
+
+-- identification and numbering errors
+
+unknownSubscriber  ERROR ::= {
+    PARAMETER	UnknownSubscriberParam
+		-- optional
+		-- UnknownSubscriberParam must not be used in version <3
+    CODE	local:1 
+}
+
+-- subscription errors
+bearerServiceNotProvisioned  ERROR ::= {
+    PARAMETER	BearerServNotProvParam
+		-- optional
+		-- BearerServNotProvParam must not be used in version <3
+    CODE	local:10
+}
+
+teleserviceNotProvisioned  ERROR ::= {
+    PARAMETER	TeleservNotProvParam
+		-- optional
+		-- TeleservNotProvParam must not be used in version <3
+    CODE	local:11
+}
+
+-- call handling errors
+callBarred  ERROR ::= {
+    PARAMETER	CallBarredParam
+		-- optional
+    CODE	local:13
+}
+
+-- any time information handling errors
+atsi-NotAllowed  ERROR ::= {
+    PARAMETER	ATSI-NotAllowedParam
+		-- optional
+    CODE	local:60
+}
+
+
+informationNotAvailable  ERROR ::= {
+    PARAMETER	InformationNotAvailableParam
+		-- optional
+    CODE	local:62
+}
+
+-- supplementary service errors
+illegalSS-Operation  ERROR ::= {
+    PARAMETER	IllegalSS-OperationParam
+		-- optional
+		-- IllegalSS-OperationParam must not be used in version <3
+    CODE	local:16
+}
+
+ss-NotAvailable  ERROR ::= {
+    PARAMETER	SS-NotAvailableParam
+		-- optional
+		-- SS-NotAvailableParam must not be used in version <3
+    CODE	local:18
+}
+
+unknownAlphabet  ERROR ::= { CODE local:71 }
+
+END -- 17.6.6 MAP-Errors
+

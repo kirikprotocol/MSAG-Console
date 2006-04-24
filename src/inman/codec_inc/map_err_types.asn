@@ -1,0 +1,128 @@
+/* $Id$ */
+/* ************************************************************************** *
+ * Module: MAP Error data types.                                              *
+ * -- 3GPP TS 29.002 V7.2.0 (2005-12)					      *
+ * ************************************************************************** *
+ * Author: R.V. Gerasimov                                                     *
+ * ************************************************************************** */
+
+-- 17.7.7	Error data types
+MAP-ER-DataTypes {
+   itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
+   gsm-Network (1) modules (3) map-ER-DataTypes (17) version10 (10)}
+DEFINITIONS IMPLICIT TAGS ::= BEGIN
+EXPORTS
+    CallBarredParam,
+    SystemFailureParam,
+    DataMissingParam,
+    UnexpectedDataParam,
+    UnknownSubscriberParam,
+    BearerServNotProvParam,
+    TeleservNotProvParam,
+    ATSI-NotAllowedParam,
+    IllegalSS-OperationParam,
+    SS-NotAvailableParam,
+    InformationNotAvailableParam
+;
+IMPORTS
+    SS-Status
+FROM MAP-SS-DataTypes {
+   itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
+   gsm-Network (1) modules (3) map-SS-DataTypes (14) version10 (10)}
+
+    BasicServiceCode,
+    NetworkResource,
+    AdditionalNetworkResource
+FROM MAP-CommonDataTypes {
+   itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
+   gsm-Network (1) modules (3) map-CommonDataTypes (18) version10 (10)}
+
+    SS-Code
+FROM MAP-SS-Code {
+   itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
+   gsm-Network (1) modules (3) map-SS-Code (15) version10 (10)}
+
+    ExtensionContainer
+FROM MAP-ExtensionDataTypes {
+   itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
+   gsm-Network (1) modules (3) map-ExtensionDataTypes (21) version10 (10)}
+;
+
+CallBarredParam ::= CHOICE {
+    callBarringCause		CallBarringCause,
+    -- call BarringCause must not be used in version 3 and higher
+    extensibleCallBarredParam	ExtensibleCallBarredParam
+    -- extensibleCallBarredParam must not be used in version <3
+}
+CallBarringCause ::= ENUMERATED { barringServiceActive  (0), operatorBarring  (1)}
+
+ExtensibleCallBarredParam ::= SEQUENCE {
+    callBarringCause			CallBarringCause	OPTIONAL,
+    extensionContainer			ExtensionContainer	OPTIONAL,
+    ... ,
+    unauthorisedMessageOriginator	[1] NULL	OPTIONAL 
+}
+
+SystemFailureParam ::= CHOICE {
+    networkResource			NetworkResource,
+    -- networkResource must not be used in version 3
+    extensibleSystemFailureParam	ExtensibleSystemFailureParam
+    -- extensibleSystemFailureParam must not be used in version <3
+}
+
+ExtensibleSystemFailureParam ::= SEQUENCE {
+    networkResource		NetworkResource	OPTIONAL,
+    extensionContainer		ExtensionContainer	OPTIONAL,
+    ...,
+    additionalNetworkResource	[0] AdditionalNetworkResource	OPTIONAL
+}
+
+
+DataMissingParam ::= SEQUENCE {
+	extensionContainer	ExtensionContainer	OPTIONAL,
+	...}
+
+UnexpectedDataParam ::= SEQUENCE {
+	extensionContainer	ExtensionContainer	OPTIONAL,
+	...}
+
+UnknownSubscriberParam ::= SEQUENCE {
+	extensionContainer	ExtensionContainer	OPTIONAL,
+	...,
+	unknownSubscriberDiagnostic	UnknownSubscriberDiagnostic	OPTIONAL}
+
+UnknownSubscriberDiagnostic ::= ENUMERATED {
+	imsiUnknown  (0),
+	gprsSubscriptionUnknown  (1),
+	...,
+	npdbMismatch  (2)}
+-- if unknown values are received in 	
+-- UnknownSubscriberDiagnostic they shall be discarded
+
+
+BearerServNotProvParam ::= SEQUENCE {
+	extensionContainer	ExtensionContainer	OPTIONAL,
+	...}
+
+TeleservNotProvParam ::= SEQUENCE {
+	extensionContainer	ExtensionContainer	OPTIONAL,
+	...}
+ATSI-NotAllowedParam ::= SEQUENCE {
+	extensionContainer	ExtensionContainer	OPTIONAL,
+	...}
+
+
+IllegalSS-OperationParam ::= SEQUENCE {
+	extensionContainer	ExtensionContainer	OPTIONAL,
+	...}
+
+SS-NotAvailableParam ::= SEQUENCE {
+	extensionContainer	ExtensionContainer	OPTIONAL,
+	...}
+
+InformationNotAvailableParam ::= SEQUENCE {
+	extensionContainer	ExtensionContainer	OPTIONAL,
+	...}
+
+END -- 17.7.7 MAP-ER-DataTypes (Error data types)
+
