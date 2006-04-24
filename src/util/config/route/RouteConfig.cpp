@@ -185,7 +185,7 @@ throw (SubjectNotFoundException)
   XmlStr suppressDeliveryReports(elem.getAttribute(XmlStr("suppressDeliveryReports")));
   XmlStr active(elem.getAttribute(XmlStr("active")));
   XmlStr hide(elem.getAttribute(XmlStr("hide")));
-  XmlStr forceRP(elem.getAttribute(XmlStr("replyPath")));
+  XmlStr forceRP(elem.getAttribute(XmlStr("replayPath")));
   //XmlStr priorityStr(elem.getAttribute(XmlStr("priority")));
   //XmlStr serviceIdStr(elem.getAttribute(XmlStr("serviceId")));
   const unsigned int priority = atoi(XmlStr(elem.getAttribute(XmlStr("priority"))));
