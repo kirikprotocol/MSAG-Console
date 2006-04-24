@@ -58,6 +58,7 @@ struct SmppEntity
     std::string abs = abonent.toString();
     const char* ab = abs.c_str();
     __require__(ab);
+
     sync::MutexGuard guard(mappingLock);
     UMRUSR* umrusr = mapping.GetPtr(ab);
     if (!umrusr) return -1;
@@ -85,8 +86,8 @@ struct SmppEntity
     sync::MutexGuard guard(mappingLock);
     UMRUSR* umrusr = mapping.GetPtr(ab);
     if (!umrusr) {
-	mapping.Insert(ab, UMRUSR());
-	umrusr = mapping.GetPtr(ab);
+        mapping.Insert(ab, UMRUSR());
+        umrusr = mapping.GetPtr(ab);
     }
     int* ptr = umrusr->USRtoUMR.GetPtr(usr);
     if (ptr) *ptr=umr;
