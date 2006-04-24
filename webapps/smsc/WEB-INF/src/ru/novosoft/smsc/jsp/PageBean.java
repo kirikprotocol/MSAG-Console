@@ -143,14 +143,14 @@ public abstract class PageBean {
     }
 
     public void journalAppend(final byte subjectType, final String subjectId, final byte action) {
-        appContext.getJournal().append(userManager.getLoginedPrincipal().getName(), sessionId + "/" + clientAddress, subjectType, subjectId, action);
+        appContext.getJournal().append(userManager.getLoginedPrincipal().getName(), /*sessionId + "/" + */clientAddress, subjectType, subjectId, action);
     }
 
     public void journalAppend(final byte subjectType, final String subjectId, final byte action, final String additionalKey, final String additionalValue) {
-        appContext.getJournal().append(userManager.getLoginedPrincipal().getName(), sessionId + "/" + clientAddress, subjectType, subjectId, action, additionalKey, additionalValue);
+        appContext.getJournal().append(userManager.getLoginedPrincipal().getName(), /*sessionId + "/" + */clientAddress, subjectType, subjectId, action, additionalKey, additionalValue);
     }
 
     public void journalAppend(final byte subjectType, final String subjectId, final byte action, final Map additional) {
-        appContext.getJournal().append(userManager.getLoginedPrincipal().getName(), sessionId + "/" + clientAddress, subjectType, subjectId, action, additional);
+        appContext.getJournal().append(userManager.getLoginedPrincipal().getName(), /*sessionId + "/" + */clientAddress, subjectType, subjectId, action, additional);
     }
 }
