@@ -9,15 +9,10 @@
     </jsp:attribute>
 
     <jsp:body>
-        <table class="list" cellspacing="0">
-            <col width="1px"/>
-            <tr class="row0">
-                <td><input class="check" type="checkbox" name="subj" id="chk_billing" value="billing"
-                <c:if test="${!bean.billingChanged}"> disabled</c:if>></td>
-                <td><label for="chk_billing">Route billing rules</label></td><td><sm:status
-                    changed="${bean.billingChanged}"/></td>
-            </tr>
-        </table>
+        <div class=page_subtitle>Status log</div>
+        <sm:scrolling columns="time, userLogin, category, message" names="time, user, category, description"
+                      widths="20,10,30,40"/>
+        <div class=page_subtitle>&nbsp;</div>
         <script>
             function enableDisableByIdFunction(itemId, isDisabled) {
                 var items = opForm.all[itemId];

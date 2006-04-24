@@ -42,7 +42,7 @@ public class Center {
     private Provider provider;
     private int uid = -1;
     private String bindSystemId;
-    private String bindPassword;
+    private String bindPassword = "";
     private String transport = "SMPP";
     private String addressRange;
 
@@ -52,7 +52,7 @@ public class Center {
                   byte mode, String host, int port, String altHost,
                   int altPort, boolean enabled, final Provider provider,
                   final int uid, final String bindSystemId, final String bindPassword, final String addressRange) throws NullPointerException {
-        if (null == id || null == bindPassword || bindSystemId == null)
+        if (null == id || bindSystemId == null)
             throw new NullPointerException("SMSC ID or bind Password or bind SystemId  is null");
         this.id = id;
         this.timeout = timeout;

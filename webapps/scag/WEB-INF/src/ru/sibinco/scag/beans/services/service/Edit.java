@@ -10,6 +10,7 @@ import ru.sibinco.scag.backend.Scag;
 import ru.sibinco.scag.backend.rules.RuleManager;
 import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.backend.status.StatMessage;
+import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.backend.transport.Transport;
 import ru.sibinco.scag.backend.service.Service;
 import ru.sibinco.scag.backend.service.ServiceProvider;
@@ -71,7 +72,7 @@ public class Edit extends TabledEditBeanImpl {
         if (appContext == null) {
             appContext = (SCAGAppContext) request.getAttribute("appContext");
         }
-
+        loginedPrincipal = request.getUserPrincipal();
         path = Utils.getPath(request);
         if (getMbCancel() != null) {
             String path = Utils.getPath(request);
@@ -83,7 +84,6 @@ public class Edit extends TabledEditBeanImpl {
             throw new AddChildException(request.getContextPath() + "/routing/routes", (!editChild ? getEditId() : getParentId()));
         }
         if (mbDelete != null) {
-            loginedPrincipal = request.getUserPrincipal();
             delete();
         }
         serviceProviders = appContext.getServiceProviderManager().getServiceProviders();
@@ -116,6 +116,57 @@ public class Edit extends TabledEditBeanImpl {
         }
         StatMessage message = new StatMessage(user, "Routes", "Deleted route(s): " + checkedSet.toString() + ".");
         appContext.getScagRoutingManager().addStatMessages(message);
+        StatusManager.getInstance().addStatMessages(message);
+    }
+
+
+    protected void save() throws SCAGJspException {
+        String messagetxt = "";
+        final ServiceProvidersManager serviceProvidersManager = appContext.getServiceProviderManager();
+        if (description == null) description = "";
+        if (getEditId() == null) {
+            Service service = new Service(name, description);
+            id = serviceProvidersManager.createService(getUserName(appContext), Long.decode(getParentId()).longValue(), service);
+            messagetxt = "Added new service: '" + name + "'.";
+        } else {
+            if (editChild) {
+                ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(Long.decode(getEditId()));
+                Service service = (Service) serviceProvider.getServices().get(Long.decode(getParentId()));
+                service.setName(name);
+                service.setDescription(description);
+                serviceProvidersManager.updateService(getUserName(appContext), Long.decode(getEditId()).longValue(), service);
+                messagetxt = "Changed service: '" + name + "'.";
+            } else {
+                ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(Long.decode(getParentId()));
+                Service service = (Service) serviceProvider.getServices().get(Long.decode(getEditId()));
+                service.setName(name);
+                service.setDescription(description);
+                serviceProvidersManager.updateService(getUserName(appContext), Long.decode(getParentId()).longValue(), service);
+                messagetxt = "Changed service: '" + name + "'.";
+            }
+        }
+        StatMessage message = new StatMessage(getUserName(appContext), "Service", messagetxt);
+        StatusManager.getInstance().addStatMessages(message);
+        final Scag scag = appContext.getScag();
+        try {
+            scag.reloadServices();
+        } catch (SibincoException e) {
+            if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
+                throw new SCAGJspException(Constants.errors.serviceProviders.COULDNT_RELOAD_SERVICE_PROVIDER, e);
+            }
+        } finally {
+            try {
+                appContext.getServiceProviderManager().store();
+            } catch (IOException e) {
+                logger.debug("Couldn't save config", e);
+            }
+        }
+        if (id != -1) {
+            throw new EditChildException(Long.toString(id), getParentId());
+        } else {
+            path = path.substring(0, (path.length() - (dirName.length() + 1))) + "edit.jsp?editId=" + (editChild ? getEditId() : getParentId());
+            throw new CancelChildException(path);
+        }
     }
 
     protected void load() throws SCAGJspException {
@@ -148,50 +199,6 @@ public class Edit extends TabledEditBeanImpl {
                     }
                 }
             }
-        }
-    }
-
-    protected void save() throws SCAGJspException {
-        final ServiceProvidersManager serviceProvidersManager = appContext.getServiceProviderManager();
-        if (description == null) description = "";
-        if (getEditId() == null) {
-            Service service = new Service(name, description);
-            id = serviceProvidersManager.createService(Long.decode(getParentId()).longValue(), service);
-        } else {
-            if (editChild) {
-                ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(Long.decode(getEditId()));
-                Service service = (Service) serviceProvider.getServices().get(Long.decode(getParentId()));
-                service.setName(name);
-                service.setDescription(description);
-                serviceProvidersManager.updateService(Long.decode(getEditId()).longValue(), service);
-            } else {
-                ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(Long.decode(getParentId()));
-                Service service = (Service) serviceProvider.getServices().get(Long.decode(getEditId()));
-                service.setName(name);
-                service.setDescription(description);
-                serviceProvidersManager.updateService(Long.decode(getParentId()).longValue(), service);
-            }
-        }
-
-        final Scag scag = appContext.getScag();
-        try {
-            scag.reloadServices();
-        } catch (SibincoException e) {
-            if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
-                throw new SCAGJspException(Constants.errors.serviceProviders.COULDNT_RELOAD_SERVICE_PROVIDER, e);
-            }
-        } finally {
-            try {
-                appContext.getServiceProviderManager().store();
-            } catch (IOException e) {
-                logger.debug("Couldn't save config", e);
-            }
-        }
-        if (id != -1) {
-            throw new EditChildException(Long.toString(id), getParentId());
-        } else {
-            path = path.substring(0, (path.length() - (dirName.length() + 1))) + "edit.jsp?editId=" + (editChild ? getEditId() : getParentId());
-            throw new CancelChildException(path);
         }
     }
 

@@ -12,10 +12,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import javax.xml.parsers.ParserConfigurationException;
-import java.util.Map;
-import java.util.Collections;
-import java.util.TreeMap;
-import java.util.Iterator;
+import java.util.*;
 import java.io.IOException;
 import java.io.File;
 import java.io.PrintWriter;
@@ -28,6 +25,13 @@ import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.lib.backend.util.StringEncoderDecoder;
 import ru.sibinco.lib.backend.route.Mask;
 import ru.sibinco.lib.SibincoException;
+import ru.sibinco.scag.backend.status.StatMessage;
+import ru.sibinco.scag.backend.status.StatusManager;
+import ru.sibinco.scag.backend.Scag;
+import ru.sibinco.scag.backend.SCAGAppContext;
+import ru.sibinco.scag.backend.daemon.Proxy;
+import ru.sibinco.scag.beans.SCAGJspException;
+import ru.sibinco.scag.Constants;
 
 /**
  * The <code>OperatorManager</code> class represents
@@ -103,7 +107,7 @@ public class OperatorManager {
         }
     }
 
-    public synchronized void updateOperator(final long id, final String name,
+    public synchronized void updateOperator(final String user, final long id, final String name,
                                             final String description, final String[] srcMasks)
             throws NullPointerException, SibincoException {
 
@@ -121,9 +125,11 @@ public class OperatorManager {
                 operator.getMasks().put(mask.getMask(), mask);
             }
         }
+        StatMessage message = new StatMessage(user, "Operator", "Changed operator: " + name + ".");
+        StatusManager.getInstance().addStatMessages(message);
     }
 
-    public synchronized long createOperator(final String name, final String description, final String[] srcMasks)
+    public synchronized long createOperator(final String user, final String name, final String description, final String[] srcMasks)
             throws NullPointerException, SibincoException {
         final Operator operator = new Operator(new Long(++lastUsedOperatorId), name);
         operator.setDescription(description);
@@ -136,6 +142,8 @@ public class OperatorManager {
                 operator.getMasks().put(mask.getMask(), mask);
             }
         }
+        StatMessage message = new StatMessage(user, "Operator", "Added new operator: " + name + ".");
+        StatusManager.getInstance().addStatMessages(message);
         return getLastUsedOperatorId();
     }
 
@@ -170,7 +178,7 @@ public class OperatorManager {
 
         buffer.append("   <operator id=\"").append(operator.getId()).append("\">").append("\n");
         buffer.append("       <name>").append(StringEncoderDecoder.encode(operator.getName().trim())).append("</name>").append("\n");
-        buffer.append("       <description>").append(StringEncoderDecoder.encode((operator.getDescription()==null)?"":operator.getDescription().trim())).append("</description>").append("\n");
+        buffer.append("       <description>").append(StringEncoderDecoder.encode((operator.getDescription() == null) ? "" : operator.getDescription().trim())).append("</description>").append("\n");
         buffer.append("       <masks>").append("\n");
         if (masks != null) {
             for (Iterator i = new SortedList(masks.keySet()).iterator(); i.hasNext();) {
@@ -185,8 +193,42 @@ public class OperatorManager {
         return buffer.toString();
     }
 
-    public synchronized void store() throws IOException {
-        storeOperators();
+    public synchronized void delete(final String user, final ArrayList toRemove) throws SCAGJspException {
+        List operatorNames = getOperatorNamesByIds(toRemove);
+        getOperators().keySet().removeAll(toRemove);
+        StatMessage message = new StatMessage(user, "Operator", "Deleted operator(s): " + operatorNames.toString() + ".");
+        StatusManager.getInstance().addStatMessages(message);
+    }
+
+    public synchronized void reloadOperators(final Scag scag) throws SCAGJspException {
+        try {
+            scag.reloadOperators();
+        } catch (SibincoException e) {
+            if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
+                throw new SCAGJspException(Constants.errors.serviceProviders.COULDNT_RELOAD_SERVICE_PROVIDER, e);
+            }
+        } finally {
+            try {
+                storeOperators();
+            } catch (IOException e) {
+                logger.debug("Couldn't save config", e);
+            }
+        }
+    }
+
+    private List getOperatorNamesByIds(final ArrayList operatorsIds) {
+        List result = new ArrayList();
+        for (Iterator i = new SortedList(operators.keySet()).iterator(); i.hasNext();) {
+            Long id = (Long) i.next();
+            Operator operator = (Operator) operators.get(id);
+            for (Iterator it = operatorsIds.iterator(); it.hasNext();) {
+               Long operatorId = (Long) it.next();
+               if(operator.getId().equals(operatorId)){
+                   result.add(operator.getName());
+               }
+            }
+        }
+        return result;
     }
 
 

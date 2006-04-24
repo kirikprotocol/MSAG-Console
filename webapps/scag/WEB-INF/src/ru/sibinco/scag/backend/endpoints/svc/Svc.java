@@ -34,7 +34,7 @@ public class Svc {
     public static final byte MODE_UNKNOWN = 0;
 
     private String id = null;
-    private String password = null;
+    private String password = "";
     private int timeout = 0;
     private boolean enabled = false;
     private byte mode = MODE_TRX;
@@ -50,7 +50,7 @@ public class Svc {
 
     public Svc(final String id, final String password, final int timeout,
                final boolean enabled, final byte mode, final Provider provider) throws NullPointerException{
-        if (null == id || null == password)
+        if (null == id)
             throw new NullPointerException("SME ID or  password  is null");
         this.id = id.trim();
         this.password = password;
