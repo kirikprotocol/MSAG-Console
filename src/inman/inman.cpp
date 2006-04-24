@@ -7,7 +7,7 @@ static char const ident[] = "$Id$";
 #include <string>
 
 #include "version.hpp"
-#include "inman/comp/comfactory.hpp"
+#include "inman/comp/cap_sms/CapSMSFactory.hpp"
 using smsc::inman::comp::initCAP3SMSComponents;
 
 #include "service.hpp"
@@ -42,7 +42,7 @@ using smsc::util::config::ConfigException;
 
 static const unsigned int _in_CFG_DFLT_CLIENT_CONNS = 3;
 static const long _in_CFG_MIN_BILLING_INTERVAL = 10; //in seconds
-static const unsigned int _in_CFG_MAX_BILLINGS = 10000;
+static const unsigned int _in_CFG_MAX_BILLINGS = 100000;
 static const unsigned int _in_CFG_DFLT_BILLINGS = 500;
 static const unsigned short _in_CFG_DFLT_CAP_TIMEOUT = 20;
 static const unsigned short _in_CFG_DFLT_BILL_TIMEOUT = 120;

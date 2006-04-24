@@ -7,7 +7,7 @@
 #include <map>
 #include "inman/inap/session.hpp"
 #include "inman/inap/dialog.hpp"
-#include "inman/comp/comps.hpp"
+#include "inman/comp/cap_sms/CapSMSComps.hpp"
 
 using smsc::inman::comp::ConnectSMSArg;
 using smsc::inman::comp::FurnishChargingInformationSMSArg;
