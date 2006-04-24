@@ -2,11 +2,11 @@
 #include <xercesc/util/OutOfMemoryException.hpp>
 
 #include <scag/bill/BillingManager.h>
+#include <scag/util/singleton/Singleton.h>
 
 #include "XMLHandlers.h"
 
 #include "HttpCommand.h"
-#include "HttpProcessor.h"
 #include "HttpRouter.h"
 
 namespace scag { namespace transport { namespace http {
@@ -15,24 +15,92 @@ XERCES_CPP_NAMESPACE_USE
 
 using scag::bill::BillingManager;
 
+using namespace scag::util::singleton;
+
+static bool  inited = false;
+static Mutex initLock;
+
+inline unsigned GetLongevity(HttpTraceRouter*) { return 5; }
+typedef SingletonHolder<HttpTraceRouter> SingleHP;
+
+HttpTraceRouter& HttpTraceRouter::Instance()
+{
+    if (!inited) 
+    {
+        MutexGuard guard(initLock);
+        if (!inited) 
+            throw std::runtime_error("HttpTraceRouter not inited!");
+    }
+    return SingleHP::Instance();
+}
+
+void HttpTraceRouter::Init(const std::string& cfg)
+{
+    if (!inited)
+    {
+        MutexGuard guard(initLock);
+        if(!inited) {
+            HttpTraceRouter& hp = SingleHP::Instance();
+            hp.init(cfg);
+            inited = true;
+        }
+    }
+}
+
+std::string HttpTraceRouter::getTraceRoute(const std::string& addr, const std::string& site, const std::string& path, uint32_t port)
+{
+    MutexGuard mt(GetRouteMutex);
+
+    char buf[20];
+    std::string url;
+    std::string trace;
+
+    sprintf(buf, ":%d", port);
+    url = site + (port != 80 ? buf : "") + path;
+
+    AddressURLKey k(addr, site, path, port);
+    uint8_t len;
+    do{
+        try{
+            HttpRouteInt *r = AddressURLMap->Get(k);
+            trace += "Match found:" + k.mask.toString() + ", url: " + url + "\n";
+            trace += "Route info:\n";
+            trace += r->toString();
+            return trace;
+        }
+        catch(XHashInvalidKeyException &e)
+        {
+            trace += "No match: mask: " + k.mask.toString() + ", url: " + url + "\n";
+            len = k.mask.cut();
+        }
+    }while(len > 1);
+
+    trace += "No matches found.";
+    return trace;
+}
+
+//-----------------------------------------------------------------------------
 HttpRouterImpl::HttpRouterImpl()
 {
     logger = smsc::logger::Logger::getInstance("httprouter");
+    routes = NULL;
+    routeIdMap = NULL;
+    AddressURLMap = NULL;
     XMLPlatformUtils::Initialize();
 }
 
 HttpRouterImpl::~HttpRouterImpl()
 {
+    delete routes;
+    delete routeIdMap;
+    delete AddressURLMap;
+
     XMLPlatformUtils::Terminate();
 }
 
 void HttpRouterImpl::init(const std::string& cfg)
 {
     route_cfg_file = cfg;
-    routes = NULL;
-    routeIdMap = NULL;
-    AddressURLMap = NULL;
-
     ReloadRoutes();
 }
                                                                         
@@ -75,7 +143,7 @@ void HttpRouterImpl::BuildMaps(RouteArray *r, RouteHash *rid, AddressURLHash *au
     {
         rt = &(*r)[i];
 
-        rt->provider_id = BillingManager::Instance().getInfrastructure().GetProviderID(rt->service_id);
+//        rt->provider_id = BillingManager::Instance().getInfrastructure().GetProviderID(rt->service_id);
 
         rid->Insert(rt->id.c_str(), rt);
 

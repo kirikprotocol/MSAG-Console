@@ -79,7 +79,7 @@ public:
         std::string s = mask;
         uint8_t i = full_len - len;
 
-        while(i)
+        while(i--)
             s += '?';
 
         return s;
@@ -161,6 +161,17 @@ struct Site{
         port = cp.port;
         paths = cp.paths;
     }
+
+    std::string toString()
+    {
+        std::string s, s1;
+        char buf[20];
+        sprintf(buf, ":%d", port);
+        s1 = host + ((port != 80) ? buf : "");
+        for(int i = 0; i < paths.Count(); i++)
+            s += s1 + paths[i] + "\n";
+        return s;
+    }
 };
 
 typedef Array<Site> SiteArray;
@@ -192,6 +203,26 @@ struct HttpRouteInt : public HttpRoute
     {
         masks = cp.masks;
         sites = cp.sites;
+    }
+
+    std::string toString()
+    {
+        char buf[100];
+        std::string s;
+
+        s += "RouteId: " + id;
+        sprintf(buf, " ServiceId: %d\n", service_id);
+        s += buf;
+
+        s += "Masks:\n";
+        for(int i = 0; i < masks.Count(); i++)
+            s += masks[i] + "\n";
+
+        s += "Urls:\n";
+        for(int i = 0; i < sites.Count(); i++)
+            s += sites[i].toString();
+
+        return s;
     }
 };
 

@@ -25,14 +25,12 @@ class HttpProcessorImpl : public HttpProcessor
         virtual bool processResponse(HttpResponse& response);
         virtual void statusResponse(HttpResponse& response, bool delivered=true);
         virtual void ReloadRoutes();
-        virtual void ReloadTraceRoutes();
 
         void init(const std::string& cfg);
 
         virtual ~HttpProcessorImpl() {}
     protected:
         HttpRouterImpl router;
-        HttpRouterImpl trace_router;
 
         void registerEvent(int event, HttpRequest& cmd);
         void registerEvent(int event, HttpResponse& cmd);
@@ -162,17 +160,11 @@ void HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
 void HttpProcessorImpl::init(const std::string& cfg)
 {
     router.init(cfg + "/http_routes.xml");
-    trace_router.init(cfg + "/http_trace_routes.xml");
 }
 
 void HttpProcessorImpl::ReloadRoutes()
 {
     router.ReloadRoutes();
-}
-
-void HttpProcessorImpl::ReloadTraceRoutes()
-{
-    trace_router.ReloadRoutes();
 }
 
 void HttpProcessorImpl::registerEvent(int event, HttpRequest& cmd)

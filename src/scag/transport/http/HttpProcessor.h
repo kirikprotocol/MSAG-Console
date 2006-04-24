@@ -38,7 +38,6 @@ namespace scag { namespace transport { namespace http {
         virtual void statusResponse(HttpResponse& response, bool delivered=true) = 0;
 
         virtual void ReloadRoutes() = 0;
-        virtual void ReloadTraceRoutes() = 0;
 
         static HttpProcessor& Instance();
         static void Init(const std::string& cfg);

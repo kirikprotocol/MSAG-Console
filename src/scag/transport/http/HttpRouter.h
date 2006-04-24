@@ -34,7 +34,6 @@ public:
     virtual HttpRoute findRoute(const std::string& addr, const std::string& site, const std::string& path, uint32_t port) = 0;
     virtual HttpRoute getRoute(const std::string& routeId) = 0;
 
-protected:
     virtual ~HttpRouter() {}
 };
 
@@ -43,6 +42,7 @@ typedef Hash<HttpRouteInt*> RouteHash;
 
 class HttpRouterImpl:public HttpRouter
 {
+protected:
     Mutex ReloadMutex, GetRouteMutex;
 
     std::string route_cfg_file;
@@ -67,6 +67,17 @@ public:
 
     ~HttpRouterImpl();
 };
+
+class HttpTraceRouter: public HttpRouterImpl
+{
+public:
+    static HttpTraceRouter& Instance();
+    static void Init(const std::string& cfg);
+
+    std::string getTraceRoute(const std::string& addr, const std::string& site, const std::string& path, uint32_t port);
+    ~HttpTraceRouter() {}
+};
+
 
 }}}
 

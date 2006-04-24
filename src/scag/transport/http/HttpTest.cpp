@@ -80,10 +80,6 @@ namespace scag { namespace transport { namespace http
     {
         // Do nothing
     }
-    virtual void ReloadTraceRoutes()
-    {
-        // Do nothing
-    }
         
         virtual ~MyHttpProcessor() {
         }

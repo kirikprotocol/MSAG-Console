@@ -13,13 +13,16 @@ int main(int argc, char* argv[])
 
     logger = Logger::getInstance("router_test");
 
-    HttpRouterImpl rt;
+//    HttpRouterImpl rt;
+    HttpTraceRouter::Init("http_routes.xml");
 
     try{
-        rt.init(".");
-        HttpRoute r = rt.findRoute("+79139034444", "yandex.ru", "/melodies", 8080);
+//        rt.init(".");
+        HttpTraceRouter& tr = HttpTraceRouter::Instance();
+        smsc_log_debug(logger, tr.getTraceRoute("+79139034444", "yandex.ru", "/melodies", 8080).c_str());
+/*        HttpRoute r = rt.findRoute("+79139034444", "yandex.ru", "/melodies", 8080);
         smsc_log_info(logger, "first test route found routeid=%s, service_id=%d", r.id.c_str(), r.service_id);
-        r = rt.findRoute("+79609134444", "yandex.ru", "/melodies", 8080);
+        r = rt.findRoute("+79609134444", "yandex.ru", "/melodies", 8080);*/
     }
     catch(Exception &e)
     {
