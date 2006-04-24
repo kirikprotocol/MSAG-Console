@@ -70,6 +70,8 @@ public:
 
 class HttpTraceRouter: public HttpRouterImpl
 {
+protected:
+    void init(const std::string& cfg);
 public:
     static HttpTraceRouter& Instance();
     static void Init(const std::string& cfg);

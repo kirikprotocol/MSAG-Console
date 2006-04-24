@@ -55,6 +55,9 @@ std::string HttpTraceRouter::getTraceRoute(const std::string& addr, const std::s
     std::string url;
     std::string trace;
 
+    if(AddressURLMap == NULL)
+        return "No loaded routes";
+
     sprintf(buf, ":%d", port);
     url = site + (port != 80 ? buf : "") + path;
 
@@ -78,6 +81,12 @@ std::string HttpTraceRouter::getTraceRoute(const std::string& addr, const std::s
     trace += "No matches found.";
     return trace;
 }
+
+void HttpTraceRouter::init(const std::string& cfg)
+{
+    route_cfg_file = cfg;
+}
+
 
 //-----------------------------------------------------------------------------
 HttpRouterImpl::HttpRouterImpl()

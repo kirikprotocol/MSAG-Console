@@ -24,6 +24,7 @@
 #include "scag/re/XMLHandlers.h"
 
 #include "scag/transport/http/HttpLogger.h"
+#include "scag/transport/http/HttpRouter.h"
 #include "scag/pers/PersClient.h"
 
 namespace scag
@@ -554,6 +555,8 @@ void Scag::init()
 
         scag::transport::http::HttpProcessor::Init("./conf");
         scag::transport::http::HttpProcessor& hp = scag::transport::http::HttpProcessor::Instance();
+
+//        scag::transport::http::HttpTraceRouter::Init("./conf/http_trace_routes.xml");
 
         using scag::config::ConfigView;
 
