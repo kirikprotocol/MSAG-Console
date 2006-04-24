@@ -32,9 +32,11 @@ class XMLInmanemuConfHandler : public XMLBasicHandler
 {
     int port;
     std::string host;
+    std::string cdr_dir;
 public:
     std::string& getHost() {return host;}
     int getPort() {return port;}
+    string& getCDRDir() {return cdr_dir;}
 
     XMLInmanemuConfHandler() : XMLBasicHandler() {};
     virtual void startElement(const XMLCh* const qname, AttributeList& attributes);
@@ -69,6 +71,11 @@ void XMLInmanemuConfHandler::startElement(const XMLCh* const qname, AttributeLis
         if (strcmp(attrName.localForm(), "port") == 0) 
         {
             if (XMLString::stringLen(XMLValue) > 0) port = atoi(attrValue.localForm());
+        }
+   
+        if (strcmp(attrName.localForm(), "cdr_dir") == 0) 
+        {
+            if (XMLString::stringLen(XMLValue) > 0) cdr_dir.append(attrValue.localForm());
         }
     }
 }
@@ -105,7 +112,7 @@ void InmanemuConfig::Init()
         //parser.setDoNamespaces(true);
 
 
-        parser.setValidateAnnotations(false);   
+//        parser.setValidateAnnotations(false);   
 
         parser.setValidationConstraintFatal(true);
 

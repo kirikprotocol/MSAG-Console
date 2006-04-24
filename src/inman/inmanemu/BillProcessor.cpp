@@ -44,7 +44,7 @@ void BillProcessor::init()
         //parser.setValidationSchemaFullChecking(true);
         //parser.setDoNamespaces(true);
 
-        parser.setValidateAnnotations(false);   
+        //parser.setValidateAnnotations(false);   
 
         parser.setValidationConstraintFatal(true);
 
@@ -95,7 +95,7 @@ void BillProcessor::commit(int BillId)
 
     account->amount = account->amount - account->charged;
 
-    smsc_log_error(logger, "%d commited for %s abonent",account->charged, abonent->toString().c_str());
+    smsc_log_error(logger, "%d commited for %s abonent (money = %d)",account->charged, abonent->toString().c_str(), account->amount);
     account->charged = 0;
 }
 
@@ -117,7 +117,7 @@ void BillProcessor::rollback(int BillId)
          return;
     }
 
-    smsc_log_error(logger, "Rollback %d for %s abonent",account->charged, abonent->toString().c_str());
+    smsc_log_error(logger, "Rollback %d for %s abonent (money = %d)",account->charged, abonent->toString().c_str(), account->amount);
     account->charged = 0;
 }
 
@@ -144,12 +144,12 @@ bool BillProcessor::charge(MatrixKey& key, Address& abonent, int BillId)
 
     if (account->amount < (*pricePtr)) 
     {
-        smsc_log_error(logger, "Cannot charge %d for %s abonent. Delails - not enough money",(*pricePtr), abonent.toString().c_str());
+        smsc_log_error(logger, "Cannot charge %d for %s abonent (money = %d). Delails - not enough money",(*pricePtr),  abonent.toString().c_str(), account->amount);
         return false;
     } 
 
     account->charged = (*pricePtr);
-    smsc_log_error(logger, "%d successfully charged for %s abonent",(*pricePtr), abonent.toString().c_str());
+    smsc_log_error(logger, "%d successfully charged for %s abonent (money = %d)",(*pricePtr), abonent.toString().c_str(), account->amount);
     return true;
 }
 
