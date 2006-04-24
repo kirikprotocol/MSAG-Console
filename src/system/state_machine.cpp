@@ -2581,6 +2581,8 @@ StateType StateMachine::submitChargeResp(Tuple& t)
       sms->setIntProperty(Tag::SMPP_ESM_CLASS,sms->getIntProperty(Tag::SMPP_ESM_CLASS)&(~0x80));
     }
 
+    smsc_log_debug(smsLog,"SBM: msgId=%lld, esm_class=%x",t.msgId,sms->getIntProperty(Tag::SMPP_ESM_CLASS));
+
     SmscCommand delivery = SmscCommand::makeDeliverySm(*sms,dialogId2);
     unsigned bodyLen=0;
     delivery->get_sms()->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&bodyLen);
@@ -3286,6 +3288,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     {
       sms.setIntProperty(Tag::SMPP_ESM_CLASS,sms.getIntProperty(Tag::SMPP_ESM_CLASS)&(~0x80));
     }
+    smsc_log_debug(smsLog,"FWD: msgId=%lld, esm_class=%x",t.msgId,sms.getIntProperty(Tag::SMPP_ESM_CLASS));
     SmscCommand delivery = SmscCommand::makeDeliverySm(sms,dialogId2);
     dest_proxy->putCommand(delivery);
     tg.active=false;
@@ -3995,6 +3998,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
           sms.setIntProperty(Tag::SMPP_ESM_CLASS,sms.getIntProperty(Tag::SMPP_ESM_CLASS)&(~0x80));
         }
 
+        smsc_log_debug(smsLog,"CONCAT: msgId=%lld, esm_class=%x",t.msgId,sms.getIntProperty(Tag::SMPP_ESM_CLASS));
         SmscCommand delivery = SmscCommand::makeDeliverySm(sms,dialogId2);
         dest_proxy->putCommand(delivery);
         tg.active=false;
@@ -4002,7 +4006,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       catch(ExtractPartFailedException& e)
       {
         errstatus=Status::INVPARLEN;
-        smsc_log_error(smsLog,"FWDDLV: failed to extract sms part for %lld",t.msgId);
+        smsc_log_error(smsLog,"CONCAT: failed to extract sms part for %lld",t.msgId);
         errtext="failed to extract sms part";
       }
       catch(InvalidProxyCommandException& e)
