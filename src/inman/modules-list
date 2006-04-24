@@ -4,10 +4,8 @@ cachedb
 storage
 common
 asn1rt
-codec
 comp
 inap
 interaction
 inmanemu
-#codec_uss
 #uss
