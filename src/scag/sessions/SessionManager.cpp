@@ -375,6 +375,8 @@ int SessionManagerImpl::processExpire()
 
             smsc_log_debug(logger,"SessionManager: try to expire session UMR='%d', Address='%s', has p: %d op: %d",(*it)->SessionKey.USR,(*it)->SessionKey.abonentAddr.toString().c_str(),session->hasPending(),session->hasOperations());
             session->expirePendingOperation();
+            //???
+            store.updateSession(sessionPtr);
 
             CSessionAccessData * data = (*it);
 

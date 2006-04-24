@@ -269,7 +269,7 @@ void Session::SerializePendingOperations(SessionBuffer& buff)
 {
     std::list<PendingOperation>::iterator it;
 
-    buff << PendingOperationList.size();
+    buff << (int)(PendingOperationList.size());
 
     for (it = PendingOperationList.begin(); it!=PendingOperationList.end(); ++it)
     {
@@ -305,6 +305,8 @@ void Session::Serialize(SessionBuffer& buff)
 
 void Session::Deserialize(SessionBuffer& buff)
 {
+    PrePendingOperationList.clear();
+
     buff.SetPos(0);
 
     DeserializeProperty(buff);
@@ -316,7 +318,7 @@ void Session::Deserialize(SessionBuffer& buff)
 
 
     m_pCurrentOperation = 0;
-
+    
     if (hasCurrentOperation) 
     {
         buff >> currentOperationId;
