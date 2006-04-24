@@ -134,7 +134,7 @@ void BillingManagerImpl::Stop()
     if (m_bStarted) 
     {
         m_bStarted = false;
-        connectEvent.Signal();
+        if (!m_Connected) connectEvent.Signal();
         //connectEvent.NotifyAll();
 
         exitEvent.Wait(); 
@@ -184,7 +184,7 @@ int BillingManagerImpl::Execute()
             } else
             {
                 m_Connected = Reconnect();
-                connectEvent.Wait(20000);
+                if (!m_Connected) connectEvent.Wait(20000);
             }
             
         } catch (SCAGException& e)
@@ -293,13 +293,16 @@ void BillingManagerImpl::commit(int billId)
     if (!pBillTransaction) throw SCAGException("Cannot find transaction for billId=%d", billId);
 
 
-    //TODO: send commit
-    DeliverySmsResult op;
+    if (pBillTransaction->status == TRANSACTION_VALID)
+    {
+        DeliverySmsResult op;
 
-    op.setDialogId(billId);
-    op.setResultValue(0);
+    
+        op.setDialogId(billId);
+        op.setResultValue(0);
 
-    sendCommand(op);
+        sendCommand(op);
+    }
 
     EventMonitorArray[pBillTransaction->EventMonitorIndex].inUse = false;
     BillTransactionHash.Delete(billId);
