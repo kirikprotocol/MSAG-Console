@@ -107,7 +107,7 @@ div.secSmsc
 	padding-left: 19px;
 	margin-left: 0px;
 	margin-bottom: 4px;
-	background-image: url(/images/smsc_ico.gif);
+	background-image: url(content/images/smsc_ico.gif);
 	font-size: small;
 	font-weight: bold;
 }
@@ -140,3 +140,8 @@ div.query_result
 	color: #161E49;
 	font-weight: bold;
 }
+
+#dd {
+   overflow: auto;
+   height: 67px;
+   border: 1px solid #777; }
