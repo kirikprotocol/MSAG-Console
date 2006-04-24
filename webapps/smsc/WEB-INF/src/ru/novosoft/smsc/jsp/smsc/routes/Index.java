@@ -272,8 +272,8 @@ public class Index extends IndexBean {
                     String[] sourceSubjects = new String[subjectsByMask.size()];
                     String[] destSubjects = new String[subjectsByMask.size()];
                     for (int i = 0; i < subjectsByMask.size(); i++) {
-                        sourceSubjects[i] = (String) subjectsByMask.get(i).getValue("Name");
-                        destSubjects[i] = (String) subjectsByMask.get(i).getValue("Name");
+                        sourceSubjects[i] = "+" + (String) subjectsByMask.get(i).getValue("Name");
+                        destSubjects[i] = "+" + (String) subjectsByMask.get(i).getValue("Name");
                     }
                     routesFilter.setSourceSubjectNames(sourceSubjects);
                     routesFilter.setDestinationSubjectNames(destSubjects);
