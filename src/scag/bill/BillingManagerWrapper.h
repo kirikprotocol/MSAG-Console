@@ -32,7 +32,7 @@ protected:
     };
     ~BillingManagerWrapper()
     {
-        if (socket) delete socket;
+        //if (socket) delete socket;
         if (pipe) delete pipe;
     }
     virtual void InitConnection(std::string& host, int port)
