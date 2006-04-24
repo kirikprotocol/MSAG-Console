@@ -32,7 +32,7 @@ public class ProfilesBean extends SmscBean {
     protected boolean divertActiveBarred = false;
     protected boolean divertActiveCapacity = false;
     protected boolean divertModifiable = false;
-    
+
     protected boolean udhConcat = true;
     protected boolean translit = true;
 
@@ -50,14 +50,16 @@ public class ProfilesBean extends SmscBean {
         try {
             registeredLocales = smsc.getRegisteredLocales();
             //todo profiler-default properties
-            codepage = Profile.convertCodepageStringToByte(smsc.getDefaultProfilePropString("DataCoding"));
-            ussd7bit = smsc.getDefaultProfilePropBoolean("UssdIn7Bit");
-            report = Profile.convertReportOptionsStringToByte(smsc.getDefaultProfilePropString("Report"));
-            aliasHide = (smsc.getDefaultProfilePropBoolean("Hide")? Profile.ALIAS_HIDE_true : Profile.ALIAS_HIDE_false);
-            aliasModifiable = smsc.getDefaultProfilePropBoolean("HideModifiable");
-            divertModifiable = smsc.getDefaultProfilePropBoolean("DivertModifiable");
-            udhConcat = smsc.getDefaultProfilePropBoolean("UdhConcat");
-            locale = smsc.getDefaultProfilePropString("Locale");
+            if (mask.equals("")) {
+                codepage = Profile.convertCodepageStringToByte(smsc.getDefaultProfilePropString("DataCoding"));
+                ussd7bit = smsc.getDefaultProfilePropBoolean("UssdIn7Bit");
+                report = Profile.convertReportOptionsStringToByte(smsc.getDefaultProfilePropString("Report"));
+                aliasHide = (smsc.getDefaultProfilePropBoolean("Hide") ? Profile.ALIAS_HIDE_true : Profile.ALIAS_HIDE_false);
+                aliasModifiable = smsc.getDefaultProfilePropBoolean("HideModifiable");
+                divertModifiable = smsc.getDefaultProfilePropBoolean("DivertModifiable");
+                udhConcat = smsc.getDefaultProfilePropBoolean("UdhConcat");
+                locale = smsc.getDefaultProfilePropString("Locale");
+            }
 
 //            if (!isTranslit) translit = ctx.getSmsc().getDefaultProfilePropBoolean("Translit");
 //            if (!isInputAccessMask) inputAccessMask = ctx.getSmsc().getDefaultProfilePropInt("InputAccessMask");
