@@ -244,8 +244,8 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
   key.abonentAddr=sms->getDestinationAddress();
   int umr = sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
   int ussd_op = sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
-    sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
-  key.USR = src->getUSR(key.abonentAddr, umr);
+		sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
+  key.USR = (ussd_op < 0) ? umr : src->getUSR(key.abonentAddr, umr);
 
   scag::sessions::SessionPtr session=scag::sessions::SessionManager::Instance().getSession(key);
   if(!session.Get())
