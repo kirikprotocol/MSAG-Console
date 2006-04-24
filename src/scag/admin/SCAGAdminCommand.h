@@ -172,6 +172,29 @@ public:
     virtual Response * CreateResponse(scag::Scag * SmscApp);
 };
 
+class CommandReloadHttpTraceRoutes : public AdminCommand
+{
+public:
+    CommandReloadHttpTraceRoutes(const xercesc::DOMDocument * const doc) :
+        AdminCommand((Command::Id)CommandIds::reloadHttpTraceRoutes, doc)
+    {
+    }
+    virtual Response * CreateResponse(scag::Scag * SmscApp);
+};
+
+class CommandTraceHttpRoute : public AdminCommand
+{
+    std::string addr, site, path;
+    uint32_t port;
+public:
+    CommandTraceHttpRoute(const xercesc::DOMDocument * const doc) :
+        AdminCommand((Command::Id)CommandIds::traceHttpRoute, doc)
+    {
+    }
+    virtual Response * CreateResponse(scag::Scag * SmscApp);
+    virtual void init();
+};
+
 }
 }
 

@@ -32,7 +32,9 @@ namespace CommandIds {
     reloadOperators,
     reloadServices,
     reloadTariffMatrix,
-    reloadHttpRoutes
+    reloadHttpRoutes,
+    reloadHttpTraceRoutes,
+    traceHttpRoute
   };
 }
 

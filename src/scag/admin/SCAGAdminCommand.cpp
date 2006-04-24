@@ -29,7 +29,7 @@
 
 #include "scag/bill/BillingManager.h"
 #include "scag/transport/http/HttpProcessor.h"
-
+#include "scag/transport/http/HttpRouter.h"
 
 #define CATCH_ADMINEXC(msg_)                                    \
       }catch(AdminException& e){                                \
@@ -577,6 +577,80 @@ Response * CommandReloadHttpRoutes::CreateResponse(scag::Scag * ScagApp)
 
     smsc_log_info(logger, "CommandReloadHttpRoutes processed ok.");
     return new Response(Response::Ok, "CommandReloadHttpRoutes processed ok.");
+}
+
+Response * CommandReloadHttpTraceRoutes::CreateResponse(scag::Scag * ScagApp)
+{
+    smsc_log_info(logger, "CommandReloadHttpTraceRoutes is processing...");
+
+//    if(!ScagApp) throw Exception("Scag undefined");
+
+    try {
+        scag::transport::http::HttpTraceRouter::Instance().ReloadRoutes();
+    } catch(Exception& e) {                                     
+        char msg[1024];                                         
+        sprintf(msg, "Failed to reload HttpTraceRoutes. Details: %s", e.what());
+        smsc_log_error(logger, msg);
+        return new Response(Response::Error, msg);
+    } catch (...) {
+        smsc_log_warn(logger, "Failed to reload HttpTraceRoutes. Unknown exception");        
+        throw AdminException("Failed to reload HttpTraceRoutes. Unknown exception");
+    }
+
+    smsc_log_info(logger, "CommandReloadHttpTraceRoutes processed ok.");
+    return new Response(Response::Ok, "CommandReloadHttpTraceRoutes processed ok.");
+}
+
+void CommandTraceHttpRoute::init()
+{
+    smsc_log_info(logger, "CommandTraceHttpRoute got parameters:");
+
+    addr = "";
+    site = "";
+    path = "";
+    port = 0;
+
+    BEGIN_SCAN_PARAMS
+    GETSTRPARAM_(addr,    "abonent")
+    GETSTRPARAM_(site,    "site")
+    GETSTRPARAM_(path,    "path")
+    GETINTPARAM(port,    "port")
+    END_SCAN_PARAMS
+
+    std::string errorStr;
+
+    if (addr == "") errorStr = "Failed to read parameter 'abonent' of CommandTraceHttpRoute";
+    if (site == "") errorStr = "Failed to read parameter 'site' of CommandTraceHttpRoute";
+
+    if (errorStr.size() > 0) 
+    {
+        smsc_log_warn(logger, errorStr.c_str());
+        throw AdminException(errorStr.c_str());
+    }
+}
+
+Response * CommandTraceHttpRoute::CreateResponse(scag::Scag * ScagApp)
+{
+    smsc_log_info(logger, "CommandTraceHttpRoute is processing...");
+
+    std::string result;
+
+    try {
+        if(port == 0)
+            port = 80;
+        result = scag::transport::http::HttpTraceRouter::Instance().getTraceRoute(addr, site, path, port);
+    } catch(Exception& e) {                                     
+        char msg[1024];                                         
+        sprintf(msg, "Trace Http route failed. Details: %s", e.what());
+        smsc_log_error(logger, msg);
+        return new Response(Response::Error, msg);
+    } catch (...) {
+        smsc_log_warn(logger, "Failed to trace HttpRoute. Unknown exception");        
+        throw AdminException("Failed to trace HttpRoute. Unknown exception");
+    }
+
+    smsc_log_info(logger, "CommandTraceHttpRoute processed ok.");
+    return new Response(Response::Ok, result.c_str());
 }
 
 }
