@@ -421,6 +421,7 @@ public:
     fd=open(fn,O_CREAT|O_WRONLY|O_APPEND|O_LARGEFILE,0644);
     if(fd==-1)throw FileException(FileException::errOpenFailed,fn);
     if(eventHandler)eventHandler->onOpen(FileEventHandler::openAppend,fn);
+    SeekEnd(0);
   }
 
   void SetUnbuffered()

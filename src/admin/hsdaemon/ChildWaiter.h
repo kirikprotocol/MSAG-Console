@@ -57,6 +57,10 @@ public:
         svc=DaemonCommandDispatcher::services[serviceId];
       }
       pid = svc->start();
+      if(pid==0)
+      {
+        throw Exception("Service::start('%s')returned 0",serviceId);
+      }
     } catch (AdminException& e) {
       smsc_log_error(logger, "Couldn't start service \"%s\", nested: %s", serviceId, e.what());
       return -1;
@@ -78,6 +82,8 @@ public:
         switch (errno)
         {
         case ECHILD:
+          chldpid=pid;
+          __trace2__("ChildShutdownWaiter: process with pid=%d already finished",pid);
           break;
         case EINTR:
           smsc_log_debug(logger, "interrupted");
@@ -90,7 +96,7 @@ public:
           break;
         }
       }
-      else if (chldpid > 0)
+      if (chldpid > 0)
       {
 #ifdef SMSC_DEBUG
         __trace2__("CHILD %u is finished", chldpid);

@@ -3628,7 +3628,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
           time_t rt;
           if(t.command->get_resp()->get_delay()!=-1)
           {
-            rt=t.command->get_resp()->get_delay();
+            rt=time(NULL)+t.command->get_resp()->get_delay();
           }else
           {
             rt=rescheduleSms(sms);
