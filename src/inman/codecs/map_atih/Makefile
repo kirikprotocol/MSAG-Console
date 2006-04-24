@@ -2,8 +2,8 @@
 # $Id$
 #
 
-CFLAGS := -I. -I../codec_inc/ros -I../codec_inc/map -I../../asn1rt -DASN1_XER_NOT_USED $(CFLAGS)
-CXXFLAGS := -I. -I../codec_inc/ros -I../codec_inc/map -I../../asn1rt -DASN1_XER_NOT_USED $(CXXFLAGS)
+CFLAGS := -I. -I../../codec_inc/ros -I../../codec_inc/map -I../../asn1rt -DASN1_XER_NOT_USED $(CFLAGS)
+CXXFLAGS := -I. -I../../codec_inc/ros -I../../codec_inc/map -I../../asn1rt -DASN1_XER_NOT_USED $(CXXFLAGS)
 PACKAGE := inman.codecs.map_atih
 
 ifndef SMSC_SRCDIR
