@@ -344,7 +344,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
     for ( int i=0; i<pdu->signalInfoLen; ++i){
       k+=sprintf(text+k,"%02x ",(unsigned)pdu->signalInfo[i]);
     }
-    __map_trace2__("mkDeliverPDU: PDU len=%d, PDU: %s",pdu->signalInfoLen,text);
+    __map_trace2__("mkDeliverPDU: esm=0x%x PDU len=%d, PDU: %s",esm,pdu->signalInfoLen,text);
   }
   return pdu;
 #else
