@@ -577,6 +577,9 @@ void Billing::onConnectSMS(ConnectSMSArg* arg)
 void Billing::onContinueSMS(void)
 {
     MutexGuard grd(bilMutex);
+    //Update abonents cache
+    if (abBillType != smsc::inman::cache::btPrepaid)
+        _cfg.abCache->setAbonentInfo(abNumber, abBillType = smsc::inman::cache::btPrepaid);
     DoCharge(0);
     return; //grd off
 }
@@ -594,7 +597,8 @@ void Billing::onReleaseSMS(ReleaseSMSArg* arg)
         if ((*it) == arg->rPCause) {
             postpaidBill = true;
             //Update abonents cache
-            _cfg.abCache->setAbonentInfo(abNumber, smsc::inman::cache::btPostpaid);
+            if (abBillType != smsc::inman::cache::btPostpaid)
+                _cfg.abCache->setAbonentInfo(abNumber, abBillType = smsc::inman::cache::btPostpaid);
             break;
         }
     }
