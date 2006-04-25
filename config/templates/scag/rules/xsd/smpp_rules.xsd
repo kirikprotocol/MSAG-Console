@@ -18,9 +18,31 @@
             </restriction>
         </simpleType>
         
+	<simpleType name="Const">
+	    <restriction base="scag:Const">
+	        <enumeration value="@TRUE" />
+		<enumeration value="@FALSE" />
+		<enumeration value="@TT_USSD" />
+		<enumeration value="@TT_SMS" />
+		<enumeration value="@TT_MMS" />
+		<enumeration value="@TT_WAP" />
+		<enumeration value="@TT_HTTP" />
+	    </restriction>
+	</simpleType>
+	
+	
         <simpleType name="Command">
             <restriction base="scag:Command">
                 <enumeration value="#svc_type"/>
+		<enumeration value="#ussd_dialog" />
+		<enumeration value="#charging" />
+	        <enumeration value="#message_transport_type" />
+	        <enumeration value="#expected_message_transport_type"/>
+	    
+	        <enumeration value="#message_content_type" />
+		<enumeration value="#expected_message_content_type" />
+		    		
+		
                 <enumeration value="#OA"/>
                 <enumeration value="#DA"/>
 

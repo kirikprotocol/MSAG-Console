@@ -42,7 +42,7 @@
     </simpleType>
     <simpleType name="Const">
         <restriction base="string">
-            <pattern value="@\p{L}+\w*"/>
+            <pattern value="@\p{L}+[\w_]*"/>
         </restriction>
     </simpleType>
 
