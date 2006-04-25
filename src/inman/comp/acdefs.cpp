@@ -31,7 +31,7 @@ static APP_CONTEXT_T const  _OIDS[] = {
 
 const APP_CONTEXT_T * ACOID::OIDbyIdx(DefinedOIDidx ac_idx)
 {
-    return (ac_idx && (ac_idx <= MAX_AC_IDX)) ? &_OIDS[ac_idx] : 0;
+    return (ac_idx && (ac_idx < MAX_AC_IDX)) ? &_OIDS[ac_idx] : 0;
 }
 
 bool ACOID::equal(const APP_CONTEXT_T* ac1, const APP_CONTEXT_T* ac2)
