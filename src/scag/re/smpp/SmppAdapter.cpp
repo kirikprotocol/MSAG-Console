@@ -49,13 +49,13 @@ AccessType SmppCommandAdapter::CheckAccess(int handlerType,const std::string& na
         return atRead;
     case EH_DELIVER_SM_RESP:
         if (name =="status") return atReadWrite;
-        if (name =="ussd_dialog") atRead;
+        if (name =="ussd_dialog") return atRead;
 
         return atNoAccess;
     case EH_SUBMIT_SM_RESP:
         if (name == "status") return atReadWrite;
         if (name == "message_id") return atRead;
-        if (name == "ussd_dialog") atRead;
+        if (name == "ussd_dialog") return atRead;
         return atNoAccess;
     }
 
@@ -947,6 +947,9 @@ AdapterProperty * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::str
     case SMS_SVC_TYPE:
         property = new AdapterProperty(name, this, ConvertStrToWStr(data.eServiceType));
         break;
+    case USSD_DIALOG:
+        property = new AdapterProperty(name,this,data.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP));
+        break;
     }
 
     int tagType = (FieldId >> 8);
@@ -1006,6 +1009,9 @@ AdapterProperty * SmppCommandAdapter::getDeliverProperty(SMS& data,const std::st
         break;
     case SMS_SVC_TYPE:
         property = new AdapterProperty(name, this, ConvertStrToWStr(data.eServiceType));
+        break;
+    case USSD_DIALOG:
+        property = new AdapterProperty(name,this,data.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP));
         break;
     }
     
