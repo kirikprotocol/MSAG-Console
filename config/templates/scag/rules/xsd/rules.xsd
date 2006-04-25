@@ -70,6 +70,16 @@
         <attribute name="op" type="scag:Operation" use="optional"/>
         <attribute name="value" type="scag:Value" use="optional"/>
     </attributeGroup>
+
+    <simpleType name="LogLevel">
+        <restriction base="string">
+            <enumeration value="debug"/>
+            <enumeration value="info"/>
+            <enumeration value="warn"/>
+            <enumeration value="error"/>
+        </restriction>
+    </simpleType>
+
     
     <!-- General actions elements group definition  -->
     <group name="Actions">
@@ -78,6 +88,14 @@
 	    <group ref="bill:Actions" />
 	    <group ref="operation:Actions" />
 	    <group ref="strings:Actions" />
+
+            <element name="log">
+                <complexType>
+                    <attribute name="level" type="scag:LogLevel" use="required"/>
+                    <attribute name="category" type="scag:Value" use="required"/>
+                    <attribute name="message" type="scag:Value" use="required"/>
+                </complexType>    
+            </element>
             
             <element name="set">
                 <complexType>
