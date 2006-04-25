@@ -234,12 +234,12 @@ Hash<int> SmppCommandAdapter::InitSubmitFieldNames()
 
     hs["ussd_dialog"]                   = USSD_DIALOG;
 
-    hs["whoisd-charging"]                          = OPTIONAL_CHARGING;
-    hs["whoisd-message-transport-type"]            = OPTIONAL_MESSAGE_TRANSPORT_TYPE;
-    hs["whoisd-expected-message-transport-type"]   = OPTIONAL_EXPECTED_MESSAGE_TRANSPORT_TYPE;
+    hs["whoisd_charging"]                          = OPTIONAL_CHARGING;
+    hs["whoisd_message_transport_type"]            = OPTIONAL_MESSAGE_TRANSPORT_TYPE;
+    hs["whoisd_expected_message_transport_type"]   = OPTIONAL_EXPECTED_MESSAGE_TRANSPORT_TYPE;
 
-    hs["whoisd-message-content-type"]              = OPTIONAL_MESSAGE_CONTENT_TYPE;
-    hs["whoisd-expected-message-content-type"]     = OPTIONAL_EXPECTED_MESSAGE_CONTENT_TYPE;
+    hs["whoisd_message_content_type"]              = OPTIONAL_MESSAGE_CONTENT_TYPE;
+    hs["whoisd_expected_message_content_type"]     = OPTIONAL_EXPECTED_MESSAGE_CONTENT_TYPE;
 
 
 /*
