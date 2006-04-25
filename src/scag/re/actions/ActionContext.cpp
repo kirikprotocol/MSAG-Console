@@ -139,9 +139,14 @@ TariffRec * ActionContext::getTariffRec(std::string& category, std::string& medy
 
 void ActionContext::fillChargeOperation(smsc::inman::interaction::ChargeSms& op, TariffRec& tariffRec)
 {
-    
     command.fillChargeOperation(op, tariffRec);
 }
+
+void ActionContext::fillRespOperation(smsc::inman::interaction::DeliverySmsResult& op, TariffRec& tariffRec)
+{
+    command.fillRespOperation(op, tariffRec);
+}
+
 
 }}}
 

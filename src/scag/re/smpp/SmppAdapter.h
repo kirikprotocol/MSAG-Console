@@ -158,6 +158,7 @@ namespace scag { namespace re { namespace smpp
         virtual void changed(AdapterProperty& property);
         virtual Property* getProperty(const std::string& name);
         virtual void fillChargeOperation(smsc::inman::interaction::ChargeSms& op, TariffRec& tariffRec);
+        virtual void fillRespOperation(smsc::inman::interaction::DeliverySmsResult& op, TariffRec& tariffRec);
 
 
         virtual ~SmppCommandAdapter();

@@ -94,7 +94,7 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, 
 
     ev.Header.sCommandStatus = commandProperty.status;
     ev.iOperatorId = commandProperty.operatorId;
-
+    
     if ((propertyObject.HandlerId == EH_SUBMIT_SM)||(propertyObject.HandlerId == EH_DELIVER_SM))
     {
         int size = MAX_TEXT_MESSAGE_LENGTH;
@@ -104,7 +104,14 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, 
     }
     sprintf((char *)ev.pSessionKey,"%s/%ld%d", sessionPrimaryKey.abonentAddr.toString().c_str(), sessionPrimaryKey.BornMicrotime.tv_sec,sessionPrimaryKey.BornMicrotime.tv_usec / 1000);
 
+    if ((propertyObject.HandlerId == EH_DELIVER_SM)||(propertyObject.HandlerId == EH_SUBMIT_SM_RESP))
+        ev.cDirection = 'i';
+    else
+        ev.cDirection = 'o';
+
+
     Statistics::Instance().registerSaccEvent(ev);
+
 }
 
 }}

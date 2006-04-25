@@ -162,5 +162,9 @@ void HttpCommandAdapter::fillChargeOperation(smsc::inman::interaction::ChargeSms
 {
 }
 
+void HttpCommandAdapter::fillRespOperation(smsc::inman::interaction::DeliverySmsResult& op, TariffRec& tariffRec)
+{
+}
+
 
 }}}

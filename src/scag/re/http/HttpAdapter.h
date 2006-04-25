@@ -34,6 +34,8 @@ namespace scag { namespace re { namespace http {
         virtual ~HttpCommandAdapter();
 
         virtual void fillChargeOperation(smsc::inman::interaction::ChargeSms& op, TariffRec& tariffRec);
+        virtual void fillRespOperation(smsc::inman::interaction::DeliverySmsResult& op, TariffRec& tariffRec);
+
 
         static AccessType CheckAccess(int handlerType, const std::string& name);
     };

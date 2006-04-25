@@ -30,6 +30,7 @@ namespace scag { namespace re { namespace actions
     {
     public:
         virtual void fillChargeOperation(smsc::inman::interaction::ChargeSms& op, TariffRec& tariffRec) = 0;
+        virtual void fillRespOperation(smsc::inman::interaction::DeliverySmsResult& op, TariffRec& tariffRec) = 0;
     };
 
 
@@ -105,6 +106,8 @@ namespace scag { namespace re { namespace actions
         void makeBillEvent(int billCommand, TariffRec& tariffRec, SACC_BILLING_INFO_EVENT_t& ev);
         CommandProperty& getCommandProperty() {return commandProperty;}
         void fillChargeOperation(smsc::inman::interaction::ChargeSms& op, TariffRec& tariffRec);
+        void fillRespOperation(smsc::inman::interaction::DeliverySmsResult& op, TariffRec& tariffRec);
+
         TariffRec * getTariffRec(std::string& category, std::string& mediaType);
     };
 

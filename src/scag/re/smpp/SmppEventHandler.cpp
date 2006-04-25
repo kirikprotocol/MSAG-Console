@@ -125,7 +125,7 @@ void SmppEventHandler::EndOperation(Session& session, SmppCommand& command, Rule
         if (currentOperation->getStatus() == OPERATION_COMPLETED) session.closeCurrentOperation();
 
         //TODO: узнать заказал ли сервис отчёт о доставке
-        if (!smppDiscriptor.m_isTransact) 
+       /* if (!smppDiscriptor.m_isTransact) 
         {
             time_t now;
             time(&now);
@@ -135,7 +135,7 @@ void SmppEventHandler::EndOperation(Session& session, SmppCommand& command, Rule
             pendingOperation.validityTime = now + SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
 
             session.addPendingOperation(pendingOperation);
-        }
+        }                    */
         break;
 
 /*
@@ -175,9 +175,9 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
 
     Address& abonentAddr = CommandBrige::getAbonentAddr(*smppcommand);
    
-/*    int operatorId = 105;
-    int providerId = 1;*/
-    
+    int operatorId = 105;
+    int providerId = 1;
+/*    
     int operatorId = istr.GetOperatorID(abonentAddr);
     if (operatorId == 0) 
         throw SCAGException("SmppEventHandler: Cannot find OperatorID for %s abonent", abonentAddr.toString().c_str());
@@ -185,7 +185,7 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     int providerId = istr.GetProviderID(command.getServiceId());
     if (providerId == 0) 
         throw SCAGException("SmppEventHandler: Cannot find ProviderID for ServiceID=%d", command.getServiceId());
-     
+  */   
 
     CommandProperty commandProperty(command, (*smppcommand)->status, abonentAddr, providerId, operatorId);
     RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), CommandBrige::getMessageBody(*smppcommand));

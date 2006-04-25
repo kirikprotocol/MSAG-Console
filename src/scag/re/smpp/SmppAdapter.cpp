@@ -1237,5 +1237,15 @@ void SmppCommandAdapter::fillChargeOperation(smsc::inman::interaction::ChargeSms
     }
 }
 
+void SmppCommandAdapter::fillRespOperation(smsc::inman::interaction::DeliverySmsResult& op, TariffRec& tariffRec)
+{
+ //   op.setDeliveryTime();
+ //   op.setDestIMSI();
+ //   op.setDestMSC();
+ //   op.setDestSMEid();
+ //   op.setDivertedAdr();
+ //   op.setResultValue();
+}
+
 
 }}}

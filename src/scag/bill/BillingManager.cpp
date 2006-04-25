@@ -333,10 +333,8 @@ void BillingManagerImpl::rollback(int billId)
     }
     
 
-    smsc_log_debug(logger, "BillingManager rollback 4");
     EventMonitorArray[pBillTransaction->EventMonitorIndex].inUse = false;
     BillTransactionHash.Delete(billId);
-    smsc_log_debug(logger, "BillingManager rollback 5");
 
 }
 /*

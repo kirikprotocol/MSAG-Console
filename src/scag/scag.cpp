@@ -478,15 +478,16 @@ void Scag::init()
   */
   //*****************************************************
 
-  /* 
+   
   ////////////////////////// FOR TEST
 
   scag::sessions::CSessionKey key;
 
-  SMS sms1, sms2;
+  SMS sms1, sms2, sms3;
   //smsc::smpp::UssdServiceOpValue::PSSR_INDICATION == sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)
   sms1.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, smsc::smpp::UssdServiceOpValue::PSSR_INDICATION);
   sms2.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, 100);
+  
 
   char buff[128];
   scag::transport::smpp::SmppCommand commandDeliver1 = scag::transport::smpp::SmppCommand::makeDeliverySm(sms1,1);
@@ -495,6 +496,12 @@ void Scag::init()
   scag::transport::smpp::SmppCommand commandSubmitResp = scag::transport::smpp::SmppCommand::makeSubmitSmResp(buff,1,1, true);
 
   scag::transport::smpp::SmppCommand commandDeliver2 = scag::transport::smpp::SmppCommand::makeDeliverySm(sms2,1);
+
+
+  scag::transport::smpp::SmppCommand commandPureSubmit = scag::transport::smpp::SmppCommand::makeSubmitSm(sms3,1);
+
+  commandPureSubmit.setServiceId(1);
+
 
   commandDeliver1.setServiceId(1);
   commandDeliver2.setServiceId(1);
@@ -537,6 +544,14 @@ void Scag::init()
   scag::re::RuleEngine::Instance().process(commandSubmitResp, *session);
   sm.releaseSession(sessionPtr);
 
+  //PURE SUBMIT
+  sessionPtr = sm.getSession(key);
+  session = sessionPtr.Get();
+  scag::re::RuleEngine::Instance().process(commandPureSubmit, *session);
+  sm.releaseSession(sessionPtr);
+  //PURE SUBMIT
+
+
   sessionPtr = sm.getSession(key);
   session = sessionPtr.Get();
   scag::re::RuleEngine::Instance().process(commandDeliver2, *session);
@@ -544,7 +559,7 @@ void Scag::init()
 
   ////////////////////////// FOR TEST 
                                    
-  */     
+       
                                     
     //********************************************************
     //************** HttpManager initialization **************
