@@ -22,11 +22,11 @@
 	    <restriction base="scag:Const">
 	        <enumeration value="@TRUE" />
 		<enumeration value="@FALSE" />
-		<enumeration value="@TT_USSD" />
-		<enumeration value="@TT_SMS" />
-		<enumeration value="@TT_MMS" />
-		<enumeration value="@TT_WAP" />
-		<enumeration value="@TT_HTTP" />
+		<enumeration value="@USSD" />
+		<enumeration value="@SMS" />
+		<enumeration value="@MMS" />
+		<enumeration value="@WAP" />
+		<enumeration value="@HTTP" />
 	    </restriction>
 	</simpleType>
 	
@@ -36,11 +36,11 @@
                 <enumeration value="#svc_type"/>
 		<enumeration value="#ussd_dialog" />
 		<enumeration value="#charging" />
-	        <enumeration value="#message_transport_type" />
-	        <enumeration value="#expected_message_transport_type"/>
+	        <enumeration value="#whoisd-message-transport-type" />
+	        <enumeration value="#whoisd-expected-message-transport-type"/>
 	    
-	        <enumeration value="#message_content_type" />
-		<enumeration value="#expected_message_content_type" />
+	        <enumeration value="#whoisd-message-content-type" />
+		<enumeration value="#whoisd-expected-message-content-type" />
 		    		
 		
                 <enumeration value="#OA"/>

@@ -27,7 +27,7 @@
     </simpleType>
     <simpleType name="Command">
         <restriction base="string">
-            <pattern value="#\p{L}+[\w_]*"/>
+            <pattern value="#\p{L}+[\w_\-]*"/>
         </restriction>
     </simpleType>
     <simpleType name="Session">

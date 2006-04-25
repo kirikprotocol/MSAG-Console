@@ -445,21 +445,29 @@ void RuleEngineImpl::ProcessInit(const std::string& dir)
     ConstantsHash["FALSE"] = property;
 
     property.setInt(Const::USSD);
-    ConstantsHash["TT_USSD"] = property;
+    ConstantsHash["USSD"] = property;
 
     property.setInt(Const::SMS);
-    ConstantsHash["TT_SMS"] = property;
+    ConstantsHash["SMS"] = property;
 
     property.setInt(Const::MMS);
-    ConstantsHash["TT_MMS"] = property;
+    ConstantsHash["MMS"] = property;
 
     property.setInt(Const::WAP);
-    ConstantsHash["TT_WAP"] = property;
+    ConstantsHash["WAP"] = property;
 
     property.setInt(Const::HTTP);
-    ConstantsHash["TT_HTTP"] = property;
+    ConstantsHash["HTTP"] = property;
 
-
+/*
+    "TRUE"
+    "FALSE"
+    "TT_USSD"
+    "TT_SMS"
+    "TT_MMS"
+    "TT_WAP"
+    "TT_HTTP"
+*/
     rules = new Rules();
 
     try
