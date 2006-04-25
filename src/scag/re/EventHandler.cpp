@@ -100,18 +100,19 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, 
         int size = MAX_TEXT_MESSAGE_LENGTH;
         if (size > messageBody.size()) size = messageBody.size();
 
-        memcpy(ev.pMessageText, messageBody.data(), size); 
+        if (size > 0) memcpy(ev.pMessageText, messageBody.data(), size); 
     }
+
     sprintf((char *)ev.pSessionKey,"%s/%ld%d", sessionPrimaryKey.abonentAddr.toString().c_str(), sessionPrimaryKey.BornMicrotime.tv_sec,sessionPrimaryKey.BornMicrotime.tv_usec / 1000);
+    //smsc_log_debug(logger,"SESSION KEY FOR TRANSPORT EVENT %s", sessionPrimaryKey.abonentAddr.toString().c_str());
+    //smsc_log_debug(logger,"SESSION KEY FOR TRANSPORT EVENT %s/%ld%d", sessionPrimaryKey.abonentAddr.toString().c_str(), sessionPrimaryKey.BornMicrotime.tv_sec,sessionPrimaryKey.BornMicrotime.tv_usec / 1000);
 
     if ((propertyObject.HandlerId == EH_DELIVER_SM)||(propertyObject.HandlerId == EH_SUBMIT_SM_RESP))
         ev.cDirection = 'i';
     else
         ev.cDirection = 'o';
 
-
     Statistics::Instance().registerSaccEvent(ev);
-
 }
 
 }}

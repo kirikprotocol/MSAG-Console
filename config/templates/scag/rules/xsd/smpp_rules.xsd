@@ -35,7 +35,7 @@
             <restriction base="scag:Command">
                 <enumeration value="#svc_type"/>
 		<enumeration value="#ussd_dialog" />
-		<enumeration value="#charging" />
+		<enumeration value="#whoisd_charging" />
 	        <enumeration value="#whoisd_message_transport_type" />
 	        <enumeration value="#whoisd_expected_message_transport_type"/>
 	    

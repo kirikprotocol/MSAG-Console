@@ -223,7 +223,7 @@ bool ActionIf::run(ActionContext& context)
         {
             Property * valproperty = context.getProperty(latinStr);
             if (valproperty) result = property->Compare(*valproperty,pt);
-            else smsc_log_warn(logger,"Action 'if': Invalid property " + FormatWStr(singleparam.wstrOperand2));
+            else smsc_log_warn(logger,"Action 'if': Invalid property '%s'", latinStr.c_str());
         } 
     
         isValidCondition = CompareResultToBool(singleparam.Operation,result);
