@@ -19,7 +19,7 @@ extern "C" {
 typedef enum SubscriberIdentity_PR {
 	SubscriberIdentity_PR_NOTHING,	/* No components present */
 	SubscriberIdentity_PR_imsi,
-	SubscriberIdentity_PR_msisdn,
+	SubscriberIdentity_PR_msisdn
 } SubscriberIdentity_PR;
 
 /* SubscriberIdentity */
