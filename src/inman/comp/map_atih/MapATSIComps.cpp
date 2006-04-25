@@ -1,0 +1,156 @@
+static char const ident[] = "$Id$";
+#include <vector>
+#include <assert.h>
+
+#include "inman/codecs/map_atih/AnyTimeSubscriptionInterrogationArg.h"
+#include "inman/codecs/map_atih/AnyTimeSubscriptionInterrogationRes.h"
+#include "inman/comp/map_atih/MapATSIComps.hpp"
+#include "inman/comp/compsutl.hpp"
+#include "inman/common/util.hpp"
+
+using smsc::cvtutil::packNumString2BCD;
+using smsc::cvtutil::packMAPAddress2OCTS;
+using smsc::inman::common::format;
+using smsc::inman::comp::OCTET_STRING_2_Address;
+using smsc::inman::comp::smsc_log_component;
+
+
+#define OCTET_STRING_DECL(name, szo) unsigned char name##_buf[szo]; OCTET_STRING_t name
+#define ZERO_OCTET_STRING(name)	{ memset(&name, 0, sizeof(name)); name.buf = name##_buf; }
+
+#define Address2OCTET_STRING(octs, addr)	{ ZERO_OCTET_STRING(octs); \
+	octs.size = packMAPAddress2OCTS(addr, (TONNPI_ADDRESS_OCTS *)(octs.buf)); }
+
+namespace smsc {
+namespace inman {
+namespace comp {
+namespace atih {
+
+/* ************************************************************************** *
+ * class ATSIArg implementation:
+ * ************************************************************************** */
+//sets ISDN address of requesting point
+void ATSIArg::setSCFaddress(const std::string &addr) throw(CustomException)
+{
+    if (!scfAdr.fromText(addr.c_str()))
+        throw CustomException("inalid scfAdr", -1, addr.c_str());
+}
+
+//sets subscriber identity: IMSI or MSISDN addr
+void ATSIArg::setSubscriberId(const std::string &addr, bool imsi/* = true*/) throw(CustomException)
+{
+    if (!subscrAdr.fromText(addr.c_str()))
+        throw CustomException("inalid subscriberID", -1, addr.c_str());
+    if ((subscrImsi = imsi)) {
+        if (((subscrAdr.length + 1)/2) > CAP_MAX_IMSILength)
+            throw CustomException("IMSI length is too long", subscrAdr.length, NULL);
+    }
+}
+
+void ATSIArg::encode(vector<unsigned char>& buf) throw(CustomException)
+{
+    asn_enc_rval_t                          erc;
+    AnyTimeSubscriptionInterrogationArg_t   cmd;
+    RequestedCAMEL_SubscriptionInfo_t	    reqCSI = askCSI;
+    unsigned char                           imsi_buf[CAP_MAX_IMSILength];
+    unsigned char                           isdn_buf[sizeof(TONNPI_ADDRESS_OCTS)];
+    unsigned char                           isdn_buf2[sizeof(TONNPI_ADDRESS_OCTS)];
+
+    memset(&cmd, 0, sizeof(cmd)); //clear asn_ctx & optionals
+    cmd.subscriberIdentity.present = subscrImsi ? SubscriberIdentity_PR_imsi
+                                                : SubscriberIdentity_PR_msisdn;
+    if (subscrImsi) {   //TBCD string
+        memset(&imsi_buf, 0, sizeof(imsi_buf)); 
+        cmd.subscriberIdentity.choice.imsi.size = 
+            packNumString2BCD(imsi_buf, subscrAdr.getSignals(), subscrAdr.length);
+        cmd.subscriberIdentity.choice.imsi.buf = imsi_buf;
+    } else {            //ISDNAddress
+        cmd.subscriberIdentity.choice.msisdn.buf = isdn_buf;
+        cmd.subscriberIdentity.choice.msisdn.size =
+            packMAPAddress2OCTS(subscrAdr, (TONNPI_ADDRESS_OCTS *)(isdn_buf));
+    }
+    cmd.requestedSubscriptionInfo.requestedCAMEL_SubscriptionInfo = &reqCSI;
+
+    cmd.gsmSCF_Address.buf = isdn_buf2;
+    cmd.gsmSCF_Address.size = 
+        packMAPAddress2OCTS(scfAdr, (TONNPI_ADDRESS_OCTS *)(isdn_buf2));
+
+    smsc_log_component(compLogger, &asn_DEF_AnyTimeSubscriptionInterrogationArg, &cmd);
+    erc = der_encode(&asn_DEF_AnyTimeSubscriptionInterrogationArg, &cmd, print2vec, &buf);
+    ASNCODEC_LOG_ENC(erc, asn_DEF_AnyTimeSubscriptionInterrogationArg, "mapATIH");
+    return;
+}
+
+
+/* ************************************************************************** *
+ * class ATSIRes implementation:
+ * ************************************************************************** */
+static bool parse_O_CSI(CAMEL_SubscriptionInfo_t *cs, MAPSCFinfo *scf_inf) throw(CustomException)
+{
+    if (cs->o_CSI && cs->o_CSI->csiActive 
+        && cs->o_CSI->o_BcsmCamelTDPDataList.list.count) {
+
+        O_BcsmCamelTDPData_t *root_elem = cs->o_CSI->o_BcsmCamelTDPDataList.list.array[0];
+        scf_inf->serviceKey = root_elem->serviceKey;
+           
+        if (!OCTET_STRING_2_Address(&(root_elem->gsmSCF_Address), scf_inf->scfAddress))
+            throw CustomException("O_CSI: bad gsmSCF_Adr", -11, NULL);
+
+        for (int i = 1; i < cs->o_CSI->o_BcsmCamelTDPDataList.list.count; i++) {
+            O_BcsmCamelTDPData_t *elem = cs->o_CSI->o_BcsmCamelTDPDataList.list.array[i];
+            if ((root_elem->gsmSCF_Address.size != elem->gsmSCF_Address.size)
+                || memcmp(root_elem->gsmSCF_Address.buf,
+                          elem->gsmSCF_Address.buf, root_elem->gsmSCF_Address.size)) {
+                std::string msg;
+                format(msg, "element: %u, trigger: %u", i, elem->o_BcsmTriggerDetectionPoint);
+                throw CustomException("O_CSI: different gsmSCF_Adr", -12, msg.c_str());
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
+bool ATSIRes::getSCFinfo(enum RequestedCAMEL_SubscriptionInfo req_csi, MAPSCFinfo * scf_dat) const
+{
+    if (!(mask & (1 << req_csi)))
+        return false;
+
+    switch (req_csi) {
+    case RequestedCAMEL_SubscriptionInfo_o_CSI:
+        *scf_dat = o_csi;
+        return true;
+    default:;
+    }
+    return false;
+}
+
+void ATSIRes::decode(const vector<unsigned char>& buf) throw(CustomException)
+{
+    AnyTimeSubscriptionInterrogationRes *  dcmd = NULL;  /* decoded structure */
+    asn_dec_rval_t  drc;    /* Decoder return value  */
+
+    drc = ber_decode(0, &asn_DEF_AnyTimeSubscriptionInterrogationRes, (void **)&dcmd, &buf[0], buf.size());
+    ASNCODEC_LOG_DEC(drc, asn_DEF_AnyTimeSubscriptionInterrogationRes, "mapATIH");
+    smsc_log_component(compLogger, &asn_DEF_AnyTimeSubscriptionInterrogationRes, dcmd);
+
+    try {
+        if (!dcmd->camel_SubscriptionInfo)
+            throw CustomException("ATSIRes: CSI missing", -1, NULL);
+
+        if (parse_O_CSI(dcmd->camel_SubscriptionInfo, &o_csi))
+            mask |= (1 << RequestedCAMEL_SubscriptionInfo_o_CSI);
+        
+        asn_DEF_AnyTimeSubscriptionInterrogationRes.free_struct(&asn_DEF_AnyTimeSubscriptionInterrogationRes, dcmd, 0);
+    } catch (CustomException & exc) {
+        asn_DEF_AnyTimeSubscriptionInterrogationRes.free_struct(&asn_DEF_AnyTimeSubscriptionInterrogationRes, dcmd, 0);
+        throw;
+    }
+    return;
+}
+
+
+}//namespace atih
+}//namespace comp
+}//namespace inman
+}//namespace smsc
