@@ -19,6 +19,14 @@ class BillActionOpen : public Action
     Logger * logger;
     std::string m_category;
     std::string m_mediaType;
+
+    FieldType m_StatusFieldType;
+    FieldType m_MediaTypeFieldType;
+    FieldType m_CategoryFieldType;
+    FieldType m_MsgFieldType;
+
+    void SetBillingStatus(ActionContext& context, std::string& errorMsg, bool isOK);
+
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name, const SectionParams& params, const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);
