@@ -2,8 +2,11 @@
 <schema targetNamespace="http://www.sibinco.com/SCAG/BILL" 
     xmlns="http://www.w3.org/2001/XMLSchema"
     xmlns:bill="http://www.sibinco.com/SCAG/BILL"
+    xmlns:scag="http://www.sibinco.com/SCAG"
     elementFormDefault="qualified">
 
+    <import schemaLocation="rules.xsd" namespace="http://www.sibinco.com/SCAG"/>
+    
     <simpleType name="BillActions">
         <restriction base="string">
             <enumeration value="commit"/>
@@ -16,19 +19,18 @@
         <choice>
             <element name="open">
                 <complexType>
-                    <attribute name="category" type="string" use="required"/>
-                    <attribute name="content-type" type="string" use="required"/>
-		    <attribute name="status" type="string" use="required" />
-		    <attribute name="msg" type="string" use="optional" />
-		    
+                    <attribute name="category" type="scag:Value" use="required"/>
+                    <attribute name="content-type" type="scag:Value" use="required"/>
+		    <attribute name="status" type="scag:Var" use="required" />
+		    <attribute name="msg" type="scag:Var" use="optional" />
                </complexType>
 	    </element>
 	    
 	    <element name="close">
 		<complexType>
 		    <attribute name="action" type="bill:BillActions" use="required" />
-                    <attribute name="status" type="string" use="optional"/>
-                    <attribute name="msg" type="string" use="optional"/>
+                    <attribute name="status" type="scag:Var" use="optional"/>
+                    <attribute name="msg" type="scag:Var" use="optional"/>
 		</complexType>
 	    </element>
         </choice>    

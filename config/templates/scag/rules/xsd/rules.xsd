@@ -32,17 +32,17 @@
     </simpleType>
     <simpleType name="Session">
         <restriction base="string">
-            <pattern value="$\p{L}+\w*"/>
+            <pattern value="$\p{L}+[\w_\-]*"/>
         </restriction>
     </simpleType>
     <simpleType name="Local">
         <restriction base="string">
-            <pattern value="%\p{L}+\w*"/>
+            <pattern value="%\p{L}+[\w_\-]*"/>
         </restriction>
     </simpleType>
     <simpleType name="Const">
         <restriction base="string">
-            <pattern value="@\p{L}+[\w_]*"/>
+            <pattern value="@\p{L}+[\w_\-]*"/>
         </restriction>
     </simpleType>
 
