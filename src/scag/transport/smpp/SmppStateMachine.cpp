@@ -33,7 +33,7 @@ struct StateMachine::ResponseRegistry
       return key.uid<<9+key.seq;
     }
   };
-  
+
   buf::XHash<RegKey,RegValue,HashFunc> reg;
   sync::Mutex mtx;
 
@@ -150,7 +150,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
   }
   else // USSD Dialog
   {
-    if (umr < 0) 
+    if (umr < 0)
     {
         if (ussd_op == smsc::smpp::UssdServiceOpValue::USSR_REQUEST) { // New service USSD dialog
             // TODO: deny service initiated dialog !!!
@@ -206,7 +206,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
   if(!st.status)
   {
     smsc_log_info(log,"Submit: RuleEngine returned result=%d",st.result);
-    SubmitResp(cmd, st.temporal ? smsc::system::Status::RX_T_APPN : 
+    SubmitResp(cmd, st.temporal ? smsc::system::Status::RX_T_APPN :
                                   smsc::system::Status::RX_P_APPN);
     scag::sessions::SessionManager::Instance().releaseSession(session);
     return;
@@ -215,6 +215,10 @@ void StateMachine::processSubmit(SmppCommand& cmd)
   try{
     int newSeq=dst->getNextSeq();
     reg.Register(dst->getUid(),newSeq,cmd);
+    if(sms.hasBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS))
+    {
+      sms.getMessageBody().dropProperty(Tag::SMSC_UNKNOWN_OPTIONALS);
+    }
     dst->putCommand(cmd);
   } catch(std::exception& e) {
     smsc_log_info(log,"Submit:Failed to putCommand into %s:%s",dst->getSystemId(),e.what());
@@ -270,8 +274,8 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
   }
 
   SmppEntity* dst=orgCmd.getEntity();
-  try { 
-      dst->putCommand(cmd); 
+  try {
+      dst->putCommand(cmd);
   } catch(std::exception& e) {
     smsc_log_warn(log,"SubmitResp:Failed to put command into %s:%s",dst->getSystemId(),e.what());
   }
@@ -382,6 +386,10 @@ void StateMachine::processDelivery(SmppCommand& cmd)
   try{
     int newSeq=dst->getNextSeq();
     reg.Register(dst->getUid(),newSeq,cmd);
+    if(sms.hasBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS))
+    {
+      sms.getMessageBody().dropProperty(Tag::SMSC_UNKNOWN_OPTIONALS);
+    }
     dst->putCommand(cmd);
   } catch(std::exception& e) {
     smsc_log_info(log,"Delivery:Failed to putCommand into %s:%s",dst->getSystemId(),e.what());
