@@ -19,7 +19,7 @@ extern "C" {
 typedef enum Ext_BasicServiceCode_PR {
 	Ext_BasicServiceCode_PR_NOTHING,	/* No components present */
 	Ext_BasicServiceCode_PR_ext_BearerService,
-	Ext_BasicServiceCode_PR_ext_Teleservice,
+	Ext_BasicServiceCode_PR_ext_Teleservice
 } Ext_BasicServiceCode_PR;
 
 /* Ext-BasicServiceCode */
