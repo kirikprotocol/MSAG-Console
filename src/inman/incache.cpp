@@ -120,10 +120,10 @@ AbonentBillType AbonentCache::ramLookUp(AbonentId & ab_number)
         if (pabRec->ab_type != btUnknown) {
             if (time(NULL) < (pabRec->tm_queried + _cfg.interval))
                 return pabRec->ab_type;
+            pabRec->ab_type = btUnknown; //expired
+            smsc_log_debug(logger, "InCache: abonent %s info is expired",
+                           ab_number.getSignals());
         }
-        pabRec->ab_type = btUnknown; //expired
-        smsc_log_debug(logger, "InCache: abonent %s info is expired",
-                       ab_number.getSignals());
     }
     return btUnknown;
 }
