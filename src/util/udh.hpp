@@ -276,7 +276,7 @@ inline bool convertSarToUdh(SMS& sms)
   {
     if(off>255-5)
     {
-      trace("udh length>255");
+      __trace__("udh length>255");
       return false;
     }
     __trace2__("SAR2UDH: 8 bit mr=%d",sms.getIntProperty(Tag::SMPP_SAR_MSG_REF_NUM));
@@ -289,7 +289,7 @@ inline bool convertSarToUdh(SMS& sms)
   {
     if(off>255-6)
     {
-      trace("udh length>255");
+      __trace__("udh length>255");
       return false;
     }
     __trace2__("SAR2UDH: 16 bit mr=%d",sms.getIntProperty(Tag::SMPP_SAR_MSG_REF_NUM));
