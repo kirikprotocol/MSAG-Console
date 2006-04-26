@@ -870,14 +870,17 @@ AdapterProperty * SmppCommandAdapter::Get_Unknown_Property(SMS& data, const std:
     uint16_t valueLen;
     if (len < 5) return 0;
 
-    for (int i = 0; i< len - 4; i++) 
+    int i = 0;
+    while (i < (len - 4)) 
     {
         value = *((uint16_t *)(buff + i));
         valueLen = *((uint16_t *)(buff + i + 2));
 
+        if (valueLen <=0) return 0;
+
         if (value == FieldId) 
         {
-            if ((i + valueLen + 2) > (len-1)) return 0;
+            if ((i + valueLen + 2) > (len - 1)) return 0;
 
             if (valueLen == 1)
             {
@@ -890,8 +893,8 @@ AdapterProperty * SmppCommandAdapter::Get_Unknown_Property(SMS& data, const std:
             return new AdapterProperty(name, this, ConvertStrToWStr(str.c_str()));
         }
 
-        if ((i + valueLen + 3) > (len-1)) return 0;
-        i = i + valueLen + 2;
+        //if ((i + valueLen + 4 + 2) > (len-1)) return 0;
+        i = i + valueLen + 4;
 
     }
     return 0;
