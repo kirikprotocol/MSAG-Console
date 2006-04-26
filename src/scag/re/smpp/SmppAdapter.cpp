@@ -3,6 +3,7 @@
 #include "scag/re/CommandBrige.h"
 #include "util/recoder/recode_dll.h"
 
+
 namespace scag { namespace re { namespace smpp 
 {
 
@@ -869,30 +870,31 @@ AdapterProperty * SmppCommandAdapter::Get_Unknown_Property(SMS& data, const std:
     uint16_t valueLen;
     if (len < 5) return 0;
 
-    for (int i = 0; i< len - 2; i++) 
+    for (int i = 0; i< len - 3; i++) 
     {
-        value = *(buff + i);
-        valueLen = *(buff + i + 2);
+        value = *((uint16_t *)(buff + i));
+        valueLen = *((uint16_t *)(buff + i + 2));
 
         if (value == FieldId) 
         {
             if ((i + valueLen + 2) > (len-1)) return 0;
 
-            if (valueLen == 1) 
-                return new AdapterProperty(name, this, (*(buff + i + 2 + 1) > 0));
+            if (valueLen == 1)
+            {
+                char temp = buff[i + 2 + 1];
+                return new AdapterProperty(name, this, (temp > 0));
+            }
 
-            char temp[2048];
-            memcpy(temp, (buff + i + 2), valueLen);
             std::string str;
-            str.append(temp,valueLen);
-    
-            return new AdapterProperty(name, this, str);
+            str.append((buff + i + 4),valueLen);
+            return new AdapterProperty(name, this, ConvertStrToWStr(str.c_str()));
         }
 
         if ((i + valueLen + 3) > (len-1)) return 0;
         i = i + valueLen + 2;
 
     }
+    return 0;
 }
 
 
@@ -909,7 +911,7 @@ AdapterProperty * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::str
     AdapterProperty * property = 0;
     char buff[20];
     int num = 0;
- 
+
     if ((FieldId >= ESM_MM_SMSC_DEFAULT)&&(FieldId <= ESM_NSF_BOTH)) 
     {
         property = Get_ESM_BIT_Property(data,name,FieldId);
@@ -922,7 +924,7 @@ AdapterProperty * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::str
     } else if ((FieldId >= USSD_PSSD_IND)&&(FieldId <= USSD_USSN_CONF)) 
     {
         property = Get_USSD_BIT_Property(data,name,FieldId);
-    } else if (FieldId = Tag::SMPP_MESSAGE_PAYLOAD) 
+    } else if (FieldId == Tag::SMPP_MESSAGE_PAYLOAD) 
     {
         property = new AdapterProperty(name,this,data.getState());
         //property->setPureInt(data.getState());
@@ -953,7 +955,7 @@ AdapterProperty * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::str
     }
 
     int tagType = (FieldId >> 8);
-
+    /*
     if (!property) 
     {
         if (tagType == SMS_STR_TAG) 
@@ -967,7 +969,7 @@ AdapterProperty * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::str
             property = new AdapterProperty(name,this,num);
         }
     }
-          
+    */      
     return property;
 }
 
@@ -1021,7 +1023,7 @@ AdapterProperty * SmppCommandAdapter::getDeliverProperty(SMS& data,const std::st
     #define SMS_BIN_TAG 2
     */
     int tagType = (FieldId >> 8);
-
+/*
     if (!property) 
     {
         if (tagType == SMS_STR_TAG) 
@@ -1036,7 +1038,7 @@ AdapterProperty * SmppCommandAdapter::getDeliverProperty(SMS& data,const std::st
             property = new AdapterProperty(name,this,num);
         }
     } 
-          
+*/          
     return property;
 }
 
