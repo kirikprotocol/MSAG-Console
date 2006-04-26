@@ -1,60 +1,63 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schema targetNamespace="http://www.sibinco.com/SCAG/PROFILE" 
     xmlns="http://www.w3.org/2001/XMLSchema"
+    xmlns:scag="http://www.sibinco.com/SCAG"
     xmlns:profile="http://www.sibinco.com/SCAG/PROFILE"
     elementFormDefault="qualified">
+
+    <import schemaLocation="riles.xsd" namespace="http://www.sibinco.com/SCAG"/>  
 
     <group name="Actions">
         <choice>
             <element name="set">
                 <complexType>
-                    <attribute name="type" type="string" use="required"/>
-                    <attribute name="var" type="string" use="required"/>
-                    <attribute name="value" type="string" use="required" />
-                    <attribute name="policy" type="string" use="optional" />
-                    <attribute name="finaldate" type="string" use="optional" />
-                    <attribute name="lifetime" type="string" use="optional" />
+                    <attribute name="type" type="scag:Value" use="required"/>
+                    <attribute name="var" type="scag:Value" use="required"/>
+                    <attribute name="value" type="scag:Value" use="required" />
+                    <attribute name="policy" type="scag:Value" use="optional" />
+                    <attribute name="finaldate" type="scag:Value" use="optional" />
+                    <attribute name="lifetime" type="scag:Value" use="optional" />
                     
                </complexType>
             </element>
 
             <element name="get">
                 <complexType>
-                    <attribute name="type" type="string" use="required"/>
-                    <attribute name="var" type="string" use="required"/>
-                    <attribute name="value" type="string" use="required" />
+                    <attribute name="type" type="scag:Value" use="required"/>
+                    <attribute name="var" type="scag:Value" use="required"/>
+                    <attribute name="value" type="scag:Var" use="required" />
                </complexType>
             </element>
 
             <element name="del">
                 <complexType>
-                    <attribute name="type" type="string" use="required" />
-                    <attribute name="var" type="string" use="optional"/>
+                    <attribute name="type" type="scag:Value" use="required" />
+                    <attribute name="var" type="scag:Value" use="optional"/>
                 </complexType>
             </element>
 
             <element name="inc">
                 <complexType>
-                    <attribute name="type" type="string" use="required"/>
-                    <attribute name="var" type="string" use="required"/>
-                    <attribute name="inc" type="string" use="required" />
-                    <attribute name="policy" type="string" use="optional" />
-                    <attribute name="finaldate" type="string" use="optional" />
-                    <attribute name="lifetime" type="string" use="optional" />
+                    <attribute name="type" type="scag:Value" use="required"/>
+                    <attribute name="var" type="scag:Value" use="required"/>
+                    <attribute name="inc" type="scag:Value" use="required" />
+                    <attribute name="policy" type="scag:Value" use="optional" />
+                    <attribute name="finaldate" type="scag:Value" use="optional" />
+                    <attribute name="lifetime" type="scag:Value" use="optional" />
                     
                </complexType>
             </element>
 
             <element name="inc-mod">
                 <complexType>
-                    <attribute name="type" type="string" use="required"/>
-                    <attribute name="var" type="string" use="required"/>
-                    <attribute name="inc" type="string" use="required" />
-                    <attribute name="mod" type="string" use="required" />
-                    <attribute name="result" type="string" use="required" />
-                    <attribute name="policy" type="string" use="optional" />
-                    <attribute name="finaldate" type="string" use="optional" />
-                    <attribute name="lifetime" type="string" use="optional" />
+                    <attribute name="type" type="scag:Value" use="required"/>
+                    <attribute name="var" type="scag:Value" use="required"/>
+                    <attribute name="inc" type="scag:Value" use="required" />
+                    <attribute name="mod" type="scag:Value" use="required" />
+                    <attribute name="result" type="scag:Var" use="required" />
+                    <attribute name="policy" type="scag:Value" use="optional" />
+                    <attribute name="finaldate" type="scag:Value" use="optional" />
+                    <attribute name="lifetime" type="scag:Value" use="optional" />
                     
                </complexType>
             </element>

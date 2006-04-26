@@ -4,7 +4,8 @@
    xmlns:scag="http://www.sibinco.com/SCAG"
    xmlns:session="http://www.sibinco.com/SCAG/SESSIONS"
    xmlns:operation="http://www.sibinco.com/SCAG/OPERATIONS"
-   xmlns:profile="http://www.sibinco.com/SCAG/PROFILE">
+   xmlns:profile="http://www.sibinco.com/SCAG/PROFILE"
+   xmlns:log="http://www.sibinco.com/SCAG/LOG">
     
     <annotation>
         <documentation xml:lang="en">
@@ -16,7 +17,7 @@
     <import schemaLocation="sessions.xsd" namespace="http://www.sibinco.com/SCAG/SESSIONS"/>
     <import schemaLocation="operations.xsd" namespace="http://www.sibinco.com/SCAG/OPERATIONS"/>
     <import schemaLocation="profile.xsd" namespace="http://www.sibinco.com/SCAG/PROFILE"/>  
-    
+    <import schemaLocation="log.xsd" namespace="http://www.sibinco.com/SCAG/LOG"/>  
     
    <!-- General values types definition  -->
     <simpleType name="Value">
@@ -29,17 +30,17 @@
     </simpleType>
     <simpleType name="Session">
         <restriction base="string">
-            <pattern value="$\p{L}+\w*"/>
+            <pattern value="$\p{L}+[\w_]*"/>
         </restriction>
     </simpleType>
     <simpleType name="Local">
         <restriction base="string">
-            <pattern value="%\p{L}+\w*"/>
+            <pattern value="%\p{L}+[\w_]*"/>
         </restriction>
     </simpleType>
     <simpleType name="Const">
         <restriction base="string">
-            <pattern value="@\p{L}+\w*"/>
+            <pattern value="@\p{L}+[\w_]*"/>
         </restriction>
     </simpleType>
 
@@ -74,6 +75,7 @@
             <group ref="session:Actions"/>
             <group ref="operation:Actions" />
             <group ref="profile:Actions" />
+            <group ref="log:Actions" />
             
             <element name="set">
                 <complexType>
