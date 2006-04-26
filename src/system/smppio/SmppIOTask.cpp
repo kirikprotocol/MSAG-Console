@@ -146,11 +146,11 @@ int SmppInputThread::Execute()
       MutexGuard g(mon);
       while(sockets.Count()==0)
       {
-        trace("in:wait for sockets");
+        __trace__("in:wait for sockets");
         //mon.wait();
         mon.wait();
         if(isStopping)break;
-        trace("in:got new socket");
+        __trace__("in:got new socket");
       }
       if(isStopping)break;
       time_t now=time(NULL);
@@ -924,7 +924,7 @@ int SmppInputThread::Execute()
       mon.Unlock();
     }
   }
-  trace("exiting smpp input thread loop");
+  __trace__("exiting smpp input thread loop");
   for(i=sockets.Count()-1;i>=0;i--)
   {
     killSocket(i);
@@ -1004,10 +1004,10 @@ int SmppOutputThread::Execute()
       mon.Lock();
       while(sockets.Count()==0)
       {
-        trace("out:wait for sockets");
+        __trace__("out:wait for sockets");
         mon.wait();
         if(isStopping)break;
-        trace("out:got new socket");
+        __trace__("out:got new socket");
       }
       if(isStopping)
       {

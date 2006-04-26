@@ -106,7 +106,7 @@ public:
 
   virtual void putCommand(const SmscCommand& cmd)
   {
-    trace("put command:enter");
+    __trace__("put command:enter");
     if(disconnecting)
     {
       throw smsc::util::Exception("proxy is disconnecting");

@@ -50,7 +50,7 @@ int SmppAcceptor::Execute()
     info2(log,"Connection accepted:%p/%s",clnt,buf);
     sm->registerSocket(clnt);
   }
-  trace("SmppAcceptor: quiting");
+  __trace__("SmppAcceptor: quiting");
   return 0;
 }
 
