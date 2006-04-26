@@ -39,13 +39,25 @@ Required environment: ORACLE_HOME
     </ant>
   </target>
 
-  <target name="logger">
+  <target name="util.leaktracing">
+    <ant antfile="${SRC_DIR}/conf/make.xml">
+      <property name="targets" value="util.leaktracing"/>
+    </ant>
+  </target>
+
+  <target name="logger" depends="util.leaktracing">
     <ant antfile="${SRC_DIR}/conf/make.xml">
       <property name="targets" value="logger"/>
     </ant>
   </target>
 
-    <target name="scag.exc">
+  <target name="scag.pers" depends="logger">
+    <ant antfile="${SRC_DIR}/conf/make.xml">
+      <property name="targets" value="scag.pers"/>
+    </ant>
+  </target>
+  
+  <target name="scag.exc" depends="logger">
     <ant antfile="${SRC_DIR}/conf/make.xml">
       <property name="targets" value="scag.exc"/>
     </ant>
@@ -87,12 +99,11 @@ Required environment: ORACLE_HOME
     </ant>
   </target>
   
-  <target name="scag" depends="logger, db, scag.exc" >
+  <target name="scag" depends="logger, db, scag.exc, util.leaktracing" >
     <ant antfile="${SRC_DIR}/conf/make.xml">
       <property name="targets" value="scag"/>
     </ant>
   </target>
-		    
 
   <target name="store" depends="logger" >
     <ant antfile="${SRC_DIR}/conf/make.xml">
