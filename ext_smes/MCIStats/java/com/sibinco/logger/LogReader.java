@@ -43,7 +43,7 @@ public class LogReader {
 
         File fileToRead = new File(filename);
         if (!fileToRead.exists()) {
-            throw new NullPointerException("File: " + filename + " dosn't exist!");
+            throw new NullPointerException("File: " + filename + " doesn't exist!");
         }
         try {
             filereader = new FileReader(fileToRead);
@@ -76,7 +76,7 @@ public class LogReader {
         String fileName =  fileToRead + fileDate;
         File file = new File(fileName);
         if (!file.exists()) {
-            throw new NullPointerException("File: " + fileName + " dosn't exist!");
+            throw new NullPointerException("File: " + fileName + " doesn't exist!");
         }
         FileReader filereader = null;
         BufferedReader bufferedreader = null;
