@@ -108,9 +108,9 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, 
     //smsc_log_debug(logger,"SESSION KEY FOR TRANSPORT EVENT %s/%ld%d", sessionPrimaryKey.abonentAddr.toString().c_str(), sessionPrimaryKey.BornMicrotime.tv_sec,sessionPrimaryKey.BornMicrotime.tv_usec / 1000);
 
     if ((propertyObject.HandlerId == EH_DELIVER_SM)||(propertyObject.HandlerId == EH_SUBMIT_SM_RESP))
-        ev.cDirection = 'i';
+        ev.cDirection = 'I';
     else
-        ev.cDirection = 'o';
+        ev.cDirection = 'O';
 
     Statistics::Instance().registerSaccEvent(ev);
 }
