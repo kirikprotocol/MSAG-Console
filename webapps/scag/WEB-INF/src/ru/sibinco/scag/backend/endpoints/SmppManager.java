@@ -15,18 +15,18 @@ import ru.sibinco.lib.SibincoException;
 import ru.sibinco.scag.backend.endpoints.svc.Svc;
 import ru.sibinco.scag.backend.endpoints.centers.Center;
 import ru.sibinco.scag.backend.sme.ProviderManager;
+import ru.sibinco.scag.backend.status.StatusManager;
+import ru.sibinco.scag.backend.status.StatMessage;
+import ru.sibinco.scag.backend.Scag;
+import ru.sibinco.scag.backend.daemon.Proxy;
+import ru.sibinco.scag.beans.SCAGJspException;
+import ru.sibinco.scag.Constants;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.FileWriter;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
-import java.util.LinkedList;
-import java.util.Comparator;
-import java.util.Iterator;
+import java.util.*;
 
 
 /**
@@ -37,7 +37,7 @@ import java.util.Iterator;
  *
  * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
  */
-public class SmppManager{
+public class SmppManager {
 
     private static final String PARAM_NAME_LAST_UID_ID = "last used uid";
 
@@ -54,7 +54,7 @@ public class SmppManager{
     public SmppManager(String configFilename, ProviderManager providerManager) {
         this.configFilename = configFilename;
         this.providerManager = providerManager;
-    }
+    }                                                                     
 
     public synchronized void init() throws IOException, ParserConfigurationException, SAXException {
         svcs.clear();
@@ -73,7 +73,7 @@ public class SmppManager{
                 } catch (NumberFormatException e) {
                     e.printStackTrace();
                     logger.error("Int parameter \"" + name + "\" misformatted: " + lastUsedId + ", skipped", e);
-                }                
+                }
             }
 
             final NodeList smerecords = document.getDocumentElement().getElementsByTagName("smerecord");
@@ -98,6 +98,146 @@ public class SmppManager{
     protected Center createCenter(Element centersRecords) {
         return new Center(centersRecords, providerManager);
     }
+
+    public synchronized void deleteCenters(final String user, final Set checkedSet, final Scag scag) throws SCAGJspException {
+        final Map centers = getCenters();
+        for (Iterator iterator = checkedSet.iterator(); iterator.hasNext();) {
+            final String centerId = (String) iterator.next();
+            Center center = (Center) centers.get(centerId);
+            try {
+                if (center.isEnabled()) {
+                    scag.deleteCenter(center);
+                }
+                centers.remove(centerId);
+            } catch (SibincoException e) {
+                if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
+                    logger.error("Couldn't delete Smsc \"" + centerId + '"', e);
+                    throw new SCAGJspException(Constants.errors.sme.COULDNT_DELETE, centerId, e);
+                } else
+                    centers.remove(centerId);
+            } finally {
+                try {
+                    store();
+                } catch (SibincoException e) {
+                    logger.error("Couldn't store smes ", e);
+                }
+            }
+        }
+        StatusManager.getInstance().addStatMessages(new StatMessage(user, "Center", "Deleted center(s): "
+                + checkedSet.toString() + "."));
+    }
+
+    public synchronized void deleteServicePoints(final String user, final Set checkedSet, final Scag scag) throws SCAGJspException {
+        final Map svcs = getSvcs();
+        for (Iterator iterator = checkedSet.iterator(); iterator.hasNext();) {
+            final String svcId = (String) iterator.next();
+            Svc svc = (Svc) getSvcs().get(svcId);
+            try {
+                if (svc.isEnabled()) {
+                    scag.deleteSvc(svcId);
+                }
+                svcs.remove(svcId);
+            } catch (SibincoException e) {
+                if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
+                    logger.error("Couldn't delete sme \"" + svcId + '"', e);
+                    throw new SCAGJspException(Constants.errors.sme.COULDNT_DELETE, svcId, e);
+                } else
+                    svcs.remove(svcId);
+            } finally {
+                try {
+                    store();
+                } catch (SibincoException e) {
+                    logger.error("Couldn't store smes ", e);
+                }
+            }
+        }
+        StatusManager.getInstance().addStatMessages(new StatMessage(user, "Service Point", "Deleted service point(s): "
+                + checkedSet.toString() + "."));
+    }
+
+    public synchronized void createUpdateCenter(String user, boolean isAdd, boolean isEnabled, Center center,
+                                                Scag scag, Center oldCenter) throws SCAGJspException {
+        String messageText = "";
+        try {
+            if (isAdd) {
+                messageText = "Added new center: ";
+                int uid = getLastUsedId();
+                center.setUid(++uid);
+                setLastUsedId(center.getUid());
+                if (center.isEnabled()) {
+                    scag.addCenter(center);
+                }
+
+            } else {
+                messageText = "Changed center: ";
+                if (oldCenter.isEnabled() == center.isEnabled()) {
+                    if (isEnabled)
+                        scag.updateCenter(center);
+                } else {
+                    if (center.isEnabled()) {
+                        scag.addCenter(center);
+                    } else {
+                        scag.deleteCenter(center);
+                    }
+                }
+            }
+        } catch (SibincoException e) {
+            if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
+                if (isAdd) centers.remove(center.getId());
+                logger.error("Couldn't applay Centers " + center.getId() + " ", e);
+                throw new SCAGJspException(Constants.errors.sme.COULDNT_APPLY, center.getId(), e);
+            }
+        } finally {
+            oldCenter = null;
+            try {
+                store();
+            } catch (SibincoException e) {
+                logger.error("Couldn't store smes ", e);
+            }
+        }
+        StatusManager.getInstance().addStatMessages(new StatMessage(user, "Center", messageText + center.getId()));
+    }
+
+    public synchronized void createUpdateServicePoint(String user, Svc svc,
+                                                      boolean isAdd,
+                                                      boolean isEnabled, Scag scag,
+                                                      Svc oldSvc) throws SCAGJspException {
+        String messageText = "";
+        try {
+            if (isAdd) {
+                messageText = "Added new service point: ";
+                if (svc.isEnabled()) {
+                    scag.addSvc(svc);
+                }
+            } else {
+                messageText = "Changed service point: ";
+                if ((oldSvc.isEnabled() == svc.isEnabled())) {
+                    if (isEnabled)
+                        scag.updateSvcInfo(svc);
+                } else {
+                    if (svc.isEnabled()) {
+                        scag.addSvc(svc);
+                    } else {
+                        scag.deleteSvc(svc.getId());
+                    }
+                }
+            }
+        } catch (SibincoException e) {
+            if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
+                if (isAdd) svcs.remove(svc.getId());
+                throw new SCAGJspException(Constants.errors.sme.COULDNT_APPLY, svc.getId(), e);
+            }
+        } finally {
+            oldSvc = null;
+            try {
+                store();
+            } catch (SibincoException e) {
+                logger.error("Couldn't store smes ", e);
+            }
+        }
+        StatusManager.getInstance().addStatMessages(new StatMessage(user, "Service Point", messageText + svc.getId()));
+    }
+
 
     public synchronized PrintWriter store(final PrintWriter out) {
         final List svcsValues = new LinkedList(svcs.values());

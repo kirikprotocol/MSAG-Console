@@ -39,11 +39,9 @@ public class Index extends TabledBeanImpl {
     private String restoreDate = null;
     private boolean routesLoaded = false;
 
-
     protected Collection getDataSource() {
         return appContext.getScagRoutingManager().getStatMessages().values();//.getRoutes().values();
     }
-
 
     public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException {
         sort = "time";
@@ -59,10 +57,8 @@ public class Index extends TabledBeanImpl {
         else if (mbSave != null)
             saveRoutes();
         this.init();
-        super.process(request, response); //refresh changes bean values (it's bug from class TabledBeanImpl) 
-
+        super.process(request, response); //refresh changes bean values (it's bug from class TabledBeanImpl)
     }
-
 
     private void init() throws SCAGJspException {
         SCAGAppContext appContext = getAppContext();
@@ -82,14 +78,11 @@ public class Index extends TabledBeanImpl {
             e.printStackTrace();
         }
 
-
         routesRestored = appContext.getScagRoutingManager().isRoutesRestored();
         routesSaved = appContext.getScagRoutingManager().isRoutesSaved();
         if (appContext.getScagRoutingManager().hasSavedConfiguration()) {
             routesLoaded = appContext.getScagRoutingManager().isRoutesLoaded();
-
         }
-
         routesChanged = appContext.getScagRoutingManager().isRoutesChanged();
         if (routesChanged) {
             changeByUser = appContext.getScagRoutingManager().getChangedByUser();
@@ -120,12 +113,7 @@ public class Index extends TabledBeanImpl {
      */
     private void restoreRoutes() throws SCAGJspException {
         try {
-
             appContext.getScagRoutingManager().restore();
-
-            //set changed by user, it wil be blocked any chages for other users
-            appContext.getScagRoutingManager().setChangedByUser(getUserName(appContext));
-
             appContext.getScagRoutingManager().setRoutesChanged(true);
             appContext.getScagRoutingManager().setRoutesRestored(true);
             appContext.getScagRoutingManager().setRoutesSaved(false);
@@ -289,15 +277,5 @@ public class Index extends TabledBeanImpl {
 
     public void setRoutesLoaded(boolean routesLoaded) {
         this.routesLoaded = routesLoaded;
-    }
-
-    private String getUserName(SCAGAppContext appContext) throws SCAGJspException {
-        Principal userPrincipal = super.getLoginedPrincipal();
-        if (userPrincipal == null)
-            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user principal(s)");
-        User user = (User) appContext.getUserManager().getUsers().get(userPrincipal.getName());
-        if (user == null)
-            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userPrincipal.getName() + "'");
-        return user.getName();
     }
 }

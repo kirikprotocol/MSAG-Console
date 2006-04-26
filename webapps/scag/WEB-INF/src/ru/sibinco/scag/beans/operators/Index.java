@@ -4,15 +4,11 @@
 
 package ru.sibinco.scag.beans.operators;
 
-import ru.sibinco.scag.Constants;
-import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.beans.TabledBeanImpl;
-import ru.sibinco.lib.backend.users.User;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.security.Principal;
 
 /**
  * The <code>Index</code> class represents
@@ -35,17 +31,7 @@ public class Index extends TabledBeanImpl {
             final Long operatorId = Long.decode(operatorIdStr);
             toRemove.add(operatorId);
         }
-        appContext.getOperatorManager().delete(getUser(appContext).getLogin(), toRemove);
+        appContext.getOperatorManager().delete(getLoginedPrincipal().getName(), toRemove);
         appContext.getOperatorManager().reloadOperators(appContext.getScag());
-    }
-
-    private User getUser(SCAGAppContext appContext) throws SCAGJspException {
-        Principal userPrincipal = super.getLoginedPrincipal();
-        if (userPrincipal == null)
-            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user principal(s)");
-        User user = (User) appContext.getUserManager().getUsers().get(userPrincipal.getName());
-        if (user == null)
-            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userPrincipal.getName() + "'");
-        return user;
     }
 }

@@ -4,7 +4,6 @@
 
 package ru.sibinco.scag.backend.status;
 
-import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -65,4 +64,36 @@ public class StatMessage {
         this.message = message;
     }
 
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        final StatMessage that = (StatMessage) o;
+
+        if (category != null ? !category.equals(that.category) : that.category != null) return false;
+        if (message != null ? !message.equals(that.message) : that.message != null) return false;
+        if (time != null ? !time.equals(that.time) : that.time != null) return false;
+        if (userLogin != null ? !userLogin.equals(that.userLogin) : that.userLogin != null) return false;
+
+        return true;
+    }
+
+    public int hashCode() {
+        int result;
+        result = (time != null ? time.hashCode() : 0);
+        result = 29 * result + (userLogin != null ? userLogin.hashCode() : 0);
+        result = 29 * result + (category != null ? category.hashCode() : 0);
+        result = 29 * result + (message != null ? message.hashCode() : 0);
+        return result;
+    }
+
+
+    public String toString() {
+        return "StatMessage{" +
+                "message='" + message + '\'' +
+                ", category='" + category + '\'' +
+                ", userLogin='" + userLogin + '\'' +
+                ", time='" + time + '\'' +
+                '}';
+    }
 }

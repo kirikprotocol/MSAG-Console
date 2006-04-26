@@ -3,17 +3,10 @@
  */
 package ru.sibinco.scag.beans.endpoints.centers;
 
-import ru.sibinco.scag.beans.TabledBeanImpl;
 import ru.sibinco.scag.beans.SCAGJspException;
-import ru.sibinco.scag.backend.Scag;
-import ru.sibinco.scag.backend.daemon.Proxy;
-import ru.sibinco.scag.backend.endpoints.centers.Center;
-import ru.sibinco.scag.Constants;
-import ru.sibinco.lib.SibincoException;
+import ru.sibinco.scag.beans.TabledBeanImpl;
 
 import java.util.Collection;
-import java.util.Map;
-import java.util.Iterator;
 
 /**
  * The <code>Index</code> class represents
@@ -23,7 +16,7 @@ import java.util.Iterator;
  *
  * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
  */
-public class Index extends TabledBeanImpl{
+public class Index extends TabledBeanImpl {
 
 
     protected Collection getDataSource() {
@@ -31,29 +24,9 @@ public class Index extends TabledBeanImpl{
     }
 
     protected void delete() throws SCAGJspException {
-        final Scag scag = appContext.getScag();
-        final Map centers = appContext.getSmppManager().getCenters();
-        for (Iterator iterator = checkedSet.iterator(); iterator.hasNext();) {
-            final String centerId = (String) iterator.next();
-            Center center = (Center) centers.get(centerId);
-            try {
-                if (center.isEnabled()) {
-                    scag.deleteCenter(center);
-                }
-                centers.remove(centerId);
-            } catch (SibincoException e) {
-                if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
-                    logger.error("Couldn't delete Smsc \"" + centerId + '"', e);
-                    throw new SCAGJspException(Constants.errors.sme.COULDNT_DELETE, centerId, e);
-                } else
-                    centers.remove(centerId);
-            } finally {
-                try {
-                    appContext.getSmppManager().store();
-                } catch (SibincoException e) {
-                    logger.error("Couldn't store smes ", e);
-                }
-            }
-        }
+        appContext.getSmppManager().deleteCenters(getLoginedPrincipal().getName(),
+                checkedSet, appContext.getScag());
     }
+
+
 }

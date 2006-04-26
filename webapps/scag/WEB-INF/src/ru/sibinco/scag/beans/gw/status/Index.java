@@ -6,6 +6,7 @@ import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.daemon.Daemon;
 import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.backend.daemon.ServiceInfo;
+import ru.sibinco.scag.backend.status.StatMessage;
 import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.beans.TabledBeanImpl;
@@ -34,10 +35,9 @@ public class Index extends TabledBeanImpl {
     }
 
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
-
+        sort = "time";
         super.process(request, response);
         final Daemon scagDaemon = appContext.getScagDaemon();
-
         try {
             scagDaemon.refreshServices(appContext.getSmppManager());
         } catch (SibincoException e) {
@@ -66,7 +66,6 @@ public class Index extends TabledBeanImpl {
             apply();
     }
 
-
     protected void delete() throws SCAGJspException {
         //To change body of implemented methods use File | Settings | File Templates.
     }
@@ -78,6 +77,8 @@ public class Index extends TabledBeanImpl {
             logger.error("Could not stop Scag", e);
             throw new SCAGJspException(Constants.errors.status.COULDNT_STOP_GATEWAY, e);
         }
+        StatusManager.getInstance().addStatMessages(new StatMessage(getLoginedPrincipal().getName(),
+                "Status MSAG", "Service MSAG stoped"));
     }
 
     private void start() throws SCAGJspException {
@@ -87,6 +88,8 @@ public class Index extends TabledBeanImpl {
             logger.error("Could not start Scag", e);
             throw new SCAGJspException(Constants.errors.status.COULDNT_START_GATEWAY, e);
         }
+        StatusManager.getInstance().addStatMessages(new StatMessage(getLoginedPrincipal().getName(),
+                "Status MSAG", "Service MSAG started"));
     }
 
     private void restore() {

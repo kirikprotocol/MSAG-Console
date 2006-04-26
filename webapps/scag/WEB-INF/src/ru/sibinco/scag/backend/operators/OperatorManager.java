@@ -124,8 +124,7 @@ public class OperatorManager {
                 operator.getMasks().put(mask.getMask(), mask);
             }
         }
-        StatMessage message = new StatMessage(user, "Operator", "Changed operator: " + name + ".");
-        StatusManager.getInstance().addStatMessages(message);
+        StatusManager.getInstance().addStatMessages(new StatMessage(user, "Operator", "Changed operator: " + name + "."));
     }
 
     public synchronized long createOperator(final String user, final String name, final String description, final String[] srcMasks)
@@ -141,8 +140,7 @@ public class OperatorManager {
                 operator.getMasks().put(mask.getMask(), mask);
             }
         }
-        StatMessage message = new StatMessage(user, "Operator", "Added new operator: " + name + ".");
-        StatusManager.getInstance().addStatMessages(message);
+        StatusManager.getInstance().addStatMessages(new StatMessage(user, "Operator", "Added new operator: " + name + "."));
         return getLastUsedOperatorId();
     }
 
@@ -195,9 +193,11 @@ public class OperatorManager {
     public synchronized void delete(final String user, final ArrayList toRemove) throws SCAGJspException {
         List operatorNames = getOperatorNamesByIds(toRemove);
         getOperators().keySet().removeAll(toRemove);
-        StatMessage message = new StatMessage(user, "Operator", "Deleted operator(s): " + operatorNames.toString() + ".");
-        StatusManager.getInstance().addStatMessages(message);
+        StatusManager.getInstance().addStatMessages(new StatMessage(user, "Operator", "Deleted operator(s): "
+                + operatorNames.toString() + "."));
     }
+
+
 
     public synchronized void reloadOperators(final Scag scag) throws SCAGJspException {
         try {

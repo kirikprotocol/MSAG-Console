@@ -3,27 +3,24 @@
  */
 package ru.sibinco.scag.beans.endpoints.centers;
 
+import ru.sibinco.lib.backend.users.User;
+import ru.sibinco.lib.backend.util.SortedList;
+import ru.sibinco.scag.Constants;
+import ru.sibinco.scag.backend.SCAGAppContext;
+import ru.sibinco.scag.backend.endpoints.centers.Center;
+import ru.sibinco.scag.backend.endpoints.svc.Svc;
+import ru.sibinco.scag.backend.sme.Provider;
+import ru.sibinco.scag.backend.transport.Transport;
+import ru.sibinco.scag.beans.DoneException;
 import ru.sibinco.scag.beans.EditBean;
 import ru.sibinco.scag.beans.SCAGJspException;
-import ru.sibinco.scag.beans.DoneException;
-import ru.sibinco.scag.backend.endpoints.svc.Svc;
-import ru.sibinco.scag.backend.endpoints.centers.Center;
-import ru.sibinco.scag.backend.transport.Transport;
-import ru.sibinco.scag.backend.SCAGAppContext;
-import ru.sibinco.scag.backend.Scag;
-import ru.sibinco.scag.backend.daemon.Proxy;
-import ru.sibinco.scag.backend.sme.Provider;
-import ru.sibinco.scag.Constants;
-import ru.sibinco.lib.backend.util.SortedList;
-import ru.sibinco.lib.backend.users.User;
-import ru.sibinco.lib.SibincoException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.security.Principal;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.ArrayList;
-import java.security.Principal;
 
 /**
  * The <code>Edit</code> class represents
@@ -56,10 +53,10 @@ public class Edit extends EditBean {
     private int uid = -1;
     private String addressRange = "";
     private long userProviderId = ALL_PROVIDERS;
+    private Principal userPrincipal = null;
 
     private void init() throws SCAGJspException {
         SCAGAppContext appContext = getAppContext();
-        Principal userPrincipal = super.getLoginedPrincipal();
         if (userPrincipal == null)
             throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user principal(s)");
         User user = (User) appContext.getUserManager().getUsers().get(userPrincipal.getName());
@@ -94,6 +91,7 @@ public class Edit extends EditBean {
     }
 
     public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException {
+        userPrincipal = request.getUserPrincipal();
         super.process(request, response);
         this.init();
     }
@@ -123,9 +121,7 @@ public class Edit extends EditBean {
     protected void save() throws SCAGJspException {
         if (null == id || 0 == id.length() || !isAdd() && (null == getEditId() || 0 == getEditId().length()))
             throw new SCAGJspException(Constants.errors.sme.SME_ID_NOT_SPECIFIED);
-
-        if (null == password)
-            password = "";
+        if (null == password) password = "";
 
         final Provider providerObj = null;//(Provider) appContext.getProviderManager().getProviders().get(new Long(providerId));
         final Map centers = appContext.getSmppManager().getCenters();
@@ -143,50 +139,10 @@ public class Edit extends EditBean {
                 enabled, providerObj, uid, bindSystemId, (bindPassword == null) ? "" : bindPassword, addressRange);
         centers.put(id, center);
 
-        final Scag scag = appContext.getScag();
-        try {
-            if (isAdd()) {
-                center.setUid(getLastUid());
-                appContext.getSmppManager().setLastUsedId(center.getUid());
-                if (center.isEnabled()) {
-                    scag.addCenter(center);
-                }
-
-            } else {
-                if (oldCenter.isEnabled() == center.isEnabled()) {
-                    if (isEnabled())
-                        scag.updateCenter(center);
-                } else {
-                    if (center.isEnabled()) {
-                        scag.addCenter(center);
-                    } else {
-                        scag.deleteCenter(center);
-                    }
-                }
-            }
-        } catch (SibincoException e) {
-            if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
-                if (isAdd()) centers.remove(id);
-                logger.error("Couldn't applay Centers " + id + " ", e);
-                throw new SCAGJspException(Constants.errors.sme.COULDNT_APPLY, id, e);
-            }
-        } finally {
-            oldCenter = null;
-            try {
-                appContext.getSmppManager().store();
-            } catch (SibincoException e) {
-                logger.error("Couldn't store smes ", e);
-            }
-        }
+        appContext.getSmppManager().createUpdateCenter(getLoginedPrincipal().getName(),
+                isAdd(), isEnabled(), center, appContext.getScag(), oldCenter);
         throw new DoneException();
     }
-
-    private int getLastUid() {
-        uid = appContext.getSmppManager().getLastUsedId();
-        uid++;
-        return uid;
-    }
-
 
     public String[] getSmes() {
         final SortedList smes = new SortedList(appContext.getSmppManager().getSvcs().keySet());

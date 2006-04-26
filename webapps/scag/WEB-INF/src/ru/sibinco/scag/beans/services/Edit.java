@@ -4,7 +4,6 @@
 
 package ru.sibinco.scag.beans.services;
 
-import ru.sibinco.lib.backend.users.User;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.SCAGAppContext;
@@ -12,19 +11,11 @@ import ru.sibinco.scag.backend.Scag;
 import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.backend.service.ServiceProvider;
 import ru.sibinco.scag.backend.service.ServiceProvidersManager;
-import ru.sibinco.scag.backend.status.StatMessage;
-import ru.sibinco.scag.backend.status.StatusManager;
-import ru.sibinco.scag.beans.AddChildException;
-import ru.sibinco.scag.beans.CancelException;
-import ru.sibinco.scag.beans.DoneException;
-import ru.sibinco.scag.beans.EditException;
-import ru.sibinco.scag.beans.SCAGJspException;
-import ru.sibinco.scag.beans.TabledEditBeanImpl;
+import ru.sibinco.scag.beans.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -89,35 +80,11 @@ public class Edit extends TabledEditBeanImpl {
             appContext.getRuleManager().removeRulesForService(serviceIdStr);
         }
         final List toRemoveRoutes = appContext.getScagRoutingManager().getRoteIdsByServiceIds(checked);
-        appContext.getScagRoutingManager().getRoutes().keySet().removeAll(toRemoveRoutes);
-        appContext.getScagRoutingManager().setRoutesChanged(true);
-        String user = null;
-        try {
-            user = getUserName(appContext);
-        } catch (SCAGJspException e) {
-            logger.error("Failed to obtain user");
-        }
-        if (toRemoveRoutes.size() > 0) {
-            StatMessage message = new StatMessage(user, "Routes", "Deleted route(s): " + toRemoveRoutes.toString() + ".");
-            appContext.getScagRoutingManager().addStatMessages(message);
-            StatusManager.getInstance().addStatMessages(message);
-        }
-        serviceProvider.getServices().keySet().removeAll(toRemove);
-
-        final Scag scag = appContext.getScag();
-        try {
-            scag.reloadServices();
-        } catch (SibincoException e) {
-            if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
-                throw new SCAGJspException(Constants.errors.serviceProviders.COULDNT_RELOAD_SERVICE_PROVIDER, e);
-            }
-        } finally {
-            try {
-                appContext.getServiceProviderManager().store();
-            } catch (IOException e) {
-                logger.debug("Couldn't save config", e);
-            }
-        }
+        appContext.getScagRoutingManager().deleteRoutes(getLoginedPrincipal().getName(),
+                 toRemoveRoutes);
+        appContext.getServiceProviderManager().deleteServices(getLoginedPrincipal().getName(),
+                toRemove, serviceProvider);
+        appContext.getServiceProviderManager().reloadServices(appContext.getScag());
     }
 
     protected void load() throws SCAGJspException {
@@ -160,17 +127,6 @@ public class Edit extends TabledEditBeanImpl {
         } else {
             throw new DoneException();
         }
-    }
-
-    private String getUserName(SCAGAppContext appContext) throws SCAGJspException {
-        Principal userPrincipal = loginedPrincipal;
-
-        if (userPrincipal == null)
-            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user principal(s)");
-        User user = (User) appContext.getUserManager().getUsers().get(userPrincipal.getName());
-        if (user == null)
-            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userPrincipal.getName() + "'");
-        return user.getName();
     }
 
     public String getId() {

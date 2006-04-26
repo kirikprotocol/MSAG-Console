@@ -6,9 +6,7 @@ package ru.sibinco.scag.beans.operators;
 
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.route.Mask;
-import ru.sibinco.lib.backend.users.User;
 import ru.sibinco.scag.Constants;
-import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.operators.Operator;
 import ru.sibinco.scag.backend.operators.OperatorManager;
 import ru.sibinco.scag.beans.DoneException;
@@ -21,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.security.Principal;
 
 /**
  * The <code>Edit</code> class represents
@@ -38,9 +35,7 @@ public class Edit extends EditBean {
     private String description;
     private String[] srcMasks = new String[0];
 
-
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
-
         super.process(request, response);
     }
 
@@ -60,7 +55,6 @@ public class Edit extends EditBean {
         for (Iterator i = operator.getMasks().values().iterator(); i.hasNext();) {
             final Mask mask = (Mask) i.next();
             maskList.add(mask.getMask());
-
         }
         srcMasks = (String[]) maskList.toArray(new String[0]);
         maskList.clear();
@@ -70,14 +64,14 @@ public class Edit extends EditBean {
         final OperatorManager operatorManager = appContext.getOperatorManager();
         if (isAdd()) {
             try {
-                id = operatorManager.createOperator(getUser(appContext).getName(), name, description, srcMasks);
+                id = operatorManager.createOperator(getLoginedPrincipal().getName(), name, description, srcMasks);
             } catch (SibincoException e) {
                 logger.debug("Couldn't create new operator", e);
                 throw new SCAGJspException(Constants.errors.operators.COULD_NOT_CREATE_OPERATOR, e);
             }
         } else {
             try {
-                operatorManager.updateOperator(getUser(appContext).getName(), id, name, description, srcMasks);
+                operatorManager.updateOperator(getLoginedPrincipal().getName(), id, name, description, srcMasks);
             } catch (SibincoException e) {
                 logger.debug("Couldn't update operator", e);
                 throw new SCAGJspException(Constants.errors.operators.COULD_NOT_UPDATE_OPERATOR, e);
@@ -87,23 +81,10 @@ public class Edit extends EditBean {
         throw new DoneException();
     }
 
-    private User getUser(SCAGAppContext appContext) throws SCAGJspException {
-        Principal userPrincipal = super.getLoginedPrincipal();
-        if (userPrincipal == null)
-            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user principal(s)");
-        User user = (User) appContext.getUserManager().getUsers().get(userPrincipal.getName());
-        if (user == null)
-            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userPrincipal.getName() + "'");
-        return user;
-    }
-
     public String getId() {
         return -1 == id ? null : String.valueOf(id);
     }
 
-    /**
-     * @noinspection JavaDoc
-     */
     public void setId(final String id) {
         this.id = Long.decode(id).longValue();
     }

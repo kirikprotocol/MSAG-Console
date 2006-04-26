@@ -14,6 +14,7 @@ import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.scag.backend.endpoints.SmppManager;
 import ru.sibinco.scag.backend.service.ServiceProvidersManager;
 import ru.sibinco.scag.backend.status.StatMessage;
+import ru.sibinco.scag.backend.status.StatusManager;
 
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
@@ -23,13 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 
 
 /**
@@ -143,7 +138,30 @@ public class ScagRoutingManager {
             logger.error("Couldn't parse", e);
             throw new SibincoException("Couldn't parse", e);
         }
+    }
 
+    public synchronized void deleteSubjects(final String user, final Set checkedSet) {
+        getSubjects().keySet().removeAll(checkedSet);
+        setRoutesChanged(true);
+        addStatMessages(new StatMessage(user, "Subject", "Deleted subject(s): " + checkedSet.toString() + "."));
+        StatusManager.getInstance().addStatMessages(new StatMessage(user,
+                "Subject", "Deleted subject(s): " + checkedSet.toString() + "."));
+    }
+
+    public synchronized void deleteRoutes(final String user, final Set checkedSet) {
+        getRoutes().keySet().removeAll(checkedSet);
+        setRoutesChanged(true);
+        StatMessage message = new StatMessage(user, "Routes", "Deleted route(s): " + checkedSet.toString() + ".");
+        addStatMessages(message);
+        StatusManager.getInstance().addStatMessages(message);
+    }
+
+    public synchronized void deleteRoutes(final String user, final List checkedSet) {
+        getRoutes().keySet().removeAll(checkedSet);
+        setRoutesChanged(true);
+        StatMessage message = new StatMessage(user, "Routes", "Deleted route(s): " + checkedSet.toString() + ".");
+        addStatMessages(message);
+        StatusManager.getInstance().addStatMessages(message);
     }
 
     protected Subject createSubject(final Element subjElem, final SmppManager smppManager) throws SibincoException {

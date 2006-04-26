@@ -24,6 +24,5 @@ public class Index extends TabledBeanImpl {
     }
 
     protected void delete() throws SCAGJspException {
-
     }
 }

@@ -7,9 +7,14 @@ package ru.sibinco.scag.backend.service;
 import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.lib.backend.util.SortedList;
+import ru.sibinco.lib.SibincoException;
 import ru.sibinco.scag.backend.routing.Route;
 import ru.sibinco.scag.backend.status.StatMessage;
 import ru.sibinco.scag.backend.status.StatusManager;
+import ru.sibinco.scag.backend.Scag;
+import ru.sibinco.scag.backend.daemon.Proxy;
+import ru.sibinco.scag.beans.SCAGJspException;
+import ru.sibinco.scag.Constants;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.util.*;
@@ -105,7 +110,6 @@ public class ServiceProvidersManager {
                         }
                     }
                     serviceProvider.getServices().put(service.getId(), service);
-
                 }
                 serviceProviders.put(serviceProvider.getId(), serviceProvider);
             }
@@ -114,6 +118,22 @@ public class ServiceProvidersManager {
 
     public synchronized void store() throws IOException {
         storeServiceProviders();
+    }
+
+    public synchronized void reloadServices(final Scag scag) throws SCAGJspException {
+        try {
+            scag.reloadServices();
+        } catch (SibincoException e) {
+            if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
+                throw new SCAGJspException(Constants.errors.serviceProviders.COULDNT_RELOAD_SERVICE_PROVIDER, e);
+            }
+        } finally {
+            try {
+                storeServiceProviders();
+            } catch (IOException e) {
+                logger.debug("Couldn't save config", e);
+            }
+        }
     }
 
     private void storeServiceProviders() throws IOException {
@@ -173,7 +193,7 @@ public class ServiceProvidersManager {
         provider.setName(name);
         if (description != null)
             provider.setDescription(description);
-        StatMessage message = new StatMessage(user, "Service Provider", "Changed service provider: " + name + ".");
+        StatMessage message = new StatMessage(user, "Service Provider", "Changed service provider: '" + name + "'");
         StatusManager.getInstance().addStatMessages(message);
     }
 
@@ -181,7 +201,7 @@ public class ServiceProvidersManager {
         final ServiceProvider serviceProvider = new ServiceProvider(new Long(++lastUsedServiceProviderId), name);
         serviceProvider.setDescription(description);
         serviceProviders.put(serviceProvider.getId(), serviceProvider);
-        StatMessage message = new StatMessage(user, "Service Provider", "Added new service provider: " + name + ".");
+        StatMessage message = new StatMessage(user, "Service Provider", "Added new service provider: '" + name + "'");
         StatusManager.getInstance().addStatMessages(message);
         return getLastUsedServiceProviderId();
     }
@@ -193,10 +213,37 @@ public class ServiceProvidersManager {
         service.setId(new Long(++lastUsedServiceId));
         serviceProvider.getServices().put(service.getId(), service);
         serviceProviders.put(serviceProvider.getId(), serviceProvider);
-        StatMessage message = new StatMessage(user, "Service", "Added new service: " + service.getName() + ".");
+        StatMessage message = new StatMessage(user, "Service", "Added new service: '" + service.getName() + "'");
         StatusManager.getInstance().addStatMessages(message);
         return getLastUsedServiceId();
     }
+
+    public synchronized void deleteServices(final String user, final List toRemove,
+                                            final ServiceProvider serviceProvider) throws SCAGJspException {
+        List serviceNames = new ArrayList();
+        for (Iterator it = toRemove.iterator(); it.hasNext();) {
+            Long serviceId = (Long) it.next();
+            Service service = (Service) serviceProvider.getServices().get(serviceId);
+            serviceNames.add(service.getName());
+        }
+        serviceProvider.getServices().keySet().removeAll(toRemove);
+        StatMessage message = new StatMessage(user, "Service", "Deleted service(s): '" + serviceNames.toString() + "'");
+        StatusManager.getInstance().addStatMessages(message);
+    }
+
+    public synchronized void deleteServiceProviders(final String user, final List toRemove) throws SCAGJspException {
+        List servProvNames = new ArrayList();
+        for (Iterator it = toRemove.iterator(); it.hasNext();) {
+            Long id = (Long) it.next();
+            ServiceProvider sp = (ServiceProvider) getServiceProviders().get(id);
+            servProvNames.add(sp.getName());
+        }
+        getServiceProviders().keySet().removeAll(toRemove);
+        StatMessage message = new StatMessage(user, "Service Provider", "Deleted service prvider(s): "
+                + servProvNames.toString() + ".");
+        StatusManager.getInstance().addStatMessages(message);
+    }
+
 
     public synchronized long updateService(final String user, final long serviceProviderId, final Service service) throws NullPointerException {
         final ServiceProvider serviceProvider = (ServiceProvider) serviceProviders.get(new Long(serviceProviderId));
@@ -205,7 +252,7 @@ public class ServiceProvidersManager {
         serviceProvider.getServices().keySet().remove(service.getId());
         serviceProvider.getServices().put(service.getId(), service);
         serviceProviders.put(serviceProvider.getId(), serviceProvider);
-        StatMessage message = new StatMessage(user, "Service", "Changed service: " + service.getName() + ".");
+        StatMessage message = new StatMessage(user, "Service", "Changed service: '" + service.getName() + "'");
         StatusManager.getInstance().addStatMessages(message);
         return service.getId().longValue();
     }
@@ -233,7 +280,7 @@ public class ServiceProvidersManager {
         }
         return service;
     }
-    
+
     public synchronized ServiceProvider getServiceProviderByServiceId(Long id) {
         ServiceProvider service = null;
         for (Iterator i = new SortedList(serviceProviders.keySet()).iterator(); i.hasNext();) {
@@ -245,7 +292,7 @@ public class ServiceProvidersManager {
         return service;
     }
 
-    public synchronized Map getRoutesByServiceId(final Map routes, Long serviceId){
+    public synchronized Map getRoutesByServiceId(final Map routes, Long serviceId) {
         Map result = Collections.synchronizedMap(new HashMap());
         for (Iterator i = new SortedList(routes.keySet()).iterator(); i.hasNext();) {
             String id = (String) i.next();

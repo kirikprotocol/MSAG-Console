@@ -4,36 +4,25 @@
 
 package ru.sibinco.scag.beans.services.service;
 
+import ru.sibinco.lib.SibincoException;
+import ru.sibinco.lib.StatusDisconnectedException;
+import ru.sibinco.lib.backend.util.SortByPropertyComparator;
+import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.SCAGAppContext;
-import ru.sibinco.scag.backend.Scag;
 import ru.sibinco.scag.backend.rules.RuleManager;
-import ru.sibinco.scag.backend.daemon.Proxy;
-import ru.sibinco.scag.backend.status.StatMessage;
-import ru.sibinco.scag.backend.status.StatusManager;
-import ru.sibinco.scag.backend.transport.Transport;
 import ru.sibinco.scag.backend.service.Service;
 import ru.sibinco.scag.backend.service.ServiceProvider;
 import ru.sibinco.scag.backend.service.ServiceProvidersManager;
-import ru.sibinco.scag.beans.CancelChildException;
-import ru.sibinco.scag.beans.EditChildException;
-import ru.sibinco.scag.beans.SCAGJspException;
-import ru.sibinco.scag.beans.TabledEditBeanImpl;
-import ru.sibinco.scag.beans.AddChildException;
+import ru.sibinco.scag.backend.transport.Transport;
+import ru.sibinco.scag.beans.*;
 import ru.sibinco.scag.util.Utils;
-import ru.sibinco.lib.SibincoException;
-import ru.sibinco.lib.StatusDisconnectedException;
-import ru.sibinco.lib.backend.util.SortedList;
-import ru.sibinco.lib.backend.util.SortByPropertyComparator;
-import ru.sibinco.lib.backend.users.User;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.util.Collection;
-import java.util.Map;
 import java.util.LinkedList;
-import java.security.Principal;
+import java.util.Map;
 
 /**
  * The <code>Edit</code> class represents
@@ -106,61 +95,31 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     protected void delete() throws SCAGJspException {
-        appContext.getScagRoutingManager().getRoutes().keySet().removeAll(checkedSet);
-        appContext.getScagRoutingManager().setRoutesChanged(true);
-        String user = null;
-        try {
-            user = getUserName(appContext);
-        } catch (SCAGJspException e) {
-            logger.error("Failed to obtain user");
-        }
-        StatMessage message = new StatMessage(user, "Routes", "Deleted route(s): " + checkedSet.toString() + ".");
-        appContext.getScagRoutingManager().addStatMessages(message);
-        StatusManager.getInstance().addStatMessages(message);
+        appContext.getScagRoutingManager().deleteRoutes(getLoginedPrincipal().getName(), checkedSet);
     }
 
-
     protected void save() throws SCAGJspException {
-        String messagetxt = "";
         final ServiceProvidersManager serviceProvidersManager = appContext.getServiceProviderManager();
         if (description == null) description = "";
         if (getEditId() == null) {
             Service service = new Service(name, description);
-            id = serviceProvidersManager.createService(getUserName(appContext), Long.decode(getParentId()).longValue(), service);
-            messagetxt = "Added new service: '" + name + "'.";
+            id = serviceProvidersManager.createService(getLoginedPrincipal().getName(), Long.decode(getParentId()).longValue(), service);
         } else {
             if (editChild) {
                 ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(Long.decode(getEditId()));
                 Service service = (Service) serviceProvider.getServices().get(Long.decode(getParentId()));
                 service.setName(name);
                 service.setDescription(description);
-                serviceProvidersManager.updateService(getUserName(appContext), Long.decode(getEditId()).longValue(), service);
-                messagetxt = "Changed service: '" + name + "'.";
+                serviceProvidersManager.updateService(getLoginedPrincipal().getName(), Long.decode(getEditId()).longValue(), service);
             } else {
                 ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(Long.decode(getParentId()));
                 Service service = (Service) serviceProvider.getServices().get(Long.decode(getEditId()));
                 service.setName(name);
                 service.setDescription(description);
-                serviceProvidersManager.updateService(getUserName(appContext), Long.decode(getParentId()).longValue(), service);
-                messagetxt = "Changed service: '" + name + "'.";
+                serviceProvidersManager.updateService(getLoginedPrincipal().getName(), Long.decode(getParentId()).longValue(), service);
             }
         }
-        StatMessage message = new StatMessage(getUserName(appContext), "Service", messagetxt);
-        StatusManager.getInstance().addStatMessages(message);
-        final Scag scag = appContext.getScag();
-        try {
-            scag.reloadServices();
-        } catch (SibincoException e) {
-            if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
-                throw new SCAGJspException(Constants.errors.serviceProviders.COULDNT_RELOAD_SERVICE_PROVIDER, e);
-            }
-        } finally {
-            try {
-                appContext.getServiceProviderManager().store();
-            } catch (IOException e) {
-                logger.debug("Couldn't save config", e);
-            }
-        }
+        appContext.getServiceProviderManager().reloadServices(appContext.getScag());
         if (id != -1) {
             throw new EditChildException(Long.toString(id), getParentId());
         } else {
@@ -327,16 +286,5 @@ public class Edit extends TabledEditBeanImpl {
 
     public void setChildEitId(String childEitId) {
         this.childEitId = childEitId;
-    }
-
-    private String getUserName(SCAGAppContext appContext) throws SCAGJspException {
-        Principal userPrincipal = loginedPrincipal;
-
-        if (userPrincipal == null)
-            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user principal(s)");
-        User user = (User) appContext.getUserManager().getUsers().get(userPrincipal.getName());
-        if (user == null)
-            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userPrincipal.getName() + "'");
-        return user.getName();
     }
 }

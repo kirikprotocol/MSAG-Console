@@ -3,25 +3,23 @@
  */
 package ru.sibinco.scag.beans.endpoints.services;
 
-import ru.sibinco.scag.beans.EditBean;
-import ru.sibinco.scag.beans.SCAGJspException;
-import ru.sibinco.scag.beans.DoneException;
-import ru.sibinco.scag.backend.endpoints.svc.Svc;
-import ru.sibinco.scag.backend.sme.Provider;
+import ru.sibinco.lib.backend.users.User;
+import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.Scag;
-import ru.sibinco.scag.backend.daemon.Proxy;
+import ru.sibinco.scag.backend.endpoints.svc.Svc;
+import ru.sibinco.scag.backend.sme.Provider;
 import ru.sibinco.scag.backend.transport.Transport;
-import ru.sibinco.scag.Constants;
-import ru.sibinco.lib.backend.users.User;
-import ru.sibinco.lib.SibincoException;
+import ru.sibinco.scag.beans.DoneException;
+import ru.sibinco.scag.beans.EditBean;
+import ru.sibinco.scag.beans.SCAGJspException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Map;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.security.Principal;
+import java.util.Map;
 
 /**
  * The <code>Edit</code> class represents
@@ -123,38 +121,12 @@ public class Edit extends EditBean {
         svc = new Svc(id, password, timeout, enabled, mode, providerObj);
         svcs.put(id, svc);
         final Scag scag = appContext.getScag();
-        try {
-            if (isAdd()) {
-                if (svc.isEnabled()) {
-                    scag.addSvc(svc);
-                }
-            } else {
-                if ((oldSvc.isEnabled() == svc.isEnabled())) {
-                    if (isEnabled())
-                        scag.updateSvcInfo(svc);
-                } else {
-                    if (svc.isEnabled()) {
-                        scag.addSvc(svc);
-                    } else {
-                        scag.deleteSvc(svc.getId());
-                    }
-                }
-            }
-        } catch (SibincoException e) {
-            if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
-                if (isAdd()) svcs.remove(id);
-                throw new SCAGJspException(Constants.errors.sme.COULDNT_APPLY, id, e);
-            }
-        } finally {
-            oldSvc = null;
-            try {
-                appContext.getSmppManager().store();
-            } catch (SibincoException e) {
-                logger.error("Couldn't store smes ", e);
-            }
-        }
+        appContext.getSmppManager().createUpdateServicePoint(getLoginedPrincipal().getName(),
+                svc, isAdd(), isEnabled(), scag, oldSvc);
         throw new DoneException();
     }
+
+
 
     public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException {
         super.process(request, response);
