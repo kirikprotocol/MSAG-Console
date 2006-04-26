@@ -348,7 +348,20 @@ Targets:
 
         </fileset>
     </jar>
-	     
+
+    <!--delete file="${JEDIT_DIR}/src/.keystore"/>
+
+    <genkey alias="msag" storepass="password" keystore="${JEDIT_DIR}/src/.keystore">
+     <dname>
+      <param name="CN" value="somebody"/>
+      <param name="OU" value="MSAG"/>
+      <param name="O"  value="Sibinco"/>
+      <param name="C"  value="ru"/>
+     </dname>
+    </genkey-->
+
+    <signjar jar="${JEDIT_DIR}/build/jedit.jar" alias="msag" storepass="password" keystore="${JEDIT_DIR}/src/.keystore"/>
+
 </target>
 																																																																																																		
   <target  name="applet" depends="distjedit">
