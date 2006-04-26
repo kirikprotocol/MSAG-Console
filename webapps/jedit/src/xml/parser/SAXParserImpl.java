@@ -589,8 +589,7 @@ public class SAXParserImpl extends XmlParser
   //{{{ error() method
   public void error(SAXParseException spe)
   {
-
-    String systemId = spe.getSystemId();
+    String systemId = null;//spe.getSystemId();
     if(systemId == null)
      systemId = buffer.getPath();
 
@@ -610,7 +609,7 @@ public class SAXParserImpl extends XmlParser
     end=start+arg.length();
     text=text.substring(start,end);
     }
-    addError(ErrorSource.ERROR,spe.getSystemId(),
+    addError(ErrorSource.ERROR,systemId,
     Math.max(0,spe.getLineNumber()-1),
     start,end,
     spe.getMessage());
@@ -619,7 +618,7 @@ public class SAXParserImpl extends XmlParser
   //{{{ warning() method
   public void warning(SAXParseException spe)
   {
-    String systemId = spe.getSystemId();
+    String systemId = null;//spe.getSystemId();
     if(systemId == null)
     systemId = buffer.getPath();
     String text=buffer.getLineText(Math.max(0,spe.getLineNumber()-1));
@@ -639,7 +638,7 @@ public class SAXParserImpl extends XmlParser
     text=text.substring(start,end);
     }
 
-    addError(ErrorSource.WARNING,spe.getSystemId(),
+    addError(ErrorSource.WARNING,systemId,
     Math.max(0,spe.getLineNumber()-1),
     start,end,//spe.getColumnNumber(),0,
     spe.getMessage());
@@ -649,9 +648,10 @@ public class SAXParserImpl extends XmlParser
   public void fatalError(SAXParseException spe)
    throws SAXParseException
   {
-   String systemId = spe.getSystemId();
+   String systemId = null;//spe.getSystemId();
    if(systemId == null)
     systemId = buffer.getPath();
+
     String text=buffer.getLineText(Math.max(0,spe.getLineNumber()-1));
     XMLParseException e=(XMLParseException) spe.getException();
     Object[] args= e.getArguments();
