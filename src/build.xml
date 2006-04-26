@@ -63,6 +63,12 @@ Required environment: ORACLE_HOME
     </ant>
   </target>
 
+  <target name="cluster" depends="logger" >
+    <ant antfile="${SRC_DIR}/conf/make.xml">
+      <property name="targets" value="cluster"/>
+    </ant>
+  </target>
+
   <target name="inman" depends="logger" >
     <ant antfile="${SRC_DIR}/conf/make.xml">
       <property name="targets" value="inman"/>

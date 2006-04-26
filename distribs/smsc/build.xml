@@ -52,6 +52,7 @@ Targets:
     <ant dir="${SRC_DIR}" target="system"/>
     <ant dir="${SRC_DIR}" target="admin"/>
     <ant dir="${SRC_DIR}" target="inman"/>
+    <ant dir="${SRC_DIR}" target="cluster"/>
   </target>
 
   <target name="makeweb">
@@ -157,6 +158,8 @@ Targets:
     <copy file="${BUILD_BIN}/db/oci/libdb_oci.so" todir="${DISTR_DIR}/lib"/>
     <copy file="${BUILD_BIN}/system/smsc" todir="${DISTR_DIR}/services/SMSC/bin"/>
     <chmod file="${DISTR_DIR}/services/SMSC/bin/smsc" perm="755"/>
+    <copy file="${BUILD_BIN}/cluster/agent" todir="${DISTR_DIR}/services/SMSC/bin"/>
+    <chmod file="${DISTR_DIR}/services/SMSC/bin/agent" perm="755"/>
     <copy file="${BUILD_BIN}/inman/inman" todir="${DISTR_DIR}/services/INMan/bin"/>
     <chmod file="${DISTR_DIR}/services/INMan/bin/inman" perm="755"/>
     <copy file="${BUILD_BIN}/store/ArchiveDaemon" todir="${DISTR_DIR}/services/ArchiveDaemon/bin"/>
@@ -165,6 +168,8 @@ Targets:
     <chmod file="${DISTR_DIR}/daemon/bin/smsc_ssdaemon" perm="755"/>
     <copy file="${BUILD_BIN}/admin/daemon/hs_smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>
     <chmod file="${DISTR_DIR}/daemon/bin/hs_smsc_ssdaemon" perm="755"/>
+    <copy file="${BUILD_BIN}/admin/daemon/hsadmin" todir="${DISTR_DIR}/daemon/bin"/>
+    <chmod file="${DISTR_DIR}/daemon/bin/hsadmin" perm="755"/>
     <chmod perm="755">
       <fileset dir="${DISTR_DIR}/lib" includes="*"/>
     </chmod>
