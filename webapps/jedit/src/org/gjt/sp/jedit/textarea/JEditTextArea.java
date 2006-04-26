@@ -4454,7 +4454,7 @@ loop:   for(int i = lineNo + 1; i < getLineCount(); i++)
    return;
   }
 
-  if(getSelectionCount() == 0)
+  /*if(getSelectionCount() == 0)
   {
    // if caret is inside leading whitespace, indent.
    String text = buffer.getLineText(caretLine);
@@ -4464,9 +4464,12 @@ loop:   for(int i = lineNo + 1; i < getLineCount(); i++)
    if(caret - start <= whiteSpace
     && buffer.indentLine(caretLine,false))
     return;
-  }
+  } */
 
-  userInput('\t');
+  userInput(' ');
+  userInput(' ');
+  userInput(' ');
+  userInput(' ');
  } //}}}
 
  //{{{ indentSelectedLines() method

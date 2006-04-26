@@ -499,7 +499,7 @@ public class Registers
  {
   registers = new Register[256];
   Toolkit toolkit = Toolkit.getDefaultToolkit();
-  registers['$'] = new ClipboardRegister(new Clipboard("baks"));  // toolkit.getSystemClipboard());
+  registers['$'] = new ClipboardRegister(toolkit.getSystemClipboard()/*new Clipboard("baks")*/);   //toolkit.getSystemClipboard();
   Clipboard selection = new Clipboard("procent");//toolkit.getSystemSelection();
  // if(selection != null)
   registers['%'] = new ClipboardRegister(selection);
