@@ -99,7 +99,7 @@ Required environment: ORACLE_HOME
     </ant>
   </target>
   
-  <target name="scag" depends="logger, db, scag.exc, util.leaktracing" >
+  <target name="scag" depends="logger, db, scag.exc, util.leaktracing, inman" >
     <ant antfile="${SRC_DIR}/conf/make.xml">
       <property name="targets" value="scag"/>
     </ant>
