@@ -33,8 +33,7 @@ namespace logger{
 
 #define __require__(expr)
 #define require(expr)
-#define trace(txt) trace2("%s",txt)
-#define __trace__(txt) trace(txt)
+#define __trace__(txt) trace2("%s",txt)
 #define __trace2__ trace2
 
 static inline void trace2(const char* fmt,...)
@@ -227,10 +226,6 @@ static inline void warning2(const char* fmt,...)
   #endif
 #endif
 
-#if defined ( trace )
-  #undef trace
-#endif
-
 #if !defined ( WATCH_LOG_STREAM )
   #define WATCH_LOG_STREAM LOG_STREAM
 #endif
@@ -250,7 +245,6 @@ static inline void warning2(const char* fmt,...)
     smsc::util::watchtImpl(expr,#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__)
   #define watchtext(expr,len) \
     smsc::util::watchtextImpl(expr,len,#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__)
-  #define trace(text) if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG)) smsc::logger::_trace_cat->log_(smsc::logger::Logger::LEVEL_DEBUG,text)
   #if defined ENABLE_FILE_NAME
     #define trace2(format,...) if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG)) smsc::logger::_trace_cat->log_(smsc::logger::Logger::LEVEL_DEBUG,format,__VA_ARGS__)
   #else
@@ -267,7 +261,6 @@ static inline void warning2(const char* fmt,...)
   #define watchx(expr)
   #define watcht(expr)
   #define watchtext(expr)
-  #define trace(text)
   #define trace2(format,...)
   #define debug1(category,text)
   #define debug2(category,format,...)
@@ -280,7 +273,7 @@ static inline void warning2(const char* fmt,...)
 #define __watchx__(expr)    watchx(expr)
 #define __watcht__(expr)    watcht(expr)
 #define __watchtext__(expr) watchtext(expr)
-#define __trace__(text)     trace(text)
+#define __trace__(text)     trace2("%s", text)
 #define __debug__(category,text)     debug1(category,text)
 #define __debug2__(category,format,...)     debug2(category,format,__VA_ARGS__)
 #define __warn__(category,text)     warn1(category,text)

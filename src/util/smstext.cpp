@@ -272,7 +272,7 @@ static bool FillUd(SMS* sms)
     {
       if(len+5-oldUdh > 255)
       {
-        trace("fillUd: estimated length>255");
+        __trace__("fillUd: estimated length>255");
         return false;
       }
       userdata[off++]=4;
@@ -283,7 +283,7 @@ static bool FillUd(SMS* sms)
     {
       if(len+7-oldUdh>255)
       {
-        trace("fillUd: estimated length>255");
+        __trace__("fillUd: estimated length>255");
         return false;
       }
       userdata[off++]=5;

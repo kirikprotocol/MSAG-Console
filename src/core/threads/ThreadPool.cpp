@@ -88,13 +88,13 @@ ThreadPool::ThreadPool()
 
 static void disp(int sig)
 {
-//  trace("got user signal");
+//  __trace__("got user signal");
 }
 
 ThreadPool::~ThreadPool()
 {
   shutdown();
-  trace("ThreadPool destroyed");
+  __trace__("ThreadPool destroyed");
 }
 
 void ThreadPool::shutdown()
@@ -106,12 +106,12 @@ void ThreadPool::shutdown()
     Unlock();
     return;
   }
-  trace("stopping tasks");
+  __trace__("stopping tasks");
   for(int i=0;i<usedThreads.Count();i++)
   {
     usedThreads[i]->stopTask();
   }
-  trace("all tasks are notified");
+  __trace__("all tasks are notified");
   Unlock();
 #ifdef linux
       typedef timespec timestruc_t;
@@ -180,7 +180,7 @@ void ThreadPool::startTask(ThreadedTask* task, bool delOnCompletion/* = true*/)
   PooledThread* t;
   if(freeThreads.Count()>0)
   {
-    trace("use free thread for new task");
+    __trace__("use free thread for new task");
     freeThreads.Pop(t);
     t->assignTask(task);
     t->processTask();
@@ -189,11 +189,11 @@ void ThreadPool::startTask(ThreadedTask* task, bool delOnCompletion/* = true*/)
   {
     if(usedThreads.Count()==maxThreads)
     {
-      trace("pending task");
+      __trace__("pending task");
       pendingTasks.Push(task);
     }else
     {
-      trace("creating new thread for task");
+      __trace__("creating new thread for task");
       t=new PooledThread(this);
       t->assignTask(task);
       t->Start(defaultStackSize);
