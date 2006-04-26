@@ -870,7 +870,7 @@ AdapterProperty * SmppCommandAdapter::Get_Unknown_Property(SMS& data, const std:
     uint16_t valueLen;
     if (len < 5) return 0;
 
-    for (int i = 0; i< len - 3; i++) 
+    for (int i = 0; i< len - 4; i++) 
     {
         value = *((uint16_t *)(buff + i));
         valueLen = *((uint16_t *)(buff + i + 2));
@@ -881,7 +881,7 @@ AdapterProperty * SmppCommandAdapter::Get_Unknown_Property(SMS& data, const std:
 
             if (valueLen == 1)
             {
-                char temp = buff[i + 2 + 1];
+                char temp = buff[i + 4];
                 return new AdapterProperty(name, this, (temp > 0));
             }
 
