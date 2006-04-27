@@ -75,8 +75,16 @@ public class Edit extends TabledEditBeanImpl {
         if (mbDelete != null) {
             delete();
         }
+        Long servIdForRout;
+        if(getEditId() != null){
+           servIdForRout = (!editChild ? Long.decode(getEditId()) : Long.decode(getParentId()));
+        }else{
+            servIdForRout = Long.decode(getParentId());
+        }
+
         serviceProviders = appContext.getServiceProviderManager().getServiceProviders();
-        routes = appContext.getServiceProviderManager().getRoutesByServiceId(appContext.getScagRoutingManager().getRoutes(), Long.decode(getParentId()));
+        routes = appContext.getServiceProviderManager().getRoutesByServiceId(
+                appContext.getScagRoutingManager().getRoutes(), servIdForRout);
         final SortedList results = new SortedList(getDataSource(), new SortByPropertyComparator(sort = (sort == null) ? "id" : sort));
         totalSize = results.size();
         if (totalSize > startPosition)
