@@ -23,7 +23,7 @@ void rolloverFiles(const char * const filename, unsigned int maxBackupIndex)
   std::auto_ptr<char> buffer(new char[max_filename_length+1]);
   snprintf(buffer.get(), max_filename_length, "%s.%u", filename, maxBackupIndex);
   buffer.get()[max_filename_length] = 0;
-  remove(buffer.get());
+  if(File::Exists(buffer.get()))File::Unlink(buffer.get());
 
   // Map {(maxBackupIndex - 1), ..., 2, 1} to {maxBackupIndex, ..., 3, 2}
   for(int i=maxBackupIndex - 1; i >= 1; i--) {
@@ -36,7 +36,7 @@ void rolloverFiles(const char * const filename, unsigned int maxBackupIndex)
     source.get()[max_filename_length] = 0;
     target.get()[max_filename_length] = 0;
 
-    rename(source.get(), target.get());
+    if(File::Exists(source.get()))File::Rename(source.get(), target.get());
   }
 }
 
@@ -105,7 +105,7 @@ void RollingFileAppender::rollover() throw()
       snprintf(target.get(), max_filename_length, "%s.1", filename.get());
       target.get()[max_filename_length] = 0;
 
-      rename(filename.get(), target.get());
+      File::Rename(filename.get(), target.get());
 
       // Open a new file
       //file = fopen(filename.get(), "w");
