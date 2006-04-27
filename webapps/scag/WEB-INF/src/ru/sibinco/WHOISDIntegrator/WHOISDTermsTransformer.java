@@ -10,6 +10,7 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.*;
 import java.util.*;
 
+import org.apache.log4j.Logger;
 
 /**
  * Created by IntelliJ IDEA.
@@ -19,19 +20,23 @@ import java.util.*;
  * To change this template use File | Settings | File Templates.
  */
 public class WHOISDTermsTransformer {
+  protected final static Logger logger = Logger.getLogger("WHOISDTermsTransformer");
+
   private final static String HeaderToWHOISDTerms = "<!--whoisd-terms \n <whoisd:terms>";
   private final static String EndingToWHOISDTerms = "-->";
   public final static boolean DEBUG = false;
 
-  public static Map buildRules(LinkedList termAsList,String service, Reader reader, File xslFolder) throws Exception {
+  public static Map buildRules(LinkedList termAsList,String service, BufferedReader br, File xslFolder) throws Exception {
     String content = "";
-    String line;
-    BufferedReader br = new BufferedReader(reader);
+    String line ="";
     try {
+     logger.debug("!!!!!!!!!!!Start getting term!!!!!!!!!!");
      while((line=br.readLine()) != null) {
-      content = content + line +"\n";
-      termAsList.add(line);
+      content = content + line + "\n";
+       logger.debug(line);
+       termAsList.add(line);
      }
+     logger.debug("!!!!!!!!!!!End getting term!!!!!!!!!!");
     }
     finally {
       if (br!=null) br.close();
