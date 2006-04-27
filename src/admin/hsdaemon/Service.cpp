@@ -207,7 +207,11 @@ void Service::shutdown()
   sleepEvent.Signal();
   if (status != running)
   {
-    if(status==starting)status=stopping;
+    if(status==starting)
+    {
+      restartRetryCount=0;
+      status=stopping;
+    }
     throw AdminException("Service is not running");
   }
 
