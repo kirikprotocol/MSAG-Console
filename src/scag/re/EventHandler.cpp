@@ -97,7 +97,7 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, 
     
     if ((propertyObject.HandlerId == EH_SUBMIT_SM)||(propertyObject.HandlerId == EH_DELIVER_SM))
     {
-        int size = MAX_TEXT_MESSAGE_LENGTH;
+        int size = MAX_TEXT_MESSAGE_LENGTH - 2;
         if (size > messageBody.size()) size = messageBody.size();
 
         if (size > 0) memcpy(ev.pMessageText, messageBody.data(), size); 
