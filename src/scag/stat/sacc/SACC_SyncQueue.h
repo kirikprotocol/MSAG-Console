@@ -152,6 +152,11 @@ public:
 	{
 		segmentsize++;
 	}
+	if(segmentsize < maximum)
+	{
+	    segmentsize++;
+	}
+	    
 	if(segmentsize)
 	{
 	  PDUPair mPair;
