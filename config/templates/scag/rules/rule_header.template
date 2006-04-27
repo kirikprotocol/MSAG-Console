@@ -7,5 +7,6 @@
 	   xmlns:strings  ="http://www.sibinco.com/SCAG/STRINGS"
            xmlns:bill     ="http://www.sibinco.com/SCAG/BILL"
 	   xmlns:profile  ="http://www.sibinco.com/SCAG/PROFILE"
+	   xmlns:log  	  ="http://www.sibinco.com/SCAG/LOG"
            transport="{1}">
 
