@@ -44,7 +44,9 @@ public class Index extends TabledBeanImpl {
         }
         final List toRemoveRoutes = appContext.getScagRoutingManager().getRoteIdsByServiceIds(
                 (String[]) serviceIds.toArray(new String[serviceIds.size()]));
-        appContext.getScagRoutingManager().deleteRoutes(getLoginedPrincipal().getName(), toRemoveRoutes);
+        if (toRemoveRoutes.size() > 0) {
+            appContext.getScagRoutingManager().deleteRoutes(getLoginedPrincipal().getName(), toRemoveRoutes);
+        }
         appContext.getServiceProviderManager().deleteServiceProviders(getLoginedPrincipal().getName(), toRemove);
         appContext.getServiceProviderManager().reloadServices(appContext.getScag());
     }

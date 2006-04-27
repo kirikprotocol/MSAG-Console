@@ -5,7 +5,7 @@
     <jsp:attribute name="menu">
         <sm-pm:menu>
             <sm-pm:item name="mbApply" value="Apply" title="Apply changes"/>
-            <sm-pm:item name="mbLoad" value="Restore" title="Undo changes"/>
+            <sm-pm:item name="mbLoad" value="Restore Apply" title="Undo changes"/>
             <sm-pm:space/>
             <sm-pm:item name="mbSave" value="Save current" title="Save current routing configuration"/>
             <sm-pm:item name="mbLoadSaved" value="Load saved" title="Load saved routing configuration"
@@ -27,10 +27,12 @@
                 }
             }
             function enableDisableButtons(){
-                enableDisableButtonsById('mbSave', ${(!bean.routesSaved)});
-                enableDisableButtonsById('mbLoadSaved', ${(!bean.routesLoaded)});
                 enableDisableButtonsById('mbApply', ${(!bean.routesChanged)});
                 enableDisableButtonsById('mbLoad', ${(!bean.routesRestored)} );
+                enableDisableButtonsById('mbSave', false);
+                enableDisableButtonsById('mbLoadSaved', ${(!bean.routesLoaded)});
+
+
             }
         </script>
         <div class=page_subtitle>Status log</div>

@@ -80,8 +80,10 @@ public class Edit extends TabledEditBeanImpl {
             appContext.getRuleManager().removeRulesForService(serviceIdStr);
         }
         final List toRemoveRoutes = appContext.getScagRoutingManager().getRoteIdsByServiceIds(checked);
-        appContext.getScagRoutingManager().deleteRoutes(getLoginedPrincipal().getName(),
-                 toRemoveRoutes);
+        if (toRemoveRoutes.size() > 0) {
+            appContext.getScagRoutingManager().deleteRoutes(getLoginedPrincipal().getName(),
+                    toRemoveRoutes);
+        }
         appContext.getServiceProviderManager().deleteServices(getLoginedPrincipal().getName(),
                 toRemove, serviceProvider);
         appContext.getServiceProviderManager().reloadServices(appContext.getScag());

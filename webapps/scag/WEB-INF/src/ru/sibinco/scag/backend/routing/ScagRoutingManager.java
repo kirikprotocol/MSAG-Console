@@ -152,16 +152,18 @@ public class ScagRoutingManager {
         getRoutes().keySet().removeAll(checkedSet);
         setRoutesChanged(true);
         StatMessage message = new StatMessage(user, "Routes", "Deleted route(s): " + checkedSet.toString() + ".");
-        addStatMessages(message);
         StatusManager.getInstance().addStatMessages(message);
+        addStatMessages(message);
+
     }
 
     public synchronized void deleteRoutes(final String user, final List checkedSet) {
         getRoutes().keySet().removeAll(checkedSet);
         setRoutesChanged(true);
         StatMessage message = new StatMessage(user, "Routes", "Deleted route(s): " + checkedSet.toString() + ".");
-        addStatMessages(message);
         StatusManager.getInstance().addStatMessages(message);
+        addStatMessages(message);
+
     }
 
     protected Subject createSubject(final Element subjElem, final SmppManager smppManager) throws SibincoException {
@@ -264,15 +266,18 @@ public class ScagRoutingManager {
     public synchronized void restore() throws SibincoException {
         loadFromFile(SMPP_ROUTES_TEMPORAL_CONFIG);
         setRoutesRestored(true);
+        clearStatMessages();
     }
 
     public synchronized void apply() throws SibincoException {
         saveToFile(SMPP_ROUTES_PRIMARY_CONFIG);
+        clearStatMessages();
     }
 
     public synchronized void load() throws SibincoException {
         loadFromFile(SMPP_ROUTES_PRIMARY_CONFIG);
         setRoutesLoaded(true);
+        clearStatMessages();
     }
 
     public synchronized void trace() throws SibincoException {
@@ -333,6 +338,10 @@ public class ScagRoutingManager {
 
     public synchronized void addStatMessages(StatMessage message) {
         statMessages.put(message.getTime(), message);
+    }
+
+    public synchronized void clearStatMessages() {
+        statMessages.clear();
     }
 
 }

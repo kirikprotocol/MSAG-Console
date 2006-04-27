@@ -6,6 +6,7 @@ package ru.sibinco.scag.backend.status;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Calendar;
 
 /**
  * The <code>StatMessage</code> class represents
@@ -22,13 +23,14 @@ public class StatMessage {
     private String category;
     private String message;
 
-    SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+    SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss:SSSS");
 
     public StatMessage(final String userLogin, final String category, final String message) {
         this.userLogin = userLogin;
         this.category = category;
         this.message = message;
-        this.time  = dateFormat.format(new Date());
+        Calendar calendar = Calendar.getInstance();
+        this.time  = dateFormat.format(calendar.getTime());
     }
 
 
