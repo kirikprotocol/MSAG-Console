@@ -111,6 +111,13 @@ public class WHOISDServlet extends HttpServlet {
    }
 
    private void applyTerm(HttpServletRequest req, boolean isMultipartFormat) throws Exception {
+     ByteArrayOutputStream bos = new ByteArrayOutputStream();
+     int b;
+     InputStream in = req.getInputStream();
+     BufferedReader br = new BufferedReader(new InputStreamReader(in));
+     while((b=br.read()) != -1) {
+         bos.write(b);
+     }
      String service = req.getParameter("service");
      if (service == null) throw new WHOISDException("service parameter is missed!");
      try {
@@ -120,20 +127,17 @@ public class WHOISDServlet extends HttpServlet {
      }
      RuleManagerWrapper rulemanager = new RuleManagerWrapper(appContext.getRuleManager());
      SAXParserImpl parser = new SAXParserImpl();
-     Reader reader = null;
      Map rulesWHOISD = null;
      Rule ruleWHOISD = null;
      LinkedList termAsList = new LinkedList();
      if (isMultipartFormat) {
-       int[] dataSlice = extractData(req);
+       int[] dataSlice = extractData(req,new ByteArrayInputStream(bos.toByteArray()));
        String content = new String();
        for (int i =0 ;i<dataSlice.length;i++)
          content = content +(char)dataSlice[i];
-       rulesWHOISD = WHOISDTermsTransformer.buildRules(termAsList,service, new StringReader(content), rulemanager.getXslFolder());
+         rulesWHOISD = WHOISDTermsTransformer.buildRules(termAsList,service, new BufferedReader(new StringReader(content)), rulemanager.getXslFolder());
      } else {
-       InputStream in = req.getInputStream();
-       reader = new BufferedReader(new InputStreamReader(in));
-       rulesWHOISD = WHOISDTermsTransformer.buildRules(termAsList,service, reader, rulemanager.getXslFolder());
+       rulesWHOISD = WHOISDTermsTransformer.buildRules(termAsList,service, new BufferedReader(new InputStreamReader(new ByteArrayInputStream(bos.toByteArray()))), rulemanager.getXslFolder());
      }
      String[] transports = Transport.transportTitles;
      if (rulesWHOISD.size()>0)
@@ -251,7 +255,7 @@ public class WHOISDServlet extends HttpServlet {
      try {
      fos = new FileOutputStream(pathToWrite);
      if (isMultipartFormat) {
-     int[] dataSlice = extractData(req);
+     int[] dataSlice = extractData(req, req.getInputStream());
      for(int i=0; i<dataSlice.length; i++)
        fos.write(dataSlice[i]);
      } else {
@@ -277,8 +281,7 @@ public class WHOISDServlet extends HttpServlet {
        else return false;
   }
 
-  private int[] extractData(HttpServletRequest request) throws IOException {
-      InputStream is = request.getInputStream();
+  private int[] extractData(HttpServletRequest request, InputStream is) throws IOException {
       int[] data = new int[request.getContentLength()];
       int bytes;
       int counter = 0;
