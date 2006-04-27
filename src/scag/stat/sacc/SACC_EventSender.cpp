@@ -290,7 +290,7 @@ void EventSender::performTransportEvent(const SACC_TRAFFIC_INFO_EVENT_t& e)
  pdu.insertSegment((uint8_t*)&e.Header.sCommandStatus,sizeof(uint16_t));
 
  uint32_t sz =0;
- while(e.pMessageText[sz]!=0)
+ while(e.pMessageText[sz]!=0 && sz < (MAX_TEXT_MESSAGE_LENGTH-1) )
  {
   sz++;
  }
@@ -352,7 +352,7 @@ void EventSender::performAlarmMessageEvent(const SACC_ALARM_MESSAGE_t& e)
  
 
  uint32_t sz =0;
- while(e.pMessageText[sz]!=0)
+ while(e.pMessageText[sz]!=0 && sz <(MAX_TEXT_MESSAGE_LENGTH-1))
  {
   sz++;
  }
@@ -388,7 +388,7 @@ void EventSender::performAlarmEvent(const SACC_ALARM_t& e)
  pdu.insertSegment((uint8_t*)&e.Header.sCommandStatus,sizeof(uint16_t));
 
  uint32_t sz =0;
- while(e.pMessageText[sz]!=0)
+ while(e.pMessageText[sz]!=0 && sz <(MAX_TEXT_MESSAGE_LENGTH-1))
  {
   sz++;
  }
