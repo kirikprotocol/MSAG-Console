@@ -88,6 +88,7 @@
 	    <group ref="bill:Actions" />
 	    <group ref="operation:Actions" />
 	    <group ref="strings:Actions" />
+	    <group ref="profile:Actions" />
 
             <element name="log">
                 <complexType>
