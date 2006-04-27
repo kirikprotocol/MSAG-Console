@@ -136,7 +136,7 @@ public class XmlCompletion extends SideKickCompletion
    StringBuffer buf = new StringBuffer();
    buf.append(element.name.substring(word.length()));
 
-   buf.append(element.getRequiredAttributesString());
+   //buf.append(element.getRequiredAttributesString());
    boolean autofill= jEdit.getBooleanProperty("xml.autofill");
    if(ch == '\n' || ch == '>')
    {
@@ -153,11 +153,11 @@ public class XmlCompletion extends SideKickCompletion
     {
      if (element.content == null || element.content.size()==0)
      {
-       buf.append("/>");
+       if (element.attributes.size()>0) buf.append(" />"); else buf.append("/>");
      }
      else
      {
-         buf.append(">");
+        if (element.attributes.size()>0) buf.append(" >"); else buf.append(">");
      }
      int start = buf.length();
 
