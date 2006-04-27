@@ -102,12 +102,15 @@ std::string Property::toString() const
             str += "ACCESS";
             break;
     }
-    strftime(buf, 32, "%Y/%m/%d %H:%M:%S", gmtime(&final_date));
-    str += " FINAL_DATE: ";
-    str += buf;
-    sprintf(buf, "%d", life_time);
-    str += " LIFE_TIME: ";
-    str += buf;
+    if(time_policy != INFINIT)
+    {
+        strftime(buf, 32, "%Y/%m/%d %H:%M:%S", gmtime(&final_date));
+        str += " FINAL_DATE: ";
+        str += buf;
+        sprintf(buf, "%d", life_time);
+        str += " LIFE_TIME: ";
+        str += buf;
+    }
     return str;
 }
 
