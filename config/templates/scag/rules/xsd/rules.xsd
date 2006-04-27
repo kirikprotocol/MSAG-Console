@@ -87,11 +87,11 @@
     <group name="Actions">
         <choice>
             <group ref="session:Actions"/>
-        <group ref="bill:Actions" />
-        <group ref="operation:Actions" />
-        <group ref="strings:Actions" />
-        <group ref="profile:Actions" />
-        <group ref="log:Actions" />
+    	    <group ref="bill:Actions" />
+    	    <group ref="operation:Actions" />
+    	    <group ref="strings:Actions" />
+    	    <group ref="profile:Actions" />
+    	    <group ref="log:Actions" />
 
             <element name="set">
                 <complexType>
@@ -115,18 +115,18 @@
         </element>
 
         
-            <element name="if">
-                <complexType>
-                    <choice>
-                        <sequence>
-                            <element name="then" type="scag:ActionsBranch" maxOccurs="1"/>
-                            <element name="else" type="scag:ActionsBranch" maxOccurs="1"/>
-                        </sequence>
-                        <group ref="scag:Actions" minOccurs="1" maxOccurs="unbounded"/>
-                    </choice>
-                    <attributeGroup ref="scag:Test"/>
-                </complexType>    
-            </element>
+        <element name="if">
+            <complexType>
+                <choice>
+                    <sequence>
+                        <element name="then" type="scag:ActionsBranch" maxOccurs="1"/>
+                        <element name="else" type="scag:ActionsBranch" maxOccurs="1"/>
+                    </sequence>
+                    <group ref="scag:Actions" minOccurs="1" maxOccurs="unbounded"/>
+                </choice>
+                <attributeGroup ref="scag:Test"/>
+            </complexType>    
+        </element>
             
         <element name="inc">
         <complexType>
