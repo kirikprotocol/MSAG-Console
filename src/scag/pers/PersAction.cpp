@@ -119,24 +119,26 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
         return;
     }
 
-    const char* vn = "value";
-    std::string s;
     if(cmd == PC_INC_MOD || cmd == PC_INC)
     {
         if(!params.Exists("inc"))
-            s = ConvertStrToWStr("1");
+        {
+            value_str = "1";
+            value = L"1";
+        }
         else
-            s = params["inc"];
+        {
+            value_str = ConvertWStrToStr(params["inc"]);
+            value = ConvertWStrTo_wstring(params["inc"]);
+        }
     }
     else
     {
         if(!params.Exists("value"))
             throw SCAGException("PersAction 'value' : missing '%s' parameter", getStrCmd());
-        s = params["value"];
+        value_str = ConvertWStrToStr(params["value"]);
+        value = ConvertWStrTo_wstring(params["value"]);
     }
-
-    value_str = ConvertWStrToStr(s);
-    value = ConvertWStrTo_wstring(s);
 
     ftValue = ActionContext::Separate(value_str, name); 
     if(cmd == PC_GET && (ftValue == ftUnknown || ftValue == ftConst))
@@ -155,11 +157,49 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
         return;
     }
 
+    if(cmd == PC_INC_MOD)
+    {
+        if(!params.Exists("mod"))
+            throw SCAGException("PersAction '%s' : missing 'mod' parameter", getStrCmd());
+
+        mod_str = ConvertWStrToStr(params["mod"]);
+
+        ftModValue = ActionContext::Separate(mod_str, name); 
+        if(ftModValue == ftField) 
+        {
+            AccessType at = CommandAdapter::CheckAccess(propertyObject.HandlerId, name, propertyObject.transport);
+            if(!(at & atRead)) 
+                throw InvalidPropertyException("PersAction '%s': cannot read property '%s' - no access", mod_str.c_str());
+        }
+
+        if(ftModValue == ftUnknown && !(mod = atoi(mod_str.c_str())))
+            throw SCAGException("PersAction '%s' : 'mod' parameter not a number. mod=%s", getStrCmd(), mod_str.c_str());
+
+        if(!params.Exists("result"))
+            throw SCAGException("PersAction '%s' : missing 'result' parameter", getStrCmd());
+
+        result_str = ConvertWStrToStr(params["result"]);
+
+        FieldType ftResultValue = ActionContext::Separate(result_str, name); 
+        if(ftResultValue == ftUnknown || ftValue == ftConst)
+            throw InvalidPropertyException("PersAction '%s': 'result' parameter should be an lvalue. Got %s", getStrCmd(), value_str.c_str());
+
+        if(ftResultValue == ftField) 
+        {
+            AccessType at = CommandAdapter::CheckAccess(propertyObject.HandlerId, name, propertyObject.transport);
+            if(!(at & atWrite)) 
+                throw InvalidPropertyException("PersAction '%s': cannot modify property '%s' - no access", value_str.c_str());
+        }
+    }
+
     if(!params.Exists("policy") || (policy = getPolicyFromStr(ConvertWStrToStr(params["policy"]))) == UNKNOWN)
         throw SCAGException("PersAction '%s' : missing or unknown 'policy' parameter", getStrCmd());
 
     if(policy == INFINIT)
+    {
+        smsc_log_debug(logger, "act params: cmd = %s, profile=%d, var=%s, policy=%d, mod=%d", getStrCmd(), profile, var.c_str(), policy, mod);
         return;
+    }
 
     if(policy == FIXED && params.Exists("finaldate"))
     {
@@ -191,35 +231,6 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
 
     life_time = time.tm_hour * 3600 + time.tm_min * 60 + time.tm_sec;
 
-    if(cmd != PC_INC_MOD)
-    {
-        smsc_log_debug(logger, "act params: cmd = %s, profile=%d, var=%s, policy=%d, life_time=%d(%s)", getStrCmd(), profile, var.c_str(), policy, life_time, lt.c_str());
-        return;
-    }
-
-    if(!params.Exists("mod"))
-        throw SCAGException("PersAction '%s' : missing 'mod' parameter", getStrCmd());
-
-    std::string mod_str = ConvertWStrToStr(params["mod"]);
-
-    if(!(mod = atoi(mod_str.c_str())))
-        throw SCAGException("PersAction '%s' : 'mod' parameter not a number. mod=%s", getStrCmd(), mod_str.c_str());
-
-    if(!params.Exists("result"))
-        throw SCAGException("PersAction '%s' : missing 'result' parameter", getStrCmd());
-
-    result_str = ConvertWStrToStr(params["result"]);
-
-    FieldType ftResultValue = ActionContext::Separate(result_str, name); 
-    if(ftResultValue == ftUnknown || ftValue == ftConst)
-        throw InvalidPropertyException("PersAction '%s': 'result' parameter should be an lvalue. Got %s", getStrCmd(), value_str.c_str());
-
-    if(ftResultValue == ftField) 
-    {
-        AccessType at = CommandAdapter::CheckAccess(propertyObject.HandlerId, name, propertyObject.transport);
-        if(!(at & atWrite)) 
-            throw InvalidPropertyException("PersAction '%s': cannot modify property '%s' - no access", value_str.c_str());
-    }
     smsc_log_debug(logger, "act params: cmd = %s, profile=%d, var=%s, policy=%d, life_time=%d(%s), mod=%d", getStrCmd(), profile, var.c_str(), policy, life_time, lt.c_str(), mod);
 }
 
@@ -328,6 +339,13 @@ bool PersAction::run(ActionContext& context)
                 }
                 else if(cmd == PC_INC_MOD)
                 {
+                    if(ftModValue != ftUnknown)
+                    {
+                        REProperty *rp = context.getProperty(mod_str);
+                        if(!rp || !(mod = rp->getInt()))
+                            return false;
+                    }
+
                     int res;
                     if(profile == PT_ABONENT)
                         res = pc.IncModProperty(profile, cp.abonentAddr.toString().c_str(), prop, mod);

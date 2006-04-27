@@ -244,6 +244,9 @@ public:
         Profile *pf;
         Property *p;
 
+        if(!mod)
+            return false;
+
         pf = getProfile(key, true);
         p = pf->GetProperty(prop.getName().c_str());
         if(p != NULL)
