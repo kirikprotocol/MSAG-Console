@@ -877,11 +877,10 @@ AdapterProperty * SmppCommandAdapter::Get_Unknown_Property(SMS& data, const std:
         valueLen = *((uint16_t *)(buff + i + 2));
 
         if (valueLen <=0) return 0;
+        if ((i + 4 + valueLen) > len) return 0;
 
         if (value == FieldId) 
         {
-            if ((i + valueLen + 2) > (len - 1)) return 0;
-
             if (valueLen == 1)
             {
                 char temp = buff[i + 4];
@@ -1215,8 +1214,16 @@ void SmppCommandAdapter::fillChargeOperation(smsc::inman::interaction::ChargeSms
     sprintf(buff,"%d", tariffRec.ServiceNumber);
     std::string str(buff);
     //op.setDestinationSubscriberNumber(sms.getDealiasedDestinationAddress().toString());
-    op.setDestinationSubscriberNumber(str);
-    op.setCallingPartyNumber(sms.getOriginatingAddress().toString());
+    if (command->cmdid == DELIVERY) 
+    {
+        op.setDestinationSubscriberNumber(str);
+        op.setCallingPartyNumber(sms.getOriginatingAddress().toString());
+    } else
+    {
+        op.setDestinationSubscriberNumber(sms.getOriginatingAddress().toString());
+        op.setCallingPartyNumber(str);
+    }
+
     op.setCallingIMSI(sms.getOriginatingDescriptor().imsi);
     //op.setSMSCAddress(INManComm::scAddr.toString());
     op.setSubmitTimeTZ(sms.getSubmitTime());

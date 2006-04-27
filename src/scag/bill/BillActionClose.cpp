@@ -118,10 +118,7 @@ bool BillActionClose::run(ActionContext& context)
             break;
         }
 
-        if (isOK) 
-            bm.commit(operation->getBillId());
-        else
-            bm.rollback(operation->getBillId());
+        if (isOK) bm.commit(operation->getBillId());
 
 
         operation->detachBill();
