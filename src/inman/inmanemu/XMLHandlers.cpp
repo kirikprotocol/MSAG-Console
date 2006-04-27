@@ -88,7 +88,10 @@ void XMLBasicHandler::startElement(const XMLCh* const qname, AttributeList& attr
             {
 //                  std::cout << "  ~~~~" << XMLString::stringLen(XMLValue) << std::endl;  
                 if (XMLString::stringLen(XMLValue) > 0) 
-                    abonentAddr.setValue(strlen(attrValue.localForm()),attrValue.localForm());
+                {
+                    Address addr(attrValue.localForm());
+                    abonentAddr = addr;
+                }
                 else
                     abonentAddr = nullAddr;
             }
