@@ -394,7 +394,7 @@ void Scag::init()
         throw Exception("Exception during initialization of PersClient: %s", e.what());
     }catch (scag::pers::client::PersClientException& e)
     {
-        smsc_log_error(logger, "Exception during initialization of PersClient: %s", e.what())
+        smsc_log_error(log, "Exception during initialization of PersClient: %s", e.what());
 //        throw Exception("Exception during initialization of PersClient: %s", e.what());
     }catch (...)
     {
