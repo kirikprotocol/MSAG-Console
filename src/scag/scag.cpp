@@ -374,7 +374,7 @@ void Scag::init()
 
     //********************************************************
     //************** Personalization client initialization **************
-/*    try {
+    try {
         smsc_log_info(log, "Personalization client initializing...");
 
         using scag::config::ConfigView;
@@ -399,7 +399,7 @@ void Scag::init()
     }catch (...)
     {
         throw Exception("Exception during initialization of PersClient: unknown error");
-    }*/
+    }
   //********************************************************
 
   //********************************************************
