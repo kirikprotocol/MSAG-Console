@@ -6,7 +6,7 @@
 
 
 #include <xercesc/sax/HandlerBase.hpp>
-#include <xercesc/framework/XMLFormatter.hpp>
+//#include <xercesc/framework/XMLFormatter.hpp>
 
 #include <util/Exception.hpp>
 
@@ -31,11 +31,11 @@ class AttributeList;
 XERCES_CPP_NAMESPACE_END
 
 
-class XMLBasicHandler : public HandlerBase//, public XMLFormatTarget
+class XMLBasicHandler : public HandlerBase
 {
     const Locator * m_pLocator;
     Logger * logger;
-    //XMLFormatter  fFormatter;
+
     IBillParserHandler * parent;
     bool m_hasHandler;
 

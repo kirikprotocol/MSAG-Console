@@ -6,107 +6,25 @@ namespace scag { namespace bill {
 
 void BillActionOpen::init(const SectionParams& params,PropertyObject propertyObject)
 {
+    logger = Logger::getInstance("scag.bill.actions");
+
     FieldType ft;
-    const char * name = 0;
-    AccessType at;
+    std::string temp;
+    bool bExist;
 
-    if (!logger) 
-        logger = Logger::getInstance("scag.bill.actions");
+    m_CategoryFieldType = CheckParameter(params, propertyObject, "bill:open", "category", true, true, temp, bExist);
+    m_category = ConvertWStrToStr(temp);
 
-    if (params.Exists("category"))
-    {
-        m_category = ConvertWStrToStr(params["category"]);
-        m_CategoryFieldType = ActionContext::Separate(m_category,name);
+    m_MediaTypeFieldType = CheckParameter(params, propertyObject, "bill:open", "content-type", true, true, temp, bExist);
+    m_mediaType = ConvertWStrToStr(temp);
 
-        if (m_CategoryFieldType == ftField) 
-        {
-            at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
-            if (!(at&atRead)) 
-                throw SCAGException("Action 'bill:open': cannot read property '%s' - no access",m_category.c_str());
-        }
+    m_StatusFieldType = CheckParameter(params, propertyObject, "bill:open", "status", true, false, temp, bExist);
+    m_sStatus = ConvertWStrToStr(temp);
 
-    }
-    else 
-        throw SCAGException("BillAction 'bill:open' : missing 'category' parameter");
+    m_MsgFieldType = CheckParameter(params, propertyObject, "bill:open", "msg", false, false, temp, m_MsgExist);
 
-    if (params.Exists("content-type")) 
-    {
-        m_mediaType = ConvertWStrToStr(params["content-type"]);
-
-        m_MediaTypeFieldType = ActionContext::Separate(m_mediaType,name);
-
-        if (m_MediaTypeFieldType == ftField) 
-        {
-            at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
-            if (!(at&atRead)) 
-                throw SCAGException("Action 'bill:open': cannot read property '%s' - no access",m_mediaType.c_str());
-        }
-
-    }
-    else 
-        throw SCAGException("BillAction 'bill:open' : missing 'content-type' parameter");
-
-    /*
-    ft = ActionContext::Separate(m_category,name);
-
-    if (ft!=ftUnknown) 
-        throw SCAGException("BillAction 'bill:open' : cannot use field for string parameter 'category'");
-
-
-    ft = ActionContext::Separate(m_mediaType,name);
-
-    if (ft!=ftUnknown) 
-        throw SCAGException("BillAction 'bill:open' : cannot use field for string parameter 'content-type'");
-     */
-
-/*
-    if (params.Exists("service")) 
-    {
-        m_sServiceName = params["service"];
-        ft = ActionContext::Separate(m_sServiceName,name);
-        if (ft==ftUnknown) 
-            throw SCAGException("BillAction '%s' : unrecognized variable prefix '%s' for 'service' parameter",m_sName.c_str(),m_sServiceName.c_str());
-    }
-*/
-    if (params.Exists("status")) 
-    {
-        m_sStatus = ConvertWStrToStr(params["status"]);
-        m_StatusFieldType = ActionContext::Separate(m_sStatus,name);
-
-        if (m_StatusFieldType == ftField) 
-        {
-            at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
-            if (!(at&atWrite)) 
-                throw SCAGException("Action 'bill:open': cannot read property '%s' - no access",m_sStatus.c_str());
-        }
-
-        if (m_StatusFieldType == ftConst) 
-            throw SCAGException("BillAction 'bill:open' : cannot modify constant property '%s'",m_sStatus.c_str());
-
-        if (m_StatusFieldType == ftUnknown) 
-            throw SCAGException("BillAction 'bill:open' : unrecognized variable prefix '%s' for 'status' parameter",m_sStatus.c_str());
-            
-    }
-
-    if (params.Exists("msg")) 
-    {
-        m_sMessage = ConvertWStrToStr(params["msg"]);
-
-        m_MsgFieldType = ActionContext::Separate(m_sMessage,name);
-
-        if (m_MsgFieldType == ftField) 
-        {
-            at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
-            if (!(at&atWrite)) 
-                throw SCAGException("Action 'bill:open': cannot read property '%s' - no access",m_sMessage.c_str());
-        }
-
-        if (m_MsgFieldType == ftConst) 
-            throw SCAGException("BillAction 'bill:open' : cannot modify constant property '%s'",m_sMessage.c_str());
-
-        if (m_MsgFieldType==ftUnknown) 
-            throw SCAGException("BillAction 'bill:open' : unrecognized variable prefix '%s' for 'msg' parameter",m_sMessage.c_str());
-    }
+    if (m_MsgExist) 
+        m_sMessage = ConvertWStrToStr(temp);
 
     smsc_log_debug(logger,"Action 'bill:open' init...");
 }
@@ -122,7 +40,7 @@ bool BillActionOpen::FinishXMLSubSection(const std::string& name)
     return true;
 }
 
-void BillActionOpen::SetBillingStatus(ActionContext& context, std::string& errorMsg, bool isOK)
+void BillActionOpen::SetBillingStatus(ActionContext& context, const char * errorMsg, bool isOK)
 {
     Property * property = context.getProperty(m_sStatus);
     if (!property) 
@@ -139,7 +57,7 @@ void BillActionOpen::SetBillingStatus(ActionContext& context, std::string& error
 
     property->setInt(1);
 
-    if (m_sMessage.size() > 0) 
+    if (m_MsgExist) 
     {
         property = context.getProperty(m_sMessage);
 
@@ -148,7 +66,7 @@ void BillActionOpen::SetBillingStatus(ActionContext& context, std::string& error
             smsc_log_debug(logger,"BillAction 'bill:open' :: Invalid property %s for msg", m_sMessage.c_str());
             return;
         }
-        property->setStr(errorMsg);
+        property->setStr(std::string(errorMsg));
     }
 
     return;
@@ -170,15 +88,12 @@ bool BillActionOpen::run(ActionContext& context)
     std::string category;
     std::string mediaType;
 
-    std::string errorMsg;
-
     if (m_MediaTypeFieldType != ftUnknown) 
     {
         Property * property = context.getProperty(m_mediaType);
         if (!property) 
         {
-            errorMsg = "Invalid property for content-type";
-            SetBillingStatus(context, errorMsg, false);
+            SetBillingStatus(context, "Invalid property for content-type", false);
             smsc_log_error(logger,"BillAction 'bill:open' :: Invalid property %s for content-type", m_mediaType.c_str());
             return true;
         }
@@ -193,9 +108,7 @@ bool BillActionOpen::run(ActionContext& context)
         Property * property = context.getProperty(m_category);
         if (!property) 
         {
-            errorMsg = "Invalid property for category";
-
-            SetBillingStatus(context, errorMsg, false);
+            SetBillingStatus(context, "Invalid property for category", false);
             smsc_log_error(logger,"BillAction 'bill:open' :: Invalid property %s for category", m_category.c_str());
             return true;
         }
@@ -208,9 +121,8 @@ bool BillActionOpen::run(ActionContext& context)
     Operation * operation = context.GetCurrentOperation();
     if (!operation) 
     {
-        errorMsg = "operation from ActionContext is invalid";
         smsc_log_error(logger,"BillActionOpen: Fatal error in action - operation from ActionContext is invalid");
-        SetBillingStatus(context, errorMsg, false);
+        SetBillingStatus(context, "operation from ActionContext is invalid", false);
         return true;
     }
 
@@ -222,42 +134,62 @@ bool BillActionOpen::run(ActionContext& context)
         tariffRec = context.getTariffRec(category, mediaType);
     } catch (SCAGException& e)
     {
-        errorMsg = std::string(e.what());
         smsc_log_warn(logger,"BillAction 'bill:open' cannot process. Delails: %s", e.what()); 
-        SetBillingStatus(context, errorMsg, false);
+        SetBillingStatus(context, e.what(), false);
         return true;
     }
 
     if (!tariffRec) 
     {
-        errorMsg = "Cannot find TariffRec";
         smsc_log_warn(logger,"BillAction 'bill:open' cannot process. Delails: Cannot find TariffRec"); 
-        SetBillingStatus(context, errorMsg, false);
+        SetBillingStatus(context, "Cannot find TariffRec", false);
         return true;
     }
 
     smsc::inman::interaction::ChargeSms op;
+    EventMonitor monitor;
 
     try 
     {
         context.fillChargeOperation(op, *tariffRec);
-        int BillId = bm.ChargeBill(op, *tariffRec);
+        int BillId = bm.ChargeBill(op, &monitor, *tariffRec);
 
-        operation->attachBill(BillId);
+        //TODO: Понять какое время нужно ждать до таймаута
+        monitor.wait(1000);
+        TransactionStatus transactionStatus = bm.GetStatus(BillId);
 
-        context.makeBillEvent(TRANSACTION_OPEN, *tariffRec, ev);
+        if ((TRANSACTION_INVALID == transactionStatus)||(TRANSACTION_NOT_STARTED == transactionStatus)) 
+        {
+            smsc_log_error(logger,"BillAction 'bill:open': billing transaction deny");
+            SetBillingStatus(context, "billing transaction deny", false);
+            context.makeBillEvent(TRANSACTION_REFUSED, *tariffRec, ev);
+        }
+        else if (TRANSACTION_WAIT_ANSWER == transactionStatus) 
+        {
+            smsc_log_error(logger,"BillAction 'bill:open': billing transaction time out");
+            SetBillingStatus(context, "billing transaction time out", false);
+            context.makeBillEvent(TRANSACTION_TIME_OUT, *tariffRec, ev);
+        }
+        else 
+        {
+            operation->attachBill(BillId);
+            context.makeBillEvent(TRANSACTION_OPEN, *tariffRec, ev);
+            bm.sendReject(BillId);
+
+            statistics.registerSaccEvent(ev);
+            SetBillingStatus(context, "", true);
+
+            return true;
+        }
+      
     } catch (SCAGException& e)
     {
-        errorMsg = std::string(e.what());
         smsc_log_warn(logger,"BillAction 'bill:open' unable to process bill:open. Delails: %s", e.what());
-        SetBillingStatus(context, errorMsg, false);
+        SetBillingStatus(context, e.what(), false);
         return true;
     }
 
-
     statistics.registerSaccEvent(ev);
-
-    SetBillingStatus(context, errorMsg, true);
     return true;
 }
 

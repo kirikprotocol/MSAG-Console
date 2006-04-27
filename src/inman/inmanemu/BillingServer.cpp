@@ -3,7 +3,6 @@
 
 #include <string>
 
-#include <logger/Logger.h>
 #include "inman/common/util.hpp"
 
 namespace inmanemu { namespace server {
@@ -12,7 +11,6 @@ using smsc::inman::common::dump;
 using inmanemu::MatrixKey;
 using namespace smsc::util;
 
-
 BillingServer::BillingServer() : buff(0), clnt(0)
 {
     needToStop = false;
@@ -20,12 +18,12 @@ BillingServer::BillingServer() : buff(0), clnt(0)
 
 BillingServer::~BillingServer()
 {
-    socket.Abort();
-    if (clnt) clnt->Abort();
-
+/*    socket.Abort();
+    if (clnt) clnt->Abort();*/
+    //if (fileStorage) delete fileStorage;
 }
 
-void BillingServer::Init(const char * host, int port)
+void BillingServer::Init(const std::string& host, int port, const std::string& cdr_dir)
 {
     logger = smsc::logger::Logger::getInstance("BillingServer");
 
@@ -34,11 +32,11 @@ void BillingServer::Init(const char * host, int port)
     //delete new char;
 
     //"localhost",10021,0
-    if (socket.InitServer(host, port ,0)==-1)
-        throw Exception("Failed to initialize socket on host '%s', port '%d'", host, port);
+    if (socket.InitServer(host.c_str(), port ,0)==-1)
+        throw Exception("Failed to initialize socket on host '%s', port '%d'", host.c_str(), port);
 
     if (socket.StartServer()==-1)
-        throw Exception("Cannot start socket server on host '%s', port '%d'", host, port);
+        throw Exception("Cannot start socket server on host '%s', port '%d'", host.c_str(), port);
 
 /*
     clnt = s.Accept();
@@ -49,7 +47,10 @@ void BillingServer::Init(const char * host, int port)
 */
 
     //ObjectBuffer buf(0);
-    smsc_log_debug(logger, "Server initialized of host '%s', port '%d'", host, port);
+
+    //fileStorage = new InBillingFileStorage(cdr_dir, 0, logger);
+
+    smsc_log_debug(logger, "Server initialized of host '%s', port '%d'", host.c_str(), port);
 
 }
 
@@ -71,7 +72,10 @@ bool BillingServer::ClientConnected()
 
 void BillingServer::Stop()
 {
-    needToStop = false;
+    smsc_log_debug(logger, "Stopping server");
+    needToStop = true;
+    socket.Abort();
+    if (clnt) clnt->Abort();
 }
 
 
@@ -122,6 +126,7 @@ ChargeSmsResult * BillingServer::CreateRespOnCharge(SerializableObject * obj)
 
     CDRRecord cdr;
     op->export2CDR(cdr);
+    //fileStorage->bill(cdr);
 
 
     printf("Charge SMS:");
@@ -164,6 +169,10 @@ void BillingServer::ProcessResultCommand(SerializableObject * obj)
     printf("DeliverySmsResult\n");
     printf("BillId = %d\n", op->getDialogId());
 
+    CDRRecord cdr;
+    op->export2CDR(cdr);
+    //fileStorage->bill(cdr);
+
     if (result) 
     {
         printf("rollback processing...\n");
@@ -186,7 +195,9 @@ void BillingServer::SendResp(SerializableObject * resp)
     buff.setDataSize(0);
     SerializerInap::getInstance()->serialize(resp,buff);
 
-    printf("sending %d bytes\n",buff.getDataSize());
+    printf("\nSending responce: %d bytes\n", buff.getDataSize());
+    printf("-------------------\n");
+
     /*
     std::string s;
 
@@ -243,13 +254,13 @@ void BillingServer::Run()
             } else 
             {
                 //sleep(10);
-                ClientConnected();
+                if (isStarted()) ClientConnected();
             }
         }
         else 
         {
             //sleep(10);
-            ClientConnected();
+            if (isStarted()) ClientConnected();
         }
     }
 

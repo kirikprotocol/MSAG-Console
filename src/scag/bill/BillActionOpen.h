@@ -25,7 +25,8 @@ class BillActionOpen : public Action
     FieldType m_CategoryFieldType;
     FieldType m_MsgFieldType;
 
-    void SetBillingStatus(ActionContext& context, std::string& errorMsg, bool isOK);
+    bool m_MsgExist;
+    void SetBillingStatus(ActionContext& context, const char * errorMsg, bool isOK);
 
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name, const SectionParams& params, const ActionFactory& factory);

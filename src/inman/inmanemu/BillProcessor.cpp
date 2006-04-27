@@ -149,7 +149,7 @@ bool BillProcessor::charge(MatrixKey& key, Address& abonent, int BillId)
     } 
 
     account->charged = (*pricePtr);
-    smsc_log_error(logger, "%d successfully charged for %s abonent (money = %d)",(*pricePtr), abonent.toString().c_str(), account->amount);
+    smsc_log_error(logger, "%d successfully charged for %s abonent (money = %d, Bill=%d)",(*pricePtr), abonent.toString().c_str(), account->amount, BillId);
     return true;
 }
 

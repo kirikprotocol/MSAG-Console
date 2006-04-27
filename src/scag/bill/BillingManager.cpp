@@ -25,6 +25,7 @@ class BillingManagerImpl : public BillingManager, public Thread, public BillingM
         int EventMonitorIndex;
         TransactionStatus status;
         TariffRec tariffRec;
+        smsc::inman::interaction::ChargeSms ChargeOperation;
         BillTransaction() : status(TRANSACTION_NOT_STARTED), EventMonitorIndex(-1) { }
     };
 
@@ -64,8 +65,9 @@ public:
     virtual int Execute();
     virtual void Start();
 
-    virtual int ChargeBill(smsc::inman::interaction::ChargeSms& op, TariffRec& tariffRec);
-    virtual TransactionStatus CheckBill(int billId, EventMonitor * eventMonitor, TariffRec& tariffRec);
+    virtual int ChargeBill(smsc::inman::interaction::ChargeSms& op, EventMonitor * eventMonitor, TariffRec& tariffRec);
+    virtual TariffRec& CheckCharge(int billId, EventMonitor * eventMonitor);
+
     virtual TransactionStatus GetStatus(int billId);
 
     virtual void commit(int billId);
@@ -77,6 +79,7 @@ public:
 
     virtual Infrastructure& getInfrastructure() { return infrastruct; };
     virtual TariffRec& getTransactionData(int billId);
+    virtual void sendReject(int billId);
 
 
     BillingManagerImpl() : 
@@ -205,36 +208,11 @@ void BillingManagerImpl::Start()
     }
 }
 
-int BillingManagerImpl::ChargeBill(smsc::inman::interaction::ChargeSms& op, TariffRec& tariffRec)
+int BillingManagerImpl::ChargeBill(smsc::inman::interaction::ChargeSms& op, EventMonitor * eventMonitor, TariffRec& tariffRec)
 {
     MutexGuard guard(inUseLock);
 
-    m_lastBillId++;
-
-    BillTransaction billTransaction;
-
-    billTransaction.tariffRec = tariffRec;
-    billTransaction.status = TRANSACTION_WAIT_ANSWER;
-
-    BillTransactionHash.Insert(m_lastBillId, billTransaction);
-
-    //TODO: send charge command with "m_lastBillId" dialod identifier
-
-    op.setDialogId(m_lastBillId);
-
-    sendCommand(op);
-
-    return m_lastBillId;
-}
-
-TransactionStatus BillingManagerImpl::CheckBill(int billId, EventMonitor * eventMonitor, TariffRec& tariffRec)
-{
-    MutexGuard guard(inUseLock);
-
-    BillTransaction * pBillTransaction = BillTransactionHash.GetPtr(billId);
     eventMonitor = 0;
-
-    if (!pBillTransaction) return TRANSACTION_NOT_STARTED;
 
     int index = -1;
     for (int i = 0; i < m_MaxEventMonitors; i++) 
@@ -246,16 +224,29 @@ TransactionStatus BillingManagerImpl::CheckBill(int billId, EventMonitor * event
         }
 
     //TODO: do what we must to do without throw exception
-    if (index == -1) throw SCAGException("BillingManager error - cannot find not in use EventMonitor");
+    if (index == -1) 
+        throw SCAGException("BillingManager error - cannot find not in use EventMonitor");
 
-    pBillTransaction->EventMonitorIndex = index;
+    BillTransaction billTransaction;
+    billTransaction.EventMonitorIndex = index;
+
+    eventMonitor = &(EventMonitorArray[billTransaction.EventMonitorIndex].eventMonitor);
+
+    m_lastBillId++;
 
 
-    eventMonitor = &(EventMonitorArray[pBillTransaction->EventMonitorIndex].eventMonitor);
+    billTransaction.tariffRec = tariffRec;
+    billTransaction.status = TRANSACTION_WAIT_ANSWER;
+    billTransaction.ChargeOperation = op;
 
-    return pBillTransaction->status;
+    BillTransactionHash.Insert(m_lastBillId, billTransaction);
+
+    op.setDialogId(m_lastBillId);
+
+    sendCommand(op);
+
+    return m_lastBillId;
 }
-
 
 
 TransactionStatus BillingManagerImpl::GetStatus(int billId)
@@ -279,7 +270,23 @@ TariffRec& BillingManagerImpl::getTransactionData(int billId)
     return pBillTransaction->tariffRec;
 }
 
-  
+
+TariffRec& BillingManagerImpl::CheckCharge(int billId, EventMonitor * eventMonitor)
+{
+    MutexGuard guard(inUseLock);
+
+    BillTransaction * pBillTransaction = BillTransactionHash.GetPtr(billId);
+
+    if (!pBillTransaction) throw SCAGException("Cannot find transaction for billId=%d", billId);
+
+    eventMonitor = &(EventMonitorArray[pBillTransaction->EventMonitorIndex].eventMonitor);
+
+    pBillTransaction->ChargeOperation.setDialogId(billId);
+    sendCommand(pBillTransaction->ChargeOperation);
+
+    return pBillTransaction->tariffRec;
+}
+
 
 void BillingManagerImpl::commit(int billId)
 {
@@ -296,9 +303,10 @@ void BillingManagerImpl::commit(int billId)
 
     if (pBillTransaction->status == TRANSACTION_VALID)
     {
-        DeliverySmsResult op;
+        smsc_log_debug(logger, "Commiting billId=%d...", billId);
 
-    
+        DeliverySmsResult op;
+ 
         op.setDialogId(billId);
         op.setResultValue(0);
 
@@ -327,7 +335,7 @@ void BillingManagerImpl::rollback(int billId)
         DeliverySmsResult op;
 
         op.setDialogId(billId);
-        op.setResultValue(1);
+        op.setResultValue(2);
 
         sendCommand(op);
     }
@@ -337,6 +345,32 @@ void BillingManagerImpl::rollback(int billId)
     BillTransactionHash.Delete(billId);
 
 }
+
+void BillingManagerImpl::sendReject(int billId)
+{
+    MutexGuard guard(inUseLock);
+
+    BillTransaction * pBillTransaction = BillTransactionHash.GetPtr(billId);
+
+    if (!pBillTransaction) 
+    {
+        smsc_log_warn(logger, "Cannot find transaction for billId=%d", billId);
+        return;
+    }
+
+    if (pBillTransaction->status == TRANSACTION_VALID)
+    {
+        DeliverySmsResult op;
+
+        op.setDialogId(billId);
+        op.setResultValue(1);
+
+        pBillTransaction->status = TRANSACTION_WAIT_ANSWER;
+        sendCommand(op);
+    }
+}
+
+
 /*
 void BillingManagerImpl::close(int billId)
 {

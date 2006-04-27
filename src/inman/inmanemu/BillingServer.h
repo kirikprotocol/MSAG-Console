@@ -2,16 +2,17 @@
 #define _INMANEMU_BILL_BILLING_SERVER_
 
 #include <logger/Logger.h>
+#include "BillProcessor.h"
+#include <inman/storage/FileStorages.hpp>
 #include "inman/interaction/messages.hpp"
 #include "core/network/Socket.hpp"
-#include "BillProcessor.h"
-
 
 namespace inmanemu { namespace server {
 
 using namespace smsc::inman::interaction;
 using namespace smsc::core::network;
 using namespace inmanemu::processor;
+using smsc::inman::filestore::InBillingFileStorage;
 
 using smsc::logger::Logger;
 
@@ -24,6 +25,7 @@ class BillingServer
     Socket socket;
     BillProcessor processor;
     bool m_ClientConnected;
+    //InBillingFileStorage * fileStorage;
 
     Socket* clnt;
 
@@ -40,7 +42,7 @@ class BillingServer
 
 
 public:
-   void Init(const char * host, int port);
+   void Init(const std::string& host, int port, const std::string& cdr_dir);
    void Run();
    void Stop();
    BillingServer();

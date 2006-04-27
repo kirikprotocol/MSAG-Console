@@ -8,12 +8,13 @@ namespace inmanemu { namespace util {
 class InmanemuConfig
 {
 public:
-    InmanemuConfig() : host("127.0.0.1") , port(8888) {};
+    InmanemuConfig() : host("127.0.0.1"), port(8888) {};
     void Init();
     ~InmanemuConfig();
 
     std::string host;
     int port;
+    std::string cdr_dir;
 };
 
 }}

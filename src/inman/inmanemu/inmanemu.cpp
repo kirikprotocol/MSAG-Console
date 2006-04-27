@@ -11,30 +11,57 @@ using namespace inmanemu::server;
 using inmanemu::util::InmanemuConfig;
 
 BillingServer * billingServer = 0;
+Logger * logger = 0;
 
-
-
-extern "C" void interupt(int sig)
+extern "C" static void appSignalHandler(int sig)
 {
-    if (billingServer) billingServer->Stop();
+    if (sig==SIGTERM || sig==SIGINT)
+    {
+        if (billingServer) billingServer->Stop();
+    }
 }
+
+extern "C" static void atExitHandler(void)
+{
+    smsc::logger::Logger::Shutdown();
+}
+
+
 
 int main(int argc,char* argv[])
 {
-  sigset(SIGINT,interupt);
+    atexit(atExitHandler);
+
+    sigset_t set;
+    sigfillset(&set);
+        sigdelset(&set, SIGTERM);
+        sigdelset(&set, SIGINT);
+        sigdelset(&set, SIGSEGV);
+        sigdelset(&set, SIGBUS);
+    sigprocmask(SIG_SETMASK, &set, NULL);
+        sigset(SIGTERM, appSignalHandler);
+    sigset(SIGINT, appSignalHandler);
+
+
   smsc::logger::Logger::Init();
+  logger = Logger::getInstance("inmanemu");
 
   billingServer = new BillingServer();
-  if (!billingServer) return 0;
+  if (!billingServer)
+  {
+      smsc_log_error(logger, "Cannot init Inmanemu server. Details: cannot create BillingServer instance");
+      return 0;
+  }
 
   InmanemuConfig cfg;
+
   try
   {
       cfg.Init();
-      billingServer->Init(cfg.host.c_str(), cfg.port);
+      billingServer->Init(cfg.host, cfg.port, cfg.cdr_dir);
   } catch (Exception& e)
   {
-      printf("%s\n", e.what());
+      smsc_log_error(logger, "Cannot init Inmanemu server. Details: ", e.what());
       
       delete billingServer;
       return 0;
@@ -42,8 +69,10 @@ int main(int argc,char* argv[])
   
 
   billingServer->Run();
+  smsc_log_info(logger, "Server stoped");
 
 
   delete billingServer;
+  billingServer = 0;
   return 0;
 }
