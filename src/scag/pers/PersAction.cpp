@@ -120,14 +120,23 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
     }
 
     const char* vn = "value";
+    std::string s;
     if(cmd == PC_INC_MOD || cmd == PC_INC)
-        vn = "inc";
+    {
+        if(!params.Exists("inc"))
+            s = ConvertStrToWStr("1");
+        else
+            s = params["inc"];
+    }
+    else
+    {
+        if(!params.Exists("value"))
+            throw SCAGException("PersAction 'value' : missing '%s' parameter", getStrCmd());
+        s = params["value"];
+    }
 
-    if(!params.Exists(vn))
-        throw SCAGException("PersAction '%s' : missing '%s' parameter", getStrCmd(), vn);
-
-    value_str = ConvertWStrToStr(params[vn]);
-    value = ConvertWStrTo_wstring(params[vn]);
+    value_str = ConvertWStrToStr(s);
+    value = ConvertWStrTo_wstring(s);
 
     ftValue = ActionContext::Separate(value_str, name); 
     if(cmd == PC_GET && (ftValue == ftUnknown || ftValue == ftConst))

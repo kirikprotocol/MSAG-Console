@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://www.sibinco.com/SCAG/LOG" 
+    xmlns="http://www.w3.org/2001/XMLSchema"
+    xmlns:scag="http://www.sibinco.com/SCAG"
+    xmlns:log="http://www.sibinco.com/SCAG/LOG"
+    elementFormDefault="qualified">
+
+    <import schemaLocation="rules.xsd" namespace="http://www.sibinco.com/SCAG"/>  
+
+    <group name="Actions">
+        <choice>
+            <element name="debug">
+                <complexType>
+                    <attribute name="category" type="scag:Value" use="required"/>
+                    <attribute name="message" type="scag:Value" use="required"/>
+               </complexType>
+            </element>
+
+            <element name="info">
+                <complexType>
+                    <attribute name="category" type="scag:Value" use="required"/>
+                    <attribute name="message" type="scag:Value" use="required"/>
+               </complexType>
+            </element>
+
+            <element name="warn">
+                <complexType>
+                    <attribute name="category" type="scag:Value" use="required"/>
+                    <attribute name="message" type="scag:Value" use="required"/>
+               </complexType>
+            </element>
+
+            <element name="error">
+                <complexType>
+                    <attribute name="category" type="scag:Value" use="required"/>
+                    <attribute name="message" type="scag:Value" use="required"/>
+               </complexType>
+            </element>
+        </choice>
+    </group>
+</schema>

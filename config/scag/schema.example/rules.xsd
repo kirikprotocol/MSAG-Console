@@ -4,6 +4,8 @@
    xmlns:scag="http://www.sibinco.com/SCAG"
    xmlns:session="http://www.sibinco.com/SCAG/SESSIONS"
    xmlns:operation="http://www.sibinco.com/SCAG/OPERATIONS"
+   xmlns:strings="http://www.sibinco.com/SCAG/STRINGS"
+   xmlns:bill="http://www.sibinco.com/SCAG/BILL"
    xmlns:profile="http://www.sibinco.com/SCAG/PROFILE"
    xmlns:log="http://www.sibinco.com/SCAG/LOG">
     
@@ -14,33 +16,35 @@
         </documentation>
     </annotation>
    
-    <import schemaLocation="sessions.xsd" namespace="http://www.sibinco.com/SCAG/SESSIONS"/>
+    <import schemaLocation="bill.xsd"       namespace="http://www.sibinco.com/SCAG/BILL"/>
+    <import schemaLocation="sessions.xsd"   namespace="http://www.sibinco.com/SCAG/SESSIONS"/>
     <import schemaLocation="operations.xsd" namespace="http://www.sibinco.com/SCAG/OPERATIONS"/>
-    <import schemaLocation="profile.xsd" namespace="http://www.sibinco.com/SCAG/PROFILE"/>  
-    <import schemaLocation="log.xsd" namespace="http://www.sibinco.com/SCAG/LOG"/>  
+    <import schemaLocation="strings.xsd"    namespace="http://www.sibinco.com/SCAG/STRINGS"/>
+    <import schemaLocation="profile.xsd"    namespace="http://www.sibinco.com/SCAG/PROFILE"/>
+    <import schemaLocation="log.xsd"        namespace="http://www.sibinco.com/SCAG/LOG"/>
     
-   <!-- General values types definition  -->
+    <!-- General values types definition  -->
     <simpleType name="Value">
         <restriction base="string"/>
     </simpleType>
     <simpleType name="Command">
         <restriction base="string">
-            <pattern value="#\p{L}+[\w_]*"/>
+            <pattern value="#\p{L}+[\w_\-]*"/>
         </restriction>
     </simpleType>
     <simpleType name="Session">
         <restriction base="string">
-            <pattern value="$\p{L}+[\w_]*"/>
+            <pattern value="$\p{L}+[\w_\-]*"/>
         </restriction>
     </simpleType>
     <simpleType name="Local">
         <restriction base="string">
-            <pattern value="%\p{L}+[\w_]*"/>
+            <pattern value="%\p{L}+[\w_\-]*"/>
         </restriction>
     </simpleType>
     <simpleType name="Const">
         <restriction base="string">
-            <pattern value="@\p{L}+[\w_]*"/>
+            <pattern value="@\p{L}+[\w_\-]*"/>
         </restriction>
     </simpleType>
 
@@ -68,15 +72,27 @@
         <attribute name="op" type="scag:Operation" use="optional"/>
         <attribute name="value" type="scag:Value" use="optional"/>
     </attributeGroup>
+
+    <simpleType name="LogLevel">
+        <restriction base="string">
+            <enumeration value="debug"/>
+            <enumeration value="info"/>
+            <enumeration value="warn"/>
+            <enumeration value="error"/>
+        </restriction>
+    </simpleType>
+
     
     <!-- General actions elements group definition  -->
     <group name="Actions">
         <choice>
-            <group ref="session:Actions"/>
-            <group ref="operation:Actions" />
-            <group ref="profile:Actions" />
-            <group ref="log:Actions" />
-            
+        <group ref="session:Actions"/>
+        <group ref="bill:Actions" />
+        <group ref="operation:Actions" />
+        <group ref="strings:Actions" />
+        <group ref="profile:Actions" />
+        <group ref="log:Actions" />
+
             <element name="set">
                 <complexType>
                     <attribute name="var" type="scag:Var" use="required"/>
@@ -90,6 +106,15 @@
                 </complexType>    
             </element>
             
+        <element name="match">
+        <complexType>
+            <attribute name="regexp" type="string" use="required" />
+            <attribute name="value" type="scag:Value" use="required"/>
+            <attribute name="result" type="scag:Var" use="required"/>
+        </complexType>
+        </element>
+
+        
             <element name="if">
                 <complexType>
                     <choice>
@@ -103,6 +128,41 @@
                 </complexType>    
             </element>
             
+        <element name="inc">
+        <complexType>
+            <attribute name="var" type="scag:Var" use="required" />
+            <attribute name="value" type="scag:Value" use="optional" />
+        </complexType>
+        </element>
+        
+        <element name="dec">
+        <complexType>
+            <attribute name="var" type="scag:Var" use="required" />
+            <attribute name="value" type="scag:Value" use="optional" />
+        </complexType>
+        </element>
+
+        <element name="mod">
+        <complexType>
+            <attribute name="var" type="scag:Var" use="required" />
+            <attribute name="value" type="scag:Value" use="required" />
+        </complexType>
+        </element>
+        
+        <element name="mul">
+        <complexType>
+            <attribute name="var" type="scag:Var" use="required" />
+            <attribute name="value" type="scag:Value" use="required" />
+        </complexType>
+        </element>
+        
+        <element name="div">
+        <complexType>
+            <attribute name="var" type="scag:Var" use="required" />
+            <attribute name="value" type="scag:Value" use="required" />
+        </complexType>
+        </element>
+
         </choice>
     </group>
     
@@ -116,14 +176,14 @@
     <simpleType name="Transport">
         <restriction base="string">
             <enumeration value="SMPP"/>
-            <enumeration value="WAP"/>
+            <enumeration value="HTTP"/>
             <enumeration value="MMS"/>
         </restriction>
     </simpleType>
     
     <!-- Main element definition  -->
     <complexType name="RuleType" abstract="true">
-        <attribute name="transport" type="scag:Transport" use="required"/>   
+        <attribute name="transport" type="scag:Transport" use="required"/>
     </complexType>
     <element name="rule" type="scag:RuleType"/>
     
