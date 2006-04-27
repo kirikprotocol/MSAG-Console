@@ -1220,7 +1220,7 @@ void SmppCommandAdapter::fillChargeOperation(smsc::inman::interaction::ChargeSms
         op.setCallingPartyNumber(sms.getOriginatingAddress().toString());
     } else
     {
-        op.setDestinationSubscriberNumber(sms.getOriginatingAddress().toString());
+        op.setDestinationSubscriberNumber(sms.getDestinationAddress().toString());
         op.setCallingPartyNumber(str);
     }
 
