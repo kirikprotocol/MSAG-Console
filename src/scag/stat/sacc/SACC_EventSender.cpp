@@ -313,7 +313,7 @@ void EventSender::performTransportEvent(const SACC_TRAFFIC_INFO_EVENT_t& e)
  }
  pdubuffer.WriteNetInt16(sz*sizeof(uint16_t));
  pdubuffer.Write(e.pMessageText,sz*sizeof(uint16_t));
- pdubuffer.WriteInt16(1);
+ pdubuffer.WriteNetInt16(1);
  pdubuffer.WriteByte(e.cDirection);
  uint32_t bsize= pdubuffer.getPos();
  pdubuffer.setPos(0);
@@ -446,10 +446,10 @@ void EventSender::performAlarmEvent(const SACC_ALARM_t& e)
  }
  pdubuffer.WriteNetInt16(sz*sizeof(uint16_t));
  pdubuffer.Write(e.pMessageText,sz*sizeof(uint16_t));
- pdubuffer.WriteInt16(1);
+ pdubuffer.WriteNetInt16(1);//!!!!!
  pdubuffer.WriteByte(e.cDirection);
  
- pdubuffer.WriteInt16(sizeof(uint32_t));
+ pdubuffer.WriteNetInt16(sizeof(uint32_t));
  pdubuffer.WriteNetInt32(e.iAlarmEventId);
 
  uint32_t bsize= pdubuffer.getPos();
