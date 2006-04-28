@@ -94,7 +94,7 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, 
     if (tempStr.size() > MAX_ABONENT_NUMBER_LENGTH - 1)
     {
         memcpy((char *)ev.Header.pAbonentNumber,tempStr.c_str(), MAX_ABONENT_NUMBER_LENGTH - 1);
-        ev.Header.pAbonentNumber[MAX_ABONENT_NUMBER_LENGTH] = 0;
+        ev.Header.pAbonentNumber[MAX_ABONENT_NUMBER_LENGTH - 1] = 0;
     }
     else
         sprintf((char *)ev.Header.pAbonentNumber,"%s",tempStr.c_str());
@@ -110,7 +110,7 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, 
         if (size > 0) 
         {
             memcpy(ev.pMessageText, messageBody.data(), size); 
-            ev.pMessageText[MAX_TEXT_MESSAGE_LENGTH] = 0;
+            ev.pMessageText[size] = 0;
         }
     }
 
