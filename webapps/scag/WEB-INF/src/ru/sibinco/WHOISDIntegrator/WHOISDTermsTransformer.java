@@ -67,7 +67,7 @@ public class WHOISDTermsTransformer {
         header.removeFirst();
         ruleresult.addAll(header);
         if (addBody(body,content, stylesheet, xslFolder)) {
-          System.out.println("WHOISDTermsTransformer: adding Rule "+stylesheet + " : " + transport);
+          logger.debug("WHOISDTermsTransformer: adding Rule "+stylesheet + " : " + transport);
           body.removeFirst();
           body.removeFirst();
           ruleresult.addAll(body);
