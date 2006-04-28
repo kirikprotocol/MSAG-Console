@@ -1,14 +1,15 @@
-#include "SACC_Defs.h"
-#include "SACC_SyncQueue.h"
+//#include "SACC_Defs.h"
+//#include "SACC_SyncQueue.h"
 #include "SACC_EventSender.h"
-#include "SACC_Events.h"
+//#include "SACC_Events.h"
 #include "stat/Statistics.h"
 #include <logger/Logger.h>
+#include <util/BufferSerialization.hpp>
+
 
 using namespace scag::stat;
 using namespace scag::stat::Counters;
-
-
+using namespace smsc::util;
 
 namespace scag{
 namespace stat{
@@ -26,7 +27,7 @@ EventSender::EventSender()
  Port=0;
  Timeout=100;
  QueueLength=10000;
-
+ pdubuffer.resize(0xFFFF);
 }
 
 
@@ -273,155 +274,193 @@ void EventSender::Put(const SACC_ALARM_MESSAGE_t & ev)
   delete pEv;
  }
 }
-
-
+ 
 void EventSender::performTransportEvent(const SACC_TRAFFIC_INFO_EVENT_t& e)
 {
- SaccPDU pdu;
- pdu.insertPDUString8((uint8_t*)e.Header.pAbonentNumber,MAX_ABONENT_NUMBER_LENGTH);
- //pdu.insertSegment((uint8_t*)&e.Header.lDateTime,sizeof(uint64_t));
- pdu.insertUint64(e.Header.lDateTime);
- pdu.insertSegment((uint8_t*)&e.iOperatorId,sizeof(uint32_t));
- pdu.insertSegment((uint8_t*)&e.Header.iServiceProviderId,sizeof(uint32_t));
- pdu.insertSegment((uint8_t*)&e.Header.iServiceId,sizeof(uint32_t));
- pdu.insertPDUString8((uint8_t*)e.pSessionKey,MAX_SESSION_KEY_LENGTH);
- pdu.insertSegment((uint8_t*)&e.Header.cProtocolId,sizeof(uint8_t));
- pdu.insertSegment((uint8_t*)&e.Header.cCommandId,sizeof(uint8_t));
- pdu.insertSegment((uint8_t*)&e.Header.sCommandStatus,sizeof(uint16_t));
+
+ pdubuffer.setPos(sizeof(uint32_t));///header plase 
+ pdubuffer.WriteNetInt16(e.getEventType());         
+ 
+ std::string stran;
+ stran.assign((char*)e.Header.pAbonentNumber);
+ 
+ pdubuffer.WriteNetInt16((uint16_t)stran.length());
+ pdubuffer.Write(e.Header.pAbonentNumber,stran.length());
+ pdubuffer.WriteNetInt16(sizeof(uint64_t));
+ pdubuffer.WriteNetInt64(e.Header.lDateTime);
+ pdubuffer.WriteNetInt16(sizeof(uint32_t));
+ pdubuffer.WriteNetInt32(e.iOperatorId);
+ pdubuffer.WriteNetInt16(sizeof(uint32_t));
+ pdubuffer.WriteNetInt32(e.Header.iServiceProviderId);
+ pdubuffer.WriteNetInt16(sizeof(uint32_t));
+ pdubuffer.WriteNetInt32(e.Header.iServiceId);
+ std::string strsk;
+ strsk.assign((char*)e.pSessionKey);
+ 
+ pdubuffer.WriteNetInt16((uint16_t)strsk.length());
+ pdubuffer.Write(e.pSessionKey,strsk.length());
+ pdubuffer.WriteNetInt16(1);
+ pdubuffer.WriteByte(e.Header.cProtocolId);
+ pdubuffer.WriteNetInt16(1);
+ pdubuffer.WriteByte(e.Header.cCommandId);
+ pdubuffer.WriteNetInt16(2);
+ pdubuffer.WriteNetInt16(e.Header.sCommandStatus);
 
  uint32_t sz =0;
  while(e.pMessageText[sz]!=0 && sz < MAX_TEXT_MESSAGE_LENGTH )
  {
-  sz++;
- }
- if(sz < MAX_TEXT_MESSAGE_LENGTH)
- {
    sz++;
  }
-
- pdu.insertSegment((uint8_t*)e.pMessageText,sz*sizeof(uint16_t));
- pdu.insertSegment((uint8_t*)&e.cDirection,sizeof(uint8_t));
- pdu.insertPDUHeader(e.getEventType());
-
- uint8_t * buffer = new uint8_t[pdu.getallsize()];
- pdu.getAll(buffer) ;
-
- int b =SaccSocket.WriteAll((char*)buffer,pdu.getallsize());
-
-  
-
+ pdubuffer.WriteNetInt16(sz*sizeof(uint16_t));
+ pdubuffer.Write(e.pMessageText,sz*sizeof(uint16_t));
+ pdubuffer.WriteInt16(1);
+ pdubuffer.WriteByte(e.cDirection);
+ uint32_t bsize= pdubuffer.getPos();
+ pdubuffer.setPos(0);
+ pdubuffer.WriteNetInt32(bsize);
+ pdubuffer.setPos(0);
+ int b =SaccSocket.WriteAll(pdubuffer.getBuffer() ,bsize);
  if(b<=0)
   bConnected=false;
 
- pdu.free();
- delete buffer;
 }
 
 void EventSender::performBillingEvent(const SACC_BILLING_INFO_EVENT_t& e)
 {
- SaccPDU pdu;
- pdu.insertPDUString8((uint8_t*)e.Header.pAbonentNumber,MAX_ABONENT_NUMBER_LENGTH);
- //pdu.insertSegment((uint8_t*)&e.Header.lDateTime,sizeof(uint64_t));
- pdu.insertUint64(e.Header.lDateTime);
- pdu.insertSegment((uint8_t*)&e.iOperatorId,sizeof(uint32_t));
- pdu.insertSegment((uint8_t*)&e.Header.iServiceProviderId,sizeof(uint32_t));
- pdu.insertSegment((uint8_t*)&e.Header.iServiceId,sizeof(uint32_t));
- pdu.insertPDUString8((uint8_t*)e.pSessionKey,MAX_SESSION_KEY_LENGTH);
- pdu.insertSegment((uint8_t*)&e.Header.cProtocolId,sizeof(uint8_t));
- pdu.insertSegment((uint8_t*)&e.Header.cCommandId,sizeof(uint8_t));
- pdu.insertSegment((uint8_t*)&e.Header.sCommandStatus,sizeof(uint16_t));
- pdu.insertSegment((uint8_t*)&e.iMediaResourceType,sizeof(uint32_t));
- pdu.insertSegment((uint8_t*)&e.iPriceCatId,sizeof(uint32_t));
- pdu.insertSegment((uint8_t*)&e.fBillingSumm,sizeof(float));
- pdu.insertPDUString8((uint8_t*)e.pBillingCurrency ,MAX_BILLING_CURRENCY_LENGTH);
- pdu.insertPDUHeader(e.getEventType());
+	
+ pdubuffer.setPos(sizeof(uint32_t));///header plase 
+ pdubuffer.WriteNetInt16(e.getEventType()); 
+ 
+ std::string stran;
+ stran.assign((char*)e.Header.pAbonentNumber);
+ pdubuffer.WriteNetInt16((uint16_t)stran.length());
+ pdubuffer.Write(e.Header.pAbonentNumber,stran.length());
+ pdubuffer.WriteNetInt16(sizeof(uint64_t));
+ pdubuffer.WriteNetInt64(e.Header.lDateTime);
+ pdubuffer.WriteNetInt16(sizeof(uint32_t));
+ pdubuffer.WriteNetInt32(e.iOperatorId);
+ pdubuffer.WriteNetInt16(sizeof(uint32_t));
+ pdubuffer.WriteNetInt32(e.Header.iServiceProviderId);
+ pdubuffer.WriteNetInt16(sizeof(uint32_t));
+ pdubuffer.WriteNetInt32(e.Header.iServiceId);
 
- uint8_t * buffer = new uint8_t[pdu.getallsize()];
- pdu.getAll(buffer) ;
+ std::string strsk;
+ strsk.assign((char*)e.pSessionKey);
+ pdubuffer.WriteNetInt16((uint16_t)strsk.length());
+ pdubuffer.Write(e.pSessionKey,strsk.length());
+ pdubuffer.WriteNetInt16(1);
+ pdubuffer.WriteByte(e.Header.cProtocolId);
+ pdubuffer.WriteNetInt16(1);
+ pdubuffer.WriteByte(e.Header.cCommandId);
+ pdubuffer.WriteNetInt16(2);
+ pdubuffer.WriteNetInt16(e.Header.sCommandStatus);
+ pdubuffer.WriteNetInt16(sizeof(uint32_t));
+ pdubuffer.WriteNetInt32(e.iMediaResourceType);
+ pdubuffer.WriteNetInt16(sizeof(uint32_t));
+ pdubuffer.WriteNetInt32(e.iPriceCatId);
+ pdubuffer.WriteNetInt16(sizeof(float));
+ pdubuffer.Write(&e.fBillingSumm,sizeof(float));
 
+ std::string strbcur;
+ strbcur.assign((char*)e.pBillingCurrency);
+ pdubuffer.WriteNetInt16((uint16_t)strbcur.length());
+ pdubuffer.Write(e.pBillingCurrency,strbcur.length());
 
- int b =SaccSocket.WriteAll((char*)buffer,pdu.getallsize());
+ uint32_t bsize= pdubuffer.getPos();
+ pdubuffer.setPos(0);
+ pdubuffer.WriteNetInt32(bsize);
+ pdubuffer.setPos(0);
+ int b =SaccSocket.WriteAll(pdubuffer.getBuffer() ,bsize);
 
  if(b<=0)
   bConnected=false;
- pdu.free();
- delete buffer; 
+ 
 }
 
 void EventSender::performAlarmMessageEvent(const SACC_ALARM_MESSAGE_t& e)
 {
- SaccPDU pdu;
- pdu.insertPDUString8((uint8_t*)e.pAbonentsNumbers,MAX_NUMBERS_TEXT_LENGTH);
- pdu.insertPDUString8((uint8_t*)e.pAddressEmail ,MAX_EMAIL_ADDRESS_LENGTH);
  
+ pdubuffer.setPos(sizeof(uint32_t));///header plase 
+ pdubuffer.WriteNetInt16(e.getEventType()); 
+ 
+ std::string stran;
+ stran.assign((char*)e.pAbonentsNumbers);
+ pdubuffer.WriteNetInt16((uint16_t)stran.length());
+ pdubuffer.Write(e.pAbonentsNumbers,stran.length());
 
+ std::string stremail;
+ stremail.assign((char*)e.pAddressEmail);
+ pdubuffer.WriteNetInt16((uint16_t)stremail.length());
+ pdubuffer.Write(e.pAddressEmail,stremail.length());
+ 
  uint32_t sz =0;
- while(e.pMessageText[sz]!=0 && sz <(MAX_TEXT_MESSAGE_LENGTH-1))
+ while(e.pMessageText[sz]!=0 && sz < MAX_TEXT_MESSAGE_LENGTH )
  {
-  sz++;
+   sz++;
  }
- if(sz < MAX_TEXT_MESSAGE_LENGTH)
- {
-     sz++;
- }
-
- pdu.insertSegment((uint8_t*)e.pMessageText,sz*sizeof(uint16_t));
- pdu.insertPDUHeader(e.getEventType());
-
- uint8_t * buffer = new uint8_t[pdu.getallsize()];
- pdu.getAll(buffer) ;
-
- int b =SaccSocket.WriteAll((char*)buffer,pdu.getallsize());
+ pdubuffer.WriteNetInt16(sz*sizeof(uint16_t));
+ pdubuffer.Write(e.pMessageText,sz*sizeof(uint16_t));
+ uint32_t bsize= pdubuffer.getPos();
+ pdubuffer.setPos(0);
+ pdubuffer.WriteNetInt32(bsize);
+ pdubuffer.setPos(0);
+ int b =SaccSocket.WriteAll(pdubuffer.getBuffer() ,bsize);
 
  if(b<=0)
   bConnected=false;
- pdu.free();
-
- delete buffer; 
 }
 
 
 void EventSender::performAlarmEvent(const SACC_ALARM_t& e)
 {
- SaccPDU pdu;
- pdu.insertPDUString8((uint8_t*)e.Header.pAbonentNumber,MAX_ABONENT_NUMBER_LENGTH);
- //pdu.insertSegment((uint8_t*)&e.Header.lDateTime,sizeof(uint64_t));
- pdu.insertUint64(e.Header.lDateTime);
- pdu.insertSegment((uint8_t*)&e.iOperatorId,sizeof(uint32_t));
- pdu.insertSegment((uint8_t*)&e.Header.iServiceProviderId,sizeof(uint32_t));
- pdu.insertSegment((uint8_t*)&e.Header.iServiceId,sizeof(uint32_t));
- pdu.insertPDUString8((uint8_t*)e.pSessionKey,MAX_SESSION_KEY_LENGTH);
- pdu.insertSegment((uint8_t*)&e.Header.cProtocolId,sizeof(uint8_t));
- pdu.insertSegment((uint8_t*)&e.Header.cCommandId,sizeof(uint8_t));
- pdu.insertSegment((uint8_t*)&e.Header.sCommandStatus,sizeof(uint16_t));
+ pdubuffer.setPos(sizeof(uint32_t));///header plase 
+ pdubuffer.WriteNetInt16(e.getEventType()); 
+ std::string stran;
+ stran.assign((char*)e.Header.pAbonentNumber);
+ pdubuffer.WriteNetInt16((uint16_t)stran.length());//an
+ pdubuffer.Write(e.Header.pAbonentNumber,stran.length());//an
+ pdubuffer.WriteNetInt16(sizeof(uint64_t));
+ pdubuffer.WriteNetInt64(e.Header.lDateTime);
+ pdubuffer.WriteNetInt16(sizeof(uint32_t));
+ pdubuffer.WriteNetInt32(e.iOperatorId);
+ pdubuffer.WriteNetInt16(sizeof(uint32_t));
+ pdubuffer.WriteNetInt32(e.Header.iServiceProviderId);
+ pdubuffer.WriteNetInt16(sizeof(uint32_t));
+ pdubuffer.WriteNetInt32(e.Header.iServiceId);
+ std::string strsk;
+ strsk.assign((char*)e.pSessionKey);
+ pdubuffer.WriteNetInt16((uint16_t)strsk.length());
+ pdubuffer.Write(e.pSessionKey,strsk.length());
 
- uint32_t sz =0;
- while(e.pMessageText[sz]!=0 && sz <(MAX_TEXT_MESSAGE_LENGTH-1))
+ pdubuffer.WriteNetInt16(1);
+ pdubuffer.WriteByte(e.Header.cProtocolId);
+ pdubuffer.WriteNetInt16(1);
+ pdubuffer.WriteByte(e.Header.cCommandId);
+ pdubuffer.WriteNetInt16(2);
+ pdubuffer.WriteNetInt16(e.Header.sCommandStatus);
+ 
+  uint32_t sz =0;
+ while(e.pMessageText[sz]!=0 && sz < MAX_TEXT_MESSAGE_LENGTH )
  {
-  sz++;
+   sz++;
  }
- if(sz < MAX_TEXT_MESSAGE_LENGTH)
- {
-     sz++;
- }
+ pdubuffer.WriteNetInt16(sz*sizeof(uint16_t));
+ pdubuffer.Write(e.pMessageText,sz*sizeof(uint16_t));
+ pdubuffer.WriteInt16(1);
+ pdubuffer.WriteByte(e.cDirection);
+ 
+ pdubuffer.WriteInt16(sizeof(uint32_t));
+ pdubuffer.WriteNetInt32(e.iAlarmEventId);
 
- pdu.insertSegment((uint8_t*)e.pMessageText,sz*sizeof(uint16_t));
- pdu.insertSegment((uint8_t*)&e.cDirection,sizeof(uint8_t));
- pdu.insertSegment((uint8_t*)&e.iAlarmEventId,sizeof(uint32_t));
- pdu.insertPDUHeader(e.getEventType());
-
-
- uint8_t * buffer = new uint8_t[pdu.getallsize()];
- pdu.getAll(buffer) ;
-
- int b =SaccSocket.WriteAll((char*)buffer,pdu.getallsize());
+ uint32_t bsize= pdubuffer.getPos();
+ pdubuffer.setPos(0);
+ pdubuffer.WriteNetInt32(bsize);
+ pdubuffer.setPos(0);
+ int b =SaccSocket.WriteAll(pdubuffer.getBuffer() ,bsize);
 
  if(b<=0)
   bConnected=false;
 
- pdu.free();
-
- delete buffer;
 }
 
 bool EventSender::PushEvent(void* item)

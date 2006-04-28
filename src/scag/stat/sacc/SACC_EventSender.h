@@ -25,16 +25,22 @@
  *    All rights reserved.
  */
 
-#include "SACC_SyncQueue.h"
+//#include "SACC_SyncQueue.h"
 #include <logger/Logger.h>
-#include "SACC_Events.h"
+//#include "SACC_Events.h"
 #include "core/threads/Thread.hpp"
 #include "core/network/Multiplexer.hpp"
 #include "core/network/Socket.hpp"
 #include "logger/Logger.h"
 #include <scag/stat/Statistics.h>
-#include "SACC_Events.h"
+//#include "SACC_Events.h"
 #include <core/synchronization/EventMonitor.hpp>
+#include <util/BufferSerialization.hpp>
+
+#include <core/buffers/FastMTQueue.hpp>
+#include <core/synchronization/EventMonitor.hpp>
+#include <core/synchronization/Event.hpp>
+
 
 #include <string>
 using namespace smsc::core::threads;
@@ -42,6 +48,7 @@ using smsc::core::network::Socket;
 using smsc::core::network::Multiplexer;
 using namespace smsc::logger;
 using smsc::util::Exception;
+using smsc::util::SerializationBuffer;
 using namespace scag::stat;
 using namespace scag::stat::Counters;
 using namespace smsc::core::synchronization;
@@ -81,7 +88,8 @@ private:
  std::string Host;
  int QueueLength;
  int Port;
- 
+ SerializationBuffer pdubuffer;
+
 // EventMonitor evReconnect;
  //EventMonitor evQueue;
 
