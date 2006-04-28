@@ -266,7 +266,7 @@ Routine* OCIConnection::createRoutine(const char* call, bool func)
 
         int curPos = 0;
         while (call && isspace(call[curPos])) curPos++;
-        while (call && (isalnum(call[curPos]) || call[curPos]=='_'))
+        while (call && (isalnum(call[curPos]) || call[curPos]=='_' || call[curPos]=='.'))
             name += call[curPos++];
 
         __trace2__("Call:\n%s", routine.c_str());
