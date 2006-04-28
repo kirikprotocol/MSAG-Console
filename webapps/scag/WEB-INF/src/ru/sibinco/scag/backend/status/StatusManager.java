@@ -38,8 +38,7 @@ public class StatusManager {
     private static StatusManager instanse;
     private File statusFolder;
     private File currentFile;
-    private final Map statMessages = Collections.synchronizedMap(new HashMap());
-
+    private final ArrayList statMessages = new ArrayList();
     private StatusManager() {
     }
 
@@ -66,12 +65,14 @@ public class StatusManager {
         }
     }
 
-    public synchronized Map getStatMessages() {
+
+
+    public synchronized ArrayList getStatMessages() {
         return statMessages;
     }
 
     public synchronized void addStatMessages(StatMessage message) {
-        statMessages.put(message.getTime(), message);
+        statMessages.add(message);
     }
 
     public File getStatusFolder() {

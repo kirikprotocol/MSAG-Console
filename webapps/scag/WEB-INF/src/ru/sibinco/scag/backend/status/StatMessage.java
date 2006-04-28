@@ -23,7 +23,7 @@ public class StatMessage {
     private String category;
     private String message;
 
-    SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss:SSSS");
+    SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
 
     public StatMessage(final String userLogin, final String category, final String message) {
         this.userLogin = userLogin;

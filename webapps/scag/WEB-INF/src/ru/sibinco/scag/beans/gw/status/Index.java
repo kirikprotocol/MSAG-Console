@@ -31,7 +31,7 @@ public class Index extends TabledBeanImpl {
     private boolean gwStopped;
 
     protected Collection getDataSource() {
-        return StatusManager.getInstance().getStatMessages().values();
+        return StatusManager.getInstance().getStatMessages();
     }
 
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {

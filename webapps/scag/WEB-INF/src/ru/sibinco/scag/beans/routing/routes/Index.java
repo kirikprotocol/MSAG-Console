@@ -40,7 +40,7 @@ public class Index extends TabledBeanImpl {
     private boolean routesLoaded = false;
 
     protected Collection getDataSource() {
-        return appContext.getScagRoutingManager().getStatMessages().values();//.getRoutes().values();
+        return appContext.getScagRoutingManager().getStatMessages();
     }
 
     public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException {

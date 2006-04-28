@@ -39,7 +39,7 @@ public class ScagRoutingManager {
 
     private Map routes = null;//Collections.synchronizedMap(new HashMap());
     private Map subjects = null;//Collections.synchronizedMap(new HashMap());
-    private final Map statMessages = Collections.synchronizedMap(new HashMap());
+    private final ArrayList statMessages = new ArrayList();
     private Logger logger = Logger.getLogger(this.getClass());
     private final File scagConfFolder;
     private SmppManager smppManager;
@@ -332,12 +332,12 @@ public class ScagRoutingManager {
         this.routesLoaded = routesLoaded;
     }
 
-    public synchronized Map getStatMessages() {
+    public synchronized ArrayList getStatMessages() {
         return statMessages;
     }
 
     public synchronized void addStatMessages(StatMessage message) {
-        statMessages.put(message.getTime(), message);
+        statMessages.add(message);
     }
 
     public synchronized void clearStatMessages() {
