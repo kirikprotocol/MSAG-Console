@@ -65,7 +65,7 @@ public class EditTag
 
   prepareTag();  //set list of names here
   if (names.size()==0) AddRequredValues(attributeValues);
-   closeTag=">";
+   closeTag="";
 
  /*  if(element.empty)
      {
@@ -213,8 +213,8 @@ Attribute attr = (Attribute)attributeModel.get(i);
    else
     set = true;
 
-   if(attr.required)
-    set = true;
+   //if(attr.required)
+   // set = true;
 
    ArrayList values;
    if(attr.type.equals("IDREF")

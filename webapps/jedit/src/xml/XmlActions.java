@@ -55,7 +55,7 @@ public class XmlActions
        int caret = textArea.getCaretPosition();
        TagParser.Tag tag = TagParser.getTagForOffset(text,caret+1);
        //System.out.println("-----------------tag = " + tag);
-       if(tag == null || tag.type == TagParser.T_END_TAG)
+       if(tag == null || tag.type == TagParser.T_END_TAG || text.substring(caret-1,caret).equals("\""))
          { //view.getToolkit().beep();
          SideKickActions.keyComplete(view);
          return;
@@ -200,12 +200,12 @@ public class XmlActions
      JEditTextArea textArea =view.getTextArea();
      Buffer buffer=textArea.getBuffer();
 
-     String newTag = dialog.getNewTag();
+     //String newTag = dialog.getNewTag();
 //     System.out.println("newTag1= "+newTag);
       if (dialog.getNames().size()>0) {
      textArea.updateMathTag();
      if (textArea.getStructureMatch()==null) {
-      String closeTag="/>"; dialog.setCloseTag(closeTag);
+      String closeTag="/>"; //dialog.setCloseTag(closeTag);
     }
         //buffer.setBooleanProperty("sidekick.keystroke-parse",false);
         dialog.setBackCursor(true);
@@ -214,9 +214,9 @@ public class XmlActions
        // int _caret=view.getTextArea().getCaretPosition();
        // view.getTextArea().setCaretPosition(_caret-4);
         //newTag=newTag+"/>";
-     newTag=newTag+view.getEditTag().getCloseTag();// "/>";
+     //newTag=newTag+view.getEditTag().getCloseTag();// "/>";
  //     System.out.println("newTag2= "+newTag);
-      if(newTag != null)
+     /* if(newTag != null)
       {
         try
         {
@@ -229,7 +229,7 @@ public class XmlActions
         {
           buffer.endCompoundEdit();
         }
-      }
+      } */
 
       }
     else {

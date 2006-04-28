@@ -102,22 +102,19 @@ public abstract class XmlParser extends SideKickParser
   {
       int attrstart=0;
       int attrend=0;
-      if (!Character.isWhitespace(text.charAt(i)))
+      if (text.charAt(i) == '"')
       {
-          if (text.charAt(i) == '=')
-          {
            attrComplete = true;
            int index ;
            for (index= i-1;index>0;index--)
-             if (!Character.isWhitespace(text.charAt(index))) {attrend=index+1;  break;}
+             if (!Character.isWhitespace(text.charAt(index)) && text.charAt(index) != '=' ) {attrend=index+1;  break;}
            for (index= attrend-1;index>0;index--)
              if (Character.isWhitespace(text.charAt(index))) {attrstart=index;  break;}
            attrName = text.substring(attrstart,attrend);
            System.out.println("attrName : "+attrName);
            break;
-          }
-          else break;
       }
+      else break;
   }
 
   int mode = -1;
@@ -164,7 +161,7 @@ public abstract class XmlParser extends SideKickParser
                  {
                    String selected = String.valueOf(get(index));
                    String insert = selected.substring(text.length());
-                   textArea.setSelectedText("\""+insert+"\"");
+                   textArea.setSelectedText(insert);
                  }};
           }
        }
