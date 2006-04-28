@@ -494,10 +494,10 @@ public class Deliveries extends InfoSmeBean
         task.setDelivery(true);
         task.setProvider(Task.INFOSME_EXT_PROVIDER);
         task.setPriority(10);
-        task.setMessagesCacheSize(100);
-        task.setMessagesCacheSleep(1);
-        task.setUncommitedInGeneration(10);
-        task.setUncommitedInProcess(10);
+        task.setMessagesCacheSize(2000);
+        task.setMessagesCacheSleep(600);
+        task.setUncommitedInGeneration(100);
+        task.setUncommitedInProcess(100);
         task.setEnabled(true);
         task.setKeepHistory(true);
         task.setReplaceMessage(false);
