@@ -120,23 +120,14 @@ bool BillActionClose::run(ActionContext& context)
 
         if (isOK) bm.commit(operation->getBillId());
 
-
         operation->detachBill();
-
-        try
-        {
-            context.makeBillEvent(billTransactionEvent, tariffRec, ev);
-        } catch (SCAGException& e) {
-            smsc_log_warn(logger,"BillAction 'bill:close' error. Delails: %s", e.what());
-            SetBillingStatus(context, e.what(), false);
-            return true;
-        }
+        context.makeBillEvent(billTransactionEvent, tariffRec, ev);
 
         SetBillingStatus(context, logMessage.c_str(), isOK);
         statistics.registerSaccEvent(ev);
 
         if (isOK) 
-            smsc_log_error(logger,"Action 'bill:close': %s", logMessage.c_str());
+            smsc_log_debug(logger,"Action 'bill:close': %s", logMessage.c_str());
         else
         {
             smsc_log_error(logger,"Action 'bill:close'. Details: %s", logMessage.c_str());
@@ -162,7 +153,7 @@ bool BillActionClose::run(ActionContext& context)
             context.makeBillEvent(TRANSACTION_CALL_ROLLBACK, tariffRec, ev);
         } catch (SCAGException& e)
         {        
-            smsc_log_warn(logger,"BillAction 'bill:close' error. Delails: %s", e.what());
+            smsc_log_error(logger,"BillAction 'bill:close' error. Delails: %s", e.what());
             SetBillingStatus(context,e.what(), false);
             return true;
         }

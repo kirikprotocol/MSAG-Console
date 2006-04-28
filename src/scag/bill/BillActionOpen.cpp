@@ -148,47 +148,58 @@ bool BillActionOpen::run(ActionContext& context)
 
     smsc::inman::interaction::ChargeSms op;
     EventMonitor monitor;
+    TransactionStatus transactionStatus;
+    int BillId = 0;
+    context.fillChargeOperation(op, *tariffRec);
 
     try 
     {
-        context.fillChargeOperation(op, *tariffRec);
-        int BillId = bm.ChargeBill(op, &monitor, *tariffRec);
+        BillId = bm.ChargeBill(op, &monitor, *tariffRec);
 
         //TODO: Понять какое время нужно ждать до таймаута
         monitor.wait(1000);
-        TransactionStatus transactionStatus = bm.GetStatus(BillId);
-
-        if ((TRANSACTION_INVALID == transactionStatus)||(TRANSACTION_NOT_STARTED == transactionStatus)) 
-        {
-            smsc_log_error(logger,"BillAction 'bill:open': billing transaction deny");
-            SetBillingStatus(context, "billing transaction deny", false);
-            context.makeBillEvent(TRANSACTION_REFUSED, *tariffRec, ev);
-        }
-        else if (TRANSACTION_WAIT_ANSWER == transactionStatus) 
-        {
-            smsc_log_error(logger,"BillAction 'bill:open': billing transaction time out");
-            SetBillingStatus(context, "billing transaction time out", false);
-            context.makeBillEvent(TRANSACTION_TIME_OUT, *tariffRec, ev);
-        }
-        else 
-        {
-            operation->attachBill(BillId);
-            context.makeBillEvent(TRANSACTION_OPEN, *tariffRec, ev);
-            bm.sendReject(BillId);
-
-            statistics.registerSaccEvent(ev);
-            SetBillingStatus(context, "", true);
-
-            return true;
-        }
-      
+        transactionStatus = bm.GetStatus(BillId);
     } catch (SCAGException& e)
     {
-        smsc_log_warn(logger,"BillAction 'bill:open' unable to process bill:open. Delails: %s", e.what());
+        smsc_log_warn(logger,"BillAction 'bill:open' unable to process. Delails: %s", e.what());
         SetBillingStatus(context, e.what(), false);
         return true;
     }
 
+    switch (transactionStatus) 
+    {
+    case TRANSACTION_INVALID:
+    case TRANSACTION_NOT_STARTED:
+        smsc_log_error(logger,"BillAction 'bill:open': billing transaction deny");
+        SetBillingStatus(context, "billing transaction deny", false);
+        context.makeBillEvent(TRANSACTION_REFUSED, *tariffRec, ev);
+        break;
+    case TRANSACTION_WAIT_ANSWER:
+        smsc_log_error(logger,"BillAction 'bill:open': billing transaction time out");
+        SetBillingStatus(context, "billing transaction time out", false);
+        context.makeBillEvent(TRANSACTION_TIME_OUT, *tariffRec, ev);
+        break;
+    default:
+        //TRANSACTION_VALID
+        try
+        {
+            operation->attachBill(BillId);
+        } catch (SCAGException& e)
+        {
+            smsc_log_warn(logger,"BillAction 'bill:open' unable to process. Delails: %s", e.what());
+            SetBillingStatus(context, e.what(), false);
+            return true;
+        }
+
+        bm.sendReject(BillId);
+
+        SetBillingStatus(context, "", true);
+        context.makeBillEvent(TRANSACTION_OPEN, *tariffRec, ev);
+        smsc_log_warn(logger,"BillAction 'bill:open' transaction successfully opened");
+        break;
+    }
+
+        
     statistics.registerSaccEvent(ev);
     return true;
 }

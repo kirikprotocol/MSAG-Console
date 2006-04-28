@@ -237,7 +237,11 @@ void RuleEngineImpl::ReadRulesFromDir(TransportType transport, const char * dir)
     int serviceId = 0;
 
     pDir = opendir(dir);
-    if (!pDir) throw RuleEngineException(0,"Invalid directory %s", dir);
+    if (!pDir) 
+    {
+        smsc_log_warn(logger,"Invalid directory %s", dir);
+        return;
+    }
 
     while (pDir) 
     {
@@ -250,7 +254,13 @@ void RuleEngineImpl::ReadRulesFromDir(TransportType transport, const char * dir)
                 RuleKey key;
                 key.transport = transport;
                 key.serviceId = serviceId;
-                updateRule(key);
+                try
+                {
+                    updateRule(key);
+                } catch (SCAGException& e)
+                {
+                    smsc_log_error(logger,"%s",e.what());
+                }
             }
             else if ((strcmp(pDirEnt->d_name,".")!=0)&&(strcmp(pDirEnt->d_name,"..")!=0)) 
             {

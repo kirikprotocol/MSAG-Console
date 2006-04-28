@@ -135,9 +135,9 @@ Session::Session(const CSessionKey& key)
 
     timeval tv;
     gettimeofday(&tv,0);
-    MillisecTime msec(tv);
 
-    smsc_log_debug(logger," *********** Session: msec %s (abonentAddr = '%s', USR=%d)", msec.toString(), m_SessionKey.abonentAddr.toString().c_str(),m_SessionKey.USR);
+//    MillisecTime msec(tv);
+//    smsc_log_debug(logger," *********** Session: msec %s (abonentAddr = '%s', USR=%d)", msec.toString(), m_SessionKey.abonentAddr.toString().c_str(),m_SessionKey.USR);
     
 
     m_SessionPrimaryKey.abonentAddr = key.abonentAddr;

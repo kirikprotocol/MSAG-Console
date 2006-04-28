@@ -510,18 +510,24 @@ void Scag::init()
 
   sms3.setBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS, data.data(), data.size());
 
+  Address abonent("+79137354153");
+  sms1.originatingAddress = abonent;
+  sms2.destinationAddress = abonent;
+
+
   char buff[128];
   scag::transport::smpp::SmppCommand commandDeliver1 = scag::transport::smpp::SmppCommand::makeDeliverySm(sms1,1);
   scag::transport::smpp::SmppCommand commandDeliverResp = scag::transport::smpp::SmppCommand::makeDeliverySmResp(buff,1,1);
   scag::transport::smpp::SmppCommand commandSubmit = scag::transport::smpp::SmppCommand::makeSubmitSm(sms2,1);
   scag::transport::smpp::SmppCommand commandSubmitResp = scag::transport::smpp::SmppCommand::makeSubmitSmResp(buff,1,1, true);
 
-  scag::transport::smpp::SmppCommand commandDeliver2 = scag::transport::smpp::SmppCommand::makeDeliverySm(sms2,1);
+  scag::transport::smpp::SmppCommand commandDeliver2 = scag::transport::smpp::SmppCommand::makeDeliverySm(sms3,1);
 
 
   scag::transport::smpp::SmppCommand commandPureSubmit = scag::transport::smpp::SmppCommand::makeSubmitSm(sms3,1);
 
   commandSubmitResp->get_resp()->set_sms(&sms2);
+
 
   commandPureSubmit.setServiceId(1);
 
@@ -581,8 +587,8 @@ void Scag::init()
   sm.releaseSession(sessionPtr);
 
   ////////////////////////// FOR TEST 
-                                   
-  */                    
+   */                                
+                      
                                     
     //********************************************************
     //************** HttpManager initialization **************

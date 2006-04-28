@@ -164,7 +164,7 @@ void SessionManagerImpl::AddRestoredSession(Session * session)
     accessData->hasOperations = session->hasOperations();
 
 
-    smsc_log_debug(logger,"SessionManager: Session restored from store with UMR='%d', Address='%s', pending: %d-%d",accessData->SessionKey.USR,accessData->SessionKey.abonentAddr.toString().c_str(),session->PendingOperationList.size(),session->PrePendingOperationList.size());
+    //smsc_log_debug(logger,"SessionManager: Session restored from store with UMR='%d', Address='%s', pending: %d-%d",accessData->SessionKey.USR,accessData->SessionKey.abonentAddr.toString().c_str(),session->PendingOperationList.size(),session->PrePendingOperationList.size());
 
     CSessionSetIterator it = SessionExpirePool.insert(accessData);
 
