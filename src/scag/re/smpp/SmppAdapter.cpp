@@ -651,7 +651,7 @@ AdapterProperty * SmppCommandAdapter::getSubmitRespProperty(SMS& data, const std
 
     }
 
-    return 0;
+    return property;
 }
 
 AdapterProperty * SmppCommandAdapter::getDeliverRespProperty(SMS& data, const std::string& name,int FieldId)
@@ -669,7 +669,7 @@ AdapterProperty * SmppCommandAdapter::getDeliverRespProperty(SMS& data, const st
         break;
     }
 
-    return 0;
+    return property;
 }
 
 
@@ -981,6 +981,7 @@ AdapterProperty * SmppCommandAdapter::getDeliverProperty(SMS& data,const std::st
     AdapterProperty * property = 0;
     char buff[100];
     int num = 0;
+    std::string tempStr;
 
     if ((FieldId >= ESM_MM_SMSC_DEFAULT)&&(FieldId <= ESM_NSF_BOTH)) 
     {
@@ -999,7 +1000,6 @@ AdapterProperty * SmppCommandAdapter::getDeliverProperty(SMS& data,const std::st
         property = new AdapterProperty(name,this,data.getState());
         //property->setPureInt(data.getState());
     } else
-
     switch (FieldId) 
     {
     case OA:
@@ -1140,9 +1140,10 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
         smsResp = command->get_resp();
         if (!smsResp) return 0;
         sms = smsResp->get_sms();
-        if (!sms) return false;
+        if (!sms) return 0;
 
         property = getSubmitRespProperty(*sms, name,*pFieldId);
+        break;
     }
 
     if ((property)&&(pFieldId)) PropertyPul.Insert(*pFieldId, property);

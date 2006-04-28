@@ -19,12 +19,11 @@ class ActionMatch : public Action
 
     std::string strValue;
     std::string wstrValue;
-
+    FieldType m_ftValue;
 
     std::string strResult;
     
     RegExp *re;
-    FieldType ftValue;
 
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name, const SectionParams& params,const ActionFactory& factory);

@@ -9,8 +9,9 @@ namespace scag { namespace re { namespace actions {
 class ActionOperationWait : public Action
 {
     ActionOperationWait(const ActionOperationWait&);
-    std::string sTime;
+    std::string m_sTime;
     int m_opType;
+    FieldType m_ftTime;
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name, const SectionParams& params,const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);

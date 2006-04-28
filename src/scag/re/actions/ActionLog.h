@@ -9,23 +9,6 @@ namespace scag { namespace re { namespace actions {
 
 class ActionLog : public Action
 {
-public:
-    enum LogLevel
-    {
-        lgWarning,
-        lgError,
-        lgDebug,
-        lgInfo
-    };
-
-
-    virtual void init(const SectionParams& params,PropertyObject propertyObject);
-    virtual bool run(ActionContext& context);
-    ActionLog (LogLevel l){ level = l; }
-
-    virtual ~ActionLog();
-
-protected:
     ActionLog(const ActionLog&);
 
     std::string wstrCategory;
@@ -35,13 +18,27 @@ protected:
     std::string strMsg;
 
 
+    enum LogLevel
+    {
+        lgWarning,
+        lgError,
+        lgDebug,
+        lgInfo
+    };
+
     LogLevel level;
     FieldType ftCategory,ftMessage;
 
-    std::string ttToStr(TransportType t);
-
+protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name, const SectionParams& params,const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);
+public:
+    virtual void init(const SectionParams& params,PropertyObject propertyObject);
+    virtual bool run(ActionContext& context);
+    ActionLog (){};
+
+    virtual ~ActionLog();
+
 };
 
 

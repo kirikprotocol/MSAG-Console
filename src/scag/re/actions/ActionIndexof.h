@@ -12,7 +12,6 @@ class ActionIndexof : public Action
     std::string wstrVariable;
 
     std::string strResult;
-    std::string wstrResult;
     
     std::string strString;
     std::string wstrString;

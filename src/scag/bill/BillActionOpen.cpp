@@ -1,3 +1,4 @@
+#include <scag/exc/SCAGExceptions.h>
 #include "BillActionOpen.h"
 #include "scag/re/CommandAdapter.h"
 
@@ -69,8 +70,6 @@ void BillActionOpen::SetBillingStatus(ActionContext& context, const char * error
         property->setStr(std::string(errorMsg));
     }
 
-    return;
-
 }
 
 bool BillActionOpen::run(ActionContext& context)
@@ -131,6 +130,7 @@ bool BillActionOpen::run(ActionContext& context)
 
     TariffRec * tariffRec;
     try {
+
         tariffRec = context.getTariffRec(category, mediaType);
     } catch (SCAGException& e)
     {

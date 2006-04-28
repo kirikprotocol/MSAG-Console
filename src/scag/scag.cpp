@@ -478,7 +478,7 @@ void Scag::init()
   */
   //*****************************************************
 
-        /*
+        
   ////////////////////////// FOR TEST
 
   scag::sessions::CSessionKey key;
@@ -487,7 +487,28 @@ void Scag::init()
   //smsc::smpp::UssdServiceOpValue::PSSR_INDICATION == sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)
   sms1.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, smsc::smpp::UssdServiceOpValue::PSSR_INDICATION);
   sms2.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, 100);
-  
+
+  std::string data;
+  uint16_t tag;
+  uint16_t val_len;
+  char val = 1;
+
+  tag = 0x4901;
+  val_len = 1;
+  data.append((char *)&tag, 2);
+  data.append((char *)&val_len, 2);
+  data.append(&val, 1);
+
+
+  tag = 0x4903;
+  val_len = 4;
+
+  data.append((char *)&tag, 2);
+  data.append((char *)&val_len, 2);
+  data.append("lala",4);
+
+
+  sms3.setBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS, data.data(), data.size());
 
   char buff[128];
   scag::transport::smpp::SmppCommand commandDeliver1 = scag::transport::smpp::SmppCommand::makeDeliverySm(sms1,1);
@@ -499,6 +520,8 @@ void Scag::init()
 
 
   scag::transport::smpp::SmppCommand commandPureSubmit = scag::transport::smpp::SmppCommand::makeSubmitSm(sms3,1);
+
+  commandSubmitResp->get_resp()->set_sms(&sms2);
 
   commandPureSubmit.setServiceId(1);
 
@@ -559,7 +582,7 @@ void Scag::init()
 
   ////////////////////////// FOR TEST 
                                    
-                      */
+                      
                                     
     //********************************************************
     //************** HttpManager initialization **************

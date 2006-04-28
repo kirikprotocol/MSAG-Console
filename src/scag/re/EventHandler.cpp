@@ -114,9 +114,9 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, 
         }
     }
 
-    tempStr = sessionPrimaryKey.abonentAddr.toString();
+    MillisecTime msec(sessionPrimaryKey.BornMicrotime);
 
-    sprintf((char *)ev.pSessionKey,"%s/%ld%d", tempStr.c_str(), sessionPrimaryKey.BornMicrotime.tv_sec,sessionPrimaryKey.BornMicrotime.tv_usec / 1000);
+    sprintf((char *)ev.pSessionKey,"%s/%s", sessionPrimaryKey.abonentAddr.toString().c_str(), msec.toString());
 
     if ((propertyObject.HandlerId == EH_DELIVER_SM)||(propertyObject.HandlerId == EH_SUBMIT_SM_RESP))
         ev.cDirection = 'I';

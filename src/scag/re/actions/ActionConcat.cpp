@@ -7,44 +7,15 @@ void ActionConcat::init(const SectionParams& params,PropertyObject propertyObjec
 {
     logger = Logger::getInstance("scag.re");
 
-    if (!params.Exists("var")) throw SCAGException("Action 'concat': missing 'var' parameter");
-    if (!params.Exists("str")) throw SCAGException("Action 'concat': missing 'str' parameter");
-
-
-    wstrVariable = params["var"];
-    strVariable = ConvertWStrToStr(params["var"]);
-    
-
-    wstrString = params["str"];
-    strString = ConvertWStrToStr(params["str"]);
-
+    std::string temp;
+    bool bExist;
     FieldType ft;
-    const char * name = 0;
 
-    m_fStrFieldType = ActionContext::Separate(strString,name); 
+    ft = CheckParameter(params, propertyObject, "concat", "var", true, false, wstrVariable, bExist);
+    strVariable = ConvertWStrToStr(wstrVariable);
 
-    AccessType at;
-
-    if (m_fStrFieldType == ftField) 
-    {
-        at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
-        if (!(at&atRead)) 
-            throw SCAGException("Action 'concat': cannot read property '%s' - no access", strString.c_str());
-    } 
-
-
-    ft = ActionContext::Separate(strVariable,name);
-
-    if (ft == ftUnknown) throw SCAGException("Action 'concat': cannot modify property '%s' - unknown variable prefix",strVariable.c_str());
-
-    if (ft == ftField) 
-    {
-        at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
-        if (!(at&atWrite)) 
-            throw SCAGException("Action 'concat': cannot modify property '%s' - no access",strVariable.c_str());
-    } else
-        if (ft == ftConst) throw SCAGException("Action 'concat' cannot modify constant variable '%s'. Details: no access to write",strVariable.c_str());
-
+    m_fStrFieldType = CheckParameter(params, propertyObject, "concat", "var", true, true, wstrString, bExist);
+    strString = ConvertWStrToStr(wstrString);
 
     smsc_log_debug(logger,"Action 'concat':: init");
 }

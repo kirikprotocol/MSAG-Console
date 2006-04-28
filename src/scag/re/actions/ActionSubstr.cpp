@@ -7,54 +7,34 @@ void ActionSubstr::init(const SectionParams& params,PropertyObject propertyObjec
 {
     logger = Logger::getInstance("scag.re");
 
-    if ((!params.Exists("var")) || (!params.Exists("result"))) throw SCAGException("Action 'substr': missing 'var' or 'result' parameter");
-    if ((!params.Exists("begin")) && (!params.Exists("end")))  throw SCAGException("Action 'substr': missing both of 'begin' and 'end' parameters.");
+    FieldType ft;
+    std::string temp;
+    bool bExist;
 
-
-    wstrVariable = params["var"];
+    m_fVariableFieldType = CheckParameter(params, propertyObject, "substr", "var", true, true, wstrVariable, bExist);
     strVariable = ConvertWStrToStr(wstrVariable);
 
-    strResult = ConvertWStrToStr(params["result"]);
+    ft = CheckParameter(params, propertyObject, "substr", "result", true, false, temp, bExist);
+    strResult = ConvertWStrToStr(temp);
 
-    if (params.Exists("begin")) 
+    ft = CheckParameter(params, propertyObject, "substr", "begin", false, true, temp, bExist);
+    if (ft!=ftUnknown) throw SCAGException("Action 'substr': 'begin' parameter must be a scalar constant type");
+
+    if (bExist)  
     {
-            beginIndex = atoi(ConvertWStrToStr(params["begin"]).c_str());
-            if (beginIndex < 0) throw SCAGException("Action 'substr': invalid 'begin' parameter.");
+        beginIndex = atoi(ConvertWStrToStr(temp).c_str());
+        if (beginIndex < 0) throw SCAGException("Action 'substr': invalid 'begin' parameter.");
     }
 
-    if (params.Exists("end")) 
+
+    ft = CheckParameter(params, propertyObject, "substr", "end", false, true, temp, bExist);
+    if (ft!=ftUnknown) throw SCAGException("Action 'substr': 'end' parameter must be a scalar constant type");
+
+    if (bExist)  
     {
-            endIndex = atoi(ConvertWStrToStr(params["end"]).c_str());
-            if (endIndex <= 0) throw SCAGException("Action 'substr': invalid 'end' parameter.");
+        endIndex = atoi(ConvertWStrToStr(temp).c_str());
+        if (endIndex <= 0) throw SCAGException("Action 'substr': invalid 'end' parameter.");
     }
-
-    FieldType ft;
-    const char * name = 0;
-
-    m_fVariableFieldType = ActionContext::Separate(strVariable,name); 
-
-    AccessType at;
-
-    if (m_fVariableFieldType == ftField) 
-    {
-        at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
-        if (!(at&atRead)) 
-            throw SCAGException("Action 'substr': cannot read property '%s' - no access",strVariable.c_str());
-    } 
-
-
-    ft = ActionContext::Separate(strResult,name);
-
-    if (ft == ftUnknown) throw SCAGException("Action 'substr': cannot modify property '%s' - unknown variable prefix",strResult.c_str());
-
-    if (ft == ftField) 
-    {
-        at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
-        if (!(at&atWrite)) 
-            throw SCAGException("Action 'substr': cannot modify property '%s' - no access",strResult.c_str());
-    } else
-        if (ft == ftConst) throw SCAGException("Action 'substr' cannot modify constant variable '%s'. Details: no access to write",strResult.c_str());
-
 
     smsc_log_debug(logger,"Action 'substr':: init");
 }

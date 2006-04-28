@@ -7,42 +7,16 @@ void ActionSet::init(const SectionParams& params,PropertyObject propertyObject)
 {
     logger = Logger::getInstance("scag.re");
 
-
-    if ((!params.Exists("var"))|| (!params.Exists("value"))) throw SCAGException("Action 'set': missing 'var' and 'value' parameters");
-
-
-    strVariable = ConvertWStrToStr(params["var"]);
-
-    wstrValue = params["value"];
-    strValue = ConvertWStrToStr(wstrValue);
-
     FieldType ft;
-    const char * name = 0;
+    std::string temp;
+    bool bExist;
 
-    ft = ActionContext::Separate(strVariable,name); 
-    if (ft==ftUnknown) 
-        throw InvalidPropertyException("Action 'set': unrecognized variable prefix '%s' for 'var' parameter",strVariable.c_str());
-
-    AccessType at;
-    std::string msg = "Action 'set': cannot set property '";
-
-    if (ft == ftField) 
-    {
-        at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
-        if (!(at&atWrite)) 
-            throw InvalidPropertyException("Action 'set': cannot set property '%s' - no access to write",strVariable.c_str());
-    } else
-        if (ft == ftConst) throw InvalidPropertyException("Action 'set': cannot modify constant variable '%s' - no access to write",strVariable.c_str());
+    ft = CheckParameter(params, propertyObject, "set", "var", true, false, temp, bExist);
+    strVariable = ConvertWStrToStr(temp);
 
 
-    valueFieldType = ActionContext::Separate(strValue,name);
-    if (valueFieldType == ftField) 
-    {
-        at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
-        if (!(at&atRead)) 
-            throw InvalidPropertyException("Action 'set': cannot read property '%s' - no access",strValue.c_str());
-    }
-
+    valueFieldType = CheckParameter(params, propertyObject, "set", "value", true, true, wstrValue, bExist);
+    strValue = ConvertWStrToStr(wstrValue);
 
     smsc_log_debug(logger,"Action 'set':: init");
 }

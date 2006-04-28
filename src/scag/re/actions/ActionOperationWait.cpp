@@ -19,33 +19,20 @@ void ActionOperationWait::init(const SectionParams& params,PropertyObject proper
 
     logger = Logger::getInstance("scag.re");
 
-    if (!params.Exists("type")) throw SCAGException("Action 'operation:wait': missing 'type' parameter");
-    if (!params.Exists("time")) throw SCAGException("Action 'operation:wait': missing 'time' parameter");
-
-
-    std::string sType = ConvertWStrToStr(params["type"]);
-
-    const char * name = 0;
-
-    sTime = ConvertWStrToStr(params["time"]);
-
     FieldType ft;
-    AccessType at;
+    std::string temp;
+    bool bExist;
 
-    ft = ActionContext::Separate(sTime,name); 
-    if (ft == ftUnknown) throw InvalidPropertyException("Action 'operation:wait': unrecognized variable prefix '%s' for 'time' parameter",sTime.c_str());
+    ft = CheckParameter(params, propertyObject, "operation:wait", "type", true, true, temp, bExist);
+    if (ft!=ftUnknown) throw SCAGException("Action 'match': 'regexp' parameter must be a scalar constant type");
+    std::string sType = ConvertWStrToStr(temp);
 
-    if (ft == ftField) 
-    {
-        at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
-        if (!(at&atRead)) 
-            throw InvalidPropertyException("Action 'operation:wait': cannot read property '%s' - no access",sTime.c_str());
-    }
+    m_ftTime = CheckParameter(params, propertyObject, "operation:wait", "time", true, true, temp, bExist);
+    m_sTime = ConvertWStrToStr(temp);
 
     m_opType = Session::getOperationType(sType);
     
-
-    smsc_log_debug(logger,"Action 'operation:wait':: init...");
+    smsc_log_debug(logger,"Action 'operation:wait':: init");
 }
 
 bool ActionOperationWait::run(ActionContext& context)
@@ -53,23 +40,29 @@ bool ActionOperationWait::run(ActionContext& context)
     smsc_log_debug(logger,"Run Action 'operation:wait'...");
 
     Property * property = 0;
-    property = context.getProperty(sTime);
+    int wait_time;
 
-    if (!property) 
+    if (m_ftTime!=ftUnknown) 
     {
-        smsc_log_warn(logger,"Action 'operation:wait': invalid property '%s' to set time", sTime.c_str());
-        return true;
+        property = context.getProperty(m_sTime);
+
+        if (!property) 
+        {
+            smsc_log_warn(logger,"Action 'operation:wait': invalid property '%s' to set time", m_sTime.c_str());
+            return true;
+        }
+        wait_time = property->getInt();
     }
+    else
+        wait_time = atoi(m_sTime.c_str());
 
     time_t pendingTime,now;
  
-
     time(&now);
-    pendingTime = now + property->getInt();
+    pendingTime = now + wait_time;
 
     context.AddPendingOperation(m_opType,pendingTime);
-
-
+ 
     return true;
 }
 

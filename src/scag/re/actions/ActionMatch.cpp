@@ -16,70 +16,32 @@ bool ActionMatch::FinishXMLSubSection(const std::string& name)
 
 void ActionMatch::init(const SectionParams& params,PropertyObject propertyObject)
 {
-    if (re) {
-        delete re;
-        re = 0;
-    }
-
     logger = Logger::getInstance("scag.re");
 
+    FieldType ft;
+    std::string temp;
+    bool bExist;
 
-    if (!params.Exists("regexp")) throw SCAGException("Action 'match': missing 'regexp' parameter");
-    if (!params.Exists("value")) throw SCAGException("Action 'match': missing 'value' parameter");
-    if (!params.Exists("result")) throw SCAGException("Action 'match': missing 'result' parameter");
+    ft = CheckParameter(params, propertyObject, "match", "regexp", true, true, wstrRegexp, bExist);
+    if (ft!=ftUnknown) throw SCAGException("Action 'match': 'regexp' parameter must be a scalar constant type");
 
-
-    const char * name = 0;
-
-    wstrRegexp = params["regexp"];
-    wstrValue = params["value"];
-
+    m_ftValue = CheckParameter(params, propertyObject, "match", "value", true, true, wstrValue, bExist);
     strValue = ConvertWStrToStr(wstrValue);
 
-    std::string wstrResult = params["result"];
-    strResult = ConvertWStrToStr(wstrResult);
-
-
-    AccessType at;
-
-    ftValue = ActionContext::Separate(strValue,name); 
-
-    if (ftValue == ftField) 
-    {
-        at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
-        if (!(at&atRead)) 
-            throw InvalidPropertyException("Action 'match': cannot read property '%s' - no access", FormatWStr(wstrValue).c_str());
-    }
-
-    FieldType ftResult = ActionContext::Separate(strResult,name); 
-
-    if (ftResult == ftField) 
-    {
-        at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
-        if (!(at&atWrite)) 
-            throw InvalidPropertyException("Action 'match': cannot read property '%s' - no access",strResult.c_str());
-    }
-
-    if (ftResult == ftUnknown) throw InvalidPropertyException("Action 'match': unrecognized variable prefix '%s' for 'result' parameter",FormatWStr(wstrResult).c_str());
-
+    ft = CheckParameter(params, propertyObject, "match", "result", true, false, temp, bExist);
+    strResult = ConvertWStrToStr(temp);
 
     re = new RegExp();
 
-
-    //std::string regexpStr = ConvertWStrToStr(wstrRegexp);
-
-    std::string temp;
+    temp = "";
     temp.append(wstrRegexp.data(), wstrRegexp.size());
     char endbuff[2] = {0,0};
     temp.append(endbuff,2);
 
-    if(!re->Compile((unsigned short *)temp.data(), OP_OPTIMIZE|OP_STRICT))
-    {
+    if (!re->Compile((unsigned short *)temp.data(), OP_OPTIMIZE|OP_STRICT))
         throw SCAGException("Action 'match' Failed to compile regexp");
-        //smsc_log_error(logger, "Action 'match' Failed to compile regexp");
-    }
 
-    smsc_log_debug(logger,"Action 'match':: init...");
+    smsc_log_debug(logger,"Action 'match':: init");
 }
 
 bool ActionMatch::run(ActionContext& context)
@@ -92,7 +54,7 @@ bool ActionMatch::run(ActionContext& context)
 
     std::string value,s2;
 
-    if (ftValue != ftUnknown) 
+    if (m_ftValue != ftUnknown) 
     {
         pValue = context.getProperty(strValue);
         if (!pValue) 
@@ -134,7 +96,6 @@ ActionMatch::ActionMatch() : re(0)
 ActionMatch::~ActionMatch() 
 {
     if (re) delete re;
-    //smsc_log_debug(logger, "'match' action released");
 }
 
 

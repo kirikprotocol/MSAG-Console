@@ -14,27 +14,12 @@ void ActionReturn::init(const SectionParams& params,PropertyObject propertyObjec
 {
     logger = Logger::getInstance("scag.re");
 
-
-    if (params.Exists("result")) 
-    {
-        ReturnValue = ConvertWStrToStr(params["result"]);
-
-        if (ReturnValue.empty()) throw SCAGException("Action 'return': missing variable to return");
-    }
-    else 
-        throw SCAGException("Action 'return': missing 'result' parameter");
-
     FieldType ft;
+    std::string temp;
+    bool bExist;
 
-    const char * name = 0;
-    ft = ActionContext::Separate(ReturnValue,name); 
-    if (ft == ftField) 
-    {
-        AccessType at;
-        at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
-        if (!(at&atRead)) 
-            throw InvalidPropertyException("Action 'return': cannot read property '%s' - no acces",ReturnValue.c_str());
-    }
+    m_ftResult = CheckParameter(params, propertyObject, "return", "result", true, true, temp, bExist);
+    ReturnValue = ConvertWStrToStr(temp);
 
     smsc_log_debug(logger,"Action 'return':: init...");
 }
@@ -42,29 +27,21 @@ void ActionReturn::init(const SectionParams& params,PropertyObject propertyObjec
 
 bool ActionReturn::run(ActionContext& context)
 {
-    FieldType ft;
+    RuleStatus rs = context.getRuleStatus();
 
-    const char * name = 0;
-    ft = ActionContext::Separate(ReturnValue,name);
-    RuleStatus rs;
-
-    if (ft==ftUnknown) 
-    {
+    if (m_ftResult==ftUnknown) 
         rs.result = atoi(ReturnValue.c_str());
-        rs.status = atoi(ReturnValue.c_str());
-    }
     else
     {
         Property * property = context.getProperty(ReturnValue);
         if (property) 
-        {
             rs.result = property->getBool();
-            rs.status = property->getBool();
-        }
-        else smsc_log_warn(logger,"Action 'return': invalid property '%s' to return", ReturnValue.c_str());
+        else 
+            smsc_log_warn(logger,"Action 'return': invalid property '%s' to return", ReturnValue.c_str());
     }
+
     context.setRuleStatus(rs);
-    smsc_log_debug(logger,"Action 'return': return status %d",rs.result);
+    smsc_log_debug(logger,"Action 'return': return result=%d",rs.result);
 
     return false;
 }

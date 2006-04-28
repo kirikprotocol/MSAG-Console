@@ -8,47 +8,16 @@ void ActionBinOperation::init(const SectionParams& params,PropertyObject propert
 {
     logger = Logger::getInstance("scag.re");
 
-    if (!params.Exists("var")) throw SCAGException("Action '%s': missing 'var' parameters", m_ActionName.c_str());
-    if ((m_valueRequired)&&(!params.Exists("value"))) throw SCAGException("Action '%s': missing 'value' parameters", m_ActionName.c_str());
-
-    strVariable = ConvertWStrToStr(params["var"]);
-
-
-    m_hasValue = params.Exists("value");
-
-    if (m_hasValue)
-    {
-        wstrValue = params["value"];
-        strValue = ConvertWStrToStr(wstrValue);
-    }
- 
+    std::string temp;
+    bool bExist;
     FieldType ft;
-    const char * name = 0;
 
-    ft = ActionContext::Separate(strVariable,name); 
-    if (ft==ftUnknown) 
-        throw InvalidPropertyException("Action '%s': unrecognized variable prefix '%s' for 'var' parameter",m_ActionName.c_str(), strVariable.c_str());
+    ft = CheckParameter(params, propertyObject, m_ActionName.c_str(), "var", true, false, temp, bExist);
+    strVariable = ConvertWStrToStr(temp);
 
-    AccessType at;
-
-    if (ft == ftField) 
-    {
-        at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
-        if (!(at&atWrite)) 
-            throw InvalidPropertyException("Action '%s': cannot set property '%s' - no access to write",m_ActionName.c_str(), strVariable.c_str());
-    }
-
-    if (m_hasValue) 
-    {
-        valueFieldType = ActionContext::Separate(strValue,name);
-        if (valueFieldType == ftField) 
-        {
-            at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
-            if (!(at&atRead)) 
-                throw InvalidPropertyException("Action '%s': cannot read property '%s' - no access", m_ActionName.c_str(), strValue.c_str());
-        }
-    }
-
+    valueFieldType = CheckParameter(params, propertyObject, m_ActionName.c_str(), "value", false, true, wstrValue, m_hasValue);
+    if (m_hasValue)
+        strValue = ConvertWStrToStr(wstrValue);
 
     smsc_log_debug(logger,"Action '%s':: init", m_ActionName.c_str());
 }
@@ -69,7 +38,7 @@ bool ActionBinOperation::run(ActionContext& context)
         property->setInt(processOperation(property->getInt(), 1));
     else 
     {
-            if (valueFieldType == ftUnknown) 
+        if (valueFieldType == ftUnknown) 
         {
             property->setInt(processOperation(property->getInt(), atoi(strValue.c_str())));
         }

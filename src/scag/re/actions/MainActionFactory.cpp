@@ -36,7 +36,7 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
     if (name=="return") return new ActionReturn();
     if (name=="traffic:check") return new ActionTrafficCheck();
     if (name=="session:abort") return new ActionAbort();
-//    if (name=="log") return new ActionLog();
+    if (name=="log") return new ActionLog();
     if (name=="operation:wait") return new ActionOperationWait();
     if (name=="match") return new ActionMatch();
 
@@ -54,16 +54,12 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
     if (name=="strings:concat") return new ActionConcat();
     if (name=="strings:indexof") return new ActionIndexof();
 
+
     if (name=="profile:set") return new PersAction(PC_SET);
     if (name=="profile:get") return new PersAction(PC_GET);
     if (name=="profile:del") return new PersAction(PC_DEL);
     if (name=="profile:inc") return new PersAction(PC_INC);
     if (name=="profile:inc-mod") return new PersAction(PC_INC_MOD);
-
-    if (name=="log:debug") return new ActionLog(ActionLog::lgDebug);
-    if (name=="log:info") return new ActionLog(ActionLog::lgInfo);
-    if (name=="log:warn") return new ActionLog(ActionLog::lgWarning);
-    if (name=="log:error") return new ActionLog(ActionLog::lgError);
 
     Action * action = 0;
 

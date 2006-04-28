@@ -174,10 +174,10 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     Infrastructure& istr = BillingManager::Instance().getInfrastructure();
 
     Address& abonentAddr = CommandBrige::getAbonentAddr(*smppcommand);
- /*   
-    int operatorId = 105;
-    int providerId = 1;   */
     
+    int operatorId = 105;
+    int providerId = 1;   
+/*    
     int operatorId = istr.GetOperatorID(abonentAddr);
     if (operatorId == 0) 
         throw SCAGException("SmppEventHandler: Cannot find OperatorID for %s abonent", abonentAddr.toString().c_str());
@@ -185,7 +185,7 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     int providerId = istr.GetProviderID(command.getServiceId());
     if (providerId == 0) 
         throw SCAGException("SmppEventHandler: Cannot find ProviderID for ServiceID=%d", command.getServiceId());
-     
+     */
   
     CommandProperty commandProperty(command, (*smppcommand)->status, abonentAddr, providerId, operatorId);
 
