@@ -113,17 +113,10 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, 
             ev.pMessageText[MAX_TEXT_MESSAGE_LENGTH] = 0;
         }
     }
-<<<<<<< EventHandler.cpp
 
     tempStr = sessionPrimaryKey.abonentAddr.toString();
 
     sprintf((char *)ev.pSessionKey,"%s/%ld%d", tempStr.c_str(), sessionPrimaryKey.BornMicrotime.tv_sec,sessionPrimaryKey.BornMicrotime.tv_usec / 1000);
-=======
-    strStr = sessionPrimaryKey.abonentAddr.toString();
-    sprintf((char *)ev.pSessionKey,"%s/%ld%d", strStr.c_str(), sessionPrimaryKey.BornMicrotime.tv_sec,sessionPrimaryKey.BornMicrotime.tv_usec / 1000);
-    //smsc_log_debug(logger,"SESSION KEY FOR TRANSPORT EVENT %s", sessionPrimaryKey.abonentAddr.toString().c_str());
-    //smsc_log_debug(logger,"SESSION KEY FOR TRANSPORT EVENT %s/%ld%d", sessionPrimaryKey.abonentAddr.toString().c_str(), sessionPrimaryKey.BornMicrotime.tv_sec,sessionPrimaryKey.BornMicrotime.tv_usec / 1000);
->>>>>>> 1.34
 
     if ((propertyObject.HandlerId == EH_DELIVER_SM)||(propertyObject.HandlerId == EH_SUBMIT_SM_RESP))
         ev.cDirection = 'I';
