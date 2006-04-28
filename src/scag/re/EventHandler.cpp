@@ -93,7 +93,7 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, 
 
     if (tempStr.size() > MAX_ABONENT_NUMBER_LENGTH - 1)
     {
-        memcpy((char *)ev.Header.pAbonentNumber,str, MAX_ABONENT_NUMBER_LENGTH - 1);
+        memcpy((char *)ev.Header.pAbonentNumber,tempStr.c_str(), MAX_ABONENT_NUMBER_LENGTH - 1);
         ev.Header.pAbonentNumber[MAX_ABONENT_NUMBER_LENGTH] = 0;
     }
     else
