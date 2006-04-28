@@ -89,24 +89,41 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, 
 
     ev.Header.lDateTime = (uint64_t)tv.tv_sec * 1000 + tv.tv_usec / 1000;
 
-    std::string strStr = commandProperty.abonentAddr.toString();
-    const char * str = strStr.c_str();
-    sprintf((char *)ev.Header.pAbonentNumber,"%s",str);
+    std::string tempStr = commandProperty.abonentAddr.toString();
+
+    if (tempStr.size() > MAX_ABONENT_NUMBER_LENGTH - 1)
+    {
+        memcpy((char *)ev.Header.pAbonentNumber,str, MAX_ABONENT_NUMBER_LENGTH - 1);
+        ev.Header.pAbonentNumber[MAX_ABONENT_NUMBER_LENGTH] = 0;
+    }
+    else
+        sprintf((char *)ev.Header.pAbonentNumber,"%s",tempStr.c_str());
 
     ev.Header.sCommandStatus = commandProperty.status;
     ev.iOperatorId = commandProperty.operatorId;
     
     if ((propertyObject.HandlerId == EH_SUBMIT_SM)||(propertyObject.HandlerId == EH_DELIVER_SM))
     {
-        int size = MAX_TEXT_MESSAGE_LENGTH - 2;
+        int size = (MAX_TEXT_MESSAGE_LENGTH - 1) * sizeof(uint16_t);
         if (size > messageBody.size()) size = messageBody.size();
 
-        if (size > 0) memcpy(ev.pMessageText, messageBody.data(), size); 
+        if (size > 0) 
+        {
+            memcpy(ev.pMessageText, messageBody.data(), size); 
+            ev.pMessageText[MAX_TEXT_MESSAGE_LENGTH] = 0;
+        }
     }
+<<<<<<< EventHandler.cpp
+
+    tempStr = sessionPrimaryKey.abonentAddr.toString();
+
+    sprintf((char *)ev.pSessionKey,"%s/%ld%d", tempStr.c_str(), sessionPrimaryKey.BornMicrotime.tv_sec,sessionPrimaryKey.BornMicrotime.tv_usec / 1000);
+=======
     strStr = sessionPrimaryKey.abonentAddr.toString();
     sprintf((char *)ev.pSessionKey,"%s/%ld%d", strStr.c_str(), sessionPrimaryKey.BornMicrotime.tv_sec,sessionPrimaryKey.BornMicrotime.tv_usec / 1000);
     //smsc_log_debug(logger,"SESSION KEY FOR TRANSPORT EVENT %s", sessionPrimaryKey.abonentAddr.toString().c_str());
     //smsc_log_debug(logger,"SESSION KEY FOR TRANSPORT EVENT %s/%ld%d", sessionPrimaryKey.abonentAddr.toString().c_str(), sessionPrimaryKey.BornMicrotime.tv_sec,sessionPrimaryKey.BornMicrotime.tv_usec / 1000);
+>>>>>>> 1.34
 
     if ((propertyObject.HandlerId == EH_DELIVER_SM)||(propertyObject.HandlerId == EH_SUBMIT_SM_RESP))
         ev.cDirection = 'I';
