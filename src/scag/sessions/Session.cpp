@@ -135,8 +135,9 @@ Session::Session(const CSessionKey& key)
 
     timeval tv;
     gettimeofday(&tv,0);
+    MillisecTime msec(tv);
 
-    smsc_log_debug(logger," *********** Session: msec %ld%d", tv.tv_sec,tv.tv_usec / 1000);
+    smsc_log_debug(logger," *********** Session: msec %s (abonentAddr = '%s', USR=%d)", msec.toString(), m_SessionKey.abonentAddr.toString().c_str(),m_SessionKey.USR);
     
 
     m_SessionPrimaryKey.abonentAddr = key.abonentAddr;
@@ -156,8 +157,6 @@ Session::~Session()
         if (value) delete value;
 
     ClearOperations();
-
-    //smsc_log_debug(logger,"Session: session destroyed USR='%d' Address = '%s'",m_SessionKey.USR,m_SessionKey.abonentAddr.toString().c_str());
 }
 
 
