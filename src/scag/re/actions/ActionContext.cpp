@@ -101,7 +101,8 @@ void ActionContext::makeBillEvent(int billCommand, TariffRec& tariffRec, SACC_BI
 
     ev.Header.lDateTime = (uint64_t)tv.tv_sec*1000 + (tv.tv_usec / 1000);
     
-    sprintf((char *)ev.Header.pAbonentNumber,"%s",commandProperty.abonentAddr.toString().c_str());
+    std::string strStr = commandProperty.abonentAddr.toString();
+    sprintf((char *)ev.Header.pAbonentNumber,"%s", strStr.c_str());
 
     ev.Header.sCommandStatus = commandProperty.status;
     
@@ -118,7 +119,8 @@ void ActionContext::makeBillEvent(int billCommand, TariffRec& tariffRec, SACC_BI
     memcpy(ev.pBillingCurrency, tariffRec.Currency.c_str(), size);
 
     CSessionPrimaryKey& sessionPrimaryKey = session.getPrimaryKey();
-    sprintf((char *)ev.pSessionKey,"%s/%ld%d", sessionPrimaryKey.abonentAddr.toString().c_str(), sessionPrimaryKey.BornMicrotime.tv_sec,sessionPrimaryKey.BornMicrotime.tv_usec / 1000);
+    strStr = sessionPrimaryKey.abonentAddr.toString();
+    sprintf((char *)ev.pSessionKey,"%s/%ld%d", strStr.c_str(), sessionPrimaryKey.BornMicrotime.tv_sec,sessionPrimaryKey.BornMicrotime.tv_usec / 1000);
 
 }
 

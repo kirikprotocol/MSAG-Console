@@ -89,7 +89,8 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, 
 
     ev.Header.lDateTime = (uint64_t)tv.tv_sec * 1000 + tv.tv_usec / 1000;
 
-    const char * str = commandProperty.abonentAddr.toString().c_str();
+    std::string strStr = commandProperty.abonentAddr.toString();
+    const char * str = strStr.c_str();
     sprintf((char *)ev.Header.pAbonentNumber,"%s",str);
 
     ev.Header.sCommandStatus = commandProperty.status;
@@ -102,8 +103,8 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, 
 
         if (size > 0) memcpy(ev.pMessageText, messageBody.data(), size); 
     }
-
-    sprintf((char *)ev.pSessionKey,"%s/%ld%d", sessionPrimaryKey.abonentAddr.toString().c_str(), sessionPrimaryKey.BornMicrotime.tv_sec,sessionPrimaryKey.BornMicrotime.tv_usec / 1000);
+    strStr = sessionPrimaryKey.abonentAddr.toString();
+    sprintf((char *)ev.pSessionKey,"%s/%ld%d", strStr.c_str(), sessionPrimaryKey.BornMicrotime.tv_sec,sessionPrimaryKey.BornMicrotime.tv_usec / 1000);
     //smsc_log_debug(logger,"SESSION KEY FOR TRANSPORT EVENT %s", sessionPrimaryKey.abonentAddr.toString().c_str());
     //smsc_log_debug(logger,"SESSION KEY FOR TRANSPORT EVENT %s/%ld%d", sessionPrimaryKey.abonentAddr.toString().c_str(), sessionPrimaryKey.BornMicrotime.tv_sec,sessionPrimaryKey.BornMicrotime.tv_usec / 1000);
 

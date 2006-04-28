@@ -59,15 +59,24 @@ RuleStatus Rule::process(SCAGCommand& command,Session& session)
     try
     {
         rs = eh->process(command, session);
-    } catch (Exception& e)
+    }
+    catch (Exception& e)
     {
         rs.status = false;
-        smsc_log_error(logger,e.what());
+        smsc_log_error(logger, "EH Rule top level exception: %s", e.what());
         return rs;
-    } catch (...)
+    } 
+    catch (std::exception& e)
     {
         rs.status = false;
-        smsc_log_error(logger,"EvendHandler: Process terminated - Unknown system error");
+        smsc_log_error(logger, "EH Rule top level exception: %s", e.what());
+	//abort();
+        return rs;
+    } 
+    catch (...)
+    {
+        rs.status = false;
+        smsc_log_error(logger,"EH Rule top level exception: Unknown system error");
         return rs;
     }
     return rs;
