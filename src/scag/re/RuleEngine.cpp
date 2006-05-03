@@ -259,7 +259,7 @@ void RuleEngineImpl::ReadRulesFromDir(TransportType transport, const char * dir)
                     updateRule(key);
                 } catch (SCAGException& e)
                 {
-                    smsc_log_error(logger,"%s",e.what());
+                    //smsc_log_error(logger,"%s",e.what());
                 }
             }
             else if ((strcmp(pDirEnt->d_name,".")!=0)&&(strcmp(pDirEnt->d_name,"..")!=0)) 
@@ -335,7 +335,7 @@ Rule * RuleEngineImpl::ParseFile(const std::string& xmlFile)
     if (errorCount > 0) 
     {
         smsc_log_error(logger,"Error parsing Rule: some errors occured");
-        return 0;
+        throw SCAGException("Error parsing Rule: some errors occured");
     }
 
     Rule * rule = handler.ReturnFinalObject();

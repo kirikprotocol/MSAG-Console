@@ -31,8 +31,6 @@ Rule::~Rule()
 
 RuleStatus Rule::process(SCAGCommand& command,Session& session)
 {
-    //TODO: fill rs fields
-
     RuleStatus rs;
     if (command.getType() != transportType)
     {

@@ -223,7 +223,6 @@ int BillingManagerImpl::ChargeBill(smsc::inman::interaction::ChargeSms& op, Even
             break;
         }
 
-    //TODO: do what we must to do without throw exception
     if (index == -1) 
         throw SCAGException("BillingManager error - cannot find not in use EventMonitor");
 

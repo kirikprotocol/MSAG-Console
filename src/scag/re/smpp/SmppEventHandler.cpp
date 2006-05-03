@@ -60,19 +60,26 @@ void SmppEventHandler::StartOperation(Session& session, SmppCommand& command)
             operation->receiveNewResp(smppDiscriptor.currentIndex, smppDiscriptor.lastIndex);
             break;
         }
-        //TODO: проверить есть ли ожидаемая операция SUBMIT, если её нет, то что и как делать?
 
         if (smppDiscriptor.currentIndex == 0)
             session.setOperationFromPending(command, CO_SUBMIT);
         else
             operation = session.setCurrentOperation(command.getOperationId());
-        operation->receiveNewPart(smppDiscriptor.currentIndex,smppDiscriptor.lastIndex);
 
+        operation->receiveNewPart(smppDiscriptor.currentIndex,smppDiscriptor.lastIndex);
         break;
 
-  /*  case CO_RECEIPT_DELIVER_SM:
-        session.setOperationFromPending(command, smppDiscriptor.cmdType);
-        break;   */
+    case CO_RECEIPT:
+        if (!smppDiscriptor.isResp) 
+        {
+            session.setOperationFromPending(command, smppDiscriptor.cmdType);
+            operation->receiveNewPart(smppDiscriptor.currentIndex,smppDiscriptor.lastIndex);
+            break;
+        }
+
+        operation->receiveNewResp(smppDiscriptor.currentIndex,smppDiscriptor.lastIndex);
+        
+        break;   
 
     case CO_USSD_DIALOG:
         smsc_log_debug(logger,"Session: process USSD_DIALOG operation");
@@ -122,30 +129,35 @@ void SmppEventHandler::EndOperation(Session& session, SmppCommand& command, Rule
 
     case CO_SUBMIT:
 
-        if (currentOperation->getStatus() == OPERATION_COMPLETED) session.closeCurrentOperation();
+        if (currentOperation->getStatus() == OPERATION_COMPLETED) 
+        {
+            session.closeCurrentOperation();
+            break;
+        }
 
-        //TODO: узнать заказал ли сервис отчёт о доставке
-       /* if (!smppDiscriptor.m_isTransact) 
+        if (smppDiscriptor.isResp) break; 
+
+        if (!smppDiscriptor.m_isTransact)
         {
             time_t now;
             time(&now);
 
             PendingOperation pendingOperation;
             pendingOperation.type = CO_RECEIPT;
+            //TODO: Определяем время жизни операции
             pendingOperation.validityTime = now + SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
 
             session.addPendingOperation(pendingOperation);
-        }                    */
+        }                    
         break;
 
-/*
-    case CO_RECEIPT_DELIVER_SM:
+
+    case CO_RECEIPT:
         //TODO:: Нужно учесть политику для multipart
-        session.closeCurrentOperation();
-        break;      */
+        if (currentOperation->getStatus() == OPERATION_COMPLETED) session.closeCurrentOperation();
+        break;      
 
     case CO_USSD_DIALOG:
-        //smsc_log_debug(logger,"Session: finish process USSD_DIALOG");
         if ((smppDiscriptor.isUSSDClosed)&&(smppDiscriptor.isResp)) session.closeCurrentOperation();
         break;
     }
@@ -174,10 +186,7 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     Infrastructure& istr = BillingManager::Instance().getInfrastructure();
 
     Address& abonentAddr = CommandBrige::getAbonentAddr(*smppcommand);
-/*    
-    int operatorId = 105;
-    int providerId = 1;   
-    */
+
 
     int operatorId = istr.GetOperatorID(abonentAddr);
     if (operatorId == 0) 

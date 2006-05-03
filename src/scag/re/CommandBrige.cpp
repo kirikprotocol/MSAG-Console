@@ -37,44 +37,6 @@ whoisd-expected-message-transport-type	Byte	0x4904
 whoisd-expected-message-content-type	String	0x4905
 
 */
-/*
-bool CommandBrige::getBinProperty(SMS& sms, SMSTags::Tags tag)
-{
-    if (!sms.hasBinProperty) return 0;
-    
-    long len;
-    char * buff = sms.getBinProperty(SMSC_UNKNOWN_OPTIONALS, %len);
-    
-    uint16_t value;
-    uint16_t valueLen;
-
-    for (int i = 0; i< len - 2; i++) 
-    {
-        value = *(buff + i);
-        valueLen = *(buff + i + 2);
-
-        if (value == tag) 
-        {
-            if (valueLen != 1) throw SCAGException("Invalid binary property");
-            if ((i + 1) > (len-1)) throw SCAGException("Out of bounds");
-
-            return (*(buff + i + 2 + 1) > 0);
-        }
-
-        if ((i + valueLen + 1) > (len-1)) throw SCAGException("Out of bounds");
-        i = i + valueLen;
-
-    }
-}
-
-std::string CommandBrige::getStringProperty(SMS& sms, Tags tag)
-{
-    char * buff;
-    len;
-    //TODO: get buff from SMS
-}
-
-*/
 
 
 EventHandlerType CommandBrige::getHTTPHandlerType(const SCAGCommand& command)
@@ -232,14 +194,18 @@ CSmppDiscriptor CommandBrige::getSmppDiscriptor(const SCAGCommand& command)
 
 
     SMS& sms = getSMS(*smppCommand);
-    
+
     CommandId cmdid = (*smppCommand)->get_commandId();
 
     CSmppDiscriptor SmppDiscriptor;
     int receiptMessageId = 0;
-    SmppDiscriptor.isUSSDClosed = false;
-    SmppDiscriptor.wantOpenUSSD = false;
-    
+
+    if (sms.hasIntProperty(Tag::SMPP_ESM_CLASS))
+    {
+        //TODO: узнать заказал ли сервис отчёт о доставке
+        int esm_class = sms.getIntProperty(Tag::SMPP_ESM_CLASS);
+        SmppDiscriptor.m_isTransact = ((esm_class&2) == 2);
+    }
     
     switch (cmdid) 
     {

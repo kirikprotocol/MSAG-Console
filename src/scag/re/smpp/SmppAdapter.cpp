@@ -443,7 +443,7 @@ void SmppCommandAdapter::Set_DC_BIT_Property(SMS& data,int FieldId,bool value)
         //TODO: check DC_TEXT field first!
         int num = data.getIntProperty(Tag::SMPP_DATA_CODING);
         if (!((num&4)==4)) return;
-
+        
         switch (FieldId) 
         {
 

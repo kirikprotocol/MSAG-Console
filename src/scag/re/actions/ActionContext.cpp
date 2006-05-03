@@ -132,12 +132,12 @@ void ActionContext::makeBillEvent(int billCommand, TariffRec& tariffRec, SACC_BI
 
 }
 
-TariffRec * ActionContext::getTariffRec(std::string& category, std::string& medyaType)
+TariffRec * ActionContext::getTariffRec(uint32_t category, uint32_t medyaType)
 {
     if (!m_TariffRec.get()) 
     {
         Infrastructure& istr = BillingManager::Instance().getInfrastructure();
-        m_TariffRec.reset(istr.GetTariff(commandProperty.operatorId, category.c_str(), medyaType.c_str()));
+        m_TariffRec.reset(istr.GetTariff(commandProperty.operatorId, category, medyaType));
 
         //if (!m_TariffRec.get()) 
           //  throw SCAGException("BillEvent: Cannot find tariffRec for OID=%d, cat=%s, mtype=%s ", commandProperty.operatorId, category.c_str(), medyaType.c_str());

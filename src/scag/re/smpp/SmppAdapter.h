@@ -154,7 +154,6 @@ namespace scag { namespace re { namespace smpp
             m_hasPayloadText = true;
         }
 
-        // TODO: Implement PropertyManager interface (Access to command fields)
         virtual void changed(AdapterProperty& property);
         virtual Property* getProperty(const std::string& name);
         virtual void fillChargeOperation(smsc::inman::interaction::ChargeSms& op, TariffRec& tariffRec);

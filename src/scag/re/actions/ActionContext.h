@@ -108,7 +108,7 @@ namespace scag { namespace re { namespace actions
         void fillChargeOperation(smsc::inman::interaction::ChargeSms& op, TariffRec& tariffRec);
         void fillRespOperation(smsc::inman::interaction::DeliverySmsResult& op, TariffRec& tariffRec);
 
-        TariffRec * getTariffRec(std::string& category, std::string& mediaType);
+        TariffRec * getTariffRec(uint32_t category, uint32_t mediaType);
     };
 
 }}}

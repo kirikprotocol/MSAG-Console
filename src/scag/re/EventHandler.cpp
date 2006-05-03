@@ -57,7 +57,6 @@ RuleStatus EventHandler::RunActions(ActionContext& context)
 {
     std::list<Action *>::const_iterator it;
 
-    //TODO: Fill default rs fields
     RuleStatus rs;
 
     rs.result = 1;
