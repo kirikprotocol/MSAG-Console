@@ -33,8 +33,8 @@ public class ProfilesBean extends SmscBean {
     protected boolean divertActiveCapacity = false;
     protected boolean divertModifiable = false;
 
-    protected boolean udhConcat = true;
-    protected boolean translit = true;
+    protected boolean udhConcat = false;
+    protected boolean translit = false;
 
     protected int groupId = 0;
     protected long inputAccessMask = 1;
