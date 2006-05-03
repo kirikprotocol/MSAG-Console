@@ -19,6 +19,8 @@ class BillActionOpen : public Action
     Logger * logger;
     std::string m_category;
     std::string m_mediaType;
+    uint32_t category;
+    uint32_t mediaType;
 
     FieldType m_StatusFieldType;
     FieldType m_MediaTypeFieldType;

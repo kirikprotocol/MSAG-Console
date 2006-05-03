@@ -2,4 +2,4 @@
 # this file contains binaries definitions
 
 # binary name        source name    libraries         
-#scag/inf_test      test           -lscag-bill-infrastruct -lscag-pers -llogger -lcore-buffers -lcore-network -lrt -lutil -lutil-config -lutil-xml $(XERCES_LIB) -lsocket -lnsl
+scag/inf_test      test           -lscag-bill-infrastruct -lscag-pers -llogger -lcore-buffers -lcore-network -lrt -lutil -lutil-config -lutil-xml $(XERCES_LIB) -lsocket -lnsl

@@ -61,8 +61,8 @@ void InfrastructureImpl::init(const std::string& dir)
 
     service_hash = new IntHash<uint32_t>();
     mask_hash = new Hash<uint32_t>();
-    category_hash = new Hash<uint32_t>();
-    media_type_hash = new Hash<uint32_t>();
+    category_hash = new IntHash<uint32_t>();
+    media_type_hash = new IntHash<uint32_t>();
     tariff_hash = new IntHash<TariffRec>();
 
 
@@ -145,8 +145,8 @@ void InfrastructureImpl::ReloadTariffMatrix()
 
     smsc_log_info(logger, "ReloadTariffMatrix Started");
 
-    Hash<uint32_t> *cat_hash = new Hash<uint32_t>();
-    Hash<uint32_t> *mt_hash = new Hash<uint32_t>();
+    IntHash<uint32_t> *cat_hash = new IntHash<uint32_t>();
+    IntHash<uint32_t> *mt_hash = new IntHash<uint32_t>();
     IntHash<TariffRec> *t_hash = new IntHash<TariffRec>();
 
     try{
@@ -218,7 +218,7 @@ uint32_t InfrastructureImpl::GetOperatorID(Address addr)
     return 0;
 }
 
-TariffRec* InfrastructureImpl::GetTariff(uint32_t operator_id, const char* category, const char* mt)
+TariffRec* InfrastructureImpl::GetTariff(uint32_t operator_id, uint32_t category, uint32_t mt)
 {
     MutexGuard mt1(TariffMatrixMapMutex);
     TariffRec *tr = NULL;

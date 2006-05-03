@@ -16,8 +16,14 @@ void BillActionOpen::init(const SectionParams& params,PropertyObject propertyObj
     m_CategoryFieldType = CheckParameter(params, propertyObject, "bill:open", "category", true, true, temp, bExist);
     m_category = ConvertWStrToStr(temp);
 
+    if(m_CategoryFieldType == ftUnknown && !(category = atoi(m_category.c_str())))
+        throw InvalidPropertyException("BillAction 'bill:open': category should be integer or variable");
+
     m_MediaTypeFieldType = CheckParameter(params, propertyObject, "bill:open", "content-type", true, true, temp, bExist);
     m_mediaType = ConvertWStrToStr(temp);
+
+    if(m_MediaTypeFieldType == ftUnknown && !(mediaType = atoi(m_mediaType.c_str())))
+        throw InvalidPropertyException("BillAction 'bill:open': content-type should be integer or variable");
 
     m_StatusFieldType = CheckParameter(params, propertyObject, "bill:open", "status", true, false, temp, bExist);
     m_sStatus = ConvertWStrToStr(temp);
@@ -82,11 +88,6 @@ bool BillActionOpen::run(ActionContext& context)
 
     SACC_BILLING_INFO_EVENT_t ev;
 
-
-    /////////////////////////////////////////////
-    std::string category;
-    std::string mediaType;
-
     if (m_MediaTypeFieldType != ftUnknown) 
     {
         Property * property = context.getProperty(m_mediaType);
@@ -96,11 +97,8 @@ bool BillActionOpen::run(ActionContext& context)
             smsc_log_error(logger,"BillAction 'bill:open' :: Invalid property %s for content-type", m_mediaType.c_str());
             return true;
         }
-        mediaType = ConvertWStrToStr(property->getStr());
+        mediaType = property->getInt();
     } 
-    else 
-        mediaType = m_mediaType;
-
 
     if (m_CategoryFieldType != ftUnknown) 
     {
@@ -111,11 +109,14 @@ bool BillActionOpen::run(ActionContext& context)
             smsc_log_error(logger,"BillAction 'bill:open' :: Invalid property %s for category", m_category.c_str());
             return true;
         }
-        category = ConvertWStrToStr(property->getStr());
+        category = property->getInt();
     } 
-    else 
-        category = m_category;
 
+    if(!category || !mediaType)
+    {
+        smsc_log_warn(logger,"BillAction 'bill:open' cannot process. Empty category or content-type");
+        return false;
+    }
 
     Operation * operation = context.GetCurrentOperation();
     if (!operation) 

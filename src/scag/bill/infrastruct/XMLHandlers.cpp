@@ -15,7 +15,7 @@ typedef struct{
     uint8_t top_tag;
 } tag_t;
 
-static tag_t category_tags[] = {
+/*static tag_t category_tags[] = {
 {"categories", -1},
 {"category", 0},
 {"name", 1},
@@ -26,7 +26,7 @@ static tag_t media_type_tags[] = {
 {"media_types", -1},
 {"media_type", 0},
 {"name", 1},
-};
+};*/
 
 #define MEDIA_TYPE_TAGS_SZ sizeof(media_type_tags) / sizeof(tag_t)
 
@@ -162,20 +162,20 @@ void XMLBasicHandler::warning(const SAXParseException& e)
 }
 
 //------------------------------------------------------------------------------
-XMLTariffMatrixHandler::XMLTariffMatrixHandler(Hash<uint32_t> *cat, Hash<uint32_t> *mt, IntHash<TariffRec> *th)
+XMLTariffMatrixHandler::XMLTariffMatrixHandler(IntHash<uint32_t> *cat, IntHash<uint32_t> *mt, IntHash<TariffRec> *th)
 {
     logger = Logger::getInstance("xmlhndlr");
     category_hash = cat;
     media_type_hash = mt;
     tariff_hash = th;
     bill_tag = -1;
-    media_type_tag = -1;
-    category_tag = -1;
+//    media_type_tag = -1;
+//    category_tag = -1;
 
-    category_id = 0;
-    category_name = "";
-    media_type_id = 0;
-    media_type_name = "";
+    category_idx = 0;
+//    category_name = "";
+    media_type_idx = 0;
+//    media_type_name = "";
 
     bill_category_id = 0;
     bill_media_type_id = 0;
@@ -194,11 +194,11 @@ void XMLTariffMatrixHandler::characters(const XMLCh *const chrs, const unsigned 
     StrX q(chars);
     char *str = (char*)q.localForm();
 
-    if(media_type_tag == 2)
+/*    if(media_type_tag == 2)
         media_type_name = str;
     else if(category_tag == 2)
         category_name = str;
-    else if(bill_tag == 3)
+    else*/ if(bill_tag == 3)
         bill_category_id = atoi(str);
     else if(bill_tag == 4)
         bill_media_type_id = atoi(str);
@@ -215,7 +215,7 @@ void XMLTariffMatrixHandler::startElement(const XMLCh* const nm, AttributeList& 
     StrX XMLQName(nm);
     const char *qname = XMLQName.localForm();
 
-    for(int i = 0; i < CATEGORY_TAGS_SZ; i++)
+/*    for(int i = 0; i < CATEGORY_TAGS_SZ; i++)
         if(!strcmp(category_tags[i].name, qname) && category_tag == category_tags[i].top_tag)
         {
             category_tag = i;
@@ -240,7 +240,7 @@ void XMLTariffMatrixHandler::startElement(const XMLCh* const nm, AttributeList& 
                 media_type_id = atoi(s.localForm());
             }
             return;
-        }
+        }*/
 
     for(int i = 0; i < BILL_TAGS_SZ; i++)
         if(!strcmp(bill_tags[i].name, qname) && bill_tag == bill_tags[i].top_tag)
@@ -258,10 +258,11 @@ void XMLTariffMatrixHandler::startElement(const XMLCh* const nm, AttributeList& 
 
 void XMLTariffMatrixHandler::endElement(const XMLCh* const nm)
 {
+    uint32_t mt, cat;
     StrX XMLQName(nm);
     const char *qname = XMLQName.localForm();
 
-    for(int i = 0; i < CATEGORY_TAGS_SZ; i++)
+/*    for(int i = 0; i < CATEGORY_TAGS_SZ; i++)
         if(!strcmp(category_tags[i].name, qname) && category_tag == i)
         {
             category_tag = category_tags[i].top_tag;
@@ -294,7 +295,7 @@ void XMLTariffMatrixHandler::endElement(const XMLCh* const nm)
                 media_type_name = "";
             }
             return;
-        }
+        }*/
 
     for(int i = 0; i < BILL_TAGS_SZ; i++)
         if(!strcmp(bill_tags[i].name, qname) && bill_tag == i)
@@ -308,13 +309,24 @@ void XMLTariffMatrixHandler::endElement(const XMLCh* const nm)
 
                 TariffRec tr(bill_service_number, bill_price, bill_currency, bill_category_id, bill_media_type_id);
 
-                uint32_t id = (bill_category_id & 0x1ff) << 23;
-                id |= (bill_media_type_id & 0x1FF) << 14;
+                if(!media_type_hash->Get(bill_media_type_id, mt))
+                {
+                    mt = media_type_idx++;
+                    media_type_hash->Insert(bill_media_type_id, mt);
+                }
+                if(!category_hash->Get(bill_category_id, cat))
+                {
+                    cat = category_idx++;
+                    category_hash->Insert(bill_category_id, cat);
+                }
+
+                uint32_t id = (cat & 0x1ff) << 23;
+                id |= (mt & 0x1FF) << 14;
                 id |= bill_operator_id & 0xFFF;
 
-                tariff_hash->Insert(id, tr);
+//                smsc_log_debug(logger,"end_billing: store ci:%d, mt:%d, sn:%d, price:%lf, op_id:%d, curr:%s, mt_idx:%d, cat_idx:%d", bill_category_id, bill_media_type_id, bill_service_number, bill_price, bill_operator_id, bill_currency.c_str(), media_type_idx, category_idx);
 
-//                smsc_log_debug(logger,"end_billing: store is=%d, ci:%d, mt:%d, sn:%d, price:%lf, op_id:%d, curr:%s", id, bill_category_id, bill_media_type_id, bill_service_number, bill_price, bill_operator_id, bill_currency.c_str());
+                tariff_hash->Insert(id, tr);
 
                 bill_category_id = 0;
                 bill_media_type_id = 0;
@@ -348,8 +360,8 @@ void XMLTariffMatrixHandler::warning(const SAXParseException& e)
     smsc_log_error(logger,"Warning at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
 }
 
-#undef CATEGORY_TAGS_SZ
-#undef MEDIA_TYPE_TAGS_SZ
+//#undef CATEGORY_TAGS_SZ
+//#undef MEDIA_TYPE_TAGS_SZ
 #undef BILL_TAGS_SZ
 
 }}}
