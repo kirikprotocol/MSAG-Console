@@ -4,6 +4,7 @@
 
 #include <list>
 
+#include "inman/common/TimeOps.hpp"
 #include "logger/Logger.h"
 #include "core/threads/Thread.hpp"
 #include "core/synchronization/Event.hpp"
@@ -18,28 +19,6 @@ using smsc::core::synchronization::EventMonitor;
 namespace smsc {
 namespace inman {
 namespace sync {
-
-//NOTE: timevals should be normalized(microsecs adjusted) !
-inline bool operator< (const struct timeval& tm1, const struct timeval& tm2)
-{
-    if (tm1.tv_sec > tm2.tv_sec)
-        return false;
-    if (tm1.tv_sec < tm2.tv_sec)
-        return true;
-    //equal secs, compare microsecs
-    return tm1.tv_usec < tm2.tv_usec ? true : false;
-}
-
-inline bool operator>= (const struct timeval& tm1, const struct timeval& tm2)
-{
-    if (tm1.tv_sec > tm2.tv_sec)
-        return true;
-    if (tm1.tv_sec < tm2.tv_sec)
-        return false;
-    //equal secs, compare microsecs
-    return tm1.tv_usec >= tm2.tv_usec ? true : false;
-}
-
 
 class EventMonitorPSX : public EventMonitor {
 public:
