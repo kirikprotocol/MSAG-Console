@@ -61,7 +61,7 @@ public class Profile {
         setDivertActiveUnconditional(divertActiveUnconditional);
         setDivertActiveAbsent(divertActiveAbsent);
         setDivertActiveBlocked(divertActiveBlocked);
-        setDivertActiveBlocked(divertActiveBarred);
+        setDivertActiveBarred(divertActiveBarred);
         setDivertActiveCapacity(divertActiveCapacity);
         setDivertModifiable(divertModifiable);
         setCodepage(codepage);
