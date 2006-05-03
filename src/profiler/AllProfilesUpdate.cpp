@@ -42,9 +42,42 @@ NameToValue hide[]=
 {
   {"enable",HideOption::hoEnabled},
   {"disable",HideOption::hoDisabled},
-  {"Substitute",HideOption::hoSubstitute},
+  {"substitute",HideOption::hoSubstitute},
 };
 
+
+struct FieldToValues{
+  template <int N>
+  FieldToValues(const char* fldName,NameToValue (&valuesArray)[N])
+  {
+    field=fldName;
+    values=valuesArray;
+    valuesCount=N;
+  }
+  std::string field;
+  NameToValue* values;
+  int valuesCount;
+};
+
+FieldToValues allFields[]=
+{
+  FieldToValues("datacoding",datacoding),
+  FieldToValues("report",report),
+  FieldToValues("hide",hide)
+};
+
+template <int N>
+void DumpAllFields(FieldToValues (&fields)[N])
+{
+  for(int i=0;i<N;i++)
+  {
+    printf("%s=\n",fields[i].field.c_str());
+    for(int j=0;j<fields[i].valuesCount;j++)
+    {
+      printf("\t%s\n",fields[i].values[j].name.c_str());
+    }
+  }
+}
 
 template <int N>
 int FindValue(const std::string& name,NameToValue (&values)[N])
@@ -142,11 +175,15 @@ int main(int argc,char* argv[])
 {
   if(argc<3)
   {
-    printf("Usage: %s infile outfile field1=value1 [field2=value2 ...]\n",argv[0]);
+    printf("Usage: %s infile outfile [field1=value1] [field2=value2 ...]\n",argv[0]);
+    printf("Available fields:\n");
+    DumpAllFields(allFields);
+    printf("\nRemove abonents with specified numbers:\nremoveabonents={filename}\n");
     return 0;
   }
   smsc::logger::Logger::Init();
   ArgsVector argsVector;
+  std::string filterFileName;
   std::string n,v;
   for(int i=3;i<argc;i++)
   {
@@ -159,13 +196,29 @@ int main(int argc,char* argv[])
     v=p+1;
     for(int j=0;j<n.length();j++)n[j]=tolower(n[j]);
     for(int j=0;j<v.length();j++)v[j]=tolower(v[j]);
+    if(n=="removeabonents")
+    {
+      filterFileName=v;
+      continue;
+    }
     argsVector.push_back(NameValue(n,v));
   }
-
+  std::set<Address> filter;
 
   std::string inFileName=argv[1];
   std::string outFileName=argv[2];
   try{
+    if(filterFileName.length()>0)
+    {
+      File f;
+      f.ROpen(filterFileName.c_str());
+      std::string addr;
+      while(f.ReadLine(addr))
+      {
+        if(addr.length()>0 && addr[0]=='7')addr='+'+addr;
+        filter.insert(addr.c_str());
+      }
+    }
     smsc::util::config::Manager::init(findConfigFile("config.xml"));
     smsc::util::config::Manager* cfg=&smsc::util::config::Manager::getInstance();
 
@@ -201,6 +254,7 @@ int main(int argc,char* argv[])
     int cnt=0;
     int dup=0;
     int skip=0;
+    int filtered=0;
 
     while(pos<sz)
     {
@@ -218,6 +272,10 @@ int main(int argc,char* argv[])
         if(isDefault(p))
         {
           skip++;
+        }
+        if(filter.find(addr)!=filter.end())
+        {
+          filtered++;
         }
         else
         {
@@ -251,7 +309,7 @@ int main(int argc,char* argv[])
       }
     }
     outFile.Flush();
-    printf("%d profiles processed, %d duplicates found, %d matched default and skipped\n",cnt,dup,skip);
+    printf("%d profiles processed, %d duplicates found, %d matched default and skipped, %d removed by request\n",cnt,dup,skip,filtered);
   }catch(std::exception& e)
   {
     printf("exception:%s\n",e.what());
