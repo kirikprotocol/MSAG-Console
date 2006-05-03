@@ -978,9 +978,18 @@ bool Task::getNextMessage(Connection* connection, Message& message)
         int fetched = 0; int uncommited = 0;
         while (rs->fetchNext() && ++fetched <= info.messagesCacheSize)
         {
-            Message fetchedMessage(rs->getUint64(1), rs->getString(2), rs->getString(3));
+            uint64_t    msgId = rs->getUint64(1);
+            const char* msgAbonent = rs->isNull(2) ? 0 : rs->getString(2);
+            const char* msgMessage = rs->isNull(3) ? 0 : rs->getString(3);
             dsInt->stopTimer(wdTimerId);
             
+            if (!msgAbonent || !msgMessage) {
+                smsc_log_warn(logger, "Selected NULL value for %s", !msgAbonent ? "abonent":"message");
+                wdTimerId = dsInt->startTimer(connection, info.dsTimeout);
+                --fetched; continue;
+            }
+            Message fetchedMessage(msgId, msgAbonent, msgMessage);
+
             std::auto_ptr<char> waitMessageId(prepareSqlCall(DO_STATE_MESSAGE_STATEMENT_ID));
             std::auto_ptr<char> waitMessageSql(prepareSqlCall(DO_STATE_MESSAGE_STATEMENT_SQL));
             Statement* waitMessage = connection->getStatement(waitMessageId.get(), 
