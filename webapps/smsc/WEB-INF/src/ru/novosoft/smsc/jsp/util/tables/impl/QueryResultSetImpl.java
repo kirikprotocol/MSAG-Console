@@ -12,9 +12,6 @@ import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Vector;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
 
 
 public class QueryResultSetImpl implements QueryResultSet
@@ -101,7 +98,7 @@ public class QueryResultSetImpl implements QueryResultSet
     results = newResults;
   }
 
-  public void sortBycolumnName(String columnName) {
+  public void sortByColumnName(String columnName) {
       Collections.sort(results, new DataItemComparator(columnName));
   }
 

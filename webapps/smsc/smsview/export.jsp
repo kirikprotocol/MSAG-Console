@@ -1,7 +1,7 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp" %>
 <%@ page import="ru.novosoft.smsc.admin.smsstat.ExportSettings,
                  ru.novosoft.smsc.jsp.smsexport.SmsExportBean" %>
-<jsp:useBean id="smsExportBean" scope="session" class="ru.novosoft.smsc.jsp.smsexport.SmsExportBean"/>
+<jsp:useBean id="smsExportBean" scope="page" class="ru.novosoft.smsc.jsp.smsexport.SmsExportBean"/>
 <% SmsExportBean bean = smsExportBean;%>
 <jsp:setProperty name="smsExportBean" property="*"/>
 <%
@@ -25,6 +25,7 @@
     int rowN = 0;
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp" %>
+<%@ include file="/WEB-INF/inc/calendar.jsp" %>
 <div class=content><%
     if (defExpSett != null && !defExpSett.isEmpty())
     {%>
@@ -52,12 +53,35 @@
             document.getElementById('password').disabled = false;
             document.getElementById('tablesPrefix').disabled = false;
         }
-
     </script>
     <%--
       }
     --%>
     <table class=properties_list cell>
+        <tr class=row<%= (rowN++) % 2%>>
+            <td nowrap><input class=radio type="radio" name="storage" id=operativeStorage
+                    value="<%= SmsExportBean.OPERATIVE_STORAGE%>"
+            <%= (bean.getStorage() == SmsExportBean.OPERATIVE_STORAGE) ? "checked":""%>
+                    onclick="javascript:opForm.submit()">
+                <label for=operativeStorage><%=getLocString("common.storages.operative")%></label></td>
+            <td nowrap><input class=radio type="radio" name="storage" id=archiveStorage
+                    value="<%= SmsExportBean.ARCHIVE_STORAGE%>"
+            <%= (bean.getStorage() == SmsExportBean.ARCHIVE_STORAGE) ? "checked":""%>
+                onclick="javascript:opForm.submit()">
+                <label for=archiveStorage><%=getLocString("common.storages.archive")%></label>
+            </td>
+        </tr>
+
+        <% if (bean.getStorage() == SmsExportBean.ARCHIVE_STORAGE) { %>
+        <tr class=row<%= (rowN++) % 2%>>
+            <th><%=getLocString("stat.exportDate")%>:</th>
+            <td nowrap><input type=text id="date" name="date" class=calendarField value="<%=bean.getDate()%>"
+                              maxlength=20 style="z-index:22;">
+                       <button class=calendarButton type=button onclick="return showCalendar(date, false, false);">...</button>
+            </td>
+        </tr>
+        <% } %>
+
         <tr class=row<%= (rowN++) % 2%>>
             <!-- TODO: add script feature to disable/restore edit fields when switching to DEFAULT destination -->
             <td nowrap><input

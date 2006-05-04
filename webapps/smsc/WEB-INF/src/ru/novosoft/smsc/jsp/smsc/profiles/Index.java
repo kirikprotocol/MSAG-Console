@@ -133,18 +133,19 @@ public class Index extends IndexBean {
                         request.getSession().removeAttribute("PROFILE_ADD_MASK");
                     } else {
                         profiles = smsc.profilesQueryFromFile(new ProfileQuery(pageSize, normalizeAddresPrefix(preferences.getProfilesFilter()), preferences.getProfilesSortOrder(), startPosition, ProfileQuery.SHOW_ADDRESSES));
-                        profiles.sortBycolumnName(preferences.getProfilesSortOrder());
+                        profiles.sortByColumnName(preferences.getProfilesSortOrder());
                     }
                     totalSize = profiles.getTotalSize();
                     request.getSession().setAttribute("profiles", profiles);
                 } else {
-                    profiles = (QueryResultSet) request.getSession().getAttribute("profiles");
-                    profiles.sortBycolumnName(preferences.getProfilesSortOrder());
                     if (request.getSession().getAttribute("PROFILE_EDIT_MASK") != null) {
                         profiles = getProfilesEditByMask((String) request.getSession().getAttribute("PROFILE_EDIT_MASK"), profiles);
                         request.getSession().removeAttribute("PROFILE_EDIT_MASK");
+                    } else {
+                        profiles = (QueryResultSet) request.getSession().getAttribute("profiles");
+                        profiles.sortByColumnName(preferences.getProfilesSortOrder());
+                        request.getSession().setAttribute("profiles", profiles);
                     }
-                    request.getSession().setAttribute("profiles", profiles);
                 }
                 totalSize = profiles.getTotalSize();
                 queried = true;
@@ -165,8 +166,8 @@ public class Index extends IndexBean {
         QueryResultSet profiles = null;
         while (!found) {
             profiles = smsc.profilesQueryFromFile(new ProfileQuery(pageSize, normalizeAddresPrefix(preferences.getProfilesFilter()), preferences.getProfilesSortOrder(), startPosition, ProfileQuery.SHOW_ADDRESSES));
-            if( profiles.size() == 0 ) {
-              return smsc.profilesQueryFromFile(new ProfileQuery(pageSize, normalizeAddresPrefix(preferences.getProfilesFilter()), preferences.getProfilesSortOrder(), 0, ProfileQuery.SHOW_ADDRESSES));
+            if (profiles.size() == 0) {
+                return smsc.profilesQueryFromFile(new ProfileQuery(pageSize, normalizeAddresPrefix(preferences.getProfilesFilter()), preferences.getProfilesSortOrder(), 0, ProfileQuery.SHOW_ADDRESSES));
             }
 
             for (Iterator i = profiles.iterator(); i.hasNext();) {
@@ -186,9 +187,9 @@ public class Index extends IndexBean {
     private QueryResultSet getProfilesEditByMask(String mask, QueryResultSet profiles) {
         startPosition = 0;
         for (Iterator i = profiles.iterator(); i.hasNext(); startPosition++) {
-                DataItem item = (DataItem) i.next();
-                String al = (String) item.getValue("mask");
-                if (al.equals(mask)) break;
+            DataItem item = (DataItem) i.next();
+            String al = (String) item.getValue("mask");
+            if (al.equals(mask)) break;
         }
         return profiles;
     }

@@ -45,7 +45,7 @@ public class EmptyResultSet implements QueryResultSet
 
   }
 
-    public void sortBycolumnName(String columnName) {
+    public void sortByColumnName(String columnName) {
     }
 
     public boolean isLast()

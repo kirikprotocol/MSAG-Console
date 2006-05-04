@@ -11,21 +11,17 @@ import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.route.Mask;
-import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileQuery;
-import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileDataItem;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.Vector;
-import java.util.Collections;
 
 public class Groups extends IndexBean
 {
@@ -92,7 +88,7 @@ public class Groups extends IndexBean
       try {
           profiles = smsc.profilesQueryFromFile(new ProfileQuery(pageSize, preferences.getProfilesFilter(), preferences.getProfilesSortOrder(), startPosition, ProfileQuery.SHOW_MASKS));
           totalSize = profiles.getTotalSize();
-          profiles.sortBycolumnName(preferences.getProfilesSortOrder());
+          profiles.sortByColumnName(preferences.getProfilesSortOrder());
           totalSize = profiles.getTotalSize();
 
       } catch (AdminException e) {
