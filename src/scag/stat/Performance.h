@@ -39,13 +39,13 @@ struct PerformanceCounter{
 struct PerformanceData{
   
     uint32_t size;
+    uint32_t sessionCount;
+    time_t uptime;
+    time_t now;
     uint32_t smppCountersNumber;
     PerformanceCounter smppCounters[PERF_CNT_COUNT];
     uint32_t httpCountersNumber;
     PerformanceCounter httpCounters[PERF_HTTP_COUNT];
-    uint32_t sessionCount;
-    time_t uptime;
-    time_t now;
     //uint32_t inProcessingCount;
     //uint32_t inScheduler;
 };
