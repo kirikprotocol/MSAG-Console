@@ -959,9 +959,10 @@ void StatisticsManager::reportGenPerformance(PerformanceData * data)
 
     uint32_t size = 200;
     buf.WriteNetInt32(size);
+    buf.WriteNetInt32(data->sessionCount);
     buf.WriteNetInt32(data->uptime);
     buf.WriteNetInt32(data->now);
-    buf.WriteNetInt32(data->sessionCount);
+
 
     buf.WriteNetInt32(data->smppCountersNumber);
 
