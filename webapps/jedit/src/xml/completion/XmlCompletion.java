@@ -112,7 +112,7 @@ public class XmlCompletion extends SideKickCompletion
   Macros.Recorder recorder = view.getMacroRecorder();
   String insert;
   int caret;
-
+  int caretShift = 0;
   if(obj instanceof XmlListCellRenderer.Comment)
   {
    insert = "!--  -->".substring(word.length());
@@ -153,11 +153,11 @@ public class XmlCompletion extends SideKickCompletion
     {
      if (element.content == null || element.content.size()==0)
      {
-       if (element.attributes.size()>0) buf.append(" />"); else buf.append("/>");
+       if (element.attributes.size()>0) {buf.append(" />"); caretShift = -2;} else buf.append("/>");
      }
      else
      {
-        if (element.attributes.size()>0) buf.append(" >"); else buf.append(">");
+        if (element.attributes.size()>0) {buf.append(" >"); caretShift = -1;} else buf.append(">");
      }
      int start = buf.length();
 
@@ -215,7 +215,7 @@ public class XmlCompletion extends SideKickCompletion
    textArea.getBuffer().setBooleanProperty("sidekick.keystroke-parse",true);
    textArea.setSelectedText(insert);
    int _caret=textArea.getCaretPosition();
-   textArea.setCaretPosition(_caret/*-1*/);
+   textArea.setCaretPosition(_caret + caretShift);
   if(caret != 0)
   {
    String code = "textArea.setCaretPosition("
