@@ -30,13 +30,13 @@ using smsc::core::network::Socket;
 using smsc::core::synchronization::Mutex;
 using smsc::core::synchronization::MutexGuard;
 
-struct PerformanceCounter{
+typedef struct {
     int32_t lastSecond;
     int32_t average;
     uint64_t total;
-} __attribute__((packed));
-
-struct PerformanceData{
+} PerformanceCounter;
+//__attribute__((packed)) 
+typedef struct {
   
     uint32_t size;
     uint32_t sessionCount;
@@ -48,7 +48,7 @@ struct PerformanceData{
     PerformanceCounter httpCounters[PERF_HTTP_COUNT];
     //uint32_t inProcessingCount;
     //uint32_t inScheduler;
-} __attribute__((packed));
+} PerformanceData;
 
 struct CommonPerformanceCounter
 {
