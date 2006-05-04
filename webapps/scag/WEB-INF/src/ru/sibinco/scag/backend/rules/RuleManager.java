@@ -90,6 +90,12 @@ public class RuleManager
   public synchronized void load() throws SibincoException
   {
     try {
+      File folder = null;
+      for(int i=0;i<Transport.transportTitles.length;i++) {
+        folder = new File(rulesFolder,Transport.transportTitles[i]);
+        if(!folder.exists())
+          folder.mkdirs();
+      }
       loadSchemas();
       Rule.header = loadRuleHeader();
     } catch (SibincoException e) {
