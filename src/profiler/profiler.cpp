@@ -192,15 +192,19 @@ Profile& Profiler::lookupEx(const Address& address,int& matchType,std::string& m
 void Profiler::remove(const Address& address)
 {
   MutexGuard g(mtx);
-  bool exact;
-  Profile& profRef=profiles->find(address,exact);
-  if(exact)
+  int matchType;
+  std::string matchAddr;
+  Profile& profRef=profiles->findEx(address,matchType,matchAddr);
+  if(matchType==ProfilerMatchType::mtExact ||
+     (matchType==ProfilerMatchType::mtMask && matchAddr==address.toString())
+    )
   {
     using namespace smsc::cluster;
     if(Interconnect::getInstance()->getRole()!=SLAVE)
     {
       storeFile.Seek(profRef.offset-AddressSize()-8-1);
       storeFile.WriteByte(0);
+      storeFile.Flush();
       holes.push_back(profRef.offset-AddressSize()-8-1);
       if(Interconnect::getInstance()->getRole()==MASTER)
       {
