@@ -22,7 +22,7 @@
         <td background="/images/smsc_14.jpg" width="26"></td>
         <td background="/images/smsc_14.jpg" width="100%">&nbsp;</td><%
         if (request.getUserPrincipal() != null) {%>
-        <td background="/images/smsc_14.jpg"><a ID="MENU0_LOGOUT" href="logout.jsp"><%=getLocString("menu.logout")%></a>
+        <td background="/images/smsc_14.jpg" nowrap><a ID="MENU0_LOGOUT" href="logout.jsp"><%=getLocString("menu.logout") + " \"" + request.getUserPrincipal().getName() + "\""%></a>
         </td><%
         }%>
         <td background="/images/smsc_14.jpg" width="52"></td></tr>
