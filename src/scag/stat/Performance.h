@@ -38,7 +38,7 @@ typedef struct {
 //__attribute__((packed)) 
 typedef struct {
   
-    uint32_t size;
+//    uint32_t size;
     uint32_t sessionCount;
     time_t uptime;
     time_t now;

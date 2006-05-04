@@ -415,7 +415,7 @@ int StatisticsManager::calculateToSleep() // returns msecs to next hour
 
 void StatisticsManager::SerializeSmppStat(Hash<CommonStat>& smppStat, SerializationBuffer& buf, bool add)
 {
-    buf.WriteInt32(smppStat.GetCount());
+    buf.WriteNetInt32(smppStat.GetCount());
 
     smppStat.First();
     char* Id = 0;
@@ -425,28 +425,28 @@ void StatisticsManager::SerializeSmppStat(Hash<CommonStat>& smppStat, Serializat
         if (!st || !Id || Id[0] == '\0') continue;
             
         uint16_t len = (uint16_t)strlen(Id);
-        buf.WriteInt16(len);
+        buf.WriteNetInt16(len);
         buf.Write(Id, len);
 
-        buf.WriteInt32(st->accepted);
-        buf.WriteInt32(st->rejected);
-        buf.WriteInt32(st->delivered);
-        buf.WriteInt32(st->gw_rejected);
-        buf.WriteInt32(st->failed);
+        buf.WriteNetInt32(st->accepted);
+        buf.WriteNetInt32(st->rejected);
+        buf.WriteNetInt32(st->delivered);
+        buf.WriteNetInt32(st->gw_rejected);
+        buf.WriteNetInt32(st->failed);
         if(add)
         {
-            buf.WriteInt32(st->recieptOk);
-            buf.WriteInt32(st->recieptFailed);
+            buf.WriteNetInt32(st->recieptOk);
+            buf.WriteNetInt32(st->recieptFailed);
         }
 
-        buf.WriteInt32(st->errors.Count());
+        buf.WriteNetInt32(st->errors.Count());
 
         IntHash<int>::Iterator sit = st->errors.First();
         int secError, seCounter;
         while (sit.Next(secError, seCounter))
         {
-            buf.WriteInt32(secError);
-            buf.WriteInt32(seCounter);
+            buf.WriteNetInt32(secError);
+            buf.WriteNetInt32(seCounter);
         }
         st = 0;
     }
@@ -454,7 +454,7 @@ void StatisticsManager::SerializeSmppStat(Hash<CommonStat>& smppStat, Serializat
 
 void StatisticsManager::SerializeHttpStat(Hash<HttpStat>& httpStat, SerializationBuffer& buf)
 {
-    buf.WriteInt32(httpStat.GetCount());
+    buf.WriteNetInt32(httpStat.GetCount());
 
     httpStat.First();
     char* Id = 0;
@@ -466,24 +466,24 @@ void StatisticsManager::SerializeHttpStat(Hash<HttpStat>& httpStat, Serializatio
 //        smsc_log_debug(logger, "name: %s, req: %d, req_r: %d, res: %d, res_r: %d, d: %d, f: %d\n", Id, st->request, st->requestRejected, st->response, st->responseRejected, st->delivered, st->failed);
 
         uint16_t len = (uint16_t)strlen(Id);
-        buf.WriteInt16(len);
+        buf.WriteNetInt16(len);
         buf.Write(Id, len);
 
-        buf.WriteInt32(st->request);
-        buf.WriteInt32(st->requestRejected);
-        buf.WriteInt32(st->response);
-        buf.WriteInt32(st->responseRejected);
-        buf.WriteInt32(st->delivered);
-        buf.WriteInt32(st->failed);
+        buf.WriteNetInt32(st->request);
+        buf.WriteNetInt32(st->requestRejected);
+        buf.WriteNetInt32(st->response);
+        buf.WriteNetInt32(st->responseRejected);
+        buf.WriteNetInt32(st->delivered);
+        buf.WriteNetInt32(st->failed);
 
-        buf.WriteInt32(st->errors.Count());
+        buf.WriteNetInt32(st->errors.Count());
 
         IntHash<int>::Iterator sit = st->errors.First();
         int secError, seCounter;
         while (sit.Next(secError, seCounter))
         {
-            buf.WriteInt32(secError);
-            buf.WriteInt32(seCounter);
+            buf.WriteNetInt32(secError);
+            buf.WriteNetInt32(seCounter);
         }
 
         st = 0;
@@ -759,7 +759,7 @@ void StatisticsManager::dumpTrafficHash(Hash<TrafficRecord>& traff, Serializatio
 
     MutexGuard mg(switchLock);
 
-    buf.WriteInt16(traff.GetCount());
+    buf.WriteNetInt16(traff.GetCount());
 
     traff.First();
     char* routeId = 0;
@@ -767,16 +767,16 @@ void StatisticsManager::dumpTrafficHash(Hash<TrafficRecord>& traff, Serializatio
     while(traff.Next(routeId, routeTraff))
     {
         uint16_t len = strlen(routeId);
-        buf.WriteInt16(len);
+        buf.WriteNetInt16(len);
         buf.Write(routeId, len);
 
         routeTraff.getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
                                     year_, month_, day_, hour_, min_);
 
-        buf.WriteInt32(mincnt_);
-        buf.WriteInt32(hourcnt_);
-        buf.WriteInt32(daycnt_);
-        buf.WriteInt32(monthcnt_);
+        buf.WriteNetInt32(mincnt_);
+        buf.WriteNetInt32(hourcnt_);
+        buf.WriteNetInt32(daycnt_);
+        buf.WriteNetInt32(monthcnt_);
 
         buf.WriteByte(year_);
         buf.WriteByte(month_);
@@ -821,20 +821,20 @@ void StatisticsManager::initTraffic(Hash<TrafficRecord>& h, const std::string lo
         tm tmnow;
         localtime_r(&now, &tmnow);
 
-        uint16_t cnt = tfile.ReadInt16();
+        uint16_t cnt = tfile.ReadNetInt16();
         while(cnt--)
         {
-            uint16_t len = tfile.ReadInt16();
+            uint16_t len = tfile.ReadNetInt16();
             TmpBuf<char, 512> id(len + 1);
 //            char id[len + 1];
             tfile.Read(id.get(), len);
             *(id.get() + len) = 0;
 //            id[len] = 0;
 
-            mincnt = tfile.ReadInt32();
-            hourcnt = tfile.ReadInt32();
-            daycnt = tfile.ReadInt32();
-            monthcnt = tfile.ReadInt32();
+            mincnt = tfile.ReadNetInt32();
+            hourcnt = tfile.ReadNetInt32();
+            daycnt = tfile.ReadNetInt32();
+            monthcnt = tfile.ReadNetInt32();
 
             year = tfile.ReadByte();
             month = tfile.ReadByte();
@@ -955,53 +955,30 @@ void StatisticsManager::incScMmsCounter(const char* systemId, int index)
 void StatisticsManager::reportGenPerformance(PerformanceData * data)
 {
     MutexGuard g(genSocketsMutex);
-    PerformanceData ld=*data;
-    int high,low;
+    SerializationBuffer buf(256);
 
-    ld.size=htonl(sizeof(ld));
-//    int size = 100;
-//    ld.size=htonl(size);
+    uint32_t size = 200;
+    buf.WriteNetInt32(size);
+    buf.WriteNetInt32(data->uptime);
+    buf.WriteNetInt32(data->now);
+    buf.WriteNetInt32(data->sessionCount);
 
-    ld.uptime=htonl(ld.uptime);
-    ld.now=htonl(ld.now);
-    ld.sessionCount=htonl(ld.sessionCount);
-
-    ld.smppCountersNumber=htonl(ld.smppCountersNumber);
+    buf.WriteNetInt32(data->smppCountersNumber);
 
     for(int i=0;i<PERF_CNT_COUNT;i++)
     {
-      ld.smppCounters[i].lastSecond=htonl(ld.smppCounters[i].lastSecond);
-      ld.smppCounters[i].average=htonl(ld.smppCounters[i].average);
-
-      uint64_t tmp=ld.smppCounters[i].total;
-      unsigned char *ptr=(unsigned char *)&ld.smppCounters[i].total;
-      ptr[0]=(unsigned char)(tmp>>56);
-      ptr[1]=(unsigned char)(tmp>>48)&0xFF;
-      ptr[2]=(unsigned char)(tmp>>40)&0xFF;
-      ptr[3]=(unsigned char)(tmp>>32)&0xFF;
-      ptr[4]=(unsigned char)(tmp>>24)&0xFF;
-      ptr[5]=(unsigned char)(tmp>>16)&0xFF;
-      ptr[6]=(unsigned char)(tmp>>8)&0xFF;
-      ptr[7]=(unsigned char)(tmp&0xFF);
+        buf.WriteNetInt32(data->smppCounters[i].lastSecond);
+        buf.WriteNetInt32(data->smppCounters[i].average);
+        buf.WriteNetInt64(data->smppCounters[i].total);
     }
 
-    ld.httpCountersNumber=htonl(ld.httpCountersNumber);
+    buf.WriteNetInt32(data->httpCountersNumber);
 
     for(int i=0;i<PERF_HTTP_COUNT;i++)
     {
-      ld.httpCounters[i].lastSecond=htonl(ld.httpCounters[i].lastSecond);
-      ld.httpCounters[i].average=htonl(ld.httpCounters[i].average);
-
-      uint64_t tmp=ld.httpCounters[i].total;
-      unsigned char *ptr=(unsigned char *)&ld.httpCounters[i].total;
-      ptr[0]=(unsigned char)(tmp>>56);
-      ptr[1]=(unsigned char)(tmp>>48)&0xFF;
-      ptr[2]=(unsigned char)(tmp>>40)&0xFF;
-      ptr[3]=(unsigned char)(tmp>>32)&0xFF;
-      ptr[4]=(unsigned char)(tmp>>24)&0xFF;
-      ptr[5]=(unsigned char)(tmp>>16)&0xFF;
-      ptr[6]=(unsigned char)(tmp>>8)&0xFF;
-      ptr[7]=(unsigned char)(tmp&0xFF);
+        buf.WriteNetInt32(data->httpCounters[i].lastSecond);
+        buf.WriteNetInt32(data->httpCounters[i].average);
+        buf.WriteNetInt64(data->httpCounters[i].total);
     }
 
     //ld.inProcessingCount=htonl(ld.inProcessingCount);
@@ -1010,10 +987,11 @@ void StatisticsManager::reportGenPerformance(PerformanceData * data)
     for(int i=0;i<genSockets.Count();i++)
     {
 
-      int wr=genSockets[i]->WriteAll((char*)&ld, ld.size);
+      int wr=genSockets[i]->WriteAll((char*)buf.getBuffer(), buf.getPos());
 
-      if(wr!=ld.size)
+      if(wr != size)
       {
+        smsc_log_warn(logger, "Error writing gen performance to socket");
         genSockets[i]->Abort();
         delete genSockets[i];
         genSockets.Delete(i);
@@ -1034,7 +1012,7 @@ void StatisticsManager::getHttpPerfData(uint64_t *cnt)
 
 void StatisticsManager::dumpPerfCounters(SerializationBuffer& buf, Hash<CommonPerformanceCounter*>& h)
 {
-    buf.WriteInt16(h.GetCount());
+    buf.WriteNetInt16(h.GetCount());
 
     h.First();
     char* sysId = 0; CommonPerformanceCounter * counter = 0;
@@ -1044,16 +1022,16 @@ void StatisticsManager::dumpPerfCounters(SerializationBuffer& buf, Hash<CommonPe
         if (sysId)
         {
             uint16_t l = strlen(sysId);
-            buf.WriteInt16(l);
+            buf.WriteNetInt16(l);
             buf.Write(sysId, l);
         }
 
         for (int i = 0; i < counter->count; i++)
         {
                  //uint16_t(2)  xxx counter + avg (hour)
-            buf.WriteInt16((counter) ? htons(counter->counters[i]) : 0);
+            buf.WriteNetInt16((counter) ? htons(counter->counters[i]) : 0);
             TimeSlotCounter<int>* cnt = (counter && counter->slots[i]) ? counter->slots[i] : 0;
-            buf.WriteInt16((cnt) ? htons((uint16_t)cnt->Avg()):0);
+            buf.WriteNetInt16((cnt) ? htons((uint16_t)cnt->Avg()):0);
         }
 
         if (counter) counter->clear();
@@ -1064,7 +1042,7 @@ void StatisticsManager::dumpSvcCounters(SerializationBuffer& buf)
 {
     MutexGuard guard(svcCountersLock);
 
-    buf.WriteInt32(0);
+    buf.WriteNetInt32(0);
 
     dumpPerfCounters(buf, svcSmppCounters);
     dumpPerfCounters(buf, svcWapCounters);
@@ -1075,7 +1053,7 @@ void StatisticsManager::dumpScCounters(SerializationBuffer& buf)
 {
     MutexGuard guard(scCountersLock);
 
-    buf.WriteInt32(0);
+    buf.WriteNetInt32(0);
 
     dumpPerfCounters(buf, scSmppCounters);
     dumpPerfCounters(buf, scWapCounters);
