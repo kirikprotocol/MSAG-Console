@@ -957,14 +957,11 @@ void StatisticsManager::reportGenPerformance(PerformanceData * data)
     MutexGuard g(genSocketsMutex);
     SerializationBuffer buf(256);
 
-    uint32_t size = 200;
+    uint32_t size = 192;
     buf.WriteNetInt32(size);
     buf.WriteNetInt32(data->sessionCount);
     buf.WriteNetInt32(data->uptime);
     buf.WriteNetInt32(data->now);
-
-
-    buf.WriteNetInt32(data->smppCountersNumber);
 
     for(int i=0;i<PERF_CNT_COUNT;i++)
     {
@@ -972,8 +969,6 @@ void StatisticsManager::reportGenPerformance(PerformanceData * data)
         buf.WriteNetInt32(data->smppCounters[i].average);
         buf.WriteNetInt64(data->smppCounters[i].total);
     }
-
-    buf.WriteNetInt32(data->httpCountersNumber);
 
     for(int i=0;i<PERF_HTTP_COUNT;i++)
     {
