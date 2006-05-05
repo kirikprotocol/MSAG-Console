@@ -31,7 +31,7 @@ session.location=/opt/home/msag_test/build/msag_distr/storage/sessions
 rules.path=/opt/home/msag_test/build/msag_distr/services/scag/conf/rules
 stat.dir=/opt/home/msag_test/build/msag_distr/storage/statistics
 
-status.storage_time=86400000
+status.show_interval=86400000
 
 stat.perf_applet.port=14821
 stat.perf_svc_applet.port=14822
