@@ -282,7 +282,7 @@ int SessionManagerImpl::Execute()
     while (isStarted())
     {
         int secs = processExpire();
-        //smsc_log_debug(logger,"SessionManager::----------- ping %d",secs);
+        smsc_log_debug(logger,"SessionManager::----------- ping %d",secs);
         awakeEvent.Wait(secs*1000);
     }
     smsc_log_info(logger,"SessionManager::stop executing");

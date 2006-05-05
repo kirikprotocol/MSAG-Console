@@ -15,11 +15,11 @@ bool ActionLog::FinishXMLSubSection(const std::string& name)
 
 std::string ActionLog::ttToStr(TransportType t)
 {
-    if(t == 1)
+    if(t == SMPP)
         return "smpp";
-    else if(t == 2)
+    else if(t == HTTP)
         return "http";
-    else if(t == 3)
+    else if(t == MMS)
         return "mms";
     return "unknown";
 }

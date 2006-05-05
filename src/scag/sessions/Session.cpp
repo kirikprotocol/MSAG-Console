@@ -52,6 +52,8 @@ void Operation::detachBill()
 
 void Operation::receiveNewPart(int currentIndex,int lastIndex)
 {
+    //smsc_log_debug(logger,"Operation: Change status part (CI=%d, LI=%d, allParts=%d)",currentIndex, lastIndex, m_receivedAllParts);
+
     if ((currentIndex < 0)||(lastIndex < 0)||(currentIndex > lastIndex)) 
         throw SCAGException("Error: Invalid SMS index (currIndex %d, lastIndex %d)",currentIndex, lastIndex);
 
@@ -78,6 +80,9 @@ void Operation::receiveNewPart(int currentIndex,int lastIndex)
 
 void Operation::receiveNewResp(int currentIndex,int lastIndex)
 {
+    //smsc_log_debug(logger,"Operation: Change status resp (CI=%d, LI=%d, allParts=%d)",currentIndex, lastIndex, m_receivedAllParts);
+
+
     if ((currentIndex < 0)||(lastIndex < 0)||(currentIndex > lastIndex)) 
         throw SCAGException("Error: Invalid SMS index (currIndex %d, lastIndex %d)",currentIndex, lastIndex);
 
@@ -193,7 +198,16 @@ void Session::DeserializeOperations(SessionBuffer& buff)
     {
         operation = new Operation();
 
-        int temp;
+        uint8_t temp;
+
+        buff >> temp;
+        operation->m_receivedAllResp = temp;
+        buff >> operation->m_receivedResp;
+
+        buff >> temp;
+        operation->m_receivedAllParts = temp;
+        buff >> operation->m_receivedParts;
+
         buff >> temp;
         operation->m_hasBill = temp;
 
@@ -203,6 +217,7 @@ void Session::DeserializeOperations(SessionBuffer& buff)
         buff >> operation->type;
         buff >> key;
         OperationsHash.Insert(key,operation);
+        //smsc_log_debug(logger, "DESERIALIZE ALLRESP=%d, ALLPARTS=%d",operation->m_receivedAllResp, operation->m_receivedAllParts);
     }
 }
 
@@ -255,12 +270,25 @@ void Session::SerializeOperations(SessionBuffer& buff)
 
     for (;it.Next(key, operation);)
     {              
-        int temp = operation->m_hasBill;
+        uint8_t temp;
+        temp = operation->m_receivedAllResp;
+        //smsc_log_debug(logger, "SERIALIZE ALLRESP=%d",temp);
+
+        buff << temp;
+        buff << operation->m_receivedResp;
+
+        temp =  operation->m_receivedAllParts;
+        buff << temp;
+        buff << operation->m_receivedParts;
+        //smsc_log_debug(logger, "SERIALIZE ALLPARTS=%d",temp);
+
+        temp = operation->m_hasBill;
         buff << temp;
         if (operation->m_hasBill) buff << operation->billId;
 
         buff << operation->type;
         buff << key;
+        //smsc_log_debug(logger, "SERIALIZE ALLRESP=%d, ALLPARTS=%d",operation->m_receivedAllResp, operation->m_receivedAllParts);
     }
 }
 

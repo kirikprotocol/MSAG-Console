@@ -8,12 +8,10 @@ namespace scag { namespace re {
 
 using namespace scag::re::smpp;
 
-void SmppEventHandler::StartOperation(Session& session, SmppCommand& command)
+void SmppEventHandler::StartOperation(Session& session, SmppCommand& command, CSmppDiscriptor& smppDiscriptor)
 {
     Operation * operation = 0;
     int UMR;
-
-    CSmppDiscriptor smppDiscriptor = CommandBrige::getSmppDiscriptor(command);
 
     switch (smppDiscriptor.cmdType)
     {
@@ -107,7 +105,7 @@ void SmppEventHandler::StartOperation(Session& session, SmppCommand& command)
     }
 }
 
-void SmppEventHandler::EndOperation(Session& session, SmppCommand& command, RuleStatus& ruleStatus)
+void SmppEventHandler::EndOperation(Session& session, SmppCommand& command, RuleStatus& ruleStatus, CSmppDiscriptor& smppDiscriptor)
 {
     Operation * currentOperation = session.GetCurrentOperation();
     if (!currentOperation) throw SCAGException("Session: Fatal error - cannot end operation. Couse: current operation not found");
@@ -118,8 +116,7 @@ void SmppEventHandler::EndOperation(Session& session, SmppCommand& command, Rule
         return;
     }
     
-
-    CSmppDiscriptor smppDiscriptor = CommandBrige::getSmppDiscriptor(command);
+    smsc_log_debug(logger, "current operation status=%d",currentOperation->getStatus());
 
     switch (smppDiscriptor.cmdType)
     {
@@ -205,8 +202,10 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     
     /////////////////////////////////////////
 
+    CSmppDiscriptor smppDiscriptor = CommandBrige::getSmppDiscriptor(*smppcommand);
+
     try {
-        StartOperation(session, *smppcommand);
+        StartOperation(session, *smppcommand, smppDiscriptor);
     } catch (SCAGException& e)
     {
         smsc_log_debug(logger, "EventHandler cannot start/locate operation. Details: %s", e.what());
@@ -229,7 +228,7 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
         rs.result = 0;
     }
 
-    EndOperation(session, *smppcommand, rs);
+    EndOperation(session, *smppcommand, rs, smppDiscriptor);
     return rs;
 }
 
