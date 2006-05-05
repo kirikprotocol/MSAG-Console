@@ -80,7 +80,11 @@ public class XmlParsedData extends SideKickParsedData
    else
     lName = name.substring(prefixLen + 1);
 
-    if (info!=null) decl = (ElementDecl)info.elementHash.get(lName);
+    if (info!=null) {
+      decl = (ElementDecl)info.elementHash.get(name);
+      if (decl != null) return decl;
+      else decl = (ElementDecl)info.elementHash.get(lName);
+    }
      if(decl == null) {
        for (Iterator it = mappings.keySet().iterator(); it.hasNext();) {
          String key = (String) it.next();
