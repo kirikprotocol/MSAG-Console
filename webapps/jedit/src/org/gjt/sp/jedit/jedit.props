@@ -132,7 +132,7 @@ buffer.tabSize=4
 buffer.indentSize=8
 
 # Soft tabs
-buffer.noTabs=false
+buffer.noTabs=true
 
 # Default edit mode
 buffer.defaultMode=text
