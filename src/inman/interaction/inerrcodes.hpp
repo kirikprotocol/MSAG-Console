@@ -9,13 +9,16 @@ namespace inman {
 
 typedef enum {
     InErrOk = 0, InErrRPCause = 1,
-    InErrINprotocol = 2, InErrTCAP = 3, InErrCAP3 = 4
+    InErrINprotocol = 2, InErrTCAP = 3, InErrCAP3 = 4,
+    InErrTCuser = 5, InErrCAPuser = 6,
+    //...
+    InErrUndefined
 } InmanErrorType;
 
 typedef enum {
     InProtocol_GeneralError = 1,
-    InProtocol_ResourceLimitation,
-    InProtocol_InvalidData
+    InProtocol_ResourceLimitation = 2,
+    InProtocol_InvalidData = 3
 } InmanProtocolErrors;
 
 typedef enum {

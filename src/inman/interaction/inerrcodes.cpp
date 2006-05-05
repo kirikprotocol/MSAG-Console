@@ -8,7 +8,6 @@ namespace inman {
 /* ************************************************************************** *
  * class InmanErrorCode implementation:
  * ************************************************************************** */
-#define MAX_RANGE InErrCAP3
 typedef struct {
     uint32_t  base;
     uint32_t  limit;
@@ -18,8 +17,12 @@ static const InErrorRange    _ranges[] = { {0,0} //placeholder
     , {0, 255}      //RP cause MO SM transfer
     , {256, 279}    //Inman TCP protocol errors
     , {280, 409}    //TCAP errors
-    , {410, 0xFFFF} //CAP3 operations errors
+    , {410, 675}    //CAP3 operations errors
+    , {680, 935}    //TCuser  errors
+    , {940, 1295}   //CAP user errors
+    , {1200, 0xFFFF} //reserved
 };
+#define MAX_RANGE (sizeof(_ranges)/sizeof(InErrorRange) - 1)
 
 InmanErrorCode::InmanErrorCode(uint32_t ercode)
     : _errcode(ercode)
