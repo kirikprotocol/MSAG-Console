@@ -200,12 +200,24 @@ CSmppDiscriptor CommandBrige::getSmppDiscriptor(const SCAGCommand& command)
     CSmppDiscriptor SmppDiscriptor;
     int receiptMessageId = 0;
 
+    bool transact = false;
+    bool req_receipt = false;
+
     if (sms.hasIntProperty(Tag::SMPP_ESM_CLASS))
     {
         //TODO: узнать заказал ли сервис отчёт о доставке
         int esm_class = sms.getIntProperty(Tag::SMPP_ESM_CLASS);
-        SmppDiscriptor.m_isTransact = ((esm_class&2) == 2);
+        transact = ((esm_class&2) == 2);
     }
+
+    if (sms.hasIntProperty(Tag::SMPP_REGISTRED_DELIVERY))
+    {
+        //TODO: узнать заказал ли сервис отчёт о доставке
+        int esm_class = sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY);
+        req_receipt = ((esm_class&3) > 0);
+    } 
+
+    SmppDiscriptor.m_waitReceipt = ((!transact)&&(req_receipt));
     
     switch (cmdid) 
     {

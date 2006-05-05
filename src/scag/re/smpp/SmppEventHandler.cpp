@@ -134,7 +134,7 @@ void SmppEventHandler::EndOperation(Session& session, SmppCommand& command, Rule
 
         if (smppDiscriptor.isResp) break; 
 
-        if (!smppDiscriptor.m_isTransact)
+        if (smppDiscriptor.m_waitReceipt)
         {
             time_t now;
             time(&now);

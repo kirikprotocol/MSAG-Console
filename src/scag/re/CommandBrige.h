@@ -58,7 +58,7 @@ struct CSmppDiscriptor
 
     bool isUSSDClosed;
     bool wantOpenUSSD;
-    bool m_isTransact;
+    bool m_waitReceipt;
     bool isResp;
 
     CSmppDiscriptor() : 
@@ -66,7 +66,7 @@ struct CSmppDiscriptor
         lastIndex(0), 
         isUSSDClosed(false), 
         wantOpenUSSD(false), 
-        m_isTransact(false),
+        m_waitReceipt(false),
         isResp(false) {}
     
 };
