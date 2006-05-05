@@ -2,14 +2,14 @@
 <sm:page>
     <jsp:attribute name="title">
         <c:choose>
-            <c:when test="${param.add}">Create new service center</c:when>
-            <c:otherwise>Edit service center "${param.editId}"</c:otherwise>
+            <c:when test="${param.add}">Create new center point</c:when>
+            <c:otherwise>Edit center point: "${param.editId}"</c:otherwise>
         </c:choose>
     </jsp:attribute>
     <jsp:attribute name="menu">
         <sm-pm:menu>
-            <sm-pm:item name="mbSave" value="Save" title="Save provider info"/>
-            <sm-pm:item name="mbCancel" value="Cancel" title="Cancel provider editing" onclick="clickCancel()"/>
+            <sm-pm:item name="mbSave" value="Save" title="Save center point info"/>
+            <sm-pm:item name="mbCancel" value="Cancel" title="Cancel center point editing" onclick="clickCancel()"/>
             <sm-pm:space/>
         </sm-pm:menu>
     </jsp:attribute>
@@ -31,7 +31,7 @@
         <c:choose>
             <c:when test="${bean.transportId == 1}">
                 <c:set var="smes" value="${fn:join(bean.smes, ',')}"/>
-                <sm-ep:properties title="SMPP Service Center info">
+                <sm-ep:properties title="SMPP Center point info">
                     <br>
                     <sm-ep:txt title="name" name="id" maxlength="60" validation="nonEmpty"/>
                     <sm-ep:txt title="bind system Id" name="bindSystemId" validation="nonEmpty"/>
@@ -53,7 +53,7 @@
                     <sm-ep:txt title="address range" name="addressRange"/>
                     <sm-ep:list title="mode" name="mode" values="1,2,3" valueTitles="TX,RX,TRX"/>
                     <sm-ep:txt title="timeout" name="timeout" maxlength="6" validation="unsigned"/>
-                    <sm-ep:check title="enabled" name="enabled"/>
+                    <sm-ep:check title="" head="enabled" name="enabled"/>
                     <c:choose>
                         <c:when test="${!param.add}">
                             <sm-ep:txt title="uid" name="uid" readonly="true"/>
@@ -63,13 +63,13 @@
                 </sm-ep:properties>
             </c:when>
             <c:when test="${bean.transportId == 2}">
-                <sm-ep:properties title="HTTP Service Center info">
+                <sm-ep:properties title="HTTP Center point info">
                     <br>
                     Place your content here
                 </sm-ep:properties>
             </c:when>
             <c:when test="${bean.transportId == 3}">
-                <sm-ep:properties title="MMS Service Center info">
+                <sm-ep:properties title="MMS Center point info">
                     <br>
                     Place your content here
                 </sm-ep:properties>

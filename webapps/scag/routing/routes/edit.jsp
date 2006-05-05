@@ -206,7 +206,7 @@
               <sm-ep:properties title="Route information" noColoredLines="false">
                   <sm-ep:txt title="name" name="id" maxlength="60" readonly="${!bean.add}" validation="nonEmpty"/>
                   <sm-ep:txt title="notes" name="notes"/>
-                  <sm-ep:list title="source SME ID" name="srcSmeId"
+                  <sm-ep:list title="source endpoint" name="srcSmeId"
                               values="${smes}" valueTitles="${smes}" onChange="srcSmeIdChanged();"/>
                   <sm-pm:space/>
               </sm-ep:properties>

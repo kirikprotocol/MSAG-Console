@@ -1,9 +1,9 @@
 <%@include file="/WEB-INF/inc/header.jspf"%>
-<sm:page title="Centers">
+<sm:page title="Center points">
   <jsp:attribute name="menu">
     <sm-pm:menu>
-      <sm-pm:item name="mbAdd" value="Add" title="Add new Center"/>
-      <sm-pm:item name="mbDelete" value="Delete" title="Delete Centers" onclick="return confirm('Are you sure to delete this object?')" isCheckSensible="true"/>
+      <sm-pm:item name="mbAdd" value="Add" title="Add new Center point"/>
+      <sm-pm:item name="mbDelete" value="Delete" title="Delete Center point(s)" onclick="return confirm('Are you sure to delete this object?')" isCheckSensible="true"/>
       <sm-pm:space/>
     </sm-pm:menu>
   </jsp:attribute>

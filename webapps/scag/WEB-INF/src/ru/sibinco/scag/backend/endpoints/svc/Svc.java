@@ -36,7 +36,7 @@ public class Svc {
     private String id = null;
     private String password = "";
     private int timeout = 0;
-    private boolean enabled = false;
+    private boolean enabled = true;
     private byte mode = MODE_TRX;
     private Provider provider;
     private String transport = "SMPP";

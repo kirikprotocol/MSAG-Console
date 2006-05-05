@@ -39,8 +39,8 @@ public class Route {
     private Map sources;
     private Map destinations;
     private boolean archived;
-    private boolean enabled;
-    private boolean active;
+    private boolean enabled = true;
+    private boolean active = true;
     private String srcSmeId;
     private Service service;
     private String notes;

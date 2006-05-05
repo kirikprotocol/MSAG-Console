@@ -36,7 +36,7 @@ public class Edit extends EditBean {
     protected byte type = Svc.SMPP;
     protected String password = null;
     protected int timeout = 0;
-    protected boolean enabled = false;
+    protected boolean enabled = true;
     protected byte mode = Svc.MODE_TRX;
     protected long providerId = -1;
     protected long transportId = 1;

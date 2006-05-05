@@ -1,9 +1,9 @@
 <%@include file="/WEB-INF/inc/header.jspf"%>
-<sm:page title="Services">
+<sm:page title="Service point">
   <jsp:attribute name="menu">
     <sm-pm:menu>
-      <sm-pm:item name="mbAdd" value="Add" title="Add new Service"/>
-      <sm-pm:item name="mbDelete" value="Delete" title="Delete Services" onclick="return confirm('Are you sure to delete this object?')" isCheckSensible="true"/>
+      <sm-pm:item name="mbAdd" value="Add" title="Add new Service point"/>
+      <sm-pm:item name="mbDelete" value="Delete" title="Delete Service point(s)" onclick="return confirm('Are you sure to delete this object?')" isCheckSensible="true"/>
       <sm-pm:space/>
     </sm-pm:menu>
   </jsp:attribute>

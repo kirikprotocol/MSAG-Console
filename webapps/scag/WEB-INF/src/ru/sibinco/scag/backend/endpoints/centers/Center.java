@@ -38,7 +38,7 @@ public class Center {
     private int port = 0;
     private String altHost;
     private int altPort;
-    private boolean enabled = false;
+    private boolean enabled = true;
     private Provider provider;
     private int uid = -1;
     private String bindSystemId;
@@ -294,7 +294,7 @@ public class Center {
         return transport;
     }
 
-    public void setTransport(String transport) {
+    public void setTransport(final String transport) {
         this.transport = transport;
     }
 
@@ -333,7 +333,7 @@ public class Center {
         return addressRange;
     }
 
-    public void setAddressRange(String addressRange) {
+    public void setAddressRange(final String addressRange) {
         this.addressRange = addressRange;
     }
 }

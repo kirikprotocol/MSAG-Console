@@ -4,9 +4,12 @@
 
 package ru.sibinco.scag.backend.status;
 
+import ru.sibinco.scag.backend.Constants;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Calendar;
+import java.util.TimeZone;
 
 /**
  * The <code>StatMessage</code> class represents
@@ -23,14 +26,19 @@ public class StatMessage {
     private String category;
     private String message;
 
-    SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+
+    SimpleDateFormat dateFormat = new SimpleDateFormat(Constants.TIME_STATUS_RECORD_FORMAT);
+
+    public StatMessage() {
+    }
 
     public StatMessage(final String userLogin, final String category, final String message) {
         this.userLogin = userLogin;
         this.category = category;
         this.message = message;
-        Calendar calendar = Calendar.getInstance();
-        this.time  = dateFormat.format(calendar.getTime());
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+        this.time = dateFormat.format(calendar.getTime());
     }
 
 
@@ -40,6 +48,10 @@ public class StatMessage {
 
     public void setTime(Date date) {
         this.time = dateFormat.format(date);
+    }
+
+    public void setTime(String date) {
+        this.time = date;
     }
 
     public String getUserLogin() {
@@ -98,4 +110,35 @@ public class StatMessage {
                 ", time='" + time + '\'' +
                 '}';
     }
+
+    public String stringToLog() {
+        return "" + time + ",  " + fixCSV(userLogin) + ",  " + fixCSV(category) + ",  " + fixCSV(message);
+    }
+
+    private String fixCSV(String source) {
+        String result;
+        int idx = 0;
+        int lastIdx = 0;
+        boolean needQuot = false;
+
+        if (source.indexOf("\"") >= 0) {
+            needQuot = true;
+            StringBuffer sb = new StringBuffer();
+            while ((idx = source.indexOf("\"", lastIdx)) >= 0) {
+                sb.append(source.substring(lastIdx, idx + 1));
+                sb.append('"');
+                lastIdx = idx + 1;
+            }
+            result = sb.toString();
+        } else
+            result = source;
+        if (result.indexOf(",") >= 0 || result.indexOf("\n") >= 0 || result.indexOf("\r") >= 0) {
+            needQuot = true;
+        }
+        if (needQuot) {
+            result = "\"" + result + "\"";
+        }
+        return result;
+    }
+
 }

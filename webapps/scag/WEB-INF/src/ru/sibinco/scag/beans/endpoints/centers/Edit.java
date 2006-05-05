@@ -41,7 +41,7 @@ public class Edit extends EditBean {
     private int port = 0;
     private String altHost = null;
     private int altPort = 0;
-    private boolean enabled = false;
+    private boolean enabled = true;
     private String bindSystemId;
     private String bindPassword;
     protected long providerId = -1;

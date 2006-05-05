@@ -45,9 +45,9 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
     private String[] srcSubjs = new String[0];
     private String[] dstMasks = new String[0];
     private String[] dstSubjs = new String[0];
-    private boolean enabled;
+    private boolean enabled = true;
     private boolean archived;
-    private boolean active;
+    private boolean active = true;
     private String srcSmeId;
     private String notes;
     private String path = "";
