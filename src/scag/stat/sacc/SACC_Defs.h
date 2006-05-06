@@ -34,6 +34,7 @@ namespace sacc{
 #define MAX_BILLING_CURRENCY_LENGTH	20
 #define MAX_NUMBERS_TEXT_LENGTH 	1024
 #define MAX_EMAIL_ADDRESS_LENGTH	1024
+#define DELEVIRY_TIME_LENGTH		16
 
 #define SACC_SEND_TRANSPORT_EVENT 		0x0001
 #define SACC_SEND_BILL_EVENT      		0x0002	
@@ -93,6 +94,14 @@ typedef enum
 	eid_sessionExpared=3
 	
 }SaccEventsIds;
+
+typedef enum
+{
+	scl_info=0,
+	scl_notify=1,
+	scl_warn=2,
+	scl_alarm=3
+}SaccCriticalityLevels;
 /**/
 	
 

@@ -202,12 +202,15 @@ using smsc::smeman::SmeRecord;
         uint8_t  pAbonentsNumbers[MAX_NUMBERS_TEXT_LENGTH];
         uint16_t pAddressEmail[MAX_EMAIL_ADDRESS_LENGTH];
         uint16_t pMessageText[MAX_TEXT_MESSAGE_LENGTH];
-
+		uint8_t  pDeliveryTime[DELEVIRY_TIME_LENGTH];
+		uint8_t  cCriticalityLevel;
         SACC_ALARM_MESSAGE_t()
         {
             memset(pAbonentsNumbers,0,MAX_NUMBERS_TEXT_LENGTH);
-            memset(pAddressEmail,0,MAX_EMAIL_ADDRESS_LENGTH*sizeof(uint16_t));
+			memset(pAddressEmail,0,MAX_EMAIL_ADDRESS_LENGTH*sizeof(uint16_t));
             memset(pMessageText,0,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
+			memset(pDeliveryTime,0,DELEVIRY_TIME_LENGTH);
+			cCriticalityLevel=scl_info;	
             sEventType = sec_alarm_message;
         }
         SACC_ALARM_MESSAGE_t(const SACC_ALARM_MESSAGE_t & src)
@@ -215,6 +218,8 @@ using smsc::smeman::SmeRecord;
             memcpy(pAbonentsNumbers,src.pAbonentsNumbers ,MAX_NUMBERS_TEXT_LENGTH);
             memcpy(pAddressEmail,src.pAddressEmail ,MAX_EMAIL_ADDRESS_LENGTH*sizeof(uint16_t));
             memcpy(pMessageText,src.pMessageText ,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
+			memcpy(pDeliveryTime,src.pDeliveryTime,DELEVIRY_TIME_LENGTH);
+			cCriticalityLevel = src.cCriticalityLevel;
             sEventType=src.sEventType;
 
         }

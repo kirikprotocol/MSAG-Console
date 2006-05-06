@@ -400,6 +400,14 @@ void EventSender::performAlarmMessageEvent(const SACC_ALARM_MESSAGE_t& e)
  }
  pdubuffer.WriteNetInt16(sz*sizeof(uint16_t));
  pdubuffer.Write(e.pMessageText,sz*sizeof(uint16_t));
+
+ pdubuffer.WriteNetInt16((uint16_t)DELEVIRY_TIME_LENGTH);
+ pdubuffer.Write(e.pDeliveryTime,DELEVIRY_TIME_LENGTH);
+
+ pdubuffer.WriteNetInt16(1);
+ pdubuffer.WriteByte(e.cCriticalityLevel);
+
+ 
  uint32_t bsize= pdubuffer.getPos();
  pdubuffer.setPos(0);
  pdubuffer.WriteNetInt32(bsize);
