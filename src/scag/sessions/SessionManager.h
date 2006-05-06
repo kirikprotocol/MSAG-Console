@@ -4,7 +4,6 @@
 #include <string>
 #include <core/threads/Thread.hpp>
 #include "Session.h"
-#include "scag/transport/SCAGCommand.h"
 #include "scag/sessions/SessionStore.h"
 
 namespace scag { namespace sessions 

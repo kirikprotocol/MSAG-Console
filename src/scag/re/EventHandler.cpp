@@ -88,7 +88,9 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, 
 
     ev.Header.lDateTime = (uint64_t)tv.tv_sec * 1000 + tv.tv_usec / 1000;
 
-    std::string tempStr = commandProperty.abonentAddr.toString();
+
+    ev.Header.pAbonentNumber = commandProperty.abonentAddr.toString();
+/*    std::string tempStr = commandProperty.abonentAddr.toString();
 
     if (tempStr.size() > MAX_ABONENT_NUMBER_LENGTH - 1)
     {
@@ -96,26 +98,28 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, 
         ev.Header.pAbonentNumber[MAX_ABONENT_NUMBER_LENGTH - 1] = 0;
     }
     else
-        sprintf((char *)ev.Header.pAbonentNumber,"%s",tempStr.c_str());
+        sprintf((char *)ev.Header.pAbonentNumber,"%s",tempStr.c_str());*/
 
     ev.Header.sCommandStatus = commandProperty.status;
     ev.iOperatorId = commandProperty.operatorId;
     
     if ((propertyObject.HandlerId == EH_SUBMIT_SM)||(propertyObject.HandlerId == EH_DELIVER_SM))
     {
-        int size = (MAX_TEXT_MESSAGE_LENGTH - 1) * sizeof(uint16_t);
+        /*int size = (MAX_TEXT_MESSAGE_LENGTH - 1) * sizeof(uint16_t);
         if (size > messageBody.size()) size = messageBody.size();
 
         if (size > 0) 
         {
             memcpy(ev.pMessageText, messageBody.data(), size); 
             ev.pMessageText[size] = 0;
-        }
+        } */
+        ev.pMessageText.append(messageBody.data(), messageBody.size());
     }
 
     MillisecTime msec(sessionPrimaryKey.BornMicrotime);
 
-    sprintf((char *)ev.pSessionKey,"%s/%s", sessionPrimaryKey.abonentAddr.toString().c_str(), msec.toString());
+    ev.pSessionKey = sessionPrimaryKey.abonentAddr.toString();
+    //sprintf((char *)ev.pSessionKey,"%s/%s", sessionPrimaryKey.abonentAddr.toString().c_str(), msec.toString());
 
     if ((propertyObject.HandlerId == EH_DELIVER_SM)||(propertyObject.HandlerId == EH_SUBMIT_SM_RESP))
         ev.cDirection = 'I';
