@@ -39,7 +39,7 @@ public class StatusManager {
     private static StatusManager instanse;
     private File statusFolder;
     private ArrayList statMessages = new ArrayList();
-    private static long storageTime = Constants.Day;
+    private static long showInterval = Constants.Day;
 
     private StatusManager() {
     }
@@ -60,7 +60,7 @@ public class StatusManager {
         if (!statusFolder.exists()) {
             statusFolder.mkdirs();
         }
-        storageTime = Long.decode(time).longValue();
+        showInterval = Long.decode(time).longValue();
         statMessages = getStatMessages(getCurrentFile().getAbsolutePath());
     }
 
@@ -160,7 +160,7 @@ public class StatusManager {
                 while (lineParser.hasMoreTokens()) {
                     String time = lineParser.nextToken().trim();
                     Date date = timeStatusFormat.parse(time);
-                    if (date.getTime() >= getMaxTime()) {
+                    if (!(date.getTime() >= getIntervalTime())) {
                         isAdd = false;
                     }
                     statMessages.setTime(time);
@@ -191,20 +191,30 @@ public class StatusManager {
             StatMessage message = messages[i];
             Date date = null;
             try {
-                date = timeStatusFormat.parse(message.getTime());               
+                date = timeStatusFormat.parse(message.getTime());
             } catch (ParseException e) {
                 logger.error("ParseException: " + e.getMessage());
             }
-            if ((date != null) && (date.getTime() < getMaxTime())) {
+            if ((date != null) && (date.getTime() < getIntervalTime())) {
                 statMessages.remove(message);
             }
         }
     }
 
-    private long getMaxTime() {
-        Calendar startTime = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
-        startTime.setTimeInMillis(startTime.getTimeInMillis() - getStorageTime());
-        return startTime.getTimeInMillis();
+    private long getIntervalTime() {
+        Date date = new Date();
+        Calendar calendarGMT = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        SimpleDateFormat dateFormatGMT = new SimpleDateFormat(Constants.TIME_STATUS_RECORD_FORMAT);
+        dateFormatGMT.setTimeZone(TimeZone.getTimeZone("GMT"));
+        synchronized (calendar) {
+            calendarGMT.setTimeInMillis(calendar.getTimeInMillis() - getShowInterval());
+            try {
+                date = timeStatusFormat.parse(dateFormatGMT.format(calendarGMT.getTime()));
+            } catch (ParseException e) {
+                logger.error("Parse Exception: " + e.getMessage());
+            }
+        }
+        return date.getTime();
     }
 
     private synchronized void writeToLog(StatMessage message) {
@@ -309,7 +319,7 @@ public class StatusManager {
         }
     }
 
-    public static long getStorageTime() {
-        return storageTime;
+    public static long getShowInterval() {
+        return showInterval;
     }
 }
