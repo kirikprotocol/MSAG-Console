@@ -6,6 +6,7 @@ import ru.sibinco.smpp.appgw.scenario.resources.ScenarioResourceBundleException;
 import ru.sibinco.smpp.appgw.scenario.*;
 import ru.sibinco.smpp.appgw.util.Transliterator;
 import ru.aurorisoft.smpp.Message;
+import ru.sibinco.smpp.MessageData;
 
 import java.util.Properties;
 import java.text.MessageFormat;
@@ -48,12 +49,19 @@ public class ShortcutHelpExecutor extends EntryExecutor
       throw new ScenarioInitializationException(err, e);
     }
   }
-
+  
+//  public ExecutorResponse execute(ScenarioState state) throws ExecutingException
+//  {
+//    return new ExecutorResponse(new String("AAA"), false);
+//  }
+	    
   public ExecutorResponse execute(ScenarioState state) throws ExecutingException
   {
-    Message resp = new Message();   resp.setMessageString(Transliterator.translit(pageShortcuts));
-    Message manual = new Message(); manual.setMessageString(pageManual);
-    return new ExecutorResponse(new Message[]{resp, manual}, true);
+    Message info = new Message();   info.setMessageString(Transliterator.translit(pageShortcuts));
+    MessageData resp = new MessageData(info);    
+    Message man = new Message(); man.setMessageString(pageManual);
+    MessageData manual = new MessageData(man);
+    return new ExecutorResponse(new MessageData[]{resp, manual}, true);
   }
 
 }

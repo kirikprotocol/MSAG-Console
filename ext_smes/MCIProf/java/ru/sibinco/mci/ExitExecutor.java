@@ -38,10 +38,11 @@ public class ExitExecutor implements Executor
 
   public ExecutorResponse execute(ScenarioState state) throws ExecutingException
   {
-    Message resp = new Message();
+//    Message resp = new Message();
     final String msg = pageFormat.format(new Object[] {});
-    resp.setMessageString(Transliterator.translit(msg));
-    return new ExecutorResponse(new Message[]{resp}, true);
+//    resp.setMessageString(Transliterator.translit(msg));
+//    return new ExecutorResponse(new Message[]{resp}, true);
+    return new ExecutorResponse(msg, true);
   }
 
 }

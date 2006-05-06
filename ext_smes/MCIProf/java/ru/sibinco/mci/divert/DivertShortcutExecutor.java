@@ -128,8 +128,9 @@ public class DivertShortcutExecutor extends DivertManagerState implements Execut
       default:
         throw new ExecutingException("Shortcut "+shortcut+" is undefined", ErrorCode.PAGE_EXECUTOR_EXCEPTION);
     }
-    Message resp = new Message(); resp.setMessageString(Transliterator.translit(message));
-    return new ExecutorResponse(resp, true);
+//    Message resp = new Message(); resp.setMessageString(Transliterator.translit(message));
+//    return new ExecutorResponse(resp, true);
+    return new ExecutorResponse(Transliterator.translit(message), false);
   }
 
 }

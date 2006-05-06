@@ -36,10 +36,10 @@ public class MainExecutor implements Executor
       throw new ScenarioInitializationException(err, e);
     }
   }
-
+  
   public ExecutorResponse execute(ScenarioState state) throws ExecutingException
   {
-    Message resp = new Message();
+//    Message resp = new Message();
     Integer strategyInt = (Integer)state.getAttribute(Constants.ATTR_STRATEGY);
     if (strategyInt == null)
       throw new ExecutingException("Strategy is undefined", ErrorCode.PAGE_EXECUTOR_EXCEPTION);
@@ -51,8 +51,9 @@ public class MainExecutor implements Executor
              strategy == Constants.RELEASE_MIXED_STRATEGY) msg = pageFormatAlt.format(new Object[] {});
     else
       throw new ExecutingException("Strategy '"+strategy+"' is invalid", ErrorCode.PAGE_EXECUTOR_EXCEPTION);
-    resp.setMessageString(Transliterator.translit(msg));
+//    resp.setMessageString(Transliterator.translit(msg));
     state.setAttribute(Constants.ATTR_MAIN, Constants.ATTR_MAIN);
-    return new ExecutorResponse(new Message[]{resp}, false);
+//    return new ExecutorResponse(new Message[]{resp}, false);
+    return new ExecutorResponse(Transliterator.translit(msg), false);
   }
 }

@@ -6,6 +6,7 @@ import ru.sibinco.smpp.appgw.scenario.resources.ScenarioResourceBundleException;
 import ru.sibinco.smpp.appgw.scenario.*;
 import ru.sibinco.smpp.appgw.util.Transliterator;
 import ru.aurorisoft.smpp.Message;
+import ru.sibinco.smpp.MessageData;
 
 import java.util.Properties;
 
@@ -40,9 +41,15 @@ public class HelpExecutor implements Executor
 
   public ExecutorResponse execute(ScenarioState state) throws ExecutingException
   {
-    Message resp = new Message();   resp.setMessageString(Transliterator.translit(pageInfo));
-    Message manual = new Message(); manual.setMessageString(pageManual);
-    return new ExecutorResponse(new Message[]{resp, manual}, true);
+
+    Message info = new Message();
+    info.setMessageString(Transliterator.translit(pageInfo));
+    MessageData resp = new MessageData(info);
+    Message man = new Message(); 
+    man.setMessageString(pageManual);
+    MessageData manual = new MessageData(man);
+	
+    return new ExecutorResponse(new MessageData[]{resp, manual}, true);
   }
 
 }

@@ -31,13 +31,19 @@ public class ShortcutErrorExecutor implements Executor
       throw new ScenarioInitializationException("Init failed", e);
     }
   }
-
+  
+//  public ExecutorResponse execute(ScenarioState state) throws ExecutingException
+//  {
+//    return new ExecutorResponse(new String("AAA"), false);
+//  }
+	    
   public ExecutorResponse execute(ScenarioState state) throws ExecutingException
   {
-    Message resp = new Message();
+//    Message resp = new Message();
     final String message = pageShortcutErr.format(new Object[] {});
-    resp.setMessageString(Transliterator.translit(message));
-    return new ExecutorResponse(resp, true);
+//    resp.setMessageString(Transliterator.translit(message));
+//    return new ExecutorResponse(resp, true);
+    return new ExecutorResponse(Transliterator.translit(message), true);
   }
 
 }

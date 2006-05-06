@@ -1,9 +1,15 @@
 package ru.sibinco.mci;
 
+import ru.sibinco.smpp.appgw.scenario.impl.AbstractSQLExecutor;
+import ru.sibinco.smpp.appgw.scenario.ScenarioInitializationException;
 import ru.sibinco.smpp.appgw.scenario.*;
+import ru.sibinco.smpp.MessageData;
+import java.util.*;
+
+//import ru.sibinco.smpp.appgw.scenario.*;
 import ru.sibinco.smpp.appgw.scenario.resources.ScenarioResourceBundle;
-import ru.sibinco.smpp.appgw.util.Transliterator;
-import ru.aurorisoft.smpp.Message;
+//import ru.sibinco.smpp.appgw.util.Transliterator;
+//import ru.aurorisoft.smpp.Message;
 import org.apache.log4j.Category;
 
 import java.util.Properties;
@@ -43,10 +49,11 @@ public class DetailsExecutor  implements Executor
 
   public ExecutorResponse execute(ScenarioState state) throws ExecutingException
   {
-    Message resp = new Message();
+//    Message resp = new Message();
     String page = detailsPage.format(new Object[] {detailsInfo});
-    resp.setMessageString(Transliterator.translit(page));
-    return new ExecutorResponse(new Message[]{resp}, false);
+//    resp.setMessageString(Transliterator.translit(page));
+//    return new ExecutorResponse(new Message[]{resp}, false);
+    return new ExecutorResponse(page, false);
   }
 
 }

@@ -90,4 +90,5 @@ public class Constants
 
   public final static String MCI_PROF_MTF_FILE    = "templates.properties";
   public final static String MCI_PROF_MSC_FILE    = "commutator.properties";
+  public final static String MCI_PROF_STORAGE_FILE= "profstorage.properties";
 }

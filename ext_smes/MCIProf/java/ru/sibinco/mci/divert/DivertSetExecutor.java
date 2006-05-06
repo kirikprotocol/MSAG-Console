@@ -45,19 +45,21 @@ public class DivertSetExecutor extends DivertManagerState implements Executor
   public ExecutorResponse execute(ScenarioState state) throws ExecutingException
   {
     DivertManagerException exc = (DivertManagerException)state.getAttribute(Constants.ATTR_ERROR);
-    Message resp = new Message();
+//    Message resp = new Message();
     if (exc != null) {
       logger.warn("Got stored exception", exc);
       state.removeAttribute(Constants.ATTR_ERROR);
       final String msg = errorFormat.format(new Object [] {getErrorMessage(exc)});
-      resp.setMessageString(Transliterator.translit(msg));
-      return new ExecutorResponse(new Message[]{resp}, true);
+//      resp.setMessageString(Transliterator.translit(msg));
+//      return new ExecutorResponse(new Message[]{resp}, true);
+    return new ExecutorResponse(Transliterator.translit(msg), true);
     }
     DivertInfo info = null;
     try { info = getDivertInfo(state); } catch (DivertManagerException e) {
       final String msg = errorFormat.format(new Object [] {getErrorMessage(e)});
-      resp.setMessageString(Transliterator.translit(msg));
-      return new ExecutorResponse(new Message[]{resp}, true);
+//      resp.setMessageString(Transliterator.translit(msg));
+        return new ExecutorResponse(Transliterator.translit(msg), true);
+//      return new ExecutorResponse(new Message[]{resp}, true);
     }
 
     String reasonValue = null; // show only inactive reasons
@@ -87,7 +89,8 @@ public class DivertSetExecutor extends DivertManagerState implements Executor
 
     if (menuOpts.endsWith("\r\n")) menuOpts = menuOpts.substring(0, menuOpts.length()-2);
     final String msg = pageFormat.format(new Object [] {menuOpts});
-    resp.setMessageString(Transliterator.translit(msg));
-    return new ExecutorResponse(new Message[]{resp}, false);
+//    resp.setMessageString(Transliterator.translit(msg));
+//    return new ExecutorResponse(new Message[]{resp}, false);
+    return new ExecutorResponse(Transliterator.translit(msg), false);
   }
 }

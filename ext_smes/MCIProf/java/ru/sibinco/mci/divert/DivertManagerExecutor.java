@@ -63,16 +63,18 @@ public class DivertManagerExecutor extends DivertManagerState implements Executo
       state.removeAttribute(Constants.ATTR_ERROR);
     }
 
-    Message resp = new Message();
+//    Message resp = new Message();
     if (exc != null) {
       final String msg = errorFormat.format(new Object[] {getErrorMessage(exc)});
-      resp.setMessageString(Transliterator.translit(msg));
-      return new ExecutorResponse(new Message[]{resp}, true);
+//      resp.setMessageString(Transliterator.translit(msg));
+      return new ExecutorResponse(Transliterator.translit(msg), false);
+//      return new ExecutorResponse(new Message[]{resp}, true);
     }
     Object[] args = new Object[] {getValue(info.getBusy()), getValue(info.getNoreply()),
                                   getValue(info.getNotavail()), getValue(info.getUncond())};
     final String msg = pageFormat.format(args);
-    resp.setMessageString(Transliterator.translit(msg));
-    return new ExecutorResponse(new Message[]{resp}, false);
+//    resp.setMessageString(Transliterator.translit(msg));
+//    return new ExecutorResponse(new Message[]{resp}, false);
+    return new ExecutorResponse(Transliterator.translit(msg), false);
   }
 }
