@@ -235,7 +235,6 @@ void StatisticsManager::registerEvent(const SmppStatEvent& se)
 
 void StatisticsManager::registerEvent(const HttpStatEvent& se)
 {
-      // TODO: implement !!!
     MutexGuard  switchGuard(switchLock);
     
     HttpStat* routeSt=0;

@@ -184,7 +184,7 @@ int BillingManagerImpl::Execute()
             } else
             {
                 m_Connected = Reconnect();
-                if (!m_Connected) connectEvent.Wait(20000);
+                if (!m_Connected) connectEvent.Wait(m_TimeOut*1000);
             }
             
         } catch (SCAGException& e)

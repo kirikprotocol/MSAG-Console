@@ -10,16 +10,9 @@ SessionManagerConfig::SessionManagerConfig()
     dir = "";
 }
 
-SessionManagerConfig::SessionManagerConfig(ConfigView& cv)  throw(ConfigException)
+SessionManagerConfig::SessionManagerConfig(ConfigView& cv) throw(ConfigException)
 {
-    try {
-        std::auto_ptr<char> dir_( cv.getString("location") );
-        dir = dir_.get();
-    }catch(ConfigException& e){
-        throw ConfigException(e.what());
-    }catch(...){
-        throw ConfigException("SessionManagerConfig.SessionManagerConfig, Unknown exception.");
-    }
+    init(cv);
 }
 
 SessionManagerConfig::SessionManagerConfig(const std::string& dir_, 
@@ -33,6 +26,9 @@ void SessionManagerConfig::init(ConfigView& cv)   throw(ConfigException)
     try {
         std::auto_ptr<char> dir_( cv.getString("location") );
         dir = dir_.get();
+
+        expireInterval = cv.getInt("expireInterval");
+        if (expireInterval <=0) expireInterval = DEFAULT_EXPIRE_INTERVAL;
     }catch(ConfigException& e){
         throw ConfigException(e.what());
     }catch(...){

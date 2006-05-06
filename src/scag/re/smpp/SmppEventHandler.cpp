@@ -210,7 +210,6 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     {
         smsc_log_debug(logger, "EventHandler cannot start/locate operation. Details: %s", e.what());
         return rs;
-        //TODO: отлуп в стейт-машину
     }
    
     ActionContext context(_constants, session, _command, commandProperty);

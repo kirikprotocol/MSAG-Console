@@ -205,16 +205,16 @@ CSmppDiscriptor CommandBrige::getSmppDiscriptor(const SCAGCommand& command)
 
     if (sms.hasIntProperty(Tag::SMPP_ESM_CLASS))
     {
-        //TODO: узнать заказал ли сервис отчёт о доставке
+        //узнаём транзакционная или нет доставка
         int esm_class = sms.getIntProperty(Tag::SMPP_ESM_CLASS);
         transact = ((esm_class&2) == 2);
     }
 
     if (sms.hasIntProperty(Tag::SMPP_REGISTRED_DELIVERY))
     {
-        //TODO: узнать заказал ли сервис отчёт о доставке
-        int esm_class = sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY);
-        req_receipt = ((esm_class&3) > 0);
+        //узнаём заказал ли сервис отчёт о доставке
+        int reg_delivery = sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY);
+        req_receipt = ((reg_delivery&3) > 0);
     } 
 
     SmppDiscriptor.m_waitReceipt = ((!transact)&&(req_receipt));

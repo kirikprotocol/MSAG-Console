@@ -5,7 +5,6 @@ namespace scag { namespace re {
 
 struct RuleStatus
 {
-    //TODO: Think ;)
     int result;
     bool status;
     bool temporal;

@@ -245,7 +245,6 @@ void SessionManagerImpl::init(const SessionManagerConfig& _config) // possible t
         smsc_log_debug(logger,"SessionManager:: URM = '%d', Address = '%s', has pending = '%d'",(*it)->SessionKey.USR,(*it)->SessionKey.abonentAddr.toString().c_str(),(*it)->hasPending);
     }
 
-
     smsc_log_debug(logger,"SessionManager::initialized");
 }
 
@@ -321,7 +320,7 @@ int SessionManagerImpl::processExpire()
 
     while (1) 
     {
-        if (SessionExpirePool.empty()) return SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
+        if (SessionExpirePool.empty()) return config.expireInterval;
 
         CSessionSetIterator it;
         for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();++it)
@@ -347,10 +346,10 @@ int SessionManagerImpl::processExpire()
             {
                 it = SessionExpirePool.begin();
                 iPeriod = ((*it)->nextWakeTime - now);
-                if (iPeriod <= 0) return SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
+                if (iPeriod <= 0) return config.expireInterval;
                 else return iPeriod;
             }
-            else return SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
+            else return config.expireInterval;
         }
 
         iPeriod = (*it)->nextWakeTime - now;
