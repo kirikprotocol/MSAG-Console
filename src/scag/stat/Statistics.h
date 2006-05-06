@@ -200,7 +200,7 @@ using smsc::smeman::SmeRecord;
         uint16_t sEventType;
     public:
         uint8_t  pAbonentsNumbers[MAX_NUMBERS_TEXT_LENGTH];
-        uint16_t pAddressEmail[MAX_EMAIL_ADDRESS_LENGTH];
+        uint8_t pAddressEmail[MAX_EMAIL_ADDRESS_LENGTH];
         uint16_t pMessageText[MAX_TEXT_MESSAGE_LENGTH];
 		uint8_t  pDeliveryTime[DELEVIRY_TIME_LENGTH];
 		uint8_t  cCriticalityLevel;
