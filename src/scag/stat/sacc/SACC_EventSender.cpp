@@ -75,9 +75,10 @@ bool EventSender::processEvent(void *ev)
  {
 	 case sec_transport:
 	  {
-		   SACC_TRAFFIC_INFO_EVENT_t e;
-		   memcpy(&e,ev,sizeof(SACC_TRAFFIC_INFO_EVENT_t));
+		   SACC_TRAFFIC_INFO_EVENT_t e((SACC_TRAFFIC_INFO_EVENT_t*)ev);
+		   //memcpy(&e,ev,sizeof(SACC_TRAFFIC_INFO_EVENT_t));
 		   delete (SACC_TRAFFIC_INFO_EVENT_t*)ev;
+
 		   performTransportEvent(e);
 		   smsc_log_debug(logger,"EventSender::Execute Sacc stat TRAFFIC event  processed from queue addr=0x%X",evType,ev);
 	  }
@@ -85,8 +86,8 @@ bool EventSender::processEvent(void *ev)
 
 	 case sec_bill:
 	  {
-		   SACC_BILLING_INFO_EVENT_t e;
-		   memcpy(&e,ev,sizeof(SACC_BILLING_INFO_EVENT_t));
+		   SACC_BILLING_INFO_EVENT_t e((SACC_BILLING_INFO_EVENT_t*)ev);
+		   //memcpy(&e,ev,sizeof(SACC_BILLING_INFO_EVENT_t));
 		   delete (SACC_BILLING_INFO_EVENT_t*)ev;
 		   performBillingEvent(e);
 		   smsc_log_debug(logger,"EventSender::Execute Sacc stat BILLING event  processed from queue addr=0x%X",evType,ev);
@@ -95,8 +96,8 @@ bool EventSender::processEvent(void *ev)
 
 	 case sec_alarm_message:
 	  {
-		   SACC_ALARM_MESSAGE_t e;
-		   memcpy(&e,ev,sizeof(SACC_ALARM_MESSAGE_t));
+		   SACC_ALARM_MESSAGE_t e((SACC_ALARM_MESSAGE_t*)ev);
+		   //memcpy(&e,ev,sizeof(SACC_ALARM_MESSAGE_t));
 		   delete (SACC_ALARM_MESSAGE_t*)ev;
 		   performAlarmMessageEvent(e);
 		   smsc_log_debug(logger,"EventSender::Execute Sacc stat ALARM_MESSAGE  processed from queue addr=0x%X",evType,ev);
@@ -105,8 +106,8 @@ bool EventSender::processEvent(void *ev)
 
 	 case sec_alarm:
 	  {
-		   SACC_ALARM_t e;
-		   memcpy(&e,ev,sizeof(SACC_ALARM_t));
+		   SACC_ALARM_t e((SACC_ALARM_t*)ev);
+		   //memcpy(&e,ev,sizeof(SACC_ALARM_t));
 		   delete (SACC_ALARM_t*)ev;
 		   performAlarmEvent(e);
 		   smsc_log_debug(logger,"EventSender::Execute Sacc stat ALARM event  processed from queue addr=0x%X",evType,ev);
@@ -277,15 +278,16 @@ void EventSender::Put(const SACC_ALARM_MESSAGE_t & ev)
  
 void EventSender::performTransportEvent(const SACC_TRAFFIC_INFO_EVENT_t& e)
 {
-
+ uint16_t len=0;
  pdubuffer.setPos(sizeof(uint32_t));///header plase 
  pdubuffer.WriteNetInt16(e.getEventType());         
  
- std::string stran;
- stran.assign((char*)e.Header.pAbonentNumber);
+ //std::string stran;
+ //stran.assign((char*)e.Header.pAbonentNumber);
  
- pdubuffer.WriteNetInt16((uint16_t)stran.length());
- pdubuffer.Write(e.Header.pAbonentNumber,stran.length());
+ len = e.Header.pAbonentNumber.length();
+ pdubuffer.WriteNetInt16(len);
+ pdubuffer.Write(e.Header.pAbonentNumber.c_str(),(len>MAX_ABONENT_NUMBER_LENGTH)?MAX_ABONENT_NUMBER_LENGTH:len);
  pdubuffer.WriteNetInt16(sizeof(uint64_t));
  pdubuffer.WriteNetInt64(e.Header.lDateTime);
  pdubuffer.WriteNetInt16(sizeof(uint32_t));
@@ -294,11 +296,11 @@ void EventSender::performTransportEvent(const SACC_TRAFFIC_INFO_EVENT_t& e)
  pdubuffer.WriteNetInt32(e.Header.iServiceProviderId);
  pdubuffer.WriteNetInt16(sizeof(uint32_t));
  pdubuffer.WriteNetInt32(e.Header.iServiceId);
- std::string strsk;
- strsk.assign((char*)e.pSessionKey);
- 
- pdubuffer.WriteNetInt16((uint16_t)strsk.length());
- pdubuffer.Write(e.pSessionKey,strsk.length());
+ //std::string strsk;
+ //strsk.assign((char*)e.pSessionKey);
+ len = e.pSessionKey.length();
+ pdubuffer.WriteNetInt16(len);
+ pdubuffer.Write(e.pSessionKey.c_str(),(len>MAX_SESSION_KEY_LENGTH)?MAX_SESSION_KEY_LENGTH:len);
  pdubuffer.WriteNetInt16(1);
  pdubuffer.WriteByte(e.Header.cProtocolId);
  pdubuffer.WriteNetInt16(1);
@@ -306,13 +308,14 @@ void EventSender::performTransportEvent(const SACC_TRAFFIC_INFO_EVENT_t& e)
  pdubuffer.WriteNetInt16(2);
  pdubuffer.WriteNetInt16(e.Header.sCommandStatus);
 
- uint32_t sz =0;
- while(e.pMessageText[sz]!=0 && sz < MAX_TEXT_MESSAGE_LENGTH )
- {
-   sz++;
- }
- pdubuffer.WriteNetInt16(sz*sizeof(uint16_t));
- pdubuffer.Write(e.pMessageText,sz*sizeof(uint16_t));
+ //uint32_t sz =0;
+ //while(e.pMessageText[sz]!=0 && sz < MAX_TEXT_MESSAGE_LENGTH )
+ //{
+  // sz++;
+ //}
+ len = e.pMessageText.size();
+ pdubuffer.WriteNetInt16(len);
+ pdubuffer.Write(e.pMessageText.c_str(),(len>MAX_TEXT_MESSAGE_LENGTH*2)?MAX_TEXT_MESSAGE_LENGTH*2:len);
  pdubuffer.WriteNetInt16(1);
  pdubuffer.WriteByte(e.cDirection);
  uint32_t bsize= pdubuffer.getPos();
@@ -327,14 +330,16 @@ void EventSender::performTransportEvent(const SACC_TRAFFIC_INFO_EVENT_t& e)
 
 void EventSender::performBillingEvent(const SACC_BILLING_INFO_EVENT_t& e)
 {
-	
+
+ uint16_t len =0;
  pdubuffer.setPos(sizeof(uint32_t));///header plase 
  pdubuffer.WriteNetInt16(e.getEventType()); 
  
- std::string stran;
- stran.assign((char*)e.Header.pAbonentNumber);
- pdubuffer.WriteNetInt16((uint16_t)stran.length());
- pdubuffer.Write(e.Header.pAbonentNumber,stran.length());
+ //std::string stran;
+ //stran.assign((char*)e.Header.pAbonentNumber);
+ len = (e.Header.pAbonentNumber.length() >MAX_ABONENT_NUMBER_LENGTH)?MAX_ABONENT_NUMBER_LENGTH:e.Header.pAbonentNumber.length() ;
+ pdubuffer.WriteNetInt16(len);
+ pdubuffer.Write(e.Header.pAbonentNumber.c_str(),len);
  pdubuffer.WriteNetInt16(sizeof(uint64_t));
  pdubuffer.WriteNetInt64(e.Header.lDateTime);
  pdubuffer.WriteNetInt16(sizeof(uint32_t));
@@ -344,10 +349,11 @@ void EventSender::performBillingEvent(const SACC_BILLING_INFO_EVENT_t& e)
  pdubuffer.WriteNetInt16(sizeof(uint32_t));
  pdubuffer.WriteNetInt32(e.Header.iServiceId);
 
- std::string strsk;
- strsk.assign((char*)e.pSessionKey);
- pdubuffer.WriteNetInt16((uint16_t)strsk.length());
- pdubuffer.Write(e.pSessionKey,strsk.length());
+ //std::string strsk;
+ //strsk.assign((char*)e.pSessionKey);
+ len = (e.pSessionKey.length()>MAX_SESSION_KEY_LENGTH)?MAX_SESSION_KEY_LENGTH:e.pSessionKey.length();
+ pdubuffer.WriteNetInt16(len);
+ pdubuffer.Write(e.pSessionKey.c_str(),len);
  pdubuffer.WriteNetInt16(1);
  pdubuffer.WriteByte(e.Header.cProtocolId);
  pdubuffer.WriteNetInt16(1);
@@ -361,10 +367,11 @@ void EventSender::performBillingEvent(const SACC_BILLING_INFO_EVENT_t& e)
  pdubuffer.WriteNetInt16(sizeof(float));
  pdubuffer.Write(&e.fBillingSumm,sizeof(float));
 
- std::string strbcur;
- strbcur.assign((char*)e.pBillingCurrency);
- pdubuffer.WriteNetInt16((uint16_t)strbcur.length());
- pdubuffer.Write(e.pBillingCurrency,strbcur.length());
+ //std::string strbcur;
+ //strbcur.assign((char*)e.pBillingCurrency);
+ len =  (e.pBillingCurrency.length()>MAX_BILLING_CURRENCY_LENGTH)?MAX_BILLING_CURRENCY_LENGTH:e.pBillingCurrency.length();
+ pdubuffer.WriteNetInt16(len);
+ pdubuffer.Write(e.pBillingCurrency.c_str(),len);
 
  uint32_t bsize= pdubuffer.getPos();
  pdubuffer.setPos(0);
@@ -379,30 +386,38 @@ void EventSender::performBillingEvent(const SACC_BILLING_INFO_EVENT_t& e)
 
 void EventSender::performAlarmMessageEvent(const SACC_ALARM_MESSAGE_t& e)
 {
- 
+ uint16_t len =0;
  pdubuffer.setPos(sizeof(uint32_t));///header plase 
  pdubuffer.WriteNetInt16(e.getEventType()); 
  
- std::string stran;
- stran.assign((char*)e.pAbonentsNumbers);
- pdubuffer.WriteNetInt16((uint16_t)stran.length());
- pdubuffer.Write(e.pAbonentsNumbers,stran.length());
+ //std::string stran;
+ //stran.assign((char*)e.pAbonentsNumbers);
+ len = (e.pAbonentsNumbers.length()>MAX_NUMBERS_TEXT_LENGTH)?MAX_NUMBERS_TEXT_LENGTH:e.pAbonentsNumbers.length();
 
- std::string stremail;
- stremail.assign((char*)e.pAddressEmail);
- pdubuffer.WriteNetInt16((uint16_t)stremail.length());
- pdubuffer.Write(e.pAddressEmail,stremail.length());
+ pdubuffer.WriteNetInt16(len);
+ pdubuffer.Write(e.pAbonentsNumbers.c_str(),len);
+
+ //std::string stremail;
+ //stremail.assign((char*)e.pAddressEmail);
+ len = (e.pAddressEmail.length()>MAX_EMAIL_ADDRESS_LENGTH)?MAX_EMAIL_ADDRESS_LENGTH:e.pAddressEmail.length();
+ pdubuffer.WriteNetInt16(len);
+ pdubuffer.Write(e.pAddressEmail.c_str(),len);
  
- uint32_t sz =0;
- while(e.pMessageText[sz]!=0 && sz < MAX_TEXT_MESSAGE_LENGTH )
- {
-   sz++;
- }
- pdubuffer.WriteNetInt16(sz*sizeof(uint16_t));
- pdubuffer.Write(e.pMessageText,sz*sizeof(uint16_t));
+// uint32_t sz =0;
+// while(e.pMessageText[sz]!=0 && sz < MAX_TEXT_MESSAGE_LENGTH )
+// {
+//   sz++;
+// }
+ len =  (e.pMessageText.size()>MAX_TEXT_MESSAGE_LENGTH*2)?MAX_TEXT_MESSAGE_LENGTH*2:e.pMessageText.size();
+ pdubuffer.WriteNetInt16(len);
+ pdubuffer.Write(e.pMessageText.c_str(),len);
 
- pdubuffer.WriteNetInt16((uint16_t)DELEVIRY_TIME_LENGTH);
- pdubuffer.Write(e.pDeliveryTime,DELEVIRY_TIME_LENGTH);
+ //pdubuffer.WriteNetInt16(sz*sizeof(uint16_t));
+ //pdubuffer.Write(e.pMessageText,sz*sizeof(uint16_t));
+
+ len = (e.pDeliveryTime.length() >DELEVIRY_TIME_LENGTH)?DELEVIRY_TIME_LENGTH:e.pDeliveryTime.length() ;
+ pdubuffer.WriteNetInt16(len);
+ pdubuffer.Write(e.pDeliveryTime.c_str(),len);
 
  pdubuffer.WriteNetInt16(1);
  pdubuffer.WriteByte(e.cCriticalityLevel);
@@ -421,12 +436,16 @@ void EventSender::performAlarmMessageEvent(const SACC_ALARM_MESSAGE_t& e)
 
 void EventSender::performAlarmEvent(const SACC_ALARM_t& e)
 {
+	uint16_t len=0;
  pdubuffer.setPos(sizeof(uint32_t));///header plase 
  pdubuffer.WriteNetInt16(e.getEventType()); 
- std::string stran;
- stran.assign((char*)e.Header.pAbonentNumber);
- pdubuffer.WriteNetInt16((uint16_t)stran.length());//an
- pdubuffer.Write(e.Header.pAbonentNumber,stran.length());//an
+ //std::string stran;
+ //stran.assign((char*)e.Header.pAbonentNumber);
+ len = (e.Header.pAbonentNumber.length()>MAX_ABONENT_NUMBER_LENGTH)?MAX_ABONENT_NUMBER_LENGTH:e.Header.pAbonentNumber.length();
+ 
+ pdubuffer.WriteNetInt16(len);//stran.length());//an
+ pdubuffer.Write(e.Header.pAbonentNumber.c_str(),len);//an
+
  pdubuffer.WriteNetInt16(sizeof(uint64_t));
  pdubuffer.WriteNetInt64(e.Header.lDateTime);
  pdubuffer.WriteNetInt16(sizeof(uint32_t));
@@ -435,10 +454,11 @@ void EventSender::performAlarmEvent(const SACC_ALARM_t& e)
  pdubuffer.WriteNetInt32(e.Header.iServiceProviderId);
  pdubuffer.WriteNetInt16(sizeof(uint32_t));
  pdubuffer.WriteNetInt32(e.Header.iServiceId);
- std::string strsk;
- strsk.assign((char*)e.pSessionKey);
- pdubuffer.WriteNetInt16((uint16_t)strsk.length());
- pdubuffer.Write(e.pSessionKey,strsk.length());
+ //std::string strsk;
+ //strsk.assign((char*)e.pSessionKey);
+ len = (e.pSessionKey.length()>MAX_SESSION_KEY_LENGTH)?MAX_SESSION_KEY_LENGTH:e.pSessionKey.length();
+ pdubuffer.WriteNetInt16(len);
+ pdubuffer.Write(e.pSessionKey.c_str(),len);
 
  pdubuffer.WriteNetInt16(1);
  pdubuffer.WriteByte(e.Header.cProtocolId);
@@ -447,13 +467,18 @@ void EventSender::performAlarmEvent(const SACC_ALARM_t& e)
  pdubuffer.WriteNetInt16(2);
  pdubuffer.WriteNetInt16(e.Header.sCommandStatus);
  
-  uint32_t sz =0;
- while(e.pMessageText[sz]!=0 && sz < MAX_TEXT_MESSAGE_LENGTH )
- {
-   sz++;
- }
- pdubuffer.WriteNetInt16(sz*sizeof(uint16_t));
- pdubuffer.Write(e.pMessageText,sz*sizeof(uint16_t));
+ // uint32_t sz =0;
+ //while(e.pMessageText[sz]!=0 && sz < MAX_TEXT_MESSAGE_LENGTH )
+ //{
+ //  sz++;
+// }
+ len =  (e.pMessageText.size()>MAX_TEXT_MESSAGE_LENGTH*2)?MAX_TEXT_MESSAGE_LENGTH*2:e.pMessageText.size();
+ pdubuffer.WriteNetInt16(len);
+ pdubuffer.Write(e.pMessageText.c_str(),len);
+
+ //pdubuffer.WriteNetInt16(sz*sizeof(uint16_t));
+ //pdubuffer.Write(e.pMessageText,sz*sizeof(uint16_t));
+
  pdubuffer.WriteNetInt16(1);//!!!!!
  pdubuffer.WriteByte(e.cDirection);
  
