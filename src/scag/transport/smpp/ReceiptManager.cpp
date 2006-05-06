@@ -103,16 +103,6 @@ ReceiptManager& ReceiptManager::Instance()
 
 /*
 
-waitReceipt(svc : Address, key : SessionKey)
-Увеличивает счётчик ожиданий отчётов для svc и SessionKey. Вызывается при обработке SUBMIT_SM если заказан отчёт
-   
-cancelReceipt(svc : Address,key : SessionKey)
-Уменьшает счётчик ожиданий отчётов для svc и SessionKey. Вызывается при обработке SUBMIT_SM_RESP failed (также и по тайм-ауту операций SUBMIT и RECEIPT).
-
-updateReceipt(svc : Address, key : SessionKey,smsc_msg_id : string,receipt : SCAGCommand&) : int
-Проверяет есть ли ожидание отчёта для svc и SessionKey. Если нет то возвращает -1. Иначе по smsc_msg_id ищет  запись. Если записи нет, то добавляет новую с полем session, поле receipt пустое; возвращает 0. Если запись есть и поле receipt непустое, то устанавливает sessionKey; возвращает 1 и поле receipt, уменьшает счётчик ожиданий по svc и SessionKey.
-Вызывается при обработке SUBMIT_SM_RESP ok.
-
 registerReceipt(svc : Address, smsc_msg_id : string, receipt : SCAGCommand, key : SessionKey&) : int
 Если ожиданий по этому svc нет вообще, то возвращает -1. Иначе по smsc_msg_id ищет  запись. Если записи нет, то добавляет новую, выставляет поле receipt, поле session пустое; возвращает 0.
 Иначе, если запись есть и поле session  не пустое, то возвращает 1 и поле session; уменьшает счётчик по svc и SessionKey.
@@ -132,23 +122,36 @@ void ReceiptManagerImpl::Init(std::string& _storePath) // possible throws except
     smsc_log_debug(logger,"ReceiptManager::initialized");
 }
 
-
+//Увеличивает счётчик ожиданий отчётов для svc и SessionKey. Вызывается при обработке SUBMIT_SM если заказан отчёт
 void ReceiptManagerImpl::waitReceipt(Address& service, CSessionKey& sessionKey)
 {
     MutexGuard guard(inUseMutex);
 }
 
+//Уменьшает счётчик ожиданий отчётов для svc и SessionKey. Вызывается при обработке SUBMIT_SM_RESP failed 
+//(также и по тайм-ауту операций SUBMIT и RECEIPT).
 void ReceiptManagerImpl::cancelReceipt(Address& service, CSessionKey& sessionKey)
 {
     MutexGuard guard(inUseMutex);
     
 }
 
+//Проверяет есть ли ожидание отчёта для svc и SessionKey. Если нет то возвращает -1. 
+//Иначе по smsc_msg_id ищет  запись. Если записи нет, то добавляет новую с полем session, 
+//поле receipt пустое; возвращает 0. Если запись есть и поле receipt непустое, то устанавливает sessionKey; 
+//возвращает 1 и поле receipt, уменьшает счётчик ожиданий по svc и SessionKey.
+//Вызывается при обработке SUBMIT_SM_RESP ok.
+
 int ReceiptManagerImpl::updateReceipt(Address& service, CSessionKey& sessionKey, std::string& smsc_msg_id, SCAGCommand& receiptCommand)
 {
     MutexGuard guard(inUseMutex);
     return 0;
 }
+
+//Если ожиданий по этому svc нет вообще, то возвращает -1. Иначе по smsc_msg_id ищет  запись. 
+//Если записи нет, то добавляет новую, выставляет поле receipt, поле session пустое; возвращает 0.
+//Иначе, если запись есть и поле session  не пустое, то возвращает 1 и поле session; 
+//уменьшает счётчик по svc и SessionKey.
 
 int ReceiptManagerImpl::registerReceipt(Address& service, CSessionKey& sessionKey, std::string& smsc_msg_id, SCAGCommand& receiptCommand)
 {
