@@ -12,6 +12,7 @@
 
     <section name="SessionManager">
 	<param name="location" type="string">@session.location@</param>
+	<param name="expireInterval" type="int">@session.expireInterval@</param>
     </section>
 
     <section name="StatisticsManager">
