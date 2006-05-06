@@ -1,4 +1,3 @@
-#include "HttpLogger.h"
 #include "ScagTask.h"
 #include "Managers.h"
 #include "HttpContext.h"
@@ -8,39 +7,37 @@ namespace scag { namespace transport { namespace http
 
 ScagTask::ScagTask(HttpManager& m, HttpProcessor& p) : manager(m), processor(p)
 {
+    logger = Logger::getInstance("scag.http.scag");
 }
 
 int ScagTask::Execute()
 {
     HttpContext *cx;
 
-    http_log_debug( "Scag %p started", this );
+    smsc_log_debug(logger, "%p started", this);
 
-    while (!isStopping) {
-        while (!((cx = manager.scags.getFirst()) || isStopping)) {
-            http_log_debug("Scag %p idle", this);
-            manager.scags.taskMon.Lock();
-            manager.scags.taskMon.wait();
-            manager.scags.taskMon.Unlock();
-            http_log_debug("Scag %p notified", this);        
-        }
+    for (;;) {
+        while (!((cx = manager.scags.getFirst()) || isStopping))
+            manager.scags.waitForContext();
+
         if (isStopping)
-	    break;
+            break;
 
-        http_log_debug("Scag %p choosen for context %p", this, cx);
+        smsc_log_debug(logger, "%p choosen for context %p", this, cx);
 
         switch (cx->action) {
         case PROCESS_REQUEST:
-            http_log_debug("Scag %p: %p, call to processRequest()", this, cx);
+            smsc_log_debug(logger, "%p: %p, call to processRequest()", this, cx);
             if (processor.processRequest(cx->getRequest())) {
-                http_log_info("Scag %p: %p, request approved", this, cx);
+                smsc_log_info(logger, "%p: %p, request approved", this, cx);
                 cx->getRequest().serialize();
+                smsc_log_debug(logger, "request %s", cx->getRequest().headers.c_str());
                 cx->action = SEND_REQUEST;
                 manager.writers.process(cx);                               
                 break;
             }
             else {
-                http_log_info("Scag %p: %p, request denied", this, cx);
+                smsc_log_info(logger, "%p: %p, request denied", this, cx);
                 cx->result = 503;          
                 // no break, go to the case PROCESS_RESPONSE
             }
@@ -49,19 +46,19 @@ int ScagTask::Execute()
                 int status = cx->result;
 
                 if (status == 0) {
-                    http_log_debug("Scag %p: %p, call to processResponse()", this, cx);
+                    smsc_log_debug(logger, "%p: %p, call to processResponse()", this, cx);
                     if (processor.processResponse(cx->getResponse())) {
-                        http_log_info("Scag %p: %p, response approved", this, cx);
+                        smsc_log_info(logger, "%p: %p, response approved", this, cx);
                     }
                     else {
-                        http_log_info("Scag %p: %p, response denied", this, cx);
+                        smsc_log_info(logger, "%p: %p, response denied", this, cx);
                         status = 503;
                     }
                 }
 
                 if (status) {
                     cx->createFakeResponse(status);
-                    http_log_warn("Scag %p: %p, status %d, fake response created",
+                    smsc_log_warn(logger, "%p: %p, status %d, fake response created",
                         this, cx, status);
                 }
             }
@@ -76,14 +73,14 @@ int ScagTask::Execute()
 
                 if (cx->result) {
                     cx->createFakeResponse(cx->result);
-                    http_log_warn("Scag %p: %p, status %d, fake response created",
+                    smsc_log_warn(logger, "%p: %p, status %d, fake response created",
                         this, cx, cx->result);
                     delivered = false;
                 }
                 else {
                     delivered = true;
                 }
-                http_log_debug("Scag %p: %p, call to statusResponse(%s)",
+                smsc_log_debug(logger, "%p: %p, call to statusResponse(%s)",
                         this, cx, delivered ? "true" : "false");
                 processor.statusResponse(cx->getResponse(), delivered);
                 delete cx;
@@ -91,7 +88,10 @@ int ScagTask::Execute()
         }
     }
 
-    http_log_debug( "Scag %p quit", this );
+    if (cx)
+        delete cx;
+
+    smsc_log_debug(logger, "%p quit", this);
 
     return 0;
 }
@@ -102,9 +102,8 @@ const char* ScagTask::taskName() {
 
 void ScagTask::stop() {
     isStopping = true;
-    manager.scags.taskMon.Lock();
-    manager.scags.taskMon.notify();    
-    manager.scags.taskMon.Unlock();
+
+    manager.scags.wakeTask();
 }
 
 }}}

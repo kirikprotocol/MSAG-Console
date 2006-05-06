@@ -36,9 +36,6 @@ public:
         unparsed(DFLT_BUF_SIZE)
     {
         setContext(user, this); 
-        cntMut.Lock();
-        count++;
-        cntMut.Unlock();
     }
 
     ~HttpContext();
@@ -61,6 +58,12 @@ public:
         unparsed.SetPos(0);  
     }
     
+    static void setConnected(Socket* s, bool c) {
+        s->setData(CONNECT_FLAG, (void*)c);
+    }
+    static bool getConnected(Socket* s) {
+        return (bool)s->getData(CONNECT_FLAG);
+    }
     static HttpContext* getContext(Socket* s) {
         return (HttpContext *)s->getData(CONTEXT);
     }
@@ -73,17 +76,14 @@ public:
     static time_t getTimestamp(Socket* s) {
         return (time_t)s->getData(TIMESTAMP);
     }
-    static unsigned int getCount() {
-	return count;
-    }
     
     TransactionContext &getTransactionContext() {
         return trc;
     }
 
-    void setDestiny(int status, unsigned int _flags) {
-        this->result = status;
-        this->flags = _flags;
+    void setDestiny(int status, unsigned int flag) {
+        result = status;
+        this->flags = flag;
     }
     void nextAction() {
         action = actionNext[action];
@@ -120,13 +120,12 @@ public:
 protected:
     enum DataKeys {
         CONTEXT,
-        TIMESTAMP
+        TIMESTAMP,
+        CONNECT_FLAG
     };
 
     static ActionID actionNext[8];
     static const char *taskName[8];
-    static Mutex cntMut;
-    static unsigned int count;    
 
     TmpBuf<char, DFLT_BUF_SIZE> unparsed;
     TransactionContext trc;

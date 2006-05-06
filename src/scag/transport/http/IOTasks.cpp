@@ -1,6 +1,5 @@
 #include <errno.h>
 #include <time.h>
-#include "HttpLogger.h"
 #include "IOTasks.h"
 #include "HttpContext.h"
 #include "Managers.h"
@@ -8,8 +7,6 @@
 
 #define READER_BUF_SIZE 8192
 #define SOCKOP_TIMEOUT 1000
-
-//extern void printHex(const char *buffer, long length);
 
 namespace scag { namespace transport { namespace http
 {
@@ -68,24 +65,28 @@ bool IOTask::isTimedOut(Socket* s, time_t now) {
 void IOTask::removeSocket(Multiplexer::SockArray &error) {
     if (error.Count()) {
         unsigned int nsub;
-        Socket *s;
-                
-        sockMon.Lock();
-        nsub = error.Count();
-        while (error.Count()) {
-            error.Pop(s);
-            killSocket(s);
+            
+        {
+            Socket *s;      
+            MutexGuard g(sockMon);
+
+            nsub = error.Count();
+            while (error.Count()) {
+                error.Pop(s);
+                killSocket(s);
+            }
         }
-        sockMon.Unlock();
 
         iomanager.removeContext(this, nsub);
     }
 }
 
 void IOTask::removeSocket(Socket *s) {
-    sockMon.Lock();    
-    multiplexer.remove(s);
-    sockMon.Unlock();
+    {
+        MutexGuard g(sockMon);
+
+        multiplexer.remove(s);
+    }
     
     iomanager.removeContext(this, 1);
 }
@@ -98,6 +99,32 @@ void IOTask::deleteSocket(Socket *s, char *buf, int how) {
     delete s;
 }
 
+void IOTask::checkConnectionTimeout(Multiplexer::SockArray& error)
+{
+    /* check connection timeout */
+    error.Empty();
+    time_t now = time(NULL);
+    for (int i = 0; i < multiplexer.Count(); i++)
+    {
+        Socket *s =  multiplexer.getSocket(i);
+
+        if (isTimedOut(s, now))
+        {
+            HttpContext *cx = HttpContext::getContext(s);
+                    
+            if (cx->action == SEND_REQUEST)
+                cx->setDestiny(503, FAKE_RESP | DEL_SITE_SOCK);
+            else if (cx->action == SEND_RESPONSE)
+                cx->setDestiny(500, STAT_RESP | DEL_USER_SOCK);
+            else if (cx->action == READ_REQUEST)
+                cx->setDestiny(503, DEL_CONTEXT);
+            else if (cx->action == READ_RESPONSE)
+                cx->setDestiny(503, FAKE_RESP);
+            error.Push(s);
+        }
+    }
+}
+
 int HttpReaderTask::Execute()
 {
     Multiplexer::SockArray ready;
@@ -106,55 +133,46 @@ int HttpReaderTask::Execute()
     unsigned int i;
     time_t now;    
 
-    http_log_debug( "Reader %p started", this );
+    smsc_log_debug(logger, "%p started", this);
     
-    //http_log_debug( "HttpReaderTask::sockMon == %p", &sockMon );
-    
-    while (!isStopping) {
+    for (;;) {
         {
             MutexGuard g(sockMon);
 
             while (!(socketCount || isStopping)) {
-                http_log_debug("Reader %p idle", this);
+                smsc_log_debug(logger, "%p idle", this);
                 sockMon.wait();         
-                http_log_debug("Reader %p notified", this);
+                smsc_log_debug(logger, "%p notified", this);
             }
             if (isStopping)
                 break;
             
-            /* check connection timeout */
-            error.Empty();
-            now = time(NULL);
-            for (i = 0; i < multiplexer.Count(); i++) {
-                Socket *s =  multiplexer.getSocket(i);
-
-                if (isTimedOut(s, now)) {
-                    HttpContext *cx = HttpContext::getContext(s);
-                    
-                    http_log_error("Reader %p: %p timed out", this, cx);
-                    cx->setDestiny(503, cx->action == READ_RESPONSE ?
-                        FAKE_RESP : DEL_CONTEXT);
-                    error.Push(s);
-                }
+            while(waitingAdd.Count())
+            {
+                Socket *s;
+                waitingAdd.Pop(s);
+                multiplexer.add(s);
             }
         }
 
+        checkConnectionTimeout(error);
+
         removeSocket(error);
 
-        //http_log_debug("Reader %p: entering the multiplexer");
-
         if (multiplexer.canRead(ready, error, SOCKOP_TIMEOUT) > 0) {
-            for (i = 0; i < error.Count(); i++) {
+            smsc_log_debug(logger, "%p Start", this);
+            for (i = 0; i < (unsigned int)error.Count(); i++) {
                 Socket *s = error[i];           
                 HttpContext *cx = HttpContext::getContext(s);
                 
-                http_log_error("Reader %p: %p failed", this, cx);
+                smsc_log_error(logger, "%p: %p failed", this, cx);
                 cx->setDestiny(503, cx->action == READ_RESPONSE ?
                     FAKE_RESP | DEL_SITE_SOCK : DEL_CONTEXT);
             }
-
+            smsc_log_debug(logger, "%p After Errors handled", this);
             now = time(NULL);
-            for (i = 0; i < ready.Count(); i++) {
+            for (i = 0; i < (unsigned int)ready.Count(); i++) {
+                smsc_log_debug(logger, "%p ready handling(cur=%d, total=%d)", this, i, ready.Count());
                 Socket *s = ready[i];
                 HttpContext *cx = HttpContext::getContext(s);
                 unsigned int unparsed_len;
@@ -166,33 +184,32 @@ int HttpReaderTask::Execute()
                 while (len == -1 && errno == EINTR);
 
                 if (len > 0 || (len == 0 && cx->action == READ_RESPONSE)) {
-                    http_log_debug("Reader %p: %p, data received", this, cx);
+                    smsc_log_debug(logger, "%p: %p, data received", this, cx);
                     unparsed_len += len;
                     len = unparsed_len;
 
                     //printHex(buf, unparsed_len);
-                                                    
+                   smsc_log_debug(logger, "<<<<<%p: %p before parse buf=%p, len=%d", this, cx, buf, unparsed_len); 
                     switch (HttpParser::parse(buf, unparsed_len, *cx)) {
                     case OK:
                         removeSocket(s);
                         if (cx->action == READ_RESPONSE) {
-                            http_log_debug("Reader %p: %p, response parsed", this, cx);
+                            smsc_log_debug(logger, "%p: %p, response parsed", this, cx);
                             //cx->setDestiny(0, DEL_SITE_SOCK);
                             deleteSocket(s, buf, SHUT_RD);
                             cx->site = NULL;
                             cx->action = PROCESS_RESPONSE;
                         }
                         else {
-                            http_log_debug("Reader %p: %p, request parsed", this, cx);
+                            smsc_log_debug(logger, "%p: %p, request parsed", this, cx);
                             //cx->setDestiny(0, 0);                            
                             cx->action = PROCESS_REQUEST;
                         }
                         cx->result = 0;
                         manager.scags.process(cx);
-                        //http_log_debug("Reader %p: finished", this);
                         break;
                     case ERROR:
-                        http_log_error("Reader %p: %p, parse error", this, cx);
+                        smsc_log_error(logger, "%p: %p, parse error", this, cx);
                         cx->setDestiny(405, cx->action == READ_RESPONSE ?
                             (FAKE_RESP | DEL_SITE_SOCK) : FAKE_RESP);
                         error.Push(s);
@@ -203,31 +220,31 @@ int HttpReaderTask::Execute()
                     }
                 }
                 else {                    
-                    http_log_error("Reader %s: %p, read error", this, cx);
+                    smsc_log_error(logger, "%p: %p, read error", this, cx);
                     cx->setDestiny(405, cx->action == READ_RESPONSE ?
                         (FAKE_RESP | DEL_SITE_SOCK) : DEL_CONTEXT);
                     error.Push(s);
                 }
+                smsc_log_debug(logger, "%p: %p ready handling end(cur=%d, total=%d)", this, cx, i, ready.Count());
             }
 
             removeSocket(error);
+            smsc_log_debug(logger, "%p, End", this);
         }
     }
 
     {
         Socket *s;
-        sockMon.Lock();
+        MutexGuard g(sockMon);
 
         while (multiplexer.Count()) {
             s = multiplexer.getSocket(0);           
             HttpContext::getContext(s)->setDestiny(0, DEL_CONTEXT);
             killSocket(s);
         }
-        
-        sockMon.Unlock();
     }
     
-    http_log_debug( "Reader %p quit", this );
+    smsc_log_debug(logger, "%p quit", this);
     
     return 0;
 }
@@ -257,74 +274,65 @@ int HttpWriterTask::Execute()
     unsigned int i;
     time_t now;
 
-    http_log_debug( "Writer %p started", this );
-
-    //http_log_debug( "HttpWriterTask::sockMon == %p", &sockMon );
+    smsc_log_debug(logger, "%p started");
     
-    while (!isStopping) {
+    for (;;) {
         {
             MutexGuard g(sockMon);
-
+            smsc_log_debug(logger, "%p Start", this);
             while (!(socketCount || isStopping)) {
-                http_log_debug("Writer %p idle", this);
+                smsc_log_debug(logger, "%p idle", this);
                 sockMon.wait();
-                http_log_debug("Writer %p notified", this);
+                smsc_log_debug(logger, "%p notified", this);
             }
             if (isStopping)
                 break;
             
-            /* check connection timeout */
-            error.Empty();
-            now = time(NULL);
-            for (i = 0; i < multiplexer.Count(); i++) {
-                Socket *s =  multiplexer.getSocket(i);
-
-                if (isTimedOut(s, now)) {
-                    HttpContext *cx = HttpContext::getContext(s);
-                    
-                    http_log_error("Writer %p: %p timed out", this, cx);
-                    if (cx->action == SEND_REQUEST)
-                        cx->setDestiny(503, FAKE_RESP | DEL_SITE_SOCK);
-                    else
-                        cx->setDestiny(500, STAT_RESP | DEL_USER_SOCK);
-                    error.Push(s);
-                }
-            }
-            
-            /* connect */
-            while (waitingConnect.Count()) {
+            while(waitingAdd.Count())
+            {
                 Socket *s;
+                waitingAdd.Pop(s);
+                if (HttpContext::getConnected(s))
+                   multiplexer.add(s);
+                else
+                   waitingConnect.Push(s);
+            }
 
-                waitingConnect.Pop(s);
-                HttpContext *cx = HttpContext::getContext(s);
-                http_log_debug("Writer %p: %p, connecting %s:%d", this, cx,
-                    cx->getRequest().getSite().c_str(), cx->getRequest().getSitePort());
+        }
 
-                if (s->Init(cx->getRequest().getSite().c_str(), cx->getRequest().getSitePort(), SOCKOP_TIMEOUT) ||
-                    s->Connect())
-                {
-                    http_log_error("Writer %p: %p, cannot connect", this, cx);
-                    cx->setDestiny(503, FAKE_RESP | DEL_SITE_SOCK | NO_MULT_REM);
-                    error.Push(s);
-                }
-                else {
-                    http_log_debug("Writer %p: %p, socket %p connected", this, cx, s);
-                    s->setNonBlocking(1);
-                    multiplexer.add(s);
-                }
+        checkConnectionTimeout(error);
+
+        /* connect */
+        while (waitingConnect.Count()) {
+            Socket *s;
+
+            waitingConnect.Pop(s);
+            HttpContext *cx = HttpContext::getContext(s);
+            smsc_log_debug(logger, "%p: %p, connecting %s:%d", this, cx,
+            cx->getRequest().getSite().c_str(), cx->getRequest().getSitePort());
+
+            if (s->Init(cx->getRequest().getSite().c_str(), cx->getRequest().getSitePort(), SOCKOP_TIMEOUT) ||
+                s->Connect())
+            {
+                smsc_log_error(logger, "%p: %p, cannot connect", this, cx);
+                cx->setDestiny(503, FAKE_RESP | DEL_SITE_SOCK | NO_MULT_REM);
+                error.Push(s);
+            }
+            else {
+                smsc_log_debug(logger, "%p: %p, socket %p connected", this, cx, s);
+                s->setNonBlocking(1);
+                multiplexer.add(s);
             }
         }
 
         removeSocket(error);
 
-        //http_log_debug("Reader %p: entering the multiplexer");
-
         if (multiplexer.canWrite(ready, error, SOCKOP_TIMEOUT) > 0) {
-            for (i = 0; i < error.Count(); i++) {
+            for (i = 0; i < (unsigned int)error.Count(); i++) {
                 Socket *s = error[i];
                 HttpContext *cx = HttpContext::getContext(s);
                 
-                http_log_error("Writer %p: %p failed", this, cx);
+                smsc_log_error(logger, "%p: %p failed", this, cx);
                 if (cx->action == SEND_REQUEST)
                     cx->setDestiny(503, FAKE_RESP | DEL_SITE_SOCK);
                 else
@@ -332,7 +340,7 @@ int HttpWriterTask::Execute()
             }
             
             now = time(NULL);  
-            for (i = 0; i < ready.Count(); i++) {
+            for (i = 0; i < (unsigned int)ready.Count(); i++) {
                 Socket *s = ready[i];
                 HttpContext *cx = HttpContext::getContext(s);
                 const char *data;
@@ -360,7 +368,6 @@ int HttpWriterTask::Execute()
                     if (cx->action == SEND_REQUEST)
                         printHex(data, size);
                     */                        
-                
                     do
                         written_size = s->Write(data, size);
                     while (written_size == -1 && errno == EINTR);
@@ -370,7 +377,7 @@ int HttpWriterTask::Execute()
                         HttpContext::updateTimestamp(s, now);
                     }
                     else {
-                        http_log_error("Writer %p: %p, write error", this, cx);
+                        smsc_log_error(logger, "%p: %p, write error", this, cx);
                         if (cx->action == SEND_REQUEST)
                             cx->setDestiny(503, FAKE_RESP | DEL_SITE_SOCK);
                         else
@@ -379,7 +386,7 @@ int HttpWriterTask::Execute()
                     }
                 }
                 
-                if (size == written_size) {
+                if (size == (unsigned int)written_size) {
                     if (cx->flags == 0) {                   
                         cx->flags = 1;
                         cx->position = 0;
@@ -387,7 +394,7 @@ int HttpWriterTask::Execute()
                     else {
                         removeSocket(s);
                         if (cx->action == SEND_REQUEST) {
-                            http_log_info("Writer %p: %p, request sent", this, cx);
+                            smsc_log_info(logger, "%p: %p, request sent", this, cx);
                             //cx->setDestiny(0, DEL_REQ);
                             delete cx->command;
                             cx->command = NULL;
@@ -396,7 +403,7 @@ int HttpWriterTask::Execute()
                             manager.readers.process(cx);
                         }
                         else {
-                            http_log_info("Writer %p: %p, response sent", this, cx);
+                            smsc_log_info(logger, "%p: %p, response sent", this, cx);
                             //cx->setDestiny(0, DEL_USER_SOCK);
                             deleteSocket(s, buf, SHUT_WR);
                             cx->user = NULL;
@@ -404,18 +411,17 @@ int HttpWriterTask::Execute()
                             cx->result = 0;
                             manager.scags.process(cx);
                         }
-                        //http_log_debug("Writer %p: finished", this);
                     }
                 }
             }
-            
             removeSocket(error);
+            smsc_log_debug(logger, "%p End", this);
         }
     }
 
     {
         Socket *s;
-        sockMon.Lock();
+        MutexGuard g(sockMon);
         
         while (multiplexer.Count()) {
             s = multiplexer.getSocket(0);
@@ -428,11 +434,9 @@ int HttpWriterTask::Execute()
             HttpContext::getContext(s)->setDestiny(0, DEL_CONTEXT);
             killSocket(s);
         }
-        
-        sockMon.Unlock();
     }
     
-    http_log_debug( "Writer %p quit", this );
+    smsc_log_debug(logger, "%p quit", this);
     
     return 0;
 }
@@ -476,28 +480,49 @@ const char* HttpReaderTask::taskName() {
 
 void HttpWriterTask::addSocket(Socket* s, bool connected)
 {
-    sockMon.Lock();
-    if (connected)        
+    MutexGuard g(sockMon);
+
+/*    if (connected)        
         multiplexer.add(s);
     else
-        waitingConnect.Push(s);
+        waitingConnect.Push(s);*/
+
+    HttpContext::setConnected(s, connected);
+    waitingAdd.Push(s);
+
     sockMon.notify();
-    sockMon.Unlock();
 }
 
 void HttpReaderTask::addSocket(Socket* s)
 {
-    sockMon.Lock();    
-    multiplexer.add(s);
+    MutexGuard g(sockMon);
+
+//    multiplexer.add(s);
+    HttpContext::setConnected(s, true);
+    waitingAdd.Push(s);
     sockMon.notify();
-    sockMon.Unlock();
 }
 
 void IOTask::stop() {
     isStopping = true;
-    sockMon.Lock();
-    sockMon.notify();    
-    sockMon.Unlock();
+
+    {
+        MutexGuard g(sockMon);
+    
+        sockMon.notify();
+    }
+}
+
+HttpWriterTask::HttpWriterTask(HttpManager& m, IOTaskManager& iom, const int timeout) :
+        IOTask(m, iom, timeout)
+{
+    logger = Logger::getInstance("scag.http.writer");
+}
+
+HttpReaderTask::HttpReaderTask(HttpManager& m, IOTaskManager& iom, const int timeout) :
+        IOTask(m, iom, timeout)
+{
+    logger = Logger::getInstance("scag.http.reader");
 }
 
 }}}

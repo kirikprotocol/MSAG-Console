@@ -4,6 +4,7 @@
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/network/Socket.hpp"
 #include "core/network/Multiplexer.hpp"
+#include "logger/Logger.h"
 #include "TaskList.h"
 
 namespace scag { namespace transport { namespace http
@@ -11,6 +12,7 @@ namespace scag { namespace transport { namespace http
 using smsc::core::synchronization::EventMonitor;
 using smsc::core::network::Socket;
 using smsc::core::network::Multiplexer;
+using smsc::logger::Logger;
 
 class HttpManager;
 class HttpContext;
@@ -35,7 +37,9 @@ protected:
             return sockets[i];
         }
     };
+
     
+    void checkConnectionTimeout(Multiplexer::SockArray& error);
     inline bool isTimedOut(Socket* s, time_t now);
     void killSocket(Socket *s);
     void removeSocket(Multiplexer::SockArray &error);
@@ -46,13 +50,14 @@ protected:
     EventMonitor sockMon;
     HttpManager &manager;
     IOTaskManager &iomanager;
+    Logger *logger;    
     int connectionTimeout;
+    Array<Socket*> waitingAdd;
 };
 
 class HttpReaderTask : public IOTask {
 public:
-    HttpReaderTask(HttpManager& m, IOTaskManager& iom, const int timeout) :
-        IOTask(m, iom, timeout) {}
+    HttpReaderTask(HttpManager& m, IOTaskManager& iom, const int timeout);
 
     virtual int Execute();
     virtual const char* taskName();
@@ -64,8 +69,7 @@ protected:
 
 class HttpWriterTask : public IOTask {
 public:
-    HttpWriterTask(HttpManager& m, IOTaskManager& iom, const int timeout) :
-        IOTask(m, iom, timeout) {}
+    HttpWriterTask(HttpManager& m, IOTaskManager& iom, const int timeout);
         
     virtual int Execute();
     virtual const char* taskName();

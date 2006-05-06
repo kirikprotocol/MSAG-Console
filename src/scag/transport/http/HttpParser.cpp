@@ -117,7 +117,7 @@ StatusCode HttpParser::parse(char* buf, unsigned int& len, HttpContext& cx)
       len = 0;
       return CONTINUE;
     }
-
+    
     command->appendMessageContent(local_buf, local_len);
     len = 0;
 
@@ -133,6 +133,7 @@ StatusCode HttpParser::parse(char* buf, unsigned int& len, HttpContext& cx)
             ll--;            
         
           std::string params(pp, ll);
+
           parseQueryParameters(params.c_str(), cx.getRequest());
         }
       }

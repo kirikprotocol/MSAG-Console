@@ -6,6 +6,8 @@
 
 CXXFLAGS := $(CXXFLAGS) -I$(SMSC_SRCDIR)
 PACKAGE := scag.transport.http
+DEBUG := YES
+#LEAKTRACE := YES
 
 ifndef SMSC_SRCDIR
 $(error SMSC_SRCDIR is not defined)

@@ -17,6 +17,9 @@
 //void printHex(const char *buffer, long length);
 
 using namespace scag::transport::http;
+using namespace smsc::logger;
+
+smsc::logger::Logger *logger;
 
 namespace scag { namespace transport { namespace http 
 {
@@ -30,7 +33,7 @@ namespace scag { namespace transport { namespace http
             request.serialize();
             const std::string &hdr = request.getMessageHeaders();
             
-            http_log_debug( "Request headers:\n%s", hdr.c_str() );
+            smsc_log_debug( logger,  "Request headers:\n%s", hdr.c_str() );
 #endif
 
 #ifdef LOG_QUERY
@@ -38,7 +41,7 @@ namespace scag { namespace transport { namespace http
             
             while (pi.next()) {
                 const std::string &value = request.getQueryParameter(pi.value());
-                http_log_debug( "%s=%s", pi.value().c_str(), value.c_str() );
+                smsc_log_debug( logger,  "%s=%s", pi.value().c_str(), value.c_str() );
             }
 #endif
 
@@ -52,7 +55,7 @@ namespace scag { namespace transport { namespace http
             response.serialize();
             const std::string &hdr = response.getMessageHeaders();
             
-            http_log_debug( "Response headers:\n%s", hdr.c_str() );
+            smsc_log_debug( logger,  "Response headers:\n%s", hdr.c_str() );
 #endif
 #ifdef LOG_TEXT
             dumpText( response );
@@ -72,7 +75,7 @@ namespace scag { namespace transport { namespace http
         virtual void statusResponse(HttpResponse& response, bool delivered = true)
         {
 #ifdef LOG_HEADERS
-            http_log_debug( "Response %s", delivered ? 
+            smsc_log_debug( logger,  "Response %s", delivered ? 
                 "delivered" : "not delivered" );
 #endif          
         }
@@ -134,12 +137,12 @@ void MyHttpProcessor::dumpText(HttpCommand &cmd)
             
         std::string s( content.GetCurPtr() - content.GetPos(),
                             content.GetPos() );                 
-        http_log_debug( "%s", s.c_str() );          
+        smsc_log_debug( logger,  "%s", s.c_str() );          
     }
 #endif    
     }    
     catch(Exception x) {
-        http_log_debug( "getMessageText() exception %s", x.what() ); 
+        smsc_log_debug( logger,  "getMessageText() exception %s", x.what() ); 
     }
 }    
     
@@ -147,21 +150,21 @@ void MyHttpProcessor::dumpText(HttpCommand &cmd)
 
 
 void http_mut_log(char *s, unsigned t, void *p) {
-    http_log_debug(s, t, p);
+    smsc_log_debug( logger, s, t, p);
 }
 
 #if 1
 HttpManagerConfig cfg(
-    5,  //int readerSockets;
-    5,  //int writerSockets;
+    10,  //int readerSockets;
+    10,  //int writerSockets;
     2,  //int readerPoolSize;
     2,  //int writerPoolSize;
-    2,  //int scagPoolSize;    
-    100,  //int scagQueueLimit;
+    1,  //int scagPoolSize;    
+    10,  //int scagQueueLimit;
     10, //int connectionTimeout;
     //unsigned int maxHeaderLength;
     "0.0.0.0",  //const char *host;
-    5000       //int port;
+    5001       //int port;
 );
 #else
 HttpManagerConfig cfg(
@@ -178,7 +181,6 @@ HttpManagerConfig cfg(
 );
 #endif
 
-
 int main() {
     HttpManager mg;
     MyHttpProcessor p;
@@ -191,25 +193,25 @@ int main() {
     pthread_sigmask(SIG_BLOCK, &set, &oset);
 
     Logger::Init();
-    //httpLogger = Logger::getInstance("scag.http");
+    logger = Logger::getInstance("scag.http");
 
-#if 1
-    {
-        Logger::LogLevels levels;
-        levels["scag.http"] = Logger::LEVEL_FATAL;
-        Logger::setLogLevels(levels);
-    }
-#endif    
+//#if 1
+//    {
+//        Logger::LogLevels levels;
+//        levels["scag.http"] = Logger::LEVEL_FATAL;
+//        Logger::setLogLevels(levels);
+//    }
+//#endif    
 
     try {
     mg.init( p, cfg );
     }
     catch(Exception x) {
-    http_log_error( "Cannot init the HTTP transport: %s", x.what());    
+    smsc_log_error( logger,  "Cannot init the HTTP transport: %s", x.what());    
     }
 
     k = 0;
-#if 0
+#if 1
     do
          //k = getchar();
          sleep(10);

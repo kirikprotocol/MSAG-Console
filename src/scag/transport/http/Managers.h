@@ -5,14 +5,17 @@
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/threads/ThreadPool.hpp"
 #include "core/network/Socket.hpp"
+#include "logger/Logger.h"
 #include "HttpAcceptor.h"
 #include "TaskList.h"
 
 namespace scag { namespace transport { namespace http
 {
 using smsc::core::synchronization::EventMonitor;
+using smsc::core::synchronization::MutexGuard;
 using smsc::core::network::Socket;
 using smsc::core::threads::ThreadPool;
+using smsc::logger::Logger;
 
 class HttpAcceptor;
 class IOTask;
@@ -28,17 +31,32 @@ public:
     void shutdown();
     void process(HttpContext* cx);
     void init(int maxThreads, int scagQueueLimit, HttpProcessor& p);
-    HttpContext* getFirst();
-    inline void fitQueueLimit();
-    inline void looseQueueLimit();
+    bool canStop();
+    void wakeTask();
+    HttpContext *getFirst();
+    void looseQueueLimit();
 
-    EventMonitor taskMon;
+    void fitQueueLimit() {
+        while (waitQueueShrinkage) {
+            smsc_log_warn(logger, "queue overlimited");
+
+            MutexGuard g(queMon);
+            queMon.wait();
+        }
+    }
+    void waitForContext() {
+        MutexGuard g(taskMon);
+        
+        taskMon.wait();
+    }
 
 protected:
     ThreadPool pool;
     Mutex procMut;
     EventMonitor queMon;
+    EventMonitor taskMon;
     HttpManager &manager;
+    Logger *logger;    
     
     HttpContext *headContext;
     HttpContext *tailContext[3];
@@ -51,11 +69,13 @@ protected:
 class IOTaskManager {
 public:
     IOTaskManager(HttpManager& m);
+    virtual ~IOTaskManager();
 
     void process(HttpContext* cx);
     void shutdown();
     void removeContext(IOTask* t, unsigned int nsub);
-    void init(int maxThreads, int maxSockets);
+    void init(int maxThread, int maxSock, const char *logName);
+    bool canStop();
 
 protected:
     struct Call {
@@ -85,7 +105,9 @@ protected:
     IOTaskParent tailTask;
     IOTask **sortedTasks;
     HttpManager &manager;
-    unsigned int maxSockets;
+    Logger *logger;
+    unsigned int maxSockets;    
+    unsigned int maxThreads;
 };
 
 class ReaderTaskManager : public IOTaskManager {

@@ -156,7 +156,7 @@ public:
         content.Append(data, length);
     }
 
-protected:
+public:
     StringHash headerFields;
     FieldIterator headerFieldsIterator;
     TmpBuf<char, 1> content;

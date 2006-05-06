@@ -1,5 +1,4 @@
 #include <limits.h>
-#include "HttpLogger.h"
 #include "Managers.h"
 #include "HttpContext.h"
 #include "IOTasks.h"
@@ -8,35 +7,31 @@
 namespace scag { namespace transport { namespace http
 {
 
-Logger* scag::transport::http::httpLogger = 0;
-
 HttpManager::HttpManager() : scags(*this),
     readers(*this), writers(*this), acceptor(*this)
 {
 }
 
-void HttpManager::init(HttpProcessor& p, const HttpManagerConfig& _cfg)
+void HttpManager::init(HttpProcessor& p, const HttpManagerConfig& conf)
 {
-    this->cfg = _cfg;
-        
-    readers.init(cfg.readerPoolSize, cfg.readerSockets);
-    writers.init(cfg.writerPoolSize, cfg.writerSockets);    
-    scags.init(cfg.scagPoolSize, cfg.scagQueueLimit, p);    
+    this->cfg = conf;
+
+    readers.init(cfg.readerPoolSize, cfg.readerSockets, "scag.http.reader");
+    writers.init(cfg.writerPoolSize, cfg.writerSockets, "scag.http.writer");
+    scags.init(cfg.scagPoolSize, cfg.scagQueueLimit, p);
     acceptor.init(cfg.host.c_str(), cfg.port);
-    
-    httpLogger = Logger::getInstance("scag.http");    
 }
 
 void HttpManager::shutdown()
 {
     acceptor.shutdown();
-    while (HttpContext::getCount())
+
+    while (!(readers.canStop() && writers.canStop() && scags.canStop()))
         sleep(1);
+
     readers.shutdown();
     writers.shutdown();
-    sleep(1);
     scags.shutdown();
-    sleep(1);
 }
 
 ScagTaskManager::ScagTaskManager(HttpManager& m) : manager(m)
@@ -45,22 +40,23 @@ ScagTaskManager::ScagTaskManager(HttpManager& m) : manager(m)
 
 void ScagTaskManager::shutdown()
 {
-    queMon.notify();
     pool.shutdown();
     
-    for (;;) {
-        HttpContext *cx = getFirst();
-        
-        if (cx)
-            delete cx;
-        else
-            break;
+    {
+        HttpContext *cx;
+        MutexGuard g(procMut);
+                        
+        while (headContext) {
+            cx = headContext;
+            headContext = headContext->next;
+            delete cx;      
+        }
     }
 }
 
 void ScagTaskManager::process(HttpContext* cx)
 {
-    procMut.Lock();
+    MutexGuard g(procMut);
 
     cx->next = tailContext[cx->action]->next;
 
@@ -74,52 +70,47 @@ void ScagTaskManager::process(HttpContext* cx)
             tailContext[1] = cx;
         if (tailContext[0] == tailContext[2])
             tailContext[0] = cx;
-    break;
+        break;
     }
+
     tailContext[cx->action]->next = cx;
     tailContext[cx->action] = cx;
     
     if (++queueLength > scagQueueLimit)
         waitQueueShrinkage = true;
 
-    //taskMon.Lock();
-    taskMon.notify();
-    //taskMon.Unlock();
-    procMut.Unlock();
+    {
+        MutexGuard q(taskMon);
+    
+        taskMon.notify();   
+    }
 }
 
-void ScagTaskManager::init(int maxThreads, int _scagQueueLimit, HttpProcessor& p)
+void ScagTaskManager::init(int maxThreads, int scagQueueLim, HttpProcessor& p)
 {
     int i;
  
-/*
-    http_log_debug( "ScagTaskManager::taskMon == %p", &taskMon );
-    http_log_debug( "ScagTaskManager::procMut == %p", &procMut );
-    http_log_debug( "ScagTaskManager::queMon == %p", &queMon );
-*/
-    
     queueLength = 0;
-    this->scagQueueLimit = _scagQueueLimit;
+    scagQueueLimit = scagQueueLim;
     waitQueueShrinkage = false;
-        
+    
     headContext = NULL;
     tailContext[0] = (HttpContext *)&headContext;
     tailContext[1] = (HttpContext *)&headContext;
     tailContext[2] = (HttpContext *)&headContext;
 
+    logger = Logger::getInstance("scag.http.scag");
+
     pool.setMaxThreads(maxThreads);
 
-    for (i = 0; i < maxThreads; i++) {
-        ScagTask *t = new ScagTask(manager, p);
-
-        pool.startTask(t);
-    }
+    for (i = 0; i < maxThreads; i++)
+        pool.startTask(new ScagTask(manager, p));
 }
 
-HttpContext* ScagTaskManager::getFirst() {
+HttpContext *ScagTaskManager::getFirst()
+{
     HttpContext *cx;
-    
-    procMut.Lock();
+    MutexGuard g(procMut);
 
     if (headContext) {
         cx = headContext;
@@ -135,19 +126,39 @@ HttpContext* ScagTaskManager::getFirst() {
         queueLength--;
 
         if (waitQueueShrinkage && queueLength <= scagQueueLimit) {
-            //queMon.Lock();
+            MutexGuard q(queMon);
+            
             waitQueueShrinkage = false;
             queMon.notify();
-            //queMon.Unlock();
         }
     }
     else {
         cx = NULL;
     }
     
-    procMut.Unlock();
-    
     return cx;
+}
+
+void ScagTaskManager::looseQueueLimit()
+{
+    MutexGuard g(queMon);
+
+    waitQueueShrinkage = false;
+    queMon.notify();
+}
+
+void ScagTaskManager::wakeTask()
+{
+    MutexGuard g(taskMon);
+    
+    taskMon.notifyAll();
+}    
+
+bool ScagTaskManager::canStop()
+{
+    MutexGuard g(procMut);
+    
+    return headContext == NULL;
 }
 
 IOTask* ReaderTaskManager::newTask()
@@ -166,8 +177,8 @@ IOTaskManager::IOTaskManager(HttpManager& m) : manager(m),
 }
 
 void IOTaskManager::giveContext(IOTask *t, HttpContext* cx) {
-    http_log_debug("%s %p:%d choosen for context %p",
-        cx->getTaskName(), t, t->getSocketCount(), cx);
+    smsc_log_debug(logger, "%p:%d choosen for context %p", t, t->getSocketCount(), cx);
+
     t->socketCount++;
     t->registerContext(cx);
     reorderTask(t);
@@ -175,7 +186,7 @@ void IOTaskManager::giveContext(IOTask *t, HttpContext* cx) {
 
 void IOTaskManager::process(HttpContext* cx)
 {
-    procMon.Lock();
+    MutexGuard g(procMon);
 
     IOTask *t = getFirst();
     
@@ -188,12 +199,11 @@ void IOTaskManager::process(HttpContext* cx)
         insertCall(&this_call);
     
         do {
-            http_log_warn("Waiting for free %s", cx->getTaskName());            
+            smsc_log_warn(logger, "%p waiting for free", cx);
             procMon.wait();
-
+            smsc_log_warn(logger, "%p after waiting for free", cx);
             if (this_call.context) {
                 call = headCall;
-
                 for (;;) {
                     call = call->next;
                     t = getFirst();
@@ -218,19 +228,17 @@ void IOTaskManager::process(HttpContext* cx)
                     headCall = headCall->prev;
             }
         } while (this_call.context);
-        
         /* exclude this_call from the queue and exit */
         this_call.prev->next = this_call.next;
         this_call.next->prev = this_call.prev;
     }
-        
-    procMon.Unlock();
 }
 
 void IOTaskManager::insertCall(Call *call) {
     ActionID action = call->context->action;
     Call *cc = &tailCall;
 
+//    smsc_log_error(logger, "||cc=%p, cc.prev=%p", cc, cc->prev);
     do 
         cc = cc->prev;
     while (cc->context && cc->context->action < action);
@@ -242,11 +250,11 @@ void IOTaskManager::insertCall(Call *call) {
 }
 
 void IOTaskManager::removeContext(IOTask* t, unsigned int nsub) {
-    procMon.Lock();
+    MutexGuard g(procMon);
+    
     t->socketCount -= nsub;
     reorderTask(t);
     procMon.notifyAll();
-    procMon.Unlock();
 }
 
 void IOTaskManager::shutdown()
@@ -255,30 +263,39 @@ void IOTaskManager::shutdown()
     delete sortedTasks;
 }
 
+bool IOTaskManager::canStop()
+{
+    MutexGuard g(procMon);
+    
+    return sortedTasks[maxThreads]->getSocketCount() == 0;
+}
+
 void IOTaskManager::assignTask(unsigned int i, IOTask *t)
 {
     sortedTasks[i] = t;
     t->taskIndex = i;
 }
 
-void IOTaskManager::init(int _maxThreads, int _maxSockets)
+void IOTaskManager::init(int maxThread, int maxSock, const char *logName)
 {
-    int i;
+    unsigned int i;
 
-    //http_log_debug( "IOTaskManager::procMon == %p", &procMon );
+    logger = Logger::getInstance(logName);
 
     tailCall.next = &tailCall;
     tailCall.prev = &tailCall;
     headCall = &tailCall;
-    this->maxSockets = _maxSockets;
-    pool.setMaxThreads(_maxThreads);
+   
+    maxSockets = maxSock;
+    maxThreads = maxThread;
+    pool.setMaxThreads(maxThreads);
     
-    sortedTasks = new IOTask *[_maxThreads + 2];
+    sortedTasks = new IOTask *[maxThreads + 2];
 
     sortedTasks[0] = (IOTask *)&headTask;               // min socketCount
-    sortedTasks[_maxThreads + 1] = (IOTask *)&tailTask;  // max socketCount
+    sortedTasks[maxThreads + 1] = (IOTask *)&tailTask;  // max socketCount
 
-    for (i = 1; i <= _maxThreads; i++) {
+    for (i = 1; i <= maxThreads; i++) {
         IOTask *t = newTask();
 
         assignTask(i, t);
@@ -307,6 +324,10 @@ void IOTaskManager::reorderTask(IOTask* t)
         
         assignTask(i, t);
     }
+}
+
+IOTaskManager::~IOTaskManager()
+{
 }
 
 }}}

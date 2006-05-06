@@ -23,9 +23,6 @@ const char *HttpContext::taskName[8] = {
     "Writer"            // <- SEND_RESPONSE
 };
 
-unsigned int HttpContext::count = 0;
-Mutex HttpContext::cntMut;
-
 HttpContext::~HttpContext()
 {
     if (user)
@@ -35,10 +32,6 @@ HttpContext::~HttpContext()
 
     if (command)
         delete command;
-        
-    cntMut.Lock();
-    count--;
-    cntMut.Unlock();        
 }
 
 }}}

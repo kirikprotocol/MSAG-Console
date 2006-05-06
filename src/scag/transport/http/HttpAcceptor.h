@@ -4,12 +4,14 @@
 #include "core/threads/Thread.hpp"
 #include "core/network/Socket.hpp"
 #include "core/synchronization/EventMonitor.hpp"
+#include "logger/Logger.h"
 
 namespace scag { namespace transport { namespace http
 {
 using smsc::core::threads::Thread;
 using smsc::core::network::Socket;
 using smsc::core::synchronization::EventMonitor;
+using smsc::logger::Logger;
 
 class HttpManager;
 
@@ -26,6 +28,7 @@ public:
 protected:
     HttpManager &manager;    
     Socket masterSocket;
+    Logger *logger;
 
 private:
     bool isStopping;  
