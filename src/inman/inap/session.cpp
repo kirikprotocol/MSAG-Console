@@ -8,6 +8,8 @@ static char const ident[] = "$Id$";
 
 using smsc::inman::common::fillAddress;
 
+#define MAX_ID_ATTEMPTS ((TCAP_DIALOG_MAX_ID - TCAP_DIALOG_MIN_ID)/3)
+
 namespace smsc  {
 namespace inman {
 namespace inap  {
@@ -34,48 +36,60 @@ void SSNSession::init(const char* own_addr, /*UCHAR_T rmt_ssn,*/
 
 SSNSession::~SSNSession()
 {
-    releaseDialogs();
     MutexGuard tmp(dlgGrd);
     for (DialogsLIST::iterator it = pool.begin(); it != pool.end(); it++) {
         delete *it;
     }
-}
-
-USHORT_T SSNSession::nextDialogId(void)
-{
-    USHORT_T id = lastDlgId;
-    if (++lastDlgId  > TCAP_DIALOG_MAX_ID)
-        lastDlgId = TCAP_DIALOG_MIN_ID;
-    return id;
-}
-
-void SSNSession::cleanUpDialogs(void)
-{
-    MutexGuard tmp(dlgGrd);
-    DialogsMap_T::iterator it  = pending.begin();
-    while (it != pending.end()) {
-        Dialog* pDlg = (*it).second;
-        DialogsMap_T::iterator curr = it++;
-        if (!pDlg->pendingInvokes()) {
-            pool.push_back(pDlg);
-            pending.erase(curr);
+    pool.clear();
+    if (!(dialogs.size() + pending.size()))
+        return;
+    smsc_log_debug(logger, "SSN[%u]: Closing %u dialogs ..",
+                    (unsigned)SSN, dialogs.size() + pending.size());
+    if (dialogs.size()) {
+        for (DialogsMap_T::iterator it = dialogs.begin(); it != dialogs.end(); it++) {
+            USHORT_T dId = (*it).first;
+            Dialog* pDlg = (*it).second;
+            if (!(pDlg->getState().value & TC_DLG_CLOSED_MASK))
+                smsc_log_warn(logger,
+                    "SSN[%u]: Dialog[%u](0x%x) is active, %u invokes pending",
+                    (unsigned)SSN, dId, pDlg->getState().value, pDlg->pendingInvokes());
+            delete (*it).second;
         }
+        dialogs.clear();
+    }
+    if (pending.size()) {
+        for (DlgTimesMap_T::iterator it = pending.begin(); it != pending.end(); it++) {
+            USHORT_T dId = (*it).first;
+            DlgTime dtm  = (*it).second;
+            smsc_log_warn(logger, "SSN[%u]: Dialog[%u](0x%x) is not terminated, %u invokes pending",
+                           (unsigned)SSN, dId, dtm.dlg->getState().value, dtm.dlg->pendingInvokes());
+            delete dtm.dlg;
+        }
+        pending.clear();
     }
 }
 
 Dialog* SSNSession::openDialog(void)
 {
     if (state != ssnBound) {
-        smsc_log_error(logger, "SSN[%u]: not bounded!");
+        smsc_log_error(logger, "SSN[%u]: not bounded!", (unsigned)SSN);
         return NULL;
     }
+    MutexGuard tmp(dlgGrd);
     if (!pool.size())
         cleanUpDialogs();
 
     Dialog* pDlg = NULL;
-    USHORT_T did = nextDialogId();
-
-    MutexGuard tmp(dlgGrd);
+    USHORT_T did = 0;
+    if (!nextDialogId(did)) {
+        smsc_log_fatal(logger, "SSN[%u]: Dialogs exhausted [%u of %u], active(%u), pending(%u)",
+            (unsigned)SSN, dialogs.size() + pending.size(),
+            TCAP_DIALOG_MAX_ID - TCAP_DIALOG_MIN_ID, dialogs.size(), pending.size());
+        if (logger->isDebugEnabled())
+            dumpDialogs();
+        return NULL;
+    }
+    
     if (pool.size()) {
         pDlg = *(pool.begin());
         pool.pop_front();
@@ -91,15 +105,8 @@ Dialog* SSNSession::openDialog(void)
 
 Dialog* SSNSession::findDialog(USHORT_T dId)
 {
-    Dialog* pDlg = NULL;
     MutexGuard tmp(dlgGrd);
-    DialogsMap_T::const_iterator it = dialogs.find(dId);
-    if (it == dialogs.end()) {
-        it = pending.find(dId);
-        pDlg = (it == pending.end()) ? NULL : (*it).second;
-    } else
-        pDlg = (*it).second;
-    return pDlg;
+    return locateDialog(dId);
 }
 
 void SSNSession::releaseDialog(Dialog* pDlg)
@@ -113,38 +120,112 @@ void SSNSession::releaseDialog(Dialog* pDlg)
         smsc_log_error(logger, "SSN[%u]: Unregistered/illegal dialog[%u]", (unsigned)SSN, dId);
     } else {
         dialogs.erase(it);
-        unsigned inv = pDlg->pendingInvokes();
-        if (inv) {
-            pending.insert(DialogsMap_T::value_type(dId, pDlg));
-            smsc_log_debug(logger, "SSN[%u]: Released dialog[%u], %u invokes pending",
-                           (unsigned)SSN, dId, inv);
+        if (!(pDlg->getState().value & TC_DLG_CLOSED_MASK)) {
+            DlgTime     dtm;
+            gettimeofday(&dtm.tms, 0);
+            dtm.dlg = pDlg;
+            pending.insert(DlgTimesMap_T::value_type(dId, dtm));
+            smsc_log_warn(logger,
+                "SSN[%u]: Pushed aside unterminated dialog[%u](0x%x), %u invokes pending",
+                (unsigned)SSN, dId, pDlg->getState().value, pDlg->pendingInvokes());
         } else {
             pool.push_back(pDlg);
-            smsc_log_debug(logger, "SSN[%u]: Released dialog[%u]",
-                           (unsigned)SSN, dId);
+            smsc_log_debug(logger, "SSN[%u]: Released terminated dialog[%u](0x%x)",
+                (unsigned)SSN, dId, pDlg->getState().value);
         }
     }
 }
 
 void SSNSession::releaseDialogs(void)
 {
-    smsc_log_debug(logger, "SSN[%u]: Releasing all dialogs ..", (unsigned)SSN);
+    smsc_log_debug(logger, "SSN[%u]: Releasing %u dialogs ..", (unsigned)SSN, dialogs.size());
     MutexGuard tmp(dlgGrd);
     for (DialogsMap_T::iterator it = dialogs.begin(); it != dialogs.end(); it++) {
         Dialog* pDlg = (*it).second;
         USHORT_T dId = (*it).first;
-        unsigned inv = pDlg->pendingInvokes();
-        if (inv) {
-            pending.insert(DialogsMap_T::value_type(dId, pDlg));
-            smsc_log_debug(logger, "SSN[%u]: Released dialog[%u], %u invokes pending",
-                           (unsigned)SSN, dId, inv);
+
+        if (!(pDlg->getState().value & TC_DLG_CLOSED_MASK)) {
+            DlgTime     dtm;
+            gettimeofday(&dtm.tms, 0);
+            dtm.dlg = pDlg;
+            pending.insert(DlgTimesMap_T::value_type(dId, dtm));
+            smsc_log_warn(logger, "SSN[%u]: Pushed aside unterminated dialog[%u], %u invokes pending",
+                           (unsigned)SSN, dId, pDlg->pendingInvokes());
         } else {
             pool.push_back(pDlg);
-            smsc_log_debug(logger, "SSN[%u]: Released dialog[%u]",
+            smsc_log_debug(logger, "SSN[%u]: Released terminated dialog[%u]",
                            (unsigned)SSN, dId);
         }
     }
     dialogs.clear();
+}
+
+/* ---------------------------------------------------------------------------------- *
+ * Protected/Private methods:
+ * NOTE: these methods are not the processing graph entries, so never lock Mutex,
+ *       it's a caller responsibility to lock it !!!
+ * ---------------------------------------------------------------------------------- */
+bool SSNSession::nextDialogId(USHORT_T & dId)
+{
+    USHORT_T attempt = 0;
+    do {
+        dId = lastDlgId;
+        if (++lastDlgId  > TCAP_DIALOG_MAX_ID)
+            lastDlgId = TCAP_DIALOG_MIN_ID;
+    } while (locateDialog(dId) || ((++attempt) >= MAX_ID_ATTEMPTS));
+
+    return (attempt < MAX_ID_ATTEMPTS) ? true : false;
+}
+
+void SSNSession::cleanUpDialogs(void)
+{
+    DlgTimesMap_T::iterator it  = pending.begin();
+    while (it != pending.end()) {
+        DlgTime dtm = (*it).second;
+        DlgTimesMap_T::iterator curr = it++;
+        if ((dtm.dlg->getState().value & TC_DLG_CLOSED_MASK) != 0) {
+            pool.push_back(dtm.dlg);
+            pending.erase(curr);
+        }
+    }
+}
+
+Dialog* SSNSession::locateDialog(USHORT_T dId)
+{
+    Dialog* pDlg = NULL;
+    DialogsMap_T::const_iterator it = dialogs.find(dId);
+    if (it == dialogs.end()) {
+        DlgTimesMap_T::iterator tit = pending.find(dId);
+        pDlg = (tit == pending.end()) ? NULL : ((*tit).second).dlg;
+    } else
+        pDlg = (*it).second;
+    return pDlg;
+}
+
+void SSNSession::dumpDialogs(void)
+{
+    std::string dump;
+    format(dump, "SSN[%u]: Dialogs [%u of %u], ", (unsigned)SSN,
+           dialogs.size() + pending.size(),
+           TCAP_DIALOG_MAX_ID - TCAP_DIALOG_MIN_ID);
+
+    if (pending.size()) {
+        format(dump, "pending(%u): ", pending.size());
+        struct timeval ctm;
+        gettimeofday(&ctm, 0);
+
+        for (DlgTimesMap_T::const_iterator it = pending.begin(); it != pending.end(); it++) {
+            DlgTime dtm = (*it).second;
+            long tdif = ctm - dtm.tms;
+            format(dump, "%u(0x%x):%lus ", (*it).first, dtm.dlg->getState().value, tdif);
+        }
+    }
+    format(dump, "active(%u): ", dialogs.size());
+    for (DialogsMap_T::const_iterator it = dialogs.begin(); it != dialogs.end(); it++) {
+        Dialog* pDlg = (*it).second;
+        format(dump, "%u(0x%x) ", (*it).first, pDlg->getState().value);
+    }
+    smsc_log_debug(logger, dump.c_str());
 }
 
 } // namespace inap

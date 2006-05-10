@@ -7,6 +7,7 @@
 #include <map>
 #include <list>
 
+#include "inman/common/TimeOps.hpp"
 #include "inman/common/types.hpp"
 #include "logger/Logger.h"
 #include "inman/comp/acdefs.hpp"
@@ -47,16 +48,24 @@ protected:
     void    setState(SSNState newState) { state = newState; }
 
 private:
+    typedef struct {
+        struct timeval tms;
+        Dialog *       dlg;
+    } DlgTime;
+
+    typedef std::map<USHORT_T, DlgTime> DlgTimesMap_T;
     typedef std::map<USHORT_T, Dialog*> DialogsMap_T;
     typedef std::list<Dialog*> DialogsLIST;
 
-    USHORT_T nextDialogId(void);
-    void     cleanUpDialogs(void);
+    bool    nextDialogId(USHORT_T & dId);
+    void    cleanUpDialogs(void);
+    Dialog* locateDialog(USHORT_T dId);
+    void    dumpDialogs(void);
 
     Mutex           dlgGrd;
     DialogsMap_T    dialogs;
     DialogsLIST     pool;
-    DialogsMap_T    pending; //released Dialogs, which have Invokes pending
+    DlgTimesMap_T   pending; //released but not terminated Dialogs with timestamp
 
     UCHAR_T         SSN;
     SCCP_ADDRESS_T  locAddr;
