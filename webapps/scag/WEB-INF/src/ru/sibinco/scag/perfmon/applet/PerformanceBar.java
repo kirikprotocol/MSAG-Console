@@ -58,11 +58,19 @@ public class PerformanceBar extends Canvas {
     Color colorGrid = new Color(0, 64, 0);
     Color colorGridLight = new Color(0, 128, 0);
     Color colorShadowBar = new Color(0, 96, 0);
+    //smpp
     Color colorBarDelivered = Color.green;
     Color colorBarGwRejected = Color.cyan;
     Color colorBarAccepted = Color.blue;
     Color colorBarRejected = Color.white;
     Color colorBarFailed = Color.red;
+    //http
+    Color colorBarResponse = Color.green;
+    Color colorBarResponseRejected = Color.cyan;
+    Color colorBarRequest = Color.blue;
+    Color colorBarRequestRejected = Color.white;
+    Color colorBarDeliveredHTTP = Color.red;
+    Color colorBarFailedHTTP = Color.yellow;
 
     public synchronized void paint(Graphics gg) {
         Dimension size = getSize();
@@ -90,16 +98,16 @@ public class PerformanceBar extends Canvas {
             int spent = 0;
 
             int smallBarWidth = (barWidth - sepBarWidth * 2) / 3;
-
+            if (PerfMon.statMode.equals(PerfMon.smppStatMode)) {
             // last rejected bar
             g.setColor(colorBarRejected);
-            int barheight = (int) ((maxheight * snap.last[PerfSnap.IDX_REJECTED]) / PerfMon.scale);
+            int barheight = (int) ((maxheight * snap.smppSnap.last[PerfSnap.SMPPSnap.IDX_REJECTED]) / PerfMon.scale);
             g.fillRect(barposx, size.height - bottomSpace - spent - barheight, smallBarWidth, barheight);
             spent += barheight;
 
             // last accepted bar
             g.setColor(colorBarAccepted);
-            barheight = (int) ((maxheight * snap.last[PerfSnap.IDX_ACCEPTED]) / PerfMon.scale);
+            barheight = (int) ((maxheight * snap.smppSnap.last[PerfSnap.SMPPSnap.IDX_ACCEPTED]) / PerfMon.scale);
             g.fillRect(barposx, size.height - bottomSpace - spent - barheight, smallBarWidth, barheight);
             spent += barheight;
 
@@ -111,13 +119,13 @@ public class PerformanceBar extends Canvas {
 
             //last Gw Rejected bar
             g.setColor(colorBarGwRejected);
-            barheight = (int) ((maxheight * snap.last[PerfSnap.IDX_GW_REJECTED]) / PerfMon.scale);
+            barheight = (int) ((maxheight * snap.smppSnap.last[PerfSnap.SMPPSnap.IDX_GW_REJECTED]) / PerfMon.scale);
             g.fillRect(barposx, size.height - bottomSpace - spent - barheight, smallBarWidth, barheight);
             spent += barheight;
 
             // last delivered bar
             g.setColor(colorBarDelivered);
-            barheight = (int) ((maxheight * snap.last[PerfSnap.IDX_DELIVERED]) / PerfMon.scale);
+            barheight = (int) ((maxheight * snap.smppSnap.last[PerfSnap.SMPPSnap.IDX_DELIVERED]) / PerfMon.scale);
             g.fillRect(barposx, size.height - bottomSpace - spent - barheight, smallBarWidth, barheight);
             spent += barheight;
 
@@ -129,19 +137,70 @@ public class PerformanceBar extends Canvas {
 
             // last failed bar
             g.setColor(colorBarFailed);
-            barheight = (int) ((maxheight * snap.last[PerfSnap.IDX_FAILED]) / PerfMon.scale);
+            barheight = (int) ((maxheight * snap.smppSnap.last[PerfSnap.SMPPSnap.IDX_FAILED]) / PerfMon.scale);
             g.fillRect(barposx, size.height - bottomSpace - spent - barheight, smallBarWidth, barheight);
             spent += barheight;
+            } else {
 
+              // last request rejected bar
+              g.setColor(colorBarRequestRejected);
+              int barheight = (int) ((maxheight * snap.httpSnap.last[PerfSnap.HTTPSnap.IDX_REQUEST_REJECTED]) / PerfMon.scale);
+              g.fillRect(barposx, size.height - bottomSpace - spent - barheight, smallBarWidth, barheight);
+              spent += barheight;
+
+              // last request bar
+              g.setColor(colorBarRequest);
+              barheight = (int) ((maxheight * snap.httpSnap.last[PerfSnap.HTTPSnap.IDX_REQUEST]) / PerfMon.scale);
+              g.fillRect(barposx, size.height - bottomSpace - spent - barheight, smallBarWidth, barheight);
+              spent += barheight;
+
+              barposx += smallBarWidth;
+              g.setColor(colorBackground);
+              g.fillRect(barposx, size.height - maxheight - bottomSpace, sepBarWidth, maxheight);
+              barposx += sepBarWidth;
+              spent = 0;
+
+              //last response rejected bar
+              g.setColor(colorBarResponseRejected);
+              barheight = (int) ((maxheight * snap.httpSnap.last[PerfSnap.HTTPSnap.IDX_RESPONSE_REJECTED]) / PerfMon.scale);
+              g.fillRect(barposx, size.height - bottomSpace - spent - barheight, smallBarWidth, barheight);
+              spent += barheight;
+
+              // last response bar
+              g.setColor(colorBarResponse);
+              barheight = (int) ((maxheight * snap.httpSnap.last[PerfSnap.HTTPSnap.IDX_RESPONSE]) / PerfMon.scale);
+              g.fillRect(barposx, size.height - bottomSpace - spent - barheight, smallBarWidth, barheight);
+              spent += barheight;
+
+              barposx += smallBarWidth;
+              g.setColor(colorBackground);
+              g.fillRect(barposx, size.height - maxheight - bottomSpace, sepBarWidth, maxheight);
+              barposx += sepBarWidth;
+              spent = 0;
+
+              // last failedHTTP bar
+              g.setColor(colorBarFailedHTTP);
+              barheight = (int) ((maxheight * snap.httpSnap.last[PerfSnap.HTTPSnap.IDX_FAILED]) / PerfMon.scale);
+              g.fillRect(barposx, size.height - bottomSpace - spent - barheight, smallBarWidth, barheight);
+              spent += barheight;
+
+              //last deliveredHTTP bar
+              g.setColor(colorBarDeliveredHTTP);
+              barheight = (int) ((maxheight * snap.httpSnap.last[PerfSnap.HTTPSnap.IDX_DELIVERED]) / PerfMon.scale);
+              g.fillRect(barposx, size.height - bottomSpace - spent - barheight, smallBarWidth, barheight);
+              spent += barheight;
+            }
             barposx += smallBarWidth;
         } else {
-            int smallBarWidth = (barWidth - sepBarWidth * (numGraphs - 1)) / numGraphs;
-
+            int smallBarWidth;
             int barheight = 0;
+            if (PerfMon.statMode.equals(PerfMon.smppStatMode)) {
+            numGraphs = 6;
+            smallBarWidth = (barWidth - sepBarWidth * (numGraphs - 1)) / numGraphs;
 
             // last submit ok bar
             g.setColor(colorBarAccepted);
-            barheight = (int) ((maxheight * snap.last[PerfSnap.IDX_ACCEPTED]) / PerfMon.scale);
+            barheight = (int) ((maxheight * snap.smppSnap.last[PerfSnap.SMPPSnap.IDX_ACCEPTED]) / PerfMon.scale);
             g.fillRect(barposx, size.height - bottomSpace - barheight, smallBarWidth, barheight);
             barposx += smallBarWidth;
             // separator bar background
@@ -151,7 +210,7 @@ public class PerformanceBar extends Canvas {
 
             // last submit err bar
             g.setColor(colorBarRejected);
-            barheight = (int) ((maxheight * snap.last[PerfSnap.IDX_REJECTED]) / PerfMon.scale);
+            barheight = (int) ((maxheight * snap.smppSnap.last[PerfSnap.SMPPSnap.IDX_REJECTED]) / PerfMon.scale);
             g.fillRect(barposx, size.height - bottomSpace - barheight, smallBarWidth, barheight);
             barposx += smallBarWidth;
             // separator bar background
@@ -161,7 +220,7 @@ public class PerformanceBar extends Canvas {
 
             // last deliver ok bar
             g.setColor(colorBarDelivered);
-            barheight = (int) ((maxheight * snap.last[PerfSnap.IDX_DELIVERED]) / PerfMon.scale);
+            barheight = (int) ((maxheight * snap.smppSnap.last[PerfSnap.SMPPSnap.IDX_DELIVERED]) / PerfMon.scale);
             g.fillRect(barposx, size.height - bottomSpace - barheight, smallBarWidth, barheight);
             barposx += smallBarWidth;
             // separator bar background
@@ -171,7 +230,7 @@ public class PerformanceBar extends Canvas {
 
             // last gw rejected  bar
             g.setColor(colorBarGwRejected);
-            barheight = (int) ((maxheight * snap.last[PerfSnap.IDX_GW_REJECTED]) / PerfMon.scale);
+            barheight = (int) ((maxheight * snap.smppSnap.last[PerfSnap.SMPPSnap.IDX_GW_REJECTED]) / PerfMon.scale);
             g.fillRect(barposx, size.height - bottomSpace - barheight, smallBarWidth, barheight);
             barposx += smallBarWidth;
             // separator bar background
@@ -181,9 +240,69 @@ public class PerformanceBar extends Canvas {
 
             // last retry bar
             g.setColor(colorBarFailed);
-            barheight = (int) ((maxheight * snap.last[PerfSnap.IDX_FAILED]) / PerfMon.scale);
+            barheight = (int) ((maxheight * snap.smppSnap.last[PerfSnap.SMPPSnap.IDX_FAILED]) / PerfMon.scale);
             g.fillRect(barposx, size.height - bottomSpace - barheight, smallBarWidth, barheight);
             barposx += smallBarWidth;
+            } else {
+              numGraphs = 7;
+              smallBarWidth = (barWidth - sepBarWidth * (numGraphs - 1)) / numGraphs;
+
+              // last request bar
+              g.setColor(colorBarRequest);
+              barheight = (int) ((maxheight * snap.httpSnap.last[PerfSnap.HTTPSnap.IDX_REQUEST]) / PerfMon.scale);
+              g.fillRect(barposx, size.height - bottomSpace - barheight, smallBarWidth, barheight);
+              barposx += smallBarWidth;
+              // separator bar background
+              g.setColor(colorBackground);
+              g.fillRect(barposx, size.height - maxheight - bottomSpace, sepBarWidth, maxheight);
+              barposx += sepBarWidth;
+
+              // last request rejected bar
+              g.setColor(colorBarRequestRejected);
+              barheight = (int) ((maxheight * snap.httpSnap.last[PerfSnap.HTTPSnap.IDX_REQUEST_REJECTED]) / PerfMon.scale);
+              g.fillRect(barposx, size.height - bottomSpace - barheight, smallBarWidth, barheight);
+              barposx += smallBarWidth;
+              // separator bar background
+              g.setColor(colorBackground);
+              g.fillRect(barposx, size.height - maxheight - bottomSpace, sepBarWidth, maxheight);
+              barposx += sepBarWidth;
+
+              // last response bar
+              g.setColor(colorBarResponse);
+              barheight = (int) ((maxheight * snap.httpSnap.last[PerfSnap.HTTPSnap.IDX_RESPONSE]) / PerfMon.scale);
+              g.fillRect(barposx, size.height - bottomSpace - barheight, smallBarWidth, barheight);
+              barposx += smallBarWidth;
+              // separator bar background
+              g.setColor(colorBackground);
+              g.fillRect(barposx, size.height - maxheight - bottomSpace, sepBarWidth, maxheight);
+              barposx += sepBarWidth;
+
+              // last response rejected  bar
+              g.setColor(colorBarResponseRejected);
+              barheight = (int) ((maxheight * snap.httpSnap.last[PerfSnap.HTTPSnap.IDX_RESPONSE_REJECTED]) / PerfMon.scale);
+              g.fillRect(barposx, size.height - bottomSpace - barheight, smallBarWidth, barheight);
+              barposx += smallBarWidth;
+              // separator bar background
+              g.setColor(colorBackground);
+              g.fillRect(barposx, size.height - maxheight - bottomSpace, sepBarWidth, maxheight);
+              barposx += sepBarWidth;
+
+              // last delivered bar
+              g.setColor(colorBarDeliveredHTTP);
+              barheight = (int) ((maxheight * snap.httpSnap.last[PerfSnap.HTTPSnap.IDX_DELIVERED]) / PerfMon.scale);
+              g.fillRect(barposx, size.height - bottomSpace - barheight, smallBarWidth, barheight);
+              barposx += smallBarWidth;
+              // separator bar background
+              g.setColor(colorBackground);
+              g.fillRect(barposx, size.height - maxheight - bottomSpace, sepBarWidth, maxheight);
+              barposx += sepBarWidth;
+
+              // last failed bar
+              g.setColor(colorBarFailedHTTP);
+              barheight = (int) ((maxheight * snap.httpSnap.last[PerfSnap.HTTPSnap.IDX_FAILED]) / PerfMon.scale);
+              g.fillRect(barposx, size.height - bottomSpace - barheight, smallBarWidth, barheight);
+              barposx += smallBarWidth;
+            }
             // separator bar background
             g.setColor(colorBackground);
             g.fillRect(barposx, size.height - maxheight - bottomSpace, sepBarWidth, maxheight);

@@ -14,11 +14,19 @@ public class PerformanceGraph extends Canvas {
   private static final Color colorGrid = new Color(0, 64, 0);
   private static final Color colorGridLight = new Color(0, 128, 0);
   private static final Color colorGridMin = new Color(0, 224, 0);
+  //smpp
   private static final Color colorGraphAccepted = Color.blue;
   private static final Color colorGraphRejected = Color.white;
   private static final Color colorGraphDelivered = Color.green;
   private static final Color colorGraphGwRejected = Color.cyan;
   private static final Color colorGraphFailed = Color.red;
+  //http
+  private static final Color colorGraphRequest = Color.blue;
+  private static final Color colorGraphRequestRejected = Color.white;
+  private static final Color colorGraphResponse = Color.green;
+  private static final Color colorGraphResponseRejected = Color.cyan;
+  private static final Color colorGraphDeliveredHTTP = Color.red;
+  private static final Color colorGraphFailedHTTP = Color.yellow;
 
   Image offscreen;
   int numGrids = 1;
@@ -152,44 +160,96 @@ public class PerformanceGraph extends Canvas {
         posx -= PerfMon.pixPerSecond;
         PerfSnap prevSnap = (PerfSnap) snaps.elementAt(idx);
         PerfSnap snap = (PerfSnap) snaps.elementAt(--idx);
+        if (PerfMon.statMode.equals(PerfMon.smppStatMode)) {
+        // smpp
         // draw submit graphs
         if( PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE || (PerfMon.viewMode == PerfMon.VIEWMODE_IO && PerfMon.viewInputEnabled) ) {
           if(PerfMon.viewMode == PerfMon.VIEWMODE_IO || (PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE && PerfMon.viewRejectedEnabled))
           drawGraphLine(g, posy, posx,
-                  (int) snap.last[PerfSnap.IDX_REJECTED],
-                  (int) prevSnap.last[PerfSnap.IDX_REJECTED],
+                  (int) snap.smppSnap.last[PerfSnap.SMPPSnap.IDX_REJECTED],
+                  (int) prevSnap.smppSnap.last[PerfSnap.SMPPSnap.IDX_REJECTED],
                   0,
                   0,
                   maxheight, colorGraphRejected);
           if(PerfMon.viewMode == PerfMon.VIEWMODE_IO || (PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE && PerfMon.viewAcceptedEnabled))
           drawGraphLine(g, posy, posx,
-                  (int) snap.last[PerfSnap.IDX_ACCEPTED], (int) prevSnap.last[PerfSnap.IDX_ACCEPTED],
-                  (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) (snap.last[PerfSnap.IDX_REJECTED]):0,
-                  (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) (prevSnap.last[PerfSnap.IDX_REJECTED]):0,
+                  (int) snap.smppSnap.last[PerfSnap.SMPPSnap.IDX_ACCEPTED], (int) prevSnap.smppSnap.last[PerfSnap.SMPPSnap.IDX_ACCEPTED],
+                  (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) (snap.smppSnap.last[PerfSnap.SMPPSnap.IDX_REJECTED]):0,
+                  (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) (prevSnap.smppSnap.last[PerfSnap.SMPPSnap.IDX_REJECTED]):0,
                   maxheight, colorGraphAccepted);
         }
         //draw deliver graphs
         if( PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE || (PerfMon.viewMode == PerfMon.VIEWMODE_IO && PerfMon.viewOutputEnabled) ) {
           if(PerfMon.viewMode == PerfMon.VIEWMODE_IO || (PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE && PerfMon.viewGwRejectedEnabled))
           drawGraphLine(g, posy, posx,
-                  (int) snap.last[PerfSnap.IDX_GW_REJECTED], (int) prevSnap.last[PerfSnap.IDX_GW_REJECTED],
+                  (int) snap.smppSnap.last[PerfSnap.SMPPSnap.IDX_GW_REJECTED], (int) prevSnap.smppSnap.last[PerfSnap.SMPPSnap.IDX_GW_REJECTED],
                   0, 0,
                   maxheight, colorGraphGwRejected);
           if(PerfMon.viewMode == PerfMon.VIEWMODE_IO || (PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE && PerfMon.viewDeliveredEnabled))
           drawGraphLine(g, posy, posx,
-                  (int) snap.last[PerfSnap.IDX_DELIVERED], (int) prevSnap.last[PerfSnap.IDX_DELIVERED],
-                  (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) snap.last[PerfSnap.IDX_GW_REJECTED]:0,
-                  (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) prevSnap.last[PerfSnap.IDX_GW_REJECTED]:0,
+                  (int) snap.smppSnap.last[PerfSnap.SMPPSnap.IDX_DELIVERED], (int) prevSnap.smppSnap.last[PerfSnap.SMPPSnap.IDX_DELIVERED],
+                  (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) snap.smppSnap.last[PerfSnap.SMPPSnap.IDX_GW_REJECTED]:0,
+                  (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) prevSnap.smppSnap.last[PerfSnap.SMPPSnap.IDX_GW_REJECTED]:0,
                   maxheight, colorGraphDelivered);
         }
         // draw transaction graphs
         if( PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE || (PerfMon.viewMode == PerfMon.VIEWMODE_IO && PerfMon.viewTransactionEnabled) ) {
           if(PerfMon.viewMode == PerfMon.VIEWMODE_IO || (PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE && PerfMon.viewFailedEnabled))
           drawGraphLine(g, posy, posx,
-                  (int) snap.last[PerfSnap.IDX_FAILED], (int) prevSnap.last[PerfSnap.IDX_FAILED],
-                  (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) snap.last[PerfSnap.IDX_GW_REJECTED]:0,
-                  (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) prevSnap.last[PerfSnap.IDX_GW_REJECTED]:0,
+                  (int) snap.smppSnap.last[PerfSnap.SMPPSnap.IDX_FAILED], (int) prevSnap.smppSnap.last[PerfSnap.SMPPSnap.IDX_FAILED],
+                  0,
+                  0,
                   maxheight, colorGraphFailed);
+        }
+       } else {
+        // http
+        // draw request graphs
+          if( PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE || (PerfMon.viewMode == PerfMon.VIEWMODE_IO && PerfMon.viewInputEnabled) ) {
+            if(PerfMon.viewMode == PerfMon.VIEWMODE_IO || (PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE && PerfMon.viewRequestRejectedEnabled))
+            drawGraphLine(g, posy, posx,
+                    (int) snap.httpSnap.last[PerfSnap.HTTPSnap.IDX_REQUEST_REJECTED],
+                    (int) prevSnap.httpSnap.last[PerfSnap.HTTPSnap.IDX_REQUEST_REJECTED],
+                    0,
+                    0,
+                    maxheight, colorGraphRequestRejected);
+            if(PerfMon.viewMode == PerfMon.VIEWMODE_IO || (PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE && PerfMon.viewRequestEnabled))
+            drawGraphLine(g, posy, posx,
+                    (int) snap.httpSnap.last[PerfSnap.HTTPSnap.IDX_REQUEST], (int) prevSnap.httpSnap.last[PerfSnap.HTTPSnap.IDX_REQUEST],
+                    (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) (snap.httpSnap.last[PerfSnap.HTTPSnap.IDX_REQUEST_REJECTED]):0,
+                    (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) (prevSnap.httpSnap.last[PerfSnap.HTTPSnap.IDX_REQUEST_REJECTED]):0,
+                    maxheight, colorGraphRequest);
+          }
+        // draw response graphs
+          if( PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE || (PerfMon.viewMode == PerfMon.VIEWMODE_IO && PerfMon.viewOutputEnabled) ) {
+            if(PerfMon.viewMode == PerfMon.VIEWMODE_IO || (PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE && PerfMon.viewResponseRejectedEnabled))
+            drawGraphLine(g, posy, posx,
+                    (int) snap.httpSnap.last[PerfSnap.HTTPSnap.IDX_RESPONSE_REJECTED], (int) prevSnap.httpSnap.last[PerfSnap.HTTPSnap.IDX_RESPONSE_REJECTED],
+                    0, 0,
+                    maxheight, colorGraphResponseRejected);
+            if(PerfMon.viewMode == PerfMon.VIEWMODE_IO || (PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE && PerfMon.viewResponseEnabled))
+            drawGraphLine(g, posy, posx,
+                    (int) snap.httpSnap.last[PerfSnap.HTTPSnap.IDX_RESPONSE], (int) prevSnap.httpSnap.last[PerfSnap.HTTPSnap.IDX_RESPONSE],
+                    (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) snap.httpSnap.last[PerfSnap.HTTPSnap.IDX_RESPONSE_REJECTED]:0,
+                    (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) prevSnap.httpSnap.last[PerfSnap.HTTPSnap.IDX_RESPONSE_REJECTED]:0,
+                    maxheight, colorGraphResponse);
+          }
+        // draw transaction graphs
+          if( PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE || (PerfMon.viewMode == PerfMon.VIEWMODE_IO && PerfMon.viewTransactionEnabled) ) {
+            if(PerfMon.viewMode == PerfMon.VIEWMODE_IO || (PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE && PerfMon.viewFailedHTTPEnabled))
+            drawGraphLine(g, posy, posx,
+                    (int) snap.httpSnap.last[PerfSnap.HTTPSnap.IDX_FAILED], (int) prevSnap.httpSnap.last[PerfSnap.HTTPSnap.IDX_FAILED],
+                    0,
+                    0,
+                    maxheight, colorGraphFailedHTTP);
+          }
+          if( PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE || (PerfMon.viewMode == PerfMon.VIEWMODE_IO && PerfMon.viewTransactionEnabled) ) {
+            if(PerfMon.viewMode == PerfMon.VIEWMODE_IO || (PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE && PerfMon.viewDeliveredHTTPEnabled))
+            drawGraphLine(g, posy, posx,
+                    (int) snap.httpSnap.last[PerfSnap.HTTPSnap.IDX_DELIVERED], (int) prevSnap.httpSnap.last[PerfSnap.HTTPSnap.IDX_DELIVERED],
+                    (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) snap.httpSnap.last[PerfSnap.HTTPSnap.IDX_FAILED]:0,
+                    (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) prevSnap.httpSnap.last[PerfSnap.HTTPSnap.IDX_FAILED]:0,
+                    maxheight, colorGraphDeliveredHTTP);
+          }
         }
       }
     }

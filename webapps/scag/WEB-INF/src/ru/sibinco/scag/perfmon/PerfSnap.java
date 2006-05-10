@@ -7,38 +7,59 @@ import java.util.*;
 import java.io.*;
 
 public class PerfSnap {
-    public long last[] = {0, 0, 0, 0, 0};
-    public long avg[] = {0, 0, 0, 0, 0};
-    public long total[] = {0, 0, 0, 0, 0};
 
     public int uptime;
     public int sctime;
-    public int queueSize;
     public int sessionCount;
 
+    public SMPPSnap smppSnap;
+    public HTTPSnap httpSnap;
 
     public String strUptime;
     public String strSctime;
     public String strSessionCount;
 
-    public final static int IDX_ACCEPTED = 0;
-    public final static int IDX_REJECTED = 1;
-    public final static int IDX_DELIVERED = 2;
-    public final static int IDX_GW_REJECTED = 3;
-    public final static int IDX_FAILED = 4;
+    public class SMPPSnap{
+      public long last[] = {0, 0, 0, 0, 0};
+      public long avg[] = {0, 0, 0, 0, 0};
+      public long total[] = {0, 0, 0, 0, 0};
 
+      public final static int IDX_ACCEPTED = 0;
+      public final static int IDX_REJECTED = 1;
+      public final static int IDX_DELIVERED = 2;
+      public final static int IDX_GW_REJECTED = 3;
+      public final static int IDX_FAILED = 4;
+    }
+
+    public class HTTPSnap{
+      public long last[] = {0, 0, 0, 0, 0, 0};
+      public long avg[] = {0, 0, 0, 0, 0, 0};
+      public long total[] = {0, 0, 0, 0, 0, 0};
+
+      public final static int IDX_REQUEST = 0;
+      public final static int IDX_REQUEST_REJECTED = 1;
+      public final static int IDX_RESPONSE = 2;
+      public final static int IDX_RESPONSE_REJECTED = 3;
+      public final static int IDX_DELIVERED = 4;
+      public final static int IDX_FAILED = 5;
+    }
 
     public PerfSnap() {
+      smppSnap = new SMPPSnap();
+      httpSnap = new HTTPSnap();
     }
 
     public PerfSnap(PerfSnap snap) {
-        System.arraycopy(snap.last, 0, last, 0, snap.last.length);
-        System.arraycopy(snap.avg, 0, avg, 0, snap.avg.length);
-        System.arraycopy(snap.total, 0, total, 0, snap.total.length);
+        this();
+        System.arraycopy(snap.smppSnap.last, 0, smppSnap.last, 0, snap.smppSnap.last.length);
+        System.arraycopy(snap.smppSnap.avg, 0, smppSnap.avg, 0, snap.smppSnap.avg.length);
+        System.arraycopy(snap.smppSnap.total, 0, smppSnap.total, 0, snap.smppSnap.total.length);
+        System.arraycopy(snap.httpSnap.last, 0, httpSnap.last, 0, snap.httpSnap.last.length);
+        System.arraycopy(snap.httpSnap.avg, 0, httpSnap.avg, 0, snap.httpSnap.avg.length);
+        System.arraycopy(snap.httpSnap.total, 0, httpSnap.total, 0, snap.httpSnap.total.length);
         uptime = snap.uptime;
         sctime = snap.sctime;
         sessionCount = snap.sessionCount;
-        queueSize = snap.queueSize;
         strSctime = new String(snap.strSctime);
         strUptime = new String(snap.strUptime);
         strSessionCount = new String(snap.strSessionCount);
@@ -103,10 +124,12 @@ public class PerfSnap {
         out.writeInt(uptime);
         out.writeInt(sctime);
         out.writeInt(sessionCount);
-        out.writeInt(queueSize);
-        writeArray(out, last);
-        writeArray(out, avg);
-        writeArray(out, total);
+        writeArray(out, smppSnap.last);
+        writeArray(out, smppSnap.avg);
+        writeArray(out, smppSnap.total);
+        writeArray(out, httpSnap.last);
+        writeArray(out, httpSnap.avg);
+        writeArray(out, httpSnap.total);
     }
 
     void writeArray(java.io.DataOutputStream out, long arrray[]) throws IOException {
@@ -120,10 +143,12 @@ public class PerfSnap {
         uptime = in.readInt();
         sctime = in.readInt();
         sessionCount = in.readInt();
-        queueSize = in.readInt();
-        readArray(in, last);
-        readArray(in, avg);
-        readArray(in, total);
+        readArray(in, smppSnap.last);
+        readArray(in, smppSnap.avg);
+        readArray(in, smppSnap.total);
+        readArray(in, httpSnap.last);
+        readArray(in, httpSnap.avg);
+        readArray(in, httpSnap.total);
     }
 
     void readArray(java.io.DataInputStream in, long array[]) throws IOException {
@@ -134,30 +159,54 @@ public class PerfSnap {
 
 
     public void init(SnapBufferReader in) throws IOException {
-        queueSize = in.readNetworkInt();
-
-        last[PerfSnap.IDX_ACCEPTED] = (long) in.readNetworkInt();
-        avg[PerfSnap.IDX_ACCEPTED] = (long) in.readNetworkInt();
-        total[PerfSnap.IDX_ACCEPTED] = in.readNetworkLong();
-
-        last[PerfSnap.IDX_REJECTED] = (long) in.readNetworkInt();
-        avg[PerfSnap.IDX_REJECTED] = (long) in.readNetworkInt();
-        total[PerfSnap.IDX_REJECTED] = in.readNetworkLong();
-
-        last[PerfSnap.IDX_DELIVERED] = (long) in.readNetworkInt();
-        avg[PerfSnap.IDX_DELIVERED] = (long) in.readNetworkInt();
-        total[PerfSnap.IDX_DELIVERED] = in.readNetworkLong();
-
-        last[PerfSnap.IDX_GW_REJECTED] = (long) in.readNetworkInt();
-        avg[PerfSnap.IDX_GW_REJECTED] = (long) in.readNetworkInt();
-        total[PerfSnap.IDX_GW_REJECTED] = in.readNetworkLong();
-
-        last[PerfSnap.IDX_FAILED] = (long) in.readNetworkInt();
-        avg[PerfSnap.IDX_FAILED] = (long) in.readNetworkInt();
-        total[PerfSnap.IDX_FAILED] = in.readNetworkLong();
-
         sessionCount = in.readNetworkInt();
         uptime = in.readNetworkInt();
         sctime = in.readNetworkInt();
+
+        //smpp counter
+        smppSnap.last[PerfSnap.SMPPSnap.IDX_ACCEPTED] = (long) in.readNetworkInt();
+        smppSnap.avg[PerfSnap.SMPPSnap.IDX_ACCEPTED] = (long) in.readNetworkInt();
+        smppSnap.total[PerfSnap.SMPPSnap.IDX_ACCEPTED] =  in.readNetworkLong();
+
+        smppSnap.last[PerfSnap.SMPPSnap.IDX_REJECTED] = (long) in.readNetworkInt();
+        smppSnap.avg[PerfSnap.SMPPSnap.IDX_REJECTED] = (long) in.readNetworkInt();
+        smppSnap.total[PerfSnap.SMPPSnap.IDX_REJECTED] = in.readNetworkLong();
+
+        smppSnap.last[PerfSnap.SMPPSnap.IDX_DELIVERED] = (long) in.readNetworkInt();
+        smppSnap.avg[PerfSnap.SMPPSnap.IDX_DELIVERED] =  (long) in.readNetworkInt();
+        smppSnap.total[PerfSnap.SMPPSnap.IDX_DELIVERED] = in.readNetworkLong();
+
+        smppSnap.last[PerfSnap.SMPPSnap.IDX_GW_REJECTED] = (long) in.readNetworkInt();
+        smppSnap.avg[PerfSnap.SMPPSnap.IDX_GW_REJECTED] = (long) in.readNetworkInt();
+        smppSnap.total[PerfSnap.SMPPSnap.IDX_GW_REJECTED] = in.readNetworkLong();
+
+        smppSnap.last[PerfSnap.SMPPSnap.IDX_FAILED] = (long) in.readNetworkInt();
+        smppSnap.avg[PerfSnap.SMPPSnap.IDX_FAILED] = (long) in.readNetworkInt();
+        smppSnap.total[PerfSnap.SMPPSnap.IDX_FAILED] = in.readNetworkLong();
+
+       //http counter
+        httpSnap.last[PerfSnap.HTTPSnap.IDX_REQUEST] = (long) in.readNetworkInt();
+        httpSnap.avg[PerfSnap.HTTPSnap.IDX_REQUEST] = (long) in.readNetworkInt();
+        httpSnap.total[PerfSnap.HTTPSnap.IDX_REQUEST] = in.readNetworkLong();
+
+        httpSnap.last[PerfSnap.HTTPSnap.IDX_REQUEST_REJECTED] = (long) in.readNetworkInt();
+        httpSnap.avg[PerfSnap.HTTPSnap.IDX_REQUEST_REJECTED] = (long) in.readNetworkInt();
+        httpSnap.total[PerfSnap.HTTPSnap.IDX_REQUEST_REJECTED] = in.readNetworkLong();
+
+        httpSnap.last[PerfSnap.HTTPSnap.IDX_RESPONSE] = (long) in.readNetworkInt();
+        httpSnap.avg[PerfSnap.HTTPSnap.IDX_RESPONSE] = (long) in.readNetworkInt();
+        httpSnap.total[PerfSnap.HTTPSnap.IDX_RESPONSE] = in.readNetworkLong();
+
+        httpSnap.last[PerfSnap.HTTPSnap.IDX_RESPONSE_REJECTED] = (long) in.readNetworkInt();
+        httpSnap.avg[PerfSnap.HTTPSnap.IDX_RESPONSE_REJECTED] = (long) in.readNetworkInt();
+        httpSnap.total[PerfSnap.HTTPSnap.IDX_RESPONSE_REJECTED] = in.readNetworkLong();
+
+        httpSnap.last[PerfSnap.HTTPSnap.IDX_DELIVERED] = (long) in.readNetworkInt();
+        httpSnap.avg[PerfSnap.HTTPSnap.IDX_DELIVERED] = (long) in.readNetworkInt();
+        httpSnap.total[PerfSnap.HTTPSnap.IDX_DELIVERED] = in.readNetworkLong();
+
+        httpSnap.last[PerfSnap.HTTPSnap.IDX_FAILED] = (long) in.readNetworkInt();
+        httpSnap.avg[PerfSnap.HTTPSnap.IDX_FAILED] = (long) in.readNetworkInt();
+        httpSnap.total[PerfSnap.HTTPSnap.IDX_FAILED] = in.readNetworkLong();
     }
 }

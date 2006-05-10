@@ -8,7 +8,7 @@ public class PerfInfoTable extends Canvas {
 
     static final int pad = 1;
     static final int grid = 1;
-    static final int numHeads = 5;
+    static int numHeads = 5;
     static final int numRows = 3;
     static final int colorShift = 16;
 
@@ -17,11 +17,12 @@ public class PerfInfoTable extends Canvas {
     static final Color lightShadowColor = SystemColor.controlLtHighlight;
     static final Color textColor = SystemColor.textText;
     static final Color headsColor[] = {
-            new Color(bgColor.getRed(), bgColor.getGreen(), bgColor.getBlue() + colorShift), // accepted
-            new Color(bgColor.getRed() + colorShift, bgColor.getGreen() + colorShift, bgColor.getBlue() + colorShift), // rejected
-            new Color(bgColor.getRed(), bgColor.getGreen() + colorShift, bgColor.getBlue()), // delivered
-            new Color(bgColor.getRed(), bgColor.getGreen() + colorShift, bgColor.getBlue() + colorShift), // Gw rejected
-            new Color(bgColor.getRed() + colorShift, bgColor.getGreen(), bgColor.getBlue()), // Failed
+            new Color(bgColor.getRed(),              bgColor.getGreen(),              bgColor.getBlue() + colorShift), // accepted || request
+            new Color(bgColor.getRed() + colorShift, bgColor.getGreen() + colorShift, bgColor.getBlue() + colorShift), // rejected || request rejected
+            new Color(bgColor.getRed(),              bgColor.getGreen() + colorShift, bgColor.getBlue()), // delivered || response
+            new Color(bgColor.getRed(),              bgColor.getGreen() + colorShift, bgColor.getBlue() + colorShift), // Gw rejected || response rejected
+            new Color(bgColor.getRed() + colorShift, bgColor.getGreen(),              bgColor.getBlue()), // Failed || deliveredHTTP
+            new Color(bgColor.getRed() + colorShift, bgColor.getGreen() + colorShift, bgColor.getBlue()) // FailedHTTP
     };
 
     PerfSnap snap;
@@ -35,23 +36,27 @@ public class PerfInfoTable extends Canvas {
     public PerfInfoTable(PerfSnap snap) {
         this.snap = new PerfSnap(snap);
         prefSize = new Dimension(100, 0);
-
-        heads = new String[numHeads];
-        for (int i = 0; i < numHeads; i++) {
-            heads[i] = PerfMon.localeText.getString("ptabh." + i);
-        }
-
-        rows = new String[numRows];
-        for (int i = 0; i < numRows; i++) {
-            rows[i] = PerfMon.localeText.getString("ptabr." + i);
-        }
-
-        invalidate();
+        updateColumns();
     }
 
     public synchronized void setSnap(PerfSnap snap) {
         this.snap = new PerfSnap(snap);
+        updateColumns();
         this.repaint();
+    }
+
+    public void updateColumns() {
+      numHeads = (PerfMon.statMode.equals(PerfMon.smppStatMode)?5:6);
+      heads = new String[numHeads];
+      for (int i = 0; i < numHeads; i++) {
+          heads[i] = PerfMon.localeText.getString("ptabh."+PerfMon.statMode+"."+i);
+      }
+
+      rows = new String[numRows];
+      for (int i = 0; i < numRows; i++) {
+          rows[i] = PerfMon.localeText.getString("ptabr." + i);
+      }
+      invalidate();
     }
 
     public void invalidate() {
@@ -127,9 +132,15 @@ public class PerfInfoTable extends Canvas {
 
         {
             // draw counters
-            drawCounters(g, snap.last, sz, fm, 1);
-            drawCounters(g, snap.avg, sz, fm, 2);
-            drawCounters(g, snap.total, sz, fm, 3);
+            if (PerfMon.statMode.equals(PerfMon.smppStatMode)) {
+              drawCounters(g, snap.smppSnap.last, sz, fm, 1);
+              drawCounters(g, snap.smppSnap.avg, sz, fm, 2);
+              drawCounters(g, snap.smppSnap.total, sz, fm, 3);
+            } else {
+              drawCounters(g, snap.httpSnap.last, sz, fm, 1);
+              drawCounters(g, snap.httpSnap.avg, sz, fm, 2);
+              drawCounters(g, snap.httpSnap.total, sz, fm, 3);
+            }
         }
 
         {

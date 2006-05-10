@@ -1,4 +1,4 @@
-<project default="update" basedir="." name="SCA Gateway web application">
+<project default="update" basedir="." name="MSA Gateway web application">
   <property file="../build.properties"/>
   <property environment="env"/>
   <property name="java_src" location="${basedir}/WEB-INF/src"/>
@@ -51,6 +51,7 @@
       <fileset dir="${java_out}">
         <include name="${perfmon_path}/applet/**"/>
         <include name="${perfmon_path}/PerfSnap.class"/>
+        <include name="${perfmon_path}/PerfSnap*.class"/>
       </fileset>
       <fileset dir="${exploded}/unjar_tmp">
         <include name="ru/sibinco/lib/backend/applet/**"/>

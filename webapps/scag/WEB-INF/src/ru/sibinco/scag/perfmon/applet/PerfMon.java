@@ -17,6 +17,9 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
 
     public static final int VIEWMODE_IO = 0;
     public static final int VIEWMODE_SEPARATE = 1;
+    public static final String smppStatMode = "smpp";
+    public static final String httpStatMode = "http";
+    public static String statMode = smppStatMode;
     AdvancedLabel uptimeLabel;
     AdvancedLabel sctimeLabel;
     AdvancedLabel sessionCountLabel;
@@ -31,12 +34,22 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     CheckboxMenuItem menuOutput;
     CheckboxMenuItem menuTransaction;
 
+    //smpp
     CheckboxMenuItem menuAccepted;
     CheckboxMenuItem menuRejected;
     CheckboxMenuItem menuDelivered;
     CheckboxMenuItem menuGwRejected;
     CheckboxMenuItem menuFailed;
 
+    //http
+    CheckboxMenuItem menuRequest;
+    CheckboxMenuItem menuRequestRejected;
+    CheckboxMenuItem menuResponse;
+    CheckboxMenuItem menuResponseRejected;
+    CheckboxMenuItem menuDeliveredHTTP;
+    CheckboxMenuItem menuFailedHTTP;
+
+    MenuItem statisticsMode;
     Menu menuIncrease;
     Menu menuDecrease;
     MenuItem menuIncrScale;
@@ -60,12 +73,19 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     public static boolean viewInputEnabled = true;
     public static boolean viewOutputEnabled = true;
     public static boolean viewTransactionEnabled = true;
+    //smpp
     public static boolean viewAcceptedEnabled = true;
     public static boolean viewRejectedEnabled = true;
     public static boolean viewDeliveredEnabled = true;
     public static boolean viewGwRejectedEnabled = true;
     public static boolean viewFailedEnabled = true;
-
+    //http
+    public static boolean viewRequestEnabled = true;
+    public static boolean viewRequestRejectedEnabled = true;
+    public static boolean viewResponseEnabled = true;
+    public static boolean viewResponseRejectedEnabled = true;
+    public static boolean viewDeliveredHTTPEnabled = true;
+    public static boolean viewFailedHTTPEnabled = true;
 
     public void init() {
         System.out.println("Initing...");
@@ -117,22 +137,41 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
         popupMenu = new PopupMenu(localeText.getString("popup.options"));
         menuSwitch = new MenuItem(localeText.getString("popup.switch"));
         menuSwitch.addActionListener(this);
+        statisticsMode = new MenuItem(localeText.getString("popup.statistics_mode")+" "+ (statMode.equals(smppStatMode)?localeText.getString("popup.http"):localeText.getString("popup.smpp")));
+        statisticsMode.addActionListener(this);
+
         menuInput = new CheckboxMenuItem(localeText.getString("popup.input"), viewInputEnabled);
         menuInput.addItemListener(this);
         menuOutput = new CheckboxMenuItem(localeText.getString("popup.output"), viewOutputEnabled);
         menuOutput.addItemListener(this);
         menuTransaction = new CheckboxMenuItem(localeText.getString("popup.transaction"), viewTransactionEnabled);
         menuTransaction.addItemListener(this);
-        menuAccepted = new CheckboxMenuItem(localeText.getString("popup.accepted"), viewAcceptedEnabled);
+
+        //smpp
+        menuAccepted = new CheckboxMenuItem(localeText.getString("popup.smpp.accepted"), viewAcceptedEnabled);
         menuAccepted.addItemListener(this);
-        menuRejected = new CheckboxMenuItem(localeText.getString("popup.rejected"), viewRejectedEnabled);
+        menuRejected = new CheckboxMenuItem(localeText.getString("popup.smpp.rejected"), viewRejectedEnabled);
         menuRejected.addItemListener(this);
-        menuDelivered = new CheckboxMenuItem(localeText.getString("popup.delivered"), viewDeliveredEnabled);
+        menuDelivered = new CheckboxMenuItem(localeText.getString("popup.smpp.delivered"), viewDeliveredEnabled);
         menuDelivered.addItemListener(this);
-        menuGwRejected = new CheckboxMenuItem(localeText.getString("popup.gwrejected"), viewGwRejectedEnabled);
+        menuGwRejected = new CheckboxMenuItem(localeText.getString("popup.smpp.gwrejected"), viewGwRejectedEnabled);
         menuGwRejected.addItemListener(this);
-        menuFailed = new CheckboxMenuItem(localeText.getString("popup.failed"), viewFailedEnabled);
+        menuFailed = new CheckboxMenuItem(localeText.getString("popup.smpp.failed"), viewFailedEnabled);
         menuFailed.addItemListener(this);
+
+        //http
+        menuRequest = new CheckboxMenuItem(localeText.getString("popup.http.request"), viewRequestEnabled);
+        menuRequest.addItemListener(this);
+        menuRequestRejected = new CheckboxMenuItem(localeText.getString("popup.http.requestrejected"), viewRequestRejectedEnabled);
+        menuRequestRejected.addItemListener(this);
+        menuResponse = new CheckboxMenuItem(localeText.getString("popup.http.response"), viewResponseEnabled);
+        menuResponse.addItemListener(this);
+        menuResponseRejected = new CheckboxMenuItem(localeText.getString("popup.http.responserejected"), viewResponseRejectedEnabled);
+        menuResponseRejected.addItemListener(this);
+        menuDeliveredHTTP = new CheckboxMenuItem(localeText.getString("popup.http.delivered"), viewDeliveredHTTPEnabled);
+        menuDeliveredHTTP.addItemListener(this);
+        menuFailedHTTP = new CheckboxMenuItem(localeText.getString("popup.http.failed"), viewFailedHTTPEnabled);
+        menuFailedHTTP.addItemListener(this);
 
         menuIncrease = new Menu(localeText.getString("popup.increase"));
         menuDecrease = new Menu(localeText.getString("popup.decrease"));
@@ -160,6 +199,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
 
         popupMenu.add(menuIncrease);
         popupMenu.add(menuDecrease);
+        popupMenu.add(statisticsMode);
         popupMenu.add(menuSwitch);
         popupMenu.add(new MenuItem("-"));
         if (viewMode == VIEWMODE_IO) {
@@ -167,11 +207,20 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
             popupMenu.add(menuOutput);
             popupMenu.add(menuTransaction);
         } else {
-            popupMenu.add(menuAccepted);
-            popupMenu.add(menuRejected);
-            popupMenu.add(menuDelivered);
-            popupMenu.add(menuGwRejected);
-            popupMenu.add(menuFailed);
+            if (statMode.equals(smppStatMode)) {
+              popupMenu.add(menuAccepted);
+              popupMenu.add(menuRejected);
+              popupMenu.add(menuDelivered);
+              popupMenu.add(menuGwRejected);
+              popupMenu.add(menuFailed);
+            } else {
+              popupMenu.add(menuRequest);
+              popupMenu.add(menuRequestRejected);
+              popupMenu.add(menuResponse);
+              popupMenu.add(menuResponseRejected);
+              popupMenu.add(menuDeliveredHTTP);
+              popupMenu.add(menuFailedHTTP);
+            }
         }
         add(popupMenu);
         perfbar = new PerformanceBar(snap);
@@ -359,18 +408,36 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
                 popupMenu.remove(menuInput);
                 popupMenu.remove(menuOutput);
                 popupMenu.remove(menuTransaction);
-                popupMenu.add(menuAccepted);
-                popupMenu.add(menuRejected);
-                popupMenu.add(menuDelivered);
-                popupMenu.add(menuGwRejected);
-                popupMenu.add(menuFailed);
+                if (statMode.equals(smppStatMode)) {
+                  popupMenu.add(menuAccepted);
+                  popupMenu.add(menuRejected);
+                  popupMenu.add(menuDelivered);
+                  popupMenu.add(menuGwRejected);
+                  popupMenu.add(menuFailed);
+                } else {
+                  popupMenu.add(menuRequest);
+                  popupMenu.add(menuRequestRejected);
+                  popupMenu.add(menuResponse);
+                  popupMenu.add(menuResponseRejected);
+                  popupMenu.add(menuDeliveredHTTP);
+                  popupMenu.add(menuFailedHTTP);
+                }
             } else {
                 viewMode = VIEWMODE_IO;
-                popupMenu.remove(menuAccepted);
-                popupMenu.remove(menuRejected);
-                popupMenu.remove(menuDelivered);
-                popupMenu.remove(menuGwRejected);
-                popupMenu.remove(menuFailed);
+                if (statMode.equals(smppStatMode)) {
+                  popupMenu.remove(menuAccepted);
+                  popupMenu.remove(menuRejected);
+                  popupMenu.remove(menuDelivered);
+                  popupMenu.remove(menuGwRejected);
+                  popupMenu.remove(menuFailed);
+                } else {
+                  popupMenu.remove(menuRequest);
+                  popupMenu.remove(menuRequestRejected);
+                  popupMenu.remove(menuResponse);
+                  popupMenu.remove(menuResponseRejected);
+                  popupMenu.remove(menuDeliveredHTTP);
+                  popupMenu.remove(menuFailedHTTP);
+                }
                 popupMenu.add(menuInput);
                 popupMenu.add(menuOutput);
                 popupMenu.add(menuTransaction);
@@ -399,6 +466,42 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
             if (pixPerSecond > 2) pixPerSecond--;
             perfbar.invalidate();
             perfGraph.invalidate();
+        } else if (e.getSource() == statisticsMode) {
+           synchronized(statisticsMode) {
+             if (statMode.equals(smppStatMode)) {
+                statMode = httpStatMode;
+                statisticsMode.setLabel(localeText.getString("popup.statistics_mode")+" "+localeText.getString("popup.smpp"));
+                if (viewMode == VIEWMODE_SEPARATE) {
+                  popupMenu.remove(menuAccepted);
+                  popupMenu.remove(menuRejected);
+                  popupMenu.remove(menuDelivered);
+                  popupMenu.remove(menuGwRejected);
+                  popupMenu.remove(menuFailed);
+                  popupMenu.add(menuRequest);
+                  popupMenu.add(menuRequestRejected);
+                  popupMenu.add(menuResponse);
+                  popupMenu.add(menuResponseRejected);
+                  popupMenu.add(menuDeliveredHTTP);
+                  popupMenu.add(menuFailedHTTP);
+                }
+             } else {
+                statMode = smppStatMode;
+                statisticsMode.setLabel(localeText.getString("popup.statistics_mode")+" "+localeText.getString("popup.http"));
+                if (viewMode == VIEWMODE_SEPARATE) {
+                  popupMenu.remove(menuRequest);
+                  popupMenu.remove(menuRequestRejected);
+                  popupMenu.remove(menuResponse);
+                  popupMenu.remove(menuResponseRejected);
+                  popupMenu.remove(menuDeliveredHTTP);
+                  popupMenu.remove(menuFailedHTTP);
+                  popupMenu.add(menuAccepted);
+                  popupMenu.add(menuRejected);
+                  popupMenu.add(menuDelivered);
+                  popupMenu.add(menuGwRejected);
+                  popupMenu.add(menuFailed);
+                }
+             }
+           }
         }
     }
 
@@ -409,7 +512,8 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
             viewOutputEnabled = menuOutput.getState();
         } else if (e.getSource() == menuTransaction) {
             viewTransactionEnabled = menuTransaction.getState();
-        } else if (e.getSource() == menuAccepted) {
+        } //smpp
+        else if (e.getSource() == menuAccepted) {
             viewAcceptedEnabled = menuAccepted.getState();
         } else if (e.getSource() == menuRejected) {
             viewRejectedEnabled = menuRejected.getState();
@@ -419,6 +523,19 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
             viewDeliveredEnabled = menuDelivered.getState();
         } else if (e.getSource() == menuGwRejected) {
             viewGwRejectedEnabled = menuGwRejected.getState();
+        } //http
+        else if (e.getSource() == menuRequest) {
+          viewRequestEnabled = menuRequest.getState();
+        } else if (e.getSource() == menuRequestRejected) {
+          viewRequestRejectedEnabled = menuRequestRejected.getState();
+        } else if (e.getSource() == menuResponse) {
+          viewResponseEnabled = menuResponse.getState();
+        } else if (e.getSource() == menuResponseRejected) {
+          viewResponseRejectedEnabled = menuResponseRejected.getState();
+        } else if (e.getSource() == menuDeliveredHTTP) {
+          viewDeliveredHTTPEnabled = menuDeliveredHTTP.getState();
+        } else if (e.getSource() == menuFailedHTTP) {
+          viewFailedHTTPEnabled = menuFailedHTTP.getState();
         }
     }
 
