@@ -9,7 +9,7 @@
 #include "HttpProcessor.h"
 #include "HttpRouter.h"
 
-#include "HttpLogger.h"
+#include "logger/Logger.h"
 
 namespace scag { namespace transport { namespace http {
 
@@ -30,6 +30,7 @@ class HttpProcessorImpl : public HttpProcessor
 
         virtual ~HttpProcessorImpl() {}
     protected:
+        smsc::logger::Logger* logger;
         HttpRouterImpl router;
 
         void registerEvent(int event, HttpRequest& cmd);
@@ -70,13 +71,13 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
 {
     HttpRoute r;
 
-    http_log_debug("Got http_request command host=%s:%d, path=%s, abonent=%s", request.getSite().c_str(), request.getSitePath().c_str(), request.getAbonent().c_str());
+    smsc_log_debug( logger, "Got http_request command host=%s:%d, path=%s, abonent=%s", request.getSite().c_str(), request.getSitePath().c_str(), request.getAbonent().c_str());
 
     RuleStatus rs;
 
     try{
         r = router.findRoute(request.getAbonent(), request.getSite(), request.getSitePath(), request.getSitePort());
-        http_log_debug("httproute found route_id=%s, service_id=%d", r.id.c_str(), r.service_id);
+        smsc_log_debug( logger, "httproute found route_id=%s, service_id=%d", r.id.c_str(), r.service_id);
         request.setServiceId(r.service_id);
         request.setRouteId(r.id);
         request.setProviderId(r.provider_id);
@@ -95,11 +96,11 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
             }
 
         } else
-            http_log_debug("session not found for abonent=%s, USR=%d", request.getAbonent().c_str(), request.getUSR());
+            smsc_log_error( logger, "session not found for abonent=%s, USR=%d", request.getAbonent().c_str(), request.getUSR());
     }
     catch(RouteNotFoundException& e)
     {
-        http_log_debug("httproute not found");
+        smsc_log_error( logger, "httproute not found");
     }
 
     registerEvent(httpRequestRejected, request);
@@ -109,7 +110,7 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
 
 bool HttpProcessorImpl::processResponse(HttpResponse& response)
 {
-    http_log_debug("Got http_response command abonent=%s, USR=%d, route_id=%s, service_id=%s", response.getAbonent().c_str(), response.getUSR(), response.getRouteId().c_str(), response.getServiceId());
+    smsc_log_debug( logger, "Got http_response command abonent=%s, USR=%d, route_id=%s, service_id=%s", response.getAbonent().c_str(), response.getUSR(), response.getRouteId().c_str(), response.getServiceId());
 
     CSessionKey sk = {response.getUSR(), response.getAbonent().c_str()};
     SessionPtr se = SessionManager::Instance().getSession(sk);
@@ -125,7 +126,7 @@ bool HttpProcessorImpl::processResponse(HttpResponse& response)
             return true;
         }
     } else
-        http_log_debug("http_response session not found abonent=%s, USR=%d", response.getAbonent().c_str(), response.getUSR());
+        smsc_log_error( logger, "http_response session not found abonent=%s, USR=%d", response.getAbonent().c_str(), response.getUSR());
 
     registerEvent(httpRequestRejected, response);
 
@@ -134,7 +135,7 @@ bool HttpProcessorImpl::processResponse(HttpResponse& response)
 
 void HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
 {
-    http_log_debug("Got http_status_response command abonent=%s, USR=%d, route_id=%s, service_id=%s, delivered=%d",
+    smsc_log_debug( logger, "Got http_status_response command abonent=%s, USR=%d, route_id=%s, service_id=%s, delivered=%d",
              response.getAbonent().c_str(), response.getUSR(), response.getRouteId().c_str(), response.getServiceId(), delivered);
 
     CSessionKey sk = {response.getUSR(), response.getAbonent().c_str()};
@@ -152,13 +153,14 @@ void HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
         }
     }
     else
-        http_log_debug("http_status_response session not found abonent=%s, USR=%d", response.getAbonent().c_str(), response.getUSR());
+        smsc_log_error( logger, "http_status_response session not found abonent=%s, USR=%d", response.getAbonent().c_str(), response.getUSR());
 
     registerEvent(httpFailed, response);
 }
         
 void HttpProcessorImpl::init(const std::string& cfg)
 {
+    logger = Logger::getInstance("httpProc");
     router.init(cfg + "/http_routes.xml");
 }
 

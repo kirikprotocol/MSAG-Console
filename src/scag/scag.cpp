@@ -23,7 +23,6 @@
 #include "util/xml/utilFunctions.h"
 #include "scag/re/XMLHandlers.h"
 
-#include "scag/transport/http/HttpLogger.h"
 #include "scag/transport/http/HttpRouter.h"
 #include "scag/pers/PersClient.h"
 

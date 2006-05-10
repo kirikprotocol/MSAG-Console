@@ -5,7 +5,6 @@
 #include "Managers.h"
 #include "HttpCommand.h"
 #include "HttpProcessor.h"
-#include "HttpLogger.h"
 
 #define ICONV_BLOCK_SIZE 32
 
