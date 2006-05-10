@@ -51,7 +51,7 @@ namespace smsc {
 namespace inman {
 namespace comp {
 
-struct InapOpCode {
+struct CapSMSOpCode {
     enum {
 	InitialDPSMS 			= 60,
 	FurnishChargingInformationSMS	= 61,
