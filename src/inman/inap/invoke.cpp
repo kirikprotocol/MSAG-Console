@@ -1,41 +1,34 @@
 static char const ident[] = "$Id$";
-#include "inman/inap/dialog.hpp"
+#include "inman/inap/invoke.hpp"
 
 namespace smsc  {
 namespace inman {
 namespace inap  {
 
-void Invoke::send(void) throw(CustomException)
+//NOTE: resWait is forbidden
+void Invoke::notifyResultListener(TcapEntity* resp, InvokeStatus resKind)
 {
-    _dlg->sendInvoke(this);
-}
-
-void Invoke::notifyResultListener(TcapEntity* resp)
-{
-    if (_iResHdl)
-        _iResHdl->result(resp);
-    _status = Invoke::resLast;
-}
-
-void Invoke::notifyResultNListener(TcapEntity* resp)
-{
-    if (_iResHdl)
-        _iResHdl->resultNL(resp);
-    _status = Invoke::resNotLast;
-}
-
-void Invoke::notifyErrorListener(TcapEntity* resp)
-{
-    if (_iResHdl)
-        _iResHdl->error(resp);
-    _status = Invoke::resError;
-}
-
-void Invoke::notifyLCancelListener(void)
-{
-    if (_iResHdl)
-        _iResHdl->lcancel();
-    _status = Invoke::resLCancel;
+    if (_iResHdl) {
+        switch (resKind) {
+        case Invoke::resLast: {
+            _iResHdl->onInvokeResult(this, resp);
+            _iResHdl = NULL;
+        } break;
+        case Invoke::resNotLast:
+            _iResHdl->onInvokeResultNL(this, resp);
+        break;
+        case Invoke::resError: {
+            _iResHdl->onInvokeError(this, resp);
+            _iResHdl = NULL;
+        } break;
+        case Invoke::resLCancel: {
+            _iResHdl->onInvokeLCancel(this);
+            _iResHdl = NULL;
+        } break;
+        default:;
+        }
+    }
+    _status = resKind;
 }
 
 } // namespace inap

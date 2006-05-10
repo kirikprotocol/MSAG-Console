@@ -1,6 +1,6 @@
 #ident "$Id$"
-#ifndef __SMSC_INMAN_INAP_ENTITY__
-#define __SMSC_INMAN_INAP_ENTITY__
+#ifndef __SMSC_INMAN_TCAP_ENTITY__
+#define __SMSC_INMAN_TCAP_ENTITY__
 
 #include "inman/common/types.hpp"
 #include "inman/comp/compdefs.hpp"
@@ -13,8 +13,8 @@ namespace inap  {
 
 typedef std::vector<unsigned char> RawBuffer;
 
-class TcapEntity
-{
+//Component of TCAP Message
+class TcapEntity {
 protected:
     UCHAR_T     id;
     UCHAR_T     opcode;
@@ -30,9 +30,7 @@ public:
 
     USHORT_T    getId() const           { return id; }
     UCHAR_T     getTag() const          { return tag; }
-    void        setTag(UCHAR_T t)       { tag = t; }
     UCHAR_T     getOpcode() const       { return opcode; }
-    void        setOpcode(UCHAR_T opc)  { opcode = opc; }
     Component*  getParam() const        { return param; }
     //sets 'param' without passing ownership, it's caller responsibility to free Component
     void        setParam(Component* p)     { param = p; ownComp = false; }
@@ -47,13 +45,10 @@ public:
         if (param)
             param->encode(params);
     }
-
-//abstract:
-    virtual void send() throw(CustomException) = 0;
 };
 
 } //inap
 } //inman
 } //smsc
-#endif /* __SMSC_INMAN_INAP_ENTITY__ */
+#endif /* __SMSC_INMAN_TCAP_ENTITY__ */
 

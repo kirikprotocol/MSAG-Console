@@ -70,42 +70,6 @@ USHORT_T EINSS7_I97TStateInd(UCHAR_T          ssn,
 }
 
 
-USHORT_T EINSS7_I97TBeginInd(UCHAR_T          ssn,
-                             USHORT_T         userId,
-                             EINSS7INSTANCE_T tcapInstanceId,
-                             USHORT_T         dialogueId,
-                             UCHAR_T          priOrder,
-                             UCHAR_T          qualityOfService,
-                             UCHAR_T          destAddrLength,
-                             UCHAR_T          *destAddr_p,
-                             UCHAR_T          orgAddrLength,
-                             UCHAR_T          *orgAddr_p,
-                             UCHAR_T          compPresent,
-                             UCHAR_T          appContextLength,
-                             UCHAR_T          *appContext_p,
-                             USHORT_T         userInfoLength,
-                             UCHAR_T          *userInfo_p)
-{
-    smsc_log_debug(tcapLogger, "BEGIN_IND {"
-                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  DialogID: 0x%X\n"
-                    "  PriOrder: 0x%X, QoS: 0x%X\n"
-                    "  Comp. present: %s\n"
-                    "  Dest. address: %s\n"
-                    "  Org. address: %s\n"
-                    "  App. context: %s\n"
-                    "  User info: %s\n"
-                    "}",
-                   ssn, userId, tcapInstanceId, dialogueId, priOrder,
-                   qualityOfService, compPresent ? "TRUE":"FALSE",
-                   dump(destAddrLength, destAddr_p).c_str(),
-                   dump(orgAddrLength, orgAddr_p).c_str(),
-                   dump(appContextLength, appContext_p).c_str(),
-                   dump(userInfoLength, userInfo_p).c_str()
-                   );
-  //TODO: Send U_ABORT_REQ
-  return MSG_OK;
-}
 
 USHORT_T EINSS7_I97TContinueInd(UCHAR_T          ssn,
                                 USHORT_T         userId,
@@ -316,7 +280,7 @@ USHORT_T EINSS7_I97TUErrorInd(UCHAR_T          ssn,
                    );
     Dialog* dlg = findDialog( ssn, dialogueId );
     if (dlg)
-        dlg->handleUserError(invokeId, tag, opLength, op, paramLength, pm);
+        dlg->handleResultError(invokeId, tag, opLength, op, paramLength, pm);
     return MSG_OK;
 }
 
@@ -343,6 +307,39 @@ USHORT_T EINSS7_I97TPAbortInd(UCHAR_T          ssn,
     return MSG_OK;
 }
 
+USHORT_T EINSS7_I97TUAbortInd(UCHAR_T          ssn,
+                              USHORT_T         userId,
+                              EINSS7INSTANCE_T tcapInstanceId,
+                              USHORT_T         dialogueId,
+                              UCHAR_T          priOrder,
+                              UCHAR_T          qualityOfService,
+                              USHORT_T         abortInfoLength,
+                              UCHAR_T          *abortInfo_p,
+                              UCHAR_T          appContextLength,
+                              UCHAR_T          *appContext_p,
+                              USHORT_T         userInfoLength,
+                              UCHAR_T          *userInfo_p)
+{
+    smsc_log_debug(tcapLogger, "U_ABORT_IND {"
+                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
+                    "  DialogID: 0x%X\n"
+                    "  PriOrder: 0x%X, QoS: 0x%X\n"
+                    "  Abort info: %s\n"
+                    "  App. context: %s\n"
+                    "  User info: %s\n"
+                    "}",
+                   ssn, userId, tcapInstanceId, dialogueId,
+                   priOrder, qualityOfService, 
+                   dump(abortInfoLength, abortInfo_p ).c_str(),
+                   dump(appContextLength, appContext_p).c_str(),
+                   dump(userInfoLength, userInfo_p).c_str()
+                   );
+
+    Dialog* dlg = findDialog(ssn, dialogueId);
+    return !dlg ? MSG_OK :
+        dlg->handleUAbort(abortInfoLength, abortInfo_p, userInfoLength, userInfo_p);
+}
+
 USHORT_T EINSS7_I97TLCancelInd( UCHAR_T          ssn,
                                 USHORT_T         userId,
                                 EINSS7INSTANCE_T tcapInstanceId,
@@ -364,6 +361,43 @@ USHORT_T EINSS7_I97TLCancelInd( UCHAR_T          ssn,
 //-------------------------------------------------------------------------------------
 // TODO: Implement
 //-------------------------------------------------------------------------------------
+USHORT_T EINSS7_I97TBeginInd(UCHAR_T          ssn,
+                             USHORT_T         userId,
+                             EINSS7INSTANCE_T tcapInstanceId,
+                             USHORT_T         dialogueId,
+                             UCHAR_T          priOrder,
+                             UCHAR_T          qualityOfService,
+                             UCHAR_T          destAddrLength,
+                             UCHAR_T          *destAddr_p,
+                             UCHAR_T          orgAddrLength,
+                             UCHAR_T          *orgAddr_p,
+                             UCHAR_T          compPresent,
+                             UCHAR_T          appContextLength,
+                             UCHAR_T          *appContext_p,
+                             USHORT_T         userInfoLength,
+                             UCHAR_T          *userInfo_p)
+{
+    smsc_log_debug(tcapLogger, "BEGIN_IND {"
+                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
+                    "  DialogID: 0x%X\n"
+                    "  PriOrder: 0x%X, QoS: 0x%X\n"
+                    "  Comp. present: %s\n"
+                    "  Dest. address: %s\n"
+                    "  Org. address: %s\n"
+                    "  App. context: %s\n"
+                    "  User info: %s\n"
+                    "}",
+                   ssn, userId, tcapInstanceId, dialogueId, priOrder,
+                   qualityOfService, compPresent ? "TRUE":"FALSE",
+                   dump(destAddrLength, destAddr_p).c_str(),
+                   dump(orgAddrLength, orgAddr_p).c_str(),
+                   dump(appContextLength, appContext_p).c_str(),
+                   dump(userInfoLength, userInfo_p).c_str()
+                   );
+  // TODO: Implement
+  return MSG_OK;
+}
+
 USHORT_T EINSS7_I97TUniInd(UCHAR_T          ssn,
                            USHORT_T         userId,
                            EINSS7INSTANCE_T tcapInstanceId,
@@ -392,38 +426,6 @@ USHORT_T EINSS7_I97TUniInd(UCHAR_T          ssn,
                    qualityOfService, compPresent ? "TRUE":"FALSE",
                    dump(destAddrLength, destAddr_p).c_str(),
                    dump(orgAddrLength, orgAddr_p).c_str(),
-                   dump(appContextLength, appContext_p).c_str(),
-                   dump(userInfoLength, userInfo_p).c_str()
-                   );
-    // TODO: Implement
-    return MSG_OK;
-}
-
-
-USHORT_T EINSS7_I97TUAbortInd(UCHAR_T          ssn,
-                              USHORT_T         userId,
-                              EINSS7INSTANCE_T tcapInstanceId,
-                              USHORT_T         dialogueId,
-                              UCHAR_T          priOrder,
-                              UCHAR_T          qualityOfService,
-                              USHORT_T         abortInfoLength,
-                              UCHAR_T          *abortInfo_p,
-                              UCHAR_T          appContextLength,
-                              UCHAR_T          *appContext_p,
-                              USHORT_T         userInfoLength,
-                              UCHAR_T          *userInfo_p)
-{
-    smsc_log_debug(tcapLogger, "U_ABORT_IND {"
-                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  DialogID: 0x%X\n"
-                    "  PriOrder: 0x%X, QoS: 0x%X\n"
-                    "  Abort info: %s\n"
-                    "  App. context: %s\n"
-                    "  User info: %s\n"
-                    "}",
-                   ssn, userId, tcapInstanceId, dialogueId,
-                   priOrder, qualityOfService, 
-                   dump(abortInfoLength, abortInfo_p ).c_str(),
                    dump(appContextLength, appContext_p).c_str(),
                    dump(userInfoLength, userInfo_p).c_str()
                    );
