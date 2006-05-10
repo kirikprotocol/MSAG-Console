@@ -4,9 +4,10 @@
            xmlns:scag     ="http://www.sibinco.com/SCAG"
            xmlns:session  ="http://www.sibinco.com/SCAG/SESSIONS"
            xmlns:operation="http://www.sibinco.com/SCAG/OPERATIONS"
-	   xmlns:strings  ="http://www.sibinco.com/SCAG/STRINGS"
+       xmlns:strings  ="http://www.sibinco.com/SCAG/STRINGS"
            xmlns:bill     ="http://www.sibinco.com/SCAG/BILL"
-	   xmlns:profile  ="http://www.sibinco.com/SCAG/PROFILE"
-	   xmlns:log  	  ="http://www.sibinco.com/SCAG/LOG"
+       xmlns:profile  ="http://www.sibinco.com/SCAG/PROFILE"
+       xmlns:log      ="http://www.sibinco.com/SCAG/LOG"
+       xmlns:send      ="http://www.sibinco.com/SCAG/SEND"
            transport="{1}">
 

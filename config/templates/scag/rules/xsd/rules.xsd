@@ -7,6 +7,7 @@
    xmlns:strings="http://www.sibinco.com/SCAG/STRINGS"
    xmlns:bill="http://www.sibinco.com/SCAG/BILL"
    xmlns:profile="http://www.sibinco.com/SCAG/PROFILE"
+   xmlns:send="http://www.sibinco.com/SCAG/SEND"
    xmlns:log="http://www.sibinco.com/SCAG/LOG">
     
     <annotation>
@@ -22,6 +23,7 @@
     <import schemaLocation="strings.xsd"    namespace="http://www.sibinco.com/SCAG/STRINGS"/>
     <import schemaLocation="profile.xsd"    namespace="http://www.sibinco.com/SCAG/PROFILE"/>
     <import schemaLocation="log.xsd"        namespace="http://www.sibinco.com/SCAG/LOG"/>
+    <import schemaLocation="send.xsd"        namespace="http://www.sibinco.com/SCAG/SEND"/>
     
     <!-- General values types definition  -->
     <simpleType name="Value">
@@ -87,11 +89,12 @@
     <group name="Actions">
         <choice>
             <group ref="session:Actions"/>
-    	    <group ref="bill:Actions" />
-    	    <group ref="operation:Actions" />
-    	    <group ref="strings:Actions" />
-    	    <group ref="profile:Actions" />
-    	    <group ref="log:Actions" />
+            <group ref="bill:Actions" />
+            <group ref="operation:Actions" />
+            <group ref="strings:Actions" />
+            <group ref="profile:Actions" />
+            <group ref="log:Actions" />
+            <group ref="send:Actions" />
 
             <element name="set">
                 <complexType>

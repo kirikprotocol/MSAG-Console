@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://www.sibinco.com/SCAG/SEND" 
+    xmlns="http://www.w3.org/2001/XMLSchema"
+    xmlns:scag="http://www.sibinco.com/SCAG"
+    xmlns:send="http://www.sibinco.com/SCAG/SEND"
+    elementFormDefault="qualified">
+
+    <import schemaLocation="rules.xsd" namespace="http://www.sibinco.com/SCAG"/>  
+
+    <complexType name="addr">
+        <attribute name="to" type="scag:Value" use="required"/>
+    </complexType>
+
+    <group name="Actions">
+        <choice>
+            <element name="alarm">
+                <complexType>
+                    <attribute name="message" type="scag:Value" use="required"/>
+                    <attribute name="date" type="scag:Value" use="optional"/>
+               </complexType>
+<!--               <element name="sms" type="addr"/>
+               <element name="email" type="addr"/>
+               <element name="mms" type="addr"/> -->
+            </element>
+
+            <element name="warn">
+                <complexType>
+                    <attribute name="message" type="scag:Value" use="required"/>
+                    <attribute name="date" type="scag:Value" use="optional"/>
+               </complexType>
+            </element>
+
+            <element name="info">
+                <complexType>
+                    <attribute name="message" type="scag:Value" use="required"/>
+                    <attribute name="date" type="scag:Value" use="optional"/>
+               </complexType>
+            </element>
+
+            <element name="notify">
+                <complexType>
+                    <attribute name="message" type="scag:Value" use="required"/>
+                    <attribute name="date" type="scag:Value" use="optional"/>
+               </complexType>
+            </element>
+        </choice>
+    </group>
+</schema>
