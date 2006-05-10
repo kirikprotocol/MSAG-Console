@@ -5,6 +5,7 @@
 #include "scag/re/actions/ActionReturn.h"
 #include "scag/re/actions/Action.h"
 #include "scag/re/actions/ActionLog.h"
+#include "scag/re/actions/ActionSend.h"
 #include "scag/re/actions/ActionAbort.h"
 #include "scag/re/actions/ActionTrafficCheck.h"
 #include "scag/re/actions/ActionOperationWait.h"
@@ -64,6 +65,11 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
     if (name=="log:info") return new ActionLog(ActionLog::lgInfo);
     if (name=="log:warn") return new ActionLog(ActionLog::lgWarning);
     if (name=="log:error") return new ActionLog(ActionLog::lgError);
+
+    if (name=="send:alarm") return new ActionSend(ActionSend::Alarm);
+    if (name=="send:warn") return new ActionSend(ActionSend::Warning);
+    if (name=="send:info") return new ActionSend(ActionSend::Info);
+    if (name=="send:notify") return new ActionSend(ActionSend::Notify);
 
     Action * action = 0;
 
