@@ -7,6 +7,25 @@ namespace scag { namespace re { namespace actions {
 
 using namespace scag::stat;
 
+bool ActionSend::getStrProperty(ActionContext& context, std::string& str, const char *field_name, std::string& val)
+{
+    const char *name;
+    Property * p2 = 0;
+    FieldType ft = ActionContext::Separate(str, name);
+    if (ft != ftUnknown)  
+    {
+        if (!(p2 = context.getProperty(str))) 
+        {
+            smsc_log_warn(logger,"Action 'send': invalid '%s' property '%s'", field_name, str.c_str());
+            return false;
+        }
+
+        val = ConvertWStrToStr(p2->getStr());
+    } else
+        val = str;
+    return true;
+}
+
 IParserHandler * ActionSend::StartXMLSubSection(const std::string& name, const SectionParams& params,const ActionFactory& factory)
 {
     const char *p;
@@ -18,8 +37,14 @@ IParserHandler * ActionSend::StartXMLSubSection(const std::string& name, const S
     {
         ftTo = CheckParameter(params, propertyObject, "send", "to", true, true, wstrTo, bExist);
         strTo = ConvertWStrToStr(wstrTo);
+        try{
         if(ftTo == ftUnknown)
             Address a(strTo.c_str());
+        }
+        catch(...)
+        {
+          throw SCAGException("Action 'send': invalid sms address %s.", strTo.c_str());
+        }
         toSms.Push(strTo);
     }else if (name == "send:email")
     {
@@ -40,20 +65,23 @@ bool ActionSend::FinishXMLSubSection(const std::string& name)
 
 void ActionSend::init(const SectionParams& params,PropertyObject _propertyObject)
 {
+    uint32_t i, y, m, d, h, min, s, t, nn;
+    char p;
     char *ptr;
     bool bExist;
 
+    logger = Logger::getInstance("scag.re");
+
     propertyObject = _propertyObject;
 
-    ftMessage = CheckParameter(params, propertyObject, "send", "message", true, true, wstrMsg, bExist);
+    CheckParameter(params, propertyObject, "send", "message", true, true, wstrMsg, bExist);
     strMsg = ConvertWStrToStr(wstrMsg);
 
     CheckParameter(params, propertyObject, "send", "date", true, true, wstrDate, bExist);
     strDate = ConvertWStrToStr(wstrDate);
 
-    tm time;
-    ptr = strptime(strDate.c_str(), "%Y%m%d%T", &time);
-    if(!ptr || *ptr)
+    i = sscanf(strDate.c_str(), "%2u%2u%2u%2u%2u%2u%1u%2u%c", &y, &m, &d, &h, &min, &s, &t, &nn, &p);
+    if(i < 9 || m > 12 || !d || d > 31 || h > 23 || min > 60 || s > 59 || (p != '-' && p != '+'))
         throw SCAGException("Action 'send' : invalid 'date' parameter");
 
     smsc_log_debug(logger,"Action 'send':: inited... level=%d", level);
@@ -61,41 +89,18 @@ void ActionSend::init(const SectionParams& params,PropertyObject _propertyObject
 
 bool ActionSend::run(ActionContext& context)
 {
-    const char *name;
     SACC_ALARM_MESSAGE_t ev;
-    Property * p1 = 0;
-    Property * p2 = 0;
     std::string s2;
-    FieldType ft;
 
     Statistics& sm = Statistics::Instance();
 
-    if (ftMessage != ftUnknown)  
-    {
-        if (!(p2 = context.getProperty(strMsg))) 
-        {
-            smsc_log_warn(logger,"Action 'send': invalid message property '%s'", strMsg.c_str());
-            return true;
-        }
-
-        ev.pMessageText = ConvertWStrToStr(p2->getStr());
-    } else
-        ev.pMessageText = strMsg;
+    if(!getStrProperty(context, strMsg, "message", ev.pMessageText))
+        return true;
 
     for(int i = 0; i < toSms.Count(); i++)
     {
-        if ((ft = ActionContext::Separate(toSms[i], name)) != ftUnknown)  
-        {
-            if (!(p2 = context.getProperty(toSms[i]))) 
-            {
-                smsc_log_warn(logger,"Action 'send': invalid toSms property '%s'", toSms[i].c_str());
-                return true;
-            }
-
-            s2 = ConvertWStrToStr(p2->getStr());
-        } 
-        else
-            s2 = toSms[i];
+        if(!getStrProperty(context, toSms[i], "toSms", s2))
+            return true;
 
         try{
             Address a(s2.c_str());
@@ -109,29 +114,17 @@ bool ActionSend::run(ActionContext& context)
 
     for(int i = 0; i < toEmail.Count(); i++)
     {
-        if ((ft = ActionContext::Separate(toEmail[i], name)) != ftUnknown)
-        {
-            if (!(p2 = context.getProperty(toEmail[i]))) 
-            {
-                smsc_log_warn(logger,"Action 'send': invalid toEmail property '%s'", toEmail[i].c_str());
-                return true;
-            }
+        if(!getStrProperty(context, toEmail[i], "toEmail", s2))
+            return true;
 
-            s2 = ConvertWStrToStr(p2->getStr());
-        } 
-        else
-            s2 = toSms[i];
-
-        try{
-            ev.pAddressEmail += s2 + ";";
-        }
-        catch(...)
-        {
-            smsc_log_warn(logger,"Action 'send': invalid message 'sms:to' property '%s'", s2.c_str());
-        }
+        ev.pAddressEmail += s2 + ";";
     }
 
-    ev.pDeliveryTime = strDate;
+    if(!getStrProperty(context, strDate, "date", ev.pDeliveryTime))
+        return true;
+
+    smsc_log_debug(logger, "msg: %s, toEmail: %s, toSms: %s, date: %s", ev.pMessageText.c_str(), ev.pAddressEmail.c_str(), ev.pAbonentsNumbers.c_str(), ev.pDeliveryTime.c_str());
+
     sm.registerSaccEvent(ev);
     return true;
 }

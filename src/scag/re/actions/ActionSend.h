@@ -34,12 +34,12 @@ protected:
     Array<std::string> toEmail;
 
     SendLevel level;
-    FieldType ftMessage;
 
     PropertyObject propertyObject;
 
     virtual IParserHandler * StartXMLSubSection(const std::string& name, const SectionParams& params,const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);
+    bool getStrProperty(ActionContext& context, std::string& str, const char *field_name, std::string& val);
 };
 
 
