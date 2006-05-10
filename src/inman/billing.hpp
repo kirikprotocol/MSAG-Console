@@ -24,7 +24,8 @@ ChargeSmsResult     <-   | bilProcessed:     SSF <- ContinueSMS ]
 #include "inman/incache.hpp"
 #include "inman/storage/FileStorages.hpp"
 
-using smsc::inman::inap::Inap;
+using smsc::inman::inap::CAPErrorSource;
+using smsc::inman::inap::CapSMSDlg;
 using smsc::inman::inap::Dialog;
 using smsc::inman::inap::SSFhandler;
 using smsc::inman::interaction::Connect;
@@ -157,9 +158,19 @@ class Billing : public SSFhandler, public InmanHandler,
                 public InAbonentQueryListenerITF, public TimerListenerITF {
 public:
     typedef enum {
-        bilIdle, bilStarted, bilQueried, bilInited, bilReleased, bilContinued, 
-        bilApproved, bilComplete, bilAborted
+        bilIdle, bilAborted,
+        bilStarted,     // SSF <- SMSC : CHARGE_SMS_TAG
+        bilQueried,     // SSF <- AbProvider: query result
+        bilInited,      // SSF -> SCF : InitialDPSMS
+        bilReleased,    // SSF <- SCF : ReleaseSMS
+                        // SSF -> SMSC : CHARGE_SMS_RESULT_TAG
+        bilContinued,   // SSF <- SCF : ContinueSMS
+                        // SSF -> SMSC : CHARGE_SMS_RESULT_TAG
+        bilApproved,    // SSF <- SMSC : DELIVERY_SMS_RESULT_TAG
+        bilReported,    // SSF -> SCF : EventReportSMS
+        bilComplete     // 
     } BillingState;
+
     typedef enum {
         doCont = 0, doEnd, doAbort
     } BillAction;
@@ -195,7 +206,8 @@ public:
     void onReleaseSMS(ReleaseSMSArg* arg);
     void onRequestReportSMSEvent(RequestReportSMSEventArg* arg);
     void onResetTimerSMS(ResetTimerSMSArg* arg);
-    void onAbortSMS(unsigned char errcode, bool tcapLayer);
+    void onEndSMS(bool approved/* = true*/);
+    void onAbortSMS(unsigned char errcode, CAPErrorSource errLayer);
 
     //InAbonentQueryListenerITF interface methods:
     void onAbonentQueried(const AbonentId & ab_number, AbonentBillType ab_type);
@@ -213,7 +225,7 @@ protected:
     void StartTimer(unsigned short timeout);
     void StopTimer(BillingState bilState);
     void ChargeAbonent(AbonentBillType ab_type);
-    void DoCharge(uint32_t inmanErr = 0);
+    void doCharge(uint32_t inmanErr = 0);
 
     Mutex           bilMutex;
     BillingCFG      _cfg;
@@ -223,7 +235,8 @@ protected:
     BillingState    state;
 
     SSNSession*     _ss7Sess;   //TCAP dialogs factory
-    Inap*           inap;       //Inap wrapper for dialog
+    bool            capDlgActive;
+    CapSMSDlg*      capDlg;     //CapSMS wrapper for TC dialog
 
     CDRRecord       cdr;        //data for CDR record creation & CAP3 interaction
     SMCAPSpecificInfo csInfo;   //data for CAP3 interaction

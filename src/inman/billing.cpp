@@ -9,6 +9,7 @@ using smsc::inman::interaction::DELIVERY_SMS_RESULT_TAG;
 using smsc::inman::BILL_MODE;
 using smsc::inman::comp::EventReportSMSArg;
 using smsc::inman::cache::_sabBillType;
+using smsc::inman::inap::_CAPSmsLayer;
 
 namespace smsc  {
 namespace inman {
@@ -147,8 +148,9 @@ void BillingConnect::onConnectError(Connect* conn, bool fatal/* = false*/)
 Billing::Billing(BillingConnect* bconn, unsigned int b_id, 
             BillingCFG * cfg, TimeWatcher* tm_watcher, Logger * uselog/* = NULL*/)
         : _bconn(bconn), _bId(b_id), _cfg(*cfg), _ss7Sess(NULL)
-        , state(bilIdle), inap(NULL), postpaidBill(false), tmWatcher(tm_watcher)
+        , state(bilIdle), capDlg(NULL), postpaidBill(false), tmWatcher(tm_watcher)
         , abBillType(smsc::inman::cache::btUnknown), providerQueried(false)
+        , capDlgActive(false)
 {
     assert(bconn && cfg && tm_watcher);
     logger = uselog ? uselog : Logger::getInstance("smsc.inman.Billing");
@@ -159,6 +161,10 @@ Billing::~Billing()
 {
     MutexGuard grd(bilMutex);
     doCleanUp();
+    if (capDlg) {
+        delete capDlg;
+        capDlg = NULL;
+    }
     smsc_log_debug(logger, "Billing[%u.%u]: Deleted", _bconn->bConnId(), _bId);
 }
 
@@ -172,7 +178,7 @@ void Billing::Abort(const char * reason/* = NULL*/)
 //returns true if all billing stages are completed
 bool Billing::BillComplete(void) const
 {
-    return ((state == Billing::bilComplete) && cdr._finalized) ? true : false;
+    return ((state >= Billing::bilReported) && cdr._finalized) ? true : false;
 }
 
 /* ---------------------------------------------------------------------------------- *
@@ -196,10 +202,6 @@ void Billing::doCleanUp(void)
         }
         timers.clear();
     }
-    if (inap) {
-        delete inap;
-        inap = NULL;
-    }
     return;
 }
 
@@ -221,8 +223,10 @@ void Billing::doFinalize(bool doReport/* = true*/)
     smsc_log_debug(logger, "Billing[%u.%u]: %s, state: %u",
                    _bconn->bConnId(), _bId, doReport ? "finished" : "cancelled", state);
     doCleanUp();
-    if (doReport)
+    if (doReport) {
+        state = bilComplete;
         _bconn->billingDone(this);
+    }
     return;
 }
 
@@ -230,15 +234,17 @@ void Billing::abortThis(const char * reason/* = NULL*/, bool doReport/* = true*/
 {
     smsc_log_error(logger, "Billing[%u.%u]: Aborting%s%s",
                    _bconn->bConnId(), _bId, reason ? ", reason: " : "", reason ? reason : "");
-    if (inap) {
-        if ((state >= bilContinued) && (state < bilComplete)) { //send sms_o_failure to SCF
+    if (capDlgActive) {
+        if ((state >= bilContinued) && (state < bilReported)) { //send sms_o_failure to SCF
             smsc_log_debug(logger, "Billing[%u.%u]: SSF --> SCF EventReportSMS(o_smsFailure (0x%X))",
                            _bconn->bConnId(), _bId, EventTypeSMS_o_smsFailure);
             try {
                 EventReportSMSArg    report(EventTypeSMS_o_smsFailure, MessageType_notification);
-                inap->eventReportSMS(&report);
+                capDlg->eventReportSMS(&report);
             } catch (std::exception & exc) { }
         }
+        capDlg->endDPSMS();
+        capDlgActive = false;
     }
     state = Billing::bilAborted;
     doFinalize(doReport);
@@ -268,8 +274,9 @@ bool Billing::startCAPDialog(void)
         return false;
     }
     try { //Initiate CAP3 dialog
-        inap = new Inap(_ss7Sess, this, _cfg.capTimeout, logger); //initialize TCAP dialog
-        assert(inap);
+        capDlg = new CapSMSDlg(_ss7Sess, this, _cfg.capTimeout, logger); //initialize TCAP dialog
+        assert(capDlg);
+        capDlgActive = true;
 
         InitialDPSMSArg arg(smsc::inman::comp::DeliveryMode_Originating, _cfg.serviceKey);
 
@@ -287,12 +294,15 @@ bool Billing::startCAPDialog(void)
 
         smsc_log_debug(logger, "Billing[%u.%u]: SSF --> SCF InitialDPSMS",
                         _bconn->bConnId(), _bId);
+        capDlg->initialDPSMS(&arg); //begins TCAP dialog
         state = Billing::bilInited;
-        inap->initialDPSMS(&arg); //begins TCAP dialog
         return true;
     } catch (std::exception& exc) {
         smsc_log_error(logger, "Billing[%u.%u]: %s",
                        _bconn->bConnId(), _bId, exc.what());
+        capDlgActive = false;
+        delete capDlg;
+        capDlg = NULL;
         return false;
     }
 }
@@ -380,7 +390,7 @@ void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes)
                    smsRes->GetValue());
 
     smsRes->export2CDR(cdr);
-    if (inap) { //continue TCAP dialog if it's still active
+    if (capDlgActive) { //continue TCAP dialog if it's still active
         smsc_log_debug(logger, "Billing[%u.%u]: SSF --> SCF EventReportSMS "
                        "( EventType: o_sms%s (0x%X), MessageType: notification(0x%X) )",
                        _bconn->bConnId(), _bId,
@@ -388,17 +398,19 @@ void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes)
                        eventType, MessageType_notification);
         try {
             EventReportSMSArg    report(eventType, MessageType_notification);
-            inap->eventReportSMS(&report);
+            capDlg->eventReportSMS(&report);
             cdr._inBilled = true;
+            state = bilReported;
         } catch (std::exception & exc) {
             postpaidBill = true;
             smsc_log_error(logger, "Billing[%u.%u]: %s", exc.what());
-            delete inap;
-            inap = NULL;
+            capDlgActive = false;
         }
     }
-    state = Billing::bilComplete;
-    doFinalize();
+    if (!capDlgActive) {
+        state = bilReported;
+        doFinalize();
+    } //else wait onEndSMS();
     return;
 }
 
@@ -419,12 +431,12 @@ void Billing::ChargeAbonent(AbonentBillType ab_type)
     if (postpaidBill) { //do not interact IN platform, just create CDR
         smsc_log_debug(logger, "Billing[%u.%u]: initiated billing via CDR",
                         _bconn->bConnId(), _bId);
-        DoCharge();
+        doCharge();
     }
 }
 
 //NOTE: bilMutex should be locked upon entry
-void Billing::DoCharge(uint32_t inmanErr /* = 0*/)
+void Billing::doCharge(uint32_t inmanErr /* = 0*/)
 {
     smsc_log_info(logger,
             "Billing[%u.%u]: <-- CHARGING_POSSIBLE (via %s), abonent(%s) type: %s (%u)",
@@ -537,7 +549,7 @@ void Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
         }
         if (state == Billing::bilContinued) {
             //SMSC doesn't respond with DeliveryResult
-            abortThis("TCP dialog is timed out");
+            abortThis("SMSC response is timed out (DeliverySmsResult)");
             return;
         }
     } //else: operation already finished
@@ -580,7 +592,7 @@ void Billing::onContinueSMS(void)
     //Update abonents cache
     if (abBillType != smsc::inman::cache::btPrepaid)
         _cfg.abCache->setAbonentInfo(abNumber, abBillType = smsc::inman::cache::btPrepaid);
-    DoCharge(0);
+    doCharge(0);
     return; //grd off
 }
 
@@ -589,8 +601,8 @@ void Billing::onReleaseSMS(ReleaseSMSArg* arg)
     MutexGuard grd(bilMutex);
     smsc_log_debug(logger, "Billing[%u.%u]: SSF <-- SCF ReleaseSMS, RP cause: %u",
                    _bconn->bConnId(), _bId, (unsigned)arg->rPCause);
+    capDlgActive = false;
 
-    BillAction  action = Billing::doEnd;
     //check for RejectSMS causes for postpaid abonents:
     for (RPCList::iterator it = _cfg.postpaidRPC.begin();
                             it != _cfg.postpaidRPC.end(); it++) {
@@ -621,9 +633,6 @@ void Billing::onReleaseSMS(ReleaseSMSArg* arg)
             _bconn->bConnId(), _bId, abNumber.getSignals(),
             _sabBillType[abBillType], (unsigned)abBillType);
         state = Billing::bilContinued;
-        delete inap;
-        inap = NULL;
-        action = Billing::doCont;
     } else {
         smsc_log_info(logger,
             "Billing[%u.%u]: <-- CHARGING_NOT_POSSIBLE (code %u), abonent(%s) type: %s (%u)",
@@ -637,51 +646,61 @@ void Billing::onReleaseSMS(ReleaseSMSArg* arg)
                         smsc::inman::interaction::CHARGING_NOT_POSSIBLE);
     res.setDialogId(_bId);
     if (!_bconn->sendCmd(&res))  //TCP connect fatal failure
-        action = Billing::doAbort;
-
-    if (action == Billing::doEnd)
-        doFinalize();
-    else if (action == Billing::doCont)
-        StartTimer(_cfg.maxTimeout);
-    else //doAbort
         abortThis(_bconn->getConnectError()->what());
+    else if (state == Billing::bilContinued)
+        StartTimer(_cfg.maxTimeout);
+    //else wait onEndSMS();
     return; //grd off
 }
 
-//Called by Inap if CAP dialog with IN-platform is aborted.
-//may be called if state is [bilInited .. bilApproved, bilComplete]
-void Billing::onAbortSMS(unsigned char errCode, bool tcapLayer)
+//Called by CapSMSDlg if CAP dialog with IN-platform is finished.
+//may be called if state is [bilInited, .. , bilReported]
+void Billing::onEndSMS(bool approved/* = true*/)
 {
     MutexGuard grd(bilMutex);
-    smsc_log_error(logger, "Billing[%u.%u]: SSF <-- SCF Error, code: %u, layer %s",
-                   _bconn->bConnId(), _bId, (unsigned)errCode, tcapLayer ? "TCAP" : "CAP3");
-    bool  doCharge = false;
+    if ((state == bilReleased) || (state == bilReported))
+        doFinalize(true);
+    else if (state != bilContinued)
+        smsc_log_error(logger, "Billing[%u.%u]: onEndSMS() at state: %u",
+                       _bconn->bConnId(), _bId, (unsigned)state);
+}
+
+//Called by CapSMSDlg if CAP dialog with IN-platform is aborted.
+//may be called if state is [bilInited .. bilApproved, ..., bilComplete]
+void Billing::onAbortSMS(unsigned char errCode, CAPErrorSource errLayer)
+{
+    MutexGuard grd(bilMutex);
+    smsc_log_error(logger, "Billing[%u.%u]: CapSMSDlg Error, code: %u, layer %s",
+                   _bconn->bConnId(), _bId, (unsigned)errCode, _CAPSmsLayer[errLayer]);
+    bool  contCharge = false;
     switch (state) {
+    case Billing::bilComplete:
+    case Billing::bilAborted:
     case Billing::bilReleased: {
-        //dialog with MSC already cancelled, just release CAP dialog
+        //dialog with MSC already cancelled/finished, just release CAP dialog
     } break;
 
     case Billing::bilInited: {
         //IN dialog initialization failed, release CAP dialog, switch to CDR mode 
-        doCharge = true;
+        contCharge = true;
     } // no break specially !
     case Billing::bilContinued:
         //dialog with MSC is in process, release CAP dialog, switch to CDR mode
     case Billing::bilApproved:
-    case Billing::bilComplete:
+    case Billing::bilReported:
         //dialog with MSC finished, release CAP dialog, switch to CDR mode
         cdr._inBilled = false;
     default:
         postpaidBill = true;
-        smsc_log_warn(logger, "Billing[%u.%u]: switched to billing via CDR (reason: SCF error).",
-                      _bconn->bConnId(), _bId);
+        smsc_log_warn(logger,
+            "Billing[%u.%u]: switched to billing via CDR (reason: CapSMSDlg error).",
+            _bconn->bConnId(), _bId);
     }
-    delete inap;
-    inap = NULL;
+    capDlgActive = false;
 
-    if (doCharge)
-        DoCharge(InmanErrorCode::GetCombinedError(
-            tcapLayer ? InErrTCAP : InErrCAP3, (uint16_t)errCode));
+    if (contCharge)
+        doCharge(InmanErrorCode::GetCombinedError(
+            static_cast<InmanErrorType>((int)errLayer), (uint16_t)errCode));
     return; //grd off
 }
 
