@@ -7,17 +7,23 @@
 
     <import schemaLocation="rules.xsd" namespace="http://www.sibinco.com/SCAG" />
     
+    <simpleType name="YesNo">
+	<restriction base="string">
+            <enumeration value="yes"/>
+            <enumeration value="no"/>
+	</restriction>
+    </simpleType>
+    
+    <attributeGroup name="SendAttributes">
+        <attribute name="message"  type="scag:Value" use="required" />
+        <attribute name="date"     type="scag:Value" use="optional" />
+	<attribute name="terminal" type="send:YesNo" use="optional" />
+    </attributeGroup>
+
     <complexType name="ToRecepient">
 	<attribute name="to" type="scag:Value" use="required" />
     </complexType>
-    <complexType name="EmptyRecepient">
-    </complexType>
     
-    <attributeGroup name="SendAttributes">
-        <attribute name="message" type="scag:Value" use="required" />
-        <attribute name="date"    type="scag:Value" use="optional" />
-    </attributeGroup>
-
     <group name="SendElements">
         <choice>
 	    <element name="sms"   type="send:ToRecepient" />
@@ -27,10 +33,7 @@
     </group>
     
     <complexType name="SendMessage">
-	<sequence>
-    	    <group ref="send:SendElements" minOccurs="0" maxOccurs="unbounded"/>
-    	    <element name="terminal" type="send:EmptyRecepient" minOccurs="0" maxOccurs="1" />
-	</sequence>
+	<group ref="send:SendElements" minOccurs="0" maxOccurs="unbounded"/>
         <attributeGroup ref="send:SendAttributes" />
     </complexType>
         
