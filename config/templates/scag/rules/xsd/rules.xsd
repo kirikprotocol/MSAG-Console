@@ -6,8 +6,8 @@
    xmlns:operation="http://www.sibinco.com/SCAG/OPERATIONS"
    xmlns:strings="http://www.sibinco.com/SCAG/STRINGS"
    xmlns:bill="http://www.sibinco.com/SCAG/BILL"
-   xmlns:profile="http://www.sibinco.com/SCAG/PROFILE"
    xmlns:send="http://www.sibinco.com/SCAG/SEND"
+   xmlns:profile="http://www.sibinco.com/SCAG/PROFILE"
    xmlns:log="http://www.sibinco.com/SCAG/LOG">
     
     <annotation>
@@ -18,13 +18,13 @@
     </annotation>
    
     <import schemaLocation="bill.xsd"       namespace="http://www.sibinco.com/SCAG/BILL"/>
+    <import schemaLocation="send.xsd"        namespace="http://www.sibinco.com/SCAG/SEND"/>
     <import schemaLocation="sessions.xsd"   namespace="http://www.sibinco.com/SCAG/SESSIONS"/>
     <import schemaLocation="operations.xsd" namespace="http://www.sibinco.com/SCAG/OPERATIONS"/>
     <import schemaLocation="strings.xsd"    namespace="http://www.sibinco.com/SCAG/STRINGS"/>
     <import schemaLocation="profile.xsd"    namespace="http://www.sibinco.com/SCAG/PROFILE"/>
     <import schemaLocation="log.xsd"        namespace="http://www.sibinco.com/SCAG/LOG"/>
-    <import schemaLocation="send.xsd"        namespace="http://www.sibinco.com/SCAG/SEND"/>
-    
+        
     <!-- General values types definition  -->
     <simpleType name="Value">
         <restriction base="string"/>
@@ -75,26 +75,16 @@
         <attribute name="value" type="scag:Value" use="optional"/>
     </attributeGroup>
 
-    <simpleType name="LogLevel">
-        <restriction base="string">
-            <enumeration value="debug"/>
-            <enumeration value="info"/>
-            <enumeration value="warn"/>
-            <enumeration value="error"/>
-        </restriction>
-    </simpleType>
-
-    
     <!-- General actions elements group definition  -->
     <group name="Actions">
         <choice>
             <group ref="session:Actions"/>
             <group ref="bill:Actions" />
+	    <group ref="send:Actions" />
             <group ref="operation:Actions" />
             <group ref="strings:Actions" />
             <group ref="profile:Actions" />
             <group ref="log:Actions" />
-            <group ref="send:Actions" />
 
             <element name="set">
                 <complexType>
@@ -116,7 +106,6 @@
             <attribute name="result" type="scag:Var" use="required"/>
         </complexType>
         </element>
-
         
         <element name="if">
             <complexType>
