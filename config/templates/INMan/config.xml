@@ -49,6 +49,7 @@
     <!-- OPTIONAL PARAMETERS follow:: -->
     <param name="ss7UserId" type="int">03</param>     <!-- PortSS7 user id [1..20], default: 03  -->
     <param name="IN_Timeout" type="int">20</param>   <!-- timeout on CAP operations, units: seconds, max: 65535, default 20 -->
+    <param name="maxDialogs" type="int">2000</param>   <!-- maximum number of simultaneous TC dialogs, max: 65530, default 2000-->
 
     <param name="RPCList_reject" type="string">16</param> <!--
      comma separated list of extra (in addition to 21) RP MO causes returned by IN platform (if supported) to forbid DP processing, 
