@@ -110,6 +110,7 @@ struct BillingCFG {
     const char*     ssf_addr;       //
     const char*     scf_addr;       //IN platform address
     int             ssn;            //
+    unsigned short  maxDlgId;       //maximum number of simultaneous TC dialogs, max: 65530
     unsigned int    serviceKey;     //service id for InitialDP operation
     RPCList         rejectRPC;      //list of RP causes forcing charging denial
     RPCList         postpaidRPC;    //list of RP causes returned for postpaid abonents

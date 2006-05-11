@@ -18,34 +18,29 @@ namespace smsc {
 namespace inman {
 namespace inap {
 
-static const USHORT_T TCAP_DIALOG_MIN_ID   = 1;
-static const USHORT_T TCAP_DIALOG_MAX_ID   = 1000;
-
 class Dialog;
 
 class SSNSession {
 public:
     typedef enum { ssnIdle = 0, ssnBound, ssnError } SSNState;
 
-    SSNSession(UCHAR_T ownssn, Logger * uselog = NULL);
-    ~SSNSession();
-
-    void    init(const char* own_addr, /*UCHAR_T rmt_ssn,*/
-                    const char* rmt_addr, ACOID::DefinedOIDidx dialog_ac_idx);
-
     SSNState getState(void) const { return state; }
 
     /* TCAP Dialogs factory methods */
     Dialog* openDialog(void);
-//    Dialog* openDialog(const char* own_addr, /*UCHAR_T rmt_ssn,*/
-//                        const char* rmt_addr, unsigned dialog_ac_idx);
     Dialog* findDialog(USHORT_T did);
     void    releaseDialog(Dialog* pDlg);
     void    releaseDialogs(void);
 
 protected:
     friend class TCAPDispatcher;
+    SSNSession(UCHAR_T ownssn, Logger * uselog = NULL);
+    ~SSNSession();
+
     void    setState(SSNState newState) { state = newState; }
+    void    init(const char* own_addr, /*UCHAR_T rmt_ssn,*/
+                const char* rmt_addr, ACOID::DefinedOIDidx dialog_ac_idx,
+                USHORT_T max_id = 2000, USHORT_T min_id = 1);
 
 private:
     typedef struct {
@@ -68,6 +63,8 @@ private:
     DlgTimesMap_T   pending; //released but not terminated Dialogs with timestamp
 
     UCHAR_T         SSN;
+    USHORT_T        maxId;
+    USHORT_T        minId;
     SCCP_ADDRESS_T  locAddr;
     SCCP_ADDRESS_T  rmtAddr;
     ACOID::DefinedOIDidx  ac_idx; //default APPLICATION-CONTEXT index for dialogs, see acdefs.hpp

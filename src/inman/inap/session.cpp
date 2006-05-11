@@ -8,7 +8,7 @@ static char const ident[] = "$Id$";
 
 using smsc::inman::common::fillAddress;
 
-#define MAX_ID_ATTEMPTS ((TCAP_DIALOG_MAX_ID - TCAP_DIALOG_MIN_ID)/3)
+#define MAX_ID_ATTEMPTS (maxId - minId)
 
 namespace smsc  {
 namespace inman {
@@ -19,7 +19,8 @@ namespace inap  {
 /////////////////////////////////////////////////////////////////////////////////////
 SSNSession::SSNSession(UCHAR_T ownssn, Logger * uselog/* = NULL*/)
     : logger(uselog), SSN(ownssn), state(ssnIdle)
-    , lastDlgId(TCAP_DIALOG_MIN_ID), ac_idx(ACOID::id_ac_NOT_AN_OID)
+    , lastDlgId(0), ac_idx(ACOID::id_ac_NOT_AN_OID)
+    , maxId(0), minId(0)
 {
     locAddr.addrLen = rmtAddr.addrLen = 0;
     if (!uselog)
@@ -27,11 +28,14 @@ SSNSession::SSNSession(UCHAR_T ownssn, Logger * uselog/* = NULL*/)
 }
 
 void SSNSession::init(const char* own_addr, /*UCHAR_T rmt_ssn,*/
-                    const char* rmt_addr, ACOID::DefinedOIDidx dialog_ac_idx)
+                    const char* rmt_addr, ACOID::DefinedOIDidx dialog_ac_idx,
+                    USHORT_T max_id/* = 2000*/, USHORT_T min_id/* = 1*/)
 {
     fillAddress(&locAddr, own_addr, SSN);
     fillAddress(&rmtAddr, rmt_addr, SSN /*rmt_ssn*/);
     ac_idx = dialog_ac_idx;
+    maxId = max_id;
+    lastDlgId = minId = min_id;
 }
 
 SSNSession::~SSNSession()
@@ -84,7 +88,7 @@ Dialog* SSNSession::openDialog(void)
     if (!nextDialogId(did)) {
         smsc_log_fatal(logger, "SSN[%u]: Dialogs exhausted [%u of %u], active(%u), pending(%u)",
             (unsigned)SSN, dialogs.size() + pending.size(),
-            TCAP_DIALOG_MAX_ID - TCAP_DIALOG_MIN_ID, dialogs.size(), pending.size());
+            maxId - minId, dialogs.size(), pending.size());
         if (logger->isDebugEnabled())
             dumpDialogs();
         return NULL;
@@ -170,9 +174,9 @@ bool SSNSession::nextDialogId(USHORT_T & dId)
     USHORT_T attempt = 0;
     do {
         dId = lastDlgId;
-        if (++lastDlgId  > TCAP_DIALOG_MAX_ID)
-            lastDlgId = TCAP_DIALOG_MIN_ID;
-    } while (locateDialog(dId) || ((++attempt) >= MAX_ID_ATTEMPTS));
+        if (++lastDlgId  > maxId)
+            lastDlgId = minId;
+    } while (locateDialog(dId) && ((++attempt) < MAX_ID_ATTEMPTS));
 
     return (attempt < MAX_ID_ATTEMPTS) ? true : false;
 }
@@ -206,8 +210,7 @@ void SSNSession::dumpDialogs(void)
 {
     std::string dump;
     format(dump, "SSN[%u]: Dialogs [%u of %u], ", (unsigned)SSN,
-           dialogs.size() + pending.size(),
-           TCAP_DIALOG_MAX_ID - TCAP_DIALOG_MIN_ID);
+           dialogs.size() + pending.size(), maxId - minId);
 
     if (pending.size()) {
         format(dump, "pending(%u): ", pending.size());
