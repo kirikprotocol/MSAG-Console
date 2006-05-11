@@ -17,7 +17,7 @@ ChargeSmsResult     <-   | bilProcessed:     SSF <- ContinueSMS ]
 ]
 */
 
-#include "inman/inap/DlgCapSMS.hpp"
+#include "inman/inap/cap_sms/DlgCapSMS.hpp"
 #include "inman/interaction/messages.hpp"
 #include "inman/interaction/connect.hpp"
 #include "inman/common/TimeWatcher.hpp"
