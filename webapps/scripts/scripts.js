@@ -86,8 +86,8 @@ function validateField_mask(elem)
     //var special_pattern_header = "^\\.5\\.0\\.";
     //var special_pattern1 = RegExp(special_pattern_header + "[ _\\-0-9A-Za-z]{1,20}\\?{0,19}$");
     //var special_pattern2 = RegExp(special_pattern_header + "([ _\\-0-9A-Za-z]|\\?){1,20}$");
-    var special_pattern1 = /^\.5\.0\.[ _\-:0-9A-Za-z]{0,20}\?{0,20}$/;
-    var special_pattern2 = /^\.5\.0\.([ _\-:0-9A-Za-z]|\?){1,20}$/;
+    var special_pattern1 = /^\.5\.0\.[ _\-:\.\,0-9A-Za-z]{0,10}\?{0,10}$/;
+    var special_pattern2 = /^\.5\.0\.([ _\-:\.\,0-9A-Za-z]|\?){1,10}$/;
 
     return elem.value == null
             || (
