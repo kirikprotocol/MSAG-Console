@@ -30,6 +30,8 @@ using smsc::inman::interaction::DeliverySmsResult;
 using smsc::inman::interaction::SmscHandler;
 using smsc::inman::interaction::SmscCommand;
 
+using smsc::inman::_InmanErrorSource;
+
 
 #define prompt(str)     fprintf(stdout, str.c_str()); smsc_log_debug(logger, str.c_str())
 #define promptLog(log, str)     fprintf(stdout, str.c_str()); smsc_log_debug(log, str.c_str())
@@ -263,14 +265,12 @@ public:
         std::string msg = format("Dialog[%u] got ChargeSmsResult: CHARGING_%sPOSSIBLE", did,
                 (result->GetValue() == smsc::inman::interaction::CHARGING_POSSIBLE ) ?
                  "" : "NOT_");
-        if (result->GetRPCause())
-            msg += format(", RPCause: %u", (unsigned)result->GetRPCause());
-        else if (result->GetCAP3Error())
-            msg += format(", CAP3Error: %u", result->GetCAP3Error());
-        else if (result->GetINprotocolError())
-            msg += ", TCP dialog error";
-        else if (result->GetTCAPError())
-            msg += ", TCAP dialog error";
+        if (result->getCombinedError()) {
+            InmanErrorType  errType;
+            uint16_t        errCode;
+            result->splitError(errType, errCode);
+            msg += format(", error %s: %u", _InmanErrorSource[errType], errCode);
+        }
         msg += "\n";
         prompt(msg);
 

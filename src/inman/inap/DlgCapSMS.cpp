@@ -11,8 +11,6 @@ namespace smsc {
 namespace inman {
 namespace inap {
 
-const char * _CAPSmsLayer[] = { "TCAP", "CAP3", "TCuser", "CAPuser" };
-
 /* ************************************************************************** *
  * class CapSMSDlg implementation:
  * ************************************************************************** */
@@ -94,7 +92,7 @@ void CapSMSDlg::onInvokeError(Invoke *op, TcapEntity * resE)
     default:;
     }
     endTCap();
-    ssfHdl->onAbortSMS(resE->getOpcode(), layerCAP3);
+    ssfHdl->onAbortSMS(resE->getOpcode(), smsc::inman::errCAP3);
 }
 
 //Called if Operation got L_CANCEL, possibly while waiting result
@@ -109,7 +107,7 @@ void CapSMSDlg::onInvokeLCancel(Invoke *op)
                 "CapSMS[%u]: state 0x%x(TC: 0x%x): has not got any Operation of smsProcessingPackage",
                 capId, _capState.value, dialog->getState().value);
             endTCap();
-            ssfHdl->onAbortSMS(CapSMSDlg::smsContractViolation, layerCAPuser);
+            ssfHdl->onAbortSMS(CapSMSDlg::smsContractViolation, smsc::inman::errCAPuser);
         }
     } else if (CapSMSOpCode::EventReportSMS == op->getOpcode()) {
         endTCap();
@@ -140,7 +138,7 @@ void CapSMSDlg::onDialogPAbort(UCHAR_T abortCause)
     if ((_capState.s.ctrReported == CAP_OPER_INITED) || _capState.s.ctrFinished)
         ssfHdl->onEndSMS(false); //T_END_IND is timed out
     else
-        ssfHdl->onAbortSMS(abortCause, layerTCAP);
+        ssfHdl->onAbortSMS(abortCause, smsc::inman::errTCAP);
 }
 
 //SCF sent DialogUAbort (some logic error on SCF side).
@@ -151,7 +149,7 @@ void CapSMSDlg::onDialogUAbort(USHORT_T abortInfo_len, UCHAR_T *pAbortInfo,
     _capState.s.ctrAborted = 1;
     smsc_log_error(logger, "CapSMS[%u]: U_ABORT at state 0x%x", capId, _capState.value);
     endTCap();
-    ssfHdl->onAbortSMS(Dialog::tcUserGeneralError, layerTCuser);
+    ssfHdl->onAbortSMS(Dialog::tcUserGeneralError, smsc::inman::errTCuser);
 }
 
 //SCF sent DialogEnd, it's either succsesfull contract completion,
@@ -166,7 +164,7 @@ void CapSMSDlg::onDialogREnd(bool compPresent)
             ssfHdl->onEndSMS(true);
         } else{
             smsc_log_error(logger, "CapSMS[%u]: T_END_IND, state 0x%x", capId, _capState.value);
-            ssfHdl->onAbortSMS(CapSMSDlg::smsContractViolation, layerCAPuser);
+            ssfHdl->onAbortSMS(CapSMSDlg::smsContractViolation, smsc::inman::errCAPuser);
         }
     } //else wait for ongoing Invoke
 }
@@ -235,7 +233,7 @@ void CapSMSDlg::onDialogInvoke(Invoke* op, bool lastComp)
         ssfHdl->onEndSMS(true);
     } else if (doAbort) {
         endTCap();
-        ssfHdl->onAbortSMS(CapSMSDlg::smsContractViolation, layerCAPuser);
+        ssfHdl->onAbortSMS(CapSMSDlg::smsContractViolation, smsc::inman::errCAPuser);
     }
 }
 

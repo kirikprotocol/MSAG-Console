@@ -8,8 +8,12 @@
 #include "inman/inap/session.hpp"
 #include "inman/inap/dialog.hpp"
 #include "inman/comp/cap_sms/CapSMSComps.hpp"
+#include "inman/interaction/inerrcodes.hpp"
 
 using smsc::core::synchronization::Mutex;
+
+using smsc::inman::InmanErrorType;
+using smsc::inman::_InmanErrorSource;
 
 using smsc::inman::comp::ConnectSMSArg;
 using smsc::inman::comp::FurnishChargingInformationSMSArg;
@@ -41,11 +45,6 @@ namespace inap {
         SSF <- ResetTimerSMS ]
 */
 
-typedef enum {
-    layerTCAP = 3, layerCAP3, layerTCuser, layerCAPuser
-} CAPErrorSource; //cooordinated with InmanErrorType !!!
-extern const char * _CAPSmsLayer[];
-
 class SSFhandler { //SSF <- SCF
 //NOTE: These callbacks should not delete CapSMSDlg !!!
 public:
@@ -58,7 +57,7 @@ public:
     virtual void onResetTimerSMS(ResetTimerSMSArg* arg) = 0;
     //dialog finalization/error handling:
     virtual void onEndSMS(bool approved = true) = 0;
-    virtual void onAbortSMS(unsigned char ercode, CAPErrorSource errLayer) = 0;
+    virtual void onAbortSMS(unsigned char ercode, InmanErrorType errLayer) = 0;
 };
 
 class SCFcontractor { //SSF -> SCF
@@ -97,10 +96,10 @@ typedef union {
 
 
 #define CAPSMS_END_TIMEOUT  2 //seconds
-//NOTE: CapSMSDlg doesn't maintain own timer for operations, it uses instead the 
-//      innate timer of the SS7 stack for Invoke lifetime.
-//      CapSMSDlg forcedly releases Invokes only on T_END_IND or P_ABORT_IND,
-//      otherwise Invokes left as pending ones until LCancel_IND
+//NOTE: CapSMS contract allows a prearranged end scenario, so CapSMSDlg sets
+//      a small timeout (CAPSMS_END_TIMEOUT) on last EventReportSMS Invoke
+//      and releases TC Dialog either on receiving T_END_IND or LCancel for
+//      EventReportSMS.
 class CapSMSDlg : public SCFcontractor, DialogListener, InvokeListener {
 public:
     //NOTE: timeout is for OPERATIONs Invokes lifetime

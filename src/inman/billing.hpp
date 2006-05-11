@@ -24,7 +24,6 @@ ChargeSmsResult     <-   | bilProcessed:     SSF <- ContinueSMS ]
 #include "inman/incache.hpp"
 #include "inman/storage/FileStorages.hpp"
 
-using smsc::inman::inap::CAPErrorSource;
 using smsc::inman::inap::CapSMSDlg;
 using smsc::inman::inap::Dialog;
 using smsc::inman::inap::SSFhandler;
@@ -208,7 +207,7 @@ public:
     void onRequestReportSMSEvent(RequestReportSMSEventArg* arg);
     void onResetTimerSMS(ResetTimerSMSArg* arg);
     void onEndSMS(bool approved/* = true*/);
-    void onAbortSMS(unsigned char errcode, CAPErrorSource errLayer);
+    void onAbortSMS(unsigned char errcode, InmanErrorType errLayer);
 
     //InAbonentQueryListenerITF interface methods:
     void onAbonentQueried(const AbonentId & ab_number, AbonentBillType ab_type);

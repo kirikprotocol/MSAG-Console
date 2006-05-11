@@ -9,7 +9,6 @@ using smsc::inman::interaction::DELIVERY_SMS_RESULT_TAG;
 using smsc::inman::BILL_MODE;
 using smsc::inman::comp::EventReportSMSArg;
 using smsc::inman::cache::_sabBillType;
-using smsc::inman::inap::_CAPSmsLayer;
 
 namespace smsc  {
 namespace inman {
@@ -104,7 +103,7 @@ void BillingConnect::onCommandReceived(Connect* conn, SerializableObject* recvCm
                 bill = new Billing(this, dlgId, &_cfg, _tmWatcher, logger);
                 workers.insert(BillingMap::value_type(dlgId, bill));
             } else {
-                ChargeSmsResult res(InErrINprotocol, InProtocol_ResourceLimitation,
+                ChargeSmsResult res(errProtocol, InProtocol_ResourceLimitation,
                                     smsc::inman::interaction::CHARGING_NOT_POSSIBLE);
                 res.setDialogId(dlgId);
                 sendCmd(&res);
@@ -478,7 +477,7 @@ void Billing::handleCommand(InmanCommand* cmd)
                 goon = false;
             }
             if (!goon || !onChargeSms(static_cast<ChargeSms*>(cmd))) {
-                ChargeSmsResult res(InErrINprotocol, InProtocol_InvalidData,
+                ChargeSmsResult res(errProtocol, InProtocol_InvalidData,
                                     smsc::inman::interaction::CHARGING_NOT_POSSIBLE);
                 res.setDialogId(_bId);
                 _bconn->sendCmd(&res);
@@ -627,7 +626,7 @@ void Billing::onReleaseSMS(ReleaseSMSArg* arg)
         }
     }
 
-    uint32_t scfErr = InmanErrorCode::GetCombinedError(InErrRPCause, (uint16_t)arg->rPCause);
+    uint32_t scfErr = InmanErrorCode::combineError(errRPCause, (uint16_t)arg->rPCause);
     if (postpaidBill) {
         smsc_log_info(logger,
             "Billing[%u.%u]: <-- CHARGING_POSSIBLE (via CDR), abonent(%s) type: %s (%u)",
@@ -668,11 +667,11 @@ void Billing::onEndSMS(bool approved/* = true*/)
 
 //Called by CapSMSDlg if CAP dialog with IN-platform is aborted.
 //may be called if state is [bilInited .. bilApproved, ..., bilComplete]
-void Billing::onAbortSMS(unsigned char errCode, CAPErrorSource errLayer)
+void Billing::onAbortSMS(unsigned char errCode, InmanErrorType errLayer)
 {
     MutexGuard grd(bilMutex);
     smsc_log_error(logger, "Billing[%u.%u]: CapSMSDlg Error, code: %u, layer %s",
-                   _bconn->bConnId(), _bId, (unsigned)errCode, _CAPSmsLayer[errLayer]);
+                   _bconn->bConnId(), _bId, (unsigned)errCode, _InmanErrorSource[errLayer]);
     bool  contCharge = false;
     switch (state) {
     case Billing::bilComplete:
@@ -700,7 +699,7 @@ void Billing::onAbortSMS(unsigned char errCode, CAPErrorSource errLayer)
     capDlgActive = false;
 
     if (contCharge)
-        doCharge(InmanErrorCode::GetCombinedError(
+        doCharge(InmanErrorCode::combineError(
             static_cast<InmanErrorType>((int)errLayer), (uint16_t)errCode));
     return; //grd off
 }

@@ -7,12 +7,19 @@
 namespace smsc  {
 namespace inman {
 
-typedef enum {
-    InErrOk = 0, InErrRPCause = 1,
-    InErrINprotocol = 2, InErrTCAP = 3, InErrCAP3 = 4,
-    InErrTCuser = 5, InErrCAPuser = 6,
+extern const char * _InmanErrorSource[];
+
+typedef enum { errOk = 0, 
+    errRPCause = 1,     // RP cause MO SM transfer
+    errProtocol = 2,    // INMan <-> SMSC protocol
+    errTCAP = 3,        // TCAP layer errors
+    errTCuser = 4,      // TC user errors
+    errCAP3 = 5,        // CAP3 services errors
+    errCAPuser = 6,     // CAP related user errors
+    errMAP = 7,         // MAP services errors
+    errMAPuser = 8,     // MAP related user errors
     //...
-    InErrUndefined
+    errUndefined        // reserved/undefined
 } InmanErrorType;
 
 typedef enum {
@@ -33,23 +40,14 @@ public:
     InmanErrorCode(InmanErrorType range, uint16_t ercode);
 
     //constructs InMan combined error code, returns zero on out-of-range args
-    static uint32_t  GetCombinedError(InmanErrorType range, uint16_t ercode);
-
+    static uint32_t combineError(InmanErrorType range, uint16_t ercode);
+    uint32_t        getCombinedError(void) const;
+    //splits combined error to class and code
+    void            splitError(InmanErrorType & errType, uint16_t & errCode);
     //returns class of error
-    InmanErrorType  GetErrorType(void) const;
-    //returns combined nonzero code holding RP cause or CAP3/TCAP error, or IN protocol error
-    uint32_t        GetCombinedError(void) const;
-    //returns original error code if error belongs to given InmanErrorClass, otherwise returns zero
-    uint16_t        GetOrigError(InmanErrorType range) const;
-
-    //returns nonzero RP cause MO SM transfer
-    uint8_t         GetRPCause(void) const;
-    //returns nonzero CAP3 error code
-    uint16_t        GetCAP3Error(void) const;
-    //returns nonzero TCAP error code
-    uint8_t         GetTCAPError(void) const;
-    //returns nonzero TCAP error code
-    uint16_t        GetINprotocolError(void) const;
+    InmanErrorType  getErrorType(void) const;
+    //returns original error code if error belongs to given InmanErrorType, otherwise returns zero
+    uint16_t        getErrorCode(InmanErrorType range) const;
 
 protected:
     uint32_t   _errcode; //combined error code
@@ -58,5 +56,4 @@ protected:
 } //inman
 } //smsc
 #endif /* _SMSC_INMAN_ERROR_CODES_HPP */
-
 
