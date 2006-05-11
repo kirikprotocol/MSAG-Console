@@ -8,7 +8,7 @@
 #include "inman/inap/session.hpp"
 #include "inman/inap/dialog.hpp"
 #include "inman/comp/cap_sms/CapSMSComps.hpp"
-#include "inman/interaction/inerrcodes.hpp"
+#include "inman/inerrcodes.hpp"
 
 using smsc::core::synchronization::Mutex;
 

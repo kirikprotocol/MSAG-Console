@@ -3,7 +3,6 @@ static char const ident[] = "$Id$";
 #include <assert.h>
 
 #include "inman/inap/DlgCapSMS.hpp"
-#include "inman/interaction/inerrcodes.hpp"
 
 using smsc::inman::comp::CapSMSOpCode;
 

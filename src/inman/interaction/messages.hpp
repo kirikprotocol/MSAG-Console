@@ -6,7 +6,7 @@
 #include "inman/interaction/serializer.hpp"
 #include "inman/common/factory.hpp"
 #include "inman/storage/cdrutil.hpp"
-#include "inman/interaction/inerrcodes.hpp"
+#include "inman/inerrcodes.hpp"
 
 using smsc::inman::interaction::ObjectBuffer;
 using smsc::inman::interaction::SerializableObject;
