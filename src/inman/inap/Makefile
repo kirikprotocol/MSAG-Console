@@ -2,7 +2,8 @@
 # $Id$
 #
 
-CXXFLAGS := -I$(SS7_STACK_HOME)/src -I../util $(CXXFLAGS)
+CXXFLAGS := -I$(SS7_STACK_HOME)/src $(CXXFLAGS)
+CFLAGS := -I$(SS7_STACK_HOME)/src $(CFLAGS)
 PACKAGE := inman.inap
 
 ifndef SMSC_SRCDIR
