@@ -132,12 +132,12 @@ public class RoutesEdit extends RouteBody {
         if (null != mbCancel)
             return RESULT_DONE;
         else if (null != mbSave)
-            return save(getLoginedPrincipal(), request);
+            return save(request);
 
         return result;
     }
 
-    protected int save(final Principal loginedPrincipal, final HttpServletRequest request) {
+    protected int save(final HttpServletRequest request) {
         Route oldRoute = null;
         if (null == routeId || 0 >= routeId.length() || null == oldRouteId || 0 >= oldRouteId.length())
             return error(SMSCErrors.error.routes.nameNotSpecified);
