@@ -235,8 +235,8 @@ public:
     }
     int Next(int& k,T& v)
     {
-      if(idx>=h.size)return 0;
-      while(idx<h.size && h.keys[idx]==-1)idx++;
+      if(idx>=h.size || h.count==0)return 0;
+      while(idx<h.size && h.refcounts[idx]==0)idx++;
       if(idx>=h.size)return 0;
       k=h.keys[idx];
       v=h.values[idx];
@@ -245,8 +245,8 @@ public:
     }
     int Next(int& k,T*& v)
     {
-      if(idx>=h.size)return 0;
-      while(idx<h.size && h.keys[idx]==-1)idx++;
+      if(idx>=h.size || h.count==0)return 0;
+      while(idx<h.size && h.refcounts[idx]==0)idx++;
       if(idx>=h.size)return 0;
       k=h.keys[idx];
       v=&h.values[idx];
