@@ -1037,8 +1037,6 @@ void StatisticsManager::dumpSvcCounters(SerializationBuffer& buf)
 {
     MutexGuard guard(svcCountersLock);
 
-    buf.WriteNetInt32(0);
-
     dumpPerfCounters(buf, svcSmppCounters);
     dumpPerfCounters(buf, svcWapCounters);
     dumpPerfCounters(buf, svcMmsCounters);
@@ -1047,8 +1045,6 @@ void StatisticsManager::dumpSvcCounters(SerializationBuffer& buf)
 void StatisticsManager::dumpScCounters(SerializationBuffer& buf)
 {
     MutexGuard guard(scCountersLock);
-
-    buf.WriteNetInt32(0);
 
     dumpPerfCounters(buf, scSmppCounters);
     dumpPerfCounters(buf, scWapCounters);
