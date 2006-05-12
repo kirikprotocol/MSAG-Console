@@ -1060,7 +1060,7 @@ void StatisticsManager::reportPerformance(bool t, Mutex& mt, Array<Socket*>& soc
     else
         dumpScCounters(buf);
 
-    uint32_t size = buf.getPos();
+    uint32_t nsize, size = buf.getPos();
 
     if (size < sizeof(uint32_t)) {
         smsc_log_warn(logger, "invalid service performance data (size=%d)", size);
@@ -1072,7 +1072,8 @@ void StatisticsManager::reportPerformance(bool t, Mutex& mt, Array<Socket*>& soc
     for(int i = 0; i < socks.Count(); i++)
     {
         size += 4;
-        int wr = socks[i]->WriteAll((char*)size, 4);
+        nsize = htonl(size);
+        int wr = socks[i]->WriteAll((char*)&nsize, 4);
         wr += socks[i]->WriteAll((char*)buf.getBuffer(), size - 4);
 
       if(wr != size)
