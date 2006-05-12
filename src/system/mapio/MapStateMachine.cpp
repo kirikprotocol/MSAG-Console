@@ -19,11 +19,15 @@ using namespace std;
 
 #include "../../mscman/MscManager.h"
 #include "../../mscman/MscStatus.h"
+#include "resourcemanager/ResourceManager.hpp"
+#include "util/templates/DummyAdapter.h"
 
 using namespace smsc::mscman;
 
 using namespace smsc::system;
 using namespace smsc::util;
+using namespace smsc::resourcemanager;
+using smsc::util::templates::DummyGetAdapter;
 
 
 static const bool SMS_SEGMENTATION = true;
@@ -1230,22 +1234,50 @@ static ET96MAP_USSD_DATA_CODING_SCHEME_T fillUSSDString(unsigned encoding, const
 static void DoUSSRUserResponceError(const SmscCommand& cmd , MapDialog* dialog)
 {
   __map_trace2__("%s: dialogid 0x%x",__func__,dialog->dialogid_map);
-  ET96MAP_ERROR_PROCESS_UNSTRUCTURED_SS_REQUEST_T error;
-  memset(&error, 0, sizeof(error));
-  error.errorCode = 34; /*Sytem failure */
-  error.u.systemFailureNetworkResource_s.networkResourcePresent = 0;
+//  ET96MAP_ERROR_PROCESS_UNSTRUCTURED_SS_REQUEST_T error;
+//  memset(&error, 0, sizeof(error));
+//  error.errorCode = 34; /*Sytem failure */
+//  error.u.systemFailureNetworkResource_s.networkResourcePresent = 0;
   ET96MAP_USSD_STRING_T ussdString = {0,};
-  char text[256];
+  char text[1024];
+  DummyGetAdapter ga;
+  ContextEnvironment ce;
+  
   if( cmd.IsOk() ) {
     if( cmd->get_commandId() == SUBMIT_RESP ) {
-      sprintf( text, "Rejected %d", cmd->get_resp()->get_status() );
+      char buf[32];
+      sprintf(buf,"%d",fd.lastResult);
+      std::string reason=ResourceManager::getInstance()->getString(fd.locale,((string)"reason.")+buf);
+      ce.exportStr("msg",reason.c_str());
+      ce.exportInt("code",cmd->get_resp()->get_status()&0x0000FFFF)
     } else {
-      sprintf( text, "Invalid command" );
+      ce.exportStr("msg","Invalid command");
+      ce.exportInt("code",0)
       __map_warn2__("%s: dialogid 0x%x invalid command_id: %d",__func__,dialog->dialogid_map,cmd->get_commandId());
     }
   } else {
-    sprintf( text, "Error %d", dialog->routeErr );
+    ce.exportStr("msg","Bad command status");
+    ce.exportInt("code",dialog->routeErr);
   }
+  
+  OutputFormatter* ofDelivered=ResourceManager::getInstance()->getFormatter("en_en","ussd_error");
+  if(!ofDelivered)
+  {
+    sprintf( text, "Unknown formatter ussd_error for locale en_en" );
+    return;
+  } else {
+    try{
+      string out;
+      ofDelivered->format(out,ga,ce);
+      if( out.length() < 160 ) strcpy(text,out.c_str());
+      else strcpy(text,out.substr(0, 160).c_str());
+    }catch(exception& e)
+    {
+      __map_warn2__("%s: dialogid 0x%x formatter error: %s",__func__,dialog->dialogid_map,e.what());
+      sprintf( text, "Formatting error: %s", e.what() );
+    }
+  }
+  
   unsigned text_len = strlen(text);
   ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding =
     fillUSSDString(MAP_LATIN1_ENCODING,(unsigned char*)text,text_len, &ussdString);
@@ -1255,7 +1287,7 @@ static void DoUSSRUserResponceError(const SmscCommand& cmd , MapDialog* dialog)
       dialog->ssn,dialog->dialogid_map,dialog->origInvokeId,
       &ussdEncoding,
       &ussdString,
-      &error), __func__);
+      0), __func__);
   }
   else throw runtime_error(
     FormatText("%s incorrect dialog version %d",__func__,dialog->version));

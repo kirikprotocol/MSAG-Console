@@ -18,6 +18,7 @@
 #include "system/status.h"
 
 #include "resourcemanager/ResourceManager.hpp"
+#include "util/templates/DummyAdapter.h"
 
 #include <exception>
 #include "util/timeslotcounter.hpp"
@@ -37,6 +38,7 @@ static char profileMagic[]="SmScPrOf";
 
 using namespace smsc::core::buffers;
 using smsc::util::Exception;
+using smsc::util::templates::DummyGetAdapter;
 using std::exception;
 using namespace smsc::util;
 
@@ -579,99 +581,6 @@ enum{
   msgTranslitOn,
   msgTranslitOff
 };
-
-class DummyGetAdapter:public GetAdapter{
-public:
-
-  virtual bool isNull(const char* key)
-      throw(AdapterException)
-  {
-    return false;
-  }
-
-  virtual const char* getString(const char* key)
-      throw(AdapterException)
-  {
-    return "";
-  }
-
-  virtual int8_t getInt8(const char* key)
-      throw(AdapterException)
-  {
-    return 0;
-  }
-
-  virtual int16_t getInt16(const char* key)
-      throw(AdapterException)
-  {
-    return 0;
-  }
-
-  virtual int32_t getInt32(const char* key)
-      throw(AdapterException)
-  {
-    return 0;
-  }
-
-  virtual int64_t getInt64(const char* key)
-      throw(AdapterException)
-  {
-    return 0;
-  }
-
-
-  virtual uint8_t getUint8(const char* key)
-      throw(AdapterException)
-  {
-    return 0;
-  }
-
-  virtual uint16_t getUint16(const char* key)
-      throw(AdapterException)
-  {
-    return 0;
-  }
-
-  virtual uint32_t getUint32(const char* key)
-      throw(AdapterException)
-  {
-    return 0;
-  }
-
-  virtual uint64_t getUint64(const char* key)
-      throw(AdapterException)
-  {
-    return 0;
-  }
-
-
-  virtual float getFloat(const char* key)
-      throw(AdapterException)
-  {
-    return 0;
-  }
-
-  virtual double getDouble(const char* key)
-      throw(AdapterException)
-  {
-    return 0;
-  }
-
-  virtual long double getLongDouble(const char* key)
-      throw(AdapterException)
-  {
-    return 0;
-  }
-
-
-  virtual time_t getDateTime(const char* key)
-      throw(AdapterException)
-  {
-    return 0;
-  }
-
-};
-
 
 int Profiler::Execute()
 {
