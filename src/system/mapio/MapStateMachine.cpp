@@ -1246,13 +1246,13 @@ static void DoUSSRUserResponceError(const SmscCommand& cmd , MapDialog* dialog)
   if( cmd.IsOk() ) {
     if( cmd->get_commandId() == SUBMIT_RESP ) {
       char buf[32];
-      sprintf(buf,"%d",fd.lastResult);
-      std::string reason=ResourceManager::getInstance()->getString(fd.locale,((string)"reason.")+buf);
+      sprintf(buf,"%d",cmd->get_resp()->get_status()&0x0000FFFF);
+      std::string reason=ResourceManager::getInstance()->getString("en_en",((string)"reason.")+buf);
       ce.exportStr("msg",reason.c_str());
-      ce.exportInt("code",cmd->get_resp()->get_status()&0x0000FFFF)
+      ce.exportInt("code",cmd->get_resp()->get_status()&0x0000FFFF);
     } else {
       ce.exportStr("msg","Invalid command");
-      ce.exportInt("code",0)
+      ce.exportInt("code",0);
       __map_warn2__("%s: dialogid 0x%x invalid command_id: %d",__func__,dialog->dialogid_map,cmd->get_commandId());
     }
   } else {
