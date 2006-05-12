@@ -14,7 +14,7 @@ using smsc::core::buffers::Array;
 class ActionSend : public Action
 {
 public:
-    enum SendLevel{ Alarm = 1, Warning, Info, Notify };
+    enum SendLevel{Info = 0, Notify = 1, Warning = 2, Alarm = 3};
 
     virtual void init(const SectionParams& params,PropertyObject propertyObject);
     virtual bool run(ActionContext& context);
@@ -32,6 +32,7 @@ protected:
     std::string strMsg;
     Array<std::string> toSms;
     Array<std::string> toEmail;
+    bool terminal;
 
     SendLevel level;
 

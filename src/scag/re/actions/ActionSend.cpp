@@ -69,10 +69,19 @@ void ActionSend::init(const SectionParams& params,PropertyObject _propertyObject
     char p;
     char *ptr;
     bool bExist;
+    std::string str;
 
     logger = Logger::getInstance("scag.re");
 
     propertyObject = _propertyObject;
+
+    terminal = false;
+    if(params.Exists("terminal"))
+    {
+        str = ConvertWStrToStr(params["terminal"]);
+        if(!strcmp(str.c_str(), "yes"))
+            terminal = true;
+    }
 
     CheckParameter(params, propertyObject, "send", "message", true, true, wstrMsg, bExist);
     strMsg = ConvertWStrToStr(wstrMsg);
@@ -122,6 +131,8 @@ bool ActionSend::run(ActionContext& context)
 
     if(!getStrProperty(context, strDate, "date", ev.pDeliveryTime))
         return true;
+
+    ev.cCriticalityLevel = (uint8_t)level;
 
     smsc_log_debug(logger, "msg: %s, toEmail: %s, toSms: %s, date: %s", ev.pMessageText.c_str(), ev.pAddressEmail.c_str(), ev.pAbonentsNumbers.c_str(), ev.pDeliveryTime.c_str());
 
