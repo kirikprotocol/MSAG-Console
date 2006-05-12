@@ -371,7 +371,7 @@ extern void AbortAndRemoveDialog(ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T 
 inline void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
   sa->setTypeOfNumber(ma->st.ton);
   sa->setNumberingPlan(ma->st.npi);
-  if ( ma->st.ton == 5 && ma->st.npi == 0 )
+  if ( ma->st.ton == 5 )
   {
     MicroString text;
     Convert7BitToText(ma->val,(ma->len/2)*8/7,&text,0);
