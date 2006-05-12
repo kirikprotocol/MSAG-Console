@@ -8,6 +8,10 @@
  *  Copyright 2006 Sibinco. All rights reserved.
  *
  */
+#include "Adapters.h"
+
+namespace smsc { namespace util { namespace templates
+{
 
 class DummyGetAdapter:public GetAdapter{
 public:
@@ -27,4 +31,6 @@ public:
   virtual long double getLongDouble(const char* key) throw(AdapterException);
   virtual time_t getDateTime(const char* key) throw(AdapterException);
 };
+
+}}}
 #endif
