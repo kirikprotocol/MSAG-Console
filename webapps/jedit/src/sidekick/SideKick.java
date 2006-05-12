@@ -473,7 +473,7 @@ class SideKick implements EBComponent
    {
     Log.log(Log.DEBUG,this,"ParseAWTRequest");
     //System.out.println("ParseAWTRequest # "+number);
-    setErrorSource(errorSource,6);
+    if (!parser.isStopped()) setErrorSource(errorSource,6);
 
     int errorCount = errorSource.getErrorCount();
     
@@ -519,7 +519,7 @@ class SideKick implements EBComponent
      + " but got event for " + buffer);
     return;
    }
-  // System.out.println("parse OnKeyStroke are implemented !!!"); 
+  // System.out.println("parse OnKeyStroke are implemented !!!");
    if(buffer.isLoaded() && buffer.getBooleanProperty("sidekick.keystroke-parse"))
     parseWithDelay();
   } //}}}

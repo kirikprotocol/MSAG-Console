@@ -49,6 +49,9 @@ public abstract class XmlParser extends SideKickParser
   stopped = true;
  } //}}}
 
+ public boolean isStopped() {
+   return stopped;
+ }
  //{{{ activate() method
  public void activate(View view)
  {

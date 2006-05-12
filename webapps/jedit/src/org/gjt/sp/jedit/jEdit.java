@@ -178,7 +178,7 @@ public class jEdit extends Applet
   {
     System.out.println("Stopping...");
    //  isNotReload=true;
-    initialized = false;
+    //initialized = false;
     super.stop();
   }
 
@@ -202,6 +202,7 @@ public class jEdit extends Applet
        PluginJAR jar=(PluginJAR) jars.elementAt(i);
        jar.clear();
      } //}}}
+    //VFSManager.clear();
     bufferHash.clear();
     bufferCount=0;
     buffersFirst=null;

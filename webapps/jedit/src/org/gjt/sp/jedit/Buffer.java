@@ -425,7 +425,7 @@ public class Buffer
    */
   public boolean save(final View view, String path, final boolean rename)
   {
-    if (!(SideKickPlugin.getParserForBuffer(this)).isParsingComplete())
+    if (SideKickPlugin.isParsingBuffer(this))
     {
         GUIUtilities.message(view,"saving-rule-while-parsing",null);
         return false;

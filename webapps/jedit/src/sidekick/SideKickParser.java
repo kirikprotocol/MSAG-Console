@@ -84,6 +84,7 @@ public abstract class SideKickParser
  {
  } //}}}
 
+ public abstract boolean isStopped(); 
  //{{{ activate() method
  /**
   * This method is called when a buffer using this parser is selected
@@ -224,10 +225,6 @@ public abstract class SideKickParser
      this.parsingComplete = parsingComplete;
  }
 
- public boolean isParsingComplete()
- {
-      return this.parsingComplete;
- }
 
  private String name;
 }
