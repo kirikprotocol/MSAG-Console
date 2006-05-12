@@ -13,6 +13,7 @@ import java.util.Date;
  */
 public class StatQuery {
     public static final long ALL_PROVIDERS = -1;
+    public static final long ALL_SERVICES = -1;
 
     private Date fromDate = new Date();
     private Date tillDate = new Date();
@@ -21,6 +22,7 @@ public class StatQuery {
     private boolean tillDateEnabled = false;
 
     private long providerId = ALL_PROVIDERS;
+    private long serviceId = ALL_SERVICES;
     private long transport = 0;
 
     public StatQuery() {
@@ -65,6 +67,14 @@ public class StatQuery {
 
     public void setProviderId(long providerId) {
         this.providerId = providerId;
+    }
+
+    public long getServiceId() {
+        return serviceId;
+    }
+
+    public void setServiceId(long serviceId) {
+        this.serviceId = serviceId;
     }
 
     public long getTransport() {

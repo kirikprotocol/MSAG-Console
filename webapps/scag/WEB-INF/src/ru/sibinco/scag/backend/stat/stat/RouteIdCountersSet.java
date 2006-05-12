@@ -15,17 +15,17 @@ public class RouteIdCountersSet extends ExtendedCountersSet implements Comparabl
         this.routeid = routeid;
     }
 
-    public RouteIdCountersSet(long accepted, long rejected, long delivered,
-                              long gw_rejected, long failed, long billingOk,
-                              long billingFailed, long recieptOk, long recieptFailed, String routeid) {
-        super(accepted, rejected, delivered, gw_rejected, failed, billingOk, billingFailed, recieptOk, recieptFailed);
+    public RouteIdCountersSet(long accepted, long rejected,
+                              long gw_rejected, long delivered, long failed,
+                              long recieptOk, long recieptFailed, String routeid) {
+        super(accepted, rejected, gw_rejected, delivered, failed, recieptOk, recieptFailed);
         this.routeid = routeid;
     }
 
     public RouteIdCountersSet(long request, long requestRejected, long response,
                                long responseRejected, long delivered, long failed,
-                               long billingOk, long billingFailed, String routeid) {
-        super(request, requestRejected, response, responseRejected, delivered, failed, billingOk, billingFailed);
+                               String routeid) {
+        super(request, requestRejected, response, responseRejected, delivered, failed);
         this.routeid = routeid;
     }
 

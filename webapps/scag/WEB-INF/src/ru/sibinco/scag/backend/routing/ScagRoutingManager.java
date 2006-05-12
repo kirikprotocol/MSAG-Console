@@ -259,6 +259,16 @@ public class ScagRoutingManager {
         return null;
     }
 
+    public int getProviderIdByServiceId(final Long serviceId) throws SibincoException {
+      return (serviceProvidersManager.getServiceProviderByServiceId(serviceId)).getId().intValue();
+    }
+
+    public int getServiceIdByRouteId(final String routeId) throws SibincoException {
+      final Route route = (Route)routes.get(routeId);
+      if (route == null) return 0;
+      return route.getService().getId().intValue();
+    }
+
     public synchronized void save() throws SibincoException {
         saveToFile(SMPP_ROUTES_TEMPORAL_CONFIG);
     }

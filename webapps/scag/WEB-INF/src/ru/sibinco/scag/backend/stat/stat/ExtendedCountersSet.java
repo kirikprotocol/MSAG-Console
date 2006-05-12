@@ -18,9 +18,9 @@ public class ExtendedCountersSet extends CountersSet {
     public ExtendedCountersSet() {
     }
 
-    public ExtendedCountersSet(long accepted, long rejected, long delivered,
-                               long gw_rejected, long failed) {
-        super(accepted, rejected, delivered, gw_rejected, failed);
+    public ExtendedCountersSet(long accepted, long rejected,
+                               long gw_rejected, long delivered, long failed) {
+        super(accepted, rejected, gw_rejected, delivered, failed);
     }
 
     public ExtendedCountersSet(long request, long requestRejected, long response,
@@ -28,16 +28,10 @@ public class ExtendedCountersSet extends CountersSet {
         super(request, requestRejected, response, responseRejected, delivered, failed);
     }
 
-    public ExtendedCountersSet(long accepted, long rejected, long delivered,
-                               long gw_rejected, long failed, long billingOk,
-                               long billingFailed, long recieptOk, long recieptFailed) {
-        super(accepted, rejected, delivered, gw_rejected, failed, billingOk, billingFailed, recieptOk, recieptFailed);
-    }
-
-    public ExtendedCountersSet(long request, long requestRejected, long response,
-                               long responseRejected, long delivered, long failed,
-                               long billingOk, long billingFailed) {
-        super(request, requestRejected, response, responseRejected, delivered, failed, billingOk, billingFailed);
+    public ExtendedCountersSet(long accepted, long rejected,
+                               long gw_rejected, long delivered, long failed,
+                               long recieptOk, long recieptFailed) {
+        super(accepted, rejected, gw_rejected, delivered, failed, recieptOk, recieptFailed);
     }
 
     public void incError(int errcode, long count) {

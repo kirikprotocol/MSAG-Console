@@ -20,9 +20,9 @@ public class SmscIdCountersSet extends ExtendedCountersSet implements Comparable
         this.smscid = smscId;
     }
 
-    public SmscIdCountersSet(long accepted, long rejected, long delivered,
-                             long gw_rejected, long failed, String smscId) {
-        super(accepted, rejected, delivered, gw_rejected, failed);
+    public SmscIdCountersSet(long accepted, long rejected,
+                             long gw_rejected, long delivered, long failed, String smscId) {
+        super(accepted, rejected, gw_rejected, delivered, failed);
         this.smscid = smscId;
     }
 

@@ -2,6 +2,7 @@ package ru.sibinco.scag.backend.stat.stat;
 
 import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.lib.backend.util.config.Config;
+import ru.sibinco.lib.SibincoException;
 import ru.sibinco.scag.backend.Constants;
 import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.transport.Transport;
@@ -16,13 +17,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.TimeZone;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -34,6 +29,8 @@ import java.util.TreeMap;
 public class Stat {
 
     org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(Stat.class);
+
+    private SCAGAppContext appContext;
 
     private final static String DATE_DIR_FORMAT = "yyyy-MM";
     private final static String DATE_DAY_FORMAT = "yyyy-MM-dd hh:mm";
@@ -56,16 +53,17 @@ public class Stat {
     private static Object instanceLock = new Object();
     private static Stat instance = null;
 
-    public static Stat getInstance(Config gwConfig) throws Exception {
+    public static Stat getInstance(SCAGAppContext appContext) throws Exception {
         synchronized (instanceLock) {
-            if (instance == null) instance = new Stat(gwConfig);
+            if (instance == null) instance = new Stat(appContext);
             return instance;
         }
     }
 
-    protected Stat(Config gwConfig) throws MessageException {
+    protected Stat(SCAGAppContext appContext) throws MessageException {
         try {
-            statstorePath = gwConfig.getString(PARAM_NAME_STAT_DIR);
+            this.appContext = appContext;
+            statstorePath = appContext.getGwConfig().getString(PARAM_NAME_STAT_DIR);
             if (statstorePath == null || statstorePath.length() <= 0)
                 throw new MessageException("store path is empty");
         } catch (Exception e) {
@@ -260,11 +258,11 @@ public class Stat {
                             haveValues = true; // read and increase counters
 
                             scanRoutesAndGeneralStat(countersForRoute, lastHourCounter, is,
-                                    query.getTransport(), query.getProviderId());
-                            scanSmes(countersForSme, is, query.getTransport(), query.getProviderId());
+                                    query.getTransport(), query.getProviderId(),query.getServiceId());
                             if (query.getTransport() == Transport.SMPP_TRANSPORT_ID) {
-                                scanSmsc(countersForSmsc, is, query.getProviderId());
+                              scanSmsc(countersForSmsc, is, query.getProviderId(),query.getServiceId());
                             }
+                            scanSmes(countersForSme, is, query.getTransport(), query.getProviderId(),query.getServiceId());
                         } catch (EOFException exc) {
                             logger.warn("Incomplete record #" + recordNum + " in " + path + "");
                         }
@@ -350,16 +348,14 @@ public class Stat {
                                                      InputStream is, boolean isNeedToCount) throws IOException {
         int accepted = (int) readUInt32(is);
         int rejected = (int) readUInt32(is);
-        int delivered = (int) readUInt32(is);
         int gw_rejected = (int) readUInt32(is);
+        int delivered = (int) readUInt32(is);
         int failed = (int) readUInt32(is);
-        int billingOk = (int) readUInt32(is);
-        int billingFailed = (int) readUInt32(is);
         int recieptOk = (int) readUInt32(is);
         int recieptFailed = (int) readUInt32(is);
         if (isNeedToCount) {
-            set.incrementFullForSMPPTransport(accepted, rejected, delivered, gw_rejected, failed, billingOk, billingFailed, recieptOk, recieptFailed);
-            countersSet.incrementFullForSMPPTransport(accepted, rejected, delivered, gw_rejected, failed, billingOk, billingFailed, recieptOk, recieptFailed);
+            set.incrementFullForSMPPTransport(accepted, rejected, gw_rejected, delivered, failed, recieptOk, recieptFailed);
+            countersSet.incrementFullForSMPPTransport(accepted, rejected, gw_rejected, delivered, failed, recieptOk, recieptFailed);
         }
     }
 
@@ -373,24 +369,22 @@ public class Stat {
         int responseRejected = (int) readUInt32(is);
         int delivered = (int) readUInt32(is);
         int failed = (int) readUInt32(is);
-        int billingOk = (int) readUInt32(is);
-        int billingFailed = (int) readUInt32(is);
         if (isNeedToCount) {
             set.incrementFullForHttpTransport(request, requestRejected, response, responseRejected,
-                    delivered, failed, billingOk, billingFailed);
+                    delivered, failed);
             countersSet.incrementFullForHttpTransport(request, requestRejected, response, responseRejected,
-                    delivered, failed, billingOk, billingFailed);
+                    delivered, failed);
         }
     }
 
     private void scanSMPPSmeCounters(CountersSet set, InputStream is, boolean isNeedToCount) throws IOException {
         int accepted = (int) readUInt32(is);
         int rejected = (int) readUInt32(is);
-        int delivered = (int) readUInt32(is);
         int gw_rejected = (int) readUInt32(is);
+        int delivered = (int) readUInt32(is);
         int failed = (int) readUInt32(is);
         if (isNeedToCount)
-            set.incrementForSMPPTransport(accepted, rejected, delivered, gw_rejected, failed);
+            set.incrementForSMPPTransport(accepted, rejected, gw_rejected, delivered, failed);
     }
 
     private void scanHttpSmeCounters(CountersSet set, InputStream is, boolean isNeedToCount) throws IOException {
@@ -407,11 +401,11 @@ public class Stat {
     private void scanSmscCounters(CountersSet set, InputStream is, boolean isNeedToCount) throws IOException {
         int accepted = (int) readUInt32(is);
         int rejected = (int) readUInt32(is);
-        int delivered = (int) readUInt32(is);
         int gw_rejected = (int) readUInt32(is);
+        int delivered = (int) readUInt32(is);
         int failed = (int) readUInt32(is);
         if (isNeedToCount)
-            set.incrementForSMPPTransport(accepted, rejected, delivered, gw_rejected, failed);
+            set.incrementForSMPPTransport(accepted, rejected, gw_rejected, delivered, failed);
     }
 
     private void scanErrors(ExtendedCountersSet set, InputStream is, boolean isNeedToCount) throws IOException {
@@ -424,17 +418,21 @@ public class Stat {
         }
     }
 
-    private void scanSmes(HashMap map, InputStream is, long transport, long providerId) throws IOException {
+    private void scanSmes(HashMap map, InputStream is, long transport, long providerId, long serviceId) throws IOException {
         int counter = (int) readUInt32(is);
 
         while (counter-- > 0) {
             boolean isNeedToCount = true;
-            int sme_id_len = readUInt8(is);
+            int sme_id_len = readUInt16(is);
             String smeId = readString(is, sme_id_len);
-            int currentProviderId = (int) readUInt32(is);
-            if (currentProviderId != providerId && providerId != -1) {
+            //int currentProviderId = (int) readUInt32(is);
+
+            if (providerId != -1 || serviceId!=-1) {
                 isNeedToCount = false;
             }
+
+            if (transport == Transport.HTTP_TRANSPORT_ID) isNeedToCount = true;
+
             SmeIdCountersSet set = (SmeIdCountersSet) map.get(smeId);
             if (set == null) {
                 set = new SmeIdCountersSet(smeId);
@@ -442,7 +440,7 @@ public class Stat {
                     map.put(smeId, set);
             }
 
-            set.setProviderId(currentProviderId);
+            //set.setProviderId(currentProviderId);
             if (transport == Transport.SMPP_TRANSPORT_ID) {
                 scanSMPPSmeCounters(set, is, isNeedToCount);
             } else if (transport == Transport.HTTP_TRANSPORT_ID) {
@@ -452,16 +450,16 @@ public class Stat {
         }
     }
 
-    private void scanSmsc(HashMap map, InputStream is, long providerId) throws IOException {
+    private void scanSmsc(HashMap map, InputStream is, long providerId, long serviceId) throws IOException {
         int counter = (int) readUInt32(is);
 
         while (counter-- > 0) {
             boolean isNeedToCount = true;
-            int smsc_id_len = readUInt8(is);
+            int smsc_id_len = readUInt16(is);
             String smscId = readString(is, smsc_id_len);
 
-            int currentProviderId = (int) readUInt32(is);
-            if (currentProviderId != providerId && providerId != -1) {
+            //int currentProviderId = (int) readUInt32(is);
+            if (providerId != -1 || serviceId!=-1) {
                 isNeedToCount = false;
             }
 
@@ -471,24 +469,32 @@ public class Stat {
                 if (isNeedToCount)
                     map.put(smscId, set);
             }
-            set.setProviderId(currentProviderId);
+            //set.setProviderId(currentProviderId);
             scanSmscCounters(set, is, isNeedToCount);
             scanErrors(set, is, isNeedToCount);
         }
     }
 
     private void scanRoutesAndGeneralStat(HashMap map, CountersSet lastHourCounter,
-                                          InputStream is, long transport, long providerId) throws IOException {
+                                          InputStream is, long transport, long providerId, long serviceId) throws IOException, SibincoException {
         int counter = (int) readUInt32(is);
         while (counter-- > 0) {
             boolean isNeedToCount = true;
-            int route_id_len = readUInt8(is);
+            int route_id_len = readUInt16(is);
             String routeId = readString(is, route_id_len);
+            int currentProviderId = -1;
+            int currentServiceId = -1;
 
-            int currentProviderId = (int) readUInt32(is);
-            if (currentProviderId != providerId && providerId != -1) {
-                isNeedToCount = false;
+            currentServiceId = appContext.getScagRoutingManager().getServiceIdByRouteId(routeId);
+            if (currentServiceId == 0) currentProviderId = 0;
+            else currentProviderId = appContext.getScagRoutingManager().getProviderIdByServiceId(new Long(currentServiceId));
+            /*int currentProviderId = (int) readUInt32(is);*/
+            if ((currentProviderId != providerId && providerId != -1) || currentProviderId == 0) {
+               isNeedToCount = false;
+            } else if ((currentServiceId != serviceId && serviceId != -1) || currentServiceId == 0) {
+               isNeedToCount = false;
             }
+
             RouteIdCountersSet set = (RouteIdCountersSet) map.get(routeId);
             if (set == null) {
                 set = new RouteIdCountersSet(routeId);

@@ -16,9 +16,9 @@ public class SmeIdCountersSet extends ExtendedCountersSet implements Comparable 
     }
 
 
-    public SmeIdCountersSet(long accepted, long rejected, long delivered,
-                            long gw_rejected, long failed, String smeid) {
-        super(accepted, rejected, delivered, gw_rejected, failed);
+    public SmeIdCountersSet(long accepted, long rejected,
+                            long gw_rejected, long delivered, long failed, String smeid) {
+        super(accepted, rejected, gw_rejected, delivered, failed);
         this.smeid = smeid;
     }
 

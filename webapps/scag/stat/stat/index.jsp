@@ -1,7 +1,7 @@
 <%@ include file="/WEB-INF/inc/header.jspf" %>
 <%@
         taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
-<sm:page title="Statistics">
+<sm:page title="Statistics" onLoad="populateArray();">
 
 <jsp:attribute name="menu">
 </jsp:attribute>
@@ -19,31 +19,30 @@
 
             </sm-ep:properties>
         </td>
-        <td align="left">
-            <table cellspacing=0 cellspadding=0 border=0>
-                <tr><td>&nbsp;
-                    <sm-ep:properties title="" noEdit="true">
-                </td></tr>
-                <tr><td>
-                    <%--c:choose>
+        <td>
+                &nbsp;
+                <sm-ep:properties title="" noEdit="true">
+                    <c:choose>
                         <c:when test="${bean.administrator}">
-                            <sm-ep:list title="Sme provider" name="providerId"
+                            <sm-ep:list title="Service provider(s)" name="providerId"
                                         values="${fn:join(bean.providerIds, ',')}"
-                                        valueTitles="${fn:join(bean.providerNames, ',')}"/>
+                                        valueTitles="${fn:join(bean.providerNames, ',')}" onChange="providerChanged();"/>
                         </c:when>
                         <c:otherwise>
-                            <sm-ep:const title="Sme provider" name="providerName" value="${bean.providerName}"/>
+                            <sm-ep:const title="Service provider" name="providerName" value="${bean.providerName}"/>
                         </c:otherwise>
-                    </c:choose--%>
-                </td></tr>
-                <tr><td>
+                    </c:choose>
                     <sm-ep:calendar title="Till date" name="tillDate"/>
-                </td></tr>
-                <tr><td>
-                    </sm-ep:properties>
-            </table>
-        </td>
-    </tr>
+                 </sm-ep:properties>
+         </td>
+         <td>
+            <sm-ep:properties title="" noEdit="true">
+                            <sm-ep:list title="Service(s)" name="serviceId"
+                                  values="${fn:join(bean.serviceIds,',')}"
+                                       valueTitles="${fn:join(bean.serviceNames,',')}" onChange="serviceChanged();"/>
+            </sm-ep:properties>
+         </td>
+       </tr>
 </table>
 <sm:break>
     <sm-pm:menu>
@@ -53,11 +52,76 @@
 </sm:break>
 
 <script language="JavaScript">
+    var services;
     function toggleVisible(p, c) {
         var o = p.className == "collapsing_list_opened";
         p.className = o ? "collapsing_list_closed"  : "collapsing_list_opened";
         c.runtimeStyle.display = o ? "none" : "block";
     }
+
+    function populateArray() {
+        services = new Array(opForm.all.serviceId.length*3);
+        for (i=1;i<opForm.all.serviceId.length;i++) {
+          curserv = opForm.all.serviceId.options[i].value;
+          serviceproviderid = curserv.split('//');
+          services[i*3] = serviceproviderid[0];
+          services[i*3+1] = serviceproviderid[1];
+          services[i*3+2] = opForm.all.serviceId.options[i].text;
+        }
+        selectedText = opForm.all.serviceId.options[opForm.all.serviceId.selectedIndex].text;
+        providerChanged();
+        for(i=1;i<opForm.all.serviceId.length;i++)
+          if (selectedText == opForm.all.serviceId.options[i].text) opForm.all.serviceId.options[i].selected = true;
+        //message = "";
+        //for (i=0;i<services.length;i++) {
+        //  message = message + 'services[' + i + ']=' + services[i] + ' | ' ;
+        //}
+        //alert(message);
+    }
+
+    function providerChanged() {
+      for(i=opForm.all.serviceId.length;i>0;i--) opForm.all.serviceId.options[i]=null;
+      opForm.all.serviceId.options[0] = new Option("ALL_SERVICES","-1",true,true);
+      providerId = opForm.all.providerId.options[opForm.all.providerId.selectedIndex].value;
+      j = 1;
+      if (providerId == "-1") {
+        for (i=1;i<services.length/3;i++) {
+           opForm.all.serviceId.options[j] = new Option(services[i*3+2],services[i*3]);
+           j=j+1;
+         }
+         return;
+      }
+      //alert('providerId = ' + providerId);
+      for (i=1;i<services.length;i++) {
+         if (services[i*3+1] == providerId) {
+           //alert('services[' + (i*3+1) + ']=' + providerId);
+           opForm.all.serviceId.options[j] = new Option(services[i*3+2],services[i*3]);
+           j=j+1;
+         }
+      }
+    }
+
+      function serviceChanged() {
+        serviceId = opForm.all.serviceId.options[opForm.all.serviceId.selectedIndex].value;
+        //alert('serviceId = ' + serviceId);
+        if (serviceId == "-1") {
+          opForm.all.providerId.options[0].selected = true;
+          return;
+        }
+        var prId;
+        for(i=1;i<services.length/3;i++) {
+             if(services[i*3] == serviceId) {
+               prId = services[i*3+1];
+               break;
+             }
+        }
+        for(i=1;i<opForm.all.providerId.length;i++) {
+           if (opForm.all.providerId.options[i].value == prId) {
+              opForm.all.providerId.options[i].selected = true;
+              return;
+           }
+        }
+      }
 </script>
 
 <c:set var="statistics" value="${bean.statistics}"/>
@@ -85,7 +149,6 @@
                         <th width="7%" style="text-align:right">Delivered</th>
                         <th width="7%" style="text-align:right">Failed</th>
                         <th width="7%" style="text-align:right">&nbsp;</th>
-                        <th width="15%" style="text-align:left">Bill OK/Fail</th>
                         <th width="15%" style="text-align:right">Reciept OK/Failed</th>
                     </tr>
                     <tr class=row0>
@@ -97,7 +160,6 @@
                         <th width="7%" style="text-align:right">${total.delivered}</th>
                         <th width="7%" style="text-align:right">${total.failed}</th>
                         <th width="7%" style="text-align:right">&nbsp;</th>
-                        <th width="15%" style="text-align:left">${total.billingOk}/${total.billingFailed}</th>
                         <th width="15%" style="text-align:right">${total.recieptOk}/${total.recieptFailed}</th>
                     </tr>
                     <c:forEach var="dayStat" items="${byDates}" varStatus="i">
@@ -114,7 +176,6 @@
                             <td style="text-align:right">${dayStat.delivered}</td>
                             <td style="text-align:right">${dayStat.failed}</td>
                             <th style="text-align:right">&nbsp;</th>
-                            <td style="text-align:left">${dayStat.billingOk}/${dayStat.billingFailed}</td>
                             <td style="text-align:right">${dayStat.recieptOk}/${dayStat.recieptFailed}</td>
                             <td style="text-align:right">&nbsp;</td>
                         </tr>
@@ -132,8 +193,6 @@
                                             <td width="7%" style="text-align:right">${hourStat.delivered}</td>
                                             <td width="7%" style="text-align:right">${hourStat.failed}</td>
                                             <th width="7%" style="text-align:right">&nbsp;</th>
-                                            <td width="15%"
-                                                style="text-align:left">${hourStat.billingOk}/${hourStat.billingFailed}</td>
                                             <th width="15%"
                                                 style="text-align:right">${hourStat.recieptOk}/${hourStat.recieptFailed}</th>
                                         </tr>
@@ -166,7 +225,6 @@
                         <th width="7%" style="text-align:right">Delivered</th>
                         <th width="7%" style="text-align:right">Failed</th>
                         <th width="7%" style="text-align:right">&nbsp;</th>
-                        <th width="15%" style="text-align:left"> Bill OK/Fail</th>
                         <th width="15%" style="text-align:right">Reciept OK/Failed</th>
                     </tr>
                     <c:forEach var="routeStat" items="${byRoute}" varStatus="i">
@@ -182,7 +240,6 @@
                             <td style="text-align:right">${routeStat.delivered}</td>
                             <td style="text-align:right">${routeStat.failed}</td>
                             <th style="text-align:right">&nbsp;</th>
-                            <td style="text-align:left">${routeStat.billingOk}/${routeStat.billingFailed}</td>
                             <th style="text-align:right">${routeStat.recieptOk}/${routeStat.recieptFailed}</th>
                             <th style="text-align:right">&nbsp;</th>
                         </tr>
@@ -218,12 +275,12 @@
     <tr><td colspan="9">&nbsp;</td></tr>
     <tr><td style="cursor:hand;text-align:right"
             onClick="toggleVisible(psme_http,csme_http);">
-        <div align="left" id="psme_http" class="collapsing_list_closed"><div class="page_subtitle">SME activity</div></div>
+        <div align="left" id="psme_http" class="collapsing_list_closed"><div class="page_subtitle">URL activity</div></div>
     </td>
         <tr id="csme_http" style="display:none"><td colspan="9">
             <table>
                 <tr>
-                    <th width="20%" style="text-align:right">SME Id</th>
+                    <th width="20%" style="text-align:right">URL</th>
                     <th width="7%" style="text-align:right">Requested</th>
                     <th width="7%" style="text-align:right">Request Rejected</th>
                     <th width="7%" style="text-align:right">Responsed</th>
@@ -299,7 +356,6 @@
                     <th width="7%" style="text-align:right">GW Rejected</th>
                     <th width="7%" style="text-align:right">Failed</th>
                     <th width="7%" style="text-align:right">&nbsp;</th>
-                    <th width="15%" style="text-align:left">Bill OK/Fail</th>
                     <th width="15%" style="text-align:right">Reciept OK/Failed</th>
                 </tr>
                 <tr class=row0>
@@ -310,7 +366,6 @@
                     <th width="7%" style="text-align:right">${total.gw_rejected}</th>
                     <th width="7%" style="text-align:right">${total.failed}</th>
                     <th width="7%" style="text-align:right">&nbsp;</th>
-                    <th width="15%" style="text-align:left">${total.billingOk}/${total.billingFailed}</th>
                     <th width="15%" style="text-align:right">${total.recieptOk}/${total.recieptFailed}</th>
                 </tr>
                 <c:forEach var="dayStat" items="${byDates}" varStatus="i">
@@ -326,7 +381,6 @@
                         <td style="text-align:right">${dayStat.gw_rejected}</td>
                         <td style="text-align:right">${dayStat.failed}</td>
                         <th style="text-align:right">&nbsp;</th>
-                        <td style="text-align:left">${dayStat.billingOk}/${dayStat.billingFailed}</td>
                         <td style="text-align:right">${dayStat.recieptOk}/${dayStat.recieptFailed}</td>
                         <td style="text-align:right">&nbsp;</td>
                     </tr>
@@ -343,8 +397,6 @@
                                         <td width="7%" style="text-align:right">${hourStat.gw_rejected}</td>
                                         <td width="7%" style="text-align:right">${hourStat.failed}</td>
                                         <th width="7%" style="text-align:right">&nbsp;</th>
-                                        <td width="15%"
-                                            style="text-align:left">${hourStat.billingOk}/${hourStat.billingFailed}</td>
                                         <th width="15%"
                                             style="text-align:right">${hourStat.recieptOk}/${hourStat.recieptFailed}</th>
                                     </tr>
@@ -375,8 +427,7 @@
                     <th width="7%" style="text-align:right">Delivered</th>
                     <th width="7%" style="text-align:right">GW Rejected</th>
                     <th width="7%" style="text-align:right">Failed</th>
-                    <th width="7%" style="text-align:right">&nbsp;</th>
-                    <th width="15%" style="text-align:left"> Bill OK/Fail</th>
+                    <th width="7%" style="text-align:right">&nbsp;</th>                    
                     <th width="15%" style="text-align:right">Reciept OK/Failed</th>
                 </tr>
                 <c:forEach var="routeStat" items="${byRoute}" varStatus="i">
@@ -391,7 +442,6 @@
                         <td style="text-align:right">${routeStat.gw_rejected}</td>
                         <td style="text-align:right">${routeStat.failed}</td>
                         <th style="text-align:right">&nbsp;</th>
-                        <td style="text-align:left">${routeStat.billingOk}/${routeStat.billingFailed}</td>
                         <th style="text-align:right">${routeStat.recieptOk}/${routeStat.recieptFailed}</th>
                         <th style="text-align:right">&nbsp;</th>
                     </tr>

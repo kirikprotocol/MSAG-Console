@@ -15,11 +15,11 @@ public class HourCountersSet extends CountersSet
   {
     this.hour = hour;
   }
-  public HourCountersSet(long accepted, long rejected, long delivered,
-                     long gw_rejected, long failed, long billingOk,
-                     long billingFailed, long recieptOk, long recieptFailed, int hour)
+  public HourCountersSet(long accepted, long rejected,
+                     long gw_rejected, long delivered, long failed,
+                     long recieptOk, long recieptFailed, int hour)
   {
-    super(accepted, rejected, delivered, gw_rejected, failed, billingOk, billingFailed, recieptOk, recieptFailed);
+    super(accepted, rejected, gw_rejected, delivered, failed, recieptOk, recieptFailed);
     this.hour = hour;
   }
 

@@ -7,6 +7,8 @@ import ru.sibinco.scag.backend.stat.stat.Statistics;
 import ru.sibinco.scag.backend.stat.stat.Stat;
 import ru.sibinco.scag.backend.sme.Provider;
 import ru.sibinco.scag.backend.SCAGAppContext;
+import ru.sibinco.scag.backend.service.ServiceProvider;
+import ru.sibinco.scag.backend.service.Service;
 import ru.sibinco.scag.backend.transport.Transport;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.lib.backend.users.User;
@@ -29,6 +31,7 @@ import java.security.Principal;
 public class Index extends SCAGBean {
     private static final String DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
     private static final String ALL_PROVIDERS = "ALL PROVIDERS";
+    private static final String ALL_SERVICES = "ALL SERVICES";
 
     private String mbQuery = null;
 
@@ -42,6 +45,9 @@ public class Index extends SCAGBean {
     private String providerName = null;
     private String[] providerIds = null;
     private String[] providerNames = null;
+    private String serviceName = null;
+    private String[] serviceIds = null;
+    private String[] serviceNames = null;
     private String transport = null;
 
     private void init() throws SCAGJspException {
@@ -60,21 +66,37 @@ public class Index extends SCAGBean {
         userProviderId = user.getProviderId();
         administrator = (userProviderId == StatQuery.ALL_PROVIDERS);
         if (administrator) {
-            Map providers = context.getProviderManager().getProviders();
+            Map providers = context.getServiceProviderManager().getServiceProviders(); //context.getProviderManager().getProviders();
             ArrayList ids = new ArrayList(100);
             ArrayList names = new ArrayList(100);
+            ArrayList serviceids = new ArrayList(100);
+            ArrayList servicenames = new ArrayList(100);
+            String prId;
             for (Iterator i = providers.values().iterator(); i.hasNext();) {
                 Object obj = i.next();
-                if (obj != null && obj instanceof Provider) {
-                    Provider provider = (Provider) obj;
-                    ids.add(Long.toString(provider.getId()));
+                if (obj != null && obj instanceof ServiceProvider) {
+                    ServiceProvider provider = (ServiceProvider) obj;
+                    prId = provider.getId().toString();
                     names.add(provider.getName());
+                    for(Iterator ii = provider.getServices().values().iterator();ii.hasNext();) {
+                       Object obj1 = ii.next();
+                       if (obj1 != null && obj1 instanceof Service) {
+                         Service service = (Service) obj1;
+                         serviceids.add(service.getId().toString()+"//"+prId);
+                         servicenames.add(service.getName());
+                       }
+                    }
+                    ids.add(prId);
                 }
             }
             ids.add(0, Long.toString(StatQuery.ALL_PROVIDERS));
             names.add(0, ALL_PROVIDERS); // TODO: sort names ?
             providerIds = (String[]) (ids.toArray(new String[0]));
             providerNames = (String[]) (names.toArray(new String[0]));
+            serviceids.add(0, Long.toString(StatQuery.ALL_SERVICES));
+            servicenames.add(0, ALL_SERVICES);
+            serviceIds = (String[]) (serviceids.toArray(new String[0]));
+            serviceNames = (String[]) (servicenames.toArray(new String[0]));
         } else {
             query.setProviderId(userProviderId);
             Object obj = context.getProviderManager().getProviders().get(new Long(userProviderId));
@@ -95,7 +117,7 @@ public class Index extends SCAGBean {
                 if (userProviderId != StatQuery.ALL_PROVIDERS && userProviderId != query.getProviderId())
                     throw new Exception("Permission denied for user '" + providerName +
                             "' to access other providers's statistics");
-                Stat stat = Stat.getInstance(appContext.getGwConfig());
+                Stat stat = Stat.getInstance(appContext);
                 if (query.getTransport() == Transport.SMPP_TRANSPORT_ID) {
                     statistics = stat.getStatistics(query);
                 } else if (query.getTransport() == Transport.HTTP_TRANSPORT_ID) {
@@ -135,6 +157,26 @@ public class Index extends SCAGBean {
 
     public String getProviderName() {
         return providerName;
+    }
+
+    public String getServiceId() {
+        return String.valueOf(query.getServiceId() + "//"+query.getProviderId());
+    }
+
+    public void setServiceId(String serviceId) {
+        query.setServiceId(Long.valueOf(serviceId).longValue());
+    }
+
+    public String[] getServiceIds() {
+        return serviceIds;
+    }
+
+    public String[] getServiceNames() {
+        return serviceNames;
+    }
+
+    public String getServiceName() {
+        return serviceName;
     }
 
     public String getTransport() {
