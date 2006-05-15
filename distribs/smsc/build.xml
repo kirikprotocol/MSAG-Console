@@ -422,5 +422,8 @@ Targets:
       <fileset dir="${DISTR_DIR}/webapps/smsc/esme_InfoSme"/>
     </move>
   </target>
-
+  
+  <target name="exportarchive" depends="makeweb">
+    <ant dir="${SMSC_DIR}/webapps/smscfeatures/smsexportarchive" target="copy"/>
+  </target>
 </project>
