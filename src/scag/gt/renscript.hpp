@@ -473,7 +473,7 @@ static JSBool _initBillInstance(JSContext *cx, JSObject *obj, uintN argc, jsval 
 		 bcfg.BillingHost=JS_GetStringBytes(JS_ValueToString(cx, argv[0]));
 		 bcfg.BillingPort=JSVAL_TO_INT(argv[1]);
 		 bcfg.MaxThreads=JSVAL_TO_INT(argv[2]);
-		 bcfg.so_dir=JS_GetStringBytes(JS_ValueToString(cx, argv[3]));
+		 bcfg.cfg_dir =JS_GetStringBytes(JS_ValueToString(cx, argv[3]));
 
 		 scag::bill::BillingManager::Init(bcfg);
 		 scag::config::ConfigManager::Init();
@@ -569,7 +569,7 @@ if(argc<8)
     dialogid);
 
  scag::transport::smpp::SmppCommand cmd;
-
+ 
 
  String2SCAGCommang(&cmd,cmd_name,str_oa,oa_tn,oa_np,str_da,da_tn,da_np,dialogid);
 
@@ -670,7 +670,22 @@ if(argc<8)
   return JS_TRUE;
   
 }  
+
+static JSBool _initHttpManager(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+	scag::transport::http::
+	return JS_TRUE;
+}
+
+static JSBool _httprun(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+
+
+	return JS_TRUE;
+
+}
 /**********************************************/  
+
 
 static JSFunctionSpec Global_functions[] = {
  /*    name          native          nargs    */
