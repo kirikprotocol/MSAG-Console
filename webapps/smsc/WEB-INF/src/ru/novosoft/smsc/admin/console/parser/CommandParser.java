@@ -653,6 +653,12 @@ public CommandParser(ParserSharedInputState state) {
 			cmd=exportsms();
 			break;
 		}
+		case TGT_ARCHIVE:
+		{
+			match(TGT_ARCHIVE);
+			cmd=exportarchive();
+			break;
+		}
 		default:
 		{
 			throw new NoViableAltException(LT(1), getFilename());
@@ -2787,6 +2793,42 @@ public CommandParser(ParserSharedInputState state) {
 		cmd = new SmsExportCommand();
 		
 		
+		{
+		switch ( LA(1)) {
+		case ADD_TO:
+		{
+			match(ADD_TO);
+			cmd.setDriver(getnameid("Driver"));
+			cmd.setSource(getnameid("Source"));
+			cmd.setUser(getnameid("User"));
+			cmd.setPassword(getnameid("Password"));
+			cmd.setTableName(getnameid("table name"));
+			break;
+		}
+		case EOF:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		return cmd;
+	}
+	
+	public final SmsArchiveExportCommand  exportarchive() throws RecognitionException, TokenStreamException {
+		SmsArchiveExportCommand cmd;
+		
+		
+		cmd = new SmsArchiveExportCommand();
+		
+		
+		{
+		match(ADD_FOR);
+		cmd.setDate(getnameid("Date to export"));
+		}
 		{
 		switch ( LA(1)) {
 		case ADD_TO:
@@ -5455,6 +5497,7 @@ public CommandParser(ParserSharedInputState state) {
 		"\"statistics\"",
 		"\"sms\"",
 		"\"messages\"",
+		"\"archive\"",
 		"\"group\"",
 		"\"name\"",
 		"\"hide\"",

@@ -174,7 +174,7 @@ public class Index extends SmscBean
 
   public String getErrorString(String errorCode)
   {
-    return reshedules.getErrorString(errorCode);
+    return reshedules.getErrorString(principal, errorCode);
   }
 
   public String getMbReset()
@@ -224,7 +224,7 @@ public class Index extends SmscBean
 
   public boolean isAllErrorsAssigned()
   {
-	if (reshedules != null) return reshedules.isAllErrorsAssigned();
+	if (reshedules != null) return reshedules.isAllErrorsAssigned(principal);
 	else return false;
   }
 
@@ -241,6 +241,6 @@ public class Index extends SmscBean
 
   public Set getAllErrorCodes() throws AdminException
   {
-    return reshedules.getAllErrorCodes();
+    return reshedules.getAllErrorCodes(principal);
   }
 }

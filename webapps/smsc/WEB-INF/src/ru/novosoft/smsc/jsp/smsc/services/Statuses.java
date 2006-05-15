@@ -62,23 +62,23 @@ public class Statuses extends PageBean {
 		}
 		switch (status) {
 		case ServiceInfo.STATUS_OFFLINE:
-			return appContext.getLocaleString("common.statuses.deactivated");
+			return appContext.getLocaleString(principal, "common.statuses.deactivated");
 		case ServiceInfo.STATUS_ONLINE1:
 			if (nodeId == ServiceInfo.STATUS_ONLINE1) {
-				return appContext.getLocaleString("common.statuses.activated");
+				return appContext.getLocaleString(principal, "common.statuses.activated");
 			}
 			else {
-				return appContext.getLocaleString("common.statuses.deactivated");
+				return appContext.getLocaleString(principal, "common.statuses.deactivated");
 			}
 		case ServiceInfo.STATUS_ONLINE2:
 			if (nodeId == ServiceInfo.STATUS_ONLINE2) {
-				return appContext.getLocaleString("common.statuses.activated");
+				return appContext.getLocaleString(principal, "common.statuses.activated");
 			}
 			else {
-				return appContext.getLocaleString("common.statuses.deactivated");
+				return appContext.getLocaleString(principal, "common.statuses.deactivated");
 			}
 		default:
-			return appContext.getLocaleString("common.statuses.unknown");
+			return appContext.getLocaleString(principal, "common.statuses.unknown");
 		}
 	}
 }

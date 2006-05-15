@@ -7,13 +7,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 
-/**
- * Created by IntelliJ IDEA.
- * User: makar
- * Date: 27.01.2004
- * Time: 16:30:52
- * To change this template use Options | File Templates.
- */
 public abstract class SmsSource
 {
   private static Category logger = Category.getInstance(SmsSource.class);

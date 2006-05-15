@@ -24,6 +24,7 @@ public class SMSCErrors {
         public static final String notYetImplemented = B + "notYetImplemented";
         public static final String CouldntGetSMSCStatus = B + "CouldntGetSMSCStatus";
         public static final String CouldntGetBundleKey = B + "CoulndtGetBundleKey";
+        public static final String FeatureIsntInstalled = B + "FeatureIsntInstalled";
 
 
         public static class sql {

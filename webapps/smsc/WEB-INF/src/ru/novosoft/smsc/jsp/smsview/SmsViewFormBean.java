@@ -89,14 +89,14 @@ public class SmsViewFormBean extends IndexBean {
         if (result != RESULT_OK) return result;
 
         if (errorValues == null) { // init error values
-            Set errorStrings = appContext.getLocaleStrings(ERR_CODES_PREFIX);
+            Set errorStrings = appContext.getLocaleStrings(principal, ERR_CODES_PREFIX);
             errorValues = new Vector();
             for (Iterator i = errorStrings.iterator(); i.hasNext();) {
                 String err = (String) i.next();
                 if (!err.startsWith(UNKNOWN_STR)) {
                     try {
                         int errorCode = Integer.parseInt(err);
-                        String errorString = appContext.getLocaleString(ERR_CODES_PREFIX + err);
+                        String errorString = appContext.getLocaleString(principal, ERR_CODES_PREFIX + err);
                         errorValues.add(new ErrorValue(errorCode, (errorString != null) ? errorString : ""));
                     } catch (Exception e) {
                     }
@@ -314,7 +314,7 @@ public class SmsViewFormBean extends IndexBean {
     public int saveResultsToFile(HttpServletResponse response) throws Exception {
         if (rows.getRowsCount() == 0) return RESULT_ERROR;
 
-        SimpleDateFormat dateFormatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss", appContext.getLocale());
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss", appContext.getUserManager().getPrefs(principal).getLocale());
         String result = "";
         for (int i = 0; i < rows.getRowsCount(); i++) {
             SmsRow row = rows.getRow(i);
@@ -461,7 +461,7 @@ public class SmsViewFormBean extends IndexBean {
 
     public String getFromDate() {
         if (query.getFilterFromDate()) {
-            SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT, appContext.getLocale());
+            SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT, appContext.getUserManager().getPrefs(principal).getLocale());
             return formatter.format(query.getFromDate());
         } else
             return "";
@@ -472,7 +472,7 @@ public class SmsViewFormBean extends IndexBean {
         query.setFilterFromDate(dateEnabled);
         if (dateEnabled) {
             try {
-                SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT, appContext.getLocale());
+                SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT, appContext.getUserManager().getPrefs(principal).getLocale());
                 query.setFromDate(formatter.parse(dateString));
             } catch (ParseException e) {
                 query.setFromDate(new Date());
@@ -483,7 +483,7 @@ public class SmsViewFormBean extends IndexBean {
 
     public String getTillDate() {
         if (query.getFilterTillDate()) {
-            SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT, appContext.getLocale());
+            SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT, appContext.getUserManager().getPrefs(principal).getLocale());
             return formatter.format(query.getTillDate());
         } else
             return "";
@@ -494,7 +494,7 @@ public class SmsViewFormBean extends IndexBean {
         query.setFilterTillDate(dateEnabled);
         if (dateEnabled) {
             try {
-                SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT, appContext.getLocale());
+                SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT, appContext.getUserManager().getPrefs(principal).getLocale());
                 query.setTillDate(formatter.parse(dateString));
             } catch (ParseException e) {
                 query.setTillDate(new Date());

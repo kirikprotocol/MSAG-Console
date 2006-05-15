@@ -41,6 +41,7 @@ public class CommandContext {
     protected int status = CMD_OK;
     protected String message = "No message";
     protected ArrayList results = new ArrayList();
+    protected Console owner = null;
 
     public CommandContext(Console owner) {
         this.smsc = owner.getSmsc();
@@ -52,6 +53,7 @@ public class CommandContext {
         this.webappConfig = owner.getWebappConfig();
         this.journal = owner.getJournal();
         this.statuses = owner.getStatuses();
+        this.owner = owner;
     }
 
     public Smsc getSmsc() {
@@ -120,5 +122,9 @@ public class CommandContext {
 
     public Collection getResults() {
         return results;
+    }
+
+    public Console getOwner() {
+        return owner;
     }
 }

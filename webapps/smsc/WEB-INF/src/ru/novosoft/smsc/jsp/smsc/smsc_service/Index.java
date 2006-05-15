@@ -220,7 +220,7 @@ public class Index extends SmscBean
   {
     Object param = params.get(paramName);
     if (param == null)
-      return "<" + appContext.getLocaleString("common.util.notSpecified") + ">";
+      return "<" + appContext.getLocaleString(principal, "common.util.notSpecified") + ">";
     if (param instanceof String)
       return (String) param;
     else

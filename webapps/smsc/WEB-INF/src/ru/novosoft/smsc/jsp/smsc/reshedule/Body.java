@@ -90,12 +90,12 @@ public class Body extends PageBean
 
   public Set getAllErrCodes()
   {
-    return reshedules.getAllErrorCodes();
+    return reshedules.getAllErrorCodes(principal);
   }
 
   public String getErrorString(String errorCode)
   {
-    return reshedules.getErrorString(errorCode);
+    return reshedules.getErrorString(principal, errorCode);
   }
 
   protected boolean isReshedulePresent()

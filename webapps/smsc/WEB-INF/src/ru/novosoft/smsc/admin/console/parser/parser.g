@@ -195,6 +195,7 @@ export returns [Command cmd] {
 	| TGT_STATS_E	cmd = exportstats
 	| TGT_SMS	cmd = exportsms
 	| TGT_SMS_E	cmd = exportsms
+	| TGT_ARCHIVE cmd = exportarchive
 	;
 
 
@@ -1013,6 +1014,16 @@ exportsms returns[SmsExportCommand cmd] {
     cmd = new SmsExportCommand();
 }
 	: (ADD_TO  { cmd.setDriver(getnameid("Driver"));        }
+		   { cmd.setSource(getnameid("Source"));        }
+		   { cmd.setUser(getnameid("User"));            }
+		   { cmd.setPassword(getnameid("Password"));    }
+		   { cmd.setTableName(getnameid("table name")); })?
+	;
+exportarchive returns[SmsArchiveExportCommand cmd] {
+    cmd = new SmsArchiveExportCommand();
+}
+	: (ADD_FOR { cmd.setDate(getnameid("Date to export"));        })
+	  (ADD_TO  { cmd.setDriver(getnameid("Driver"));    }
 		   { cmd.setSource(getnameid("Source"));        }
 		   { cmd.setUser(getnameid("User"));            }
 		   { cmd.setPassword(getnameid("Password"));    }

@@ -54,6 +54,7 @@ tokens {
   TGT_STATS_E   = "statistics";
   TGT_SMS       = "sms";
   TGT_SMS_E     = "messages";
+  TGT_ARCHIVE   = "archive";
   TGT_GROUP     = "group";
 
   OPT_NAME      = "name";

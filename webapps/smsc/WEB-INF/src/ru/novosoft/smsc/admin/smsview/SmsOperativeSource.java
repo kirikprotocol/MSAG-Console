@@ -129,7 +129,6 @@ public class SmsOperativeSource extends SmsSource
           }
           if( query.isFilterLastResult && row.getLastResult() != query.getLastResult() ) {
             it.remove();
-            continue;
           }
         }
       }

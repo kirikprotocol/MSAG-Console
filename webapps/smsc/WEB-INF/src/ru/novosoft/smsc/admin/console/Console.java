@@ -197,4 +197,8 @@ public class Console extends Thread {
         }
         return out;
     }
+
+    public SMSCAppContext getContext() {
+        return context;
+    }
 }

@@ -54,9 +54,7 @@
             document.getElementById('tablesPrefix').disabled = false;
         }
     </script>
-    <%--
-      }
-    --%>
+    
     <table class=properties_list cell>
         <tr class=row<%= (rowN++) % 2%>>
             <td nowrap><input class=radio type="radio" name="storage" id=operativeStorage
@@ -119,32 +117,13 @@
             <td nowrap><input class=txt type=text id="tablesPrefix" name="tablesPrefix"
                               value="<%=defExpSett.getTablesPrefix()%>"></td>
         </tr>
-
-        <%--
-      <tr class=row<%= (rowN++)%2%>>
-        <th>Data Source:</th>
-        <td><input class=txt type="text" id="source" name="source" value="<%=defExpSett.getSource()%>" size=25 maxlength=25 onkeyup="hideAddresses()"></td>
-        <th>Driver:</th>
-        <td><input class=txt type="text" id="driver" name="driver" value="<%=defExpSett.getDriver()%>" size=17 maxlength=15 onkeyup="hideSmeIds()"></td>
-      </tr>
-      <tr class=row<%= (rowN++)%2%>>
-        <th>User:</th>
-        <td><input class=txt type="text" id="user" name="user"  value="<%=defExpSett.getUser()%>" size=25 maxlength=25></td>
-        <th>Password:</th>
-        <td><input class=txt type="text" id="password" name="password"  value="<%=defExpSett.getPassword()%>" size=17 maxlength=15></td>
-      </tr>
-      <tr class=row<%= (rowN++)%2%>>
-        <th>Table Name:</th>
-        <td><input class=txt type="text" id="tablesPrefix" name="tablesPrefix" value="<%=defExpSett.getTablesPrefix()%>" size=25 maxlength=25></td>
-        <th>&nbsp</th>
-        <td>&nbsp</td>
-      </tr>  --%>
     </table>
     <%}
     %>
 </div>
 <%
     page_menu_begin(out);
+    if (errorMessages.size() == 0)
     page_menu_button(session, out, "mbExport", "common.buttons.export", "common.buttons.smsExportHint");
     page_menu_space(out);
     page_menu_end(out);

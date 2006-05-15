@@ -6,8 +6,8 @@ import ru.novosoft.smsc.admin.acl.AclManager;
 import ru.novosoft.smsc.admin.category.CategoryManager;
 import ru.novosoft.smsc.admin.closedgroups.ClosedGroupManager;
 import ru.novosoft.smsc.admin.console.Console;
-import ru.novosoft.smsc.admin.daemon.DaemonManagerImpl;
 import ru.novosoft.smsc.admin.daemon.DaemonManagerHSImpl;
+import ru.novosoft.smsc.admin.daemon.DaemonManagerImpl;
 import ru.novosoft.smsc.admin.journal.Journal;
 import ru.novosoft.smsc.admin.provider.ProviderManager;
 import ru.novosoft.smsc.admin.resource_group.ResourceGroupConstants;
@@ -17,7 +17,6 @@ import ru.novosoft.smsc.admin.resources.ResourcesManagerImpl;
 import ru.novosoft.smsc.admin.route.RouteSubjectManagerImpl;
 import ru.novosoft.smsc.admin.service.*;
 import ru.novosoft.smsc.admin.smsc_service.*;
-import ru.novosoft.smsc.admin.users.User;
 import ru.novosoft.smsc.admin.users.UserManager;
 import ru.novosoft.smsc.perfmon.PerfServer;
 import ru.novosoft.smsc.topmon.TopServer;
@@ -28,6 +27,7 @@ import ru.novosoft.smsc.util.xml.WebXml;
 import ru.novosoft.util.jsp.AppContextImpl;
 
 import java.io.File;
+import java.security.Principal;
 import java.util.*;
 
 public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext {
@@ -228,22 +228,10 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
         }
     }
 
-    public Locale getLocale() {
-        Locale result = null;
-        if (userManager != null) {
-            User user = userManager.getLoginedUser();
-            if (user != null) result = user.getPrefs().getLocale();
-        }
-        if (result == null) result = new Locale(LocaleMessages.DEFAULT_PREFERRED_LANGUAGE);
-        return result;
-    }
-
-    public String getLocaleString(String key) {
+    public String getLocaleString(Principal principal, String key) {
         String result = null;
-        if (userManager != null) // на всякий случай
-        {
-            User user = userManager.getLoginedUser();
-            if (user != null) result = getLocaleString(user.getPrefs().getLocale(), key);
+        if (userManager != null) {
+            result = getLocaleString(userManager.getPrefs(principal).getLocale(), key);
         }
         if (result == null) {
             try {
@@ -253,22 +241,16 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
             catch (MissingResourceException e) {
                 result = /*"ResourceNotFound: " + */key;
             }
-
         }
         return result;
     }
 
-    private String getLocaleString(Locale locale, String key) {
+    private static String getLocaleString(Locale locale, String key) {
         return LocaleMessages.getString(locale, key);
     }
 
-    public Set getLocaleStrings(String prefix) {
-        return getLocaleStrings(userManager.getLoginedUser().getPrefs().getLocale(), prefix);
-    }
-
-
-    private Set getLocaleStrings(Locale locale, String prefix) {
-        return LocaleMessages.getStrings(locale, prefix);
+    public Set getLocaleStrings(Principal principal, String prefix) {
+        return LocaleMessages.getStrings(userManager.getPrefs(principal).getLocale(), prefix);
     }
 
     public String getInitErrorCode() {

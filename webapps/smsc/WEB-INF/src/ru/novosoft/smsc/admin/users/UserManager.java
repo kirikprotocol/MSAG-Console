@@ -11,6 +11,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.jsp.util.tables.DataSource;
 import ru.novosoft.smsc.jsp.util.tables.Filter;
 import ru.novosoft.smsc.jsp.util.tables.Query;
@@ -30,9 +31,6 @@ import java.util.*;
 public class UserManager implements DataSource {
     private File configFile = null;
     private Map users = new HashMap();
-
-    private Principal loginedPrincipal = null;
-    private User loginedUser = null;
 
     public UserManager(File configFile)
             throws Exception, SAXException, IOException {
@@ -148,24 +146,13 @@ public class UserManager implements DataSource {
         }
     }
 
-    public Principal getLoginedPrincipal() {
-        return loginedPrincipal;
-    }
-
-    public User getLoginedUser() {
-        return loginedUser;
-    }
-
-    public void setLoginedPrincipal(Principal principal) {
+    public UserPreferences getPrefs(Principal principal) {
         if (principal != null) {
             Object o = users.get(principal.getName());
             if (o != null) {
-                loginedPrincipal = principal;
-                loginedUser = (User) o;
+                return ((User) o).getPrefs();
             }
-        } else {
-            loginedPrincipal = null;
-            loginedUser = null;
         }
+        return new UserPreferences();
     }
 }

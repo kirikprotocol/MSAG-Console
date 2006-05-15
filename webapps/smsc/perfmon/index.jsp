@@ -13,7 +13,7 @@
     UserPreferences prefs = new UserPreferences();
     if (appContext != null) {
         try {
-            prefs = appContext.getUserManager().getLoginedUser().getPrefs();
+            prefs = appContext.getUserManager().getPrefs(request.getUserPrincipal());
             port = appContext.getConfig().getInt("perfmon.appletport");
         } catch (Throwable e) {
             e.printStackTrace();

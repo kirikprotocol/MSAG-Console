@@ -16,13 +16,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-/**
- * Created by IntelliJ IDEA.
- * User: Andrey
- * Date: 22.04.2005
- * Time: 15:32:13
- * To change this template use File | Settings | File Templates.
- */
 public class SmsStat
  {
     org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(SmsStat.class);

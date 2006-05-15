@@ -242,5 +242,4 @@ public class SmsFileImport  extends Message
       }
       return true;
     }
-
 }

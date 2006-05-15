@@ -260,7 +260,7 @@ public class SmsDaemonFormBean extends PageBean
   public String getStringParam(String paramName)
   {
     Object param = params.get(paramName);
-    if (param == null) return "<" + appContext.getLocaleString("common.util.notSpecified") + ">";
+    if (param == null) return "<" + appContext.getLocaleString(principal, "common.util.notSpecified") + ">";
     if (param instanceof String) return (String) param;
     return null;
   }

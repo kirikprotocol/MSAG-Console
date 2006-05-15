@@ -25,6 +25,7 @@ import ru.novosoft.util.jsp.AppContext;
 
 import java.util.Locale;
 import java.util.Set;
+import java.security.Principal;
 
 
 public interface SMSCAppContext extends AppContext {
@@ -48,11 +49,9 @@ public interface SMSCAppContext extends AppContext {
 
     String getInitErrorCode();
 
-    Locale getLocale();
+    String getLocaleString(Principal principal, String key);
 
-    String getLocaleString(String key);
-
-    Set getLocaleStrings(String prefix);
+    Set getLocaleStrings(Principal principal, String prefix);
 
     SmeManager getSmeManager();
 

@@ -12,13 +12,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
-/**
- * Created by IntelliJ IDEA.
- * User: makar
- * Date: 05.05.2005
- * Time: 19:03:29
- * To change this template use File | Settings | File Templates.
- */
 public class StatExportCommand extends CommandClass
 {
     // export stats for 25.04.2005 [to driver source user pass table_prefix]

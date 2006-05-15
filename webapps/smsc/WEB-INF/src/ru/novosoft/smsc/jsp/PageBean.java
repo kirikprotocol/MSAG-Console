@@ -10,7 +10,6 @@ import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.admin.service.HostsManager;
-import ru.novosoft.smsc.admin.users.UserManager;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -30,11 +29,11 @@ public abstract class PageBean {
     protected List errors = null;
     protected SMSCAppContext appContext = null;
     protected HostsManager hostsManager = null;
-    protected UserManager userManager = null;
     protected HttpSession session = null;
     protected String sessionId = null;
     protected UserPreferences preferences = null;
     protected String clientAddress = null;
+    protected Principal principal = null;
 
     public int process(final HttpServletRequest request) {
         this.errors = (List) request.getAttribute(Constants.SMSC_ERROR_MESSAGES_ATTRIBUTE_NAME);
@@ -50,19 +49,17 @@ public abstract class PageBean {
         if (this.appContext.getInitErrorCode() != null)
             return error(this.appContext.getInitErrorCode());
 
-        this.preferences = new UserPreferences();
-        if (this.appContext != null) {
-            this.userManager = this.appContext.getUserManager();
-            if (this.userManager != null) {
-                this.userManager.setLoginedPrincipal(request.getUserPrincipal());
-                //this.preferences = this.appContext.getUserPreferences(this.getLoginedPrincipal());
-                if (this.userManager.getLoginedUser() != null) this.preferences = this.userManager.getLoginedUser().getPrefs();
-            }
-        }
-
         session = request.getSession(false);
         clientAddress = request.getRemoteAddr();
+        principal = request.getUserPrincipal();
         sessionId = null != session ? session.getId() : "unknown";
+
+        this.preferences = new UserPreferences();
+        try {
+            this.preferences = appContext.getUserManager().getPrefs(principal);
+        }
+        catch (Exception e) {
+        }
 
         return init(errors);
     }
@@ -138,19 +135,18 @@ public abstract class PageBean {
         return appContext;
     }
 
-    public Principal getLoginedPrincipal() {
-        return userManager.getLoginedPrincipal();
-    }
-
     public void journalAppend(final byte subjectType, final String subjectId, final byte action) {
-        appContext.getJournal().append(userManager.getLoginedPrincipal().getName(), /*sessionId + "/" + */clientAddress, subjectType, subjectId, action);
+        if (principal != null)
+            appContext.getJournal().append(principal.getName(), /*sessionId + "/" + */clientAddress, subjectType, subjectId, action);
     }
 
     public void journalAppend(final byte subjectType, final String subjectId, final byte action, final String additionalKey, final String additionalValue) {
-        appContext.getJournal().append(userManager.getLoginedPrincipal().getName(), /*sessionId + "/" + */clientAddress, subjectType, subjectId, action, additionalKey, additionalValue);
+        if (principal != null)
+            appContext.getJournal().append(principal.getName(), /*sessionId + "/" + */clientAddress, subjectType, subjectId, action, additionalKey, additionalValue);
     }
 
     public void journalAppend(final byte subjectType, final String subjectId, final byte action, final Map additional) {
-        appContext.getJournal().append(userManager.getLoginedPrincipal().getName(), /*sessionId + "/" + */clientAddress, subjectType, subjectId, action, additional);
+        if (principal != null)
+            appContext.getJournal().append(principal.getName(), /*sessionId + "/" + */clientAddress, subjectType, subjectId, action, additional);
     }
 }

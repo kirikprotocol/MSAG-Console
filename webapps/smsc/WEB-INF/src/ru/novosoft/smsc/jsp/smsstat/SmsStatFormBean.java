@@ -145,8 +145,8 @@ public class SmsStatFormBean extends IndexBean {
             Object obj_j = j.next();
             if (obj_j == null || !(obj_j instanceof ErrorCounterSet)) continue;
             ErrorCounterSet errStat = (ErrorCounterSet) obj_j;
-            String errMessage = getAppContext().getLocaleString("smsc.errcode." + errStat.errcode);
-            if (errMessage == null) errMessage = getAppContext().getLocaleString("smsc.errcode.unknown");
+            String errMessage = getAppContext().getLocaleString(principal, "smsc.errcode." + errStat.errcode);
+            if (errMessage == null) errMessage = getAppContext().getLocaleString(principal, "smsc.errcode.unknown");
             if (errMessage == null) errMessage = "";
             errMessage = ((errMessage == null) ? "" : (errMessage + " ")) + ("(" + errStat.errcode + ")");
             out.print("\"" + errMessage + "\"");
