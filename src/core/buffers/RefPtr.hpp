@@ -15,17 +15,17 @@ template <class T,class S=EmptyMutex>
 class RefPtr{
 protected:
   struct RefPtrData{
-    S lock;
+    mutable S lock;
     RefPtrData():refCount(0),ptr(0)
     {
     }
-    int refCount;
+    mutable int refCount;
     T  *ptr;
-    void Lock()
+    void Lock()const
     {
       lock.Lock();
     }
-    void Unlock()
+    void Unlock()const
     {
       lock.Unlock();
     }
@@ -74,7 +74,7 @@ public:
     return data->ptr;
   }
 protected:
-  void Ref()
+  void Ref()const
   {
     data->Lock();
     data->refCount++;
