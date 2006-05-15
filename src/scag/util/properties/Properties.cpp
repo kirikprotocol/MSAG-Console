@@ -54,6 +54,11 @@ std::string Property::ConvertUCS2ToStr(std::string& wstr)
 
 std::string Property::ConvertInt64ToUCS2(int64_t val)
 {
+    char buff[128];
+    char resbuff[256];
+
+    int size = sprintf(buff,"%lld", i_val);
+/*
     char * buff = new char(128);
     buff[127] = 0;
     char resbuff[256];
@@ -66,9 +71,15 @@ std::string Property::ConvertInt64ToUCS2(int64_t val)
         resbuff[i*2] = 0;
         resbuff[i*2+1] = temp[i];
     }
+*/
+    for (int i = 0; i < size; i++) 
+    {
+        resbuff[i*2] = 0;
+        resbuff[i*2+1] = buff[i];
+    }
 
     std::string res;
-    res.assign(resbuff,size*2);
+    res.append(resbuff,size*2);
 
     //std::cout << "???" << size << std::endl;
     return res;
