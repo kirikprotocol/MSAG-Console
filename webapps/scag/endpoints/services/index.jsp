@@ -1,5 +1,5 @@
 <%@include file="/WEB-INF/inc/header.jspf"%>
-<sm:page title="Service point">
+<sm:page title="Service points">
   <jsp:attribute name="menu">
     <sm-pm:menu>
       <sm-pm:item name="mbAdd" value="Add" title="Add new Service point"/>
