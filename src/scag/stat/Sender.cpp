@@ -65,6 +65,7 @@ int Registrator::Execute()
         if(++httpCounter == 6) httpCounter = 0;
         hs.routeId = "route1";
         hs.url = "yandex.ru/url1";
+        hs.site = "yandex.ru";
         hs.serviceId = 1;
         hs.counter = httpCounter;
         hs.errCode = 1;
