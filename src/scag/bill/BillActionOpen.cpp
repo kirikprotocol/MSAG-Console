@@ -30,8 +30,9 @@ void BillActionOpen::init(const SectionParams& params,PropertyObject propertyObj
 
     m_MsgFieldType = CheckParameter(params, propertyObject, "bill:open", "msg", false, false, temp, m_MsgExist);
 
-    if (m_MsgExist) 
+    if (m_MsgExist)
         m_sMessage = ConvertWStrToStr(temp);
+        
 
     smsc_log_debug(logger,"Action 'bill:open' init...");
 }
@@ -73,7 +74,7 @@ void BillActionOpen::SetBillingStatus(ActionContext& context, const char * error
             smsc_log_debug(logger,"BillAction 'bill:open' :: Invalid property %s for msg", m_sMessage.c_str());
             return;
         }
-        property->setStr(std::string(errorMsg));
+        property->setStr(ConvertStrToWStr(errorMsg));
     }
 
 }
