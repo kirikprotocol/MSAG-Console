@@ -39,8 +39,8 @@ public:
   }
   RefPtr(const RefPtr& src)
   {
+    src.Ref();
     data=src.data;
-    Ref();
   }
   ~RefPtr()
   {
@@ -49,8 +49,8 @@ public:
   RefPtr& operator=(const RefPtr& src)
   {
     Unref();
+    src.Ref();
     data=src.data;
-    Ref();
     return *this;
   }
   RefPtr& operator=(T* ptr)
