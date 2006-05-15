@@ -46,7 +46,7 @@ using scag::transport::smpp::SmppCommand;
 using scag::stat::StatisticsManager;
 
 using smsc::util::Exception;
-
+using scag::exceptions::SCAGException;
 using namespace scag::transport::smpp;
 using namespace smsc::sms;
 using namespace smsc::logger;
