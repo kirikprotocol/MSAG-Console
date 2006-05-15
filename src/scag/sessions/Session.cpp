@@ -512,6 +512,9 @@ Operation * Session::setCurrentOperationByType(int operationType)
         if (operation->type == operationType) 
         {
             bChanged = true;
+            currentOperationId = key;
+            m_pCurrentOperation = operation;
+
             return operation;
         }
     }
