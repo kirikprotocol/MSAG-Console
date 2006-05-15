@@ -929,6 +929,7 @@ void StatisticsManager::incSvcSmppCounter(const char* systemId, int index)
 void StatisticsManager::incSvcWapCounter(const char* systemId, int index)
 {
     incSvcScCounter(systemId, index, PERF_HTTP_COUNT, svcWapCounters, svcCountersLock);
+    smsc_log_debug(logger, "after inc svcWapCounter.Count=%d", svcWapCounters.GetCount());
 }
 
 void StatisticsManager::incSvcMmsCounter(const char* systemId, int index)
@@ -944,6 +945,7 @@ void StatisticsManager::incScSmppCounter(const char* systemId, int index)
 void StatisticsManager::incScWapCounter(const char* systemId, int index)
 {
     incSvcScCounter(systemId, index, PERF_HTTP_COUNT, scWapCounters, scCountersLock);
+    smsc_log_debug(logger, "after inc scWapCounter.Count=%d", scWapCounters.GetCount());
 }
 
 void StatisticsManager::incScMmsCounter(const char* systemId, int index)
@@ -1038,6 +1040,7 @@ void StatisticsManager::dumpSvcCounters(SerializationBuffer& buf)
     MutexGuard guard(svcCountersLock);
 
     dumpPerfCounters(buf, svcSmppCounters);
+    smsc_log_debug(logger, "before dump svcWapCounter.Count=%d", svcWapCounters.GetCount());
     dumpPerfCounters(buf, svcWapCounters);
     dumpPerfCounters(buf, svcMmsCounters);
 }
@@ -1047,6 +1050,7 @@ void StatisticsManager::dumpScCounters(SerializationBuffer& buf)
     MutexGuard guard(scCountersLock);
 
     dumpPerfCounters(buf, scSmppCounters);
+    smsc_log_debug(logger, "before dump scWapCounter.Count=%d", scWapCounters.GetCount());
     dumpPerfCounters(buf, scWapCounters);
     dumpPerfCounters(buf, scMmsCounters);
 }
