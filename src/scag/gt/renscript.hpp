@@ -316,13 +316,16 @@ static JSBool _initReInstance(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 			smsc_log_error(logger,"RE == 0 !");
 			return 0;
 		}
-    }
-    catch(...)
-    {
-
-   smsc_log_error(logger,"can't init RE instance !");
-
-    }
+    
+    } catch (SCAGException& e) 
+	{
+      smsc_log_warn(log, "%s", e.what());
+      __warning__("Rule Engine is not started.");
+	} 
+	catch(...)
+	{
+      __warning__("Unknown error: rule Engine is not started.");
+	}
 
   if(engine)
  *rval=BOOLEAN_TO_JSVAL(true); 
