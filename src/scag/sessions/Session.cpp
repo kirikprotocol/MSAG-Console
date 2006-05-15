@@ -478,6 +478,7 @@ void Session::expirePendingOperation()
 void Session::closeCurrentOperation()
 {
     smsc_log_debug(logger,"Session: close current operation (id=%lld)", currentOperationId);
+    if (!m_pCurrentOperation) return;
 
     delete m_pCurrentOperation;
     m_pCurrentOperation = 0;
@@ -519,7 +520,7 @@ Operation * Session::setCurrentOperationByType(int operationType)
         }
     }
 
-    throw SCAGException("Session: Cannot find pending operation");
+    throw SCAGException("Session: Cannot find operation with type=%d", operationType);
 }
 
 
