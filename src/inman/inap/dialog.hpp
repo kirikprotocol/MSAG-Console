@@ -64,8 +64,9 @@ public:
 
 class Dialog {
 public:
-    Dialog(USHORT_T dlgId, ACOID::DefinedOIDidx dialog_ac_idx, const SCCP_ADDRESS_T & loc_addr,
-           const SCCP_ADDRESS_T & rmt_addr, Logger * uselog = NULL);
+    Dialog(USHORT_T dlgId, ACOID::DefinedOIDidx dialog_ac_idx, USHORT_T msg_user_id,
+           const SCCP_ADDRESS_T & loc_addr, const SCCP_ADDRESS_T & rmt_addr,
+           Logger * uselog = NULL);
     //reinitializes Dialog to be reused with other id
     void reset(USHORT_T new_id);
 
@@ -150,6 +151,7 @@ private:
     SCCP_ADDRESS_T  ownAddr;
     SCCP_ADDRESS_T  rmtAddr;
     UCHAR_T         dSSN;   //SubSystemNumber dialog uses
+    USHORT_T        msgUserId;  //Common part message port user id
     APP_CONTEXT_T   ac;
     USHORT_T        _dId;
     USHORT_T        _timeout;

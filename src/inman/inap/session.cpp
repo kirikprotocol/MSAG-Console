@@ -17,8 +17,8 @@ namespace inap  {
 /////////////////////////////////////////////////////////////////////////////////////
 // TCAP Session (TCAP dialogs factory, one per SSN)
 /////////////////////////////////////////////////////////////////////////////////////
-SSNSession::SSNSession(UCHAR_T ownssn, Logger * uselog/* = NULL*/)
-    : logger(uselog), SSN(ownssn), state(ssnIdle)
+SSNSession::SSNSession(UCHAR_T ownssn, USHORT_T user_id, Logger * uselog/* = NULL*/)
+    : logger(uselog), SSN(ownssn), userId(user_id), state(ssnIdle)
     , lastDlgId(0), ac_idx(ACOID::id_ac_NOT_AN_OID)
     , maxId(0), minId(0)
 {
@@ -99,7 +99,7 @@ Dialog* SSNSession::openDialog(void)
         pool.pop_front();
         pDlg->reset(did);
     } else
-        pDlg = new Dialog(did, ac_idx, locAddr, rmtAddr, logger);
+        pDlg = new Dialog(did, ac_idx, userId, locAddr, rmtAddr, logger);
 
     smsc_log_debug(logger, "SSN[%u]: Opening dialog[%u]", (unsigned)SSN, did);
     dialogs.insert(DialogsMap_T::value_type(did, pDlg));

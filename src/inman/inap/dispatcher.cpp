@@ -198,7 +198,7 @@ bool TCAPDispatcher::bindSSN(UCHAR_T ssn)
     SSNmap_T::iterator it = sessions.find(ssn);
 
     if (it == sessions.end()) {
-        pSession = new SSNSession(ssn, logger);
+        pSession = new SSNSession(ssn, userId, logger);
         sessions.insert(SSNmap_T::value_type(ssn, pSession));
     } else
         pSession = (*it).second;

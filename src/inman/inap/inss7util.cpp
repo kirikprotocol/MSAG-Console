@@ -1,89 +1,10 @@
 static char const ident[] = "$Id$";
 
-#include <vector>
-
 #include "inman/inap/inss7util.hpp"
-#include "inman/common/util.hpp"
-
-using smsc::inman::common::unpack_addr;
 
 namespace smsc {
 namespace inman {
 namespace inap {
-
-std::string getCalledNumberDescription(EINSS7_I97_CALLEDNUMB_T* called)
-{
-  if (!called) return "";
-  std::vector<char> addr(called->noOfAddrSign + 1);
-  unpack_addr(&addr[0], called->addrSign_p, called->noOfAddrSign);
-  addr.insert(addr.begin(),'.');
-  addr.insert(addr.begin(),called->numberPlan + '0');
-  addr.insert(addr.begin(),'.');
-  addr.insert(addr.begin(),called->natureOfAddr + '0');
-  addr.insert(addr.begin(),'.');
-  char str[]="Called=";
-  char *end=str+sizeof(str)-1;
-  addr.insert(addr.begin(),str,end);
-  return &addr[0];
-}
-
-std::string getCallingNumberDescription(EINSS7_I97_CALLINGNUMB_T* calling)
-{
-  if (!calling) return "";
-  std::vector<char> addr(calling->noOfAddrSign + 1);
-  unpack_addr(&addr[0], calling->addrSign_p, calling->noOfAddrSign);
-  addr.insert(addr.begin(),'.');
-  addr.insert(addr.begin(),calling->numberPlan + '0');
-  addr.insert(addr.begin(),'.');
-  addr.insert(addr.begin(),calling->natureOfAddr + '0');
-  addr.insert(addr.begin(),'.');
-  char str[]="Calling=";
-  char *end=str+sizeof(str)-1;
-  addr.insert(addr.begin(),str,end);
-  return &addr[0];
-}
-
-std::string getRedirectingNumberDescription(EINSS7_I97_REDIRECTINGNUMB_T* redirNumb)
-{
-  if (!redirNumb) return "";
-  std::vector<char> addr(redirNumb->noOfAddrSign + 1);
-  unpack_addr(&addr[0], redirNumb->addrSign_p, redirNumb->noOfAddrSign);
-  addr.insert(addr.begin(),'.');
-  addr.insert(addr.begin(),redirNumb->numberPlan + '0');
-  addr.insert(addr.begin(),'.');
-  addr.insert(addr.begin(),redirNumb->natureOfAddr + '0');
-  addr.insert(addr.begin(),'.');
-  char str[]="RedirectingNumber=";
-  char *end=str+sizeof(str)-1;
-  addr.insert(addr.begin(),str,end);
-  return &addr[0];
-}
-std::string getRedirectionNumberDescription(EINSS7_I97_REDIRECTIONNUMB_T* redirectionNumb_sp)
-{
-  if (!redirectionNumb_sp) return "";
-  std::vector<char> addr(redirectionNumb_sp->noOfAddrSign + 1);
-  unpack_addr(&addr[0], redirectionNumb_sp->addrSign_p, redirectionNumb_sp->noOfAddrSign);
-  char str[]="RedirectionNumber=";
-  char *end=str+sizeof(str)-1;
-  addr.insert(addr.begin(),str,end);
-  return &addr[0];
-}
-
-std::string getOriginalNumberDescription(EINSS7_I97_ORIGINALNUMB_T* origNumb)
-{
-  if (!origNumb) return "";
-  std::vector<char> addr(origNumb->noOfAddrSign + 1);
-  unpack_addr(&addr[0], origNumb->addrSign_p, origNumb->noOfAddrSign);
-  addr.insert(addr.begin(),'.');
-  addr.insert(addr.begin(),origNumb->numberPlan + '0');
-  addr.insert(addr.begin(),'.');
-  addr.insert(addr.begin(),origNumb->natureOfAddr + '0');
-  addr.insert(addr.begin(),'.');
-  char str[]="Original=";
-  char *end=str+sizeof(str)-1;
-  addr.insert(addr.begin(),str,end);
-  return &addr[0];
-}
 
 std::string getTypeOfServiceDescription(UCHAR_T typeOfService) {
   switch(typeOfService) {

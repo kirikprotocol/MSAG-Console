@@ -34,7 +34,7 @@ public:
 
 protected:
     friend class TCAPDispatcher;
-    SSNSession(UCHAR_T ownssn, Logger * uselog = NULL);
+    SSNSession(UCHAR_T ownssn, USHORT_T user_id, Logger * uselog = NULL);
     ~SSNSession();
 
     void    setState(SSNState newState) { state = newState; }
@@ -63,6 +63,7 @@ private:
     DlgTimesMap_T   pending; //released but not terminated Dialogs with timestamp
 
     UCHAR_T         SSN;
+    USHORT_T        userId;
     USHORT_T        maxId;
     USHORT_T        minId;
     SCCP_ADDRESS_T  locAddr;

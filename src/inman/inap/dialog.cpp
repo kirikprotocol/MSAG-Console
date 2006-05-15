@@ -20,12 +20,13 @@ namespace inap  {
 /////////////////////////////////////////////////////////////////////////////////////
 // Dialog class implementation
 /////////////////////////////////////////////////////////////////////////////////////
-Dialog::Dialog(USHORT_T dlgId, ACOID::DefinedOIDidx dialog_ac_idx, const SCCP_ADDRESS_T & loc_addr,
-                const SCCP_ADDRESS_T & rmt_addr, Logger * uselog/* = NULL*/)
+Dialog::Dialog(USHORT_T dlgId, ACOID::DefinedOIDidx dialog_ac_idx,  USHORT_T msg_user_id,
+               const SCCP_ADDRESS_T & loc_addr, const SCCP_ADDRESS_T & rmt_addr,
+               Logger * uselog/* = NULL*/)
   : logger(uselog), _dId(dlgId),  ownAddr(loc_addr), rmtAddr(rmt_addr)
   , qSrvc(EINSS7_I97TCAP_QLT_BOTH), priority(EINSS7_I97TCAP_PRI_HIGH_0)
   , _timeout(_DEFAULT_INVOKE_TIMER), _lastInvId(0)
-  , _ac_idx(dialog_ac_idx)
+  , _ac_idx(dialog_ac_idx), msgUserId(msg_user_id)
 {
     _state.value = 0;
     dSSN = ownAddr.addr[1];
@@ -112,7 +113,7 @@ void Dialog::beginDialog(UCHAR_T* ui/* = NULL*/, USHORT_T uilen/* = 0*/) throw (
                     "  App. context: %s\n"
                     "  User info[%u]: %s\n"
                     "}",
-                   dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId, priority, qSrvc, 
+                   dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, priority, qSrvc, 
                    dump(rmtAddr.addrLen, rmtAddr.addr).c_str(),
                    dump(ownAddr.addrLen, ownAddr.addr).c_str(),
                    dump(ac.acLen, ac.ac).c_str(),
@@ -120,7 +121,7 @@ void Dialog::beginDialog(UCHAR_T* ui/* = NULL*/, USHORT_T uilen/* = 0*/) throw (
                    );
     MutexGuard  tmp(dlgGrd);
     USHORT_T result = EINSS7_I97TBeginReq(
-                        dSSN, MSG_USER_ID, TCAP_INSTANCE_ID,
+                        dSSN, msgUserId, TCAP_INSTANCE_ID,
                         _dId, priority, qSrvc,
                         rmtAddr.addrLen, rmtAddr.addr,
                         ownAddr.addrLen, ownAddr.addr,
@@ -147,14 +148,14 @@ void Dialog::continueDialog(void) throw (CustomException)
                     "  Org. address: %s\n"
                     "  App. context[%u]: %s\n"
                     "}",
-                    dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId, priority, qSrvc, 
+                    dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, priority, qSrvc, 
                     "", // dump(ownAddr.addrLen, ownAddr.addr).c_str(),
                     ac.acLen, dump(ac.acLen, ac.ac).c_str()
                    );
 
     MutexGuard  tmp(dlgGrd);
     USHORT_T result =
-        EINSS7_I97TContinueReq(dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId,
+        EINSS7_I97TContinueReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
                                priority, qSrvc, 0, NULL, //ownAddr.addrLen, ownAddr.addr,
                                ac.acLen, ac.ac, 0, NULL);
 
@@ -182,12 +183,12 @@ void Dialog::endDialog(bool basicEnd/* = true*/) throw (CustomException)
                     "  Termination: 0x%X\n"
                     "  App. context[%u]: %s\n"
                     "}",
-                   dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId, priority, qSrvc,
+                   dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, priority, qSrvc,
                    termination, ac.acLen, dump(ac.acLen, ac.ac).c_str()
                    );
 
     USHORT_T result =
-        EINSS7_I97TEndReq(dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId,
+        EINSS7_I97TEndReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
                           priority, qSrvc, termination,
                           ac.acLen, ac.ac, 0, NULL);
 
@@ -212,14 +213,14 @@ void Dialog::sendInvoke(Invoke * inv) throw (CustomException)
                 "ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
                 "invokeId=%d, lunkedused=\"%s\", linkedid=%d, "
                 "tag=\"%s\", opcode[%d]={%s}, parameters[%d]={%s})",
-                dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId,
+                dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
                 inv->getId(), linked ? "YES" : "NO", linked ? linked->getId() : 0,
                 (inv->getTag() == EINSS7_I97TCAP_OPERATION_TAG_LOCAL) ? "LOCAL" : "GLOBAL",
                 op.size(), dump(op.size(), &op[0]).c_str(),
                 params.size(), dump(params.size(), &params[0]).c_str());
 
     USHORT_T result = 
-        EINSS7_I97TInvokeReq(dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId, inv->getId(), 
+        EINSS7_I97TInvokeReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, inv->getId(), 
             linked ? EINSS7_I97TCAP_LINKED_ID_USED : EINSS7_I97TCAP_LINKED_ID_NOT_USED,
             linked ? linked->getId() : 0,
             EINSS7_I97TCAP_OP_CLASS_1, invTimeout, inv->getTag(),
@@ -236,14 +237,14 @@ void Dialog::sendResultLast(TcapEntity* res) throw (CustomException)
     smsc_log_debug(logger, "EINSS7_I97TResultLReq("
                 "ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
                 "invokeId=%d, tag=\"%s\", opcode[%d]={%s}, parameters[%d]={%s})",
-                dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId,
+                dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
                 res->getId(), 
                 (res->getTag() == EINSS7_I97TCAP_OPERATION_TAG_LOCAL) ? "LOCAL" : "GLOBAL",
                 op.size(), dump(op.size(), &op[0]).c_str(),
                 params.size(), dump(params.size(), &params[0]).c_str());
 
     USHORT_T result =
-        EINSS7_I97TResultLReq(dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId,
+        EINSS7_I97TResultLReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
         res->getId(), res->getTag(), 
         op.size(), &op[0], params.size(), &params[0]);
 
@@ -258,14 +259,14 @@ void Dialog::sendResultNotLast(TcapEntity* res) throw (CustomException)
     smsc_log_debug(logger, "EINSS7_I97TResultNLReq("
                 "ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
                 "invokeId=%d, tag=\"%s\", opcode[%d]={%s}, parameters[%d]={%s})",
-                dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId,
+                dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
                 res->getId(), 
                 (res->getTag() == EINSS7_I97TCAP_OPERATION_TAG_LOCAL) ? "LOCAL" : "GLOBAL",
                 op.size(), dump(op.size(), &op[0]).c_str(),
                 params.size(), dump(params.size(), &params[0]).c_str());
 
     USHORT_T result =
-        EINSS7_I97TResultNLReq(dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId,
+        EINSS7_I97TResultNLReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
         res->getId(), res->getTag(),
         op.size(), &op[0], params.size(), &params[0]);
 
@@ -281,14 +282,14 @@ void Dialog::sendResultError(TcapEntity* res) throw (CustomException)
     smsc_log_debug(logger, "EINSS7_I97TUErrorReq("
                 "ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
                 "invokeId=%d, tag=\"%s\", opcode[%d]={%s}, parameters[%d]={%s})",
-                dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId,
+                dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
                 res->getId(), 
                 (res->getTag() == EINSS7_I97TCAP_OPERATION_TAG_LOCAL) ? "LOCAL" : "GLOBAL",
                 op.size(), dump(op.size(), &op[0]).c_str(),
                 params.size(), dump(params.size(), &params[0]).c_str());
 
     USHORT_T result =
-        EINSS7_I97TUErrorReq(dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId,
+        EINSS7_I97TUErrorReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
         res->getId(), res->getTag(),
         op.size(), &op[0], params.size(), &params[0]);
 
@@ -300,10 +301,10 @@ void Dialog::resetInvokeTimer(UCHAR_T invokeId) throw (CustomException)
 {
     smsc_log_debug(logger,"EINSS7_I97TTimerResetReq("
                    "ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, invokeId=%d",
-                   dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId, invokeId);
+                   dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, invokeId);
 
     USHORT_T result = 
-        EINSS7_I97TTimerResetReq(dSSN, MSG_USER_ID, TCAP_INSTANCE_ID, _dId, invokeId);
+        EINSS7_I97TTimerResetReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, invokeId);
 
     checkSS7res("TTimerResetReq failed", result);
 }
