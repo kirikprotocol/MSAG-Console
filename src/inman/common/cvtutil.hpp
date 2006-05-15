@@ -37,11 +37,15 @@ inline unsigned char unpackBCDOct2Num(unsigned char &oct)
 
 /* GVR:
  * Packs NumericString ('0'-'9') as Binary Coded Decimal String.
+ * By default, in case of odd string length, the '1111'B filler is added
+ * to high semioctet of last byte.
+ *
  * NOTE: function doesn't perform check for output buffer ABW ('Array out
- * of Boundary Writing' because of its size is precisely determined, so
- * it's caller responsibility to provide necessary buffer.
+ * of Boundary Writing', its size is precisely determined, so
+ * it's caller responsibility to provide necessary space.
  */
-inline unsigned packNumString2BCD(unsigned char* bcd, const char* str, unsigned slen)
+inline unsigned packNumString2BCD(unsigned char* bcd, const char* str,
+                                  unsigned slen, bool filler = true)
 {
     unsigned bcdLen = (slen + 1)/2;
 
@@ -51,7 +55,7 @@ inline unsigned packNumString2BCD(unsigned char* bcd, const char* str, unsigned 
 	else
 	    bcd[i/2] = (str[i]-'0') & 0x0F;	// fill low semioctet
     }
-    if (slen % 2)
+    if ((slen % 2) && filler)
 	bcd[bcdLen - 1] |= 0xF0;		// add filler to high semioctet
 
     return bcdLen;

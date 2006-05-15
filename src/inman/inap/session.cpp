@@ -1,12 +1,12 @@
 static char const ident[] = "$Id$";
 
-#include <assert.h>
-
+//#include <assert.h>
+#include "inman/common/util.hpp"
+#include "inman/common/adrutil.hpp"
 #include "inman/inap/session.hpp"
 #include "inman/inap/dialog.hpp"
-#include "inman/common/util.hpp"
 
-using smsc::inman::common::fillAddress;
+using smsc::cvtutil::packSCCPAddress;
 
 #define MAX_ID_ATTEMPTS (maxId - minId)
 
@@ -31,8 +31,8 @@ void SSNSession::init(const char* own_addr, /*UCHAR_T rmt_ssn,*/
                     const char* rmt_addr, ACOID::DefinedOIDidx dialog_ac_idx,
                     USHORT_T max_id/* = 2000*/, USHORT_T min_id/* = 1*/)
 {
-    fillAddress(&locAddr, own_addr, SSN);
-    fillAddress(&rmtAddr, rmt_addr, SSN /*rmt_ssn*/);
+    packSCCPAddress(&locAddr, own_addr, SSN);
+    packSCCPAddress(&rmtAddr, rmt_addr, SSN /*rmt_ssn*/);
     ac_idx = dialog_ac_idx;
     maxId = max_id;
     lastDlgId = minId = min_id;

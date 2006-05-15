@@ -10,6 +10,8 @@
 
 #include <string>
 
+#include "inman/common/types.hpp"
+
 #define MAP_MAX_ISDN_AddressLength	8
 #define CAP_MAX_SMS_AddressStringLength	10 //CAP-datatypes.maxSMS-AddressStringLength - 1
 #define CAP_MAX_SMS_AddressValueLength  CAP_MAX_SMS_AddressStringLength*2
@@ -78,8 +80,6 @@ struct TonNpiAddress {
         snprintf(buf, sizeof(buf), ".%d.%d.%s", typeOfNumber, numPlanInd, value);
         return buf;
     }
-
-    
 };
 
 
@@ -129,7 +129,8 @@ extern unsigned packMAPAddress2LocationOCTS(const TonNpiAddress& addr,
 						LOCATION_ADDRESS_OCTS * oa);
 extern unsigned unpackOCTS2MAPAddress(TonNpiAddress& addr, TONNPI_ADDRESS_OCTS * oa,
 							    unsigned valLen);
-
+//according to Q.713 clause 3.4.2
+extern unsigned packSCCPAddress(SCCP_ADDRESS_T* dst, const char *saddr, unsigned char ssn);
 }//namespace cvtutil
 }//namespace smsc
 

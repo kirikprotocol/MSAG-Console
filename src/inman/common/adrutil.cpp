@@ -64,6 +64,24 @@ unsigned packMAPAddress2LocationOCTS(const TonNpiAddress& addr, LOCATION_ADDRESS
     return oa_length + 2;
 }
 
+//according to Q.713 clause 3.4.2
+unsigned packSCCPAddress(SCCP_ADDRESS_T* dst, const char *saddr, unsigned char ssn)
+{
+    unsigned len = strlen(saddr);
+    dst->addrLen = 5 + (len + 1)/2;             // length in octets
+    dst->addr[0] = 0x12;                        // SSN & GlobTitle indicator
+    dst->addr[1] = ssn;                         // SSN
+    dst->addr[2] = 0;                           // Translation Type
+    dst->addr[3] = 0x10 | (!(len%2) ? 0x02 : 0x01); // NP & GlobTitle coding
+    dst->addr[4] = 0x04;                        // Nature of address
+
+    //NOTE: SCCP address uses filler '0000'B !!!
+    packNumString2BCD(dst->addr + 5, saddr, len, false);
+    return len ? (unsigned)(dst->addrLen) : 0;
+}
+
+
+
 }//namespace cvtutil
 }//namespace smsc
 

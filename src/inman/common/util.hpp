@@ -3,16 +3,10 @@
 #define __SMSC_INMAN_COMMON_UTIL_HPP__
 
 #include <string>
-#include "inman/common/types.hpp"
 
 namespace smsc {
 namespace inman {
 namespace common {
-
-extern void pack_addr(unsigned char* dst, const char* src, int len);
-extern void unpack_addr(char* dst, unsigned char* src, int len);
-extern void fillAddress(SCCP_ADDRESS_T* dst, const char *saddr, unsigned char ssn);
-extern void fillAddress(ADDRESS_BUF_T *dst, const char *saddr);
 
 //uses internal 4k buffer for formatting
 extern int         format(std::string & fstr, const char* fmt, ...);
