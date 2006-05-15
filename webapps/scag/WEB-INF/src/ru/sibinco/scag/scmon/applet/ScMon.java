@@ -19,8 +19,9 @@ import java.util.Locale;
 import java.net.Socket;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.applet.Applet;
 
-public class ScMon extends JApplet implements Runnable, MouseListener, ActionListener, ItemListener {
+public class ScMon extends Applet implements Runnable, MouseListener, ActionListener, ItemListener {
 
     public static ResourceBundle localText;
     public static ResourceBundle messagesText;
@@ -51,7 +52,7 @@ public class ScMon extends JApplet implements Runnable, MouseListener, ActionLis
         graphHead = Integer.valueOf(getParameter("graph.head")).intValue();
 
         setFont(new Font("Dialog", Font.BOLD, 14));
-        setLayout(new GridLayout());
+        setLayout(new GridBagLayout());
         setBackground(SystemColor.control);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH;
@@ -76,10 +77,9 @@ public class ScMon extends JApplet implements Runnable, MouseListener, ActionLis
                 graphHiGrid, graphHead, localText, messagesText, snapHttpHistory);
 
         JTabbedPane jTabbedPane = new JTabbedPane();
-        jTabbedPane.addTab("SMPP", new SmppPanel());
         jTabbedPane.addTab("HTTP", new HttpPanel());
         jTabbedPane.addTab("MMS", new MmsPanel());
-
+        jTabbedPane.insertTab("SMPP", null, new SmppPanel(), null, 0);
         gbc.gridy = 1;
         gbc.gridx = 1;
         gbc.gridwidth = 1;

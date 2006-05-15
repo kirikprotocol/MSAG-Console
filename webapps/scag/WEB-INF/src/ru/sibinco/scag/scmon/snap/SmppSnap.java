@@ -36,8 +36,8 @@ public class SmppSnap extends SnapAbstract {
     }
 
     public void init(SnapBufferReader in) throws IOException {
-
-        smppId = in.readNetworkCFixedString(MAX_STR_LEN);
+        short systemIdLength = in.readNetworkShort();
+        smppId = in.readNetworkCFixedString(systemIdLength);
         for (int i = 0; i < COUNTERS; i++) {
             smppSpeed[i] = in.readNetworkShort();
             smppAvgSpeed[i] = in.readNetworkShort();

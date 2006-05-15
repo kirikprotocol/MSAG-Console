@@ -33,7 +33,8 @@ public class MmsSnap extends SnapAbstract {
     }
 
     public void init(SnapBufferReader in) throws IOException {
-        mmsId = in.readNetworkCFixedString(MAX_STR_LEN);
+        short systemIdLength = in.readNetworkShort();
+        mmsId = in.readNetworkCFixedString(systemIdLength);
         for (int i = 0; i < COUNTERS; i++) {
             mmsSpeed[i] = in.readNetworkShort();
             mmsAvgSpeed[i] = in.readNetworkShort();

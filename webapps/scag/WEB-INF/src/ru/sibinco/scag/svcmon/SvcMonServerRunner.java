@@ -100,8 +100,7 @@ public class SvcMonServerRunner extends Thread {
     protected void readSnap(InputStream inputStream, SvcSnap snap) throws IOException {
 
         int len = inbuf.readNetworkInt(inputStream);
-        inbuf.fill(inputStream, len);
-        int queueSize = inbuf.readNetworkInt();
+        inbuf.fill(inputStream, len-4);
         snap.init(inbuf);
         //printDebug(snap);
     }

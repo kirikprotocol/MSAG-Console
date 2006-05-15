@@ -85,8 +85,8 @@ public class ScServerRunner extends Thread {
     protected void readSnap(InputStream inputStream, ScSnap snap) throws IOException {
 
             int len = inbuf.readNetworkInt(inputStream);
-            inbuf.fill(inputStream, len);
-            int queueSize = inbuf.readNetworkInt();
+            inbuf.fill(inputStream, len-4);
+            //int queueSize = inbuf.readNetworkInt();
             snap.init(inbuf);
             //printDebug(snap);
         }

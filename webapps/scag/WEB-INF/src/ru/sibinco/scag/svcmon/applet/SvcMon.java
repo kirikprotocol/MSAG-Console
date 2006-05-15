@@ -18,6 +18,7 @@ import java.util.Locale;
 import java.net.Socket;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.applet.Applet;
 
 /**
  * The <code>SvcMon</code> class represents
@@ -27,7 +28,7 @@ import java.io.IOException;
  *
  * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
  */
-public class SvcMon extends JApplet implements Runnable, MouseListener, ActionListener, ItemListener {
+public class SvcMon extends Applet implements Runnable, MouseListener, ActionListener, ItemListener {
 
     public static ResourceBundle localText;
     public static ResourceBundle messagesText;
@@ -58,7 +59,7 @@ public class SvcMon extends JApplet implements Runnable, MouseListener, ActionLi
         graphHead = Integer.valueOf(getParameter("graph.head")).intValue();
 
         setFont(new Font("Dialog", Font.BOLD, 14));
-        setLayout(new GridLayout());
+        setLayout(new GridBagLayout());
         setBackground(SystemColor.control);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH;
@@ -83,10 +84,9 @@ public class SvcMon extends JApplet implements Runnable, MouseListener, ActionLi
                 graphHiGrid, graphHead, localText, messagesText, snapHttpHistory);
 
         JTabbedPane jTabbedPane = new JTabbedPane();
-        jTabbedPane.addTab("SMPP", new SmppPanel());
         jTabbedPane.addTab("HTTP", new HttpPanel());
         jTabbedPane.addTab("MMS", new MmsPanel());
-
+        jTabbedPane.insertTab("SMPP", null, new SmppPanel() , null, 0);
         gbc.gridy = 1;
         gbc.gridx = 1;
         gbc.gridwidth = 1;
@@ -102,7 +102,7 @@ public class SvcMon extends JApplet implements Runnable, MouseListener, ActionLi
             setLayout(new BorderLayout());
             add(smppTopGraph, BorderLayout.CENTER);
             setFont(new Font("Dialog", Font.BOLD, 12));
-            smppTopGraph.requestFocus();
+            //smppTopGraph.requestFocus();
         }
     }
 
@@ -111,7 +111,7 @@ public class SvcMon extends JApplet implements Runnable, MouseListener, ActionLi
             setLayout(new BorderLayout());
             add(httpTopGraph, BorderLayout.CENTER);
             setFont(new Font("Dialog", Font.BOLD, 12));
-            httpTopGraph.requestFocus();
+            //httpTopGraph.requestFocus();
         }
     }
 
@@ -141,8 +141,8 @@ public class SvcMon extends JApplet implements Runnable, MouseListener, ActionLi
                     gotFirstSnap(snap);
                     while (!isStopping) {
                         snap.read(is);
-                        smppTopGraph.setSnap(snap);
                         httpTopGraph.setSnap(snap);
+                        smppTopGraph.setSnap(snap);
                     }
                 } catch (IOException ex) {
                     removeAll();

@@ -43,7 +43,8 @@ public class HttpSnap extends SnapAbstract {
     }
 
     public void init(SnapBufferReader in) throws IOException {
-        httpId = in.readNetworkCFixedString(MAX_STR_LEN);
+        short urlIdLength = in.readNetworkShort();
+        httpId = in.readNetworkCFixedString(urlIdLength);
         for (int i = 0; i < COUNTERS; i++) {
             httpSpeed[i] = in.readNetworkShort();
             httpAvgSpeed[i] = in.readNetworkShort();
