@@ -473,7 +473,7 @@ static JSBool _initBillInstance(JSContext *cx, JSObject *obj, uintN argc, jsval 
 		 bcfg.BillingHost=JS_GetStringBytes(JS_ValueToString(cx, argv[0]));
 		 bcfg.BillingPort=JSVAL_TO_INT(argv[1]);
 		 bcfg.MaxThreads=JSVAL_TO_INT(argv[2]);
-		 bcfg.cfg_dir =JS_GetStringBytes(JS_ValueToString(cx, argv[3]));
+		 bcfg.cfg_dir=JS_GetStringBytes(JS_ValueToString(cx, argv[3]));
 
 		 scag::bill::BillingManager::Init(bcfg);
 		 scag::config::ConfigManager::Init();
@@ -673,7 +673,7 @@ if(argc<8)
 
 static JSBool _initHttpManager(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-	scag::transport::http::
+	//scag::transport::http::
 	return JS_TRUE;
 }
 
