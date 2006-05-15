@@ -110,7 +110,7 @@ void SmppEventHandler::EndOperation(Session& session, SmppCommand& command, Rule
     Operation * currentOperation = session.GetCurrentOperation();
     if (!currentOperation) throw SCAGException("Session: Fatal error - cannot end operation. Couse: current operation not found");
 
-    if (!ruleStatus.result) 
+    if (!ruleStatus.status) 
     {
         session.closeCurrentOperation(); 
         return;
@@ -220,11 +220,11 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     } catch (SCAGException& e)
     {
         smsc_log_debug(logger, "EventHandler: error in actions processing. Details: %s", e.what());
-        rs.result = 0;
+        rs.status = false;
     } catch (std::exception& e)
     {
         smsc_log_debug(logger, "EventHandler: error in actions processing. Details: %s", e.what());
-        rs.result = 0;
+        rs.result = false;
     }
 
     EndOperation(session, *smppcommand, rs, smppDiscriptor);

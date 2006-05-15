@@ -8,8 +8,16 @@ namespace scag { namespace re { namespace actions {
 
 class ActionReturn : public Action
 {
-    std::string ReturnValue;
+    std::string m_sResultValue;
+    int m_nResultValue;
+    bool m_bResultExist;
     FieldType m_ftResult;
+
+    bool m_bStatusValue;
+    FieldType m_ftStatus;
+    std::string m_sStatusValue;
+
+
     ActionReturn(const ActionReturn &);
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);

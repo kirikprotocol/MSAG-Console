@@ -95,7 +95,8 @@
             
             <element name="return">
                 <complexType>
-                    <attribute name="result" type="scag:Value" use="required"/>
+                    <attribute name="result" type="scag:Value" use="optional"/>
+                    <attribute name="status" type="scag:Value" use="required"/>
                 </complexType>    
             </element>
             

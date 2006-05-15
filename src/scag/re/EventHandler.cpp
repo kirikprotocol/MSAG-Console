@@ -59,7 +59,6 @@ RuleStatus EventHandler::RunActions(ActionContext& context)
 
     RuleStatus rs;
 
-    rs.result = 1;
     rs.status = true;
 
     context.setRuleStatus(rs);
