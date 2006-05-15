@@ -58,35 +58,51 @@ inline unsigned packNumString2BCD(unsigned char* bcd, const char* str, unsigned 
 }
 
 /* GVR:
- * Unpacks TBCD coded numeric string. Returns number of digits.
+ * Unpacks BCD coded numeric string. Returns number of digits.
  */
 inline unsigned unpackBCD2NumString(const unsigned char* bcd, char* str, unsigned bcdLen)
 {
     unsigned i, k;
     for (i = k = 0; i < bcdLen; i++) {
-        str[k++] = '0' + (char)(bcd[i] & 0x0f); // low semioctet
-        if (!(bcd[i] ^ 0xf0)) // high semioctet, check for possible filler 
+        str[k++] = '0' + (char)(bcd[i] & 0x0F); // low semioctet
+        // high semioctet, check for possible filler 
+        if ((str[k] = (char)((bcd[i] >> 4) & 0x0F)) == 0x0F)
             break;
-        str[k++] = '0' + (char)((bcd[i] >> 4) & 0x0f);
+        str[k++] += '0';
     }
     str[k++] = 0;
     return k;
-
-#ifdef OLD_CODE
-    unsigned i = 0;
-    for (; i < bcdLen*2; i++) {
-	if (i & 0x01) {		// high semioctet
-	    str[i] = '0' + (char)((bcd[i/2] >> 4) & 0x0f);
-	    if (str[i] == '?')	// check for possible filler ('0' + 0x0f = '?')
-		str[i] = 0;
-	} else			// low semioctet
-	    str[i] = '0' + (char)(bcd[i/2] & 0x0f);
-    }
-    if (str[i])
-	str[i++] = 0;
-    return i - 1;
-#endif /* OLD_CODE */
 }
+
+/* GVR:
+ * Unpacks TBCD (Telephony BCD) coded address to string. 
+ * Returns signed number of digits (negative in case of illegal symbol was met).
+ */
+inline int unpackTBCD2String(const unsigned char* bcd, char* str, unsigned bcdLen)
+{
+    bool illegal = false;
+    unsigned i, k;
+    for (i = k = 0; i < bcdLen; i++) {
+        str[k++] = '0' + (char)(bcd[i] & 0x0F); // low semioctet
+        // high semioctet, check for possible filler 
+        if ((str[k] = (char)((bcd[i] >> 4) & 0x0F)) > 0x09) {
+            if (str[k] == 0x0F)
+                break;
+            if (str[k] == 0x0B)
+                str[k++] == '*';
+            else if (str[k] == 0x0C)
+                str[k++] == '#';
+            else {
+                str[k++] == '?';
+                illegal = true;
+            }
+        } else
+            str[k++] += '0';
+    }
+    str[k++] = 0;
+    return illegal ? -(int)k : (int)k;
+}
+
 /* GVR:
  * Adds symbol to buffer containing packed 7bit chars
  */
