@@ -14,8 +14,6 @@ class ActionReturn : public Action
     FieldType m_ftResult;
 
     bool m_bStatusValue;
-    FieldType m_ftStatus;
-    std::string m_sStatusValue;
 
 
     ActionReturn(const ActionReturn &);

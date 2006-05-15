@@ -28,12 +28,18 @@ void ActionReturn::init(const SectionParams& params,PropertyObject propertyObjec
             m_nResultValue = atoi(m_sResultValue.c_str());
     }
 
-    m_ftStatus = CheckParameter(params, propertyObject, "return", "status", true, true, temp, bExist);
-    m_sStatusValue = ConvertWStrToStr(temp);
+    FieldType ftStatus = CheckParameter(params, propertyObject, "return", "status", true, true, temp, bExist);
+    std::string StatusStr = ConvertWStrToStr(temp);
 
-    if (m_ftStatus == ftUnknown) 
-        m_bStatusValue = atoi(m_sStatusValue.c_str());
+    if (ftStatus != ftUnknown) 
+        throw SCAGException("Action 'return': status must be 'Ok|Failed' type");
 
+    if (StatusStr == "Ok") 
+        m_bStatusValue = true;
+    else if (StatusStr == "Failed") 
+        m_bStatusValue = false;
+    else
+        throw SCAGException("Action 'return': status must be 'Ok|Failed' type");
 
     smsc_log_debug(logger,"Action 'return':: init...");
 }
@@ -57,16 +63,7 @@ bool ActionReturn::run(ActionContext& context)
         }
     }
 
-    if (m_ftStatus == ftUnknown) 
-        rs.status = m_bStatusValue;
-    else
-    {
-        Property * property = context.getProperty(m_sStatusValue);
-        if (property) 
-            rs.status = property->getBool();
-        else 
-            smsc_log_warn(logger,"Action 'return': invalid property '%s' to return", m_sStatusValue.c_str());
-    }
+   rs.status = m_bStatusValue;
 
 
     context.setRuleStatus(rs);

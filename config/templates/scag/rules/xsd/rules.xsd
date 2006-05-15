@@ -75,6 +75,14 @@
         <attribute name="value" type="scag:Value" use="optional"/>
     </attributeGroup>
 
+    <simpleType name="Status">
+        <restriction base="string">
+            <enumeration value="Ok"/>
+            <enumeration value="Failed"/>
+        </restriction>
+    </simpleType>
+
+
     <!-- General actions elements group definition  -->
     <group name="Actions">
         <choice>
@@ -96,7 +104,7 @@
             <element name="return">
                 <complexType>
                     <attribute name="result" type="scag:Value" use="optional"/>
-                    <attribute name="status" type="scag:Value" use="required"/>
+                    <attribute name="status" type="scag:Status" use="required"/>
                 </complexType>    
             </element>
             
