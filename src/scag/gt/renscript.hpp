@@ -319,12 +319,11 @@ static JSBool _initReInstance(JSContext *cx, JSObject *obj, uintN argc, jsval *a
     
     } catch (SCAGException& e) 
 	{
-      smsc_log_warn(log, "%s", e.what());
-      __warning__("Rule Engine is not started.");
+      smsc_log_error(logger, "Rule Engine is not started. %s", e.what());
 	} 
 	catch(...)
 	{
-      __warning__("Unknown error: rule Engine is not started.");
+      smsc_log_error(logger,"Unknown error: rule Engine is not started.");
 	}
 
   if(engine)
