@@ -302,18 +302,20 @@ static JSBool _initReInstance(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 {
  std::string dir_name=JS_GetStringBytes(JS_ValueToString(cx, argv[0]));
 
- try{
+	try{
 
      smsc_log_debug(logger,"RuleEngine::Init('%s')",dir_name.c_str());
 
-     RuleEngine::Init(dir_name);
-     RuleEngine& re2=RuleEngine::Instance();
-         engine=&re2;
-    if(engine==0)
-    {
-   smsc_log_error(logger,"RE == 0 !");
-     return 0;
- }
+     
+     scag::re::RuleEngine & re2 = scag::re::RuleEngine::Instance();
+     re2.Init(dir_name);
+
+	 engine=&re2;
+		if(engine==0)
+		{
+			smsc_log_error(logger,"RE == 0 !");
+			return 0;
+		}
     }
     catch(...)
     {
