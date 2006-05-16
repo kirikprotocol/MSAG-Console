@@ -38,7 +38,7 @@ public class Index extends TabledBeanImpl {
                     appContext.getServiceProviderManager().getServiceProviders().get(providerId);
             for (Iterator iterator = serviceProvider.getServices().keySet().iterator(); iterator.hasNext();) {
                 String serviceIdStr = (iterator.next()).toString();
-                appContext.getRuleManager().removeRulesForService(serviceIdStr);
+                appContext.getRuleManager().removeRulesForService(getLoginedPrincipal().getName(), serviceIdStr);
                 serviceIds.add(serviceIdStr);
             }
         }

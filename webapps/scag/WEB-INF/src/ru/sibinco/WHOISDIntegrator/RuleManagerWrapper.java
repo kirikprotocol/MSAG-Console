@@ -26,6 +26,7 @@ import java.lang.reflect.Method;
 public class RuleManagerWrapper {
   public final static String TERM_COMMIT ="Commit";
   public final static String TERM_ROLLBACK ="Rollback";
+  private final static String WHOISD_USER = "whoisd user";
   private final RuleManager rulemanager;
   private ArrayList ruleCommands;
   public RuleManagerWrapper(RuleManager rulemanager) {
@@ -36,7 +37,7 @@ public class RuleManagerWrapper {
   public LinkedList AddRule(final Rule rule, final String service, final String transport) throws SibincoException, IOException {
   try {
     addRuleCommand("AddRule", service ,transport);
-    return rulemanager.AddRule(getRuleContent(getRuleContentAsString(rule)), service, transport, RuleManager.TERM_MODE);
+    return rulemanager.AddRule(getRuleContent(getRuleContentAsString(rule)), service, transport, RuleManager.TERM_MODE, WHOISD_USER);
   } catch(SibincoException se) {
     if (se instanceof StatusDisconnectedException) {
      return null;
@@ -49,7 +50,7 @@ public class RuleManagerWrapper {
   public LinkedList updateRule(final Rule rule, final String service, final String transport) throws SibincoException, IOException {
   try {
     addRuleCommand("updateRule", service , transport);
-    return rulemanager.updateRule(getRuleContent(getRuleContentAsString(rule)),service,transport, RuleManager.TERM_MODE);
+    return rulemanager.updateRule(getRuleContent(getRuleContentAsString(rule)),service,transport, RuleManager.TERM_MODE, WHOISD_USER);
   } catch(SibincoException se) {
      if (se instanceof StatusDisconnectedException) {
      return null;
@@ -61,7 +62,7 @@ public class RuleManagerWrapper {
 
   public void removeRule(final String service, final String transport) throws SibincoException {
       addRuleCommand("removeRule", service , transport);
-      rulemanager.removeRule(service, transport, RuleManager.TERM_MODE);
+      rulemanager.removeRule(service, transport, RuleManager.TERM_MODE, WHOISD_USER);
   }
 
   public File getXslFolder() {
@@ -87,11 +88,13 @@ public class RuleManagerWrapper {
   //--------------------------------
   public void AddRuleCommit(RuleCommand ruleCommand) {
     System.out.println("invoked AddRuleCommit service = "+ ruleCommand.id+" transport = "+ ruleCommand.transport);
+    rulemanager.saveMessage("Added rule: ", WHOISD_USER, ruleCommand.id, ruleCommand.transport);
     //do nothing!
   }
 
   public void updateRuleCommit(RuleCommand ruleCommand) throws Exception{
     System.out.println("invoked updateRuleCommit service = "+ ruleCommand.id+" transport = "+ ruleCommand.transport);
+    rulemanager.saveMessage("Updated rule: ", WHOISD_USER, ruleCommand.id, ruleCommand.transport);
     //TODO
     //we have to save rule_1.xml.new in backup folder
     File ruleFile = rulemanager.composeRuleFile(ruleCommand.transport,new Long(ruleCommand.id));
@@ -101,16 +104,19 @@ public class RuleManagerWrapper {
 
   public void removeRuleCommit(RuleCommand ruleCommand) throws Exception {
     System.out.println("invoked removeRuleCommit service = "+ ruleCommand.id+" transport = "+ ruleCommand.transport);
+    rulemanager.saveMessage("Removed rule: ", WHOISD_USER, ruleCommand.id, ruleCommand.transport);
     rulemanager.removeRuleFile(ruleCommand.id, ruleCommand.transport);
   }
 
   public void AddRuleRollback(RuleCommand ruleCommand) throws Exception{
     System.out.println("invoked AddRuleRollback service = "+ ruleCommand.id+" transport = "+ ruleCommand.transport);
+    rulemanager.saveMessage("Failed to add rule: ", WHOISD_USER, ruleCommand.id, ruleCommand.transport);
     rulemanager.removeRuleFile(ruleCommand.id, ruleCommand.transport);
   }
 
   public void updateRuleRollback(RuleCommand ruleCommand) throws Exception {
     System.out.println("invoked updateRuleRollback service = "+ ruleCommand.id+" transport = "+ ruleCommand.transport);
+    rulemanager.saveMessage("Failed to update rule: ", WHOISD_USER, ruleCommand.id, ruleCommand.transport);
     //TODO
     //rule_1.xml.new -> rule_1.xml and delete rule_1.xml.new
     File ruleFile = rulemanager.composeRuleFile(ruleCommand.transport,new Long(ruleCommand.id));
@@ -120,6 +126,7 @@ public class RuleManagerWrapper {
 
   public void removeRuleRollback(RuleCommand ruleCommand) {
     System.out.println("invoked removeRuleRollback service = "+ ruleCommand.id+" transport = "+ ruleCommand.transport);
+    rulemanager.saveMessage("Failed to remove rule: ", WHOISD_USER, ruleCommand.id, ruleCommand.transport);
     //do nothing
   }
 

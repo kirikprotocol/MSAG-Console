@@ -171,7 +171,7 @@ public class Edit extends TabledEditBeanImpl {
 
     private void deleteRule(String transport) throws SCAGJspException {
         try {
-            appContext.getRuleManager().removeRule(Long.toString(id), transport, RuleManager.NON_TERM_MODE);
+            appContext.getRuleManager().removeRule(Long.toString(id), transport, RuleManager.NON_TERM_MODE, getLoginedPrincipal().getName());
         } catch (SibincoException se) {
             if (!(se instanceof StatusDisconnectedException)) {
                 se.printStackTrace();/*PRINT ERROR ON THE SCREEN;*/

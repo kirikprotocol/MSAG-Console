@@ -15,6 +15,8 @@ import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.scag.backend.sme.Provider;
 import ru.sibinco.scag.backend.sme.ProviderManager;
 import ru.sibinco.scag.backend.Scag;
+import ru.sibinco.scag.backend.status.StatMessage;
+import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.backend.transport.Transport;
 import ru.sibinco.scag.beans.SCAGJspException;
 
@@ -248,7 +250,7 @@ public class RuleManager
      return schema.schemaContent;
    }
 
- public synchronized LinkedList AddRule(BufferedReader r, final String ruleId, final String transport, int mode) throws SibincoException, IOException
+ public synchronized LinkedList AddRule(BufferedReader r, final String ruleId, final String transport, int mode, String user) throws SibincoException, IOException
  {
   logger.debug("AddNewRule ruleId= "+ruleId + " ,transport = "+transport);
   LinkedList errorInfo=new LinkedList();
@@ -268,7 +270,10 @@ public class RuleManager
     errorInfo =(LinkedList) scag.addRule(ruleId, transport);
   } catch (SibincoException e) {
     if (!(e instanceof StatusDisconnectedException)) {
+      if (mode!=TERM_MODE) saveMessage("Failed to add rule: ", user, ruleId, transport);
       removeRuleFile(ruleId, transport);
+    } else {
+      if (mode!=TERM_MODE) saveMessage("Added rule: ", user, ruleId, transport);
     }
     logger.error(e.getMessage());// e.printStackTrace();
     throw e;
@@ -276,13 +281,15 @@ public class RuleManager
   }
 
   if (errorInfo == null || errorInfo.size() == 0) {
+    if (mode!=TERM_MODE) saveMessage("Added rule: ", user, ruleId, transport);
   }
   else  {
+    if (mode!=TERM_MODE) saveMessage("Failed to add rule: ", user, ruleId, transport);
     removeRuleFile(ruleId, transport);
   }
   return errorInfo;
 }
-  public synchronized LinkedList updateRule(BufferedReader r, final String ruleId, final String transport, int mode) throws SibincoException,  IOException
+  public synchronized LinkedList updateRule(BufferedReader r, final String ruleId, final String transport, int mode, String user) throws SibincoException,  IOException
  {
    //String ruleId=fileName.substring(5,fileName.length()-4);
    Rule rule = getRule(new Long(ruleId),transport);
@@ -307,11 +314,14 @@ public class RuleManager
      errorInfo=(LinkedList) scag.updateRule(ruleId, transport);
    }    catch (SibincoException e)    {
      if (e instanceof StatusDisconnectedException) {
-       if (mode != TERM_MODE)
+       if (mode != TERM_MODE) {
+         saveMessage("Updated rule: ", user, ruleId, transport);
          Functions.SavedFileToBackup(currentRuleFile,".new");
+       }
      }
      else {
        if (mode != TERM_MODE) {
+        saveMessage("Failed to update rule: ", user, ruleId, transport);
         saveRule(curbody,ruleId,rule.getTransport());
         currentRuleFile.delete();
        }
@@ -321,10 +331,13 @@ public class RuleManager
     }
    }
     if (errorInfo == null || errorInfo.size()==0) {
-        if (mode!=TERM_MODE)
-       Functions.SavedFileToBackup(currentRuleFile, ".new");
+        if (mode!=TERM_MODE) {
+          saveMessage("Updated rule: ", user, ruleId, transport);
+          Functions.SavedFileToBackup(currentRuleFile, ".new");
+        }
     } else {
        if (mode != TERM_MODE) {
+         saveMessage("Failed to update rule: ", user, ruleId, transport);
          saveRule(curbody,ruleId,rule.getTransport());
          currentRuleFile.delete();
        }
@@ -386,30 +399,41 @@ public class RuleManager
       }
     }
 
-    public synchronized void removeRule(final String ruleId, final String transport, int mode) throws SibincoException
+    public synchronized void removeRule(final String ruleId, final String transport, int mode, String user) throws SibincoException
     {
     //in term mode file deleted in removeRuleCommit(...) method in RuleManagerWrapper
           try {
             scag.removeRule(ruleId,transport);
-            if (mode != TERM_MODE)
-            removeRuleFile(ruleId, transport);
-          } catch (SibincoException se) {
-            if (se instanceof StatusDisconnectedException) {
-              if (mode != TERM_MODE)
+            if (mode != TERM_MODE) {
+              saveMessage("Removed rule: ", user, ruleId, transport);
               removeRuleFile(ruleId, transport);
             }
-            else
+          } catch (SibincoException se) {
+            if (se instanceof StatusDisconnectedException) {
+              if (mode != TERM_MODE) {
+               saveMessage("Removed rule: ", user, ruleId, transport);
+               removeRuleFile(ruleId, transport);
+              }
+            }
+            else {
+              saveMessage("Failed to remove rule: ", user, ruleId, transport);
               throw se;
+            }
           }
     }
 
-    public void removeRulesForService(final String ruleId) throws SCAGJspException
+    public void saveMessage(final String stringMessage, final String user, final String ruleId, final String transport) {
+      StatMessage message = new StatMessage(user, "Rule", stringMessage + "rule_"+ ruleId+".xml for transport " + transport);
+      StatusManager.getInstance().addStatMessages(message);
+    }
+
+    public void removeRulesForService(final String user,final String ruleId) throws SCAGJspException
     {
       try {
       String[] transports = Transport.transportTitles;
     for (byte i =0 ;i<transports.length;i++) {
            Rule current = getRule(new Long(ruleId),transports[i]);
-           if (current!=null) removeRule(ruleId, current.getTransport(), NON_TERM_MODE);
+           if (current!=null) removeRule(ruleId, current.getTransport(), NON_TERM_MODE, user);
         }
       } catch(SibincoException se) {
               se.printStackTrace();/*PRINT ERROR ON THE SCREEN;*/

@@ -77,7 +77,7 @@ public class Edit extends TabledEditBeanImpl {
             final String serviceIdStr = checked[i];
             final Long serviceId = Long.decode(serviceIdStr);
             toRemove.add(serviceId);
-            appContext.getRuleManager().removeRulesForService(serviceIdStr);
+            appContext.getRuleManager().removeRulesForService(getLoginedPrincipal().getName(), serviceIdStr);
         }
         final List toRemoveRoutes = appContext.getScagRoutingManager().getRoteIdsByServiceIds(checked);
         if (toRemoveRoutes.size() > 0) {
