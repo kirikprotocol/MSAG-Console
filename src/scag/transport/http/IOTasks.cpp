@@ -160,7 +160,6 @@ int HttpReaderTask::Execute()
         removeSocket(error);
 
         if (multiplexer.canRead(ready, error, SOCKOP_TIMEOUT) > 0) {
-            smsc_log_debug(logger, "%p Start", this);
             for (i = 0; i < (unsigned int)error.Count(); i++) {
                 Socket *s = error[i];           
                 HttpContext *cx = HttpContext::getContext(s);
@@ -169,10 +168,8 @@ int HttpReaderTask::Execute()
                 cx->setDestiny(503, cx->action == READ_RESPONSE ?
                     FAKE_RESP | DEL_SITE_SOCK : DEL_CONTEXT);
             }
-            smsc_log_debug(logger, "%p After Errors handled", this);
             now = time(NULL);
             for (i = 0; i < (unsigned int)ready.Count(); i++) {
-                smsc_log_debug(logger, "%p ready handling(cur=%d, total=%d)", this, i, ready.Count());
                 Socket *s = ready[i];
                 HttpContext *cx = HttpContext::getContext(s);
                 unsigned int unparsed_len;
@@ -189,7 +186,6 @@ int HttpReaderTask::Execute()
                     len = unparsed_len;
 
                     //printHex(buf, unparsed_len);
-                   smsc_log_debug(logger, "<<<<<%p: %p before parse buf=%p, len=%d", this, cx, buf, unparsed_len); 
                     switch (HttpParser::parse(buf, unparsed_len, *cx)) {
                     case OK:
                         removeSocket(s);
@@ -225,11 +221,9 @@ int HttpReaderTask::Execute()
                         (FAKE_RESP | DEL_SITE_SOCK) : DEL_CONTEXT);
                     error.Push(s);
                 }
-                smsc_log_debug(logger, "%p: %p ready handling end(cur=%d, total=%d)", this, cx, i, ready.Count());
             }
 
             removeSocket(error);
-            smsc_log_debug(logger, "%p, End", this);
         }
     }
 
@@ -279,7 +273,6 @@ int HttpWriterTask::Execute()
     for (;;) {
         {
             MutexGuard g(sockMon);
-            smsc_log_debug(logger, "%p Start", this);
             while (!(socketCount || isStopping)) {
                 smsc_log_debug(logger, "%p idle", this);
                 sockMon.wait();
@@ -415,7 +408,6 @@ int HttpWriterTask::Execute()
                 }
             }
             removeSocket(error);
-            smsc_log_debug(logger, "%p End", this);
         }
     }
 

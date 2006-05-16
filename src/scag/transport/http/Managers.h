@@ -37,10 +37,10 @@ public:
     void looseQueueLimit();
 
     void fitQueueLimit() {
+        MutexGuard g(queMon);
         while (waitQueueShrinkage) {
             smsc_log_warn(logger, "queue overlimited");
 
-            MutexGuard g(queMon);
             queMon.wait();
         }
     }

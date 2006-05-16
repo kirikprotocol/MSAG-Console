@@ -61,15 +61,15 @@ void ScagTaskManager::process(HttpContext* cx)
     cx->next = tailContext[cx->action]->next;
 
     switch (cx->action) {
-    case 1:
-        if (tailContext[0] == tailContext[1])
-            tailContext[0] = cx;
+    case PROCESS_RESPONSE:
+        if (tailContext[PROCESS_REQUEST] == tailContext[PROCESS_RESPONSE])
+            tailContext[PROCESS_REQUEST] = cx;
         break;
-    case 2:                    
-        if (tailContext[1] == tailContext[2])
-            tailContext[1] = cx;
-        if (tailContext[0] == tailContext[2])
-            tailContext[0] = cx;
+    case PROCESS_STATUS_RESPONSE:                    
+        if (tailContext[PROCESS_RESPONSE] == tailContext[PROCESS_STATUS_RESPONSE])
+            tailContext[PROCESS_RESPONSE] = cx;
+        if (tailContext[PROCESS_REQUEST] == tailContext[PROCESS_STATUS_RESPONSE])
+            tailContext[PROCESS_REQUEST] = cx;
         break;
     }
 
@@ -115,12 +115,12 @@ HttpContext *ScagTaskManager::getFirst()
     if (headContext) {
         cx = headContext;
 
-        if (headContext == tailContext[0])
-            tailContext[0] = (HttpContext *)&headContext;
-        if (headContext == tailContext[1])
-            tailContext[1] = (HttpContext *)&headContext;
-        if (headContext == tailContext[2])
-            tailContext[2] = (HttpContext *)&headContext;
+        if (headContext == tailContext[PROCESS_REQUEST])
+            tailContext[PROCESS_REQUEST] = (HttpContext *)&headContext;
+        if (headContext == tailContext[PROCESS_RESPONSE])
+            tailContext[PROCESS_RESPONSE] = (HttpContext *)&headContext;
+        if (headContext == tailContext[PROCESS_STATUS_RESPONSE])
+            tailContext[PROCESS_STATUS_RESPONSE] = (HttpContext *)&headContext;
         
         headContext = headContext->next;
         queueLength--;
@@ -312,7 +312,7 @@ void IOTaskManager::reorderTask(IOTask* t)
         /* go right */
         do {        
             assignTask(i, sortedTasks[i+1]);
-        } while (cc > sortedTasks[++i+1]->getSocketCount());            
+        } while (cc > sortedTasks[++i+1]->getSocketCount());
         
         assignTask(i, t);
     }
