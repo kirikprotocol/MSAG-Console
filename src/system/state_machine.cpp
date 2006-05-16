@@ -2134,7 +2134,7 @@ StateType StateMachine::submit(Tuple& t)
       smsc->ChargeSms(t.msgId,*sms,ctx);
     }catch(std::exception& e)
     {
-      submitResp(t,sms,Status::SYSERR);
+      submitResp(t,sms,Status::NOCONNECTIONTOINMAN);
       warn2(smsLog,"SBM:ChargeSms failed:%s",e.what());
       return ERROR_STATE;
     }
@@ -2711,7 +2711,7 @@ StateType StateMachine::forward(Tuple& t)
     }catch(std::exception& e)
     {
       warn2(smsLog,"FWD: ChargeSms for id=%lld failed:%s",t.msgId,e.what());
-      sms.setLastResult(Status::SYSERR);
+      sms.setLastResult(Status::NOCONNECTIONTOINMAN);
       smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
       smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
       Descriptor d;
