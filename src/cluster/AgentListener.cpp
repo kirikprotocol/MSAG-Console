@@ -1,20 +1,12 @@
 #include "cluster/AgentListener.h"
 #include "cluster/Interconnect.h"
 #include <signal.h>
-
-namespace smsc {
-namespace system {
-
-extern "C" void sigShutdownHandler(int signo);
-
-}
-}
+#include "system/smsc.hpp"
 
 namespace smsc{
 namespace cluster {
 
 using smsc::core::network::Socket;
-using smsc::system::sigShutdownHandler;
 
 void AgentListener::Start()
 {
@@ -156,7 +148,7 @@ void AgentListener::read(Socket * socket, void* buffer, int size)
 
 void AgentListener::shutdownSmsc()
 {
-  sigShutdownHandler(SIGTERM);
+  if(psmsc)((smsc::system::Smsc*)psmsc)->stop();
 }
 
 }

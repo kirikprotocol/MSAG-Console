@@ -1001,6 +1001,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
 
           smsc_log_info(log, "pid: %ld", (long)getpid() );
           agentListener.init(host.get(), port, getpid());
+          agentListener.assignSmsc(this);
           agentListener.Start();
 
           smsc_log_info(log, "Agent listener is started" );

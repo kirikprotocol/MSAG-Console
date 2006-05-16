@@ -19,7 +19,7 @@ class AgentListener : public Thread
 {
 public:
     AgentListener()
-        : logger(Logger::getInstance("AgentLst")), stop(true), stopSmsc(false),clntSock(0)
+        : logger(Logger::getInstance("AgentLst")), stop(true), stopSmsc(false),clntSock(0),psmsc(0)
     {
   };
   virtual ~AgentListener()
@@ -30,6 +30,10 @@ public:
   };
 
     void init(const std::string& host, int port, pid_t pid_);
+    void assignSmsc(void* smscptr)
+    {
+      psmsc=smscptr;
+    }
     void Start();
     void Stop();
     virtual int Execute();
@@ -41,6 +45,7 @@ protected:
     bool stop;
     bool stopSmsc;
     pid_t pid;
+    void* psmsc;
 
     int readCommand(Socket * socket);
     void read(Socket * socket, void* buffer, int size);
