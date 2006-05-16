@@ -28,6 +28,7 @@ pers.port=1200
 pers.host=0.0.0.0
 
 session.location=/opt/home/msag_test/build/msag_distr/storage/sessions
+session.expireInterval = 10
 rules.path=/opt/home/msag_test/build/msag_distr/services/scag/conf/rules
 stat.dir=/opt/home/msag_test/build/msag_distr/storage/statistics
 
