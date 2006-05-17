@@ -114,10 +114,10 @@ bool ActionIf::FinishXMLSubSection(const std::string& name)
         FillElseSection = false;
         return false;
     }
-#ifndef NDEBUG
-    else if (name != "if") throw SCAGException("Action 'if': unrecognized final tag");
+/*#ifndef NDEBUG
+    else if (name != "if") throw SCAGException("Action 'if': unrecognized final tag '%s'", name.c_str());
 #endif
-
+  */
     return true;
 }
 
