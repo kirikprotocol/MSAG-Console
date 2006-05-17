@@ -84,8 +84,8 @@ int main(int argc, char* argv[])
             smsc_log_info(logger, "operator_id = 1, category_id=1, media_type=2. sn:%d, price:%lf, curr:%s", tr->ServiceNumber, tr->Price, tr->Currency.c_str());
         }
 
-        int c;
-        scanf("%d", &c);
+//        int c;
+  //      scanf("%d", &c);
 
         sm.ReloadProviderMap();
         sm.ReloadOperatorMap();
