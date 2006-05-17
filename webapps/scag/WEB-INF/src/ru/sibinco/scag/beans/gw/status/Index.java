@@ -35,7 +35,7 @@ public class Index extends TabledBeanImpl {
     }
 
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
-        sort = "time";
+
         super.process(request, response);
         final Daemon scagDaemon = appContext.getScagDaemon();
         try {
@@ -237,5 +237,9 @@ public class Index extends TabledBeanImpl {
 
     public void setMbStop(final String mbStop) {
         this.mbStop = mbStop;
+    }
+
+    protected String getDefaultSort() {
+        return "-time";
     }
 }
