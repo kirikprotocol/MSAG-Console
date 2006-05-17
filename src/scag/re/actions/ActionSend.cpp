@@ -60,7 +60,7 @@ IParserHandler * ActionSend::StartXMLSubSection(const std::string& name, const S
 
 bool ActionSend::FinishXMLSubSection(const std::string& name)
 {
-    return (name == "send:alarm");
+    return ((name == "send:alarm")||(name == "send:info")||(name == "send:notify")||(name == "send:warn"));
 }
 
 void ActionSend::init(const SectionParams& params,PropertyObject _propertyObject)
