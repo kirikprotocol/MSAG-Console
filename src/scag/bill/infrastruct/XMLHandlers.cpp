@@ -5,10 +5,12 @@
 
 #include "XMLHandlers.h"
 #include <locale.h>
+#include "sms/sms.h"
 
 namespace scag { namespace bill { namespace infrastruct {
 
 using namespace smsc::util;
+using namespace smsc::sms;
 
 typedef struct{
     const char *name;
@@ -134,7 +136,8 @@ void XMLBasicHandler::endElement(const XMLCh* const qname)
         {
             mask_chars[mask_len] = 0;
             StrX s(mask_chars);
-            abonent_hash->Insert(s.localForm(), cur_operator_id);
+            Address addr(s.localForm());
+            abonent_hash->Insert(addr.toString().c_str(), cur_operator_id);
         }
         in_mask = false;
     }

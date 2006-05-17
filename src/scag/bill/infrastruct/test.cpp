@@ -67,6 +67,7 @@ int main(int argc, char* argv[])
         smsc_log_info(logger, "abonent_id = +79139061234, op_id=%d", sm.GetOperatorID(Address("+79139061234")));
         smsc_log_info(logger, "abonent_id = +79139079876, op_id=%d", sm.GetOperatorID(Address("+79139079876")));
         smsc_log_info(logger, "abonent_id = +79129079876, op_id=%d", sm.GetOperatorID(Address("+79129079876")));
+        smsc_log_info(logger, "abonent_id = +71112223344, op_id=%d", sm.GetOperatorID(Address("+71112223344")));
 
         smsc_log_info(logger, ">>>>>>Tariff test<<<<<<<<");
         TariffRec* tr;
@@ -83,6 +84,9 @@ int main(int argc, char* argv[])
             smsc_log_info(logger, "operator_id = 1, category_id=1, media_type=2. sn:%d, price:%lf, curr:%s", tr->ServiceNumber, tr->Price, tr->Currency.c_str());
         }
 
+        int c;
+        scanf("%d", &c);
+
         sm.ReloadProviderMap();
         sm.ReloadOperatorMap();
         sm.ReloadTariffMatrix();
@@ -96,6 +100,7 @@ int main(int argc, char* argv[])
         smsc_log_info(logger, "abonent_id = +79139061234, op_id=%d", sm.GetOperatorID(Address("+79139061234")));
         smsc_log_info(logger, "abonent_id = +79139079876, op_id=%d", sm.GetOperatorID(Address("+79139079876")));
         smsc_log_info(logger, "abonent_id = +79129079876, op_id=%d", sm.GetOperatorID(Address("+79129079876")));
+        smsc_log_info(logger, "abonent_id = +71112223344, op_id=%d", sm.GetOperatorID(Address("+71112223344")));
 
         smsc_log_info(logger, ">>>>>>Tariff test<<<<<<<<");
         tr = sm.GetTariff(1, 1, 1);

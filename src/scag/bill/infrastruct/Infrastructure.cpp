@@ -194,11 +194,8 @@ uint32_t InfrastructureImpl::GetOperatorID(Address addr)
     if(mask_hash == NULL)
         return 0;
 
-    std::string a;
-    uint8_t mask_ptr;
-
-    a = addr.toString();
-    mask_ptr = a.length();
+    std::string a = addr.toString();
+    uint8_t mask_ptr = a.length();
 
     bool found;
     while(!(found = mask_hash->Exists(a.c_str())) && mask_ptr > 6)
