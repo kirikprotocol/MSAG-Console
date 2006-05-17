@@ -13,7 +13,6 @@
 #include <core/buffers/IntHash.hpp>
 
 #include <logger/Logger.h>
-#include <sms/sms_const.h>
 
 #include "XMLHandlers.h"
 
@@ -28,7 +27,7 @@ using smsc::core::synchronization::MutexGuard;
 using smsc::core::synchronization::Mutex;
 using namespace smsc::util;
 using smsc::logger::Logger;
-using smsc::sms;
+using namespace smsc::sms;
 
 InfrastructureImpl::InfrastructureImpl()
 {
@@ -195,25 +194,18 @@ uint32_t InfrastructureImpl::GetOperatorID(Address addr)
     if(mask_hash == NULL)
         return 0;
 
-    uint8_t mask_ptr, addr_len;
-    char a[smsc::sms::MAX_ADDRESS_VALUE_LENGTH + 2];
+    std::string a;
+    uint8_t mask_ptr;
 
-    a[0] = '+';
-    addr_len = addr.getValue(a + 1);
-
-    if(!addr_len)
-        return 0;
-
-    addr_len++;
-
-    mask_ptr = addr_len - 1;
+    a = addr.toString();
+    mask_ptr = a.length();
 
     bool found;
-    while(!(found = mask_hash->Exists(a)) && mask_ptr > 1)
-        a[mask_ptr--] = '?';
+    while(!(found = mask_hash->Exists(a.c_str())) && mask_ptr > 6)
+        a[--mask_ptr] = '?';
 
     if(found)
-        return mask_hash->Get(a);
+        return mask_hash->Get(a.c_str());
 
     return 0;
 }
