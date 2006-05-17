@@ -22,9 +22,12 @@
 #include <sms/sms.h>
 #include <scag/transport/SCAGCommand.h>
 #include <scag/exc/SCAGExceptions.h>
+#include "scag/config/route/RouteConfig.h"
+#include "scag/config/route/RouteStructures.h"
 
 #include <scag/stat/StatisticsManager.h>
-
+#include "scag/pers/PersClient.h"
+#include <scag/transport/smpp/router/route_manager.h>
 //inthash
 #include <core/buffers/IntHash.hpp>
 
@@ -39,11 +42,20 @@
 
 using scag::re::RuleEngine;
 using scag::re::RuleStatus;
-using scag::sessions::SessionManager;
+using std::exception;
+
 using scag::sessions::SessionManagerConfig;
 using scag::sessions::CSessionKey;
 using scag::sessions::SessionPtr;
 using scag::transport::smpp::SmppCommand;
+
+using namespace scag::sessions;
+using namespace scag::config;
+using namespace scag::exceptions;
+
+using namespace scag::transport::smpp::router;
+using scag::config::RouteConfig;
+using scag::config::Route;
 
 using namespace scag::transport::smpp;
 using namespace smsc::sms;
@@ -51,6 +63,9 @@ using namespace smsc::logger;
 using namespace scag::util;
 using namespace scag::stat;
 
+using scag::bill::BillingManager;
+using scag::stat::StatisticsManager;
+using scag::config::BillingManagerConfig;
 //inthash
 using namespace smsc::core::buffers;
 
@@ -75,7 +90,7 @@ SmppCommand command;
 
 /**Create rules from directory */
 
-int  initReInstance( std::string& dir_name)
+/*int  initReInstance( std::string& dir_name)
 {
 
 // try{
@@ -85,7 +100,7 @@ int  initReInstance( std::string& dir_name)
      RuleEngine::Init(dir_name);
      RuleEngine& re2=RuleEngine::Instance();
          engine=&re2;
-/*    if(engine==0)
+    if(engine==0)
     {
      smsc_log_error(logger,"RE == 0 !");
      return 0;
@@ -100,10 +115,8 @@ int  initReInstance( std::string& dir_name)
 
   if(!engine)
   return 0;
-*/
 return 1;
 }
-
 int  initSessionManagerInstance(std::string &dir_name,time_t tmint)
 {
 
@@ -133,7 +146,7 @@ try{
     smsc_log_debug(logger,"SessionManager Init success, cfg=%s, timeout=%d",dir_name.c_str(),tmint);
      
    return 1;
-}
+}                      */
 
 /*static JSBool _initBillInstance(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -178,6 +191,10 @@ static JSBool _deleterule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
        uint32_t dialogid);
    
 */
+
+
+///////////////////////////////////////////////////
+
 int ruleRun(   std::string cmd_name,  
 		std::string str_oa,  
   		uint8_t oa_tn   ,
@@ -213,7 +230,8 @@ int ruleRun(   std::string cmd_name,
    oa.setValue(str_oa.length(),str_oa.c_str());
   
  key.abonentAddr = oa;
- cmd->set_ruleId(ruleid);
+ cmd->set_serviceId(ruleid);
+ cmd->set_operationId(1);
 
  if(session.Get()==0)
 	session =  smanager->newSession(key);;//smanager->getSession(cmd);
@@ -358,43 +376,159 @@ void sessionsDeliverSM(int scnt)
 	}
 }
 
+void init()
+{
+   try{
+   	 smsc_log_info(logger,  "SCAG configuration loading..." );
+	 scag::config::ConfigManager::Init();
+	 smsc_log_info(logger,  "SCAG configuration is loaded" );
+
+	}
+       catch (scag::config::ConfigException &c)
+       {
+	 smsc_log_error(logger,"%s",c.what());	
+	}
+                                                
+	ConfigManager & cfg = ConfigManager::Instance();
+
+/********************************************************/
+  try {
+        BillingManager::Init(cfg.getBillManConfig());
+    }catch(...)
+    {
+        throw Exception("Exception during initialization of BillingManager");
+    }
+
+/*********************************************************/
+   try {
+        smsc_log_info(logger, "Personalization client initializing...");
+
+        using scag::config::ConfigView;
+
+        std::auto_ptr<ConfigView> cv(new ConfigView(*cfg.getConfig(), "Personalization"));
+
+        auto_ptr <char> host(cv->getString("host", NULL, false));
+
+        if(!host.get())
+            throw Exception("Empty host");
+
+        scag::pers::client::PersClient::Init(host.get(), cv->getInt("port", NULL), cv->getInt("timeout", NULL));
+
+        smsc_log_info(logger, "Personalization client initialized");
+    }catch(Exception& e)
+    {
+        throw Exception("Exception during initialization of PersClient: %s", e.what());
+    }catch (scag::pers::client::PersClientException& e)
+    {
+        smsc_log_error(logger, "Exception during initialization of PersClient: %s", e.what());
+//        throw Exception("Exception during initialization of PersClient: %s", e.what());
+    }catch (...)
+    {
+        throw Exception("Exception during initialization of PersClient: unknown error");
+    }
+
+//************** RuleEngine initialization ***************
+  try {
+      smsc_log_info(logger, "Rule Engine is starting..." );
+
+      using scag::config::ConfigView;
+      std::auto_ptr<ConfigView> cv(new ConfigView(*cfg.getConfig(),"RuleEngine"));
+
+      auto_ptr <char> loc(cv->getString("location", 0, false));
+      if (!loc.get()) throw Exception("RuleEngine.location not found");
+
+      std::string location = loc.get();
+
+      scag::re::RuleEngine & re = scag::re::RuleEngine::Instance();
+      re.Init(location);
+
+      engine=&re;
+      smsc_log_info(logger, "Rule Engine started" );
+
+  } catch (SCAGException& e) {
+      smsc_log_warn(logger, "%s", e.what());
+      __warning__("Rule Engine is not started.");
+  } catch(...){
+      __warning__("Unknown error: rule Engine is not started.");
+  }
+
+  //*********** SessionManager initialization **************
+  try{
+      smsc_log_info(logger, "Session Manager is starting..." );
+
+      SessionManager::Init(cfg.getSessionManConfig());
+      SessionManager& sm2=SessionManager::Instance();
+      smanager=&sm2;
+      smsc_log_info(logger, "Session Manager started" );
+  }
+  catch(exception& e)
+  {
+      smsc_log_warn(logger, "Scag.init exception: %s", e.what());
+      __warning__("Sessioan Manager is not started.");
+  }catch(...){
+      __warning__("Session Manager is not started.");
+  }
+  //********************************************************
+
+ //********** Statistics manager initialization ***********
+  try{
+      StatisticsManager::init(cfg.getStatManConfig());
+
+      smsc_log_info(logger, "Statistics manager started" );
+  }catch(exception& e){
+      smsc_log_warn(logger, "init exception: %s", e.what());
+      __warning__("Statistics manager is not started.");
+  }catch(...){
+      __warning__("Statistics manager is not started.");
+  }
+
+}
+
+void fortest(std::string str_oa,std::string str_da)
+{
+  scag::sessions::CSessionKey key;
+
+  SMS sms1;
+ smsc::sms::Address oa,da ;
+
+
+ oa.setNumberingPlan(1);
+ oa.setTypeOfNumber(1);
+
+ da.setNumberingPlan(1);
+ da.setTypeOfNumber(1);
+
+ oa.setValue(str_oa.length(),str_oa.c_str());
+ da.setValue(str_da.length(),str_da.c_str());
+
+ sms1.setDestinationAddress(da);
+ sms1.setOriginatingAddress(oa);
+
+  //smsc::smpp::UssdServiceOpValue::PSSR_INDICATION == sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)
+  //sms1.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, smsc::smpp::UssdServiceOpValue::PSSR_INDICATION);
+  //sms2.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, 100);
+
+  char buff[128];
+  scag::transport::smpp::SmppCommand commandDeliver1 = scag::transport::smpp::SmppCommand::makeDeliverySm(sms1,1);
+  commandDeliver1.setServiceId(1);
+
+  SessionManager& sm = SessionManager::Instance();
+  key.abonentAddr = oa;
+  scag::sessions::SessionPtr sessionPtr = sm.newSession(key);
+  scag::sessions::Session * session = sessionPtr.Get();
+
+  if (session) smsc_log_warn(logger, "SESSION IS VALID");
+
+  scag::re::RuleEngine::Instance().process(commandDeliver1, *session);
+  sm.releaseSession(sessionPtr);
+
+
+}
 int  main(int argc,char ** argv)
 {
 
-
-	std:string dn="./rules";
-	
 	smsc::logger::Logger::Init();    
 	logger = smsc::logger::Logger::getInstance("scag.retst");        
-
-	std::string dir="/export/home/green/install/bin/stat";
-        std::string host="127.0.0.1";
-	
-	
-	StatManConfig smcfg(dir,host,54000,54300,54400);
-
-
-	if(argc>1)	
-	{
-	    if(strcmp(argv[1],"-a")==0)
-	    {
-		if(argc>3)
-    		{
-//		    std::string adminhost=argv[2];
-//		    int adminport=atoi(argv[3]);
-//		    testAdmin(adminhost,adminport);
-		}
-		else
-		{
-		    printf("errors in command line\n");
-		    return 0;
-		}
-		return 0;
-	    }
-	}
-																									    
-
-	StatisticsManager::init(smcfg);
 
 	if(!logger)     
 	{
@@ -402,18 +536,24 @@ int  main(int argc,char ** argv)
   	  return 0;    
 	}
 
-	if(!initReInstance(dn))
-	{
-	  return 0;
-	}
 
-	dn ="./store";
+	init();
 
-	if(!initSessionManagerInstance(dn,100))
-	{
-	  return 0;
-	}
+
+//	if(!initReInstance(dn))
+//	{
+//	  return 0;
+//	}
+
+//	dn ="./store";
+
+//	if(!initSessionManagerInstance(dn,100))
+//	{
+//	  return 0;
+//	}
 	  
+        scag::sessions::SessionPtr sess;
+
 //	  for(;;)    
 	  {
 		  int scnt=1;
@@ -422,7 +562,9 @@ int  main(int argc,char ** argv)
 //		  sessionsDeliverSM(scnt);
 //		  sessionsClose(scnt);
 //		  
-         	ruleRun("deliver_sm","812345671",0,1,"897654326",0,1,51,0,1,sess);
+
+//        	ruleRun("deliver_sm","+79130000001",1,1,"+70001",1,1,51,0,1,sess);
+fortest("9130000001","0001");
 		
 //		engine->removeRule(10);
 //		engine->updateRule(10);
