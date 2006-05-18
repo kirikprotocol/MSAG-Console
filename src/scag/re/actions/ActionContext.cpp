@@ -16,8 +16,10 @@ CommandProperty::CommandProperty(SCAGCommand& command, int commandStatus, Addres
     serviceId = command.getServiceId();
     protocol = CommandBrige::getProtocolForEvent(command);
 
+    commandId = command.getCommandId();
+    
     status = commandStatus;
-
+    
     providerId = ProviderId;
     operatorId = OperatorId;
 }
@@ -164,6 +166,44 @@ void ActionContext::fillRespOperation(smsc::inman::interaction::DeliverySmsResul
     command.fillRespOperation(op, tariffRec);
 }
 
+
+bool ActionContext::checkIfCanSetPending(int operationType, int eventHandlerType, TransportType transportType)
+{
+    //Проверяем на возможность создавать pending operation для каждого транспорта и хэндлера:
+
+   
+    bool result = false;
+    
+    switch (transportType) 
+    {
+    case SMPP: 
+        /*
+        DELIVER_SM:          SUBMIT, USSD_DIALOG
+        RECEIPT_DELIVER_SM:  SUBMIT, USSD_DIALOG
+        USSD DELIVER_SM:     SUBMIT
+        */
+
+        if (commandProperty.commandId == DELIVERY)
+        {
+            if (operationType == CO_SUBMIT) result = true;
+            else 
+            if ((operationType == CO_USSD_DIALOG)&&
+               ((eventHandlerType == EH_RECEIPT)||(eventHandlerType == EH_DELIVER_SM))) result = true;
+        } 
+        
+        break;
+
+    case HTTP:
+        break;
+
+    case MMS:
+        break;
+    }
+    
+    return result;
+
+    
+}
 
 }}}
 

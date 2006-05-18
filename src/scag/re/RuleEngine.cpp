@@ -469,6 +469,15 @@ void RuleEngineImpl::ProcessInit(const std::string& dir)
     property.setInt(Const::HTTP);
     ConstantsHash["HTTP"] = property;
 
+    property.setInt(OPERATION_INITED);
+    ConstantsHash["ICC_INITED"] = property;
+
+    property.setInt(OPERATION_CONTINUED);
+    ConstantsHash["ICC_CONTINUED"] = property;
+
+    property.setInt(OPERATION_COMPLETED);
+    ConstantsHash["ICC_COMPLETED"] = property;
+
 /*
     "TRUE"
     "FALSE"

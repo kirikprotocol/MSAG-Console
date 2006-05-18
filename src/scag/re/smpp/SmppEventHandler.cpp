@@ -60,23 +60,24 @@ void SmppEventHandler::StartOperation(Session& session, SmppCommand& command, CS
         }
 
         if (smppDiscriptor.currentIndex == 0)
+        {
             session.setOperationFromPending(command, CO_SUBMIT);
-        else
-            operation = session.setCurrentOperation(command.getOperationId());
-
+            break;
+        }
+        
         operation->receiveNewPart(smppDiscriptor.currentIndex,smppDiscriptor.lastIndex);
         break;
 
     case CO_RECEIPT:
+        //TODO:: Нужно учесть политику для multipart
+
         if (!smppDiscriptor.isResp) 
         {
-            session.setOperationFromPending(command, smppDiscriptor.cmdType);
             operation->receiveNewPart(smppDiscriptor.currentIndex,smppDiscriptor.lastIndex);
             break;
         }
 
         operation->receiveNewResp(smppDiscriptor.currentIndex,smppDiscriptor.lastIndex);
-        
         break;   
 
     case CO_USSD_DIALOG:
@@ -136,7 +137,7 @@ void SmppEventHandler::EndOperation(Session& session, SmppCommand& command, Rule
 
         if (smppDiscriptor.m_waitReceipt)
         {
-            time_t now;
+            /*time_t now;
             time(&now);
 
             PendingOperation pendingOperation;
@@ -144,14 +145,16 @@ void SmppEventHandler::EndOperation(Session& session, SmppCommand& command, Rule
             //TODO: Определяем время жизни операции
             pendingOperation.validityTime = now + SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
 
-            session.addPendingOperation(pendingOperation);
+
+            session.addPendingOperation(pendingOperation);*/
+            session.AddNewOperationToHash(command, CO_RECEIPT);
         }                    
         break;
 
 
     case CO_RECEIPT:
-        //TODO:: Нужно учесть политику для multipart
         if (currentOperation->getStatus() == OPERATION_COMPLETED) session.closeCurrentOperation();
+
         break;      
 
     case CO_USSD_DIALOG:
@@ -203,6 +206,7 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     /////////////////////////////////////////
 
     CSmppDiscriptor smppDiscriptor = CommandBrige::getSmppDiscriptor(*smppcommand);
+    
 
     try {
         StartOperation(session, *smppcommand, smppDiscriptor);

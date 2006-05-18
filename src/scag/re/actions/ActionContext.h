@@ -45,6 +45,7 @@ namespace scag { namespace re { namespace actions
 
         int providerId;
         int operatorId;
+        uint8_t commandId;
 
         CommandProperty(SCAGCommand& command, int commandStatus, Address& addr, int ProviderId, int OperatorId);
     };
@@ -109,6 +110,7 @@ namespace scag { namespace re { namespace actions
         void fillRespOperation(smsc::inman::interaction::DeliverySmsResult& op, TariffRec& tariffRec);
 
         TariffRec * getTariffRec(uint32_t category, uint32_t mediaType);
+        bool checkIfCanSetPending(int operationType, int eventHandlerType, TransportType transportType);
     };
 
 }}}

@@ -24,7 +24,7 @@ void ActionOperationWait::init(const SectionParams& params,PropertyObject proper
     bool bExist;
 
     ft = CheckParameter(params, propertyObject, "operation:wait", "type", true, true, temp, bExist);
-    if (ft!=ftUnknown) throw SCAGException("Action 'match': 'regexp' parameter must be a scalar constant type");
+    if (ft!=ftUnknown) throw SCAGException("Action 'operation:wait': 'type' parameter must be a scalar constant type");
     std::string sType = ConvertWStrToStr(temp);
 
     m_ftTime = CheckParameter(params, propertyObject, "operation:wait", "time", true, true, temp, bExist);
@@ -32,12 +32,25 @@ void ActionOperationWait::init(const SectionParams& params,PropertyObject proper
 
     m_opType = Session::getOperationType(sType);
     
+    m_eventHandlerType = propertyObject.HandlerId;
+    m_transportType = propertyObject.transport;
+
+
     smsc_log_debug(logger,"Action 'operation:wait':: init");
 }
 
 bool ActionOperationWait::run(ActionContext& context)
 {
     smsc_log_debug(logger,"Run Action 'operation:wait'...");
+
+    if (!context.checkIfCanSetPending(m_opType, m_eventHandlerType, m_transportType))
+    {
+        smsc_log_debug(logger,"Run Action 'operation:wait': cannot set pending operation (id=%d) for this type of command",m_opType);
+        return true;
+    }
+
+
+
 
     Property * property = 0;
     int wait_time;

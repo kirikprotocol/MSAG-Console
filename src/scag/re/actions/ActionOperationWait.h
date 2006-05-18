@@ -12,6 +12,8 @@ class ActionOperationWait : public Action
     std::string m_sTime;
     int m_opType;
     FieldType m_ftTime;
+    int m_eventHandlerType;
+    TransportType m_transportType;
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name, const SectionParams& params,const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);

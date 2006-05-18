@@ -41,7 +41,7 @@ whoisd-expected-message-content-type	String	0x4905
 
 EventHandlerType CommandBrige::getHTTPHandlerType(const SCAGCommand& command)
 {
-    switch(((HttpCommand&)command).getCommandId())
+    switch(command.getCommandId())
     {
         case HTTP_REQUEST:
             return EH_HTTP_REQUEST;
@@ -224,6 +224,7 @@ CSmppDiscriptor CommandBrige::getSmppDiscriptor(const SCAGCommand& command)
     case DELIVERY:
         receiptMessageId = atoi(sms.getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
 
+        //TODO: ensure
         if (receiptMessageId) SmppDiscriptor.cmdType = CO_RECEIPT;
         else if (sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) 
         {

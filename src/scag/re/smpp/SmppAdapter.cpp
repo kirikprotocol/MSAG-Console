@@ -1161,6 +1161,7 @@ void SmppCommandAdapter::changed(AdapterProperty& property)
 
     int * pFieldId = 0;
     int FieldId;
+    int receiptMessageId;
 
     const std::string name = property.GetName();  
 
@@ -1173,6 +1174,11 @@ void SmppCommandAdapter::changed(AdapterProperty& property)
         pFieldId = DeliverFieldNames.GetPtr(name.c_str());
         if (!pFieldId) return;
 
+        //TODO: ensure
+        receiptMessageId = atoi(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
+        //TODO: check - what we must to do?
+        if (receiptMessageId) return; 
+        
         WriteDeliveryField(*sms,*pFieldId,property);
         FieldId = *pFieldId;
         break;

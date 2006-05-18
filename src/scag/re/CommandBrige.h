@@ -166,7 +166,10 @@ public:
 
         SMS& sms = getSMS(*smppCommand);
 
-        return sms.getIntProperty(Tag::SMPP_SAR_MSG_REF_NUM);
+        if (sms.hasIntProperty(Tag::SMPP_SAR_MSG_REF_NUM)) 
+            return sms.getIntProperty(Tag::SMPP_SAR_MSG_REF_NUM);
+
+        return 0;
     }
 };
 
