@@ -564,7 +564,7 @@ int  main(int argc,char ** argv)
 //		  
 
 //        	ruleRun("deliver_sm","+79130000001",1,1,"+70001",1,1,51,0,1,sess);
-fortest("9130000001","0001");
+fortest("+79130000001","0001");
 		
 //		engine->removeRule(10);
 //		engine->updateRule(10);
