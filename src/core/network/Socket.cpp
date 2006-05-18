@@ -4,7 +4,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-
 #ifdef _WIN32
 #pragma comment(lib,"ws2_32.lib")
 #else
@@ -38,7 +37,14 @@ int Socket::Init(const char *host,int port,int timeout)
     memcpy(&sockAddr.sin_addr,&ulINAddr,sizeof(ulINAddr));
   }else
   {
+#ifndef _REENTRANT
     lpHostEnt=gethostbyname(host);
+#else
+    char buf[1024];
+    int h_err;
+    hostent he;
+    lpHostEnt=gethostbyname_r(host, &he, buf, sizeof(buf), &h_err);
+#endif
     if(lpHostEnt==NULL)
     {
       return -1;
