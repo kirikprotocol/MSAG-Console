@@ -80,6 +80,16 @@ struct TonNpiAddress {
         snprintf(buf, sizeof(buf), ".%d.%d.%s", typeOfNumber, numPlanInd, value);
         return buf;
     }
+
+    inline bool operator== (const TonNpiAddress &adr2) const
+    {
+        if ((typeOfNumber == adr2.typeOfNumber)
+            && (numPlanInd == adr2.numPlanInd)
+            && (length == adr2.length)) {
+            return !strcmp((char*)value, (char*)adr2.value) ? true : false;
+        }
+        return false;
+    }
 };
 
 
