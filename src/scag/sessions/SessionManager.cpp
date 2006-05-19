@@ -379,9 +379,12 @@ int SessionManagerImpl::processExpire()
 
             data->hasPending = session->hasPending();
             data->hasOperations = session->hasOperations();
-            data->nextWakeTime = session->getWakeUpTime();
 
-            //TODO: delete it and insert a new one, updated
+            time_t wakeTime = session->getWakeUpTime();
+
+            if (wakeTime == 0) data->nextWakeTime = now; 
+            else data->nextWakeTime = wakeTime;
+
             iPeriod = data->nextWakeTime - now;
         }
 
@@ -400,7 +403,7 @@ int SessionManagerImpl::processExpire()
         else
         {
             store.updateSession(sessionPtr);
-            if (iPeriod > 0) return iPeriod;
+            if (iPeriod >= 0) return iPeriod;
         }
 
     }
@@ -497,9 +500,12 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
     
     CSessionSetIterator * itPtr = SessionHash.GetPtr(sessionKey);
 
-    if (!itPtr) throw SCAGException("SessionManager: Fatal error 0");
+    if (!itPtr) throw SCAGException("SessionManager: Fatal error - cannot find session (USR = '%d',Abonent='%s') to release", sessionKey.USR, sessionKey.abonentAddr.toString().c_str());
     CSessionSetIterator it = (*itPtr);
+    CSessionAccessData * accessData = (*it);
 
+
+    bool changePendingFlag = false;
 
     std::list<PendingOperation>::iterator itPending;
 
@@ -509,15 +515,16 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
         {
             session->DoAddPendingOperation(*itPending);
         }
-        (*it)->nextWakeTime = session->getWakeUpTime();
+        accessData->nextWakeTime = session->getWakeUpTime();
 
         session->PrePendingOperationList.clear();
         session->bChanged = true;
+        changePendingFlag = true;
     }
 
-    (*it)->bOpened = false;
-    (*it)->hasPending = session->hasPending();
-    (*it)->hasOperations = session->hasOperations();
+    accessData->bOpened = false;
+    accessData->hasPending = session->hasPending();
+    accessData->hasOperations = session->hasOperations();
 
     if (!session->hasOperations()) 
     {
@@ -531,6 +538,18 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
         smsc_log_debug(logger,"SessionManager: session closed (%s USR=%d)",sessionKey.abonentAddr.toString().c_str(), sessionKey.USR);
         return;
     }
+
+    if (changePendingFlag) 
+    {
+        CSessionAccessData * accessData = (*it);
+
+        SessionHash.Delete(sessionKey);
+        SessionExpirePool.erase(it);
+
+        it = SessionExpirePool.insert(accessData);
+        SessionHash.Insert(sessionKey, it);
+    }
+
 
     //if (session->isChanged()) 
     store.updateSession(session);

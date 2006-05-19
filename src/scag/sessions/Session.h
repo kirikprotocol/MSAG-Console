@@ -186,7 +186,18 @@ namespace scag { namespace sessions
         void setStatus(ICCOperationStatus status) {m_Status = status;}
 
         ~Operation() {}
-        Operation() :logger(0), m_hasBill(false), m_receivedResp(false), m_receivedParts(0), m_receivedAllParts(false), m_receivedAllResp(false) {logger = Logger::getInstance("scag.re");};
+        Operation() : 
+            logger(0), 
+            m_hasBill(false), 
+            m_receivedResp(false), 
+            m_receivedParts(0), 
+            m_receivedAllParts(false), 
+            m_receivedAllResp(false),
+            m_Status(OPERATION_INITED)
+
+        {
+            logger = Logger::getInstance("scag.re");
+        };
     };
 
 

@@ -390,7 +390,28 @@ void Session::changed(AdapterProperty& property)
 
 Property* Session::getProperty(const std::string& name)
 {
-    AdapterProperty ** propertyPTR = PropertyHash.GetPtr(name.c_str());
+    AdapterProperty ** propertyPTR = 0;
+
+    if (name=="ICC_STATUS") 
+    {
+        if (!m_pCurrentOperation) return 0;
+
+        propertyPTR = PropertyHash.GetPtr(name.c_str());
+
+        if (!propertyPTR) 
+        {
+
+            AdapterProperty * property = new AdapterProperty(name,this, m_pCurrentOperation->getStatus());
+            PropertyHash.Insert(name.c_str(),property);
+            return property; 
+        }
+        (*propertyPTR)->setInt(m_pCurrentOperation->getStatus());
+
+        return (*propertyPTR);
+
+    }
+
+    propertyPTR = PropertyHash.GetPtr(name.c_str());
 
     if (!propertyPTR) 
     {
@@ -533,12 +554,13 @@ void Session::setOperationFromPending(SCAGCommand& cmd, int operationType)
         if (it->type == operationType) 
         {
             AddNewOperationToHash(cmd, operationType);
+
             PendingOperationList.erase(it);
             bChanged = true;
             return;
         }
     }
-    throw SCAGException("Session: Cannot find pending operation");
+    throw SCAGException("Session: Cannot find pending operation (type=%d)", operationType);
 }
 
 
@@ -590,11 +612,9 @@ Operation * Session::GetCurrentOperation() const
 
 time_t Session::getWakeUpTime()
 {
-    long now;
-    time(&now);
-    time_t time = now;
+    if (PendingOperationList.empty()) return 0;
 
-    if (!PendingOperationList.empty()) time = (PendingOperationList.begin())->validityTime;
+    time_t time = (PendingOperationList.begin())->validityTime;
     return time;
 }
 

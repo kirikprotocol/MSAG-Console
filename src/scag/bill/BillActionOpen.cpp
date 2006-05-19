@@ -165,6 +165,8 @@ bool BillActionOpen::run(ActionContext& context)
     {
         smsc_log_warn(logger,"BillAction 'bill:open' unable to process. Delails: %s", e.what());
         SetBillingStatus(context, e.what(), false);
+        context.makeBillEvent(TRANSACTION_REFUSED, *tariffRec, ev);
+        statistics.registerSaccEvent(ev);
         return true;
     }
 
@@ -189,8 +191,9 @@ bool BillActionOpen::run(ActionContext& context)
         } catch (SCAGException& e)
         {
             smsc_log_warn(logger,"BillAction 'bill:open' unable to process. Delails: %s", e.what());
+            context.makeBillEvent(TRANSACTION_REFUSED, *tariffRec, ev);
             SetBillingStatus(context, e.what(), false);
-            return true;
+            break;
         }
 
         bm.sendReject(BillId);

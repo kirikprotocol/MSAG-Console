@@ -104,7 +104,7 @@ public:
     virtual void setOperationId(int64_t op);   // initialy -1
 
     virtual bool isResponse() = 0;
-    virtual uint8_t getCommandId() { return command_id; };
+    virtual uint8_t getCommandId() const { return command_id; };
     virtual void setCommandId(uint8_t cmd) { command_id = cmd; };
 
     uint16_t getUSR() {

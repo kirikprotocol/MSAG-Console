@@ -1216,6 +1216,10 @@ public:
     cmd->set_operationId(op);
   }
 
+   uint8_t getCommandId() const 
+   {
+       return cmd->cmdid;
+   }
 
 };
 

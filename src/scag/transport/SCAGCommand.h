@@ -31,6 +31,7 @@ using smsc::core::buffers::Hash;
 
       virtual int64_t getOperationId() const = 0;
       virtual void setOperationId(int64_t op) = 0;
+      virtual uint8_t getCommandId() const = 0;
 
       virtual ~SCAGCommand() {};
     };
