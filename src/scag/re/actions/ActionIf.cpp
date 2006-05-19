@@ -104,13 +104,23 @@ IParserHandler * ActionIf::StartXMLSubSection(const std::string& name,const Sect
 
 bool ActionIf::FinishXMLSubSection(const std::string& name)
 {
-    if (name == "then") 
+
+    int thenPos = name.find("then", -1);
+    int endPos = name.find("else", -1);
+
+    //smsc_log_debug(logger, "Action <if>: --- section %s, %d, %d", name.c_str(), thenPos, endPos);
+
+    if (thenPos >= 0) 
     {
+        //smsc_log_debug(logger, "Action <if>: <then> closed");
+
         FillThenSection = false;
         return false;
     }
-    else if (name == "else") 
+    else if (endPos >= 0) 
     {
+        //smsc_log_debug(logger, "Action <if>: <else> closed");
+
         FillElseSection = false;
         return false;
     }
@@ -118,6 +128,7 @@ bool ActionIf::FinishXMLSubSection(const std::string& name)
     else if (name != "if") throw SCAGException("Action 'if': unrecognized final tag '%s'", name.c_str());
 #endif
   */
+    smsc_log_debug(logger, "Action <if>: action closed");
     return true;
 }
 
