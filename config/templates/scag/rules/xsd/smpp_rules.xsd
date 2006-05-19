@@ -27,6 +27,11 @@
 		<enumeration value="@MMS" />
 		<enumeration value="@WAP" />
 		<enumeration value="@HTTP" />
+		
+    		<enumeration value="@ICC_INITED"/>
+    		<enumeration value="@ICC_CONTINUED"/>
+    		<enumeration value="@ICC_COMPLETED"/>
+		
 	    </restriction>
 	</simpleType>
 	
