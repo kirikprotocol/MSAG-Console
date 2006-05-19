@@ -366,11 +366,18 @@ SSNSession* TCAPDispatcher::openSession(UCHAR_T ssn, const char* own_addr, /*UCH
                             const char* rmt_addr, ACOID::DefinedOIDidx dialog_ac_idx,
                             USHORT_T max_id)
 {
+    return openSession(ssn, own_addr, ssn, rmt_addr, dialog_ac_idx, max_id);
+}
+
+SSNSession* TCAPDispatcher::openSession(UCHAR_T ssn, const char* own_addr, UCHAR_T rmt_ssn,
+                            const char* rmt_addr, ACOID::DefinedOIDidx dialog_ac_idx,
+                            USHORT_T max_id)
+{
     SSNSession* pSession = findSession(ssn);
     if (!pSession) {
         smsc_log_error(logger, "TCAPDsp: invalid/inactive session, SSN: %u", ssn);
     } else
-        pSession->init(own_addr, rmt_addr, dialog_ac_idx, max_id);
+        pSession->init(own_addr, rmt_ssn, rmt_addr, dialog_ac_idx, max_id);
     return pSession;
 }
 

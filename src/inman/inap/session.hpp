@@ -25,6 +25,7 @@ public:
     typedef enum { ssnIdle = 0, ssnBound, ssnError } SSNState;
 
     SSNState getState(void) const { return state; }
+    const char* getOwnAdr(void) const { return ownAdr.c_str(); }
 
     /* TCAP Dialogs factory methods */
     Dialog* openDialog(void);
@@ -38,7 +39,7 @@ protected:
     ~SSNSession();
 
     void    setState(SSNState newState) { state = newState; }
-    void    init(const char* own_addr, /*UCHAR_T rmt_ssn,*/
+    void    init(const char* own_addr, UCHAR_T rmt_ssn,
                 const char* rmt_addr, ACOID::DefinedOIDidx dialog_ac_idx,
                 USHORT_T max_id = 2000, USHORT_T min_id = 1);
 
@@ -66,6 +67,7 @@ private:
     USHORT_T        userId;
     USHORT_T        maxId;
     USHORT_T        minId;
+    std::string     ownAdr;
     SCCP_ADDRESS_T  locAddr;
     SCCP_ADDRESS_T  rmtAddr;
     ACOID::DefinedOIDidx  ac_idx; //default APPLICATION-CONTEXT index for dialogs, see acdefs.hpp

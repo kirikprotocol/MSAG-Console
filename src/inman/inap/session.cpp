@@ -27,12 +27,13 @@ SSNSession::SSNSession(UCHAR_T ownssn, USHORT_T user_id, Logger * uselog/* = NUL
         logger = Logger::getInstance("smsc.inman.inap.Session");
 }
 
-void SSNSession::init(const char* own_addr, /*UCHAR_T rmt_ssn,*/
+void SSNSession::init(const char* own_addr, UCHAR_T rmt_ssn,
                     const char* rmt_addr, ACOID::DefinedOIDidx dialog_ac_idx,
                     USHORT_T max_id/* = 2000*/, USHORT_T min_id/* = 1*/)
 {
+    ownAdr += own_addr;
     packSCCPAddress(&locAddr, own_addr, SSN);
-    packSCCPAddress(&rmtAddr, rmt_addr, SSN /*rmt_ssn*/);
+    packSCCPAddress(&rmtAddr, rmt_addr, rmt_ssn);
     ac_idx = dialog_ac_idx;
     maxId = max_id;
     lastDlgId = minId = min_id;

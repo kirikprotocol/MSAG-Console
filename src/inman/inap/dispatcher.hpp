@@ -60,7 +60,9 @@ public:
     SS7State_T  getState(void) const { return state; }
 
     //Opens or reinitializes SSNSession (TCAP dialogs factory)
-    SSNSession*  openSession(UCHAR_T ssn, const char* own_addr, /*UCHAR_T rmt_ssn,*/
+    SSNSession*  openSession(UCHAR_T ssn, const char* own_addr,
+                     const char* rmt_addr, ACOID::DefinedOIDidx dialog_ac_idx, USHORT_T max_id);
+    SSNSession*  openSession(UCHAR_T ssn, const char* own_addr, UCHAR_T rmt_ssn,
                      const char* rmt_addr, ACOID::DefinedOIDidx dialog_ac_idx, USHORT_T max_id);
     SSNSession* findSession(UCHAR_T ssn);
 
