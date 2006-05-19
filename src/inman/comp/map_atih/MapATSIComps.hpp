@@ -2,7 +2,7 @@
 #ifndef __SMSC_INMAN_MAPATSI_COMPS_HPP__
 #define __SMSC_INMAN_MAPATSI_COMPS_HPP__
 
-#include <string>
+//#include <string>
 
 #include "inman/common/adrutil.hpp"
 #include "logger/Logger.h"
@@ -70,11 +70,11 @@ public:
     ~ATSIArg() { }
 
     //sets ISDN address of requesting point
-    void setSCFaddress(const std::string& addr) throw(CustomException);
+    void setSCFaddress(const char * addr) throw(CustomException);
     void setSCFaddress(const TonNpiAddress& addr) { scfAdr = addr; }
 
     //sets subscriber identity: IMSI or MSISDN addr
-    void setSubscriberId(const std::string &addr, bool imsi = true) throw(CustomException);
+    void setSubscriberId(const char * addr, bool imsi = true) throw(CustomException);
     //set subscriber identity as MSISDN addr
     void setSubscriberId(const TonNpiAddress& addr)
     { subscrAdr = addr; subscrImsi = false; }
@@ -100,7 +100,7 @@ public:
     bool isCSIpresent(enum RequestedCAMEL_SubscriptionInfo req_csi) const
     { return (mask & (1 << req_csi)) ? true : false; }
 
-    //O-SCI only for now
+    //O-CSI only for now
     bool getSCFinfo(enum RequestedCAMEL_SubscriptionInfo req_csi, MAPSCFinfo * scf_dat) const;
 
     void decode(const vector<unsigned char>& buf) throw(CustomException);

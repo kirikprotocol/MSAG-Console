@@ -30,17 +30,16 @@ namespace atih {
  * class ATSIArg implementation:
  * ************************************************************************** */
 //sets ISDN address of requesting point
-void ATSIArg::setSCFaddress(const std::string &addr) throw(CustomException)
+void ATSIArg::setSCFaddress(const char * addr) throw(CustomException)
 {
-    if (!scfAdr.fromText(addr.c_str()))
-        throw CustomException("inalid scfAdr", -1, addr.c_str());
+    if (!scfAdr.fromText(addr))
+        throw CustomException("inalid scfAdr", -1, addr);
 }
-
 //sets subscriber identity: IMSI or MSISDN addr
-void ATSIArg::setSubscriberId(const std::string &addr, bool imsi/* = true*/) throw(CustomException)
+void ATSIArg::setSubscriberId(const char *addr, bool imsi/* = true*/) throw(CustomException)
 {
-    if (!subscrAdr.fromText(addr.c_str()))
-        throw CustomException("inalid subscriberID", -1, addr.c_str());
+    if (!subscrAdr.fromText(addr))
+        throw CustomException("inalid subscriberID", -1, addr);
     if ((subscrImsi = imsi)) {
         if (((subscrAdr.length + 1)/2) > CAP_MAX_IMSILength)
             throw CustomException("IMSI length is too long", subscrAdr.length, NULL);
