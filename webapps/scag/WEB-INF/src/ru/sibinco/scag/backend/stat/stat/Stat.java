@@ -429,9 +429,9 @@ public class Stat {
 
             if (providerId != -1 || serviceId!=-1) {
                 isNeedToCount = false;
+            } else if(transport == Transport.SMPP_TRANSPORT_ID && !appContext.getSmppManager().getSvcs().containsKey(smeId)) {
+                isNeedToCount = false;
             }
-
-            if (transport == Transport.HTTP_TRANSPORT_ID) isNeedToCount = true;
 
             SmeIdCountersSet set = (SmeIdCountersSet) map.get(smeId);
             if (set == null) {
@@ -461,6 +461,8 @@ public class Stat {
             //int currentProviderId = (int) readUInt32(is);
             if (providerId != -1 || serviceId!=-1) {
                 isNeedToCount = false;
+            } else if(!appContext.getSmppManager().getCenters().containsKey(smscId)) {
+                isNeedToCount = false;
             }
 
             SmscIdCountersSet set = (SmscIdCountersSet) map.get(smscId);
@@ -486,13 +488,16 @@ public class Stat {
             int currentServiceId = -1;
 
             currentServiceId = appContext.getScagRoutingManager().getServiceIdByRouteId(routeId);
-            if (currentServiceId == 0) currentProviderId = 0;
-            else currentProviderId = appContext.getScagRoutingManager().getProviderIdByServiceId(new Long(currentServiceId));
-            /*int currentProviderId = (int) readUInt32(is);*/
-            if ((currentProviderId != providerId && providerId != -1) || currentProviderId == 0) {
-               isNeedToCount = false;
-            } else if ((currentServiceId != serviceId && serviceId != -1) || currentServiceId == 0) {
-               isNeedToCount = false;
+            if (currentServiceId == 0) isNeedToCount = false;
+            else {
+              if (serviceId != -1) {
+                //check route for service!
+                if (currentServiceId!=serviceId) isNeedToCount = false;
+              } else if (providerId!=-1) {
+                //check route for provider!
+                currentProviderId = appContext.getScagRoutingManager().getProviderIdByServiceId(new Long(currentServiceId));
+                if (currentProviderId!=providerId) isNeedToCount = false;
+              }
             }
 
             RouteIdCountersSet set = (RouteIdCountersSet) map.get(routeId);

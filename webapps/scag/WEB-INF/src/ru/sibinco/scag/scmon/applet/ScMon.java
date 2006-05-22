@@ -102,9 +102,9 @@ public class ScMon extends Applet implements Runnable, MouseListener, ActionList
     class HttpPanel extends JPanel {
         public HttpPanel() {
             setLayout(new BorderLayout());
-            add(httpTopGraph, BorderLayout.CENTER);
+            //add(httpTopGraph, BorderLayout.CENTER);
             setFont(new Font("Dialog", Font.BOLD, 12));
-            httpTopGraph.requestFocus();
+            //httpTopGraph.requestFocus();
         }
     }
 
