@@ -28,15 +28,13 @@
                 <sm-ep:calendar title="From date" name="fromDate"/>
             </sm-ep:properties>
         </td>
-        <td>
-           &nbsp;
+        <td valign="bottom">
            <sm-ep:properties title="" noEdit="true">
-                            <sm-pm:space/>
-                            <sm-pm:space/>
+                <sm-ep:property title="">&nbsp;</sm-ep:property>
                             <sm-ep:list title="Service(s)" name="serviceId"
                                   values="${fn:join(bean.serviceIds,',')}"
                                        valueTitles="${fn:join(bean.serviceNames,',')}" onChange="serviceChanged();"/>
-                    <sm-ep:calendar title="Till date" name="tillDate"/>
+                <sm-ep:calendar title="Till date" name="tillDate"/>
             </sm-ep:properties>
          </td>
        </tr>
@@ -135,25 +133,25 @@
             <div align="left" id="pgs_http" class="collapsing_list_closed"><div class="page_subtitle">General
                 statistics(for existent routes)</div>
             </div></td>
-            <tr id="cgs_http" style="display:block"><td colspan="8" width="100%">
+            <tr id="cgs_http" style="display:block"><td colspan="9" width="100%">
                 <table>
                     <tr>
                         <th width="20%" style="text-align:right">&nbsp;</th>
-                        <th width="7%" style="text-align:right">Requested</th>
-                        <th width="7%" style="text-align:right">Request Rejected</th>
-                        <th width="7%" style="text-align:right">Responsed</th>
-                        <th width="7%" style="text-align:right">Response Rejected</th>
-                        <th width="7%" style="text-align:right">Delivered</th>
+                        <th width="10%" style="text-align:right">Requested</th>
+                        <th width="13%" style="text-align:right">Request Rejected</th>
+                        <th width="10%" style="text-align:right">Responsed</th>
+                        <th width="13%" style="text-align:right">Response Rejected</th>
+                        <th width="10%" style="text-align:right">Delivered</th>
                         <th width="7%" style="text-align:right">Failed</th>
                         <th style="text-align:right">&nbsp;</th>
                     </tr>
                     <tr class=row0>
                         <th width="20%" style="text-align:right">Total HTTP processed:</th>
-                        <th width="7%" style="text-align:right">${total.request}</th>
-                        <th width="7%" style="text-align:right">${total.requestRejected}</th>
-                        <th width="7%" style="text-align:right">${total.response}</th>
-                        <th width="7%" style="text-align:right">${total.responseRejected}</th>
-                        <th width="7%" style="text-align:right">${total.delivered}</th>
+                        <th width="10%" style="text-align:right">${total.request}</th>
+                        <th width="13%" style="text-align:right">${total.requestRejected}</th>
+                        <th width="10%" style="text-align:right">${total.response}</th>
+                        <th width="13%" style="text-align:right">${total.responseRejected}</th>
+                        <th width="10%" style="text-align:right">${total.delivered}</th>
                         <th width="7%" style="text-align:right">${total.failed}</th>
                         <th style="text-align:right">&nbsp;</th>
                     </tr>
@@ -170,22 +168,22 @@
                             <td style="text-align:right">${dayStat.responseRejected}</td>
                             <td style="text-align:right">${dayStat.delivered}</td>
                             <td style="text-align:right">${dayStat.failed}</td>
-                            <th style="text-align:right">&nbsp;</th>
+                            <td style="text-align:right">&nbsp;</td>
                         </tr>
                         <tr id="c${disNo}" style="display:none">
-                            <td colspan="8" width="100%">
+                            <td colspan="9" width="100%">
                                 <table class=list cellspacing=0 cellpadding=0 border=0 width="100%">
                                     <c:forEach var="hourStat" items="${dayStat.hourStat}">
                                         <tr class=row1>
                                             <td width="20%" style="text-align:right"><fmt:formatNumber
                                                     value="${hourStat.hour}" minIntegerDigits="2"/></td>
-                                            <td width="7%" style="text-align:right">${hourStat.request}</td>
-                                            <td width="7%" style="text-align:right">${hourStat.requestRejected}</td>
-                                            <td width="7%" style="text-align:right">${hourStat.response}</td>
-                                            <td width="7%" style="text-align:right">${hourStat.responseRejected}</td>
-                                            <td width="7%" style="text-align:right">${hourStat.delivered}</td>
+                                            <td width="10%" style="text-align:right">${hourStat.request}</td>
+                                            <td width="13%" style="text-align:right">${hourStat.requestRejected}</td>
+                                            <td width="10%" style="text-align:right">${hourStat.response}</td>
+                                            <td width="13%" style="text-align:right">${hourStat.responseRejected}</td>
+                                            <td width="10%" style="text-align:right">${hourStat.delivered}</td>
                                             <td width="7%" style="text-align:right">${hourStat.failed}</td>
-                                            <th style="text-align:right">&nbsp;</th>
+                                            <td style="text-align:right">&nbsp;</td>
                                         </tr>
                                     </c:forEach>
                                 </table>
@@ -209,11 +207,11 @@
                 <table>
                     <tr>
                         <th width="20%" style="text-align:right">Route Id</th>
-                        <th width="7%" style="text-align:right">Requested</th>
-                        <th width="7%" style="text-align:right">Request Rejected</th>
-                        <th width="7%" style="text-align:right">Responsed</th>
-                        <th width="7%" style="text-align:right">Response Rejected</th>
-                        <th width="7%" style="text-align:right">Delivered</th>
+                        <th width="10%" style="text-align:right">Requested</th>
+                        <th width="13%" style="text-align:right">Request Rejected</th>
+                        <th width="10%" style="text-align:right">Responsed</th>
+                        <th width="13%" style="text-align:right">Response Rejected</th>
+                        <th width="10%" style="text-align:right">Delivered</th>
                         <th width="7%" style="text-align:right">Failed</th>
                         <th style="text-align:right">&nbsp;</th>
                     </tr>
@@ -269,15 +267,13 @@
             <table>
                 <tr>
                     <th width="20%" style="text-align:right">URL</th>
-                    <th width="7%" style="text-align:right">Requested</th>
-                    <th width="7%" style="text-align:right">Request Rejected</th>
-                    <th width="7%" style="text-align:right">Responsed</th>
-                    <th width="7%" style="text-align:right">Response Rejected</th>
-                    <th width="7%" style="text-align:right">Delivered</th>
+                    <th width="10%" style="text-align:right">Requested</th>
+                    <th width="13%" style="text-align:right">Request Rejected</th>
+                    <th width="10%" style="text-align:right">Responsed</th>
+                    <th width="13%" style="text-align:right">Response Rejected</th>
+                    <th width="10%" style="text-align:right">Delivered</th>
                     <th width="7%" style="text-align:right">Failed</th>
-                    <th width="15%" style="text-align:right">&nbsp;</th>
-                    <th width="15%" style="text-align:right">&nbsp;</th>
-                    <th width="15%" style="text-align:right">&nbsp;</th>
+                    <th style="text-align:right">&nbsp;</th>
                 </tr>
                 <c:forEach var="smeStat" items="${bySme}" varStatus="i">
                     <tr class=row0>
@@ -291,9 +287,6 @@
                         <td style="text-align:right">${smeStat.responseRejected}</td>
                         <td style="text-align:right">${smeStat.delivered}</td>
                         <td style="text-align:right">${smeStat.failed}</td>
-                        <td style="text-align:right">&nbsp;</td>
-                        <td style="text-align:right">&nbsp;</td>
-                        <td style="text-align:right">&nbsp;</td>
                         <td style="text-align:right">&nbsp;</td>
                     </tr>
                     <tr id="c${disNo}" style="display:none">
@@ -335,24 +328,24 @@
         <div align="left" id="pgs" class="collapsing_list_closed"><div class="page_subtitle">General statistics(for existent routes)</div>
         </div></td>
         <tr id="cgs" style="display:block"><td colspan="9" width="100%">
-            <table>
+            <table border=0>
                 <tr>
                     <th width="20%" style="text-align:right">&nbsp;</th>
-                    <th width="7%" style="text-align:right">Accepted</th>
-                    <th width="7%" style="text-align:right">Rejected</th>
-                    <th width="7%" style="text-align:right">Delivered</th>
-                    <th width="7%" style="text-align:right">GW Rejected</th>
-                    <th width="7%" style="text-align:right">Failed</th>
+                    <th width="8%" style="text-align:right">Accepted</th>
+                    <th width="8%" style="text-align:right">Rejected</th>
+                    <th width="8%" style="text-align:right">Delivered</th>
+                    <th width="10%" style="text-align:right">GW Rejected</th>
+                    <th width="8%" style="text-align:right">Failed</th>
                     <th width="7%" style="text-align:right">&nbsp;</th>
                     <th width="15%" style="text-align:right">Reciept OK/Failed</th>
                 </tr>
                 <tr class=row0>
                     <th width="20%" style="text-align:right">Total SMS processed:</th>
-                    <th width="7%" style="text-align:right">${total.accepted}</th>
-                    <th width="7%" style="text-align:right">${total.rejected}</th>
-                    <th width="7%" style="text-align:right">${total.delivered}</th>
-                    <th width="7%" style="text-align:right">${total.gw_rejected}</th>
-                    <th width="7%" style="text-align:right">${total.failed}</th>
+                    <th width="8%" style="text-align:right">${total.accepted}</th>
+                    <th width="8%" style="text-align:right">${total.rejected}</th>
+                    <th width="8%" style="text-align:right">${total.delivered}</th>
+                    <th width="10%" style="text-align:right">${total.gw_rejected}</th>
+                    <th width="8%" style="text-align:right">${total.failed}</th>
                     <th width="7%" style="text-align:right">&nbsp;</th>
                     <th width="15%" style="text-align:right">${total.recieptOk}/${total.recieptFailed}</th>
                     <th style="text-align:right">&nbsp;</th>
@@ -380,11 +373,11 @@
                                     <tr class=row1>
                                         <td width="20%" style="text-align:right"><fmt:formatNumber
                                                 value="${hourStat.hour}" minIntegerDigits="2"/></td>
-                                        <td width="7%" style="text-align:right">${hourStat.accepted}</td>
-                                        <td width="7%" style="text-align:right">${hourStat.rejected}</td>
-                                        <td width="7%" style="text-align:right">${hourStat.delivered}</td>
-                                        <td width="7%" style="text-align:right">${hourStat.gw_rejected}</td>
-                                        <td width="7%" style="text-align:right">${hourStat.failed}</td>
+                                        <td width="8%" style="text-align:right">${hourStat.accepted}</td>
+                                        <td width="8%" style="text-align:right">${hourStat.rejected}</td>
+                                        <td width="8%" style="text-align:right">${hourStat.delivered}</td>
+                                        <td width="10%" style="text-align:right">${hourStat.gw_rejected}</td>
+                                        <td width="8%" style="text-align:right">${hourStat.failed}</td>
                                         <th width="7%" style="text-align:right">&nbsp;</th>
                                         <th width="15%"  style="text-align:right">${hourStat.recieptOk}/${hourStat.recieptFailed}</th>
                                         <th style="text-align:right">&nbsp;</th>
@@ -411,11 +404,11 @@
             <table>
                 <tr>
                     <th width="20%" style="text-align:right">Route Id</th>
-                    <th width="7%" style="text-align:right">Accepted</th>
-                    <th width="7%" style="text-align:right">Rejected</th>
-                    <th width="7%" style="text-align:right">Delivered</th>
-                    <th width="7%" style="text-align:right">GW Rejected</th>
-                    <th width="7%" style="text-align:right">Failed</th>
+                    <th width="8%" style="text-align:right">Accepted</th>
+                    <th width="8%" style="text-align:right">Rejected</th>
+                    <th width="8%" style="text-align:right">Delivered</th>
+                    <th width="10%" style="text-align:right">GW Rejected</th>
+                    <th width="8%" style="text-align:right">Failed</th>
                     <th width="7%" style="text-align:right">&nbsp;</th>                    
                     <th width="15%" style="text-align:right">Reciept OK/Failed</th>
                 </tr>
@@ -472,14 +465,12 @@
             <table>
                 <tr>
                     <th width="20%" style="text-align:right">SME Id</th>
-                    <th width="7%" style="text-align:right">Accepted</th>
-                    <th width="7%" style="text-align:right">Rejected</th>
-                    <th width="7%" style="text-align:right">Delivered</th>
-                    <th width="7%" style="text-align:right">GW Rejected</th>
-                    <th width="7%" style="text-align:right">Failed</th>
-                    <th width="15%" style="text-align:right">&nbsp;</th>
-                    <th width="15%" style="text-align:right">&nbsp;</th>
-                    <th width="15%" style="text-align:right">&nbsp;</th>
+                    <th width="8%" style="text-align:right">Accepted</th>
+                    <th width="8%" style="text-align:right">Rejected</th>
+                    <th width="8%" style="text-align:right">Delivered</th>
+                    <th width="10%" style="text-align:right">GW Rejected</th>
+                    <th width="8%" style="text-align:right">Failed</th>
+                    <th style="text-align:right">&nbsp;</th>
                 </tr>
                 <c:forEach var="smeStat" items="${bySme}" varStatus="i">
                     <tr class=row0>
@@ -492,9 +483,6 @@
                         <td style="text-align:right">${smeStat.delivered}</td>
                         <td style="text-align:right">${smeStat.gw_rejected}</td>
                         <td style="text-align:right">${smeStat.failed}</td>
-                        <td style="text-align:right">&nbsp;</td>
-                        <td style="text-align:right">&nbsp;</td>
-                        <td style="text-align:right">&nbsp;</td>
                         <td style="text-align:right">&nbsp;</td>
                     </tr>
                     <tr id="c${disNo}" style="display:none">
@@ -535,14 +523,12 @@
             <table>
                 <tr>
                     <th width="20%" style="text-align:right">SMSC Id</th>
-                    <th width="7%" style="text-align:right">Accepted</th>
-                    <th width="7%" style="text-align:right">Rejected</th>
-                    <th width="7%" style="text-align:right">Delivered</th>
-                    <th width="7%" style="text-align:right">GW Rejected</th>
-                    <th width="7%" style="text-align:right">Failed</th>
-                    <th width="15%" style="text-align:right">&nbsp;</th>
-                    <th width="15%" style="text-align:right">&nbsp;</th>
-                    <th width="15%" style="text-align:right">&nbsp;</th>
+                    <th width="8%" style="text-align:right">Accepted</th>
+                    <th width="8%" style="text-align:right">Rejected</th>
+                    <th width="8%" style="text-align:right">Delivered</th>
+                    <th width="10%" style="text-align:right">GW Rejected</th>
+                    <th width="8%" style="text-align:right">Failed</th>
+                    <th style="text-align:right">&nbsp;</th>
                 </tr>
                 <c:forEach var="smscStat" items="${bySmsc}" varStatus="i">
                     <tr class=row0>
@@ -556,9 +542,6 @@
                         <td style="text-align:right">${smscStat.gw_rejected}</td>
                         <td style="text-align:right">${smscStat.failed}</td>
                         <td style="text-align:right">&nbsp;</td>
-                        <th style="text-align:right">&nbsp;</th>
-                        <th style="text-align:right">&nbsp;</th>
-                        <th style="text-align:right">&nbsp;</th>
                     </tr>
                     <tr id="c${disNo}" style="display:none">
                         <td colspan="9" width="100%">
