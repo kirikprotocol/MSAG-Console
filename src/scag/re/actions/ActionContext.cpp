@@ -89,7 +89,7 @@ void ActionContext::abortSession()
 }
 
 
-void ActionContext::makeBillEvent(int billCommand, TariffRec& tariffRec, SACC_BILLING_INFO_EVENT_t& ev)
+void ActionContext::makeBillEvent(int billCommand, int commandStatus, TariffRec& tariffRec, SACC_BILLING_INFO_EVENT_t& ev)
 {
     ev.Header.cCommandId = billCommand;
 
@@ -112,7 +112,7 @@ void ActionContext::makeBillEvent(int billCommand, TariffRec& tariffRec, SACC_BI
     else
         sprintf((char *)ev.Header.pAbonentNumber,"%s",temp.c_str());
     */
-    ev.Header.sCommandStatus = commandProperty.status;
+    ev.Header.sCommandStatus = commandStatus;
     
     ev.iOperatorId = commandProperty.operatorId;
     ev.iPriceCatId = tariffRec.CategoryId;

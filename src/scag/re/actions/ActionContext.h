@@ -104,7 +104,7 @@ namespace scag { namespace re { namespace actions
         void AddPendingOperation(uint8_t type, time_t pendingTime);
         Operation * GetCurrentOperation() {return session.GetCurrentOperation();}
 
-        void makeBillEvent(int billCommand, TariffRec& tariffRec, SACC_BILLING_INFO_EVENT_t& ev);
+        void makeBillEvent(int billCommand, int commandStatus, TariffRec& tariffRec, SACC_BILLING_INFO_EVENT_t& ev);
         CommandProperty& getCommandProperty() {return commandProperty;}
         void fillChargeOperation(smsc::inman::interaction::ChargeSms& op, TariffRec& tariffRec);
         void fillRespOperation(smsc::inman::interaction::DeliverySmsResult& op, TariffRec& tariffRec);

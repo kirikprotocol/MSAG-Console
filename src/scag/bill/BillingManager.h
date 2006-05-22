@@ -37,8 +37,17 @@ enum BillingTransactionEvent
     TRANSACTION_OPEN            = 1,
     TRANSACTION_COMMITED        = 2,
     TRANSACTION_CALL_ROLLBACK   = 3,
-    TRANSACTION_TIME_OUT        = 4,
-    TRANSACTION_REFUSED         = 5
+    TRANSACTION_TIME_OUT        = 4
+    //TRANSACTION_REFUSED         = 5
+};
+
+enum BillingCommandStatus
+{
+    COMMAND_SUCCESSFULL         =0,
+    SERVER_NOT_RESPONSE         =1,
+    REJECTED_BY_SERVER          =2,
+    EXTERNAL_ERROR              =3,
+    INVALID_TRANSACTION         =4
 };
 /*
 1-open

@@ -398,7 +398,7 @@ void BillingManagerImpl::onChargeSmsResult(ChargeSmsResult* result)
         //TODO: do what we must to do
         return;
     }
-
+    
     if( result->GetValue() == smsc::inman::interaction::CHARGING_POSSIBLE ) 
         pBillTransaction->status = TRANSACTION_VALID;
     else 

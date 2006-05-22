@@ -165,7 +165,7 @@ bool BillActionOpen::run(ActionContext& context)
     {
         smsc_log_warn(logger,"BillAction 'bill:open' unable to process. Delails: %s", e.what());
         SetBillingStatus(context, e.what(), false);
-        context.makeBillEvent(TRANSACTION_REFUSED, *tariffRec, ev);
+        context.makeBillEvent(TRANSACTION_OPEN, EXTERNAL_ERROR, *tariffRec, ev);
         statistics.registerSaccEvent(ev);
         return true;
     }
@@ -173,15 +173,19 @@ bool BillActionOpen::run(ActionContext& context)
     switch (transactionStatus) 
     {
     case TRANSACTION_INVALID:
+        smsc_log_error(logger,"BillAction 'bill:open': billing transaction invalid");
+        SetBillingStatus(context, "billing transaction invalid", false);
+        context.makeBillEvent(TRANSACTION_OPEN, INVALID_TRANSACTION, *tariffRec, ev);
+        break;
     case TRANSACTION_NOT_STARTED:
         smsc_log_error(logger,"BillAction 'bill:open': billing transaction deny");
         SetBillingStatus(context, "billing transaction deny", false);
-        context.makeBillEvent(TRANSACTION_REFUSED, *tariffRec, ev);
+        context.makeBillEvent(TRANSACTION_OPEN, REJECTED_BY_SERVER, *tariffRec, ev);
         break;
     case TRANSACTION_WAIT_ANSWER:
         smsc_log_error(logger,"BillAction 'bill:open': billing transaction time out");
         SetBillingStatus(context, "billing transaction time out", false);
-        context.makeBillEvent(TRANSACTION_TIME_OUT, *tariffRec, ev);
+        context.makeBillEvent(TRANSACTION_OPEN, SERVER_NOT_RESPONSE, *tariffRec, ev);
         break;
     default:
         //TRANSACTION_VALID
@@ -191,7 +195,7 @@ bool BillActionOpen::run(ActionContext& context)
         } catch (SCAGException& e)
         {
             smsc_log_warn(logger,"BillAction 'bill:open' unable to process. Delails: %s", e.what());
-            context.makeBillEvent(TRANSACTION_REFUSED, *tariffRec, ev);
+            context.makeBillEvent(TRANSACTION_OPEN, EXTERNAL_ERROR, *tariffRec, ev);
             SetBillingStatus(context, e.what(), false);
             break;
         }
@@ -199,7 +203,7 @@ bool BillActionOpen::run(ActionContext& context)
         bm.sendReject(BillId);
 
         SetBillingStatus(context, "", true);
-        context.makeBillEvent(TRANSACTION_OPEN, *tariffRec, ev);
+        context.makeBillEvent(TRANSACTION_OPEN, COMMAND_SUCCESSFULL, *tariffRec, ev);
         smsc_log_warn(logger,"BillAction 'bill:open' transaction successfully opened");
         break;
     }
