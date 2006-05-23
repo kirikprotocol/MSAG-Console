@@ -17,8 +17,11 @@
 
 using namespace scag::transport::http;
 using namespace smsc::logger;
+using namespace smsc::core::synchronization;
 
 smsc::logger::Logger *logger;
+Mutex mtx;
+uint32_t req_cnt = 0, resp_cnt = 0, st_resp_cnt = 0;
 
 namespace scag { namespace transport { namespace http 
 {
@@ -47,6 +50,11 @@ namespace scag { namespace transport { namespace http
 #ifdef LOG_TEXT
             dumpText( request );
 #endif                              
+            {
+                MutexGuard mt(mtx);
+                req_cnt++;
+            }
+
             return true;
         }
         virtual bool processResponse(HttpResponse& response) {
@@ -67,6 +75,10 @@ namespace scag { namespace transport { namespace http
                 printHex(data, length > 50 ? 50 : length);
             }
 #endif
+            {
+                MutexGuard mt(mtx);
+                resp_cnt++;
+            }
 
             return true;
         }
@@ -77,6 +89,11 @@ namespace scag { namespace transport { namespace http
             smsc_log_debug( logger,  "Response %s", delivered ? 
                 "delivered" : "not delivered" );
 #endif          
+            {
+                MutexGuard mt(mtx);
+                st_resp_cnt++;
+            }
+
         }
     virtual void ReloadRoutes()
     {
@@ -186,6 +203,8 @@ int main() {
     int k;
     sigset_t oset;
     sigset_t set;
+    uint32_t last_req_cnt = 0, last_resp_cnt = 0, last_st_resp_cnt = 0;
+    time_t t;
         
     sigemptyset(&set);
     sigaddset(&set, SIGPIPE);
@@ -211,9 +230,21 @@ int main() {
 
     k = 0;
 #if 1
-    do
+    printf("\n");
+    t = time(NULL);
+    do{
          //k = getchar();
-         sleep(10);
+         sleep(1);
+         {
+            MutexGuard mt(mtx);
+            int d = time(NULL) - t;
+            printf("\rTime: %d. Total: %d, %d, %d. Average: %d, %d, %d. Last second: %d, %d, %d\t", d, req_cnt, resp_cnt, st_resp_cnt, req_cnt/d, resp_cnt/d, st_resp_cnt/d, req_cnt - last_req_cnt, resp_cnt - last_resp_cnt, st_resp_cnt - last_st_resp_cnt);
+            last_req_cnt = req_cnt;
+            last_resp_cnt = resp_cnt;
+            last_st_resp_cnt = st_resp_cnt;
+         }
+         fflush(stdout);
+   }
     while (!(k == 'q' || k == 'Q'));
 #else    
     sleep(60);
