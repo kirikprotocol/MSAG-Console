@@ -25,8 +25,11 @@ public:
     typedef enum { ssnIdle = 0, ssnBound, ssnError } SSNState;
     typedef enum { ssnSingleRoute = 0, ssnMultiAddress, ssnMultiRoute } SSNType;
 
-    SSNState getState(void) const { return state; }
+    SSNState    getState(void) const { return state; }
     const char* getOwnAdr(void) const { return ownAdr.c_str(); }
+    UCHAR_T     getRmtSSN(void) const { return !rmtAddr.addrLen ? 0 :
+                                        rmtAddr.addr[(rmtAddr.addrLen > 1) ? 1 : 0];
+                                      }
 
     /* -- TCAP Dialogs factory methods -- */
     //only for singleRoute session (opened with remote ssn & addr specified)
