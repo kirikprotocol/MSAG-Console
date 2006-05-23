@@ -1,3 +1,7 @@
+#include <xercesc/dom/DOM.hpp>
+#include "scag/config/ConfigView.h"
+#include <scag/config/Config.h>
+
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
@@ -5,6 +9,13 @@
 #include "Managers.h"
 #include "HttpCommand.h"
 #include "HttpProcessor.h"
+
+#include "util/xml/init.h"
+#include "util/xml/utilFunctions.h"
+#include "util/debug.h"
+#include "util/xml/DOMTreeReader.h"
+
+#include <util/findConfigFile.h>
 
 #define ICONV_BLOCK_SIZE 32
 
@@ -18,6 +29,10 @@
 using namespace scag::transport::http;
 using namespace smsc::logger;
 using namespace smsc::core::synchronization;
+using namespace scag::config;
+using namespace xercesc;
+using namespace smsc::util::xml;
+using namespace smsc::util;
 
 smsc::logger::Logger *logger;
 Mutex mtx;
@@ -169,8 +184,9 @@ void http_mut_log(char *s, unsigned t, void *p) {
     smsc_log_debug( logger, s, t, p);
 }
 
-#if 1
-HttpManagerConfig cfg(
+
+
+HttpManagerConfig HttpManCfg(
     10,  //int readerSockets;
     10,  //int writerSockets;
     2,  //int readerPoolSize;
@@ -182,22 +198,101 @@ HttpManagerConfig cfg(
     "0.0.0.0",  //const char *host;
     5001       //int port;
 );
-#else
-HttpManagerConfig cfg(
-    1000,  //int readerSockets;
-    1000,  //int writerSockets;
-    5,  //int readerPoolSize;
-    5,  //int writerPoolSize;
-    5,  //int scagPoolSize;    
-    10000,  //int scagQueueLimit;
-    20, //int connectionTimeout;
-    //unsigned int maxHeaderLength;
-    "0.0.0.0",  //const char *host;
-    5000       //int port;
-);
-#endif
 
-int main() {
+void load_config(ConfigView & cv)
+{
+ 
+	    try {
+
+        std::auto_ptr<char> host_( cv.getString("host") );
+        HttpManCfg.readerSockets =cv.getInt("readerSockets");;
+		HttpManCfg.writerSockets =cv.getInt("writerSockets");;
+		HttpManCfg.readerPoolSize=cv.getInt("readerPoolSize");;
+		HttpManCfg.writerPoolSize=cv.getInt("writerPoolSize");;
+		HttpManCfg.scagPoolSize  =cv.getInt("scagPoolSize");;
+		HttpManCfg.scagQueueLimit=cv.getInt("scagQueueLimit");;
+		HttpManCfg.connectionTimeout=cv.getInt("connectionTimeout");;
+		HttpManCfg.host = host_.get();
+        HttpManCfg.port = cv.getInt("port");
+   
+
+		printf("%s:%d\n",HttpManCfg.host.c_str(),HttpManCfg.port);
+		printf("readerSockets %d\n",HttpManCfg.readerSockets);
+		printf("writerSockets %d\n",HttpManCfg.writerSockets);
+		printf("readerPoolSize %d\n",HttpManCfg.readerPoolSize);
+		printf("writerPoolSize %d\n",HttpManCfg.writerPoolSize);
+		printf("scagPoolSize %d\n",HttpManCfg.scagPoolSize);
+		printf("scagQueueLimit %d\n",HttpManCfg.scagQueueLimit);
+		printf("connectionTimeout %d\n",HttpManCfg.connectionTimeout);
+
+
+		fflush(stdout);
+    }
+	catch(ConfigException& e)
+	{
+        smsc_log_error(logger,"%s",e.what());
+    }
+	catch(...)
+	{
+        smsc_log_debug(logger," Unknown exception.");
+    }
+	
+}
+
+int configure() 
+{
+  initXerces();
+  
+  try
+  {
+	Config config;
+    __trace__("reading config...");
+    DOMTreeReader reader;
+
+    const char* cfgFile=smsc::util::findConfigFile("config.xml");
+    char * filename = new char[strlen(cfgFile) + 1];
+    std::strcpy(filename, cfgFile);
+	std::auto_ptr<char>config_filename(filename);
+
+    DOMDocument *document = reader.read(config_filename.get());
+    if (document && document->getDocumentElement())
+    {
+      DOMElement *elem = document->getDocumentElement();
+      __trace__("config readed");
+      config.parse(*elem);
+      __trace2__("parsed %u ints, %u booleans, %u strings\n",
+                 config.intParams.GetCount(),
+                 config.boolParams.GetCount(),
+                 config.strParams.GetCount());
+    } else {
+      smsc_log_debug(logger,"Parse result is null");
+	  return 0;
+    }
+
+     load_config(ConfigView(config, "HttpTransport"));
+
+  } catch (ParseException &e) {
+      smsc_log_debug(logger,"%s",e.what());
+	  return 0;
+  }catch(ConfigException& e){
+      smsc_log_debug(logger,"%s",e.what());
+	  return 0;
+  }catch(Exception &e) {
+      smsc_log_debug(logger,"%s",e.what());
+	  return 0;
+  }catch(...) {
+      smsc_log_debug(logger,"exception, unknown exception");
+	  return 0;
+  }
+  return 1;
+}
+
+
+
+
+int main() 
+{
+
     HttpManager mg;
     MyHttpProcessor p;
     int k;
@@ -212,6 +307,11 @@ int main() {
 
     Logger::Init();
     logger = Logger::getInstance("scag.http");
+	if(!configure())
+	{
+		printf("error in config file!");
+		return 0;
+	}
 
 //#if 1
 //    {
@@ -222,7 +322,7 @@ int main() {
 //#endif    
 
     try {
-    mg.init( p, cfg );
+    mg.init( p, HttpManCfg );
     }
     catch(Exception x) {
     smsc_log_error( logger,  "Cannot init the HTTP transport: %s", x.what());    
