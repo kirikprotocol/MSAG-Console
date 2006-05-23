@@ -85,6 +85,8 @@ int Registrator::Execute()
 Sender::Sender()
     : perfListener(0), isStopping(false)/*, logger(Logger::getInstance("Sender"))*/
 {
+    start.tv_sec=0;
+    start.tv_nsec=0;
 }
 
 Sender::~Sender()
@@ -145,6 +147,7 @@ int Sender::Execute()
          (start.tv_sec*1000.0+start.tv_nsec/1000000.0))/1000.0;
       tm=((now.tv_sec*1000.0+now.tv_nsec/1000000.0)-
          (lasttime.tv_sec*1000.0+lasttime.tv_nsec/1000000.0))/1000;
+//      smsc_log_debug(logger, "now.tv_sec=%d, now.tv_nsec=%d, start.tv_sec=%d, start.tv_nsec=%d", now.tv_sec, now.tv_nsec, start.tv_sec, start.tv_nsec);
       //rate=(cnt-last)/tm;
       //avg=cnt/ut;
 //      printf("UT:%.3lf         \r",ut);
