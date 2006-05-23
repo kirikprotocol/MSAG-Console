@@ -148,6 +148,9 @@ bool BillActionOpen::run(ActionContext& context)
         return true;
     }
 
+    if(tariffRec->Price == 0)
+        smsc_log_warn(logger, "Zero price in tariff matrix. ServiceNumber=%d, CategoryId=%d, MediaTypeId=%d", tariffRec->ServiceNumber, tariffRec->CategoryId, tariffRec->MediaTypeId);
+
     smsc::inman::interaction::ChargeSms op;
     EventMonitor monitor;
     TransactionStatus transactionStatus;

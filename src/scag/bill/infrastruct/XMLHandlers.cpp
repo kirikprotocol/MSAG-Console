@@ -310,6 +310,9 @@ void XMLTariffMatrixHandler::endElement(const XMLCh* const nm)
                     !bill_service_number || bill_currency.length() == 0 || !bill_operator_id)
                     throw Exception("Invalid XML 'billing' record");
 
+                if(bill_price == 0)
+                    smsc_log_warn(logger, "Zero price in tariff matrix. ServiceNumber=%d, CategoryId=%d, MediaTypeId=%d", bill_service_number, bill_category_id, bill_media_type_id);
+
                 TariffRec tr(bill_service_number, bill_price, bill_currency, bill_category_id, bill_media_type_id);
 
                 if(!media_type_hash->Get(bill_media_type_id, mt))

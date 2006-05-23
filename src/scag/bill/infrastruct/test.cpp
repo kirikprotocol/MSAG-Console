@@ -84,8 +84,8 @@ int main(int argc, char* argv[])
             smsc_log_info(logger, "operator_id = 1, category_id=1, media_type=2. sn:%d, price:%lf, curr:%s", tr->ServiceNumber, tr->Price, tr->Currency.c_str());
         }
 
-//        int c;
-  //      scanf("%d", &c);
+        int o, m, c;
+        scanf("%d %d %d", &o, &m, &c);
 
         sm.ReloadProviderMap();
         sm.ReloadOperatorMap();
@@ -115,6 +115,15 @@ int main(int argc, char* argv[])
             auto_ptr<TariffRec> pp(tr);
             smsc_log_info(logger, "operator_id = 1, category_id=1, media_type=2. sn:%d, price:%lf, curr:%s", tr->ServiceNumber, tr->Price, tr->Currency.c_str());
         }
+        tr = sm.GetTariff(o, m, c);
+        if(tr != NULL)
+        {
+            auto_ptr<TariffRec> pp(tr);
+            smsc_log_info(logger, "operator_id = %d, category_id=%d, media_type=%d. sn:%d, price:%lf, curr:%s", o, c, m, tr->ServiceNumber, tr->Price, tr->Currency.c_str());
+            printf("operator_id = %d, category_id=%d, media_type=%d. sn:%d, price:%lf, curr:%s", o, c, m, tr->ServiceNumber, tr->Price, tr->Currency.c_str());
+        }
+        else
+            printf("No such record. operator_id = %d, category_id=%d, media_type=%d", o, c, m);
         }
 
     }
