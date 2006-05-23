@@ -4,7 +4,9 @@
 #inman/cvtest cvtest -zrescan -lrt -L$(SMSC_BUILDDIR)/bin -linman-common 
 inman/inman_test inman_test $(SOCKETLIB) $(__OCI_LIB_SO__) -lrt -L$(SMSC_BUILDDIR)/bin -linman  -lcore-threads -lthread -llogger -lcore-network -lnsl -linman-interaction -linman-common
 inman/inman inman $(SOCKETLIB) -linman -ldb -linman-cachedb -linman-storage -linman-inap  -linman-inap-cap_sms -linman-comp -linman-comp-cap_sms  -linman-codec_inc-cap -linman-codec_inc-map -linman-codec_inc-in_cs -linman-codec_inc-ros   -linman-asn1rt -linman-interaction -linman-common -lutil -lutil-config -lutil-xml $(XERCES_LIB) -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) -linman-inap $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -lcore-threads -lthread -llogger -lcore-network -lnsl -ldl -lutil-mirrorfile
--inman/ussman ussman $(SOCKETLIB) -linman -linman-inap -linman-uss -linman-codec _inc-map -linman-codec_inc-ros -linman-asn1rt -linman-common -linman-interaction -linman-comp -linman-comp-map_uss -lutil-config -lutil-xml $(XERCES_LIB) -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) -linman-inap $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -lcore-threads -lthread -llogger -lcore-network -lnsl -ldl
+-inman/ussman ussman $(SOCKETLIB) -linman -linman-inap -linman-uss -linman-codec_inc-map -linman-codec_inc-ros -linman-asn1rt -linman-common -linman-interaction -linman-comp -linman-comp-map_uss -lutil-config -lutil-xml $(XERCES_LIB) -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) -linman-inap $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -lcore-threads -lthread -llogger -lcore-network -lnsl -ldl
 -inman/ussman_test ussman_test $(SOCKETLIB) -lrt -L$(SMSC_BUILDDIR)/bin -lcore-threads -lthread -llogger -lcore-network -lnsl -linman-uss -linman-interaction -linman-common
+inman/atih_test atih_test $(SOCKETLIB) -linman -linman-inap -linman-inap-map_atih -linman-comp -linman-comp-map_atih -linman-codecs-map_atih -linman-codec_inc-map -linman-codec_inc-ros -linman-asn1rt -linman-common -lutil-config -lutil-xml $(XERCES_LIB) -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) -linman-inap $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -lcore-threads -lthread -llogger -lcore-network -lnsl -ldl
+
 
 
