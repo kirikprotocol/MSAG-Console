@@ -28,8 +28,8 @@ Service::Service(const InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
     else {
         smsc_log_debug(logger, "InmanSrv: TCAP dispatcher has connected to SS7 stack");
         session = disp->openSession(_cfg.bill.ssn, _cfg.bill.ssf_addr,
-                                    _cfg.bill.scf_addr, ACOID::id_ac_cap3_sms_AC,
-                                    _cfg.bill.maxDlgId);
+                                    ACOID::id_ac_cap3_sms_AC, _cfg.bill.maxDlgId,
+                                    _cfg.bill.ssn, _cfg.bill.scf_addr);
         if (session)
             smsc_log_debug(logger, "InmanSrv: SSN[%u] session inited", _cfg.bill.ssn);
     }

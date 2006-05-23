@@ -63,7 +63,7 @@ void Dialog::releaseAllInvokes(void)
     terminating.clear();
 }
 
-void Dialog::reset(USHORT_T new_id)
+void Dialog::reset(USHORT_T new_id, const SCCP_ADDRESS_T * rmt_addr/* = NULL*/)
 {
     MutexGuard dtmp(dlgGrd);
     releaseAllInvokes();
@@ -71,6 +71,8 @@ void Dialog::reset(USHORT_T new_id)
     _dId = new_id;
     _state.value = 0;
     listeners.clear();
+    if (rmt_addr)
+        rmtAddr = *rmt_addr;
 }
 
 

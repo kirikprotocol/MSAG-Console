@@ -23,12 +23,18 @@ class Dialog;
 class SSNSession {
 public:
     typedef enum { ssnIdle = 0, ssnBound, ssnError } SSNState;
+    typedef enum { ssnSingleRoute = 0, ssnMultiAddress, ssnMultiRoute } SSNType;
 
     SSNState getState(void) const { return state; }
     const char* getOwnAdr(void) const { return ownAdr.c_str(); }
 
-    /* TCAP Dialogs factory methods */
-    Dialog* openDialog(void);
+    /* -- TCAP Dialogs factory methods -- */
+    //only for singleRoute session (opened with remote ssn & addr specified)
+    Dialog* openDialog(void);   
+    //only for multiAddress session (opened with remote ssn specified)
+    Dialog* openDialog(const char* rmt_addr);
+    //only for multiRoute session
+    Dialog* openDialog(UCHAR_T rmt_ssn, const char* rmt_addr);
     Dialog* findDialog(USHORT_T did);
     void    releaseDialog(Dialog* pDlg);
     void    releaseDialogs(void);
@@ -39,8 +45,8 @@ protected:
     ~SSNSession();
 
     void    setState(SSNState newState) { state = newState; }
-    void    init(const char* own_addr, UCHAR_T rmt_ssn,
-                const char* rmt_addr, ACOID::DefinedOIDidx dialog_ac_idx,
+    void    init(const char* own_addr, ACOID::DefinedOIDidx dialog_ac_idx, 
+                const char* rmt_addr = NULL, UCHAR_T rmt_ssn = 0,
                 USHORT_T max_id = 2000, USHORT_T min_id = 1);
 
 private:
@@ -53,6 +59,7 @@ private:
     typedef std::map<USHORT_T, Dialog*> DialogsMap_T;
     typedef std::list<Dialog*> DialogsLIST;
 
+    Dialog* initDialog(const SCCP_ADDRESS_T & rmt_addr);
     bool    nextDialogId(USHORT_T & dId);
     void    cleanUpDialogs(void);
     Dialog* locateDialog(USHORT_T dId);
@@ -63,6 +70,7 @@ private:
     DialogsLIST     pool;
     DlgTimesMap_T   pending; //released but not terminated Dialogs with timestamp
 
+    SSNType         iType;
     UCHAR_T         SSN;
     USHORT_T        userId;
     USHORT_T        maxId;

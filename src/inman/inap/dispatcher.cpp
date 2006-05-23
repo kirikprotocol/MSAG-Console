@@ -361,32 +361,26 @@ bool TCAPDispatcher::confirmSSN(UCHAR_T ssn, UCHAR_T bindResult)
     return false;
 }
 
-//Opens or reinitializes SSNSession
-SSNSession* TCAPDispatcher::openSession(UCHAR_T ssn, const char* own_addr, /*UCHAR_T rmt_ssn, */
-                            const char* rmt_addr, ACOID::DefinedOIDidx dialog_ac_idx,
-                            USHORT_T max_id)
+//Opens or reinitializes SSNSession (multiRoute/multiAddress/singleRoute)
+SSNSession* TCAPDispatcher::openSession(UCHAR_T ssn, const char* own_addr,
+                            ACOID::DefinedOIDidx dialog_ac_idx, USHORT_T max_id,
+                            UCHAR_T rmt_ssn/* = 0*/, const char* rmt_addr/* = NULL*/)
 {
-    return openSession(ssn, own_addr, ssn, rmt_addr, dialog_ac_idx, max_id);
-}
-
-SSNSession* TCAPDispatcher::openSession(UCHAR_T ssn, const char* own_addr, UCHAR_T rmt_ssn,
-                            const char* rmt_addr, ACOID::DefinedOIDidx dialog_ac_idx,
-                            USHORT_T max_id)
-{
-    SSNSession* pSession = findSession(ssn);
+    MutexGuard tmp(_mutex);
+    SSNSession* pSession = lookUpSSN(ssn);
     if (!pSession) {
         smsc_log_error(logger, "TCAPDsp: invalid/inactive session, SSN: %u", ssn);
     } else
-        pSession->init(own_addr, rmt_ssn, rmt_addr, dialog_ac_idx, max_id);
+        pSession->init(own_addr, dialog_ac_idx, rmt_addr, rmt_ssn, max_id);
     return pSession;
 }
 
 SSNSession* TCAPDispatcher::findSession(UCHAR_T ssn)
 {
     MutexGuard tmp(_mutex);
-    SSNmap_T::const_iterator it = sessions.find(ssn);
-    return (it == sessions.end()) ? NULL : (*it).second;
+    return lookUpSSN(ssn);
 }
+
 
 } // namespace inap
 } // namespace inmgr

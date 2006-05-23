@@ -67,8 +67,8 @@ public:
     Dialog(USHORT_T dlgId, ACOID::DefinedOIDidx dialog_ac_idx, USHORT_T msg_user_id,
            const SCCP_ADDRESS_T & loc_addr, const SCCP_ADDRESS_T & rmt_addr,
            Logger * uselog = NULL);
-    //reinitializes Dialog to be reused with other id
-    void reset(USHORT_T new_id);
+    //reinitializes Dialog to be reused with other id and remote address
+    void reset(USHORT_T new_id, const SCCP_ADDRESS_T * rmt_addr = NULL);
 
     enum {
         tcUserGeneralError = 0

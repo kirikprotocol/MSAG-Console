@@ -1,6 +1,6 @@
 static char const ident[] = "$Id$";
 
-//#include <assert.h>
+#include <assert.h>
 #include "inman/common/util.hpp"
 #include "inman/common/adrutil.hpp"
 #include "inman/inap/session.hpp"
@@ -19,7 +19,7 @@ namespace inap  {
 /////////////////////////////////////////////////////////////////////////////////////
 SSNSession::SSNSession(UCHAR_T ownssn, USHORT_T user_id, Logger * uselog/* = NULL*/)
     : logger(uselog), SSN(ownssn), userId(user_id), state(ssnIdle)
-    , lastDlgId(0), ac_idx(ACOID::id_ac_NOT_AN_OID)
+    , lastDlgId(0), ac_idx(ACOID::id_ac_NOT_AN_OID), iType(ssnMultiRoute)
     , maxId(0), minId(0)
 {
     locAddr.addrLen = rmtAddr.addrLen = 0;
@@ -27,13 +27,20 @@ SSNSession::SSNSession(UCHAR_T ownssn, USHORT_T user_id, Logger * uselog/* = NUL
         logger = Logger::getInstance("smsc.inman.inap.Session");
 }
 
-void SSNSession::init(const char* own_addr, UCHAR_T rmt_ssn,
-                    const char* rmt_addr, ACOID::DefinedOIDidx dialog_ac_idx,
+void SSNSession::init(const char* own_addr, ACOID::DefinedOIDidx dialog_ac_idx,
+                    const char* rmt_addr/* = NULL*/, UCHAR_T rmt_ssn/* = 0*/,
                     USHORT_T max_id/* = 2000*/, USHORT_T min_id/* = 1*/)
 {
     ownAdr += own_addr;
     packSCCPAddress(&locAddr, own_addr, SSN);
-    packSCCPAddress(&rmtAddr, rmt_addr, rmt_ssn);
+    if (rmt_addr) {
+        packSCCPAddress(&rmtAddr, rmt_addr, rmt_ssn);
+        iType = ssnSingleRoute;
+    } else if (rmt_ssn) {
+        rmtAddr.addrLen = 1;
+        rmtAddr.addr[0] = rmt_ssn;
+        iType = ssnMultiAddress;
+    }// else { rmtAddr.addrLen = 0; iType = ssnMultiRoute; }
     ac_idx = dialog_ac_idx;
     maxId = max_id;
     lastDlgId = minId = min_id;
@@ -74,39 +81,26 @@ SSNSession::~SSNSession()
     }
 }
 
-Dialog* SSNSession::openDialog(void)
+Dialog* SSNSession::openDialog(UCHAR_T rmt_ssn, const char* rmt_addr)
 {
-    if (state != ssnBound) {
-        smsc_log_error(logger, "SSN[%u]: not bounded!", (unsigned)SSN);
-        return NULL;
-    }
+    SCCP_ADDRESS_T  sccp_addr;
     MutexGuard tmp(dlgGrd);
-    if (!pool.size())
-        cleanUpDialogs();
-
-    Dialog* pDlg = NULL;
-    USHORT_T did = 0;
-    if (!nextDialogId(did)) {
-        smsc_log_fatal(logger, "SSN[%u]: Dialogs exhausted [%u of %u], active(%u), pending(%u)",
-            (unsigned)SSN, dialogs.size() + pending.size(),
-            maxId - minId, dialogs.size(), pending.size());
-        if (logger->isDebugEnabled())
-            dumpDialogs();
-        return NULL;
-    }
-    
-    if (pool.size()) {
-        pDlg = *(pool.begin());
-        pool.pop_front();
-        pDlg->reset(did);
-    } else
-        pDlg = new Dialog(did, ac_idx, userId, locAddr, rmtAddr, logger);
-
-    smsc_log_debug(logger, "SSN[%u]: Opening dialog[%u]", (unsigned)SSN, did);
-    dialogs.insert(DialogsMap_T::value_type(did, pDlg));
-    return pDlg;
+    packSCCPAddress(&sccp_addr, rmt_addr, rmt_ssn);
+    return initDialog(sccp_addr);
 }
 
+Dialog* SSNSession::openDialog(const char* rmt_addr)
+{
+    assert(iType == ssnMultiAddress);
+    return openDialog(rmtAddr.addr[0], rmt_addr);
+}
+
+Dialog* SSNSession::openDialog(void)
+{
+    assert(iType == ssnSingleRoute);
+    MutexGuard tmp(dlgGrd);
+    return initDialog(rmtAddr);
+}
 
 Dialog* SSNSession::findDialog(USHORT_T dId)
 {
@@ -170,6 +164,38 @@ void SSNSession::releaseDialogs(void)
  * NOTE: these methods are not the processing graph entries, so never lock Mutex,
  *       it's a caller responsibility to lock it !!!
  * ---------------------------------------------------------------------------------- */
+Dialog* SSNSession::initDialog(const SCCP_ADDRESS_T & rmt_addr)
+{
+    if (state != ssnBound) {
+        smsc_log_error(logger, "SSN[%u]: not bounded!", (unsigned)SSN);
+        return NULL;
+    }
+    if (!pool.size())
+        cleanUpDialogs();
+
+    Dialog* pDlg = NULL;
+    USHORT_T did = 0;
+    if (!nextDialogId(did)) {
+        smsc_log_fatal(logger, "SSN[%u]: Dialogs exhausted [%u of %u], active(%u), pending(%u)",
+            (unsigned)SSN, dialogs.size() + pending.size(),
+            maxId - minId, dialogs.size(), pending.size());
+        if (logger->isDebugEnabled())
+            dumpDialogs();
+        return NULL;
+    }
+
+    if (pool.size()) {
+        pDlg = *(pool.begin());
+        pool.pop_front();
+        pDlg->reset(did, &rmt_addr);
+    } else
+        pDlg = new Dialog(did, ac_idx, userId, locAddr, rmt_addr, logger);
+
+    smsc_log_debug(logger, "SSN[%u]: Opening dialog[%u]", (unsigned)SSN, did);
+    dialogs.insert(DialogsMap_T::value_type(did, pDlg));
+    return pDlg;
+}
+
 bool SSNSession::nextDialogId(USHORT_T & dId)
 {
     USHORT_T attempt = 0;

@@ -29,8 +29,7 @@ class SSNSession;
 
 //TCAPDispatcher: manages SS7 stack connecton, listens for TCAP/SCCP messages
 //NOTE: this is a singleton, so initialization is not thread safe
-class TCAPDispatcher : /*protected*/ Thread
-{
+class TCAPDispatcher : Thread {
 protected:
     void* operator new(size_t);
     TCAPDispatcher();
@@ -60,25 +59,23 @@ public:
     SS7State_T  getState(void) const { return state; }
 
     //Opens or reinitializes SSNSession (TCAP dialogs factory)
+    //  multiRoute/multiAddress/singleRoute session:
     SSNSession*  openSession(UCHAR_T ssn, const char* own_addr,
-                     const char* rmt_addr, ACOID::DefinedOIDidx dialog_ac_idx, USHORT_T max_id);
-    SSNSession*  openSession(UCHAR_T ssn, const char* own_addr, UCHAR_T rmt_ssn,
-                     const char* rmt_addr, ACOID::DefinedOIDidx dialog_ac_idx, USHORT_T max_id);
+                             ACOID::DefinedOIDidx dialog_ac_idx, USHORT_T max_id,
+                             UCHAR_T rmt_ssn = 0, const char* rmt_addr = NULL);
     SSNSession* findSession(UCHAR_T ssn);
 
 protected:
-    int  Execute();         //Listener thread entry point
-    int  Listen();          //listens for TCAP/SCCP messages
-    
-    int  connectCP(SS7State_T upTo = ss7CONNECTED);   //Returns:  (-1) - failed to connect,
-                            //0 - already connected, 1 - successfully connected
-    void disconnectCP(SS7State_T downTo = ss7None);
+    int  Execute(void);         //Listener thread entry point
+    int  Listen(void);          //listens for TCAP/SCCP messages
 
+    //Returns:  (-1) - failed to connect, 0 - already connected, 1 - successfully connected
+    int  connectCP(SS7State_T upTo = ss7CONNECTED);
+    void disconnectCP(SS7State_T downTo = ss7None);
     bool bindSSN(UCHAR_T ssn);
     void bindSSNs(void);
     void unbindSSNs(void);
     unsigned unbindedSSNs(void);
-
 
     typedef std::map<UCHAR_T, SSNSession*> SSNmap_T;
     EventMonitor    _mutex;
@@ -89,6 +86,12 @@ protected:
     volatile DSPStatus_t   _status;
     time_t          lastBindReq;
     Logger*         logger;
+
+    inline SSNSession* lookUpSSN(UCHAR_T ssn)
+    {
+        SSNmap_T::const_iterator it = sessions.find(ssn);
+        return (it == sessions.end()) ? NULL : (*it).second;
+    }
 };
 
 } //inap
