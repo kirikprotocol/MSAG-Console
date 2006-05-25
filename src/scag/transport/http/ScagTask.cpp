@@ -31,7 +31,7 @@ int ScagTask::Execute()
             if (processor.processRequest(cx->getRequest())) {
                 smsc_log_info(logger, "%p: %p, request approved", this, cx);
                 cx->getRequest().serialize();
-                smsc_log_debug(logger, "request %s", cx->getRequest().headers.c_str());
+//                smsc_log_debug(logger, "request %s", cx->getRequest().headers.c_str());
                 cx->action = SEND_REQUEST;
                 manager.writers.process(cx);                               
                 break;

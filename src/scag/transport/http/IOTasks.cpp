@@ -305,7 +305,7 @@ int HttpWriterTask::Execute()
             cx->getRequest().getSite().c_str(), cx->getRequest().getSitePort());
 
             if (s->Init(cx->getRequest().getSite().c_str(), cx->getRequest().getSitePort(), SOCKOP_TIMEOUT) ||
-                s->Connect())
+                s->Connect(true))
             {
                 smsc_log_error(logger, "%p: %p, cannot connect", this, cx);
                 cx->setDestiny(503, FAKE_RESP | DEL_SITE_SOCK | NO_MULT_REM);
@@ -313,7 +313,7 @@ int HttpWriterTask::Execute()
             }
             else {
                 smsc_log_debug(logger, "%p: %p, socket %p connected", this, cx, s);
-                s->setNonBlocking(1);
+                //s->setNonBlocking(1);
                 multiplexer.add(s);
             }
         }
