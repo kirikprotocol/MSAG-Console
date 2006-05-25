@@ -8,6 +8,7 @@
 #pragma comment(lib,"ws2_32.lib")
 #else
 #include <sys/ioctl.h>
+#include <errno.h>
 #ifndef linux
 #include <sys/filio.h>
 #endif
@@ -55,7 +56,7 @@ int Socket::Init(const char *host,int port,int timeout)
   return 0;
 }
 
-int Socket::Connect()
+int Socket::Connect(bool nb)
 {
   Close();
   sock=socket(AF_INET,SOCK_STREAM,0);
@@ -64,7 +65,10 @@ int Socket::Connect()
   {
     return -1;
   }
-  if(connect(sock,(sockaddr*)&sockAddr,sizeof(sockAddr)))
+
+  if(nb) setNonBlocking(1);
+
+  if(connect(sock,(sockaddr*)&sockAddr,sizeof(sockAddr)) && errno != EINPROGRESS)
   {
     closesocket(sock);
     sock=INVALID_SOCKET;

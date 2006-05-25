@@ -66,7 +66,7 @@ public:
   SOCKET getSocket(){return sock;}
 
   int Init(const char *host,int port,int timeout);
-  int Connect();
+  int Connect(bool nb = false);
   void Close();
   void Abort();
   void ReuseAddr()
