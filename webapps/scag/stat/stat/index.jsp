@@ -47,7 +47,9 @@
 </sm:break>
 
 <script language="JavaScript">
-    var services;
+    var servicesHash;
+    var providersHash;
+
     function toggleVisible(p, c) {
         var o = p.className == "collapsing_list_opened";
         p.className = o ? "collapsing_list_closed"  : "collapsing_list_opened";
@@ -55,68 +57,64 @@
     }
 
     function populateArray() {
-        services = new Array(opForm.all.serviceId.length*3);
-        for (i=1;i<opForm.all.serviceId.length;i++) {
+        servicesHash = new Array();
+        providersHash = new Array();
+        for (var i=1;i<opForm.all.serviceId.length;i++) {
           curserv = opForm.all.serviceId.options[i].value;
           serviceproviderid = curserv.split('//');
-          services[i*3] = serviceproviderid[0];
-          services[i*3+1] = serviceproviderid[1];
-          services[i*3+2] = opForm.all.serviceId.options[i].text;
+          var providerId = serviceproviderid[1];
+          var serviceId = serviceproviderid[0];
+          providersHash[serviceId] = providerId;
+          if (servicesHash[providerId]) {
+            array = servicesHash[providerId];
+            array[array.length] = {value:serviceId, text:opForm.all.serviceId.options[i].text};
+            servicesHash[providerId] = array;             
+          } else {
+            servicesHash[providerId] = [{value:serviceId, text:opForm.all.serviceId.options[i].text}];
+          }
         }
         selectedText = opForm.all.serviceId.options[opForm.all.serviceId.selectedIndex].text;
         providerChanged();
-        for(i=1;i<opForm.all.serviceId.length;i++)
+        for(var i=1;i<opForm.all.serviceId.length;i++)
           if (selectedText == opForm.all.serviceId.options[i].text) opForm.all.serviceId.options[i].selected = true;
-        //message = "";
-        //for (i=0;i<services.length;i++) {
-        //  message = message + 'services[' + i + ']=' + services[i] + ' | ' ;
-        //}
-        //alert(message);
     }
 
     function providerChanged() {
-      for(i=opForm.all.serviceId.length;i>0;i--) opForm.all.serviceId.options[i]=null;
+      opForm.all.serviceId.options.length=0;
       opForm.all.serviceId.options[0] = new Option("ALL_SERVICES","-1",true,true);
-      providerId = opForm.all.providerId.options[opForm.all.providerId.selectedIndex].value;
-      j = 1;
+      var providerId = opForm.all.providerId.options[opForm.all.providerId.selectedIndex].value;
+      var j = 1;
       if (providerId == "-1") {
-        for (i=1;i<services.length/3;i++) {
-           opForm.all.serviceId.options[j] = new Option(services[i*3+2],services[i*3]);
-           j=j+1;
+         for (var i=1;i<servicesHash.length;i++) {
+           var array = servicesHash[i];
+           if (array && array.length && array.length>0)
+           for (var y=0;y<array.length;y++) {
+             opForm.all.serviceId.options[j] = new Option(array[y].text, array[y].value);
+             j=j+1;
+           }
          }
          return;
       }
-      //alert('providerId = ' + providerId);
-      for (i=1;i<services.length;i++) {
-         if (services[i*3+1] == providerId) {
-           //alert('services[' + (i*3+1) + ']=' + providerId);
-           opForm.all.serviceId.options[j] = new Option(services[i*3+2],services[i*3]);
+      var services = servicesHash[providerId];
+      if (services && services.length && services.length>0)
+      for (var i=0;i<services.length;i++) {
+           opForm.all.serviceId.options[j] = new Option(services[i].text, services[i].value);
            j=j+1;
-         }
       }
     }
 
-      function serviceChanged() {
-        serviceId = opForm.all.serviceId.options[opForm.all.serviceId.selectedIndex].value;
-        //alert('serviceId = ' + serviceId);
-        if (serviceId == "-1") {
-          opForm.all.providerId.options[0].selected = true;
-          return;
-        }
-        var prId;
-        for(i=1;i<services.length/3;i++) {
-             if(services[i*3] == serviceId) {
-               prId = services[i*3+1];
-               break;
-             }
-        }
-        for(i=1;i<opForm.all.providerId.length;i++) {
-           if (opForm.all.providerId.options[i].value == prId) {
-              opForm.all.providerId.options[i].selected = true;
-              return;
-           }
-        }
+    function serviceChanged() {
+      var serviceId = opForm.all.serviceId.options[opForm.all.serviceId.selectedIndex].value;
+      if (serviceId == "-1") return;
+      var prId = providersHash[serviceId];
+      if (opForm.all.providerId.options[opForm.all.providerId.selectedIndex].value == prId) return;
+      for(i=1;i<opForm.all.providerId.length;i++) {
+         if (opForm.all.providerId.options[i].value == prId) {
+            opForm.all.providerId.options[i].selected = true;
+            return;
+         }
       }
+    }
 </script>
 
 <c:set var="statistics" value="${bean.statistics}"/>
