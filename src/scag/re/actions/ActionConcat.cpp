@@ -14,7 +14,7 @@ void ActionConcat::init(const SectionParams& params,PropertyObject propertyObjec
     ft = CheckParameter(params, propertyObject, "concat", "var", true, false, wstrVariable, bExist);
     strVariable = ConvertWStrToStr(wstrVariable);
 
-    m_fStrFieldType = CheckParameter(params, propertyObject, "concat", "var", true, true, wstrString, bExist);
+    m_fStrFieldType = CheckParameter(params, propertyObject, "concat", "str", true, true, wstrString, bExist);
     strString = ConvertWStrToStr(wstrString);
 
     smsc_log_debug(logger,"Action 'concat':: init");
@@ -23,7 +23,7 @@ void ActionConcat::init(const SectionParams& params,PropertyObject propertyObjec
 
 bool ActionConcat::run(ActionContext& context)
 {
-    smsc_log_debug(logger,"Run Action 'substr'");
+    smsc_log_debug(logger,"Run Action 'concat'");
 
     std::string strArgument;
 
@@ -32,7 +32,7 @@ bool ActionConcat::run(ActionContext& context)
         strArgument = wstrString;
     } else
     {
-        Property * property = context.getProperty(wstrString);
+        Property * property = context.getProperty(strString);
 
         if (!property) 
         {
@@ -58,7 +58,7 @@ bool ActionConcat::run(ActionContext& context)
     resultProperty->setStr(result);
 
 
-    smsc_log_debug(logger,"Action 'concat':: substr result is '%s'", FormatWStr(result).c_str());
+    smsc_log_debug(logger,"Action 'concat':: concat result is '%s'", FormatWStr(result).c_str());
     return true;
 }
 

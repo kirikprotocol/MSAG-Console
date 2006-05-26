@@ -55,19 +55,25 @@ Property* ActionContext::getProperty(const std::string& var)
 {
     FieldType prefix;
     const char * name;
-    Property * p = 0;
+    Property * propertyPtr = 0;
 
     prefix = Separate(var,name);
+
 
     switch (prefix) 
     {
     case ftLocal:
-        if (!variables.Exists(name)) 
+        propertyPtr = variables.GetPtr(name);
+
+        std::cout << prefix << std::endl;
+
+        if (!propertyPtr) 
         {
             Property property;
             variables.Insert(name,property);
+            propertyPtr = variables.GetPtr(name);
         }
-        return variables.GetPtr(name);
+        return propertyPtr;
         break;
 
     case ftConst:
