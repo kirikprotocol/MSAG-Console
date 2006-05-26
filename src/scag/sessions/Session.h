@@ -123,7 +123,7 @@ namespace scag { namespace sessions
         {
             return ((this->abonentAddr == sk.abonentAddr) && (this->USR == sk.USR));
         }
-        CSessionKey() : USR(-1) {}
+        //CSessionKey() : USR(-1) {}
     };
 
  /*   struct COperationKey
