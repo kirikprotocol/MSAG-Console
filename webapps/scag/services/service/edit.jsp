@@ -31,14 +31,6 @@
             <sm-pm:space/>
         </sm-pm:menu>
         <c:if test="${!param.add}">
-            <applet code="org.gjt.sp.jedit.jEdit.class" codebase="rules/rules" width="1" height="1" archive="jedit.jar" name=jedit ID=jedit>
-                <param name="noplugins" value="-noplugins">
-                <param name="homedir" value="applet">
-                <param name="username" value="rules">
-                <param name="servletUrl" value="${pageContext.request.contextPath}/applet/myServlet">
-                <param name="targetUrl" value="${pageContext.request.contextPath}/services/service/edit.jsp?editId=${bean.editId}&parentId=${bean.parentId}&editChild=${param.editChild}">
-            </applet>
-
             <div class=page_subtitle>&nbsp;</div>
             <sm-ep:properties title="Service rules">
                 <sm:rule transport="SMPP" exists="${bean.smppRuleExists}"/>

@@ -57,7 +57,6 @@ public class myServlet extends HttpServlet
   protected static final int AddRule = 30;
   protected static final int RootElement = 31;
   protected static final int RuleName = 32;
-  protected static final int RuleNameReset = 33;
   protected static final int UnLockServiceRule = 34;
   protected HttpSession session = null;
 
@@ -82,7 +81,6 @@ public class myServlet extends HttpServlet
        case LoadNewRule:li=LoadNewRule(req,file,transport,res); SendResult(li,res); break;
        case ExistRule:  ExistRule(req,file,transport,res); break;
        case SaveBackup: list=SaveBackup(new File(file), req); break;
-       case RuleNameReset: if (session !=null) session.removeAttribute("newRule"); break;
        case UnLockServiceRule: unlockRule(req,file,transport); break;
        default:
         if (req.getParameter("renameto")!=null) list=RenameTo(new File(file),new File(req.getParameter("renameto")));
@@ -193,8 +191,6 @@ public class myServlet extends HttpServlet
   private void AddRule(HttpServletRequest req,final String file, final String transport, HttpServletResponse res) throws IOException
   {
     System.out.println("myServlet AddRule");
-    //session = req.getSession(false);
-    //Rule newRule =(Rule)session.getAttribute("newRule");
     SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
     PrintWriter out = res.getWriter();    
     LinkedList li;

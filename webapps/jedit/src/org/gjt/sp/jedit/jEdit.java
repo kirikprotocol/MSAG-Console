@@ -81,13 +81,11 @@ public class jEdit extends Applet
 
   public static URL baseUrl = null;
   public static URL servletUrl = null;
-  // targetUrl - URL to be forwarded on when buffer is successfully saved
-  public static URL targetUrl =null;
   public static String username = null;
   public static String password = null;
   public static char separatorChar ;
-  public static AppletContext jEditContext = null;
   private boolean initialized = false;
+  private static boolean stopped = true;
   private void initialize() {
     String[] args = new String[5];
     String userFile = getParameter("file"); //"applet";//+username;
@@ -96,6 +94,20 @@ public class jEdit extends Applet
   }
   public void init() {
     System.out.println("Initing...");
+    /*PipedInputStream in = new PipedInputStream();
+    try {
+    PipedOutputStream out = new PipedOutputStream(in);
+    System.setOut(new PrintStream(out));
+    System.setErr(System.out);
+    } catch (IOException io){}
+    final BufferedReader iis = new BufferedReader(new InputStreamReader(in));
+    new Thread( ) {
+                public void run( ) {
+                    try {
+                        while ((iis.readLine( )) != null) {}
+                    } catch(IOException io) {}
+                }
+            }.start( );*/
     //super.init();
     setFont(new Font("dialog", Font.BOLD, 12));
     setLayout(new GridBagLayout());
@@ -104,7 +116,6 @@ public class jEdit extends Applet
     gbc.fill = GridBagConstraints.BOTH;
     //String[] args = new String[5];
     baseUrl = getCodeBase();
-    jEditContext = getAppletContext();
     username = getParameter("username");
     password = getParameter("password");
     jEditHome =getParameter("homedir");
@@ -118,12 +129,10 @@ public class jEdit extends Applet
     String path = baseUrl.getPath();
     try {
       servletUrl = new URL(baseUrl, getParameter("servleturl"));
-      targetUrl = new URL(baseUrl, getParameter("targetUrl"));
     } catch (MalformedURLException e) { e.printStackTrace();
     }
     System.out.println("baseUrl= " + baseUrl.toString());
     System.out.println("servletUrl= " + servletUrl.toString());
-    System.out.println("targetUrl= " + targetUrl);
     initSystemProperties();
     VFSManager.init();
     //this.main(args);
@@ -142,6 +151,7 @@ public class jEdit extends Applet
   }
   public void openRule(final String userFile, final String transport)
    {
+     stopped = false;
      if(!initialized) {
        initialize();
        initialized = true;
@@ -159,6 +169,7 @@ public class jEdit extends Applet
 
   public void newRule(final String userFile, final String transport)
     {
+      stopped = false;
       if(!initialized) {
         initialize();
         initialized = true;
@@ -187,11 +198,15 @@ public class jEdit extends Applet
     return destroyed;
   }
 
+  public boolean isStopped() {
+    return stopped;
+  }
+
   public void destroy()
   {
     System.out.println("Destroying...");
-    if (getBooleanProperty("newRule")) InvalidateNewRule();
     unlockAllRules();
+    stopped = true;
     destroyed=true;
     startupDone=false;
     initialized = false;
@@ -212,8 +227,6 @@ public class jEdit extends Applet
     viewsLast=null;
     activeView=null;
     System.out.println("exit zakomentirovan!!!...");
-    if (getBooleanProperty("newRule")) InvalidateNewRule();
-    unlockAllRules();
    //  jEdit.exit(activeView,true);
   }
   //{{{ main() method
@@ -2451,10 +2464,9 @@ public class jEdit extends Applet
     }
     if (getBooleanProperty("newRule"))
     {
-      InvalidateNewRule();
-      jEdit.jEditContext.showDocument(jEdit.targetUrl);
     } else
     unlockRule(path,transport);
+    stopped = true;
   } //}}}
   //{{{ exitView() method
   /**
@@ -2529,20 +2541,10 @@ public class jEdit extends Applet
     }
     if (getBooleanProperty("newRule"))
     {
-      InvalidateNewRule();
-      jEdit.jEditContext.showDocument(jEdit.targetUrl);
     } else
     unlockRule(path,transport);
+    stopped = true;
   } //}}}
-  /*invalidate "newRule" attribute in session to prevent call of jEdit.newRule() method
-    from page   ...scag/rules/rules/index.jsp*/
-  private static void InvalidateNewRule()
-  {
-    //System.out.println("Right exit!!!!!!!!!!!!!!!!!!!!!!!!!!...");
-    HashMap h = new HashMap();
-    h.put("file","");
-    HttpGet(h,RuleNameReset);
-  }
 
   private static void unlockAllRules() {
     unlockRule("","");
@@ -3141,7 +3143,6 @@ public class jEdit extends Applet
   protected static final int AddRule = 30;
   protected static final int RootElement = 31;
   protected static final int RuleName = 32;
-  protected static final int RuleNameReset = 33;
   protected static final int UnLockServiceRule = 34;
 
   public static int getRootElement()

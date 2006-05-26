@@ -111,7 +111,7 @@ public class CatalogManager
    if(buf.isPerformingIO())
     VFSManager.waitForRequests();
    Log.log(Log.DEBUG,CatalogManager.class,"Found open buffer for " + newSystemId);
-   InputSource source = new InputSource(systemId);
+   InputSource source = new PermanentInputSource(systemId);
    try
    {
     buf.readLock();
@@ -129,7 +129,7 @@ public class CatalogManager
       || newSystemId.startsWith("jar:")
       || newSystemId.endsWith(".xsd"))
   {
-   InputSource source = new InputSource(systemId);
+   InputSource source = new PermanentInputSource(systemId);
    source.setByteStream(new URL(newSystemId).openStream());
    return source;
   }
@@ -172,7 +172,7 @@ public class CatalogManager
 
    if(session[0] != null)
    {
-    InputSource source = new InputSource(systemId);
+    InputSource source = new PermanentInputSource(systemId);
     if(cache)
     {
      File file;

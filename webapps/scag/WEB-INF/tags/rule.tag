@@ -7,31 +7,21 @@
 <%@attribute name="transport" required="true"%>
 <%@attribute name="exists" required="true"%>
      <script>
-        function newRule(id,transport)
-        {
-            document.jedit.newRule(id,transport);
-            return false;
-        }
-        function editRule(id,transport)
-        {
-            document.jedit.openRule(id,transport);
-            return false;
-        }
+     function openJedit(id,transport,action)
+     {
+       window.open("<%=request.getContextPath()%>/rules/rules/jedit.jsp?id="+id+"&transport="+transport+"&action="+action,"","width=1,height=1,left="+screen.availWidth+",top="+screen.availHeight);
+       return false;
+     }
      </script>
 
   <sm-ep:property title = "${transport}">
      <c:choose>
         <c:when test="${exists}">
-             <a href="#" onClick="return editRule('${bean.id}','${transport}');"> Edit </a> |
-             <%--sm-pm:item name="editRule" value="Edit" title="Edit Rule" onclick="editRule('${bean.id}','${transport}')"/--%>
+              <input type=button onClick="return openJedit('${bean.id}','${transport}','edit')" value="Edit" > |
               <input type=submit id="deleteRule${transport}" name="deleteRule${transport}" value="Delete">
-              </input>
         </c:when>
         <c:otherwise>
-              <%--input type=submit id="addRule${transport}" name="addRule${transport}" value="Add">
-              </input--%>
-             <a href="#" onClick="return newRule('${bean.id}','${transport}');"> Add </a>
-
+            <input type=button onClick="return openJedit('${bean.id}','${transport}','add')" value="Add">
         </c:otherwise>
      </c:choose>
    </sm-ep:property>

@@ -46,10 +46,12 @@ import org.apache.xerces.xni.parser.XMLParseException;
 public class SAXParserImpl extends XmlParser
 {
  private HashMap activePrefixes;
+ private HashMap sourceCash;
  //{{{ SAXParserImpl constructor
  public SAXParserImpl()
  {
   super("xml");
+  sourceCash = new HashMap();
  } //}}}
 
  //{{{ parse() method
@@ -394,7 +396,8 @@ public class SAXParserImpl extends XmlParser
    throws SAXException
   {
    InputSource source = null;
-      //System.out.println("SAXParserImpl resolveEntity systemId= "+systemId);
+   if (sourceCash.containsKey(systemId)) return (InputSource)sourceCash.get(systemId);
+     //System.out.println(",,,,,,,,,,,,,,,,,SAXParserImpl resolveEntity systemId= "+systemId + "publicId = " +publicId+",,,,,");
    try
    {
     source = CatalogManager.resolve(loc.getSystemId(),publicId,systemId);
@@ -425,6 +428,7 @@ public class SAXParserImpl extends XmlParser
     Log.log(Log.DEBUG,this,"PUBLIC=" + publicId
      + ", SYSTEM=" + systemId
      + " resolved to " + source.getSystemId());
+    sourceCash.put(systemId,source);
     return source;
    }
   } //}}}
