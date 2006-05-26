@@ -1,6 +1,7 @@
 #ifndef __SCAG_RULE_ENGINE_ACTION__
 #define __SCAG_RULE_ENGINE_ACTION__
 
+
 #include "ActionContext.h"
 #include <scag/re/actions/IParserHandler.h>
 #include <logger/Logger.h>
