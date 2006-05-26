@@ -203,7 +203,7 @@ Hash<int> SmppCommandAdapter::InitSubmitFieldNames()
 
 /*    hs["short_message"]                 = Tag::SMPP_SHORT_MESSAGE; //*
     hs["message_payload"]               = Tag::SMPP_MESSAGE_PAYLOAD; //**/
-    hs["message_body"]                  = SMS_MESSAGE_BODY;
+    hs["message_text"]                  = SMS_MESSAGE_BODY;
 
     hs["source_port"]                   = Tag::SMPP_SOURCE_PORT; 
     hs["destination_port"]              = Tag::SMPP_DESTINATION_PORT; 
@@ -386,7 +386,7 @@ Hash<int> SmppCommandAdapter::InitDeliverFieldNames()
 
 /*    hs["short_message"]                 = Tag::SMPP_SHORT_MESSAGE; //*
     hs["message_payload"]               = Tag::SMPP_MESSAGE_PAYLOAD; //**/
-    hs["message_body"]                  = SMS_MESSAGE_BODY;
+    hs["message_text"]                  = SMS_MESSAGE_BODY;
 
     hs["source_port"]                   = Tag::SMPP_SOURCE_PORT; 
     hs["destination_port"]              = Tag::SMPP_DESTINATION_PORT; 

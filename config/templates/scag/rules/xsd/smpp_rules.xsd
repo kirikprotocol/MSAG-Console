@@ -136,6 +136,7 @@
                 <enumeration value="#ussd_ussn_conf"/>
                 <enumeration value="#status"/>
 		
+                <enumeration value="#message_text"/>
 
             </restriction>    
         </simpleType>
