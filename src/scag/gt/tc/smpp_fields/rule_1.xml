@@ -1,106 +1,112 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <scag:rule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                    xsi:schemaLocation="http://www.sibinco.com/SCAG smpp_rules.xsd"
-                    xmlns:scag="http://www.sibinco.com/SCAG"
-                    xmlns:session="http://www.sibinco.com/SCAG/SESSIONS"
-                    xmlns:operation="http://www.sibinco.com/SCAG/OPERATIONS"
-                    transport="SMPP">
+xsi:schemaLocation="http://www.sibinco.com/SCAG ../xsd/smpp_rules.xsd"
+xmlns:scag     ="http://www.sibinco.com/SCAG"
+xmlns:session  ="http://www.sibinco.com/SCAG/SESSIONS"
+xmlns:operation="http://www.sibinco.com/SCAG/OPERATIONS"
+xmlns:strings  ="http://www.sibinco.com/SCAG/STRINGS"
+xmlns:bill     ="http://www.sibinco.com/SCAG/BILL"
+xmlns:send     ="http://www.sibinco.com/SCAG/SEND"
+xmlns:profile  ="http://www.sibinco.com/SCAG/PROFILE"
+xmlns:log      ="http://www.sibinco.com/SCAG/LOG"
+transport="SMPP">
+
 <deliver_sm>
-<log level="debug" category="FROMRULELOG" message="#OA" />
+<log:debug   category="FROMRULELOG" message="#OA" />
 
-<log level="debug" category="FROMRULELOG" message="#DA" />
+<log:debug   category="FROMRULELOG" message="#DA" />
 
-<log level="debug" category="FROMRULELOG" message="#esm_mm_smsc_default" />
+<log:debug   category="FROMRULELOG" message="#esm_mm_smsc_default" />
 
-<log level="debug" category="FROMRULELOG" message="#esm_mm_datagram" />
+<log:debug   category="FROMRULELOG" message="#esm_mm_datagram" />
 
-<log level="debug" category="FROMRULELOG" message="#esm_mm_forward" />
+<log:debug   category="FROMRULELOG" message="#esm_mm_forward" />
 
-<log level="debug" category="FROMRULELOG" message="#esm_mm_s_and_f" />
+<log:debug   category="FROMRULELOG" message="#esm_mm_s_and_f" />
 
-<log level="debug" category="FROMRULELOG" message="#esm_mt_default" />
+<log:debug   category="FROMRULELOG" message="#esm_mt_default" />
 
-<log level="debug" category="FROMRULELOG" message="#esm_mt_delivery_ack" />
+<log:debug   category="FROMRULELOG" message="#esm_mt_delivery_ack" />
 
-<log level="debug" category="FROMRULELOG" message="#esm_mt_manual_ack" />
+<log:debug   category="FROMRULELOG" message="#esm_mt_manual_ack" />
 
-<log level="debug" category="FROMRULELOG" message="#esm_nsf_none" />
+<log:debug   category="FROMRULELOG" message="#esm_nsf_none" />
 
-<log level="debug" category="FROMRULELOG" message="#esm_nsf_udhi" />
+<log:debug   category="FROMRULELOG" message="#esm_nsf_udhi" />
 
-<log level="debug" category="FROMRULELOG" message="#esm_nsf_srp" />
+<log:debug   category="FROMRULELOG" message="#esm_nsf_srp" />
 
-<log level="debug" category="FROMRULELOG" message="#esm_nsf_both" />
+<log:debug   category="FROMRULELOG" message="#esm_nsf_both" />
 
-<log level="debug" category="FROMRULELOG" message="#protocol_id" />
+<log:debug   category="FROMRULELOG" message="#protocol_id" />
 
-<log level="debug" category="FROMRULELOG" message="#priority_flag" />
+<log:debug   category="FROMRULELOG" message="#priority_flag" />
 
-<log level="debug" category="FROMRULELOG" message="#rd_receipt_off" />
+<log:debug   category="FROMRULELOG" message="#rd_receipt_off" />
 
-<log level="debug" category="FROMRULELOG" message="#rd_receipt_on" />
+<log:debug   category="FROMRULELOG" message="#rd_receipt_on" />
 
-<log level="debug" category="FROMRULELOG" message="#rd_receipt_failure" />
+<log:debug   category="FROMRULELOG" message="#rd_receipt_failure" />
 
-<log level="debug" category="FROMRULELOG" message="#rd_ack_off" />
+<log:debug   category="FROMRULELOG" message="#rd_ack_off" />
 
-<log level="debug" category="FROMRULELOG" message="#rd_ack_on" />
+<log:debug   category="FROMRULELOG" message="#rd_ack_on" />
 
-<log level="debug" category="FROMRULELOG" message="#rd_ack_man_on" />
+<log:debug   category="FROMRULELOG" message="#rd_ack_man_on" />
 
-<log level="debug" category="FROMRULELOG" message="#rd_ack_both_on" />
+<log:debug   category="FROMRULELOG" message="#rd_ack_both_on" />
 
-<log level="debug" category="FROMRULELOG" message="#rd_i_notification" />
+<log:debug   category="FROMRULELOG" message="#rd_i_notification" />
 
-<log level="debug" category="FROMRULELOG" message="#dc_binary" />
+<log:debug   category="FROMRULELOG" message="#dc_binary" />
 
-<log level="debug" category="FROMRULELOG" message="#dc_text" />
+<log:debug   category="FROMRULELOG" message="#dc_text" />
 
-<log level="debug" category="FROMRULELOG" message="#dc_smsc_default" />
+<log:debug   category="FROMRULELOG" message="#dc_smsc_default" />
 
-<log level="debug" category="FROMRULELOG" message="#dc_ascii_x34" />
+<log:debug   category="FROMRULELOG" message="#dc_ascii_x34" />
 
-<log level="debug" category="FROMRULELOG" message="#dc_latin1" />
+<log:debug   category="FROMRULELOG" message="#dc_latin1" />
 
-<log level="debug" category="FROMRULELOG" message="#dc_jis" />
+<log:debug   category="FROMRULELOG" message="#dc_jis" />
 
-<log level="debug" category="FROMRULELOG" message="#dc_cyrilic" />
+<log:debug   category="FROMRULELOG" message="#dc_cyrilic" />
 
-<log level="debug" category="FROMRULELOG" message="#dc_latin_hebrew" />
+<log:debug   category="FROMRULELOG" message="#dc_latin_hebrew" />
 
-<log level="debug" category="FROMRULELOG" message="#dc_ucs2" />
+<log:debug   category="FROMRULELOG" message="#dc_ucs2" />
 
-<log level="debug" category="FROMRULELOG" message="#dc_pictogram_enc" />
+<log:debug   category="FROMRULELOG" message="#dc_pictogram_enc" />
 
-<log level="debug" category="FROMRULELOG" message="#dc_iso_music_codes" />
+<log:debug   category="FROMRULELOG" message="#dc_iso_music_codes" />
 
-<log level="debug" category="FROMRULELOG" message="#dc_e_kanji_jis" />
+<log:debug   category="FROMRULELOG" message="#dc_e_kanji_jis" />
 
-<log level="debug" category="FROMRULELOG" message="#dc_ks_c_5601" />
+<log:debug   category="FROMRULELOG" message="#dc_ks_c_5601" />
 
-<log level="debug" category="FROMRULELOG" message="#dc_gsm_mwi" />
+<log:debug   category="FROMRULELOG" message="#dc_gsm_mwi" />
 
-<log level="debug" category="FROMRULELOG" message="#dc_gsm_msg_cc" />
+<log:debug   category="FROMRULELOG" message="#dc_gsm_msg_cc" />
 
-<log level="debug" category="FROMRULELOG" message="#sm_length" />
+<log:debug   category="FROMRULELOG" message="#sm_length" />
 
-<log level="debug" category="FROMRULELOG" message="#short_message" />
+<log:debug   category="FROMRULELOG" message="#short_message" />
 
-<log level="debug" category="FROMRULELOG" message="#source_port" />
+<log:debug   category="FROMRULELOG" message="#source_port" />
 
-<log level="debug" category="FROMRULELOG" message="#destination_port" />
+<log:debug   category="FROMRULELOG" message="#destination_port" />
 
-<log level="debug" category="FROMRULELOG" message="#sar_msg_ref_num" />
+<log:debug   category="FROMRULELOG" message="#sar_msg_ref_num" />
 
-<log level="debug" category="FROMRULELOG" message="#sar_total_segments" />
+<log:debug   category="FROMRULELOG" message="#sar_total_segments" />
 
-<log level="debug" category="FROMRULELOG" message="#sar_segment_seqnum" />
+<log:debug   category="FROMRULELOG" message="#sar_segment_seqnum" />
 
-<log level="debug" category="FROMRULELOG" message="#message_payload" />
+<log:debug   category="FROMRULELOG" message="#message_payload" />
 
-<log level="debug" category="FROMRULELOG" message="#user_response_code" />
+<log:debug   category="FROMRULELOG" message="#user_response_code" />
 
-<log level="debug" category="FROMRULELOG" message="#language_indicator" />
+<log:debug   category="FROMRULELOG" message="#language_indicator" />
 
 </deliver_sm>
 </scag:rule>
