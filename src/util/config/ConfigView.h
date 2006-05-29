@@ -1,3 +1,4 @@
+#ident "$Id$"
 #ifndef SMSC_UTIL_CONFIG_CONFIG_VIEW
 #define SMSC_UTIL_CONFIG_CONFIG_VIEW
 
@@ -34,7 +35,8 @@ namespace smsc { namespace util { namespace config
         inline const char* getInstance() {
             return category;
         };
-        
+
+        bool    findSubSection(const char * const subsectionName);
         ConfigView* getSubConfig(const char* sub, bool full=false);
         
         CStrSet* getSectionNames()

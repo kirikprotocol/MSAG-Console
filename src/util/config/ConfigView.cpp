@@ -1,4 +1,4 @@
-
+/* $Id$ */
 #include "ConfigView.h"
 
 namespace smsc { namespace util { namespace config
@@ -35,6 +35,15 @@ ConfigView::ConfigView(Manager& manager, const char* cat)
 ConfigView::~ConfigView()
 {
     if (category) delete category;
+}
+
+bool ConfigView::findSubSection(const char * const subsectionName)
+{
+    //compose absolute name for subsection
+    char* section = prepareSubSection(subsectionName);
+    bool  res = config.findSection(section);
+    delete section;
+    return res;
 }
 
 ConfigView* ConfigView::getSubConfig(const char* sub, bool full)
