@@ -2,10 +2,10 @@
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
 
 <!-- INMan interacts the IN node -->
-<config>
-  <param name="host" type="string">@inman.host@</param>
+<config> <!-- InMan 0.4.1. and higher -->
+  <param name="host" type="string">@inman.host@</param>  <!-- InMan service host -->
   <param name="port" type="int">@inman.port@</param>     <!-- InMan service port -->
-  <param name="maxClients" type="int" optional="true">1</param>  <!--  max allowed INMan client connections -->
+  <param name="maxClients" type="int">3</param>       <!--  max allowed INMan client connections, default: 3 -->
 
   <section name="Billing">
     <param name="billMode" type="string">all</param>       <!-- options: [none, all, ussd, sms]
@@ -14,28 +14,29 @@
       ussd: request IN platform in case of USSD only, bill SMS to CDR
       sms:  request IN platform in case of SMS only, bill USSD to CDR
     -->
-   <param name="abonentPolicy" type="string">IN</param>  <!-- abonent type determination policy, 
+   <param name="abonentPolicy" type="string">IN</param>  <!-- type of abonent provider to use, 
     options: [IN, DB, HLR]
     IN        determine abonent type while interacting IN,  requires IN_interaction.RPCList_postpaid defined
-    DB      determine abonent type quering DB, requires DataProvider defined
-    HLR -  determine abonent type asking HLR, not supported yet
+    DB      determine abonent type quering DB, requires AbonentProvider.ProviderDB defined
+    HLR -  determine abonent type asking HLR, equires AbonentProvider.ProviderHLR defined, not supported yet
     -->
-    <param name="maxBillings" type="int">500</param>   <!--  [1 .. 10000] , default 500 
+    <param name="maxBillings" type="int">20</param>   <!--  [1 .. 100000] , default 500 
      maximium simultaneous billing requests per INMan client  connect -->
     <param name="abonentTypeTimeout" type="int">5</param> <!-- units: seconds, [1 .. 65535], default 5 
-    maximum allowed time for determining abonent type, (HLR & DB interaction), billing continues on its expiration in CDR mode -->
-    <param name="maxTimeout" type="int">120</param>  <!-- units: seconds, [5 .. 65535], default 120 
-    maximum allowed value for billing suspending time (TCP interaction), billing aborts on its expiration  -->
+    maximum allowed time for determining abonent type, (HLR & DB interaction),
+    billing continues on its expiration in CDR mode -->
+    <param name="maxTimeout" type="int">20</param>  <!-- units: seconds, [5 .. 65535], default 120 
+    maximum allowed value for billing suspending time (SMSC interaction), billing aborts on its expiration  -->
 
     <param name="cdrDir" type="string">./cdrs</param>  <!-- directory to store CDRs -->
     <param name="cdrInterval" type="int">120</param>   <!-- CDR storage rolling interval, units: seconds -->
-    <param name="cdrMode" type="string">all</param>        <!-- options: [none, all, postpaid]
+    <param name="cdrMode" type="string">all</param>    <!-- options: [none, all, postpaid]
       none:  don't write CDR at all
       all:      always write CDR
       postpaid:  write CDR either for POSTPAID abonents or in case of IN platform interaction error
     -->
     <param name="cacheRAM" type="int">40</param>   <!-- abonents cache RAM buffer size, units: Mb -->
-    <param name="cacheInterval" type="int">1440</param>   <!-- abonent info refreshing interval, units: minutes -->
+    <param name="cacheInterval" type="int">2</param>   <!-- abonent info refreshing interval, units: minutes -->
     <param name="cacheDir" type="string">./cache</param>  <!-- directory to store abonents cache -->
     <param name="cacheRecords" type="int">1</param>  <!-- initial number of cache file records, 
      units: abonents :) , default: 10000 -->
@@ -49,25 +50,28 @@
     <!-- OPTIONAL PARAMETERS follow:: -->
     <param name="ss7UserId" type="int">03</param>     <!-- PortSS7 user id [1..20], default: 03  -->
     <param name="IN_Timeout" type="int">20</param>   <!-- timeout on CAP operations, units: seconds, max: 65535, default 20 -->
-    <param name="maxDialogs" type="int">2000</param>   <!-- maximum number of simultaneous TC dialogs, max: 65530, default 2000-->
+    <param name="maxDialogs" type="int">2000</param>   <!-- maximum number of simultaneous TC dialogs, [2..65530], default 2000-->
 
-    <param name="RPCList_reject" type="string">16</param> <!--
-     comma separated list of extra (in addition to 21) RP MO causes returned by IN platform (if supported) to forbid DP processing, 
+    <param name="RPCList_reject" type="string"></param> <!--
+     comma separated list of extra (in addition to 21) RP MO causes 
+     returned by IN platform, which forbid DP processing because of low balance (if supported) 
      format: rpc1,rpc2,rpc3,.. 
      example(Alcatel): 16
     -->
-    <param name="RPCList_postpaid" type="string">41</param> <!--
+    <param name="RPCList_postpaid" type="string"></param> <!--
      comma separated list of RP MO causes returned by IN platform for postpaid abonents (if supported),
-     format: rpc1,rpc2,rpc3,.. 
-     example (Huawei): 41
+     format: rpc1,rpc2,rpc3,..
+     example (Huawei): 41 
     -->
  </section>
 
 <!-- OPTIONAL PARAMETERS follow: -->
-    <section name="DataProvider"> <!--  Abonent type is provided by DB, not HLR -->
+<section name="AbonentProvider"> <!-- Abonent type is provided by either DB, or HLR -->
+    <param name="loadup" type="string">libinprov_db.so</param>
+    <section name="ProviderDB"> <!-- Abonent type is provided by DB -->
          <section name="DataSource">
-            <param name="type" type="string">OCI</param>  <!-- Oracle DB --> 
-            <param name="dbInstance" type="string">DBS_ORCL</param>
+            <param name="type" type="string">OCI</param> <!-- Oracle DB -->
+            <param name="dbInstance" type="string">@inman.db.instance@</param>
             <param name="dbUserName" type="string">@inman.db.userid@</param>
             <param name="dbUserPassword" type="string">@inman.db.PasSword@</param>
             <param name="connections" type="int">5</param>  <!--  max allowed db connections -->
@@ -76,10 +80,10 @@
             <param name="timeout" type="int">15</param>  <!--  timeout on connection queries, units: secs  [1..65535] -->
 
            <!--  SQL function returning Abonent type has following prototype:
-                  FUNCTION abonentQueryFunc (iqueryFuncArg  IN VARCHAR2) RETURN NUMBER
+                  FUNCTION abonentQueryFunc (iqueryFuncArg  IN VARCHAR) RETURN NUMBER
             -->
             <param name="abonentQueryFunc" type="string">@inman.db.abonentQueryFunc@</param>
-            <param name="queryFuncArg" type="string">@inman.db.queryFuncArg@</param> 
+            <param name="queryFuncArg" type="string">@inman.db.queryFuncArg@</param>
          </section>
         <section name="DataSourceDrivers">
             <section name="OCIDataSourceDriver">
@@ -88,6 +92,7 @@
             </section>
         </section>
    </section>
+</section>   <!--  AbonentProvider -->
 </config>
 
 <!--
