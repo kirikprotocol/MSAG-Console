@@ -447,7 +447,7 @@ static void SendErrToSmsc(unsigned dialogid,unsigned code)
   if ( dialogid == 0 ) return;
   __map_trace2__("Send error 0x%x to SMSC dialogid=%x",code,dialogid);
   SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",dialogid,code);
-  if ( GET_STATUS_CODE(code) == Status::SUBSCRBUSYMT 
+  if ( GET_STATUS_CODE(code) == Status::SUBSCRBUSYMT
     && GET_STATUS_TYPE(code) == CMD_ERR_RESCHEDULENOW ){
     cmd->get_resp()->set_delay(GetBusyDelay());
   } else if( GET_STATUS_CODE(code) == Status::LOCKEDBYMO ) {
@@ -529,7 +529,7 @@ static void SendRInfo(MapDialog* dialog)
   checkMapReq( Et96MapOpenReq(
     dialog->ssn, dialog_id,
     &appContext, &dialog->mshlrAddr, &dialog->scAddr, 0, 0, 0 ), __func__);
-  
+
   dialog->id_opened = true;
 
   if ( dialog->version != 2 && dialog->version != 1 ) dialog->version = 2;
@@ -2045,7 +2045,11 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
     case MAPST_ImsiWaitRInfo:
       {
         if ( dialog->routeErr ) {
-          if(errorSendRoutingInfoForSm_sp && errorSendRoutingInfoForSm_sp->errorCode == 13 &&
+          if(errorSendRoutingInfoForSm_sp &&
+             (
+               errorSendRoutingInfoForSm_sp->errorCode == 13 ||  // call barred
+               errorSendRoutingInfoForSm_sp->errorCode == 11     // teleservice not provisioned
+             ) &&
              MapDialogContainer::getAllowCallBarred() == true &&
              dialog->state == MAPST_ImsiWaitRInfo) {
             // normal situation no error
