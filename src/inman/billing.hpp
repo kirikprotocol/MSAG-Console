@@ -21,7 +21,8 @@ ChargeSmsResult     <-   | bilProcessed:     SSF <- ContinueSMS ]
 #include "inman/interaction/messages.hpp"
 #include "inman/interaction/connect.hpp"
 #include "inman/common/TimeWatcher.hpp"
-#include "inman/incache.hpp"
+#include "inman/abprov/AbProvider.hpp"
+//#include "inman/incache.hpp"
 #include "inman/storage/FileStorages.hpp"
 
 using smsc::inman::inap::CapSMSDlg;
@@ -40,11 +41,11 @@ using smsc::inman::sync::TimerListenerITF;
 using smsc::inman::sync::TimersLIST;
 using smsc::inman::sync::OPAQUE_OBJ;
 
-using smsc::inman::cache::InAbonentProviderITF;
-using smsc::inman::cache::InAbonentQueryListenerITF;
-using smsc::inman::cache::AbonentCacheITF;
-using smsc::inman::cache::AbonentBillType;
-using smsc::inman::cache::AbonentId;
+using smsc::inman::abprov::InAbonentProviderITF;
+using smsc::inman::abprov::InAbonentQueryListenerITF;
+//using smsc::inman::cache::AbonentCacheITF;
+//using smsc::inman::cache::AbonentBillType;
+//using smsc::inman::cache::AbonentId;
 
 using smsc::inman::filestore::InBillingFileStorage;
 
