@@ -15,7 +15,9 @@ Mutex mapMutex;
 
 //#define SMSC_FORWARD_RESPONSE 0x001
 
-static unsigned __global_bind_counter = 0;
+//unsigned __global_bind_counter = 0;
+bool SSN_bound = false;
+bool USSD_SSN_bound = false;
 static unsigned __pingPongWaitCounter = 0;
 static bool MAP_dispatching = false;
 static bool MAP_isAlive = false;
@@ -37,13 +39,11 @@ extern "C" {
   {
     __map_warn2__("Et96MapBindConf confirmation received ssn=%d status=%d",lssn,status);
     if( status == 0 || status == 1 ) {
-      if( lssn == SSN || lssn == USSD_SSN ) { 
-        ++__global_bind_counter;
-      }
-    } else if( status == 9 ) {
-      if( lssn == SSN || lssn == USSD_SSN ) { 
-        --__global_bind_counter;
-      }
+      if( lssn == SSN ) SSN_bound = true;
+      else if( lssn == USSD_SSN ) USSD_SSN_bound = true; 
+    } else {
+      if( lssn == SSN ) SSN_bound = false;
+      else if( lssn == USSD_SSN ) USSD_SSN_bound = false; 
     }
     return ET96MAP_E_OK;
   }
@@ -56,6 +56,24 @@ extern "C" {
                            ULONG_T localSPC)
   {
     __map_warn2__("Et96MapStateInd received ssn=%d user state=%d affected SSN=%d affected SPC=%ld local SPC=%ld",lssn,userState,affectedSSN,affectedSPC,localSPC);
+    if( userState == 1 ) {
+      if (affectedSSN == SSN ) {
+        SSN_bound = false;
+        USHORT_T result = Et96MapBindReq(MY_USER_ID, SSN);
+        if (result!=ET96MAP_E_OK) {
+          __map_warn2__("Bind error 0x%hx",result);
+        }
+      } else if( affectedSSN == USSD_SSN ) {
+        USSD_SSN_bound = false;
+        USHORT_T result = Et96MapBindReq(MY_USER_ID, USSD_SSN);
+        if (result!=ET96MAP_E_OK) {
+          __map_warn2__("USSD Bind error 0x%hx",result);
+        }
+      }
+    } else {
+      if (affectedSSN == SSN ) SSN_bound = true;
+      else if( affectedSSN == USSD_SSN ) USSD_SSN_bound = true;
+    }
     return ET96MAP_E_OK;
   }
 
@@ -117,7 +135,8 @@ void MapIoTask::connect(unsigned timeout) {
 void MapIoTask::init(unsigned timeout)
 {
   USHORT_T err;
-  __global_bind_counter = 0;
+  SSN_bound = false;
+  USSD_SSN_bound = false;
   __pingPongWaitCounter = 0;
   err = EINSS7CpMsgInitNoSig(MAXENTRIES);
   if ( err != MSG_OK ) {
@@ -135,7 +154,8 @@ void MapIoTask::disconnect()
 {
   USHORT_T result;
   __map_warn__("disconnect from MAP stack");
-  __global_bind_counter = 0;
+  SSN_bound = false;
+  USSD_SSN_bound = false;
   
   result = Et96MapUnbindReq(SSN);
   if ( result != ET96MAP_E_OK) {
@@ -208,7 +228,7 @@ void MapIoTask::dispatcher()
     MAP_dispatching = false;
     
     if ( result == MSG_TIMEOUT ) {
-      if ( __global_bind_counter == CORRECT_BIND_COUNTER ) continue;
+      if ( SSN_bound && USSD_SSN_bound ) continue;
       __map_warn2__("MAP:: check binders %d", bindTimer);
       if ( ++bindTimer <= MAX_BIND_TIMEOUT ) continue;
       __map_warn2__("MAP:: not all binders binded in %d seconds. Restarting...", MAX_BIND_TIMEOUT);
@@ -670,7 +690,7 @@ void MapProxy::checkLogging() {
 
 bool isMapBound() {
 #ifdef USE_MAP
-  return __global_bind_counter == CORRECT_BIND_COUNTER;
+  return SSN_bound && USSD_SSN_bound;
 #else
   return false;
 #endif
