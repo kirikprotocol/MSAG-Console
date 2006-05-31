@@ -190,10 +190,7 @@ void IOTaskManager::process(HttpContext* cx)
 
     IOTask *t = getFirst();
     
-    int i = t->getSocketCount();
-    if(i)
-        smsc_log_error(logger, "IOTMgr: %d, %d, %d", i, maxSockets, maxSockets - i);
-    if (i < maxSockets) {
+    if (t->getSocketCount() < maxSockets) {
         giveContext(t, cx);
     }
     else {
