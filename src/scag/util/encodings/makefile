@@ -4,7 +4,7 @@
 #
 #
 
-PACKAGE := scag.util.decode
+PACKAGE := scag.util.encodings
 
 
 ifndef SMSC_SRCDIR
