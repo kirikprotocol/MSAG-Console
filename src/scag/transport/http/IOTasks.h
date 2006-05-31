@@ -53,6 +53,7 @@ protected:
     Logger *logger;    
     int connectionTimeout;
     Array<Socket*> waitingAdd;
+    inline void addSocket(Socket* s, bool connected);
 };
 
 class HttpReaderTask : public IOTask {
@@ -62,9 +63,6 @@ public:
     virtual int Execute();
     virtual const char* taskName();
     virtual void registerContext(HttpContext* cx);
-
-protected:
-    inline void addSocket(Socket* s);
 };
 
 class HttpWriterTask : public IOTask {
@@ -76,8 +74,6 @@ public:
     virtual void registerContext(HttpContext* cx);
 
 protected:
-    inline void addSocket(Socket* s, bool connected);
-
     Array<Socket*> waitingConnect;
 };
 

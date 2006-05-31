@@ -82,7 +82,7 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
         request.setRouteId(r.id);
         request.setProviderId(r.provider_id);
 
-        CSessionKey sk = {request.getUSR(), request.getAbonent().c_str()};
+        CSessionKey sk = {request.getUSR(), Address(request.getAbonent().c_str())};
         SessionPtr se = SessionManager::Instance().getSession(sk);
 
         if(se.Get())
@@ -98,9 +98,9 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
         } else
             smsc_log_error( logger, "session not found for abonent=%s, USR=%d", request.getAbonent().c_str(), request.getUSR());
     }
-    catch(RouteNotFoundException& e)
+    catch(Exception& e)
     {
-        smsc_log_error( logger, "httproute not found");
+        smsc_log_error(logger, "error processing request. %s", e.what());
     }
 
     registerEvent(httpRequestRejected, request);
@@ -112,21 +112,27 @@ bool HttpProcessorImpl::processResponse(HttpResponse& response)
 {
     smsc_log_debug( logger, "Got http_response command abonent=%s, USR=%d, route_id=%s, service_id=%s", response.getAbonent().c_str(), response.getUSR(), response.getRouteId().c_str(), response.getServiceId());
 
-    CSessionKey sk = {response.getUSR(), response.getAbonent().c_str()};
-    SessionPtr se = SessionManager::Instance().getSession(sk);
+    try{
+        CSessionKey sk = {response.getUSR(), Address(response.getAbonent().c_str())};
+        SessionPtr se = SessionManager::Instance().getSession(sk);
 
-    RuleStatus rs;
+        RuleStatus rs;
 
-    if(se.Get())
-    {
-        rs = RuleEngine::Instance().process(response, *se.Get());
-        if(rs.result >= 0)
+        if(se.Get())
         {
-            registerEvent(httpRequest, response);
-            return true;
-        }
-    } else
-        smsc_log_error( logger, "http_response session not found abonent=%s, USR=%d", response.getAbonent().c_str(), response.getUSR());
+            rs = RuleEngine::Instance().process(response, *se.Get());
+            if(rs.result >= 0)
+            {
+                registerEvent(httpRequest, response);
+                return true;
+            }
+        } else
+            smsc_log_error( logger, "http_response session not found abonent=%s, USR=%d", response.getAbonent().c_str(), response.getUSR());
+    }
+    catch(Exception& e)
+    {
+        smsc_log_error( logger, "http_response error processing abonent=%s, USR=%d. %s", response.getAbonent().c_str(), response.getUSR(), e.what());
+    }
 
     registerEvent(httpRequestRejected, response);
 
@@ -138,22 +144,28 @@ void HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
     smsc_log_debug( logger, "Got http_status_response command abonent=%s, USR=%d, route_id=%s, service_id=%s, delivered=%d",
              response.getAbonent().c_str(), response.getUSR(), response.getRouteId().c_str(), response.getServiceId(), delivered);
 
-    CSessionKey sk = {response.getUSR(), response.getAbonent().c_str()};
-    SessionPtr se = SessionManager::Instance().getSession(sk);
+    try{
+        CSessionKey sk = {response.getUSR(), Address(response.getAbonent().c_str())};
+        SessionPtr se = SessionManager::Instance().getSession(sk);
 
-    RuleStatus rs;
-    if(se.Get())
-    {
-        response.setCommandId(HTTP_DELIVERY);
-        rs = RuleEngine::Instance().process(response, *se.Get());
-        if(rs.result > 0)
+        RuleStatus rs;
+        if(se.Get())
         {
-            registerEvent(httpDelivered, response);
-            return;
+            response.setCommandId(HTTP_DELIVERY);
+            rs = RuleEngine::Instance().process(response, *se.Get());
+            if(rs.result > 0)
+            {
+                registerEvent(httpDelivered, response);
+                return;
+            }
         }
+        else
+            smsc_log_error( logger, "http_status_response session not found abonent=%s, USR=%d", response.getAbonent().c_str(), response.getUSR());
     }
-    else
-        smsc_log_error( logger, "http_status_response session not found abonent=%s, USR=%d", response.getAbonent().c_str(), response.getUSR());
+    catch(Exception& e)
+    {
+        smsc_log_error( logger, "http_status_response error processing abonent=%s, USR=%d. %s", response.getAbonent().c_str(), response.getUSR(), e.what());
+    }
 
     registerEvent(httpFailed, response);
 }

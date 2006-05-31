@@ -95,9 +95,9 @@ void ScagTaskManager::init(int maxThreads, int scagQueueLim, HttpProcessor& p)
     waitQueueShrinkage = false;
     
     headContext = NULL;
-    tailContext[0] = (HttpContext *)&headContext;
-    tailContext[1] = (HttpContext *)&headContext;
-    tailContext[2] = (HttpContext *)&headContext;
+    tailContext[PROCESS_REQUEST] = (HttpContext *)&headContext;
+    tailContext[PROCESS_RESPONSE] = (HttpContext *)&headContext;
+    tailContext[PROCESS_STATUS_RESPONSE] = (HttpContext *)&headContext;
 
     logger = Logger::getInstance("scag.http.scag");
 
@@ -190,7 +190,10 @@ void IOTaskManager::process(HttpContext* cx)
 
     IOTask *t = getFirst();
     
-    if (t->getSocketCount() < maxSockets) {
+    int i = t->getSocketCount();
+    if(i)
+        smsc_log_error(logger, "IOTMgr: %d, %d, %d", i, maxSockets, maxSockets - i);
+    if (i < maxSockets) {
         giveContext(t, cx);
     }
     else {
