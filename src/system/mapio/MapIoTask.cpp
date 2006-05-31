@@ -59,12 +59,14 @@ extern "C" {
     if( userState == 1 ) {
       if (affectedSSN == SSN ) {
         SSN_bound = false;
+        __map_warn2__("Et96MapStateInd SSN %d is unavailable trying to rebind",affectedSSN);
         USHORT_T result = Et96MapBindReq(MY_USER_ID, SSN);
         if (result!=ET96MAP_E_OK) {
           __map_warn2__("Bind error 0x%hx",result);
         }
       } else if( affectedSSN == USSD_SSN ) {
         USSD_SSN_bound = false;
+        __map_warn2__("Et96MapStateInd SSN %d is unavailable trying to rebind",affectedSSN);
         USHORT_T result = Et96MapBindReq(MY_USER_ID, USSD_SSN);
         if (result!=ET96MAP_E_OK) {
           __map_warn2__("USSD Bind error 0x%hx",result);
