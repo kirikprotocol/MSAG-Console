@@ -22,7 +22,7 @@ namespace scag { namespace sessions
         ReceiptManager() {};
     public:
 
-        static void Init(std::string& storePath);
+        static void Init();
         static ReceiptManager& Instance();
 
         virtual void waitReceipt(Address& service, CSessionKey& sessionKey) = 0;

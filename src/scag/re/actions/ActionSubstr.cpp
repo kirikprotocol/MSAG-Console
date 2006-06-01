@@ -90,10 +90,11 @@ bool ActionSubstr::run(ActionContext& context)
     }
 
     std::string temp;
-    char buff[1024];
-    memcpy(buff,strArgument.data() + begin, end - begin + 2);
+    auto_ptr<char> buff(new char[end - begin + 2]);
+    memcpy(buff.get(),strArgument.data() + begin, end - begin + 2);
 
-    temp.assign(buff, end - begin + 2);
+    temp.assign(buff.get(), end - begin + 2);
+
     resultProperty->setStr(temp);
     smsc_log_debug(logger,"Action 'substr':: substr result is '%s' (begin=%d, end=%d)", FormatWStr(temp).c_str(), begin, end);
 

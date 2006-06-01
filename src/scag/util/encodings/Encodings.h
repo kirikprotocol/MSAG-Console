@@ -9,7 +9,8 @@ namespace scag { namespace util { namespace encodings {
 struct Convertor
 {
 
-    static void UCS2ToUTF8(unsigned char * usc2buff, int usc2len, std::string& utf8str);
+    static void UCS2ToUTF8(unsigned short * ucs2buff, int ucs2len, std::string& utf8str);
+
     static void GSM7BitToUTF8(unsigned char * gsm7BitBuff, int gsm7BitBuffLen, std::string& utf8str);
     static void MultibyteToUTF8(unsigned char * latin1Buff, int latin1BuffLen, ConvEncodingEnum encoding, std::string& utf8str);
 
