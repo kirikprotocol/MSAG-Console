@@ -63,41 +63,6 @@ TimePolicy PersAction::getPolicyFromStr(std::string& str)
         return UNKNOWN;
 }
 
-static std::wstring ConvertWStrTo_wstring(const std::string& str)
-{
-    TmpBuf<wchar_t, 1024> buf(1024);
-    std::wstring wstr;
-    const char* chrs  = str.c_str();
-
-    for(int i = 0; i < str.length(); i+=2)
-    {
-        wchar_t r = (chrs[i] << 8) + chrs[i + 1];
-        buf.Append(&r, 1);
-    }
-
-    wstr.assign(buf.get(), buf.GetPos());
-
-    return wstr;
-}
-
-static std::string Convert_wstringToWstr(const std::wstring& wstr)
-{
-    std::string str;
-    TmpBuf<char, 1024> buf(1024);
-    const wchar_t* wchrs  = wstr.c_str();
-
-    for(int i = 0; i < wstr.length(); i++)
-    {
-        char r = (*wchrs >> 8);
-        buf.Append(&r, 1);
-        r = *(wchrs++);
-        buf.Append(&r, 1);
-    }
-
-    str.assign(buf.get(), buf.GetPos());
-    return str;
-}
-
 void PersAction::init(const SectionParams& params, PropertyObject propertyObject)
 {
     const char * name = 0;
@@ -105,13 +70,13 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
     if(!logger) 
         logger = Logger::getInstance("scag.pers.action");
 
-    if(!params.Exists("type") || (profile = getProfileTypeFromStr(ConvertWStrToStr(params["type"]))) == PT_UNKNOWN) 
+    if(!params.Exists("type") || (profile = getProfileTypeFromStr(params["type"])) == PT_UNKNOWN) 
         throw SCAGException("PersAction '%s' : missing or unknown 'type' parameter", getStrCmd());
     
     if(!params.Exists("var"))
         throw SCAGException("PersAction '%s' : missing 'var' parameter", getStrCmd());
 
-    var = ConvertWStrToStr(params["var"]);
+    var = params["var"];
 
     if(cmd == PC_DEL)
     {
@@ -120,24 +85,12 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
     }
 
     if(cmd == PC_INC_MOD || cmd == PC_INC)
-    {
-        if(!params.Exists("inc"))
-        {
-            value_str = "1";
-            value = L"1";
-        }
-        else
-        {
-            value_str = ConvertWStrToStr(params["inc"]);
-            value = ConvertWStrTo_wstring(params["inc"]);
-        }
-    }
+        value_str = params.Exists("inc") ? params["inc"] : "1";
     else
     {
         if(!params.Exists("value"))
             throw SCAGException("PersAction 'value' : missing '%s' parameter", getStrCmd());
-        value_str = ConvertWStrToStr(params["value"]);
-        value = ConvertWStrTo_wstring(params["value"]);
+        value_str = params["value"];
     }
 
     ftValue = ActionContext::Separate(value_str, name); 
@@ -162,7 +115,7 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
         if(!params.Exists("mod"))
             throw SCAGException("PersAction '%s' : missing 'mod' parameter", getStrCmd());
 
-        mod_str = ConvertWStrToStr(params["mod"]);
+        mod_str = params["mod"];
 
         ftModValue = ActionContext::Separate(mod_str, name); 
         if(ftModValue == ftField) 
@@ -178,7 +131,7 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
         if(!params.Exists("result"))
             throw SCAGException("PersAction '%s' : missing 'result' parameter", getStrCmd());
 
-        result_str = ConvertWStrToStr(params["result"]);
+        result_str = params["result"];
 
         FieldType ftResultValue = ActionContext::Separate(result_str, name); 
         if(ftResultValue == ftUnknown || ftValue == ftConst)
@@ -192,7 +145,7 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
         }
     }
 
-    if(!params.Exists("policy") || (policy = getPolicyFromStr(ConvertWStrToStr(params["policy"]))) == UNKNOWN)
+    if(!params.Exists("policy") || (policy = getPolicyFromStr(params["policy"])) == UNKNOWN)
         throw SCAGException("PersAction '%s' : missing or unknown 'policy' parameter", getStrCmd());
 
     if(policy == INFINIT)
@@ -203,7 +156,7 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
 
     if(policy == FIXED && params.Exists("finaldate"))
     {
-        std::string dt = ConvertWStrToStr(params["finaldate"]);
+        std::string dt = params["finaldate"];
 
         struct tm time;
         char *ptr;
@@ -220,7 +173,7 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
     if(!params.Exists("lifetime"))
         throw SCAGException("PersAction '%s' : missing 'finaldate' or 'lifetime' parameter", getStrCmd());
 
-    std::string lt = ConvertWStrToStr(params["lifetime"]);
+    std::string lt = params["lifetime"];
 
     struct tm time;
     char *ptr;
@@ -264,7 +217,7 @@ static void setPersPropFromREProp(Property& prop, REProperty& rep)
             prop.setDateValue(rep.getDate());
             break;
         case reprop::pt_str:
-            prop.setStringValue(ConvertWStrTo_wstring(rep.getStr()).c_str());
+            prop.setStringValue(rep.getStr().c_str());
             break;
     }
 }
@@ -283,7 +236,7 @@ static void setREPropFromPersProp(REProperty& rep, Property& prop)
             rep.setDate(prop.getDateValue());
             break;
         case STRING:
-            rep.setStr(Convert_wstringToWstr(prop.getStringValue()));
+            rep.setStr(prop.getStringValue());
             break;
     }
 }
@@ -321,7 +274,7 @@ bool PersAction::run(ActionContext& context)
                         return false;
                 }
                 else
-                    prop.assign(var.c_str(), value.c_str(), policy, final_date, life_time);
+                    prop.assign(var.c_str(), value_str.c_str(), policy, final_date, life_time);
 
                 if(cmd == PC_SET)
                 {

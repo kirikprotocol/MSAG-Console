@@ -14,7 +14,6 @@ using smsc::core::buffers::Hash;
 using scag::transport::SCAGCommand;
 
 typedef Hash<std::string> StringHash;
-typedef std::basic_string<wchar_t> wstring;
 
 const char CONTENT_LENGTH_FIELD[] = "content-length";
 const char CONTENT_TYPE_FIELD[] = "content-type";
@@ -142,8 +141,8 @@ public:
         content.setSize(length);
     }
     
-    const wstring& getMessageText();
-    bool setMessageText(const wstring& text);
+    const std::string& getMessageText();
+    bool setMessageText(const std::string& text);
 
     const uint8_t* getMessageBinary(int& length);
     void setMessageBinary(uint8_t* body, int length, const std::string& cp);
@@ -164,7 +163,7 @@ public:
     std::string charset;
     std::string contentType;
     std::string httpVersion;
-    wstring textContent;
+    std::string textContent;
     uint8_t command_id;
         
     TransactionContext &trc;

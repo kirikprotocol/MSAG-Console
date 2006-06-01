@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
         prop.setBool("test_val_bool", false, R_ACCESS, -1, 25);
         pc.SetProperty(PT_ABONENT, "+79232446251", prop);
 
-        prop.setString("test_val_string", L"test_string", W_ACCESS, -1, 25);
+        prop.setString("test_val_string", "test_string", W_ACCESS, -1, 25);
         pc.SetProperty(PT_ABONENT, "+79232446251", prop);
 
         prop.setDate("test_val_date", 111111, INFINIT, -1, 25);
@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
         prop.setBool("test_val_bool", false, R_ACCESS, -1, 25);
         pc.SetProperty(PT_PROVIDER, 12, prop);
 
-        prop.setString("test_val_string", L"test_string", W_ACCESS, -1, 25);
+        prop.setString("test_val_string", "test_string", W_ACCESS, -1, 25);
         pc.SetProperty(PT_OPERATOR, 12, prop);
 
         prop.setDate("test_val_date", 111111, INFINIT, -1, 25);

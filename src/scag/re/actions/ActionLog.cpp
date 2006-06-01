@@ -31,13 +31,12 @@ void ActionLog::init(const SectionParams& params,PropertyObject propertyObject)
     if (!params.Exists("category")) throw SCAGException("Action 'log': missing 'category' parameter");
 
     const char * name = 0;
-    strCategory = ConvertWStrToStr(params["category"]);
+    strCategory = params["category"];
     std::string s = "rule." + ttToStr(propertyObject.transport) + "." + strCategory;
 
     logger = Logger::getInstance(s.c_str());
 
-    ftMessage = CheckParameter(params, propertyObject, "log", "message", true, true, wstrMsg, bExist);
-    strMsg = ConvertWStrToStr(wstrMsg);
+    ftMessage = CheckParameter(params, propertyObject, "log", "message", true, true, strMsg, bExist);
 
     smsc_log_debug(logger,"Action 'log':: inited... level=%d, category %s, transport=%s", level, strCategory.c_str(), ttToStr(propertyObject.transport).c_str());
 }
@@ -57,7 +56,7 @@ bool ActionLog::run(ActionContext& context)
             return true;
         }
 
-        s2 = ConvertWStrToStr(p2->getStr());
+        s2 = p2->getStr();
     } 
     else
         s2 = strMsg;

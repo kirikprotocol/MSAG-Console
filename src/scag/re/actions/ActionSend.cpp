@@ -20,7 +20,7 @@ bool ActionSend::getStrProperty(ActionContext& context, std::string& str, const 
             return false;
         }
 
-        val = ConvertWStrToStr(p2->getStr());
+        val = p2->getStr();
     } else
         val = str;
     return true;
@@ -30,16 +30,15 @@ IParserHandler * ActionSend::StartXMLSubSection(const std::string& name, const S
 {
     const char *p;
     bool bExist;
-    std::string strTo, wstrTo;
+    std::string strTo;
     FieldType ftTo;
 
     if(name == "send:sms")
     {
-        ftTo = CheckParameter(params, propertyObject, "send", "to", true, true, wstrTo, bExist);
-        strTo = ConvertWStrToStr(wstrTo);
+        ftTo = CheckParameter(params, propertyObject, "send", "to", true, true, strTo, bExist);
         try{
-        if(ftTo == ftUnknown)
-            Address a(strTo.c_str());
+            if(ftTo == ftUnknown)
+                Address a(strTo.c_str());
         }
         catch(...)
         {
@@ -48,8 +47,7 @@ IParserHandler * ActionSend::StartXMLSubSection(const std::string& name, const S
         toSms.Push(strTo);
     }else if (name == "send:email")
     {
-        ftTo = CheckParameter(params, propertyObject, "send", "to", true, true, wstrTo, bExist);
-        strTo = ConvertWStrToStr(wstrTo);
+        ftTo = CheckParameter(params, propertyObject, "send", "to", true, true, strTo, bExist);
         if(ftTo == ftUnknown && ((p = strchr(strTo.c_str(), '@')) == NULL || !*p))
                throw SCAGException("Action 'send': invalid e-mail address %s. Should be name@domain", strTo.c_str());
         toEmail.Push(strTo);
@@ -78,16 +76,14 @@ void ActionSend::init(const SectionParams& params,PropertyObject _propertyObject
     terminal = false;
     if(params.Exists("terminal"))
     {
-        str = ConvertWStrToStr(params["terminal"]);
+        str = params["terminal"];
         if(!strcmp(str.c_str(), "yes"))
             terminal = true;
     }
 
-    CheckParameter(params, propertyObject, "send", "message", true, true, wstrMsg, bExist);
-    strMsg = ConvertWStrToStr(wstrMsg);
+    CheckParameter(params, propertyObject, "send", "message", true, true, strMsg, bExist);
 
-    CheckParameter(params, propertyObject, "send", "date", true, true, wstrDate, bExist);
-    strDate = ConvertWStrToStr(wstrDate);
+    CheckParameter(params, propertyObject, "send", "date", true, true, strDate, bExist);
 
     i = sscanf(strDate.c_str(), "%2u%2u%2u%2u%2u%2u%1u%2u%c", &y, &m, &d, &h, &min, &s, &t, &nn, &p);
     if(i < 9 || m > 12 || !d || d > 31 || h > 23 || min > 60 || s > 59 || (p != '-' && p != '+'))

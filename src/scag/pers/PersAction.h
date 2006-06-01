@@ -20,7 +20,6 @@ using smsc::logger::Logger;
         ProfileType profile;
         std::string var;
         FieldType ftValue, ftModValue;
-        std::wstring value;
         std::string value_str, mod_str;
         std::string result_str;
         TimePolicy policy;

@@ -25,9 +25,6 @@ public:
 protected:
     ActionSend(const ActionSend&);
 
-    std::string wstrDate;
-    std::string wstrMsg;
-
     std::string strDate;
     std::string strMsg;
     Array<std::string> toSms;

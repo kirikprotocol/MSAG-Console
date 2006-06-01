@@ -1,25 +1,25 @@
 /* $Id$ */
 
-#include <wchar.h>
-
+#include <string.h>
+#include <stdlib.h>
 #include "Property.h"
 
 namespace scag{ namespace pers{
 
-void Property::assign(const char *nm, const wchar_t *str, TimePolicy policy, time_t fd, uint32_t lt)
+void Property::assign(const char *nm, const char *str, TimePolicy policy, time_t fd, uint32_t lt)
 {
-    wchar_t *ep;
+    char *ep;
     uint32_t i;
 
     name = nm;
     setTimePolicy(policy, fd, lt);
 
-    if(!wcscmp(str, L"false"))
+    if(!strcmp(str, "false"))
         setBoolValue(false);
-    else if(!wcscmp(str, L"true"))
+    else if(strcmp(str, "true"))
         setBoolValue(true);
-    else if((str[0] >= L'0' && str[0] <= L'9' || str[0] == L'-' || str[0] == L'+') 
-        && ((i = wcstol(str, &ep, 0)) || ep != str) && !*ep)
+    else if((str[0] >= '0' && str[0] <= '9' || str[0] == '-' || str[0] == '+') 
+        && ((i = strtol(str, &ep, 0)) || ep != str) && !*ep)
         setIntValue(i);
 //    else if((s = strptime(str, "%d.%m.%Y %T", &time)) && !*s)
 //        setDateValue(mktime(&time));
@@ -70,7 +70,7 @@ std::string Property::toString() const
             str += buf;
             break;
         case STRING:
-            str += " STRING: ";// + s_val;
+            str += " STRING: " + s_val;
             break;
         case BOOL:
             str += " BOOL: ";
@@ -163,7 +163,7 @@ void Property::setBool(const char *nm, bool b, TimePolicy policy, time_t fd, uin
     setTimePolicy(policy, fd, lt);
 }
 
-void Property::setString(const char *nm, const wchar_t* str, TimePolicy policy, time_t fd, uint32_t lt)
+void Property::setString(const char *nm, const char* str, TimePolicy policy, time_t fd, uint32_t lt)
 {
     name = nm;
     setStringValue(str);

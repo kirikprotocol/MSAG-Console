@@ -8,7 +8,7 @@
 #define CRLF "\r\n"
 #define SP ' '
 
-using namespace std;
+//using namespace std;
 
 namespace scag { namespace transport { namespace http
 {
@@ -143,7 +143,7 @@ const std::string& HttpRequest::getQueryParameter(const std::string& paramName)
     }
 }
 
-const wstring& HttpCommand::getMessageText()
+const std::string& HttpCommand::getMessageText()
 {
     if (textContent.empty() &&
         !strncasecmp(getHeaderField(content_type_field).c_str(), "text/", 5))
@@ -152,10 +152,8 @@ const wstring& HttpCommand::getMessageText()
         size_t inbytesleft;
         char *outbufptr;
         const char *inbufptr = getMessageContent(inbytesleft);
-        size_t outbufsize;
         size_t outbytesleft;
-        iconv_t cd = iconv_open("wchar_t", charset.c_str());
-        wchar_t *outbuf;
+        iconv_t cd = iconv_open("utf8", charset.c_str());
 
         if (cd == (iconv_t)(-1))
             throw Exception("iconv_open() failed");
@@ -164,17 +162,23 @@ const wstring& HttpCommand::getMessageText()
             if (cd == (iconv_t)(-1))
                 throw Exception("iconv_open() failed");
         
-            outbufsize = inbytesleft;
-            outbytesleft = outbufsize * sizeof(wchar_t);
-            outbuf = new wchar_t[outbufsize];
-            outbufptr = (char *)outbuf;
+            TmpBuf<char, 2048> buf(2048);
+            buf.SetPos(0);
+            while (inbytesleft) {
+                buf.setSize(buf.GetPos() + ICONV_BLOCK_SIZE);
+                outbufptr = buf.GetCurPtr();
+                outbytesleft = ICONV_BLOCK_SIZE;
 
-            result = iconv(cd, &inbufptr, &inbytesleft, &outbufptr, &outbytesleft);
-            
+                result = iconv(cd, &inbufptr, &inbytesleft, &outbufptr, &outbytesleft);
+                if (result == (size_t)(-1) && errno != E2BIG)
+                    break;
+                
+                buf.SetPos(buf.GetPos() + ICONV_BLOCK_SIZE - outbytesleft);
+            }
+
             iconv_close(cd);
 
-            textContent.assign(outbuf, outbufsize - outbytesleft / sizeof(wchar_t));
-            delete outbuf;
+            textContent.assign(buf.get(), buf.GetPos());
 
             if (result == (size_t)(-1))
                 throw Exception("iconv() failed");
@@ -184,7 +188,7 @@ const wstring& HttpCommand::getMessageText()
     return textContent;
 }
 
-bool HttpCommand::setMessageText(const wstring& text)
+bool HttpCommand::setMessageText(const std::string& text)
 {
     textContent.clear();   
 
@@ -195,10 +199,10 @@ bool HttpCommand::setMessageText(const wstring& text)
     {  
         size_t result = 0;
         size_t outbytesleft;    
-        size_t inbytesleft = text.size() * sizeof(wchar_t);
+        size_t inbytesleft = text.size();
         char *outbufptr;
         const char *inbufptr = (char *)text.data();
-        iconv_t cd = iconv_open(charset.c_str(), "wchar_t");
+        iconv_t cd = iconv_open(charset.c_str(), "utf8");
 
         if (cd == (iconv_t)(-1))
             throw Exception("iconv_open() failed");

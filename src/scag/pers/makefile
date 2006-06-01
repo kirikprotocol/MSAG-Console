@@ -4,7 +4,7 @@
 #
 #
 
-#CXXFLAGS := $(CXXFLAGS)
+#CXXFLAGS := $(CXXFLAGS) -g
 PACKAGE := scag.pers
 
 ifndef SMSC_SRCDIR

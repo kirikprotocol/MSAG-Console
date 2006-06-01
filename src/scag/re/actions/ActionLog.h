@@ -28,12 +28,8 @@ public:
 protected:
     ActionLog(const ActionLog&);
 
-    std::string wstrCategory;
-    std::string wstrMsg;
-
     std::string strCategory;
     std::string strMsg;
-
 
     LogLevel level;
     FieldType ftCategory,ftMessage;

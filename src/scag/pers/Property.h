@@ -32,7 +32,7 @@ class Property {
 protected:
     PropertyType type;
     std::string name;
-    std::wstring s_val;
+    std::string s_val;
     int32_t i_val;
     time_t d_val;
     bool b_val;
@@ -43,7 +43,6 @@ protected:
 
     void copy(const Property& cp);
     static void StringFromBuf(SerialBuffer& buf, std::string &str);
-    static void StringFromBuf(SerialBuffer& buf, std::wstring &str);
 
 public:
 
@@ -56,7 +55,7 @@ public:
         setInt(nm, i, policy, fd, lt);
     };
 
-    Property(const char *nm, const wchar_t* str, TimePolicy policy, time_t fd, uint32_t lt)
+    Property(const char *nm, const char* str, TimePolicy policy, time_t fd, uint32_t lt)
     {
         setString(nm, str, policy, fd, lt);
     };
@@ -69,12 +68,12 @@ public:
     uint32_t getIntValue() { return i_val; };
     bool getBoolValue() { return b_val; };
     time_t getDateValue() { return d_val; };
-    const std::wstring& getStringValue() { return s_val; };
+    const std::string& getStringValue() { return s_val; };
     void setValue(const Property& cp);
     void setIntValue(int32_t i) { i_val = i; type = INT; };
     void setBoolValue(bool b) { b_val = b; type = BOOL; };
     void setDateValue(time_t d) { d_val = d; type = DATE; };
-    void setStringValue(const wchar_t* s) { s_val = s; type = STRING; };
+    void setStringValue(const char* s) { s_val = s; type = STRING; };
     uint8_t getType() { return type; };
     void setTimePolicy(TimePolicy policy, time_t fd, uint32_t lt);
     TimePolicy getTimePolicy() { return time_policy; };
@@ -83,10 +82,10 @@ public:
 
     void setInt(const char *nm, int32_t i, TimePolicy policy, time_t fd, uint32_t lt);
     void setBool(const char *nm, bool b, TimePolicy policy, time_t fd, uint32_t lt);
-    void setString(const char *nm, const wchar_t* str, TimePolicy policy, time_t fd, uint32_t lt);
+    void setString(const char *nm, const char* str, TimePolicy policy, time_t fd, uint32_t lt);
     void setDate(const char *nm, time_t t, TimePolicy policy, time_t fd, uint32_t lt);
 
-    void assign(const char *nm, const wchar_t* str, TimePolicy policy, time_t fd, uint32_t lt);
+    void assign(const char *nm, const char* str, TimePolicy policy, time_t fd, uint32_t lt);
 
     void Serialize(SerialBuffer& buf);
     void Deserialize(SerialBuffer& buf);

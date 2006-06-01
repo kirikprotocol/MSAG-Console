@@ -92,7 +92,7 @@ Property* HttpCommandAdapter::getRequestProperty(const std::string& name)
     else if(!strcmp(name.c_str(), "port"))
         prop = new AdapterProperty(name, this, cmd.getSitePort());
     else if(!strcmp(name.c_str(), "message"))
-        prop = new AdapterProperty(name, this, Convert_wstringToWStr(cmd.getMessageText()));
+        prop = new AdapterProperty(name, this, cmd.getMessageText());
 
     if(prop)
         PropertyPool.Insert(name.c_str(), prop);
@@ -154,7 +154,7 @@ void HttpCommandAdapter::changed(AdapterProperty& property)
         else if(!strcmp(property.GetName().c_str(), "port"))
             cmd.setSitePort(property.getInt());
         else if(!strcmp(property.GetName().c_str(), "message"))
-            cmd.setMessageText(ConvertWStrTo_wstring(property.getStr()));
+            cmd.setMessageText(property.getStr());
     }
 }
 
