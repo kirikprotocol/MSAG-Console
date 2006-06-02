@@ -114,7 +114,7 @@ bool EventSender::processEvent(void *ev)
 	  }
 
 	  default:
-		  smsc_log_error(logger,"EventSender Unknown event!!");
+		  smsc_log_warn(logger,"EventSender Unknown event!!");
 	   break;
 
 	  }
@@ -178,13 +178,13 @@ bool EventSender::connect(std::string host, int port,int timeout)
  
  if(SaccSocket.Init(host.c_str(),port,timeout/1000)!=0)
  {
-     smsc_log_error(logger,"EventSender::connect Failed to init socket");
+     smsc_log_warn(logger,"EventSender::connect Failed to init socket");
   return false;
  }
 
  if(SaccSocket.Connect()!=0)
  {
-     smsc_log_error(logger,"EventSender::connect Failed to connect");
+     smsc_log_warn(logger,"EventSender::connect Failed to connect");
   return false;
  }
 
@@ -233,7 +233,7 @@ void EventSender::Put (const SACC_ALARM_t& ev)
  
  if(!PushEvent(pEv))
  {
-    smsc_log_error(logger,"Error push alarm_event to QOEUE for SACC EVENT queue is Overflow!"); 
+    smsc_log_warn(logger,"Error push alarm_event to QOEUE for SACC EVENT queue is Overflow!"); 
   delete pEv;
  }
 }
@@ -247,7 +247,7 @@ void EventSender::Put(const SACC_TRAFFIC_INFO_EVENT_t& ev)
 
  if(!PushEvent(pEv))
  {
-     smsc_log_error(logger,"Error push traffic_event to QOEUE for SACC EVENT queue is Overflow!"); 
+     smsc_log_warn(logger,"Error push traffic_event to QOEUE for SACC EVENT queue is Overflow!"); 
   delete pEv;
  }
 }
@@ -259,7 +259,7 @@ void EventSender::Put(const SACC_BILLING_INFO_EVENT_t& ev)
 
  if(!PushEvent(pEv))
  {
-  smsc_log_error(logger,"Error push billing_event to QOEUE for SACC EVENT? queue is Overflow!"); 
+  smsc_log_warn(logger,"Error push billing_event to QOEUE for SACC EVENT? queue is Overflow!"); 
   delete pEv;
  }
 }
@@ -271,7 +271,7 @@ void EventSender::Put(const SACC_ALARM_MESSAGE_t & ev)
 
  if(!PushEvent(pEv))
  {
-    smsc_log_error(logger,"Error push Alarm_Message to QOEUE for SACC EVENT queue is Overflow!"); 
+    smsc_log_warn(logger,"Error push Alarm_Message to QOEUE for SACC EVENT queue is Overflow!"); 
   delete pEv;
  }
 }
