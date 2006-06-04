@@ -65,7 +65,7 @@ public class ScagRoutingManager {
     public void init() throws SibincoException {
         try {
             load();
-            trace();
+            //trace();
         } catch (SibincoException e) {
             e.printStackTrace();
             throw new SibincoException(e.getMessage());
