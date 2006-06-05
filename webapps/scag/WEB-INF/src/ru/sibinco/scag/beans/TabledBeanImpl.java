@@ -6,6 +6,7 @@ import ru.sibinco.lib.bean.TabledBean;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.util.*;
 
 
@@ -18,7 +19,7 @@ public abstract class TabledBeanImpl extends SCAGBean implements TabledBean
 {
   protected List tabledItems = new ArrayList();
   protected String sort = null;
-  protected int pageSize = 25;
+  protected int pageSize = 1;
   protected int totalSize = 0;
   protected int startPosition = 0;
   protected String[] checked = new String[0];
@@ -31,6 +32,17 @@ public abstract class TabledBeanImpl extends SCAGBean implements TabledBean
   public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException
   {
     super.process(request, response);
+      HttpSession session = request.getSession();
+      if(session.getAttribute("pageSize") == null){
+          session.setAttribute("pageSize", new Integer(25));
+      }else{
+          Integer pSize = (Integer) session.getAttribute("pageSize");
+          if(pSize.intValue() != pageSize && pageSize != 1){
+              session.setAttribute("pageSize", new Integer(pageSize));
+          }
+      }
+      pageSize = Integer.parseInt(String.valueOf(session.getAttribute("pageSize")));
+      
     if (mbEdit != null)
       throw new EditException(mbEdit);
     if (mbAdd != null)
