@@ -175,8 +175,7 @@ public class SmsArchiveExport extends SmsExport {
             stmt.setString(pos++, row.getOriginatingDescriptor().getMsc());
             stmt.setString(pos++, row.getOriginatingDescriptor().getImsi());
             stmt.setLong(pos++, row.getOriginatingDescriptor().getSme());
-        }
-        else {
+        } else {
             stmt.setString(pos++, null);
             stmt.setString(pos++, null);
             stmt.setLong(pos++, 0);
@@ -185,8 +184,7 @@ public class SmsArchiveExport extends SmsExport {
             stmt.setString(pos++, row.getDestinationDescriptor().getMsc());
             stmt.setString(pos++, row.getDestinationDescriptor().getImsi());
             stmt.setLong(pos++, row.getDestinationDescriptor().getSme());
-        }
-        else {
+        } else {
             stmt.setString(pos++, null);
             stmt.setString(pos++, null);
             stmt.setLong(pos++, 0);
