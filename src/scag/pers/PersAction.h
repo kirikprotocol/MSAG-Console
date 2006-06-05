@@ -33,8 +33,8 @@ using smsc::logger::Logger;
         virtual bool FinishXMLSubSection(const std::string& name);
 
         const char* getStrCmd();
-        ProfileType getProfileTypeFromStr(std::string& str);
-        TimePolicy getPolicyFromStr(std::string& str);
+        ProfileType getProfileTypeFromStr(const std::string& str);
+        TimePolicy getPolicyFromStr(const std::string& str);
         uint32_t getKey(const CommandProperty& cp, ProfileType pt);
     public:
         PersAction() : cmd(PC_GET), final_date(-1), life_time(-1), policy(UNKNOWN) {}

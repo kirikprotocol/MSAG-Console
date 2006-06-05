@@ -33,7 +33,7 @@ const char* PersAction::getStrCmd()
     }
 }
 
-ProfileType PersAction::getProfileTypeFromStr(std::string& str)
+ProfileType PersAction::getProfileTypeFromStr(const std::string& str)
 {
     if(!strcmp(str.c_str(), "ABONENT"))
         return PT_ABONENT;
@@ -47,7 +47,7 @@ ProfileType PersAction::getProfileTypeFromStr(std::string& str)
         return PT_UNKNOWN;
 }
 
-TimePolicy PersAction::getPolicyFromStr(std::string& str)
+TimePolicy PersAction::getPolicyFromStr(const std::string& str)
 {
     if(!strcmp(str.c_str(), "INFINIT"))
         return INFINIT;
