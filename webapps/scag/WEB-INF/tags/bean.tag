@@ -35,9 +35,15 @@
                 ru.sibinco.lib.backend.util.Functions.getLocaleEncoding()) + "&parentId=" +
                 java.net.URLEncoder.encode(e.getParentId(),
                 ru.sibinco.lib.backend.util.Functions.getLocaleEncoding()));
-    } catch (ru.sibinco.scag.beans.AddException e) {
+    } catch (ru.sibinco.scag.beans. AddException e) {
         response.sendRedirect("add.jsp");
-    } catch (ru.sibinco.scag.beans.AddChildException e) {
+    } catch (ru.sibinco.scag.beans. AddSiteSubjectException e) {
+        response.sendRedirect("add.jsp?add=true&transportId=" +
+                java.net.URLEncoder.encode(e.getTransportId(),
+                ru.sibinco.lib.backend.util.Functions.getLocaleEncoding())+ "&subjectType=" +
+                java.net.URLEncoder.encode(e.getSubjectType(),
+                ru.sibinco.lib.backend.util.Functions.getLocaleEncoding()));
+    }catch (ru.sibinco.scag.beans.AddChildException e) {
         response.sendRedirect(e.getAdditDir() + File.separatorChar + "add.jsp?add=true&parentId=" +
                 java.net.URLEncoder.encode(e.getParentId(),
                 ru.sibinco.lib.backend.util.Functions.getLocaleEncoding()));
