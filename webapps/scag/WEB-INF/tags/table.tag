@@ -1,15 +1,15 @@
-<%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%><%@
- taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%><%@
- taglib prefix="smf" uri="/scag/func"%><%@
- tag body-content="empty" %><%@
- attribute name="columns" required="true"%><%@
- attribute name="names" required="true"%><%@
- attribute name="widths" required="true"%><%@
- attribute name="edit" required="false"%><%@
- attribute name="child" required="false"%><%@
- attribute name="parentId" required="false"%><%@
- attribute name="goal" required="false" %>
-<%@attribute name="filter" required="false"%>
+<%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
+<%@taglib prefix="smf" uri="/scag/func"%>
+<%@tag body-content="empty" %>
+<%@attribute name="columns" required="true"%>
+<%@attribute name="names" required="true"%>
+<%@attribute name="widths" required="true"%>
+<%@attribute name="edit" required="false"%>
+<%@attribute name="child" required="false"%>
+<%@attribute name="parentId" required="false"%>
+<%@attribute name="subjType" required="false"%>
+
 <c:set var="columns" value="${fn:split(columns, ',')}"/>
 <c:set var="names" value="${fn:split(names, ',')}"/>
 <c:set var="widths" value="${fn:split(widths, ',')}"/>
@@ -20,51 +20,18 @@
 <input type="hidden" id="childEditId" name="childEditId" value="">
 
 <script>
-function tableTag_navigatePage(pageNum)
-{
-	opForm.startPosition.value = pageNum*${bean.pageSize};
-	opForm.submit();
-	return false;
-}
-function tableTag_sort(sort)
-{
-  if (document.all.sort.value == sort)
-    opForm.sort.value = "-" + sort;
-  else
-    opForm.sort.value = sort;
-	opForm.submit();
-	return false;
-}
-function tableTag_checkChecks()
-{
-  var buttonsEnabled;
-  buttonsEnabled = false;
-  for (i=0; i<opForm.elements.length; i++)
-  {
-    var elem = opForm.elements[i];
-    if (elem.tagName == "INPUT" && elem.className == "check" && elem.checked)
-      buttonsEnabled = true;
-  }
-
-  for (i=0; i<document.all.length; i++)
-  {
-    var elem = document.all[i];
-    if (elem.tagName == "A" && elem.isCheckSensible)
-      elem.disabled = !buttonsEnabled;
-  }
-}
 
 function clearForm() {
-    opForm.target="_self";
-    opForm.action="<%=request.getContextPath() + (request.getServletPath().endsWith(".jsp")
-                                                         ? request.getServletPath().substring(0, request.getServletPath().lastIndexOf('/'))
-                                                         : request.getServletPath())%>/add.jsp";
+    opForm.target = "_self";
+    opForm.action = "<%=request.getContextPath() + (request.getServletPath().endsWith(".jsp")
+                      ? request.getServletPath().substring(0, request.getServletPath().lastIndexOf('/'))
+                      : request.getServletPath())%>/add.jsp";
     opForm.submit();
     return false;
 }
 
 
-function edit(idToEdit, child, parentId) {
+function edit(idToEdit, child, parentId) {              
     opForm.mbEdit.value = idToEdit;
     opForm.editId.value = idToEdit;
     var addPath = (child == null || child == '') ? "/edit.jsp" : (child + "/edit.jsp?parentId=" + idToEdit + "&editChild=true");
@@ -149,40 +116,4 @@ function edit(idToEdit, child, parentId) {
   </c:forEach>
 </tbody>
 </table>
-
-<c:set var="pageCurrent" value="${(bean.startPosition-(bean.startPosition%bean.pageSize)) / bean.pageSize}"/>
-<c:set var="pageFirst" value="${(pageCurrent -4) < 0 ? 0 : (pageCurrent -4)}"/>
-<c:set var="pageTotal" value="${((bean.totalSize-(bean.totalSize%bean.pageSize)) / bean.pageSize) + ((bean.totalSize % bean.pageSize) > 0 ? 1 : 0)}"/>
-<c:set var="pageLast" value="${(pageCurrent +4) > (pageTotal-1) ? (pageTotal-1) : (pageCurrent +4)}"/>
-<table class=navbar cellspacing=1 cellpadding=0>
-<tr>
-<td class=first onclick="return tableTag_navigatePage(0)" title="First page"><a href="#">&nbsp;</a></td>
-<c:if test="${pageCurrent > 0}">
-<td class=prev onclick="return tableTag_navigatePage(${pageCurrent-1})" title="Previous page"><a href="#">&nbsp;</a></td>
-</c:if>
-<c:forEach var="i"  begin="${pageFirst}" end="${pageLast < 0 ? 0 : pageLast}">
-  <td class="<c:choose><c:when test="${i == pageCurrent}"
-    >current</c:when><c:otherwise>page</c:otherwise></c:choose>" onclick="return tableTag_navigatePage(${i})" title="Page ${i+1}">${i+1}</td>
-</c:forEach>
-<c:if test="${pageCurrent+1 < pageTotal}">
-<td class=next title="Next page" onclick="return tableTag_navigatePage(${pageCurrent+1})"><a href="#">&nbsp;</a></td>
-</c:if>
-<td class=last onclick="return tableTag_navigatePage(${pageTotal > 0 ? pageTotal-1 : 0})" title="Last page"><a href="#">&nbsp;</a></td>
-<td class=total>total:${bean.totalSize} items</td>
-<td class=pageSize><select id="pageSize" name="pageSize" onchange="document.all.startPosition.value=0; opForm.submit();" >
-  <option value=  "3" <c:if test="${bean.pageSize ==   3}">selected</c:if>  >3</option>
-  <option value=  "5" <c:if test="${bean.pageSize ==   5}">selected</c:if>  >5</option>
-  <option value= "10" <c:if test="${bean.pageSize ==  10}">selected</c:if> >10</option>
-  <option value= "25" <c:if test="${bean.pageSize ==  25}">selected</c:if> >25</option>
-  <option value= "50" <c:if test="${bean.pageSize ==  50}">selected</c:if> >50</option>
-  <option value="100" <c:if test="${bean.pageSize == 100}">selected</c:if>>100</option>
-  <option value="250" <c:if test="${bean.pageSize == 250}">selected</c:if>>250</option>
-  <option value="500" <c:if test="${bean.pageSize == 500}">selected</c:if>>500</option>
-</select></td>
-<c:if test="${filter==true}">
-    <td class=filter><img src="content/images/but_filter.gif" class=button jbuttonName="mbFilter" jbuttonValue="Filter" title="Filter" jbuttonOnclick="return filter()"></td>
-</c:if>
-<%--td class=filter><%button(out, "but_filter.gif", "mbFilter", "Filter", "Filter", "return clickFilter()");%></td--%>
-</tr>
-</table>
-<!--<script>tableTag_checkChecks();</script>-->
+<%@ include file="paging.tag" %>
