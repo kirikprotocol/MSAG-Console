@@ -98,7 +98,7 @@ void MapIoTask::connect(unsigned timeout) {
     __map_warn2__("Error at MsgOpen, code 0x%hx",result);
     kill(getpid(),17);
   }
-
+  bindTimer = 0;
   int tries = 0;
   while( tries < 60 ) {
     result = MsgConn(MY_USER_ID,ETSIMAP_ID);
