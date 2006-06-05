@@ -154,7 +154,6 @@ public class ScagRoutingManager {
         StatMessage message = new StatMessage(user, "Routes", "Deleted route(s): " + checkedSet.toString() + ".");
         StatusManager.getInstance().addStatMessages(message);
         addStatMessages(message);
-
     }
 
     public synchronized void deleteRoutes(final String user, final List checkedSet) {
@@ -163,7 +162,6 @@ public class ScagRoutingManager {
         StatMessage message = new StatMessage(user, "Routes", "Deleted route(s): " + checkedSet.toString() + ".");
         StatusManager.getInstance().addStatMessages(message);
         addStatMessages(message);
-
     }
 
     protected Subject createSubject(final Element subjElem, final SmppManager smppManager) throws SibincoException {
