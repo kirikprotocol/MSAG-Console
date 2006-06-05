@@ -7,15 +7,12 @@ import ru.sibinco.scag.beans.TabledBeanImpl;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.SCAGAppContext;
+import ru.sibinco.scag.backend.transport.Transport;
 import ru.sibinco.scag.backend.daemon.Proxy;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Collection;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.Locale;
-import java.util.Date;
+import java.util.*;
 import java.security.Principal;
 import java.text.DateFormat;
 
@@ -30,6 +27,13 @@ public class Index extends TabledBeanImpl {
     private String mbLoadSaved;
     private String mbLoad;
     private String mbSave;
+
+    private String mbApplyHttp;
+    private String mbLoadSavedHttp;
+    private String mbLoadHttp;
+    private String mbSaveHttp;
+    private String mbRestoreHttp;
+
     private String[] subj;
     private boolean routesChanged;
     private String changeByUser;
@@ -39,25 +43,50 @@ public class Index extends TabledBeanImpl {
     private String restoreDate = null;
     private boolean routesLoaded = false;
 
+    private boolean httpRoutesSaved = false;
+    private boolean httpRoutesChanged = false;
+    private boolean httpRoutesRestored = false;
+    private boolean httpRoutesLoaded = false;
+
+    protected long transportId = Transport.HTTP_TRANSPORT_ID;
+
     protected Collection getDataSource() {
-        return appContext.getScagRoutingManager().getStatMessages();
+        if (transportId == Transport.SMPP_TRANSPORT_ID) {
+            return appContext.getScagRoutingManager().getStatMessages();
+        } else if (transportId == Transport.HTTP_TRANSPORT_ID) {
+            return appContext.getHttpRoutingManager().getStatMessages();
+        } else {
+            return new HashMap().values();
+        }
     }
 
     public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException {
         sort = "time";
-        super.process(request, response); // initializes bean values
+        super.process(request, response);
+
+        if (null != mbRestoreHttp)
+            restoreHttpRoutes();
         if (null != mbRestore)
             restoreRoutes();
+        else if (null != mbApplyHttp)
+            applyHttpRoutes();
         else if (null != mbApply)
             applyRoutes();
         else if (null != mbLoadSaved)
             restoreRoutes();
+        else if (null != mbLoadSavedHttp)
+            restoreHttpRoutes();
         else if (mbLoad != null)
             loadRoutes();
+        else if (mbLoadHttp != null)
+            loadHttpRoutes();
         else if (mbSave != null)
             saveRoutes();
+        else if (mbSaveHttp != null)
+            saveHttpRoutes();
         this.init();
-        super.process(request, response); //refresh changes bean values (it's bug from class TabledBeanImpl)
+        //refresh changes bean values (it's bug from class TabledBeanImpl)
+        super.process(request, response);
     }
 
     private void init() throws SCAGJspException {
@@ -67,9 +96,13 @@ public class Index extends TabledBeanImpl {
         Calendar restoreCalendar = new GregorianCalendar(locale);
         DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM, locale);
 
-        final Date restoreFileDate;
+        Date restoreFileDate = null;
         try {
-            restoreFileDate = appContext.getScagRoutingManager().getRestoreFileDate();
+            if (transportId == Transport.SMPP_TRANSPORT_ID) {
+                restoreFileDate = appContext.getScagRoutingManager().getRestoreFileDate();
+            } else if (transportId == Transport.HTTP_TRANSPORT_ID) {
+                restoreFileDate = appContext.getHttpRoutingManager().getRestoreFileDate();
+            }
             if (restoreFileDate != null) {
                 restoreCalendar.setTime(restoreFileDate);
                 restoreDate = dateFormat.format(restoreFileDate);
@@ -78,6 +111,7 @@ public class Index extends TabledBeanImpl {
             e.printStackTrace();
         }
 
+        /********************** SMPP ROUTES *********************************/
         routesRestored = appContext.getScagRoutingManager().isRoutesRestored();
         routesSaved = appContext.getScagRoutingManager().isRoutesSaved();
         if (appContext.getScagRoutingManager().hasSavedConfiguration()) {
@@ -88,6 +122,14 @@ public class Index extends TabledBeanImpl {
             changeByUser = appContext.getScagRoutingManager().getChangedByUser();
             currentUser = getUser(appContext).getName().equals(changeByUser);
         }
+
+        /*********************** HTTP ROUTES **********************************/
+        httpRoutesRestored = appContext.getHttpRoutingManager().isRoutesRestored();
+        httpRoutesSaved = appContext.getHttpRoutingManager().isRoutesSaved();
+        if (appContext.getHttpRoutingManager().hasSavedConfiguration()) {
+            httpRoutesLoaded = appContext.getHttpRoutingManager().isRoutesLoaded();
+        }
+        httpRoutesChanged = appContext.getHttpRoutingManager().isRoutesChanged();
     }
 
     private User getUser(SCAGAppContext appContext) throws SCAGJspException {
@@ -106,7 +148,7 @@ public class Index extends TabledBeanImpl {
     }
 
     /**
-     * This private method will be restory routes from route_.xml file
+     * This private method will be restory routes from smpp_routes_.xml file
      * saved user's earlier
      *
      * @throws SCAGJspException - an throws exception if it will be occurred
@@ -123,9 +165,33 @@ public class Index extends TabledBeanImpl {
             logger.debug("Couldn't restore routes", e);
             throw new SCAGJspException(Constants.errors.status.COULDNT_RESTORE_ROUTES, e);
         }
-
     }
 
+    /**
+     * This private method will be restory routes from http_routes_.xml file
+     * saved user's earlier
+     *
+     * @throws SCAGJspException - an throws exception if it will be occurred
+     */
+    private void restoreHttpRoutes() throws SCAGJspException {
+        try {
+            appContext.getHttpRoutingManager().restore();
+            appContext.getHttpRoutingManager().setRoutesChanged(true);
+            appContext.getHttpRoutingManager().setRoutesRestored(true);
+            appContext.getHttpRoutingManager().setRoutesSaved(false);
+            appContext.getHttpRoutingManager().setRoutesLoaded(false);
+
+        } catch (SibincoException e) {
+            logger.debug("Couldn't restore http routes", e);
+            throw new SCAGJspException(Constants.errors.status.COULDNT_RESTORE_HTTP_ROUTES, e);
+        }
+    }
+
+    /**
+     * This private method will be applay smpp routes to smpp_routes.xml file
+     *
+     * @throws SCAGJspException - an throws exception if it will be occurred
+     */
     private void applyRoutes() throws SCAGJspException {
         try {
             appContext.getScagRoutingManager().apply();
@@ -147,7 +213,31 @@ public class Index extends TabledBeanImpl {
     }
 
     /**
-     * This method provides to load applied configuration
+     * This private method will be applay http routes to http_routes.xml file
+     *
+     * @throws SCAGJspException - an throws exception if it will be occurred
+     */
+    private void applyHttpRoutes() throws SCAGJspException {
+        try {
+            appContext.getHttpRoutingManager().apply();
+            try {
+                appContext.getScag().apply("routes");
+            } catch (SibincoException e) {
+                if (Proxy.STATUS_CONNECTED == appContext.getScag().getStatus()) {
+                    logger.debug("Couldn't apply http routes", e);
+                    throw new SCAGJspException(Constants.errors.routing.routes.COULDNT_APPLY_HTTP_ROUTES, e);
+                }
+            }
+            appContext.getHttpRoutingManager().setRoutesChanged(false);
+            init();
+        } catch (SibincoException e) {
+            logger.debug("Couldn't apply http routes", e);
+            throw new SCAGJspException(Constants.errors.routing.routes.COULDNT_APPLY_HTTP_ROUTES, e);
+        }
+    }
+
+    /**
+     * This method provides to load smpp routes applied configuration
      *
      * @throws SCAGJspException - an throws exception if it will
      *                          be occurred@throws SCAGJspException
@@ -157,7 +247,7 @@ public class Index extends TabledBeanImpl {
         try {
             appContext.getScagRoutingManager().load();
         } catch (SibincoException exc) {
-            logger.debug("Couldn't load routes", exc);
+            logger.debug("Couldn't load smpp routes", exc);
             throw new SCAGJspException(Constants.errors.routing.routes.COULDNT_LOAD_ROUTES, exc);
         }
         appContext.getScagRoutingManager().setRoutesChanged(false);
@@ -166,18 +256,59 @@ public class Index extends TabledBeanImpl {
         appContext.getScagRoutingManager().setRoutesSaved(false);
     }
 
-    // saves temporal configuration
+    /**
+     * This method provides to load http routes applied configuration
+     *
+     * @throws SCAGJspException - an throws exception if it will
+     *                          be occurred@throws SCAGJspException
+     */
+    protected void loadHttpRoutes() throws SCAGJspException {
+
+        try {
+            appContext.getHttpRoutingManager().load();
+        } catch (SibincoException exc) {
+            logger.debug("Couldn't load http routes", exc);
+            throw new SCAGJspException(Constants.errors.routing.routes.COULDNT_LOAD_HTTP_ROUTES, exc);
+        }
+        appContext.getHttpRoutingManager().setRoutesChanged(false);
+        appContext.getHttpRoutingManager().setRoutesRestored(false);
+        appContext.getHttpRoutingManager().setRoutesLoaded(true);
+        appContext.getHttpRoutingManager().setRoutesSaved(false);
+    }
+
+    /**
+     * This method providers to saves temporal smpp routes  configuration
+     *
+     * @throws SCAGJspException - an throws exception if it will
+     *                          be occurred@throws SCAGJspException
+     */
     protected void saveRoutes() throws SCAGJspException {
         try {
             appContext.getScagRoutingManager().save();
         } catch (SibincoException exc) {
-            logger.debug("Couldn't save routes", exc);
+            logger.debug("Couldn't save smpp routes", exc);
             throw new SCAGJspException(Constants.errors.routing.routes.COULDNT_SAVE_ROUTES, exc);
         }
         appContext.getScagRoutingManager().setRoutesSaved(true);
         appContext.getScagRoutingManager().setRoutesRestored(true);
     }
 
+    /**
+     * This method providers to saves temporal http routes  configuration
+     *
+     * @throws SCAGJspException - an throws exception if it will
+     *                          be occurred@throws SCAGJspException
+     */
+    protected void saveHttpRoutes() throws SCAGJspException {
+        try {
+            appContext.getHttpRoutingManager().save();
+        } catch (SibincoException exc) {
+            logger.debug("Couldn't save http routes", exc);
+            throw new SCAGJspException(Constants.errors.routing.routes.COULDNT_SAVE_HTTP_ROUTES, exc);
+        }
+        appContext.getHttpRoutingManager().setRoutesSaved(true);
+        appContext.getHttpRoutingManager().setRoutesRestored(true);
+    }
 
     public boolean isRoutesChanged() {
         return routesChanged;
@@ -278,4 +409,93 @@ public class Index extends TabledBeanImpl {
     public void setRoutesLoaded(boolean routesLoaded) {
         this.routesLoaded = routesLoaded;
     }
+
+    public long getTransportId() {
+        return transportId;
+    }
+
+    public void setTransportId(long transportId) {
+        this.transportId = transportId;
+    }
+
+    public String[] getTransportIds() {
+        return Transport.transportIds;
+    }
+
+    public String[] getTransportTitles() {
+        return Transport.transportTitles;
+    }
+
+    public String getMbApplyHttp() {
+        return mbApplyHttp;
+    }
+
+    public void setMbApplyHttp(String mbApplyHttp) {
+        this.mbApplyHttp = mbApplyHttp;
+    }
+
+    public String getMbLoadSavedHttp() {
+        return mbLoadSavedHttp;
+    }
+
+    public void setMbLoadSavedHttp(String mbLoadSavedHttp) {
+        this.mbLoadSavedHttp = mbLoadSavedHttp;
+    }
+
+    public String getMbLoadHttp() {
+        return mbLoadHttp;
+    }
+
+    public void setMbLoadHttp(String mbLoadHttp) {
+        this.mbLoadHttp = mbLoadHttp;
+    }
+
+    public String getMbSaveHttp() {
+        return mbSaveHttp;
+    }
+
+    public void setMbSaveHttp(String mbSaveHttp) {
+        this.mbSaveHttp = mbSaveHttp;
+    }
+
+    public String getMbRestoreHttp() {
+        return mbRestoreHttp;
+    }
+
+    public void setMbRestoreHttp(String mbRestoreHttp) {
+        this.mbRestoreHttp = mbRestoreHttp;
+    }
+
+    public boolean isHttpRoutesChanged() {
+        return httpRoutesChanged;
+    }
+
+    public void setHttpRoutesChanged(boolean httpRoutesChanged) {
+        this.httpRoutesChanged = httpRoutesChanged;
+    }
+
+    public boolean isHttpRoutesRestored() {
+        return httpRoutesRestored;
+    }
+
+    public void setHttpRoutesRestored(boolean httpRoutesRestored) {
+        this.httpRoutesRestored = httpRoutesRestored;
+    }
+
+    public boolean isHttpRoutesLoaded() {
+        return httpRoutesLoaded;
+    }
+
+    public void setHttpRoutesLoaded(boolean httpRoutesLoaded) {
+        this.httpRoutesLoaded = httpRoutesLoaded;
+    }
+
+    public boolean isHttpRoutesSaved() {
+        return httpRoutesSaved;
+    }
+
+    public void setHttpRoutesSaved(boolean httpRoutesSaved) {
+        this.httpRoutesSaved = httpRoutesSaved;
+    }
 }
+
