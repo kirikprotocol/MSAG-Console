@@ -73,4 +73,29 @@
       <param name="user" type="string">smsc_starkom</param>
     </section>
   </section>
+
+  <section name="statsave_datasource">
+    <param name="driver" type="string">oracle.jdbc.driver.OracleDriver</param>
+    <param name="pass" type="string">smsc_starkom</param>
+    <param name="source" type="string">jdbc:oracle:thin:@max:1521:ORCL</param>
+    <param name="tables_prefix" type="string">sms_stat</param>
+    <param name="user" type="string">smsc_starkom</param>
+  </section>
+
+  <section name="opersave_datasource">
+    <param name="driver" type="string">oracle.jdbc.driver.OracleDriver</param>
+    <param name="pass" type="string">smsc_starkom</param>
+    <param name="source" type="string">jdbc:oracle:thin:@max:1521:ORCL</param>
+    <param name="tables_prefix" type="string">oper_sms</param>
+    <param name="user" type="string">smsc_starkom</param>
+  </section>
+
+  <section name="archsave_datasource">
+    <param name="driver" type="string">oracle.jdbc.driver.OracleDriver</param>
+    <param name="pass" type="string">smsc_starkom</param>
+    <param name="source" type="string">jdbc:oracle:thin:@max:1521:ORCL</param>
+    <param name="tables_prefix" type="string">arch_sms</param>
+    <param name="user" type="string">smsc_starkom</param>
+  </section>
+
 </config>

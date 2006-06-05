@@ -1,22 +1,10 @@
-<?xml version="1.0" encoding="WINDOWS-1251"?>
+<?xml version="1.0" encoding="windows-1251"?>
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
 
 <config>
   <section name="installation">
-   <param name="type" type="string">HA</param>
-   <param name="rgmapFile" type="string"></param>
+    <param name="type" type="string">single</param>
   </section>
-
-  <section name="nodes">
-    <section name="smsc-node1">
-      <param name="id" type="string">1</param>
-    </section>
-
-    <section name="smsc-node2">
-      <param name="id" type="string">2</param>
-    </section>
-  </section>
-
 
   <section name="categories">
     <param name="1" type="string">category1</param>
@@ -24,11 +12,12 @@
     <param name="3" type="string">super puper category mega giga</param>
     <param name="last used category id" type="int">3</param>
   </section>
-  
+
   <section name="console">
     <param name="enabled" type="bool">false</param>
     <param name="humanPort" type="int">@console.human.port@</param>
     <param name="scriptPort" type="int">@console.script.port@</param>
+    <param name="timeout" type="int">600</param>
   </section>
 
   <section name="daemons">
@@ -51,18 +40,12 @@
   <section name="profiler">
     <param name="storeFile" type="string">@localstore.dir@/profiles.bin</param>
   </section>
-  
+
   <section name="providers">
     <param name="1" type="string">hello</param>
     <param name="2" type="string">mark</param>
     <param name="3" type="string">burger</param>
     <param name="last used provider id" type="int">3</param>
-  </section>
-  
-  <section name="smsc">
-    <param name="config folder" type="string">services/SMSC/conf</param>
-    <param name="host" type="string">@connect.host@</param>
-    <param name="port" type="int">@smsc.admin.port@</param>
   </section>
 
   <section name="system">
@@ -72,8 +55,24 @@
     <param name="webapp folder" type="string">webapps/smsc</param>
     <param name="work folder" type="string">temp</param>
   </section>
-  
+
   <section name="statsave_datasource">
+      <param name="source" type="string">@jdbc.source@</param>
+      <param name="driver" type="string">@jdbc.driver@</param>
+      <param name="user" type="string">@db.user@</param>
+      <param name="pass" type="string">@db.password@</param>
+      <param name="tables_prefix" type="string">sms_stat</param>
+  </section>  
+
+  <section name="opersave_datasource">
+      <param name="source" type="string">@jdbc.source@</param>
+      <param name="driver" type="string">@jdbc.driver@</param>
+      <param name="user" type="string">@db.user@</param>
+      <param name="pass" type="string">@db.password@</param>
+      <param name="tables_prefix" type="string">sms_stat</param>
+  </section>  
+
+  <section name="archsave_datasource">
       <param name="source" type="string">@jdbc.source@</param>
       <param name="driver" type="string">@jdbc.driver@</param>
       <param name="user" type="string">@db.user@</param>
