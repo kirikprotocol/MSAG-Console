@@ -4,7 +4,6 @@
 package ru.sibinco.scag.backend.routing;
 
 import ru.sibinco.lib.backend.route.Mask;
-import ru.sibinco.lib.backend.route.MaskList;
 import ru.sibinco.lib.backend.util.StringEncoderDecoder;
 import ru.sibinco.lib.SibincoException;
 import org.w3c.dom.Element;

@@ -6,7 +6,6 @@ package ru.sibinco.scag.backend.routing;
 import ru.sibinco.scag.backend.endpoints.svc.Svc;
 import ru.sibinco.scag.backend.endpoints.SmppManager;
 import ru.sibinco.scag.backend.endpoints.centers.Center;
-import ru.sibinco.lib.backend.route.MaskList;
 import ru.sibinco.lib.backend.route.Mask;
 import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.lib.backend.util.StringEncoderDecoder;
