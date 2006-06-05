@@ -38,6 +38,7 @@ public class Smsc extends Service {
 
     private static final String APPLY_ALIASES_METHOD_ID = "apply_aliases";
 
+    private static final String APPLY_TIMEZONES_ID = "apply_timezones";
     private static final String APPLY_RESCHEDULE_ID = "apply_reschedule";
 
     private static final String APPLY_ROUTES_METHOD_ID = "apply_routes";
@@ -474,6 +475,14 @@ public class Smsc extends Service {
             catsList.add(catName + LOGGER_DELIMITER + catPriority);
         }
         call(SMSC_COMPONENT_ID, LOG_SET_CATEGORIES_ID, Type.Types[Type.BooleanType], params);
+    }
+
+    public synchronized void applyTimezones() throws AdminException {
+        if (getInfo().isOnline()) {
+            call(SMSC_COMPONENT_ID, APPLY_TIMEZONES_ID, Type.Types[Type.StringType], new HashMap());
+        } else {
+            logger.debug("Couldn't call apply timezones method on SMSC - SMSC is not running. Status is " + getInfo().getStatusStr() + " (" + getInfo().getStatus() + ")");
+        }
     }
 
     public synchronized void applyReschedule() throws AdminException {

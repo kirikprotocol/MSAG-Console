@@ -150,6 +150,7 @@ public class Index extends ru.novosoft.smsc.jsp.smsc.reshedule.Index {
                 timezones.putSubject(newSubjName, newSubjValue);
             }*/
             timezones.save();
+            smsc.applyTimezones();
         }
         catch (Exception e) {
             return error(SMSCErrors.error.smsc.timezones.couldntSave, e);
