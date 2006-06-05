@@ -35,7 +35,7 @@
 <div class=content>
     <div class=page_subtitle><%=getLocString("stat.subTitle")%></div>
     <input type=hidden name=initialized value=true>
-    <table class=properties_list cellspacing=0>
+    <table class=properties_list cellspacing=0 height="60">
         <tr class=row0>
             <th><%=getLocString("common.util.FromDate")%>:</th>
             <td nowrap><input type=text id="fromDate" name="fromDate" class=calendarField

@@ -1,6 +1,7 @@
 function trim(str) {
     return str.replace(/^\s+|\s+$/g, '');
 }
+
 function makeYear(year, curYear) { // +2:-7; +20:-79; +200:-799; ... etc
     year = trim(year);
     if (year < 0 || curYear < 0 || year - 1 + 1 != year) return false;
@@ -20,11 +21,13 @@ function makeYear(year, curYear) { // +2:-7; +20:-79; +200:-799; ... etc
     }
     return calcYear;
 }
+
 if (!("isLocalized" in this))
 {
     var calendarMonths = new Array("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December");
     var calendarWD = new Array("Su", "Mo", "Tu", "We", "Th", "Fr", "Sa", "Su");
 }
+
 var calendarLastPos = -1;
 var calendarLastDayPos = -1;
 var calendarCurYear = -1;
@@ -230,11 +233,11 @@ function showCalendar(calendarInputText, us, showTime) {
             cell.style.width = "22px";
         }
     calendarPanel.style.posLeft = PageX;
-    calendarPanel.style.posTop = PageY + calendarInputText.offsetHeight;
+    calendarPanel.style.posTop = 80;//PageY + calendarInputText.offsetHeight;
     createCalendarPanel(year, month, day, hour, minute, second, PM);
     calendarPanel.style.display = "block";
     document.getElementById('calendarIFrame').style.posLeft = PageX;
-    document.getElementById('calendarIFrame').style.posTop = PageY + calendarInputText.offsetHeight;
+    document.getElementById('calendarIFrame').style.posTop = 80;//PageY + calendarInputText.offsetHeight;
     document.getElementById('calendarIFrame').style.width = calendarPanel.offsetWidth;
     document.getElementById('calendarIFrame').style.height = calendarPanel.offsetHeight;
     document.getElementById('calendarIFrame').style.display = "block";
@@ -243,8 +246,9 @@ function showCalendar(calendarInputText, us, showTime) {
 }
 
 function isCalendarOwner(o) {
+    //return true;
     while (o != null) {
-//        alert("o:" + o + " tag:" + o.tagName + " id:" + o.id);
+          //      alert("o:" + o + " tag:" + o.tagName + " id:" + o.id);
         if (o == calendarPanel) return true;
         o = o.parentElement;
     }
@@ -254,7 +258,7 @@ function isCalendarOwner(o) {
 function calendarMD() {
     calendarPanel.setCapture();
     var a = window.event.srcElement;
-//    alert("owner:" + isCalendarOwner(a) + " pt:" + calendarPressedTime);
+    //    alert("owner:" + isCalendarOwner(a) + " pt:" + calendarPressedTime);
     if (!isCalendarOwner(a) && !calendarPressedTime) return calendarClose();
     var b = window.event.button;
     if (a != null && a.name != null && b == 1) {
