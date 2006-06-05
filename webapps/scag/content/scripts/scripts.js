@@ -486,3 +486,43 @@ function removeRow(tbl, rowId)
 	var rowElem = tbl.rows(rowId);
 	tbl.deleteRow(rowElem.rowIndex);
 }
+
+function changeTransportId() {
+    var transport = opForm.all.transportId.options[opForm.all.transportId.selectedIndex].value;
+    opForm.submit();
+    return true;
+}
+
+function tableTag_NavigatePage(pageNum) {
+    opForm.startPosition.value = pageNum * $
+{
+    bean.pageSize
+}
+    ;
+    opForm.submit();
+    return false;
+}
+
+function tableTag_sort(sort) {
+    if (document.all.sort.value == sort)
+        opForm.sort.value = "-" + sort;
+    else
+        opForm.sort.value = sort;
+    opForm.submit();
+    return false;
+}
+
+function tableTag_checkChecks() {
+    var buttonsEnabled;
+    buttonsEnabled = false;
+    for (i = 0; i < opForm.elements.length; i++) {
+        var elem = opForm.elements[i];
+        if (elem.tagName == "INPUT" && elem.className == "check" && elem.checked)
+            buttonsEnabled = true;
+    }
+    for (i = 0; i < document.all.length; i++) {
+        var elem = document.all[i];
+        if (elem.tagName == "A" && elem.isCheckSensible)
+            elem.disabled = !buttonsEnabled;
+    }
+}
