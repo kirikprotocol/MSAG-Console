@@ -5,6 +5,7 @@ import org.xml.sax.SAXException;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.util.config.Config;
 import ru.sibinco.scag.backend.resources.ResourceManager;
+import ru.sibinco.scag.backend.routing.http.HttpRoutingManager;
 import ru.sibinco.scag.backend.routing.ScagRoutingManager;
 import ru.sibinco.scag.backend.users.UserManager;
 import ru.sibinco.scag.backend.protocol.journal.Journal;
@@ -47,6 +48,7 @@ public class SCAGAppContext {
     private final OperatorManager operatorManager;
     private final CategoryManager categoryManager;
     private final ScagRoutingManager scagRoutingManager;
+    private final HttpRoutingManager httpRoutingManager;
     private final ResourceManager resourceManager;
     private final PerfServer perfServer;
     private final SvcMonServer svcMonServer;
@@ -97,6 +99,8 @@ public class SCAGAppContext {
             ruleManager.init();
             scagRoutingManager = new ScagRoutingManager(scagConfFolder, smppManager, serviceProvidersManager);
             scagRoutingManager.init();
+            httpRoutingManager = new HttpRoutingManager(scagConfFolder, serviceProvidersManager);
+            httpRoutingManager.init();
             StatusManager.getInstance().init(config.getString("status_folder"), config.getString("show_interval"));
             statuses = new Statuses();
             perfServer = new PerfServer(config);
@@ -168,6 +172,10 @@ public class SCAGAppContext {
 
     public ScagRoutingManager getScagRoutingManager() {
         return scagRoutingManager;
+    }
+
+    public HttpRoutingManager getHttpRoutingManager() {
+        return httpRoutingManager;
     }
 
     public ResourceManager getResourceManager() {
