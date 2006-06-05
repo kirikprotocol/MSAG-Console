@@ -46,11 +46,17 @@ namespace scag { namespace sessions
             CSessionAccessData() : nextWakeTime(0), bOpened(false), hasPending(false), hasOperations(false) {}
         };
 
-        class XSessionHashFunc {
+        class XSessionHashFunc{
         public:
             static uint32_t CalcHash(const CSessionKey& key)
             {
-                return XAddrHashFunc::CalcHash(key.abonentAddr);
+                uint32_t retval = (key.abonentAddr.type+key.USR)^key.abonentAddr.plan;
+                int i;
+                for(i=0;i<key.abonentAddr.length;i++)
+                {
+                    retval=retval*10+(key.abonentAddr.value[i]-'0');
+                }
+                return retval;
             }
         };
 

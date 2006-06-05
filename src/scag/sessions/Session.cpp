@@ -177,7 +177,7 @@ void Session::DeserializeProperty(SessionBuffer& buff)
         buff >> name;
         buff >> value;
 
-        AdapterProperty * property = new AdapterProperty(name,this,UnformatWStr(value));
+        AdapterProperty * property = new AdapterProperty(name,this,value);
         PropertyHash.Insert(name.c_str(),property);
     }
 }
@@ -254,8 +254,8 @@ void Session::SerializeProperty(SessionBuffer& buff)
     for (Hash <AdapterProperty *>::Iterator it = PropertyHash.getIterator(); it.Next(key, value);)
     {
         buff << key;
-        std::string wstr = value->getStr();
-        buff << FormatWStr(wstr).c_str();
+        std::string str = value->getStr();
+        buff << str.c_str();
     }
 }
 

@@ -13,7 +13,7 @@ void BillActionClose::init(const SectionParams& params,PropertyObject propertyOb
 
     if (params.Exists("action")) 
     {
-        std::string str = ConvertWStrToStr(params["action"]);
+        std::string str = params["action"];
 
         if ((str!="commit")&&(str!="rollback")) throw SCAGException("Action 'bill:close': unrecognised 'action' paramener ''",str.c_str());
 
@@ -29,10 +29,10 @@ void BillActionClose::init(const SectionParams& params,PropertyObject propertyOb
     bool bExist;
 
     ft = CheckParameter(params, propertyObject, "bill:close", "status", false, false, temp, m_StatusExist);
-    if (m_StatusExist) m_sStatus = ConvertWStrToStr(temp);
+    if (m_StatusExist) m_sStatus = temp;
 
     ft = CheckParameter(params, propertyObject, "bill:close", "msg", false, false, temp, m_MsgExist);
-    if (m_MsgExist) m_sMessage = ConvertWStrToStr(temp);
+    if (m_MsgExist) m_sMessage = temp;
 
     smsc_log_debug(logger,"Action 'bill:close' init...");
 }

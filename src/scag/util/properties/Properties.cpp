@@ -19,7 +19,7 @@ const char* TimeFormat = "%A, %d - %B - %Y.\n";
 
 
 //////////////////////////////////////////////////////CONVERT////////////////////////////////
-
+/*
 int64_t Property::ConvertUCS2ToInt64(std::string& wstr)
 {
     char buff[128];
@@ -71,7 +71,7 @@ std::string Property::ConvertInt64ToUCS2(int64_t val)
     //std::cout << "???" << size << std::endl;
     return res;
 }
-
+*/
 
 int64_t Property::convertToInt() 
 {
@@ -82,7 +82,7 @@ int64_t Property::convertToInt()
     case pt_bool: 
         break;
     case pt_str:
-        i_val = ConvertUCS2ToInt64(s_val);
+        i_val = atoi(s_val.c_str());
         break;
 /*    case PTYPE_DATE:
         throw ConvertException("date","int");
@@ -98,11 +98,14 @@ const std::string& Property::convertToStr()
 {
     if (sync) return s_val;
 
+    char buff[128];
+
     switch (type) 
     {
     case pt_bool: 
     case pt_int:
-        s_val = ConvertInt64ToUCS2(i_val);
+        sprintf(buff, "%d", i_val);
+        s_val.assign(buff);
         break;
 /*    case PTYPE_DATE:
         tm * time = gmtime((long *)(&i_val));
@@ -125,7 +128,7 @@ bool Property::convertToBool()
     switch (type) 
     {
     case pt_str:
-        i_val = ConvertUCS2ToInt64(s_val);
+        i_val = atoi(s_val.c_str());
         break;
 /*    case PTYPE_DATE:
         throw ConvertException("date","bool");
@@ -146,7 +149,7 @@ time_t Property::convertToDate()
     case pt_str: 
         tm time;
 
-        strptime(ConvertUCS2ToStr(s_val).c_str(),TimeFormat,&time);
+        strptime(s_val.c_str(),TimeFormat,&time);
         i_val = mktime(&time);
         break;
 /*    case pt_int:
@@ -317,7 +320,7 @@ void AdapterProperty::setPureDate(time_t val)
     return 0;
 } */
 
-
+/*
 std::string ConvertStrToWStr(const char * str)
 {
     std::string wstr;
@@ -420,4 +423,40 @@ std::string UnformatWStr(std::string& str)
     return wstr;
 }
 
+<<<<<<< Properties.cpp
+std::wstring ConvertWStrTo_wstring(const std::string& str)
+{
+    TmpBuf<wchar_t, 1024> buf(1024);
+    std::wstring wstr;
+    const char* chrs  = str.c_str();
+
+    for(int i = 0; i < str.length(); i+=2)
+    {
+        wchar_t r = (chrs[i] << 8) + chrs[i + 1];
+        buf.Append(&r, 1);
+    }
+
+    wstr.assign(buf.get(), buf.GetPos());
+
+    return wstr;
+}
+
+std::string Convert_wstringToWStr(const std::wstring& wstr)
+{
+    std::string str;
+    TmpBuf<char, 1024> buf(1024);
+    const wchar_t* wchrs  = wstr.c_str();
+
+    for(int i = 0; i < wstr.length(); i++)
+    {
+        char r = (*wchrs >> 8);
+        buf.Append(&r, 1);
+        r = *(wchrs++);
+        buf.Append(&r, 1);
+    }
+
+    str.assign(buf.get(), buf.GetPos());
+    return str;
+}
+  */
 }}}

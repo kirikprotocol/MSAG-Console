@@ -1,8 +1,10 @@
 #include "ActionMatch.h"
 #include "scag/re/CommandAdapter.h"
+#include "scag/util/encodings/Encodings.h"
 
 namespace scag { namespace re { namespace actions {
 
+using scag::util::encodings::Convertor;
 
 IParserHandler * ActionMatch::StartXMLSubSection(const std::string& name, const SectionParams& params,const ActionFactory& factory)
 {
@@ -22,14 +24,14 @@ void ActionMatch::init(const SectionParams& params,PropertyObject propertyObject
     std::string temp;
     bool bExist;
 
-    ft = CheckParameter(params, propertyObject, "match", "regexp", true, true, wstrRegexp, bExist);
+    ft = CheckParameter(params, propertyObject, "match", "regexp", true, true, strRegexp, bExist);
     if (ft!=ftUnknown) throw SCAGException("Action 'match': 'regexp' parameter must be a scalar constant type");
+    Convertor::UTF8ToUCS2(strRegexp.c_str(),strRegexp.size(),wstrRegexp);
 
-    m_ftValue = CheckParameter(params, propertyObject, "match", "value", true, true, wstrValue, bExist);
-    strValue = ConvertWStrToStr(wstrValue);
+    m_ftValue = CheckParameter(params, propertyObject, "match", "value", true, true, strValue, bExist);
+    Convertor::UTF8ToUCS2(strValue.c_str(),strValue.size(),wstrValue);
 
-    ft = CheckParameter(params, propertyObject, "match", "result", true, false, temp, bExist);
-    strResult = ConvertWStrToStr(temp);
+    ft = CheckParameter(params, propertyObject, "match", "result", true, false, strResult, bExist);
 
     re = new RegExp();
 
@@ -62,10 +64,11 @@ bool ActionMatch::run(ActionContext& context)
             smsc_log_warn(logger,"Action 'match': invalid property '%s'", strValue.c_str());
             return true;
         }
-        value = pValue->getStr();
+        std::string temp = pValue->getStr();
+        Convertor::UTF8ToUCS2(temp.c_str(),temp.size(), value);
     } else value = wstrValue;
 
-    smsc_log_warn(logger,"Action 'match': regexp '%s', value '%s'", FormatWStr(wstrRegexp).c_str(),FormatWStr(value).c_str());
+    smsc_log_warn(logger,"Action 'match': regexp '%s', value '%s'", strRegexp.c_str(),value.c_str());
 
 
     pResult = context.getProperty(strResult);

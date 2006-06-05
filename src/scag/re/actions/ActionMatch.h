@@ -19,6 +19,7 @@ class ActionMatch : public Action
 
     std::string strValue;
     std::string wstrValue;
+
     FieldType m_ftValue;
 
     std::string strResult;

@@ -61,16 +61,14 @@ void ActionTrafficCheck::init(const SectionParams& params, PropertyObject _prope
     propertyObject = _propertyObject;
 
     FieldType ft;
-    std::string temp;
     bool bExist;
+    std::string sPeriod;
 
-    m_ftMax = CheckParameter(params, propertyObject, "traffic:check", "max", true, true, temp, bExist);
-    m_sMax = ConvertWStrToStr(temp);
+    m_ftMax = CheckParameter(params, propertyObject, "traffic:check", "max", true, true, m_sMax, bExist);
 
-    ft = CheckParameter(params, propertyObject, "traffic:check", "period", true, true, temp, bExist);
-    std::string sPeriod = ConvertWStrToStr(temp);
+    ft = CheckParameter(params, propertyObject, "traffic:check", "period", true, true, sPeriod, bExist);
 
-    if (!StrToPeriod(m_period,sPeriod)) SCAGException("Action 'traffic:check': invalid value '%s' for 'period' parameter", FormatWStr(temp).c_str());
+    if (!StrToPeriod(m_period,sPeriod)) SCAGException("Action 'traffic:check': invalid value '%s' for 'period' parameter", sPeriod.c_str());
 }
 
 bool ActionTrafficCheck::run(ActionContext& context)

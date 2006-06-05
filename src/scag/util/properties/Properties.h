@@ -48,11 +48,6 @@ namespace scag { namespace util { namespace properties
         bool    convertToBool();
         time_t  convertToDate();
 
-        std::string ConvertInt64ToUCS2(int64_t val);
-        int64_t ConvertUCS2ToInt64(std::string& wstr);
-        std::string ConvertUCS2ToStr(std::string& wstr);
-
-
 
     public:
 
@@ -135,7 +130,7 @@ namespace scag { namespace util { namespace properties
     public:
         PropertyManager() {};
     };
-
+ /*
     std::string ConvertStrToWStr(const char * str);
     std::string ConvertWStrToStr(std::string wstr);
 
@@ -144,7 +139,7 @@ namespace scag { namespace util { namespace properties
 
     // Functions for converting 2bytes strings to/from standard wstring type
     std::wstring ConvertWStrTo_wstring(const std::string& str);
-    std::string Convert_wstringToWStr(const std::wstring& wstr);
+    std::string Convert_wstringToWStr(const std::wstring& wstr);*/
 }}}
 
 #endif // SCAG_UTIL_PROPERTIES

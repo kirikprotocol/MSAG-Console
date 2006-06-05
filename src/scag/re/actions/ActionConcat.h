@@ -9,10 +9,8 @@ class ActionConcat : public Action
 {
     ActionConcat(const ActionConcat &);
     std::string strVariable;
-    std::string wstrVariable;
 
     std::string strString;
-    std::string wstrString;
     
     FieldType m_fStrFieldType;
 protected:

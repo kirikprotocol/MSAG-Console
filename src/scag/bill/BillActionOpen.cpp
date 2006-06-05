@@ -13,25 +13,22 @@ void BillActionOpen::init(const SectionParams& params,PropertyObject propertyObj
     std::string temp;
     bool bExist;
 
-    m_CategoryFieldType = CheckParameter(params, propertyObject, "bill:open", "category", true, true, temp, bExist);
-    m_category = ConvertWStrToStr(temp);
+    m_CategoryFieldType = CheckParameter(params, propertyObject, "bill:open", "category", true, true, m_category, bExist);
 
     if(m_CategoryFieldType == ftUnknown && !(category = atoi(m_category.c_str())))
         throw InvalidPropertyException("BillAction 'bill:open': category should be integer or variable");
 
-    m_MediaTypeFieldType = CheckParameter(params, propertyObject, "bill:open", "content-type", true, true, temp, bExist);
-    m_mediaType = ConvertWStrToStr(temp);
+    m_MediaTypeFieldType = CheckParameter(params, propertyObject, "bill:open", "content-type", true, true, m_mediaType, bExist);
 
     if(m_MediaTypeFieldType == ftUnknown && !(mediaType = atoi(m_mediaType.c_str())))
         throw InvalidPropertyException("BillAction 'bill:open': content-type should be integer or variable");
 
-    m_StatusFieldType = CheckParameter(params, propertyObject, "bill:open", "status", true, false, temp, bExist);
-    m_sStatus = ConvertWStrToStr(temp);
+    m_StatusFieldType = CheckParameter(params, propertyObject, "bill:open", "status", true, false, m_sStatus, bExist);
 
     m_MsgFieldType = CheckParameter(params, propertyObject, "bill:open", "msg", false, false, temp, m_MsgExist);
 
     if (m_MsgExist)
-        m_sMessage = ConvertWStrToStr(temp);
+        m_sMessage = temp;
         
 
     smsc_log_debug(logger,"Action 'bill:open' init...");
@@ -74,7 +71,7 @@ void BillActionOpen::SetBillingStatus(ActionContext& context, const char * error
             smsc_log_debug(logger,"BillAction 'bill:open' :: Invalid property %s for msg", m_sMessage.c_str());
             return;
         }
-        property->setStr(ConvertStrToWStr(errorMsg));
+        property->setStr(errorMsg);
     }
 
 }

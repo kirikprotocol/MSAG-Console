@@ -121,7 +121,7 @@ namespace scag { namespace sessions
 
         bool operator ==(const CSessionKey& sk) const
         {
-            return ((this->abonentAddr == sk.abonentAddr) && (this->USR == sk.USR));
+            return ((this->USR == sk.USR) && (this->abonentAddr == sk.abonentAddr));
         }
         //CSessionKey() : USR(-1) {}
     };

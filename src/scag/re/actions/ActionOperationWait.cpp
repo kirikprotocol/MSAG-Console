@@ -20,15 +20,13 @@ void ActionOperationWait::init(const SectionParams& params,PropertyObject proper
     logger = Logger::getInstance("scag.re");
 
     FieldType ft;
-    std::string temp;
     bool bExist;
+    std::string sType;
 
-    ft = CheckParameter(params, propertyObject, "operation:wait", "type", true, true, temp, bExist);
+    ft = CheckParameter(params, propertyObject, "operation:wait", "type", true, true, sType, bExist);
     if (ft!=ftUnknown) throw SCAGException("Action 'operation:wait': 'type' parameter must be a scalar constant type");
-    std::string sType = ConvertWStrToStr(temp);
 
-    m_ftTime = CheckParameter(params, propertyObject, "operation:wait", "time", true, true, temp, bExist);
-    m_sTime = ConvertWStrToStr(temp);
+    m_ftTime = CheckParameter(params, propertyObject, "operation:wait", "time", true, true, m_sTime, bExist);
 
     m_opType = Session::getOperationType(sType);
     

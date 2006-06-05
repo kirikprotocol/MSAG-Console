@@ -60,23 +60,23 @@ void Convertor::UCS2ToUTF8(unsigned short * ucs2buff, int ucs2len, std::string& 
     */
 }
 
-void Convertor::GSM7BitToUTF8(unsigned char * gsm7BitBuff, int gsm7BitBuffLen, std::string& utf8str)
+void Convertor::GSM7BitToUTF8(const char * gsm7BitBuff, int gsm7BitBuffLen, std::string& utf8str)
 {
 }
 
-void Convertor::MultibyteToUTF8(unsigned char * latin1Buff, int latin1BuffLen, ConvEncodingEnum encoding, std::string& utf8str)
+void Convertor::MultibyteToUTF8(const char * latin1Buff, int latin1BuffLen, ConvEncodingEnum encoding, std::string& utf8str)
 {
 }
 
-void Convertor::UTF8ToUSC2(unsigned char * utf8buff, int utf8len, std::string& ucs2str)
+void Convertor::UTF8ToUCS2(const char * utf8buff, int utf8len, std::string& ucs2str)
 {
 }
 
-void Convertor::GSM7BitToUCS2(unsigned char * gsm7BitBuff, int gsm7BitBuffLen, std::string& ucs2str)
+void Convertor::GSM7BitToUCS2(const char * gsm7BitBuff, int gsm7BitBuffLen, std::string& ucs2str)
 {
 }
 
-void Convertor::MultibyteToUCS2(unsigned char * latin1Buff, int latin1BuffLen, ConvEncodingEnum encoding, std::string& ucs2str)
+void Convertor::MultibyteToUCS2(const char * latin1Buff, int latin1BuffLen, ConvEncodingEnum encoding, std::string& ucs2str)
 {
 }
 

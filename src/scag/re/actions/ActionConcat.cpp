@@ -11,11 +11,8 @@ void ActionConcat::init(const SectionParams& params,PropertyObject propertyObjec
     bool bExist;
     FieldType ft;
 
-    ft = CheckParameter(params, propertyObject, "concat", "var", true, false, wstrVariable, bExist);
-    strVariable = ConvertWStrToStr(wstrVariable);
-
-    m_fStrFieldType = CheckParameter(params, propertyObject, "concat", "str", true, true, wstrString, bExist);
-    strString = ConvertWStrToStr(wstrString);
+    ft = CheckParameter(params, propertyObject, "concat", "var", true, false, strVariable, bExist);
+    m_fStrFieldType = CheckParameter(params, propertyObject, "concat", "str", true, true, strString, bExist);
 
     smsc_log_debug(logger,"Action 'concat':: init");
 }
@@ -29,7 +26,7 @@ bool ActionConcat::run(ActionContext& context)
 
     if (m_fStrFieldType == ftUnknown) 
     {
-        strArgument = wstrString;
+        strArgument = strString;
     } else
     {
         Property * property = context.getProperty(strString);
@@ -58,7 +55,7 @@ bool ActionConcat::run(ActionContext& context)
     resultProperty->setStr(result);
 
 
-    smsc_log_debug(logger,"Action 'concat':: concat result is '%s'", FormatWStr(result).c_str());
+    smsc_log_debug(logger,"Action 'concat':: concat result is '%s'", result.c_str());
     return true;
 }
 

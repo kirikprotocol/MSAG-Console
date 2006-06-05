@@ -20,19 +20,17 @@ void ActionIf::init(const SectionParams& params,PropertyObject _propertyObject)
     bool bExist;
     FieldType ft;
 
-    ft = CheckParameter(params, propertyObject, "if", "test", true, true, temp, bExist);
-    singleparam.strOperand1 = ConvertWStrToStr(temp);
+    ft = CheckParameter(params, propertyObject, "if", "test", true, true, singleparam.strOperand1, bExist);
 
-    if (ft == ftUnknown) throw SCAGException("Action 'if': unrecognized variable prefix '%s' for 'test' parameter", FormatWStr(temp).c_str());
+    if (ft == ftUnknown) throw SCAGException("Action 'if': unrecognized variable prefix '%s' for 'test' parameter", singleparam.strOperand1.c_str());
 
     m_hasOP = params.Exists("op");
-    ftSecondOperandFieldType = CheckParameter(params, propertyObject, "if", "value", false, true, singleparam.wstrOperand2, bExist);
-    singleparam.strOperand2 = ConvertWStrToStr(singleparam.wstrOperand2);
+    ftSecondOperandFieldType = CheckParameter(params, propertyObject, "if", "value", false, true, singleparam.strOperand2, bExist);
 
     if (m_hasOP&&(!bExist)) throw SCAGException("Action 'if': missing 'value' parameter"); 
     if ((!m_hasOP)&&bExist) throw SCAGException("Action 'if': missing 'op' parameter"); 
 
-    if (m_hasOP) singleparam.Operation = GetOperationFromSTR(ConvertWStrToStr(params["op"]));
+    if (m_hasOP) singleparam.Operation = GetOperationFromSTR(params["op"]);
 
     smsc_log_debug(logger,"Action 'if':: init");
 }
@@ -170,7 +168,7 @@ bool ActionIf::run(ActionContext& context)
         //std::string str = property->getStr();
         //smsc_log_debug(logger,"Testing %s='%s' vs %s",singleparam.strOperand1.c_str(),FormatWStr(str).c_str(),ConvertWStrToStr(singleparam.wstrOperand2).c_str());
 
-        smsc_log_debug(logger,"Testing "+singleparam.strOperand1+"='"+ConvertWStrToStr((property->getStr()))+"'"+" vs "+ConvertWStrToStr(singleparam.wstrOperand2));
+        smsc_log_debug(logger,"Testing %s = '%s' vs '%s'", singleparam.strOperand1.c_str(), property->getStr().c_str(),singleparam.strOperand2.c_str());
 
         int result = 0;
 
@@ -195,7 +193,7 @@ bool ActionIf::run(ActionContext& context)
         if (ftUnknown == ftSecondOperandFieldType) 
         {
             if (pt == pt_str)
-                result = property->Compare(singleparam.wstrOperand2);
+                result = property->Compare(singleparam.strOperand2);
             else
                 result = property->Compare(atoi(singleparam.strOperand2.c_str())); 
         } 

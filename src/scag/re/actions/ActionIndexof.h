@@ -9,12 +9,10 @@ class ActionIndexof : public Action
 {
     ActionIndexof(const ActionIndexof &);
     std::string strVariable;
-    std::string wstrVariable;
 
     std::string strResult;
     
     std::string strString;
-    std::string wstrString;
 
     FieldType m_fVariableFieldType;
     FieldType m_fStringFieldType;

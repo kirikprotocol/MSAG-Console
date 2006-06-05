@@ -12,12 +12,9 @@ void ActionBinOperation::init(const SectionParams& params,PropertyObject propert
     bool bExist;
     FieldType ft;
 
-    ft = CheckParameter(params, propertyObject, m_ActionName.c_str(), "var", true, false, temp, bExist);
-    strVariable = ConvertWStrToStr(temp);
+    ft = CheckParameter(params, propertyObject, m_ActionName.c_str(), "var", true, false, strVariable, bExist);
 
-    valueFieldType = CheckParameter(params, propertyObject, m_ActionName.c_str(), "value", false, true, wstrValue, m_hasValue);
-    if (m_hasValue)
-        strValue = ConvertWStrToStr(wstrValue);
+    valueFieldType = CheckParameter(params, propertyObject, m_ActionName.c_str(), "value", false, true, strValue, m_hasValue);
 
     smsc_log_debug(logger,"Action '%s':: init", m_ActionName.c_str());
 }
@@ -52,7 +49,7 @@ bool ActionBinOperation::run(ActionContext& context)
                 //smsc_log_debug(logger,"Action '%s': property '%s' set to '%s'",strVariable.c_str(),strValue.c_str());
             }
             else 
-                smsc_log_warn(logger,"Action '%s': cannot process binary operation with '%s' and '%s' value - no such property", m_ActionName.c_str(), strVariable.c_str(),FormatWStr(strValue).c_str());
+                smsc_log_warn(logger,"Action '%s': cannot process binary operation with '%s' and '%s' value - no such property", m_ActionName.c_str(), strVariable.c_str(),strValue.c_str());
                 
         }
     }

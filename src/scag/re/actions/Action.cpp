@@ -4,7 +4,7 @@
 
 namespace scag { namespace re { namespace actions {
 
-FieldType Action::CheckParameter(const SectionParams& params, PropertyObject& propertyObject, const char * actionName, const char * paramName, bool isRequired, bool isReadOnly, std::string& wstrParameter, bool& exist)
+FieldType Action::CheckParameter(const SectionParams& params, PropertyObject& propertyObject, const char * actionName, const char * paramName, bool isRequired, bool isReadOnly, std::string& strParameter, bool& exist)
 {
     std::string temp;
     FieldType fieldType = ftUnknown;
@@ -15,8 +15,7 @@ FieldType Action::CheckParameter(const SectionParams& params, PropertyObject& pr
     {
         exist = true;
 
-        wstrParameter = params[paramName];
-        temp = ConvertWStrToStr(wstrParameter);
+        strParameter = params[paramName];
 
         fieldType = ActionContext::Separate(temp,name);
         AccessType at;
@@ -28,20 +27,20 @@ FieldType Action::CheckParameter(const SectionParams& params, PropertyObject& pr
             if (isReadOnly) 
             {
                 if (!(at&atRead)) 
-                    throw SCAGException("Action '%s': cannot read property '%s' for '%s' parameter - no access", actionName, temp.c_str(), paramName);
+                    throw SCAGException("Action '%s': cannot read property '%s' for '%s' parameter - no access", actionName, strParameter.c_str(), paramName);
             } else
             {
                 if (!(at&atWrite)) 
-                    throw SCAGException("Action '%s': cannot write property '%s' for '%s' parameter - no access", actionName, temp.c_str(), paramName);
+                    throw SCAGException("Action '%s': cannot write property '%s' for '%s' parameter - no access", actionName, strParameter.c_str(), paramName);
             }
         } 
         else
         {
             if ((fieldType == ftConst)&&(!isReadOnly)) 
-                throw SCAGException("Action '%s': cannot modify constant property '%s' for '%s' parameter - no access", actionName, temp.c_str(), paramName);
+                throw SCAGException("Action '%s': cannot modify constant property '%s' for '%s' parameter - no access", actionName, strParameter.c_str(), paramName);
 
             if ((fieldType == ftUnknown)&&(!isReadOnly)) 
-                throw SCAGException("Action '%s': cannot modify scalar constant '%s' for '%s' parameter", actionName, FormatWStr(wstrParameter).c_str(), paramName);
+                throw SCAGException("Action '%s': cannot modify scalar constant '%s' for '%s' parameter", actionName, strParameter.c_str(), paramName);
         }
 
     }

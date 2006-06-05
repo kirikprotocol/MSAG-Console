@@ -17,19 +17,13 @@ void ActionReturn::init(const SectionParams& params,PropertyObject propertyObjec
     FieldType ft;
     std::string temp;
     bool bExist;
+    std::string StatusStr;
 
-    m_ftResult = CheckParameter(params, propertyObject, "return", "result", false, true, temp, m_bResultExist);
+    m_ftResult = CheckParameter(params, propertyObject, "return", "result", false, true, m_sResultValue, m_bResultExist);
 
-    if (m_bResultExist) 
-    {
-        m_sResultValue = ConvertWStrToStr(temp);
+    if ((m_bResultExist)&&(m_ftResult == ftUnknown)) m_nResultValue = atoi(m_sResultValue.c_str());
 
-        if (m_ftResult == ftUnknown) 
-            m_nResultValue = atoi(m_sResultValue.c_str());
-    }
-
-    FieldType ftStatus = CheckParameter(params, propertyObject, "return", "status", true, true, temp, bExist);
-    std::string StatusStr = ConvertWStrToStr(temp);
+    FieldType ftStatus = CheckParameter(params, propertyObject, "return", "status", true, true, StatusStr, bExist);
 
     if (ftStatus != ftUnknown) 
         throw SCAGException("Action 'return': status must be 'Ok|Failed' type");

@@ -11,14 +11,9 @@ void ActionIndexof::init(const SectionParams& params,PropertyObject propertyObje
     bool bExist;
     FieldType ft;
 
-    m_fVariableFieldType = CheckParameter(params, propertyObject, "indexof", "var", true, true, wstrVariable, bExist);
-    strVariable = ConvertWStrToStr(wstrVariable);
-
-    m_fStringFieldType = CheckParameter(params, propertyObject, "indexof", "str", true, true, wstrString, bExist);
-    strString = ConvertWStrToStr(wstrString);
-
-    ft = CheckParameter(params, propertyObject, "indexof", "result", true, false, temp, bExist);
-    strResult = ConvertWStrToStr(temp);
+    m_fVariableFieldType = CheckParameter(params, propertyObject, "indexof", "var", true, true, strVariable, bExist);
+    m_fStringFieldType = CheckParameter(params, propertyObject, "indexof", "str", true, true, strString, bExist);
+    ft = CheckParameter(params, propertyObject, "indexof", "result", true, false, strResult, bExist);
 
     smsc_log_debug(logger,"Action 'indexof':: init");
 }
@@ -33,7 +28,7 @@ bool ActionIndexof::run(ActionContext& context)
 
     if (m_fVariableFieldType == ftUnknown) 
     {
-        strArgument1 = wstrVariable;
+        strArgument1 = strVariable;
     } else
     {
         Property * property = context.getProperty(strVariable);
@@ -49,14 +44,14 @@ bool ActionIndexof::run(ActionContext& context)
 
     if (m_fStringFieldType == ftUnknown) 
     {
-        strArgument2 = wstrString;
+        strArgument2 = strString;
     } else
     {
-        Property * property = context.getProperty(wstrString);
+        Property * property = context.getProperty(strString);
 
         if (!property) 
         {
-            smsc_log_warn(logger,"Action 'indexof':: invalid property '%s'",wstrString.c_str());
+            smsc_log_warn(logger,"Action 'indexof':: invalid property '%s'",strString.c_str());
             return true;
         }
         strArgument2 = property->getStr();

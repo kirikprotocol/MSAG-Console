@@ -8,15 +8,12 @@ void ActionSet::init(const SectionParams& params,PropertyObject propertyObject)
     logger = Logger::getInstance("scag.re");
 
     FieldType ft;
-    std::string temp;
     bool bExist;
 
-    ft = CheckParameter(params, propertyObject, "set", "var", true, false, temp, bExist);
-    strVariable = ConvertWStrToStr(temp);
+    ft = CheckParameter(params, propertyObject, "set", "var", true, false, m_strVariable, bExist);
 
 
-    valueFieldType = CheckParameter(params, propertyObject, "set", "value", true, true, wstrValue, bExist);
-    strValue = ConvertWStrToStr(wstrValue);
+    m_valueFieldType = CheckParameter(params, propertyObject, "set", "value", true, true, m_strValue, bExist);
 
     smsc_log_debug(logger,"Action 'set':: init");
 }
@@ -25,31 +22,31 @@ void ActionSet::init(const SectionParams& params,PropertyObject propertyObject)
 bool ActionSet::run(ActionContext& context)
 {
     smsc_log_debug(logger,"Run Action 'set'");
-    Property * property = context.getProperty(strVariable);
+    Property * property = context.getProperty(m_strVariable);
 
     if (!property) 
     {
-        smsc_log_warn(logger,"Action 'set':: invalid property '%s'",strVariable.c_str());
+        smsc_log_warn(logger,"Action 'set':: invalid property '%s'",m_strVariable.c_str());
         return true;
     }
 
-    if (valueFieldType == ftUnknown) 
+    if (m_valueFieldType == ftUnknown) 
     {
-        property->setStr(wstrValue);
+        property->setStr(m_strValue);
 
-        smsc_log_debug(logger,"Action 'set': property '%s' set to '%s'",strVariable.c_str(),FormatWStr(wstrValue).c_str());
+        smsc_log_debug(logger,"Action 'set': property '%s' set to '%s'",m_strVariable.c_str(),m_strValue.c_str());
     }
     else
     {
-        Property * val = context.getProperty(strValue);
+        Property * val = context.getProperty(m_strValue);
 
         if (val) 
         {
             property->setStr(val->getStr());
-            smsc_log_debug(logger,"Action 'set': property '%s' set to '%s'",strVariable.c_str(),strValue.c_str());
+            smsc_log_debug(logger,"Action 'set': property '%s' set to '%s'",m_strVariable.c_str(),m_strValue.c_str());
         }
         else 
-            smsc_log_warn(logger,"Action 'set': cannot initialize '%s' with '%s' value - no such property",strVariable.c_str(),FormatWStr(strValue).c_str());
+            smsc_log_warn(logger,"Action 'set': cannot initialize '%s' with '%s' value - no such property",m_strVariable.c_str(),m_strValue.c_str());
             
     }
 

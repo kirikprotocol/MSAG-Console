@@ -15,7 +15,7 @@ using smsc::logger::Logger;
 class Action : public IParserHandler
 {
 protected:
-    FieldType CheckParameter(const SectionParams& params, PropertyObject& propertyObject, const char * actionName, const char * paramName, bool isRequired, bool readOnly, std::string& wstrParameter, bool& exist);
+    FieldType CheckParameter(const SectionParams& params, PropertyObject& propertyObject, const char * actionName, const char * paramName, bool isRequired, bool readOnly, std::string& strParameter, bool& exist);
     Logger * logger;
 public:
     Action() : logger(0) {};

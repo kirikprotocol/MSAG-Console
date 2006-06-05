@@ -8,21 +8,19 @@ void ActionSubstr::init(const SectionParams& params,PropertyObject propertyObjec
     logger = Logger::getInstance("scag.re");
 
     FieldType ft;
-    std::string temp;
     bool bExist;
+    std::string temp;
 
-    m_fVariableFieldType = CheckParameter(params, propertyObject, "substr", "var", true, true, wstrVariable, bExist);
-    strVariable = ConvertWStrToStr(wstrVariable);
+    m_fVariableFieldType = CheckParameter(params, propertyObject, "substr", "var", true, true, m_strVariable, bExist);
 
-    ft = CheckParameter(params, propertyObject, "substr", "result", true, false, temp, bExist);
-    strResult = ConvertWStrToStr(temp);
+    ft = CheckParameter(params, propertyObject, "substr", "result", true, false, m_strResult, bExist);
 
     ft = CheckParameter(params, propertyObject, "substr", "begin", false, true, temp, bExist);
     if (ft!=ftUnknown) throw SCAGException("Action 'substr': 'begin' parameter must be a scalar constant type");
 
     if (bExist)  
     {
-        beginIndex = atoi(ConvertWStrToStr(temp).c_str());
+        beginIndex = atoi(temp.c_str());
         if (beginIndex < 0) throw SCAGException("Action 'substr': invalid 'begin' parameter.");
     }
 
@@ -32,7 +30,7 @@ void ActionSubstr::init(const SectionParams& params,PropertyObject propertyObjec
 
     if (bExist)  
     {
-        endIndex = atoi(ConvertWStrToStr(temp).c_str());
+        endIndex = atoi(temp.c_str());
         if (endIndex <= 0) throw SCAGException("Action 'substr': invalid 'end' parameter.");
     }
 
@@ -48,14 +46,14 @@ bool ActionSubstr::run(ActionContext& context)
 
     if (m_fVariableFieldType == ftUnknown) 
     {
-        strArgument = wstrVariable;
+        strArgument = m_strVariable;
     } else
     {
-        Property * property = context.getProperty(strVariable);
+        Property * property = context.getProperty(m_strVariable);
 
         if (!property) 
         {
-            smsc_log_warn(logger,"Action 'substr':: invalid property '%s'",strVariable.c_str());
+            smsc_log_warn(logger,"Action 'substr':: invalid property '%s'",m_strVariable.c_str());
             return true;
         }
         strArgument = property->getStr();
@@ -69,7 +67,7 @@ bool ActionSubstr::run(ActionContext& context)
 
     if (begin >= strArgument.size()) 
     {
-        smsc_log_warn(logger,"Action 'substr':: 'begin' parameter is out of bound '%s' string", FormatWStr(strArgument).c_str());
+        smsc_log_warn(logger,"Action 'substr':: 'begin' parameter is out of bound '%s' string", strArgument.c_str());
         return true;
     } 
 
@@ -82,10 +80,10 @@ bool ActionSubstr::run(ActionContext& context)
         return true;
     }
     
-    Property * resultProperty = context.getProperty(strResult);
+    Property * resultProperty = context.getProperty(m_strResult);
     if (!resultProperty) 
     {
-        smsc_log_warn(logger,"Action 'substr':: invalid property '%s'",strResult.c_str());
+        smsc_log_warn(logger,"Action 'substr':: invalid property '%s'",m_strResult.c_str());
         return true;
     }
 
@@ -96,7 +94,7 @@ bool ActionSubstr::run(ActionContext& context)
     temp.assign(buff.get(), end - begin + 2);
 
     resultProperty->setStr(temp);
-    smsc_log_debug(logger,"Action 'substr':: substr result is '%s' (begin=%d, end=%d)", FormatWStr(temp).c_str(), begin, end);
+    smsc_log_debug(logger,"Action 'substr':: substr result is '%s' (begin=%d, end=%d)", temp.c_str(), begin, end);
 
 
     return true;

@@ -11,7 +11,6 @@ class ActionBinOperation : public Action
     std::string strVariable;
 
     std::string strValue;
-    std::string wstrValue;
     bool m_hasValue;
 
     FieldType valueFieldType;

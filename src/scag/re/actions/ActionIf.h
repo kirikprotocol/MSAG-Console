@@ -33,7 +33,6 @@ class ActionIf : public Action
     struct SingleParam
     {
         std::string strOperand1;
-        std::string wstrOperand2;
         std::string strOperand2;
 
         IfOperations Operation;

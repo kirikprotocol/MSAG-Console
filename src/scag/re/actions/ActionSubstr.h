@@ -8,10 +8,9 @@ namespace scag { namespace re { namespace actions {
 class ActionSubstr : public Action
 {
     ActionSubstr(const ActionSubstr &);
-    std::string strVariable;
-    std::string wstrVariable;
+    std::string m_strVariable;
 
-    std::string strResult;
+    std::string m_strResult;
     
     int beginIndex;
     int endIndex;
