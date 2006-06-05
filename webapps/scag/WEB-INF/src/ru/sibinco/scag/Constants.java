@@ -18,6 +18,7 @@ public class Constants {
             public static final Constants COULDNT_SAVE_CONFIG = new Constants("error.status.couldnt_save_config");
             public static final Constants COULDNT_APPLY_ROUTES = new Constants("error.status.couldnt_apply_routes");
             public static final Constants COULDNT_RESTORE_ROUTES = new Constants("error.status.couldnt_restory_routes");
+            public static final Constants COULDNT_RESTORE_HTTP_ROUTES = new Constants("error.status.couldnt_restory_http_routes");
             public static final Constants COULDNT_START_GATEWAY = new Constants("error.status.couldnt_start_gateway");
             public static final Constants COULDNT_STOP_GATEWAY = new Constants("error.status.couldnt_stop_gateway");
             public static final Constants COULDNT_REFRESH_SERVICES = new Constants("error.status.couldnt_refresh_services");
@@ -37,11 +38,19 @@ public class Constants {
         public interface routing {
             public interface subjects {
                 public static final Constants SUBJECT_ALREADY_EXISTS = new Constants("error.routing.subjects.subject_already_exists");
+                public static final Constants HTTP_SUBJECT_ALREADY_EXISTS = new Constants("error.routing.subjects.http_subject_already_exists");
                 public static final Constants COULD_NOT_CREATE = new Constants("error.routing.subjects.could_not_create");
+                public static final Constants COULD_NOT_CREATE_HTTP_SUBJECT = new Constants("error.routing.subjects.could_not_create_http_subject");
+                public static final Constants COULD_NOT_CREATE_HTTP_SUBJECT_SITE = new Constants("error.routing.subjects.could_not_create_http_subject_site");
                 public static final Constants DEFAULT_SME_NOT_FOUND = new Constants("error.routing.subjects.default_sme_not_found");
                 public static final Constants COULD_NOT_SET_MASKS = new Constants("error.routing.subjects.could_not_set_masks");
             }
 
+            public interface sites{
+                public static final Constants HTTP_SITE_ALREADY_EXISTS = new Constants("error.routing.sites.http_site_already_exists");
+                public static final Constants HTTP_HOST_ALREADY_EXISTS = new Constants("error.routing.sites.http_host_already_exists");
+                public static final Constants COULD_NOT_CREATE = new Constants("error.routing.sites.could_not_create");
+            }
 
             public interface routes {
                 public static final Constants ROUTE_ALREADY_EXISTS = new Constants("error.routing.routes.route_already_exists");
@@ -52,8 +61,11 @@ public class Constants {
                 public static final Constants COULD_NOT_CREATE_MASK = new Constants("error.routing.routes.could_not_create_mask");
                 public static final Constants COULD_NOT_CREATE_DESTINATION_MASK = new Constants("error.routing.routes.could_not_create_destination_mask");
                 public static final Constants COULDNT_APPLY_ROUTES = new Constants("error.routing.couldnt_apply_routes");
+                public static final Constants COULDNT_APPLY_HTTP_ROUTES = new Constants("error.routing.couldnt_apply_http_routes");
                 public static final Constants COULDNT_LOAD_ROUTES = new Constants("error.routing.couldnt_load_routes");
+                public static final Constants COULDNT_LOAD_HTTP_ROUTES = new Constants("error.routing.couldnt_load_http_routes");
                 public static final Constants COULDNT_SAVE_ROUTES = new Constants("error.routing.couldnt_save_routes");
+                public static final Constants COULDNT_SAVE_HTTP_ROUTES = new Constants("error.routing.couldnt_save_http_routes");
             }
 
             public interface tracer {
