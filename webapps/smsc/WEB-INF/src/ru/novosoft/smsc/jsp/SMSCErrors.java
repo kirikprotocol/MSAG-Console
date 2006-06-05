@@ -202,7 +202,6 @@ public class SMSCErrors {
             public static final String couldntGetLogCats = B + "couldntGetLogCats";
             public static final String couldntSetLogCats = B + "couldntSetLogCats";
 
-
             public static class reshedule {
                 private static final String B = smsc.B + "reshedule.";
                 public static final String couldntGetErrorCodes = B + "couldntGetErrorCodes";
@@ -211,6 +210,12 @@ public class SMSCErrors {
                 public static final String couldntGetReshedules = B + "couldntGetReshedules";
                 public static final String resheduleAlreadyPresent = B + "resheduleAlreadyPresent";
                 public static final String couldntGetResheduleInstance = B + "couldntGetResheduleInstance";
+            }
+
+            public static class timezones {
+                private static final String B = smsc.B + "timezones.";
+                public static final String couldntGetTimeZones = B + "couldntGetTimeZones";
+                public static final String couldntSave = B + "couldntSave";
             }
         }
 

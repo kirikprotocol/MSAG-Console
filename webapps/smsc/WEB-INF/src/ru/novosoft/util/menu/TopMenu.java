@@ -23,7 +23,8 @@ public class TopMenu extends ArrayList {
             smsItems.add(new MenuItem("menu.smsc.users", "/smsc/users/index.jsp", MenuItem.VISIBLE_IN_ALL));
             smsItems.add(new MenuItem("menu.smsc.resources", "/smsc/locale_resources/index.jsp", MenuItem.VISIBLE_IN_ALL));
             smsItems.add(new MenuItem("menu.smsc.journal", "/smsc/journal/index.jsp", MenuItem.VISIBLE_IN_ALL));
-            smsItems.add(new MenuItem("menu.smsc.closedgroups", "/smsc/closed_groups/index.jsp", MenuItem.VISIBLE_IN_ALL));            
+            smsItems.add(new MenuItem("menu.smsc.closedgroups", "/smsc/closed_groups/index.jsp", MenuItem.VISIBLE_IN_ALL));
+            smsItems.add(new MenuItem("menu.smsc.timezones", "/smsc/timezones/index.jsp", MenuItem.VISIBLE_IN_ALL));
             smsItems.add(new MenuItem("menu.smsc.switch", "/smsc/smsc_service/switch.jsp", MenuItem.VISIBLE_IN_HA));
             add(new MenuItem("menu.smsc", "", smsItems));
 

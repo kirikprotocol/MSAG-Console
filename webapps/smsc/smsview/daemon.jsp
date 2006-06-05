@@ -2,8 +2,7 @@
 <%@ page import="ru.novosoft.smsc.jsp.smsc.localeResources.Section,
                  ru.novosoft.smsc.jsp.smsview.SmsDaemonFormBean,
                  java.util.HashMap" %>
-<jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsview.SmsDaemonFormBean"
-        />
+<jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsview.SmsDaemonFormBean"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
     ServiceIDForShowStatus = Constants.ARCHIVE_DAEMON_SVC_ID;
@@ -80,7 +79,7 @@
         inputElement.name = sectionName + "<%=Section.NAME_DELIMETER%>" + paramNameElem.value;
         inputElement.value = paramValueElem.value;
         inputElement.className = "txtW";
-        newCell = newRow.insertCell();
+        newCell = newRow.insertCell(1);
         newCell.appendChild(inputElement);
 
         imgElement = document.createElement("img");
@@ -88,7 +87,7 @@
         imgElement.setAttribute('sectionName', sectionName);
         imgElement.setAttribute('paramName', paramNameElem.value);
         imgElement.attachEvent("onclick", removeParam_Event);
-        newCell = newRow.insertCell();
+        newCell = newRow.insertCell(2);
         newCell.appendChild(imgElement);
 
         paramNameElem.value = "";

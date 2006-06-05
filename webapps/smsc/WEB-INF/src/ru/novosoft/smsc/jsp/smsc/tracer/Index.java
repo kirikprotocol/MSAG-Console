@@ -140,7 +140,7 @@ public class Index extends IndexBean
 
       traceResults = appContext.getSmsc().traceRoute(dstAddress, srcAddress, srcSysId);
       if (null == traceResults || 1 >= traceResults.size())
-        throw new AdminException("Transport error, invalid responce.");
+        throw new AdminException("Transport error, invalid response.");
       message = (String) traceResults.get(0);
       messageType = message.startsWith("Route found (disabled)") ? TRACE_ROUTE_STATUS :
               message.startsWith("Route not found") ? TRACE_ROUTE_NOT_FOUND : TRACE_ROUTE_FOUND;

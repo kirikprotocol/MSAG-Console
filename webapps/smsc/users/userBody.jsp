@@ -54,6 +54,7 @@
             paramCheck(out, "users.roles.mtsmsme-admin", "roles", "role27", "mtsmsme-admin", bean.isUserInRole("mtsmsme-admin"), null);
             paramCheck(out, "users.roles.journal", "roles", "role28", "journal", bean.isUserInRole("journal"), null);
             paramCheck(out, "users.roles.closed_groups", "roles", "role29", "closed_groups", bean.isUserInRole("closed_groups"), null);
+            paramCheck(out, "users.roles.timezones", "roles", "role30", "timezones", bean.isUserInRole("timezones"), null);            
 
             if (bean.getServiceRoles().size() > 0)
                 for (Iterator i = bean.getServiceRoles().iterator(); i.hasNext();) {
