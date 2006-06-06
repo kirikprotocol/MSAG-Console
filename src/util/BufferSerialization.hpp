@@ -167,6 +167,44 @@ public:
     str=buf;
   }
 
+  template <class StrLenType>
+  void WriteString(const std::string& str)
+  {
+    if(str.length()!=(StrLenType)str.length())
+    {
+      throw std::runtime_error("WriteString: string length is too large for requested length type");
+    }
+    if(sizeof(StrLenType)==1)
+    {
+      WriteByte(str.length());
+    }else if(sizeof(StrLenType)==2)
+    {
+      WriteNetInt16(str.length());
+    }else
+    {
+      WriteNetInt32(str.length());
+    }
+    Write(str.c_str(),str.length());
+  }
+  template <class StrLenType>
+  void ReadString(std::string& str)
+  {
+    int len;
+    if(sizeof(StrLenType)==1)
+    {
+      len=ReadByte();
+    }else if(sizeof(StrLenType)==2)
+    {
+      len=ReadNetInt16();
+    }else
+    {
+      len=ReadNetInt32();
+    }
+    if(bufferPos+len>bufferSize)throw std::runtime_error("Attempt to read beyond buffer");
+    str.assign(buffer+bufferPos,len);
+    bufferPos+=len;
+  }
+
   void assign(void* buf,uint32_t sz)
   {
     resize(sz);
