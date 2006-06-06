@@ -329,22 +329,6 @@ void Scheduler::Init(Smsc* psmsc,smsc::util::config::Manager* cfgman)
   //billingStorage.init(*cfgman);
   archiveStorage.init(*cfgman);
 
-  const char* idFileName=cfgman->getString("MessageStore.LocalStore.msgidfile");
-  if(File::Exists(idFileName))
-  {
-    idFile.RWOpen(idFileName);
-    idSeq=idFile.ReadNetInt64();
-    idSeq+=MessageIdSequenceExtent;
-    idFile.Seek(0);
-    idFile.WriteNetInt64(idSeq);
-  }else
-  {
-    idFile.WOpen(idFileName);
-    idSeq=0;
-    idFile.WriteNetInt64(idSeq);
-  }
-  idFile.SetUnbuffered();
-
 }
 
 

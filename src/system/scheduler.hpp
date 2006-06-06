@@ -117,10 +117,36 @@ public:
   {
     localFileStore.Stop();
     localFileStore.WaitFor();
+    for(std::vector<StoreData*>::iterator it=storeDataPool.begin();it!=storeDataPool.end();it++)
+    {
+      delete *it;
+    }
+    for(std::vector<MultiChain*>::iterator it=mcPool.begin();it!=mcPool.end();it++)
+    {
+      delete *it;
+    }
   }
   int Execute();
   const char* taskName(){return "scheduler";}
 
+  void InitMsgId(smsc::util::config::Manager* cfgman)
+  {
+    const char* idFileName=cfgman->getString("MessageStore.LocalStore.msgidfile");
+    if(File::Exists(idFileName))
+    {
+      idFile.RWOpen(idFileName);
+      idSeq=idFile.ReadNetInt64();
+      idSeq+=MessageIdSequenceExtent;
+      idFile.Seek(0);
+      idFile.WriteNetInt64(idSeq);
+    }else
+    {
+      idFile.WOpen(idFileName);
+      idSeq=0;
+      idFile.WriteNetInt64(idSeq);
+    }
+    idFile.SetUnbuffered();
+  }
   void Init(Smsc* psmsc,smsc::util::config::Manager* cfgman);
   void DelayInit(Smsc* psmsc);
 
