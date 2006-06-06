@@ -44,6 +44,11 @@ public:
 
   RouteIterator getRouteIterator() const;
 
+  Subject& getSubject(const char* subjName)
+  {
+    return *subjects.Get(subjName);
+  }
+
 protected:
   smsc::logger::Logger *logger;
   RoutePVector routes;
