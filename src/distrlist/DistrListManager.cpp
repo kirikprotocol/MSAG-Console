@@ -157,6 +157,7 @@ void DistrListManager::addDistrList(string dlName, bool system,const Address& dl
           PrincipalNotExistsException, ListCountExceededException)
 {
     MutexGuard mg(mtx);
+    for(int i=0;i<dlName.length();i++)dlName[i]=tolower(dlName[i]);
     if(lists.Exists(dlName.c_str()))throw ListAlreadyExistsException();
     PrincipalRecord* prcPtr;
     if(!system)
@@ -1571,7 +1572,7 @@ void DistrListManager::grantPosting(const string& dlName, const Address& owner,c
     DistrListRecord** lstPtr=lists.GetPtr(dlName.c_str());
     if(!lstPtr)throw ListNotExistsException("%s",dlName.c_str());
     DistrListRecord& lst=**lstPtr;
-    if(lst.owner!=owner)throw PrincipalNotExistsException();
+    if(strcmp(lst.owner.value,owner.value))throw PrincipalNotExistsException();
 
     SubmitterRecord sbmRec(lst,submitter);
     if(lst.submitters.find(sbmRec)!=lst.submitters.end())throw SubmitterAlreadyExistsException();
@@ -1587,7 +1588,7 @@ void DistrListManager::revokePosting(string dlName, const Address& owner,const A
     DistrListRecord** lstPtr=lists.GetPtr(dlName.c_str());
     if(!lstPtr)throw ListNotExistsException("%s",dlName.c_str());
     DistrListRecord& lst=**lstPtr;
-    if(lst.owner!=owner)throw PrincipalNotExistsException();
+    if(strcmp(lst.owner.value,owner.value))throw PrincipalNotExistsException();
 
     SubmitterRecord sbmRec(lst,submitter);
     DistrListRecord::SubmittersContainer::iterator it=lst.submitters.find(sbmRec);
