@@ -129,7 +129,7 @@ void XMLBasicHandler::endElement(const XMLCh* const nm)
 
         if(route_enabled)
         {
-            smsc_log_debug(logger, "Push route id=%s", route.id.c_str());
+//            smsc_log_debug(logger, "Push route id=%s", route.id.c_str());
             routes->Push(route);
         }
 

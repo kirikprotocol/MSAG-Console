@@ -283,26 +283,30 @@ StatusCode HttpParser::parsePath(std::string &path, HttpRequest& cx)
     mid++;
 
   len = mid - pos;
-  if (!(mid <= end && *mid == '_' && 1 <= len && len <= 20))
+  if (!(mid <= end && 1 <= len && len <= 20))
     return ERROR;
 
   str.assign(pos, len);
   cx.setAbonent(str);
-  mid++;
-  len = end - mid;
-  str.assign(mid, len);
+
+  if(*mid == '_')
+  {
+      mid++;
+      len = end - mid;
+      str.assign(mid, len);
   
-  pos = str.c_str();
-  while (isdigit(*pos))
-    pos++;
-  if (*pos || !(1 <= len && len <= 5))
-    return ERROR;
+      pos = str.c_str();
+      while (isdigit(*pos))
+        pos++;
+      if (*pos || !(1 <= len && len <= 5))
+        return ERROR;
   
-  len = atoi(str.c_str());
-  if (len > USHRT_MAX)
-    return ERROR;
+      len = atoi(str.c_str());
+      if (len > USHRT_MAX | !len)
+        return ERROR;
   
-  cx.setUSR(len);
+      cx.setUSR(len);
+  }
 #endif
  
   pos = end + 1;
@@ -324,7 +328,11 @@ StatusCode HttpParser::parsePath(std::string &path, HttpRequest& cx)
 
   pos = end;
   if (*pos)
-    cx.sitePath.assign(pos);
+  {
+    cx.siteFull.assign(pos);
+    end = strrchr(pos, '/');
+    cx.sitePath.assign(pos, end + 1 - pos);
+  }
 
   return OK;
 }

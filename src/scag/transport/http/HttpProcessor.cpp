@@ -71,7 +71,7 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
 {
     HttpRoute r;
 
-    smsc_log_debug( logger, "Got http_request command host=%s:%d, path=%s, abonent=%s", request.getSite().c_str(), request.getSitePath().c_str(), request.getAbonent().c_str());
+    smsc_log_debug( logger, "Got http_request command host=%s:%d, path=%s, abonent=%s, USR=%d", request.getSite().c_str(), request.getSitePort(), request.getSiteFull().c_str(), request.getAbonent().c_str(), request.getUSR());
 
     RuleStatus rs;
 
@@ -82,8 +82,15 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
         request.setRouteId(r.id);
         request.setProviderId(r.provider_id);
 
+        SessionPtr se;
         CSessionKey sk = {request.getUSR(), Address(request.getAbonent().c_str())};
-        SessionPtr se = SessionManager::Instance().getSession(sk);
+        if(request.getUSR())
+            se = SessionManager::Instance().getSession(sk);
+        else
+        {
+            se = SessionManager::Instance().newSession(sk);
+            request.setUSR(sk.USR);
+        }
 
         if(se.Get())
         {
@@ -98,6 +105,10 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
         } else
             smsc_log_error( logger, "session not found for abonent=%s, USR=%d", request.getAbonent().c_str(), request.getUSR());
     }
+    catch(RouteNotFoundException& e)
+    {
+        smsc_log_warn(logger, "route not found for abonent:%s, site:%s:%d%s", request.getAbonent().c_str(), request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str());
+    }
     catch(Exception& e)
     {
         smsc_log_error(logger, "error processing request. %s", e.what());
@@ -110,7 +121,7 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
 
 bool HttpProcessorImpl::processResponse(HttpResponse& response)
 {
-    smsc_log_debug( logger, "Got http_response command abonent=%s, USR=%d, route_id=%s, service_id=%s", response.getAbonent().c_str(), response.getUSR(), response.getRouteId().c_str(), response.getServiceId());
+    smsc_log_debug( logger, "Got http_response command abonent=%s, USR=%d, route_id=%s, service_id=%d", response.getAbonent().c_str(), response.getUSR(), response.getRouteId().c_str(), response.getServiceId());
 
     try{
         CSessionKey sk = {response.getUSR(), Address(response.getAbonent().c_str())};
@@ -141,7 +152,7 @@ bool HttpProcessorImpl::processResponse(HttpResponse& response)
 
 void HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
 {
-    smsc_log_debug( logger, "Got http_status_response command abonent=%s, USR=%d, route_id=%s, service_id=%s, delivered=%d",
+    smsc_log_debug(logger, "Got http_status_response command abonent=%s, USR=%d, route_id=%s, service_id=%d, delivered=%d",
              response.getAbonent().c_str(), response.getUSR(), response.getRouteId().c_str(), response.getServiceId(), delivered);
 
     try{
