@@ -1026,6 +1026,10 @@ public:
           printf("Unknown smpp optional: tag=%04x dump: %s\n",tag,dump.c_str());
         }
       }
+      if(s.hasIntProperty(Tag::SMPP_SAR_MSG_REF_NUM))
+      {
+        printf("SAR_MR:%d\nSAR_TOTAL:%d\nSAR_SEQNUM:%d\n",s.getIntProperty(Tag::SMPP_SAR_MSG_REF_NUM),s.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS),s.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM));
+      }
       if(s.getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::BINARY)
       {
         printf("Esm class: %02X\n",s.getIntProperty(Tag::SMPP_ESM_CLASS));
