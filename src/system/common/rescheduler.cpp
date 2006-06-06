@@ -108,6 +108,8 @@ void RescheduleCalculator::InitDefault(const char* timestring)throw(Exception)
 }
 
 void RescheduleCalculator::init(const char* filename){
+  smsc::logger::Logger* log=smsc::logger::Logger::getInstance("resched");
+  smsc_log_info(log,"Loading reschedule data from %s",filename);
   MutexGuard mg(rescheduleMutex);
 
   RescheduleTable.Clean();
@@ -169,15 +171,43 @@ void RescheduleCalculator::init(const char* filename){
   catch(const XMLException& e)
   {
     XmlStr s(e.getMessage());
+    smsc_log_warn(log,"XMLException:%s",s.c_str());
     throw Exception("XMLException:%s",s.c_str());
   }
   catch(std::exception& e)
   {
+    smsc_log_warn(log,"exception:%s",e.what());
     throw;
   }
   catch (...) {
+      smsc_log_warn(log,"unknown exception");
       throw Exception("Can't read %s",filename);
   }
+  std::string out;
+  for(int i=0;i<RescheduleTable.Count();i++)
+  {
+    if(i!=0)out+=',';
+    char buf[32];
+    sprintf(buf,"%d",RescheduleTable[i]);
+    out+=buf;
+  }
+  smsc_log_info(log,"Default Reschedule Table:%s",out.c_str());
+  int code;
+  TimeArray* arr;
+  IntHash<TimeArray*>::Iterator it=CodesTable.First();
+  while(it.Next(code,arr))
+  {
+    out="";
+    for(int i=0;i<arr->Count();i++)
+    {
+      if(i!=0)out+=',';
+      char buf[32];
+      sprintf(buf,"%d",(*arr)[i]);
+      out+=buf;
+    }
+    smsc_log_info(log,"Reschedule Table for code %d:%s",code,out.c_str());
+  }
+  smsc_log_info(log,"Reschedule data loaded");
 }
 
 void RescheduleCalculator::reset(){
@@ -206,6 +236,7 @@ void RescheduleCalculator::AddToTable(const char* timeline,const char* codes)
 time_t RescheduleCalculator::calcNextTryTime(time_t lasttry,int code,int attempt)
 {
   MutexGuard mg(rescheduleMutex);
+  static smsc::logger::Logger* log=smsc::logger::Logger::getInstance("resched");
   if(CodesTable.Exist(code))
   {
     TimeArray *ta=CodesTable.Get(code);
@@ -216,6 +247,7 @@ time_t RescheduleCalculator::calcNextTryTime(time_t lasttry,int code,int attempt
       return lasttry+60;
     }
     if(attempt>=ta->Count())attempt=ta->Count()-1;
+    smsc_log_debug(log,"Retry time increment for code %d,attemt %d=%d",code,attempt,(*ta)[attempt]);
     return lasttry+(*ta)[attempt];
   }
   if(DefaultAttemptsLimit!=-1 && attempt>=DefaultAttemptsLimit)return -1;
@@ -226,6 +258,7 @@ time_t RescheduleCalculator::calcNextTryTime(time_t lasttry,int code,int attempt
   }
   if(attempt<0)attempt=0;
   if(attempt>=RescheduleTable.Count())attempt=RescheduleTable.Count()-1;
+  smsc_log_debug(log,"Default Retry time increment for code %d,attemt %d=%d",code,attempt,RescheduleTable[attempt]);
   return lasttry+RescheduleTable[attempt];
 }
 
