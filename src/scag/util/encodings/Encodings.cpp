@@ -1,6 +1,7 @@
 #include "Encodings.h"
 
 #include <memory>
+#include <util/recoder/recode_dll.h>
 
 namespace scag { namespace util { namespace encodings {
 
@@ -60,24 +61,29 @@ void Convertor::UCS2ToUTF8(unsigned short * ucs2buff, int ucs2len, std::string& 
     */
 }
 
-void Convertor::GSM7BitToUTF8(const char * gsm7BitBuff, int gsm7BitBuffLen, std::string& utf8str)
-{
-}
-
-void Convertor::MultibyteToUTF8(const char * latin1Buff, int latin1BuffLen, ConvEncodingEnum encoding, std::string& utf8str)
-{
-}
-
 void Convertor::UTF8ToUCS2(const char * utf8buff, int utf8len, std::string& ucs2str)
 {
 }
 
-void Convertor::GSM7BitToUCS2(const char * gsm7BitBuff, int gsm7BitBuffLen, std::string& ucs2str)
+
+void Convertor::GSM7BitToUTF8(const char * gsm7BitBuff, int gsm7BitBuffLen, std::string& utf8str)
 {
 }
 
-void Convertor::MultibyteToUCS2(const char * latin1Buff, int latin1BuffLen, ConvEncodingEnum encoding, std::string& ucs2str)
+int Convertor::UTF8ToGSM7Bit(const char * utf8buff, int utf8len, char * gsm7BitBuff, int gsm7BitBuffLen)
 {
+    return 0;
+}
+
+
+void Convertor::MultibyteToUTF8(const char * latin1Buff, int latin1BuffLen, EncodeTypes::EncodingEnum encoding, std::string& utf8str)
+{
+}
+
+
+int Convertor::UTF8ToMultibyte(const char * utf8buff, int utf8len, EncodeTypes::EncodingEnum encoding, char * latin1Buff, int latin1BuffLen)
+{
+    return 0;
 }
 
 
