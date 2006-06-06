@@ -145,16 +145,9 @@ void Rule::init(const SectionParams& params, PropertyObject propertyObject)
 
     std::string sTransport = params["transport"];
 
-    char buff[1024];
-    int len = ConvertUCS2ToMultibyte((short *)sTransport.data(),sTransport.size(),buff,1024,CONV_ENCODING_ANSI);
-
-    std::string str;
-    str.assign(buff,len);
-
-    //std:: cout << "^^^^^^^^^^^^" << ConvertWStrToStr(sTransport.c_str()) << "^^" << sTransport.size() << std::endl;
-    TransportType * transportPTR = RuleEngine::Instance().getTransportTypeHash().GetPtr(str.c_str());
+    TransportType * transportPTR = RuleEngine::Instance().getTransportTypeHash().GetPtr(sTransport.c_str());
     
-    if (!transportPTR) throw SCAGException("Rule: invalid value '%s' for 'transport' parameter",str.c_str());
+    if (!transportPTR) throw SCAGException("Rule: invalid value '%s' for 'transport' parameter",sTransport.c_str());
 
     transportType = *transportPTR;
 

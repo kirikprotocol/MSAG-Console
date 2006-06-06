@@ -553,7 +553,7 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
             data.setIntProperty(FieldId,property.getInt());
             break;
         case SMS_SVC_TYPE:
-            str = ConvertWStrToStr(property.getStr());
+            str = property.getStr();
 
             if (str.size() >= MAX_ESERVICE_TYPE_LENGTH) 
                 len = MAX_ESERVICE_TYPE_LENGTH;
@@ -889,7 +889,7 @@ AdapterProperty * SmppCommandAdapter::Get_Unknown_Property(SMS& data, const std:
 
             std::string str;
             str.append((buff + i + 4),valueLen);
-            return new AdapterProperty(name, this, ConvertStrToWStr(str.c_str()));
+            return new AdapterProperty(name, this, str.c_str());
         }
 
         //if ((i + valueLen + 4 + 2) > (len-1)) return 0;
@@ -937,10 +937,10 @@ AdapterProperty * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::str
     switch (FieldId) 
     {
     case OA:
-        property = new AdapterProperty(name,this,ConvertStrToWStr((data.getOriginatingAddress().toString()).c_str()));
+        property = new AdapterProperty(name,this,data.getOriginatingAddress().toString().c_str());
         break;
     case DA:
-        property = new AdapterProperty(name,this,ConvertStrToWStr((data.getDestinationAddress().toString()).c_str()));
+        property = new AdapterProperty(name,this,data.getDestinationAddress().toString().c_str());
         break;
     case SMS_VALIDITY_PERIOD:
         property = new AdapterProperty(name,this,data.validTime);
@@ -949,7 +949,7 @@ AdapterProperty * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::str
         property = getMessageBodyProperty(data,name);
         break;
     case SMS_SVC_TYPE:
-        property = new AdapterProperty(name, this, ConvertStrToWStr(data.eServiceType));
+        property = new AdapterProperty(name, this, data.eServiceType);
         break;
     case USSD_DIALOG:
         property = new AdapterProperty(name,this,data.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP));
@@ -1003,16 +1003,16 @@ AdapterProperty * SmppCommandAdapter::getDeliverProperty(SMS& data,const std::st
     switch (FieldId) 
     {
     case OA:
-        property = new AdapterProperty(name,this,ConvertStrToWStr(data.getOriginatingAddress().toString().c_str()));
+        property = new AdapterProperty(name,this,data.getOriginatingAddress().toString().c_str());
         break;
     case DA:
-        property = new AdapterProperty(name,this,ConvertStrToWStr(data.getDestinationAddress().toString().c_str()));
+        property = new AdapterProperty(name,this,data.getDestinationAddress().toString().c_str());
         break;
     case SMS_MESSAGE_BODY:
         property = getMessageBodyProperty(data, name);
         break;
     case SMS_SVC_TYPE:
-        property = new AdapterProperty(name, this, ConvertStrToWStr(data.eServiceType));
+        property = new AdapterProperty(name, this, data.eServiceType);
         break;
     case USSD_DIALOG:
         property = new AdapterProperty(name,this,data.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP));

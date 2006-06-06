@@ -7,6 +7,8 @@
 #include <xercesc/sax/Locator.hpp>
 #include <xercesc/util/TransService.hpp>
 
+#include <scag/util/encodings/Encodings.h>
+
 namespace scag { namespace re { 
 
 //static const char*  encodingName    = "LATIN1";
@@ -16,7 +18,7 @@ static XMLTranscoder::UnRepOpts unRepOpts = XMLTranscoder::UnRep_Throw;
 static const XMLCh  gEndElement[] = { chOpenAngle, chForwardSlash, chNull };
 
 using namespace smsc::util;
-
+using namespace scag::util::encodings;
 
 /////////////////////////////////////////////SemanticAnalyser/////////////////////////////
 
@@ -175,9 +177,11 @@ void XMLBasicHandler::startElement(const XMLCh* const qname, AttributeList& attr
 
         //value.append((wchar_t *)XMLValue, XMLString::stringLen(XMLValue));
 
-        value.assign((char *)XMLValue,XMLString::stringLen(XMLValue)*2);
+        //value.assign((char *)XMLValue,XMLString::stringLen(XMLValue)*2);
+        Convertor::UCS2ToUTF8(XMLValue, XMLString::stringLen(XMLValue), value);
 
         _transcoder->transcodeTo(XMLName, XMLString::stringLen(XMLName), buff, 1024, charsEaten,unRepOpts);
+
 
         attr[(char *)buff] = value;
     }

@@ -6,7 +6,6 @@ namespace scag { namespace re { namespace actions {
 
 FieldType Action::CheckParameter(const SectionParams& params, PropertyObject& propertyObject, const char * actionName, const char * paramName, bool isRequired, bool isReadOnly, std::string& strParameter, bool& exist)
 {
-    std::string temp;
     FieldType fieldType = ftUnknown;
 
     const char * name = 0;
@@ -17,7 +16,7 @@ FieldType Action::CheckParameter(const SectionParams& params, PropertyObject& pr
 
         strParameter = params[paramName];
 
-        fieldType = ActionContext::Separate(temp,name);
+        fieldType = ActionContext::Separate(strParameter,name);
         AccessType at;
 
         if (fieldType == ftField) 

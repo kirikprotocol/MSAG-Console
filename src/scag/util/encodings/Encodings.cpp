@@ -5,7 +5,7 @@
 
 namespace scag { namespace util { namespace encodings {
 
-void Convertor::UCS2ToUTF8(unsigned short * ucs2buff, int ucs2len, std::string& utf8str)
+void Convertor::UCS2ToUTF8(const unsigned short * ucs2buff, int ucs2len, std::string& utf8str)
 {
     int pos = 0;
     
@@ -15,7 +15,7 @@ void Convertor::UCS2ToUTF8(unsigned short * ucs2buff, int ucs2len, std::string& 
     for (int i = 0; i < ucs2len; i++) 
     {
         unsigned short ucs2ch = ucs2buff[i];
-
+     
         if ((ucs2ch >=0x00000000)&&(ucs2ch <= 0x0000007F)) 
         {
             ptr[pos] = ucs2ch;
@@ -24,13 +24,12 @@ void Convertor::UCS2ToUTF8(unsigned short * ucs2buff, int ucs2len, std::string& 
         else
         if ((ucs2ch >=0x00000080)&&(ucs2ch <= 0x000007FF))
         {
-            char ch = ((ucs2ch & 63) + 128);
-            ptr[pos] = ch;
-            pos++;
+            char ch1 = ((ucs2ch & 63) + 128);
+            char ch2 = ((ucs2ch >> 6) + 192);
 
-            ch = ((ucs2ch >> 6) + 192);
-            ptr[pos] = ch;
-            pos++;
+            ptr[pos] = ch2;
+            ptr[pos+1] = ch1;
+            pos+=2;
         }
         else
         if ((ucs2ch >=0x00000800)&&(ucs2ch <= 0x0000FFFF))
@@ -39,8 +38,7 @@ void Convertor::UCS2ToUTF8(unsigned short * ucs2buff, int ucs2len, std::string& 
             for (int j=0; j<2; j++) 
             {
                 ch = ((ucs2ch & 63) + 128);
-                ptr[pos] = ch;
-                pos++;
+                ptr[pos+2-j] = ch;
 
                 ucs2ch >> 6;
             }
@@ -48,8 +46,8 @@ void Convertor::UCS2ToUTF8(unsigned short * ucs2buff, int ucs2len, std::string& 
             ch = ucs2ch + 224;
 
             ptr[pos] = ch;
-            pos++;
-        }
+            pos+=3;
+        }      
     }
 
     utf8str.assign(ptr,pos);

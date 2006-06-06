@@ -34,12 +34,12 @@ struct Convertor
     /**
      *
      * @param usc2buff Буффер, содержащий строку в формате UCS2
-     * @param ucs2len Длинна строки (каждый символ строки занимает 4 байта)
+     * @param ucs2len Длинна строки (каждый символ строки занимает 2 байта)
      * @param utf8str Строка, в которую возвращяется результат
      * 
      * @see UTF8ToUCS2
     */
-    static void UCS2ToUTF8(unsigned short * ucs2buff, int ucs2len, std::string& utf8str);
+    static void UCS2ToUTF8(const unsigned short * ucs2buff, int ucs2len, std::string& utf8str);
 
     /**
      *
