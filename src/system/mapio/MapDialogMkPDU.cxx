@@ -1,3 +1,5 @@
+#include "system/common/TimeZoneMan.hpp"
+
 struct SMS_DELIVERY_FORMAT_HEADER{
   union{
     struct{
@@ -12,7 +14,7 @@ struct SMS_DELIVERY_FORMAT_HEADER{
   }uu;
 };
 
-void fillPduTime(MAP_TIMESTAMP* pdu_tm,struct tm* tms)
+void fillPduTime(MAP_TIMESTAMP* pdu_tm,struct tm* tms,int atz)
 {
   pdu_tm->year.first  =  ((tms->tm_year)%100)/10;
   pdu_tm->year.second  = tms->tm_year%10;
@@ -26,10 +28,9 @@ void fillPduTime(MAP_TIMESTAMP* pdu_tm,struct tm* tms)
   pdu_tm->min.second  = tms->tm_min%10;
   pdu_tm->sec.first  =  tms->tm_sec/10;
   pdu_tm->sec.second  = tms->tm_sec%10;
-  int tz = timezone;
-  if ( tms->tm_isdst ) tz-=3600;
-  tz = -tz/900;
-  pdu_tm->tz = tz;
+  if ( tms->tm_isdst ) atz-=3600;
+  atz = -atz/900;
+  pdu_tm->tz = atz;
 }
 
 ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false)
@@ -230,21 +231,32 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
     }
   }
   {
-    
+
     time_t t = sms->getSubmitTime();
     if( isrcpt && sms->hasIntProperty(Tag::SMSC_RECEIPTED_MSG_SUBMIT_TIME) ) {
       t = sms->getIntProperty(Tag::SMSC_RECEIPTED_MSG_SUBMIT_TIME);
     }
 //    time(&t);
+    int abonentsTz=smsc::system::common::TimeZoneManager().getTimeZone(sms->getDestinationAddress());
+    abonentsTz*=60;
+    abonentsTz=-abonentsTz;
     struct tm tms;
+    if(timezone!=abonentsTz)
+    {
+      t+=(timezone-abonentsTz);
+    }
     localtime_r(&t,&tms);
-    fillPduTime((MAP_TIMESTAMP*)pdu_ptr,&tms);
+    fillPduTime((MAP_TIMESTAMP*)pdu_ptr,&tms,abonentsTz);
     pdu_ptr+=sizeof(MAP_TIMESTAMP);
     if(isrcpt)
     {
       t=sms->getIntProperty(Tag::SMSC_DISCHARGE_TIME);
+      if(timezone!=abonentsTz)
+      {
+        t+=(timezone-abonentsTz);
+      }
       localtime_r(&t,&tms);
-      fillPduTime((MAP_TIMESTAMP*)pdu_ptr,&tms);
+      fillPduTime((MAP_TIMESTAMP*)pdu_ptr,&tms,abonentsTz);
       pdu_ptr+=sizeof(MAP_TIMESTAMP);
       //!!!TODO!!! expired
       switch(sms->getIntProperty(Tag::SMPP_MSG_STATE))

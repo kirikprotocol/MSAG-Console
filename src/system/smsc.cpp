@@ -35,6 +35,7 @@
 #include "cluster/listeners/SmeCommandListener.h"
 #include "cluster/listeners/CgmCommandListener.h"
 #include "closedgroups/ClosedGroupsManager.hpp"
+#include "system/common/TimeZoneMan.hpp"
 
 #include <unistd.h>
 
@@ -310,6 +311,12 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     snmpAgent->statusChange(SnmpAgent::INIT);
   }
 #endif
+
+  {
+    std::string tzCfg=findConfigFile("timezones.xml");
+    std::string rtCfg=findConfigFile("routes.xml");
+    common::TimeZoneManager::Init(tzCfg.c_str(),rtCfg.c_str());
+  }
 
   /*
     register SME's
@@ -1156,6 +1163,7 @@ void Smsc::run()
 
   // start rescheduler created in init
   // start on thread pool 2 to shutdown it after state machines
+  scheduler->InitMsgId(&smsc::util::config::Manager::getInstance());
   tp2.startTask(scheduler);
 
 #ifdef ENABLE_MAP_SYM
@@ -1231,6 +1239,7 @@ void Smsc::shutdown()
     __trace__("stopping interconnect");
     InterconnectManager::shutdown();
   }
+  common::TimeZoneManager::Shutdown();
   __trace__("shutdown completed");
 }
 

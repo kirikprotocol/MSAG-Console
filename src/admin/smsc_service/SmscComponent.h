@@ -69,6 +69,7 @@ protected:
   Variant applyLocaleResource() throw (AdminException);
   void reloadConfigsAndRestart() throw (AdminException);
   void reReadConfigs() throw (AdminException);
+  void applyTimeZones()throw(AdminException);
 
   void mscRegistrate(const Arguments & args);
   void mscUnregister(const Arguments & args);
@@ -136,7 +137,7 @@ protected:
   Methods methods;
   enum
   {
-    applyRoutesMethod, applyAliasesMethod, applyRescheduleMethod, applyServicesMethod, applySmscConfigMethod, applyLocaleResourceMethod,
+    applyRoutesMethod, applyAliasesMethod, applyRescheduleMethod, applyServicesMethod, applySmscConfigMethod, applyLocaleResourceMethod,applyTimeZonesMethod,
     profileLookupMethod, profileUpdateMethod, profileLookupExMethod, profileDeleteMethod,
     flushStatisticsMethod,
     processCancelMessagesMethod,

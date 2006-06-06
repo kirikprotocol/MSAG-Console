@@ -15,6 +15,7 @@
 #include "util/udh.hpp"
 #include "core/buffers/FixedLengthString.hpp"
 #include "closedgroups/ClosedGroupsInterface.hpp"
+#include "system/common/TimeZoneMan.hpp"
 
 // строчка по русски, что б сработал autodetect :)
 
@@ -1456,6 +1457,12 @@ StateType StateMachine::submit(Tuple& t)
       sms->setIntProperty(Tag::SMPP_SM_LENGTH,0);
       sms->setIntProperty(Tag::SMSC_ORIGINALPARTSNUM,num);
 
+      if(sms->getIntProperty(Tag::SMPP_SAR_MSG_REF_NUM))
+      {
+        sms->getMessageBody().dropIntProperty(Tag::SMPP_SAR_MSG_REF_NUM);
+        sms->getMessageBody().dropIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
+        sms->getMessageBody().dropIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
+      }
 
       char cibuf[256*2+1];
       ConcatInfo *ci=(ConcatInfo *)cibuf;
@@ -4249,7 +4256,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       FormatData fd;
       fd.ddest=ddest;
       fd.addr=addr;
-      fd.date=time(NULL);
+      fd.date=time(NULL)+common::TimeZoneManager::getInstance().getTimeZone(rpt.getDestinationAddress());
       fd.msgId=msgid;
       fd.err="";
       fd.lastResult=0;
@@ -4827,7 +4834,7 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
   const Descriptor& d=sms.getDestinationDescriptor();
   fd.msc=d.msc;
   fd.addr=addr;
-  fd.date=sms.getSubmitTime();
+  fd.date=sms.getSubmitTime()+common::TimeZoneManager::getInstance().getTimeZone(rpt.getDestinationAddress());
   fd.msgId=msgid;
   fd.err=reason;
   fd.setLastResult(sms.lastResult);
@@ -4909,7 +4916,7 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
     fd.ddest=ddest;
     const Descriptor& d=sms.getDestinationDescriptor();
     fd.msc=d.msc;
-    fd.date=sms.getSubmitTime();
+    fd.date=sms.getSubmitTime()+common::TimeZoneManager::getInstance().getTimeZone(rpt.getDestinationAddress());
     fd.addr=addr;
     fd.msgId=msgid;
     fd.err=reason;

@@ -14,6 +14,7 @@
 #include "cluster/Interconnect.h"
 #include "cluster/Commands.h"
 #include "closedgroups/ClosedGroupsInterface.hpp"
+#include "system/common/TimeZoneMan.hpp"
 
 namespace smsc {
 namespace admin {
@@ -220,6 +221,7 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
   Method apply_smsc_config     ((unsigned)applySmscConfigMethod,     "apply_smsc_config",     empty_params, StringType);
   Method apply_services        ((unsigned)applyServicesMethod,       "apply_services",        empty_params, StringType);
   Method apply_locale_resource ((unsigned)applyLocaleResourceMethod, "apply_locale_resources",empty_params, StringType);
+  Method apply_timezones       ((unsigned)applyTimeZonesMethod,      "apply_timezones",       empty_params, StringType);
 
   Parameters trace_route_params;
   trace_route_params["dstAddress"] = Parameter("dstAddress", StringType);
@@ -305,6 +307,7 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
   methods[apply_smsc_config    .getName()] = apply_smsc_config;
   methods[apply_services       .getName()] = apply_services;
   methods[apply_locale_resource.getName()] = apply_locale_resource;
+  methods[apply_timezones      .getName()] = apply_timezones;
 
   methods[profile_lookup.getName()] = profile_lookup;
   methods[profile_update.getName()] = profile_update;
@@ -433,7 +436,9 @@ throw (AdminException)
         return Variant("");
       case applyLocaleResourceMethod:
         return applyLocaleResource();
-
+      case applyTimeZonesMethod:
+        applyTimeZones();
+        return Variant("");
 
       case mscRegistrateMethod:
         mscRegistrate(args);
@@ -1734,6 +1739,11 @@ throw (AdminException)
   return Variant("");
 }
 
+
+void SmscComponent::applyTimeZones()throw(AdminException)
+{
+  smsc::system::common::TimeZoneManager::getInstance().Reload();
+}
 
 Variant SmscComponent::aclListNames(const Arguments & args) throw (AdminException)
 {
