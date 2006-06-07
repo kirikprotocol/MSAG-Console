@@ -64,11 +64,11 @@
 <script language="JavaScript">
     function addParam(sectionName)
     {
-        tableElem = opForm.all("paramTable_" + sectionName);
-        paramNameElem = opForm.all("newParamName_" + sectionName);
-        paramValueElem = opForm.all("newParamValue_" + sectionName);
+        tableElem = document.getElementById("paramTable_" + sectionName);
+        paramNameElem = document.getElementById("newParamName_" + sectionName);
+        paramValueElem = document.getElementById("newParamValue_" + sectionName);
 
-        test = opForm.all("paramRow_" + sectionName + "<%=Section.NAME_DELIMETER%>" + paramNameElem.value);
+        test = document.getElementById("paramRow_" + sectionName + "<%=Section.NAME_DELIMETER%>" + paramNameElem.value);
         if (test == null)
         {
             newRow = tableElem.insertRow(tableElem.rows.length - 1);
@@ -104,7 +104,7 @@
     }
     function delParam(sectionName, paramName)
     {
-        tableElem = opForm.all("paramTable_" + sectionName);
+        tableElem = document.getElementById("paramTable_" + sectionName);
         rowId = "paramRow_" + sectionName + "<%=Section.NAME_DELIMETER%>" + paramName;
         rowElem = tableElem.rows(rowId);
         tableElem.deleteRow(rowElem.rowIndex);
