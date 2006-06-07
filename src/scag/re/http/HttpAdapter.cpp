@@ -31,6 +31,7 @@ Hash<AccessType> HttpCommandAdapter::InitRequestAccess()
     hs.Insert("abonent", atReadWrite);
     hs.Insert("site", atReadWrite);
     hs.Insert("path", atReadWrite);
+    hs.Insert("pathfull", atReadWrite);
     hs.Insert("port", atReadWrite);
     hs.Insert("message", atReadWrite);
 
@@ -42,10 +43,10 @@ AccessType HttpCommandAdapter::CheckAccess(int handlerType,const std::string& na
     if(!strncmp(name.c_str(), "header-", 7))
         return atReadWrite;
 
-    if(handlerType == HTTP_RESPONSE && !strcmp(name.c_str(), "status"))
+    if(handlerType == EH_HTTP_RESPONSE && !strcmp(name.c_str(), "status"))
         return atReadWrite;
 
-    if(handlerType == HTTP_REQUEST)
+    if(handlerType == EH_HTTP_REQUEST)
     {
         if(!strncmp(name.c_str(), "param-", 6))
             return atRead;
