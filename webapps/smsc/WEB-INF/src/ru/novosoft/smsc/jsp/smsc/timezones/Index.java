@@ -4,10 +4,7 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class Index extends ru.novosoft.smsc.jsp.smsc.reshedule.Index {
     private TimeZones timezones = null;
@@ -26,7 +23,7 @@ public class Index extends ru.novosoft.smsc.jsp.smsc.reshedule.Index {
             }
         }
         catch (Throwable e) {
-            logger.error("couldn't instantiate Reshedules", e);
+            logger.error("couldn't instantiate timezones", e);
             return error(SMSCErrors.error.smsc.timezones.couldntGetTimeZones, e);
         }
 
@@ -57,10 +54,12 @@ public class Index extends ru.novosoft.smsc.jsp.smsc.reshedule.Index {
     }
 
     public Collection getMasks() {
+        if (timezones == null) return new LinkedList();
         return timezones.getMasks();
     }
 
     public Collection getSubjects() {
+        if (timezones == null) return new LinkedList();        
         return timezones.getSubjects();
     }
 

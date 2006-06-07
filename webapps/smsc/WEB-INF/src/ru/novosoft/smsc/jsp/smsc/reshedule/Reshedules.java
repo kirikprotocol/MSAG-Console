@@ -223,7 +223,7 @@ class Reshedules
         smscConfig = appContext.getSmsc().getSmscConfig();
         if (smscConfig == null) {throw new AdminException(SMSCErrors.error.smsc.couldntGetConfig);}
         String configName = smscConfig.getString(RESHEDULE_CONFIG);
-        File confFile = new File(WebAppFolders.getSmscConfFolder(), configName);
+        File confFile = new File(WebAppFolders.getWebappFolder(), configName);
         Config result = new Config(confFile);
         return result;
     }

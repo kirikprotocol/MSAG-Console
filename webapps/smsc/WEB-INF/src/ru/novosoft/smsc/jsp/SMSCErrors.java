@@ -216,6 +216,7 @@ public class SMSCErrors {
                 private static final String B = smsc.B + "timezones.";
                 public static final String couldntGetTimeZones = B + "couldntGetTimeZones";
                 public static final String couldntSave = B + "couldntSave";
+                public static final String couldntGetTimezoneConfig = B + "couldntGetTimezoneConfig";
             }
         }
 

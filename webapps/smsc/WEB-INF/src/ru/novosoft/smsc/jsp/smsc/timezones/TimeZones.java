@@ -35,11 +35,11 @@ public class TimeZones {
             this.appContext = appContext;
             config = getTimeZonesConfig();
             if (config == null) {
-                throw new AdminException(SMSCErrors.error.smsc.couldntGetScheduleConfig);
+                throw new AdminException(SMSCErrors.error.smsc.timezones.couldntGetTimezoneConfig);
             }
         }
         catch (Throwable e) {
-            logger.debug("Couldn't get reschedule config", e);
+            logger.debug("Couldn't get timezone config", e);
             throw e;
         }
     }
@@ -65,7 +65,7 @@ public class TimeZones {
             throw new AdminException(SMSCErrors.error.smsc.couldntGetConfig);
         }
         String configName = smscConfig.getString(TIMEZONES_CONFIG);
-        File confFile = new File(WebAppFolders.getSmscConfFolder(), configName);
+        File confFile = new File(WebAppFolders.getWebappFolder(), configName);
         return new Config(confFile);
     }
 
