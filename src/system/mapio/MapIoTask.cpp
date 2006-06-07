@@ -18,6 +18,7 @@ Mutex mapMutex;
 //unsigned __global_bind_counter = 0;
 bool SSN_bound = false;
 bool USSD_SSN_bound = false;
+int bindTimer = 0;
 static unsigned __pingPongWaitCounter = 0;
 static bool MAP_dispatching = false;
 static bool MAP_isAlive = false;
@@ -58,6 +59,7 @@ extern "C" {
     __map_warn2__("Et96MapStateInd received ssn=%d user state=%d affected SSN=%d affected SPC=%ld local SPC=%ld",lssn,userState,affectedSSN,affectedSPC,localSPC);
     if( userState == 1 ) {
       if (affectedSSN == SSN ) {
+        bindTimer = 0;
         SSN_bound = false;
         __map_warn2__("Et96MapStateInd SSN %d is unavailable trying to rebind",affectedSSN);
         USHORT_T result = Et96MapBindReq(MY_USER_ID, SSN);
@@ -65,6 +67,7 @@ extern "C" {
           __map_warn2__("Bind error 0x%hx",result);
         }
       } else if( affectedSSN == USSD_SSN ) {
+        bindTimer = 0;
         USSD_SSN_bound = false;
         __map_warn2__("Et96MapStateInd SSN %d is unavailable trying to rebind",affectedSSN);
         USHORT_T result = Et96MapBindReq(MY_USER_ID, USSD_SSN);
@@ -98,7 +101,6 @@ void MapIoTask::connect(unsigned timeout) {
     __map_warn2__("Error at MsgOpen, code 0x%hx",result);
     kill(getpid(),17);
   }
-  bindTimer = 0;
   int tries = 0;
   while( tries < 60 ) {
     result = MsgConn(MY_USER_ID,ETSIMAP_ID);
@@ -120,6 +122,7 @@ void MapIoTask::connect(unsigned timeout) {
   }
 
   __map_warn__("Binding subsystems");
+  bindTimer = 0;
   
   result = Et96MapBindReq(MY_USER_ID, SSN);
   if (result!=ET96MAP_E_OK) {
@@ -211,7 +214,6 @@ void MapIoTask::dispatcher()
   smsc::logger::Logger *time_logger = smsc::logger::Logger::getInstance("map.itime");
   
   message.receiver = MY_USER_ID;
-  int bindTimer = 0;
   for (;;) {
     MAP_isAlive = true;
     if ( isStopping ) {
