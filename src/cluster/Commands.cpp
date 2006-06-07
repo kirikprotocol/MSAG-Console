@@ -1350,114 +1350,72 @@ void SmeUpdateCommand::getArgs(smsc::smeman::SmeInfo &si_) const
     si_ = si;
 }
 
+
 void* SmeUpdateCommand::serialize(uint32_t &len)
 {
 
 
-  uint8_t *buffer = 0;
+  SerializationBuffer buf(128);
 
   try {
 
-  len = 38 + si.rangeOfAddress.length() + si.systemType.length() +
-                si.password.length() + si.hostname.length() + si.systemId.length() +
-                si.receiptSchemeName.length();
+  buf.WriteByte(si.typeOfNumber);
+  buf.WriteByte(si.numberingPlan);
+  buf.WriteByte(si.interfaceVersion);
+  buf.WriteNetInt32(si.port);
+  buf.WriteNetInt32(si.priority);
 
-  buffer = new uint8_t[len];
-
-  memcpy((void*)buffer,         (const void*)&si.typeOfNumber, 1);
-  memcpy((void*)(buffer + 1),   (const void*)&si.numberingPlan, 1);
-  memcpy((void*)(buffer + 2),   (const void*)&si.interfaceVersion, 1);
-
-  //printf("typeOfNumber: %d, numberingPlan: %d, interfaceVersion: %d\n", si.typeOfNumber, si.numberingPlan, si.interfaceVersion);
-
-  uint32_t value32;
-
-  value32 = htonl(si.port);
-  memcpy((void*)(buffer + 3),   (const void*)&value32, 4);
-  value32 = htonl(si.priority);
-  memcpy((void*)(buffer + 7),   (const void*)&value32, 4);
-  value32 = htonl(si.SME_N);
-  memcpy((void*)(buffer + 11),  (const void*)&value32, 4);
-  value32 = htonl(si.timeout);
-  memcpy((void*)(buffer + 15),  (const void*)&value32, 4);
-  value32 = htonl(si.proclimit);
-  memcpy((void*)(buffer + 19),  (const void*)&value32, 4);
-  value32 = htonl(si.schedlimit);
-  memcpy((void*)(buffer + 23),  (const void*)&value32, 4);
-  value32 = htonl(si.providerId);
-  memcpy((void*)(buffer + 27),  (const void*)&value32, 4);
-
-  /*printf("port: %d, priority: %d, SME_N: %d, timeout: %d\nproclimit: %d, schedlimit: %d, providerId: %d\n", si.port,
-            si.priority, si.SME_N, si.timeout, si.proclimit, si.schedlimit, si.providerId);*/
+  buf.WriteNetInt32(si.SME_N);
+  buf.WriteNetInt32(si.timeout);
+  buf.WriteNetInt32(si.proclimit);
+  buf.WriteNetInt32(si.schedlimit);
+  buf.WriteNetInt32(si.providerId);
+  buf.WriteNetInt32(si.accessMask);
 
   uint8_t val;
 
   //printf("bindMode: ");
-  switch(si.bindMode){
-  case smsc::smeman::smeRX:
+  switch(si.bindMode)
+  {
+    case smsc::smeman::smeRX:
       val = 0;
-      //printf("smeRX\n");
       break;
-  case smsc::smeman::smeTX:
+    case smsc::smeman::smeTX:
       val = 1;
-      //printf("smeTX\n");
       break;
-  case smsc::smeman::smeTRX:
+    case smsc::smeman::smeTRX:
       val = 2;
-      //printf("smeTRX\n");
       break;
   }
 
-  val = val << (uint8_t)4;
-
-#define BIT(x) (((uint8_t)1)<<((uint8_t)x))
+  val<<=4;
 
   if(si.disabled)
-      val |= (uint8_t)1;
+      val |= 1;
   if(si.wantAlias)
-      val |= BIT(1);
+      val |= 2;
   if(si.forceDC)
-      val |= BIT(2);
+      val |= 4;
   if(si.internal)
-      val |= BIT(3);
+      val |= 8;
 
-  /*if(si.disabled)
-      printf("disabled ok\n");
-  if(si.wantAlias)
-      printf("wantAlias ok\n");
-  if(si.forceDC)
-      printf("forceDC ok\n");
-  if(si.internal)
-      printf("internal ok\n");*/
+  buf.WriteByte(val);
 
-#undef BIT
+  buf.WriteString<uint16_t>(si.rangeOfAddress);
+  buf.WriteString<uint16_t>(si.systemType);
+  buf.WriteString<uint16_t>(si.password);
+  buf.WriteString<uint16_t>(si.hostname);
+  buf.WriteString<uint16_t>(si.systemId);
+  buf.WriteString<uint16_t>(si.receiptSchemeName);
 
-  memcpy((void*)(buffer + 31), (const void*)&val, 1);
-
-  int sz = 0;
-  memcpy((void*)( (uint8_t*)buffer + 32 ),      (const void*)si.rangeOfAddress.c_str(),     si.rangeOfAddress.length() + 1);
-  sz += si.rangeOfAddress.length() + 1;
-  //printf("rangeOfAddress: '%s', len: %d, sz: %d\n", si.rangeOfAddress.c_str(), si.rangeOfAddress.length(), sz);
-  memcpy((void*)( (uint8_t*)buffer + 32 + sz ), (const void*)si.systemType.c_str(),         si.systemType.length() + 1);
-  sz += si.systemType.length() + 1;
-  //printf("systemType: '%s', len: %d, sz: %d\n", si.systemType.c_str(), si.systemType.length(), sz);
-  memcpy((void*)( (uint8_t*)buffer + 32 + sz ), (const void*)si.password.c_str(),           si.password.length() + 1);
-  sz += si.password.length() + 1;
-  //printf("password: '%s', len: %d, sz: %d\n", si.password.c_str(), si.password.length(), sz);
-  memcpy((void*)( (uint8_t*)buffer + 32 + sz ), (const void*)si.hostname.c_str(),           si.hostname.length() + 1);
-  sz += si.hostname.length() + 1;
-  //printf("hostname: '%s', len: %d, sz: %d\n", si.hostname.c_str(), si.hostname.length(), sz);
-  memcpy((void*)( (uint8_t*)buffer + 32 + sz ), (const void*)si.systemId.c_str(),           si.systemId.length() + 1);
-  sz += si.systemId.length() + 1;
-  //printf("systemId: '%s', len: %d, sz: %d\n", si.systemId.c_str(), si.systemId.length(), sz);
-  memcpy((void*)( (uint8_t*)buffer + 32 + sz ), (const void*)si.receiptSchemeName.c_str(),  si.receiptSchemeName.length() + 1);
-  //printf("receiptSchemeName: '%s', len: %d, sz: %d\n", si.receiptSchemeName.c_str(), si.receiptSchemeName.length(), sz);
-
-   }catch(...){
-       return 0;
+   }catch(std::exception& e)
+   {
+     __warning2__("Serialization error:%s",e.what());
+     return 0;
    }
 
-  return (void*)buffer;
+  len=buf.getPos();
+  return buf.releaseBuffer();
 }
 bool SmeUpdateCommand::deserialize(void *buffer, uint32_t len)
 {
@@ -1466,86 +1424,62 @@ bool SmeUpdateCommand::deserialize(void *buffer, uint32_t len)
 
   try {
 
-  uint8_t val;
+  SerializationBuffer buf;
+  buf.setExternalBuffer(buffer,len);
 
-  uint32_t value32;
+  si.typeOfNumber=buf.ReadByte();
+  si.numberingPlan=buf.ReadByte();
+  si.interfaceVersion=buf.ReadByte();
 
-  memcpy((void*)&si.typeOfNumber,       (const void*)buffer, 1);
-  memcpy((void*)&si.numberingPlan,      (const void*)((uint8_t*)buffer + 1), 1);
-  memcpy((void*)&si.interfaceVersion,   (const void*)((uint8_t*)buffer + 2), 1);
 
-  //printf("typeOfNumber: %d, numberingPlan: %d, interfaceVersion: %d\n", si.typeOfNumber, si.numberingPlan, si.interfaceVersion);
-
-  memcpy((void*)&value32,               (const void*)((uint8_t*)buffer + 3), 4);
-  si.port = ntohl(value32);
-  memcpy((void*)&value32,           (const void*)((uint8_t*)buffer + 7), 4);
-  si.priority = ntohl(value32);
-  memcpy((void*)&value32,              (const void*)((uint8_t*)buffer + 11), 4);
-  si.SME_N = ntohl(value32);
-  memcpy((void*)&value32,            (const void*)((uint8_t*)buffer + 15), 4);
-  si.timeout = ntohl(value32);
-  memcpy((void*)&value32,          (const void*)((uint8_t*)buffer + 19), 4);
-  si.proclimit = ntohl(value32);
-  memcpy((void*)&value32,         (const void*)((uint8_t*)buffer + 23), 4);
-  si.schedlimit = ntohl(value32);
-  memcpy((void*)&value32,         (const void*)((uint8_t*)buffer + 27), 4);
-  si.providerId = ntohl(value32);
+  si.port = buf.ReadNetInt32();
+  si.priority = buf.ReadNetInt32();
+  si.SME_N = buf.ReadNetInt32();
+  si.timeout = buf.ReadNetInt32();
+  si.proclimit = buf.ReadNetInt32();
+  si.schedlimit = buf.ReadNetInt32();
+  si.providerId = buf.ReadNetInt32();
+  si.accessMask = buf.ReadNetInt32();
 
   /*printf("port: %d, priority: %d, SME_N: %d, timeout: %d\nproclimit: %d, schedlimit: %d, providerId: %d\n", si.port,
             si.priority, si.SME_N, si.timeout, si.proclimit, si.schedlimit, si.providerId);*/
 
-  memcpy((void*)&val,                   (const void*)((uint8_t*)buffer + 31), 1);
+  uint8_t val=buf.ReadByte();
 
 
-#define BIT(x) (((uint8_t)1)<<((uint8_t)x))
+  si.disabled =     val & 1;
+  si.wantAlias =    val & 2;
+  si.forceDC =      val & 4;
+  si.internal =     val & 8;
 
-  si.disabled =     val & (uint8_t)1;
-  si.wantAlias =    val & BIT(1);
-  si.forceDC =      val & BIT(2);
-  si.internal =     val & BIT(3);
 
-  /*if(si.disabled)
-      printf("disabled ok\n");
-  if(si.wantAlias)
-      printf("wantAlias ok\n");
-  if(si.forceDC)
-      printf("forceDC ok\n");
-  if(si.internal)
-      printf("internal ok\n");*/
-
-#undef BIT
-
-  val = val >> (uint8_t)4;
+  val>>=val;
   //printf("bindMode: ");
-  switch(val){
-  case 0:
+  switch(val)
+  {
+    case 0:
       si.bindMode = smsc::smeman::smeRX;
-      //printf("smeRX\n");
-  case 1:
+      break;
+    case 1:
       si.bindMode = smsc::smeman::smeTX;
-      //printf("smeTX\n");
-  case 2:
+      break;
+    case 2:
       si.bindMode = smsc::smeman::smeTRX;
-      //printf("smeTRX\n");
+      break;
   }
 
-  int sz = 0;
-  si.rangeOfAddress =       (char*)(   (uint8_t*)buffer + 32   );           sz += si.rangeOfAddress.length() + 1;   if (32 + sz >= len) return false;
-  //printf("rangeOfAddress: '%s', len: %d, sz: %d\n", si.rangeOfAddress.c_str(), si.rangeOfAddress.length(), sz);
-  si.systemType =           (char*)(   (uint8_t*)buffer + 32 + sz   );      sz += si.systemType.length() + 1;       if (32 + sz >= len) return false;
-  //printf("systemType: '%s', len: %d, sz: %d\n", si.systemType.c_str(), si.systemType.length(), sz);
-  si.password =             (char*)(   (uint8_t*)buffer + 32 + sz   );      sz += si.password.length() + 1;         if (32 + sz >= len) return false;
-  //printf("password: '%s', len: %d, sz: %d\n", si.password.c_str(), si.password.length(), sz);
-  si.hostname =             (char*)(   (uint8_t*)buffer + 32 + sz   );      sz += si.hostname.length() + 1;         if (32 + sz >= len) return false;
-  //printf("hostname: '%s', len: %d, sz: %d\n", si.hostname.c_str(), si.hostname.length(), sz);
-  si.systemId =             (char*)(   (uint8_t*)buffer + 32 + sz   );      sz += si.systemId.length() + 1;         if (32 + sz >= len) return false;
-  //printf("systemId: '%s', len: %d, sz: %d\n", si.systemId.c_str(), si.systemId.length(), sz);
-  si.receiptSchemeName =    (char*)(   (uint8_t*)buffer + 32 + sz   );
-  //printf("receiptSchemeName: '%s', len: %d, sz: %d\n", si.receiptSchemeName.c_str(), si.receiptSchemeName.length(), sz);
+  buf.ReadString<uint16_t>(si.rangeOfAddress);
+  buf.ReadString<uint16_t>(si.systemType);
+  buf.ReadString<uint16_t>(si.password);
+  buf.ReadString<uint16_t>(si.hostname);
+  buf.ReadString<uint16_t>(si.systemId);
+  buf.ReadString<uint16_t>(si.receiptSchemeName);
 
-  }catch(...){
-      return false;
-  }
+ }catch(std::exception& e)
+ {
+   __warning2__("Deserialization error:%s",e.what());
+   return false;
+ }
 
   return true;
 }
