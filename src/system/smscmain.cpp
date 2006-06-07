@@ -69,6 +69,7 @@ extern "C" void atExitHandler(void)
 int main(int argc,char* argv[])
 {
   Logger::Init();
+  tzset();
 
   atexit(atExitHandler);
   smsc::system::clearThreadSignalMask();
