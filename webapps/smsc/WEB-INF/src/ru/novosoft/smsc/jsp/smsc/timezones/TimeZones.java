@@ -65,7 +65,7 @@ public class TimeZones {
             throw new AdminException(SMSCErrors.error.smsc.couldntGetConfig);
         }
         String configName = smscConfig.getString(TIMEZONES_CONFIG);
-        File confFile = new File(WebAppFolders.getWebappFolder(), configName);
+        File confFile = new File(configName);
         return new Config(confFile);
     }
 

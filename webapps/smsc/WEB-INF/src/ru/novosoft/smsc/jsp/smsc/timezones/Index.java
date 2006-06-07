@@ -2,11 +2,12 @@ package ru.novosoft.smsc.jsp.smsc.timezones;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.SMSCErrors;
+import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
-public class Index extends ru.novosoft.smsc.jsp.smsc.reshedule.Index {
+public class Index extends SmscBean {
     private TimeZones timezones = null;
 
     private String mbSave = null;
@@ -59,7 +60,7 @@ public class Index extends ru.novosoft.smsc.jsp.smsc.reshedule.Index {
     }
 
     public Collection getSubjects() {
-        if (timezones == null) return new LinkedList();        
+        if (timezones == null) return new LinkedList();
         return timezones.getSubjects();
     }
 
@@ -162,10 +163,12 @@ public class Index extends ru.novosoft.smsc.jsp.smsc.reshedule.Index {
     }
 
     public String[] getAvailableTimeZones() {
+        if (timezones == null) return new String[0];
         return timezones.getAvailableIDs();
     }
 
     public String getDefaultTimeZone() {
+        if (timezones == null) return "";
         return timezones.getDefaultTimeZone();
     }
 }
