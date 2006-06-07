@@ -126,7 +126,9 @@ public class TimeZones {
 
     private Collection getItems(String key) {
         if (config == null) return new LinkedList();
-        return new SortedList(config.getSectionChildShortParamsNames(key));
+        Collection c = config.getSectionChildShortParamsNames(key);
+        if (c != null) return new SortedList(c);
+        else return new LinkedList();
     }
 
     private TimeZone getTimeZone(String key) throws AdminException {
