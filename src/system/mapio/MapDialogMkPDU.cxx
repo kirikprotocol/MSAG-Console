@@ -238,7 +238,6 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
     }
 //    time(&t);
     int abonentsTz=smsc::system::common::TimeZoneManager().getTimeZone(sms->getDestinationAddress());
-    abonentsTz*=60;
     abonentsTz=-abonentsTz;
     struct tm tms;
     if(timezone!=abonentsTz)
