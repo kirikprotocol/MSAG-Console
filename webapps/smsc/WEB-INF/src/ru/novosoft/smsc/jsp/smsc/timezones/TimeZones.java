@@ -46,12 +46,10 @@ public class TimeZones {
 
     public String getDefaultTimeZone() {
         try {
-            return config.getString(TIMEZONES_DEFAULT);
-        } catch (Config.ParamNotFoundException e) {
-            return "";
-        } catch (Config.WrongParamTypeException e) {
-            logger.error("default timezone \"" + TIMEZONES_DEFAULT + "\" is not string");
-            return "";
+            return getTimeZone(TIMEZONES_DEFAULT).getID();
+        } catch (AdminException e) {
+            logger.error("default timezone is not present in config");
+            return TimeZone.getTimeZone("").getID();
         }
     }
 

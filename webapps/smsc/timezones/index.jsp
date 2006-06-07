@@ -95,7 +95,7 @@
             newCell.appendChild(imgElement);
 
             paramNameElem.value = "";
-            paramValueElem.value = "";
+            paramValueElem.value = document.getElementById("defaultTZ").value;
         }
     }
     function removeParam_Event()
@@ -111,6 +111,7 @@
     }
 </script>
 <div class=content>
+    <input type="hidden" id="defaultTZ" value="<%=bean.getDefaultTimeZone()%>">
     <div class=secSmsc><%=getLocString("timezones.table")%></div>
     <%
         startSection(out, "timezonesTable", "timezones.masks", true);
