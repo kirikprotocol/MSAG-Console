@@ -35,6 +35,7 @@ public:
   SessionPtr newSession(const CSessionKey& sessionKey);
   void deleteSession(const CSessionKey& sessionKey);
   void updateSession(SessionPtr session);
+  uint32_t getSessionsCount() {return dhash.Count();}
 
 protected:
     smsc::logger::Logger* log;

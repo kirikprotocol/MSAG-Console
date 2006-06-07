@@ -273,7 +273,7 @@ void HttpRequest::serialize()
         
         headers = httpMethodNames[httpMethod];
         headers += SP;
-        headers += sitePath;
+        headers += siteFull;
 
 #ifdef SESSION_ID_ENABLED
         headers += '/';

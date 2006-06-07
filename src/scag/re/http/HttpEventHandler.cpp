@@ -17,15 +17,17 @@ RuleStatus HttpEventHandler::processRequest(HttpCommand& command, Session& sessi
     HttpCommandAdapter _command(command);
 
     try{
-        session.setOperationFromPending(command, CO_HTTP_DELIVERY);
-
         time_t now;
         time(&now);
 
-        PendingOperation pendingOperation;
+/*        PendingOperation pendingOperation;
         pendingOperation.type = CO_HTTP_DELIVERY;
         pendingOperation.validityTime = now + SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
-        session.addPendingOperation(pendingOperation);
+        session.addPendingOperation(pendingOperation);*/
+
+        session.AddNewOperationToHash(command, CO_HTTP_DELIVERY);
+//        session.setOperationFromPending(command, CO_HTTP_DELIVERY);
+//        command.setOperationId(session.getCurrentOperationId());
 
         std::string str;
         RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), str);
@@ -72,7 +74,7 @@ RuleStatus HttpEventHandler::processResponse(HttpCommand& command, Session& sess
         return rs;
     } catch (SCAGException& e)
     {
-        smsc_log_debug(logger, "HttpEventHandler: cannot process request command - %s", e.what());
+        smsc_log_debug(logger, "HttpEventHandler: cannot process response command - %s", e.what());
         //TODO: отлуп в стейт-машину
     }
 
@@ -90,7 +92,7 @@ RuleStatus HttpEventHandler::processDelivery(HttpCommand& command, Session& sess
         session.closeCurrentOperation();            
     } catch (SCAGException& e)
     {
-        smsc_log_debug(logger, "HttpEventHandler: cannot process request command - %s", e.what());
+        smsc_log_debug(logger, "HttpEventHandler: cannot process delivery command - %s", e.what());
         //TODO: отлуп в стейт-машину
     }
 

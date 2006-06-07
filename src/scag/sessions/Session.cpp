@@ -358,10 +358,10 @@ void Session::Deserialize(SessionBuffer& buff)
     buff >> tmp;
     m_SessionKey.USR = tmp;
 
-	uint8_t c;
+    uint8_t c;
     buff >> lastAccessTime >> lastOperationId;
     // >> c;
-	//m_isTransact = c;     
+    //m_isTransact = c;     
 
     //buff >> tmp;
     //m_SmppDiscriptor.cmdType = (CommandOperations)tmp;
@@ -618,6 +618,9 @@ time_t Session::getWakeUpTime()
     return time;
 }
 
-
+uint64_t Session::getCurrentOperationId()
+{
+    return currentOperationId;
+}
 
 }}

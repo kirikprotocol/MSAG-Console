@@ -61,7 +61,7 @@ protected:
 };
 
 enum HttpCommandId {
-    HTTP_REQUEST = 1000,
+    HTTP_REQUEST = 100,
     HTTP_RESPONSE,
     HTTP_DELIVERY
 };

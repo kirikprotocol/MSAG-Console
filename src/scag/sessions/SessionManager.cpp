@@ -110,6 +110,7 @@ namespace scag { namespace sessions
         virtual SessionPtr getSession(const CSessionKey& sessionKey);
         virtual void releaseSession(SessionPtr session);
         virtual void closeSession(SessionPtr session);
+        virtual uint32_t getSessionsCount();
 
         virtual int Execute();
         virtual void Start();
@@ -287,7 +288,7 @@ int SessionManagerImpl::Execute()
     while (isStarted())
     {
         int secs = processExpire();
-        smsc_log_debug(logger,"SessionManager::----------- ping %d",secs);
+//        smsc_log_debug(logger,"SessionManager::----------- ping %d",secs);
         awakeEvent.Wait(secs*1000);
     }
     smsc_log_info(logger,"SessionManager::stop executing");
@@ -606,6 +607,13 @@ int16_t SessionManagerImpl::getNewUSR(Address& address)
     else UMRHash.Insert(address,result);
 
     return result;
+}
+
+uint32_t SessionManagerImpl::getSessionsCount()
+{
+    MutexGuard mt(inUseMonitor);
+
+    return store.getSessionsCount();
 }
 
 
