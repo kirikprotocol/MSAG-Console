@@ -381,12 +381,21 @@ Targets:
       <antcall target="web_context_dir"/>
   </target>
 
+    <!--<target name="web_context_dir" description="Moving files to given new web directory">-->
+        <!--<mkdir dir="${DISTR_DIR}/webapps/msag"/>-->
+        <!--<move todir="${DISTR_DIR}/webapps/msag">-->
+            <!--<fileset dir="${DISTR_DIR}/webapps/scag"/>-->
+        <!--</move>-->
+    <!--</target>-->
+
     <target name="web_context_dir" description="Moving files to given new web directory">
         <mkdir dir="${DISTR_DIR}/webapps/msag"/>
-        <move todir="${DISTR_DIR}/webapps/msag">
+        <copy todir="${DISTR_DIR}/webapps/msag">
             <fileset dir="${DISTR_DIR}/webapps/scag"/>
-        </move>
+        </copy>
+        <delete dir="${DISTR_DIR}/webapps/scag"/>
     </target>
+
 
   <target name="notomcat" description="removes tomcat distrib from update. Use before tar">
     <delete>
