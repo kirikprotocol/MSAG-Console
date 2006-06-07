@@ -287,7 +287,7 @@
                 newCell.innerHTML = valueElem.value + '<input type=hidden name=srcMasks value="' + valueElem.value + '">';
                 newRow.appendChild(newCell);
                 newCell = document.createElement("td");
-                newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeRow(document.getElementById(\'sources_table\', \'' + newRow.id + '\')" style="cursor: hand;">';
+                newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeRow(document.getElementById(\'sources_table\'), \'' + newRow.id + '\')" style="cursor: hand;">';
                 newRow.appendChild(newCell);
                 valueElem.value = "";
                 valueElem.focus();
@@ -405,7 +405,7 @@ function addDestMask() {
         newRow.appendChild(newCell);
 
         newCell = document.createElement("td");
-        newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeRow(document.getElementById(\'destinations_table\', \'' + newRow.id + '\')" style="cursor: hand;">';
+        newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeRow(document.getElementById(\'destinations_table\'), \'' + newRow.id + '\')" style="cursor: hand;">';
         newRow.appendChild(newCell);
         document.getElementById('newDstMask').value = "";
         document.getElementById('newDstMask').focus();

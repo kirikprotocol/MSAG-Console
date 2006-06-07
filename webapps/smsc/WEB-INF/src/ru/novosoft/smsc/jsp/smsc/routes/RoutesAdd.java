@@ -12,6 +12,7 @@ import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.route.*;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.util.Functions;
+import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -70,14 +71,14 @@ public class RoutesAdd extends RouteBody
       if (paramName.startsWith(subjprefix)) {
         final String[] strings = (String[]) requestParameters.get(paramName);
         if (strings.length > 0) {
-          final String dstName = paramName.substring(subjprefix.length());
+          final String dstName = StringEncoderDecoder.decodeHEX(paramName.substring(subjprefix.length()));
           selectedSmes.put(dstName, strings[0]);
         }
       }
       else if (paramName.startsWith(maskprefix)) {
         final String[] strings = (String[]) requestParameters.get(paramName);
         if (strings.length > 0) {
-          final String dstName = paramName.substring(maskprefix.length());
+          final String dstName = StringEncoderDecoder.decodeHEX(paramName.substring(maskprefix.length()));
           selectedMaskSmes.put(dstName, strings[0]);
         }
       }
