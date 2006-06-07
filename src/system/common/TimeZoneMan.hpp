@@ -15,12 +15,17 @@ namespace sync=smsc::core::synchronization;
 
 class TimeZoneManager{
 public:
+  TimeZoneManager()
+  {
+    log=smsc::logger::Logger::getInstance("tzman");
+  }
   static void Init(const char* tzFileName,const char* routeFileName)
   {
     instance=new TimeZoneManager;
     instance->cfgTzFileName=tzFileName;
     instance->cfgRouteFileName=routeFileName;
     instance->Reload();
+    smsc_log_info(instance->log,"init %s, %s",tzFileName,routeFileName);
   }
 
   static TimeZoneManager& getInstance()
@@ -35,7 +40,12 @@ public:
   {
     sync::MutexGuard mg(mtx);
     OffsetMap::const_iterator it=offsetMap.find(addr);
-    if(it==offsetMap.end())return defaultOffset;
+    if(it==offsetMap.end())
+    {
+      smsc_log_debug(log,"defTz=%d for addr=%s",defaultOffset,addr.toString().c_str());
+      return defaultOffset;
+    }
+    smsc_log_debug(log,"tz=%d for addr=%s",it->second,addr.toString().c_str());
     return it->second;
   }
 
@@ -78,6 +88,7 @@ protected:
 
   int defaultOffset;
 
+  smsc::logger::Logger* log;
 
 };
 

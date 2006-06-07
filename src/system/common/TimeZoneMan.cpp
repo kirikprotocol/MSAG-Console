@@ -16,7 +16,7 @@ static int getOffsetValue(const smsc::util::config::Config& cfg,const char* para
   const char* val=cfg.getString(param);
   int rv;
   if(sscanf(val,"%d,",&rv)!=1)throw smsc::util::Exception("Invalid value for timezone:%s",val);
-  return rv;
+  return rv*60;
 }
 
 void TimeZoneManager::Reload()
