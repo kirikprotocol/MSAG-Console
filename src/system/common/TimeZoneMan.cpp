@@ -49,30 +49,35 @@ void TimeZoneManager::Reload()
   rcfg.load(cfgRouteFileName.c_str());
 
   sync::MutexGuard mg(mtx);
-  offsetMap.clear();
+  //offsetMap.clear();
+  OffsetMap tempMap;
   defaultOffset=getOffsetValue(cfg,"default_timezone");
   std::auto_ptr<CStrSet> masks(cfg.getChildStrParamNames("masks"));
   char buf[128];
   for(CStrSet::iterator it=masks->begin();it!=masks->end();it++)
   {
+    smsc_log_info(log,"Loading mask:%s",Unquote(*it).c_str());
     snprintf(buf,128,"masks.%s",it->c_str());
-    offsetMap.insert(OffsetMap::value_type(Unquote(*it).c_str(),getOffsetValue(cfg,buf)));
+    tempMap.insert(OffsetMap::value_type(Unquote(*it).c_str(),getOffsetValue(cfg,buf)));
   }
   std::auto_ptr<CStrSet> subjs(cfg.getChildStrParamNames("subjects"));
   for(CStrSet::iterator it=subjs->begin();it!=subjs->end();it++)
   {
+    std::string subjName=Unquote(*it);
+    smsc_log_info(log,"Loading subject:%s",subjName.c_str());
     snprintf(buf,128,"subjects.%s",it->c_str());
     try{
-      route::Subject& subj=rcfg.getSubject(Unquote(*it).c_str());
+      route::Subject& subj=rcfg.getSubject(subjName.c_str());
       for(route::MaskVector::const_iterator sit=subj.getMasks().begin();sit!=subj.getMasks().end();sit++)
       {
-        offsetMap.insert(OffsetMap::value_type(sit->c_str(),getOffsetValue(cfg,buf)));
+        tempMap.insert(OffsetMap::value_type(sit->c_str(),getOffsetValue(cfg,buf)));
       }
     }catch(smsc::core::buffers::HashInvalidKeyException& e)
     {
-      throw smsc::util::Exception("Unknown subject:%s",it->c_str());
+      throw smsc::util::Exception("Unknown subject:%s",subjName.c_str());
     }
   }
+  offsetMap=tempMap;
 }
 
 }//common

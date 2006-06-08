@@ -24,8 +24,8 @@ public:
     instance=new TimeZoneManager;
     instance->cfgTzFileName=tzFileName;
     instance->cfgRouteFileName=routeFileName;
+    smsc_log_info(instance->log,"Init: %s, %s",tzFileName,routeFileName);
     instance->Reload();
-    smsc_log_info(instance->log,"init %s, %s",tzFileName,routeFileName);
   }
 
   static TimeZoneManager& getInstance()
