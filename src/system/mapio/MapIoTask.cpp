@@ -70,7 +70,7 @@ extern "C" {
             __map_warn2__("SSN Bind error 0x%hx",result);
           }
         } else if( affectedSSN == USSD_SSN && USSD_SSN_bound) {
-          __map_warn2__("Et96MapStateInd SSN %d is unavailable trying to reconnect",affectedSSN);
+          __map_warn2__("Et96MapStateInd SSN %d is unavailable trying to rebind",affectedSSN);
           USSD_SSN_bound = false;
           USHORT_T result = Et96MapBindReq(MY_USER_ID, USSD_SSN);
           if (result!=ET96MAP_E_OK) {
