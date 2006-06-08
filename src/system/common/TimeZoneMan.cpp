@@ -19,6 +19,14 @@ static int getOffsetValue(const smsc::util::config::Config& cfg,const char* para
   return rv*60;
 }
 
+
+static std::string Unquote(const std::string& s)
+{
+  std::string rv=s;
+  for(int i=0;i<rv.length();i++)if(rv[i]=='^')rv[i]='.';
+  return rv;
+}
+
 void TimeZoneManager::Reload()
 {
   using namespace xercesc;
@@ -48,14 +56,14 @@ void TimeZoneManager::Reload()
   for(CStrSet::iterator it=masks->begin();it!=masks->end();it++)
   {
     snprintf(buf,128,"masks.%s",it->c_str());
-    offsetMap.insert(OffsetMap::value_type(it->c_str(),getOffsetValue(cfg,buf)));
+    offsetMap.insert(OffsetMap::value_type(Unquote(*it).c_str(),getOffsetValue(cfg,buf)));
   }
   std::auto_ptr<CStrSet> subjs(cfg.getChildStrParamNames("subjects"));
   for(CStrSet::iterator it=subjs->begin();it!=subjs->end();it++)
   {
     snprintf(buf,128,"subjects.%s",it->c_str());
     try{
-      route::Subject& subj=rcfg.getSubject(it->c_str());
+      route::Subject& subj=rcfg.getSubject(Unquote(*it).c_str());
       for(route::MaskVector::const_iterator sit=subj.getMasks().begin();sit!=subj.getMasks().end();sit++)
       {
         offsetMap.insert(OffsetMap::value_type(sit->c_str(),getOffsetValue(cfg,buf)));
