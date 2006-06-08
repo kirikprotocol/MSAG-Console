@@ -6,11 +6,11 @@ import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.util.SortedList;
-import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.smsc.util.config.Config;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.TimeZone;
 
@@ -19,6 +19,7 @@ public class TimeZones {
     private static final String TIMEZONES_DEFAULT = "default_timezone";
     public static final String TIMEZONES_MASKS_PREFIX = "masks";
     public static final String TIMEZONES_SUBJECTS_PREFIX = "subjects";
+    private static final char DOT_REPLACER = '^';
 
     private static TimeZones instance = null;
 
@@ -77,10 +78,12 @@ public class TimeZones {
     }
 
     public void putSubject(String subj, String timezone) throws AdminException {
+        subj = prepareSubject(subj);
         putItem(TIMEZONES_SUBJECTS_PREFIX + '.' + subj, subj, timezone);
     }
 
     public void removeSubject(String subj) {
+        subj = prepareSubject(subj);
         remove(TIMEZONES_SUBJECTS_PREFIX + '.' + subj);
     }
 
@@ -92,6 +95,7 @@ public class TimeZones {
     }
 
     public TimeZone getSubjectTimeZone(String subj) throws AdminException {
+        subj = prepareSubject(subj);
         if (isSubjectPresent(subj)) {
             return getTimeZone(TIMEZONES_SUBJECTS_PREFIX + '.' + subj);
         } else
@@ -125,8 +129,15 @@ public class TimeZones {
     private Collection getItems(String key) {
         if (config == null) return new LinkedList();
         Collection c = config.getSectionChildShortParamsNames(key);
-        if (c != null) return new SortedList(c);
-        else return new LinkedList();
+        SortedList result = new SortedList();
+        if (c != null)
+            for (Iterator i = c.iterator(); i.hasNext();) {
+                String s = (String) i.next();
+                if (s.indexOf(DOT_REPLACER) != -1)
+                    s = s.replace(DOT_REPLACER, '.');
+                result.add(s);
+            }
+        return result;
     }
 
     private TimeZone getTimeZone(String key) throws AdminException {
@@ -134,7 +145,7 @@ public class TimeZones {
             String str = config.getString(key);
             str = str.substring(str.indexOf(",") + 1);
             TimeZone tmz = TimeZone.getTimeZone(str);
-            if (tmz.getRawOffset() == 0 && !str.equals("GMT")) throw new AdminException("Incorrect timezone in config: "+str);
+            if (tmz.getRawOffset() == 0 && !str.equals("GMT")) throw new AdminException("Incorrect timezone in config: " + str);
             return tmz;
         } catch (Config.ParamNotFoundException e) {
             return TimeZone.getTimeZone(getDefaultTimeZone());
@@ -159,5 +170,11 @@ public class TimeZones {
             if (tz.getRawOffset() == 0 && !value.equals("GMT")) throw new AdminException("not valid timezone: " + value);
             config.setString(key, Integer.toString(TimeZone.getTimeZone(value).getRawOffset() / 60000) + "," + value);
         }
+    }
+
+    private String prepareSubject(String subj) {
+        String result = subj;
+        if (result.indexOf(".") != -1) result = result.replace('.', DOT_REPLACER);
+        return result;
     }
 }
