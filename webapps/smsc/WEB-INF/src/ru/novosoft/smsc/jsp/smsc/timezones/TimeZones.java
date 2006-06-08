@@ -70,20 +70,22 @@ public class TimeZones {
 
     public void putMask(String mask, String timezone) throws AdminException {
         new Mask(mask); //проверка валидности маски
+        prepareItem(mask);
         putItem(TIMEZONES_MASKS_PREFIX + '.' + mask, mask, timezone);
     }
 
     public void removeMask(String mask) {
+        prepareItem(mask);
         remove(TIMEZONES_MASKS_PREFIX + '.' + mask);
     }
 
     public void putSubject(String subj, String timezone) throws AdminException {
-        subj = prepareSubject(subj);
+        prepareItem(subj);
         putItem(TIMEZONES_SUBJECTS_PREFIX + '.' + subj, subj, timezone);
     }
 
     public void removeSubject(String subj) {
-        subj = prepareSubject(subj);
+        prepareItem(subj);
         remove(TIMEZONES_SUBJECTS_PREFIX + '.' + subj);
     }
 
@@ -95,7 +97,7 @@ public class TimeZones {
     }
 
     public TimeZone getSubjectTimeZone(String subj) throws AdminException {
-        subj = prepareSubject(subj);
+        subj = prepareItem(subj);
         if (isSubjectPresent(subj)) {
             return getTimeZone(TIMEZONES_SUBJECTS_PREFIX + '.' + subj);
         } else
@@ -172,8 +174,8 @@ public class TimeZones {
         }
     }
 
-    private String prepareSubject(String subj) {
-        String result = subj;
+    private String prepareItem(String item) {
+        String result = item;
         if (result.indexOf(".") != -1) result = result.replace('.', DOT_REPLACER);
         return result;
     }
