@@ -90,6 +90,7 @@ public class TimeZones {
     }
 
     public TimeZone getMaskTimeZone(String mask) throws AdminException {
+        mask = prepareItem(mask);
         if (isMaskPresent(mask)) {
             return getTimeZone(TIMEZONES_MASKS_PREFIX + '.' + mask);
         } else
@@ -121,11 +122,11 @@ public class TimeZones {
     }
 
     protected boolean isMaskPresent(String mask) {
-        return isPresent(TIMEZONES_MASKS_PREFIX + '.' + mask);
+        return isPresent(TIMEZONES_MASKS_PREFIX + '.' + prepareItem(mask));
     }
 
     protected boolean isSubjectPresent(String subj) {
-        return isPresent(TIMEZONES_SUBJECTS_PREFIX + '.' + subj);
+        return isPresent(TIMEZONES_SUBJECTS_PREFIX + '.' + prepareItem(subj));
     }
 
     private Collection getItems(String key) {
