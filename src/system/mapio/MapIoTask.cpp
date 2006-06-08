@@ -60,18 +60,28 @@ extern "C" {
                            ULONG_T localSPC)
   {
     __map_warn2__("Et96MapStateInd received ssn=%d user state=%d affected SSN=%d affected SPC=%ld local SPC=%ld",lssn,userState,affectedSSN,affectedSPC,localSPC);
-    if( userState == 1 ) {
-      if (affectedSSN == SSN ) {
-        __map_warn2__("Et96MapStateInd SSN %d is unavailable trying to reconnect",affectedSSN);
-        MAP_disconnectDetected = true;
-      } else if( affectedSSN == USSD_SSN ) {
-        __map_warn2__("Et96MapStateInd SSN %d is unavailable trying to reconnect",affectedSSN);
-        MAP_disconnectDetected = true;
+    if( affectedSPC == localSPC ) {
+      if( userState == 1 ) {
+        if (affectedSSN == SSN && SSN_bound ) {
+          __map_warn2__("Et96MapStateInd SSN %d is unavailable trying to rebind",affectedSSN);
+          SSN_bound = false;
+          result = Et96MapBindReq(MY_USER_ID, SSN);
+          if (result!=ET96MAP_E_OK) {
+            __map_warn2__("SSN Bind error 0x%hx",result);
+          }
+        } else if( affectedSSN == USSD_SSN && USSD_SSN_bound) {
+          __map_warn2__("Et96MapStateInd SSN %d is unavailable trying to reconnect",affectedSSN);
+          USSD_SSN_bound = false;
+          result = Et96MapBindReq(MY_USER_ID, USSD_SSN);
+          if (result!=ET96MAP_E_OK) {
+            __map_warn2__("USSD SSN Bind error 0x%hx",result);
+          }
+        }
+      } else {
+        if (affectedSSN == SSN ) SSN_bound = true;
+        else if( affectedSSN == USSD_SSN ) USSD_SSN_bound = true;
       }
-    } else {
-      if (affectedSSN == SSN ) SSN_bound = true;
-      else if( affectedSSN == USSD_SSN ) USSD_SSN_bound = true;
-    }
+    }  
     return ET96MAP_E_OK;
   }
 
