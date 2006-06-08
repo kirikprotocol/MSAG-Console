@@ -1742,7 +1742,12 @@ throw (AdminException)
 
 void SmscComponent::applyTimeZones()throw(AdminException)
 {
-  smsc::system::common::TimeZoneManager::getInstance().Reload();
+  try{
+    smsc::system::common::TimeZoneManager::getInstance().Reload();
+  }catch(std::exception& e)
+  {
+    throw AdminException("%s",e.what());
+  }
 }
 
 Variant SmscComponent::aclListNames(const Arguments & args) throw (AdminException)
