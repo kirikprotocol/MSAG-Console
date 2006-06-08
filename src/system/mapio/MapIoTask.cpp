@@ -39,12 +39,15 @@ extern "C" {
   USHORT_T Et96MapBindConf(ET96MAP_LOCAL_SSN_T lssn, ET96MAP_BIND_STAT_T status)
   {
     __map_warn2__("Et96MapBindConf confirmation received ssn=%d status=%d",lssn,status);
-    if( status == 0 || status == 1 ) {
+    if( status == 0  ) {
       if( lssn == SSN ) SSN_bound = true;
       else if( lssn == USSD_SSN ) USSD_SSN_bound = true; 
+    } else if( status == 1 ) {
+      __map_warn2__("Et96MapBindConf SSN %d is already bound trying to reconnect",lssn);
+      MAP_disconnectDetected = true;
     } else {
-      if( lssn == SSN ) SSN_bound = false;
-      else if( lssn == USSD_SSN ) USSD_SSN_bound = false; 
+      __map_warn2__("Et96MapBindConf SSN %d is not bound trying to reconnect",lssn);
+      MAP_disconnectDetected = true;
     }
     return ET96MAP_E_OK;
   }
@@ -59,21 +62,11 @@ extern "C" {
     __map_warn2__("Et96MapStateInd received ssn=%d user state=%d affected SSN=%d affected SPC=%ld local SPC=%ld",lssn,userState,affectedSSN,affectedSPC,localSPC);
     if( userState == 1 ) {
       if (affectedSSN == SSN ) {
-        bindTimer = 0;
-        SSN_bound = false;
-        __map_warn2__("Et96MapStateInd SSN %d is unavailable trying to rebind",affectedSSN);
-        USHORT_T result = Et96MapBindReq(MY_USER_ID, SSN);
-        if (result!=ET96MAP_E_OK) {
-          __map_warn2__("Bind error 0x%hx",result);
-        }
+        __map_warn2__("Et96MapStateInd SSN %d is unavailable trying to reconnect",affectedSSN);
+        MAP_disconnectDetected = true;
       } else if( affectedSSN == USSD_SSN ) {
-        bindTimer = 0;
-        USSD_SSN_bound = false;
-        __map_warn2__("Et96MapStateInd SSN %d is unavailable trying to rebind",affectedSSN);
-        USHORT_T result = Et96MapBindReq(MY_USER_ID, USSD_SSN);
-        if (result!=ET96MAP_E_OK) {
-          __map_warn2__("USSD Bind error 0x%hx",result);
-        }
+        __map_warn2__("Et96MapStateInd SSN %d is unavailable trying to reconnect",affectedSSN);
+        MAP_disconnectDetected = true;
       }
     } else {
       if (affectedSSN == SSN ) SSN_bound = true;
@@ -232,6 +225,13 @@ void MapIoTask::dispatcher()
     MAP_dispatching = false;
     
     if ( result == MSG_TIMEOUT ) {
+      if (MAP_disconnectDetected && !isStopping) {
+        MutexGuard mapMutexGuard(mapMutex);
+        disconnect();
+        connect();
+        MAP_disconnectDetected = false;
+        continue;
+      }
       if ( SSN_bound && USSD_SSN_bound ) continue;
       __map_warn2__("MAP:: check binders %d", bindTimer);
       if ( ++bindTimer <= MAX_BIND_TIMEOUT ) continue;
@@ -245,7 +245,7 @@ void MapIoTask::dispatcher()
       }
       continue;
     }
-    if ( result == MSG_BROKEN_CONNECTION ) {
+    if ( result == MSG_BROKEN_CONNECTION && !isStopping) {
       __map_warn2__("Broken connection %d", result);
       MutexGuard mapMutexGuard(mapMutex);
       disconnect();
@@ -263,10 +263,8 @@ void MapIoTask::dispatcher()
         disconnect();
         connect();
         MAP_disconnectDetected = false;
-        continue;
-      } else {
-        return;
       }
+      continue;
     }
     
     __map_trace2__("MsgRecv receive msg with receiver 0x%hx sender 0x%hx prim 0x%hx size %d",message.receiver,message.sender,message.primitive,message.size);
@@ -336,7 +334,7 @@ void MapIoTask::dispatcher()
       usecs = curtime.tv_usec < utime.tv_usec?(1000000+curtime.tv_usec)-utime.tv_usec:curtime.tv_usec-utime.tv_usec;
       smsc_log_debug(time_logger, "prim=%d s=%ld us=%ld", message.primitive, curtime.tv_sec-utime.tv_sec, usecs );
     }
-    if (MAP_disconnectDetected) {
+    if (MAP_disconnectDetected && !isStopping) {
       MutexGuard mapMutexGuard(mapMutex);
       disconnect();
       connect();
