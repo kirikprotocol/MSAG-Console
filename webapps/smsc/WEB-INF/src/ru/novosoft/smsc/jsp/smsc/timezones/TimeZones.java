@@ -70,22 +70,22 @@ public class TimeZones {
 
     public void putMask(String mask, String timezone) throws AdminException {
         new Mask(mask); //проверка валидности маски
-        prepareItem(mask);
+        mask = prepareItem(mask);
         putItem(TIMEZONES_MASKS_PREFIX + '.' + mask, mask, timezone);
     }
 
     public void removeMask(String mask) {
-        prepareItem(mask);
+        mask = prepareItem(mask);
         remove(TIMEZONES_MASKS_PREFIX + '.' + mask);
     }
 
     public void putSubject(String subj, String timezone) throws AdminException {
-        prepareItem(subj);
+        subj = prepareItem(subj);
         putItem(TIMEZONES_SUBJECTS_PREFIX + '.' + subj, subj, timezone);
     }
 
     public void removeSubject(String subj) {
-        prepareItem(subj);
+        subj = prepareItem(subj);
         remove(TIMEZONES_SUBJECTS_PREFIX + '.' + subj);
     }
 
