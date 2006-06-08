@@ -74,6 +74,7 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
     smsc_log_debug( logger, "Got http_request command host=%s:%d, path=%s, abonent=%s, USR=%d", request.getSite().c_str(), request.getSitePort(), request.getSiteFull().c_str(), request.getAbonent().c_str(), request.getUSR());
 
     RuleStatus rs;
+    SessionPtr se;
 
     try{
         r = router.findRoute(request.getAbonent(), request.getSite(), request.getSitePath(), request.getSitePort());
@@ -82,25 +83,32 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
         request.setRouteId(r.id);
         request.setProviderId(r.provider_id);
 
-        SessionPtr se;
         CSessionKey sk = {request.getUSR(), Address(request.getAbonent().c_str())};
-        if(request.getUSR())
-            se = SessionManager::Instance().getSession(sk);
-        else
+        if(!request.getUSR())
         {
             se = SessionManager::Instance().newSession(sk);
+
+            if(se.Get())
+            {
+                PendingOperation pendingOperation;
+                pendingOperation.type = CO_HTTP_DELIVERY;
+                pendingOperation.validityTime = time(NULL) + SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
+                se.Get()->addPendingOperation(pendingOperation);
+                SessionManager::Instance().releaseSession(se);
+            }
+
             request.setUSR(sk.USR);
         }
+        se = SessionManager::Instance().getSession(sk);
 
         if(se.Get())
         {
             rs = RuleEngine::Instance().process(request, *se.Get());
 
-            SessionManager::Instance().releaseSession(se);
-
             if(rs.result >= 0)
             {
                 registerEvent(httpRequest, request);
+                SessionManager::Instance().releaseSession(se);
                 return true;
             }
         } else
@@ -115,6 +123,9 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
         smsc_log_error(logger, "error processing request. %s", e.what());
     }
 
+    if(se.Get())
+        SessionManager::Instance().releaseSession(se);
+
     registerEvent(httpRequestRejected, request);
 
     return false;
@@ -124,18 +135,19 @@ bool HttpProcessorImpl::processResponse(HttpResponse& response)
 {
     smsc_log_debug( logger, "Got http_response command abonent=%s, USR=%d, route_id=%s, service_id=%d", response.getAbonent().c_str(), response.getUSR(), response.getRouteId().c_str(), response.getServiceId());
 
+    SessionPtr se;
     try{
         CSessionKey sk = {response.getUSR(), Address(response.getAbonent().c_str())};
-        SessionPtr se = SessionManager::Instance().getSession(sk);
+        se = SessionManager::Instance().getSession(sk);
         RuleStatus rs;
 
         if(se.Get())
         {
             rs = RuleEngine::Instance().process(response, *se.Get());
-            SessionManager::Instance().releaseSession(se);
             if(rs.result >= 0)
             {
                 registerEvent(httpRequest, response);
+                SessionManager::Instance().releaseSession(se);
                 return true;
             }
         } else
@@ -150,6 +162,8 @@ bool HttpProcessorImpl::processResponse(HttpResponse& response)
         smsc_log_error( logger, "http_response error processing abonent=%s, USR=%d.", response.getAbonent().c_str(), response.getUSR());
     }
 
+    if(se.Get())
+        SessionManager::Instance().releaseSession(se);
 
     registerEvent(httpRequestRejected, response);
 
@@ -161,20 +175,21 @@ void HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
     smsc_log_debug(logger, "Got http_status_response command abonent=%s, USR=%d, route_id=%s, service_id=%d, delivered=%d",
              response.getAbonent().c_str(), response.getUSR(), response.getRouteId().c_str(), response.getServiceId(), delivered);
 
+    SessionPtr se;
     try{
         CSessionKey sk = {response.getUSR(), Address(response.getAbonent().c_str())};
-        SessionPtr se = SessionManager::Instance().getSession(sk);
+        se = SessionManager::Instance().getSession(sk);
 
         RuleStatus rs;
         if(se.Get())
         {
             response.setCommandId(HTTP_DELIVERY);
             rs = RuleEngine::Instance().process(response, *se.Get());
-            SessionManager::Instance().releaseSession(se);
 
             if(rs.result > 0)
             {
                 registerEvent(httpDelivered, response);
+                SessionManager::Instance().releaseSession(se);
                 return;
             }
         }
@@ -189,6 +204,9 @@ void HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
     {
         smsc_log_error( logger, "http_status_response error processing abonent=%s, USR=%d.", response.getAbonent().c_str(), response.getUSR());
     }
+
+    if(se.Get())
+        SessionManager::Instance().releaseSession(se);
 
     registerEvent(httpFailed, response);
 }

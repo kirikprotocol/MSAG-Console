@@ -17,17 +17,12 @@ RuleStatus HttpEventHandler::processRequest(HttpCommand& command, Session& sessi
     HttpCommandAdapter _command(command);
 
     try{
-        time_t now;
-        time(&now);
+        session.setOperationFromPending(command, CO_HTTP_DELIVERY);
 
-/*        PendingOperation pendingOperation;
+        PendingOperation pendingOperation;
         pendingOperation.type = CO_HTTP_DELIVERY;
-        pendingOperation.validityTime = now + SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
-        session.addPendingOperation(pendingOperation);*/
-
-        session.AddNewOperationToHash(command, CO_HTTP_DELIVERY);
-//        session.setOperationFromPending(command, CO_HTTP_DELIVERY);
-//        command.setOperationId(session.getCurrentOperationId());
+        pendingOperation.validityTime = time(NULL) + SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
+        session.addPendingOperation(pendingOperation);
 
         std::string str;
         RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), str);

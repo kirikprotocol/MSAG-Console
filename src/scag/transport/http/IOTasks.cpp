@@ -116,13 +116,13 @@ void IOTask::checkConnectionTimeout(Multiplexer::SockArray& error)
             HttpContext *cx = HttpContext::getContext(s);
                     
             if (cx->action == SEND_REQUEST)
-                cx->setDestiny(501, FAKE_RESP | DEL_SITE_SOCK); //503
+                cx->setDestiny(503, FAKE_RESP | DEL_SITE_SOCK); //503
             else if (cx->action == SEND_RESPONSE)
-                cx->setDestiny(502, STAT_RESP | DEL_USER_SOCK); //500
+                cx->setDestiny(500, STAT_RESP | DEL_USER_SOCK); //500
             else if (cx->action == READ_REQUEST)
                 cx->setDestiny(503, DEL_CONTEXT); //503
             else if (cx->action == READ_RESPONSE)
-                cx->setDestiny(504, FAKE_RESP); //503
+                cx->setDestiny(503, FAKE_RESP); //503
             error.Push(s);
         }
     }
@@ -168,7 +168,7 @@ int HttpReaderTask::Execute()
                 HttpContext *cx = HttpContext::getContext(s);
                 
                 smsc_log_error(logger, "%p: %p failed", this, cx);
-                cx->setDestiny(505, cx->action == READ_RESPONSE ? //503
+                cx->setDestiny(503, cx->action == READ_RESPONSE ? //503
                     FAKE_RESP | DEL_SITE_SOCK : DEL_CONTEXT);
             }
             now = time(NULL);
@@ -304,7 +304,7 @@ int HttpWriterTask::Execute()
                 s->Connect(true))
             {
                 smsc_log_error(logger, "%p: %p, cannot connect", this, cx);
-                cx->setDestiny(506, FAKE_RESP | DEL_SITE_SOCK | NO_MULT_REM); //
+                cx->setDestiny(503, FAKE_RESP | DEL_SITE_SOCK | NO_MULT_REM); //
                 error.Push(s);
             }
             else {
@@ -323,9 +323,9 @@ int HttpWriterTask::Execute()
                 
                 smsc_log_error(logger, "%p: %p failed", this, cx);
                 if (cx->action == SEND_REQUEST)
-                    cx->setDestiny(507, FAKE_RESP | DEL_SITE_SOCK); //503
+                    cx->setDestiny(503, FAKE_RESP | DEL_SITE_SOCK); //503
                 else
-                    cx->setDestiny(508, STAT_RESP | DEL_USER_SOCK);              //500
+                    cx->setDestiny(500, STAT_RESP | DEL_USER_SOCK);              //500
             }
             
             now = time(NULL);  
@@ -368,9 +368,9 @@ int HttpWriterTask::Execute()
                     else {
                         smsc_log_error(logger, "%p: %p, write error", this, cx);
                         if (cx->action == SEND_REQUEST)
-                            cx->setDestiny(509, FAKE_RESP | DEL_SITE_SOCK); //503
+                            cx->setDestiny(503, FAKE_RESP | DEL_SITE_SOCK); //503
                         else
-                            cx->setDestiny(510, STAT_RESP | DEL_USER_SOCK); //500
+                            cx->setDestiny(500, STAT_RESP | DEL_USER_SOCK); //500
                         error.Push(s);
                     }
                 }
