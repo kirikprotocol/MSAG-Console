@@ -6,12 +6,14 @@
 #include "scag/bill/BillingManager.h"
 #include "scag/sessions/Session.h"
 
+#include "scag/util/encodings/Encodings.h"
 
 namespace scag { namespace re {
 
 using namespace scag::transport::http;
 using namespace scag::bill;
 using namespace scag::sessions;
+using namespace scag::util::encodings;
 
  /*
 namespace SMSTags 
@@ -156,27 +158,32 @@ std::string CommandBrige::getMessageBody(SmppCommand& command)
     switch (code) 
     {
     case smsc::smpp::DataCoding::SMSC7BIT:
+        Convertor::GSM7BitToUTF8(buff,len,str);
+/*
         Convert7BitToUCS2(buff, len, (short *)ucs2buff, len*2); 
         str.assign(ucs2buff,len*2);
 
         ucs2buff[0] = 0;
         ucs2buff[1] = 0;
-        str.append(ucs2buff,2);
+        str.append(ucs2buff,2);*/
         break;
     case smsc::smpp::DataCoding::LATIN1:
+        Convertor::MultibyteToUTF8(buff, len, EncodeTypes::CONV_ENCODING_KOI8R, str);
+    /*
         ConvertMultibyteToUCS2(buff, len, (short *)ucs2buff, len*2, CONV_ENCODING_KOI8R);
         str.assign(ucs2buff,len*2);
 
         ucs2buff[0] = 0;
         ucs2buff[1] = 0;
-        str.append(ucs2buff,2);
+        str.append(ucs2buff,2);*/
         break;
     default:
-    //        memcpy(ucs2buff, buff, len);
+        Convertor::UCS2ToUTF8((unsigned short *)buff, len, str);
+/*
         str.assign(buff,len);
         ucs2buff[0] = 0;
         ucs2buff[1] = 0;
-        str.append(ucs2buff,2);
+        str.append(ucs2buff,2);*/
     }
 
     return str;
@@ -316,9 +323,6 @@ int CommandBrige::getProtocolForEvent(SCAGCommand& command)
     throw SCAGException("CommandBrige: Unknown command protocol");
 }                 
 
-/*void CommandBrige::makeTrafficEvent(SmppCommand& command, int handlerType, scag::sessions::CSessionPrimaryKey& sessionPrimaryKey, SACC_TRAFFIC_INFO_EVENT_t& ev)
-{
-} */
 
 
 }}

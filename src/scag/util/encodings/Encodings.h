@@ -39,7 +39,7 @@ struct Convertor
      * 
      * @see UTF8ToUCS2
     */
-    static void UCS2ToUTF8(const unsigned short * ucs2buff, int ucs2len, std::string& utf8str);
+    static void UCS2ToUTF8(const unsigned short * ucs2buff, unsigned int ucs2len, std::string& utf8str);
 
     /**
      *
@@ -49,7 +49,7 @@ struct Convertor
      * 
      * @see UCS2ToUTF8
     */
-    static void UTF8ToUCS2(const char * utf8buff, int utf8len, std::string& ucs2str);
+    static void UTF8ToUCS2(const char * utf8buff, unsigned int utf8len, std::string& ucs2str);
 
 
     /**
@@ -60,7 +60,7 @@ struct Convertor
      * 
      * @see UTF8ToGSM7Bit
     */
-    static void GSM7BitToUTF8(const char * gsm7BitBuff, int gsm7BitBuffLen, std::string& utf8str);
+    static void GSM7BitToUTF8(const char * gsm7BitBuff, unsigned int gsm7BitBuffLen, std::string& utf8str);
 
 
     /**
@@ -74,11 +74,11 @@ struct Convertor
      * 
      * @see GSM7BitToUTF8
     */
-    static int UTF8ToGSM7Bit(const char * utf8buff, int utf8len, char * gsm7BitBuff, int gsm7BitBuffLen);
+    static int UTF8ToGSM7Bit(const char * utf8buff, unsigned int utf8len, char * gsm7BitBuff, unsigned int gsm7BitBuffLen);
 
 
-    static void MultibyteToUTF8(const char * latin1Buff, int latin1BuffLen, EncodeTypes::EncodingEnum encoding, std::string& utf8str);
-    static int UTF8ToMultibyte(const char * utf8buff, int utf8len, EncodeTypes::EncodingEnum encoding, char * latin1Buff, int latin1BuffLen);
+    static void MultibyteToUTF8(const char * latin1Buff, unsigned int latin1BuffLen, EncodeTypes::EncodingEnum encoding, std::string& utf8str);
+    static int UTF8ToMultibyte(const char * utf8buff, unsigned int utf8len, EncodeTypes::EncodingEnum encoding, char * latin1Buff, unsigned int latin1BuffLen);
 
 
 }; 

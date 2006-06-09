@@ -3,7 +3,6 @@
 #include "scag/transport/http/HttpCommand.h"
 #include "scag/re/smpp/SmppEventHandler.h"
 #include "scag/re/http/HttpEventHandler.h"
-#include "util/recoder/recode_dll.h"
 #include "RuleEngine.h"
 
 

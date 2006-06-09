@@ -2,10 +2,14 @@
 
 #include <memory>
 #include <util/recoder/recode_dll.h>
+#include <iconv.h>
+#include <scag/exc/SCAGExceptions.h>
+
+using namespace scag::exceptions;
 
 namespace scag { namespace util { namespace encodings {
 
-void Convertor::UCS2ToUTF8(const unsigned short * ucs2buff, int ucs2len, std::string& utf8str)
+void Convertor::UCS2ToUTF8(const unsigned short * ucs2buff, unsigned int ucs2len, std::string& utf8str)
 {
     int pos = 0;
     
@@ -59,27 +63,41 @@ void Convertor::UCS2ToUTF8(const unsigned short * ucs2buff, int ucs2len, std::st
     */
 }
 
-void Convertor::UTF8ToUCS2(const char * utf8buff, int utf8len, std::string& ucs2str)
+void Convertor::UTF8ToUCS2(const char * utf8buff, unsigned int utf8len, std::string& ucs2str)
 {
+    iconv_t cd = iconv_open("utf8", "ucs2");
+
+    if( cd == (iconv_t)(-1) ) throw SCAGException("Convertor: Cannot convert from 'utf8' to 'ucs2'");
+
+    int nBuffSize = utf8len*2;
+    unsigned int nBytesLeft = nBuffSize;
+
+    std::auto_ptr<char> buff(new char[nBuffSize]);
+    char * buffPtr = buff.get();
+
+    size_t res = iconv(cd, &utf8buff, &utf8len, &buffPtr, &nBytesLeft);
+    iconv_close(cd);
+
+    ucs2str.assign(buff.get());
 }
 
 
-void Convertor::GSM7BitToUTF8(const char * gsm7BitBuff, int gsm7BitBuffLen, std::string& utf8str)
+void Convertor::GSM7BitToUTF8(const char * gsm7BitBuff, unsigned int gsm7BitBuffLen, std::string& utf8str)
 {
 }
 
-int Convertor::UTF8ToGSM7Bit(const char * utf8buff, int utf8len, char * gsm7BitBuff, int gsm7BitBuffLen)
+int Convertor::UTF8ToGSM7Bit(const char * utf8buff, unsigned int utf8len, char * gsm7BitBuff, unsigned int gsm7BitBuffLen)
 {
     return 0;
 }
 
 
-void Convertor::MultibyteToUTF8(const char * latin1Buff, int latin1BuffLen, EncodeTypes::EncodingEnum encoding, std::string& utf8str)
+void Convertor::MultibyteToUTF8(const char * latin1Buff, unsigned int latin1BuffLen, EncodeTypes::EncodingEnum encoding, std::string& utf8str)
 {
 }
 
 
-int Convertor::UTF8ToMultibyte(const char * utf8buff, int utf8len, EncodeTypes::EncodingEnum encoding, char * latin1Buff, int latin1BuffLen)
+int Convertor::UTF8ToMultibyte(const char * utf8buff, unsigned int utf8len, EncodeTypes::EncodingEnum encoding, char * latin1Buff, unsigned int latin1BuffLen)
 {
     return 0;
 }

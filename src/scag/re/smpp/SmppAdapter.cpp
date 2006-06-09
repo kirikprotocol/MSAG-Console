@@ -1,13 +1,15 @@
 #include "SmppAdapter.h"
 #include "scag/re/CommandAdapter.h"
 #include "scag/re/CommandBrige.h"
-#include "util/recoder/recode_dll.h"
+
+#include "scag/util/encodings/Encodings.h"
 
 
 namespace scag { namespace re { namespace smpp 
 {
 
 using namespace scag::util::properties;
+using namespace scag::util::encodings;
 
 
 Hash<int> SmppCommandAdapter::SubmitFieldNames = SmppCommandAdapter::InitSubmitFieldNames();
@@ -571,16 +573,17 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
             char buff[2048];
 
             int code = data.getIntProperty(Tag::SMPP_DATA_CODING);
+            int resultLen = 0;
 
             switch (code) 
             {
             case smsc::smpp::DataCoding::SMSC7BIT:
-                ConvertUCS2To7Bit((short *)str.data(), str.size()-2, buff, 2048); 
-                str.assign(buff,str.size()/2-1);
+                resultLen = Convertor::UTF8ToGSM7Bit(str.data(), str.size(), buff, 2048);
+                str.assign(buff, resultLen);
                 break;
             case smsc::smpp::DataCoding::LATIN1:
-                ConvertUCS2ToMultibyte((short *)str.data(), str.size()-2, buff, 2048, CONV_ENCODING_LATIN1);
-                str.assign(buff,str.size()/2-1);
+                resultLen = Convertor::UTF8ToMultibyte(str.data(), str.size(), EncodeTypes::CONV_ENCODING_KOI8R, buff, 2048);
+                str.assign(buff,resultLen);
                 break;
             }
   
