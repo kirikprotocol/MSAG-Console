@@ -97,6 +97,14 @@ public class PerfServerRunner extends Thread
     synchronized (shutSemaphore) {
       isStopping = true;
       try {
+        smscSock.close();
+      } catch (IOException e) {
+      }
+      try {
+        sock.close();
+      } catch (IOException e) {
+      }
+      try {
         shutSemaphore.wait();
       } catch (InterruptedException e) {
       }
@@ -134,7 +142,7 @@ public class PerfServerRunner extends Thread
       long t = System.currentTimeMillis() / 1000;
       if (t <= lastsec) {
         try {
-          Thread.currentThread().sleep(50);
+          sleep(50);
         } catch (InterruptedException ex) {
         }
         continue;
