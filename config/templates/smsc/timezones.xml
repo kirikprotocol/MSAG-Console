@@ -2,15 +2,11 @@
 <!DOCTYPE config SYSTEM "configuration.dtd">
 
 <config>
-  <param name="default_timezone" type="string">Asia/Novosibirsk</param>
+  <param name="default_timezone" type="string">180,Europe/Moscow</param>
 
   <section name="masks">
-    <param name="+1" type="string">360,Asia/Novosibirsk</param>
-    <param name="+2" type="string">360,Asia/Novosibirsk</param>
   </section>
 
   <section name="subjects">
-    <param name="123" type="string">0,GMT</param>
-    <param name="234" type="string">360,Asia/Novosibirsk</param>
   </section>
 </config>
