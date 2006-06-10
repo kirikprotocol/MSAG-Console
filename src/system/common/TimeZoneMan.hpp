@@ -2,10 +2,11 @@
 #define __SMSC_SYSTEM_COMMON_TIMEZONEMAN_HPP_
 
 #include <string>
-#include <map>
+#include "core/buffers/DigitalTree.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "sms/sms.h"
 #include "util/Exception.hpp"
+
 
 namespace smsc{
 namespace system{
@@ -38,15 +39,17 @@ public:
 
   int getTimeZone(const smsc::sms::Address& addr)const
   {
+    char buf[64];
+    sprintf(buf,"%d%d%s",addr.type%10,addr.plan%10,addr.value);
     sync::MutexGuard mg(mtx);
-    OffsetMap::const_iterator it=offsetMap.find(addr);
-    if(it==offsetMap.end())
+    int rv;
+    if(!offsetMap.Find(buf,rv))
     {
       smsc_log_debug(log,"defTz=%d for addr=%s",defaultOffset,addr.toString().c_str());
       return defaultOffset;
     }
-    smsc_log_debug(log,"tz=%d for addr=%s",it->second,addr.toString().c_str());
-    return it->second;
+    smsc_log_debug(log,"tz=%d for addr=%s",rv,addr.toString().c_str());
+    return rv;
   }
 
   static void Shutdown()
@@ -59,36 +62,22 @@ protected:
 
   static TimeZoneManager* instance;
 
-  struct MaskComparator{
-    bool operator()(const smsc::sms::Address& addra,const smsc::sms::Address& addrb)const
-    {
-      if(addra.type<addrb.type)return true;
-      if(addra.type>addrb.type)return false;
-      if(addra.plan<addrb.plan)return true;
-      if(addra.plan>addrb.plan)return false;
-      const char* a=addra.value;
-      const char* b=addrb.value;
-      while(*a && *b)
-      {
-        if(*a=='?' || *b=='?')return addra.length<addrb.length;//strlen(a)<strlen(b);
-        if(*a<*b)return true;
-        a++;
-        b++;
-      }
-      return !*a && *b;
-    }
-  };
-
 
   std::string cfgTzFileName;
   std::string cfgRouteFileName;
   mutable sync::Mutex mtx;
-  typedef std::map<smsc::sms::Address,int,MaskComparator> OffsetMap;
-  OffsetMap offsetMap;
+  smsc::core::buffers::DigitalTree<int> offsetMap;
 
   int defaultOffset;
 
   smsc::logger::Logger* log;
+
+  std::string AddrToString(const smsc::sms::Address& addr)
+  {
+    char buf[64];
+    sprintf(buf,"%d%d%s",addr.type%10,addr.plan%10,addr.value);
+    return buf;
+  }
 
 };
 

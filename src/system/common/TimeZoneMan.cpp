@@ -49,8 +49,7 @@ void TimeZoneManager::Reload()
   rcfg.load(cfgRouteFileName.c_str());
 
   sync::MutexGuard mg(mtx);
-  //offsetMap.clear();
-  OffsetMap tempMap;
+  smsc::core::buffers::DigitalTree<int> tempTree;
   defaultOffset=getOffsetValue(cfg,"default_timezone");
   std::auto_ptr<CStrSet> masks(cfg.getChildStrParamNames("masks"));
   char buf[128];
@@ -58,7 +57,7 @@ void TimeZoneManager::Reload()
   {
     smsc_log_info(log,"Loading mask:%s",Unquote(*it).c_str());
     snprintf(buf,128,"masks.%s",it->c_str());
-    tempMap.insert(OffsetMap::value_type(Unquote(*it).c_str(),getOffsetValue(cfg,buf)));
+    tempTree.Insert(AddrToString(Unquote(*it).c_str()).c_str(),getOffsetValue(cfg,buf));
   }
   std::auto_ptr<CStrSet> subjs(cfg.getChildStrParamNames("subjects"));
   for(CStrSet::iterator it=subjs->begin();it!=subjs->end();it++)
@@ -70,14 +69,14 @@ void TimeZoneManager::Reload()
       route::Subject& subj=rcfg.getSubject(subjName.c_str());
       for(route::MaskVector::const_iterator sit=subj.getMasks().begin();sit!=subj.getMasks().end();sit++)
       {
-        tempMap.insert(OffsetMap::value_type(sit->c_str(),getOffsetValue(cfg,buf)));
+        tempTree.Insert(AddrToString(sit->c_str()).c_str(),getOffsetValue(cfg,buf));
       }
     }catch(smsc::core::buffers::HashInvalidKeyException& e)
     {
       throw smsc::util::Exception("Unknown subject:%s",subjName.c_str());
     }
   }
-  offsetMap=tempMap;
+  offsetMap.Swap(tempTree);
 }
 
 }//common
