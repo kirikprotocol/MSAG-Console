@@ -4,6 +4,24 @@
   xmlns="http://java.sun.com/xml/ns/j2ee"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+
+  <context-param>
+     <param-name>
+        javax.servlet.jsp.jstl.fmt.localizationContext
+     </param-name>
+     <param-value>
+       locales.messages
+     </param-value>
+  </context-param>
+  <context-param>
+    <param-name>
+      javax.servlet.jsp.jstl.fmt.locale
+    </param-name>
+    <param-value>
+      @language.default@
+    </param-value>
+  </context-param>
+
   <servlet>
         <servlet-name>applet</servlet-name>
         <servlet-class>ru.sibinco.scag.beans.rules.applet.myServlet</servlet-class>
