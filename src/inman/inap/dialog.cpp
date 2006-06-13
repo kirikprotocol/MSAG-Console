@@ -118,7 +118,7 @@ void Dialog::beginDialog(UCHAR_T* ui/* = NULL*/, USHORT_T uilen/* = 0*/) throw (
 {
     smsc_log_debug(logger, "BEGIN_REQ -> {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  DialogID: 0x%X\n"
+                    "  Dialog[0x%X]\n"
                     "  PriOrder: 0x%X, QoS: 0x%X\n"
                     "  Dest. address: %s\n"
                     "  Org. address: %s\n"
@@ -155,7 +155,7 @@ void Dialog::continueDialog(void) throw (CustomException)
 {
     smsc_log_debug(logger, "CONTINUE_REQ -> {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  DialogID: 0x%X\n"
+                    "  Dialog[0x%X]\n"
                     "  PriOrder: 0x%X, QoS: 0x%X\n"
                     "  Org. address: %s\n"
                     "  App. context[%u]: %s\n"
@@ -185,7 +185,7 @@ void Dialog::endDialog(bool basicEnd/* = true*/) throw (CustomException)
 
         smsc_log_debug(logger, "END_REQ -> {"
                         "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                        "  DialogID: 0x%X\n"
+                        "  Dialog[0x%X]\n"
                         "  PriOrder: 0x%X, QoS: 0x%X\n"
                         "  Termination: 0x%X\n"
                         "  App. context[%u]: %s\n"
