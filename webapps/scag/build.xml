@@ -52,6 +52,7 @@
         <include name="${perfmon_path}/applet/**"/>
         <include name="${perfmon_path}/PerfSnap.class"/>
         <include name="${perfmon_path}/PerfSnap*.class"/>
+        <include name="locales/*.properties"/>
       </fileset>
       <fileset dir="${exploded}/unjar_tmp">
         <include name="ru/sibinco/lib/backend/applet/**"/>
@@ -64,6 +65,7 @@
         <include name="${svcmon_path}/applet/**"/>
         <include name="${svcmon_path}/snap/**"/>
         <include name="${svcmon_path}/SvcSnap.class"/>
+        <include name="locales/*.properties"/>
       </fileset>
       <fileset dir="${exploded}/unjar_tmp">
         <include name="ru/sibinco/lib/backend/applet/**"/>
@@ -77,6 +79,7 @@
         <include name="${scmon_path}/applet/*.java"/>
         <include name="${scmon_path}/ScSnap.class"/>
         <include name="${scmon_path}/snap/**"/>
+        <include name="locales/*.properties"/>
       </fileset>
       <fileset dir="${exploded}/unjar_tmp">
         <include name="ru/sibinco/lib/backend/applet/**"/>
