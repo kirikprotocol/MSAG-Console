@@ -146,7 +146,7 @@ bool HttpProcessorImpl::processResponse(HttpResponse& response)
             rs = RuleEngine::Instance().process(response, *se.Get());
             if(rs.result >= 0)
             {
-                registerEvent(httpRequest, response);
+                registerEvent(httpResponse, response);
                 SessionManager::Instance().releaseSession(se);
                 return true;
             }
@@ -165,7 +165,7 @@ bool HttpProcessorImpl::processResponse(HttpResponse& response)
     if(se.Get())
         SessionManager::Instance().releaseSession(se);
 
-    registerEvent(httpRequestRejected, response);
+    registerEvent(httpResponseRejected, response);
 
     return false;
 }
