@@ -21,6 +21,7 @@
     <param name="gw name" type="string">scag</param>
     <param name="show_interval" type="string">@status.show_interval@</param> 
     <param name="ids_file" type="string">webapps/msag/WEB-INF/ids.xml</param>
+    <param name="locales_file" type="string">webapps/msag/WEB-INF/locales.xml</param>
 
     <section name="gw daemon">
         <param name="host" type="string">@connect.host@</param>

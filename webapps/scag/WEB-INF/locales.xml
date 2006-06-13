@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="WINDOWS-1251"?>
+<locales>
+  <!--attribute "language" must contain 2-letter lowercase language code defined in ISO 639-->
+  <!--optional attribute "country" must contain 2-letter uppercase country code defined in ISO 3166, i.e. "RU" , "US"-->
+  <!--attribute "icon" must contain image file name located in ../msag_distr/webapps/msag/content/images dir-->
+  <locale language="ru" icon="russia.gif"/>
+  <locale language="en" icon="usa.gif"/>
+</locales>
