@@ -1,5 +1,6 @@
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
+<%@taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%>
 <%@taglib prefix="smf" uri="/scag/func"%>
 
 <%@attribute name="filter" required="false"%>
@@ -22,7 +23,7 @@
 <td class=next title="Next page" onclick="return tableTag_navigatePage(${pageCurrent+1})"><a href="#">&nbsp;</a></td>
 </c:if>
 <td class=last onclick="return tableTag_navigatePage(${pageTotal > 0 ? pageTotal-1 : 0})" title="Last page"><a href="#">&nbsp;</a></td>
-<td class=total>total:${bean.totalSize} items</td>
+<td class=total><fmt:message>common.table.total</fmt:message>:${bean.totalSize} <fmt:message>common.table.items</fmt:message></td>
 <td class=pageSize><select id="pageSize" name="pageSize" onchange="document.all.startPosition.value=0; opForm.submit();" >
   <option value=  "3" <c:if test="${bean.pageSize ==   3}">selected</c:if>  >3</option>
   <option value=  "5" <c:if test="${bean.pageSize ==   5}">selected</c:if>  >5</option>

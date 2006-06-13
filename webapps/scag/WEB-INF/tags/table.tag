@@ -1,5 +1,6 @@
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
+<%@taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%>
 <%@taglib prefix="smf" uri="/scag/func"%>
 <%@tag body-content="empty" %>
 <%@attribute name="columns" required="true"%>
@@ -61,7 +62,7 @@ function edit(idToEdit, child, parentId) {
         <c:otherwise>
           <th width="${widths[status.count-1]}%"><a href="#" onclick="return tableTag_sort('${column}')"
             <c:if test="${fn:endsWith(bean.sort, column)}">class="${fn:startsWith(bean.sort, '-') ? 'up' : 'down'}"</c:if>
-          >${names[status.count-1]}</a></th>
+          ><fmt:message>${names[status.count-1]}</fmt:message></a></th>
         </c:otherwise>
       </c:choose>
     </c:forEach>
