@@ -572,7 +572,11 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
 
             std::string resStr;
 
-            int code = data.getIntProperty(Tag::SMPP_DATA_CODING);
+            int code = smsc::smpp::DataCoding::SMSC7BIT;
+
+            if (data.hasIntProperty(Tag::SMPP_DATA_CODING)) 
+                code = data.getIntProperty(Tag::SMPP_DATA_CODING);
+
             int resultLen = 0;
 
             switch (code) 
@@ -586,6 +590,8 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
             case smsc::smpp::DataCoding::UCS2:
                 Convertor::UTF8ToUCS2(str.data(), str.size(), resStr);
                 break;
+            default:
+                Convertor::UTF8ToGSM7Bit(str.data(), str.size(), resStr);
             }
   
 

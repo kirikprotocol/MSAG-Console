@@ -153,37 +153,24 @@ std::string CommandBrige::getMessageBody(SmppCommand& command)
 
     if (buff == 0) return str;
 
-    int code = data.getIntProperty(Tag::SMPP_DATA_CODING);
+    int code = smsc::smpp::DataCoding::SMSC7BIT;
+
+    if (data.hasIntProperty(Tag::SMPP_DATA_CODING)) 
+        code = data.getIntProperty(Tag::SMPP_DATA_CODING);
 
     switch (code) 
     {
     case smsc::smpp::DataCoding::SMSC7BIT:
         Convertor::GSM7BitToUTF8(buff,len,str);
-/*
-        Convert7BitToUCS2(buff, len, (short *)ucs2buff, len*2); 
-        str.assign(ucs2buff,len*2);
-
-        ucs2buff[0] = 0;
-        ucs2buff[1] = 0;
-        str.append(ucs2buff,2);*/
         break;
     case smsc::smpp::DataCoding::LATIN1:
         Convertor::KOI8RToUTF8(buff, len, str);
-    /*
-        ConvertMultibyteToUCS2(buff, len, (short *)ucs2buff, len*2, CONV_ENCODING_KOI8R);
-        str.assign(ucs2buff,len*2);
-
-        ucs2buff[0] = 0;
-        ucs2buff[1] = 0;
-        str.append(ucs2buff,2);*/
+        break;
+    case smsc::smpp::DataCoding::UCS2:
+        Convertor::UCS2ToUTF8((unsigned short *)buff, len, str);
         break;
     default:
-        Convertor::UCS2ToUTF8((unsigned short *)buff, len, str);
-/*
-        str.assign(buff,len);
-        ucs2buff[0] = 0;
-        ucs2buff[1] = 0;
-        str.append(ucs2buff,2);*/
+        Convertor::GSM7BitToUTF8(buff,len,str);
     }
 
     return str;
