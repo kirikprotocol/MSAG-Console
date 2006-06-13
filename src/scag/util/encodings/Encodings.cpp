@@ -84,7 +84,7 @@ void Convertor::UTF8ToUCS2(const char * utf8buff, unsigned int utf8len, std::str
 
 void Convertor::GSM7BitToUTF8(const char * gsm7BitBuff, unsigned int gsm7BitBuffLen, std::string& utf8str)
 {
-    int nBuffSize = gsm7BitBuffLen * 2;
+    int nBuffSize = gsm7BitBuffLen * 2 + 1;
     std::auto_ptr<char> buff(new char[nBuffSize]);
     memset(buff.get(),nBuffSize,0);
 
@@ -94,7 +94,7 @@ void Convertor::GSM7BitToUTF8(const char * gsm7BitBuff, unsigned int gsm7BitBuff
 
 void Convertor::UTF8ToGSM7Bit(const char * utf8buff, unsigned int utf8len, std::string& gsm7BitStr)
 {
-    int nBuffSize = utf8len;
+    int nBuffSize = utf8len + 1;
     std::auto_ptr<char> buff(new char[nBuffSize]);
     memset(buff.get(),nBuffSize,0);
 
