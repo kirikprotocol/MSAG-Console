@@ -2666,7 +2666,7 @@ USHORT_T Et96MapDelimiterInd(
         PauseOnImsiReq(dialog.get());
       } else {
         dialog->state = MAPST_WaitSubmitCmdConf;
-        SendSubmitCommand(dialog);
+        SendSubmitCommand(dialog.get());
       }
       break;
     case MAPST_WaitSmsMODelimiter:
@@ -3483,8 +3483,8 @@ USHORT_T Et96MapV1ProcessUnstructuredSSDataInd(
     
     SMS& sms = *dialog->sms.get();
     sms.setIntProperty(Tag::SMSC_ORIGINAL_DC, smsc::smpp::DataCoding::LATIN1 );
-    string subsystem = GetUSSDSubsystem(ssUserData_s.ssUserDataStr,ssUserData_s.ssUserDataStrLen);
-    string ussdStr = GetUSSDRequestString(ssUserData_s.ssUserDataStr,ssUserData_s.ssUserDataStrLen);
+    string subsystem = GetUSSDSubsystem((const char*)ssUserData_s.ssUserDataStr,ssUserData_s.ssUserDataStrLen);
+    string ussdStr = GetUSSDRequestString((const char*)ssUserData_s.ssUserDataStr,ssUserData_s.ssUserDataStrLen);
     sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,ussdStr.c_str(),ussdStr.length());
     sms.setIntProperty(Tag::SMPP_SM_LENGTH,ussdStr.length());
     sms.setIntProperty(Tag::SMPP_DATA_CODING,smsc::smpp::DataCoding::LATIN1);
@@ -3499,10 +3499,9 @@ USHORT_T Et96MapV1ProcessUnstructuredSSDataInd(
     sms.setIntProperty(Tag::SMPP_PROTOCOL_ID,0);
     sms.setMessageReference(0);
     sms.setDestinationAddress(dest_addr);
-    dialog->sms = _sms;
-    dialog->state = MAPST_WaitUssdDelimiter;
-    dialog->sms->setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_PSSR_IND);
-    dialog->sms->setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,dialog->ussdMrRef);
+    sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_PSSR_IND);
+    sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,dialog->ussdMrRef);
+    dialog->state = MAPST_WaitUssdV1Delimiter;
     dialog->invokeId = invokeId;
   }MAP_CATCH(__dialogid_map,0,localSsn);
   return ET96MAP_E_OK;
