@@ -1,4 +1,5 @@
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%>
 <%@
  taglib prefix="sm-pm" tagdir="/WEB-INF/tags/page_menu"%>
 <%@
@@ -17,11 +18,11 @@
   <sm-ep:property title = "${transport}">
      <c:choose>
         <c:when test="${exists}">
-              <input type=button onClick="return openJedit('${bean.id}','${transport}','edit')" value="Edit" > |
-              <input type=submit id="deleteRule${transport}" name="deleteRule${transport}" value="Delete">
+              <input type=button onClick="return openJedit('${bean.id}','<fmt:message>${transport}</fmt:message>','edit')" value="Edit" > |
+              <input type=submit id="deleteRule${transport}" name="deleteRule<fmt:message>${transport}</fmt:message>" value="Delete">
         </c:when>
         <c:otherwise>
-            <input type=button onClick="return openJedit('${bean.id}','${transport}','add')" value="Add">
+            <input type=button onClick="return openJedit('${bean.id}','<fmt:message>${transport}</fmt:message>','add')" value="Add">
         </c:otherwise>
      </c:choose>
    </sm-ep:property>
