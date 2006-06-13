@@ -102,7 +102,7 @@ namespace scag { namespace re { namespace smpp
 
         bool m_hasPayloadText;
 
-        bool IsShortSize(int size) {return true;}
+        bool IsShortSize(int size) {return (size <= 254);}
         AdapterProperty * getMessageBodyProperty(SMS& data, std::string name);
 
 
