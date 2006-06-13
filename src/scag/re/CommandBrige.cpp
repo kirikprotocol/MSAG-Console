@@ -168,7 +168,7 @@ std::string CommandBrige::getMessageBody(SmppCommand& command)
         str.append(ucs2buff,2);*/
         break;
     case smsc::smpp::DataCoding::LATIN1:
-        Convertor::MultibyteToUTF8(buff, len, EncodeTypes::CONV_ENCODING_KOI8R, str);
+        Convertor::KOI8RToUTF8(buff, len, str);
     /*
         ConvertMultibyteToUCS2(buff, len, (short *)ucs2buff, len*2, CONV_ENCODING_KOI8R);
         str.assign(ucs2buff,len*2);

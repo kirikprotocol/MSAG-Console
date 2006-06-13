@@ -570,7 +570,7 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
         case SMS_MESSAGE_BODY:
             str = property.getStr();
 
-            char buff[2048];
+            std::string resStr;
 
             int code = data.getIntProperty(Tag::SMPP_DATA_CODING);
             int resultLen = 0;
@@ -578,12 +578,13 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
             switch (code) 
             {
             case smsc::smpp::DataCoding::SMSC7BIT:
-                resultLen = Convertor::UTF8ToGSM7Bit(str.data(), str.size(), buff, 2048);
-                str.assign(buff, resultLen);
+                Convertor::UTF8ToGSM7Bit(str.data(), str.size(), resStr);
                 break;
             case smsc::smpp::DataCoding::LATIN1:
-                resultLen = Convertor::UTF8ToMultibyte(str.data(), str.size(), EncodeTypes::CONV_ENCODING_KOI8R, buff, 2048);
-                str.assign(buff,resultLen);
+                Convertor::UTF8ToKOI8R(str.data(), str.size(), resStr);
+                break;
+            case smsc::smpp::DataCoding::UCS2:
+                Convertor::UTF8ToUCS2(str.data(), str.size(), resStr);
                 break;
             }
   
@@ -592,9 +593,9 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
             {
 
                 if (m_hasPayloadText) 
-                    data.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,str.data(),str.size());
+                    data.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, resStr.data(), resStr.size());
                 else 
-                    data.setBinProperty(Tag::SMPP_SHORT_MESSAGE,str.data(),str.size());
+                    data.setBinProperty(Tag::SMPP_SHORT_MESSAGE, resStr.data(), resStr.size());
             }
             else
             {
@@ -602,36 +603,7 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
                 data.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,str.data(),str.size());
             }
             break;
-
-/*        case Tag::SMPP_SHORT_MESSAGE:
-        case Tag::SMPP_MESSAGE_PAYLOAD:
-            //Жопа ->
-            std::string str = property.getStr();
-            data.setBinProperty(FieldId,str.data(),str.size());
-            break;*/
         }
-
-
-
- /*       switch (FieldId) 
-        {
-
-        case Tag::SMPP_SM_LENGTH:
-            data.setIntProperty(Tag::SMPP_SM_LENGTH,property.getInt());
-            break;
-        case Tag::SMPP_SHORT_MESSAGE:
-    
-            break;
-        case Tag::SMPP_USER_RESPONSE_CODE:
-    
-            break;
-        case Tag::SMPP_MESSAGE_PAYLOAD:
-    
-            break;
-        case Tag::SMPP_LANGUAGE_INDICATOR:
-    
-            break;
-        }*/
 }
 
 

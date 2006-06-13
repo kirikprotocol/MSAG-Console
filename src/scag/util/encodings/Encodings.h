@@ -74,11 +74,11 @@ struct Convertor
      * 
      * @see GSM7BitToUTF8
     */
-    static int UTF8ToGSM7Bit(const char * utf8buff, unsigned int utf8len, char * gsm7BitBuff, unsigned int gsm7BitBuffLen);
+    static void UTF8ToGSM7Bit(const char * utf8buff, unsigned int utf8len, std::string& gsm7BitStr);
 
 
-    static void MultibyteToUTF8(const char * latin1Buff, unsigned int latin1BuffLen, EncodeTypes::EncodingEnum encoding, std::string& utf8str);
-    static int UTF8ToMultibyte(const char * utf8buff, unsigned int utf8len, EncodeTypes::EncodingEnum encoding, char * latin1Buff, unsigned int latin1BuffLen);
+    static void UTF8ToKOI8R(const char * utf8buff, unsigned int utf8len, std::string& koi8rStr);
+    static void KOI8RToUTF8(const char * latin1Buff, unsigned int latin1BuffLen, std::string& utf8str);
 
 
 }; 

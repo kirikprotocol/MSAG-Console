@@ -92,20 +92,55 @@ void Convertor::GSM7BitToUTF8(const char * gsm7BitBuff, unsigned int gsm7BitBuff
     utf8str.assign(buff.get());
 }
 
-int Convertor::UTF8ToGSM7Bit(const char * utf8buff, unsigned int utf8len, char * gsm7BitBuff, unsigned int gsm7BitBuffLen)
+void Convertor::UTF8ToGSM7Bit(const char * utf8buff, unsigned int utf8len, std::string& gsm7BitStr)
 {
-    return 0;
+    int nBuffSize = utf8len;
+    std::auto_ptr<char> buff(new char[nBuffSize]);
+    memset(buff.get(),nBuffSize,0);
+
+    ConvertTextTo7Bit(utf8buff, utf8len, buff.get(), nBuffSize, CONV_ENCODING_KOI8R);
+
+    gsm7BitStr.assign(buff.get());
 }
 
 
-void Convertor::MultibyteToUTF8(const char * latin1Buff, unsigned int latin1BuffLen, EncodeTypes::EncodingEnum encoding, std::string& utf8str)
+void Convertor::KOI8RToUTF8(const char * latin1Buff, unsigned int latin1BuffLen, std::string& utf8str)
 {
+    iconv_t cd = iconv_open("UTF-8","KOI8-R");
+
+    if( cd == (iconv_t)(-1) ) throw SCAGException("Convertor: Cannot convert from 'utf8' to 'ucs2'");
+
+    int nBuffSize = latin1BuffLen * 2;
+    unsigned int nBytesLeft = nBuffSize;
+
+    std::auto_ptr<char> buff(new char[nBuffSize]);
+    char * buffPtr = buff.get();
+
+    size_t res = iconv(cd, &latin1Buff, &latin1BuffLen, &buffPtr, &nBytesLeft);
+    iconv_close(cd);
+
+    utf8str.assign(buff.get(), nBuffSize - nBytesLeft);
 }
 
 
-int Convertor::UTF8ToMultibyte(const char * utf8buff, unsigned int utf8len, EncodeTypes::EncodingEnum encoding, char * latin1Buff, unsigned int latin1BuffLen)
+void Convertor::UTF8ToKOI8R(const char * utf8buff, unsigned int utf8len, std::string& koi8rStr)
 {
-    return 0;
+    iconv_t cd = iconv_open("KOI8-R", "UTF-8");
+
+    if( cd == (iconv_t)(-1) ) throw SCAGException("Convertor: Cannot convert from 'utf8' to 'koi8r'");
+
+    unsigned int nBytesLeft = utf8len;
+    int nBuffSize = utf8len;
+
+    std::auto_ptr<char> buff(new char[nBuffSize]);
+    char * buffPtr = buff.get();
+
+
+    size_t res = iconv(cd, &utf8buff, &utf8len, &buffPtr, &nBytesLeft);
+    iconv_close(cd);
+
+    koi8rStr.assign(buff.get(), nBuffSize - nBytesLeft);
+
 }
 
 
