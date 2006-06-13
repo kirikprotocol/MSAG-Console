@@ -65,11 +65,11 @@ void Convertor::UCS2ToUTF8(const unsigned short * ucs2buff, unsigned int ucs2len
 
 void Convertor::UTF8ToUCS2(const char * utf8buff, unsigned int utf8len, std::string& ucs2str)
 {
-    iconv_t cd = iconv_open("utf8", "ucs2");
+    iconv_t cd = iconv_open("UCS-2", "UTF-8");
 
     if( cd == (iconv_t)(-1) ) throw SCAGException("Convertor: Cannot convert from 'utf8' to 'ucs2'");
 
-    int nBuffSize = utf8len*2;
+    int nBuffSize = utf8len * 2;
     unsigned int nBytesLeft = nBuffSize;
 
     std::auto_ptr<char> buff(new char[nBuffSize]);
@@ -78,12 +78,18 @@ void Convertor::UTF8ToUCS2(const char * utf8buff, unsigned int utf8len, std::str
     size_t res = iconv(cd, &utf8buff, &utf8len, &buffPtr, &nBytesLeft);
     iconv_close(cd);
 
-    ucs2str.assign(buff.get());
+    ucs2str.assign(buff.get(), nBuffSize - nBytesLeft);
 }
 
 
 void Convertor::GSM7BitToUTF8(const char * gsm7BitBuff, unsigned int gsm7BitBuffLen, std::string& utf8str)
 {
+    int nBuffSize = gsm7BitBuffLen * 2;
+    std::auto_ptr<char> buff(new char[nBuffSize]);
+    memset(buff.get(),nBuffSize,0);
+
+    Convert7BitToText(gsm7BitBuff, gsm7BitBuffLen, buff.get(), nBuffSize);
+    utf8str.assign(buff.get());
 }
 
 int Convertor::UTF8ToGSM7Bit(const char * utf8buff, unsigned int utf8len, char * gsm7BitBuff, unsigned int gsm7BitBuffLen)
