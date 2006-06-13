@@ -100,6 +100,8 @@
     param(out, "smsc.map.lockedMOdelay", "map.lockedByMODelay", bean.getIntParam("map.lockedByMODelay"));
     param(out, "smsc.map.MOlockTime", "map.MOLockTimeout", bean.getIntParam("map.MOLockTimeout"));
     param(out, "smsc.map.allowCallBarred", "map.allowCallBarred", bean.getBoolParam("map.allowCallBarred"));
+    param(out, "smsc.map.ussdV1Enabled", "map.ussdV1Enabled", bean.getBoolParam("map.ussdV1Enabled"));
+    param(out, "smsc.map.ussdV1UseOrigEntityNumber", "map.ussdV1UseOrigEntityNumber", bean.getBoolParam("map.ussdV1UseOrigEntityNumber"));
     finishParams(out);
     finishSection(out);
     //################################## traffic control #############################

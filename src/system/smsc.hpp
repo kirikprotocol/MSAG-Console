@@ -588,6 +588,8 @@ protected:
   int    lockedByMODelay;
   int    MOLockTimeout;
   bool   allowCallBarred;
+  bool   ussdV1Enabled;
+  bool   ussdV1UseOrigEntityNumber;
   time_t startTime;
 
   performance::SmePerformanceMonitor smePerfMonitor;

@@ -69,6 +69,9 @@
     <param name="busyMTDelay" type="int">20</param>
     <param name="lockedByMODelay" type="int">20</param>
     <param name="MOLockTimeout" type="int">45</param>
+    <param name="allowCallBarred" type="bool">false</param>
+    <param name="ussdV1Enabled" type="bool">false</param>
+    <param name="ussdV1UseOrigEntityNumber" type="bool">false</param>
   </section>
 
   <section name="profiler">

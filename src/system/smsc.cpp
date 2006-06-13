@@ -872,6 +872,18 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     __warning__("map.allowCallBarred not found, disabled");
     allowCallBarred = false;
   }
+  try{
+    ussdV1Enabled=cfg.cfgman->getBool("map.ussdV1Enabled");
+  } catch (...) {
+    __warning__("map.ussdV1Enabled not found, disabled");
+    ussdV1Enabled = false;
+  }
+  try{
+    ussdV1UseOrigEntityNumber=cfg.cfgman->getBool("map.ussdV1UseOrigEntityNumber");
+  } catch (...) {
+    __warning__("map.ussdV1UseOrigEntityNumber not found, disabled");
+    ussdV1UseOrigEntityNumber = false;
+  }
 
   {
     /*
@@ -1136,7 +1148,7 @@ void Smsc::run()
     __trace__("SMPPIO started");
 #if defined(USE_MAP) && !defined(NOMAPPROXY)
     Event mapiostarted;
-    MapIoTask* mapio = new MapIoTask(&mapiostarted,scAddr,ussdCenterAddr,ussdSSN,busyMTDelay,lockedByMODelay,MOLockTimeout,allowCallBarred);
+    MapIoTask* mapio = new MapIoTask(&mapiostarted,scAddr,ussdCenterAddr,ussdSSN,busyMTDelay,lockedByMODelay,MOLockTimeout,allowCallBarred,ussdV1Enabled,ussdV1UseOrigEntityNumber);
     tp.startTask(mapio);
     mapiostarted.Wait();
     __trace__("MAPIO started");

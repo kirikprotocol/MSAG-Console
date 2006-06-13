@@ -347,21 +347,40 @@ inline void ConvAddrMSISDN2Smc(const ET96MAP_ADDRESS_T* ma,Address* sa)
 {
   sa->setTypeOfNumber((ma->typeOfAddress>>4)&0x7);
   sa->setNumberingPlan(ma->typeOfAddress&0xf);
-  if ( ma->addressLength != 0 ){
-    char sa_val[21] = {0,};
-    int i = 0;
-    for ( ;i<(ma->addressLength);i++){
-      if( i % 2 == 0 ) {
-        sa_val[i] = (ma->address[i/2]&0x0f)+0x30;
-      } else {
-        sa_val[i] = (ma->address[i/2]>>4)+0x30;
-      }
-      if(sa_val[i] > 0x39 ) throw runtime_error("MAP::ConvAddrMSISDN2Smc numeric address contains not digit.");
+  if ( ma->addressLength == 0 ) throw runtime_error("MAP::ConvAddrMSISDN2Smc  ET96MAP_ADDRESS_T length should be greater than 0");
+  char sa_val[21] = {0,};
+  int i = 0;
+  for ( ;i<(ma->addressLength);i++){
+    if( i % 2 == 0 ) {
+      sa_val[i] = (ma->address[i/2]&0x0f)+0x30;
+    } else {
+      sa_val[i] = (ma->address[i/2]>>4)+0x30;
     }
-    sa->setValue(i,sa_val);
-  }else{
-    throw runtime_error("MAP::ConvAddrMSISDN2Smc  ET96MAP_SM_RP_OA_T length should be greater than 0");
+    if(sa_val[i] > 0x39 ) throw runtime_error("MAP::ConvAddrMSISDN2Smc numeric address contains not digit.");
   }
+  sa->setValue(i,sa_val);
+}
+
+inline void ConvAddrIMSI2Smc(const ET96MAP_IMSI_T* ma,Address* sa)
+{
+  sa->setTypeOfNumber(0);  // unknown
+  sa->setNumberingPlan(9); // reserved but we will use it for imsi
+  if ( ma->imsiLen == 0 ) throw runtime_error("MAP::ConvAddrIMSI2Smc  ET96MAP_IMSI_T length should be greater than 0");
+  char sa_val[21] = {0,};
+  char *sa_ptr = sa_val;
+  int i = 0;
+  for ( ;i<(ma->imsiLen);i++){
+    *sa_ptr = (ma->imsi[i]&0x0f)+0x30; 
+    if( *sa_ptr > 0x39 ) throw runtime_error("MAP::ConvAddrIMSI2Smc numeric address contains not digit.");
+    sa_ptr++;
+    *sa_ptr = (ma->imsi[i]>>4)+0x30; 
+    if( *sa_ptr == 0x0f ) *sa_ptr = 0;
+    else {
+      if( *sa_ptr > 0x39 ) throw runtime_error("MAP::ConvAddrIMSI2Smc numeric address contains not digit.");
+      sa_ptr++;
+    }
+  }
+  sa->setValue(sa_ptr-sa_val,sa_val);
 }
 
 extern void CloseDialog(ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId);

@@ -351,6 +351,8 @@ class MapDialogContainer{
   static int lockedByMoDelay;
   static int MOLockTimeout;
   static bool allowCallBarred;
+  static bool ussdV1Enabled;
+  static bool ussdV1UseOrigEntityNumber;
 
   int    processTimeout;
   int    processLimit;
@@ -440,7 +442,11 @@ public:
   static void setMOLockTimeout(int val){MOLockTimeout=val;}
   static int  getMOLockTimeout(){return MOLockTimeout;}
   static void setAllowCallBarred(bool val){allowCallBarred=val;}
-  static int  getAllowCallBarred(){return allowCallBarred;}
+  static bool  getAllowCallBarred(){return allowCallBarred;}
+  static void setUssdV1Enabled(bool val){ussdV1Enabled=val;}
+  static bool  getUssdV1Enabled(){return ussdV1Enabled;}
+  static void setUssdV1UseOrigEntityNumber(bool val){ussdV1UseOrigEntityNumber=val;}
+  static bool  getUssdV1UseOrigEntityNumber(){return ussdV1UseOrigEntityNumber;}
 
   static void dropInstance()
   {
@@ -732,7 +738,7 @@ public:
   virtual const char* taskName() { return "MapIoTask";}
   bool isStarted() {return is_started;}
   MapProxy proxy;
-  MapIoTask(Event* startevent,const string& scAddr, const string& ussdCenterAddr, int ussdSSN, int busyMTDelay, int lockedByMODelay, int MOLockTimeout, bool allowCallBarred) : startevent(startevent),is_started(false)
+  MapIoTask(Event* startevent,const string& scAddr, const string& ussdCenterAddr, int ussdSSN, int busyMTDelay, int lockedByMODelay, int MOLockTimeout, bool allowCallBarred, bool ussdV1Enabled, bool ussdV1UseOrigEntityNumber) : startevent(startevent),is_started(false)
   {
     MapDialogContainer::SetSCAdress(scAddr);
     MapDialogContainer::SetUSSDAdress(ussdCenterAddr);
@@ -742,6 +748,8 @@ public:
     MapDialogContainer::setLockedByMoDelay(lockedByMODelay);
     MapDialogContainer::setMOLockTimeout(MOLockTimeout);
     MapDialogContainer::setAllowCallBarred(allowCallBarred);
+    MapDialogContainer::setUssdV1Enabled(ussdV1Enabled);
+    MapDialogContainer::setUssdV1UseOrigEntityNumber(ussdV1UseOrigEntityNumber);
   }
   ~MapIoTask() {
     __mapdlg_trace__("Destroying MapIoTask");
