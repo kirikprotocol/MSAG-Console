@@ -46,17 +46,22 @@ Dialog::~Dialog()
 void Dialog::releaseAllInvokes(void)
 {
     MutexGuard  tmp(invGrd);
+    clearInvokes();
+}
+
+void Dialog::clearInvokes(void)
+{
     InvokeMap::const_iterator it;
     for (it = originating.begin(); it != originating.end(); it++) {
         Invoke * inv = (*it).second;
-        smsc_log_debug(logger, "Dialog[%u]: releasing Invoke[%u].(%u): respType: %d, status: %d",
+        smsc_log_debug(logger, "Dialog[0x%X]: releasing Invoke[%u].(%u): respType: %d, status: %d",
                        _dId, inv->getId(), inv->getOpcode(), inv->getResultType(), inv->getStatus());
         delete inv;
     }
     originating.clear();
     for (it = terminating.begin(); it != terminating.end(); it++) {
         Invoke * inv = (*it).second;
-        smsc_log_debug(logger, "Dialog[%u]: releasing Invoke[%u].(%u): respType: %d, status: %d",
+        smsc_log_debug(logger, "Dialog[0x%X]: releasing Invoke[%u].(%u): respType: %d, status: %d",
                        _dId, inv->getId(), inv->getOpcode(), inv->getResultType(), inv->getStatus());
         delete inv;
     }
@@ -75,6 +80,11 @@ void Dialog::reset(USHORT_T new_id, const SCCP_ADDRESS_T * rmt_addr/* = NULL*/)
         rmtAddr = *rmt_addr;
 }
 
+TC_DlgState Dialog::getState(void)
+{ 
+    MutexGuard  tmp(dlgGrd);
+    return _state; 
+}
 
 void Dialog::addListener(DialogListener* pListener)
 {
@@ -169,34 +179,32 @@ void Dialog::continueDialog(void) throw (CustomException)
 void Dialog::endDialog(bool basicEnd/* = true*/) throw (CustomException)
 {
     MutexGuard  tmp(dlgGrd);
-    if (_state.value & TC_DLG_CLOSED_MASK) {
-        smsc_log_warn(logger, "Dialog[%u]: END_REQ: already %s (state = 0x%x)", _dId,
-            (_state.value & TC_DLG_ABORTED_MASK) ? "aborted" : "ended", _state.value);
-        return;
+    if (!(_state.value & TC_DLG_CLOSED_MASK)) {
+        USHORT_T termination = basicEnd ? EINSS7_I97TCAP_TERM_BASIC_END :
+            EINSS7_I97TCAP_TERM_PRE_ARR_END;
+
+        smsc_log_debug(logger, "END_REQ -> {"
+                        "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
+                        "  DialogID: 0x%X\n"
+                        "  PriOrder: 0x%X, QoS: 0x%X\n"
+                        "  Termination: 0x%X\n"
+                        "  App. context[%u]: %s\n"
+                        "}",
+                       dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, priority, qSrvc,
+                       termination, ac.acLen, dump(ac.acLen, ac.ac).c_str()
+                       );
+
+        USHORT_T result =
+            EINSS7_I97TEndReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
+                              priority, qSrvc, termination,
+                              ac.acLen, ac.ac, 0, NULL);
+
+        checkSS7res("TEndReq failed", result); //throws
+        _state.s.dlgLEnded = 1;
     }
-
-    USHORT_T termination = basicEnd ? EINSS7_I97TCAP_TERM_BASIC_END :
-        EINSS7_I97TCAP_TERM_PRE_ARR_END;
-
-    smsc_log_debug(logger, "END_REQ -> {"
-                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  DialogID: 0x%X\n"
-                    "  PriOrder: 0x%X, QoS: 0x%X\n"
-                    "  Termination: 0x%X\n"
-                    "  App. context[%u]: %s\n"
-                    "}",
-                   dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, priority, qSrvc,
-                   termination, ac.acLen, dump(ac.acLen, ac.ac).c_str()
-                   );
-
-    USHORT_T result =
-        EINSS7_I97TEndReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
-                          priority, qSrvc, termination,
-                          ac.acLen, ac.ac, 0, NULL);
-
-    checkSS7res("TEndReq failed", result); //throws
-    _state.s.dlgLEnded = 1;
     releaseAllInvokes();
+    smsc_log_debug(logger, "Dialog[0x%X]: %s (state = 0x%x)", _dId,
+        (_state.value & TC_DLG_ABORTED_MASK) ? "aborted" : "ended", _state.value);
 }
 
 
@@ -333,7 +341,7 @@ Invoke* Dialog::initInvoke(UCHAR_T opcode, InvokeListener * pLst/* = NULL*/,
         originating.insert(InvokeMap::value_type(inv->getId(), inv));
     else
         terminating.insert(InvokeMap::value_type(inv->getId(), inv));
-    smsc_log_debug(logger, "Dialog[%u]: initiated Invoke[%u].(%u), respType: %d",
+    smsc_log_debug(logger, "Dialog[0x%X]: initiated Invoke[%u].(%u), respType: %d",
         (unsigned)_dId, (unsigned)inv->getId(), (unsigned)opcode, (int)resp);
     return inv;
 }
@@ -356,12 +364,12 @@ void Dialog::releaseInvoke(UCHAR_T invId)
     }
     if (inv) {
         smsc_log_debug(logger,
-            "Dialog[%u]: releasing Invoke[%u].(%u): respType: %d, status: %d",
+            "Dialog[0x%X]: releasing Invoke[%u].(%u): respType: %d, status: %d",
             (unsigned)_dId, (unsigned)invId, (unsigned)inv->getOpcode(),
             inv->getResultType(), inv->getStatus());
         delete inv;
     } else {
-        smsc_log_error(logger, "Dialog[%u]: releasing unregistered Invoke[%u]",
+        smsc_log_error(logger, "Dialog[0x%X]: releasing unregistered Invoke[%u]",
                        (unsigned)_dId, (unsigned)invId);
     }
     return;
@@ -407,8 +415,11 @@ USHORT_T Dialog::handleEndDialog(bool compPresent)
     ListenerList cpList;
     {
         MutexGuard tmp(dlgGrd);
-        _state.s.dlgREnded = !compPresent ? TCAP_DLG_COMP_LAST : TCAP_DLG_COMP_WAIT;
-        releaseAllInvokes();
+        if (!compPresent) {
+            _state.s.dlgREnded = TCAP_DLG_COMP_LAST;
+            releaseAllInvokes();
+        } else //wait for ongoing invoke/result/error
+            _state.s.dlgREnded = TCAP_DLG_COMP_WAIT;
         cpList = listeners;
     }
     //NOTE: calling onDialogREnd() may lead to ~Dialog()/reset() being called,
@@ -490,12 +501,12 @@ USHORT_T Dialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const 
                 comp->decode(code); //throws
                 invoke.ownParam(comp);
             } catch (std::exception & exc) {
-                smsc_log_error(logger, "Dialog[%u]: Invoke[%u].(%u).Arg: %s",
+                smsc_log_error(logger, "Dialog[0x%X]: Invoke[%u].(%u).Arg: %s",
                     (unsigned)_dId, (unsigned)invId, (unsigned)op[0], exc.what());
                 delete comp;
             }
         } else {
-            smsc_log_fatal(logger, "Dialog[%u]: Invoke[%u].(%u): unregistered Arg",
+            smsc_log_fatal(logger, "Dialog[0x%X]: Invoke[%u].(%u): unregistered Arg",
                 (unsigned)_dId, (unsigned)invId, (unsigned)op[0]);
         }
     }
@@ -535,19 +546,19 @@ USHORT_T Dialog::handleLCancelInvoke(UCHAR_T invId)
         if ((invCp.getStatus() <= Invoke::resNotLast)
             && (invCp.getResultType() == Invoke::respResultOrError))
             smsc_log_error(logger,
-                "Dialog[%u]: Invoke[%u].(%u) got L_CANCEL expecting returnResult",
+                "Dialog[0x%X]: Invoke[%u].(%u) got L_CANCEL expecting returnResult",
                 (unsigned)_dId, (unsigned)invId, invCp.getOpcode());
         smsc_log_debug(logger,
-            "Dialog[%u]: releasing Invoke[%u].(%u): respType: %d, status: %d",
+            "Dialog[0x%X]: releasing Invoke[%u].(%u): respType: %d, status: %d",
             (unsigned)_dId, (unsigned)invId, (unsigned)invCp.getOpcode(),
             invCp.getResultType(), invCp.getStatus());
 
         try { invCp.notifyResultListener(NULL, Invoke::resLCancel);
         } catch (std::exception & exc) {
-            smsc_log_error(logger, "Dialog[%u]: Invoke[%u].LCancel listener: %s",
+            smsc_log_error(logger, "Dialog[0x%X]: Invoke[%u].LCancel listener: %s",
                 (unsigned)_dId, (unsigned)invId, exc.what());
         } catch (...) {
-            smsc_log_error(logger, "Dialog[%u]: Invoke[%u].LCancel listener: unknown exception",
+            smsc_log_error(logger, "Dialog[0x%X]: Invoke[%u].LCancel listener: unknown exception",
                 (unsigned)_dId, (unsigned)invId);
         }
     }
@@ -559,18 +570,13 @@ USHORT_T Dialog::handleResultLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, co
 {
     assert(op && (oplen > 0));
     assert(tag == EINSS7_I97TCAP_OPERATION_TAG_LOCAL);
-    {
-        MutexGuard tmp(dlgGrd);
-        if (_state.s.dlgRContinued == TCAP_DLG_COMP_WAIT)
-            _state.s.dlgRContinued = TCAP_DLG_COMP_LAST;
-        else if (_state.s.dlgREnded == TCAP_DLG_COMP_WAIT)
-            _state.s.dlgREnded = TCAP_DLG_COMP_LAST;
-    }
 
     Invoke* pInv = NULL;
     Invoke  invCp;
-    {   //search for originating Invoke and copy it onto stack
-        MutexGuard  tmp(invGrd);
+    {
+        MutexGuard dtmp(dlgGrd);
+        //search for originating Invoke and copy it onto stack
+        MutexGuard itmp(invGrd);
         InvokeMap::iterator it = originating.find(invId);
         if (it != originating.end()) {
             pInv = (*it).second;
@@ -578,8 +584,15 @@ USHORT_T Dialog::handleResultLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, co
             invCp.clone(pInv);
             delete pInv;
         } else
-            smsc_log_error(logger, "Dialog[%u]: Result[%u] for unknown Invoke[%u]",
+            smsc_log_error(logger, "Dialog[0x%X]: Result[%u] for unknown Invoke[%u]",
                 (unsigned)_dId, (unsigned)op[0], (unsigned)invId);
+
+        if (_state.s.dlgRContinued == TCAP_DLG_COMP_WAIT)
+            _state.s.dlgRContinued = TCAP_DLG_COMP_LAST;
+        else if (_state.s.dlgREnded == TCAP_DLG_COMP_WAIT) {
+            _state.s.dlgREnded = TCAP_DLG_COMP_LAST;
+            clearInvokes();
+        }
     }
     if (pInv) { //prepare result and call invoke result listeners
         TcapEntity  result(invId, tag, op[0]);
@@ -591,25 +604,25 @@ USHORT_T Dialog::handleResultLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, co
                 resParm->decode(code);
                 result.ownParam(resParm);
             } catch (std::exception & exc) {
-                smsc_log_error(logger, "Dialog[%u]: Invoke[%u].Result[%u]: %s",
+                smsc_log_error(logger, "Dialog[0x%X]: Invoke[%u].Result[%u]: %s",
                     (unsigned)_dId, (unsigned)invId, (unsigned)op[0], exc.what());
                 delete resParm;
             }
         } else
-            smsc_log_error(logger, "Dialog[%u]: Invoke[%u]: unregistered Result[%u]",
+            smsc_log_error(logger, "Dialog[0x%X]: Invoke[%u]: unregistered Result[%u]",
                             (unsigned)_dId, (unsigned)invId, (unsigned)op[0]);
         //NOTE: notifyResultListeners() may lead to ~Dialog()/reset() being called !!!
         //ResultListener should copy 'resParm', not take its ownership !
         unsigned dlgId = (unsigned)_dId;
         try { invCp.notifyResultListener(&result, Invoke::resLast);
         } catch (std::exception & exc) {
-            smsc_log_error(logger, "Dialog[%u]: Invoke[%u].Result[%u] listener: %s",
+            smsc_log_error(logger, "Dialog[0x%X]: Invoke[%u].Result[%u] listener: %s",
                 dlgId, (unsigned)invId, (unsigned)op[0], exc.what());
         } catch (...) {
-            smsc_log_error(logger, "Dialog[%u]: Invoke[%u].Result[%u] listener: unknown exception", 
+            smsc_log_error(logger, "Dialog[0x%X]: Invoke[%u].Result[%u] listener: unknown exception", 
                 dlgId, (unsigned)invId, (unsigned)op[0]);
         }
-        smsc_log_debug(logger, "Dialog[%u]: releasing Invoke[%u].(%u): respType: %d, status: %d",
+        smsc_log_debug(logger, "Dialog[0x%X]: releasing Invoke[%u].(%u): respType: %d, status: %d",
             dlgId, (unsigned)invId, (unsigned)invCp.getOpcode(),
             invCp.getResultType(), invCp.getStatus());
     }
@@ -636,12 +649,12 @@ USHORT_T Dialog::handleResultNotLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen,
                 resParm->decode(code);
                 result.ownParam(resParm);
             } catch (std::exception & exc) {
-                smsc_log_error(logger, "Dialog[%u]: Invoke[%u].ResultNL[%u]: %s",
+                smsc_log_error(logger, "Dialog[0x%X]: Invoke[%u].ResultNL[%u]: %s",
                     (unsigned)_dId, (unsigned)invId, (unsigned)op[0], exc.what());
                 delete resParm;
             }
         } else
-            smsc_log_error(logger, "Dialog[%u]: Invoke[%u]: unregistered ResultNL[%u]",
+            smsc_log_error(logger, "Dialog[0x%X]: Invoke[%u]: unregistered ResultNL[%u]",
                             (unsigned)_dId, (unsigned)invId, (unsigned)op[0]);
 
         Invoke* inv = (*it).second;
@@ -649,14 +662,14 @@ USHORT_T Dialog::handleResultNotLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen,
         //ResultListener should copy 'resParm', not take its ownership !
         try { inv->notifyResultListener(&result, Invoke::resNotLast);
         } catch (std::exception & exc) {
-            smsc_log_error(logger, "Dialog[%u]: Invoke[%u].ResultNL[%u] listener: %s",
+            smsc_log_error(logger, "Dialog[0x%X]: Invoke[%u].ResultNL[%u] listener: %s",
                 (unsigned)_dId, (unsigned)invId, (unsigned)op[0], exc.what());
         } catch (...) {
-            smsc_log_error(logger, "Dialog[%u]: Invoke[%u].ResultNL[%u] listener: unknown exception", 
+            smsc_log_error(logger, "Dialog[0x%X]: Invoke[%u].ResultNL[%u] listener: unknown exception", 
                 (unsigned)_dId, (unsigned)invId, (unsigned)op[0]);
         }
     } else
-        smsc_log_warn(logger, "Dialog[%u]: ResultNL[%u] for unknown Invoke[%u]",
+        smsc_log_warn(logger, "Dialog[0x%X]: ResultNL[%u] for unknown Invoke[%u]",
                 (unsigned)_dId, (unsigned)op[0], (unsigned)invId);
     return MSG_OK;
 }
@@ -666,18 +679,13 @@ USHORT_T Dialog::handleResultError(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, c
 {
     assert(op && (oplen > 0));
     assert(tag == EINSS7_I97TCAP_OPERATION_TAG_LOCAL);
-    {
-        MutexGuard tmp(dlgGrd);
-        if (_state.s.dlgRContinued == TCAP_DLG_COMP_WAIT)
-            _state.s.dlgRContinued = TCAP_DLG_COMP_LAST;
-        else if (_state.s.dlgREnded == TCAP_DLG_COMP_WAIT)
-            _state.s.dlgREnded = TCAP_DLG_COMP_LAST;
-    }
 
     Invoke* pInv = NULL;
     Invoke  invCp;
-    {   //search for originating Invoke and copy it onto stack
-        MutexGuard  tmp(invGrd);
+    {
+        MutexGuard dtmp(dlgGrd);
+        //search for originating Invoke and copy it onto stack
+        MutexGuard itmp(invGrd);
         InvokeMap::iterator it = originating.find(invId);
         if (it != originating.end()) {
             pInv = (*it).second;
@@ -685,8 +693,15 @@ USHORT_T Dialog::handleResultError(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, c
             invCp.clone(pInv);
             delete pInv;
         } else
-            smsc_log_error(logger, "Dialog[%u]: Error[%u] for unknown Invoke[%u]",
+            smsc_log_error(logger, "Dialog[0x%X]: Error[%u] for unknown Invoke[%u]",
                 (unsigned)_dId, (unsigned)op[0], (unsigned)invId);
+
+        if (_state.s.dlgRContinued == TCAP_DLG_COMP_WAIT)
+            _state.s.dlgRContinued = TCAP_DLG_COMP_LAST;
+        else if (_state.s.dlgREnded == TCAP_DLG_COMP_WAIT) {
+            _state.s.dlgREnded = TCAP_DLG_COMP_LAST;
+            clearInvokes();
+        }
     }
     if (pInv) { //prepare resultError and call invoke result listener
         TcapEntity  resErr(invId, tag, op[0]);
@@ -698,25 +713,25 @@ USHORT_T Dialog::handleResultError(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, c
                 resParm->decode(code);
                 resErr.ownParam(resParm);
             } catch (std::exception & exc) {
-                smsc_log_error(logger, "Dialog[%u]: Invoke[%u].Error[%u]: %s",
+                smsc_log_error(logger, "Dialog[0x%X]: Invoke[%u].Error[%u]: %s",
                     (unsigned)_dId, (unsigned)invId, (unsigned)op[0], exc.what());
                 delete resParm;
             }
         } else
-            smsc_log_error(logger, "Dialog[%u]: Invoke[%u]: unregistered Error[%u]",
+            smsc_log_error(logger, "Dialog[0x%X]: Invoke[%u]: unregistered Error[%u]",
                             (unsigned)_dId, (unsigned)invId, (unsigned)op[0]);
         //NOTE: notifyResultListeners() may lead to ~Dialog()/reset() being called !!!
         //ResultListener should copy 'resParm', not take its ownership !
         unsigned dlgId = (unsigned)_dId;
         try { invCp.notifyResultListener(&resErr, Invoke::resError);
         } catch (std::exception & exc) {
-            smsc_log_error(logger, "Dialog[%u]: Invoke[%u].Error[%u] listener: %s",
+            smsc_log_error(logger, "Dialog[0x%X]: Invoke[%u].Error[%u] listener: %s",
                 dlgId, (unsigned)invId, (unsigned)op[0], exc.what());
         } catch (...) {
-            smsc_log_error(logger, "Dialog[%u]: Invoke[%u].Error[%u] listener: unknown exception", 
+            smsc_log_error(logger, "Dialog[0x%X]: Invoke[%u].Error[%u] listener: unknown exception", 
                 dlgId, (unsigned)invId, (unsigned)op[0]);
         }
-        smsc_log_debug(logger, "Dialog[%u]: releasing Invoke[%u].(%u): respType: %d, status: %d",
+        smsc_log_debug(logger, "Dialog[0x%X]: releasing Invoke[%u].(%u): respType: %d, status: %d",
             dlgId, (unsigned)invId, (unsigned)invCp.getOpcode(), invCp.getResultType(),
             invCp.getStatus());
     }

@@ -85,7 +85,7 @@ USHORT_T EINSS7_I97TContinueInd(UCHAR_T          ssn,
 {
     smsc_log_debug(tcapLogger, "CONTINUE_IND {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  DialogID: 0x%X\n"
+                    "  Dialog[0x%X]\n"
                     "  PriOrder: 0x%X, QoS: 0x%X\n"
                     "  Comp. present: %s\n"
                     "  App. context: %s\n"
@@ -113,7 +113,7 @@ USHORT_T EINSS7_I97TAddressInd(UCHAR_T ssn,
 {
     smsc_log_debug(tcapLogger, "ADDRESS_IND {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  DialogID: 0x%X\n"
+                    "  Dialog[0x%X]\n"
                     "  Bitmask: 0x%X\n"
                     "  Org. address: %s\n"
                     "}",
@@ -138,7 +138,7 @@ USHORT_T EINSS7_I97TEndInd(UCHAR_T          ssn,
 {
     smsc_log_debug(tcapLogger, "END_IND {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  DialogID: 0x%X\n"
+                    "  Dialog[0x%X]\n"
                     "  PriOrder: 0x%X, QoS: 0x%X\n"
                     "  Comp. present: %s\n"
                     "  App. context: %s\n"
@@ -171,7 +171,7 @@ USHORT_T EINSS7_I97TInvokeInd(UCHAR_T          ssn,
 {
     smsc_log_debug(tcapLogger, "INVOKE_IND {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  DialogID: 0x%X, LastComponent: %s\n"
+                    "  Dialog[0x%X], LastComponent: %s\n"
                     "  InvokeID: 0x%X, LinkedId: %s\n"
                     "  Operation: %s, Tag: %s\n"
                     "  Params[%u]: %s\n"
@@ -205,7 +205,7 @@ USHORT_T EINSS7_I97TResultNLInd(UCHAR_T          ssn,
 {
     smsc_log_debug(tcapLogger, "RESULT_NL_IND {"
                     "  SSN: %u\n, UserID: %u, TcapInstanceID: %u\n"
-                    "  DialogID: 0x%X, LastComponent: %s\n"
+                    "  Dialog[0x%X], LastComponent: %s\n"
                     "  InvokeID: 0x%X\n"
                     "  Operation: %s, Tag: %s\n"
                     "  Params[%u]: %s\n"
@@ -236,7 +236,7 @@ USHORT_T EINSS7_I97TResultLInd( UCHAR_T          ssn,
 {
     smsc_log_debug(tcapLogger, "RESULT_L_IND {"
                     "  SSN: %u\n, UserID: %u, TcapInstanceID: %u\n"
-                    "  DialogID: 0x%X, LastComponent: %s\n"
+                    "  Dialog[0x%X], LastComponent: %s\n"
                     "  InvokeID: 0x%X\n"
                     "  Operation: %s, Tag: %s\n"
                     "  Params[%u]: %s\n"
@@ -266,8 +266,8 @@ USHORT_T EINSS7_I97TUErrorInd(UCHAR_T          ssn,
                               UCHAR_T          *pm)
 {
     smsc_log_debug(tcapLogger, "U_ERROR_IND {"
-                    "  SSN: %u\n, UserID: %u, TcapInstanceID: %u\n"
-                    "  DialogID: 0x%X, LastComponent: %s\n"
+                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
+                    "  Dialog[0x%X], LastComponent: %s\n"
                     "  InvokeID: 0x%X\n"
                     "  Error: %s, Tag: %s\n"
                     "  Params[%u]: %s\n"
@@ -294,7 +294,7 @@ USHORT_T EINSS7_I97TPAbortInd(UCHAR_T          ssn,
 {
     smsc_log_debug(tcapLogger, "P_ABORT_IND {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  DialogID: 0x%X\n"
+                    "  Dialog[0x%X]\n"
                     "  PriOrder: 0x%X, QoS: 0x%X\n"
                     "  Abort cause: 0x%X\n"
                     "}",
@@ -322,7 +322,7 @@ USHORT_T EINSS7_I97TUAbortInd(UCHAR_T          ssn,
 {
     smsc_log_debug(tcapLogger, "U_ABORT_IND {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  DialogID: 0x%X\n"
+                    "  Dialog[0x%X]\n"
                     "  PriOrder: 0x%X, QoS: 0x%X\n"
                     "  Abort info: %s\n"
                     "  App. context: %s\n"
@@ -348,7 +348,7 @@ USHORT_T EINSS7_I97TLCancelInd( UCHAR_T          ssn,
 {
     smsc_log_debug(tcapLogger, "L_CANCEL_IND {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  DialogID: 0x%X, InvokeId: 0x%X\n"
+                    "  Dialog[0x%X], InvokeId: 0x%X\n"
                     "}",
                     ssn, userId, tcapInstanceId, dialogueId, invokeId
                    );
@@ -379,7 +379,7 @@ USHORT_T EINSS7_I97TBeginInd(UCHAR_T          ssn,
 {
     smsc_log_debug(tcapLogger, "BEGIN_IND {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  DialogID: 0x%X\n"
+                    "  Dialog[0x%X]\n"
                     "  PriOrder: 0x%X, QoS: 0x%X\n"
                     "  Comp. present: %s\n"
                     "  Dest. address: %s\n"
@@ -448,7 +448,7 @@ USHORT_T EINSS7_I97TNoticeInd(UCHAR_T          ssn,
 {
     smsc_log_debug(tcapLogger, "NOTICE_IND {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  DialogID: 0x%X, RelDialogID: 0x%X\n"
+                    "  Dialog[0x%X], RelDialog[0x%X]\n"
                     "  ReportCause: 0x%X, ReturnIndicator: 0x%X\n"
                     "  SegmentationIndicator: 0x%X\n"
                     "  Dest. address: %s\n"
@@ -475,7 +475,7 @@ USHORT_T EINSS7_I97TURejectInd( UCHAR_T          ssn,
 {
     smsc_log_debug(tcapLogger, "U_REJECT_IND {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  DialogID: 0x%X, LastComponent: %s\n"
+                    "  Dialog[0x%X], LastComponent: %s\n"
                     "  InvokeId: %s\n"
                     "  ProblemCode: 0x%X, ProblemCodeTag: 0x%X\n"
                     "}",
@@ -499,7 +499,7 @@ USHORT_T EINSS7_I97TLRejectInd(UCHAR_T          ssn,
 {
     smsc_log_debug(tcapLogger, "L_REJECT_IND {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  DialogID: 0x%X\n"
+                    "  Dialog[0x%X]\n"
                     "  InvokeId: %s\n"
                     "  ProblemCode: 0x%X, ProblemCodeTag: 0x%X\n"
                     "}",
@@ -523,7 +523,7 @@ USHORT_T EINSS7_I97TRRejectInd(UCHAR_T          ssn,
 {
     smsc_log_debug(tcapLogger, "R_REJECT_IND {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  DialogID: 0x%X, LastComponent: %s\n"
+                    "  Dialog[0x%X], LastComponent: %s\n"
                     "  InvokeId: %s\n"
                     "  ProblemCode: 0x%X, ProblemCodeTag: 0x%X\n"
                     "}",

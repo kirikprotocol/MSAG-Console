@@ -67,9 +67,6 @@ public:
     Dialog(USHORT_T dlgId, ACOID::DefinedOIDidx dialog_ac_idx, USHORT_T msg_user_id,
            const SCCP_ADDRESS_T & loc_addr, const SCCP_ADDRESS_T & rmt_addr,
            Logger * uselog = NULL);
-    //reinitializes Dialog to be reused with other id and remote address
-    void reset(USHORT_T new_id, const SCCP_ADDRESS_T * rmt_addr = NULL);
-
     enum {
         tcUserGeneralError = 0
     };
@@ -77,7 +74,7 @@ public:
     void addListener(DialogListener* pListener);
     void removeListener(DialogListener* pListener);
 
-    const TC_DlgState & getState(void) const { return _state; }
+    TC_DlgState getState(void);
 
     USHORT_T getId(void)      const { return _dId;     }
     //returns the default timeout for Invokes
@@ -133,8 +130,11 @@ public:
 protected:
     friend class SSNSession;
     virtual ~Dialog();
+    //reinitializes Dialog to be reused with other id and remote address
+    void reset(USHORT_T new_id, const SCCP_ADDRESS_T * rmt_addr = NULL);
 
 private:
+    void clearInvokes(void);
     void checkSS7res(const char * descr, USHORT_T result) throw(CustomException);
     UCHAR_T  getNextInvokeId(void)  { return _lastInvId++; }
 
