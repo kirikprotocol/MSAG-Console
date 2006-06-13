@@ -37,25 +37,6 @@ public:
                                                             time_t queried = 0) = 0;
 };
 
-
-class InAbonentQueryListenerITF {
-public:
-    virtual void onAbonentQueried(const AbonentId & ab_number, AbonentBillType ab_type) = 0;
-};
-
-class InAbonentProviderITF {
-public:
-    //binds AbonentCache to Provider
-    virtual void bindCache(AbonentCacheITF * cache) = 0;
-    //Starts query and binds listener to it. If AbonentCache is bound, the abonent info
-    //will be stored in it on query completion. 
-    //Returns true if query succesfully started, false otherwise
-    virtual bool startQuery(const AbonentId & ab_number, InAbonentQueryListenerITF * pf_cb) = 0;
-    //Unbinds query listener, cancels query if no listeners remain.
-    virtual void cancelQuery(const AbonentId & ab_number, InAbonentQueryListenerITF * pf_cb) = 0;
-    virtual void cancelAllQueries(void) = 0;
-};
-
 struct AbonentRecord {
     AbonentBillType ab_type;
     time_t          tm_queried;
