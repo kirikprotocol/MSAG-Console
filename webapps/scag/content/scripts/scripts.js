@@ -52,7 +52,7 @@ function validateField_port(elem)
 	var intValue = elem.value/1;   
 	return isNaN(intValue) || intValue >= 0xFFFF || intValue < 0
 		//? validationError(elem, "Port must be integer less than " + 0xFFFF)
-		? validationError(elem, portErrorMsg + 0xFFFF)
+		? validationError(elem, '<fmt:message>scripts.portErrorMsg</fmt:message>' + 0xFFFF)
 		: true;
 }
 
@@ -79,7 +79,7 @@ function validateField_mask(elem)
 			&& (elem.value.match(special_pattern1) == null || elem.value.match(special_pattern2) == null)
 		   )
 		//? validationError(elem, "Invalid mask")
-		? validationError(elem, maskErrorMsg)
+		? validationError(elem, '<fmt:message>scripts.maskErrorMsg</fmt:message>')
 		: true;
 }
 
@@ -92,7 +92,7 @@ function validateField_select(elem)
 {
 	return (elem.selectedIndex == 0)
 		//? validationError(elem, "Please, select something")
-		? validationError(elem, selectErrorMsg)
+		? validationError(elem, '<fmt:message>scripts.selectErrorMsg</fmt:message>')
 		: true;
 }
 
@@ -101,7 +101,7 @@ function validateField_priority(elem)
 	var intValue = elem.value/1;
 	return isNaN(intValue) || intValue < 0  || intValue > (0x10000/2)
 		//? validationError(elem, "Priority must be positive integer less than " + (0x10000/2))
-		? validationError(elem, priorityErrorMsg + (0x10000/2))
+		? validationError(elem, '<fmt:message>scripts.priorityErrorMsg</fmt:message>' + (0x10000/2))
 		: true;
 }
 
@@ -110,7 +110,7 @@ function validateField_route_serviceId(elem)
 	var intValue = elem.value/1;
 	return isNaN(intValue) || intValue < 0
 		//? validationError(elem, "Service ID must be positive integer")
-		? validationError(elem, servIDErrorMsg)
+		? validationError(elem, '<fmt:message>scripts.servIDErrorMsg</fmt:message>')
 		: true;
 }
 
@@ -118,7 +118,7 @@ function validateField_nonEmpty(elem)
 {
 	return elem.value == null || elem.value.length == 0
 		//? validationError(elem, "Must be not empty")
-		? validationError(elem, nonEmptyErrorMsg)
+		? validationError(elem, '<fmt:message>scripts.nonEmptyErrorMsg</fmt:message>')
 		: true;
 }
 
@@ -129,7 +129,7 @@ function validateField_language(elem)
 	if (!result) elem.value = defaultLanguage;
 	return result
 		? true
-		: validationError(elem, nonLanguageErrorMsg);
+		: validationError(elem, '<fmt:message>scripts.nonLanguageErrorMsg</fmt:message>');
 }
 
 function validateField_email(elem)
@@ -137,7 +137,7 @@ function validateField_email(elem)
 	//var r = RegExp("(^).*\@.*\..*$");
 	var r = /(^).*\@.*\..*$/
 	return elem.value == null || elem.value.match(r) == null
-		? validationError(elem, maskErrorMsg)
+		? validationError(elem, '<fmt:message>scripts.maskErrorMsg</fmt:message>')
 		: true;
 }
 
@@ -145,7 +145,7 @@ function validateField_positive(elem)
 {
 	var intValue = elem.value/1;
 	return isNaN(intValue) || intValue <= 0
-		? validationError(elem, valueErrorMsg)
+		? validationError(elem, '<fmt:message>scripts.valueErrorMsg</fmt:message>')
 		: true;
 }
 
@@ -155,7 +155,7 @@ function validateField_int_range(elem)
 	var intMin = elem.range_min == null ? (1/0) : (elem.range_min/1);
 	var intMax = elem.range_max == null ? (1/0) : (elem.range_max/1);
 	return isNaN(intValue) || ((!isNaN(intMin)) && intValue < intMin) || ((!isNaN(intMax)) && intValue > intMax)
-		? validationError(elem, rangeValueErrorMsg_pre+elem.range_min+", "+elem.range_max+"]")
+		? validationError(elem, '<fmt:message>scripts.rangeValueErrorMsg_pre</fmt:message>'+elem.range_min+", "+elem.range_max+"]")
 		: true;
 }
 
@@ -165,7 +165,7 @@ function validateField_unsigned(elem)
 	//var r = RegExp("^(\\s*)(\\d+)(\\s*)$");
 	var r = /^(\s*)(\d+)(\s*)$/;
 	return elem.value == null || elem.value.match(r) == null
-		? validationError(elem, valueSignErrorMsg)
+		? validationError(elem, '<fmt:message>scripts.valueSignErrorMsg</fmt:message>')
 		: true;
 }
 
@@ -181,7 +181,7 @@ function validateField_address(elem)
     var r2 = /^\.5\.0\.[ _\-:0-9A-Za-z]{1,20}$/;
 
 	return elem.value == null || (elem.value.match(r1) == null && elem.value.match(r2) == null)
-		? validationError(elem, addressErrorMsg)
+		? validationError(elem, '<fmt:message>scripts.addressErrorMsg</fmt:message>')
 		: true;
 }
 
@@ -197,7 +197,7 @@ function validateField_address_prefix(elem)
 	var r2 = /^\.5\.0\.[ _\-:0-9A-Za-z\*]{1,20}$/;
 
 	return elem.value == null || (elem.value.match(r1) == null && elem.value.match(r2) == null)
-		? validationError(elem, addrPreErrorMsg)
+		? validationError(elem, '<fmt:message>scripts.addrPreErrorMsg</fmt:message>')
 		: true;
 }
 
@@ -212,7 +212,7 @@ function validateField_id(elem)
 	var r = /^[a-zA-Z_0-9]+$/
 
 	return elem.value == null || elem.value.length == 0 || elem.value.match(r) == null
-		? validationError(elem, idErrorMsg)
+		? validationError(elem, '<fmt:message>scripts.idErrorMsg</fmt:message>')
 		: true;
 }
 
@@ -225,7 +225,7 @@ function validateField_reschedule(elem)
 	var r = /^(\d+[s|m|h|d](\:\d+)?\,)*(\d+[s|m|h|d](\:(\d+|\*))?)$/
 
 	return elem.value == null || elem.value.match(r) == null
-		? validationError(elem, policyErrorMsg)
+		? validationError(elem, '<fmt:message>scripts.policyErrorMsg</fmt:message>')
 		: true;
 }
 
@@ -234,36 +234,18 @@ var release_causes = [1,2,3,4,5,8,9,16,17,18,19,20,21,22,27,28,29,31,34,38,41,42
 function validateField_release_cause(elem)
 {
 	if (elem.value == null || elem.value.length == 0)
-		return validationError(elem, causeNullValueErrorMsg);
+		return validationError(elem, '<fmt:message>scripts.causeNullValueErrorMsg</fmt:message>');
 
 	var intValue = elem.value/1;
 	if (isNaN(intValue) || intValue <= 0)
-		return validationError(elem, causePositiveErrorMsg);
+		return validationError(elem, '<fmt:message>scripts.causePositiveErrorMsg</fmt:message>');
 
   for (var e in release_causes)
     if (intValue == release_causes[e]) return true;
 
-  return validationError(elem, causeValueErrorMsg_pre+intValue+causeValueErrorMsg_post);
+  return validationError(elem, '<fmt:message>scripts.causeValueErrorMsg_pre</fmt:message>'+intValue+'<fmt:message>scripts.causeValueErrorMsg_post</fmt:message>');
 }
 
-function validateField_ruleName(elem)
-{
-   var pattern = /^.*["&<>'].*$/;
-   if (elem.value == null || elem.value.length == 0)
-   {
-	 validationError(elem, nonEmptyErrorMsg)
-	 //validationError(elem, "Must be not empty");
-	 return false;
-   }
-   else if (elem.value.match(pattern) != null)
-   {
-     validationError(elem, wrongRuleNameMsg)
-     //validationError(elem, "Rule name can't contain \", < , > , & , \' character(s)");
-     return false;
-   }
-   else
-     return true;
-}
 
 function validateField(elem)
 {
@@ -286,9 +268,8 @@ function validateField(elem)
 		case "reschedule": return validateField_reschedule(elem);
 		case "release_cause": return validateField_release_cause(elem);
 		case "language": return validateField_language(elem);
-		case "ruleName": return validateField_ruleName(elem);
 	}
-	alert(unknownValidationTypeErrorMsg + ": "+elem.validation);
+	alert('<fmt:message>scripts.unknownValidationTypeErrorMsg</fmt:message>' + ": "+elem.validation);
 	return false;
 }
 

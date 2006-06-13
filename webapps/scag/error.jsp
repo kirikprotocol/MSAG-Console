@@ -2,7 +2,7 @@
                  java.io.StringWriter,
                  ru.sibinco.lib.SibincoException,
                  ru.sibinco.scag.beans.SCAGJspException,
-                 ru.sibinco.lib.LocaleMessages,
+                 ru.sibinco.scag.util.LocaleMessages,
                  java.util.Locale,
                  java.security.Principal"%>
 <%@page isErrorPage="true"%>
@@ -29,7 +29,7 @@
     pageContext.setAttribute("exception", e);
     String message = "Unknown exception";
     if (e.getCode() != null)
-      message = LocaleMessages.getInstance().getMessage(request.getLocale(), e.getCode().getId());
+      message = LocaleMessages.getInstance().getMessage(session, e.getCode().getId());
     if (message == null)
       message = e.getMessage();
     pageContext.setAttribute("e_message", message);

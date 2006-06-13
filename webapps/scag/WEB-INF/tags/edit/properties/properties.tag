@@ -1,5 +1,6 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%@ tag body-content="scriptless" %>
 <%@ attribute name="title" required="false" %>
 <%@ attribute name="noColoredLines" required="false" %>
@@ -13,7 +14,7 @@
     <input type="hidden" name="add" value="${fn:escapeXml(bean.add)}">
 </c:if>
 
-<div class=page_subtitle>${fn:escapeXml(title)}</div>
+<div class=page_subtitle><c:if test="${!empty title}"><fmt:message>${fn:escapeXml(title)}</fmt:message></c:if></div>
 
 <table class=properties_list cellspacing=0 cellpadding=0>
     <c:if test="${!SCAG_EDIT_PROPERTIES_noHeaders}">

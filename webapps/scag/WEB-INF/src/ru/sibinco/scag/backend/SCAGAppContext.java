@@ -21,6 +21,7 @@ import ru.sibinco.scag.backend.operators.OperatorManager;
 import ru.sibinco.scag.perfmon.PerfServer;
 import ru.sibinco.scag.svcmon.SvcMonServer;
 import ru.sibinco.scag.scmon.ScServer;
+import ru.sibinco.scag.util.LocaleManager;
 import ru.sibinco.tomcat_auth.XmlAuthenticator;
 
 import javax.sql.DataSource;
@@ -50,6 +51,7 @@ public class SCAGAppContext {
     private final ScagRoutingManager scagRoutingManager;
     private final HttpRoutingManager httpRoutingManager;
     private final ResourceManager resourceManager;
+    private final LocaleManager localeManager;
     private final PerfServer perfServer;
     private final SvcMonServer svcMonServer;
     private final ScServer scServer;
@@ -88,6 +90,7 @@ public class SCAGAppContext {
             String xsdFolder = gwConfigFolder + config.getString("gw location.xsd_folder");
             String xslFolder = gwConfigFolder + config.getString("gw location.xsl_folder");
             resourceManager = new ResourceManager(scagConfFolder);
+            localeManager = new LocaleManager(config.getString("locales_file"));
             scagDaemon = new Daemon(gwDaemonHost, (int) config.getInt("gw daemon.port"), smppManager, config.getString("gw daemon.folder"));
             final ServiceInfo scagServiceInfo = (ServiceInfo) scagDaemon.getServices().get(config.getString("gw name"));
             if (scagServiceInfo != null) {
@@ -180,6 +183,10 @@ public class SCAGAppContext {
 
     public ResourceManager getResourceManager() {
         return resourceManager;
+    }
+
+    public LocaleManager getLocaleManager() {
+        return localeManager;
     }
 
     public Daemon getScagDaemon() {

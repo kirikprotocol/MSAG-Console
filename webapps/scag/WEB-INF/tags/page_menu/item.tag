@@ -1,4 +1,5 @@
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%><%@
+   taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%><%@
  tag body-content="empty"%><%@
  attribute name="name" required="true"%><%@
  attribute name="value" required="true" %><%@
@@ -22,11 +23,11 @@
 
 <c:if test="${page_menu_delimiter_needed}"><td width=1px>|</td></c:if>
     <td width=1px>
-        <a id="${name}" jbuttonName="${name}" jbuttonValue="${value}" title="${title}"
+        <a id="${name}" jbuttonName="${name}" jbuttonValue="${value}" title="<fmt:message>${title}</fmt:message>"
             <c:if test="${!empty enabled && !enabled}">disabled</c:if>
             <c:if test="${!empty onclick}">jbuttonOnclick="${onclick}"</c:if>
             <c:if test="${isCheckSensible}">isCheckSensible="${isCheckSensible}"</c:if>>
-        ${value}
+        <fmt:message>${value}</fmt:message>
         </a>
     </td>
 <c:set var="page_menu_delimiter_needed" value="true" scope="request"></c:set>
@@ -35,7 +36,7 @@
 
         <c:if test="${page_menu_delimiter_needed}"><td width=1px>|</td></c:if>
             <td width=1px>
-                <input type=submit id="${name}" name="${name}" value="${value}" title="${title}"
+                <input type=submit id="${name}" name="${name}" value="<fmt:message>${value}</fmt:message>" title="<fmt:message>${title}</fmt:message>"
                     <c:if test="${!empty enabled && !enabled}">disabled</c:if>
                     <c:if test="${!empty onclick}">jbuttonOnclick="${onclick}"</c:if>
                     <c:if test="${isCheckSensible}">isCheckSensible="${isCheckSensible}"</c:if>>
@@ -49,7 +50,7 @@ else{
     %>
     <c:if test="${page_menu_delimiter_needed}"><td width=1px>|</td></c:if>
             <td width=1px>
-                <input type="submit" id="${name}" name="${name}" value="${value}" title="${title}"
+                <input type="submit" id="${name}" name="${name}" value="<fmt:message>${value}</fmt:message>" title="<fmt:message>${title}</fmt:message>"
                     <c:if test="${!empty enabled && !enabled}">disabled</c:if>
                     <c:if test="${!empty onclick}">jbuttonOnclick="${onclick}"</c:if>
                     <c:if test="${isCheckSensible}">isCheckSensible="${isCheckSensible}"</c:if>>

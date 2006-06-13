@@ -11,8 +11,10 @@ import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.scag.backend.SCAGAppContext;
 
 import javax.servlet.*;
+import javax.servlet.jsp.jstl.core.Config;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.util.ArrayList;
 
 
 public class SCAGFilter implements Filter {
@@ -28,6 +30,7 @@ public class SCAGFilter implements Filter {
         this.config = config;
         try {
             appContext = SCAGAppContext.getInstance(config.getServletContext().getInitParameter("AppConfigFile"));
+            setdefaultLocale();
         } catch (Throwable t) {
             logger.fatal("Could not initialize application", t);
             throw new ServletException("Could not initialize application", t);
@@ -37,6 +40,7 @@ public class SCAGFilter implements Filter {
     public void destroy() {
         appContext.destroy();
         defaultEncoding = "ISO-8859-1";
+        config.getServletContext().removeAttribute("localesList");
         config = null;
         appContext = null;
     }
@@ -61,4 +65,17 @@ public class SCAGFilter implements Filter {
         chain.doFilter(req, resp);
     }
 
+    private void setdefaultLocale() throws Throwable {
+      String language = config.getServletContext().getInitParameter("javax.servlet.jsp.jstl.fmt.locale");
+      ArrayList localesList = null;
+      try {
+        localesList = appContext.getLocaleManager().validate(language);
+      } catch (Throwable t) {
+        t.printStackTrace();
+        throw t;
+      }
+      config.getServletContext().setAttribute("localesList",localesList);
+      Config.set(config.getServletContext(), Config.FMT_LOCALIZATION_CONTEXT, config.getServletContext().getInitParameter("javax.servlet.jsp.jstl.fmt.localizationContext"));
+      Config.set(config.getServletContext(), Config.FMT_LOCALE, language);
+    }
 }

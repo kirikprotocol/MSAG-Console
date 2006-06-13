@@ -89,7 +89,7 @@ public class MenuItem  implements Serializable {
         this.key = key;
     }
 
-    public String getCaption() {
+    public String getCaption(ResourceBundle messages) {
         if (key != null) {
             try {
                 return messages.getString(key);
@@ -120,13 +120,13 @@ public class MenuItem  implements Serializable {
         this.subMenu = subMenu;
     }
 
-    public int getSubMenuWidth() {
+    public int getSubMenuWidth(ResourceBundle messages) {
         subMenuWidth = 0;
         Collection items = getSubMenu();
         for(Iterator it = items.iterator(); it.hasNext();){
             MenuItem item = (MenuItem) it.next();
-            if(subMenuWidth < (item.getCaption().length() + 2) * 7){
-                subMenuWidth = (item.getCaption().length() + 2) * 7;
+            if(subMenuWidth < (item.getCaption(messages).length() + 2) * 7){
+                subMenuWidth = (item.getCaption(messages).length() + 2) * 7;
             }
         }
         return subMenuWidth;

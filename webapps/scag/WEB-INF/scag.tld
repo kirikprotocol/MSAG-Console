@@ -10,19 +10,19 @@
   <function>
     <description>Checks if string is present in string array.</description>
     <name>contains</name>
-    <function-class>ru.sibinco.lib.backend.util.TagLibFunctions</function-class>
+    <function-class>ru.sibinco.scag.util.TagLibFunctions</function-class>
     <function-signature>boolean contains( java.lang.String[] , java.lang.String)</function-signature>
   </function>
   <function>
     <description>Checks if item (by id) is checked.</description>
     <name>checked</name>
-    <function-class>ru.sibinco.lib.backend.util.TagLibFunctions</function-class>
+    <function-class>ru.sibinco.scag.util.TagLibFunctions</function-class>
     <function-signature>boolean checked(ru.sibinco.lib.bean.TabledBean, java.lang.String)</function-signature>
   </function>
   <function>
     <description>Checks if obj is String.</description>
     <name>isString</name>
-    <function-class>ru.sibinco.lib.backend.util.TagLibFunctions</function-class>
+    <function-class>ru.sibinco.scag.util.TagLibFunctions</function-class>
     <function-signature>boolean isString(java.lang.Object)</function-signature>
     </function>
   <function>
@@ -34,20 +34,20 @@
   <function>
     <description>Checks if obj is boolean.</description>
     <name>isBoolean</name>
-    <function-class>ru.sibinco.lib.backend.util.TagLibFunctions</function-class>
+    <function-class>ru.sibinco.scag.util.TagLibFunctions</function-class>
     <function-signature>boolean isBoolean(java.lang.Object)</function-signature>
   </function>
   <function>
     <description>Concatenates two strings (because EL or jstl cannot do it!).</description>
     <name>concat</name>
-    <function-class>ru.sibinco.lib.backend.util.TagLibFunctions</function-class>
+    <function-class>ru.sibinco.scag.util.TagLibFunctions</function-class>
     <function-signature>boolean concat(java.lang.String, java.lang.String)</function-signature>
   </function>
   <function>
     <description>Returns locale message for SMSC error code (optionally extended by errcode value).</description>
     <name>getErrorMessage</name>
-    <function-class>ru.sibinco.lib.backend.util.TagLibFunctions</function-class>
-    <function-signature>java.lang.String getErrorMessage(java.util.Locale, int, boolean)</function-signature>
+    <function-class>ru.sibinco.scag.util.TagLibFunctions</function-class>
+    <function-signature>java.lang.String getErrorMessage(javax.servlet.http.HttpSession,int, boolean)</function-signature>
   </function>
 </taglib>
 

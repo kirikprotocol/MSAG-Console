@@ -53,7 +53,7 @@
             String messagecause = null;
             String messagecauseresult = null;
             if (e.getCode() != null)
-              message = ru.sibinco.lib.LocaleMessages.getInstance().getMessage(request.getLocale(), e.getCode().getId());
+              message = ru.sibinco.scag.util.LocaleMessages.getInstance().getMessage(session,e.getCode().getId());
             if (message == null)
               message = (e.getCode()==null)?"Unknown exception":e.getCode().getId();
             messageresult = java.text.MessageFormat.format(messageresult,new Object[]{message});
@@ -65,7 +65,7 @@
                cause = (ru.sibinco.scag.beans.SCAGJspException)cause;
                messagecauseresult = cause.getMessage();
             if (((ru.sibinco.scag.beans.SCAGJspException)cause).getCode()!=null) {
-              messagecause = ru.sibinco.lib.LocaleMessages.getInstance().getMessage(request.getLocale(), ((ru.sibinco.scag.beans.SCAGJspException)cause).getCode().getId());
+              messagecause = ru.sibinco.scag.util.LocaleMessages.getInstance().getMessage(session,((ru.sibinco.scag.beans.SCAGJspException)cause).getCode().getId());
             }
             if (messagecause == null)
                  messagecause = (((ru.sibinco.scag.beans.SCAGJspException)cause).getCode()==null)?"Unknown exception":((ru.sibinco.scag.beans.SCAGJspException)cause).getCode().getId();

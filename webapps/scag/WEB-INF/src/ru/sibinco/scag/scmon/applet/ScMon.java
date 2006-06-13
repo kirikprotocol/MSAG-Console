@@ -42,9 +42,12 @@ public class ScMon extends Applet implements Runnable, MouseListener, ActionList
     public void init() {
 
         System.out.println("Initing...");
-        locale = new Locale(getParameter("locale.language").toLowerCase(), getParameter("locale.country").toLowerCase());
-        localText = ResourceBundle.getBundle("ru.sibinco.scag.scmon.applet.text", locale);
-        messagesText = ResourceBundle.getBundle("ru.sibinco.scag.scmon.applet.text", locale);
+        String country =  getParameter("locale.country");
+        if (country!=null)
+          locale = new Locale(getParameter("locale.language").toLowerCase(),country.toLowerCase());
+        else locale = new Locale(getParameter("locale.language").toLowerCase());
+        localText = ResourceBundle.getBundle("locales.messages", locale);
+        messagesText = ResourceBundle.getBundle("locales.messages", locale);
         maxSpeed = Integer.valueOf(getParameter("max.speed")).intValue();
         graphScale = Integer.valueOf(getParameter("graph.scale")).intValue();
         graphGrid = Integer.valueOf(getParameter("graph.grid")).intValue();

@@ -1,5 +1,7 @@
 <%@
  taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%><%@
+ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%>
+<%@ 
  taglib prefix="sm" tagdir="/WEB-INF/tags"%><%@
  taglib prefix="sm-mm" tagdir="/WEB-INF/tags/main_menu"%><%@
 
@@ -49,10 +51,13 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
   }
 
 %>
+<%if (request.getParameter("locale")!=null) {%>
+  <fmt:setLocale value="<%=request.getParameter("locale")%>" scope="session"/>
+<%}%>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
-  <title>MSA Gateway Administration Console<c:if test="${!empty title}">: ${title}</c:if></title>
+  <title><fmt:message>common.title</fmt:message><c:if test="${!empty title}">: <fmt:message>${title}<c:if test="${!empty param.editId}"><fmt:param value="${param.editId}"/></c:if></fmt:message></c:if></title>
   <base href="<%=request.getScheme()%>://<%=request.getServerName()%>:<%=request.getServerPort()+request.getContextPath()%>/">
   <link rel="STYLESHEET" type="text/css" href="content/styles/colors.css">
   <link rel="STYLESHEET" type="text/css" href="content/styles/common.css">
@@ -68,10 +73,11 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
   <link rel="STYLESHEET" type="text/css" href="content/styles/calendar.css">
 
   <link rel="STYLESHEET" type="text/css" href="collapsing_tree.css">
-
-  <script src="content/scripts/scripts.js" type="text/javascript"></script>
-  <script src="content/scripts/calendar.js" type="text/javascript"></script>
-  <script src="content/scripts/scripts_msg_en.js" type="text/javascript"></script>
+  <script> <%@include file = "/content/scripts/scripts.js" %> </script>
+  <script> <%@include file = "/content/scripts/calendar_msg.js" %> </script>
+<%--  <script src="content/scripts/scripts.js" type="text/javascript"></script>--%>
+<%--  <script src="content/scripts/scripts_msg_<%=ru.sibinco.scag.util.LocaleMessages.getInstance().getCurBundleLocaleLanguage()%>.js" type="text/javascript"></script>--%>
+<%--  <script src="content/scripts/calendar_msg_<%=ru.sibinco.scag.util.LocaleMessages.getInstance().getCurBundleLocaleLanguage()%>.js" type="text/javascript"></script>--%>
 </head>
 <body onload="initjsDOMenu(); ${onLoad}">
   <!--calendar-->
@@ -205,24 +211,31 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
       <!-- main menu -->
       <sm-mm:top_menu/>
 
-      <table width="100%" id="MAIN_MENU_TABLE" border="0"  cellspacing="0" cellpadding="0" class="main_menu">
-		<tr>
+    <table width="100%" id="MAIN_MENU_TABLE" border="0"  cellspacing="0" cellpadding="0" class="main_menu">
+		 <tr>
 			<td background="content/images/smsc_13.jpg" width="26"></td>
 			<td background="content/images/smsc_14.jpg" width="100%">&nbsp;</td>
+      <%
+        java.util.ArrayList localesList = (java.util.ArrayList)application.getAttribute("localesList");
+        for (int i=0;i<localesList.size();i++) {
+          ru.sibinco.scag.util.LocaleManager.SCAGLocale locale = (ru.sibinco.scag.util.LocaleManager.SCAGLocale)localesList.get(i);
+          out.println("<td background=\"content/images/smsc_14.jpg\"><a href=\"?locale="+locale.locale.getLanguage()+"\"><img src=\"content/images/"+locale.icon+"\" alt="+locale.locale.getDisplayName(ru.sibinco.scag.util.LocaleMessages.getInstance().getLocale(session))+"></a></td>");
+        }
+      %>
             <%
                 if (request != null && request.getUserPrincipal() != null) {
             %>
-                   <td background="content/images/smsc_14.jpg"><a ID="MENU0_LOGOUT" href="logout.jsp">Logout&nbsp;"<%=request.getUserPrincipal().getName()%>"</a></td>
+                   <td background="content/images/smsc_14.jpg"><a ID="MENU0_LOGOUT" href="logout.jsp"><fmt:message>common.logout</fmt:message>&nbsp;"<%=request.getUserPrincipal().getName()%>"</a></td>
             <%
                 }
             %>
 			<td background="content/images/smsc_16.jpg" width="52"></td>
-		</tr>
+		 </tr>
 		</table>
 		<span id="MENU0_NONE"></span>
         <table cellpadding=0 cellspacing=0 height=30px class=smsc_status>
            <tr>
-             <th background="content/images/smsc_17.jpg" nowrap>${title}</th>
+             <th background="content/images/smsc_17.jpg" nowrap><c:if test="${!empty title}"><fmt:message>${title}<c:if test="${!empty param.editId}"><fmt:param value="${param.editId}"/></c:if></fmt:message></c:if></th>
              <td align="right">&nbsp;<%if (request.getUserPrincipal() != null) {%><span id="SCAGStatusSpan" datasrc="#tdcSCAGStatusObject" DATAFORMATAS="html" datafld="status"/><%}%></td>
              <td width=12px background="content/images/smsc_19.jpg" style="padding-right:0px;"></td>
            </tr>
