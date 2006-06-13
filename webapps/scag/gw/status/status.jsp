@@ -1,24 +1,32 @@
-<%@ page import="ru.sibinco.lib.backend.service.ServiceInfo"
+<%@ page  pageEncoding="windows-1251"
+          contentType="text/html; charset=windows-1251"
+          import="ru.sibinco.lib.backend.service.ServiceInfo,
+                  ru.sibinco.scag.util.LocaleMessages"
  %><jsp:useBean id="bean" class="ru.sibinco.scag.beans.gw.status.Status"
  />status
 <%
-  bean.process(request, response);
+  bean.process(request, response);  
+  String label = LocaleMessages.getInstance().getMessage(session,"status.unknown");
   switch(bean.getScagStatus())
   {
     case ServiceInfo.STATUS_RUNNING:
-      out.print("<img src='content/images/ic_running.gif' width=10 height=10 title='running'> running");
+      label = LocaleMessages.getInstance().getMessage(session,"status.running");
+      out.print("<img src='content/images/ic_running.gif' width=10 height=10 title='"+label+"'> "+label);
       break;
     case ServiceInfo.STATUS_STOPPING:
-      out.print("<img src='content/images/ic_stopping.gif' width=10 height=10 title='stopping'> stopping");
+      label = LocaleMessages.getInstance().getMessage(session,"status.stopping");
+      out.print("<img src='content/images/ic_stopping.gif' width=10 height=10 title='"+label+"'> "+label);
       break;
     case ServiceInfo.STATUS_STOPPED:
-      out.print("<img src='content/images/ic_stopped.gif' width=10 height=10 title='stopped'> stopped");
+      label = LocaleMessages.getInstance().getMessage(session,"status.stopped");
+      out.print("<img src='content/images/ic_stopped.gif' width=10 height=10 title='"+label+"'> "+label);
       break;
     case ServiceInfo.STATUS_STARTING:
-      out.print("<img src='content/images/ic_starting.gif' width=10 height=10 title='starting'> starting");
+      label = LocaleMessages.getInstance().getMessage(session,"status.starting");
+      out.print("<img src='content/images/ic_starting.gif' width=10 height=10 title='"+label+"'> "+label);
       break;
     default:
-      out.print("<img src='content/images/ic_unknown.gif' width=10 height=10 title='unknown'> unknown");
+      out.print("<img src='content/images/ic_unknown.gif' width=10 height=10 title='"+label+"'> "+label);
       break;
   }
 %>

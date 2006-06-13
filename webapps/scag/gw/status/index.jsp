@@ -1,16 +1,16 @@
 <%@ include file="/WEB-INF/inc/header.jspf" %>
-<sm:page title="Status" onLoad="enableDisableStartStopButtonsForSCAGStatusPage();">
+<sm:page title="status.title" onLoad="enableDisableStartStopButtonsForSCAGStatusPage();">
     <jsp:attribute name="menu">
         <sm-pm:menu>
             <sm-pm:space/>
-            <sm-pm:item name="mbStart" value="Start" title="Start SCAG" isCheckSensible="false"/>
-            <sm-pm:item name="mbStop" value="Stop" title="Stop SCAG" isCheckSensible="false"/>
+            <sm-pm:item name="mbStart" value="status.item.mbstart.value" title="status.item.mbstart.title" isCheckSensible="false"/>
+            <sm-pm:item name="mbStop" value="status.item.mbstop.value" title="status.item.mbstop.title" isCheckSensible="false"/>
         </sm-pm:menu>
     </jsp:attribute>
 
     <jsp:body>
-        <div class=page_subtitle>Status log</div>
-        <sm:scrolling columns="time, userLogin, category, message" names="time (GMT), user, category, description"
+        <div class=page_subtitle><fmt:message>status.label.status_log</fmt:message></div>
+        <sm:scrolling columns="time, userLogin, category, message" names="status.scrolling.names.time, status.scrolling.names.user, status.scrolling.names.category, status.scrolling.names.description"
                       widths="30,10,20,40"/>
         <div class=page_subtitle>&nbsp;</div>
         <script>
@@ -22,15 +22,15 @@
             }
             function enableDisableStartStopButtonsForSCAGStatusPage() {
 
-                if (document.all.SCAGStatusSpan.innerText == ' running') {
-                    enableDisableByIdFunction('mbStart', document.all.SCAGStatusSpan.innerText == ' running');
-                    enableDisableByIdFunction('mbStop', document.all.SCAGStatusSpan.innerText == ' stopped');
-                } else if (document.all.SCAGStatusSpan.innerText == ' stopped' || document.all.SCAGStatusSpan.innerText == ' stopping') {
-                    enableDisableByIdFunction('mbStop', document.all.SCAGStatusSpan.innerText == ' stopped');
-                    enableDisableByIdFunction('mbStart', document.all.SCAGStatusSpan.innerText == ' running');
-                } else if (document.all.SCAGStatusSpan.innerText == ' unknown') {
-                    enableDisableByIdFunction('mbStop', document.all.SCAGStatusSpan.innerText == ' unknown');
-                    enableDisableByIdFunction('mbStart', document.all.SCAGStatusSpan.innerText == ' unknown');
+                if (document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.running</fmt:message>') {
+                    enableDisableByIdFunction('mbStart', document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.running</fmt:message>');
+                    enableDisableByIdFunction('mbStop', document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.stopped</fmt:message>');
+                } else if (document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.stopped</fmt:message>' || document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.stopping</fmt:message>') {
+                    enableDisableByIdFunction('mbStop', document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.stopped</fmt:message>');
+                    enableDisableByIdFunction('mbStart', document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.running</fmt:message>');
+                } else if (document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.unknown</fmt:message>') {
+                    enableDisableByIdFunction('mbStop', document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.unknown</fmt:message>');
+                    enableDisableByIdFunction('mbStart', document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.unknown</fmt:message>');
                 }
                 window.setTimeout(enableDisableStartStopButtonsForSCAGStatusPage, 1000);
             }

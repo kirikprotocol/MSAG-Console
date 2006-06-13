@@ -1,7 +1,7 @@
 <%@ include file="/WEB-INF/inc/header.jspf" %>
-<%@
-        taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
-<sm:page title="Statistics" onLoad="populateArray();">
+<%@taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%>
+<sm:page title="statistics.title" onLoad="populateArray();">
 
 <jsp:attribute name="menu">
 </jsp:attribute>
@@ -12,36 +12,36 @@
 <table>
     <tr>
         <td valign="top">
-            <sm-ep:properties title="Query parameters" noEdit="true">
-                <sm-ep:list title="Transport" name="transportId" values="${fn:join(bean.transportIds, ',')}"
+            <sm-ep:properties title="statistics.properties" noEdit="true">
+                <sm-ep:list title="statistics.list.transport" name="transportId" values="${fn:join(bean.transportIds, ',')}"
                             valueTitles="${fn:join(bean.transportTitles, ',')}"/>
                     <c:choose>
                         <c:when test="${bean.administrator}">
-                            <sm-ep:list title="Service provider(s)" name="providerId"
+                            <sm-ep:list title="statistics.list.service_providers" name="providerId"
                                         values="${fn:join(bean.providerIds, ',')}"
                                         valueTitles="${fn:join(bean.providerNames, ',')}" onChange="providerChanged();"/>
                         </c:when>
                         <c:otherwise>
-                            <sm-ep:const title="Service provider" name="providerName" value="${bean.providerName}"/>
+                            <sm-ep:const title="statistics.const.service_provider" name="providerName" value="${bean.providerName}"/>
                         </c:otherwise>
                     </c:choose>
-                <sm-ep:calendar title="From date" name="fromDate"/>
+                <sm-ep:calendar title="statistics.calendar.fromdate" name="fromDate"/>
             </sm-ep:properties>
         </td>
         <td valign="bottom">
            <sm-ep:properties title="" noEdit="true">
                 <sm-ep:property title="">&nbsp;</sm-ep:property>
-                            <sm-ep:list title="Service(s)" name="serviceId"
+                            <sm-ep:list title="statistics.list.services" name="serviceId"
                                   values="${fn:join(bean.serviceIds,',')}"
                                        valueTitles="${fn:join(bean.serviceNames,',')}" onChange="serviceChanged();"/>
-                <sm-ep:calendar title="Till date" name="tillDate"/>
+                <sm-ep:calendar title="statistics.calendar.tilldate" name="tillDate"/>
             </sm-ep:properties>
          </td>
        </tr>
 </table>
 <sm:break>
     <sm-pm:menu>
-        <sm-pm:item name="mbQuery" value="Query" title="Query statistics"/>
+        <sm-pm:item name="mbQuery" value="statistics.item.value" title="statistics.item.title"/>
         <sm-pm:space/>
     </sm-pm:menu>
 </sm:break>
@@ -128,8 +128,8 @@
         <tr><td colspan="9">&nbsp;</td></tr>
         <tr><td style="cursor:hand;text-align:right"
                 onClick="toggleVisible(pgs_http,cgs_http);">
-            <div align="left" id="pgs_http" class="collapsing_list_closed"><div class="page_subtitle">General
-                statistics(for existent routes)</div>
+            <div align="left" id="pgs_http" class="collapsing_list_opened"><div class="page_subtitle">
+               <fmt:message>statistics.label.general</fmt:message></div>
             </div></td>
             <tr id="cgs_http" style="display:block"><td colspan="9" width="100%">
                 <table>
@@ -199,7 +199,8 @@
         <tr><td colspan="9">&nbsp;</td></tr>
         <tr><td style="cursor:hand;text-align:right"
                 onClick="toggleVisible(prout_http,crout_http);">
-            <div align="left" id="prout_http" class="collapsing_list_closed"><div class="page_subtitle">Traffic by existent routes</div>
+            <div align="left" id="prout_http" class="collapsing_list_opened">
+               <div class="page_subtitle"><fmt:message>statistics.label.trafic_by_routes</fmt:message></div>
             </div></td>
             <tr id="crout_http" style="display:block"><td colspan="9">
                 <table>
@@ -238,7 +239,7 @@
                                     <c:forEach var="routeErr" items="${routeStat.errors}">
                                         <tr class=row1>
                                             <td style="text-align:right"
-                                                nowrap>${fn:escapeXml(smf:getErrorMessage(pageContext.request.locale, routeErr.errcode, true))}</td>
+                                                nowrap>${fn:escapeXml(smf:getErrorMessage(pageContext.session,routeErr.errcode, true))}</td>
                                             <td style="text-align:right">${routeErr.counter}</td>
                                             <td>&nbsp;</td>
                                         </tr>
@@ -259,7 +260,9 @@
     <tr><td colspan="9">&nbsp;</td></tr>
     <tr><td style="cursor:hand;text-align:right"
             onClick="toggleVisible(psme_http,csme_http);">
-        <div align="left" id="psme_http" class="collapsing_list_closed"><div class="page_subtitle">URL activity</div></div>
+        <div align="left" id="psme_http" class="collapsing_list_opened">
+          <div class="page_subtitle"><fmt:message>statistics.label.url_activity</fmt:message></div>
+        </div>
     </td>
         <tr id="csme_http" style="display:block"><td colspan="9">
             <table>
@@ -298,7 +301,7 @@
                                 <c:forEach var="smeErr" items="${smeStat.errors}">
                                     <tr class=row1>
                                         <td style="text-align:right"
-                                            nowrap>${fn:escapeXml(smf:getErrorMessage(pageContext.request.locale, smeErr.errcode, true))}</td>
+                                            nowrap>${fn:escapeXml(smf:getErrorMessage(pageContext.session,smeErr.errcode, true))}</td>
                                         <td style="text-align:right">${smeErr.counter}</td>
                                         <td>&nbsp;</td>
                                     </tr>
@@ -323,7 +326,8 @@
     <tr><td colspan="9">&nbsp;</td></tr>
     <tr><td style="cursor:hand;text-align:right"
             onClick="toggleVisible(pgs,cgs);">
-        <div align="left" id="pgs" class="collapsing_list_closed"><div class="page_subtitle">General statistics(for existent routes)</div>
+        <div align="left" id="pgs" class="collapsing_list_opened"><div class="page_subtitle">
+           <fmt:message>statistics.label.general</fmt:message></div>
         </div></td>
         <tr id="cgs" style="display:block"><td colspan="9" width="100%">
             <table border=0>
@@ -396,7 +400,8 @@
     <tr><td colspan="9">&nbsp;</td></tr>
     <tr><td style="cursor:hand;text-align:right"
             onClick="toggleVisible(prout,crout);">
-        <div align="left" id="prout" class="collapsing_list_closed"><div class="page_subtitle">Traffic by existent routes</div>
+        <div align="left" id="prout" class="collapsing_list_opened">
+          <div class="page_subtitle"><fmt:message>statistics.label.trafic_by_routes</fmt:message></div>
         </div></td>
         <tr id="crout" style="display:block"><td colspan="9">
             <table>
@@ -407,7 +412,7 @@
                     <th width="8%" style="text-align:right">Delivered</th>
                     <th width="10%" style="text-align:right">GW Rejected</th>
                     <th width="8%" style="text-align:right">Failed</th>
-                    <th width="7%" style="text-align:right">&nbsp;</th>                    
+                    <th width="7%" style="text-align:right">&nbsp;</th>
                     <th width="15%" style="text-align:right">Reciept OK/Failed</th>
                 </tr>
                 <c:forEach var="routeStat" items="${byRoute}" varStatus="i">
@@ -436,7 +441,7 @@
                                 <c:forEach var="routeErr" items="${routeStat.errors}">
                                     <tr class=row1>
                                         <td style="text-align:right"
-                                            nowrap>${fn:escapeXml(smf:getErrorMessage(pageContext.request.locale, routeErr.errcode, true))}</td>
+                                            nowrap>${fn:escapeXml(smf:getErrorMessage(pageContext.session,routeErr.errcode, true))}</td>
                                         <td style="text-align:right">${routeErr.counter}</td>
                                         <td>&nbsp;</td>
                                     </tr>
@@ -457,7 +462,9 @@
     <tr><td colspan="9">&nbsp;</td></tr>
     <tr><td style="cursor:hand;text-align:right"
             onClick="toggleVisible(psme,csme);">
-        <div align="left" id="psme" class="collapsing_list_closed"><div class="page_subtitle">Existent SME activity</div></div>
+        <div align="left" id="psme" class="collapsing_list_opened">
+          <div class="page_subtitle"><fmt:message>statistics.label.sme_activity</fmt:message></div>
+        </div>
     </td>
         <tr id="csme" style="display:block"><td colspan="9">
             <table>
@@ -494,7 +501,7 @@
                                 <c:forEach var="smeErr" items="${smeStat.errors}">
                                     <tr class=row1>
                                         <td style="text-align:right"
-                                            nowrap>${fn:escapeXml(smf:getErrorMessage(pageContext.request.locale, smeErr.errcode, true))}</td>
+                                            nowrap>${fn:escapeXml(smf:getErrorMessage(pageContext.session,smeErr.errcode, true))}</td>
                                         <td style="text-align:right">${smeErr.counter}</td>
                                         <td>&nbsp;</td>
                                     </tr>
@@ -515,7 +522,9 @@
     <tr><td colspan=9>&nbsp;</td></tr>
     <tr><td style="cursor:hand;text-align:right"
             onClick="toggleVisible(psmsc,csmsc);">
-        <div align="left" id="psmsc" class="collapsing_list_closed"><div class="page_subtitle">Existent SMSC activity</div></div>
+        <div align="left" id="psmsc" class="collapsing_list_opened">
+          <div class="page_subtitle"><fmt:message>statistics.label.smsc_activity</fmt:message></div>
+        </div>
     </td>
         <tr id="csmsc" style="display:block"><td colspan="9" width="100%">
             <table>
@@ -552,7 +561,7 @@
                                 <c:forEach var="smscErr" items="${smscStat.errors}">
                                     <tr class=row1>
                                         <td style="text-align:right"
-                                            nowrap>${fn:escapeXml(smf:getErrorMessage(pageContext.request.locale, smscErr.errcode, true))}</td>
+                                            nowrap>${fn:escapeXml(smf:getErrorMessage(pageContext.session,smscErr.errcode, true))}</td>
                                         <td style="text-align:right">${smscErr.counter}</td>
                                         <td>&nbsp;</td>
                                     </tr>

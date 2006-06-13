@@ -2,8 +2,8 @@
 <sm:page>
     <jsp:attribute name="title">
         <c:choose>
-            <c:when test="${param.add}">Create new Service Providers</c:when>
-            <c:otherwise>Edit Service Provider</c:otherwise>
+            <c:when test="${param.add}">services.add.title</c:when>
+            <c:otherwise>services.edit.title</c:otherwise>
         </c:choose>
     </jsp:attribute>
 
@@ -11,37 +11,37 @@
 
     </jsp:attribute>
     <jsp:body>
-        <sm-ep:properties title="Service Provider info">
+        <sm-ep:properties title="services.edit.properties">
             <c:if test="${!bean.add}"><input type="hidden" name="id" id="id" value="${fn:escapeXml(bean.id)}"></c:if>
-            <sm-ep:txt title="name" name="name" validation="nonEmpty"/>
-            <sm-ep:txtBox title="description" cols="0" rows="0" name="description"/>
+            <sm-ep:txt title="services.edit.txt.name" name="name" validation="nonEmpty"/>
+            <sm-ep:txtBox title="services.edit.txtbox.description" cols="0" rows="0" name="description"/>
         </sm-ep:properties>
         <div class=page_subtitle>&nbsp;</div>
         <c:if test="${!param.add}">
         <sm-pm:menu>
-                <sm-pm:item name="mbSave" value="Done" title="Save provider info"/>
-                <sm-pm:item name="mbCancel" value="Cancel" title="Cancel provider editing" onclick="clickCancel()"/>
+                <sm-pm:item name="mbSave" value="services.edit.item.mbsave.value" title="services.edit.item.mbsave.title"/>
+                <sm-pm:item name="mbCancel" value="services.edit.item.mbcancel.value" title="services.edit.item.mbcancel.title" onclick="clickCancel()"/>
             <sm-pm:space/>
         </sm-pm:menu>
         </c:if>
         <c:if test="${!param.add}">
             <div class=page_subtitle>&nbsp;</div>
 
-            <div class=page_subtitle>Services List</div>
-            <sm:table columns="checkbox,name" names="c,name,services num" widths="1,20" child="/service" edit="name"/>
+            <div class=page_subtitle><fmt:message>services.edit.label.services_list</fmt:message></div>
+            <sm:table columns="checkbox,name" names="c,services.edit.table.names.name,services num" widths="1,20" child="/service" edit="name"/>
         </c:if>
         <div class=page_subtitle>&nbsp;</div>
         <sm-pm:menu>
             <c:if test="${!param.add}">
-                <sm-pm:item name="mbAddChild" value="Add Service" title="Add new Service"/>
+                <sm-pm:item name="mbAddChild" value="services.edit.item.mbaddchild.value" title="services.edit.item.mbaddchild.title"/>
             </c:if>
             <c:if test="${!param.add}">
-                <sm-pm:item name="mbDelete" value="Delete Service" title="Delete Service"
+                <sm-pm:item name="mbDelete" value="services.edit.item.mbdelete.value" title="services.edit.item.mbdelete.title"
                             onclick="return confirm('Are you sure to delete this object?')" isCheckSensible="true"/>
             </c:if>
             <c:if test="${param.add}">
-                <sm-pm:item name="mbSave" value="Create" title="Create provider info"/>
-                <sm-pm:item name="mbCancel" value="Cancel" title="Cancel provider editing" onclick="clickCancel()"/>
+                <sm-pm:item name="mbSave" value="services.edit.item.mbsave2.value" title="services.edit.item.mbsave2.title"/>
+                <sm-pm:item name="mbCancel" value="services.edit.item.mbcancel.value" title="services.edit.item.mbcancel.title" onclick="clickCancel()"/>
             </c:if>
             <sm-pm:space/>
         </sm-pm:menu>

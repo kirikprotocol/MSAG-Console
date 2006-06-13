@@ -18,8 +18,8 @@
 %>
 
 <applet code="ru.sibinco.scag.scmon.applet.ScMon.class" width="100%" height="100%" archive="scmon.jar">
-    <param name="locale.country" value="us">
-    <param name="locale.language" value="en">
+<%--    <param name="locale.country" value="us">--%>
+ 		<param name="locale.language" value="<%=ru.sibinco.scag.util.LocaleMessages.getInstance().getLocaleLanguage(session)%>">
     <param name="graph.scale" value="2">
     <param name="locales.messages" value="RUSSIA">
     <param name="graph.grid" value="2">
