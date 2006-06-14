@@ -2963,6 +2963,9 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
     sms.setOriginatingAddress(src_addr);
 
     sms.setIntProperty(Tag::SMSC_ORIGINAL_DC, ussdDataCodingScheme );
+    unsigned esm_class = 2; // Transaction mode
+    sms.setIntProperty(Tag::SMPP_ESM_CLASS,esm_class);
+
     UCHAR_T udhPresent, msgClassMean, msgClass;
     unsigned dataCoding = (unsigned)convertCBSDatacoding2SMSC(ussdDataCodingScheme, &udhPresent, &msgClassMean, &msgClass);
     if( dataCoding == smsc::smpp::DataCoding::SMSC7BIT )
@@ -2972,13 +2975,10 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
       Convert7BitToSMSC7Bit(ussdString_s.ussdStr,chars/*ussdString_s.ussdStrLen*/,&ms,0);
       subsystem = GetUSSDSubsystem(ms.bytes,ms.len);
       string ussdStr = GetUSSDRequestString(ms.bytes, ms.len);
+      sms.setIntProperty(Tag::SMPP_DATA_CODING,dataCoding);
       sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,ussdStr.c_str(),ussdStr.length());
       sms.setIntProperty(Tag::SMPP_SM_LENGTH,ussdStr.length());
-      sms.setIntProperty(Tag::SMPP_DATA_CODING,dataCoding);
     } else {
-/*      sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,ussdString_sp->ussdStr,ussdString_sp->ussdStrLen);
-      sms.setIntProperty(Tag::SMPP_SM_LENGTH,ussdString_sp->ussdStrLen);
-      sms.setIntProperty(Tag::SMPP_DATA_CODING,dataCoding);*/
       __map_warn2__("DCS 0x%02X received in Et96MapV2ProcessUnstructuredSSRequestInd", ussdDataCodingScheme );
       throw runtime_error("Datacoding other then GSM7bit is not supported in Et96MapV2ProcessUnstructuredSSRequestInd");
     }
@@ -2987,10 +2987,6 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
     subsystem.insert(0, ".5.0.ussd:");
     dialog->subsystem = subsystem;
     Address dest_addr = Address(subsystem.c_str());
-//    dest_addr.type = 0;
-//    dest_addr.plan = 1;
-    unsigned esm_class = 2; // Transaction mode
-    sms.setIntProperty(Tag::SMPP_ESM_CLASS,esm_class);
     sms.setIntProperty(Tag::SMPP_PROTOCOL_ID,0);
     sms.setMessageReference(0);
     sms.setDestinationAddress(dest_addr);
@@ -2999,12 +2995,6 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
     //dialog->ussdSequence = NextSequence();
     dialog->sms->setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_PSSR_IND);
     dialog->sms->setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,dialog->ussdMrRef);
-    //{
-    //  ostringstream  ost;
-    //  ost << dialog->ussdSequence;
-    //  //dialog->sms->setStrProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,message_reference.str());
-    //}
-    //SendSubmitCommand (dialog.get());
     dialog->invokeId = invokeId;
   }MAP_CATCH(__dialogid_map,0,localSsn);
   return ET96MAP_E_OK;
@@ -3459,7 +3449,7 @@ USHORT_T Et96MapV1BeginSubscriberActivityInd(
     }
     Address imsi;
     try {
-      ConvAddrMSISDN2Smc(&originatingEntityNumber_s,&addr);
+      ConvAddrIMSI2Smc(&imsi_s,&imsi);
     } catch (...) {
     }
     
@@ -3496,19 +3486,19 @@ USHORT_T Et96MapV1ProcessUnstructuredSSDataInd(
     
     SMS& sms = *dialog->sms.get();
     sms.setIntProperty(Tag::SMSC_ORIGINAL_DC, smsc::smpp::DataCoding::LATIN1 );
+    unsigned esm_class = 2; // Transaction mode
+    sms.setIntProperty(Tag::SMPP_ESM_CLASS,esm_class);
     string subsystem = GetUSSDSubsystem((const char*)ssUserData_s.ssUserDataStr,ssUserData_s.ssUserDataStrLen);
     string ussdStr = GetUSSDRequestString((const char*)ssUserData_s.ssUserDataStr,ssUserData_s.ssUserDataStrLen);
+    sms.setIntProperty(Tag::SMPP_DATA_CODING,smsc::smpp::DataCoding::LATIN1);
     sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,ussdStr.c_str(),ussdStr.length());
     sms.setIntProperty(Tag::SMPP_SM_LENGTH,ussdStr.length());
-    sms.setIntProperty(Tag::SMPP_DATA_CODING,smsc::smpp::DataCoding::LATIN1);
     dialog->ussdMrRef = MakeMrRef();
     
     __map_trace2__("%s: dialogid 0x%x invokeid=%d request length %d subsystem %s mr=%x",__func__,dialogueId,invokeId,ssUserData_s.ssUserDataStrLen,subsystem.c_str(),dialog->ussdMrRef);
     subsystem.insert(0, ".5.0.ussd:");
     dialog->subsystem = subsystem;
     Address dest_addr = Address(subsystem.c_str());
-    unsigned esm_class = 2; // Transaction mode
-    sms.setIntProperty(Tag::SMPP_ESM_CLASS,esm_class);
     sms.setIntProperty(Tag::SMPP_PROTOCOL_ID,0);
     sms.setMessageReference(0);
     sms.setDestinationAddress(dest_addr);
