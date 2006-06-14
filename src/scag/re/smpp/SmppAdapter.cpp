@@ -746,7 +746,9 @@ AdapterProperty * SmppCommandAdapter::Get_RD_BIT_Property(SMS& data, const std::
 
 AdapterProperty * SmppCommandAdapter::Get_DC_BIT_Property(SMS& data, const std::string& name,int FieldId)
 {
+
     AdapterProperty * property = 0;
+
     char buff[2] = {0,0};
     int num = 0;
 
