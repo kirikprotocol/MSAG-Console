@@ -104,7 +104,7 @@ const std::string& Property::convertToStr()
     {
     case pt_bool: 
     case pt_int:
-        sprintf(buff, "%d", i_val);
+        sprintf(buff, "%lld", i_val);
         s_val.assign(buff);
         break;
 /*    case PTYPE_DATE:
