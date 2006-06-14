@@ -94,20 +94,6 @@ public class jEdit extends Applet
   }
   public void init() {
     System.out.println("Initing...");
-    /*PipedInputStream in = new PipedInputStream();
-    try {
-    PipedOutputStream out = new PipedOutputStream(in);
-    System.setOut(new PrintStream(out));
-    System.setErr(System.out);
-    } catch (IOException io){}
-    final BufferedReader iis = new BufferedReader(new InputStreamReader(in));
-    new Thread( ) {
-                public void run( ) {
-                    try {
-                        while ((iis.readLine( )) != null) {}
-                    } catch(IOException io) {}
-                }
-            }.start( );*/
     //super.init();
     setFont(new Font("dialog", Font.BOLD, 12));
     setLayout(new GridBagLayout());
@@ -135,6 +121,14 @@ public class jEdit extends Applet
     System.out.println("servletUrl= " + servletUrl.toString());
     initSystemProperties();
     VFSManager.init();
+    if (!getBooleanProperty("debug"))  {
+      System.setOut(new PrintStream(new OutputStream(){
+        public void write(int b) throws IOException {
+            //doing nothing!!!;
+        }
+      }));
+      System.setErr(System.out);
+    }
     //this.main(args);
     isNotReload=true;
   }
