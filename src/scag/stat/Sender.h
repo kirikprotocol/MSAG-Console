@@ -36,7 +36,7 @@ protected:
     timespec start;
     PerformanceListener* perfListener;
     bool isStopping;
-    //Logger * logger;
+    Logger * logger;
 };
 
 }

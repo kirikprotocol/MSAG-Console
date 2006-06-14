@@ -17,8 +17,28 @@ namespace stat {
 
 using smsc::smeman::SmeRecord;
 
-
-
+    namespace events{
+        namespace smpp{
+            const int SUBMIT_OK = 1;
+            const int SUBMIT_FAILED = 2;
+            const int DELIVER_OK = 3;
+            const int DELIVER_FAILED = 4;
+            const int SUBMIT_RESP_OK = 5;
+            const int SUBMIT_RESP_FAILED = 6;
+            const int DELIVER_RESP_OK = 7;
+            const int DELIVER_RESP_FAILED = 8;
+            const int RECEIPT_OK = 9;
+            const int RECEIPT_FAILED = 10;
+        }
+/*        namespace http{
+            const int REQUEST_OK = 1;
+            const int REQUEST_FAILED = 2;
+            const int RESPNSE_OK = 3;
+            const int RESPONSE_FAILED = 4;
+            const int DELIVERED = 5;
+            const int FAILED = 6;
+        }*/
+    }
 
     namespace Counters
     {
@@ -57,8 +77,8 @@ using smsc::smeman::SmeRecord;
         uint16_t sEventType;
     public:
         //uint8_t  pAbonentNumber[MAX_ABONENT_NUMBER_LENGTH]; 
-		std::string pAbonentNumber;
-		uint8_t  cCommandId;        
+        std::string pAbonentNumber;
+        uint8_t  cCommandId;        
         uint8_t  cProtocolId;       
         uint16_t sCommandStatus;
         uint64_t lDateTime;
@@ -68,7 +88,7 @@ using smsc::smeman::SmeRecord;
         SACC_EVENT_HEADER_t()
         {
             //memset(pAbonentNumber,0,MAX_ABONENT_NUMBER_LENGTH);
-			pAbonentNumber="";	
+            pAbonentNumber="";  
             sEventType=0;
             cCommandId=0;       
             cProtocolId=0;      
@@ -81,7 +101,7 @@ using smsc::smeman::SmeRecord;
         {
             //memcpy(pAbonentNumber,src.pAbonentNumber,MAX_ABONENT_NUMBER_LENGTH);
 
-			pAbonentNumber = src.pAbonentNumber;
+            pAbonentNumber = src.pAbonentNumber;
             sEventType=src.sEventType;
             cCommandId=src.cCommandId;      
             cProtocolId=src.cProtocolId;        
@@ -102,17 +122,17 @@ using smsc::smeman::SmeRecord;
         uint32_t iOperatorId;
         uint8_t  cDirection;
         //uint16_t pMessageText[MAX_TEXT_MESSAGE_LENGTH];//512*32
-		//uint8_t  pSessionKey[MAX_SESSION_KEY_LENGTH];
-		std::string pMessageText;
-		std::string pSessionKey;
+        //uint8_t  pSessionKey[MAX_SESSION_KEY_LENGTH];
+        std::string pMessageText;
+        std::string pSessionKey;
 
         SACC_TRAFFIC_INFO_EVENT_t()
         {
             //memset(&Header,0,sizeof(SACC_EVENT_HEADER_t));
             //memset(pMessageText,0,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
             //memset(pSessionKey,0,MAX_SESSION_KEY_LENGTH);
-			pMessageText="";
-			pSessionKey="";
+            pMessageText="";
+            pSessionKey="";
 
             Header.setEventType(sec_transport);
             iOperatorId=0;
@@ -121,28 +141,28 @@ using smsc::smeman::SmeRecord;
 
         SACC_TRAFFIC_INFO_EVENT_t(const SACC_TRAFFIC_INFO_EVENT_t & src)
         {
-			Header = src.Header;
+            Header = src.Header;
             //memcpy(&Header,&src.Header,sizeof(SACC_EVENT_HEADER_t));
             //memcpy(pMessageText,src.pMessageText,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
-			pMessageText=src.pMessageText;
+            pMessageText=src.pMessageText;
             //memcpy(pSessionKey,src.pSessionKey,MAX_SESSION_KEY_LENGTH);
-			pSessionKey=src.pSessionKey;
+            pSessionKey=src.pSessionKey;
             iOperatorId=src.iOperatorId;
             cDirection=src.cDirection;
         }
 
-		SACC_TRAFFIC_INFO_EVENT_t(SACC_TRAFFIC_INFO_EVENT_t *src)
+        SACC_TRAFFIC_INFO_EVENT_t(SACC_TRAFFIC_INFO_EVENT_t *src)
         {
-		
-			Header = src->Header;
+        
+            Header = src->Header;
             //memcpy(&Header,&src.Header,sizeof(SACC_EVENT_HEADER_t));
             //memcpy(pMessageText,src.pMessageText,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
-			pMessageText=src->pMessageText;
+            pMessageText=src->pMessageText;
             //memcpy(pSessionKey,src.pSessionKey,MAX_SESSION_KEY_LENGTH);
-			pSessionKey=src->pSessionKey;
+            pSessionKey=src->pSessionKey;
             iOperatorId=src->iOperatorId;
             cDirection=src->cDirection;
-			
+            
         }
 
 
@@ -157,7 +177,7 @@ using smsc::smeman::SmeRecord;
         uint32_t iMediaResourceType;
         uint32_t iPriceCatId;
         float    fBillingSumm; 
-		std::string  pBillingCurrency;//[MAX_BILLING_CURRENCY_LENGTH];
+        std::string  pBillingCurrency;//[MAX_BILLING_CURRENCY_LENGTH];
         std::string  pSessionKey;//[MAX_SESSION_KEY_LENGTH];
      
         SACC_BILLING_INFO_EVENT_t()
@@ -165,8 +185,8 @@ using smsc::smeman::SmeRecord;
             //memset(&Header,0,sizeof(SACC_EVENT_HEADER_t));
             //memset(pBillingCurrency,0,MAX_BILLING_CURRENCY_LENGTH);
             //memset(pSessionKey,0,MAX_SESSION_KEY_LENGTH);
-			pBillingCurrency="";
-			pSessionKey="";
+            pBillingCurrency="";
+            pSessionKey="";
             Header.setEventType(sec_bill);
             iOperatorId=0;
             iMediaResourceType=0;
@@ -175,30 +195,30 @@ using smsc::smeman::SmeRecord;
         }   
         SACC_BILLING_INFO_EVENT_t(const SACC_BILLING_INFO_EVENT_t & src)
         {
-			Header = src.Header;
+            Header = src.Header;
             //memcpy(&Header,&src.Header,sizeof(SACC_EVENT_HEADER_t));
             //memcpy(pBillingCurrency,src.pBillingCurrency,MAX_BILLING_CURRENCY_LENGTH);
             //memcpy(pSessionKey,src.pSessionKey,MAX_SESSION_KEY_LENGTH);
-			pBillingCurrency=src.pBillingCurrency;
-			pSessionKey=src.pSessionKey;
+            pBillingCurrency=src.pBillingCurrency;
+            pSessionKey=src.pSessionKey;
             iOperatorId=src.iOperatorId;
             iMediaResourceType=src.iMediaResourceType;
             iPriceCatId=src.iPriceCatId;
             fBillingSumm=src.fBillingSumm; 
         }
-		SACC_BILLING_INFO_EVENT_t(SACC_BILLING_INFO_EVENT_t *src)
+        SACC_BILLING_INFO_EVENT_t(SACC_BILLING_INFO_EVENT_t *src)
         {
- 			Header = src->Header;
+            Header = src->Header;
             //memcpy(&Header,&src.Header,sizeof(SACC_EVENT_HEADER_t));
             //memcpy(pBillingCurrency,src.pBillingCurrency,MAX_BILLING_CURRENCY_LENGTH);
             //memcpy(pSessionKey,src.pSessionKey,MAX_SESSION_KEY_LENGTH);
-			pBillingCurrency=src->pBillingCurrency;
-			pSessionKey=src->pSessionKey;
+            pBillingCurrency=src->pBillingCurrency;
+            pSessionKey=src->pSessionKey;
             iOperatorId=src->iOperatorId;
             iMediaResourceType=src->iMediaResourceType;
             iPriceCatId=src->iPriceCatId;
             fBillingSumm=src->fBillingSumm; 
-		}
+        }
         uint16_t getEventType()const{return Header.getEventType();}; 
     };
 
@@ -210,11 +230,11 @@ using smsc::smeman::SmeRecord;
         uint8_t  cDirection;
         uint32_t iOperatorId;
         uint32_t iAlarmEventId;
-		std::string  pSessionKey;//[MAX_SESSION_KEY_LENGTH];
-		std::string pMessageText;//[MAX_TEXT_MESSAGE_LENGTH];
+        std::string  pSessionKey;//[MAX_SESSION_KEY_LENGTH];
+        std::string pMessageText;//[MAX_TEXT_MESSAGE_LENGTH];
         SACC_ALARM_t()
         {
-			
+            
             pSessionKey="";
             pMessageText="";
             iOperatorId=0;
@@ -225,7 +245,7 @@ using smsc::smeman::SmeRecord;
         }
         SACC_ALARM_t(const SACC_ALARM_t& src)
         {
-			Header = src.Header;
+            Header = src.Header;
             pSessionKey= src.pSessionKey;
             pMessageText=src.pMessageText;
             iOperatorId=src.iOperatorId;
@@ -234,16 +254,16 @@ using smsc::smeman::SmeRecord;
 
         }
 
-		SACC_ALARM_t(SACC_ALARM_t* src)
+        SACC_ALARM_t(SACC_ALARM_t* src)
         {
-			
-			Header = src->Header;
+            
+            Header = src->Header;
             pSessionKey= src->pSessionKey; 
             pMessageText=src->pMessageText;
             iOperatorId=src->iOperatorId;
             cDirection=src->cDirection;
             iAlarmEventId = src->iAlarmEventId; 
-			
+            
         }
 
         uint16_t getEventType()const{return Header.getEventType();} ;
@@ -255,48 +275,48 @@ using smsc::smeman::SmeRecord;
     private:
         uint16_t sEventType;
     public:
-		std::string  pAbonentsNumbers;//[MAX_NUMBERS_TEXT_LENGTH];
+        std::string  pAbonentsNumbers;//[MAX_NUMBERS_TEXT_LENGTH];
         std::string  pAddressEmail;//[MAX_EMAIL_ADDRESS_LENGTH];
         std::string  pMessageText;//[MAX_TEXT_MESSAGE_LENGTH];
-		std::string  pDeliveryTime;//[DELEVIRY_TIME_LENGTH];
+        std::string  pDeliveryTime;//[DELEVIRY_TIME_LENGTH];
 
-		uint8_t  cCriticalityLevel;
+        uint8_t  cCriticalityLevel;
         SACC_ALARM_MESSAGE_t()
         {
             pAbonentsNumbers="";//memset(pAbonentsNumbers,0,MAX_NUMBERS_TEXT_LENGTH);
-			pAddressEmail="";//memset(pAddressEmail,0,MAX_EMAIL_ADDRESS_LENGTH*sizeof(uint16_t));
+            pAddressEmail="";//memset(pAddressEmail,0,MAX_EMAIL_ADDRESS_LENGTH*sizeof(uint16_t));
             pMessageText="";//memset(pMessageText,0,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
-			pDeliveryTime="";//memset(pDeliveryTime,0,DELEVIRY_TIME_LENGTH);
-			cCriticalityLevel=scl_info;	
+            pDeliveryTime="";//memset(pDeliveryTime,0,DELEVIRY_TIME_LENGTH);
+            cCriticalityLevel=scl_info; 
             sEventType = sec_alarm_message;
         }
         SACC_ALARM_MESSAGE_t(const SACC_ALARM_MESSAGE_t & src)
         {
-			pAbonentsNumbers=src.pAbonentsNumbers;	
-			pAddressEmail=src.pAddressEmail;
-			pMessageText=src.pMessageText;
-			pDeliveryTime=src.pDeliveryTime;
+            pAbonentsNumbers=src.pAbonentsNumbers;  
+            pAddressEmail=src.pAddressEmail;
+            pMessageText=src.pMessageText;
+            pDeliveryTime=src.pDeliveryTime;
 
          //   memcpy(pAbonentsNumbers,src.pAbonentsNumbers ,MAX_NUMBERS_TEXT_LENGTH);
          //   memcpy(pAddressEmail,src.pAddressEmail ,MAX_EMAIL_ADDRESS_LENGTH*sizeof(uint16_t));
          //   memcpy(pMessageText,src.pMessageText ,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
-		 //	  memcpy(pDeliveryTime,src.pDeliveryTime,DELEVIRY_TIME_LENGTH);
-			cCriticalityLevel = src.cCriticalityLevel;
+         //   memcpy(pDeliveryTime,src.pDeliveryTime,DELEVIRY_TIME_LENGTH);
+            cCriticalityLevel = src.cCriticalityLevel;
             sEventType=src.sEventType;
 
         }
-		SACC_ALARM_MESSAGE_t(SACC_ALARM_MESSAGE_t * src)
+        SACC_ALARM_MESSAGE_t(SACC_ALARM_MESSAGE_t * src)
         {
-			pAbonentsNumbers=src->pAbonentsNumbers;	
-			pAddressEmail=src->pAddressEmail;
-			pMessageText=src->pMessageText;
-			pDeliveryTime=src->pDeliveryTime;
+            pAbonentsNumbers=src->pAbonentsNumbers; 
+            pAddressEmail=src->pAddressEmail;
+            pMessageText=src->pMessageText;
+            pDeliveryTime=src->pDeliveryTime;
 
          //   memcpy(pAbonentsNumbers,src.pAbonentsNumbers ,MAX_NUMBERS_TEXT_LENGTH);
          //   memcpy(pAddressEmail,src.pAddressEmail ,MAX_EMAIL_ADDRESS_LENGTH*sizeof(uint16_t));
          //   memcpy(pMessageText,src.pMessageText ,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
-		 //	  memcpy(pDeliveryTime,src.pDeliveryTime,DELEVIRY_TIME_LENGTH);
-			cCriticalityLevel = src->cCriticalityLevel;
+         //   memcpy(pDeliveryTime,src.pDeliveryTime,DELEVIRY_TIME_LENGTH);
+            cCriticalityLevel = src->cCriticalityLevel;
             sEventType=src->sEventType;
 
         }
@@ -307,51 +327,57 @@ using smsc::smeman::SmeRecord;
     struct SmppStatEvent
     {
       char smeId[smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1];
+      char smscId[smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1];
       char routeId[smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH+1];
       int  routeProviderId;
 
-      int counter;
+      int event;
       int errCode;
-      bool internal;
-      
 
       SmppStatEvent()
       {
         smeId[0]=0;
+        smscId[0]=0;
         routeId[0]=0;
         routeProviderId=-1;
-        counter = -1;
+        event = -1;
         errCode = -1;
-        
-        internal = false;
       }
-      SmppStatEvent(scag::transport::smpp::SmppEntityInfo& smppEntity, int cnt, int errcode)
+      SmppStatEvent(const char* sme, const char* sc, int cnt, int errcode)
       {
-        strncpy(smeId, smppEntity.systemId, sizeof(smeId));
+        smeId[0] = 0;
+        if(sme != NULL)
+            strncpy(smeId, sme, sizeof(smeId));
+        smscId[0] = 0;
+        if(sc != NULL)
+            strncpy(smscId, sc, sizeof(smscId));
+
         routeId[0]=0;
 
         routeProviderId=-1;
-        counter = cnt;
+        event = cnt;
         errCode = errcode;
-        internal = ( smppEntity.type == scag::transport::smpp::etSmsc );
       }
-      SmppStatEvent(scag::transport::smpp::SmppEntityInfo& smppEntity, scag::transport::smpp::router::RouteInfo& ri, int cnt, int errcode)
+      SmppStatEvent(const char* sme, const char* sc, scag::transport::smpp::router::RouteInfo& ri, int cnt, int errcode)
       {
-        strncpy(smeId, smppEntity.systemId, sizeof(smeId));
+        smeId[0] = 0;
+        if(sme != NULL)
+            strncpy(smeId, sme, sizeof(smeId));
+        smscId[0] = 0;
+        if(sc != NULL)
+            strncpy(smscId, sc, sizeof(smscId));
         strncpy(routeId, (char*)ri.routeId, sizeof(routeId));
-        counter = cnt;
+        event = cnt;
         errCode = errcode;
-        internal = ( smppEntity.type == scag::transport::smpp::etSmsc );
       }
       SmppStatEvent(const SmppStatEvent& src)
       {
         memcpy(smeId,src.smeId,sizeof(smeId));
+        memcpy(smscId,src.smscId,sizeof(smscId));
         memcpy(routeId,src.routeId,sizeof(routeId));
         routeProviderId=src.routeProviderId;
-        counter = src.counter;
         errCode = src.errCode;
-        internal = src.internal;
-
+        event = src.event;
       }
     };
     

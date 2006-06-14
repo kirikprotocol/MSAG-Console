@@ -1,5 +1,6 @@
 #include "Sender.h"
 #include "StatisticsManager.h"
+#include "scag/sessions/SessionManager.h"
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -8,6 +9,7 @@ namespace stat {
 
 using smsc::core::threads::Thread;
 using smsc::logger::Logger;
+using namespace scag::sessions;
 
 class Registrator : public Thread {
 public:
@@ -39,14 +41,14 @@ int Registrator::Execute()
         HttpStatEvent hs;
 
         //=============== sme1 =====================
-        if(++counter == 5) counter = 0;
+        if(++counter == 9) counter = 1;
         int count =  7. * ( (double)random() / 2147483648. ) + 1;
         for(int i = 0; i<= count - 1; i++){
             strcpy(si.smeId, "sme1");
+            strcpy(si.smscId, "smsc1");
             strcpy(si.routeId, "route1");
             si.routeProviderId = 1;
-            si.counter = counter;
-            si.internal = false;
+            si.event = counter;
             si.errCode = 1;
             sm->registerEvent(si);
         }
@@ -54,10 +56,10 @@ int Registrator::Execute()
         count =  7. * ( (double)random() / 2147483648. ) + 1;
         for(int i = 0; i <= count - 1; i++){
             strcpy(si.smeId, "sme2");
+            strcpy(si.smscId, "smsc2");
             strcpy(si.routeId, "route3");
             si.routeProviderId = 3;
-            si.counter = counter;
-            si.internal = true;
+            si.event = counter;
             si.errCode = 1;
             sm->registerEvent(si);
         }
@@ -236,7 +238,7 @@ int Sender::Execute()
       d.now=now.tv_sec;
       d.uptime=now.tv_sec-start.tv_sec;
 
-      d.sessionCount=0;
+      d.sessionCount= SessionManager::Instance().getSessionsCount();
 
       perfListener->reportGenPerformance(&d);
 
