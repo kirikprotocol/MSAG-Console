@@ -1348,7 +1348,7 @@ static void DoUSSRUserResponce( MapDialog* dialog)
       data_len=Transliterate(buf,len,CONV_ENCODING_CP1251,data,ET96MAP_MAX_SS_USER_DATA_LEN*3);
       if ( data_len > ET96MAP_MAX_SS_USER_DATA_LEN || data_len == -1)
         throw runtime_error(FormatText("MAP::%s MAP.did:{0x%x} very long msg text %d",__func__,dialog->dialogid_map,text_len));
-      text = data;
+      text = (const unsigned char*)data;
       text_len = data_len;
     }
     
