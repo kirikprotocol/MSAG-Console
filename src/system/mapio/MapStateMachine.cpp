@@ -21,6 +21,7 @@ using namespace std;
 #include "../../mscman/MscStatus.h"
 #include "resourcemanager/ResourceManager.hpp"
 #include "util/templates/DummyAdapter.h"
+#include "util/recoder/recode_dll.h"
 
 using namespace smsc::mscman;
 
@@ -1338,6 +1339,18 @@ static void DoUSSRUserResponce( MapDialog* dialog)
   } else if( dialog->version == 1 ) {
     if ( text_len > ET96MAP_MAX_SS_USER_DATA_LEN )
       throw runtime_error(FormatText("MAP::%s MAP.did:{0x%x} very long msg text %d",__func__,dialog->dialogid_map,text_len));
+    
+    char data[ET96MAP_MAX_SS_USER_DATA_LEN*3];
+    int data_len = 0;
+    if( encoding == MAP_UCS2_ENCODING ) {
+      char buf[ET96MAP_MAX_SS_USER_DATA_LEN];
+      int len = ConvertUCS2ToMultibyte((const short*)text,text_len,buf,ET96MAP_MAX_SS_USER_DATA_LEN,CONV_ENCODING_CP1251);
+      data_len=Transliterate(buf,len,CONV_ENCODING_CP1251,data,ET96MAP_MAX_SS_USER_DATA_LEN*3);
+      if ( data_len > ET96MAP_MAX_SS_USER_DATA_LEN || data_len == -1)
+        throw runtime_error(FormatText("MAP::%s MAP.did:{0x%x} very long msg text %d",__func__,dialog->dialogid_map,text_len));
+      text = data;
+      text_len = data_len;
+    }
     
     ET96MAP_SS_USER_DATA_T ussdData;
     memcpy(ussdData.ssUserDataStr,text,text_len);
