@@ -11,10 +11,12 @@
 #include "inman/common/types.hpp"
 #include "inman/inap/invoke.hpp"
 #include "inman/comp/acdefs.hpp"
+#include "inman/comp/operfactory.hpp"
 
 using smsc::ac::ACOID;
 using smsc::logger::Logger;
 using smsc::inman::common::CustomException;
+using smsc::inman::comp::OperationFactory;
 
 namespace smsc {
 namespace inman {
@@ -160,6 +162,7 @@ private:
     UCHAR_T         _lastInvId;
     Logger*         logger;
     ACOID::DefinedOIDidx   _ac_idx; //ApplicationContext index, see acdefs.hpp
+    OperationFactory * ac_fact;
 };
 
 } //inap

@@ -5,13 +5,10 @@ static char const ident[] = "$Id$";
 
 #include "inman/inap/dialog.hpp"
 #include "inman/inap/dispatcher.hpp"
-#include "inman/comp/operfactory.hpp"
 
 using smsc::inman::common::format;
 using smsc::inman::common::dump;
 using smsc::inman::comp::ApplicationContextFactory;
-using smsc::inman::comp::OperationFactory;
-
 
 namespace smsc  {
 namespace inman {
@@ -35,6 +32,8 @@ Dialog::Dialog(USHORT_T dlgId, ACOID::DefinedOIDidx dialog_ac_idx,  USHORT_T msg
     APP_CONTEXT_T * acPtr = (APP_CONTEXT_T *)ACOID::OIDbyIdx(dialog_ac_idx);
     assert(acPtr);
     ac = *acPtr;
+    ac_fact = ApplicationContextFactory::getFactory(_ac_idx);
+    assert(ac_fact);
 }
 
 Dialog::~Dialog()
@@ -54,14 +53,14 @@ void Dialog::clearInvokes(void)
     InvokeMap::const_iterator it;
     for (it = originating.begin(); it != originating.end(); it++) {
         Invoke * inv = (*it).second;
-        smsc_log_debug(logger, "Dialog[0x%X]: releasing Invoke[%u].(%u): respType: %d, status: %d",
+        smsc_log_debug(logger, "Dialog[0x%X]: releasing Invoke[%u]{%u}: respType: %d, status: %d",
                        _dId, inv->getId(), inv->getOpcode(), inv->getResultType(), inv->getStatus());
         delete inv;
     }
     originating.clear();
     for (it = terminating.begin(); it != terminating.end(); it++) {
         Invoke * inv = (*it).second;
-        smsc_log_debug(logger, "Dialog[0x%X]: releasing Invoke[%u].(%u): respType: %d, status: %d",
+        smsc_log_debug(logger, "Dialog[0x%X]: releasing Invoke[%u]{%u}: respType: %d, status: %d",
                        _dId, inv->getId(), inv->getOpcode(), inv->getResultType(), inv->getStatus());
         delete inv;
     }
@@ -324,11 +323,10 @@ Invoke* Dialog::initInvoke(UCHAR_T opcode, InvokeListener * pLst/* = NULL*/,
 {
     MutexGuard  tmp(invGrd);
     Invoke::InvokeResponse  resp = Invoke::respNone;
-    OperationFactory * fact = ApplicationContextFactory::getFactory(_ac_idx);
 
-    if (fact->hasErrors(opcode))
+    if (ac_fact->hasErrors(opcode))
         resp = Invoke::respError;
-    if (fact->hasResult(opcode))
+    if (ac_fact->hasResult(opcode))
         resp = Invoke::respResultOrError;
 
     Invoke* inv = new Invoke(getNextInvokeId(), EINSS7_I97TCAP_OPERATION_TAG_LOCAL,
@@ -341,7 +339,7 @@ Invoke* Dialog::initInvoke(UCHAR_T opcode, InvokeListener * pLst/* = NULL*/,
         originating.insert(InvokeMap::value_type(inv->getId(), inv));
     else
         terminating.insert(InvokeMap::value_type(inv->getId(), inv));
-    smsc_log_debug(logger, "Dialog[0x%X]: initiated Invoke[%u].(%u), respType: %d",
+    smsc_log_debug(logger, "Dialog[0x%X]: initiated Invoke[%u]{%u}, respType: %d",
         (unsigned)_dId, (unsigned)inv->getId(), (unsigned)opcode, (int)resp);
     return inv;
 }
@@ -364,7 +362,7 @@ void Dialog::releaseInvoke(UCHAR_T invId)
     }
     if (inv) {
         smsc_log_debug(logger,
-            "Dialog[0x%X]: releasing Invoke[%u].(%u): respType: %d, status: %d",
+            "Dialog[0x%X]: releasing Invoke[%u]{%u}: respType: %d, status: %d",
             (unsigned)_dId, (unsigned)invId, (unsigned)inv->getOpcode(),
             inv->getResultType(), inv->getStatus());
         delete inv;
@@ -494,19 +492,19 @@ USHORT_T Dialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const 
     Invoke  invoke(invId, tag, op[0]);
 
     if (pmlen) { //operation parameters present
-        Component* comp = ApplicationContextFactory::getFactory(_ac_idx)->createArg(op[0]);
+        Component* comp = ac_fact->createArg(op[0]);
         if (comp) {
             try {
                 std::vector<unsigned char> code( pm, pm + pmlen );
                 comp->decode(code); //throws
                 invoke.ownParam(comp);
             } catch (std::exception & exc) {
-                smsc_log_error(logger, "Dialog[0x%X]: Invoke[%u].(%u).Arg: %s",
+                smsc_log_error(logger, "Dialog[0x%X]: Invoke[%u]{%u}.Arg: %s",
                     (unsigned)_dId, (unsigned)invId, (unsigned)op[0], exc.what());
                 delete comp;
             }
         } else {
-            smsc_log_fatal(logger, "Dialog[0x%X]: Invoke[%u].(%u): unregistered Arg",
+            smsc_log_fatal(logger, "Dialog[0x%X]: Invoke[%u]{%u}: unregistered Arg",
                 (unsigned)_dId, (unsigned)invId, (unsigned)op[0]);
         }
     }
@@ -546,10 +544,10 @@ USHORT_T Dialog::handleLCancelInvoke(UCHAR_T invId)
         if ((invCp.getStatus() <= Invoke::resNotLast)
             && (invCp.getResultType() == Invoke::respResultOrError))
             smsc_log_error(logger,
-                "Dialog[0x%X]: Invoke[%u].(%u) got L_CANCEL expecting returnResult",
+                "Dialog[0x%X]: Invoke[%u]{%u} got L_CANCEL expecting returnResult",
                 (unsigned)_dId, (unsigned)invId, invCp.getOpcode());
         smsc_log_debug(logger,
-            "Dialog[0x%X]: releasing Invoke[%u].(%u): respType: %d, status: %d",
+            "Dialog[0x%X]: releasing Invoke[%u]{%u}: respType: %d, status: %d",
             (unsigned)_dId, (unsigned)invId, (unsigned)invCp.getOpcode(),
             invCp.getResultType(), invCp.getStatus());
 
@@ -597,7 +595,7 @@ USHORT_T Dialog::handleResultLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, co
     if (pInv) { //prepare result and call invoke result listeners
         TcapEntity  result(invId, tag, op[0]);
 
-        Component* resParm = ApplicationContextFactory::getFactory(_ac_idx)->createRes(op[0]);
+        Component* resParm = ac_fact->createRes(op[0]);
         if (resParm) {
             try {
                 std::vector<unsigned char> code(pm, pm + pmlen);
@@ -608,7 +606,7 @@ USHORT_T Dialog::handleResultLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, co
                     (unsigned)_dId, (unsigned)invId, (unsigned)op[0], exc.what());
                 delete resParm;
             }
-        } else
+        } else if (pmlen)
             smsc_log_error(logger, "Dialog[0x%X]: Invoke[%u]: unregistered Result[%u]",
                             (unsigned)_dId, (unsigned)invId, (unsigned)op[0]);
         //NOTE: notifyResultListeners() may lead to ~Dialog()/reset() being called !!!
@@ -622,7 +620,7 @@ USHORT_T Dialog::handleResultLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, co
             smsc_log_error(logger, "Dialog[0x%X]: Invoke[%u].Result[%u] listener: unknown exception", 
                 dlgId, (unsigned)invId, (unsigned)op[0]);
         }
-        smsc_log_debug(logger, "Dialog[0x%X]: releasing Invoke[%u].(%u): respType: %d, status: %d",
+        smsc_log_debug(logger, "Dialog[0x%X]: releasing Invoke[%u]{%u}: respType: %d, status: %d",
             dlgId, (unsigned)invId, (unsigned)invCp.getOpcode(),
             invCp.getResultType(), invCp.getStatus());
     }
@@ -641,8 +639,7 @@ USHORT_T Dialog::handleResultNotLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen,
     if (it != originating.end()) {
         TcapEntity  result(invId, tag, op[0]);
 
-        Component* resParm = ApplicationContextFactory::getFactory(_ac_idx)->createRes(op[0]);
-        assert(resParm);
+        Component* resParm = ac_fact->createRes(op[0]);
         if (resParm) {
             try {
                 std::vector<unsigned char> code(pm, pm + pmlen);
@@ -653,7 +650,7 @@ USHORT_T Dialog::handleResultNotLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen,
                     (unsigned)_dId, (unsigned)invId, (unsigned)op[0], exc.what());
                 delete resParm;
             }
-        } else
+        } else if (pmlen)
             smsc_log_error(logger, "Dialog[0x%X]: Invoke[%u]: unregistered ResultNL[%u]",
                             (unsigned)_dId, (unsigned)invId, (unsigned)op[0]);
 
@@ -706,17 +703,21 @@ USHORT_T Dialog::handleResultError(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, c
     if (pInv) { //prepare resultError and call invoke result listener
         TcapEntity  resErr(invId, tag, op[0]);
 
-        Component* resParm = ApplicationContextFactory::getFactory(_ac_idx)->createRes(op[0]);
-        if (resParm) {
-            try {
-                std::vector<unsigned char> code(pm, pm + pmlen);
-                resParm->decode(code);
-                resErr.ownParam(resParm);
-            } catch (std::exception & exc) {
-                smsc_log_error(logger, "Dialog[0x%X]: Invoke[%u].Error[%u]: %s",
-                    (unsigned)_dId, (unsigned)invId, (unsigned)op[0], exc.what());
-                delete resParm;
-            }
+        if (ac_fact->hasError(pInv->getOpcode(), op[0])) {
+            Component* resParm = ac_fact->createErr(op[0]);
+            if (resParm) {
+                try {
+                    std::vector<unsigned char> code(pm, pm + pmlen);
+                    resParm->decode(code);
+                    resErr.ownParam(resParm);
+                } catch (std::exception & exc) {
+                    smsc_log_error(logger, "Dialog[0x%X]: Invoke[%u].Error[%u]: %s",
+                        (unsigned)_dId, (unsigned)invId, (unsigned)op[0], exc.what());
+                    delete resParm;
+                }
+            } else if (pmlen)
+                smsc_log_warn(logger, "Dialog[0x%X]: Invoke[%u]: unregistered Error[%u] parametr",
+                                (unsigned)_dId, (unsigned)invId, (unsigned)op[0]);
         } else
             smsc_log_error(logger, "Dialog[0x%X]: Invoke[%u]: unregistered Error[%u]",
                             (unsigned)_dId, (unsigned)invId, (unsigned)op[0]);
@@ -731,7 +732,7 @@ USHORT_T Dialog::handleResultError(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, c
             smsc_log_error(logger, "Dialog[0x%X]: Invoke[%u].Error[%u] listener: unknown exception", 
                 dlgId, (unsigned)invId, (unsigned)op[0]);
         }
-        smsc_log_debug(logger, "Dialog[0x%X]: releasing Invoke[%u].(%u): respType: %d, status: %d",
+        smsc_log_debug(logger, "Dialog[0x%X]: releasing Invoke[%u]{%u}: respType: %d, status: %d",
             dlgId, (unsigned)invId, (unsigned)invCp.getOpcode(), invCp.getResultType(),
             invCp.getStatus());
     }
