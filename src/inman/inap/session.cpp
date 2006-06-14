@@ -24,7 +24,7 @@ SSNSession::SSNSession(UCHAR_T ownssn, USHORT_T user_id, Logger * uselog/* = NUL
 {
     locAddr.addrLen = rmtAddr.addrLen = 0;
     if (!uselog)
-        logger = Logger::getInstance("smsc.inman.inap.Session");
+        logger = Logger::getInstance("smsc.inman.inap.SSN");
 }
 
 void SSNSession::init(const char* own_addr, ACOID::DefinedOIDidx dialog_ac_idx,
@@ -63,7 +63,7 @@ SSNSession::~SSNSession()
             Dialog* pDlg = (*it).second;
             if (!(pDlg->getState().value & TC_DLG_CLOSED_MASK))
                 smsc_log_warn(logger,
-                    "SSN[%u]: Dialog[%u](0x%x) is active, %u invokes pending",
+                    "SSN[%u]: Dialog[0x%X](0x%x) is active, %u invokes pending",
                     (unsigned)SSN, dId, pDlg->getState().value, pDlg->pendingInvokes());
             delete (*it).second;
         }
@@ -73,7 +73,7 @@ SSNSession::~SSNSession()
         for (DlgTimesMap_T::iterator it = pending.begin(); it != pending.end(); it++) {
             USHORT_T dId = (*it).first;
             DlgTime dtm  = (*it).second;
-            smsc_log_warn(logger, "SSN[%u]: Dialog[%u](0x%x) is not terminated, %u invokes pending",
+            smsc_log_warn(logger, "SSN[%u]: Dialog[0x%X](0x%x) is not terminated, %u invokes pending",
                            (unsigned)SSN, dId, dtm.dlg->getState().value, dtm.dlg->pendingInvokes());
             delete dtm.dlg;
         }
@@ -116,7 +116,7 @@ void SSNSession::releaseDialog(Dialog* pDlg)
     USHORT_T dId = pDlg->getId();
     DialogsMap_T::iterator it = dialogs.find(dId);
     if ((it == dialogs.end()) || (pDlg != (*it).second)) {
-        smsc_log_error(logger, "SSN[%u]: Unregistered/illegal dialog[%u]", (unsigned)SSN, dId);
+        smsc_log_error(logger, "SSN[%u]: Unregistered/illegal Dialog[0x%X]", (unsigned)SSN, dId);
     } else {
         dialogs.erase(it);
         if (!(pDlg->getState().value & TC_DLG_CLOSED_MASK)) {
@@ -125,11 +125,11 @@ void SSNSession::releaseDialog(Dialog* pDlg)
             dtm.dlg = pDlg;
             pending.insert(DlgTimesMap_T::value_type(dId, dtm));
             smsc_log_warn(logger,
-                "SSN[%u]: Pushed aside unterminated dialog[%u](0x%x), %u invokes pending",
+                "SSN[%u]: Pushed aside unterminated Dialog[0x%X](0x%x), %u invokes pending",
                 (unsigned)SSN, dId, pDlg->getState().value, pDlg->pendingInvokes());
         } else {
             pool.push_back(pDlg);
-            smsc_log_debug(logger, "SSN[%u]: Released terminated dialog[%u](0x%x)",
+            smsc_log_debug(logger, "SSN[%u]: Released terminated Dialog[0x%X](0x%x)",
                 (unsigned)SSN, dId, pDlg->getState().value);
         }
     }
@@ -148,11 +148,11 @@ void SSNSession::releaseDialogs(void)
             gettimeofday(&dtm.tms, 0);
             dtm.dlg = pDlg;
             pending.insert(DlgTimesMap_T::value_type(dId, dtm));
-            smsc_log_warn(logger, "SSN[%u]: Pushed aside unterminated dialog[%u], %u invokes pending",
+            smsc_log_warn(logger, "SSN[%u]: Pushed aside unterminated Dialog[0x%X], %u invokes pending",
                            (unsigned)SSN, dId, pDlg->pendingInvokes());
         } else {
             pool.push_back(pDlg);
-            smsc_log_debug(logger, "SSN[%u]: Released terminated dialog[%u]",
+            smsc_log_debug(logger, "SSN[%u]: Released terminated Dialog[0x%X]",
                            (unsigned)SSN, dId);
         }
     }
@@ -191,7 +191,7 @@ Dialog* SSNSession::initDialog(const SCCP_ADDRESS_T & rmt_addr)
     } else
         pDlg = new Dialog(did, ac_idx, userId, locAddr, rmt_addr, logger);
 
-    smsc_log_debug(logger, "SSN[%u]: Opening dialog[%u]", (unsigned)SSN, did);
+    smsc_log_debug(logger, "SSN[%u]: Opening Dialog[0x%X]", (unsigned)SSN, did);
     dialogs.insert(DialogsMap_T::value_type(did, pDlg));
     return pDlg;
 }

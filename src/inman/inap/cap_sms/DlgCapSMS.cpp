@@ -77,7 +77,7 @@ void CapSMSDlg::onInvokeError(Invoke *op, TcapEntity * resE)
 {
     MutexGuard  grd(_sync);
     UCHAR_T opcode = op->getOpcode();
-    smsc_log_error(logger, "CapSMS[%u]: Invoke[%u].(%u) got a returnError: %u",
+    smsc_log_error(logger, "CapSMS[%u]: Invoke[%u]{%u} got a returnError: %u",
         capId, (unsigned)op->getId(), (unsigned)opcode, (unsigned)resE->getOpcode());
 
     //call operation errors handler
