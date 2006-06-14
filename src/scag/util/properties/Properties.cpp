@@ -295,30 +295,7 @@ void AdapterProperty::setDate(time_t val)
     Property::setDate(val);
     if (patron) patron->changed(*this);
 }
-  /*
-void AdapterProperty::setPureStr(const std::string& val)
-{
-    Property::setStr(val);
-}
-void AdapterProperty::setPureInt(int64_t val)
-{
-    Property::setInt(val);
-}
-void AdapterProperty::setPureBool(bool val)
-{
-    Property::setBool(val);
-}
-void AdapterProperty::setPureDate(time_t val)
-{
-    Property::setDate(val);
-}
-      */
 
-////////////////////////////////////PROPERTY MANAGER/////////////////////////
-/*NamedProperty* PropertyManager::getProperty(const std::string& name)
-{
-    return 0;
-} */
 
 /*
 std::string ConvertStrToWStr(const char * str)
