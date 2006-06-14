@@ -8,7 +8,7 @@ namespace inman {
 
 const char * _InmanErrorSource[] = {
     "Ok", "RPCause", "INManProtocol",
-    "layerTCAP", "TCuser", "layerCAP3", "CAPuser", "layerMAP", "MAPuser"
+    "TCAP", "TCuser", "CAP3", "CAPuser", "MAP", "MAPuser"
 };
 /* ************************************************************************** *
  * class InmanErrorCode implementation:
