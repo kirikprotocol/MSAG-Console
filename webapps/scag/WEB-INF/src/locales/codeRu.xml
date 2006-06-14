@@ -1,0 +1,12 @@
+<project default="codeRu"  basedir=".">
+  <property name="java_src" location="${basedir}"/>
+  <property name="java_out" location="C:/scag1/webapps/scag/WEB-INF/classes"/>
+  <target name="codeRu">
+     <delete>
+       <fileset dir="${java_out}/locales">
+         <include name="*"/>
+       </fileset>
+     </delete>
+     <native2ascii encoding="Cp1251" src="${java_src}" dest="${java_out}/locales"/>
+  </target>
+</project>
