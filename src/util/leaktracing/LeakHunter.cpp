@@ -147,7 +147,7 @@ static void sigcheckpoint(int param)
 
 void LeakHunter::Init()
 {
-  sigset(17,sigcheckpoint);
+  sigset(1,sigcheckpoint);
 
   int i;
   for(i=0;i<LH_HASHSIZE;i++)

@@ -108,6 +108,7 @@ void registerSignalHandlers_internal()
 {
   sigset_t set;
   sigemptyset(&set);
+  sigaddset(&set,1);//for leakhunter
   sigaddset(&set,17);
   sigaddset(&set, SIGBUS);
   sigaddset(&set, SIGFPE);
