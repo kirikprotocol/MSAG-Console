@@ -27,6 +27,9 @@ metal.secondary.fontstyle=0
 decorate.frames=false
 decorate.dialogs=false
 
+#debugging
+debug=false
+
 # If true, welcome screen will be displayed.
 # Set to false after initial startup.
 firstTime=true
