@@ -21,9 +21,10 @@
   <property name="tomcat_auth_lib" location="${BUILD_DIR}/jars/sibinco_tomcat_auth.jar"/>
   <property name="log4j_jar" location="WEB-INF/lib/log4j.jar"/>
   <property name="servlet_jar" location="${CATALINA_HOME}/common/lib/servlet-api.jar"/>
-  <property name="tomcat_server_libs" 
+  <property name="jsp_jar" location="${CATALINA_HOME}/common/lib/jsp-api.jar"/>
+  <property name="tomcat_server_libs"
             location="${CATALINA_HOME}/server/lib/catalina.jar:${CATALINA_HOME}/bin/jmx.jar"/>
-
+  <property name="jstl_jar" location="WEB-INF/lib/jstl.jar"/>
   <target name="init">
     <tstamp/>
     <mkdir dir="${java_out}"/>
@@ -33,7 +34,7 @@
 
   <target name="compile" depends="init" description="compile the sources">
     <javac srcdir="${java_src}" destdir="${java_out}" source="1.4" target="1.4" 
-           classpath="${sibinco_lib}:${tomcat_auth_lib}:${log4j_jar}:${servlet_jar}:${tomcat_server_libs}" debug="yes"/>
+           classpath="${sibinco_lib}:${tomcat_auth_lib}:${log4j_jar}:${servlet_jar}:${tomcat_server_libs}:${jstl_jar}:${jsp_jar}" debug="yes"/>
     <native2ascii encoding="Cp1251" src="${java_src}/locales" dest="${java_out}/locales"/>
     <native2ascii encoding="Cp1251" src="${perfmon_src}/applet" dest="${perfmon_out}/applet"/>
     <native2ascii encoding="Cp1251" src="${svcmon_src}/applet" dest="${svcmon_out}/applet"/>
