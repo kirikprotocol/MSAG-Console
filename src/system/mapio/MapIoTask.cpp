@@ -413,6 +413,8 @@ int MapDialogContainer::busyMTDelay = 10;
 int MapDialogContainer::lockedByMoDelay = 10;
 int MapDialogContainer::MOLockTimeout = 45;
 bool MapDialogContainer::allowCallBarred = false;
+bool MapDialogContainer::ussdV1Enabled = false;
+bool MapDialogContainer::ussdV1UseOrigEntityNumber = false;
 
 MapProxy* MapDialogContainer::proxy = 0;
 
