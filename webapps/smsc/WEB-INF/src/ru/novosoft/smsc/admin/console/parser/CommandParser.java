@@ -20,6 +20,7 @@ import ru.novosoft.smsc.admin.console.commands.sme.*;
 import ru.novosoft.smsc.admin.console.commands.misc.*;
 import ru.novosoft.smsc.admin.console.commands.apply.*;
 import ru.novosoft.smsc.admin.console.commands.closedgroup.*;
+import ru.novosoft.smsc.admin.console.commands.emailsme.*;
 
 
 import antlr.TokenBuffer;
@@ -234,6 +235,12 @@ public CommandParser(ParserSharedInputState state) {
 			cmd=addgroup();
 			break;
 		}
+		case TGT_EMAILSME:
+		{
+			match(TGT_EMAILSME);
+			cmd=addemailsme();
+			break;
+		}
 		default:
 		{
 			throw new NoViableAltException(LT(1), getFilename());
@@ -326,6 +333,12 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			match(TGT_GROUP);
 			cmd=delgroup();
+			break;
+		}
+		case TGT_EMAILSME:
+		{
+			match(TGT_EMAILSME);
+			cmd=delemailsme();
 			break;
 		}
 		default:
@@ -1374,6 +1387,66 @@ public CommandParser(ParserSharedInputState state) {
 		return cmd;
 	}
 	
+	public final EmailSmeAddCommand  addemailsme() throws RecognitionException, TokenStreamException {
+		EmailSmeAddCommand cmd;
+		
+		
+		cmd = new EmailSmeAddCommand();
+		
+		
+		emailsme_gen_opt(cmd);
+		{
+		match(OPT_USERNAME);
+		cmd.setUserName(getnameid("emailsme username"));
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_FORWARDEMAIL:
+		{
+			match(OPT_FORWARDEMAIL);
+			cmd.setForwardEmail(getnameid("emailsme forwardemail"));
+			break;
+		}
+		case OPT_REALNAME:
+		case OPT_LIMITTYPE:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_REALNAME:
+		{
+			match(OPT_REALNAME);
+			cmd.setRealName(getnameid("emailsme realname"));
+			break;
+		}
+		case OPT_LIMITTYPE:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		match(OPT_LIMITTYPE);
+		cmd.setLimitType(getnameid("emailsme limit type"));
+		}
+		{
+		match(OPT_LIMITVALUE);
+		cmd.setLimitValue(getint("emailsme limit value"));
+		}
+		return cmd;
+	}
+	
 	public final RouteDeleteCommand  delroute() throws RecognitionException, TokenStreamException {
 		RouteDeleteCommand cmd;
 		
@@ -1596,6 +1669,17 @@ public CommandParser(ParserSharedInputState state) {
 		{
 		cmd.setClosedGroupId(getnameid("group id to delete"));
 		}
+		return cmd;
+	}
+	
+	public final EmailSmeDelCommand  delemailsme() throws RecognitionException, TokenStreamException {
+		EmailSmeDelCommand cmd;
+		
+		
+		cmd = new EmailSmeDelCommand();
+		
+		
+		emailsme_gen_opt(cmd);
 		return cmd;
 	}
 	
@@ -5454,6 +5538,32 @@ public CommandParser(ParserSharedInputState state) {
 		}
 	}
 	
+	public final void emailsme_gen_opt(
+		EmailSmeGenCommand cmd
+	) throws RecognitionException, TokenStreamException {
+		
+		
+		try {      // for error handling
+			{
+			match(OPT_TON);
+			cmd.setTon(getint("emailsme ton"));
+			}
+			{
+			match(OPT_NPI);
+			cmd.setNpi(getint("emailsme npi"));
+			}
+			{
+			match(OPT_ADDRESS);
+			cmd.setAddress(getnameid("emailsme address"));
+			}
+		}
+		catch (RecognitionException ex) {
+			
+			throw new RecognitionException("emailsme option(s) invalid. Details: "+ex.getMessage());
+			
+		}
+	}
+	
 	
 	public static final String[] _tokenNames = {
 		"<0>",
@@ -5499,6 +5609,7 @@ public CommandParser(ParserSharedInputState state) {
 		"\"messages\"",
 		"\"archive\"",
 		"\"group\"",
+		"\"emailsme\"",
 		"\"name\"",
 		"\"hide\"",
 		"\"nohide\"",
@@ -5573,6 +5684,12 @@ public CommandParser(ParserSharedInputState state) {
 		"\"outputaccessbit\"",
 		"\"accessmask\"",
 		"\"accessbit\"",
+		"\"username\"",
+		"\"forwardemail\"",
+		"\"realname\"",
+		"\"address\"",
+		"\"limittype\"",
+		"\"limitvalue\"",
 		"\"force\"",
 		"\"suppress\"",
 		"\"pass\"",

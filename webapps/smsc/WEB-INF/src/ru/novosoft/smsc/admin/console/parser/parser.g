@@ -19,6 +19,7 @@ import ru.novosoft.smsc.admin.console.commands.sme.*;
 import ru.novosoft.smsc.admin.console.commands.misc.*;
 import ru.novosoft.smsc.admin.console.commands.apply.*;
 import ru.novosoft.smsc.admin.console.commands.closedgroup.*;
+import ru.novosoft.smsc.admin.console.commands.emailsme.*;
 
 }
 
@@ -93,6 +94,7 @@ add returns [Command cmd] {
 	| TGT_PROVIDER	cmd = addprovider
 	| TGT_CATEGORY	cmd = addcategory
 	| TGT_GROUP     cmd = addgroup
+	| TGT_EMAILSME  cmd = addemailsme
 	;
 	
 /* ----------------------- Del action parser ---------------------- */
@@ -112,6 +114,7 @@ del returns [Command cmd] {
 	| TGT_PROVIDER	cmd = delprovider
 	| TGT_CATEGORY	cmd = delcategory
 	| TGT_GROUP     cmd = delgroup
+	| TGT_EMAILSME  cmd = delemailsme
 	;
 /* ----------------------- Alt action parser ---------------------- */
 alt returns [Command cmd] {
@@ -979,7 +982,31 @@ viewsme returns [SmeViewCommand cmd] {
         cmd = new ClosedGroupViewCommand();
     }	: ({ cmd.setClosedGroupId(getnameid("group id to view")); })
     	;
+/*--------------------Email SME ---------------------------- */
+emailsme_gen_opt[EmailSmeGenCommand cmd]
+    	: (OPT_TON { cmd.setTon(getint("emailsme ton")); })
+    	  (OPT_NPI { cmd.setNpi(getint("emailsme npi")); })
+    	  (OPT_ADDRESS { cmd.setAddress(getnameid("emailsme address")); })
+    	;
+exception
+catch [RecognitionException ex] {
+   throw new RecognitionException("emailsme option(s) invalid. Details: "+ex.getMessage());
+}
 
+addemailsme returns [EmailSmeAddCommand cmd] {
+    cmd = new EmailSmeAddCommand();
+}	: emailsme_gen_opt[cmd]
+      (OPT_USERNAME { cmd.setUserName(getnameid("emailsme username")); })
+      (OPT_FORWARDEMAIL { cmd.setForwardEmail(getnameid("emailsme forwardemail")); })?
+      (OPT_REALNAME { cmd.setRealName(getnameid("emailsme realname")); })?
+      (OPT_LIMITTYPE { cmd.setLimitType(getnameid("emailsme limit type")); })
+      (OPT_LIMITVALUE { cmd.setLimitValue(getint("emailsme limit value")); })
+	;
+
+delemailsme returns [EmailSmeDelCommand cmd] {
+    cmd = new EmailSmeDelCommand();
+}   : emailsme_gen_opt[cmd]
+    ;
 /* ------------------ Misc commands parsers ---------------- */
 
 addprovider returns [ProviderAddCommand cmd] {

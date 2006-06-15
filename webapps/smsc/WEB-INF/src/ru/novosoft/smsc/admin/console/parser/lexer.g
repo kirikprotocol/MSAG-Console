@@ -56,6 +56,7 @@ tokens {
   TGT_SMS_E     = "messages";
   TGT_ARCHIVE   = "archive";
   TGT_GROUP     = "group";
+  TGT_EMAILSME  = "emailsme";
 
   OPT_NAME      = "name";
   OPT_HIDE      = "hide";
@@ -131,6 +132,12 @@ tokens {
   OPT_OUTPUTACCESSBIT  =  "outputaccessbit";
   OPT_ACCESSMASK = "accessmask";
   OPT_ACCESSBIT  = "accessbit";
+  OPT_USERNAME   = "username";
+  OPT_FORWARDEMAIL = "forwardemail";
+  OPT_REALNAME   = "realname";
+  OPT_ADDRESS    = "address";
+  OPT_LIMITTYPE  = "limittype";
+  OPT_LIMITVALUE = "limitvalue";
 
   VAL_FORCE     = "force";
   VAL_SUPPRESS  = "suppress";

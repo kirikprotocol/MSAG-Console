@@ -52,7 +52,7 @@ public class ProfileAddCommand extends ProfileGenCommand {
                 ussd7bit = ctx.getSmsc().getDefaultProfilePropBoolean("UssdIn7Bit");
             }
             if (!isReport) report = Profile.convertReportOptionsStringToByte(ctx.getSmsc().getDefaultProfilePropString("Report"));
-            if (!isAliasHide) aliasHide = (ctx.getSmsc().getDefaultProfilePropBoolean("Hide") ? Profile.ALIAS_HIDE_true : Profile.ALIAS_HIDE_true );
+            if (!isAliasHide) aliasHide = (ctx.getSmsc().getDefaultProfilePropBoolean("Hide") ? Profile.ALIAS_HIDE_true : Profile.ALIAS_HIDE_true);
             if (!isAliasModifiable) aliasModifiable = ctx.getSmsc().getDefaultProfilePropBoolean("HideModifiable");
             if (!isDivertModifiable) divertModifiable = ctx.getSmsc().getDefaultProfilePropBoolean("DivertModifiable");
             if (!isUdhConcat) udhConcat = ctx.getSmsc().getDefaultProfilePropBoolean("UdhConcat");
