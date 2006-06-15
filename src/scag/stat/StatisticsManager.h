@@ -233,7 +233,7 @@ namespace stat {
         void StatisticsManager::dumpScCounters(SerializationBuffer& buf);
 
         int indexByCounter(int counter);
-        int indexByHttpCounter(int counter);
+        int indexByHttpCounter(int event);
 
         void SerializeSmppStat(Hash<CommonStat>& smppStat, SerializationBuffer& buf, bool add);
         void SerializeHttpStat(Hash<HttpStat>& httpStat, SerializationBuffer& buf);

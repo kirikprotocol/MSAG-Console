@@ -29,6 +29,32 @@ using namespace scag::stat::sacc;
 namespace scag { 
 namespace stat {
 
+    namespace Counters
+    {
+        typedef enum 
+        {
+          cntAccepted,
+          cntRejected,
+          cntDelivered,
+          cntGw_Rejected,
+          cntFailed,
+
+          cntRecieptOk,
+          cntRecieptFailed
+        } SmppStatCounter;
+
+        typedef enum
+        {
+          httpRequest,
+          httpRequestRejected,
+          httpResponse,
+          httpResponseRejected,
+          httpDelivered,
+          httpFailed
+        } HttpStatCounter;
+    }
+
+
 bool  StatisticsManager::inited = false;
 Mutex StatisticsManager::initLock;
 
@@ -205,7 +231,7 @@ void StatisticsManager::registerEvent(const SmppStatEvent& se)
 
   switch(se.event)
   {
-    case SUBMIT_FAILED:
+    case events::smpp::SUBMIT_FAILED:
         if(smeSt) { 
             smeSt->rejected++; smeSt->gw_rejected++; 
             incSvcSmppCounter(se.smeId, cntRejected); incSvcSmppCounter(se.smeId, cntGw_Rejected);
@@ -213,7 +239,7 @@ void StatisticsManager::registerEvent(const SmppStatEvent& se)
         if(routeSt) { routeSt->rejected++; routeSt->gw_rejected++; }
         genStatSmpp.inc(cntRejected); genStatSmpp.inc(cntGw_Rejected);
         break;
-    case SUBMIT_RESP_OK:
+    case events::smpp::SUBMIT_RESP_OK:
         if(smeSt) { smeSt->accepted++; incSvcSmppCounter(se.smeId, cntAccepted); }
         if(srvSt) { srvSt->delivered++; incScSmppCounter(se.smscId, cntDelivered); }
         if(routeSt) { routeSt->accepted++; }
@@ -223,20 +249,20 @@ void StatisticsManager::registerEvent(const SmppStatEvent& se)
 
         genStatSmpp.inc(cntAccepted);
         break;
-    case SUBMIT_RESP_FAILED:
+    case events::smpp::SUBMIT_RESP_FAILED:
         if(smeSt) { smeSt->rejected++; incSvcSmppCounter(se.smeId, cntRejected); }
         if(srvSt) { srvSt->failed++; incScSmppCounter(se.smscId, cntFailed); }
         if(routeSt) { routeSt->rejected++; }
         genStatSmpp.inc(cntRejected);
         break;
-    case DELIVER_FAILED:
+    case events::smpp::DELIVER_FAILED:
         if(srvSt) {
             srvSt->rejected++; srvSt->gw_rejected++;
             incScSmppCounter(se.smscId, cntRejected); incScSmppCounter(se.smscId, cntGw_Rejected);}
         if(routeSt) { routeSt->rejected++; routeSt->gw_rejected++; }
         genStatSmpp.inc(cntRejected); genStatSmpp.inc(cntGw_Rejected);
         break;
-    case DELIVER_RESP_OK:
+    case events::smpp::DELIVER_RESP_OK:
         if(smeSt) { smeSt->delivered++; incSvcSmppCounter(se.smeId, cntDelivered); }
         if(srvSt) { srvSt->accepted++; incScSmppCounter(se.smscId, cntAccepted); }
         if(routeSt) { routeSt->accepted++; }
@@ -246,19 +272,19 @@ void StatisticsManager::registerEvent(const SmppStatEvent& se)
 
         genStatSmpp.inc(cntAccepted);
         break;
-    case DELIVER_RESP_FAILED:
+    case events::smpp::DELIVER_RESP_FAILED:
         if(smeSt) { smeSt->failed++; incSvcSmppCounter(se.smeId, cntFailed); }
         if(srvSt) { srvSt->rejected++; incScSmppCounter(se.smscId, cntRejected); }
         if(routeSt) { routeSt->rejected++; }
         genStatSmpp.inc(cntRejected);
         break;
-    case RECEIPT_OK:
+    case events::smpp::RECEIPT_OK:
         if(smeSt) { smeSt->recieptOk++; incSvcSmppCounter(se.smeId, cntRecieptOk); }
         if(srvSt) { srvSt->recieptOk++; incScSmppCounter(se.smscId, cntRecieptOk); }
         if(routeSt) { routeSt->recieptOk++; }
         genStatSmpp.inc(cntRecieptOk);
         break;
-    case RECEIPT_FAILED:
+    case events::smpp::RECEIPT_FAILED:
         if(smeSt) { smeSt->recieptFailed++; incSvcSmppCounter(se.smeId, cntRecieptFailed);}
         if(srvSt) { srvSt->recieptFailed++; incScSmppCounter(se.smscId, cntRecieptFailed);}
         if(routeSt) { routeSt->recieptFailed++; }
@@ -278,7 +304,7 @@ void StatisticsManager::registerEvent(const HttpStatEvent& se)
     
     using namespace Counters;
     
-    genStatHttp.inc(se.counter);
+    genStatHttp.inc(se.event);
     
     if (se.routeId.length())
     {
@@ -302,31 +328,31 @@ void StatisticsManager::registerEvent(const HttpStatEvent& se)
             httpStatByUrl[currentIndex].Insert(se.url.c_str(), newStat);
             urlSt=httpStatByUrl[currentIndex].GetPtr(se.url.c_str());
         }
-        incSvcWapCounter(se.site.c_str(), se.counter);
+        incSvcWapCounter(se.site.c_str(), se.event);
     }
     
     if(routeSt)     incError(routeSt->errors, se.errCode);
     if(urlSt)       incError(urlSt->errors, se.errCode);
     
-    switch(se.counter)
+    switch(se.event)
     {
         #define INC_STAT(cnt,field) case cnt:{\
               if(routeSt)routeSt->field++; \
               if(urlSt)urlSt->field++; \
               }break;
     
-        INC_STAT(httpRequest,request)
-        INC_STAT(httpRequestRejected,requestRejected)
-        INC_STAT(httpResponse,response)
-        INC_STAT(httpResponseRejected,responseRejected)
-        INC_STAT(httpDelivered,delivered)
-        INC_STAT(httpFailed,failed)
+        INC_STAT(events::http::REQUEST_OK,request)
+        INC_STAT(events::http::REQUEST_FAILED,requestRejected)
+        INC_STAT(events::http::RESPONSE_OK,response)
+        INC_STAT(events::http::RESPONSE_FAILED,responseRejected)
+        INC_STAT(events::http::DELIVERED,delivered)
+        INC_STAT(events::http::FAILED,failed)
 
         #undef INC_STAT
     
     }
     
-    if (se.routeId.length() && se.counter == httpRequest)
+    if (se.routeId.length() && se.event == events::http::REQUEST_OK)
         incRouteTraffic(httpTrafficByRouteId, se.routeId.c_str());
 
     //thrSaccSender.Put(se.sacc_stat);
@@ -1186,24 +1212,24 @@ int StatisticsManager::indexByCounter(int counter)
   return -1;
 }
 
-int StatisticsManager::indexByHttpCounter(int counter)
+int StatisticsManager::indexByHttpCounter(int event)
 {
 
   using namespace Counters;
 
-  switch(counter)
+  switch(event)
   {
-  case httpRequest:
+  case events::http::REQUEST_OK:
       return PERF_HTTP_REQUEST;
-  case httpRequestRejected:
+  case events::http::REQUEST_FAILED:
       return PERF_HTTP_REQUEST_REJECTED;
-  case httpResponse:
+  case events::http::RESPONSE_OK:
       return PERF_HTTP_RESPONSE;
-  case httpResponseRejected:
+  case events::http::RESPONSE_FAILED:
       return PERF_HTTP_RESPONSE_REJECTED;
-  case httpDelivered:
+  case events::http::DELIVERED:
       return PERF_HTTP_DELIVERED;
-  case httpFailed:
+  case events::http::FAILED:
       return PERF_HTTP_FAILED;
   }
 

@@ -50,7 +50,6 @@ using namespace smsc::logger;
 using smsc::util::Exception;
 using smsc::util::SerializationBuffer;
 using namespace scag::stat;
-using namespace scag::stat::Counters;
 using namespace smsc::core::synchronization;
 
 namespace scag{

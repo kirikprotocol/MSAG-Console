@@ -29,8 +29,6 @@ protected:
 
 int Registrator::Execute()
 {
-    using namespace Counters;
-
     int counter = 0;
     int httpCounter = 0;
 
@@ -64,12 +62,12 @@ int Registrator::Execute()
             sm->registerEvent(si);
         }
         //=================== http1 ====================
-        if(++httpCounter == 6) httpCounter = 0;
+        if(++httpCounter == 7) httpCounter = 1;
         hs.routeId = "route1";
         hs.url = "yandex.ru/url1";
         hs.site = "yandex.ru";
         hs.serviceId = 1;
-        hs.counter = httpCounter;
+        hs.event = httpCounter;
         hs.errCode = 1;
         count =  7. * ( (double)random() / 2147483648. ) + 1;
         for(int i = 0; i<= count - 1; i++){            
@@ -116,7 +114,6 @@ int Sender::Execute()
  
 
     // Makes statistics
-    using namespace Counters;
     StatisticsManager * sm = dynamic_cast<StatisticsManager*>(perfListener);
 
 #ifdef MSAG_FAKE_STAT

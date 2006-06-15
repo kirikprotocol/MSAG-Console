@@ -8,7 +8,6 @@
 
 
 using namespace scag::stat;
-using namespace scag::stat::Counters;
 using namespace smsc::util;
 
 namespace scag{
@@ -35,9 +34,9 @@ EventSender::EventSender()
 EventSender::~EventSender()
 {
 
-	//smsc_log_debug(logger,"EventSender:: ~EventSender %d",*bStarted);
-	//evReconnect.notifyAll();
-    //mtx.notifyAll();	
+    //smsc_log_debug(logger,"EventSender:: ~EventSender %d",*bStarted);
+    //evReconnect.notifyAll();
+    //mtx.notifyAll();  
 }
 
 
@@ -73,51 +72,51 @@ bool EventSender::processEvent(void *ev)
  
  switch(evType) 
  {
-	 case sec_transport:
-	  {
-		   SACC_TRAFFIC_INFO_EVENT_t e((SACC_TRAFFIC_INFO_EVENT_t*)ev);
-		   //memcpy(&e,ev,sizeof(SACC_TRAFFIC_INFO_EVENT_t));
-		   delete (SACC_TRAFFIC_INFO_EVENT_t*)ev;
+     case sec_transport:
+      {
+           SACC_TRAFFIC_INFO_EVENT_t e((SACC_TRAFFIC_INFO_EVENT_t*)ev);
+           //memcpy(&e,ev,sizeof(SACC_TRAFFIC_INFO_EVENT_t));
+           delete (SACC_TRAFFIC_INFO_EVENT_t*)ev;
 
-		   performTransportEvent(e);
-		   smsc_log_debug(logger,"EventSender::Execute Sacc stat TRAFFIC event  processed from queue addr=0x%X",evType,ev);
-	  }
-	   break;
+           performTransportEvent(e);
+           smsc_log_debug(logger,"EventSender::Execute Sacc stat TRAFFIC event  processed from queue addr=0x%X",evType,ev);
+      }
+       break;
 
-	 case sec_bill:
-	  {
-		   SACC_BILLING_INFO_EVENT_t e((SACC_BILLING_INFO_EVENT_t*)ev);
-		   //memcpy(&e,ev,sizeof(SACC_BILLING_INFO_EVENT_t));
-		   delete (SACC_BILLING_INFO_EVENT_t*)ev;
-		   performBillingEvent(e);
-		   smsc_log_debug(logger,"EventSender::Execute Sacc stat BILLING event  processed from queue addr=0x%X",evType,ev);
-	  }
-	   break;
+     case sec_bill:
+      {
+           SACC_BILLING_INFO_EVENT_t e((SACC_BILLING_INFO_EVENT_t*)ev);
+           //memcpy(&e,ev,sizeof(SACC_BILLING_INFO_EVENT_t));
+           delete (SACC_BILLING_INFO_EVENT_t*)ev;
+           performBillingEvent(e);
+           smsc_log_debug(logger,"EventSender::Execute Sacc stat BILLING event  processed from queue addr=0x%X",evType,ev);
+      }
+       break;
 
-	 case sec_alarm_message:
-	  {
-		   SACC_ALARM_MESSAGE_t e((SACC_ALARM_MESSAGE_t*)ev);
-		   //memcpy(&e,ev,sizeof(SACC_ALARM_MESSAGE_t));
-		   delete (SACC_ALARM_MESSAGE_t*)ev;
-		   performAlarmMessageEvent(e);
-		   smsc_log_debug(logger,"EventSender::Execute Sacc stat ALARM_MESSAGE  processed from queue addr=0x%X",evType,ev);
-	  }
-	  break;
+     case sec_alarm_message:
+      {
+           SACC_ALARM_MESSAGE_t e((SACC_ALARM_MESSAGE_t*)ev);
+           //memcpy(&e,ev,sizeof(SACC_ALARM_MESSAGE_t));
+           delete (SACC_ALARM_MESSAGE_t*)ev;
+           performAlarmMessageEvent(e);
+           smsc_log_debug(logger,"EventSender::Execute Sacc stat ALARM_MESSAGE  processed from queue addr=0x%X",evType,ev);
+      }
+      break;
 
-	 case sec_alarm:
-	  {
-		   SACC_ALARM_t e((SACC_ALARM_t*)ev);
-		   //memcpy(&e,ev,sizeof(SACC_ALARM_t));
-		   delete (SACC_ALARM_t*)ev;
-		   performAlarmEvent(e);
-		   smsc_log_debug(logger,"EventSender::Execute Sacc stat ALARM event  processed from queue addr=0x%X",evType,ev);
-	  }
+     case sec_alarm:
+      {
+           SACC_ALARM_t e((SACC_ALARM_t*)ev);
+           //memcpy(&e,ev,sizeof(SACC_ALARM_t));
+           delete (SACC_ALARM_t*)ev;
+           performAlarmEvent(e);
+           smsc_log_debug(logger,"EventSender::Execute Sacc stat ALARM event  processed from queue addr=0x%X",evType,ev);
+      }
 
-	  default:
-		  smsc_log_warn(logger,"EventSender Unknown event!!");
-	   break;
+      default:
+          smsc_log_warn(logger,"EventSender Unknown event!!");
+       break;
 
-	  }
+      }
  return true;
 }
 
@@ -131,15 +130,15 @@ bool EventSender::checkQueue()
   void * ev;
   if(bConnected)
   {
-	if(eventsQueue.Pop(ev))
-	{
-	   if(ev)
-	   { 
-		  processEvent(ev);
-	   }
-	   
-	  return true;
-	}
+    if(eventsQueue.Pop(ev))
+    {
+       if(ev)
+       { 
+          processEvent(ev);
+       }
+       
+      return true;
+    }
   }
   return false;
 }
@@ -148,23 +147,23 @@ int EventSender::Execute()
 {
  if(connect(Host,Port,Timeout))
  {
-	   bConnected=true;
+       bConnected=true;
  }
  
  while( bStarted)
  {
 
-	  if(!bConnected )
-	  {
-		SaccSocket.Abort();
+      if(!bConnected )
+      {
+        SaccSocket.Abort();
 
-			if(connect(Host,Port,Timeout))
-			{
-			   bConnected=true;
-			}
-		//evReconnect.wait(Timeout);
-	  }
-	  checkQueue();
+            if(connect(Host,Port,Timeout))
+            {
+               bConnected=true;
+            }
+        //evReconnect.wait(Timeout);
+      }
+      checkQueue();
  }
 
  smsc_log_debug(logger,"EventSender stopped.");
@@ -436,7 +435,7 @@ void EventSender::performAlarmMessageEvent(const SACC_ALARM_MESSAGE_t& e)
 
 void EventSender::performAlarmEvent(const SACC_ALARM_t& e)
 {
-	uint16_t len=0;
+    uint16_t len=0;
  pdubuffer.setPos(sizeof(uint32_t));///header plase 
  pdubuffer.WriteNetInt16(e.getEventType()); 
  //std::string stran;
@@ -503,9 +502,9 @@ bool EventSender::PushEvent(void* item)
 
   if(eventsQueue.Count()<QueueLength)
   {
-	  eventsQueue.Push(item);
-	  mtx.notifyAll();
-	  return true;
+      eventsQueue.Push(item);
+      mtx.notifyAll();
+      return true;
   }
   mtx.notifyAll();  
   return false;

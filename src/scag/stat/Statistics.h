@@ -17,60 +17,6 @@ namespace stat {
 
 using smsc::smeman::SmeRecord;
 
-    namespace events{
-        namespace smpp{
-            const int SUBMIT_OK = 1;
-            const int SUBMIT_FAILED = 2;
-            const int DELIVER_OK = 3;
-            const int DELIVER_FAILED = 4;
-            const int SUBMIT_RESP_OK = 5;
-            const int SUBMIT_RESP_FAILED = 6;
-            const int DELIVER_RESP_OK = 7;
-            const int DELIVER_RESP_FAILED = 8;
-            const int RECEIPT_OK = 9;
-            const int RECEIPT_FAILED = 10;
-        }
-/*        namespace http{
-            const int REQUEST_OK = 1;
-            const int REQUEST_FAILED = 2;
-            const int RESPNSE_OK = 3;
-            const int RESPONSE_FAILED = 4;
-            const int DELIVERED = 5;
-            const int FAILED = 6;
-        }*/
-    }
-
-    namespace Counters
-    {
-
-/* additions for sacc */
-    
-
-
-/**/    
-        typedef enum 
-        {
-          cntAccepted,
-          cntRejected,
-          cntDelivered,
-          cntGw_Rejected,
-          cntFailed,
-
-          cntRecieptOk,
-          cntRecieptFailed
-        } SmppStatCounter;
-
-        typedef enum
-        {
-          httpRequest,
-          httpRequestRejected,
-          httpResponse,
-          httpResponseRejected,
-          httpDelivered,
-          httpFailed
-        } HttpStatCounter;
-    }
-
     struct SACC_EVENT_HEADER_t
     {
     private:
@@ -324,6 +270,29 @@ using smsc::smeman::SmeRecord;
 
     };
 
+    namespace events{
+        namespace smpp{
+            const int SUBMIT_OK = 1;
+            const int SUBMIT_FAILED = 2;
+            const int DELIVER_OK = 3;
+            const int DELIVER_FAILED = 4;
+            const int SUBMIT_RESP_OK = 5;
+            const int SUBMIT_RESP_FAILED = 6;
+            const int DELIVER_RESP_OK = 7;
+            const int DELIVER_RESP_FAILED = 8;
+            const int RECEIPT_OK = 9;
+            const int RECEIPT_FAILED = 10;
+        }
+        namespace http{
+            const int REQUEST_OK = 1;
+            const int REQUEST_FAILED = 2;
+            const int RESPONSE_OK = 3;
+            const int RESPONSE_FAILED = 4;
+            const int DELIVERED = 5;
+            const int FAILED = 6;
+        }
+    }
+
     struct SmppStatEvent
     {
       char smeId[smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1];
@@ -331,7 +300,7 @@ using smsc::smeman::SmeRecord;
       char routeId[smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH+1];
       int  routeProviderId;
 
-      int event;
+      int event; // use constants from scag::stat::events::smpp
       int errCode;
 
       SmppStatEvent()
@@ -388,21 +357,21 @@ using smsc::smeman::SmeRecord;
       std::string site;
       uint32_t serviceId;
       uint32_t serviceProviderId;
-      int counter;
+      int event; // use constants from scag::stat::events::http
       int errCode;
       
       HttpStatEvent(int cnt=-1, const std::string& rId="", const uint32_t sId=0, int spId=0, const std::string _url = "", const std::string _path = "", int err=0)
-        : routeId(rId), serviceId(sId), serviceProviderId(spId), counter(cnt), errCode(err), url(_url + "/" +_path), site(_url) {};
+        : routeId(rId), serviceId(sId), serviceProviderId(spId), event(cnt), errCode(err), url(_url + "/" +_path), site(_url) {};
 
       HttpStatEvent(const HttpStatEvent& cp)
-        : routeId(cp.routeId), serviceId(cp.serviceId), serviceProviderId(cp.serviceProviderId), counter(cp.counter), errCode(cp.errCode), url(cp.url), site(cp.site) {};
+        : routeId(cp.routeId), serviceId(cp.serviceId), serviceProviderId(cp.serviceProviderId), event(cp.event), errCode(cp.errCode), url(cp.url), site(cp.site) {};
 
         HttpStatEvent& operator=(const HttpStatEvent& cp)
         {
             routeId = cp.routeId;
             serviceId = cp.serviceId;
             serviceProviderId = cp.serviceProviderId;
-            counter = cp.counter;
+            event = cp.event;
             errCode = cp.errCode;
             url = cp.url;
             site = cp.site;

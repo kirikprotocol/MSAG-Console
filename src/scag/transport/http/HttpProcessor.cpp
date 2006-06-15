@@ -16,7 +16,6 @@ namespace scag { namespace transport { namespace http {
 using namespace scag::util::singleton;
 using namespace scag::sessions;
 using namespace scag::re;
-using namespace scag::stat::Counters;
 
 class HttpProcessorImpl : public HttpProcessor
 {
@@ -107,7 +106,7 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
 
             if(rs.result >= 0)
             {
-                registerEvent(httpRequest, request);
+                registerEvent(scag::stat::events::http::REQUEST_OK, request);
                 SessionManager::Instance().releaseSession(se);
                 return true;
             }
@@ -126,7 +125,7 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
     if(se.Get())
         SessionManager::Instance().releaseSession(se);
 
-    registerEvent(httpRequestRejected, request);
+    registerEvent(scag::stat::events::http::REQUEST_FAILED, request);
 
     return false;
 }
@@ -146,7 +145,7 @@ bool HttpProcessorImpl::processResponse(HttpResponse& response)
             rs = RuleEngine::Instance().process(response, *se.Get());
             if(rs.result >= 0)
             {
-                registerEvent(httpResponse, response);
+                registerEvent(scag::stat::events::http::RESPONSE_OK, response);
                 SessionManager::Instance().releaseSession(se);
                 return true;
             }
@@ -165,7 +164,7 @@ bool HttpProcessorImpl::processResponse(HttpResponse& response)
     if(se.Get())
         SessionManager::Instance().releaseSession(se);
 
-    registerEvent(httpResponseRejected, response);
+    registerEvent(scag::stat::events::http::RESPONSE_FAILED, response);
 
     return false;
 }
@@ -186,9 +185,9 @@ void HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
             response.setCommandId(HTTP_DELIVERY);
             rs = RuleEngine::Instance().process(response, *se.Get());
 
-            if(rs.result > 0)
+            if(rs.result > 0 && delivered)
             {
-                registerEvent(httpDelivered, response);
+                registerEvent(scag::stat::events::http::DELIVERED, response);
                 SessionManager::Instance().releaseSession(se);
                 return;
             }
@@ -208,7 +207,7 @@ void HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
     if(se.Get())
         SessionManager::Instance().releaseSession(se);
 
-    registerEvent(httpFailed, response);
+    registerEvent(scag::stat::events::http::FAILED, response);
 }
         
 void HttpProcessorImpl::init(const std::string& cfg)
