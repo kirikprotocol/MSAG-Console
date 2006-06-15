@@ -100,15 +100,17 @@ int StateMachine::Execute()
   return 0;
 }
 
-static void registerEvent(int event, SmppEntity* sme, SmppEntity* sc, router::RouteInfo& ri, int errCode)
+void StateMachine::registerEvent(int event, SmppEntity* sme, SmppEntity* sc, router::RouteInfo& ri, int errCode)
 {
+    smsc_log_debug(log, "SmppStateMAchine Event:%d", event);
     char* sme_id = (sme != NULL) ? (char*)sme->info.systemId : (char*)NULL;
     char* sc_id = (sc != NULL) ? (char*)sc->info.systemId : (char*)NULL;
     Statistics::Instance().registerEvent(SmppStatEvent(sme_id, sc_id, ri, event, errCode));
 }
 
-static void registerEvent(int event, SmppEntity* sme, SmppEntity* sc, int errCode)
+void StateMachine::registerEvent(int event, SmppEntity* sme, SmppEntity* sc, int errCode)
 {
+    smsc_log_debug(log, "SmppStateMAchine Event:%d", event);
     char* sme_id = (sme != NULL) ? (char*)sme->info.systemId : (char*)NULL;
     char* sc_id = (sc != NULL) ? (char*)sc->info.systemId : (char*)NULL;
     Statistics::Instance().registerEvent(SmppStatEvent(sme_id, sc_id, event, errCode));
