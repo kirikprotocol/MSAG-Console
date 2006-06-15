@@ -116,14 +116,14 @@ int Sender::Execute()
     // Makes statistics
     StatisticsManager * sm = dynamic_cast<StatisticsManager*>(perfListener);
 
-//#ifdef MSAG_FAKE_STAT
+#ifdef MSAG_FAKE_STAT
     Registrator registrator;
     printf("Registrator is initing...\n");
     registrator.init(sm);
     printf("Registrator is inited\n");
     registrator.Start();
     printf("Registrator is started\n");
-//#endif
+#endif
 
 
     //for(;;)
@@ -248,12 +248,12 @@ int Sender::Execute()
       perfListener->reportScPerformance();
     }
 
-//#ifdef MSAG_FAKE_STAT
+#ifdef MSAG_FAKE_STAT
     //Statistics is made
     printf("Registrator stoping...\n");
     registrator.Stop();
     printf("Registrator stoped\n");
-//#endif
+#endif
 
     return 1;
 }

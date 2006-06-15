@@ -327,7 +327,7 @@ using smsc::smeman::SmeRecord;
         event = cnt;
         errCode = errcode;
       }
-      SmppStatEvent(const char* sme, const char* sc, scag::transport::smpp::router::RouteInfo& ri, int cnt, int errcode)
+      SmppStatEvent(const char* sme, const char* sc, const char* rid, int cnt, int errcode)
       {
         smeId[0] = 0;
         if(sme != NULL)
@@ -335,7 +335,7 @@ using smsc::smeman::SmeRecord;
         smscId[0] = 0;
         if(sc != NULL)
             strncpy(smscId, sc, sizeof(smscId));
-        strncpy(routeId, (char*)ri.routeId, sizeof(routeId));
+        strncpy(routeId, rid, sizeof(routeId));
         event = cnt;
         errCode = errcode;
       }
