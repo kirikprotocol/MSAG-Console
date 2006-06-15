@@ -37,6 +37,8 @@ protected:
 
   void SubmitResp(SmppCommand& cmd,int status);
   void DeliveryResp(SmppCommand& cmd,int status);
+    void registerEvent(int event, SmppEntity* sme, SmppEntity* sc, int errCode);
+    void registerEvent(int event, SmppEntity* sme, SmppEntity* sc, router::RouteInfo& ri, int errCode);
 
   struct ResponseRegistry;
   static ResponseRegistry reg;
