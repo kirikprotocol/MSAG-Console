@@ -399,6 +399,7 @@ inline void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
       text.len--;
       text.bytes[text.len]=0;
     }
+    if ( text.len == 0 ) throw runtime_error("MAP::ConvAddrMap2Smc: zero address");
     sa->setValue(text.len,text.bytes);
   }
   else
