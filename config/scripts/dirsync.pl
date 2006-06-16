@@ -1,3 +1,4 @@
+#!/usr/bin/perl
 use strict;
 use File::Copy;
 if(@ARGV!=2)
