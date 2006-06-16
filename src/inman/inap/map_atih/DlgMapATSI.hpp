@@ -32,7 +32,7 @@ public:
     virtual void onATSIResult(ATSIRes* arg) = 0;
     //dialog finalization/error handling:
     //if errLayer != errOk, dialog is aborted by reason = errcode
-    virtual void onEndATSI(unsigned char ercode, InmanErrorType errLayer) = 0;
+    virtual void onEndATSI(unsigned short ercode, InmanErrorType errLayer) = 0;
 };
 
 #define MAP_OPER_INITED 0x2 //'10'B  on BIG-ENDIAN
