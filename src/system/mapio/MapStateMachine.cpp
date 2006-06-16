@@ -3440,18 +3440,10 @@ USHORT_T Et96MapV1BeginSubscriberActivityInd(
       throw runtime_error(
                           FormatText("MAP::%s MAP.did:{0x%x} is not present",__func__,dialogueId));
     __require__(dialog->ssn==localSsn);
-    bool hasAddr = false;
     Address addr;
-    try {
-      ConvAddrMSISDN2Smc(&originatingEntityNumber_s,&addr);
-      hasAddr = true;
-    } catch (...) {
-    }
+    ConvAddrMSISDN2Smc(&originatingEntityNumber_s,&addr);
     Address imsi;
-    try {
-      ConvAddrIMSI2Smc(&imsi_s,&imsi);
-    } catch (...) {
-    }
+    ConvAddrIMSI2Smc(&imsi_s,&imsi);
     
     auto_ptr<SMS> _sms ( new SMS() );
     SMS& sms = *_sms.get();

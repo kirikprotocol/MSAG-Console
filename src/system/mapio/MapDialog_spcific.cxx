@@ -374,7 +374,7 @@ inline void ConvAddrIMSI2Smc(const ET96MAP_IMSI_T* ma,Address* sa)
     if( *sa_ptr > 0x39 ) throw runtime_error("MAP::ConvAddrIMSI2Smc numeric address contains not digit.");
     sa_ptr++;
     *sa_ptr = (ma->imsi[i]>>4)+0x30; 
-    if( *sa_ptr == 0x0f ) *sa_ptr = 0;
+    if( *sa_ptr == 0x0f+0x30 ) *sa_ptr = 0;
     else {
       if( *sa_ptr > 0x39 ) throw runtime_error("MAP::ConvAddrIMSI2Smc numeric address contains not digit.");
       sa_ptr++;
