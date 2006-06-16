@@ -129,7 +129,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
     src->getSystemId(),
     sms.getDestinationAddress().toString().c_str());
     SubmitResp(cmd,smsc::system::Status::NOROUTE);
-    registerEvent(scag::stat::events::smpp::SUBMIT_FAILED, src, NULL, smsc::system::Status::NOROUTE);
+    registerEvent(scag::stat::events::smpp::SUBMIT_REJECTED, src, NULL, smsc::system::Status::NOROUTE);
     return;
   }
 
@@ -181,7 +181,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
         else {
             smsc_log_warn(log, "USSD Submit: UMR is not specified");
             SubmitResp(cmd,smsc::system::Status::USSDDLGREFMISM);
-            registerEvent(scag::stat::events::smpp::SUBMIT_FAILED, src, dst, (char*)ri.routeId, -1);
+            registerEvent(scag::stat::events::smpp::SUBMIT_REJECTED, src, dst, (char*)ri.routeId, -1);
             return;
         }
     }
@@ -192,7 +192,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
         if (!session.Get()) {
             smsc_log_warn(log, "USSD Submit: USR=%d is invalid, no session", key.USR);
             SubmitResp(cmd,smsc::system::Status::USSDDLGREFMISM);
-            registerEvent(scag::stat::events::smpp::SUBMIT_FAILED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
+            registerEvent(scag::stat::events::smpp::SUBMIT_REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
             return;
         }
         sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, umr);
@@ -204,7 +204,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
         if (!session.Get()) {
             smsc_log_warn(log, "USSD Submit: USR=%d is invalid, no session", key.USR);
             SubmitResp(cmd,smsc::system::Status::USSDDLGREFMISM);
-            registerEvent(scag::stat::events::smpp::SUBMIT_FAILED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
+            registerEvent(scag::stat::events::smpp::SUBMIT_REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
             return;
         }
         sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, umr);
@@ -217,7 +217,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
     else {
         smsc_log_warn(log, "USSD Submit: USSD_OP=%d is invalid", ussd_op);
         SubmitResp(cmd,smsc::system::Status::USSDDLGREFMISM); // TODO: status
-        registerEvent(scag::stat::events::smpp::SUBMIT_FAILED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
+        registerEvent(scag::stat::events::smpp::SUBMIT_REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
         return;
     }
   }
@@ -232,7 +232,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
     SubmitResp(cmd, st.temporal ? smsc::system::Status::RX_T_APPN :
                                   smsc::system::Status::RX_P_APPN);
     scag::sessions::SessionManager::Instance().releaseSession(session);
-    registerEvent(scag::stat::events::smpp::SUBMIT_FAILED, src, dst, (char*)ri.routeId, st.result);
+    registerEvent(scag::stat::events::smpp::SUBMIT_REJECTED, src, dst, (char*)ri.routeId, st.result);
     return;
   }
 
@@ -244,6 +244,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
       sms.getMessageBody().dropProperty(Tag::SMSC_UNKNOWN_OPTIONALS);
     }
     dst->putCommand(cmd);
+    registerEvent(scag::stat::events::smpp::SUBMIT_ACCEPTED, src, dst, (char*)ri.routeId, -1);
   } catch(std::exception& e) {
     registerEvent(scag::stat::events::smpp::SUBMIT_FAILED, src, dst, (char*)ri.routeId, -1);
     smsc_log_info(log,"Submit:Failed to putCommand into %s:%s",dst->getSystemId(),e.what());
@@ -335,7 +336,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
       src->getSystemId(),
       sms.getDestinationAddress().toString().c_str());
     DeliveryResp(cmd,smsc::system::Status::NOROUTE);
-    registerEvent(scag::stat::events::smpp::DELIVER_FAILED, NULL, src, smsc::system::Status::NOROUTE);
+    registerEvent(scag::stat::events::smpp::DELIVER_REJECTED, NULL, src, smsc::system::Status::NOROUTE);
     return;
   }
 
@@ -378,7 +379,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
       if (umr < 0) {
           smsc_log_warn(log, "USSD Delivery: UMR is not specified");
           DeliveryResp(cmd,smsc::system::Status::USSDDLGREFMISM);
-          registerEvent(scag::stat::events::smpp::DELIVER_FAILED, dst, src, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
+          registerEvent(scag::stat::events::smpp::DELIVER_REJECTED, dst, src, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
           return;
       }
       else if (ussd_op == smsc::smpp::UssdServiceOpValue::PSSR_INDICATION) { // New user USSD dialog
@@ -395,7 +396,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
           if (!session.Get()) {
               smsc_log_warn(log, "USSD Delivery: USR=%d is invalid, no session", key.USR);
               DeliveryResp(cmd,smsc::system::Status::USSDDLGREFMISM);
-              registerEvent(scag::stat::events::smpp::DELIVER_FAILED, dst, src, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
+              registerEvent(scag::stat::events::smpp::DELIVER_REJECTED, dst, src, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
               return;
           }
           sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
@@ -407,7 +408,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
       else {
           smsc_log_warn(log, "USSD Delivery: USSD_OP=%d is invalid", ussd_op);
           DeliveryResp(cmd,smsc::system::Status::USSDDLGREFMISM); // TODO: status
-          registerEvent(scag::stat::events::smpp::DELIVER_FAILED, dst, src, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
+          registerEvent(scag::stat::events::smpp::DELIVER_REJECTED, dst, src, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
           return;
       }
   }
@@ -422,7 +423,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
     DeliveryResp(cmd, st.temporal? smsc::system::Status::RX_T_APPN :
                                    smsc::system::Status::RX_P_APPN);
     scag::sessions::SessionManager::Instance().releaseSession(session);
-    registerEvent(scag::stat::events::smpp::DELIVER_FAILED, dst, src, (char*)ri.routeId, st.temporal? smsc::system::Status::RX_T_APPN : smsc::system::Status::RX_P_APPN);
+    registerEvent(scag::stat::events::smpp::DELIVER_REJECTED, dst, src, (char*)ri.routeId, st.temporal? smsc::system::Status::RX_T_APPN : smsc::system::Status::RX_P_APPN);
     return;
   }
 
@@ -435,6 +436,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
       sms.getMessageBody().dropProperty(Tag::SMSC_UNKNOWN_OPTIONALS);
     }
     dst->putCommand(cmd);
+    registerEvent(scag::stat::events::smpp::DELIVER_ACCEPTED, dst, src, (char*)ri.routeId, -1);
   } catch(std::exception& e) {
     smsc_log_info(log,"Delivery:Failed to putCommand into %s:%s",dst->getSystemId(),e.what());
     registerEvent(scag::stat::events::smpp::DELIVER_FAILED, dst, src, (char*)ri.routeId, -1);

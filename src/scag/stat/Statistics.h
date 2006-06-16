@@ -272,16 +272,18 @@ using smsc::smeman::SmeRecord;
 
     namespace events{
         namespace smpp{
-            const int SUBMIT_OK = 1;
-            const int SUBMIT_FAILED = 2;
-            const int DELIVER_OK = 3;
+            const int SUBMIT_FAILED = 1;
+            const int SUBMIT_REJECTED = 2;
+            const int SUBMIT_ACCEPTED = 3;
             const int DELIVER_FAILED = 4;
-            const int SUBMIT_RESP_OK = 5;
-            const int SUBMIT_RESP_FAILED = 6;
-            const int DELIVER_RESP_OK = 7;
-            const int DELIVER_RESP_FAILED = 8;
-            const int RECEIPT_OK = 9;
-            const int RECEIPT_FAILED = 10;
+            const int DELIVER_REJECTED = 5;
+            const int DELIVER_ACCEPTED = 6;
+            const int SUBMIT_RESP_OK = 7;
+            const int SUBMIT_RESP_FAILED = 8;
+            const int DELIVER_RESP_OK = 9;
+            const int DELIVER_RESP_FAILED = 10;
+            const int RECEIPT_OK = 11;
+            const int RECEIPT_FAILED = 12;
         }
         namespace http{
             const int REQUEST_OK = 1;
