@@ -11,7 +11,6 @@ static char const ident[] = "$Id$";
 using smsc::inman::comp::atih::initMAPATIH3Components;
 
 #include "util/config/ConfigView.h"
-//#include "util/mirrorfile/mirrorfile.h"
 using smsc::util::config::ConfigView;
 using smsc::util::config::CStrSet;
 
@@ -218,6 +217,11 @@ public:
             fprintf(outStream, "ERR: CSI result for unregistered subscriber %s",
                     subcr_addr.c_str());
         return;
+    }
+    void onCSIabort(const std::string &subcr_addr, unsigned short ercode, InmanErrorType errLayer)
+    {
+        fprintf(outStream, "ERR: CSI request for subscriber %s failed: code %u, layer %s\n",
+                subcr_addr.c_str(), ercode, _InmanErrorSource[errLayer]);
     }
 };
 

@@ -26,6 +26,7 @@ namespace inman {
 class ATCSIListener {
 public:
     virtual void onCSIresult(const std::string & subcr_addr, const MAPSCFinfo* scfInfo) = 0;
+    virtual void onCSIabort(const std::string &subcr_addr, unsigned short ercode, InmanErrorType errLayer) = 0;
 };
 
 class ATIInterrogator: ATSIhandler {
@@ -44,7 +45,7 @@ protected:
     //ATSIhandler interface
     void onATSIResult(ATSIRes* arg);
     //dialog finalization/error handling:
-    void onEndATSI(unsigned char ercode, InmanErrorType errLayer);
+    void onEndATSI(unsigned short ercode, InmanErrorType errLayer);
 
 private:
     Mutex           _sync;
@@ -88,6 +89,7 @@ protected:
     friend class ATIInterrogator;
     //-- ATCSIListener interface
     void onCSIresult(const std::string &subcr_addr, const MAPSCFinfo* scfInfo);
+    void onCSIabort(const std::string &subcr_addr, unsigned short ercode, InmanErrorType errLayer);
 
 private:
     typedef std::map<std::string, ATIInterrogator *> IntrgtrMAP;

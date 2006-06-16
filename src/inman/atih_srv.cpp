@@ -87,13 +87,17 @@ bool ServiceATIH::requestCSI(const std::string &subcr_addr, bool imsi/* = true*/
     MutexGuard  grd(_sync);
     IntrgtrMAP::iterator it = workers.find(subcr_addr);
     if (it == workers.end()) {
-        ATIInterrogator * worker = newWorker();
-        if (worker->interrogate(subcr_addr, imsi)) {
-            workers.insert(IntrgtrMAP::value_type(subcr_addr, worker));
-            return true;
-        }
-        pool.push_back(worker);
-    }
+        if (session && (session->getState() == SSNSession::ssnBound)) {
+            ATIInterrogator * worker = newWorker();
+            if (worker->interrogate(subcr_addr, imsi)) {
+                workers.insert(IntrgtrMAP::value_type(subcr_addr, worker));
+                return true;
+            }
+            pool.push_back(worker);
+        } else
+            smsc_log_error(logger, "ATIHSrv: SSN is not bound!");
+    } else
+        smsc_log_error(logger, "ATIHSrv: CSI request already active!");
     return false;
 }
 
@@ -113,6 +117,19 @@ void ServiceATIH::onCSIresult(const std::string & subcr_addr, const MAPSCFinfo* 
     }
 }
 
+void ServiceATIH::onCSIabort(const std::string &subcr_addr, unsigned short ercode,
+                                                             InmanErrorType errLayer)
+{
+    MutexGuard  grd(_sync);
+    IntrgtrMAP::iterator it = workers.find(subcr_addr);
+    if (it != workers.end()) {
+        ATIInterrogator * worker = (*it).second;
+        workers.erase(it);
+        if (_cfg.client)
+            _cfg.client->onCSIabort(subcr_addr, ercode, errLayer);
+        pool.push_back(worker);
+    }
+}
 
 /* ------------------------------------------------------------------------ *
  * Private/protected methods
@@ -162,6 +179,8 @@ bool ATIInterrogator::isActive(void)
 bool ATIInterrogator::interrogate(const std::string &subcr_addr, bool imsi/* = false*/)
 {
     MutexGuard  grd(_sync);
+    scfInfo.serviceKey = 0;
+    scfInfo.scfAddress.clear();
     try {
         mapDlg = new MapATSIDlg(tcSesssion, this);
         smsc_log_debug(logger, "Intrgtr[%s]: requesting subscription ..", subcr_addr.c_str());
@@ -199,14 +218,17 @@ void ATIInterrogator::onATSIResult(ATSIRes* arg)
         scfInfo.scfAddress.clear();
 }
  //dialog finalization/error handling:
-void ATIInterrogator::onEndATSI(unsigned char ercode, InmanErrorType errLayer)
+void ATIInterrogator::onEndATSI(unsigned short ercode, InmanErrorType errLayer)
 {
     MutexGuard  grd(_sync);
     if (mapDlg) {
         delete mapDlg;
         mapDlg = NULL;
     }
-    csiHdl->onCSIresult(subcrAddr, &scfInfo);
+    if (errLayer == smsc::inman::errOk)
+        csiHdl->onCSIresult(subcrAddr, &scfInfo);
+    else
+        csiHdl->onCSIabort(subcrAddr, ercode, errLayer);
 }
 
 
