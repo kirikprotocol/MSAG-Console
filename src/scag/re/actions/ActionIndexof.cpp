@@ -12,7 +12,7 @@ void ActionIndexof::init(const SectionParams& params,PropertyObject propertyObje
     FieldType ft;
 
     m_fVariableFieldType = CheckParameter(params, propertyObject, "indexof", "var", true, true, strVariable, bExist);
-    m_fStringFieldType = CheckParameter(params, propertyObject, "indexof", "str", true, true, strString, bExist);
+    m_fStringFieldType = CheckParameter(params, propertyObject, "indexof", "value", true, true, strString, bExist);
     ft = CheckParameter(params, propertyObject, "indexof", "result", true, false, strResult, bExist);
 
     smsc_log_debug(logger,"Action 'indexof':: init");
@@ -104,7 +104,7 @@ bool ActionIndexof::run(ActionContext& context)
 
 IParserHandler * ActionIndexof::StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory)
 {
-    throw SCAGException("Action 'substr' cannot include child objects");
+    throw SCAGException("Action 'indexof' cannot include child objects");
 }
 
 bool ActionIndexof::FinishXMLSubSection(const std::string& name)

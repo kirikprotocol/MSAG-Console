@@ -12,7 +12,7 @@ void ActionConcat::init(const SectionParams& params,PropertyObject propertyObjec
     FieldType ft;
 
     ft = CheckParameter(params, propertyObject, "concat", "var", true, false, strVariable, bExist);
-    m_fStrFieldType = CheckParameter(params, propertyObject, "concat", "str", true, true, strString, bExist);
+    m_fStrFieldType = CheckParameter(params, propertyObject, "concat", "value", true, true, strString, bExist);
 
     smsc_log_debug(logger,"Action 'concat':: init");
 }

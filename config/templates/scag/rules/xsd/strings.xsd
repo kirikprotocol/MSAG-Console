@@ -2,33 +2,36 @@
 <schema targetNamespace="http://www.sibinco.com/SCAG/STRINGS" 
     xmlns="http://www.w3.org/2001/XMLSchema"
     xmlns:operation="http://www.sibinco.com/SCAG/STRINGS"
+    xmlns:scag="http://www.sibinco.com/SCAG"
     elementFormDefault="qualified">
+
+    <import schemaLocation="rules.xsd" namespace="http://www.sibinco.com/SCAG" />
 
     <group name="Actions">
         <choice>
             <element name="indexof">
                 <complexType>
-                    <attribute name="var" type="string" use="required"/>
-		    <attribute name="str" type="string" use="required"/>
+                    <attribute name="var" type="scag:Value" use="required"/>
+		    <attribute name="value" type="scag:Value" use="required"/>
 
-		    <attribute name="result" type="string" use="required" />
+		    <attribute name="result" type="scag:Var" use="required" />
                 </complexType>
             </element>
 
             <element name="substr">
                 <complexType>
-                    <attribute name="var" type="string" use="required"/>
-		    <attribute name="begin" type="string" use="optional"/>
-		    <attribute name="end" type="string" use="optional"/>
+                    <attribute name="var" type="scag:Value" use="required"/>
+		    <attribute name="begin" type="scag:Value" use="optional"/>
+		    <attribute name="end" type="scag:Value" use="optional"/>
 		    
-		    <attribute name="result" type="string" use="required" />
+		    <attribute name="result" type="scag:Var" use="required" />
                 </complexType>
             </element>
 
             <element name="concat">
                 <complexType>
-                    <attribute name="var" type="string" use="required"/>
-		    <attribute name="str" type="string" use="required"/>
+                    <attribute name="var" type="scag:Var" use="required"/>
+		    <attribute name="value" type="scag:Value" use="required"/>
                 </complexType>
             </element>
 
