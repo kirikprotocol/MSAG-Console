@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2006 SibInco Inc. All Rights Reserved.
+ */
+
 package ru.sibinco.scag.util;
 
 import ru.sibinco.lib.backend.util.xml.Utils;
