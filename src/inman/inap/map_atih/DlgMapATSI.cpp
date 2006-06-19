@@ -157,7 +157,8 @@ void MapATSIDlg::onDialogUAbort(USHORT_T abortInfo_len, UCHAR_T *pAbortInfo,
         smsc_log_error(logger, "MapATSI[%u]: U_ABORT at state 0x%x", atsiId, _atsiState.value);
         endTCap();
     }
-    atsiHdl->onEndATSI(Dialog::tcUserGeneralError, smsc::inman::errTCuser);
+    atsiHdl->onEndATSI((abortInfo_len == 1) ? *pAbortInfo : Dialog::tcUserGeneralError,
+                       smsc::inman::errTCuser);
 }
 
 //SCF sent DialogEnd, it's either succsesfull contract completion,
