@@ -8,6 +8,7 @@ import javax.servlet.jsp.jstl.core.Config;
 import javax.servlet.jsp.jstl.fmt.LocalizationContext;
 import javax.servlet.http.HttpSession;
 import java.util.*;
+import java.text.MessageFormat;
 
 
 public class LocaleMessages
@@ -34,6 +35,14 @@ public class LocaleMessages
   public String getMessage(HttpSession session,String key) {
       try {
         return getBundle(session).getString(key);
+      } catch(MissingResourceException ex) {
+        return "???"+key+"???";
+      }
+  }
+
+  public String getMessage(HttpSession session,String key, Object[] values) {
+      try {
+          return  MessageFormat.format(getMessage(session, key), values);
       } catch(MissingResourceException ex) {
         return "???"+key+"???";
       }
