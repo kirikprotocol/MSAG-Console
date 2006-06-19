@@ -7,7 +7,7 @@ namespace scag { namespace re { namespace actions {
 
 using namespace scag::stat;
 
-static bool checkSDTPDateFormat(std::string& str)
+static bool checkSDTPDateFormat(std::string& str, std::string& msg)
 {
     char p;
     uint32_t i, y, m, d, h, min, s, t, nn;
@@ -15,8 +15,36 @@ static bool checkSDTPDateFormat(std::string& str)
     if(str.length() > 0)
     {
         i = sscanf(str.c_str(), "%2u%2u%2u%2u%2u%2u%1u%2u%c", &y, &m, &d, &h, &min, &s, &t, &nn, &p);
-        if(i < 9 || m > 12 || !d || d > 31 || h > 23 || min > 60 || s > 59 || (p != '-' && p != '+' && p != 'R'))
+        if(i != 9)
+        {
+            msg = "Wrong field count";
             return false;
+        }
+        else if(m > 12)
+        {
+            msg = "Wrong month";
+            return false;
+        }
+        else if((!d && p != 'R') || d > 31)
+        {
+            msg = "Wrong day";
+            return false;
+        }
+        else if(h > 23 || min > 60 || s > 59)
+        {
+            msg = "Wrong time";
+            return false;
+        }
+        else if(p != '-' && p != '+' && p != 'R')
+        {
+            msg = "Wrong p parameter";
+            return false;
+        }
+        else if(nn > 48)
+        {
+            msg = "Wrong nn parameter";
+            return false;
+        }
     }
     return true;
 }
@@ -78,6 +106,7 @@ bool ActionSend::FinishXMLSubSection(const std::string& name)
 void ActionSend::init(const SectionParams& params,PropertyObject _propertyObject)
 {
     bool bExist;
+    std::string msg;
 
     logger = Logger::getInstance("scag.re");
 
@@ -94,8 +123,8 @@ void ActionSend::init(const SectionParams& params,PropertyObject _propertyObject
 
     FieldType ft = CheckParameter(params, propertyObject, "send", "date", false, true, strDate, bExist);
 
-    if(ft == ftUnknown && !checkSDTPDateFormat(strDate))
-        throw SCAGException("Action 'send' : invalid 'date' parameter");
+    if(ft == ftUnknown && !checkSDTPDateFormat(strDate, msg))
+        throw SCAGException("Action 'send' : invalid 'date' parameter: %s", msg.c_str());
 
     smsc_log_debug(logger,"Action 'send':: inited... level=%d", level);
 }
@@ -104,6 +133,7 @@ bool ActionSend::run(ActionContext& context)
 {
     SACC_ALARM_MESSAGE_t ev;
     std::string s2;
+    std::string msg;
 
     Statistics& sm = Statistics::Instance();
 
@@ -134,9 +164,9 @@ bool ActionSend::run(ActionContext& context)
     }
 
     getStrProperty(context, strDate, "date", ev.pDeliveryTime);
-    if(!checkSDTPDateFormat(ev.pDeliveryTime))
+    if(!checkSDTPDateFormat(ev.pDeliveryTime, msg))
     {
-        smsc_log_error(logger, "Action 'send' invalid SDTP date format");
+        smsc_log_error(logger, "Action 'send' invalid SDTP date format: %s", msg.c_str());
         return true;
     }
 
