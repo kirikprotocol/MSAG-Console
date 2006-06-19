@@ -236,11 +236,11 @@ void cmd_config(Console&, const std::vector<std::string> &args)
 }
 
 
-//> set_abn ['1.1.signals'] ['imsi_number']
+//> set_abn ['.1.1.signals'] ['imsi_number']
 void cmd_set_abn(Console&, const std::vector<std::string> &args)
 {
     if (args.size() < 2) {
-        fprintf(stdout, "USAGE: set_abn ['1.1.signals'] ['imsi_number']\n");
+        fprintf(stdout, "USAGE: set_abn ['.1.1.signals'] ['imsi_number']\n");
         return;
     }
     TonNpiAddress   adr[2]; //msisdn, imsi
@@ -250,14 +250,14 @@ void cmd_set_abn(Console&, const std::vector<std::string> &args)
             || ((adr[0].numPlanInd != adr[0].typeOfNumber)
                 || (adr[0].numPlanInd != 1))) {
             fprintf(stdout, "ERR: bad MSISDN");
-            fprintf(stdout, "USAGE: set_abn ['1.1.signals'] ['imsi_number']\n");
+            fprintf(stdout, "USAGE: set_abn ['.1.1.signals'] ['imsi_number']\n");
             return;
         }
     }
     if (args.size() >= 3) { //imsi: (isdn, unknown)
         if (!adr[1].fromText(args[2].c_str()) || NOT_IMSI(adr[1])) {
             fprintf(stdout, "ERR: bad IMSI");
-            fprintf(stdout, "USAGE: set_abn ['1.1.signals'] ['imsi_number']\n");
+            fprintf(stdout, "USAGE: set_abn ['.1.1.signals'] ['imsi_number']\n");
             return;
         }
     }
@@ -266,11 +266,11 @@ void cmd_set_abn(Console&, const std::vector<std::string> &args)
 
 //requests SCF info via O_CSI
 //> o_csi address
-// where addres either 'abn.N' or '1.1.signals' or 'imsi_number'
+// where addres either 'abn.N' or '.1.1.signals' or 'imsi_number'
 void cmd_o_csi(Console&, const std::vector<std::string> &args)
 {
     if (args.size() < 2) {
-        fprintf(stdout, "USAGE: o_csi [abn.NN | '1.1.signals' | 'imsi_number']\n");
+        fprintf(stdout, "USAGE: o_csi [abn.NN | '.1.1.signals' | 'imsi_number']\n");
         return;
     }
     bool        imsi = false;
@@ -282,29 +282,36 @@ void cmd_o_csi(Console&, const std::vector<std::string> &args)
         abId = (unsigned)atoi(s_abn + 4);
         if (!abId || abId > abnData.getMaxAbId()) {
             fprintf(stdout, "ERR:  %s abonent Id %s\n", !abId ? "bad" : "unknown", s_abn);
-            fprintf(stdout, "USAGE: o_csi [abn.NN | '1.1.signals' | 'imsi_number']\n");
+            fprintf(stdout, "USAGE: o_csi [abn.NN | '.1.1.signals' | 'imsi_number']\n");
             return;
         }
         AbonentInfo ab_inf = *abnData.getAbnInfo(abId);
         subscr = ab_inf.addr.toString();
-    } else if (!strncmp(s_abn, "1.1.", 4)) { //msisdn
+    } else if (!strncmp(s_abn, ".1.1.", 5)) { //msisdn
         TonNpiAddress addr;
         if (!addr.fromText(s_abn)) {
             fprintf(stdout, "ERR:  bad MSISDN %s\n", s_abn);
-            fprintf(stdout, "USAGE: o_csi [abn.NN | '1.1.signals' | 'imsi_number']\n");
+            fprintf(stdout, "USAGE: o_csi [abn.NN | '.1.1.signals' | 'imsi_number']\n");
             return;
         }
         abId = abnData.addAbonent(&addr, NULL);
         subscr = addr.toString();
-    } else {                                //imsi
-        fprintf(stdout, "ERR:  IMSI is  not supported yet.\n");
-/*
+    } else {                                //imsi or unknown
         TonNpiAddress addr;
-        if (!addr.fromText(s_abn) || NOT_IMSI(addr)) {
-            fprintf(stdout, "ERR:  bad IMSI %s\n", s_abn);
-            fprintf(stdout, "USAGE: o_csi [abn.NN | '1.1.signals' | 'imsi_number']\n");
+        if (!addr.fromText(s_abn)) {
+            fprintf(stdout, "ERR:  bad IMSI or MSISDN: %s\n", s_abn);
+            fprintf(stdout, "USAGE: o_csi [abn.NN | '.1.1.signals' | 'imsi_number']\n");
             return;
         }
+        if (NOT_IMSI(addr)) {
+            fprintf(stdout, "ERR:  bad IMSI or MSISDN %s\n", s_abn);
+            fprintf(stdout, "USAGE: o_csi [abn.NN | '.1.1.signals' | 'imsi_number']\n");
+            return;
+        }
+        fprintf(stdout, "[o_csi]: %s\n", addr.getSignals());
+        fprintf(stdout, "ERR:  IMSI is  not supported yet.\n");
+        return;
+/*
         abId = abnData.addAbonent(NULL, &addr);
         subscr = addr.toString();
         imsi = true;
