@@ -18,7 +18,7 @@
       javax.servlet.jsp.jstl.fmt.locale
     </param-name>
     <param-value>
-      @language.default@
+      ru
     </param-value>
   </context-param>
 
@@ -46,6 +46,10 @@
    <servlet>
      <servlet-name>WHOISD</servlet-name>
      <servlet-class>ru.sibinco.WHOISDIntegrator.WHOISDServlet</servlet-class>     
+   </servlet>
+   <servlet>
+     <servlet-name>resource</servlet-name>
+     <servlet-class>ru.sibinco.scag.util.ResourceServlet</servlet-class>
    </servlet>
   <filter>
     <filter-name>SCAG</filter-name>
@@ -204,9 +208,13 @@
 
    <servlet-mapping>
      <servlet-name>WHOISD</servlet-name>
-     <url-pattern>@WHOISD.url-pattern@</url-pattern>
+     <url-pattern>/WHOISD/*</url-pattern>
    </servlet-mapping>
 
+   <servlet-mapping>
+     <servlet-name>resource</servlet-name>
+     <url-pattern>/resource/*</url-pattern>
+   </servlet-mapping>
   <filter-mapping>
     <filter-name>SCAG</filter-name>
     <url-pattern>/*</url-pattern>
