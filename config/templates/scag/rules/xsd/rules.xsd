@@ -18,7 +18,7 @@
     </annotation>
    
     <import schemaLocation="bill.xsd"       namespace="http://www.sibinco.com/SCAG/BILL"/>
-    <import schemaLocation="send.xsd"        namespace="http://www.sibinco.com/SCAG/SEND"/>
+    <import schemaLocation="send.xsd"       namespace="http://www.sibinco.com/SCAG/SEND"/>
     <import schemaLocation="sessions.xsd"   namespace="http://www.sibinco.com/SCAG/SESSIONS"/>
     <import schemaLocation="operations.xsd" namespace="http://www.sibinco.com/SCAG/OPERATIONS"/>
     <import schemaLocation="strings.xsd"    namespace="http://www.sibinco.com/SCAG/STRINGS"/>
@@ -69,6 +69,19 @@
             <enumeration value="gei"/><enumeration value="lei"/>
         </restriction>
     </simpleType>
+    
+    
+    <simpleType name="TransportOperation">
+        <restriction base="string">
+	    <enumeration value="DELIVER" />
+	    <enumeration value="SUBMIT" />
+	    <enumeration value="RECEIPT" />
+	    <enumeration value="USSD_DIALOG" />
+	    <enumeration value="HTTP_DELIVERY" />
+        </restriction>
+    </simpleType>
+    
+    
     <attributeGroup name="Test">
         <attribute name="test" type="scag:Named" use="required"/>
         <attribute name="op" type="scag:Operation" use="optional"/>

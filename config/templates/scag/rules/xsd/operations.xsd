@@ -2,14 +2,17 @@
 <schema targetNamespace="http://www.sibinco.com/SCAG/OPERATIONS" 
     xmlns="http://www.w3.org/2001/XMLSchema"
     xmlns:operation="http://www.sibinco.com/SCAG/OPERATIONS"
+    xmlns:scag="http://www.sibinco.com/SCAG"
     elementFormDefault="qualified">
+
+    <import schemaLocation="rules.xsd" namespace="http://www.sibinco.com/SCAG" />
 
     <group name="Actions">
         <choice>
             <element name="wait">
                 <complexType>
-                    <attribute name="type" type="string" use="required"/>
-		    <attribute name="time" type="string" use="required"/>
+                    <attribute name="type" type="scag:TransportOperation" use="required"/>
+		    <attribute name="time" type="scag:Value" use="required"/>
                 </complexType>
             </element>
         </choice>    
