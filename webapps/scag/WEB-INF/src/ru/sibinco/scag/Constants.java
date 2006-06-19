@@ -138,13 +138,15 @@ public class Constants {
         }
 
         public interface rules {
-            public static final Constants RULE_ID_NOT_SPECIFIED = new Constants("error.rules.rule_id_not_specified");
-            public static final Constants RULE_NAME_NOT_FOUND = new Constants("error.rules.name_not_found");
             public static final Constants COULD_NOT_REMOVE_RULE = new Constants("error.rule.not.removed");
         }
 
         public interface stat {
             public static final Constants GET_STATISTICS_FAILED = new Constants("error.stat.get_statistics_failed");
+            public static final Constants STORE_PATH_EMPTY = new Constants("error.stat.store_path_empty");//store path is empty
+            public static final Constants FAILED_OBTAIN_DIR = new Constants("error.stat.failed_obtain_dir");//Failed to obtain statistics dir. Details:
+            public static final Constants NO_STAT_DIR = new Constants("error.stat.no_stat_dir");//No stat directories at path
+            public static final Constants UNSUPPORTED_HEADER = new Constants("error.stat.unsupported_header");//unsupported header of file (support only SCAG.STAT file )
         }
 
     }

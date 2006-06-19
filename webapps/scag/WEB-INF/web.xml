@@ -47,6 +47,10 @@
      <servlet-name>WHOISD</servlet-name>
      <servlet-class>ru.sibinco.WHOISDIntegrator.WHOISDServlet</servlet-class>     
    </servlet>
+   <servlet>
+     <servlet-name>resource</servlet-name>
+     <servlet-class>ru.sibinco.scag.util.ResourceServlet</servlet-class>
+   </servlet>
   <filter>
     <filter-name>SCAG</filter-name>
     <filter-class>ru.sibinco.scag.beans.SCAGFilter</filter-class>
@@ -207,6 +211,10 @@
      <url-pattern>/WHOISD/*</url-pattern>
    </servlet-mapping>
 
+   <servlet-mapping>
+     <servlet-name>resource</servlet-name>
+     <url-pattern>/resource/*</url-pattern>
+   </servlet-mapping>
   <filter-mapping>
     <filter-name>SCAG</filter-name>
     <url-pattern>/*</url-pattern>

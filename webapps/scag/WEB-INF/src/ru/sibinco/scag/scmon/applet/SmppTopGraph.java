@@ -6,6 +6,7 @@ package ru.sibinco.scag.scmon.applet;
 
 import ru.sibinco.scag.scmon.ScSnap;
 import ru.sibinco.scag.scmon.snap.SmppSnap;
+import ru.sibinco.scag.util.RemoteResourceBundle;
 
 import java.awt.*;
 import java.awt.event.MouseListener;
@@ -52,8 +53,7 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
     int smeNameWidth = 0;
     int maxSpeed = 50;
     int rowHeight = SmppSnap.COUNTERS * 2;
-    ResourceBundle localeText;
-    ResourceBundle messagesText;
+    RemoteResourceBundle localeText;
     int graphScale;
     int graphGrid;
     int graphHiGrid;
@@ -84,8 +84,7 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
 
     public SmppTopGraph(ScSnap snap, int maxSpeed, int graphScale,
                         int graphGrid, int graphHiGrid,
-                        int graphHead, ResourceBundle localeText,
-                        ResourceBundle messagesText,
+                        int graphHead, RemoteResourceBundle localeText,
                         SnapSmppHistory snapSmppHistory) {
         super();
         this.maxSpeed = maxSpeed;
@@ -94,7 +93,6 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
         this.graphGrid = graphGrid;
         this.graphHiGrid = graphHiGrid;
         this.graphHead = graphHead;
-        this.messagesText = messagesText;
         this.snapSmppHistory = snapSmppHistory;
         addMouseListener(this);
         addMouseMotionListener(this);

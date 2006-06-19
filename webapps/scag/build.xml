@@ -50,10 +50,10 @@
     <mkdir dir="${exploded}/stat/monitor"/>
     <jar jarfile="${exploded}/stat/monitor/perfmon.jar">
       <fileset dir="${java_out}">
-        <include name="${perfmon_path}/applet/**"/>
+        <include name="${perfmon_path}/applet/**/*.class"/>
         <include name="${perfmon_path}/PerfSnap.class"/>
         <include name="${perfmon_path}/PerfSnap*.class"/>
-        <include name="locales/*.properties"/>
+        <include name="ru/sibinco/scag/util/RemoteResourceBundle.class"/>
       </fileset>
       <fileset dir="${exploded}/unjar_tmp">
         <include name="ru/sibinco/lib/backend/applet/**"/>
@@ -63,10 +63,10 @@
     <mkdir dir="${exploded}/endpoints/services/monitor"/>
     <jar jarfile="${exploded}/endpoints/services/monitor/svcmon.jar">
       <fileset dir="${java_out}">
-        <include name="${svcmon_path}/applet/**"/>
+        <include name="${svcmon_path}/applet/**/*.class"/>
         <include name="${svcmon_path}/snap/**"/>
         <include name="${svcmon_path}/SvcSnap.class"/>
-        <include name="locales/*.properties"/>
+        <include name="ru/sibinco/scag/util/RemoteResourceBundle.class"/>
       </fileset>
       <fileset dir="${exploded}/unjar_tmp">
         <include name="ru/sibinco/lib/backend/applet/**"/>
@@ -76,11 +76,10 @@
     <mkdir dir="${exploded}/endpoints/centers/monitor"/>
     <jar jarfile="${exploded}/endpoints/centers/monitor/scmon.jar">
       <fileset dir="${java_out}">
-        <include name="${scmon_path}/applet/**"/>
-        <include name="${scmon_path}/applet/*.java"/>
+        <include name="${scmon_path}/applet/**/*.class"/>
         <include name="${scmon_path}/ScSnap.class"/>
         <include name="${scmon_path}/snap/**"/>
-        <include name="locales/*.properties"/>
+        <include name="ru/sibinco/scag/util/RemoteResourceBundle.class"/>
       </fileset>
       <fileset dir="${exploded}/unjar_tmp">
         <include name="ru/sibinco/lib/backend/applet/**"/>

@@ -6,6 +6,7 @@ package ru.sibinco.scag.svcmon.applet;
 
 import ru.sibinco.scag.svcmon.SvcSnap;
 import ru.sibinco.scag.svcmon.snap.HttpSnap;
+import ru.sibinco.scag.util.RemoteResourceBundle;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -14,7 +15,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.Comparator;
-import java.util.ResourceBundle;
 
 /**
  * The <code>HttpTopGraph</code> class represents
@@ -61,8 +61,7 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
     int smeNameWidth = 0;
     int maxSpeed = 50;
     int rowHeight = HttpSnap.COUNTERS * 2;
-    ResourceBundle localeText;
-    ResourceBundle messagesText;
+    RemoteResourceBundle localeText;
     int graphScale;
     int graphGrid;
     int graphHiGrid;
@@ -93,8 +92,7 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
 
     public HttpTopGraph(SvcSnap snap, int maxSpeed, int graphScale,
                         int graphGrid, int graphHiGrid,
-                        int graphHead, ResourceBundle localeText,
-                        ResourceBundle messagesText,
+                        int graphHead, RemoteResourceBundle localeText,
                         SnapHttpHistory snapHttpHistory) {
         super();
         this.maxSpeed = maxSpeed;
@@ -103,7 +101,6 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
         this.graphGrid = graphGrid;
         this.graphHiGrid = graphHiGrid;
         this.graphHead = graphHead;
-        this.messagesText = messagesText;
         this.snapHttpHistory = snapHttpHistory;
         addMouseListener(this);
         addMouseMotionListener(this);

@@ -5,6 +5,7 @@ import ru.sibinco.scag.backend.rules.Rule;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
+import javax.xml.transform.OutputKeys;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.*;
@@ -51,7 +52,7 @@ public class WHOISDTermsTransformer {
     long id = Long.parseLong(service);
     HashMap transportToXSl = WHOISDRequest.transportToXSl;
     LinkedList termsresult = new LinkedList();
-    addBody(termsresult,content, stylesheet, xslFolder);
+    addBody(termsresult,content, stylesheet, xslFolder,false);
     termsresult.remove(1);
     termsresult.add(1,HeaderToWHOISDTerms);
     termsresult.add(EndingToWHOISDTerms);
@@ -66,9 +67,9 @@ public class WHOISDTermsTransformer {
         header = Rule.getRuleHeader(transport);
         header.removeFirst();
         ruleresult.addAll(header);
-        if (addBody(body,content, stylesheet, xslFolder)) {
+        if (addBody(body,content, stylesheet, xslFolder,true)) {
           logger.debug("WHOISDTermsTransformer: adding Rule "+stylesheet + " : " + transport);
-          body.removeFirst();
+          //body.removeFirst();
           body.removeFirst();
           ruleresult.addAll(body);
           newRule = new Rule(new Long(id),"",transport,termsresult);
@@ -81,13 +82,14 @@ public class WHOISDTermsTransformer {
   }
 
 
-  private static boolean addBody(LinkedList result,String content, String stylesheet, File xslFolder) throws Exception {    
+  private static boolean addBody(LinkedList result,String content, String stylesheet, File xslFolder, boolean omit_declaration) throws Exception {
     StringWriter sw = new StringWriter();
     StringReader sr = new StringReader(content);
     BufferedReader br = null;
     try {
     TransformerFactory tFactory = TransformerFactory.newInstance();
     Transformer transformer = tFactory.newTransformer(new StreamSource(new File(xslFolder,stylesheet)) ) ;
+    transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, (omit_declaration)?"yes":"no");
     transformer.transform(new StreamSource(sr), new StreamResult(sw));
     br = new BufferedReader(new StringReader(sw.toString()));
     String line;

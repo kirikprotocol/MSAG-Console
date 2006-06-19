@@ -3,6 +3,7 @@ package ru.sibinco.scag.perfmon.applet;
 import ru.sibinco.lib.backend.applet.AdvancedLabel;
 import ru.sibinco.lib.backend.applet.LabelGroup;
 import ru.sibinco.scag.perfmon.PerfSnap;
+import ru.sibinco.scag.util.RemoteResourceBundle;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -59,7 +60,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     MenuItem menuDecrBlock;
     MenuItem menuDecrPix;
 
-    public static ResourceBundle localeText;
+    public static RemoteResourceBundle localeText;
     public static Locale locale;
     public static SimpleDateFormat dateFormat;
     public static SimpleDateFormat gridFormat;
@@ -89,11 +90,8 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
 
     public void init() {
         System.out.println("Initing...");
-        String country =  getParameter("locale.country");
-        if (country!=null)
-          locale = new Locale(getParameter("locale.language").toLowerCase(),country.toLowerCase());
-        else locale = new Locale(getParameter("locale.language").toLowerCase());
-        localeText = ResourceBundle.getBundle("locales.messages", locale);
+        localeText = new RemoteResourceBundle(getCodeBase(),getParameter("resource_servlet_uri"));
+        locale=localeText.getLocale();
         dateFormat = new SimpleDateFormat(localeText.getString("sctime"),locale);
         gridFormat = new SimpleDateFormat(localeText.getString("gridtime"),locale);
 

@@ -51,9 +51,9 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
   }
 
 %>
-<%if (request.getParameter("locale")!=null) {%>
-  <fmt:setLocale value="<%=request.getParameter("locale")%>" scope="session"/>
-<%}%>
+<c:if test="${!empty param.locale}">
+  <fmt:setLocale value="${param.locale}" scope="session"/>
+</c:if>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
@@ -73,10 +73,10 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
   <link rel="STYLESHEET" type="text/css" href="content/styles/calendar.css">
 
   <link rel="STYLESHEET" type="text/css" href="collapsing_tree.css">
-  <script> <%@include file = "/content/scripts/scripts.js" %> </script>
-  <script> <%@include file = "/content/scripts/calendar_msg.js" %> </script>
-<%--  <script src="content/scripts/scripts.js" type="text/javascript"></script>--%>
-<%--  <script src="content/scripts/scripts_msg_<%=ru.sibinco.scag.util.LocaleMessages.getInstance().getCurBundleLocaleLanguage()%>.js" type="text/javascript"></script>--%>
+<%--  <script> <%@include file = "/content/scripts/scripts.js" %> </script>--%>
+<%--  <script> <%@include file = "/content/scripts/calendar_msg.js" %> </script>--%>
+  <script src="content/scripts/scripts.jsp" type="text/javascript"></script>  
+<%--  <script src="content/scripts/scripts_msg_<%=ru.sibinco.scag.util.LocaleMessages.getInstance().getLocaleLanguage(session)%>.js" type="text/javascript"></script>--%>
 <%--  <script src="content/scripts/calendar_msg_<%=ru.sibinco.scag.util.LocaleMessages.getInstance().getCurBundleLocaleLanguage()%>.js" type="text/javascript"></script>--%>
 </head>
 <body onload="initjsDOMenu(); ${onLoad}">

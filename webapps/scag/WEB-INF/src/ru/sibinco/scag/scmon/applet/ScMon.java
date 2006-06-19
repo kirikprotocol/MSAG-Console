@@ -5,6 +5,7 @@
 package ru.sibinco.scag.scmon.applet;
 
 import ru.sibinco.scag.scmon.ScSnap;
+import ru.sibinco.scag.util.RemoteResourceBundle;
 
 import javax.swing.*;
 import java.awt.event.MouseListener;
@@ -23,8 +24,7 @@ import java.applet.Applet;
 
 public class ScMon extends Applet implements Runnable, MouseListener, ActionListener, ItemListener {
 
-    public static ResourceBundle localText;
-    public static ResourceBundle messagesText;
+    public static RemoteResourceBundle localText;
     public static Locale locale;
     private Label connectingLabel;
     private SnapSmppHistory snapSmppHistory;
@@ -42,12 +42,8 @@ public class ScMon extends Applet implements Runnable, MouseListener, ActionList
     public void init() {
 
         System.out.println("Initing...");
-        String country =  getParameter("locale.country");
-        if (country!=null)
-          locale = new Locale(getParameter("locale.language").toLowerCase(),country.toLowerCase());
-        else locale = new Locale(getParameter("locale.language").toLowerCase());
-        localText = ResourceBundle.getBundle("locales.messages", locale);
-        messagesText = ResourceBundle.getBundle("locales.messages", locale);
+        localText = new RemoteResourceBundle(getCodeBase(),getParameter("resource_servlet_uri"));
+        locale=localText.getLocale();
         maxSpeed = Integer.valueOf(getParameter("max.speed")).intValue();
         graphScale = Integer.valueOf(getParameter("graph.scale")).intValue();
         graphGrid = Integer.valueOf(getParameter("graph.grid")).intValue();
@@ -74,10 +70,10 @@ public class ScMon extends Applet implements Runnable, MouseListener, ActionList
         snapHttpHistory = new SnapHttpHistory();
 
         smppTopGraph = new SmppTopGraph(snap, maxSpeed, graphScale, graphGrid,
-                graphHiGrid, graphHead, localText, messagesText, snapSmppHistory);
+                graphHiGrid, graphHead, localText, snapSmppHistory);
 
         httpTopGraph = new HttpTopGraph(snap, maxSpeed, graphScale, graphGrid,
-                graphHiGrid, graphHead, localText, messagesText, snapHttpHistory);
+                graphHiGrid, graphHead, localText, snapHttpHistory);
 
         JTabbedPane jTabbedPane = new JTabbedPane();
         jTabbedPane.addTab("HTTP", new HttpPanel());

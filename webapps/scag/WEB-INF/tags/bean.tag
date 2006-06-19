@@ -56,7 +56,9 @@
               message = ru.sibinco.scag.util.LocaleMessages.getInstance().getMessage(session,e.getCode().getId());
             if (message == null)
               message = (e.getCode()==null)?"Unknown exception":e.getCode().getId();
-            messageresult = java.text.MessageFormat.format(messageresult,new Object[]{message});
+            String exc=ru.sibinco.scag.util.LocaleMessages.getInstance().getMessage(session,"error.common.exception");
+            String info=ru.sibinco.scag.util.LocaleMessages.getInstance().getMessage(session,"error.common.info");
+            messageresult = java.text.MessageFormat.format(messageresult,new Object[]{exc,message,info});
 
             Throwable cause = null;
             //if (e.getCause() instanceof ru.sibinco.scag.beans.SCAGJspException)
@@ -69,13 +71,13 @@
             }
             if (messagecause == null)
                  messagecause = (((ru.sibinco.scag.beans.SCAGJspException)cause).getCode()==null)?"Unknown exception":((ru.sibinco.scag.beans.SCAGJspException)cause).getCode().getId();
-            messagecauseresult = java.text.MessageFormat.format(messagecauseresult,new Object[]{messagecause});
-            } else if (cause!=null) messagecauseresult = cause.getMessage();
+            messagecauseresult = java.text.MessageFormat.format(messagecauseresult,new Object[]{exc,messagecause,info});
+            } else if (cause!=null) messagecauseresult = ru.sibinco.scag.util.LocaleMessages.getInstance().getMessage(session,"error.common.exception") +" "+cause.getMessage();
             %>
               <div class=error>
                 <div class=header><%=messageresult%></div>
              <% if (messagecauseresult!=null) { %>
-                <div class=header>Nested: <%=messagecauseresult%></div>
+                <div class=header><%=ru.sibinco.scag.util.LocaleMessages.getInstance().getMessage(session,"error.common.nested")+" "+messagecauseresult%></div>
               </div>
             <%   }
        // throw e;

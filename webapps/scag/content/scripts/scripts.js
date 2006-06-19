@@ -507,3 +507,7 @@ function tableTag_checkChecks() {
             elem.disabled = !buttonsEnabled;
     }
 }
+
+function deleteConfirm() {
+    return confirm('<fmt:message>scripts.deleteConfirm</fmt:message>');
+}

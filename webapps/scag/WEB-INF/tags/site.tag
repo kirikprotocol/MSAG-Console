@@ -1,5 +1,6 @@
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
+<%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <%@taglib prefix="smf" uri="/scag/func"%>
 <%@tag body-content="empty"%>
 <%@attribute name="columns" required="true"%>
@@ -48,7 +49,7 @@
                             <a href="#" onclick="return tableTag_sort('${column}')"
                                 <c:if test="${fn:endsWith(bean.sort,column)}">
                                     class="${fn:startsWith(bean.sort,'-') ? 'up' : 'down'}"
-                                </c:if>>${names[status.count-1]}</a>
+                                </c:if>><fmt:message>${names[status.count-1]}</fmt:message></a>
                         </th>
                     </c:otherwise>
                 </c:choose>

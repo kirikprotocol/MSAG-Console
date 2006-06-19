@@ -18,11 +18,11 @@
   <sm-ep:property title = "${transport}">
      <c:choose>
         <c:when test="${exists}">
-              <input type=button onClick="return openJedit('${bean.id}','<fmt:message>${transport}</fmt:message>','edit')" value="Edit" > |
-              <input type=submit id="deleteRule${transport}" name="deleteRule<fmt:message>${transport}</fmt:message>" value="Delete">
+              <input type=button onClick="return openJedit('${bean.id}','<fmt:message>${transport}</fmt:message>','edit')" value="<fmt:message>service.edit.rule.edit</fmt:message>" > |
+              <input type=submit name="deleteRule<fmt:message>${transport}</fmt:message>" value="<fmt:message>service.edit.rule.delete</fmt:message>">
         </c:when>
         <c:otherwise>
-            <input type=button onClick="return openJedit('${bean.id}','<fmt:message>${transport}</fmt:message>','add')" value="Add">
+            <input type=button onClick="return openJedit('${bean.id}','<fmt:message>${transport}</fmt:message>','add')" value="<fmt:message>service.edit.rule.add</fmt:message>">
         </c:otherwise>
      </c:choose>
    </sm-ep:property>

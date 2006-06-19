@@ -37,7 +37,7 @@ public class SCAGJspException extends SibincoException
 
   public SCAGJspException(Constants code, String additionalInfo, Throwable cause)
   {
-    super("Exception: " + (code != null ? "{0}" : "internal") + (additionalInfo != null && additionalInfo.length() > 0 ? ", info:\"" + additionalInfo + '"' : ""), cause);
+    super("{0} " + (code != null ? "{1}" : "internal") + (additionalInfo != null && additionalInfo.length() > 0 ? ", {2}\"" + additionalInfo + '"' : ""), cause);
     this.code = code;
     this.additionalInfo = additionalInfo;
   }
