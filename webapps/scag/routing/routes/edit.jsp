@@ -7,7 +7,7 @@
       <c:otherwise>routes.edit.title</c:otherwise>
     </c:choose>
   </jsp:attribute>
-  
+
   <jsp:attribute name="menu">
     <sm-pm:menu>
       <sm-pm:item name="mbSave" value="routes.edit.item.mbsave.value" title="routes.edit.item.mbsave.title"/>
