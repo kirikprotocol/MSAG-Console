@@ -27,7 +27,7 @@ namespace cvtutil {
 struct TonNpiAddress {
     unsigned char    length, typeOfNumber, numPlanInd;
                      //value is always zero-terminated
-    unsigned char    value[CAP_MAX_SMS_AddressStringLength*2 + 1];
+    unsigned char    value[CAP_MAX_SMS_AddressValueLength + 1];
 
     inline void clear(void) { length = typeOfNumber  = numPlanInd = value[0] = 0; }
     inline const char * getSignals(void) const { return (const char*)&value[0]; }
@@ -39,23 +39,33 @@ struct TonNpiAddress {
         if (!text || !*text)
             return false;
 
-        unsigned char    addr_value[20 + 1]; //CAP_MAX_SMS_AddressStringLength*2
-        int iplan, itype;
-        memset(addr_value, 0, sizeof(addr_value));
+        char    buff[CAP_MAX_SMS_AddressValueLength + 1];
+        char *  addr_value = buff;
+        int     iplan = 0, itype = 0;
+        int     max_scan = 1, scanned = 0;
 
-        int max_scan = 1, scanned;
+        memset(buff, 0, sizeof(buff));
         switch (text[0]) {
         case '.': {  //ton.npi.adr
             scanned = sscanf(text, ".%d.%d.%20s", &itype, &iplan, addr_value);
             max_scan = 3;
         } break;
         case '+': {  //isdn international adr
-            scanned = sscanf(text, "+%20[0123456789?]s", addr_value);
+            scanned = sscanf(text, "+%20[0123456789]s", addr_value);
             iplan = itype = 1;
         } break;
-        default:    //isdn unknown adr
-            scanned = sscanf(text, "%20[0123456789?]s", addr_value);
-            iplan = 1; itype = 0;
+        default:    //isdn unknown or alpha-numeric adr
+            length = strlen(text);
+            scanned = sscanf(text, "%20[0123456789]s", addr_value);
+            if (scanned == 1 && (length == strlen(addr_value))) {
+                iplan = 1; /*itype = 0;*/   // isdn unknown
+            } else {
+                if (length <= CAP_MAX_SMS_AddressValueLength) {
+                    /*iplan = 0;*/ itype = 5;   //alpha-numeric adr
+                    addr_value = (char*)text;
+                    scanned = 1;
+                }
+            }
         }
         if (scanned < max_scan)
             return false;
