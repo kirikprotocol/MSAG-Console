@@ -1,11 +1,11 @@
 package ru.sibinco.scag.backend.stat.stat;
 
 import ru.sibinco.lib.backend.util.Functions;
-import ru.sibinco.lib.backend.util.config.Config;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.scag.backend.Constants;
 import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.transport.Transport;
+import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.beans.MessageException;
 
 import java.io.BufferedInputStream;
@@ -60,14 +60,14 @@ public class Stat {
         }
     }
 
-    protected Stat(SCAGAppContext appContext) throws MessageException {
+    protected Stat(SCAGAppContext appContext) throws SCAGJspException {
         try {
             this.appContext = appContext;
             statstorePath = appContext.getGwConfig().getString(PARAM_NAME_STAT_DIR);
             if (statstorePath == null || statstorePath.length() <= 0)
-                throw new MessageException("store path is empty");
+                throw new SCAGJspException(ru.sibinco.scag.Constants.errors.stat.STORE_PATH_EMPTY);
         } catch (Exception e) {
-            throw new MessageException("Failed to obtain statistics dir. Details: " + e.getMessage());
+            throw new SCAGJspException(ru.sibinco.scag.Constants.errors.stat.FAILED_OBTAIN_DIR, e.getMessage());
         }
         dateDirFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
         dateDirFileFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
@@ -75,7 +75,7 @@ public class Stat {
         dateDayLocalFormat.setTimeZone(TimeZone.getDefault());
     }
 
-    private TreeMap getStatQueryDirs(long transport) throws MessageException {
+    private TreeMap getStatQueryDirs(long transport) throws SCAGJspException {
 
         File statPath = new File(statstorePath, Transport.getTransportName((int) transport));
 
@@ -90,7 +90,7 @@ public class Stat {
 
         String[] dirNames = statPath.list();
         if (dirNames == null || dirNames.length == 0)
-            throw new MessageException("No stat directories at path '" + statPath.getAbsolutePath() + "'");
+            throw new SCAGJspException(ru.sibinco.scag.Constants.errors.stat.NO_STAT_DIR, statPath.getAbsolutePath());
 
         Date tillQueryDirTime = tillQueryDate;
         Date tillQueryFileTime = tillQueryDate;
@@ -201,7 +201,7 @@ public class Stat {
                 input = new BufferedInputStream(new FileInputStream(path));
                 String fileStamp = readString(input, 9); // read head: 9 bytes
                 if (fileStamp == null || !fileStamp.equals("SCAG.STAT"))
-                    throw new MessageException("unsupported header of file (support only SCAG.STAT file )");
+                    throw new SCAGJspException(ru.sibinco.scag.Constants.errors.stat.UNSUPPORTED_HEADER);
                 readUInt16(input); // read version for support reasons uint16
 
                 CountersSet lastHourCounter = new CountersSet();

@@ -16,8 +16,7 @@
 	}
 %>
 	<applet code="ru.sibinco.scag.perfmon.applet.PerfMon.class" width="100%" height="100%" archive="perfmon.jar">
-<%--		<param name="locale.country" value="ru">--%>
-		<param name="locale.language" value="<%=ru.sibinco.scag.util.LocaleMessages.getInstance().getLocaleLanguage(session)%>">
+    <param name="resource_servlet_uri" value="<%=request.getContextPath()+"/resource/?"%>">
 		<param name="pixPerSecond" value="4">
 		<param name="scale" value="80">
 		<param name="block" value="8">

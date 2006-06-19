@@ -4,15 +4,15 @@
 <sm:page>
 <jsp:attribute name="title">
     <c:choose>
-        <c:when test="${param.add}">Create new Operator</c:when>
-        <c:otherwise>Edit Operator</c:otherwise>
+        <c:when test="${param.add}">operators.add.title</c:when>
+        <c:otherwise>operators.edit.title</c:otherwise>
     </c:choose>
 </jsp:attribute>
 
 <jsp:attribute name="menu">
     <sm-pm:menu>
-        <sm-pm:item name="mbSave" value="Save" title="Save Operator info"/>
-        <sm-pm:item name="mbCancel" value="Cancel" title="Cancel Operator editing" onclick="clickCancel()"/>
+        <sm-pm:item name="mbSave" value="operators.edit.item.mbsave.value" title="operators.edit.item.mbsave.title"/>
+        <sm-pm:item name="mbCancel" value="operators.edit.item.mbcancel.value" title="operators.edit.item.mbcancel.title" onclick="clickCancel()"/>
         <sm-pm:space/>
     </sm-pm:menu>
 </jsp:attribute>
@@ -54,11 +54,11 @@
         <col width="50%">
         <tr>
             <td valign="top">
-                <sm-ep:properties title="Operator info">
+                <sm-ep:properties title="operators.edit.properties">
                     <c:if test="${!bean.add}"><input type="hidden" name="id" id="id"
                                                      value="${fn:escapeXml(bean.id)}"></c:if>
-                    <sm-ep:txt title="name" name="name" validation="nonEmpty"/>
-                    <sm-ep:txtBox title="description" cols="0" rows="0" name="description"/>
+                    <sm-ep:txt title="operators.edit.txt.name" name="name" validation="nonEmpty"/>
+                    <sm-ep:txtBox title="operators.edit.txtbox.description" cols="0" rows="0" name="description"/>
                 </sm-ep:properties>
             </td>
             <td valign="top">&nbsp;</td>
@@ -75,7 +75,7 @@
                     <col width="100%" align="right">
                     <col width="100%" align="left">
                     <tr>
-                        <td>mask</td>
+                        <td><fmt:message>operators.edit.label.mask</fmt:message></td>
                         <td><input id="newSrcMask" class="txt" name="srcMasks" validation="routeMask"
                                    onkeyup="resetValidation(this)"></td>
                         <td><img src="content/images/but_add.gif" onclick="addMask(opForm.all.newSrcMask)"

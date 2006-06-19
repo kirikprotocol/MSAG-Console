@@ -1,7 +1,7 @@
 <%@ include file="/WEB-INF/inc/header.jspf" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 
-<sm:page title="Routes" onLoad="enableDisableButtons();">
+<sm:page title="routes_status.title" onLoad="enableDisableButtons();">
     <jsp:attribute name="menu">
     </jsp:attribute>
 
@@ -35,7 +35,7 @@
             <col width="15%">
             <col width="100%">
             <c:set var="prop_rowN" value="0" scope="request"/>
-            <sm-ep:list title="Transport" onChange="changeTransportId();" name="transportId"
+            <sm-ep:list title="routes_status.list.transportid" onChange="changeTransportId();" name="transportId"
                         values="${fn:join(bean.transportIds, ',')}"
                         valueTitles="${fn:join(bean.transportTitles, ',')}"/>
         </table>
@@ -43,30 +43,30 @@
 
         <c:choose>
             <c:when test="${bean.transportId == 1}">
-                <div class=page_subtitle>SMPP Routes status log</div>
+                <div class=page_subtitle><fmt:message>routes_status.label.smpp</fmt:message></div>
                 <sm:scrolling columns="time, userLogin, category, message"
-                              names="time (GMT), user, category, description"
+                              names="routes_status.scrolling.names.time, routes_status.scrolling.names.userlogin, routes_status.scrolling.names.category, routes_status.scrolling.names.message"
                               widths="30,10,20,40"/>
                 <sm-pm:menu>
-                    <sm-pm:item name="mbApply" value="Apply" title="Apply changes"/>
-                    <sm-pm:item name="mbLoad" value="Restore Apply" title="Undo changes"/>
+                    <sm-pm:item name="mbApply" value="routes_status.item.mbapply.value" title="routes_status.item.mbapply.title"/>
+                    <sm-pm:item name="mbLoad" value="routes_status.item.mbload.value" title="routes_status.item.mbload.title"/>
                     <sm-pm:space/>
-                    <sm-pm:item name="mbSave" value="Save current" title="Save current routing configuration"/>
-                    <sm-pm:item name="mbLoadSaved" value="Load saved" title="Load saved routing configuration"
+                    <sm-pm:item name="mbSave" value="routes_status.item.mbsave.value" title="routes_status.item.mbsave.title"/>
+                    <sm-pm:item name="mbLoadSaved" value="routes_status.item.mbloadsaved.value" title="routes_status.item.mbloadsaved.title"
                                 onclick="confirm(loadSaved());"/>
                 </sm-pm:menu>
             </c:when>
             <c:when test="${bean.transportId == 2}">
-                <div class=page_subtitle>HTTP Routes status log</div>
+                <div class=page_subtitle><fmt:message>routes_status.label.http</fmt:message></div>
                 <sm:scrolling columns="time, userLogin, category, message"
-                              names="time (GMT), user, category, description"
+                              names="routes_status.scrolling.names.time, routes_status.scrolling.names.userlogin, routes_status.scrolling.names.category, routes_status.scrolling.names.message"
                               widths="30,10,20,40"/>
                 <sm-pm:menu>
-                    <sm-pm:item name="mbApplyHttp" value="Apply" title="Apply changes"/>
-                    <sm-pm:item name="mbLoadHttp" value="Restore Apply" title="Undo changes"/>
+                    <sm-pm:item name="mbApplyHttp" value="routes_status.item.mbapply.value" title="routes_status.item.mbapply.title"/>
+                    <sm-pm:item name="mbLoadHttp" value="routes_status.item.mbload.value" title="routes_status.item.mbload.title"/>
                     <sm-pm:space/>
-                    <sm-pm:item name="mbSaveHttp" value="Save current" title="Save current routing configuration"/>
-                    <sm-pm:item name="mbLoadSavedHttp" value="Load saved" title="Load saved routing configuration"
+                    <sm-pm:item name="mbSaveHttp" value="routes_status.item.mbsave.value" title="routes_status.item.mbsave.title"/>
+                    <sm-pm:item name="mbLoadSavedHttp" value="routes_status.item.mbloadsaved.value" title="routes_status.item.mbloadsaved.title"
                                 onclick="confirm(loadSaved());"/>
                 </sm-pm:menu>
             </c:when>

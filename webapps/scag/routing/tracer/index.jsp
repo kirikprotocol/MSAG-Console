@@ -1,7 +1,7 @@
 <%@ page import="ru.sibinco.lib.backend.util.StringEncoderDecoder,
                  java.util.List"%>
 <%@include file="/WEB-INF/inc/header.jspf"%>
-<sm:page title="Routes Tracing">
+<sm:page title="routes_tracing.title">
   <jsp:attribute name="menu">
   </jsp:attribute>
 
@@ -12,37 +12,37 @@
   <c:choose>
     <c:when test="${bean.appContext.statuses.routesLoaded}">
 
-   <sm-ep:properties title="Routes tracing">
-      <sm-ep:txt title="Source Address" name="srcAddress"   />
-      <sm-ep:txt title="Destination Address" name="dstAddress"  />
-      <sm-ep:txt title="Source System ID" name="srcSysId"  />
+   <sm-ep:properties title="routes_tracing.properties">
+      <sm-ep:txt title="routes_tracing.txt.srcaddress" name="srcAddress"   />
+      <sm-ep:txt title="routes_tracing.txt.dstaddress" name="dstAddress"  />
+      <sm-ep:txt title="routes_tracing.txt.srcsysId" name="srcSysId"  />
     </sm-ep:properties>
 
     <sm:break>
     <sm-pm:menu>
-      <sm-pm:item name="mbCheck" value="Loadup & Check" title="Load & Check routing configuration"/>
-      <sm-pm:item name="mbTrace" value="Trace route" title="Trace route" />
+      <sm-pm:item name="mbCheck" value="routes_tracing.item.mbcheck.value" title="routes_tracing.item.mbcheck.title"/>
+      <sm-pm:item name="mbTrace" value="routes_tracing.item.mbtrace.value" title="routes_tracing.item.mbtrace.title" />
       <sm-pm:space/>
     </sm-pm:menu>
     </sm:break>
 
    </c:when>
-   <c:otherwise>Trace Route
+   <c:otherwise><fmt:message>routes_tracing.label.trace_route</fmt:message>
 
 
     <div class=content>
     <table class=properties_list cell>
       <tr class=row0><td>
-       <span class="C800"><b>Warning !</b></span><br><br>
-       <span class="C000">Active routing configuration is not loaded or has been changed.</span><br>
-       <span class="C000">Please loadup new routing information to route tracer.</span><br>&nbsp;
+       <span class="C800"><b><fmt:message>routes_tracing.label.warning1</fmt:message></b></span><br><br>
+       <span class="C000"><fmt:message>routes_tracing.label.warning2</fmt:message></span><br>
+       <span class="C000"><fmt:message>routes_tracing.label.warning3</fmt:message></span><br>&nbsp;
       </td></tr>
     </table>
     </div>
 
     <sm:break>
      <sm-pm:menu>
-      <sm-pm:item name="mbCheck" value="Loadup & Check" title="Load & Check routing configuration"/>
+      <sm-pm:item name="mbCheck" value="routes_tracing.item.mbcheck.value" title="routes_tracing.item.mbcheck.title"/>
       <sm-pm:space/>
      </sm-pm:menu>
     </sm:break>
@@ -88,7 +88,7 @@
 </c:if>
 <c:if test="${ routeInfo !=null }">
  <br>
-  <div class=page_subtitle>Route info</div>
+  <div class=page_subtitle><fmt:message>routes_tracing.label.route_info</fmt:message></div>
   <table class=properties_list cell>
 <c:forEach items="${routeInfoMap}" var="i" varStatus="status">
  <c:set var="key" value="${i.key}"/>
@@ -108,7 +108,7 @@
 </c:if>
 <c:if test="${ traceResults !=null && fn:length(traceResults)>0 }">
 <br>
-  <div class=page_subtitle>Trace</div>
+  <div class=page_subtitle><fmt:message>routes_tracing.label.trace</fmt:message></div>
 <textarea style="font-family:Courier New;height:300px">
 <c:forEach items="${traceResults}" var="result" ><c:set var="traceObj" value="${result}"/><c:if test="${traceObj != null && smf:isString(traceObj)}">${traceObj}</c:if>
 </c:forEach>

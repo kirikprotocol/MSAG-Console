@@ -46,7 +46,7 @@
             <sm-pm:menu>
                 <sm-pm:item name="mbAddChild" value="service.edit.item.mbaddchild.value" title="service.edit.item.mbaddchild.title"/>
                 <sm-pm:item name="mbDelete" value="service.edit.item.mbdelete.value" title="service.edit.item.mbdelete.title"
-                            onclick="return confirm('Are you sure to delete this object?')" isCheckSensible="true"/>
+                            onclick="deleteConfirm()" isCheckSensible="true"/>
                 <sm-pm:space/>
             </sm-pm:menu>
         </c:if>

@@ -3,15 +3,15 @@
 <sm:page>
   <jsp:attribute name="title">
     <c:choose>
-      <c:when test="${param.add}">Create new route</c:when>
-      <c:otherwise>Edit route "${param.editId}"</c:otherwise>
+      <c:when test="${param.add}">routes.add.title</c:when>
+      <c:otherwise>routes.edit.title</c:otherwise>
     </c:choose>
   </jsp:attribute>
   
   <jsp:attribute name="menu">
     <sm-pm:menu>
-      <sm-pm:item name="mbSave" value="Save" title="Save route"/>
-      <sm-pm:item name="mbCancel" value="Cancel" title="Cancel route editing" onclick="clickCancel()"/><%--onclick="history.back();"/>--%>
+      <sm-pm:item name="mbSave" value="routes.edit.item.mbsave.value" title="routes.edit.item.mbsave.title"/>
+      <sm-pm:item name="mbCancel" value="routes.edit.item.mbcancel.value" title="routes.edit.item.mbcancel.title" onclick="clickCancel()"/><%--onclick="history.back();"/>--%>
       <sm-pm:space/>
     </sm-pm:menu>
   </jsp:attribute>
@@ -203,19 +203,19 @@
       <col width="50%">
       <tr>
           <td valign="top">
-              <sm-ep:properties title="Route information" noColoredLines="false">
-                  <sm-ep:txt title="name" name="id" maxlength="60" readonly="${!bean.add}" validation="nonEmpty"/>
-                  <sm-ep:txt title="notes" name="notes"/>
-                  <sm-ep:list title="source endpoint" name="srcSmeId"
+              <sm-ep:properties title="routes.edit.properties.route_info" noColoredLines="false">
+                  <sm-ep:txt title="routes.edit.txt.id" name="id" maxlength="60" readonly="${!bean.add}" validation="nonEmpty"/>
+                  <sm-ep:txt title="routes.edit.txt.notes" name="notes"/>
+                  <sm-ep:list title="routes.edit.list.srcsmeid" name="srcSmeId"
                               values="${smes}" valueTitles="${smes}" onChange="srcSmeIdChanged();"/>
                   <sm-pm:space/>
               </sm-ep:properties>
           </td>
           <td valign="top">
-              <sm-ep:properties title="Route options" noColoredLines="false" noHeaders="false">
-                  <sm-ep:check title="active" name="active"/>
-                  <sm-ep:check title="allowed" name="enabled"/>
-                  <sm-ep:check title="archived" name="archived"/>
+              <sm-ep:properties title="routes.edit.properties.route_options" noColoredLines="false" noHeaders="false">
+                  <sm-ep:check title="routes.edit.check.active" name="active"/>
+                  <sm-ep:check title="routes.edit.check.enabled" name="enabled"/>
+                  <sm-ep:check title="routes.edit.check.archived" name="archived"/>
                   <sm-pm:space/>
               </sm-ep:properties>
           </td>
@@ -228,13 +228,13 @@
       <col width="42">
       <tr>
         <td valign="top">
-          <div class=page_subtitle>Sources</div>
+          <div class=page_subtitle><fmt:message>routes.edit.label.sources</fmt:message></div>
           <table cellspacing=0 cellpadding=0>
           <col width="50%" align=left>
           <col width="50%" align=right>
           <col width="0%" align=left>
           <tr valign="middle">
-            <td>Subject</td>
+            <td><fmt:message>routes.edit.label.subject</fmt:message></td>
             <td><select id=srcSubjSelect class="txt" >
               <c:forEach items="${bean.allUncheckedSrcSubjects}" var="i">
                 <option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>
@@ -243,7 +243,7 @@
             <td><img src="content/images/but_add.gif" onclick="addSourceSubj()" style="cursor:hand;"></td>
           </tr>
           <tr>
-            <td>Mask</td>
+            <td><fmt:message>routes.edit.label.mask</fmt:message></td>
             <td><input id=newSrcMask class=txt name=srcMasks validation="routeMask" onkeyup="resetValidation(this)"></td>
             <td><img src="content/images/but_add.gif" onclick="addSourceMask(opForm.all.newSrcMask)" style="cursor:hand;"></td>
           </tr>
@@ -276,14 +276,14 @@
           </table>
         </td>
         <td valign="top">
-          <div class=page_subtitle>Destinations</div>
+          <div class=page_subtitle><fmt:message>routes.edit.label.destinations</fmt:message></div>
           <table cellspacing=0 cellpadding=0>
           <col width="89%">
           <col width="10%" align=right>
           <col width="1%">
           <col width="0%">
           <tr>
-            <td>Subject</td>
+            <td><fmt:message>routes.edit.label.subject</fmt:message></td>
             <td><select id=dstSubjSelect onchange="return selectDefaultSme();">
               <c:forEach items="${bean.allUncheckedDstSubjects}"  var="i">
                 <option value="${fn:escapeXml(i.key)}" defaultSme="${fn:escapeXml(i.value)}">${fn:escapeXml(i.key)}</option>
@@ -297,7 +297,7 @@
             <td><img src="content/images/but_add.gif" onclick="addDestSubj()" style="cursor:hand;"></td>
           </tr>
           <tr>
-            <td>Mask</td>
+            <td><fmt:message>routes.edit.label.mask</fmt:message></td>
             <td><input id=newDstMask class=txt name=new_dstMask validation="routeMask" onkeyup="resetValidation(this)"></td>
             <td><select name=new_dst_mask_sme_ id=newDstMaskSme>
               <c:forEach items="${bean.allSmes}" var="i">

@@ -37,7 +37,7 @@
             </c:if>
             <c:if test="${!param.add}">
                 <sm-pm:item name="mbDelete" value="services.edit.item.mbdelete.value" title="services.edit.item.mbdelete.title"
-                            onclick="return confirm('Are you sure to delete this object?')" isCheckSensible="true"/>
+                            onclick="deleteConfirm()" isCheckSensible="true"/>
             </c:if>
             <c:if test="${param.add}">
                 <sm-pm:item name="mbSave" value="services.edit.item.mbsave2.value" title="services.edit.item.mbsave2.title"/>

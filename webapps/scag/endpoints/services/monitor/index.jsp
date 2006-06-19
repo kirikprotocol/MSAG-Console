@@ -18,8 +18,7 @@
 %>
 
 <applet code="ru.sibinco.scag.svcmon.applet.SvcMon.class" width="100%" height="100%" archive="svcmon.jar">
-<%--    <param name="locale.country" value="us">--%>
-    <param name="locale.language" value="<%=ru.sibinco.scag.util.LocaleMessages.getInstance().getLocaleLanguage(session)%>">
+    <param name="resource_servlet_uri" value="<%=request.getContextPath()+"/resource/?"%>">
     <param name="graph.scale" value="2">
     <param name="locales.messages" value="RUSSIA">
     <param name="graph.grid" value="2">

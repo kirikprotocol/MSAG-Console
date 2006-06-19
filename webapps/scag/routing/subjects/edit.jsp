@@ -4,8 +4,8 @@
 <sm:page>
 <jsp:attribute name="title">
     <c:choose>
-        <c:when test="${param.add}">Create new subject</c:when>
-        <c:otherwise>Edit subject "${param.editId}"</c:otherwise>
+        <c:when test="${param.add}">subjects.add.title</c:when>
+        <c:otherwise>subjects.edit.title</c:otherwise>
     </c:choose>
 </jsp:attribute>
 
@@ -88,12 +88,12 @@
               <col width="50%">
               <tr>
                   <td valign="top">
-                      <sm-ep:properties title="Subject info">
-                          <sm-ep:txt title="name" name="name" maxlength="60" readonly="${!bean.add}"
+                      <sm-ep:properties title="subjects.edit.properties.smpp_info">
+                          <sm-ep:txt title="subjects.edit.txt.name" name="name" maxlength="60" readonly="${!bean.add}"
                                      validation="nonEmpty"/>
-                          <sm-ep:list title="default SME" name="defaultSme" values="${smes}"
+                          <sm-ep:list title="subjects.edit.list.defaultsme" name="defaultSme" values="${smes}"
                                       valueTitles="${smes}"/>
-                          <sm-ep:txtBox title="description" cols="0" rows="0" name="description"/>
+                          <sm-ep:txtBox title="subjects.edit.txtbox.description" cols="0" rows="0" name="description"/>
                       </sm-ep:properties>
                   </td>
                   <td valign="top">&nbsp;</td>
@@ -110,7 +110,7 @@
                           <col width="100%" align="right">
                           <col width="100%" align="left">
                           <tr>
-                              <td>mask</td>
+                              <td><fmt:message>subjects.edit.label.mask</fmt:message></td>
                               <td><input id="newSrcMask" class="txt" name="masks" validation="routeMask"
                                          onkeyup="resetValidation(this)"></td>
                               <td><img src="content/images/but_add.gif"
@@ -143,8 +143,8 @@
                   <tr><td colspan="2">&nbsp;</td></tr>
           </table>
           <sm-pm:menu>
-              <sm-pm:item name="mbSave" value="Save" title="Save subject"/>
-              <sm-pm:item name="mbCancel" value="Cancel" title="Cancel subject editing" onclick="clickCancel()"/>
+              <sm-pm:item name="mbSave" value="subjects.edit.item.mbsave.value" title="subjects.edit.item.mbsave.title"/>
+              <sm-pm:item name="mbCancel" value="subjects.edit.item.mbcancel.value" title="subjects.edit.item.mbcancel.title" onclick="clickCancel()"/>
               <sm-pm:space/>
           </sm-pm:menu>
       </c:when>
@@ -156,9 +156,9 @@
               <col width="30%">
               <tr>
                   <td valign="top">
-                      <sm-ep:properties title="Http Subject info">
+                      <sm-ep:properties title="subjects.edit.properties.http_info">
                           <br>
-                          <sm-ep:txt title="name" name="name" maxlength="60" readonly="${!bean.add}"
+                          <sm-ep:txt title="subjects.edit.txt.name" name="name" maxlength="60" readonly="${!bean.add}"
                                      validation="nonEmpty"/>
                       </sm-ep:properties>
                   </td>
@@ -176,7 +176,7 @@
                           <col width="100%" align="right">
                           <col width="100%" align="left">
                           <tr>
-                              <td>address&nbsp;</td>
+                              <td><fmt:message>subjects.edit.label.address</fmt:message>&nbsp;</td>
                               <td><input id="newAddress" class="txt" name="address" validation="routeMask"
                                          onkeyup="resetValidation(this)"></td>
                               <td><img src="content/images/but_add.gif"
@@ -211,8 +211,8 @@
           <input type="hidden" name="transportId" value="${bean.transportId}">
           <input type="hidden" name="subjectType" value="${bean.subjectType}">
           <sm-pm:menu>
-              <sm-pm:item name="mbSave" value="Save" title="Save subject"/>
-              <sm-pm:item name="mbCancel" value="Cancel" title="Cancel subject editing" onclick="clickCancel()"/>
+              <sm-pm:item name="mbSave" value="subjects.edit.item.mbsave.value" title="subjects.edit.item.mbsave.title"/>
+              <sm-pm:item name="mbCancel" value="subjects.edit.item.mbcancel.value" title="subjects.edit.item.mbcancel.title" onclick="clickCancel()"/>
               <sm-pm:space/>
           </sm-pm:menu>
       </c:when>
@@ -222,9 +222,9 @@
               <col width="50%">
               <tr>
                   <td valign="top">
-                      <sm-ep:properties title="Site Site info">
+                      <sm-ep:properties title="subjects.edit.properties.site_info">
                           <br>
-                          <sm-ep:txt title="name" name="name" maxlength="60" readonly="${!bean.add}"
+                          <sm-ep:txt title="subjects.edit.txt.name" name="name" maxlength="60" readonly="${!bean.add}"
                                      validation="nonEmpty"/>
                       </sm-ep:properties>
                   </td>
@@ -233,8 +233,8 @@
                   <tr><td colspan="2">&nbsp;</td></tr>
           </table>
           <sm-pm:menu>
-              <sm-pm:item name="mbSave" value="Save" title="Save subject"/>
-              <sm-pm:item name="mbCancel" value="Cancel" title="Cancel subject editing"
+              <sm-pm:item name="mbSave" value="subjects.edit.item.mbsave.value" title="subjects.edit.item.mbsave.title"/>
+              <sm-pm:item name="mbCancel" value="subjects.edit.item.mbcancel.value" title="subjects.edit.item.mbcancel.title"
                           onclick="clickCancel()"/>
               <sm-pm:space/>
           </sm-pm:menu>
@@ -242,14 +242,14 @@
               <c:when test="${!param.add}">
                   <div class=page_subtitle>&nbsp;</div>
 
-                  <div class=page_subtitle>Site List</div>
-                  <sm:table columns="checkbox,id" names="c,name" widths="1,99" child="/routing/subjects/site"
+                  <div class=page_subtitle><fmt:message>subjects.edit.label.site_list</fmt:message></div>
+                  <sm:table columns="checkbox,id" names="c,subjects.edit.table.names.id" widths="1,99" child="/routing/subjects/site"
                             parentId="${bean.httpSiteId}" edit="id"/>
 
                   <sm-pm:menu>
-                      <sm-pm:item name="mbAddSite" value="Add" title="Add new site"/>
-                      <sm-pm:item name="mbDelete" value="Delete" title="Delete site"
-                                  onclick="return confirm('Are you sure to delete this object?')"
+                      <sm-pm:item name="mbAddSite" value="subjects.edit.item.mbaddsite.value" title="subjects.edit.item.mbaddsite.title"/>
+                      <sm-pm:item name="mbDelete" value="subjects.edit.item.mbdelete.value" title="subjects.edit.item.mbdelete.title"
+                                  onclick="deleteConfirm()"
                                   isCheckSensible="true"/>
                       <sm-pm:space/>
                   </sm-pm:menu>
