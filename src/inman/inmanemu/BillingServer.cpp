@@ -63,7 +63,7 @@ bool BillingServer::ClientConnected()
     else 
     {
         m_ClientConnected = true;
-        printf("Client accepted\n");
+        smsc_log_debug(logger,"Client accepted\n");
     }
 
     
@@ -85,18 +85,18 @@ SerializableObject * BillingServer::ReadCommand()
 
     if(clnt->ReadAll((char*)&len,4)!=4)
     {
-        printf("read failed\n");
+        smsc_log_debug(logger, "read failed\n");
         return 0;
     }
 
     len = ntohl(len);
-    printf("received:%d bytes\n",len);
+    smsc_log_debug(logger, "received:%d bytes\n",len);
 
     buff.reset(len);
 
     if (clnt->ReadAll((char*)buff.get(),len)!=len)
     {
-      printf("read failed\n");
+      smsc_log_debug(logger, "read failed\n");
       return 0;
     }
     buff.setDataSize(len);
@@ -109,7 +109,7 @@ SerializableObject * BillingServer::ReadCommand()
     SerializableObject* obj=SerializerInap::getInstance()->deserialize(buff);
     obj->load(buff);
 
-    printf("received obj dialogId=%d\n",obj->getDialogId());
+    smsc_log_debug(logger, "received obj dialogId=%d\n",obj->getDialogId());
     return obj;
 }
 
@@ -120,7 +120,7 @@ ChargeSmsResult * BillingServer::CreateRespOnCharge(SerializableObject * obj)
 
     if (!op) 
     {
-        printf("command invalid\n");
+        smsc_log_debug(logger, "command invalid\n");
         return 0;
     }
 
@@ -129,12 +129,12 @@ ChargeSmsResult * BillingServer::CreateRespOnCharge(SerializableObject * obj)
     //fileStorage->bill(cdr);
 
 
-    printf("Charge SMS:");
-    printf("ServiceId = %d\n",cdr._serviceId);
-    printf("userMsgRef=%d\n",cdr._userMsgRef);
-    printf("service number=%s\n",cdr._dstAdr.c_str());
-    printf("abonent %s\n", cdr._srcAdr.c_str());
-    printf("--------------\n\n");
+    smsc_log_debug(logger, "Charge SMS:");
+    smsc_log_debug(logger, "ServiceId = %d\n",cdr._serviceId);
+    smsc_log_debug(logger, "userMsgRef=%d\n",cdr._userMsgRef);
+    smsc_log_debug(logger, "service number=%s\n",cdr._dstAdr.c_str());
+    smsc_log_debug(logger, "abonent %s\n", cdr._srcAdr.c_str());
+    smsc_log_debug(logger, "--------------\n\n");
 
     int charge=1;
   /*if(argc>1)
@@ -166,8 +166,8 @@ void BillingServer::ProcessResultCommand(SerializableObject * obj)
 
     int result = op->GetValue();
 
-    printf("DeliverySmsResult\n");
-    printf("BillId = %d\n", op->getDialogId());
+    smsc_log_debug(logger, "DeliverySmsResult\n");
+    smsc_log_debug(logger, "BillId = %d\n", op->getDialogId());
 
     CDRRecord cdr;
     op->export2CDR(cdr);
@@ -175,16 +175,16 @@ void BillingServer::ProcessResultCommand(SerializableObject * obj)
 
     if (result) 
     {
-        printf("rollback processing...\n");
+        smsc_log_debug(logger, "rollback processing...\n");
         processor.rollback(op->getDialogId());
     }
     else
     {
         processor.commit(op->getDialogId());
-        printf("commit processing...\n");
+        smsc_log_debug(logger, "commit processing...\n");
     }
 
-    printf("--------------\n\n");
+    smsc_log_debug(logger, "--------------\n\n");
 
 
 }
@@ -195,8 +195,8 @@ void BillingServer::SendResp(SerializableObject * resp)
     buff.setDataSize(0);
     SerializerInap::getInstance()->serialize(resp,buff);
 
-    printf("\nSending responce: %d bytes\n", buff.getDataSize());
-    printf("-------------------\n");
+    smsc_log_debug(logger, "\nSending responce: %d bytes\n", buff.getDataSize());
+    smsc_log_debug(logger, "-------------------\n");
 
     /*
     std::string s;

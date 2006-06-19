@@ -26,8 +26,13 @@
 #include "scag/transport/http/HttpRouter.h"
 #include "scag/pers/PersClient.h"
 
+#include "scag/util/encodings/Encodings.h"
+
+
 namespace scag
 {
+    using namespace scag::util::encodings;
+
     using namespace xercesc;
 
     using namespace scag::exceptions;
@@ -477,7 +482,7 @@ void Scag::init()
   */
   //*****************************************************
 
-  /*      
+   /*     
   ////////////////////////// FOR TEST
 
   scag::sessions::CSessionKey key;
@@ -486,6 +491,14 @@ void Scag::init()
   //smsc::smpp::UssdServiceOpValue::PSSR_INDICATION == sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)
   sms1.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, smsc::smpp::UssdServiceOpValue::PSSR_INDICATION);
   sms2.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, 100);
+
+  
+  std::string text;
+  const char * inBuff = "2 3 LA";
+  
+  Convertor::UTF8ToGSM7Bit(inBuff, strlen(inBuff), text);
+  sms1.setIntProperty(Tag::SMPP_DATA_CODING, smsc::smpp::DataCoding::SMSC7BIT);
+  sms1.setBinProperty(Tag::SMPP_SHORT_MESSAGE, text.data(), text.size());
 
   std::string data;
   uint16_t tag;
@@ -586,7 +599,7 @@ void Scag::init()
   sm.releaseSession(sessionPtr);
 
   ////////////////////////// FOR TEST 
-  */                                 
+   */                                
                       
                                     
     //********************************************************
