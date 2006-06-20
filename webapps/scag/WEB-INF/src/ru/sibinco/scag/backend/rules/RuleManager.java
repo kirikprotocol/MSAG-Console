@@ -224,7 +224,7 @@ public class RuleManager
    {
      LinkedList li=new  LinkedList();
      InputStream _in=null; BufferedReader in = null; String inputLine;long length=0;
-     try {  _in = new FileInputStream(fileName); in = new BufferedReader(new InputStreamReader(_in));
+     try {  _in = new FileInputStream(fileName); in = new BufferedReader(new InputStreamReader(_in,"UTF-8"));
        li.addFirst("ok");
        while ((inputLine = in.readLine()) != null) {li.add(inputLine);length+=inputLine.length(); }
      } catch (FileNotFoundException e) { e.printStackTrace();
