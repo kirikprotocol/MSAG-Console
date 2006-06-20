@@ -16,7 +16,7 @@ void Property::assign(const char *nm, const char *str, TimePolicy policy, time_t
 
     if(!strcmp(str, "false"))
         setBoolValue(false);
-    else if(strcmp(str, "true"))
+    else if(!strcmp(str, "true"))
         setBoolValue(true);
     else if((str[0] >= '0' && str[0] <= '9' || str[0] == '-' || str[0] == '+') 
         && ((i = strtol(str, &ep, 0)) || ep != str) && !*ep)
