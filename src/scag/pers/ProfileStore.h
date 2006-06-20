@@ -244,9 +244,6 @@ public:
         Profile *pf;
         Property *p;
 
-        if(!mod)
-            return false;
-
         pf = getProfile(key, true);
         p = pf->GetProperty(prop.getName().c_str());
         if(p != NULL)
@@ -254,7 +251,8 @@ public:
             smsc_log_debug(log, "profile %s, incProperty: %s", key.toString().c_str(), p->toString().c_str());
             if(p->getType() == INT && prop.getType() == INT)
             {
-                res = (p->getIntValue() + prop.getIntValue()) % mod;
+                res = p->getIntValue() + prop.getIntValue();
+                if(mod) res %= mod;
                 p->setIntValue(res);
                 p->WriteAccess();
                 storeProfile(key, pf);
