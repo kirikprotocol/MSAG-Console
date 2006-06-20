@@ -112,10 +112,8 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
 
     if(cmd == PC_INC_MOD)
     {
-        if(!params.Exists("mod"))
-            throw SCAGException("PersAction '%s' : missing 'mod' parameter", getStrCmd());
-
-        mod_str = params["mod"];
+        mod = 0;
+        mod_str = params.Exists("mod") ? params["mod"] : "0";
 
         ftModValue = ActionContext::Separate(mod_str, name); 
         if(ftModValue == ftField) 
@@ -125,7 +123,7 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
                 throw InvalidPropertyException("PersAction '%s': cannot read property '%s' - no access", mod_str.c_str());
         }
 
-        if(ftModValue == ftUnknown && !(mod = atoi(mod_str.c_str())))
+        if(ftModValue == ftUnknown && strcmp(mod_str.c_str(), "0") && !(mod = atoi(mod_str.c_str())))
             throw SCAGException("PersAction '%s' : 'mod' parameter not a number. mod=%s", getStrCmd(), mod_str.c_str());
 
         if(!params.Exists("result"))
@@ -133,14 +131,14 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
 
         result_str = params["result"];
 
-        FieldType ftResultValue = ActionContext::Separate(result_str, name); 
+        FieldType ftResultValue = ActionContext::Separate(result_str, name);
         if(ftResultValue == ftUnknown || ftValue == ftConst)
             throw InvalidPropertyException("PersAction '%s': 'result' parameter should be an lvalue. Got %s", getStrCmd(), value_str.c_str());
 
-        if(ftResultValue == ftField) 
+        if(ftResultValue == ftField)
         {
             AccessType at = CommandAdapter::CheckAccess(propertyObject.HandlerId, name, propertyObject.transport);
-            if(!(at & atWrite)) 
+            if(!(at & atWrite))
                 throw InvalidPropertyException("PersAction '%s': cannot modify property '%s' - no access", value_str.c_str());
         }
     }
