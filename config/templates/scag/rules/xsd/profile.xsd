@@ -10,19 +10,19 @@
     <simpleType name="ProfileType">
         <restriction base="scag:Value">
             <enumeration value="ABONENT" />
-    	    <enumeration value="OPERATOR" />
-    	    <enumeration value="PROVIDER" />
-    	    <enumeration value="SERVICE" />
+            <enumeration value="OPERATOR" />
+            <enumeration value="PROVIDER" />
+            <enumeration value="SERVICE" />
         </restriction>
     </simpleType>
 
     <simpleType name="TimePolicy">
         <restriction base="scag:Value">
             <enumeration value="INFINIT" />
-    	    <enumeration value="FIXED" />
-    	    <enumeration value="R_ACCESS" />
-    	    <enumeration value="W_ACCESS" />
-    	    <enumeration value="ACCESS" />
+            <enumeration value="FIXED" />
+            <enumeration value="R_ACCESS" />
+            <enumeration value="W_ACCESS" />
+            <enumeration value="ACCESS" />
         </restriction>
     </simpleType>
 
@@ -72,7 +72,7 @@
                     <attribute name="type" type="profile:ProfileType" use="required"/>
                     <attribute name="var" type="scag:Value" use="required"/>
                     <attribute name="inc" type="scag:Value" use="optional" />
-                    <attribute name="mod" type="scag:Value" use="required" />
+                    <attribute name="mod" type="scag:Value" use="optional" />
                     <attribute name="result" type="scag:Var" use="required" />
                     <attribute name="policy" type="profile:TimePolicy" use="optional" />
                     <attribute name="finaldate" type="scag:Value" use="optional" />
