@@ -113,7 +113,7 @@ public class RuleManager
     BufferedReader br = null;
     try {
      fs = new FileInputStream(headerTemplatePath);
-     br = new BufferedReader(new InputStreamReader(fs));
+     br = new BufferedReader(new InputStreamReader(fs,"UTF-8"));
      String line;
      while ((line = br.readLine())!=null) {
       header.append(line).append('\n');
@@ -149,7 +149,7 @@ public class RuleManager
     LinkedList schemaContent = new LinkedList();
     File schemaFile =new File(xsdFolder,schemaPath);
     in = new FileInputStream(schemaFile);
-    br = new BufferedReader(new InputStreamReader(in));
+    br = new BufferedReader(new InputStreamReader(in,"UTF-8"));
     String line;
     while ((line=br.readLine())!=null)
       schemaContent.add(line);
