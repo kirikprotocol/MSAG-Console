@@ -261,7 +261,8 @@ public:
         }
         else
         {
-            res = prop.getIntValue() % mod;
+            res = prop.getIntValue();
+            if(mod) res %= mod;
             prop.setIntValue(res);
             pf->AddProperty(prop);
             storeProfile(key, pf);
