@@ -349,7 +349,7 @@ public class RuleManager
     File ruleFile = composeRuleFile(transport,new Long(ruleId));
     File newFile = Functions.createNewFilenameForSave(ruleFile);
     try {
-      PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), Functions.getLocaleEncoding()));
+      PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), "UTF-8"));
       for (Iterator i = li.listIterator(1); i.hasNext();) {
           out.println(i.next());
       }
@@ -365,7 +365,7 @@ public class RuleManager
 
     try {
       File newFile= composeRuleFile(transport,new Long(ruleId));
-      final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), Functions.getLocaleEncoding()));
+      final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), "UTF-8"));
       for (Iterator i = li.listIterator(1); i.hasNext();)
         out.println(i.next());
       out.flush();
@@ -384,7 +384,7 @@ public class RuleManager
       try {
         File newFile= composeRuleFile(transport,new Long(ruleId));
         logger.debug("Saving rule to disc!!!! file : " + newFile);
-        final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), Functions.getLocaleEncoding()));
+        final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), "UTF-8"));
         String s;
         while((s=r.readLine())!=null) {
           out.println(s);
