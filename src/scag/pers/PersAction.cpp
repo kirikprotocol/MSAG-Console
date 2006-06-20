@@ -293,8 +293,9 @@ bool PersAction::run(ActionContext& context)
                     if(ftModValue != ftUnknown)
                     {
                         REProperty *rp = context.getProperty(mod_str);
-                        if(!rp || !(mod = rp->getInt()))
+                        if(!rp)
                             return false;
+                        mod = rp->getInt();
                     }
 
                     int res;
