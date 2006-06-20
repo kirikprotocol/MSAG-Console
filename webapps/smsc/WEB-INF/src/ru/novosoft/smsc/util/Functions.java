@@ -55,8 +55,7 @@ public class Functions {
         File file = new File(folderUnpackTo, name);
         file.getParentFile().mkdirs();
         OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
-        for (int i = 0; (i = zin.read()) != -1; out.write(i))
-            ;
+        for (int i = 0; (i = zin.read()) != -1; out.write(i));
         out.close();
     }
 
