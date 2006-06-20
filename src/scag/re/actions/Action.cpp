@@ -15,7 +15,6 @@ FieldType Action::CheckParameter(const SectionParams& params, PropertyObject& pr
         exist = true;
 
         strParameter = params[paramName];
-
         fieldType = ActionContext::Separate(strParameter,name);
         AccessType at;
 
