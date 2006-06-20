@@ -18,7 +18,7 @@
       javax.servlet.jsp.jstl.fmt.locale
     </param-name>
     <param-value>
-      ru
+      @language.default@
     </param-value>
   </context-param>
 
@@ -208,7 +208,7 @@
 
    <servlet-mapping>
      <servlet-name>WHOISD</servlet-name>
-     <url-pattern>/WHOISD/*</url-pattern>
+     <url-pattern>@WHOISD.url-pattern@</url-pattern>
    </servlet-mapping>
 
    <servlet-mapping>

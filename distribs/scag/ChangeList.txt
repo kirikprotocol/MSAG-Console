@@ -1,5 +1,6 @@
-13.06.2006 18:00 dym
+20.06.2006 18:00 dym
 Added parametr: language.default
 What for: to have capability to set default language for console
 Type: string
-Available values: are contained in the attribute "language" of "locale" elements in file ..\smsc\webapps\scag\WEB-INF\locales.xml. For example: "ru", "en".
+Available values: are contained in the attribute "language" and optional attribute "country" of "locale" elements 
+in file ..\smsc\webapps\scag\WEB-INF\locales.xml. For example: "ru", "en", "ru_RU", "en_US".
