@@ -1,3 +1,7 @@
+#
+# $Id$
+#
+
 ASN_MODULE_SOURCES=	\
 	Code.c	\
 	Priority.c	\
