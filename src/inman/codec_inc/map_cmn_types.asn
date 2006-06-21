@@ -21,6 +21,8 @@ EXPORTS
     maxISDN-AddressLength,
     FTN-AddressString,
     ISDN-SubaddressString,
+    ExternalSignalInfo,
+    Ext-ExternalSignalInfo,
     AlertingPattern,
     TBCD-STRING,
 -- data types for numbering and identification
@@ -28,6 +30,7 @@ EXPORTS
     IMEI,
     NetworkResource,
     AdditionalNetworkResource,
+    NAEA-PreferredCI,
     SubscriberIdentity,
 
 -- data types for CAMEL
@@ -53,11 +56,11 @@ FROM MAP-BS-Code {
    itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
    gsm-Network (1) modules (3) map-BS-Code (20) version10 (10)}
 
-    SS-Code
+/*    SS-Code
 FROM MAP-SS-Code {
    itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
    gsm-Network (1) modules (3) map-SS-Code (15) version10 (10)}
-
+*/
     ExtensionContainer
 FROM MAP-ExtensionDataTypes {
    itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
@@ -169,6 +172,51 @@ ISDN-SubaddressString ::= OCTET STRING (SIZE (1..maxISDN-SubaddressLength))
 
 maxISDN-SubaddressLength  INTEGER ::= 21
 
+ExternalSignalInfo ::= SEQUENCE {
+    protocolId		ProtocolId,
+    signalInfo		SignalInfo,
+    -- Information about the internal structure is given in
+    -- clause 7.6.9.
+    extensionContainer	ExtensionContainer	OPTIONAL,
+    -- extensionContainer must not be used in version 2
+    ...
+}
+
+SignalInfo ::= OCTET STRING (SIZE (1..maxSignalInfoLength))
+
+maxSignalInfoLength  INTEGER ::= 200
+-- This NamedValue represents the theoretical maximum number of octets which is
+-- available to carry a single instance of the SignalInfo data type,
+-- without requiring segmentation to cope with the network layer service.
+-- However, the actual maximum size available for an instance of the data
+-- type may be lower, especially when other information elements
+-- have to be included in the same component.
+
+ProtocolId ::= ENUMERATED {
+    gsm-0408  (1),
+    gsm-0806  (2),
+    gsm-BSSMAP  (3),
+    -- Value 3 is reserved and must not be used
+    ets-300102-1  (4)
+}
+
+Ext-ExternalSignalInfo ::= SEQUENCE {
+    ext-ProtocolId	Ext-ProtocolId,
+    signalInfo		SignalInfo,
+    -- Information about the internal structure is given in
+    -- clause 7.6.9.10
+    extensionContainer	ExtensionContainer	OPTIONAL,
+    ...
+}
+
+Ext-ProtocolId ::= ENUMERATED { ets-300356 (1), ...  }
+-- exception handling:
+-- For Ext-ExternalSignalInfo sequences containing this parameter with any
+-- other value than the ones listed the receiver shall ignore the whole 
+-- Ext-ExternalSignalInfo sequence.
+
+
+
 AlertingPattern ::= OCTET STRING (SIZE (1) )
 -- This type is used to represent Alerting Pattern
 -- bits 8765 : 0000 (unused)
@@ -216,6 +264,19 @@ AdditionalNetworkResource ::= ENUMERATED {
 }
 -- if unknown value is received in AdditionalNetworkResource
 -- it shall be ignored.
+
+NAEA-PreferredCI ::= SEQUENCE {
+    naea-PreferredCIC	[0] NAEA-CIC,
+    extensionContainer	[1] ExtensionContainer	OPTIONAL,
+    ...
+}
+
+NAEA-CIC ::= OCTET STRING (SIZE (3))
+-- The internal structure is defined by the Carrier Identification
+-- parameter in ANSI T1.113.3. Carrier codes between "000" and "999" may
+-- be encoded as 3 digits using "000" to "999" or as 4 digits using 
+-- "0000" to "0999". Carrier codes between "1000" and "9999" are encoded
+-- using 4 digits.
 
 
 SubscriberIdentity ::= CHOICE {

@@ -13,35 +13,43 @@ MAP-ER-DataTypes {
 DEFINITIONS IMPLICIT TAGS ::= BEGIN
 EXPORTS
     CallBarredParam,
+    CUG-RejectParam,
     SystemFailureParam,
     DataMissingParam,
     UnexpectedDataParam,
+    FacilityNotSupParam,
+    OR-NotAllowedParam,
     UnknownSubscriberParam,
+    NumberChangedParam,
     BearerServNotProvParam,
     TeleservNotProvParam,
+    AbsentSubscriberParam,
+    BusySubscriberParam,
+    NoSubscriberReplyParam,
+    ForwardingViolationParam,
     ATSI-NotAllowedParam,
     IllegalSS-OperationParam,
     SS-NotAvailableParam,
     InformationNotAvailableParam
 ;
 IMPORTS
-    SS-Status
+/*    SS-Status
 FROM MAP-SS-DataTypes {
    itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
    gsm-Network (1) modules (3) map-SS-DataTypes (14) version10 (10)}
-
-    BasicServiceCode,
+*/
+--    BasicServiceCode,
     NetworkResource,
     AdditionalNetworkResource
 FROM MAP-CommonDataTypes {
    itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
    gsm-Network (1) modules (3) map-CommonDataTypes (18) version10 (10)}
 
-    SS-Code
+/*    SS-Code
 FROM MAP-SS-Code {
    itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
    gsm-Network (1) modules (3) map-SS-Code (15) version10 (10)}
-
+*/
     ExtensionContainer
 FROM MAP-ExtensionDataTypes {
    itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
@@ -63,6 +71,19 @@ ExtensibleCallBarredParam ::= SEQUENCE {
     unauthorisedMessageOriginator	[1] NULL	OPTIONAL 
 }
 
+CUG-RejectParam ::= SEQUENCE {
+    cug-RejectCause	CUG-RejectCause	OPTIONAL,
+    extensionContainer	ExtensionContainer	OPTIONAL,
+    ...
+}
+
+CUG-RejectCause ::= ENUMERATED {
+    incomingCallsBarredWithinCUG  (0),
+    subscriberNotMemberOfCUG  (1),
+    requestedBasicServiceViolatesCUG-Constraints  (5),
+    calledPartySS-InteractionViolation  (7)
+}
+
 SystemFailureParam ::= CHOICE {
     networkResource			NetworkResource,
     -- networkResource must not be used in version 3
@@ -79,50 +100,115 @@ ExtensibleSystemFailureParam ::= SEQUENCE {
 
 
 DataMissingParam ::= SEQUENCE {
-	extensionContainer	ExtensionContainer	OPTIONAL,
-	...}
+    extensionContainer	ExtensionContainer	OPTIONAL,
+    ...
+}
 
 UnexpectedDataParam ::= SEQUENCE {
-	extensionContainer	ExtensionContainer	OPTIONAL,
-	...}
+    extensionContainer	ExtensionContainer	OPTIONAL,
+    ...
+}
+
+FacilityNotSupParam ::= SEQUENCE {
+    extensionContainer	ExtensionContainer	OPTIONAL,
+    ...,
+    shapeOfLocationEstimateNotSupported 	 [0] NULL	OPTIONAL,
+    neededLcsCapabilityNotSupportedInServingNode [1] NULL	OPTIONAL
+}
+
+OR-NotAllowedParam ::= SEQUENCE {
+    extensionContainer	ExtensionContainer	OPTIONAL,
+    ...
+}
+
 
 UnknownSubscriberParam ::= SEQUENCE {
-	extensionContainer	ExtensionContainer	OPTIONAL,
-	...,
-	unknownSubscriberDiagnostic	UnknownSubscriberDiagnostic	OPTIONAL}
+    extensionContainer	ExtensionContainer	OPTIONAL,
+    ...,
+    unknownSubscriberDiagnostic	UnknownSubscriberDiagnostic	OPTIONAL
+}
 
 UnknownSubscriberDiagnostic ::= ENUMERATED {
-	imsiUnknown  (0),
-	gprsSubscriptionUnknown  (1),
-	...,
-	npdbMismatch  (2)}
--- if unknown values are received in 	
+    imsiUnknown  (0),
+    gprsSubscriptionUnknown  (1),
+    ...,
+    npdbMismatch  (2)
+}
+-- if unknown values are received in
 -- UnknownSubscriberDiagnostic they shall be discarded
 
+NumberChangedParam ::= SEQUENCE {
+    extensionContainer	ExtensionContainer	OPTIONAL,
+    ...
+}
 
 BearerServNotProvParam ::= SEQUENCE {
-	extensionContainer	ExtensionContainer	OPTIONAL,
-	...}
+    extensionContainer	ExtensionContainer	OPTIONAL,
+    ...
+}
 
 TeleservNotProvParam ::= SEQUENCE {
-	extensionContainer	ExtensionContainer	OPTIONAL,
-	...}
-ATSI-NotAllowedParam ::= SEQUENCE {
-	extensionContainer	ExtensionContainer	OPTIONAL,
-	...}
+    extensionContainer	ExtensionContainer	OPTIONAL,
+    ...
+}
 
+AbsentSubscriberParam ::= SEQUENCE {
+    extensionContainer		ExtensionContainer	OPTIONAL,
+    ...,
+    absentSubscriberReason	[0] AbsentSubscriberReason	OPTIONAL
+}
+
+AbsentSubscriberReason ::= ENUMERATED {
+    imsiDetach (0),
+    restrictedArea (1),
+    noPageResponse (2),
+    ... ,
+    purgedMS (3)
+}
+-- exception handling: at reception of other values than the ones listed the 
+-- AbsentSubscriberReason shall be ignored. 
+-- The AbsentSubscriberReason: purgedMS is defined for the Super-Charger feature 
+-- (see TS 23.116). If this value is received in a Provide Roaming Number response
+-- it shall be mapped to the AbsentSubscriberReason: imsiDetach in the Send Routeing
+-- Information response
+
+BusySubscriberParam ::= SEQUENCE {
+    extensionContainer	ExtensionContainer	OPTIONAL,
+    ...,
+    ccbs-Possible	[0] NULL		OPTIONAL,
+    ccbs-Busy		[1] NULL		OPTIONAL
+}
+
+NoSubscriberReplyParam ::= SEQUENCE {
+    extensionContainer	ExtensionContainer	OPTIONAL,
+    ...
+}
+
+ForwardingViolationParam ::= SEQUENCE {
+    extensionContainer	ExtensionContainer	OPTIONAL,
+    ...
+}
+
+
+ATSI-NotAllowedParam ::= SEQUENCE {
+    extensionContainer	ExtensionContainer	OPTIONAL,
+    ...
+}
 
 IllegalSS-OperationParam ::= SEQUENCE {
-	extensionContainer	ExtensionContainer	OPTIONAL,
-	...}
+    extensionContainer	ExtensionContainer	OPTIONAL,
+    ...
+}
 
 SS-NotAvailableParam ::= SEQUENCE {
-	extensionContainer	ExtensionContainer	OPTIONAL,
-	...}
+    extensionContainer	ExtensionContainer	OPTIONAL,
+    ...
+}
 
 InformationNotAvailableParam ::= SEQUENCE {
-	extensionContainer	ExtensionContainer	OPTIONAL,
-	...}
+    extensionContainer	ExtensionContainer	OPTIONAL,
+    ...
+}
 
 END -- 17.7.7 MAP-ER-DataTypes (Error data types)
 

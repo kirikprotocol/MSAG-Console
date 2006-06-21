@@ -17,13 +17,21 @@ EXPORTS
     systemFailure,
     dataMissing,
     unexpectedDataValue,
+    facilityNotSupported,
     -- identification and numbering errors
     unknownSubscriber,
+    numberChanged,
     -- subscription errors
     bearerServiceNotProvisioned,
     teleserviceNotProvisioned,
     -- call handling errors
+    or-NotAllowed,
+    busySubscriber,
+    noSubscriberReply,
+    absentSubscriber,
     callBarred,
+    forwardingViolation,
+    cug-Reject,
     -- any time information handling errors
     atsi-NotAllowed,
     informationNotAvailable,
@@ -35,21 +43,29 @@ EXPORTS
 
 IMPORTS
     ERROR
-FROM Remote-Operations-Information-Objects {joint-iso-itu-t remote-operations(4)
-  informationObjects(5) version1(0)}
+FROM Remote-Operations-Information-Objects {
+    joint-iso-itu-t remote-operations(4) informationObjects(5) version1(0)}
   
-    SS-Status
+/*    SS-Status
 FROM MAP-SS-DataTypes {
    itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
    gsm-Network (1) modules (3) map-SS-DataTypes (14) version10 (10)}
-
+*/
     SystemFailureParam,
     DataMissingParam,
     UnexpectedDataParam,
+    FacilityNotSupParam,
     UnknownSubscriberParam,
+    NumberChangedParam,
     BearerServNotProvParam,
     TeleservNotProvParam,
+    OR-NotAllowedParam,
+    AbsentSubscriberParam,
+    BusySubscriberParam,
+    NoSubscriberReplyParam,
     CallBarredParam,
+    ForwardingViolationParam,
+    CUG-RejectParam,
     ATSI-NotAllowedParam,
     InformationNotAvailableParam,    
     IllegalSS-OperationParam,
@@ -61,81 +77,112 @@ FROM MAP-ER-DataTypes {
 
 -- generic errors
 systemFailure  ERROR ::= {
-    PARAMETER	SystemFailureParam
-    -- optional
+    PARAMETER	SystemFailureParam		-- optional
     CODE	local:34 
 }
 
 dataMissing  ERROR ::= {
-    PARAMETER	DataMissingParam
-		-- optional
+    PARAMETER	DataMissingParam		-- optional
 		-- DataMissingParam must not be used in version <3
     CODE	local:35 
 }
 
 unexpectedDataValue  ERROR ::= {
-    PARAMETER	UnexpectedDataParam
-		-- optional
+    PARAMETER	UnexpectedDataParam		-- optional
 		-- UnexpectedDataParam must not be used in version <3
-	CODE	local:36 
+    CODE	local:36 
+}
+
+facilityNotSupported  ERROR ::= {
+    PARAMETER   FacilityNotSupParam		-- optional
+		-- FacilityNotSupParam must not be used in version <3
+    CODE	local:21 
 }
 
 -- identification and numbering errors
 
 unknownSubscriber  ERROR ::= {
-    PARAMETER	UnknownSubscriberParam
-		-- optional
+    PARAMETER	UnknownSubscriberParam		-- optional
 		-- UnknownSubscriberParam must not be used in version <3
     CODE	local:1 
 }
 
+numberChanged  ERROR ::= {
+    PARAMETER   NumberChangedParam		-- optional
+    CODE	local:44 
+}
+
 -- subscription errors
 bearerServiceNotProvisioned  ERROR ::= {
-    PARAMETER	BearerServNotProvParam
-		-- optional
+    PARAMETER	BearerServNotProvParam		-- optional
 		-- BearerServNotProvParam must not be used in version <3
     CODE	local:10
 }
 
 teleserviceNotProvisioned  ERROR ::= {
-    PARAMETER	TeleservNotProvParam
-		-- optional
+    PARAMETER	TeleservNotProvParam		-- optional
 		-- TeleservNotProvParam must not be used in version <3
     CODE	local:11
 }
 
 -- call handling errors
+absentSubscriber  ERROR ::= {
+    PARAMETER	AbsentSubscriberParam		-- optional
+		-- AbsentSubscriberParam must not be used in version <3
+    CODE	local:27 
+}
+
+busySubscriber  ERROR ::= {
+    PARAMETER	BusySubscriberParam		-- optional
+    CODE	local:45 
+}
+
+noSubscriberReply  ERROR ::= {
+    PARAMETER	NoSubscriberReplyParam		-- optional
+    CODE	local:46 
+}
+
 callBarred  ERROR ::= {
-    PARAMETER	CallBarredParam
-		-- optional
+    PARAMETER	CallBarredParam			-- optional
     CODE	local:13
+}
+
+forwardingViolation  ERROR ::= {
+    PARAMETER	ForwardingViolationParam	-- optional
+    CODE	local:14 
+}
+
+cug-Reject  ERROR ::= {
+    PARAMETER	CUG-RejectParam			-- optional
+    CODE	local:15 
+}
+
+or-NotAllowed  ERROR ::= {
+    PARAMETER   OR-NotAllowedParam		-- optional
+    CODE	local:48 
 }
 
 -- any time information handling errors
 atsi-NotAllowed  ERROR ::= {
-    PARAMETER	ATSI-NotAllowedParam
-		-- optional
+    PARAMETER	ATSI-NotAllowedParam		-- optional
     CODE	local:60
 }
 
 
 informationNotAvailable  ERROR ::= {
-    PARAMETER	InformationNotAvailableParam
-		-- optional
+    PARAMETER	InformationNotAvailableParam	-- optional
     CODE	local:62
 }
 
 -- supplementary service errors
 illegalSS-Operation  ERROR ::= {
-    PARAMETER	IllegalSS-OperationParam
-		-- optional
+    PARAMETER	IllegalSS-OperationParam	-- optional
 		-- IllegalSS-OperationParam must not be used in version <3
     CODE	local:16
 }
 
 ss-NotAvailable  ERROR ::= {
-    PARAMETER	SS-NotAvailableParam
-		-- optional
+    PARAMETER	SS-NotAvailableParam		-- optional
 		-- SS-NotAvailableParam must not be used in version <3
     CODE	local:18
 }
