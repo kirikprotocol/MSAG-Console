@@ -167,21 +167,8 @@ DEFINITIONS IMPLICIT TAGS ::= BEGIN
 -- only types concerning MAP-ANY-TIME-SUBSCRIPTION-INTERROGATION service.
 EXPORTS
 -- subscriber management types
-    ODB-Data,
-    O-CSI, 
-    D-CSI,
-    O-BcsmCamelTDPCriteriaList, 
-    T-BCSM-CAMEL-TDP-CriteriaList,
-    SS-CSI,
-    ServiceKey,
-    DefaultCallHandling,
-    CamelCapabilityHandling,
-    BasicServiceCriteria,
-    SupportedCamelPhases,
-    OfferedCamel4CSIs,
-    maxNumOfCamelTDPData,
-    T-CSI,
-    T-BcsmTriggerDetectionPoint,
+--    ODB-Data,
+--    SS-CSI,
 -- any time information handling types
     AnyTimeSubscriptionInterrogationArg,
     AnyTimeSubscriptionInterrogationRes
@@ -214,6 +201,23 @@ FROM MAP-CommonDataTypes {
 FROM MAP-ExtensionDataTypes {
    itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
    gsm-Network (1) modules (3) map-ExtensionDataTypes (21) version10 (10)}
+
+    O-CSI, 
+    D-CSI,
+    O-BcsmCamelTDPCriteriaList, 
+    T-BCSM-CAMEL-TDP-CriteriaList,
+    ServiceKey,
+    DefaultCallHandling,
+    CamelCapabilityHandling,
+    BasicServiceCriteria,
+    SupportedCamelPhases,
+    OfferedCamel4CSIs,
+    maxNumOfCamelTDPData,
+    T-CSI,
+    T-BcsmTriggerDetectionPoint
+FROM MAP-MS-DataTypes {
+   itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
+   gsm-Network (1) modules (3) map-MS-DataTypes (11) version10 (10)}
 ;
 
 GPRS-CSI ::= SEQUENCE {
@@ -410,35 +414,6 @@ MT-SMS-TPDU-Type ::= ENUMERATED {
 -- In CAMEL phase 4, sms-SUBMIT-REPORT shall not be used and a received TPDU-TypeCriterion
 -- sequence containing sms-SUBMIT-REPORT shall be wholly ignored.
 
-D-CSI ::= SEQUENCE {
-    dp-AnalysedInfoCriteriaList	[0] DP-AnalysedInfoCriteriaList	OPTIONAL,
-    camelCapabilityHandling	[1] CamelCapabilityHandling	OPTIONAL,
-    extensionContainer		[2] ExtensionContainer	OPTIONAL,
-    notificationToCSE		[3] NULL		OPTIONAL,
-    csi-Active			[4] NULL		OPTIONAL,
-    ...
-} 
---	notificationToCSE and csi-Active shall not be present when D-CSI is sent to VLR/GMSC.
---	They may only be included in ATSI/ATM ack/NSDC message.
---	DP-AnalysedInfoCriteria and  camelCapabilityHandling shall be present in 
---	the D-CSI sequence.
---	If D-CSI is segmented, then the first segment shall contain dp-AnalysedInfoCriteriaList
---	and camelCapabilityHandling. Subsequent segments shall not contain
---	camelCapabilityHandling, but may contain dp-AnalysedInfoCriteriaList.
-
-DP-AnalysedInfoCriteriaList  ::= SEQUENCE SIZE (1..maxNumOfDP-AnalysedInfoCriteria) OF
-				DP-AnalysedInfoCriterium
-maxNumOfDP-AnalysedInfoCriteria INTEGER ::= 10
-
-DP-AnalysedInfoCriterium ::= SEQUENCE {
-    dialledNumber	ISDN-AddressString,
-    serviceKey		ServiceKey,
-    gsmSCF-Address	ISDN-AddressString,
-    defaultCallHandling	DefaultCallHandling,
-    extensionContainer	ExtensionContainer	OPTIONAL,
-    ...
-}
-
 SS-CSI ::= SEQUENCE {
     ss-CamelData	SS-CamelData,
     extensionContainer	ExtensionContainer	OPTIONAL,
@@ -467,145 +442,6 @@ SS-EventList  ::= SEQUENCE SIZE (1..maxNumOfCamelSSEvents) OF SS-Code
 -- If the VLR receives SS-CSI containing a marking for ccbs, the VLR shall discard the
 -- ccbs marking in SS-CSI.
 maxNumOfCamelSSEvents INTEGER ::= 10
-
-O-CSI ::= SEQUENCE {
-    o-BcsmCamelTDPDataList	O-BcsmCamelTDPDataList,
-    extensionContainer		ExtensionContainer	OPTIONAL,
-    ...,
-    camelCapabilityHandling	[0] CamelCapabilityHandling	OPTIONAL,
-    notificationToCSE		[1] NULL	OPTIONAL,
-    csiActive			[2] NULL	OPTIONAL
-}
--- notificationtoCSE and csiActive shall not be present when O-CSI is sent to VLR/GMSC.
--- They may only be included in ATSI/ATM ack/NSDC message.
--- O-CSI shall not be segmented.
-
-O-BcsmCamelTDPDataList ::= SEQUENCE SIZE (1..maxNumOfCamelTDPData) OF
-				O-BcsmCamelTDPData
--- O-BcsmCamelTDPDataList shall not contain more than one instance of
--- O-BcsmCamelTDPData containing the same value for o-BcsmTriggerDetectionPoint.
--- For CAMEL Phase 2, this means that only one instance of O-BcsmCamelTDPData is allowed
--- with o-BcsmTriggerDetectionPoint being equal to DP2.
-maxNumOfCamelTDPData  INTEGER ::= 10
-
-O-BcsmCamelTDPData ::= SEQUENCE {
-    o-BcsmTriggerDetectionPoint	O-BcsmTriggerDetectionPoint,
-    serviceKey			ServiceKey,
-    gsmSCF-Address		[0] ISDN-AddressString,
-    defaultCallHandling		[1] DefaultCallHandling,
-    extensionContainer		[2] ExtensionContainer	OPTIONAL,
-    ...
-}
-
-ServiceKey ::= INTEGER (0..2147483647)
-
-O-BcsmTriggerDetectionPoint ::= ENUMERATED {
-    collectedInfo (2), ..., routeSelectFailure (4) 
-}
--- exception handling:
--- For O-BcsmCamelTDPData sequences containing this parameter with any
--- other value than the ones listed the receiver shall ignore the whole 
--- O-BcsmCamelTDPDatasequence. 
--- For O-BcsmCamelTDP-Criteria sequences containing this parameter with any
--- other value than the ones listed the receiver shall ignore the whole
--- O-BcsmCamelTDP-Criteria sequence.
-
-O-BcsmCamelTDPCriteriaList ::= SEQUENCE SIZE (1..maxNumOfCamelTDPData) OF
-				O-BcsmCamelTDP-Criteria 
-
-O-BcsmCamelTDP-Criteria ::= SEQUENCE {
-    o-BcsmTriggerDetectionPoint	O-BcsmTriggerDetectionPoint,
-    destinationNumberCriteria 	[0] DestinationNumberCriteria	OPTIONAL,
-    basicServiceCriteria	[1] BasicServiceCriteria	OPTIONAL,
-    callTypeCriteria		[2] CallTypeCriteria		OPTIONAL,
-    ...,
-    o-CauseValueCriteria	[3] O-CauseValueCriteria	OPTIONAL,
-    extensionContainer		[4] ExtensionContainer		OPTIONAL
-}
-
-T-BCSM-CAMEL-TDP-CriteriaList ::= SEQUENCE SIZE (1..maxNumOfCamelTDPData) OF
-				T-BCSM-CAMEL-TDP-Criteria 
-
-T-BCSM-CAMEL-TDP-Criteria ::= SEQUENCE {
-    t-BCSM-TriggerDetectionPoint    T-BcsmTriggerDetectionPoint,
-    basicServiceCriteria	[0] BasicServiceCriteria	OPTIONAL,
-    t-CauseValueCriteria	[1] T-CauseValueCriteria	OPTIONAL,
-    ...
-}
-
-DestinationNumberCriteria  ::= SEQUENCE {
-    matchType			[0] MatchType,
-    destinationNumberList 	[1] DestinationNumberList	OPTIONAL,
-    destinationNumberLengthList	[2] DestinationNumberLengthList	OPTIONAL,
--- one or both of destinationNumberList and destinationNumberLengthList 
--- shall be present
-    ...
-}
-
-DestinationNumberList  ::= SEQUENCE SIZE (1..maxNumOfCamelDestinationNumbers) OF
-				ISDN-AddressString
--- The receiving entity shall not check the format of a number in
--- the dialled number list
-
-DestinationNumberLengthList  ::= SEQUENCE SIZE (1..maxNumOfCamelDestinationNumberLengths) OF 
-				INTEGER(1..maxNumOfISDN-AddressDigits)
-
-BasicServiceCriteria   ::= SEQUENCE SIZE(1..maxNumOfCamelBasicServiceCriteria) OF
-	Ext-BasicServiceCode
-
-maxNumOfISDN-AddressDigits  INTEGER ::= 15
-
-maxNumOfCamelDestinationNumbers  INTEGER ::= 10
-
-maxNumOfCamelDestinationNumberLengths  INTEGER ::= 3
-
-maxNumOfCamelBasicServiceCriteria  INTEGER ::= 5
-
-CallTypeCriteria ::= ENUMERATED { forwarded(0), notForwarded (1)}
-
-MatchType        ::= ENUMERATED { inhibiting(0), enabling(1)}
-
-O-CauseValueCriteria   ::= SEQUENCE SIZE(1..maxNumOfCAMEL-O-CauseValueCriteria) OF
-				CauseValue
-maxNumOfCAMEL-O-CauseValueCriteria  INTEGER ::= 5
-
-T-CauseValueCriteria   ::= SEQUENCE SIZE(1..maxNumOfCAMEL-T-CauseValueCriteria) OF
-	CauseValue
-
-maxNumOfCAMEL-T-CauseValueCriteria  INTEGER ::= 5
-
-CauseValue ::= OCTET STRING (SIZE(1))
--- Type extracted from Cause parameter in ITU-T Recommendation Q.763.
--- For the use of cause value refer to ITU-T Recommendation Q.850.
-
-DefaultCallHandling ::= ENUMERATED {
-	continueCall (0) ,
-	releaseCall (1) ,
-	...}
--- exception handling:
--- reception of values in range 2-31 shall be treated as "continueCall"
--- reception of values greater than 31 shall be treated as "releaseCall"
-
-CamelCapabilityHandling ::= INTEGER(1..16) 
--- value 1 = CAMEL phase 1,
--- value 2 = CAMEL phase 2,
--- value 3 = CAMEL Phase 3,
--- value 4 = CAMEL phase 4:
--- reception of values greater than 4 shall be treated as CAMEL phase 4.
-
-SupportedCamelPhases ::= BIT STRING {
-    phase1 (0), phase2 (1), phase3 (2), phase4 (3)
-} (SIZE (1..16)) 
--- A node shall mark in the BIT STRING all CAMEL Phases it supports.
--- Other values than listed above shall be discarded.
-
-OfferedCamel4CSIs ::= BIT STRING {
-    o-csi (0), d-csi (1), vt-csi (2), t-csi (3),
-    mt-sms-csi (4), mg-csi (5), psi-enhancements (6) 
-} (SIZE (7..16))
--- A node supporting Camel phase 4 shall mark in the BIT STRING all Camel4 CSIs 
--- it offers.
--- Other values than listed above shall be discarded.
 
 SMS-CSI ::= SEQUENCE {
     sms-CAMEL-TDP-DataList	[0] SMS-CAMEL-TDP-DataList	OPTIONAL,
@@ -718,44 +554,6 @@ MM-Code ::= OCTET STRING (SIZE (1))
 -- CS domain, then the MSC shall ignore that MM-code.
 -- If the SGSN receives any other MM-code than the ones listed above for the
 -- PS domain, then the SGSN shall ignore that MM-code.
-
-T-CSI ::= SEQUENCE {
-    t-BcsmCamelTDPDataList	T-BcsmCamelTDPDataList,
-    extensionContainer		ExtensionContainer	OPTIONAL,
-    ...,
-    camelCapabilityHandling	[0] CamelCapabilityHandling	OPTIONAL,
-    notificationToCSE		[1] NULL	OPTIONAL,
-    csi-Active			[2] NULL	OPTIONAL
-}
--- notificationToCSE and csi-Active shall not be present when VT-CSI/T-CSI is sent
--- to VLR/GMSC.
--- They may only be included in ATSI/ATM ack/NSDC message.
--- T-CSI shall not be segmented.
-
-T-BcsmCamelTDPDataList ::= SEQUENCE SIZE (1..maxNumOfCamelTDPData) OF
-			    T-BcsmCamelTDPData
---- T-BcsmCamelTDPDataList shall not contain more than one instance of
---- T-BcsmCamelTDPData containing the same value for t-BcsmTriggerDetectionPoint.
---- For CAMEL Phase 2, this means that only one instance of T-BcsmCamelTDPData is allowed
---- with t-BcsmTriggerDetectionPoint being equal to DP12. 
---- For CAMEL Phase 3, more TDP's are allowed.
-
-T-BcsmCamelTDPData ::= SEQUENCE {
-    t-BcsmTriggerDetectionPoint	T-BcsmTriggerDetectionPoint,
-    serviceKey			ServiceKey,
-    gsmSCF-Address		[0] ISDN-AddressString,
-    defaultCallHandling		[1] DefaultCallHandling,
-    extensionContainer		[2] ExtensionContainer	OPTIONAL,
-    ...
-}
-
-T-BcsmTriggerDetectionPoint ::= ENUMERATED {
-    termAttemptAuthorized (12), ... , tBusy (13), tNoAnswer (14)
-}
--- exception handling:
--- For T-BcsmCamelTDPData sequences containing this parameter with any other
--- value than the ones listed above, the receiver shall ignore the whole
--- T-BcsmCamelTDPData sequence.
 
 -- any time information handling types
 
