@@ -139,7 +139,7 @@ Targets:
     </copy>
     <copy todir="${DISTR_DIR}/services/scag/conf" preservelastmodified="yes" flatten="yes" >
       <fileset dir="${SMSC_DIR}/config"
-               includes="scag/smpp.dtd scag/operators.dtd scag/tariffs.dtd scag/services.dtd scag/smpp_routes.dtd"/>
+               includes="scag/smpp.dtd scag/operators.dtd scag/tariffs.dtd scag/services.dtd scag/smpp_routes.dtd scag/http_routes.dtd"/>
     </copy>
   </target>
 
