@@ -126,7 +126,7 @@
         <c:set var="total" value="${httpStatistics.total}"/>
         <c:set var="byDates" value="${httpStatistics.dateStat}"/>
         <tr><td colspan="9">&nbsp;</td></tr>
-        <tr><td style="cursor:hand;text-align:right"
+        <tr><td style="cursor:hand;text-align:left"
                 onClick="toggleVisible(pgs_http,cgs_http);">
             <div align="left" id="pgs_http" class="collapsing_list_opened"><div class="page_subtitle">
                <fmt:message>statistics.label.general</fmt:message></div>
@@ -134,54 +134,55 @@
             <tr id="cgs_http" style="display:block"><td colspan="9" width="100%">
                 <table>
                     <tr>
-                        <th width="20%" style="text-align:right">&nbsp;</th>
-                        <th width="10%" style="text-align:right">Requested</th>
-                        <th width="13%" style="text-align:right">Request Rejected</th>
-                        <th width="10%" style="text-align:right">Responsed</th>
-                        <th width="13%" style="text-align:right">Response Rejected</th>
-                        <th width="10%" style="text-align:right">Delivered</th>
-                        <th width="7%" style="text-align:right">Failed</th>
-                        <th style="text-align:right">&nbsp;</th>
+                        <th width="27%" style="text-align:left">&nbsp;</th>
+                        <th width="10%" style="text-align:left">Requested</th>
+                        <th width="13%" style="text-align:left">Request Rejected</th>
+                        <th width="10%" style="text-align:left">Responsed</th>
+                        <th width="13%" style="text-align:left">Response Rejected</th>
+                        <th width="10%" style="text-align:left">Delivered</th>
+                        <th width="7%" style="text-align:left">Failed</th>
+                        <th style="text-align:left">&nbsp;</th>
                     </tr>
                     <tr class=row0>
-                        <th width="20%" style="text-align:right">Total HTTP processed:</th>
-                        <th width="10%" style="text-align:right">${total.request}</th>
-                        <th width="13%" style="text-align:right">${total.requestRejected}</th>
-                        <th width="10%" style="text-align:right">${total.response}</th>
-                        <th width="13%" style="text-align:right">${total.responseRejected}</th>
-                        <th width="10%" style="text-align:right">${total.delivered}</th>
-                        <th width="7%" style="text-align:right">${total.failed}</th>
-                        <th style="text-align:right">&nbsp;</th>
+                        <th width="27%" style="text-align:left">Total HTTP processed:</th>
+                        <th width="10%" style="text-align:left">${total.request}</th>
+                        <th width="13%" style="text-align:left">${total.requestRejected}</th>
+                        <th width="10%" style="text-align:left">${total.response}</th>
+                        <th width="13%" style="text-align:left">${total.responseRejected}</th>
+                        <th width="10%" style="text-align:left">${total.delivered}</th>
+                        <th width="7%" style="text-align:left">${total.failed}</th>
+                        <th style="text-align:left">&nbsp;</th>
                     </tr>
                     <c:forEach var="dayStat" items="${byDates}" varStatus="i">
                         <tr class=row0>
-                            <td style="cursor:hand;text-align:right"
+                            <td style="cursor:hand;text-align:left"
                                 onClick="toggleVisible(opForm.all.p${disNo}, opForm.all.c${disNo});">
-                                <div align=right id="p${disNo}" class="collapsing_list_closed"><fmt:formatDate
+                                <div align=left id="p${disNo}" class="collapsing_list_closed"><fmt:formatDate
                                         value="${dayStat.date}" pattern="dd MMMM, yyyy"/></div>
                             </td>
-                            <td style="text-align:right">${dayStat.request}</td>
-                            <td style="text-align:right">${dayStat.requestRejected}</td>
-                            <td style="text-align:right">${dayStat.response}</td>
-                            <td style="text-align:right">${dayStat.responseRejected}</td>
-                            <td style="text-align:right">${dayStat.delivered}</td>
-                            <td style="text-align:right">${dayStat.failed}</td>
-                            <td style="text-align:right">&nbsp;</td>
+                            <td style="text-align:left">${dayStat.request}</td>
+                            <td style="text-align:left">${dayStat.requestRejected}</td>
+                            <td style="text-align:left">${dayStat.response}</td>
+                            <td style="text-align:left">${dayStat.responseRejected}</td>
+                            <td style="text-align:left">${dayStat.delivered}</td>
+                            <td style="text-align:left">${dayStat.failed}</td>
+                            <td style="text-align:left">&nbsp;</td>
                         </tr>
                         <tr id="c${disNo}" style="display:none">
                             <td colspan="9" width="100%">
                                 <table class=list cellspacing=0 cellpadding=0 border=0 width="100%">
                                     <c:forEach var="hourStat" items="${dayStat.hourStat}">
                                         <tr class=row1>
-                                            <td width="20%" style="text-align:right"><fmt:formatNumber
-                                                    value="${hourStat.hour}" minIntegerDigits="2"/></td>
-                                            <td width="10%" style="text-align:right">${hourStat.request}</td>
-                                            <td width="13%" style="text-align:right">${hourStat.requestRejected}</td>
-                                            <td width="10%" style="text-align:right">${hourStat.response}</td>
-                                            <td width="13%" style="text-align:right">${hourStat.responseRejected}</td>
-                                            <td width="10%" style="text-align:right">${hourStat.delivered}</td>
-                                            <td width="7%" style="text-align:right">${hourStat.failed}</td>
-                                            <td style="text-align:right">&nbsp;</td>
+                                            <td width="27%" style="text-align:left">
+                                                <div align=left style="padding-left:87px"><fmt:formatNumber
+                                                    value="${hourStat.hour}" minIntegerDigits="2"/></div></td>
+                                            <td width="10%" style="text-align:left">${hourStat.request}</td>
+                                            <td width="13%" style="text-align:left">${hourStat.requestRejected}</td>
+                                            <td width="10%" style="text-align:left">${hourStat.response}</td>
+                                            <td width="13%" style="text-align:left">${hourStat.responseRejected}</td>
+                                            <td width="10%" style="text-align:left">${hourStat.delivered}</td>
+                                            <td width="7%" style="text-align:left">${hourStat.failed}</td>
+                                            <td style="text-align:left">&nbsp;</td>
                                         </tr>
                                     </c:forEach>
                                 </table>
@@ -197,7 +198,7 @@
         <c:set var="byRoute" value="${httpStatistics.routeIdStat}"/>
         <c:if test="${!(empty byRoute)}">
         <tr><td colspan="9">&nbsp;</td></tr>
-        <tr><td style="cursor:hand;text-align:right"
+        <tr><td style="cursor:hand;text-align:left"
                 onClick="toggleVisible(prout_http,crout_http);">
             <div align="left" id="prout_http" class="collapsing_list_opened">
                <div class="page_subtitle"><fmt:message>statistics.label.trafic_by_routes</fmt:message></div>
@@ -205,42 +206,44 @@
             <tr id="crout_http" style="display:block"><td colspan="9">
                 <table>
                     <tr>
-                        <th width="20%" style="text-align:right">Route Id</th>
-                        <th width="10%" style="text-align:right">Requested</th>
-                        <th width="13%" style="text-align:right">Request Rejected</th>
-                        <th width="10%" style="text-align:right">Responsed</th>
-                        <th width="13%" style="text-align:right">Response Rejected</th>
-                        <th width="10%" style="text-align:right">Delivered</th>
-                        <th width="7%" style="text-align:right">Failed</th>
-                        <th style="text-align:right">&nbsp;</th>
+                        <th width="27%" style="text-align:left">Route Id</th>
+                        <th width="10%" style="text-align:left">Requested</th>
+                        <th width="13%" style="text-align:left">Request Rejected</th>
+                        <th width="10%" style="text-align:left">Responsed</th>
+                        <th width="13%" style="text-align:left">Response Rejected</th>
+                        <th width="10%" style="text-align:left">Delivered</th>
+                        <th width="7%" style="text-align:left">Failed</th>
+                        <th style="text-align:left">&nbsp;</th>
                     </tr>
                     <c:forEach var="routeStat" items="${byRoute}" varStatus="i">
                         <tr class=row0>
-                            <td style="cursor:hand;text-align:right"
+                            <td style="cursor:hand;text-align:left"
                                 onClick="toggleVisible(opForm.all.p${disNo}, opForm.all.c${disNo});">
                                 <div id="p${disNo}" class="collapsing_list_closed">${fn:escapeXml(routeStat.routeid)}</div>
                             </td>
-                            <td style="text-align:right">${routeStat.request}</td>
-                            <td style="text-align:right">${routeStat.requestRejected}</td>
-                            <td style="text-align:right">${routeStat.response}</td>
-                            <td style="text-align:right">${routeStat.responseRejected}</td>
-                            <td style="text-align:right">${routeStat.delivered}</td>
-                            <td style="text-align:right">${routeStat.failed}</td>
-                            <th style="text-align:right">&nbsp;</th>
+                            <td style="text-align:left">${routeStat.request}</td>
+                            <td style="text-align:left">${routeStat.requestRejected}</td>
+                            <td style="text-align:left">${routeStat.response}</td>
+                            <td style="text-align:left">${routeStat.responseRejected}</td>
+                            <td style="text-align:left">${routeStat.delivered}</td>
+                            <td style="text-align:left">${routeStat.failed}</td>
+                            <th style="text-align:left">&nbsp;</th>
                         </tr>
                         <tr id="c${disNo}" style="display:none">
                             <td colspan=9 width="100%">
                                 <table class=properties_list cellspacing=0 cellpadding=0 border=0>
                                     <tr class=row0>
-                                        <th width="27%" style="text-align:right">Error Code</th>
-                                        <th width="7%" style="text-align:right">Count</th>
+                                        <th width="28px">&nbsp;</th>
+                                        <th width="27%" style="text-align:left">Error Code</th>
+                                        <th width="7%" style="text-align:left">Count</th>
                                         <th>&nbsp;</th>
                                     </tr>
                                     <c:forEach var="routeErr" items="${routeStat.errors}">
                                         <tr class=row1>
-                                            <td style="text-align:right"
+                                            <th width="28px">&nbsp;</th>
+                                            <td style="text-align:left"
                                                 nowrap>${fn:escapeXml(smf:getErrorMessage(pageContext.session,routeErr.errcode, true))}</td>
-                                            <td style="text-align:right">${routeErr.counter}</td>
+                                            <td style="text-align:left">${routeErr.counter}</td>
                                             <td>&nbsp;</td>
                                         </tr>
                                     </c:forEach>
@@ -258,7 +261,7 @@
     <c:set var="bySme" value="${httpStatistics.smeIdStat}"/>
     <c:if test="${!(empty bySme)}">
     <tr><td colspan="9">&nbsp;</td></tr>
-    <tr><td style="cursor:hand;text-align:right"
+    <tr><td style="cursor:hand;text-align:left"
             onClick="toggleVisible(psme_http,csme_http);">
         <div align="left" id="psme_http" class="collapsing_list_opened">
           <div class="page_subtitle"><fmt:message>statistics.label.url_activity</fmt:message></div>
@@ -267,42 +270,44 @@
         <tr id="csme_http" style="display:block"><td colspan="9">
             <table>
                 <tr>
-                    <th width="20%" style="text-align:right">URL</th>
-                    <th width="10%" style="text-align:right">Requested</th>
-                    <th width="13%" style="text-align:right">Request Rejected</th>
-                    <th width="10%" style="text-align:right">Responsed</th>
-                    <th width="13%" style="text-align:right">Response Rejected</th>
-                    <th width="10%" style="text-align:right">Delivered</th>
-                    <th width="7%" style="text-align:right">Failed</th>
-                    <th style="text-align:right">&nbsp;</th>
+                    <th width="27%" style="text-align:left">URL</th>
+                    <th width="10%" style="text-align:left">Requested</th>
+                    <th width="13%" style="text-align:left">Request Rejected</th>
+                    <th width="10%" style="text-align:left">Responsed</th>
+                    <th width="13%" style="text-align:left">Response Rejected</th>
+                    <th width="10%" style="text-align:left">Delivered</th>
+                    <th width="7%" style="text-align:left">Failed</th>
+                    <th style="text-align:left">&nbsp;</th>
                 </tr>
                 <c:forEach var="smeStat" items="${bySme}" varStatus="i">
                     <tr class=row0>
-                        <td style="cursor:hand;text-align:right"
+                        <td style="cursor:hand;text-align:left"
                             onClick="toggleVisible(opForm.all.p${disNo}, opForm.all.c${disNo});">
                             <div id="p${disNo}" class="collapsing_list_closed">${fn:escapeXml(smeStat.smeid)}</div>
                         </td>
-                        <td style="text-align:right">${smeStat.request}</td>
-                        <td style="text-align:right">${smeStat.requestRejected}</td>
-                        <td style="text-align:right">${smeStat.response}</td>
-                        <td style="text-align:right">${smeStat.responseRejected}</td>
-                        <td style="text-align:right">${smeStat.delivered}</td>
-                        <td style="text-align:right">${smeStat.failed}</td>
-                        <td style="text-align:right">&nbsp;</td>
+                        <td style="text-align:left">${smeStat.request}</td>
+                        <td style="text-align:left">${smeStat.requestRejected}</td>
+                        <td style="text-align:left">${smeStat.response}</td>
+                        <td style="text-align:left">${smeStat.responseRejected}</td>
+                        <td style="text-align:left">${smeStat.delivered}</td>
+                        <td style="text-align:left">${smeStat.failed}</td>
+                        <td style="text-align:left">&nbsp;</td>
                     </tr>
                     <tr id="c${disNo}" style="display:none">
                         <td colspan="9" width="100%">
                             <table class=properties_list cellspacing=0 cellpadding=0 border=0 width="100%">
                                 <tr class=row0>
-                                    <th width="27%" style="text-align:right">Error Code</th>
-                                    <th width="7%" style="text-align:right">Count</th>
+                                    <th width="28px">&nbsp;</th>
+                                    <th width="27%" style="text-align:left">Error Code</th>
+                                    <th width="7%" style="text-align:left">Count</th>
                                     <th>&nbsp;</th>
                                 </tr>
                                 <c:forEach var="smeErr" items="${smeStat.errors}">
                                     <tr class=row1>
-                                        <td style="text-align:right"
+                                        <th width="28px">&nbsp;</th>
+                                        <td style="text-align:left"
                                             nowrap>${fn:escapeXml(smf:getErrorMessage(pageContext.session,smeErr.errcode, true))}</td>
-                                        <td style="text-align:right">${smeErr.counter}</td>
+                                        <td style="text-align:left">${smeErr.counter}</td>
                                         <td>&nbsp;</td>
                                     </tr>
                                 </c:forEach>
@@ -324,65 +329,67 @@
     <c:set var="total" value="${statistics.total}"/>
     <c:set var="byDates" value="${statistics.dateStat}"/>
     <tr><td colspan="9">&nbsp;</td></tr>
-    <tr><td style="cursor:hand;text-align:right"
+    <tr><td style="cursor:hand;text-align:left"
             onClick="toggleVisible(pgs,cgs);">
         <div align="left" id="pgs" class="collapsing_list_opened"><div class="page_subtitle">
            <fmt:message>statistics.label.general</fmt:message></div>
         </div></td>
         <tr id="cgs" style="display:block"><td colspan="9" width="100%">
-            <table border=0>
+            <table>
                 <tr>
-                    <th width="20%" style="text-align:right">&nbsp;</th>
-                    <th width="8%" style="text-align:right">Accepted</th>
-                    <th width="8%" style="text-align:right">Rejected</th>
-                    <th width="8%" style="text-align:right">Delivered</th>
-                    <th width="10%" style="text-align:right">GW Rejected</th>
-                    <th width="8%" style="text-align:right">Failed</th>
-                    <th width="7%" style="text-align:right">&nbsp;</th>
-                    <th width="15%" style="text-align:right">Reciept OK/Failed</th>
+                    <th width="27%" style="text-align:left">&nbsp;</th>
+                    <th width="8%" style="text-align:left">Accepted</th>
+                    <th width="8%" style="text-align:left">Rejected</th>
+                    <th width="8%" style="text-align:left">Delivered</th>
+                    <th width="10%" style="text-align:left">GW Rejected</th>
+                    <th width="8%" style="text-align:left">Failed</th>
+<%--                    <th width="7%" style="text-align:left">&nbsp;</th>--%>
+                    <th width="15%" style="text-align:left">Reciept OK/Failed</th>
+                    <th style="text-align:left">&nbsp;</th>
                 </tr>
                 <tr class=row0>
-                    <th width="20%" style="text-align:right">Total SMS processed:</th>
-                    <th width="8%" style="text-align:right">${total.accepted}</th>
-                    <th width="8%" style="text-align:right">${total.rejected}</th>
-                    <th width="8%" style="text-align:right">${total.delivered}</th>
-                    <th width="10%" style="text-align:right">${total.gw_rejected}</th>
-                    <th width="8%" style="text-align:right">${total.failed}</th>
-                    <th width="7%" style="text-align:right">&nbsp;</th>
-                    <th width="15%" style="text-align:right">${total.recieptOk}/${total.recieptFailed}</th>
-                    <th style="text-align:right">&nbsp;</th>
+                    <th width="27%" style="text-align:left">Total SMS processed:</th>
+                    <th width="8%" style="text-align:left">${total.accepted}</th>
+                    <th width="8%" style="text-align:left">${total.rejected}</th>
+                    <th width="8%" style="text-align:left">${total.delivered}</th>
+                    <th width="10%" style="text-align:left">${total.gw_rejected}</th>
+                    <th width="8%" style="text-align:left">${total.failed}</th>
+<%--                    <th width="7%" style="text-align:left">&nbsp;</th>--%>
+                    <th width="15%" style="text-align:left">${total.recieptOk}/${total.recieptFailed}</th>
+                    <th style="text-align:left">&nbsp;</th>
                 </tr>
                 <c:forEach var="dayStat" items="${byDates}" varStatus="i">
                     <tr class=row0>
                         <td style="cursor:hand;text-align:right"
                             onClick="toggleVisible(opForm.all.p${disNo}, opForm.all.c${disNo});">
-                            <div align=right id="p${disNo}" class="collapsing_list_closed"><fmt:formatDate
+                            <div align=left id="p${disNo}" class="collapsing_list_closed"><fmt:formatDate
                                     value="${dayStat.date}" pattern="dd MMMM, yyyy"/></div>
                         </td>
-                        <td style="text-align:right">${dayStat.accepted}</td>
-                        <td style="text-align:right">${dayStat.rejected}</td>
-                        <td style="text-align:right">${dayStat.delivered}</td>
-                        <td style="text-align:right">${dayStat.gw_rejected}</td>
-                        <td style="text-align:right">${dayStat.failed}</td>
-                        <th style="text-align:right">&nbsp;</th>
-                        <td style="text-align:right">${dayStat.recieptOk}/${dayStat.recieptFailed}</td>
-                        <td style="text-align:right">&nbsp;</td>
+                        <td style="text-align:left">${dayStat.accepted}</td>
+                        <td style="text-align:left">${dayStat.rejected}</td>
+                        <td style="text-align:left">${dayStat.delivered}</td>
+                        <td style="text-align:left">${dayStat.gw_rejected}</td>
+                        <td style="text-align:left">${dayStat.failed}</td>
+<%--                        <th style="text-align:left">&nbsp;</th>--%>
+                        <td style="text-align:left">${dayStat.recieptOk}/${dayStat.recieptFailed}</td>
+                        <td style="text-align:left">&nbsp;</td>
                     </tr>
                     <tr id="c${disNo}" style="display:none">
                         <td colspan="9" width="100%">
                             <table class=list cellspacing=0 cellpadding=0 border=0 width="100%">
                                 <c:forEach var="hourStat" items="${dayStat.hourStat}">
                                     <tr class=row1>
-                                        <td width="20%" style="text-align:right"><fmt:formatNumber
-                                                value="${hourStat.hour}" minIntegerDigits="2"/></td>
-                                        <td width="8%" style="text-align:right">${hourStat.accepted}</td>
-                                        <td width="8%" style="text-align:right">${hourStat.rejected}</td>
-                                        <td width="8%" style="text-align:right">${hourStat.delivered}</td>
-                                        <td width="10%" style="text-align:right">${hourStat.gw_rejected}</td>
-                                        <td width="8%" style="text-align:right">${hourStat.failed}</td>
-                                        <th width="7%" style="text-align:right">&nbsp;</th>
-                                        <th width="15%"  style="text-align:right">${hourStat.recieptOk}/${hourStat.recieptFailed}</th>
-                                        <th style="text-align:right">&nbsp;</th>
+                                        <td width="27%" style="text-align:right">
+                                             <div align=left style="padding-left:87px"><fmt:formatNumber
+                                                value="${hourStat.hour}" minIntegerDigits="2"/> </div></td>
+                                        <td width="8%" style="text-align:left">${hourStat.accepted}</td>
+                                        <td width="8%" style="text-align:left">${hourStat.rejected}</td>
+                                        <td width="8%" style="text-align:left">${hourStat.delivered}</td>
+                                        <td width="10%" style="text-align:left">${hourStat.gw_rejected}</td>
+                                        <td width="8%" style="text-align:left">${hourStat.failed}</td>
+<%--                                        <th width="7%" style="text-align:left">&nbsp;</th>--%>
+                                        <th width="15%"  style="text-align:left">${hourStat.recieptOk}/${hourStat.recieptFailed}</th>
+                                        <th style="text-align:left">&nbsp;</th>
                                     </tr>
                                 </c:forEach>
                             </table>
@@ -398,7 +405,7 @@
     <c:set var="byRoute" value="${statistics.routeIdStat}"/>
     <c:if test="${!(empty byRoute)}">
     <tr><td colspan="9">&nbsp;</td></tr>
-    <tr><td style="cursor:hand;text-align:right"
+    <tr><td style="cursor:hand;text-align:left"
             onClick="toggleVisible(prout,crout);">
         <div align="left" id="prout" class="collapsing_list_opened">
           <div class="page_subtitle"><fmt:message>statistics.label.trafic_by_routes</fmt:message></div>
@@ -406,43 +413,45 @@
         <tr id="crout" style="display:block"><td colspan="9">
             <table>
                 <tr>
-                    <th width="20%" style="text-align:right">Route Id</th>
-                    <th width="8%" style="text-align:right">Accepted</th>
-                    <th width="8%" style="text-align:right">Rejected</th>
-                    <th width="8%" style="text-align:right">Delivered</th>
-                    <th width="10%" style="text-align:right">GW Rejected</th>
-                    <th width="8%" style="text-align:right">Failed</th>
-                    <th width="7%" style="text-align:right">&nbsp;</th>
-                    <th width="15%" style="text-align:right">Reciept OK/Failed</th>
+                    <th width="27%" style="text-align:left">Route Id</th>
+                    <th width="8%" style="text-align:left">Accepted</th>
+                    <th width="8%" style="text-align:left">Rejected</th>
+                    <th width="8%" style="text-align:left">Delivered</th>
+                    <th width="10%" style="text-align:left">GW Rejected</th>
+                    <th width="8%" style="text-align:left">Failed</th>
+<%--                    <th width="7%" style="text-align:left">&nbsp;</th>--%>
+                    <th width="15%" style="text-align:left">Reciept OK/Failed</th>
                 </tr>
                 <c:forEach var="routeStat" items="${byRoute}" varStatus="i">
                     <tr class=row0>
-                        <td style="cursor:hand;text-align:right"
+                        <td style="cursor:hand;text-align:left"
                             onClick="toggleVisible(opForm.all.p${disNo}, opForm.all.c${disNo});">
                             <div id="p${disNo}" class="collapsing_list_closed">${fn:escapeXml(routeStat.routeid)}</div>
                         </td>
-                        <td style="text-align:right">${routeStat.accepted}</td>
-                        <td style="text-align:right">${routeStat.rejected}</td>
-                        <td style="text-align:right">${routeStat.delivered}</td>
-                        <td style="text-align:right">${routeStat.gw_rejected}</td>
-                        <td style="text-align:right">${routeStat.failed}</td>
-                        <th style="text-align:right">&nbsp;</th>
-                        <th style="text-align:right">${routeStat.recieptOk}/${routeStat.recieptFailed}</th>
-                        <th style="text-align:right">&nbsp;</th>
+                        <td style="text-align:left">${routeStat.accepted}</td>
+                        <td style="text-align:left">${routeStat.rejected}</td>
+                        <td style="text-align:left">${routeStat.delivered}</td>
+                        <td style="text-align:left">${routeStat.gw_rejected}</td>
+                        <td style="text-align:left">${routeStat.failed}</td>
+<%--                        <th style="text-align:left">&nbsp;</th>--%>
+                        <th style="text-align:left">${routeStat.recieptOk}/${routeStat.recieptFailed}</th>
+                        <th style="text-align:left">&nbsp;</th>
                     </tr>
                     <tr id="c${disNo}" style="display:none">
                         <td colspan=9 width="100%">
                             <table class=properties_list cellspacing=0 cellpadding=0 border=0>
                                 <tr class=row0>
-                                    <th width="27%" style="text-align:right">Error Code</th>
-                                    <th width="7%" style="text-align:right">Count</th>
+                                    <th width="28px">&nbsp;</th>
+                                    <th width="27%" style="text-align:left">Error Code</th>
+                                    <th width="7%" style="text-align:left">Count</th>
                                     <th>&nbsp;</th>
                                 </tr>
                                 <c:forEach var="routeErr" items="${routeStat.errors}">
                                     <tr class=row1>
-                                        <td style="text-align:right"
+                                        <th width="28px">&nbsp;</th>
+                                        <td style="text-align:left"
                                             nowrap>${fn:escapeXml(smf:getErrorMessage(pageContext.session,routeErr.errcode, true))}</td>
-                                        <td style="text-align:right">${routeErr.counter}</td>
+                                        <td style="text-align:left">${routeErr.counter}</td>
                                         <td>&nbsp;</td>
                                     </tr>
                                 </c:forEach>
@@ -460,7 +469,7 @@
     <c:set var="bySme" value="${statistics.smeIdStat}"/>
     <c:if test="${!(empty bySme)}">
     <tr><td colspan="9">&nbsp;</td></tr>
-    <tr><td style="cursor:hand;text-align:right"
+    <tr><td style="cursor:hand;text-align:left"
             onClick="toggleVisible(psme,csme);">
         <div align="left" id="psme" class="collapsing_list_opened">
           <div class="page_subtitle"><fmt:message>statistics.label.sme_activity</fmt:message></div>
@@ -469,40 +478,42 @@
         <tr id="csme" style="display:block"><td colspan="9">
             <table>
                 <tr>
-                    <th width="20%" style="text-align:right">SME Id</th>
-                    <th width="8%" style="text-align:right">Accepted</th>
-                    <th width="8%" style="text-align:right">Rejected</th>
-                    <th width="8%" style="text-align:right">Delivered</th>
-                    <th width="10%" style="text-align:right">GW Rejected</th>
-                    <th width="8%" style="text-align:right">Failed</th>
-                    <th style="text-align:right">&nbsp;</th>
+                    <th width="27%" style="text-align:left">SME Id</th>
+                    <th width="8%" style="text-align:left">Accepted</th>
+                    <th width="8%" style="text-align:left">Rejected</th>
+                    <th width="8%" style="text-align:left">Delivered</th>
+                    <th width="10%" style="text-align:left">GW Rejected</th>
+                    <th width="8%" style="text-align:left">Failed</th>
+                    <th style="text-align:left">&nbsp;</th>
                 </tr>
                 <c:forEach var="smeStat" items="${bySme}" varStatus="i">
                     <tr class=row0>
-                        <td style="cursor:hand;text-align:right"
+                        <td style="cursor:hand;text-align:left"
                             onClick="toggleVisible(opForm.all.p${disNo}, opForm.all.c${disNo});">
                             <div id="p${disNo}" class="collapsing_list_closed">${fn:escapeXml(smeStat.smeid)}</div>
                         </td>
-                        <td style="text-align:right">${smeStat.accepted}</td>
-                        <td style="text-align:right">${smeStat.rejected}</td>
-                        <td style="text-align:right">${smeStat.delivered}</td>
-                        <td style="text-align:right">${smeStat.gw_rejected}</td>
-                        <td style="text-align:right">${smeStat.failed}</td>
-                        <td style="text-align:right">&nbsp;</td>
+                        <td style="text-align:left">${smeStat.accepted}</td>
+                        <td style="text-align:left">${smeStat.rejected}</td>
+                        <td style="text-align:left">${smeStat.delivered}</td>
+                        <td style="text-align:left">${smeStat.gw_rejected}</td>
+                        <td style="text-align:left">${smeStat.failed}</td>
+                        <td style="text-align:left">&nbsp;</td>
                     </tr>
                     <tr id="c${disNo}" style="display:none">
                         <td colspan="9" width="100%">
                             <table class=properties_list cellspacing=0 cellpadding=0 border=0 width="100%">
                                 <tr class=row0>
-                                    <th width="27%" style="text-align:right">Error Code</th>
-                                    <th width="7%" style="text-align:right">Count</th>
+                                    <th width="28px">&nbsp;</th>
+                                    <th width="27%" style="text-align:left">Error Code</th>
+                                    <th width="7%" style="text-align:left">Count</th>
                                     <th>&nbsp;</th>
                                 </tr>
                                 <c:forEach var="smeErr" items="${smeStat.errors}">
                                     <tr class=row1>
-                                        <td style="text-align:right"
+                                        <th width="28px">&nbsp;</th>
+                                        <td style="text-align:left"
                                             nowrap>${fn:escapeXml(smf:getErrorMessage(pageContext.session,smeErr.errcode, true))}</td>
-                                        <td style="text-align:right">${smeErr.counter}</td>
+                                        <td style="text-align:left">${smeErr.counter}</td>
                                         <td>&nbsp;</td>
                                     </tr>
                                 </c:forEach>
@@ -520,7 +531,7 @@
     <c:set var="bySmsc" value="${statistics.smscIdStat}"/>
     <c:if test="${!(empty bySmsc)}">
     <tr><td colspan=9>&nbsp;</td></tr>
-    <tr><td style="cursor:hand;text-align:right"
+    <tr><td style="cursor:hand;text-align:left"
             onClick="toggleVisible(psmsc,csmsc);">
         <div align="left" id="psmsc" class="collapsing_list_opened">
           <div class="page_subtitle"><fmt:message>statistics.label.smsc_activity</fmt:message></div>
@@ -529,40 +540,42 @@
         <tr id="csmsc" style="display:block"><td colspan="9" width="100%">
             <table>
                 <tr>
-                    <th width="20%" style="text-align:right">SMSC Id</th>
-                    <th width="8%" style="text-align:right">Accepted</th>
-                    <th width="8%" style="text-align:right">Rejected</th>
-                    <th width="8%" style="text-align:right">Delivered</th>
-                    <th width="10%" style="text-align:right">GW Rejected</th>
-                    <th width="8%" style="text-align:right">Failed</th>
-                    <th style="text-align:right">&nbsp;</th>
+                    <th width="27%" style="text-align:left">SMSC Id</th>
+                    <th width="8%" style="text-align:left">Accepted</th>
+                    <th width="8%" style="text-align:left">Rejected</th>
+                    <th width="8%" style="text-align:left">Delivered</th>
+                    <th width="10%" style="text-align:left">GW Rejected</th>
+                    <th width="8%" style="text-align:left">Failed</th>
+                    <th style="text-align:left">&nbsp;</th>
                 </tr>
                 <c:forEach var="smscStat" items="${bySmsc}" varStatus="i">
                     <tr class=row0>
-                        <td style="cursor:hand;text-align:right"
+                        <td style="cursor:hand;text-align:left"
                             onClick="toggleVisible(opForm.all.p${disNo}, opForm.all.c${disNo});">
                             <div id="p${disNo}" class="collapsing_list_closed">${fn:escapeXml(smscStat.smscid)}</div>
                         </td>
-                        <td style="text-align:right">${smscStat.accepted}</td>
-                        <td style="text-align:right">${smscStat.rejected}</td>
-                        <td style="text-align:right">${smscStat.delivered}</td>
-                        <td style="text-align:right">${smscStat.gw_rejected}</td>
-                        <td style="text-align:right">${smscStat.failed}</td>
-                        <td style="text-align:right">&nbsp;</td>
+                        <td style="text-align:left">${smscStat.accepted}</td>
+                        <td style="text-align:left">${smscStat.rejected}</td>
+                        <td style="text-align:left">${smscStat.delivered}</td>
+                        <td style="text-align:left">${smscStat.gw_rejected}</td>
+                        <td style="text-align:left">${smscStat.failed}</td>
+                        <td style="text-align:left">&nbsp;</td>
                     </tr>
                     <tr id="c${disNo}" style="display:none">
                         <td colspan="9" width="100%">
                             <table class=properties_list cellspacing=0 cellpadding=0 border=0 width="100%">
                                 <tr class=row0>
-                                    <th width="27%" style="text-align:right">Error Code</th>
-                                    <th width="7%" style="text-align:right">Count</th>
+                                    <th width="28px">&nbsp;</th>
+                                    <th width="27%" style="text-align:left">Error Code</th>
+                                    <th width="7%" style="text-align:left">Count</th>
                                     <th>&nbsp;</th>
                                 </tr>
                                 <c:forEach var="smscErr" items="${smscStat.errors}">
                                     <tr class=row1>
-                                        <td style="text-align:right"
+                                        <th width="28px">&nbsp;</th>
+                                        <td style="text-align:left"
                                             nowrap>${fn:escapeXml(smf:getErrorMessage(pageContext.session,smscErr.errcode, true))}</td>
-                                        <td style="text-align:right">${smscErr.counter}</td>
+                                        <td style="text-align:left">${smscErr.counter}</td>
                                         <td>&nbsp;</td>
                                     </tr>
                                 </c:forEach>

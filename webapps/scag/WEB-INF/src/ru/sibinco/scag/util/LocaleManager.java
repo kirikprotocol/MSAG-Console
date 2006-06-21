@@ -1,7 +1,3 @@
-/*
- * Copyright (c) 2006 SibInco Inc. All Rights Reserved.
- */
-
 package ru.sibinco.scag.util;
 
 import ru.sibinco.lib.backend.util.xml.Utils;
@@ -71,36 +67,33 @@ public class LocaleManager {
     String icon = localeElement.getAttribute("icon");
     if (icon.equals("")) throw new Exception("attribute \"icon\" must be specified");
     String country = localeElement.getAttribute("country");
-    //check in ISO 639
-    String[] languages = Locale.getISOLanguages();
-    String[] countries;
-    if (!country.equals("")) {
-     //check in ISO 3166
-     countries= Locale.getISOCountries();
-     //if (...) throws Exception
-    }
+    Locale locale = new Locale(language,country);
+    boolean marker = false;
+    Locale[] locales = Locale.getAvailableLocales();
+    for (int i = 0; i<locales.length;i++)
+      if (locales[i].equals(locale)) {
+        marker = true;
+        break;
+      }
+    if (!marker) throw new Exception("Locale with language \""+language+"\""+((country.length()>0)?" and country \""+country+"\"":"")+" doesn't supported by JVM");
+
     //check if messages_xx_xx.properties exists
-    boolean isDefaultLocale = false;
-    Locale locale, defaultLocale;
-    locale = new Locale(language,country);
-    if (country.equals("")) {
-      defaultLocale= new Locale(Locale.getDefault().getLanguage());
-    } else
-      defaultLocale=Locale.getDefault();
-    if (locale.equals(defaultLocale)) isDefaultLocale = true;
-    ResourceBundle rb = ResourceBundle.getBundle("locales.messages",locale);
-    //System.out.println(language+"####"+rb);
-    //System.out.println(language+"????"+ResourceBundle.getBundle("locales.messages", Locale.getDefault()));
-    if (rb == ResourceBundle.getBundle("locales.messages", Locale.getDefault())) {
-      if (!isDefaultLocale) throw new Exception("There is no messages_"+language+(country.length()>0?"_"+country+".properties":".properties"));
-    }
-    return new SCAGLocale(locale,icon);
+    Locale ResultLocale = ResourceBundle.getBundle("locales.messages",locale).getLocale();
+    if (!ResultLocale.equals(locale)) throw new Exception("There is no messages_"+language+(country.length()>0?"_"+country+".properties":".properties"));
+       return new SCAGLocale(locale,icon);        
   }
 
-  public ArrayList validate(String language) throws Throwable {
-     for (Iterator i = localesList.iterator();i.hasNext();)
-       if (((SCAGLocale)i.next()).locale.getLanguage().equals(language)) return localesList;
-     throw new Exception("localization information for default language \""+language+"\" not scpecified in locales.xml");
+  public ArrayList validate(String language_contry) throws Throwable {
+     Locale defaultLocale = null;
+     boolean countryPresent = (language_contry.indexOf("_")==-1)?false:true;
+     if (countryPresent) {
+        String[] lan_con = language_contry.split("_");
+        defaultLocale = new Locale(lan_con[0],lan_con[1]);
+     } else
+       defaultLocale = new Locale(language_contry);
+       for (Iterator i = localesList.iterator();i.hasNext();)
+         if (((SCAGLocale)i.next()).locale.equals(defaultLocale)) return localesList;
+       throw new Exception("Wrong default language parameter in web.xml - localization information for default language \""+defaultLocale.getLanguage()+"\""+((countryPresent)?(" and country \""+defaultLocale.getCountry()+"\""):"") +" not scpecified in locales.xml");
   }
 
   public class SCAGLocale {

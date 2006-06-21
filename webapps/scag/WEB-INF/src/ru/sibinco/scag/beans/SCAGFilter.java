@@ -66,16 +66,16 @@ public class SCAGFilter implements Filter {
     }
 
     private void setdefaultLocale() throws Throwable {
-      String language = config.getServletContext().getInitParameter("javax.servlet.jsp.jstl.fmt.locale");
+      String language_country = config.getServletContext().getInitParameter("javax.servlet.jsp.jstl.fmt.locale");
       ArrayList localesList = null;
       try {
-        localesList = appContext.getLocaleManager().validate(language);
+        localesList = appContext.getLocaleManager().validate(language_country);
       } catch (Throwable t) {
         t.printStackTrace();
         throw t;
       }
       config.getServletContext().setAttribute("localesList",localesList);
       Config.set(config.getServletContext(), Config.FMT_LOCALIZATION_CONTEXT, config.getServletContext().getInitParameter("javax.servlet.jsp.jstl.fmt.localizationContext"));
-      Config.set(config.getServletContext(), Config.FMT_LOCALE, language);
+      Config.set(config.getServletContext(), Config.FMT_LOCALE, language_country);
     }
 }
