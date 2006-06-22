@@ -6,7 +6,7 @@
 
 PACKAGE := emailsme
 
-__LIBRARIES :=-L$(SMSC_BUILDDIR)/bin -llogger -L$(SMSC_BUILDDIR)/bin/db/exceptions/ -ldb_exc
+__LIBRARIES :=-L$(SMSC_BUILDDIR)/bin -llogger
 
 ifndef SMSC_SRCDIR
 $(error SMSC_SRCDIR is not defined)

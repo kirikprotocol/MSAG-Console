@@ -10,18 +10,21 @@
 #define NAMEDBRACKETS
 #include "util/regexp/RegExp.cpp"
 #include "core/buffers/Array.hpp"
-
-#include "db/DataSource.h"
-#include "db/DataSourceLoader.h"
 #include "util/templates/Formatters.h"
 #include "util/xml/init.h"
-
+#include "util/BufferSerialization.hpp"
 #include "emailsme/util/PipedChild.hpp"
-
+#include "core/buffers/TmpBuf.hpp"
+#include "core/buffers/DiskHash.hpp"
+#include "core/buffers/PageFile.hpp"
+#include "util/crc32.h"
 #include <signal.h>
 #include <pthread.h>
+#include <list>
+#include "sms/sms_util.h"
+#include "emailsme/AbonentProfile.hpp"
 
-
+using namespace smsc::emailsme;
 using namespace smsc::sms;
 using namespace smsc::sme;
 using namespace smsc::smpp;
@@ -31,8 +34,7 @@ using namespace smsc::core::threads;
 using namespace smsc::core::synchronization;
 using namespace smsc::util::templates;
 
-using smsc::core::buffers::Hash;
-using smsc::core::buffers::Array;
+using namespace smsc::core::buffers;
 
 using namespace smsc::emailsme;
 
@@ -136,6 +138,524 @@ public:
 };
 
 
+template <int N>
+class StrKey{
+protected:
+  char str[N+1];
+  uint8_t len;
+public:
+  StrKey()
+  {
+    memset(str,0,N+1);
+    len=0;
+  }
+  StrKey(const char* s)
+  {
+    int l=strlen(s);
+    strncpy(str,s,N);
+    str[N]=0;
+    len=l>N?N:l;
+  }
+  StrKey(const StrKey& src)
+  {
+    strcpy(str,src.str);
+    len=src.len;
+  }
+  StrKey& operator=(const StrKey& src)
+  {
+    strcpy(str,src.str);
+    len=src.len;
+    return *this;
+  }
+
+  bool operator==(const StrKey& cmp)
+  {
+    return cmp.len==len && !strcmp(cmp.str,str);
+  }
+
+  const char* toString(){return str;}
+  static uint32_t Size(){return N+1;}
+  void Read(File& f)
+  {
+    f.XRead(len);
+    f.Read(str,N);
+    str[len]=0;
+  }
+  void Write(File& f)const
+  {
+    f.XWrite(len);
+    f.Write(str,N);
+  }
+  uint32_t HashCode(uint32_t attempt)const
+  {
+    uint32_t res=0;
+    res=crc32(res,str,len);
+    for(;attempt>0;attempt--)res=crc32(res,str,len);
+    return res;
+  }
+};
+
+struct Int64Key{
+  uint64_t key;
+
+  Int64Key():key(0){}
+  Int64Key(uint64_t key):key(key){}
+  Int64Key(const Int64Key& src)
+  {
+    key=src.key;
+  }
+  Int64Key& operator=(const Int64Key& src)
+  {
+    key=src.key;
+    return *this;
+  }
+  uint64_t Get()const{return key;}
+
+  static uint32_t Size(){return 8;}
+  void Read(File& f)
+  {
+    key=f.ReadNetInt64();
+  }
+  void Write(File& f)const
+  {
+    f.WriteNetInt64(key);
+  }
+  uint32_t HashCode(uint32_t attempt)const
+  {
+    uint32_t res=0;
+    res=crc32(res,&key,sizeof(key));
+    for(;attempt>0;attempt--)res=crc32(res,&key,sizeof(key));
+    return res;
+  }
+  bool operator==(const Int64Key& cmp)
+  {
+    return key==cmp.key;
+  }
+};
+
+template <int AbonentProfile::*field>
+bool LimitBreak(AbonentProfile& p)
+{
+  struct tm tdate;
+  struct tm tnow;
+  localtime_r(&p.limitDate,&tdate);
+  time_t now=time(NULL);
+  localtime_r(&now,&tnow);
+  switch(p.ltype)
+  {
+    case ltDay:
+      if(tdate.tm_mday!=tnow.tm_mday)
+      {
+        p.limitDate=now;
+        p.*field=0;
+        return false;
+      }
+      break;
+    case ltWeek:
+      if((now-p.limitDate)/(60*60*24)>7)
+      {
+        p.limitDate=now;
+        p.*field=0;
+        return false;
+      }
+      break;
+    case ltMonth:
+      if(tdate.tm_mon!=tnow.tm_mon)
+      {
+        p.limitDate=now;
+        p.*field=0;
+        return false;
+      }
+      break;
+  }
+  return p.*field>p.limitValue;
+}
+
+class ProfileStorage{
+public:
+  ProfileStorage()
+  {
+  }
+  void Open(const char* dir)
+  {
+    log=smsc::logger::Logger::getInstance("storage");
+    std::string baseDir=dir;
+    if(baseDir.length()>0 && baseDir[baseDir.length()-1]!='/')baseDir+='/';
+    std::string storeFileName=baseDir+"store.bin";
+    std::string addressIdxFileName=baseDir+"addr.idx";
+    std::string emailIdxFileName=baseDir+"email.idx";
+    if(!File::Exists(storeFileName.c_str()))
+    {
+      store.Create(storeFileName.c_str(),128,100000);
+      abonentIndex.Create(addressIdxFileName.c_str(),100000,false);
+      emailIndex.Create(emailIdxFileName.c_str(),100000,false);
+    }else
+    {
+      store.Open(storeFileName.c_str());
+      abonentIndex.Open(addressIdxFileName.c_str());
+      emailIndex.Open(emailIdxFileName.c_str());
+    }
+  }
+
+  void CreateProfile(const AbonentProfile& p)
+  {
+    smsc_log_debug(log,"Create profile for %s/%s",p.addr.toString().c_str(),p.user.c_str());
+    File::offset_type off;
+    {
+      MutexGuard mg(diskMtx);
+      SerializationBuffer sb;
+      p.Write(sb);
+      off=store.Append(sb.getBuffer(),sb.getPos());
+      abonentIndex.Insert(p.addr.value,off);
+      emailIndex.Insert(p.user.c_str(),off);
+    }
+    {
+      MutexGuard mg(cacheMtx);
+
+      AbonentProfile* pc=new AbonentProfile;
+      *pc=p;
+      pc->offset=off;
+      cache.push_back(pc);
+      CacheList::iterator it=cache.end();
+      it--;
+      abonentCache.Insert(p.addr.value,it);
+      emailCache.Insert(p.user.c_str(),it);
+      CheckCacheLimit();
+    }
+  }
+  bool getProfileByAddress(const char* addr,AbonentProfile& p)
+  {
+    {
+      MutexGuard mg(cacheMtx);
+      CacheList::iterator* ptr=abonentCache.GetPtr(addr);
+      if(ptr)
+      {
+        p=***ptr;
+        return true;
+      }
+    }
+    bool rv=false;
+    std::vector<unsigned char> buf;
+    SerializationBuffer buffer;
+    File::offset_type off;
+    Int64Key value;
+    {
+      MutexGuard mg(diskMtx);
+      if(abonentIndex.LookUp(addr,value))
+      {
+        off=value.key;
+        store.Read(off,buf);
+        rv=true;
+      }
+    }
+    if(rv)
+    {
+      buffer.setExternalBuffer(&buf[0],buf.size());
+      p.Read(buffer);
+      p.offset=off;
+      MutexGuard mg(cacheMtx);
+      cache.push_back(new AbonentProfile(p));
+      CacheList::iterator it=cache.end();
+      it--;
+      abonentCache.Insert(addr,it);
+      emailCache.Insert(p.user.c_str(),it);
+      CheckCacheLimit();
+    }
+    return rv;
+  }
+  bool getProfileByEmail(const char* user,AbonentProfile& p)
+  {
+    {
+      MutexGuard mg(cacheMtx);
+      CacheList::iterator* ptr=emailCache.GetPtr(user);
+      if(ptr)
+      {
+        p=***ptr;
+        return true;
+      }
+    }
+    bool rv=false;
+    std::vector<unsigned char> buf;
+    SerializationBuffer buffer;
+    File::offset_type off;
+    {
+      MutexGuard mg(diskMtx);
+      Int64Key value;
+      if(emailIndex.LookUp(user,value))
+      {
+        off=value.key;
+        store.Read(off,buf);
+        rv=true;
+      }
+    }
+    if(rv)
+    {
+      buffer.setExternalBuffer(&buf[0],buf.size());
+      p.Read(buffer);
+      p.offset=off;
+      MutexGuard mg(cacheMtx);
+      cache.push_back(new AbonentProfile(p));
+      CacheList::iterator it=cache.end();
+      it--;
+      abonentCache.Insert(p.addr.value,it);
+      emailCache.Insert(user,it);
+      CheckCacheLimit();
+    }
+    return rv;
+  }
+
+  void DeleteProfile(const AbonentProfile& p)
+  {
+    smsc_log_debug(log,"Delete profile %s/%s",p.addr.toString().c_str(),p.user.c_str());
+    {
+      MutexGuard mg(cacheMtx);
+      CacheList::iterator* ptr=emailCache.GetPtr(p.user.c_str());
+      if(ptr)
+      {
+        cache.erase(*ptr);
+        abonentCache.Delete(p.addr.value);
+        emailCache.Delete(p.user.c_str());
+      }
+    }
+    MutexGuard mg(diskMtx);
+    abonentIndex.Delete(p.addr.value);
+    emailIndex.Delete(p.user.c_str());
+    store.Delete(p.offset);
+  }
+  void UpdateProfile(AbonentProfile& p)
+  {
+    smsc_log_debug(log,"Update profile for %s/%s",p.addr.toString().c_str(),p.user.c_str());
+    {
+      MutexGuard mg(cacheMtx);
+      CacheList::iterator* ptr=emailCache.GetPtr(p.user.c_str());
+      if(ptr)
+      {
+        p.offset=(**ptr)->offset;
+        ***ptr=p;
+      }
+    }
+    SerializationBuffer buf(256);
+    p.Write(buf);
+    MutexGuard mg(diskMtx);
+    store.Update(p.offset,buf.getBuffer(),buf.getPos());
+  }
+
+  bool checkEml2GsmLimit(const char* email)
+  {
+    MutexGuard lmg(limitMtx);
+    AbonentProfile p;
+    if(!getProfileByEmail(email,p) && !getProfileByAddress(email,p))return false;
+    bool rv=!LimitBreak<&AbonentProfile::limitCountEml2Gsm>(p);
+    UpdateProfile(p);
+    return rv;
+  }
+
+  void incEml2GsmLimit(const char* email)
+  {
+    MutexGuard lmg(limitMtx);
+    AbonentProfile p;
+    if(!getProfileByEmail(email,p) && !getProfileByAddress(email,p))throw smsc::util::Exception("Unknown user:%s",email);;
+    p.limitCountEml2Gsm++;
+    smsc_log_debug(log,"Inc eml2gsm for %s=%d",email,p.limitCountEml2Gsm);
+    UpdateProfile(p);
+    /*
+    SerializationBuffer buf(256);
+    p.Write(buf);
+    MutexGuard mg(diskMtx);
+    store.Update(p.offset,buf.getBuffer(),buf.getPos());
+    */
+  }
+
+  bool checkGsm2EmlLimit(const char* addr)
+  {
+    MutexGuard lmg(limitMtx);
+    AbonentProfile p;
+    if(!getProfileByAddress(addr,p))return false;
+    bool rv=!LimitBreak<&AbonentProfile::limitCountGsm2Eml>(p);
+    UpdateProfile(p);
+    return rv;
+  }
+
+  void incGsm2EmlLimit(const char* addr)
+  {
+    MutexGuard lmg(limitMtx);
+    AbonentProfile p;
+    if(!getProfileByAddress(addr,p))throw smsc::util::Exception("Unknown abonent:%s",addr);
+    p.limitCountGsm2Eml++;
+    smsc_log_debug(log,"Inc gsm2eml for %s=%d",addr,p.limitCountGsm2Eml);
+    UpdateProfile(p);
+    /*
+    SerializationBuffer buf(256);
+    p.Write(buf);
+    MutexGuard mg(diskMtx);
+    store.Update(p.offset,buf.getBuffer(),buf.getPos());
+    */
+  }
+
+protected:
+  Mutex diskMtx;
+  DiskHash<StrKey<24>,Int64Key> abonentIndex;
+  DiskHash<StrKey<32>,Int64Key> emailIndex;
+  PageFile store;
+
+  Mutex limitMtx;
+
+  Mutex cacheMtx;
+  typedef std::list<AbonentProfile*> CacheList;
+  Hash<CacheList::iterator> abonentCache,emailCache;
+  CacheList cache;
+  int cacheLimit;
+
+  smsc::logger::Logger* log;
+
+  void CheckCacheLimit()
+  {
+    while(abonentCache.GetCount()<cacheLimit)
+    {
+      abonentCache.Delete(cache.front()->addr.value);
+      emailCache.Delete(cache.front()->user.c_str());
+      delete cache.front();
+      cache.pop_front();
+    }
+  }
+};
+
+ProfileStorage storage;
+
+
+class AdminCommandsListener:public smsc::core::threads::Thread{
+public:
+  AdminCommandsListener():running(false)
+  {
+    log=smsc::logger::Logger::getInstance("emladm");
+    readTimeOut=20;
+  }
+  void Init(const char* host,int port)
+  {
+    if(sck.InitServer(host,port,0)==-1)throw smsc::util::Exception("Failed to init server socket at %s:%d",host,port);
+    if(sck.StartServer()==-1)throw smsc::util::Exception("Failed to start server socket at %s:%d",host,port);
+  }
+  int Execute()
+  {
+    smsc_log_debug(log,"Starting AdminCommandsListener");
+    running=true;
+    SerializationBuffer buf;
+    TmpBuf<char,1024> tmp(0);
+    while(running)
+    {
+      std::auto_ptr<smsc::core::network::Socket> clnt(sck.Accept());
+      if(!clnt.get())break;
+      char szbuf[4]={0,};
+      int sz=0;
+      while(sz<4)
+      {
+        if(!clnt->canRead(readTimeOut))break;
+        int rd=clnt->Read(szbuf+sz,4-sz);
+        if(rd<=0)break;
+        sz+=rd;
+      }
+      if(sz!=4)
+      {
+        smsc_log_warn(log,"Failed to read packet size from socket");
+        continue;
+      }
+      smsc_log_debug(log,"szbuf:%02x %02x %02x %02x",szbuf[0],szbuf[1],szbuf[2],szbuf[3]);
+      uint32_t pktSize=0;
+      memcpy(&pktSize,szbuf,4);
+      pktSize=ntohl(pktSize);
+      if(pktSize>65536)
+      {
+        smsc_log_warn(log,"Packet size too large:%d",pktSize);
+        continue;
+      }
+      tmp.setSize(pktSize);
+      int bufSz=0;
+      while(bufSz<pktSize)
+      {
+        if(!clnt->canRead(readTimeOut))break;
+        int rd=clnt->Read(tmp.get()+bufSz,pktSize-bufSz);
+        if(rd<=0)break;
+        bufSz+=rd;
+      }
+      if(bufSz<pktSize)
+      {
+        smsc_log_warn(log,"Failed to read packet from socket:%d/%d",bufSz,pktSize);
+        continue;
+      }
+      std::string dump;
+      for(int i=0;i<pktSize;i++)
+      {
+        char hex[8];
+        sprintf(hex," %02x",(int)(unsigned char)tmp.get()[i]);
+        dump+=hex;
+      }
+      smsc_log_debug(log,"Packet dump:%s",dump.c_str());
+      buf.setExternalBuffer(tmp.get(),pktSize);
+      uint32_t cmdId=buf.ReadNetInt32();
+      uint32_t rv=1;
+      try
+      {
+        smsc_log_debug(log,"Received cmdId=%d",cmdId);
+        switch(cmdId)
+        {
+          case cmdUpdateProfile:
+          {
+            AbonentProfile p,p2;
+            p.Read(buf);
+            if(storage.getProfileByAddress(p.addr.value,p2))
+            {
+              if(p.user!=p2.user)
+              {
+                storage.DeleteProfile(p2);
+                storage.CreateProfile(p);
+              }else
+              {
+                storage.UpdateProfile(p);
+              }
+            }else
+            {
+              storage.CreateProfile(p);
+            }
+          }break;
+          case cmdDeleteProfile:
+          {
+            Address addr;
+            ReadAddress(buf,addr);
+            AbonentProfile p;
+            if(!storage.getProfileByAddress(addr.value,p))
+            {
+              rv=0;
+            }else
+            {
+              storage.DeleteProfile(p);
+            }
+          }
+        }
+      }catch(std::exception& e)
+      {
+        rv=0;
+        smsc_log_warn(log,"exception in cmd=%d:'%s'",cmdId,e.what());
+      }
+      rv=htonl(rv);
+      clnt->Write((char*)&rv,4);
+
+    }
+    smsc_log_debug(log,"Finishing AdminCommandsListener");
+    return 0;
+  }
+  void Stop()
+  {
+    running=false;
+    sck.Abort();
+  }
+protected:
+  enum{cmdUpdateProfile=1,cmdDeleteProfile};
+  smsc::core::network::Socket sck;
+  int readTimeOut;
+  bool running;
+  smsc::logger::Logger* log;
+};
+
 namespace cfg{
  string sourceAddress;
  int protocolId;
@@ -150,32 +670,10 @@ namespace cfg{
  int annotationSize;
  string maildomain;
  string mailstripper;
- smsc::db::DataSource *dataSource;
  OutputFormatter *msgFormat;
-};
+ string storeDir;
 
-class ConnectionGuard{
-  smsc::db::DataSource *ds;
-  smsc::db::Connection *conn;
-public:
-  ConnectionGuard(smsc::db::DataSource *_ds):ds(_ds)
-  {
-    conn=ds->getConnection();
-  }
-  ~ConnectionGuard()
-  {
-    ds->freeConnection(conn);
-  }
-  smsc::db::Connection* operator->()
-  {
-    return conn;
-  }
-  smsc::db::Connection* get()
-  {
-    return conn;
-  }
 };
-
 
 int stopped=0;
 
@@ -195,6 +693,7 @@ const int INVALIDSMS   =0;
 const int NETERROR     =1;
 const int UNABLETOSEND =2;
 const int NOPROFILE    =3;
+const int OUTOFLIMIT   =4;
 const int OK           =256;
 };
 
@@ -234,23 +733,19 @@ string ExtractEmail(const string& value)
   return res;
 }
 
-int getUsageCount(int id)
-{
-  using namespace smsc::db;
-  const char* sql="select count(*) from EMLSME_HISTORY where user_id=:id";
-  ConnectionGuard connection(cfg::dataSource);
-  if(!connection.get())throw Exception("Failed to get db connection");
-  auto_ptr<Statement> statement(connection->createStatement(sql));
-  if(!statement.get())throw Exception("Failed to prepare statement");
-  statement->setInt32(1,id);
-  auto_ptr<ResultSet> rs(statement->executeQuery());
-  if(!rs.get())throw Exception("Failed to make a query to DB");
-  return rs->getInt32(1);
-}
-
-
 string MapEmailToAddress(const string& username,string& fwd)
 {
+  AbonentProfile p;
+  if(!storage.getProfileByEmail(username.c_str(),p))
+  {
+    if(!storage.getProfileByAddress(username.c_str(),p) || !p.numberMap)
+    {
+      throw Exception("Unknown username:%s",username.c_str());
+    }
+  }
+  fwd=p.forwardEmail;
+  return p.addr.toString();
+  /*
   using namespace smsc::db;
   const char* sql="select address,forward,daily_limit,(select count(*) from EMLSME_HISTORY where MSG_DATE<=:1 and EMLSME_HISTORY.address=EMLSME_PROFILES.address) from EMLSME_PROFILES where username=:2";
   ConnectionGuard connection(cfg::dataSource);
@@ -275,10 +770,18 @@ string MapEmailToAddress(const string& username,string& fwd)
   fwd=rs->isNull(2)?"":rs->getString(2);
   __trace2__("Map %s->%s",username.c_str(),rs->getString(1));
   return rs->getString(1);
+  */
 }
 
 string MapAddressToEmail(const string& address)
 {
+  AbonentProfile p;
+  if(!storage.getProfileByAddress(address.c_str(),p))
+  {
+    throw Exception("Profile not found for address=%s",address.c_str());
+  }
+  return p.user;
+  /*
   using namespace smsc::db;
   const char* sql="select username from EMLSME_PROFILES where address=:1";
   ConnectionGuard connection(cfg::dataSource);
@@ -291,6 +794,7 @@ string MapAddressToEmail(const string& address)
   if(!rs->fetchNext())throw Exception("Mapping address->email for %s not found",address.c_str());
   __trace2__("Map %s->%s",address.c_str(),rs->getString(1));
   return rs->getString(1);
+  */
 }
 
 
@@ -308,6 +812,7 @@ void ReplaceString(string& s,const char* what,const char* to)
 
 int SendEMail(const string& from,const Array<string>& to,const string& subj,const string& body,bool rawMsg=false)
 {
+  __trace2__("sending email from %s to %d recepients(first=%s), subj=%s",from.c_str(),to.Count(),to[0].c_str(),subj.c_str());
   Socket s;
   if(s.Init(cfg::smtpHost.c_str(),cfg::smtpPort,0)==-1)
   {
@@ -353,66 +858,150 @@ int SendEMail(const string& from,const Array<string>& to,const string& subj,cons
 
 int processSms(const char* text,const char* fromaddress)
 {
-  Hash<SMatch> h;
-  SMatch m[10];
-  int n=10;
-  if(!reParseSms.Match(text,m,n,&h))
-  {
-    __trace2__("RegExp match failed:%d",reParseSms.LastError());
-    return ProcessSmsCodes::INVALIDSMS;
-  }
-  string cf,addr,rn,subj,body,from,fromdecor;
-  getField(text,h,"flag",cf);
-  getField(text,h,"address",addr);
-  getField(text,h,"realname",rn);
-  getField(text,h,"subj",subj);
-  getField(text,h,"body",body);
-  Socket s;
-
-  ReplaceString(addr,"*","@");
-  ReplaceString(addr,"$","_");
-
-  ReplaceString(body,"\n.\n","\n..\n");
-
   try{
-    from=makeFromAddress(MapAddressToEmail(fromaddress).c_str());
-  }catch(exception& e)
-  {
-    __warning2__("failed to map address to mail:%s",e.what());
-    return ProcessSmsCodes::NOPROFILE;
-  }
-  fromdecor=from;
-  if(rn.length())
-  {
-    fromdecor=rn+"<"+from+">";
-  }
-
-  Array<string> to;
-  int startpos=0;
-  int pos=addr.find(',');
-  if(pos==string::npos)
-  {
-    to.Push(addr);
-  }else
-  {
-    while(pos!=string::npos)
+    Hash<SMatch> h;
+    SMatch m[10];
+    int n=10;
+    if(!reParseSms.Match(text,m,n,&h))
     {
-      to.Push(addr.substr(startpos,pos-startpos));
-      startpos=pos+1;
-      pos=addr.find(',',pos+1);
+      __trace2__("RegExp match failed:%d",reParseSms.LastError());
+      return ProcessSmsCodes::INVALIDSMS;
     }
-    to.Push(addr.substr(startpos));
-  }
+    string addr,subj,body,from,fromdecor;
+    //getField(text,h,"flag",cf);
+    getField(text,h,"address",addr);
+    //getField(text,h,"realname",rn);
+    getField(text,h,"subj",subj);
+    getField(text,h,"body",body);
+    Socket s;
 
-  try{
-    int rv=SendEMail(fromdecor,to,subj,body);
-    if(rv!=ProcessSmsCodes::OK)return rv;
-  }catch(...)
+    ReplaceString(addr,"*","@");
+    ReplaceString(addr,"$","_");
+
+    if(!storage.checkGsm2EmlLimit(fromaddress))
+    {
+      return ProcessSmsCodes::OUTOFLIMIT;
+    }
+
+    ReplaceString(body,"\n.\n","\n..\n");
+
+    AbonentProfile p;
+    if(!storage.getProfileByAddress(fromaddress,p))
+    {
+      __trace2__("no profile for abonent %s",fromaddress);
+      return ProcessSmsCodes::NOPROFILE;
+    }
+
+    const char* sp=strchr(text,' ');
+    std::string cmd;
+    if(sp)
+    {
+      cmd.assign(text,0,sp-text);
+      for(int i=0;i<cmd.length();i++)cmd[i]=tolower(cmd[i]);
+      while(*sp==' ')sp++;
+    }else
+    {
+      cmd=text;
+    }
+
+    __trace2__("cmd=%s",cmd.c_str());
+
+    if(cmd=="alias")
+    {
+      std::string value=sp;
+      if(value.length() && value!=p.user)
+      {
+        storage.DeleteProfile(p);
+        p.user=value;
+        storage.CreateProfile(p);
+      }
+      return ProcessSmsCodes::OK;
+    }
+    if(cmd=="aliasoff")
+    {
+      if(p.user!=p.addr.value)
+      {
+        p.user=p.addr.value;
+        storage.DeleteProfile(p);
+        storage.CreateProfile(p);
+      }
+      return ProcessSmsCodes::OK;
+    }
+    if(cmd=="forward")
+    {
+      p.forwardEmail=sp;
+      storage.UpdateProfile(p);
+      return ProcessSmsCodes::OK;
+    }
+    if(cmd=="forwardoff")
+    {
+      p.forwardEmail="";
+      storage.UpdateProfile(p);
+      return ProcessSmsCodes::OK;
+    }
+
+    if(cmd=="realname")
+    {
+      p.realName=sp;
+      storage.UpdateProfile(p);
+      return ProcessSmsCodes::OK;
+    }
+    if(cmd=="number")
+    {
+      std::string val=sp;
+      for(int i=0;i<val.length();i++)val[i]=tolower(val[i]);
+      if(val=="on")p.numberMap=true;
+      else if(val=="off")p.numberMap=false;
+      else return ProcessSmsCodes::INVALIDSMS;
+      storage.UpdateProfile(p);
+      return ProcessSmsCodes::OK;
+    }
+
+    try{
+      from=makeFromAddress(MapAddressToEmail(fromaddress).c_str());
+    }catch(exception& e)
+    {
+      __warning2__("failed to map address to mail:%s",e.what());
+      return ProcessSmsCodes::NOPROFILE;
+    }
+    fromdecor=from;
+    if(p.realName.length()>0)
+    {
+      fromdecor='"'+p.realName+"\" <"+from+">";
+    }
+
+    Array<string> to;
+    int startpos=0;
+    int pos=addr.find(',');
+    if(pos==string::npos)
+    {
+      to.Push(addr);
+    }else
+    {
+      while(pos!=string::npos)
+      {
+        to.Push(addr.substr(startpos,pos-startpos));
+        startpos=pos+1;
+        pos=addr.find(',',pos+1);
+      }
+      to.Push(addr.substr(startpos));
+    }
+
+    try{
+      int rv=SendEMail(fromdecor,to,subj,body);
+      storage.incGsm2EmlLimit(fromaddress);
+      if(rv!=ProcessSmsCodes::OK)return rv;
+    }catch(...)
+    {
+      __warning__("SMTP session aborted");
+      return ProcessSmsCodes::UNABLETOSEND;
+    }
+    return ProcessSmsCodes::OK;
+  }catch(std::exception& e)
   {
-    __warning__("SMTP session aborted");
-    return ProcessSmsCodes::UNABLETOSEND;
+    __warning2__("Exception in processSms:%s",e.what());
   }
-  return ProcessSmsCodes::OK;
+  return ProcessSmsCodes::NETERROR;
 }
 
 class MyListener:public SmppPduEventListener{
@@ -428,13 +1017,11 @@ public:
       ((PduXSm*)pdu)->get_message().get_source().get_typeOfNumber(),
       ((PduXSm*)pdu)->get_message().get_source().get_numberingPlan(),
       ((PduXSm*)pdu)->get_message().get_source().get_value());
-      char addrtext[64];
-      addr.toString(addrtext,sizeof(addrtext));
-
-      int code=processSms(buf,addrtext);
+      int code=processSms(buf,addr.value);
       __trace2__("processSms: code=%d",code);
       switch(code)
       {
+        case ProcessSmsCodes::OUTOFLIMIT:
         case ProcessSmsCodes::NOPROFILE:
         case ProcessSmsCodes::INVALIDSMS:code=SmppStatusSet::ESME_RX_P_APPN;break;
         case ProcessSmsCodes::UNABLETOSEND:
@@ -473,8 +1060,10 @@ bool GetNextLine(const char* text,int maxlen,int& pos,string& line)
   return true;
 }
 
+/*
 void IncUsageCounter(const string& address)
 {
+
   using namespace smsc::db;
   __trace2__("inc counter for %s",address.c_str());
   const char* sql="insert into EMLSME_HISTORY (address,MSG_DATE) values (:1,:2)";
@@ -487,6 +1076,7 @@ void IncUsageCounter(const string& address)
   statement->executeUpdate();
   connection->commit();
 }
+*/
 
 int ProcessMessage(const char *msg,int len)
 {
@@ -503,12 +1093,12 @@ int ProcessMessage(const char *msg,int len)
         inheader=false;
         continue;
       }
-      int pos=line.find(':');
-      if(pos==string::npos)continue;
-      name=line.substr(0,pos);
-      pos++;
-      while(pos<line.length() && line[pos]==' ')pos++;
-      value=line.substr(pos);
+      int pos2=line.find(':');
+      if(pos2==string::npos)continue;
+      name=line.substr(0,pos2);
+      pos2++;
+      while(pos2<line.length() && line[pos2]==' ')pos2++;
+      value=line.substr(pos2);
 
       if(name=="From")
       {
@@ -527,12 +1117,41 @@ int ProcessMessage(const char *msg,int len)
     break;
   }
 
+  AbonentProfile p;
+
+  string dstUser=to.substr(0,to.find('@'));
+
+  if(!storage.getProfileByEmail(dstUser.c_str(),p))
+  {
+    __trace2__("no profile for user:%s",dstUser.c_str());
+    if(storage.getProfileByAddress(dstUser.c_str(),p))
+    {
+      if(!p.numberMap)
+      {
+        __trace2__("number map turned off for address:%s",dstUser.c_str());
+        return StatusCodes::STATUS_CODE_NOUSER;
+      }
+    }else
+    {
+      __trace2__("no profile for address:%s",dstUser.c_str());
+      return StatusCodes::STATUS_CODE_NOUSER;
+    }
+  }
+
+
+  if(!storage.checkEml2GsmLimit(dstUser.c_str()))
+  {
+    __trace2__("limit exceeded for user:%s",dstUser.c_str());
+    return StatusCodes::STATUS_CODE_UNKNOWNERROR;
+  }
+
   if(!util::childRunning)
   {
     if(emlIn)fclose(emlIn);
     if(emlOut)fclose(emlOut);
     if(util::ForkPipedCmd(cfg::mailstripper.c_str(),emlIn,emlOut)<=0)
     {
+      __trace2__("failed to fork mailstripper child:%s",strerror(errno));
       return StatusCodes::STATUS_CODE_UNKNOWNERROR;
     }
   };
@@ -545,6 +1164,7 @@ int ProcessMessage(const char *msg,int len)
     int wr=fwrite(msg,1,len,emlOut);fflush(emlOut);
     if(wr<=0)
     {
+      __trace__("failed to write data for mailstripper");
       return StatusCodes::STATUS_CODE_UNKNOWNERROR;
     }
     sz+=wr;
@@ -553,6 +1173,7 @@ int ProcessMessage(const char *msg,int len)
   char buf[16];
   if(!fgets(buf,sizeof(buf),emlIn))
   {
+    __trace__("failed to read data from mailstripper");
     return StatusCodes::STATUS_CODE_UNKNOWNERROR;
   }
   __trace2__("resp len=%d",len);
@@ -563,7 +1184,11 @@ int ProcessMessage(const char *msg,int len)
   while(sz<len)
   {
     int rv=fread(newmsg.get(),1,len-sz,emlIn);
-    if(rv==0 || rv==-1)return StatusCodes::STATUS_CODE_UNKNOWNERROR;
+    if(rv==0 || rv==-1)
+    {
+      __trace__("failed to read data from mailstripper");
+      return StatusCodes::STATUS_CODE_UNKNOWNERROR;
+    }
     sz+=rv;
   }
   newmsg.get()[len]=0;
@@ -577,14 +1202,14 @@ int ProcessMessage(const char *msg,int len)
   sms.setOriginatingAddress(cfg::sourceAddress.c_str());
 
   string fwd;
-  string dst=MapEmailToAddress(to.substr(0,to.find('@')),fwd);
+  string dst=MapEmailToAddress(dstUser,fwd);
   if(fwd.length())
   {
     try{
-      Array<string> to;
-      to.Push(fwd);
+      Array<string> to2;
+      to2.Push(fwd);
       string body(msg,len);
-      SendEMail(from,to,"",body,true);
+      SendEMail(from,to2,"",body,true);
     }catch(exception& e)
     {
       __warning2__("Failed to forward msg to %s:%s",fwd.c_str(),e.what());
@@ -668,7 +1293,7 @@ int ProcessMessage(const char *msg,int len)
     if(rc==StatusCodes::STATUS_CODE_OK)
     {
       try{
-        IncUsageCounter(dst);
+        storage.incEml2GsmLimit(dstUser.c_str());
       }catch(exception& e)
       {
         __warning2__("failed to inc counter:%s",e.what());
@@ -741,6 +1366,7 @@ int main(int argc,char* argv[])
   cfg::mainId=pthread_self();
 
   RegExp::InitLocale();
+  /*
   reParseSms.Compile(
 "/(#(?{flag}\\w)#)?"                         // optional control flag
 "(?{address}(?:.*?[@*][^#\\(\\s,]+,?)+)"     // mandatory address(es)
@@ -748,24 +1374,32 @@ int main(int argc,char* argv[])
 "(?:##(?{subj}.*?)#|\\((?{subj}.*?)\\)|\\s)" // optinal subject
 "(?{body}.+)$/xs"                            // body
 );
+*/
+  if(!reParseSms.Compile(
+"/^(?:"
+"alias\\s+\\w*|"
+"aliasoff|"
+"forward\\s+[\\w\\-\\.]+@[\\w\\-\\.]+|"
+"forwardoff|"
+"number\\s+on|"
+"number\\s+off|"
+"(?{address}[\\w\\-\\.]+@[\\w\\-\\.]+)(?:\\ssubj=\"(?{subj}.*?)\")?\\s*(?{body}.*)"
+")$/isx"
+))
+  {
+    fprintf(stderr,"Failed to compile parseregexp\n");
+    return -1;
+  }
+
 
   try{
 
   using namespace smsc::util;
-  using namespace smsc::db;
-  config::Manager::init("config.xml");
+  //using namespace smsc::db;
+  config::Manager::init("conf/emailsme.xml");
   config::Manager& cfgman= config::Manager::getInstance();
 
   config::ConfigView *dsConfig = new config::ConfigView(cfgman, "StartupLoader");
-
-  const char* OCI_DS_FACTORY_IDENTITY = "OCI";
-  DataSourceLoader::loadup(dsConfig);
-
-  cfg::dataSource = DataSourceFactory::getDataSource(OCI_DS_FACTORY_IDENTITY);
-  if (!cfg::dataSource) throw Exception("Failed to get DataSource");
-  auto_ptr<ConfigView> config(new ConfigView(cfgman,"DataSource"));
-
-  cfg::dataSource->init(config.get());
 
 
   cfg::smtpHost=cfgman.getString("smtp.host");
@@ -780,6 +1414,10 @@ int main(int argc,char* argv[])
   {
   }
 
+  cfg::storeDir=cfgman.getString("store.dir");
+
+  storage.Open(cfg::storeDir.c_str());
+
 
   SmeConfig cfg;
   cfg.host=cfgman.getString("smpp.host");
@@ -793,6 +1431,11 @@ int main(int argc,char* argv[])
   cfg::protocolId=cfgman.getInt("smpp.protocolId");
 
   cfg::maildomain=cfgman.getString("mail.domain");
+
+  AdminCommandsListener acl;
+
+  acl.Init(cfgman.getString("admin.host"),cfgman.getInt("admin.port"));
+  acl.Start();
 
   Socket srv;
 

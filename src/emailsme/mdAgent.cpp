@@ -28,7 +28,7 @@ struct LogFile{
 FILE *f;
 LogFile()
 {
-  f=fopen("/usr/local/mdAgent/mdAgent.log","at");
+  f=fopen("logs/mdAgent.log","at");
 }
 void logit(const char* fmt,...)
 {
@@ -54,7 +54,12 @@ bool ReadConfig(const char* cfgfile)
   while(fgets(strbuf,sizeof(strbuf),f))
   {
     if(strbuf[0]=='#')continue;
-    if(strbuf[strlen(strbuf)-1]==0x0a)strbuf[strlen(strbuf)-1]=0;
+    int l=strlen(strbuf);
+    while(l>0 && (strbuf[l-1]==0x0a || strbuf[l-1]==0x0d))
+    {
+      strbuf[l-1]=0;
+      l--;
+    }
     if(!strbuf[0])continue;
     char *val=strchr(strbuf,'=');
     if(!val)
@@ -104,20 +109,22 @@ int main(int argc,char* argv[])
   LOG(("Start reading\n"));
   while((rd=read(0,buf,sizeof(buf)))>0)
   {
-    LOG(("Reading...(%d)\n",msg.Length()));
+    LOG(("Read %d bytes\n",rd));
     msg.Concat(buf,0,rd);
     if(msg.Length()>maxsize)
     {
       LOG(("Too long message\n"));
       return(EX_CANTCREAT);
     }
-    LOG(("Reading...(%d)\n",msg.Length()));
+    LOG(("Total read:%d\n",msg.Length()));
   }
+  LOG(("Finished reading\n"));
   if(rd==-1)
   {
     LOG(("Read error\n"));
     return(EX_IOERR);
   }
+  LOG(("Connecting to %s:%d\n",host.Str(),port));
   Socket s;
   if(s.Init(host,port,0)==-1 || s.Connect()==-1)
   {
