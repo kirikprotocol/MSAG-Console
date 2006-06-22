@@ -34,8 +34,12 @@ class XMLBasicHandler : public HandlerBase
     RouteArray* routes;
     HttpRouteInt route;
     bool route_enabled;
+    bool in_sites, in_abonents;
 
     void characters(const XMLCh *const chars, const unsigned int length);
+
+    void insertPlacement(PlacementArray* pa, Placement& p);
+    Placement assignPlacement(std::string& rid, AttributeList& attrs);
 
     Logger *logger;
 

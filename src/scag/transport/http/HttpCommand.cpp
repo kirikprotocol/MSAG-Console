@@ -261,6 +261,28 @@ void HttpCommand::setMessageBinary(uint8_t* body, int length, const std::string&
     textContent.clear();
 }
 
+void HttpRequest::serializeQuery(std::string& s)
+{
+    bool n = false;
+    char *keystr;
+    std::string *valptr;
+    std::string t;
+
+    queryParameters.First();
+    while (queryParameters.Next(keystr, valptr))
+    {
+        if(n)
+            s += "&";
+        else
+            n = true;
+        s += keystr;
+        s += "=";
+        t = *valptr;
+        HttpParser::urlEncode(t);
+        s += t;
+    }
+}
+
 void HttpRequest::serialize()
 {
     if (headers.empty()) {
@@ -283,7 +305,7 @@ void HttpRequest::serialize()
 #endif        
         if (!(siteQuery.empty() || httpMethod == POST)) {
             headers += '?';
-            headers += siteQuery;
+            serializeQuery(headers);
         }
         
         headers += SP;
@@ -291,6 +313,15 @@ void HttpRequest::serialize()
         headers += CRLF;
 
         setHeaderField(connection_field, close);
+
+        if(httpMethod == POST && !strcmp(contentType.c_str(), "application/x-www-form-url-encoded"))
+        {
+            std::string cnt;
+            serializeQuery(cnt);
+            content.SetPos(0);
+            content.Append(cnt.c_str(), cnt.length());
+            setContentLength(cnt.length());
+        }
         
         headerFields.First();
         while (headerFields.Next(keystr, valptr)) {
@@ -306,7 +337,7 @@ void HttpRequest::serialize()
 
 void HttpResponse::serialize()
 {
-    if (headers.empty()) {      
+    if (headers.empty()) {
         char *keystr;
         std::string *valptr;
         char buf[20];

@@ -243,12 +243,12 @@ public:
 
     ParameterIterator& getQueryParameterNames();
     const std::string& getQueryParameter(const std::string& paramName);
+    void setQueryParameter(const std::string& paramName, const std::string& paramValue);
+
     void serialize();
     virtual bool isResponse();
-
 protected:
-    void setQueryParameter(const std::string& paramName,
-                           const std::string& paramValue);
+    void serializeQuery(std::string& s);
 
     static const char *httpMethodNames[9];
 

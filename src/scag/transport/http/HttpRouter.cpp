@@ -95,7 +95,7 @@ HttpRouterImpl::HttpRouterImpl()
     routes = NULL;
     routeIdMap = NULL;
     AddressURLMap = NULL;
-    XMLPlatformUtils::Initialize();
+    XMLPlatformUtils::Initialize("en_EN.UTF-8");
 }
 
 HttpRouterImpl::~HttpRouterImpl()

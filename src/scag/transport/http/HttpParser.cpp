@@ -443,6 +443,9 @@ StatusCode HttpParser::parseQueryParameters(const char *buf, HttpRequest& cx)
     else
       value = mid;
 
+    if(urlDecode(value) != OK)
+        return ERROR;
+
     cx.setQueryParameter(key, value);
 
     start = end + 1;

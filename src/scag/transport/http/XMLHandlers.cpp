@@ -14,10 +14,41 @@ XMLBasicHandler::XMLBasicHandler(RouteArray* r)
 {
     logger = Logger::getInstance("httpxml");
     routes = r;
+    in_sites = false;
+    in_abonents = false;
 }
 
 void XMLBasicHandler::characters(const XMLCh *const chars, const unsigned int length) 
 {
+}
+
+Placement XMLBasicHandler::assignPlacement(std::string& rid, AttributeList& attrs)
+{
+    Placement p;
+
+    StrX s = attrs.getValue("type");
+    if(!p.setType(s.localForm()))
+        throw Exception("Invalid placement type: route id=%s, type=%s", route.id.c_str(), s.localForm());
+
+    StrX s1 = attrs.getValue("name");
+    p.name = s1.localForm();
+
+    StrX s2 = attrs.getValue("priority");
+    p.prio = atoi(s2.localForm());
+    if(!p.prio)
+        throw Exception("Invalid priority: route id=%s, prio=%s", route.id.c_str(), s2.localForm());
+
+    return p;
+}
+
+void XMLBasicHandler::insertPlacement(PlacementArray* pa, Placement& p)
+{
+    int i = 0;
+
+    while(i < pa->Count() && pa->operator[](i).prio < p.prio)
+        i++;
+
+    pa->Insert(i, p);
 }
 
 void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
@@ -27,7 +58,39 @@ void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
 
 //    smsc_log_debug(logger, "Start element %s route_id=%s", qname, route.id.c_str());
 
-    if(!strcmp(qname, "route"))
+    if(!strcmp(qname, "sites"))
+        in_sites = true;
+    else if(!strcmp(qname, "abonents"))
+        in_abonents = true;
+    else if(route.id.length() && !strcmp(qname, "usr_place"))
+    {
+        Placement p = assignPlacement(route.id, attrs);
+        PlacementArray* pa;
+        if(in_abonents)
+            pa = &route.inUSRPlace;
+        else if(in_sites)
+            pa = &route.outUSRPlace;
+        else
+            throw Exception("Invalid XML usr_place record: route id=%s, name=%s, type=%d, prio=%d", route.id.c_str(), p.name.c_str(), p.type, p.prio);
+
+        insertPlacement(pa, p);
+            
+        smsc_log_debug(logger, "usr_place record: route id=%s, name=%s, type=%d, prio=%d", route.id.c_str(), p.name.c_str(), p.type, p.prio);
+    }
+    else if(route.id.length() && !strcmp(qname, "address_place"))
+    {
+        Placement p = assignPlacement(route.id, attrs);
+        PlacementArray* pa;
+        if(in_sites)
+            pa = &route.outAddressPlace;
+        else
+            throw Exception("Invalid XML address_place record: route id=%s, name=%s, type=%d, prio=%d", route.id.c_str(), p.name.c_str(), p.type, p.prio);
+
+        insertPlacement(pa, p);
+            
+        smsc_log_debug(logger, "address_place record: route id=%s, name=%s, type=%d, prio=%d", route.id.c_str(), p.name.c_str(), p.type, p.prio);
+    }
+    else if(!strcmp(qname, "route"))
     {
         StrX s = attrs.getValue("id");
         route.id = s.localForm();
@@ -122,7 +185,11 @@ void XMLBasicHandler::endElement(const XMLCh* const nm)
     const char *qname = XMLQName.localForm();
 
 
-    if(!strcmp(qname, "route"))
+    if(!strcmp(qname, "sites"))
+        in_sites = false;
+    else if(!strcmp(qname, "abonents"))
+        in_abonents = false;
+    else if(!strcmp(qname, "route"))
     {
         if(route.id.length() == 0 || route.service_id == 0 || route.sites.Count() == 0 || route.masks.Count() == 0)
             throw Exception("Invalid XML http_route record");

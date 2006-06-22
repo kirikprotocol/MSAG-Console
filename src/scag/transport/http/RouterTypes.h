@@ -23,6 +23,37 @@ using smsc::core::buffers::Array;
 using smsc::core::buffers::XHash;
 using smsc::util::crc32;
 
+namespace PlacementType{
+    const uint32_t COOKIE = 1;
+    const uint32_t HEADER = 2;
+    const uint32_t URL = 3;
+    const uint32_t PARAM = 4;
+};
+
+class Placement{
+public:
+    uint32_t type;
+    uint32_t prio;
+    std::string name;
+    bool setType(const char* t)
+    {
+        if(!strcmp(t, "cookie"))
+            type = PlacementType::COOKIE;
+        else if(!strcmp(t, "header"))
+            type = PlacementType::HEADER;
+        else if(!strcmp(t, "url"))
+            type = PlacementType::URL;
+        else if(!strcmp(t, "param"))
+            type = PlacementType::PARAM;
+        else
+            return false;
+
+        return true;
+    }
+};
+
+typedef Array<Placement> PlacementArray;
+
 class AddressMask{
 public:
     uint8_t len;
@@ -181,6 +212,9 @@ struct HttpRoute
     uint32_t service_id;
     uint32_t provider_id;
     std::string id;
+    PlacementArray inUSRPlace;
+    PlacementArray outUSRPlace;
+    PlacementArray outAddressPlace;
 
     HttpRoute(): service_id(0), provider_id(0) {}
 
