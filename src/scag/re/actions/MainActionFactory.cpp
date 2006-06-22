@@ -41,7 +41,9 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
     if (name=="operation:wait") return new ActionOperationWait();
     if (name=="match") return new ActionMatch();
 
-    if (name=="bill:open") return new BillActionOpen();
+    if (name=="bill:open") return new BillActionOpen(false);
+    if (name=="operation:bill_wait") return new BillActionOpen(true);
+
     if (name=="bill:close") return new BillActionClose();
 
     if (name=="inc") return new ActionInc();
