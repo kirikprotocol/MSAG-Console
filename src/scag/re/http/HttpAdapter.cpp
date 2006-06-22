@@ -49,7 +49,7 @@ AccessType HttpCommandAdapter::CheckAccess(int handlerType,const std::string& na
     if(handlerType == EH_HTTP_REQUEST)
     {
         if(!strncmp(name.c_str(), "param-", 6))
-            return atRead;
+            return atReadWrite;
 
         AccessType *a = RequestFieldsAccess.GetPtr(name.c_str());
         if(a) return *a;
@@ -148,6 +148,8 @@ void HttpCommandAdapter::changed(AdapterProperty& property)
     {
         HttpRequest& cmd = (HttpRequest&)command;
 
+        if(!strncmp(property.GetName().c_str(), "param-", 6))
+            cmd.setQueryParameter(property.GetName().c_str() + 6, property.getStr());
         if(!strcmp(property.GetName().c_str(), "abonent"))
             cmd.setAbonent(property.getStr());
         else if(!strcmp(property.GetName().c_str(), "site"))
