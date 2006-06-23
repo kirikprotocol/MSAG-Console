@@ -22,6 +22,11 @@ static APP_CONTEXT_T const  _OIDS[] = {
 //  { itu-t(0) identified-organization(4) etsi(0) mobileDomain(0) gsm-Network(1)
 //    ac-Id(0) anyTimeInfoHandling(43) version3(3) }
     ,{7, {0x04, 0x00, 0x00, 0x01, 0x00, 0x2B, 0x03}}
+//id_ac_map_locInfoRetrieval_v3:
+//  { itu-t(0) identified-organization(4) etsi(0) mobileDomain(0) gsm-Network(1)
+//    ac-Id(0) locInfoRetrieval(5) version3(3) }
+    ,{7, {0x04, 0x00, 0x00, 0x01, 0x00, 0x05, 0x03}}
+
 };
 #define MAX_AC_IDX  (sizeof(_OIDS)/sizeof(APP_CONTEXT_T))
 

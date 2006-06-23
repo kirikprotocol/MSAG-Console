@@ -14,9 +14,10 @@ struct ACOID {
         ,id_ac_cap3_sms_AC
         ,id_ac_map_networkUnstructuredSs_v2
         ,id_ac_map_anyTimeInfoHandling_v3
+        ,id_ac_map_locInfoRetrieval_v3
         // ...
         //insert additional OIDs here, before id_ac_RESERVED_MAX
-        ,id_ac_RESERVED_MAX
+        ,id_ac_RESERVED_MAX //max element is reserved !!!
     } DefinedOIDidx;
 
     //returns TRUE if OIDs are equal
