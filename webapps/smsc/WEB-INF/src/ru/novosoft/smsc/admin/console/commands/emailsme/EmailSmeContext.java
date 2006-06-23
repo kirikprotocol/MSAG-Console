@@ -46,12 +46,13 @@ public class EmailSmeContext extends Proxy {
     }
 
     public void add(byte ton, byte npi, String address, String userName, String forwardEmail,
-                    String realName, byte limitType, int lastLimitUpdateDate, int limitValue,
+                    String realName, byte limitType, byte numberMapping, int lastLimitUpdateDate, int limitValue,
                     int limitCountGsm2Eml, int limitCountEml2Gsm) throws AdminException {
         checkConnect();
         try {
             int packetLength = 4/*commandId*/ + 1/*ton*/ + 1/*npi*/ + 21/*address*/ +
                     2 + userName.length() + 2 + forwardEmail.length() + 2 + realName.length() + 1/*limitType*/ +
+                    1/*numberMapping*/ +
                     4/*lastLimitUpdateDate*/ + 4/*limitValue*/ + 4/*limitCountGsm2Eml*/ + 4/*limitCountEml2Gsm*/;
             Message.writeUInt32(out, packetLength);
             Message.writeUInt32(out, COMMAND_UPDATE);
@@ -67,6 +68,7 @@ public class EmailSmeContext extends Proxy {
             Message.writeString16(out, forwardEmail);
             Message.writeString16(out, realName);
             Message.writeUInt8(out, limitType);
+            Message.writeUInt8(out, numberMapping);
             Message.writeUInt32(out, lastLimitUpdateDate);
             Message.writeUInt32(out, limitValue);
             Message.writeUInt32(out, limitCountGsm2Eml);

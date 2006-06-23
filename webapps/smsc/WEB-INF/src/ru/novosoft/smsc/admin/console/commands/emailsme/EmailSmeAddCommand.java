@@ -18,7 +18,7 @@ public class EmailSmeAddCommand extends EmailSmeGenCommand {
         String out = "emailsme '" + address + "'";
         try {
             EmailSmeContext context = EmailSmeContext.getInstance(ctx.getOwner().getContext());
-            context.add(ton, npi, address, userName, forwardEmail, realName, limitType, 0, limitValue, 0, 0);
+            context.add(ton, npi, address, userName, forwardEmail, realName, limitType, (byte)1, 0, limitValue, 0, 0);
             ctx.setMessage(out + " added or updated.");
             ctx.setStatus(CommandContext.CMD_OK);
         } catch (AdminException e) {
