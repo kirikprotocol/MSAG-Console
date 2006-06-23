@@ -13,6 +13,7 @@
 #include "system/smppio/SmppSocket.hpp"
 #include "smeman/smsccmd.h"
 #include <string>
+#include <map>
 #include "util/Exception.hpp"
 
 namespace smsc{
@@ -53,7 +54,8 @@ public:
     disconnecting=false;
     disconnectionStart=0;
     unbinding=false;
-    __trace2__("SmppProxy: processLimit=%d, processTimeout=%u",processLimit,processTimeout);
+    log=smsc::logger::Logger::getInstance("smppprx");
+    info2(log,"SmppProxy: processLimit=%d, processTimeout=%u",processLimit,processTimeout);
   }
   virtual ~SmppProxy(){}
   virtual void close()
@@ -128,6 +130,7 @@ public:
     {
       MutexGuard g(mutexout);
       if(!opened)return;
+
       bool ussdSession=false;
       if(cmd->get_commandId()==DELIVERY)
       {
@@ -153,7 +156,7 @@ public:
       {
         checkProcessLimit(cmd);//can throw ProxyQueueLimitException
       }
-      trace2("put command:total %d commands",outqueue.Count());
+      debug2(log,"put command:total %d commands",outqueue.Count());
       outqueue.Push(cmd,cmd->get_priority());
     }
     {
@@ -171,7 +174,7 @@ public:
   virtual bool getCommand(SmscCommand& cmd)
   {
     if(!inqueue.Pop(cmd))return false;
-    trace2("get command:%p",*((void**)&cmd));
+    debug2(log,"get command:%p",*((void**)&cmd));
     MutexGuard g(mutexin);
     inQueueCount--;
     if(cmd->get_commandId()==SUBMIT)submitCount--;
@@ -204,7 +207,7 @@ public:
   {
     if(!CheckValidOutgoingCmd(cmd) || disconnecting)
     {
-      __trace2__("SmppProxy::putIncomingCommand: command for invalid bind state: %d",cmd->get_commandId());
+      debug2(log,"SmppProxy::putIncomingCommand: command for invalid bind state: %d",cmd->get_commandId());
       SmscCommand errresp;
       switch(cmd->get_commandId())
       {
@@ -236,7 +239,7 @@ public:
       errresp=SmscCommand::makeSmppPduCommand(pdu,ct);
       //cmd->get_dialogId(),SmppStatusSet::ESME_RINVBNDSTS
       //putCommand(errresp);
-      __trace2__("SmppProxy::putIncomingCommand: error answer cmdid=%d",errresp->get_commandId());
+      debug2(log,"SmppProxy::putIncomingCommand: error answer cmdid=%d",errresp->get_commandId());
       {
         MutexGuard g(mutexout);
         if(!opened)return;
@@ -273,49 +276,67 @@ public:
     }else */
     if(cmd->get_commandId()==SMPP_PDU)
     {
-      MutexGuard g(mutexout);
       if(!opened)return;
+      MutexGuard g(mutexout);
       outqueue.Push(cmd,SmscCommandDefaultPriority);
     }
     else
     {
+      MutexGuard g(mutexin);
+      if(!opened)
       {
-        MutexGuard g(mutexin);
-        if(!opened)
+        return;
+      }
+      if(cmd->get_commandId()==SUBMIT)
+      {
+        bool ussdSession=false;
+        SMS& sms=*cmd->get_sms();
+        if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
         {
-          return;
-        }
-        if(cmd->get_commandId()==SUBMIT)
-        {
-          bool ussdSession=false;
-          SMS& sms=*cmd->get_sms();
-          if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
-          {
-            if(sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)!=USSD_PSSR_IND &&
-               !(
-                 sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)==USSD_USSR_REQ &&
-                 sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)
-                )
+          if(sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)!=USSD_PSSR_IND &&
+             !(
+               sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)==USSD_USSR_REQ &&
+               sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)
               )
-            {
-              ussdSession=true;
-            }
-          }
-
-          if(!ussdSession && submitCount>submitLimit)
+            )
           {
-            throw ProxyQueueLimitException(submitCount,submitLimit);
+            ussdSession=true;
           }
-          submitCount++;
         }
-        else
-        if(inQueueCount>=totalLimit)
+
+        if(!ussdSession && submitCount>submitLimit)
         {
-          throw ProxyQueueLimitException(inQueueCount,totalLimit);
+          throw ProxyQueueLimitException(submitCount,submitLimit);
         }
-        if(cmd->get_commandId()==DELIVERY_RESP)
+        if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
         {
-          processResponse(cmd);
+          MutexGuard mg(mutex);
+          UssdSessionKey key(sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE),sms.getDestinationAddress());
+          debug2(log,"SmppProxy::trying to find ussd session for %s/%d",key.oa.toString().c_str(),key.mr);
+          UssdSessionMap::iterator it=ussdSessionMap.find(key);
+          if(it!=ussdSessionMap.end())
+          {
+            info1(log,"SmppProxy::session found, delayed response sent");
+            inqueue.Push(it->second->cmd);
+            inQueueCount++;
+          }else
+          {
+            warn1(log,"SmppProxy::session not found!!!");
+          }
+        }
+        submitCount++;
+      }
+      else
+      if(inQueueCount>=totalLimit)
+      {
+        throw ProxyQueueLimitException(inQueueCount,totalLimit);
+      }
+      if(cmd->get_commandId()==DELIVERY_RESP)
+      {
+        if(processResponse(cmd))
+        {
+          //delivery resp on ussd op preserved till corresponding submit
+          return;
         }
       }
       inqueue.Push(cmd);
@@ -593,6 +614,7 @@ public:
   }
 
 protected:
+  smsc::logger::Logger* log;
   mutable Mutex mutex,mutexin,mutexout;
   std::string id;
   SmeIndex smeIndex;
@@ -602,13 +624,34 @@ protected:
   smsc::core::buffers::PriorityQueue<SmscCommand,smsc::core::buffers::CyclicQueue<SmscCommand>,0,31> outqueue;
   bool forceDc;
 
+  struct UssdSessionKey{
+    uint16_t mr;
+    Address oa;
+    UssdSessionKey():mr(0){}
+    UssdSessionKey(uint16_t mr,const Address& oa):mr(mr),oa(oa){}
+    bool operator<(const UssdSessionKey& rhs)const
+    {
+      return mr<rhs.mr || (mr==rhs.mr && oa<rhs.oa);
+    }
+  };
+
   struct ControlItem{
     time_t submitTime;
     int seqNum;
+    bool ussd;
+    UssdSessionKey key;
+    SmscCommand cmd;
+    ControlItem(time_t t,int seq):submitTime(t),seqNum(seq),ussd(false)
+    {
+    }
   };
 
-  std::list<ControlItem> limitQueue;
-  smsc::core::buffers::IntHash<std::list<ControlItem>::iterator> limitHash;
+
+  typedef std::list<ControlItem> LimitQueue;
+  LimitQueue limitQueue;
+  typedef std::map<UssdSessionKey,LimitQueue::iterator> UssdSessionMap;
+  UssdSessionMap ussdSessionMap;
+  smsc::core::buffers::IntHash<LimitQueue::iterator> limitHash;
   int processLimit;
   int processTimeout;
 
@@ -620,23 +663,47 @@ protected:
     while(!limitQueue.empty() && limitQueue.begin()->submitTime+processTimeout<now)
     {
       limitHash.Delete(limitQueue.begin()->seqNum);
+      if(limitQueue.begin()->ussd)
+      {
+        ussdSessionMap.erase(limitQueue.begin()->key);
+      }
       limitQueue.erase(limitQueue.begin());
     }
     if(limitQueue.size()==processLimit)throw ProxyQueueLimitException(processLimit,limitQueue.size());
-    ControlItem ci={now,cmd->get_dialogId()};
+    ControlItem ci(now,cmd->get_dialogId());
+    bool ussd=false;
+    if(cmd->get_commandId()==DELIVERY && cmd->get_sms()->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+    {
+      debug2(log,"SmppProxy:: ussd session detected oa/mr=%s/%d",cmd->get_sms()->getOriginatingAddress().toString().c_str(),cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
+      ci.ussd=true;
+      ci.key=UssdSessionKey(cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE),cmd->get_sms()->getOriginatingAddress());
+      ussd=true;
+    }
     limitQueue.push_back(ci);
-    limitHash.Insert(ci.seqNum,--limitQueue.end());
+    LimitQueue::iterator it=--limitQueue.end();
+    limitHash.Insert(ci.seqNum,it);
+    if(ussd)ussdSessionMap.insert(UssdSessionMap::value_type(ci.key,it));
   }
 
-  void processResponse(const SmscCommand& cmd)
+  bool processResponse(const SmscCommand& cmd)
   {
-    if(processLimit==0)return;
+    if(processLimit==0)return false;
     MutexGuard g(mutex);
-    if(limitHash.Exist(cmd->get_dialogId()))
+    LimitQueue::iterator *ptr=limitHash.GetPtr(cmd->get_dialogId());
+    if(ptr)
     {
-      limitQueue.erase(limitHash.Get((int)cmd->get_dialogId()));
-      limitHash.Delete(cmd->get_dialogId());
+      if(!(*ptr)->ussd)
+      {
+        limitQueue.erase(*ptr);
+        limitHash.Delete(cmd->get_dialogId());
+        return false;
+      }else
+      {
+        (*ptr)->cmd=cmd;
+        return true;
+      }
     }
+    return false;
   }
 
   volatile int seq;
