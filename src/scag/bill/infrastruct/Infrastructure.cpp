@@ -53,7 +53,7 @@ InfrastructureImpl::~InfrastructureImpl()
 
 void InfrastructureImpl::init(const std::string& dir)
 {
-    XMLPlatformUtils::Initialize("ru_RU.KOI8-R");
+    XMLPlatformUtils::Initialize("en_EN.UTF-8");
     logger = Logger::getInstance("bill.i");
 
     smsc_log_debug(logger,"Provider/Operator Mapper allocated");
@@ -199,10 +199,16 @@ uint32_t InfrastructureImpl::GetOperatorID(Address addr)
 
     bool found;
     while(!(found = mask_hash->Exists(a.c_str())) && mask_ptr > 6)
+    {
+        smsc_log_debug(logger, "Trying mask: %s", a.c_str());
         a[--mask_ptr] = '?';
+    }
 
     if(found)
+    {
+        smsc_log_debug(logger, "Match mask: %s", a.c_str());
         return mask_hash->Get(a.c_str());
+    }
 
     return 0;
 }

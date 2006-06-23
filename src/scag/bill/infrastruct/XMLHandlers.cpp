@@ -138,6 +138,7 @@ void XMLBasicHandler::endElement(const XMLCh* const qname)
             StrX s(mask_chars);
             Address addr(s.localForm());
             abonent_hash->Insert(addr.toString().c_str(), cur_operator_id);
+            smsc_log_debug(logger, "Added: operator_id=%d, mask=%s", cur_operator_id, addr.toString().c_str());
         }
         in_mask = false;
     }
