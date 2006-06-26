@@ -1383,6 +1383,7 @@ int main(int argc,char* argv[])
 "forwardoff|"
 "number\\s+on|"
 "number\\s+off|"
+"realname\\s+.*|"
 "(?{address}[\\w\\-\\.]+@[\\w\\-\\.]+)(?:\\ssubj=\"(?{subj}.*?)\")?\\s*(?{body}.*)"
 ")$/isx"
 ))
