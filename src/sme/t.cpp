@@ -133,6 +133,9 @@ struct VClientData{
   int src_port;
   int dst_port;
 
+  int umr;
+  bool umrPresent;
+
   int validTime;
 
   bool replaceIfPresent;
@@ -173,7 +176,7 @@ struct VClientData{
     respDelayMax=0;
     mode=0;
     dataSm=false;
-    ussd=0;
+    ussd=-1;
     dataCoding=DataCoding::LATIN1;
     esmclass=0;
     sar_mr=0;
@@ -197,6 +200,8 @@ struct VClientData{
     replaceIfPresent=false;
     eservicetype="TEST";
     setDpf=false;
+    umr=0;
+    umrPresent=false;
   }
 
 }defVC;
@@ -231,6 +236,10 @@ int& respStatus=defVC.respStatus;
 
 string& sourceAddress=defVC.sourceAddress;
 string& eservicetype=defVC.eservicetype;
+
+int& umr=defVC.umr;
+bool& umrPresent=defVC.umrPresent;
+
 
 bool& setDpf=defVC.setDpf;
 
@@ -276,7 +285,7 @@ Option options[]={
 {"validTime",'i',&validTime},
 {"replaceIfPresent",'b',&replaceIfPresent},
 {"eservicetype",'s',&eservicetype},
-{"setDpf",'b',&setDpf},
+{"setDpf",'b',&setDpf}
 };
 
 const int optionsCount=sizeof(options)/sizeof(Option);
@@ -436,6 +445,24 @@ void CancelCmd(SmppSession& ss,const string& args)
   {
     printf("Cancel timedout\n");
   }
+}
+
+void SetUmrCommand(SmppSession& ss,const string& args)
+{
+  if(args.length()==0)
+  {
+    printf("Usage: setumr {umr|off}\n");
+    return;
+  }
+  if(args=="no" || args=="off")
+  {
+    umrPresent=false;
+    printf("Umr turned off\n");
+    return;
+  }
+  umr=atoi(args.c_str());
+  umrPresent=true;
+  printf("umr set to %d\n",umr);
 }
 
 const char* modes[]=
@@ -755,7 +782,8 @@ CmdRec commands[]={
 {"virtualclients",0},
 {"answer",Answer},
 {"addsmppoptional",AddSmppOptional},
-{"removesmppoptional",RemoveSmppOptional}
+{"removesmppoptional",RemoveSmppOptional},
+{"setumr",SetUmrCommand}
 };
 
 const int commandsCount=sizeof(commands)/sizeof(CmdRec);
@@ -1735,7 +1763,6 @@ int main(int argc,char* argv[])
         {
           s.setDestinationAddress(answerAddress);
           lastAddr=answerAddress.toString();
-          answerMode=false;
         }else
         {
           try{
@@ -1803,7 +1830,7 @@ int main(int argc,char* argv[])
       if(setDpf)s.setIntProperty(Tag::SMPP_SET_DPF,1);
 
 
-      if(ussd)s.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,ussd);
+      if(ussd!=-1)s.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,ussd);
       else s.messageBody.dropIntProperty(Tag::SMPP_USSD_SERVICE_OP);
 
       if(s.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
@@ -1812,6 +1839,19 @@ int main(int argc,char* argv[])
       }else
       {
         __trace__("no ussd");
+      }
+      if(!answerMode)
+      {
+        if(umrPresent)
+        {
+          s.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,umr);
+        }else
+        {
+          s.messageBody.dropIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+        }
+      }else
+      {
+        answerMode=false;
       }
 
       if(sar_num!=0)
