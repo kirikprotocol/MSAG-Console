@@ -19,7 +19,7 @@ extern "C" {
 typedef enum RoutingInfo_PR {
 	RoutingInfo_PR_NOTHING,	/* No components present */
 	RoutingInfo_PR_roamingNumber,
-	RoutingInfo_PR_forwardingData,
+	RoutingInfo_PR_forwardingData
 } RoutingInfo_PR;
 
 /* RoutingInfo */

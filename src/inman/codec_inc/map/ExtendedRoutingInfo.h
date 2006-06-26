@@ -19,7 +19,7 @@ extern "C" {
 typedef enum ExtendedRoutingInfo_PR {
 	ExtendedRoutingInfo_PR_NOTHING,	/* No components present */
 	ExtendedRoutingInfo_PR_routingInfo,
-	ExtendedRoutingInfo_PR_camelRoutingInfo,
+	ExtendedRoutingInfo_PR_camelRoutingInfo
 } ExtendedRoutingInfo_PR;
 
 /* ExtendedRoutingInfo */

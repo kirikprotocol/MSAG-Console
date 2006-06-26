@@ -21,7 +21,7 @@ typedef enum SubscriberState_PR {
 	SubscriberState_PR_assumedIdle,
 	SubscriberState_PR_camelBusy,
 	SubscriberState_PR_netDetNotReachable,
-	SubscriberState_PR_notProvidedFromVLR,
+	SubscriberState_PR_notProvidedFromVLR
 } SubscriberState_PR;
 
 /* SubscriberState */

@@ -25,7 +25,7 @@ typedef enum PS_SubscriberState_PR {
 	PS_SubscriberState_PR_ps_AttachedReachableForPaging,
 	PS_SubscriberState_PR_ps_PDP_ActiveNotReachableForPaging,
 	PS_SubscriberState_PR_ps_PDP_ActiveReachableForPaging,
-	PS_SubscriberState_PR_netDetNotReachable,
+	PS_SubscriberState_PR_netDetNotReachable
 } PS_SubscriberState_PR;
 
 /* PS-SubscriberState */
