@@ -262,6 +262,8 @@ protected:
   uint32_t bufferSize;
   uint32_t bufferPos;
   bool bufferOwned;
+  SerializationBuffer(const SerializationBuffer&);
+  void operator=(const SerializationBuffer&);
 };
 
 }
