@@ -3567,7 +3567,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
     if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2 &&
        sms.getIntProperty(Tag::SMPP_SET_DPF))//forward/transaction mode
     {
-      if(GET_STATUS_TYPE(t.command->get_resp()->get_status())==CMD_ERR_TEMP)
+      if(GET_STATUS_CODE(t.command->get_resp()->get_status())==1179 || GET_STATUS_CODE(t.command->get_resp()->get_status())==1044)
       {
         try{
           sms.lastTime=time(NULL);
