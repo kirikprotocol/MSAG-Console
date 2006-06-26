@@ -5,6 +5,8 @@ import ru.novosoft.smsc.util.SortedList;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Created by IntelliJ IDEA.
@@ -15,6 +17,7 @@ import java.util.Collection;
  */
 public class Options extends MCISmeBean
 {
+  public static final String SCHEDTABLE_SECTION_NAME = "MCISme.Scheduling.schedule";
   private String address = "";
   private String redirectionAddress = "";
   private String svcType = "";
@@ -24,6 +27,7 @@ public class Options extends MCISmeBean
   private int daysValid = 1;
   private int unrespondedMessagesMax = 0;
   private int unrespondedMessagesSleep = 0;
+  private int outgoingSpeedMax = 0;
   private String responceWaitTime = "";
   private String receiptWaitTime = "";
   private int inputQueueSize=0;
@@ -81,14 +85,17 @@ public class Options extends MCISmeBean
   private boolean defaultAbsent         = false;
   private boolean defaultDetach         = false;
 
-  private String  dataSourceType = "";
-  private int     dataSourceConnections = 0;
-  private String  dataSourceDbInstance = "";
-  private String  dataSourceDbUserName = "";
-  private String  dataSourceDbUserPassword = "";
-  private boolean dataSourceWatchdog = false;
-  private String  dataSourceJdbcDriver = "";
-  private String  dataSourceJdbcSource = "";
+//  private String  dataSourceType = "";
+//  private int     dataSourceConnections = 0;
+//  private String  dataSourceDbInstance = "";
+//  private String  dataSourceDbUserName = "";
+//  private String  dataSourceDbUserPassword = "";
+//  private boolean dataSourceWatchdog = false;
+//  private String  dataSourceJdbcDriver = "";
+//  private String  dataSourceJdbcSource = "";
+
+  private  String newError = null;
+  private  String newErrorTimeout = null;
 
   private String  mciProfLocation = "";
   private String  mciHost = "";
@@ -98,6 +105,19 @@ public class Options extends MCISmeBean
   private String  mciNvtIODevice = "";
   private String  mciSmeAddresses = "";
   private String  voiceMailAddresses = "";
+
+  private String    eventStorageLocation = "";
+  private String    eventLifeTime = "";
+  private String    eventPolicyRegistration = "";
+  private int       maxEvents = 0;
+  private int       bdFilesIncr = 0;
+
+  private String    profStorageLocation = "";
+  private int       profStoragePort = 0;
+  private String    statDir = "";
+
+  private String   resendingPeriod = "";
+  private String   schedOnBusy = "";
 
   private boolean initialized = false;
 
@@ -119,6 +139,7 @@ public class Options extends MCISmeBean
         calledMask  = getConfig().getString("MCISme.CalledMask");
         unrespondedMessagesMax = getConfig().getInt("MCISme.unrespondedMessagesMax");
         unrespondedMessagesSleep = getConfig().getInt("MCISme.unrespondedMessagesSleep");
+        outgoingSpeedMax = getConfig().getInt("MCISme.outgoingSpeedMax");
         responceWaitTime = getConfig().getString("MCISme.responceWaitTime");
         receiptWaitTime = getConfig().getString("MCISme.receiptWaitTime");
         inputQueueSize = getConfig().getInt("MCISme.inputQueueSize");
@@ -220,14 +241,28 @@ public class Options extends MCISmeBean
         try { redirectionAddress = getConfig().getString("MCISme.redirectionAddress"); } catch (Throwable th) {
           redirectionAddress = address;
         }
-        dataSourceType = getConfig().getString("MCISme.DataSource.type");
-        dataSourceConnections = getConfig().getInt("MCISme.DataSource.connections");
-        dataSourceDbInstance = getConfig().getString("MCISme.DataSource.dbInstance");
-        dataSourceDbUserName = getConfig().getString("MCISme.DataSource.dbUserName");
-        dataSourceDbUserPassword = getConfig().getString("MCISme.DataSource.dbUserPassword");
-        dataSourceWatchdog = getConfig().getBool("MCISme.DataSource.watchdog");
-        dataSourceJdbcDriver = getConfig().getString("MCISme.DataSource.jdbc.driver");
-        dataSourceJdbcSource = getConfig().getString("MCISme.DataSource.jdbc.source");
+  //      dataSourceType = getConfig().getString("MCISme.DataSource.type");
+  //      dataSourceConnections = getConfig().getInt("MCISme.DataSource.connections");
+  //      dataSourceDbInstance = getConfig().getString("MCISme.DataSource.dbInstance");
+  //      dataSourceDbUserName = getConfig().getString("MCISme.DataSource.dbUserName");
+  //      dataSourceDbUserPassword = getConfig().getString("MCISme.DataSource.dbUserPassword");
+  //      dataSourceWatchdog = getConfig().getBool("MCISme.DataSource.watchdog");
+  //      dataSourceJdbcDriver = getConfig().getString("MCISme.DataSource.jdbc.driver");
+  //      dataSourceJdbcSource = getConfig().getString("MCISme.DataSource.jdbc.source");
+
+        eventStorageLocation = getConfig().getString("MCISme.Storage.location");
+        eventLifeTime = getConfig().getString("MCISme.Storage.eventLifeTime");
+        eventPolicyRegistration = getConfig().getString("MCISme.Storage.eventRegistrationPolicy");
+        maxEvents = getConfig().getInt("MCISme.Storage.maxEvents");
+        bdFilesIncr = getConfig().getInt("MCISme.Storage.bdFilesIncr");
+
+        profStorageLocation = getConfig().getString("MCISme.ProfileStorage.location");
+        profStoragePort = getConfig().getInt("MCISme.ProfileStorage.port");
+
+        resendingPeriod = getConfig().getString("MCISme.Scheduling.resendingPeriod");
+        schedOnBusy = getConfig().getString("MCISme.Scheduling.schedOnBusy");
+
+        statDir = getConfig().getString("MCISme.Statistics.statDir");
 
       } catch (Exception e) {
         logger.error(e);
@@ -259,13 +294,13 @@ public class Options extends MCISmeBean
     int result = super.process(request);
     if (result != RESULT_OK)  return result;
 
-    if (mbDone != null)   return save();
+    if (mbDone != null)   return save(request.getParameterMap());
     if (mbCancel != null) return RESULT_DONE;
 
     return result;
   }
 
-  private int save()
+  private int save(Map requestParams)
   {
     getConfig().setString("MCISme.Address", address);
     getConfig().setString("MCISme.redirectionAddress", redirectionAddress);
@@ -276,6 +311,7 @@ public class Options extends MCISmeBean
     getConfig().setString("MCISme.CalledMask" , calledMask);
     getConfig().setInt   ("MCISme.unrespondedMessagesMax", unrespondedMessagesMax);
     getConfig().setInt   ("MCISme.unrespondedMessagesSleep", unrespondedMessagesSleep);
+    getConfig().setInt   ("MCISme.outgoingSpeedMax", outgoingSpeedMax);
     getConfig().setString("MCISme.responceWaitTime", responceWaitTime);
     getConfig().setString("MCISme.receiptWaitTime", receiptWaitTime);
     getConfig().setInt   ("MCISme.inputQueueSize", inputQueueSize);
@@ -336,17 +372,58 @@ public class Options extends MCISmeBean
     getConfig().setInt   ("MCISme.Reasons.Other.cause", causeOther);
     getConfig().setBool  ("MCISme.Reasons.Other.inform", informOther);
 
-    getConfig().setString("MCISme.DataSource.type", dataSourceType);
-    getConfig().setInt   ("MCISme.DataSource.connections", dataSourceConnections);
-    getConfig().setString("MCISme.DataSource.dbInstance", dataSourceDbInstance);
-    getConfig().setString("MCISme.DataSource.dbUserName", dataSourceDbUserName);
-    getConfig().setString("MCISme.DataSource.dbUserPassword", dataSourceDbUserPassword);
-    getConfig().setBool  ("MCISme.DataSource.watchdog", dataSourceWatchdog);
-    getConfig().setString("MCISme.DataSource.jdbc.driver", dataSourceJdbcDriver);
-    getConfig().setString("MCISme.DataSource.jdbc.source", dataSourceJdbcSource);
+//    getConfig().setString("MCISme.DataSource.type", dataSourceType);
+//    getConfig().setInt   ("MCISme.DataSource.connections", dataSourceConnections);
+//    getConfig().setString("MCISme.DataSource.dbInstance", dataSourceDbInstance);
+//    getConfig().setString("MCISme.DataSource.dbUserName", dataSourceDbUserName);
+//    getConfig().setString("MCISme.DataSource.dbUserPassword", dataSourceDbUserPassword);
+//    getConfig().setBool  ("MCISme.DataSource.watchdog", dataSourceWatchdog);
+//    getConfig().setString("MCISme.DataSource.jdbc.driver", dataSourceJdbcDriver);
+//    getConfig().setString("MCISme.DataSource.jdbc.source", dataSourceJdbcSource);
 
+    getConfig().setString("MCISme.Storage.location", eventStorageLocation);
+    getConfig().setString("MCISme.Storage.eventLifeTime", eventLifeTime);
+    getConfig().setString("MCISme.Storage.eventRegistrationPolicy", eventPolicyRegistration);
+    getConfig().setInt("MCISme.Storage.maxEvents", maxEvents);
+    getConfig().setInt("MCISme.Storage.bdFilesIncr", bdFilesIncr);
+
+    getConfig().setString("MCISme.ProfileStorage.location", profStorageLocation);
+    getConfig().setInt("MCISme.ProfileStorage.port", profStoragePort);
+
+    getConfig().setString("MCISme.Scheduling.resendingPeriod", resendingPeriod);
+    getConfig().setString("MCISme.Scheduling.schedOnBusy", schedOnBusy);
+
+    getConfig().setString("MCISme.Statistics.statDir", statDir);
+
+    final String PREFIX = "err.to.";
+    getConfig().removeSection(SCHEDTABLE_SECTION_NAME);
+    for (Iterator i = requestParams.keySet().iterator(); i.hasNext();)
+    {
+      String paramName = (String) i.next();
+      if (paramName.startsWith(PREFIX))
+      {
+        final String paramValue = getParamValue(requestParams.get(paramName));
+        if (paramValue != null)
+            getConfig().setString(SCHEDTABLE_SECTION_NAME + '.' + paramValue, getParamValue(requestParams.get(paramName.substring(4))));
+      }
+    }
     getMCISmeContext().setChangedOptions(true);
     return RESULT_DONE;
+  }
+
+  private String getParamValue(Object paramObjectValue)
+  {
+    if (paramObjectValue instanceof String)
+      return (String) paramObjectValue;
+    else if (paramObjectValue instanceof String[]) {
+      String[] paramValues = (String[]) paramObjectValue;
+      StringBuffer result = new StringBuffer();
+      for (int i = 0; i < paramValues.length; i++) {
+        result.append(paramValues[i]);
+      }
+      return result.toString();
+    } else
+      return null;
   }
 
   public String getMciProfLocation() {
@@ -543,6 +620,24 @@ public class Options extends MCISmeBean
       this.unrespondedMessagesSleep = Integer.decode(unrespondedMessagesSleep).intValue();
     } catch (NumberFormatException e) {
       logger.debug("Invalid int MCISme.unrespondedMessagesSleep parameter value: " + unrespondedMessagesSleep + '"', e);
+    }
+  }
+
+  public int getOutgoingSpeedMaxInt() {
+    return outgoingSpeedMax;
+  }
+  public void setOutgoingSpeedMaxInt(int value) {
+    this.outgoingSpeedMax = value;
+  }
+  public String getOutgoingSpeedMax() {
+    return String.valueOf(outgoingSpeedMax);
+  }
+  public void setOutgoingSpeedMax(String value)
+  {
+    try {
+      this.outgoingSpeedMax = Integer.decode(value).intValue();
+    } catch (NumberFormatException e) {
+      logger.debug("Invalid int MCISme.outgoingSpeedMax parameter value: " + outgoingSpeedMax + '"', e);
     }
   }
 
@@ -877,7 +972,7 @@ public class Options extends MCISmeBean
     this.informOther = informOther;
   }
 
-  public String getDataSourceType() {
+/*  public String getDataSourceType() {
     return dataSourceType;
   }
   public void setDataSourceType(String dataSourceType) {
@@ -936,7 +1031,7 @@ public class Options extends MCISmeBean
   public void setDataSourceJdbcSource(String dataSourceJdbcSource) {
     this.dataSourceJdbcSource = dataSourceJdbcSource;
   }
-
+  */
   public String getMciHost() {
     return mciHost;
   }
@@ -1012,8 +1107,121 @@ public class Options extends MCISmeBean
   public int getConstraintType() {
     return constraintType;
   }
+
   public void setConstraintType(int constraintType) {
     this.constraintType = constraintType;
   }
 
+    public String getEventStorageLocation() {
+      return eventStorageLocation;
+    }
+    public void setEventStorageLocation(String value) {
+      this.eventStorageLocation = value;
+    }
+    public String getEventLifeTime() {
+      return eventLifeTime;
+    }
+    public void setEventLifeTime(String value) {
+      this.eventLifeTime = value;
+    }
+    public String getEventPolicyRegistration() {
+      return eventPolicyRegistration;
+    }
+    public void setEventPolicyRegistration(String value) {
+      this.eventPolicyRegistration = value;
+    }
+    public int getMaxEventsInt() {
+      return maxEvents;
+    }
+    public String getMaxEvents() {
+      return String.valueOf(maxEvents);
+    }
+
+    public void setMaxEventsInt(int value) {
+      this.maxEvents = value;
+    }
+
+    public void setMaxEvents(String value) {
+      try { this.maxEvents = Integer.decode(value).intValue(); } catch (NumberFormatException e) {
+        logger.debug("Invalid int MCISme.MSC.port parameter value: \"" + value + '"', e);
+      }
+    }
+
+    public int getBdFilesIncrInt() {
+      return bdFilesIncr;
+    }
+    public String getBdFilesIncr() {
+      return String.valueOf(bdFilesIncr);
+    }
+
+    public void setBdFilesIncrInt(int value) {
+      this.bdFilesIncr = value;
+    }
+
+    public void setBdFilesIncr(String value) {
+      try { this.bdFilesIncr = Integer.decode(value).intValue(); } catch (NumberFormatException e) {
+        logger.debug("Invalid int MCISme.MSC.port parameter value: \"" + value + '"', e);
+      }
+    }
+
+
+  public String getProfStorageLocation() {
+    return profStorageLocation;
+  }
+  public void setProfStorageLocation(String value) {
+    this.profStorageLocation = value;
+  }
+
+  public int getProfStoragePortInt() {
+    return profStoragePort;
+  }
+  public String getProfStoragePort() {
+    return String.valueOf(profStoragePort);
+  }
+
+  public void setProfStoragePortInt(int value) {
+    this.profStoragePort = value;
+  }
+
+  public void setProfStoragePort(String value) {
+    try { this.profStoragePort = Integer.decode(value).intValue(); } catch (NumberFormatException e) {
+      logger.debug("Invalid int MCISme.MSC.port parameter value: \"" + value + '"', e);
+    }
+  }
+
+    public String getResendingPeriod() {
+      return resendingPeriod;
+    }
+    public void setResendingPeriod(String value) {
+      this.resendingPeriod = value;
+    }
+    public String getSchedOnBusy() {
+      return schedOnBusy;
+    }
+    public void setSchedOnBusy(String value) {
+      this.schedOnBusy = value;
+    }
+
+  public String getStatDir() {
+    return statDir;
+  }
+  public void setStatDir(String value) {
+    this.statDir = value;
+  }
+
+  public List getErrorNumbers() {
+    return new SortedList(getConfig().getSectionChildShortParamsNames(SCHEDTABLE_SECTION_NAME));
+  }
+  public String getOnErrorTimeout(String errorNumber)
+  {
+      String result = null;
+      try
+      {
+        result = getConfig().getString(SCHEDTABLE_SECTION_NAME + '.' + errorNumber);
+      } catch (Exception e) {
+        logger.error(e);
+        result = "00:00:00";
+      }
+    return result;
+  }
 }

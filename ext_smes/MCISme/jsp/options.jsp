@@ -1,6 +1,8 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="ru.novosoft.smsc.mcisme.beans.Options,
-                 ru.novosoft.smsc.util.StringEncoderDecoder, ru.novosoft.smsc.mcisme.beans.MCISmeBean"%>
+		java.util.Iterator, java.util.Collection,
+		ru.novosoft.smsc.util.StringEncoderDecoder, 
+		ru.novosoft.smsc.mcisme.beans.MCISmeBean"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.mcisme.beans.Options" />
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -53,6 +55,10 @@
 <tr class=row<%=rowN++&1%>>
   <th>Unresponded messages sleep</th>
   <td><input class=txt name=unrespondedMessagesSleep value="<%=StringEncoderDecoder.encode(bean.getUnrespondedMessagesSleep())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Outgoing speed max</th>
+  <td><input class=txt name=outgoingSpeedMax value="<%=StringEncoderDecoder.encode(bean.getOutgoingSpeedMax())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Response wait time</th>
@@ -225,41 +231,126 @@ switchConstraint();
   <td>&nbsp;</td>
 </tr>
 </table>
-<div class=page_subtitle><%= getLocString("mcisme.subtitle.ds")%></div>
-<table class=properties_list cellspacing=0  width="100%" <%rowN=0;%>>
+<div class=page_subtitle><%= getLocString("mcisme.subtitle.storage")%></div>
+<table class=properties_list cellspacing=0 width="100%">
 <col width="20%">
 <col width="80%">
 <tr class=row<%=rowN++&1%>>
-  <th>Data source type</th>
-  <td><input class=txt name=dataSourceType value="<%=StringEncoderDecoder.encode(bean.getDataSourceType())%>"></td>
+  <th>Storage path</th>
+  <td><input class=txt name=eventStorageLocation value="<%=StringEncoderDecoder.encode(bean.getEventStorageLocation())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Connections</th>
-  <td><input class=txt name=dataSourceConnections value="<%=StringEncoderDecoder.encode(bean.getDataSourceConnections())%>"></td>
+  <th>Event life time</th>
+  <td><input class=txt name=eventLifeTime value="<%=StringEncoderDecoder.encode(bean.getEventLifeTime())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>DB instance</th>
-  <td><input class=txt name=dataSourceDbInstance value="<%=StringEncoderDecoder.encode(bean.getDataSourceDbInstance())%>"></td>
+  <th>Max evenets</th>
+  <td><input class=txt name=maxEvents value="<%=StringEncoderDecoder.encode(bean.getMaxEvents())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>DB user name</th>
-  <td><input class=txt name=dataSourceDbUserName value="<%=StringEncoderDecoder.encode(bean.getDataSourceDbUserName())%>"></td>
+  <th>Events registration policy</th>
+  <td><input class=txt name=eventPolicyRegistration value="<%=StringEncoderDecoder.encode(bean.getEventPolicyRegistration())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>DB user password</th>
-  <td><input class=txt name=dataSourceDbUserPassword value="<%=StringEncoderDecoder.encode(bean.getDataSourceDbUserPassword())%>"></td>
+  <th>Increment BD Files</th>
+  <td><input class=txt name=bdFilesIncr value="<%=StringEncoderDecoder.encode(bean.getBdFilesIncr())%>"></td>
+</tr>
+</table>
+<div class=page_subtitle><%= getLocString("mcisme.subtitle.prof_stor")%></div>
+<table class=properties_list cellspacing=0 width="100%">
+<col width="20%">
+<col width="80%">
+<tr class=row<%=rowN++&1%>>
+  <th>Storage path</th>
+  <td><input class=txt name=profStorageLocation value="<%=StringEncoderDecoder.encode(bean.getProfStorageLocation())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th><label for=watchdog>Watchdog</label></th>
-  <td><input class=check type=checkbox name=dataSourceWatchdog id=watchdog value=true <%=bean.isDataSourceWatchdog() ? "checked" : ""%>></td>
+  <th>Storage port</th>
+  <td><input class=txt name=profStoragePort value="<%=StringEncoderDecoder.encode(bean.getProfStoragePort())%>"></td>
+</tr>
+</table>
+<div class=page_subtitle><%= getLocString("mcisme.subtitle.statistics")%></div>
+<table class=properties_list cellspacing=0 width="100%">
+<col width="20%">
+<col width="80%">
+<tr class=row<%=rowN++&1%>>
+  <th>Directory</th>
+  <td><input class=txt name=statDir value="<%=StringEncoderDecoder.encode(bean.getStatDir())%>"></td>
+</tr>
+</table>
+<div class=page_subtitle><%= getLocString("mcisme.subtitle.scheduling")%></div>
+<table class=properties_list cellspacing=0 width="100%">
+<col width="20%">
+<col width="80%">
+<tr class=row<%=rowN++&1%>>
+  <th>Resending period</th>
+  <td><input class=txt name=resendingPeriod value="<%=StringEncoderDecoder.encode(bean.getResendingPeriod())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>JDBC driver</th>
-  <td><input class=txt name=dataSourceJdbcDriver value="<%=StringEncoderDecoder.encode(bean.getDataSourceJdbcDriver())%>"></td>
+  <th>Scheduling on busy</th>
+  <td><input class=txt name=schedOnBusy value="<%=StringEncoderDecoder.encode(bean.getSchedOnBusy())%>"></td>
 </tr>
-<tr class=row<%=rowN++&1%>>
-  <th>JDBC source</th>
-  <td><input class=txt name=dataSourceJdbcSource value="<%=StringEncoderDecoder.encode(bean.getDataSourceJdbcSource())%>"></td>
+</table>
+<script type="text/javascript">
+function clickAddErrorTimeout()
+{
+	var errElem   = document.getElementById('sched_new_err');
+	var timeoutElem = document.getElementById('sched_new_timeout');
+	var newRow = sched_table_id.insertRow(sched_table_id.rows.length-1);
+	newRow.className = "row" + (sched_table_id.rows.length & 1);
+	newRow.id = "sched_row_" + errElem.value;
+	var newCell = document.createElement("td");
+	newCell.innerHTML = "<input class=txt name=\"err.to." + errElem.value +"\" value=\"" + errElem.value + "\">";
+	newRow.appendChild(newCell);
+	newCell = document.createElement("td");
+	newCell.innerHTML = "<input class=txtW name=\"to." + errElem.value + "\" value=\"" + timeoutElem.value + "\">";
+	newRow.appendChild(newCell);
+	newCell = document.createElement("td");
+	newCell.innerHTML = "<img src=\"/images/but_del.gif\" class=button jbuttonName=\"mbRemove\" jbuttonValue=\"common.buttons.remove\" title=\"mcisme.hint.remove_ds_driver\" jbuttonOnclick=\"return clickRemoveErrorTimeout('" + newRow.id + "');\">";
+	newRow.appendChild(newCell);
+
+	errElem.value = "";
+	timeoutElem.value = "";
+
+	document.getElementById("").value = document.getElementById("").value + 1;
+
+	return false;
+}
+function clickRemoveErrorTimeout(id_to_remove)
+{
+	var rowElem = sched_table_id.rows(id_to_remove);
+	sched_table_id.deleteRow(rowElem.rowIndex);
+
+	return false;
+}
+</script>
+<table class=properties_list cellspacing=0 id=sched_table_id>
+<col width=20%>
+<col width=20%>
+<col width=20%>
+<tr>
+	<th>Error Number</th>
+	<th colspan=2>Timeout</th>
+</tr>
+
+<%
+	Collection errorNumbers = bean.getErrorNumbers();
+	for (Iterator i = errorNumbers.iterator(); i.hasNext();)
+	{
+		String errorNumber = (String) i.next();
+		final String onErrorTimout = bean.getOnErrorTimeout(errorNumber);
+		%><tr class=row<%=(rowN++)&1%> id=sched_row_<%=StringEncoderDecoder.encode(errorNumber)%>>
+			<td><input class=txt name="err.to.<%=errorNumber%>"    value="<%=errorNumber%>"></td>
+			<td><input class=txtW name="to.<%=errorNumber%>" value="<%=onErrorTimout%>"></td>
+			<td><%button(out, "/images/but_del.gif", "mbDel", "common.buttons.remove", "mcisme.hint.remove_error_timeout", "return clickRemoveErrorTimeout('sched_row_" + StringEncoderDecoder.encode(errorNumber) + "');");%></td>
+		</tr><%
+
+	}
+%>
+<tr id=sched_row_new class=row<%=(rowN+1)&1%>>
+	<td><input class=txt  id="sched_new_err"   name="sched_new_err"  ></td>
+	<td><input class=txtW id="sched_new_timeout" name="sched_new_timeout"></td>
+	<td><%button(out, "/images/but_add.gif", "mbAdd", "common.buttons.add", "mcisme.hint.add_ds_driver", "return clickAddErrorTimeout();");%></td>
 </tr>
 </table>
 <div class=page_subtitle><%= getLocString("mcisme.subtitle.mci_prof_options")%></div>

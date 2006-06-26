@@ -1,7 +1,6 @@
 package ru.novosoft.smsc.mcisme.beans;
 
 import ru.novosoft.smsc.util.config.Config;
-import ru.novosoft.smsc.util.hsModeSupport.FileOutputStreamMirror;
 import ru.novosoft.smsc.admin.AdminException;
 
 import java.io.*;
@@ -46,8 +45,8 @@ public class Index extends IndexProperties
     getMCISmeContext().setChangedRules(false);
     getMCISmeContext().setChangedOffsets(false);
     getMCISmeContext().reloadDataSource(oldConfig, config);
-    if (getMCISmeContext().getDataSource() == null)
-      warning("Invalid JDBC parameters");
+//    if (getMCISmeContext().getDataSource() == null)
+//      warning("Invalid JDBC parameters");
 
     saveMCIProfOptions(config);
 
@@ -144,7 +143,7 @@ public class Index extends IndexProperties
 
     OutputStream os = null;
     try {
-      os = new FileOutputStreamMirror(file);
+      os = new FileOutputStream(file);
       properties.store(os, comment);
     } catch(IOException e) {
       throw e;

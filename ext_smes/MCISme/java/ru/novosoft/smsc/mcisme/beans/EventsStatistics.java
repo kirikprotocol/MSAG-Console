@@ -3,12 +3,20 @@ package ru.novosoft.smsc.mcisme.beans;
 import ru.novosoft.smsc.mcisme.backend.Statistics;
 import ru.novosoft.smsc.mcisme.backend.StatQuery;
 import ru.novosoft.smsc.mcisme.backend.EventsStat;
+import ru.novosoft.smsc.mcisme.backend.HourCountersSet;
+import ru.novosoft.smsc.mcisme.backend.DateCountersSet;
+import ru.novosoft.smsc.mcisme.backend.CountersSet;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Date;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.lang.Integer;
 
 /**
  * Created by IntelliJ IDEA.
@@ -19,6 +27,9 @@ import java.text.ParseException;
  */
 public class EventsStatistics extends MCISmeBean
 {
+	private static final String SMSC_MCISME_STAT_HEADER_TEXT = "SMSC.MCISME.STAT";
+	private static final int SMSC_MCISME_STAT_VERSION_INFO = 0x0001;
+
     private static final String DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
 
     private Statistics statistics = null;
@@ -32,8 +43,8 @@ public class EventsStatistics extends MCISmeBean
       int result = super.init(errors);
       if (result != RESULT_OK) return result;
 
-      if (getMCISmeContext().getDataSource() != null)
-        stat.setDataSource(getMCISmeContext().getDataSource());
+//      if (getMCISmeContext().getDataSource() != null)
+//        stat.setDataSource(getMCISmeContext().getDataSource());
 
       stat.setMCISme(getMCISmeContext().getMCISme());
 
@@ -42,30 +53,43 @@ public class EventsStatistics extends MCISmeBean
 
     public int process(HttpServletRequest request)
     {
-      int result = super.process(request);
-      if (result != RESULT_OK) return result;
+		int result = super.process(request);
+		if (result != RESULT_OK) return result;
+		
+		String statPath = null;
 
-      if (getMCISmeContext().getDataSource() == null)
-        warning("DataSource not initialized");
+		try
+		{
+			String statDir = getConfig().getString("MCISme.Statistics.statDir");
+			statPath = new String(getMCISmeContext().getMCISmeFolder() + '/' + statDir);
+			logger.debug(statPath);
+		} 
+		catch (Exception e) 
+		{
+			logger.error(e);
+			return error("mcisme.error.config_load_failed", e);
+		}
+		
+		if (mbQuery != null)
+		{
+			try
+			{
+				statistics = null;
+				statistics = stat.getStatistics(statPath, query);
+			}
+			catch (Throwable e)
+			{
+				logger.debug("Couldn't get statisctics", e);
+				return error("mcisme.error.get_stat", e);
+			}
+		mbQuery = null;
+		}
 
-      if (mbQuery != null) {
-        try {
-          statistics = null;
-          if (getMCISmeContext().getDataSource() != null)
-            statistics = stat.getStatistics(query);
-          else
-            return error("mcisme.error.ds_init");
-        } catch (Throwable e) {
-          logger.debug("Couldn't get statisctics", e);
-          return error("mcisme.error.get_stat", e);
-        }
-        mbQuery = null;
-      }
+		return RESULT_OK;
+	}
 
-      return RESULT_OK;
-    }
-
-    public Statistics getStatistics() {
+    public Statistics getStatistics() 
+	{
       return statistics;
     }
 
