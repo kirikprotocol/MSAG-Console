@@ -75,6 +75,7 @@ static const int DEFERREDDELIVERY=1040; // deferred sms with charge on delivery 
 static const int DENIEDBYCLOSEDGROUP=1041; // member of closed group tried to send sms to restricted address
 static const int DENIEDBYACCESSMASK=1042;  // access mask prohibited submit
 static const int NOCONNECTIONTOINMAN=1043; // failed to connect to inman
+static const int MSMEMCAPACITYFULL=1044;  // mobile station cannot receive sms due to memory limit
 
 
 static const int MAP_UR_NO_REASON=1109;
@@ -1188,10 +1189,10 @@ static const bool errorStatus[1280] = {
 1, // USSDDLGREFMISM=1038
 1, // DENIEDBYINMAN=1039
 0, // DEFERREDDELIVERY=1040
-1,
-1,
-1,
-1,
+1, // DENIEDBYCLOSEDGROUP=1041
+1, // DENIEDBYACCESSMASK=1042
+0, // NOCONNECTIONTOINMAN=1043
+0, // MSMEMCAPACITYFULL=1044
 1,
 1,
 1,
