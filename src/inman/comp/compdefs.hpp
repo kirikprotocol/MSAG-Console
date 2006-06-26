@@ -55,7 +55,7 @@ public:
 //may be transferred over TCAP in segmented manner (see 3GPP TS 29.002 Annex C)
 class MAPComponent: public Component {
 public:
-    virtual void mergeSegment(const Component * segm) throw(CustomException)
+    virtual void mergeSegment(Component * segm) throw(CustomException)
     { throw CustomException("TC-Result-NL segmentation is not supported", -1, NULL); }
 };
 
