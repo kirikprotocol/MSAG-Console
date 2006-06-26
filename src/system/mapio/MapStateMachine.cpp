@@ -2582,6 +2582,7 @@ static USHORT_T Et96MapVxForwardSmMTConf_Impl (
           if ( errorForwardSMmt_sp->u.smDeliveryFailureReason_s.reason == ET96MAP_SM_DELIVERY_FAILURE_REASON_MT_T::ET96MAP_MEM_CAPACITY_EXCEEDED )
           {
             dialog->memoryExceeded = true;
+            throw MAPDIALOG_TEMP_ERROR( FormatText("%s: MS memory capacity full", __func__), Status::MSMEMCAPACITYFULL);
           }
           else if ( errorForwardSMmt_sp->u.smDeliveryFailureReason_s.reason == ET96MAP_SM_DELIVERY_FAILURE_REASON_MT_T::ET96MAP_PROTOCOL_ERROR
             || errorForwardSMmt_sp->u.smDeliveryFailureReason_s.reason == ET96MAP_SM_DELIVERY_FAILURE_REASON_MT_T::ET96MAP_MO_SERVICE_CENTER_CONGESTION )
