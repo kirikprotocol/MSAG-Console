@@ -78,6 +78,7 @@ int main(int argc,char* argv[])
       if(sz<8+4+1 || off+sz>f.Size())
       {
         f.Seek(off+1);
+        printf("!");fflush(stdout);
         continue;
       }
       item.id=f.ReadNetInt64();
@@ -92,6 +93,7 @@ int main(int argc,char* argv[])
       if(sz!=sz2)
       {
         f.Seek(off+1);
+        printf("!");fflush(stdout);
         continue;
       }
       if(sz>70000)
