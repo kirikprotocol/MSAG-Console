@@ -2,14 +2,13 @@
 #ifndef __SMSC_INMAN_MAPATSI_COMPS_HPP__
 #define __SMSC_INMAN_MAPATSI_COMPS_HPP__
 
-//#include <string>
-
 #include "inman/common/adrutil.hpp"
 #include "logger/Logger.h"
 #include "inman/comp/compdefs.hpp"
 
 using smsc::logger::Logger;
 using smsc::inman::comp::Component;
+using smsc::inman::comp::MAPSCFinfo;
 
 /* GVR NOTE: while linking the below enums are taken from generated *
  * asn1/c codec, so they should not have namespace prefix.          */
@@ -32,11 +31,6 @@ namespace smsc {
 namespace inman {
 namespace comp {
 namespace atih {
-
-typedef struct {
-    unsigned      serviceKey;
-    TonNpiAddress scfAddress;
-} MAPSCFinfo;
 
 //MAP anyTimeInfohandling service
 struct MAPATIH_OpCode {

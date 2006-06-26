@@ -14,7 +14,7 @@ using smsc::inman::inap::TCAPDispatcher;
 #include "inman/comp/map_atih/MapATSIComps.hpp"
 using smsc::inman::comp::atih::ATSIRes;
 using smsc::inman::comp::atih::ATSIArg;
-using smsc::inman::comp::atih::MAPSCFinfo;
+using smsc::inman::comp::MAPSCFinfo;
 
 #include "inman/inap/map_atih/DlgMapATSI.hpp"
 using smsc::inman::inap::atih::ATSIhandler;
