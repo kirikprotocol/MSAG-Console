@@ -46,8 +46,9 @@ public class MCISmeContext implements SMEAppContext
   private boolean changedOffsets = false;
 
   private ConnectionPool dataSource = null;
+	private String mciSmeFolder = null;
   private String smeId = "MCISme";
-
+	
   private MCISmeContext(final SMSCAppContext appContext, final String smeId)
       throws AdminException, ParserConfigurationException, SAXException, IOException, Config.WrongParamTypeException, Config.ParamNotFoundException
   {
@@ -57,8 +58,9 @@ public class MCISmeContext implements SMEAppContext
     resetConfig();
     this.mciSme = new MCISme(appContext.getHostsManager().getServiceInfo(this.smeId),
                              config.getString("MCISme.Admin.host"), config.getInt("MCISme.Admin.port"));
+	this.mciSmeFolder = new String(appContext.getHostsManager().getServiceInfo(smeId).getServiceFolder().getCanonicalPath());
   }
-
+	
   private void shutdownDataSource()
   {
     try {
@@ -72,6 +74,12 @@ public class MCISmeContext implements SMEAppContext
   public void shutdown()
   {
     shutdownDataSource();
+  }
+
+  
+  public String getMCISmeFolder()
+  { 
+	return this.mciSmeFolder;
   }
 
   public Config loadCurrentConfig()
