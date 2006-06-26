@@ -95,6 +95,7 @@ CXXFLAGS := $(CXXFLAGS) -DDISABLE_TRACING
 endif
 
 ifeq ($(LEAKTRACE),YES)
+CXXFLAGS:= $(CXXFLAGS) -DLEAKTRACE
 LDFLAGS := $(LDFLAGS) -lutil-leaktracing
 EXTRADEPS:= $(SMSC_BUILDDIR)/lib/libutil-leaktracing.a
 export EXTRADEPS
