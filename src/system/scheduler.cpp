@@ -5,13 +5,18 @@
 #include <vector>
 #include "core/buffers/XHash.hpp"
 #include "cluster/Interconnect.h"
+#include "core/threads/Thread.hpp"
 
 namespace smsc{
 namespace system{
 
 smsc::logger::Logger* Scheduler::log;
 
+/*
 static EventMonitor* schedulerMon=0;
+static Mutex* storeMtx=0;
+static bool* delayInitPtr=0;
+*/
 
 using namespace std;
 
@@ -22,7 +27,7 @@ struct LoadUpInfo{
   SMSId id;
   uint32_t seq;
   bool final;
-  SMS sms;
+  SMS* sms;
 };
 
 typedef XHash<SMSId,LoadUpInfo> LoadUpHash;
@@ -65,10 +70,12 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
     abort();
   }
 
-  if(schedulerMon)
+  bool delayInit=sched.delayInit;
+
+  if(delayInit)
   {
     __trace__("schedulerMon->Unlock();");
-    schedulerMon->Unlock();
+    sched.mon.Unlock();
   }
   try{
     if(File::Exists(mainFileName.c_str()))
@@ -87,6 +94,9 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
         f->Rename((rolFileName+".bak").c_str());
         files.push_back(f);
       }
+
+      InitPrimaryFile(mainFileName);
+      if(sched.delayInit)sched.delayInit=false;
 
       for(vector<File*>::iterator it=files.begin();it!=files.end();it++)
       {
@@ -147,14 +157,24 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
             itemPtr=luHash.GetPtr(item.id);
             if(itemPtr!=0)
             {
-              if(itemPtr->final || itemPtr->seq>item.seq)continue;
+              if(itemPtr->final || itemPtr->seq>item.seq)
+              {
+                if(itemPtr->sms)
+                {
+                  delete itemPtr->sms;
+                  itemPtr->sms=0;
+                }
+                continue;
+              }
             }
 
             smsBuf.SetPos(0);
-            Deserialize(smsBuf,item.sms,fileVer);
+            item.sms=new SMS;
+            Deserialize(smsBuf,*item.sms,fileVer);
 
             if(itemPtr)
             {
+              if(itemPtr->sms)delete itemPtr->sms;
               *itemPtr=item;
             }else
             {
@@ -172,18 +192,18 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
         pf->Close();
         delete pf;
       }
+    }else
+    {
+      InitPrimaryFile(mainFileName);
     }
-
-
-    InitPrimaryFile(mainFileName);
   }catch(std::exception& e)
   {
     __warning2__("Exception during storage init %s",e.what());
   }
-  if(schedulerMon)
+  if(delayInit)
   {
     __trace__("schedulerMon->Lock();");
-    schedulerMon->Lock();
+    sched.mon.Lock();
   }
 
   __trace2__("Local store loaded. %d messages found.",luVector.size());
@@ -192,26 +212,56 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
   for(LoadUpVector::iterator it=luVector.begin();it!=luVector.end();it++)
   {
     if((*it)->final)continue;
-    Save((*it)->id,(*it)->seq,(*it)->sms);
-    SMS& sms=(*it)->sms;
+    if(!(*it)->sms)
+    {
+      __warning2__("Loading error!!! Sms point==NULL!!! msgId=%lld",(*it)->id);
+      continue;
+    }
+    {
+      MutexGuard mg(sched.storeMtx);
+      Save((*it)->id,(*it)->seq,*(*it)->sms);
+    }
+    SMS& sms=*(*it)->sms;
     __trace2__("srcsmeid=%s",sms.getSourceSmeId());
     try{
       int smeIndex=smsc->getSmeIndex(sms.getSourceSmeId());
-      if(schedulerMon)schedulerMon->Unlock();
+      if(delayInit)
+      {
+        sched.mon.Unlock();
+      }
       try{
         sched.AddScheduledSms((*it)->id,sms,smeIndex);
       }catch(std::exception& e)
       {
         __warning2__("Exception in AddScheduledSms:'%s'",e.what());
       }
-      if(schedulerMon)schedulerMon->Lock();
+
+      cnt++;
+      if(cnt%100)
+      {
+        smsc::core::threads::Thread::Yield();
+      }
+
       Scheduler::StoreData* sd=new Scheduler::StoreData(sms,(*it)->seq);
-      sched.store.Insert((*it)->id,sd);
-      sd->rit=sched.replMap.insert(Scheduler::ReplaceIfPresentMap::value_type(&sd->sms,(*it)->id));
-      sd->it=sched.currentSnap.insert(sched.currentSnap.begin(),IdSeqPair((*it)->id,(*it)->seq));
+      if(delayInit)
+      {
+        sched.mon.Lock();
+      }
+
+      {
+        MutexGuard mg(sched.storeMtx);
+        sched.store.Insert((*it)->id,sd);
+        sd->rit=sched.replMap.insert(Scheduler::ReplaceIfPresentMap::value_type(&sd->sms,(*it)->id));
+        sd->it=sched.currentSnap.insert(sched.currentSnap.begin(),IdSeqPair((*it)->id,(*it)->seq));
+      }
     }catch(...)
     {
       __warning2__("systemId=%s not found. sms %lld dropped",sms.getSourceSmeId(),(*it)->id);
+    }
+    if((*it)->sms)
+    {
+      delete (*it)->sms;
+      (*it)->sms=0;
     }
   }
 
@@ -332,8 +382,9 @@ void Scheduler::Init(Smsc* psmsc,smsc::util::config::Manager* cfgman)
 }
 
 
-void Scheduler::DelayInit(Smsc* psmsc)
+void Scheduler::DelayInit(Smsc* psmsc,smsc::util::config::Manager* cfgman)
 {
+  archiveStorage.init(*cfgman);
   smsc=psmsc;
   delayInit=true;
 }
@@ -347,7 +398,8 @@ int Scheduler::Execute()
     info1(log,"Start delayedInit");
     try{
       MutexGuard guard(mon);
-      schedulerMon=&mon;
+      //schedulerMon=&mon;
+      //delayInitPtr=&delayInit;
       Init(smsc,&smsc::util::config::Manager::getInstance());
     }catch(std::exception& e)
     {

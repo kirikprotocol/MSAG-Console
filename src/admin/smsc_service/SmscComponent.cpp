@@ -807,6 +807,16 @@ throw (AdminException)
     throw   AdminException("SMSC Application started already (or not sucessfully stopped)");
 }
 
+void SmscComponent::sigStopSmsc()
+{
+  smsc::core::synchronization::MutexGuard guard(mutex);
+  if (smsc_app_runner.get() != 0)
+  {
+    smsc_app_runner->stop();
+  }
+}
+
+
 void SmscComponent::stopSmsc()
 throw (AdminException)
 {
@@ -822,8 +832,9 @@ throw (AdminException)
       if(rv!=0)
       {
         smsc_log_error(logger, "thr_join returned: %d", rv);
+        return;
       }
-      smsc_app_runner.reset(0);
+      //smsc_app_runner.reset(0);
       isStopping = false;
     }
     catch (smsc::util::Exception &e)

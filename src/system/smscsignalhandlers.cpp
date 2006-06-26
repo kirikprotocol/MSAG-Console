@@ -92,7 +92,7 @@ extern "C" void sigShutdownHandler(int signo)
       try{
         SmscComponent *tmp=_smscComponent;
         _smscComponent=0;
-        tmp->stopSmsc();
+        tmp->sigStopSmsc();
       }catch(std::exception& e)
       {
         fprintf(stderr,"Exception in stopSmsc:%s\n",e.what());

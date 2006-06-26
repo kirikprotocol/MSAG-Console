@@ -5,6 +5,7 @@
 #include <windows.h>
 #else
 #include <pthread.h>
+#include <sched.h>
 #include <signal.h>
 #endif
 
@@ -30,6 +31,18 @@ public:
 #endif
   int getRetCode(){return retcode;}
   void setRetCode(int rc){retcode=rc;}
+
+#ifndef _WIN32
+  static void Yield()
+  {
+    sched_yield();
+  }
+#else
+  static void Yield()
+  {
+    Sleep(0);
+  }
+#endif
 
 protected:
   int retcode;

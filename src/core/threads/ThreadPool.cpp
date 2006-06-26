@@ -135,7 +135,9 @@ void ThreadPool::shutdown()
       usedThreads[i]->Kill(16);
     }
     Unlock();
-    if(time(NULL)-sdstart>60)abort();
+#ifndef LEAKTRACE
+    if(time(NULL)-sdstart>180)abort();
+#endif
     Wait();
   }
   Lock();

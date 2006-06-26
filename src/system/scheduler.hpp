@@ -125,6 +125,18 @@ public:
     {
       delete *it;
     }
+    SMSId key;
+    StoreData* value;
+    store.First();
+    while(store.Next(key,value))
+    {
+      delete value;
+    }
+    for(TimeLine::TimeMap::iterator it=timeLine.tmap.begin();it!=timeLine.tmap.end();it++)
+    {
+      it->second->Clear();
+      delete it->second;
+    }
   }
   int Execute();
   const char* taskName(){return "scheduler";}
@@ -148,7 +160,7 @@ public:
     idFile.SetUnbuffered();
   }
   void Init(Smsc* psmsc,smsc::util::config::Manager* cfgman);
-  void DelayInit(Smsc* psmsc);
+  void DelayInit(Smsc* psmsc,smsc::util::config::Manager* cfgman);
 
   void AddScheduledSms(SMSId id,const SMS& sms,SmeIndex idx)
   {
@@ -1140,6 +1152,14 @@ public:
       debug2(Scheduler::log,"mc:remove: c=%p",i->second);
       i->second->inTimeLine=false;
       cmap.erase(i);
+    }
+
+    void Clear()
+    {
+      for(ChainMap::iterator it=cmap.begin();it!=cmap.end();it++)
+      {
+        delete it->second;
+      }
     }
   };
 

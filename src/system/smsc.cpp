@@ -470,7 +470,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   smsc_log_info(log, "Initializing scheduler" );
   if(ishs)
   {
-    scheduler->DelayInit(this);
+    scheduler->DelayInit(this,cfg.cfgman);
   }
   else
   {

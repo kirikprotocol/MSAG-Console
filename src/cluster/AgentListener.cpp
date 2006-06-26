@@ -4,6 +4,11 @@
 #include "system/smsc.hpp"
 
 namespace smsc{
+
+namespace system{
+  extern "C" void sigShutdownHandler(int signo);
+}
+
 namespace cluster {
 
 using smsc::core::network::Socket;
@@ -73,7 +78,9 @@ int AgentListener::Execute()
     }
 
     if(stopSmsc)
-        kill(pid, SIGTERM);
+    {
+      shutdownSmsc();
+    }
     return 0;
 }
 
@@ -148,7 +155,8 @@ void AgentListener::read(Socket * socket, void* buffer, int size)
 
 void AgentListener::shutdownSmsc()
 {
-  if(psmsc)((smsc::system::Smsc*)psmsc)->stop();
+  //if(psmsc)((smsc::system::Smsc*)psmsc)->stop();
+  smsc::system::sigShutdownHandler(15);
 }
 
 }

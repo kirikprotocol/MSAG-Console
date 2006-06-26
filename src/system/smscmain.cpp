@@ -168,7 +168,9 @@ int main(int argc,char* argv[])
       //fprintf(stderr,"smsc stopped, finishing\n");
       // stopped
       if (smsc_component.isSmscRunning() && !smsc_component.isSmscStopping())
-      smsc_component.stopSmsc();
+      {
+        smsc_component.stopSmsc();
+      }
 
       Manager::deinit();
 

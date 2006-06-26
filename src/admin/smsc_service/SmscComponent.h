@@ -46,6 +46,7 @@ public:
 
   void runSmsc() throw (AdminException);
   void stopSmsc() throw (AdminException);
+  void sigStopSmsc();
   bool isSmscRunning() {return smsc_app_runner.get() != 0;}
   bool isSmscStopping() {return isStopping;}
   void abort();

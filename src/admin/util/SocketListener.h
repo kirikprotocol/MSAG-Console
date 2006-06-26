@@ -45,7 +45,7 @@ public:
 
     if (sock.InitServer(hostName, portToListen, 10, 0) != 0)
     {
-      throw AdminException("socket fails");
+      throw AdminException("SocketListener: Failed to init server at %s:%d",hostName,portToListen);
     }
     smsc_log_info(logger, "socket listener ready to start on port %i", portToListen);
   }
