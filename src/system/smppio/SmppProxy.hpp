@@ -319,6 +319,8 @@ public:
             info1(log,"SmppProxy::session found, delayed response sent");
             inqueue.Push(it->second->cmd);
             inQueueCount++;
+            limitQueue.erase(it->second);
+            ussdSessionMap.erase(it);
           }else
           {
             warn1(log,"SmppProxy::session not found!!!");
