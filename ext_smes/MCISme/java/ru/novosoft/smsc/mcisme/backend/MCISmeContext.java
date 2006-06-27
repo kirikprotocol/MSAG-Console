@@ -40,13 +40,10 @@ public class MCISmeContext implements SMEAppContext
   private MCISme mciSme = null;
 
   private boolean changedOptions = false;
-  private boolean changedDrivers = false;
   private boolean changedTemplates = false;
   private boolean changedRules = false;
-  private boolean changedOffsets = false;
 
-  private ConnectionPool dataSource = null;
-	private String mciSmeFolder = null;
+  private String mciSmeFolder = null;
   private String smeId = "MCISme";
 	
   private MCISmeContext(final SMSCAppContext appContext, final String smeId)
@@ -61,19 +58,19 @@ public class MCISmeContext implements SMEAppContext
 	this.mciSmeFolder = new String(appContext.getHostsManager().getServiceInfo(smeId).getServiceFolder().getCanonicalPath());
   }
 	
-  private void shutdownDataSource()
-  {
-    try {
-      if (dataSource != null) dataSource.shutdown();
-      dataSource = null;
-    } catch (SQLException ex) {
-      logger.error("ConnectionPool shutdown failed", ex);
-    }
-  }
+//  private void shutdownDataSource()
+//  {
+//    try {
+//      if (dataSource != null) dataSource.shutdown();
+//      dataSource = null;
+//    } catch (SQLException ex) {
+//      logger.error("ConnectionPool shutdown failed", ex);
+//    }
+//  }
 
   public void shutdown()
   {
-    shutdownDataSource();
+    //shutdownDataSource();
   }
 
   
@@ -93,7 +90,6 @@ public class MCISmeContext implements SMEAppContext
       throws AdminException, SAXException, ParserConfigurationException, IOException
   {
     final Config newConfig = loadCurrentConfig();
-    reloadDataSource(config, newConfig);
     config = newConfig;
   }
 
@@ -102,30 +98,30 @@ public class MCISmeContext implements SMEAppContext
     return config;
   }
 
-  public void reloadDataSource(final Config oldConfig, final Config newConfig)
-  {
-    try {
-      if (null == oldConfig
-          || !Config.isParamEquals(oldConfig, newConfig, "MCISme.DataSource.jdbc.source")
-          || !Config.isParamEquals(oldConfig, newConfig, "MCISme.DataSource.jdbc.driver")
-          || !Config.isParamEquals(oldConfig, newConfig, "MCISme.DataSource.dbUserName")
-          || !Config.isParamEquals(oldConfig, newConfig, "MCISme.DataSource.dbUserPassword"))
-      {
-        shutdownDataSource();
-        final Properties properties = new Properties();
-        properties.setProperty("jdbc.source", newConfig.getString("MCISme.DataSource.jdbc.source"));
-        properties.setProperty("jdbc.driver", newConfig.getString("MCISme.DataSource.jdbc.driver"));
-        properties.setProperty("jdbc.user", newConfig.getString("MCISme.DataSource.dbUserName"));
-        properties.setProperty("jdbc.pass", newConfig.getString("MCISme.DataSource.dbUserPassword"));
-        properties.setProperty("jdbc.min.connections", "0");
-        properties.setProperty("jdbc.max.idle.time", "240");
-        properties.setProperty("jdbc.pool.name", "mcisme");
-        dataSource = new ConnectionPool(properties);
-      }
-    } catch (Throwable e) {
-      logger.error("Could not init datasource", e);
-    }
-  }
+//  public void reloadDataSource(final Config oldConfig, final Config newConfig)
+//  {
+//    try {
+//      if (null == oldConfig
+//          || !Config.isParamEquals(oldConfig, newConfig, "MCISme.DataSource.jdbc.source")
+//          || !Config.isParamEquals(oldConfig, newConfig, "MCISme.DataSource.jdbc.driver")
+//          || !Config.isParamEquals(oldConfig, newConfig, "MCISme.DataSource.dbUserName")
+//          || !Config.isParamEquals(oldConfig, newConfig, "MCISme.DataSource.dbUserPassword"))
+//      {
+//        shutdownDataSource();
+//        final Properties properties = new Properties();
+//        properties.setProperty("jdbc.source", newConfig.getString("MCISme.DataSource.jdbc.source"));
+//        properties.setProperty("jdbc.driver", newConfig.getString("MCISme.DataSource.jdbc.driver"));
+//        properties.setProperty("jdbc.user", newConfig.getString("MCISme.DataSource.dbUserName"));
+//        properties.setProperty("jdbc.pass", newConfig.getString("MCISme.DataSource.dbUserPassword"));
+//        properties.setProperty("jdbc.min.connections", "0");
+//        properties.setProperty("jdbc.max.idle.time", "240");
+//        properties.setProperty("jdbc.pool.name", "mcisme");
+//        dataSource = new ConnectionPool(properties);
+//      }
+//    } catch (Throwable e) {
+//      logger.error("Could not init datasource", e);
+//    }
+//  }
 
   public MCISme getMCISme()
   {
@@ -140,16 +136,6 @@ public class MCISmeContext implements SMEAppContext
   public void setChangedOptions(final boolean changedOptions)
   {
     this.changedOptions = changedOptions;
-  }
-
-  public boolean isChangedDrivers()
-  {
-    return changedDrivers;
-  }
-
-  public void setChangedDrivers(final boolean changedDrivers)
-  {
-    this.changedDrivers = changedDrivers;
   }
 
   public boolean isChangedTemplates()
@@ -172,19 +158,6 @@ public class MCISmeContext implements SMEAppContext
     this.changedRules = changedRules;
   }
 
-  public boolean isChangedOffsets()
-  {
-    return changedOffsets;
-  }
 
-  public void setChangedOffsets(boolean changedOffsets)
-  {
-    this.changedOffsets = changedOffsets;
-  }
-
-  public DataSource getDataSource()
-  {
-    return dataSource;
-  }
 }
 

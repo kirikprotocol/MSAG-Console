@@ -40,13 +40,8 @@ public class Index extends IndexProperties
     backup.save();
 
     getMCISmeContext().setChangedOptions(false);
-    getMCISmeContext().setChangedDrivers(false);
     getMCISmeContext().setChangedTemplates(false);
     getMCISmeContext().setChangedRules(false);
-    getMCISmeContext().setChangedOffsets(false);
-    getMCISmeContext().reloadDataSource(oldConfig, config);
-//    if (getMCISmeContext().getDataSource() == null)
-//      warning("Invalid JDBC parameters");
 
     saveMCIProfOptions(config);
 
@@ -59,10 +54,8 @@ public class Index extends IndexProperties
       getMCISmeContext().resetConfig();
       saveMCIProfOptions(getConfig());
       getMCISmeContext().setChangedOptions(false);
-      getMCISmeContext().setChangedDrivers(false);
       getMCISmeContext().setChangedTemplates(false);
       getMCISmeContext().setChangedRules(false);
-      getMCISmeContext().setChangedOffsets(false);
     } catch (Throwable e) {
       logger.debug("Couldn't reload MCI Sme config", e);
       return error("mcisme.error.config_reload", e);

@@ -84,20 +84,12 @@ function checkApplyResetButtons()
       <td><%= configStatus(bean.isOptionsChanged())%></td>
     </tr>
     <tr class=row1>
-      <th><%= getLocString("mcisme.label.ds_drivers_config")%></th>
-      <td><%= configStatus(bean.isDriversChanged())%></td>
-    </tr>
-    <tr class=row0>
       <th><%= getLocString("mcisme.label.templates_config")%></th>
       <td><%= configStatus(bean.isTemplatesChanged())%></td>
     </tr>
-    <tr class=row1>
+    <tr class=row0>
       <th><%= getLocString("mcisme.label.rules_config")%></th>
       <td><%= configStatus(bean.isRulesChanged())%></td>
-    </tr>
-    <tr class=row0>
-      <th><%= getLocString("mcisme.label.tz_offsets")%></th>
-      <td><%= configStatus(bean.isOffsetsChanged())%></td>
     </tr>
     </table>
   </td>
