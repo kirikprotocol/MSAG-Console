@@ -72,17 +72,29 @@ std::string getCalledNumberDescription(EINSS7_I97_CALLEDNUMB_T* called)
 std::string getCallingNumberDescription(EINSS7_I97_CALLINGNUMB_T* calling)
 {
   if (!calling) return "";
-  vector<char> addr(calling->noOfAddrSign + 1);
-  unpack_addr(&addr[0], calling->addrSign_p, calling->noOfAddrSign);
-  addr.insert(addr.begin(),'.');
-  addr.insert(addr.begin(),calling->numberPlan + '0');
-  addr.insert(addr.begin(),'.');
-  addr.insert(addr.begin(),calling->natureOfAddr + '0');
-  addr.insert(addr.begin(),'.');
-  char str[]="Calling=";
-  char *end=str+sizeof(str)-1;
-  addr.insert(addr.begin(),str,end);
-  return &addr[0];
+  string res="Calling=(";
+  res += "PRES=";
+  switch (calling->presentationRestr) {
+    case EINSS7_I97_PRES_ALLOWED   : res += "ALLOWED";break;
+    case EINSS7_I97_PRES_RESTR     : res += "RESTRICTED";break;
+    case EINSS7_I97_ADDR_NOT_AVAIL : res += "NOT AVAIL";break;
+    default                        : res += "UNKNOWN";break;
+  }
+  res += ",SCREEN=";
+  switch (calling->screening) {
+    case EINSS7_I97_USER_PROV : res += "USER"; break;
+    case EINSS7_I97_NETW_PROV : res += "NET"; break;
+    default                   : res += "UNKNOWN"; break;
+  }
+  switch (calling->numbIncompl) {
+    case EINSS7_I97_NUMB_COMPL   : res += ",COMPLETE"; break;
+    case EINSS7_I97_NUMB_INCOMPL : res += ",INCOMPLETE"; break;
+  }
+  char addr[32] = {0,}; int k;
+  k = sprintf(addr,".%d.%d.",calling->natureOfAddr,calling->numberPlan); addr[k] = 0;
+  unpack_addr(addr+k, calling->addrSign_p, calling->noOfAddrSign);
+  res += ",AI=";res += addr; res += ")";
+  return res;
 }
 
 std::string getRedirectingNumberDescription(EINSS7_I97_REDIRECTINGNUMB_T* redirNumb)
