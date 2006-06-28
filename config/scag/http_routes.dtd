@@ -9,9 +9,25 @@
     enabled (true|false) #IMPLIED
 >
 
-<!ELEMENT abonents (address|subject)*>
+<!ELEMENT abonents (address|subject|placement)*>
 
-<!ELEMENT sites (site|site_subject)*>
+<!ELEMENT sites (site|site_subject|placement)*>
+
+<!ELEMENT placement (usr_place|address_place)*>
+
+<!ELEMENT usr_place EMPTY>
+<!ATTLIST usr_place
+    type CDATA #REQUIRED
+    name CDATA #REQUIRED
+    priority CDATA #REQUIRED
+>
+
+<!ELEMENT address_place EMPTY>
+<!ATTLIST address_place
+    type CDATA #REQUIRED
+    name CDATA #REQUIRED
+    priority CDATA #REQUIRED
+>
 
 <!ELEMENT address EMPTY>
 <!ATTLIST address
