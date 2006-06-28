@@ -54,7 +54,7 @@ public class HttpSite {
             out.println("    <site host=\"" + StringEncoderDecoder.encode(site.getHost()) + "\" port=\"" + site.getPort() + "\" >");
             String[] pathLinks = site.getPathLinks();
             for (int i = 0; i < pathLinks.length; i++) {
-                out.println("      <path value=\"" + pathLinks[i] + "\">");
+                out.println("      <path value=\"" + pathLinks[i] + "\"/>");
             }
             out.println("    </site>");
         }
