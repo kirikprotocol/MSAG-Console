@@ -32,10 +32,75 @@ static const std::string connection_field(CONNECTION_FIELD);
 static const std::string close("close");
 static const std::string empty;        
 
-HttpCommand::~HttpCommand()
+void Cookie::serialize(std::string& s, bool set)
 {
+    if(name.length())
+    {
+        s += name;
+        if(value.length())
+        {
+            s += "=";
+            s += value;
+        }
+        s += ";";
+    }
+
+    char *keystr;
+    std::string *valptr;
+
+    params.First();
+    while (params.Next(keystr, valptr))
+    {
+        if(!set)
+            s += '$';
+        s += keystr;
+        s += "=";
+        s += *valstr;
+        s += ";"
+    }
+
+    return s;
 }
 
+const std::string& Cookie::getParam(const char * name)
+{
+    std::string *a = params.GetPtr(name);
+    if(a)
+        return *a;
+    return empty;
+}
+
+void Cookie::setParam(const char* name, std::string& val)
+{
+    params.Insert(name, val);
+}
+
+HttpCommand::~HttpCommand()
+{
+    char *keystr;
+    Cookie **valptr;
+
+    cookies.First();
+    while (cookies.Next(keystr, valptr))
+        if(*valptr) delete *valptr;
+}
+
+Cookie* HttpCommand::getCookie(std::string& name)
+{
+    Cookie **c = cookies.GetPtr(name.c_str());
+    if(c)
+        return *c;
+    return NULL;
+}
+
+Cookie* HttpCommand::setCookie(std::string& name, std::string& value)
+{
+    Cookie *c = new Cookie;
+    c->name = name;
+    c->value = value;
+    cookies.Insert(name.c_str(), c);
+    return c;
+}
 // virtual functions {
 TransportType HttpCommand::getType() const
 {
@@ -126,6 +191,14 @@ HttpRequest::ParameterIterator& HttpRequest::getQueryParameterNames()
 void HttpRequest::setQueryParameter(const std::string& paramName,
                                 const std::string& _paramValue)
 {
+    std::string s = _paramValue;
+    HttpParser::urlEncode(s);
+    queryParameters[paramName.c_str()] = s;
+}
+
+void HttpRequest::setQueryParameterEncoded(const std::string& paramName,
+                                const std::string& _paramValue)
+{
     queryParameters[paramName.c_str()] = _paramValue;
 }
 
@@ -135,7 +208,8 @@ const std::string& HttpRequest::getQueryParameter(const std::string& paramName)
     
     if (valptr) {
         paramValue.assign(*valptr);
-        HttpParser::urlDecode(paramValue);
+        if(HttpParser::urlDecode(paramValue) != OK)
+            return empty;
         return paramValue;
     }
     else {
@@ -278,7 +352,6 @@ void HttpRequest::serializeQuery(std::string& s)
         s += keystr;
         s += "=";
         t = *valptr;
-        HttpParser::urlEncode(t);
         s += t;
     }
 }
@@ -323,6 +396,17 @@ void HttpRequest::serialize()
             setContentLength(cnt.length());
         }
         
+        if(cookies.Count())
+        {
+            headers += "Cookie: ";
+            defCookie.serialize(headers, false);
+            cookies.First();
+            while (cookies.Next(keystr, valptr)) {
+                *valptr->serialize(headers, false);
+            }
+            headers += CRLF;
+        }
+
         headerFields.First();
         while (headerFields.Next(keystr, valptr)) {
             headers += keystr;
@@ -355,6 +439,17 @@ void HttpResponse::serialize()
 
         setHeaderField(connection_field, close);
         
+        if(cookies.Count())
+        {
+            headers += "Set-Cookie: ";
+            defCookie.serialize(headers, true);
+            cookies.First();
+            while (cookies.Next(keystr, valptr)) {
+                *valptr->serialize(headers, true);
+            }
+            headers += CRLF;
+        }
+
         headerFields.First();
         while (headerFields.Next(keystr, valptr)) {
             headers += keystr;

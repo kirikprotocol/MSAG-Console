@@ -12,6 +12,8 @@ const char HOST_FIELD[] = "host";
 const char CONTENT_TYPE_URL_ENCODED[] = "application/x-www-form-urlencoded";
 const char CHARSET[] = "charset";
 const char KEEP_ALIVE[] = "keep-alive";
+const char COOKIE_FIELD = "cookie";
+const char SET_COOKIE_FIELD = "set-cookie";
 
 struct http_methods {
   const char   *name; 
@@ -374,13 +376,17 @@ StatusCode HttpParser::parseHeaderFieldLine(char *buf, unsigned int len,
     return OK;
   }
 
+  bool b;
+  if (!(b = strcmp(key.c_str(), COOKIE_FIELD)) || !strcmp(key.c_str(), SET_COOKIE_FIELD))
+    return parseCookie(value.c_str(), cmd, b);
+
   cmd.setHeaderField(key, value);
 
   if (!strcmp(key.c_str(), CONTENT_LENGTH_FIELD)) {
     cmd.setContentLength(atoi(value.c_str()));
     return OK;
   }
- 
+
   if (!strcmp(key.c_str(), CONTENT_TYPE_FIELD)) {
     pos = stringStrN(value.c_str(), CHARSET);
 
@@ -446,7 +452,61 @@ StatusCode HttpParser::parseQueryParameters(const char *buf, HttpRequest& cx)
     if(urlDecode(value) != OK)
         return ERROR;
 
-    cx.setQueryParameter(key, value);
+    cx.setQueryParameterEncoded(key, value);
+
+    start = end + 1;
+  } while (end);
+
+  return OK;
+}
+
+StatusCode HttpParser::parseCookie(const char *buf, HttpCommand& cmd, bool set)
+{
+    static const char* cookieParams[] = {"version", "path", "domain", "port", "max-age", "comment", "secure", "expires"};
+    static const char cookieParamsCnt = sizeof(cookieParams)/sizeof(char*);
+
+  const char  *start = buf, *mid, *end;
+  std::string key, value;
+  Cookie *cur = &cmd.defCookie;
+
+  do {
+    end = strpbrk(start, ';,');
+    mid = strchr(start, '=');
+
+    if (!mid || (mid && end && (mid > end)))
+      return ERROR;
+
+    *mid = 0;
+    mid++;
+
+    if (end)
+      *end = 0;
+
+    while(*start && *start == ' ') start++;
+
+    if(*start == '$' && set)
+        return ERROR;
+
+    if(*start == '$')
+        cur->setParam(start + 1, mid);
+    else
+    {
+        bool f = false;
+        for(int i = 0; i < cookieParamsCnt; i++)
+            if(!strcasecmp(cookieParams[i], start))
+            {
+                cur->setParam(start, mid);
+                f = true;
+                break;
+            }
+        if(!f)
+        {
+            cur = new Cookie;
+            cur->name.assign(start);
+            cur->value.assign(mid);
+            cmd.cookies.Insert(cur->name.c_str(), cur);
+        }
+    }
 
     start = end + 1;
   } while (end);

@@ -66,6 +66,19 @@ enum HttpCommandId {
     HTTP_DELIVERY
 };
 
+class Cookie{
+public:
+    std::string name;
+    std::string value;
+    StringHash params;
+
+    void serialize(std::string& s, bool set = false);
+    const std::string& getParam(const char * name);
+    void setParam(const char* name, std::string& val);
+};
+
+typedef Hash<Cookie*> CookieHash;
+
 /**
  * Abstract class represents generic HttpCommand (Request or Response)
  * Defines basic command methods
@@ -155,6 +168,9 @@ public:
         content.Append(data, length);
     }
 
+    Cookie* getCookie(std::string& name);
+    Cookie* setCookie(std::string& name, std::string& value);
+
 public:
     StringHash headerFields;
     FieldIterator headerFieldsIterator;
@@ -164,6 +180,8 @@ public:
     std::string contentType;
     std::string httpVersion;
     std::string textContent;
+    Cookie  defCookie;
+    CookieHash cookies;
     uint8_t command_id;
         
     TransactionContext &trc;
@@ -243,7 +261,8 @@ public:
 
     ParameterIterator& getQueryParameterNames();
     const std::string& getQueryParameter(const std::string& paramName);
-    void setQueryParameter(const std::string& paramName, const std::string& paramValue);
+    void setQueryParameter(const std::string& paramName, const std::string& _paramValue);
+    void setQueryParameterEncoded(const std::string& paramName, const std::string& _paramValue);
 
     void serialize();
     virtual bool isResponse();
