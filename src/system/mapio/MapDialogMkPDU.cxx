@@ -345,13 +345,13 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
   }
   pdu->signalInfoLen  = pdu_ptr-(unsigned char*)pdu->signalInfo;
   //if ( pdu->signalInfoLen > 140 ) header->uu.s.mms = 1;
-  if( smsc::logger::_map_cat->isDebugEnabled() ) {
+  if( MapDialogContainer::loggerMapPdu->isDebugEnabled() ) {
     char text[sizeof(*pdu)*4] = {0,};
     int k = 0;
     for ( int i=0; i<pdu->signalInfoLen; ++i){
       k+=sprintf(text+k,"%02x ",(unsigned)pdu->signalInfo[i]);
     }
-    __map_trace2__("mkDeliverPDU: esm=0x%x PDU len=%d, PDU: %s",esm,pdu->signalInfoLen,text);
+    __log2__(MapDialogContainer::loggerMapPdu,smsc::logger::Logger::LEVEL_DEBUG,"Send MAP pdu to %s from %s len=%d: %s",sms->getDestinationAddress().toString().c_str(),sms->getOriginatingAddress().toString().c_str(), pdu->signalInfoLen,text);
   }
   return pdu;
 #else
