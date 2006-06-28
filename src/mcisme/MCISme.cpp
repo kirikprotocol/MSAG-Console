@@ -32,6 +32,11 @@
 #include "TaskProcessor.h"
 #include "MCISmeComponent.h"
 
+#include "AbntAddr.hpp"
+#include "ProfilesStorage.hpp"
+#include "Profiler.h"
+#include "ProfilesStorageServer.hpp"
+
 #include "version.inc"
 
 using namespace smsc::sme;
@@ -102,19 +107,35 @@ extern bool convertMSISDNStringToAddress(const char* string, Address& address)
 
 static int   unrespondedMessagesSleep = 10;
 static int   unrespondedMessagesMax   = 3;
+static int   outgoingSpeedMax = 50;
+
+//template <class T=int,T init_v=0,T inc_v=1>
+//class TimeSlotCounterEx: public TimeSlotCounter<T, init_v, inc_v>
+//{
+//public:
+//	TimeSlotCounterEx(unsigned int nsec,unsigned int msecres=100): TimeSlotCounter(nsec, msecres){}
+//	~TimeSlotCounterEx(){}
+//
+//  int getUsedSlots(void)
+//  {
+//    Inc(0);
+//    return (last-first+slotsCount)%slotsCount;
+//  }
+//};
 
 class TrafficControl
 {
     static EventMonitor   trafficMonitor; 
     static TimeSlotCounter<int> incoming;
     static TimeSlotCounter<int> outgoing;
+	static TimeSlotCounter<int> limitSpeed;
     static bool                 stopped; 
 
 public:
 
     static void incOutgoing()
     {
-        MutexGuard guard(trafficMonitor);
+		MutexGuard guard(trafficMonitor);
         outgoing.Inc(); 
         if (TrafficControl::stopped) return;
 
@@ -129,6 +150,15 @@ public:
         } else {
             smsc_log_debug(logger, "nowait");
         }
+
+		uint32_t pause;
+		while(limitSpeed.Get() >= outgoingSpeedMax)
+		{
+			trafficMonitor.wait(10);
+			pause+=10;
+		}
+		limitSpeed.Inc();
+		smsc_log_debug(logger, "Speed limiter stoped sending by %d milliseconds", pause);
     };
     static bool getTraffic(int& in, int& out)
     {
@@ -138,7 +168,7 @@ public:
     };
     static void incIncoming()
     {
-        MutexGuard guard(trafficMonitor);
+		MutexGuard guard(trafficMonitor);
         incoming.Inc();
         if (TrafficControl::stopped) return;
         if ((outgoing.Get()-incoming.Get()) < unrespondedMessagesMax) {
@@ -161,6 +191,7 @@ public:
 EventMonitor         TrafficControl::trafficMonitor;
 TimeSlotCounter<int> TrafficControl::incoming(10, 10);
 TimeSlotCounter<int> TrafficControl::outgoing(10, 10);
+TimeSlotCounter<int> TrafficControl::limitSpeed(1,10);
 bool                 TrafficControl::stopped = false;
 
 class MCISmeConfig : public SmeConfig
@@ -177,7 +208,7 @@ public:
                 strSysType(0), strOrigAddr(0)
     {
         // Mandatory fields
-        strHost = config->getString("host", "SMSC host wasn't defined !");
+		strHost = config->getString("host", "SMSC host wasn't defined !");
         host = strHost;
         strSid = config->getString("sid", "MCISme id wasn't defined !");
         sid = strSid;
@@ -285,13 +316,67 @@ public:
             
             asyncTransmitter->sendPdu(&(sm.get_header()));
         }
-        else
+        else if(message.data_sm)
+		{
+
+			const char* out  = message.message.c_str();//"Hello World!!";
+            int outLen = message.message.length();//13;
+            
+            char* msgBuf = 0;
+            int msgDataCoding = DataCoding::LATIN1;
+            if(hasHighBit(out,outLen))
+            {
+                int msgLen = outLen*2;
+                msgBuf = new char[msgLen];
+                ConvertMultibyteToUCS2(out, outLen, (short *)msgBuf, msgLen, CONV_ENCODING_CP1251);
+                short* msgBufConv = (short *)msgBuf;
+                for (int p=0; p<outLen; p++) msgBufConv[p] = htons(msgBufConv[p]);
+                msgDataCoding = DataCoding::UCS2;
+                out = msgBuf; outLen = msgLen;
+            }
+
+            time_t smsValidityDate = time(NULL) + processor.getDaysValid()*3600*24;
+            
+            EService svcType;
+            strncpy(svcType, processor.getSvcType(), MAX_ESERVICE_TYPE_LENGTH);
+            svcType[MAX_ESERVICE_TYPE_LENGTH]='\0';
+
+            PduDataSm	sm;
+
+			sm.get_data().set_serviceType(svcType);
+			sm.get_data().get_source().set_typeOfNumber(oa.type);
+            sm.get_data().get_source().set_numberingPlan(oa.plan);
+            sm.get_data().get_source().set_value(oa.value);
+            sm.get_data().get_dest()  .set_typeOfNumber(da.type);
+            sm.get_data().get_dest()  .set_numberingPlan(da.plan);
+            sm.get_data().get_dest()  .set_value(da.value);
+            sm.get_data().set_esmClass(SMSC_TRANSACTION_MSG_MODE); // forward (i.e. transactional)
+			sm.get_data().set_dataCoding(msgDataCoding);
+
+            sm.get_optional().set_payloadType(0);
+            sm.get_optional().set_messagePayload(out, outLen);
+			sm.get_optional().set_setDpf(1);
+
+            sm.get_header().set_commandLength(sm.size());
+			sm.get_header().set_commandId(SmppCommandSet::DATA_SM);
+            sm.get_header().set_commandStatus(0);
+            sm.get_header().set_sequenceNumber(seqNumber);
+
+            if (msgBuf) delete msgBuf;
+			//sm.dump(stdout, 1);
+			
+			smsc_log_debug(logger, "Sending DATA_SM to %s seq_num = %d", daStr, sm.get_header().get_sequenceNumber());
+            asyncTransmitter->sendPdu(&(sm.get_header()));
+            TrafficControl::incOutgoing();
+
+		}
+		else
         {
             const char* out  = message.message.c_str();
             int outLen = message.message.length();
             
             char* msgBuf = 0;
-            int msgDataCoding = DataCoding::LATIN1;
+			int msgDataCoding = DataCoding::LATIN1;
             if(hasHighBit(out,outLen))
             {
                 int msgLen = outLen*2;
@@ -350,6 +435,8 @@ public:
             sm.get_header().set_sequenceNumber(seqNumber);
 
             if (msgBuf) delete msgBuf;
+
+			smsc_log_debug(logger, "Sending SUBMIT_SM to %s seq_num = %d", daStr, sm.get_header().get_sequenceNumber());
             asyncTransmitter->sendPdu(&(sm.get_header()));
             TrafficControl::incOutgoing();
         }
@@ -379,102 +466,95 @@ public:
         asyncTransmitter = transmitter;
     }
     
-    void processResponce(SmppHeader *pdu, bool cancel)
+    void processDataSmResp(SmppHeader *pdu)
     {
         if (!pdu) return;
+		int cmdId	= pdu->get_commandId();
+        int seqNum	= pdu->get_sequenceNumber();
+        int status	= pdu->get_commandStatus();
         
-        int seqNum = pdu->get_sequenceNumber();
-        int status = pdu->get_commandStatus();
-        
-        bool accepted       = (status == Status::OK);
-        bool cancel_failed  = (cancel && (status == Status::CANCELFAIL));
-        bool retry          = (cancel_failed) ? false:(!accepted && !Status::isErrorPermanent(status));
-        
-        bool immediate      = (status == Status::MSGQFUL   ||
-                               status == Status::THROTTLED ||
-                               status == Status::SUBSCRBUSYMT);
+		TrafficControl::incIncoming();
+		processor.invokeProcessDataSmResp(cmdId, status, seqNum);
 
-        bool trafficst      = (status == Status::MSGQFUL                   ||
-                               status == Status::THROTTLED                 ||
-                               status == Status::MAP_RESOURCE_LIMITATION   ||
-                               status == Status::MAP_NO_RESPONSE_FROM_PEER ||
-                               status == Status::SMENOTCONNECTED           ||
-                               status == Status::SYSFAILURE);
+	}
+	void processAlertNotification(SmppHeader *pdu)
+	{
+        if (!pdu) return;
+        PduAlertNotification* alert = (PduAlertNotification*)pdu;
+		int cmdId	= pdu->get_commandId();
+        int status	= pdu->get_commandStatus();
+		int ton = alert->get_esme().get_typeOfNumber();
+		int npi = alert->get_esme().get_numberingPlan();
+		int ms_availability_status = 0xFF;
+		
+		if(alert->get_optional().has_msAvailableStatus())
+			ms_availability_status = alert->get_optional().get_msAvailableStatus();
 
-        if (!trafficst && !cancel) TrafficControl::incIncoming();
-
-        std::string msgId = ""; 
-        if (!cancel) {
-            const char* msgid = ((PduXSmResp*)pdu)->get_messageId();
-            if (!msgid || msgid[0] == '\0') accepted = false;
-            else msgId = msgid;
-        }
-
-        processor.invokeProcessResponce(seqNum, accepted, retry, immediate,
-                                        cancel, cancel_failed, msgId);
-    }
-
-    void processReceipt (SmppHeader *pdu)
+		const char* source_addr = alert->get_esme().get_value();
+		int source_addr_size = strlen(source_addr);
+		
+		smsc_log_debug(logger, "MCISme: Recieved Alert Notification: ton=%d, npi=%d, source_addr=%s, addr_size=%d avalible = %X", 
+						ton, npi, source_addr, source_addr_size, ms_availability_status);
+//		if(0 != ms_availability_status)	return;
+        AbntAddr	abnt(source_addr_size, ton, npi, source_addr);
+		processor.invokeProcessAlertNotification(cmdId, status, abnt);
+	}
+    void processDeliverySm(SmppHeader *pdu)
     {
         if (!pdu || !asyncTransmitter) return;
-        bool bNeedResponce = true;
+        //bool bNeedResponce = true;
 
-        SMS sms;
-        fetchSmsFromSmppPdu((PduXSm*)pdu, &sms);
-        bool isReceipt = (sms.hasIntProperty(Tag::SMPP_ESM_CLASS)) ? 
-            ((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3C) == 0x4) : false;
-        
-        if (isReceipt && ((PduXSm*)pdu)->get_optional().has_receiptedMessageId())
-        {
-            const char* msgid = ((PduXSm*)pdu)->get_optional().get_receiptedMessageId();
-            if (msgid && msgid[0] != '\0')
-            {
-                bool delivered = false;
-                bool expired   = false;
-                bool deleted   = false;
-                
-                if (sms.hasIntProperty(Tag::SMPP_MSG_STATE))
-                {
-                    int msgState = sms.getIntProperty(Tag::SMPP_MSG_STATE);
-                    switch (msgState)
-                    {
-                    case SmppMessageState::DELIVERED:
-                        delivered = true;
-                        break;
-                    case SmppMessageState::EXPIRED:
-                        expired = true;
-                        break;
-                    case SmppMessageState::DELETED:
-                        deleted = true;
-                        break;
-                    case SmppMessageState::ENROUTE:
-                    case SmppMessageState::UNKNOWN:
-                    case SmppMessageState::ACCEPTED:
-                    case SmppMessageState::REJECTED:
-                    case SmppMessageState::UNDELIVERABLE:
-                        break;
-                    default:
-                        smsc_log_warn(logger, "Invalid state=%d received in reciept !", msgState);
-                        break;
-                    }
-                }
-                
-                bNeedResponce = processor.invokeProcessReceipt(msgid, delivered, expired, deleted);
-            }
-        }
-
-        if (bNeedResponce)
-        {
-            PduDeliverySmResp smResp;
-            smResp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
-            smResp.set_messageId("");
-            smResp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
-            asyncTransmitter->sendDeliverySmResp(smResp);
-        }
+        //SMS sms;
+        //fetchSmsFromSmppPdu((PduXSm*)pdu, &sms);
+        //bool isReceipt = (sms.hasIntProperty(Tag::SMPP_ESM_CLASS)) ? 
+        //    ((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3C) == 0x4) : false;
+        //
+        //if (isReceipt && ((PduXSm*)pdu)->get_optional().has_receiptedMessageId())
+        //{
+        //    const char* msgid = ((PduXSm*)pdu)->get_optional().get_receiptedMessageId();
+        //    if (msgid && msgid[0] != '\0')
+        //    {
+        //        bool delivered = false;
+        //        bool expired   = false;
+        //        bool deleted   = false;
+        //        
+        //        if (sms.hasIntProperty(Tag::SMPP_MSG_STATE))
+        //        {
+        //            int msgState = sms.getIntProperty(Tag::SMPP_MSG_STATE);
+        //            switch (msgState)
+        //            {
+        //            case SmppMessageState::DELIVERED:
+        //                delivered = true;
+        //                break;
+        //            case SmppMessageState::EXPIRED:
+        //                expired = true;
+        //                break;
+        //            case SmppMessageState::DELETED:
+        //                deleted = true;
+        //                break;
+        //            case SmppMessageState::ENROUTE:
+        //            case SmppMessageState::UNKNOWN:
+        //            case SmppMessageState::ACCEPTED:
+        //            case SmppMessageState::REJECTED:
+        //            case SmppMessageState::UNDELIVERABLE:
+        //                break;
+        //            default:
+        //                smsc_log_warn(logger, "Invalid state=%d received in reciept !", msgState);
+        //                break;
+        //            }
+        //        }
+        //    }
+        //}
+		PduDeliverySmResp smResp;
+        smResp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
+        smResp.set_messageId("");
+        smResp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+        asyncTransmitter->sendDeliverySmResp(smResp);
     }
 
     void handleEvent(SmppHeader *pdu)
     {
+
         if (bMCISmeIsConnecting) {
             mciSmeReady.Wait(mciSmeReadyTimeout);
             if (bMCISmeIsConnecting) {
@@ -485,20 +565,48 @@ public:
 
         switch (pdu->get_commandId())
         {
-        case SmppCommandSet::DELIVERY_SM:
-            processReceipt(pdu);
-            break;
-        case SmppCommandSet::CANCEL_SM_RESP:
-            processResponce(pdu, true);
-            break;
-        case SmppCommandSet::SUBMIT_SM_RESP:
-            processResponce(pdu, false);
-            break;
-        case SmppCommandSet::ENQUIRE_LINK: case SmppCommandSet::ENQUIRE_LINK_RESP:
-            break;
-        default:
-            smsc_log_debug(logger, "Received unsupported Pdu !");
-            break;
+			case SmppCommandSet::DATA_SM_RESP:
+				processDataSmResp(pdu);
+				break;
+			case SmppCommandSet::ALERT_NOTIFICATION:
+				processAlertNotification(pdu);
+				break;
+
+				//if(resp->get_optional().has_deliveryFailureReason())
+				//	printf("faied = %X\n", resp->get_optional().deliveryFailureReason);
+				//else
+				//	printf("OK\n");
+				//if(resp->get_optional().has_networkErrorCode())
+				//	printf("networkErrorCode = %X\n", resp->get_optional().networkErrorCode);
+				//else
+				//	printf("No networkErrorCode \n");
+				//if(resp->get_optional().has_additionalStatusInfoText())
+				//	printf("additionalStatusInfoText = %s\n", resp->get_optional().additionalStatusInfoText);
+				//else
+				//	printf("No additionalStatusInfoText\n");
+				//if(resp->get_optional().has_dpfResult())
+				//	printf("dpfResult = %X\n", resp->get_optional().dpfResult);
+				//else
+				//	printf("No dpfResult\n");
+				//break;
+				//resp->dump(stdout, 1);
+
+			case SmppCommandSet::DELIVERY_SM:
+				smsc_log_debug(logger, "Received DELIVERY_SM seq_num = %d", pdu->get_sequenceNumber());	
+				processDeliverySm(pdu);
+				break;
+			case SmppCommandSet::CANCEL_SM_RESP:
+				smsc_log_debug(logger, "Received CANCEL_SM_RESP seq_num = %d", pdu->get_sequenceNumber());
+				break;
+			case SmppCommandSet::SUBMIT_SM_RESP:
+				TrafficControl::incIncoming();
+				smsc_log_debug(logger, "SUBMIT_SM_RESP seq_num = %d", pdu->get_sequenceNumber());
+				break;
+			case SmppCommandSet::ENQUIRE_LINK: case SmppCommandSet::ENQUIRE_LINK_RESP:
+				break;
+			default:
+				smsc_log_debug(logger, "Received unsupported Pdu !");
+				break;
         }
         
         disposePdu(pdu);
@@ -600,23 +708,75 @@ int main(void)
     logger = Logger::getInstance("smsc.mcisme.MCISme");
     
     atexit(atExitHandler);
-    clearSignalMask();
+ //   clearSignalMask();
 
-    shutdownThread.Start();
+	//shutdownThread.Start();
 
+
+//	ProfilesStorage::Open();
+
+//	ProfilesStorage* ps = ProfilesStorage::GetInstance();
+
+	//AbntAddr abnt("+1234567890");
+	//AbonentProfile prof;
+	//
+	//prof.eventMask = 17;
+	//prof.inform = true;
+	//prof.notify = false;
+	//prof.informTemplateId = 18;
+	//prof.notifyTemplateId = -1;
+
+	//printf("prof.eventMask = %d\n", prof.eventMask);
+	//printf("prof.inform = %d\n", prof.inform);
+	//printf("prof.notify = %d\n", prof.notify);
+	//printf("prof.informTemplateId = %d\n", prof.informTemplateId);
+	//printf("prof.notifyTemplateId = %d\n", prof.notifyTemplateId);
+
+	//ps->Set(abnt, prof);
+
+	//prof.eventMask = 0;
+	//prof.inform = 0;
+	//prof.notify = 0;
+	//prof.informTemplateId = 0;
+	//prof.notifyTemplateId = 0;
+
+	//printf("prof.eventMask = %d\n", prof.eventMask);
+	//printf("prof.inform = %d\n", prof.inform);
+	//printf("prof.notify = %d\n", prof.notify);
+	//printf("prof.informTemplateId = %d\n", prof.informTemplateId);
+	//printf("prof.notifyTemplateId = %d\n", prof.notifyTemplateId);
+
+	//ps->Get(abnt, prof);
+
+	//printf("prof.eventMask = %d\n", prof.eventMask);
+	//printf("prof.inform = %d\n", prof.inform);
+	//printf("prof.notify = %d\n", prof.notify);
+	//printf("prof.informTemplateId = %d\n", prof.informTemplateId);
+	//printf("prof.notifyTemplateId = %d\n", prof.notifyTemplateId);
+
+
+	//uint32_t val;
+	//const char* key1 = "1234";
+	//ps->Set(key1, 10);
+	//ps->Get(key1, val);
+	//printf("val=%d\n", val);
+	//ps->Set(key1, 20);
+	//ps->Get(key1, val);
+	//printf("val=%d\n", val);
+
+//	exit(0);
     std::auto_ptr<ServiceSocketListener> adml(new ServiceSocketListener());
     adminListener = adml.get();
-    
+
     int resultCode = 0;
     try 
     {
         smsc_log_info(logger, getStrVersion());
-
-        Manager::init("config.xml");
+        Manager::init("./conf/config.xml");
         Manager& manager = Manager::getInstance();
 
-        ConfigView dsConfig(manager, "StartupLoader");
-        DataSourceLoader::loadup(&dsConfig);
+//      ConfigView dsConfig(manager, "StartupLoader");
+//      DataSourceLoader::loadup(&dsConfig);
         
         ConfigView tpConfig(manager, "MCISme");
         try { unrespondedMessagesMax = tpConfig.getInt("unrespondedMessagesMax"); } catch (...) {};
@@ -625,7 +785,7 @@ int main(void)
             smsc_log_warn(logger, "Parameter 'unrespondedMessagesMax' value is invalid. Using default %d",
                           unrespondedMessagesMax);
         }
-        if (unrespondedMessagesMax > 500) {
+		if (unrespondedMessagesMax > 500) {
             smsc_log_warn(logger, "Parameter 'unrespondedMessagesMax' value '%d' is too big. "
                           "The preffered max value is 500", unrespondedMessagesMax);
         }
@@ -639,23 +799,63 @@ int main(void)
             smsc_log_warn(logger, "Parameter 'unrespondedMessagesSleep' value '%d' is too big. "
                           "The preffered max value is 500ms", unrespondedMessagesSleep);
         }
-        
-        ConfigView adminConfig(manager, "MCISme.Admin");
-        adminListener->init(adminConfig.getString("host"), adminConfig.getInt("port"));               
+
+        try { outgoingSpeedMax = tpConfig.getInt("outgoingSpeedMax"); } catch (...) {};
+        if (outgoingSpeedMax <= 0) {
+            outgoingSpeedMax = 50;
+            smsc_log_warn(logger, "'outgoingSpeedMax' value is invalid. Using default %d messages per second",
+                          outgoingSpeedMax);
+        }
+        if (outgoingSpeedMax > 400) {
+            smsc_log_warn(logger, "Parameter 'unrespondedMessagesSleep' value '%d' is too big. "
+                          "The preffered max value is 400 messages per second", outgoingSpeedMax);
+        }
+
+		std::auto_ptr<ConfigView> profStorCfgGuard(tpConfig.getSubConfig("ProfileStorage"));
+        ConfigView* profStorCfg = profStorCfgGuard.get();
+        string locationProfStor;
+        try {locationProfStor = profStorCfg->getString("location"); } catch (...){locationProfStor="./";
+            smsc_log_warn(logger, "Parameter <MCISme.ProfileStorage.location> missed. Default value is './'");}
+		smsc_log_warn(logger, "Profile Storage location is '%s'", locationProfStor.c_str());
+		ProfilesStorage::Open(locationProfStor);
+		smsc_log_warn(logger, "Profile Storage is opened");
+
+		ProfilesStorageServer	pss;
+        try 
+		{
+			int portProfStor = profStorCfg->getInt("port");
+			if(portProfStor > 0)
+			{
+				pss.init("0.0.0.0", portProfStor);
+				pss.Start();
+				smsc_log_warn(logger, "ProfilesStorageServer started on port %d.", portProfStor);
+			}
+			else
+				smsc_log_warn(logger, "ProfilesStorageServer NOT started - illegal port %d.", portProfStor);
+		} 
+		catch (...)
+		{
+			smsc_log_warn(logger, "Parameter <MCISme.ProfileStorage.port> missed. ProfilesStorageServer NOT started");
+		}
+		
+		ConfigView adminConfig(manager, "MCISme.Admin");
+		smsc_log_debug(logger, "%s %d", adminConfig.getString("host"), adminConfig.getInt("port"));
+	    adminListener->init(adminConfig.getString("host"), adminConfig.getInt("port"));               
         bAdminListenerInited = true;
         
-        TaskProcessor processor(&tpConfig);
+		TaskProcessor processor(&tpConfig);
+
         taskProcessor = &processor;
         
         MCISmeAdministrator adminHandler(processor);
         MCISmeComponent admin(adminHandler);                   
         ComponentManager::registerComponent(&admin); 
         adminListener->Start();
-        
+       
         ConfigView smscConfig(manager, "MCISme.SMSC");
         MCISmeConfig cfg(&smscConfig);
-
-        while (!isNeedStop())
+		
+		while (!isNeedStop())
         {
             MCISmePduListener       listener(processor);
             SmppSession             session(cfg, &listener);
@@ -689,12 +889,11 @@ int main(void)
                 continue;
             }
             smsc_log_info(logger, "Connected.");
-            
-            //smsc_log_info(logger, "Running messages send loop...");
-            //setShutdownHandler();
-            processor.Run();
+            smsc_log_info(logger, "Running messages send loop...");
+            setShutdownHandler();
+			processor.Run();
             clearSignalMask();
-            //smsc_log_info(logger, "Message send loop exited");
+            smsc_log_info(logger, "Message send loop exited");
             
             smsc_log_info(logger, "Disconnecting from SMSC ...");
             TrafficControl::stopControl();
@@ -731,8 +930,9 @@ int main(void)
         adminListener->WaitFor();
     }
 
-    DataSourceLoader::unload();
-    //smsc_log_debug(logger, "Exited !!!");
+//    DataSourceLoader::unload();
+    //ProfilesStorage::Close();
+    smsc_log_debug(logger, "Exited !!!");
     shutdownThread.Stop();
     return resultCode;
 }

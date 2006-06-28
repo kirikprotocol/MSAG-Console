@@ -19,6 +19,7 @@
 
 #include "Templates.h"
 #include "misscall/callproc.hpp"
+#include <mcisme/AbntAddr.hpp>
 
 namespace smsc { namespace mcisme
 {
@@ -32,7 +33,7 @@ namespace smsc { namespace mcisme
         uint64_t    id;
         uint32_t    attempts;
         std::string abonent, message, smsc_id;
-        bool        cancel, notification, skip;
+        bool        cancel, notification, skip, data_sm;
         int         rowsCount, eventsCount;
 
         static int  maxRowsPerMessage;
@@ -41,7 +42,7 @@ namespace smsc { namespace mcisme
         Message(const Message& msg) 
             : id(msg.id), attempts(msg.attempts), abonent(msg.abonent), message(msg.message),
               smsc_id(msg.smsc_id), cancel(msg.cancel), notification(msg.notification), 
-              skip(msg.skip), rowsCount(msg.rowsCount), eventsCount(msg.eventsCount) {};
+			  skip(msg.skip), data_sm(msg.data_sm), rowsCount(msg.rowsCount), eventsCount(msg.eventsCount) {};
         
         Message& operator=(const Message& msg) {
             id = msg.id; attempts = msg.attempts;
@@ -54,7 +55,7 @@ namespace smsc { namespace mcisme
         inline void reset(const std::string& _abonent="") {
             id = 0; attempts = 0; this->abonent = _abonent;
             message = ""; smsc_id = ""; skip = false;
-            cancel = false; notification = false; 
+            cancel = false; notification = false; data_sm = false;
             rowsCount = 0; eventsCount = 0; 
         };
         inline bool isFull() {
@@ -89,7 +90,10 @@ namespace smsc { namespace mcisme
 
         bool canAdd(const MissedCallEvent& event);
         void addEvent(const MissedCallEvent& event);
+		void addEvent(const AbntAddr& abnt, const MCEvent& event);
         void formatMessage(Message& message, int timeOffset=0);
+//		void formatMessage(Message& message, const AbntAddr& abnt, const vector<MCEvent>& mc_events, uint8_t start_from, /*vector<uint32_t>*/uint8_t* ids, uint8_t& events_count,  int timeOffset=0);
+		void formatMessage(Message& message, const AbntAddr& abnt, const vector<MCEvent>& mc_events, uint8_t start_from, vector<MCEvent>& for_send, int timeOffset=0);
     };
 
     void keyIsNotSupported(const char* type) throw(AdapterException);

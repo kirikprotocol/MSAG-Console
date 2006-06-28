@@ -41,7 +41,7 @@ namespace smsc { namespace mcisme
     {
         uint8_t eventMask;
         bool    inform, notify;
-        int32_t informTemplateId, notifyTemplateId; // if -1 => default
+        int8_t informTemplateId, notifyTemplateId; // if -1 => default
         
         AbonentProfile() 
             : eventMask(AbonentProfiler::defaultEventMask), 

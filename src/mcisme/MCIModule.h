@@ -16,10 +16,10 @@
 
 #include <system/smscsignalhandlers.h>
 
-#include "misscall/callproc.hpp"
+#include <mcisme/misscall/callproc.hpp>
 
-//#define MCI_MODULE_TEST YES
-#undef  MCI_MODULE_TEST
+#define MCI_MODULE_TEST YES
+//#undef  MCI_MODULE_TEST
 
 extern "C" void clearSignalMask(void);
 
@@ -69,7 +69,7 @@ namespace smsc { namespace mcisme
 
         MCIModule(Hash<Circuits>& circuits, std::vector<Rule>& rules, 
                   const ReleaseSettings& releaseSettings, const char* redirectionAddress,
-                  const char* callingMask, const char* calledMask) 
+                  const char* callingMask, const char* calledMask, const char* countryCode) 
             : Thread(), logger(Logger::getInstance("smsc.mcisme.MCIModule")), 
                 listener(0), bAttached(false), bNeedExit(false), bRunning(false)
         {
@@ -81,6 +81,7 @@ namespace smsc { namespace mcisme
             module->setRedirectionAddress(redirectionAddress);
             module->setCircuits(circuits);
             module->setRules(rules);
+			module->setCountryCode(countryCode);
             if (!setCallingMask(callingMask))
                 throw Exception("Failed to compile calling mask '%s'.", callingMask ? callingMask:"");
             if (!setCalledMask(calledMask)) 
@@ -134,7 +135,7 @@ namespace smsc { namespace mcisme
         #ifdef MCI_MODULE_TEST
         void test()
         {
-            const int maxAbonents = 100;
+            const int maxAbonents = 900000;
             srandom((unsigned int)time(NULL)/*(unsigned int)0xdeadbeaf*/);
 
             MissedCallEvent event; char abonent[128]; Event sleepEvent;
@@ -145,13 +146,28 @@ namespace smsc { namespace mcisme
                 event.time = time(NULL)+((int)random()%3600);
                 sprintf(abonent, "+79029%06d", number); event.to   = abonent;
                 sprintf(abonent, "+79029%06d", caller); event.from = abonent;
-                if (i%10 == 0) event.from = ""; // unknown
+                //if (i%10 == 0)
+				event.from = ""; // unknown
                 event.cause = ALL;
                 {
                     MutexGuard guard(attachLock);
-                    if (bAttached && listener) listener->missed(event);
+                    if (bAttached && listener) 
+					{
+						listener->missed(event);
+						listener->missed(event);
+						listener->missed(event);
+						listener->missed(event);
+						listener->missed(event);
+						listener->missed(event);
+						listener->missed(event);
+						listener->missed(event);
+						listener->missed(event);
+						listener->missed(event);
+						listener->missed(event);
+						listener->missed(event);
+					}
                 }
-                sleepEvent.Wait(10); //3000
+                sleepEvent.Wait(100);
             }
         }
         #endif
@@ -171,17 +187,9 @@ namespace smsc { namespace mcisme
                 {   
         #ifndef MCI_MODULE_TEST
                     int result = 0;
-                    if (module && ((result = module->run()) != 0))
-                    {
-                        setRunning(false);
-                        smsc_log_error(logger, "MCI Module run/init failure. Exit code=%d. Stopping service", result);
-                        if (sigsend(P_PID, P_MYID, smsc::system::SHUTDOWN_SIGNAL) != 0) {
-                            smsc_log_error(logger, "Failed to send shutdown signal. Cause: %s. Terminating process...",
-                                           strerror(errno));
-                            exit(errno);
-                        }
-                        break;
-                    }
+                    if (module) result = module->run();
+                    setRunning(false);
+                    smsc_log_warn(logger, "MCI Module exited. Exit code=%d, restarting module", result);
         #else                    
                     test(); setRunning(false);
         #endif

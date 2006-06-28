@@ -2,9 +2,9 @@
 #define SMSC_MCI_SME_STATISTICS_MANAGER
 
 #include "Statistics.h"
+#include "core/buffers/File.hpp"
 
 #include <logger/Logger.h>
-#include <db/DataSource.h>
 
 #include <core/threads/Thread.hpp>
 
@@ -13,9 +13,9 @@
 
 namespace smsc { namespace mcisme
 {
-    using namespace smsc::db;
     using namespace core::threads;
     using namespace core::synchronization;
+    using smsc::core::buffers::File;
     
     using smsc::logger::Logger;
     
@@ -25,7 +25,6 @@ namespace smsc { namespace mcisme
     
         smsc::logger::Logger*   logger;
         smsc::logger::Logger*   processLog;
-        Connection*             connection;
         
         EventsStat              statistics[2];
 
@@ -40,8 +39,18 @@ namespace smsc { namespace mcisme
         short switchCounters();
         void  flushCounters(short index);
 
-        uint32_t calculatePeriod();
+        //uint32_t calculatePeriod();
         int      calculateToSleep();
+
+        std::string     location;
+        bool            bFileTM;
+        tm              fileTM;
+        File file;
+
+        bool createStorageDir(const std::string loc);
+        void dumpCounters(const uint8_t* buff, int buffLen, const tm& flushTM);
+        bool createDir(const std::string& dir);
+        void calculateTime(tm& flushTM);
 
     public:
         
@@ -56,8 +65,12 @@ namespace smsc { namespace mcisme
         virtual void incDelivered(const char* abonent);
         virtual void incFailed   (const char* abonent);
         virtual void incNotified (const char* abonent);
+        virtual void incMissed   (uint8_t count = 1);
+        virtual void incDelivered(uint8_t count = 1);
+        virtual void incFailed   (uint8_t count = 1);
+        virtual void incNotified (uint8_t count = 1);
         
-        StatisticsManager(Connection* connection);
+        StatisticsManager(const std::string& loc);
         virtual ~StatisticsManager();
     };
 
