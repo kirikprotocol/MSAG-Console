@@ -97,9 +97,7 @@ public class HttpRoute {
     public PrintWriter store(PrintWriter out) {
         String name = StringEncoderDecoder.encode(getName());
         try {
-            out.println("  <route id=\"" + name
-                    + "\" enabled=\"" + isEnabled()
-                    + "\">");
+            out.println("  <route id=\"" + name + "\" serviceId=\"" + service.getId() + "\" enabled=\"" + isEnabled() + "\">");
             abonent.store(out);
             routeSite.store(out);
             out.println("  </route>");

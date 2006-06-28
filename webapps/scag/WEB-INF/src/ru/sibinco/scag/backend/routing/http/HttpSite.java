@@ -51,7 +51,7 @@ public class HttpSite {
         out.println("  <site_subject_def id=\"" + StringEncoderDecoder.encode(getName()) + "\">");
         for (Iterator iterator = sites.values().iterator(); iterator.hasNext();) {
             final Site site = (Site) iterator.next();
-            out.println("    <site host=\"" + StringEncoderDecoder.encode(site.getHost()) + "\" port=\"" + site.getPort() + "\" >");
+            out.println("    <site host=\"" + StringEncoderDecoder.encode(site.getHost()) + "\"  port=\"" + site.getPort() + "\" >");
             String[] pathLinks = site.getPathLinks();
             for (int i = 0; i < pathLinks.length; i++) {
                 out.println("      <path value=\"" + pathLinks[i] + "\"/>");

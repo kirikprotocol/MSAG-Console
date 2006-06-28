@@ -67,10 +67,10 @@ public class RouteSite {
         }
         for (Iterator i = sites.values().iterator(); i.hasNext();) {
             final Site site = (Site) i.next();
-            out.println("      <site host=\"" + StringEncoderDecoder.encode(site.getHost()) + "\" +" +
-                    "host=\"" + site.getPort() + "\">");
+            out.println("      <site host=\"" + StringEncoderDecoder.encode(site.getHost()) + "\""  +
+                    " port=\"" + site.getPort() + "\">");
             for (int j = 0; j < site.getPathLinks().length; j++) {
-                out.println("           <path value==\"" + StringEncoderDecoder.encode(site.getPathLinks()[j]) + "\"/>");
+                out.println("           <path value=\"" + StringEncoderDecoder.encode(site.getPathLinks()[j]) + "\"/>");
             }
             out.println("      </site>");
         }
