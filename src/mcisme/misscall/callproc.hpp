@@ -56,6 +56,7 @@ static const uint8_t PREFIXED_STRATEGY = 0x01;
 static const uint8_t REDIRECT_STRATEGY = 0x02; // MTS defualt strategy
 static const uint8_t MIXED_STRATEGY    = 0x03;
 static const uint8_t REDIREC_RULE_STRATEGY = 0x04;
+static const uint8_t COUNTRY_CODE_MAX_LEN = 0x03;
 
 struct ReleaseSettings {
   int strategy;
@@ -84,6 +85,7 @@ class MissedCallProcessor
     void setRules(vector<Rule>& rules);
     void setReleaseSettings(ReleaseSettings params);
     void setRedirectionAddress(const char* address);
+	bool setCountryCode(const char* _countryCode);
 
   private:
     MissedCallProcessor();

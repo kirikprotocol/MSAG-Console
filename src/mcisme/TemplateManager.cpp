@@ -12,6 +12,9 @@ TemplateManager::TemplateManager(ConfigView* config) // throws ConfigException
     ConfigView* informCfg = informCfgGuard.get();
     std::auto_ptr< std::set<std::string> > informSetGuard(informCfg->getShortSectionNames());
     std::set<std::string>* informSet = informSetGuard.get();
+//	std::set<std::string>* informSet = informCfg->getShortSectionNames();
+	//int sz = informSet->size();
+	//printf("Total templates is %d\n", sz);
     for (std::set<std::string>::iterator i=informSet->begin();i!=informSet->end();i++)
     {
         const char* templateName = (const char *)i->c_str();
@@ -29,6 +32,7 @@ TemplateManager::TemplateManager(ConfigView* config) // throws ConfigException
         std::string messageTemplate = templateConfig->getString("message");
         std::string unknownCaller   = templateConfig->getString("unknownCaller");
         std::string singleTemplate  = templateConfig->getString("singleRow");
+	
         if (group) {
             std::string multiTemplate = templateConfig->getString("multiRow");
             informTemplates.Insert (templateId, 
@@ -38,7 +42,17 @@ TemplateManager::TemplateManager(ConfigView* config) // throws ConfigException
         else informTemplates.Insert(templateId, 
                                     new InformTemplateFormatter(messageTemplate, unknownCaller,
                                                                 singleTemplate));
-    }
+
+		//printf("\ntemplateName = %s\n", templateName);
+		//printf("templateId = %d\n", templateId);
+		//printf("group = %d\n", group);
+		//const char* str = messageTemplate.c_str();
+		//printf("messageTemplate = %s (len = %d)\n", messageTemplate.c_str(), messageTemplate.length());
+		//const char* tmp = messageTemplate.c_str();
+		//printf("unknownCaller = %s\n", unknownCaller.c_str());
+		//printf("singleTemplate = %s\n", singleTemplate.c_str());
+	
+	}
     defaultInformTemplateId = (int32_t)informCfg->getInt("default");
     if (defaultInformTemplateId < 0 || !informTemplates.Exist(defaultInformTemplateId)) 
         throw ConfigException("Default inform template id=%ld is invalid or wasn't specified", 

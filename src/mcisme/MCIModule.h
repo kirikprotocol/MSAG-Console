@@ -18,8 +18,8 @@
 
 #include <mcisme/misscall/callproc.hpp>
 
-#define MCI_MODULE_TEST YES
-//#undef  MCI_MODULE_TEST
+//#define MCI_MODULE_TEST YES
+#undef  MCI_MODULE_TEST
 
 extern "C" void clearSignalMask(void);
 

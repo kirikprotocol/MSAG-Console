@@ -465,12 +465,12 @@ int TaskProcessor::Execute()
 
 			try{checkAddress(event.to.c_str());}catch(Exception e)
 			{
-				smsc_log_error(logger, "Bad called number %s", e.what());
+				smsc_log_error(logger, "Bad called number. %s", e.what());
 				continue;
 			}
 			try{checkAddress(event.from.c_str());}catch(Exception e)
 			{
-				smsc_log_error(logger, "Bad calling number %s", e.what());
+				smsc_log_error(logger, "Bad calling number. %s", e.what());
 			}
 			AbntAddr to(event.to.c_str()), from(event.from.c_str());
 			outEvent = from;
@@ -490,7 +490,6 @@ int TaskProcessor::Execute()
 		catch(...)
 		{
 			smsc_log_error(logger, "Exeption in TaskProcessor::Execute()");
-			exit(0);
 		}
 	}
 	exitedEvent.Signal();

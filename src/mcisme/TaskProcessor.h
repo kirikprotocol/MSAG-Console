@@ -40,7 +40,6 @@
 #include "Messages.h"
 #include "Storage.hpp"
 #include "DeliveryQueue.hpp"
-#include "SMSCMessagesQueue.hpp"
 #include "AbntAddr.hpp"
 #include "ProfilesStorage.hpp"
 

@@ -708,9 +708,9 @@ int main(void)
     logger = Logger::getInstance("smsc.mcisme.MCISme");
     
     atexit(atExitHandler);
- //   clearSignalMask();
+    clearSignalMask();
 
-	//shutdownThread.Start();
+	shutdownThread.Start();
 
 
 //	ProfilesStorage::Open();
