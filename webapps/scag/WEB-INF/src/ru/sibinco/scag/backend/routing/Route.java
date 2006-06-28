@@ -193,7 +193,7 @@ public class Route {
             out.println("  </route>");
             return out;
         } catch (Exception e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            logger.error("Couldn't save route " + name, e);            
         }
         return null;
     }

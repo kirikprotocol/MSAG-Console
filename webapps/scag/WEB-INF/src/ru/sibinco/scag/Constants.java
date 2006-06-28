@@ -6,11 +6,13 @@
 package ru.sibinco.scag;
 
 
+
 public class Constants {
     public static final String TomcatRealmName = "SMSC.SmscRealm";
     private final String id;
     public static final String SCAG_SME_ID = "scag";
     public static final String SCAG_ERROR_MESSAGES_ATTRIBUTE_NAME = "SCAG_ERROR_MESSAGES_ATTRIBUTE";
+    public static final String APP_CONTEXT = "appContext";
 
     public interface errors {
         public interface status {
@@ -50,6 +52,7 @@ public class Constants {
                 public static final Constants HTTP_SITE_ALREADY_EXISTS = new Constants("error.routing.sites.http_site_already_exists");
                 public static final Constants HTTP_HOST_ALREADY_EXISTS = new Constants("error.routing.sites.http_host_already_exists");
                 public static final Constants COULD_NOT_CREATE = new Constants("error.routing.sites.could_not_create");
+                public static final Constants FOUND_DUPLICATE_SITE = new Constants("error.routing.sites.found.duplicate.site");
             }
 
             public interface routes {

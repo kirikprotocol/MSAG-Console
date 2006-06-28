@@ -95,6 +95,7 @@ public class HttpRoutingManager {
             final Document routesDocument = Utils.parse(config.getAbsolutePath());
             loadSubjects(routesDocument.getDocumentElement().getElementsByTagName("subject_def"));
             loadSites(routesDocument.getDocumentElement().getElementsByTagName("site_subject_def"));
+            loadRoutes(routesDocument.getDocumentElement().getElementsByTagName("route"));
         } catch (FactoryConfigurationError error) {
             logger.error("Couldn't configure xml parser factory", error);
             throw new SibincoException("Couldn't configure xml parser factory", error);
@@ -113,6 +114,19 @@ public class HttpRoutingManager {
         }
     }
 
+    private void loadRoutes(NodeList routeList) throws SibincoException {
+        routes = Collections.synchronizedMap(new HashMap());
+        for (int i = 0; i < routeList.getLength(); i++) {
+            final Element routeElem = (Element) routeList.item(i);
+            String id = routeElem.getAttribute("id");
+            routes.put(id, createRoute(routeElem, subjects));
+        }
+    }
+
+    private HttpRoute createRoute(Element routeElem, Map subjects) throws SibincoException {
+        return new HttpRoute(routeElem, subjects, serviceProvidersManager);
+    }
+
 
     private void saveToFile(final String fileName) throws SibincoException {
         final File file = new File(msagConfFolder, fileName);
@@ -128,6 +142,14 @@ public class HttpRoutingManager {
             for (Iterator iterator = subjects.values().iterator(); iterator.hasNext();) {
                 final HttpSubject httpSubject = (HttpSubject) iterator.next();
                 httpSubject.store(out);
+            }
+            for (Iterator iterator = sites.values().iterator(); iterator.hasNext();) {
+                final HttpSite httpSite = (HttpSite) iterator.next();
+                httpSite.store(out);
+            }
+            for (Iterator iterator = routes.values().iterator(); iterator.hasNext();) {
+                final HttpRoute httpRoute = (HttpRoute) iterator.next();
+                httpRoute.store(out);
             }
             Functions.storeConfigFooter(out, "http_routes");
             out.flush();

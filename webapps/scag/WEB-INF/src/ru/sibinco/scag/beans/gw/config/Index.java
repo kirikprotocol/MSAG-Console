@@ -223,5 +223,4 @@ public class Index extends EditBean {
     public void setStarted(boolean started) {
         this.started = started;
     }
-
 }

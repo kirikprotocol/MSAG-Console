@@ -26,7 +26,6 @@ public class HttpSubject{
 
     private String name = null;
     private MaskList masks;
-    private String notes = "";
 
     public HttpSubject(Element subjElement) throws SibincoException {
 
@@ -83,13 +82,4 @@ public class HttpSubject{
     public void setId(final String id) {
         setName(id);
     }
-
-    public String getNotes() {
-        return notes;
-    }
-
-    public void setNotes(final String notes) {
-        this.notes = notes;
-    }
-
 }

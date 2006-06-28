@@ -17,6 +17,8 @@ import java.util.*;
  */
 public abstract class TabledBeanImpl extends SCAGBean implements TabledBean
 {
+
+  public static final String PAGE_SIZE = "pageSize";
   protected List tabledItems = new ArrayList();
   protected String sort = null;
   protected int pageSize = 1;
@@ -33,15 +35,15 @@ public abstract class TabledBeanImpl extends SCAGBean implements TabledBean
   {
     super.process(request, response);
       HttpSession session = request.getSession();
-      if(session.getAttribute("pageSize") == null){
-          session.setAttribute("pageSize", new Integer(25));
+      if(session.getAttribute(PAGE_SIZE) == null){
+          session.setAttribute(PAGE_SIZE, new Integer(25));
       }else{
-          Integer pSize = (Integer) session.getAttribute("pageSize");
+          Integer pSize = (Integer) session.getAttribute(PAGE_SIZE);
           if(pSize.intValue() != pageSize && pageSize != 1){
-              session.setAttribute("pageSize", new Integer(pageSize));
+              session.setAttribute(PAGE_SIZE, new Integer(pageSize));
           }
       }
-      pageSize = Integer.parseInt(String.valueOf(session.getAttribute("pageSize")));
+      pageSize = Integer.parseInt(String.valueOf(session.getAttribute(PAGE_SIZE)));
       
     if (mbEdit != null)
       throw new EditException(mbEdit);

@@ -37,8 +37,8 @@ import java.util.*;
  */
 public class ScagRoutingManager {
 
-    private Map routes = null;//Collections.synchronizedMap(new HashMap());
-    private Map subjects = null;//Collections.synchronizedMap(new HashMap());
+    private Map routes = null;
+    private Map subjects = null;
     private final ArrayList statMessages = new ArrayList();
     private Logger logger = Logger.getLogger(this.getClass());
     private final File scagConfFolder;

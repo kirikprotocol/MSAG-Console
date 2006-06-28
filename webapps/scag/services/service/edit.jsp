@@ -38,15 +38,26 @@
                 <sm:rule transport="service.edit.rule.transport.mms" exists="${bean.mmsRuleExists}"/>
             </sm-ep:properties>
             <div class=page_subtitle>&nbsp;</div>
-            <div class=page_subtitle><fmt:message>service.edit.label.routes_list</fmt:message></div>
+            <div class=page_subtitle><fmt:message>service.edit.label.smpp.routes_list</fmt:message></div>
             <sm:table columns="checkbox,id,active,enabled,archived,notes"
                       names="c,service.edit.table.names.id,service.edit.table.names.active,service.edit.table.names.enabled,service.edit.table.names.archived,service.edit.table.names.notes" widths="1,60,20,20,39,59"
                       child="/routing/routes" parentId="${bean.parentId}" edit="id"/>
             <div class=page_subtitle>&nbsp;</div>
             <sm-pm:menu>
-                <sm-pm:item name="mbAddChild" value="service.edit.item.mbaddchild.value" title="service.edit.item.mbaddchild.title"/>
+                <sm-pm:item name="mbAddSmppRoute" value="service.edit.item.mbaddchild.value" title="service.edit.item.mbaddchild.title"/>
                 <sm-pm:item name="mbDelete" value="service.edit.item.mbdelete.value" title="service.edit.item.mbdelete.title"
                             onclick="deleteConfirm()" isCheckSensible="true"/>
+                <sm-pm:space/>
+            </sm-pm:menu>
+            <div class=page_subtitle>&nbsp;</div>
+            <div class=page_subtitle><fmt:message>service.edit.label.http.routes_list</fmt:message></div>
+            <sm:http_route columns="checkbox,id,enabled" names="c,name,enabled" widths="1,79,20"
+                           child="/routing/routes/http" parentId="${bean.parentId}" edit="id"/>
+            <div class=page_subtitle>&nbsp;</div>
+            <sm-pm:menu>
+                <sm-pm:item name="mbAddHttpRoute" value="service.edit.item.mbaddchild.value" title="service.edit.item.mbaddchild.title"/>
+                <sm-pm:item name="mbDelete" value="service.edit.item.mbdelete.value" title="service.edit.item.mbdelete.title"
+                            onclick="return confirm()" isCheckSensible="true"/>
                 <sm-pm:space/>
             </sm-pm:menu>
         </c:if>

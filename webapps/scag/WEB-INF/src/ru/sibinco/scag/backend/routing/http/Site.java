@@ -34,6 +34,13 @@ public class Site {
         this.pathLinks = pathLinks;
     }
 
+    public Site(String host, int port)  throws SibincoException {
+        if(host == null)
+            throw new NullPointerException("Host is null");
+        this.host = host;
+        this.port = port;
+    }
+
     public String getHost() {
         return host;
     }

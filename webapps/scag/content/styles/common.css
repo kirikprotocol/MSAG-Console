@@ -67,6 +67,15 @@ input.txt
 {
 	width: 265px;
 }
+input.midtxt
+{
+	width: 205px;
+}
+
+input.mintxt
+{
+	width: 60px;
+}
 input.txtW
 {
 	width: 100%;

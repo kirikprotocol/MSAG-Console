@@ -9,6 +9,7 @@ import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.scag.backend.routing.Route;
+import ru.sibinco.scag.backend.routing.http.HttpRoute;
 import ru.sibinco.scag.backend.status.StatMessage;
 import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.backend.Scag;
@@ -297,6 +298,20 @@ public class ServiceProvidersManager {
         for (Iterator i = new SortedList(routes.keySet()).iterator(); i.hasNext();) {
             String id = (String) i.next();
             Route route = (Route) routes.get(id);
+            if (route.getService() != null) {
+                if (route.getService().getId().equals(serviceId)) {
+                    result.put(route.getId(), route);
+                }
+            }
+        }
+        return result;
+    }
+
+    public synchronized Map getHttpRoutesByServiceId(final Map routes, Long serviceId) {
+        Map result = Collections.synchronizedMap(new HashMap());
+        for (Iterator i = new SortedList(routes.keySet()).iterator(); i.hasNext();) {
+            String id = (String) i.next();
+            HttpRoute route = (HttpRoute) routes.get(id);
             if (route.getService() != null) {
                 if (route.getService().getId().equals(serviceId)) {
                     result.put(route.getId(), route);

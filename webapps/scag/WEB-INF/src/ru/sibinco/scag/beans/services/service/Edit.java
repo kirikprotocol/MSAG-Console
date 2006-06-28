@@ -20,9 +20,8 @@ import ru.sibinco.scag.util.Utils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.Map;
+import javax.servlet.http.HttpSession;
+import java.util.*;
 
 /**
  * The <code>Edit</code> class represents
@@ -48,10 +47,14 @@ public class Edit extends TabledEditBeanImpl {
     private String dirName = "service";
     private boolean editChild = false;
     private String path = "";
-    private String mbAddChild;
+    private String mbAddSmppRoute;
+    private String mbAddHttpRoute;
     private Map routes = null;
     private Map serviceProviders;
     private String childEitId;
+    private List httpRuteItems = new ArrayList();
+
+    private int totalHttpSize = 0;
 
     protected Collection getDataSource() {
         return routes.values();
@@ -69,19 +72,30 @@ public class Edit extends TabledEditBeanImpl {
             throw new CancelChildException(path);
         } else if (getMbSave() != null) {
             save();
-        } else if (getMbAddChild() != null) {
+        } else if (getMbAddSmppRoute() != null) {
             throw new AddChildException(request.getContextPath() + "/routing/routes", (!editChild ? getEditId() : getParentId()));
+        } else if (getMbAddHttpRoute() != null) {
+            throw new AddChildException(request.getContextPath() + "/routing/routes/http", (!editChild ? getEditId() : getParentId()));
         }
         if (mbDelete != null) {
             delete();
         }
         Long servIdForRout;
-        if(getEditId() != null){
-           servIdForRout = (!editChild ? Long.decode(getEditId()) : Long.decode(getParentId()));
-        }else{
+        if (getEditId() != null) {
+            servIdForRout = (!editChild ? Long.decode(getEditId()) : Long.decode(getParentId()));
+        } else {
             servIdForRout = Long.decode(getParentId());
         }
-
+        HttpSession session = request.getSession();
+        if (session.getAttribute(TabledBeanImpl.PAGE_SIZE) == null) {
+            session.setAttribute(TabledBeanImpl.PAGE_SIZE, new Integer(25));
+        } else {
+            Integer pSize = (Integer) session.getAttribute(TabledBeanImpl.PAGE_SIZE);
+            if (pSize.intValue() != pageSize && pageSize != 1) {
+                session.setAttribute(TabledBeanImpl.PAGE_SIZE, new Integer(pageSize));
+            }
+        }
+        pageSize = Integer.parseInt(String.valueOf(session.getAttribute(TabledBeanImpl.PAGE_SIZE)));
         serviceProviders = appContext.getServiceProviderManager().getServiceProviders();
         routes = appContext.getServiceProviderManager().getRoutesByServiceId(
                 appContext.getScagRoutingManager().getRoutes(), servIdForRout);
@@ -91,6 +105,17 @@ public class Edit extends TabledEditBeanImpl {
             tabledItems = results.subList(startPosition, Math.min(totalSize, startPosition + pageSize));
         else
             tabledItems = new LinkedList();
+
+        final SortedList results2 = new SortedList(
+                appContext.getServiceProviderManager().getHttpRoutesByServiceId(
+                        appContext.getHttpRoutingManager().getRoutes(), servIdForRout).values(),
+                new SortByPropertyComparator(sort));
+        totalHttpSize = results2.size();
+        if (totalHttpSize > startPosition)
+            httpRuteItems = results2.subList(startPosition, Math.min(totalHttpSize, startPosition + pageSize));
+        else
+            httpRuteItems = new LinkedList();
+
         load();
 
         if (deleteRuleSMPP != null) deleteRule(Transport.SMPP_TRANSPORT_NAME);
@@ -280,12 +305,12 @@ public class Edit extends TabledEditBeanImpl {
         return (appContext.getRuleManager().getRule(new Long(id), Transport.MMS_TRANSPORT_NAME) != null);
     }
 
-    public String getMbAddChild() {
-        return mbAddChild;
+    public String getMbAddSmppRoute() {
+        return mbAddSmppRoute;
     }
 
-    public void setMbAddChild(String mbAddChild) {
-        this.mbAddChild = mbAddChild;
+    public void setMbAddSmppRoute(String mbAddSmppRoute) {
+        this.mbAddSmppRoute = mbAddSmppRoute;
     }
 
     public String getChildEitId() {
@@ -294,5 +319,29 @@ public class Edit extends TabledEditBeanImpl {
 
     public void setChildEitId(String childEitId) {
         this.childEitId = childEitId;
+    }
+
+    public List getHttpRuteItems() {
+        return httpRuteItems;
+    }
+
+    public void setHttpRuteItems(List httpRuteItems) {
+        this.httpRuteItems = httpRuteItems;
+    }
+
+    public String getMbAddHttpRoute() {
+        return mbAddHttpRoute;
+    }
+
+    public void setMbAddHttpRoute(String mbAddHttpRoute) {
+        this.mbAddHttpRoute = mbAddHttpRoute;
+    }
+
+    public int getTotalHttpSize() {
+        return totalHttpSize;
+    }
+
+    public void setTotalHttpSize(int totalHttpSize) {
+        this.totalHttpSize = totalHttpSize;
     }
 }
