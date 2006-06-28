@@ -4,7 +4,7 @@
         <sm-pm:menu>
             <sm-pm:item name="mbAdd" value="operators.index.item.mbadd.value" title="operators.index.item.mbadd.title"/>
             <sm-pm:item name="mbDelete" value="operators.index.item.mbdelete.value" title="operators.index.item.mbdelete.title"
-                        onclick="deleteConfirm()" isCheckSensible="true"/>
+                        onclick="return deleteConfirm()" isCheckSensible="true"/>
             <sm-pm:space/>
         </sm-pm:menu>
     </jsp:attribute>

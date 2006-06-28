@@ -249,7 +249,7 @@
                   <sm-pm:menu>
                       <sm-pm:item name="mbAddSite" value="subjects.edit.item.mbaddsite.value" title="subjects.edit.item.mbaddsite.title"/>
                       <sm-pm:item name="mbDelete" value="subjects.edit.item.mbdelete.value" title="subjects.edit.item.mbdelete.title"
-                                  onclick="deleteConfirm()"
+                                  onclick="return deleteConfirm()"
                                   isCheckSensible="true"/>
                       <sm-pm:space/>
                   </sm-pm:menu>

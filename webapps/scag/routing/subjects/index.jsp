@@ -20,7 +20,7 @@
                 <sm-pm:menu>
                     <sm-pm:item name="mbAdd" value="subjects.index.item.mbadd.value" title="subjects.index.item.mbadd.title"/>
                     <sm-pm:item name="mbDelete" value="subjects.index.item.mbdelete.value" title="subjects.index.item.mbdelete.title"
-                                onclick="deleteConfirm()" isCheckSensible="true"/>
+                                onclick="return deleteConfirm()" isCheckSensible="true"/>
                     <sm-pm:space/>
                 </sm-pm:menu>
 
@@ -31,7 +31,7 @@
                 <sm-pm:menu>
                     <sm-pm:item name="mbAddHttpSubj" value="subjects.index.item.mbaddhttpsubj.value" title="subjects.index.item.mbaddhttpsubj.title"/>
                     <sm-pm:item name="mbDeleteHttpSubj" value="subjects.index.item.mbdeletehttpsubj.value" title="subjects.index.item.mbdeletehttpsubj.title"
-                                onclick="deleteConfirm()" isCheckSensible="true"/>
+                                onclick="return deleteConfirm()" isCheckSensible="true"/>
                     <sm-pm:space/>
                 </sm-pm:menu>
                 <div class=page_subtitle>&nbsp;</div>
@@ -41,7 +41,7 @@
                 <sm-pm:menu>
                     <sm-pm:item name="mbAddHttpSite" value="subjects.index.item.mbadd.value" title="subjects.index.item.mbadd.title"/>
                     <sm-pm:item name="mbDeleteHttpSite" value="subjects.index.item.mbdelete.value" title="subjects.index.item.mbdelete.title"
-                                onclick="deleteConfirm()" isCheckSensible="true"/>
+                                onclick="return deleteConfirm()" isCheckSensible="true"/>
                     <sm-pm:space/>
                 </sm-pm:menu>
 

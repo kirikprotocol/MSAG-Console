@@ -46,7 +46,7 @@
             <sm-pm:menu>
                 <sm-pm:item name="mbAddSmppRoute" value="service.edit.item.mbaddchild.value" title="service.edit.item.mbaddchild.title"/>
                 <sm-pm:item name="mbDelete" value="service.edit.item.mbdelete.value" title="service.edit.item.mbdelete.title"
-                            onclick="deleteConfirm()" isCheckSensible="true"/>
+                            onclick="return deleteConfirm()" isCheckSensible="true"/>
                 <sm-pm:space/>
             </sm-pm:menu>
             <div class=page_subtitle>&nbsp;</div>
@@ -57,7 +57,7 @@
             <sm-pm:menu>
                 <sm-pm:item name="mbAddHttpRoute" value="service.edit.item.mbaddchild.value" title="service.edit.item.mbaddchild.title"/>
                 <sm-pm:item name="mbDeleteHttpRoute" value="service.edit.item.mbdelete.value" title="service.edit.item.mbdelete.title"
-                            onclick="deleteConfirm()" isCheckSensible="true"/>
+                           onclick="return deleteConfirm()" isCheckSensible="true"/>
                 <sm-pm:space/>
             </sm-pm:menu>
         </c:if>

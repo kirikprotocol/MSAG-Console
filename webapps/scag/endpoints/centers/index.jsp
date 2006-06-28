@@ -3,7 +3,8 @@
   <jsp:attribute name="menu">
     <sm-pm:menu>
       <sm-pm:item name="mbAdd" value="centers.index.item.mbadd.value" title="centers.index.item.mbadd.title"/>
-      <sm-pm:item name="mbDelete" value="centers.index.item.mbdelete.value" title="centers.index.item.mbdelete.title" onclick="deleteConfirm()" isCheckSensible="true"/>
+      <sm-pm:item name="mbDelete" value="centers.index.item.mbdelete.value" title="centers.index.item.mbdelete.title"
+                  onclick="return deleteConfirm()" isCheckSensible="true"/>
       <sm-pm:space/>
     </sm-pm:menu>
   </jsp:attribute>

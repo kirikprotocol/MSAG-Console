@@ -3,7 +3,7 @@
   <jsp:attribute name="menu">
     <sm-pm:menu>
       <sm-pm:item name="mbAdd" value="Add" title="Add new locale"/>
-      <sm-pm:item name="mbDelete" value="Delete" title="Delete service center" onclick="deleteConfirm()" isCheckSensible="true"/>
+      <sm-pm:item name="mbDelete" value="Delete" title="Delete service center" onclick="return deleteConfirm()" isCheckSensible="true"/>
       <sm-pm:space/>
     </sm-pm:menu>
   </jsp:attribute>
