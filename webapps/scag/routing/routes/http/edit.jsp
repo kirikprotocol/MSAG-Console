@@ -197,6 +197,7 @@
             newCell.innerHTML = addSiteSectionBody(siteName, valueElem.value, portElem.value);
             newRow.appendChild(newCell);
             valueElem.value = "";
+            portElem.value = '80';
             valueElem.focus();
             return true;
         } else
