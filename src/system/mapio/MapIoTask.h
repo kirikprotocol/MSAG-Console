@@ -382,6 +382,7 @@ class MapDialogContainer{
   }
 public:
   static smsc::logger::Logger* loggerStatDlg;
+  static smsc::logger::Logger* loggerMapPdu;
 
   void setPerformanceLimits(int newTimeOut,int newProcLimit)
   {
@@ -420,6 +421,7 @@ public:
 //    MutexGuard g(sync_object);
     if ( !container ) {
       loggerStatDlg = smsc::logger::Logger::getInstance("map.stat.dlg");
+      loggerMapPdu = smsc::logger::Logger::getInstance("map.pdu");
       container = new MapDialogContainer();
       container->last_dump_time = 0;
       for (unsigned n=1;n<MAX_DIALOGID_POOLED;++n){
