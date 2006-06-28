@@ -260,6 +260,22 @@ public class HttpRoutingManager {
         return null;
     }
 
+     public synchronized void deleteRoutes(final String user, final Set checkedSet) {
+        getRoutes().keySet().removeAll(checkedSet);
+        setRoutesChanged(true);
+        StatMessage message = new StatMessage(user, "Routes", "Deleted route(s): " + checkedSet.toString() + ".");
+        StatusManager.getInstance().addStatMessages(message);
+        addStatMessages(message);
+    }
+
+    public synchronized void deleteRoutes(final String user, final List checkedSet) {
+        getRoutes().keySet().removeAll(checkedSet);
+        setRoutesChanged(true);
+        StatMessage message = new StatMessage(user, "Routes", "Deleted route(s): " + checkedSet.toString() + ".");
+        StatusManager.getInstance().addStatMessages(message);
+        addStatMessages(message);
+    }
+
     public synchronized HttpSite getHttpSiteByName(String name) {
         return (HttpSite) sites.get(name);
     }

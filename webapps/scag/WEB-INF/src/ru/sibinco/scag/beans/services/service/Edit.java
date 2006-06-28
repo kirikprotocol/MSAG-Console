@@ -52,6 +52,7 @@ public class Edit extends TabledEditBeanImpl {
     private Map routes = null;
     private Map serviceProviders;
     private String childEitId;
+    private String mbDeleteHttpRoute;
     private List httpRuteItems = new ArrayList();
 
     private int totalHttpSize = 0;
@@ -79,6 +80,9 @@ public class Edit extends TabledEditBeanImpl {
         }
         if (mbDelete != null) {
             delete();
+        }
+        if (mbDeleteHttpRoute != null) {
+            deleteHttpRoute();
         }
         Long servIdForRout;
         if (getEditId() != null) {
@@ -125,6 +129,10 @@ public class Edit extends TabledEditBeanImpl {
             super.process(request, response);
         }
 
+    }
+
+    private void deleteHttpRoute() {
+       appContext.getHttpRoutingManager().deleteRoutes(getLoginedPrincipal().getName(), checkedSet);
     }
 
     protected void delete() throws SCAGJspException {
@@ -343,5 +351,13 @@ public class Edit extends TabledEditBeanImpl {
 
     public void setTotalHttpSize(int totalHttpSize) {
         this.totalHttpSize = totalHttpSize;
+    }
+
+    public String getMbDeleteHttpRoute() {
+        return mbDeleteHttpRoute;
+    }
+
+    public void setMbDeleteHttpRoute(String mbDeleteHttpRoute) {
+        this.mbDeleteHttpRoute = mbDeleteHttpRoute;
     }
 }
