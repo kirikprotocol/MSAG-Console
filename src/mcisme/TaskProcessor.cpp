@@ -18,6 +18,7 @@
 #include <sme/SmppBase.hpp>
 #include <sms/sms.h>
 #include <system/status.h>
+#include "system/common/TimeZoneMan.hpp"
 #include <time.h>
 #include "Templates.h"
 
@@ -271,6 +272,25 @@ TaskProcessor::TaskProcessor(ConfigView* config)
         throw ConfigException("MCISme supports only one constraint either by messages or callers. "
                               "Use <MCISme.maxCallersCount> or <MCISme.maxMessagesCount> parameter.");
 
+    string timeZoneFileLocation;
+    try { timeZoneFileLocation = config->getString("timeZoneFileLocation"); } catch (...)
+	{
+		throw ConfigException("MCISme need timeZoneFileLocation parameter."
+                              "Use <MCISme.timeZoneFileLocation> parameter in config.xml.");
+	}
+    string routesFileLocation;
+    try { routesFileLocation = config->getString("routesFileLocation"); } catch (...)
+	{
+		throw ConfigException("MCISme need routesFileLocation parameter."
+                              "Use <MCISme.routesFileLocation> parameter in config.xml.");
+	}
+	try{smsc::system::common::TimeZoneManager::Init(timeZoneFileLocation.c_str(), routesFileLocation.c_str());}catch(Exception e)
+	{
+        smsc_log_warn(logger, "TimeZoneManager::Init() error. %s", e.what());
+		throw ConfigException(e.what());
+	}
+	
+	time_t t = time(NULL); localtime(&t);	// после вызова localtime() должна проинициализироваться timezone;
 
 //    std::auto_ptr<ConfigView> dsIntCfgGuard(config->getSubConfig("DataSource"));
 //    initDataSource(dsIntCfgGuard.get());
@@ -348,6 +368,7 @@ TaskProcessor::~TaskProcessor()
     if (statistics) delete statistics;
 	if (pStorage) delete pStorage;
 	if (pDeliveryQueue) delete pDeliveryQueue;
+	smsc::system::common::TimeZoneManager::Shutdown();
 //    if (dsStatConnection) ds->freeConnection(dsStatConnection);
 //    if (ds) delete ds;
 }
@@ -431,17 +452,6 @@ int TaskProcessor::Execute()
 	
 	smsc_log_debug(logger, "Execute");
 
-//	int i=0;
-	//while (bInQueueOpen)
-	//{
-	//	statistics->incMissed();
-	//	statistics->incDelivered(5);
-	//	statistics->incFailed(2);
-	//	statistics->incNotified();
-	//	sleep(1);
-	//}
-	//exitedEvent.Signal();
- //   return 0;
 	time_t start = time(0);
 	time_t end = time(0);
 	uint32_t count=0;
@@ -527,6 +537,7 @@ void TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt)
 	sms_info*			pInfo = new sms_info;
 	
 	pInfo->abnt = abnt;
+	int timeOffset = smsc::system::common::TimeZoneManager::getInstance().getTimeZone(abnt.getAddress())+timezone;
 	formatter.formatMessage(msg, abnt, events, 0, pInfo->events);
 	msg.data_sm = true;
 //	smsc_log_debug(logger, "ProcessAbntEvents: msg = %s", msg.message.c_str());

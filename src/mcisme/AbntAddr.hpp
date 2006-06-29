@@ -240,7 +240,12 @@ public:
 	//		return snprintf(buf,buflen,".%d.%d.%s",value.addr_type,value.num_plan,vl);
 	//}
 
-	inline std::string getText(void)const
+	Address getAddress(void) const
+	{
+		return Address(getText().c_str());
+	};
+
+	inline std::string getText(void) const
 	{
 		char vl[32];
 		char buf[48];

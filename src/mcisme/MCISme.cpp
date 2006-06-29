@@ -708,63 +708,9 @@ int main(void)
     logger = Logger::getInstance("smsc.mcisme.MCISme");
     
     atexit(atExitHandler);
-    clearSignalMask();
-
+	clearSignalMask();
 	shutdownThread.Start();
 
-
-//	ProfilesStorage::Open();
-
-//	ProfilesStorage* ps = ProfilesStorage::GetInstance();
-
-	//AbntAddr abnt("+1234567890");
-	//AbonentProfile prof;
-	//
-	//prof.eventMask = 17;
-	//prof.inform = true;
-	//prof.notify = false;
-	//prof.informTemplateId = 18;
-	//prof.notifyTemplateId = -1;
-
-	//printf("prof.eventMask = %d\n", prof.eventMask);
-	//printf("prof.inform = %d\n", prof.inform);
-	//printf("prof.notify = %d\n", prof.notify);
-	//printf("prof.informTemplateId = %d\n", prof.informTemplateId);
-	//printf("prof.notifyTemplateId = %d\n", prof.notifyTemplateId);
-
-	//ps->Set(abnt, prof);
-
-	//prof.eventMask = 0;
-	//prof.inform = 0;
-	//prof.notify = 0;
-	//prof.informTemplateId = 0;
-	//prof.notifyTemplateId = 0;
-
-	//printf("prof.eventMask = %d\n", prof.eventMask);
-	//printf("prof.inform = %d\n", prof.inform);
-	//printf("prof.notify = %d\n", prof.notify);
-	//printf("prof.informTemplateId = %d\n", prof.informTemplateId);
-	//printf("prof.notifyTemplateId = %d\n", prof.notifyTemplateId);
-
-	//ps->Get(abnt, prof);
-
-	//printf("prof.eventMask = %d\n", prof.eventMask);
-	//printf("prof.inform = %d\n", prof.inform);
-	//printf("prof.notify = %d\n", prof.notify);
-	//printf("prof.informTemplateId = %d\n", prof.informTemplateId);
-	//printf("prof.notifyTemplateId = %d\n", prof.notifyTemplateId);
-
-
-	//uint32_t val;
-	//const char* key1 = "1234";
-	//ps->Set(key1, 10);
-	//ps->Get(key1, val);
-	//printf("val=%d\n", val);
-	//ps->Set(key1, 20);
-	//ps->Get(key1, val);
-	//printf("val=%d\n", val);
-
-//	exit(0);
     std::auto_ptr<ServiceSocketListener> adml(new ServiceSocketListener());
     adminListener = adml.get();
 
@@ -775,9 +721,6 @@ int main(void)
         Manager::init("./conf/config.xml");
         Manager& manager = Manager::getInstance();
 
-//      ConfigView dsConfig(manager, "StartupLoader");
-//      DataSourceLoader::loadup(&dsConfig);
-        
         ConfigView tpConfig(manager, "MCISme");
         try { unrespondedMessagesMax = tpConfig.getInt("unrespondedMessagesMax"); } catch (...) {};
         if (unrespondedMessagesMax <= 0) {

@@ -176,7 +176,7 @@ void MessageFormatter::formatMessage(Message& message, const AbntAddr& abnt, con
 			if(!callers.Exists(fromStr))
 			{
 				callers.Insert(fromStr, true);
-				convertedTime = mc_events[i].dt + timeOffset*3600;
+				convertedTime = mc_events[i].dt + timeOffset; //timeOffset*3600;
 				for_send.push_back(mc_events[i]);
 				count++;
 
@@ -189,7 +189,7 @@ void MessageFormatter::formatMessage(Message& message, const AbntAddr& abnt, con
 					
 					if(0 == strcmp(testStr, fromStr))
 					{
-						time_t t = mc_events[j].dt + timeOffset*3600;
+						time_t t = mc_events[j].dt + timeOffset; //*3600;
 						if(t > convertedTime) 
 							convertedTime = t;
 						for_send.push_back(mc_events[j]);

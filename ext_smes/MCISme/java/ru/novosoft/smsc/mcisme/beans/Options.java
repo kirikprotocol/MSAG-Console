@@ -106,6 +106,10 @@ public class Options extends MCISmeBean
   private String  mciSmeAddresses = "";
   private String  voiceMailAddresses = "";
 
+  private String  countryCode = "";
+  private String  timeZoneFileLocation = "";
+  private String  routesFileLocation = "";
+
   private String    eventStorageLocation = "";
   private String    eventLifeTime = "";
   private String    eventPolicyRegistration = "";
@@ -250,7 +254,11 @@ public class Options extends MCISmeBean
   //      dataSourceJdbcDriver = getConfig().getString("MCISme.DataSource.jdbc.driver");
   //      dataSourceJdbcSource = getConfig().getString("MCISme.DataSource.jdbc.source");
 
-        eventStorageLocation = getConfig().getString("MCISme.Storage.location");
+		countryCode = getConfig().getString("MCISme.CountryCode");
+		timeZoneFileLocation = getConfig().getString("MCISme.timeZoneFileLocation");
+		routesFileLocation = getConfig().getString("MCISme.routesFileLocation");
+
+		eventStorageLocation = getConfig().getString("MCISme.Storage.location");
         eventLifeTime = getConfig().getString("MCISme.Storage.eventLifeTime");
         eventPolicyRegistration = getConfig().getString("MCISme.Storage.eventRegistrationPolicy");
         maxEvents = getConfig().getInt("MCISme.Storage.maxEvents");
@@ -380,6 +388,10 @@ public class Options extends MCISmeBean
 //    getConfig().setBool  ("MCISme.DataSource.watchdog", dataSourceWatchdog);
 //    getConfig().setString("MCISme.DataSource.jdbc.driver", dataSourceJdbcDriver);
 //    getConfig().setString("MCISme.DataSource.jdbc.source", dataSourceJdbcSource);
+
+	getConfig().setString("MCISme.CountryCode", countryCode);
+	getConfig().setString("MCISme.timeZoneFileLocation", timeZoneFileLocation);
+	getConfig().setString("MCISme.routesFileLocation", routesFileLocation);
 
     getConfig().setString("MCISme.Storage.location", eventStorageLocation);
     getConfig().setString("MCISme.Storage.eventLifeTime", eventLifeTime);
@@ -1112,7 +1124,33 @@ public class Options extends MCISmeBean
     this.constraintType = constraintType;
   }
 
-    public String getEventStorageLocation() {
+	public String getCountryCode() 
+	{
+		return countryCode;
+	}
+	public void setCountryCode(String value) 
+	{
+		this.countryCode = value;
+	}
+	public String getTimeZoneFileLocation() 
+	{
+		return timeZoneFileLocation;
+	}
+	public void setTimeZoneFileLocation(String value) 
+	{
+		this.timeZoneFileLocation = value;
+	}
+	public String getRoutesFileLocation() 
+	{
+		return routesFileLocation;
+	}
+	public void setRoutesFileLocation(String value) 
+	{
+		this.routesFileLocation = value;
+	}
+
+    public String getEventStorageLocation() 
+	{
       return eventStorageLocation;
     }
     public void setEventStorageLocation(String value) {
@@ -1164,8 +1202,8 @@ public class Options extends MCISmeBean
       }
     }
 
-
-  public String getProfStorageLocation() {
+  public String getProfStorageLocation() 
+  {
     return profStorageLocation;
   }
   public void setProfStorageLocation(String value) {

@@ -77,10 +77,6 @@
   <td><input class=txt name=outputQueueSize value="<%=StringEncoderDecoder.encode(bean.getOutputQueueSize())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Max rows per message</th>
-  <td><input class=txt name=maxRowsPerMessage value="<%=StringEncoderDecoder.encode(bean.getMaxRowsPerMessage())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
   <th><label for=constraintType>Abonent traffic constraint</label></th>
   <td>
   <select name=constraintType id=constraintType onChange="switchConstraint();">
@@ -114,14 +110,6 @@
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Tasks thread pool max</th>
-  <td><input class=txt name=smppThreadPoolMax value="<%=StringEncoderDecoder.encode(bean.getSmppThreadPoolMax())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th>Tasks thread pool init</th>
-  <td><input class=txt name=smppThreadPoolInit value="<%=StringEncoderDecoder.encode(bean.getSmppThreadPoolInit())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
   <th>Admin host</th>
   <td><input class=txt name=adminHost value="<%=StringEncoderDecoder.encode(bean.getAdminHost())%>"></td>
 </tr>
@@ -148,6 +136,18 @@
 <tr class=row<%=rowN++&1%>>
   <th>SMSC connection password</th>
   <td><input class=txt name=smscPassword value="<%=StringEncoderDecoder.encode(bean.getSmscPassword())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Country code</th>
+  <td><input class=txt name=countryCode value="<%=StringEncoderDecoder.encode(bean.getCountryCode())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Time zones file location</th>
+  <td><input class=txt name=timeZoneFileLocation value="<%=StringEncoderDecoder.encode(bean.getTimeZoneFileLocation())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Routes file location</th>
+  <td><input class=txt name=routesFileLocation value="<%=StringEncoderDecoder.encode(bean.getRoutesFileLocation())%>"></td>
 </tr>
 </table>
 <script type="text/javascript">
