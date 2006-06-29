@@ -133,13 +133,13 @@ public class ProfileShortcutExecutor extends ProfileManagerState implements Exec
   {
     String str = "";
     if (activeReasons.indexOf('B') >= 0) str += (valueBusy + ": " +
-          (checkEventMask(info.eventMask, ProfileInfo.MASK_BUSY) ? valueYes:valueNo)+"/r/n");
+          (checkEventMask(info.eventMask, ProfileInfo.MASK_BUSY) ? valueYes:valueNo)+"\r\n");
     if (activeReasons.indexOf('D') >= 0) str += (valueDetach + ": " +
-          (checkEventMask(info.eventMask, ProfileInfo.MASK_DETACH) ? valueYes:valueNo)+"/r/n");
+          (checkEventMask(info.eventMask, ProfileInfo.MASK_DETACH) ? valueYes:valueNo)+"\r\n");
     if (activeReasons.indexOf('A') >= 0) str += (valueAbsent + ": " +
-          (checkEventMask(info.eventMask, ProfileInfo.MASK_ABSENT) ? valueYes:valueNo)+"/r/n");
+          (checkEventMask(info.eventMask, ProfileInfo.MASK_ABSENT) ? valueYes:valueNo)+"\r\n");
     if (activeReasons.indexOf('N') >= 0) str += (valueNoreply + ": " +
-          (checkEventMask(info.eventMask, ProfileInfo.MASK_NOREPLY) ? valueYes:valueNo)+"/r/n");
+          (checkEventMask(info.eventMask, ProfileInfo.MASK_NOREPLY) ? valueYes:valueNo)+"\r\n");
     if (activeReasons.indexOf('U') >= 0) str += (valueUncond + ": " +
           (checkEventMask(info.eventMask, ProfileInfo.MASK_UNCOND) ? valueYes:valueNo));
     return (str.endsWith("\r\n") ? str.substring(0, str.length()-2) : str);
@@ -203,8 +203,9 @@ public class ProfileShortcutExecutor extends ProfileManagerState implements Exec
       default:
         throw new ExecutingException("Shortcut "+shortcut+" is undefined", ErrorCode.PAGE_EXECUTOR_EXCEPTION);
     }
-    Message resp = new Message(); resp.setMessageString(Transliterator.translit(message));
-    return new ExecutorResponse(resp, true);
+//    Message resp = new Message(); resp.setMessageString(Transliterator.translit(message));
+//    return new ExecutorResponse(resp, true);
+    return new ExecutorResponse(Transliterator.translit(message), false);
   }
 
 }

@@ -52,6 +52,7 @@ public class ProfileManagerAltExecutor extends ProfileManagerState implements Ex
   private String getMaskValue(int mask, int option) {
     return (checkEventMask(mask, option) ? valueYes:valueNo);
   }
+  
   public ExecutorResponse execute(ScenarioState state) throws ExecutingException
   {
     ProfileInfo info = null;
@@ -64,16 +65,18 @@ public class ProfileManagerAltExecutor extends ProfileManagerState implements Ex
       state.removeAttribute(Constants.ATTR_ERROR);
     }
 
-    Message resp = new Message();
+//    Message resp = new Message();
     if (exc != null) {
       final String msg = errorFormat.format(new Object[] {getErrorMessage(exc)});
-      resp.setMessageString(Transliterator.translit(msg));
-      return new ExecutorResponse(new Message[]{resp}, true);
+//      resp.setMessageString(Transliterator.translit(msg));
+      return new ExecutorResponse(Transliterator.translit(msg), false);
+//      return new ExecutorResponse(new Message[]{resp}, true);
     }
 
     String jumpTo = (String)state.getAttribute(Constants.ATTR_JUMP);
     if (jumpTo != null) {
       state.removeAttribute(Constants.ATTR_JUMP);
+//    return new ExecutorResponse(new String("AAA"), false);
       return new ExecutorResponse(new Jump(jumpTo, state.getMessageString()));
     }
 
@@ -113,8 +116,9 @@ public class ProfileManagerAltExecutor extends ProfileManagerState implements Ex
     else if (body.endsWith("\r\n")) body = body.substring(0, body.length()-2);
     Object[] args = new Object[] { prefix, body };
     final String msg = pageFormat.format(args);
-    resp.setMessageString(Transliterator.translit(msg));
-    return new ExecutorResponse(new Message[]{resp}, false);
+//    resp.setMessageString(Transliterator.translit(msg));
+//    return new ExecutorResponse(new Message[]{resp}, false);
+    return new ExecutorResponse(Transliterator.translit(msg), false);
   }
 
 }

@@ -1,7 +1,7 @@
 package ru.sibinco.mci.profile;
 
 import ru.sibinco.smpp.appgw.scenario.ScenarioInitializationException;
-import ru.sibinco.smpp.appgw.util.ConnectionPool;
+//import ru.sibinco.smpp.appgw.util.ConnectionPool;
 import ru.sibinco.mci.Constants;
 
 import java.util.Iterator;
@@ -12,16 +12,10 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.ResultSet;
 import java.io.*;
+import java.net.*;
 
 import org.apache.log4j.Category;
 
-/**
- * Created by IntelliJ IDEA.
- * User: makar
- * Date: 09.09.2004
- * Time: 15:07:55
- * To change this template use File | Settings | File Templates.
- */
 public class ProfileManager
 {
   private static ProfileManager instance = null;
@@ -39,6 +33,8 @@ public class ProfileManager
   private ProfileInfo DEFAULT_PROFILE_INFO = new ProfileInfo();
   private HashMap informFormats = new HashMap(); // TODO: synchronize it ???
   private HashMap notifyFormats = new HashMap(); // TODO: synchronize it ???
+  private String hostProfStor = new String();
+  private int portProfStor = 0;
 
   private final static String DEFAULT_INFORM = "defaultInform";
   private final static String DEFAULT_NOTIFY = "defaultNotify";
@@ -47,6 +43,8 @@ public class ProfileManager
   private final static String DEFAULT_NOTIFY_ID = "defaultNotifyId";
   private final static String INFORM_TEMPLATE_PREFIX = "informTemplate.";
   private final static String NOTIFY_TEMPLATE_PREFIX = "notifyTemplate.";
+  private final static String HOST_PROF_STOR = "host";
+  private final static String PORT_PROF_STOR = "port";
 
   private ProfileManager() throws ScenarioInitializationException
   {
@@ -119,6 +117,31 @@ public class ProfileManager
       }
     }
 
+    InputStream isProfStor = this.getClass().getClassLoader().getResourceAsStream(Constants.MCI_PROF_STORAGE_FILE);
+    if (isProfStor == null)
+      throw new ScenarioInitializationException("Failed to locate template properties file");
+
+    Properties ProfStorProp = new Properties();
+    try {
+      ProfStorProp.load(isProfStor);
+    } catch(IOException e) {
+      throw new ScenarioInitializationException("Failed to load Profiles Storage properties", e);
+    } finally {
+      try { isProfStor.close(); } catch (Throwable th) {}
+    }
+
+    String host = ProfStorProp.getProperty(HOST_PROF_STOR);
+    if (host == null || host.trim().length() <= 0) {
+      logger.error("Parameter '"+HOST_PROF_STOR+"' missed. You must specify it.");
+      throw new ScenarioInitializationException("Failed to load Profiles Storage property '" + HOST_PROF_STOR + "'");
+    }
+    hostProfStor = host;
+    try {
+      portProfStor = Integer.parseInt(ProfStorProp.getProperty(PORT_PROF_STOR));
+    } catch (Exception e) {
+        logger.error("Parameter '"+PORT_PROF_STOR+"' missed. You must specify it.");
+        throw new ScenarioInitializationException("Failed to load Profiles Storage property '" + PORT_PROF_STOR + "'", e);
+    }
   }
 
   private FormatType getFormatType(long id, boolean inform)
@@ -138,44 +161,134 @@ public class ProfileManager
   private final static String DEL_PROFILE_SQL =
       "DELETE FROM mcisme_abonents WHERE abonent=?";
 
+	private byte[] prepareStatement(String abnt, ProfileInfo info, boolean set)
+	{
+		byte[] stmt = new byte[40];
+		int i;
+
+		stmt[0] = 1;
+		stmt[1]=0;	stmt[2]=0;
+		for(i = 0; i < abnt.length(); i++)
+			stmt[i+3] = (byte)abnt.charAt(i);
+		if(set)
+		{
+			stmt[0] = 2;
+			stmt[35] = (byte)info.getEventMask();
+			stmt[36] = (info.isInform() ? (byte)1:(byte)0);
+			stmt[37] = (info.isNotify() ? (byte)1:(byte)0);
+			stmt[38] = (byte)info.getInformFormat().getId();
+			stmt[39] = (byte)info.getNotifyFormat().getId();
+		}
+		return stmt;
+	}
+
+	private byte[] executeQuery(byte[] stmt) throws ProfileManagerException
+	{
+		ProfileInfo info = new ProfileInfo(DEFAULT_PROFILE_INFO);
+		Socket socket = null;
+		InputStream input = null;
+		OutputStream output = null;
+		byte[] anw = new byte[40];
+		int ret=0, len=0;
+		try 
+		{
+			socket = new Socket(hostProfStor, portProfStor);
+			socket.setSoTimeout(15000);
+			input = socket.getInputStream();
+			output = socket.getOutputStream();
+//			logger.error("Query to DB failed");
+			output.write(stmt, 0, 40);
+			while(len < 40)
+			{
+				ret = input.read(anw, len, 40-len);
+				len += ret;
+			}
+			if(anw[2] != 0)
+			{
+				logger.warn("ProfileInfo: Query to ProfileStorage - answer status != 0");
+				throw new ProfileManagerException(ProfileManagerException.DB_ERROR);
+			}
+			input.close();
+			output.close();
+			socket.close();
+			return anw;
+
+		} 
+		catch(UnknownHostException exc) 
+		{
+			logger.warn("ProfileInfo: Query to ProfileStorage");
+			throw new ProfileManagerException(exc, ProfileManagerException.DB_ERROR);
+		} 
+		catch(IOException exc) 
+		{
+			logger.warn("ProfileInfo: Query to ProfileStorage");
+			throw new ProfileManagerException(exc, ProfileManagerException.DB_ERROR);
+		}
+//		catch(SocketTimeoutException exc) 
+//		{
+//			logger.warn("ProfileInfo: Query to ProfileStorage");
+//			throw new ProfileManagerException(exc, ProfileManagerException.DB_ERROR);
+//		}
+	}
+
   public ProfileInfo getProfileInfo(String abonent) throws ProfileManagerException
   {
-    Connection connection  = null;
-    PreparedStatement stmt = null;
-    ResultSet rs = null;
-    try
+//    Connection connection  = null;
+//    PreparedStatement stmt = null;
+//    ResultSet rs = null;
+	
+	try
     {
-      connection = ConnectionPool.getConnection();
-      stmt = connection.prepareStatement(GET_PROFILE_SQL);
-      stmt.setString(1, abonent);
-      rs = stmt.executeQuery();
+//      connection = ConnectionPool.getConnection();
+//      stmt = connection.prepareStatement(GET_PROFILE_SQL);
+//      stmt.setString(1, abonent);
+//      rs = stmt.executeQuery();
+//
+//      if (rs == null || !rs.next())
+//        return new ProfileInfo(DEFAULT_PROFILE_INFO);
+		ProfileInfo i = new ProfileInfo();
+		byte[] stmt = prepareStatement(abonent, i, false);
+		byte[] anw = executeQuery(stmt);
 
-      if (rs == null || !rs.next())
-        return new ProfileInfo(DEFAULT_PROFILE_INFO);
+		ProfileInfo info = new ProfileInfo(getFormatType(anw[38], true), getFormatType(anw[39], false), (anw[36]==0? false: true), (anw[37]==0? false: true), anw[35]);
+//		info.eventMask = anw[35];
+//		info.inform = (anw[36]==0? false: true);
+//		info.notify = (anw[37]==0? false: true);
+//		info.informFormat = getFormatType(anw[38], true);
+//		info.notifyFormat = getFormatType(anw[39], false);
+//		ProfileInfo info = new ProfileInfo(getFormatType(1, true), getFormatType(1, false), true, true, 111);
 
-      ProfileInfo info = new ProfileInfo();
-      int pos = 1;
-      String result = rs.getString(pos++);
-      if (rs.wasNull()) info.inform = DEFAULT_PROFILE_INFO.inform;
-      else info.inform = !(result == null || result.length() <= 0 || result.trim().equalsIgnoreCase("N"));
-      result = rs.getString(pos++);
-      if (rs.wasNull()) info.notify = DEFAULT_PROFILE_INFO.notify;
-      else info.notify = !(result == null || result.length() <= 0 || result.trim().equalsIgnoreCase("N"));
-      long informId  = rs.getLong(pos++); if (rs.wasNull()) informId = DEFAULT_PROFILE_INFO.informFormat.getId();
-      long notifyId  = rs.getLong(pos++); if (rs.wasNull()) notifyId = DEFAULT_PROFILE_INFO.notifyFormat.getId();
-      info.eventMask = rs.getInt (pos++); if (rs.wasNull()) info.eventMask = DEFAULT_PROFILE_INFO.eventMask;
-      info.informFormat = getFormatType(informId, true);
-      info.notifyFormat = getFormatType(notifyId, false);
-      return info;
+		return info;
+	
+//		int pos = 1;
+//		String result = rs.getString(pos++);
+//		if (rs.wasNull()) info.inform = DEFAULT_PROFILE_INFO.inform;
+//		else info.inform = !(result == null || result.length() <= 0 || result.trim().equalsIgnoreCase("N"));
+//		result = rs.getString(pos++);
+//		if (rs.wasNull()) info.notify = DEFAULT_PROFILE_INFO.notify;
+//		else info.notify = !(result == null || result.length() <= 0 || result.trim().equalsIgnoreCase("N"));
+//		long informId  = rs.getLong(pos++); if (rs.wasNull()) informId = DEFAULT_PROFILE_INFO.informFormat.getId();
+//		long notifyId  = rs.getLong(pos++); if (rs.wasNull()) notifyId = DEFAULT_PROFILE_INFO.notifyFormat.getId();
+//		info.eventMask = rs.getInt (pos++); if (rs.wasNull()) info.eventMask = DEFAULT_PROFILE_INFO.eventMask;
+//		info.informFormat = getFormatType(informId, true);
+//		info.notifyFormat = getFormatType(notifyId, false);
+//		return info;
     }
     catch (Exception exc) {
       logger.error("Query to DB failed", exc);
       throw new ProfileManagerException(exc, ProfileManagerException.DB_ERROR);
     }
-    finally {
-      try { if (rs != null) rs.close(); } catch (Throwable th) { logger.error(th); }
-      try { if (stmt != null) stmt.close(); } catch (Throwable th) { logger.error(th); }
-      try { if (connection != null) connection.close(); } catch (Throwable th) { logger.error(th); }
+//	catch (ProfileManagerException exc) 
+//	{
+//		logger.error("Query to DB failed", exc);
+//		throw new ProfileManagerException(exc, ProfileManagerException.DB_ERROR);
+//	}
+
+	finally 
+	{
+//      try { if (rs != null) rs.close(); } catch (Throwable th) { logger.error(th); }
+//      try { if (stmt != null) stmt.close(); } catch (Throwable th) { logger.error(th); }
+//      try { if (connection != null) connection.close(); } catch (Throwable th) { logger.error(th); }
     }
   }
 
@@ -191,39 +304,51 @@ public class ProfileManager
   }
   public void setProfileInfo(String abonent, ProfileInfo info) throws ProfileManagerException
   {
-    Connection connection  = null;
-    PreparedStatement stmt = null;
-    try
-    {
-      connection = ConnectionPool.getConnection();
-      stmt = connection.prepareStatement(SET_PROFILE_SQL);
-      int pos = bindProfileInfo(stmt, info, 1);
-      stmt.setString(pos++, abonent);
+	  try
+	  {
+		  byte[] stmt = prepareStatement(abonent, info, true);
+		  byte[] anw = executeQuery(stmt);
+	  }
+	  catch (Exception exc) 
+	  {
+		  logger.error("Query to DB failed", exc);
+		  throw new ProfileManagerException(exc, ProfileManagerException.DB_ERROR);
+	  }
 
-      if (stmt.executeUpdate() <= 0) {
-        stmt.close(); stmt = null; pos = 1;
-        stmt = connection.prepareStatement(INS_PROFILE_SQL);
-        stmt.setString(pos++, abonent);
-        bindProfileInfo(stmt, info, pos);
-        if (stmt.executeUpdate() <= 0)
-          throw new Exception("Failed to insert new ProfileInfo record");
-      }
-      connection.commit();
-    }
-    catch (Exception exc) {
-      try { if (connection != null) connection.rollback(); } catch (Throwable th) { logger.error("", th); }
-      logger.error("Update/Insert to DB failed", exc);
-      throw new ProfileManagerException(exc, ProfileManagerException.DB_ERROR);
-    }
-    finally {
-      try { if (stmt != null) stmt.close(); } catch (Throwable th) { logger.error("", th); }
-      try { if (connection != null) connection.close(); }  catch (Throwable th) { logger.error("", th); }
-    }
+
+//    Connection connection  = null;
+//    PreparedStatement stmt = null;
+//    try
+//    {
+//      connection = ConnectionPool.getConnection();
+//      stmt = connection.prepareStatement(SET_PROFILE_SQL);
+//      int pos = bindProfileInfo(stmt, info, 1);
+//      stmt.setString(pos++, abonent);
+//
+//      if (stmt.executeUpdate() <= 0) {
+//        stmt.close(); stmt = null; pos = 1;
+//        stmt = connection.prepareStatement(INS_PROFILE_SQL);
+//        stmt.setString(pos++, abonent);
+//        bindProfileInfo(stmt, info, pos);
+//        if (stmt.executeUpdate() <= 0)
+//          throw new Exception("Failed to insert new ProfileInfo record");
+//      }
+//      connection.commit();
+//    }
+//    catch (Exception exc) {
+//      try { if (connection != null) connection.rollback(); } catch (Throwable th) { logger.error("", th); }
+//      logger.error("Update/Insert to DB failed", exc);
+//      throw new ProfileManagerException(exc, ProfileManagerException.DB_ERROR);
+//    }
+//    finally {
+//      try { if (stmt != null) stmt.close(); } catch (Throwable th) { logger.error("", th); }
+//      try { if (connection != null) connection.close(); }  catch (Throwable th) { logger.error("", th); }
+//    }
   }
 
   public void delProfileInfo(String abonent) throws ProfileManagerException
   {
-    Connection connection  = null;
+/*    Connection connection  = null;
     PreparedStatement stmt = null;
     try
     {
@@ -241,7 +366,7 @@ public class ProfileManager
     finally {
       try { if (stmt != null) stmt.close(); } catch (Throwable th) { logger.error("", th); }
       try { if (connection != null) connection.close(); } catch (Throwable th) { logger.error("", th); }
-    }
+    }*/
   }
 
   public Iterator getFormatAlts(boolean inform) {

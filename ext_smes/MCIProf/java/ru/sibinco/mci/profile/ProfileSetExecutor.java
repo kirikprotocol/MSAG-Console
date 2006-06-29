@@ -49,8 +49,9 @@ public class ProfileSetExecutor extends ProfileManagerState implements Executor
       logger.warn("Got stored exception", exc);
       state.removeAttribute(Constants.ATTR_ERROR);
       final String msg = errorFormat.format(new Object [] {getErrorMessage(exc)});
-      resp.setMessageString(Transliterator.translit(msg));
-      return new ExecutorResponse(new Message[]{resp}, true);
+//      resp.setMessageString(Transliterator.translit(msg));
+      return new ExecutorResponse(Transliterator.translit(msg), false);
+//      return new ExecutorResponse(new Message[]{resp}, true);
     }
 
     final String reason = (String)state.getAttribute(Constants.ATTR_REASON);
@@ -72,8 +73,9 @@ public class ProfileSetExecutor extends ProfileManagerState implements Executor
 
     Object args[] = new Object[] {inform ? valueInform:valueNotify, formatAlts};
     final String msg = pageFormat.format(args);
-    resp.setMessageString(Transliterator.translit(msg));
-    return new ExecutorResponse(new Message[]{resp}, false);
+//    resp.setMessageString(Transliterator.translit(msg));
+//    return new ExecutorResponse(new Message[]{resp}, false);
+    return new ExecutorResponse(Transliterator.translit(msg), false);
   }
 
 }

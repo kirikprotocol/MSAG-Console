@@ -56,13 +56,15 @@ public class ProfileManagerExecutor extends ProfileManagerState implements Execu
     Message resp = new Message();
     if (exc != null) {
       final String msg = errorFormat.format(new Object[] {getErrorMessage(exc)});
-      resp.setMessageString(Transliterator.translit(msg));
-      return new ExecutorResponse(new Message[]{resp}, true);
+//      resp.setMessageString(Transliterator.translit(msg));
+      return new ExecutorResponse(Transliterator.translit(msg), true);
+//      return new ExecutorResponse(new Message[]{resp}, true);
     }
     Object[] args = new Object[] {info.inform ? valueYes:valueNo, info.informFormat.getName(),
                                   info.notify ? valueYes:valueNo, info.notifyFormat.getName()};
     final String msg = pageFormat.format(args);
-    resp.setMessageString(Transliterator.translit(msg));
-    return new ExecutorResponse(new Message[]{resp}, false);
+//    resp.setMessageString(Transliterator.translit(msg));	
+//    return new ExecutorResponse(new Message[]{resp}, false);
+   return new ExecutorResponse(Transliterator.translit(msg), false);
   }
 }
