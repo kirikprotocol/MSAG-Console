@@ -53,12 +53,8 @@ InfrastructureImpl::~InfrastructureImpl()
 
 void InfrastructureImpl::init(const std::string& dir)
 {
-<<<<<<< Infrastructure.cpp
-    //XMLPlatformUtils::Initialize("ru_RU.KOI8-R");
-    XMLPlatformUtils::Initialize();
-=======
     XMLPlatformUtils::Initialize("en_EN.UTF-8");
->>>>>>> 1.21
+
     logger = Logger::getInstance("bill.i");
 
     smsc_log_debug(logger,"Provider/Operator Mapper allocated");
