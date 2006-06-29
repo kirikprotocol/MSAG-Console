@@ -538,7 +538,7 @@ void TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt)
 	
 	pInfo->abnt = abnt;
 	int timeOffset = smsc::system::common::TimeZoneManager::getInstance().getTimeZone(abnt.getAddress())+timezone;
-	formatter.formatMessage(msg, abnt, events, 0, pInfo->events);
+	formatter.formatMessage(msg, abnt, events, 0, pInfo->events, timeOffset);
 	msg.data_sm = true;
 //	smsc_log_debug(logger, "ProcessAbntEvents: msg = %s", msg.message.c_str());
 	msg.abonent = abnt.getText();//"777";
