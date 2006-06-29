@@ -1,14 +1,14 @@
 #ifndef _BILL_ACTION_OPEN_
 #define _BILL_ACTION_OPEN_
 
-#include "scag/re/actions/Action.h"
+#include "scag/re/actions/ActionAbstractWait.h"
 
 namespace scag { namespace bill {
 
 using namespace scag::re::actions;
 using namespace scag::re;
 
-class BillActionOpen : public Action
+class BillActionOpen : public ActionAbstractWait
 {
     std::string m_sName;
     //std::string m_sServiceName;
@@ -28,13 +28,16 @@ class BillActionOpen : public Action
     FieldType m_MsgFieldType;
 
     bool m_MsgExist;
-    void SetBillingStatus(ActionContext& context, const char * errorMsg, bool isOK);
 
+
+    bool m_waitOperation;
+
+    void SetBillingStatus(ActionContext& context, const char * errorMsg, bool isOK);
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name, const SectionParams& params, const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);
 public:
-    BillActionOpen() : logger(0) {}
+    BillActionOpen(bool waitOperation);
     virtual bool run(ActionContext& context);
     virtual void init(const SectionParams& params,PropertyObject propertyObject);
 };

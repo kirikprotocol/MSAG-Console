@@ -8,6 +8,9 @@
 #include "scag/exc/SCAGExceptions.h"
 #include "BillingManagerWrapper.h"
 
+#define _NO_INMAN_CONNECTION_
+
+
 namespace scag { namespace bill {
 
 using namespace smsc::core::threads;
@@ -159,7 +162,12 @@ void BillingManagerImpl::init(BillingManagerConfig& cfg)
     InitConnection(cfg.BillingHost, cfg.BillingPort);
 
     smsc_log_info(logger,"BillingManager connecting to host '%s', port %d", cfg.BillingHost.c_str(),cfg.BillingPort);
+
+    #ifndef _NO_INMAN_CONNECTION_
     m_Connected = Reconnect();
+    #else
+    m_Connected = true;
+    #endif
 
     EventMonitorArray = new EventMonitorEntity[m_MaxEventMonitors];
 
@@ -179,7 +187,9 @@ int BillingManagerImpl::Execute()
         {
             if (m_Connected) 
             {
+                #ifndef _NO_INMAN_CONNECTION_
                 receiveCommand();
+                #endif
                 connectEvent.Wait(100);
             } else
             {
@@ -190,6 +200,7 @@ int BillingManagerImpl::Execute()
         } catch (SCAGException& e)
         {
             smsc_log_error(logger, "BillingManager error: %s", e.what());
+            m_Connected = false;
         }
     }
  
@@ -235,15 +246,22 @@ int BillingManagerImpl::ChargeBill(smsc::inman::interaction::ChargeSms& op, Even
 
 
     billTransaction.tariffRec = tariffRec;
+
+    #ifndef _NO_INMAN_CONNECTION_
     billTransaction.status = TRANSACTION_WAIT_ANSWER;
+    #else
+    billTransaction.status = TRANSACTION_VALID;
+    #endif
+
     billTransaction.ChargeOperation = op;
 
     BillTransactionHash.Insert(m_lastBillId, billTransaction);
 
     op.setDialogId(m_lastBillId);
 
+    #ifndef _NO_INMAN_CONNECTION_
     sendCommand(op);
-
+    #endif
     return m_lastBillId;
 }
 
@@ -281,7 +299,12 @@ TariffRec& BillingManagerImpl::CheckCharge(int billId, EventMonitor * eventMonit
     eventMonitor = &(EventMonitorArray[pBillTransaction->EventMonitorIndex].eventMonitor);
 
     pBillTransaction->ChargeOperation.setDialogId(billId);
+
+    #ifndef _NO_INMAN_CONNECTION_
     sendCommand(pBillTransaction->ChargeOperation);
+    #else
+    pBillTransaction->status = TRANSACTION_VALID;
+    #endif
 
     return pBillTransaction->tariffRec;
 }
@@ -309,7 +332,9 @@ void BillingManagerImpl::commit(int billId)
         op.setDialogId(billId);
         op.setResultValue(0);
 
+        #ifndef _NO_INMAN_CONNECTION_
         sendCommand(op);
+        #endif
     }
 
     EventMonitorArray[pBillTransaction->EventMonitorIndex].inUse = false;
@@ -336,7 +361,9 @@ void BillingManagerImpl::rollback(int billId)
         op.setDialogId(billId);
         op.setResultValue(2);
 
+        #ifndef _NO_INMAN_CONNECTION_
         sendCommand(op);
+        #endif
     }
     
 
@@ -357,6 +384,7 @@ void BillingManagerImpl::sendReject(int billId)
         return;
     }
 
+    #ifndef _NO_INMAN_CONNECTION_
     if (pBillTransaction->status == TRANSACTION_VALID)
     {
         DeliverySmsResult op;
@@ -367,6 +395,8 @@ void BillingManagerImpl::sendReject(int billId)
         pBillTransaction->status = TRANSACTION_WAIT_ANSWER;
         sendCommand(op);
     }
+    #endif
+
 }
 
 
