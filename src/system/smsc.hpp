@@ -420,7 +420,7 @@ public:
     std::string::size_type pos=0;
     bool ok=false;
     do{
-      sscanf(ids.c_str()+pos,"%x",&hostid);
+      sscanf(ids.c_str()+pos,"%lx",&hostid);
       if(hostid==gethostid())
       {
         ok=true;break;
