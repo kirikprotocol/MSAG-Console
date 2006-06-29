@@ -254,7 +254,7 @@ private:
 
 };
 
-//#pragma pack(pop)
+#pragma pack()
 
 };	//  namespace mcisme
 };	//  namespace smsc
