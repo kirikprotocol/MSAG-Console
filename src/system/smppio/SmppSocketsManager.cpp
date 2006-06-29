@@ -1,6 +1,7 @@
 #include "system/smppio/SmppSocketsManager.hpp"
 #include "system/smppio/SmppIOTask.hpp"
 #include <string.h>
+#include "util/64bitcompat.h"
 
 namespace smsc{
 namespace system{
@@ -89,7 +90,7 @@ void SmppSocketsManager::registerSocket(Socket* sock)
 int SmppSocketsManager::removeSocket(Socket* sock)
 {
   MutexGuard g(mtxRemove);
-  int x=reinterpret_cast<int>(sock->getData(0));
+  int x=VoidPtr2Int(sock->getData(0));
   x--;
   trace2("socket ref count for %p:%d",sock,x);
   sock->setData(0,(void*)x);
