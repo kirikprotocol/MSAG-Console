@@ -514,6 +514,7 @@ struct _SmscCommand
   CommandId cmdid;
   uint32_t dialogId;
   void* dta;
+  int intData;
   int status;
   Mutex mutex;
   SmeProxy *proxy;
@@ -621,7 +622,7 @@ struct _SmscCommand
 
   SmppHeader* get_smppPdu(){return (SmppHeader*)dta;}
 
-  int get_smeIndex(){return (int)dta;}
+  int get_smeIndex(){return intData;}
 
   AlertNotification& get_alertNotification(){return *(AlertNotification*)dta;}
 
@@ -646,7 +647,7 @@ struct _SmscCommand
 
   int get_mode()
   {
-    return (int)dta;
+    return (int)intData;
   }
 
   INSmsChargeResponse* get_chargeSmsResp()
@@ -851,7 +852,7 @@ public:
     _SmscCommand& _cmd = *cmd.cmd;
     _cmd.ref_count = 1;
     _cmd.cmdid = SMEALERT;
-    _cmd.dta = (void*)idx;
+    _cmd.intData = idx;
     _cmd.dialogId = 0;
     return cmd;
   }
@@ -888,7 +889,7 @@ public:
     _SmscCommand& _cmd=*cmd.cmd;
     _cmd.ref_count=1;
     _cmd.cmdid=UNBIND;
-    _cmd.dta=(void*)mode;
+    _cmd.intData=mode;
     _cmd.status=0;
     _cmd.dialogId=dialogId;
     return cmd;
@@ -1215,7 +1216,7 @@ public:
       case SmppCommandSet::ENQUIRE_LINK_RESP:
       {
         _cmd->cmdid=ENQUIRELINK_RESP;
-        _cmd->dta=(void*)pdu->get_commandStatus();
+        _cmd->status=pdu->get_commandStatus();
         goto end_construct;
       }
       case SmppCommandSet::SUBMIT_MULTI:
