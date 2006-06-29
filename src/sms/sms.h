@@ -545,7 +545,7 @@ struct OptionalProperty{
     string* sValue;
     string* bValue;
   };
-  OptionalProperty():isSetVal(0),type(SMS_INT_TAG),iValue(0){}
+  OptionalProperty():isSetVal(0),type(SMS_INT_TAG),bValue(0){}
   OptionalProperty(const OptionalProperty& prop):isSetVal(0),type(SMS_INT_TAG),iValue(0)
   {
     if(prop.isSetVal==1 && prop.type==SMS_BIN_TAG)
