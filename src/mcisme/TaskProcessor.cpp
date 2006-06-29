@@ -496,7 +496,7 @@ int TaskProcessor::Execute()
 			if (checkEventMask(profile.eventMask, event.cause))
 			{
 				pStorage->addEvent(to, outEvent);
-				pDeliveryQueue->Schedule(to, 0);//((event.cause&0x02)==0x02)); //0x02 - BUSY
+				pDeliveryQueue->Schedule(to, ((event.cause&0x02)==0x02)); //0x02 - BUSY
 				statistics->incMissed();
 				smsc_log_debug(logger, "Abonent %s (couse = 0x%02X) was added to Scheduled Delivery Queue", to.toString().c_str(), event.cause);
 			}

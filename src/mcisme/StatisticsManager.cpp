@@ -401,7 +401,7 @@ void StatisticsManager::calculateTime(tm& flushTM)
 {
     time_t flushTime = time(0);
     if (!bExternalFlush) flushTime -= SMSC_MCISME_STAT_DUMP_INTERVAL;
-    gmtime_r(&flushTime, &flushTM); flushTM.tm_sec = 0; flushTM.tm_min = 0;
+    localtime_r(&flushTime, &flushTM); flushTM.tm_sec = 0; flushTM.tm_min = 0;
 }
 
 }}                                                            
