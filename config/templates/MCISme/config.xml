@@ -20,8 +20,9 @@
 	<param name="CallingMask" type="string">/^(?:\.3\.\d\.\d{10}|\.4\.\d\.\d{1,20})$/</param>
 	<param name="CalledMask"  type="string">/^\d{10}$/</param>
 	
-	<param name="unrespondedMessagesMax" type="int">5</param>
+	<param name="unrespondedMessagesMax" type="int">100</param>
 	<param name="unrespondedMessagesSleep" type="int">20</param>
+	<param name="outgoingSpeedMax" type="int">50</param>
 	
 	<param name="responceWaitTime" type="string">00:00:05</param>
 	<param name="receiptWaitTime" type="string">00:00:05</param>
@@ -33,6 +34,12 @@
 	<param name="forceInform" type="bool">true</param>
 	<param name="forceNotify" type="bool">true</param>
 	<param name="forceSeparate" type="bool">false</param>
+
+	<param name="CountryCode" type="string">@mcisme.CountryCode@</param>
+        <param name="timeZoneFileLocation" type="string">@timeZoneFileLocation@</param>^M
+        <param name="routesFileLocation" type="string">@routesFileLocation@</param>^M
+			
+			
 			
         <section name="SMPPThreadPool">
             <param name="max" type="int">15</param>
@@ -116,6 +123,38 @@
             <param name="regexp" type="string"></param>
           </section>
         </section>
+
+
+	<section name="Statistics">
+	    <param name="statDir" type="string">@mcisme.Stat.statDir@</param> <!-- Type only directory name, not path-->
+	</section>
+
+	<section name="ProfileStorage">
+	    <param name="location" type="string">@mcisme.profstor.location@</param>
+	    <param name="port" type="int">@mcisme.profstor.port@</param>
+	</section>
+	
+	<section name="Storage">
+	    <param name="location" type="string">@mcisme.storage.location@</param>
+	    <param name="eventLifeTime" type="string">@mcisme.storage.eventLifeTime@</param>
+	    <param name="maxEvents" type="int">@mcisme.storage.maxEvents@</param>
+	    <param name="eventRegistrationPolicy" type="string">@mcisme.storage.policy@</param>
+	    <param name="bdFilesIncr" type="int">@mcisme.storage.bdFilesIncr@</param>
+	</section>
+	    	    
+        <section name="Scheduling">
+	    <param name="schedulingPolicy" type="string">ConstResendingPeriod</param>
+	    <param name="resendingPeriod" type="string">00:30:00</param>
+	    <param name="schedOnBusy" type="string">00:05:00</param>	    
+	    
+	    <section name="schedule">
+	        <param name="default" type="string">@mcisme.errdefault@</param>
+	        <param name="1179" type="string">@mcisme.err1179@</param>
+	        <param name="1184" type="string">@mcisme.err1184@</param>
+	    </section>
+
+	</section>
+
     
         <section name="Templates">
 
