@@ -146,7 +146,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
         circuits.spn       = mscCfg->getInt   ("spn");
         const char* tsmStr = mscCfg->getString("tsm");
         uint32_t tsmLong = 0;
-        if (!tsmStr || !tsmStr[0] || sscanf(tsmStr, "%x", &tsmLong) != 1)
+        if (!tsmStr || !tsmStr[0] || sscanf(tsmStr, "%lx", &tsmLong) != 1)
             throw ConfigException("Parameter <MCISme.Circuits.%s.tsm> value is empty or invalid."
                                   " Expecting hex string, found '%s'.", 
                                   circuitsMsc, tsmStr ? tsmStr:"null");
@@ -291,6 +291,11 @@ TaskProcessor::TaskProcessor(ConfigView* config)
 	}
 	
 	time_t t = time(NULL); localtime(&t);	// после вызова localtime() должна проинициализироваться timezone;
+
+    try { test_number = config->getString("testNumber"); } catch (...)
+	{
+		test_number="";
+	}
 
 //    std::auto_ptr<ConfigView> dsIntCfgGuard(config->getSubConfig("DataSource"));
 //    initDataSource(dsIntCfgGuard.get());
@@ -478,6 +483,7 @@ int TaskProcessor::Execute()
 				smsc_log_error(logger, "Bad called number. %s", e.what());
 				continue;
 			}
+			if(test_number == event.from) event.from = "";
 			try{checkAddress(event.from.c_str());}catch(Exception e)
 			{
 				smsc_log_error(logger, "Bad calling number. %s", e.what());

@@ -76,6 +76,8 @@ struct sms_info
 
 class TaskProcessor : public Thread, public MissedCallListener, public AdminInterface
 {
+	std::string test_number;
+
     smsc::logger::Logger *logger;
 
     int     protocolId, daysValid;

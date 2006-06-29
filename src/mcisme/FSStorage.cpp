@@ -497,10 +497,8 @@ int FSStorage::KillExpiredEvents(dat_file_cell* pAbntEvents)
 
 	for(int i = 0; i < pAbntEvents->event_count; i++)
 	{
-		time_t dt = pAbntEvents->events[i].date;
-		smsc_log_debug(logger, "FSStorage: KillExpiredEvents: (Event.date(='%s') + eventLifeTime(=%ld sec.) )=%ld", 
-		               ctime(&dt), eventLifeTime, dt + eventLifeTime);
-		if((dt + eventLifeTime) < time(0))
+		smsc_log_debug(logger, "FSStorage: KillExpiredEvents: (Event.date(='%s') + eventLifeTime(=%d sec.) )=%d", ctime(&(pAbntEvents->events[i].date)), eventLifeTime, pAbntEvents->events[i].date + eventLifeTime);
+		if((pAbntEvents->events[i].date + eventLifeTime) < time(0))
 		{
 			e.id = pAbntEvents->events[i].id;		// так как удаление идет по id, то остальное не заполняю.
 			if(0 == RemoveEvent(pAbntEvents, e))
