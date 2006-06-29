@@ -89,7 +89,7 @@ void SmppSocketsManager::registerSocket(Socket* sock)
 int SmppSocketsManager::removeSocket(Socket* sock)
 {
   MutexGuard g(mtxRemove);
-  int x=(int)sock->getData(0);
+  int x=reinterpret_cast<int>(sock->getData(0));
   x--;
   trace2("socket ref count for %p:%d",sock,x);
   sock->setData(0,(void*)x);

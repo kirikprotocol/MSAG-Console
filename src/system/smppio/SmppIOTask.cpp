@@ -196,12 +196,11 @@ int SmppInputThread::Execute()
           {
             ss->getProxy()->putCommand
             (
-              SmscCommand::makeCommand
+              SmscCommand::makeEnquireLink
               (
-                ENQUIRELINK,
                 ss->getProxy()->getNextSequenceNumber(),
                 0,
-                (void*)ss->getChannelType()
+                ss->getChannelType()
               )
             );
           }
@@ -698,7 +697,7 @@ int SmppInputThread::Execute()
                       (
                         pdu->get_sequenceNumber(),
                         Status::OK,
-                        (void*)ss->getChannelType()
+                        ss->getChannelType()
                       )
                     );
                     //ss->getProxy()->close();
@@ -738,12 +737,11 @@ int SmppInputThread::Execute()
                   {
                     ss->getProxy()->putCommand
                     (
-                      SmscCommand::makeCommand
+                      SmscCommand::makeEnquireLinkResp
                       (
-                        ENQUIRELINK_RESP,
                         pdu->get_sequenceNumber(),
                         Status::OK,
-                        (void*)ss->getChannelType()
+                        ss->getChannelType()
                       )
                     );
                   }else

@@ -895,14 +895,14 @@ public:
     return cmd;
   }
 
-  static SmscCommand makeUnbindResp(uint32_t dialogId,uint32_t status,void* data)
+  static SmscCommand makeUnbindResp(uint32_t dialogId,uint32_t status,int data)
   {
     SmscCommand cmd;
     cmd.cmd=new _SmscCommand;
     _SmscCommand& _cmd=*cmd.cmd;
     _cmd.ref_count=1;
     _cmd.cmdid=UNBIND_RESP;
-    _cmd.dta=data;
+    _cmd.intData=data;
     _cmd.status=status;
     _cmd.dialogId=dialogId;
     return cmd;
@@ -990,6 +990,32 @@ public:
     _cmd.cmdid = QUERYABONENTSTATUS_RESP;
     _cmd.dta = new AbonentStatus(as,status,msc,imsi);
     _cmd.dialogId = 0;
+    return cmd;
+  }
+
+  static SmscCommand makeEnquireLink(uint32_t dialogId,uint32_t status,int data)
+  {
+    SmscCommand cmd;
+    cmd.cmd=new _SmscCommand;
+    _SmscCommand& _cmd=*cmd.cmd;
+    _cmd.ref_count=1;
+    _cmd.cmdid=ENQUIRELINK;
+    _cmd.status=status;
+    _cmd.intData=data;
+    _cmd.dialogId=dialogId;
+    return cmd;
+  }
+
+  static SmscCommand makeEnquireLinkResp(uint32_t dialogId,uint32_t status,int data)
+  {
+    SmscCommand cmd;
+    cmd.cmd=new _SmscCommand;
+    _SmscCommand& _cmd=*cmd.cmd;
+    _cmd.ref_count=1;
+    _cmd.cmdid=ENQUIRELINK_RESP;
+    _cmd.status=status;
+    _cmd.intData=data;
+    _cmd.dialogId=dialogId;
     return cmd;
   }
 

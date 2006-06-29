@@ -371,10 +371,10 @@ public:
     else
     if((cmdid==ENQUIRELINK || cmdid==ENQUIRELINK_RESP || cmdid==UNBIND_RESP))
     {
-      if(((int)cmd->dta)==ctReceiver)
+      if(cmd->intData==ctReceiver)
       {
         cmdMode=1;
-      }else if(((int)cmd->dta)==ctTransmitter)
+      }else if(cmd->intData==ctTransmitter)
       {
         cmdMode=2;
       }
