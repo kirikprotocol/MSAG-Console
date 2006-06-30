@@ -25,9 +25,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.util.*;
 import java.security.Principal;
-import java.text.MessageFormat;
-
-import org.apache.jasper.runtime.BodyContentImpl;
 
 
 /**
