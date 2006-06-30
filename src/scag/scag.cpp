@@ -604,15 +604,15 @@ void Scag::init()
                                     
     //********************************************************
     //************** HttpManager initialization **************
-/*    try {
+    try {
         smsc_log_info(log, "Http Manager is starting");
 
-        scag::transport::http::httpLogger = smsc::logger::Logger::getInstance("httpLogger");
+//        scag::transport::http::httpLogger = smsc::logger::Logger::getInstance("httpLogger");
 
         scag::transport::http::HttpProcessor::Init("./conf");
         scag::transport::http::HttpProcessor& hp = scag::transport::http::HttpProcessor::Instance();
 
-//        scag::transport::http::HttpTraceRouter::Init("./conf/http_trace_routes.xml");
+        scag::transport::http::HttpTraceRouter::Init("./conf/http_trace_routes.xml");
 
         using scag::config::ConfigView;
 
@@ -647,7 +647,7 @@ void Scag::init()
     }catch (...)
     {
         throw Exception("Exception during initialization of HttpManager: unknown error");
-    }*/
+    }
   //********************************************************
 
 
