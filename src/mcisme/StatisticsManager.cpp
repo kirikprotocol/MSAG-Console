@@ -357,6 +357,7 @@ void StatisticsManager::dumpCounters(const uint8_t* buff, int buffLen, const tm&
         if (File::Exists(fullPathStr)) { 
             needHeader = false;
             file.WOpen(fullPathStr);
+			file.SeekEnd(0);
         } else {
             file.RWCreate(fullPathStr);
         }

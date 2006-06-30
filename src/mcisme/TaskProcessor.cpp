@@ -80,30 +80,13 @@ inline static bool checkEventMask(uint8_t userMask, uint8_t eventCause)
     return ((userMask & eventCause) == eventCause);
 }
 
-/* ---------------------------- TaskProcessor ---------------------------- */
-
-//void TaskProcessor::initDataSource(ConfigView* config)
-//{
-//    try  {
-//        std::auto_ptr<char> dsIdentity(config->getString("type"));
-//        const char* dsIdentityStr = dsIdentity.get();
-//        ds = DataSourceFactory::getDataSource(dsIdentityStr);
-//        if (!ds) throw ConfigException("DataSource for '%s' identity wasn't registered !", dsIdentityStr);
-//        ds->init(config);
-//    } 
-//    catch (ConfigException& exc) {
-//        if (ds) delete ds; ds = 0;
-//        throw;
-//    }
-//}
-
 TaskProcessor::TaskProcessor(ConfigView* config)
     : Thread(), MissedCallListener(), AdminInterface(), 
         logger(Logger::getInstance("smsc.mcisme.TaskProcessor")), 
 		profileStorage(ProfilesStorage::GetInstance()),
         protocolId(0), daysValid(1), svcType(0), address(0), 
-        /*maxInThreads(10), initInThreads(0),*/ templateManager(0), mciModule(0), messageSender(0),
-        /*ds(0), dsStatConnection(0),*/ statistics(0), maxInQueueSize(10000), maxOutQueueSize(10000),
+        templateManager(0), mciModule(0), messageSender(0),
+        statistics(0), maxInQueueSize(10000), maxOutQueueSize(10000),
         bStarted(false), bInQueueOpen(false), bOutQueueOpen(false), pStorage(0), pDeliveryQueue(0)
 {
     smsc_log_info(logger, "Loading ...");
@@ -692,37 +675,6 @@ void TaskProcessor::StopProcessEvent4Abnt(const AbntAddr& abnt)
 	pDeliveryQueue->Remove(abnt);
 }
 
-//void TaskProcessor::lockSmscId(const char* smsc_id)
-//{
-//    MutexGuard guard(smscIdMonitor);
-//    while (lockedSmscIds.Exists(smsc_id)) smscIdMonitor.wait();
-//    lockedSmscIds.Insert(smsc_id, true);
-//}
-//void TaskProcessor::freeSmscId(const char* smsc_id)
-//{
-//    MutexGuard guard(smscIdMonitor);
-//    if (lockedSmscIds.Exists(smsc_id)) {
-//        lockedSmscIds.Delete(smsc_id);
-//        smscIdMonitor.notifyAll();
-//    }
-//}
-
-//class SmscIdAccessor
-//{
-//    TaskProcessor* processor;
-//    const char*    smsc_id;
-//
-//public:
-//
-//    SmscIdAccessor(TaskProcessor* _processor, const char* _smsc_id=0)
-//        : processor(_processor), smsc_id(_smsc_id) {
-//        if (processor && smsc_id) processor->lockSmscId(smsc_id);
-//    };
-//    ~SmscIdAccessor() { 
-//        if (processor && smsc_id) processor->freeSmscId(smsc_id);
-//    }
-//};
-
 void TaskProcessor::openInQueue() {
     MutexGuard guard(inQueueMonitor);
     bInQueueOpen = true;
@@ -768,46 +720,5 @@ bool TaskProcessor::getFromInQueue(MissedCallEvent& event)
     smsc_log_info(logger, "Input queue closed");
     return false;
 }
-
-///* ------------------------ Output (sending) queue access ------------------------ */ 
-//
-//void TaskProcessor::openOutQueue() {
-//    MutexGuard guard(outQueueMonitor);
-//    bOutQueueOpen = true;
-//    outQueueMonitor.notifyAll();
-//}
-//void TaskProcessor::closeOutQueue() {
-//    MutexGuard guard(outQueueMonitor);
-//    bOutQueueOpen = false;
-//    outQueueMonitor.notifyAll();
-//}
-//bool TaskProcessor::putToOutQueue(const Message& message, bool force/*=false*/)
-//{
-//	return true;
-//    MutexGuard guard(outQueueMonitor);
-//    while (!force && bOutQueueOpen && (outQueue.Count() >= maxOutQueueSize)) {
-//        outQueueMonitor.wait();
-//    }
-//    if (!bOutQueueOpen) return false;
-//    outQueue.Push(message);
-//    outQueueMonitor.notifyAll();
-//    return true;
-//}
-//bool TaskProcessor::getFromOutQueue(Message& message)
-//{
-//	return true;
-//    MutexGuard guard(outQueueMonitor);
-//    do {
-//        if (outQueue.Count() > 0) {
-//            outQueue.Pop(message);
-//            outQueueMonitor.notifyAll();
-//            return true;
-//        }
-//        outQueueMonitor.wait();
-//    } while (bOutQueueOpen);
-//    smsc_log_info(logger, "Output queue closed");
-//    return false;
-//}
-
 }
 }

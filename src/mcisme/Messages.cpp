@@ -159,6 +159,7 @@ void MessageFormatter::formatMessage(Message& message, const AbntAddr& abnt, con
     OutputFormatter*  singleFormatter = formatter->getSingleFormatter();
 //    OutputFormatter*  messageFormatter = formatter->getMessageFormatter();
 	size_t	mc_events_count = mc_events.size();
+	int hibit=0;
 	
 	if(formatter->isGroupping())
 	{
@@ -205,8 +206,8 @@ void MessageFormatter::formatMessage(Message& message, const AbntAddr& abnt, con
 				OutputFormatter*  messageFormatter = formatter->getMessageFormatter();
 				MessageGetAdapter msg_adapter(toAbnt, rows, total);
 				messageFormatter->format(test_msg, msg_adapter, ctx);
-
-				if(test_msg.length() < sms::MAX_SHORT_MESSAGE_LENGTH)
+				hibit = hasHighBit(test_msg.c_str(), test_msg.length()); 
+				if(test_msg.length() < MAX_MSG_LENS[hibit])
 				{
 					message.message = test_msg;
 					test_msg="";
@@ -214,7 +215,15 @@ void MessageFormatter::formatMessage(Message& message, const AbntAddr& abnt, con
 				}
 				else
 				{
-					for_send.erase(for_send.end()-count, for_send.end());
+					if(i == start_from)
+					{	
+						// обрезать смску.
+						message.message = test_msg;
+						message.message.resize(MAX_MSG_LENS[hibit]);
+						message.eventsCount++;
+					}
+					else
+						for_send.erase(for_send.end()-count, for_send.end());
 					break;
 				}
 			}
@@ -223,7 +232,6 @@ void MessageFormatter::formatMessage(Message& message, const AbntAddr& abnt, con
 	}
 	else
 	{
-		int hibit=0;
 		for (int i = start_from; i < mc_events_count; i++)
 		{
 			AbntAddr from(&(mc_events[i].caller));
