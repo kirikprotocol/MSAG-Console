@@ -510,9 +510,9 @@ Response * CommandReloadTariffMatrix::CreateResponse(scag::Scag * ScagApp)
     return new Response(Response::Ok, "CommandReloadTariffMatrix processed ok.");
 }
 
-Response * CommandReloadHttpRoutes::CreateResponse(scag::Scag * ScagApp)
+Response * CommandLoadHttpTraceRoutes::CreateResponse(scag::Scag * ScagApp)
 {
-    smsc_log_info(logger, "CommandReloadHttpRoutes is processing...");
+    smsc_log_info(logger, "CommandLoadHttpTraceRoutes is processing...");
 
 //    if(!ScagApp) throw Exception("Scag undefined");
 
@@ -528,13 +528,13 @@ Response * CommandReloadHttpRoutes::CreateResponse(scag::Scag * ScagApp)
         throw AdminException("Failed to reload HttpRoutes. Unknown exception");
     }
 
-    smsc_log_info(logger, "CommandReloadHttpRoutes processed ok.");
-    return new Response(Response::Ok, "CommandReloadHttpRoutes processed ok.");
+    smsc_log_info(logger, "CommandLoadHttpTraceRoutes processed ok.");
+    return new Response(Response::Ok, "CommandLoadHttpTraceRoutes processed ok.");
 }
-
-Response * CommandReloadHttpTraceRoutes::CreateResponse(scag::Scag * ScagApp)
+/*
+Response * CommandLoadHttpTraceRoutes::CreateResponse(scag::Scag * ScagApp)
 {
-    smsc_log_info(logger, "CommandReloadHttpTraceRoutes is processing...");
+    smsc_log_info(logger, "CommandLoadHttpTraceRoutes is processing...");
 
 //    if(!ScagApp) throw Exception("Scag undefined");
 
@@ -550,9 +550,9 @@ Response * CommandReloadHttpTraceRoutes::CreateResponse(scag::Scag * ScagApp)
         throw AdminException("Failed to reload HttpTraceRoutes. Unknown exception");
     }
 
-    smsc_log_info(logger, "CommandReloadHttpTraceRoutes processed ok.");
-    return new Response(Response::Ok, "CommandReloadHttpTraceRoutes processed ok.");
-}
+    smsc_log_info(logger, "CommandLoadHttpTraceRoutes processed ok.");
+    return new Response(Response::Ok, "CommandLoadHttpTraceRoutes processed ok.");
+}        */
 
 void CommandTraceHttpRoute::init()
 {
