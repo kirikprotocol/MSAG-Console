@@ -66,7 +66,8 @@ public class JEditTextArea extends JComponent
   enableEvents(AWTEvent.FOCUS_EVENT_MASK | AWTEvent.KEY_EVENT_MASK);
 
   this.view = view;
-
+  //System.out.println("+++++++++++Inside JEditTextArea constructor caretTimer = " + caretTimer);
+  //if (caretTimer!=null) System.out.println("+++++++++++ caretTimer.isRunning() = " + caretTimer.isRunning());
   //{{{ Initialize some misc. stuff
   selectionManager = new SelectionManager(this);
   chunkCache = new ChunkCache(this);
@@ -76,21 +77,6 @@ public class JEditTextArea extends JComponent
   listenerList = new EventListenerList();
   caretEvent = new MutableCaretEvent();
   blink = true;
-  if(jEdit.isDestroyed()) {
-  caretTimer = new Timer(500,new CaretBlinker());
-  caretTimer.setInitialDelay(500);
-  caretTimer.start();
-  structureTimer = new Timer(100,new ActionListener()
-       {
-         public void actionPerformed(ActionEvent evt)
-         {
-           if(focusedComponent != null)
-             focusedComponent.updateStructureHighlight();
-         }
-       });
-  structureTimer.setInitialDelay(100);
-  structureTimer.setRepeats(false);
-  }
   lineSegment = new Segment();
   returnValue = new Point();
   structureMatchers = new LinkedList();
@@ -157,6 +143,21 @@ public class JEditTextArea extends JComponent
   // when setting the initial caret position for a buffer
   // (eg, from the recent file list)
   focusedComponent = this;
+  caretTimer = new Timer(500,new CaretBlinker());
+  caretTimer.setInitialDelay(500);
+  caretTimer.start();
+
+  structureTimer = new Timer(100,new ActionListener()
+  {
+    public void actionPerformed(ActionEvent evt)
+    {
+     if(focusedComponent != null)
+      focusedComponent.updateStructureHighlight();
+    }
+  });
+  structureTimer.setInitialDelay(100);
+  structureTimer.setRepeats(false);
+  structureTimer.start();
 
   popupEnabled = true;
  } //}}}
@@ -167,6 +168,14 @@ public class JEditTextArea extends JComponent
   */
  public void dispose()
  {
+  if (caretTimer!=null) {
+    caretTimer.stop();
+    caretTimer = null;
+  }
+  if (structureTimer!=null) {
+     structureTimer.stop();
+     structureTimer = null;
+  }
   DisplayManager.textAreaDisposed(this);
  } //}}}
 
@@ -1873,7 +1882,7 @@ forward_scan:  do
   {
    buffer.beginCompoundEdit();
 
-   moveCaretPosition(s.setText(buffer,selectedText));
+   moveCaretPosition(s.setText(buffer,selectedText), new Boolean(false));
   }
   // No matter what happends... stops us from leaving buffer
   // in a bad state
@@ -1896,7 +1905,7 @@ forward_scan:  do
  {
   int newCaret = replaceSelection(selectedText);
   if(newCaret != -1)
-   moveCaretPosition(newCaret);
+   moveCaretPosition(newCaret, new Boolean(false));
   selectNone();
  } //}}}
 
@@ -1913,7 +1922,7 @@ forward_scan:  do
  {
   int newCaret = replaceSelection(selectedText);
   if(moveCaret && newCaret != -1)
-   moveCaretPosition(newCaret);
+   moveCaretPosition(newCaret, new Boolean(false));
   selectNone();
  } //}}}
 
@@ -2031,6 +2040,7 @@ forward_scan:  do
   */
  public final void blinkCaret()
  {
+  //System.out.println("---------inside blinkCaret() caretBlinks = " + caretBlinks);
   if(caretBlinks)
   {
    blink = !blink;
@@ -2038,6 +2048,7 @@ forward_scan:  do
   }
   else
    blink = true;
+  //System.out.println("---------inside blinkCaret() blink = " + blink );
  } //}}}
 
  //{{{ centerCaret() method
@@ -2077,6 +2088,17 @@ forward_scan:  do
   moveCaretPosition(newCaret,doElectricScroll);
  } //}}}
 
+ public void setStartCaretPosition() {
+   int lineNumber = 0;
+   try {
+     String line = jEdit.StringGet(buffer.getPath(),jEdit.getRuleHeaderLineNumber());
+     lineNumber = Integer.parseInt(line) - 1;
+   } catch(Exception e) {
+     e.printStackTrace();
+   }
+   forbidenStartPosition = getLineStartOffset(lineNumber) - 1;
+   setCaretPosition(forbidenStartPosition+1);
+ }
  //{{{ moveCaretPosition() method
  /**
   * Sets the caret position without deactivating the selection.
@@ -2084,19 +2106,33 @@ forward_scan:  do
   */
  public void moveCaretPosition(int newCaret)
  {
-  moveCaretPosition(newCaret,true);
+  moveCaretPosition(newCaret,true,new Boolean(true));
  } //}}}
 
+  public void moveCaretPosition(int newCaret, boolean doElectricScroll)
+  {
+    moveCaretPosition(newCaret,doElectricScroll,new Boolean(true));
+  } //}}}
+
+  public void moveCaretPosition(int newCaret, Boolean lastLineProtection)
+  {
+    moveCaretPosition(newCaret,true,lastLineProtection);
+  } //}}}
+
+  public void moveCaretPosition(int newCaret, int scrollMode)
+  {
+    moveCaretPosition(newCaret, scrollMode, new Boolean(true));
+  }
  //{{{ moveCaretPosition() method
  /**
   * Sets the caret position without deactivating the selection.
   * @param newCaret The caret position
   * @param doElectricScroll Do electric scrolling?
   */
- public void moveCaretPosition(int newCaret, boolean doElectricScroll)
+ public void moveCaretPosition(int newCaret, boolean doElectricScroll, Boolean lastLineProtection)
  {
   moveCaretPosition(newCaret,doElectricScroll ? ELECTRIC_SCROLL
-   : NORMAL_SCROLL);
+   : NORMAL_SCROLL, lastLineProtection);
  } //}}}
 
  //{{{ moveCaretPosition() method
@@ -2110,13 +2146,18 @@ forward_scan:  do
   * ELECTRIC_SCROLL).
   * @since jEdit 4.2pre1
   */
- public void moveCaretPosition(int newCaret, int scrollMode)
+ public void moveCaretPosition(int newCaret, int scrollMode, Boolean lastLineProtection)
  {
   if(newCaret < 0 || newCaret > buffer.getLength())
   {
    throw new IllegalArgumentException("caret out of bounds: "
     + newCaret);
   }
+
+  if (newCaret<=forbidenStartPosition) return;
+  //System.out.println("!!!!!!!!!!!----------lastLineProtection.booleanValue()"+lastLineProtection.booleanValue());
+  if (lastLineProtection.booleanValue() && (getLineOfOffset(newCaret) == physLastLine))  return;
+
   int oldCaretLine = caretLine;
 
   if(caret == newCaret)
@@ -5082,7 +5123,7 @@ loop:   for(int i = lineNo + 1; i < getLineCount(); i++)
   */
  final boolean isCaretVisible()
  {
-  return blink && hasFocus();
+  return blink;
  } //}}}
 
  //{{{ isStructureHighlightVisible() method
@@ -5299,8 +5340,8 @@ loop:   for(int i = lineNo + 1; i < getLineCount(); i++)
  //{{{ Private members
 
  //{{{ Static variables
- private static Timer caretTimer;
- private static Timer structureTimer;
+ private Timer caretTimer;
+ private Timer structureTimer;
  //}}}
 
  //{{{ Instance variables
@@ -5325,6 +5366,8 @@ loop:   for(int i = lineNo + 1; i < getLineCount(); i++)
  private int electricScroll;
 
  private int horizontalOffset;
+
+ private int forbidenStartPosition;
 
  private boolean quickCopy;
 
@@ -5904,6 +5947,7 @@ loop:   for(int i = lineNo + 1; i < getLineCount(); i++)
    getToolkit().beep();
    return;
   }
+  if (caret == (forbidenStartPosition+1)) return;
   getBuffer().setBooleanProperty("sidekick.keystroke-parse",true);
   if (!displayManager.isLineVisible(caretLine+1)) selectFold();
   if(getSelectionCount() != 0)
@@ -6049,7 +6093,8 @@ loop:   for(int i = lineNo + 1; i < getLineCount(); i++)
   //{{{ actionPerformed() method
   public void actionPerformed(ActionEvent evt)
   {
-   if(focusedComponent != null && focusedComponent.hasFocus())
+   //System.out.println("---------inside actionPerformed of CaretBlinker, focusedComponent = " + focusedComponent);
+   if(focusedComponent != null)
     focusedComponent.blinkCaret();
   } //}}}
  } //}}}
@@ -6185,7 +6230,7 @@ loop:   for(int i = lineNo + 1; i < getLineCount(); i++)
  //{{{ Class initializer
  static
  {
-  caretTimer = new Timer(500,new CaretBlinker());
+  /*caretTimer = new Timer(500,new CaretBlinker());
   caretTimer.setInitialDelay(500);
   caretTimer.start();
 
@@ -6198,6 +6243,6 @@ loop:   for(int i = lineNo + 1; i < getLineCount(); i++)
    }
   });
   structureTimer.setInitialDelay(100);
-  structureTimer.setRepeats(false);
+  structureTimer.setRepeats(false); */
  } //}}}
 }

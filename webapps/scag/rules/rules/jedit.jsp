@@ -9,29 +9,40 @@
 <html>
     <head><title>jEdit window</title></head>
     <script>
-              function open()
+              function openjEditView(action,id)
+              {
+                document.focus();
+                if (action == "edit") document.jedit.openRule(id);
+                  else document.jedit.newRule(id);
+              }
+
+              function openjEditWindow(action,id)
               {
                 opener.status = "<fmt:message>jEdit.starting</fmt:message>";
-                action = "<%=request.getParameter("action")%>";
-                id = "<%=request.getParameter("id")%>";
-                transport = "<%=request.getParameter("transport")%>";
-                if (action == "edit") document.jedit.openRule(id,transport);
-                  else document.jedit.newRule(id,transport);
-                setInterval("toClose()",1000);
+                openjEditView(action,id);
+                toClose();
               }
+
               function toClose()
               {
-                if (document.jedit.isStopped()) {
-                   window.close();
-                   if (action == "add") opener.document.opForm.submit();
-                   opener.status = "<fmt:message>jEdit.stopped</fmt:message>";
+                var action = document.jedit.isWindowClosed();
+                if (document.jedit.isWindowClosed()) {
+                   if (action == "addRule") opener.document.opForm.submit();
+                   if (document.jedit.isStopped()) {
+                     window.close();
+                     opener.status = "<fmt:message>jEdit.stopped</fmt:message>";
+                     opener.jEdit = null;
+                     return;
+                   }
                 } else {
+                  opener.jEdit = window;
                   opener.status = "<fmt:message>jEdit.started</fmt:message>";
                 }
+                setTimeout(toClose,1000);
               }
     </script>
 
-  <body onLoad="open()">
+  <body onLoad="openjEditWindow('<%=request.getParameter("action")%>','<%=request.getParameter("id")%>')">
     <applet code="org.gjt.sp.jedit.jEdit.class" width="1" height="1" archive="jedit.jar" name=jedit ID=jedit>
        <param name="noplugins" value="-noplugins">
        <param name="homedir" value="applet">

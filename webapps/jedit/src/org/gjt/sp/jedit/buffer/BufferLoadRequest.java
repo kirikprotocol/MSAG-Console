@@ -72,7 +72,7 @@ public class BufferLoadRequest extends BufferIORequest
     int command=jEdit.getParseXml();
     if (jEdit.getBooleanProperty("bufferWorkWithId")) command=jEdit.getLoadRule();
     if (buffer!=null && buffer.getBooleanProperty("newRule")) command=jEdit.getLoadNewRule();
-    String content="?username="+jEdit.username+"&password="+jEdit.password+"&command="+command+"&file="+path+"&transport="+buffer.getProperty("transport");
+    String content="?username="+jEdit.username+"&password="+jEdit.password+"&command="+command+"&file="+path;
     System.out.println("BufferLoadRequest _createInputStream content= "+content);
     try {
       url=new URL(jEdit.servletUrl,content);

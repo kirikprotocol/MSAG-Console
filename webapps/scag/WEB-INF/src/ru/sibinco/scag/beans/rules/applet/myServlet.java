@@ -49,6 +49,7 @@ public class myServlet extends HttpServlet
   protected static final int LineSeparator = 21;
   protected static final int SeparatorChar = 22;
   protected static final int OsName = 23;
+  protected static final int Transport = 24;
   protected static final int NewRule = 25;
   protected static final int UpdateRule = 26;
   protected static final int ExistRule = 27;
@@ -56,20 +57,28 @@ public class myServlet extends HttpServlet
   protected static final int LoadNewRule = 29;
   protected static final int AddRule = 30;
   protected static final int RootElement = 31;
-  protected static final int RuleName = 32;
+  protected static final int Title = 32;
   protected static final int UnLockServiceRule = 34;
+  protected static final int RuleHeaderLineNumber = 35;
   protected HttpSession session = null;
 
   // public static String userdir=null;
   // private static String settingsDirectory;
   public final void doGet(HttpServletRequest req,
                           HttpServletResponse res)
-          throws ServletException,IOException
-  { String file=req.getParameter("file");
+          throws IOException
+  {
+    String file=req.getParameter("file");
+    String transport=null;
     String[] list=null;
     LinkedList li;
     int command=Integer.parseInt(req.getParameter("command"));
-    String transport=req.getParameter("transport");
+    if (file.indexOf(Rule.complexRuleIdSeparator)!=-1) {
+     String[] id_transport = Rule.getIdAndTransport(file);
+     file = id_transport[0];
+     transport = id_transport[1];
+    }
+
    // System.out.println("myServlet Get file= "+file+" command= "+command);
     res.setContentType("text/html; charset=windows-1251");
     if(file!=null) {
@@ -77,11 +86,14 @@ public class myServlet extends HttpServlet
     {
        case ParseXml:   li=ParseXml(file); SendResult(li,res); break;
        case RootElement:li=RootElement(req);   SendResult(li,res); break;
-       case LoadRule:   li=LoadRule(req,file,transport,res); SendResult(li,res); break;
-       case LoadNewRule:li=LoadNewRule(req,file,transport,res); SendResult(li,res); break;
+       case LoadRule:   li=LoadRule(req,file,transport); SendResult(li,res); break;
+       case LoadNewRule:li=LoadNewRule(file,transport); SendResult(li,res); break;
        case ExistRule:  ExistRule(req,file,transport,res); break;
+       case Transport : list=getTransport(transport);break;
        case SaveBackup: list=SaveBackup(new File(file), req); break;
        case UnLockServiceRule: unlockRule(req,file,transport); break;
+       case Title: getTitle(req,file,transport,res); break;
+       case RuleHeaderLineNumber: getRuleHeaderLineNumber(res);
        default:
         if (req.getParameter("renameto")!=null) list=RenameTo(new File(file),new File(req.getParameter("renameto")));
         else if (req.getParameter("intparam")!=null) list=FilesCommand(file,command,Integer.parseInt(req.getParameter("intparam")));
@@ -108,18 +120,20 @@ public class myServlet extends HttpServlet
 
   public final void doPut(HttpServletRequest req,
                           HttpServletResponse res)
-          throws ServletException,IOException
-  { String file=req.getParameter("file");
+          throws IOException
+  {
+    String file=req.getParameter("file");
+    String transport=null;
     int command=Integer.parseInt(req.getParameter("command"));
-    String transport = req.getParameter("transport");
-   // System.out.println("myServlet PUT file= "+file+" command= "+command);
-    PrintWriter out = res.getWriter();
+    if (file.indexOf(Rule.complexRuleIdSeparator)!=-1) {
+     String[] id_transport = Rule.getIdAndTransport(file);
+     file = id_transport[0];
+     transport = id_transport[1];
+    }
     res.setContentType("text/html; charset=windows-1251");
     if (command==Write) Write(req,file,res);
     if (command==UpdateRule) updateRule(req,file,transport,res);
     if (command==AddRule) AddRule(req,file,transport,res);
-    //out.print("true");out.flush();out.close();
-    //doRequest(req, res);
   }
  private void Write(HttpServletRequest req,final String file,HttpServletResponse res) throws IOException
  {
@@ -157,6 +171,31 @@ public class myServlet extends HttpServlet
     }
     Rule rule = appContext.getRuleManager().getRule(Long.valueOf(file) ,transport);
     rule.unlock();
+  }
+
+  private void getTitle(HttpServletRequest req, final String file, final String transport, HttpServletResponse res) {
+     SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
+     try {
+      String serviceName=appContext.getServiceProviderManager().getServiceById(new Long(file)).getName();
+      if (serviceName!=null) {        
+        String total = transport + ", " + serviceName + "(id=" + file + ")";
+        res.getWriter().write(total);
+        res.getWriter().flush();
+        res.getWriter().close();
+      }
+     } catch(Throwable e) {
+     }
+  }
+
+  private void getRuleHeaderLineNumber(HttpServletResponse res) {
+     int lineCount = 0;
+     BufferedReader br = new BufferedReader(new StringReader(Rule.header));
+     try {
+       while(br.readLine()!=null) lineCount=lineCount+1;
+       res.getWriter().write(""+lineCount);
+       res.getWriter().flush();
+       res.getWriter().close();
+     } catch (Throwable e) {}
   }
 
   private void updateRule(HttpServletRequest req,final String file, final String transport, HttpServletResponse res) throws IOException
@@ -235,7 +274,7 @@ public class myServlet extends HttpServlet
      res.setHeader("status","ok");
      return res;
   }
-  private LinkedList LoadRule(HttpServletRequest req,final String file, final String transport, HttpServletResponse res) throws IOException
+  private LinkedList LoadRule(HttpServletRequest req, final String file, final String transport)
     {
       System.out.println("LoadRule id= "+file+" transport="+transport);
       SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
@@ -244,12 +283,10 @@ public class myServlet extends HttpServlet
       return rule.getBody();
     }
 
-  private LinkedList LoadNewRule(HttpServletRequest req,final String file, final String transport, HttpServletResponse res) throws IOException
+  private LinkedList LoadNewRule(final String file, final String transport)
   {
-    System.out.println("LoaNewdRule id= "+file + " transport = "+transport);
+    System.out.println("LoadNewRule id= "+file + " transport = "+transport);
     Rule newRule=Rule.createNewRule(Long.parseLong(file),transport);
-    //session = req.getSession(false);
-    //session.setAttribute("newRule",newRule);
     LinkedList li;
     li=newRule.getBody();
     System.out.println("body size = " + li.size());
@@ -258,7 +295,7 @@ public class myServlet extends HttpServlet
     return li;
   }
 
-   private void ExistRule(HttpServletRequest req,final String file, final String transport, HttpServletResponse res) throws IOException
+   private void ExistRule(HttpServletRequest req, final String file, final String transport,HttpServletResponse res) throws IOException
   {
     System.out.println("ExistRule id= "+file + " transport="+transport);
     SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
@@ -395,6 +432,10 @@ public class myServlet extends HttpServlet
     list[0]=result;
     if (autosaveFile.renameTo(renameto)) result="true";
     list[0]=result; System.out.println("result= "+result);return list;
+  }
+
+  private String[] getTransport(final String transport) {
+    return new String[]{transport};
   }
 
   private String[] SaveBackup(final File source, HttpServletRequest req)

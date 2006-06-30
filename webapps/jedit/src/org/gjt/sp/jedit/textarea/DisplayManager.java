@@ -750,6 +750,7 @@ public class DisplayManager
 
   if(textArea.getDisplayManager() == this)
   {
+   textArea.setStartCaretPosition();
    textArea.propertiesChanged();
    init();
   }

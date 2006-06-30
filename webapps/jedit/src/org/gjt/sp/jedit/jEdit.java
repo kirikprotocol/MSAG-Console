@@ -85,6 +85,7 @@ public class jEdit extends Applet
   public static String password = null;
   public static char separatorChar ;
   private boolean initialized = false;
+  private static String windowClosed = null;
   private static boolean stopped = true;
   private void initialize() {
     String[] args = new String[5];
@@ -143,7 +144,7 @@ public class jEdit extends Applet
     args[0]=getParameter("file");
 
   }
-  public void openRule(final String userFile, final String transport)
+  public void openRule(final String userFile)
    {
      stopped = false;
      if(!initialized) {
@@ -154,14 +155,13 @@ public class jEdit extends Applet
      super.start();
      String[] args = new String[5];
      args[0]=userFile;
-     args[1]=transport;
      setBooleanProperty("newRule",false);
       this.main2(args);
      isNotReload=true;
      //}
    }
 
-  public void newRule(final String userFile, final String transport)
+  public void newRule(final String userFile)
     {
       stopped = false;
       if(!initialized) {
@@ -172,11 +172,10 @@ public class jEdit extends Applet
       super.start();
       String[] args = new String[5];
       args[0]=userFile;
-      args[1]=transport;
       setBooleanProperty("newRule",true);
       this.main2(args);
       isNotReload=true;
-      //}      
+      //}
     }
 
   public void stop()
@@ -193,6 +192,7 @@ public class jEdit extends Applet
   }
 
   public boolean isStopped() {
+    windowClosed=null;
     return stopped;
   }
 
@@ -498,13 +498,14 @@ public class jEdit extends Applet
       BeanShell.runScript(null, scriptFile, null, false);
     } //}}}
     GUIUtilities.advanceSplashProgress();
-    String transport = args[1];
+
+    String transport = StringGet(userFile,Transport);
     userDir = MiscUtilities.constructPath(userDir, transport);//jEditHome+"\\"+jEdit.username;//null;
     if (!BoolGet(userDir, Exists)) BoolGet(userDir, MkDir);
     System.out.println("userDir+transport= "+userDir);
     if (!jEdit.getBooleanProperty("bufferWorkWithId")) userFile="rule_"+userFile+".xml";
     // Open files, create the view and hide the splash screen.
-    finishStartupNext(gui, restore,userDir, args,userFile,transport);
+    finishStartupNext(gui, restore,userDir, args,userFile);
 
   } //}}}
   public static final String IdToFileName(final String Id)
@@ -2400,8 +2401,9 @@ public class jEdit extends Applet
     // Close dialog, view.close() call need a view...
     if (view == null)
       view = activeView;
+    String ruleAction = (view.getBuffer().getBooleanProperty("newRule"))?"addRule":"EditRule";
     String path = view.getBuffer().getSymlinkPath();
-    String transport = (String)view.getBuffer().getProperty("transport");
+
      for (int i = 0; i < jars.size(); i++) {
        PluginJAR jar=(PluginJAR) jars.elementAt(i);
        jar.WindowClose(view);
@@ -2459,8 +2461,8 @@ public class jEdit extends Applet
     if (getBooleanProperty("newRule"))
     {
     } else
-    unlockRule(path,transport);
-    stopped = true;
+    unlockRule(path);
+    setWindowClosed(ruleAction);
   } //}}}
   //{{{ exitView() method
   /**
@@ -2477,7 +2479,7 @@ public class jEdit extends Applet
     // Close dialog, view.close() call need a view...
     if (view == null)
       view = activeView;
-    String transport = (String)view.getBuffer().getProperty("transport");
+    String ruleAction = (view.getBuffer().getBooleanProperty("newRule"))?"addRule":"EditRule";
    // jEdit.closeBuffer(view,view.getBuffer());
     // Wait for pending I/O requests
     VFSManager.waitForRequests();
@@ -2536,17 +2538,25 @@ public class jEdit extends Applet
     if (getBooleanProperty("newRule"))
     {
     } else
-    unlockRule(path,transport);
-    stopped = true;
+    unlockRule(path);
+    setWindowClosed(ruleAction);
   } //}}}
 
-  private static void unlockAllRules() {
-    unlockRule("","");
+  private static void setWindowClosed(String ruleAction) {
+    windowClosed = ruleAction;
+    if (viewCount==0) stopped = true;
   }
-  private static void unlockRule(String file, String transport) {
+
+  public String isWindowClosed() {
+    return windowClosed;
+  }
+
+  private static void unlockAllRules() {
+    unlockRule("");
+  }
+  private static void unlockRule(String file) {
     HashMap h = new HashMap();
     h.put("file",file);
-    h.put("transport",transport);
     HttpGet(h,UnLockServiceRule);
   }
   //{{{ getEditServer() method
@@ -2763,7 +2773,7 @@ public class jEdit extends Applet
   private static View activeView;
 
   private static boolean startupDone;
-  private static boolean destroyed=true;
+  private static boolean destroyed;
   private static Thread mainThread;
   //}}}
 
@@ -3129,6 +3139,7 @@ public class jEdit extends Applet
   protected static final int LineSeparator = 21;
   protected static final int SeparatorChar = 22;
   protected static final int OsName = 23;
+  protected static final int Transport = 24;
   protected static final int NewRule = 25;
   protected static final int UpdateRule = 26;
   protected static final int ExistRule = 27;
@@ -3136,8 +3147,9 @@ public class jEdit extends Applet
   protected static final int LoadNewRule = 29;
   protected static final int AddRule = 30;
   protected static final int RootElement = 31;
-  protected static final int RuleName = 32;
+  protected static final int Title = 32;
   protected static final int UnLockServiceRule = 34;
+  protected static final int RuleHeaderLineNumber = 35;
 
   public static int getRootElement()
   {
@@ -3256,6 +3268,10 @@ public class jEdit extends Applet
   {
     return GetPermissions;
   }
+
+  public static int getRuleHeaderLineNumber() {
+    return RuleHeaderLineNumber;
+  }
   //{{{ SaveBackupGet() method
   /**
    * implemented in servlet MiscUtilities.saveBackup method
@@ -3324,13 +3340,8 @@ public class jEdit extends Applet
    */
   public static boolean BoolGet(final String file, final int command)
   {
-    return BoolGet(file,command,null);
-  }
-  public static boolean BoolGet(final String file, final int command, final String transport)
-  {
     HashMap args = new HashMap();
     args.put("file", file);
-    if (transport!=null) args.put("transport",transport);
     LinkedList list = (LinkedList) HttpGet(args, command);
     boolean result = false;
     String inputLine;
@@ -3659,7 +3670,7 @@ public class jEdit extends Applet
   } //}}}
   //{{{ finishStartup() method
   private static void finishStartupNext(final boolean gui, final boolean restore,
-                                        final String userDir,final String[] args,final String userFile, final String transport)
+                                        final String userDir,final String[] args,final String userFile)
   {
     SwingUtilities.invokeLater(new Runnable()
     {
@@ -3691,7 +3702,7 @@ public class jEdit extends Applet
       } //if (buffer != null)
       else {
        Hashtable props = new Hashtable();
-       props.put("transport",transport);
+
        buffer=openFile(null, userDir, userFile , false, props);
       //  todo end
         View view = null;
@@ -3998,21 +4009,24 @@ loop:  for(int i = 0; i < list.length; i++)
   private static void closeView(View view, boolean callExit)
   {
     PerspectiveManager.setPerspectiveDirty(true);
-
+    String ruleAction = (view.getBuffer().getBooleanProperty("newRule"))?"addRule":"EditRule";
     System.out.println("before if (viewsFirst == viewsLast && callExit)  !!!!");
     if (viewsFirst == viewsLast && callExit) {
       System.out.println("before exit !!!!");
-    //  EditBus.send(new ViewUpdate(view, ViewUpdate.CLOSED));
-      exitView(view, false, view.getBuffer().getSymlinkPath() ); /* exit does editor event & save */  }
+      //EditBus.send(new ViewUpdate(view, ViewUpdate.CLOSED));
+      exitView(view, false, view.getBuffer().getSymlinkPath() );   }
     else {
-       exitView(view, false, view.getBuffer().getSymlinkPath());
-     /* EditBus.send(new ViewUpdate(view, ViewUpdate.CLOSED));
+      if (closeBuffer(view, view.getBuffer())) {
+      EditBus.send(new ViewUpdate(view, ViewUpdate.CLOSED));
+
       view.close();
       removeViewFromList(view);
 
       if (view == activeView)
         activeView = null;
-       */
+
+      setWindowClosed(ruleAction);
+      }
     }
   } //}}}
 

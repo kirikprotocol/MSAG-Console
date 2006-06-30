@@ -1,5 +1,6 @@
 package ru.sibinco.scag.util;
 import ru.sibinco.lib.bean.TabledBean;
+import ru.sibinco.scag.backend.rules.Rule;
 
 import javax.servlet.http.HttpSession;
 
@@ -59,5 +60,7 @@ public class TagLibFunctions {
     }
   }
 
-
+  public static final String getComplexRuleId(String ruleId, String transport) {
+    return Rule.composeComplexId(ruleId,transport);
+  }
 }

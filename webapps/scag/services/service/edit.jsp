@@ -33,9 +33,9 @@
         <c:if test="${!param.add}">
             <div class=page_subtitle>&nbsp;</div>
             <sm-ep:properties title="service.edit.properties.service_rules">
-                <sm:rule transport="service.edit.rule.transport.smpp" exists="${bean.smppRuleExists}"/>
-                <sm:rule transport="service.edit.rule.transport.http" exists="${bean.httpRuleExists}"/>
-                <sm:rule transport="service.edit.rule.transport.mms" exists="${bean.mmsRuleExists}"/>
+                <sm:rule tname="SMPP" ttitle="service.edit.rule.transport.smpp" exists="${bean.smppRuleExists}"/>
+                <sm:rule tname="HTTP" ttitle="service.edit.rule.transport.http" exists="${bean.httpRuleExists}"/>
+                <sm:rule tname="MMS" ttitle="service.edit.rule.transport.mms" exists="${bean.mmsRuleExists}"/>
             </sm-ep:properties>
             <div class=page_subtitle>&nbsp;</div>
             <div class=page_subtitle><fmt:message>service.edit.label.smpp.routes_list</fmt:message></div>

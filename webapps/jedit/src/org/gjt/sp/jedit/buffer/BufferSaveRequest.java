@@ -149,7 +149,7 @@ public class BufferSaveRequest extends BufferIORequest
     if (jEdit.getBooleanProperty("bufferWorkWithId")) command=jEdit.getUpdateRule();
     if (buffer!=null && buffer.getBooleanProperty("newRule")) command=jEdit.getAddRule();
     URL url; HttpURLConnection c=null;
-    String content="?username="+jEdit.username+"&password="+jEdit.password+"&command="+command+"&file="+savePath+"&transport="+buffer.getProperty("transport");
+    String content="?username="+jEdit.username+"&password="+jEdit.password+"&command="+command+"&file="+savePath;
     System.out.println("BufferSaveRequest command=SaveRule content= "+content);
     try {
           url=new URL(jEdit.servletUrl,content);

@@ -1269,16 +1269,11 @@ public void setEdittag(boolean edit)
    Buffer buffer = (Buffer)buffers.elementAt(i);
       String name=(jEdit.getBooleanProperty("bufferWorkWithId") ? buffer.getPath(): buffer.getName());
       if(jEdit.getBooleanProperty("bufferWorkWithId"))  {
-        //String nameId=jEdit.StringGet(name,jEdit.RuleName);
-        //title.append(" ");title.append(nameId);
+        String total=jEdit.StringGet(name,jEdit.Title);
         title.append(" [");
+        title.append(total);
+        title.append("]");
       }
-     // if (name.endsWith(".xml")) name=name.substring(0,name.length()-4);
-     // if (name.startsWith("rule_")) name=name.substring(5);
-     //  title.append((showFullPath && !buffer.isNewFile())
-    //? buffer.getPath() : name);
-     title.append(buffer.getProperty("transport"));
-   if(jEdit.getBooleanProperty("bufferWorkWithId")) title.append("]");
    if(buffer.isDirty())
    {
     unsavedChanges = true;

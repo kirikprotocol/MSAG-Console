@@ -49,5 +49,11 @@
     <function-class>ru.sibinco.scag.util.TagLibFunctions</function-class>
     <function-signature>java.lang.String getErrorMessage(javax.servlet.http.HttpSession,int, boolean)</function-signature>
   </function>
+  <function>
+    <description>Return complex rule id</description>
+    <name>getComplexRuleId</name>
+    <function-class>ru.sibinco.scag.util.TagLibFunctions</function-class>
+    <function-signature>java.lang.String getComplexRuleId(java.lang.String, java.lang.String)</function-signature>
+  </function>
 </taglib>
 

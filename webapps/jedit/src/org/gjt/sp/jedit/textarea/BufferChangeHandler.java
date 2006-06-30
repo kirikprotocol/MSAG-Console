@@ -140,7 +140,7 @@ class BufferChangeHandler extends BufferChangeAdapter
      ? JEditTextArea.ELECTRIC_SCROLL
      : JEditTextArea.NO_SCROLL);
     textArea.moveCaretPosition(
-     caret + length,scrollMode);
+     caret + length,scrollMode, new Boolean(false));
    }
    else
    {
@@ -148,7 +148,7 @@ class BufferChangeHandler extends BufferChangeAdapter
      ? JEditTextArea.NORMAL_SCROLL
      : JEditTextArea.NO_SCROLL);
     textArea.moveCaretPosition(
-     caret,scrollMode);
+     caret,scrollMode, new Boolean(false));
    }
   }
   else

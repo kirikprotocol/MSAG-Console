@@ -30,6 +30,7 @@ public class Rule
   public static final LinkedList ending = new LinkedList();
   public static final String ROOT_ELEMENT="scag:rule";
   public static final String XML_LINE="<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+  public static final String complexRuleIdSeparator = "/";
   private boolean locked = false;
   static {
        ending.add("</"+ROOT_ELEMENT+">");
@@ -135,16 +136,14 @@ public class Rule
     return whoisdPartOffset;
   }
 
-  public static String getRuleKey(Long id, String transport){
-    return getRuleKey(id.toString(), transport);
+
+  public static String[] getIdAndTransport(String complexId) {
+    String[] id_transport = complexId.split(complexRuleIdSeparator);
+    return id_transport;
   }
 
-  public static String getRuleKey(String id, String transport){
-    return transport+"/"+id;
-  }
-
-  public String getRuleKey() {
-    return getRuleKey(id, transport);
+  public static String composeComplexId(String ruleId, String transport) {
+    return ruleId+complexRuleIdSeparator+transport;
   }
 }
 
