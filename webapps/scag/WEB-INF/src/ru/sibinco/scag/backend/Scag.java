@@ -11,6 +11,8 @@ import ru.sibinco.scag.backend.endpoints.svc.Svc;
 import ru.sibinco.scag.backend.protocol.commands.Apply;
 import ru.sibinco.scag.backend.protocol.commands.CommandCall;
 import ru.sibinco.scag.backend.protocol.commands.Type;
+import ru.sibinco.scag.backend.protocol.commands.routes.ApplyHttpRoutes;
+import ru.sibinco.scag.backend.protocol.commands.routes.ApplySmppRoutes;
 import ru.sibinco.scag.backend.protocol.commands.tariffmatrix.ReloadTariffMatrix;
 import ru.sibinco.scag.backend.protocol.commands.services.ReloadServices;
 import ru.sibinco.scag.backend.protocol.commands.operators.ReloadOperators;
@@ -33,12 +35,12 @@ import java.util.Map;
 /**
  * Created by igork Date: 25.05.2004 Time: 15:50:34
  */
-public class Scag extends Proxy {
+public class Scag extends Proxy {                           
 
     private final String id;
     private static final String SCAG_COMPONENT_ID = "scag";
-    private static final String LOAD_ROUTES_METHOD_ID = "loadRoutes";
-    private static final String TRACE_ROUTE_METHOD_ID = "traceRoute";
+    private static final String LOAD_ROUTES_METHOD_ID = "loadSmppTraceRoutes";
+    private static final String TRACE_ROUTE_METHOD_ID = "traceSmppRoute";
     private static final String ADD_RULE_METHOD_ID = "addRule";
     private static final String UPDATE_RULE_METHOD_ID = "updateRule";
 
@@ -56,7 +58,7 @@ public class Scag extends Proxy {
         super(host, port);
         id = serviceId;
     }
-
+                                    
     public String getId() {
         return id;
     }
@@ -147,6 +149,18 @@ public class Scag extends Proxy {
        final Response response = super.runCommand(new ReloadOperators());
        if (Response.STATUS_OK!=response.getStatus())
          throw new SibincoException("Couldn't reload operators, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+    }
+
+    public void applySmppRoutes() throws SibincoException {
+        final Response response = super.runCommand(new ApplySmppRoutes());
+        if (Response.STATUS_OK != response.getStatus())
+            throw new SibincoException("Couldn't apply smpp routes, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+    }
+
+    public void applyHttpRoutes() throws SibincoException {
+       final Response response = super.runCommand(new ApplyHttpRoutes());
+       if (Response.STATUS_OK!=response.getStatus())
+         throw new SibincoException("Couldn't apply http routes, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
     }
 
     public void reloadServices() throws SibincoException {
