@@ -53,23 +53,25 @@ const int MAX_BDFILES_INCR = 10000;
 //	структура "событие дл€ абонента" 
 struct event_cell
 {
-	uint8_t	id;
-	time_t		date;
-	uint8_t		calling_num[17];
+	time_t          date;
+	uint8_t         id;
+	AbntAddrValue		calling_num;
+	uint8_t         reserved[16-1-sizeof(AbntAddrValue)];
 };
 
 //	структура файла событий дл€ абонентов
 struct dat_file_cell
 {
-	uint8_t		event_count;
-	uint8_t		inaccessible_num[17];
-	event_cell	events[MAX_EVENTS];
+	uint8_t         event_count;
+	AbntAddrValue		inaccessible_num;
+	uint8_t         reserved[16-1-sizeof(AbntAddrValue)];
+	event_cell      events[MAX_EVENTS];
 };
 
 //	структура файла индексов
 struct idx_file_cell
 {
-	uint8_t		inaccessible_num[17];
+	AbntAddrValue		inaccessible_num;
 //		uint32_t	cell_num;
 };
 
@@ -96,60 +98,6 @@ public:
 	void Erase(void){free_cells.clear();}
 };
 
-////	—труктура, номер €чеек в файлах данных и индексов дл€ одного абонента
-//struct HashEntity
-//{
-//	uint32_t	cell_in_dat;	// номер €чейки в файле данных
-//	uint32_t	cell_in_idx;	// номер €чейки в индекс-файле
-//	
-//	HashEntity(uint dat=0, uint idx=0): cell_in_dat(dat), cell_in_idx(idx){}
-//	HashEntity(const HashEntity& cell): cell_in_dat(cell.cell_in_dat), cell_in_idx(cell.cell_in_idx){}
-//	HashEntity& operator=(const HashEntity& cell)
-//	{
-//		if(&cell != this)
-//		{cell_in_dat = cell.cell_in_dat; cell_in_idx = cell.cell_in_idx;}
-//		return *this;
-//	}
-//};
-
-//class HashAbnt
-//{
-//	Hash<HashEntity>	num_cell;	//	таблица местоположиний записей в файлах данных и индексов об абонентне (ключ - Address)
-
-//public:
-//	HashAbnt(){}
-//	~HashAbnt(){Erase();}
-
-//	void Insert(const AbntAddr& abnt, const uint8_t& dat, const uint8_t& idx)
-//	{
-//		HashEntity cell(dat, idx);
-//		num_cell.Insert(abnt.toString().c_str(), cell);
-//	}
-//	void Insert(const AbntAddr& abnt, const HashEntity& cell)
-//	{
-//		num_cell.Insert(abnt.toString().c_str(), cell);
-//	}
-
-//	HashEntity Get(const AbntAddr& abnt)
-//	{
-//		HashEntity cell = num_cell.Get(abnt.toString().c_str());
-//		return cell;
-//	}
-//	void Remove(const AbntAddr& abnt)
-//	{
-//		num_cell.Delete(abnt.toString().c_str());
-//	}
-
-//	int Exists(const AbntAddr& abnt)
-//	{
-//		return num_cell.Exists(abnt.toString().c_str());
-//	}
-
-//	void Erase(void)
-//	{
-//		num_cell.Empty();			
-//	}
-//};
 typedef uint32_t	cell_t;
 class HashAbnt
 {

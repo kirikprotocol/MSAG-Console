@@ -24,13 +24,13 @@ using sms::AddressValue;
 
 union	AbntAddrValue
 {
-	uint8_t full_addr[17];
+	uint8_t full_addr[10];
 	struct	_addr_content
 	{
 		uint8_t	length:5;
 		uint8_t	plan:3;
 		uint8_t type;
-		uint8_t signals[15];
+		uint8_t signals[8];
 	} addr_content;
 };
 
@@ -153,7 +153,7 @@ public:
 	inline void setValue(uint8_t _len, const char* _value)
 	{
 		__require__(_len && _value && _value[0]
-		&& _len < sizeof(value.addr_content.signals));
+		&& _len < sizeof(value.addr_content.signals)*2);
 
 		memset((void*)&value.addr_content.signals, 0xFF, sizeof(value.addr_content.signals));
 
