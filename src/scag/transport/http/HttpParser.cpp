@@ -12,8 +12,8 @@ const char HOST_FIELD[] = "host";
 const char CONTENT_TYPE_URL_ENCODED[] = "application/x-www-form-urlencoded";
 const char CHARSET[] = "charset";
 const char KEEP_ALIVE[] = "keep-alive";
-const char COOKIE_FIELD = "cookie";
-const char SET_COOKIE_FIELD = "set-cookie";
+const char COOKIE_FIELD[] = "cookie";
+const char SET_COOKIE_FIELD[] = "set-cookie";
 
 struct http_methods {
   const char   *name; 
@@ -256,86 +256,9 @@ StatusCode HttpParser::parseFirstLine(char *buf, unsigned int len, HttpContext& 
             path.erase(path.begin() + (end - pos), path.end());
           }
         }
-        return parsePath(path, cx.getRequest());
+        cx.getRequest().sitePath = path;
       }
   }
-  return OK;
-}
-
-StatusCode HttpParser::parsePath(std::string &path, HttpRequest& cx)
-{
-  const char    *pos = path.c_str(), *mid, *end;
-  std::string   str;
-  unsigned int len;
-   
-  end = strchr(pos, '/');
-  if (!end)
-    return ERROR;
-
-#ifdef SESSION_ID_ENABLED
-  if (end == pos) {
-    pos++;
-    end = strchr(pos, '/');
-    if (!end)
-      return ERROR;
-  }
-
-  mid = pos;
-  while (mid <= end && isalnum(*mid))
-    mid++;
-
-  len = mid - pos;
-  if (!(mid <= end && 1 <= len && len <= 20))
-    return ERROR;
-
-  str.assign(pos, len);
-  cx.setAbonent(str);
-
-  if(*mid == '_')
-  {
-      mid++;
-      len = end - mid;
-      str.assign(mid, len);
-  
-      pos = str.c_str();
-      while (isdigit(*pos))
-        pos++;
-      if (*pos || !(1 <= len && len <= 5))
-        return ERROR;
-  
-      len = atoi(str.c_str());
-      if (len > USHRT_MAX | !len)
-        return ERROR;
-  
-      cx.setUSR(len);
-  }
-#endif
- 
-  pos = end + 1;
-  end = strchr(pos, '/');
-  if (!end)
-    return ERROR;
-
-  mid = strchr(pos, ':');
-  if (mid && (mid < end)) {
-    str.assign(pos, mid - pos);
-    cx.setSite(str);
-    mid++;
-    str.assign(mid, end - mid);
-    cx.sitePort = atoi(str.c_str());
-  } else {
-    str.assign(pos, end - pos);
-    cx.setSite(str);
-  }
-
-  pos = end;
-  if (*pos)
-  {
-    cx.siteFull.assign(pos);
-    end = strrchr(pos, '/');
-    cx.sitePath.assign(pos, end + 1 - pos);
-  }
-
   return OK;
 }
 
@@ -372,7 +295,6 @@ StatusCode HttpParser::parseHeaderFieldLine(char *buf, unsigned int len,
     return OK;
 
   if (!strcmp(key.c_str(), HOST_FIELD) && cx.action == READ_REQUEST) {
-    cmd.setHeaderField(key, cx.getRequest().getSite());   
     return OK;
   }
 
@@ -470,7 +392,7 @@ StatusCode HttpParser::parseCookie(const char *buf, HttpCommand& cmd, bool set)
   Cookie *cur = &cmd.defCookie;
 
   do {
-    end = strpbrk(start, ';,');
+    end = strpbrk(start, ";,");
     mid = strchr(start, '=');
 
     if (!mid || (mid && end && (mid > end)))
