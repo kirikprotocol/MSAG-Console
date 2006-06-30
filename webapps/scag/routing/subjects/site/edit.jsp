@@ -4,16 +4,16 @@
 <sm:page>
 <jsp:attribute name="title">
     <c:choose>
-        <c:when test="${param.add}">Create new subject</c:when>
-        <c:otherwise>Edit subject "${param.editId}"</c:otherwise>
+        <c:when test="${param.add}">subjects.add.title</c:when>
+        <c:otherwise>subjects.edit.title</c:otherwise>
     </c:choose>
 </jsp:attribute>
 
 
 <jsp:attribute name="menu">
     <sm-pm:menu>
-        <sm-pm:item name="mbSave" value="Save" title="Save subject"/>
-        <sm-pm:item name="mbCancel" value="Cancel" title="Cancel subject editing" onclick="clickCancel()"/>
+        <sm-pm:item name="mbSave" value="subjects.edit.item.mbsave.value" title="subjects.edit.item.mbsave.title"/>
+        <sm-pm:item name="mbCancel" value="subjects.edit.item.mbcancel.value" title="subjects.edit.item.mbcancel.title" onclick="clickCancel()"/>
         <sm-pm:space/>
     </sm-pm:menu>
 </jsp:attribute>
@@ -68,10 +68,10 @@
           <col width="50%">
           <tr>
               <td valign="top">
-                  <sm-ep:properties title="Site info">
+                  <sm-ep:properties title="subjects.site.info">
                       <br>
-                      <sm-ep:txt title="host" name="host" maxlength="60"/>
-                      <sm-ep:txt title="port" name="port" maxlength="60"/>
+                      <sm-ep:txt title="subjects.edit.txt.host" name="host" maxlength="60"/>
+                      <sm-ep:txt title="subjects.edit.txt.port" name="port" maxlength="60"/>
                   </sm-ep:properties>
               </td>
               <td valign="top">&nbsp;</td>

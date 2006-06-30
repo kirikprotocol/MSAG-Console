@@ -71,7 +71,7 @@ public class Index extends TabledBeanImpl {
         else if (null != mbApplyHttp)
             applyHttpRoutes();
         else if (null != mbApply)
-            applyRoutes();
+            applySmppRoutes();
         else if (null != mbLoadSaved)
             restoreRoutes();
         else if (null != mbLoadSavedHttp)
@@ -192,11 +192,11 @@ public class Index extends TabledBeanImpl {
      *
      * @throws SCAGJspException - an throws exception if it will be occurred
      */
-    private void applyRoutes() throws SCAGJspException {
+    private void applySmppRoutes() throws SCAGJspException {
         try {
             appContext.getScagRoutingManager().apply();
             try {
-                appContext.getScag().apply("routes");
+                appContext.getScag().applySmppRoutes();
             } catch (SibincoException e) {
                 if (Proxy.STATUS_CONNECTED == appContext.getScag().getStatus()) {
                     logger.debug("Couldn't apply routes", e);
@@ -221,7 +221,7 @@ public class Index extends TabledBeanImpl {
         try {
             appContext.getHttpRoutingManager().apply();
             try {
-                appContext.getScag().apply("routes");
+                appContext.getScag().applyHttpRoutes();
             } catch (SibincoException e) {
                 if (Proxy.STATUS_CONNECTED == appContext.getScag().getStatus()) {
                     logger.debug("Couldn't apply http routes", e);
