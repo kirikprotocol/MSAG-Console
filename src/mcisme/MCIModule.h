@@ -18,8 +18,8 @@
 
 #include <mcisme/misscall/callproc.hpp>
 
-//#define MCI_MODULE_TEST YES
-#undef  MCI_MODULE_TEST
+#define MCI_MODULE_TEST YES
+//#undef  MCI_MODULE_TEST
 
 extern "C" void clearSignalMask(void);
 
@@ -146,7 +146,7 @@ namespace smsc { namespace mcisme
                 event.time = time(NULL)+((int)random()%3600);
                 sprintf(abonent, "+79029%06d", number); event.to   = abonent;
                 sprintf(abonent, "+79029%06d", caller); event.from = abonent;
-                //if (i%10 == 0)
+                if (i%10 == 0)
 				event.from = ""; // unknown
                 event.cause = ALL;
                 {

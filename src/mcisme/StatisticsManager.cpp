@@ -166,14 +166,14 @@ short StatisticsManager::switchCounters()
 }*/
 int StatisticsManager::calculateToSleep() // returns msecs to next hour
 {
-//	return SMSC_MCISME_STAT_DUMP_INTERVAL*1000;
+	return SMSC_MCISME_STAT_DUMP_INTERVAL*1000;
 
-    time_t currTime = time(0);
-    time_t nextTime = currTime + SMSC_MCISME_STAT_DUMP_INTERVAL;
-    tm tmNT; localtime_r(&nextTime, &tmNT);
-    tmNT.tm_sec = 0; tmNT.tm_min = 0;
-    nextTime = mktime(&tmNT);
-    return (((nextTime-currTime)*1000)+1);
+    //time_t currTime = time(0);
+    //time_t nextTime = currTime + SMSC_MCISME_STAT_DUMP_INTERVAL;
+    //tm tmNT; localtime_r(&nextTime, &tmNT);
+    //tmNT.tm_sec = 0; tmNT.tm_min = 0;
+    //nextTime = mktime(&tmNT);
+    //return (((nextTime-currTime)*1000)+1);
 }
 
 /*const char* INSERT_EVENTS_STAT_STATE_ID = "INSERT_EVENTS_STAT_STATE_ID";
