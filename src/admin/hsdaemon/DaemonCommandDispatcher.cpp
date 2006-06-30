@@ -37,6 +37,7 @@ Mutex DaemonCommandDispatcher::configManagerMutex;
 
 Mutex ChildShutdownWaiter::startedWaitersMutex;
 WAITERS ChildShutdownWaiter::startedWaiters;
+bool ChildShutdownWaiter::shutdownInProgress=false;
 unsigned int DaemonCommandDispatcher::shutdownTimeout;
 int DaemonCommandDispatcher::retryTimeout;
 int DaemonCommandDispatcher::retryCount;
@@ -83,6 +84,7 @@ void DaemonCommandDispatcher::init(config::Manager * confManager) throw ()
 }
 void DaemonCommandDispatcher::shutdown()
 {
+  ChildShutdownWaiter::shutdownInProgress=true;
   stopAllServices(shutdownTimeout);
   ChildShutdownWaiter::stopWaiters();
 }
@@ -604,6 +606,7 @@ void DaemonCommandDispatcher::stopAllServices(unsigned int timeoutInSecs)
         try {
           allShutdowned = false;
           smsc_log_debug(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "send shutdown signal to service \"%s\"", servicePtr->getId());
+          servicePtr->setSwitchover(true);
           servicePtr->shutdown();
         } catch (...) {
           smsc_log_error(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "Couldn't stop service \"%s\", skipped", serviceId == NULL ? "<unknown>" : serviceId);

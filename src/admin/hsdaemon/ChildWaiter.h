@@ -151,8 +151,14 @@ public:
   const char * const getServiceId() const {return serviceId;}
   const bool isStopped() const {return isStopped_;}
 
+  static bool shutdownInProgress;
+
   static void startService(const char * const serviceId)
   {
+    if(shutdownInProgress)
+    {
+      __trace2__("shutdown in progress, service '%s' not started",serviceId);
+    }
     __trace2__("ChildShutdownWaiter : start service \"%s\"", serviceId);
     cleanStoppedWaiters();
     MutexGuard guard(startedWaitersMutex);
