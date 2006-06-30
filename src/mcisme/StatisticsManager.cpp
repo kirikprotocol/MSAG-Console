@@ -15,7 +15,7 @@ const char * SMSC_MCISME_STAT_DIR_NAME_FORMAT = "%04d-%02d";
 const char * SMSC_MCISME_STAT_FILE_NAME_FORMAT = "%02d.rts";
 const char * SMSC_MCISME_STAT_HEADER_TEXT = "SMSC.MCISME.STAT";
 const uint16_t SMSC_MCISME_STAT_VERSION_INFO = 0x0001;
-const uint16_t SMSC_MCISME_STAT_DUMP_INTERVAL = 3600;
+const uint16_t SMSC_MCISME_STAT_DUMP_INTERVAL = 60;
 
 StatisticsManager::StatisticsManager(const std::string& loc)
     : Statistics(), Thread(), logger(0), processLog(0), 
@@ -374,9 +374,9 @@ void StatisticsManager::dumpCounters(const uint8_t* buff, int buffLen, const tm&
     
     smsc_log_debug(logger, "Statistics data dump...");
     uint32_t value32 = htonl(buffLen);
-    file.Write((const void *)&value32, sizeof(value32));
+//    file.Write((const void *)&value32, sizeof(value32));
     file.Write((const void *)buff, buffLen); // write dump to it
-    file.Write((const void *)&value32, sizeof(value32));		// νΰ υσÿ??????
+//    file.Write((const void *)&value32, sizeof(value32));		// νΰ υσÿ??????
     file.Flush();
     smsc_log_debug(logger, "Statistics data dumped.");
 

@@ -55,7 +55,7 @@ struct event_cell
 {
 	time_t          date;
 	uint8_t         id;
-	AbntAddrValue		calling_num;
+	AbntAddrValue	calling_num;
 	uint8_t         reserved[16-1-sizeof(AbntAddrValue)];
 };
 
@@ -63,7 +63,7 @@ struct event_cell
 struct dat_file_cell
 {
 	uint8_t         event_count;
-	AbntAddrValue		inaccessible_num;
+	AbntAddrValue	inaccessible_num;
 	uint8_t         reserved[16-1-sizeof(AbntAddrValue)];
 	event_cell      events[MAX_EVENTS];
 };

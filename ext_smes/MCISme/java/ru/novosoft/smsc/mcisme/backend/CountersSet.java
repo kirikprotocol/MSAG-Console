@@ -35,5 +35,14 @@ public class CountersSet
     failed += set.failed;
     notified += set.notified;
   }
+  public void reset(CountersSet set)
+  {
+	missed = 0;
+	delivered = 0;
+	failed = 0;
+	notified = 0;
+  }
+
+
 
 }

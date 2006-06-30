@@ -94,6 +94,8 @@ public class EventsStat
 				  {
 					  Date dt = new Date(year-1900, month-1, day);
 					  DateCountersSet dayStat = new DateCountersSet(dt);
+					  roughFromDate.setHours(fromHour);
+					  roughTillDate.setHours(tillHour);
 					  try
 					  {
 						  File dayFile = new File(dirDays, days[j]);
@@ -106,19 +108,26 @@ public class EventsStat
 						  int version = buff[0]; version = (version << 8) | buff[1];
 						  if(version != SMSC_MCISME_STAT_VERSION_INFO)  continue;
 						  CountersSet counters = new CountersSet();
-						  int hour=0;
-						  while( -1 != (hour = getNextHourStat(statFile, counters)))
+						  CountersSet curCounters = new CountersSet();
+						  int hour = getNextHourStat(statFile, counters);
+						  int curHour = hour;
+//						  while( -1 != (hour = getNextHourStat(statFile, counters)))
+						  while( -1 != hour)
 						  {
-							  curDate.setHours(hour);
-							  roughFromDate.setHours(fromHour);
-							  roughTillDate.setHours(tillHour);
-							  
-//							  if( (hour >= fromHour) && (hour <= tillHour) )
-							  if( (curDate.compareTo(roughFromDate) >= 0) && (curDate.compareTo(roughTillDate) <= 0))
+							  if( hour != curHour )
 							  {
-								  HourCountersSet hourStat = new HourCountersSet(counters, hour);
-								  dayStat.addHourStat(hourStat);
+                                  curDate.setHours(curHour);
+								  if( (curDate.compareTo(roughFromDate) >= 0) && (curDate.compareTo(roughTillDate) <= 0))
+								  {
+									  HourCountersSet hourStat = new HourCountersSet(counters, curHour);
+									  dayStat.addHourStat(hourStat);
+								  }
+								  curHour = hour;
+								  curCounters.reset();
 							  }
+							  else
+								  curCounters.increment(counters);
+							  hour = getNextHourStat(statFile, counters);
 						  }
 						  statistics.addDateStat(dayStat);
 						  statFile.close();
@@ -139,8 +148,8 @@ public class EventsStat
 	  int hour;
 	  try
 	  {
-		  byte[] buff = new byte[25];
-		  if(statFile.read(buff, 0, 25)==-1)  return -1;
+		  byte[] buff = new byte[17];//[25];
+		  if(statFile.read(buff, 0, 17)==-1)  return -1;
 		  hour = buff[4];
 		  counters.missed = byte4_to_int(buff, 5);
           counters.delivered = byte4_to_int(buff, 9);
