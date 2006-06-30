@@ -112,14 +112,15 @@ public class EventsStat
 						  int hour = getNextHourStat(statFile, counters);
 						  int curHour = hour;
 //						  while( -1 != (hour = getNextHourStat(statFile, counters)))
-						  while( -1 != hour)
+						  boolean process = true;
+						  while(-1 != curHour)
 						  {
 							  if( hour != curHour )
 							  {
                                   curDate.setHours(curHour);
 								  if( (curDate.compareTo(roughFromDate) >= 0) && (curDate.compareTo(roughTillDate) <= 0))
 								  {
-									  HourCountersSet hourStat = new HourCountersSet(counters, curHour);
+									  HourCountersSet hourStat = new HourCountersSet(curCounters, curHour);
 									  dayStat.addHourStat(hourStat);
 								  }
 								  curHour = hour;
@@ -127,7 +128,8 @@ public class EventsStat
 							  }
 							  else
 								  curCounters.increment(counters);
-							  hour = getNextHourStat(statFile, counters);
+							  if(-1 != hour)
+								hour = getNextHourStat(statFile, counters);
 						  }
 						  statistics.addDateStat(dayStat);
 						  statFile.close();
@@ -150,11 +152,11 @@ public class EventsStat
 	  {
 		  byte[] buff = new byte[17];//[25];
 		  if(statFile.read(buff, 0, 17)==-1)  return -1;
-		  hour = buff[4];
-		  counters.missed = byte4_to_int(buff, 5);
-          counters.delivered = byte4_to_int(buff, 9);
-		  counters.failed = byte4_to_int(buff, 13);
-		  counters.notified = byte4_to_int(buff, 17);
+		  hour = buff[0];//4];
+		  counters.missed = byte4_to_int(buff, 1);//5);
+          counters.delivered = byte4_to_int(buff, 5);//);
+		  counters.failed = byte4_to_int(buff, 9);//13);
+		  counters.notified = byte4_to_int(buff, 13);//17);
 	  }
 	  catch(Exception e)
 	  {
