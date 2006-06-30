@@ -204,6 +204,7 @@ public class OperatorManager {
             scag.reloadOperators();
         } catch (SibincoException e) {
             if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
+                 logger.error("Couldn't reload Operator ", e);
                 throw new SCAGJspException(Constants.errors.serviceProviders.COULDNT_RELOAD_SERVICE_PROVIDER, e);
             }
         } finally {
