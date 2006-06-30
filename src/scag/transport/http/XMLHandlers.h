@@ -33,18 +33,19 @@ class XMLBasicHandler : public HandlerBase
     std::string site_subj_id;
     RouteArray* routes;
     HttpRouteInt route;
+    PlacementArray* addrPlace;
     bool route_enabled;
-    bool in_sites, in_abonents;
+    bool in_sites, in_abonents, in_options;
 
     void characters(const XMLCh *const chars, const unsigned int length);
 
-    void insertPlacement(PlacementArray* pa, Placement& p);
-    Placement assignPlacement(std::string& rid, AttributeList& attrs);
+    void insertPlacement(PlacementArray* pa, const Placement& p);
+    Placement assignPlacement(const std::string& rid, AttributeList& attrs);
 
     Logger *logger;
 
 public:
-    XMLBasicHandler(RouteArray*);
+    XMLBasicHandler(RouteArray*, PlacementArray*);
     ~XMLBasicHandler() {};
 
     void startElement(const XMLCh* const qname, AttributeList& attributes);

@@ -10,19 +10,19 @@ namespace scag { namespace transport { namespace http {
 
 using namespace smsc::util;
 
-XMLBasicHandler::XMLBasicHandler(RouteArray* r)
+XMLBasicHandler::XMLBasicHandler(RouteArray* r, PlacementArray* ap)
 {
     logger = Logger::getInstance("httpxml");
     routes = r;
-    in_sites = false;
-    in_abonents = false;
+    in_options = in_sites = in_abonents = false;
+    addrPlace = ap;
 }
 
 void XMLBasicHandler::characters(const XMLCh *const chars, const unsigned int length) 
 {
 }
 
-Placement XMLBasicHandler::assignPlacement(std::string& rid, AttributeList& attrs)
+Placement XMLBasicHandler::assignPlacement(const std::string& rid, AttributeList& attrs)
 {
     Placement p;
 
@@ -41,7 +41,7 @@ Placement XMLBasicHandler::assignPlacement(std::string& rid, AttributeList& attr
     return p;
 }
 
-void XMLBasicHandler::insertPlacement(PlacementArray* pa, Placement& p)
+void XMLBasicHandler::insertPlacement(PlacementArray* pa, const Placement& p)
 {
     int i = 0;
 
@@ -58,7 +58,9 @@ void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
 
 //    smsc_log_debug(logger, "Start element %s route_id=%s", qname, route.id.c_str());
 
-    if(!strcmp(qname, "sites"))
+    if(!strcmp(qname, "options"))
+        in_options = true;
+    else if(!strcmp(qname, "sites"))
         in_sites = true;
     else if(!strcmp(qname, "abonents"))
         in_abonents = true;
@@ -77,18 +79,22 @@ void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
             
         smsc_log_debug(logger, "usr_place record: route id=%s, name=%s, type=%d, prio=%d", route.id.c_str(), p.name.c_str(), p.type, p.prio);
     }
-    else if(route.id.length() && !strcmp(qname, "address_place"))
+    else if(!strcmp(qname, "address_place"))
     {
-        Placement p = assignPlacement(route.id, attrs);
-        PlacementArray* pa;
-        if(in_sites)
-            pa = &route.outAddressPlace;
+        if(in_options)
+        {
+            Placement p = assignPlacement("", attrs);
+            insertPlacement(pa, p);
+            smsc_log_debug(logger, "address_place record: [options] name=%s, type=%d, prio=%d", p.name.c_str(), p.type, p.prio);
+        }
+        else if(route.id.length() && in_sites)
+        {
+            Placement p = assignPlacement(route.id, attrs);
+            insertPlacement(&route.outAddressPlace, p);
+            smsc_log_debug(logger, "address_place record: route id=%s, name=%s, type=%d, prio=%d", route.id.c_str(), p.name.c_str(), p.type, p.prio);
+        }
         else
-            throw Exception("Invalid XML address_place record: route id=%s, name=%s, type=%d, prio=%d", route.id.c_str(), p.name.c_str(), p.type, p.prio);
-
-        insertPlacement(pa, p);
-            
-        smsc_log_debug(logger, "address_place record: route id=%s, name=%s, type=%d, prio=%d", route.id.c_str(), p.name.c_str(), p.type, p.prio);
+            throw Exception("Invalid XML address_place record: No route id or not in sites");
     }
     else if(!strcmp(qname, "route"))
     {
@@ -185,7 +191,9 @@ void XMLBasicHandler::endElement(const XMLCh* const nm)
     const char *qname = XMLQName.localForm();
 
 
-    if(!strcmp(qname, "sites"))
+    if(!strcmp(qname, "options"))
+        in_options = false;
+    else if(!strcmp(qname, "sites"))
         in_sites = false;
     else if(!strcmp(qname, "abonents"))
         in_abonents = false;

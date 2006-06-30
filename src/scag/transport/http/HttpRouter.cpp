@@ -95,6 +95,7 @@ HttpRouterImpl::HttpRouterImpl()
     routes = NULL;
     routeIdMap = NULL;
     AddressURLMap = NULL;
+    defAddressPlace = NULL;
     XMLPlatformUtils::Initialize("en_EN.UTF-8");
 }
 
@@ -103,6 +104,7 @@ HttpRouterImpl::~HttpRouterImpl()
     delete routes;
     delete routeIdMap;
     delete AddressURLMap;
+    delete defAddressPlace;
 
     XMLPlatformUtils::Terminate();
 }
@@ -113,6 +115,11 @@ void HttpRouterImpl::init(const std::string& cfg)
     ReloadRoutes();
 }
                                                                         
+PlacementArray HttpRouterImpl::getDefaultAddressPlacement()
+{
+    return *defAddressPlace;
+}
+
 HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& site, const std::string& path, uint32_t port)
 {
     MutexGuard mt(GetRouteMutex);
@@ -180,18 +187,22 @@ void HttpRouterImpl::ReloadRoutes()
     RouteArray* r = new RouteArray;
     RouteHash* h = new RouteHash;
     AddressURLHash* auh = new AddressURLHash;
+    PlacementArray* ap = new PlacementArray;
+
     try{
 
-        XMLBasicHandler handler(r);
+        XMLBasicHandler handler(r, ap);
         ParseFile(route_cfg_file.c_str(), &handler);
         BuildMaps(r, h, auh);
         MutexGuard mg(GetRouteMutex);
         delete routes;
         delete routeIdMap;
         delete AddressURLMap;
+        delete defAddressPlace;
         routes = r;
         routeIdMap = h;
         AddressURLMap = auh;
+        defAddressPlace = ap;
     }
     catch(Exception& e)
     {
@@ -199,6 +210,7 @@ void HttpRouterImpl::ReloadRoutes()
         delete r;
         delete h;
         delete auh;
+        delete ap;
         throw e; 
     }
 

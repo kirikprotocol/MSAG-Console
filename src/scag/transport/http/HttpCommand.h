@@ -168,8 +168,8 @@ public:
         content.Append(data, length);
     }
 
-    Cookie* getCookie(std::string& name);
-    Cookie* setCookie(std::string& name, std::string& value);
+    Cookie* getCookie(const std::string& name);
+    Cookie* setCookie(const std::string& name, const std::string& value);
 
 public:
     StringHash headerFields;

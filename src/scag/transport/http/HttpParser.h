@@ -43,9 +43,7 @@ private:
 
   static StatusCode parseQueryParameters(const char *buf, HttpRequest& cx);
 
-  static StatusCode parsePath(std::string &path, HttpRequest& cx);
-
-  static StatusCode parseCookie(const char *buf, HttpCommand& cmd);
+  static StatusCode parseCookie(const char *buf, HttpCommand& cmd, bool set);
 
   static int compareNocaseN(const char *src, const char *dst, int count);
 

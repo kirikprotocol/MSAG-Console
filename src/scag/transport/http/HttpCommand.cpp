@@ -55,24 +55,22 @@ void Cookie::serialize(std::string& s, bool set)
             s += '$';
         s += keystr;
         s += "=";
-        s += *valstr;
-        s += ";"
+        s += *valptr;
+        s += ";";
     }
-
-    return s;
 }
 
-const std::string& Cookie::getParam(const char * name)
+const std::string& Cookie::getParam(const char * nm)
 {
-    std::string *a = params.GetPtr(name);
+    std::string *a = params.GetPtr(nm);
     if(a)
         return *a;
     return empty;
 }
 
-void Cookie::setParam(const char* name, std::string& val)
+void Cookie::setParam(const char* nm, std::string& val)
 {
-    params.Insert(name, val);
+    params.Insert(nm, val);
 }
 
 HttpCommand::~HttpCommand()
@@ -85,7 +83,7 @@ HttpCommand::~HttpCommand()
         if(*valptr) delete *valptr;
 }
 
-Cookie* HttpCommand::getCookie(std::string& name)
+Cookie* HttpCommand::getCookie(const std::string& name)
 {
     Cookie **c = cookies.GetPtr(name.c_str());
     if(c)
@@ -93,12 +91,16 @@ Cookie* HttpCommand::getCookie(std::string& name)
     return NULL;
 }
 
-Cookie* HttpCommand::setCookie(std::string& name, std::string& value)
+Cookie* HttpCommand::setCookie(const std::string& name, const std::string& value)
 {
-    Cookie *c = new Cookie;
-    c->name = name;
+    Cookie *c = getCookie(name);
+    if(c == NULL)
+    {
+        c = new Cookie;
+        c->name = name;
+        cookies.Insert(name.c_str(), c);
+    }
     c->value = value;
-    cookies.Insert(name.c_str(), c);
     return c;
 }
 // virtual functions {
@@ -368,14 +370,8 @@ void HttpRequest::serialize()
         
         headers = httpMethodNames[httpMethod];
         headers += SP;
-        headers += siteFull;
+        headers += sitePath;
 
-#ifdef SESSION_ID_ENABLED
-        headers += '/';
-        headers += getAbonent();
-        headers += '_';
-        headers += lltostr(getUSR(), buf + 19);
-#endif        
         if (!(siteQuery.empty() || httpMethod == POST)) {
             headers += '?';
             serializeQuery(headers);
@@ -396,16 +392,19 @@ void HttpRequest::serialize()
             setContentLength(cnt.length());
         }
         
-        if(cookies.Count())
+        if(cookies.GetCount())
         {
-            headers += "Cookie: ";
+            headers += "cookie: ";
             defCookie.serialize(headers, false);
+            Cookie** ck;
             cookies.First();
-            while (cookies.Next(keystr, valptr)) {
-                *valptr->serialize(headers, false);
+            while (cookies.Next(keystr, ck)) {
+                (*ck)->serialize(headers, false);
             }
             headers += CRLF;
         }
+
+        setHeaderField("host", site + ((sitePort != 80) ? ':' + lltostr(sitePort, buf + 19) : ""));
 
         headerFields.First();
         while (headerFields.Next(keystr, valptr)) {
@@ -439,13 +438,14 @@ void HttpResponse::serialize()
 
         setHeaderField(connection_field, close);
         
-        if(cookies.Count())
+        if(cookies.GetCount())
         {
-            headers += "Set-Cookie: ";
+            headers += "set-cookie: ";
             defCookie.serialize(headers, true);
+            Cookie** ck;
             cookies.First();
-            while (cookies.Next(keystr, valptr)) {
-                *valptr->serialize(headers, true);
+            while (cookies.Next(keystr, ck)) {
+                (*ck)->serialize(headers, true);
             }
             headers += CRLF;
         }
