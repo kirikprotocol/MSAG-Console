@@ -239,7 +239,7 @@ void MessageFormatter::formatMessage(Message& message, const AbntAddr& abnt, con
 			if (fromStr == UNKNOWN_CALLER || (strcmp(fromStr, UNKNOWN_CALLER) == 0))
 				fromStr = unknownCaller.c_str();
 	        
-			time_t convertedTime = mc_events[i].dt + timeOffset*3600;
+			time_t convertedTime = mc_events[i].dt + timeOffset;//*3600;
 
 			InformGetAdapter info_adapter(toAbnt, fromStr, 1, convertedTime);
 			singleFormatter->format(rows, info_adapter, ctx);
