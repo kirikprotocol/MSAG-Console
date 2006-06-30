@@ -37,8 +37,8 @@ SCAGCommandReader::SCAGCommandReader(Socket * admSocket)
   commandlist["reloadServices"] = CommandIds::reloadServices;
   commandlist["reloadTariffMatrix"] = CommandIds::reloadTariffMatrix;
 
-  commandlist["reloadHttpRoutes"] = CommandIds::reloadHttpRoutes;
-  commandlist["reloadHttpTraceRoutes"] = CommandIds::reloadHttpTraceRoutes;
+  commandlist["applyHttpRoutes"] = CommandIds::reloadHttpRoutes;
+  commandlist["loadHttpTraceRoutes"] = CommandIds::reloadHttpTraceRoutes;
   commandlist["traceHttpRoute"] = CommandIds::traceHttpRoute;
 }
 

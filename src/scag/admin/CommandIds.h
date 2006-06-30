@@ -21,8 +21,9 @@ namespace CommandIds {
     addSme,
     statusSme,
     deleteSme,
-    traceRoute,
-    loadRoutes,
+    applySmppRoutes,
+    loadSmppTraceRoutes,
+    traceSmppRoute,
     addSmsc,
     deleteSmsc,
     updateSmsc,
@@ -32,8 +33,8 @@ namespace CommandIds {
     reloadOperators,
     reloadServices,
     reloadTariffMatrix,
-    reloadHttpRoutes,
-    reloadHttpTraceRoutes,
+    applyHttpRoutes,
+    loadHttpTraceRoutes,
     traceHttpRoute
   };
 }
