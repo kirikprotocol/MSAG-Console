@@ -286,11 +286,11 @@ void MissedCallProcessor::setCircuits(Hash<Circuits>& circuits)
 
 bool MissedCallProcessor::setCountryCode(const char* _countryCode)
 {
-	size_t len = strlen(_countryCode);
-	if(len > COUNTRY_CODE_MAX_LEN)	return false;
-	strncpy(countryCode, _countryCode, len);
-	countryCode[len]=0;
-	return true;
+  size_t len = strlen(_countryCode);
+  if(len > COUNTRY_CODE_MAX_LEN)  return false;
+  strncpy(countryCode, _countryCode, len);
+  countryCode[len]=0;
+  return true;
 }
 
 struct InternalRule {
@@ -831,9 +831,9 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling, EINSS7_I97_CALLEDNUMB_T *c
       if (calling->natureOfAddr == EINSS7_I97_NATIONAL_NO)
       {
 //        cgaddr[0] = '+';cgaddr[1] = '7'; // valid only for Russia!!!
-		size_t len = strlen(countryCode);
-		cgaddr[0] = '+';
-		strncpy(&cgaddr[1], countryCode, len);
+    size_t len = strlen(countryCode);
+    cgaddr[0] = '+';
+    strncpy(&cgaddr[1], countryCode, len);
         unpack_addr(cgaddr+len+1, calling->addrSign_p, calling->noOfAddrSign);
       }
       else if (calling->natureOfAddr == EINSS7_I97_INTERNATIONAL_NO)
@@ -868,9 +868,9 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling, EINSS7_I97_CALLEDNUMB_T *c
       if (called->natureOfAddr == EINSS7_I97_NATIONAL_NO)
       {
 //        cdaddr[0] = '+';cdaddr[1] = '7'; // valid only for Russia!!!
-		size_t len = strlen(countryCode);
-		cdaddr[0] = '+';
-		strncpy(&cdaddr[1], countryCode, len);
+    size_t len = strlen(countryCode);
+    cdaddr[0] = '+';
+    strncpy(&cdaddr[1], countryCode, len);
         unpack_addr(cdaddr+len+1, called->addrSign_p, called->noOfAddrSign);
       }
       else if (called->natureOfAddr == EINSS7_I97_INTERNATIONAL_NO)
@@ -922,7 +922,39 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling,
       called = &fixed_called;
     }
   }
-	
+  /*
+   * FIX: remove trailing 0 from calling national address
+   * Change request from MTS Belarus
+   */
+  EINSS7_I97_CALLINGNUMB_T fixed_calling;
+  UCHAR_T fixed_calling_p[32] = {0};
+  if (calling &&
+      calling->natureOfAddr == EINSS7_I97_NATIONAL_NO)
+  {
+    char claddr[32] = {0};
+    unpack_addr(claddr, calling->addrSign_p, calling->noOfAddrSign);
+    int addrlen = strlen(claddr);
+
+    int skip = 0; while(claddr[skip] == '0') skip++;
+
+    if (skip)
+    {
+      pack_addr(fixed_calling_p, claddr + skip, addrlen - skip);
+      fixed_calling.natureOfAddr = calling->natureOfAddr;
+      fixed_calling.screening = calling->screening;
+      fixed_calling.presentationRestr = calling->presentationRestr;
+      fixed_calling.numberPlan = calling->numberPlan;
+      fixed_calling.numbIncompl = calling->numbIncompl;
+      fixed_calling.noOfAddrSign = addrlen - skip;
+      fixed_calling.addrSign_p = fixed_calling_p;
+      smsc_log_debug(missedCallProcessorLogger,
+                     "modify calling address: %s -> %s",
+                     getCallingNumberDescription(calling).c_str(),
+                     getCallingNumberDescription(&fixed_calling).c_str());
+      calling = &fixed_calling;
+    }
+  }
+
   if (calling &&
       calling->noOfAddrSign > 0 &&
       calling->noOfAddrSign <= MAX_FULL_ADDRESS_VALUE_LENGTH &&
@@ -944,9 +976,9 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling,
       if (calling->natureOfAddr == EINSS7_I97_NATIONAL_NO)
       {
 //        cgaddr[0] = '+';cgaddr[1] = '7'; // valid only for Russia!!!
-		size_t len = strlen(countryCode);
-		cgaddr[0] = '+';
-		strncpy(&cgaddr[1], countryCode, len);
+    size_t len = strlen(countryCode);
+    cgaddr[0] = '+';
+    strncpy(&cgaddr[1], countryCode, len);
         unpack_addr(cgaddr+len+1, calling->addrSign_p, calling->noOfAddrSign);
       }
       else if (calling->natureOfAddr == EINSS7_I97_INTERNATIONAL_NO)
@@ -981,10 +1013,10 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling,
       if (called->natureOfAddr == EINSS7_I97_NATIONAL_NO)
       {
 //        cdaddr[0] = '+';cdaddr[1] = '7'; // valid only for Russia!!!
-		size_t len = strlen(countryCode);
-		cdaddr[0] = '+';
-		strncpy(&cdaddr[1], countryCode, len);
-	    unpack_addr(cdaddr+len+1, called->addrSign_p, called->noOfAddrSign);
+    size_t len = strlen(countryCode);
+    cdaddr[0] = '+';
+    strncpy(&cdaddr[1], countryCode, len);
+      unpack_addr(cdaddr+len+1, called->addrSign_p, called->noOfAddrSign);
       }
       else if (called->natureOfAddr == EINSS7_I97_INTERNATIONAL_NO)
       {
