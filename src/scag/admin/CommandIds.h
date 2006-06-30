@@ -20,17 +20,9 @@ namespace CommandIds {
     addSme,
     statusSme,
     deleteSme,
-<<<<<<< CommandIds.h
-
-    traceSmppRoute,
-    loadSmppTraceRoutes,
-    applySmppRoutes,
-
-=======
     applySmppRoutes,
     loadSmppTraceRoutes,
     traceSmppRoute,
->>>>>>> 1.10
     addSmsc,
     deleteSmsc,
     updateSmsc,
