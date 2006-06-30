@@ -16,14 +16,21 @@ namespace admin {
 namespace CommandIds {
   enum IDS {
     unknown = smsc::admin::protocol::Command::undefined,
-    apply,
     updateSmeInfo,
     addSme,
     statusSme,
     deleteSme,
+<<<<<<< CommandIds.h
+
+    traceSmppRoute,
+    loadSmppTraceRoutes,
+    applySmppRoutes,
+
+=======
     applySmppRoutes,
     loadSmppTraceRoutes,
     traceSmppRoute,
+>>>>>>> 1.10
     addSmsc,
     deleteSmsc,
     updateSmsc,

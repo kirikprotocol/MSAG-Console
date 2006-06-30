@@ -41,7 +41,7 @@ public:
   SCAGCommandDispatcher(Socket * admSocket);
   virtual ~SCAGCommandDispatcher();
   virtual Response *handle(const Command * const command) throw (AdminException);
-  virtual void DoActions(Actions::CommandActions actions);
+  //virtual void DoActions(Actions::CommandActions actions);
 
   static void shutdown();
   static void startGw();

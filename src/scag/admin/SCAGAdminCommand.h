@@ -76,11 +76,11 @@ public:
 };
 
 //========================================================================
-//==================== TraceRoute command ================================
-class CommandTraceRoute : public AdminCommand 
+//==================== TraceSmppRoute command ================================
+class CommandTraceSmppRoute : public AdminCommand 
 {
 public:
-  CommandTraceRoute(const xercesc::DOMDocument * doc) : AdminCommand((Command::Id)CommandIds::traceRoute, doc)
+  CommandTraceSmppRoute(const xercesc::DOMDocument * doc) : AdminCommand((Command::Id)CommandIds::traceSmppRoute, doc)
   {
   }
   
@@ -94,11 +94,11 @@ protected:
   std::string srcSysId;
 };
 
-class CommandLoadRoutes : public AdminCommand 
+class CommandLoadSmppTraceRoutes : public AdminCommand 
 {
 public:
   
-  CommandLoadRoutes(const xercesc::DOMDocument * doc) : AdminCommand((Command::Id)CommandIds::loadRoutes, doc)
+  CommandLoadSmppTraceRoutes(const xercesc::DOMDocument * doc) : AdminCommand((Command::Id)CommandIds::loadSmppTraceRoutes, doc)
   {
   }
 
@@ -106,29 +106,17 @@ public:
 };
 
 //========================================================================
-//==================== Apply command =====================================
-class CommandApply : public AdminCommand 
+//==================== CommandApplySmppRoutes command =====================================
+class CommandApplySmppRoutes : public AdminCommand 
 {
 public:
-  enum subjects {
-    unknown,
-    config,
-    routes,
-    providers,
-    smscs
-  };
   
-  CommandApply(const xercesc::DOMDocument * doc) 
-    : AdminCommand((Command::Id)CommandIds::apply, doc)
+  CommandApplySmppRoutes(const xercesc::DOMDocument * doc) 
+    : AdminCommand((Command::Id)CommandIds::applySmppRoutes, doc)
   {
   }
 
   virtual Response * CreateResponse(scag::Scag * ScagApp);
-  virtual scag::admin::Actions::CommandActions GetActions();
-  virtual void init();
-
-private:
-  subjects subj;
 };
 
 //------------------------ Bill infrastructure commands ------------------------

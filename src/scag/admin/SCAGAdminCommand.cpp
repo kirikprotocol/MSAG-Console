@@ -230,9 +230,9 @@ using scag::config::ConfigManager;
 
 
 
-Response * CommandLoadRoutes::CreateResponse(scag::Scag * ScagApp)
+Response * CommandLoadSmppTraceRoutes::CreateResponse(scag::Scag * ScagApp)
 {
-    smsc_log_info(logger, "CommandLoadRoutes is processing");
+    smsc_log_info(logger, "CommandLoadSmppTraceRoutes is processing");
 
     smsc::admin::service::Variant result(smsc::admin::service::StringListType);
     result.appendValueToStringList("Routes configuration successfully loaded");
@@ -244,7 +244,6 @@ Response * CommandLoadRoutes::CreateResponse(scag::Scag * ScagApp)
     vector<std::string> traceBuff;
 
   try {
-
 
       ScagApp->reloadTestRoutes(cfg);
       ScagApp->getTestRouterInstance()->enableTrace(true);
@@ -263,16 +262,16 @@ Response * CommandLoadRoutes::CreateResponse(scag::Scag * ScagApp)
           smsc_log_info(logger, "traceBuff[%d]: %s", i, traceBuff[i].c_str());
       }
 
-  CATCH_ADMINEXC("CommandLoadRoutes exception")
-  CATCH_CFGEXC("CommandLoadRoutes exception")
-  CATCH_STDEXC("CommandLoadRoutes exception")
+  CATCH_ADMINEXC("CommandLoadSmppTraceRoutes exception")
+  CATCH_CFGEXC("CommandLoadSmppTraceRoutes exception")
+  CATCH_STDEXC("CommandLoadSmppTraceRoutes exception")
 
   } catch (...) {
-      smsc_log_warn(logger, "CommandLoadRoutes exception. Unknown exception");
-      throw AdminException("CommandLoadRoutes exception. Unknown exception");
+      smsc_log_warn(logger, "CommandLoadSmppTraceRoutes exception. Unknown exception");
+      throw AdminException("CommandLoadSmppTraceRoutes exception. Unknown exception");
   }
 
-  smsc_log_info(logger, "CommandLoadRoutes is processed ok");
+  smsc_log_info(logger, "CommandLoadSmppTraceRoutes is processed ok");
   return new Response(Response::Ok, result);
 }
 
@@ -306,9 +305,9 @@ inline char* getEncodedString(const char* const src)
 
 
 
-void CommandTraceRoute::init()
+void CommandTraceSmppRoute::init()
 {
-    smsc_log_info(logger, "CommandStatusSme got parameters:");
+    smsc_log_info(logger, "CommandTraceSmppRoute got parameters:");
 
     srcAddr = "";
     dstAddr = "";
@@ -333,9 +332,9 @@ void CommandTraceRoute::init()
     }
 }
 
-Response * CommandTraceRoute::CreateResponse(scag::Scag * ScagApp)
+Response * CommandTraceSmppRoute::CreateResponse(scag::Scag * ScagApp)
 {
-    smsc_log_info(logger, "CommandTraceRoute is processing...");
+    smsc_log_info(logger, "CommandTraceSmppRoute is processing...");
     const char* _srcAddr  = srcAddr.c_str();
     const char* _dstAddr  = dstAddr.c_str();
     const char* _srcSysId = srcSysId.c_str();
@@ -415,7 +414,7 @@ Response * CommandTraceRoute::CreateResponse(scag::Scag * ScagApp)
           smsc_log_info(logger, "traceBuff[%d]: %s", i, traceBuff[i].c_str());
       }
 
-      smsc_log_info(logger, "CommandTraceRoute is processed ok");
+      smsc_log_info(logger, "CommandTraceSmppRoute is processed ok");
       return new Response(Response::Ok, result);
 
 /*  CATCH_ADMINEXC("Failed to trace route")
@@ -426,65 +425,19 @@ Response * CommandTraceRoute::CreateResponse(scag::Scag * ScagApp)
 }
 
 //================================================================
-//================ Apply commands ================================
+//================ ApplySmppTraceRoutes command ================================
 
 
-void CommandApply::init()
+Response * CommandApplySmppRoutes::CreateResponse(scag::Scag * SmscApp)
 {
-    smsc_log_info(logger, "CommandApply got parameters:");
+    smsc_log_info(logger, "CommandApplySmppRoutes is processing...");
 
-    subj = CommandApply::unknown;
+    ConfigManager & cfg = ConfigManager::Instance();
 
-    BEGIN_SCAN_PARAMS
-    if (::strcmp("subj", name) == 0) 
-    {
-        if (strcmp("config", value.get()) == 0) subj = CommandApply::config;
-        else if (strcmp("routes", value.get()) == 0) subj = CommandApply::routes;
-        else if (strcmp("providers", value.get()) == 0) subj = CommandApply::providers;
-        else if (strcmp("smscs", value.get()) == 0) subj = CommandApply::smscs;
-        else subj = CommandApply::unknown;
+    cfg.reloadConfig(scag::config::ROUTE_CFG);
 
-        smsc_log_info(logger, "subj: %s, %d", value.get(), subj);
-          
-    }
-    END_SCAN_PARAMS
-
-    if (subj == CommandApply::unknown) 
-    {
-        smsc_log_warn(logger, "Failed to read parameters of Apply command. Unknown parameter.");
-        throw AdminException("Failed to read parameters of Apply command. Unknown parameter.");
-    }
-
-}
-
-Response * CommandApply::CreateResponse(scag::Scag * SmscApp)
-{
-    smsc_log_info(logger, "CommandApply is processing...");
-    smsc_log_info(logger, "CommandApply is processed ok");
+    smsc_log_info(logger, "CommandApplySmppRoutes is processed ok");
     return new Response(Response::Ok, "none");
-}
-
-Actions::CommandActions CommandApply::GetActions()
-{
-    Actions::CommandActions result;
-
-    switch (subj)
-    {
-    case CommandApply::config:
-        result.reloadconfig = true;
-        break;
-    case CommandApply::routes:
-        result.reloadroutes = true;
-        break;
-    case CommandApply::smscs:
-        result.reloadsmscs = true;
-        break;
-    case CommandApply::providers:
-        result.reloadconfig = true;
-        break;
-
-    }
-    return result;
 }
 
 //-------------------- Bill Infrastructure commands ----------------------------

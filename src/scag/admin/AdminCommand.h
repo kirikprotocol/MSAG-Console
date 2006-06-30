@@ -65,11 +65,11 @@ public:
       return new Response(Response::Ok, "none");
   }
 
-  virtual Actions::CommandActions GetActions()
+/*  virtual Actions::CommandActions GetActions()
   {
       Actions::CommandActions result;
       return result;
-  }
+  }*/
 
   virtual void init() {}
 

@@ -14,15 +14,13 @@
 namespace scag {
 namespace admin {
 namespace Actions {
-
+/*
 struct CommandActions
 {
   bool restart;
-  bool reloadconfig;
   bool reloadroutes;
-  bool reloadsmscs;
-  CommandActions() : restart(false), reloadconfig(false), reloadroutes(false), reloadsmscs(false) {};
-};
+  CommandActions() : restart(false), reloadroutes(false) {};
+};  */
 
 
 }

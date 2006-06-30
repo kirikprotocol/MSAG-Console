@@ -175,7 +175,7 @@ Response * SCAGCommandDispatcher::handle(const Command * const command) throw (A
 
     try {
         Response * result = adminCommand->CreateResponse(runner->getApp());
-        DoActions(adminCommand->GetActions());
+        //DoActions(adminCommand->GetActions());
         return result;
     } catch (AdminException &e) {
         return new Response(Response::Error, e.what());
@@ -190,21 +190,14 @@ void SCAGCommandDispatcher::shutdown()
 {
     stopGw();
 }
-
+/*
 void SCAGCommandDispatcher::DoActions(Actions::CommandActions actions)
 {
     ConfigManager & cfg = ConfigManager::Instance();
 
     if (actions.reloadroutes)
         cfg.reloadConfig(scag::config::ROUTE_CFG);
-
-    if (actions.reloadconfig)
-        cfg.reloadAllConfigs();
-
-    if (actions.reloadsmscs)
-        cfg.reloadConfig(scag::config::SMPPMAN_CFG);
-
 }
-
+*/
 }
 }

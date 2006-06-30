@@ -18,12 +18,15 @@ namespace admin {
 SCAGCommandReader::SCAGCommandReader(Socket * admSocket)
   : CommandReader(admSocket)
 {
+    //applySmppRoutes|loadSmppTraceRoutes|traceSmppRoute|
+
+  commandlist["applySmppRoutes"] = CommandIds::applySmppRoutes;
+  commandlist["loadSmppTraceRoutes"] = CommandIds::loadSmppTraceRoutes;
+  commandlist["traceSmppRoute"] = CommandIds::traceSmppRoute;
+
   commandlist["addSme"] = CommandIds::addSme;
   commandlist["statusSme"] = CommandIds::statusSme;
-  commandlist["apply"] = CommandIds::apply;
   commandlist["deleteSme"] = CommandIds::deleteSme;
-  commandlist["loadRoutes"] = CommandIds::loadRoutes;
-  commandlist["traceRoute"] = CommandIds::traceRoute;
   commandlist["updateSmeInfo"] = CommandIds::updateSmeInfo;
   commandlist["addSmsc"] = CommandIds::addSmsc;
   commandlist["deleteSmsc"] = CommandIds::deleteSmsc;
@@ -42,25 +45,6 @@ SCAGCommandReader::SCAGCommandReader(Socket * admSocket)
   commandlist["traceHttpRoute"] = CommandIds::traceHttpRoute;
 }
 
-/*
-    addSme
-    statusSme
-    apply
-    deleteSme
-    loadRoutes
-    traceRoute
-    updateSmeInfo
-    addSmsc
-    deleteSmsc
-    updateSmsc
-    addRule
-    updateRule
-    removeRule
-    reloadOperators
-    reloadServices
-    reloadTariffMatrix
-    
-*/
 
 SCAGCommandReader::~SCAGCommandReader()
 {
@@ -87,13 +71,15 @@ Command * SCAGCommandReader::createCommand(int id, const DOMDocument *data)
 
   switch (id)
   {
-    case CommandIds::apply: return new CommandApply(data);
+    case CommandIds::applySmppRoutes: return new CommandApplySmppRoutes(data);
+    case CommandIds::traceSmppRoute: return new CommandTraceSmppRoute(data);
+    case CommandIds::loadSmppTraceRoutes: return new CommandLoadSmppTraceRoutes(data);
+
+
     case CommandIds::updateSmeInfo: return new CommandUpdateSmeInfo(data);
     case CommandIds::addSme: return new CommandAddSme(data);
     case CommandIds::statusSme: return new CommandStatusSme(data);
     case CommandIds::deleteSme: return new CommandDeleteSme(data);
-    case CommandIds::traceRoute: return new CommandTraceRoute(data);
-    case CommandIds::loadRoutes: return new CommandLoadRoutes(data);
     case CommandIds::addSmsc: return new CommandAddSmsc(data);
     case CommandIds::deleteSmsc: return new CommandDeleteSmsc(data);
     case CommandIds::updateSmsc: return new CommandUpdateSmsc(data);
