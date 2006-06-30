@@ -73,6 +73,14 @@ void Cookie::setParam(const char* nm, std::string& val)
     params.Insert(nm, val);
 }
 
+void Cookie::setParam(const char* nm, uint32_t ncnt, const char* val, uint32_t vcnt)
+{
+    std::string n, v;
+    n.assign(nm, ncnt);
+    v.assign(val, vcnt);
+    params.Insert(n.c_str(), v);
+}
+
 HttpCommand::~HttpCommand()
 {
     char *keystr;
