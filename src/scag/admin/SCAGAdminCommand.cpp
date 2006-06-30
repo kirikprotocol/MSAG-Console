@@ -440,6 +440,22 @@ Response * CommandApplySmppRoutes::CreateResponse(scag::Scag * SmscApp)
     return new Response(Response::Ok, "none");
 }
 
+//================ ApplySmppTraceRoutes command ================================
+
+
+Response * CommandApplyHttpRoutes::CreateResponse(scag::Scag * SmscApp)
+{
+    smsc_log_info(logger, "CommandApplyHttpRoutes is processing...");
+
+    ConfigManager & cfg = ConfigManager::Instance();
+
+    //cfg.reloadConfig(scag::config::ROUTE_CFG);
+
+    smsc_log_info(logger, "CommandApplyHttpRoutes is processed ok");
+    return new Response(Response::Ok, "none");
+}
+
+
 //-------------------- Bill Infrastructure commands ----------------------------
 Response * CommandReloadOperators::CreateResponse(scag::Scag * ScagApp)
 {
