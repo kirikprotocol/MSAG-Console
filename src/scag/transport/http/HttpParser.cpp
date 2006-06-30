@@ -404,9 +404,9 @@ StatusCode HttpParser::parseCookie(const char *buf, HttpCommand& cmd, bool set)
     if (end)
       *end = 0;
 
-    while(*start && *start == ' ') start++;
+    while(start < mid && *start == ' ') start++;
 
-    if(*start == '$' && set)
+    if(start >= mid || (*start == '$' && set))
         return ERROR;
 
     if(*start == '$')
