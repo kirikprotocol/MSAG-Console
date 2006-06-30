@@ -142,7 +142,7 @@ public class RuleManagerWrapper {
     ruleCommands.add(new RuleCommand(commandName, id, transport));
   }
 
-  private class RuleCommand {
+  private static class RuleCommand {
     public String commandName;
     public String id;
     public String transport;

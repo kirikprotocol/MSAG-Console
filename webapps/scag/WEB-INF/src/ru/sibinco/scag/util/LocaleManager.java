@@ -96,7 +96,7 @@ public class LocaleManager {
        throw new Exception("Wrong default language parameter in web.xml - localization information for default language \""+defaultLocale.getLanguage()+"\""+((countryPresent)?(" and country \""+defaultLocale.getCountry()+"\""):"") +" not scpecified in locales.xml");
   }
 
-  public class SCAGLocale {
+  public static class SCAGLocale {
     public Locale locale;
     public String icon;
     public SCAGLocale(Locale locale, String icon) {
