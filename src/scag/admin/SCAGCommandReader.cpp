@@ -40,8 +40,8 @@ SCAGCommandReader::SCAGCommandReader(Socket * admSocket)
   commandlist["reloadServices"] = CommandIds::reloadServices;
   commandlist["reloadTariffMatrix"] = CommandIds::reloadTariffMatrix;
 
-  commandlist["applyHttpRoutes"] = CommandIds::reloadHttpRoutes;
-  commandlist["loadHttpTraceRoutes"] = CommandIds::reloadHttpTraceRoutes;
+  commandlist["applyHttpRoutes"] = CommandIds::applyHttpRoutes;
+  commandlist["loadHttpTraceRoutes"] = CommandIds::loadHttpTraceRoutes;
   commandlist["traceHttpRoute"] = CommandIds::traceHttpRoute;
 }
 
@@ -90,8 +90,8 @@ Command * SCAGCommandReader::createCommand(int id, const DOMDocument *data)
     case CommandIds::reloadOperators: return new CommandReloadOperators(data);
     case CommandIds::reloadServices: return new CommandReloadServices(data);
     case CommandIds::reloadTariffMatrix: return new CommandReloadTariffMatrix(data);
-    case CommandIds::reloadHttpRoutes: return new CommandReloadHttpRoutes(data);
-    case CommandIds::reloadHttpTraceRoutes: return new CommandReloadHttpTraceRoutes(data);
+    case CommandIds::applyHttpRoutes: return new CommandApplyHttpRoutes(data);
+    case CommandIds::loadHttpTraceRoutes: return new CommandLoadHttpTraceRoutes(data);
     case CommandIds::traceHttpRoute: return new CommandTraceHttpRoute(data);
 
     default: 

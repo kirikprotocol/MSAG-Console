@@ -119,6 +119,20 @@ public:
   virtual Response * CreateResponse(scag::Scag * ScagApp);
 };
 
+//==================== CommandApplySmppRoutes command =====================================
+class CommandApplyHttpRoutes : public AdminCommand 
+{
+public:
+  
+  CommandApplyHttpRoutes(const xercesc::DOMDocument * doc) 
+    : AdminCommand((Command::Id)CommandIds::applyHttpRoutes, doc)
+  {
+  }
+
+  virtual Response * CreateResponse(scag::Scag * ScagApp);
+};
+
+
 //------------------------ Bill infrastructure commands ------------------------
 class CommandReloadOperators : public AdminCommand
 {
@@ -150,21 +164,11 @@ public:
     virtual Response * CreateResponse(scag::Scag * SmscApp);
 };
 
-class CommandReloadHttpRoutes : public AdminCommand
+class CommandLoadHttpTraceRoutes : public AdminCommand
 {
 public:
-    CommandReloadHttpRoutes(const xercesc::DOMDocument * const doc) :
-        AdminCommand((Command::Id)CommandIds::reloadHttpRoutes, doc)
-    {
-    }
-    virtual Response * CreateResponse(scag::Scag * SmscApp);
-};
-
-class CommandReloadHttpTraceRoutes : public AdminCommand
-{
-public:
-    CommandReloadHttpTraceRoutes(const xercesc::DOMDocument * const doc) :
-        AdminCommand((Command::Id)CommandIds::reloadHttpTraceRoutes, doc)
+    CommandLoadHttpTraceRoutes(const xercesc::DOMDocument * const doc) :
+        AdminCommand((Command::Id)CommandIds::loadHttpTraceRoutes, doc)
     {
     }
     virtual Response * CreateResponse(scag::Scag * SmscApp);
