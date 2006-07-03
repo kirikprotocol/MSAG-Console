@@ -22,7 +22,7 @@ void ActionAbstractWait::InitParameters(const SectionParams& params,PropertyObje
     smsc_log_debug(logger,"Action '%s':: init", m_ActionName.c_str());
 }
 
-bool ActionAbstractWait::RegisterPending(ActionContext& context)
+bool ActionAbstractWait::RegisterPending(ActionContext& context, int billID)
 {
     smsc_log_debug(logger,"Run Action '%s'...", m_ActionName.c_str());
 
@@ -54,7 +54,7 @@ bool ActionAbstractWait::RegisterPending(ActionContext& context)
     time(&now);
     pendingTime = now + wait_time;
 
-    context.AddPendingOperation(m_opType,pendingTime);
+    context.AddPendingOperation(m_opType, pendingTime, billID);
 
     return true;
 

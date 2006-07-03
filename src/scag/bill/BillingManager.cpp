@@ -8,7 +8,7 @@
 #include "scag/exc/SCAGExceptions.h"
 #include "BillingManagerWrapper.h"
 
-#define _NO_INMAN_CONNECTION_
+//#define MSAG_INMAN_BILL
 
 
 namespace scag { namespace bill {
@@ -163,7 +163,7 @@ void BillingManagerImpl::init(BillingManagerConfig& cfg)
 
     smsc_log_info(logger,"BillingManager connecting to host '%s', port %d", cfg.BillingHost.c_str(),cfg.BillingPort);
 
-    #ifndef _NO_INMAN_CONNECTION_
+    #ifdef MSAG_INMAN_BILL
     m_Connected = Reconnect();
     #else
     m_Connected = true;
@@ -187,7 +187,7 @@ int BillingManagerImpl::Execute()
         {
             if (m_Connected) 
             {
-                #ifndef _NO_INMAN_CONNECTION_
+                #ifdef MSAG_INMAN_BILL
                 receiveCommand();
                 #endif
                 connectEvent.Wait(100);
@@ -247,7 +247,7 @@ int BillingManagerImpl::ChargeBill(smsc::inman::interaction::ChargeSms& op, Even
 
     billTransaction.tariffRec = tariffRec;
 
-    #ifndef _NO_INMAN_CONNECTION_
+    #ifdef MSAG_INMAN_BILL
     billTransaction.status = TRANSACTION_WAIT_ANSWER;
     #else
     billTransaction.status = TRANSACTION_VALID;
@@ -259,7 +259,7 @@ int BillingManagerImpl::ChargeBill(smsc::inman::interaction::ChargeSms& op, Even
 
     op.setDialogId(m_lastBillId);
 
-    #ifndef _NO_INMAN_CONNECTION_
+    #ifdef MSAG_INMAN_BILL
     sendCommand(op);
     #endif
     return m_lastBillId;
@@ -300,7 +300,7 @@ TariffRec& BillingManagerImpl::CheckCharge(int billId, EventMonitor * eventMonit
 
     pBillTransaction->ChargeOperation.setDialogId(billId);
 
-    #ifndef _NO_INMAN_CONNECTION_
+    #ifdef MSAG_INMAN_BILL
     sendCommand(pBillTransaction->ChargeOperation);
     #else
     pBillTransaction->status = TRANSACTION_VALID;
@@ -332,7 +332,7 @@ void BillingManagerImpl::commit(int billId)
         op.setDialogId(billId);
         op.setResultValue(0);
 
-        #ifndef _NO_INMAN_CONNECTION_
+        #ifdef MSAG_INMAN_BILL
         sendCommand(op);
         #endif
     }
@@ -361,7 +361,7 @@ void BillingManagerImpl::rollback(int billId)
         op.setDialogId(billId);
         op.setResultValue(2);
 
-        #ifndef _NO_INMAN_CONNECTION_
+        #ifdef MSAG_INMAN_BILL
         sendCommand(op);
         #endif
     }
@@ -384,7 +384,7 @@ void BillingManagerImpl::sendReject(int billId)
         return;
     }
 
-    #ifndef _NO_INMAN_CONNECTION_
+    #ifdef MSAG_INMAN_BILL
     if (pBillTransaction->status == TRANSACTION_VALID)
     {
         DeliverySmsResult op;

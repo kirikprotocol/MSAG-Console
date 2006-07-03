@@ -19,7 +19,7 @@ protected:
     std::string m_ActionName;
 
     virtual void InitParameters(const SectionParams& params,PropertyObject propertyObject);
-    virtual bool RegisterPending(ActionContext& context);
+    virtual bool RegisterPending(ActionContext& context, int billID = 0);
 public:
     ActionAbstractWait() : m_opType(-1) {};
 

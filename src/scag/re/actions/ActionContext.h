@@ -101,7 +101,7 @@ namespace scag { namespace re { namespace actions
         bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value);
         Property* getProperty(const std::string& var);
         void abortSession();
-        void AddPendingOperation(uint8_t type, time_t pendingTime);
+        void AddPendingOperation(uint8_t type, time_t pendingTime, int billID);
         Operation * GetCurrentOperation() {return session.GetCurrentOperation();}
 
         void makeBillEvent(int billCommand, int commandStatus, TariffRec& tariffRec, SACC_BILLING_INFO_EVENT_t& ev);

@@ -27,11 +27,12 @@ CommandProperty::CommandProperty(SCAGCommand& command, int commandStatus, Addres
 
 
 
-void ActionContext::AddPendingOperation(uint8_t type, time_t pendingTime)
+void ActionContext::AddPendingOperation(uint8_t type, time_t pendingTime, int billID)
 {
     PendingOperation pendingOperation;
     pendingOperation.validityTime = pendingTime;
     pendingOperation.type = type;
+    pendingOperation.billID = billID;
     
     session.addPendingOperation(pendingOperation);
 }

@@ -15,10 +15,13 @@ class BillActionOpen : public ActionAbstractWait
 
     std::string m_sStatus;
     std::string m_sMessage;
+    std::string m_sResNumber;
 
     Logger * logger;
     std::string m_category;
     std::string m_mediaType;
+
+
     uint32_t category;
     uint32_t mediaType;
 
@@ -28,11 +31,11 @@ class BillActionOpen : public ActionAbstractWait
     FieldType m_MsgFieldType;
 
     bool m_MsgExist;
-
+    bool m_ResNumExist;
 
     bool m_waitOperation;
 
-    void SetBillingStatus(ActionContext& context, const char * errorMsg, bool isOK);
+    void SetBillingStatus(ActionContext& context, const char * errorMsg, bool isOK, const TariffRec * tariffRec);
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name, const SectionParams& params, const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);
