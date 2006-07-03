@@ -387,7 +387,7 @@ StatusCode HttpParser::parseCookie(const char *buf, HttpCommand& cmd, bool set)
     static const char* cookieParams[] = {"version", "path", "domain", "port", "max-age", "comment", "secure", "expires"};
     static const char cookieParamsCnt = sizeof(cookieParams)/sizeof(char*);
 
-  const char  *start = buf, *mid, *end;
+  const char  *start = buf, *mid, *end, *val;;
   std::string key, value;
   Cookie *cur = &cmd.defCookie;
 
@@ -398,34 +398,29 @@ StatusCode HttpParser::parseCookie(const char *buf, HttpCommand& cmd, bool set)
     if (!mid || (mid && end && (mid > end)))
       return ERROR;
 
-    *mid = 0;
-    mid++;
-
-    if (end)
-      *end = 0;
-
     while(start < mid && *start == ' ') start++;
 
     if(start >= mid || (*start == '$' && set))
         return ERROR;
 
+    val = mid + 1;
+
     if(*start == '$')
-        cur->setParam(start + 1, mid);
+        cur->setParam(start + 1, mid - start - 1, val, end ? end - val : strlen(val));
     else
     {
-        bool f = false;
-        for(int i = 0; i < cookieParamsCnt; i++)
-            if(!strcasecmp(cookieParams[i], start))
-            {
-                cur->setParam(start, mid);
-                f = true;
-                break;
-            }
-        if(!f)
+        int i = 0;
+        while(i < cookieParamsCnt && strcasecmp(cookieParams[i], start)) i++;
+        if(i < cookieParamsCnt)
+            cur->setParam(start, mid - start, val, end ? end - val : strlen(val));
+        else
         {
             cur = new Cookie;
-            cur->name.assign(start);
-            cur->value.assign(mid);
+            cur->name.assign(start, mid - start);
+            if(end)
+                cur->value.assign(val, end - val);
+            else
+                cur->value.assign(val);
             cmd.cookies.Insert(cur->name.c_str(), cur);
         }
     }

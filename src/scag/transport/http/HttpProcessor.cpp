@@ -32,9 +32,15 @@ class HttpProcessorImpl : public HttpProcessor
         PlacementArray defAddrPlaces;
         smsc::logger::Logger* logger;
         HttpRouterImpl router;
-        bool addrInURL = true;
+        bool addrInURL;
 
-        bool parsePath(std::string &path, HttpRequest& cx);
+        bool findPlace(std::string& rs, const PlacementArray& places, HttpRequest& request);
+        bool findUSR(HttpRequest& request, const PlacementArray& places);
+        bool findAddress(HttpRequest& request, const PlacementArray& places);
+        void setUSR(HttpRequest& request, const PlacementArray& places);
+        void setAbonent(HttpRequest& request, const PlacementArray& places);
+        void setPlaces(const std::string& rs, const PlacementArray& places, HttpRequest& request);
+        bool parsePath(bool addr, const std::string &path, HttpRequest& cx);
         void registerEvent(int event, HttpRequest& cmd);
         void registerEvent(int event, HttpResponse& cmd);
 };
@@ -69,7 +75,7 @@ void HttpProcessor::Init(const std::string& cfg)
     }
 }
 
-bool HttpProcessor::parsePath(bool addr, std::string &path, HttpRequest& cx)
+bool HttpProcessorImpl::parsePath(bool addr, const std::string &path, HttpRequest& cx)
 {
   const char    *pos = path.c_str(), *mid, *end;
   std::string   str;
@@ -131,7 +137,7 @@ bool HttpProcessor::parsePath(bool addr, std::string &path, HttpRequest& cx)
     cx.setSite(str);
     mid++;
     str.assign(mid, end - mid);
-    cx.sitePort = atoi(str.c_str());
+    cx.setSitePort(atoi(str.c_str()));
   } else {
     str.assign(pos, end - pos);
     cx.setSite(str);
@@ -140,54 +146,63 @@ bool HttpProcessor::parsePath(bool addr, std::string &path, HttpRequest& cx)
   pos = end;
   if (*pos)
   {
-    cx.siteFull.assign(pos);
+    str.assign(pos);
+    cx.setSiteFull(pos);
     end = strrchr(pos, '/');
-    cx.sitePath.assign(pos, end + 1 - pos);
+    str.assign(pos, end + 1 - pos);
+    cx.setSitePath(str);
   }
 
   return true;
 }
 
-bool HttpProcessorImpl::findPlace(std::string& rs, PlacementArray& places)
+bool HttpProcessorImpl::findPlace(std::string& rs, const PlacementArray& places, HttpRequest& request)
 {
     for(int i = 0; i < places.Count(); i++)
     {
-        switch(places[i].place)
+        switch(places[i].type)
         {
             case PlacementType::PARAM:
-                std::string& s = request.getQueryParameter(places[i].name);
+            {
+                const std::string& s = request.getQueryParameter(places[i].name);
                 if(!s.length()) break;
                 rs = s;
                 return true;
+            }
             case PlacementType::COOKIE:
+            {
                 Cookie *c = request.getCookie(places[i].name);
                 if(c == NULL || !c->value.length()) break;
                 rs = c->value;
                 return true;
+            }
             case PlacementType::HEADER:
-                std::string& s = request.getHeaderField(places[i].name);
+            {
+                const std::string& s = request.getHeaderField(places[i].name);
                 if(!s.length()) break;
                 rs = s;
                 return true;;
+            }
         }
     }
     return false;
 }
 
-bool HttpProcessorImpl::findAddress(HttpRequest& request, PlacementArray& places)
+bool HttpProcessorImpl::findAddress(HttpRequest& request, const PlacementArray& places)
 {
     if(request.getAbonent().length())
         return true;
 
-    if(findPlace(s, places))
+    std::string s;
+    if(findPlace(s, places, request))
     {
-        request.setAbonent(i);
+        request.setAbonent(s);
         return true;
     }
     return false;
 }
 
-bool HttpProcessorImpl::findUSR(HttpRequest& request, PlacementArray& places)
+bool HttpProcessorImpl::findUSR(HttpRequest& request, const PlacementArray& places)
 {
     std::string s;
     uint16_t i;
@@ -195,7 +210,7 @@ bool HttpProcessorImpl::findUSR(HttpRequest& request, PlacementArray& places)
     if(request.getUSR())
         return true;
 
-    if(findPlace(s, places) && (i = atoi(s.c_str())))
+    if(findPlace(s, places, request) && (i = atoi(s.c_str())))
     {
         request.setUSR(i);
         return true;
@@ -203,35 +218,37 @@ bool HttpProcessorImpl::findUSR(HttpRequest& request, PlacementArray& places)
     return false;
 }
 
-void HttpProcessorImpl::setUSR(HttpRequest& request, PlacementArray& places)
+void HttpProcessorImpl::setUSR(HttpRequest& request, const PlacementArray& places)
 {
     std::string s;
     uint16_t i;
 
     char buf[10];
     buf[9] = 0;
-    setPlaces(lltostr(request.getUSR(), buf + 9), places);
+    setPlaces(lltostr(request.getUSR(), buf + 9), places, request);
 }
 
 void HttpProcessorImpl::setAbonent(HttpRequest& request, const PlacementArray& places)
 {
-    setPlaces(request.getAbonent(), places);
+    setPlaces(request.getAbonent(), places, request);
 }
 
-void HttpProcessorImpl::setPlaces(const std::string& rs, const PlacementArray& places)
+void HttpProcessorImpl::setPlaces(const std::string& rs, const PlacementArray& places, HttpRequest& request)
 {
     std::string s;
 
     for(int i = 0; i < places.Count(); i++)
     {
-        switch(places[i].place)
+        switch(places[i].type)
         {
             case PlacementType::PARAM:
                 request.setQueryParameter(places[i].name, rs);
                 break;
             case PlacementType::COOKIE:
+            {
                 Cookie *c = request.setCookie(places[i].name, rs);
                 break;
+            }
             case PlacementType::HEADER:
                 request.setHeaderField(places[i].name, rs);
                 break;
@@ -249,7 +266,7 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
     SessionPtr se;
 
     try{
-        if(!parsePath(addrInURL, request.getSiteFull()) || !findAddress(request, defAddressPlaces))
+        if(!parsePath(addrInURL, request.getSiteFull(), request) || !findAddress(request, defAddrPlaces))
         {
             registerEvent(scag::stat::events::http::REQUEST_FAILED, request);
             return false;
@@ -261,7 +278,7 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
         request.setRouteId(r.id);
         request.setProviderId(r.provider_id);
 
-        findUSR(request, r->inUSRPlace);
+        findUSR(request, r.inUSRPlace);
 
         CSessionKey sk = {request.getUSR(), Address(request.getAbonent().c_str())};
         if(!request.getUSR())
@@ -294,15 +311,16 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
                 {
                     char buf[20];
                     buf[19] = 0;
-                    std::String h += '/';
-                    h += getAbonent();
+                    std::string h;
+                    h += '/';
+                    h += request.getAbonent();
                     h += '_';
                     h += lltostr(request.getUSR(), buf + 19);
-                    request.setPath(request.getPath() + h);
+                    request.setSitePath(request.getSitePath() + h);
                 }
 
-                setUSR(request, r->outUSRPlace);
-                setAbonent(request, r->outAddressPlace);
+                setUSR(request, r.outUSRPlace);
+                setAbonent(request, r.outAddressPlace);
 
                 return true;
             }
@@ -408,6 +426,7 @@ void HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
         
 void HttpProcessorImpl::init(const std::string& cfg)
 {
+    addrInURL = true;
     logger = Logger::getInstance("httpProc");
     router.init(cfg + "/http_routes.xml");
 }
@@ -418,11 +437,10 @@ void HttpProcessorImpl::ReloadRoutes()
     defAddrPlaces = router.getDefaultAddressPlacement();
 
     int i = 0;
-    while(i < defAddrPlaces.Count() && defAddrPlaces[i].place != PlacementType::URL)
+    while(i < defAddrPlaces.Count() && defAddrPlaces[i].type != PlacementType::URL)
         i++;
 
-    if(i < defAddrPlaces.Count())
-        addrInURL = true;
+    addrInURL = i < defAddrPlaces.Count();
 }
 
 void HttpProcessorImpl::registerEvent(int event, HttpRequest& cmd)

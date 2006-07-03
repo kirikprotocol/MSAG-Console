@@ -84,7 +84,7 @@ void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
         if(in_options)
         {
             Placement p = assignPlacement("", attrs);
-            insertPlacement(pa, p);
+            insertPlacement(addrPlace, p);
             smsc_log_debug(logger, "address_place record: [options] name=%s, type=%d, prio=%d", p.name.c_str(), p.type, p.prio);
         }
         else if(route.id.length() && in_sites)

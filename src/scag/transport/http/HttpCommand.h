@@ -75,7 +75,7 @@ public:
     void serialize(std::string& s, bool set = false);
     const std::string& getParam(const char * name);
     void setParam(const char* nm, std::string& val);
-    void setParam(const char* nm, uint32_t ncnt, const char* val, uint32_t ncnt);
+    void setParam(const char* nm, uint32_t ncnt, const char* val, uint32_t vcnt);
 };
 
 typedef Hash<Cookie*> CookieHash;
