@@ -208,9 +208,17 @@ bool ActionContext::checkIfCanSetPending(int operationType, int eventHandlerType
     }
     
     return result;
-
-    
+   
 }
+
+int ActionContext::getCurrentOperationBillID()
+{
+    Operation * operation = session.GetCurrentOperation();
+    if (!operation) return 0;
+
+    return operation->getBillId();
+}
+
 
 }}}
 

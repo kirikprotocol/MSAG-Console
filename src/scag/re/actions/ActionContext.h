@@ -111,6 +111,7 @@ namespace scag { namespace re { namespace actions
 
         TariffRec * getTariffRec(uint32_t category, uint32_t mediaType);
         bool checkIfCanSetPending(int operationType, int eventHandlerType, TransportType transportType);
+        int getCurrentOperationBillID();
     };
 
 }}}
