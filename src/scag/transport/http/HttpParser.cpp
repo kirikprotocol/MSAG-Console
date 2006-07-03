@@ -410,7 +410,7 @@ StatusCode HttpParser::parseCookie(const char *buf, HttpCommand& cmd, bool set)
     else
     {
         int i = 0;
-        while(i < cookieParamsCnt && strcasecmp(cookieParams[i], start)) i++;
+        while(i < cookieParamsCnt && strncasecmp(cookieParams[i], start, mid - start)) i++;
         if(i < cookieParamsCnt)
             cur->setParam(start, mid - start, val, end ? end - val : strlen(val));
         else

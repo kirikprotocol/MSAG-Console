@@ -33,7 +33,7 @@ extern "C" void* thread(void* a)
         Socket *s = new Socket();
         if (!s->Init(SERVER, PORT, 100) && !s->Connect())
         {
-            const char str[] = "GET "URL_" HTTP/1.1\r\nHost: "SERVER"\r\nConnection: close\r\nCookie: $Version=0;test_cookie=213;$expires=234;test_cookie2=asdf;\r\n\r\n";
+            const char str[] = "GET "URL_" HTTP/1.1\r\nHost: "SERVER"\r\nConnection: close\r\nCookie: $Version=0;test_cookie=213;expires=234;test_cookie2=asdf;\r\n\r\n";
 
             if(s->Write(str, sizeof(str)) == sizeof(str))
             {
