@@ -612,7 +612,7 @@ void Scag::init()
         scag::transport::http::HttpProcessor::Init("./conf");
         scag::transport::http::HttpProcessor& hp = scag::transport::http::HttpProcessor::Instance();
 
-        scag::transport::http::HttpTraceRouter::Init("./conf/http_trace_routes.xml");
+        scag::transport::http::HttpTraceRouter::Init("./conf/http_routes__.xml");
 
         using scag::config::ConfigView;
 
