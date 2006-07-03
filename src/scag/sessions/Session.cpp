@@ -33,6 +33,23 @@ int Session::getOperationType(std::string& str)
 }
 
 
+
+void PendingOperation::rollbackAll()
+{
+    if (billID > 0) 
+    {
+        BillingManager& bm = BillingManager::Instance();
+
+        __warning__("PendingOperation: Rollback all");
+
+        bm.rollback(billID);
+        billID = 0;
+    }
+}
+
+
+
+
 ICCOperationStatus Operation::getStatus()
 {
     return m_Status;
@@ -119,10 +136,10 @@ void Operation::rollbackAll()
 {
     smsc_log_debug(logger,"Operation: Rollback all");
     
-    BillingManager& bm = BillingManager::Instance();
-
     if (m_hasBill) 
     {
+        BillingManager& bm = BillingManager::Instance();
+
         bm.rollback(billId);
         m_hasBill = false;
     }
@@ -235,8 +252,10 @@ void Session::DeserializePendingOperations(SessionBuffer& buff)
         int temp;
 
         buff >> p.type >> p.validityTime >> temp;
-
         p.bStartBillingOperation = temp;
+
+        buff >> p.billID;
+
         PendingOperationList.push_back(p);
     }
 
@@ -302,6 +321,9 @@ void Session::SerializePendingOperations(SessionBuffer& buff)
     {
         int temp = it->bStartBillingOperation;
         buff << it->type << it->validityTime << temp;
+
+        buff << it->billID;
+
     }
 }
 
@@ -458,6 +480,12 @@ void Session::abort()
         delete value;
     }
 
+    for (std::list<PendingOperation>::iterator it = PendingOperationList.begin(); it!=PendingOperationList.end(); ++it)
+    {              
+        it->rollbackAll();
+    }
+
+
     OperationsHash.Empty();
     PendingOperationList.clear();
     PrePendingOperationList.clear();
@@ -490,6 +518,10 @@ void Session::expirePendingOperation()
     if (PendingOperationList.size() > 0) 
     {
         smsc_log_debug(logger,"Session: pending operation has expiried");
+
+        std::list<PendingOperation>::iterator it = PendingOperationList.begin();
+        if (it->billID > 0) it->rollbackAll();
+
         PendingOperationList.pop_front();
         bChanged = true;
     }
@@ -553,7 +585,9 @@ void Session::setOperationFromPending(SCAGCommand& cmd, int operationType)
     {
         if (it->type == operationType) 
         {
-            AddNewOperationToHash(cmd, operationType);
+            Operation * operation = AddNewOperationToHash(cmd, operationType);
+
+            if (it->billID > 0) operation->attachBill(it->billID);
 
             PendingOperationList.erase(it);
             bChanged = true;

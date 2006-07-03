@@ -152,8 +152,10 @@ namespace scag { namespace sessions
         uint8_t type;
         time_t validityTime;
         bool bStartBillingOperation;
+        int billID;
+        void rollbackAll();
 
-        PendingOperation() : bStartBillingOperation(false) {};
+        PendingOperation() : bStartBillingOperation(false), billID(0) {};
     };
 
     class Operation
