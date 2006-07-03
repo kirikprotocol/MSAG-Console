@@ -447,11 +447,19 @@ Response * CommandApplyHttpRoutes::CreateResponse(scag::Scag * SmscApp)
 {
     smsc_log_info(logger, "CommandApplyHttpRoutes is processing...");
 
-    ConfigManager & cfg = ConfigManager::Instance();
+    try {
+        scag::transport::http::HttpProcessor::Instance().ReloadRoutes();
+    } catch(Exception& e) {                                     
+        char msg[1024];                                         
+        sprintf(msg, "Failed to reload HttpRoutes. Details: %s", e.what());
+        smsc_log_error(logger, msg);
+        return new Response(Response::Error, msg);
+    } catch (...) {
+        smsc_log_warn(logger, "Failed to reload HttpRoutes. Unknown exception");        
+        throw AdminException("Failed to reload HttpRoutes. Unknown exception");
+    }
 
-    //cfg.reloadConfig(scag::config::ROUTE_CFG);
-
-    smsc_log_info(logger, "CommandApplyHttpRoutes is processed ok");
+    smsc_log_info(logger, "CommandApplyHttpRoutes processed ok.");
     return new Response(Response::Ok, "none");
 }
 
@@ -530,10 +538,8 @@ Response * CommandLoadHttpTraceRoutes::CreateResponse(scag::Scag * ScagApp)
 {
     smsc_log_info(logger, "CommandLoadHttpTraceRoutes is processing...");
 
-//    if(!ScagApp) throw Exception("Scag undefined");
-
     try {
-        scag::transport::http::HttpProcessor::Instance().ReloadRoutes();
+        scag::transport::http::HttpTraceRouter::Instance().ReloadRoutes();
     } catch(Exception& e) {                                     
         char msg[1024];                                         
         sprintf(msg, "Failed to reload HttpRoutes. Details: %s", e.what());
