@@ -7,6 +7,7 @@ static char const ident[] = "$Id$";
 #include "inman/inap/dialog.hpp"
 
 using smsc::cvtutil::packSCCPAddress;
+using smsc::cvtutil::unpackSCCP2SSN_GT;
 
 #define MAX_ID_ATTEMPTS (maxId - minId)
 
@@ -191,7 +192,14 @@ Dialog* SSNSession::initDialog(const SCCP_ADDRESS_T & rmt_addr)
     } else
         pDlg = new Dialog(did, ac_idx, userId, locAddr, rmt_addr, logger);
 
-    smsc_log_debug(logger, "SSN[%u]: Opening Dialog[0x%X]", (unsigned)SSN, did);
+
+    if (logger->isLogLevelEnabled(Logger::LEVEL_DEBUG)) {
+        unsigned char r_ssn;
+        char          r_adr[CAP_MAX_SMS_AddressValueLength + 4];
+        unpackSCCP2SSN_GT(&rmt_addr, r_ssn, r_adr);
+        smsc_log_debug(logger, "SSN[%u]: Opening Dialog[0x%X] -> [%u:%s]", (unsigned)SSN, did,
+                        r_ssn, r_adr);
+    }
     dialogs.insert(DialogsMap_T::value_type(did, pDlg));
     return pDlg;
 }
