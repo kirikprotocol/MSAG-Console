@@ -307,14 +307,20 @@ public class myServlet extends HttpServlet
     out.flush();out.close();
   }
 
-  private LinkedList ParseXml(final String fileName)
+  private LinkedList ParseXml(final String fileName )
   {
+    System.out.println("%%%%%%%%%%inside parsexml!!!!!%%%%%%%%%%%% fileName="+fileName);
     LinkedList li=new  LinkedList();
     InputStream _in=null; BufferedReader in = null; String inpuLine;
     try {  _in = new FileInputStream(fileName); in = new BufferedReader(new InputStreamReader(_in));
       li.addFirst("ok");
-      while ((inpuLine = in.readLine()) != null) li.add(inpuLine);
-    } catch (FileNotFoundException e) { //e.printStackTrace();
+      while ((inpuLine = in.readLine()) != null) {
+        System.out.println("$$$"+inpuLine);
+        li.add(inpuLine);
+      }
+
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
       li.addFirst(e.getMessage());
     } catch (IOException e) {  e.printStackTrace();
     }
