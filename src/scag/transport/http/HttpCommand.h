@@ -253,11 +253,11 @@ public:
         siteQuery = query;
     }
 
-    const std::string& getSiteFull() {
-        return siteFull;
+    const std::string& getSiteFileName() {
+        return siteFileName;
     }
-    void setSiteFull(const std::string& full) {
-        siteFull = full;
+    void setSiteFileName(const std::string& fn) {
+        siteFileName = fn;
     }
 
     ParameterIterator& getQueryParameterNames();
@@ -265,7 +265,7 @@ public:
     void setQueryParameter(const std::string& paramName, const std::string& _paramValue);
     void setQueryParameterEncoded(const std::string& paramName, const std::string& _paramValue);
 
-    void serialize();
+    const std::string& serialize();
     virtual bool isResponse();
 protected:
     void serializeQuery(std::string& s);
@@ -280,6 +280,7 @@ protected:
     std::string sitePath;    
     std::string siteQuery;
     std::string siteFull;
+    std::string siteFileName;
     std::string paramValue;
 };
 

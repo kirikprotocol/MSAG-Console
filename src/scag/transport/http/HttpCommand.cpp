@@ -366,9 +366,9 @@ void HttpRequest::serializeQuery(std::string& s)
     }
 }
 
-void HttpRequest::serialize()
+const std::string& HttpRequest::serialize()
 {
-    if (headers.empty()) {
+//    if (headers.empty()) {
         char *keystr;
         std::string *valptr;
         char buf[20];
@@ -379,6 +379,7 @@ void HttpRequest::serialize()
         headers = httpMethodNames[httpMethod];
         headers += SP;
         headers += sitePath;
+        headers += siteFileName;
 
         if (!(siteQuery.empty() || httpMethod == POST)) {
             headers += '?';
@@ -423,7 +424,8 @@ void HttpRequest::serialize()
         }
         
         headers += CRLF;
-    }
+        return headers;
+//    }
 }
 
 void HttpResponse::serialize()

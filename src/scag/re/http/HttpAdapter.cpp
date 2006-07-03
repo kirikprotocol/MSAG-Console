@@ -31,6 +31,7 @@ Hash<AccessType> HttpCommandAdapter::InitRequestAccess()
     hs.Insert("abonent", atReadWrite);
     hs.Insert("site", atReadWrite);
     hs.Insert("path", atReadWrite);
+    hs.Insert("filename", atReadWrite);
     hs.Insert("port", atReadWrite);
     hs.Insert("message", atReadWrite);
 
@@ -89,6 +90,8 @@ Property* HttpCommandAdapter::getRequestProperty(const std::string& name)
         prop = new AdapterProperty(name, this, cmd.getSite());
     else if(!strcmp(name.c_str(), "path"))
         prop = new AdapterProperty(name, this, cmd.getSitePath());
+    else if(!strcmp(name.c_str(), "filename"))
+        prop = new AdapterProperty(name, this, cmd.getSiteFileName());
     else if(!strcmp(name.c_str(), "port"))
         prop = new AdapterProperty(name, this, cmd.getSitePort());
     else if(!strcmp(name.c_str(), "message"))
@@ -153,6 +156,8 @@ void HttpCommandAdapter::changed(AdapterProperty& property)
             cmd.setSite(property.getStr());
         else if(!strcmp(property.GetName().c_str(), "path"))
             cmd.setSitePath(property.getStr());
+        else if(!strcmp(property.GetName().c_str(), "filename"))
+            cmd.setSiteFileName(property.getStr());
         else if(!strcmp(property.GetName().c_str(), "port"))
             cmd.setSitePort(property.getInt());
         else if(!strcmp(property.GetName().c_str(), "message"))
