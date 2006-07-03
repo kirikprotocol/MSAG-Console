@@ -29,7 +29,7 @@ public abstract class SCAGBean
       this.errors = new ArrayList();
      error("error.errorListNotInitialized");
     }
-    appContext = (SCAGAppContext) request.getAttribute("appContext");
+    appContext = (SCAGAppContext) request.getAttribute(Constants.APP_CONTEXT);
     loginedPrincipal = request.getUserPrincipal();
   }
   protected void error(final String errorCode)

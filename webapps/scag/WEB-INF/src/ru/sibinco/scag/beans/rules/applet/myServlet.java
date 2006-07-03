@@ -4,6 +4,7 @@ package ru.sibinco.scag.beans.rules.applet;
 import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.rules.Rule;
 import ru.sibinco.scag.backend.rules.RuleManager;
+import ru.sibinco.scag.Constants;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.StatusDisconnectedException;
 
@@ -164,7 +165,7 @@ public class myServlet extends HttpServlet
  }
 
   private void unlockRule(HttpServletRequest req,final String file, final String transport) {
-    SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
+    SCAGAppContext appContext = (SCAGAppContext) req.getAttribute(Constants.APP_CONTEXT);
     if (file.equals("")) {
       appContext.getRuleManager().unlockAllRules();
       return;
@@ -174,7 +175,7 @@ public class myServlet extends HttpServlet
   }
 
   private void getTitle(HttpServletRequest req, final String file, final String transport, HttpServletResponse res) {
-     SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
+     SCAGAppContext appContext = (SCAGAppContext) req.getAttribute(Constants.APP_CONTEXT);
      try {
       String serviceName=appContext.getServiceProviderManager().getServiceById(new Long(file)).getName();
       if (serviceName!=null) {        
@@ -201,7 +202,7 @@ public class myServlet extends HttpServlet
   private void updateRule(HttpServletRequest req,final String file, final String transport, HttpServletResponse res) throws IOException
   {
     System.out.println("myServlet updateRule");
-    SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
+    SCAGAppContext appContext = (SCAGAppContext) req.getAttribute(Constants.APP_CONTEXT);
     //transport
     LinkedList li;
     PrintWriter out = res.getWriter();
@@ -230,7 +231,7 @@ public class myServlet extends HttpServlet
   private void AddRule(HttpServletRequest req,final String file, final String transport, HttpServletResponse res) throws IOException
   {
     System.out.println("myServlet AddRule");
-    SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
+    SCAGAppContext appContext = (SCAGAppContext) req.getAttribute(Constants.APP_CONTEXT);
     PrintWriter out = res.getWriter();    
     LinkedList li;
     BufferedReader r=req.getReader();
@@ -277,7 +278,7 @@ public class myServlet extends HttpServlet
   private LinkedList LoadRule(HttpServletRequest req, final String file, final String transport)
     {
       System.out.println("LoadRule id= "+file+" transport="+transport);
-      SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
+      SCAGAppContext appContext = (SCAGAppContext) req.getAttribute(Constants.APP_CONTEXT);
       Rule rule = appContext.getRuleManager().getRule(Long.valueOf(file) ,transport);
       rule.lock();
       return rule.getBody();
@@ -298,7 +299,7 @@ public class myServlet extends HttpServlet
    private void ExistRule(HttpServletRequest req, final String file, final String transport,HttpServletResponse res) throws IOException
   {
     System.out.println("ExistRule id= "+file + " transport="+transport);
-    SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
+    SCAGAppContext appContext = (SCAGAppContext) req.getAttribute(Constants.APP_CONTEXT);
     PrintWriter out = res.getWriter();
     if (appContext.getRuleManager().getRule(Long.valueOf(file),transport)!=null)
         out.print("true");
