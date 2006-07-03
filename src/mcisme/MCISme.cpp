@@ -198,13 +198,14 @@ class MCISmeConfig : public SmeConfig
 {
 private:
     
-    char *strHost, *strSid;//, *strPassword, *strSysType, *strOrigAddr;
+    char *strHost, *strSid, *strPassword, *strSysType, *strOrigAddr;
 
 public:
     
     MCISmeConfig(ConfigView* config)
         throw(ConfigException)
-            : SmeConfig(), strHost(0), strSid(0)//, strPassword(0), strSysType(0), strOrigAddr(0)
+            : SmeConfig(), strHost(0), strSid(0), strPassword(0), 
+                strSysType(0), strOrigAddr(0)
     {
         // Mandatory fields
 		strHost = config->getString("host", "SMSC host wasn't defined !");
@@ -216,27 +217,27 @@ public:
         timeOut = config->getInt("timeout", "Connect timeout wasn't defined !");
         
         // Optional fields
-        //try {
-        //    strPassword = config->getString("password", "MCISme password wasn't defined !");
-        //    password = strPassword;
-        //} catch (ConfigException& exc) { password = ""; strPassword = 0; }
-        //try {
-        //    strSysType = config->getString("systemType", "MCISme system type wasn't defined !");
-        //    systemType = strSysType;
-        //} catch (ConfigException& exc) { systemType = ""; strSysType = 0; }
-        //try {
-        //    strOrigAddr = config->getString("origAddress", "MCISme originating address wasn't defined !");
-        //    origAddr = strOrigAddr;
-        //} catch (ConfigException& exc) { origAddr = ""; strOrigAddr = 0; }
+        try {
+            strPassword = config->getString("password", "MCISme password wasn't defined !");
+            password = strPassword;
+        } catch (ConfigException& exc) { password = ""; strPassword = 0; }
+        try {
+            strSysType = config->getString("systemType", "MCISme system type wasn't defined !");
+            systemType = strSysType;
+        } catch (ConfigException& exc) { systemType = ""; strSysType = 0; }
+        try {
+            strOrigAddr = config->getString("origAddress", "MCISme originating address wasn't defined !");
+            origAddr = strOrigAddr;
+        } catch (ConfigException& exc) { origAddr = ""; strOrigAddr = 0; }
     };
 
     virtual ~MCISmeConfig()
     {
         if (strHost) delete strHost;
         if (strSid) delete strSid;
-        //if (strPassword) delete strPassword;
-        //if (strSysType) delete strSysType;
-        //if (strOrigAddr) delete strOrigAddr;
+        if (strPassword) delete strPassword;
+        if (strSysType) delete strSysType;
+        if (strOrigAddr) delete strOrigAddr;
     };
 };
 
