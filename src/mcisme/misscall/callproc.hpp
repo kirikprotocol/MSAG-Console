@@ -36,9 +36,9 @@ class MissedCallListener{
     virtual void missed(MissedCallEvent event) = 0;
 };
 struct Circuits {
-  int  hsn;
-  int  spn;
-  long ts;
+  uint32_t ts;
+  uint8_t  hsn;
+  uint8_t  spn;
 };
 
 struct Rule {
@@ -85,7 +85,7 @@ class MissedCallProcessor
     void setRules(vector<Rule>& rules);
     void setReleaseSettings(ReleaseSettings params);
     void setRedirectionAddress(const char* address);
-	bool setCountryCode(const char* _countryCode);
+  bool setCountryCode(const char* _countryCode);
 
   private:
     MissedCallProcessor();
