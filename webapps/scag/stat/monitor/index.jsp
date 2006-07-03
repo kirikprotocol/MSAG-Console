@@ -1,10 +1,12 @@
-<%@ page import="ru.sibinco.scag.backend.SCAGAppContext"%><html>
+<%@ page import="ru.sibinco.scag.backend.SCAGAppContext"%>
+<%@ page import="ru.sibinco.scag.Constants"%>
+<html>
 <head>
-	<link rel="STYLESHEET" type="text/css" href="content/styles/common.css">
+    <link rel="STYLESHEET" type="text/css" href="content/styles/common.css">
 </head>
 <body style="margin: 0px 0px 0px 0px;">
 <%
-	SCAGAppContext appContext = (SCAGAppContext) request.getAttribute("appContext");
+	SCAGAppContext appContext = (SCAGAppContext) request.getAttribute(Constants.APP_CONTEXT);
 	long port = 6695;
 	if (appContext != null)
 	{

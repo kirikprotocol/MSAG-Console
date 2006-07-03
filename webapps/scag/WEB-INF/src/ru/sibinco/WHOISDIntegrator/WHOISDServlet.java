@@ -5,6 +5,7 @@ import ru.sibinco.scag.backend.rules.Rule;
 import ru.sibinco.scag.backend.rules.RuleManager;
 import ru.sibinco.scag.backend.transport.Transport;
 import ru.sibinco.scag.beans.rules.applet.MiscUtilities;
+import ru.sibinco.scag.Constants;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.StatusDisconnectedException;
 import ru.sibinco.lib.backend.util.Functions;
@@ -36,7 +37,7 @@ public class WHOISDServlet extends HttpServlet {
 
   public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
     logRequest(req);
-    appContext = (SCAGAppContext)req.getAttribute("appContext");
+    appContext = (SCAGAppContext)req.getAttribute(Constants.APP_CONTEXT);
     int id = getRequestId(req);
     LinkedList result = new LinkedList();
     try {
@@ -71,7 +72,7 @@ public class WHOISDServlet extends HttpServlet {
 
   public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException{
        logRequest(req);
-       appContext = (SCAGAppContext)req.getAttribute("appContext");
+       appContext = (SCAGAppContext)req.getAttribute(Constants.APP_CONTEXT);
        int id = getRequestId(req);
        LinkedList result = new LinkedList();
        try {

@@ -35,7 +35,7 @@ public class Edit extends EditBean {
     private String id;
     private String path = "";
     private String host;
-    private int port = 0;
+    private int port = 80;
 
     private String parentId;
     private String[] pathLinks = new String[0];
@@ -51,7 +51,7 @@ public class Edit extends EditBean {
         appContext = getAppContext();
 
         if (appContext == null) {
-            appContext = (SCAGAppContext) request.getAttribute("appContext");
+            appContext = (SCAGAppContext) request.getAttribute(Constants.APP_CONTEXT);
         }
 
         if (getMbCancel() != null) {

@@ -9,6 +9,7 @@ package ru.sibinco.scag.beans;
 import org.apache.log4j.Logger;
 import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.scag.backend.SCAGAppContext;
+import ru.sibinco.scag.Constants;
 
 import javax.servlet.*;
 import javax.servlet.jsp.jstl.core.Config;
@@ -57,7 +58,7 @@ public class SCAGFilter implements Filter {
         }
 
         req.setCharacterEncoding(defaultEncoding);
-        req.setAttribute("appContext", appContext);
+        req.setAttribute(Constants.APP_CONTEXT, appContext);
         if (req instanceof HttpServletRequest) {
             final HttpServletRequest request = (HttpServletRequest) req;
             req.setAttribute("requestURI", request.getRequestURI());

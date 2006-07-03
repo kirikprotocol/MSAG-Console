@@ -51,7 +51,7 @@ public class Edit extends TabledEditBeanImpl {
 
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
         if (appContext == null) {
-            appContext = (SCAGAppContext) request.getAttribute("appContext");
+            appContext = (SCAGAppContext) request.getAttribute(Constants.APP_CONTEXT);
         }
         userLogin = request.getUserPrincipal().getName();
         if (getMbCancel() != null) {
