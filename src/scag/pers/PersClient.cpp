@@ -14,12 +14,63 @@ using scag::pers;
 bool  PersClient::inited = false;
 Mutex PersClient::initLock;
 
+class PersClientImpl: public PersClient {
+//    friend class PersClient;
+public:
+    PersClientImpl(): connected(false) {};
+    ~PersClientImpl() { if(connected) sock.Close(); };
+
+    void SetProperty(ProfileType pt, const char* key, Property& prop);// throw(PersClientException);
+    void SetProperty(ProfileType pt, uint32_t key, Property& prop);// throw(PersClientException);
+
+    void GetProperty(ProfileType pt, const char* key, const char *property_name, Property& prop);// throw(PersClientException);
+    void GetProperty(ProfileType pt, uint32_t key, const char *property_name, Property& prop);// throw(PersClientException);
+
+    void DelProperty(ProfileType pt, const char* key, const char *property_name);// throw(PersClientException);
+    void DelProperty(ProfileType pt, uint32_t key, const char *property_name);// throw(PersClientException);
+
+    void IncProperty(ProfileType pt, const char* key, Property& prop);// throw(PersClientException);
+    void IncProperty(ProfileType pt, uint32_t key, Property& prop);// throw(PersClientException);
+
+    int IncModProperty(ProfileType pt, const char* key, Property& prop, uint32_t mod); //throw(PersClientException)
+    int IncModProperty(ProfileType pt, uint32_t key, Property& prop, uint32_t mod); //throw(PersClientException)
+
+    void init_internal(const char *_host, int _port, int timeout); //throw(PersClientException);
+protected:
+
+    void init();
+    void SetPacketSize();
+    void _SetProperty(ProfileType pt, const char* skey, uint32_t ikey, Property& prop); //throw(PersClientException)
+    void _DelProperty(ProfileType pt, const char* skey, uint32_t ikey, const char *property_name); //throw(PersClientException)
+    void _IncProperty(ProfileType pt, const char* key, uint32_t ikey, Property& prop); //throw(PersClientException)
+    int _IncModProperty(ProfileType pt, const char* key, uint32_t ikey, Property& prop, uint32_t mod); //throw(PersClientException)
+    void FillHead(PersCmd pc, ProfileType pt, const char *key);
+    void FillHead(PersCmd pc, ProfileType pt, uint32_t key);
+    void AppendString(const char *str);
+    void SendPacket();
+    void ReadPacket();
+    void WriteAllTO(char* buf, uint32_t sz);
+    void ReadAllTO(char* buf, uint32_t sz);
+    uint32_t GetPacketSize();
+    PersServerResponseType GetServerResponse();
+    void ParseProperty(Property& prop);
+
+    std::string host;
+    int port;
+    int timeout;
+    Socket sock;
+    bool connected;
+    Logger * log;
+    Mutex mtx;
+    SerialBuffer sb;
+};
+
 inline unsigned GetLongevity(PersClient*) { return 5; }
-typedef SingletonHolder<PersClient> SinglePC;
+typedef SingletonHolder<PersClientImpl> SinglePC;
 
 PersClient& PersClient::Instance()
 {
-    if (!PersClient::inited) 
+    if (!PersClient::inited)
     {
         MutexGuard guard(PersClient::initLock);
         if (!PersClient::inited) 
@@ -33,15 +84,15 @@ void PersClient::Init(const char *_host, int _port, int _timeout) //throw(PersCl
     if (!PersClient::inited)
     {
         MutexGuard guard(PersClient::initLock);
-        if(!PersClient::inited) {
-            PersClient& pc = SinglePC::Instance();
+        if(!inited) {
+            PersClientImpl& pc = SinglePC::Instance();
             pc.init_internal(_host, _port, _timeout);
             PersClient::inited = true;
         }
     }
 }
 
-void PersClient::init_internal(const char *_host, int _port, int _timeout) //throw(PersClientException)
+void PersClientImpl::init_internal(const char *_host, int _port, int _timeout) //throw(PersClientException)
 {
     log = Logger::getInstance("client");
     connected = false;
@@ -51,7 +102,7 @@ void PersClient::init_internal(const char *_host, int _port, int _timeout) //thr
     init();
 }
 
-void PersClient::_SetProperty(ProfileType pt, const char* skey, uint32_t ikey, Property& prop) //throw(PersClientException)
+void PersClientImpl::_SetProperty(ProfileType pt, const char* skey, uint32_t ikey, Property& prop) //throw(PersClientException)
 {
     MutexGuard mt(mtx);
 
@@ -66,14 +117,14 @@ void PersClient::_SetProperty(ProfileType pt, const char* skey, uint32_t ikey, P
         throw PersClientException(SERVER_ERROR);
 }
 
-void PersClient::SetProperty(ProfileType pt, const char* key, Property& prop) //throw(PersClientException)
+void PersClientImpl::SetProperty(ProfileType pt, const char* key, Property& prop) //throw(PersClientException)
 {
     if(pt != PT_ABONENT)
         throw PersClientException(INVALID_KEY);
 
     _SetProperty(pt, key, 0, prop);
 }
-void PersClient::SetProperty(ProfileType pt, uint32_t key, Property& prop) //throw(PersClientException)
+void PersClientImpl::SetProperty(ProfileType pt, uint32_t key, Property& prop) //throw(PersClientException)
 {
     if(pt == PT_ABONENT)
         throw PersClientException(INVALID_KEY);
@@ -81,7 +132,7 @@ void PersClient::SetProperty(ProfileType pt, uint32_t key, Property& prop) //thr
     _SetProperty(pt, NULL, key, prop);
 }
 
-void PersClient::GetProperty(ProfileType pt, const char* key, const char *property_name, Property& prop) //throw(PersClientException)
+void PersClientImpl::GetProperty(ProfileType pt, const char* key, const char *property_name, Property& prop) //throw(PersClientException)
 {
     if(pt != PT_ABONENT)
         throw PersClientException(INVALID_KEY);
@@ -95,7 +146,7 @@ void PersClient::GetProperty(ProfileType pt, const char* key, const char *proper
     ReadPacket();
     ParseProperty(prop);
 }
-void PersClient::GetProperty(ProfileType pt, uint32_t key, const char *property_name, Property& prop) //throw(PersClientException)
+void PersClientImpl::GetProperty(ProfileType pt, uint32_t key, const char *property_name, Property& prop) //throw(PersClientException)
 {
     if(pt == PT_ABONENT)
         throw PersClientException(INVALID_KEY);
@@ -109,7 +160,7 @@ void PersClient::GetProperty(ProfileType pt, uint32_t key, const char *property_
     ParseProperty(prop);
 }
 
-void PersClient::_DelProperty(ProfileType pt, const char* skey, uint32_t ikey, const char *property_name) //throw(PersClientException)
+void PersClientImpl::_DelProperty(ProfileType pt, const char* skey, uint32_t ikey, const char *property_name) //throw(PersClientException)
 {
     MutexGuard mt(mtx);
 
@@ -130,7 +181,7 @@ void PersClient::_DelProperty(ProfileType pt, const char* skey, uint32_t ikey, c
         throw PersClientException(SERVER_ERROR);
 }
 
-void PersClient::DelProperty(ProfileType pt, const char* key, const char *property_name) //throw(PersClientException)
+void PersClientImpl::DelProperty(ProfileType pt, const char* key, const char *property_name) //throw(PersClientException)
 {
     if(pt != PT_ABONENT)
         throw PersClientException(INVALID_KEY);
@@ -138,7 +189,7 @@ void PersClient::DelProperty(ProfileType pt, const char* key, const char *proper
     _DelProperty(pt, key, 0, property_name);
 }
 
-void PersClient::DelProperty(ProfileType pt, uint32_t key, const char *property_name) //throw(PersClientException)
+void PersClientImpl::DelProperty(ProfileType pt, uint32_t key, const char *property_name) //throw(PersClientException)
 {
     if(pt == PT_ABONENT)
         throw PersClientException(INVALID_KEY);
@@ -146,7 +197,7 @@ void PersClient::DelProperty(ProfileType pt, uint32_t key, const char *property_
     _DelProperty(pt, NULL, key, property_name);
 }
 
-void PersClient::_IncProperty(ProfileType pt, const char* skey, uint32_t ikey, Property& prop) //throw(PersClientException)
+void PersClientImpl::_IncProperty(ProfileType pt, const char* skey, uint32_t ikey, Property& prop) //throw(PersClientException)
 {
     if(prop.getType() != INT && prop.getType() != DATE)
         throw PersClientException(INVALID_PROPERTY_TYPE);
@@ -164,14 +215,14 @@ void PersClient::_IncProperty(ProfileType pt, const char* skey, uint32_t ikey, P
     if(GetServerResponse() != RESPONSE_OK)
         throw PersClientException(SERVER_ERROR);
 }
-void PersClient::IncProperty(ProfileType pt, const char* key, Property& prop) //throw(PersClientException)
+void PersClientImpl::IncProperty(ProfileType pt, const char* key, Property& prop) //throw(PersClientException)
 {
     if(pt != PT_ABONENT)
         throw PersClientException(INVALID_KEY);
 
     _IncProperty(pt, key, 0, prop);
 }
-void PersClient::IncProperty(ProfileType pt, uint32_t key, Property& prop) //throw(PersClientException)
+void PersClientImpl::IncProperty(ProfileType pt, uint32_t key, Property& prop) //throw(PersClientException)
 {
     if(pt == PT_ABONENT)
         throw PersClientException(INVALID_KEY);
@@ -179,7 +230,7 @@ void PersClient::IncProperty(ProfileType pt, uint32_t key, Property& prop) //thr
     _IncProperty(pt, NULL, key, prop);
 }
 
-int PersClient::_IncModProperty(ProfileType pt, const char* skey, uint32_t ikey, Property& prop, uint32_t mod) //throw(PersClientException)
+int PersClientImpl::_IncModProperty(ProfileType pt, const char* skey, uint32_t ikey, Property& prop, uint32_t mod) //throw(PersClientException)
 {
     if(prop.getType() != INT && prop.getType() != DATE)
         throw PersClientException(INVALID_PROPERTY_TYPE);
@@ -209,14 +260,14 @@ int PersClient::_IncModProperty(ProfileType pt, const char* skey, uint32_t ikey,
     }
 
 }
-int PersClient::IncModProperty(ProfileType pt, const char* key, Property& prop, uint32_t mod) //throw(PersClientException)
+int PersClientImpl::IncModProperty(ProfileType pt, const char* key, Property& prop, uint32_t mod) //throw(PersClientException)
 {
     if(pt != PT_ABONENT)
         throw PersClientException(INVALID_KEY);
 
     return _IncModProperty(pt, key, 0, prop, mod);
 }
-int PersClient::IncModProperty(ProfileType pt, uint32_t key, Property& prop, uint32_t mod) //throw(PersClientException)
+int PersClientImpl::IncModProperty(ProfileType pt, uint32_t key, Property& prop, uint32_t mod) //throw(PersClientException)
 {
     if(pt == PT_ABONENT)
         throw PersClientException(INVALID_KEY);
@@ -224,7 +275,7 @@ int PersClient::IncModProperty(ProfileType pt, uint32_t key, Property& prop, uin
     return _IncModProperty(pt, NULL, key, prop, mod);
 }
 
-void PersClient::init()
+void PersClientImpl::init()
 {
     char resp[3];
     if(connected)
@@ -251,7 +302,7 @@ void PersClient::init()
     connected = true;
 }
 
-void PersClient::ReadAllTO(char* buf, uint32_t sz)
+void PersClientImpl::ReadAllTO(char* buf, uint32_t sz)
 {
     int cnt;
     uint32_t rd = 0;
@@ -270,7 +321,7 @@ void PersClient::ReadAllTO(char* buf, uint32_t sz)
     }
 }
 
-void PersClient::WriteAllTO(char* buf, uint32_t sz)
+void PersClientImpl::WriteAllTO(char* buf, uint32_t sz)
 {
     int cnt;
     uint32_t wr = 0;
@@ -289,7 +340,7 @@ void PersClient::WriteAllTO(char* buf, uint32_t sz)
     }
 }
 
-void PersClient::SendPacket()
+void PersClientImpl::SendPacket()
 {
     init();
     try{
@@ -304,7 +355,7 @@ void PersClient::SendPacket()
     }
 }
 
-void PersClient::ReadPacket()
+void PersClientImpl::ReadPacket()
 {
     char tmp_buf[1024];
     uint32_t sz;
@@ -331,19 +382,19 @@ void PersClient::ReadPacket()
     }
 }
 
-void PersClient::SetPacketSize()
+void PersClientImpl::SetPacketSize()
 {
     sb.SetPos(0);
     sb.WriteInt32(sb.GetSize());
 }
 
-uint32_t PersClient::GetPacketSize()
+uint32_t PersClientImpl::GetPacketSize()
 {
     sb.SetPos(0);
     return sb.ReadInt32();
 }
 
-PersServerResponseType PersClient::GetServerResponse()
+PersServerResponseType PersClientImpl::GetServerResponse()
 {
     try{
         sb.SetPos(sizeof(uint32_t));
@@ -355,7 +406,7 @@ PersServerResponseType PersClient::GetServerResponse()
     }
 }
 
-void PersClient::FillHead(PersCmd pc, ProfileType pt, uint32_t key)
+void PersClientImpl::FillHead(PersCmd pc, ProfileType pt, uint32_t key)
 {
     sb.Empty();
     sb.SetPos(4);
@@ -364,7 +415,7 @@ void PersClient::FillHead(PersCmd pc, ProfileType pt, uint32_t key)
     sb.WriteInt32(key);
 }
 
-void PersClient::FillHead(PersCmd pc, ProfileType pt, const char *key)
+void PersClientImpl::FillHead(PersCmd pc, ProfileType pt, const char *key)
 {
     sb.Empty();
     sb.SetPos(4);
@@ -373,7 +424,7 @@ void PersClient::FillHead(PersCmd pc, ProfileType pt, const char *key)
     sb.WriteString(key);
 }
 
-void PersClient::ParseProperty(Property& prop)
+void PersClientImpl::ParseProperty(Property& prop)
 {
     PersServerResponseType ss = GetServerResponse();
     if(ss == RESPONSE_PROPERTY_NOT_FOUND)

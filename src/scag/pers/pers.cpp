@@ -29,7 +29,7 @@ extern "C" static void appSignalHandler(int sig)
     smsc_log_debug(logger, "Signal %d handled !", sig);
     if (sig==SIGTERM || sig==SIGINT)
     {
-		if(ps) ps->Stop();
+        if(ps) ps->Stop();
         smsc_log_info(logger, "Stopping ...");
     }
 }
@@ -41,69 +41,69 @@ extern "C" static void atExitHandler(void)
 
 int main(int argc, char* argv[])
 {
-	std::string storageDir;
-	int resultCode = 0;
-	std::string host;
-	int port = 9988;
-	int maxClientCount = 100;
+    std::string storageDir;
+    int resultCode = 0;
+    std::string host;
+    int port = 9988;
+    int maxClientCount = 100;
 
-	Logger::Init();
-	logger = Logger::getInstance("pers");
+    Logger::Init();
+    logger = Logger::getInstance("pers");
 
-	StringProfileStore AbonentStore;
-	IntProfileStore ServiceStore, OperatorStore, ProviderStore;
+    StringProfileStore AbonentStore;
+    IntProfileStore ServiceStore, OperatorStore, ProviderStore;
 
-	atexit(atExitHandler);
+    atexit(atExitHandler);
 
     sigset_t set;
     sigfillset(&set);
-	sigdelset(&set, SIGTERM);
-	sigdelset(&set, SIGINT);
-	sigdelset(&set, SIGSEGV);
-	sigdelset(&set, SIGBUS);
+    sigdelset(&set, SIGTERM);
+    sigdelset(&set, SIGINT);
+    sigdelset(&set, SIGSEGV);
+    sigdelset(&set, SIGBUS);
     sigprocmask(SIG_SETMASK, &set, NULL);
-	sigset(SIGTERM, appSignalHandler);
+    sigset(SIGTERM, appSignalHandler);
     sigset(SIGINT, appSignalHandler);
 
-	try{
-		smsc_log_info(logger,  "Starting up %s", getStrVersion());
+    try{
+        smsc_log_info(logger,  "Starting up %s", getStrVersion());
 
-		Manager::init("config.xml");
-	    Manager& manager = Manager::getInstance();
+        Manager::init("config.xml");
+        Manager& manager = Manager::getInstance();
 
-		ConfigView persConfig(manager, "pers");
+        ConfigView persConfig(manager, "pers");
 
         try { storageDir = persConfig.getString("storage_dir"); } catch (...) {};
-		int len = storageDir.length();
-		if( len > 0 && storageDir[len - 1] != '\\' && storageDir[len - 1] != '/')
-			storageDir += '/';
+        int len = storageDir.length();
+        if( len > 0 && storageDir[len - 1] != '\\' && storageDir[len - 1] != '/')
+            storageDir += '/';
 
-		ConfigView cacheConfig(manager, "pers.cache_max");
+        ConfigView cacheConfig(manager, "pers.cache_max");
 
-		uint32_t cm;
+        uint32_t cm;
         try { cm = cacheConfig.getInt("abonent"); } catch (...) { cm = 1000; };
-		AbonentStore.init(storageDir + "abonent", cm);
+        AbonentStore.init(storageDir + "abonent", cm);
 
         try { cm = cacheConfig.getInt("service"); } catch (...) { cm = 1000; };
-		ServiceStore.init(storageDir + "service", cm);
+        ServiceStore.init(storageDir + "service", cm);
 
         try { cm = cacheConfig.getInt("operator"); } catch (...) { cm = 1000; };
-		OperatorStore.init(storageDir + "operator", cm);
+        OperatorStore.init(storageDir + "operator", cm);
 
         try { cm = cacheConfig.getInt("provider"); } catch (...) { cm = 1000; };
-		ProviderStore.init(storageDir + "provider", cm);
+        ProviderStore.init(storageDir + "provider", cm);
 
         try { host = persConfig.getString("host"); } catch (...) {};
         try { port = persConfig.getInt("port"); } catch (...) {};
         try { maxClientCount = persConfig.getInt("connections"); } catch (...) {};
 
-		ps = new PersServer(host.c_str(), port, maxClientCount, 
-			new CommandDispatcher(&AbonentStore, &ServiceStore, &OperatorStore, &ProviderStore));
+        ps = new PersServer(host.c_str(), port, maxClientCount, 
+            new CommandDispatcher(&AbonentStore, &ServiceStore, &OperatorStore, &ProviderStore));
 
-		auto_ptr<PersServer> pp(ps);
+        auto_ptr<PersServer> pp(ps);
 
-		ps->InitServer();
-		ps->Execute();
+        ps->InitServer();
+        ps->Execute();
     }
     catch (ConfigException& exc) 
     {
@@ -126,5 +126,5 @@ int main(int argc, char* argv[])
         resultCode = -5;
     }
 
-	return resultCode;
+    return resultCode;
 }

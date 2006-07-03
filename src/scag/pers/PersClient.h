@@ -56,58 +56,31 @@ public:
 };
 
 class PersClient {
-public:
-    PersClient(): connected(false) {};
-    ~PersClient() { if(connected) sock.Close(); };
+protected:
+    virtual ~PersClient() {};
 
+public:
     static PersClient& Instance();
     static void Init(const char *_host, int _port, int timeout);// throw(PersClientException);
 
-    void SetProperty(ProfileType pt, const char* key, Property& prop);// throw(PersClientException);
-    void SetProperty(ProfileType pt, uint32_t key, Property& prop);// throw(PersClientException);
+    virtual void SetProperty(ProfileType pt, const char* key, Property& prop) = 0;// throw(PersClientException);
+    virtual void SetProperty(ProfileType pt, uint32_t key, Property& prop) = 0;// throw(PersClientException);
 
-    void GetProperty(ProfileType pt, const char* key, const char *property_name, Property& prop);// throw(PersClientException);
-    void GetProperty(ProfileType pt, uint32_t key, const char *property_name, Property& prop);// throw(PersClientException);
+    virtual void GetProperty(ProfileType pt, const char* key, const char *property_name, Property& prop) = 0;// throw(PersClientException);
+    virtual void GetProperty(ProfileType pt, uint32_t key, const char *property_name, Property& prop) = 0;// throw(PersClientException);
 
-    void DelProperty(ProfileType pt, const char* key, const char *property_name);// throw(PersClientException);
-    void DelProperty(ProfileType pt, uint32_t key, const char *property_name);// throw(PersClientException);
+    virtual void DelProperty(ProfileType pt, const char* key, const char *property_name) = 0;// throw(PersClientException);
+    virtual void DelProperty(ProfileType pt, uint32_t key, const char *property_name) = 0;// throw(PersClientException);
 
-    void IncProperty(ProfileType pt, const char* key, Property& prop);// throw(PersClientException);
-    void IncProperty(ProfileType pt, uint32_t key, Property& prop);// throw(PersClientException);
+    virtual void IncProperty(ProfileType pt, const char* key, Property& prop) = 0;// throw(PersClientException);
+    virtual void IncProperty(ProfileType pt, uint32_t key, Property& prop) = 0;// throw(PersClientException);
 
-    int IncModProperty(ProfileType pt, const char* key, Property& prop, uint32_t mod); //throw(PersClientException)
-    int IncModProperty(ProfileType pt, uint32_t key, Property& prop, uint32_t mod); //throw(PersClientException)
+    virtual int IncModProperty(ProfileType pt, const char* key, Property& prop, uint32_t mod) = 0; //throw(PersClientException)
+    virtual int IncModProperty(ProfileType pt, uint32_t key, Property& prop, uint32_t mod) = 0; //throw(PersClientException)
 
 protected:
     static bool  inited;
     static Mutex initLock;
-
-    void init();
-    void init_internal(const char *_host, int _port, int timeout); //throw(PersClientException);
-    void SetPacketSize();
-    void _SetProperty(ProfileType pt, const char* skey, uint32_t ikey, Property& prop); //throw(PersClientException)
-    void _DelProperty(ProfileType pt, const char* skey, uint32_t ikey, const char *property_name); //throw(PersClientException)
-    void _IncProperty(ProfileType pt, const char* key, uint32_t ikey, Property& prop); //throw(PersClientException)
-    int _IncModProperty(ProfileType pt, const char* key, uint32_t ikey, Property& prop, uint32_t mod); //throw(PersClientException)
-    void FillHead(PersCmd pc, ProfileType pt, const char *key);
-    void FillHead(PersCmd pc, ProfileType pt, uint32_t key);
-    void AppendString(const char *str);
-    void SendPacket();
-    void ReadPacket();
-    void WriteAllTO(char* buf, uint32_t sz);
-    void ReadAllTO(char* buf, uint32_t sz);
-    uint32_t GetPacketSize();
-    PersServerResponseType GetServerResponse();
-    void ParseProperty(Property& prop);
-
-    std::string host;
-    int port;
-    int timeout;
-    Socket sock;
-    bool connected;
-    Logger * log;
-    Mutex mtx;
-    SerialBuffer sb;
 };
 
 }}}
