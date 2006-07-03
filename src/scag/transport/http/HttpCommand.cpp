@@ -111,6 +111,7 @@ Cookie* HttpCommand::setCookie(const std::string& name, const std::string& value
     c->value = value;
     return c;
 }
+
 // virtual functions {
 TransportType HttpCommand::getType() const
 {

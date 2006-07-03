@@ -61,7 +61,8 @@ std::string HttpTraceRouter::getTraceRoute(const std::string& addr, const std::s
     sprintf(buf, ":%d", port);
     url = site + (port != 80 ? buf : "") + path;
 
-    AddressURLKey k(addr, site, path, port);
+    Address adr(addr.c_str());
+    AddressURLKey k(adr.toString(), site, path, port);
     uint8_t len;
     do{
         try{
@@ -76,7 +77,7 @@ std::string HttpTraceRouter::getTraceRoute(const std::string& addr, const std::s
             trace += "No match: mask: " + k.mask.toString() + ", url: " + url + "\n";
             len = k.mask.cut();
         }
-    }while(len > 1);
+    }while(len > 3);
 
     trace += "No matches found.";
     return trace;
@@ -124,7 +125,8 @@ HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& 
 {
     MutexGuard mt(GetRouteMutex);
 
-    AddressURLKey k(addr, site, path, port);
+    Address adr(addr.c_str());
+    AddressURLKey k(adr.toString(), site, path, port);
     uint8_t len;
     do{
         try{
@@ -135,7 +137,7 @@ HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& 
         {
             len = k.mask.cut();
         }
-    }while(len > 1);
+    }while(len > 3);
 
     throw RouteNotFoundException();
 }

@@ -110,19 +110,19 @@ void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
     else if((route.id.length() || subj_id.length()) && !strcmp(qname, "address"))
     {
         StrX s = attrs.getValue("value");
-        std::string str = s.localForm();
+        Address addr(s.localForm());
         if(route.id.length())
-            route.masks.Push(str);
+            route.masks.Push(addr.toString());
         else
         {
             try{
                 Array<std::string>& masks = subj_hash.Get(subj_id.c_str());
-                masks.Push(str);
+                masks.Push(addr.toString());
             }
             catch(HashInvalidKeyException &e)
             {
                 StringArray m;
-                m.Push(str);
+                m.Push(addr.toString());
                 subj_hash.Insert(subj_id.c_str(), m);
             }
         }
