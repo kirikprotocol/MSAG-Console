@@ -102,7 +102,7 @@ USHORT_T EINSS7_I97IsupCongInd(USHORT_T resourceGroup,
                                UCHAR_T congLevel)
 {
   smsc_log_warn(missedCallProcessorLogger, 
-                "EMPTY CALLBACK: EINSS7_I97IsupCongInd in RG=%d to DPC=%ld new CongLevel=%s",
+                "EMPTY CALLBACK: EINSS7_I97IsupCongInd in RG=%d to DPC=%d new CongLevel=%s",
 		resourceGroup,
 		dpc,
 		getCongLevelDescription(congLevel));

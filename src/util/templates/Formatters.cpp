@@ -147,7 +147,7 @@ void Int32Formatter::format(std::string& output,
         }
     }
     char    buff[64] = "";
-    sprintf(buff, "%ld", value);
+    sprintf(buff, "%d", value);
     output += buff;
     
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);

@@ -129,7 +129,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
         circuits.spn       = mscCfg->getInt   ("spn");
         const char* tsmStr = mscCfg->getString("tsm");
         uint32_t tsmLong = 0;
-        if (!tsmStr || !tsmStr[0] || sscanf(tsmStr, "%lx", &tsmLong) != 1)
+        if (!tsmStr || !tsmStr[0] || sscanf(tsmStr, "%x", &tsmLong) != 1)
             throw ConfigException("Parameter <MCISme.Circuits.%s.tsm> value is empty or invalid."
                                   " Expecting hex string, found '%s'.", 
                                   circuitsMsc, tsmStr ? tsmStr:"null");

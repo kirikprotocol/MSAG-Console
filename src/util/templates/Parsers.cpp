@@ -146,7 +146,7 @@ void Int32Parser::parse(std::string& input,
         const char* str = input.c_str();
         const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
         if (!(str && *str) && def) str = def;
-        if ((result = sscanf(str, "%ld%n", &value, &bytes)) == EOF
+        if ((result = sscanf(str, "%d%n", &value, &bytes)) == EOF
             || !result || !bytes || bytes<0)
             throw ParsingException("Error scanning int32 type. "
                                    "Processing string: '%s'", str);
@@ -159,7 +159,7 @@ void Int32Parser::parse(std::string& input,
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
     if (arg) adapter.setInt32(arg, (int32_t)value);
 
-    __trace2__("Arg-Pos: %s, Value: %ld, Less: <%s>",
+    __trace2__("Arg-Pos: %s, Value: %d, Less: <%s>",
                (arg) ? arg:"-", value, input.c_str());
 }
 void Int64Parser::parse(std::string& input,

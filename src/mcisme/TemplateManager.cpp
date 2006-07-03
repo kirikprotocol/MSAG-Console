@@ -26,7 +26,7 @@ TemplateManager::TemplateManager(ConfigView* config) // throws ConfigException
 
         int  templateId = templateConfig->getInt("id");
         if (templateId < 0 || informTemplates.Exist(templateId))
-            throw ConfigException("Inform template id=%ld is invalid or already registered", templateId);
+            throw ConfigException("Inform template id=%d is invalid or already registered", templateId);
 
         bool group      = templateConfig->getBool("group");
         std::string messageTemplate = templateConfig->getString("message");
@@ -55,7 +55,7 @@ TemplateManager::TemplateManager(ConfigView* config) // throws ConfigException
 	}
     defaultInformTemplateId = (int32_t)informCfg->getInt("default");
     if (defaultInformTemplateId < 0 || !informTemplates.Exist(defaultInformTemplateId)) 
-        throw ConfigException("Default inform template id=%ld is invalid or wasn't specified", 
+        throw ConfigException("Default inform template id=%d is invalid or wasn't specified", 
                               defaultInformTemplateId);
     
     std::auto_ptr<ConfigView> notifyCfgGuard(config->getSubConfig("Notify"));
@@ -73,14 +73,14 @@ TemplateManager::TemplateManager(ConfigView* config) // throws ConfigException
 
         int  templateId = templateConfig->getInt("id");
         if (templateId < 0 || notifyTemplates.Exist(templateId))
-            throw ConfigException("Notify template id=%ld is invalid or already registered", templateId);
+            throw ConfigException("Notify template id=%d is invalid or already registered", templateId);
 
         std::string messageTemplate = templateConfig->getString("message");
         notifyTemplates.Insert(templateId, new NotifyTemplateFormatter(messageTemplate));
     }
     defaultNotifyTemplateId = (int32_t)notifyCfg->getInt("default");
     if (defaultNotifyTemplateId < 0 || !notifyTemplates.Exist(defaultNotifyTemplateId)) 
-        throw ConfigException("Default notify template id=%ld is invalid or wasn't specified", 
+        throw ConfigException("Default notify template id=%d is invalid or wasn't specified", 
                               defaultNotifyTemplateId);
 }
 

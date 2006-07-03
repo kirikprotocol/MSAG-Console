@@ -218,6 +218,8 @@ struct Connection {
 
     status = UNBLOCKING;
 
+    smsc_log_info(missedCallProcessorLogger,
+                     "unblocking span=%d hsn=%d ts=0x%x",cics.spn,cics.hsn,cics.ts);
     USHORT_T result;
     result = EINSS7_MgmtApiSendOrderReq(
                USER,

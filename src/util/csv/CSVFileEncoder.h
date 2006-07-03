@@ -66,7 +66,7 @@ namespace smsc { namespace util { namespace csv
         }
         inline static void addInt32(std::string& out, int32_t val, bool last=false)
         {
-            char buf[32]; sprintf(buf, "%ld", val); out += buf;
+            char buf[32]; sprintf(buf, "%d", val); out += buf;
             if (last) addTerminator(out);
             else addSeparator(out);
         }

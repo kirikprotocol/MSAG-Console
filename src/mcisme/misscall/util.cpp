@@ -221,7 +221,7 @@ std::string getHeadDescription(EINSS7_I97_ISUPHEAD_T* isupHead_sp)
   {
     snprintf(buf,
              sizeof(buf),
-             "CID=%ld HSN=%d SPN=%d TS=%d",
+             "CID=%d HSN=%d SPN=%d TS=%d",
              isupHead_sp->connectionId,
              isupHead_sp->hsn,
              isupHead_sp->span,
