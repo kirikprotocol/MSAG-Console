@@ -64,7 +64,7 @@ unsigned packMAPAddress2LocationOCTS(const TonNpiAddress& addr, LOCATION_ADDRESS
     return oa_length + 2;
 }
 
-//according to Q.713 clause 3.4.2 (3.4.2.3.4)
+//according to Q.713 clause 3.4.2 (3.4.2.3.4) (with GT & SSN)
 unsigned packSCCPAddress(SCCP_ADDRESS_T* dst, const char *saddr, unsigned char ssn)
 {
     unsigned len = strlen(saddr);
@@ -81,6 +81,17 @@ unsigned packSCCPAddress(SCCP_ADDRESS_T* dst, const char *saddr, unsigned char s
     return len ? (unsigned)(dst->addrLen) : 0;
 }
 
+unsigned unpackSCCP2SSN_GT(const SCCP_ADDRESS_T* dst, unsigned char & ssn, char *addr)
+{
+    unsigned adrlen = unpackBCD2NumString(dst->addr + 5, addr, dst->addrLen - 5);
+    //NOTE: SCCP address uses filler '0000'B !!!
+    if ((dst->addr[3] & 0x3) % 2) { //odd length
+        adrlen--;
+        addr[adrlen-1] = 0;
+    }
+    ssn = dst->addr[1];
+    return adrlen;
+}
 
 
 }//namespace cvtutil

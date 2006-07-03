@@ -149,8 +149,9 @@ extern unsigned packMAPAddress2LocationOCTS(const TonNpiAddress& addr,
 						LOCATION_ADDRESS_OCTS * oa);
 extern unsigned unpackOCTS2MAPAddress(TonNpiAddress& addr, TONNPI_ADDRESS_OCTS * oa,
 							    unsigned valLen);
-//according to Q.713 clause 3.4.2
+//according to Q.713 clause 3.4.2 (with GT & SSN)
 extern unsigned packSCCPAddress(SCCP_ADDRESS_T* dst, const char *saddr, unsigned char ssn);
+extern unsigned unpackSCCP2SSN_GT(const SCCP_ADDRESS_T* dst, unsigned char & ssn, char *addr);
 }//namespace cvtutil
 }//namespace smsc
 
