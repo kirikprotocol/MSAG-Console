@@ -28,7 +28,7 @@ decorate.frames=false
 decorate.dialogs=false
 
 #debugging
-debug=false
+debug=true
 
 # If true, welcome screen will be displayed.
 # Set to false after initial startup.
