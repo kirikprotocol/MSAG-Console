@@ -4,6 +4,16 @@
 
 <http_routes>
 
+    <options>
+        <placement>
+            <address_place type="cookie" name="User-Identity-Forward-msisdn" priority="1"/>
+            <address_place type="header" name="WHOISD-USR" priority="2"/>
+            <address_place type="cookie" name="User-Identity-MMC-preserved-msisdn" priority="3"/>
+            <address_place type="url" name="abonent" priority="4"/>
+            <address_place type="param" name="usr" priority="5"/>
+        </placement>
+    </options>
+
     <subject_def id="MTS_numbers">
         <address value="+7902912????"/>
         <address value="+7905985????"/>
@@ -41,13 +51,16 @@
                 <path value="/melodies"/>
                 <path value="/pictures"/>
             </site>
+
             <site host="mail.ru" port="8080">
                 <path value="/melodies"/>
                 <path value="/pictures"/>
             </site>
+
             <site host="192.168.1.213" port="80">
                 <path value="/"/>
             </site>
+
             <placement>
                 <usr_place type="url" name="usr" priority="1"/>
                 <usr_place type="cookie" name="WHOISD-USR" priority="2"/>
