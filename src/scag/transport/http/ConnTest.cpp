@@ -13,11 +13,11 @@ smsc::logger::Logger *logger;
 Mutex mtx;
 uint32_t cnt = 0, err = 0;
 
-#define SERVER "niagara"
-#define PORT 23840
-#define URL_ "1_2/192.168.1.213/w1251.html"
-#define THREADS_CNT 100
-#define REQUESTS_CNT 10000
+#define SERVER "sunfire"
+#define PORT 5001
+#define URL_ "79039126430/192.168.1.213/w1251.html"
+#define THREADS_CNT 1
+#define REQUESTS_CNT 1
 /*#define SERVER "sunfire"
 #define PORT 5001
 #define URL_ "/1_2/192.168.1.213/w1251.html"
@@ -33,7 +33,7 @@ extern "C" void* thread(void* a)
         Socket *s = new Socket();
         if (!s->Init(SERVER, PORT, 100) && !s->Connect())
         {
-            const char str[] = "GET "URL_" HTTP/1.1\r\nHost: "SERVER"\r\nConnection: close\r\n\r\n";
+            const char str[] = "GET "URL_" HTTP/1.1\r\nHost: "SERVER"\r\nConnection: close\r\nCookie: $Version=0;test_cookie=213;$expires=234;test_cookie2=asdf;\r\n\r\n";
 
             if(s->Write(str, sizeof(str)) == sizeof(str))
             {

@@ -387,7 +387,7 @@ StatusCode HttpParser::parseCookie(const char *buf, HttpCommand& cmd, bool set)
     static const char* cookieParams[] = {"version", "path", "domain", "port", "max-age", "comment", "secure", "expires"};
     static const char cookieParamsCnt = sizeof(cookieParams)/sizeof(char*);
 
-  const char  *start = buf, *mid, *end, *val;;
+  const char  *start = buf, *mid, *end, *val;
   std::string key, value;
   Cookie *cur = &cmd.defCookie;
 
@@ -426,7 +426,7 @@ StatusCode HttpParser::parseCookie(const char *buf, HttpCommand& cmd, bool set)
     }
 
     start = end + 1;
-  } while (end);
+  } while (end && start && *start);
 
   return OK;
 }
