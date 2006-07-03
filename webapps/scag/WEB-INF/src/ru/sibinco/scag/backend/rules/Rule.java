@@ -30,7 +30,7 @@ public class Rule
   public static final LinkedList ending = new LinkedList();
   public static final String ROOT_ELEMENT="scag:rule";
   public static final String XML_LINE="<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
-  public static final String complexRuleIdSeparator = "/";
+  public static final String complexRuleIdSeparator = "////";
   private boolean locked = false;
   static {
        ending.add("</"+ROOT_ELEMENT+">");
