@@ -73,7 +73,6 @@ public:
 		if(!text || !*text)
 		{
 			Clear();
-//			throw runtime_error("bad address NULL");	
 		}
 		else
 		{
@@ -94,8 +93,8 @@ public:
 					scaned = sscanf(text,"%20[0123456789?]s",addr_value);
 					if ( !scaned )
 					{
-						bad_address = true;
-//						throw runtime_error(string("bad address ")+text);
+            Clear();
+            return;
 					}
 					else
 					{
