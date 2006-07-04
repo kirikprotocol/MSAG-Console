@@ -56,6 +56,7 @@ bool HttpTraceRouter::getTraceRoute(const std::string& addr, const std::string& 
 
     if(AddressURLMap == NULL)
     {
+        trace.push_back("");
         trace.push_back("No loaded routes");
         return false;
     }
