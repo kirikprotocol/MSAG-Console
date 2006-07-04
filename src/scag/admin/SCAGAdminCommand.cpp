@@ -551,7 +551,9 @@ Response * CommandLoadHttpTraceRoutes::CreateResponse(scag::Scag * ScagApp)
     }
 
     smsc_log_info(logger, "CommandLoadHttpTraceRoutes processed ok.");
-    return new Response(Response::Ok, "CommandLoadHttpTraceRoutes processed ok.");
+    Variant result(smsc::admin::service::StringListType);
+    result.appendValueToStringList("CommandLoadHttpTraceRoutes processed ok.");
+    return new Response(Response::Ok, result);
 }
 /*
 Response * CommandLoadHttpTraceRoutes::CreateResponse(scag::Scag * ScagApp)
@@ -620,7 +622,7 @@ Response * CommandTraceHttpRoute::CreateResponse(scag::Scag * ScagApp)
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
-        smsc_log_warn(logger, "Failed to trace HttpRoute. Unknown exception");        
+        smsc_log_warn(logger, "Failed to trace HttpRoute. Unknown exception");
         throw AdminException("Failed to trace HttpRoute. Unknown exception");
     }
 
