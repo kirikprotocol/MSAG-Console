@@ -2,6 +2,7 @@
 #define SCAG_TRANSPORT_HTTP_ROUTER
 
 #include <string>
+#include <vector>
 
 #include <xercesc/sax/HandlerBase.hpp>
 
@@ -78,7 +79,7 @@ public:
     static HttpTraceRouter& Instance();
     static void Init(const std::string& cfg);
 
-    std::string getTraceRoute(const std::string& addr, const std::string& site, const std::string& path, uint32_t port);
+    bool HttpTraceRouter::getTraceRoute(const std::string& addr, const std::string& site, const std::string& path, uint32_t port, std::vector<std::string>& trace);
     ~HttpTraceRouter() {}
 };
 

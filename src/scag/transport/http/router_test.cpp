@@ -1,5 +1,6 @@
 #include "HttpRouter.h"
 #include <logger/Logger.h>
+#include <vector>
 
 using namespace scag::transport::http;
 
@@ -19,7 +20,11 @@ int main(int argc, char* argv[])
     try{
 //        rt.init(".");
         HttpTraceRouter& tr = HttpTraceRouter::Instance();
-        smsc_log_debug(logger, tr.getTraceRoute("+79139034444", "yandex.ru", "/melodies", 8080).c_str());
+        tr.ReloadRoutes();
+        std::vector<std::string> trace;
+        tr.getTraceRoute("+79139034444", "yandex.ru", "/melodies", 8080, trace);
+        for(int i = 0; i< trace.size(); i++)
+            smsc_log_debug(logger, trace[i].c_str());
 /*        HttpRoute r = rt.findRoute("+79139034444", "yandex.ru", "/melodies", 8080);
         smsc_log_info(logger, "first test route found routeid=%s, service_id=%d", r.id.c_str(), r.service_id);
         r = rt.findRoute("+79609134444", "yandex.ru", "/melodies", 8080);*/

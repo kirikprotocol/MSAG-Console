@@ -104,7 +104,7 @@ bool HttpProcessorImpl::parsePath(bool addr, const std::string &path, HttpReques
         }
 
         mid = pos;
-        while (mid <= end && isalnum(*mid))
+        while (mid <= end && (isalnum(*mid) || *mid == '+'))
             mid++;
 
         len = mid - pos;
@@ -115,7 +115,8 @@ bool HttpProcessorImpl::parsePath(bool addr, const std::string &path, HttpReques
         }
 
         str.assign(pos, len);
-        cx.setAbonent(str);
+        Address addr(str.c_str());
+        cx.setAbonent(addr.toString());
 
         if(*mid == '_')
         {
@@ -264,9 +265,10 @@ void HttpProcessorImpl::setAbonent(HttpRequest& request, const PlacementArray& p
 void HttpProcessorImpl::setPlaces(const std::string& rs, const PlacementArray& places, HttpRequest& request)
 {
     std::string s;
-
+        smsc_log_debug(logger, "set cookie: [%d]",places.Count());
     for(int i = 0; i < places.Count(); i++)
     {
+        smsc_log_debug(logger, "set cookie: [%d]",places[i].type);
         switch(places[i].type)
         {
             case PlacementType::PARAM:
@@ -274,6 +276,7 @@ void HttpProcessorImpl::setPlaces(const std::string& rs, const PlacementArray& p
                 break;
             case PlacementType::COOKIE:
             {
+                smsc_log_debug(logger, "set cookie: [%s]=[%s]",places[i].name.c_str(), rs.c_str());
                 Cookie *c = request.setCookie(places[i].name, rs);
                 break;
             }

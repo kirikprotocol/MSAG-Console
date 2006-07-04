@@ -15,7 +15,7 @@ uint32_t cnt = 0, err = 0;
 
 #define SERVER "sunfire"
 #define PORT 5001
-#define URL_ "79039126430/192.168.1.213/w1251.html"
+#define URL_ "+79039126430/192.168.1.213/w1251.html"
 #define THREADS_CNT 1
 #define REQUESTS_CNT 1
 /*#define SERVER "sunfire"

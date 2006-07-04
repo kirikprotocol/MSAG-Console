@@ -47,16 +47,18 @@ void HttpTraceRouter::Init(const std::string& cfg)
     }
 }
 
-std::string HttpTraceRouter::getTraceRoute(const std::string& addr, const std::string& site, const std::string& path, uint32_t port)
+bool HttpTraceRouter::getTraceRoute(const std::string& addr, const std::string& site, const std::string& path, uint32_t port, std::vector<std::string>& trace)
 {
     MutexGuard mt(GetRouteMutex);
 
     char buf[20];
     std::string url;
-    std::string trace;
 
     if(AddressURLMap == NULL)
-        return "No loaded routes";
+    {
+        trace.push_back("No loaded routes");
+        return false;
+    }
 
     sprintf(buf, ":%d", port);
     url = site + (port != 80 ? buf : "") + path;
@@ -67,20 +69,43 @@ std::string HttpTraceRouter::getTraceRoute(const std::string& addr, const std::s
     do{
         try{
             HttpRouteInt *r = AddressURLMap->Get(k);
-            trace += "Match found:" + k.mask.toString() + ", url: " + url + "\n";
-            trace += "Route info:\n";
-            trace += r->toString();
-            return trace;
+            trace.push_back("Match found:" + k.mask.toString() + ", url: " + url);
+            trace.push_back("Route info:");
+
+            char buf[100];
+            std::string s;
+
+//            trace.push_back("RouteId: " + r->id);
+            sprintf(buf, " ServiceId: %d", r->service_id);
+            trace.push_back("RouteId: " + r->id + buf);
+
+            trace.push_back("Masks:");
+            for(int i = 0; i < r->masks.Count(); i++)
+                trace.push_back(r->masks[i]);
+
+            trace.push_back("Urls:");
+            for(int i = 0; i < r->sites.Count(); i++)
+            {
+                std::string s1;
+                sprintf(buf, ":%d", r->sites[i].port);
+                s1 = r->sites[i].host + ((r->sites[i].port != 80) ? buf : "");
+                for(int j = 0; j < r->sites[i].paths.Count(); j++)
+                    trace.push_back(s1 + r->sites[i].paths[j]);
+            }
+
+//                trace.push_back(r->sites[i].toString());
+
+            return true;
         }
         catch(XHashInvalidKeyException &e)
         {
-            trace += "No match: mask: " + k.mask.toString() + ", url: " + url + "\n";
+            trace.push_back("Trying mask: " + k.mask.toString() + ", url: " + url + ". No match");
             len = k.mask.cut();
         }
-    }while(len > 3);
+    }while(len > 5);
 
-    trace += "No matches found.";
-    return trace;
+    trace.push_back("No matches found");
+    return false;
 }
 
 void HttpTraceRouter::init(const std::string& cfg)
@@ -137,7 +162,7 @@ HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& 
         {
             len = k.mask.cut();
         }
-    }while(len > 3);
+    }while(len > 5);
 
     throw RouteNotFoundException();
 }
