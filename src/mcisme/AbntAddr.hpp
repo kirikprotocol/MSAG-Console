@@ -70,10 +70,9 @@ public:
 
 	AbntAddr(const char* text)
 	{
-		bool bad_address = false;
 		if(!text || !*text)
 		{
-			bad_address = true;
+			Clear();
 //			throw runtime_error("bad address NULL");	
 		}
 		else
@@ -105,15 +104,10 @@ public:
 					}
 				}
 			}
-			if(!bad_address)
-			{
-				value.addr_content.type = (uint8_t)itype;
-				value.addr_content.plan = (uint8_t)iplan;
-				value.addr_content.length = strlen(addr_value);
-				setValue(strlen(addr_value), addr_value);
-//				printf("AbntAddr: len = %d, plan = %d, type = %d\n", value.addr_content.length, value.addr_content.plan, value.addr_content.type);
-			}
-			else Clear();
+  		value.addr_content.type = (uint8_t)itype;
+			value.addr_content.plan = (uint8_t)iplan;
+			value.addr_content.length = strlen(addr_value);
+			setValue(strlen(addr_value), addr_value);
 		}
 	}
 
