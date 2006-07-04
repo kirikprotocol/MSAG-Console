@@ -505,7 +505,7 @@ void TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt)
 
 	if(!GetAbntEvents(abnt, events))
 	{
-		smsc_log_debug(logger, "No more events for Abonent %s ", abnt.toString().c_str());
+		smsc_log_info(logger, "No more events for Abonent %s ", abnt.toString().c_str());
 		pDeliveryQueue->Remove(abnt);
 		return;
 	}

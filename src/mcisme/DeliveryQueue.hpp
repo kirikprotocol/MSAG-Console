@@ -148,7 +148,7 @@ public:
 		if(onBusy)
 		{
 			schedTime += schedTimeOnBusy;
-			smsc_log_info(logger, "Abonent %s was BUSY waiting %d seconds", strAbnt.c_str(), schedTime);
+			smsc_log_info(logger, "Abonent %s was BUSY waiting up to %s", strAbnt.c_str(), ctime(&schedTime));
 		}
 		deliveryQueue.insert(multimap<time_t, AbntAddr>::value_type(schedTime, abnt));
 		
