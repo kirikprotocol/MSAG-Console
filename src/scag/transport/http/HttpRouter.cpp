@@ -201,7 +201,6 @@ void HttpRouterImpl::BuildMaps(RouteArray *r, RouteHash *rid, AddressURLHash *au
                 for(int m = 0; m < rt->sites[k].paths.Count(); m++)
                 {
                     smsc_log_debug(logger, "AddedMapping mask: %s, URL: %s:%d%s", rt->masks[j].c_str(), rt->sites[k].host.c_str(), rt->sites[k].port, rt->sites[k].paths[m].c_str());
-                    smsc_log_debug(logger, "Add");
                     AddressURLKey auk(rt->masks[j], rt->sites[k].host, rt->sites[k].paths[m], rt->sites[k].port);
                     auh->Insert(auk, rt);
                 }

@@ -224,6 +224,10 @@ struct HttpRoute
         service_id =cp.service_id;
         provider_id =cp.provider_id;
         id = cp.id;
+        inUSRPlace = cp.inUSRPlace;
+        outUSRPlace = cp.outUSRPlace;
+        outAddressPlace = cp.outAddressPlace;
+        enabled = cp.enabled;
     }
 };
 

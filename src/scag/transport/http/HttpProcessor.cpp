@@ -265,18 +265,18 @@ void HttpProcessorImpl::setAbonent(HttpRequest& request, const PlacementArray& p
 void HttpProcessorImpl::setPlaces(const std::string& rs, const PlacementArray& places, HttpRequest& request)
 {
     std::string s;
-        smsc_log_debug(logger, "set cookie: [%d]",places.Count());
+
     for(int i = 0; i < places.Count(); i++)
     {
-        smsc_log_debug(logger, "set cookie: [%d]",places[i].type);
         switch(places[i].type)
         {
             case PlacementType::PARAM:
+            {
                 request.setQueryParameter(places[i].name, rs);
                 break;
+            }
             case PlacementType::COOKIE:
             {
-                smsc_log_debug(logger, "set cookie: [%s]=[%s]",places[i].name.c_str(), rs.c_str());
                 Cookie *c = request.setCookie(places[i].name, rs);
                 break;
             }
@@ -352,7 +352,6 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
                     request.setSiteFileName(request.getSiteFileName() + h);
                 }
 
-                smsc_log_debug(logger, "qqqqqq: %d %d", r.outUSRPlace.Count(), r.outAddressPlace.Count());
                 setUSR(request, r.outUSRPlace);
                 setAbonent(request, r.outAddressPlace);
                 smsc_log_debug(logger, "SERIALIZED REQUEST AFTER PROCESSING: %s", request.serialize().c_str());

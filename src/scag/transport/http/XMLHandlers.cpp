@@ -213,6 +213,9 @@ void XMLBasicHandler::endElement(const XMLCh* const nm)
         route.service_id = 0;
         route.masks.Empty();
         route.sites.Empty();
+        route.inUSRPlace.Empty();
+        route.outUSRPlace.Empty();
+        route.outAddressPlace.Empty();
     }
     else if(!strcmp(qname, "subject_def"))
         subj_id = "";

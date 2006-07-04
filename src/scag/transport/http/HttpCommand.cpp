@@ -382,7 +382,7 @@ const std::string& HttpRequest::serialize()
         headers += sitePath;
         headers += siteFileName;
 
-        if (!(siteQuery.empty() || httpMethod == POST)) {
+        if (queryParameters.GetCount() && httpMethod == GET) {
             headers += '?';
             serializeQuery(headers);
         }
