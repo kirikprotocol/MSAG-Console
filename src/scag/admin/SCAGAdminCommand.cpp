@@ -610,12 +610,22 @@ Response * CommandTraceHttpRoute::CreateResponse(scag::Scag * ScagApp)
 {
     smsc_log_info(logger, "CommandTraceHttpRoute is processing...");
 
-    std::string result;
+    Variant result(smsc::admin::service::StringListType);
 
     try {
         if(port == 0)
             port = 80;
-        result = scag::transport::http::HttpTraceRouter::Instance().getTraceRoute(addr, site, path, port);
+        vector<std::string> traceBuff;
+        if(scag::transport::http::HttpTraceRouter::Instance().getTraceRoute(addr, site, path, port, traceBuff))
+            result.appendValueToStringList("Http route found");
+        else
+            result.appendValueToStringList("Http route not found");
+
+        for (int i=0; i<traceBuff.size(); i++){
+            result.appendValueToStringList(traceBuff[i].c_str());
+            smsc_log_info(logger, "HttpTraceBuff[%d]: %s", i, traceBuff[i].c_str());
+        }
+
     } catch(Exception& e) {                                     
         char msg[1024];                                         
         sprintf(msg, "Trace Http route failed. Details: %s", e.what());
@@ -627,7 +637,7 @@ Response * CommandTraceHttpRoute::CreateResponse(scag::Scag * ScagApp)
     }
 
     smsc_log_info(logger, "CommandTraceHttpRoute processed ok.");
-    return new Response(Response::Ok, result.c_str());
+    return new Response(Response::Ok, result);
 }
 
 }
