@@ -44,7 +44,7 @@ namespace smsc { namespace mcisme
         Message() { reset(); };
         Message(const Message& msg) 
             : id(msg.id), attempts(msg.attempts), abonent(msg.abonent), message(msg.message),
-          smsc_id(msg.smsc_id), cancel(msg.cancel), notification(msg.notification), logger(Logger::getInstance("mci.msgfmt")), 
+          smsc_id(msg.smsc_id), cancel(msg.cancel), notification(msg.notification),  
 			  skip(msg.skip), data_sm(msg.data_sm), rowsCount(msg.rowsCount), eventsCount(msg.eventsCount) {};
         
         Message& operator=(const Message& msg) {
@@ -89,7 +89,7 @@ namespace smsc { namespace mcisme
     
     public:
 
-        MessageFormatter(InformTemplateFormatter* _formatter) : formatter(_formatter) {};
+        MessageFormatter(InformTemplateFormatter* _formatter) : formatter(_formatter), logger(Logger::getInstance("mci.msgfmt")) {};
 
         bool canAdd(const MissedCallEvent& event);
         void addEvent(const MissedCallEvent& event);
