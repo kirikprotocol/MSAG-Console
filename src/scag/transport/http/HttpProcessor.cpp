@@ -205,21 +205,24 @@ bool HttpProcessorImpl::findPlace(const char* wh, std::string& rs, const Placeme
                 smsc_log_debug(logger, " %s FOUND IN HEADER: %s=%s", wh, places[i].name.c_str(), rs.c_str());
                 return true;;
             }
+            case PlacementType::URL:
+            {
+                if(rs.length())
+                {
+                    smsc_log_debug(logger, " %s FOUND IN URL: %s=%s", wh, places[i].name.c_str(), rs.c_str());
+                    return true;
+                }
+                break;
+            }
         }
     }
-    smsc_log_debug( logger, "%s NOR FOUND", wh);
+    smsc_log_debug( logger, "%s NOT FOUND", wh);
     return false;
 }
 
 bool HttpProcessorImpl::findAddress(HttpRequest& request, const PlacementArray& places)
 {
-    if(request.getAbonent().length())
-    {
-        smsc_log_debug(logger, "ADDRESS FOUND IN URL");
-        return true;
-    }
-
-    std::string s;
+    std::string s = request.getAbonent();
     if(findPlace("ADDRESS", s, places, request))
     {
         request.setAbonent(s);
@@ -230,14 +233,8 @@ bool HttpProcessorImpl::findAddress(HttpRequest& request, const PlacementArray& 
 
 bool HttpProcessorImpl::findUSR(HttpRequest& request, const PlacementArray& places)
 {
-    std::string s;
+    std::string s = request.getUSR() ? "1" : "";
     uint16_t i;
-
-    if(request.getUSR())
-    {
-        smsc_log_debug(logger, "USR FOUND IN URL");
-        return true;
-    }
 
     if(findPlace("USR", s, places, request) && (i = atoi(s.c_str())))
     {

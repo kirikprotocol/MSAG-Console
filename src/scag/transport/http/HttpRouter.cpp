@@ -66,6 +66,8 @@ bool HttpTraceRouter::getTraceRoute(const std::string& addr, const std::string& 
     Address adr(addr.c_str());
     AddressURLKey k(adr.toString(), site, path, port);
     uint8_t len;
+
+    trace.push_back("");
     do{
         try{
             HttpRouteInt *r = AddressURLMap->Get(k);
@@ -75,10 +77,9 @@ bool HttpTraceRouter::getTraceRoute(const std::string& addr, const std::string& 
             char buf[100];
             std::string s;
 
-//            trace.push_back("RouteId: " + r->id);
-            sprintf(buf, " ServiceId: %d", r->service_id);
-            trace.push_back("RouteId: " + r->id + buf + "Enabled: " + (r->enabled ? "yes" : "no"));
-//            trace.push_back("Enabled: " + r->enabled ? "yes" : "no");
+            sprintf(buf, ";ServiceId:%d", r->service_id);
+            s = "RouteId:" + r->id + buf + ";Enabled:" + (r->enabled ? "yes" : "no");
+            trace[0] = s;
 
             trace.push_back("Masks:");
             for(int i = 0; i < r->masks.Count(); i++)
@@ -93,8 +94,6 @@ bool HttpTraceRouter::getTraceRoute(const std::string& addr, const std::string& 
                 for(int j = 0; j < r->sites[i].paths.Count(); j++)
                     trace.push_back(s1 + r->sites[i].paths[j]);
             }
-
-//                trace.push_back(r->sites[i].toString());
 
             return true;
         }
