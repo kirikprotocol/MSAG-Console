@@ -478,6 +478,7 @@ int TaskProcessor::Execute()
 //			if (releaseCallsStrategy != MIXED_STRATEGY || event.cause != ABSENT)
 			if (checkEventMask(profile.eventMask, event.cause))
 			{
+        smsc_log_debug(logger, "add event %s -> %s", from.getText().c_str(), to.getText().c_str() );
 				pStorage->addEvent(to, outEvent);
 				pDeliveryQueue->Schedule(to, ((event.cause&0x02)==0x02)); //0x02 - BUSY
 				statistics->incMissed();
@@ -488,7 +489,7 @@ int TaskProcessor::Execute()
 		}
 		catch(...)
 		{
-			smsc_log_error(logger, "Exeption in TaskProcessor::Execute()");
+			smsc_log_error(logger, "Exception in TaskProcessor::Execute()");
 		}
 	}
 	exitedEvent.Signal();
