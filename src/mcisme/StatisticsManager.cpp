@@ -22,8 +22,8 @@ StatisticsManager::StatisticsManager(const std::string& loc)
             currentIndex(0), bExternalFlush(false), bStarted(false), 
             bNeedExit(false), location(loc)
 {
-    logger = Logger::getInstance("smsc.mcisme.StatisticsManager");
-    processLog = Logger::getInstance("smsc.mcisme.Process");
+    logger = Logger::getInstance("mci.statmgr");
+    processLog = Logger::getInstance("mci.process");
 
     if(!createStorageDir(location))
         smsc_log_warn(logger, "Can't create directory: '%s'", location.c_str());

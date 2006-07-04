@@ -84,7 +84,7 @@ public:
 
 	DeliveryQueue(time_t _dt = 5, time_t onBusy = 300):
 		dt(_dt), schedTimeOnBusy(onBusy), total(0), isQueueOpen(false),
-		logger(smsc::logger::Logger::getInstance("smsc.DlvQueue")){}
+		logger(smsc::logger::Logger::getInstance("mci.DlvQueue")){}
 	DeliveryQueue(const DeliveryQueue& addr){}
 	virtual ~DeliveryQueue(){Erase();}
 
@@ -137,18 +137,18 @@ public:
 	void Schedule(const AbntAddr& abnt, bool onBusy=false)
 	{
 		string strAbnt = abnt.toString();
-		smsc_log_debug(logger, "DeliveryQueue: Schedule %s", strAbnt.c_str());
+		smsc_log_debug(logger, "Schedule %s", strAbnt.c_str());
 		MutexGuard lock(deliveryQueueMonitor);
 		if(AbntsStatus.Exists(strAbnt.c_str()))
 		{
-			smsc_log_debug(logger, "DeliveryQueue: Abonent %s already scheduled. total = %d (%d)", strAbnt.c_str(), total, deliveryQueue.size());
+			smsc_log_info(logger, "Abonent %s already scheduled. total = %d (%d)", strAbnt.c_str(), total, deliveryQueue.size());
 			return;
 		}
 		time_t schedTime = time(0);
 		if(onBusy)
 		{
 			schedTime += schedTimeOnBusy;
-			smsc_log_debug(logger, "DeliveryQueue: Abonent %s was BUSY waiting %d seconds", strAbnt.c_str(), schedTime);
+			smsc_log_info(logger, "Abonent %s was BUSY waiting %d seconds", strAbnt.c_str(), schedTime);
 		}
 		deliveryQueue.insert(multimap<time_t, AbntAddr>::value_type(schedTime, abnt));
 		
@@ -157,18 +157,18 @@ public:
 //		AbntsStatus.Insert(strAbnt.c_str(), Idle);
 		deliveryQueueMonitor.notify();
 		total++;
-		smsc_log_debug(logger, "DeliveryQueue: Add %s. total = %d (%d) (sched rows = %d) (on time %s)", strAbnt.c_str(), total, deliveryQueue.size(), schedParam.count, ctime(&schedTime));
+		smsc_log_info(logger, "Add %s. total = %d (%d) (sched rows = %d) (on time %s)", strAbnt.c_str(), total, deliveryQueue.size(), schedParam.count, ctime(&schedTime));
 	}
 
 	void Reschedule(const AbntAddr& abnt, int resp_status = smsc::system::Status::OK) // bool toHead = false
 	{
 		bool toHead = false;
 		string strAbnt = abnt.toString();
-		smsc_log_debug(logger, "DeliveryQueue: Reschedule %s", strAbnt.c_str());
+		smsc_log_debug(logger, "Reschedule %s", strAbnt.c_str());
 		MutexGuard lock(deliveryQueueMonitor);
 		if(!AbntsStatus.Exists(strAbnt.c_str()))
 		{
-			smsc_log_debug(logger, "DeliveryQueue: Rescheduling %s canceled (abonent is not in hash).", strAbnt.c_str());
+			smsc_log_debug(logger, "Rescheduling %s canceled (abonent is not in hash).", strAbnt.c_str());
 			return;
 		}
 		
@@ -179,7 +179,7 @@ public:
 //		if(*status == AlertHandled)
 		if(schedParam->abntStatus == AlertHandled)
 		{
-			smsc_log_debug(logger, "DeliveryQueue: ALERT_NOTIFICATION for %s has accepted previously.", strAbnt.c_str());
+			smsc_log_debug(logger, "ALERT_NOTIFICATION for %s has accepted previously.", strAbnt.c_str());
 			toHead = true;
 		}
 		
@@ -191,7 +191,7 @@ public:
 			deliveryQueue.insert(multimap<time_t, AbntAddr>::value_type(time(0), abnt));
 			schedParam->count++;
 			deliveryQueueMonitor.notify();
-			smsc_log_debug(logger, "DeliveryQueue: Rescheduling %s to Head (sched rows = %d)", strAbnt.c_str(), schedParam->count);
+			smsc_log_info(logger, "Rescheduling %s to Head (sched rows = %d)", strAbnt.c_str(), schedParam->count);
 		}
 		else 
 		{
@@ -200,10 +200,10 @@ public:
 				time_t t = CalcTimeDelivery(resp_status);
 				deliveryQueue.insert(multimap<time_t, AbntAddr>::value_type(t, abnt));
 				schedParam->count++;
-				smsc_log_debug(logger, "DeliveryQueue: Rescheduling %s to Tail on %s (sched rows = %d)", strAbnt.c_str(), ctime(&t), schedParam->count);
+				smsc_log_info(logger, "Rescheduling %s to Tail on %s (sched rows = %d)", strAbnt.c_str(), ctime(&t), schedParam->count);
 			}
 			else
-				smsc_log_debug(logger, "DeliveryQueue: Rescheduling %s canceled - event already exists (sched rows = %d)", strAbnt.c_str(), schedParam->count);
+				smsc_log_info(logger, "Rescheduling %s canceled - event already exists (sched rows = %d)", strAbnt.c_str(), schedParam->count);
 		}
 
 	}
@@ -211,11 +211,11 @@ public:
 	void RegisterAlert(const AbntAddr& abnt)
 	{
 		string strAbnt = abnt.toString();
-		smsc_log_debug(logger, "DeliveryQueue: RegisterAlert for %s", strAbnt.c_str());
+		smsc_log_debug(logger, "RegisterAlert for %s", strAbnt.c_str());
 		MutexGuard lock(deliveryQueueMonitor);
 		if(!AbntsStatus.Exists(strAbnt.c_str()))
 		{
-			smsc_log_debug(logger, "DeliveryQueue: Registration alert for %s canceled (abonent is not in hash).", strAbnt.c_str());
+			smsc_log_debug(logger, "Registration alert for %s canceled (abonent is not in hash).", strAbnt.c_str());
 			return;
 		}
 
@@ -227,35 +227,34 @@ public:
 		{
 			deliveryQueue.insert(multimap<time_t, AbntAddr>::value_type(time(0), abnt));
 			schedParam->count++;
-			smsc_log_debug(logger, "DeliveryQueue: Registering Alert and rescheduling %s to Head (sched rows = %d)", strAbnt.c_str(), schedParam->count);
+			smsc_log_info(logger, "Registering Alert and rescheduling %s to Head (sched rows = %d)", strAbnt.c_str(), schedParam->count);
 			deliveryQueueMonitor.notify();
 		}
 		else
 		{
 //			*status = AlertHandled;
 			schedParam->abntStatus = AlertHandled;
-			smsc_log_debug(logger, "DeliveryQueue: Registering Alert for %s (sched rows = %d)", strAbnt.c_str(), schedParam->count);
+			smsc_log_info(logger, "Registering Alert for %s (sched rows = %d)", strAbnt.c_str(), schedParam->count);
 		}
 	}
 
 	bool Get(AbntAddr& abnt)
 	{
-		smsc_log_debug(logger, "DeliveryQueue: Get");
 		MutexGuard lock(deliveryQueueMonitor);
 		int pause = GetDeliveryTime()-time(0);
 
-		smsc_log_debug(logger, "DeliveryQueue: pause = %d", pause);
+		smsc_log_debug(logger, "pause = %d", pause);
 		if(pause > 0)
 		{
 			if(0 == deliveryQueueMonitor.wait(pause*1000))
-                smsc_log_debug(logger, "DeliveryQueue: recieved a notify.");
+                smsc_log_debug(logger, "recieved a notify.");
 			else
-				smsc_log_debug(logger, "DeliveryQueue: timeout has passed.");
+				smsc_log_debug(logger, "timeout has passed.");
 		}
 
 		if(!isQueueOpen)
 		{	
-			smsc_log_debug(logger, "DeliveryQueue: Queue was closed.");
+			smsc_log_info(logger, "Queue was closed.");
 			return false;
 		}
 		
@@ -269,7 +268,7 @@ public:
 
 			if(t > time(0))
 			{
-				smsc_log_debug(logger, "DeliveryQueue: Delivery time is not reached yet.");
+				smsc_log_debug(logger, "Delivery time is not reached yet.");
 				return false;
 			}
 			abnt = It->second;
@@ -285,50 +284,50 @@ public:
 				{	
 					//*status = InProcess;
 					schedParam->abntStatus = InProcess;
-					smsc_log_debug(logger, "DeliveryQueue: Abonent %s ready to delivery (sched rows = %d).", strAbnt.c_str(), schedParam->count);
+					smsc_log_info(logger, "Abonent %s ready to delivery (sched rows = %d).", strAbnt.c_str(), schedParam->count);
 					return true;
 				}
 				else
 				{
-					smsc_log_debug(logger, "DeliveryQueue: Abonent %s already in delivery (sched rows = %d).", strAbnt.c_str(), schedParam->count);
+					smsc_log_info(logger, "Abonent %s already in delivery (sched rows = %d).", strAbnt.c_str(), schedParam->count);
 					return false;
 				}
 				return true;
 			}
 			else
 			{
-				smsc_log_debug(logger, "DeliveryQueue: Abonent %s is not exists in the hash.", strAbnt.c_str());
+				smsc_log_debug(logger, "Abonent %s is not exists in the hash.", strAbnt.c_str());
 			    return false;
 			}
 		}
 		
-		smsc_log_debug(logger, "DeliveryQueue: deliveryQueue is empty.");
+		smsc_log_debug(logger, "deliveryQueue is empty.");
 		return false;
 	}
 
 	void Remove(const AbntAddr& abnt)
 	{
 		string strAbnt = abnt.toString();
-		smsc_log_debug(logger, "DeliveryQueue: Remove %s",strAbnt.c_str());
+		smsc_log_debug(logger, "Remove %s",strAbnt.c_str());
 		MutexGuard lock(deliveryQueueMonitor);
 		if(AbntsStatus.Exists(strAbnt.c_str()))
 		{
 			AbntsStatus.Delete(strAbnt.c_str());
 			total--;
-			smsc_log_debug(logger, "DeliveryQueue:Remove %s total = %d (%d, %d)", strAbnt.c_str(), total, deliveryQueue.size(), AbntsStatus.GetCount());
+			smsc_log_info(logger, "Remove %s total = %d (%d, %d)", strAbnt.c_str(), total, deliveryQueue.size(), AbntsStatus.GetCount());
 		}
 		else
-			smsc_log_debug(logger, "DeliveryQueue: Remove %s canceled (abonent is not in hash).", strAbnt.c_str());
+			smsc_log_debug(logger, "Remove %s canceled (abonent is not in hash).", strAbnt.c_str());
 	}
 	void Erase(void)
 	{
-		smsc_log_debug(logger, "DeliveryQueue: Erase");
+		smsc_log_debug(logger, "Erase");
 		MutexGuard lock(deliveryQueueMonitor);
-		smsc_log_debug(logger, "DeliveryQueue: Queue size = %d, Hash size = %d, total = %d", deliveryQueue.size(), AbntsStatus.GetCount(), total);
+		smsc_log_info(logger, "Queue size = %d, Hash size = %d, total = %d", deliveryQueue.size(), AbntsStatus.GetCount(), total);
 		deliveryQueue.erase(deliveryQueue.begin(), deliveryQueue.end());
 		AbntsStatus.Empty();
 		total = 0;
-		smsc_log_debug(logger, "DeliveryQueue: Errased. (%d %d %d)", deliveryQueue.size(), AbntsStatus.GetCount(), total);
+		smsc_log_info(logger, "Erased. (%d %d %d)", deliveryQueue.size(), AbntsStatus.GetCount(), total);
 	}
 
 private:

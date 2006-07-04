@@ -172,7 +172,6 @@ void MessageFormatter::formatMessage(Message& message, const AbntAddr& abnt, con
 			const char* fromStr = (from.getText().length() > 0) ? from.getText().c_str():UNKNOWN_CALLER;
 			if (fromStr == UNKNOWN_CALLER || (strcmp(fromStr, UNKNOWN_CALLER) == 0))
 				fromStr = unknownCaller.c_str();
-      smsc_log_debug( logger, "formatting for caller %s", fromStr );
 			if(!callers.Exists(fromStr))
 			{
 				callers.Insert(fromStr, true);
@@ -186,7 +185,6 @@ void MessageFormatter::formatMessage(Message& message, const AbntAddr& abnt, con
 					const char* testStr = (test.getText().length() > 0) ? test.getText().c_str():UNKNOWN_CALLER;
 					if (testStr == UNKNOWN_CALLER || (strcmp(testStr, UNKNOWN_CALLER) == 0))
 						testStr = unknownCaller.c_str();
-          smsc_log_debug( logger, "formatting for caller %s test group %s", fromStr, testStr );
 					if(0 == strcmp(testStr, fromStr))
 					{
 						time_t t = mc_events[j].dt + timeOffset; //*3600;
@@ -194,7 +192,6 @@ void MessageFormatter::formatMessage(Message& message, const AbntAddr& abnt, con
 							convertedTime = t;
 						for_send.push_back(mc_events[j]);
 						count++;
-            smsc_log_debug( logger, "formatting for caller %s grouped cnt=%d", fromStr, count );
 					}
 				}
 				total += count;
@@ -239,7 +236,6 @@ void MessageFormatter::formatMessage(Message& message, const AbntAddr& abnt, con
 			const char* fromStr = (from.getText().length() > 0) ? from.getText().c_str():UNKNOWN_CALLER;
 			if (fromStr == UNKNOWN_CALLER || (strcmp(fromStr, UNKNOWN_CALLER) == 0))
 				fromStr = unknownCaller.c_str();
-      smsc_log_debug( logger, "formatting for caller %s", fromStr );
 			time_t convertedTime = mc_events[i].dt + timeOffset;//*3600;
 
 			InformGetAdapter info_adapter(toAbnt, fromStr, 1, convertedTime);
