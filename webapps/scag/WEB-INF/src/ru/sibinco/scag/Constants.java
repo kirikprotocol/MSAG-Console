@@ -13,6 +13,7 @@ public class Constants {
     public static final String SCAG_SME_ID = "scag";
     public static final String SCAG_ERROR_MESSAGES_ATTRIBUTE_NAME = "SCAG_ERROR_MESSAGES_ATTRIBUTE";
     public static final String APP_CONTEXT = "appContext";
+    public static final String HTTP_TRANSPORT = "HTTP_TRANSPORT";
 
     public interface errors {
         public interface status {

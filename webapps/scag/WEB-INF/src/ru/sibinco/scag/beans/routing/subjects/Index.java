@@ -6,6 +6,7 @@ import ru.sibinco.lib.backend.util.SortByPropertyComparator;
 import ru.sibinco.scag.beans.*;
 import ru.sibinco.scag.backend.transport.Transport;
 import ru.sibinco.scag.backend.routing.http.HttpRoutingManager;
+import ru.sibinco.scag.Constants;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -46,15 +47,15 @@ public class Index extends TabledBeanImpl implements TabledBean {
 
         HttpSession session = request.getSession();
 
-        if (session.getAttribute("HTTP_TRANSPORT") == null) {
-            session.setAttribute("HTTP_TRANSPORT", new Integer(Transport.SMPP_TRANSPORT_ID));
+        if (session.getAttribute(Constants.HTTP_TRANSPORT) == null) {
+            session.setAttribute(Constants.HTTP_TRANSPORT, new Integer(Transport.SMPP_TRANSPORT_ID));
         } else {
-            Integer tTransportId = (Integer) session.getAttribute("HTTP_TRANSPORT");
+            Integer tTransportId = (Integer) session.getAttribute(Constants.HTTP_TRANSPORT);
             if (tTransportId.intValue() != transportId && transportId != -1) {
-                session.setAttribute("HTTP_TRANSPORT", new Integer(transportId));
+                session.setAttribute(Constants.HTTP_TRANSPORT, new Integer(transportId));
             }
         }
-        transportId = Integer.parseInt(String.valueOf(session.getAttribute("HTTP_TRANSPORT")));
+        transportId = Integer.parseInt(String.valueOf(session.getAttribute(Constants.HTTP_TRANSPORT)));
 
         if (mbDeleteHttpSite != null) {
             super.process(request, response);
@@ -115,7 +116,7 @@ public class Index extends TabledBeanImpl implements TabledBean {
         return transportId;
     }
 
-    public void setTransportId(int transportId) {
+    public void setTransportId(final int transportId) {
         this.transportId = transportId;
     }
 

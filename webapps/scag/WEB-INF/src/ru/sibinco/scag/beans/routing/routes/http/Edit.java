@@ -130,23 +130,23 @@ public class Edit extends EditBean {
                 if (routes.containsKey(id))
                     throw new SCAGJspException(Constants.errors.routing.routes.ROUTE_ALREADY_EXISTS, id);
                 routes.put(id, new HttpRoute(id, serviceObj, enabled, abonent, routeSite));
-                messageText = LocaleMessages.getInstance().getMessage(getSession(), "added.new.route.0", new Object[]{id});
+                messageText = "Added new route: "  + id + " ";
             } else {
                 if (!getEditId().equals(id) && routes.containsKey(id))
                     throw new SCAGJspException(Constants.errors.routing.routes.ROUTE_ALREADY_EXISTS, id);
                 routes.remove(getEditId());
                 routes.put(id, new HttpRoute(id, serviceObj, enabled, abonent, routeSite));
-                messageText = LocaleMessages.getInstance().getMessage(getSession(), "changed.route.0", new Object[]{id});
+                messageText = "Changed route: " + id + " ";
 
             }
         } catch (SibincoException e) {
-            logger.error(LocaleMessages.getInstance().getMessage(getSession(), "could.not.create.new.route"), e);
+            logger.error("Could not create new route ", e);
             throw new SCAGJspException(Constants.errors.routing.routes.COULD_NOT_CREATE, e);
         }
         appContext.getHttpRoutingManager().setRoutesChanged(true);
         appContext.getHttpRoutingManager().setRoutesSaved(true);
 
-        StatMessage message = new StatMessage(super.getLoginedPrincipal().getName(), LocaleMessages.getInstance().getMessage(getSession(), "routes"), messageText);
+        StatMessage message = new StatMessage(super.getLoginedPrincipal().getName(), "Routes", messageText);
         appContext.getHttpRoutingManager().addStatMessages(message);
         StatusManager.getInstance().addStatMessages(message);
 

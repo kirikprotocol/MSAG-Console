@@ -26,7 +26,7 @@ public class Site {
     public Site() {
     }
 
-    public Site(String host, int port, String[] pathLinks)  throws SibincoException {
+    public Site(String host, int port, String[] pathLinks) throws SibincoException {
         if(host == null)
             throw new NullPointerException("Host is null");
         this.host = host;

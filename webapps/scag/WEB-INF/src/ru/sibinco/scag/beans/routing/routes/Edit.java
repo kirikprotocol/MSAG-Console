@@ -145,7 +145,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
                         final Destination destination = svc == null ? new Destination(mask, center) : new Destination(mask, svc);
                         destinations.put(destination.getName(), destination);
                     } catch (SibincoException e) {
-                        logger.debug(LocaleMessages.getInstance().getMessage(getSession(),"could.not.create.destination"), e);
+                        logger.debug("Could not create destination ", e);
                         throw new SCAGJspException(Constants.errors.routing.routes.COULD_NOT_CREATE_DESTINATION, e);
                     }
                 }
@@ -157,7 +157,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
             try {
                 mask = new Mask(new_dstMask);
             } catch (SibincoException e) {
-                logger.debug(LocaleMessages.getInstance().getMessage(getSession(),"could.not.create.destination.mask"), e);
+                logger.debug("Could not create destination mask ", e);
                 throw new SCAGJspException(Constants.errors.routing.routes.COULD_NOT_CREATE_DESTINATION_MASK, new_dstMask, e);
             }
             final Svc svc = (Svc) appContext.getSmppManager().getSvcs().get(new_dst_mask_sme_);
@@ -171,7 +171,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
                     new_dst_mask_sme_ = (String) appContext.getSmppManager().getSvcs().keySet().iterator().next();
                 new_dstMask = "";
             } catch (SibincoException e) {
-                logger.debug(LocaleMessages.getInstance().getMessage(getSession(),"could.not.create.destination"), e);
+                logger.debug("Could not create destination ", e);
                 throw new SCAGJspException(Constants.errors.routing.routes.COULD_NOT_CREATE_DESTINATION, e);
             }
         }
@@ -257,7 +257,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
                 routes.put(id,
                         new Route(id, sources, destinations, archived, enabled, active, srcSmeId,
                                 serviceObj, notes));
-                messagetxt = LocaleMessages.getInstance().getMessage(getSession(),"added.new.route.0", new Object[]{id});
+                messagetxt = "Added new route: " + id + " ";
             } else {
                 if (!getEditId().equals(id) && routes.containsKey(id))
                     throw new SCAGJspException(Constants.errors.routing.routes.ROUTE_ALREADY_EXISTS, id);
@@ -265,17 +265,17 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
                 routes.put(id,
                         new Route(id, sources, destinations, archived, enabled, active, srcSmeId,
                                 serviceObj, notes));
-                messagetxt = LocaleMessages.getInstance().getMessage(getSession(),"changed.route.0", new Object[]{id});
+                messagetxt = "Changed route: " + id + " ";
             }
         } catch (SibincoException e) {
-            logger.error(LocaleMessages.getInstance().getMessage(getSession(),"could.not.create.new.route"), e);
+            logger.error("Could not create new route ", e);
             throw new SCAGJspException(Constants.errors.routing.routes.COULD_NOT_CREATE, e);
         }
         appContext.getScagRoutingManager().setRoutesChanged(true);
         appContext.getScagRoutingManager().setChangedByUser(getUser(appContext).getName());
         appContext.getScagRoutingManager().setRoutesSaved(true);
 
-        StatMessage message = new StatMessage(getUser(appContext).getName(), LocaleMessages.getInstance().getMessage(getSession(),"routes"), messagetxt);
+        StatMessage message = new StatMessage(getUser(appContext).getName(), "Routes" , messagetxt);
         appContext.getScagRoutingManager().addStatMessages(message);
         StatusManager.getInstance().addStatMessages(message);
 
