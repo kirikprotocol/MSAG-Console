@@ -82,7 +82,7 @@ inline static bool checkEventMask(uint8_t userMask, uint8_t eventCause)
 
 TaskProcessor::TaskProcessor(ConfigView* config)
     : Thread(), MissedCallListener(), AdminInterface(), 
-        logger(Logger::getInstance("smsc.mcisme.TaskProcessor")), 
+        logger(Logger::getInstance("mci.TaskProc")), 
 		profileStorage(ProfilesStorage::GetInstance()),
         protocolId(0), daysValid(1), svcType(0), address(0), 
         templateManager(0), mciModule(0), messageSender(0),
@@ -466,7 +466,7 @@ int TaskProcessor::Execute()
 				smsc_log_error(logger, "Bad called number. %s", e.what());
 				continue;
 			}
-			if(test_number == event.from) event.from = "";
+//			if(test_number == event.from) event.from = "";
 			try{checkAddress(event.from.c_str());}catch(Exception e)
 			{
 				smsc_log_error(logger, "Bad calling number. %s", e.what());
@@ -503,13 +503,13 @@ void TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt)
 
 	vector<MCEvent>		events;
 
-	smsc_log_debug(logger, "Attempt to send SMS to Abonent %s ", abnt.toString().c_str());
 	if(!GetAbntEvents(abnt, events))
 	{
 		smsc_log_debug(logger, "No more events for Abonent %s ", abnt.toString().c_str());
 		pDeliveryQueue->Remove(abnt);
 		return;
 	}
+	smsc_log_debug(logger, "Attempt to send SMS to Abonent %s ", abnt.toString().c_str());
 //	AbonentProfile		profile(AbonentProfiler::getProfile(abnt.getText().c_str()));
 
 	AbonentProfile profile;

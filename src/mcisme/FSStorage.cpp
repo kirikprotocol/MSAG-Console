@@ -458,7 +458,8 @@ int FSStorage::AddAbntEvent(dat_file_cell* pAbntEvents, const MCEvent& event)
 
 	pAbntEvents->events[pAbntEvents->event_count].date = time(0);
 	pAbntEvents->events[pAbntEvents->event_count].id = pAbntEvents->events[pAbntEvents->event_count-1].id + 1;
-	memcpy((void*)&(pAbntEvents->events[pAbntEvents->event_count++].calling_num), (void*)&(event.caller.full_addr), sizeof(pAbntEvents->events[pAbntEvents->event_count].calling_num));
+	memcpy((void*)&(pAbntEvents->events[pAbntEvents->event_count].calling_num), (void*)&(event.caller.full_addr), sizeof(pAbntEvents->events[pAbntEvents->event_count].calling_num));
+  pAbntEvents->event_count++;
 }
 
 int FSStorage::RemoveAbntEvents(dat_file_cell* pAbntEvents, const vector<MCEvent>& events)

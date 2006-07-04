@@ -20,6 +20,7 @@
 #include "Templates.h"
 #include "misscall/callproc.hpp"
 #include <mcisme/AbntAddr.hpp>
+#include <logger/Logger.h>
 
 namespace smsc { namespace mcisme
 {
@@ -27,6 +28,7 @@ namespace smsc { namespace mcisme
     
     using namespace smsc::core::synchronization;
     using namespace smsc::core::buffers;
+    using smsc::logger::Logger;
     
     struct Message
     {
@@ -37,11 +39,12 @@ namespace smsc { namespace mcisme
         int         rowsCount, eventsCount;
 
         static int  maxRowsPerMessage;
+
         
         Message() { reset(); };
         Message(const Message& msg) 
             : id(msg.id), attempts(msg.attempts), abonent(msg.abonent), message(msg.message),
-              smsc_id(msg.smsc_id), cancel(msg.cancel), notification(msg.notification), 
+          smsc_id(msg.smsc_id), cancel(msg.cancel), notification(msg.notification), logger(Logger::getInstance("mci.msgfmt")), 
 			  skip(msg.skip), data_sm(msg.data_sm), rowsCount(msg.rowsCount), eventsCount(msg.eventsCount) {};
         
         Message& operator=(const Message& msg) {
@@ -76,13 +79,13 @@ namespace smsc { namespace mcisme
     class MessageFormatter
     {
     private:
+      smsc::logger::Logger *logger;
+      InformTemplateFormatter*    formatter;
 
-        InformTemplateFormatter*    formatter;
-
-        Hash <uint32_t>             counters;
-        Array<MissedCallEvent>      events;
+      Hash <uint32_t>             counters;
+      Array<MissedCallEvent>      events;
         
-        bool isLastFromCaller(int index);
+      bool isLastFromCaller(int index);
     
     public:
 
@@ -90,10 +93,10 @@ namespace smsc { namespace mcisme
 
         bool canAdd(const MissedCallEvent& event);
         void addEvent(const MissedCallEvent& event);
-		void addEvent(const AbntAddr& abnt, const MCEvent& event);
+        void addEvent(const AbntAddr& abnt, const MCEvent& event);
         void formatMessage(Message& message, int timeOffset=0);
 //		void formatMessage(Message& message, const AbntAddr& abnt, const vector<MCEvent>& mc_events, uint8_t start_from, /*vector<uint32_t>*/uint8_t* ids, uint8_t& events_count,  int timeOffset=0);
-		void formatMessage(Message& message, const AbntAddr& abnt, const vector<MCEvent>& mc_events, uint8_t start_from, vector<MCEvent>& for_send, int timeOffset=0);
+        void formatMessage(Message& message, const AbntAddr& abnt, const vector<MCEvent>& mc_events, uint8_t start_from, vector<MCEvent>& for_send, int timeOffset=0);
     };
 
     void keyIsNotSupported(const char* type) throw(AdapterException);

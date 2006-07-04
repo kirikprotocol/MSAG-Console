@@ -78,7 +78,7 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
 {
 	std::string test_number;
 
-    smsc::logger::Logger *logger;
+  smsc::logger::Logger *logger;
 
     int     protocolId, daysValid;
     char    *svcType, *address;
