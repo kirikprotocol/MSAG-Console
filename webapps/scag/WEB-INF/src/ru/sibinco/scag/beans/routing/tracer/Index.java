@@ -5,7 +5,9 @@ import ru.sibinco.lib.bean.TabledBean;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.beans.TabledBeanImpl;
 import ru.sibinco.scag.backend.routing.ScagRoutingManager;
+import ru.sibinco.scag.backend.routing.http.HttpRoutingManager;
 import ru.sibinco.scag.backend.Scag;
+import ru.sibinco.scag.backend.transport.Transport;
 import ru.sibinco.scag.backend.endpoints.SmppManager;
 
 import javax.servlet.http.HttpServletRequest;
@@ -15,55 +17,91 @@ import java.util.*;
 
 public class Index extends TabledBeanImpl implements TabledBean {
 
-    public final int TRACE_ROUTE_FOUND = 10;
-    public static final int TRACE_ROUTE_STATUS = 20;
-    public final int TRACE_ROUTE_NOT_FOUND = 30;
+    public final int traceRouteFound = 10;
+    public static final int traceRouteStatus = 20;
+    public final int traceRouteNotFound = 30;
 
+    protected int transportId =  -1;
+
+    // ************ SMPP **************//
     private String dstAddress = null;
     private String srcAddress = null;
     private String srcSysId = "";
     private String editId = "";
     private String add = "";
 
+    // ************ HTTP **************//
+    private String abonent;
+    private String site;
+    private String path;
+    private int port = 80;
+
     private String message = null;
     private List routeInfo = null;
     private HashMap routeInfoMap = null;
     private List traceResults = null;
-    private int messageType = TRACE_ROUTE_STATUS;
+    private int messageType = traceRouteStatus;
 
     private String mbCheck = null;
     private String mbTrace = null;
 
     protected ScagRoutingManager scagRoutingManager = null;
+    protected HttpRoutingManager httpRoutingManager = null;
     protected SmppManager smppManager = null;
     protected Scag scag = null;
 
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
         super.process(request, response);
         scagRoutingManager = appContext.getScagRoutingManager();
+        httpRoutingManager = appContext.getHttpRoutingManager();
         smppManager = appContext.getSmppManager();
+
         scag = appContext.getScag();
-        if (null != mbCheck)
-            loadAndCheck();
-        else if (null != mbTrace && null != dstAddress && null != srcAddress)
-            traceRoute();
+        if (null != mbCheck && (getTransportId() == Transport.SMPP_TRANSPORT_ID)){
+            loadSmppAndCheck();
+        } else if(null != mbCheck && (getTransportId() == Transport.HTTP_TRANSPORT_ID)){
+            loadHttpAndCheck();
+        } else if (null != mbTrace && null != dstAddress && null != srcAddress
+                && (getTransportId() == Transport.SMPP_TRANSPORT_ID)){
+            traceSmppRoute();
+        } else if (null != mbTrace && null != abonent && null != site && null != path && 0 != port
+                && (getTransportId() == Transport.HTTP_TRANSPORT_ID)){
+            traceHttpRoute();
+        }
     }
 
-    private void loadAndCheck() throws SCAGJspException {
+    private void loadSmppAndCheck() throws SCAGJspException {
         try {
-            traceResults = scag.loadRoutes(scagRoutingManager);
+            traceResults = scag.loadSmppRoutes(scagRoutingManager);
             if (null == traceResults || 0 >= traceResults.size())
                 throw new SibincoException("Transport error, invalid responce.");
             message = (String) traceResults.get(0);
-            messageType = TRACE_ROUTE_STATUS;
+            messageType = traceRouteStatus;
             routeInfo = null;
             traceResults.remove(0);
-            appContext.getStatuses().setRoutesLoaded(true);
+            appContext.getStatuses().setSmppRoutesLoaded(true);
         } catch (SibincoException e) {
             e.printStackTrace();
             error("errors.routing.tracer.LoadAndCheckFailed", e.getMessage());
         }
     }
+
+    private void loadHttpAndCheck() throws SCAGJspException {
+            try {
+                traceResults = scag.loadHttpRoutes(httpRoutingManager);
+                if (null == traceResults || 0 >= traceResults.size())
+                    throw new SibincoException("Transport error, invalid responce.");
+                message = (String) traceResults.get(0);
+                messageType = traceRouteStatus;
+                routeInfo = null;
+                traceResults.remove(0);
+                appContext.getStatuses().setHttpRoutesLoaded(true);
+            } catch (SibincoException e) {
+                e.printStackTrace();
+                error("errors.routing.tracer.LoadAndCheckFailed", e.getMessage());
+            }
+        }
+
 
     private String decodeString(final String str) {
         final int strLen = null == str ? 0 : str.length();
@@ -104,14 +142,14 @@ public class Index extends TabledBeanImpl implements TabledBean {
         return list;
     }
 
-    private void traceRoute() throws SCAGJspException {
+    private void traceSmppRoute() throws SCAGJspException {
         try {
-            traceResults = appContext.getScag().traceRoute(dstAddress, srcAddress, srcSysId);
+            traceResults = appContext.getScag().traceSmppRoute(dstAddress, srcAddress, srcSysId);
             if (null == traceResults || 1 >= traceResults.size())
                 throw new SibincoException("Transport error, invalid responce.");
             message = (String) traceResults.get(0);
-            messageType = message.startsWith("Route found (disabled)") ? TRACE_ROUTE_STATUS :
-                    message.startsWith("Route not found") ? TRACE_ROUTE_NOT_FOUND : TRACE_ROUTE_FOUND;
+            messageType = message.startsWith("Route found (disabled)") ? traceRouteStatus :
+                    message.startsWith("Route not found") ? traceRouteNotFound : traceRouteFound;
             routeInfo = parseRouteInfo((String) traceResults.get(1));
             if (routeInfo != null) {
                 routeInfoMap = new HashMap();
@@ -130,6 +168,35 @@ public class Index extends TabledBeanImpl implements TabledBean {
         }
     }
 
+
+    private void traceHttpRoute() throws SCAGJspException {
+        try {
+            traceResults = appContext.getScag().traceHttpRoute(abonent, site, path, port);
+            if (null == traceResults || 1 >= traceResults.size())
+                throw new SibincoException("Transport error, invalid responce.");
+            message = (String) traceResults.get(0);
+            messageType = message.startsWith("Route found (disabled)") ? traceRouteStatus :
+                    message.startsWith("Route not found") ? traceRouteNotFound : traceRouteFound;
+            routeInfo = parseRouteInfo((String) traceResults.get(1));
+            if (routeInfo != null) {
+                routeInfoMap = new HashMap();
+                for (int i = 0; i < routeInfo.size(); i += 2) {
+                    String key = (String) routeInfo.get(i);
+                    String value = (String) routeInfo.get(i + 1);
+                    if(key.equals("ServiceId")){
+                        value = appContext.getServiceProviderManager().getServiceById(new Long(value)).getName();
+                    }
+                    routeInfoMap.put(key, value);
+                }
+            }
+            traceResults.remove(0);
+            traceResults.remove(0);
+        } catch (SibincoException e) {
+            e.printStackTrace();
+            error("errors.routing.tracer.TraceRouteFailed", e.getMessage());
+
+        }
+    }
     /* ------------------------------ Bean Properties --------------------------- */
 
     public String getDstAddress() {
@@ -197,7 +264,7 @@ public class Index extends TabledBeanImpl implements TabledBean {
         return editId;
     }
 
-    public void setEditId(String editId) {
+    public void setEditId(final String editId) {
         this.editId = editId;
     }
 
@@ -205,7 +272,7 @@ public class Index extends TabledBeanImpl implements TabledBean {
         return add;
     }
 
-    public void setAdd(String add) {
+    public void setAdd(final String add) {
         this.add = add;
     }
 
@@ -213,20 +280,54 @@ public class Index extends TabledBeanImpl implements TabledBean {
         return scag;
     }
 
-    public void setScag(Scag scag) {
+    public void setScag(final Scag scag) {
         this.scag = scag;
     }
 
-    public int getTRACE_ROUTE_FOUND() {
-        return TRACE_ROUTE_FOUND;
+    public String getAbonent() {
+        return abonent;
     }
 
-    public int getTRACE_ROUTE_NOT_FOUND() {
-        return TRACE_ROUTE_NOT_FOUND;
+    public void setAbonent(final String abonent) {
+        this.abonent = abonent;
     }
 
-    public static int getTRACE_ROUTE_STATUS() {
-        return TRACE_ROUTE_STATUS;
+    public String getSite() {
+        return site;
+    }
+
+    public void setSite(final String site) {
+        this.site = site;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(final String path) {
+        this.path = path;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(final int port) {
+        this.port = port;
+    }
+
+    public int getTraceRouteFound() {
+        return traceRouteFound;
+    }
+
+  public  int getTraceRouteNotFound()
+  {
+        return traceRouteNotFound;
+    }
+
+  public static int getTraceRouteStatus()
+  {
+        return traceRouteStatus;
     }
 
     protected Collection getDataSource() {
@@ -234,5 +335,21 @@ public class Index extends TabledBeanImpl implements TabledBean {
     }
 
     protected void delete() {
+    }
+
+    public int getTransportId() {
+        return transportId;
+    }
+
+    public void setTransportId(final int transportId) {
+        this.transportId = transportId;
+    }
+
+    public String[] getTransportIds() {
+        return Transport.transportIds;
+    }
+
+    public String[] getTransportTitles() {
+        return Transport.transportTitles;
     }
 }

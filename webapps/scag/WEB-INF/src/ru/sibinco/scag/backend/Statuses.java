@@ -12,7 +12,8 @@ public class Statuses {
     private boolean smscsChanged = false;
     private boolean billingChanged = false;
     private boolean aliasesChanged = false;
-    private boolean routesLoaded = false;
+    private boolean httpRoutesLoaded = false;
+    private boolean smppRoutesLoaded = false;
 
     public boolean isConfigChanged() {
         return configChanged;
@@ -62,11 +63,19 @@ public class Statuses {
         this.aliasesChanged = aliasesChanged;
     }
 
-    public boolean isRoutesLoaded() {
-        return routesLoaded;
+    public boolean isHttpRoutesLoaded() {
+        return httpRoutesLoaded;
     }
 
-    public void setRoutesLoaded(boolean routesLoaded) {
-        this.routesLoaded = routesLoaded;
+    public void setHttpRoutesLoaded(boolean httpRoutesLoaded) {
+        this.httpRoutesLoaded = httpRoutesLoaded;
+    }
+
+    public boolean isSmppRoutesLoaded() {
+        return smppRoutesLoaded;
+    }
+
+    public void setSmppRoutesLoaded(boolean smppRoutesLoaded) {
+        this.smppRoutesLoaded = smppRoutesLoaded;
     }
 }

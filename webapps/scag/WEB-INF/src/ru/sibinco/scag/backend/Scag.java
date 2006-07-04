@@ -25,6 +25,7 @@ import ru.sibinco.scag.backend.protocol.commands.endpoints.UpdateSvcInfo;
 import ru.sibinco.scag.backend.protocol.commands.rules.RemoveRule;
 import ru.sibinco.scag.backend.protocol.response.Response;
 import ru.sibinco.scag.backend.routing.ScagRoutingManager;
+import ru.sibinco.scag.backend.routing.http.HttpRoutingManager;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -38,9 +39,15 @@ import java.util.Map;
 public class Scag extends Proxy {                           
 
     private final String id;
+
     private static final String SCAG_COMPONENT_ID = "scag";
-    private static final String LOAD_ROUTES_METHOD_ID = "loadSmppTraceRoutes";
-    private static final String TRACE_ROUTE_METHOD_ID = "traceSmppRoute";
+    //************************ SMPP ROUTES **************************************//
+    private static final String LOAD_SMPP_ROUTES_METHOD_ID = "loadSmppTraceRoutes";
+    private static final String TRACE_SMPP_ROUTE_METHOD_ID = "traceSmppRoute";
+    //*********************** HTTP ROUTES **************************************//
+    private static final String LOAD_HTTP_ROUTES_METHOD_ID = "loadHttpTraceRoutes";
+    private static final String TRACE_HTTP_ROUTE_METHOD_ID = "traceHttpRoute";
+
     private static final String ADD_RULE_METHOD_ID = "addRule";
     private static final String UPDATE_RULE_METHOD_ID = "updateRule";
 
@@ -117,7 +124,6 @@ public class Scag extends Proxy {
         }
     }
 
-
     public synchronized List addRule(final String ruleId, final String transport) throws SibincoException {
        String err = "Couldn't add rule , nested: ";
        HashMap args = new HashMap();
@@ -136,12 +142,19 @@ public class Scag extends Proxy {
         return res instanceof List ? (List) res : null;
     }
 
-
-    public synchronized List loadRoutes(final ScagRoutingManager scagRoutingManager)
+    public synchronized List loadSmppRoutes(final ScagRoutingManager scagRoutingManager)
             throws SibincoException {
         scagRoutingManager.trace();
-        String err = "Couldn't load active routes configuration, nested: ";
-        final Object res = call(LOAD_ROUTES_METHOD_ID, err, Type.Types[Type.STRING_LIST_TYPE], new HashMap());
+        String err = "Couldn't load active smpp routes configuration, nested: ";
+        final Object res = call(LOAD_SMPP_ROUTES_METHOD_ID, err, Type.Types[Type.STRING_LIST_TYPE], new HashMap());
+        return res instanceof List ? (List) res : null;
+    }
+
+    public synchronized List loadHttpRoutes(final HttpRoutingManager httpRoutingManager)
+            throws SibincoException {
+        httpRoutingManager.trace();
+        String err = "Couldn't load active http routes configuration, nested: ";
+        final Object res = call(LOAD_HTTP_ROUTES_METHOD_ID, err, Type.Types[Type.STRING_LIST_TYPE], new HashMap());
         return res instanceof List ? (List) res : null;
     }
 
@@ -170,7 +183,6 @@ public class Scag extends Proxy {
     }
 
     public void reloadTariffMatrix() throws SibincoException {
-      //System.out.println("invoked reloadTariffMatrix");
       try {
       final Response response = super.runCommand(new ReloadTariffMatrix());
       if (Response.STATUS_OK!=response.getStatus())
@@ -183,15 +195,12 @@ public class Scag extends Proxy {
     }
 
     public Object call(final String commandId, final String err, final Type returnType, final Map arguments) throws SibincoException {
-        //if (info.status != ServiceInfo.STATUS_RUNNING)
-        // throw new SibincoException("Service \"" + info.getId() + "\" is not running");
-        // refreshComponents();
         try {
         final Response r = runCommand(new CommandCall(commandId, returnType, arguments));
         if (Response.STATUS_OK != r.getStatus())
             throw new SibincoException("Error occured: " + err + r.getDataAsString());
         final Element resultElem = (Element) r.getData().getElementsByTagName("variant").item(0);
-        final Type resultType = Type.getInstance(resultElem.getAttribute("type"));
+            final Type resultType = Type.getInstance(resultElem.getAttribute("type"));
         switch (resultType.getId()) {
             case Type.STRING_TYPE:
                 return Utils.getNodeText(resultElem);
@@ -211,15 +220,26 @@ public class Scag extends Proxy {
          }
     }
 
-
-    public synchronized List traceRoute(final String dstAddress, final String srcAddress, final String srcSysId)
+    public synchronized List traceSmppRoute(final String dstAddress, final String srcAddress, final String srcSysId)
             throws SibincoException {
         String err = "Couldn't trace route , nested: ";
         final Map args = new HashMap();
         args.put("dstAddress", dstAddress);
         args.put("srcAddress", srcAddress);
         args.put("srcSysId", srcSysId);
-        final Object res = call(TRACE_ROUTE_METHOD_ID, err, Type.Types[Type.STRING_LIST_TYPE], args);
+        final Object res = call(TRACE_SMPP_ROUTE_METHOD_ID, err, Type.Types[Type.STRING_LIST_TYPE], args);
+        return res instanceof List ? (List) res : null;
+    }
+
+    public synchronized List traceHttpRoute(final String abonent, final String site, final String path, final int port)
+            throws SibincoException {
+        String err = "Couldn't trace route , nested: ";
+        final Map args = new HashMap();
+        args.put("abonent", abonent);
+        args.put("site", site);
+        args.put("path", path);
+        args.put("port", new Integer(port));
+        final Object res = call(TRACE_HTTP_ROUTE_METHOD_ID, err, Type.Types[Type.STRING_LIST_TYPE], args);
         return res instanceof List ? (List) res : null;
     }
 
