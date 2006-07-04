@@ -77,7 +77,7 @@ void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
 
         insertPlacement(pa, p);
             
-        smsc_log_debug(logger, "usr_place record: route id=%s, name=%s, type=%d, prio=%d", route.id.c_str(), p.name.c_str(), p.type, p.prio);
+        smsc_log_debug(logger, "usr_place record: route id=%s, name=%s, type=%d, prio=%d, count=%d", route.id.c_str(), p.name.c_str(), p.type, p.prio, pa->Count());
     }
     else if(!strcmp(qname, "address_place"))
     {
@@ -91,7 +91,7 @@ void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
         {
             Placement p = assignPlacement(route.id, attrs);
             insertPlacement(&route.outAddressPlace, p);
-            smsc_log_debug(logger, "address_place record: route id=%s, name=%s, type=%d, prio=%d", route.id.c_str(), p.name.c_str(), p.type, p.prio);
+            smsc_log_debug(logger, "address_place record: route id=%s, name=%s, type=%d, prio=%d, count=%d", route.id.c_str(), p.name.c_str(), p.type, p.prio, route.outAddressPlace.Count());
         }
         else
             throw Exception("Invalid XML address_place record: No route id or not in sites");
@@ -103,9 +103,9 @@ void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
         StrX s1 = attrs.getValue("serviceId");
         route.service_id = atoi(s1.localForm());
         StrX s2 = attrs.getValue("enabled");
-        route_enabled = true;
+        route.enabled = true;
         if(s2.localForm() && !strcmp(s2.localForm(), "false"))
-            route_enabled = false;
+            route.enabled = false;
     }
     else if((route.id.length() || subj_id.length()) && !strcmp(qname, "address"))
     {
@@ -202,13 +202,13 @@ void XMLBasicHandler::endElement(const XMLCh* const nm)
         if(route.id.length() == 0 || route.service_id == 0 || route.sites.Count() == 0 || route.masks.Count() == 0)
             throw Exception("Invalid XML http_route record");
 
-        if(route_enabled)
-        {
+//        if(route_enabled)
+//        {
 //            smsc_log_debug(logger, "Push route id=%s", route.id.c_str());
             routes->Push(route);
-        }
+//        }
 
-        route_enabled = true;
+        route.enabled = true;
         route.id = "";
         route.service_id = 0;
         route.masks.Empty();

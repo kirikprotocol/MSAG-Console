@@ -77,7 +77,8 @@ bool HttpTraceRouter::getTraceRoute(const std::string& addr, const std::string& 
 
 //            trace.push_back("RouteId: " + r->id);
             sprintf(buf, " ServiceId: %d", r->service_id);
-            trace.push_back("RouteId: " + r->id + buf);
+            trace.push_back("RouteId: " + r->id + buf + "Enabled: " + (r->enabled ? "yes" : "no"));
+//            trace.push_back("Enabled: " + r->enabled ? "yes" : "no");
 
             trace.push_back("Masks:");
             for(int i = 0; i < r->masks.Count(); i++)
@@ -156,7 +157,10 @@ HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& 
     do{
         try{
             HttpRouteInt *r = AddressURLMap->Get(k);
-            return *r;
+            if(r->enabled)
+                return *r;
+            else
+                len = k.mask.cut();
         }
         catch(XHashInvalidKeyException &e)
         {
@@ -197,6 +201,7 @@ void HttpRouterImpl::BuildMaps(RouteArray *r, RouteHash *rid, AddressURLHash *au
                 for(int m = 0; m < rt->sites[k].paths.Count(); m++)
                 {
                     smsc_log_debug(logger, "AddedMapping mask: %s, URL: %s:%d%s", rt->masks[j].c_str(), rt->sites[k].host.c_str(), rt->sites[k].port, rt->sites[k].paths[m].c_str());
+                    smsc_log_debug(logger, "Add");
                     AddressURLKey auk(rt->masks[j], rt->sites[k].host, rt->sites[k].paths[m], rt->sites[k].port);
                     auh->Insert(auk, rt);
                 }

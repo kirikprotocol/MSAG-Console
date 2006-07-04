@@ -209,6 +209,7 @@ typedef Array<Site> SiteArray;
 
 struct HttpRoute
 {
+    bool enabled;
     uint32_t service_id;
     uint32_t provider_id;
     std::string id;

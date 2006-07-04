@@ -352,6 +352,7 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
                     request.setSiteFileName(request.getSiteFileName() + h);
                 }
 
+                smsc_log_debug(logger, "qqqqqq: %d %d", r.outUSRPlace.Count(), r.outAddressPlace.Count());
                 setUSR(request, r.outUSRPlace);
                 setAbonent(request, r.outAddressPlace);
                 smsc_log_debug(logger, "SERIALIZED REQUEST AFTER PROCESSING: %s", request.serialize().c_str());
