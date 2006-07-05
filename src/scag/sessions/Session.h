@@ -174,6 +174,10 @@ namespace scag { namespace sessions
         bool m_receivedAllResp;
 
         ICCOperationStatus m_Status;
+
+        std::list<int> DependOperationList;
+        std::list<int> DependPendingOperationList;
+
     public:
         uint8_t type;
         void attachBill(int BillId);

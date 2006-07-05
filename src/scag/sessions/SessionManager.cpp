@@ -145,6 +145,21 @@ void SessionManagerImpl::AddRestoredSession(Session * session)
 {
     CSessionKey sessionKey;
 
+    int key;
+    Operation * value;
+
+    COperationsHash::Iterator iter = session->OperationsHash.First();
+
+    for (;iter.Next(key, value);)
+    {              
+        if ((value->type != CO_USSD_DIALOG)&&(value->type != CO_HTTP_DELIVERY)) 
+        {
+            delete value;
+            smsc_log_debug(logger,"SessionManager: Session operation has finished");
+        }
+
+    }    
+
     sessionKey = session->getSessionKey();
 
     int16_t lastUSR = getLastUSR(sessionKey.abonentAddr);
