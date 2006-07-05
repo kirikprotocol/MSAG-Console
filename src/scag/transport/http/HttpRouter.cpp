@@ -139,7 +139,6 @@ HttpRouterImpl::~HttpRouterImpl()
 void HttpRouterImpl::init(const std::string& cfg)
 {
     route_cfg_file = cfg;
-    ReloadRoutes();
 }
                                                                         
 PlacementArray HttpRouterImpl::getDefaultAddressPlacement()

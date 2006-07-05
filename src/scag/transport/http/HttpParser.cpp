@@ -364,6 +364,10 @@ StatusCode HttpParser::parseQueryParameters(const char *buf, HttpRequest& cx)
       return ERROR;
 
     key.assign(start, mid - start);
+
+    for (unsigned int i = 0; i < key.length(); ++i)
+        key[i] = tolower(key[i]);
+
     mid++;
 
     if (end)
@@ -417,6 +421,10 @@ StatusCode HttpParser::parseCookie(const char *buf, HttpCommand& cmd, bool set)
         {
             cur = new Cookie;
             cur->name.assign(start, mid - start);
+
+            for (unsigned int i = 0; i < cur->name.length(); ++i)
+                cur->name[i] = tolower(cur->name[i]);
+
             if(end)
                 cur->value.assign(val, end - val);
             else

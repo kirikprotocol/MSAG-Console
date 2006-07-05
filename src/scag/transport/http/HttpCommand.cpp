@@ -77,6 +77,10 @@ void Cookie::setParam(const char* nm, uint32_t ncnt, const char* val, uint32_t v
 {
     std::string n, v;
     n.assign(nm, ncnt);
+
+    for (unsigned int i = 0; i < n.length(); ++i)
+        n[i] = tolower(n[i]);
+
     v.assign(val, vcnt);
     params.Insert(n.c_str(), v);
 }
@@ -99,16 +103,16 @@ Cookie* HttpCommand::getCookie(const std::string& name)
     return NULL;
 }
 
-Cookie* HttpCommand::setCookie(const std::string& name, const std::string& value)
+Cookie* HttpCommand::setCookie(const std::string& nm, const std::string& val)
 {
-    Cookie *c = getCookie(name);
+    Cookie *c = getCookie(nm);
     if(c == NULL)
     {
         c = new Cookie;
-        c->name = name;
-        cookies.Insert(name.c_str(), c);
+        c->name = nm;
+        cookies.Insert(nm.c_str(), c);
     }
-    c->value = value;
+    c->value = val;
     return c;
 }
 
