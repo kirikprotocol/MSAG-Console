@@ -2,6 +2,7 @@
 #define SCAG_TRANSPORT_HTTP_ROUTER
 
 #include <string>
+#include <vector>
 
 #include <xercesc/sax/HandlerBase.hpp>
 
@@ -50,6 +51,7 @@ protected:
     RouteArray* routes;
     RouteHash* routeIdMap;
     AddressURLHash* AddressURLMap;
+    PlacementArray* defAddressPlace;
 
     smsc::logger::Logger *logger;
 
@@ -62,6 +64,7 @@ public:
 
     HttpRoute findRoute(const std::string& addr, const std::string& site, const std::string& path, uint32_t port);
     HttpRoute getRoute(const std::string& routeId);
+    PlacementArray getDefaultAddressPlacement();
 
     void ReloadRoutes();
 

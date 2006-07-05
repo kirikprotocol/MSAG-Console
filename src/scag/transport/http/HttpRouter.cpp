@@ -109,7 +109,6 @@ bool HttpTraceRouter::getTraceRoute(const std::string& addr, const std::string& 
     return false;
 }
 
-
 void HttpTraceRouter::init(const std::string& cfg)
 {
     route_cfg_file = cfg;
@@ -123,7 +122,8 @@ HttpRouterImpl::HttpRouterImpl()
     routes = NULL;
     routeIdMap = NULL;
     AddressURLMap = NULL;
-    XMLPlatformUtils::Initialize();
+    defAddressPlace = NULL;
+    XMLPlatformUtils::Initialize("en_EN.UTF-8");
 }
 
 HttpRouterImpl::~HttpRouterImpl()
@@ -131,6 +131,7 @@ HttpRouterImpl::~HttpRouterImpl()
     delete routes;
     delete routeIdMap;
     delete AddressURLMap;
+    delete defAddressPlace;
 
     XMLPlatformUtils::Terminate();
 }
@@ -138,25 +139,33 @@ HttpRouterImpl::~HttpRouterImpl()
 void HttpRouterImpl::init(const std::string& cfg)
 {
     route_cfg_file = cfg;
-    ReloadRoutes();
 }
                                                                         
+PlacementArray HttpRouterImpl::getDefaultAddressPlacement()
+{
+    return *defAddressPlace;
+}
+
 HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& site, const std::string& path, uint32_t port)
 {
     MutexGuard mt(GetRouteMutex);
 
-    AddressURLKey k(addr, site, path, port);
+    Address adr(addr.c_str());
+    AddressURLKey k(adr.toString(), site, path, port);
     uint8_t len;
     do{
         try{
             HttpRouteInt *r = AddressURLMap->Get(k);
-            return *r;
+            if(r->enabled)
+                return *r;
+            else
+                len = k.mask.cut();
         }
         catch(XHashInvalidKeyException &e)
         {
             len = k.mask.cut();
         }
-    }while(len > 1);
+    }while(len > 5);
 
     throw RouteNotFoundException();
 }
@@ -208,18 +217,22 @@ void HttpRouterImpl::ReloadRoutes()
     RouteArray* r = new RouteArray;
     RouteHash* h = new RouteHash;
     AddressURLHash* auh = new AddressURLHash;
+    PlacementArray* ap = new PlacementArray;
+
     try{
 
-        XMLBasicHandler handler(r);
+        XMLBasicHandler handler(r, ap);
         ParseFile(route_cfg_file.c_str(), &handler);
         BuildMaps(r, h, auh);
         MutexGuard mg(GetRouteMutex);
         delete routes;
         delete routeIdMap;
         delete AddressURLMap;
+        delete defAddressPlace;
         routes = r;
         routeIdMap = h;
         AddressURLMap = auh;
+        defAddressPlace = ap;
     }
     catch(Exception& e)
     {
@@ -227,6 +240,7 @@ void HttpRouterImpl::ReloadRoutes()
         delete r;
         delete h;
         delete auh;
+        delete ap;
         throw e; 
     }
 
