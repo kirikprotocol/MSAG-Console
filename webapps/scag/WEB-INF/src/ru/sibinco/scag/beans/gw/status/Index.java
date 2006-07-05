@@ -22,11 +22,8 @@ import java.util.Collection;
  */
 public class Index extends TabledBeanImpl {
 
-    private String mbApply;
-    private String mbRestore;
     private String mbStart;
     private String mbStop;
-    private String[] subj;
     private boolean gwRunning;
     private boolean gwStopped;
 
@@ -60,10 +57,6 @@ public class Index extends TabledBeanImpl {
             start();
         if (null != mbStop)
             stop();
-        if (null != mbRestore)
-            restore();
-        else if (null != mbApply)
-            apply();
     }
 
     protected void delete() throws SCAGJspException {
@@ -90,109 +83,6 @@ public class Index extends TabledBeanImpl {
         }
         StatusManager.getInstance().addStatMessages(new StatMessage(getLoginedPrincipal().getName(),
                 "Status MSAG", "Service MSAG started"));
-    }
-
-    private void restore() {
-        if (null != subj && 0 < subj.length)
-            for (int i = 0; i < subj.length; i++) {
-                final String s = subj[i];
-                if ("config".equals(s))
-                    restoreConfig();
-            }
-    }
-
-    private void restoreConfig() {
-    }
-
-    private void apply() throws SCAGJspException {
-        if (null != subj && 0 < subj.length)
-            for (int i = 0; i < subj.length; i++) {
-                final String s = subj[i];
-                if ("config".equals(s))
-                    applyConfig();
-                if ("routes".equals(s))
-                    applyRoutes();
-                if ("users".equals(s))
-                    applyUsers();                
-            }
-    }
-
-
-    private void applyUsers() throws SCAGJspException {
-        try {
-            appContext.getUserManager().apply();
-            appContext.getStatuses().setUsersChanged(false);
-        } catch (Throwable e) {
-            logger.debug("Couldn't apply users", e);
-            throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_USERS, e);
-        }
-    }
-
-    private void applyRoutes() throws SCAGJspException {
-        try {
-            appContext.getScagRoutingManager().apply();
-            try {
-                appContext.getScag().apply("routes");
-            } catch (SibincoException e) {
-                if (Proxy.STATUS_CONNECTED == appContext.getScag().getStatus()) {
-                    logger.debug("Couldn't apply routes", e);
-                    throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_ROUTES, e);
-                }
-            }
-            appContext.getStatuses().setRoutesChanged(false);
-        } catch (SibincoException e) {
-            logger.debug("Couldn't apply routes", e);
-            throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_ROUTES, e);
-        }
-    }
-
-    private void applyConfig() throws SCAGJspException {
-        try {
-            appContext.getGwConfig().save();
-
-            try {
-                appContext.getScag().apply("config");
-            } catch (SibincoException e) {
-                if (Proxy.STATUS_CONNECTED == appContext.getScag().getStatus()) {
-                    logger.debug("Couldn't apply config", e);
-                    throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_CONFIG, e);
-                }
-            }
-            appContext.getStatuses().setConfigChanged(false);
-        } catch (SibincoException e) {
-            logger.debug("Couldn't apply config", e);
-            throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_CONFIG, e);
-        } catch (Config.WrongParamTypeException e) {
-            logger.debug("Couldn't save config", e);
-            throw new SCAGJspException(Constants.errors.status.COULDNT_SAVE_CONFIG, e);
-        } catch (IOException e) {
-            logger.debug("Couldn't save config", e);
-            throw new SCAGJspException(Constants.errors.status.COULDNT_SAVE_CONFIG, e);
-        }
-    }
-
-    public String getMbApply() {
-        return mbApply;
-    }
-
-    public void setMbApply(final String mbApply) {
-        this.mbApply = mbApply;
-    }
-
-    public String getMbRestore() {
-        return mbRestore;
-    }
-
-    public void setMbRestore(final String mbRestore) {
-        this.mbRestore = mbRestore;
-    }
-
-    public String[] getSubj() {
-        return subj;
-    }
-
-    public void setSubj(final String[] subj) {
-        this.subj = subj;
     }
 
     public boolean isConfigChanged() {
