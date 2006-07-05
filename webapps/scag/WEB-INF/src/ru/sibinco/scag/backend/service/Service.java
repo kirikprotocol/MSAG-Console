@@ -83,6 +83,12 @@ public class Service {
         return result;
     }
 
+    public Service copy() {
+      Service s = new Service(id,name);
+      s.setDescription(description);
+      return s;
+    }
+
     public String toString() {
         return "Service{" +
                 "id=" + id +

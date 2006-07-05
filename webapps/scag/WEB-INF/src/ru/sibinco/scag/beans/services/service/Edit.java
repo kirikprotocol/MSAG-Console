@@ -141,26 +141,33 @@ public class Edit extends TabledEditBeanImpl {
 
     protected void save() throws SCAGJspException {
         final ServiceProvidersManager serviceProvidersManager = appContext.getServiceProviderManager();
+        Service oldService = null;
+        Long serviceProviderId = null;
         if (description == null) description = "";
         if (getEditId() == null) {
             Service service = new Service(name, description);
-            id = serviceProvidersManager.createService(getLoginedPrincipal().getName(), Long.decode(getParentId()).longValue(), service);
+            serviceProviderId = Long.decode(getParentId());
+            id = serviceProvidersManager.createService(getLoginedPrincipal().getName(), serviceProviderId.longValue(), service);
         } else {
             if (editChild) {
-                ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(Long.decode(getEditId()));
+                serviceProviderId = Long.decode(getEditId());
+                ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(serviceProviderId);
                 Service service = (Service) serviceProvider.getServices().get(Long.decode(getParentId()));
+                oldService = service.copy();
                 service.setName(name);
                 service.setDescription(description);
                 serviceProvidersManager.updateService(getLoginedPrincipal().getName(), Long.decode(getEditId()).longValue(), service);
             } else {
-                ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(Long.decode(getParentId()));
+                serviceProviderId = Long.decode(getParentId());
+                ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(serviceProviderId);
                 Service service = (Service) serviceProvider.getServices().get(Long.decode(getEditId()));
+                oldService = service.copy();
                 service.setName(name);
                 service.setDescription(description);
                 serviceProvidersManager.updateService(getLoginedPrincipal().getName(), Long.decode(getParentId()).longValue(), service);
             }
         }
-        appContext.getServiceProviderManager().reloadServices(appContext.getScag());
+        appContext.getServiceProviderManager().reloadServices(appContext.getScag(),(getEditId() == null)?true:false,id, serviceProviderId, oldService);
         if (id != -1) {
             throw new EditChildException(Long.toString(id), getParentId());
         } else {
@@ -207,7 +214,8 @@ public class Edit extends TabledEditBeanImpl {
             appContext.getRuleManager().removeRule(Long.toString(id), transport, RuleManager.NON_TERM_MODE, getLoginedPrincipal().getName());
         } catch (SibincoException se) {
             if (!(se instanceof StatusDisconnectedException)) {
-                se.printStackTrace();/*PRINT ERROR ON THE SCREEN;*/
+                logger.error("Couldn't remove rule",se);
+                //se.printStackTrace();/*PRINT ERROR ON THE SCREEN;*/
                 throw new SCAGJspException(Constants.errors.rules.COULD_NOT_REMOVE_RULE, se);
             }
         }

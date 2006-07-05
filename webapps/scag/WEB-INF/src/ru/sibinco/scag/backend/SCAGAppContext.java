@@ -18,6 +18,7 @@ import ru.sibinco.scag.backend.daemon.ServiceInfo;
 import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.backend.service.ServiceProvidersManager;
 import ru.sibinco.scag.backend.operators.OperatorManager;
+import ru.sibinco.scag.backend.gw.ConfigManager;
 import ru.sibinco.scag.perfmon.PerfServer;
 import ru.sibinco.scag.svcmon.SvcMonServer;
 import ru.sibinco.scag.scmon.ScServer;
@@ -52,6 +53,7 @@ public class SCAGAppContext {
     private final HttpRoutingManager httpRoutingManager;
     private final ResourceManager resourceManager;
     private final LocaleManager localeManager;
+    private final ConfigManager configManager;
     private final PerfServer perfServer;
     private final SvcMonServer svcMonServer;
     private final ScServer scServer;
@@ -71,8 +73,10 @@ public class SCAGAppContext {
             String gwConfigFolder = config.getString("gw location.gw_config_folder");
             scagConfFolder = new File(gwConfigFolder);
             gwConfigFolder = gwConfigFolder  + File.separatorChar;
-            gwConfig = new Config(new File(gwConfigFolder + File.separatorChar + config.getString("gw location.gw_config")));
+            String gwConfigFile = gwConfigFolder + File.separatorChar + config.getString("gw location.gw_config");
+            gwConfig = new Config(new File(gwConfigFile));
             idsConfig = new Config(new File(config.getString("ids_file")));
+            configManager = new ConfigManager(gwConfigFile,gwConfig);
             String gwDaemonHost = config.getString("gw daemon.host");
 
 
@@ -187,6 +191,10 @@ public class SCAGAppContext {
 
     public LocaleManager getLocaleManager() {
         return localeManager;
+    }
+
+    public ConfigManager getConfigManager() {
+        return configManager;
     }
 
     public Daemon getScagDaemon() {

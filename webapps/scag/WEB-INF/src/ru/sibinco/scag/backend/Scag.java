@@ -4,6 +4,7 @@ import org.w3c.dom.Element;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.StatusDisconnectedException;
 import ru.sibinco.lib.backend.util.xml.Utils;
+import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.backend.daemon.ServiceInfo;
 import ru.sibinco.scag.backend.endpoints.centers.Center;
@@ -31,6 +32,10 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
+import java.io.File;
+import java.io.IOException;
 
 
 /**
@@ -70,48 +75,51 @@ public class Scag extends Proxy {
         return id;
     }
 
-    public void apply(final String subject) throws SibincoException {
+    protected void apply(final String subject) throws SibincoException {
         final Response response = super.runCommand(new Apply(subject));
         if (Response.STATUS_OK != response.getStatus())
             throw new SibincoException("Couldn't apply, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
     }
 
-    public void addSvc(final Svc svc) throws SibincoException {
+    //service points
+    protected void addSvc(final Svc svc) throws SibincoException {
         final Response response = super.runCommand(new AddSvc(svc));
         if (Response.STATUS_OK != response.getStatus())
             throw new SibincoException("Couldn't add sme, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
     }
 
-    public void updateSvcInfo(final Svc svc) throws SibincoException {
+    protected void updateSvcInfo(final Svc svc) throws SibincoException {
         final Response response = super.runCommand(new UpdateSvcInfo(svc));
         if (Response.STATUS_OK != response.getStatus())
             throw new SibincoException("Couldn't update sme info, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
     }
 
-    public void deleteSvc(final String svcId) throws SibincoException {
+    protected void deleteSvc(final String svcId) throws SibincoException {
         final Response response = super.runCommand(new DeleteSvc(svcId));
         if (Response.STATUS_OK != response.getStatus())
             throw new SibincoException("Couldn't delete sme, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
     }
 
-    public void addCenter(final Center center) throws SibincoException {
+    //centers
+    protected void addCenter(final Center center) throws SibincoException {
         final Response response = super.runCommand(new AddCenter(center));
         if (Response.STATUS_OK != response.getStatus())
             throw new SibincoException("Couldn't register Smsc , nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
     }
 
-    public void updateCenter(final Center center) throws SibincoException {
+    protected void updateCenter(final Center center) throws SibincoException {
         final Response response = super.runCommand(new UpdateCenter(center));
         if (Response.STATUS_OK != response.getStatus())
             throw new SibincoException("Couldn't modify Smsc , nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
     }
 
-    public void deleteCenter(final Center center) throws SibincoException {
+    protected void deleteCenter(final Center center) throws SibincoException {
         final Response response = super.runCommand(new DeleteCenter(center));
         if (Response.STATUS_OK != response.getStatus())
             throw new SibincoException("Couldn't delete Smsc, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
     }
 
+    //rules command invoked directly(not by invokeCommand(...)) because of specific logic
     public void removeRule(final String ruleId, final String transport) throws SibincoException {
         try {
         final Response response = super.runCommand(new RemoveRule(ruleId,transport));
@@ -124,7 +132,7 @@ public class Scag extends Proxy {
         }
     }
 
-    public synchronized List addRule(final String ruleId, final String transport) throws SibincoException {
+    public List addRule(final String ruleId, final String transport) throws SibincoException {
        String err = "Couldn't add rule , nested: ";
        HashMap args = new HashMap();
        args.put("serviceId",ruleId);
@@ -133,7 +141,7 @@ public class Scag extends Proxy {
        return res instanceof List ? (List) res : null;
    }
 
-    public synchronized List updateRule(final String ruleId, final String transport) throws SibincoException {
+    public List updateRule(final String ruleId, final String transport) throws SibincoException {
         String err = "Couldn't update rule , nested: ";
         HashMap args = new HashMap();
         args.put("serviceId",ruleId);
@@ -158,7 +166,8 @@ public class Scag extends Proxy {
         return res instanceof List ? (List) res : null;
     }
 
-    public void reloadOperators() throws SibincoException {
+    //operators
+    protected void reloadOperators() throws SibincoException {
        final Response response = super.runCommand(new ReloadOperators());
        if (Response.STATUS_OK!=response.getStatus())
          throw new SibincoException("Couldn't reload operators, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
@@ -176,12 +185,14 @@ public class Scag extends Proxy {
          throw new SibincoException("Couldn't apply http routes, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
     }
 
-    public void reloadServices() throws SibincoException {
+    //service providers
+    protected void reloadServices() throws SibincoException {
       final Response response = super.runCommand(new ReloadServices());
       if (Response.STATUS_OK!=response.getStatus())
         throw new SibincoException("Couldn't reload services, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
     }
 
+    //tariff matrix(invoked directly)
     public void reloadTariffMatrix() throws SibincoException {
       try {
       final Response response = super.runCommand(new ReloadTariffMatrix());
@@ -269,4 +280,59 @@ public class Scag extends Proxy {
         return result;
     }
 
+    //common logic of command executing
+    //1. "save" or "delete" button pressed
+    public void invokeCommand(final String commandName, final Object paramsObject, final Scag scag, final Manager manager, final String configFilename) throws SibincoException {
+     try{
+       //2.save current config to temporary file(smpp.xml->smpp.xml.old)
+       File configFile = new File(configFilename);
+       File temporary = Functions.createTempFilename(configFile.getName(),".old",configFile.getParentFile());
+       Functions.RenameFile(configFile,temporary);
+       //3.save config
+       manager.store();
+       //4.send command
+      try {
+       try {
+         Method commandMethod;
+         if (paramsObject==null) {
+           commandMethod = this.getClass().getDeclaredMethod(commandName, new Class[]{});
+           commandMethod.invoke(scag,null);
+         } else {
+           commandMethod = this.getClass().getDeclaredMethod(commandName, new Class[]{paramsObject.getClass()});
+           commandMethod.invoke(scag,new Object[]{paramsObject});
+         }
+       }catch (NoSuchMethodException e) {
+         e.printStackTrace();
+       } catch (IllegalAccessException e) {
+         e.printStackTrace();
+       } catch (InvocationTargetException e) {
+         throw (SibincoException)e.getTargetException();
+        }
+      } catch (SibincoException se) {
+        //5. does service started?
+        if (getStatus() == STATUS_DISCONNECTED) {
+          //5. N0(service isn't started)
+          //9. save smpp.xml to backup!
+          //10. delete smpp.xml.old
+          Functions.SavedFileToBackup(temporary,".old");
+          throw new StatusDisconnectedException(host,port);
+        } else {
+          //5. YES(service is started)
+          //6. service return error
+          //7. Restore config from temporary file(smpp.xml.new -> smpp.xml)
+          Functions.renameNewSavedFileToOriginal(temporary,configFile,true);
+          //Paint error on the screen by throwing exception(next string)
+          throw se;
+        }
+      }
+      //we don't have any exception, so
+      //9. save smpp.xml to backup!
+      //10. delete smpp.xml.new
+      Functions.SavedFileToBackup(temporary,".old");
+   } catch (IOException e) {
+     e.printStackTrace();
+     logger.error("IO operation failed - couldn't save config",e);
+     throw new SibincoException("IO operation failed - couldn't save config");
+   }
+  }
 }

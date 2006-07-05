@@ -94,7 +94,14 @@ public class ServiceProvider {
         return services;
     }
 
-    
+  public ServiceProvider copy() {
+    ServiceProvider sp = new ServiceProvider(id, name);
+    sp.setDescription(description);
+    sp.getServices().putAll(services);
+    //TODO: copy status
+    return sp;
+  }
+
 
     public String toString() {
         return "ServiceProvider{" +

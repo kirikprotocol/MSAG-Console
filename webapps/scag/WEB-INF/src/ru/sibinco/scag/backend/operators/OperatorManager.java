@@ -25,9 +25,11 @@ import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.lib.backend.util.StringEncoderDecoder;
 import ru.sibinco.lib.backend.route.Mask;
 import ru.sibinco.lib.SibincoException;
+import ru.sibinco.lib.StatusDisconnectedException;
 import ru.sibinco.scag.backend.status.StatMessage;
 import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.backend.Scag;
+import ru.sibinco.scag.backend.Manager;
 import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.Constants;
@@ -40,7 +42,7 @@ import ru.sibinco.scag.Constants;
  *
  * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
  */
-public class OperatorManager {
+public class OperatorManager implements Manager {
 
     private Logger logger = Logger.getLogger(this.getClass());
     private final Map operators = Collections.synchronizedMap(new TreeMap());
@@ -106,11 +108,12 @@ public class OperatorManager {
         }
     }
 
-    public synchronized void updateOperator(final String user, final long id, final String name,
+    public synchronized Operator updateOperator(final String user, final long id, final String name,
                                             final String description, final String[] srcMasks)
             throws NullPointerException, SibincoException {
 
         final Operator operator = (Operator) operators.get(new Long(id));
+        final Operator oldOperator = operator.copy();
         if (null == operator)
             throw new NullPointerException("Operator \"" + id + "\" not found.");
         operator.setName(name);
@@ -125,6 +128,7 @@ public class OperatorManager {
             }
         }
         StatusManager.getInstance().addStatMessages(new StatMessage(user, "Operator", "Changed operator: " + name + "."));
+        return oldOperator;
     }
 
     public synchronized long createOperator(final String user, final String name, final String description, final String[] srcMasks)
@@ -146,9 +150,9 @@ public class OperatorManager {
 
     private void storeOperators() throws IOException {
         File configFile = new File(configFilename);
-        File configNew = Functions.createNewFilenameForSave(configFile);
+        //File configNew = Functions.createNewFilenameForSave(configFile);
 
-        PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(configNew), Functions.getLocaleEncoding()));
+        PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(configFile), Functions.getLocaleEncoding()));
         Functions.storeConfigHeader(out, "operators", "operators.dtd", System.getProperty("file.encoding").equals("Cp1251") ? "ISO-8859-1" : System.getProperty("file.encoding"));
         out.print(getParamXmlText());
         for (Iterator i = new SortedList(operators.keySet()).iterator(); i.hasNext();) {
@@ -159,7 +163,16 @@ public class OperatorManager {
         Functions.storeConfigFooter(out, "operators");
         out.flush();
         out.close();
-        Functions.renameNewSavedFileToOriginal(configNew, configFile);
+        //Functions.renameNewSavedFileToOriginal(configNew, configFile);
+    }
+
+    public void store() throws SibincoException {
+      try {
+        storeOperators();
+      } catch (IOException e) {
+        logger.error("Couldn't save operators config", e);
+        throw new SibincoException("Couldn't save Svc's config", e);
+      }
     }
 
     private String getParamXmlText() {
@@ -190,34 +203,39 @@ public class OperatorManager {
         return buffer.toString();
     }
 
-    public synchronized void delete(final String user, final ArrayList toRemove) throws SCAGJspException {
-        List operatorNames = getOperatorNamesByIds(toRemove);
+    public synchronized void delete(final String user, final ArrayList toRemove, final Scag scag) throws SCAGJspException {
+        Object[] ops = getOperatorNamesByIds(toRemove);
+        List operatorNames = (List)ops[0];
+        Map operatorsToDelete = (Map)ops[1];
         getOperators().keySet().removeAll(toRemove);
+        try {
+           scag.invokeCommand("reloadOperators",null,scag,this,configFilename);
+        } catch (SibincoException e) {
+            if (!(e instanceof StatusDisconnectedException)) {
+              getOperators().putAll(operatorsToDelete);
+              logger.error("Couldn't delete operator(s) ", e);
+              throw new SCAGJspException(Constants.errors.operators.COULD_NOT_RELOAD_OPERATORS , e);
+            }
+        }
         StatusManager.getInstance().addStatMessages(new StatMessage(user, "Operator", "Deleted operator(s): "
                 + operatorNames.toString() + "."));
     }
 
-
-
-    public synchronized void reloadOperators(final Scag scag) throws SCAGJspException {
+    public synchronized void reloadOperators(final Scag scag, final boolean isAdd, final long id, final Operator oldOperator) throws SCAGJspException {
         try {
-            scag.reloadOperators();
+            scag.invokeCommand("reloadOperators",null,scag,this,configFilename);
         } catch (SibincoException e) {
-            if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
-                 logger.error("Couldn't reload Operator ", e);
-                throw new SCAGJspException(Constants.errors.serviceProviders.COULDNT_RELOAD_SERVICE_PROVIDER, e);
-            }
-        } finally {
-            try {
-                storeOperators();
-            } catch (IOException e) {
-                logger.debug("Couldn't save config", e);
+            if (!(e instanceof StatusDisconnectedException)) {
+                operators.remove(new Long(id));
+                if (!isAdd) operators.put(oldOperator.getId(), oldOperator);
+                throw new SCAGJspException(Constants.errors.operators.COULD_NOT_RELOAD_OPERATORS , e);
             }
         }
     }
 
-    private List getOperatorNamesByIds(final ArrayList operatorsIds) {
+    private Object[] getOperatorNamesByIds(final ArrayList operatorsIds) {
         List result = new ArrayList();
+        Map op = new HashMap();
         for (Iterator i = new SortedList(operators.keySet()).iterator(); i.hasNext();) {
             Long id = (Long) i.next();
             Operator operator = (Operator) operators.get(id);
@@ -225,10 +243,11 @@ public class OperatorManager {
                Long operatorId = (Long) it.next();
                if(operator.getId().equals(operatorId)){
                    result.add(operator.getName());
+                   op.put(operator.getId(),operator);
                }
             }
         }
-        return result;
+        return new Object[]{result,op};
     }
 
 

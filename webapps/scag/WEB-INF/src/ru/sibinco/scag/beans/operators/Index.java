@@ -31,7 +31,7 @@ public class Index extends TabledBeanImpl {
             final Long operatorId = Long.decode(operatorIdStr);
             toRemove.add(operatorId);
         }
-        appContext.getOperatorManager().delete(getLoginedPrincipal().getName(), toRemove);
-        appContext.getOperatorManager().reloadOperators(appContext.getScag());
+        appContext.getOperatorManager().delete(getLoginedPrincipal().getName(), toRemove, appContext.getScag());
+        //appContext.getOperatorManager().reloadOperators(appContext.getScag());
     }
 }

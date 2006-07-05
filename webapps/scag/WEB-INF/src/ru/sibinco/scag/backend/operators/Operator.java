@@ -84,6 +84,12 @@ public class Operator {
         return result;
     }
 
+    public Operator copy() {
+      Operator o = new Operator(id, name);
+      o.setDescription(description);
+      o.getMasks().putAll(masks);
+      return o;
+    }
 
     public String toString() {
         return "Operator{" +

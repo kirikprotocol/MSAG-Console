@@ -12,12 +12,14 @@ import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.lib.SibincoException;
+import ru.sibinco.lib.StatusDisconnectedException;
 import ru.sibinco.scag.backend.endpoints.svc.Svc;
 import ru.sibinco.scag.backend.endpoints.centers.Center;
 import ru.sibinco.scag.backend.sme.ProviderManager;
 import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.backend.status.StatMessage;
 import ru.sibinco.scag.backend.Scag;
+import ru.sibinco.scag.backend.Manager;
 import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.Constants;
@@ -37,7 +39,7 @@ import java.util.*;
  *
  * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
  */
-public class SmppManager {
+public class SmppManager implements Manager {
 
     private static final String PARAM_NAME_LAST_UID_ID = "last used uid";
 
@@ -104,22 +106,16 @@ public class SmppManager {
         for (Iterator iterator = checkedSet.iterator(); iterator.hasNext();) {
             final String centerId = (String) iterator.next();
             Center center = (Center) centers.get(centerId);
+            centers.remove(centerId);
             try {
                 if (center.isEnabled()) {
-                    scag.deleteCenter(center);
+                    scag.invokeCommand("deleteCenter",center,scag,this,configFilename);
                 }
-                centers.remove(centerId);
             } catch (SibincoException e) {
-                if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
+                if (!(e instanceof StatusDisconnectedException)) {
                     logger.error("Couldn't delete Smsc \"" + centerId + '"', e);
+                    centers.put(centerId,center);
                     throw new SCAGJspException(Constants.errors.sme.COULDNT_DELETE, centerId, e);
-                } else
-                    centers.remove(centerId);
-            } finally {
-                try {
-                    store();
-                } catch (SibincoException e) {
-                    logger.error("Couldn't store smes ", e);
                 }
             }
         }
@@ -131,23 +127,17 @@ public class SmppManager {
         final Map svcs = getSvcs();
         for (Iterator iterator = checkedSet.iterator(); iterator.hasNext();) {
             final String svcId = (String) iterator.next();
-            Svc svc = (Svc) getSvcs().get(svcId);
+            Svc svc = (Svc) svcs.get(svcId);
+            svcs.remove(svcId);
             try {
                 if (svc.isEnabled()) {
-                    scag.deleteSvc(svcId);
+                    scag.invokeCommand("deleteSvc",svcId,scag,this,configFilename);
                 }
-                svcs.remove(svcId);
             } catch (SibincoException e) {
-                if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
+                if (!(e instanceof StatusDisconnectedException)) {
                     logger.error("Couldn't delete sme \"" + svcId + '"', e);
+                    svcs.put(svcId,svc);
                     throw new SCAGJspException(Constants.errors.sme.COULDNT_DELETE, svcId, e);
-                } else
-                    svcs.remove(svcId);
-            } finally {
-                try {
-                    store();
-                } catch (SibincoException e) {
-                    logger.error("Couldn't store smes ", e);
                 }
             }
         }
@@ -165,35 +155,36 @@ public class SmppManager {
                 center.setUid(++uid);
                 setLastUsedId(center.getUid());
                 if (center.isEnabled()) {
-                    scag.addCenter(center);
+                    scag.invokeCommand("addCenter",center,scag,this,configFilename);
                 }
 
             } else {
                 messageText = "Changed center: ";
                 if (oldCenter.isEnabled() == center.isEnabled()) {
                     if (isEnabled)
-                        scag.updateCenter(center);
+                        scag.invokeCommand("updateCenter",center,scag,this,configFilename);
                 } else {
                     if (center.isEnabled()) {
-                        scag.addCenter(center);
+                        scag.invokeCommand("addCenter",center,scag,this,configFilename);
                     } else {
-                        scag.deleteCenter(center);
+                        //TODO why delete???
+                        //scag.invokeCommand("deleteCenter",center,scag,this,configFilename);
+                        HashSet set = new HashSet();
+                        set.add(center.getId());
+                        deleteCenters(user,set,scag);
                     }
                 }
             }
         } catch (SibincoException e) {
-            if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
-                if (isAdd) centers.remove(center.getId());
+            if (!(e instanceof StatusDisconnectedException)) {
+                centers.remove(center.getId());
+                if (!isAdd) centers.put(oldCenter.getId(),oldCenter);
                 logger.error("Couldn't applay Centers " + center.getId() + " ", e);
                 throw new SCAGJspException(Constants.errors.sme.COULDNT_APPLY, center.getId(), e);
             }
-        } finally {
+        }
+        finally {
             oldCenter = null;
-            try {
-                store();
-            } catch (SibincoException e) {
-                logger.error("Couldn't store smes ", e);
-            }
         }
         StatusManager.getInstance().addStatMessages(new StatMessage(user, "Center", messageText + center.getId()));
     }
@@ -207,39 +198,40 @@ public class SmppManager {
             if (isAdd) {
                 messageText = "Added new service point: ";
                 if (svc.isEnabled()) {
-                    scag.addSvc(svc);
+                    scag.invokeCommand("addSvc", svc, scag, this, configFilename);
                 }
             } else {
                 messageText = "Changed service point: ";
                 if ((oldSvc.isEnabled() == svc.isEnabled())) {
                     if (isEnabled)
-                        scag.updateSvcInfo(svc);
+                        scag.invokeCommand("updateSvcInfo", svc, scag, this, configFilename);
                 } else {
                     if (svc.isEnabled()) {
-                        scag.addSvc(svc);
+                        scag.invokeCommand("addSvc", svc, scag, this, configFilename);
                     } else {
-                        scag.deleteSvc(svc.getId());
+                        //TODO why delete???
+                        //scag.deleteSvc(svc.getId());
+                        HashSet set = new HashSet();
+                        set.add(svc.getId());
+                        deleteServicePoints(user,set,scag);
                     }
                 }
             }
         } catch (SibincoException e) {
-            if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
-                if (isAdd) svcs.remove(svc.getId());
+            if (!(e instanceof StatusDisconnectedException)) {
+                svcs.remove(svc.getId());
+                if (!isAdd) svcs.put(oldSvc.getId(),oldSvc);
+                logger.error("Couldn't applay service point " + svc.getId() + " ", e);
                 throw new SCAGJspException(Constants.errors.sme.COULDNT_APPLY, svc.getId(), e);
             }
         } finally {
             oldSvc = null;
-            try {
-                store();
-            } catch (SibincoException e) {
-                logger.error("Couldn't store smes ", e);
-            }
         }
         StatusManager.getInstance().addStatMessages(new StatMessage(user, "Service Point", messageText + svc.getId()));
     }
 
 
-    public synchronized PrintWriter store(final PrintWriter out) {
+    public PrintWriter store(final PrintWriter out) {
         final List svcsValues = new LinkedList(svcs.values());
         Collections.sort(svcsValues, new Comparator() {
             public int compare(final Object o1, final Object o2) {
@@ -287,7 +279,7 @@ public class SmppManager {
         return new SortedList(centers.keySet());
     }
 
-    public synchronized void store() throws SibincoException {
+    public void store() throws SibincoException {
         try {
             store(new PrintWriter(new FileWriter(configFilename))).close();
         } catch (IOException e) {

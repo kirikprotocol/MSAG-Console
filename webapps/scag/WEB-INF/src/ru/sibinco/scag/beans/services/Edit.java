@@ -85,8 +85,7 @@ public class Edit extends TabledEditBeanImpl {
                     toRemoveRoutes);
         }
         appContext.getServiceProviderManager().deleteServices(getLoginedPrincipal().getName(),
-                toRemove, serviceProvider);
-        appContext.getServiceProviderManager().reloadServices(appContext.getScag());
+            toRemove, serviceProvider, appContext.getScag());
     }
 
     protected void load() throws SCAGJspException {
@@ -105,25 +104,14 @@ public class Edit extends TabledEditBeanImpl {
 
     protected void save() throws SCAGJspException {
         final ServiceProvidersManager serviceProvidersManager = appContext.getServiceProviderManager();
+        ServiceProvider oldProvider = null;
         if (isAdd()) {
             id = serviceProvidersManager.createServiceProvider(userLogin, name, description);
         } else {
-            serviceProvidersManager.updateServiceProvider(userLogin, id, name, description);
+            oldProvider = serviceProvidersManager.updateServiceProvider(userLogin, id, name, description);
         }
         final Scag scag = appContext.getScag();
-        try {
-            scag.reloadServices();
-        } catch (SibincoException e) {
-            if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
-                throw new SCAGJspException(Constants.errors.serviceProviders.COULDNT_RELOAD_SERVICE_PROVIDER, Long.toString(id), e);
-            }
-        } finally {
-            try {
-                serviceProvidersManager.store();
-            } catch (IOException e) {
-                logger.debug("Couldn't save config", e);
-            }
-        }
+        appContext.getServiceProviderManager().reloadServices(scag,isAdd(),id,oldProvider);
         if (isAdd()) {
             throw new EditException(Long.toString(id));
         } else {

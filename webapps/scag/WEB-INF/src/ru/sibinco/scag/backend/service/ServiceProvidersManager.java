@@ -8,11 +8,13 @@ import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.lib.SibincoException;
+import ru.sibinco.lib.StatusDisconnectedException;
 import ru.sibinco.scag.backend.routing.Route;
 import ru.sibinco.scag.backend.routing.http.HttpRoute;
 import ru.sibinco.scag.backend.status.StatMessage;
 import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.backend.Scag;
+import ru.sibinco.scag.backend.Manager;
 import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.Constants;
@@ -40,7 +42,7 @@ import org.apache.log4j.Logger;
  *
  * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
  */
-public class ServiceProvidersManager {
+public class ServiceProvidersManager implements Manager {
 
     private Logger logger = Logger.getLogger(this.getClass());
     private final Map serviceProviders = Collections.synchronizedMap(new TreeMap());
@@ -117,31 +119,46 @@ public class ServiceProvidersManager {
         }
     }
 
-    public synchronized void store() throws IOException {
-        storeServiceProviders();
+    public void store() throws SibincoException {
+        try {
+          storeServiceProviders();
+        } catch (IOException e) {
+            logger.error("Couldn't save service provider's config", e);
+            throw new SibincoException("Couldn't save service provider's config", e);
+        }
     }
 
-    public synchronized void reloadServices(final Scag scag) throws SCAGJspException {
-        try {
-            scag.reloadServices();
-        } catch (SibincoException e) {
-            if (Proxy.STATUS_CONNECTED == scag.getStatus()) {
-                throw new SCAGJspException(Constants.errors.serviceProviders.COULDNT_RELOAD_SERVICE_PROVIDER, e);
-            }
-        } finally {
-            try {
-                storeServiceProviders();
-            } catch (IOException e) {
-                logger.debug("Couldn't save config", e);
-            }
-        }
+    public synchronized void reloadServices(final Scag scag, final boolean isAdd, final long id, final ServiceProvider oldProvider) throws SCAGJspException {
+      try {
+          scag.invokeCommand("reloadServices",null,scag,this,configFilename);
+      } catch (SibincoException e) {
+          if (!(e instanceof StatusDisconnectedException)) {
+              serviceProviders.remove(new Long(id));
+              if (!isAdd) serviceProviders.put(oldProvider.getId(), oldProvider);
+              throw new SCAGJspException(Constants.errors.serviceProviders.COULDNT_RELOAD_SERVICE_PROVIDER, e);
+          }
+      }
+    }
+
+    public synchronized void reloadServices(final Scag scag, final boolean isAdd, final long id, final Long serviceProviderId, final Service oldService) throws SCAGJspException {
+      try {
+          scag.invokeCommand("reloadServices",null,scag,this,configFilename);
+      } catch (SibincoException e) {
+          if (!(e instanceof StatusDisconnectedException)) {
+              final ServiceProvider provider = (ServiceProvider) serviceProviders.get(serviceProviderId);
+              provider.getServices().remove(new Long(id));
+              if (!isAdd)  provider.getServices().put(oldService.getId(),oldService);
+              //serviceProviders.put(provider.getId(), provider);
+              throw new SCAGJspException(Constants.errors.serviceProviders.COULDNT_RELOAD_SERVICE_PROVIDER, e);
+          }
+      }
     }
 
     private void storeServiceProviders() throws IOException {
         File configFile = new File(configFilename);
-        File configNew = Functions.createNewFilenameForSave(configFile);
+        //File configNew = Functions.createNewFilenameForSave(configFile);
 
-        PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(configNew), Functions.getLocaleEncoding()));
+        PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(configFile), Functions.getLocaleEncoding()));
         Functions.storeConfigHeader(out, "service_providers", "services.dtd", System.getProperty("file.encoding").equals("Cp1251") ? "ISO-8859-1" : System.getProperty("file.encoding"));
         out.print(getParamXmlText());
         for (Iterator i = new SortedList(serviceProviders.keySet()).iterator(); i.hasNext();) {
@@ -152,7 +169,7 @@ public class ServiceProvidersManager {
         Functions.storeConfigFooter(out, "service_providers");
         out.flush();
         out.close();
-        Functions.renameNewSavedFileToOriginal(configNew, configFile);
+        //Functions.renameNewSavedFileToOriginal(configNew, configFile);
     }
 
     private String getParamXmlText() {
@@ -187,8 +204,9 @@ public class ServiceProvidersManager {
         return buffer.toString();
     }
 
-    public synchronized void updateServiceProvider(final String user, final long id, final String name, final String description) throws NullPointerException {
+    public synchronized ServiceProvider updateServiceProvider(final String user, final long id, final String name, final String description) throws NullPointerException {
         final ServiceProvider provider = (ServiceProvider) serviceProviders.get(new Long(id));
+        final ServiceProvider oldProvider = (ServiceProvider)provider.copy();
         if (null == provider)
             throw new NullPointerException("Service Provider \"" + id + "\" not found.");
         provider.setName(name);
@@ -196,6 +214,7 @@ public class ServiceProvidersManager {
             provider.setDescription(description);
         StatMessage message = new StatMessage(user, "Service Provider", "Changed service provider: '" + name + "'");
         StatusManager.getInstance().addStatMessages(message);
+        return oldProvider;
     }
 
     public synchronized long createServiceProvider(final String user, final String name, final String description) throws NullPointerException {
@@ -220,26 +239,49 @@ public class ServiceProvidersManager {
     }
 
     public synchronized void deleteServices(final String user, final List toRemove,
-                                            final ServiceProvider serviceProvider) throws SCAGJspException {
+                                            final ServiceProvider serviceProvider, final Scag scag) throws SCAGJspException {
         List serviceNames = new ArrayList();
+        Map servicesToDelete = new HashMap();
         for (Iterator it = toRemove.iterator(); it.hasNext();) {
             Long serviceId = (Long) it.next();
             Service service = (Service) serviceProvider.getServices().get(serviceId);
             serviceNames.add(service.getName());
+            servicesToDelete.put(serviceId,service);
         }
         serviceProvider.getServices().keySet().removeAll(toRemove);
+        try {
+          scag.invokeCommand("reloadServices",null,scag,this,configFilename);
+        } catch (SibincoException e) {
+          if (!(e instanceof StatusDisconnectedException)) {
+            serviceProvider.getServices().putAll(servicesToDelete);
+            logger.error("Couldn't delete service(s) for service provider", e);
+            throw new SCAGJspException(Constants.errors.serviceProviders.COULDNT_RELOAD_SERVICE_PROVIDER, e);
+          }
+        }
         StatMessage message = new StatMessage(user, "Service", "Deleted service(s): '" + serviceNames.toString() + "'");
         StatusManager.getInstance().addStatMessages(message);
     }
 
-    public synchronized void deleteServiceProviders(final String user, final List toRemove) throws SCAGJspException {
+    public synchronized void deleteServiceProviders(final String user, final List toRemove, final Scag scag) throws SCAGJspException {
         List servProvNames = new ArrayList();
+        Map providersToDelete = new HashMap();
         for (Iterator it = toRemove.iterator(); it.hasNext();) {
             Long id = (Long) it.next();
             ServiceProvider sp = (ServiceProvider) getServiceProviders().get(id);
             servProvNames.add(sp.getName());
+            providersToDelete.put(id,sp);
         }
         getServiceProviders().keySet().removeAll(toRemove);
+        try {
+           scag.invokeCommand("reloadServices",null,scag,this,configFilename);
+        } catch (SibincoException e) {
+            if (!(e instanceof StatusDisconnectedException)) {
+                //restore runtime storage
+                getServiceProviders().putAll(providersToDelete);
+                logger.error("Couldn't delete provider(s) ", e);
+                throw new SCAGJspException(Constants.errors.serviceProviders.COULDNT_RELOAD_SERVICE_PROVIDER, e);
+          }
+        }
         StatMessage message = new StatMessage(user, "Service Provider", "Deleted service prvider(s): "
                 + servProvNames.toString() + ".");
         StatusManager.getInstance().addStatMessages(message);

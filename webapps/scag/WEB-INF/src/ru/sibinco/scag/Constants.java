@@ -123,6 +123,7 @@ public class Constants {
             public static final Constants COULD_NOT_CREATE_MASK = new Constants("error.operators.couldnt_create_mask");
             public static final Constants COULD_NOT_CREATE_OPERATOR = new Constants("error.operators.couldnt_create_operator");
             public static final Constants COULD_NOT_UPDATE_OPERATOR = new Constants("error.operators.couldnt_update_operator");
+            public static final Constants COULD_NOT_RELOAD_OPERATORS = new Constants("error.operators.couldnt_reload_operators");
         }
 
         public interface serviceProviders {
