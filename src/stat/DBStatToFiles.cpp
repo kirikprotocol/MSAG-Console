@@ -207,7 +207,7 @@ void process(Connection* connection, const char* location)
         }
         
         convertPeriod(period, flushTM);
-        smsc_log_debug(logger, "Dumping period %ld", period);
+        smsc_log_debug(logger, "Dumping period %d", period);
         StatisticsManager::flush(flushTM, storage, stat, statSme, statRoute);
         stat.Empty(); statSme.Empty(); statRoute.Empty();
     }

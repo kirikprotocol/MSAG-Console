@@ -424,9 +424,9 @@ struct SubmitData
 const char* LOG_PREFIX_PATTERN = "%c %02d-%02d %02d:%02d:%02d,%03d %03d%n";
 const char* LOG_CAT_ST_PATTERN = "sms.trace: ";
 const char* LOG_SBM_ST_PATTERN = "SBM: ";
-const char* LOG_SBM_PR_PATTERN = "Id=%lld;seq=%ld;%n";
+const char* LOG_SBM_PR_PATTERN = "Id=%lld;seq=%d;%n";
 const char* LOG_FWD_ST_PATTERN = "FWDDLV: ";
-const char* LOG_FWD_PR_PATTERN = "msgId=%lld, seq number:%ld;%n";
+const char* LOG_FWD_PR_PATTERN = "msgId=%lld, seq number:%d;%n";
 const char* LOG_DLVRSP_PATTERN = "DLVRSP: msgId=%lld;class=%n";
 
 int main(int argc, char* argv[])

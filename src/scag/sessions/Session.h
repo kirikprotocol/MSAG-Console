@@ -66,7 +66,7 @@ namespace scag { namespace sessions
             if (sync) return buff;
 
             char tmp[4];
-            sprintf(tmp,"%d",timeVal.tv_usec / 1000);
+            sprintf(tmp,"%ld",timeVal.tv_usec / 1000);
             int len = strlen(tmp);
 
             while (len < 3)

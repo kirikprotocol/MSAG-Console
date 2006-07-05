@@ -479,7 +479,7 @@ USHORT_T EINSS7_I96SccpStateInd(UCHAR_T ssn,
                                 ULONG_T lspc)
 {
   smsc_log_warn(MtSmsProcessorLogger,
-                "SccpStateInd SSN=%d STATUS=%s AFFECTED(SSN=%d,SPC=%ld) LOCAL(SPC=%ld)",
+                "SccpStateInd SSN=%d STATUS=%s AFFECTED(SSN=%d,SPC=%d) LOCAL(SPC=%d)",
                 ssn,
                 userstatus==0?"\"User in service\"":"\"User out of service\"",
                 assn,aspc,lspc);

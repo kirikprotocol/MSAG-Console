@@ -76,7 +76,6 @@ int TaskScheduler::Execute()
         }
         else
         {
-            //printf("Sleepping %ld seconds ...\n", toSleep);
             while (toSleep > 0 && !bNeedExit && !bChanged) 
             {
                 if (toSleep > SERVICE_SLEEP) {

@@ -59,7 +59,7 @@ extern "C" {
                            ULONG_T affectedSPC,
                            ULONG_T localSPC)
   {
-    __map_warn2__("Et96MapStateInd received ssn=%d user state=%d affected SSN=%d affected SPC=%ld local SPC=%ld",lssn,userState,affectedSSN,affectedSPC,localSPC);
+    __map_warn2__("Et96MapStateInd received ssn=%d user state=%d affected SSN=%d affected SPC=%d local SPC=%d",lssn,userState,affectedSSN,affectedSPC,localSPC);
     if( affectedSPC == localSPC ) {
       if( userState == 1 ) {
         if (affectedSSN == SSN && SSN_bound ) {

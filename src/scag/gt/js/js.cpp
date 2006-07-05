@@ -1426,7 +1426,7 @@ ConvertArgs(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (!ok)
         return JS_FALSE;
     fprintf(gOutFile,
-            "b %u, c %x (%c), i %ld, u %lu, j %ld\n",
+            "b %u, c %x (%c), i %d, u %u, j %d\n",
             b, c, (char)c, i, u, j);
     fprintf(gOutFile,
             "d %g, I %g, s %s, S %s, W %s, obj %s, fun %s\n"

@@ -51,7 +51,7 @@ void Decoder::decodemt(void *buf, int buflen,MtForward& msg)
   rval = ber_decode(0/*opt_codec_ctx*/, mtdef,(void **)&structure, buf, buflen);
 
   smsc_log_debug(logger,
-                 "Decoder::decodemt consumes %d/%ld and returns code %d",
+                 "Decoder::decodemt consumes %d/%d and returns code %d",
                  rval.consumed,
                  buflen,
                  rval.code
@@ -79,7 +79,7 @@ void Decoder::decode(void *buf, int buflen,Message& msg)
   if (rval.code)
   {
     smsc_log_debug(logger,
-                   "Decoder::decode fails: retcode=%d consumes %d/%ld",
+                   "Decoder::decode fails: retcode=%d consumes %d/%d",
                  rval.code,
                  rval.consumed,
                  buflen

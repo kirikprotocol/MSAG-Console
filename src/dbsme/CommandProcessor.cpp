@@ -540,7 +540,7 @@ void DataProvider::process(Command& command)
             long usecs;
             gettimeofday( &curtime, 0 );
             usecs = curtime.tv_usec < utime.tv_usec?(1000000+curtime.tv_usec)-utime.tv_usec:curtime.tv_usec-utime.tv_usec;
-            smsc_log_info(log,  "job %s processed in s=%ld us=%ld. From: '.%d.%d.%s'",
+            smsc_log_info(log,  "job %s processed in s=%ld us=%ld. From: '.%d.%d.%s'",  //64 bit safe
 			  job->getName(), curtime.tv_sec-utime.tv_sec, usecs,
 			  from.type, from.plan, from.value);
       }
@@ -551,7 +551,7 @@ void DataProvider::process(Command& command)
           long usecs;
           gettimeofday( &curtime, 0 );
           usecs = curtime.tv_usec < utime.tv_usec?(1000000+curtime.tv_usec)-utime.tv_usec:curtime.tv_usec-utime.tv_usec;
-          smsc_log_info(log,  "job %s unsuccsess in s=%ld us=%ld From: '.%d.%d.%s'",
+          smsc_log_info(log,  "job %s unsuccsess in s=%ld us=%ld From: '.%d.%d.%s'", //64 bit safe
 			job->getName(), curtime.tv_sec-utime.tv_sec, usecs,
 			from.type, from.plan, from.value);
       }

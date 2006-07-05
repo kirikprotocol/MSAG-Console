@@ -144,7 +144,7 @@ int main(char *argv, int argc)
                               (dvoid *) &size, (ub4 *) 0, (ub4) OCI_ATTR_DATA_SIZE,
                               (OCIError *) errhp));
 
-      printf("Parameter %lu: type %d size %ld\n", counter, type, size);
+      printf("Parameter %lu: type %d size %d\n", counter, type, size);
 
       check(errhp, OCIDescriptorFree((dvoid *) param, OCI_DTYPE_PARAM));
       /* increment counter and get next descriptor, if there is one */

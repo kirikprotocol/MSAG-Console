@@ -375,7 +375,6 @@ void ReschedulePduMonitor::eval(time_t time, int& attempt, time_t& diff,
 	diff = INT_MAX;
 	for (;; attempt++)
 	{
-		//__trace2__("eval(): nextTime = %ld", nextTime);
 		time_t curDiff = time - nextTime;
 		if (abs(curDiff) > abs(diff))
 		{
