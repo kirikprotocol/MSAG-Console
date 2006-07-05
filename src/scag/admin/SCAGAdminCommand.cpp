@@ -619,7 +619,7 @@ Response * CommandTraceHttpRoute::CreateResponse(scag::Scag * ScagApp)
         if(scag::transport::http::HttpTraceRouter::Instance().getTraceRoute(addr, site, path, port, traceBuff))
             result.appendValueToStringList("Http route found");
         else
-            result.appendValueToStringList("Http route NOT found");
+            result.appendValueToStringList("Http route not found");
 
         for (int i=0; i<traceBuff.size(); i++){
             result.appendValueToStringList(traceBuff[i].c_str());
