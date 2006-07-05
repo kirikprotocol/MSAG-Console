@@ -82,6 +82,11 @@ public class Constants {
                 public static final Constants TraceRouteFailed = new Constants("error.routing.tracer.TraceRouteFailed");
                 public static final Constants LoadAndCheckFailed = new Constants("error.routing.tracer.LoadAndCheckFailed");
             }
+
+            public interface options{
+                public static final Constants OPTIONS_NOT_FOUND = new Constants("error.routing.options.options_not_found");
+
+            }
         }
 
 
