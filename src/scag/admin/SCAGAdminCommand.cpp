@@ -616,15 +616,15 @@ Response * CommandTraceHttpRoute::CreateResponse(scag::Scag * ScagApp)
         if(port == 0)
             port = 80;
         vector<std::string> traceBuff;
-        /*if(scag::transport::http::HttpTraceRouter::Instance().getTraceRoute(addr, site, path, port, traceBuff))
+        if(scag::transport::http::HttpTraceRouter::Instance().getTraceRoute(addr, site, path, port, traceBuff))
             result.appendValueToStringList("Http route found");
-        else*/
+        else
             result.appendValueToStringList("Http route NOT found");
 
-/*        for (int i=0; i<traceBuff.size(); i++){
+        for (int i=0; i<traceBuff.size(); i++){
             result.appendValueToStringList(traceBuff[i].c_str());
             smsc_log_info(logger, "HttpTraceBuff[%d]: %s", i, traceBuff[i].c_str());
-        }*/
+        }
 
     } catch(Exception& e) {                                     
         char msg[1024];                                         
