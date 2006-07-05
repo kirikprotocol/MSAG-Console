@@ -98,6 +98,8 @@ namespace scag { namespace re { namespace actions
         static bool ActionContext::StrToPeriod(CheckTrafficPeriod& period, std::string& str);
 
 
+        CommandAccessor& getCommand() { return command; };
+
         bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value);
         Property* getProperty(const std::string& var);
         void abortSession();

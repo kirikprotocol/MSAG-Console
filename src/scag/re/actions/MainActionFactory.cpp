@@ -14,6 +14,7 @@
 #include "scag/bill/BillActionClose.h"
 
 #include "scag/pers/PersAction.h"
+#include "scag/transport/http/HttpCookieAction.h"
 
 #include "scag/re/actions/ActionBinOperations.h"
 #include "scag/re/actions/ActionSubstr.h"
@@ -29,6 +30,7 @@ namespace scag { namespace re { namespace actions {
 using namespace scag::re::actions;
 using namespace scag::bill;
 using namespace scag::pers;
+using namespace scag::transport::http;
 
 
 Action * MainActionFactory::CreateAction(const std::string& name) const
@@ -74,8 +76,10 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
     if (name=="send:info") return new ActionSend(ActionSend::Info);
     if (name=="send:notify") return new ActionSend(ActionSend::Notify);
 
-    if (name=="operation:bill_move_wait") return new ActionBillMoveWait();
+    if (name=="http:get-cookie") return new CookieAction(false);
+    if (name=="http:set-cookie") return new CookieAction(true);
 
+    if (name=="operation:bill_move_wait") return new ActionBillMoveWait();
 
     Action * action = 0;
 
