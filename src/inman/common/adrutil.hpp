@@ -12,9 +12,12 @@
 
 #include "inman/common/types.hpp"
 
+#define MAP_MAX_IMSI_AddressLength	8
+#define MAP_MAX_IMSI_AddressValueLength	(MAP_MAX_IMSI_AddressLength*2)
 #define MAP_MAX_ISDN_AddressLength	8
+
 #define CAP_MAX_SMS_AddressStringLength	10 //CAP-datatypes.maxSMS-AddressStringLength - 1
-#define CAP_MAX_SMS_AddressValueLength  CAP_MAX_SMS_AddressStringLength*2
+#define CAP_MAX_SMS_AddressValueLength  (CAP_MAX_SMS_AddressStringLength*2)
 #define CAP_MAX_LocationNumber_Length	8
 #define CAP_MAX_TimeAndTimezoneLength	8
 #define CAP_MAX_IMSILength		8
