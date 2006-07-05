@@ -19,14 +19,14 @@
 
 <!ELEMENT usr_place EMPTY>
 <!ATTLIST usr_place
-    type CDATA #REQUIRED
+    type CDATA (url|param|header|cookie) #REQUIRED
     name CDATA #REQUIRED
-    priority CDATA #REQUIRED
+    priority CDATA #IMPLIED
 >
 
 <!ELEMENT address_place EMPTY>
 <!ATTLIST address_place
-    type CDATA #REQUIRED
+    type CDATA (url|param|header|cookie) #REQUIRED
     name CDATA #REQUIRED
     priority CDATA #REQUIRED
 >
