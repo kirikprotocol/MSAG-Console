@@ -33,21 +33,23 @@ bool SSNSession::init(const char* own_addr, ACOID::DefinedOIDidx dialog_ac_idx,
                     const char* rmt_addr/* = NULL*/, UCHAR_T rmt_ssn/* = 0*/,
                     USHORT_T max_id/* = 2000*/, USHORT_T min_id/* = 1*/)
 {
-    TonNpiAddress   onpi, rnpi;
+    TonNpiAddress   onpi;
 
     if (!onpi.fromText(own_addr) || (onpi.numPlanInd != NUMBERING_ISDN)
         || (onpi.typeOfNumber > ToN_INTERNATIONAL))
         return false;
-    if (!rnpi.fromText(rmt_addr) || (rnpi.numPlanInd != NUMBERING_ISDN)
-        || (rnpi.typeOfNumber > ToN_INTERNATIONAL))
-        return false;
-    onpi.typeOfNumber = ToN_INTERNATIONAL;
-    rnpi.typeOfNumber = ToN_INTERNATIONAL;
-    onpi.toString(ownAdr, sizeof(ownAdr));
 
-    packSCCPAddress(&locAddr, own_addr, SSN);
+    onpi.typeOfNumber = ToN_INTERNATIONAL; //correct isdn unknown
+    onpi.toString(ownAdr, sizeof(ownAdr));
+    packSCCPAddress(&locAddr, onpi.getSignals(), SSN);
+
     if (rmt_addr) {
-        packSCCPAddress(&rmtAddr, rmt_addr, rmt_ssn);
+        TonNpiAddress   rnpi;
+        if (!rnpi.fromText(rmt_addr) || (rnpi.numPlanInd != NUMBERING_ISDN)
+            || (rnpi.typeOfNumber > ToN_INTERNATIONAL))
+            return false;
+
+        packSCCPAddress(&rmtAddr, rnpi.getSignals(), rmt_ssn);
         iType = ssnSingleRoute;
     } else if (rmt_ssn) {
         rmtAddr.addrLen = 1;
