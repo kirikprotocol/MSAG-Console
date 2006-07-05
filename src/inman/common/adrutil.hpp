@@ -19,6 +19,11 @@
 #define CAP_MAX_TimeAndTimezoneLength	8
 #define CAP_MAX_IMSILength		8
 
+#define NUMBERING_ISDN                  1
+#define ToN_INTERNATIONAL               1
+#define ToN_ALPHANUM                    5
+#define ToN_UNKNOWN                     0
+
 namespace smsc {
 namespace cvtutil {
 
