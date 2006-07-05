@@ -161,11 +161,12 @@ void BillingManagerImpl::init(BillingManagerConfig& cfg)
 
     InitConnection(cfg.BillingHost, cfg.BillingPort);
 
-    smsc_log_info(logger,"BillingManager connecting to host '%s', port %d", cfg.BillingHost.c_str(),cfg.BillingPort);
 
     #ifdef MSAG_INMAN_BILL
+    smsc_log_info(logger,"BillingManager connecting to host '%s', port %d", cfg.BillingHost.c_str(),cfg.BillingPort);
     m_Connected = Reconnect();
     #else
+    smsc_log_info(logger,"BillingManager skip connection (fake connection initialized)");
     m_Connected = true;
     #endif
 
