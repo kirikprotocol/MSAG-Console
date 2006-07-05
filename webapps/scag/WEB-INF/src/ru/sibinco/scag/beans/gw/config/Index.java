@@ -85,6 +85,10 @@ public class Index extends EditBean {
 
     protected void save() throws SCAGJspException {
         final Config gwConfig = appContext.getGwConfig();
+        Config oldConfig = null;
+        try {
+          oldConfig = (Config)gwConfig.clone();
+        } catch (CloneNotSupportedException c) {}
         final Statuses statuses = appContext.getStatuses();
         for (Iterator i = params.entrySet().iterator(); i.hasNext();) {
             Map.Entry entry = (Map.Entry) i.next();
@@ -108,40 +112,16 @@ public class Index extends EditBean {
             this.configChanged = true;
         }
 
-        try {
-            appContext.getGwConfig().save();
-            appContext.getStatuses().setConfigChanged(false);
-            started = true;
-            stopped = true;
-        } catch (Config.WrongParamTypeException e) {
-            logger.debug("Couldn't save config", e);
-            throw new SCAGJspException(Constants.errors.status.COULDNT_SAVE_CONFIG, e);
-        } catch (IOException e) {
-            logger.debug("Couldn't save config", e);
-            throw new SCAGJspException(Constants.errors.status.COULDNT_SAVE_CONFIG, e);
-        }
+        //appContext.getGwConfig().save();
+        appContext.getConfigManager().applyConfig(appContext.getScag(), oldConfig);
+        appContext.getStatuses().setConfigChanged(false);
+        started = true;
+        stopped = true;
         StatMessage message = new StatMessage(getUserName(appContext), "Configuration", "Changed configuration.");
         StatusManager.getInstance().addStatMessages(message);
         throw new DoneException();
     }
 
-    private void applyConfig() throws SCAGJspException {
-        try {
-
-            try {
-                appContext.getScag().apply("config");
-            } catch (SibincoException e) {
-                if (Proxy.STATUS_CONNECTED == appContext.getScag().getStatus()) {
-                    logger.debug("Couldn't apply config", e);
-                    throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_CONFIG, e);
-                }
-            }
-
-        } catch (SibincoException e) {
-            logger.debug("Couldn't apply config", e);
-            throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_CONFIG, e);
-        }
-    }
 
     private void stop() throws SCAGJspException {
         try {
