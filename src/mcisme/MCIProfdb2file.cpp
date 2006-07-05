@@ -122,13 +122,14 @@ int main(int argc, char** argv)
       //profile.eventMask = rs->isNull(5) ? AbonentProfiler::defaultEventMask : rs->getUint8(5);
 			printf("Process Abonent %s inform:%s notify:%s informTemplate:%d notifyTemplate:%d eventMask:%d\n", abntStr, infStr, notStr, infId, notId, eventMask);
       profile.eventMask = eventMask;
-      profile.inform = *infStr=='Y'?true:false;
-      profile.notify = *notStr=='Y'?true:false;
+      profile.inform = (*infStr=='Y')?true:false;
+      profile.notify = (*notStr=='Y')?true:false;
       if( infId == 4 ) profile.informTemplateId = 2;
       else profile.informTemplateId = 1;
       if( notId == 3 ) profile.notifyTemplateId = 2;
       else profile.notifyTemplateId = 1;
       abnt = AbntAddr(abntStr);
+			printf("Set Abonent %s inform:%d notify:%d informTemplate:%d notifyTemplate:%d eventMask:%d\n", abnt.getText().c_str(), profile.inform, profile.notify, profile.informTemplateId, profile.notifyTemplateId, profile.eventMask);
       profStorage->Set(abnt,profile);
     } 
     printf("Done\n");
