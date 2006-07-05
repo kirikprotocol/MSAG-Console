@@ -23,16 +23,28 @@ SSNSession::SSNSession(UCHAR_T ownssn, USHORT_T user_id, Logger * uselog/* = NUL
     , lastDlgId(0), ac_idx(ACOID::id_ac_NOT_AN_OID), iType(ssnMultiRoute)
     , maxId(0), minId(0)
 {
+    ownAdr[0] = 0;
     locAddr.addrLen = rmtAddr.addrLen = 0;
     if (!uselog)
         logger = Logger::getInstance("smsc.inman.inap.SSN");
 }
 
-void SSNSession::init(const char* own_addr, ACOID::DefinedOIDidx dialog_ac_idx,
+bool SSNSession::init(const char* own_addr, ACOID::DefinedOIDidx dialog_ac_idx,
                     const char* rmt_addr/* = NULL*/, UCHAR_T rmt_ssn/* = 0*/,
                     USHORT_T max_id/* = 2000*/, USHORT_T min_id/* = 1*/)
 {
-    ownAdr += own_addr;
+    TonNpiAddress   onpi, rnpi;
+
+    if (!onpi.fromText(own_addr) || (onpi.numPlanInd != NUMBERING_ISDN)
+        || (onpi.typeOfNumber > ToN_INTERNATIONAL))
+        return false;
+    if (!rnpi.fromText(rmt_addr) || (rnpi.numPlanInd != NUMBERING_ISDN)
+        || (rnpi.typeOfNumber > ToN_INTERNATIONAL))
+        return false;
+    onpi.typeOfNumber = ToN_INTERNATIONAL;
+    rnpi.typeOfNumber = ToN_INTERNATIONAL;
+    onpi.toString(ownAdr, sizeof(ownAdr));
+
     packSCCPAddress(&locAddr, own_addr, SSN);
     if (rmt_addr) {
         packSCCPAddress(&rmtAddr, rmt_addr, rmt_ssn);
@@ -45,6 +57,7 @@ void SSNSession::init(const char* own_addr, ACOID::DefinedOIDidx dialog_ac_idx,
     ac_idx = dialog_ac_idx;
     maxId = max_id;
     lastDlgId = minId = min_id;
+    return true;
 }
 
 SSNSession::~SSNSession()

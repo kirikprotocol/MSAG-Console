@@ -370,8 +370,8 @@ SSNSession* TCAPDispatcher::openSession(UCHAR_T ssn, const char* own_addr,
     SSNSession* pSession = lookUpSSN(ssn);
     if (!pSession) {
         smsc_log_error(logger, "TCAPDsp: invalid/inactive session, SSN: %u", ssn);
-    } else
-        pSession->init(own_addr, dialog_ac_idx, rmt_addr, rmt_ssn, max_id);
+    } else if (!pSession->init(own_addr, dialog_ac_idx, rmt_addr, rmt_ssn, max_id))
+        return NULL;
     return pSession;
 }
 

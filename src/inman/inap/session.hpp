@@ -26,7 +26,7 @@ public:
     typedef enum { ssnSingleRoute = 0, ssnMultiAddress, ssnMultiRoute } SSNType;
 
     SSNState    getState(void) const { return state; }
-    const char* getOwnAdr(void) const { return ownAdr.c_str(); }
+    const char* getOwnAdr(void) const { return ownAdr; }
     UCHAR_T     getRmtSSN(void) const { return !rmtAddr.addrLen ? 0 :
                                         rmtAddr.addr[(rmtAddr.addrLen > 1) ? 1 : 0];
                                       }
@@ -48,7 +48,8 @@ protected:
     ~SSNSession();
 
     void    setState(SSNState newState) { state = newState; }
-    void    init(const char* own_addr, ACOID::DefinedOIDidx dialog_ac_idx, 
+    //Returns false in case of invalid addresses
+    bool    init(const char* own_addr, ACOID::DefinedOIDidx dialog_ac_idx, 
                 const char* rmt_addr = NULL, UCHAR_T rmt_ssn = 0,
                 USHORT_T max_id = 2000, USHORT_T min_id = 1);
 
@@ -78,7 +79,8 @@ private:
     USHORT_T        userId;
     USHORT_T        maxId;
     USHORT_T        minId;
-    std::string     ownAdr;
+//    std::string     ownAdr;
+    char            ownAdr[48];
     SCCP_ADDRESS_T  locAddr;
     SCCP_ADDRESS_T  rmtAddr;
     ACOID::DefinedOIDidx  ac_idx; //default APPLICATION-CONTEXT index for dialogs, see acdefs.hpp
