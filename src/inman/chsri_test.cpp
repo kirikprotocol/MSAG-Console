@@ -48,12 +48,13 @@ extern "C" static void sighandler(int signal)
     _runService = 0;
 }
 
-
-typedef struct {
+struct AbonentInfo {
     TonNpiAddress  addr;
     char           imsi[MAP_MAX_IMSI_AddressValueLength];
     MAPSCFinfo     scf;
-} AbonentInfo;
+
+    AbonentInfo()   { imsi[0] = 0; scf.serviceKey = 0; }
+};
 
 typedef struct {
     const char *  addr;
