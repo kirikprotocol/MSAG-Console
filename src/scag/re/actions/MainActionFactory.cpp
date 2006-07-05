@@ -19,6 +19,7 @@
 #include "scag/re/actions/ActionSubstr.h"
 #include "scag/re/actions/ActionConcat.h"
 #include "scag/re/actions/ActionIndexof.h"
+#include "scag/re/actions/ActionBillMoveWait.h"
 
 
 //#include "scag/SAX2Print.hpp"
@@ -72,6 +73,9 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
     if (name=="send:warn") return new ActionSend(ActionSend::Warning);
     if (name=="send:info") return new ActionSend(ActionSend::Info);
     if (name=="send:notify") return new ActionSend(ActionSend::Notify);
+
+    if (name=="operation:bill_move_wait") return new ActionBillMoveWait();
+
 
     Action * action = 0;
 
