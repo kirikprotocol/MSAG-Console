@@ -234,7 +234,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
         smsc_log_warn(logger, "Parameter <MCISme.defaultNotify> missed. Defaul profile notify flag is off");
     }
     int defaultReasonsMask = smsc::misscall::NONE;
-    try { defaultReasonsMask = config->getBool("defaultReasonsMask"); } catch (...) { 
+    try { defaultReasonsMask = config->getInt("defaultReasonsMask"); } catch (...) { 
         defaultReasonsMask = smsc::misscall::ALL; // 0xFF;
         smsc_log_warn(logger, "Parameter <MCISme.defaultReasonsMask> missed. All masks on by default");
     }
