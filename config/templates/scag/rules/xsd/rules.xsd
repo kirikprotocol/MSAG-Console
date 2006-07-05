@@ -8,7 +8,8 @@
    xmlns:bill="http://www.sibinco.com/SCAG/BILL"
    xmlns:send="http://www.sibinco.com/SCAG/SEND"
    xmlns:profile="http://www.sibinco.com/SCAG/PROFILE"
-   xmlns:log="http://www.sibinco.com/SCAG/LOG">
+   xmlns:log="http://www.sibinco.com/SCAG/LOG"
+   xmlns:http="http://www.sibinco.com/SCAG/HTTP">
     
     <annotation>
         <documentation xml:lang="en">
@@ -24,6 +25,7 @@
     <import schemaLocation="strings.xsd"    namespace="http://www.sibinco.com/SCAG/STRINGS"/>
     <import schemaLocation="profile.xsd"    namespace="http://www.sibinco.com/SCAG/PROFILE"/>
     <import schemaLocation="log.xsd"        namespace="http://www.sibinco.com/SCAG/LOG"/>
+    <import schemaLocation="http.xsd"        namespace="http://www.sibinco.com/SCAG/HTTP"/>
         
     <!-- General values types definition  -->
     <simpleType name="Value">
@@ -73,11 +75,11 @@
     
     <simpleType name="TransportOperation">
         <restriction base="string">
-	    <enumeration value="DELIVER" />
-	    <enumeration value="SUBMIT" />
-	    <enumeration value="RECEIPT" />
-	    <enumeration value="USSD_DIALOG" />
-	    <enumeration value="HTTP_DELIVERY" />
+        <enumeration value="DELIVER" />
+        <enumeration value="SUBMIT" />
+        <enumeration value="RECEIPT" />
+        <enumeration value="USSD_DIALOG" />
+        <enumeration value="HTTP_DELIVERY" />
         </restriction>
     </simpleType>
     
@@ -101,11 +103,12 @@
         <choice>
             <group ref="session:Actions"/>
             <group ref="bill:Actions" />
-	    <group ref="send:Actions" />
+            <group ref="send:Actions" />
             <group ref="operation:Actions" />
             <group ref="strings:Actions" />
             <group ref="profile:Actions" />
             <group ref="log:Actions" />
+            <group ref="http:Actions" />
 
             <element name="set">
                 <complexType>
