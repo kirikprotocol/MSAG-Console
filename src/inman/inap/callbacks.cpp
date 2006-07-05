@@ -204,7 +204,7 @@ USHORT_T EINSS7_I97TResultNLInd(UCHAR_T          ssn,
                                 UCHAR_T          *pm)
 {
     smsc_log_debug(tcapLogger, "RESULT_NL_IND {"
-                    "  SSN: %u\n, UserID: %u, TcapInstanceID: %u\n"
+                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
                     "  Dialog[0x%X], LastComponent: %s\n"
                     "  InvokeID: 0x%X\n"
                     "  Operation: %s, Tag: %s\n"
@@ -235,7 +235,7 @@ USHORT_T EINSS7_I97TResultLInd( UCHAR_T          ssn,
                                 UCHAR_T          *pm)
 {
     smsc_log_debug(tcapLogger, "RESULT_L_IND {"
-                    "  SSN: %u\n, UserID: %u, TcapInstanceID: %u\n"
+                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
                     "  Dialog[0x%X], LastComponent: %s\n"
                     "  InvokeID: 0x%X\n"
                     "  Operation: %s, Tag: %s\n"
