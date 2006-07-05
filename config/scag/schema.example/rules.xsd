@@ -6,8 +6,10 @@
    xmlns:operation="http://www.sibinco.com/SCAG/OPERATIONS"
    xmlns:strings="http://www.sibinco.com/SCAG/STRINGS"
    xmlns:bill="http://www.sibinco.com/SCAG/BILL"
+   xmlns:send="http://www.sibinco.com/SCAG/SEND"
    xmlns:profile="http://www.sibinco.com/SCAG/PROFILE"
-   xmlns:log="http://www.sibinco.com/SCAG/LOG">
+   xmlns:log="http://www.sibinco.com/SCAG/LOG"
+   xmlns:http="http://www.sibinco.com/SCAG/HTTP">
     
     <annotation>
         <documentation xml:lang="en">
@@ -17,12 +19,14 @@
     </annotation>
    
     <import schemaLocation="bill.xsd"       namespace="http://www.sibinco.com/SCAG/BILL"/>
+    <import schemaLocation="send.xsd"       namespace="http://www.sibinco.com/SCAG/SEND"/>
     <import schemaLocation="sessions.xsd"   namespace="http://www.sibinco.com/SCAG/SESSIONS"/>
     <import schemaLocation="operations.xsd" namespace="http://www.sibinco.com/SCAG/OPERATIONS"/>
     <import schemaLocation="strings.xsd"    namespace="http://www.sibinco.com/SCAG/STRINGS"/>
     <import schemaLocation="profile.xsd"    namespace="http://www.sibinco.com/SCAG/PROFILE"/>
     <import schemaLocation="log.xsd"        namespace="http://www.sibinco.com/SCAG/LOG"/>
-    
+    <import schemaLocation="http.xsd"        namespace="http://www.sibinco.com/SCAG/HTTP"/>
+        
     <!-- General values types definition  -->
     <simpleType name="Value">
         <restriction base="string"/>
@@ -67,31 +71,44 @@
             <enumeration value="gei"/><enumeration value="lei"/>
         </restriction>
     </simpleType>
+    
+    
+    <simpleType name="TransportOperation">
+        <restriction base="string">
+        <enumeration value="DELIVER" />
+        <enumeration value="SUBMIT" />
+        <enumeration value="RECEIPT" />
+        <enumeration value="USSD_DIALOG" />
+        <enumeration value="HTTP_DELIVERY" />
+        </restriction>
+    </simpleType>
+    
+    
     <attributeGroup name="Test">
         <attribute name="test" type="scag:Named" use="required"/>
         <attribute name="op" type="scag:Operation" use="optional"/>
         <attribute name="value" type="scag:Value" use="optional"/>
     </attributeGroup>
 
-    <simpleType name="LogLevel">
+    <simpleType name="Status">
         <restriction base="string">
-            <enumeration value="debug"/>
-            <enumeration value="info"/>
-            <enumeration value="warn"/>
-            <enumeration value="error"/>
+            <enumeration value="Ok"/>
+            <enumeration value="Failed"/>
         </restriction>
     </simpleType>
 
-    
+
     <!-- General actions elements group definition  -->
     <group name="Actions">
         <choice>
-        <group ref="session:Actions"/>
-        <group ref="bill:Actions" />
-        <group ref="operation:Actions" />
-        <group ref="strings:Actions" />
-        <group ref="profile:Actions" />
-        <group ref="log:Actions" />
+            <group ref="session:Actions"/>
+            <group ref="bill:Actions" />
+            <group ref="send:Actions" />
+            <group ref="operation:Actions" />
+            <group ref="strings:Actions" />
+            <group ref="profile:Actions" />
+            <group ref="log:Actions" />
+            <group ref="http:Actions" />
 
             <element name="set">
                 <complexType>
@@ -102,7 +119,8 @@
             
             <element name="return">
                 <complexType>
-                    <attribute name="result" type="scag:Value" use="required"/>
+                    <attribute name="result" type="scag:Value" use="optional"/>
+                    <attribute name="status" type="scag:Status" use="required"/>
                 </complexType>    
             </element>
             
@@ -113,20 +131,19 @@
             <attribute name="result" type="scag:Var" use="required"/>
         </complexType>
         </element>
-
         
-            <element name="if">
-                <complexType>
-                    <choice>
-                        <sequence>
-                            <element name="then" type="scag:ActionsBranch" maxOccurs="1"/>
-                            <element name="else" type="scag:ActionsBranch" maxOccurs="1"/>
-                        </sequence>
-                        <group ref="scag:Actions" minOccurs="1" maxOccurs="unbounded"/>
-                    </choice>
-                    <attributeGroup ref="scag:Test"/>
-                </complexType>    
-            </element>
+        <element name="if">
+            <complexType>
+                <choice>
+                    <sequence>
+                        <element name="then" type="scag:ActionsBranch" maxOccurs="1"/>
+                        <element name="else" type="scag:ActionsBranch" maxOccurs="1"/>
+                    </sequence>
+                    <group ref="scag:Actions" minOccurs="1" maxOccurs="unbounded"/>
+                </choice>
+                <attributeGroup ref="scag:Test"/>
+            </complexType>    
+        </element>
             
         <element name="inc">
         <complexType>

@@ -9,5 +9,6 @@
             xmlns:send     ="http://www.sibinco.com/SCAG/SEND"
             xmlns:profile  ="http://www.sibinco.com/SCAG/PROFILE"
             xmlns:log      ="http://www.sibinco.com/SCAG/LOG"
+            xmlns:http      ="http://www.sibinco.com/SCAG/HTTP"
             transport="{1}">
 
