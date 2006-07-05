@@ -40,7 +40,7 @@ class XMLBasicHandler : public HandlerBase
     void characters(const XMLCh *const chars, const unsigned int length);
 
     void insertPlacement(PlacementArray* pa, const Placement& p);
-    Placement assignPlacement(const std::string& rid, AttributeList& attrs);
+    Placement assignPlacement(const std::string& rid, AttributeList& attrs, bool req);
 
     Logger *logger;
 

@@ -22,10 +22,9 @@ void XMLBasicHandler::characters(const XMLCh *const chars, const unsigned int le
 {
 }
 
-Placement XMLBasicHandler::assignPlacement(const std::string& rid, AttributeList& attrs)
+Placement XMLBasicHandler::assignPlacement(const std::string& rid, AttributeList& attrs, bool req)
 {
     Placement p;
-
     StrX s = attrs.getValue("type");
     if(!p.setType(s.localForm()))
         throw Exception("Invalid placement type: route id=%s, type=%s", route.id.c_str(), s.localForm());
@@ -36,12 +35,14 @@ Placement XMLBasicHandler::assignPlacement(const std::string& rid, AttributeList
     for (unsigned int i = 0; i < p.name.length(); ++i)
         p.name[i] = tolower(p.name[i]);
 
-
-    StrX s2 = attrs.getValue("priority");
-    p.prio = atoi(s2.localForm());
-    if(!p.prio)
-        throw Exception("Invalid priority: route id=%s, prio=%s", route.id.c_str(), s2.localForm());
-
+    p.prio = 0;
+    if(req)
+    {
+        StrX s2 = attrs.getValue("priority");
+        p.prio = atoi(s2.localForm());
+        if(!p.prio)
+            throw Exception("Invalid priority: route id=%s, prio=%s", route.id.c_str(), s2.localForm());
+    }
     return p;
 }
 
@@ -49,8 +50,11 @@ void XMLBasicHandler::insertPlacement(PlacementArray* pa, const Placement& p)
 {
     int i = 0;
 
-    while(i < pa->Count() && pa->operator[](i).prio < p.prio)
-        i++;
+    if(p.prio)
+    {
+        while(i < pa->Count() && pa->operator[](i).prio < p.prio)
+            i++;
+    }
 
     pa->Insert(i, p);
 }
@@ -61,7 +65,6 @@ void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
     const char *qname = XMLQName.localForm();
 
 //    smsc_log_debug(logger, "Start element %s route_id=%s", qname, route.id.c_str());
-
     if(!strcmp(qname, "options"))
         in_options = true;
     else if(!strcmp(qname, "sites"))
@@ -70,7 +73,7 @@ void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
         in_abonents = true;
     else if(route.id.length() && !strcmp(qname, "usr_place"))
     {
-        Placement p = assignPlacement(route.id, attrs);
+        Placement p = assignPlacement(route.id, attrs, !in_sites);
         PlacementArray* pa;
         if(in_abonents)
             pa = &route.inUSRPlace;
@@ -87,13 +90,13 @@ void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
     {
         if(in_options)
         {
-            Placement p = assignPlacement("", attrs);
+            Placement p = assignPlacement("", attrs, true);
             insertPlacement(addrPlace, p);
             smsc_log_debug(logger, "address_place record: [options] name=%s, type=%d, prio=%d", p.name.c_str(), p.type, p.prio);
         }
         else if(route.id.length() && in_sites)
         {
-            Placement p = assignPlacement(route.id, attrs);
+            Placement p = assignPlacement(route.id, attrs, false);
             insertPlacement(&route.outAddressPlace, p);
             smsc_log_debug(logger, "address_place record: route id=%s, name=%s, type=%d, prio=%d, count=%d", route.id.c_str(), p.name.c_str(), p.type, p.prio, route.outAddressPlace.Count());
         }
