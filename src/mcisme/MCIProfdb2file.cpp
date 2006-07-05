@@ -124,19 +124,22 @@ int main(int argc, char** argv)
       profile.eventMask = eventMask;
       profile.inform = *infStr=='Y'?true:false;
       profile.notify = *notStr=='Y'?true:false;
-      profile.informTemplateId = (uint8_t)infId;
-      profile.notifyTemplateId = (uint8_t)notId;
+      if( infId == 4 ) profile.informTemplateId = 2;
+      else profile.informTemplateId = 1;
+      if( notId == 3 ) profile.notifyTemplateId = 2;
+      else profile.notifyTemplateId = 1;
       abnt = AbntAddr(abntStr);
       profStorage->Set(abnt,profile);
     } 
+    printf("Done\n");
 	}
 	catch(...)
 	{
-		printf("Exception");
+		printf("Exception\n");
 	}
   
   //    dsStatConnection = ds->getConnection();
-  
 	ProfilesStorage::Close();
+  
   return 0;
 }
