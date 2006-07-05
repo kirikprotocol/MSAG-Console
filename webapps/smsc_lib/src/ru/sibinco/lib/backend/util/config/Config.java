@@ -436,4 +436,9 @@ public class Config implements Cloneable
         params.put(paramName, configToCopyFrom.params.get(paramName));
     }
   }
+
+  public void copyParams(final Config configToCopyFrom) {
+    params.clear();
+    params.putAll(configToCopyFrom.params);
+  }
 }

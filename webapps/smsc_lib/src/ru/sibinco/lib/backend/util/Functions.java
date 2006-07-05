@@ -158,10 +158,14 @@ public class Functions
     return newFilename;
   }
 
-  public static final void renameNewSavedFileToOriginal(File newCreatedFile, File oldFileRenameTo) throws IOException
+  public static final void renameNewSavedFileToOriginal(File newCreatedFile, File oldFileRenameTo) throws IOException {
+     renameNewSavedFileToOriginal(newCreatedFile,oldFileRenameTo,false);
+  }
+
+  public static final void renameNewSavedFileToOriginal(File newCreatedFile, File oldFileRenameTo,boolean deleteBackup) throws IOException
   {
     final String suffix = suffixDateFormat.format(new Date());
-
+    File backFile = null;
     // rename old config file to bakup file
     String oldFilename = oldFileRenameTo.getAbsolutePath();
     if (oldFileRenameTo.exists()) {
@@ -172,7 +176,7 @@ public class Functions
           backupDir = oldFileRenameTo.getParentFile();
         }
       }
-      final File backFile = Functions.createTempFilename(oldFileRenameTo.getName(), suffix, backupDir);
+      backFile = Functions.createTempFilename(oldFileRenameTo.getName(), suffix, backupDir);
       if (!new File(oldFilename).renameTo(backFile)) {
         logger.error("Couldn't rename old file \"" + oldFilename + "\" to backup file \"" + backFile.getAbsolutePath() + '"');
         throw new IOException("Couldn't rename old file \"" + oldFilename + "\" to backup file \"" + backFile.getAbsolutePath() + '"');
@@ -186,6 +190,7 @@ public class Functions
       ;
       throw new IOException("Couldn't rename new file \"" + newFilename + "\" to old file \"" + oldFilename + '"');
     }
+    if (deleteBackup) backFile.delete();
   }
 
   public static final void SavedFileToBackup(File newCreatedFile, String suffixToDelete) throws IOException
@@ -207,6 +212,14 @@ public class Functions
         logger.error("Couldn't rename old file \"" + newCreated + "\" to backup file \"" + backFile.getAbsolutePath() + '"');
         throw new IOException("Couldn't rename old file \"" + newCreated + "\" to backup file \"" + backFile.getAbsolutePath() + '"');
       }
+    }
+  }
+
+  public static final void RenameFile(File original, File destination) throws IOException {
+    String configPath = original.getAbsolutePath();
+    if (!new File(configPath).renameTo(destination)) {
+      logger.error("Couldn't rename current config file \"" + configPath + "\" to temporary file \"" + destination.getAbsolutePath() + '"');
+      throw new IOException("Couldn't rename current config file \"" + configPath + "\" to temporary file \"" + destination.getAbsolutePath() + '"');
     }
   }
 
