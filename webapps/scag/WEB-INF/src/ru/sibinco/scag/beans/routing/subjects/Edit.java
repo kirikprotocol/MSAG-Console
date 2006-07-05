@@ -92,6 +92,7 @@ public class Edit extends TabledEditBeanImpl {//EditBean {
                     final Mask mask = (Mask) i.next();
                     maskList.add(mask.getMask());
                 }
+                masks = (String[]) maskList.toArray(new String[0]);
                 maskList.clear();
 
             }
