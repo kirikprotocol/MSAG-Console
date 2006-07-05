@@ -1,5 +1,7 @@
 static char const ident[] = "$Id$";
 
+#include <assert.h>
+
 #include "inman/inap/map_chsri/DlgMapCHSRI.hpp"
 using smsc::inman::comp::chsri::CHSendRoutingInfoArg;
 
