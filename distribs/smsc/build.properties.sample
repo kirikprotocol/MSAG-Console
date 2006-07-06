@@ -1,5 +1,9 @@
 BUILD_DIR=/home/serge/build
 SMSC_DIR=/home/serge/smsc
+; for 64 bit build set B64 property to yes and put B64=YES to makeargs
+; also specify apporpriate xtarget values in makeargs like:
+; XTARGET="-g -xtarget=ultra3 -xarch=v9 -xmemalign=8i -xcode=pic32"
+B64=NO
 MAKE_ARGS=CXX=CC DEBUG=YES TRACE=YES DISABLE_SMPP_CHECKS=YES
 CATALINA_HOME=/home/serge/build/distr/tomcat
 CATALINA_BASE=/home/serge/build/distr
