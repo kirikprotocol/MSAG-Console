@@ -480,19 +480,24 @@ void HttpResponse::serialize()
 void HttpResponse::fillFakeResponse(int s)
 {
     const char *sl;
+    int len;
     
     switch (s) {
     case 405:
         sl = "Method Not Allowed";
+        len = sizeof("Method Not Allowed");
         break;
     case 500:
         sl = "Internal Server Error";
+        len = sizeof("Internal Server Error");
         break;
     case 503:
         sl = "Service Unavailable";
+        len = sizeof("Service Unavailable");
         break;  
     default:
         sl = "HTTP Transport Error";
+        len = sizeof("HTTP Transport Error");
         break;
     }
 
@@ -504,6 +509,10 @@ void HttpResponse::fillFakeResponse(int s)
             
     headerFields.Assign(StringHash());
     content.SetPos(0);
+    content.Append("<html><body><h1>", 16);
+    content.Append(sl, len);
+    content.Append("</h1></body></html>", 19);
+    setLengthField(content.GetPos());
 }
 
 bool HttpResponse::isResponse()
