@@ -64,8 +64,8 @@ bool HttpTraceRouter::getTraceRoute(const std::string& addr, const std::string& 
     sprintf(buf, ":%d", port);
     url = site + (port != 80 ? buf : "") + path;
 
-    Address adr(addr.c_str());
-    AddressURLKey k(adr.toString(), site, path, port);
+//    Address adr(addr.c_str());
+    AddressURLKey k(addr, site, path, port);
     uint8_t len;
 
     trace.push_back("");
@@ -151,8 +151,8 @@ HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& 
 {
     MutexGuard mt(GetRouteMutex);
 
-    Address adr(addr.c_str());
-    AddressURLKey k(adr.toString(), site, path, port);
+//    Address adr(addr.c_str());
+    AddressURLKey k(addr, site, path, port);
     uint8_t len;
     do{
         try{

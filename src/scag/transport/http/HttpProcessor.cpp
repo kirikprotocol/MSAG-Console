@@ -118,8 +118,8 @@ bool HttpProcessorImpl::parsePath(bool addr, const std::string &path, HttpReques
         }
 
         str.assign(pos, len);
-        Address addr(str.c_str());
-        cx.setAbonent(addr.toString());
+//        Address addr(str.c_str());
+        cx.setAbonent(str);
 
         if(*mid == '_')
         {
@@ -333,7 +333,7 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
 
         findUSR(request, r.inUSRPlace.Count() ? r.inUSRPlace : defInUSRPlaces);
 
-        CSessionKey sk = {request.getUSR(), Address(request.getAbonent().c_str())};
+        CSessionKey sk = {request.getUSR(), request.getAbonent()};
         if(!request.getUSR())
         {
             se = SessionManager::Instance().newSession(sk);
@@ -410,7 +410,7 @@ bool HttpProcessorImpl::processResponse(HttpResponse& response)
 
     SessionPtr se;
     try{
-        CSessionKey sk = {response.getUSR(), Address(response.getAbonent().c_str())};
+        CSessionKey sk = {response.getUSR(), response.getAbonent()};
         se = SessionManager::Instance().getSession(sk);
         RuleStatus rs;
 
@@ -450,7 +450,7 @@ void HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
 
     SessionPtr se;
     try{
-        CSessionKey sk = {response.getUSR(), Address(response.getAbonent().c_str())};
+        CSessionKey sk = {response.getUSR(), response.getAbonent()};
         se = SessionManager::Instance().getSession(sk);
 
         RuleStatus rs;
