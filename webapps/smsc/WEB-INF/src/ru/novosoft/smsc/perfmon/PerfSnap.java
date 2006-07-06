@@ -2,6 +2,7 @@ package ru.novosoft.smsc.perfmon;
 
 import ru.novosoft.smsc.perfmon.applet.PerfMon;
 import ru.novosoft.smsc.util.SnapBufferReader;
+import ru.novosoft.smsc.util.Support64Bit;
 
 import java.io.IOException;
 import java.util.Date;
@@ -12,8 +13,8 @@ public class PerfSnap
   public long avg[] = {0, 0, 0, 0, 0, 0};
   public long total[] = {0, 0, 0, 0, 0, 0};
 
-  public int uptime;
-  public int sctime;
+  public long uptime;
+  public long sctime;
   public int queueSize;
   public int processingSize;
   public int schedulerSize;
@@ -69,7 +70,7 @@ public class PerfSnap
     {
       StringBuffer sb = new StringBuffer(128);
       boolean include = false;
-      int days = uptime / (3600 * 24);
+      int days = (int)(uptime / (3600 * 24));
       if (days > 0) {
         sb.append(days);
         sb.append(' ');
@@ -77,7 +78,7 @@ public class PerfSnap
         sb.append(' ');
         include = true;
       }
-      int hours = (uptime - (days * 3600 * 24)) / 3600;
+      int hours = (int)((uptime - (days * 3600 * 24)) / 3600);
       if (include || hours > 0) {
         sb.append(hours);
         sb.append(' ');
@@ -85,14 +86,14 @@ public class PerfSnap
         sb.append(' ');
         include = true;
       }
-      int minutes = (uptime % 3600) / 60;
+      int minutes = (int)((uptime % 3600) / 60);
       if (include || minutes > 0) {
         sb.append(minutes);
         sb.append(' ');
         sb.append(verbDigit("uptime.minutes", minutes));
         sb.append(' ');
       }
-      int seconds = uptime % 60;
+      int seconds = (int)(uptime % 60);
       if (seconds < 10) sb.append('0');
       sb.append(seconds);
       sb.append(' ');
@@ -107,8 +108,13 @@ public class PerfSnap
   public void write(java.io.DataOutputStream out)
           throws IOException
   {
-    out.writeInt(uptime);
-    out.writeInt(sctime);
+    if( Support64Bit.enabled ) {
+      out.writeLong(uptime);
+      out.writeLong(sctime);
+    } else {
+      out.writeInt((int)uptime);
+      out.writeInt((int)sctime);
+    }
     out.writeInt(queueSize);
     out.writeInt(processingSize);
     out.writeInt(schedulerSize);
@@ -135,8 +141,13 @@ public class PerfSnap
   public void read(java.io.DataInputStream in)
           throws IOException
   {
-    uptime = in.readInt();
-    sctime = in.readInt();
+    if( Support64Bit.enabled ) {
+      uptime = in.readLong();
+      sctime = in.readLong();
+    } else {
+      uptime = in.readInt();
+      sctime = in.readInt();
+    }
     queueSize = in.readInt();
     processingSize = in.readInt();
     schedulerSize = in.readInt();
@@ -188,8 +199,13 @@ public class PerfSnap
     total[PerfSnap.IDX_RETRY] = in.readNetworkLong();
 
     queueSize = in.readNetworkInt();
-    uptime = in.readNetworkInt();
-    sctime = in.readNetworkInt();
+    if( Support64Bit.enabled ) {
+      uptime = in.readNetworkLong();
+      sctime = in.readNetworkLong();
+    } else {
+      uptime = in.readNetworkInt();
+      sctime = in.readNetworkInt();
+    }
     processingSize = in.readNetworkInt();
     schedulerSize = in.readNetworkInt();
   }
