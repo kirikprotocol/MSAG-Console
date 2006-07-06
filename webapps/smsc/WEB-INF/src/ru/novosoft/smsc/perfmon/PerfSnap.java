@@ -200,8 +200,8 @@ public class PerfSnap
 
     queueSize = in.readNetworkInt();
     if( Support64Bit.enabled ) {
-      uptime = in.readNetworkLong();
-      sctime = in.readNetworkLong();
+      uptime = in.readNetworkLongRev();
+      sctime = in.readNetworkLongRev();
     } else {
       uptime = in.readNetworkInt();
       sctime = in.readNetworkInt();

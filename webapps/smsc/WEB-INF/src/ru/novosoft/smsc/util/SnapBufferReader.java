@@ -84,6 +84,13 @@ public class SnapBufferReader
     return ((long) (i1) << 32) + (i2 & 0xFFFFFFFFL);
   }
 
+  public long readNetworkLongRev() throws IOException
+  {
+    int i1 = readNetworkInt();
+    int i2 = readNetworkInt();
+    return ((long) (i2) << 32) + (i1 & 0xFFFFFFFFL);
+  }
+
   public String readNetworkString() throws IOException
   {
     int sz = ((int) readNetworkShort()) & 0xFFFF;
