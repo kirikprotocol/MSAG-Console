@@ -27,6 +27,8 @@ enum CommandOperations
     CO_DELIVER,
     CO_SUBMIT,
     CO_RECEIPT,
+    CO_DATA_DELIVER,
+    CO_DATA_SUBMIT,
 
     //USSD
     CO_USSD_DIALOG,
@@ -44,6 +46,10 @@ enum EventHandlerType
     EH_DELIVER_SM,
     EH_DELIVER_SM_RESP,
     EH_RECEIPT,
+    EH_DATA_SUBMIT_SM,
+    EH_DATA_DELIVER_SM,
+    EH_DATA_SUBMIT_SM_RESP,
+    EH_DATA_DELIVER_SM_RESP,
 
     EH_HTTP_REQUEST,
     EH_HTTP_RESPONSE,

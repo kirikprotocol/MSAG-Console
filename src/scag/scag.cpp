@@ -482,7 +482,7 @@ void Scag::init()
   */
   //*****************************************************
 
-   /*     
+  /*      
   ////////////////////////// FOR TEST
 
   scag::sessions::CSessionKey key;
@@ -526,6 +526,12 @@ void Scag::init()
   sms1.originatingAddress = abonent;
   sms2.destinationAddress = abonent;
 
+  unsigned short shbuff[100];
+  shbuff[0] = 0x4903; 
+  shbuff[1] = 2; 
+  shbuff[2] = 12593; 
+
+  sms2.setBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS, (const char *)shbuff, 6);
 
   char buff[128];
   scag::transport::smpp::SmppCommand commandDeliver1 = scag::transport::smpp::SmppCommand::makeDeliverySm(sms1,1);
@@ -599,8 +605,8 @@ void Scag::init()
   sm.releaseSession(sessionPtr);
 
   ////////////////////////// FOR TEST 
-   */                                
-                      
+                                   
+   */                   
                                     
     //********************************************************
     //************** HttpManager initialization **************

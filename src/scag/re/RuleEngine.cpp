@@ -491,7 +491,8 @@ void RuleEngineImpl::ProcessInit(const std::string& dir)
 
     try
     {
-        XMLPlatformUtils::Initialize("ru_RU.KOI8-R");
+        //XMLPlatformUtils::Initialize("ru_RU.KOI8-R");
+        XMLPlatformUtils::Initialize();
     }
     catch (const XMLException& toCatch)
     {
