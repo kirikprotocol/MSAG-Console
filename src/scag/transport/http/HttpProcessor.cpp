@@ -333,7 +333,7 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
 
         findUSR(request, r.inUSRPlace.Count() ? r.inUSRPlace : defInUSRPlaces);
 
-        CSessionKey sk = {request.getUSR(), request.getAbonent()};
+        CSessionKey sk = {request.getUSR(), request.getAbonent().c_str()};
         if(!request.getUSR())
         {
             se = SessionManager::Instance().newSession(sk);
@@ -410,7 +410,7 @@ bool HttpProcessorImpl::processResponse(HttpResponse& response)
 
     SessionPtr se;
     try{
-        CSessionKey sk = {response.getUSR(), response.getAbonent()};
+        CSessionKey sk = {response.getUSR(), response.getAbonent().c_str()};
         se = SessionManager::Instance().getSession(sk);
         RuleStatus rs;
 
@@ -450,7 +450,7 @@ void HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
 
     SessionPtr se;
     try{
-        CSessionKey sk = {response.getUSR(), response.getAbonent()};
+        CSessionKey sk = {response.getUSR(), response.getAbonent().c_str()};
         se = SessionManager::Instance().getSession(sk);
 
         RuleStatus rs;
