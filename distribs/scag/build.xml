@@ -25,16 +25,17 @@
   <property name="TEMPL_DIR" value="${SMSC_DIR}/config/templates"/>
   <property name="WEBSRC_DIR" value="${SMSC_DIR}/webapps"/>
   <property name="JEDIT_DIR" value="${SMSC_DIR}/webapps/jedit"/>
-  <property name="WEBINF_DIR" value="${DISTR_DIR}/webapps/scag/WEB-INF"/>
-  <property name="EXPLODED_DIR" location="${BUILD_DIR}/exploded/scag"/>
+  <property name="WEBINF_DIR" value="${DISTR_DIR}/webapps/msag/WEB-INF"/>
+  <property name="EXPLODED_DIR" location="${BUILD_DIR}/exploded/msag"/>
   <property name="xmlcommon_lib" location="${JEDIT_DIR}/lib/xml-commons-resolver.jar"/>
   <property name="htmlparser_lib" location="${JEDIT_DIR}/lib/htmlparser.jar"/>
   <property name="SERVICE2HOME_PATH" value="../.."/>
   <property name="DAEMON2HOME_PATH" value=".."/>
   <target name="help">
     <echo>
-SCA Gateway build script
+MSA Gateway build script
 Targets:
+    TODO: !!!!
       rmbuild
 
     </echo>
@@ -50,13 +51,13 @@ Targets:
     <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="admin"/>
   </target>
 
-    <target name="makeweb">
-        <untar compression="gzip" src="${SMSC_DIR}/config/tomcat/tomcat5.tar.gz" dest="${DISTR_DIR}/tomcat"/>
-        <chmod perm="775">
-            <fileset dir="${DISTR_DIR}/tomcat/bin" includes="*.sh"/>
-        </chmod>
-        <ant antfile="${WEBSRC_DIR}/build-scag.xml" dir="${WEBSRC_DIR}" target="build"/>
-    </target>
+  <target name="makeweb">
+    <untar compression="gzip" src="${SMSC_DIR}/config/tomcat/tomcat5.tar.gz" dest="${DISTR_DIR}/tomcat"/>
+    <chmod perm="775">
+        <fileset dir="${DISTR_DIR}/tomcat/bin" includes="*.sh"/>
+    </chmod>
+    <ant antfile="${WEBSRC_DIR}/build-scag.xml" dir="${WEBSRC_DIR}" target="build"/>
+  </target>
 
   <target name="rmdistr">
     <delete dir="${DISTR_DIR}"/>
@@ -90,7 +91,6 @@ Targets:
     <mkdir dir="${DISTR_DIR}/services/scag/conf"/>
     <mkdir dir="${DISTR_DIR}/daemon/conf"/>
     <mkdir dir="${DISTR_DIR}/applet"/>
-
            
     <symlink resource="${SERVICE2HOME_PATH}/lib"  link="${DISTR_DIR}/services/scag"/>
     <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/scag"/>
@@ -99,11 +99,6 @@ Targets:
     <symlink resource="${SERVICE2HOME_PATH}/../conf/response.dtd"         link="${DISTR_DIR}/services/scag/conf"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/command_gw.dtd"       link="${DISTR_DIR}/services/scag/conf"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/locale_resources.dtd" link="${DISTR_DIR}/services/scag/conf"/>
-    <!--<symlink resource="${SERVICE2HOME_PATH}/../conf/routes.dtd"           link="${DISTR_DIR}/services/scag/conf"/>-->
-    <!--<symlink resource="${SERVICE2HOME_PATH}/../conf/smpp.dtd"             link="${DISTR_DIR}/services/scag/conf"/>-->
-    <!--<symlink resource="${SERVICE2HOME_PATH}/../conf/operators.dtd"        link="${DISTR_DIR}/services/scag/conf"/>-->
-    <!--<symlink resource="${SERVICE2HOME_PATH}/../conf/tariffs.dtd"          link="${DISTR_DIR}/services/scag/conf"/>-->
-    <!--<symlink resource="${SERVICE2HOME_PATH}/../conf/services.dtd"         link="${DISTR_DIR}/services/scag/conf"/>-->
 
     <symlink resource="${DAEMON2HOME_PATH}/lib"  link="${DISTR_DIR}/daemon"/>
     <symlink resource="${DAEMON2HOME_PATH}/logs" link="${DISTR_DIR}/daemon"/>
@@ -111,22 +106,16 @@ Targets:
     <symlink resource="${DAEMON2HOME_PATH}/../conf/configuration.dtd" link="${DISTR_DIR}/daemon/conf"/>
     <symlink resource="${DAEMON2HOME_PATH}/../conf/response.dtd" link="${DISTR_DIR}/daemon/conf"/>
 
-    <symlink resource="../webapps/scag/WEB-INF/classes/log4j.properties" link="${DISTR_DIR}/conf"/>
+    <symlink resource="${WEBINF_DIR}/classes/log4j.properties" link="${DISTR_DIR}/conf"/>
   </target>
 
   <target name="create_update" depends="create_distr_tree_update, makegw, makeweb">
     <copy file="${BUILD_BIN}/liblogger.so" todir="${DISTR_DIR}/lib"/>
-
-    <!--copy file="${BUILD_BIN}/scag/exc/libscag_exc.so" todir="${DISTR_DIR}/lib"/-->
-
-    <!--copy file="${BUILD_BIN}/db/exceptions/libdb_exc.so" todir="${DISTR_DIR}/lib"/-->
-    <!--copy file="${BUILD_BIN}/db/oci/libdb_oci.so" todir="${DISTR_DIR}/lib"/--><!-- G Panin Zakomital -->
-    <!--copy file="${BUILD_BIN}/libsimplebilling.so" todir="${DISTR_DIR}/lib"/-->
-    <!--copy file="${BUILD_BIN}/scag/scag" todir="${DISTR_DIR}/services/scag/bin"/-->
-    <!--chmod file="${DISTR_DIR}/services/scag/bin/scag" perm="755"/-->
-
-    <symlink resource="${BUILD_BIN}/scag/scag" link="${DISTR_DIR}/services/scag/bin/scag" overwrite="yes"/>
-    <symlink resource="${BUILD_BIN}/scag/exc/libscag_exc.so" link="${DISTR_DIR}/lib/libscag_exc.so" overwrite="yes"/>
+    <copy file="${BUILD_BIN}/scag/exc/libscag_exc.so" todir="${DISTR_DIR}/lib"/>
+    <copy file="${BUILD_BIN}/db/exceptions/libdb_exc.so" todir="${DISTR_DIR}/lib"/>
+    <copy file="${BUILD_BIN}/db/oci/libdb_oci.so" todir="${DISTR_DIR}/lib"/>
+    <copy file="${BUILD_BIN}/scag/scag" todir="${DISTR_DIR}/services/scag/bin"/>
+    <chmod file="${DISTR_DIR}/services/scag/bin/scag" perm="755"/>
 
     <copy file="${BUILD_BIN}/admin/daemon/smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>
     <chmod file="${DISTR_DIR}/daemon/bin/smsc_ssdaemon" perm="755"/>
@@ -157,7 +146,7 @@ Targets:
       </fileset>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
-    <copy todir="${DISTR_DIR}/webapps/scag/WEB-INF/classes/" file="${TEMPL_DIR}/log4j.properties" flatten="yes" >
+    <copy todir="${WEBINF_DIR}/classes/" file="${TEMPL_DIR}/log4j.properties" flatten="yes" >
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
     <copy todir="${DISTR_DIR}" flatten="yes">
@@ -174,7 +163,7 @@ Targets:
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
 
-    <copy tofile="${DISTR_DIR}/webapps/scag/WEB-INF/web.xml" file="${TEMPL_DIR}/scag/web.xml">
+    <copy tofile="${WEBINF_DIR}/web.xml" file="${TEMPL_DIR}/scag/web.xml">
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
 
@@ -183,21 +172,16 @@ Targets:
                <include name="scag/rules/*"/>
       </fileset>
     </copy>
-
     <copy todir="${DISTR_DIR}/services/scag/conf/rules/xsd" flatten="yes" >
       <fileset dir="${TEMPL_DIR}">
                <include name="scag/rules/xsd/*"/>
       </fileset>
     </copy>
-
     <copy todir="${DISTR_DIR}/services/scag/conf/rules/xsl" flatten="yes" >
       <fileset dir="${TEMPL_DIR}">
                <include name="scag/rules/xsl/*"/>
       </fileset>
     </copy>
-    <!--<symlink resource="../services/scag/conf/rules" link="${DISTR_DIR}/conf" />-->
-
-
 
     <!-- daemon configuration-->
     <copy tofile="${DISTR_DIR}/daemon/logger.properties" file="${TEMPL_DIR}/logger/daemon.logger">
@@ -228,13 +212,14 @@ Targets:
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
 
-      <!-- turn scripts be executable -->
+    <!-- turn scripts be executable -->
     <chmod perm="755">
       <fileset dir="${DISTR_DIR}" includes="**/*.sh"/>
     </chmod>
-      <mkdir dir="${session.location}" description="create sessions dir"/>
-      <mkdir dir="${stat.dir}" description="create statistics dir"/>
-      <mkdir dir="${stat.traffic_dir}" description="create traffic dir"/>
+    <mkdir dir="${session.location}" description="create sessions dir"/>
+    <mkdir dir="${pers.dir}" description="create personalization storage dir"/>
+    <mkdir dir="${stat.dir}" description="create statistics dir"/>
+    <mkdir dir="${stat.traffic_dir}" description="create traffic dir"/>
   </target>
 
   <target name="extra_libs" depends="">
@@ -250,24 +235,21 @@ Targets:
       <fileset dir="${DISTR_DIR}/lib" includes="*"/>
     </chmod>
   </target>
- <target name="compile" >
-     <copy todir="${DISTR_DIR}/applet">
-       <fileset dir="${WEBSRC_DIR}/jedit/dirs" includes="**/*"/>
-     </copy>
-   <mkdir dir="${JEDIT_DIR}/build"/>
+  
+  <target name="compile" >
+    <copy todir="${DISTR_DIR}/applet">
+      <fileset dir="${WEBSRC_DIR}/jedit/dirs" includes="**/*"/>
+    </copy>
+    <mkdir dir="${JEDIT_DIR}/build"/>
     <unjar src="${htmlparser_lib}" dest="${JEDIT_DIR}/build"/>
-    <javac
-             srcdir="${JEDIT_DIR}/src"
+    <javac   srcdir="${JEDIT_DIR}/src"
              destdir="${JEDIT_DIR}/build"
              deprecation="on"
              includeJavaRuntime="no"
-             debug="yes"
-             encoding="UTF8"
-             source="1.4"
-             target="1.4"
-             classpath="${JEDIT_DIR}/build"
-
-             >
+             debug="yes"  encoding="UTF8"
+             source="1.4" target="1.4"
+             classpath="${JEDIT_DIR}/build" 
+	     >
              <include name="bsh/**/*.java"/>
              <include name="com/microstar/xml/*.java"/>
              <include name="errorlist/*.java"/>
@@ -277,9 +259,9 @@ Targets:
              <include name="sidekick/*.java"/>
              <include name="xml/**/*.java"/>
      </javac>
- </target>
+  </target>
 
-<target name="distjedit" depends="compile" description="Compile and package jEdit.">
+  <target name="distjedit" depends="compile" description="Compile and package jEdit.">
     <jar
     jarfile="${JEDIT_DIR}/build/jedit.jar"
     manifest="${JEDIT_DIR}/src/org/gjt/sp/jedit/jedit.manifest"
@@ -350,7 +332,6 @@ Targets:
     </jar>
 
     <!--delete file="${JEDIT_DIR}/src/.keystore"/>
-
     <genkey alias="msag" storepass="password" keystore="${JEDIT_DIR}/src/.keystore">
      <dname>
       <param name="CN" value="somebody"/>
@@ -361,8 +342,7 @@ Targets:
     </genkey-->
 
     <signjar jar="${JEDIT_DIR}/build/jedit.jar" alias="msag" storepass="password" keystore="${JEDIT_DIR}/src/.keystore"/>
-
-</target>
+  </target>
 																																																																																																		
   <target  name="applet" depends="distjedit">
 	 <copy todir="${DISTR_DIR}/webapps/scag/rules/rules" preservelastmodified="yes">
@@ -378,16 +358,7 @@ Targets:
 
   <target name="distr" depends="create_distr, extra_libs, configure">
     <ant antfile="${WEBSRC_DIR}/build-scag.xml" dir="${WEBSRC_DIR}" target="install"/>
-      <antcall target="web_context_dir"/>
   </target>
-
-    <target name="web_context_dir" description="Moving files to given new web directory">
-        <mkdir dir="${DISTR_DIR}/webapps/msag"/>
-        <copy todir="${DISTR_DIR}/webapps/msag">
-            <fileset dir="${DISTR_DIR}/webapps/scag"/>
-        </copy>
-	<delete dir="${DISTR_DIR}/webapps/scag"/>
-    </target>
 
   <target name="notomcat" description="removes tomcat distrib from update. Use before tar">
     <delete>

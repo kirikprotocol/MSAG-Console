@@ -2,8 +2,8 @@
   <property file="../build.properties"/>
   <property environment="env"/>
   <property name="java_src" location="${basedir}/WEB-INF/src"/>
-  <property name="java_out" location="${BUILD_DIR}/classes/scag"/>
-  <property name="exploded" location="${BUILD_DIR}/exploded/scag"/>
+  <property name="java_out" location="${BUILD_DIR}/classes/msag"/>
+  <property name="exploded" location="${BUILD_DIR}/exploded/msag"/>
   <property name="java_lib" location="${exploded}/WEB-INF/lib"/>
   <property name="perfmon_path" value="ru/sibinco/scag/perfmon"/>
   <property name="perfmon_src" location="${java_src}/${perfmon_path}"/>
@@ -104,19 +104,19 @@
   </target>
 
   <target name="install" depends="build" description="installs the webapp">
-    <copy todir="${CATALINA_BASE}/webapps/scag" preservelastmodified="yes">
+    <copy todir="${CATALINA_BASE}/webapps/msag" preservelastmodified="yes">
       <fileset dir="${exploded}"/>
     </copy>
   </target>
 
   <target name="update" depends="build" description="update existing installation">
-    <copy todir="${CATALINA_BASE}/webapps/scag" preservelastmodified="yes">
+    <copy todir="${CATALINA_BASE}/webapps/msag" preservelastmodified="yes">
       <fileset dir="${exploded}" excludes="WEB-INF/config.xml WEB-INF/users.xml" />
     </copy>
-    <copy todir="${CATALINA_BASE}/webapps/scag" preservelastmodified="yes">
+    <copy todir="${CATALINA_BASE}/webapps/msag" preservelastmodified="yes">
       <fileset dir="${exploded}" excludes="WEB-INF/services.xml WEB-INF/services.xml" />
     </copy>
-    <copy todir="${CATALINA_BASE}/webapps/scag" preservelastmodified="yes">
+    <copy todir="${CATALINA_BASE}/webapps/msag" preservelastmodified="yes">
       <fileset dir="${exploded}" excludes="WEB-INF/ids.xml WEB-INF/ids.xml" />
     </copy>
   </target>
