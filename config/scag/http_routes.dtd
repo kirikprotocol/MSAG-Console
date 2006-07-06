@@ -9,7 +9,7 @@
     enabled (true|false) #IMPLIED
 >
 
-<!ELEMENT options (placement)>
+<!ELEMENT options (abonents, sites)>
 
 <!ELEMENT abonents (address|subject|placement)*>
 

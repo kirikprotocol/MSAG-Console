@@ -5,14 +5,39 @@
 <http_routes>
 
     <options>
-        <placement>
-            <address_place type="cookie" name="User-Identity-Forward-msisdn" priority="1"/>
-            <address_place type="header" name="WHOISD-ADDRESS" priority="2"/>
-            <address_place type="cookie" name="WHOISD-ADDRESS" priority="3"/>
-            <address_place type="cookie" name="User-Identity-MMC-preserved-msisdn" priority="4"/>
-            <address_place type="url" name="" priority="5"/>
-            <address_place type="param" name="abonent" priority="6"/>
-        </placement>
+        <abonents>
+            <placement>
+                <address_place type="cookie" name="User-Identity-Forward-msisdn" priority="1"/>
+                <address_place type="header" name="WHOISD-ADDRESS" priority="2"/>
+                <address_place type="cookie" name="WHOISD-ADDRESS" priority="3"/>
+                <address_place type="cookie" name="User-Identity-MMC-preserved-msisdn" priority="4"/>
+                <address_place type="url" name="" priority="5"/>
+                <address_place type="param" name="abonent" priority="6"/>
+
+                <usr_place type="url" name="usr"/>
+                <usr_place type="cookie" name="WHOISD-USR"/>
+                <usr_place type="header" name="WHOISD-USR"/>
+                <usr_place type="param" name="usr"/>
+
+            </placement>
+        </abonents>
+
+        <sites>
+            <placement>
+                <usr_place type="url" name="usr"/>
+                <usr_place type="cookie" name="WHOISD-USR"/>
+                <usr_place type="header" name="WHOISD-USR"/>
+                <usr_place type="param" name="usr"/>
+
+                <address_place type="cookie" name="User-Identity-Forward-msisdn"/>
+                <address_place type="header" name="WHOISD-ADDRESS"/>
+                <address_place type="cookie" name="User-Identity-MMC-preserved-msisdn"/>
+                <address_place type="url" name="abonent"/> 
+                <address_place type="param" name="address"/>
+                <address_place type="param" name="address"/>
+            </placement>
+        </sites>
+
     </options>
 
     <subject_def id="MTS_numbers">
@@ -38,12 +63,12 @@
             <address value="+7903???????"/>
             <address value="+79039126430"/>
 
-            <placement>
+<!--            <placement>
                 <usr_place type="url" name="usr" priority="1"/>
                 <usr_place type="cookie" name="WHOISD-USR" priority="2"/>
                 <usr_place type="header" name="WHOISD-USR" priority="3"/>
                 <usr_place type="param" name="usr" priority="4"/>
-            </placement>
+            </placement> -->
 
         </abonents>
 
@@ -62,7 +87,7 @@
                 <path value="/"/>
             </site>
 
-            <placement>
+<!--            <placement>
                 <usr_place type="url" name="usr"/>
                 <usr_place type="cookie" name="WHOISD-USR"/>
                 <usr_place type="header" name="WHOISD-USR"/>
@@ -74,7 +99,7 @@
                 <address_place type="url" name="abonent"/> 
                 <address_place type="param" name="address"/>
                 <address_place type="param" name="address"/>
-            </placement>
+            </placement> -->
         </sites>
     </route>
 
