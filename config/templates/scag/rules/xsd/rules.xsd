@@ -75,11 +75,22 @@
     
     <simpleType name="TransportOperation">
         <restriction base="string">
+<<<<<<< rules.xsd
+	    <enumeration value="DELIVER" />
+	    <enumeration value="SUBMIT" />
+	    <enumeration value="RECEIPT" />
+	    <enumeration value="USSD_DIALOG" />
+	    <enumeration value="HTTP_DELIVERY" />
+	    <enumeration value="DATA_DELIVER" />
+	    <enumeration value="DATA_SUBMIT" />
+	    
+=======
         <enumeration value="DELIVER" />
         <enumeration value="SUBMIT" />
         <enumeration value="RECEIPT" />
         <enumeration value="USSD_DIALOG" />
         <enumeration value="HTTP_DELIVERY" />
+>>>>>>> 1.24
         </restriction>
     </simpleType>
     
