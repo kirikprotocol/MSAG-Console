@@ -33,7 +33,10 @@ class XMLBasicHandler : public HandlerBase
     std::string site_subj_id;
     RouteArray* routes;
     HttpRouteInt route;
-    PlacementArray* addrPlace;
+    PlacementArray* inAddrPlace;
+    PlacementArray* outAddrPlace;
+    PlacementArray* inUSRPlace;
+    PlacementArray* outUSRPlace;
     bool route_enabled;
     bool in_sites, in_abonents, in_options;
 
@@ -45,7 +48,7 @@ class XMLBasicHandler : public HandlerBase
     Logger *logger;
 
 public:
-    XMLBasicHandler(RouteArray*, PlacementArray*);
+    XMLBasicHandler(RouteArray*, PlacementArray*, PlacementArray*, PlacementArray*, PlacementArray*);
     ~XMLBasicHandler() {};
 
     void startElement(const XMLCh* const qname, AttributeList& attributes);

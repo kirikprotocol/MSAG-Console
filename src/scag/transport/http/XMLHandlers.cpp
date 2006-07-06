@@ -10,12 +10,15 @@ namespace scag { namespace transport { namespace http {
 
 using namespace smsc::util;
 
-XMLBasicHandler::XMLBasicHandler(RouteArray* r, PlacementArray* ap)
+XMLBasicHandler::XMLBasicHandler(RouteArray* r, PlacementArray* inap, PlacementArray* outap,PlacementArray* inup,PlacementArray* outup)
 {
     logger = Logger::getInstance("httpxml");
     routes = r;
     in_options = in_sites = in_abonents = false;
-    addrPlace = ap;
+    inAddrPlace = inap;
+    outAddrPlace = outap;
+    inUSRPlace = inup;
+    outUSRPlace = outup;
 }
 
 void XMLBasicHandler::characters(const XMLCh *const chars, const unsigned int length) 
@@ -38,10 +41,14 @@ Placement XMLBasicHandler::assignPlacement(const std::string& rid, AttributeList
     p.prio = 0;
     if(req)
     {
-        StrX s2 = attrs.getValue("priority");
-        p.prio = atoi(s2.localForm());
+        const XMLCh* c = attrs.getValue("priority");
+        if(c != NULL)
+        {
+            StrX s2 = attrs.getValue("priority");
+            p.prio = atoi(s2.localForm());
+        }
         if(!p.prio)
-            throw Exception("Invalid priority: route id=%s, prio=%s", route.id.c_str(), s2.localForm());
+            throw Exception("Priority is required: route id=%s", route.id.c_str());
     }
     return p;
 }
@@ -71,34 +78,50 @@ void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
         in_sites = true;
     else if(!strcmp(qname, "abonents"))
         in_abonents = true;
-    else if(route.id.length() && !strcmp(qname, "usr_place"))
+    else if(!strcmp(qname, "usr_place"))
     {
-        Placement p = assignPlacement(route.id, attrs, !in_sites);
-        PlacementArray* pa;
-        if(in_abonents)
-            pa = &route.inUSRPlace;
-        else if(in_sites)
-            pa = &route.outUSRPlace;
-        else
-            throw Exception("Invalid XML usr_place record: route id=%s, name=%s, type=%d, prio=%d", route.id.c_str(), p.name.c_str(), p.type, p.prio);
+        if(in_options)
+        {
+            Placement p = assignPlacement("", attrs, in_abonents);
+            if(in_abonents)
+                insertPlacement(inUSRPlace, p);
+            else if(in_sites)
+                insertPlacement(outUSRPlace, p);
+            smsc_log_debug(logger, "usr_place record: [options] name=%s, type=%d, prio=%d", p.name.c_str(), p.type, p.prio);
+        }
+        else if(route.id.length())
+        {
+            Placement p = assignPlacement(route.id, attrs, in_abonents);
 
-        insertPlacement(pa, p);
-            
-        smsc_log_debug(logger, "usr_place record: route id=%s, name=%s, type=%d, prio=%d, count=%d", route.id.c_str(), p.name.c_str(), p.type, p.prio, pa->Count());
+            if(in_abonents)
+                insertPlacement(&route.inUSRPlace, p);
+            else if(in_sites)
+                insertPlacement(&route.outUSRPlace, p);
+
+            smsc_log_debug(logger, "usr_place record: route id=%s, name=%s, type=%d, prio=%d", route.id.c_str(), p.name.c_str(), p.type, p.prio);
+        }
+        else
+            throw Exception("Invalid XML usr_place record: No route id");
+
     }
     else if(!strcmp(qname, "address_place"))
     {
         if(in_options)
         {
-            Placement p = assignPlacement("", attrs, true);
-            insertPlacement(addrPlace, p);
+            Placement p = assignPlacement("", attrs, in_abonents);
+
+            if(in_abonents)
+                insertPlacement(inAddrPlace, p);
+            else if(in_sites)
+                insertPlacement(outAddrPlace, p);
+
             smsc_log_debug(logger, "address_place record: [options] name=%s, type=%d, prio=%d", p.name.c_str(), p.type, p.prio);
         }
         else if(route.id.length() && in_sites)
         {
             Placement p = assignPlacement(route.id, attrs, false);
             insertPlacement(&route.outAddressPlace, p);
-            smsc_log_debug(logger, "address_place record: route id=%s, name=%s, type=%d, prio=%d, count=%d", route.id.c_str(), p.name.c_str(), p.type, p.prio, route.outAddressPlace.Count());
+            smsc_log_debug(logger, "address_place record: route id=%s, name=%s, type=%d, prio=%d", route.id.c_str(), p.name.c_str(), p.type, p.prio);
         }
         else
             throw Exception("Invalid XML address_place record: No route id or not in sites");

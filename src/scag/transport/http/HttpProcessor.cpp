@@ -28,10 +28,14 @@ class HttpProcessorImpl : public HttpProcessor
         void init(const std::string& cfg);
         virtual ~HttpProcessorImpl() {}
     protected:
-        PlacementArray defAddrPlaces;
+        PlacementArray defInAddrPlaces;
+        PlacementArray defOutAddrPlaces;
+        PlacementArray defInUSRPlaces;
+        PlacementArray defOutUSRPlaces;
+
         smsc::logger::Logger* logger;
         HttpRouterImpl router;
-        bool addrInURL;
+        bool addrInURL, USRInURL;
 
 //        bool findPlace(std::string& rs, const PlacementArray& places, HttpRequest& request);
         bool findPlace(const char* wh, std::string& rs, const PlacementArray& places, HttpRequest& request);
@@ -114,9 +118,6 @@ bool HttpProcessorImpl::parsePath(bool addr, const std::string &path, HttpReques
         }
 
         str.assign(pos, len);
-        if(str[0] != '+')
-            str = '+' + str;
-
         Address addr(str.c_str());
         cx.setAbonent(addr.toString());
 
@@ -223,9 +224,6 @@ bool HttpProcessorImpl::findPlace(const char* wh, std::string& rs, const Placeme
 
 bool HttpProcessorImpl::findAddress(HttpRequest& request, const PlacementArray& places)
 {
-    if(request.getAbonent().length())
-        return true;
-
     std::string s = request.getAbonent();
     if(findPlace("ADDRESS", s, places, request))
     {
@@ -240,12 +238,11 @@ bool HttpProcessorImpl::findUSR(HttpRequest& request, const PlacementArray& plac
     std::string s;
 
     if(request.getUSR())
-        return true;
-/*    {
+    {
         char buf[20];
         buf[19] = 0;
         s = lltostr(request.getUSR(), buf + 19);
-    }*/
+    }
 
     uint16_t i;
 
@@ -317,7 +314,7 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
             return false;
         }
 
-        if(!findAddress(request, defAddrPlaces))
+        if(!findAddress(request, defInAddrPlaces))
         {
             registerEvent(scag::stat::events::http::REQUEST_FAILED, request);
             smsc_log_debug( logger, "http_request address not found %s", request.getSitePath().c_str());
@@ -334,7 +331,7 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
         request.setRouteId(r.id);
         request.setProviderId(r.provider_id);
 
-        findUSR(request, r.inUSRPlace);
+        findUSR(request, r.inUSRPlace.Count() ? r.inUSRPlace : defInUSRPlaces);
 
         CSessionKey sk = {request.getUSR(), Address(request.getAbonent().c_str())};
         if(!request.getUSR())
@@ -363,11 +360,11 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
                 registerEvent(scag::stat::events::http::REQUEST_OK, request);
                 SessionManager::Instance().releaseSession(se);
 
-                bool a = setAbonent(request, r.outAddressPlace);
-                bool u = setUSR(request, r.outUSRPlace);
+                bool a = setAbonent(request, r.outAddressPlace.Count() ? r.outAddressPlace : defOutAddrPlaces);
+                bool u = setUSR(request, r.outUSRPlace.Count() ? r.outUSRPlace : defOutUSRPlaces);
                 std::string h;
 
-/*                if(a || u)
+                if(a || u)
                 {
                     if(request.getSiteFileName().length())
                         h += '/';
@@ -380,18 +377,6 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
                         h += '_';
                         h += lltostr(request.getUSR(), buf + 19);
                     }
-                    if(h.length())
-                        request.setSiteFileName(request.getSiteFileName() + h);
-                }*/
-                if(addrInURL)
-                {
-                    if(request.getSiteFileName().length())
-                        h += '/';
-                        h += request.getAbonent();
-                        char buf[20];
-                        buf[19] = 0;
-                        h += '_';
-                        h += lltostr(request.getUSR(), buf + 19);
                     if(h.length())
                         request.setSiteFileName(request.getSiteFileName() + h);
                 }
@@ -501,8 +486,6 @@ void HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
         
 void HttpProcessorImpl::init(const std::string& cfg)
 {
-    addrInURL = false;
-    addrInURL = true;
     logger = Logger::getInstance("httpProc");
     router.init(cfg + "/http_routes.xml");
     ReloadRoutes();
@@ -511,14 +494,23 @@ void HttpProcessorImpl::init(const std::string& cfg)
 void HttpProcessorImpl::ReloadRoutes()
 {
     router.ReloadRoutes();
-    defAddrPlaces = router.getDefaultAddressPlacement();
+
+    router.getDefaultInAddressPlacement(defInAddrPlaces);
+    router.getDefaultInUSRPlacement(defInUSRPlaces);
+    router.getDefaultOutAddressPlacement(defOutAddrPlaces);
+    router.getDefaultOutUSRPlacement(defOutUSRPlaces);
 
     int i = 0;
-    while(i < defAddrPlaces.Count() && defAddrPlaces[i].type != PlacementType::URL)
+    while(i < defInAddrPlaces.Count() && defInAddrPlaces[i].type != PlacementType::URL)
         i++;
 
-    addrInURL = i < defAddrPlaces.Count();
-    addrInURL = true;
+    addrInURL = i < defInAddrPlaces.Count();
+
+    i = 0;
+    while(i < defInUSRPlaces.Count() && defInUSRPlaces[i].type != PlacementType::URL)
+        i++;
+
+    USRInURL = i < defInUSRPlaces.Count();
 }
 
 void HttpProcessorImpl::registerEvent(int event, HttpRequest& cmd)

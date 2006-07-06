@@ -51,7 +51,10 @@ protected:
     RouteArray* routes;
     RouteHash* routeIdMap;
     AddressURLHash* AddressURLMap;
-    PlacementArray* defAddressPlace;
+    PlacementArray* defInAddressPlace;
+    PlacementArray* defInUSRPlace;
+    PlacementArray* defOutAddressPlace;
+    PlacementArray* defOutUSRPlace;
 
     smsc::logger::Logger *logger;
 
@@ -64,7 +67,11 @@ public:
 
     HttpRoute findRoute(const std::string& addr, const std::string& site, const std::string& path, uint32_t port);
     HttpRoute getRoute(const std::string& routeId);
-    PlacementArray getDefaultAddressPlacement();
+
+    void getDefaultInAddressPlacement(PlacementArray& r) { r = *defInAddressPlace; };
+    void getDefaultOutAddressPlacement(PlacementArray& r) { r = *defOutAddressPlace; };
+    void getDefaultInUSRPlacement(PlacementArray& r) { r = *defInUSRPlace; };
+    void getDefaultOutUSRPlacement(PlacementArray& r) { r = *defOutUSRPlace; };
 
     void ReloadRoutes();
 

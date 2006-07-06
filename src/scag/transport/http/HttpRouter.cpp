@@ -122,7 +122,10 @@ HttpRouterImpl::HttpRouterImpl()
     routes = NULL;
     routeIdMap = NULL;
     AddressURLMap = NULL;
-    defAddressPlace = NULL;
+    defInAddressPlace = NULL;
+    defOutAddressPlace = NULL;
+    defInUSRPlace = NULL;
+    defOutUSRPlace = NULL;
     XMLPlatformUtils::Initialize("en_EN.UTF-8");
 }
 
@@ -131,7 +134,10 @@ HttpRouterImpl::~HttpRouterImpl()
     delete routes;
     delete routeIdMap;
     delete AddressURLMap;
-    delete defAddressPlace;
+    delete defInAddressPlace;
+    delete defOutAddressPlace;
+    delete defInUSRPlace;
+    delete defOutUSRPlace;
 
     XMLPlatformUtils::Terminate();
 }
@@ -141,11 +147,6 @@ void HttpRouterImpl::init(const std::string& cfg)
     route_cfg_file = cfg;
 }
                                                                         
-PlacementArray HttpRouterImpl::getDefaultAddressPlacement()
-{
-    return *defAddressPlace;
-}
-
 HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& site, const std::string& path, uint32_t port)
 {
     MutexGuard mt(GetRouteMutex);
@@ -217,22 +218,31 @@ void HttpRouterImpl::ReloadRoutes()
     RouteArray* r = new RouteArray;
     RouteHash* h = new RouteHash;
     AddressURLHash* auh = new AddressURLHash;
-    PlacementArray* ap = new PlacementArray;
+    PlacementArray* inap = new PlacementArray;
+    PlacementArray* outap = new PlacementArray;
+    PlacementArray* inup = new PlacementArray;
+    PlacementArray* outup = new PlacementArray;
 
     try{
 
-        XMLBasicHandler handler(r, ap);
+        XMLBasicHandler handler(r, inap, outap, inup, outup);
         ParseFile(route_cfg_file.c_str(), &handler);
         BuildMaps(r, h, auh);
         MutexGuard mg(GetRouteMutex);
         delete routes;
         delete routeIdMap;
         delete AddressURLMap;
-        delete defAddressPlace;
+        delete defInAddressPlace;
+        delete defOutAddressPlace;
+        delete defInUSRPlace;
+        delete defOutUSRPlace;
         routes = r;
         routeIdMap = h;
         AddressURLMap = auh;
-        defAddressPlace = ap;
+        defInAddressPlace = inap;
+        defOutAddressPlace = outap;
+        defInUSRPlace = inup;
+        defOutUSRPlace = outup;
     }
     catch(Exception& e)
     {
@@ -240,7 +250,10 @@ void HttpRouterImpl::ReloadRoutes()
         delete r;
         delete h;
         delete auh;
-        delete ap;
+        delete inap;
+        delete outap;
+        delete inup;
+        delete outup;
         throw e; 
     }
 
