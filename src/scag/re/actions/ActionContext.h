@@ -46,8 +46,9 @@ namespace scag { namespace re { namespace actions
         int providerId;
         int operatorId;
         uint8_t commandId;
+        CommandOperations cmdType;
 
-        CommandProperty(SCAGCommand& command, int commandStatus, Address& addr, int ProviderId, int OperatorId);
+        CommandProperty(SCAGCommand& command, int commandStatus, Address& addr, int ProviderId, int OperatorId, CommandOperations CmdType);
     };
 
 

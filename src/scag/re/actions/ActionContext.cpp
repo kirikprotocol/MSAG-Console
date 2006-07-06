@@ -10,9 +10,10 @@ namespace scag { namespace re { namespace actions
     using namespace scag::exceptions;
 
 
-CommandProperty::CommandProperty(SCAGCommand& command, int commandStatus, Address& addr, int ProviderId, int OperatorId)
+CommandProperty::CommandProperty(SCAGCommand& command, int commandStatus, Address& addr, int ProviderId, int OperatorId, CommandOperations CmdType)
     : abonentAddr(addr)
 {
+    cmdType = CmdType;
     serviceId = command.getServiceId();
     protocol = CommandBrige::getProtocolForEvent(command);
 
@@ -188,6 +189,7 @@ bool ActionContext::checkIfCanSetPending(int operationType, int eventHandlerType
         DELIVER_SM:          SUBMIT, USSD_DIALOG
         RECEIPT_DELIVER_SM:  SUBMIT, USSD_DIALOG
         USSD DELIVER_SM:     SUBMIT
+        USSD SUBMIT_SM:      SUBMIT
         */
 
         if (commandProperty.commandId == DELIVERY)
@@ -197,7 +199,13 @@ bool ActionContext::checkIfCanSetPending(int operationType, int eventHandlerType
             if ((operationType == CO_USSD_DIALOG)&&
                ((eventHandlerType == EH_RECEIPT)||(eventHandlerType == EH_DELIVER_SM))) result = true;
         } 
-        
+
+        if ((commandProperty.commandId == SUBMIT)&&(commandProperty.cmdType == CO_USSD_DIALOG)&&(operationType == CO_SUBMIT)) 
+            result = true;
+
+        if ((commandProperty.commandId == SUBMIT)&&(!commandProperty.cmdType != CO_USSD_DIALOG)&&(operationType == CO_HTTP_DELIVERY)) 
+            result = true;
+
         break;
 
     case HTTP:

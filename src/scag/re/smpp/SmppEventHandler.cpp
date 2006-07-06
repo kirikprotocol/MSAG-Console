@@ -186,6 +186,7 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     Infrastructure& istr = BillingManager::Instance().getInfrastructure();
 
     Address& abonentAddr = CommandBrige::getAbonentAddr(*smppcommand);
+    CSmppDiscriptor smppDiscriptor = CommandBrige::getSmppDiscriptor(*smppcommand);
 
 
     int operatorId = istr.GetOperatorID(abonentAddr);
@@ -197,7 +198,7 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
         throw SCAGException("SmppEventHandler: Cannot find ProviderID for ServiceID=%d", command.getServiceId());
      
   
-    CommandProperty commandProperty(command, (*smppcommand)->status, abonentAddr, providerId, operatorId);
+    CommandProperty commandProperty(command, (*smppcommand)->status, abonentAddr, providerId, operatorId, smppDiscriptor.cmdType);
 
     std::string message = CommandBrige::getMessageBody(*smppcommand);
 
@@ -205,7 +206,7 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     
     /////////////////////////////////////////
 
-    CSmppDiscriptor smppDiscriptor = CommandBrige::getSmppDiscriptor(*smppcommand);
+    
     
 
     try {
@@ -242,6 +243,13 @@ int SmppEventHandler::StrToHandlerId(const std::string& str)
     if (str == "deliver_sm")            return EH_DELIVER_SM;
     if (str == "deliver_sm_resp")       return EH_DELIVER_SM_RESP;
     if (str == "receipt")               return EH_RECEIPT;
+
+    if (str == "data_submit_sm")        return EH_DATA_SUBMIT_SM;
+    if (str == "data_submit_sm_resp")   return EH_DATA_SUBMIT_SM_RESP;
+    if (str == "data_deliver_sm")       return EH_DATA_DELIVER_SM;
+    if (str == "data_deliver_sm_resp")  return EH_DATA_DELIVER_SM_RESP;
+
+
     return UNKNOWN; 
 }
 

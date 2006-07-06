@@ -144,6 +144,7 @@ void SessionManagerCallback(void * sm,Session * session)
 void SessionManagerImpl::AddRestoredSession(Session * session)
 {
     CSessionKey sessionKey;
+    sessionKey = session->getSessionKey();
 
     int key;
     Operation * value;
@@ -154,13 +155,12 @@ void SessionManagerImpl::AddRestoredSession(Session * session)
     {              
         if ((value->type != CO_USSD_DIALOG)&&(value->type != CO_HTTP_DELIVERY)) 
         {
+            smsc_log_debug(logger,"SessionManager: Session (A=%s) operation has finished (TYPE=%d)", sessionKey.abonentAddr.toString().c_str(), value->type);
             delete value;
-            smsc_log_debug(logger,"SessionManager: Session operation has finished");
         }
 
     }    
 
-    sessionKey = session->getSessionKey();
 
     int16_t lastUSR = getLastUSR(sessionKey.abonentAddr);
     lastUSR++;
