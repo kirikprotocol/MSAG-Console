@@ -15,9 +15,7 @@
 		    <attribute name="time" type="scag:Value" use="required"/>
                 </complexType>
             </element>
-        </choice>    
-	
-        <choice>
+	    
             <element name="bill_wait">
                 <complexType>
                     <attribute name="type" type="scag:TransportOperation" use="required"/>
@@ -31,10 +29,7 @@
 		    <attribute name="result_number" type="scag:Var" use="optional" />
                 </complexType>
             </element>
-        </choice>    
-	
-
-        <choice>
+	    
             <element name="bill_move_wait">
                 <complexType>
                     <attribute name="type" type="scag:TransportOperation" use="required"/>
@@ -44,8 +39,11 @@
 		    <attribute name="msg" type="scag:Var" use="optional" />
                 </complexType>
             </element>
-        </choice>    
 
+
+	    
+        </choice>    
+	
     </group>
     
 </schema>
