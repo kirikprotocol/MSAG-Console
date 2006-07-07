@@ -198,14 +198,14 @@ public class PerfSnap
     avg[PerfSnap.IDX_RETRY] = (long) in.readNetworkInt();
     total[PerfSnap.IDX_RETRY] = in.readNetworkLong();
 
-    queueSize = in.readNetworkInt();
     if( Support64Bit.enabled ) {
-      uptime = in.readNetworkLongRev();
-      sctime = in.readNetworkLongRev();
+      uptime = in.readNetworkLong();
+      sctime = in.readNetworkLong();
     } else {
       uptime = in.readNetworkInt();
       sctime = in.readNetworkInt();
     }
+    queueSize = in.readNetworkInt();
     processingSize = in.readNetworkInt();
     schedulerSize = in.readNetworkInt();
   }
