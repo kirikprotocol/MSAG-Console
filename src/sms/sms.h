@@ -38,6 +38,7 @@
 #endif
 #include "sms/sms_const.h"
 #include "sms/sms_tags.h"
+#include "sms/sms_buf.h"
 
 namespace smsc {
 
@@ -535,23 +536,19 @@ struct Descriptor
   }
 };
 
-static const string nullStr="";
+static const SmsPropertyBuf nullStr="";
 
 struct OptionalProperty{
   uint16_t isSetVal;
   uint16_t type;
   union{
+    SmsPropertyBuf* sValue;
+    SmsPropertyBuf* bValue;
     int iValue;
-    string* sValue;
-    string* bValue;
   };
   OptionalProperty():isSetVal(0),type(SMS_INT_TAG),bValue(0){}
   OptionalProperty(const OptionalProperty& prop):isSetVal(0),type(SMS_INT_TAG),iValue(0)
   {
-    if(prop.isSetVal==1 && prop.type==SMS_BIN_TAG)
-    {
-      //fprintf(stderr,"constructor:%p\n",this);
-    }
     *this=prop;
   }
   bool isSet()
@@ -560,10 +557,6 @@ struct OptionalProperty{
   }
   OptionalProperty& operator=(const OptionalProperty& src)
   {
-    if(type==SMS_BIN_TAG || src.type==SMS_BIN_TAG)
-    {
-      //fprintf(stderr,"isSetVal:%d->%d, type: %d->%d\n",isSetVal,src.isSetVal,type,src.type);
-    }
     if(src.isSetVal==0 || src.isSetVal==2)
     {
       if(isSetVal==1)isSetVal=2;
@@ -582,8 +575,7 @@ struct OptionalProperty{
         {
           if(!sValue)
           {
-            sValue=new string;
-            //printf("allocStr:%p\n",sValue);
+            sValue=new SmsPropertyBuf;
           }
           sValue->assign(src.sValue->data(),src.sValue->length());
         }break;
@@ -591,11 +583,7 @@ struct OptionalProperty{
         {
           if(!bValue)
           {
-            bValue=new string;
-            //fprintf(stderr,"op=:allocBin(%p):%p, len=%d\n",this,bValue,src.bValue->length());
-          }else
-          {
-            //fprintf(stderr,"op=:reuse(%p):%p, len=%d\n",this,bValue,src.bValue->length());
+            bValue=new SmsPropertyBuf;
           }
           bValue->assign(src.bValue->data(),src.bValue->length());
         }break;
@@ -605,7 +593,6 @@ struct OptionalProperty{
   }
   ~OptionalProperty()
   {
-    //fprintf(stderr,"~OptionalProperty:%p\n",this);
     if(isSetVal)
     {
       if(type==SMS_STR_TAG)
@@ -615,14 +602,9 @@ struct OptionalProperty{
       }
       else if(type==SMS_BIN_TAG)
       {
-        //fprintf(stderr,"del bin(%p):%p\n",this,bValue);
         delete bValue;
         bValue=0;
       }
-    }
-    if(type==SMS_BIN_TAG && bValue!=0)
-    {
-      //fprintf(stderr,"del bin FUCK(%p):%p\n",this,bValue);
     }
   }
   void setInt(int value)
@@ -636,11 +618,7 @@ struct OptionalProperty{
     type=SMS_STR_TAG;
     if(!isSetVal)
     {
-      sValue=new string;
-      //printf("allocStr(%p):%p\n",this,sValue);
-    }else
-    {
-      //printf("setStr(%p):%p\n",this,sValue);
+      sValue=new SmsPropertyBuf;
     }
     *sValue=str;
     isSetVal=1;
@@ -650,12 +628,7 @@ struct OptionalProperty{
     type=SMS_BIN_TAG;
     if(!isSetVal)
     {
-      string* old=bValue;
-      bValue=new string;
-      //fprintf(stderr,"setBin:allocBin(%p):%p,old=%p, len=%d\n",this,bValue,old,len);
-    }else
-    {
-      //fprintf(stderr,"setBin:reuse(%p):%p, len=%d\n",this,bValue,len);
+      bValue=new SmsPropertyBuf;
     }
     bValue->assign(bin,len);
     isSetVal=1;
@@ -664,7 +637,7 @@ struct OptionalProperty{
   {
     return iValue;
   }
-  const string& getStr()const
+  const SmsPropertyBuf& getStr()const
   {
     if(isSetVal==1)return *sValue;
     else return nullStr;
@@ -686,10 +659,6 @@ struct OptionalProperty{
     if(isSetVal)
     {
       isSetVal=2;
-      if(type==SMS_BIN_TAG)
-      {
-        //fprintf(stderr,"Unset(%p):%p\n",this,bValue);
-      }
     }
   }
 };
@@ -840,7 +809,7 @@ public:
     prop.properties[tag].setInt(value);
   }
 
-  const string& getStrProperty(int tag)const
+  const SmsPropertyBuf& getStrProperty(int tag)const
   {
     __require__((tag>>8)==SMS_STR_TAG);
     tag&=0xff;
@@ -1735,7 +1704,7 @@ struct SMS
   {
     messageBody.setIntProperty(tag,value);
   }
-  const string& getStrProperty(int tag)const
+  const SmsPropertyBuf& getStrProperty(int tag)const
   {
     return messageBody.getStrProperty(tag);
   }

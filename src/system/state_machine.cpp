@@ -3545,7 +3545,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
   }
 
   int sttype=GET_STATUS_TYPE(t.command->get_resp()->get_status());
-  info2(smsLog, "DLVRSP: msgId=%lld;class=%s;st=%d;oa=%s;%s;srcprx=%s;dstprx=%s;route=%s;%s",t.msgId,
+  info2(smsLog, "DLVRSP: msgId=%lld;class=%s;st=%d;oa=%s;%s;srcprx=%s;dstprx=%s;route=%s;%s%s",t.msgId,
       sttype==CMD_OK?"OK":
       sttype==CMD_ERR_RESCHEDULENOW?"RESCHEDULEDNOW":
       sttype==CMD_ERR_TEMP?"TEMP ERROR":"PERM ERROR",
@@ -3555,8 +3555,8 @@ StateType StateMachine::deliveryResp(Tuple& t)
       sms.getSourceSmeId(),
       sms.getDestinationSmeId(),
       sms.getRouteId(),
-      t.command->get_resp()->get_diverted()?
-      (";diverted_to="+sms.getStrProperty(Tag::SMSC_DIVERTED_TO)).c_str():""
+      t.command->get_resp()->get_diverted()?";diverted_to=":"",
+      t.command->get_resp()->get_diverted()?sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str():""
     );
 
 
