@@ -32,8 +32,6 @@
 #include <mcisme/AbntAddr.hpp>
 #include <mcisme/DeliveryQueue.hpp>
 
-#pragma pack(1)
-
 namespace smsc { namespace mcisme
 {
 
@@ -201,8 +199,6 @@ private:
 	int IncrStorage(const uint32_t& num_cells);
 
 };
-
-#pragma pack()
 
 };	//  namespace mcisme
 };	//  namespace smsc

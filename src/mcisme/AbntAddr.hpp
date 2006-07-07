@@ -20,8 +20,6 @@ using std::string;
 using sms::Address;
 using sms::AddressValue;
 
-#pragma pack(1)
-
 union	AbntAddrValue
 {
 	uint8_t full_addr[10];
@@ -315,7 +313,6 @@ struct MCEvent
 
 };
 
-#pragma pack()
 };	//  namespace mcisme
 };	//  namespace smsc
 #endif
