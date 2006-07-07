@@ -109,7 +109,7 @@ RuleStatus HttpEventHandler::process(SCAGCommand& command, Session& session)
 
     Infrastructure& istr = BillingManager::Instance().getInfrastructure();
 
-    Address abonentAddr(hc.getAbonent().c_str());
+    Address abonentAddr(hc.getAddress().c_str());
 
     uint32_t operatorId = istr.GetOperatorID(abonentAddr);
     if (operatorId == 0) 

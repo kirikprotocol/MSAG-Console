@@ -11,11 +11,17 @@
 
 <!ELEMENT options (abonents, sites)>
 
-<!ELEMENT abonents (address|subject|placement)*>
+<!ELEMENT abonents (address|subject|placement|address_prefix)*>
 
 <!ELEMENT sites (site|site_subject|placement)*>
 
 <!ELEMENT placement (usr_place|address_place)*>
+
+<!ELEMENT address_prefix EMPTY>
+<!ATTLIST address_prefix
+    ton CDATA #REQUIRED
+    npi CDATA #REQUIRED
+>
 
 <!ELEMENT usr_place EMPTY>
 <!ATTLIST usr_place

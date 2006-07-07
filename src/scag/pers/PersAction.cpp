@@ -253,7 +253,7 @@ bool PersAction::run(ActionContext& context)
         {
             case PC_DEL:
                 if(profile == PT_ABONENT)
-                    pc.DelProperty(profile, cp.abonentAddr.toString().c_str(), var.c_str());
+                    pc.DelProperty(profile, cp.abonentAddr.value, var.c_str());
                 else
                     pc.DelProperty(profile, getKey(cp, profile), var.c_str());
                 break;
@@ -277,14 +277,14 @@ bool PersAction::run(ActionContext& context)
                 if(cmd == PC_SET)
                 {
                     if(profile == PT_ABONENT)
-                        pc.SetProperty(profile, cp.abonentAddr.toString().c_str(), prop);
+                        pc.SetProperty(profile, cp.abonentAddr.value, prop);
                     else
                         pc.SetProperty(profile, getKey(cp, profile), prop);
                 }
                 else if(cmd == PC_INC)
                 {
                     if(profile == PT_ABONENT)
-                        pc.IncProperty(profile, cp.abonentAddr.toString().c_str(), prop);
+                        pc.IncProperty(profile, cp.abonentAddr.value, prop);
                     else
                         pc.IncProperty(profile, getKey(cp, profile), prop);
                 }
@@ -300,7 +300,7 @@ bool PersAction::run(ActionContext& context)
 
                     int res;
                     if(profile == PT_ABONENT)
-                        res = pc.IncModProperty(profile, cp.abonentAddr.toString().c_str(), prop, mod);
+                        res = pc.IncModProperty(profile, cp.abonentAddr.value, prop, mod);
                     else
                         res = pc.IncModProperty(profile, getKey(cp, profile), prop, mod);
 
@@ -312,7 +312,7 @@ bool PersAction::run(ActionContext& context)
             case PC_GET:
             {
                 if(profile == PT_ABONENT)
-                    pc.GetProperty(profile, cp.abonentAddr.toString().c_str(), var.c_str(), prop);
+                    pc.GetProperty(profile, cp.abonentAddr.value, var.c_str(), prop);
                 else
                     pc.GetProperty(profile, getKey(cp, profile), var.c_str(), prop);
 

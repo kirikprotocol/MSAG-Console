@@ -58,17 +58,19 @@
 
     <route id="route1" serviceId="5">
         <abonents>
+            <address_prefix ton="1" npi="1"/>
+
             <subject id="MTS_numbers"/>
             <address value="+7913???????"/>
             <address value="+7903???????"/>
-            <address value="+79039126430"/>
+            <address value="79039126430"/>
 
-<!--            <placement>
+            <placement>
                 <usr_place type="url" name="usr" priority="1"/>
                 <usr_place type="cookie" name="WHOISD-USR" priority="2"/>
                 <usr_place type="header" name="WHOISD-USR" priority="3"/>
                 <usr_place type="param" name="usr" priority="4"/>
-            </placement> -->
+            </placement>
 
         </abonents>
 
@@ -87,7 +89,7 @@
                 <path value="/"/>
             </site>
 
-<!--            <placement>
+            <placement>
                 <usr_place type="url" name="usr"/>
                 <usr_place type="cookie" name="WHOISD-USR"/>
                 <usr_place type="header" name="WHOISD-USR"/>
@@ -99,7 +101,7 @@
                 <address_place type="url" name="abonent"/> 
                 <address_place type="param" name="address"/>
                 <address_place type="param" name="address"/>
-            </placement> -->
+            </placement>
         </sites>
     </route>
 
