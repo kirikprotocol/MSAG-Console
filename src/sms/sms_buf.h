@@ -1,0 +1,77 @@
+#ifndef __SMSC_SMS_SMSBUF_H__
+#define __SMSC_SMS_SMSBUF_H__
+
+#include <string.h>
+#include <string>
+
+namespace smsc{
+namespace sms{
+
+class SmsPropertyBuf{
+public:
+  SmsPropertyBuf():buf(0),strlength(0),size(0){}
+  SmsPropertyBuf(const char* str):buf(0),strlength(0),size(0)
+  {
+    assign(str,strlen(str));
+  }
+  SmsPropertyBuf(const SmsPropertyBuf& rhs)
+  {
+    strlength=rhs.strlength;
+    size=strlength+1;
+    buf=new char[size];
+    memcpy(buf,rhs.buf,strlength);
+    buf[strlength]=0;
+  }
+  SmsPropertyBuf& operator=(const SmsPropertyBuf& rhs)
+  {
+    assign(rhs.c_str(),rhs.length());
+    return *this;
+  }
+  SmsPropertyBuf& operator=(const char* str)
+  {
+    assign(str,strlen(str));
+    return *this;
+  }
+  operator std::string ()const
+  {
+    return std::string(buf?buf:"",strlength);
+  }
+  ~SmsPropertyBuf()
+  {
+    if(buf)delete [] buf;
+  }
+  void assign(const char* str,int len)
+  {
+    if(len>=size)
+    {
+      delete [] buf;
+      buf=new char[len+1];
+      size=len+1;
+    }
+    memcpy(buf,str,len);
+    strlength=len;
+    buf[strlength+1]=0;
+  }
+  int length()const
+  {
+    return strlength;
+  }
+  const char* c_str()const
+  {
+    return buf?buf:"";
+  }
+  const char* data()const
+  {
+    return buf?buf:"";
+  }
+
+protected:
+  char* buf;
+  int strlength;
+  int size;
+};
+
+}//sms
+}//smsc
+
+#endif
