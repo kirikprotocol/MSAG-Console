@@ -216,6 +216,7 @@ struct HttpRoute
     PlacementArray inUSRPlace;
     PlacementArray outUSRPlace;
     PlacementArray outAddressPlace;
+    std::string addressPrefix;
 
     HttpRoute(): service_id(0), provider_id(0) {}
 
@@ -228,6 +229,7 @@ struct HttpRoute
         outUSRPlace = cp.outUSRPlace;
         outAddressPlace = cp.outAddressPlace;
         enabled = cp.enabled;
+        addressPrefix = cp.addressPrefix;
     }
 };
 

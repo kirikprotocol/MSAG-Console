@@ -30,6 +30,7 @@ struct TransactionContext {
     int32_t providerId;
     std::string routeId;
     std::string abonent;
+    std::string address;
     int ruleId;
     uint16_t usr;
 
@@ -132,6 +133,12 @@ public:
     }
     void setAbonent(const std::string& abonent) {
         trc.abonent = abonent;
+    }
+    const std::string& getAddress() {
+        return trc.address;
+    }
+    void setAddress(const std::string& address) {
+        trc.address = address;
     }
     // ---------- Command context methods (end) ----------    
 

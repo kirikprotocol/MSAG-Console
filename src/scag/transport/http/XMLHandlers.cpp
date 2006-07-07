@@ -78,6 +78,21 @@ void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
         in_sites = true;
     else if(!strcmp(qname, "abonents"))
         in_abonents = true;
+    else if(!strcmp(qname, "address_prefix") )
+    {
+        StrX s = attrs.getValue("ton");
+        StrX s1 = attrs.getValue("npi");
+        if(route.id.length())
+        {
+            route.addressPrefix = '.';
+            route.addressPrefix += s.localForm();
+            route.addressPrefix += '.';
+            route.addressPrefix += s1.localForm();
+            route.addressPrefix += '.';
+        }
+        else
+            throw Exception("Invalid XML address_prefix: No route id");
+    }
     else if(!strcmp(qname, "usr_place"))
     {
         if(in_options)
@@ -240,6 +255,7 @@ void XMLBasicHandler::endElement(const XMLCh* const nm)
 
         route.enabled = true;
         route.id = "";
+        route.addressPrefix = "";
         route.service_id = 0;
         route.masks.Empty();
         route.sites.Empty();

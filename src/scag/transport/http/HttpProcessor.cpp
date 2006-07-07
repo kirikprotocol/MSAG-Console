@@ -333,7 +333,9 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
 
         findUSR(request, r.inUSRPlace.Count() ? r.inUSRPlace : defInUSRPlaces);
 
-        CSessionKey sk = {request.getUSR(), request.getAbonent().c_str()};
+        request.setAddress(r.addressPrefix + request.getAbonent());
+
+        CSessionKey sk = {request.getUSR(), request.getAddress().c_str()};
         if(!request.getUSR())
         {
             se = SessionManager::Instance().newSession(sk);
@@ -385,7 +387,7 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
                 return true;
             }
         } else
-            smsc_log_error( logger, "session not found for abonent=%s, USR=%d", request.getAbonent().c_str(), request.getUSR());
+            smsc_log_error( logger, "session not found for addr=%s, USR=%d", request.getAddress().c_str(), request.getUSR());
     }
     catch(RouteNotFoundException& e)
     {
@@ -410,7 +412,7 @@ bool HttpProcessorImpl::processResponse(HttpResponse& response)
 
     SessionPtr se;
     try{
-        CSessionKey sk = {response.getUSR(), response.getAbonent().c_str()};
+        CSessionKey sk = {response.getUSR(), response.getAddress().c_str()};
         se = SessionManager::Instance().getSession(sk);
         RuleStatus rs;
 
@@ -424,7 +426,7 @@ bool HttpProcessorImpl::processResponse(HttpResponse& response)
                 return true;
             }
         } else
-            smsc_log_error( logger, "http_response session not found abonent=%s, USR=%d", response.getAbonent().c_str(), response.getUSR());
+            smsc_log_error( logger, "http_response session not found abonent=%s, USR=%d", response.getAddress().c_str(), response.getUSR());
     }
     catch(Exception& e)
     {
@@ -450,7 +452,7 @@ void HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
 
     SessionPtr se;
     try{
-        CSessionKey sk = {response.getUSR(), response.getAbonent().c_str()};
+        CSessionKey sk = {response.getUSR(), response.getAddress().c_str()};
         se = SessionManager::Instance().getSession(sk);
 
         RuleStatus rs;
@@ -467,7 +469,7 @@ void HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
             }
         }
         else
-            smsc_log_error( logger, "http_status_response session not found abonent=%s, USR=%d", response.getAbonent().c_str(), response.getUSR());
+            smsc_log_error( logger, "http_status_response session not found abonent=%s, USR=%d", response.getAddress().c_str(), response.getUSR());
     }
     catch(Exception& e)
     {
