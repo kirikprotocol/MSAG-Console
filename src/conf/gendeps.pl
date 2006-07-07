@@ -50,10 +50,10 @@ while(<IN>)
   print OUT "\tmkdir -p `dirname \$@`\n";
   print OUT "\techo linking \$@\n";
   print OUT "\t\$(CXX) \$(CXXFLAGS) -o \$@ \$< \$(LDFLAGS) @f";
-  if($ENV{MACHTYPE} eq 'sparc-sun-solaris')
-  {
-    print OURT ' -leinss7';
-  }
+#  if($ENV{MACHTYPE} eq 'sparc-sun-solaris')
+#  {
+#    print OURT ' -leinss7';
+#  }
   print OUT "\n\n";
   for my $l(@f)
   {
