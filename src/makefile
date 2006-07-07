@@ -17,12 +17,16 @@ else
 SHARED_OPT:=-shared
 endif
 
-SSL_DIR:=/usr/local/ssl
+SSL_LIB_DIR:=/usr/lib
+ifeq ($(B64),YES)
+SSL_LIB_DIR:=/usr/lib/sparcv9
+endif
+
 ifeq ($(CXX),CC)
 ifeq ($(SNMP),YES)
 SSL_LIB:=-lcrypto -lssl
 else
-SSL_LIB:=$(SSL_DIR)/lib/libcrypto.a $(SSL_DIR)/lib/libssl.a
+SSL_LIB:=$(SSL_LIB_DIR)/libcrypto.a $(SSL_LIB_DIR)/libssl.a
 endif
 else
 SSL_LIB:=-lcrypto -lssl
@@ -72,20 +76,25 @@ endif
 export SS7_STACK_HOME
 
 SS7_LIBRARY_NAME := einss7_r
+ifeq ($(B64),YES)
+SS7_LIBRARY_NAME := einss7_r_64
+endif
+
 export SS7_LIBRARY_NAME
 
-CAMMON_INCLUDES = -I$(SMSC_SRCDIR) -I/usr/local/include -I$(SSL_DIR)/include -I$(SS7_STACK_HOME)/src -DEINSS7_THREADSAFE=1 -DMAP_R12 -D__EXTENSIONS__
+CAMMON_INCLUDES = -I$(SMSC_SRCDIR) -I/usr/local/include -I$(SS7_STACK_HOME)/src -DEINSS7_THREADSAFE=1 -DMAP_R12 -D__EXTENSIONS__
 
 CFLAGS := $(CAMMON_INCLUDES) -D_REENTERANT -D_REENTRANT -D_FILE_OFFSET_BITS=64
 CXXFLAGS := $(CAMMON_INCLUDES) -D_REENTERANT -D_REENTRANT -D_FILE_OFFSET_BITS=64
 ifeq ($(CXX),CC)
 COMPFLAGS:=-features=extensions $(XTARGET) -mt -D_POSIX_PTHREAD_SEMANTICS
 CXXFLAGS := $(CXXFLAGS) -library=stlport4
+CFLAGS := $(CFLAGS) $(XTARGET)
 endif
 ifeq ($(CXX),CC)
-LDFLAGS := -zrescan -L$(SMSC_BUILDDIR)/lib -L/usr/local/lib/CC -L/usr/local/lib -L$(SSL_DIR)/lib
+LDFLAGS := $(XTARGET) -zrescan -L$(SMSC_BUILDDIR)/lib -L/usr/local/lib/CC -L/usr/local/lib -L$(SSL_LIB_DIR)
 else
-LDFLAGS := -L$(SMSC_BUILDDIR)/lib -L/usr/local/lib -L$(SSL_DIR)/lib
+LDFLAGS := -L$(SMSC_BUILDDIR)/lib -L/usr/local/lib -L$(SSL_LIB_DIR)
 CXXFLAGS := $(CXXFLAGS) -fPIC
 endif
 
