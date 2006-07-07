@@ -32,20 +32,12 @@ struct PerformanceCounter{
 const int performanceCounters=6;
 
 struct PerformanceData{
-  /*
-  PerformanceCounter submitOk;
-  PerformanceCounter submitErr;
-  PerformanceCounter deliverOk;
-  PerformanceCounter deliverErrTerm;
-  PerformanceCounter deliverErrPerm;
-  PerformanceCounter rescheduled;
-  */
   uint32_t size;
   uint32_t countersNumber;
   PerformanceCounter counters[performanceCounters];
-  uint32_t eventQueueSize;
   time_t uptime;
   time_t now;
+  uint32_t eventQueueSize;
   uint32_t inProcessingCount;
   uint32_t inScheduler;
 };
@@ -60,8 +52,8 @@ struct PerformanceData{
 
 struct SmePerformanceCounter
 {
-    uint16_t                counters[SME_PERF_CNT_COUNT];
     TimeSlotCounter<int>*   slots   [SME_PERF_CNT_COUNT];
+    uint16_t                counters[SME_PERF_CNT_COUNT];
 
     SmePerformanceCounter() { 
         memset(counters, 0, sizeof(counters));
@@ -77,8 +69,8 @@ struct SmePerformanceCounter
 };
 struct SmeErrorCounter
 {
-    uint16_t                errors;
     TimeSlotCounter<int>*   slot;
+    uint16_t                errors;
 
     SmeErrorCounter() : errors(0), slot(0) {};
     virtual ~SmeErrorCounter() {
