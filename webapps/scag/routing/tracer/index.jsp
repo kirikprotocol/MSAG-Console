@@ -107,8 +107,10 @@
                             <c:otherwise>&nbsp;</c:otherwise>
                         </c:choose></th>
                         <td width="70%" nowrap><c:choose>
-                            <c:when test="${val != null && fn:length(fn:trim(val))>0}"><c:out
-                                    value="${fn:escapeXml(val)}"/></c:when>
+                            <c:when test="${val != null && fn:length(fn:trim(val))>0}">
+                                <c:out value="${val}"/>
+                                <%--<c:out value="${fn:escapeXml(val)}"/>--%>
+                            </c:when>
                             <c:otherwise>&nbsp;</c:otherwise>
                         </c:choose></td>
                     </tr>
@@ -118,11 +120,8 @@
         <c:if test="${ traceResults !=null && fn:length(traceResults)>0 }">
             <br>
             <div class=page_subtitle><fmt:message>routes_tracing.label.trace</fmt:message></div>
-            <textarea style="font-family:Courier New;height:300px">
-                <c:forEach items="${traceResults}" var="result"><c:set var="traceObj" value="${result}"/><c:if
-                        test="${traceObj != null && smf:isString(traceObj)}">${traceObj}</c:if>
-                </c:forEach>
-            </textarea>
+            <textarea  readonly="true" style="font-family:Courier New,sans-serif; height:300px"><c:forEach items="${traceResults}" var="result">
+                <c:set var="traceObj" value="${result}"/><c:if test="${traceObj != null && smf:isString(traceObj)}">${fn:trim(traceObj)}</c:if></c:forEach></textarea>
             </div>
         </c:if>
     </c:if>
