@@ -85,6 +85,7 @@ public class Constants {
 
             public interface options{
                 public static final Constants OPTIONS_NOT_FOUND = new Constants("error.routing.options.options_not_found");
+                public static final Constants COULD_NOT_SAVE_HTTP_OPTIONS = new Constants("error.routing.options.could_not_create_http_options");
 
             }
         }
