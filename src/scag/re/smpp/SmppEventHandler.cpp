@@ -206,7 +206,11 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     
     /////////////////////////////////////////
 
-    
+    if ((*smppcommand)->status > 0)
+    {
+        rs.result = (*smppcommand)->status;
+        rs.status = true;
+    }
     
 
     try {
@@ -244,10 +248,8 @@ int SmppEventHandler::StrToHandlerId(const std::string& str)
     if (str == "deliver_sm_resp")       return EH_DELIVER_SM_RESP;
     if (str == "receipt")               return EH_RECEIPT;
 
-    if (str == "data_submit_sm")        return EH_DATA_SUBMIT_SM;
-    if (str == "data_submit_sm_resp")   return EH_DATA_SUBMIT_SM_RESP;
-    if (str == "data_deliver_sm")       return EH_DATA_DELIVER_SM;
-    if (str == "data_deliver_sm_resp")  return EH_DATA_DELIVER_SM_RESP;
+    if (str == "data_sm")               return EH_DATA_SM;
+    if (str == "data_sm_resp")          return EH_DATA_SM_RESP;
 
 
     return UNKNOWN; 
