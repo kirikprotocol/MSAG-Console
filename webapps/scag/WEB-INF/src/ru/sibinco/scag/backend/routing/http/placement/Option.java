@@ -31,47 +31,48 @@ public class Option {
     public Option(final NodeList optionsList) throws SibincoException {
 
         Element optionsElement = (Element) optionsList.item(0);
-        NodeList abonentList = optionsElement.getElementsByTagName("abonents");
-        NodeList sitesList = optionsElement.getElementsByTagName("sites");
-        Element abonentElement = (Element) abonentList.item(0);
-        Element sitesElement = (Element) sitesList.item(0);
+        if (optionsElement != null) {
+            NodeList abonentList = optionsElement.getElementsByTagName("abonents");
+            NodeList sitesList = optionsElement.getElementsByTagName("sites");
+            Element abonentElement = (Element) abonentList.item(0);
+            Element sitesElement = (Element) sitesList.item(0);
 
-        NodeList addressPlaceList = abonentElement.getElementsByTagName("address_place");
-        NodeList usrPlaceList = abonentElement.getElementsByTagName("usr_place");
-        for (int i = 0; i < addressPlaceList.getLength(); i++) {
-            Element addressPlaceElement = (Element) addressPlaceList.item(i);
-            final AbonentsPlacement abonentsPlacement = new AbonentsPlacement(
-                    addressPlaceElement.getAttribute("type"),
-                    addressPlaceElement.getAttribute("name"),
-                    Integer.parseInt(addressPlaceElement.getAttribute("priority")));
-            abonAddressPlace.add(abonentsPlacement);
-        }
-        for (int i = 0; i < usrPlaceList.getLength(); i++) {
-            Element usrPlaceElement = (Element) usrPlaceList.item(i);
-            final AbonentsPlacement abonentsPlacement = new AbonentsPlacement(
-                    usrPlaceElement.getAttribute("type"),
-                    usrPlaceElement.getAttribute("name"),
-                    Integer.parseInt(usrPlaceElement.getAttribute("priority")));
-            abonUsrPlace.add(abonentsPlacement);
-        }
+            NodeList addressPlaceList = abonentElement.getElementsByTagName("address_place");
+            NodeList usrPlaceList = abonentElement.getElementsByTagName("usr_place");
+            for (int i = 0; i < addressPlaceList.getLength(); i++) {
+                Element addressPlaceElement = (Element) addressPlaceList.item(i);
+                final AbonentsPlacement abonentsPlacement = new AbonentsPlacement(
+                        addressPlaceElement.getAttribute("type"),
+                        addressPlaceElement.getAttribute("name"),
+                        Integer.parseInt(addressPlaceElement.getAttribute("priority")));
+                abonAddressPlace.add(abonentsPlacement);
+            }
+            for (int i = 0; i < usrPlaceList.getLength(); i++) {
+                Element usrPlaceElement = (Element) usrPlaceList.item(i);
+                final AbonentsPlacement abonentsPlacement = new AbonentsPlacement(
+                        usrPlaceElement.getAttribute("type"),
+                        usrPlaceElement.getAttribute("name"),
+                        Integer.parseInt(usrPlaceElement.getAttribute("priority")));
+                abonUsrPlace.add(abonentsPlacement);
+            }
 
-        NodeList sitesAddrPlaceList = sitesElement.getElementsByTagName("address_place");
-        for (int i = 0; i < sitesAddrPlaceList.getLength(); i++) {
-            Element sitesAddressPlaceElement = (Element) sitesAddrPlaceList.item(i);
-            final SitePlacement sitePlacement = new SitePlacement(
-                    sitesAddressPlaceElement.getAttribute("type"),
-                    sitesAddressPlaceElement.getAttribute("name"));
-            siteAddressPlace.add(sitePlacement);
+            NodeList sitesAddrPlaceList = sitesElement.getElementsByTagName("address_place");
+            for (int i = 0; i < sitesAddrPlaceList.getLength(); i++) {
+                Element sitesAddressPlaceElement = (Element) sitesAddrPlaceList.item(i);
+                final SitePlacement sitePlacement = new SitePlacement(
+                        sitesAddressPlaceElement.getAttribute("type"),
+                        sitesAddressPlaceElement.getAttribute("name"));
+                siteAddressPlace.add(sitePlacement);
+            }
+            NodeList sitesUsrPlaceList = sitesElement.getElementsByTagName("usr_place");
+            for (int i = 0; i < sitesUsrPlaceList.getLength(); i++) {
+                Element usrPlaceElement = (Element) sitesUsrPlaceList.item(i);
+                final SitePlacement sitePlacement = new SitePlacement(
+                        usrPlaceElement.getAttribute("type"),
+                        usrPlaceElement.getAttribute("name"));
+                siteUsrPlace.add(sitePlacement);
+            }
         }
-        NodeList sitesUsrPlaceList = sitesElement.getElementsByTagName("usr_place");
-        for (int i = 0; i < sitesUsrPlaceList.getLength(); i++) {
-            Element usrPlaceElement = (Element) sitesUsrPlaceList.item(i);
-            final SitePlacement sitePlacement = new SitePlacement(
-                    usrPlaceElement.getAttribute("type"),
-                    usrPlaceElement.getAttribute("name"));
-            siteUsrPlace.add(sitePlacement);
-        }
-
 
     }
 
@@ -103,14 +104,14 @@ public class Option {
             final SitePlacement placement = (SitePlacement) i.next();
             out.println("                <address_place type=\""
                     + StringEncoderDecoder.encode(placement.getType()) + "\" "
-                    + " name=\"" + StringEncoderDecoder.encode(placement.getName()) +  "\" />");
+                    + " name=\"" + StringEncoderDecoder.encode(placement.getName()) + "\" />");
         }
         out.println();
         for (Iterator i = siteUsrPlace.iterator(); i.hasNext();) {
             final SitePlacement placement = (SitePlacement) i.next();
             out.println("                <usr_place type=\""
                     + StringEncoderDecoder.encode(placement.getType()) + "\" "
-                    + " name=\"" + StringEncoderDecoder.encode(placement.getName()) +  "\" />");
+                    + " name=\"" + StringEncoderDecoder.encode(placement.getName()) + "\" />");
         }
         out.println("            </placement>");
         out.println("        </sites>");
