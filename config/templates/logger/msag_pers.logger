@@ -1,0 +1,5 @@
+root=DEBUG, default
+
+appender.default.file.name=logs/pers.log
+appender.default.file.maxsize=50Mb
+appender.default.file.maxindex=4
