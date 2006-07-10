@@ -1,3 +1,5 @@
+installation.type=single
+installation.mirrorpath=
 
 catalina.control.port=23800
 catalina.connector.port=23801
@@ -7,7 +9,7 @@ logs.dir=logs
 WHOISD.url-pattern=/WHOISD/*
 
 scag.service.name=scag
-scag.service.args=SCAG
+scag.service.args=MSA Gateway
 scag.service.autostart=false
 
 listen.host=0.0.0.0
@@ -24,9 +26,6 @@ bill.config_dir=conf
 bill.server_host=127.0.0.1
 bill.server_port=23989
 bill.time_out=60000
-
-installation.type=single
-installation.mirrorpath=
 
 status.show_interval=86400000
 language.default=ru
@@ -52,7 +51,10 @@ stat.sacc_queue_length=1000
 
 pers.port=23880
 pers.host=0.0.0.0
-pers.dir=/opt/home/msag_test/msag_distr/storage/pers
+pers.connections=100
+pers.storage_dir=/opt/home/msag_stbl/msag_distr/storage/pers
+pers.service.args=MSAG Personalization
+pers.service.autostart=false
 
 LC_ALL=ru_RU.WINDOWS-1251
 NLS_LANG=RUSSIAN_CIS.CL8MSWIN1251
