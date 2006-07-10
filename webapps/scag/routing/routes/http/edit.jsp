@@ -143,7 +143,7 @@
         if (trimStr(valueElem.value).length > 0) {
             var tbl = tblElem;
             var newRow = tbl.insertRow(tbl.rows.length);
-            newRow.className = "row1";
+            newRow.className = "row" + ((tbl.rows.length + 1) & 1);
             newRow.id = "pathRow_" + (global_counter++);
             newCell = document.createElement("td");
             newCell.innerHTML = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
@@ -162,14 +162,14 @@
     }
 
     function trimStr(sString) {
-            while (sString.substring(0, 1) == ' '){
-                sString = sString.substring(1, sString.length);
-            }
-            while (sString.substring(sString.length - 1, sString.length) == ' '){
-                sString = sString.substring(0, sString.length - 1);
-            }
-            return sString;
+        while (sString.substring(0, 1) == ' ') {
+            sString = sString.substring(1, sString.length);
         }
+        while (sString.substring(sString.length - 1, sString.length) == ' ') {
+            sString = sString.substring(0, sString.length - 1);
+        }
+        return sString;
+    }
 
 
 

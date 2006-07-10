@@ -19,13 +19,12 @@
   <jsp:body>
   <script>
   var global_counter = 0;
-  function removeRow(tbl, rowId)
-  {
+  function removeRow(tbl, rowId){
       var rowElem = tbl.rows(rowId);
       tbl.deleteRow(rowElem.rowIndex);
   }
-  function removeSrcSubj(rowId)
-  {
+
+  function removeSrcSubj(rowId){
       var selectElem = opForm.all.srcSubjSelect;
       var tbl = opForm.all.sources_table;
       var rowElem = tbl.rows(rowId);
@@ -37,6 +36,7 @@
       selectElem.disabled = false;
       tbl.deleteRow(rowElem.rowIndex);
   }
+
   function addSourceMask(valueElem) {
       if (validateField(valueElem)) {
           var tbl = opForm.all.sources_table;
