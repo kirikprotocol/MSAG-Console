@@ -197,7 +197,7 @@ void SmppSocket::sendData()
       connected=false;
       return;
     }
-    lastActivity=time(NULL);
+    //lastActivity=time(NULL);
     wrBufSent+=res;
     if(wrBufSent==wrBufUsed)
     {

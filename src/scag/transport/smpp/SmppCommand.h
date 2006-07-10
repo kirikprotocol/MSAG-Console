@@ -56,7 +56,10 @@ enum CommandId
   BIND_TRANSCEIVER,       //19
   BIND_RECIEVER_RESP,     //20
   BIND_TRANSMITTER_RESP,  //21
-  BIND_TRANCIEVER_RESP    //22
+  BIND_TRANCIEVER_RESP,   //22
+  DATASM,                 //23
+  DATASM_RESP,            //24
+  PROCESSEXPIREDRESP      //25
 };
 
 enum CommandStatus{
@@ -346,6 +349,23 @@ struct BindCommand{
   BindCommand(const char* id,const char* pwd,const char* rng):sysId(id),pass(pwd),addrRange(rng){}
 };
 
+struct SmsCommand{
+  enum DataSmDirection{
+    dsdUnknown,
+    dsdSrv2Srv,
+    dsdSrv2Sc,
+    dsdSc2Srv,
+    dsdSc2Sc
+  };
+  SmsCommand():dir(dsdUnknown){}
+  SmsCommand(const SMS& sms):sms(sms),dir(dsdUnknown)
+  {
+  }
+  SMS sms;
+  Address orgSrc,orgDst;
+  DataSmDirection dir;
+};
+
 struct SmppEntity;
 
 struct _SmppCommand
@@ -369,7 +389,8 @@ struct _SmppCommand
     {
     case DELIVERY:
     case SUBMIT:
-      if(dta)delete ( (SMS*)dta );
+    case DATASM:
+      if(dta)delete ( (SmsCommand*)dta );
       break;
 
     case SUBMIT_MULTI_SM:
@@ -421,13 +442,27 @@ struct _SmppCommand
 
   uint32_t get_dialogId() const { return dialogId; }
   void set_dialogId(uint32_t dlgId) { dialogId=dlgId; }
+
   CommandId get_commandId() const { return cmdid; }
-  SMS* get_sms() const { return (SMS*)dta; }
-  SMS* get_sms_and_forget() { SMS* s = (SMS*)dta; dta = 0; return s;}
+
+  SMS* get_sms()
+  {
+    __require__(cmdid==SUBMIT || cmdid==DELIVERY || cmdid==DATASM);
+    return &((SmsCommand*)dta)->sms;
+  }
+  SmsCommand& get_smsCommand()
+  {
+    __require__(cmdid==SUBMIT || cmdid==DELIVERY || cmdid==DATASM);
+    return *((SmsCommand*)dta);
+  }
   const ReplaceSm& get_replaceSm(){return *(ReplaceSm*)dta;}
   const QuerySm& get_querySm(){return *(QuerySm*)dta;}
   const CancelSm& get_cancelSm(){return *(CancelSm*)dta;}
-  SmsResp* get_resp() const { return (SmsResp*)dta; }
+  SmsResp* get_resp() const
+  {
+    __require__(cmdid==DELIVERY_RESP || cmdid==SUBMIT_RESP || cmdid==DATASM_RESP);
+    return (SmsResp*)dta;
+  }
   SubmitMultiResp* get_MultiResp() { return (SubmitMultiResp*)dta;}
   SubmitMultiSm* get_Multi() { return (SubmitMultiSm*)dta;}
   int get_priority(){return priority;};
@@ -436,7 +471,7 @@ struct _SmppCommand
   const Address& get_address() { return *(Address*)dta; }
   void set_address(const Address& addr) { *(Address*)dta = addr; }
 
-  SmppHeader* get_smppPdu(){return (SmppHeader*)dta;}
+  //SmppHeader* get_smppPdu(){return (SmppHeader*)dta;}
 
   BindCommand& get_bindCommand(){return *((BindCommand*)dta);}
 
@@ -519,8 +554,8 @@ public:
     _SmppCommand& _cmd = *cmd.cmd;
     _cmd.ref_count = 1;
     _cmd.cmdid = SUBMIT;
-    _cmd.dta = new SMS;
-    *_cmd.get_sms() = sms;
+    _cmd.dta = new SmsCommand(sms);
+    //*_cmd.get_sms() = sms;
     _cmd.dialogId = dialogId;
     return cmd;
   }
@@ -532,8 +567,8 @@ public:
     _SmppCommand& _cmd = *cmd.cmd;
     _cmd.ref_count = 1;
     _cmd.cmdid = DELIVERY;
-    _cmd.dta = new SMS;
-    *_cmd.get_sms() = sms;
+    _cmd.dta = new SmsCommand(sms);
+    //*_cmd.get_sms() = sms;
     _cmd.dialogId = dialogId;
     return cmd;
   }
@@ -549,6 +584,20 @@ public:
     _cmd.get_resp()->set_messageId(messageId);
     _cmd.get_resp()->set_status(status);
     if(dataSm)_cmd.get_resp()->set_dataSm();
+    _cmd.dialogId = dialogId;
+    return cmd;
+  }
+
+  static SmppCommand makeDataSmResp(const char* messageId, uint32_t dialogId, uint32_t status)
+  {
+    SmppCommand cmd;
+    cmd.cmd = new _SmppCommand;
+    _SmppCommand& _cmd = *cmd.cmd;
+    _cmd.ref_count = 1;
+    _cmd.cmdid = DATASM_RESP;
+    _cmd.dta = new SmsResp;
+    _cmd.get_resp()->set_messageId(messageId);
+    _cmd.get_resp()->set_status(status);
     _cmd.dialogId = dialogId;
     return cmd;
   }
@@ -710,9 +759,8 @@ public:
   static void makeSMSBody(SMS* sms,const SmppHeader* pdu,bool forceDC)
   {
     const PduXSm* xsm = reinterpret_cast<const PduXSm*>(pdu);
-    //(SMS*)_cmd->dta =  new SMS;
     fetchSmsFromSmppPdu((PduXSm*)xsm,sms,forceDC);
-    SMS &s=*sms;//((SMS*)_cmd->dta);
+    SMS &s=*sms;
     if(s.getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x3 && s.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
     {
       unsigned len;
@@ -762,11 +810,11 @@ public:
       }
       case SmppCommandSet::DATA_SM:
       {
-        _cmd->cmdid = SUBMIT;
+        _cmd->cmdid = DATASM;
         PduDataSm* dsm = reinterpret_cast<PduDataSm*>(pdu);
-        _cmd->dta =  new SMS;
-        if(!fetchSmsFromDataSmPdu(dsm,(SMS*)(_cmd->dta),forceDC))throw Exception("Invalid data coding");
-        ((SMS*)_cmd->dta)->setIntProperty(Tag::SMPP_DATA_SM,1);
+        _cmd->dta =  new SmsCommand;
+        if(!fetchSmsFromDataSmPdu(dsm,_cmd->get_sms(),forceDC))throw Exception("Invalid data coding");
+        _cmd->get_sms()->setIntProperty(Tag::SMPP_DATA_SM,1);
         goto end_construct;
       }
       case SmppCommandSet::SUBMIT_SM:
@@ -785,6 +833,10 @@ public:
         goto sms_resp;
       }
       case SmppCommandSet::DATA_SM_RESP:
+      {
+        _cmd->cmdid = DATASM_RESP;
+        goto sms_resp;
+      }
       case SmppCommandSet::DELIVERY_SM_RESP:
       {
         _cmd->cmdid = DELIVERY_RESP;
@@ -865,8 +917,8 @@ public:
 
     sms_pdu:
     {
-      _cmd->dta =  new SMS;
-      makeSMSBody((SMS*)_cmd->dta,pdu,forceDC);
+      _cmd->dta =  new SmsCommand;
+      makeSMSBody(_cmd->get_sms(),pdu,forceDC);
       goto end_construct;
     }
     sms_resp:
@@ -1216,7 +1268,7 @@ public:
     cmd->set_operationId(op);
   }
 
-   uint8_t getCommandId() const 
+   uint8_t getCommandId() const
    {
        return cmd->cmdid;
    }

@@ -22,6 +22,15 @@ int SmppWriter::Execute()
       bool haveData=false;
       for(int i=0;i<sockets.Count();i++)
       {
+        if(sockets[i]->checkTimeout(enquireLinkTimeout))
+        {
+          sockets[i]->genEnquireLink(enquireLinkTimeout);
+        }
+        if(sockets[i]->checkTimeout(inactivityTimeout))
+        {
+          sockets[i]->disconnect();
+          continue;
+        }
         if(sockets[i]->wantToSend())
         {
           mul.add(sockets[i]->getSocket());

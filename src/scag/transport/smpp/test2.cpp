@@ -41,6 +41,7 @@ int main(int argc,char* argv[])
     sm.LoadRoutes("routes.xml");
     printf("press enter...");
 
+    /*
     SmppEntityInfo se;
 
     se.type=etSmsc;
@@ -60,6 +61,7 @@ int main(int argc,char* argv[])
     sm.addSmppEntity(se);
     sm.deleteSmppEntity(se.systemId);
     sm.addSmppEntity(se);
+    */
 
 
     char buf[32];

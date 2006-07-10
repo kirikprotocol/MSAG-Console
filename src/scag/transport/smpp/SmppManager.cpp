@@ -208,6 +208,7 @@ SmppManager::SmppManager():sm(this,this)
   log=smsc::logger::Logger::getInstance("smppMan");
   running=false;
   lastUid=0;
+  lastExpireProcess=0;
 }
 
 
@@ -491,7 +492,21 @@ bool SmppManager::getCommand(SmppCommand& cmd)
   MutexGuard mg(queueMon);
   while(running && queue.Count()==0)
   {
-    queueMon.wait();
+    queueMon.wait(5000);
+    time_t now=time(NULL);
+    if(now-lastExpireProcess>5)
+    {
+      lastExpireProcess=now;
+      cmd=SmppCommand::makeCommand(PROCESSEXPIREDRESP,0,0,0);
+      return true;
+    }
+  }
+  time_t now=time(NULL);
+  if(now-lastExpireProcess>5)
+  {
+    lastExpireProcess=now;
+    cmd=SmppCommand::makeCommand(PROCESSEXPIREDRESP,0,0,0);
+    return true;
   }
   if(!running || queue.Count()==0)return false;
   queue.Pop(cmd);

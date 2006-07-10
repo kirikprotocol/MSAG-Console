@@ -29,6 +29,9 @@ public:
   void processSubmitResp(SmppCommand& cmd);
   void processDelivery(SmppCommand& cmd);
   void processDeliveryResp(SmppCommand& cmd);
+  void processDataSm(SmppCommand& cmd);
+  void processDataSmResp(SmppCommand& cmd);
+  void processExpiredResps();
 
 protected:
   SmppCommandQueue* queue;
@@ -37,8 +40,9 @@ protected:
 
   void SubmitResp(SmppCommand& cmd,int status);
   void DeliveryResp(SmppCommand& cmd,int status);
-    void registerEvent(int event, SmppEntity* sme, SmppEntity* sc, int errCode);
-    void registerEvent(int event, SmppEntity* sme, SmppEntity* sc, const char* rid, int errCode);
+
+  void registerEvent(int event, SmppEntity* sme, SmppEntity* sc, int errCode);
+  void registerEvent(int event, SmppEntity* sme, SmppEntity* sc, const char* rid, int errCode);
 
   struct ResponseRegistry;
   static ResponseRegistry reg;

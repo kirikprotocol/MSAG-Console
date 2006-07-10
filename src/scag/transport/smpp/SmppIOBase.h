@@ -23,6 +23,8 @@ public:
   SmppIOBase()
   {
     log=smsc::logger::Logger::getInstance("smpp.io");
+    inactivityTimeout=120;
+    enquireLinkTimeout=60;
   }
 
   ~SmppIOBase()
@@ -82,6 +84,8 @@ protected:
   buf::Array<SmppSocket*> sockets;
   net::Multiplexer mul;
   smsc::logger::Logger* log;
+  int inactivityTimeout;
+  int enquireLinkTimeout;
 };
 
 }//smpp

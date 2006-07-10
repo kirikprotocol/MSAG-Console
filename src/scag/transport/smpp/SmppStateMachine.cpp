@@ -3,6 +3,7 @@
 #include "scag/re/RuleEngine.h"
 #include "scag/sessions/SessionManager.h"
 #include "scag/stat/StatisticsManager.h"
+#include "system/status.h"
 
 namespace scag{
 namespace transport{
@@ -14,10 +15,12 @@ using namespace scag::stat;
 struct StateMachine::ResponseRegistry
 {
   smsc::logger::Logger* log;
+  int timeout;
 
   ResponseRegistry()
   {
     log=0;
+    timeout=60;
   }
   struct RegKey{
     int uid;
@@ -26,9 +29,18 @@ struct StateMachine::ResponseRegistry
       return uid==key.uid && seq==key.seq;
     }
   };
+  struct ListValue{
+    RegKey key;
+    time_t insTime;
+  };
+
+  typedef std::list<ListValue> TimeOutList;
+  TimeOutList toList;
+
   struct RegValue{
     SmppCommand cmd;
     int dlgId;
+    TimeOutList::iterator it;
   };
   struct HashFunc{
     static unsigned int CalcHash(const RegKey& key) {
@@ -48,7 +60,13 @@ struct StateMachine::ResponseRegistry
     key.uid=uid;
     key.seq=seq;
     RegValue val;
+    ListValue lv;
+    lv.key=key;
+    lv.insTime=time(NULL);
+    toList.push_back(lv);
     val.cmd=cmd;
+    val.it=toList.end();
+    val.it--;
     val.dlgId=cmd->get_dialogId();
     cmd->set_dialogId(seq);
     reg.Insert(key,val);
@@ -65,9 +83,28 @@ struct StateMachine::ResponseRegistry
     if(!ptr)return 0;
     cmd=ptr->cmd;
     cmd->set_dialogId(ptr->dlgId);
+    toList.erase(ptr->it);
     reg.Delete(key);
     return true;
   }
+
+  bool getExpiredCmd(SmppCommand& cmd)
+  {
+    sync::MutexGuard mg(mtx);
+    if(toList.empty())return false;
+    time_t now=time(NULL);
+    if(now-toList.front().insTime<timeout)
+    {
+      return false;
+    }
+    RegValue* ptr=reg.GetPtr(toList.front().key);
+    cmd=ptr->cmd;
+    cmd->set_dialogId(ptr->dlgId);
+    //reg.Delete(toList.head().key);
+    //toList.pop_front();
+    return true;
+  }
+
 };
 
 StateMachine::ResponseRegistry StateMachine::reg;
@@ -80,13 +117,16 @@ int StateMachine::Execute()
     try{
       if(queue->getCommand(cmd))
       {
-        smsc_log_debug(log,"Exec: processing command %d(%x) from %s",cmd->get_commandId(),cmd->get_commandId(),cmd.getEntity()->getSystemId());
+        smsc_log_debug(log,"Exec: processing command %d(%x) from %s",cmd->get_commandId(),cmd->get_commandId(),cmd.getEntity()?cmd.getEntity()->getSystemId():"");
         switch(cmd->get_commandId())
         {
           case SUBMIT:          processSubmit(cmd);         break;
           case SUBMIT_RESP:     processSubmitResp(cmd);     break;
           case DELIVERY:        processDelivery(cmd);       break;
           case DELIVERY_RESP:   processDeliveryResp(cmd);   break;
+          case DATASM:          processDataSm(cmd);         break;
+          case DATASM_RESP:     processDataSmResp(cmd);     break;
+          case PROCESSEXPIREDRESP: processExpiredResps();   break;
           default:
             smsc_log_warn(log,"Unprocessed command id %d",cmd->get_commandId());
             break;
@@ -120,6 +160,9 @@ void StateMachine::processSubmit(SmppCommand& cmd)
 {
   router::RouteInfo ri;
   SMS& sms=*cmd->get_sms();
+  SmsCommand& smscmd=cmd->get_smsCommand();
+  smscmd.orgSrc=sms.getOriginatingAddress();
+  smscmd.orgDst=sms.getDestinationAddress();
   SmppEntity *src=cmd.getEntity();
   SmppEntity *dst=routeMan->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
   if(!dst)
@@ -274,6 +317,9 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
   cmd->set_serviceId(orgCmd->get_serviceId());
   cmd->set_operationId(orgCmd->get_operationId());
 
+  sms->setOriginatingAddress(orgCmd->get_smsCommand().orgSrc);
+  sms->setDestinationAddress(orgCmd->get_smsCommand().orgDst);
+
   scag::sessions::CSessionKey key;
   key.abonentAddr=sms->getDestinationAddress();
   int umr = sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
@@ -327,6 +373,9 @@ void StateMachine::processDelivery(SmppCommand& cmd)
 {
   router::RouteInfo ri;
   SMS& sms=*(cmd->get_sms());
+  SmsCommand& smscmd=cmd->get_smsCommand();
+  smscmd.orgSrc=sms.getOriginatingAddress();
+  smscmd.orgDst=sms.getDestinationAddress();
   SmppEntity *src=cmd.getEntity();
   SmppEntity *dst=routeMan->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
   if(!dst)
@@ -461,9 +510,12 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
   }
 
   SmppEntity* dst=orgCmd.getEntity();
-  cmd->get_resp()->set_sms(orgCmd->get_sms());
+  SMS* sms=orgCmd->get_sms();
+  cmd->get_resp()->set_sms(sms);
   cmd->set_serviceId(orgCmd->get_serviceId());
   cmd->set_operationId(orgCmd->get_operationId());
+  sms->setOriginatingAddress(orgCmd->get_smsCommand().orgSrc);
+  sms->setDestinationAddress(orgCmd->get_smsCommand().orgDst);
 
   scag::sessions::CSessionKey key;
   key.abonentAddr=orgCmd->get_sms()->getOriginatingAddress();
@@ -528,6 +580,199 @@ void StateMachine::DeliveryResp(SmppCommand& cmd,int status)
       status
     )
   );
+}
+
+void StateMachine::processDataSm(SmppCommand& cmd)
+{
+  router::RouteInfo ri;
+  SMS& sms=*(cmd->get_sms());
+  SmsCommand& smscmd=cmd->get_smsCommand();
+  smscmd.orgSrc=sms.getOriginatingAddress();
+  smscmd.orgDst=sms.getDestinationAddress();
+  SmppEntity *src=cmd.getEntity();
+  SmppEntity *dst=routeMan->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
+  if(!dst)
+  {
+    smsc_log_info(log,"DataSm: no route %s(%s)->%s",
+      sms.getOriginatingAddress().toString().c_str(),
+      src->getSystemId(),
+      sms.getDestinationAddress().toString().c_str());
+    DeliveryResp(cmd,smsc::system::Status::NOROUTE);
+    registerEvent(scag::stat::events::smpp::DELIVER_REJECTED, NULL, src, smsc::system::Status::NOROUTE);
+    return;
+  }
+
+  sms.setRouteId(ri.routeId);
+  sms.setSourceSmeId(src->getSystemId());
+  sms.setDestinationSmeId(dst->getSystemId());
+
+  if(src->info.type==etService)
+  {
+    if(dst->info.type==etService)
+    {
+      smscmd.dir=SmsCommand::dsdSrv2Srv;
+    }else
+    {
+      smscmd.dir=SmsCommand::dsdSrv2Sc;
+    }
+  }else
+  {
+    if(dst->info.type==etService)
+    {
+      smscmd.dir=SmsCommand::dsdSc2Srv;
+    }else
+    {
+      smscmd.dir=SmsCommand::dsdSc2Sc;
+    }
+  }
+
+  cmd->set_serviceId(ri.serviceId);
+
+  int umr = sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) ?
+            sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) : -1;
+  int ussd_op = sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
+                sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
+
+  smsc_log_debug(log, "Datasm: UMR=%d, USSD_OP=%d", umr, ussd_op);
+
+  scag::sessions::CSessionKey key;
+  scag::sessions::SessionPtr session;
+  key.abonentAddr=sms.getOriginatingAddress();
+  if (ussd_op < 0) // SMPP, No USSD specific flags
+  {
+      if (umr < 0) {
+          key.USR = 0;
+          session=scag::sessions::SessionManager::Instance().newSession(key);
+          sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
+      }
+      else {
+          key.USR = umr;
+          smsc_log_debug(log, "SMPP DataSm: Continue, UMR=%d", umr);
+          session=scag::sessions::SessionManager::Instance().getSession(key);
+          if (!session.Get()) {
+              session=scag::sessions::SessionManager::Instance().newSession(key);
+              sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
+              smsc_log_warn(log, "SMPP DataSm: Session for USR=%d not found, created new USR=%d", umr, key.USR);
+          }
+      }
+  }
+  smsc_log_debug(log, "DataSm: RuleEngine processing...");
+  scag::re::RuleStatus st=scag::re::RuleEngine::Instance().process(cmd,*session);
+  smsc_log_debug(log, "DataSm: RuleEngine procesed.");
+
+  if(!st.status)
+  {
+    smsc_log_info(log,"DataSm: RuleEngine returned result=%d",st.result);
+    DeliveryResp(cmd, st.temporal? smsc::system::Status::RX_T_APPN :
+                                   smsc::system::Status::RX_P_APPN);
+    scag::sessions::SessionManager::Instance().releaseSession(session);
+    registerEvent(scag::stat::events::smpp::DELIVER_REJECTED, dst, src, (char*)ri.routeId, st.temporal? smsc::system::Status::RX_T_APPN : smsc::system::Status::RX_P_APPN);
+    return;
+  }
+
+
+  try{
+    int newSeq=dst->getNextSeq();
+    reg.Register(dst->getUid(),newSeq,cmd);
+    if(sms.hasBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS))
+    {
+      sms.getMessageBody().dropProperty(Tag::SMSC_UNKNOWN_OPTIONALS);
+    }
+    dst->putCommand(cmd);
+    registerEvent(scag::stat::events::smpp::DELIVER_ACCEPTED, dst, src, (char*)ri.routeId, -1);
+  } catch(std::exception& e) {
+    smsc_log_info(log,"DataSm:Failed to putCommand into %s:%s",dst->getSystemId(),e.what());
+    registerEvent(scag::stat::events::smpp::DELIVER_FAILED, dst, src, (char*)ri.routeId, -1);
+  }
+  scag::sessions::SessionManager::Instance().releaseSession(session);
+}
+void StateMachine::processDataSmResp(SmppCommand& cmd)
+{
+    int rs = -2;
+    scag::re::RuleStatus st;
+
+  smsc_log_debug(log, "DataSmResp");
+
+  SmppCommand orgCmd;
+  SmppEntity* src=cmd.getEntity();
+  if(!reg.Get(src->getUid(),cmd->get_dialogId(),orgCmd))
+  {
+    smsc_log_warn(log,"Original datasm for datasm response not found. sid='%s',seq='%d'",src->getSystemId(),cmd->get_dialogId());
+    registerEvent(scag::stat::events::smpp::DELIVER_RESP_FAILED, src, NULL, -1);
+    return;
+  }
+
+  SmppEntity* dst=orgCmd.getEntity();
+  SMS* sms=orgCmd->get_sms();
+  cmd->get_resp()->set_sms(sms);
+  cmd->set_serviceId(orgCmd->get_serviceId());
+  cmd->set_operationId(orgCmd->get_operationId());
+  sms->setOriginatingAddress(orgCmd->get_smsCommand().orgSrc);
+  sms->setDestinationAddress(orgCmd->get_smsCommand().orgDst);
+
+  scag::sessions::CSessionKey key;
+  key.abonentAddr=orgCmd->get_sms()->getOriginatingAddress();
+  key.USR=orgCmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+
+//  if(cmd.status != CMD_OK)
+//      Statistics::Instance().registerEvent(SmppStatEvent(src->info, cntRejected, -1));
+
+  scag::sessions::SessionPtr session=scag::sessions::SessionManager::Instance().getSession(key);
+  if(!session.Get())
+  {
+    smsc_log_warn(log,"Session not found. key='%s:%d'",key.abonentAddr.toString().c_str(),key.USR);
+    cmd->get_resp()->set_status(smsc::system::Status::RX_T_APPN);
+    rs = smsc::system::Status::RX_T_APPN;
+  }
+  else
+  {
+    smsc_log_debug(log, "datasm resp: processing...");
+    st=scag::re::RuleEngine::Instance().process(cmd,*session);
+    smsc_log_debug(log, "datasm resp: procesed.");
+    if(!st.status)
+        rs = st.result;
+  }
+
+  cmd->set_dialogId(orgCmd->get_dialogId());
+  cmd->get_resp()->set_messageId("");
+
+  try{
+    dst->putCommand(cmd);
+  } catch(std::exception& e) {
+    smsc_log_warn(log,"DataSmResp:Failed to put command into %s:%s",dst->getSystemId(),e.what());
+    rs = -1;
+  }
+
+  if(rs != -2 || !st.status)
+      registerEvent(scag::stat::events::smpp::DELIVER_RESP_FAILED, src, dst, (char*)orgCmd->get_sms()->getRouteId(), rs);
+  else
+      registerEvent(scag::stat::events::smpp::DELIVER_RESP_OK, src, dst, (char*)orgCmd->get_sms()->getRouteId(), -1);
+
+  if(session.Get())scag::sessions::SessionManager::Instance().releaseSession(session);
+  cmd->get_resp()->set_sms(0);
+}
+
+void StateMachine::processExpiredResps()
+{
+  SmppCommand cmd;
+  while(reg.getExpiredCmd(cmd))
+  {
+    switch(cmd->get_commandId())
+    {
+      case DELIVERY:
+      {
+        processDeliveryResp(SmppCommand::makeDeliverySmResp("0",cmd->get_dialogId(),smsc::system::Status::DELIVERYTIMEDOUT));
+      }break;
+      case SUBMIT:
+      {
+        processSubmitResp(SmppCommand::makeSubmitSmResp("0",cmd->get_dialogId(),smsc::system::Status::DELIVERYTIMEDOUT,false));
+      }break;
+      case DATASM:
+      {
+        processDataSmResp(SmppCommand::makeDataSmResp("0",cmd->get_dialogId(),smsc::system::Status::DELIVERYTIMEDOUT));
+      }break;
+    }
+  }
 }
 
 }//smpp

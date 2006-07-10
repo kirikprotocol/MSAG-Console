@@ -81,6 +81,7 @@ protected:
 
   buf::CyclicQueue<SmppCommand> queue;
   sync::EventMonitor queueMon;
+  time_t lastExpireProcess;
 
   typedef RefPtr<router::RouteManager,sync::Mutex> RouterRef;
   RouterRef routeMan;
