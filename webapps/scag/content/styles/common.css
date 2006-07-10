@@ -121,6 +121,20 @@ div.secSmsc
 	font-weight: bold;
 }
 
+div.page_subtitle_medium,
+{
+	background-position: left;
+	background-repeat: no-repeat;
+	color: #308380;
+	padding-left: 10px;
+	margin-left: 0px;
+	margin-bottom: 4px;
+	background-image: url(content/images/smsc_ico.gif);
+	font-size: medium;
+	font-weight: bold;
+}
+
+
 /*************************************************************************/
 table.smsc_status,
 table.smsc_status td,
