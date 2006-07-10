@@ -15,6 +15,7 @@ import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.scag.backend.service.ServiceProvidersManager;
 import ru.sibinco.scag.backend.status.StatMessage;
 import ru.sibinco.scag.backend.status.StatusManager;
+import ru.sibinco.scag.backend.routing.http.placement.Option;
 
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
@@ -39,6 +40,7 @@ public class HttpRoutingManager {
     private Map routes = null;
     private Map subjects = null;
     private Map sites = null;
+    private Option options = null;
     private final File msagConfFolder;
     private ArrayList statMessages = new ArrayList();
     private ServiceProvidersManager serviceProvidersManager;
@@ -93,6 +95,7 @@ public class HttpRoutingManager {
         logger.debug("exit " + this.getClass().getName() + ".loadFromFile(\"" + fileName + "\")");
         try {
             final Document routesDocument = Utils.parse(config.getAbsolutePath());
+            loadOptions(routesDocument.getDocumentElement().getElementsByTagName("options"));
             loadSubjects(routesDocument.getDocumentElement().getElementsByTagName("subject_def"));
             loadSites(routesDocument.getDocumentElement().getElementsByTagName("site_subject_def"));
             loadRoutes(routesDocument.getDocumentElement().getElementsByTagName("route"));
@@ -114,6 +117,10 @@ public class HttpRoutingManager {
         }
     }
 
+    private void loadOptions(NodeList options) throws SibincoException {
+        setOptions(new Option(options));
+    }
+
     private void loadRoutes(NodeList routeList) throws SibincoException {
         routes = Collections.synchronizedMap(new HashMap());
         for (int i = 0; i < routeList.getLength(); i++) {
@@ -127,7 +134,6 @@ public class HttpRoutingManager {
         return new HttpRoute(routeElem, subjects, serviceProvidersManager);
     }
 
-
     private void saveToFile(final String fileName) throws SibincoException {
         final File file = new File(msagConfFolder, fileName);
         final File newFile = Functions.createNewFilenameForSave(file);
@@ -139,6 +145,7 @@ public class HttpRoutingManager {
         try {
             final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), localEncoding));
             Functions.storeConfigHeader(out, "http_routes", "http_routes.dtd", localEncoding);
+            options.store(out);
             for (Iterator iterator = subjects.values().iterator(); iterator.hasNext();) {
                 final HttpSubject httpSubject = (HttpSubject) iterator.next();
                 httpSubject.store(out);
@@ -290,6 +297,14 @@ public class HttpRoutingManager {
 
     public Map getSites() {
         return sites;
+    }
+
+    public synchronized Option getOptions() {
+        return options;
+    }
+
+    public synchronized void setOptions(Option options) {
+        this.options = options;
     }
 
     public boolean isRoutesChanged() {
