@@ -284,6 +284,13 @@ using smsc::smeman::SmeRecord;
             const int DELIVER_RESP_FAILED = 10;
             const int RECEIPT_OK = 11;
             const int RECEIPT_FAILED = 12;
+
+            const int FAILED = 20;
+            const int REJECTED = 21;
+            const int ACCEPTED = 22;
+
+            const int RESP_OK = 23;
+            const int RESP_FAILED = 24;
         }
         namespace http{
             const int REQUEST_OK = 1;

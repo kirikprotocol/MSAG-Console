@@ -41,8 +41,7 @@ protected:
   void SubmitResp(SmppCommand& cmd,int status);
   void DeliveryResp(SmppCommand& cmd,int status);
 
-  void registerEvent(int event, SmppEntity* sme, SmppEntity* sc, int errCode);
-  void registerEvent(int event, SmppEntity* sme, SmppEntity* sc, const char* rid, int errCode);
+  void registerEvent(int event, SmppEntity* src, SmppEntity* dst, const char* rid, int errCode);
 
   struct ResponseRegistry;
   static ResponseRegistry reg;
