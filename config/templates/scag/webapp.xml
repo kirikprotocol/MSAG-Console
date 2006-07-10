@@ -23,6 +23,11 @@
     <param name="ids_file" type="string">webapps/msag/WEB-INF/ids.xml</param>
     <param name="locales_file" type="string">webapps/msag/WEB-INF/locales.xml</param>
 
+    <section name="installation">
+     <param name="type" type="string">@installation.type@</param>
+     <param name="mirrorpath" type="string">@installation.mirrorpath@</param>
+    </section>
+
     <section name="gw daemon">
         <param name="host" type="string">@connect.host@</param>
         <param name="port" type="int">@daemon.admin.port@</param>

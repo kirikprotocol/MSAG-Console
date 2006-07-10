@@ -25,6 +25,9 @@ bill.server_host=127.0.0.1
 bill.server_port=23989
 bill.time_out=60000
 
+installation.type=single
+installation.mirrorpath=
+
 status.show_interval=86400000
 language.default=ru
 session.location=/opt/home/msag_test/msag_distr/storage/sessions
