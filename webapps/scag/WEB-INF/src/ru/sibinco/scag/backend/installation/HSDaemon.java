@@ -17,7 +17,7 @@ import org.apache.log4j.Logger;
  */
 public class HSDaemon {
   private Logger logger = Logger.getLogger(this.getClass());
-  private static final boolean DEBUG = true;
+  private static final boolean DEBUG = false;
 
   private static final String typeSingle = "single";
   private static final String typeHS = "HS";
