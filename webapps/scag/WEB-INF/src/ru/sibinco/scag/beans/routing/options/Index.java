@@ -5,10 +5,9 @@
 package ru.sibinco.scag.beans.routing.options;
 
 import ru.sibinco.lib.SibincoException;
-import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.routing.http.placement.AbonentsPlacement;
-import ru.sibinco.scag.backend.routing.http.placement.SitePlacement;
 import ru.sibinco.scag.backend.routing.http.placement.Option;
+import ru.sibinco.scag.backend.routing.http.placement.SitePlacement;
 import ru.sibinco.scag.backend.status.StatMessage;
 import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.beans.EditBean;
@@ -18,7 +17,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * The <code>Index</code> class represents
