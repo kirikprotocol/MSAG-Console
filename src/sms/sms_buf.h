@@ -50,7 +50,7 @@ public:
     }
     memcpy(buf,str,len);
     strlength=len;
-    buf[strlength+1]=0;
+    buf[strlength]=0;
   }
   int length()const
   {
