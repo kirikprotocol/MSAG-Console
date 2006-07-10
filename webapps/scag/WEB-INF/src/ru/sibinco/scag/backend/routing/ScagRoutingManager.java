@@ -9,12 +9,19 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import ru.sibinco.lib.SibincoException;
+import ru.sibinco.lib.StatusDisconnectedException;
 import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.scag.backend.endpoints.SmppManager;
 import ru.sibinco.scag.backend.service.ServiceProvidersManager;
 import ru.sibinco.scag.backend.status.StatMessage;
 import ru.sibinco.scag.backend.status.StatusManager;
+import ru.sibinco.scag.backend.Manager;
+import ru.sibinco.scag.backend.SCAGAppContext;
+import ru.sibinco.scag.backend.installation.HSDaemon;
+import ru.sibinco.scag.backend.daemon.Proxy;
+import ru.sibinco.scag.beans.SCAGJspException;
+import ru.sibinco.scag.Constants;
 
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
@@ -35,7 +42,7 @@ import java.util.*;
  *
  * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
  */
-public class ScagRoutingManager {
+public class ScagRoutingManager extends Manager {
 
     private Map routes = null;
     private Map subjects = null;
@@ -44,6 +51,7 @@ public class ScagRoutingManager {
     private final File scagConfFolder;
     private SmppManager smppManager;
     private ServiceProvidersManager serviceProvidersManager;
+    private HSDaemon hsDaemon;
     private boolean routesChanged = false;
     private String changedByUser = "";
     private boolean routesRestored = false;
@@ -56,10 +64,11 @@ public class ScagRoutingManager {
 
 
     public ScagRoutingManager(File smscConfFolder, SmppManager smppManager,
-                              ServiceProvidersManager serviceProvidersManager) {
+                              ServiceProvidersManager serviceProvidersManager, HSDaemon hsDaemon) {
         this.scagConfFolder = smscConfFolder;
         this.smppManager = smppManager;
         this.serviceProvidersManager = serviceProvidersManager;
+        this.hsDaemon = hsDaemon;
     }
 
     public void init() throws SibincoException {
@@ -190,14 +199,18 @@ public class ScagRoutingManager {
     }
 
     private void saveToFile(final String filename) throws SibincoException {
+       saveToFile(filename, true);
+    }
 
+    private void saveToFile(final String filename, boolean backup) throws SibincoException {
         final File file = new File(scagConfFolder, filename);
-        final File newFile = Functions.createNewFilenameForSave(file);
+        File newFile = null;
+        if (backup) newFile = Functions.createNewFilenameForSave(file);
         try {
             String localEncoding = Functions.getLocaleEncoding();
             if (localEncoding.equalsIgnoreCase("Cp1251"))
                 localEncoding = "WINDOWS-1251";
-            final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), localEncoding));
+            final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream((backup)?newFile:file), localEncoding));
 
             Functions.storeConfigHeader(out, "routes", "smpp_routes.dtd", localEncoding);
             for (Iterator it = subjects.values().iterator(); it.hasNext();) {
@@ -211,7 +224,7 @@ public class ScagRoutingManager {
             Functions.storeConfigFooter(out, "routes");
             out.flush();
             out.close();
-            Functions.renameNewSavedFileToOriginal(newFile, file);
+            if (backup) Functions.renameNewSavedFileToOriginal(newFile, file);
 
         } catch (FileNotFoundException e) {
             throw new SibincoException("Couldn't save new routes settings: Couldn't write to destination config filename: " + e.getMessage());
@@ -269,6 +282,7 @@ public class ScagRoutingManager {
 
     public synchronized void save() throws SibincoException {
         saveToFile(SMPP_ROUTES_TEMPORAL_CONFIG);
+        hsDaemon.store(scagConfFolder, SMPP_ROUTES_TEMPORAL_CONFIG);
     }
 
     public synchronized void restore() throws SibincoException {
@@ -277,9 +291,20 @@ public class ScagRoutingManager {
         clearStatMessages();
     }
 
-    public synchronized void apply() throws SibincoException {
-        saveToFile(SMPP_ROUTES_PRIMARY_CONFIG);
-        clearStatMessages();
+    public synchronized void apply(final SCAGAppContext appContext) throws SCAGJspException {
+      try {
+          appContext.getScag().invokeCommand("applySmppRoutes",null,appContext,this,new File(scagConfFolder, SMPP_ROUTES_PRIMARY_CONFIG).getAbsolutePath());
+      } catch (SibincoException e) {
+          if (!(e instanceof StatusDisconnectedException)) {
+              logger.debug("Couldn't apply routes", e);
+              throw new SCAGJspException(Constants.errors.routing.routes.COULDNT_APPLY_ROUTES, e);
+          }
+      }
+      clearStatMessages();
+    }
+
+    public void store() throws SibincoException {
+       saveToFile(SMPP_ROUTES_PRIMARY_CONFIG,false);
     }
 
     public synchronized void load() throws SibincoException {

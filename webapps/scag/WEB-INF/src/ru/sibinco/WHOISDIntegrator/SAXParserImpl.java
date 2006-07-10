@@ -17,7 +17,7 @@ import java.io.Reader;
 public class SAXParserImpl
 {
 
- public void parseRule(String ruleContent,String path, String transport) throws Exception {
+ public static void parseRule(String ruleContent,String path, String transport) throws Exception {
     try {
        parse(new StringReader(ruleContent), path);
     } catch (SAXException e){
@@ -31,7 +31,7 @@ public class SAXParserImpl
    }
  }
 
-  public void parseTariffMatrix(String path) throws Exception {
+  public static void parseTariffMatrix(String path) throws Exception {
     try {
        parse(null, path);
     } catch (SAXException e){
@@ -44,7 +44,7 @@ public class SAXParserImpl
   }
 
  //{{{ parse() method
- private void parse(Reader contentReader,String path) throws Exception
+ private static void parse(Reader contentReader,String path) throws Exception
  {
   Handler handler = new Handler();
 
@@ -65,7 +65,7 @@ public class SAXParserImpl
 
 
  //{{{ Handler class
- class Handler extends DefaultHandler
+ static class Handler extends DefaultHandler
  {
   //{{{ resolveEntity() method
   /*public InputSource resolveEntity(String publicId, String systemId)

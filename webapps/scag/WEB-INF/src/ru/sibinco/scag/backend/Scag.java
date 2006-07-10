@@ -27,6 +27,7 @@ import ru.sibinco.scag.backend.protocol.commands.rules.RemoveRule;
 import ru.sibinco.scag.backend.protocol.response.Response;
 import ru.sibinco.scag.backend.routing.ScagRoutingManager;
 import ru.sibinco.scag.backend.routing.http.HttpRoutingManager;
+import ru.sibinco.WHOISDIntegrator.TariffMatrixManager;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -150,6 +151,7 @@ public class Scag extends Proxy {
         return res instanceof List ? (List) res : null;
     }
 
+    //load routes
     public synchronized List loadSmppRoutes(final ScagRoutingManager scagRoutingManager)
             throws SibincoException {
         scagRoutingManager.trace();
@@ -173,13 +175,14 @@ public class Scag extends Proxy {
          throw new SibincoException("Couldn't reload operators, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
     }
 
-    public void applySmppRoutes() throws SibincoException {
+    //apply routes
+    protected void applySmppRoutes() throws SibincoException {
         final Response response = super.runCommand(new ApplySmppRoutes());
         if (Response.STATUS_OK != response.getStatus())
             throw new SibincoException("Couldn't apply smpp routes, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
     }
 
-    public void applyHttpRoutes() throws SibincoException {
+    protected void applyHttpRoutes() throws SibincoException {
        final Response response = super.runCommand(new ApplyHttpRoutes());
        if (Response.STATUS_OK!=response.getStatus())
          throw new SibincoException("Couldn't apply http routes, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
@@ -192,17 +195,11 @@ public class Scag extends Proxy {
         throw new SibincoException("Couldn't reload services, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
     }
 
-    //tariff matrix(invoked directly)
-    public void reloadTariffMatrix() throws SibincoException {
-      try {
+    //tariff matrix
+    protected void reloadTariffMatrix() throws SibincoException {
       final Response response = super.runCommand(new ReloadTariffMatrix());
       if (Response.STATUS_OK!=response.getStatus())
-        throw new SibincoException("Couldn't reload tariff matrix, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
-      }  catch (SibincoException se) {
-           if (getStatus() == STATUS_DISCONNECTED)
-             throw new StatusDisconnectedException(host,port);
-           else throw se;
-      }
+        throw new SibincoException(TariffMatrixManager.WHOISD_ERROR_PREFIX+", nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
     }
 
     public Object call(final String commandId, final String err, final Type returnType, final Map arguments) throws SibincoException {
@@ -282,7 +279,7 @@ public class Scag extends Proxy {
 
     //common logic of command executing
     //1. "save" or "delete" button pressed
-    public void invokeCommand(final String commandName, final Object paramsObject, final Scag scag, final Manager manager, final String configFilename) throws SibincoException {
+    public void invokeCommand(final String commandName, final Object paramsObject, final SCAGAppContext appContext,  final Manager manager, final String configFilename) throws SibincoException {
      try{
        //2.save current config to temporary file(smpp.xml->smpp.xml.old)
        File configFile = new File(configFilename);
@@ -290,18 +287,26 @@ public class Scag extends Proxy {
        Functions.RenameFile(configFile,temporary);
        //3.save config
        manager.store();
+       //3.1 parse method used to localy validate saved config
+       try {
+         manager.parse();
+       } catch (Throwable e) {
+         Functions.renameNewSavedFileToOriginal(temporary,configFile,true);
+         throw new SibincoException(e);
+       }
        //4.send command
       try {
        try {
          Method commandMethod;
          if (paramsObject==null) {
            commandMethod = this.getClass().getDeclaredMethod(commandName, new Class[]{});
-           commandMethod.invoke(scag,null);
+           commandMethod.invoke(appContext.getScag(),null);
          } else {
            commandMethod = this.getClass().getDeclaredMethod(commandName, new Class[]{paramsObject.getClass()});
-           commandMethod.invoke(scag,new Object[]{paramsObject});
+           commandMethod.invoke(appContext.getScag(),new Object[]{paramsObject});
          }
        }catch (NoSuchMethodException e) {
+         logger.error("scag doesn't support command "+commandName,e);
          e.printStackTrace();
        } catch (IllegalAccessException e) {
          e.printStackTrace();
@@ -315,6 +320,7 @@ public class Scag extends Proxy {
           //9. save smpp.xml to backup!
           //10. delete smpp.xml.old
           Functions.SavedFileToBackup(temporary,".old");
+          appContext.getHSDaemon().store(configFile);
           throw new StatusDisconnectedException(host,port);
         } else {
           //5. YES(service is started)
@@ -329,8 +335,9 @@ public class Scag extends Proxy {
       //9. save smpp.xml to backup!
       //10. delete smpp.xml.new
       Functions.SavedFileToBackup(temporary,".old");
+      appContext.getHSDaemon().store(configFile);
    } catch (IOException e) {
-     e.printStackTrace();
+     //e.printStackTrace();
      logger.error("IO operation failed - couldn't save config",e);
      throw new SibincoException("IO operation failed - couldn't save config");
    }

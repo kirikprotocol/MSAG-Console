@@ -78,7 +78,7 @@ public class WHOISDServlet extends HttpServlet {
        try {
         switch (id) {
           case WHOISDRequest.RULE: applyTerm(req,isMultipartFormat(req));SendResult(result, resp); break;
-          case WHOISDRequest.TARIFF_MATRIX: applyTariffMatrix(composePath("gw location.tariffs_file"),req,isMultipartFormat(req)); SendResult(result, resp); break;
+          case WHOISDRequest.TARIFF_MATRIX: appContext.getTMatrixManager().applyTariffMatrix(composePath("gw location.tariffs_file"),req,isMultipartFormat(req), appContext); SendResult(result, resp); break;
           default:
             resp.setHeader("status","false");
             result.add(WHOISD_ERROR_PREFIX+"Wrong request for post method");
@@ -126,8 +126,7 @@ public class WHOISDServlet extends HttpServlet {
      } catch (NumberFormatException e) {
        throw new WHOISDException("service parameter must be an integer or long value");
      }
-     RuleManagerWrapper rulemanager = new RuleManagerWrapper(appContext.getRuleManager());
-     SAXParserImpl parser = new SAXParserImpl();
+     RuleManagerWrapper rulemanager = appContext.getRuleManager().getWrapper();
      Map rulesWHOISD = null;
      Rule ruleWHOISD = null;
      LinkedList termAsList = new LinkedList();
@@ -145,7 +144,7 @@ public class WHOISDServlet extends HttpServlet {
      try {
      for (byte i =0 ;i<transports.length;i++) {
        ruleWHOISD = (Rule)rulesWHOISD.get(transports[i]);
-       Rule curRule = rulemanager.getRule(new Long(service),transports[i]);
+       Rule curRule = rulemanager.getRule(service,transports[i]);
        if (curRule!=null && curRule.isLocked()) throw new WHOISDException("Rule ["+transports[i]+"] is editing in MSAG web admin console right now");
        if (ruleWHOISD == null) {
          if (curRule!=null) {
@@ -155,7 +154,7 @@ public class WHOISDServlet extends HttpServlet {
        }
        String ruleSystemId = composePath("gw location.rules_folder")+"/"+ transports[i] + "/"+ruleWHOISD.getId().toString();
        try {
-        parser.parseRule(rulemanager.getRuleContentAsString(ruleWHOISD), ruleSystemId, transports[i]);
+        SAXParserImpl.parseRule(rulemanager.getRuleContentAsString(ruleWHOISD), ruleSystemId, transports[i]);
        } catch(WHOISDException e) {
          throw new WHOISDException(composeErrorMessage(ruleWHOISD,termAsList, e.getMessage(), e.getLineNumber()));
        }
@@ -177,7 +176,7 @@ public class WHOISDServlet extends HttpServlet {
    }
 
    private String composeErrorMessage(Rule ruleWHOISD, LinkedList termAsList, String errormessage, int linenumber) {
-     int ruleHeaderLength = Rule.getRuleHeader(ruleWHOISD.getTransport()).size();
+     int ruleHeaderLength = Rule.mainHeaderLength;
      LinkedList ruleBodyWithoutHeader = ruleWHOISD.getBody();
      for (int ii=0;ii<(ruleHeaderLength+ruleWHOISD.getWhoisdPartOffset());ii++)
        ruleBodyWithoutHeader.removeFirst();   
@@ -215,41 +214,7 @@ public class WHOISDServlet extends HttpServlet {
      return message;
    }
 
-   private void applyTariffMatrix(String pathToWrite, HttpServletRequest req, boolean isMultipartFormat) throws Exception {
-     //backup current file "tariffs.xml" -> "tariffs.xml~"
-     File tariffMatrix = new File(pathToWrite);
-     File tariffMatrixTemp = new File(pathToWrite+'~');
-     boolean backupResult = false;
-     // do we have file to backup?
-     if (tariffMatrix.exists()) {
-      backupResult = MiscUtilities.moveFile(tariffMatrix,tariffMatrixTemp, false);
-      if (!backupResult) throw new Exception("Can't make temporary file tariffs.xml~");
-     }
-     saveFile(pathToWrite, req, isMultipartFormat);
-     SAXParserImpl parser = new SAXParserImpl();
-     try {
-     parser.parseTariffMatrix(pathToWrite);
-     try {
-       appContext.getScag().reloadTariffMatrix();
-     } catch (SibincoException se) {
-       if (!(se instanceof StatusDisconnectedException))
-         if (se.getMessage().startsWith("Couldn't reload tariff matrix"))
-           throw new WHOISDException(se.getMessage());
-         else throw se;
-      }
-      //there are no exceptions -> copy tariffMatrixTemp to backup folder
-      if (tariffMatrixTemp.exists()) Functions.SavedFileToBackup(tariffMatrixTemp,"~");
-     } catch (Exception e) {
-       //excpiton occurs while parsing -> restore backup file(i.e. "tariffs.xml~" ->  "tariffs.xml") and delete backup file
-       if (tariffMatrixTemp.exists()) {
-         if (!MiscUtilities.moveFile(tariffMatrixTemp,tariffMatrix, true)) throw new Exception("Can't restore tariffs.xml from tariffs.xml~");
-       } else
-         if (!tariffMatrix.delete()) throw new Exception("TariffMatrix contains errors but can not be deleted");
-       throw e;
-     }
-   }
-
-   private void saveFile(String pathToWrite, HttpServletRequest req, boolean isMultipartFormat) throws Exception {
+   public static void saveFile(String pathToWrite, HttpServletRequest req, boolean isMultipartFormat) throws Exception {
      InputStream in = null;
      BufferedReader br = null;
      FileOutputStream fos = null;
@@ -282,7 +247,7 @@ public class WHOISDServlet extends HttpServlet {
        else return false;
   }
 
-  private int[] extractData(HttpServletRequest request, InputStream is) throws IOException {
+  private static int[] extractData(HttpServletRequest request, InputStream is) throws IOException {
       int[] data = new int[request.getContentLength()];
       int bytes;
       int counter = 0;
@@ -311,7 +276,7 @@ public class WHOISDServlet extends HttpServlet {
       return dataSlice;
   }
 
-  private String getBoundary(HttpServletRequest request) {
+  private static String getBoundary(HttpServletRequest request) {
     String cType = request.getContentType();
     return cType.substring(cType.indexOf("boundary=")+9);
   }
@@ -355,7 +320,7 @@ public class WHOISDServlet extends HttpServlet {
     if (transport == null) throw new WHOISDException("transport parameter is missed!");
     transport = transport.toUpperCase();
     validateTransportParameter(transport);
-    Rule rule = appContext.getRuleManager().getRule(serviceId,transport);
+    Rule rule = appContext.getRuleManager().getRule(serviceId.toString(),transport);
     if (rule == null) throw new WHOISDException("There is no rule for service with id = " + serviceId + " and transport "+ transport);
     if (rule.isLocked()) throw new WHOISDException("Rule is editing in MSAG web admin console right now");
     LinkedList result = new LinkedList(rule.getBody());

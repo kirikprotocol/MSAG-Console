@@ -167,7 +167,7 @@ public class Edit extends TabledEditBeanImpl {
                 serviceProvidersManager.updateService(getLoginedPrincipal().getName(), Long.decode(getParentId()).longValue(), service);
             }
         }
-        appContext.getServiceProviderManager().reloadServices(appContext.getScag(),(getEditId() == null)?true:false,id, serviceProviderId, oldService);
+        appContext.getServiceProviderManager().reloadServices(appContext,(getEditId() == null)?true:false,id, serviceProviderId, oldService);
         if (id != -1) {
             throw new EditChildException(Long.toString(id), getParentId());
         } else {
@@ -310,15 +310,15 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public boolean isSmppRuleExists() {
-        return (appContext.getRuleManager().getRule(new Long(id), Transport.SMPP_TRANSPORT_NAME) != null);
+        return (appContext.getRuleManager().getRule(String.valueOf(id), Transport.SMPP_TRANSPORT_NAME) != null);
     }
 
     public boolean isHttpRuleExists() {
-        return (appContext.getRuleManager().getRule(new Long(id), Transport.HTTP_TRANSPORT_NAME) != null);
+        return (appContext.getRuleManager().getRule(String.valueOf(id), Transport.HTTP_TRANSPORT_NAME) != null);
     }
 
     public boolean isMmsRuleExists() {
-        return (appContext.getRuleManager().getRule(new Long(id), Transport.MMS_TRANSPORT_NAME) != null);
+        return (appContext.getRuleManager().getRule(String.valueOf(id), Transport.MMS_TRANSPORT_NAME) != null);
     }
 
     public String getMbAddSmppRoute() {

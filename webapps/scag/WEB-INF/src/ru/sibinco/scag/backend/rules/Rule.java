@@ -26,6 +26,7 @@ public class Rule
   private Long id;
   private String notes;
   private LinkedList body = new LinkedList();
+  public static int mainHeaderLength;
   public static String header;
   public static final LinkedList ending = new LinkedList();
   public static final String ROOT_ELEMENT="scag:rule";

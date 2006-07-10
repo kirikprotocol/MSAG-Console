@@ -10,6 +10,8 @@ import ru.sibinco.lib.SibincoException;
  * Time: 14:00:22
  * To change this template use File | Settings | File Templates.
  */
-public interface Manager {
-  public void store() throws SibincoException;
+public abstract class Manager {
+  public abstract void store() throws SibincoException;
+  public void parse() throws Throwable {
+  }
 }

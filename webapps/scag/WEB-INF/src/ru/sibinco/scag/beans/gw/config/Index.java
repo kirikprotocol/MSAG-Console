@@ -113,7 +113,7 @@ public class Index extends EditBean {
         }
 
         //appContext.getGwConfig().save();
-        appContext.getConfigManager().applyConfig(appContext.getScag(), oldConfig);
+        appContext.getConfigManager().applyConfig(appContext, oldConfig);
         appContext.getStatuses().setConfigChanged(false);
         started = true;
         stopped = true;

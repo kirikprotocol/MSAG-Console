@@ -7,7 +7,9 @@ import ru.sibinco.lib.backend.users.User;
 import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.lib.backend.util.xml.Utils;
+import ru.sibinco.lib.SibincoException;
 import ru.sibinco.tomcat_auth.XmlAuthenticator;
+import ru.sibinco.scag.backend.installation.HSDaemon;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
@@ -23,9 +25,10 @@ public class UserManager {
 
     private Map users = Collections.synchronizedMap(new HashMap());
     private final File configFile;
-
-    public UserManager(String config) throws IOException, ParserConfigurationException, SAXException {
+    private final HSDaemon hsDaemon;
+    public UserManager(String config, HSDaemon hsDaemon) throws IOException, ParserConfigurationException, SAXException {
         this.configFile = new File(config);
+        this.hsDaemon = hsDaemon;
         try {
             load();
         } catch (IOException e) {
@@ -53,9 +56,10 @@ public class UserManager {
         }
     }
 
-    public synchronized void apply() throws IOException, ParserConfigurationException, SAXException {
+    public synchronized void apply() throws IOException, ParserConfigurationException, SAXException, SibincoException {
         store();
         XmlAuthenticator.init(configFile);
+        hsDaemon.store(configFile);
     }
 
     protected void store() throws IOException {

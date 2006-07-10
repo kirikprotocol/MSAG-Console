@@ -18,8 +18,8 @@ import ru.sibinco.scag.backend.endpoints.centers.Center;
 import ru.sibinco.scag.backend.sme.ProviderManager;
 import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.backend.status.StatMessage;
-import ru.sibinco.scag.backend.Scag;
 import ru.sibinco.scag.backend.Manager;
+import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.Constants;
@@ -39,7 +39,7 @@ import java.util.*;
  *
  * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
  */
-public class SmppManager implements Manager {
+public class SmppManager extends Manager {
 
     private static final String PARAM_NAME_LAST_UID_ID = "last used uid";
 
@@ -101,7 +101,7 @@ public class SmppManager implements Manager {
         return new Center(centersRecords, providerManager);
     }
 
-    public synchronized void deleteCenters(final String user, final Set checkedSet, final Scag scag) throws SCAGJspException {
+    public synchronized void deleteCenters(final String user, final Set checkedSet, final SCAGAppContext appContext) throws SCAGJspException {
         final Map centers = getCenters();
         for (Iterator iterator = checkedSet.iterator(); iterator.hasNext();) {
             final String centerId = (String) iterator.next();
@@ -109,7 +109,7 @@ public class SmppManager implements Manager {
             centers.remove(centerId);
             try {
                 if (center.isEnabled()) {
-                    scag.invokeCommand("deleteCenter",center,scag,this,configFilename);
+                    appContext.getScag().invokeCommand("deleteCenter",center,appContext,this,configFilename);
                 }
             } catch (SibincoException e) {
                 if (!(e instanceof StatusDisconnectedException)) {
@@ -123,7 +123,7 @@ public class SmppManager implements Manager {
                 + checkedSet.toString() + "."));
     }
 
-    public synchronized void deleteServicePoints(final String user, final Set checkedSet, final Scag scag) throws SCAGJspException {
+    public synchronized void deleteServicePoints(final String user, final Set checkedSet, final SCAGAppContext appContext) throws SCAGJspException {
         final Map svcs = getSvcs();
         for (Iterator iterator = checkedSet.iterator(); iterator.hasNext();) {
             final String svcId = (String) iterator.next();
@@ -131,7 +131,7 @@ public class SmppManager implements Manager {
             svcs.remove(svcId);
             try {
                 if (svc.isEnabled()) {
-                    scag.invokeCommand("deleteSvc",svcId,scag,this,configFilename);
+                    appContext.getScag().invokeCommand("deleteSvc",svcId,appContext,this,configFilename);
                 }
             } catch (SibincoException e) {
                 if (!(e instanceof StatusDisconnectedException)) {
@@ -146,7 +146,7 @@ public class SmppManager implements Manager {
     }
 
     public synchronized void createUpdateCenter(String user, boolean isAdd, boolean isEnabled, Center center,
-                                                Scag scag, Center oldCenter) throws SCAGJspException {
+                                                SCAGAppContext appContext, Center oldCenter) throws SCAGJspException {
         String messageText = "";
         try {
             if (isAdd) {
@@ -155,23 +155,23 @@ public class SmppManager implements Manager {
                 center.setUid(++uid);
                 setLastUsedId(center.getUid());
                 if (center.isEnabled()) {
-                    scag.invokeCommand("addCenter",center,scag,this,configFilename);
+                    appContext.getScag().invokeCommand("addCenter",center,appContext,this,configFilename);
                 }
 
             } else {
                 messageText = "Changed center: ";
                 if (oldCenter.isEnabled() == center.isEnabled()) {
                     if (isEnabled)
-                        scag.invokeCommand("updateCenter",center,scag,this,configFilename);
+                        appContext.getScag().invokeCommand("updateCenter",center,appContext,this,configFilename);
                 } else {
                     if (center.isEnabled()) {
-                        scag.invokeCommand("addCenter",center,scag,this,configFilename);
+                        appContext.getScag().invokeCommand("addCenter",center,appContext,this,configFilename);
                     } else {
                         //TODO why delete???
                         //scag.invokeCommand("deleteCenter",center,scag,this,configFilename);
                         HashSet set = new HashSet();
                         set.add(center.getId());
-                        deleteCenters(user,set,scag);
+                        deleteCenters(user,set,appContext);
                     }
                 }
             }
@@ -191,29 +191,29 @@ public class SmppManager implements Manager {
 
     public synchronized void createUpdateServicePoint(String user, Svc svc,
                                                       boolean isAdd,
-                                                      boolean isEnabled, Scag scag,
+                                                      boolean isEnabled, SCAGAppContext appContext,
                                                       Svc oldSvc) throws SCAGJspException {
         String messageText = "";
         try {
             if (isAdd) {
                 messageText = "Added new service point: ";
                 if (svc.isEnabled()) {
-                    scag.invokeCommand("addSvc", svc, scag, this, configFilename);
+                    appContext.getScag().invokeCommand("addSvc", svc, appContext, this, configFilename);
                 }
             } else {
                 messageText = "Changed service point: ";
                 if ((oldSvc.isEnabled() == svc.isEnabled())) {
                     if (isEnabled)
-                        scag.invokeCommand("updateSvcInfo", svc, scag, this, configFilename);
+                        appContext.getScag().invokeCommand("updateSvcInfo", svc, appContext, this, configFilename);
                 } else {
                     if (svc.isEnabled()) {
-                        scag.invokeCommand("addSvc", svc, scag, this, configFilename);
+                        appContext.getScag().invokeCommand("addSvc", svc, appContext, this, configFilename);
                     } else {
                         //TODO why delete???
                         //scag.deleteSvc(svc.getId());
                         HashSet set = new HashSet();
                         set.add(svc.getId());
-                        deleteServicePoints(user,set,scag);
+                        deleteServicePoints(user,set,appContext);
                     }
                 }
             }

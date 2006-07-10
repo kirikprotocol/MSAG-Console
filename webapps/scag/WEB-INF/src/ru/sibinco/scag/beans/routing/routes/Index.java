@@ -193,23 +193,10 @@ public class Index extends TabledBeanImpl {
      * @throws SCAGJspException - an throws exception if it will be occurred
      */
     private void applySmppRoutes() throws SCAGJspException {
-        try {
-            appContext.getScagRoutingManager().apply();
-            try {
-                appContext.getScag().applySmppRoutes();
-            } catch (SibincoException e) {
-                if (Proxy.STATUS_CONNECTED == appContext.getScag().getStatus()) {
-                    logger.debug("Couldn't apply routes", e);
-                    throw new SCAGJspException(Constants.errors.routing.routes.COULDNT_APPLY_ROUTES, e);
-                }
-            }
-            appContext.getScagRoutingManager().setChangedByUser("");
-            appContext.getScagRoutingManager().setRoutesChanged(false);
-            init();
-        } catch (SibincoException e) {
-            logger.debug("Couldn't apply routes", e);
-            throw new SCAGJspException(Constants.errors.routing.routes.COULDNT_APPLY_ROUTES, e);
-        }
+          appContext.getScagRoutingManager().apply(appContext);
+          appContext.getScagRoutingManager().setChangedByUser("");
+          appContext.getScagRoutingManager().setRoutesChanged(false);
+          init();
     }
 
     /**
@@ -218,22 +205,9 @@ public class Index extends TabledBeanImpl {
      * @throws SCAGJspException - an throws exception if it will be occurred
      */
     private void applyHttpRoutes() throws SCAGJspException {
-        try {
-            appContext.getHttpRoutingManager().apply();
-            try {
-                appContext.getScag().applyHttpRoutes();
-            } catch (SibincoException e) {
-                if (Proxy.STATUS_CONNECTED == appContext.getScag().getStatus()) {
-                    logger.debug("Couldn't apply http routes", e);
-                    throw new SCAGJspException(Constants.errors.routing.routes.COULDNT_APPLY_HTTP_ROUTES, e);
-                }
-            }
-            appContext.getHttpRoutingManager().setRoutesChanged(false);
-            init();
-        } catch (SibincoException e) {
-            logger.debug("Couldn't apply http routes", e);
-            throw new SCAGJspException(Constants.errors.routing.routes.COULDNT_APPLY_HTTP_ROUTES, e);
-        }
+        appContext.getHttpRoutingManager().apply(appContext);
+        appContext.getHttpRoutingManager().setRoutesChanged(false);
+        init();
     }
 
     /**

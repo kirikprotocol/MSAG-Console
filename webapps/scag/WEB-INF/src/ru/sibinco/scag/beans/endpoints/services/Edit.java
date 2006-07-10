@@ -122,7 +122,7 @@ public class Edit extends EditBean {
         svcs.put(id, svc);
         final Scag scag = appContext.getScag();
         appContext.getSmppManager().createUpdateServicePoint(getLoginedPrincipal().getName(),
-                svc, isAdd(), isEnabled(), scag, oldSvc);
+                svc, isAdd(), isEnabled(), appContext, oldSvc);
         throw new DoneException();
     }
 

@@ -47,6 +47,6 @@ public class Index extends TabledBeanImpl {
         if (toRemoveRoutes.size() > 0) {
             appContext.getScagRoutingManager().deleteRoutes(getLoginedPrincipal().getName(), toRemoveRoutes);
         }
-        appContext.getServiceProviderManager().deleteServiceProviders(getLoginedPrincipal().getName(), toRemove, appContext.getScag());
+        appContext.getServiceProviderManager().deleteServiceProviders(getLoginedPrincipal().getName(), toRemove, appContext);
     }
 }

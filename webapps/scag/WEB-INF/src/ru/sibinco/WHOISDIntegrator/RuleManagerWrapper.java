@@ -2,6 +2,7 @@ package ru.sibinco.WHOISDIntegrator;
 
 import ru.sibinco.scag.backend.rules.RuleManager;
 import ru.sibinco.scag.backend.rules.Rule;
+import ru.sibinco.scag.backend.installation.HSDaemon;
 import ru.sibinco.scag.beans.rules.applet.MiscUtilities;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.StatusDisconnectedException;
@@ -69,7 +70,7 @@ public class RuleManagerWrapper {
    return rulemanager.getXslFolder();
   }
 
-  public Rule getRule(Long ruleId, String transport) {
+  public Rule getRule(String ruleId, String transport) {
     return rulemanager.getRule(ruleId,transport);
   }
 
@@ -86,26 +87,29 @@ public class RuleManagerWrapper {
     return new BufferedReader(new StringReader(ruleContent));
   }
   //--------------------------------
-  public void AddRuleCommit(RuleCommand ruleCommand) {
+  public void AddRuleCommit(RuleCommand ruleCommand) throws Exception {
     System.out.println("invoked AddRuleCommit service = "+ ruleCommand.id+" transport = "+ ruleCommand.transport);
+    rulemanager.finishOperation(ruleCommand.id,ruleCommand.transport,HSDaemon.UPDATEORADD);
     rulemanager.saveMessage("Added rule: ", WHOISD_USER, ruleCommand.id, ruleCommand.transport);
     //do nothing!
   }
 
-  public void updateRuleCommit(RuleCommand ruleCommand) throws Exception{
+  public void updateRuleCommit(RuleCommand ruleCommand) throws Exception {
     System.out.println("invoked updateRuleCommit service = "+ ruleCommand.id+" transport = "+ ruleCommand.transport);
-    rulemanager.saveMessage("Updated rule: ", WHOISD_USER, ruleCommand.id, ruleCommand.transport);
     //TODO
     //we have to save rule_1.xml.new in backup folder
-    File ruleFile = rulemanager.composeRuleFile(ruleCommand.transport,new Long(ruleCommand.id));
+    File ruleFile = rulemanager.composeRuleFile(ruleCommand.transport,ruleCommand.id);
     File currentRuleFile = Functions.createNewFilename(ruleFile);
     Functions.SavedFileToBackup(currentRuleFile,".new");
+    rulemanager.finishOperation(ruleCommand.id,ruleCommand.transport,HSDaemon.UPDATEORADD);
+    rulemanager.saveMessage("Updated rule: ", WHOISD_USER, ruleCommand.id, ruleCommand.transport);
   }
 
   public void removeRuleCommit(RuleCommand ruleCommand) throws Exception {
     System.out.println("invoked removeRuleCommit service = "+ ruleCommand.id+" transport = "+ ruleCommand.transport);
-    rulemanager.saveMessage("Removed rule: ", WHOISD_USER, ruleCommand.id, ruleCommand.transport);
     rulemanager.removeRuleFile(ruleCommand.id, ruleCommand.transport);
+    rulemanager.finishOperation(ruleCommand.id,ruleCommand.transport,HSDaemon.REMOVE);
+    rulemanager.saveMessage("Removed rule: ", WHOISD_USER, ruleCommand.id, ruleCommand.transport);
   }
 
   public void AddRuleRollback(RuleCommand ruleCommand) throws Exception{
@@ -119,7 +123,7 @@ public class RuleManagerWrapper {
     rulemanager.saveMessage("Failed to update rule: ", WHOISD_USER, ruleCommand.id, ruleCommand.transport);
     //TODO
     //rule_1.xml.new -> rule_1.xml and delete rule_1.xml.new
-    File ruleFile = rulemanager.composeRuleFile(ruleCommand.transport,new Long(ruleCommand.id));
+    File ruleFile = rulemanager.composeRuleFile(ruleCommand.transport,ruleCommand.id);
     File currentRuleFile = Functions.createNewFilename(ruleFile);
     if (!MiscUtilities.moveFile(currentRuleFile,ruleFile, true)) throw new Exception("Can't restore rule_"+ruleCommand.id+".xml from rule_"+ruleCommand.id+".xml.new");
   }
@@ -140,6 +144,10 @@ public class RuleManagerWrapper {
 
   public void addRuleCommand(String commandName, String id, String transport) {
     ruleCommands.add(new RuleCommand(commandName, id, transport));
+  }
+
+  public void clear() {
+    ruleCommands.clear();
   }
 
   private static class RuleCommand {

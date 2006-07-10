@@ -140,7 +140,7 @@ public class Edit extends EditBean {
         centers.put(id, center);
 
         appContext.getSmppManager().createUpdateCenter(getLoginedPrincipal().getName(),
-                isAdd(), isEnabled(), center, appContext.getScag(), oldCenter);
+                isAdd(), isEnabled(), center, appContext, oldCenter);
         throw new DoneException();
     }
 

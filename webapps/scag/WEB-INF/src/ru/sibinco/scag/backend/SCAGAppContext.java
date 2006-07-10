@@ -19,11 +19,13 @@ import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.backend.service.ServiceProvidersManager;
 import ru.sibinco.scag.backend.operators.OperatorManager;
 import ru.sibinco.scag.backend.gw.ConfigManager;
+import ru.sibinco.scag.backend.installation.HSDaemon;
 import ru.sibinco.scag.perfmon.PerfServer;
 import ru.sibinco.scag.svcmon.SvcMonServer;
 import ru.sibinco.scag.scmon.ScServer;
 import ru.sibinco.scag.util.LocaleManager;
 import ru.sibinco.tomcat_auth.XmlAuthenticator;
+import ru.sibinco.WHOISDIntegrator.TariffMatrixManager;
 
 import javax.sql.DataSource;
 import javax.xml.parsers.ParserConfigurationException;
@@ -54,11 +56,13 @@ public class SCAGAppContext {
     private final ResourceManager resourceManager;
     private final LocaleManager localeManager;
     private final ConfigManager configManager;
+    private final TariffMatrixManager tMatrixManager;
     private final PerfServer perfServer;
     private final SvcMonServer svcMonServer;
     private final ScServer scServer;
     private final Daemon scagDaemon;
     private final Scag scag;
+    private final HSDaemon hsDaemon;
     private final Statuses statuses;
     private final DataSource connectionPool;
     private Journal journal = new Journal();
@@ -77,11 +81,13 @@ public class SCAGAppContext {
             gwConfig = new Config(new File(gwConfigFile));
             idsConfig = new Config(new File(config.getString("ids_file")));
             configManager = new ConfigManager(gwConfigFile,gwConfig);
+            tMatrixManager = new TariffMatrixManager();
             String gwDaemonHost = config.getString("gw daemon.host");
 
 
             connectionPool = null;
-            userManager = new UserManager(config.getString("users_config_file"));
+            hsDaemon = new HSDaemon(config.getString("installation.type"), config.getString("installation.mirrorpath"));
+            userManager = new UserManager(config.getString("users_config_file"),hsDaemon);
             providerManager = new ProviderManager(idsConfig);
             serviceProvidersManager = new ServiceProvidersManager(gwConfigFolder + config.getString("gw location.services_file"));
             serviceProvidersManager.init();
@@ -102,11 +108,11 @@ public class SCAGAppContext {
             } else {
                 scag = new Scag(gwDaemonHost, (int) gwConfig.getInt("admin.port"));
             }
-            ruleManager = new RuleManager(new File(rulesFolder), new File(xsdFolder), new File(xslFolder), scag);
+            ruleManager = new RuleManager(new File(rulesFolder), new File(xsdFolder), new File(xslFolder), scag, hsDaemon);
             ruleManager.init();
-            scagRoutingManager = new ScagRoutingManager(scagConfFolder, smppManager, serviceProvidersManager);
+            scagRoutingManager = new ScagRoutingManager(scagConfFolder, smppManager, serviceProvidersManager, hsDaemon);
             scagRoutingManager.init();
-            httpRoutingManager = new HttpRoutingManager(scagConfFolder, serviceProvidersManager);
+            httpRoutingManager = new HttpRoutingManager(scagConfFolder, serviceProvidersManager, hsDaemon);
             httpRoutingManager.init();
             StatusManager.getInstance().init(config.getString("status_folder"), config.getString("show_interval"));
             statuses = new Statuses();
@@ -197,12 +203,20 @@ public class SCAGAppContext {
         return configManager;
     }
 
+    public TariffMatrixManager getTMatrixManager() {
+      return tMatrixManager;
+    }
+
     public Daemon getScagDaemon() {
         return scagDaemon;
     }
 
     public Scag getScag() {
         return scag;
+    }
+
+    public HSDaemon getHSDaemon() {
+        return hsDaemon;
     }
 
     public Statuses getStatuses() {

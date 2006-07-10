@@ -15,6 +15,7 @@ import ru.sibinco.scag.backend.status.StatMessage;
 import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.backend.Scag;
 import ru.sibinco.scag.backend.Manager;
+import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.Constants;
@@ -42,7 +43,7 @@ import org.apache.log4j.Logger;
  *
  * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
  */
-public class ServiceProvidersManager implements Manager {
+public class ServiceProvidersManager extends Manager {
 
     private Logger logger = Logger.getLogger(this.getClass());
     private final Map serviceProviders = Collections.synchronizedMap(new TreeMap());
@@ -128,9 +129,9 @@ public class ServiceProvidersManager implements Manager {
         }
     }
 
-    public synchronized void reloadServices(final Scag scag, final boolean isAdd, final long id, final ServiceProvider oldProvider) throws SCAGJspException {
+    public synchronized void reloadServices(final SCAGAppContext appContext, final boolean isAdd, final long id, final ServiceProvider oldProvider) throws SCAGJspException {
       try {
-          scag.invokeCommand("reloadServices",null,scag,this,configFilename);
+          appContext.getScag().invokeCommand("reloadServices",null,appContext,this,configFilename);
       } catch (SibincoException e) {
           if (!(e instanceof StatusDisconnectedException)) {
               serviceProviders.remove(new Long(id));
@@ -140,9 +141,9 @@ public class ServiceProvidersManager implements Manager {
       }
     }
 
-    public synchronized void reloadServices(final Scag scag, final boolean isAdd, final long id, final Long serviceProviderId, final Service oldService) throws SCAGJspException {
+    public synchronized void reloadServices(final SCAGAppContext appContext, final boolean isAdd, final long id, final Long serviceProviderId, final Service oldService) throws SCAGJspException {
       try {
-          scag.invokeCommand("reloadServices",null,scag,this,configFilename);
+          appContext.getScag().invokeCommand("reloadServices",null,appContext,this,configFilename);
       } catch (SibincoException e) {
           if (!(e instanceof StatusDisconnectedException)) {
               final ServiceProvider provider = (ServiceProvider) serviceProviders.get(serviceProviderId);
@@ -239,7 +240,7 @@ public class ServiceProvidersManager implements Manager {
     }
 
     public synchronized void deleteServices(final String user, final List toRemove,
-                                            final ServiceProvider serviceProvider, final Scag scag) throws SCAGJspException {
+                                            final ServiceProvider serviceProvider, final SCAGAppContext appContext) throws SCAGJspException {
         List serviceNames = new ArrayList();
         Map servicesToDelete = new HashMap();
         for (Iterator it = toRemove.iterator(); it.hasNext();) {
@@ -250,7 +251,7 @@ public class ServiceProvidersManager implements Manager {
         }
         serviceProvider.getServices().keySet().removeAll(toRemove);
         try {
-          scag.invokeCommand("reloadServices",null,scag,this,configFilename);
+          appContext.getScag().invokeCommand("reloadServices",null,appContext,this,configFilename);
         } catch (SibincoException e) {
           if (!(e instanceof StatusDisconnectedException)) {
             serviceProvider.getServices().putAll(servicesToDelete);
@@ -262,7 +263,7 @@ public class ServiceProvidersManager implements Manager {
         StatusManager.getInstance().addStatMessages(message);
     }
 
-    public synchronized void deleteServiceProviders(final String user, final List toRemove, final Scag scag) throws SCAGJspException {
+    public synchronized void deleteServiceProviders(final String user, final List toRemove, final SCAGAppContext appContext) throws SCAGJspException {
         List servProvNames = new ArrayList();
         Map providersToDelete = new HashMap();
         for (Iterator it = toRemove.iterator(); it.hasNext();) {
@@ -273,7 +274,7 @@ public class ServiceProvidersManager implements Manager {
         }
         getServiceProviders().keySet().removeAll(toRemove);
         try {
-           scag.invokeCommand("reloadServices",null,scag,this,configFilename);
+           appContext.getScag().invokeCommand("reloadServices",null,appContext,this,configFilename);
         } catch (SibincoException e) {
             if (!(e instanceof StatusDisconnectedException)) {
                 //restore runtime storage

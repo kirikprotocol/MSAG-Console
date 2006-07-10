@@ -30,6 +30,7 @@ import ru.sibinco.scag.backend.status.StatMessage;
 import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.backend.Scag;
 import ru.sibinco.scag.backend.Manager;
+import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.Constants;
@@ -42,7 +43,7 @@ import ru.sibinco.scag.Constants;
  *
  * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
  */
-public class OperatorManager implements Manager {
+public class OperatorManager extends Manager {
 
     private Logger logger = Logger.getLogger(this.getClass());
     private final Map operators = Collections.synchronizedMap(new TreeMap());
@@ -203,13 +204,13 @@ public class OperatorManager implements Manager {
         return buffer.toString();
     }
 
-    public synchronized void delete(final String user, final ArrayList toRemove, final Scag scag) throws SCAGJspException {
+    public synchronized void delete(final String user, final ArrayList toRemove, final SCAGAppContext appContext) throws SCAGJspException {
         Object[] ops = getOperatorNamesByIds(toRemove);
         List operatorNames = (List)ops[0];
         Map operatorsToDelete = (Map)ops[1];
         getOperators().keySet().removeAll(toRemove);
         try {
-           scag.invokeCommand("reloadOperators",null,scag,this,configFilename);
+           appContext.getScag().invokeCommand("reloadOperators",null,appContext,this,configFilename);
         } catch (SibincoException e) {
             if (!(e instanceof StatusDisconnectedException)) {
               getOperators().putAll(operatorsToDelete);
@@ -221,9 +222,9 @@ public class OperatorManager implements Manager {
                 + operatorNames.toString() + "."));
     }
 
-    public synchronized void reloadOperators(final Scag scag, final boolean isAdd, final long id, final Operator oldOperator) throws SCAGJspException {
+    public synchronized void reloadOperators(final SCAGAppContext appContext, final boolean isAdd, final long id, final Operator oldOperator) throws SCAGJspException {
         try {
-            scag.invokeCommand("reloadOperators",null,scag,this,configFilename);
+            appContext.getScag().invokeCommand("reloadOperators",null,appContext,this,configFilename);
         } catch (SibincoException e) {
             if (!(e instanceof StatusDisconnectedException)) {
                 operators.remove(new Long(id));

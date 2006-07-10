@@ -165,13 +165,7 @@ public class myServlet extends HttpServlet
  }
 
   private void unlockRule(HttpServletRequest req,final String file, final String transport) {
-    SCAGAppContext appContext = (SCAGAppContext) req.getAttribute(Constants.APP_CONTEXT);
-    if (file.equals("")) {
-      appContext.getRuleManager().unlockAllRules();
-      return;
-    }
-    Rule rule = appContext.getRuleManager().getRule(Long.valueOf(file) ,transport);
-    rule.unlock();
+  //TODO
   }
 
   private void getTitle(HttpServletRequest req, final String file, final String transport, HttpServletResponse res) {
@@ -189,14 +183,14 @@ public class myServlet extends HttpServlet
   }
 
   private void getRuleHeaderLineNumber(HttpServletResponse res) {
-     int lineCount = 0;
-     BufferedReader br = new BufferedReader(new StringReader(Rule.header));
+     int lineCount = Rule.mainHeaderLength;
      try {
-       while(br.readLine()!=null) lineCount=lineCount+1;
        res.getWriter().write(""+lineCount);
        res.getWriter().flush();
        res.getWriter().close();
-     } catch (Throwable e) {}
+     } catch (Throwable e) {
+       e.printStackTrace();
+     }
   }
 
   private void updateRule(HttpServletRequest req,final String file, final String transport, HttpServletResponse res) throws IOException
@@ -279,8 +273,8 @@ public class myServlet extends HttpServlet
     {
       System.out.println("LoadRule id= "+file+" transport="+transport);
       SCAGAppContext appContext = (SCAGAppContext) req.getAttribute(Constants.APP_CONTEXT);
-      Rule rule = appContext.getRuleManager().getRule(Long.valueOf(file) ,transport);
-      rule.lock();
+      Rule rule = appContext.getRuleManager().getRule(file ,transport);
+      //rule.lock();
       return rule.getBody();
     }
 
@@ -301,7 +295,7 @@ public class myServlet extends HttpServlet
     System.out.println("ExistRule id= "+file + " transport="+transport);
     SCAGAppContext appContext = (SCAGAppContext) req.getAttribute(Constants.APP_CONTEXT);
     PrintWriter out = res.getWriter();
-    if (appContext.getRuleManager().getRule(Long.valueOf(file),transport)!=null)
+    if (appContext.getRuleManager().getRule(file,transport)!=null)
         out.print("true");
     else  out.print("false");
     out.flush();out.close();
@@ -309,18 +303,17 @@ public class myServlet extends HttpServlet
 
   private LinkedList ParseXml(final String fileName )
   {
-    System.out.println("%%%%%%%%%%inside parsexml!!!!!%%%%%%%%%%%% fileName="+fileName);
     LinkedList li=new  LinkedList();
     InputStream _in=null; BufferedReader in = null; String inpuLine;
     try {  _in = new FileInputStream(fileName); in = new BufferedReader(new InputStreamReader(_in));
       li.addFirst("ok");
       while ((inpuLine = in.readLine()) != null) {
-        System.out.println("$$$"+inpuLine);
+        //System.out.println("$$$"+inpuLine);
         li.add(inpuLine);
       }
 
     } catch (FileNotFoundException e) {
-      e.printStackTrace();
+      //e.printStackTrace();
       li.addFirst(e.getMessage());
     } catch (IOException e) {  e.printStackTrace();
     }

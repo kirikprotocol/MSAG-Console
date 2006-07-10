@@ -25,7 +25,7 @@ public class Index extends TabledBeanImpl implements TabledBean {
 
     protected void delete() throws SCAGJspException {
         appContext.getSmppManager().deleteServicePoints(getLoginedPrincipal().getName(),
-                checkedSet, appContext.getScag());
+                checkedSet, appContext);
     }
 
 }

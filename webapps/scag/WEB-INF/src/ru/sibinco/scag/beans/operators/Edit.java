@@ -78,7 +78,7 @@ public class Edit extends EditBean {
                 throw new SCAGJspException(Constants.errors.operators.COULD_NOT_UPDATE_OPERATOR, e);
             }
         }
-        operatorManager.reloadOperators(appContext.getScag(),isAdd(), id, oldOperator);
+        operatorManager.reloadOperators(appContext,isAdd(), id, oldOperator);
         throw new DoneException();
     }
 

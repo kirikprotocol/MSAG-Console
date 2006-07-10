@@ -85,7 +85,7 @@ public class Edit extends TabledEditBeanImpl {
                     toRemoveRoutes);
         }
         appContext.getServiceProviderManager().deleteServices(getLoginedPrincipal().getName(),
-            toRemove, serviceProvider, appContext.getScag());
+            toRemove, serviceProvider, appContext);
     }
 
     protected void load() throws SCAGJspException {
@@ -109,9 +109,8 @@ public class Edit extends TabledEditBeanImpl {
             id = serviceProvidersManager.createServiceProvider(userLogin, name, description);
         } else {
             oldProvider = serviceProvidersManager.updateServiceProvider(userLogin, id, name, description);
-        }
-        final Scag scag = appContext.getScag();
-        appContext.getServiceProviderManager().reloadServices(scag,isAdd(),id,oldProvider);
+        }        
+        appContext.getServiceProviderManager().reloadServices(appContext,isAdd(),id,oldProvider);
         if (isAdd()) {
             throw new EditException(Long.toString(id));
         } else {

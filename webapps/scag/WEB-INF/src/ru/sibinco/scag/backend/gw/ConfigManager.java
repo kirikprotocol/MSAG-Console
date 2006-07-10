@@ -1,7 +1,7 @@
 package ru.sibinco.scag.backend.gw;
 
 import ru.sibinco.scag.backend.Manager;
-import ru.sibinco.scag.backend.Scag;
+import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.lib.SibincoException;
@@ -18,7 +18,7 @@ import java.io.IOException;
  * Time: 12:58:51
  * To change this template use File | Settings | File Templates.
  */
-public class ConfigManager implements Manager {
+public class ConfigManager extends Manager {
   private Logger logger = Logger.getLogger(this.getClass());
   private final String configFilename;
   private final Config gwConfig;
@@ -27,9 +27,9 @@ public class ConfigManager implements Manager {
     this.gwConfig = gwConfig;
   }
 
-  public synchronized void applyConfig(final Scag scag, final Config oldConfig) throws SCAGJspException {
+  public synchronized void applyConfig(final SCAGAppContext appContext, final Config oldConfig) throws SCAGJspException {
      try {
-         scag.invokeCommand("apply","config",scag,this,configFilename);
+         appContext.getScag().invokeCommand("apply","config",appContext,this,configFilename);
      } catch (SibincoException e) {
      if (!(e instanceof StatusDisconnectedException)) {
           //restore - copy parameters from oldConfig to current

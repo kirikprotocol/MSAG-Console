@@ -10,12 +10,18 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import ru.sibinco.lib.SibincoException;
+import ru.sibinco.lib.StatusDisconnectedException;
 import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.scag.backend.service.ServiceProvidersManager;
 import ru.sibinco.scag.backend.status.StatMessage;
 import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.backend.routing.http.placement.Option;
+import ru.sibinco.scag.backend.Manager;
+import ru.sibinco.scag.backend.SCAGAppContext;
+import ru.sibinco.scag.backend.installation.HSDaemon;
+import ru.sibinco.scag.beans.SCAGJspException;
+import ru.sibinco.scag.Constants;
 
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
@@ -30,7 +36,7 @@ import java.util.*;
  *
  * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
  */
-public class HttpRoutingManager {
+public class HttpRoutingManager extends Manager{
 
     private Logger logger = Logger.getLogger(this.getClass());
 
@@ -44,6 +50,7 @@ public class HttpRoutingManager {
     private final File msagConfFolder;
     private ArrayList statMessages = new ArrayList();
     private ServiceProvidersManager serviceProvidersManager;
+    private HSDaemon hsDaemon;
     private boolean routesChanged = false;
     private boolean routesRestored = false;
     private boolean routesSaved = false;
@@ -54,9 +61,10 @@ public class HttpRoutingManager {
     private static final String HTTP_ROUTES_TRACEABLE_CONFIG = "http_routes__.xml";
 
 
-    public HttpRoutingManager(final File msagConfFolder, final ServiceProvidersManager serviceProvidersManager) {
+    public HttpRoutingManager(final File msagConfFolder, final ServiceProvidersManager serviceProvidersManager, final HSDaemon hsDaemon) {
         this.msagConfFolder = msagConfFolder;
         this.serviceProvidersManager = serviceProvidersManager;
+        this.hsDaemon = hsDaemon;
     }
 
     public void init() throws SibincoException {
@@ -134,16 +142,21 @@ public class HttpRoutingManager {
         return new HttpRoute(routeElem, subjects, serviceProvidersManager);
     }
 
-    private void saveToFile(final String fileName) throws SibincoException {
+    private void saveToFile(final String filename) throws SibincoException {
+      saveToFile(filename, true);
+    }
+
+    private void saveToFile(final String fileName, final boolean backup) throws SibincoException {
         final File file = new File(msagConfFolder, fileName);
-        final File newFile = Functions.createNewFilenameForSave(file);
+        File newFile = null;
+        if (backup) newFile = Functions.createNewFilenameForSave(file);
 
         String localEncoding = Functions.getLocaleEncoding();
         if (localEncoding.equalsIgnoreCase("Cp1251")) {
             localEncoding = "WINDOWS-1251";
         }
         try {
-            final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), localEncoding));
+            final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream((backup)?newFile:file), localEncoding));
             Functions.storeConfigHeader(out, "http_routes", "http_routes.dtd", localEncoding);
             options.store(out);
             for (Iterator iterator = subjects.values().iterator(); iterator.hasNext();) {
@@ -161,7 +174,7 @@ public class HttpRoutingManager {
             Functions.storeConfigFooter(out, "http_routes");
             out.flush();
             out.close();
-            Functions.renameNewSavedFileToOriginal(newFile, file);
+            if (backup) Functions.renameNewSavedFileToOriginal(newFile, file);
 
         } catch (FileNotFoundException e) {
             throw new SibincoException("Couldn't save new routes settings: Couldn't write to destination config filename: " + e.getMessage());
@@ -181,6 +194,7 @@ public class HttpRoutingManager {
 
     public synchronized void save() throws SibincoException {
         saveToFile(HTTP_ROUTES_TEMPORAL_CONFIG);
+        hsDaemon.store(msagConfFolder, HTTP_ROUTES_TEMPORAL_CONFIG);
     }
 
     public synchronized void restore() throws SibincoException {
@@ -189,9 +203,20 @@ public class HttpRoutingManager {
         clearStatMessages();
     }
 
-    public synchronized void apply() throws SibincoException {
-        saveToFile(HTTP_ROUTES_PRIMARY_CONFIG);
-        clearStatMessages();
+    public synchronized void apply(final SCAGAppContext appContext) throws SCAGJspException {
+      try {
+          appContext.getScag().invokeCommand("applyHttpRoutes",null,appContext,this,new File(msagConfFolder, HTTP_ROUTES_PRIMARY_CONFIG).getAbsolutePath());
+      } catch (SibincoException e) {
+          if (!(e instanceof StatusDisconnectedException)) {
+              logger.debug("Couldn't apply http routes", e);
+              throw new SCAGJspException(Constants.errors.routing.routes.COULDNT_APPLY_HTTP_ROUTES, e);
+          }
+      }
+      clearStatMessages();
+    }
+
+    public void store() throws SibincoException {
+       saveToFile(HTTP_ROUTES_PRIMARY_CONFIG,false);
     }
 
     public synchronized void load() throws SibincoException {
