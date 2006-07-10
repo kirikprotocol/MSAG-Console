@@ -31,13 +31,22 @@
   <property name="htmlparser_lib" location="${JEDIT_DIR}/lib/htmlparser.jar"/>
   <property name="SERVICE2HOME_PATH" value="../.."/>
   <property name="DAEMON2HOME_PATH" value=".."/>
+  
   <target name="help">
     <echo>
-MSA Gateway build script
+MSA Gateway &amp; Co  build script
 Targets:
-    TODO: !!!!
-      rmbuild
 
+    makedeps    Creates dependencies for C++ MSAG sources
+    distr       Builds C++ MSAG, Admin Daemon, WebAdmin sorces. 
+                Creates and moves distribute tree into DISTR_DIR.
+    rmdistr     Removes distribute tree from DISTR_DIR.
+    rmbuild     Removes build directory from BUILD_DIR.
+    makegw      Builds C++ MSAG, Admin Daemon sources into BUILD_DIR.
+    makeweb     Builds WebAdmin sorces into BUILD_DIR.
+    
+    TODO: The rest of !!!!
+    
     </echo>
   </target>
 
