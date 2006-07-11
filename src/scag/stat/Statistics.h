@@ -30,6 +30,7 @@ using smsc::smeman::SmeRecord;
         uint64_t lDateTime;
         uint32_t iServiceProviderId;
         uint32_t iServiceId;
+        uint32_t iOperatorId;
         
         SACC_EVENT_HEADER_t()
         {
@@ -42,6 +43,7 @@ using smsc::smeman::SmeRecord;
             lDateTime=0;
             iServiceProviderId=0;
             iServiceId=0;
+            iOperatorId=0;
         }
         SACC_EVENT_HEADER_t(const SACC_EVENT_HEADER_t& src)
         {
@@ -55,6 +57,7 @@ using smsc::smeman::SmeRecord;
             lDateTime=src.lDateTime;
             iServiceProviderId=src.iServiceProviderId;
             iServiceId=src.iServiceId;
+            iOperatorId = src.iOperatorId;
         }
          uint16_t getEventType()const{return sEventType;} ;
         
@@ -65,7 +68,6 @@ using smsc::smeman::SmeRecord;
     {
         SACC_EVENT_HEADER_t Header;
         
-        uint32_t iOperatorId;
         uint8_t  cDirection;
         //uint16_t pMessageText[MAX_TEXT_MESSAGE_LENGTH];//512*32
         //uint8_t  pSessionKey[MAX_SESSION_KEY_LENGTH];
@@ -81,7 +83,6 @@ using smsc::smeman::SmeRecord;
             pSessionKey="";
 
             Header.setEventType(sec_transport);
-            iOperatorId=0;
             cDirection=0;
         };
 
@@ -93,7 +94,6 @@ using smsc::smeman::SmeRecord;
             pMessageText=src.pMessageText;
             //memcpy(pSessionKey,src.pSessionKey,MAX_SESSION_KEY_LENGTH);
             pSessionKey=src.pSessionKey;
-            iOperatorId=src.iOperatorId;
             cDirection=src.cDirection;
         }
 
@@ -106,7 +106,6 @@ using smsc::smeman::SmeRecord;
             pMessageText=src->pMessageText;
             //memcpy(pSessionKey,src.pSessionKey,MAX_SESSION_KEY_LENGTH);
             pSessionKey=src->pSessionKey;
-            iOperatorId=src->iOperatorId;
             cDirection=src->cDirection;
             
         }
@@ -119,7 +118,6 @@ using smsc::smeman::SmeRecord;
     {
         SACC_EVENT_HEADER_t Header;
 
-        uint32_t iOperatorId;
         uint32_t iMediaResourceType;
         uint32_t iPriceCatId;
         float    fBillingSumm; 
@@ -134,7 +132,6 @@ using smsc::smeman::SmeRecord;
             pBillingCurrency="";
             pSessionKey="";
             Header.setEventType(sec_bill);
-            iOperatorId=0;
             iMediaResourceType=0;
             iPriceCatId=0;
             fBillingSumm=0.00000; 
@@ -147,7 +144,6 @@ using smsc::smeman::SmeRecord;
             //memcpy(pSessionKey,src.pSessionKey,MAX_SESSION_KEY_LENGTH);
             pBillingCurrency=src.pBillingCurrency;
             pSessionKey=src.pSessionKey;
-            iOperatorId=src.iOperatorId;
             iMediaResourceType=src.iMediaResourceType;
             iPriceCatId=src.iPriceCatId;
             fBillingSumm=src.fBillingSumm; 
@@ -160,7 +156,6 @@ using smsc::smeman::SmeRecord;
             //memcpy(pSessionKey,src.pSessionKey,MAX_SESSION_KEY_LENGTH);
             pBillingCurrency=src->pBillingCurrency;
             pSessionKey=src->pSessionKey;
-            iOperatorId=src->iOperatorId;
             iMediaResourceType=src->iMediaResourceType;
             iPriceCatId=src->iPriceCatId;
             fBillingSumm=src->fBillingSumm; 
@@ -174,7 +169,6 @@ using smsc::smeman::SmeRecord;
 
         SACC_EVENT_HEADER_t Header;
         uint8_t  cDirection;
-        uint32_t iOperatorId;
         uint32_t iAlarmEventId;
         std::string  pSessionKey;//[MAX_SESSION_KEY_LENGTH];
         std::string pMessageText;//[MAX_TEXT_MESSAGE_LENGTH];
@@ -183,7 +177,6 @@ using smsc::smeman::SmeRecord;
             
             pSessionKey="";
             pMessageText="";
-            iOperatorId=0;
             Header.setEventType(0x0003);
             cDirection=0;
             iAlarmEventId =0;
@@ -194,7 +187,6 @@ using smsc::smeman::SmeRecord;
             Header = src.Header;
             pSessionKey= src.pSessionKey;
             pMessageText=src.pMessageText;
-            iOperatorId=src.iOperatorId;
             cDirection=src.cDirection;
             iAlarmEventId = src.iAlarmEventId; 
 
@@ -206,7 +198,6 @@ using smsc::smeman::SmeRecord;
             Header = src->Header;
             pSessionKey= src->pSessionKey; 
             pMessageText=src->pMessageText;
-            iOperatorId=src->iOperatorId;
             cDirection=src->cDirection;
             iAlarmEventId = src->iAlarmEventId; 
             
