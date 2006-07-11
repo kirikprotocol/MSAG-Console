@@ -32,6 +32,13 @@
     		<enumeration value="@ICC_CONTINUED"/>
     		<enumeration value="@ICC_COMPLETED"/>
 		
+    		<enumeration value="@UNKNOWN"/>
+    		<enumeration value="@SC_2_SME"/>
+    		<enumeration value="@SME_2_SME"/>
+    		<enumeration value="@SC_2_SC"/>
+    		<enumeration value="@SME_2_SC"/>
+		
+		
 	    </restriction>
 	</simpleType>
 	
