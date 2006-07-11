@@ -12,8 +12,9 @@ import ru.sibinco.scag.backend.status.StatMessage;
 import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.backend.service.Service;
 import ru.sibinco.scag.backend.routing.http.*;
+import ru.sibinco.scag.backend.routing.http.placement.AbonentsPlacement;
+import ru.sibinco.scag.backend.routing.http.placement.SitePlacement;
 import ru.sibinco.scag.Constants;
-import ru.sibinco.scag.util.LocaleMessages;
 import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.lib.backend.route.Mask;
 import ru.sibinco.lib.SibincoException;
@@ -35,11 +36,23 @@ import java.util.*;
  */
 public class Edit extends EditBean {
 
+    public static final String ADDRESS_SELECT = "addressSelect_";
+    public static final String SITE_SELECT = "siteSelect_";
+    public static final String ABON_USR_SELECT = "abonUsrSelect_";
+    public static final String SITE_USR_SELECT = "siteUsrSelect_";
+    public static final String URL_TYPE = "url";
+    public static final String PARAM_TYPE = "param";
+    public static final String HEADER_TYPE = "header";
+    public static final String COOKIE_TYPE = "cookie";
+
     private String id;
     private boolean enabled = true;
     private String path = "";
     private String parentId;
     private String serviceName = null;
+    private int ton = 1;
+    private int npi = 1;
+
 
     /**
      * ********** ABONENTS *******************
@@ -47,6 +60,10 @@ public class Edit extends EditBean {
     private String[] abonAddress = new String[0];
     private String[] abonSubj = new String[0];
     private Set abonSubjsSet = new HashSet();
+
+    private AbonentsPlacement[] abonentUsr = new AbonentsPlacement[0];
+    private String[] abonentUsrName = new String[0];
+    private String[] abonentUsrType = new String[0];
 
     /**
      * ********** SITES *******************
@@ -57,6 +74,17 @@ public class Edit extends EditBean {
     private String[] sitesPort = new String[0];
     private String[] pathLinks = new String[0];
     private Set siteSubjsSet = new HashSet();
+
+    private SitePlacement[] siteUsr = new SitePlacement[0];
+    private String[] siteUsrName = new String[0];
+    private String[] siteUsrType = new String[0];
+
+    private SitePlacement[] siteAddress = new SitePlacement[0];
+    private String[] siteAddrName = new String[0];
+    private String[] siteAddrType = new String[0];
+
+    private String[] optionTypes = {URL_TYPE, PARAM_TYPE, HEADER_TYPE, COOKIE_TYPE};
+
     private HttpSession session;
 
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
@@ -80,7 +108,58 @@ public class Edit extends EditBean {
         }
         if (getMbSave() != null) {
             super.process(request, response);
-            save();
+
+            List siteAddrList = new ArrayList();
+            for (int i = 0; i < siteAddrName.length; i++) {
+                String s = new StringBuffer().append(SITE_SELECT).append(siteAddrName[i]).append(siteAddrType[i].
+                        substring(siteAddrType[i].lastIndexOf('_'))).toString();
+                String[] results = request.getParameterValues(s);
+                for (int j = 0; j < results.length; j++) {
+                    try {
+                        siteAddrList.add(new SitePlacement(results[j], siteAddrName[i]));
+                    } catch (SibincoException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            siteAddress = (SitePlacement[]) siteAddrList.toArray(new SitePlacement[siteAddrList.size()]);
+            siteAddrList.clear();
+
+            List abonentUsrList = new ArrayList();
+            for (int i = 0; i < abonentUsrName.length; i++) {
+                String s = new StringBuffer().append(ABON_USR_SELECT).append(abonentUsrName[i]).
+                        append(abonentUsrType[i].substring(abonentUsrType[i].lastIndexOf('_'))).toString();
+                String[] results = request.getParameterValues(s);
+
+                int priority = i + 1;
+                for (int j = 0; j < results.length; j++) {
+                    try {
+                        abonentUsrList.add(new AbonentsPlacement(results[j], abonentUsrName[i], priority));
+                    } catch (SibincoException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            }
+            abonentUsr = (AbonentsPlacement[]) abonentUsrList.toArray(new AbonentsPlacement[abonentUsrList.size()]);
+            abonentUsrList.clear();
+
+            List siteUsrrList = new ArrayList();
+            for (int i = 0; i < siteUsrName.length; i++) {
+                String s = new StringBuffer().append(SITE_USR_SELECT).append(siteUsrName[i]).append(siteUsrType[i].
+                        substring(siteUsrType[i].lastIndexOf('_'))).toString();
+                String[] results = request.getParameterValues(s);
+                for (int j = 0; j < results.length; j++) {
+                    try {
+                        siteUsrrList.add(new SitePlacement(results[j], siteUsrName[i]));
+                    } catch (SibincoException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            siteUsr = (SitePlacement[]) siteUsrrList.toArray(new SitePlacement[siteUsrrList.size()]);
+            siteAddrList.clear();
+            saveRoutes();
         }
         load(id);
         super.process(request, response);
@@ -98,7 +177,8 @@ public class Edit extends EditBean {
             siteSubj = routeSite.getSiteSubjAsString();
             sites = routeSite.getArraySite();
             sitesHost = routeSite.getSiteAsStr();
-
+            ton = abonent.getTon();
+            npi = abonent.getNpi();
             abonSubj = abonent.getSubjectsAsStr();
             for (int i = 0; i < abonSubj.length; i++) {
                 abonSubjsSet.add(abonSubj[i]);
@@ -111,10 +191,13 @@ public class Edit extends EditBean {
             if (null != route.getService()) {
                 serviceName = route.getService().getName();
             }
+            abonentUsr = getAbonentsPlacements(route.getAbonent().getAbonUsrPlace());
+            siteUsr = getSitePlacement(route.getRouteSite().getUsrPlace());
+            siteAddress = getSitePlacement(route.getRouteSite().getAddressPlace());
         }
     }
 
-    protected void save() throws SCAGJspException {
+    protected void saveRoutes() throws SCAGJspException {
 
         final Map routes = appContext.getHttpRoutingManager().getRoutes();
         String messageText = "";
@@ -130,7 +213,7 @@ public class Edit extends EditBean {
                 if (routes.containsKey(id))
                     throw new SCAGJspException(Constants.errors.routing.routes.ROUTE_ALREADY_EXISTS, id);
                 routes.put(id, new HttpRoute(id, serviceObj, enabled, abonent, routeSite));
-                messageText = "Added new route: "  + id + " ";
+                messageText = "Added new route: " + id + " ";
             } else {
                 if (!getEditId().equals(id) && routes.containsKey(id))
                     throw new SCAGJspException(Constants.errors.routing.routes.ROUTE_ALREADY_EXISTS, id);
@@ -154,6 +237,9 @@ public class Edit extends EditBean {
                 append(getParentId()).append("&editId=").append(
                 appContext.getServiceProviderManager().getServiceProviderByServiceId(
                         Long.decode(getParentId())).getId()).append("&editChild=true").toString());
+    }
+
+    protected void save() throws SCAGJspException {
     }
 
 
@@ -188,6 +274,15 @@ public class Edit extends EditBean {
                     routeSite.getSites().put(site.getHost(), site);
                 }
             }
+            routeSite.getAddressPlace().clear();
+            routeSite.getUsrPlace().clear();
+
+            for (int j = 0; j < siteAddress.length; j++) {
+                routeSite.getAddressPlace().add(siteAddress[j]);
+            }
+            for (int j = 0; j < siteUsr.length; j++) {
+                routeSite.getUsrPlace().add(siteUsr[j]);
+            }
         }
         return routeSite;
     }
@@ -221,6 +316,13 @@ public class Edit extends EditBean {
                 abonent.getAddress().put(mask.getMask(), mask);
             }
         }
+        abonent.setNpi(getNpi());
+        abonent.setTon(getTon());
+        abonent.getAbonUsrPlace().clear();
+        for (int i = 0; i < abonentUsr.length; i++) {
+            abonent.getAbonUsrPlace().add(abonentUsr[i]);
+        }
+
         return abonent;
     }
 
@@ -235,6 +337,15 @@ public class Edit extends EditBean {
         siteSubj.removeAll(siteSubjsSet);
         return siteSubj;
     }
+
+    private AbonentsPlacement[] getAbonentsPlacements(List addressPlace) {
+            return (AbonentsPlacement[]) addressPlace.toArray(new AbonentsPlacement[addressPlace.size()]);
+        }
+
+        private SitePlacement[] getSitePlacement(List addressPlace) {
+            return (SitePlacement[]) addressPlace.toArray(new SitePlacement[addressPlace.size()]);
+        }
+
 
     public String getId() {
         return id;
@@ -343,5 +454,97 @@ public class Edit extends EditBean {
             subjSiteList.add(httpSubject.getName());
         }
         return (String[]) subjSiteList.toArray(new String[subjSiteList.size()]);
+    }
+
+    public int getTon() {
+        return ton;
+    }
+
+    public void setTon(final int ton) {
+        this.ton = ton;
+    }
+
+    public int getNpi() {
+        return npi;
+    }
+
+    public void setNpi(final int npi) {
+        this.npi = npi;
+    }
+
+    public AbonentsPlacement[] getAbonentUsr() {
+        return abonentUsr;
+    }
+
+    public void setAbonentUsr(AbonentsPlacement[] abonentUsr) {
+        this.abonentUsr = abonentUsr;
+    }
+
+    public String[] getAbonentUsrName() {
+        return abonentUsrName;
+    }
+
+    public void setAbonentUsrName(String[] abonentUsrName) {
+        this.abonentUsrName = abonentUsrName;
+    }
+
+    public String[] getAbonentUsrType() {
+        return abonentUsrType;
+    }
+
+    public void setAbonentUsrType(String[] abonentUsrType) {
+        this.abonentUsrType = abonentUsrType;
+    }
+
+    public SitePlacement[] getSiteUsr() {
+        return siteUsr;
+    }
+
+    public void setSiteUsr(SitePlacement[] siteUsr) {
+        this.siteUsr = siteUsr;
+    }
+
+    public String[] getSiteUsrName() {
+        return siteUsrName;
+    }
+
+    public void setSiteUsrName(String[] siteUsrName) {
+        this.siteUsrName = siteUsrName;
+    }
+
+    public String[] getSiteUsrType() {
+        return siteUsrType;
+    }
+
+    public void setSiteUsrType(String[] siteUsrType) {
+        this.siteUsrType = siteUsrType;
+    }
+
+    public String[] getOptionTypes() {
+        return optionTypes;
+    }
+
+    public SitePlacement[] getSiteAddress() {
+        return siteAddress;
+    }
+
+    public void setSiteAddress(SitePlacement[] siteAddress) {
+        this.siteAddress = siteAddress;
+    }
+
+    public String[] getSiteAddrName() {
+        return siteAddrName;
+    }
+
+    public void setSiteAddrName(String[] siteAddrName) {
+        this.siteAddrName = siteAddrName;
+    }
+
+    public String[] getSiteAddrType() {
+        return siteAddrType;
+    }
+
+    public void setSiteAddrType(String[] siteAddrType) {
+        this.siteAddrType = siteAddrType;
     }
 }
