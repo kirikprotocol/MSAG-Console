@@ -70,6 +70,15 @@ enum CommandStatus{
   CMD_ERR_RESCHEDULENOW=4
 };
 
+enum DataSmDirection{
+  dsdUnknown,
+  dsdSrv2Srv,
+  dsdSrv2Sc,
+  dsdSc2Srv,
+  dsdSc2Sc
+};
+
+
 #define MAKE_COMMAND_STATUS(type,code) ((type<<16)|code)
 #define GET_STATUS_TYPE(status) ((status>>16)&7)
 #define GET_STATUS_CODE(status) (status&0x0ffff)
@@ -82,14 +91,25 @@ private:
   uint32_t status;
   bool dataSm;
   SMS* sms;
+  DataSmDirection dir;
 public:
 
 
-  SmsResp() : messageId(0), status(0),dataSm(false),sms(0){};
+  SmsResp() : messageId(0), status(0),dataSm(false),sms(0), dir(dsdUnknown){};
   ~SmsResp()
   {
     if ( messageId ) delete messageId;
     if (sms)delete sms;
+  }
+
+  void set_dir(DataSmDirection direction)
+  {
+      dir = direction;
+  }
+
+  DataSmDirection get_dir()
+  {
+      return dir;
   }
 
   void set_messageId(const char* msgid)
@@ -350,13 +370,6 @@ struct BindCommand{
 };
 
 struct SmsCommand{
-  enum DataSmDirection{
-    dsdUnknown,
-    dsdSrv2Srv,
-    dsdSrv2Sc,
-    dsdSc2Srv,
-    dsdSc2Sc
-  };
   SmsCommand():dir(dsdUnknown){}
   SmsCommand(const SMS& sms):sms(sms),dir(dsdUnknown)
   {
@@ -402,6 +415,7 @@ struct _SmppCommand
 
     case DELIVERY_RESP:
     case SUBMIT_RESP:
+    case DATASM_RESP:
       delete ( (SmsResp*)dta );
       break;
 
@@ -433,6 +447,7 @@ struct _SmppCommand
     case BIND_RECIEVER_RESP:
     case BIND_TRANSMITTER_RESP:
     case BIND_TRANCIEVER_RESP:
+    case PROCESSEXPIREDRESP:
       // nothing to delete
       break;
     default:

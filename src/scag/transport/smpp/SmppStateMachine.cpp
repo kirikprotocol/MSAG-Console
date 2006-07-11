@@ -617,19 +617,19 @@ void StateMachine::processDataSm(SmppCommand& cmd)
   {
     if(dst->info.type==etService)
     {
-      smscmd.dir=SmsCommand::dsdSrv2Srv;
+      smscmd.dir=dsdSrv2Srv;
     }else
     {
-      smscmd.dir=SmsCommand::dsdSrv2Sc;
+      smscmd.dir=dsdSrv2Sc;
     }
   }else
   {
     if(dst->info.type==etService)
     {
-      smscmd.dir=SmsCommand::dsdSc2Srv;
+      smscmd.dir=dsdSc2Srv;
     }else
     {
-      smscmd.dir=SmsCommand::dsdSc2Sc;
+      smscmd.dir=dsdSc2Sc;
     }
   }
 
@@ -712,6 +712,8 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
   SmppEntity* dst=orgCmd.getEntity();
   SMS* sms=orgCmd->get_sms();
   cmd->get_resp()->set_sms(sms);
+  cmd->get_resp()->set_dir((orgCmd->get_smsCommand()).dir);
+
   cmd->set_serviceId(orgCmd->get_serviceId());
   cmd->set_operationId(orgCmd->get_operationId());
   sms->setOriginatingAddress(orgCmd->get_smsCommand().orgSrc);
