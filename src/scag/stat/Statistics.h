@@ -272,7 +272,7 @@ using smsc::smeman::SmeRecord;
 
     namespace events{
         namespace smpp{
-            const int SUBMIT_FAILED = 1;
+/*            const int SUBMIT_FAILED = 1;
             const int SUBMIT_REJECTED = 2;
             const int SUBMIT_ACCEPTED = 3;
             const int DELIVER_FAILED = 4;
@@ -281,7 +281,7 @@ using smsc::smeman::SmeRecord;
             const int SUBMIT_RESP_OK = 7;
             const int SUBMIT_RESP_FAILED = 8;
             const int DELIVER_RESP_OK = 9;
-            const int DELIVER_RESP_FAILED = 10;
+            const int DELIVER_RESP_FAILED = 10;*/
             const int RECEIPT_OK = 11;
             const int RECEIPT_FAILED = 12;
 
@@ -304,58 +304,64 @@ using smsc::smeman::SmeRecord;
 
     struct SmppStatEvent
     {
-      char smeId[smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1];
-      char smscId[smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1];
+      char srcId[smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1];
+      char dstId[smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1];
       char routeId[smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH+1];
       int  routeProviderId;
+      bool srcType, dstType;
 
       int event; // use constants from scag::stat::events::smpp
       int errCode;
 
       SmppStatEvent()
       {
-        smeId[0]=0;
-        smscId[0]=0;
+        srcId[0]=0;
+        dstId[0]=0;
         routeId[0]=0;
         routeProviderId=-1;
         event = -1;
         errCode = -1;
       }
-      SmppStatEvent(const char* sme, const char* sc, int cnt, int errcode)
+      SmppStatEvent(const char* src, bool _srcType, const char* dst, bool _dstType, int cnt, int errcode)
       {
-        smeId[0] = 0;
-        if(sme != NULL)
-            strncpy(smeId, sme, sizeof(smeId));
-        smscId[0] = 0;
-        if(sc != NULL)
-            strncpy(smscId, sc, sizeof(smscId));
-
+        srcId[0] = 0;
+        if(src != NULL)
+            strncpy(srcId, src, sizeof(srcId));
+        srcType = _srcType;
+        dstId[0] = 0;
+        if(dst != NULL)
+            strncpy(dstId, dst, sizeof(dstId));
+        dstType = _dstType;
         routeId[0]=0;
 
         routeProviderId=-1;
         event = cnt;
         errCode = errcode;
       }
-      SmppStatEvent(const char* sme, const char* sc, const char* rid, int cnt, int errcode)
+      SmppStatEvent(const char* src, bool _srcType, const char* dst, bool _dstType, const char* rid, int cnt, int errcode)
       {
-        smeId[0] = 0;
-        if(sme != NULL)
-            strncpy(smeId, sme, sizeof(smeId));
-        smscId[0] = 0;
-        if(sc != NULL)
-            strncpy(smscId, sc, sizeof(smscId));
+        srcId[0] = 0;
+        if(src != NULL)
+            strncpy(srcId, src, sizeof(srcId));
+        srcType = _srcType;
+        dstId[0] = 0;
+        if(dst != NULL)
+            strncpy(dstId, dst, sizeof(dstId));
+        dstType = _dstType;
         strncpy(routeId, rid, sizeof(routeId));
         event = cnt;
         errCode = errcode;
       }
       SmppStatEvent(const SmppStatEvent& src)
       {
-        memcpy(smeId,src.smeId,sizeof(smeId));
-        memcpy(smscId,src.smscId,sizeof(smscId));
+        memcpy(srcId,src.srcId,sizeof(srcId));
+        memcpy(dstId,src.dstId,sizeof(dstId));
         memcpy(routeId,src.routeId,sizeof(routeId));
         routeProviderId=src.routeProviderId;
         errCode = src.errCode;
         event = src.event;
+        srcType = src.srcType;
+        dstType = src.dstType;
       }
     };
     

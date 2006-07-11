@@ -222,12 +222,13 @@ namespace stat {
         inline TimeSlotCounter<int>* newSlotCounter() {
             return new TimeSlotCounter<int>(3600, 1000);
         }
-        void incSvcSmppCounter(const char* systemId, int index);
+        void incSmppCounter(const char* systemId, bool sc, int index);
+//        void incSvcSmppCounter(const char* systemId, int index);
         void incSvcWapCounter(const char*  systemId, int index);
         void incSvcMmsCounter(const char*  systemId, int index);
         void StatisticsManager::dumpSvcCounters(SerializationBuffer& buf);
 
-        void incScSmppCounter(const char* systemId, int index);
+//        void incScSmppCounter(const char* systemId, int index);
         void incScWapCounter(const char*  systemId, int index);
         void incScMmsCounter(const char*  systemId, int index);
         void StatisticsManager::dumpScCounters(SerializationBuffer& buf);
@@ -242,6 +243,7 @@ namespace stat {
         void reportPerformance(bool t, Mutex& mt, Array<Socket*>& socks);
         void incRouteTraffic(Hash<TrafficRecord>& h,  const char* routeId);
         void dumpTrafficHash(Hash<TrafficRecord>& traff, SerializationBuffer& buf);
+        CommonStat* getStat(const char* id, bool sc);
     public:
         static void init(const StatManConfig& statManCfg);    
         

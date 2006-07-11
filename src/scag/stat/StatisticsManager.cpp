@@ -182,36 +182,38 @@ void StatisticsManager::incError(IntHash<int>& hash, int errcode)
     else (*counter)++;
 }
 
+CommonStat* StatisticsManager::getStat(const char* id, bool sc)
+{
+    CommonStat* st = NULL;
+    Hash<CommonStat>* h = sc ? &srvStatBySmeId[currentIndex] : &srvStatBySmeId[currentIndex];
+
+    if(id && id[0])
+    {
+        st = h->GetPtr(id);
+        if(!st)
+        {
+            CommonStat newStat;
+            h->Insert(id, newStat);
+            st = h->GetPtr(id);
+        }
+    }
+    return st;
+}
+
 void StatisticsManager::registerEvent(const SmppStatEvent& se)
 {
   MutexGuard  switchGuard(switchLock);
 
-  CommonStat* smeSt=0;
+  CommonStat* srcSt=0;
   CommonStat* routeSt=0;
-  CommonStat* srvSt=0;
+  CommonStat* dstSt=0;
 
   using namespace Counters;
   using namespace events::smpp;
 
-  if (se.smeId && se.smeId[0])
-  {
-    smeSt = statBySmeId[currentIndex].GetPtr(se.smeId);
-    if(!smeSt)
-    {
-        CommonStat newStat;
-        statBySmeId[currentIndex].Insert(se.smeId, newStat);
-        smeSt=statBySmeId[currentIndex].GetPtr(se.smeId);
-    }
-  }
-  if(se.smscId && se.smscId[0])
-  {
-    srvSt = srvStatBySmeId[currentIndex].GetPtr(se.smscId);
-    if(!srvSt){
-        CommonStat newStat;
-        srvStatBySmeId[currentIndex].Insert(se.smscId, newStat);
-        srvSt=srvStatBySmeId[currentIndex].GetPtr(se.smscId);
-    }
-  }
+  srcSt = getStat(se.srcId, se.srcType);
+  dstSt = getStat(se.dstId, se.dstType);
+
   if (se.routeId && se.routeId[0])
   {
     //smsc_log_debug(logger, "routeId: '%s'", se.routeId);
@@ -223,49 +225,49 @@ void StatisticsManager::registerEvent(const SmppStatEvent& se)
       routeSt=statByRouteId[currentIndex].GetPtr(se.routeId);
     }
   }
-  if(smeSt) incError(smeSt->errors, se.errCode);
-  if(srvSt) incError(srvSt->errors, se.errCode);
+  if(srcSt) incError(srcSt->errors, se.errCode);
+  if(dstSt) incError(dstSt->errors, se.errCode);
   if(routeSt) incError(routeSt->errors, se.errCode);
 
   if(routeSt && se.routeProviderId!=-1)routeSt->providerId=se.routeProviderId;
 
 #ifdef MSAG_FAKE_STAT
-#define STAT_LOG_EVENT(ev) smsc_log_debug(logger, "StatisticsManager:events::smpp::"ev" %d %d %d", smeSt, srvSt, routeSt)
+#define STAT_LOG_EVENT(ev) smsc_log_debug(logger, "StatisticsManager:events::smpp::"ev" %d %d %d", srcSt, dstSt, routeSt)
 #else
 #define STAT_LOG_EVENT(ev)
 #endif
 
   switch(se.event)
   {
-    case events::smpp::SUBMIT_ACCEPTED:
-        STAT_LOG_EVENT("SUBMIT_ACCEPTED");
+    case events::smpp::ACCEPTED:
+        STAT_LOG_EVENT("ACCEPTED");
 
-        if(smeSt) { smeSt->accepted++; incSvcSmppCounter(se.smeId, cntAccepted); }
+        if(srcSt) { srcSt->accepted++; incSmppCounter(se.srcId, se.srcType, cntAccepted); }
         if(routeSt) { routeSt->accepted++; }
 
         genStatSmpp.inc(cntAccepted);
         break;
-    case events::smpp::SUBMIT_REJECTED:
-        STAT_LOG_EVENT("SUBMIT_REJECTED");
+    case events::smpp::REJECTED:
+        STAT_LOG_EVENT("REJECTED");
 
-        if(smeSt) { smeSt->rejected++; incSvcSmppCounter(se.smeId, cntRejected); 
-                    smeSt->gw_rejected++; incSvcSmppCounter(se.smeId, cntGw_Rejected);
+        if(srcSt) { srcSt->rejected++; incSmppCounter(se.srcId, se.srcType, cntRejected); 
+                    srcSt->gw_rejected++; incSmppCounter(se.srcId, se.srcType, cntGw_Rejected);
                   }
         if(routeSt) { routeSt->rejected++; routeSt->gw_rejected++;}
 
         genStatSmpp.inc(cntRejected); genStatSmpp.inc(cntGw_Rejected);
         break;
-    case events::smpp::SUBMIT_FAILED:
-        STAT_LOG_EVENT("SUBMIT_FAILED");
+    case events::smpp::FAILED:
+        STAT_LOG_EVENT("FAILED");
 
-        if(srvSt) { srvSt->failed++; incScSmppCounter(se.smscId, cntFailed); }
+        if(dstSt) { dstSt->failed++; incSmppCounter(se.dstId, se.dstType, cntFailed); }
         if(routeSt) { routeSt->failed++; }
 
         genStatSmpp.inc(cntFailed);       
         break;
-    case events::smpp::SUBMIT_RESP_OK:
-        STAT_LOG_EVENT("SUBMIT_RESP_OK");
-        if(srvSt) { srvSt->delivered++; incScSmppCounter(se.smscId, cntDelivered);}
+    case events::smpp::RESP_OK:
+        STAT_LOG_EVENT("RESP_OK");
+        if(dstSt) { dstSt->delivered++; incSmppCounter(se.dstId, se.dstType, cntDelivered);}
         if(routeSt) { routeSt->delivered++; }
 
         if (se.routeId && se.routeId[0])
@@ -273,68 +275,24 @@ void StatisticsManager::registerEvent(const SmppStatEvent& se)
 
         genStatSmpp.inc(cntDelivered);
         break;
-    case events::smpp::SUBMIT_RESP_FAILED:
-        STAT_LOG_EVENT("SUBMIT_RESP_FAILED");
-        if(smeSt) { smeSt->rejected++; incSvcSmppCounter(se.smeId, cntRejected);}
-        if(srvSt) { srvSt->failed++; incScSmppCounter(se.smscId, cntFailed);}
+    case events::smpp::RESP_FAILED:
+        STAT_LOG_EVENT("RESP_FAILED");
+        if(srcSt) { srcSt->rejected++; incSmppCounter(se.srcId, se.srcType, cntRejected);}
+        if(dstSt) { dstSt->failed++; incSmppCounter(se.dstId, se.dstType, cntFailed);}
         if(routeSt) { routeSt->rejected++; }
 
         genStatSmpp.inc(cntRejected); genStatSmpp.inc(cntFailed);
         break;
-    case events::smpp::DELIVER_ACCEPTED:
-        STAT_LOG_EVENT("DELIVER_ACCEPTED");
-
-        if(srvSt) { srvSt->accepted++; incScSmppCounter(se.smscId, cntAccepted); }
-        if(routeSt) { routeSt->accepted++; }
-
-        genStatSmpp.inc(cntAccepted);
-        break;
-    case events::smpp::DELIVER_REJECTED:
-        STAT_LOG_EVENT("DELIVER_REJECTED");
-
-        if(srvSt) { srvSt->rejected++; incScSmppCounter(se.smscId, cntRejected); 
-                    srvSt->gw_rejected++; incScSmppCounter(se.smscId, cntGw_Rejected);
-                  }
-        if(routeSt) { routeSt->rejected++; routeSt->gw_rejected++;}
-
-        genStatSmpp.inc(cntRejected); genStatSmpp.inc(cntGw_Rejected);
-        break;
-
-    case events::smpp::DELIVER_FAILED:
-        STAT_LOG_EVENT("DELIVER_FAILED");
-        if(smeSt) { smeSt->failed++;  incSvcSmppCounter(se.smeId, cntFailed); }
-        if(routeSt) { routeSt->failed++; }
-
-        genStatSmpp.inc(cntFailed);
-        break;
-    case events::smpp::DELIVER_RESP_OK:
-        STAT_LOG_EVENT("DELIVER_RESP_OK");
-        if(smeSt) { smeSt->delivered++; incSvcSmppCounter(se.smeId, cntDelivered);}
-        if(routeSt) { routeSt->delivered++; }
-
-        if (se.routeId && se.routeId[0])
-            incRouteTraffic(smppTrafficByRouteId, se.routeId);
-
-        genStatSmpp.inc(cntDelivered);        
-        break;
-    case events::smpp::DELIVER_RESP_FAILED:
-        STAT_LOG_EVENT("DELIVER_RESP_FAILED");
-        if(smeSt) { smeSt->failed++; incSvcSmppCounter(se.smeId, cntFailed);}
-        if(srvSt) { srvSt->rejected++; incScSmppCounter(se.smscId, cntRejected);}
-        if(routeSt) { routeSt->rejected++; }
-
-        genStatSmpp.inc(cntFailed); genStatSmpp.inc(cntRejected);
-        break;
     case events::smpp::RECEIPT_OK:
-        if(smeSt) { smeSt->recieptOk++; incSvcSmppCounter(se.smeId, cntRecieptOk); }
-        if(srvSt) { srvSt->recieptOk++; incScSmppCounter(se.smscId, cntRecieptOk); }
+        if(srcSt) { srcSt->recieptOk++; incSmppCounter(se.srcId, se.srcType, cntRecieptOk); }
+        if(dstSt) { dstSt->recieptOk++; incSmppCounter(se.dstId, se.dstType, cntRecieptOk); }
         if(routeSt) { routeSt->recieptOk++; }
 
         genStatSmpp.inc(cntRecieptOk);
         break;
     case events::smpp::RECEIPT_FAILED:
-        if(smeSt) { smeSt->recieptFailed++; incSvcSmppCounter(se.smeId, cntRecieptFailed);}
-        if(srvSt) { srvSt->recieptFailed++; incScSmppCounter(se.smscId, cntRecieptFailed);}
+        if(srcSt) { srcSt->recieptFailed++; incSmppCounter(se.srcId, se.srcType, cntRecieptFailed);}
+        if(dstSt) { dstSt->recieptFailed++; incSmppCounter(se.dstId, se.dstType, cntRecieptFailed);}
         if(routeSt) { routeSt->recieptFailed++; }
 
         genStatSmpp.inc(cntRecieptFailed);
@@ -1032,11 +990,22 @@ void StatisticsManager::incSvcScCounter(const char* systemId, int index, int max
     if (!pCounter) svcCounters.Insert(systemId, counter);
 }
 
-void StatisticsManager::incSvcSmppCounter(const char* systemId, int index)
+void StatisticsManager::incSmppCounter(const char* systemId, bool sc, int index)
+{
+    if(sc)
+        incSvcScCounter(systemId, index, PERF_CNT_COUNT, scSmppCounters, scCountersLock);
+    else
+    {
+        index = indexByCounter(index);
+        incSvcScCounter(systemId, index, PERF_CNT_COUNT, svcSmppCounters, svcCountersLock);
+    }
+}
+
+/*void StatisticsManager::incSvcSmppCounter(const char* systemId, int index)
 {
     index = indexByCounter(index);
     incSvcScCounter(systemId, index, PERF_CNT_COUNT, svcSmppCounters, svcCountersLock);
-}
+}*/
 
 void StatisticsManager::incSvcWapCounter(const char* systemId, int index)
 {
@@ -1049,10 +1018,10 @@ void StatisticsManager::incSvcMmsCounter(const char* systemId, int index)
     incSvcScCounter(systemId, index, PERF_CNT_COUNT, svcMmsCounters, svcCountersLock);
 }
 
-void StatisticsManager::incScSmppCounter(const char* systemId, int index)
+/*void StatisticsManager::incScSmppCounter(const char* systemId, int index)
 {
     incSvcScCounter(systemId, index, PERF_CNT_COUNT, scSmppCounters, scCountersLock);
-}
+}*/
 
 void StatisticsManager::incScWapCounter(const char* systemId, int index)
 {

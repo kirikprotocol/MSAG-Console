@@ -42,8 +42,10 @@ int Registrator::Execute()
         if(++counter == 9) counter = 1;
         int count =  7. * ( (double)random() / 2147483648. ) + 1;
         for(int i = 0; i<= count - 1; i++){
-            strcpy(si.smeId, "sme1");
-            strcpy(si.smscId, "smsc1");
+            strcpy(si.srcId, "sme1");
+            si.srcType = false;
+            strcpy(si.dstId, "smsc1");
+            si.dstType = true;
             strcpy(si.routeId, "route1");
             si.routeProviderId = 1;
             si.event = counter;
@@ -53,8 +55,10 @@ int Registrator::Execute()
         //==========================================
         count =  7. * ( (double)random() / 2147483648. ) + 1;
         for(int i = 0; i <= count - 1; i++){
-            strcpy(si.smeId, "sme2");
-            strcpy(si.smscId, "smsc2");
+            strcpy(si.srcId, "sme2");
+            si.srcType = false;
+            strcpy(si.dstId, "smsc2");
+            si.dstType = true;
             strcpy(si.routeId, "route3");
             si.routeProviderId = 3;
             si.event = counter;

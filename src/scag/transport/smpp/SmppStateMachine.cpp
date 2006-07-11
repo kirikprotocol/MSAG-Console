@@ -142,45 +142,25 @@ int StateMachine::Execute()
 
 void StateMachine::registerEvent(int event, SmppEntity* src, SmppEntity* dst, const char* rid, int errCode)
 {
-    char* sc_id = NULL;
-    char* sme_id = NULL;
+    char* src_id;
+    char* dst_id = NULL;
+    bool srcType, dstType = false;
 
     smsc_log_debug(log, "SmppStateMachine Event:%d", event);
 
-    if(src->info.type == etSmsc && (!dst || dst->info.type == etService))
-    {
-        sc_id = (char*)src->info.systemId;
-        if(dst != NULL) sme_id = (char*)dst->info.systemId;
-        switch(event)
-        {
-            case scag::stat::events::smpp::FAILED: event = scag::stat::events::smpp::DELIVER_FAILED; break;
-            case scag::stat::events::smpp::ACCEPTED: event = scag::stat::events::smpp::DELIVER_ACCEPTED; break;
-            case scag::stat::events::smpp::REJECTED: event = scag::stat::events::smpp::DELIVER_REJECTED; break;
+    src_id = (char*)src->info.systemId;
+    srcType = src->info.type == etSmsc;
 
-            case scag::stat::events::smpp::RESP_FAILED: event = scag::stat::events::smpp::SUBMIT_RESP_FAILED; break;
-            case scag::stat::events::smpp::RESP_OK: event = scag::stat::events::smpp::SUBMIT_RESP_OK; break;
-        }
-    }
-    else if(src->info.type == etService && (!dst || dst->info.type == etSmsc))
+    if(dst)
     {
-        sme_id = (char*)src->info.systemId;
-        if(dst != NULL) sc_id = (char*)dst->info.systemId;
-        switch(event)
-        {
-            case scag::stat::events::smpp::FAILED: event = scag::stat::events::smpp::SUBMIT_FAILED; break;
-            case scag::stat::events::smpp::ACCEPTED: event = scag::stat::events::smpp::SUBMIT_ACCEPTED; break;
-            case scag::stat::events::smpp::REJECTED: event = scag::stat::events::smpp::SUBMIT_REJECTED; break;
-
-            case scag::stat::events::smpp::RESP_FAILED: event = scag::stat::events::smpp::DELIVER_RESP_FAILED; break;
-            case scag::stat::events::smpp::RESP_OK: event = scag::stat::events::smpp::DELIVER_RESP_OK; break;
-        }
+        dst_id = (char*)dst->info.systemId;
+        dstType = dst->info.type == etSmsc;
     }
-        //TODO: src=smsc && dst==smsc, src==service&&dst==service
 
     if(rid)
-        Statistics::Instance().registerEvent(SmppStatEvent(sme_id, sc_id, rid, event, errCode));
+        Statistics::Instance().registerEvent(SmppStatEvent(src_id, srcType, dst_id, dstType, rid, event, errCode));
     else
-        Statistics::Instance().registerEvent(SmppStatEvent(sme_id, sc_id, event, errCode));
+        Statistics::Instance().registerEvent(SmppStatEvent(src_id, srcType, dst_id, dstType, event, errCode));
 }
 
 void StateMachine::processSubmit(SmppCommand& cmd)
