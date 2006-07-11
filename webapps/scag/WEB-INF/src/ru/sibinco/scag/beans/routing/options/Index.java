@@ -36,6 +36,7 @@ public class Index extends EditBean {
     public static final String PARAM_TYPE = "param";
     public static final String HEADER_TYPE = "header";
     public static final String COOKIE_TYPE = "cookie";
+
     private AbonentsPlacement[] abonentAddress = new AbonentsPlacement[0];
     private String[] abonAddrName = new String[0];
     private String[] abonAddrType = new String[0];
