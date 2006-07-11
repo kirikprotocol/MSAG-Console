@@ -80,8 +80,10 @@
 	    <enumeration value="RECEIPT" />
 	    <enumeration value="USSD_DIALOG" />
 	    <enumeration value="HTTP_DELIVERY" />
-	    <enumeration value="DATA_DELIVER" />
-	    <enumeration value="DATA_SUBMIT" />
+	    <enumeration value="DATA_SC_2_SME" />
+	    <enumeration value="DATA_SC_2_SC" />
+	    <enumeration value="DATA_SME_2_SME" />
+	    <enumeration value="DATA_SME_2_SC" />
         </restriction>
     </simpleType>
     
