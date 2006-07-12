@@ -27,8 +27,10 @@ enum CommandOperations
     CO_DELIVER,
     CO_SUBMIT,
     CO_RECEIPT,
-    CO_DATA_DELIVER,
-    CO_DATA_SUBMIT,
+    CO_DATA_SC_2_SME,
+    CO_DATA_SC_2_SC,
+    CO_DATA_SME_2_SME,
+    CO_DATA_SME_2_SC,
 
     //USSD
     CO_USSD_DIALOG,
@@ -116,10 +118,12 @@ public:
         {
         case DELIVERY:
         case SUBMIT:
+        case DATASM:
             sms = command->get_sms();
             break;
         case DELIVERY_RESP:
         case SUBMIT_RESP:
+        case DATASM_RESP:
             SmsResp * resp = command->get_resp();
             if (resp) sms = resp->get_sms();
             break;
@@ -149,6 +153,32 @@ public:
             break;
         case SUBMIT_RESP:
             resultAddr = sms.destinationAddress;
+            break;
+        case DATASM:
+            switch (command->get_smsCommand().dir)
+            {
+            case dsdSc2Srv:
+                resultAddr = sms.destinationAddress;
+                break;
+            case dsdSrv2Sc:
+                resultAddr = sms.originatingAddress;
+                break;
+            }
+
+            break;
+        case DATASM_RESP:
+
+            if (!command->get_resp()) break;
+
+            switch (command->get_resp()->get_dir())
+            {
+            case dsdSc2Srv:
+                resultAddr = sms.destinationAddress;
+                break;
+            case dsdSrv2Sc:
+                resultAddr = sms.originatingAddress;
+                break;
+            }
             break;
         }
   

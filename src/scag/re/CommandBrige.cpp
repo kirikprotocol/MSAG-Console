@@ -96,6 +96,14 @@ EventHandlerType CommandBrige::getSMPPHandlerType(const SCAGCommand& command)
         handlerType = EH_SUBMIT_SM_RESP;
         break;
 
+    case DATASM:
+        handlerType = EH_DATA_SM;
+        break;
+
+    case DATASM_RESP:
+        handlerType = EH_DATA_SM_RESP;
+        break;
+
     default:
         handlerType = EH_UNKNOWN;
     }
@@ -193,6 +201,7 @@ CSmppDiscriptor CommandBrige::getSmppDiscriptor(const SCAGCommand& command)
 
     CSmppDiscriptor SmppDiscriptor;
     int receiptMessageId = 0;
+    SmsResp * smsResp = 0;
 
     bool transact = false;
     bool req_receipt = false;
@@ -280,6 +289,62 @@ CSmppDiscriptor CommandBrige::getSmppDiscriptor(const SCAGCommand& command)
         SmppDiscriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
         SmppDiscriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
         break;
+
+    case DATASM:
+
+        switch ((*smppCommand)->get_smsCommand().dir) 
+        {
+        case dsdSc2Sc:
+            SmppDiscriptor.cmdType = CO_DATA_SC_2_SC;
+            break;
+        case dsdSc2Srv:
+            SmppDiscriptor.cmdType = CO_DATA_SC_2_SME;
+            break;
+        case dsdSrv2Sc:
+            SmppDiscriptor.cmdType = CO_DATA_SME_2_SC;
+            break;
+        case dsdSrv2Srv:
+            SmppDiscriptor.cmdType = CO_DATA_SME_2_SME;
+            break;
+        case dsdUnknown:
+        default:
+            throw SCAGException("Command Brige: cannot identify DATA_SM direction");
+            break;
+
+        }
+        break;
+
+    case DATASM_RESP:
+        smsResp = (*smppCommand)->get_resp();
+        if (!smsResp) throw SCAGException("Command Brige: cannot get SmsCommand from DATA_SM");
+        SmppDiscriptor.isResp = true;
+
+        switch (smsResp->get_dir()) 
+        {
+        case dsdSc2Sc:
+            SmppDiscriptor.cmdType = CO_DATA_SC_2_SC;
+            break;
+        case dsdSc2Srv:
+            SmppDiscriptor.cmdType = CO_DATA_SC_2_SME;
+            break;
+        case dsdSrv2Sc:
+            SmppDiscriptor.cmdType = CO_DATA_SME_2_SC;
+            break;
+        case dsdSrv2Srv:
+            SmppDiscriptor.cmdType = CO_DATA_SME_2_SME;
+            break;
+        case dsdUnknown:
+        default:
+            throw SCAGException("Command Brige: cannot identify DATA_SM direction");
+            break;
+
+        }
+        break;
+  /*  case PROCESSEXPIREDRESP:
+        SmppDiscriptor.isResp = true;
+        SmppDiscriptor.
+
+        break;*/
     }
         /*
         if (sms == 0) throw SCAGException("Command Bridge Error: Unknown SCAGCommand data");

@@ -525,6 +525,9 @@ void Scag::init()
   Address abonent("+79137354153");
   sms1.originatingAddress = abonent;
   sms2.destinationAddress = abonent;
+  sms3.originatingAddress = abonent;
+  sms3.destinationAddress = abonent;
+
 
   unsigned short shbuff[100];
   shbuff[0] = 0x4903; 
@@ -543,6 +546,14 @@ void Scag::init()
 
 
   scag::transport::smpp::SmppCommand commandPureSubmit = scag::transport::smpp::SmppCommand::makeSubmitSm(sms3,1);
+  scag::transport::smpp::SmppCommand commandPureDataSm = scag::transport::smpp::SmppCommand::makeSubmitSm(sms3,1);
+
+  commandPureDataSm->cmdid = scag::transport::smpp::DATASM;
+  commandPureDataSm->get_smsCommand().dir = scag::transport::smpp::dsdSrv2Sc;
+  commandPureDataSm.setServiceId(1);
+
+
+
 
   commandSubmitResp->get_resp()->set_sms(&sms2);
 
@@ -571,6 +582,9 @@ void Scag::init()
   scag::sessions::Session * session = sessionPtr.Get();
 
   if (session) smsc_log_warn(log, "SESSION IS VALID");
+
+  scag::re::RuleEngine::Instance().process(commandPureDataSm, *session);
+  sm.releaseSession(sessionPtr);
 
   scag::re::RuleEngine::Instance().process(commandDeliver1, *session);
   sm.releaseSession(sessionPtr);
@@ -605,8 +619,8 @@ void Scag::init()
   sm.releaseSession(sessionPtr);
 
   ////////////////////////// FOR TEST 
-                                   
-   */                   
+  */                                 
+                      
                                     
     //********************************************************
     //************** HttpManager initialization **************

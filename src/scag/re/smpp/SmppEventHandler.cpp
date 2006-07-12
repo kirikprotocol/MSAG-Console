@@ -16,6 +16,7 @@ void SmppEventHandler::StartOperation(Session& session, SmppCommand& command, CS
     switch (smppDiscriptor.cmdType)
     {
     case CO_DELIVER:
+    case CO_DATA_SME_2_SC:
         if ((smppDiscriptor.currentIndex <= 1)&&(!smppDiscriptor.isResp))
         {
             operation = session.AddNewOperationToHash(command, smppDiscriptor.cmdType);
@@ -35,6 +36,7 @@ void SmppEventHandler::StartOperation(Session& session, SmppCommand& command, CS
 
 
     case CO_SUBMIT:
+    case CO_DATA_SC_2_SME:
         //TODO: разобаться с RECEIPT`ом и SUBMIT_RESP
 
         UMR = CommandBrige::getUMR(command);
@@ -122,10 +124,12 @@ void SmppEventHandler::EndOperation(Session& session, SmppCommand& command, Rule
     switch (smppDiscriptor.cmdType)
     {
     case CO_DELIVER:
+    case CO_DATA_SME_2_SC:
         if (currentOperation->getStatus() == OPERATION_COMPLETED) session.closeCurrentOperation();
         break;
 
     case CO_SUBMIT:
+    case CO_DATA_SC_2_SME:
 
         if (currentOperation->getStatus() == OPERATION_COMPLETED) 
         {

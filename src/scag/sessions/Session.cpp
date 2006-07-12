@@ -530,8 +530,9 @@ void Session::expirePendingOperation()
 
 void Session::closeCurrentOperation()
 {
-    smsc_log_debug(logger,"Session: close current operation (id=%lld)", currentOperationId);
     if (!m_pCurrentOperation) return;
+
+    smsc_log_debug(logger,"Session: close current operation (id=%lld)", currentOperationId);
 
     delete m_pCurrentOperation;
     m_pCurrentOperation = 0;

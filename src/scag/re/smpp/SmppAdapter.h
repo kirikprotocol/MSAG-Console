@@ -87,6 +87,7 @@ namespace scag { namespace re { namespace smpp
             USSD_DIALOG             = 155,
             MESSAGE_ID              = 156,
             STATUS                  = 157,
+            PACKET_DIRECTION        = 158,
 
             //Binary tags
             OPTIONAL_CHARGING                           = 0x4901,
@@ -110,6 +111,9 @@ namespace scag { namespace re { namespace smpp
         AdapterProperty * getDeliverProperty(SMS& data,const std::string& name,int FieldId);
         AdapterProperty * getSubmitRespProperty(SMS& data, const std::string& name,int FieldId);
         AdapterProperty * getDeliverRespProperty(SMS& data, const std::string& name,int FieldId);
+        AdapterProperty * getDataSmRespProperty(SMS& data,const std::string& name,int FieldId);
+        AdapterProperty * getDataSmProperty(SmsCommand& data,const std::string& name,int FieldId);
+
 
         AdapterProperty * Get_ESM_BIT_Property(SMS& data, const std::string& name,int FieldId);
         AdapterProperty * Get_RD_BIT_Property(SMS& data, const std::string& name,int FieldId);
@@ -123,6 +127,7 @@ namespace scag { namespace re { namespace smpp
 
         void WriteDeliveryField(SMS& data,int FieldId,AdapterProperty& property);
         void WriteSubmitField(SMS& data,int FieldId,AdapterProperty& property);
+        void WriteDataSmField(SMS& data,int FieldId,AdapterProperty& property);
 
 
         SmppCommand&    command;
@@ -130,20 +135,28 @@ namespace scag { namespace re { namespace smpp
 
         static IntHash<AccessType> SubmitFieldsAccess;
         static IntHash<AccessType> DeliverFieldsAccess;
-
+        static IntHash<AccessType> DataSmFieldsAccess;
 
         static Hash<int> SubmitFieldNames;
         static Hash<int> SubmitRespFieldNames;
         static Hash<int> DeliverFieldNames;
         static Hash<int> DeliverRespFieldNames;
+        static Hash<int> DataSmFieldNames;
+        static Hash<int> DataSmRespFieldNames;
+
 
         static Hash<int> InitSubmitFieldNames();
         static Hash<int> InitSubmitRespFieldNames();
         static Hash<int> InitDeliverRespFieldNames();
         static Hash<int> InitDeliverFieldNames();
 
+        static Hash<int> InitDataSmFieldNames();
+        static Hash<int> InitDataSmRespFieldNames();
+
         static IntHash<AccessType> InitSubmitAccess();
         static IntHash<AccessType> InitDeliverAccess();
+        static IntHash<AccessType> InitDataSmAccess();
+
 
                                                             
     public:

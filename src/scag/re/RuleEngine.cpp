@@ -482,7 +482,21 @@ void RuleEngineImpl::ProcessInit(const std::string& dir)
     property.setInt(OPERATION_COMPLETED);
     ConstantsHash["ICC_COMPLETED"] = property;
 
-/*
+    property.setInt(dsdUnknown);
+    ConstantsHash["UNKNOWN"] = property;
+
+    property.setInt(dsdSrv2Srv);
+    ConstantsHash["SME_2_SME"] = property;
+
+    property.setInt(dsdSrv2Sc);
+    ConstantsHash["SME_2_SC"] = property;
+
+    property.setInt(dsdSc2Srv);
+    ConstantsHash["SC_2_SME"] = property;
+
+    property.setInt(dsdSc2Sc);
+    ConstantsHash["SC_2_SC"] = property;
+    /*
     "TRUE"
     "FALSE"
     "TT_USSD"
