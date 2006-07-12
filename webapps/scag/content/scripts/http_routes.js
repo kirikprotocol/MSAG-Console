@@ -332,17 +332,21 @@ function removeSection(sectionName) {
     sectionElem.removeNode(true);
 }
 
-function addSite(valueElem, portElem, addPathStr) {
+function addSite(valueElem, portElem, addPathStr, msgVal) {
+    if(document.getElementById(trim(valueElem.value)) != null){
+        alert(msgVal);
+        return false;
+    }
     if (!trimStr(portElem.value).length > 0)
         portElem.value = '80';
     if ((trimStr(valueElem.value).length > 0) && validateField(portElem)) {
 
-        var siteName = valueElem.value.substr(0, valueElem.value.indexOf('.'));
+        var siteName = trimStr(valueElem.value.substr(0, valueElem.value.indexOf('.')));
 
         var tbl = opForm.all.div_site_table;
         var newRow = tbl.insertRow(tbl.rows.length);
         newCell = newRow.insertCell();
-        newCell.innerHTML = addSiteSectionBody(siteName, valueElem.value, portElem.value, addPathStr);
+        newCell.innerHTML = addSiteSectionBody(siteName, trimStr(valueElem.value), trimStr(portElem.value), addPathStr);
         newRow.appendChild(newCell);
         valueElem.value = "";
         portElem.value = '80';
@@ -355,13 +359,13 @@ function addSite(valueElem, portElem, addPathStr) {
 function addSiteSectionBody(siteName, siteFullName, sitePort, addPathStr) {
     var sectionHeader_ = "sectionHeader_" + siteName;
     return ""
-            + "<div class=\"collapsing_tree_opened\" id=\"" + sectionHeader_ + "\" onclick=\"collasping_tree_showhide_section('" + siteName + "')\">"
+            + "<div class=\"collapsing_tree_opened\" id=\"" + sectionHeader_ + "\">"// onclick=\"collasping_tree_showhide_section('" + siteName + "')\">"
             + " <table id=\"sitesp_table_" + siteName + "\" cellpadding=\"0\" cellspacing=\"0\" class=\"properties_list\">"
             + " <col width=\"1%\">"
             + " <col width=\"99%\">"
             + " <tr>"
             + " <td width=\"100%\">" + siteFullName + "</td>"
-            + " <td align=\"left\" nowrap=\"true\"><input type=\"hidden\" name=\"sitesHost\" value=\"" + siteFullName + "\">"
+            + " <td align=\"left\" nowrap=\"true\"><input type=\"hidden\" name=\"sitesHost\" id=\"" + siteFullName + "\"  value=\"" + siteFullName + "\">"
             + " <input type=\"hidden\" name=\"sitesPort\" value=\"" + siteFullName + "_" + sitePort + "\"></td>"
             + " <td><img src=\"content/images/but_del.gif\" onClick=\"removeSection('" + siteName + "')\"></td>"
             + " </tr>"
