@@ -111,6 +111,14 @@ struct TonNpiAddress {
 };
 
 
+struct MAPSCFinfo { //gsmSCF paramaters
+    uint32_t      serviceKey;
+    TonNpiAddress scfAddress;
+
+    MAPSCFinfo() : serviceKey(0) { }
+};
+
+
 typedef union TONPI_OCT_u {
     unsigned char tonpi;
     struct {
@@ -167,5 +175,6 @@ using smsc::cvtutil::TonNpiAddress;
 using smsc::cvtutil::TONNPI_OCT;
 using smsc::cvtutil::TONNPI_ADDRESS_OCTS;
 using smsc::cvtutil::LOCATION_ADDRESS_OCTS;
+using smsc::cvtutil::MAPSCFinfo;
 
 #endif /* __SMSC_CONVERSION_ADDRESS_UTL_HPP__ */
