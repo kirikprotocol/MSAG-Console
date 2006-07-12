@@ -122,7 +122,7 @@ void ActionContext::makeBillEvent(int billCommand, int commandStatus, TariffRec&
     */
     ev.Header.sCommandStatus = commandStatus;
     
-    ev.iOperatorId = commandProperty.operatorId;
+    ev.Header.iOperatorId = commandProperty.operatorId;
     ev.iPriceCatId = tariffRec.CategoryId;
     
     

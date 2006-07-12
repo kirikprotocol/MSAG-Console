@@ -100,7 +100,7 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, 
         sprintf((char *)ev.Header.pAbonentNumber,"%s",tempStr.c_str());*/
 
     ev.Header.sCommandStatus = commandProperty.status;
-    ev.iOperatorId = commandProperty.operatorId;
+    ev.Header.iOperatorId = commandProperty.operatorId;
     
     if ((propertyObject.HandlerId == EH_SUBMIT_SM)||(propertyObject.HandlerId == EH_DELIVER_SM))
     {
