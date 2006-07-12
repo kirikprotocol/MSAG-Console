@@ -351,6 +351,19 @@ bool Billing::onChargeSms(ChargeSms* sms)
                     _bconn->bConnId(), _bId, 
                    (cdr._bearer == CDRRecord::dpUSSD) ? "dpUSSD" : "dpSMS",
                    cdr._srcAdr.c_str(), cdr._dstAdr.c_str());
+    //check for source IMSI & MSC
+    if (!strcmp("MAP_PROXY", cdr._srcSMEid.c_str())) {
+        if (!cdr._srcIMSI.length() || !cdr._srcMSC.length()) {
+            std::string rec;
+            CDRRecord::csvEncode(cdr, rec);
+            smsc_log_error(logger, "Billing[%u.%u]: empty source IMSI or MSC!",
+                           _bconn->bConnId(), _bId);
+            smsc_log_error(logger, "Billing[%u.%u]: header: <%s>", 
+                           _bconn->bConnId(), _bId, smsc::inman::cdr::_CDRRecordHeader_TEXT);
+            smsc_log_error(logger, "Billing[%u.%u]: cdr   : <%s>", 
+                           _bconn->bConnId(), _bId, rec.c_str());
+        }
+    }
 
     postpaidBill = ( (_cfg.billMode == smsc::inman::BILL_ALL)
                     || ((_cfg.billMode == smsc::inman::BILL_USSD)
