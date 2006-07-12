@@ -50,7 +50,7 @@
                     <td>&nbsp;</td>
                     <%--<td width="43%">Priority:&nbsp;${pls.name}</td>--%>
                     <td>
-                        <input type="text" size="50" style="font:bold; color:black;" value="${pls.name}" readonly="true"/>
+                        <input type="text" size="50" style="color:black;" value="${pls.name}" readonly="true"/>
                         <input type="hidden" name="abonAddrName" value="${pls.name}">
                         <input type="hidden" name="abonAddrType" value="${pls.name}_${rowN}">
                     </td>
@@ -106,7 +106,7 @@
                         <td>&nbsp;</td>
                             <%--<td width="43%">Priority:&nbsp;${pls.name}</td>--%>
                         <td>
-                            <input type="text" size="50" style="font:bold; color:black;" value="${pls.name}" readonly="true"/>
+                            <input type="text" size="50" style="color:black;" value="${pls.name}" readonly="true"/>
                             <input type="hidden" name="siteAddrName" value="${pls.name}">
                             <input type="hidden" name="siteAddrType" value="${pls.name}_${rowN}">
                         </td>
@@ -174,7 +174,7 @@
                         <td>&nbsp;</td>
                             <%--<td width="43%">Priority:&nbsp;${pls.name}</td>--%>
                         <td>
-                            <input type="text" size="50" style="font:bold; color:black;" value="${pls.name}"
+                            <input type="text" size="50" style="color:black;" value="${pls.name}"
                                    readonly="true"/>
                             <input type="hidden" name="abonentUsrName" value="${pls.name}">
                             <input type="hidden" name="abonentUsrType" value="${pls.name}_${rowN}">
@@ -238,7 +238,7 @@
                         <td>&nbsp;</td>
                             <%--<td width="43%">Priority:&nbsp;${pls.name}</td>--%>
                         <td>
-                            <input type="text" size="50" style="font:bold; color:black;" value="${pls.name}"
+                            <input type="text" size="50" style="color:black;" value="${pls.name}"
                                    readonly="true"/>
                             <input type="hidden" name="siteUsrName" value="${pls.name}">
                             <input type="hidden" name="siteUsrType" value="${pls.name}_${rowN}">
