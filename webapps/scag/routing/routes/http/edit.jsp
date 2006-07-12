@@ -18,7 +18,6 @@
 
 <jsp:body>
 <script src="content/scripts/http_routes.js" type="text/javascript"></script>
-
 <table cellpadding="5">
     <col width="50%">
     <col width="50%">
@@ -44,7 +43,14 @@
     </tr>
 </table>
     <br>
-    <sm-et:section title="Address/USR Placement Options" opened="false"  name="allplacement">
+    <table class="properties_list" cellspacing="0" cellspadding="0" border="0">
+        <tr><td style="cursor:hand;text-align:left"
+                onClick="toggleVisible(pgs_http,cgs_http);">
+        <div align="left" id="pgs_http" class="collapsing_list_closed"><div class="page_subtitle">
+               <u><font size="2"><fmt:message>options.item.title.address.usr</fmt:message></font></u></div>
+            </div></td>
+            <tr id="cgs_http" style="display:none"><td colspan="9" width="100%">
+    <%--<sm-et:section title="Address/USR Placement Options" opened="false"  name="allplacement">--%>
     <table cellpadding="0" cellspacing="0" width="100%">
         <tr>
             <td align="left"><hr></td>
@@ -77,7 +83,7 @@
                         <td>&nbsp;</td>
                             <%--<td width="43%">Priority:&nbsp;${pls.name}</td>--%>
                         <td>
-                            <input type="text" size="50" style="font:bold; color:black;" value="${pls.name}"
+                            <input type="text" size="50" style="color:black;" value="${pls.name}"
                                    readonly="true"/>
                             <input type="hidden" name="abonentUsrName" value="${pls.name}">
                             <input type="hidden" name="abonentUsrType" value="${pls.name}_${rowN}">
@@ -137,7 +143,7 @@
                         <td>&nbsp;</td>
                             <%--<td width="43%">Priority:&nbsp;${pls.name}</td>--%>
                         <td>
-                            <input type="text" size="50" style="font:bold; color:black;" value="${pls.name}"
+                            <input type="text" size="50" style="color:black;" value="${pls.name}"
                                    readonly="true"/>
                             <input type="hidden" name="siteUsrName" value="${pls.name}">
                             <input type="hidden" name="siteUsrType" value="${pls.name}_${rowN}">
@@ -228,7 +234,7 @@
                         <td>&nbsp;</td>
                             <%--<td width="43%">Priority:&nbsp;${pls.name}</td>--%>
                         <td>
-                            <input type="text" size="50" style="font:bold; color:black;" value="${pls.name}" readonly="true"/>
+                            <input type="text" size="50" style="color:black;" value="${pls.name}" readonly="true"/>
                             <input type="hidden" name="siteAddrName" value="${pls.name}">
                             <input type="hidden" name="siteAddrType" value="${pls.name}_${rowN}">
                         </td>
@@ -267,7 +273,9 @@
         </td>
          </tr>
         </table>
-</sm-et:section>
+<%--</sm-et:section>--%>
+    </td></tr>
+</table>
 <br>
 <table><tr><td colspan="2"><hr></td></tr></table>
 <table cellpadding="12">
@@ -345,8 +353,9 @@
                 </tr>
                 <tr>
                     <td><fmt:message>routes.edit.site.port</fmt:message></td>
+
                     <td nowrap="true"><input id="newSite" class="midtxt" name="newSite"><b>:</b><input id="newPort" class="mintxt" name="newPort" value="80" validation="port" onkeyup="resetValidation(this)"></td>
-                    <td><img src="content/images/but_add.gif" alt="Add new Site" onclick="addSite(opForm.all.newSite,opForm.all.newPort)"
+                    <td><img src="content/images/but_add.gif" alt="Add new Site" onclick="addSite(opForm.all.newSite,opForm.all.newPort,'<fmt:message>routes.edit.add.new.path</fmt:message>')"
                         style="cursor: hand;"></td>
                 </tr>
             </table>
@@ -384,7 +393,7 @@
                                     <col width="99%">
                                     <tr>
                                         <td width="100%">${fn:escapeXml(i.host)}</td>
-                                        <td align="left" nowrap="true"><input type="hidden" name="sitesHost"
+                                        <td align="left" nowrap="true"><input type="hidden" name="sitesHost"  id="${esite}"
                                                                               value="${esite}">
                                             <input type="hidden" name="sitesPort" value="${esite}_${eport}"></td>
                                         <td><img src="content/images/but_del.gif"
