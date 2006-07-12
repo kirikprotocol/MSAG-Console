@@ -1123,7 +1123,7 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
 {
 
     SMS * sms = 0;
-    SmsCommand * smsCmd = 0;
+    SmsCommand smsCmd;
 
     CommandId cmdid = command->get_commandId();
 
@@ -1203,8 +1203,7 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
         property = getSubmitRespProperty(*sms, name,*pFieldId);
         break;
     case DATASM:
-        smsCmd = (SmsCommand *)(command->dta);
-        if (!smsCmd) return 0;
+        smsCmd = command->get_smsCommand();
 
         pFieldId = DataSmFieldNames.GetPtr(name.c_str());
         if (!pFieldId) return 0;
@@ -1212,7 +1211,7 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
         propertyPtr = PropertyPul.GetPtr(*pFieldId);
         if (propertyPtr) return (*propertyPtr);
 
-        property = getDataSmProperty(*smsCmd,name,*pFieldId);
+        property = getDataSmProperty(smsCmd,name,*pFieldId);
         break;
     case DATASM_RESP:
 
