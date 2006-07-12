@@ -184,6 +184,12 @@ function commonOnLoad() {
     checkSiteSubj();
 }
 
+function toggleVisible(p, c) {
+        var o = p.className == "collapsing_list_opened";
+        p.className = o ? "collapsing_list_closed"  : "collapsing_list_opened";
+        c.runtimeStyle.display = o ? "none" : "block";
+}
+
 function removeAbonetSubj(rowId) {
     var selectElem = opForm.all.abonSubjSelect;
     var tbl = opForm.all.abonents_table;
@@ -326,7 +332,7 @@ function removeSection(sectionName) {
     sectionElem.removeNode(true);
 }
 
-function addSite(valueElem, portElem) {
+function addSite(valueElem, portElem, addPathStr) {
     if (!trimStr(portElem.value).length > 0)
         portElem.value = '80';
     if ((trimStr(valueElem.value).length > 0) && validateField(portElem)) {
@@ -336,7 +342,7 @@ function addSite(valueElem, portElem) {
         var tbl = opForm.all.div_site_table;
         var newRow = tbl.insertRow(tbl.rows.length);
         newCell = newRow.insertCell();
-        newCell.innerHTML = addSiteSectionBody(siteName, valueElem.value, portElem.value);
+        newCell.innerHTML = addSiteSectionBody(siteName, valueElem.value, portElem.value, addPathStr);
         newRow.appendChild(newCell);
         valueElem.value = "";
         portElem.value = '80';
@@ -346,7 +352,7 @@ function addSite(valueElem, portElem) {
         return false;
 }
 
-function addSiteSectionBody(siteName, siteFullName, sitePort) {
+function addSiteSectionBody(siteName, siteFullName, sitePort, addPathStr) {
     var sectionHeader_ = "sectionHeader_" + siteName;
     return ""
             + "<div class=\"collapsing_tree_opened\" id=\"" + sectionHeader_ + "\" onclick=\"collasping_tree_showhide_section('" + siteName + "')\">"
@@ -360,13 +366,12 @@ function addSiteSectionBody(siteName, siteFullName, sitePort) {
             + " <td><img src=\"content/images/but_del.gif\" onClick=\"removeSection('" + siteName + "')\"></td>"
             + " </tr>"
             + " <tr>"
-            + " <td nowrap=\"true\">Add new path&nbsp;</td>"
+            + " <td nowrap=\"true\">" + addPathStr + "&nbsp;</td>"
             + " <td align=\"right\"><input id=\"" + siteName + "_newPath\" class=\"txt\" name=\"" + siteName + "_newPath\"></td>"
-            + " <td><img src=\"content/images/but_add.gif\" alt=\"Add new path\" "
+            + " <td><img src=\"content/images/but_add.gif\" alt=\"" + addPathStr + "\" "
             + "onclick=\"addPath(opForm.all." + siteName + "_newPath, '" + siteFullName + "', opForm.all.sitesp_table_" + siteName + ", '" + siteName + "')\" "
             + "style=\"cursor:hand;\"></td>"
             + " </tr>"
             + " </table>"
             + "</div>";
 }
-
