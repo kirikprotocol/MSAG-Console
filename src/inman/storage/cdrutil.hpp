@@ -6,6 +6,8 @@ namespace smsc  {
 namespace inman {
 namespace cdr {
 
+extern const char    _CDRRecordHeader_TEXT[];
+
 struct CDRRecord {
     CDRRecord();
 
