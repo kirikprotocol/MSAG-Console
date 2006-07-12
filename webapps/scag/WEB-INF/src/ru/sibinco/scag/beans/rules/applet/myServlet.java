@@ -295,7 +295,7 @@ public class myServlet extends HttpServlet
     System.out.println("ExistRule id= "+file + " transport="+transport);
     SCAGAppContext appContext = (SCAGAppContext) req.getAttribute(Constants.APP_CONTEXT);
     PrintWriter out = res.getWriter();
-    if (appContext.getRuleManager().getRule(file,transport)!=null)
+    if (appContext.getRuleManager().checkRuleFileExists(file,transport))
         out.print("true");
     else  out.print("false");
     out.flush();out.close();

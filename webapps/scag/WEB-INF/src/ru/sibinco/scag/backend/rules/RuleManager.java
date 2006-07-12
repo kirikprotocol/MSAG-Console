@@ -83,6 +83,10 @@ public class RuleManager
       return newFile;
   }
 
+  public boolean checkRuleFileExists(String ruleId, String transport) {
+    return composeRuleFile(transport, ruleId).exists();
+  }
+
   public Rule getRule(String ruleId, String transport)
   {
     Rule rule = null;
@@ -95,12 +99,6 @@ public class RuleManager
       }
     return rule;
   }
-
- public LinkedList getRuleBody(String ruleId, String transport)
- {
-   Rule rule = getRule(ruleId, transport);
-   return rule.getBody();
- }
 
   public synchronized void load() throws SibincoException
   {
@@ -458,8 +456,8 @@ public class RuleManager
       try {
       String[] transports = Transport.transportTitles;
       for (byte i =0 ;i<transports.length;i++) {
-           Rule current = getRule(ruleId,transports[i]);
-           if (current!=null) removeRule(ruleId, current.getTransport(), NON_TERM_MODE, user);
+           boolean ruleExist = checkRuleFileExists(ruleId,transports[i]);
+           if (ruleExist) removeRule(ruleId, transports[i], NON_TERM_MODE, user);
         }
       } catch(SibincoException se) {
               se.printStackTrace();/*PRINT ERROR ON THE SCREEN;*/

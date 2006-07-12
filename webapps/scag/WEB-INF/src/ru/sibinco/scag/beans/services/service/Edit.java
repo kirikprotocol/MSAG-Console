@@ -310,15 +310,15 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public boolean isSmppRuleExists() {
-        return (appContext.getRuleManager().getRule(String.valueOf(id), Transport.SMPP_TRANSPORT_NAME) != null);
+        return (appContext.getRuleManager().checkRuleFileExists(String.valueOf(id), Transport.SMPP_TRANSPORT_NAME));
     }
 
     public boolean isHttpRuleExists() {
-        return (appContext.getRuleManager().getRule(String.valueOf(id), Transport.HTTP_TRANSPORT_NAME) != null);
+        return (appContext.getRuleManager().checkRuleFileExists(String.valueOf(id), Transport.HTTP_TRANSPORT_NAME));
     }
 
     public boolean isMmsRuleExists() {
-        return (appContext.getRuleManager().getRule(String.valueOf(id), Transport.MMS_TRANSPORT_NAME) != null);
+        return (appContext.getRuleManager().checkRuleFileExists(String.valueOf(id), Transport.MMS_TRANSPORT_NAME));
     }
 
     public String getMbAddSmppRoute() {
