@@ -74,8 +74,9 @@ AccessType SmppCommandAdapter::CheckAccess(int handlerType, const std::string& n
         return atRead;
         break;
     case EH_DATA_SM_RESP:
-        pFieldId = DataSmFieldNames.GetPtr(name.c_str());
+        pFieldId = DataSmRespFieldNames.GetPtr(name.c_str());
         if (!pFieldId) return atNoAccess;
+
         return atRead;
         break;
     }
@@ -174,6 +175,11 @@ Hash<int> SmppCommandAdapter::InitDataSmFieldNames()
 Hash<int> SmppCommandAdapter::InitDataSmRespFieldNames()
 {
     Hash<int> hs;
+
+    hs["OA"]                            = OA;
+    hs["DA"]                            = DA;
+
+    hs["packet_direction"]              = PACKET_DIRECTION;
 
     hs["status"] = STATUS;
     return hs;
