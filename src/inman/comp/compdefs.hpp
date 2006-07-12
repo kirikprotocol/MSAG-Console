@@ -14,11 +14,6 @@ namespace smsc {
 namespace inman {
 namespace comp {
 
-typedef struct {
-    unsigned      serviceKey;
-    TonNpiAddress scfAddress;
-} MAPSCFinfo;
-
 class ASN1EncodeError : public CustomException {
 public:
     ASN1EncodeError(const char * def_name, const char * failed_type)

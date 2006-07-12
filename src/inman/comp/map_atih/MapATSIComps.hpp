@@ -8,7 +8,7 @@
 
 using smsc::logger::Logger;
 using smsc::inman::comp::Component;
-using smsc::inman::comp::MAPSCFinfo;
+//using smsc::inman::comp::MAPSCFinfo;
 
 /* GVR NOTE: while linking the below enums are taken from generated *
  * asn1/c codec, so they should not have namespace prefix.          */

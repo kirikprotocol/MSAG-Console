@@ -13,7 +13,7 @@ using smsc::inman::inap::TCAPDispatcher;
 #include "inman/comp/map_chsri/MapCHSRIComps.hpp"
 using smsc::inman::comp::chsri::CHSendRoutingInfoRes;
 using smsc::inman::comp::chsri::CHSendRoutingInfoArg;
-using smsc::inman::comp::MAPSCFinfo;
+//using smsc::inman::comp::MAPSCFinfo;
 
 #include "inman/inap/map_chsri/DlgMapCHSRI.hpp"
 using smsc::inman::inap::chsri::CHSRIhandler;

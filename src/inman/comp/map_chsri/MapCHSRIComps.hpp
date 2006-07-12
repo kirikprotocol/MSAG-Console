@@ -9,7 +9,7 @@
 using smsc::logger::Logger;
 using smsc::inman::comp::Component;
 using smsc::inman::comp::MAPComponent;
-using smsc::inman::comp::MAPSCFinfo;
+//using smsc::inman::comp::MAPSCFinfo;
 
 namespace smsc {
 namespace inman {
