@@ -23,6 +23,7 @@ Hash<int> SmppCommandAdapter::DataSmRespFieldNames = SmppCommandAdapter::InitDat
 
 IntHash<AccessType> SmppCommandAdapter::SubmitFieldsAccess = SmppCommandAdapter::InitSubmitAccess();
 IntHash<AccessType> SmppCommandAdapter::DeliverFieldsAccess = SmppCommandAdapter::InitDeliverAccess();
+IntHash<AccessType> SmppCommandAdapter::DataSmFieldsAccess = SmppCommandAdapter::InitDataSmAccess();
 
 
 
