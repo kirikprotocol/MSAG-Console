@@ -18,6 +18,7 @@
 
 <jsp:body>
 <script src="content/scripts/http_routes.js" type="text/javascript"></script>
+
 <table cellpadding="5">
     <col width="50%">
     <col width="50%">
@@ -355,7 +356,7 @@
                     <td><fmt:message>routes.edit.site.port</fmt:message></td>
 
                     <td nowrap="true"><input id="newSite" class="midtxt" name="newSite"><b>:</b><input id="newPort" class="mintxt" name="newPort" value="80" validation="port" onkeyup="resetValidation(this)"></td>
-                    <td><img src="content/images/but_add.gif" alt="Add new Site" onclick="addSite(opForm.all.newSite,opForm.all.newPort,'<fmt:message>routes.edit.add.new.path</fmt:message>')"
+                    <td><img src="content/images/but_add.gif" alt="Add new Site" onclick="addSite(opForm.all.newSite,opForm.all.newPort,'<fmt:message>routes.edit.add.new.path</fmt:message>','<fmt:message>scripts.site.already.exist</fmt:message>')"
                         style="cursor: hand;"></td>
                 </tr>
             </table>
@@ -385,8 +386,8 @@
                             <c:set var="sectHeader" value="sectionHeader_${esite_sub}"/>
                             <c:set var="esite_table" value="sitesp_table_${esite_sub}"/>
 
-                            <div class="collapsing_tree_opened" id="${sectHeader}"
-                                 onclick="collasping_tree_showhide_section('${esite_sub}')">
+                            <div class="collapsing_tree_opened" id="${sectHeader}">
+                                 <%--onclick="collasping_tree_showhide_section('${esite_sub}')">--%>
 
                                 <table id="${esite_table}" cellpadding="0" cellspacing="0" class="properties_list">
                                     <col width="1%">
