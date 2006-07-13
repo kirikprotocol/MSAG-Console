@@ -27,7 +27,7 @@
         opForm.subjectType.value = '1';
         opForm.action = "<%=request.getContextPath() + (request.getServletPath().endsWith(".jsp")
                          ? request.getServletPath().substring(0, request.getServletPath().lastIndexOf('/'))
-                         : request.getServletPath())%>/edit.jsp?subjectType=1";
+                         : request.getServletPath())%>/edit.jsp?subjectType=1&editId=" + idToEdit;
         opForm.submit();
         return false;
     }
