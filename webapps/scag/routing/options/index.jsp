@@ -27,7 +27,7 @@
     </table>
     <br>
     <table width="100%" cellpadding="0" cellspacing="0">
-        <tr><td>
+        <tr><td valign="top">
 
         <table id="abon_address_tbl" class="properties_list" cellpadding="0" cellspacing="0">
             <c:set var="rowN" value="0"/>
@@ -50,7 +50,7 @@
                     <td>&nbsp;</td>
                     <%--<td width="43%">Priority:&nbsp;${pls.name}</td>--%>
                     <td>
-                        <input type="text" size="50" style="color:black;" value="${pls.name}" readonly="true"/>
+                        <input type="text" size="45" style="color:black;" value="${pls.name}" readonly="true"/>
                         <input type="hidden" name="abonAddrName" value="${pls.name}">
                         <input type="hidden" name="abonAddrType" value="${pls.name}_${rowN}">
                     </td>
@@ -84,8 +84,8 @@
                 <td>&nbsp;</td>
             </tr>
         </table>
-        </td>
-        <td>
+        </td><td>&nbsp;</td>
+        <td valign="top">
             <table id="site_address_tbl" class="properties_list" cellpadding="0" cellspacing="0">
                 <c:set var="rowN" value="0"/>
                 <c:forEach items="${bean.siteAddress}" var="pls">
@@ -106,7 +106,7 @@
                         <td>&nbsp;</td>
                             <%--<td width="43%">Priority:&nbsp;${pls.name}</td>--%>
                         <td>
-                            <input type="text" size="50" style="color:black;" value="${pls.name}" readonly="true"/>
+                            <input type="text" size="45" style="color:black;" value="${pls.name}" readonly="true"/>
                             <input type="hidden" name="siteAddrName" value="${pls.name}">
                             <input type="hidden" name="siteAddrType" value="${pls.name}_${rowN}">
                         </td>
@@ -146,7 +146,7 @@
          </tr>
         </table>
     <table width="100%" cellpadding="0" cellspacing="0">
-        <tr><td>
+        <tr><td valign="top">
 
         <br>
         <br>
@@ -174,7 +174,7 @@
                         <td>&nbsp;</td>
                             <%--<td width="43%">Priority:&nbsp;${pls.name}</td>--%>
                         <td>
-                            <input type="text" size="50" style="color:black;" value="${pls.name}"
+                            <input type="text" size="45" style="color:black;" value="${pls.name}"
                                    readonly="true"/>
                             <input type="hidden" name="abonentUsrName" value="${pls.name}">
                             <input type="hidden" name="abonentUsrType" value="${pls.name}_${rowN}">
@@ -210,7 +210,7 @@
             </tr>
         </table>
     </td>
-        <td>
+        <td valign="top">
 
         <br>
         <br>
@@ -238,7 +238,7 @@
                         <td>&nbsp;</td>
                             <%--<td width="43%">Priority:&nbsp;${pls.name}</td>--%>
                         <td>
-                            <input type="text" size="50" style="color:black;" value="${pls.name}"
+                            <input type="text" size="45" style="color:black;" value="${pls.name}"
                                    readonly="true"/>
                             <input type="hidden" name="siteUsrName" value="${pls.name}">
                             <input type="hidden" name="siteUsrType" value="${pls.name}_${rowN}">
@@ -276,7 +276,5 @@
         </td>
     </tr>
     </table>
-
-
     </jsp:body>
 </sm:page>
