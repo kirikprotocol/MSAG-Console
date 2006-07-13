@@ -76,6 +76,24 @@ public class HttpSite {
         this.sites = new HashMap();
     }
 
+    public Site[] getArraySite() {
+        List siteList = new ArrayList();
+        for (Iterator i = sites.values().iterator(); i.hasNext();) {
+            final Site site = (Site) i.next();
+            siteList.add(site);
+        }
+        return (Site[]) siteList.toArray(new Site[siteList.size()]);
+    }
+
+    public String[] getSiteAsStr() {
+        List siteList = new ArrayList();
+        for (Iterator i = sites.values().iterator(); i.hasNext();) {
+            final Site site = (Site) i.next();
+            siteList.add(site.getHost());
+        }
+        return (String[]) siteList.toArray(new String[siteList.size()]);
+    }
+
     public String getName() {
         return name.trim();
     }
