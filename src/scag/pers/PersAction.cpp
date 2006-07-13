@@ -311,13 +311,25 @@ bool PersAction::run(ActionContext& context)
                 break;
             case PC_GET:
             {
-                if(profile == PT_ABONENT)
-                    pc.GetProperty(profile, cp.abonentAddr.value, var.c_str(), prop);
-                else
-                    pc.GetProperty(profile, getKey(cp, profile), var.c_str(), prop);
-
-                REProperty *rep = context.getProperty(value_str);
-                setREPropFromPersProp(*rep, prop);
+                try{
+                    if(profile == PT_ABONENT)
+                        pc.GetProperty(profile, cp.abonentAddr.value, var.c_str(), prop);
+                    else
+                        pc.GetProperty(profile, getKey(cp, profile), var.c_str(), prop);
+                    REProperty *rep = context.getProperty(value_str);
+                    setREPropFromPersProp(*rep, prop);
+                }
+                catch(PersClientException& e)
+                {
+                    if(e.getType() == PROPERTY_NOT_FOUND)
+                    {
+                        REProperty *rep = context.getProperty(value_str);
+                        rep->setStr("");
+                        smsc_log_warn(logger, "PersClientException: GetProperty not found: %s", var.c_str());
+                    }
+                    else
+                        throw e;
+                }
                 break;
             }
         }
