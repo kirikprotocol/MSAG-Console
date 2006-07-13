@@ -14,6 +14,7 @@ import ru.sibinco.scag.backend.routing.Subject;
 import ru.sibinco.scag.backend.routing.http.HttpRoutingManager;
 import ru.sibinco.scag.backend.routing.http.HttpSubject;
 import ru.sibinco.scag.backend.routing.http.HttpSite;
+import ru.sibinco.scag.backend.routing.http.Site;
 import ru.sibinco.scag.backend.status.StatMessage;
 import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.backend.transport.Transport;
@@ -28,7 +29,7 @@ import java.util.*;
 /**
  * Created by igork Date: 20.04.2004 Time: 15:51:47
  */
-public class Edit extends TabledEditBeanImpl {//EditBean {
+public class Edit extends EditBean {
 
     private String name;
     private String defaultSme;
@@ -41,37 +42,20 @@ public class Edit extends TabledEditBeanImpl {//EditBean {
     private String httpSubjId = null;
     private String httpSiteId = null;
     private int subjectType;
-    private Map sites = new HashMap();
     private String mbAddSite;
+
+    private Site[] sites = new Site[0];
+    private String[] sitesHost = new String[0];
+    private String[] sitesPort = new String[0];
+    private String[] pathLinks = new String[0];
 
 
     public String getId() {
         return name;
     }
 
-    protected Collection getDataSource() {
-        return sites.values();
-    }
-
-    protected void delete() throws SCAGJspException {
-        appContext.getHttpRoutingManager().deleteSite(getId(), getLoginedPrincipal().getName(), checkedSet);
-    }
 
     public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException {
-        super.process(request, response);
-
-        if (mbDelete != null) {
-            delete();
-            load(getId());
-        }
-
-        if (getId() == null && !isAdd())
-            load(getEditId());
-
-        if (getMbAddSite() != null) {
-            throw new AddChildException(request.getContextPath() + "/routing/subjects/site", getId());
-        }
-
         super.process(request, response);
     }
 
@@ -102,12 +86,16 @@ public class Edit extends TabledEditBeanImpl {//EditBean {
                 if (null != httpSubject) {
                     name = httpSubject.getName();
                     address = httpSubject.getMasks();
+                    if (getEditId() == null) {
+                        setEditId(getId());
+                    }
                 }
             } else if (getSubjectType() == HttpRoutingManager.HTTP_SITE_TYPE) {
 
                 HttpSite httpSite = (HttpSite) appContext.getHttpRoutingManager().getSites().get(getHttpSiteId());
                 if (null != httpSite) {
-                    sites = httpSite.getSites();
+                    sites = httpSite.getArraySite();
+                    sitesHost = httpSite.getSiteAsStr();
                     name = httpSite.getName();
                 }
             }
@@ -155,7 +143,31 @@ public class Edit extends TabledEditBeanImpl {//EditBean {
                     if (httpSites.containsKey(name))
                         throw new SCAGJspException(Constants.errors.routing.sites.HTTP_SITE_ALREADY_EXISTS, name);//
                     try {
-                        httpSites.put(name, new HttpSite(name));
+                        HttpSite httpSite = new HttpSite(name);
+                        for (int i = 0; i < sitesHost.length; i++) {
+                            for (int j = 0; j < sitesPort.length; j++) {
+                                String port = sitesPort[j];
+                                int portlen = sitesPort[j].lastIndexOf('_');
+                                String siteName = port.substring(0, portlen);
+                                port = port.substring(portlen + 1);
+                                if (sitesHost[i].equals(siteName)) {
+                                    final Site site = new Site(sitesHost[i], Integer.parseInt(port));
+                                    List listPath = new ArrayList();
+                                    for (int k = 0; k < pathLinks.length; k++) {
+                                        String pathLink = pathLinks[k];
+                                        int pathlen = pathLink.lastIndexOf('_');
+                                        String sitPath = pathLink.substring(0, pathlen);
+                                        if (sitPath.equals(site.getHost())) {
+                                            listPath.add(pathLink.substring(pathlen + 1));
+                                        }
+                                    }
+                                    site.setPathLinks((String[]) listPath.toArray(new String[listPath.size()]));
+                                    httpSite.getSites().put(site.getHost(), site);
+                                }
+                            }
+                        }
+
+                        httpSites.put(httpSite.getName(), httpSite);
                         messagetxt = "Added new http subject site: '" + name + "'.";
                     } catch (SibincoException e) {
                         logger.debug("Could not create new http subject site", e);
@@ -213,6 +225,39 @@ public class Edit extends TabledEditBeanImpl {//EditBean {
                     }
                 } else if (getSubjectType() == HttpRoutingManager.HTTP_SITE_TYPE) {
 
+                    try {
+                        HttpSite httpSite = new HttpSite(name);
+                        for (int i = 0; i < sitesHost.length; i++) {
+                            for (int j = 0; j < sitesPort.length; j++) {
+                                String port = sitesPort[j];
+                                int portlen = sitesPort[j].lastIndexOf('_');
+                                String siteName = port.substring(0, portlen);
+                                port = port.substring(portlen + 1);
+                                if (sitesHost[i].equals(siteName)) {
+                                    final Site site = new Site(sitesHost[i], Integer.parseInt(port));
+                                    List listPath = new ArrayList();
+                                    for (int k = 0; k < pathLinks.length; k++) {
+                                        String pathLink = pathLinks[k];
+                                        int pathlen = pathLink.lastIndexOf('_');
+                                        String sitPath = pathLink.substring(0, pathlen);
+                                        if (sitPath.equals(site.getHost())) {
+                                            listPath.add(pathLink.substring(pathlen + 1));
+                                        }
+                                    }
+                                    site.setPathLinks((String[]) listPath.toArray(new String[listPath.size()]));
+                                    httpSite.getSites().put(site.getHost(), site);
+                                }
+                            }
+                        }
+                        httpSites.remove(httpSite.getName());
+                        httpSites.put(httpSite.getName(), httpSite);
+                        messagetxt = "Changed http subject site: '" + name + "'.";
+                    } catch (SibincoException e) {
+                        logger.debug("Could not create new http subject site", e);
+                        throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_CREATE_HTTP_SUBJECT_SITE, e);
+                    }
+
+
                 }
             }
         }
@@ -241,6 +286,7 @@ public class Edit extends TabledEditBeanImpl {//EditBean {
         }
         return result.toString();
     }
+
 
     private User getUser(SCAGAppContext appContext) throws SCAGJspException {
         Principal userPrincipal = super.getLoginedPrincipal();
@@ -296,7 +342,7 @@ public class Edit extends TabledEditBeanImpl {//EditBean {
         return transportId;
     }
 
-    public void setTransportId(long transportId) {
+    public void setTransportId(final long transportId) {
         this.transportId = transportId;
     }
 
@@ -304,7 +350,7 @@ public class Edit extends TabledEditBeanImpl {//EditBean {
         return httpSubjId;
     }
 
-    public void setHttpSubjId(String httpSubjId) {
+    public void setHttpSubjId(final String httpSubjId) {
         this.httpSubjId = httpSubjId;
     }
 
@@ -312,7 +358,7 @@ public class Edit extends TabledEditBeanImpl {//EditBean {
         return httpSiteId;
     }
 
-    public void setHttpSiteId(String httpSiteId) {
+    public void setHttpSiteId(final String httpSiteId) {
         this.httpSiteId = httpSiteId;
     }
 
@@ -320,7 +366,7 @@ public class Edit extends TabledEditBeanImpl {//EditBean {
         return subjectType;
     }
 
-    public void setSubjectType(int subjectType) {
+    public void setSubjectType(final int subjectType) {
         this.subjectType = subjectType;
     }
 
@@ -328,8 +374,39 @@ public class Edit extends TabledEditBeanImpl {//EditBean {
         return mbAddSite;
     }
 
-    public void setMbAddSite(String mbAddSite) {
+    public void setMbAddSite(final String mbAddSite) {
         this.mbAddSite = mbAddSite;
     }
 
+    public Site[] getSites() {
+        return sites;
+    }
+
+    public void setSites(final Site[] sites) {
+        this.sites = sites;
+    }
+
+    public String[] getSitesHost() {
+        return sitesHost;
+    }
+
+    public void setSitesHost(final String[] sitesHost) {
+        this.sitesHost = sitesHost;
+    }
+
+    public String[] getSitesPort() {
+        return sitesPort;
+    }
+
+    public void setSitesPort(final String[] sitesPort) {
+        this.sitesPort = sitesPort;
+    }
+
+    public String[] getPathLinks() {
+        return pathLinks;
+    }
+
+    public void setPathLinks(final String[] pathLinks) {
+        this.pathLinks = pathLinks;
+    }
 }
