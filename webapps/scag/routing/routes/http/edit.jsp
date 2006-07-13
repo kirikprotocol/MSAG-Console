@@ -359,7 +359,7 @@
                     <td><img src="content/images/but_add.gif" alt="Add new Site" onclick="addSite(opForm.all.newSite,opForm.all.newPort,'<fmt:message>routes.edit.add.new.path</fmt:message>','<fmt:message>scripts.site.already.exist</fmt:message>')"
                         style="cursor: hand;"></td>
                 </tr>
-            </table>
+            </table>                            
             <hr>
             <table id="sites_table" class="properties_list" cellpadding="0" cellspacing="0">
                 <col width="1%">
