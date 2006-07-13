@@ -84,7 +84,7 @@
                         <td>&nbsp;</td>
                             <%--<td width="43%">Priority:&nbsp;${pls.name}</td>--%>
                         <td>
-                            <input type="text" size="50" style="color:black;" value="${pls.name}"
+                            <input type="text" size="45" style="color:black;" value="${pls.name}"
                                    readonly="true"/>
                             <input type="hidden" name="abonentUsrName" value="${pls.name}">
                             <input type="hidden" name="abonentUsrType" value="${pls.name}_${rowN}">
@@ -144,7 +144,7 @@
                         <td>&nbsp;</td>
                             <%--<td width="43%">Priority:&nbsp;${pls.name}</td>--%>
                         <td>
-                            <input type="text" size="50" style="color:black;" value="${pls.name}"
+                            <input type="text" size="45" style="color:black;" value="${pls.name}"
                                    readonly="true"/>
                             <input type="hidden" name="siteUsrName" value="${pls.name}">
                             <input type="hidden" name="siteUsrType" value="${pls.name}_${rowN}">
@@ -212,7 +212,7 @@
                 </tr>
             </table>
         </td>
-            <td width="475">
+            <td width="475" valign="">
             <div class="page_subtitle">Address place:</div>
             <br>
             <table width="50%" id="site_address_tbl" class="properties_list" cellpadding="0" cellspacing="0">
@@ -235,7 +235,7 @@
                         <td>&nbsp;</td>
                             <%--<td width="43%">Priority:&nbsp;${pls.name}</td>--%>
                         <td>
-                            <input type="text" size="50" style="color:black;" value="${pls.name}" readonly="true"/>
+                            <input type="text" size="45" style="color:black;" value="${pls.name}" readonly="true"/>
                             <input type="hidden" name="siteAddrName" value="${pls.name}">
                             <input type="hidden" name="siteAddrType" value="${pls.name}_${rowN}">
                         </td>
