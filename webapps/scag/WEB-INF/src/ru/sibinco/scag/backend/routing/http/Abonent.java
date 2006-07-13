@@ -4,7 +4,6 @@
 
 package ru.sibinco.scag.backend.routing.http;
 
-import ru.sibinco.lib.backend.route.Mask;
 import ru.sibinco.lib.backend.util.StringEncoderDecoder;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.scag.backend.routing.http.placement.AbonentsPlacement;
@@ -58,8 +57,8 @@ public class Abonent {
 
         for (int i = 0; i < listAddr.getLength(); i++) {
             Element addrElem = (Element) listAddr.item(i);
-            Mask addressMask = new Mask(addrElem.getAttribute("value"));
-            address.put(addressMask.getMask(), addressMask);
+            String addressMask = addrElem.getAttribute("value");
+            address.put(addressMask, addressMask);
         }
         if (listAddrPref != null) {
             Element addrPrefElement = (Element) listAddrPref.item(0);
@@ -100,8 +99,8 @@ public class Abonent {
         }
         out.println();
         for (Iterator i = address.values().iterator(); i.hasNext();) {
-            final Mask addressMask = (Mask) i.next();
-            out.println("        <address value=\"" + StringEncoderDecoder.encode(addressMask.getNormalizedMask()) + "\"/>");
+            final String addressMask = (String) i.next();
+            out.println("        <address value=\"" + StringEncoderDecoder.encode(addressMask) + "\"/>");
         }
         out.println();
         out.println("        <placement>");
@@ -140,8 +139,8 @@ public class Abonent {
     public String[] getAddressAsStr() {
         List list = new ArrayList();
         for (Iterator i = address.values().iterator(); i.hasNext();) {
-            final Mask addressMask = (Mask) i.next();
-            list.add(addressMask.getMask());
+            final String addressMask = (String) i.next();
+            list.add(addressMask);
         }
         return (String[]) list.toArray(new String[list.size()]);
     }
