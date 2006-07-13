@@ -81,6 +81,8 @@ namespace scag { namespace sessions
         CUMRHash        UMRHash;
         Logger *        logger;
 
+//        std::list<CSessionKey> NeedToUpdateSessionList;
+
 //        int16_t         m_nLastUSR;
         Mutex           stopLock;
         Event           awakeEvent, exitEvent;
@@ -88,7 +90,7 @@ namespace scag { namespace sessions
 
         SessionStore    store;
         SessionManagerConfig config;
-        
+
         void Stop();
         bool isStarted();
         int  processExpire();
@@ -146,21 +148,7 @@ void SessionManagerImpl::AddRestoredSession(Session * session)
     CSessionKey sessionKey;
     sessionKey = session->getSessionKey();
 
-    int key;
-    Operation * value;
-
-    COperationsHash::Iterator iter = session->OperationsHash.First();
-
-    for (;iter.Next(key, value);)
-    {              
-        if ((value->type != CO_USSD_DIALOG)&&(value->type != CO_HTTP_DELIVERY)) 
-        {
-            smsc_log_debug(logger,"SessionManager: Session (A=%s) operation has finished (TYPE=%d)", sessionKey.abonentAddr.toString().c_str(), value->type);
-            delete value;
-        }
-
-    }    
-
+    //smsc_log_debug(logger,"SessionManager: Restoring session from store");
 
     int16_t lastUSR = getLastUSR(sessionKey.abonentAddr);
     lastUSR++;
@@ -186,8 +174,6 @@ void SessionManagerImpl::AddRestoredSession(Session * session)
     accessData->hasOperations = session->hasOperations();
 
 
-    //smsc_log_debug(logger,"SessionManager: Session restored from store with UMR='%d', Address='%s', pending: %d-%d",accessData->SessionKey.USR,accessData->SessionKey.abonentAddr.toString().c_str(),session->PendingOperationList.size(),session->PrePendingOperationList.size());
-
     CSessionSetIterator it = SessionExpirePool.insert(accessData);
 
 /*    if (!pr.second) 
@@ -197,8 +183,9 @@ void SessionManagerImpl::AddRestoredSession(Session * session)
         smsc_log_debug(logger,"SessionManager: Error - session cannot be inserted");
         return;
     }*/
-
     SessionHash.Insert(sessionKey,it);
+
+    smsc_log_debug(logger,"SessionManager: Session restored from store with UMR='%d', Address='%s', pending: %d-%d",accessData->SessionKey.USR,accessData->SessionKey.abonentAddr.toString().c_str(),session->PendingOperationList.size(),session->PrePendingOperationList.size());
 }
 
 SessionManagerImpl::~SessionManagerImpl() 
@@ -261,9 +248,58 @@ void SessionManagerImpl::init(const SessionManagerConfig& _config) // possible t
 
     store.init(config.dir,SessionManagerCallback,this);
 
+    
+    /*
+    std::list<CSessionKey>::iterator updIt;
+    for (updIt = NeedToUpdateSessionList.begin();updIt!=NeedToUpdateSessionList.end();++updIt) 
+    {
+        SessionPtr sessionPtr = store.getSession(*updIt);
+        store.updateSession(sessionPtr);
+    }
+    NeedToUpdateSessionList.clear();
+    */
+
+    smsc_log_debug(logger,"Sessions: %d", SessionExpirePool.size());
+
     CSessionSetIterator it;
     for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();++it)
     {
+        smsc_log_debug(logger,"new one");
+
+        CSessionAccessData * accessData = (*it);
+
+        SessionPtr session = store.getSession(accessData->SessionKey);
+
+        int key;
+        Operation * value = 0;
+
+        COperationsHash::Iterator iter = session->OperationsHash.First();
+
+        smsc_log_debug(logger,"SessionManager: Session (A=%s) has %d operations", (*it)->SessionKey.abonentAddr.toString().c_str(), session->OperationsHash.Count());
+
+        for (;iter.Next(key, value);)
+        {              
+            if ((value->type != CO_USSD_DIALOG)&&(value->type != CO_HTTP_DELIVERY)) 
+            {
+                smsc_log_debug(logger,"SessionManager: Session (A=%s) operation has finished (TYPE=%d)", (*it)->SessionKey.abonentAddr.toString().c_str(), value->type);
+                if (session->m_pCurrentOperation == value) 
+                {
+                    session->m_pCurrentOperation = 0;
+                    session->currentOperationId = 0;
+                }
+                delete value;
+                session->bChanged = true;
+
+                session->OperationsHash.Delete(key);
+            }
+        }    
+
+        if (session->bChanged) 
+        {
+            accessData->hasOperations = session->hasOperations();
+            store.updateSession(session);
+        }
+
         smsc_log_debug(logger,"SessionManager:: URM = '%d', Address = '%s', has pending = '%d'",(*it)->SessionKey.USR,(*it)->SessionKey.abonentAddr.toString().c_str(),(*it)->hasPending);
     }
 
