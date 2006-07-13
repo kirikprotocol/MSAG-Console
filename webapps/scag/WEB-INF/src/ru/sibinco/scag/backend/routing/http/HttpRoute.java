@@ -11,11 +11,8 @@ import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.util.StringEncoderDecoder;
 import ru.sibinco.scag.backend.service.Service;
 import ru.sibinco.scag.backend.service.ServiceProvidersManager;
-import ru.sibinco.scag.backend.routing.Source;
-import ru.sibinco.scag.backend.routing.Destination;
 
 import java.util.Map;
-import java.util.Iterator;
 import java.io.PrintWriter;
 
 /**
@@ -91,7 +88,7 @@ public class HttpRoute {
     }
 
     public String getName() {
-        return name;
+        return name.trim();
     }
 
     public PrintWriter store(PrintWriter out) {
