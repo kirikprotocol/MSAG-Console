@@ -6,7 +6,7 @@
 
 PACKAGE := scag
 
-__LIBRARIES := -L$(SMSC_BUILDDIR)/bin/db/exceptions/ -ldb_exc
+__LIBRARIES := -L$(SMSC_BUILDDIR)/bin/scag/exc/ -lscag_exc
 
 CXXFLAGS := -DSMPPGW $(CXXFLAGS)
 
