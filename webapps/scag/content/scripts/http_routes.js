@@ -26,7 +26,7 @@ function addSiteDefaultUSRplace(valueElem, selectElem) {
         newCell.innerHTML = "&nbsp;";
         newRow.appendChild(newCell);
         newCell = newRow.insertCell();
-        newCell.innerHTML = "<input type=\"text\" size=\"50\" style=\"font:bold; color:black;\" value=\"" + siteUsrPlaceName + "\" readonly=\"true\"/>"
+        newCell.innerHTML = "<input type=\"text\" size=\"45\" style=\"color:black;\" value=\"" + siteUsrPlaceName + "\" readonly=\"true\"/>"
                 + "<input type=\"hidden\" name=\"siteUsrName\" value=\"" + siteUsrPlaceName + "\">"
                 + "<input type=\"hidden\" name=\"siteUsrType\" value=\"" + siteUsrPlaceName + "_" + inner__counter + "\">";
         newRow.appendChild(newCell);
@@ -59,7 +59,7 @@ function addAbonDefaultUSRplace(valueElem, selectElem) {
         newCell.innerHTML = "&nbsp;";
         newRow.appendChild(newCell);
         newCell = newRow.insertCell();
-        newCell.innerHTML = "<input type=\"text\" size=\"50\" style=\"font:bold; color:black;\" value=\"" + abonUsrPlaceName + "\" readonly=\"true\"/>"
+        newCell.innerHTML = "<input type=\"text\" size=\"45\" style=\"color:black;\" value=\"" + abonUsrPlaceName + "\" readonly=\"true\"/>"
                 + "<input type=\"hidden\" name=\"abonentUsrName\" value=\"" + abonUsrPlaceName + "\">"
                 + "<input type=\"hidden\" name=\"abonentUsrType\" value=\"" + abonUsrPlaceName + "_" + inner__counter + "\">";
         newRow.appendChild(newCell);
@@ -92,7 +92,7 @@ function addDefaultAddressPlace(valueElem, selectElem) {
         newCell.innerHTML = "&nbsp;";
         newRow.appendChild(newCell);
         newCell = newRow.insertCell();
-        newCell.innerHTML = "<input type=\"text\" size=\"50\" style=\"font:bold; color:black;\" value=\"" + sitePlaceName + "\" readonly=\"true\"/>"
+        newCell.innerHTML = "<input type=\"text\" size=\"45\" style=\"color:black;\" value=\"" + sitePlaceName + "\" readonly=\"true\"/>"
                 + "<input type=\"hidden\" name=\"siteAddrName\" value=\"" + sitePlaceName + "\">"
                 + "<input type=\"hidden\" name=\"siteAddrType\" value=\"" + sitePlaceName + "_" + inner__counter + "\">";
         newRow.appendChild(newCell);
@@ -127,7 +127,7 @@ function addGlobAddressPlace(valueElem, selectElem) {
         newCell.innerHTML = "&nbsp;";
         newRow.appendChild(newCell);
         newCell = newRow.insertCell();
-        newCell.innerHTML = "<input type=\"text\" size=\"50\" style=\"font:bold; color:black;\" value=\"" + addrPlaceName + "\" readonly=\"true\"/>"
+        newCell.innerHTML = "<input type=\"text\" size=\"45\" style=\"color:black;\" value=\"" + addrPlaceName + "\" readonly=\"true\"/>"
                 + "<input type=\"hidden\" name=\"abonAddrName\" value=\"" + addrPlaceName + "\">"
                 + "<input type=\"hidden\" name=\"abonAddrType\" value=\"" + addrPlaceName + "_" + inner__counter + "\">";
         newRow.appendChild(newCell);
