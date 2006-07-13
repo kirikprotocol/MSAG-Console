@@ -67,8 +67,6 @@ Property* ActionContext::getProperty(const std::string& var)
     case ftLocal:
         propertyPtr = variables.GetPtr(name);
 
-        std::cout << prefix << std::endl;
-
         if (!propertyPtr) 
         {
             Property property;

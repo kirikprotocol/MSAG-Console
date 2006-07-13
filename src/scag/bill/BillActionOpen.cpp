@@ -158,14 +158,14 @@ bool BillActionOpen::run(ActionContext& context)
         tariffRec = context.getTariffRec(category, mediaType);
     } catch (SCAGException& e)
     {
-        smsc_log_warn(logger,"Action '%s' cannot process. Delails: %s", m_ActionName.c_str(), e.what()); 
+        smsc_log_warn(logger,"Action '%s' cannot process. Delails: Cannot find TariffRec for category='%d', mediaType='%d'", m_ActionName.c_str(), category, mediaType);
         SetBillingStatus(context, e.what(), false, tariffRec);
         return true;
     }
 
     if (!tariffRec) 
     {
-        smsc_log_warn(logger,"Action '%s' cannot process. Delails: Cannot find TariffRec", m_ActionName.c_str()); 
+        smsc_log_warn(logger,"Action '%s' cannot process. Delails: Cannot find TariffRec for category='%d', mediaType='%d'", m_ActionName.c_str(), category, mediaType);
         SetBillingStatus(context, "Cannot find TariffRec", false, 0);
         return true;
     }
