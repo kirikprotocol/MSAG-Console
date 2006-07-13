@@ -4,15 +4,14 @@
 
 package ru.sibinco.scag.backend.routing.http;
 
-import ru.sibinco.lib.backend.route.Mask;
-import ru.sibinco.lib.backend.util.StringEncoderDecoder;
-import ru.sibinco.lib.SibincoException;
-import ru.sibinco.scag.backend.routing.MaskList;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import ru.sibinco.lib.SibincoException;
+import ru.sibinco.lib.backend.util.StringEncoderDecoder;
 
-import java.util.Collection;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The <code>HttpSubject</code> class represents
@@ -25,37 +24,35 @@ import java.io.PrintWriter;
 public class HttpSubject{
 
     private String name = null;
-    private MaskList masks;
+    private String[] masks;
 
     public HttpSubject(Element subjElement) throws SibincoException {
 
         name = StringEncoderDecoder.encode(subjElement.getAttribute("id"));
         NodeList maskList = subjElement.getElementsByTagName("address");
-        masks = new MaskList();
+
+        List masksList = new ArrayList();
         for (int i = 0; i < maskList.getLength(); i++) {
             Element maskElem = (Element) maskList.item(i);
-            masks.add(new Mask(maskElem.getAttribute("value").trim()));
+            masksList.add(maskElem.getAttribute("value").trim());
         }
+        masks = (String[]) masksList.toArray(new String[masksList.size()]);
+        masksList.clear();
     }
 
     public HttpSubject(String name, String[] masksStrings) throws SibincoException {
         if (name == null)
             throw new NullPointerException("HttpSubject id is null ");
         this.name = name;
-        this.masks = new MaskList(masksStrings);
-    }
-
-    public HttpSubject(String name, Collection masksStrings) throws SibincoException {
-        if (name == null)
-            throw new NullPointerException("HttpSubject id is null ");
-        this.name = name;
-        this.masks = new MaskList(masksStrings);
+        this.masks = masksStrings;
     }
 
     public PrintWriter store(PrintWriter out) {
-        out.println("<subject_def id=\"" + StringEncoderDecoder.encode(getName()) + "\">");
-        getMasks().store(out, "address");
-        out.println("  </subject_def>");
+        out.println("    <subject_def id=\"" + StringEncoderDecoder.encode(getName()) + "\">");
+        for (int i = 0; i < masks.length; i++) {
+            out.println("        <address  value=\""+  masks[i] + "\"/>");
+        }
+        out.println("    </subject_def>");
         return out;
     }
 
@@ -67,11 +64,11 @@ public class HttpSubject{
         this.name = name;
     }
 
-    public MaskList getMasks() {
+    public String[] getMasks() {
         return masks;
     }
 
-    public void setMasks(final MaskList masks) {
+    public void setMasks(final String[] masks) {
         this.masks = masks;
     }
 
