@@ -2090,9 +2090,21 @@ forward_scan:  do
 
  public void setStartCaretPosition() {
    int lineNumber = 0;
+   int i = 2;
+   boolean finded = false;
+   if (getLineText(2).indexOf("whoisd:terms")!=-1) {
+     for(; i<getLineCount();i++) {
+        if (getLineText(i).indexOf("</whoisd:terms>")!=-1) {
+          finded = true;
+          break;
+        }
+     }
+   }
+
+   if (finded) lineNumber = i+1;
    try {
      String line = jEdit.StringGet(buffer.getPath(),jEdit.getRuleHeaderLineNumber());
-     lineNumber = Integer.parseInt(line) - 1;
+     lineNumber = lineNumber + Integer.parseInt(line) - 1;
    } catch(Exception e) {
      e.printStackTrace();
    }

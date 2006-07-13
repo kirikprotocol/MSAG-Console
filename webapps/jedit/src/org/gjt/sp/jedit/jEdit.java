@@ -199,7 +199,7 @@ public class jEdit extends Applet
   public void destroy()
   {
     System.out.println("Destroying...");
-    unlockAllRules();
+    //unlockAllRules();
     stopped = true;
     destroyed=true;
     startupDone=false;
@@ -2458,10 +2458,10 @@ public class jEdit extends Applet
       // Byebye...
      // System.exit(0);
     }
-    if (getBooleanProperty("newRule"))
+    /*if (getBooleanProperty("newRule"))
     {
     } else
-    unlockRule(path);
+    unlockRule(path);*/
     setWindowClosed(ruleAction);
   } //}}}
   //{{{ exitView() method
@@ -2535,10 +2535,10 @@ public class jEdit extends Applet
       // Byebye...
      // System.exit(0);
     }
-    if (getBooleanProperty("newRule"))
+    /*if (getBooleanProperty("newRule"))
     {
     } else
-    unlockRule(path);
+    unlockRule(path);*/
     setWindowClosed(ruleAction);
   } //}}}
 
