@@ -72,7 +72,7 @@ bool HttpTraceRouter::getTraceRoute(const std::string& addr, const std::string& 
     do{
         try{
             HttpRouteInt *r = AddressURLMap->Get(k);
-            trace.push_back("Match found:" + k.mask.toString() + ", url: " + url);
+            trace.push_back("Match found: " + k.mask.toString() + ", url: " + url);
             trace.push_back("Route info:");
 
             char buf[100];
@@ -103,7 +103,7 @@ bool HttpTraceRouter::getTraceRoute(const std::string& addr, const std::string& 
             trace.push_back("Trying mask: " + k.mask.toString() + ", url: " + url + ". No match");
             len = k.mask.cut();
         }
-    }while(len > 5);
+    }while(len > 0);
 
     trace.push_back("No matches found");
     return false;
@@ -166,7 +166,7 @@ HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& 
         {
             len = k.mask.cut();
         }
-    }while(len > 5);
+    }while(len > 0);
 
     throw RouteNotFoundException();
 }
