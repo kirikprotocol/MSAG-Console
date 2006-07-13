@@ -1,10 +1,10 @@
 package ru.sibinco.scag.beans.routing.subjects;
 
 import ru.sibinco.lib.SibincoException;
-import ru.sibinco.lib.backend.route.Mask;
 import ru.sibinco.lib.backend.users.User;
 import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.lib.backend.util.SortedList;
+import ru.sibinco.lib.backend.route.Mask;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.endpoints.centers.Center;
@@ -101,13 +101,7 @@ public class Edit extends TabledEditBeanImpl {//EditBean {
                 HttpSubject httpSubject = (HttpSubject) appContext.getHttpRoutingManager().getSubjects().get(getHttpSubjId());
                 if (null != httpSubject) {
                     name = httpSubject.getName();
-                    final List addressList = new ArrayList();
-                    for (Iterator i = httpSubject.getMasks().iterator(); i.hasNext();) {
-                        final Mask mask = (Mask) i.next();
-                        addressList.add(mask.getMask());
-                    }
-                    address = (String[]) addressList.toArray(new String[addressList.size()]);
-                    addressList.clear();
+                    address = httpSubject.getMasks();
                 }
             } else if (getSubjectType() == HttpRoutingManager.HTTP_SITE_TYPE) {
 
@@ -214,12 +208,7 @@ public class Edit extends TabledEditBeanImpl {//EditBean {
                         }
                     } else {
                         final HttpSubject httpSubject = (HttpSubject) httpSubjects.get(name);
-                        try {
-                            httpSubject.setMasks(new MaskList(address));
-                        } catch (SibincoException e) {
-                            logger.debug("Could not set masks list http for subject", e);
-                            throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_SET_MASKS, e);
-                        }
+                        httpSubject.setMasks(address);
                         messagetxt = "Changed http subject: '" + httpSubject.getName() + "'.";
                     }
                 } else if (getSubjectType() == HttpRoutingManager.HTTP_SITE_TYPE) {
