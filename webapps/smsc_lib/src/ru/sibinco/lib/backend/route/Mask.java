@@ -97,6 +97,11 @@ public class Mask
         return out;
     }
 
+    public PrintWriter storeNotNormalizedMask(PrintWriter out, String param) {
+        out.println("    <" + param + "  value=\"" + StringEncoderDecoder.encode(getMask()) + "\"/>");
+        return out;
+    }
+
   public static boolean isMaskValid(String maskStr)
   {
     // valid masks:
