@@ -98,6 +98,7 @@ void IOTask::deleteSocket(Socket *s, char *buf, int how) {
     shutdown(s->getSocket(), how);
     while ((int)recv(s->getSocket(), buf, 4, 0) > 0)
         ;
+//        ;
 //    s->Abort();
     delete s;
 }
@@ -345,9 +346,11 @@ int HttpWriterTask::Execute()
                 }
                 else {
                     // write content
-                    data = cx->command->getMessageContent(size) + cx->position;
+                    data = cx->command->getMessageContent(size);
+                    data += cx->position;
                     size -= cx->position;
-                    
+//                    if(size > 1000)
+  //                      size = 1000;
                     //printHex(data, size);
                 }
                 
@@ -358,9 +361,11 @@ int HttpWriterTask::Execute()
                         printHex(data, size);
                     */                        
                     do
+                    {
                         written_size = s->Write(data, size);
-                    while (written_size == -1 && errno == EINTR);
-                    
+//                        smsc_log_debug(logger, "written_size=%d data=%d size=%d", written_size, data, size);
+                    }while (written_size == -1 && errno == EINTR);
+                    smsc_log_debug(logger, "written %d", written_size);
                     if (written_size > 0) {
                         cx->position += written_size;
                         HttpContext::updateTimestamp(s, now);
@@ -375,32 +380,36 @@ int HttpWriterTask::Execute()
                     }
                 }
                 
-                if (size == (unsigned int)written_size) {
-                    if (cx->flags == 0) {                   
+                if (cx->flags == 0)
+                {
+                    if(cx->position >= cx->command->getMessageHeaders().size())
+                    {
                         cx->flags = 1;
                         cx->position = 0;
                     }
+                }
+                else if (cx->position >= cx->command->getContentLength())
+                {
+                    removeSocket(s);
+                    if (cx->action == SEND_REQUEST) {
+                        smsc_log_info(logger, "%p: %p, request sent", this, cx);
+                        //cx->setDestiny(0, DEL_REQ);
+                        delete cx->command;
+                        cx->command = NULL;
+                        cx->action = READ_RESPONSE;
+                        cx->result = 0;
+                        manager.readers.process(cx);
+                    }
                     else {
-                        removeSocket(s);
-                        if (cx->action == SEND_REQUEST) {
-                            smsc_log_info(logger, "%p: %p, request sent", this, cx);
-                            //cx->setDestiny(0, DEL_REQ);
-                            delete cx->command;
-                            cx->command = NULL;
-                            cx->action = READ_RESPONSE;
-                            cx->result = 0;
-                            manager.readers.process(cx);
-                        }
-                        else {
-                            smsc_log_info(logger, "%p: %p, response sent", this, cx);
-                            //cx->setDestiny(0, DEL_USER_SOCK);
-//                            deleteSocket(s, buf, SHUT_WR);
-                            delete s;
-                            cx->user = NULL;
-                            cx->action = PROCESS_STATUS_RESPONSE;
-                            cx->result = 0;
-                            manager.scags.process(cx);
-                        }
+                        smsc_log_info(logger, "%p: %p, response sent", this, cx);
+                        //cx->setDestiny(0, DEL_USER_SOCK);
+                         deleteSocket(s, buf, SHUT_WR);
+//sleep(10);
+  //                      delete s;
+                        cx->user = NULL;
+                        cx->action = PROCESS_STATUS_RESPONSE;
+                        cx->result = 0;
+                        manager.scags.process(cx);
                     }
                 }
             }

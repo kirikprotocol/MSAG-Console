@@ -234,15 +234,15 @@ const std::string& HttpRequest::getQueryParameter(const std::string& paramName)
 
 const std::string& HttpCommand::getMessageText()
 {
-    if (textContent.empty() &&
-        !strncasecmp(getHeaderField(content_type_field).c_str(), "text/", 5))
+    if (charset.length() && (textContent.empty() &&
+        !strncasecmp(getHeaderField(content_type_field).c_str(), "text/", 5)))
     {
         size_t result = 0;
         size_t inbytesleft;
         char *outbufptr;
         const char *inbufptr = getMessageContent(inbytesleft);
         size_t outbytesleft;
-        iconv_t cd = iconv_open("utf8", charset.c_str());
+        iconv_t cd = iconv_open("UTF-8", charset.c_str());
 
         if (cd == (iconv_t)(-1))
             throw Exception("iconv_open() failed");
@@ -283,15 +283,15 @@ bool HttpCommand::setMessageText(const std::string& text)
 
     const std::string &content_type = getHeaderField(content_type_field);
 
-    if (content_type.empty() ||
-        !strncasecmp(content_type.c_str(), "text/", 5))
+    if (charset.length() && (content_type.empty() ||
+        !strncasecmp(content_type.c_str(), "text/", 5)))
     {  
         size_t result = 0;
         size_t outbytesleft;    
         size_t inbytesleft = text.size();
         char *outbufptr;
         const char *inbufptr = (char *)text.data();
-        iconv_t cd = iconv_open(charset.c_str(), "utf8");
+        iconv_t cd = iconv_open(charset.c_str(), "UTF-8");
 
         if (cd == (iconv_t)(-1))
             throw Exception("iconv_open() failed");
@@ -418,7 +418,7 @@ const std::string& HttpRequest::serialize()
             headers += CRLF;
         }
 
-        setHeaderField("host", site + ((sitePort != 80) ? ':' + lltostr(sitePort, buf + 19) : ""));
+        setHeaderField("host", site + ((sitePort != 80) ? ':' + std::string(lltostr(sitePort, buf + 19)) : ""));
 
         headerFields.First();
         while (headerFields.Next(keystr, valptr)) {
