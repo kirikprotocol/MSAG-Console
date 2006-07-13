@@ -311,10 +311,7 @@ public class Edit extends EditBean {
         }
         for (int i = 0; i < abonAddress.length; i++) {
             String abonAddres = abonAddress[i];
-            if (null != abonAddres && 0 < abonAddres.trim().length()) {
-                final Mask mask = new Mask(abonAddres);
-                abonent.getAddress().put(mask.getMask(), mask);
-            }
+            abonent.getAddress().put(abonAddres, abonAddres);
         }
         abonent.setNpi(getNpi());
         abonent.setTon(getTon());
