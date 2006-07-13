@@ -32,7 +32,7 @@ public class Placement {
     }
 
     public String getType() {
-        return type;
+        return type.trim();
     }
 
     public void setType(final String type) {
@@ -40,7 +40,7 @@ public class Placement {
     }
 
     public String getName() {
-        return name;
+        return name.trim();
     }
 
     public void setName(final String name) {
