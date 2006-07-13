@@ -44,18 +44,18 @@ public class RouteSite {
         NodeList subjSiteList = routeElement.getElementsByTagName("site_subject");
         for (int i = 0; i < subjSiteList.getLength(); i++) {
             Element subjSiteElement = (Element) subjSiteList.item(i);
-            final HttpSite httpSite = new HttpSite(subjSiteElement.getAttribute("id"));
+            final HttpSite httpSite = new HttpSite(subjSiteElement.getAttribute("id").trim());
             siteSubjects.put(httpSite.getName(), httpSite);
         }
         NodeList listSite = routeElement.getElementsByTagName("site");
         for (int i = 0; i < listSite.getLength(); i++) {
             Element siteElement = (Element) listSite.item(i);
-            final Site site = new Site(siteElement.getAttribute("host"), Integer.parseInt(siteElement.getAttribute("port")));
+            final Site site = new Site(siteElement.getAttribute("host").trim(), Integer.parseInt(siteElement.getAttribute("port").trim()));
             NodeList pathNodeList = siteElement.getElementsByTagName("path");
             List list = new ArrayList();
             for (int j = 0; j < pathNodeList.getLength(); j++) {
                 Element pathElement = (Element) pathNodeList.item(j);
-                list.add(pathElement.getAttribute("value"));
+                list.add(pathElement.getAttribute("value").trim());
             }
             site.setPathLinks((String[]) list.toArray(new String[list.size()]));
             sites.put(site.getHost(), site);
@@ -70,8 +70,8 @@ public class RouteSite {
                     for (int i = 0; i < usrPlaceNodeList.getLength(); i++) {
                         Element usrPlaceElement = (Element) usrPlaceNodeList.item(i);
                         final SitePlacement sitePlacement = new SitePlacement(
-                                usrPlaceElement.getAttribute("type"),
-                                usrPlaceElement.getAttribute("name"));
+                                usrPlaceElement.getAttribute("type").trim(),
+                                usrPlaceElement.getAttribute("name").trim());
                         usrPlace.add(sitePlacement);
                     }
                 }
@@ -82,8 +82,8 @@ public class RouteSite {
                     for (int i = 0; i < addressPlaceNodeList.getLength(); i++) {
                         Element addressPlaceElement = (Element) addressPlaceNodeList.item(i);
                         final SitePlacement sitePlacement = new SitePlacement(
-                                addressPlaceElement.getAttribute("type"),
-                                addressPlaceElement.getAttribute("name"));
+                                addressPlaceElement.getAttribute("type").trim(),
+                                addressPlaceElement.getAttribute("name").trim());
                         addressPlace.add(sitePlacement);
                     }
                 }
