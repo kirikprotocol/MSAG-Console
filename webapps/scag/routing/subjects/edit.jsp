@@ -14,9 +14,10 @@
 </jsp:attribute>
 
 <jsp:body>
+      <script src="content/scripts/http_routes.js" type="text/javascript"></script>
       <script type="text/javascript">
 
-        var global_counter = 0;
+        var global_subj_counter = 0;
 
         function removeRow(tbl, rowId) {
             var rowElem = tbl.rows(rowId);
@@ -28,7 +29,7 @@
                 var tbl = opForm.all.sources_table;
                 var newRow = tbl.insertRow(tbl.rows.length);
                 newRow.className = "row" + ((tbl.rows.length + 1) & 1);
-                newRow.id = "srcRow_" + (global_counter++);
+                newRow.id = "srcRow_" + (global_subj_counter++);
                 newCell = document.createElement("td");
                 newCell.innerHTML = '<img src="content/images/mask.gif">';
                 newRow.appendChild(newCell);
@@ -51,7 +52,7 @@
                 var tbl = opForm.all.path_table;
                 var newRow = tbl.insertRow(tbl.rows.length);
                 newRow.className = "row" + ((tbl.rows.length + 1) & 1);
-                newRow.id = "srcRow_" + (global_counter++);
+                newRow.id = "srcRow_" + (global_subj_counter++);
                 newCell = document.createElement("td");
                 newCell.innerHTML = '<img src="content/images/mask.gif">';
                 newRow.appendChild(newCell);
@@ -228,33 +229,94 @@
                                      validation="nonEmpty"/>
                       </sm-ep:properties>
                   </td>
-
                   <td valign="top">&nbsp;</td>
                   <tr><td colspan="2">&nbsp;</td></tr>
           </table>
+          <table cellpadding="0" cellspacing="0">
+              <col width="10%" align="left">
+              <col width="20%" align="left">
+              <col width="0%" align="left">
+              <col width="0%" align="left">
+              <tr>
+                  <td><fmt:message>routes.edit.site.port</fmt:message></td>
+
+                  <td nowrap="true"><input id="newSite" class="midtxt" name="newSite"><b>:</b><input id="newPort"
+                                                                                                     class="mintxt"
+                                                                                                     name="newPort"
+                                                                                                     value="80"
+                                                                                                     validation="port"
+                                                                                                     onkeyup="resetValidation(this)">
+                  </td>
+                  <td><img src="content/images/but_add.gif" alt="Add new Site"
+                           onclick="addSite(opForm.all.newSite,opForm.all.newPort,'<fmt:message>routes.edit.add.new.path</fmt:message>','<fmt:message>scripts.site.already.exist</fmt:message>')"
+                           style="cursor: hand;"></td>
+              </tr>
+          </table>
+            <hr>
+          <sm-et:section title="Sites List" opened="true"  name="allsites">
+                <table id="div_site_table" cellpadding="0" cellspacing="0" class="properties_list">
+                    <tr><td>
+                        <c:forEach items="${bean.sites}" var="i">
+                            <c:set var="esite" value="${fn:escapeXml(i.host)}"/>
+                            <c:set var="eport" value="${fn:escapeXml(i.port)}"/>
+                            <c:set var="esite_sub" value="${fn:substringBefore(esite,'.')}"/>
+                            <c:set var="sectHeader" value="sectionHeader_${esite_sub}"/>
+                            <c:set var="esite_table" value="sitesp_table_${esite_sub}"/>
+
+                            <div class="collapsing_tree_opened" id="${sectHeader}">
+                                 <%--onclick="collasping_tree_showhide_section('${esite_sub}')">--%>
+
+                                <table id="${esite_table}" cellpadding="0" cellspacing="0" class="properties_list">
+                                    <col width="1%">
+                                    <col width="99%">
+                                    <tr>
+                                        <td width="100%">${fn:escapeXml(i.host)}</td>
+                                        <td align="left" nowrap="true"><input type="hidden" name="sitesHost"  id="${esite}"
+                                                                              value="${esite}">
+                                            <input type="hidden" name="sitesPort" value="${esite}_${eport}"></td>
+                                        <td><img src="content/images/but_del.gif"
+                                                 onClick="removeSection('${esite_sub}')"
+                                                 style="cursor:hand;"></td>
+                                    </tr>
+
+                                    <tr>
+                                        <td nowrap="true"><fmt:message>routes.edit.add.new.path</fmt:message>&nbsp;</td>
+                                        <td align="right"><input id="${esite_sub}_newPath" class="txt"
+                                                                 name="${esite_sub}_newPath"></td>
+                                        <td><img src="content/images/but_add.gif" alt="Add new path"
+                                                 onclick="addPath(opForm.all.${esite_sub}_newPath, '${esite}', opForm.all.sitesp_table_${esite_sub}, '${esite_sub}')"
+                                                 style="cursor:hand;"></td>
+                                    </tr>
+                                    <c:set var="rowN" value="0"/>
+                                    <c:forEach items="${i.pathLinks}" var="j">
+                                        <c:set var="epath" value="${fn:escapeXml(j)}"/>
+                                        <tr class="row${rowN%2}" id="pathRow_${esite_sub}_${epath}">
+                                            <td></td>
+                                            <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${epath}<input type="hidden"
+                                                                                             name="pathLinks"
+                                                                                             value="${esite}_${epath}">
+                                            </td>
+                                            <td><img src="content/images/but_del.gif"
+                                                     onClick="removeRow(opForm.all.sitesp_table_${esite_sub}, 'pathRow_${esite_sub}_${epath}')"
+                                                     style="cursor:hand;"></td>
+                                        </tr>
+                                        <c:set var="rowN" value="${rowN+1}"/>
+                                    </c:forEach>
+                                </table>
+                            </div>
+                        </c:forEach>
+                    </td></tr>
+                    <tr><td valign="top">&nbsp;</td></tr>
+                  <tr><td colspan="2">&nbsp;</td></tr>
+                </table>
+            </sm-et:section>
+          <br>
           <sm-pm:menu>
               <sm-pm:item name="mbSave" value="subjects.edit.item.mbsave.value" title="subjects.edit.item.mbsave.title"/>
               <sm-pm:item name="mbCancel" value="subjects.edit.item.mbcancel.value" title="subjects.edit.item.mbcancel.title"
                           onclick="clickCancel()"/>
               <sm-pm:space/>
           </sm-pm:menu>
-          <c:choose>
-              <c:when test="${!param.add}">
-                  <div class=page_subtitle>&nbsp;</div>
-
-                  <div class=page_subtitle><fmt:message>subjects.edit.label.site_list</fmt:message></div>
-                  <sm:table columns="checkbox,id" names="c,subjects.edit.table.names.id" widths="1,99" child="/routing/subjects/site"
-                            parentId="${bean.httpSiteId}" edit="id"/>
-
-                  <sm-pm:menu>
-                      <sm-pm:item name="mbAddSite" value="subjects.edit.item.mbaddsite.value" title="subjects.edit.item.mbaddsite.title"/>
-                      <sm-pm:item name="mbDelete" value="subjects.edit.item.mbdelete.value" title="subjects.edit.item.mbdelete.title"
-                                  onclick="return deleteConfirm()"
-                                  isCheckSensible="true"/>
-                      <sm-pm:space/>
-                  </sm-pm:menu>
-              </c:when>
-          </c:choose>
           <input type="hidden" name="transportId" value="${bean.transportId}">
           <input type="hidden" name="subjectType" value="${bean.subjectType}">
       </c:when>
