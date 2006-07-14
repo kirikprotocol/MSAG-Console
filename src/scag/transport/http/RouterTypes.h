@@ -135,40 +135,36 @@ public:
 class AddressURLKey
 {
 public:
-    uint32_t port;
-    std::string site;
-    std::string path;
-    AddressMask mask;
+    uint32_t maskId, hostId, pathId;
 
-    AddressURLKey() : path(""), mask(""), site(""), port(0)
+    AddressURLKey() : pathId(0), maskId(0), hostId(0)
     {
     }
 
-    AddressURLKey(const std::string& _msk, const std::string& _site, const std::string& _path, uint32_t _port) : site(_site), path(_path), mask(_msk.c_str()), port(_port)
+    AddressURLKey(uint32_t _mid, const uint32_t _hid, const uint32_t _pid) : maskId(_mid), pathId(_pid), hostId(_hid)
     {
     }
 
-    AddressURLKey(const AddressURLKey& cp) : site(cp.site), path(cp.path), port(cp.port), mask(cp.mask)
+    AddressURLKey(const AddressURLKey& cp) : maskId(cp.maskId), pathId(cp.pathId), hostId(cp.hostId)
     {
     }
 
     AddressURLKey& operator=(const AddressURLKey& cp)
     {
-        site = cp.site;
-        path = cp.path;
-        port = cp.port;
-        mask = cp.mask;
+        maskId = cp.maskId;
+        pathId = cp.pathId;
+        hostId = cp.hostId;
         return *this;
     }
 
     bool operator==(const AddressURLKey& cp)const
     {
-        return mask == cp.mask && site == cp.site && path == cp.path && port == cp.port;
+        return maskId == cp.maskId && hostId == cp.hostId && pathId == cp.pathId;
     }
 
     uint32_t HashCode()const
     {
-        return crc32(crc32(crc32(mask.HashCode(), site.c_str(), site.length()), path.c_str(), path.length()), &port, sizeof(uint32_t));
+        return crc32(crc32(crc32(1, &maskId, sizeof(uint32_t)), &pathId, sizeof(uint32_t)), &hostId, sizeof(uint32_t));
     }
 
     static uint32_t CalcHash(const AddressURLKey& cp)

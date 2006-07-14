@@ -50,6 +50,7 @@ protected:
 
     RouteArray* routes;
     RouteHash* routeIdMap;
+    Hash<uint32_t> *pathsMap, *hostsMap, *masksMap;
     AddressURLHash* AddressURLMap;
     PlacementArray* defInAddressPlace;
     PlacementArray* defInUSRPlace;
@@ -59,7 +60,8 @@ protected:
     smsc::logger::Logger *logger;
 
     void ParseFile(const char* _xmlFile, HandlerBase* handler);
-    void BuildMaps(RouteArray*, RouteHash*, AddressURLHash*);
+    void BuildMaps(RouteArray *r, RouteHash *rid, AddressURLHash *auh, Hash<uint32_t>* mh, Hash<uint32_t>* hh, Hash<uint32_t>* ph);
+    uint32_t getId(Hash<uint32_t>* h, const std::string& s, uint32_t& id);
 public:
     HttpRouterImpl();
 

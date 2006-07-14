@@ -325,7 +325,7 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
 
         smsc_log_debug(logger, "SERIALIZED REQUEST BEFORE PROCESSING: %s", request.serialize().c_str());
             
-        r = router.findRoute(request.getAbonent(), request.getSite(), request.getSitePath(), request.getSitePort());
+        r = router.findRoute(request.getAbonent(), request.getSite(), request.getSitePath() + request.getSiteFileName(), request.getSitePort());
         smsc_log_debug( logger, "httproute found route_id=%s, service_id=%d", r.id.c_str(), r.service_id);
         request.setServiceId(r.service_id);
         request.setRouteId(r.id);
