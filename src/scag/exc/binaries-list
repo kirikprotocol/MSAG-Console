@@ -1,5 +1,0 @@
-# $Id$
-# this file contains binaries definitions
-
-# binary name source name libraries         
-scag/exc/libscag_exc.so  SCAGExceptions $(SHARED_OPT) -ldl -lutil -lcore-threads -lrt
