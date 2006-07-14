@@ -6,8 +6,6 @@
 
 PACKAGE := scag.admin
 
-__LIBRARIES := -L$(SMSC_BUILDDIR)/bin/db/exceptions/ -ldb_exc
-
 CXXFLAGS := -DSCAG $(CXXFLAGS)
 
 ifndef SMSC_SRCDIR

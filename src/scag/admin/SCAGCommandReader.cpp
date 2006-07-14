@@ -19,6 +19,7 @@ SCAGCommandReader::SCAGCommandReader(Socket * admSocket)
   : CommandReader(admSocket)
 {
     //applySmppRoutes|loadSmppTraceRoutes|traceSmppRoute|
+  commandlist["applyConfig"] = CommandIds::applyConfig;
 
   commandlist["applySmppRoutes"] = CommandIds::applySmppRoutes;
   commandlist["loadSmppTraceRoutes"] = CommandIds::loadSmppTraceRoutes;
@@ -71,6 +72,8 @@ Command * SCAGCommandReader::createCommand(int id, const DOMDocument *data)
 
   switch (id)
   {
+    case CommandIds::applyConfig: return new CommandApplyConfig(data);
+
     case CommandIds::applySmppRoutes: return new CommandApplySmppRoutes(data);
     case CommandIds::traceSmppRoute: return new CommandTraceSmppRoute(data);
     case CommandIds::loadSmppTraceRoutes: return new CommandLoadSmppTraceRoutes(data);

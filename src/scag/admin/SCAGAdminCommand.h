@@ -105,6 +105,22 @@ public:
   virtual Response * CreateResponse(scag::Scag * SmscApp);
 };
 
+
+//========================================================================
+//==================== CommandApplyConfig command =====================================
+class CommandApplyConfig : public AdminCommand 
+{
+public:
+  
+  CommandApplyConfig(const xercesc::DOMDocument * doc) 
+    : AdminCommand((Command::Id)CommandIds::applyConfig, doc)
+  {
+  }
+
+  virtual Response * CreateResponse(scag::Scag * ScagApp);
+};
+
+
 //========================================================================
 //==================== CommandApplySmppRoutes command =====================================
 class CommandApplySmppRoutes : public AdminCommand 

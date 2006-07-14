@@ -425,6 +425,22 @@ Response * CommandTraceSmppRoute::CreateResponse(scag::Scag * ScagApp)
 }
 
 //================================================================
+//================ ApplyComfig command ===========================
+
+Response * CommandApplyConfig::CreateResponse(scag::Scag * SmscApp)
+{
+    smsc_log_info(logger, "CommandApplyConfig is processing...");
+
+    ConfigManager & cfg = ConfigManager::Instance();
+
+    cfg.reloadAllConfigs();
+
+    smsc_log_info(logger, "CommandApplyConfig is processed ok");
+    return new Response(Response::Ok, "none");
+}
+
+
+//================================================================
 //================ ApplySmppTraceRoutes command ================================
 
 

@@ -20,6 +20,7 @@ namespace CommandIds {
     addSme,
     statusSme,
     deleteSme,
+    applyConfig,
     applySmppRoutes,
     loadSmppTraceRoutes,
     traceSmppRoute,
