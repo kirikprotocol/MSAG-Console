@@ -10,8 +10,8 @@
 #include "scag/re/actions/ActionTrafficCheck.h"
 #include "scag/re/actions/ActionOperationWait.h"
 #include "scag/re/actions/ActionMatch.h"
-#include "scag/bill/BillActionOpen.h"
-#include "scag/bill/BillActionClose.h"
+#include "scag/re/actions/BillActionOpen.h"
+#include "scag/re/actions/BillActionClose.h"
 
 #include "scag/pers/PersAction.h"
 #include "scag/transport/http/HttpCookieAction.h"

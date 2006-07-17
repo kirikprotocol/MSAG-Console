@@ -8,6 +8,7 @@ void ActionBinOperation::init(const SectionParams& params,PropertyObject propert
 {
     logger = Logger::getInstance("scag.re");
 
+
     std::string temp;
     bool bExist;
     FieldType ft;
@@ -19,7 +20,7 @@ void ActionBinOperation::init(const SectionParams& params,PropertyObject propert
     smsc_log_debug(logger,"Action '%s':: init", m_ActionName.c_str());
 }
 
-
+                                        
 bool ActionBinOperation::run(ActionContext& context)
 {
     smsc_log_debug(logger,"Run Action '%s'", m_ActionName.c_str());

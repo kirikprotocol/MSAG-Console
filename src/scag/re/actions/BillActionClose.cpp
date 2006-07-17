@@ -2,7 +2,7 @@
 #include "scag/stat/Statistics.h"
 
 
-namespace scag { namespace bill {
+namespace scag { namespace re { namespace actions {
 
 using namespace scag::stat;
 
@@ -10,6 +10,16 @@ using namespace scag::stat;
 void BillActionClose::init(const SectionParams& params,PropertyObject propertyObject)
 {
     logger = Logger::getInstance("scag.bill.actions");
+    /*
+    try
+    {
+        throw SCAGException("NOT CATCHED!");
+    }
+    catch (SCAGException& e)
+    {
+        smsc_log_debug(logger, "CATCHED!");
+    } */
+
 
     if (params.Exists("action")) 
     {
@@ -34,12 +44,14 @@ void BillActionClose::init(const SectionParams& params,PropertyObject propertyOb
     ft = CheckParameter(params, propertyObject, "bill:close", "msg", false, false, temp, m_MsgExist);
     if (m_MsgExist) m_sMessage = temp;
 
-    smsc_log_debug(logger,"Action 'bill:close' init...");
+    smsc_log_debug(logger,"Action 'bill:close' init...");    
 }
 
 bool BillActionClose::run(ActionContext& context)
 {
-    smsc_log_debug(logger,"Run Action 'bill:close'...");
+
+    smsc_log_debug(logger, "Run Action 'bill:close'...");
+
 
     /////////////////////////////////////////////
 
@@ -47,7 +59,7 @@ bool BillActionClose::run(ActionContext& context)
 
     SACC_BILLING_INFO_EVENT_t ev;
 
-   
+    
     /////////////////////////////////////////////
     BillingManager& bm = BillingManager::Instance();
 
@@ -228,5 +240,5 @@ bool BillActionClose::FinishXMLSubSection(const std::string& name)
 }
 
 
-}}
+}}}
 

@@ -283,7 +283,8 @@ TariffRec& BillingManagerImpl::getTransactionData(int billId)
 
     BillTransaction * pBillTransaction = BillTransactionHash.GetPtr(billId);
 
-    if (!pBillTransaction) throw SCAGException("Cannot find transaction for billId=%d", billId);
+    if (!pBillTransaction) 
+        throw SCAGException("Cannot find transaction for billId=%d", billId);
 
     return pBillTransaction->tariffRec;
 }

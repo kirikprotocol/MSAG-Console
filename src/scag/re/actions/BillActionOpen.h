@@ -3,10 +3,7 @@
 
 #include "scag/re/actions/ActionAbstractWait.h"
 
-namespace scag { namespace bill {
-
-using namespace scag::re::actions;
-using namespace scag::re;
+namespace scag { namespace re { namespace actions {
 
 class BillActionOpen : public ActionAbstractWait
 {
@@ -17,7 +14,6 @@ class BillActionOpen : public ActionAbstractWait
     std::string m_sMessage;
     std::string m_sResNumber;
 
-    Logger * logger;
     std::string m_category;
     std::string m_mediaType;
 
@@ -47,7 +43,7 @@ public:
 
 
 
-}}
+}}}
 
 
 #endif

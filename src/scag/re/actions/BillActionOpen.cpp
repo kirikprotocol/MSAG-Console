@@ -1,10 +1,9 @@
-#include <scag/exc/SCAGExceptions.h>
 #include "BillActionOpen.h"
 #include "scag/re/CommandAdapter.h"
 
-namespace scag { namespace bill {
+namespace scag { namespace re { namespace actions {
 
-BillActionOpen::BillActionOpen(bool waitOperation) : logger(0) 
+BillActionOpen::BillActionOpen(bool waitOperation)  
 {
     m_waitOperation = waitOperation;
     if (waitOperation) m_ActionName = "operation:bill_wait";
@@ -241,5 +240,5 @@ bool BillActionOpen::run(ActionContext& context)
     return true;
 }
 
-}}
+}}}
 
