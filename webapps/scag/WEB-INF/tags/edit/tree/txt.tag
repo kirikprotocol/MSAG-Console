@@ -16,5 +16,5 @@
            value="${fn:escapeXml(bean.params[param_name])}"
     <c:if test="${readonly}"> readonly</c:if>
     <c:if test="${!empty validation}"> validation="${validation}" onkeyup="resetValidation(this)"</c:if>
-    <c:if test="${!empty onchanged}">onkeypress="${onchanged}" </c:if>/>
+    <c:if test="${!empty onchanged}">onfocus="${onchanged}" </c:if>/>
 </sm-et:property>
