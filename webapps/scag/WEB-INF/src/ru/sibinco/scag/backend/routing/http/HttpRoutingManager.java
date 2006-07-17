@@ -292,6 +292,30 @@ public class HttpRoutingManager extends Manager{
         return null;
     }
 
+    public List getRoteIdsByServiceIds(String[] checked){
+        final List roteIds = new ArrayList();
+        for (int i = 0; i < checked.length; i++) {
+            final String serviceIdStr = checked[i];
+            final Long serviceId = Long.decode(serviceIdStr);
+            HttpRoute[] routes = getRoutesByServiceId(serviceId);
+            for (int j = 0; j < routes.length; j++) {
+                roteIds.add(routes[j].getId());
+            }
+        }
+        return roteIds;
+    }
+
+    public HttpRoute[] getRoutesByServiceId(final Long svcId) {
+        List result = new ArrayList();
+        for (Iterator it = routes.values().iterator(); it.hasNext();) {
+            final HttpRoute route = (HttpRoute) it.next();
+            if(route.getService().getId().equals(svcId)){
+               result.add(route);
+            }
+        }
+        return (HttpRoute[]) result.toArray(new HttpRoute[result.size()]);
+    }
+
      public synchronized void deleteRoutes(final String user, final Set checkedSet) {
         getRoutes().keySet().removeAll(checkedSet);
         setRoutesChanged(true);
