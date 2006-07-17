@@ -7,6 +7,8 @@ package ru.sibinco.scag.beans.services;
 import ru.sibinco.scag.backend.service.ServiceProvider;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.beans.TabledBeanImpl;
+import ru.sibinco.scag.Constants;
+import ru.sibinco.lib.SibincoException;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,23 +32,33 @@ public class Index extends TabledBeanImpl {
     protected void delete() throws SCAGJspException {
         final List toRemove = new ArrayList(checked.length);
         final List serviceIds = new ArrayList();
-        for (int i = 0; i < checked.length; i++) {
-            final String serviceProviderIdStr = checked[i];
-            final Long providerId = Long.decode(serviceProviderIdStr);
-            toRemove.add(providerId);
-            ServiceProvider serviceProvider = (ServiceProvider)
-                    appContext.getServiceProviderManager().getServiceProviders().get(providerId);
-            for (Iterator iterator = serviceProvider.getServices().keySet().iterator(); iterator.hasNext();) {
-                String serviceIdStr = (iterator.next()).toString();
-                appContext.getRuleManager().removeRulesForService(getLoginedPrincipal().getName(), serviceIdStr);
-                serviceIds.add(serviceIdStr);
+        if (appContext.getHttpRoutingManager().isRoutesChanged() || appContext.getScagRoutingManager().isRoutesChanged()){
+            throw new SCAGJspException(Constants.errors.routing.routes.COULD_NOT_DELETE_SERVICE_PROVIDER);
+        } else {
+            for (int i = 0; i < checked.length; i++) {
+                final String serviceProviderIdStr = checked[i];
+                final Long providerId = Long.decode(serviceProviderIdStr);
+                toRemove.add(providerId);
+                ServiceProvider serviceProvider = (ServiceProvider)
+                        appContext.getServiceProviderManager().getServiceProviders().get(providerId);
+                for (Iterator iterator = serviceProvider.getServices().keySet().iterator(); iterator.hasNext();) {
+                    String serviceIdStr = (iterator.next()).toString();
+                    appContext.getRuleManager().removeRulesForService(getLoginedPrincipal().getName(), serviceIdStr);
+                    serviceIds.add(serviceIdStr);
+                }
             }
+            final List toRemoveSmppRoutes = appContext.getScagRoutingManager().getRoteIdsByServiceIds(
+                    (String[]) serviceIds.toArray(new String[serviceIds.size()]));
+            if (toRemoveSmppRoutes.size() > 0) {
+                appContext.getScagRoutingManager().deleteRoutes(getLoginedPrincipal().getName(), toRemoveSmppRoutes);
+            }
+            final List toRemoveHttpRoutes = appContext.getHttpRoutingManager().getRoteIdsByServiceIds(
+                    (String[]) serviceIds.toArray(new String[serviceIds.size()]));
+            if (toRemoveHttpRoutes.size() > 0) {
+                appContext.getHttpRoutingManager().deleteRoutes(getLoginedPrincipal().getName(), toRemoveHttpRoutes);
+            }
+            appContext.getServiceProviderManager().deleteServiceProviders(getLoginedPrincipal().getName(), toRemove, appContext);
+
         }
-        final List toRemoveRoutes = appContext.getScagRoutingManager().getRoteIdsByServiceIds(
-                (String[]) serviceIds.toArray(new String[serviceIds.size()]));
-        if (toRemoveRoutes.size() > 0) {
-            appContext.getScagRoutingManager().deleteRoutes(getLoginedPrincipal().getName(), toRemoveRoutes);
-        }
-        appContext.getServiceProviderManager().deleteServiceProviders(getLoginedPrincipal().getName(), toRemove, appContext);
     }
 }
