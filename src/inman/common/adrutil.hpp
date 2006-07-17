@@ -5,7 +5,7 @@
 #ifndef __SMSC_CONVERSION_ADDRESS_UTL_HPP__
 #define __SMSC_CONVERSION_ADDRESS_UTL_HPP__
 
-#include <stdint.h>
+#include <inttypes.h>
 #include <string.h>
 #include <stdio.h>
 
