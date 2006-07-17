@@ -70,6 +70,8 @@ public class Constants {
                 public static final Constants COULDNT_LOAD_HTTP_ROUTES = new Constants("error.routing.couldnt_load_http_routes");
                 public static final Constants COULDNT_SAVE_ROUTES = new Constants("error.routing.couldnt_save_routes");
                 public static final Constants COULDNT_SAVE_HTTP_ROUTES = new Constants("error.routing.couldnt_save_http_routes");
+                public static final Constants COULD_NOT_DELETE_SERVICE_PROVIDER = new Constants("error.routing.couldnt_delete.service.provider.route.or.subject.changed");
+                public static final Constants COULD_NOT_DELETE_SERVICE = new Constants("error.routing.couldnt_delete.service.route.or.subject.changed");
             }
 
             public interface tracer {
