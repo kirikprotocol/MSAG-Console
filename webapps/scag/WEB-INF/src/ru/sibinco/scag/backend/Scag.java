@@ -12,6 +12,7 @@ import ru.sibinco.scag.backend.endpoints.svc.Svc;
 import ru.sibinco.scag.backend.protocol.commands.Apply;
 import ru.sibinco.scag.backend.protocol.commands.CommandCall;
 import ru.sibinco.scag.backend.protocol.commands.Type;
+import ru.sibinco.scag.backend.protocol.commands.ApplyConfig;
 import ru.sibinco.scag.backend.protocol.commands.routes.ApplyHttpRoutes;
 import ru.sibinco.scag.backend.protocol.commands.routes.ApplySmppRoutes;
 import ru.sibinco.scag.backend.protocol.commands.tariffmatrix.ReloadTariffMatrix;
@@ -80,6 +81,12 @@ public class Scag extends Proxy {
         final Response response = super.runCommand(new Apply(subject));
         if (Response.STATUS_OK != response.getStatus())
             throw new SibincoException("Couldn't apply, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+    }
+
+    protected void applyConfig() throws SibincoException {
+        final Response response = super.runCommand(new ApplyConfig());
+        if (Response.STATUS_OK != response.getStatus())
+            throw new SibincoException("Couldn't apply config, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
     }
 
     //service points
