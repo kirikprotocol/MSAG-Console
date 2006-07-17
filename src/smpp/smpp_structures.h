@@ -69,6 +69,7 @@ namespace SmppOptionalTags{
   static const uint16_t supported_codeset   = 0x4101;
   static const uint16_t imsi_address        = 0x4102;
   static const uint16_t msc_address         = 0x4103;
+  static const uint16_t protocol_id         = 0x4104;
 }
 
 namespace SmppOptionalLength{
@@ -121,6 +122,7 @@ namespace SmppOptionalLength{
   static const uint16_t supported_codeset   = 2;
   static const uint16_t imsi_address        = 31;
   static const uint16_t msc_address         = 31;
+  static const uint16_t protocol_id         = 1;
 }
 
 namespace SmppOptionalFields{
@@ -176,6 +178,9 @@ namespace SmppOptionalFields{
   static const uint64_t msc_address         = BIT(47);
 
   static const uint64_t unknownFields       = BIT(48);
+  static const uint64_t protocol_id         = BIT(49);
+
+
 #undef BIT
 }
 
@@ -610,6 +615,7 @@ struct SmppOptional //: public MemoryManagerUnit
   _o_int_property__(uint16_t,supported_codeset)
 
   _o_ostr_property__(unknownFields)
+  _o_int_property__(uint8_t,protocol_id)
 
 #undef _o_int_property__
 #undef _o_intarr_property__
@@ -674,6 +680,7 @@ struct SmppOptional //: public MemoryManagerUnit
   _o_cstr_property__(imsi_address)
   _o_cstr_property__(msc_address)
   _o_int_property__(uint16_t,supported_codeset)
+  _o_int_property__(uint8_t,protocol_id)
 
   + (uint32_t)( has_unknownFields()  ?  unknownFields.size()  : 0 )
 
@@ -746,6 +753,7 @@ struct SmppOptional //: public MemoryManagerUnit
     _o_int_property__(uint16_t,supported_codeset)
 
     _o_ostr_property__(unknownFields)
+    _o_int_property__(uint8_t,protocol_id)
 
     --align;
     dump_text1("} //SmppOptional");
