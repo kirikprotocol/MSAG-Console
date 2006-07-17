@@ -54,7 +54,7 @@ static time_t strtotime(const char*& str)
       case 'm':result+=val*60;break;
       case 'S':
       case 's':result+=val;break;
-      default: abort();throw Exception("Invalid time format:%c",type);
+      default: throw Exception("Invalid time format:%c",type);
     }
     str+=pos;
   }
