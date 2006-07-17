@@ -35,8 +35,8 @@ int StatusSme::Execute()
   SMS *sms;
   SMS s;
   //string answer;
-  char msc[]="";
-  char imsi[]="";
+  char msc[]="123";
+  char imsi[]="321";
   s.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
   s.setDeliveryReport(0);
   s.setArchivationRequested(false);
@@ -201,7 +201,7 @@ int StatusSme::Execute()
 
 
     time_t t=time(NULL)+60;
-    s.setValidTime(t);
+    //s.setValidTime(t);
     s.setOriginatingAddress(sms->getDestinationAddress());
     s.setDestinationAddress(sms->getOriginatingAddress());
     s.setIntProperty(Tag::SMPP_ESM_CLASS,0);
