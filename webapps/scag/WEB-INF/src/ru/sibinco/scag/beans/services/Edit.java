@@ -4,18 +4,14 @@
 
 package ru.sibinco.scag.beans.services;
 
-import ru.sibinco.lib.SibincoException;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.SCAGAppContext;
-import ru.sibinco.scag.backend.Scag;
-import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.backend.service.ServiceProvider;
 import ru.sibinco.scag.backend.service.ServiceProvidersManager;
 import ru.sibinco.scag.beans.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -73,19 +69,28 @@ public class Edit extends TabledEditBeanImpl {
 
     protected void delete() throws SCAGJspException {
         final List toRemove = new ArrayList(checked.length);
-        for (int i = 0; i < checked.length; i++) {
-            final String serviceIdStr = checked[i];
-            final Long serviceId = Long.decode(serviceIdStr);
-            toRemove.add(serviceId);
-            appContext.getRuleManager().removeRulesForService(getLoginedPrincipal().getName(), serviceIdStr);
+        if (appContext.getHttpRoutingManager().isRoutesChanged() || appContext.getScagRoutingManager().isRoutesChanged()){
+            throw new SCAGJspException(Constants.errors.routing.routes.COULD_NOT_DELETE_SERVICE);
+        } else {
+            for (int i = 0; i < checked.length; i++) {
+                final String serviceIdStr = checked[i];
+                final Long serviceId = Long.decode(serviceIdStr);
+                toRemove.add(serviceId);
+                appContext.getRuleManager().removeRulesForService(getLoginedPrincipal().getName(), serviceIdStr);
+            }
+            final List toRemoveSmppRoutes = appContext.getScagRoutingManager().getRoteIdsByServiceIds(checked);
+            final List toRemoveHttpRoutes = appContext.getHttpRoutingManager().getRoteIdsByServiceIds(checked);
+            if (toRemoveSmppRoutes.size() > 0) {
+                appContext.getScagRoutingManager().deleteRoutes(getLoginedPrincipal().getName(),
+                        toRemoveSmppRoutes);
+            }
+            if (toRemoveHttpRoutes.size() > 0) {
+                appContext.getHttpRoutingManager().deleteRoutes(getLoginedPrincipal().getName(),
+                        toRemoveSmppRoutes);
+            }
+            appContext.getServiceProviderManager().deleteServices(getLoginedPrincipal().getName(),
+                    toRemove, serviceProvider, appContext);
         }
-        final List toRemoveRoutes = appContext.getScagRoutingManager().getRoteIdsByServiceIds(checked);
-        if (toRemoveRoutes.size() > 0) {
-            appContext.getScagRoutingManager().deleteRoutes(getLoginedPrincipal().getName(),
-                    toRemoveRoutes);
-        }
-        appContext.getServiceProviderManager().deleteServices(getLoginedPrincipal().getName(),
-            toRemove, serviceProvider, appContext);
     }
 
     protected void load() throws SCAGJspException {
@@ -109,8 +114,8 @@ public class Edit extends TabledEditBeanImpl {
             id = serviceProvidersManager.createServiceProvider(userLogin, name, description);
         } else {
             oldProvider = serviceProvidersManager.updateServiceProvider(userLogin, id, name, description);
-        }        
-        appContext.getServiceProviderManager().reloadServices(appContext,isAdd(),id,oldProvider);
+        }
+        appContext.getServiceProviderManager().reloadServices(appContext, isAdd(), id, oldProvider);
         if (isAdd()) {
             throw new EditException(Long.toString(id));
         } else {
