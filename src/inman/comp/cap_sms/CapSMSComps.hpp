@@ -26,7 +26,7 @@ typedef enum MonitorMode {
 #endif /* _MonitorMode_H_ */
 
 #ifndef	_MiscCallInfo_H_
-//this is the clone of MiscCallInfo.h::MessageType_e
+//this is the clone of MiscCallInfo.h::messageType_e
 typedef enum messageType {
     MessageType_request		= 0,
     MessageType_notification	= 1
@@ -88,8 +88,7 @@ typedef enum DeliveryMode {
 // This operation is used after a TDP to indicate request for service.
 class PrivateInitialDPSMSArg;
 //NOTE: requires the preceeding call of tzset()
-class InitialDPSMSArg: public Component //SSF -> SCF
-{
+class InitialDPSMSArg: public Component { //SSF -> SCF
 public:
     InitialDPSMSArg(DeliveryMode_e idpMode, unsigned int serviceKey);
     ~InitialDPSMSArg();
@@ -135,19 +134,17 @@ private:
 //  This operation is used to notify the gsmSCF of a Short Message related event
 //  (FSM events such as submission, delivery or failure) previously requested by
 //  the gsmSCF in a RequestReportSMSEvent operation.
-class EventReportSMSArg: public Component //SSF -> SCF
-{
-    public:
-	EventTypeSMS_e	eventType;
-	messageType_e	messageType;
+class EventReportSMSArg: public Component { //SSF -> SCF
+public:
+    EventReportSMSArg(EventTypeSMS_e et, messageType_e mt);
+    ~EventReportSMSArg() {}
 
-	EventReportSMSArg(EventTypeSMS_e et, messageType_e mt);
-	~EventReportSMSArg() {}
+    void encode(vector<unsigned char>& buf) throw(CustomException);
 
-	void encode(vector<unsigned char>& buf) throw(CustomException);
-
-    private:
-	Logger*  compLogger;
+private:
+    EventTypeSMS_e	eventType;
+    messageType_e	messageType;
+    Logger*  compLogger;
 };
 
 //  Direction: gsmSCF -> gsmSSF or gprsSSF, Timer: Trrbsms
@@ -156,48 +153,45 @@ class EventReportSMSArg: public Component //SSF -> SCF
 //  and to send a notification to the gsmSCF when the event is detected.
 class InternalRequestReportSMSEventArg;
 // NOTE: Inman uses only SCF -> SSF
-class RequestReportSMSEventArg: public Component //SSF -> SCF, SCF -> SSF
-{
-    public:
-	struct SMSEvent 
-	{
-	  EventTypeSMS_e event;
-	  MonitorMode_e monitorType;
-	};
+class RequestReportSMSEventArg: public Component { //SSF -> SCF, SCF -> SSF
+public:
+    struct SMSEvent {
+        EventTypeSMS_e event;
+        MonitorMode_e monitorType;
+    };
+    typedef vector<SMSEvent> SMSEventVector;
 
-	typedef vector<SMSEvent> SMSEventVector;
+    RequestReportSMSEventArg();
+    ~RequestReportSMSEventArg();
 
-	RequestReportSMSEventArg();
-	~RequestReportSMSEventArg();
+    const SMSEventVector& getSMSEvents();
 
-	const SMSEventVector& getSMSEvents();
+    void  decode(const vector<unsigned char>& buf) throw(CustomException);
 
-	void  decode(const vector<unsigned char>& buf) throw(CustomException);
-
-    private:
-	InternalRequestReportSMSEventArg* comp;
-	Logger*  compLogger;
+private:
+    InternalRequestReportSMSEventArg* comp;
+    Logger*  compLogger;
 };
 
 //  Direction: gsmSCF -> gsmSSF or gprsSSF, Timer: Tconsms
 //  This operation is used to request the smsSSF to perform the SMS processing
 //  actions to route or forward a short message to a specified destination.
-class ConnectSMSArg: public Component //SCF -> SSF
-{
-    public:
-	ConnectSMSArg();
-	~ConnectSMSArg();
+class ConnectSMSArg: public Component { //SCF -> SSF
+public:
+    ConnectSMSArg();
+    ~ConnectSMSArg();
 
-	const TonNpiAddress&	destinationSubscriberNumber() { return dstSN; }
-	const TonNpiAddress&	callingPartyNumber() { return clngPN; }
-	const TonNpiAddress&	SMSCAddress() { return sMSCAdr; }
+    const TonNpiAddress&	destinationSubscriberNumber() { return dstSN; }
+    const TonNpiAddress&	callingPartyNumber() { return clngPN; }
+    const TonNpiAddress&	SMSCAddress() { return sMSCAdr; }
 
-	void decode(const vector<unsigned char>& buf) throw(CustomException);
+    void decode(const vector<unsigned char>& buf) throw(CustomException);
 
-    protected:
-	TonNpiAddress	dstSN, clngPN, sMSCAdr;
-    private:
-	Logger* compLogger;
+protected:
+    TonNpiAddress	dstSN, clngPN, sMSCAdr;
+
+private:
+    Logger* compLogger;
 };
 
 //  Direction: gsmSCF -> gsmSSF or gprsSSF, Timer: Tfcisms 
@@ -205,51 +199,49 @@ class ConnectSMSArg: public Component //SCF -> SSF
 //  charging record or to include some information in the default SM record.
 //  The registered charging record is intended for off line charging of the
 //  Short Message.
-class PrivateFurnishChargingInformationSMSArg;
-class FurnishChargingInformationSMSArg: public Component //SCF -> SSF 
-{
-    public:
-	FurnishChargingInformationSMSArg();
-	~FurnishChargingInformationSMSArg();
 
-	void decode(const vector<unsigned char>& buf) throw(CustomException);
+/* GVRoman NOTE: This operation doesn't used by known IN-points
+class FurnishChargingInformationSMSArg: public Component { //SCF -> SSF 
+public:
+    FurnishChargingInformationSMSArg();
+    ~FurnishChargingInformationSMSArg();
 
-    private:
-	PrivateFurnishChargingInformationSMSArg* comp;
+    void decode(const vector<unsigned char>& buf) throw(CustomException);
+
+private:
 	Logger* compLogger;
 };
+*/
 
 //  Direction: gsmSCF -> gsmSSF or gprsSSF, Timer: Trelsms
 //  This operation is used to prevent an attempt to submit or deliver a short message. 
-class ReleaseSMSArg: public Component //SCF -> SSF 
-{
-    public:
-	unsigned char rPCause;
+class ReleaseSMSArg: public Component { //SCF -> SSF 
+public:
+    unsigned char rPCause;
 
-	ReleaseSMSArg();
-	~ReleaseSMSArg();
+    ReleaseSMSArg();
+    ~ReleaseSMSArg();
 
-	void decode(const vector<unsigned char>& buf) throw(CustomException);
+    void decode(const vector<unsigned char>& buf) throw(CustomException);
 
-    private:
-	Logger* compLogger;
+private:
+    Logger* compLogger;
 };
 
 // Direction: gsmSCF -> smsSSF, Timer: Trtsms 
 // This operation is used to request the smsSSF to refresh an application
 // timer in the smsSSF.
-class ResetTimerSMSArg: public Component //SCF -> SSF 
-{
-    public:
-	time_t	timerValue;
+class ResetTimerSMSArg: public Component { //SCF -> SSF 
+public:
+    time_t	timerValue;
 
-	ResetTimerSMSArg();
-	~ResetTimerSMSArg();
+    ResetTimerSMSArg();
+    ~ResetTimerSMSArg();
 
-	void decode(const vector<unsigned char>& buf) throw(CustomException);
+    void decode(const vector<unsigned char>& buf) throw(CustomException);
 
-    private:
-	Logger* compLogger;
+private:
+    Logger* compLogger;
 };
 
 }//namespace comp
