@@ -1076,7 +1076,7 @@ void Smsc::run()
     {
       MutexGuard mg(idleMon);
       icon->addChangeRoleHandler(NotifyMonHandler,&idleMon);
-      __trace__("wait for change role event");
+      smsc_log_info(log,"wait for change role event");
       while(!stopFlag)
       {
          int rv=idleMon.wait(1000);
