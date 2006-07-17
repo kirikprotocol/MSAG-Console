@@ -29,7 +29,7 @@ public class ConfigManager extends Manager {
 
   public synchronized void applyConfig(final SCAGAppContext appContext, final Config oldConfig) throws SCAGJspException {
      try {
-         appContext.getScag().invokeCommand("apply","config",appContext,this,configFilename);
+         appContext.getScag().invokeCommand("applyConfig", null, appContext, this, configFilename);
      } catch (SibincoException e) {
      if (!(e instanceof StatusDisconnectedException)) {
           //restore - copy parameters from oldConfig to current
