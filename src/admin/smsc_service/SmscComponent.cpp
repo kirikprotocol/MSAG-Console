@@ -1158,7 +1158,12 @@ throw (AdminException)
 void SmscComponent::applyReschedule()
 throw (AdminException)
 {
-  smsc_app_runner->getApp()->reloadReschedule();
+  try{
+    smsc_app_runner->getApp()->reloadReschedule();
+  }catch(std::exception& e)
+  {
+    throw AdminException("%s",e.what());
+  }
 
   if(smsc_app_runner->getApp()->isHs()){
       Interconnect * iconn = Interconnect::getInstance();
