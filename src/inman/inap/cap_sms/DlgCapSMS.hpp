@@ -15,13 +15,8 @@ using smsc::core::synchronization::Mutex;
 using smsc::inman::InmanErrorType;
 using smsc::inman::_InmanErrorSource;
 
-using smsc::inman::comp::ConnectSMSArg;
-using smsc::inman::comp::FurnishChargingInformationSMSArg;
-using smsc::inman::comp::ReleaseSMSArg;
-using smsc::inman::comp::RequestReportSMSEventArg;
-using smsc::inman::comp::ResetTimerSMSArg;
-using smsc::inman::comp::EventReportSMSArg;
 using smsc::inman::comp::InitialDPSMSArg;
+
 using smsc::inman::inap::SSNSession;
 
 namespace smsc {
@@ -40,30 +35,25 @@ namespace inap {
         SSF <- RequestReportSMSEvent
         eventReportSMS -> SCF       ]
 [ <- smsBillingPackage:
-        SSF <- FurnishChargingInformationSMS ]
+        SSF <- FurnishChargingInformationSMS ]  -- unused by known IN-points !!!
 [ <- smsTimerPackage:
         SSF <- ResetTimerSMS ]
 */
 
-class SSFhandler { //SSF <- SCF
+
+class CapSMS_SSFhandlerITF { //SSF <- CapSMSDlg <- SCF
 //NOTE: These callbacks should not delete CapSMSDlg !!!
 public:
-    //CapSMS operations:
-    virtual void onConnectSMS(ConnectSMSArg* arg) = 0;
-    virtual void onContinueSMS(void) = 0;
-    virtual void onFurnishChargingInformationSMS(FurnishChargingInformationSMSArg* arg) = 0;
-    virtual void onReleaseSMS(ReleaseSMSArg* arg) = 0;
-    virtual void onRequestReportSMSEvent(RequestReportSMSEventArg* arg) = 0;
-    virtual void onResetTimerSMS(ResetTimerSMSArg* arg) = 0;
+    virtual void onDPSMSResult(unsigned char rp_cause = 0) = 0;
     //dialog finalization/error handling:
-    virtual void onEndSMS(bool approved = true) = 0;
-    virtual void onAbortSMS(unsigned char ercode, InmanErrorType errLayer) = 0;
+    virtual void onEndCapDlg(unsigned char ercode = 0, InmanErrorType errLayer = smsc::inman::errOk) = 0;
 };
 
-class SCFcontractor { //SSF -> SCF
+
+class CapSMS_SCFContractorITF { //SSF -> SCF
 public: //operations:
-    virtual void initialDPSMS(InitialDPSMSArg* arg) = 0;
-    virtual void eventReportSMS(EventReportSMSArg* arg) = 0;
+    virtual void initialDPSMS(InitialDPSMSArg* arg) throw(CustomException) = 0;
+    virtual void eventReportSMS(bool submitted) throw(CustomException) = 0;
 };
 
 #define CAP_OPER_INITED 0x2 //'10'B  on BIG-ENDIAN
@@ -100,22 +90,23 @@ typedef union {
 //      a small timeout (CAPSMS_END_TIMEOUT) on last EventReportSMS Invoke
 //      and releases TC Dialog either on receiving T_END_IND or LCancel for
 //      EventReportSMS.
-class CapSMSDlg : public SCFcontractor, DialogListener, InvokeListener {
+class CapSMSDlg : public CapSMS_SCFContractorITF, DialogListener, InvokeListener {
 public:
     //NOTE: timeout is for OPERATIONs Invokes lifetime
-    CapSMSDlg(SSNSession* pSession, SSFhandler * ssfHandler,
-         USHORT_T timeout = 0, Logger * uselog = NULL);
-    //NOTE: ~CapSMSDlg() doesn't delete Dialog, it just releases it !!!
-    virtual ~CapSMSDlg();
+    CapSMSDlg(SSNSession* pSession, CapSMS_SSFhandlerITF * ssfHandler,
+                USHORT_T timeout = 0, Logger * uselog = NULL);
+    virtual ~CapSMSDlg(); //Dialog is not deleted, but just released !!!
     enum {
         smsContractViolation = 0
     };
 
+    unsigned getId(void) const { return capId; }
+
     // SCFcontractor interface
-    //  inittiate capSMS starting TCAP dialog
+    //  initiates capSMS dialog (over TCAP dialog)
     void initialDPSMS(InitialDPSMSArg* arg) throw(CustomException);
-    //  continues and ends TCAP dialog
-    void eventReportSMS(EventReportSMSArg* arg) throw(CustomException);
+    //  reports delivery status(continues) and ends capSMS dialog
+    void eventReportSMS(bool submitted) throw(CustomException);
 
     void endDPSMS(void); //ends TC dialog, releases Dialog(), resets SSFhandler
 
@@ -143,8 +134,8 @@ private:
     Dialog*     dialog;     //TCAP dialog
     SSNSession* session;    //TCAP dialogs factory
     Logger*     logger;
-    SSFhandler* ssfHdl;
     CAP3State   _capState;  //current state of cap3SMS CONTRACT
+    CapSMS_SSFhandlerITF* ssfHdl;
 };
 
 } //inap

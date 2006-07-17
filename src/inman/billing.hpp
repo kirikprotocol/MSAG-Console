@@ -4,16 +4,17 @@
 #define __SMSC_INMAN_INAP_BILLING__
 
 /* Inman interoperation scheme:
-SMSC   < - >           Billing      < - >    Inap (SSF)  < - >    In-platform(SCF)
+SMSC   < - >           Billing(SSF)     < - >  CapSMSDlg  < - >    In-platform(SCF)
 ChargeSms           -> [ bilStarted,
-                         bilInited:          InitialDP ->  SCF]
-
-                       [ bilReleased:        SSF <- ReleaseSMS
-ChargeSmsResult     <-   | bilProcessed:     SSF <- ContinueSMS ]
+                         bilInited:      -->   InitialDP ->  SCF]
+                                                [ CapSMSDlg <- ReleaseSMS(SCF)
+                                                  | CapSMSDlg <- ContinueSMS(SCF) ]
+                       [ bilReleased     <--   onDPSMSResult()
+ChargeSmsResult     <-   | bilProcessed ]
 
 [ CHARGING_POSSIBLE:
-  DeliverySmsResult -> [  bilApproved:       eventReportSMS -> SCF
-                          bilComplete :                     <-    ]
+  DeliverySmsResult -> [  bilApproved:   -->   eventReportSMS  --> SCF
+                          bilComplete :  <--   onEndCapDlg() ]
 ]
 */
 
@@ -22,12 +23,11 @@ ChargeSmsResult     <-   | bilProcessed:     SSF <- ContinueSMS ]
 #include "inman/interaction/connect.hpp"
 #include "inman/common/TimeWatcher.hpp"
 #include "inman/abprov/AbProvider.hpp"
-//#include "inman/incache.hpp"
 #include "inman/storage/FileStorages.hpp"
 
 using smsc::inman::inap::CapSMSDlg;
 using smsc::inman::inap::Dialog;
-using smsc::inman::inap::SSFhandler;
+using smsc::inman::inap::CapSMS_SSFhandlerITF;
 using smsc::inman::interaction::Connect;
 using smsc::inman::interaction::ConnectListener;
 using smsc::inman::interaction::InmanCommand;
@@ -35,6 +35,7 @@ using smsc::inman::interaction::InmanHandler;
 using smsc::inman::interaction::SMCAPSpecificInfo;
 using smsc::inman::interaction::ChargeSms;
 using smsc::inman::interaction::DeliverySmsResult;
+using smsc::inman::interaction::ChargeSmsResult_t;
 using smsc::inman::sync::StopWatch;
 using smsc::inman::sync::TimeWatcher;
 using smsc::inman::sync::TimerListenerITF;
@@ -155,7 +156,7 @@ protected:
     TimeWatcher* _tmWatcher;
 };
 
-class Billing : public SSFhandler, public InmanHandler,
+class Billing : public CapSMS_SSFhandlerITF, public InmanHandler,
                 public InAbonentQueryListenerITF, public TimerListenerITF {
 public:
     typedef enum {
@@ -200,15 +201,10 @@ public:
     bool onChargeSms(ChargeSms*);
     void onDeliverySmsResult(DeliverySmsResult*);
 
-    //SSFHandler interface methods:
-    void onConnectSMS(ConnectSMSArg* arg);
-    void onContinueSMS(void);
-    void onFurnishChargingInformationSMS(FurnishChargingInformationSMSArg* arg);
-    void onReleaseSMS(ReleaseSMSArg* arg);
-    void onRequestReportSMSEvent(RequestReportSMSEventArg* arg);
-    void onResetTimerSMS(ResetTimerSMSArg* arg);
-    void onEndSMS(bool approved/* = true*/);
-    void onAbortSMS(unsigned char errcode, InmanErrorType errLayer);
+    //CapSMS_SSFhandlerITF interface methods:
+    void onDPSMSResult(unsigned char rp_cause = 0);
+    //dialog finalization/error handling:
+    void onEndCapDlg(unsigned char ercode = 0, InmanErrorType errLayer = smsc::inman::errOk);
 
     //InAbonentQueryListenerITF interface methods:
     void onAbonentQueried(const AbonentId & ab_number, AbonentBillType ab_type);
@@ -226,7 +222,7 @@ protected:
     void StartTimer(unsigned short timeout);
     void StopTimer(BillingState bilState);
     void ChargeAbonent(AbonentBillType ab_type);
-    void doCharge(uint32_t inmanErr = 0);
+    void chargeResult(ChargeSmsResult_t chg_res, uint32_t inmanErr = 0);
 
     Mutex           bilMutex;
     BillingCFG      _cfg;
