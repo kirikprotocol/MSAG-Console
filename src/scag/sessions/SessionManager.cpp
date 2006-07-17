@@ -249,23 +249,9 @@ void SessionManagerImpl::init(const SessionManagerConfig& _config) // possible t
     store.init(config.dir,SessionManagerCallback,this);
 
     
-    /*
-    std::list<CSessionKey>::iterator updIt;
-    for (updIt = NeedToUpdateSessionList.begin();updIt!=NeedToUpdateSessionList.end();++updIt) 
-    {
-        SessionPtr sessionPtr = store.getSession(*updIt);
-        store.updateSession(sessionPtr);
-    }
-    NeedToUpdateSessionList.clear();
-    */
-
-    smsc_log_debug(logger,"Sessions: %d", SessionExpirePool.size());
-
     CSessionSetIterator it;
     for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();++it)
     {
-        smsc_log_debug(logger,"new one");
-
         CSessionAccessData * accessData = (*it);
 
         SessionPtr session = store.getSession(accessData->SessionKey);

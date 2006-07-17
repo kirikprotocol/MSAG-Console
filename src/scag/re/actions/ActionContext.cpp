@@ -110,16 +110,7 @@ void ActionContext::makeBillEvent(int billCommand, int commandStatus, TariffRec&
     ev.Header.lDateTime = (uint64_t)tv.tv_sec*1000 + (tv.tv_usec / 1000);
 
     ev.Header.pAbonentNumber = commandProperty.abonentAddr.toString();
-    //sprintf((char *)ev.Header.pAbonentNumber,"%s",commandProperty.abonentAddr.toString().c_str());
-    /*
-    std::string temp = commandProperty.abonentAddr.toString();
-    if (temp.size() > MAX_ABONENT_NUMBER_LENGTH - 1) 
-        memcpy((char *)ev.Header.pAbonentNumber,temp.c_str(), MAX_ABONENT_NUMBER_LENGTH - 1);
-    else
-        sprintf((char *)ev.Header.pAbonentNumber,"%s",temp.c_str());
-    */
     ev.Header.sCommandStatus = commandStatus;
-    
     ev.Header.iOperatorId = commandProperty.operatorId;
     ev.iPriceCatId = tariffRec.CategoryId;
     
@@ -128,15 +119,7 @@ void ActionContext::makeBillEvent(int billCommand, int commandStatus, TariffRec&
     ev.iMediaResourceType = tariffRec.MediaTypeId;
 
     ev.pBillingCurrency = tariffRec.Currency;
-    /*
-    if (tariffRec.Currency.size() > MAX_BILLING_CURRENCY_LENGTH - 1) 
-    {
-        memcpy(ev.pBillingCurrency, tariffRec.Currency.c_str(), MAX_BILLING_CURRENCY_LENGTH - 1);
-        ev.pBillingCurrency[MAX_BILLING_CURRENCY_LENGTH - 1] = 0;
-    }
-    else
-        sprintf((char *)ev.pBillingCurrency,"%s",tariffRec.Currency.c_str());
-    */
+
     CSessionPrimaryKey& sessionPrimaryKey = session.getPrimaryKey();
 
     ev.pSessionKey = sessionPrimaryKey.abonentAddr.toString();
