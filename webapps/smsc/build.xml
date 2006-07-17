@@ -76,6 +76,7 @@
         <include name="${perfmon_path}/PerfSnap.class"/>
         <include name="${smsc_package_path}/util/applet/**"/>
         <include name="${smsc_package_path}/util/SnapBufferReader.class"/>
+        <include name="${smsc_package_path}/util/Support64Bit.class"/>
       </fileset>
     </jar>
     <mkdir dir="${exploded}/topmon"/>
@@ -87,6 +88,7 @@
         <include name="${topmon_path}/SmeSnap.class"/>
         <include name="${smsc_package_path}/util/applet/**"/>
         <include name="${smsc_package_path}/util/SnapBufferReader.class"/>
+        <include name="${smsc_package_path}/util/Support64Bit.class"/>
         <include name="locales/**"/>
       </fileset>
     </jar>
