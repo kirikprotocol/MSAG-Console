@@ -74,10 +74,18 @@ extern "C" void sigDumpDispatcher(int sig)
 extern "C" void sigShutdownHandler(int signo)
 {
   fprintf(stderr, "Signal %i received, shutdown\n", signo);
+  static time_t firstSig=time(NULL);
   if(_smsc==0 && _smscComponent==0 && _socketListener==0)
   {
-    fprintf(stderr,"2nd shutdown signal received. something wrong. aborting.\n");
-    abort();
+    if(time(NULL)-firstSig<30)
+    {
+      fprintf(stderr,"2nd shutdown signal received. 30 seconds not passed since last signal, ignoring\n");
+      return;
+    }else
+    {
+      fprintf(stderr,"2nd shutdown signal received. something wrong. aborting.\n");
+      abort();
+    }
   }
 
 
