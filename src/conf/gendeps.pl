@@ -18,7 +18,7 @@ die "SMSC_BUILDDIR not defined" unless $builddir;
 my $pdir=substr($dir,length($srcdir)+1);
 my $lib=$pdir;
 $lib=~s#/#-#g;
-#print "Lib=$lib;pdir=$pdir\n"; 
+#print "Lib=$lib;pdir=$pdir\n";
 
 open(OUT,">>$builddir/deps/$pdir/.binaries-rules")
  or die "Failed to open $builddir/deps/$pdir/.binaries-rules";
@@ -71,6 +71,7 @@ while(<IN>)
   my $gccflags=$ENV{GCCFLAGS};
   $gccflags=~s/(?<=\s)\+w2?\s//gsm;
   $gccflags=~s/-library=stlport4//;
+  $gccflags=~s/-x(arch|target)=\w+//g;
   #print STDERR "Exec:g++ -MM $gccflags $srcdir/$pdir/$src.cpp\n";
   my $dep=`g++ -MM $gccflags $srcdir/$pdir/$src.cpp`;
   $dep=~s/^#.*?$//mg;
