@@ -130,7 +130,7 @@ Targets:
 
   <target name="create_update" depends="create_distr_tree_update, makegw, makeweb">
     <copy file="${BUILD_BIN}/liblogger.so" todir="${DISTR_DIR}/lib"/>
-    <copy file="${BUILD_BIN}/scag/exc/libscag_exc.so" todir="${DISTR_DIR}/lib"/>
+    <!--copy file="${BUILD_BIN}/scag/exc/libscag_exc.so" todir="${DISTR_DIR}/lib"/-->
     <copy file="${BUILD_BIN}/db/exceptions/libdb_exc.so" todir="${DISTR_DIR}/lib"/>
     <copy file="${BUILD_BIN}/db/oci/libdb_oci.so" todir="${DISTR_DIR}/lib"/>
     <copy file="${BUILD_BIN}/scag/scag" todir="${DISTR_DIR}/services/scag/bin"/>
