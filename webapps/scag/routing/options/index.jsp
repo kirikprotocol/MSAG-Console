@@ -267,7 +267,7 @@
                 <td width="25%">
                     <input id="new_site_usr" class="txt" size="50" name="new_site_usr">
                 </td>
-                <td width="68%"><img src="content/images/but_add.gif" alt="Add new Site"
+                <td width="68%"><img src="content/images/but_add.gif" alt="Add new Site  USR"
                          onclick="addSiteDefaultUSRplace(opForm.all.new_site_usr, opForm.all.typeSelectUsrSite.options[typeSelectUsrSite.selectedIndex].value)"
                          style="cursor:hand;"></td>
                 <td>&nbsp;</td>
