@@ -24,8 +24,7 @@ RuleStatus HttpEventHandler::processRequest(HttpCommand& command, Session& sessi
         pendingOperation.validityTime = time(NULL) + SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
         session.addPendingOperation(pendingOperation);
 
-        std::string str;
-        RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), str);
+        RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), "");
 
         ActionContext context(_constants, session, _command, commandProperty);
 
@@ -57,8 +56,7 @@ RuleStatus HttpEventHandler::processResponse(HttpCommand& command, Session& sess
     try{
         session.setCurrentOperation(command.getOperationId());
 
-        std::string str;
-        RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), str);
+        RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), "");
 
         ActionContext context(_constants, session, _command, commandProperty);
 
@@ -83,6 +81,7 @@ RuleStatus HttpEventHandler::processDelivery(HttpCommand& command, Session& sess
     smsc_log_debug(logger, "Process HttpEventHandler Delivery...");
 
     try{
+//        RegisterTrafficEvent(cp, session.getPrimaryKey(), "");
         session.setCurrentOperation(command.getOperationId());
         session.closeCurrentOperation();            
     } catch (SCAGException& e)
