@@ -404,6 +404,7 @@ sub conv_addr_payer{
     $addr=$1;
   };
 
+  return $addr;
 #  print substr($addr, 1);
 
   $addr = substr($addr, 1) if $addr=~/^(?:7913|83832|73832|838822|738822|7902|83812|73812|7904)/;
@@ -444,6 +445,12 @@ sub datetotimestamp{
 
 sub process{
   my ($inf,$outarr,$nbfile)=@_;
+  if(-s $inf==0)
+  {
+    pop @$outarr;
+    return;
+  }
+  print "Processing:$inf\n";
   my $in=IO::File->new;
   if(!$in->open('<'.$inf)){die "Faield to open input file $inf:$!"};
   my $out={};
@@ -532,6 +539,10 @@ sub process{
         $$addrref=~s/^\.\d\.\d\.(ussd:)/$1/i;
         $$addrref=~s/^\.\d\.\d\.//i;
         $$addrref=~s/^(?!ussd:)/ussd:/i;
+        if(length($$addrref)==11)
+        {
+          $$addrref=~s/^(ussd:)...(...)$/$1$2/;
+        }
 #        print "new addr:$$addrref\n";
       }
     }
