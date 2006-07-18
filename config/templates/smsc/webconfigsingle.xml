@@ -26,6 +26,12 @@
       <param name="services folder" type="string">services</param>
     </section>
   </section>
+  
+  <section name="smsc">
+    <param name="config folder" type="string">@smsc.confFolder@</param>
+    <param name="host" type="string">@smsc.host@</param>
+    <param name="port" type="int">@smsc.port@</param>
+  </section>
 
   <section name="perfmon">
     <param name="appletport" type="int">@perfmon.applet.port@</param>
