@@ -136,6 +136,7 @@ Targets:
     <symlink resource="${SERVICE2HOME_PATH}/../conf/configuration.dtd" link="${DISTR_DIR}/services/SMSC/conf"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/response.dtd" link="${DISTR_DIR}/services/SMSC/conf"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/AliasRecords.dtd" link="${DISTR_DIR}/services/SMSC/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/ClosedGroups.dtd" link="${DISTR_DIR}/services/SMSC/conf"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/SmeRecords.dtd" link="${DISTR_DIR}/services/SMSC/conf"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/locale_resources.dtd" link="${DISTR_DIR}/services/SMSC/conf"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/routes.dtd" link="${DISTR_DIR}/services/SMSC/conf"/>
@@ -180,11 +181,11 @@ Targets:
       <fileset dir="${DISTR_DIR}/lib" includes="*"/>
     </chmod>
     <copy todir="${DISTR_DIR}/conf" preservelastmodified="yes" flatten="yes" >
-      <fileset dir="${SMSC_DIR}/config" includes="command.dtd configuration.dtd response.dtd AliasRecords.dtd SmeRecords.dtd smppgw/command_gw.dtd resourcemanager/locale_resources.dtd routes.dtd"/>
+      <fileset dir="${SMSC_DIR}/config" includes="command.dtd configuration.dtd response.dtd AliasRecords.dtd ClosedGroups.dtd SmeRecords.dtd smppgw/command_gw.dtd resourcemanager/locale_resources.dtd routes.dtd"/>
     </copy>
     <mkdir dir="${DISTR_DIR}/webapps/smsc/WEB-INF/classes/dtds"/>
     <copy todir="${DISTR_DIR}/webapps/smsc/WEB-INF/classes/dtds" preservelastmodified="yes" flatten="yes" >
-      <fileset dir="${SMSC_DIR}/config" includes="command.dtd configuration.dtd response.dtd AliasRecords.dtd SmeRecords.dtd smppgw/command_gw.dtd resourcemanager/locale_resources.dtd routes.dtd webapp/users.dtd"/>
+      <fileset dir="${SMSC_DIR}/config" includes="command.dtd configuration.dtd response.dtd AliasRecords.dtd ClosedGroups.dtd SmeRecords.dtd smppgw/command_gw.dtd resourcemanager/locale_resources.dtd routes.dtd webapp/users.dtd"/>
       <fileset dir="${TEMPL_DIR}/smsc" includes="web-app_2_3.dtd"/>
     </copy>
     <!-- database sql scripts -->
@@ -249,7 +250,7 @@ Targets:
     </copy>
     <chmod file="${DISTR_DIR}/services/SMSC/bin/service" perm="755"/>
     <copy todir="${DISTR_DIR}/services/SMSC/conf" flatten="yes">
-      <fileset dir="${TEMPL_DIR}/smsc" includes="config.xml routes.xml routes_.xml routes__.xml sme.xml aliases.xml reschedule.xml"/>
+      <fileset dir="${TEMPL_DIR}/smsc" includes="config.xml routes.xml routes_.xml routes__.xml sme.xml aliases.xml reschedule.xml ClosedGroups.xml timezones.xml"/>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
     <symlink resource="../services/SMSC/conf/config.xml" link="${DISTR_DIR}/conf/config.xml" overwrite="yes"/>
@@ -259,6 +260,8 @@ Targets:
     <symlink resource="../services/SMSC/conf/sme.xml" link="${DISTR_DIR}/conf/sme.xml" overwrite="yes"/>
     <symlink resource="../services/SMSC/conf/aliases.xml" link="${DISTR_DIR}/conf/aliases.xml" overwrite="yes"/>
     <symlink resource="../services/SMSC/conf/reschedule.xml" link="${DISTR_DIR}/conf/reschedule.xml" overwrite="yes"/>
+    <symlink resource="../services/SMSC/conf/timezones.xml" link="${DISTR_DIR}/conf/timezones.xml" overwrite="yes"/>
+    <symlink resource="../services/SMSC/conf/ClosedGroups.xml" link="${DISTR_DIR}/conf/ClosedGroups.xml" overwrite="yes"/>	
 
     <!-- inman configuration-->
     <copy tofile="${DISTR_DIR}/services/INMan/bin/service" file="${TEMPL_DIR}/service/INMan">
