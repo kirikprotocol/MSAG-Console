@@ -137,8 +137,8 @@ TariffRec * ActionContext::getTariffRec(uint32_t category, uint32_t medyaType)
         Infrastructure& istr = BillingManager::Instance().getInfrastructure();
         m_TariffRec.reset(istr.GetTariff(commandProperty.operatorId, category, medyaType));
 
-        //if (!m_TariffRec.get()) 
-          //  throw SCAGException("BillEvent: Cannot find tariffRec for OID=%d, cat=%s, mtype=%s ", commandProperty.operatorId, category.c_str(), medyaType.c_str());
+        if (!m_TariffRec.get()) 
+            throw SCAGException("BillEvent: Cannot find tariffRec for OID=%d, cat=%d, mtype=%d ", commandProperty.operatorId, category, medyaType);
     }
 
     return m_TariffRec.get();
