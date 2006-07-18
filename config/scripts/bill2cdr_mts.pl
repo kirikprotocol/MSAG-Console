@@ -252,6 +252,11 @@ for(@dir)
   {
     mkdir $nbarcout,0755;
   }
+  $nbarcout.=sprintf("/%02d",$hour);
+  unless(-d $nbarcout)
+  {
+    mkdir $nbarcout,0755;
+  }
 
   $nbfile=$nbarcout.'/'.$nbfile;
 
@@ -294,6 +299,11 @@ for(@dir)
     mkdir $arcout,0755;
   }
   $arcout.=sprintf("/%02d",$mday);
+  unless(-d $arcout)
+  {
+    mkdir $arcout,0755;
+  }
+  $arcout.=sprintf("/%02d",$hour);
   unless(-d $arcout)
   {
     mkdir $arcout,0755;
