@@ -4,24 +4,6 @@ namespace scag { namespace re { namespace http {
 
 using namespace scag::util::properties;
 
-/*
-method r/w
-site r/w
-path r/w
-port r/w
-query r/w
-site_full r/w
-param_%s r
-header_%s r/w
-body_text r
-body_binary r
-body_append w
-
-status r/w
-header_%s r/w
-body_append w
-*/
-
 Hash<AccessType> HttpCommandAdapter::RequestFieldsAccess = HttpCommandAdapter::InitRequestAccess();
 
 Hash<AccessType> HttpCommandAdapter::InitRequestAccess()
@@ -34,6 +16,7 @@ Hash<AccessType> HttpCommandAdapter::InitRequestAccess()
     hs.Insert("filename", atReadWrite);
     hs.Insert("port", atReadWrite);
     hs.Insert("message", atReadWrite);
+    hs.Insert("usr", atReadWrite);
 
     return hs;
 }
@@ -43,8 +26,12 @@ AccessType HttpCommandAdapter::CheckAccess(int handlerType,const std::string& na
     if(!strncmp(name.c_str(), "header-", 7))
         return atReadWrite;
 
-    if(handlerType == EH_HTTP_RESPONSE && !strcmp(name.c_str(), "status"))
-        return atReadWrite;
+    if(handlerType == EH_HTTP_RESPONSE)
+    {
+        if(!strcmp(name.c_str(), "status") || !strcmp(name.c_str(), "message")
+        || !strcmp(name.c_str(), "abonent") || !strcmp(name.c_str(), "usr"))
+            return atReadWrite;
+    }
 
     if(handlerType == EH_HTTP_REQUEST)
     {
@@ -96,6 +83,8 @@ Property* HttpCommandAdapter::getRequestProperty(const std::string& name)
         prop = new AdapterProperty(name, this, cmd.getSitePort());
     else if(!strcmp(name.c_str(), "message"))
         prop = new AdapterProperty(name, this, cmd.getMessageText());
+    else if(!strcmp(name.c_str(), "usr"))
+        prop = new AdapterProperty(name, this, cmd.getUSR());
 
     if(prop)
         PropertyPool.Insert(name.c_str(), prop);
@@ -116,6 +105,12 @@ Property* HttpCommandAdapter::getResponseProperty(const std::string& name)
         prop = new AdapterProperty(name, this, cmd.getHeaderField(name.c_str() + 7));
     else if(!strcmp(name.c_str(), "status"))
         prop = new AdapterProperty(name, this, cmd.getStatus());
+    else if(!strcmp(name.c_str(), "abonent"))
+        prop = new AdapterProperty(name, this, cmd.getAbonent());
+    else if(!strcmp(name.c_str(), "usr"))
+        prop = new AdapterProperty(name, this, cmd.getUSR());
+    else if(!strcmp(name.c_str(), "message"))
+        prop = new AdapterProperty(name, this, cmd.getMessageText());
 
     if(prop)
         PropertyPool.Insert(name.c_str(), prop);
@@ -143,6 +138,12 @@ void HttpCommandAdapter::changed(AdapterProperty& property)
 
         if(!strcmp(property.GetName().c_str(), "status"))
             cmd.setStatus(property.getInt());
+        else if(!strcmp(property.GetName().c_str(), "abonent"))
+            cmd.setAbonent(property.getStr());
+        else if(!strcmp(property.GetName().c_str(), "usr"))
+            cmd.setUSR(property.getInt());
+        else if(!strcmp(property.GetName().c_str(), "message"))
+            cmd.setMessageText(property.getStr());
     }
     else if(command.getCommandId() == HTTP_REQUEST)
     {
@@ -150,7 +151,7 @@ void HttpCommandAdapter::changed(AdapterProperty& property)
 
         if(!strncmp(property.GetName().c_str(), "param-", 6))
             cmd.setQueryParameter(property.GetName().c_str() + 6, property.getStr());
-        if(!strcmp(property.GetName().c_str(), "abonent"))
+        else if(!strcmp(property.GetName().c_str(), "abonent"))
             cmd.setAbonent(property.getStr());
         else if(!strcmp(property.GetName().c_str(), "site"))
             cmd.setSite(property.getStr());
@@ -162,6 +163,8 @@ void HttpCommandAdapter::changed(AdapterProperty& property)
             cmd.setSitePort(property.getInt());
         else if(!strcmp(property.GetName().c_str(), "message"))
             cmd.setMessageText(property.getStr());
+        else if(!strcmp(property.GetName().c_str(), "usr"))
+            cmd.setUSR(property.getInt());
     }
 }
 

@@ -18,14 +18,24 @@
             </restriction>
         </simpleType>
         
+<!--        <simpleType name="httpHeader">
+            <restriction base="string">
+                <pattern value="#header\-\p{L}+[\w_\-]*"/>
+            </restriction>
+        </simpleType> -->
+
         <simpleType name="Command">
             <restriction base="scag:Command">
-		<!-- TODO: add http fields -->
-                <enumeration value="#aaa"/>
-                <enumeration value="#bbb"/>
-                <enumeration value="#ccc"/>
-                <enumeration value="#ddd"/>
-            </restriction>    
+                <enumeration value="#abonent"/>
+                <enumeration value="#path"/>
+                <enumeration value="#site"/>
+                <enumeration value="#port"/>
+                <enumeration value="#filename"/>
+                <enumeration value="#message"/>
+                <enumeration value="#status"/>
+<!--                <enumeration value="#header-*"/>
+                <enumeration value="#param-*"/> -->
+            </restriction>
         </simpleType>
         
         <complexType name="RuleType">

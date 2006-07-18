@@ -114,6 +114,8 @@ RuleStatus HttpEventHandler::process(SCAGCommand& command, Session& session)
     if (operatorId == 0) 
         throw SCAGException("HttpEventHandler: Cannot find OperatorID for %s abonent", abonentAddr.toString().c_str());
 
+    smsc_log_debug(logger, "HttpEventHandler: Operator found. Id = %d", operatorId);
+
     CommandProperty cp(command, 0, abonentAddr, operatorId, hc.getProviderId(), CO_HTTP_DELIVERY);
 
     switch(hc.getCommandId())
