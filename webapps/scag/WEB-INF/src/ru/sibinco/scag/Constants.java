@@ -118,6 +118,7 @@ public class Constants {
             public static final Constants COULDNT_APPLY = new Constants("error.services.couldnt_apply");
             public static final Constants notAuthorizedForDeletingService = new Constants("error.services.notAuthorizedForDeletingService");
             public static final Constants couldntGetServiceInfo = new Constants("error.services.couldntGetServiceInfo");
+            public static final Constants COULDNT_DELETE_SERVICE_RULE_IS_EDITING = new Constants("error.services.couldntDelete");
         }
 
         public interface providers {
@@ -152,6 +153,7 @@ public class Constants {
 
         public interface rules {
             public static final Constants COULD_NOT_REMOVE_RULE = new Constants("error.rule.not.removed");
+            public static final Constants COULD_NOT_REMOVE_RULE_IS_EDITING = new Constants("error.rule.not.removed.is.editing");
         }
 
         public interface stat {

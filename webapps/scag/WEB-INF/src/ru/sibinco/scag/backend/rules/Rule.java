@@ -45,18 +45,6 @@ public class Rule
     this.body.addAll(body);
   }
 
-  public boolean isLocked() {
-    return locked;
-  }
-
-  public void lock() {
-    locked = true;
-  }
-
-  public void unlock() {
-    locked = false;
-  }
-
   public static Rule createNewRule(long id,String transport)
   {
     LinkedList body=new LinkedList();

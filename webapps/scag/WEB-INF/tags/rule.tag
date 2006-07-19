@@ -10,10 +10,11 @@
 <%@attribute name="tname" required="true"%>
 <%@attribute name="ttitle" required="true"%>
 <%@attribute name="exists" required="true"%>
+<%@attribute name="locked" required="true"%>
      <script>
      function openJedit(id,action)
      {
-       if (window.jEdit) {         
+       if (window.jEdit) {
          window.jEdit.openjEditView(action,id);
        } else {
          window.open("<%=request.getContextPath()%>/rules/rules/jedit.jsp?id="+id+"&action="+action,"","width=1,height=1,left="+screen.availWidth+",top="+screen.availHeight);
@@ -25,11 +26,11 @@
   <sm-ep:property title = "${ttitle}">
      <c:choose>
         <c:when test="${exists}">
-              <input type=button onClick="return openJedit('${smf:getComplexRuleId(bean.id,tname)}','edit')" value="<fmt:message>service.edit.rule.edit</fmt:message>" > |
-              <input type=submit name="deleteRule${tname}" value="<fmt:message>service.edit.rule.delete</fmt:message>">
+             <input type=submit <c:if test="${locked}">disabled</c:if> onClick="return openJedit('${smf:getComplexRuleId(bean.id,tname)}','edit')" value="<fmt:message>service.edit.rule.edit</fmt:message>"> |
+             <input type=submit <c:if test="${locked}">disabled</c:if> name="deleteRule${tname}" value="<fmt:message>service.edit.rule.delete</fmt:message>">
         </c:when>
         <c:otherwise>
-            <input type=button onClick="return openJedit('${smf:getComplexRuleId(bean.id,tname)}','add')" value="<fmt:message>service.edit.rule.add</fmt:message>">
+             <input type=submit <c:if test="${locked}">disabled</c:if> onClick="return openJedit('${smf:getComplexRuleId(bean.id,tname)}','add')" value="<fmt:message>service.edit.rule.add</fmt:message>">
         </c:otherwise>
      </c:choose>
-   </sm-ep:property>
+  </sm-ep:property>

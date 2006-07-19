@@ -16,6 +16,7 @@ import ru.sibinco.scag.backend.service.ServiceProvider;
 import ru.sibinco.scag.backend.service.ServiceProvidersManager;
 import ru.sibinco.scag.backend.transport.Transport;
 import ru.sibinco.scag.beans.*;
+import ru.sibinco.scag.beans.rules.RuleState;
 import ru.sibinco.scag.util.Utils;
 
 import javax.servlet.http.HttpServletRequest;
@@ -210,14 +211,16 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     private void deleteRule(String transport) throws SCAGJspException {
+        RuleState ruleState = appContext.getRuleManager().getRuleStateAndLock(Long.toString(id), transport);
+        if (ruleState.getLocked())
+            throw new SCAGJspException(ru.sibinco.scag.Constants.errors.rules.COULD_NOT_REMOVE_RULE_IS_EDITING);
         try {
             appContext.getRuleManager().removeRule(Long.toString(id), transport, RuleManager.NON_TERM_MODE, getLoginedPrincipal().getName());
         } catch (SibincoException se) {
-            if (!(se instanceof StatusDisconnectedException)) {
-                logger.error("Couldn't remove rule",se);
-                //se.printStackTrace();/*PRINT ERROR ON THE SCREEN;*/
-                throw new SCAGJspException(Constants.errors.rules.COULD_NOT_REMOVE_RULE, se);
-            }
+           logger.error("Couldn't remove rule",se);
+           throw new SCAGJspException(Constants.errors.rules.COULD_NOT_REMOVE_RULE, se);
+        } finally {
+            appContext.getRuleManager().unlockRule(Long.toString(id), transport);
         }
     }
 
@@ -309,16 +312,16 @@ public class Edit extends TabledEditBeanImpl {
         this.editChild = editChild;
     }
 
-    public boolean isSmppRuleExists() {
-        return (appContext.getRuleManager().checkRuleFileExists(String.valueOf(id), Transport.SMPP_TRANSPORT_NAME));
+    public RuleState getSmppRuleState() {
+        return (appContext.getRuleManager().getRuleState(String.valueOf(id), Transport.SMPP_TRANSPORT_NAME));
     }
 
-    public boolean isHttpRuleExists() {
-        return (appContext.getRuleManager().checkRuleFileExists(String.valueOf(id), Transport.HTTP_TRANSPORT_NAME));
+    public RuleState getHttpRuleState() {
+        return (appContext.getRuleManager().getRuleState(String.valueOf(id), Transport.HTTP_TRANSPORT_NAME));
     }
 
-    public boolean isMmsRuleExists() {
-        return (appContext.getRuleManager().checkRuleFileExists(String.valueOf(id), Transport.MMS_TRANSPORT_NAME));
+    public RuleState getMmsRuleState() {
+        return (appContext.getRuleManager().getRuleState(String.valueOf(id), Transport.MMS_TRANSPORT_NAME));
     }
 
     public String getMbAddSmppRoute() {

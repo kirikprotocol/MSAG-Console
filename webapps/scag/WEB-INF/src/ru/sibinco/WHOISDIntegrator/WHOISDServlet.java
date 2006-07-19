@@ -5,6 +5,7 @@ import ru.sibinco.scag.backend.rules.Rule;
 import ru.sibinco.scag.backend.rules.RuleManager;
 import ru.sibinco.scag.backend.transport.Transport;
 import ru.sibinco.scag.beans.rules.applet.MiscUtilities;
+import ru.sibinco.scag.beans.rules.RuleState;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.StatusDisconnectedException;
@@ -144,10 +145,9 @@ public class WHOISDServlet extends HttpServlet {
      try {
      for (byte i =0 ;i<transports.length;i++) {
        ruleWHOISD = (Rule)rulesWHOISD.get(transports[i]);
-       Rule curRule = rulemanager.getRule(service,transports[i]);
-       if (curRule!=null && curRule.isLocked()) throw new WHOISDException("Rule ["+transports[i]+"] is editing in MSAG web admin console right now");
+       RuleState curRuleState = rulemanager.getRuleStateAndLock(service,transports[i]);
        if (ruleWHOISD == null) {
-         if (curRule!=null) {
+         if (curRuleState.getExists()) {
            rulemanager.removeRule(service,transports[i]);
          }
          continue;
@@ -158,21 +158,23 @@ public class WHOISDServlet extends HttpServlet {
        } catch(WHOISDException e) {
          throw new WHOISDException(composeErrorMessage(ruleWHOISD,termAsList, e.getMessage(), e.getLineNumber()));
        }
-       if (ruleWHOISD != null && curRule!=null) {
+       if (ruleWHOISD != null && curRuleState.getExists()) {
           LinkedList error = rulemanager.updateRule(ruleWHOISD,service,transports[i]);
           if (error != null && error.size()>0)
             throw new WHOISDException(composeErrorMessage(ruleWHOISD,termAsList, (String)error.get(0) + " Line in term - {0}.", Integer.parseInt((String)error.get(1))) );
-       } else if (ruleWHOISD != null && curRule==null) {
+       } else if (ruleWHOISD != null && !curRuleState.getExists()) {
           LinkedList error = rulemanager.AddRule(ruleWHOISD,service, transports[i]);
           if (error != null && error.size()>0)
             throw new WHOISDException(composeErrorMessage(ruleWHOISD,termAsList, (String)error.get(0) + " Line in term - {0}.", Integer.parseInt((String)error.get(1))) );
        }
      }
+     rulemanager.applyTerm(RuleManagerWrapper.TERM_COMMIT);
      } catch (Exception e) {
        rulemanager.applyTerm(RuleManagerWrapper.TERM_ROLLBACK);
        throw e;
+     } finally {
+       rulemanager.unlockRules();
      }
-     rulemanager.applyTerm(RuleManagerWrapper.TERM_COMMIT);
    }
 
    private String composeErrorMessage(Rule ruleWHOISD, LinkedList termAsList, String errormessage, int linenumber) {
@@ -319,10 +321,9 @@ public class WHOISDServlet extends HttpServlet {
     String transport = req.getParameter("transport");
     if (transport == null) throw new WHOISDException("transport parameter is missed!");
     transport = transport.toUpperCase();
-    validateTransportParameter(transport);
+    validateTransportParameter(transport);    
     Rule rule = appContext.getRuleManager().getRule(serviceId.toString(),transport);
     if (rule == null) throw new WHOISDException("There is no rule for service with id = " + serviceId + " and transport "+ transport);
-    if (rule.isLocked()) throw new WHOISDException("Rule is editing in MSAG web admin console right now");
     LinkedList result = new LinkedList(rule.getBody());
     result.removeFirst();
     return result;

@@ -45,11 +45,15 @@
    </servlet>
    <servlet>
      <servlet-name>WHOISD</servlet-name>
-     <servlet-class>ru.sibinco.WHOISDIntegrator.WHOISDServlet</servlet-class>     
+     <servlet-class>ru.sibinco.WHOISDIntegrator.WHOISDServlet</servlet-class>
    </servlet>
    <servlet>
      <servlet-name>resource</servlet-name>
      <servlet-class>ru.sibinco.scag.util.ResourceServlet</servlet-class>
+   </servlet>
+   <servlet>
+     <servlet-name>remoteClassLoader</servlet-name>
+     <servlet-class>ru.sibinco.scag.util.RemoteClassLoader</servlet-class>
    </servlet>
   <filter>
     <filter-name>SCAG</filter-name>
@@ -214,6 +218,11 @@
    <servlet-mapping>
      <servlet-name>resource</servlet-name>
      <url-pattern>/resource/*</url-pattern>
+   </servlet-mapping>
+
+   <servlet-mapping>
+     <servlet-name>remoteClassLoader</servlet-name>
+     <url-pattern>/rules/rules/ru/sibinco/scag/*</url-pattern>
    </servlet-mapping>
   <filter-mapping>
     <filter-name>SCAG</filter-name>

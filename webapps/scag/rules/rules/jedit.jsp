@@ -12,8 +12,23 @@
               function openjEditView(action,id)
               {
                 document.focus();
-                if (action == "edit") document.jedit.openRule(id);
-                  else document.jedit.newRule(id);
+                var checkResult = null;
+                if (action == "edit") checkResult = document.jedit.openRule(id);
+                  else checkResult = document.jedit.newRule(id);
+                if (checkResult)
+                {
+                  alertError(checkResult);
+                  opener.document.opForm.submit();
+                }
+              }
+
+              function alertError(checkResult) {
+                if (checkResult == 'jEdit.rule_state.existError')
+                  opener.alert("<fmt:message>jEdit.rule_state.existError</fmt:message>");
+                else if (checkResult == 'jEdit.rule_state.notExistError')
+                  opener.alert("<fmt:message>jEdit.rule_state.notExistError</fmt:message>");
+                else if (checkResult == 'jEdit.rule_state.lockedError')
+                  opener.alert("<fmt:message>jEdit.rule_state.lockedError</fmt:message>");                  
               }
 
               function openjEditWindow(action,id)

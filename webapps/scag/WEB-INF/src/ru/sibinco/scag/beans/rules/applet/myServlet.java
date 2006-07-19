@@ -5,6 +5,7 @@ import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.rules.Rule;
 import ru.sibinco.scag.backend.rules.RuleManager;
 import ru.sibinco.scag.Constants;
+import ru.sibinco.scag.beans.rules.RuleState;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.StatusDisconnectedException;
 
@@ -61,6 +62,7 @@ public class myServlet extends HttpServlet
   protected static final int Title = 32;
   protected static final int UnLockServiceRule = 34;
   protected static final int RuleHeaderLineNumber = 35;
+  protected static final int getRuleStateAndLock = 36;
   protected HttpSession session = null;
 
   // public static String userdir=null;
@@ -88,13 +90,14 @@ public class myServlet extends HttpServlet
        case ParseXml:   li=ParseXml(file); SendResult(li,res); break;
        case RootElement:li=RootElement(req);   SendResult(li,res); break;
        case LoadRule:   li=LoadRule(req,file,transport); SendResult(li,res); break;
-       case LoadNewRule:li=LoadNewRule(file,transport); SendResult(li,res); break;
+       case LoadNewRule:li=LoadNewRule(req,file,transport); SendResult(li,res); break;
        case ExistRule:  ExistRule(req,file,transport,res); break;
        case Transport : list=getTransport(transport);break;
        case SaveBackup: list=SaveBackup(new File(file), req); break;
        case UnLockServiceRule: unlockRule(req,file,transport); break;
        case Title: getTitle(req,file,transport,res); break;
        case RuleHeaderLineNumber: getRuleHeaderLineNumber(res);
+       case getRuleStateAndLock: getRuleStateAndLock(req,file,transport,res);
        default:
         if (req.getParameter("renameto")!=null) list=RenameTo(new File(file),new File(req.getParameter("renameto")));
         else if (req.getParameter("intparam")!=null) list=FilesCommand(file,command,Integer.parseInt(req.getParameter("intparam")));
@@ -165,7 +168,9 @@ public class myServlet extends HttpServlet
  }
 
   private void unlockRule(HttpServletRequest req,final String file, final String transport) {
-  //TODO
+     System.out.println("!!!!!unlock rule id = " + file + " transport = " + transport);
+     SCAGAppContext appContext = (SCAGAppContext) req.getAttribute(Constants.APP_CONTEXT);
+     appContext.getRuleManager().unlockRule(file, transport.toUpperCase());
   }
 
   private void getTitle(HttpServletRequest req, final String file, final String transport, HttpServletResponse res) {
@@ -191,6 +196,18 @@ public class myServlet extends HttpServlet
      } catch (Throwable e) {
        e.printStackTrace();
      }
+  }
+
+  private void getRuleStateAndLock(HttpServletRequest req, final String file, final String transport, HttpServletResponse res) {
+    SCAGAppContext appContext = (SCAGAppContext) req.getAttribute(Constants.APP_CONTEXT);
+    try {
+     RuleState ruleState = appContext.getRuleManager().getRuleStateAndLock(file,transport);
+     ObjectOutputStream out = new ObjectOutputStream(res.getOutputStream());
+     out.writeObject(ruleState);
+     out.flush();
+     out.close();
+    } catch(Throwable e) {
+    }
   }
 
   private void updateRule(HttpServletRequest req,final String file, final String transport, HttpServletResponse res) throws IOException
@@ -274,19 +291,20 @@ public class myServlet extends HttpServlet
       System.out.println("LoadRule id= "+file+" transport="+transport);
       SCAGAppContext appContext = (SCAGAppContext) req.getAttribute(Constants.APP_CONTEXT);
       Rule rule = appContext.getRuleManager().getRule(file ,transport);
-      //rule.lock();
       return rule.getBody();
     }
 
-  private LinkedList LoadNewRule(final String file, final String transport)
+  private LinkedList LoadNewRule(HttpServletRequest req, final String file, final String transport)
   {
     System.out.println("LoadNewRule id= "+file + " transport = "+transport);
     Rule newRule=Rule.createNewRule(Long.parseLong(file),transport);
     LinkedList li;
     li=newRule.getBody();
     System.out.println("body size = " + li.size());
-    if(li.size()>0) li.addFirst("ok");
-    else li.add("error: newRule is null!");
+    if(li.size()>0) {
+      li.addFirst("ok");
+    } else
+       li.add("error: newRule is null!");
     return li;
   }
 

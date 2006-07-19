@@ -4,6 +4,7 @@ import ru.sibinco.scag.backend.rules.RuleManager;
 import ru.sibinco.scag.backend.rules.Rule;
 import ru.sibinco.scag.backend.installation.HSDaemon;
 import ru.sibinco.scag.beans.rules.applet.MiscUtilities;
+import ru.sibinco.scag.beans.rules.RuleState;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.StatusDisconnectedException;
 import ru.sibinco.lib.backend.util.Functions;
@@ -12,9 +13,7 @@ import java.io.File;
 import java.io.BufferedReader;
 import java.io.StringReader;
 import java.io.IOException;
-import java.util.LinkedList;
-import java.util.Iterator;
-import java.util.ArrayList;
+import java.util.*;
 import java.lang.reflect.Method;
 
 /**
@@ -30,9 +29,11 @@ public class RuleManagerWrapper {
   private final static String WHOISD_USER = "whoisd user";
   private final RuleManager rulemanager;
   private ArrayList ruleCommands;
+  private ArrayList lockedRules;
   public RuleManagerWrapper(RuleManager rulemanager) {
     this.rulemanager = rulemanager;
     ruleCommands = new ArrayList(3);
+    lockedRules = new ArrayList(3);
   }
 
   public LinkedList AddRule(final Rule rule, final String service, final String transport) throws SibincoException, IOException {
@@ -74,6 +75,21 @@ public class RuleManagerWrapper {
     return rulemanager.getRule(ruleId,transport);
   }
 
+  public RuleState getRuleStateAndLock(String ruleId, String transport) throws WHOISDException {
+    RuleState curRuleState =  rulemanager.getRuleStateAndLock(ruleId,transport);
+    if (curRuleState.getLocked()) throw new WHOISDException("Rule ["+transport+"] is editing in MSAG web admin console right now");
+    lockedRules.add(Rule.composeComplexId(ruleId, transport));
+    return curRuleState;
+  }
+
+  public void unlockRules() {
+    for (Iterator i = lockedRules.iterator();i.hasNext(); ) {
+      String complexRuleId = (String)i.next();
+      System.out.println("unlocking rule " + complexRuleId);
+      rulemanager.unlockRule(complexRuleId);
+    }
+  }
+
   public String getRuleContentAsString(Rule rule){
     LinkedList ruleBody = rule.getBody();
     String ruleContent="";
@@ -96,7 +112,6 @@ public class RuleManagerWrapper {
 
   public void updateRuleCommit(RuleCommand ruleCommand) throws Exception {
     System.out.println("invoked updateRuleCommit service = "+ ruleCommand.id+" transport = "+ ruleCommand.transport);
-    //TODO
     //we have to save rule_1.xml.new in backup folder
     File ruleFile = rulemanager.composeRuleFile(ruleCommand.transport,ruleCommand.id);
     File currentRuleFile = Functions.createNewFilename(ruleFile);
@@ -121,7 +136,6 @@ public class RuleManagerWrapper {
   public void updateRuleRollback(RuleCommand ruleCommand) throws Exception {
     System.out.println("invoked updateRuleRollback service = "+ ruleCommand.id+" transport = "+ ruleCommand.transport);
     rulemanager.saveMessage("Failed to update rule: ", WHOISD_USER, ruleCommand.id, ruleCommand.transport);
-    //TODO
     //rule_1.xml.new -> rule_1.xml and delete rule_1.xml.new
     File ruleFile = rulemanager.composeRuleFile(ruleCommand.transport,ruleCommand.id);
     File currentRuleFile = Functions.createNewFilename(ruleFile);
@@ -147,7 +161,8 @@ public class RuleManagerWrapper {
   }
 
   public void clear() {
-    ruleCommands.clear();
+     ruleCommands.clear();
+     lockedRules.clear();
   }
 
   private static class RuleCommand {

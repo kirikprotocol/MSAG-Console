@@ -20,6 +20,7 @@ import ru.sibinco.scag.backend.status.StatMessage;
 import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.backend.transport.Transport;
 import ru.sibinco.scag.beans.SCAGJspException;
+import ru.sibinco.scag.beans.rules.RuleState;
 import ru.sibinco.WHOISDIntegrator.RuleManagerWrapper;
 
 import javax.xml.parsers.FactoryConfigurationError;
@@ -42,11 +43,13 @@ public class RuleManager
   public final static int TERM_MODE = 1;
   private final RuleManagerWrapper wrapper;
   private final Map schemas = Collections.synchronizedMap(new HashMap());
+  private final Map ruleStates = Collections.synchronizedMap(new HashMap());
   private final File rulesFolder;
   private final File xsdFolder;
   private final File xslFolder;
   private final Scag scag;
   private final HSDaemon hsDaemon;
+  private final static Object lockObject = new Object();
   private final Logger logger = Logger.getLogger(this.getClass());
   private final static boolean DEBUG = false;
 
@@ -100,7 +103,71 @@ public class RuleManager
     return rule;
   }
 
-  public synchronized void load() throws SibincoException
+  //SYNCHRONIZATION
+  public RuleState getRuleState(String ruleId, String transport) {
+    synchronized (lockObject) {
+      String complexRuleId = Rule.composeComplexId(ruleId,transport);
+      RuleState ruleState = null;
+      ruleState = (RuleState)ruleStates.get(complexRuleId);
+      if (ruleState!=null) return ruleState;
+      ruleState = new RuleState();
+      ruleState.setExists(checkRuleFileExists(ruleId, transport));
+      ruleState.setLocked(false);
+      ruleStates.put(complexRuleId,ruleState);
+      return ruleState;
+    }
+  }
+
+  //this method is called when client want to lock rule!
+  public RuleState getRuleStateAndLock(String ruleId, String transport) {
+    synchronized (lockObject) {
+
+      String complexRuleId = Rule.composeComplexId(ruleId,transport);
+      RuleState ruleState = null;
+      ruleState = (RuleState)ruleStates.get(complexRuleId);
+      if (ruleState!=null) {
+        if (ruleState.getLocked())
+          return ruleState;
+        else {
+          RuleState copy = ruleState.copy();
+          //lock rule!!!
+          ruleState.setLocked(true);
+          //return copy - whith unlocked state - client don't need to lock rule!
+          return copy;
+        }
+      } else {
+        ruleState = new RuleState();
+        ruleState.setExists(checkRuleFileExists(ruleId, transport));
+        ruleState.setLocked(false);
+        RuleState copy = ruleState.copy();
+        //lock rule!!!
+        ruleState.setLocked(true);
+        ruleStates.put(complexRuleId,ruleState);
+        //return copy - when unlocked state - client don't need to lock rule!
+        return copy;
+      }
+    }
+  }
+
+  private void setRuleState(String ruleId, String transport, boolean exists, boolean locked) {
+    synchronized (lockObject) {
+      String complexRuleId = Rule.composeComplexId(ruleId,transport);
+      RuleState ruleState = (RuleState)ruleStates.get(complexRuleId);
+      ruleState.setExists(exists);
+      ruleState.setLocked(locked);
+    }
+  }
+
+  public void unlockRule(String ruleId, String transport) {
+    setRuleState(ruleId, transport, checkRuleFileExists(ruleId, transport), false);
+  }
+
+  public void unlockRule(String complexRuleId) {
+    String[] id_transport = Rule.getIdAndTransport(complexRuleId);
+    unlockRule(id_transport[0], id_transport[1]);
+  }
+
+  public void load() throws SibincoException
   {
     try {
       File folder = null;
@@ -370,7 +437,7 @@ public class RuleManager
 
   public synchronized void removeRule(final String ruleId, final String transport, int mode, String user) throws SibincoException
   {
-  //in term mode file deleted in removeRuleCommit(...) method in RuleManagerWrapper
+        //in term mode file deleted in removeRuleCommit(...) method in RuleManagerWrapper
         try {
           scag.removeRule(ruleId,transport);
           if (mode != TERM_MODE) {
@@ -453,18 +520,22 @@ public class RuleManager
 
     public void removeRulesForService(final String user,final String ruleId) throws SCAGJspException
     {
-      try {
+      //TODO - check if some one else have deleted service!
       String[] transports = Transport.transportTitles;
       for (byte i =0 ;i<transports.length;i++) {
-           boolean ruleExist = checkRuleFileExists(ruleId,transports[i]);
-           if (ruleExist) removeRule(ruleId, transports[i], NON_TERM_MODE, user);
-        }
-      } catch(SibincoException se) {
+          RuleState ruleState = getRuleStateAndLock(ruleId,transports[i]);
+          if (ruleState.getLocked()) throw new SCAGJspException(ru.sibinco.scag.Constants.errors.services.COULDNT_DELETE_SERVICE_RULE_IS_EDITING,ruleId);
+          try {
+            if (ruleState.getExists()) removeRule(ruleId, transports[i], NON_TERM_MODE, user);
+            ruleStates.remove(Rule.composeComplexId(ruleId,transports[i]));
+          } catch(SibincoException se) {
               se.printStackTrace();/*PRINT ERROR ON THE SCREEN;*/
+              unlockRule(ruleId, transports[i]);
               logger.error("Couldn't remove rule");
               throw new SCAGJspException(ru.sibinco.scag.Constants.errors.rules.COULD_NOT_REMOVE_RULE, se);
-       }
-    }
+          }
+      }
+   }
 
     public void removeRuleFile(String ruleId, String transport) throws SibincoException
     {
@@ -478,9 +549,6 @@ public class RuleManager
       File ruleFile= composeRuleFile(transport,ruleId);
       hsDaemon.doOperation(ruleFile,operationType);
     }
-
-  public void unlockAllRules() {
-  }
 
   private String buffertostring(BufferedReader r) throws IOException
   {
