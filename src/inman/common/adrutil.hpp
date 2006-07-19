@@ -12,16 +12,17 @@
 #include <string>
 
 #include "inman/common/types.hpp"
+#include "util/int.h"
 
-#define MAP_MAX_IMSI_AddressLength	8
-#define MAP_MAX_IMSI_AddressValueLength	(MAP_MAX_IMSI_AddressLength*2)
-#define MAP_MAX_ISDN_AddressLength	8
+#define MAP_MAX_IMSI_AddressLength  8
+#define MAP_MAX_IMSI_AddressValueLength (MAP_MAX_IMSI_AddressLength*2)
+#define MAP_MAX_ISDN_AddressLength  8
 
-#define CAP_MAX_SMS_AddressStringLength	10 //CAP-datatypes.maxSMS-AddressStringLength - 1
+#define CAP_MAX_SMS_AddressStringLength 10 //CAP-datatypes.maxSMS-AddressStringLength - 1
 #define CAP_MAX_SMS_AddressValueLength  (CAP_MAX_SMS_AddressStringLength*2)
-#define CAP_MAX_LocationNumber_Length	8
-#define CAP_MAX_TimeAndTimezoneLength	8
-#define CAP_MAX_IMSILength		8
+#define CAP_MAX_LocationNumber_Length 8
+#define CAP_MAX_TimeAndTimezoneLength 8
+#define CAP_MAX_IMSILength    8
 
 #define NUMBERING_ISDN                  1
 #define ToN_INTERNATIONAL               1
@@ -78,7 +79,7 @@ struct TonNpiAddress {
         }
         if (scanned < max_scan)
             return false;
-        
+
         numPlanInd = (unsigned char)iplan;
         typeOfNumber = (unsigned char)itype;
         memcpy(value, addr_value, length = strlen((const char*)addr_value));
@@ -123,34 +124,34 @@ struct MAPSCFinfo { //gsmSCF paramaters
 typedef union TONPI_OCT_u {
     unsigned char tonpi;
     struct {
-	unsigned char reserved_1:1;
-	unsigned char ton:3;
-	unsigned char npi:4;
-    }	st;
+  unsigned char reserved_1:1;
+  unsigned char ton:3;
+  unsigned char npi:4;
+    } st;
 } TONNPI_OCT;
 
 typedef struct TONNPI_ADDRESS_OCTS_s {
-    TONNPI_OCT	    b0;
+    TONNPI_OCT      b0;
     unsigned char   val[CAP_MAX_SMS_AddressStringLength];  //MAX_ADDRESS_VALUE_LENGTH/2
 } TONNPI_ADDRESS_OCTS;
 
 
 typedef struct LOCATION_ADDRESS_OCTS_s {
     union _b0_u {
-	unsigned char ton;	/* type and length of number */
-	struct {
-	    unsigned char oddAdrLen	: 1; /* odd/even number of chars in address */
-	    unsigned char ton		: 7; /* type of number */
-	} st;
+  unsigned char ton;  /* type and length of number */
+  struct {
+      unsigned char oddAdrLen : 1; /* odd/even number of chars in address */
+      unsigned char ton   : 7; /* type of number */
+  } st;
     } b0;
     union _b1_u {
-	unsigned char inds;	/* octet of various indicators */
-	struct {
-	    unsigned char INNid		: 1;
-	    unsigned char npi		: 3;
-	    unsigned char presRestr	: 2;
-	    unsigned char screenId	: 2;
-	} st;
+  unsigned char inds; /* octet of various indicators */
+  struct {
+      unsigned char INNid   : 1;
+      unsigned char npi   : 3;
+      unsigned char presRestr : 2;
+      unsigned char screenId  : 2;
+  } st;
     } b1;
     unsigned char   val[CAP_MAX_LocationNumber_Length]; /* address */
 } LOCATION_ADDRESS_OCTS;
@@ -163,9 +164,9 @@ extern unsigned packMAPAddress2OCTS(const TonNpiAddress& addr, TONNPI_ADDRESS_OC
 //NOTE: alphanumeric numbers is forbidden!
 //Returns 0 in case of error, number of packed octets otherwise
 extern unsigned packMAPAddress2LocationOCTS(const TonNpiAddress& addr,
-						LOCATION_ADDRESS_OCTS * oa);
+            LOCATION_ADDRESS_OCTS * oa);
 extern unsigned unpackOCTS2MAPAddress(TonNpiAddress& addr, TONNPI_ADDRESS_OCTS * oa,
-							    unsigned valLen);
+                  unsigned valLen);
 //according to Q.713 clause 3.4.2 (with GT & SSN)
 extern unsigned packSCCPAddress(SCCP_ADDRESS_T* dst, const char *saddr, unsigned char ssn);
 extern unsigned unpackSCCP2SSN_GT(const SCCP_ADDRESS_T* dst, unsigned char & ssn, char *addr);
