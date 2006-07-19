@@ -226,9 +226,11 @@ inline bool smsCanBeTransliterated(SMS* sms)
   len/=2;
   for(int i=0;i<len;i++)
   {
-    if((ucsbody[i]&0xff00)!=0x0000 && (ucsbody[i]&0xff00)!=0x0400)
+    uint16_t chr;
+    memcpy(&chr,ucsbody+i,2);
+    if((chr&0xff00)!=0x0000 && (chr&0xff00)!=0x0400)
     {
-      __trace2__("cantranslit=false, %x",(unsigned int)ucsbody[i]);
+      __trace2__("cantranslit=false, %x",(unsigned int)chr);
       return false;
     }
   }

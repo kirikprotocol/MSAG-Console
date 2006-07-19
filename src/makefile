@@ -17,7 +17,7 @@ else
 SHARED_OPT:=-shared
 endif
 
-SSL_LIB_DIR:=/usr/lib
+SSL_LIB_DIR:=/usr/local/ssl/lib
 ifeq ($(B64),YES)
 SSL_LIB_DIR:=/usr/lib/sparcv9
 endif
@@ -82,13 +82,13 @@ endif
 
 export SS7_LIBRARY_NAME
 
-CAMMON_INCLUDES = -I$(SMSC_SRCDIR) -I/usr/local/include -I$(SS7_STACK_HOME)/src -DEINSS7_THREADSAFE=1 -DMAP_R12 -D__EXTENSIONS__
+CAMMON_INCLUDES = -I$(SMSC_SRCDIR) -I/usr/local/include -I$(SS7_STACK_HOME)/src -DEINSS7_THREADSAFE=1 -DMAP_R12 -D__EXTENSIONS__ -I/usr/local/ssl/include
 
 CFLAGS := $(CAMMON_INCLUDES) -D_REENTERANT -D_REENTRANT -D_FILE_OFFSET_BITS=64
 CXXFLAGS := $(CAMMON_INCLUDES) -D_REENTERANT -D_REENTRANT -D_FILE_OFFSET_BITS=64
 ifeq ($(CXX),CC)
-COMPFLAGS:=-features=extensions $(XTARGET) -mt -D_POSIX_PTHREAD_SEMANTICS
-CXXFLAGS := $(CXXFLAGS) -library=stlport4
+COMPFLAGS:=-features=extensions -mt -D_POSIX_PTHREAD_SEMANTICS
+CXXFLAGS := $(CXXFLAGS) $(XTARGET) -library=stlport4
 CFLAGS := $(CFLAGS) $(XTARGET)
 endif
 ifeq ($(CXX),CC)

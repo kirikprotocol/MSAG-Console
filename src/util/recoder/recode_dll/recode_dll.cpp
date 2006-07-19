@@ -328,7 +328,8 @@ int RECODE_DECL ConvertUCS2To7Bit(const short* ucs2, int ucs2buff_size,
   }
   for ( int i=0; i < ucs2buff_size/2; ++i )
   {
-    unsigned short ch = (unsigned short)(ucs2[i]);
+    unsigned short ch;
+    memcpy(&ch,ucs2+i,2);
     if ( ch > 255 ) {
       const unsigned char* sequence = Translit(ConvertW2C(ch,CONV_ENCODING_CP1251),CONV_ENCODING_CP1251,
                                               prev_is_capital?CONV_PREVIOUS_IS_CAPITAL:0,&prev_is_capital);
