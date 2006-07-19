@@ -69,7 +69,7 @@ private:
 	mutable char* user_data;
 
 public:        
-    Message() { reset(); };
+    Message() : user_data(0) { reset(); };
 	~Message(){if(user_data) delete[] user_data;};
     Message(const Message& msg) 
         : id(msg.id), attempts(msg.attempts), abonent(msg.abonent), message(msg.message),
