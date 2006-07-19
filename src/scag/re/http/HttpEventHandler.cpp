@@ -76,21 +76,31 @@ RuleStatus HttpEventHandler::processResponse(HttpCommand& command, Session& sess
     return rs;
 }
 
-RuleStatus HttpEventHandler::processDelivery(HttpCommand& command, Session& session)
+RuleStatus HttpEventHandler::processDelivery(HttpCommand& command, Session& session, CommandProperty& cp)
 {
     smsc_log_debug(logger, "Process HttpEventHandler Delivery...");
 
+    Hash<Property> _constants;
+    RuleStatus rs;
+
+    HttpCommandAdapter _command(command);
+
     try{
-//        RegisterTrafficEvent(cp, session.getPrimaryKey(), "");
         session.setCurrentOperation(command.getOperationId());
-        session.closeCurrentOperation();            
+
+        RegisterTrafficEvent(cp, session.getPrimaryKey(), "");
+
+        ActionContext context(_constants, session, _command, cp);
+
+        rs = RunActions(context);
+        session.closeCurrentOperation();
+
+        return rs;
     } catch (SCAGException& e)
     {
         smsc_log_debug(logger, "HttpEventHandler: cannot process delivery command - %s", e.what());
         //TODO: отлуп в стейт-машину
     }
-
-    RuleStatus rs;
 
     rs.status = false;
     rs.result = -1;
@@ -131,7 +141,7 @@ RuleStatus HttpEventHandler::process(SCAGCommand& command, Session& session)
         case HTTP_RESPONSE:
             return processResponse(hc, session, cp);
         case HTTP_DELIVERY:
-            return processDelivery(hc, session);
+            return processDelivery(hc, session, cp);
         default:
             smsc_log_debug(logger, "HttpEventHandler: unknown command");
     }
