@@ -2712,33 +2712,6 @@ StateType StateMachine::forward(Tuple& t)
     }
   }
 
-  if(sms.getState()==EXPIRED_STATE)
-  {
-    smsc_log_warn(smsLog, "FWD: sms in expired state msgId=%lld",t.msgId);
-    sms.setLastResult(Status::EXPIRED);
-    smsc->getScheduler()->InvalidSms(t.msgId);
-    return EXPIRED_STATE;
-  }
-
-  time_t now=time(NULL);
-  if((sms.getValidTime()<=now && sms.getLastResult()!=0) || //expired or
-     RescheduleCalculator::calcNextTryTime(now,sms.getLastResult(),sms.getAttemptsCount())==-1) //max attempts count reached
-  {
-    sms.setLastResult(Status::EXPIRED);
-    smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
-    smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
-    try{
-      smsc->getScheduler()->InvalidSms(t.msgId);
-      store->changeSmsStateToExpired(t.msgId);
-    }catch(...)
-    {
-      __warning__("FORWARD: failed to change state to expired");
-    }
-    info2(smsLog, "FWD: %lld expired (valid:%u - now:%u)",t.msgId,sms.getValidTime(),now);
-    sendFailureReport(sms,t.msgId,EXPIRED_STATE,"expired");
-    return EXPIRED_STATE;
-  }
-
   if(sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnDelivery  && sms.billingRecord)
   {
     try{
@@ -2783,7 +2756,33 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     return ERROR_STATE;
   }
 
+  if(sms.getState()==EXPIRED_STATE)
+  {
+    smsc_log_warn(smsLog, "FWD: sms in expired state msgId=%lld",t.msgId);
+    sms.setLastResult(Status::EXPIRED);
+    smsc->getScheduler()->InvalidSms(t.msgId);
+    return EXPIRED_STATE;
+  }
+
   time_t now=time(NULL);
+  if((sms.getValidTime()<=now && sms.getLastResult()!=0) || //expired or
+     RescheduleCalculator::calcNextTryTime(now,sms.getLastResult(),sms.getAttemptsCount())==-1) //max attempts count reached
+  {
+    sms.setLastResult(Status::EXPIRED);
+    smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
+    smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
+    try{
+      smsc->getScheduler()->InvalidSms(t.msgId);
+      store->changeSmsStateToExpired(t.msgId);
+    }catch(...)
+    {
+      __warning__("FORWARD: failed to change state to expired");
+    }
+    info2(smsLog, "FWD: %lld expired (valid:%u - now:%u)",t.msgId,sms.getValidTime(),now);
+    sendFailureReport(sms,t.msgId,EXPIRED_STATE,"expired");
+    return EXPIRED_STATE;
+  }
+
 
   if(sms.hasIntProperty(Tag::SMSC_MERGE_CONCAT) && sms.getIntProperty(Tag::SMSC_MERGE_CONCAT)!=3)
   {
