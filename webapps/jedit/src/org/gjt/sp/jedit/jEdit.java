@@ -36,6 +36,7 @@ import java.util.*;
 import java.util.List;
 import java.applet.Applet;
 import java.applet.AppletContext;
+import java.lang.reflect.Method;
 
 import org.gjt.sp.jedit.buffer.BufferIORequest;
 import org.gjt.sp.jedit.buffer.KillRing;
@@ -144,9 +145,14 @@ public class jEdit extends Applet
     args[0]=getParameter("file");
 
   }
-  public void openRule(final String userFile)
+  public String openRule(final String userFile)
    {
      stopped = false;
+     String validationResult = validate(userFile, false);
+     if (validationResult!=null) {
+       setWindowClosed(editRule);
+       return validationResult;
+     }       
      if(!initialized) {
        initialize();
        initialized = true;
@@ -158,12 +164,18 @@ public class jEdit extends Applet
      setBooleanProperty("newRule",false);
       this.main2(args);
      isNotReload=true;
+     return null;
      //}
    }
 
-  public void newRule(final String userFile)
+  public String newRule(final String userFile)
     {
       stopped = false;
+      String validationResult = validate(userFile, true);
+      if (validationResult!=null) {
+        setWindowClosed(addRule);
+        return validationResult;
+      }
       if(!initialized) {
         initialize();
         initialized = true;
@@ -176,6 +188,7 @@ public class jEdit extends Applet
       this.main2(args);
       isNotReload=true;
       //}
+      return null;
     }
 
   public void stop()
@@ -184,6 +197,40 @@ public class jEdit extends Applet
    //  isNotReload=true;
     //initialized = false;
     super.stop();
+  }
+
+  private String validate(String userFile, boolean newRule) {
+    boolean isLocked = false;
+    boolean isExist = false;
+    Object ruleState = getObject(userFile,getRuleStateAndLock);
+    try {
+       Method locked = ruleState.getClass().getMethod("getLocked",new Class[]{});
+       isLocked = ((Boolean)locked.invoke(ruleState,new Object[]{})).booleanValue();
+       Method exist = ruleState.getClass().getMethod("getExists",new Class[]{});
+       isExist = ((Boolean)exist.invoke(ruleState,new Object[]{})).booleanValue();
+      System.out.println("!!!!Rule isLocked = " + isLocked);
+      if (isLocked) {
+        return (String)ruleState.getClass().getField("lockedError").get(ruleState) ;
+      }
+      if (newRule) {
+        //somebody has created it before you press "Add" button
+        if (isExist) {
+          //rule was locked by command, so we need to unlock it first!
+          unlockRule(userFile);
+          return (String)ruleState.getClass().getField("existError").get(ruleState) ;
+        }
+      } else {
+        //somebody has deleted it before you press "Edit" button
+        if (!isExist) {
+          //rule was locked by command, so we need to unlock it first!
+          unlockRule(userFile);
+          return (String)ruleState.getClass().getField("notExistError").get(ruleState) ;
+        }
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return null;
   }
 
   public static boolean isDestroyed()
@@ -199,7 +246,8 @@ public class jEdit extends Applet
   public void destroy()
   {
     System.out.println("Destroying...");
-    //unlockAllRules();
+    //unlock rules of this instance of jedit!!!
+    unlockAllRules();
     stopped = true;
     destroyed=true;
     startupDone=false;
@@ -1678,6 +1726,7 @@ public class jEdit extends Applet
     removeBufferFromList(buffer);
     buffer.close();
     DisplayManager.bufferClosed(buffer);
+    unlockRule(path);
     System.out.println("jEdit._closeBuffer line 1654 EditBus.send(new BufferUpdate(buffer, view, BufferUpdate.CLOSED))");
     EditBus.send(new BufferUpdate(buffer, view, BufferUpdate.CLOSED));
 
@@ -1755,6 +1804,7 @@ public class jEdit extends Applet
 
       buffer.close();
       DisplayManager.bufferClosed(buffer);
+      unlockRule(buffer.getSymlinkPath());
       if (!isExiting) {
         EditBus.send(new BufferUpdate(buffer, view,
                 BufferUpdate.CLOSED));
@@ -2458,10 +2508,6 @@ public class jEdit extends Applet
       // Byebye...
      // System.exit(0);
     }
-    /*if (getBooleanProperty("newRule"))
-    {
-    } else
-    unlockRule(path);*/
     setWindowClosed(ruleAction);
   } //}}}
   //{{{ exitView() method
@@ -2535,10 +2581,6 @@ public class jEdit extends Applet
       // Byebye...
      // System.exit(0);
     }
-    /*if (getBooleanProperty("newRule"))
-    {
-    } else
-    unlockRule(path);*/
     setWindowClosed(ruleAction);
   } //}}}
 
@@ -2552,7 +2594,10 @@ public class jEdit extends Applet
   }
 
   private static void unlockAllRules() {
-    unlockRule("");
+    //System.out.println("$$$$$$$$Destroyed$$$$$$$$ " + bufferHash.size());
+    Set ruleIds = bufferHash.keySet();
+    for (Iterator i = ruleIds.iterator();i.hasNext();)
+      unlockRule((String)i.next());
   }
   private static void unlockRule(String file) {
     HashMap h = new HashMap();
@@ -2776,7 +2821,9 @@ public class jEdit extends Applet
   private static boolean destroyed;
   private static Thread mainThread;
   //}}}
-
+  private static final String addRule="addRule";
+  private static final String editRule="EditRule";
+    
   public jEdit()
   {
   }
@@ -3150,6 +3197,7 @@ public class jEdit extends Applet
   protected static final int Title = 32;
   protected static final int UnLockServiceRule = 34;
   protected static final int RuleHeaderLineNumber = 35;
+  protected static final int getRuleStateAndLock = 36;
 
   public static int getRootElement()
   {
@@ -3440,6 +3488,14 @@ public class jEdit extends Applet
     LinkedList list = (LinkedList) HttpGet(args, command);
     return list;
   }
+
+  public static Object getObject(final String file, final int command)
+  {
+    HashMap args = new HashMap();
+    args.put("file", file);
+    LinkedList list = (LinkedList) HttpGet(args, command);
+    return list.get(0);
+  }
   //{{{ HttpGet() method
   /**
    * send file command in servlet via GET method .
@@ -3450,6 +3506,7 @@ public class jEdit extends Applet
     URL url = null;
     HttpURLConnection urlcon = null;
     BufferedReader in = null;
+    ObjectInputStream input = null;
     String content = "?username=" + jEdit.username + "&password=" + jEdit.password + "&command=" + command;
     StringBuffer buf = new StringBuffer(content);
     for (Iterator it = args.keySet().iterator(); it.hasNext();) {
@@ -3469,9 +3526,14 @@ public class jEdit extends Applet
         String status = urlcon.getHeaderField("status");
         if (!status.equals("ok")) throw new FileNotFoundException(status);
       }
-      in = new BufferedReader(new InputStreamReader(urlcon.getInputStream()));
-      while ((inputLine = in.readLine()) != null) {
-        list.add(inputLine);
+      if (command == getRuleStateAndLock) {
+        input = new ObjectInputStream(urlcon.getInputStream());
+        list.add(input.readObject());
+      } else {
+        in = new BufferedReader(new InputStreamReader(urlcon.getInputStream()));
+        while ((inputLine = in.readLine()) != null) {
+          list.add(inputLine);
+        }
       }
     } catch (MalformedURLException e) {
       e.printStackTrace();
@@ -3480,10 +3542,13 @@ public class jEdit extends Applet
       */
     } catch (IOException e) {
       e.printStackTrace();
+    } catch (ClassNotFoundException e) {
+      e.printStackTrace();
     } finally {
       try {
         if (in != null) in.close();
         if (urlcon != null) urlcon.disconnect();
+        if (input !=null) input.close();
       } catch (IOException e) {
         e.printStackTrace();
       }
@@ -4009,7 +4074,7 @@ loop:  for(int i = 0; i < list.length; i++)
   private static void closeView(View view, boolean callExit)
   {
     PerspectiveManager.setPerspectiveDirty(true);
-    String ruleAction = (view.getBuffer().getBooleanProperty("newRule"))?"addRule":"EditRule";
+    String ruleAction = (view.getBuffer().getBooleanProperty("newRule"))?addRule:editRule;
     System.out.println("before if (viewsFirst == viewsLast && callExit)  !!!!");
     if (viewsFirst == viewsLast && callExit) {
       System.out.println("before exit !!!!");
