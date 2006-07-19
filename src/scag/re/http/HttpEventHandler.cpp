@@ -116,7 +116,13 @@ RuleStatus HttpEventHandler::process(SCAGCommand& command, Session& session)
 
     smsc_log_debug(logger, "HttpEventHandler: Operator found. Id = %d", operatorId);
 
-    CommandProperty cp(command, 0, abonentAddr, operatorId, hc.getProviderId(), CO_HTTP_DELIVERY);
+/*    uint32_t providerId = istr.GetProviderID(hc.getServiceId());
+    if (providerId == 0) 
+        throw SCAGException("HttpEventHandler: Cannot find ProviderID for ServiceID=%d", hc.getServiceId());
+
+    smsc_log_debug(logger, "HttpEventHandler: Provider ID found. ID = %d", providerId);*/
+
+    CommandProperty cp(command, 0, abonentAddr, hc.getProviderId(), operatorId, CO_HTTP_DELIVERY);
 
     switch(hc.getCommandId())
     {

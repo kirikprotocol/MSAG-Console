@@ -265,7 +265,7 @@ void HttpRouterImpl::BuildMaps(RouteArray *r, RouteHash *rid, AddressURLHash *au
     {
         rt = &(*r)[i];
 
-//        rt->provider_id = BillingManager::Instance().getInfrastructure().GetProviderID(rt->service_id);
+        rt->provider_id = BillingManager::Instance().getInfrastructure().GetProviderID(rt->service_id);
 
         rid->Insert(rt->id.c_str(), rt);
 
