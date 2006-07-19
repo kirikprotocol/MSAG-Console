@@ -4,20 +4,19 @@
 
 package ru.sibinco.scag.beans.routing.routes.http;
 
-import ru.sibinco.scag.beans.EditBean;
-import ru.sibinco.scag.beans.SCAGJspException;
-import ru.sibinco.scag.beans.CancelChildException;
+import ru.sibinco.lib.SibincoException;
+import ru.sibinco.lib.backend.util.SortedList;
+import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.SCAGAppContext;
-import ru.sibinco.scag.backend.status.StatMessage;
-import ru.sibinco.scag.backend.status.StatusManager;
-import ru.sibinco.scag.backend.service.Service;
 import ru.sibinco.scag.backend.routing.http.*;
 import ru.sibinco.scag.backend.routing.http.placement.AbonentsPlacement;
 import ru.sibinco.scag.backend.routing.http.placement.SitePlacement;
-import ru.sibinco.scag.Constants;
-import ru.sibinco.lib.backend.util.SortedList;
-import ru.sibinco.lib.backend.route.Mask;
-import ru.sibinco.lib.SibincoException;
+import ru.sibinco.scag.backend.service.Service;
+import ru.sibinco.scag.backend.status.StatMessage;
+import ru.sibinco.scag.backend.status.StatusManager;
+import ru.sibinco.scag.beans.CancelChildException;
+import ru.sibinco.scag.beans.EditBean;
+import ru.sibinco.scag.beans.SCAGJspException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -46,7 +45,7 @@ public class Edit extends EditBean {
     public static final String COOKIE_TYPE = "cookie";
 
     private String id;
-    private boolean enabled = true;
+    private boolean enabled;
     private String path = "";
     private String parentId;
     private String serviceName = null;
@@ -194,6 +193,9 @@ public class Edit extends EditBean {
             abonentUsr = getAbonentsPlacements(route.getAbonent().getAbonUsrPlace());
             siteUsr = getSitePlacement(route.getRouteSite().getUsrPlace());
             siteAddress = getSitePlacement(route.getRouteSite().getAddressPlace());
+        }
+        if (isAdd()) {
+            enabled = true;
         }
     }
 
