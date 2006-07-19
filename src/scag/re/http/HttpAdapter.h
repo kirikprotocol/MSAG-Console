@@ -20,10 +20,15 @@ namespace scag { namespace re { namespace http {
     public:
 
         static Hash<AccessType> RequestFieldsAccess;
+        static Hash<AccessType> ResponseFieldsAccess;
+        static Hash<AccessType> DeliveryFieldsAccess;
         static Hash<AccessType> InitRequestAccess();
+        static Hash<AccessType> InitResponseAccess();
+        static Hash<AccessType> InitDeliveryAccess();
 
         Property* getRequestProperty(const std::string& name);
         Property* getResponseProperty(const std::string& name);
+        Property* getDeliveryProperty(const std::string& name);
 
         HttpCommandAdapter(HttpCommand& _command) : CommandAccessor(), command(_command)
         {

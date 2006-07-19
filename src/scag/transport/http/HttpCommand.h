@@ -313,12 +313,16 @@ public:
     void setStatusLine(const std::string& sl) {
         statusLine = sl;
     }
+
+    bool getDelivered() { return delivered; }
+    void setDelivered(bool d) { delivered = d; }
     
     void fillFakeResponse(int s);
     void serialize();
     virtual bool isResponse();
     
 protected:
+    bool delivered;
     std::string statusLine;
     int status;
 };

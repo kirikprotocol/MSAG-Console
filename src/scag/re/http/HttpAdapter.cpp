@@ -52,7 +52,7 @@ AccessType HttpCommandAdapter::CheckAccess(int handlerType,const std::string& na
     AccessType *a = NULL;
 
     if(!strncmp(name.c_str(), "header-", 7))
-        return handlerType == EH_HTTP_DELIVER ? atRead : atReadWrite;
+        return handlerType == EH_HTTP_DELIVERY ? atRead : atReadWrite;
         
     if(handlerType == EH_HTTP_REQUEST)
     {
@@ -184,7 +184,7 @@ Property* HttpCommandAdapter::getProperty(const std::string& name)
 
 void HttpCommandAdapter::changed(AdapterProperty& property)
 {
-    else if(command.getCommandId() == HTTP_RESPONSE)
+    if(command.getCommandId() == HTTP_RESPONSE)
     {
         HttpResponse& cmd = (HttpResponse&)command;
 

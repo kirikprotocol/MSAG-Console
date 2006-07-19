@@ -459,6 +459,7 @@ void HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
         if(se.Get())
         {
             response.setCommandId(HTTP_DELIVERY);
+            response.setDelivered(delivered);
             rs = RuleEngine::Instance().process(response, *se.Get());
 
             if(rs.result > 0 && delivered)
