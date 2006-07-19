@@ -175,17 +175,23 @@ bool ActionContext::checkIfCanSetPending(int operationType, int eventHandlerType
 
         if (commandProperty.commandId == DELIVERY)
         {
-            if (operationType == CO_SUBMIT) result = true;
+            if ((operationType == CO_SUBMIT)||(operationType == CO_DATA_SC_2_SME)) result = true;
             else 
             if ((operationType == CO_USSD_DIALOG)&&
                ((eventHandlerType == EH_RECEIPT)||(eventHandlerType == EH_DELIVER_SM))) result = true;
         } 
 
-        if ((commandProperty.commandId == SUBMIT)&&(commandProperty.cmdType == CO_USSD_DIALOG)&&(operationType == CO_SUBMIT)) 
-            result = true;
+        if (commandProperty.commandId == SUBMIT)
+        {
 
-        if ((commandProperty.commandId == SUBMIT)&&(!commandProperty.cmdType != CO_USSD_DIALOG)&&(operationType == CO_HTTP_DELIVERY)) 
-            result = true;
+            if ((commandProperty.cmdType == CO_USSD_DIALOG)&&(operationType == CO_SUBMIT)) result = true;
+            if ((!commandProperty.cmdType != CO_USSD_DIALOG)&&(operationType == CO_HTTP_DELIVERY)) result = true;
+
+            if (operationType == CO_DATA_SC_2_SME) result = true;
+            if (operationType == CO_SUBMIT) result = true;
+        }
+
+
 
         break;
 

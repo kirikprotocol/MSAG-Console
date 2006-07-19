@@ -4,7 +4,6 @@
 #include <string>
 #include <core/buffers/Hash.hpp>
 #include <scag/re/RuleStatus.h>
-//#include <scag/util/properties/Properties.h>
 #include "scag/sessions/Session.h"
 
 
@@ -89,10 +88,6 @@ namespace scag { namespace re { namespace actions
         }
 
         void setRuleStatus(RuleStatus rs) {status = rs;};
-        //int getServiceId() {return commandProperty.serviceId;}
-        //int getHandlerType() {return m_handlerType;}
-
-        //Address& getAbonentAddr() {return commandProperty.abonentAddr;}
 
         //Comment: 'name' is valid until 'var' is valid
         static FieldType Separate(const std::string& var, const char *& name);
