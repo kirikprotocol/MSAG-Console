@@ -2,29 +2,28 @@ package ru.sibinco.scag.beans.routing.routes;
 
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.route.Mask;
-import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.lib.backend.users.User;
+import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.scag.Constants;
-import ru.sibinco.scag.util.LocaleMessages;
-import ru.sibinco.scag.backend.endpoints.svc.Svc;
+import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.endpoints.centers.Center;
+import ru.sibinco.scag.backend.endpoints.svc.Svc;
 import ru.sibinco.scag.backend.routing.Destination;
 import ru.sibinco.scag.backend.routing.Route;
 import ru.sibinco.scag.backend.routing.Source;
 import ru.sibinco.scag.backend.routing.Subject;
-import ru.sibinco.scag.backend.SCAGAppContext;
+import ru.sibinco.scag.backend.service.Service;
 import ru.sibinco.scag.backend.status.StatMessage;
 import ru.sibinco.scag.backend.status.StatusManager;
-import ru.sibinco.scag.backend.service.Service;
+import ru.sibinco.scag.beans.CancelChildException;
 import ru.sibinco.scag.beans.EditBean;
 import ru.sibinco.scag.beans.SCAGJspException;
-import ru.sibinco.scag.beans.CancelChildException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.util.*;
 import java.security.Principal;
+import java.util.*;
 
 
 /**
@@ -38,9 +37,9 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
     private String[] srcSubjs = new String[0];
     private String[] dstMasks = new String[0];
     private String[] dstSubjs = new String[0];
-    private boolean enabled = true;
+    private boolean enabled;
     private boolean archived;
-    private boolean active = true;
+    private boolean active;
     private String srcSmeId;
     private String notes;
     private String path = "";
@@ -80,7 +79,6 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
                     append("&editId=").append(appContext.getServiceProviderManager().getServiceProviderByServiceId(
                     Long.decode(getParentId())).getId()).append("&editChild=true").toString());
         }
-
         if (getEditId() != null)
             id = getEditId();
         destinations = new HashMap();
@@ -242,6 +240,10 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
                 serviceName = route.getService().getName();
             }
         }
+        if (isAdd()) {
+            enabled = true;
+            active = true;
+        }
     }
 
     protected void save() throws SCAGJspException {
@@ -255,7 +257,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
                 if (routes.containsKey(id))
                     throw new SCAGJspException(Constants.errors.routing.routes.ROUTE_ALREADY_EXISTS, id);
                 routes.put(id,
-                        new Route(id, sources, destinations, archived, enabled, active, srcSmeId,
+                        new Route(id, sources, destinations, isArchived(), isEnabled(), isActive(), srcSmeId,
                                 serviceObj, notes));
                 messagetxt = "Added new route: " + id + " ";
             } else {
