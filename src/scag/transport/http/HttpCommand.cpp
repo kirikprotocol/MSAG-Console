@@ -3,6 +3,7 @@
 #include "util/Exception.hpp"
 #include "HttpCommand.h"
 #include "HttpParser.h"
+#include "scag/exc/SCAGExceptions.h"
 
 #define ICONV_BLOCK_SIZE 32
 #define CRLF "\r\n"
@@ -13,6 +14,7 @@
 namespace scag { namespace transport { namespace http
 {
 using smsc::util::Exception;
+using scag::exceptions::SCAGException;
 
 const char *HttpRequest::httpMethodNames[9] = {
     NULL,
@@ -234,6 +236,9 @@ const std::string& HttpRequest::getQueryParameter(const std::string& paramName)
 
 const std::string& HttpCommand::getMessageText()
 {
+    const std::string &content_type = getHeaderField(content_type_field);
+
+    printf("charset=%s content-type=%s\n", charset.c_str(), getHeaderField(content_type_field).c_str());
     if (charset.length() && (textContent.empty() &&
         !strncasecmp(getHeaderField(content_type_field).c_str(), "text/", 5)))
     {
@@ -245,11 +250,11 @@ const std::string& HttpCommand::getMessageText()
         iconv_t cd = iconv_open("UTF-8", charset.c_str());
 
         if (cd == (iconv_t)(-1))
-            throw Exception("iconv_open() failed");
+            throw SCAGException("getMessageText: iconv_open() failed errno=%d charset=%s content-type=%s", errno, charset.c_str(), content_type.c_str());
 
         if (inbytesleft) {
             if (cd == (iconv_t)(-1))
-                throw Exception("iconv_open() failed");
+                throw SCAGException("getMessageText: iconv_open() failed errno=%d charset=%s content-type=%s", errno, charset.c_str(), content_type.c_str());
         
             TmpBuf<char, 2048> buf(2048);
             buf.SetPos(0);
@@ -270,7 +275,7 @@ const std::string& HttpCommand::getMessageText()
             textContent.assign(buf.get(), buf.GetPos());
 
             if (result == (size_t)(-1))
-                throw Exception("iconv() failed");
+                throw SCAGException("getMessageText: iconv() failed errno=%d charset=%s content-type=%s", errno, charset.c_str(), content_type.c_str());
         }
     }
         
@@ -283,6 +288,7 @@ bool HttpCommand::setMessageText(const std::string& text)
 
     const std::string &content_type = getHeaderField(content_type_field);
 
+    printf("charset=%s content-type=%s\n", charset.c_str(), content_type.c_str());
     if (charset.length() && (content_type.empty() ||
         !strncasecmp(content_type.c_str(), "text/", 5)))
     {  
@@ -294,7 +300,7 @@ bool HttpCommand::setMessageText(const std::string& text)
         iconv_t cd = iconv_open(charset.c_str(), "UTF-8");
 
         if (cd == (iconv_t)(-1))
-            throw Exception("iconv_open() failed");
+            throw SCAGException("setMessageText: iconv_open() failed errno=%d charset=%s content-type=%s", errno, charset.c_str(), content_type.c_str());
 
         content.SetPos(0);
         while (inbytesleft) {
@@ -312,7 +318,7 @@ bool HttpCommand::setMessageText(const std::string& text)
         iconv_close(cd);
 
         if (result == (size_t)(-1))
-            throw Exception("iconv() failed");
+            throw SCAGException("setMessageText: iconv() failed errno=%d charset=%s content-type=%s", errno, charset.c_str(), content_type.c_str());
 
         if (contentLength >= 0) {
             setContentLength(content.GetPos());

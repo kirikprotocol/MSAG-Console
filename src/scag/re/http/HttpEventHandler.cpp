@@ -39,6 +39,9 @@ RuleStatus HttpEventHandler::processRequest(HttpCommand& command, Session& sessi
         //TODO: отлуп в стейт-машину
     }
 
+    if(session.GetCurrentOperation())
+        session.closeCurrentOperation();
+
     rs.status = false;
     rs.result = -1;
     return rs;
@@ -71,6 +74,9 @@ RuleStatus HttpEventHandler::processResponse(HttpCommand& command, Session& sess
         //TODO: отлуп в стейт-машину
     }
 
+    if(session.GetCurrentOperation())
+        session.closeCurrentOperation();
+
     rs.status = false;
     rs.result = -1;
     return rs;
@@ -93,6 +99,7 @@ RuleStatus HttpEventHandler::processDelivery(HttpCommand& command, Session& sess
         ActionContext context(_constants, session, _command, cp);
 
         rs = RunActions(context);
+
         session.closeCurrentOperation();
 
         return rs;
@@ -101,6 +108,9 @@ RuleStatus HttpEventHandler::processDelivery(HttpCommand& command, Session& sess
         smsc_log_debug(logger, "HttpEventHandler: cannot process delivery command - %s", e.what());
         //TODO: отлуп в стейт-машину
     }
+
+    if(session.GetCurrentOperation())
+        session.closeCurrentOperation();
 
     rs.status = false;
     rs.result = -1;
