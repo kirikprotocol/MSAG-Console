@@ -479,7 +479,7 @@ int TaskProcessor::Execute()
 			if (checkEventMask(profile.eventMask, event.cause))
 			{
 				pStorage->addEvent(to, outEvent);
-				pDeliveryQueue->Schedule(to, 0);//((event.cause&0x02)==0x02)); //0x02 - BUSY
+				pDeliveryQueue->Schedule(to, ((event.cause&0x02)==0x02)); //0x02 - BUSY
 				statistics->incMissed();
 				smsc_log_debug(logger, "Abonent %s (couse = 0x%02X) was added to Scheduled Delivery Queue", to.toString().c_str(), event.cause);
 			}
@@ -527,12 +527,10 @@ void TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt)
 	
 	pInfo->abnt = abnt;
 	int timeOffset = smsc::system::common::TimeZoneManager::getInstance().getTimeZone(abnt.getAddress())+timezone;
+//	msg.data_sm = true;
+	msg.secured_data = true;
 	formatter.formatMessage(msg, abnt, events, 0, pInfo->events, timeOffset);
-
-	smsc_log_debug(logger, "!!!!!!!!!!!!!!%s\n", msg.message.c_str());
-
-	msg.data_sm = true;
-//	smsc_log_debug(logger, "ProcessAbntEvents: msg = %s", msg.message.c_str());
+	smsc_log_debug(logger, "ProcessAbntEvents: msg = %s", msg.message.c_str());
 	msg.abonent = abnt.getText();//"777";
 	
 	MutexGuard Lock(smsInfoMutex);

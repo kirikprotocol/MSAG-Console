@@ -30,6 +30,9 @@ namespace smsc { namespace mcisme
     using namespace smsc::core::buffers;
     using smsc::logger::Logger;
 
+
+namespace UDPattern
+{
 	// User Data
 	static const char UDHL = 0x02;
 	static const char IEI = 0x70;
@@ -56,6 +59,10 @@ namespace smsc { namespace mcisme
 												CHL, SPI1, SPI2, KIc, KID, TAR1, TAR2,
 												TAR3, CNTR12345, CNTR12345, CNTR12345,
 												CNTR12345, CNTR12345, PCNTR};
+};
+
+using namespace UDPattern;
+
 struct Message
 {
     uint64_t    id;
@@ -69,7 +76,7 @@ private:
 	mutable char* user_data;
 
 public:        
-    Message() : user_data(0) { reset(); };
+	Message(): user_data(0) { reset(); };
 	~Message(){if(user_data) delete[] user_data;};
     Message(const Message& msg) 
         : id(msg.id), attempts(msg.attempts), abonent(msg.abonent), message(msg.message),

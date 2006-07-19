@@ -356,6 +356,47 @@ public:
             sm.get_optional().set_payloadType(0);
             sm.get_optional().set_messagePayload(out, outLen);
 			sm.get_optional().set_setDpf(1);
+
+            sm.get_header().set_commandLength(sm.size());
+			sm.get_header().set_commandId(SmppCommandSet::DATA_SM);
+            sm.get_header().set_commandStatus(0);
+            sm.get_header().set_sequenceNumber(seqNumber);
+
+            if (msgBuf) delete msgBuf;
+			//sm.dump(stdout, 1);
+			
+			smsc_log_debug(logger, "Sending DATA_SM to %s seq_num = %d", daStr, sm.get_header().get_sequenceNumber());
+            asyncTransmitter->sendPdu(&(sm.get_header()));
+            TrafficControl::incOutgoing();
+
+		}
+		else if(message.secured_data)
+		{
+			const char* out  = message.GetMsg();//.message.c_str();
+			int outLen = message.GetMsgLen();//message.length();
+            
+            char* msgBuf = 0;
+            int msgDataCoding = DataCoding::BINARY;
+
+            EService svcType;
+            strncpy(svcType, processor.getSvcType(), MAX_ESERVICE_TYPE_LENGTH);
+            svcType[MAX_ESERVICE_TYPE_LENGTH]='\0';
+
+            PduDataSm	sm;
+
+			sm.get_data().set_serviceType(svcType);
+			sm.get_data().get_source().set_typeOfNumber(oa.type);
+            sm.get_data().get_source().set_numberingPlan(oa.plan);
+            sm.get_data().get_source().set_value(oa.value);
+            sm.get_data().get_dest()  .set_typeOfNumber(da.type);
+            sm.get_data().get_dest()  .set_numberingPlan(da.plan);
+            sm.get_data().get_dest()  .set_value(da.value);
+            sm.get_data().set_esmClass(SMSC_TRANSACTION_MSG_MODE|0x40); // forward (i.e. transactional)
+			sm.get_data().set_dataCoding(msgDataCoding);
+
+            sm.get_optional().set_payloadType(0);
+            sm.get_optional().set_messagePayload(out, outLen);
+			sm.get_optional().set_setDpf(1);
 			sm.get_optional().set_protocol_id(0x7F);
 
             sm.get_header().set_commandLength(sm.size());
@@ -705,16 +746,12 @@ public:
 
 int main(void)
 {
-#ifdef DEBUG
-	printf("Debug\n");
-	exit(0);
-#endif
     Logger::Init();
     logger = Logger::getInstance("smsc.mcisme.MCISme");
     
- //   atexit(atExitHandler);
-	//clearSignalMask();
-	//shutdownThread.Start();
+    atexit(atExitHandler);
+	clearSignalMask();
+	shutdownThread.Start();
 
     std::auto_ptr<ServiceSocketListener> adml(new ServiceSocketListener());
     adminListener = adml.get();
