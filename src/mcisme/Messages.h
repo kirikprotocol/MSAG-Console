@@ -29,42 +29,105 @@ namespace smsc { namespace mcisme
     using namespace smsc::core::synchronization;
     using namespace smsc::core::buffers;
     using smsc::logger::Logger;
+
+	// User Data
+	static const char UDHL = 0x02;
+	static const char IEI = 0x70;
+	static const char IEIDL = 0x00;
+	// Secured Data
+	static const char CPI = 0x70;
+	static const char CPL1 = 0x00;
+	static const char CPL2 = 0x00;
+	static const char CHI = 0x00;
+	static const char CHL = 0x0D;
+	static const char SPI1 = 0x00;
+	static const char SPI2 = 0x00;
+	static const char KIc = 0x00;
+	static const char KID = 0x00;
+	static const char TAR1 = 0x7F;
+	static const char TAR2 = 0x00;
+	static const char TAR3 = 0x01;
+	static const char CNTR12345 = 0x00;
+	static const char PCNTR = 0x00;
+
+	static const int indexCPL = 0x04;
+	static const int user_data_pattern_len = 21;
+	static const char user_data_pattern[21] = {UDHL, IEI, IEIDL, CPI, CPL1, CPL2, CHI,
+												CHL, SPI1, SPI2, KIc, KID, TAR1, TAR2,
+												TAR3, CNTR12345, CNTR12345, CNTR12345,
+												CNTR12345, CNTR12345, PCNTR};
+struct Message
+{
+    uint64_t    id;
+    uint32_t    attempts;
+    std::string abonent, message, smsc_id;
+    bool        cancel, notification, skip, data_sm, secured_data;
+    int         rowsCount, eventsCount;
+	static int  maxRowsPerMessage;
+
+private:
+	mutable char* user_data;
+
+public:        
+    Message() { reset(); };
+	~Message(){if(user_data) delete[] user_data;};
+    Message(const Message& msg) 
+        : id(msg.id), attempts(msg.attempts), abonent(msg.abonent), message(msg.message),
+        smsc_id(msg.smsc_id), cancel(msg.cancel), notification(msg.notification),  
+		skip(msg.skip), data_sm(msg.data_sm), secured_data(msg.secured_data),
+		rowsCount(msg.rowsCount), eventsCount(msg.eventsCount),
+		user_data(0)
+		{
+			user_data = new char[sizeof(msg.user_data)];
+			memcpy(user_data, msg.user_data, sizeof(msg.user_data));
+		};
     
-    struct Message
-    {
-        uint64_t    id;
-        uint32_t    attempts;
-        std::string abonent, message, smsc_id;
-        bool        cancel, notification, skip, data_sm;
-        int         rowsCount, eventsCount;
-
-        static int  maxRowsPerMessage;
-
-        
-        Message() { reset(); };
-        Message(const Message& msg) 
-            : id(msg.id), attempts(msg.attempts), abonent(msg.abonent), message(msg.message),
-          smsc_id(msg.smsc_id), cancel(msg.cancel), notification(msg.notification),  
-			  skip(msg.skip), data_sm(msg.data_sm), rowsCount(msg.rowsCount), eventsCount(msg.eventsCount) {};
-        
-        Message& operator=(const Message& msg) {
-            id = msg.id; attempts = msg.attempts;
-            abonent = msg.abonent; message = msg.message; smsc_id = msg.smsc_id; 
-            cancel = msg.cancel; notification = msg.notification; skip = msg.skip;
-            rowsCount = msg.rowsCount; eventsCount  = msg.eventsCount; 
-            return (*this);
-        };
-
-        inline void reset(const std::string& _abonent="") {
-            id = 0; attempts = 0; this->abonent = _abonent;
-            message = ""; smsc_id = ""; skip = false;
-            cancel = false; notification = false; data_sm = false;
-            rowsCount = 0; eventsCount = 0; 
-        };
-        inline bool isFull() {
-            return (rowsCount >= Message::maxRowsPerMessage);
-        };
+    Message& operator=(const Message& msg) {
+        id = msg.id; attempts = msg.attempts;
+        abonent = msg.abonent; message = msg.message; smsc_id = msg.smsc_id; 
+        cancel = msg.cancel; notification = msg.notification; skip = msg.skip;
+		data_sm = msg.data_sm; secured_data = msg.secured_data;
+        rowsCount = msg.rowsCount; eventsCount  = msg.eventsCount; 
+		if(user_data) delete[] user_data;
+		if(msg.user_data)
+		{
+			user_data = new char[sizeof(msg.user_data)];
+			memcpy(user_data, msg.user_data, sizeof(msg.user_data));
+		}
+        return (*this);
     };
+    inline void reset(const std::string& _abonent="") {
+        id = 0; attempts = 0; this->abonent = _abonent;
+        message = ""; smsc_id = ""; skip = false;
+        cancel = false; notification = false; data_sm = false;
+		data_sm = false; secured_data = false;
+        rowsCount = 0; eventsCount = 0; 
+		if(user_data) delete[] user_data;
+    };
+    inline bool isFull() {
+        return (rowsCount >= Message::maxRowsPerMessage);
+    };
+	const char* GetMsg(void) const
+	{
+		if(!secured_data)
+			return message.c_str();
+
+		if(user_data) delete[] user_data;
+		int secured_data_len = message.length();
+		user_data = new char[user_data_pattern_len + secured_data_len];
+		memcpy(user_data, user_data_pattern, user_data_pattern_len);
+		memcpy(user_data + user_data_pattern_len, message.c_str(), secured_data_len);
+		uint16_t *cpl = (uint16_t*)&user_data[indexCPL];
+		*cpl = CHL + secured_data_len;
+		return user_data;
+	}
+	int GetMsgLen(void) const
+	{
+		int len = message.length();
+		if(secured_data) len += user_data_pattern_len;
+		return len;
+	}
+};
 
     /* -------------------------- Параметры для шаблона сообщения -------------------------- */
     extern const char* MSG_TEMPLATE_PARAM_ABONENT; // кому посылается сообщение (i|n)

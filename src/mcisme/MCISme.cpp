@@ -319,8 +319,8 @@ public:
         else if(message.data_sm)
 		{
 
-			const char* out  = message.message.c_str();//"Hello World!!";
-            int outLen = message.message.length();//13;
+			const char* out  = message.GetMsg();//.message.c_str();
+			int outLen = message.GetMsgLen();//message.length();
             
             char* msgBuf = 0;
             int msgDataCoding = DataCoding::LATIN1;
@@ -335,7 +335,7 @@ public:
                 out = msgBuf; outLen = msgLen;
             }
 
-            time_t smsValidityDate = time(NULL) + processor.getDaysValid()*3600*24;
+//            time_t smsValidityDate = time(NULL) + processor.getDaysValid()*3600*24;
             
             EService svcType;
             strncpy(svcType, processor.getSvcType(), MAX_ESERVICE_TYPE_LENGTH);
@@ -356,6 +356,7 @@ public:
             sm.get_optional().set_payloadType(0);
             sm.get_optional().set_messagePayload(out, outLen);
 			sm.get_optional().set_setDpf(1);
+			sm.get_optional().set_protocol_id(0x7F);
 
             sm.get_header().set_commandLength(sm.size());
 			sm.get_header().set_commandId(SmppCommandSet::DATA_SM);
@@ -704,12 +705,16 @@ public:
 
 int main(void)
 {
+#ifdef DEBUG
+	printf("Debug\n");
+	exit(0);
+#endif
     Logger::Init();
     logger = Logger::getInstance("smsc.mcisme.MCISme");
     
-    atexit(atExitHandler);
-	clearSignalMask();
-	shutdownThread.Start();
+ //   atexit(atExitHandler);
+	//clearSignalMask();
+	//shutdownThread.Start();
 
     std::auto_ptr<ServiceSocketListener> adml(new ServiceSocketListener());
     adminListener = adml.get();

@@ -409,6 +409,7 @@ void TaskProcessor::Run()
 	time_t	cur_time;
 	int		wait_smsc_msg;
 
+	sleep(2);
 //	while(bOutQueueOpen)
 	while(pDeliveryQueue->isQueueOpened())
 	{
@@ -443,7 +444,6 @@ int TaskProcessor::Execute()
 	time_t start = time(0);
 	time_t end = time(0);
 	uint32_t count=0;
-
 	while (bInQueueOpen)//++i<=12)//bInQueueOpen
 	{
 		try
@@ -479,7 +479,7 @@ int TaskProcessor::Execute()
 			if (checkEventMask(profile.eventMask, event.cause))
 			{
 				pStorage->addEvent(to, outEvent);
-				pDeliveryQueue->Schedule(to, ((event.cause&0x02)==0x02)); //0x02 - BUSY
+				pDeliveryQueue->Schedule(to, 0);//((event.cause&0x02)==0x02)); //0x02 - BUSY
 				statistics->incMissed();
 				smsc_log_debug(logger, "Abonent %s (couse = 0x%02X) was added to Scheduled Delivery Queue", to.toString().c_str(), event.cause);
 			}
@@ -528,6 +528,11 @@ void TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt)
 	pInfo->abnt = abnt;
 	int timeOffset = smsc::system::common::TimeZoneManager::getInstance().getTimeZone(abnt.getAddress())+timezone;
 	formatter.formatMessage(msg, abnt, events, 0, pInfo->events, timeOffset);
+
+	smsc_log_debug(logger, "!!!!!!!!!!!!!!%s\n", msg.message.c_str());
+	printf("%s:%s (%d)\n", abnt.getText().c_str(), msg.message.c_str(), '+');
+	exit(0);
+
 	msg.data_sm = true;
 //	smsc_log_debug(logger, "ProcessAbntEvents: msg = %s", msg.message.c_str());
 	msg.abonent = abnt.getText();//"777";

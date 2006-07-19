@@ -91,8 +91,8 @@ public:
 					scaned = sscanf(text,"%20[0123456789?]s",addr_value);
 					if ( !scaned )
 					{
-            Clear();
-            return;
+						Clear();
+						return;
 					}
 					else
 					{
@@ -101,7 +101,7 @@ public:
 					}
 				}
 			}
-  		value.addr_content.type = (uint8_t)itype;
+	  		value.addr_content.type = (uint8_t)itype;
 			value.addr_content.plan = (uint8_t)iplan;
 			value.addr_content.length = strlen(addr_value);
 			setValue(strlen(addr_value), addr_value);

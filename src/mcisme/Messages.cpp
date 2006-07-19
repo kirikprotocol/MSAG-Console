@@ -196,8 +196,8 @@ void MessageFormatter::formatMessage(Message& message, const AbntAddr& abnt, con
 				}
 				total += count;
 				InformGetAdapter info_adapter(toAbnt, fromStr, count, convertedTime);
-        if( count > 1 ) multiFormatter->format(rows, info_adapter, ctx);
-        else singleFormatter->format(rows, info_adapter, ctx);
+				if( count > 1 ) multiFormatter->format(rows, info_adapter, ctx);
+				else singleFormatter->format(rows, info_adapter, ctx);
 
 				message.rowsCount++;
 
@@ -268,95 +268,4 @@ void MessageFormatter::formatMessage(Message& message, const AbntAddr& abnt, con
 		}
 	}
 }
-
-//void MessageFormatter::formatMessage(Message& message, const AbntAddr& abnt, const vector<MCEvent>& mc_events, uint8_t start_from, vector<MCEvent>& for_send, int timeOffset/*=0*/)
-//{
-//    message.message = ""; message.rowsCount = 0; message.eventsCount = 0;
-//	if (mc_events.size() <= 0) return;
-////    message.eventsCount = events.Count(); 
-//	
-//	std::string test_msg;
-//    std::string rows = "";
-//    ContextEnvironment ctx;
-//    const std::string unknownCaller = formatter->getUnknownCaller();
-//    OutputFormatter*  multiFormatter = formatter->getMultiFormatter();
-//    OutputFormatter*  singleFormatter = formatter->getSingleFormatter();
-////    OutputFormatter*  messageFormatter = formatter->getMessageFormatter();
-//    
-//    for (int i=start_from; i<mc_events.size(); i++)
-//    {
-//		AbntAddr from(&(mc_events[i].caller));
-//		const char* fromStr = (from.getText().length() > 0) ? from.getText().c_str():UNKNOWN_CALLER;
-//        if (fromStr == UNKNOWN_CALLER || (strcmp(fromStr, UNKNOWN_CALLER) == 0))
-//            fromStr = unknownCaller.c_str();
-//        
-//		time_t convertedTime = mc_events[i].dt + timeOffset*3600;
-//
-//		InformGetAdapter info_adapter(abnt.getText(), fromStr, 1, convertedTime);
-//        singleFormatter->format(rows, info_adapter, ctx);
-//        message.rowsCount++;
-//
-//		OutputFormatter*  messageFormatter = formatter->getMessageFormatter();
-//		MessageGetAdapter msg_adapter(message.abonent, rows, i+1);
-//		messageFormatter->format(test_msg, msg_adapter, ctx);
-//
-//		if(test_msg.length() < MAX_SHORT_MESSAGE_LENGTH)
-//		{
-//			message.message = test_msg;
-//			test_msg="";
-//			message.eventsCount++;
-//			for_send.push_back(mc_events[i]);
-//		}
-//		else
-//			break;
-//	}
-//}
-
-
 }}
-
-//void MessageFormatter::formatMessage(Message& message, const AbntAddr& abnt, const vector<MCEvent>& mc_events, uint8_t start_from, /*vector<uint32_t>*/uint8_t* ids, uint8_t& events_count, int timeOffset/*=0*/)
-//{
-//    message.message = ""; message.rowsCount = 0; message.eventsCount = 0;
-//	if (mc_events.size() <= 0) return;
-////    message.eventsCount = events.Count(); 
-//	
-//	events_count=0;
-//	std::string test_msg;
-//    std::string rows = "";
-//    ContextEnvironment ctx;
-//    const std::string unknownCaller = formatter->getUnknownCaller();
-//    OutputFormatter*  multiFormatter = formatter->getMultiFormatter();
-//    OutputFormatter*  singleFormatter = formatter->getSingleFormatter();
-////    OutputFormatter*  messageFormatter = formatter->getMessageFormatter();
-//    
-//    for (int i=start_from; i<mc_events.size(); i++)
-//    {
-//		AbntAddr from(&(mc_events[i].caller));
-//		const char* fromStr = (from.getText().length() > 0) ? from.getText().c_str():UNKNOWN_CALLER;
-//        if (fromStr == UNKNOWN_CALLER || (strcmp(fromStr, UNKNOWN_CALLER) == 0))
-//            fromStr = unknownCaller.c_str();
-//        
-//		time_t convertedTime = mc_events[i].dt + timeOffset*3600;
-//
-//		InformGetAdapter info_adapter(abnt.getText(), fromStr, 1, convertedTime);
-//        singleFormatter->format(rows, info_adapter, ctx);
-//        message.rowsCount++;
-//
-//		OutputFormatter*  messageFormatter = formatter->getMessageFormatter();
-//		MessageGetAdapter msg_adapter(message.abonent, rows, i+1);
-//		messageFormatter->format(test_msg, msg_adapter, ctx);
-//
-//		if(test_msg.length() < 300)
-//		{
-//			message.message = test_msg;
-//			test_msg="";
-//			message.eventsCount++;
-////			ids.push_back(mc_events[i].id);
-//			ids[i-start_from] = mc_events[i].id;
-//			events_count++;
-//		}
-//		else
-//			break;
-//	}
-//}
