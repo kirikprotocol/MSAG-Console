@@ -118,7 +118,7 @@ bool ActionMatch::run(ActionContext& context)
         Convertor::UTF8ToUCS2(temp.c_str(),temp.size(), value);
     } else value = wstrValue;
 
-    smsc_log_warn(logger,"Action 'match': regexp '%s', value '%s'", strRegexp.c_str(),strValue.c_str());
+    smsc_log_debug(logger,"Action 'match': regexp '%s', value '%s'", strRegexp.c_str(),strValue.c_str());
 
 
     pResult = context.getProperty(strResult);
@@ -135,7 +135,7 @@ bool ActionMatch::run(ActionContext& context)
   bool flag = re->Match((unsigned short *)value.data(),m,n);
 
   pResult->setBool(flag);
-  smsc_log_warn(logger,"Action 'match': result '%d'", flag);
+  smsc_log_debug(logger,"Action 'match': result '%d'", flag);
 
   return true;
 }

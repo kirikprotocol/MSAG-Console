@@ -230,7 +230,7 @@ bool BillActionOpen::run(ActionContext& context)
 
         if (m_waitOperation) RegisterPending(context);
 
-        smsc_log_warn(logger,"Action '%s' transaction successfully opened", m_ActionName.c_str());
+        smsc_log_debug(logger,"Action '%s' transaction successfully opened", m_ActionName.c_str());
         break;
     }
 
