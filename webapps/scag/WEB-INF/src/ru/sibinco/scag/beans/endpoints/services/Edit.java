@@ -86,6 +86,9 @@ public class Edit extends EditBean {
                         "Failed to locate provider for id=" + userProviderId);
             providerName = ((Provider) obj).getName();
         }
+        if(isAdd()){
+            enabled = true;
+        }
     }
 
     protected void load(String loadId) throws SCAGJspException {
