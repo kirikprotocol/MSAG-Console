@@ -63,7 +63,7 @@ AccessType HttpCommandAdapter::CheckAccess(int handlerType,const std::string& na
     }
     else if(handlerType == EH_HTTP_RESPONSE)
         a = ResponseFieldsAccess.GetPtr(name.c_str());
-    if(handlerType == EH_HTTP_DELIVERY)
+    else if(handlerType == EH_HTTP_DELIVERY)
         a = DeliveryFieldsAccess.GetPtr(name.c_str());
 
     if(a) return *a;
