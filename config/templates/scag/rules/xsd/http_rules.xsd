@@ -18,13 +18,13 @@
             </restriction>
         </simpleType>
         
-<!--        <simpleType name="httpHeader">
+	<!--simpleType name="httpHeader">
             <restriction base="string">
                 <pattern value="#header\-\p{L}+[\w_\-]*"/>
             </restriction>
-        </simpleType> -->
+        </simpleType-->
 
-        <simpleType name="Command">
+        <!--simpleType name="Command">
             <restriction base="scag:Command">
                 <enumeration value="#abonent"/>
                 <enumeration value="#path"/>
@@ -33,10 +33,10 @@
                 <enumeration value="#filename"/>
                 <enumeration value="#message"/>
                 <enumeration value="#status"/>
-<!--                <enumeration value="#header-*"/>
-                <enumeration value="#param-*"/> -->
+                <enumeration value="#header-*"/>
+                <enumeration value="#param-*"/>
             </restriction>
-        </simpleType>
+        </simpleType-->
         
         <complexType name="RuleType">
             <complexContent>
