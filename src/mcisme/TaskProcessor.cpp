@@ -530,8 +530,6 @@ void TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt)
 	formatter.formatMessage(msg, abnt, events, 0, pInfo->events, timeOffset);
 
 	smsc_log_debug(logger, "!!!!!!!!!!!!!!%s\n", msg.message.c_str());
-	printf("%s:%s (%d)\n", abnt.getText().c_str(), msg.message.c_str(), '+');
-	exit(0);
 
 	msg.data_sm = true;
 //	smsc_log_debug(logger, "ProcessAbntEvents: msg = %s", msg.message.c_str());
