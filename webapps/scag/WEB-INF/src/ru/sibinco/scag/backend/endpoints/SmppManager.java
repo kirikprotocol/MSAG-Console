@@ -167,11 +167,7 @@ public class SmppManager extends Manager {
                     if (center.isEnabled()) {
                         appContext.getScag().invokeCommand("addCenter",center,appContext,this,configFilename);
                     } else {
-                        //TODO why delete???
-                        //scag.invokeCommand("deleteCenter",center,scag,this,configFilename);
-                        HashSet set = new HashSet();
-                        set.add(center.getId());
-                        deleteCenters(user,set,appContext);
+                        appContext.getScag().invokeCommand("deleteCenter",center,appContext,this,configFilename);
                     }
                 }
             }
@@ -209,11 +205,7 @@ public class SmppManager extends Manager {
                     if (svc.isEnabled()) {
                         appContext.getScag().invokeCommand("addSvc", svc, appContext, this, configFilename);
                     } else {
-                        //TODO why delete???
-                        //scag.deleteSvc(svc.getId());
-                        HashSet set = new HashSet();
-                        set.add(svc.getId());
-                        deleteServicePoints(user,set,appContext);
+                        appContext.getScag().invokeCommand("deleteSvc", svc.getId(), appContext, this, configFilename);
                     }
                 }
             }
