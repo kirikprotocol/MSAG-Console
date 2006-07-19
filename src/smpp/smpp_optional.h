@@ -132,6 +132,8 @@ inline void fillSmppOptional(SmppStream* stream,SmppOptional* opt)
     for ( int k=0; k<len; ++k )fillX(stream,(uint8_t)val[k]);
   }
 
+  /*protocol_id*/        macroFillField(protocol_id);
+
 #undef macroFillField
 #undef macroFillOctetStr
 #undef macroFillCOctetStr
@@ -269,6 +271,7 @@ inline void fetchSmppOptional(SmppStream* stream,SmppOptional* opt)
       macroFetchCOctetStr( imsi_address, length );
       macroFetchCOctetStr( msc_address, length );
       macroFetchField( supported_codeset );
+      /*protocol_id*/        macroFetchField(protocol_id);
       default:
         {
           opt->field_present |= SmppOptionalFields::unknownFields;
@@ -300,6 +303,7 @@ inline void fetchSmppOptional(SmppStream* stream,SmppOptional* opt)
         while( stream->dataOffset<nextDataOffset) {int8_t octet; fetchX(stream,octet);};
       }
       */
+
     #undef macroFetchField
     #undef macroFetchOctetStr
     #undef macroFetchCOctetStr
