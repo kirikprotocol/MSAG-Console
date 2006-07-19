@@ -5,42 +5,68 @@ namespace scag { namespace re { namespace http {
 using namespace scag::util::properties;
 
 Hash<AccessType> HttpCommandAdapter::RequestFieldsAccess = HttpCommandAdapter::InitRequestAccess();
+Hash<AccessType> HttpCommandAdapter::ResponseFieldsAccess = HttpCommandAdapter::InitResponseAccess();
+Hash<AccessType> HttpCommandAdapter::DeliveryFieldsAccess = HttpCommandAdapter::InitDeliveryAccess();
 
 Hash<AccessType> HttpCommandAdapter::InitRequestAccess()
 {
     Hash<AccessType> hs;
 
-    hs.Insert("abonent", atReadWrite);
+    hs.Insert("abonent", atRead);
+    hs.Insert("usr", atRead);
     hs.Insert("site", atReadWrite);
     hs.Insert("path", atReadWrite);
     hs.Insert("filename", atReadWrite);
     hs.Insert("port", atReadWrite);
+    hs.Insert("message", atRead);
+
+    return hs;
+}
+
+Hash<AccessType> HttpCommandAdapter::InitResponseAccess()
+{
+    Hash<AccessType> hs;
+
+    hs.Insert("abonent", atRead);
+    hs.Insert("usr", atRead);
+    hs.Insert("status", atReadWrite);
     hs.Insert("message", atReadWrite);
-    hs.Insert("usr", atReadWrite);
+
+    return hs;
+}
+
+Hash<AccessType> HttpCommandAdapter::InitDeliveryAccess()
+{
+    Hash<AccessType> hs;
+
+    hs.Insert("abonent", atRead);
+    hs.Insert("usr", atRead);
+    hs.Insert("status", atRead);
+    hs.Insert("delivered", atRead);
 
     return hs;
 }
 
 AccessType HttpCommandAdapter::CheckAccess(int handlerType,const std::string& name)
 {
+    AccessType *a = NULL;
+
     if(!strncmp(name.c_str(), "header-", 7))
-        return atReadWrite;
-
-    if(handlerType == EH_HTTP_RESPONSE)
-    {
-        if(!strcmp(name.c_str(), "status") || !strcmp(name.c_str(), "message")
-        || !strcmp(name.c_str(), "abonent") || !strcmp(name.c_str(), "usr"))
-            return atReadWrite;
-    }
-
+        return handlerType == EH_HTTP_DELIVER ? atRead : atReadWrite;
+        
     if(handlerType == EH_HTTP_REQUEST)
     {
         if(!strncmp(name.c_str(), "param-", 6))
             return atReadWrite;
 
-        AccessType *a = RequestFieldsAccess.GetPtr(name.c_str());
-        if(a) return *a;
+        a = RequestFieldsAccess.GetPtr(name.c_str());
     }
+    else if(handlerType == EH_HTTP_RESPONSE)
+        a = ResponseFieldsAccess.GetPtr(name.c_str());
+    if(handlerType == EH_HTTP_DELIVERY)
+        a = DeliveryFieldsAccess.GetPtr(name.c_str());
+
+    if(a) return *a;
 
     return atNoAccess;
 }
@@ -118,30 +144,58 @@ Property* HttpCommandAdapter::getResponseProperty(const std::string& name)
     return prop;
 }
 
+Property* HttpCommandAdapter::getDeliveryProperty(const std::string& name)
+{
+    AdapterProperty **p = PropertyPool.GetPtr(name.c_str());
+    if(p) return *p;
+
+    AdapterProperty* prop = NULL;
+
+    HttpResponse& cmd = (HttpResponse&)command;
+
+    if(!strncmp(name.c_str(), "header-", 7))
+        prop = new AdapterProperty(name, this, cmd.getHeaderField(name.c_str() + 7));
+    else if(!strcmp(name.c_str(), "status"))
+        prop = new AdapterProperty(name, this, cmd.getStatus());
+    else if(!strcmp(name.c_str(), "abonent"))
+        prop = new AdapterProperty(name, this, cmd.getAbonent());
+    else if(!strcmp(name.c_str(), "usr"))
+        prop = new AdapterProperty(name, this, cmd.getUSR());
+    else if(!strcmp(name.c_str(), "delivered"))
+        prop = new AdapterProperty(name, this, cmd.getDelivered());
+
+    if(prop)
+        PropertyPool.Insert(name.c_str(), prop);
+        
+    return prop;
+}
+
 Property* HttpCommandAdapter::getProperty(const std::string& name)
 {
     if(command.getCommandId() == HTTP_REQUEST)
         return getRequestProperty(name);
     else if(command.getCommandId() == HTTP_RESPONSE)
         return getResponseProperty(name);
+    else if(command.getCommandId() == HTTP_DELIVERY)
+        return getDeliveryProperty(name);
 
     return 0;
 }
 
 void HttpCommandAdapter::changed(AdapterProperty& property)
 {
-    if(!strncmp(property.GetName().c_str(), "header-", 7))
-        command.setHeaderField(property.GetName().c_str() + 7, property.getStr());
     else if(command.getCommandId() == HTTP_RESPONSE)
     {
         HttpResponse& cmd = (HttpResponse&)command;
 
-        if(!strcmp(property.GetName().c_str(), "status"))
+        if(!strncmp(property.GetName().c_str(), "header-", 7))
+            cmd.setHeaderField(property.GetName().c_str() + 7, property.getStr());
+        else if(!strcmp(property.GetName().c_str(), "status"))
             cmd.setStatus(property.getInt());
-        else if(!strcmp(property.GetName().c_str(), "abonent"))
+/*        else if(!strcmp(property.GetName().c_str(), "abonent"))
             cmd.setAbonent(property.getStr());
         else if(!strcmp(property.GetName().c_str(), "usr"))
-            cmd.setUSR(property.getInt());
+            cmd.setUSR(property.getInt());*/
         else if(!strcmp(property.GetName().c_str(), "message"))
             cmd.setMessageText(property.getStr());
     }
@@ -149,10 +203,12 @@ void HttpCommandAdapter::changed(AdapterProperty& property)
     {
         HttpRequest& cmd = (HttpRequest&)command;
 
-        if(!strncmp(property.GetName().c_str(), "param-", 6))
+        if(!strncmp(property.GetName().c_str(), "header-", 7))
+            cmd.setHeaderField(property.GetName().c_str() + 7, property.getStr());
+        else if(!strncmp(property.GetName().c_str(), "param-", 6))
             cmd.setQueryParameter(property.GetName().c_str() + 6, property.getStr());
-        else if(!strcmp(property.GetName().c_str(), "abonent"))
-            cmd.setAbonent(property.getStr());
+/*        else if(!strcmp(property.GetName().c_str(), "abonent"))
+            cmd.setAbonent(property.getStr());*/
         else if(!strcmp(property.GetName().c_str(), "site"))
             cmd.setSite(property.getStr());
         else if(!strcmp(property.GetName().c_str(), "path"))
@@ -161,10 +217,10 @@ void HttpCommandAdapter::changed(AdapterProperty& property)
             cmd.setSiteFileName(property.getStr());
         else if(!strcmp(property.GetName().c_str(), "port"))
             cmd.setSitePort(property.getInt());
-        else if(!strcmp(property.GetName().c_str(), "message"))
+/*        else if(!strcmp(property.GetName().c_str(), "message"))
             cmd.setMessageText(property.getStr());
         else if(!strcmp(property.GetName().c_str(), "usr"))
-            cmd.setUSR(property.getInt());
+            cmd.setUSR(property.getInt());*/
     }
 }
 
