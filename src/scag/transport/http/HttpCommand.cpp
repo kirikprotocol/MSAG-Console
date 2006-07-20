@@ -247,10 +247,17 @@ const std::string& HttpCommand::getMessageText()
         char *outbufptr;
         const char *inbufptr = getMessageContent(inbytesleft);
         size_t outbytesleft;
+
+        if(!strcasecmp("UTF-8", charset.c_str()))
+        {
+            textContent.assign(inbufptr, inbytesleft);
+            return textContent;
+        }
+
         iconv_t cd = iconv_open("UTF-8", charset.c_str());
 
         if (cd == (iconv_t)(-1))
-            throw SCAGException("getMessageText: iconv_open() failed errno=%d charset=%s content-type=%s", errno, charset.c_str(), content_type.c_str());
+            throw SCAGException("getMessageText: iconv_open() failed errno=%d charset=%s content-type=%s length=%d", errno, charset.c_str(), content_type.c_str(), content.GetPos());
 
         if (inbytesleft) {
             if (cd == (iconv_t)(-1))
@@ -297,6 +304,16 @@ bool HttpCommand::setMessageText(const std::string& text)
         size_t inbytesleft = text.size();
         char *outbufptr;
         const char *inbufptr = (char *)text.data();
+
+        if(!strcasecmp("UTF-8", charset.c_str()))
+        {
+            content.SetPos(0);
+            content.Append(text.c_str(), text.length());
+            setContentLength(content.GetPos());
+            setLengthField(content.GetPos());
+            return true;
+        }
+        
         iconv_t cd = iconv_open(charset.c_str(), "UTF-8");
 
         if (cd == (iconv_t)(-1))
