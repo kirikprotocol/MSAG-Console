@@ -353,8 +353,8 @@ inline void fetchOptionals(SmppOptional& optional,SMS* sms,bool forceDC=false)
   {
     sms->setBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS,optional.get_unknownFields(),optional.size_unknownFields());
   }
-  if ( optional.has_protocol_id() )
-    sms->setIntProperty(Tag::SMPP_PROTOCOL_ID,(uint32_t)optional.get_protocol_id());  
+//  if ( optional.has_protocol_id() )
+//    sms->setIntProperty(Tag::SMPP_PROTOCOL_ID,(uint32_t)optional.get_protocol_id());  
 }
 
 inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms,bool forceDC=false)
@@ -606,6 +606,8 @@ inline bool fetchSmsFromDataSmPdu(PduDataSm* pdu,SMS* sms,bool forceDC=false)
   }
   sms->setIntProperty(Tag::SMPP_PRIORITY,0);
   sms->setIntProperty(Tag::SMPP_PROTOCOL_ID,0);
+  if ( pdu->optional.has_protocol_id() )
+    sms->setIntProperty(Tag::SMPP_PROTOCOL_ID,(uint32_t)pdu->optional.get_protocol_id());  
   sms->setIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG,0);
   sms->setNextTime(0);
   return true;
