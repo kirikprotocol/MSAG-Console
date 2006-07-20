@@ -137,7 +137,7 @@ public class XmlAttributeCompletion  extends SideKickCompletion
     List names=view.getEditTag().getNames();
     names.remove(selected);
     String insert = selected.substring(text.length());
-    insert=insert+" =\"\"";
+    insert=insert+"=\"\"";
     String closeTag=view.getEditTag().getCloseTag();//"/>";
    if (view.getEditTag().isBackCursor()) {
      int caret=textArea.getCaretPosition();
