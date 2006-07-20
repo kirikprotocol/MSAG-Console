@@ -30,6 +30,7 @@ public abstract class XmlParser extends SideKickParser
  public static final String INSTANT_COMPLETION_TRIGGERS = "/";
  public static final int ELEMENT_COMPLETE = '<';
  public static final int ENTITY_COMPLETE = '&';
+ public static final int ELEMENT_COMPLETE_CLOSE = '<'+'/';
 
  //{{{ XmlParser constructor
  public XmlParser(String name)
@@ -132,8 +133,12 @@ public abstract class XmlParser extends SideKickParser
      : ENTITY_COMPLETE);
     break;
    }
-   else if(ch == '/' && (i == 0 || text.charAt(i - 1) != '<'))
-    return null;
+   else if(ch == '/' && text.charAt(i - 1) == '<') {
+     wordStart = i-1;
+     mode = ELEMENT_COMPLETE_CLOSE;
+     break;
+   } else if(ch == '/' && (i == 0 || text.charAt(i - 1) != '<'))
+     return null;
   }
 
   String closingTag = null;
@@ -180,7 +185,9 @@ public abstract class XmlParser extends SideKickParser
    }
    else if(mode == ENTITY_COMPLETE)
     completions = data.getNoNamespaceCompletionInfo().entities;
-   else
+   else if(mode == ELEMENT_COMPLETE_CLOSE) {
+     completions = new ArrayList(0);
+   } else
     throw new InternalError("Bad mode: " + mode);
 
    if(mode == ELEMENT_COMPLETE)
@@ -228,6 +235,15 @@ public abstract class XmlParser extends SideKickParser
      if(entity.name.startsWith(word))
       allowedCompletions.add(entity);
     }
+   }
+   else if(mode == ELEMENT_COMPLETE_CLOSE) {
+     TagParser.Tag tag = TagParser.findLastOpenTag(text,caret - 2,data);
+     if(tag != null && TagParser.getMatchingTag( buffer.getText(caret, buffer.getLength()- caret - 1),tag)==null )
+      closingTag = tag.tag;
+     if(closingTag != null && ("/" + closingTag).startsWith(word))
+     {
+      allowedCompletions.add(new XmlListCellRenderer.ClosingTag(closingTag));
+     }
    }
    /* else if(mode == ID_COMPLETE)
    {
