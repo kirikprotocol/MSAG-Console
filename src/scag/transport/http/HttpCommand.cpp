@@ -3,6 +3,7 @@
 #include "util/Exception.hpp"
 #include "HttpCommand.h"
 #include "HttpParser.h"
+#include "scag/util/encodings/Encodings.h"
 #include "scag/exc/SCAGExceptions.h"
 
 #define ICONV_BLOCK_SIZE 32
@@ -15,6 +16,7 @@ namespace scag { namespace transport { namespace http
 {
 using smsc::util::Exception;
 using scag::exceptions::SCAGException;
+using scag::util::encodings::Convertor;
 
 const char *HttpRequest::httpMethodNames[9] = {
     NULL,
@@ -238,52 +240,21 @@ const std::string& HttpCommand::getMessageText()
 {
     const std::string &content_type = getHeaderField(content_type_field);
 
-    printf("charset=%s content-type=%s\n", charset.c_str(), getHeaderField(content_type_field).c_str());
-    if (charset.length() && (textContent.empty() &&
-        !strncasecmp(getHeaderField(content_type_field).c_str(), "text/", 5)))
+//    printf("charset=%s content-type=%s\n", charset.c_str(), getHeaderField(content_type_field).c_str());
+    if(charset.length() && (textContent.empty() && !strncasecmp(content_type.c_str(), "text/", 5)))
     {
-        size_t result = 0;
-        size_t inbytesleft;
-        char *outbufptr;
+        unsigned int inbytesleft;
         const char *inbufptr = getMessageContent(inbytesleft);
-        size_t outbytesleft;
 
-        if(!strcasecmp("UTF-8", charset.c_str()))
-        {
-            textContent.assign(inbufptr, inbytesleft);
-            return textContent;
-        }
-
-        iconv_t cd = iconv_open("UTF-8", charset.c_str());
-
-        if (cd == (iconv_t)(-1))
-            throw SCAGException("getMessageText: iconv_open() failed errno=%d charset=%s content-type=%s length=%d", errno, charset.c_str(), content_type.c_str(), content.GetPos());
-
-        if (inbytesleft) {
-            if (cd == (iconv_t)(-1))
-                throw SCAGException("getMessageText: iconv_open() failed errno=%d charset=%s content-type=%s", errno, charset.c_str(), content_type.c_str());
-        
+//        if(!strcasecmp("UTF-8", charset.c_str()))
+//            textContent.assign(inbufptr, inbytesleft);
+//        else
+//        {
             TmpBuf<char, 2048> buf(2048);
-            buf.SetPos(0);
-            while (inbytesleft) {
-                buf.setSize(buf.GetPos() + ICONV_BLOCK_SIZE);
-                outbufptr = buf.GetCurPtr();
-                outbytesleft = ICONV_BLOCK_SIZE;
-
-                result = iconv(cd, &inbufptr, &inbytesleft, &outbufptr, &outbytesleft);
-                if (result == (size_t)(-1) && errno != E2BIG)
-                    break;
-                
-                buf.SetPos(buf.GetPos() + ICONV_BLOCK_SIZE - outbytesleft);
-            }
-
-            iconv_close(cd);
-
+            
+            Convertor::convert(charset.c_str(), "UTF-8", inbufptr, inbytesleft, buf);
             textContent.assign(buf.get(), buf.GetPos());
-
-            if (result == (size_t)(-1))
-                throw SCAGException("getMessageText: iconv() failed errno=%d charset=%s content-type=%s", errno, charset.c_str(), content_type.c_str());
-        }
+//        }
     }
         
     return textContent;
@@ -295,53 +266,16 @@ bool HttpCommand::setMessageText(const std::string& text)
 
     const std::string &content_type = getHeaderField(content_type_field);
 
-    printf("charset=%s content-type=%s\n", charset.c_str(), content_type.c_str());
-    if (charset.length() && (content_type.empty() ||
-        !strncasecmp(content_type.c_str(), "text/", 5)))
+//    printf("charset=%s content-type=%s\n", charset.c_str(), content_type.c_str());
+    if(charset.length() && (content_type.empty() || !strncasecmp(content_type.c_str(), "text/", 5)))
     {  
-        size_t result = 0;
-        size_t outbytesleft;    
-        size_t inbytesleft = text.size();
-        char *outbufptr;
-        const char *inbufptr = (char *)text.data();
-
-        if(!strcasecmp("UTF-8", charset.c_str()))
-        {
-            content.SetPos(0);
-            content.Append(text.c_str(), text.length());
-            setContentLength(content.GetPos());
-            setLengthField(content.GetPos());
-            return true;
-        }
-        
-        iconv_t cd = iconv_open(charset.c_str(), "UTF-8");
-
-        if (cd == (iconv_t)(-1))
-            throw SCAGException("setMessageText: iconv_open() failed errno=%d charset=%s content-type=%s", errno, charset.c_str(), content_type.c_str());
-
-        content.SetPos(0);
-        while (inbytesleft) {
-            content.setSize(content.GetPos() + ICONV_BLOCK_SIZE);
-            outbufptr = content.GetCurPtr();
-            outbytesleft = ICONV_BLOCK_SIZE;
-
-            result = iconv(cd, &inbufptr, &inbytesleft, &outbufptr, &outbytesleft);
-            if (result == (size_t)(-1) && errno != E2BIG)
-                break;
-                
-            content.SetPos(content.GetPos() + ICONV_BLOCK_SIZE - outbytesleft);
-        }
-
-        iconv_close(cd);
-
-        if (result == (size_t)(-1))
-            throw SCAGException("setMessageText: iconv() failed errno=%d charset=%s content-type=%s", errno, charset.c_str(), content_type.c_str());
-
-        if (contentLength >= 0) {
-            setContentLength(content.GetPos());
-            setLengthField(content.GetPos());
-        }
-
+        content.SetPos(0);        
+//        if(!strcasecmp("UTF-8", charset.c_str()))
+//            content.Append(text.c_str(), text.length());
+//        else
+            Convertor::convert("UTF-8", charset.c_str(), text.c_str(), text.length(), (TmpBuf<char,2048>&)content);
+        setContentLength(content.GetPos());
+        setLengthField(content.GetPos());
         return true;
     }
     

@@ -2,8 +2,15 @@
 #define _SCAG_UTIL_ENCODINGS_H_
 
 #include <string>
+#include <iconv.h>
+#include <core/buffers/Hash.hpp>
+#include <core/buffers/TmpBuf.hpp>
+#include <core/synchronization/Mutex.hpp>
 
 namespace scag { namespace util { namespace encodings {
+
+using namespace smsc::core::buffers;
+using namespace smsc::core::synchronization;
 
 namespace EncodeTypes
 {
@@ -30,7 +37,8 @@ enum EncodingEnum
 
 struct Convertor
 {
-
+    Convertor::~Convertor();
+    
     /**
      *
      * @param usc2buff Буффер, содержащий строку в формате UCS2
@@ -79,8 +87,15 @@ struct Convertor
 
     static void UTF8ToKOI8R(const char * utf8buff, unsigned int utf8len, std::string& koi8rStr);
     static void KOI8RToUTF8(const char * latin1Buff, unsigned int latin1BuffLen, std::string& utf8str);
-
-
+    
+    static void convert(const char* inCharset, const char* outCharset, const char * in, unsigned int inLen, TmpBuf<char, 2048>& buf);
+    static void convert(const char* inCharset, const char* outCharset, const char * in, unsigned int inLen, std::string& outstr);
+    
+protected:
+    static iconv_t getIconv(const char* inCharset, const char* outCharset);
+    
+    static Hash<iconv_t> iconvHash;
+    static Mutex mtx;
 }; 
 
 

@@ -2,15 +2,26 @@
 
 #include <memory>
 #include <util/recoder/recode_dll.h>
-#include <iconv.h>
 #include <scag/exc/SCAGExceptions.h>
+#include <scag/util/singleton/Singleton.h>
 
 using namespace scag::exceptions;
 
 namespace scag { namespace util { namespace encodings {
 
+using namespace scag::util::singleton;
+
+Hash<iconv_t> Convertor::iconvHash;
+
+Mutex Convertor::mtx;
+
+inline unsigned GetLongevity(Convertor*) { return 5; }
+typedef SingletonHolder<Convertor> SingleC;
+
 void Convertor::UCS2ToUTF8(const unsigned short * ucs2buff, unsigned int ucs2len, std::string& utf8str)
 {
+//    convert("UCS-2", "UTF-8", (const char*)ucs2buff, ucs2len, utf8str);
+    
     int pos = 0;
     
     std::auto_ptr<char> buff(new char[ucs2len*3]);
@@ -65,20 +76,7 @@ void Convertor::UCS2ToUTF8(const unsigned short * ucs2buff, unsigned int ucs2len
 
 void Convertor::UTF8ToUCS2(const char * utf8buff, unsigned int utf8len, std::string& ucs2str)
 {
-    iconv_t cd = iconv_open("UCS-2", "UTF-8");
-
-    if( cd == (iconv_t)(-1) ) throw SCAGException("Convertor: Cannot convert from 'utf8' to 'ucs2'");
-
-    int nBuffSize = utf8len * 2;
-    unsigned int nBytesLeft = nBuffSize;
-
-    std::auto_ptr<char> buff(new char[nBuffSize]);
-    char * buffPtr = buff.get();
-
-    size_t res = iconv(cd, &utf8buff, &utf8len, &buffPtr, &nBytesLeft);
-    iconv_close(cd);
-
-    ucs2str.assign(buff.get(), nBuffSize - nBytesLeft);
+    convert("UTF-8", "UCS-2", utf8buff, utf8len, ucs2str);
 }
 
 
@@ -104,42 +102,106 @@ void Convertor::UTF8ToGSM7Bit(const char * utf8buff, unsigned int utf8len, std::
 
 void Convertor::KOI8RToUTF8(const char * latin1Buff, unsigned int latin1BuffLen, std::string& utf8str)
 {
-    iconv_t cd = iconv_open("UTF-8","KOI8-R");
-
-    if( cd == (iconv_t)(-1) ) throw SCAGException("Convertor: Cannot convert from 'utf8' to 'ucs2'");
-
-    int nBuffSize = latin1BuffLen * 2;
-    unsigned int nBytesLeft = nBuffSize;
-
-    std::auto_ptr<char> buff(new char[nBuffSize]);
-    char * buffPtr = buff.get();
-
-    size_t res = iconv(cd, &latin1Buff, &latin1BuffLen, &buffPtr, &nBytesLeft);
-    iconv_close(cd);
-
-    utf8str.assign(buff.get(), nBuffSize - nBytesLeft);
+    convert("KOI8-R", "UTF-8", latin1Buff, latin1BuffLen, utf8str);
 }
 
 
 void Convertor::UTF8ToKOI8R(const char * utf8buff, unsigned int utf8len, std::string& koi8rStr)
 {
-    iconv_t cd = iconv_open("KOI8-R", "UTF-8");
-
-    if( cd == (iconv_t)(-1) ) throw SCAGException("Convertor: Cannot convert from 'utf8' to 'koi8r'");
-
-    unsigned int nBytesLeft = utf8len;
-    int nBuffSize = utf8len;
-
-    std::auto_ptr<char> buff(new char[nBuffSize]);
-    char * buffPtr = buff.get();
-
-
-    size_t res = iconv(cd, &utf8buff, &utf8len, &buffPtr, &nBytesLeft);
-    iconv_close(cd);
-
-    koi8rStr.assign(buff.get(), nBuffSize - nBytesLeft);
-
+    convert("UTF-8", "KOI8-R", utf8buff, utf8len, koi8rStr);
 }
 
+iconv_t Convertor::getIconv(const char* inCharset, const char* outCharset)
+{
+    std::string s = inCharset;
+    s += '#';
+    s += outCharset;
+    
+    iconv_t *pcd = iconvHash.GetPtr(s.c_str());
+    
+    if(pcd) return *pcd;
+        
+    iconv_t cd = iconv_open(outCharset, inCharset);
+    
+    if( cd == (iconv_t)(-1) )
+        throw SCAGException("Convertor: iconv_open. Cannot convert from '%s' to '%s'. errno=%d", inCharset, outCharset, errno);        
+        
+    iconvHash.Insert(s.c_str(), cd);
+        
+    return cd;        
+}
+
+void Convertor::convert(const char* inCharset, const char* outCharset, const char * in, unsigned int inLen, TmpBuf<char, 2048>& buf)
+{
+//    #define ICONV_BLOCK_SIZE 128
+    #define MAX_BYTES_IN_CHAR 2
+    
+    static Convertor& c = SingleC::Instance();
+    
+    MutexGuard mt(mtx);
+    
+    iconv_t cd = getIconv(inCharset, outCharset);
+    
+    char *outbufptr;
+    size_t outbytesleft;
+    
+    iconv(cd, NULL, NULL, NULL, NULL);
+
+//    buf.SetPos(0);
+/*    while (inLen) {
+        size_t i = inLen > ICONV_BLOCK_SIZE ? ICONV_BLOCK_SIZE : inLen;
+        buf.setSize(buf.GetPos() + MAX_BYTES_IN_CHAR * ICONV_BLOCK_SIZE);
+        outbufptr = buf.GetCurPtr();
+        outbytesleft = MAX_BYTES_IN_CHAR * ICONV_BLOCK_SIZE;
+        
+        printf("<iconv_t=%d in=%p inLen=%d outbufptr=%p outbytesleft=%d incharset=%s outCharset=%s\n", cd, in, i, outbufptr, outbytesleft, inCharset, outCharset);
+        if(iconv(cd, &in, &i, &outbufptr, &outbytesleft) == (size_t)(-1) && errno != E2BIG)
+        {
+            printf("iconv_err\n");
+            throw SCAGException("Convertor: iconv. Cannot convert from '%s' to '%s'. errno=%d. bytesleft=%d", inCharset, outCharset, errno, inLen);
+        }
+        printf(">iconv_t=%d in=%p inLen=%d outbufptr=%p outbytesleft=%d incharset=%s outCharset=%s\n", cd, in, i, outbufptr, outbytesleft, inCharset, outCharset);        
+        buf.SetPos(buf.GetPos() + MAX_BYTES_IN_CHAR * ICONV_BLOCK_SIZE - outbytesleft);
+        
+        if(inLen > ICONV_BLOCK_SIZE)
+            inLen -= ICONV_BLOCK_SIZE;
+        else            
+            inLen = 0;            
+    }*/
+
+    outbytesleft = MAX_BYTES_IN_CHAR * inLen;
+    buf.setSize(buf.GetPos() + outbytesleft);
+    outbufptr = buf.GetCurPtr();
+    
+//    printf("<iconv_t=%d in=%p inLen=%d outbufptr=%p outbytesleft=%d incharset=%s outCharset=%s\n", cd, in, inLen, outbufptr, outbytesleft, inCharset, outCharset);    
+    if(iconv(cd, &in, &inLen, &outbufptr, &outbytesleft) == (size_t)(-1) && errno != E2BIG)
+        throw SCAGException("Convertor: iconv. Cannot convert from '%s' to '%s'. errno=%d. bytesleft=%d", inCharset, outCharset, errno, inLen);
+//    printf(">iconv_t=%d in=%p inLen=%d outbufptr=%p outbytesleft=%d incharset=%s outCharset=%s\n", cd, in, inLen, outbufptr, outbytesleft, inCharset, outCharset);                
+    
+    #undef ICONV_BLOCK_SIZE
+}
+
+void Convertor::convert(const char* inCharset, const char* outCharset, const char * in, unsigned int inLen, std::string& outstr)
+{
+    TmpBuf<char, 2048> buf(2048);
+    convert(inCharset, outCharset, in, inLen, buf);
+    
+    outstr.assign(buf.get(), buf.GetPos());
+}
+
+Convertor::~Convertor()
+{
+    char* k;
+    iconv_t cd;
+    
+    MutexGuard mt(mtx);
+    
+    iconvHash.First();
+    while(iconvHash.Next(k, cd))
+    {
+        if(cd != (iconv_t)-1)
+            iconv_close(cd);
+    }
+}
 
 }}}
