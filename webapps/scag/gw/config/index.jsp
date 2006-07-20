@@ -22,10 +22,11 @@
                 items[i].disabled = isDisabled;
             }
         }
-        function configChanged() {
 
+        function configChanged() {
             enableDisableByIdFunction('mbSave', false);
         }
+
         function enableDisableStartStopButtonsForSCAGStatusPage() {
 
             if (document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.running</fmt:message>') {
@@ -55,6 +56,7 @@
     <sm-et:section title="Session Manager" name="SessionManager">
         <sm-et:properties>
             <sm-et:txt title="Location" name="location" type="string" onchanged="configChanged();"/>
+            <sm-et:txt title="Expire Interval" name="expireInterval" type="int" onchanged="configChanged();"/>
         </sm-et:properties>
     </sm-et:section>
 
