@@ -1,7 +1,4 @@
-#include "Encodings.h"
-
 #include <memory>
-
 
 #include <iconv.h>
 #include <util/recoder/recode_dll.h>
@@ -11,6 +8,8 @@
 
 #include <scag/util/singleton/Singleton.h>
 
+#include "Encodings.h"
+
 namespace scag { namespace util { namespace encodings {
 
 using namespace smsc::core::synchronization;
@@ -18,7 +17,7 @@ using namespace smsc::core::synchronization;
 struct ConvertorImpl : public Convertor
 {
 
-    ConvertorImpl() {};
+    ConvertorImpl() : Convertor() {};
     ~ConvertorImpl();
     
     void convert(const char* inCharset, const char* outCharset,
