@@ -2,43 +2,36 @@
 #define _SCAG_UTIL_ENCODINGS_H_
 
 #include <string>
-#include <iconv.h>
-#include <core/buffers/Hash.hpp>
+
 #include <core/buffers/TmpBuf.hpp>
-#include <core/synchronization/Mutex.hpp>
+#include <scag/exc/SCAGExceptions.h>
 
 namespace scag { namespace util { namespace encodings {
 
-using namespace smsc::core::buffers;
-using namespace smsc::core::synchronization;
+using namespace scag::exceptions;
 
 namespace EncodeTypes
 {
+    enum EncodingEnum 
+    {
+	//Повторение костиковского енума
+	CONV_ENCODING_ANSI = 0,
+	CONV_ENCODING_CP1251 = 1,
+	CONV_ENCODING_LATIN1 = 2,
+	CONV_ENCODING_KOI8R = 3,
+	CONV_ENCODING_ISO8895_5 = 4,
 
-enum EncodingEnum 
-{
-  //Повторение костиковского енума
-  CONV_ENCODING_ANSI = 0,
-  CONV_ENCODING_CP1251 = 1,
-  CONV_ENCODING_LATIN1 = 2,
-  CONV_ENCODING_KOI8R = 3,
-  CONV_ENCODING_ISO8895_5 = 4,
-
-  //Дополнительные значения
-  CONV_ENCODING_UCS2 = 5,
-  CONV_ENCODING_UTF8 = 6,
-  CONV_ENCODING_GMS7Bit = 7
-
-};
-
-
+	//Дополнительные значения
+	CONV_ENCODING_UCS2 = 5,
+	CONV_ENCODING_UTF8 = 6,
+	CONV_ENCODING_GMS7Bit = 7
+    };
 }
 
+using namespace smsc::core::buffers;
 
 struct Convertor
 {
-    Convertor::~Convertor();
-    
     /**
      *
      * @param usc2buff Буффер, содержащий строку в формате UCS2
@@ -85,6 +78,8 @@ struct Convertor
     static void UTF8ToGSM7Bit(const char * utf8buff, unsigned int utf8len, std::string& gsm7BitStr);
 
 
+    //TODO: Add DoxyGen comments !!!
+    
     static void UTF8ToKOI8R(const char * utf8buff, unsigned int utf8len, std::string& koi8rStr);
     static void KOI8RToUTF8(const char * latin1Buff, unsigned int latin1BuffLen, std::string& utf8str);
     
@@ -95,10 +90,9 @@ struct Convertor
                         const char * in, unsigned int inLen, std::string& outstr);
     
 protected:
-    static iconv_t getIconv(const char* inCharset, const char* outCharset);
-    
-    static Hash<iconv_t> iconvHash;
-    static Mutex mtx;
+
+    Convertor() {};
+    ~Convertor() {};
 }; 
 
 

@@ -1,22 +1,41 @@
 #include "Encodings.h"
 
 #include <memory>
-#include <util/recoder/recode_dll.h>
-#include <scag/exc/SCAGExceptions.h>
-#include <scag/util/singleton/Singleton.h>
 
-using namespace scag::exceptions;
+
+#include <iconv.h>
+#include <util/recoder/recode_dll.h>
+
+#include <core/buffers/Hash.hpp>
+#include <core/synchronization/Mutex.hpp>
+
+#include <scag/util/singleton/Singleton.h>
 
 namespace scag { namespace util { namespace encodings {
 
+using namespace smsc::core::synchronization;
+
+struct ConvertorImpl : public Convertor
+{
+
+    ConvertorImpl() {};
+    ~ConvertorImpl();
+    
+    void convert(const char* inCharset, const char* outCharset,
+                 const char * in, unsigned int inLen, TmpBuf<char, 2048>& buf);
+                        
+private:
+
+    iconv_t getIconv(const char* inCharset, const char* outCharset);
+    
+    Hash<iconv_t> iconvHash;
+    Mutex mtx;
+};
+
 using namespace scag::util::singleton;
 
-Hash<iconv_t> Convertor::iconvHash;
-
-Mutex Convertor::mtx;
-
 inline unsigned GetLongevity(Convertor*) { return 5; }
-typedef SingletonHolder<Convertor> SingleC;
+typedef SingletonHolder<ConvertorImpl> SingleC;
 
 void Convertor::UCS2ToUTF8(const unsigned short * ucs2buff, unsigned int ucs2len, std::string& utf8str)
 {
@@ -111,18 +130,33 @@ void Convertor::UTF8ToKOI8R(const char * utf8buff, unsigned int utf8len, std::st
     convert("UTF-8", "KOI8-R", utf8buff, utf8len, koi8rStr);
 }
 
-iconv_t Convertor::getIconv(const char* inCharset, const char* outCharset)
+
+#define MAX_BYTES_IN_CHAR 2
+    
+void Convertor::convert(const char* inCharset, const char* outCharset,
+                        const char * in, unsigned int inLen, TmpBuf<char, 2048>& buf)
 {
-    std::string s = inCharset;
-    s += '#';
-    s += outCharset;
+    ConvertorImpl& c = SingleC::Instance();
+    c.convert(inCharset, outCharset, in, inLen, buf);
+}
+
+void Convertor::convert(const char* inCharset, const char* outCharset,
+                        const char * in, unsigned int inLen, std::string& outstr)
+{
+    TmpBuf<char, 2048> buf(inLen * MAX_BYTES_IN_CHAR);
+    convert(inCharset, outCharset, in, inLen, buf);
+    
+    outstr.assign(buf.get(), buf.GetPos());
+}
+
+iconv_t ConvertorImpl::getIconv(const char* inCharset, const char* outCharset)
+{
+    std::string s = inCharset; s += '#'; s += outCharset;
     
     iconv_t *pcd = iconvHash.GetPtr(s.c_str());
-    
     if(pcd) return *pcd;
         
     iconv_t cd = iconv_open(outCharset, inCharset);
-    
     if( cd == (iconv_t)(-1) )
         throw SCAGException("Convertor: iconv_open. Cannot convert from '%s' to '%s'. errno=%d", inCharset, outCharset, errno);        
         
@@ -132,12 +166,10 @@ iconv_t Convertor::getIconv(const char* inCharset, const char* outCharset)
 }
 
 #define MAX_BYTES_IN_CHAR 2
-    
-void Convertor::convert(const char* inCharset, const char* outCharset,
-                        const char * in, unsigned int inLen, TmpBuf<char, 2048>& buf)
+
+void ConvertorImpl::convert(const char* inCharset, const char* outCharset,
+                            const char * in, unsigned int inLen, TmpBuf<char, 2048>& buf)
 {
-    static Convertor& c = SingleC::Instance();
-    
     MutexGuard mt(mtx);
     
     iconv_t cd = getIconv(inCharset, outCharset);
@@ -153,21 +185,11 @@ void Convertor::convert(const char* inCharset, const char* outCharset,
     
     if(iconv(cd, &in, &inLen, &outbufptr, &outbytesleft) == (size_t)(-1) && errno != E2BIG)
         throw SCAGException("Convertor: iconv. Cannot convert from '%s' to '%s'. errno=%d. bytesleft=%d", inCharset, outCharset, errno, inLen);
-        
-}
-
-void Convertor::convert(const char* inCharset, const char* outCharset,
-                        const char * in, unsigned int inLen, std::string& outstr)
-{
-    TmpBuf<char, 2048> buf(inLen * MAX_BYTES_IN_CHAR);
-    convert(inCharset, outCharset, in, inLen, buf);
-    
-    outstr.assign(buf.get(), buf.GetPos());
 }
 
 #undef MAX_BYTES_IN_CHAR
 
-Convertor::~Convertor()
+ConvertorImpl::~ConvertorImpl()
 {
     char* k;
     iconv_t cd;
