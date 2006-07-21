@@ -131,9 +131,9 @@ iconv_t Convertor::getIconv(const char* inCharset, const char* outCharset)
     return cd;        
 }
 
-void Convertor::convert(const char* inCharset, const char* outCharset, const char * in, unsigned int inLen, TmpBuf<char, 2048>& buf)
+void Convertor::convert(const char* inCharset, const char* outCharset,
+                        const char * in, unsigned int inLen, TmpBuf<char, 2048>& buf)
 {
-//    #define ICONV_BLOCK_SIZE 128
     #define MAX_BYTES_IN_CHAR 2
     
     static Convertor& c = SingleC::Instance();
@@ -147,41 +147,18 @@ void Convertor::convert(const char* inCharset, const char* outCharset, const cha
     
     iconv(cd, NULL, NULL, NULL, NULL);
 
-//    buf.SetPos(0);
-/*    while (inLen) {
-        size_t i = inLen > ICONV_BLOCK_SIZE ? ICONV_BLOCK_SIZE : inLen;
-        buf.setSize(buf.GetPos() + MAX_BYTES_IN_CHAR * ICONV_BLOCK_SIZE);
-        outbufptr = buf.GetCurPtr();
-        outbytesleft = MAX_BYTES_IN_CHAR * ICONV_BLOCK_SIZE;
-        
-        printf("<iconv_t=%d in=%p inLen=%d outbufptr=%p outbytesleft=%d incharset=%s outCharset=%s\n", cd, in, i, outbufptr, outbytesleft, inCharset, outCharset);
-        if(iconv(cd, &in, &i, &outbufptr, &outbytesleft) == (size_t)(-1) && errno != E2BIG)
-        {
-            printf("iconv_err\n");
-            throw SCAGException("Convertor: iconv. Cannot convert from '%s' to '%s'. errno=%d. bytesleft=%d", inCharset, outCharset, errno, inLen);
-        }
-        printf(">iconv_t=%d in=%p inLen=%d outbufptr=%p outbytesleft=%d incharset=%s outCharset=%s\n", cd, in, i, outbufptr, outbytesleft, inCharset, outCharset);        
-        buf.SetPos(buf.GetPos() + MAX_BYTES_IN_CHAR * ICONV_BLOCK_SIZE - outbytesleft);
-        
-        if(inLen > ICONV_BLOCK_SIZE)
-            inLen -= ICONV_BLOCK_SIZE;
-        else            
-            inLen = 0;            
-    }*/
-
     outbytesleft = MAX_BYTES_IN_CHAR * inLen;
     buf.setSize(buf.GetPos() + outbytesleft);
     outbufptr = buf.GetCurPtr();
     
-//    printf("<iconv_t=%d in=%p inLen=%d outbufptr=%p outbytesleft=%d incharset=%s outCharset=%s\n", cd, in, inLen, outbufptr, outbytesleft, inCharset, outCharset);    
     if(iconv(cd, &in, &inLen, &outbufptr, &outbytesleft) == (size_t)(-1) && errno != E2BIG)
         throw SCAGException("Convertor: iconv. Cannot convert from '%s' to '%s'. errno=%d. bytesleft=%d", inCharset, outCharset, errno, inLen);
-//    printf(">iconv_t=%d in=%p inLen=%d outbufptr=%p outbytesleft=%d incharset=%s outCharset=%s\n", cd, in, inLen, outbufptr, outbytesleft, inCharset, outCharset);                
-    
-    #undef ICONV_BLOCK_SIZE
+        
+    #undef MAX_BYTES_IN_CHAR        
 }
 
-void Convertor::convert(const char* inCharset, const char* outCharset, const char * in, unsigned int inLen, std::string& outstr)
+void Convertor::convert(const char* inCharset, const char* outCharset,
+                        const char * in, unsigned int inLen, std::string& outstr)
 {
     TmpBuf<char, 2048> buf(2048);
     convert(inCharset, outCharset, in, inLen, buf);
