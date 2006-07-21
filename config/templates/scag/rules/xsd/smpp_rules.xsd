@@ -33,10 +33,10 @@
     		<enumeration value="@ICC_COMPLETED"/>
 		
     		<enumeration value="@UNKNOWN"/>
-    		<enumeration value="@SC_2_SME"/>
-    		<enumeration value="@SME_2_SME"/>
-    		<enumeration value="@SC_2_SC"/>
-    		<enumeration value="@SME_2_SC"/>
+    		<enumeration value="@DIRECTION_SC_2_SME"/>
+    		<enumeration value="@DIRECTION_SME_2_SME"/>
+    		<enumeration value="@DIRECTION_SC_2_SC"/>
+    		<enumeration value="@DIRECTION_SME_2_SC"/>
 		
 		
 	    </restriction>
@@ -45,7 +45,8 @@
 	
         <simpleType name="Command">
             <restriction base="scag:Command">
-                <enumeration value="#svc_type"/>
+	        <enumeration value="#packet_direction"/>
+	        <enumeration value="#svc_type"/>
 		<enumeration value="#ussd_dialog" />
 		<enumeration value="#whoisd_charging" />
 	        <enumeration value="#whoisd_message_transport_type" />
