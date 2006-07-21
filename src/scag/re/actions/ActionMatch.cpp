@@ -43,7 +43,7 @@ void ActionMatch::init(const SectionParams& params,PropertyObject propertyObject
         temp.append(endbuff,2);
 
 
-        if (!re->Compile((unsigned short *)temp.data(), OP_OPTIMIZE|OP_STRICT))
+        if (!re->Compile((unsigned short *)temp.data(), OP_OPTIMIZE|OP_STRICT|OP_SINGLELINE))
             throw SCAGException("Action 'match' Failed to compile regexp");
 
         m_Compiled = true;
@@ -86,7 +86,7 @@ bool ActionMatch::run(ActionContext& context)
         char endbuff[2] = {0,0};
         regexp.append(endbuff,2);
 
-        if (!re->Compile((unsigned short *)regexp.data(), OP_OPTIMIZE|OP_STRICT))
+        if (!re->Compile((unsigned short *)regexp.data(), OP_OPTIMIZE|OP_STRICT|OP_SINGLELINE))
         {
             smsc_log_warn(logger, "Action 'match' Failed to compile regexp '%s'",temp.c_str());
 
