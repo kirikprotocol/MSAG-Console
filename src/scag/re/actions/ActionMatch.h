@@ -26,6 +26,8 @@ class ActionMatch : public Action
     
     RegExp *re;
     bool m_Compiled;
+    int m_type;
+
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name, const SectionParams& params,const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);

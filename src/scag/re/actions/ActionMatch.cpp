@@ -37,12 +37,15 @@ void ActionMatch::init(const SectionParams& params,PropertyObject propertyObject
 
     if (ftRegexp == ftUnknown) 
     {
+        if (strRegexp.size() == 0) throw SCAGException("Action 'match': invalid parameter 'regexp'. Delails: Cannot use blank string.");
+
         temp = "";
         temp.append(wstrRegexp.data(), wstrRegexp.size());
         char endbuff[2] = {0,0};
         temp.append(endbuff,2);
 
-
+        m_type = (OP_OPTIMIZE|OP_STRICT)|((strRegexp[0] == '/') ? OP_PERLSTYLE:OP_SINGLELINE);
+        
         if (!re->Compile((unsigned short *)temp.data(), OP_OPTIMIZE|OP_STRICT|OP_SINGLELINE))
             throw SCAGException("Action 'match' Failed to compile regexp");
 
@@ -86,7 +89,7 @@ bool ActionMatch::run(ActionContext& context)
         char endbuff[2] = {0,0};
         regexp.append(endbuff,2);
 
-        if (!re->Compile((unsigned short *)regexp.data(), OP_OPTIMIZE|OP_STRICT|OP_SINGLELINE))
+        if (!re->Compile((unsigned short *)regexp.data(), m_type))
         {
             smsc_log_warn(logger, "Action 'match' Failed to compile regexp '%s'",temp.c_str());
 
