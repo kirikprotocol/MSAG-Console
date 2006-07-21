@@ -131,11 +131,11 @@ iconv_t Convertor::getIconv(const char* inCharset, const char* outCharset)
     return cd;        
 }
 
+#define MAX_BYTES_IN_CHAR 2
+    
 void Convertor::convert(const char* inCharset, const char* outCharset,
                         const char * in, unsigned int inLen, TmpBuf<char, 2048>& buf)
 {
-    #define MAX_BYTES_IN_CHAR 2
-    
     static Convertor& c = SingleC::Instance();
     
     MutexGuard mt(mtx);
@@ -154,17 +154,18 @@ void Convertor::convert(const char* inCharset, const char* outCharset,
     if(iconv(cd, &in, &inLen, &outbufptr, &outbytesleft) == (size_t)(-1) && errno != E2BIG)
         throw SCAGException("Convertor: iconv. Cannot convert from '%s' to '%s'. errno=%d. bytesleft=%d", inCharset, outCharset, errno, inLen);
         
-    #undef MAX_BYTES_IN_CHAR        
 }
 
 void Convertor::convert(const char* inCharset, const char* outCharset,
                         const char * in, unsigned int inLen, std::string& outstr)
 {
-    TmpBuf<char, 2048> buf(2048);
+    TmpBuf<char, 2048> buf(inLen * MAX_BYTES_IN_CHAR);
     convert(inCharset, outCharset, in, inLen, buf);
     
     outstr.assign(buf.get(), buf.GetPos());
 }
+
+#undef MAX_BYTES_IN_CHAR
 
 Convertor::~Convertor()
 {

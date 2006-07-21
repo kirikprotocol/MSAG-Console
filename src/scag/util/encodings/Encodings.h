@@ -88,8 +88,11 @@ struct Convertor
     static void UTF8ToKOI8R(const char * utf8buff, unsigned int utf8len, std::string& koi8rStr);
     static void KOI8RToUTF8(const char * latin1Buff, unsigned int latin1BuffLen, std::string& utf8str);
     
-    static void convert(const char* inCharset, const char* outCharset, const char * in, unsigned int inLen, TmpBuf<char, 2048>& buf);
-    static void convert(const char* inCharset, const char* outCharset, const char * in, unsigned int inLen, std::string& outstr);
+    static void convert(const char* inCharset, const char* outCharset,
+                        const char * in, unsigned int inLen, TmpBuf<char, 2048>& buf);
+                        
+    static void convert(const char* inCharset, const char* outCharset,
+                        const char * in, unsigned int inLen, std::string& outstr);
     
 protected:
     static iconv_t getIconv(const char* inCharset, const char* outCharset);
