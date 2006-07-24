@@ -228,7 +228,7 @@ void EventSender::Put (const SACC_ALARM_t& ev)
 {
 
  SACC_ALARM_t* pEv = new SACC_ALARM_t(ev);
- smsc_log_debug(logger,"EventSender::put SACC_TRAFFIC_INFO_EVENT_t addr=0x%X",pEv);
+ smsc_log_debug(logger,"EventSender::put SACC_ALARM_EVENT_t addr=0x%X",pEv);
  
  if(!PushEvent(pEv))
  {
