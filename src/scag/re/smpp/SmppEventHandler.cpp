@@ -192,16 +192,20 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     Address& abonentAddr = CommandBrige::getAbonentAddr(*smppcommand);
     CSmppDiscriptor smppDiscriptor = CommandBrige::getSmppDiscriptor(*smppcommand);
 
-
-    int operatorId = istr.GetOperatorID(abonentAddr);
-    if (operatorId == 0) 
-        throw SCAGException("SmppEventHandler: Cannot find OperatorID for %s abonent", abonentAddr.toString().c_str());
-    
     int providerId = istr.GetProviderID(command.getServiceId());
     if (providerId == 0) 
         throw SCAGException("SmppEventHandler: Cannot find ProviderID for ServiceID=%d", command.getServiceId());
-     
-  
+
+    int operatorId = istr.GetOperatorID(abonentAddr);
+    if (operatorId == 0) 
+    {
+        RegisterAlarmEvent(1, abonentAddr.toString(), CommandBrige::getProtocolForEvent(*smppcommand), command.getServiceId(),
+                            providerId, 0, 0, session.getPrimaryKey().abonentAddr.toString(),
+                            (propertyObject.HandlerId == EH_SUBMIT_SM)||(propertyObject.HandlerId == EH_DELIVER_SM) ? 'I' : 'O');
+        
+        throw SCAGException("SmppEventHandler: Cannot find OperatorID for %s abonent", abonentAddr.toString().c_str());
+    }
+    
     CommandProperty commandProperty(command, (*smppcommand)->status, abonentAddr, providerId, operatorId, smppDiscriptor.cmdType);
 
     std::string message = CommandBrige::getMessageBody(*smppcommand);

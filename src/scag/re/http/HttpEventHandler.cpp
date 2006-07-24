@@ -131,8 +131,14 @@ RuleStatus HttpEventHandler::process(SCAGCommand& command, Session& session)
     Address abonentAddr(hc.getAddress().c_str());
 
     uint32_t operatorId = istr.GetOperatorID(abonentAddr);
-    if (operatorId == 0) 
+    if (operatorId == 0)
+    {
+        RegisterAlarmEvent(1, abonentAddr.toString(), PROTOCOL_HTTP, hc.getServiceId(),
+                            hc.getProviderId(), 0, 0, session.getPrimaryKey().abonentAddr.toString(),
+                            hc.getCommandId() == HTTP_RESPONSE ? 'O' : 'I');
+        
         throw SCAGException("HttpEventHandler: Cannot find OperatorID for %s abonent", abonentAddr.toString().c_str());
+    }
 
     smsc_log_debug(logger, "HttpEventHandler: Operator found. Id = %d", operatorId);
 

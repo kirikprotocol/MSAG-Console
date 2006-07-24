@@ -44,6 +44,7 @@ SCAGCommandReader::SCAGCommandReader(Socket * admSocket)
   commandlist["applyHttpRoutes"] = CommandIds::applyHttpRoutes;
   commandlist["loadHttpTraceRoutes"] = CommandIds::loadHttpTraceRoutes;
   commandlist["traceHttpRoute"] = CommandIds::traceHttpRoute;
+  commandlist["getLogCategories"] = CommandIds::getLogCategories;
 }
 
 
@@ -96,6 +97,7 @@ Command * SCAGCommandReader::createCommand(int id, const DOMDocument *data)
     case CommandIds::applyHttpRoutes: return new CommandApplyHttpRoutes(data);
     case CommandIds::loadHttpTraceRoutes: return new CommandLoadHttpTraceRoutes(data);
     case CommandIds::traceHttpRoute: return new CommandTraceHttpRoute(data);
+    case CommandIds::getLogCategories: return new CommandGetLogCategories(data);
 
     default: 
       smsc_log_warn(logger, "Unknown command id \"%i\"", id);

@@ -120,10 +120,33 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, 
     ev.pSessionKey = sessionPrimaryKey.abonentAddr.toString();
     //sprintf((char *)ev.pSessionKey,"%s/%s", sessionPrimaryKey.abonentAddr.toString().c_str(), msec.toString());
 
-    if ((propertyObject.HandlerId == EH_DELIVER_SM)||(propertyObject.HandlerId == EH_SUBMIT_SM_RESP))
+    if ((propertyObject.HandlerId == EH_DELIVER_SM)||(propertyObject.HandlerId == EH_SUBMIT_SM_RESP) || (propertyObject.HandlerId == EH_HTTP_REQUEST))
         ev.cDirection = 'I';
     else
         ev.cDirection = 'O';
+
+    Statistics::Instance().registerSaccEvent(ev);
+}
+
+void EventHandler::RegisterAlarmEvent(uint32_t eventId, const std::string& addr, uint8_t protocol, uint32_t serviceId, uint32_t providerId, uint32_t operatorId, uint16_t commandStatus, const std::string& sessionPrimaryKey, char dir)
+{
+    SACC_ALARM_t ev;
+
+    ev.Header.cCommandId = 3;
+    ev.Header.cProtocolId = protocol;
+    ev.Header.iServiceId = serviceId;
+    ev.Header.iServiceProviderId = providerId; 
+    ev.Header.pAbonentNumber = addr;
+    ev.Header.sCommandStatus = commandStatus;
+    ev.Header.iOperatorId = operatorId;
+    ev.iAlarmEventId = eventId;
+    
+    timeval tv;
+    gettimeofday(&tv,0);
+    ev.Header.lDateTime = (uint64_t)tv.tv_sec * 1000 + tv.tv_usec / 1000;
+
+    ev.pSessionKey = sessionPrimaryKey;
+    ev.cDirection = dir;
 
     Statistics::Instance().registerSaccEvent(ev);
 }

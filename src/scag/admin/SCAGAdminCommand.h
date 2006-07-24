@@ -203,6 +203,17 @@ public:
     virtual void init();
 };
 
+class CommandGetLogCategories : public AdminCommand
+{
+public:
+    CommandGetLogCategories(const xercesc::DOMDocument * const doc) :
+        AdminCommand((Command::Id)CommandIds::getLogCategories, doc)
+    {
+    }
+    virtual Response * CreateResponse(scag::Scag * SmscApp);
+    virtual void init();
+};
+
 }
 }
 

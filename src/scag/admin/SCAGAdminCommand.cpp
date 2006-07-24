@@ -656,6 +656,65 @@ Response * CommandTraceHttpRoute::CreateResponse(scag::Scag * ScagApp)
     return new Response(Response::Ok, result);
 }
 
+Response * CommandGetLogCategories::CreateResponse(scag::Scag * ScagApp)
+{
+    smsc_log_info(logger, "CommandGetLogCategories is processing...");
+
+    Variant result(smsc::admin::service::StringListType);
+    
+    try {
+        std::auto_ptr<const Logger::LogLevels> cats(Logger::getLogLevels());
+        char * k;
+        Logger::LogLevel level;
+        for (Logger::LogLevels::Iterator i = cats->getIterator(); i.Next(k, level); )
+        {
+            std::string tmp(k);
+            tmp += ",";
+            tmp += Logger::getLogLevel(level);
+            result.appendValueToStringList(tmp.c_str());
+        }
+    } catch(Exception& e) {                                     
+        char msg[1024];                                         
+        snprintf(msg, 1023, "CommandGetLogCategories failed. Details: %s", e.what());
+        msg[1023] = 0;
+        smsc_log_error(logger, msg);
+        return new Response(Response::Error, msg);
+    } catch (...) {
+        smsc_log_warn(logger, "CommandGetLogCategories Failed. Unknown exception");
+        throw AdminException("CommandGetLogCategories Failed. Unknown exception");
+    }
+
+    smsc_log_info(logger, "CommandGetLogCategories processed ok.");
+    return new Response(Response::Ok, result);
+}
+
+/*void SmscComponent::logSetCategories(const Arguments & args)
+{
+  const StringList & cats = args.Get("categories").getStringListValue();
+  Logger::LogLevels levels;
+  for (StringList::const_iterator i = cats.begin(); i != cats.end(); i++)
+  {
+    std::auto_ptr<char> str(cStringCopy(*i));
+    char * delim_pos = strrchr(str.get(), ',');
+    if (delim_pos != NULL)
+    {
+      char * value = delim_pos+1;
+      *delim_pos = 0;
+      levels[str.get()] = Logger::getLogLevel(value);
+    }
+    else
+    {
+      smsc_log_error(logger, "misformatted logger category string: \"%s\"", str.get());
+    }
+  }
+
+  Logger::setLogLevels(levels);
+
+  if( smsc_app_runner->getApp()->getMapProxy() != 0 ) {
+    dynamic_cast<MapProxy*>(smsc_app_runner->getApp()->getMapProxy())->checkLogging();
+  }
+}*/
+
 }
 }
 

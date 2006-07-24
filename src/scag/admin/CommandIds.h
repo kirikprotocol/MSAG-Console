@@ -35,7 +35,8 @@ namespace CommandIds {
     reloadTariffMatrix,
     applyHttpRoutes,
     loadHttpTraceRoutes,
-    traceHttpRoute
+    traceHttpRoute,
+    getLogCategories    
   };
 }
 
