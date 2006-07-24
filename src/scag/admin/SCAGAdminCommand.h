@@ -211,7 +211,6 @@ public:
     {
     }
     virtual Response * CreateResponse(scag::Scag * SmscApp);
-    virtual void init();
 };
 
 }
