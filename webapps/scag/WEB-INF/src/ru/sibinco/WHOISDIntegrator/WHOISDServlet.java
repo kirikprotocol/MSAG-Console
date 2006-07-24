@@ -123,10 +123,12 @@ public class WHOISDServlet extends HttpServlet {
      String service = req.getParameter("service");
      if (service == null) throw new WHOISDException("service parameter is missed!");
      try {
-       new Long(req.getParameter("service"));
+       new Long(service);
      } catch (NumberFormatException e) {
        throw new WHOISDException("service parameter must be an integer or long value");
      }
+     if (appContext.getServiceProviderManager().getServiceById(new Long(service))==null)
+       throw new WHOISDException("MSAG doesn't contain service with id = " + service);     
      RuleManagerWrapper rulemanager = appContext.getRuleManager().getWrapper();
      Map rulesWHOISD = null;
      Rule ruleWHOISD = null;

@@ -43,7 +43,11 @@ public class TopMenu  extends ArrayList {
             Collection routingItems = new ArrayList();
             routingItems.add(new MenuItem("menu.routing.subjects", "/routing/subjects/index.jsp"));
             routingItems.add(new MenuItem("menu.routing.options", "/routing/options/index.jsp"));
-            routingItems.add(new MenuItem("menu.routing.routes", "/routing/routes/index.jsp"));
+            Collection routesStatusItems = new ArrayList();
+            routesStatusItems.add(new MenuItem("menu.routing.routes.SMPP", "/routing/routes/index.jsp?transportId=1"));
+            routesStatusItems.add(new MenuItem("menu.routing.routes.HTTP", "/routing/routes/index.jsp?transportId=2"));
+            routesStatusItems.add(new MenuItem("menu.routing.routes.MMS", "/routing/routes/index.jsp?transportId=3"));
+            routingItems.add(new MenuItem("menu.routing.routes", "", routesStatusItems));
             routingItems.add(new MenuItem("menu.routing.tracer", "/routing/tracer/index.jsp"));
             add(new MenuItem("menu.routing", "", routingItems));
 

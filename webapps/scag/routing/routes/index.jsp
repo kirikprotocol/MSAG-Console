@@ -29,6 +29,16 @@
                 enableDisableButtonsById('mbSaveHttp', false);
                 enableDisableButtonsById('mbLoadSavedHttp', ${(!bean.httpRoutesLoaded)});
             }
+
+            function changeTransportId() {
+                var transport = opForm.all.transportId.options[opForm.all.transportId.selectedIndex].value;
+                if (location.href.indexOf("transportId")!=-1) {
+                  var action = location.href.substring(0,location.href.indexOf("transportId")-1);
+                  opForm.action=action;
+                }                
+                opForm.submit();
+                return true;
+            }
         </script>
 
         <table class=properties_list cellspacing=0 cellpadding=0>
