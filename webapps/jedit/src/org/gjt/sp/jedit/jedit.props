@@ -28,7 +28,7 @@ decorate.frames=false
 decorate.dialogs=false
 
 #debugging
-debug=true
+debug=false
 
 # If true, welcome screen will be displayed.
 # Set to false after initial startup.
@@ -435,6 +435,6 @@ plugin-manager.hide-libraries.toggle=true
 menu.spillover=20
 bufferSwitcher.maxRowCount=10
 showTooltips=true
-ioThreadCount=4
+ioThreadCount=2
 server.brokenToFront=false
 #}}}
