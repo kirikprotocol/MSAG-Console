@@ -46,7 +46,7 @@ my $eoln="\x0d\x0a";
 {value=>'0',width=>10},                          #21 256
 #{field=>'SERVICE_ID',width=>10},
 #{field=>'MSG_ID',width=>10},
-{value=>'0',width=>1},                           #22 266 
+{value=>'0',width=>1},                           #22 266
 {value=>'0',width=>1},                           #23 267
 {value=>'0',width=>1},                           #24 268
 {value=>'0',width=>1},                           #25 269
@@ -111,7 +111,15 @@ for(@dir)
 
   $header="90$timestamp".(' 'x81).'0'.(' 'x7).'90'.(' 'x17).'0'.(' 'x385);
   $footer="90$timestamp".(' 'x81)."0$eoln$crc";
-  process($infile,$tmpfile);
+  eval{
+    process($infile,$tmpfile);
+  };
+  if($@)
+  {
+    print STDERR "Processing error on file $infile:'$@'\n";
+    rename($infile,$infile.'.err');
+  }
+
   if(-f $tmpfile)
   {
     if(!move($tmpfile,$outfile))
@@ -126,6 +134,11 @@ for(@dir)
     mkdir $arcout,0755;
   }
   $arcout.=sprintf("/%02d",$mday);
+  unless(-d $arcout)
+  {
+    mkdir $arcout,0755;
+  }
+  $arcout.=sprintf("/%02d",$hour);
   unless(-d $arcout)
   {
     mkdir $arcout,0755;
