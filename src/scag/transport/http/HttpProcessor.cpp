@@ -321,7 +321,7 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
             return false;
         }
 
-        smsc_log_debug( logger, "Got http_request command host=%s:%d, path=%s, filename=%s, abonent=%s, USR=%d", request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str(), request.getAbonent().c_str(), request.getUSR());
+        smsc_log_debug(logger, "Got http_request command host=%s:%d, path=%s, filename=%s, abonent=%s, USR=%d", request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str(), request.getAbonent().c_str(), request.getUSR());
 
         smsc_log_debug(logger, "SERIALIZED REQUEST BEFORE PROCESSING: %s", request.serialize().c_str());
             
@@ -357,7 +357,7 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
         {
             rs = RuleEngine::Instance().process(request, *se.Get());
 
-            if(rs.result >= 0)
+            if(rs.result >= 0 && rs.status)
             {
                 registerEvent(scag::stat::events::http::REQUEST_OK, request);
                 SessionManager::Instance().releaseSession(se);
@@ -419,7 +419,7 @@ bool HttpProcessorImpl::processResponse(HttpResponse& response)
         if(se.Get())
         {
             rs = RuleEngine::Instance().process(response, *se.Get());
-            if(rs.result >= 0)
+            if(rs.result >= 0 && rs.status)
             {
                 registerEvent(scag::stat::events::http::RESPONSE_OK, response);
                 SessionManager::Instance().releaseSession(se);
@@ -462,7 +462,7 @@ void HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
             response.setDelivered(delivered);
             rs = RuleEngine::Instance().process(response, *se.Get());
 
-            if(rs.result > 0 && delivered)
+            if(rs.result > 0 && rs.status && delivered)
             {
                 registerEvent(scag::stat::events::http::DELIVERED, response);
                 SessionManager::Instance().releaseSession(se);

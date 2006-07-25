@@ -162,7 +162,11 @@ RuleStatus HttpEventHandler::process(SCAGCommand& command, Session& session)
             smsc_log_debug(logger, "HttpEventHandler: unknown command");
     }
 
-    return RuleStatus();
+    RuleStatus rs;
+    
+    rs.status = false;
+    rs.result = -1;
+    return rs;
 }
 
 int HttpEventHandler::StrToHandlerId(const std::string& str)
