@@ -26,6 +26,7 @@
   <section name="admin">
     <param name="host" type="string">@emailsme.admin.host@</param>
     <param name="port" type="int">@emailsme.admin.port@</param>
+    <param name="allowGsm2EmlWithoutProfile" type="bool">false</param>
   </section>
 
   <section name="mail">
