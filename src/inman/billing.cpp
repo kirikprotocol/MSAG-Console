@@ -206,11 +206,12 @@ void Billing::doCleanUp(void)
 
 void Billing::doFinalize(bool doReport/* = true*/)
 {
-    smsc_log_info(logger, "Billing[%u.%u]: %scomplete, CDR is %scomposed, "
-                   "cdrMode: %d, billingType: %sPAID",
+    smsc_log_info(logger, "Billing[%u.%u]: %scomplete, CDR is %sprepared, "
+                   "cdrMode: %d, billingType: %sPAID(%s)",
                    _bconn->bConnId(), _bId, BillComplete() ? "" : "IN",
                    cdr._finalized ? "" : "NOT ",
-                   _cfg.cdrMode, postpaidBill ? "POST": "PRE");
+                   _cfg.cdrMode, postpaidBill ? "POST": "PRE",
+                   cdr._inBilled ? "IN": "CDR");
 
     if ((_cfg.cdrMode && cdr._finalized && _cfg.bfs)
         && ((_cfg.cdrMode == BillingCFG::CDR_ALL)
@@ -627,6 +628,7 @@ void Billing::onEndCapDlg(unsigned char ercode/* = 0*/,
                           InmanErrorType errLayer/* = smsc::inman::errOk*/)
 {
     MutexGuard grd(bilMutex);
+    capDlgActive = false;
     if (errLayer == smsc::inman::errOk) {   //EndSMS
         if ((state == bilReleased) || (state == bilReported))
             doFinalize(true);
@@ -660,7 +662,6 @@ void Billing::onEndCapDlg(unsigned char ercode/* = 0*/,
                 "Billing[%u.%u]: switched to billing via CDR (reason: CapSMSDlg error).",
                 _bconn->bConnId(), _bId);
         }
-        capDlgActive = false;
         if (contCharge)
             chargeResult(smsc::inman::interaction::CHARGING_POSSIBLE,
                         InmanErrorCode::combineError(errLayer, (uint16_t)ercode));
