@@ -126,7 +126,7 @@ void FileStorage::deleteFile(const std::string& fullPath)
 {
     try { File::Unlink(fullPath.c_str()); }
     catch (std::exception& exc) {
-        throw StorageException(exc.what()); 
+        throw StorageException(exc.what());
     }
 }
 void FileStorage::deleteFile(const std::string& location, const std::string& fileName)
@@ -159,7 +159,7 @@ void FileStorage::rollErrorFile(const std::string& location, const std::string& 
 
     try { File::Rename(fullOldFile.c_str(), fullNewFile.c_str()); }
     catch (std::exception& exc) {
-        throw StorageException(exc.what()); 
+        throw StorageException(exc.what());
     }
 }
 void FileStorage::rollFileExtension(const std::string& location, const char* fileName, bool bill)
@@ -172,16 +172,16 @@ void FileStorage::rollFileExtension(const std::string& location, const char* fil
 
     try { File::Rename(fullOldFile.c_str(), fullNewFile.c_str()); }
     catch (std::exception& exc) {
-        throw StorageException(exc.what()); 
+        throw StorageException(exc.what());
     }
 }
 bool FileStorage::createDir(const std::string& dir)
 {
     if (mkdir(dir.c_str(), S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH) != 0) { // define mode ???
         if (errno == EEXIST) return false;
-        Exception exc("Failed to create directory '%s'. Details: %s", 
+        Exception exc("Failed to create directory '%s'. Details: %s",
                       dir.c_str(), strerror(errno));
-        throw StorageException(exc.what()); 
+        throw StorageException(exc.what());
     }
     return true;
 }
@@ -216,7 +216,7 @@ void FileStorage::flush()
 void FileStorage::close()
 {
     MutexGuard guard(storageFileLock);
-    try { storageFile.Close(); } 
+    try { storageFile.Close(); }
     catch (FileException& fexc) {
         smsc_log_error(log, "Failed to close file. Details: %s", fexc.what());
     }
@@ -226,7 +226,7 @@ void FileStorage::getPos(File::offset_type* pos)
 {
     __require__(pos);
 
-    try { *pos = storageFile.Pos(); } 
+    try { *pos = storageFile.Pos(); }
     catch (FileException& exc) {
         try { storageFile.Close(); } catch (...) {}
         throw StorageException(exc.what());
@@ -236,7 +236,7 @@ void FileStorage::setPos(const File::offset_type* pos)
 {
     __require__(pos);
 
-    try { storageFile.Seek(*pos, SEEK_SET); } 
+    try { storageFile.Seek(*pos, SEEK_SET); }
     catch (FileException& exc) {
         try { storageFile.Close(); } catch (...) {}
         throw StorageException(exc.what());
@@ -281,7 +281,7 @@ bool RollingStorage::create(bool bill, bool roll/*=false*/)
         File::offset_type fpos = 0; FileStorage::getPos(&fpos);
         int headerPos = ((bill) ? strlen(SMSC_BILLING_HEADER_TEXT):
             (strlen(SMSC_ARCHIVE_HEADER_TEXT) + sizeof(SMSC_ARCHIVE_VERSION_INFO)))+2;
-        if (fpos <= headerPos) return false; // file is empty => no rolling 
+        if (fpos <= headerPos) return false; // file is empty => no rolling
     }
 
     time_t current = time(NULL);
@@ -294,22 +294,22 @@ bool RollingStorage::create(bool bill, bool roll/*=false*/)
     fullFilePath += '/'; fullFilePath += (const char*)storageNewFileName; fullFilePath += '.';
     fullFilePath += (bill ? SMSC_LAST_BILLING_FILE_EXTENSION:SMSC_LAST_ARCHIVE_FILE_EXTENSION);
     const char* fullFilePathStr = fullFilePath.c_str();
-    
+
     if (File::Exists(fullFilePathStr)) { // file already exists
         Exception exc("Failed to create new %s file '%s'. File already exists!",
                       (bill ? "billing":"archive"), fullFilePathStr);
         throw StorageException(exc.what());
     }
-    
+
     File storageNewFile;
-    try { storageNewFile.RWCreate(fullFilePathStr); } 
+    try { storageNewFile.RWCreate(fullFilePathStr); }
     catch (FileException& fexc) {
         Exception exc("Failed to create new %s file '%s'. Details: %s",
                       (bill ? "billing":"archive"), fullFilePathStr, fexc.what());
         throw StorageException(exc.what());
     }
 
-    try 
+    try
     {
         if (storageFile.isOpened()) { // close old file & roll extension if needed
             storageFile.Close();
@@ -479,8 +479,8 @@ void FileStorage::save(SMSId id, SMS& sms, File::offset_type* pos /*= 0 (no getP
     int32_t bodyBufferLen = sms.messageBody.getBufferLength();
     int32_t textLen       = 0;
 
-    uint32_t recordSize = sizeof(id)+sizeof(smsState)+sizeof(sms.submitTime)+sizeof(sms.validTime)+
-        sizeof(sms.attempts)+sizeof(sms.lastResult)+sizeof(sms.lastTime)+sizeof(sms.nextTime)+
+    uint32_t recordSize = sizeof(id)+sizeof(smsState)+sizeof(uint32_t)+sizeof(uint32_t)+
+        sizeof(sms.attempts)+sizeof(sms.lastResult)+sizeof(uint32_t)+sizeof(uint32_t)+
         sizeof(oaSize)+oaSize+sizeof(daSize)+daSize+sizeof(ddaSize)+ddaSize+sizeof(sms.messageReference)+
         sizeof(svcSize)+svcSize+sizeof(sms.deliveryReport)+sizeof(sms.billingRecord)+
         sizeof(odMscSize)+odMscSize+sizeof(odImsiSize)+odImsiSize+sizeof(sms.originatingDescriptor.sme)+
@@ -499,7 +499,7 @@ void FileStorage::save(SMSId id, SMS& sms, File::offset_type* pos /*= 0 (no getP
     memcpy(position, &idd, sizeof(idd)); position+=sizeof(idd);
     memcpy(position, &smsState, sizeof(smsState)); position+=sizeof(smsState);
 
-    time_t writeTime = htonl(sms.submitTime);
+    uint32_t writeTime = htonl(sms.submitTime);
     memcpy(position, &writeTime, sizeof(writeTime)); position+=sizeof(writeTime);
     writeTime = htonl(sms.validTime);
     memcpy(position, &writeTime, sizeof(writeTime)); position+=sizeof(writeTime);
@@ -633,14 +633,15 @@ bool FileStorage::load(SMSId& id, SMS& sms, const File::offset_type* pos /*= 0 (
         memcpy(&smsState, position, sizeof(smsState)); position+=sizeof(smsState);
         sms.state = (smsc::sms::State)smsState;
 
-        memcpy(&sms.submitTime, position, sizeof(sms.submitTime)); position+=sizeof(sms.submitTime);
-        sms.submitTime = ntohl(sms.submitTime);
-        memcpy(&sms.validTime,  position, sizeof(sms.validTime) ); position+=sizeof(sms.validTime);
-        sms.validTime  = ntohl(sms.validTime);
-        memcpy(&sms.lastTime,   position, sizeof(sms.lastTime)  ); position+=sizeof(sms.lastTime);
-        sms.lastTime   = ntohl(sms.lastTime);
-        memcpy(&sms.nextTime,   position, sizeof(sms.nextTime)  ); position+=sizeof(sms.nextTime);
-        sms.nextTime   = ntohl(sms.nextTime);
+        uint32_t rdTime;
+        memcpy(&rdTime, position, sizeof(rdTime)); position+=sizeof(rdTime);
+        sms.submitTime = ntohl(rdTime);
+        memcpy(&rdTime,  position, sizeof(rdTime) ); position+=sizeof(rdTime);
+        sms.validTime  = ntohl(rdTime);
+        memcpy(&rdTime,   position, sizeof(rdTime)  ); position+=sizeof(rdTime);
+        sms.lastTime   = ntohl(rdTime);
+        memcpy(&rdTime,   position, sizeof(rdTime)  ); position+=sizeof(rdTime);
+        sms.nextTime   = ntohl(rdTime);
 
         memcpy(&sms.attempts, position, sizeof(sms.attempts)); position+=sizeof(sms.attempts);
         sms.attempts = ntohl(sms.attempts);
@@ -777,10 +778,10 @@ bool PersistentStorage::create(bool create)
     std::string fullFilePath = storageLocation+'/'+storageFileName;
     const char* fullFilePathStr = fullFilePath.c_str();
 
-    try 
+    try
     {
         if (File::Exists(fullFilePathStr)) // file exists
-        { 
+        {
             if (!create) storageFile.ROpen(fullFilePathStr); // open for reading
             else {
                 storageFile.RWOpen(fullFilePathStr); // open for writing
@@ -789,7 +790,7 @@ bool PersistentStorage::create(bool create)
             }
         }
         else // file not exists
-        { 
+        {
             if (!create) {
                 Exception exc("File '%s' not exists. Details: %s", fullFilePathStr, strerror(errno));
                 throw StorageException(exc.what());
@@ -860,7 +861,7 @@ bool TextDumpStorage::create()
     const char* fullFilePathStr = fullFilePath.c_str();
 
     bool fileFound = false;
-    try 
+    try
     {
         fileFound = File::Exists(fullFilePathStr);
         if (fileFound) { // open for writing (append)
@@ -1061,7 +1062,7 @@ bool TransactionStorage::open(bool create)
 {
     const char* fullFilePathStr = storageFileName.c_str();
     bool fileExists = true;
-    try 
+    try
     {
         if (!storageFile.isOpened())
         {
@@ -1088,7 +1089,7 @@ bool TransactionStorage::getTransactionData(File::offset_type* pos)
     if (!this->open(false)) return false;
     uint64_t value = 0;
     bool result = FileStorage::read((void *)&value, sizeof(value));
-    if (!result) { 
+    if (!result) {
         try { storageFile.Close(); } catch (...) {}
     }
     *pos = (File::offset_type)((result) ? Uint64Converter::toHostOrder(value):-1);

@@ -8,6 +8,7 @@
 #include <ucontext.h>
 #include <signal.h>
 #include <pthread.h>
+#include "util/64bitcompat.h"
 
 #ifdef linux
 #include <execinfo.h>
@@ -43,6 +44,11 @@ static void BackTrace(void** dump)
 
 #if defined(sparc) || defined(__sparc)
 #define FRAME_PTR_REGISTER REG_SP
+#ifdef __sparcv9
+#define BIAS 2047
+#else
+#define BIAS 0
+#endif
 #endif
 
 #if defined(i386) || defined(__i386)
@@ -55,7 +61,7 @@ static void BackTrace(void** dump)
 
   ucontext_t u;
   getcontext(&u);
-  frame* fp=(frame*)u.uc_mcontext.gregs[FRAME_PTR_REGISTER];
+  frame* fp=(struct frame*)((long)(u.uc_mcontext.gregs[FRAME_PTR_REGISTER]) + BIAS);
 
   void* savpc;
   frame* savfp;
@@ -76,7 +82,7 @@ static void BackTrace(void** dump)
     {
       skip--;
     }
-    fp = (::frame*)fp->fr_savfp;
+    fp = (struct frame*)((long)(fp->fr_savfp) + BIAS);
   }
   if(counter!=MAXTRACESIZE)dump[counter]=0;
 }
@@ -167,7 +173,7 @@ void LeakHunter::Init()
 
 LeakHunter::~LeakHunter()
 {
-  char *fn="lh.log";
+  const char *fn="lh.log";
   if(getenv("LEAK_HUNTER_LOG"))
   {
     fn=getenv("LEAK_HUNTER_LOG");
@@ -182,7 +188,7 @@ LeakHunter::~LeakHunter()
     for(int j=0;j<memcounts[i];j++)
     {
       BlockInfo *bi=&memblocks[i][j];
-      fprintf(f,"Mem:0x%08X size %d, allocated at\n",(int)bi->addr,bi->size);
+      fprintf(f,"Mem:0x%p size %d, allocated at\n",bi->addr,bi->size);
       DumpTrace(bi->trace);
       fprintf(f,"\n");
     }
@@ -225,7 +231,7 @@ void LeakHunter::CheckPoint()
         if(!fnd)
         {
           BlockInfo *bi=&memblocks[i][j];
-          fprintf(f,"Mem:0x%08X size %d, allocated at\n",(int)bi->addr,bi->size);
+          fprintf(f,"Mem:0x%p size %d, allocated at\n",bi->addr,bi->size);
           DumpTrace(bi->trace);
           fprintf(f,"\n");
         }
@@ -267,7 +273,7 @@ void LeakHunter::DumpTrace(void** trace)
   for(int i=0;i<MAXTRACESIZE;i++)
   {
     if(!trace[i])break;
-    fprintf(f,"{0x%08X}\n",(int)trace[i]);
+    fprintf(f,"{0x%p}\n",trace[i]);
   }
 }
 
@@ -276,7 +282,7 @@ void LeakHunter::RegisterAlloc(void* ptr,int size)
 {
   smsc::core::synchronization::MutexGuard guard(m);
   if(!init)Init();
-  int idx=(((int)ptr)>>5)%LH_HASHSIZE;
+  int idx=((VoidPtr2Int(ptr))>>5)%LH_HASHSIZE;
   if(memcounts[idx]==memsizes[idx])
   {
     BlockInfo *tmp=(BlockInfo *)malloc(sizeof(BlockInfo)*memsizes[idx]*2);
@@ -311,7 +317,7 @@ static void PrintTrace()
   for(int i=0;i<MAXTRACESIZE;i++)
   {
     if(!trace[i])break;
-    fprintf(stderr,"l *0x%08X\n",(int)trace[i]);
+    fprintf(stderr,"l *0x%p\n",trace[i]);
   }
 }
 
@@ -319,7 +325,7 @@ int LeakHunter::RegisterDealloc(void* ptr)
 {
   smsc::core::synchronization::MutexGuard guard(m);
   if(!init)Init();
-  int idx=(((int)ptr)>>5)%LH_HASHSIZE;
+  int idx=((VoidPtr2Int(ptr))>>5)%LH_HASHSIZE;
   int i;
   for(i=memcounts[idx]-1;i>=0;i--)
   {
@@ -336,7 +342,7 @@ int LeakHunter::RegisterDealloc(void* ptr)
       return 1;
     }
   }
-  fprintf(stderr,"Error: Block with address 0x%08X deallocated twice or wasn't allocated!\n",(int)ptr);
+  fprintf(stderr,"Error: Block with address 0x%p deallocated twice or wasn't allocated!\n",ptr);
   PrintTrace();
   return 0;
   //throw "DELETE UNALLOCATED BLOCK";
@@ -437,7 +443,7 @@ static void xfree(void* ptr)
   free(orgmem);
 }
 
-void* operator new(unsigned int size)
+void* operator new(size_t size)
 {
   smsc::util::leaktracing::initlh();
   void* mem=xmalloc(size);
@@ -451,7 +457,7 @@ void* operator new(unsigned int size)
   return mem;
 }
 
-void* operator new[](unsigned int size)
+void* operator new[](size_t size)
 {
   smsc::util::leaktracing::initlh();
   void* mem=xmalloc(size);
