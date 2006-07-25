@@ -195,9 +195,12 @@ public:
     {
       if(!inqueue.Pop(cmd))break;
       inQueueCount--;
-      cmd.setProxy(prx);
-      cmds.push_back(cmd);
-      mx++;
+      if(cmd.IsOk())
+      {
+        cmd.setProxy(prx);
+        cmds.push_back(cmd);
+        mx++;
+      }
       if(cmd->get_commandId()==SUBMIT)submitCount--;
     }
     return inQueueCount;
