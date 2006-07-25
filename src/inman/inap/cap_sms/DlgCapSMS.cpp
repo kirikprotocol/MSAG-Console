@@ -261,9 +261,14 @@ void CapSMSDlg::onDialogInvoke(Invoke* op, bool lastComp)
         smsc_log_error(logger, "CapSMS[%u]: illegal Invoke(opcode = %u)",
             capId, op->getOpcode());
     }
-    if (doAbort)
-        smsc_log_error(logger, "CapSMS[%u]: inconsistent Invoke(opcode = %u), state(0x%x)",
-                        capId, op->getOpcode(), _capState.value);
+    if (doAbort) {
+        /* NOTE: there is a known problem with Alcatel IN: it sends END_REQ carrying
+         * excessive ContinueSMS component.
+         */
+        logger->log(_capState.s.ctrFinished ? Logger::LEVEL_WARN : Logger::LEVEL_ERROR,
+                    "CapSMS[%u]: inconsistent Invoke(opcode = %u), state(0x%x)",
+                    capId, op->getOpcode(), _capState.value);
+    }
     if (_capState.s.ctrFinished) {
         endTCap(); //ReleaseSMS 
         ssfHdl->onEndCapDlg();
