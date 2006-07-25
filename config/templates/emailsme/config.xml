@@ -2,6 +2,10 @@
 <!DOCTYPE config SYSTEM "configuration.dtd">
 <config>
 
+  <section name="store">
+    <param name="dir" type="string">@emailsme.store.dir@</param>
+  </section>
+
   <section name="smpp">
       <param name="host" type="string">@connect.host@</param>
       <param name="port" type="int">@smsc.smpp.port@</param>
@@ -17,6 +21,11 @@
   <section name="listener">
     <param name="host" type="string">@listen.host@</param>
     <param name="port" type="int">@emailsme.mdagent.port@</param>
+  </section>
+
+  <section name="admin">
+    <param name="host" type="string">@emailsme.admin.host@</param>
+    <param name="port" type="int">@emailsme.admin.port@</param>
   </section>
 
   <section name="mail">
@@ -35,19 +44,4 @@
     <param name="annotationSize" type="int">460</param>
   </section>
 
-  <section name="StartupLoader">
-    <section name="DataSourceDrivers">
-      <section name="OCIDataSourceDriver">
-        <param name="type" type="string">OCI</param>
-        <param name="loadup" type="string">libdb_oci.so</param>
-      </section>
-    </section>
-  </section>
-  <section name="DataSource">
-    <param name="type" type="string">OCI</param>
-    <param name="connections" type="int">5</param>
-    <param name="dbInstance" type="string">@db.instance@</param>
-    <param name="dbUserName" type="string">@db.user@</param>
-    <param name="dbUserPassword" type="string">@db.password@</param>
-  </section>
 </config>
