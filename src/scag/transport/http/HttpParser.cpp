@@ -396,7 +396,7 @@ StatusCode HttpParser::parseCookie(const char *buf, HttpCommand& cmd, bool set)
   Cookie *cur = &cmd.defCookie;
 
   do {
-    end = strpbrk(start, ";,");
+    end = strpbrk(start, ";");
     mid = strchr(start, '=');
 
     if (!mid || (mid && end && (mid > end)))
