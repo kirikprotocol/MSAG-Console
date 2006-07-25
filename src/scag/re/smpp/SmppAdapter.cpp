@@ -91,6 +91,7 @@ IntHash<AccessType> SmppCommandAdapter::InitDataSmAccess()
 {
     IntHash<AccessType> hs;
     hs.Insert(OA,atReadWrite);
+    hs.Insert(DA,atReadWrite);
     return hs;
 }
 
@@ -582,7 +583,10 @@ void SmppCommandAdapter::Set_DC_BIT_Property(SMS& data,int FieldId,bool value)
 
 void SmppCommandAdapter::WriteDataSmField(SMS& data,int FieldId,AdapterProperty& property)
 {
-
+    if (FieldId == OA) 
+        AssignAddress(data.originatingAddress, property.getStr().c_str());
+    else if (FieldId == DA) 
+        AssignAddress(data.destinationAddress, property.getStr().c_str());
 }
 
 
@@ -1304,20 +1308,7 @@ void SmppCommandAdapter::changed(AdapterProperty& property)
         pFieldId = DataSmFieldNames.GetPtr(name.c_str());
         if (!pFieldId) return;
 
-        if (name == "OA") 
-        {
-            switch (command->get_smsCommand().dir)
-            {
-            case dsdSc2Srv:
-                AssignAddress(sms->destinationAddress, property.getStr().c_str());
-                break;
-            case dsdSrv2Sc:
-                AssignAddress(sms->originatingAddress, property.getStr().c_str());
-                break;
-            }
-        }
-        else 
-            WriteDataSmField(*sms,*pFieldId,property);
+        WriteDataSmField(*sms,*pFieldId,property);
 
         break;
     case DATASM_RESP:
