@@ -5,7 +5,9 @@
 #include "util/Exception.hpp"
 #include "util/BufferSerialization.hpp"
 #include "core/network/Socket.hpp"
+#include "sms/sms_util.h"
 
+using namespace smsc::sms;
 using namespace smsc::emailsme;
 using namespace smsc::util;
 using namespace smsc::core::network;
@@ -79,6 +81,10 @@ int main(int argc,char* argv[])
   if(argc!=4)
   {
     printf("Usage: %s host:port command args\n",argv[0]);
+    printf("Commands:\n"
+    "update addr={address} user={username},limit={number}{d|w|m}[,forwardEmail={email}][,realName={realname}]\n"
+    "delete addr={address}\n"
+    );
     return -1;
   }
   char host[256];
@@ -91,60 +97,85 @@ int main(int argc,char* argv[])
   std::string command=argv[2];
   ParamsMap m;
   ParseParams(m,argv[3]);
-  if(command=="update")
-  {
-    smsc::emailsme::AbonentProfile p;
-    p.addr=getParamAsString(m,"addr").c_str();
-    p.user=getParamAsString(m,"user");
-    p.forwardEmail=getOptParamAsString(m,"fwdEmail");
-    p.realName=getOptParamAsString(m,"realName");
-    std::string limit=getParamAsString(m,"limit");
-    char lt;
-    if(!sscanf(limit.c_str(),"%d%c",&p.limitValue,&lt))
+  try{
+    if(command=="update")
     {
-      printf("Invalid limit value:%s\n",limit.c_str());
-      return -1;
-    }
-    switch(lt)
-    {
-      case 'd':p.ltype=ltDay;break;
-      case 'w':p.ltype=ltWeek;break;
-      case 'm':p.ltype=ltMonth;break;
-      default:
+      smsc::emailsme::AbonentProfile p;
+      p.addr=getParamAsString(m,"addr").c_str();
+      p.user=getParamAsString(m,"user");
+      p.forwardEmail=getOptParamAsString(m,"fwdEmail");
+      p.realName=getOptParamAsString(m,"realName");
+      std::string limit=getParamAsString(m,"limit");
+      char lt;
+      if(!sscanf(limit.c_str(),"%d%c",&p.limitValue,&lt))
       {
-        printf("Unknown limit type:%c\n",lt);
+        printf("Invalid limit value:%s\n",limit.c_str());
         return -1;
       }
-    }
-    p.numberMap=true;
-    p.limitDate=0;
-    p.limitCountGsm2Eml=0;
-    p.limitCountEml2Gsm=0;
-    SerializationBuffer sb;
-    sb.WriteNetInt32(1);
-    p.Write(sb);
-    Socket s;
-    if(s.Init(host,port,0)==-1)
+      switch(lt)
+      {
+        case 'd':p.ltype=ltDay;break;
+        case 'w':p.ltype=ltWeek;break;
+        case 'm':p.ltype=ltMonth;break;
+        default:
+        {
+          printf("Unknown limit type:%c\n",lt);
+          return -1;
+        }
+      }
+      p.numberMap=true;
+      p.limitDate=0;
+      p.limitCountGsm2Eml=0;
+      p.limitCountEml2Gsm=0;
+      SerializationBuffer sb;
+      sb.WriteNetInt32(1);
+      p.Write(sb);
+      Socket s;
+      if(s.Init(host,port,0)==-1)
+      {
+        printf("Socket init failed at %s:%d\n",host,port);
+        return -1;
+      }
+      if(s.Connect()==-1)
+      {
+        printf("Failed to connect to %s:%d\n",host,port);
+        return -1;
+      }
+      int pktSz=htonl(sb.getPos());
+      s.WriteAll((char*)&pktSz,4);
+      s.WriteAll(sb.getBuffer(),sb.getPos());
+      int rv;
+      s.ReadAll((char*)&rv,4);
+      printf("Result:%d\n",rv);
+    }else if(command=="delete")
     {
-      printf("Socket init failed at %s:%d\n",host,port);
-      return -1;
-    }
-    if(s.Connect()==-1)
+      SerializationBuffer sb;
+      sb.WriteNetInt32(2);
+      WriteAddress(sb,getParamAsString(m,"addr").c_str());
+      Socket s;
+      if(s.Init(host,port,0)==-1)
+      {
+        printf("Socket init failed at %s:%d\n",host,port);
+        return -1;
+      }
+      if(s.Connect()==-1)
+      {
+        printf("Failed to connect to %s:%d\n",host,port);
+        return -1;
+      }
+      int pktSz=htonl(sb.getPos());
+      s.WriteAll((char*)&pktSz,4);
+      s.WriteAll(sb.getBuffer(),sb.getPos());
+      int rv;
+      s.ReadAll((char*)&rv,4);
+      printf("Result:%d\n",rv);
+    }else
     {
-      printf("Failed to connect to %s:%d\n",host,port);
-      return -1;
+      printf("Unknown command:%s\n",command.c_str());
     }
-    int pktSz=htonl(sb.getPos());
-    s.WriteAll((char*)&pktSz,4);
-    s.WriteAll(sb.getBuffer(),sb.getPos());
-    int rv;
-    s.ReadAll((char*)&rv,4);
-    printf("Result:%d\n",rv);
-  }else if(command=="delete")
+  }catch(std::exception& e)
   {
-  }else
-  {
-    printf("Unknown command:%s\n",command.c_str());
+    printf("Exception:%s\n",e.what());
   }
   return 0;
 }

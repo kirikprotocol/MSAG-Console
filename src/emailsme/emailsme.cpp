@@ -672,7 +672,7 @@ namespace cfg{
  string mailstripper;
  OutputFormatter *msgFormat;
  string storeDir;
-
+ bool allowGsm2EmlWithoutProfile=false;
 };
 
 int stopped=0;
@@ -878,19 +878,29 @@ int processSms(const char* text,const char* fromaddress)
     ReplaceString(addr,"*","@");
     ReplaceString(addr,"$","_");
 
-    if(!storage.checkGsm2EmlLimit(fromaddress))
-    {
-      return ProcessSmsCodes::OUTOFLIMIT;
-    }
-
     ReplaceString(body,"\n.\n","\n..\n");
 
     AbonentProfile p;
+    bool haveprofile=true;
     if(!storage.getProfileByAddress(fromaddress,p))
     {
       __trace2__("no profile for abonent %s",fromaddress);
-      return ProcessSmsCodes::NOPROFILE;
+      if(!cfg::allowGsm2EmlWithoutProfile)
+      {
+        return ProcessSmsCodes::NOPROFILE;
+      }
+      haveprofile=false;
+      p.user=fromaddress;
     }
+
+    if(haveprofile)
+    {
+      if(!storage.checkGsm2EmlLimit(fromaddress))
+      {
+        return ProcessSmsCodes::OUTOFLIMIT;
+      }
+    }
+
 
     const char* sp=strchr(text,' ');
     std::string cmd;
@@ -906,59 +916,68 @@ int processSms(const char* text,const char* fromaddress)
 
     __trace2__("cmd=%s",cmd.c_str());
 
-    if(cmd=="alias")
+    if(haveprofile)
     {
-      std::string value=sp;
-      if(value.length() && value!=p.user)
+      if(cmd=="alias")
       {
-        storage.DeleteProfile(p);
-        p.user=value;
-        storage.CreateProfile(p);
+        std::string value=sp;
+        if(value.length() && value!=p.user)
+        {
+          storage.DeleteProfile(p);
+          p.user=value;
+          storage.CreateProfile(p);
+        }
+        return ProcessSmsCodes::OK;
       }
-      return ProcessSmsCodes::OK;
-    }
-    if(cmd=="aliasoff")
-    {
-      if(p.user!=p.addr.value)
+      if(cmd=="aliasoff")
       {
-        p.user=p.addr.value;
-        storage.DeleteProfile(p);
-        storage.CreateProfile(p);
+        if(p.user!=p.addr.value)
+        {
+          p.user=p.addr.value;
+          storage.DeleteProfile(p);
+          storage.CreateProfile(p);
+        }
+        return ProcessSmsCodes::OK;
       }
-      return ProcessSmsCodes::OK;
-    }
-    if(cmd=="forward")
-    {
-      p.forwardEmail=sp;
-      storage.UpdateProfile(p);
-      return ProcessSmsCodes::OK;
-    }
-    if(cmd=="forwardoff")
-    {
-      p.forwardEmail="";
-      storage.UpdateProfile(p);
-      return ProcessSmsCodes::OK;
-    }
+      if(cmd=="forward")
+      {
+        p.forwardEmail=sp;
+        storage.UpdateProfile(p);
+        return ProcessSmsCodes::OK;
+      }
+      if(cmd=="forwardoff")
+      {
+        p.forwardEmail="";
+        storage.UpdateProfile(p);
+        return ProcessSmsCodes::OK;
+      }
 
-    if(cmd=="realname")
-    {
-      p.realName=sp;
-      storage.UpdateProfile(p);
-      return ProcessSmsCodes::OK;
-    }
-    if(cmd=="number")
-    {
-      std::string val=sp;
-      for(int i=0;i<val.length();i++)val[i]=tolower(val[i]);
-      if(val=="on")p.numberMap=true;
-      else if(val=="off")p.numberMap=false;
-      else return ProcessSmsCodes::INVALIDSMS;
-      storage.UpdateProfile(p);
-      return ProcessSmsCodes::OK;
+      if(cmd=="realname")
+      {
+        p.realName=sp;
+        storage.UpdateProfile(p);
+        return ProcessSmsCodes::OK;
+      }
+      if(cmd=="number")
+      {
+        std::string val=sp;
+        for(int i=0;i<val.length();i++)val[i]=tolower(val[i]);
+        if(val=="on")p.numberMap=true;
+        else if(val=="off")p.numberMap=false;
+        else return ProcessSmsCodes::INVALIDSMS;
+        storage.UpdateProfile(p);
+        return ProcessSmsCodes::OK;
+      }
     }
 
     try{
-      from=makeFromAddress(MapAddressToEmail(fromaddress).c_str());
+      if(haveprofile)
+      {
+        from=makeFromAddress(MapAddressToEmail(fromaddress).c_str());
+      }else
+      {
+        from=makeFromAddress(fromaddress);
+      }
     }catch(exception& e)
     {
       __warning2__("failed to map address to mail:%s",e.what());
@@ -989,7 +1008,7 @@ int processSms(const char* text,const char* fromaddress)
 
     try{
       int rv=SendEMail(fromdecor,to,subj,body);
-      storage.incGsm2EmlLimit(fromaddress);
+      if(haveprofile)storage.incGsm2EmlLimit(fromaddress);
       if(rv!=ProcessSmsCodes::OK)return rv;
     }catch(...)
     {
@@ -1408,11 +1427,20 @@ int main(int argc,char* argv[])
     cfg::smtpPort=cfgman.getInt("smtp.port");
   }catch(...)
   {
+    __warning__("smpp.port not found, using default");
   }
   try{
     cfg::retryTime=cfgman.getInt("smpp.retryTime");
   }catch(...)
   {
+    __warning__("smpp.retryTime not found, using default");
+  }
+
+  try{
+    cfg::allowGsm2EmlWithoutProfile=cfgman.getBool("admin.allowGsm2EmlWithoutProfile");
+  }catch(...)
+  {
+    __warning__("admin.allowGsm2EmlWithoutProfile not found, disabled by default");
   }
 
   cfg::storeDir=cfgman.getString("store.dir");
