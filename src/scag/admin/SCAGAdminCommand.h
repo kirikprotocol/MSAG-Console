@@ -213,6 +213,18 @@ public:
     virtual Response * CreateResponse(scag::Scag * SmscApp);
 };
 
+class CommandSetLogCategories : public AdminCommand
+{
+    std::string cats;
+public:
+    CommandSetLogCategories(const xercesc::DOMDocument * const doc) :
+        AdminCommand((Command::Id)CommandIds::setLogCategories, doc)
+    {
+    }
+    virtual Response * CreateResponse(scag::Scag * SmscApp);
+    virtual void init();    
+};
+
 }
 }
 

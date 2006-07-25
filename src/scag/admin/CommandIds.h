@@ -36,7 +36,8 @@ namespace CommandIds {
     applyHttpRoutes,
     loadHttpTraceRoutes,
     traceHttpRoute,
-    getLogCategories    
+    getLogCategories,
+    setLogCategories
   };
 }
 

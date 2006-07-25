@@ -688,32 +688,49 @@ Response * CommandGetLogCategories::CreateResponse(scag::Scag * ScagApp)
     return new Response(Response::Ok, result);
 }
 
-/*void SmscComponent::logSetCategories(const Arguments & args)
+void CommandSetLogCategories::init()
 {
-  const StringList & cats = args.Get("categories").getStringListValue();
-  Logger::LogLevels levels;
-  for (StringList::const_iterator i = cats.begin(); i != cats.end(); i++)
-  {
-    std::auto_ptr<char> str(cStringCopy(*i));
-    char * delim_pos = strrchr(str.get(), ',');
-    if (delim_pos != NULL)
+    smsc_log_info(logger, "CommandSetLogCategories got parameters:");
+
+    BEGIN_SCAN_PARAMS
+    GETSTRPARAM_(cats,    "cats")
+    END_SCAN_PARAMS
+    smsc_log_info(logger, "CommandSetLogCategories cats=%s", cats.c_str());    
+}
+
+Response * CommandSetLogCategories::CreateResponse(scag::Scag * ScagApp)
+{
+    smsc_log_info(logger, "CommandSetLogCategories is processing...");
+
+    const char *delim_pos, *p = cats.c_str();
+    bool s = false;
+    std::string cat, val;
+    Logger::LogLevels levels;    
+    
+    while((delim_pos = strrchr(p, ',')))
     {
-      char * value = delim_pos+1;
-      *delim_pos = 0;
-      levels[str.get()] = Logger::getLogLevel(value);
+        if(!s)
+            cat.assign(p, delim_pos - p);
+        else
+        {
+            val.assign(p, delim_pos - p);
+            levels[cat.c_str()] = Logger::getLogLevel(val.c_str());
+            smsc_log_debug(logger, "SetLogCategories [%s]=[%s]", cat.c_str(), val.c_str());
+        }
+        s = !s;
+        p = delim_pos + 1;
+    }
+    
+    if(s)
+    {
+        if(*p) levels[cat.c_str()] = Logger::getLogLevel(p);
     }
     else
-    {
-      smsc_log_error(logger, "misformatted logger category string: \"%s\"", str.get());
-    }
-  }
-
-  Logger::setLogLevels(levels);
-
-  if( smsc_app_runner->getApp()->getMapProxy() != 0 ) {
-    dynamic_cast<MapProxy*>(smsc_app_runner->getApp()->getMapProxy())->checkLogging();
-  }
-}*/
+        return new Response(Response::Error, "CommandGetLogCategories processed failed. Bad format");        
+        
+    smsc_log_info(logger, "CommandGetLogCategories processed ok.");
+    return new Response(Response::Ok, "CommandGetLogCategories processed ok.");
+}
 
 }
 }
