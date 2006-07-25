@@ -44,16 +44,14 @@ public:
   {
     if(rd->Count()>0)
     {
-      rd->Pop(item);
-      return true;
+      return rd->Pop(item);
     }
     {
       MutexGuard g(mtx);
       std::swap(rd,wr);
     }
     if(rd->Count()==0)return false;
-    rd->Pop(item);
-    return true;
+    return rd->Pop(item);
   }
 
   void Wait()const
