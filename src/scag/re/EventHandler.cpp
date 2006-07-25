@@ -89,29 +89,12 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, 
 
 
     ev.Header.pAbonentNumber = commandProperty.abonentAddr.toString();
-/*    std::string tempStr = commandProperty.abonentAddr.toString();
-
-    if (tempStr.size() > MAX_ABONENT_NUMBER_LENGTH - 1)
-    {
-        memcpy((char *)ev.Header.pAbonentNumber,tempStr.c_str(), MAX_ABONENT_NUMBER_LENGTH - 1);
-        ev.Header.pAbonentNumber[MAX_ABONENT_NUMBER_LENGTH - 1] = 0;
-    }
-    else
-        sprintf((char *)ev.Header.pAbonentNumber,"%s",tempStr.c_str());*/
 
     ev.Header.sCommandStatus = commandProperty.status;
     ev.Header.iOperatorId = commandProperty.operatorId;
     
-    if ((propertyObject.HandlerId == EH_SUBMIT_SM)||(propertyObject.HandlerId == EH_DELIVER_SM))
+    if ((propertyObject.HandlerId == EH_SUBMIT_SM)||(propertyObject.HandlerId == EH_DELIVER_SM)||(propertyObject.HandlerId == EH_DATA_SM))
     {
-        /*int size = (MAX_TEXT_MESSAGE_LENGTH - 1) * sizeof(uint16_t);
-        if (size > messageBody.size()) size = messageBody.size();
-
-        if (size > 0) 
-        {
-            memcpy(ev.pMessageText, messageBody.data(), size); 
-            ev.pMessageText[size] = 0;
-        } */
         ev.pMessageText.append(messageBody.data(), messageBody.size());
     }
 

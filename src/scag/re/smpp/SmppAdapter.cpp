@@ -65,6 +65,7 @@ AccessType SmppCommandAdapter::CheckAccess(int handlerType, const std::string& n
         return atNoAccess;
         break;
     case EH_DATA_SM:
+
         pFieldId = DataSmFieldNames.GetPtr(name.c_str());
 
         if (!pFieldId) return atNoAccess;
@@ -89,6 +90,7 @@ AccessType SmppCommandAdapter::CheckAccess(int handlerType, const std::string& n
 IntHash<AccessType> SmppCommandAdapter::InitDataSmAccess()
 {
     IntHash<AccessType> hs;
+    hs.Insert(OA,atReadWrite);
     return hs;
 }
 
@@ -1302,7 +1304,21 @@ void SmppCommandAdapter::changed(AdapterProperty& property)
         pFieldId = DataSmFieldNames.GetPtr(name.c_str());
         if (!pFieldId) return;
 
-        WriteDataSmField(*sms,*pFieldId,property);
+        if (name == "OA") 
+        {
+            switch (command->get_smsCommand().dir)
+            {
+            case dsdSc2Srv:
+                AssignAddress(sms->destinationAddress, property.getStr().c_str());
+                break;
+            case dsdSrv2Sc:
+                AssignAddress(sms->originatingAddress, property.getStr().c_str());
+                break;
+            }
+        }
+        else 
+            WriteDataSmField(*sms,*pFieldId,property);
+
         break;
     case DATASM_RESP:
         if (name!="status") return;

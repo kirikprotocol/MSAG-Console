@@ -376,6 +376,12 @@ int CommandBrige::getProtocolForEvent(SCAGCommand& command)
 }                 
 
 
+void AssignAddress(Address& address, const char * str)
+{
+    Address addr(str);
+    address = addr;
+}
+
 
 }}
 

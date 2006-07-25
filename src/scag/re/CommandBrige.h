@@ -79,6 +79,8 @@ struct CSmppDiscriptor
 };
 
 
+void AssignAddress(Address& address, const char * str);
+
 
 class CommandBrige
 {
@@ -133,7 +135,20 @@ public:
         if (!sms) throw SCAGException("Command Bridge Error: Cannot get SMS from SmppCommand");
         return *sms;
     }
-
+/*
+    static void setAbonentAddr(SmppCommand& command)
+    {
+        switch (command->get_smsCommand().dir)
+        {
+        case dsdSc2Srv:
+            AssignAddress(sms->destinationAddress, property.getStr().c_str());
+            break;
+        case dsdSrv2Sc:
+            AssignAddress(sms->originatingAddress, property.getStr().c_str());
+            break;
+        }
+    }
+*/
     static Address getAbonentAddr(SmppCommand& command)  
     {
         Address resultAddr;
