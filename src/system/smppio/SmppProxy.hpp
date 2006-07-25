@@ -319,11 +319,17 @@ public:
           UssdSessionMap::iterator it=ussdSessionMap.find(key);
           if(it!=ussdSessionMap.end())
           {
-            info1(log,"SmppProxy::session found, delayed response sent");
-            inqueue.Push(it->second->cmd);
-            inQueueCount++;
-            limitQueue.erase(it->second);
-            ussdSessionMap.erase(it);
+            if(it->second->cmd.IsOk())
+            {
+              info1(log,"SmppProxy::session found, delayed response sent");
+              inqueue.Push(it->second->cmd);
+              inQueueCount++;
+              limitQueue.erase(it->second);
+              ussdSessionMap.erase(it);
+            }else
+            {
+              it->second->noDelay=true;
+            }
           }else
           {
             warn1(log,"SmppProxy::session not found!!!");
@@ -618,6 +624,11 @@ public:
     forceDc=val;
   }
 
+  bool isDualChannel()
+  {
+    return dualChannel;
+  }
+
 protected:
   smsc::logger::Logger* log;
   mutable Mutex mutex,mutexin,mutexout;
@@ -644,9 +655,10 @@ protected:
     time_t submitTime;
     int seqNum;
     bool ussd;
+    bool noDelay;
     UssdSessionKey key;
     SmscCommand cmd;
-    ControlItem(time_t t,int seq):submitTime(t),seqNum(seq),ussd(false)
+    ControlItem(time_t t,int seq):submitTime(t),seqNum(seq),ussd(false),noDelay(false)
     {
     }
   };
@@ -704,8 +716,17 @@ protected:
         return false;
       }else
       {
-        (*ptr)->cmd=cmd;
-        return true;
+        if(!(*ptr)->noDelay)
+        {
+          (*ptr)->cmd=cmd;
+          return true;
+        }else
+        {
+          ussdSessionMap.erase((*ptr)->key);
+          limitQueue.erase(*ptr);
+          limitHash.Delete(cmd->get_dialogId());
+          return false;
+        }
       }
     }
     return false;
