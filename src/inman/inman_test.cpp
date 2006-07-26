@@ -386,6 +386,37 @@ public:
 
 static Facade* _pFacade = 0;
 
+static void impl_multi_charge(const std::vector<std::string> &args, uint32_t delivery = 0)
+{
+    if (_pFacade->isRunning()) {
+        if (args.size() < 2) {
+            fprintf(stdout, "USAGE: %s num_of_dialogs!\n", args[0].c_str());
+            return;
+        }
+        unsigned int dnum = (unsigned int)atoi(args[1].c_str());
+        if (!dnum) {
+            fprintf(stdout, "ERR: bad number specified (%s)!\n", args[1].c_str());
+            return;
+        }
+        for (; dnum > 0; dnum--) {
+            unsigned int did = _pFacade->initDialog(0, true, delivery);
+            _pFacade->sendChargeSms(did);
+        }
+    } else
+        throw ConnectionClosedException();
+}
+
+void cmd_multi_chargeOk(Console&, const std::vector<std::string> &args)
+{
+    impl_multi_charge(args, 0);
+}
+
+void cmd_multi_chargeErr(Console&, const std::vector<std::string> &args)
+{
+    impl_multi_charge(args, 1016);
+}
+
+
 void cmd_charge(Console&, const std::vector<std::string> &args)
 {
     if (_pFacade->isRunning()) {
@@ -635,6 +666,8 @@ int main(int argc, char** argv)
         console.addItem( "adralpha",  cmd_adrAlpha);
         console.addItem( "chargeExc",  cmd_chargeExc);
         console.addItem( "dlvrExc",  cmd_dlvrExc); 
+        console.addItem( "m_chargeOk", cmd_multi_chargeOk); //[chargeSMS -> reportOk]
+        console.addItem( "m_chargeErr",  cmd_multi_chargeErr);//[chargeSMS -> reportErr]
 
         _pFacade->Start();
 
