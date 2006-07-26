@@ -55,7 +55,7 @@ public:
     //NOTE: the order of states is important!!!
     typedef enum { tmrNone = 0, tmrExpired, tmrAborted, tmrStopped
     } SWStatus;
-    typedef enum { tmrIdle = 0, tmrInited, tmrActive, tmrSignaling, tmrSignaled
+    typedef enum { tmrIdle = 0, tmrInited, tmrActive, tmrIsToSignal, tmrSignaled
     } SWState;
 
     typedef enum { errNoErr = 0, errBadTimer = 1, errBadTimeVal = 2, errActiveTimer
@@ -89,6 +89,7 @@ protected:
 
 private:
     void reset(void);
+    void deactivate(bool doRelease);
 
     unsigned        _id;
     bool            _multiRun;  //auto release on signalling

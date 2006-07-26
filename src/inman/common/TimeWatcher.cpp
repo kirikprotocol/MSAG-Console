@@ -51,30 +51,32 @@ StopWatch::TMError StopWatch::start(long timeout, bool millisecs/* = true*/)
 
 void StopWatch::stop(void)
 {
-    MutexGuard  tmp(_sync);
-     //set stopped status, so signal() does not call listener callback
-    _result = tmrStopped;
-    if (_tmrState == tmrSignaling)
-        _sigEvent.Wait();
-    if (_multiRun) {
-        _owner->deactivateTimer(this);
-        _tmrState = tmrInited;
-    } else {
-        _owner->dischargeTimer(this);
-        reset();
+    _sync.Lock();
+    _result = tmrStopped;           //change status so signal() doesn't call listener
+    if (_tmrState == tmrIsToSignal) { //timer is passed to Notifier and awaits signalling
+        _sync.Unlock();
+        _sigEvent.Wait();       //wait for signal() completion
+        _sync.Lock();
     }
-    return;
+    if (_multiRun && (_tmrState != tmrInited))
+        deactivate(false);
+    else if (_tmrState != tmrIdle)
+        deactivate(true);
+    _sync.Unlock();
 }
 
 void StopWatch::release(void)
 {
-    MutexGuard  tmp(_sync);
-    //set stopped status, so signal() does not call listener callback
-    _result = tmrStopped;
-    if (_tmrState == tmrSignaling)
-        _sigEvent.Wait();
-    _owner->dischargeTimer(this);
-    reset();
+    _sync.Lock();
+    _result = tmrStopped;           //change status so signal() doesn't call listener
+    if (_tmrState == tmrIsToSignal) { //timer is passed to Notifier and awaits signalling
+        _sync.Unlock();
+        _sigEvent.Wait();       //wait for signal() completion
+        _sync.Lock();
+    }
+    if (_tmrState != tmrIdle)
+        deactivate(true);
+    _sync.Unlock();
 }
 
 /* ---------------------------------------------------------------------------------- *
@@ -97,25 +99,38 @@ void StopWatch::signalStatus(SWStatus status)
     MutexGuard  tmp(_sync);
     if (status > _result)
         _result = status;
-    _tmrState = tmrSignaling;
+    _tmrState = tmrIsToSignal;
 }
 
 void StopWatch::signal(void)
 {
 //    smsc_log_debug(logger, "Timer[%u]: signaling at state %u, argKind: %d", _id, _tmrState, _opaqueObj.kind);
     MutexGuard  tmp(_sync);
-    assert (_tmrState == tmrSignaling);
-
-    if ((_result != tmrStopped) && _cb_event)
-        _cb_event->onTimerEvent(this, (_opaqueObj.kind != OPAQUE_OBJ::objNone) ?
-                                &_opaqueObj : NULL);
-    _sigEvent.Signal();
+    if (_tmrState == tmrIsToSignal) {
+        if ((_result != tmrStopped) &&_cb_event)
+            _cb_event->onTimerEvent(this, (_opaqueObj.kind != OPAQUE_OBJ::objNone) ?
+                                    &_opaqueObj : NULL);
+        _sigEvent.Signal();
+    }
+    _tmrState = tmrSignaled;
+    deactivate(false); //stop timer
     return;
 }
 
 /* ---------------------------------------------------------------------------------- *
  * StopWatch Private methods:
  * ---------------------------------------------------------------------------------- */
+void StopWatch::deactivate(bool doRelease)
+{
+    if (_multiRun && !doRelease) {
+        _owner->deactivateTimer(this);
+        _tmrState = tmrInited;
+    } else {
+        _owner->dischargeTimer(this);
+        reset();
+    }
+}
+
 void StopWatch::reset(void)
 {
     _multiRun = false;
@@ -170,8 +185,7 @@ int TimeNotifier::Execute(void)
                 _sync.Unlock();
                 try {
                     smsc_log_debug(logger, "TmNtfr: signaling timer[%u]", tmr->getId());
-                    tmr->signal();
-                    tmr->stop();
+                    tmr->signal(); //also stops timer
                 } catch (std::exception& exc) {
                     smsc_log_error(logger, "TmNtfr: timer[%u] listener exception: %s", tmr->getId(), exc.what());
                 } catch (...) {
