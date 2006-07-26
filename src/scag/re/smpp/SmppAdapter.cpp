@@ -99,6 +99,10 @@ IntHash<AccessType> SmppCommandAdapter::InitSubmitAccess()
 {
     IntHash<AccessType> hs;
 
+    hs.Insert(OA,atReadWrite);
+    hs.Insert(DA,atReadWrite);
+
+
     hs.Insert(DC_BINARY,atReadWrite);
     hs.Insert(DC_TEXT, atReadWrite);
     hs.Insert(DC_SMSC_DEFAULT, atReadWrite);
@@ -132,6 +136,9 @@ IntHash<AccessType> SmppCommandAdapter::InitSubmitAccess()
 IntHash<AccessType> SmppCommandAdapter::InitDeliverAccess()
 {
     IntHash<AccessType> hs;
+
+    hs.Insert(OA,atReadWrite);
+    hs.Insert(DA,atReadWrite);
 
     hs.Insert(DC_BINARY, atReadWrite);
     hs.Insert(DC_TEXT, atReadWrite);
@@ -602,7 +609,11 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
     int len = 0;
     std::string str;
 
-    if ((FieldId >= DC_BINARY)&&(FieldId <= DC_GSM_MSG_CC)) 
+    if (FieldId == OA) 
+        AssignAddress(data.originatingAddress, property.getStr().c_str());
+    else if (FieldId == DA) 
+        AssignAddress(data.destinationAddress, property.getStr().c_str());
+    else if ((FieldId >= DC_BINARY)&&(FieldId <= DC_GSM_MSG_CC)) 
     {
         Set_DC_BIT_Property(data,FieldId,property.getBool());
     } 
