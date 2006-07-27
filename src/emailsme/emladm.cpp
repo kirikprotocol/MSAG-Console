@@ -82,7 +82,7 @@ int main(int argc,char* argv[])
   {
     printf("Usage: %s host:port command args\n",argv[0]);
     printf("Commands:\n"
-    "update addr={address} user={username},limit={number}{d|w|m}[,forwardEmail={email}][,realName={realname}]\n"
+    "update addr={address},user={username},limit={number}{d|w|m}[,forwardEmail={email}][,realName={realname}]\n"
     "delete addr={address}\n"
     );
     return -1;
