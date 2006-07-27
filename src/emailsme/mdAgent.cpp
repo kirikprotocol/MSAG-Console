@@ -19,6 +19,7 @@
 using smsc::core::network::Socket;
 using smsc::core::buffers::String;
 
+String logFile="logs/mdAgent.log";
 String host="";
 int port=0;
 int maxsize=1024*1024;
@@ -28,7 +29,12 @@ struct LogFile{
 FILE *f;
 LogFile()
 {
-  f=fopen("logs/mdAgent.log","at");
+  f=fopen(logFile,"at");
+}
+void reopen()
+{
+  fclose(f);
+  f=fopen(logFile,"at");
 }
 void logit(const char* fmt,...)
 {
@@ -82,6 +88,12 @@ bool ReadConfig(const char* cfgfile)
     if(!strcmp(strbuf,"maxsize"))
     {
       maxsize=atoi(val);
+      continue;
+    }
+    if(!strcmp(strbuf,"logfile"))
+    {
+      logFile=val;
+      logger.reopen();
       continue;
     }
     LOG(("Unknown config parameter %s\n",strbuf));
