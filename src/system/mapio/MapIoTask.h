@@ -380,6 +380,7 @@ class MapDialogContainer{
       }
     }
   }
+  
 public:
   static smsc::logger::Logger* loggerStatDlg;
   static smsc::logger::Logger* loggerMapPdu;
@@ -414,6 +415,20 @@ public:
     if ( container ) {
       delete container;
       container = 0;
+    }
+  }
+
+  void DropAllDialogs() {
+    unsigned key;
+    MapDialog* dlg;
+    hash_.First();
+    __mapdlg_trace2__("%s: dropping all dialogs %s",__func__);
+    while(hash_.Next(key,dlg)) {
+      for (;!dlg->chain.empty();dlg->chain.pop_front())
+      {
+        //drop chain elements
+      }
+      _dropDialog(dlg);
     }
   }
 

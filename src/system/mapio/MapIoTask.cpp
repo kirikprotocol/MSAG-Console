@@ -186,8 +186,9 @@ void MapIoTask::disconnect()
   if ( result != MSG_OK) {
     __map_warn2__("error at MsgClose errcode 0x%hx",result);
 //    if ( !isStopping ) kill(getpid(),17);
-    return;
+//    return;
   }
+  MapDialogContainer::getInstance()->DropAllDialogs();
 }
 
 void MapIoTask::deinit( bool connected )
