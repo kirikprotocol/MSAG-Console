@@ -4,6 +4,10 @@ use MIME::Parser;
 use Lingua::DetectCharset;
 use Convert::Cyrillic;
 
+my $logfile='logs/mailreaper.log';
+my $maxlogsize=100*1024*1024;
+
+
 binmode(STDOUT);
 binmode(STDIN);
 
@@ -15,7 +19,7 @@ sub Log{
   return unless $log;
   if(!$logfh)
   {
-    if(open($logfh,'>>maillog'))
+    if(open($logfh,'>>'.$logfile))
     {
       print $logfh "=== log started ===\n";
       select($logfh);
@@ -29,6 +33,12 @@ sub Log{
     }
   }
   print $logfh @_,"\n";
+  if(tell($logfh)>$maxlogsize)
+  {
+    close $logfh;
+    rename $logfile,$logfile.'.1';
+    $logfh=undef;
+  }
 }
 
 Log("Starting...");
@@ -41,8 +51,12 @@ while(my $sz=<STDIN>)
   Log("Read:$raw");
   my $parser=new MIME::Parser;
   $parser->decode_headers(1);
-  $parser->output_to_core(1);#'tmp');
-  $parser->tmp_to_core(1);
+  $parser->output_under('tmp');
+  mkdir 'tmp' unless -f 'tmp';
+  #$parser->output_to_core(1);#'tmp');
+  #$parser->tmp_to_core(1);
+  #$parser->tmp_recycling(1);
+  #$parser->use_inner_files(1);
   my $entity=eval{$parser->parse_data($raw);};
   if($@)
   {
@@ -141,21 +155,10 @@ while(my $sz=<STDIN>)
 
   $msg=~s/\n+/\n/g;
 
+  $subj=Normalize($subj);
+  $msg=Normalize($msg);
+
   $msg=Clean($from)."\n".Clean($subj)."\n".$msg;
-
-  my $charset=Lingua::DetectCharset::Detect($msg);
-  Log($msgct,"\n",$charset);
-
-  if($charset ne 'ENG' && $charset ne 'WIN')
-  {
-    if($charset eq 'KOI8')
-    {
-      $msg=Convert::Cyrillic::cstocs('koi8','win',$msg);
-    }elsif($charset eq 'UTF8')
-    {
-      $msg=Convert::Cyrillic::cstocs('utf8','win',$msg);
-    }
-  }
 
   $msg=~s/(\nMsg=)\x0a/$1/;
 
@@ -163,6 +166,13 @@ while(my $sz=<STDIN>)
   print length($msg)."\n";
   print $msg;
   Log("write resp ok");
+  $parser->filer->purge;
+  opendir(D,'tmp');
+  for(readdir(D))
+  {
+    rmdir('tmp/'.$_);
+  }
+  closedir(D);
 }
 
 sub Clean{
@@ -170,3 +180,21 @@ sub Clean{
   $str=~s/[\x0a\x0d]//g;
   return $str;
 };
+
+sub Normalize{
+  my $txt=shift;
+  my $charset=Lingua::DetectCharset::Detect($txt);
+  #Log($msgct,"\n",$charset);
+
+  if($charset ne 'ENG' && $charset ne 'WIN')
+  {
+    if($charset eq 'KOI8')
+    {
+      return Convert::Cyrillic::cstocs('koi8','win',$txt);
+    }elsif($charset eq 'UTF8')
+    {
+      return Convert::Cyrillic::cstocs('utf8','win',$txt);
+    }
+  }
+  return $txt;
+}
