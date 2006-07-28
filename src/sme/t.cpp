@@ -924,6 +924,20 @@ public:
         return;
       }
 
+      if(respDelayMin || respDelayMax)
+      {
+        double r=rand()/RAND_MAX;
+        int delay=respDelayMin+(respDelayMax-respDelayMin)*r;
+#ifndef _WIN32
+        int sec=delay/1000;
+        int msec=delay%1000;
+        timestruc_t tv={sec,msec*1000000};
+        nanosleep(&tv,0);
+#else
+        Sleep(delay);
+#endif
+      }
+
       if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
       {
         PduDeliverySmResp resp;
@@ -1100,19 +1114,6 @@ public:
       }
       printf("==========\n");
       fflush(stdout);
-      if(respDelayMin || respDelayMax)
-      {
-        double r=rand()/RAND_MAX;
-        int delay=respDelayMin+(respDelayMax-respDelayMin)*r;
-#ifndef _WIN32
-        int sec=delay/1000;
-        int msec=delay%1000;
-        timestruc_t tv={sec,msec*1000000};
-        nanosleep(&tv,0);
-#else
-        Sleep(delay);
-#endif
-      }
 
       if(autoAnswer)
       {
