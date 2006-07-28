@@ -770,15 +770,21 @@ void StateMachine::processExpiredResps()
     {
       case DELIVERY:
       {
-        processDeliveryResp(SmppCommand::makeDeliverySmResp("0",cmd->get_dialogId(),smsc::system::Status::DELIVERYTIMEDOUT));
+        SmppCommand resp=SmppCommand::makeDeliverySmResp("0",cmd->get_dialogId(),smsc::system::Status::DELIVERYTIMEDOUT);
+        resp.setEntity(cmd.getEntity());
+        processDeliveryResp(resp);
       }break;
       case SUBMIT:
       {
-        processSubmitResp(SmppCommand::makeSubmitSmResp("0",cmd->get_dialogId(),smsc::system::Status::DELIVERYTIMEDOUT,false));
+        SmppCommand resp=SmppCommand::makeSubmitSmResp("0",cmd->get_dialogId(),smsc::system::Status::DELIVERYTIMEDOUT,false)
+        resp.setEntity(cmd.getEntity());
+        processSubmitResp(resp);
       }break;
       case DATASM:
       {
-        processDataSmResp(SmppCommand::makeDataSmResp("0",cmd->get_dialogId(),smsc::system::Status::DELIVERYTIMEDOUT));
+        SmppCommand resp=SmppCommand::makeDataSmResp("0",cmd->get_dialogId(),smsc::system::Status::DELIVERYTIMEDOUT);
+        resp.setEntity(cmd.getEntity());
+        processDataSmResp(resp);
       }break;
     }
   }
