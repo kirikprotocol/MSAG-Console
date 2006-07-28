@@ -19,6 +19,12 @@ Hash<int> Session::InitOperationTypesHash()
 
     hs["HTTP_DELIVERY"] = CO_HTTP_DELIVERY;
 
+    hs["DATA_SC_2_SME"] = CO_DATA_SC_2_SME;
+    hs["DATA_SC_2_SC"] = CO_DATA_SC_2_SC;
+    hs["DATA_SME_2_SME"] = CO_DATA_SME_2_SME;
+    hs["DATA_SME_2_SC"] = CO_DATA_SME_2_SC;
+
+
     return hs;
 }
 

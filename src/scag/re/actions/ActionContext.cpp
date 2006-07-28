@@ -192,11 +192,16 @@ bool ActionContext::checkIfCanSetPending(int operationType, int eventHandlerType
             if (operationType == CO_SUBMIT) result = true;
         }
 
+        if (commandProperty.commandId == DATASM)
+        {
+            return true;
+        }
 
 
         break;
 
     case HTTP:
+        return true;
         break;
 
     case MMS:
