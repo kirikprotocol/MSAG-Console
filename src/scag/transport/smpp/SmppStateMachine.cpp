@@ -776,7 +776,7 @@ void StateMachine::processExpiredResps()
       }break;
       case SUBMIT:
       {
-        SmppCommand resp=SmppCommand::makeSubmitSmResp("0",cmd->get_dialogId(),smsc::system::Status::DELIVERYTIMEDOUT,false)
+        SmppCommand resp=SmppCommand::makeSubmitSmResp("0",cmd->get_dialogId(),smsc::system::Status::DELIVERYTIMEDOUT,false);
         resp.setEntity(cmd.getEntity());
         processSubmitResp(resp);
       }break;
