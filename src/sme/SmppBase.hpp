@@ -737,6 +737,8 @@ public:
     if(reader.isRunning())reader.WaitFor();
     if(reader.isRunning())writer.WaitFor();
     closed=true;
+    abortWaits();
+    lock.Empty();
   }
 
   int getNextSeq()
