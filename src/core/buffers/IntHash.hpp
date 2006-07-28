@@ -202,6 +202,7 @@ public:
   int Delete(int key)
   {
     //printf("del:%d\n",key);fflush(stdout);
+    if(size==0)return 0;
     unsigned int idx;
     int attempt=0;
     do{
