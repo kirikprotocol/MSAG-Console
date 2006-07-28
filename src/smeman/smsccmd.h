@@ -248,7 +248,7 @@ public:
 static inline void fillField(auto_ptr<char>& field,const char* text,int length=-1)
 {
   if(length==0 || text==NULL)return;
-  if(length==-1)length=strlen(text);
+  if(length==-1)length=(int)strlen(text);
   field=auto_ptr<char>(new char[length+1]);
   memcpy(field.get(),text,length);
   field.get()[length]=0;
@@ -380,8 +380,8 @@ struct CancelSm{
   {
     char oabuf[32];
     char dabuf[32];
-    int oalen=oa.toString(oabuf,sizeof(oabuf));
-    int dalen=da.toString(dabuf,sizeof(dabuf));
+    int oalen=oa.toString(oabuf,(int)sizeof(oabuf));
+    int dalen=da.toString(dabuf,(int)sizeof(dabuf));
     fillField(sourceAddr,oabuf,oalen);
     fillField(destAddr,dabuf,dalen);
     char idbuf[32];

@@ -172,7 +172,7 @@ Profiler::~Profiler()
 {
   delete profiles;
   try{
-    smeman->unregisterSmeProxy(systemId);
+    smeman->unregisterSmeProxy(this);
   }catch(...)
   {
   }

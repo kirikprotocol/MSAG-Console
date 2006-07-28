@@ -96,7 +96,7 @@ public:
   {
     sess.close();
     smsc_log_info(log, "Smpp session is clossed.");
-    smereg->unregisterSmeProxy(id);
+    smereg->unregisterSmeProxy(this);
     smsc_log_info(log, "Sme proxy is unregistred.");
   }
 

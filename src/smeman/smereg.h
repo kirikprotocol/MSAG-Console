@@ -16,12 +16,12 @@ namespace smeman {
 class SmeRegistrar
 {
 public:
-  virtual void registerSmeProxy(const SmeSystemId& systemId,
+  virtual bool registerSmeProxy(const SmeSystemId& systemId,
                                 const SmePassword& pwd,
                                 SmeProxy* smeProxy) = 0;
   virtual void registerInternallSmeProxy(const SmeSystemId& systemId,
                                          SmeProxy* smeProxy)=0;
-  virtual void unregisterSmeProxy(const SmeSystemId& systemId) = 0;
+  virtual void unregisterSmeProxy(SmeProxy* smeProxy) = 0;
 };
 
 

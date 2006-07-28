@@ -54,6 +54,7 @@ public:
     disconnecting=false;
     disconnectionStart=0;
     unbinding=false;
+    active=false;
     log=smsc::logger::Logger::getInstance("smppprx");
     info2(log,"SmppProxy: processLimit=%d, processTimeout=%u",processLimit,processTimeout);
   }
@@ -208,7 +209,7 @@ public:
 
   void putIncomingCommand(const SmscCommand& cmd,int ct)
   {
-    if(!CheckValidOutgoingCmd(cmd) || disconnecting)
+    if(!CheckValidOutgoingCmd(cmd) || disconnecting || !active)
     {
       debug2(log,"SmppProxy::putIncomingCommand: command for invalid bind state: %d",cmd->get_commandId());
       SmscCommand errresp;
@@ -624,6 +625,11 @@ public:
     forceDc=val;
   }
 
+  void activate()
+  {
+    active=true;
+  }
+
   bool isDualChannel()
   {
     return dualChannel;
@@ -750,6 +756,7 @@ protected:
   time_t disconnectionStart;
   bool unbinding;
   bool dualChannel;
+  bool active;
 };
 
 bool SmppProxy::CheckValidIncomingCmd(const SmscCommand& cmd)

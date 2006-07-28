@@ -43,7 +43,7 @@ public:
   {
     debug1(log,"Calling stop on packetWriter");
     packetWriter.Stop();
-    smeReg->unregisterSmeProxy(systemId.c_str());
+    smeReg->unregisterSmeProxy(this);
   }
 
   //////////

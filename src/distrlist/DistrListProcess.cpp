@@ -35,7 +35,7 @@ DistrListProcess::DistrListProcess(DistrListAdmin* admin,SmeRegistrar* reg) :
 
 DistrListProcess::~DistrListProcess()
 {
-  smereg->unregisterSmeProxy("DSTRLST");
+  smereg->unregisterSmeProxy(this);
 }
 void DistrListProcess::close()  {}
 

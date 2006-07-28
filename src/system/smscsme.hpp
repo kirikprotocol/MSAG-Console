@@ -32,7 +32,7 @@ public:
   {
     __trace__("try to unregister abonentinfo sme");
     try{
-      smeman->unregisterSmeProxy(systemId);
+      smeman->unregisterSmeProxy(this);
     }catch(...)
     {
       __trace__("failed to unregister abonentinfo sme");

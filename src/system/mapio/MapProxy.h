@@ -44,7 +44,7 @@ public:
   }
   virtual ~MapProxy()
   {
-    if(smereg)smereg->unregisterSmeProxy("MAP_PROXY");
+    if(smereg)smereg->unregisterSmeProxy(this);
   }
   virtual void close(){}
   void notifyOutThread(){}

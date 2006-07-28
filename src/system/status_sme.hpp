@@ -32,7 +32,7 @@ public:
   {
     __trace__("try to unregister abonentinfo sme");
     try{
-      smsc->unregisterSmeProxy(systemId);
+      smsc->unregisterSmeProxy(this);
     }catch(...)
     {
       __trace__("failed to unregister abonentinfo sme");

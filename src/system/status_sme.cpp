@@ -60,6 +60,7 @@ int StatusSme::Execute()
       continue;
     }
     sms=cmd->get_sms();
+    __trace2__("statusSme: protocilId=%d",sms->getIntProperty(Tag::SMPP_PROTOCOL_ID));
     resp=SmscCommand::makeDeliverySmResp(
       sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str(),
       cmd->get_dialogId(),

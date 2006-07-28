@@ -18,9 +18,10 @@
 #include "smetable.h"
 #include "smeiter.h"
 #include "smereg.h"
-#include "smedispatch.h"
-#include "dispatch.h"
+//#include "smedispatch.h"
+//#include "dispatch.h"
 #include "core/synchronization/Mutex.hpp"
+#include "core/synchronization/Event.hpp"
 #include "admin/service/Variant.h"
 #include "admin/service/Type.h"
 
@@ -68,6 +69,7 @@ public:
   uint32_t uniqueId;
   SmeInfo info;
   SmeProxy* proxy;
+  std::vector<SmeProxy*> backupProxies;
   bool deleted;
   SmeIndex idx;
   mutable Mutex mutex;
@@ -177,13 +179,14 @@ typedef std::vector<SmeRecord*> Records;
 class SmeManager :
   public SmeAdministrator,
   public SmeTable,
-  public SmeRegistrar,
-  public Dispatch
+  public SmeRegistrar
+  //public Dispatch
 {
 
   mutable Mutex lock;
-  SmeProxyDispatcher dispatcher;
-    Records records;
+  Event mon;
+  //SmeProxyDispatcher dispatcher;
+  Records records;
   SmeIndex internalLookup(const SmeSystemId& systemId) const;
 public:
   virtual ~SmeManager()
@@ -198,7 +201,7 @@ public:
           __warning__((string("proxy with system id ")+
                       (*it)->info.systemId+
                       string(" is attached when destroy smeman")).c_str());
-          dispatcher.detachSmeProxy((*it)->proxy);
+          //dispatcher.detachSmeProxy((*it)->proxy);
         }
         delete (*it);
       }
@@ -233,17 +236,17 @@ public:
   virtual SmeIndex getSmeIndex() const; // ?????
 */
   // SmeRegistrar implementation
-  virtual void registerSmeProxy(const SmeSystemId& systemId,
+  virtual bool registerSmeProxy(const SmeSystemId& systemId,
                                 const SmePassword& pwd,
                                 SmeProxy* smeProxy);
   virtual void registerInternallSmeProxy(const SmeSystemId& systemId,
                                 SmeProxy* smeProxy);
 
   SmeProxy* checkSmeProxy(const SmeSystemId& systemId,const SmePassword& pwd);
-  virtual void unregisterSmeProxy(const SmeSystemId& systemId);
+  virtual void unregisterSmeProxy(SmeProxy* smeProxy);
 
   // SmeDispatcher implementation
-  virtual SmeProxy* selectSmeProxy(unsigned long timeout=0,int* idx=0);
+  //virtual SmeProxy* selectSmeProxy(unsigned long timeout=0,int* idx=0);
   virtual void getFrame(vector<SmscCommand>& frames, unsigned long timeout,bool skipScheduler);
   //virtual ~SmeManager(){}
 

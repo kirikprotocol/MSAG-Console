@@ -122,7 +122,8 @@ __synchronized__
   {
     // ???????  что делать если уже в работе , шутдаунить прокси, как корректно или абортом
     // к примеру так, но тогда , что делает close?
-    dispatcher.detachSmeProxy(records[index]->proxy);
+    //dispatcher.detachSmeProxy(records[index]->proxy);
+    records[index]->proxy->attachMonitor(0);
     //records[index]->proxy->close();
     records[index]->proxy->disconnect();
     //delete records[index].proxy;
@@ -286,7 +287,8 @@ __synchronized__
     records[index]->uniqueId = nextProxyUniqueId();
     records[index]->info.internal=true;
   }
-  dispatcher.attachSmeProxy(smeProxy,index);
+  smeProxy->attachMonitor(&mon);
+  //dispatcher.attachSmeProxy(smeProxy,index);
 }
 
 
@@ -312,7 +314,7 @@ SmeProxy* SmeManager::checkSmeProxy(const SmeSystemId& systemId,const SmePasswor
 }
 
 
-void SmeManager::registerSmeProxy(const SmeSystemId& systemId,
+bool SmeManager::registerSmeProxy(const SmeSystemId& systemId,
                                   const SmePassword& pwd,
                                   SmeProxy* smeProxy)
 {
@@ -334,12 +336,6 @@ __synchronized__
     __trace2__("Attempt to bind disabled sme:%s",systemId.c_str());
     throw SmeRegisterException(SmeRegisterFailReasons::rfDisabled);
   }
-  if ( records[index]->proxy )
-  {
-    __trace2__("Failed to register proxy with sid:%s",systemId.c_str());
-    __warning__("Sme proxy with tihs systemId already registered");
-    throw SmeRegisterException(SmeRegisterFailReasons::rfAlreadyRegistered);
-  }
   if ( records[index]->info.password!=pwd)
   {
     __trace2__("Invalid password for sme %s (%s!=%s)",systemId.c_str(),
@@ -348,40 +344,78 @@ __synchronized__
       smsc_log_error(smsc::logger::Logger::getInstance("smeman.register"), "Attempt to register sme %s with invalid password",systemId.c_str());
     throw SmeRegisterException(SmeRegisterFailReasons::rfInvalidPassword);
   }
+
   {
     MutexGuard guard(records[index]->mutex);
+
+    if ( records[index]->proxy )
+    {
+      __trace2__("Failed to register proxy with sid:%s",systemId.c_str());
+      __warning__("Sme proxy with tihs systemId already registered");
+      //throw SmeRegisterException(SmeRegisterFailReasons::rfAlreadyRegistered);
+      records[index]->backupProxies.push_back(smeProxy);
+      return false;
+    }
+
     smeProxy->setPriority(records[index]->info.priority);
     records[index]->proxy = smeProxy;
     records[index]->uniqueId = nextProxyUniqueId();
     __trace2__("registerSme: smeId=%s, uniqueId=%d",systemId.c_str(),records[index]->uniqueId);
   }
-  dispatcher.attachSmeProxy(smeProxy,index);
+  //dispatcher.attachSmeProxy(smeProxy,index);
+  smeProxy->attachMonitor(&mon);
+  return true;
 }
 
-void SmeManager::unregisterSmeProxy(const SmeSystemId& systemId)
+void SmeManager::unregisterSmeProxy(SmeProxy* smeProxy)
 {
   SmeIndex index;
-  {
-    __synchronized__
-    index = internalLookup(systemId);
-    if ( index == INVALID_SME_INDEX ) throw runtime_error("is not registred");
-  }
+  __synchronized__
+  index = internalLookup(smeProxy->getSystemId());
+  if ( index == INVALID_SME_INDEX ) throw runtime_error("sme proxy is not registred");
 
+  MutexGuard guard(records[index]->mutex);
+  if ( records[index]->proxy )
   {
-    MutexGuard guard(records[index]->mutex);
-    if ( records[index]->proxy ){
-      dispatcher.detachSmeProxy(records[index]->proxy);
-    }
-    else
-      __warning2__("unregister null proxy(%s)",systemId.c_str());
+    if(records[index]->proxy==smeProxy)
     {
-      __synchronized__
-      records[index]->proxy = 0;
+      //dispatcher.detachSmeProxy(records[index]->proxy);
+      records[index]->proxy->attachMonitor(0);
+      if(records[index]->backupProxies.empty())
+      {
+        records[index]->proxy = 0;
+      }else
+      {
+        records[index]->proxy=records[index]->backupProxies.front();
+        records[index]->backupProxies.erase(records[index]->backupProxies.begin());
+        records[index]->proxy->activate();
+      }
+    }else
+    {
+      bool found=false;
+      for(std::vector<SmeProxy*>::iterator it=records[index]->backupProxies.begin();it!=records[index]->backupProxies.end();it++)
+      {
+        if(*it==smeProxy)
+        {
+          records[index]->backupProxies.erase(it);
+          found=true;
+          break;
+        }
+      }
+      if(!found)
+      {
+         __warning2__("unregisterSmeProxy: proxy not found(%p)!",smeProxy);
+      }
     }
+  }
+  else
+  {
+    __warning2__("unregister null proxy(%s)",smeProxy->getSystemId());
   }
 }
 
 // SmeDispatcher implementation
+/*
 SmeProxy* SmeManager::selectSmeProxy(unsigned long timeout,int* idx)
 {
   int _idx;
@@ -394,6 +428,7 @@ SmeProxy* SmeManager::selectSmeProxy(unsigned long timeout,int* idx)
   }
   else return 0;
 }
+*/
 
 // SmeDispatcher implementation
 void SmeManager::getFrame(vector<SmscCommand>& frames, unsigned long timeout,bool skipScheduler)
@@ -438,7 +473,7 @@ void SmeManager::getFrame(vector<SmscCommand>& frames, unsigned long timeout,boo
     }
     if(count)info2(log,"total commands in queues:%d",count);
   }
-  if ( !frames.size() ) dispatcher.waitOnMon(timeout);
+  if ( !frames.size() ) mon.Wait(timeout);
 }
 
 SmeIndex SmeManager::internalLookup(const SmeSystemId& systemId) const

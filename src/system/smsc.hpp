@@ -211,9 +211,9 @@ public:
     smscsme->putIncomingCommand(SmscCommand::makeKillMrCacheItemCmd(org,dst,mr));
   }
 
-  void unregisterSmeProxy(const string& sysid)
+  void unregisterSmeProxy(SmeProxy* smeProxy)
   {
-    smeman.unregisterSmeProxy(sysid);
+    smeman.unregisterSmeProxy(smeProxy);
   }
 
   SmeAdministrator* getSmeAdmin(){return &smeman;}

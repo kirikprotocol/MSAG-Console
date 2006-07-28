@@ -41,7 +41,7 @@ extern "C" {
     __map_warn2__("Et96MapBindConf confirmation received ssn=%d status=%d",lssn,status);
     if( status == 0  ) {
       if( lssn == SSN ) SSN_bound = true;
-      else if( lssn == USSD_SSN ) USSD_SSN_bound = true; 
+      else if( lssn == USSD_SSN ) USSD_SSN_bound = true;
     } else if( status == 1 ) {
       __map_warn2__("Et96MapBindConf SSN %d is already bound trying to reconnect",lssn);
       MAP_disconnectDetected = true;
@@ -81,7 +81,7 @@ extern "C" {
         if (affectedSSN == SSN ) SSN_bound = true;
         else if( affectedSSN == USSD_SSN ) USSD_SSN_bound = true;
       }
-    }  
+    }
     return ET96MAP_E_OK;
   }
 
@@ -108,7 +108,7 @@ void MapIoTask::connect(unsigned timeout) {
   while( tries < 60 ) {
     result = MsgConn(MY_USER_ID,ETSIMAP_ID);
     if ( result != MSG_OK ) {
-      __map_warn2__("Error at MsgConn, code 0x%hx, sleep 1 sec and retry connect",result); 
+      __map_warn2__("Error at MsgConn, code 0x%hx, sleep 1 sec and retry connect",result);
       sleep(1);
       tries++;
     } else {
@@ -126,7 +126,7 @@ void MapIoTask::connect(unsigned timeout) {
 
   __map_warn__("Binding subsystems");
   bindTimer = 0;
-  
+
   result = Et96MapBindReq(MY_USER_ID, SSN);
   if (result!=ET96MAP_E_OK) {
     __map_warn2__("SSN Bind error 0x%hx",result);
@@ -164,24 +164,24 @@ void MapIoTask::disconnect()
   __map_warn__("disconnect from MAP stack");
   SSN_bound = false;
   USSD_SSN_bound = false;
-  
+
   result = Et96MapUnbindReq(SSN);
   if ( result != ET96MAP_E_OK) {
     __map_warn2__("error at Et96MapUnbindReq SSN=%d errcode 0x%hx",SSN,result);
   }
-  
+
   result = Et96MapUnbindReq(USSD_SSN);
   if ( result != ET96MAP_E_OK) {
     __map_warn2__("error at Et96MapUnbindReq SSN=%d errcode 0x%hx",USSD_SSN,result);
   }
-  
+
   result = MsgRel(MY_USER_ID,ETSIMAP_ID);
   if ( result != MSG_OK) {
     __map_warn2__("error at MsgRel errcode 0x%hx",result);
 //    if ( !isStopping ) kill(getpid(),17);
 //    return;
   }
-  
+
   result = MsgClose(MY_USER_ID);
   if ( result != MSG_OK) {
     __map_warn2__("error at MsgClose errcode 0x%hx",result);
@@ -216,7 +216,7 @@ void MapIoTask::dispatcher()
   APP_EVENT_T *eventlist = NULL;
   INT_T        eventlist_len = 0;
   smsc::logger::Logger *time_logger = smsc::logger::Logger::getInstance("map.itime");
-  
+
   message.receiver = MY_USER_ID;
   for (;;) {
     MAP_isAlive = true;
@@ -232,9 +232,9 @@ void MapIoTask::dispatcher()
     result = MsgRecvEvent( &message, 0, 0, 1000 );
 #endif
     if ( time_logger->isDebugEnabled() ) gettimeofday( &utime, 0 );
-    
+
     MAP_dispatching = false;
-    
+
     if ( result == MSG_TIMEOUT ) {
       if (MAP_disconnectDetected && !isStopping) {
         MutexGuard mapMutexGuard(mapMutex);
@@ -277,7 +277,7 @@ void MapIoTask::dispatcher()
       }
       continue;
     }
-    
+
     __map_trace2__("MsgRecv receive msg with receiver 0x%hx sender 0x%hx prim 0x%hx size %d",message.receiver,message.sender,message.primitive,message.size);
     if ( message.primitive == 0x8b && message.msg_p[6] >= 0x04 ) {
       __map_trace__("MsgRecv hatching msg to reset priority order " );
@@ -467,7 +467,7 @@ void MapDialogContainer::registerSelf(SmeManager* smeman)
 void MapDialogContainer::unregisterSelf(SmeManager* smeman)
 {
   __map_trace__("unregister MAP_PROXY");
-  smeman->unregisterSmeProxy("MAP_PROXY");
+  smeman->unregisterSmeProxy(proxy);
   __map_trace__("unregister MAP_PROXY OK");
 }
 
