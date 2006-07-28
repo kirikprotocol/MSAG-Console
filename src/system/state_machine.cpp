@@ -2780,6 +2780,12 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     }
     info2(smsLog, "FWD: %lld expired (valid:%u - now:%u)",t.msgId,sms.getValidTime(),now);
     sendFailureReport(sms,t.msgId,EXPIRED_STATE,"expired");
+    try{
+      smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
+    }catch(std::exception& e)
+    {
+      smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
+    }
     return EXPIRED_STATE;
   }
 
