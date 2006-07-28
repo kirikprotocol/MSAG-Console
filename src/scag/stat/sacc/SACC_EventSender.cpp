@@ -81,7 +81,7 @@ bool EventSender::processEvent(void *ev)
            performTransportEvent(e);
            smsc_log_debug(logger,"EventSender::Execute Sacc stat TRAFFIC event  processed from queue addr=0x%X",evType,ev);
       }
-       break;
+      break;
 
      case sec_bill:
       {
@@ -91,7 +91,7 @@ bool EventSender::processEvent(void *ev)
            performBillingEvent(e);
            smsc_log_debug(logger,"EventSender::Execute Sacc stat BILLING event  processed from queue addr=0x%X",evType,ev);
       }
-       break;
+      break;
 
      case sec_alarm_message:
       {
@@ -111,7 +111,8 @@ bool EventSender::processEvent(void *ev)
            performAlarmEvent(e);
            smsc_log_debug(logger,"EventSender::Execute Sacc stat ALARM event  processed from queue addr=0x%X",evType,ev);
       }
-
+      break;
+       
       default:
           smsc_log_warn(logger,"EventSender Unknown event!!");
        break;
