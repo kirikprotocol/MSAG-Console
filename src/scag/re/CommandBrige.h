@@ -174,10 +174,10 @@ public:
             switch (command->get_smsCommand().dir)
             {
             case dsdSc2Srv:
-                resultAddr = sms.destinationAddress;
+                resultAddr = sms.originatingAddress;
                 break;
             case dsdSrv2Sc:
-                resultAddr = sms.originatingAddress;
+                resultAddr = sms.destinationAddress;
                 break;
             }
 
@@ -189,10 +189,10 @@ public:
             switch (command->get_resp()->get_dir())
             {
             case dsdSc2Srv:
-                resultAddr = sms.destinationAddress;
+                resultAddr = sms.originatingAddress;
                 break;
             case dsdSrv2Sc:
-                resultAddr = sms.originatingAddress;
+                resultAddr = sms.destinationAddress;
                 break;
             }
             break;
