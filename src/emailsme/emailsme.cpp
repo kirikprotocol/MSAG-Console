@@ -846,6 +846,7 @@ int SendEMail(const string& from,const Array<string>& to,const string& subj,cons
       if(i!=to.Count()-1)addr+=',';
     }
     s.Printf("To: %s\r\n",addr.c_str());
+    s.Printf("Content-Type: text/plain; charset=windows-1251\n");
     if(subj.length())s.Printf("Subject: %s\r\n",subj.c_str());
     s.Printf("\r\n");
   }
