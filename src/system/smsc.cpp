@@ -1231,7 +1231,7 @@ void Smsc::shutdown()
 
   tp.shutdown();
 
-  smeman.unregisterSmeProxy("scheduler");
+  smeman.unregisterSmeProxy(scheduler);
 
   tp2.shutdown();
 

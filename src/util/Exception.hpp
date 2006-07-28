@@ -26,7 +26,7 @@ public:
   }
   inline void fill(const char* fmt,va_list arglist)
   {
-    int size=strlen(fmt)*4;
+    size_t size=strlen(fmt)*4;
     char *buf=new char[size];
     int res;
     res=vsnprintf( buf, size,fmt,arglist);

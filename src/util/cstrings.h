@@ -110,7 +110,7 @@ inline bool startsWith(const char * const str, const char * const prefix)
 */
 inline char * trim(char * str)
 {
-  const size_t l = strlen(str);
+  const int l = (int)strlen(str);
   for (int i = l-1; i >= 0 && (str[i] == ' ' || str[i] == '\t' || str[i] == '\n'); i--) str[i]=0;
   char * s = str;
   while (*s == ' ' || *s == '\t' || *s == '\n') s++;

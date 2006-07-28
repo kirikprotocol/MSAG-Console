@@ -40,7 +40,7 @@ public:
   {
     if(buf)delete [] buf;
   }
-  void assign(const char* str,int len)
+  void assign(const char* str,size_t len)
   {
     if(len>=size)
     {

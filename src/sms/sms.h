@@ -150,7 +150,7 @@ struct Address
     }
     plan = (uint8_t)iplan;
     type = (uint8_t)itype;
-    length = strlen(addr_value);
+    length = (uint8_t)strlen(addr_value);
     memcpy(value,addr_value,sizeof(addr_value));
   }
 

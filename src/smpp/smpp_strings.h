@@ -87,7 +87,7 @@ struct COStr //: public MemoryManagerUnit
   ~COStr(){ /*__trace__(__PRETTY_FUNCTION__); __watch__(text);*/ dispose(); }
   operator const char*()const{/*__require__(text!=NULL);*/ return text;}
   const char* cstr()const{/*__require__(text!=NULL);*/ return text;}
-  uint16_t size()const{ return text ? strlen( text ) : 0 ; }
+  uint16_t size()const{ return text ? (uint16_t)strlen( text ) : 0 ; }
   void copy(const char* src)
   {
 //    __require__ ( src != NULL );
@@ -95,7 +95,7 @@ struct COStr //: public MemoryManagerUnit
     //if ( text ) delete text;
     dispose();
 
-    int length = src?strlen(src):0;
+    size_t length = src?strlen(src):0;
     if ( !length  ) return;
     //text = (char*)smartMalloc(length+1);
     text = new char[length+1];
