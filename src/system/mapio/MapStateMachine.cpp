@@ -2392,6 +2392,13 @@ USHORT_T Et96MapOpenInd (
       throw runtime_error("MAP:: can't create dialog");
     dialog->state = MAPST_WaitSms;
   }
+  catch(ProxyQueueLimitException& e)
+  {
+    __map_warn2__("%s: dialogid 0x%x %s",__func__,dialogueId,e.what());
+    ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
+    warnMapReq( Et96MapOpenResp(localSsn,dialogueId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0), __func__);
+    warnMapReq( Et96MapDelimiterReq(localSsn,dialogueId,0,0), __func__);
+  }
   catch(exception& e)
   {
     __map_warn2__("%s: dialogid 0x%x <exception>:%s",__func__,dialogueId,e.what());
