@@ -31,22 +31,24 @@ static SmppProxy* getRegisteredProxy(SmeManager* smeManager,const char* sysId,co
 {
   MutexGuard mg(getKillMutex);
   SmppProxy* proxy=(SmppProxy*)smeManager->checkSmeProxy(sysId,pass);
-  if(!proxy)return 0;
+  if(!proxy || ct==-1)return 0;
   proxy->AddRef(ct);
   return proxy;
 }
 
 static void KillProxy(int ct,SmppProxy* proxy,SmeManager* smeManager)
 {
+  static smsc::logger::Logger* snmpLog=smsc::logger::Logger::getInstance("sms.snmp.alarm");
   MutexGuard mg(getKillMutex);
   if(proxy && !proxy->Unref(ct))
   {
     try{
       __trace2__("unregistering(%p) smeId=%s",proxy,proxy->getSystemId());
-      smsc_log_debug(smsc::logger::Logger::getInstance("sms.snmp.alarm"),"unregister sme:%s",proxy->getSystemId());
-      smeManager->unregisterSmeProxy(proxy->getSystemId());
+      smeManager->unregisterSmeProxy(proxy);
+      smsc_log_debug(snmpLog,"unregister sme: %s successful",proxy->getSystemId());
     }catch(...)
     {
+      smsc_log_debug(snmpLog,"unregister sme: %s failed",proxy->getSystemId());
       __trace__("failed to unregister");
     }
     __trace2__("KILLPROXY: %p(%s)",proxy,proxy->getSystemId());
@@ -370,7 +372,7 @@ int SmppInputThread::Execute()
                   }
                 }catch(SmeRegisterException& e)
                 {
-                  smsc_log_debug(snmpLog,"registration of sme:%s failed",sid.c_str());
+                  smsc_log_debug(snmpLog,"register sme: %s failed",sid.c_str());
                   int errcode=SmppStatusSet::ESME_RBINDFAIL;
                   switch(e.getReason())
                   {
@@ -495,7 +497,7 @@ int SmppInputThread::Execute()
                           set_commandStatus(SmppStatusSet::ESME_RALYBND);
                         err=true;
                       }
-                      if(rebindproxy)
+                      if(rebindproxy && proxy->isDualChannel())
                       {
                         err=true;
                         resppdu.get_header().
@@ -503,6 +505,12 @@ int SmppInputThread::Execute()
                       }
                       if(!err)
                       {
+                        if(rebindproxy)
+                        {
+                          proxy=new SmppProxy(ss,totalLimit,si.proclimit,si.timeout);
+                          info2(log,"SmppProxy: new backup proxy(%s) %p!",si.systemId.c_str(),proxy);
+                          rebindproxy=false;
+                        }
                         proxy->setProxyType(proxyTransceiver);
                         ss->setChannelType(ctTransceiver);
                         ((SmppSocket*)(ss->getSocket()->
@@ -559,13 +567,17 @@ int SmppInputThread::Execute()
                     if(!rebindproxy)
                     {
                       debug2(log,"try to register sme:%s",sid.c_str());
-                      smsc_log_debug(snmpLog,"register sme:%s",sid.c_str());
+                      //smsc_log_debug(snmpLog,"register sme:%s",sid.c_str());
+                      if(
                       smeManager->registerSmeProxy(
                         bindpdu->get_systemId()?bindpdu->get_systemId():"",
                         bindpdu->get_password()?bindpdu->get_password():"",
-                        proxy);
+                        proxy))
+                      {
+                        proxy->activate();
+                      }
 
-                      smsc_log_debug(snmpLog,"register sme:%s successful",sid.c_str());
+                      smsc_log_debug(snmpLog,"register sme: %s successful",sid.c_str());
                       proxy->setId(sid,proxyIndex);
                       info2(log,"NEWPROXY: p=%p, smid=%s, forceDC=%s",proxy,sid.c_str(),si.forceDC?"true":"false");
                     }else
@@ -577,7 +589,7 @@ int SmppInputThread::Execute()
                       set_commandStatus(SmppStatusSet::ESME_ROK);
                   }catch(SmeRegisterException& e)
                   {
-                    smsc_log_debug(snmpLog,"registration of sme:%s failed",sid.c_str());
+                    smsc_log_debug(snmpLog,"register sme: %s failed",sid.c_str());
                     int errcode=SmppStatusSet::ESME_RBINDFAIL;
                     switch(e.getReason())
                     {
