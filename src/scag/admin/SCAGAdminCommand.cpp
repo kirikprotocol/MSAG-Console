@@ -707,16 +707,21 @@ Response * CommandSetLogCategories::CreateResponse(scag::Scag * ScagApp)
     std::string cat, val;
     Logger::LogLevels levels;    
     
-    while((delim_pos = strrchr(p, ',')))
+    while((delim_pos = strchr(p, ',')))
     {
         if(!s)
+        {            
+            if(delim_pos > p && delim_pos[-1] == '\\')
+                delim_pos--;
             cat.assign(p, delim_pos - p);
+        }
         else
         {
             val.assign(p, delim_pos - p);
             levels[cat.c_str()] = Logger::getLogLevel(val.c_str());
             smsc_log_debug(logger, "SetLogCategories [%s]=[%s]", cat.c_str(), val.c_str());
         }
+        smsc_log_debug(logger, "val=%s, cat=%s", val.c_str(), cat.c_str());
         s = !s;
         p = delim_pos + 1;
     }
