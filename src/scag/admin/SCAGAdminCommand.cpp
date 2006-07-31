@@ -693,7 +693,7 @@ void CommandSetLogCategories::init()
     smsc_log_info(logger, "CommandSetLogCategories got parameters:");
 
     BEGIN_SCAN_PARAMS
-    GETSTRPARAM_(cats,    "cats")
+    GETSTRPARAM_(cats,    "categories")
     END_SCAN_PARAMS
     smsc_log_info(logger, "CommandSetLogCategories cats=%s", cats.c_str());    
 }
