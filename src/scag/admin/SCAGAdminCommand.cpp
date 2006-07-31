@@ -711,9 +711,8 @@ Response * CommandSetLogCategories::CreateResponse(scag::Scag * ScagApp)
     {
         if(!s)
         {            
-            if(delim_pos > p && delim_pos[-1] == '\\')
-                delim_pos--;
-            cat.assign(p, delim_pos - p);
+            int i = delim_pos - p - ((delim_pos > p && delim_pos[-1] == '\\') ? 1 : 0);
+            cat.assign(p, i);
         }
         else
         {
