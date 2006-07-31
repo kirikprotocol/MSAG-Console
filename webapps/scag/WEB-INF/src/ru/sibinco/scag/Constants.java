@@ -36,6 +36,9 @@ public class Constants {
         public interface config {
             public static final Constants INVALID_INTEGER = new Constants("error.config.invalid_integer");
         }
+        public interface logging {
+            public static final Constants COULDNT_SET_LOGCATS = new Constants("error.logging.couldnt.setLog.cats");
+        }
 
 
         public interface routing {
