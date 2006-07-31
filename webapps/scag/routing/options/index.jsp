@@ -34,7 +34,8 @@
             <c:forEach items="${bean.abonentAddress}" var="pls">
                 <tr><td>
                 <tr class="row${rowN%2}" id="address_place_${pls.name}_${rowN}">
-                    <td width="7%"><select id="addressSelect_${pls.name}_${rowN}" name="addressSelect_${pls.name}_${rowN}" class="txt">
+                    <td width="7%">
+                        <select id="addressSelect_${pls.name}_${rowN}" name="addressSelect_${pls.name}_${rowN}" class="txt">
                         <c:forEach items="${bean.optionTypes}" var="i">
                             <c:choose>
                                 <c:when test="${pls.type==i}">
