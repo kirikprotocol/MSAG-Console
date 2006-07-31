@@ -70,28 +70,9 @@ int main(int argc, char* argv[])
         scag::transport::http::HttpProcessor::Init("./conf");
         scag::transport::http::HttpProcessor& hp = scag::transport::http::HttpProcessor::Instance();
 
-        using scag::config::ConfigView;
+        httpMan.init(hp, cfg.getHttpManConfig());
 
-        std::auto_ptr<ConfigView> cv(new ConfigView(*cfg.getConfig(), "HttpTransport"));
-
-        scag::transport::http::HttpManagerConfig http_cfg(10, 10, 10, 10, 10, 10, 100, "", 1234);
-
-        auto_ptr <char> host(cv->getString("host", NULL, false));
-        http_cfg.host = host.get();
-
-        http_cfg.readerSockets = cv->getInt("readerSockets", NULL);
-        http_cfg.writerSockets = cv->getInt("writerSockets", NULL);
-        http_cfg.readerPoolSize = cv->getInt("readerPoolSize", NULL);
-        http_cfg.writerPoolSize = cv->getInt("writerPoolSize", NULL);
-        http_cfg.scagPoolSize = cv->getInt("scagPoolSize", NULL);
-        http_cfg.scagQueueLimit = cv->getInt("scagQueueLimit", NULL);
-        http_cfg.connectionTimeout = cv->getInt("connectionTimeout", NULL);
-        http_cfg.port = cv->getInt("port", NULL);
-        smsc_log_debug(logger, "http_host=%s, http_port=%d", http_cfg.host.c_str(), http_cfg.port);
-
-        httpMan.init(hp, http_cfg);
-
-        smsc_log_info(logger, "Http Manager started");
+        smsc_log_info(logger, "Http Manager started host=%s:%d", cfg.getHttpManConfig().host.c_str(), cfg.getHttpManConfig().port);
 
         int k = 0;
 #if 1

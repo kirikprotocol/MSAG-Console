@@ -634,26 +634,7 @@ void Scag::init()
 
         scag::transport::http::HttpTraceRouter::Init("./conf/http_routes__.xml");
 
-        using scag::config::ConfigView;
-
-        std::auto_ptr<ConfigView> cv(new ConfigView(*cfg.getConfig(), "HttpTransport"));
-
-        scag::transport::http::HttpManagerConfig http_cfg(10, 10, 10, 10, 10, 10, 100, "", 1234);
-
-        auto_ptr <char> host(cv->getString("host", NULL, false));
-        http_cfg.host = host.get();
-
-        http_cfg.readerSockets = cv->getInt("readerSockets", NULL);
-        http_cfg.writerSockets = cv->getInt("writerSockets", NULL);
-        http_cfg.readerPoolSize = cv->getInt("readerPoolSize", NULL);
-        http_cfg.writerPoolSize = cv->getInt("writerPoolSize", NULL);
-        http_cfg.scagPoolSize = cv->getInt("scagPoolSize", NULL);
-        http_cfg.scagQueueLimit = cv->getInt("scagQueueLimit", NULL);
-        http_cfg.connectionTimeout = cv->getInt("connectionTimeout", NULL);
-        http_cfg.port = cv->getInt("port", NULL);
-        smsc_log_debug(log, "http_host=%s, http_port=%d", http_cfg.host.c_str(), http_cfg.port);
-
-        httpMan.init(hp, http_cfg);
+        httpMan.init(hp, cfg.getHttpManConfig());
 
         smsc_log_info(log, "Http Manager started");
     }catch(Exception& e)

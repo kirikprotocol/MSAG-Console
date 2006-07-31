@@ -8,6 +8,7 @@
 #include "logger/Logger.h"
 #include "HttpAcceptor.h"
 #include "TaskList.h"
+#include "scag/config/http/HttpManagerConfig.h"
 
 namespace scag { namespace transport { namespace http
 {
@@ -16,6 +17,7 @@ using smsc::core::synchronization::MutexGuard;
 using smsc::core::network::Socket;
 using smsc::core::threads::ThreadPool;
 using smsc::logger::Logger;
+using scag::config::HttpManagerConfig;
 
 class HttpAcceptor;
 class IOTask;
@@ -125,7 +127,7 @@ protected:
     virtual IOTask* newTask();
 };
 
-struct HttpManagerConfig {
+/*struct HttpManagerConfig {
     int readerSockets;
     int writerSockets;
     int readerPoolSize;
@@ -165,7 +167,7 @@ struct HttpManagerConfig {
         host = cp.host;
         port = cp.port;
     }
-};
+};*/
 
 class HttpManager {
 public:

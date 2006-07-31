@@ -50,6 +50,7 @@ public:
   virtual StatManConfig& getStatManConfig(){ return getStatManConfig_(); }
   virtual BillingManagerConfig& getBillManConfig(){ return getBillManConfig_(); }
   virtual SessionManagerConfig& getSessionManConfig(){ return getSessionManConfig_(); }
+  virtual HttpManagerConfig& getHttpManConfig(){ return getHttpManConfig_(); }  
 
     static RouteConfig&  getRouteConfig_()
     {
@@ -75,6 +76,11 @@ public:
     {
         static SessionManagerConfig sessionManCfg;
         return sessionManCfg;
+    };
+    static HttpManagerConfig& getHttpManConfig_()
+    {
+        static HttpManagerConfig httpManCfg;
+        return httpManCfg;
     };
     virtual Hash<std::string>*& getLicConfig(){return licconfig;};
     virtual Config* getConfig(){return &config;};
@@ -187,6 +193,7 @@ void ConfigManagerImpl::Init()
     getBillManConfig_().init(ConfigView(config, "BillingManager"));
     getSessionManConfig_().init(ConfigView(config, "SessionManager"));
     getStatManConfig_().init(ConfigView(config, "StatisticsManager"));
+    getHttpManConfig_().init(ConfigView(config, "HttpTransport"));    
 
   } catch (ParseException &e) {
       throw ConfigException(e.what());
@@ -465,6 +472,11 @@ void ConfigManagerImpl::reload(Array<int>& changedConfigs)
     if(  getSessionManConfig_().check(ConfigView(config, "SessionManager"))  ){
         getSessionManConfig_().init(ConfigView(config, "SessionManager"));
         changedConfigs.Push(SESSIONMAN_CFG);
+    }
+
+    if(  getHttpManConfig_().check(ConfigView(config, "HttpTransport"))  ){
+        getHttpManConfig_().init(ConfigView(config, "HttpTransport"));
+        changedConfigs.Push(HTTPMAN_CFG);
     }
 
 
