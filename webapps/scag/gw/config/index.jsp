@@ -1,6 +1,6 @@
 <%@ include file="/WEB-INF/inc/header.jspf" %>
 
-<script src="tree.js"></script>
+<script src="content/scripts/tree.js"></script>
 
 <sm:page title="config.title" onLoad="enableDisableStartStopButtonsForSCAGStatusPage();">
 <jsp:attribute name="menu">
