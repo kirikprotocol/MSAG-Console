@@ -729,7 +729,10 @@ Response * CommandSetLogCategories::CreateResponse(scag::Scag * ScagApp)
         if(*p) levels[cat.c_str()] = Logger::getLogLevel(p);
     }
     else
-        return new Response(Response::Error, "CommandSetLogCategories processed failed. Bad format");        
+    {
+        smsc_log_info(logger, "CommandSetLogCategories processed failed. Bad format");
+        return new Response(Response::Error, Variant(false));        
+    }
         
     smsc_log_info(logger, "CommandSetLogCategories processed ok.");
     return new Response(Response::Ok, Variant(true));
