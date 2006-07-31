@@ -734,6 +734,8 @@ Response * CommandSetLogCategories::CreateResponse(scag::Scag * ScagApp)
         return new Response(Response::Error, Variant(false));        
     }
         
+    Logger::setLogLevels(levels);
+      
     smsc_log_info(logger, "CommandSetLogCategories processed ok.");
     return new Response(Response::Ok, Variant(true));
 }
