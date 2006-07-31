@@ -53,7 +53,12 @@ int SmppWriter::Execute()
       }
       for(int i=0;i<ready.Count();i++)
       {
-        getSmppSocket(ready[i])->sendData();
+        try{
+          getSmppSocket(ready[i])->sendData();
+        }catch(std::exception& e)
+        {
+          warn2(log,"exception in sendData:%s",e.what());
+        }
       }
       MutexGuard mg(mon);
       deleteDisconnected();

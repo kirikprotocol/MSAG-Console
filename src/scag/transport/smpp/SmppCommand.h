@@ -1069,6 +1069,23 @@ public:
         xsm->set_messageId(c.get_resp()->get_messageId());
         return reinterpret_cast<SmppHeader*>(xsm.release());
       }
+    case DATASM:
+      {
+          auto_ptr<PduDataSm> xsm(new PduDataSm);
+          xsm->header.set_commandId(SmppCommandSet::DATA_SM);
+          xsm->header.set_sequenceNumber(c.get_dialogId());
+          fillDataSmFromSms(xsm.get(),c.get_sms(),forceDC);
+          return reinterpret_cast<SmppHeader*>(xsm.release());
+      }
+    case DATASM_RESP:
+      {
+          auto_ptr<PduDataSmResp> xsm(new PduDataSmResp);
+          xsm->header.set_commandId(SmppCommandSet::DATA_SM_RESP);
+          xsm->header.set_sequenceNumber(c.get_dialogId());
+          xsm->header.set_commandStatus(makeSmppStatus(c.get_resp()->get_status()));
+          xsm->set_messageId(c.get_resp()->get_messageId());
+          return reinterpret_cast<SmppHeader*>(xsm.release());
+      }
     case GENERIC_NACK:
       {
         auto_ptr<PduGenericNack> gnack(new PduGenericNack);
