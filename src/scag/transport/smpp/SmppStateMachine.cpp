@@ -700,16 +700,16 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
   }
 
   SmppEntity* dst=orgCmd.getEntity();
+  SmsCommand& smscmd=orgCmd->get_smsCommand();
   SMS* sms=orgCmd->get_sms();
   cmd->get_resp()->set_sms(sms);
-  cmd->get_resp()->set_dir((orgCmd->get_smsCommand()).dir);
+  cmd->get_resp()->set_dir(smscmd.dir);
 
   cmd->set_serviceId(orgCmd->get_serviceId());
   cmd->set_operationId(orgCmd->get_operationId());
-  sms->setOriginatingAddress(orgCmd->get_smsCommand().orgSrc);
-  sms->setDestinationAddress(orgCmd->get_smsCommand().orgDst);
-
-  SmsCommand& smscmd=cmd->get_smsCommand();
+  sms->setOriginatingAddress(smscmd.orgSrc);
+  sms->setDestinationAddress(smscmd.orgDst);
+  
   scag::sessions::CSessionKey key;
   key.abonentAddr = (smscmd.dir == dsdSrv2Sc || smscmd.dir == dsdSc2Sc) ?
          orgCmd->get_sms()->getDestinationAddress():
