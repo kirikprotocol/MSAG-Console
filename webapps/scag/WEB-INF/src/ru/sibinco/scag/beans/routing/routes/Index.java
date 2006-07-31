@@ -3,18 +3,17 @@ package ru.sibinco.scag.beans.routing.routes;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.users.User;
 import ru.sibinco.lib.backend.util.Functions;
-import ru.sibinco.scag.beans.TabledBeanImpl;
-import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.transport.Transport;
-import ru.sibinco.scag.backend.daemon.Proxy;
+import ru.sibinco.scag.beans.SCAGJspException;
+import ru.sibinco.scag.beans.TabledBeanImpl;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.*;
 import java.security.Principal;
 import java.text.DateFormat;
+import java.util.*;
 
 
 /**
@@ -48,7 +47,8 @@ public class Index extends TabledBeanImpl {
     private boolean httpRoutesRestored = false;
     private boolean httpRoutesLoaded = false;
 
-    protected long transportId = Transport.HTTP_TRANSPORT_ID;
+    protected long transportId = Transport.SMPP_TRANSPORT_ID;
+
 
     protected Collection getDataSource() {
         if (transportId == Transport.SMPP_TRANSPORT_ID) {
