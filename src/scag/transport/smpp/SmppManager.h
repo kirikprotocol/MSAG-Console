@@ -82,7 +82,7 @@ public:
 protected:
   smsc::logger::Logger* log;
   buf::Hash<SmppEntity*> registry;
-  sync::Mutex regMtx;
+  mutable sync::Mutex regMtx;
   SmppSocketManager sm;
 
   bool running;
