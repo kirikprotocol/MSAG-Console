@@ -6,6 +6,7 @@ namespace smpp{
 
 void SmppSocketManager::registerSocket(SmppSocket* sock)
 {
+  MutexGuard mg(mtx);
   sock->setSocketManager(this);
   sock->setInterfaces(queue,reg);
   for(int i=0;i<readers.Count();i++)
