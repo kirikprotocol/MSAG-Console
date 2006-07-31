@@ -720,7 +720,6 @@ Response * CommandSetLogCategories::CreateResponse(scag::Scag * ScagApp)
             levels[cat.c_str()] = Logger::getLogLevel(val.c_str());
             smsc_log_debug(logger, "SetLogCategories [%s]=[%s]", cat.c_str(), val.c_str());
         }
-        smsc_log_debug(logger, "val=%s, cat=%s", val.c_str(), cat.c_str());
         s = !s;
         p = delim_pos + 1;
     }
@@ -730,10 +729,10 @@ Response * CommandSetLogCategories::CreateResponse(scag::Scag * ScagApp)
         if(*p) levels[cat.c_str()] = Logger::getLogLevel(p);
     }
     else
-        return new Response(Response::Error, "CommandGetLogCategories processed failed. Bad format");        
+        return new Response(Response::Error, "CommandSetLogCategories processed failed. Bad format");        
         
-    smsc_log_info(logger, "CommandGetLogCategories processed ok.");
-    return new Response(Response::Ok, "CommandGetLogCategories processed ok.");
+    smsc_log_info(logger, "CommandSetLogCategories processed ok.");
+    return new Response(Response::Ok, "CommandSetLogCategories processed ok.");
 }
 
 }
