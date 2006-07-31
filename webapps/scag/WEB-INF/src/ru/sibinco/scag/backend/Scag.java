@@ -1,43 +1,35 @@
 package ru.sibinco.scag.backend;
 
 import org.w3c.dom.Element;
+import ru.sibinco.WHOISDIntegrator.TariffMatrixManager;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.StatusDisconnectedException;
-import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.lib.backend.util.Functions;
+import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.backend.daemon.ServiceInfo;
 import ru.sibinco.scag.backend.endpoints.centers.Center;
 import ru.sibinco.scag.backend.endpoints.svc.Svc;
 import ru.sibinco.scag.backend.protocol.commands.Apply;
+import ru.sibinco.scag.backend.protocol.commands.ApplyConfig;
 import ru.sibinco.scag.backend.protocol.commands.CommandCall;
 import ru.sibinco.scag.backend.protocol.commands.Type;
-import ru.sibinco.scag.backend.protocol.commands.ApplyConfig;
+import ru.sibinco.scag.backend.protocol.commands.endpoints.*;
+import ru.sibinco.scag.backend.protocol.commands.operators.ReloadOperators;
 import ru.sibinco.scag.backend.protocol.commands.routes.ApplyHttpRoutes;
 import ru.sibinco.scag.backend.protocol.commands.routes.ApplySmppRoutes;
-import ru.sibinco.scag.backend.protocol.commands.tariffmatrix.ReloadTariffMatrix;
-import ru.sibinco.scag.backend.protocol.commands.services.ReloadServices;
-import ru.sibinco.scag.backend.protocol.commands.operators.ReloadOperators;
-import ru.sibinco.scag.backend.protocol.commands.endpoints.AddCenter;
-import ru.sibinco.scag.backend.protocol.commands.endpoints.AddSvc;
-import ru.sibinco.scag.backend.protocol.commands.endpoints.DeleteCenter;
-import ru.sibinco.scag.backend.protocol.commands.endpoints.DeleteSvc;
-import ru.sibinco.scag.backend.protocol.commands.endpoints.UpdateCenter;
-import ru.sibinco.scag.backend.protocol.commands.endpoints.UpdateSvcInfo;
 import ru.sibinco.scag.backend.protocol.commands.rules.RemoveRule;
+import ru.sibinco.scag.backend.protocol.commands.services.ReloadServices;
+import ru.sibinco.scag.backend.protocol.commands.tariffmatrix.ReloadTariffMatrix;
 import ru.sibinco.scag.backend.protocol.response.Response;
 import ru.sibinco.scag.backend.routing.ScagRoutingManager;
 import ru.sibinco.scag.backend.routing.http.HttpRoutingManager;
-import ru.sibinco.WHOISDIntegrator.TariffMatrixManager;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.lang.reflect.Method;
-import java.lang.reflect.InvocationTargetException;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
 
 
 /**
@@ -57,6 +49,7 @@ public class Scag extends Proxy {
 
     private static final String ADD_RULE_METHOD_ID = "addRule";
     private static final String UPDATE_RULE_METHOD_ID = "updateRule";
+    private static final char LOGGER_DELIMITER = ',';
 
     public Scag(final ServiceInfo gwServiceInfo, final int port) {
         super(gwServiceInfo.getHost(), port);
@@ -284,6 +277,40 @@ public class Scag extends Proxy {
         return result;
     }
 
+    public synchronized Map getLogCategories() throws SibincoException {
+        final Map return_result = new HashMap();
+        String err = "Couldn't get LogCategories , nested: ";
+        final Object result0 = call("getLogCategories", err, Type.Types[Type.STRING_LIST_TYPE], new HashMap());
+        if (result0 instanceof List) {
+            final List result = (List) result0;
+            for (Iterator iterator = result.iterator(); iterator.hasNext();) {
+                final String cat = (String) iterator.next();
+                final int delim_pos = cat.lastIndexOf(LOGGER_DELIMITER);
+                if (0 <= delim_pos) {
+                    final String name = cat.substring(0, delim_pos);
+                    final String value = cat.substring(delim_pos + 1);
+                    return_result.put(name, value);
+                } else
+                    logger.error("Error in response: string \"" + cat + "\" misformated.");
+            }
+        } else
+            throw new SibincoException("Error in response");
+        return return_result;
+    }
+
+    public synchronized void setLogCategories(final Map cats) throws SibincoException {
+        final Map params = new HashMap();
+        final List catsList = new LinkedList();
+        params.put("categories", catsList);
+        String err = "Couldn't set LogCategories , nested: ";
+        for (Iterator iterator = cats.entrySet().iterator(); iterator.hasNext();) {
+            final Map.Entry entry = (Map.Entry) iterator.next();
+            final String catName = (String) entry.getKey();
+            final String catPriority = (String) entry.getValue();
+            catsList.add(catName + LOGGER_DELIMITER + catPriority);
+        }
+        call("setLogCategories", err, Type.Types[Type.BOOLEAN_TYPE], params);
+    }
     //common logic of command executing
     //1. "save" or "delete" button pressed
     public void invokeCommand(final String commandName, final Object paramsObject, final SCAGAppContext appContext,  final Manager manager, final String configFilename) throws SibincoException {
