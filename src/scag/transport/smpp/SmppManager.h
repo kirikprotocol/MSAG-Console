@@ -71,6 +71,14 @@ public:
     return *ptr;
   }
 
+  virtual SmppEntity* getSmppEntity(const char* systemId)const
+  {
+    MutexGuard mg(regMtx);
+    SmppEntity** ptr=registry.GetPtr(systemId);
+    if(!ptr)return 0;
+    return *ptr;
+  }
+
 protected:
   smsc::logger::Logger* log;
   buf::Hash<SmppEntity*> registry;

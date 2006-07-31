@@ -44,7 +44,7 @@ struct StateMachine::ResponseRegistry
   };
   struct HashFunc{
     static unsigned int CalcHash(const RegKey& key) {
-      return key.uid<<9+key.seq;
+      return (key.seq<<11)+key.uid;
     }
   };
 
@@ -117,9 +117,7 @@ int StateMachine::Execute()
     try{
       if(queue->getCommand(cmd))
       {
-        if (cmd->get_commandId() != 25) {
-    	    smsc_log_debug(log,"Exec: processing command %d(%x) from %s",cmd->get_commandId(),cmd->get_commandId(),cmd.getEntity()?cmd.getEntity()->getSystemId():"");
-	} 
+        smsc_log_debug(log,"Exec: processing command %d(%x) from %s",cmd->get_commandId(),cmd->get_commandId(),cmd.getEntity()?cmd.getEntity()->getSystemId():"");
         switch(cmd->get_commandId())
         {
           case SUBMIT:          processSubmit(cmd);         break;
@@ -615,11 +613,24 @@ void StateMachine::processDataSm(SmppCommand& cmd)
   sms.setSourceSmeId(src->getSystemId());
   sms.setDestinationSmeId(dst->getSystemId());
 
-  if(src->info.type==etService) {
-    smscmd.dir = (dst->info.type==etService) ? dsdSrv2Srv : dsdSrv2Sc;
-  }
-  else {
-    smscmd.dir = (dst->info.type==etService) ? dsdSc2Srv : dsdSc2Sc;
+  if(src->info.type==etService)
+  {
+    if(dst->info.type==etService)
+    {
+      smscmd.dir=dsdSrv2Srv;
+    }else
+    {
+      smscmd.dir=dsdSrv2Sc;
+    }
+  }else
+  {
+    if(dst->info.type==etService)
+    {
+      smscmd.dir=dsdSc2Srv;
+    }else
+    {
+      smscmd.dir=dsdSc2Sc;
+    }
   }
 
   cmd->set_serviceId(ri.serviceId);
@@ -633,8 +644,7 @@ void StateMachine::processDataSm(SmppCommand& cmd)
 
   scag::sessions::CSessionKey key;
   scag::sessions::SessionPtr session;
-  key.abonentAddr = (src->info.type == etService) ? 
-		     sms.getDestinationAddress() : sms.getOriginatingAddress();
+  key.abonentAddr=sms.getOriginatingAddress();
   if (ussd_op < 0) // SMPP, No USSD specific flags
   {
       if (umr < 0) {
@@ -709,11 +719,8 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
   sms->setOriginatingAddress(orgCmd->get_smsCommand().orgSrc);
   sms->setDestinationAddress(orgCmd->get_smsCommand().orgDst);
 
-  SmsCommand& smscmd=cmd->get_smsCommand();
   scag::sessions::CSessionKey key;
-  key.abonentAddr = (smscmd.dir == dsdSrv2Sc || smscmd.dir == dsdSc2Sc) ? 
-		     orgCmd->get_sms()->getDestinationAddress():
-		     orgCmd->get_sms()->getOriginatingAddress();
+  key.abonentAddr=orgCmd->get_sms()->getOriginatingAddress();
   key.USR=orgCmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
 
 //  if(cmd.status != CMD_OK)
@@ -764,19 +771,19 @@ void StateMachine::processExpiredResps()
       case DELIVERY:
       {
         SmppCommand resp=SmppCommand::makeDeliverySmResp("0",cmd->get_dialogId(),smsc::system::Status::DELIVERYTIMEDOUT);
-        resp.setEntity(cmd.getEntity());
+        resp.setEntity(routeMan->getSmppEntity(cmd->get_sms()->getDestinationSmeId()));
         processDeliveryResp(resp);
       }break;
       case SUBMIT:
       {
         SmppCommand resp=SmppCommand::makeSubmitSmResp("0",cmd->get_dialogId(),smsc::system::Status::DELIVERYTIMEDOUT,false);
-        resp.setEntity(cmd.getEntity());
+        resp.setEntity(routeMan->getSmppEntity(cmd->get_sms()->getDestinationSmeId()));
         processSubmitResp(resp);
       }break;
       case DATASM:
       {
         SmppCommand resp=SmppCommand::makeDataSmResp("0",cmd->get_dialogId(),smsc::system::Status::DELIVERYTIMEDOUT);
-        resp.setEntity(cmd.getEntity());
+        resp.setEntity(routeMan->getSmppEntity(cmd->get_sms()->getDestinationSmeId()));
         processDataSmResp(resp);
       }break;
     }
