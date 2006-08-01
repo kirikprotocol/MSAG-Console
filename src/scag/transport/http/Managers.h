@@ -9,6 +9,8 @@
 #include "HttpAcceptor.h"
 #include "TaskList.h"
 #include "scag/config/http/HttpManagerConfig.h"
+#include "scag/config/ConfigManager.h"
+#include "scag/config/ConfigListener.h"
 
 namespace scag { namespace transport { namespace http
 {
@@ -17,7 +19,7 @@ using smsc::core::synchronization::MutexGuard;
 using smsc::core::network::Socket;
 using smsc::core::threads::ThreadPool;
 using smsc::logger::Logger;
-using scag::config::HttpManagerConfig;
+using namespace scag::config;
 
 class HttpAcceptor;
 class IOTask;
@@ -169,11 +171,12 @@ protected:
     }
 };*/
 
-class HttpManager {
+class HttpManager: public ConfigListener {
 public:
     HttpManager();
 
     void init(HttpProcessor& p, const HttpManagerConfig& cfg);
+    void configChanged();
     void shutdown();
 
     HttpManagerConfig cfg;
@@ -182,6 +185,7 @@ public:
     WriterTaskManager writers;
 
 protected:
+    Logger *logger;
     HttpAcceptor acceptor;
 };
 

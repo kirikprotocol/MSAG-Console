@@ -12,6 +12,7 @@
 #include <scag/config/ConfigManager.h>
 #include <scag/transport/http/Managers.h>
 #include <scag/stat/StatisticsManager.h>
+#include <scag/pers/PersClient.h>
 #include "HttpProcessor.h"
 #include "HttpRouter.h"
 
@@ -25,6 +26,7 @@ using namespace scag::transport;
 using namespace scag::transport::smpp;
 using namespace scag::transport::http;
 using namespace scag::stat;
+using namespace scag::pers::client;
 
 static Logger *logger;
 Mutex mtx;
@@ -38,8 +40,6 @@ extern "C" static void atExitHandler(void)
                                            
 int main(int argc, char* argv[])
 {
-    HttpManager httpMan;
-
     int resultCode = 0;
 
     Logger::Init();
@@ -56,6 +56,10 @@ int main(int argc, char* argv[])
         ConfigManager::Init();
         ConfigManager & cfg = ConfigManager::Instance();
 
+        HttpManager httpMan;
+        
+        PersClient::Init(cfg.getPersClientConfig());
+        
         BillingManager::Init(cfg.getBillManConfig());
 
         SessionManager::Init(cfg.getSessionManConfig());
@@ -72,8 +76,9 @@ int main(int argc, char* argv[])
 
         httpMan.init(hp, cfg.getHttpManConfig());
 
-        smsc_log_info(logger, "Http Manager started host=%s:%d", cfg.getHttpManConfig().host.c_str(), cfg.getHttpManConfig().port);
-
+        sleep(5);
+        cfg.reloadAllConfigs();
+        
         int k = 0;
 #if 1
         do{

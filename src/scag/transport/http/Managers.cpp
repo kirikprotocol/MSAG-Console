@@ -8,8 +8,15 @@ namespace scag { namespace transport { namespace http
 {
 
 HttpManager::HttpManager() : scags(*this),
-    readers(*this), writers(*this), acceptor(*this)
+    readers(*this), writers(*this), acceptor(*this), ConfigListener(HTTPMAN_CFG)
 {
+    logger = Logger::getInstance("scag.http.manager");
+}
+
+void HttpManager::configChanged()
+{
+    shutdown();
+    init(HttpProcessor::Instance(), ConfigManager::Instance().getHttpManConfig());
 }
 
 void HttpManager::init(HttpProcessor& p, const HttpManagerConfig& conf)
@@ -20,6 +27,7 @@ void HttpManager::init(HttpProcessor& p, const HttpManagerConfig& conf)
     writers.init(cfg.writerPoolSize, cfg.writerSockets, "scag.http.writer");
     scags.init(cfg.scagPoolSize, cfg.scagQueueLimit, p);
     acceptor.init(cfg.host.c_str(), cfg.port);
+    smsc_log_info(logger, "Http manager inited host=%s:%d", cfg.host.c_str(), cfg.port);
 }
 
 void HttpManager::shutdown()
@@ -28,10 +36,11 @@ void HttpManager::shutdown()
 
     while (!(readers.canStop() && writers.canStop() && scags.canStop()))
         sleep(1);
-
+        
+    scags.shutdown();
     readers.shutdown();
     writers.shutdown();
-    scags.shutdown();
+    smsc_log_info(logger, "HttpManager shutdown");
 }
 
 ScagTaskManager::ScagTaskManager(HttpManager& m) : manager(m)
@@ -259,6 +268,7 @@ void IOTaskManager::removeContext(IOTask* t, unsigned int nsub) {
 
 void IOTaskManager::shutdown()
 {
+    procMon.notify();
     pool.shutdown();
     delete sortedTasks;
 }
