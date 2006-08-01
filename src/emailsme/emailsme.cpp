@@ -23,6 +23,7 @@
 #include <list>
 #include "sms/sms_util.h"
 #include "emailsme/AbonentProfile.hpp"
+#include "util/Base64.hpp"
 
 using namespace smsc::emailsme;
 using namespace smsc::sms;
@@ -847,7 +848,7 @@ int SendEMail(const string& from,const Array<string>& to,const string& subj,cons
     }
     s.Printf("To: %s\r\n",addr.c_str());
     s.Printf("Content-Type: text/plain; charset=windows-1251\n");
-    if(subj.length())s.Printf("Subject: %s\r\n",subj.c_str());
+    if(subj.length())s.Printf("Subject: =?windows-1251?B?%s?=\r\n",encode64(subj).c_str());
     s.Printf("\r\n");
   }
   if(s.WriteAll(body.c_str(),body.length())==-1)throw Exception("Failed to write body");
