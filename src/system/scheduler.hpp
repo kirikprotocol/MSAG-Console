@@ -727,6 +727,7 @@ public:
       id=d.id;
       resched=d.resched;
       expDate=d.expDate;
+      fake=d.fake;
     }
     SchedulerData(SMSId argId,time_t argExpDate,bool argRes=false):id(argId),expDate(argExpDate),resched(argRes),fake(false){}
     SMSId id;
