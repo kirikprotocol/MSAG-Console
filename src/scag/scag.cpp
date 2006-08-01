@@ -381,16 +381,7 @@ void Scag::init()
     try {
         smsc_log_info(log, "Personalization client initializing...");
 
-        using scag::config::ConfigView;
-
-        std::auto_ptr<ConfigView> cv(new ConfigView(*cfg.getConfig(), "Personalization"));
-
-        auto_ptr <char> host(cv->getString("host", NULL, false));
-
-        if(!host.get())
-            throw Exception("Empty host");
-
-        scag::pers::client::PersClient::Init(host.get(), cv->getInt("port", NULL), cv->getInt("timeout", NULL));
+        scag::pers::client::PersClient::Init(cfg.getPersClientConfig());
 
         smsc_log_info(log, "Personalization client initialized");
     }catch(Exception& e)

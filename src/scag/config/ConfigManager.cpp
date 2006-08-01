@@ -51,6 +51,7 @@ public:
   virtual BillingManagerConfig& getBillManConfig(){ return getBillManConfig_(); }
   virtual SessionManagerConfig& getSessionManConfig(){ return getSessionManConfig_(); }
   virtual HttpManagerConfig& getHttpManConfig(){ return getHttpManConfig_(); }  
+  virtual PersClientConfig& getPersClientConfig(){ return getPersClientConfig_(); }    
 
     static RouteConfig&  getRouteConfig_()
     {
@@ -81,6 +82,11 @@ public:
     {
         static HttpManagerConfig httpManCfg;
         return httpManCfg;
+    };
+    static PersClientConfig& getPersClientConfig_()
+    {
+        static PersClientConfig persCfg;
+        return persCfg;
     };
     virtual Hash<std::string>*& getLicConfig(){return licconfig;};
     virtual Config* getConfig(){return &config;};
@@ -194,6 +200,7 @@ void ConfigManagerImpl::Init()
     getSessionManConfig_().init(ConfigView(config, "SessionManager"));
     getStatManConfig_().init(ConfigView(config, "StatisticsManager"));
     getHttpManConfig_().init(ConfigView(config, "HttpTransport"));    
+    getPersClientConfig_().init(ConfigView(config, "Personalization"));        
 
   } catch (ParseException &e) {
       throw ConfigException(e.what());
@@ -268,6 +275,7 @@ void ConfigManagerImpl::reloadAllConfigs()
     MutexGuard mg(listenerLock);
 
     getRouteConfig_().reload();
+    
     //getSmppManConfig_().reload();
 
     if(listeners.Exist(ROUTE_CFG)){
@@ -477,6 +485,11 @@ void ConfigManagerImpl::reload(Array<int>& changedConfigs)
     if(  getHttpManConfig_().check(ConfigView(config, "HttpTransport"))  ){
         getHttpManConfig_().init(ConfigView(config, "HttpTransport"));
         changedConfigs.Push(HTTPMAN_CFG);
+    }
+    
+    if(  getPersClientConfig_().check(ConfigView(config, "Personalization"))  ){
+        getPersClientConfig_().init(ConfigView(config, "Personalization"));
+        changedConfigs.Push(PERSCLIENT_CFG);
     }
 
 

@@ -7,6 +7,7 @@
 #include "scag/config/bill/BillingManagerConfig.h"
 #include "scag/config/sessn/SessionManagerConfig.h"
 #include "scag/config/http/HttpManagerConfig.h"
+#include "scag/config/pers/PersClientConfig.h"
 
 #include <string>
 
@@ -21,7 +22,8 @@ enum ConfigType
     STATMAN_CFG,
     BILLMAN_CFG,
     SESSIONMAN_CFG,
-    HTTPMAN_CFG
+    HTTPMAN_CFG,
+    PERSCLIENT_CFG
 };
 
 class ConfigManager
@@ -44,6 +46,7 @@ public:
     virtual BillingManagerConfig& getBillManConfig() = 0;
     virtual SessionManagerConfig& getSessionManConfig() = 0;
     virtual HttpManagerConfig& getHttpManConfig() = 0;    
+    virtual PersClientConfig& getPersClientConfig() = 0;    
     virtual Hash<std::string>*& getLicConfig() = 0;
     virtual Config* getConfig() = 0;
 };

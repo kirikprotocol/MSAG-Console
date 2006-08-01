@@ -8,6 +8,7 @@
 #include "Property.h"
 #include "core/network/Socket.hpp"
 #include "Types.h"
+#include "scag/config/pers/PersClientConfig.h"
 
 namespace scag { namespace pers { namespace client {
 
@@ -15,6 +16,7 @@ using smsc::core::network::Socket;
 
 using smsc::logger::Logger;
 using scag::pers;
+using namespace scag::config;
 
 enum PersClientExceptionType{
     CANT_CONNECT,
@@ -62,6 +64,7 @@ protected:
 public:
     static PersClient& Instance();
     static void Init(const char *_host, int _port, int timeout);// throw(PersClientException);
+    static void Init(const PersClientConfig& cfg);// throw(PersClientException);    
 
     virtual void SetProperty(ProfileType pt, const char* key, Property& prop) = 0;// throw(PersClientException);
     virtual void SetProperty(ProfileType pt, uint32_t key, Property& prop) = 0;// throw(PersClientException);

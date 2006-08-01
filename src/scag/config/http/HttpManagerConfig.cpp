@@ -39,7 +39,7 @@ bool HttpManagerConfig::check(ConfigView& cv)   throw(ConfigException)
             scagPoolSize != cv.getInt("scagPoolSize", NULL) ||
             scagQueueLimit != cv.getInt("scagQueueLimit", NULL) ||
             connectionTimeout != cv.getInt("connectionTimeout", NULL) ||
-            port != cv.getInt("port", NULL) || !strcmp(host.c_str(), h.get());
+            port != cv.getInt("port", NULL) || strcmp(host.c_str(), h.get());
     }catch(ConfigException& e){
         throw ConfigException(e.what());
     }catch(...){

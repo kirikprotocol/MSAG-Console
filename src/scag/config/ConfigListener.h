@@ -8,12 +8,12 @@ namespace config {
 
 class ConfigListener {
 private:
-	ConfigType type;
+    ConfigType type;
 protected:
-	ConfigListener(ConfigType type_);
+    ConfigListener(ConfigType type_);
 public:
-	virtual ~ConfigListener();
-	virtual void configChanged() = 0;
+    virtual ~ConfigListener();
+    virtual void configChanged() = 0;
 };
 
 }

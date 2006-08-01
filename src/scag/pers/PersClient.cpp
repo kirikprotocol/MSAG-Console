@@ -1,6 +1,8 @@
 /* $Id$ */
 
 #include <scag/util/singleton/Singleton.h>
+#include "scag/config/ConfigManager.h"
+#include "scag/config/ConfigListener.h"
 
 #include "PersClient.h"
 
@@ -14,10 +16,10 @@ using scag::pers;
 bool  PersClient::inited = false;
 Mutex PersClient::initLock;
 
-class PersClientImpl: public PersClient {
+class PersClientImpl: public PersClient, public ConfigListener {
 //    friend class PersClient;
 public:
-    PersClientImpl(): connected(false) {};
+    PersClientImpl(): connected(false), ConfigListener(PERSCLIENT_CFG) {};
     ~PersClientImpl() { if(connected) sock.Close(); };
 
     void SetProperty(ProfileType pt, const char* key, Property& prop);// throw(PersClientException);
@@ -38,7 +40,9 @@ public:
     void init_internal(const char *_host, int _port, int timeout); //throw(PersClientException);
 protected:
 
+    void configChanged();
     void init();
+    void reinit(const char *_host, int _port, int _timeout); //throw(PersClientException)    
     void SetPacketSize();
     void _SetProperty(ProfileType pt, const char* skey, uint32_t ikey, Property& prop); //throw(PersClientException)
     void _DelProperty(ProfileType pt, const char* skey, uint32_t ikey, const char *property_name); //throw(PersClientException)
@@ -92,9 +96,43 @@ void PersClient::Init(const char *_host, int _port, int _timeout) //throw(PersCl
     }
 }
 
+void PersClient::Init(const PersClientConfig& cfg)// throw(PersClientException);    
+{
+    if (!PersClient::inited)
+    {
+        MutexGuard guard(PersClient::initLock);
+        if(!inited) {
+            PersClientImpl& pc = SinglePC::Instance();
+            pc.init_internal(cfg.host.c_str(), cfg.port, cfg.timeout);
+            PersClient::inited = true;
+        }
+    }
+}
+
 void PersClientImpl::init_internal(const char *_host, int _port, int _timeout) //throw(PersClientException)
 {
     log = Logger::getInstance("client");
+    connected = false;
+    host = _host;
+    port = _port;
+    timeout = _timeout;
+    init();
+}
+
+void PersClientImpl::configChanged() //throw(PersClientException)
+{
+    PersClientConfig& cfg = ConfigManager::Instance().getPersClientConfig();
+    
+    reinit(cfg.host.c_str(), cfg.port, cfg.timeout);
+}
+
+void PersClientImpl::reinit(const char *_host, int _port, int _timeout) //throw(PersClientException)
+{
+    MutexGuard mt(mtx);
+
+    smsc_log_info(log, "PersClient reinit host=%s:%d timeout=%d", _host, _port, _timeout);
+    
+    if(connected) sock.Close();
     connected = false;
     host = _host;
     port = _port;
@@ -280,10 +318,9 @@ void PersClientImpl::init()
     char resp[3];
     if(connected)
         return;
-    if(sock.Init(host.c_str(), port, timeout) == -1)
+    if(sock.Init(host.c_str(), port, timeout) == -1 || sock.Connect() == -1)
         throw PersClientException(CANT_CONNECT);
-    if(sock.Connect() == -1)
-        throw PersClientException(CANT_CONNECT);
+        
     if(sock.Read(resp, 2) != 2)
     {
         sock.Close();
