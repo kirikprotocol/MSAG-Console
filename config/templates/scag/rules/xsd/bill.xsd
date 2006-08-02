@@ -23,6 +23,8 @@
                     <attribute name="content-type" type="scag:Value" use="required"/>
 		    <attribute name="status" type="scag:Var" use="required" />
 		    <attribute name="msg" type="scag:Var" use="optional" />
+
+		    <attribute name="result_number" type="scag:Var" use="optional" />
                </complexType>
 	    </element>
 	    
