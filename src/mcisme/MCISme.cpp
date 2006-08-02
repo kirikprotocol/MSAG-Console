@@ -370,11 +370,15 @@ public:
             TrafficControl::incOutgoing();
 
 		}
-		else if(message.secured_data)
+	    else if(message.secured_data)
 		{
+			smsc_log_debug(logger, "000000000000000");
 			const char* out  = message.GetMsg();//.message.c_str();
+			smsc_log_debug(logger, "1111111111");			
 			int outLen = message.GetMsgLen();//message.length();
-            
+			smsc_log_debug(logger, "2222222222");
+
+
             char* msgBuf = 0;
             int msgDataCoding = DataCoding::BINARY;
 
@@ -392,7 +396,8 @@ public:
             sm.get_data().get_dest()  .set_numberingPlan(da.plan);
             sm.get_data().get_dest()  .set_value(da.value);
             sm.get_data().set_esmClass(SMSC_TRANSACTION_MSG_MODE|0x40); // forward (i.e. transactional)
-			sm.get_data().set_dataCoding(msgDataCoding);
+	    sm.get_data().set_dataCoding(msgDataCoding);
+	    sm.get_optional().set_destAddrSubunit(0x03);
 
             sm.get_optional().set_payloadType(0);
             sm.get_optional().set_messagePayload(out, outLen);
@@ -414,8 +419,8 @@ public:
 		}
 		else
         {
-            const char* out  = message.message.c_str();
-            int outLen = message.message.length();
+            const char* out  = message.GetMsg();
+            int outLen = message.GetMsgLen();
             
             char* msgBuf = 0;
 			int msgDataCoding = DataCoding::LATIN1;
@@ -445,8 +450,8 @@ public:
             sm.get_message().get_dest()  .set_typeOfNumber(da.type);
             sm.get_message().get_dest()  .set_numberingPlan(da.plan);
             sm.get_message().get_dest()  .set_value(da.value);
-            sm.get_message().set_esmClass(0); // default mode (not transactional)
-            sm.get_message().set_protocolId(processor.getProtocolId());
+            sm.get_message().set_esmClass(0x40); // default mode (not transactional)
+            sm.get_message().set_protocolId(0x7F);//processor.getProtocolId());
             sm.get_message().set_priorityFlag(0);
             char timeBuffer[64];
             cTime2SmppTime(smsValidityDate, timeBuffer);
@@ -457,7 +462,7 @@ public:
             sm.get_message().set_replaceIfPresentFlag(0);
 
             sm.get_message().set_smDefaultMsgId(0);
-            sm.get_message().set_dataCoding(msgDataCoding);
+            sm.get_message().set_dataCoding(DataCoding::BINARY);//;msgDataCoding);
             
             if (outLen > MAX_ALLOWED_MESSAGE_LENGTH)
             {

@@ -119,7 +119,7 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
     void closeInQueue();
     bool putToInQueue(const MissedCallEvent& event, bool skip=true);
     bool getFromInQueue(MissedCallEvent& event);
-    
+    void test(void);    
     //void openOutQueue();
     //void closeOutQueue();
     //bool putToOutQueue(const Message& event, bool force=false);

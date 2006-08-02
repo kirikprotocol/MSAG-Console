@@ -49,16 +49,18 @@ namespace UDPattern
 	static const char KID = 0x00;
 	static const char TAR1 = 0x7F;
 	static const char TAR2 = 0x00;
-	static const char TAR3 = 0x01;
+	static const char TAR3 = 0x10;
 	static const char CNTR12345 = 0x00;
 	static const char PCNTR = 0x00;
 
 	static const int indexCPL = 0x04;
-	static const int user_data_pattern_len = 21;
-	static const char user_data_pattern[21] = {UDHL, IEI, IEIDL, CPI, CPL1, CPL2, CHI,
-												CHL, SPI1, SPI2, KIc, KID, TAR1, TAR2,
-												TAR3, CNTR12345, CNTR12345, CNTR12345,
-												CNTR12345, CNTR12345, PCNTR};
+	static const int user_data_pattern_len = 19;
+	static const char user_data_pattern[19] = {UDHL, CPI, IEIDL, CPL1, CPL2, CHL, SPI1, SPI2, KIc, KID, TAR1, TAR2, TAR3, 0,0,0,0,0, 0};//, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+//	static const char user_data_pattern[19] = {UDHL, CPI, IEIDL, CPL1, CPL1, CHL, SPI1, SPI2, KIc, KID, TAR1, TAR2, TAR3, CNTR12345, CNTR12345, CNTR12345, CNTR12345, CNTR12345, PCNTR};
+//	static const char user_data_pattern[21] = {UDHL, IEI, IEIDL, CPI, CPL1,  CHI,
+//												CHL, SPI1, SPI2, KIc, KID, TAR1, TAR2,
+//												TAR3, CNTR12345, CNTR12345, CNTR12345,
+//												CNTR12345, CNTR12345, PCNTR};
 };
 
 using namespace UDPattern;
@@ -124,8 +126,9 @@ public:
 		user_data = new char[user_data_pattern_len + secured_data_len];
 		memcpy(user_data, user_data_pattern, user_data_pattern_len);
 		memcpy(user_data + user_data_pattern_len, message.c_str(), secured_data_len);
-		uint16_t *cpl = (uint16_t*)&user_data[indexCPL];
-		*cpl = CHL + secured_data_len;
+//		uint16_t *cpl = (uint16_t*)&user_data[indexCPL];
+//		*cpl = CHL + secured_data_len + 1;
+		user_data[indexCPL] = CHL + secured_data_len + 1;
 		return user_data;
 	}
 	int GetMsgLen(void) const

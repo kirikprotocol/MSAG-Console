@@ -409,7 +409,7 @@ void TaskProcessor::Run()
 	time_t	cur_time;
 	int		wait_smsc_msg;
 
-	sleep(2);
+	test();
 //	while(bOutQueueOpen)
 	while(pDeliveryQueue->isQueueOpened())
 	{
@@ -493,6 +493,25 @@ int TaskProcessor::Execute()
 	}
 	exitedEvent.Signal();
     return 0;
+}
+
+void TaskProcessor::test(void)
+{
+	Message	msg;
+	
+	msg.message="79139167634+3+10:45+20/07/06";
+	msg.secured_data = true;
+	smsc_log_debug(logger, "ProcessAbntEvents: msg = %s", msg.message.c_str());
+//	msg.abonent = "+79163526458";
+	msg.abonent = "+79163526460";
+//	msg.abonent = "+79139167634";
+	
+	int seqNum = messageSender->getSequenceNumber();
+	if(!messageSender->send(seqNum, msg))
+	{
+		smsc_log_debug(logger, "Send DATA_SM for Abonent  failed");
+		return;
+	}
 }
 
 void TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt)
