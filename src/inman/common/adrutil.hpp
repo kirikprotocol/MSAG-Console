@@ -5,24 +5,23 @@
 #ifndef __SMSC_CONVERSION_ADDRESS_UTL_HPP__
 #define __SMSC_CONVERSION_ADDRESS_UTL_HPP__
 
-#include <inttypes.h>
+#include <inttypes.h>   //OS dependent
 #include <string.h>
 #include <stdio.h>
 
 #include <string>
 
 #include "inman/common/types.hpp"
-#include "util/int.h"
 
-#define MAP_MAX_IMSI_AddressLength  8
+#define MAP_MAX_IMSI_AddressLength      8
 #define MAP_MAX_IMSI_AddressValueLength (MAP_MAX_IMSI_AddressLength*2)
-#define MAP_MAX_ISDN_AddressLength  8
+#define MAP_MAX_ISDN_AddressLength      8
 
 #define CAP_MAX_SMS_AddressStringLength 10 //CAP-datatypes.maxSMS-AddressStringLength - 1
 #define CAP_MAX_SMS_AddressValueLength  (CAP_MAX_SMS_AddressStringLength*2)
-#define CAP_MAX_LocationNumber_Length 8
-#define CAP_MAX_TimeAndTimezoneLength 8
-#define CAP_MAX_IMSILength    8
+#define CAP_MAX_LocationNumber_Length   8
+#define CAP_MAX_TimeAndTimezoneLength   8
+#define CAP_MAX_IMSILength              8
 
 #define NUMBERING_ISDN                  1
 #define ToN_INTERNATIONAL               1
@@ -124,9 +123,9 @@ struct MAPSCFinfo { //gsmSCF paramaters
 typedef union TONPI_OCT_u {
     unsigned char tonpi;
     struct {
-  unsigned char reserved_1:1;
-  unsigned char ton:3;
-  unsigned char npi:4;
+        unsigned char reserved_1:1;
+        unsigned char ton       :3;
+        unsigned char npi       :4;
     } st;
 } TONNPI_OCT;
 
@@ -138,20 +137,20 @@ typedef struct TONNPI_ADDRESS_OCTS_s {
 
 typedef struct LOCATION_ADDRESS_OCTS_s {
     union _b0_u {
-  unsigned char ton;  /* type and length of number */
-  struct {
-      unsigned char oddAdrLen : 1; /* odd/even number of chars in address */
-      unsigned char ton   : 7; /* type of number */
-  } st;
+        unsigned char ton;  /* type and length of number */
+        struct {
+            unsigned char oddAdrLen : 1; /* odd/even number of chars in address */
+            unsigned char ton       : 7; /* type of number */
+        } st;
     } b0;
     union _b1_u {
-  unsigned char inds; /* octet of various indicators */
-  struct {
-      unsigned char INNid   : 1;
-      unsigned char npi   : 3;
-      unsigned char presRestr : 2;
-      unsigned char screenId  : 2;
-  } st;
+        unsigned char inds; /* octet of various indicators */
+        struct {
+            unsigned char INNid     : 1;
+            unsigned char npi       : 3;
+            unsigned char presRestr : 2;
+            unsigned char screenId  : 2;
+        } st;
     } b1;
     unsigned char   val[CAP_MAX_LocationNumber_Length]; /* address */
 } LOCATION_ADDRESS_OCTS;
