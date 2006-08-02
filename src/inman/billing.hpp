@@ -18,6 +18,9 @@ ChargeSmsResult     <-   | bilProcessed ]
 ]
 */
 
+#include "inman/common/RPCList.hpp"
+using smsc::inman::common::RPCList;
+
 #include "inman/inap/cap_sms/DlgCapSMS.hpp"
 #include "inman/interaction/messages.hpp"
 #include "inman/interaction/connect.hpp"
@@ -44,9 +47,6 @@ using smsc::inman::sync::OPAQUE_OBJ;
 
 using smsc::inman::abprov::InAbonentProviderITF;
 using smsc::inman::abprov::InAbonentQueryListenerITF;
-//using smsc::inman::cache::AbonentCacheITF;
-//using smsc::inman::cache::AbonentBillType;
-//using smsc::inman::cache::AbonentId;
 
 using smsc::inman::filestore::InBillingFileStorage;
 
@@ -55,38 +55,6 @@ namespace inman   {
 
 typedef enum { BILL_NONE = 0, BILL_ALL, BILL_USSD, BILL_SMS } BILL_MODE;
 typedef enum { policyIN = 0, policyDB, policyHLR } BillPolicy;
-
-class RPCList : public std::list<unsigned char> {
-public:
-    int init(const char * str) throw(CustomException)
-    {
-        if (!str || !str[0])
-            RPCList::clear();
-        else {
-            std::string rplist(str);
-            std::string::size_type pos = 0, commaPos;
-            do {
-                commaPos = rplist.find_first_of(',', pos);
-                std::string rp_s = rplist.substr(pos, commaPos);
-                int rp_i = atoi(rp_s.c_str());
-                if (!rp_i || (rp_i > 0xFF))
-                    throw CustomException(format("bad element \'%s\'", rp_s.c_str()).c_str());
-
-                RPCList::push_back((unsigned char)rp_i);
-                pos = commaPos + 1;
-            } while (commaPos != rplist.npos);
-        }
-        return RPCList::size();
-    }
-    int print(std::string & ostr)
-    {
-        int i = 0;
-        RPCList::iterator it = RPCList::begin();
-        for (; it != RPCList::end(); it++, i++)
-            format(ostr, "%s%u", i ? ", ":"", (*it));
-        return i;
-    }
-};
 
 struct BillingCFG {
     typedef enum { CDR_NONE = 0, CDR_ALL = 1, CDR_POSTPAID = 2} CDR_MODE;
