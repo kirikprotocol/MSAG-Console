@@ -496,15 +496,7 @@ void RuleEngineImpl::ProcessInit(const std::string& dir)
 
     property.setInt(dsdSc2Sc);
     ConstantsHash["DIRECTION_SC_2_SC"] = property;
-    /*
-    "TRUE"
-    "FALSE"
-    "TT_USSD"
-    "TT_SMS"
-    "TT_MMS"
-    "TT_WAP"
-    "TT_HTTP"
-*/
+
     rules = new Rules();
 
     try
