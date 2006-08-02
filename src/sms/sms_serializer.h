@@ -105,15 +105,16 @@ namespace BufOps{
 
   inline SmsBuffer& operator<<(SmsBuffer& buf,time_t val)
   {
-    val=ntohl(val);
-    buf.Append((char*)&val,4);
+    uint32_t tmp=ntohl(val);
+    buf.Append((char*)&tmp,4);
     return buf;
   }
 
   inline SmsBuffer& operator>>(SmsBuffer& buf,time_t& val)
   {
-    buf.Read((char*)&val,4);
-    val=htonl(val);
+    uint32_t tmp;
+    buf.Read((char*)&tmp,4);
+    val=htonl(tmp);
     return buf;
   }
 
