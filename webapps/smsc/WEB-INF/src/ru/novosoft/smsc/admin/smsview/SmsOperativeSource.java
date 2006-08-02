@@ -26,7 +26,7 @@ import java.util.Map;
 public class SmsOperativeSource extends SmsSource
 {
   Category logger = Category.getInstance(SmsOperativeSource.class);
-  private final static int MAX_SMS_FETCH_SIZE = 200;
+//  private final static int MAX_SMS_FETCH_SIZE = 200;
   private String smsstorePath;
   private static final String SECTION_NAME_LocalStore = "MessageStore.LocalStore";
   private static final String PARAM_NAME_filename = "filename";
@@ -56,13 +56,8 @@ public class SmsOperativeSource extends SmsSource
     }
     if (smsstorePath.indexOf(dirPrefics) != 0)
       smsstorePath = absolutePath + smsstorePath;
-    FileInputStream input = null;
-    try {
-      input = new FileInputStream(smsstorePath);
-    } catch (FileNotFoundException e) {
-      e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-      throw new AdminException(e.getMessage());
-    }
+    if( !((new File(smsstorePath).exists())) )
+       throw new AdminException("Operative store path does not exists "+smsstorePath);
   }
 
   protected void load(File file) throws IOException
@@ -84,17 +79,17 @@ public class SmsOperativeSource extends SmsSource
     int rowsMaximum = query.getRowsMaximum();
     if (rowsMaximum == 0) return set;
     boolean haveArc=false;
-    int smsCount = 0;
     HashMap msgs = new HashMap(5000);
     System.out.println("start reading File in: " + new Date());
     long tm = System.currentTimeMillis();
     try {
       input = new FileInputStream(smsstorePath);
 
-      String FileName = Message.readString(input, 9);
+      Message.readString(input, 9);
       long version = Message.readUInt32(input);
       if ( version> 0x010000 ) haveArc=true;
 //      HashSet msgIds = new HashSet(5000);
+      int totalCount = 0;
       try {
         RsFileMessage resp = new RsFileMessage();
         byte message[] = new byte[256*1024];
@@ -106,6 +101,7 @@ public class SmsOperativeSource extends SmsSource
           InputStream bis = new ByteArrayInputStream(message, 0, msgSize1);
           long msgId=Message.readInt64(bis);
           Long lmsgId = new Long(msgId);
+          totalCount++;
           if( resp.receive(bis, query, message, msgId, false,haveArc) ) {
             if( resp.getSms().getStatusInt() == SmsRow.MSG_STATE_ENROUTE ) {
               msgs.put(lmsgId, resp.getSms());
@@ -115,8 +111,8 @@ public class SmsOperativeSource extends SmsSource
           }
         }
       } catch (EOFException e) {
-        e.printStackTrace();
       }
+      logger.info("Operative store read "+totalCount+" records. "+msgs.size()+" messages matches filter");
       if( query.isFilterLastResult || query.isFilterStatus ) {
         Map.Entry entry = null;
         SmsRow row = null;
