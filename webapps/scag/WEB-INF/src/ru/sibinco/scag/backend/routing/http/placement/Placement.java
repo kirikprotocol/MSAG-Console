@@ -32,7 +32,8 @@ public class Placement {
     }
 
     public String getType() {
-        return type.trim();
+        if(type != null)type.trim();
+        return type;
     }
 
     public void setType(final String type) {
@@ -40,7 +41,8 @@ public class Placement {
     }
 
     public String getName() {
-        return name.trim();
+        if(name != null)name.trim();
+        return name;
     }
 
     public void setName(final String name) {
