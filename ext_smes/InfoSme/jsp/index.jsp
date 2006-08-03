@@ -75,12 +75,12 @@ function checkApplyResetButtons()
     <tr class=row1 id=procRow>
       <td style="padding-right:3px"><input class=check type=checkbox id=toStartProcessor name=toStart value=processor onClick="checkStartStop();"></td>
       <th><label for=toStartProcessor><%= getLocString("infosme.label.send_processor")%><label></th>
-      <td id=procStatus><%=bean.isTaskProcessorRuning() ? "running" : "stopped"%></td>
+      <td id=procStatus><%=bean.isTaskProcessorRuning() ? getLocString("common.statuses.online") : getLocString("common.statuses.offline") %></td>
     </tr>
     <tr class=row0 id=schedRow>
       <td style="padding-right:3px"><input class=check type=checkbox id=toStartScheduler name=toStart value=scheduler onClick="checkStartStop();"></td>
       <th><label for=toStartScheduler><%= getLocString("infosme.label.gen_processor")%></label></th>
-      <td id=schedStatus><%=bean.isTaskSchedulerRuning() ? "running" : "stopped"%></td>
+      <td id=schedStatus><%=bean.isTaskSchedulerRuning() ? getLocString("common.statuses.online") : getLocString("common.statuses.offline") %></td>
     </tr>
     </table>
   </td>
@@ -131,9 +131,9 @@ function checkStartStop()
 
   var smeChecked = document.getElementById('toStartSme').checked;
   var procChecked = document.getElementById('toStartProcessor').checked;
-  var procRunning = document.getElementById('procStatus').innerText == "running";
+  var procRunning = document.getElementById('procStatus').innerText == "online";
   var schedChecked = document.getElementById('toStartScheduler').checked;
-  var schedRunning = document.getElementById('schedStatus').innerText == "running";
+  var schedRunning = document.getElementById('schedStatus').innerText == "online";
 
   var smeStart = smeStopped && smeChecked;
   var smeStop = smeRunning && smeChecked;
