@@ -15,6 +15,7 @@
 #include "router/route_manager.h"
 #include "SmppRouter.h"
 #include "core/threads/ThreadPool.hpp"
+#include "scag/config/ConfigListener.h"
 
 namespace scag{
 namespace transport{
@@ -23,13 +24,14 @@ namespace smpp{
 namespace buf=smsc::core::buffers;
 namespace thr=smsc::core::threads;
 namespace sync=smsc::core::synchronization;
-
+using namespace scag::config;
 
 class SmppManager:
   public SmppManagerAdmin,
   public SmppChannelRegistrator,
   public SmppCommandQueue,
-  public SmppRouter{
+  public SmppRouter,
+  public ConfigListener{
 public:
   SmppManager();
   ~SmppManager();
@@ -50,6 +52,8 @@ public:
   //queue
   virtual void putCommand(SmppChannel* ct,SmppCommand& cmd);
   virtual bool getCommand(SmppCommand& cmd);
+  
+  void configChanged();
 
   void StopProcessing()
   {
