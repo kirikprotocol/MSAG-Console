@@ -136,10 +136,10 @@ public class Edit extends EditBean {
         }
         centers.remove(getEditId());
         final Center center;
-        if (altHost == null || altHost.trim().length() == 0) altHost = "";
-        if (bindPassword == null || bindPassword.trim().length() == 0) bindPassword = "";
-        center = new Center(id, timeout, mode, host, port, altHost, altPort,
-                enabled, providerObj, uid, bindSystemId, (bindPassword == null) ? "" : bindPassword, addressRange);
+        if (altHost == null || getAltHost().length() == 0) altHost = "";
+        if (bindPassword == null || getBindPassword().length() == 0) bindPassword = "";
+        center = new Center(getId(), timeout, mode, getHost(), port, getAltHost(), altPort,
+                enabled, providerObj, uid, getBindSystemId(), (bindPassword == null) ? "" : getBindPassword(), getAddressRange());
         centers.put(id, center);
 
         appContext.getSmppManager().createUpdateCenter(getLoginedPrincipal().getName(),
@@ -158,6 +158,7 @@ public class Edit extends EditBean {
     }
 
     public String getId() {
+        if(id != null) id.trim();
         return id;
     }
 
@@ -166,6 +167,7 @@ public class Edit extends EditBean {
     }
 
     public String getHost() {
+        if(host != null) host.trim();
         return host;
     }
 
@@ -182,6 +184,7 @@ public class Edit extends EditBean {
     }
 
     public String getPassword() {
+        if(password != null)password.trim();
         return password;
     }
 
@@ -190,6 +193,7 @@ public class Edit extends EditBean {
     }
 
     public String getAltHost() {
+        if(altHost != null)altHost.trim();
         return altHost;
     }
 
@@ -254,6 +258,7 @@ public class Edit extends EditBean {
     }
 
     public String getProviderName() {
+        if(providerName != null)providerName.trim();
         return providerName;
     }
 
@@ -278,6 +283,7 @@ public class Edit extends EditBean {
     }
 
     public String getBindSystemId() {
+        if(bindSystemId != null)bindSystemId.trim();
         return bindSystemId;
     }
 
@@ -286,6 +292,7 @@ public class Edit extends EditBean {
     }
 
     public String getBindPassword() {
+        if(bindPassword != null)bindPassword.trim();
         return bindPassword;
     }
 
@@ -294,6 +301,7 @@ public class Edit extends EditBean {
     }
 
     public String getAddressRange() {
+        if(addressRange != null)addressRange.trim();
         return addressRange;
     }
 
