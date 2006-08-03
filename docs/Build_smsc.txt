@@ -6,6 +6,7 @@
 export PATH=/usr/ccs/bin:/opt/SUNWspro/bin:$PATH
 . /opt/oracle/.oraenv
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.:./lib
+Убедитесь что после изменения строки с путями GNU make будет выбираться первым
 
 2. CVS
    Настройка доступа к репозиторию:
@@ -17,7 +18,7 @@ cvs -d :pserver:username@cvs:/cvsroot co smsc
 3. Настройка параметров сборки.
 
 3.1. Настройка сборки smsc
-Необходимо выполнить след. комманды, чтобы скопировать темплейтные 
+Необходимо выполнить след. комманды, чтобы скопировать темплейтные
 файлы настроек:
 cp ~/smsc/src/modules-list-smsc ~/smsc/src/modules-list
 cp ~/smsc/distribs/smsc/build.properties.sample ~/smsc/distribs/smsc/build.properties
@@ -51,7 +52,7 @@ cd ~/smsc/distribs/smsc
 ant update
 
 после чего в ~/build/distr у вас появится готовая версия что скопировать поверх
-установленной, она не содержит файлов конфигураций, так что все настройки 
+установленной, она не содержит файлов конфигураций, так что все настройки
 будут сохранены после апдейта.
 
 6. Сборка дополнительных компонент.
@@ -74,15 +75,15 @@ ant emailsme_distr
 ant emailsme_update
 
 Дистрибутив компонент сохраняется в war файл в ~/build/distr/webapps.
-Апдейты компонент создают файлы в иерархии установленной версии. Т.е. 
+Апдейты компонент создают файлы в иерархии установленной версии. Т.е.
 простым копирование поверх установленного все апдейтится.
 
 7. Полезные комманды:
-ant rmbuild 
+ant rmbuild
     - удаляет build директорию, полезно если хочется сделать полный rebuild
-ant -DMOD=module_name makemod 
+ant -DMOD=module_name makemod
     - компиляет один сишный модуль, вместо make module_name в дире ~/smsc/src
-ant makeweb 
+ant makeweb
     - компиляет только вебовскую часть, ~/build/exploded затем содержит все накомпиленное
 
 8. Примеры
