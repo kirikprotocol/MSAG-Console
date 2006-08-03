@@ -203,7 +203,7 @@ static void ParseTag(SmppManager* smppMan,DOMNodeList* list,SmppEntityType et)
   }
 }
 
-SmppManager::SmppManager():sm(this,this)
+SmppManager::SmppManager():sm(this,this), ConfigListener(SMPPMAN_CFG)
 {
   log=smsc::logger::Logger::getInstance("smppMan");
   running=false;
@@ -250,6 +250,10 @@ void SmppManager::Init(const char* cfgFile)
   {
     tp.startTask(new StateMachine(this,this));
   }
+}
+
+void SmppManager::configChanged()
+{
 }
 
 void SmppManager::LoadRoutes(const char* cfgFile)
