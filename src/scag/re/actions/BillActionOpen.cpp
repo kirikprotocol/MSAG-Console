@@ -216,7 +216,7 @@ bool BillActionOpen::run(ActionContext& context)
         try
         {
             if (m_waitOperation) 
-                RegisterPending(context, BillId)
+                RegisterPending(context, BillId);
             else
                 operation->attachBill(BillId);
         } catch (SCAGException& e)

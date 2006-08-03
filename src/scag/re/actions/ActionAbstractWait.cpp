@@ -22,14 +22,13 @@ void ActionAbstractWait::InitParameters(const SectionParams& params,PropertyObje
     smsc_log_debug(logger,"Action '%s':: init", m_ActionName.c_str());
 }
 
-bool ActionAbstractWait::RegisterPending(ActionContext& context, int billID)
+void ActionAbstractWait::RegisterPending(ActionContext& context, int billID)
 {
     smsc_log_debug(logger,"Action '%s': registering pending...", m_ActionName.c_str());
 
     if (!context.checkIfCanSetPending(m_opType, m_eventHandlerType, m_transportType))
     {
-        smsc_log_debug(logger,"Run Action '%s': cannot set pending operation (id=%d) for this type of command", m_ActionName.c_str(), m_opType);
-        return false;
+        throw SCAGException("Cannot set pending operation (id=%d) for this type of command", m_opType);
     }
 
     Property * property = 0;
@@ -41,8 +40,7 @@ bool ActionAbstractWait::RegisterPending(ActionContext& context, int billID)
 
         if (!property) 
         {
-            smsc_log_warn(logger,"Action '%s': invalid property '%s' to set time", m_ActionName.c_str(), m_sTime.c_str());
-            return false;
+            throw SCAGException("Invalid property '%s' to set time", m_sTime.c_str());
         }
         wait_time = property->getInt();
     }
@@ -56,8 +54,6 @@ bool ActionAbstractWait::RegisterPending(ActionContext& context, int billID)
 
     context.AddPendingOperation(m_opType, pendingTime, billID);
     smsc_log_debug(logger,"Action '%s': pending registered time=%d, type=%d", m_ActionName.c_str(), wait_time, m_opType);
-
-    return true;
 
 }
 
