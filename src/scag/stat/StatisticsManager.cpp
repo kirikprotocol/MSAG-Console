@@ -98,6 +98,15 @@ void StatisticsManager::init(const StatManConfig& statManConfig)
     }
 }
 
+void StatisticsManager::configChanged()
+{
+    MutexGuard  switchGuard(switchLock);
+    
+    Stop();
+    configure(ConfigManager::Instance().getStatManConfig());
+    Start();
+}
+
 void StatisticsManager::configure(const StatManConfig& statManConfig)
 {
     location = statManConfig.getDir();
@@ -155,7 +164,7 @@ void StatisticsManager::configure(const StatManConfig& statManConfig)
 StatisticsManager::StatisticsManager()
     : Statistics(), Thread(), genStatHttp(PERF_HTTP_COUNT), genStatSmpp(PERF_CNT_COUNT),
       logger(Logger::getInstance("scag.stat.StatisticsManager")),
-      currentIndex(0), bExternalFlush(false), isStarted(false) 
+      currentIndex(0), bExternalFlush(false), isStarted(false), ConfigListener(STATMAN_CFG)
 {
     memset(&smppFileTM, 0, sizeof(smppFileTM));
     memset(&httpFileTM, 0, sizeof(httpFileTM));
