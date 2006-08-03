@@ -39,6 +39,7 @@ bool ActionBillMoveWait::run(ActionContext& context)
     } catch (SCAGException& e)
     {
         smsc_log_error(logger, "Action '%s': Cannot process. Details: %s", m_ActionName.c_str(), e.what());
+
         return true;
     }
 
@@ -49,6 +50,7 @@ bool ActionBillMoveWait::run(ActionContext& context)
     if (!property) 
     {
         smsc_log_error(logger, "Action '%s': Invalid property '%s'", m_ActionName.c_str(), m_sStatus.c_str());
+
         return true;
     }
 
@@ -60,6 +62,7 @@ bool ActionBillMoveWait::run(ActionContext& context)
         if (!property) 
         {
             smsc_log_error(logger, "Action '%s': Invalid property '%s'", m_ActionName.c_str(), m_sMessage.c_str());
+
             return true;
         }
         property->setStr("Cannot register pending operation");

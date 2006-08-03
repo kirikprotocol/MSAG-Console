@@ -228,7 +228,7 @@ bool BillActionOpen::run(ActionContext& context)
         SetBillingStatus(context, "", true, tariffRec);
         context.makeBillEvent(TRANSACTION_OPEN, COMMAND_SUCCESSFULL, *tariffRec, ev);
 
-        if (m_waitOperation) RegisterPending(context);
+        if (m_waitOperation) RegisterPending(context, BillId);
 
         smsc_log_debug(logger,"Action '%s' transaction successfully opened", m_ActionName.c_str());
         break;
