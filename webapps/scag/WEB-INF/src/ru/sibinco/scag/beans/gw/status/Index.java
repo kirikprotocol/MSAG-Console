@@ -1,10 +1,8 @@
 package ru.sibinco.scag.beans.gw.status;
 
 import ru.sibinco.lib.SibincoException;
-import ru.sibinco.lib.backend.util.config.Config;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.daemon.Daemon;
-import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.backend.daemon.ServiceInfo;
 import ru.sibinco.scag.backend.status.StatMessage;
 import ru.sibinco.scag.backend.status.StatusManager;
@@ -13,7 +11,6 @@ import ru.sibinco.scag.beans.TabledBeanImpl;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.util.Collection;
 
 
@@ -53,10 +50,14 @@ public class Index extends TabledBeanImpl {
             gwStopped = ServiceInfo.STATUS_STOPPED == gwStatus;
         }
 
-        if (null != mbStart)
+        if (null != mbStart) {
             start();
-        if (null != mbStop)
+            super.process(request, response);
+        }
+        if (null != mbStop) {
             stop();
+            super.process(request, response);
+        }
     }
 
     protected void delete() throws SCAGJspException {
