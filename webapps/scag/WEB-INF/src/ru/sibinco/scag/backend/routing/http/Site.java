@@ -42,6 +42,7 @@ public class Site {
     }
 
     public String getHost() {
+        if(host != null)host.trim();
         return host;
     }
 
