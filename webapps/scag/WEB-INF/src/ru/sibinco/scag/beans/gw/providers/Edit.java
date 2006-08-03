@@ -39,9 +39,9 @@ public class Edit extends EditBean {
     protected void save() throws SCAGJspException {
         final ProviderManager providerManager = appContext.getProviderManager();
         if (isAdd()) {
-            providerManager.createProvider(name);
+            providerManager.createProvider(getName());
         } else {
-            providerManager.setProviderName(id, name);
+            providerManager.setProviderName(id, getName());
         }
         appContext.getProviderManager().store();
 
@@ -66,6 +66,7 @@ public class Edit extends EditBean {
     }
 
     public String getName() {
+        if(name != null)name.trim();
         return name;
     }
 
