@@ -111,9 +111,9 @@ public class Edit extends TabledEditBeanImpl {
         final ServiceProvidersManager serviceProvidersManager = appContext.getServiceProviderManager();
         ServiceProvider oldProvider = null;
         if (isAdd()) {
-            id = serviceProvidersManager.createServiceProvider(userLogin, name, description);
+            id = serviceProvidersManager.createServiceProvider(userLogin, getName(), description);
         } else {
-            oldProvider = serviceProvidersManager.updateServiceProvider(userLogin, id, name, description);
+            oldProvider = serviceProvidersManager.updateServiceProvider(userLogin, id, getName(), description);
         }
         appContext.getServiceProviderManager().reloadServices(appContext, isAdd(), id, oldProvider);
         if (isAdd()) {
@@ -132,6 +132,7 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public String getName() {
+        if(name != null)name.trim();
         return name;
     }
 
