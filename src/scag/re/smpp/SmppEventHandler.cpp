@@ -11,7 +11,7 @@ using namespace scag::re::smpp;
 void SmppEventHandler::StartOperation(Session& session, SmppCommand& command, CSmppDiscriptor& smppDiscriptor)
 {
     Operation * operation = 0;
-    int UMR;
+    int16_t UMR;
 
     switch (smppDiscriptor.cmdType)
     {
@@ -53,8 +53,6 @@ void SmppEventHandler::StartOperation(Session& session, SmppCommand& command, CS
             break;
         }
 
-        operation = session.setCurrentOperation(command.getOperationId());
-
         if (smppDiscriptor.isResp) 
         {
             operation->receiveNewResp(smppDiscriptor.currentIndex, smppDiscriptor.lastIndex);
@@ -65,8 +63,10 @@ void SmppEventHandler::StartOperation(Session& session, SmppCommand& command, CS
         {
             session.setOperationFromPending(command, CO_SUBMIT);
             break;
-        }
-        
+        } 
+
+        operation = session.setCurrentOperation(command.getOperationId());
+
         operation->receiveNewPart(smppDiscriptor.currentIndex,smppDiscriptor.lastIndex);
         break;
 
