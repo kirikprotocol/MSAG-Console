@@ -35,8 +35,8 @@ Placement XMLBasicHandler::assignPlacement(const std::string& rid, AttributeList
     StrX s1 = attrs.getValue("name");
     p.name = s1.localForm();
 
-    for (unsigned int i = 0; i < p.name.length(); ++i)
-        p.name[i] = tolower(p.name[i]);
+//    for (unsigned int i = 0; i < p.name.length(); ++i)
+//        p.name[i] = tolower(p.name[i]);
 
     p.prio = 0;
     if(req)

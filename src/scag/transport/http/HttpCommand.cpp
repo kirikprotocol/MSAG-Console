@@ -82,8 +82,8 @@ void Cookie::setParam(const char* nm, uint32_t ncnt, const char* val, uint32_t v
     std::string n, v;
     n.assign(nm, ncnt);
 
-    for (unsigned int i = 0; i < n.length(); ++i)
-        n[i] = tolower(n[i]);
+//    for (unsigned int i = 0; i < n.length(); ++i)
+//        n[i] = tolower(n[i]);
 
     v.assign(val, vcnt);
     params.Insert(n.c_str(), v);

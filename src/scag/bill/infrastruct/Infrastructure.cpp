@@ -210,7 +210,7 @@ uint32_t InfrastructureImpl::GetOperatorID(Address addr)
         smsc_log_debug(logger, "Match mask: %s", a.c_str());
         return mask_hash->Get(a.c_str());
     }
-    smsc_log_debug(logger, "No match mask found for: %s", addr.toString());
+    smsc_log_debug(logger, "No match mask found for: %s", addr.toString().c_str());
     return 0;
 }
 
