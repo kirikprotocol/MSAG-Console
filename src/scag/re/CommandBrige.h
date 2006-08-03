@@ -24,19 +24,19 @@ using namespace smsc::smpp::UssdServiceOpValue;
 enum CommandOperations
 {
     //SMS
-    CO_DELIVER,
-    CO_SUBMIT,
-    CO_RECEIPT,
-    CO_DATA_SC_2_SME,
-    CO_DATA_SC_2_SC,
-    CO_DATA_SME_2_SME,
-    CO_DATA_SME_2_SC,
+    CO_DELIVER = 0,
+    CO_SUBMIT = 1,
+    CO_RECEIPT = 2,
+    CO_DATA_SC_2_SME = 3,
+    CO_DATA_SC_2_SC = 4,
+    CO_DATA_SME_2_SME = 5,
+    CO_DATA_SME_2_SC = 6,
 
     //USSD
-    CO_USSD_DIALOG,
+    CO_USSD_DIALOG = 7,
 
     //HTTP
-    CO_HTTP_DELIVERY
+    CO_HTTP_DELIVERY = 8
 
 };
 

@@ -62,7 +62,7 @@ void SmppEventHandler::StartOperation(Session& session, SmppCommand& command, CS
 
         if (smppDiscriptor.currentIndex == 0)
         {
-            session.setOperationFromPending(command, CO_SUBMIT);
+            session.setOperationFromPending(command, smppDiscriptor.cmdType);
             break;
         } 
 

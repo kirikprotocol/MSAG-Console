@@ -55,7 +55,7 @@ bool ActionAbstractWait::RegisterPending(ActionContext& context, int billID)
     pendingTime = now + wait_time;
 
     context.AddPendingOperation(m_opType, pendingTime, billID);
-    smsc_log_debug(logger,"Action '%s': pending registered time=%d", m_ActionName.c_str(), wait_time);
+    smsc_log_debug(logger,"Action '%s': pending registered time=%d, type=%d", m_ActionName.c_str(), wait_time, m_opType);
 
     return true;
 
