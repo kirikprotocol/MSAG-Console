@@ -18,7 +18,7 @@ void SmppEventHandler::StartOperation(Session& session, SmppCommand& command, CS
     case CO_DELIVER:
     case CO_DATA_SC_2_SME:
 
-        if (session.hasPending()) 
+        if ((session.hasPending())&&(!smppDiscriptor.isResp)) 
         {
             session.setOperationFromPending(command, smppDiscriptor.cmdType);
             break;
