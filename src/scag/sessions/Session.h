@@ -281,7 +281,7 @@ namespace scag { namespace sessions
         Operation * AddNewOperationToHash(SCAGCommand& cmd, int operationType);
         Operation * setCurrentOperation(uint64_t operationId);
         Operation * setCurrentOperationByType(int operationType);
-        void setOperationFromPending(SCAGCommand& cmd, int operationType);
+        Operation * setOperationFromPending(SCAGCommand& cmd, int operationType);
         uint64_t getCurrentOperationId();
         
         time_t Session::getWakeUpTime();

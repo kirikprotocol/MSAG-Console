@@ -496,7 +496,8 @@ SessionPtr SessionManagerImpl::getSession(const CSessionKey& sessionKey)
     (*it)->bOpened = true;
 
     session = store.getSession(sessionKey);
-    smsc_log_debug(logger,"SessionManager: get session - pending count = %d",session->PendingOperationList.size());
+
+    smsc_log_debug(logger,"SessionManager: (USR=%d) get session - pending count = %d", session->getUSR(), session->PendingOperationList.size());
     
     return session;
 }
@@ -538,7 +539,7 @@ SessionPtr SessionManagerImpl::newSession(CSessionKey& sessionKey)
         session = SessionPtr(0);
         return session;
     }*/
-    smsc_log_debug(logger,"SessionManager: new session (%s USR=%d)",sessionKey.abonentAddr.toString().c_str(),sessionKey.USR);
+    smsc_log_debug(logger,"SessionManager: new session (%s USR=%d)",sessionKey.abonentAddr.toString().c_str(),session->getUSR());
 
     SessionHash.Insert(sessionKey,it);
     return session;

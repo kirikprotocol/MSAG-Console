@@ -382,7 +382,7 @@ void Session::Deserialize(SessionBuffer& buff)
 
     buff >> m_SessionKey.abonentAddr;
 
-    unsigned int tmp;
+    uint32_t tmp;
     buff >> tmp;
     m_SessionKey.USR = tmp;
 
@@ -584,7 +584,7 @@ Operation * Session::setCurrentOperationByType(int operationType)
 }
 
 
-void Session::setOperationFromPending(SCAGCommand& cmd, int operationType)
+Operation * Session::setOperationFromPending(SCAGCommand& cmd, int operationType)
 {
     std::list<PendingOperation>::iterator it;
 
@@ -600,7 +600,7 @@ void Session::setOperationFromPending(SCAGCommand& cmd, int operationType)
             bChanged = true;
 
             smsc_log_debug(logger,"** Session: pending closed", currentOperationId);
-            return;
+            return operation;
         }
     }
     throw SCAGException("Session: Cannot find pending operation (type=%d)", operationType);
