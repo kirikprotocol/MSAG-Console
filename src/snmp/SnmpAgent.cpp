@@ -16,6 +16,7 @@
          netsnmp_request_info *requests);
     void sendStatusNotification(unsigned int clientreg, void *clientarg);
     void sendAlarmNotification(unsigned int clientreg, void *clientarg);
+    void sendSmscAlertFFMR(unsigned int clientreg, void *clientarg);
     int smscDescrHandler(netsnmp_mib_handler *handler,
                  netsnmp_handler_registration *reginfo,
                  netsnmp_agent_request_info *reqinfo,
@@ -28,20 +29,30 @@
                          netsnmp_handler_registration *reginfo,
                          netsnmp_agent_request_info *reqinfo,
                          netsnmp_request_info *requests);
+    struct FFMRargs {
+      char* alarmId;
+      char* alarmObjCategory;
+      char* text;
+      uint8_t severity;
+    };
     void send_change_status();
-    void* agent;
-    void* agentlog;
-    void* smscptr;
+    void* agent = 0;
+    void* agentlog = 0;
+    void* smscptr = 0;
     struct timeval  agentStartTime;
     static u_long      accepted = 2;
     static int         status = 0;
     static oid statusNotificationOid[] = { 1, 3, 6, 1, 4, 1, 17939, 1, 0, 1 };
     static oid alertOid[] =              { 1, 3, 6, 1, 4, 1, 17939, 1, 0, 2 };
+    static oid smscAlertFFMROid[] =      { 1, 3, 6, 1, 4, 1, 17939, 1, 0, 3 };
     static oid smscDescrOid[] =          { 1, 3, 6, 1, 4, 1, 17939, 1, 1, 0 };
     static oid status_oid[] =            { 1, 3, 6, 1, 4, 1, 17939, 1, 2, 0 };
     static oid smscUpTimeOid[] =         { 1, 3, 6, 1, 4, 1, 17939, 1, 3, 0 };
     static oid accepted_oid[] =          { 1, 3, 6, 1, 4, 1, 17939, 1, 4, 0 };
     static oid alertMessageOid[] =       { 1, 3, 6, 1, 4, 1, 17939, 1, 5, 0 };
+    static oid alertSeverityOid[] =      { 1, 3, 6, 1, 4, 1, 17939, 1, 7, 0 };
+    static oid alertIdOid[] =            { 1, 3, 6, 1, 4, 1, 17939, 1, 8, 0 };
+    static oid alertObjCategoryOid[] =   { 1, 3, 6, 1, 4, 1, 17939, 1, 9, 0 };
     static oid sumbitOkOid[] =           { 1, 3, 6, 1, 4, 1, 17939, 1, 4, 1, 0 };
     static oid sumbitErrOid[] =          { 1, 3, 6, 1, 4, 1, 17939, 1, 4, 2, 0 };
     static oid deliverOkOid[] =          { 1, 3, 6, 1, 4, 1, 17939, 1, 4, 3, 0 };
@@ -102,19 +113,38 @@
       }
       void SnmpAgent::statusChange(smscStatus newstatus)
       {
+        return; //MTS doesn't need this trap
         status = newstatus;
         int *statusSave;
         memdup((uchar_t **) &statusSave,(uchar_t *) &status,sizeof(status));
-        struct timeval t;t.tv_sec=0,t.tv_usec=10000;
+        struct timeval t;t.tv_sec=0,t.tv_usec=10;
         snmp_alarm_register_hr(t, 0, sendStatusNotification, (void*)statusSave);
         smsc_log_debug(log, "smsc status changed to %d, trap sent, saved = %d(%d)",newstatus,*statusSave,sizeof(status));
       }
 
       void SnmpAgent::trap(const char * const message)
       {
-        struct timeval t;t.tv_sec=0,t.tv_usec=10000;
+        struct timeval t;t.tv_sec=0,t.tv_usec=10;
         snmp_alarm_register_hr(t, 0, sendAlarmNotification, strdup(message));
       }
+      void SnmpAgent::trap(const char * const alarmId,
+                           const char * const alarmObjCategory,
+                           alertSeverity severity,
+                           const char * const text)
+      {
+        if (!agent) return;
+        struct timeval t;t.tv_sec=0,t.tv_usec=10;
+        struct FFMRargs * clientarg = (struct FFMRargs *)malloc(sizeof(struct FFMRargs));
+        if (clientarg)
+        {
+          clientarg->alarmId = strdup(alarmId);
+          clientarg->alarmObjCategory = strdup(alarmObjCategory);
+          clientarg->severity = severity;
+          clientarg->text = strdup(text);
+        }
+        snmp_alarm_register_hr(t, 0, sendSmscAlertFFMR,clientarg);
+      }
+
 
     }//snmp name space
   }//smsc name space
@@ -174,7 +204,11 @@
         netsnmp_request_add_list_data(requests, netsnmp_create_data_list(INSTANCE_HANDLER_NAME, it_save, free));
         break;
       case MODE_SET_ACTION:
-        //*it = (int) *(requests->requestvb->val.integer);
+        //MTS dosn't need to stop by SNMP so just send error and do nothing
+        netsnmp_set_request_error(reqinfo, requests, SNMP_ERR_WRONGVALUE);
+        break;
+        //MTS dosn't need to stop by SNMP so the following code becomes unreached
+
         smsc_log_debug( ((smsc::logger::Logger*)agentlog), "hello from smscStatusHandler MODE_SET_ACTION");
         if (agent)
         {
@@ -235,6 +269,59 @@
     snmp_free_varbind(notification_vars);
     free(clientarg);
   }
+
+  /* order of vars in clientarg array: alarmId, alarmObCategory, severity, text */
+  extern "C"
+  void
+  sendSmscAlertFFMR(unsigned int clientreg, void *clientarg)
+  {
+    struct FFMRargs * vars = (struct FFMRargs *)clientarg;
+    if (vars)
+    {
+      netsnmp_variable_list *notification_vars = NULL;
+      u_char* buf; int buflen;
+      if (vars->text)
+      {
+        buf = (u_char*)vars->text;buflen = strlen(vars->text);
+        snmp_varlist_add_variable(&notification_vars,
+                                  alertMessageOid, OID_LENGTH(alertMessageOid), ASN_OCTET_STR,
+                                  buf,buflen);
+        free(vars->text);
+      }
+
+      {
+        buf = &(vars->severity); buflen = sizeof(vars->severity);
+        snmp_varlist_add_variable(&notification_vars,
+                                  alertSeverityOid, OID_LENGTH(alertSeverityOid), ASN_INTEGER,
+                                  buf,buflen);
+      }
+
+      if (vars->alarmObjCategory)
+      {
+        buf = (u_char*)vars->alarmObjCategory;buflen = strlen(vars->alarmObjCategory);
+        snmp_varlist_add_variable(&notification_vars,
+                                  alertObjCategoryOid, OID_LENGTH(alertObjCategoryOid), ASN_OCTET_STR,
+                                  buf,buflen);
+        free(vars->alarmObjCategory);
+      }
+
+      if (vars->alarmId)
+      {
+        buf = (u_char*)vars->alarmId;buflen = strlen(vars->alarmId);
+        snmp_varlist_add_variable(&notification_vars,
+                                  alertIdOid, OID_LENGTH(alertIdOid), ASN_OCTET_STR,
+                                  buf,buflen);
+        free(vars->alarmId);
+      }
+
+      send_enterprise_trap_vars(SNMP_TRAP_ENTERPRISESPECIFIC, 1,
+                                smscAlertFFMROid,
+                                OID_LENGTH(smscAlertFFMROid), notification_vars);
+      snmp_free_varbind(notification_vars);
+      free(clientarg);
+    }
+  }
+
   static char version[] ="SMSC UNKNOWN VERSION";
   extern "C" int smscDescrHandler(netsnmp_mib_handler *handler,
                                   netsnmp_handler_registration *reginfo,
