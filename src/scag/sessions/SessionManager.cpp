@@ -18,6 +18,7 @@
 #include "scag/exc/SCAGExceptions.h"
 #include "scag/util/sms/HashUtil.h"
 #include "scag/re/CommandBrige.h"
+#include "scag/config/ConfigListener.h"
 
 namespace scag { namespace sessions 
 {
@@ -33,7 +34,7 @@ namespace scag { namespace sessions
     using smsc::logger::Logger;
 
 
-    class SessionManagerImpl : public SessionManager, public Thread
+    class SessionManagerImpl : public SessionManager, public Thread, public ConfigListener
     {
         struct CSessionAccessData
         {
@@ -101,11 +102,13 @@ namespace scag { namespace sessions
         int16_t getLastUSR(Address& address);
 
     public:
+        void configChanged();
+        
         void AddRestoredSession(Session * session);
 
         void init(const SessionManagerConfig& config);
 
-        SessionManagerImpl() : bStarted(false) , logger(0) {};
+        SessionManagerImpl() : bStarted(false) , logger(0), ConfigListener(SESSIONMAN_CFG) {};
         virtual ~SessionManagerImpl();
         
         // SessionManager interface
@@ -292,6 +295,15 @@ void SessionManagerImpl::init(const SessionManagerConfig& _config) // possible t
     smsc_log_debug(logger,"SessionManager::initialized");
 }
 
+void SessionManagerImpl::configChanged()
+{
+    MutexGuard mt(inUseMonitor);
+    
+    Stop();
+    init(ConfigManager::Instance().getSessionManConfig());
+    Start();
+}
+
 bool SessionManagerImpl::isStarted()
 {
     //MutexGuard guard(stopLock);
@@ -332,7 +344,6 @@ int SessionManagerImpl::Execute()
     exitEvent.Signal();
     return 0;
 }
-
 
 SessionManagerImpl::CSessionSetIterator SessionManagerImpl::DeleteSession(CSessionSetIterator it)
 {

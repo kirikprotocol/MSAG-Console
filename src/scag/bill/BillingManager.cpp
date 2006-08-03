@@ -7,6 +7,7 @@
 
 #include "scag/exc/SCAGExceptions.h"
 #include "BillingManagerWrapper.h"
+#include "scag/config/ConfigListener.h"
 
 //#define MSAG_INMAN_BILL
 
@@ -19,9 +20,7 @@ using namespace scag::exceptions;
 
 using smsc::logger::Logger;
 
-
-
-class BillingManagerImpl : public BillingManager, public Thread, public BillingManagerWrapper
+class BillingManagerImpl : public BillingManager, public Thread, public BillingManagerWrapper, public ConfigListener
 {
     struct BillTransaction
     {
@@ -60,7 +59,7 @@ class BillingManagerImpl : public BillingManager, public Thread, public BillingM
     void Stop();
     bool isStarted();
 
-	InfrastructureImpl infrastruct;
+    InfrastructureImpl infrastruct;
 
 public:
     void init(BillingManagerConfig& cfg);
@@ -85,10 +84,12 @@ public:
     virtual void sendReject(int billId);
 
 
+    void configChanged();
+    
     BillingManagerImpl() : 
         m_bStarted(false), 
         EventMonitorArray(0), 
-        m_lastBillId(0) {}
+        m_lastBillId(0), ConfigListener(BILLMAN_CFG) {}
 
     ~BillingManagerImpl()
     {
@@ -177,6 +178,14 @@ void BillingManagerImpl::init(BillingManagerConfig& cfg)
     smsc_log_info(logger,"BillingManager inited...");
 }
 
+void BillingManagerImpl::configChanged()
+{
+    MutexGuard guard(inUseLock);
+    
+    Stop();
+    init(ConfigManager::Instance().getBillManConfig());
+    Start();
+}
 
 int BillingManagerImpl::Execute()
 {

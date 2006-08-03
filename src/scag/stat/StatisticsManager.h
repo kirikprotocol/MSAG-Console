@@ -18,6 +18,7 @@
 #include "TrafficRecord.h"
 #include <core/buffers/File.hpp>
 #include "scag/config/stat/StatManConfig.h"
+#include "scag/config/ConfigListener.h"
 
 #include "util/timeslotcounter.hpp"
 #include "core/network/Socket.hpp"
@@ -39,7 +40,7 @@ namespace stat {
     using namespace smsc::core::synchronization;
     using smsc::core::buffers::File;
     using smsc::core::buffers::Array;
-    using scag::config::StatManConfig;
+    using namespace scag::config;
 
     using smsc::core::buffers::IntHash;
     using smsc::core::buffers::Hash;
@@ -116,7 +117,7 @@ namespace stat {
       }
     };
 
-    class StatisticsManager : public Statistics, public PerformanceListener, public PerformanceServer, public Thread
+    class StatisticsManager : public Statistics, public PerformanceListener, public PerformanceServer, public Thread, public ConfigListener
     {
     friend class Statistics;
     private:
@@ -246,6 +247,8 @@ namespace stat {
         CommonStat* getStat(const char* id, bool sc);
     public:
         static void init(const StatManConfig& statManCfg);    
+        
+        void configChanged();
         
         virtual int Execute();
 
