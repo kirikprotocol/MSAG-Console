@@ -12,8 +12,8 @@ import ru.sibinco.lib.backend.util.StringEncoderDecoder;
 import ru.sibinco.scag.backend.service.Service;
 import ru.sibinco.scag.backend.service.ServiceProvidersManager;
 
-import java.util.Map;
 import java.io.PrintWriter;
+import java.util.Map;
 
 /**
  * The <code>HttpRoute</code> class represents
@@ -88,7 +88,8 @@ public class HttpRoute {
     }
 
     public String getName() {
-        return name.trim();
+        if(name != null)name.trim();
+        return name;
     }
 
     public PrintWriter store(PrintWriter out) {
