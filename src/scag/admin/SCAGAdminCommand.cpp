@@ -38,7 +38,7 @@
         smsc_log_error(logger, msg);                            \
         return new Response(Response::Error, msg);
 #define CATCH_CFGEXC(msg_)                                      \
-      }catch(ConfigException& e){                               \
+      }catch(smsc::util::config::ConfigException& e){                               \
         char msg[1024];                                         \
         sprintf(msg, msg_ " Details: %s", e.what());            \
         smsc_log_error(logger, msg);                            \
@@ -553,21 +553,22 @@ Response * CommandReloadTariffMatrix::CreateResponse(scag::Scag * ScagApp)
 Response * CommandLoadHttpTraceRoutes::CreateResponse(scag::Scag * ScagApp)
 {
     smsc_log_info(logger, "CommandLoadHttpTraceRoutes is processing...");
-
+    Variant result(smsc::admin::service::StringListType);
+        
     try {
         scag::transport::http::HttpTraceRouter::Instance().ReloadRoutes();
     } catch(Exception& e) {                                     
         char msg[1024];                                         
         sprintf(msg, "Failed to reload HttpTraceRoutes. Details: %s", e.what());
         smsc_log_error(logger, msg);
-        return new Response(Response::Error, msg);
+        result.appendValueToStringList(msg);
+        return new Response(Response::Error, result);
     } catch (...) {
         smsc_log_warn(logger, "Failed to reload HttpTraceRoutes. Unknown exception");        
         throw AdminException("Failed to reload HttpTraceRoutes. Unknown exception");
     }
 
     smsc_log_info(logger, "CommandLoadHttpTraceRoutes processed ok.");
-    Variant result(smsc::admin::service::StringListType);
     result.appendValueToStringList("Trace routes successfully loaded.");
     return new Response(Response::Ok, result);
 }
