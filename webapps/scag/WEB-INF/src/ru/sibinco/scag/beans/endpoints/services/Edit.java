@@ -48,6 +48,7 @@ public class Edit extends EditBean {
 
 
     public String getId() {
+        if(id != null)id.trim();
         return id;
     }
 
@@ -109,9 +110,9 @@ public class Edit extends EditBean {
         if (null == id || 0 == id.length() || !isAdd() && (null == getEditId() || 0 == getEditId().length()))
             throw new SCAGJspException(Constants.errors.sme.SME_ID_NOT_SPECIFIED);
 
-        if (null == password || password.trim().length() == 0)
+        if (null == password || getPassword().length() == 0)
             password = "";
-        final Provider providerObj = null;//(Provider) appContext.getProviderManager().getProviders().get(new Long(providerId));
+        final Provider providerObj = null;
         final Map svcs = appContext.getSmppManager().getSvcs();
         if (svcs.containsKey(id) && (isAdd() || !id.equals(getEditId())))
             throw new SCAGJspException(Constants.errors.sme.SME_ALREADY_EXISTS, id);
@@ -121,8 +122,8 @@ public class Edit extends EditBean {
         }
         svcs.remove(getEditId());
         final Svc svc;
-        svc = new Svc(id, password, timeout, enabled, mode, providerObj);
-        svcs.put(id, svc);
+        svc = new Svc(getId(), getPassword(), timeout, enabled, mode, providerObj);
+        svcs.put(getId(), svc);
         final Scag scag = appContext.getScag();
         appContext.getSmppManager().createUpdateServicePoint(getLoginedPrincipal().getName(),
                 svc, isAdd(), isEnabled(), appContext, oldSvc);
@@ -150,6 +151,7 @@ public class Edit extends EditBean {
     }
 
     public String getPassword() {
+        if(password != null)password.trim();
         return password;
     }
 
@@ -199,6 +201,7 @@ public class Edit extends EditBean {
     }
 
     public String getProviderName() {
+        if(providerName != null)providerName.trim();
         return providerName;
     }
 
