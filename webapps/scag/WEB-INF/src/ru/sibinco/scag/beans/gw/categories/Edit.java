@@ -3,18 +3,18 @@
  */
 package ru.sibinco.scag.beans.gw.categories;
 
+import ru.sibinco.lib.backend.util.config.Config;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.sme.Category;
 import ru.sibinco.scag.backend.sme.CategoryManager;
 import ru.sibinco.scag.beans.DoneException;
 import ru.sibinco.scag.beans.EditBean;
 import ru.sibinco.scag.beans.SCAGJspException;
-import ru.sibinco.lib.backend.util.config.Config;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Map;
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * The <code>Edit</code> class represents
@@ -49,9 +49,9 @@ public class Edit extends EditBean {
         final CategoryManager categoryManager = appContext.getCategoryManager();
 
         if (isAdd()) {
-            categoryManager.createCategory(name);
+            categoryManager.createCategory(getName());
         } else {
-            categoryManager.setCategoryName(id, name);
+            categoryManager.setCategoryName(id, getName());
         }
         appContext.getCategoryManager().store();
         try {
@@ -76,6 +76,7 @@ public class Edit extends EditBean {
     }
 
     public String getName() {
+        if(name != null)name.trim();
         return name;
     }
 
