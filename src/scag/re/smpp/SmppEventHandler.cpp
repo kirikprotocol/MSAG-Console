@@ -20,7 +20,8 @@ void SmppEventHandler::StartOperation(Session& session, SmppCommand& command, CS
 
         if ((session.hasPending())&&(!smppDiscriptor.isResp)) 
         {
-            session.setOperationFromPending(command, smppDiscriptor.cmdType);
+            operation = session.setOperationFromPending(command, smppDiscriptor.cmdType);
+            operation->receiveNewPart(smppDiscriptor.currentIndex,smppDiscriptor.lastIndex);
             break;
         }
 
@@ -70,12 +71,12 @@ void SmppEventHandler::StartOperation(Session& session, SmppCommand& command, CS
 
         if (smppDiscriptor.currentIndex == 0)
         {
-            session.setOperationFromPending(command, smppDiscriptor.cmdType);
+            operation = session.setOperationFromPending(command, smppDiscriptor.cmdType);
+            operation->receiveNewPart(smppDiscriptor.currentIndex,smppDiscriptor.lastIndex);
             break;
         } 
 
         operation = session.setCurrentOperation(command.getOperationId());
-
         operation->receiveNewPart(smppDiscriptor.currentIndex,smppDiscriptor.lastIndex);
         break;
 

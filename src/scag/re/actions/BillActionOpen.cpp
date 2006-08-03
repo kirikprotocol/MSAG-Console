@@ -212,9 +212,13 @@ bool BillActionOpen::run(ActionContext& context)
         break;
     default:
         //TRANSACTION_VALID
+
         try
         {
-            operation->attachBill(BillId);
+            if (m_waitOperation) 
+                RegisterPending(context, BillId)
+            else
+                operation->attachBill(BillId);
         } catch (SCAGException& e)
         {
             smsc_log_warn(logger,"Action '%s' unable to process. Delails: %s", m_ActionName.c_str(), e.what());
@@ -222,13 +226,11 @@ bool BillActionOpen::run(ActionContext& context)
             SetBillingStatus(context, e.what(), false, 0);
             break;
         }
-
         bm.sendReject(BillId);
 
         SetBillingStatus(context, "", true, tariffRec);
         context.makeBillEvent(TRANSACTION_OPEN, COMMAND_SUCCESSFULL, *tariffRec, ev);
 
-        if (m_waitOperation) RegisterPending(context, BillId);
 
         smsc_log_debug(logger,"Action '%s' transaction successfully opened", m_ActionName.c_str());
         break;
