@@ -201,7 +201,7 @@ uint32_t InfrastructureImpl::GetOperatorID(Address addr)
     bool found;
     while(!(found = mask_hash->Exists(a.c_str())) && mask_ptr > 6)
     {
-        smsc_log_debug(logger, "Trying mask: %s", a.c_str());
+//        smsc_log_debug(logger, "Trying mask: %s", a.c_str());
         a[--mask_ptr] = '?';
     }
 
@@ -210,7 +210,7 @@ uint32_t InfrastructureImpl::GetOperatorID(Address addr)
         smsc_log_debug(logger, "Match mask: %s", a.c_str());
         return mask_hash->Get(a.c_str());
     }
-
+    smsc_log_debug(logger, "No match mask found for: %s", addr.toString());
     return 0;
 }
 
