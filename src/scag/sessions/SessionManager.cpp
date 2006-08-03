@@ -378,14 +378,15 @@ int SessionManagerImpl::processExpire()
         if (SessionExpirePool.empty()) return config.expireInterval;
 
         CSessionSetIterator it;
-        for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();++it)
+
+        for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();)
         {
             if ((!(*it)->bOpened)&&((*it)->hasPending)) break;
             if ((!(*it)->bOpened)&&(!(*it)->hasPending)&&(!(*it)->hasOperations)) 
             {
                 it = DeleteSession(it);
-                return 0;
-            }
+            } 
+            else ++it;
         }
 
         time_t now;
@@ -576,6 +577,7 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
         session->bChanged = true;
         changePendingFlag = true;
     }
+
 
     accessData->bOpened = false;
     accessData->hasPending = session->hasPending();

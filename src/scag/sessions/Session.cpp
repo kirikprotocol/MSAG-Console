@@ -598,6 +598,8 @@ void Session::setOperationFromPending(SCAGCommand& cmd, int operationType)
 
             PendingOperationList.erase(it);
             bChanged = true;
+
+            smsc_log_debug(logger,"** Session: pending closed", currentOperationId);
             return;
         }
     }

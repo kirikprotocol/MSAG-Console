@@ -251,6 +251,7 @@ namespace scag { namespace sessions
         void DeserializeProperty(SessionBuffer& buff);
         void DeserializeOperations(SessionBuffer& buff);
         void DeserializePendingOperations(SessionBuffer& buff);
+
     public:
         int getPendingAmount() {return PendingOperationList.size();}
 
@@ -287,7 +288,7 @@ namespace scag { namespace sessions
         void Serialize(SessionBuffer& buff);
         void Deserialize(SessionBuffer& buff);
         CSessionPrimaryKey& getPrimaryKey() {return m_SessionPrimaryKey;}
-
+        int16_t getUSR() { return m_SessionKey.USR; }
 
         static int getOperationType(std::string& str);
         static Hash<int> Session::InitOperationTypesHash();

@@ -95,6 +95,7 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, 
     
     if ((propertyObject.HandlerId == EH_SUBMIT_SM)||(propertyObject.HandlerId == EH_DELIVER_SM)||(propertyObject.HandlerId == EH_DATA_SM))
     {
+
         ev.pMessageText.append(messageBody.data(), messageBody.size());
     }
 

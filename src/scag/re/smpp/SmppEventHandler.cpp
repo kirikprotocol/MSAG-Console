@@ -39,7 +39,7 @@ void SmppEventHandler::StartOperation(Session& session, SmppCommand& command, CS
     case CO_DATA_SME_2_SC:
         //TODO: разобаться с RECEIPT`ом и SUBMIT_RESP
 
-        UMR = CommandBrige::getUMR(command);
+        UMR = session.getUSR();
 
         if ((UMR == 0)&&(!smppDiscriptor.isResp))
         {

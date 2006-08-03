@@ -204,7 +204,7 @@ public:
 
 
 
-    static int16_t getUMR(const SCAGCommand& command)  
+/*    static int16_t getUMR(const SCAGCommand& command)  
     {
 //        Tag::SMPP_SAR_MSG_REF_NUM
 
@@ -220,7 +220,7 @@ public:
             return sms.getIntProperty(Tag::SMPP_SAR_MSG_REF_NUM);
 
         return 0;
-    }
+    }*/
 };
 
 
