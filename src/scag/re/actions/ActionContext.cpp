@@ -217,6 +217,8 @@ int ActionContext::getCurrentOperationBillID()
     Operation * operation = session.GetCurrentOperation();
     if (!operation) return 0;
 
+    if (!operation->hasBill()) throw SCAGException("Operation: cannot find billing transaction");
+
     return operation->getBillId();
 }
 

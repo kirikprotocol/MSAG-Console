@@ -17,6 +17,13 @@ void SmppEventHandler::StartOperation(Session& session, SmppCommand& command, CS
     {
     case CO_DELIVER:
     case CO_DATA_SC_2_SME:
+
+        if (session.hasPending()) 
+        {
+            session.setOperationFromPending(command, smppDiscriptor.cmdType);
+            break;
+        }
+
         if ((smppDiscriptor.currentIndex <= 1)&&(!smppDiscriptor.isResp))
         {
             operation = session.AddNewOperationToHash(command, smppDiscriptor.cmdType);
@@ -33,6 +40,7 @@ void SmppEventHandler::StartOperation(Session& session, SmppCommand& command, CS
         }
 
         break;
+
 
     
     case CO_SUBMIT:

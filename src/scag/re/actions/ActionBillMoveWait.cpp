@@ -32,7 +32,16 @@ void ActionBillMoveWait::init(const SectionParams& params, PropertyObject proper
 bool ActionBillMoveWait::run(ActionContext& context)
 {
     
-    bool status = RegisterPending(context, context.getCurrentOperationBillID());
+    bool status;
+    try
+    {
+        status = RegisterPending(context, context.getCurrentOperationBillID());
+    } catch (SCAGException& e)
+    {
+        smsc_log_error(logger, "Action '%s': Cannot process. Details: %s", m_ActionName.c_str(), e.what());
+        return true;
+    }
+
     Property * property;
 
     property = context.getProperty(m_sStatus);
