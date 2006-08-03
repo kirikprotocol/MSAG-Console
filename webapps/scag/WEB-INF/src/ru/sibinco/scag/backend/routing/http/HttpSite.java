@@ -9,8 +9,8 @@ import org.w3c.dom.NodeList;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.util.StringEncoderDecoder;
 
-import java.util.*;
 import java.io.PrintWriter;
+import java.util.*;
 
 /**
  * The <code>HttpSite</code> class represents
@@ -95,7 +95,8 @@ public class HttpSite {
     }
 
     public String getName() {
-        return name.trim();
+        if(name != null)name.trim();
+        return name;
     }
 
     public void setName(String name) {
