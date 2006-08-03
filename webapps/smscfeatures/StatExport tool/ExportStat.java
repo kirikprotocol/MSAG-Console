@@ -193,6 +193,7 @@ public class ExportStat {
 
     private final static String DATE_FORMAT = "yyyy-MM-dd-HH";
     private SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
+    private SimpleDateFormat gmtDateFormat = new SimpleDateFormat(DATE_FORMAT);
     private final static String DEST_FILE_PREFIX_FORMAT = "yyyyMMdd_HH";
     private SimpleDateFormat destFilePrefixFormat = new SimpleDateFormat(DEST_FILE_PREFIX_FORMAT);
 
@@ -205,10 +206,13 @@ public class ExportStat {
         srcDir = new File(src);
         destDir = new File(dest);
         try {
-            fromDate = dateFormat.parse(dateTime);
-            localCalendar.setTime(fromDate);
-            localCalendar.set(Calendar.HOUR_OF_DAY, localCalendar.get(Calendar.HOUR_OF_DAY) + 1);
-            tillDate = localCalendar.getTime();
+	    gmtDateFormat.setCalendar( calendar );
+	    dateFormat.setCalendar( localCalendar );
+	    calendar.setTime(dateFormat.parse(dateTime));
+            fromDate = calendar.getTime();
+            calendar.set(Calendar.HOUR_OF_DAY, calendar.get(Calendar.HOUR_OF_DAY) + 1);
+            tillDate = calendar.getTime();
+	    System.out.println("GMT from: "+gmtDateFormat.format(fromDate)+" till: "+gmtDateFormat.format(tillDate));
         }
         catch (java.text.ParseException e) {
             e.printStackTrace();
@@ -263,10 +267,10 @@ public class ExportStat {
                                 int hour = readUInt8(is);
                                 int min = readUInt8(is);
                                 min = 0; // skip minute
-                                localCalendar.setTime(fileDate);
-                                localCalendar.set(Calendar.HOUR, hour);
-                                localCalendar.set(Calendar.MINUTE, min);
-                                curDate = localCalendar.getTime();
+                                calendar.setTime(fileDate);
+                                calendar.set(Calendar.HOUR, hour);
+                                calendar.set(Calendar.MINUTE, min);
+                                curDate = calendar.getTime();
 
                                 if (fromDate != null && curDate.getTime() < fromDate.getTime()) {
                                     continue;
@@ -276,7 +280,6 @@ public class ExportStat {
                                     finished = true;
                                     break;
                                 }
-
                                 haveValues = true; // read and increase counters
                                 errMessage = "Failed to read statistics file '" + path + "'";
                                 scanCounters(totalCounters, is);
@@ -294,7 +297,8 @@ public class ExportStat {
                     } // while has more records in file
                     if (haveValues) { // dump the rest of data
                         dump(smeCounters, routeCounters);
-                        System.out.println("Last dump stat for: " + dateDayFormat.format(lastDate) + " GMT");
+			if( lastDate != null )
+                          System.out.println("Last dump stat for: " + dateDayFormat.format(lastDate) + " GMT");
                     }
                 }
                 catch (IOException e) { // stream fails or file has incorrect header
@@ -312,29 +316,30 @@ public class ExportStat {
                     (System.currentTimeMillis() - tm) / 1000);
         }
         catch (Exception exc) {
+	  exc.printStackTrace();
         }
     }
 
     private void dump(HashMap smeCounters, HashMap routeCounters) throws Exception {
         String datePrefix = destFilePrefixFormat.format(fromDate);
         File dest = new File(destDir, "sme_stats_" + datePrefix + ".csv");
-        FileWriter r = new FileWriter(dest);
+        PrintWriter r = new PrintWriter(new FileWriter(dest));
         for (Iterator i = smeCounters.keySet().iterator(); i.hasNext();) {
             String smeId = (String) i.next();
             SmeIdCountersSet set = (SmeIdCountersSet) smeCounters.get(smeId);
             if (set == null) continue;
-            r.write(smeId + ",accepted," + set.accepted);
-            r.write(smeId + ",rejected," + set.rejected);
-            r.write(smeId + ",delivered," + set.delivered);
-            r.write(smeId + ",failed," + set.failed);
-            r.write(smeId + ",rescheduled," + set.rescheduled);
-            r.write(smeId + ",temporal," + set.temporal);
-            r.write(smeId + ",peak_i," + set.peak_i);
-            r.write(smeId + ",peak_o," + set.peak_o);
+            r.println(smeId + ",accepted," + set.accepted);
+            r.println(smeId + ",rejected," + set.rejected);
+            r.println(smeId + ",delivered," + set.delivered);
+            r.println(smeId + ",failed," + set.failed);
+            r.println(smeId + ",rescheduled," + set.rescheduled);
+            r.println(smeId + ",temporal," + set.temporal);
+            r.println(smeId + ",peak_i," + set.peak_i);
+            r.println(smeId + ",peak_o," + set.peak_o);
             for (Iterator j = set.getErrors().iterator(); j.hasNext();) {
                 ErrorCounterSet err = (ErrorCounterSet) j.next();
                 if (err == null) continue;
-                r.write(smeId + ",errc-" + err.errcode + "," + err.counter);
+                r.println(smeId + ",errc-" + err.errcode + "," + err.counter);
             }
         }
         r.close();
@@ -345,18 +350,20 @@ public class ExportStat {
         if (dirNames == null || dirNames.length == 0)
             throw new Exception("No stat directories at path '" + srcDir.getAbsolutePath() + "'");
 
+        dateDirFormat.setCalendar( calendar );
+	dateDirFileFormat.setCalendar( calendar );
         Date tillQueryDirTime = tillDate;
         Date tillQueryFileTime = tillDate;
         Date fromQueryDirTime = null;
         Date fromQueryFileTime = null;
         if (fromDate != null) {
-            localCalendar.setTime(fromDate);
-            localCalendar.set(Calendar.HOUR_OF_DAY, 0);
-            localCalendar.set(Calendar.MINUTE, 0);
-            localCalendar.set(Calendar.MILLISECOND, 0);
-            fromQueryFileTime = localCalendar.getTime();
-            localCalendar.set(Calendar.DAY_OF_MONTH, 0);
-            fromQueryDirTime = localCalendar.getTime();
+            calendar.setTime(fromDate);
+            calendar.set(Calendar.HOUR_OF_DAY, 0);
+            calendar.set(Calendar.MINUTE, 0);
+            calendar.set(Calendar.MILLISECOND, 0);
+            fromQueryFileTime = calendar.getTime();
+            calendar.set(Calendar.DAY_OF_MONTH, 0);
+            fromQueryDirTime = calendar.getTime();
         }
 
         TreeMap selected = new TreeMap();
@@ -369,6 +376,7 @@ public class ExportStat {
                 dirDate = dateDirFormat.parse(dirName);
             }
             catch (ParseException exc) {
+	        System.out.println("Warn: "+exc.getMessage());
                 continue;
             }
 
@@ -390,6 +398,7 @@ public class ExportStat {
                     fileDate = dateDirFileFormat.parse(dirName + File.separatorChar + fileName);
                 }
                 catch (ParseException exc) {
+		    System.out.println("Warn: "+exc.getMessage());
                     continue;
                 }
 
