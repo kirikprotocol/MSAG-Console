@@ -43,7 +43,7 @@ bool ActionBillMoveWait::run(ActionContext& context)
         return true;
     }
 
-    property->setBool(status);
+    property->setBool(!status);
 
     if ((!status)&&(m_MsgExist))
     {

@@ -24,7 +24,7 @@ void ActionAbstractWait::InitParameters(const SectionParams& params,PropertyObje
 
 bool ActionAbstractWait::RegisterPending(ActionContext& context, int billID)
 {
-    smsc_log_debug(logger,"Run Action '%s'...", m_ActionName.c_str());
+    smsc_log_debug(logger,"Action '%s': registering pending...", m_ActionName.c_str());
 
     if (!context.checkIfCanSetPending(m_opType, m_eventHandlerType, m_transportType))
     {
@@ -55,6 +55,7 @@ bool ActionAbstractWait::RegisterPending(ActionContext& context, int billID)
     pendingTime = now + wait_time;
 
     context.AddPendingOperation(m_opType, pendingTime, billID);
+    smsc_log_debug(logger,"Action '%s': pending registered time=%d", m_ActionName.c_str(), wait_time);
 
     return true;
 
