@@ -5,7 +5,6 @@
 package ru.sibinco.scag.beans.services.service;
 
 import ru.sibinco.lib.SibincoException;
-import ru.sibinco.lib.StatusDisconnectedException;
 import ru.sibinco.lib.backend.util.SortByPropertyComparator;
 import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.scag.Constants;
@@ -146,7 +145,7 @@ public class Edit extends TabledEditBeanImpl {
         Long serviceProviderId = null;
         if (description == null) description = "";
         if (getEditId() == null) {
-            Service service = new Service(name, description);
+            Service service = new Service(getName(), getDescription());
             serviceProviderId = Long.decode(getParentId());
             id = serviceProvidersManager.createService(getLoginedPrincipal().getName(), serviceProviderId.longValue(), service);
         } else {
@@ -155,16 +154,16 @@ public class Edit extends TabledEditBeanImpl {
                 ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(serviceProviderId);
                 Service service = (Service) serviceProvider.getServices().get(Long.decode(getParentId()));
                 oldService = service.copy();
-                service.setName(name);
-                service.setDescription(description);
+                service.setName(getName());
+                service.setDescription(getDescription());
                 serviceProvidersManager.updateService(getLoginedPrincipal().getName(), Long.decode(getEditId()).longValue(), service);
             } else {
                 serviceProviderId = Long.decode(getParentId());
                 ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(serviceProviderId);
                 Service service = (Service) serviceProvider.getServices().get(Long.decode(getEditId()));
                 oldService = service.copy();
-                service.setName(name);
-                service.setDescription(description);
+                service.setName(getName());
+                service.setDescription(getDescription());
                 serviceProvidersManager.updateService(getLoginedPrincipal().getName(), Long.decode(getParentId()).longValue(), service);
             }
         }
@@ -229,6 +228,7 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public String getName() {
+        if(name != null) name.trim();
         return name;
     }
 
@@ -237,6 +237,7 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public String getDescription() {
+        if(description != null) description.trim();
         return description;
     }
 

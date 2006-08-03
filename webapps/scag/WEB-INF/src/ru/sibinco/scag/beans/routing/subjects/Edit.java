@@ -1,10 +1,10 @@
 package ru.sibinco.scag.beans.routing.subjects;
 
 import ru.sibinco.lib.SibincoException;
+import ru.sibinco.lib.backend.route.Mask;
 import ru.sibinco.lib.backend.users.User;
 import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.lib.backend.util.SortedList;
-import ru.sibinco.lib.backend.route.Mask;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.endpoints.centers.Center;
@@ -12,18 +12,23 @@ import ru.sibinco.scag.backend.endpoints.svc.Svc;
 import ru.sibinco.scag.backend.routing.MaskList;
 import ru.sibinco.scag.backend.routing.Subject;
 import ru.sibinco.scag.backend.routing.http.HttpRoutingManager;
-import ru.sibinco.scag.backend.routing.http.HttpSubject;
 import ru.sibinco.scag.backend.routing.http.HttpSite;
+import ru.sibinco.scag.backend.routing.http.HttpSubject;
 import ru.sibinco.scag.backend.routing.http.Site;
 import ru.sibinco.scag.backend.status.StatMessage;
 import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.backend.transport.Transport;
-import ru.sibinco.scag.beans.*;
+import ru.sibinco.scag.beans.DoneException;
+import ru.sibinco.scag.beans.EditBean;
+import ru.sibinco.scag.beans.SCAGJspException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.security.Principal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -51,7 +56,7 @@ public class Edit extends EditBean {
 
 
     public String getId() {
-        return name;
+        return getName();
     }
 
 
@@ -119,31 +124,32 @@ public class Edit extends EditBean {
 
         if (isAdd()) {
             if (transportId == Transport.SMPP_TRANSPORT_ID) {
-                if (subjects.containsKey(name))
-                    throw new SCAGJspException(Constants.errors.routing.subjects.SUBJECT_ALREADY_EXISTS, name);
+                if (subjects.containsKey(getName()))
+                    throw new SCAGJspException(Constants.errors.routing.subjects.SUBJECT_ALREADY_EXISTS, getName());
                 try {
-                    subjects.put(name, defSvc == null ? new Subject(name, defCenter, masks, description) : new Subject(name, defSvc, masks, description));
-                    messagetxt = "Added new subject: '" + name + "'.";
+                    subjects.put(getName(), defSvc == null ? new Subject(getName(), defCenter, masks, getDescription())
+                            : new Subject(getName(), defSvc, masks, getDescription()));
+                    messagetxt = "Added new subject: '" + getName() + "'.";
                 } catch (SibincoException e) {
                     logger.debug("Could not create new subject", e);
                     throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_CREATE, e);
                 }
             } else if (transportId == Transport.HTTP_TRANSPORT_ID) {
                 if (getSubjectType() == HttpRoutingManager.HTTP_SUBJECT_TYPE) {
-                    if (httpSubjects.containsKey(name))
-                        throw new SCAGJspException(Constants.errors.routing.subjects.HTTP_SUBJECT_ALREADY_EXISTS, name);
+                    if (httpSubjects.containsKey(getName()))
+                        throw new SCAGJspException(Constants.errors.routing.subjects.HTTP_SUBJECT_ALREADY_EXISTS, getName());
                     try {
-                        httpSubjects.put(name, new HttpSubject(name, address));
-                        messagetxt = "Added new http subject: '" + name + "'.";
+                        httpSubjects.put(getName(), new HttpSubject(getName(), address));
+                        messagetxt = "Added new http subject: '" + getName() + "'.";
                     } catch (SibincoException e) {
                         logger.debug("Could not create new http subject", e);
                         throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_CREATE_HTTP_SUBJECT, e);
                     }
                 } else if (getSubjectType() == HttpRoutingManager.HTTP_SITE_TYPE) {
-                    if (httpSites.containsKey(name))
-                        throw new SCAGJspException(Constants.errors.routing.sites.HTTP_SITE_ALREADY_EXISTS, name);//
+                    if (httpSites.containsKey(getName()))
+                        throw new SCAGJspException(Constants.errors.routing.sites.HTTP_SITE_ALREADY_EXISTS, getName());//
                     try {
-                        HttpSite httpSite = new HttpSite(name);
+                        HttpSite httpSite = new HttpSite(getName());
                         for (int i = 0; i < sitesHost.length; i++) {
                             for (int j = 0; j < sitesPort.length; j++) {
                                 String port = sitesPort[j];
@@ -168,7 +174,7 @@ public class Edit extends EditBean {
                         }
 
                         httpSites.put(httpSite.getName(), httpSite);
-                        messagetxt = "Added new http subject site: '" + name + "'.";
+                        messagetxt = "Added new http subject site: '" + getName() + "'.";
                     } catch (SibincoException e) {
                         logger.debug("Could not create new http subject site", e);
                         throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_CREATE_HTTP_SUBJECT_SITE, e);
@@ -177,19 +183,20 @@ public class Edit extends EditBean {
             }
         } else {
             if (transportId == Transport.SMPP_TRANSPORT_ID) {
-                if (!getEditId().equals(name)) {
-                    if (subjects.containsKey(name))
-                        throw new SCAGJspException(Constants.errors.routing.subjects.SUBJECT_ALREADY_EXISTS, name);
+                if (!getEditId().equals(getName())) {
+                    if (subjects.containsKey(getName()))
+                        throw new SCAGJspException(Constants.errors.routing.subjects.SUBJECT_ALREADY_EXISTS, getName());
                     subjects.remove(getEditId());
                     try {
-                        subjects.put(name, defSvc == null ? new Subject(name, defCenter, masks, description) : new Subject(name, defSvc, masks, description));
+                        subjects.put(getName(), defSvc == null ? new Subject(getName(), defCenter, masks, getDescription())
+                                : new Subject(getName(), defSvc, masks, getDescription()));
 
                     } catch (SibincoException e) {
                         logger.debug("Could not create new subject", e);
                         throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_CREATE, e);
                     }
                 } else {
-                    final Subject subject = (Subject) subjects.get(name);
+                    final Subject subject = (Subject) subjects.get(getName());
                     if (defSvc != null) {
                         subject.setSvc(defSvc);
                         subject.setCenter(null);
@@ -203,30 +210,30 @@ public class Edit extends EditBean {
                         logger.debug("Could not set masks list for subject", e);
                         throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_SET_MASKS, e);
                     }
-                    subject.setNotes(description);
+                    subject.setNotes(getDescription());
                     messagetxt = "Changed subject: '" + subject.getName() + "'.";
                 }
             } else if (transportId == Transport.HTTP_TRANSPORT_ID) {
                 if (getSubjectType() == HttpRoutingManager.HTTP_SUBJECT_TYPE) {
-                    if (!getId().equals(name)) {
-                        if (httpSubjects.containsKey(name))
-                            throw new SCAGJspException(Constants.errors.routing.subjects.HTTP_SUBJECT_ALREADY_EXISTS, name);
+                    if (!getId().equals(getName())) {
+                        if (httpSubjects.containsKey(getName()))
+                            throw new SCAGJspException(Constants.errors.routing.subjects.HTTP_SUBJECT_ALREADY_EXISTS, getName());
                         httpSubjects.remove(getId());
                         try {
-                            httpSubjects.put(name, new HttpSubject(name, address));
+                            httpSubjects.put(getName(), new HttpSubject(getName(), address));
                         } catch (SibincoException e) {
                             logger.debug("Could not create new subject", e);
                             throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_CREATE, e);
                         }
                     } else {
-                        final HttpSubject httpSubject = (HttpSubject) httpSubjects.get(name);
+                        final HttpSubject httpSubject = (HttpSubject) httpSubjects.get(getName());
                         httpSubject.setMasks(address);
                         messagetxt = "Changed http subject: '" + httpSubject.getName() + "'.";
                     }
                 } else if (getSubjectType() == HttpRoutingManager.HTTP_SITE_TYPE) {
 
                     try {
-                        HttpSite httpSite = new HttpSite(name);
+                        HttpSite httpSite = new HttpSite(getName());
                         for (int i = 0; i < sitesHost.length; i++) {
                             for (int j = 0; j < sitesPort.length; j++) {
                                 String port = sitesPort[j];
@@ -251,7 +258,7 @@ public class Edit extends EditBean {
                         }
                         httpSites.remove(httpSite.getName());
                         httpSites.put(httpSite.getName(), httpSite);
-                        messagetxt = "Changed http subject site: '" + name + "'.";
+                        messagetxt = "Changed http subject site: '" + getName() + "'.";
                     } catch (SibincoException e) {
                         logger.debug("Could not create new http subject site", e);
                         throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_CREATE_HTTP_SUBJECT_SITE, e);
@@ -299,6 +306,7 @@ public class Edit extends EditBean {
     }
 
     public String getName() {
+        if(name != null)name.trim();
         return name;
     }
 
@@ -331,6 +339,7 @@ public class Edit extends EditBean {
     }
 
     public String getDescription() {
+        if(description != null)description.trim();
         return description;
     }
 
