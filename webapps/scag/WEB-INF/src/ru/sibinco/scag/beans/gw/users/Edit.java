@@ -3,7 +3,9 @@ package ru.sibinco.scag.beans.gw.users;
 import ru.sibinco.lib.backend.users.User;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.sme.Provider;
-import ru.sibinco.scag.beans.*;
+import ru.sibinco.scag.beans.DoneException;
+import ru.sibinco.scag.beans.EditBean;
+import ru.sibinco.scag.beans.SCAGJspException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -54,32 +56,33 @@ public class Edit extends EditBean {
     }
 
     protected void save() throws SCAGJspException {
-        if ((null != password && 0 < password.length()) || (null != confirmPassword && 0 < confirmPassword.length()))
-            if (null != password ? !password.equals(confirmPassword) : !confirmPassword.equals(password))
+        if ((null != password && 0 < getPassword().length()) || (null != confirmPassword && 0 < getConfirmPassword().length()))
+            if (null != password ? !getPassword().equals(getConfirmPassword()) : !getConfirmPassword().equals(getPassword()))
                 throw new SCAGJspException(Constants.errors.users.PASSWORD_NOT_CONFIRM);
 
         final Map users = appContext.getUserManager().getUsers();
 
         if (isAdd()) {
-            if (null == login || 0 == login.length())
+            if (null == login || 0 == getLogin().length())
                 throw new SCAGJspException(Constants.errors.users.LOGIN_NOT_SPECIFIED);
-            if (null == password || 0 == password.length())
+            if (null == password || 0 == getPassword().length())
                 throw new SCAGJspException(Constants.errors.users.PASSWORD_NOT_SPECIFIED);
-            if (users.containsKey(login))
-                throw new SCAGJspException(Constants.errors.users.USER_ALREADY_EXISTS, login);
+            if (users.containsKey(getLogin()))
+                throw new SCAGJspException(Constants.errors.users.USER_ALREADY_EXISTS, getLogin());
         } else {
-            if (null == getEditId() || 0 == getEditId().length() || null == login || 0 == login.length())
+            if (null == getEditId() || 0 == getEditId().length() || null == login || 0 == getLogin().length())
                 throw new SCAGJspException(Constants.errors.users.LOGIN_NOT_SPECIFIED);
-            if (users.containsKey(login) && !getEditId().equals(login))
-                throw new SCAGJspException(Constants.errors.users.USER_ALREADY_EXISTS, login);
+            if (users.containsKey(getLogin()) && !getEditId().equals(getLogin()))
+                throw new SCAGJspException(Constants.errors.users.USER_ALREADY_EXISTS, getLogin());
 
             final User user = (User) users.remove(getEditId());
             if (null != user) {
-                if (null == password || 0 == password.length())
+                if (null == password || 0 == getPassword().length())
                     password = user.getPassword();
             }
         }
-        users.put(login, new User(login, password, roles, firstName, lastName, dept, workPhone, homePhone, cellPhone, email, providerId));
+        users.put(getLogin(), new User(getLogin(), getPassword(), roles, getFirstName(), getLastName(),
+                getDept(), getWorkPhone(), getHomePhone(), getCellPhone(), getEmail(), providerId));
         appContext.getStatuses().setUsersChanged(true);
         applyUsers();
         throw new DoneException();
@@ -117,6 +120,7 @@ public class Edit extends EditBean {
 
 
     public String getLogin() {
+        if(login != null)login.trim();
         return login;
     }
 
@@ -125,6 +129,7 @@ public class Edit extends EditBean {
     }
 
     public String getPassword() {
+        if(password != null)password.trim();
         return password;
     }
 
@@ -133,6 +138,7 @@ public class Edit extends EditBean {
     }
 
     public String getConfirmPassword() {
+        if(confirmPassword != null)confirmPassword.trim();
         return confirmPassword;
     }
 
@@ -149,6 +155,7 @@ public class Edit extends EditBean {
     }
 
     public String getFirstName() {
+        if(firstName != null)firstName.trim();
         return firstName;
     }
 
@@ -157,6 +164,7 @@ public class Edit extends EditBean {
     }
 
     public String getLastName() {
+        if(lastName != null)lastName.trim();
         return lastName;
     }
 
@@ -165,6 +173,7 @@ public class Edit extends EditBean {
     }
 
     public String getDept() {
+        if(dept != null)dept.trim();
         return dept;
     }
 
@@ -173,6 +182,7 @@ public class Edit extends EditBean {
     }
 
     public String getWorkPhone() {
+        if(workPhone != null)workPhone.trim();
         return workPhone;
     }
 
@@ -181,6 +191,7 @@ public class Edit extends EditBean {
     }
 
     public String getHomePhone() {
+        if(homePhone != null)homePhone.trim();
         return homePhone;
     }
 
@@ -189,6 +200,7 @@ public class Edit extends EditBean {
     }
 
     public String getCellPhone() {
+        if(cellPhone != null)cellPhone.trim();
         return cellPhone;
     }
 
@@ -197,6 +209,7 @@ public class Edit extends EditBean {
     }
 
     public String getEmail() {
+        if(email != null)email.trim();
         return email;
     }
 
