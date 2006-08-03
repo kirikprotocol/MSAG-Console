@@ -55,6 +55,7 @@ void SmppEventHandler::StartOperation(Session& session, SmppCommand& command, CS
 
         if (smppDiscriptor.isResp) 
         {
+            operation = session.setCurrentOperation(command.getOperationId());
             operation->receiveNewResp(smppDiscriptor.currentIndex, smppDiscriptor.lastIndex);
             break;
         }
