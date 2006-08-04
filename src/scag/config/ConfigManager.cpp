@@ -36,7 +36,7 @@ using smsc::util::findConfigFile;
 class ConfigManagerImpl : public ConfigManager
 {
 public:
-    virtual ~ConfigManagerImpl() {cout << "ConfigManager released" << endl;}
+    virtual ~ConfigManagerImpl() {smsc_log_info(logger, "ConfigManager released");}
     ConfigManagerImpl() throw(ConfigException);
 
     virtual void registerListener(ConfigType type, ConfigListener* listener);
@@ -124,7 +124,7 @@ Config ConfigManagerImpl::config;
 static bool  bConfigManagerInited = false;
 static Mutex initConfigManagerLock;
 
-inline unsigned GetLongevity(ConfigManagerImpl*) { return 8; }
+inline unsigned GetLongevity(ConfigManagerImpl*) { return 1; }
 typedef SingletonHolder<ConfigManagerImpl> SingleConfig;
 
 void ConfigManager::Init()
