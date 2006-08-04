@@ -151,7 +151,7 @@ std::string CommandBrige::getMessageBody(SmppCommand& command)
     */
     SMS& data = getSMS(command);
 
-    if (data.hasBinProperty(Tag::SMPP_SHORT_MESSAGE) 
+    if (data.hasBinProperty(Tag::SMPP_SHORT_MESSAGE)) 
     {
         buff = data.getBinProperty(Tag::SMPP_SHORT_MESSAGE, &len);
         if (len == 0) 
