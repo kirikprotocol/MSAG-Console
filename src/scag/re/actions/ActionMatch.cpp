@@ -45,9 +45,11 @@ void ActionMatch::init(const SectionParams& params,PropertyObject propertyObject
         temp.append(endbuff,2);
 
         //OP_SINGLELINE
-        m_type = (OP_OPTIMIZE|OP_STRICT)|((strRegexp[0] == '/') ? OP_PERLSTYLE:0);
+        //m_type = (OP_OPTIMIZE|OP_STRICT)|((strRegexp[0] == '/') ? OP_PERLSTYLE:OP_SINGLELINE);
+        m_type = (OP_OPTIMIZE|OP_STRICT|OP_SINGLELINE);
+
         
-        if (!re->Compile((unsigned short *)temp.data(), OP_OPTIMIZE))
+        if (!re->Compile((unsigned short *)temp.data(), m_type))
             throw SCAGException("Action 'match' Failed to compile regexp");
 
         m_Compiled = true;
@@ -90,7 +92,7 @@ bool ActionMatch::run(ActionContext& context)
         char endbuff[2] = {0,0};
         regexp.append(endbuff,2);
 
-        m_type = (OP_OPTIMIZE|OP_STRICT)|((temp[0] == '/') ? OP_PERLSTYLE:0);
+        m_type = (OP_OPTIMIZE|OP_STRICT|OP_SINGLELINE);
 
         if (!re->Compile((unsigned short *)regexp.data(), m_type))
         {
