@@ -108,19 +108,13 @@ page_menu_end(out);
 function checkStartStop()
 {
   var status = document.getElementById('RUNNING_STATUSERVICE_MCISme').innerText;
-  var serviceRunning = (status == "<%= getLocString("common.statuses.online1") %>" ||
-                        status == "<%= getLocString("common.statuses.online2") %>" ||
-                        status == "<%= getLocString("common.statuses.running") %>" );
-  var serviceStopped = (status == "<%= getLocString("common.statuses.offline") %>" ||
-                        status == "<%= getLocString("common.statuses.stopped") %>" );
+  var serviceRunning = (status != "<%= getLocString("common.statuses.offline") %>");
+  var serviceStopped = (status == "<%= getLocString("common.statuses.offline") %>");
   var serviceChecked  = document.getElementById('toStartService').checked;
 
   status = document.getElementById('RUNNING_STATUSERVICE_MCIProf').innerText;
-  var profilerRunning = (status == "<%= getLocString("common.statuses.online1") %>" ||
-                         status == "<%= getLocString("common.statuses.online2") %>" ||
-                         status == "<%= getLocString("common.statuses.running") %>" );
-  var profilerStopped = (status == "<%= getLocString("common.statuses.offline") %>" ||
-                         status == "<%= getLocString("common.statuses.stopped") %>" );
+  var profilerRunning = (status != "<%= getLocString("common.statuses.offine") %>");
+  var profilerStopped = (status == "<%= getLocString("common.statuses.offline") %>");
   var profilerChecked = document.getElementById('toStartProfiler').checked;
 
   var serviceStart  = serviceStopped && serviceChecked;

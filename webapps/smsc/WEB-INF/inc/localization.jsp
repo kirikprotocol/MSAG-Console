@@ -58,7 +58,8 @@
         Locale result = null;
         SMSCAppContext appContext = null;
         if (req != null) appContext = (SMSCAppContext) req.getAttribute("appContext");
-        if (appContext != null) result = appContext.getUserManager().getPrefs(req.getUserPrincipal()).getLocale();
+        if ((req.getUserPrincipal() != null) && (appContext != null))
+            result = appContext.getUserManager().getPrefs(req.getUserPrincipal()).getLocale();
         if (result == null) result = new Locale(LocaleMessages.DEFAULT_PREFERRED_LANGUAGE);
         return result;
     }

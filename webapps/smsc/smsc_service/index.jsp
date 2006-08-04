@@ -77,6 +77,8 @@
     param(out, "smsc.core.defLocale", "core.default_locale", bean.getStringParam("core.default_locale"));
     param(out, "smsc.core.mergeTime", "core.mergeTimeout", bean.getIntParam("core.mergeTimeout"));
     param(out, "smsc.core.validTime", "sms.max_valid_time", bean.getIntParam("sms.max_valid_time"));
+    param(out, "smsc.core.tzConfig", "core.timezones_config", bean.getStringParam("core.timezones_config"));
+    param(out, "smsc.core.schedConfig", "core.reschedule_config", bean.getStringParam("core.reschedule_config"));
     finishParams(out);
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~ core.perfomance ~~~~~~~~~~~~~~~~~~~~~~~~~
     startSection(out, "core.performance", "smsc.core.perfmon", false);

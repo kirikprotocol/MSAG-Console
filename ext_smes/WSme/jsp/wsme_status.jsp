@@ -19,7 +19,7 @@ switch (bean.getServiceStatus(Functions.getServiceId(request.getServletPath())))
 		%><span class=C080><%=getLocString("common.statuses.online")%></span><%
 		break;
 	default:
-		%><span class=C000>undefined</span><%
+		%><span class=C000><%=getLocString("common.statuses.unknown")%></span><%
 		break;
 }
 %>

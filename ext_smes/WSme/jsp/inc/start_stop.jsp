@@ -8,8 +8,8 @@ page_menu_end(out);
 <script>
 function refreshWSmeStartStopButtonsStatus()
 {
-	document.getElementById('btnStart').disabled = (document.getElementById('RUNNING_STATUSERVICE_<%=bean.getSmeId()%>').innerText != "stopped");
-	document.getElementById('btnStop').disabled = (document.getElementById('RUNNING_STATUSERVICE_<%=bean.getSmeId()%>').innerText != "running");
+	document.getElementById('btnStart').disabled = (document.getElementById('RUNNING_STATUSERVICE_<%=bean.getSmeId()%>').innerText != "<%= getLocString("common.statuses.offline") %>");
+	document.getElementById('btnStop').disabled = (document.getElementById('RUNNING_STATUSERVICE_<%=bean.getSmeId()%>').innerText = "<%= getLocString("common.statuses.offline") %>");
 	window.setTimeout(refreshWSmeStartStopButtonsStatus, 5000);
 }
 refreshWSmeStartStopButtonsStatus();

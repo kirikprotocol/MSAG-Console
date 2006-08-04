@@ -16,12 +16,8 @@
     function refreshEmailSmeStartStopButtonsStatus()
     {
         var status = document.getElementById('RUNNING_STATUSERVICE_<%=ServiceIDForShowStatus%>').innerText;
-        document.getElementById('mbStart').disabled = (status == "<%= getLocString("common.statuses.online1") %>" ||
-                                                       status == "<%= getLocString("common.statuses.online2") %>" ||
-                                                       status == "<%= getLocString("common.statuses.online") %>" ||
-                                                       status == "<%= getLocString("common.statuses.unknown" )%>" );
-        document.getElementById('mbStop').disabled = (status == "<%= getLocString("common.statuses.offline") %>" ||
-                                                      status == "<%= getLocString("common.statuses.unknown") %>" );
+        document.getElementById('mbStart').disabled = (status != "<%= getLocString("common.statuses.offline") %>");
+        document.getElementById('mbStop').disabled = (status == "<%= getLocString("common.statuses.offline") %>");
         window.setTimeout(refreshEmailSmeStartStopButtonsStatus, 5000);
     }
     refreshEmailSmeStartStopButtonsStatus();
