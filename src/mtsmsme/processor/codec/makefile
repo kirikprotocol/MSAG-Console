@@ -1,5 +1,6 @@
 
 CFLAGS := -I. -I../asn1rt $(CFLAGS)
+CXXFLAGS := -I. -I../asn1rt $(CXXFLAGS)
 PACKAGE := mtsmsme.processor.codec
 
 ifndef SMSC_SRCDIR
