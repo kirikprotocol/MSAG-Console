@@ -251,7 +251,7 @@ namespace scag { namespace sessions
         void DeserializeProperty(SessionBuffer& buff);
         void DeserializeOperations(SessionBuffer& buff);
         void DeserializePendingOperations(SessionBuffer& buff);
-        bool CanOpenSubmitOperation;
+        bool m_CanOpenSubmitOperation;
     public:
         int getPendingAmount() {return PendingOperationList.size();}
         bool getCanOpenSubmitOperation() { return m_CanOpenSubmitOperation;}

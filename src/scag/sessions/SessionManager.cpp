@@ -515,6 +515,7 @@ SessionPtr SessionManagerImpl::newSession(CSessionKey& sessionKey)
 
     session = store.newSession(sessionKey);
     session->setSessionKey(sessionKey);
+    session->m_CanOpenSubmitOperation = true;
 
     time_t time = session->getWakeUpTime();
 
