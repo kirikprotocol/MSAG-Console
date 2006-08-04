@@ -45,8 +45,8 @@ void ActionMatch::init(const SectionParams& params,PropertyObject propertyObject
         temp.append(endbuff,2);
 
         //OP_SINGLELINE
-        //m_type = (OP_OPTIMIZE|OP_STRICT)|((strRegexp[0] == '/') ? OP_PERLSTYLE:OP_SINGLELINE);
-        m_type = (OP_OPTIMIZE|OP_STRICT|OP_SINGLELINE);
+        m_type = (OP_OPTIMIZE|OP_STRICT)|((strRegexp[0] == '/') ? OP_PERLSTYLE:OP_SINGLELINE);
+        //m_type = (OP_OPTIMIZE|OP_STRICT|OP_SINGLELINE);
 
         
         if (!re->Compile((unsigned short *)temp.data(), m_type))
@@ -56,6 +56,7 @@ void ActionMatch::init(const SectionParams& params,PropertyObject propertyObject
     } else m_Compiled = false;
 
     smsc_log_debug(logger,"Action 'match':: init");
+    smsc_log_debug(logger,"Action 'match':: size: %d, %d",strRegexp.size(), wstrRegexp.size());
 }
 
 bool ActionMatch::run(ActionContext& context)
@@ -92,7 +93,7 @@ bool ActionMatch::run(ActionContext& context)
         char endbuff[2] = {0,0};
         regexp.append(endbuff,2);
 
-        m_type = (OP_OPTIMIZE|OP_STRICT|OP_SINGLELINE);
+        m_type = (OP_OPTIMIZE|OP_STRICT)|((strRegexp[0] == '/') ? OP_PERLSTYLE:OP_SINGLELINE);
 
         if (!re->Compile((unsigned short *)regexp.data(), m_type))
         {
