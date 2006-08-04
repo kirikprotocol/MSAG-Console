@@ -217,21 +217,26 @@ void ConfigManagerImpl::Init()
 
 void ConfigManagerImpl::registerListener(ConfigType type, ConfigListener *listener)
 {
+    smsc_log_debug(logger, "Registering config listener. type=%d", type);
     MutexGuard mg(listenerLock);
 
     if(!listeners.Exist(type))
         listeners.Insert(type, listener);
+        
+    smsc_log_debug(logger, "Config listener registered. type=%d", type);
 }
 
 void ConfigManagerImpl::removeListener(ConfigType type)
 {
+    smsc_log_debug(logger, "Removing config listener. type=%d", type);
     MutexGuard mg(listenerLock);
 
     if(listeners.Exist(type)){
         ConfigListener * listener = listeners.Get(type);
-        delete listener;
+//        delete listener;
         listeners.Delete(type);
     }
+    smsc_log_debug(logger, "Config listener removed. type=%d", type);    
 }
 
 void ConfigManagerImpl::reloadConfig(ConfigType type)
