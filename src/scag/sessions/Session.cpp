@@ -156,7 +156,7 @@ void Operation::rollbackAll()
 Session::Session(const CSessionKey& key) 
     : PropertyManager(), lastAccessTime(-1), 
         bChanged(false), bDestroy(false), accessCount(0), m_pCurrentOperation(0),
-        logger(0), lastOperationId(0)
+        logger(0), lastOperationId(0), m_CanOpenSubmitOperation(false)
 {
     logger = Logger::getInstance("scag.re");
     m_SessionKey = key;
