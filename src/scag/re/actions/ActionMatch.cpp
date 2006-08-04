@@ -56,7 +56,6 @@ void ActionMatch::init(const SectionParams& params,PropertyObject propertyObject
     } else m_Compiled = false;
 
     smsc_log_debug(logger,"Action 'match':: init");
-    smsc_log_debug(logger,"Action 'match':: size: %d, %d",strRegexp.size(), wstrRegexp.size());
 }
 
 bool ActionMatch::run(ActionContext& context)

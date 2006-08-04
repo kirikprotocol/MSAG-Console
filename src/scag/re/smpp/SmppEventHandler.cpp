@@ -59,7 +59,7 @@ void SmppEventHandler::ProcessModifyCommandOperation(Session& session, SmppComma
 
         UMR = session.getUSR();
 
-        if (UMR == 0)
+        if (UMR <= 0)
         {
             if (smppDiscriptor.currentIndex == 0) 
                 operation = session.AddNewOperationToHash(command, smppDiscriptor.cmdType);
