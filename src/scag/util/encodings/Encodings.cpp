@@ -167,10 +167,12 @@ iconv_t ConvertorImpl::getIconv(const char* inCharset, const char* outCharset)
 }
 
 #define MAX_BYTES_IN_CHAR 2
+#define ICONV_BLOCK_SIZE 128
 
 void ConvertorImpl::convert(const char* inCharset, const char* outCharset,
                             const char * in, unsigned int inLen, TmpBuf<char, 2048>& buf)
 {
+
     MutexGuard mt(mtx);
     
     iconv_t cd = getIconv(inCharset, outCharset);
@@ -179,20 +181,31 @@ void ConvertorImpl::convert(const char* inCharset, const char* outCharset,
     size_t outbytesleft, i;
     
     iconv(cd, NULL, NULL, NULL, NULL);
-
-    i = outbytesleft = MAX_BYTES_IN_CHAR * inLen;
-    buf.setSize(buf.GetPos() + outbytesleft);
-    outbufptr = buf.GetCurPtr();
-//    smsc_log_debug(smsc::logger::Logger::getInstance("conv.conv"), "in=%s, out=%s, inbuf=%d, inbuflen=%d, outbutesleft=%d", inCharset, outCharset, in, inLen, outbytesleft);
-    if(iconv(cd, &in, &inLen, &outbufptr, &outbytesleft) == (size_t)(-1) && errno != E2BIG)
-        throw SCAGException("Convertor: iconv. Cannot convert from '%s' to '%s'. errno=%d. bytesleft=%d", inCharset, outCharset, errno, inLen);
-        
-    buf.SetPos(i - outbytesleft);
-            
-//    smsc_log_debug(smsc::logger::Logger::getInstance("conv.conv"), "in=%s, out=%s, inbuf=%d, inbuflen=%d, outbutesleft=%d, gp=%d", inCharset, outCharset, in, inLen, outbytesleft, buf.GetPos());
+    
+    while (inLen) {
+         size_t i = inLen > ICONV_BLOCK_SIZE ? ICONV_BLOCK_SIZE : inLen;
+         buf.setSize(buf.GetPos() + MAX_BYTES_IN_CHAR * ICONV_BLOCK_SIZE);
+         outbufptr = buf.GetCurPtr();
+         outbytesleft = MAX_BYTES_IN_CHAR * ICONV_BLOCK_SIZE;
+         
+//         printf("<iconv_t=%d in=%p inLen=%d outbufptr=%p outbytesleft=%d incharset=%s outCharset=%s\n", cd, in, i, outbufptr, outbytesleft, inCharset, outCharset);
+         if(iconv(cd, &in, &i, &outbufptr, &outbytesleft) == (size_t)(-1) && errno != E2BIG)
+         {
+//             printf("iconv_err\n");
+             throw SCAGException("Convertor: iconv. Cannot convert from '%s' to '%s'. errno=%d. bytesleft=%d", inCharset, outCharset, errno, inLen);
+         }
+//         printf(">iconv_t=%d in=%p inLen=%d outbufptr=%p outbytesleft=%d incharset=%s outCharset=%s\n", cd, in, i, outbufptr, outbytesleft, inCharset, outCharset);        
+         buf.SetPos(buf.GetPos() + MAX_BYTES_IN_CHAR * ICONV_BLOCK_SIZE - outbytesleft);
+         
+         if(inLen > ICONV_BLOCK_SIZE)
+             inLen -= ICONV_BLOCK_SIZE;
+         else            
+             inLen = 0;            
+     }
 }
 
 #undef MAX_BYTES_IN_CHAR
+#undef ICONV_BLOCK_SIZE
 
 ConvertorImpl::~ConvertorImpl()
 {
