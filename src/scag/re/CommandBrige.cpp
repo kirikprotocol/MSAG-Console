@@ -151,12 +151,12 @@ std::string CommandBrige::getMessageBody(SmppCommand& command)
     */
     SMS& data = getSMS(command);
 
-    if (data.hasBinProperty(Tag::SMPP_SHORT_MESSAGE))
-    {
-        buff = data.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
-    } else if (data.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD)) 
+    if (data.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD)) 
     {
         buff = data.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+    } else if (data.hasBinProperty(Tag::SMPP_SHORT_MESSAGE))
+    {
+        buff = data.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
     } 
 
     if (buff == 0) return str;

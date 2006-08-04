@@ -8,8 +8,11 @@ namespace scag { namespace re {
 
 class SmppEventHandler : public EventHandler
 {
-    void StartOperation(Session& session, SmppCommand& command, CSmppDiscriptor& smppDiscriptor);
-    void EndOperation(Session& session, SmppCommand& command, RuleStatus& ruleStatus, CSmppDiscriptor& smppDiscriptor);
+    void ProcessModifyRespCommandOperation(Session& session, SmppCommand& command, CSmppDiscriptor& smppDiscriptor);
+    void ProcessModifyCommandOperation(Session& session, SmppCommand& command, CSmppDiscriptor& smppDiscriptor);
+
+    void ModifyOperationBeforeExecuting(Session& session, SmppCommand& command, CSmppDiscriptor& smppDiscriptor);
+    void ModifyOperationAfterExecuting(Session& session, SmppCommand& command, RuleStatus& ruleStatus, CSmppDiscriptor& smppDiscriptor);
 public:
     virtual RuleStatus process(SCAGCommand& command, Session& session); 
     

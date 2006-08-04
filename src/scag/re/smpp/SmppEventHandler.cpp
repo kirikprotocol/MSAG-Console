@@ -8,7 +8,33 @@ namespace scag { namespace re {
 
 using namespace scag::re::smpp;
 
-void SmppEventHandler::StartOperation(Session& session, SmppCommand& command, CSmppDiscriptor& smppDiscriptor)
+
+void SmppEventHandler::ProcessModifyRespCommandOperation(Session& session, SmppCommand& command, CSmppDiscriptor& smppDiscriptor)
+{
+    Operation * operation = 0;
+
+    switch (smppDiscriptor.cmdType)
+    {
+    case CO_DELIVER:
+    case CO_SUBMIT:
+    case CO_DATA_SC_2_SME:
+    case CO_DATA_SME_2_SC:
+    case CO_RECEIPT:
+        operation = session.setCurrentOperation(command.getOperationId());
+        operation->receiveNewResp(smppDiscriptor.currentIndex,smppDiscriptor.lastIndex);
+        break;
+    case CO_USSD_DIALOG:
+        smsc_log_debug(logger,"Session: process USSD_DIALOG operation");
+        operation = session.setCurrentOperationByType(CO_USSD_DIALOG);
+
+        if (smppDiscriptor.isUSSDClosed) operation->setStatus(OPERATION_COMPLETED);
+        else operation->setStatus(OPERATION_CONTINUED);
+
+        break;
+    }
+}
+
+void SmppEventHandler::ProcessModifyCommandOperation(Session& session, SmppCommand& command, CSmppDiscriptor& smppDiscriptor)
 {
     Operation * operation = 0;
     int16_t UMR;
@@ -17,92 +43,46 @@ void SmppEventHandler::StartOperation(Session& session, SmppCommand& command, CS
     {
     case CO_DELIVER:
     case CO_DATA_SC_2_SME:
-
-        if ((session.hasPending())&&(!smppDiscriptor.isResp)) 
-        {
+        if (session.hasPending()) 
             operation = session.setOperationFromPending(command, smppDiscriptor.cmdType);
-            operation->receiveNewPart(smppDiscriptor.currentIndex,smppDiscriptor.lastIndex);
-            break;
-        }
-
-        if ((smppDiscriptor.currentIndex <= 1)&&(!smppDiscriptor.isResp))
-        {
+        else if (smppDiscriptor.currentIndex <= 1)
             operation = session.AddNewOperationToHash(command, smppDiscriptor.cmdType);
-            operation->receiveNewPart(smppDiscriptor.currentIndex,smppDiscriptor.lastIndex);
-        } 
         else 
-        {
             operation = session.setCurrentOperation(command.getOperationId());
 
-            if (!smppDiscriptor.isResp)
-                operation->receiveNewPart(smppDiscriptor.currentIndex,smppDiscriptor.lastIndex);
-            else 
-                operation->receiveNewResp(smppDiscriptor.currentIndex,smppDiscriptor.lastIndex);
-        }
-
+        operation->receiveNewPart(smppDiscriptor.currentIndex,smppDiscriptor.lastIndex);
         break;
 
-
-    
     case CO_SUBMIT:
     case CO_DATA_SME_2_SC:
         //TODO: разобатьс€ с RECEIPT`ом и SUBMIT_RESP
 
         UMR = session.getUSR();
 
-        if ((UMR == 0)&&(!smppDiscriptor.isResp))
+        if (UMR == 0)
         {
             if (smppDiscriptor.currentIndex == 0) 
                 operation = session.AddNewOperationToHash(command, smppDiscriptor.cmdType);
             else
                 operation = session.setCurrentOperation(command.getOperationId());
-
-            operation->receiveNewPart(smppDiscriptor.currentIndex, smppDiscriptor.lastIndex);
-
-            break;
-        }
-
-        if (smppDiscriptor.isResp) 
-        {
-            operation = session.setCurrentOperation(command.getOperationId());
-            operation->receiveNewResp(smppDiscriptor.currentIndex, smppDiscriptor.lastIndex);
-            break;
-        }
-
-        if (smppDiscriptor.currentIndex == 0)
-        {
-            operation = session.setOperationFromPending(command, smppDiscriptor.cmdType);
-            operation->receiveNewPart(smppDiscriptor.currentIndex,smppDiscriptor.lastIndex);
-            break;
         } 
+        else if (smppDiscriptor.currentIndex == 0)
+            operation = session.setOperationFromPending(command, smppDiscriptor.cmdType);
+        else
+            operation = session.setCurrentOperation(command.getOperationId());
 
-        operation = session.setCurrentOperation(command.getOperationId());
         operation->receiveNewPart(smppDiscriptor.currentIndex,smppDiscriptor.lastIndex);
         break;
 
     case CO_RECEIPT:
         //TODO:: Ќужно учесть политику дл€ multipart
 
-        if (!smppDiscriptor.isResp) 
-        {
-            operation->receiveNewPart(smppDiscriptor.currentIndex,smppDiscriptor.lastIndex);
-            break;
-        }
-
+        operation = session.setCurrentOperation(command.getOperationId());
         operation->receiveNewResp(smppDiscriptor.currentIndex,smppDiscriptor.lastIndex);
         break;   
 
     case CO_USSD_DIALOG:
         smsc_log_debug(logger,"Session: process USSD_DIALOG operation");
-
-        if (smppDiscriptor.isResp)
-        {
-            operation = session.setCurrentOperationByType(CO_USSD_DIALOG);
-
-            if (smppDiscriptor.isUSSDClosed) operation->setStatus(OPERATION_COMPLETED);
-            else operation->setStatus(OPERATION_CONTINUED);
-            break;
-        }
 
         if (smppDiscriptor.wantOpenUSSD)
         {
@@ -118,7 +98,17 @@ void SmppEventHandler::StartOperation(Session& session, SmppCommand& command, CS
     }
 }
 
-void SmppEventHandler::EndOperation(Session& session, SmppCommand& command, RuleStatus& ruleStatus, CSmppDiscriptor& smppDiscriptor)
+
+
+void SmppEventHandler::ModifyOperationBeforeExecuting(Session& session, SmppCommand& command, CSmppDiscriptor& smppDiscriptor)
+{
+   if (smppDiscriptor.isResp)
+       ProcessModifyRespCommandOperation(session, command, smppDiscriptor);
+   else
+       ProcessModifyCommandOperation(session, command, smppDiscriptor);
+}
+
+void SmppEventHandler::ModifyOperationAfterExecuting(Session& session, SmppCommand& command, RuleStatus& ruleStatus, CSmppDiscriptor& smppDiscriptor)
 {
     Operation * currentOperation = session.GetCurrentOperation();
     if (!currentOperation) throw SCAGException("Session: Fatal error - cannot end operation. Couse: current operation not found");
@@ -232,7 +222,7 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     
 
     try {
-        StartOperation(session, *smppcommand, smppDiscriptor);
+        ModifyOperationBeforeExecuting(session, *smppcommand, smppDiscriptor);
     } catch (SCAGException& e)
     {
         smsc_log_debug(logger, "EventHandler cannot start/locate operation. Details: %s", e.what());
@@ -254,7 +244,7 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
         rs.status = false;
     }
 
-    EndOperation(session, *smppcommand, rs, smppDiscriptor);
+    ModifyOperationAfterExecuting(session, *smppcommand, rs, smppDiscriptor);
     return rs;
 }
 

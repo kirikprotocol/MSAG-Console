@@ -188,7 +188,7 @@ void SessionManagerImpl::AddRestoredSession(Session * session)
     }*/
     SessionHash.Insert(sessionKey,it);
 
-    smsc_log_debug(logger,"SessionManager: Session restored from store with UMR='%d', Address='%s', pending: %d-%d",accessData->SessionKey.USR,accessData->SessionKey.abonentAddr.toString().c_str(),session->PendingOperationList.size(),session->PrePendingOperationList.size());
+    smsc_log_debug(logger,"SessionManager: Session restored from store with USR='%d', Address='%s', pending: %d-%d",accessData->SessionKey.USR,accessData->SessionKey.abonentAddr.toString().c_str(),session->PendingOperationList.size(),session->PrePendingOperationList.size());
 }
 
 SessionManagerImpl::~SessionManagerImpl() 
@@ -268,19 +268,17 @@ void SessionManagerImpl::init(const SessionManagerConfig& _config) // possible t
 
         for (;iter.Next(key, value);)
         {              
-            if ((value->type != CO_USSD_DIALOG)&&(value->type != CO_HTTP_DELIVERY)) 
+            smsc_log_debug(logger,"SessionManager: Session (A=%s) operation has finished (TYPE=%d)", (*it)->SessionKey.abonentAddr.toString().c_str(), value->type);
+            if (session->m_pCurrentOperation == value) 
             {
-                smsc_log_debug(logger,"SessionManager: Session (A=%s) operation has finished (TYPE=%d)", (*it)->SessionKey.abonentAddr.toString().c_str(), value->type);
-                if (session->m_pCurrentOperation == value) 
-                {
-                    session->m_pCurrentOperation = 0;
-                    session->currentOperationId = 0;
-                }
-                delete value;
-                session->bChanged = true;
-
-                session->OperationsHash.Delete(key);
+                session->m_pCurrentOperation = 0;
+                session->currentOperationId = 0;
             }
+
+            delete value;
+            session->bChanged = true;
+
+            session->OperationsHash.Delete(key);
         }    
 
         if (session->bChanged) 
@@ -289,7 +287,7 @@ void SessionManagerImpl::init(const SessionManagerConfig& _config) // possible t
             store.updateSession(session);
         }
 
-        smsc_log_debug(logger,"SessionManager:: URM = '%d', Address = '%s', has pending = '%d'",(*it)->SessionKey.USR,(*it)->SessionKey.abonentAddr.toString().c_str(),(*it)->hasPending);
+        smsc_log_debug(logger,"SessionManager:: USR = '%d', Address = '%s', has pending = '%d'",(*it)->SessionKey.USR,(*it)->SessionKey.abonentAddr.toString().c_str(),(*it)->hasPending);
     }
 
     smsc_log_debug(logger,"SessionManager::initialized");

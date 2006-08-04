@@ -44,9 +44,10 @@ void ActionMatch::init(const SectionParams& params,PropertyObject propertyObject
         char endbuff[2] = {0,0};
         temp.append(endbuff,2);
 
-        m_type = (OP_OPTIMIZE|OP_STRICT)|((strRegexp[0] == '/') ? OP_PERLSTYLE:OP_SINGLELINE);
+        //OP_SINGLELINE
+        m_type = (OP_OPTIMIZE|OP_STRICT)|((strRegexp[0] == '/') ? OP_PERLSTYLE:0);
         
-        if (!re->Compile((unsigned short *)temp.data(), OP_OPTIMIZE|OP_STRICT|OP_SINGLELINE))
+        if (!re->Compile((unsigned short *)temp.data(), m_type))
             throw SCAGException("Action 'match' Failed to compile regexp");
 
         m_Compiled = true;

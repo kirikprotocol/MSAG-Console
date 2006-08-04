@@ -27,9 +27,7 @@ void ActionAbstractWait::RegisterPending(ActionContext& context, int billID)
     smsc_log_debug(logger,"Action '%s': registering pending...", m_ActionName.c_str());
 
     if (!context.checkIfCanSetPending(m_opType, m_eventHandlerType, m_transportType))
-    {
         throw SCAGException("Cannot set pending operation (id=%d) for this type of command", m_opType);
-    }
 
     Property * property = 0;
     int wait_time;
@@ -39,9 +37,7 @@ void ActionAbstractWait::RegisterPending(ActionContext& context, int billID)
         property = context.getProperty(m_sTime);
 
         if (!property) 
-        {
             throw SCAGException("Invalid property '%s' to set time", m_sTime.c_str());
-        }
         wait_time = property->getInt();
     }
     else
