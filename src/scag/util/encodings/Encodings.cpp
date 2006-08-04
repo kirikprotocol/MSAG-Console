@@ -8,6 +8,8 @@
 
 #include <scag/util/singleton/Singleton.h>
 
+#include <logger/Logger.h>
+
 #include "Encodings.h"
 
 namespace scag { namespace util { namespace encodings {
@@ -144,7 +146,7 @@ void Convertor::convert(const char* inCharset, const char* outCharset,
 {
     TmpBuf<char, 2048> buf(inLen * MAX_BYTES_IN_CHAR);
     convert(inCharset, outCharset, in, inLen, buf);
-    
+//    smsc_log_debug(smsc::logger::Logger::getInstance("conv.conv"), "buf=%d getpos=%d", buf.get(), buf.GetPos());
     outstr.assign(buf.get(), buf.GetPos());
 }
 
@@ -174,16 +176,20 @@ void ConvertorImpl::convert(const char* inCharset, const char* outCharset,
     iconv_t cd = getIconv(inCharset, outCharset);
     
     char *outbufptr;
-    size_t outbytesleft;
+    size_t outbytesleft, i;
     
     iconv(cd, NULL, NULL, NULL, NULL);
 
-    outbytesleft = MAX_BYTES_IN_CHAR * inLen;
+    i = outbytesleft = MAX_BYTES_IN_CHAR * inLen;
     buf.setSize(buf.GetPos() + outbytesleft);
     outbufptr = buf.GetCurPtr();
-    
+//    smsc_log_debug(smsc::logger::Logger::getInstance("conv.conv"), "in=%s, out=%s, inbuf=%d, inbuflen=%d, outbutesleft=%d", inCharset, outCharset, in, inLen, outbytesleft);
     if(iconv(cd, &in, &inLen, &outbufptr, &outbytesleft) == (size_t)(-1) && errno != E2BIG)
         throw SCAGException("Convertor: iconv. Cannot convert from '%s' to '%s'. errno=%d. bytesleft=%d", inCharset, outCharset, errno, inLen);
+        
+    buf.SetPos(i - outbytesleft);
+            
+//    smsc_log_debug(smsc::logger::Logger::getInstance("conv.conv"), "in=%s, out=%s, inbuf=%d, inbuflen=%d, outbutesleft=%d, gp=%d", inCharset, outCharset, in, inLen, outbytesleft, buf.GetPos());
 }
 
 #undef MAX_BYTES_IN_CHAR
