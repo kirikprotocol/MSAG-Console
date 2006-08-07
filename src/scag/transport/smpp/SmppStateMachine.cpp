@@ -99,7 +99,8 @@ struct StateMachine::ResponseRegistry
     }
     RegValue* ptr=reg.GetPtr(toList.front().key);
     cmd=ptr->cmd;
-    cmd->set_dialogId(ptr->dlgId);
+    //cmd->set_dialogId(ptr->dlgId); expired cmd fix
+    cmd->set_dialogId(key.seq);
     //reg.Delete(toList.head().key);
     //toList.pop_front();
     return true;
