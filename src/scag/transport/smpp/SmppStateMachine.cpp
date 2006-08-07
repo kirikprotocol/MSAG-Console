@@ -97,7 +97,8 @@ struct StateMachine::ResponseRegistry
     {
       return false;
     }
-    RegValue* ptr=reg.GetPtr(toList.front().key);
+    RegKey key = toList.front().key;
+    RegValue* ptr=reg.GetPtr(key);
     cmd=ptr->cmd;
     //cmd->set_dialogId(ptr->dlgId); expired cmd fix
     cmd->set_dialogId(key.seq);
