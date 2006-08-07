@@ -98,7 +98,7 @@ Property* HttpCommandAdapter::getRequestProperty(const std::string& name)
     else if(!strncmp(name.c_str(), "param-", 6))
         prop = new AdapterProperty(name, this, cmd.getQueryParameter(name.c_str() + 6));
     else if(!strcmp(name.c_str(), "abonent"))
-        prop = new AdapterProperty(name, this, cmd.getAbonent());
+        prop = new AdapterProperty(name, this, cmd.getAddress());
     else if(!strcmp(name.c_str(), "site"))
         prop = new AdapterProperty(name, this, cmd.getSite());
     else if(!strcmp(name.c_str(), "path"))
@@ -132,7 +132,7 @@ Property* HttpCommandAdapter::getResponseProperty(const std::string& name)
     else if(!strcmp(name.c_str(), "status"))
         prop = new AdapterProperty(name, this, cmd.getStatus());
     else if(!strcmp(name.c_str(), "abonent"))
-        prop = new AdapterProperty(name, this, cmd.getAbonent());
+        prop = new AdapterProperty(name, this, cmd.getAddress());
     else if(!strcmp(name.c_str(), "usr"))
         prop = new AdapterProperty(name, this, cmd.getUSR());
     else if(!strcmp(name.c_str(), "message"))
@@ -158,7 +158,7 @@ Property* HttpCommandAdapter::getDeliveryProperty(const std::string& name)
     else if(!strcmp(name.c_str(), "status"))
         prop = new AdapterProperty(name, this, cmd.getStatus());
     else if(!strcmp(name.c_str(), "abonent"))
-        prop = new AdapterProperty(name, this, cmd.getAbonent());
+        prop = new AdapterProperty(name, this, cmd.getAddress());
     else if(!strcmp(name.c_str(), "usr"))
         prop = new AdapterProperty(name, this, cmd.getUSR());
     else if(!strcmp(name.c_str(), "delivered"))
