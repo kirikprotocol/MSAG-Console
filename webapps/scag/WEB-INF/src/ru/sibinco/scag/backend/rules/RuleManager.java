@@ -159,6 +159,7 @@ public class RuleManager
   }
 
   public void unlockRule(String ruleId, String transport) {
+    logger.debug("!!!!!unlock rule id = " + ruleId + " transport = " + transport);
     setRuleState(ruleId, transport, checkRuleFileExists(ruleId, transport), false);
   }
 

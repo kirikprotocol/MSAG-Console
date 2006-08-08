@@ -36,7 +36,7 @@ public class WHOISDServlet extends HttpServlet {
   private static final int CR = (int)'\r';
   private static final int LF = (int)'\n';
 
-  public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+  public synchronized void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
     logRequest(req);
     appContext = (SCAGAppContext)req.getAttribute(Constants.APP_CONTEXT);
     int id = getRequestId(req);
@@ -71,7 +71,7 @@ public class WHOISDServlet extends HttpServlet {
     }
   }
 
-  public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException{
+  public synchronized void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException{
        logRequest(req);
        appContext = (SCAGAppContext)req.getAttribute(Constants.APP_CONTEXT);
        int id = getRequestId(req);

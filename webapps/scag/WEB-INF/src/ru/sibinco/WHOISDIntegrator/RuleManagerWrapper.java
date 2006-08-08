@@ -16,6 +16,8 @@ import java.io.IOException;
 import java.util.*;
 import java.lang.reflect.Method;
 
+import org.apache.log4j.Logger;
+
 /**
  * Created by IntelliJ IDEA.
  * User: dym
@@ -24,6 +26,8 @@ import java.lang.reflect.Method;
  * To change this template use File | Settings | File Templates.
  */
 public class RuleManagerWrapper {
+  protected final Logger logger = Logger.getLogger(this.getClass());
+
   public final static String TERM_COMMIT ="Commit";
   public final static String TERM_ROLLBACK ="Rollback";
   private final static String WHOISD_USER = "whoisd user";
@@ -85,7 +89,6 @@ public class RuleManagerWrapper {
   public void unlockRules() {
     for (Iterator i = lockedRules.iterator();i.hasNext(); ) {
       String complexRuleId = (String)i.next();
-      System.out.println("unlocking rule " + complexRuleId);
       rulemanager.unlockRule(complexRuleId);
     }
   }
@@ -104,14 +107,14 @@ public class RuleManagerWrapper {
   }
   //--------------------------------
   public void AddRuleCommit(RuleCommand ruleCommand) throws Exception {
-    System.out.println("invoked AddRuleCommit service = "+ ruleCommand.id+" transport = "+ ruleCommand.transport);
+    logger.debug("invoked AddRuleCommit service = "+ ruleCommand.id+" transport = "+ ruleCommand.transport);
     rulemanager.finishOperation(ruleCommand.id,ruleCommand.transport,HSDaemon.UPDATEORADD);
     rulemanager.saveMessage("Added rule: ", WHOISD_USER, ruleCommand.id, ruleCommand.transport);
     //do nothing!
   }
 
   public void updateRuleCommit(RuleCommand ruleCommand) throws Exception {
-    System.out.println("invoked updateRuleCommit service = "+ ruleCommand.id+" transport = "+ ruleCommand.transport);
+    logger.debug("invoked updateRuleCommit service = "+ ruleCommand.id+" transport = "+ ruleCommand.transport);
     //we have to save rule_1.xml.new in backup folder
     File ruleFile = rulemanager.composeRuleFile(ruleCommand.transport,ruleCommand.id);
     File currentRuleFile = Functions.createNewFilename(ruleFile);
@@ -121,20 +124,20 @@ public class RuleManagerWrapper {
   }
 
   public void removeRuleCommit(RuleCommand ruleCommand) throws Exception {
-    System.out.println("invoked removeRuleCommit service = "+ ruleCommand.id+" transport = "+ ruleCommand.transport);
+    logger.debug("invoked removeRuleCommit service = "+ ruleCommand.id+" transport = "+ ruleCommand.transport);
     rulemanager.removeRuleFile(ruleCommand.id, ruleCommand.transport);
     rulemanager.finishOperation(ruleCommand.id,ruleCommand.transport,HSDaemon.REMOVE);
     rulemanager.saveMessage("Removed rule: ", WHOISD_USER, ruleCommand.id, ruleCommand.transport);
   }
 
   public void AddRuleRollback(RuleCommand ruleCommand) throws Exception{
-    System.out.println("invoked AddRuleRollback service = "+ ruleCommand.id+" transport = "+ ruleCommand.transport);
+    logger.debug("invoked AddRuleRollback service = "+ ruleCommand.id+" transport = "+ ruleCommand.transport);
     rulemanager.saveMessage("Failed to add rule: ", WHOISD_USER, ruleCommand.id, ruleCommand.transport);
     rulemanager.removeRuleFile(ruleCommand.id, ruleCommand.transport);
   }
 
   public void updateRuleRollback(RuleCommand ruleCommand) throws Exception {
-    System.out.println("invoked updateRuleRollback service = "+ ruleCommand.id+" transport = "+ ruleCommand.transport);
+    logger.debug("invoked updateRuleRollback service = "+ ruleCommand.id+" transport = "+ ruleCommand.transport);
     rulemanager.saveMessage("Failed to update rule: ", WHOISD_USER, ruleCommand.id, ruleCommand.transport);
     //rule_1.xml.new -> rule_1.xml and delete rule_1.xml.new
     File ruleFile = rulemanager.composeRuleFile(ruleCommand.transport,ruleCommand.id);
@@ -143,7 +146,7 @@ public class RuleManagerWrapper {
   }
 
   public void removeRuleRollback(RuleCommand ruleCommand) {
-    System.out.println("invoked removeRuleRollback service = "+ ruleCommand.id+" transport = "+ ruleCommand.transport);
+    logger.debug("invoked removeRuleRollback service = "+ ruleCommand.id+" transport = "+ ruleCommand.transport);
     rulemanager.saveMessage("Failed to remove rule: ", WHOISD_USER, ruleCommand.id, ruleCommand.transport);
     //do nothing
   }

@@ -16,8 +16,9 @@ import javax.servlet.http.HttpSession;
 import javax.servlet.ServletException;
 import java.io.*;
 import java.util.LinkedList;
-import java.util.Map;
 import java.util.zip.GZIPOutputStream;
+
+import org.apache.log4j.Logger;
 
 /**
  * Created by IntelliJ IDEA.
@@ -28,6 +29,8 @@ import java.util.zip.GZIPOutputStream;
  */
 public class myServlet extends HttpServlet
 {
+  protected final Logger logger = Logger.getLogger(this.getClass());
+
   protected static final int Delete=1;
   protected static final int CanRead=2;
   protected static final int IsDirectory=3;
@@ -168,7 +171,6 @@ public class myServlet extends HttpServlet
  }
 
   private void unlockRule(HttpServletRequest req,final String file, final String transport) {
-     System.out.println("!!!!!unlock rule id = " + file + " transport = " + transport);
      SCAGAppContext appContext = (SCAGAppContext) req.getAttribute(Constants.APP_CONTEXT);
      appContext.getRuleManager().unlockRule(file, transport.toUpperCase());
   }
@@ -212,7 +214,6 @@ public class myServlet extends HttpServlet
 
   private void updateRule(HttpServletRequest req,final String file, final String transport, HttpServletResponse res) throws IOException
   {
-    System.out.println("myServlet updateRule");
     SCAGAppContext appContext = (SCAGAppContext) req.getAttribute(Constants.APP_CONTEXT);
     //transport
     LinkedList li;
@@ -241,7 +242,6 @@ public class myServlet extends HttpServlet
  }
   private void AddRule(HttpServletRequest req,final String file, final String transport, HttpServletResponse res) throws IOException
   {
-    System.out.println("myServlet AddRule");
     SCAGAppContext appContext = (SCAGAppContext) req.getAttribute(Constants.APP_CONTEXT);
     PrintWriter out = res.getWriter();    
     LinkedList li;
@@ -288,7 +288,7 @@ public class myServlet extends HttpServlet
   }
   private LinkedList LoadRule(HttpServletRequest req, final String file, final String transport)
     {
-      System.out.println("LoadRule id= "+file+" transport="+transport);
+      logger.debug("LoadRule id= "+file+" transport="+transport);
       SCAGAppContext appContext = (SCAGAppContext) req.getAttribute(Constants.APP_CONTEXT);
       Rule rule = appContext.getRuleManager().getRule(file ,transport);
       return rule.getBody();
@@ -296,11 +296,11 @@ public class myServlet extends HttpServlet
 
   private LinkedList LoadNewRule(HttpServletRequest req, final String file, final String transport)
   {
-    System.out.println("LoadNewRule id= "+file + " transport = "+transport);
+    logger.debug("LoadNewRule id= "+file + " transport = "+transport);
     Rule newRule=Rule.createNewRule(Long.parseLong(file),transport);
     LinkedList li;
     li=newRule.getBody();
-    System.out.println("body size = " + li.size());
+    logger.debug("body size = " + li.size());
     if(li.size()>0) {
       li.addFirst("ok");
     } else
@@ -310,7 +310,7 @@ public class myServlet extends HttpServlet
 
    private void ExistRule(HttpServletRequest req, final String file, final String transport,HttpServletResponse res) throws IOException
   {
-    System.out.println("ExistRule id= "+file + " transport="+transport);
+    logger.debug("ExistRule id= "+file + " transport="+transport);
     SCAGAppContext appContext = (SCAGAppContext) req.getAttribute(Constants.APP_CONTEXT);
     PrintWriter out = res.getWriter();
     if (appContext.getRuleManager().checkRuleFileExists(file,transport))
