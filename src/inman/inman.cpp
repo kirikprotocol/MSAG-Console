@@ -14,11 +14,17 @@ using smsc::inman::comp::initCAP3SMSComponents;
 #include "util/config/ConfigView.h"
 #include "util/mirrorfile/mirrorfile.h"
 using smsc::util::config::ConfigView;
-using smsc::util::config::CStrSet;
+//using smsc::util::config::CStrSet;
 
-#include "inman/abprov/AbProvider.hpp"
-using smsc::inman::abprov::AbonentProviderLoader;
-using smsc::inman::abprov::AbonentProviderCreatorITF;
+//#include "inman/abprov/AbProvider.hpp"
+//using smsc::inman::abprov::AbonentProviderLoader;
+//using smsc::inman::abprov::AbonentProviderCreatorITF;
+
+#include "inman/abprov/IAPLoader.hpp"
+using smsc::inman::iaprvd::IAProviderLoader;
+using smsc::inman::iaprvd::IAProviderCreatorITF;
+//#include "inman/abprov/IAProvider.hpp"
+
 
 namespace smsc {
   namespace inman {
@@ -67,7 +73,7 @@ static const char * const _PolicyModes[3] = {"IN", "DB", "HLR"};
 
 
 struct INBillConfig : public InService_CFG {
-    AbonentProviderCreatorITF * provAllc;
+    IAProviderCreatorITF * provAllc;
 public:
     INBillConfig()
     {
@@ -75,7 +81,7 @@ public:
         sock.host = bill.ssf_addr = bill.scf_addr = bill.cdrDir = NULL;
         sock.port = bill.ssn = bill.serviceKey = 0;
         bill.cdrInterval = cachePrm.interval = cachePrm.RAM = 0;
-        cachePrm.nmDir = NULL;
+        bill.policyNm = cachePrm.nmDir = NULL;
         bill.billMode = smsc::inman::BILL_ALL;
         bill.policy = smsc::inman::policyIN;
         bill.cdrMode =  BillingCFG::CDR_ALL;
@@ -146,19 +152,20 @@ public:
         smsc_log_info(inmanLogger, "billMode: %s [%d]", cstr, bill.billMode);
 
         cstr = NULL;
-        try { cstr = billCfg.getString("abonentPolicy");
+        try { bill.policyNm = billCfg.getString("abonentPolicy");
         } catch (ConfigException& exc) {
             throw ConfigException("'abonentPolicy' is unknown or missing");
         }
+/*
         if (!strcmp(cstr, _PolicyModes[smsc::inman::policyDB]))
             bill.policy = smsc::inman::policyDB;
         else if (!strcmp(cstr, _PolicyModes[smsc::inman::policyHLR])) {
             throw ConfigException("'abonentPolicy' HLR is not implemented");
-//            bill.policy = smsc::inman::policyHLR;
+            bill.policy = smsc::inman::policyHLR;
         } else if (strcmp(cstr, _PolicyModes[smsc::inman::policyIN]))
             throw ConfigException("'abonentPolicy' is unknown or missing");
         smsc_log_info(inmanLogger, "abonentPolicy: %s [%d]", cstr, bill.policy);
-
+*/
         cstr = NULL;
         try { cstr = billCfg.getString("cdrMode");
         } catch (ConfigException& exc) {
@@ -340,32 +347,31 @@ public:
         smsc_log_info(inmanLogger, cppStr.c_str());
 
         /* **************************** *
-         * AbonentProvider parameters:  *
+         * AbonentProviders parameters:  *
          * **************************** */
-        if (bill.policy != smsc::inman::policyIN) {
-            if (!manager.findSection("AbonentProvider"))
-                throw ConfigException("'AbonentProvider' section is missed (abonentPolicy: %s)",
-                                      _PolicyModes[bill.policy]);
-            ConfigView  provCfg(manager, "AbonentProvider");
-            cstr = NULL;
-            try {
-                cstr = provCfg.getString("loadup"); 
-            } catch (ConfigException& exc) {
-                throw ConfigException("'AbonentProvider' library name is missed");
-            }
-
-            if (bill.policy == smsc::inman::policyDB) {
-                if (!manager.findSection("AbonentProvider.ProviderDB"))
-                    throw ConfigException("'AbonentProvider.ProviderDB' section is missed");
-
-                smsc_log_info(inmanLogger, "Loading AbonentProvider driver '%s' ..", cstr);
-                ConfigView* dbCfg = provCfg.getSubConfig("ProviderDB");
-                provAllc = (AbonentProviderCreatorITF *)AbonentProviderLoader::LoadDL(cstr, dbCfg); //throws
-                smsc_log_info(inmanLogger, "Loaded AbonentProvider driver '%s'",
-                               provAllc->ident());
-                provAllc->logConfig(inmanLogger);
-            } // else smsc::inman::policyHLR
+        if (!manager.findSection("AbonentProviders"))
+            throw ConfigException("'AbonentProviders' section is missed (abonentPolicy: %s)",
+                                  bill.policyNm);
+        ConfigView  provSec(manager, "AbonentProviders");
+        if (!provSec.findSubSection(bill.policyNm))
+            throw ConfigException("'%s' is missed in 'AbonentProviders' section",
+                                  bill.policyNm);
+        ConfigView * provCfg = provSec.getSubConfig(bill.policyNm);
+        smsc_log_info(inmanLogger, "Loading AbonentProvider '%s'", bill.policyNm);
+        provAllc = (IAProviderCreatorITF *)IAProviderLoader::LoadIAP(provCfg, inmanLogger); //throws
+        switch (provAllc->type()) {
+        case smsc::inman::iaprvd::iapHLR:
+            bill.policy = smsc::inman::policyHLR; break;
+        case smsc::inman::iaprvd::iapDB:
+            bill.policy = smsc::inman::policyDB; break;
+        case smsc::inman::iaprvd::iapIN:
+            bill.policy = smsc::inman::policyIN; break;
+        default:;
         }
+        smsc_log_info(inmanLogger, "AbonentProvider '%s': type %s (%u), ident: %s",
+                      bill.policyNm, _PolicyModes[bill.policy], provAllc->type(),
+                      provAllc->ident());
+        provAllc->logConfig(inmanLogger);
         /**/
         return;
     }
