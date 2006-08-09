@@ -2,7 +2,7 @@
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
 
 <!-- INMan interacts the IN node -->
-<config> <!-- InMan 0.4.1. and higher -->
+<config> <!-- InMan 0.4.2. and higher -->
   <param name="host" type="string">@inman.host@</param>  <!-- InMan service host -->
   <param name="port" type="int">@inman.port@</param>     <!-- InMan service port -->
   <param name="maxClients" type="int">3</param>       <!--  max allowed INMan client connections, default: 3 -->
@@ -14,12 +14,9 @@
       ussd: request IN platform in case of USSD only, bill SMS to CDR
       sms:  request IN platform in case of SMS only, bill USSD to CDR
     -->
-   <param name="abonentPolicy" type="string">IN</param>  <!-- type of abonent provider to use, 
-    options: [IN, DB, HLR]
-    IN        determine abonent type while interacting IN,  requires IN_interaction.RPCList_postpaid defined
-    DB      determine abonent type quering DB, requires AbonentProvider.ProviderDB defined
-    HLR -  determine abonent type asking HLR, equires AbonentProvider.ProviderHLR defined, not supported yet
-    -->
+    <param name="abonentPolicy" type="string">DB_Contract</param> <!-- 
+      prioriterized CSV list of abonent providers to use (defined in section AbonentProviders) 
+     -->
     <param name="maxBillings" type="int">20</param>   <!--  [1 .. 100000] , default 500 
      maximium simultaneous billing requests per INMan client  connect -->
     <param name="abonentTypeTimeout" type="int">5</param> <!-- units: seconds, [1 .. 65535], default 5 
@@ -65,34 +62,37 @@
     -->
  </section>
 
-<!-- OPTIONAL PARAMETERS follow: -->
-<section name="AbonentProvider"> <!-- Abonent type is provided by either DB, or HLR -->
-    <param name="loadup" type="string">libinprov_db.so</param>
-    <section name="ProviderDB"> <!-- Abonent type is provided by DB -->
-         <section name="DataSource">
-            <param name="type" type="string">OCI</param> <!-- Oracle DB -->
-            <param name="dbInstance" type="string">@inman.db.instance@</param>
-            <param name="dbUserName" type="string">@inman.db.userid@</param>
-            <param name="dbUserPassword" type="string">@inman.db.PasSword@</param>
-            <param name="connections" type="int">5</param>  <!--  max allowed db connections -->
-            <param name="maxQueries" type="int">15</param>  <!--  max allowed db queries -->
-            <param name="watchdog" type="bool">true</param>  <!--  turn on timeouts handling -->
-            <param name="timeout" type="int">15</param>  <!--  timeout on connection queries, units: secs  [1..65535] -->
+  <section name="AbonentProviders">
+  <!-- abonent contract/gsmSCF params  providers -->
+      <section name="DB_Contract"> <!-- DB provides abonent contract (prepaid or postpaid) only -->
+          <param name="loadup" type="string">libinman_iap_db.so</param>
+          <section name="Config">
+              <section name="DataSource">
+                 <param name="type" type="string">OCI</param> <!-- Oracle DB -->
+                 <param name="dbInstance" type="string">@inman.db.instance@</param>
+                 <param name="dbUserName" type="string">@inman.db.userid@</param>
+                 <param name="dbUserPassword" type="string">@inman.db.PasSword@</param>
+                 <param name="connections" type="int">5</param>  <!--  max allowed db connections -->
+                 <param name="maxQueries" type="int">15</param>  <!--  max allowed db queries -->
+                 <param name="watchdog" type="bool">true</param>  <!--  turn on timeouts handling -->
+                 <param name="timeout" type="int">15</param>  <!--  timeout on connection queries, units: secs  [1..65535] -->
 
-           <!--  SQL function returning Abonent type has following prototype:
-                  FUNCTION abonentQueryFunc (iqueryFuncArg  IN VARCHAR) RETURN NUMBER
-            -->
-            <param name="abonentQueryFunc" type="string">@inman.db.abonentQueryFunc@</param>
-            <param name="queryFuncArg" type="string">@inman.db.queryFuncArg@</param>
-         </section>
-        <section name="DataSourceDrivers">
-            <section name="OCIDataSourceDriver">
-                <param name="type" type="string">OCI</param>
-                <param name="loadup" type="string">libdb_oci.so</param>
-            </section>
-        </section>
-   </section>
-</section>   <!--  AbonentProvider -->
+                <!--  SQL function returning Abonent type has following prototype:
+                       FUNCTION abonentQueryFunc (iqueryFuncArg  IN VARCHAR) RETURN NUMBER
+                 -->
+                 <param name="abonentQueryFunc" type="string">@inman.db.abonentQueryFunc@</param>
+                 <param name="queryFuncArg" type="string">@inman.db.queryFuncArg@</param>
+              </section>
+             <section name="DataSourceDrivers">
+                 <section name="OCIDataSourceDriver">
+                     <param name="type" type="string">OCI</param>
+                     <param name="loadup" type="string">libdb_oci.so</param>
+                 </section>
+             </section>
+          </section>
+      </section> <!-- DB_Contract -->
+
+  </section> <!-- AbonentProviders -->
 </config>
 
 <!--
