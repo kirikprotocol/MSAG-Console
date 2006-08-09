@@ -13,7 +13,8 @@
 #undef NOLOGGERPLEASE
 
 using smsc::logger::Logger;
-using smsc::cvtutil::TonNpiAddress;
+using smsc::cvtutil::packMAPAddress2OCTS;
+using smsc::cvtutil::unpackOCTS2MAPAddress;
 using smsc::core::buffers::Hash;
 using smsc::core::buffers::DiskHash;
 
@@ -30,21 +31,46 @@ typedef enum { btUnknown = 0, btPostpaid, btPrepaid
 
 extern const char * _sabBillType[];
 
-class AbonentCacheITF {
-public:
-    virtual AbonentBillType getAbonentInfo(AbonentId & ab_number) = 0;
-    virtual void setAbonentInfo(const AbonentId & ab_number, AbonentBillType ab_type,
-                                                            time_t queried = 0) = 0;
-};
-
 struct AbonentRecord {
     AbonentBillType ab_type;
     time_t          tm_queried;
+    MAPSCFinfo      gsmSCF;
 
-    AbonentRecord()
-        : ab_type(smsc::inman::cache::btUnknown), tm_queried(0) {}
-    AbonentRecord(AbonentBillType abType, time_t qryTm)
-        : ab_type(abType), tm_queried(qryTm) {}
+    AbonentRecord() : ab_type(smsc::inman::cache::btUnknown), tm_queried(0)
+    { }
+    AbonentRecord(AbonentBillType abType, time_t qryTm, const MAPSCFinfo * p_scf = NULL)
+        : ab_type(abType), tm_queried(qryTm)
+    {
+        if (p_scf)
+            gsmSCF = *p_scf;
+    }
+
+    void reset(void)
+    {
+        ab_type = smsc::inman::cache::btUnknown;
+        tm_queried = 0;
+        gsmSCF.serviceKey = 0;
+        gsmSCF.scfAddress.clear();
+
+    }
+
+    const MAPSCFinfo * getSCFinfo(void) const
+    {
+        return gsmSCF.scfAddress.length ? &gsmSCF : NULL;
+    }
+};
+
+class AbonentCacheITF {
+public:
+    virtual AbonentBillType getAbonentInfo(AbonentId & ab_number,
+                                           AbonentRecord * ab_rec = NULL) = 0;
+    virtual void setAbonentInfo(const AbonentId & ab_number, AbonentBillType ab_type,
+                                time_t queried = 0, const MAPSCFinfo * p_scf = NULL) = 0;
+
+    void setAbonentInfo(const AbonentId & ab_number, AbonentRecord * ab_rec)
+    {
+        setAbonentInfo(ab_number, ab_rec->ab_type, ab_rec->tm_queried, ab_rec->getSCFinfo());
+    }
 };
 
 struct AbonentCacheCFG {
@@ -95,8 +121,8 @@ class AbonentHashData : public AbonentRecord {
 public:
     AbonentHashData() : AbonentRecord()
     { }
-    AbonentHashData(AbonentBillType abType, time_t qryTm)
-        : AbonentRecord(abType, qryTm)
+    AbonentHashData(AbonentBillType abType, time_t qryTm, const MAPSCFinfo * p_scf = NULL)
+        : AbonentRecord(abType, qryTm, p_scf)
     { }
     
     static void WriteTimeT(File& fh, time_t val) /* throw (FileException) */
@@ -118,33 +144,69 @@ public:
 
     //DiskHash interface methods
     static uint32_t Size(void)
-    { return sizeof(time_t) + 1; }
+    { return sizeof(time_t) + 1 + sizeof(uint32_t) + MAP_MAX_ISDN_AddressLength; }
 
     void Read(File& fh) /* throw (FileException) */
     {
-        ab_type = (AbonentBillType)fh.ReadByte();
+        unsigned char fb = fh.ReadByte();
+        ab_type = (AbonentBillType)(fb & 0x7F);
         tm_queried = ReadTimeT(fh);
+        if (fb & 0x80) {
+            gsmSCF.serviceKey = (uint32_t)fh.ReadNetInt32();
+            TONNPI_ADDRESS_OCTS oct;
+            oct.b0.tonpi = fh.ReadByte();
+            fh.Read(oct.val, MAP_MAX_ISDN_AddressLength);
+            unpackOCTS2MAPAddress(gsmSCF.scfAddress, &oct, MAP_MAX_ISDN_AddressLength);
+        } else {
+            gsmSCF.serviceKey = 0;
+            gsmSCF.scfAddress.clear();
+        }
+            
     }
     void Write(File& fh) /* throw (FileException) */ const
     { 
-        fh.WriteByte((unsigned char)ab_type);
+        fh.WriteByte(gsmSCF.serviceKey ? ((unsigned char)ab_type | 0x80) : 
+                     (unsigned char)ab_type);
         WriteTimeT(fh, tm_queried);
+        if (gsmSCF.serviceKey) {
+            fh.WriteNetInt32(gsmSCF.serviceKey);
+            TONNPI_ADDRESS_OCTS oct;
+            unsigned len = packMAPAddress2OCTS(gsmSCF.scfAddress, &oct);
+            fh.WriteByte(oct.b0.tonpi);
+            fh.Write(oct.val, len - 1);
+        }
     }
 };
 
 
 class AbonentCache: public AbonentCacheITF {
 public:
+    AbonentCache(AbonentCacheCFG * cfg, Logger * uselog = NULL);
+    ~AbonentCache();
+
+    //AbonentCacheITF interface methods
+    AbonentBillType getAbonentInfo(AbonentId & ab_number,
+                                           AbonentRecord * ab_rec = NULL);
+    void setAbonentInfo(const AbonentId & ab_number, AbonentBillType ab_type,
+                        time_t queried = 0, const MAPSCFinfo * p_scf = NULL);
+
+protected:
     typedef std::list<AbonentId>    AccessList;
     struct AbonentRecordRAM : public AbonentRecord {
         AccessList::iterator accIt;
 
         AbonentRecordRAM() : AbonentRecord()
         { }
-        AbonentRecordRAM(AbonentBillType abType, time_t qryTm)
-            : AbonentRecord(abType, qryTm)
+        AbonentRecordRAM(AbonentBillType abType, time_t qryTm, const MAPSCFinfo * p_scf = NULL)
+            : AbonentRecord(abType, qryTm, p_scf)
         { }
     };
+
+    bool load(const char * file_nm);
+    bool close(void);
+    int  ramInsert(const AbonentId & ab_number, AbonentBillType ab_type,
+                   time_t & queried, const MAPSCFinfo * p_scf = NULL);
+    AbonentRecord * ramLookUp(AbonentId & ab_number);
 
 private:
     typedef DiskHash<AbonentHashKey, AbonentHashData> AbonentHash;
@@ -158,19 +220,6 @@ private:
     AbonentHash             flCache;
     bool                    useFile;
 
-public:
-    AbonentCache(AbonentCacheCFG * cfg, Logger * uselog = NULL);
-    ~AbonentCache();
-
-    //AbonentCacheITF interface methods
-    AbonentBillType getAbonentInfo(AbonentId & ab_number);
-    void setAbonentInfo(const AbonentId & ab_number, AbonentBillType ab_type,
-                        time_t queried = 0);
-protected:
-    bool load(const char * file_nm);
-    bool close(void);
-    int  ramInsert(const AbonentId & ab_number, AbonentBillType ab_type, time_t & queried);
-    AbonentBillType ramLookUp(AbonentId & ab_number);
 };
 
 } //cache
