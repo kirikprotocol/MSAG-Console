@@ -1,156 +1,133 @@
 #ident "$Id$"
-#ifndef SMSC_INMAN_ABPROVIDER_DB_HPP
-#define SMSC_INMAN_ABPROVIDER_DB_HPP
+/* ************************************************************************** *
+ * DB Abonent Provider: implements functionality for quering Oracle DB
+ * for abonent contract.
+ * ************************************************************************** *
+ * Expects Provider Config subsection formed as follow:
+ *
+ *  <section name="Config">
+ *      <section name="DataSource">
+ *          <param name="type" type="string">OCI</param> <!-- Oracle DB -->
+ *          <param name="dbInstance" type="string">....</param>
+ *          <param name="dbUserName" type="string">....</param>
+ *          <param name="dbUserPassword" type="string">....</param>
+ *          <param name="connections" type="int">5</param>  <!--  max allowed db connections -->
+ *          <param name="maxQueries" type="int">15</param>  <!--  max allowed db queries -->
+ *          <param name="watchdog" type="bool">true</param>  <!--  turn on timeouts handling -->
+ *          <param name="timeout" type="int">15</param>  <!--  timeout on connection queries, units: secs  [1..65535] -->
+ *
+ *       <!--  SQL function returning Abonent type has following prototype:
+ *              FUNCTION abonentQueryFunc (iqueryFuncArg  IN VARCHAR) RETURN NUMBER
+ *        -->
+ *          <param name="abonentQueryFunc" type="string">....</param>
+ *          <param name="queryFuncArg" type="string">....</param>
+ *      </section>
+ *      <section name="DataSourceDrivers">
+ *          <section name="OCIDataSourceDriver">
+ *              <param name="type" type="string">OCI</param>
+ *              <param name="loadup" type="string">libdb_oci.so</param>
+ *          </section>
+ *      </section>
+ *  </section>
+ * ************************************************************************** */
+#ifndef SMSC_INMAN_IAPROVIDER_DB_HPP
+#define SMSC_INMAN_IAPROVIDER_DB_HPP
 
-#include <list>
-#include <map>
+#include "inman/abprov/IAPLoader.hpp"
+using smsc::inman::iaprvd::IAProviderType;
+using smsc::inman::iaprvd::IAProviderAbility_e;
+using smsc::inman::iaprvd::IAProviderCreatorITF;
+using smsc::inman::iaprvd::IAProviderITF;
 
-#include "inman/abprov/AbProvider.hpp"
-#include "core/threads/ThreadPool.hpp"
+#include "inman/abprov/facility/IAPThrFacility.hpp"
+using smsc::inman::iaprvd::IAPQueryAC;
+using smsc::inman::iaprvd::IAPQueryManagerITF;
+
 #include "db/DataSource.h"
-
-using smsc::logger::Logger;
-using smsc::core::buffers::Hash;
-using smsc::core::threads::Thread;
-using smsc::core::threads::ThreadedTask;
-using smsc::core::threads::ThreadPool;
-using smsc::core::synchronization::Event;
-
 using smsc::db::DataSource;
-using smsc::db::Routine;
-
-using smsc::inman::cache::AbonentBillType;
-using smsc::inman::cache::AbonentCacheITF;
-
-using smsc::inman::abprov::InAbonentProviderITF;
-using smsc::inman::abprov::InAbonentQueryListenerITF;
 
 namespace smsc {
 namespace inman {
-namespace abprov {
+namespace iaprvd {
 namespace db { 
 
-class AbonentQuery;
+struct IAPQueryDB_CFG {
+    DataSource *    ds;
+    const char *    rtId;   //SQL function name
+    const char *    rtKey;  //SQL function argument name
+    unsigned        timeOut_secs;
 
-class DBQueryManagerITF {
-public:
-    virtual void releaseQuery(AbonentQuery * query) = 0;
-    virtual bool hasListeners(AbonentId & ab_number) = 0;
+    IAPQueryDB_CFG() { ds = NULL; rtId = rtKey = NULL; timeOut_secs = 0; }
 };
 
-class AbonentQuery : public ThreadedTask {
+class IAPQueryDB : public IAPQueryAC {
 protected:
-    Mutex               mutex;
-    DBQueryManagerITF*  _owner;
-    DataSource *        _ds;
-    const char *        rtId;  //SQL function name
-    const char *        rtKey; //SQL function argument name
+    IAPQueryDB_CFG      _cfg;
     std::string         callStr;
-    AbonentId           abonent;
-    AbonentBillType     abType;
-    unsigned            timeOut;
-    unsigned            _qId;  //query unique id
-    unsigned long       usage; //counter of runs
 
 public:
-    AbonentQuery(unsigned q_id, DBQueryManagerITF * owner, DataSource * ds, 
-                            //SQL function name and argument name
-                            const char * rt_id, const char * rt_key);
-    ~AbonentQuery();
-
-    void init(const AbonentId & ab_number, unsigned timeout = 0);
-
-    const AbonentId &     getAbonent(void) const { return abonent; }
-    const AbonentBillType getAbonentType(void) const { return  abType; }
-
+    IAPQueryDB(unsigned q_id, IAPQueryManagerITF * owner, 
+               Logger * use_log, const IAPQueryDB_CFG & use_cfg);
+    // ****************************************
+    //-- IAPQueryAC implementation:
+    // ****************************************
     int Execute(void);
-    void onRelease(void);
-    const char * taskName() { return "AbonentQuery"; }
-    void stop();
-
-    unsigned getId(void) const { return _qId; }
-    unsigned long Usage(void) const { return usage; }
+    const char * taskName() { return "IAPQueryDB"; }
 };
-
 
 struct DBSourceCFG {
-    DataSource *    ds;
-    const char *    rtId;
-    const char *    rtKey;
+    IAPQueryDB_CFG  qryCfg;
     unsigned        max_queries;
     unsigned        init_threads;
-    unsigned        timeout;
 
-    DBSourceCFG() {
-        ds = NULL; rtId = rtKey = NULL; max_queries = init_threads = timeout = 0;
-    }
+    DBSourceCFG() { max_queries = init_threads = 0; }
 };
 
-class DBAbonentProviderCreator: public AbonentProviderCreatorITF {
-protected:
-    DBSourceCFG     cfg;
-    typedef std::list<InAbonentProviderITF *> ProvidersLIST;
-    ProvidersLIST   providers;
-
-public:
-    DBAbonentProviderCreator(const DBSourceCFG & use_cfg) : cfg(use_cfg) { }
-    ~DBAbonentProviderCreator();
-
-    // -- AbonentProviderCreatorITF interface
-    const char * ident(void) const;
-    InAbonentProviderITF *  create(Logger * use_log);
-    void  logConfig(Logger * use_log) const;
-};
-
-
-typedef std::list<InAbonentQueryListenerITF *> QueryCBList;
-
-class DBAbonentProvider : public InAbonentProviderITF, public DBQueryManagerITF {
+class DBQueryFactory : public IAPQueryFactoryITF {
 private:
-    typedef std::list<AbonentQuery*> QueriesList;
-    typedef struct {
-        AbonentQuery*   qryDb;
-        QueryCBList     cbList;
-    } CachedQuery;
-    typedef Hash<CachedQuery> QueriesHash;
-
-    Logger *            logger;
-    DBSourceCFG         _cfg;
-    ThreadPool          pool;
-
-    Mutex               qrsGuard;
-    QueriesList         qryPool;
-    QueriesHash         qryCache;
-    AbonentCacheITF *   cache;
-    unsigned            _lastQId;
-
-protected:
-    friend class AbonentQuery;
-    //DBQueryManagerITF interface methods
-    void releaseQuery(AbonentQuery * query);
-    bool hasListeners(AbonentId & ab_number);
+    IAPQueryDB_CFG  _cfg;
+    Logger *        logger;
 
 public:
-    DBAbonentProvider(const DBSourceCFG *in_cfg, Logger * uselog = NULL);
-    ~DBAbonentProvider();
+    DBQueryFactory(const IAPQueryDB_CFG &in_cfg, unsigned timeout_secs,
+                   Logger * uselog = NULL);
+    ~DBQueryFactory() { }
 
     // ****************************************
-    // InAbonentProviderITF implementation:
+    //-- IAPQueryFactoryITF implementation:
     // ****************************************
-    void bindCache(AbonentCacheITF * use_cache); 
-    //Starts query and binds listener to it. If AbonentCache is bound, the abonent info
-    //will be stored in it on query completion. 
-    //Returns true if query succesfully started, false otherwise
-    bool startQuery(const AbonentId & ab_number, InAbonentQueryListenerITF * pf_cb = NULL);
-    //Unbinds query listener, cancels query if no listeners remain.
-    void cancelQuery(const AbonentId & ab_number, InAbonentQueryListenerITF * pf_cb);
-    void cancelAllQueries(void);
+    IAPQueryAC * newQuery(unsigned q_id, IAPQueryManagerITF * owner, Logger * use_log);
 };
+
+
+class IAProviderCreatorDB: public IAProviderCreatorITF {
+protected:
+    typedef std::list<IAProviderThreaded *> ProvidersLIST;
+
+    ProvidersLIST           prvdList;
+    IAProviderThreadedCFG   prvdCfg;
+    IAPQueryDB_CFG          qryCfg;
+    Logger *                logger;
+
+public:
+    IAProviderCreatorDB(const DBSourceCFG & use_cfg, Logger * use_log = NULL);
+    ~IAProviderCreatorDB();
+
+    // ****************************************
+    // -- IAProviderCreatorITF interface
+    // ****************************************
+    IAProviderType      type(void)      const { return smsc::inman::iaprvd::iapDB; }
+    IAProviderAbility_e ability(void)   const { return smsc::inman::iaprvd::abContract; }
+    const char *        ident(void)     const { return "iapDB_OCI"; }
+    IAProviderITF *     create(Logger * use_log);
+    void                logConfig(Logger * use_log) const;
+};
+
 
 } //db
-} //abprov
+} //iaprvd
 } //inman
 } //smsc
 
-#endif /* SMSC_INMAN_ABPROVIDER_DB_HPP */
+#endif /* SMSC_INMAN_IAPROVIDER_DB_HPP */
 
