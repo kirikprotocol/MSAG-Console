@@ -560,10 +560,11 @@ void Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
 }
 
 /* -------------------------------------------------------------------------- *
- * InAbonentQueryListenerITF interface implementation:
+ * IAPQueryListenerITF interface implementation:
  * -------------------------------------------------------------------------- */
 //NOTE: it's the processing graph entry point, so locks bilMutex !!!
-void Billing::onAbonentQueried(const AbonentId & ab_number, AbonentBillType ab_type)
+void Billing::onIAPQueried(const AbonentId & ab_number, AbonentBillType ab_type,
+                           const MAPSCFinfo * scf/* = NULL*/)
 {
     MutexGuard grd(bilMutex);
 

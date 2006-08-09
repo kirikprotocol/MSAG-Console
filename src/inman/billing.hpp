@@ -25,7 +25,6 @@ using smsc::inman::common::RPCList;
 #include "inman/interaction/messages.hpp"
 #include "inman/interaction/connect.hpp"
 #include "inman/common/TimeWatcher.hpp"
-#include "inman/abprov/AbProvider.hpp"
 #include "inman/storage/FileStorages.hpp"
 
 using smsc::inman::inap::CapSMSDlg;
@@ -45,8 +44,9 @@ using smsc::inman::sync::TimerListenerITF;
 using smsc::inman::sync::TimersLIST;
 using smsc::inman::sync::OPAQUE_OBJ;
 
-using smsc::inman::abprov::InAbonentProviderITF;
-using smsc::inman::abprov::InAbonentQueryListenerITF;
+#include "inman/abprov/IAProvider.hpp"
+using smsc::inman::iaprvd::IAProviderITF;
+using smsc::inman::iaprvd::IAPQueryListenerITF;
 
 using smsc::inman::filestore::InBillingFileStorage;
 
@@ -59,11 +59,12 @@ typedef enum { policyIN = 0, policyDB, policyHLR } BillPolicy;
 struct BillingCFG {
     typedef enum { CDR_NONE = 0, CDR_ALL = 1, CDR_POSTPAID = 2} CDR_MODE;
     AbonentCacheITF * abCache;
-    InAbonentProviderITF * abProvider;
+    IAProviderITF * abProvider;
     InBillingFileStorage * bfs;
 //billing parameters
     BILL_MODE       billMode;
     BillPolicy      policy;
+    const char *    policyNm;
     CDR_MODE        cdrMode;
     const char *    cdrDir;         //location to store CDR files
     long            cdrInterval;    //rolling interval for CDR files
@@ -125,7 +126,7 @@ protected:
 };
 
 class Billing : public CapSMS_SSFhandlerITF, public InmanHandler,
-                public InAbonentQueryListenerITF, public TimerListenerITF {
+                public IAPQueryListenerITF, public TimerListenerITF {
 public:
     typedef enum {
         bilIdle, bilAborted,
@@ -174,8 +175,9 @@ public:
     //dialog finalization/error handling:
     void onEndCapDlg(unsigned char ercode = 0, InmanErrorType errLayer = smsc::inman::errOk);
 
-    //InAbonentQueryListenerITF interface methods:
-    void onAbonentQueried(const AbonentId & ab_number, AbonentBillType ab_type);
+    //IAPQueryListenerITF interface methods:
+    void onIAPQueried(const AbonentId & ab_number, AbonentBillType ab_type,
+                                const MAPSCFinfo * scf = NULL);
     //TimerListenerITF interface methods:
     void onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj);
 
