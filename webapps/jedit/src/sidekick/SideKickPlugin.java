@@ -200,7 +200,7 @@ public class SideKickPlugin extends EBPlugin
  {
    if(worker == null)
   {
-   worker = new WorkThreadPool("SideKick",2);
+   worker = new WorkThreadPool("SideKick",4);
    worker.start();
   }
   worker.addWorkRequest(run,inAWT);

@@ -435,6 +435,6 @@ plugin-manager.hide-libraries.toggle=true
 menu.spillover=20
 bufferSwitcher.maxRowCount=10
 showTooltips=true
-ioThreadCount=2
+ioThreadCount=1
 server.brokenToFront=false
 #}}}
