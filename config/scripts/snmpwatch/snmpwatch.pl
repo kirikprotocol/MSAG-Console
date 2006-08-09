@@ -11,29 +11,55 @@ my $loadAvgActive;
 my %mntThresholds;
 my %mntActive;
 
-my @severityNames=qw(NORMAL WARNING MINOR MAJOR CRITICAL);
+my @severityNames=qw(1 2 3 4 5);
 
-open(my $cfg,$ARGV[0]) || die "Failed to open '$ARGV[0]': '$!'";
-while(<$cfg>)
+my $cfgTimeStamp;
+my $cfgFileName=$ARGV[0];
+LoadConfig();
+
+
+sub LoadConfig
 {
-  s/[\x00-\x1f]//g;
-  next if /^#/ || /^$/;
-  if(/^(\d+),(\d+(?:\.\d+)?),(\d+),(\d+),(\d+),(\d+),(\d+)$/)
+  my @st=stat($cfgFileName);
+  if(!@st)
   {
-    $loadAvgThresholds[$1]=
-    {
-      hundredPercentValue=>$2,
-      severityThresholds=>[$3,$4,$5,$6,$7]
-    };
-  }elsif(/^([^,]+),(\d+),(\d+),(\d+),(\d+),(\d+)$/)
-  {
-    $mntThresholds{$1}=[$2,$3,$4,$5,$6];
-  }else
-  {
-    print STDERR "Unknown line in config: $_";
+    die "Failed to stat '$cfgFileName': '$!'";
   }
+  if($cfgTimeStamp==$st[9])
+  {
+    return;
+  };
+  print "Loading config:$cfgFileName\n";
+  $cfgTimeStamp=$st[9];
+
+  @loadAvgThresholds=();
+  #$loadAvgActive=undef;
+  %mntThresholds=();
+  #%mntActive=();
+
+
+  open(my $cfg,$cfgFileName) || die "Failed to open '$cfgFileName': '$!'";
+  while(<$cfg>)
+  {
+    s/[\x00-\x1f]//g;
+    next if /^#/ || /^$/;
+    if(/^(\d+),(\d+(?:\.\d+)?),(\d+),(\d+),(\d+),(\d+),(\d+)$/)
+    {
+      $loadAvgThresholds[$1]=
+      {
+        hundredPercentValue=>$2,
+        severityThresholds=>[$3,$4,$5,$6,$7]
+      };
+    }elsif(/^([^,]+),([^,]+),(\d+),(\d+),(\d+),(\d+),(\d+)$/)
+    {
+      $mntThresholds{$1}={name=>$2,thr=>[$3,$4,$5,$6,$7]};
+    }else
+    {
+      print STDERR "Unknown line in config: $_";
+    }
+  }
+  close($cfg);
 }
-close($cfg);
 
 unless(@loadAvgThresholds)
 {
@@ -50,6 +76,7 @@ while($running)
   CheckLoadAverage();
   CheckDiskFree();
   sleep(5);
+  LoadConfig();
 }
 
 print "Finished\n";
@@ -57,7 +84,6 @@ print "Finished\n";
 sub CheckLoadAverage
 {
   my ($la)=(`uptime`=~/load average:\s+\d+\.\d+,\s+(\d+\.\d+)/);
-  print "Load average:$la\n";
   my @tm=localtime(time);
   my $hour=$tm[2];
   my $thr;
@@ -69,12 +95,14 @@ sub CheckLoadAverage
 
   my $percent=int(100*$la/$thr->{hundredPercentValue});
 
+  print "Load average:$la ($percent\%)\n";
+
   my $loadLevel;
   for(my $i=4;$i>=0;$i--)
   {
     if($percent>=$thr->{severityThresholds}->[$i])
     {
-      $loadLevel=$i;
+      $loadLevel=$i+1;
       last;
     }
   }
@@ -82,7 +110,7 @@ sub CheckLoadAverage
   {
     if($loadAvgActive)
     {
-      SnmpTrap("<CLEARED> <NORMAL> AVG_LOAD threshold crossed");
+      SnmpTrap("Cleared OS AVG_LOAD Threshold crossed $percent\% (AlarmID=AVG_LOAD; severity=1)",1,'OS','AVG_LOAD');
       $loadAvgActive=undef;
     }
   }else
@@ -90,7 +118,7 @@ sub CheckLoadAverage
     if($loadAvgActive ne $severityNames[$loadLevel])
     {
       $loadAvgActive=$severityNames[$loadLevel];
-      SnmpTrap("<ACTIVE> <$loadAvgActive> AVG_LOAD threshold crossed");
+      SnmpTrap("Active OS AVG_LOAD Threshold crossed $percent\% (AlarmID=AVG_LOAD; severity=$loadAvgActive)",$loadAvgActive,'OS','AVG_LOAD');
     }
   }
 }
@@ -107,14 +135,15 @@ sub CheckDiskFree
     my $capacity=int($line[4]);
     my $disk=$line[0];
     print "mnt=$mnt,cap=$capacity,dsk=$disk\n";
-    my $svrt=$mntThresholds{$mnt};
+    my $svrt=$mntThresholds{$mnt}->{thr};
+    my $name=$mntThresholds{$mnt}->{name};
 
     my $fillLevel;
     for(my $i=4;$i>=0;$i--)
     {
       if($capacity>=$svrt->[$i])
       {
-        $fillLevel=$i;
+        $fillLevel=$i+1;
         last;
       }
     }
@@ -122,7 +151,7 @@ sub CheckDiskFree
     {
       if($mntActive{$mnt})
       {
-        SnmpTrap("<CLEAR> <NORMAL> HDD threshold for $mnt crossed");
+        SnmpTrap("Cleared OS HDD_$name Threshold crossed $capacity\% (AlarmID=HDD_$name; severity=1)",1,'OS',"HDD_$name");
         $mntActive{$mnt}=undef;
       }
     }else
@@ -130,7 +159,7 @@ sub CheckDiskFree
       if($mntActive{$mnt} ne $severityNames[$fillLevel])
       {
         $mntActive{$mnt}=$severityNames[$fillLevel];
-        SnmpTrap("<ACTIVE> <@{[$mntActive{$mnt}]}> HDD threshold for $mnt crossed");
+        SnmpTrap("Active OS HDD_$name Threshold crossed $capacity\% (AlarmID=HDD_$name; severity=@{[$mntActive{$mnt}]})",$mntActive{$mnt},'OS',"HDD_$name");
       }
     }
   }
@@ -138,5 +167,12 @@ sub CheckDiskFree
 
 sub SnmpTrap
 {
-  print "SnmpTrap:",@_,"\n";
+  my ($msg,$severity,$object,$alarmId)=@_;
+  system(
+"snmptrap -v 2c -c ussdc  traphost '' SIBINCO-SMSC-MIB::smscAlertFFMR ".
+"SIBINCO-SMSC-MIB::alertSeverity i $severity ".
+"SIBINCO-SMSC-MIB::alertMessage s '$msg' ".
+"SIBINCO-SMSC-MIB::alertObjCategory s '$object' ".
+"SIBINCO-SMSC-MIB::alertId s '$alarmId'"
+);
 }
