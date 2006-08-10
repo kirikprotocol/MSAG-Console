@@ -7,6 +7,9 @@
     id CDATA #REQUIRED
     serviceId CDATA #REQUIRED
     enabled (true|false) #IMPLIED
+    default (true|false) #IMPLIED
+    name CDATA #REQUIRED
+    transit (allowed|disallowed) #IMPLIED
 >
 
 <!ELEMENT options (abonents, sites)>
@@ -37,6 +40,20 @@
     priority CDATA #IMPLIED
 >
 
+<!ELEMENT route_id_place EMPTY>
+<!ATTLIST route_id_place
+    type (url|param|header|cookie) #REQUIRED
+    name CDATA #REQUIRED
+    priority CDATA #IMPLIED
+>
+
+<!ELEMENT service_id_place EMPTY>
+<!ATTLIST service_id_place
+    type (url|param|header|cookie) #REQUIRED
+    name CDATA #REQUIRED
+    priority CDATA #IMPLIED
+>
+
 <!ELEMENT address EMPTY>
 <!ATTLIST address
     value CDATA #REQUIRED
@@ -51,6 +68,7 @@
 <!ATTLIST site
     host CDATA #REQUIRED
     port CDATA #REQUIRED
+    default (true|false) #IMPLIED
 >
 
 <!ELEMENT subject EMPTY>
@@ -61,6 +79,7 @@
 <!ELEMENT site_subject EMPTY>
 <!ATTLIST site_subject
     id CDATA #REQUIRED
+    default (true|false) #IMPLIED
 >
 
 <!ELEMENT subject_def (address+)>
