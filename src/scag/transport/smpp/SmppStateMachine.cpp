@@ -418,20 +418,13 @@ void StateMachine::processDelivery(SmppCommand& cmd)
   key.abonentAddr=sms.getOriginatingAddress();
   if (ussd_op < 0) // SMPP, No USSD specific flags
   {
-      if (umr < 0) {
-          key.USR = 0;
-          session=scag::sessions::SessionManager::Instance().newSession(key);
-          sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
-      }
-      else {
-          key.USR = umr;
-          smsc_log_debug(log, "SMPP Delivery: Continue, UMR=%d", umr);
-          session=scag::sessions::SessionManager::Instance().getSession(key);
-          if (!session.Get()) {
-              session=scag::sessions::SessionManager::Instance().newSession(key);
-              sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
-              smsc_log_warn(log, "SMPP Delivery: Session for USR=%d not found, created new USR=%d", umr, key.USR);
-          }
+      key.USR = 0; // Always create new session
+      session=scag::sessions::SessionManager::Instance().newSession(key);
+      sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
+      if (umr > 0) {
+          smsc_log_warn(log, "SMPP Delivery, UMR=%d is set. "
+                             "Created new session instead. USR=%d", umr, key.USR);
+	  umr = -1;
       }
   }
   else // USSD Dialog
