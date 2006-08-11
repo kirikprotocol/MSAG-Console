@@ -9,7 +9,7 @@
     enabled (true|false) #IMPLIED
     default (true|false) #IMPLIED
     name CDATA #REQUIRED
-    transit (true|false) #IMPLIED
+    transit (allowed|disallowed) #IMPLIED
 >
 
 <!ELEMENT options (abonents, sites)>
@@ -18,7 +18,7 @@
 
 <!ELEMENT sites (site|site_subject|placement)*>
 
-<!ELEMENT placement (usr_place|address_place)*>
+<!ELEMENT placement (usr_place|address_place|route_id_place|service_id_place)*>
 
 <!ELEMENT address_prefix EMPTY>
 <!ATTLIST address_prefix
