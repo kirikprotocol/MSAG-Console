@@ -75,7 +75,7 @@
         </site>
     </site_subject_def>
     
-    <route id="1" serviceId="5" default="true" name="route1" transit="allowed">
+    <route id="1" serviceId="5" default="true" name="route1" transit="true">
         <abonents>
             <address_prefix ton="1" npi="1"/>
 
@@ -95,7 +95,7 @@
         </abonents>
 
         <sites>
-            <site host="yandex.ru" port="8080" default="true">
+            <site host="yandex.ru" port="8080">
                 <path value="/melodies"/>
                 <path value="/pictures"/>
             </site>
@@ -113,7 +113,7 @@
                 <path value="/nskm1/savvy2/"/>
             </site>
 
-            <site host="sunfire" port="5003">
+            <site host="sunfire" port="5003" default="true">
                 <path value="/"/>
                 <path value="/utf8/"/>
             </site>
@@ -130,12 +130,12 @@
 <!--                <address_place type="url" name="abonent"/> -->
                 <address_place type="param" name="address"/>
                 
-                <route_id_place type="url" name="r"/>
+<!--                <route_id_place type="url" name="r"/> -->
                 <route_id_place type="cookie" name="WHOISD-RID"/>
                 <route_id_place type="header" name="WHOISD-RID"/>
                 <route_id_place type="param" name="rid"/>
 
-                <service_id_place type="url" name="s"/>
+<!--                <service_id_place type="url" name="s"/> -->
                 <service_id_place type="cookie" name="WHOISD-SID"/>
                 <service_id_place type="header" name="WHOISD-SID"/>
                 <service_id_place type="param" name="sid"/>
