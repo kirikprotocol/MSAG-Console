@@ -28,7 +28,7 @@ struct TransactionContext {
     int64_t operationId;
     int32_t serviceId;
     int32_t providerId;
-    std::string routeId;
+    uint32_t routeId;
     std::string abonent;
     std::string address;
     int ruleId;
@@ -39,6 +39,7 @@ struct TransactionContext {
         serviceId = -1;
         providerId = -1;
         ruleId = -1;
+        routeId = 0;
         usr = 0;
     }
 };
@@ -105,8 +106,8 @@ public:
     virtual int getRuleId() const;    // initialy -1
     virtual void setRuleId(int ruleId); 
 
-    virtual const std::string& getRouteId() const;
-    virtual void setRouteId(const std::string& routeId);
+    virtual uint32_t getRouteId() const;
+    virtual void setRouteId(uint32_t routeId);
 
     virtual int getServiceId() const;
     virtual void setServiceId(int serviceId);

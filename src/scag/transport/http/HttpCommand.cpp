@@ -157,11 +157,11 @@ void HttpCommand::setOperationId(int64_t id)
 {
     trc.operationId = id;
 }
-const std::string& HttpCommand::getRouteId() const
+uint32_t HttpCommand::getRouteId() const
 {
     return trc.routeId;
 }
-void HttpCommand::setRouteId(const std::string& routeId)
+void HttpCommand::setRouteId(uint32_t routeId)
 {
     trc.routeId = routeId;
 }
@@ -246,15 +246,15 @@ const std::string& HttpCommand::getMessageText()
         unsigned int inbytesleft;
         const char *inbufptr = getMessageContent(inbytesleft);
 
-//        if(!strcasecmp("UTF-8", charset.c_str()))
-//            textContent.assign(inbufptr, inbytesleft);
-//        else
-//        {
+        if(!strcasecmp("UTF-8", charset.c_str()))
+            textContent.assign(inbufptr, inbytesleft);
+        else
+        {
             TmpBuf<char, 2048> buf(2048);
             
             Convertor::convert(charset.c_str(), "UTF-8", inbufptr, inbytesleft, buf);
             textContent.assign(buf.get(), buf.GetPos());
-//        }
+        }
     }
         
     return textContent;
@@ -270,9 +270,9 @@ bool HttpCommand::setMessageText(const std::string& text)
     if(charset.length() && (content_type.empty() || !strncasecmp(content_type.c_str(), "text/", 5)))
     {  
         content.SetPos(0);        
-//        if(!strcasecmp("UTF-8", charset.c_str()))
-//            content.Append(text.c_str(), text.length());
-//        else
+        if(!strcasecmp("UTF-8", charset.c_str()))
+            content.Append(text.c_str(), text.length());
+        else
             Convertor::convert("UTF-8", charset.c_str(), text.c_str(), text.length(), (TmpBuf<char,2048>&)content);
         setContentLength(content.GetPos());
         setLengthField(content.GetPos());

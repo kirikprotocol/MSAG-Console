@@ -10,27 +10,25 @@ namespace scag { namespace transport { namespace http {
 
 using namespace smsc::util;
 
-XMLBasicHandler::XMLBasicHandler(RouteArray* r, PlacementArray* inap, PlacementArray* outap,PlacementArray* inup,PlacementArray* outup)
+XMLBasicHandler::XMLBasicHandler(RouteArray* r, PlacementKindArray* inap, PlacementKindArray* outap)
 {
     logger = Logger::getInstance("httpxml");
     routes = r;
     in_options = in_sites = in_abonents = false;
-    inAddrPlace = inap;
-    outAddrPlace = outap;
-    inUSRPlace = inup;
-    outUSRPlace = outup;
+    inPlace = inap;
+    outPlace = outap;
 }
 
 void XMLBasicHandler::characters(const XMLCh *const chars, const unsigned int length) 
 {
 }
 
-Placement XMLBasicHandler::assignPlacement(const std::string& rid, AttributeList& attrs, bool req)
+Placement XMLBasicHandler::assignPlacement(const std::string& rname, AttributeList& attrs, bool req)
 {
     Placement p;
     StrX s = attrs.getValue("type");
     if(!p.setType(s.localForm()))
-        throw Exception("Invalid placement type: route id=%s, type=%s", route.id.c_str(), s.localForm());
+        throw Exception("Invalid placement type: route_name=%s, type=%s", route.name.c_str(), s.localForm());
 
     StrX s1 = attrs.getValue("name");
     p.name = s1.localForm();
@@ -48,7 +46,7 @@ Placement XMLBasicHandler::assignPlacement(const std::string& rid, AttributeList
             p.prio = atoi(s2.localForm());
         }
         if(!p.prio)
-            throw Exception("Priority is required: route id=%s", route.id.c_str());
+            throw Exception("Priority is required: route_name=%s", route.name.c_str());
     }
     return p;
 }
@@ -66,8 +64,61 @@ void XMLBasicHandler::insertPlacement(PlacementArray* pa, const Placement& p)
     pa->Insert(i, p);
 }
 
+uint32_t XMLBasicHandler::getKind(const std::string& s)
+{
+    if(!s.compare("address_place"))
+        return PlacementKind::ADDR;
+    else if(!s.compare("usr_place"))
+        return PlacementKind::USR;
+    else if(!s.compare("route_id_place"))
+        return PlacementKind::ROUTE_ID;
+    else if(!s.compare("service_id_place"))
+        return PlacementKind::SERVICE_ID;
+    return PlacementKind::UNKNOWN;
+}
+
+void XMLBasicHandler::handlePlacement(uint32_t k, AttributeList& attrs)
+{
+    if(in_options)
+    {
+        Placement p = assignPlacement("", attrs, in_abonents);
+        if(in_abonents)
+            insertPlacement(&(*inPlace)[k], p);
+        else if(in_sites)
+            insertPlacement(&(*outPlace)[k], p);
+//        smsc_log_debug(logger, "place record: [options] kind=%d name=%s, type=%d, prio=%d", k, p.name.c_str(), p.type, p.prio);
+    }
+    else if(route.id)
+    {
+        Placement p = assignPlacement(route.name, attrs, in_abonents);
+
+        if(in_abonents)
+            insertPlacement(&route.inPlace[k], p);
+        else if(in_sites)
+            insertPlacement(&route.outPlace[k], p);
+
+//        smsc_log_debug(logger, "place record: route name=%s, name=%s, type=%d, prio=%d", route.name.c_str(), p.name.c_str(), p.type, p.prio);
+    }
+    else
+        throw Exception("Invalid XML usr_place record: No route id");
+}
+
+bool XMLBasicHandler::getBool(AttributeList& attrs, const char *v, bool def)
+{
+    StrX s2 = attrs.getValue(v);
+    if(s2.localForm())
+    {
+        if(!strcmp(s2.localForm(), "false"))
+            return false;
+        else if(!strcmp(s2.localForm(), "true"))
+            return true;
+    }
+    return def;
+}
+
 void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
 {
+    uint32_t i;
     StrX XMLQName(nm);
     const char *qname = XMLQName.localForm();
 
@@ -82,7 +133,7 @@ void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
     {
         StrX s = attrs.getValue("ton");
         StrX s1 = attrs.getValue("npi");
-        if(route.id.length())
+        if(route.id)
         {
             route.addressPrefix = '.';
             route.addressPrefix += s.localForm();
@@ -93,70 +144,29 @@ void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
         else
             throw Exception("Invalid XML address_prefix: No route id");
     }
-    else if(!strcmp(qname, "usr_place"))
-    {
-        if(in_options)
-        {
-            Placement p = assignPlacement("", attrs, in_abonents);
-            if(in_abonents)
-                insertPlacement(inUSRPlace, p);
-            else if(in_sites)
-                insertPlacement(outUSRPlace, p);
-            smsc_log_debug(logger, "usr_place record: [options] name=%s, type=%d, prio=%d", p.name.c_str(), p.type, p.prio);
-        }
-        else if(route.id.length())
-        {
-            Placement p = assignPlacement(route.id, attrs, in_abonents);
-
-            if(in_abonents)
-                insertPlacement(&route.inUSRPlace, p);
-            else if(in_sites)
-                insertPlacement(&route.outUSRPlace, p);
-
-            smsc_log_debug(logger, "usr_place record: route id=%s, name=%s, type=%d, prio=%d", route.id.c_str(), p.name.c_str(), p.type, p.prio);
-        }
-        else
-            throw Exception("Invalid XML usr_place record: No route id");
-
-    }
-    else if(!strcmp(qname, "address_place"))
-    {
-        if(in_options)
-        {
-            Placement p = assignPlacement("", attrs, in_abonents);
-
-            if(in_abonents)
-                insertPlacement(inAddrPlace, p);
-            else if(in_sites)
-                insertPlacement(outAddrPlace, p);
-
-            smsc_log_debug(logger, "address_place record: [options] name=%s, type=%d, prio=%d", p.name.c_str(), p.type, p.prio);
-        }
-        else if(route.id.length() && in_sites)
-        {
-            Placement p = assignPlacement(route.id, attrs, false);
-            insertPlacement(&route.outAddressPlace, p);
-            smsc_log_debug(logger, "address_place record: route id=%s, name=%s, type=%d, prio=%d", route.id.c_str(), p.name.c_str(), p.type, p.prio);
-        }
-        else
-            throw Exception("Invalid XML address_place record: No route id or not in sites");
-    }
+    else if((i = getKind(qname)) != PlacementKind::UNKNOWN)
+        handlePlacement(i, attrs);
     else if(!strcmp(qname, "route"))
     {
-        StrX s = attrs.getValue("id");
-        route.id = s.localForm();
-        StrX s1 = attrs.getValue("serviceId");
-        route.service_id = atoi(s1.localForm());
-        StrX s2 = attrs.getValue("enabled");
-        route.enabled = true;
-        if(s2.localForm() && !strcmp(s2.localForm(), "false"))
-            route.enabled = false;
+        StrX s = attrs.getValue("name");
+        route.name = s.localForm();
+        StrX s1 = attrs.getValue("id");
+        route.id = atoi(s1.localForm());
+        if(!route.id)
+            throw Exception("Invalid XML route id: name = %s, id = %s", s.localForm(), s1.localForm());
+        StrX s2 = attrs.getValue("serviceId");
+        route.service_id = atoi(s2.localForm());
+        if(!route.service_id)
+            throw Exception("Invalid XML service id: name = %s, id = %s, service_id=%s", s.localForm(), s1.localForm(), s2.localForm());
+        route.enabled = getBool(attrs, "enabled", true);
+        route.def = getBool(attrs, "default", false);
+        route.transit = getBool(attrs, "transit", false);
     }
-    else if((route.id.length() || subj_id.length()) && !strcmp(qname, "address"))
+    else if((route.id || subj_id.length()) && !strcmp(qname, "address"))
     {
         StrX s = attrs.getValue("value");
 //        Address addr(s.localForm());
-        if(route.id.length())
+        if(route.id)
             route.masks.Push(s.localForm());
         else
         {
@@ -172,7 +182,7 @@ void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
             }
         }
     }
-    else if(route.id.length() && !strcmp(qname, "subject"))
+    else if(route.id && !strcmp(qname, "subject"))
     {
         StrX s = attrs.getValue("id");
 
@@ -185,24 +195,30 @@ void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
         {
             std::string str = "Invalid XML subject not found id=";
             str += s.localForm();
-            str += "route_id=" + route.id;
+            str += "route_name=%s" + route.name;
             throw Exception(str.c_str());
         }
     }
-    else if(route.id.length() && !strcmp(qname, "site_subject"))
+    else if(route.id && !strcmp(qname, "site_subject"))
     {
         StrX s = attrs.getValue("id");
+        bool d = getBool(attrs, "default", false);
 
         try{
-            SiteArray& st = site_subj_hash.Get(s.localForm());
-            for(int i = 0; i < st.Count(); i++)
-                route.sites.Push(st[i]);
+            SiteSubjDef& st = site_subj_hash.Get(s.localForm());
+            for(int i = 0; i < st.sites.Count(); i++)
+            {
+                bool p = st.sites[i].def;
+                if(!d && st. sites[i].def) st.sites[i].def = false;
+                route.sites.Push(st.sites[i]);
+                st.sites[i].def = p;
+            }
         }
         catch(HashInvalidKeyException &e)
         {
             std::string str = "Invalid XML site_subject not found id=";
             str += s.localForm();
-            str += "route_id=" + route.id;
+            str += "route_name=" + route.name;
             throw Exception(str.c_str());
         }
     }
@@ -214,14 +230,15 @@ void XMLBasicHandler::startElement(const XMLCh* const nm, AttributeList& attrs)
     else if(!strcmp(qname, "site_subject_def"))
     {
         StrX s = attrs.getValue("id");
-        site_subj_id = s.localForm();
+        site_subj.id = s.localForm();
     }
-    else if((site_subj_id.length() || route.id.length()) && !strcmp(qname, "site"))
+    else if((site_subj.id.length() || route.id) && !strcmp(qname, "site"))
     {
         StrX s = attrs.getValue("host");
         site.host = s.localForm();
         StrX s1 = attrs.getValue("port");
         site.port = atoi(s1.localForm());
+        site.def = getBool(attrs, "default", false);
     }
     else if(site.host.length() && !strcmp(qname, "path"))
     {
@@ -244,49 +261,53 @@ void XMLBasicHandler::endElement(const XMLCh* const nm)
         in_abonents = false;
     else if(!strcmp(qname, "route"))
     {
-        if(route.id.length() == 0 || route.service_id == 0 || route.sites.Count() == 0 || route.masks.Count() == 0)
+        if(route.id == 0 || route.service_id == 0 || route.sites.Count() == 0 || route.masks.Count() == 0)
             throw Exception("Invalid XML http_route record");
 
-//        if(route_enabled)
-//        {
-//            smsc_log_debug(logger, "Push route id=%s", route.id.c_str());
-            routes->Push(route);
-//        }
+//        smsc_log_debug(logger, "Push route. %s", route.toString().c_str());
+
+        routes->Push(route);
 
         route.enabled = true;
-        route.id = "";
+        route.id = 0;
+        route.name = "";
         route.addressPrefix = "";
         route.service_id = 0;
+        route.transit = route.def = false;
+        route.enabled = true;
         route.masks.Empty();
         route.sites.Empty();
-        route.inUSRPlace.Empty();
-        route.outUSRPlace.Empty();
-        route.outAddressPlace.Empty();
+        for(int i = 0; i < PLACEMENT_KIND_COUNT; i++)
+        {
+            route.inPlace[i].Empty();
+            route.outPlace[i].Empty();
+        }
     }
     else if(!strcmp(qname, "subject_def"))
         subj_id = "";
     else if(!strcmp(qname, "site_subject_def"))
     {
-        if(site_subj_id.length() == 0 || sites.Count() == 0)
+        if(site_subj.id.length() == 0 || site_subj.sites.Count() == 0)
             throw Exception("Invalid XML site_subj_def record");
 
-        site_subj_hash.Insert(site_subj_id.c_str(), sites);
-
-        site_subj_id = "";
-        sites.Empty();
+        site_subj_hash.Insert(site_subj.id.c_str(), site_subj);
+        smsc_log_debug(logger, "Site subj def inserted id=%s", site_subj.id.c_str());
+        site_subj.id = "";
+        site_subj.sites.Empty();
     }
     else if(!strcmp(qname, "site"))
     {
         if(site.host.length() == 0 || site.port == 0 || site.paths.Count() == 0)
             throw Exception("Invalid XML site record");
 
-        if(route.id.length())
+        if(route.id)
             route.sites.Push(site);
-        else if(site_subj_id.length())
-            sites.Push(site);
+        else if(site_subj.id.length())
+            site_subj.sites.Push(site);
 
         site.host = "";
         site.port = 0;
+        site.def = false;
         site.paths.Empty();
     }
 }

@@ -58,14 +58,13 @@ HttpRouterImpl::HttpRouterImpl()
     logger = smsc::logger::Logger::getInstance("httprouter");
     routes = NULL;
     routeIdMap = NULL;
+    serviceIdMap = NULL;
     masksMap = NULL;
     hostsMap = NULL;
     pathsMap = NULL;
+    defInPlace = NULL;
+    defOutPlace = NULL;
     AddressURLMap = NULL;
-    defInAddressPlace = NULL;
-    defOutAddressPlace = NULL;
-    defInUSRPlace = NULL;
-    defOutUSRPlace = NULL;
     XMLPlatformUtils::Initialize("en_EN.UTF-8");
 }
 
@@ -73,11 +72,10 @@ HttpRouterImpl::~HttpRouterImpl()
 {
     delete routes;
     delete routeIdMap;
+    delete serviceIdMap;
     delete AddressURLMap;
-    delete defInAddressPlace;
-    delete defOutAddressPlace;
-    delete defInUSRPlace;
-    delete defOutUSRPlace;
+    delete defInPlace;
+    delete defOutPlace;
 
     XMLPlatformUtils::Terminate();
 }
@@ -143,8 +141,12 @@ bool HttpTraceRouter::getTraceRoute(const std::string& addr, const std::string& 
 
                         trace.push_back("Route info:");
 
-                        sprintf(buf, ";ServiceId:%d", r->service_id);
-                        std::string s1 = "RouteId:" + r->id + buf + ";Enabled:" + (r->enabled ? "yes" : "no");
+                        sprintf(buf, "RouteId: %d;ServiceId:%d", r->id, r->service_id);
+                        std::string s1 = "RouteName: " + r->name + buf;
+                        if(r->enabled) s1 +=";Enabled";
+                        if(r->def) s1 += ";Default";
+                        if(r->transit) s1 += ";Transit";
+                        
                         trace[0] = s1;
 
                         trace.push_back("Masks:");
@@ -152,10 +154,12 @@ bool HttpTraceRouter::getTraceRoute(const std::string& addr, const std::string& 
                             trace.push_back(r->masks[i]);
 
                         trace.push_back("Urls:");
+                        buf[19] = 0;
                         for(int i = 0; i < r->sites.Count(); i++)
                         {
+                            trace.push_back(r->sites[i].host + ':' + lltostr(r->sites[i].port, buf + 19) + (r->sites[i].def ? ";Default" : ""));
                             for(int j = 0; j < r->sites[i].paths.Count(); j++)
-                                trace.push_back(s + r->sites[i].paths[j]);
+                                trace.push_back(r->sites[i].paths[j]);
                         }
 
                         return true;
@@ -229,11 +233,85 @@ HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& 
     throw RouteNotFoundException();
 }
 
-HttpRoute HttpRouterImpl::getRoute(const std::string& routeId)
+bool HttpRouterImpl::checkRoute(HttpRouteInt* rt, const std::string& addr, const std::string& path)
+{
+    StringArray* pt = &rt->defSite.paths;
+    int i = 0;
+    bool found = false;
+
+    while(i < pt->Count() && !found)
+    {
+        std::string& s = (*pt)[i];
+        if(s[s.length()-1] == '/')
+        {
+            if(!strncmp(path.c_str(), s.c_str(), s.length()))
+                found = true;
+        }
+        else if(!strcmp(path.c_str(), s.c_str()))
+            found = true;
+        i++;
+    }
+    if(!found) return false;
+
+    if(!addr.length())
+    {
+        if(!rt->transit)
+            smsc_log_error(logger, "Route found. id=%d. But it is not transit.", rt->id);
+        return rt->transit;
+    }
+    i = 0;
+    found = false;
+    StringArray* masks = &rt->masks;
+    while(i < rt->masks.Count() && !found)
+    {
+        const char* s = rt->masks[i].c_str(), *p;
+        if(rt->masks[i].length() == addr.length())
+        {
+            if(p = strchr(s, '?'))
+            {
+                if(!strncmp(s, addr.c_str(), p - s))
+                    found = true;
+            }
+            else if(!strcmp(s, addr.c_str()))
+                found = true;
+        }
+        i++;
+    }
+
+    if(!found) return false;
+
+    return true;
+}
+
+HttpRoute HttpRouterImpl::findRouteByServiceId(const std::string& addr, uint32_t sid, const std::string& path)
+{
+    MutexGuard mt(GetRouteMutex);
+
+    HttpRouteInt** rt;
+
+    rt = serviceIdMap->GetPtr(sid);
+    if(!rt || !checkRoute(*rt, addr, path)) throw RouteNotFoundException();
+
+    return **rt;
+}
+
+HttpRoute HttpRouterImpl::findRouteByRouteId(const std::string& addr, uint32_t rid, const std::string& path)
+{
+    MutexGuard mt(GetRouteMutex);
+
+    HttpRouteInt** rt;
+
+    rt = routeIdMap->GetPtr(rid);
+    if(!rt || !checkRoute(*rt, addr, path)) throw RouteNotFoundException();
+
+    return **rt;
+}
+
+HttpRoute HttpRouterImpl::getRoute(uint32_t routeId)
 {
     MutexGuard mt(GetRouteMutex);
     try{
-        return *routeIdMap->Get(routeId.c_str());
+        return *routeIdMap->Get(routeId);
     }
     catch(HashInvalidKeyException& e)
     {
@@ -254,7 +332,7 @@ uint32_t HttpRouterImpl::getId(Hash<uint32_t>* h, const std::string& s, uint32_t
     return rid;
 }
 
-void HttpRouterImpl::BuildMaps(RouteArray *r, RouteHash *rid, AddressURLHash *auh, Hash<uint32_t>* mh, Hash<uint32_t>* hh, Hash<uint32_t>* ph)
+void HttpRouterImpl::BuildMaps(RouteArray *r, RouteHash *rid, ServiceIdHash *sid, AddressURLHash *auh, Hash<uint32_t>* mh, Hash<uint32_t>* hh, Hash<uint32_t>* ph)
 {
     char buf[20];
     HttpRouteInt *rt;
@@ -269,7 +347,15 @@ void HttpRouterImpl::BuildMaps(RouteArray *r, RouteHash *rid, AddressURLHash *au
         if(rt->provider_id == 0)
             throw Exception("provider id not found for service id=%d", rt->service_id);
 
-        rid->Insert(rt->id.c_str(), rt);
+        int i = rt->sites.Count() - 1;
+        while(i > 0 && !rt->sites[i].def)
+            i--;
+        rt->defSite = rt->sites[i];
+
+        if(rt->def)
+            sid->Insert(rt->service_id, rt);
+
+        rid->Insert(rt->id, rt);
 
         for(int j = 0; j < rt->masks.Count(); j++)
         {
@@ -298,55 +384,51 @@ void HttpRouterImpl::ReloadRoutes()
 
     RouteArray* r = new RouteArray;
     RouteHash* h = new RouteHash;
+    ServiceIdHash* s = new ServiceIdHash; 
     Hash<uint32_t>* mh = new Hash<uint32_t>;
     Hash<uint32_t>* ph = new Hash<uint32_t>;
     Hash<uint32_t>* hh = new Hash<uint32_t>;
     AddressURLHash* auh = new AddressURLHash;
-    PlacementArray* inap = new PlacementArray;
-    PlacementArray* outap = new PlacementArray;
-    PlacementArray* inup = new PlacementArray;
-    PlacementArray* outup = new PlacementArray;
+    PlacementKindArray *inap = (PlacementKindArray*)new PlacementKindArray;
+    PlacementKindArray* outap = (PlacementKindArray*)new PlacementKindArray;
 
     try{
 
-        XMLBasicHandler handler(r, inap, outap, inup, outup);
+        XMLBasicHandler handler(r, inap, outap);
         ParseFile(route_cfg_file.c_str(), &handler);
-        BuildMaps(r, h, auh, mh, hh, ph);
+        BuildMaps(r, h, s, auh, mh, hh, ph);
         MutexGuard mg(GetRouteMutex);
         delete routes;
         delete routeIdMap;
+        delete serviceIdMap;
         delete masksMap;
         delete pathsMap;
         delete hostsMap;
         delete AddressURLMap;
-        delete defInAddressPlace;
-        delete defOutAddressPlace;
-        delete defInUSRPlace;
-        delete defOutUSRPlace;
+        delete defInPlace;
+        delete defOutPlace;
         routes = r;
         routeIdMap = h;
+        serviceIdMap = s;
         masksMap = mh;
         hostsMap = hh;
         pathsMap = ph;
         AddressURLMap = auh;
-        defInAddressPlace = inap;
-        defOutAddressPlace = outap;
-        defInUSRPlace = inup;
-        defOutUSRPlace = outup;
+        defInPlace = inap;
+        defOutPlace = outap;
     }
     catch(Exception& e)
     {
         smsc_log_info(logger, "Routes reloading was not successful: %s", e.what());
         delete r;
         delete h;
+        delete s;
         delete auh;
         delete mh;
         delete hh;
         delete ph;
         delete inap;
         delete outap;
-        delete inup;
-        delete outup;
         throw e; 
     }
 

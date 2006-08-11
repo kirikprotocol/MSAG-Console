@@ -20,23 +20,26 @@ using smsc::core::buffers::Hash;
 
 XERCES_CPP_NAMESPACE_USE
 
+struct SiteSubjDef
+{
+    std::string id;
+    SiteArray sites;
+};
+
 class XMLBasicHandler : public HandlerBase
 {
     Hash<StringArray> subj_hash;
-    Hash<SiteArray> site_subj_hash;
+    Hash<SiteSubjDef> site_subj_hash;
     uint32_t service_id;
     Site site;
     StringArray addrs;
-    SiteArray sites;
 
     std::string subj_id;
-    std::string site_subj_id;
+    SiteSubjDef site_subj;
     RouteArray* routes;
     HttpRouteInt route;
-    PlacementArray* inAddrPlace;
-    PlacementArray* outAddrPlace;
-    PlacementArray* inUSRPlace;
-    PlacementArray* outUSRPlace;
+    PlacementKindArray* inPlace;
+    PlacementKindArray* outPlace;    
     bool route_enabled;
     bool in_sites, in_abonents, in_options;
 
@@ -44,11 +47,14 @@ class XMLBasicHandler : public HandlerBase
 
     void insertPlacement(PlacementArray* pa, const Placement& p);
     Placement assignPlacement(const std::string& rid, AttributeList& attrs, bool req);
+    void handlePlacement(uint32_t k, AttributeList& attrs);
 
     Logger *logger;
 
+    uint32_t getKind(const std::string& s);
+    bool getBool(AttributeList& attrs, const char *v, bool def);
 public:
-    XMLBasicHandler(RouteArray*, PlacementArray*, PlacementArray*, PlacementArray*, PlacementArray*);
+    XMLBasicHandler(RouteArray*, PlacementKindArray*, PlacementKindArray*);
     ~XMLBasicHandler() {};
 
     void startElement(const XMLCh* const qname, AttributeList& attributes);

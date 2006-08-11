@@ -82,16 +82,16 @@ int main(int argc, char* argv[])
         int k = 0;
 #if 1
         do{
-             sleep(1);
+             sleep(10);
        }
         while (!(k == 'q' || k == 'Q'));
 #else    
-        sleep(60);
+        sleep(10);
 #endif    
-
+        smsc_log_debug(logger, "Http man shutdown");
         httpMan.shutdown();
-        Logger::Shutdown();
-
+        smsc_log_debug(logger, "after Http man shutdown");        
+//        Logger::Shutdown();
     }
     catch (SCAGException& exc) 
     {

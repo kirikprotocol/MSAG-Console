@@ -23,11 +23,21 @@ using smsc::core::buffers::Array;
 using smsc::core::buffers::XHash;
 using smsc::util::crc32;
 
+#define PLACEMENT_TYPE_COUNT 4
 namespace PlacementType{
-    const uint32_t COOKIE = 1;
-    const uint32_t HEADER = 2;
-    const uint32_t URL = 3;
-    const uint32_t PARAM = 4;
+    const uint32_t UNKNOWN = 255;
+    const uint32_t COOKIE = 0;
+    const uint32_t HEADER = 1;
+    const uint32_t URL = 2;
+    const uint32_t PARAM = 3;
+};
+#define PLACEMENT_KIND_COUNT 4
+namespace PlacementKind{
+    const uint32_t UNKNOWN = 255;
+    const uint32_t USR = 0;
+    const uint32_t ADDR = 1;
+    const uint32_t ROUTE_ID = 2;
+    const uint32_t SERVICE_ID = 3;
 };
 
 class Placement{
@@ -53,8 +63,10 @@ public:
 };
 
 typedef Array<Placement> PlacementArray;
+typedef PlacementArray PlacementKindArray[PLACEMENT_KIND_COUNT];
 
-class AddressMask{
+
+/*class AddressMask{
 public:
     uint8_t len;
     uint8_t full_len;
@@ -130,24 +142,16 @@ public:
     {
         return am.HashCode();
     }
-};
+};*/
 
 class AddressURLKey
 {
 public:
     uint32_t maskId, hostId, pathId;
 
-    AddressURLKey() : pathId(0), maskId(0), hostId(0)
-    {
-    }
-
-    AddressURLKey(uint32_t _mid, const uint32_t _hid, const uint32_t _pid) : maskId(_mid), pathId(_pid), hostId(_hid)
-    {
-    }
-
-    AddressURLKey(const AddressURLKey& cp) : maskId(cp.maskId), pathId(cp.pathId), hostId(cp.hostId)
-    {
-    }
+    AddressURLKey() : pathId(0), maskId(0), hostId(0) {}
+    AddressURLKey(uint32_t _mid, const uint32_t _hid, const uint32_t _pid) : maskId(_mid), pathId(_pid), hostId(_hid) {}
+    AddressURLKey(const AddressURLKey& cp) : maskId(cp.maskId), pathId(cp.pathId), hostId(cp.hostId) {}
 
     AddressURLKey& operator=(const AddressURLKey& cp)
     {
@@ -176,17 +180,19 @@ public:
 typedef Array<std::string> StringArray;
 
 struct Site{
+    bool def;
     std::string host;
     uint32_t port;
     StringArray paths;
 
-    Site(): host(""), port(0) {};
+    Site(): host(""), port(0), def(false) {};
 
     Site(const Site& cp)
     {
         host = cp.host;
         port = cp.port;
         paths = cp.paths;
+        def = cp.def;
     }
 
     std::string toString()
@@ -194,9 +200,9 @@ struct Site{
         std::string s, s1;
         char buf[20];
         sprintf(buf, ":%d", port);
-        s1 = host + ((port != 80) ? buf : "");
+        s = s1 = host + ((port != 80) ? buf : "") + (def ? " default\n" : "\n");
         for(int i = 0; i < paths.Count(); i++)
-            s += s1 + paths[i] + "\n";
+            s += paths[i] + "\n";
         return s;
     }
 };
@@ -205,27 +211,34 @@ typedef Array<Site> SiteArray;
 
 struct HttpRoute
 {
-    bool enabled;
+    bool enabled, def, transit;
     uint32_t service_id;
     uint32_t provider_id;
-    std::string id;
-    PlacementArray inUSRPlace;
-    PlacementArray outUSRPlace;
-    PlacementArray outAddressPlace;
+    uint32_t id;
+    std::string name;
+    PlacementKindArray inPlace;
+    PlacementKindArray outPlace;
     std::string addressPrefix;
+    Site defSite;    
 
-    HttpRoute(): service_id(0), provider_id(0) {}
+    HttpRoute(): id(0), service_id(0), provider_id(0), enabled(true), def(false), transit(false) {}
 
     HttpRoute(const HttpRoute& cp)
     {
         service_id =cp.service_id;
         provider_id =cp.provider_id;
         id = cp.id;
-        inUSRPlace = cp.inUSRPlace;
-        outUSRPlace = cp.outUSRPlace;
-        outAddressPlace = cp.outAddressPlace;
+        name = cp.name;
+        for(int i = 0; i < PLACEMENT_KIND_COUNT; i++)
+        {
+            inPlace[i] = cp.inPlace[i];
+            outPlace[i] = cp.outPlace[i];            
+        }
         enabled = cp.enabled;
+        def = cp.def;        
+        transit = cp.transit;
         addressPrefix = cp.addressPrefix;
+        defSite = cp.defSite;
     }
 };
 
@@ -247,9 +260,14 @@ struct HttpRouteInt : public HttpRoute
         char buf[100];
         std::string s;
 
-        s += "RouteId: " + id;
-        sprintf(buf, " ServiceId: %d\n", service_id);
+        s += "RouteName: \"" + name + "\"";
+        sprintf(buf, " RouteId: %d; ServiceId: %d", id, service_id);
         s += buf;
+        
+        if(enabled) s += " enabled";
+        if(def) s += " default";
+        if(transit) s += " transit";
+        s += " AddressPrefix: " + addressPrefix + "\n";
 
         s += "Masks:\n";
         for(int i = 0; i < masks.Count(); i++)
