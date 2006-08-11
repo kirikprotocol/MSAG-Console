@@ -65,7 +65,7 @@
     </subject_def>
 
     <site_subject_def id="Sites1">
-        <site host="yandex1.ru" port="8082">
+        <site host="yandex1.ru" port="8082" default="true">
             <path value="/melodies"/>
             <path value="/pictures"/>
         </site>
@@ -151,7 +151,7 @@
         </abonents>
 
         <sites>
-            <site_subject id="Sites1"/>
+            <site_subject id="Sites1" default="true"/>
         </sites>
     </route>
 
