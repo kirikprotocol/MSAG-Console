@@ -179,6 +179,14 @@ Hash<int> SmppCommandAdapter::InitDataSmFieldNames()
     hs["DA"]                            = DA;
 
     hs["packet_direction"]              = PACKET_DIRECTION;
+
+    hs["whoisd_charging"]                          = OPTIONAL_CHARGING;
+    hs["whoisd_message_transport_type"]            = OPTIONAL_MESSAGE_TRANSPORT_TYPE;
+    hs["whoisd_expected_message_transport_type"]   = OPTIONAL_EXPECTED_MESSAGE_TRANSPORT_TYPE;
+
+    hs["whoisd_message_content_type"]              = OPTIONAL_MESSAGE_CONTENT_TYPE;
+    hs["whoisd_expected_message_content_type"]     = OPTIONAL_EXPECTED_MESSAGE_CONTENT_TYPE;
+
     return hs;
 }
 
@@ -1037,6 +1045,11 @@ AdapterProperty * SmppCommandAdapter::getDataSmRespProperty(SMS& data,const std:
 AdapterProperty * SmppCommandAdapter::getDataSmProperty(SmsCommand& data,const std::string& name,int FieldId)
 {
     AdapterProperty * property = 0;
+
+    if ((FieldId >= OPTIONAL_CHARGING)&&(FieldId <= OPTIONAL_EXPECTED_MESSAGE_CONTENT_TYPE))
+    {
+        property = Get_Unknown_Property(data, name, FieldId);
+    } else
 
     switch (FieldId)
     {

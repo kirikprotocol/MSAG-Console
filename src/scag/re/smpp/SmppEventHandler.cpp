@@ -125,6 +125,7 @@ void SmppEventHandler::ModifyOperationAfterExecuting(Session& session, SmppComma
     {
     case CO_DELIVER:
     case CO_DATA_SC_2_SME:
+    case CO_RECEIPT:
         if (currentOperation->getStatus() == OPERATION_COMPLETED) session.closeCurrentOperation();
         break;
 
@@ -155,11 +156,6 @@ void SmppEventHandler::ModifyOperationAfterExecuting(Session& session, SmppComma
         }                    
         break;
 
-
-    case CO_RECEIPT:
-        if (currentOperation->getStatus() == OPERATION_COMPLETED) session.closeCurrentOperation();
-
-        break;      
 
     case CO_USSD_DIALOG:
         if ((smppDiscriptor.isUSSDClosed)&&(smppDiscriptor.isResp)) session.closeCurrentOperation();
@@ -214,21 +210,22 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     
     /////////////////////////////////////////
 
-    if ((*smppcommand)->status > 0)
-    {
-        rs.result = (*smppcommand)->status;
-        rs.status = true;
-    }
-    
 
     try {
         ModifyOperationBeforeExecuting(session, *smppcommand, smppDiscriptor);
     } catch (SCAGException& e)
     {
         smsc_log_debug(logger, "EventHandler cannot start/locate operation. Details: %s", e.what());
+        rs.result = (*smppcommand)->status;
         return rs;
     }
-   
+
+    if ((*smppcommand)->status > 0)
+    {
+        rs.result = (*smppcommand)->status;
+        return rs;
+    }
+
     ActionContext context(_constants, session, _command, commandProperty);
 
     try
