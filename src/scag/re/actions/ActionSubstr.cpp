@@ -89,7 +89,7 @@ bool ActionSubstr::run(ActionContext& context)
     int end;
 
     if (beginIndex < 0) begin = 0;
-    else begin = beginIndex * 2;
+    else begin = beginIndex;
 
     if (begin >= strArgument.size()) 
     {
@@ -97,8 +97,8 @@ bool ActionSubstr::run(ActionContext& context)
         return true;
     } 
 
-    if ((endIndex < 0)||((endIndex*2) >= strArgument.size())) end = strArgument.size() - 2;
-    else end = endIndex * 2;
+    if ((endIndex < 0)||((endIndex) >= strArgument.size())) end = strArgument.size() - 1;
+    else end = endIndex;
 
     if (begin > end) 
     {
@@ -114,10 +114,10 @@ bool ActionSubstr::run(ActionContext& context)
     }
 
     std::string temp;
-    auto_ptr<char> buff(new char[end - begin + 2]);
-    memcpy(buff.get(),strArgument.data() + begin, end - begin + 2);
+    auto_ptr<char> buff(new char[end - begin + 1]);
+    memcpy(buff.get(),strArgument.data() + begin, end - begin + 1);
 
-    temp.assign(buff.get(), end - begin + 2);
+    temp.assign(buff.get(), end - begin + 1);
 
     resultProperty->setStr(temp);
     smsc_log_debug(logger,"Action 'substr':: substr result is '%s' (begin=%d, end=%d)", temp.c_str(), begin, end);
