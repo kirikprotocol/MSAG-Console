@@ -209,13 +209,22 @@ HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& 
         {
             pid = *p;
             uint32_t addrLen = addr.length();
+            HttpRouteInt **rt;            
+            
+            if(!addrLen)
+            {
+                AddressURLKey auk(0, hid, pid);                
+                if((rt = AddressURLMap->GetPtr(auk)) && (*rt)->enabled)
+                    return *(*rt);
+                throw RouteNotFoundException();                
+            }
+            
             strcpy(buf, addr.c_str());
             while(addrLen > 0)
             {
                 if((p = masksMap->GetPtr(buf)))
                 {
                     AddressURLKey auk(*p, hid, pid);
-                    HttpRouteInt **rt;
                     if((rt = AddressURLMap->GetPtr(auk)) && (*rt)->enabled)
                         return *(*rt);
                 }
@@ -290,7 +299,7 @@ HttpRoute HttpRouterImpl::findRouteByServiceId(const std::string& addr, uint32_t
     HttpRouteInt** rt;
 
     rt = serviceIdMap->GetPtr(sid);
-    if(!rt || !checkRoute(*rt, addr, path)) throw RouteNotFoundException();
+    if(!rt || !(*rt)->enabled || !checkRoute(*rt, addr, path)) throw RouteNotFoundException();
 
     return **rt;
 }
@@ -302,7 +311,7 @@ HttpRoute HttpRouterImpl::findRouteByRouteId(const std::string& addr, uint32_t r
     HttpRouteInt** rt;
 
     rt = routeIdMap->GetPtr(rid);
-    if(!rt || !checkRoute(*rt, addr, path)) throw RouteNotFoundException();
+    if(!rt || !(*rt)->enabled || !checkRoute(*rt, addr, path)) throw RouteNotFoundException();
 
     return **rt;
 }
@@ -357,16 +366,27 @@ void HttpRouterImpl::BuildMaps(RouteArray *r, RouteHash *rid, ServiceIdHash *sid
 
         rid->Insert(rt->id, rt);
 
-        for(int j = 0; j < rt->masks.Count(); j++)
+        for(int k = 0; k < rt->sites.Count(); k++)
         {
-            cmid = getId(mh, rt->masks[j], mid);
-            for(int k = 0; k < rt->sites.Count(); k++)
+            s = rt->sites[k].host + ':' + lltostr(rt->sites[k].port, buf + 19);
+            chid = getId(hh, s, hid);
+            for(int m = 0; m < rt->sites[k].paths.Count(); m++)
             {
-                s = rt->sites[k].host + ':' + lltostr(rt->sites[k].port, buf + 19);
-                chid = getId(hh, s, hid);
-                for(int m = 0; m < rt->sites[k].paths.Count(); m++)
+                cpid = getId(ph, rt->sites[k].paths[m], pid);
+                
+                if(rt->transit)
                 {
-                    cpid = getId(ph, rt->sites[k].paths[m], pid);
+                    AddressURLKey auk(0, chid, cpid);
+                    if(!auh->Exists(auk))
+                    {
+                        smsc_log_debug(logger, "AddedMapping transit URL: %s:%d%s", rt->sites[k].host.c_str(), rt->sites[k].port, rt->sites[k].paths[m].c_str());
+                        auh->Insert(auk, rt);
+                    }
+                }
+                
+                for(int j = 0; j < rt->masks.Count(); j++)
+                {
+                    cmid = getId(mh, rt->masks[j], mid);
                     smsc_log_debug(logger, "AddedMapping mask: %s, URL: %s:%d%s", rt->masks[j].c_str(), rt->sites[k].host.c_str(), rt->sites[k].port, rt->sites[k].paths[m].c_str());
                     AddressURLKey auk(cmid, chid, cpid);
                     auh->Insert(auk, rt);
