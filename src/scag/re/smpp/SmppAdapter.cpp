@@ -1046,9 +1046,10 @@ AdapterProperty * SmppCommandAdapter::getDataSmProperty(SmsCommand& data,const s
 {
     AdapterProperty * property = 0;
 
+    data.
     if ((FieldId >= OPTIONAL_CHARGING)&&(FieldId <= OPTIONAL_EXPECTED_MESSAGE_CONTENT_TYPE))
     {
-        property = Get_Unknown_Property(data, name, FieldId);
+        property = Get_Unknown_Property(data.sms, name, FieldId);
     } else
 
     switch (FieldId)
