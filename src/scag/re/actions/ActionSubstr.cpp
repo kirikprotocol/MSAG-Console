@@ -9,28 +9,27 @@ void ActionSubstr::init(const SectionParams& params,PropertyObject propertyObjec
 
     FieldType ft;
     bool bExist;
-    std::string temp;
 
     m_fVariableFieldType = CheckParameter(params, propertyObject, "substr", "var", true, true, m_strVariable, bExist);
 
     ft = CheckParameter(params, propertyObject, "substr", "result", true, false, m_strResult, bExist);
 
-    ft = CheckParameter(params, propertyObject, "substr", "begin", false, true, temp, bExist);
-    if (ft!=ftUnknown) throw SCAGException("Action 'substr': 'begin' parameter must be a scalar constant type");
+    m_ftBegin = CheckParameter(params, propertyObject, "substr", "begin", false, true, m_strBegin, m_bExistBegin);
+    //if (ft!=ftUnknown) throw SCAGException("Action 'substr': 'begin' parameter must be a scalar constant type");
 
-    if (bExist)  
+    if ((m_ftBegin==ftUnknown)&&(m_bExistBegin))
     {
-        beginIndex = atoi(temp.c_str());
+        beginIndex = atoi(m_strBegin.c_str());
         if (beginIndex < 0) throw SCAGException("Action 'substr': invalid 'begin' parameter.");
     }
 
 
-    ft = CheckParameter(params, propertyObject, "substr", "end", false, true, temp, bExist);
-    if (ft!=ftUnknown) throw SCAGException("Action 'substr': 'end' parameter must be a scalar constant type");
+    m_ftEnd = CheckParameter(params, propertyObject, "substr", "end", false, true, m_strEnd, m_bExistEnd);
+    //if (ft!=ftUnknown) throw SCAGException("Action 'substr': 'end' parameter must be a scalar constant type");
 
-    if (bExist)  
+    if ((m_ftEnd==ftUnknown)&&(m_bExistEnd))
     {
-        endIndex = atoi(temp.c_str());
+        endIndex = atoi(m_strEnd.c_str());
         if (endIndex <= 0) throw SCAGException("Action 'substr': invalid 'end' parameter.");
     }
 
@@ -58,6 +57,33 @@ bool ActionSubstr::run(ActionContext& context)
         }
         strArgument = property->getStr();
     }
+
+
+    if ((m_ftBegin!=ftUnknown)&&(m_bExistBegin)) 
+    {
+        Property * property = context.getProperty(m_strBegin);
+
+        if (!property) 
+        {
+            smsc_log_warn(logger,"Action 'substr':: invalid property '%s'",m_strBegin.c_str());
+            return true;
+        }
+        beginIndex = property->getInt();
+    }
+
+    if ((m_ftEnd!=ftUnknown)&&(m_bExistEnd))
+    {
+        Property * property = context.getProperty(m_strEnd);
+
+        if (!property) 
+        {
+            smsc_log_warn(logger,"Action 'substr':: invalid property '%s'",m_strEnd.c_str());
+            return true;
+        }
+        endIndex = property->getInt();
+    }
+
+
 
     int begin;
     int end;
