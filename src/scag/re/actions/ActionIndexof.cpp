@@ -70,8 +70,8 @@ bool ActionIndexof::run(ActionContext& context)
     int i;
     bool isEqual;
 
-    int len1 = strArgument1.size() /2;
-    int len2 = strArgument2.size() /2;
+    int len1 = strArgument1.size();
+    int len2 = strArgument2.size();
 
     if ((len1 >= len2)&&(len1 > 0)&&(len2 > 0)) 
     {
@@ -81,8 +81,8 @@ bool ActionIndexof::run(ActionContext& context)
 
             for (int j = 0; j < len2; j++)
             {
-                unsigned short ch1 = *(unsigned short *)(strArgument1.data()+i*2+j*2);
-                unsigned short ch2 = *(unsigned short *)(strArgument2.data()+j*2);
+                char ch1 = *(char *)(strArgument1.data()+i+j);
+                char ch2 = *(char *)(strArgument2.data()+j);
 
                 if (ch1!=ch2) 
                 {
