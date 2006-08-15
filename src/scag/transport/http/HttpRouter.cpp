@@ -85,6 +85,34 @@ void HttpRouterImpl::init(const std::string& cfg)
     route_cfg_file = cfg;
 }
 
+void HttpTraceRouter::routeInfo(HttpRouteInt* r, std::vector<std::string>& trace)
+{
+    char buf[150];
+    
+    trace.push_back("Route info:");
+
+    sprintf(buf, " RouteId: %d;ServiceId:%d", r->id, r->service_id);
+    std::string s1 = "RouteName: " + r->name + buf;
+    if(r->enabled) s1 +=";Enabled";
+    if(r->def) s1 += ";Default";
+    if(r->transit) s1 += ";Transit";
+    
+    trace[0] = s1;
+
+    trace.push_back("Masks:");
+    for(int i = 0; i < r->masks.Count(); i++)
+        trace.push_back(r->masks[i]);
+
+    trace.push_back("Urls:");
+    buf[19] = 0;
+    for(int i = 0; i < r->sites.Count(); i++)
+    {
+        trace.push_back(r->sites[i].host + ':' + lltostr(r->sites[i].port, buf + 19) + (r->sites[i].def ? ";Default" : ""));
+        for(int j = 0; j < r->sites[i].paths.Count(); j++)
+            trace.push_back(r->sites[i].paths[j]);
+    }
+}
+
 bool HttpTraceRouter::getTraceRoute(const std::string& addr, const std::string& site, const std::string& path, uint32_t port, std::vector<std::string>& trace)
 {
     MutexGuard mt(GetRouteMutex);
@@ -137,30 +165,8 @@ bool HttpTraceRouter::getTraceRoute(const std::string& addr, const std::string& 
                     if((rt = AddressURLMap->GetPtr(auk)))
                     {
                         r = *rt;
-                        trace.push_back("Route Found: " + r->id);
 
-                        trace.push_back("Route info:");
-
-                        sprintf(buf, "RouteId: %d;ServiceId:%d", r->id, r->service_id);
-                        std::string s1 = "RouteName: " + r->name + buf;
-                        if(r->enabled) s1 +=";Enabled";
-                        if(r->def) s1 += ";Default";
-                        if(r->transit) s1 += ";Transit";
-                        
-                        trace[0] = s1;
-
-                        trace.push_back("Masks:");
-                        for(int i = 0; i < r->masks.Count(); i++)
-                            trace.push_back(r->masks[i]);
-
-                        trace.push_back("Urls:");
-                        buf[19] = 0;
-                        for(int i = 0; i < r->sites.Count(); i++)
-                        {
-                            trace.push_back(r->sites[i].host + ':' + lltostr(r->sites[i].port, buf + 19) + (r->sites[i].def ? ";Default" : ""));
-                            for(int j = 0; j < r->sites[i].paths.Count(); j++)
-                                trace.push_back(r->sites[i].paths[j]);
-                        }
+                        routeInfo(r, trace);
 
                         return true;
                     }
@@ -178,6 +184,101 @@ bool HttpTraceRouter::getTraceRoute(const std::string& addr, const std::string& 
         pathPtr[ptLen] = 0;
     }
 
+    trace.push_back("No matches found");
+    return false;
+}
+
+bool HttpTraceRouter::checkTraceRoute(HttpRouteInt* rt, const std::string& addr, const std::string& path, std::vector<std::string>& trace)
+{
+    StringArray* pt = &rt->defSite.paths;
+    int i = 0;
+    bool found = false;
+    char buf[20];
+    
+    buf[19] = 0;
+    while(i < pt->Count() && !found)
+    {
+        std::string& s = (*pt)[i];
+        trace.push_back("Checking path: \"" + s + "\"");        
+        if(s[s.length()-1] == '/')
+        {
+            if(!strncmp(path.c_str(), s.c_str(), s.length()))
+            {
+                trace.push_back("Match path: \"" + s + "\"");
+                found = true;
+            }
+        }
+        else if(!strcmp(path.c_str(), s.c_str()))
+        {
+            trace.push_back("Match path: \"" + s + "\"");
+            found = true;
+        }
+        i++;
+    }
+    if(!found) return false;
+
+    if(!addr.length())
+    {
+        if(!rt->transit)
+            trace.push_back(std::string("Route found. id=") + lltostr(rt->id, buf + 19) + ". But it is not transit.");        
+        return rt->transit;
+    }
+    
+    i = 0;
+    found = false;
+    StringArray* masks = &rt->masks;
+    while(i < rt->masks.Count() && !found)
+    {
+        const char* s = rt->masks[i].c_str(), *p;
+        trace.push_back("Checking mask: \"" + rt->masks[i] + "\"");
+        if(rt->masks[i].length() == addr.length())
+        {
+            if(p = strchr(s, '?'))
+            {
+                if(!strncmp(s, addr.c_str(), p - s))
+                {
+                    trace.push_back("Match mask: \"" + rt->masks[i] + "\"");
+                    found = true;
+                }
+            }
+            else if(!strcmp(s, addr.c_str()))
+            {
+                trace.push_back("Match mask: \"" + rt->masks[i] + "\"");            
+                found = true;
+            }
+        }
+        i++;
+    }
+    if(!found) return false;
+
+    return true;
+}
+
+bool HttpTraceRouter::getTraceRouteById(const std::string& addr, const std::string& path, uint32_t rid, uint32_t sid, std::vector<std::string>& trace)
+{
+    char buf[20];
+    HttpRouteInt** rt;
+    
+    buf[19]=0;    
+    trace.push_back("");
+    
+    if(rid)
+    {
+        rt = routeIdMap->GetPtr(rid);
+        if(rt) trace.push_back(std::string("Route found with RouteId=") + lltostr(rid, buf + 19));
+    }
+    else if(sid)
+    {
+        rt = serviceIdMap->GetPtr(sid);
+        if(rt) trace.push_back(std::string("Route found with ServiceId=")+ lltostr(sid, buf + 19));
+    }
+    
+    if(rt && checkTraceRoute(*rt, addr, path, trace))
+    {
+        routeInfo(*rt, trace);
+        return true;
+    }
+    
     trace.push_back("No matches found");
     return false;
 }
@@ -213,7 +314,7 @@ HttpRoute HttpRouterImpl::findRoute(const std::string& addr, const std::string& 
             
             if(!addrLen)
             {
-                AddressURLKey auk(0, hid, pid);                
+                AddressURLKey auk(0, hid, pid);
                 if((rt = AddressURLMap->GetPtr(auk)) && (*rt)->enabled)
                     return *(*rt);
                 throw RouteNotFoundException();                
@@ -268,6 +369,7 @@ bool HttpRouterImpl::checkRoute(HttpRouteInt* rt, const std::string& addr, const
             smsc_log_error(logger, "Route found. id=%d. But it is not transit.", rt->id);
         return rt->transit;
     }
+    
     i = 0;
     found = false;
     StringArray* masks = &rt->masks;
@@ -286,7 +388,6 @@ bool HttpRouterImpl::checkRoute(HttpRouteInt* rt, const std::string& addr, const
         }
         i++;
     }
-
     if(!found) return false;
 
     return true;

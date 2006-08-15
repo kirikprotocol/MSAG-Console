@@ -71,6 +71,7 @@ public :
     StrX(const XMLCh* const toTranscode)
     {
         fLocalForm = XMLString::transcode(toTranscode);
+        s[0] = 0;
     }
 
     ~StrX()
@@ -80,11 +81,11 @@ public :
 
     const char* localForm() const
     {
-        return fLocalForm;
+        return fLocalForm ? fLocalForm : s;
     }
 
 private :
-    char* fLocalForm;
+    char* fLocalForm, s[1];
 };
 
 }}}

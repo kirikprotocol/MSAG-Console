@@ -89,11 +89,14 @@ class HttpTraceRouter: public HttpRouterImpl
 {
 protected:
     void init(const std::string& cfg);
+    void routeInfo(HttpRouteInt* r, std::vector<std::string>& trace);    
+    bool checkTraceRoute(HttpRouteInt* rt, const std::string& addr, const std::string& path, std::vector<std::string>& trace);
 public:
     static HttpTraceRouter& Instance();
     static void Init(const std::string& cfg);
 
-    bool HttpTraceRouter::getTraceRoute(const std::string& addr, const std::string& site, const std::string& path, uint32_t port, std::vector<std::string>& trace);
+    bool getTraceRoute(const std::string& addr, const std::string& site, const std::string& path, uint32_t port, std::vector<std::string>& trace);
+    bool getTraceRouteById(const std::string& addr, const std::string& path, uint32_t rid, uint32_t sid, std::vector<std::string>& trace);
     ~HttpTraceRouter() {}
 };
 
