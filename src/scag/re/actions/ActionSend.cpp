@@ -72,27 +72,33 @@ IParserHandler * ActionSend::StartXMLSubSection(const std::string& name, const S
 {
     const char *p;
     bool bExist;
-    std::string strTo;
-    FieldType ftTo;
+    std::string strTo, strFrom;
+    FieldType ftTo, ftFrom;
 
     if(name == "send:sms")
     {
         ftTo = CheckParameter(params, propertyObject, "send", "to", true, true, strTo, bExist);
+        ftFrom = CheckParameter(params, propertyObject, "send", "from", false, true, strFrom, bExist);        
         try{
-            if(ftTo == ftUnknown)
-                Address a(strTo.c_str());
+            if(ftTo == ftUnknown) Address a(strTo.c_str());
+            if(ftFrom == ftUnknown && strFrom.length()) Address a1(strFrom.c_str());
         }
         catch(...)
         {
-          throw SCAGException("Action 'send': invalid sms address %s.", strTo.c_str());
+          throw SCAGException("Action 'send': invalid sms address %s or %s.", strTo.c_str(), strFrom.c_str());
         }
         toSms.Push(strTo);
+        fromSms.Push(strFrom);        
     }else if (name == "send:email")
     {
         ftTo = CheckParameter(params, propertyObject, "send", "to", true, true, strTo, bExist);
-        if(ftTo == ftUnknown && ((p = strchr(strTo.c_str(), '@')) == NULL || !*p))
-               throw SCAGException("Action 'send': invalid e-mail address %s. Should be name@domain", strTo.c_str());
+        if(ftTo == ftUnknown && ((p = strchr(strTo.c_str(), '@')) == NULL || !*(p+1)))
+               throw SCAGException("Action 'send': invalid recipient e-mail address %s. Should be name@domain", strTo.c_str());
+        ftFrom = CheckParameter(params, propertyObject, "send", "from", false, true, strFrom, bExist);
+        if(ftFrom == ftUnknown && strFrom.length() && ((p = strchr(strFrom.c_str(), '@')) == NULL || !*(p+1)))
+               throw SCAGException("Action 'send': invalid sender e-mail address %s. Should be name@domain", strFrom.c_str());
         toEmail.Push(strTo);
+        fromEmail.Push(strFrom);        
     } else
          throw SCAGException("Action 'send': unknown subsection %s", name.c_str());
     return NULL;
@@ -131,8 +137,9 @@ void ActionSend::init(const SectionParams& params,PropertyObject _propertyObject
 
 bool ActionSend::run(ActionContext& context)
 {
+    const char *p;
     SACC_ALARM_MESSAGE_t ev;
-    std::string s2;
+    std::string s2, s3;
     std::string msg;
 
     Statistics& sm = Statistics::Instance();
@@ -142,25 +149,45 @@ bool ActionSend::run(ActionContext& context)
 
     for(int i = 0; i < toSms.Count(); i++)
     {
-        if(!getStrProperty(context, toSms[i], "toSms", s2))
+        s3.clear();
+        if(!getStrProperty(context, toSms[i], "toSms", s2) || fromSms[i].length() && !getStrProperty(context, fromSms[i], "fromSms", s3))
             return true;
 
         try{
             Address a(s2.c_str());
-            ev.pAbonentsNumbers += a.toString() + ";";
+            if(s3.length())
+            {
+                Address a1(s3.c_str());
+                s3 = a1.toString();
+            }
+            ev.pAbonentsNumbers += a.toString();
+            if(s3.length())
+                ev.pAbonentsNumbers += "," + s3;
+            ev.pAbonentsNumbers += ";";
         }
         catch(...)
         {
-            smsc_log_warn(logger,"Action 'send': invalid message 'sms:to' property '%s'", s2.c_str());
+            smsc_log_warn(logger,"Action 'send': invalid message 'sms:to'='%s' or 'sms:from'='%s' property", s2.c_str(), s3.c_str());
         }
     }
 
     for(int i = 0; i < toEmail.Count(); i++)
     {
-        if(!getStrProperty(context, toEmail[i], "toEmail", s2))
+        s3.clear();
+        if(!getStrProperty(context, toEmail[i], "toEmail", s2) || fromEmail[i].length() && !getStrProperty(context, fromEmail[i], "fromEmail", s3))
             return true;
-
-        ev.pAddressEmail += s2 + ";";
+            
+        if(((p = strchr(s2.c_str(), '@')) == NULL || !*(p+1)))
+               smsc_log_warn(logger, "Action 'send': invalid recipient e-mail address %s. Should be name@domain", s2.c_str());        
+        else if(s3.length() && ((p = strchr(s3.c_str(), '@')) == NULL || !*(p+1)))
+               smsc_log_warn(logger, "Action 'send': invalid sender e-mail address %s. Should be name@domain", s3.c_str());        
+        else               
+        {
+            ev.pAddressEmail += s2;
+            if(s3.length())
+                ev.pAddressEmail += "," + s3;
+            ev.pAddressEmail += ";";
+        }
     }
 
     getStrProperty(context, strDate, "date", ev.pDeliveryTime);
@@ -172,7 +199,7 @@ bool ActionSend::run(ActionContext& context)
 
     ev.cCriticalityLevel = (uint8_t)level;
 
-    smsc_log_debug(logger, "msg: %s, toEmail: %s, toSms: %s, date: %s", ev.pMessageText.c_str(), ev.pAddressEmail.c_str(), ev.pAbonentsNumbers.c_str(), ev.pDeliveryTime.c_str());
+    smsc_log_debug(logger, "msg: \"%s\", toEmail: \"%s\", toSms: \"%s\", date: \"%s\"", ev.pMessageText.c_str(), ev.pAddressEmail.c_str(), ev.pAbonentsNumbers.c_str(), ev.pDeliveryTime.c_str());
 
     sm.registerSaccEvent(ev);
     return true;

@@ -27,8 +27,8 @@ protected:
 
     std::string strDate;
     std::string strMsg;
-    Array<std::string> toSms;
-    Array<std::string> toEmail;
+    Array<std::string> toSms, toEmail;
+    Array<std::string> fromSms, fromEmail;
     bool terminal;
 
     SendLevel level;
