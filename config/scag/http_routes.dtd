@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
-<!ELEMENT http_routes (options*, subject_def*, site_subject_def*, route*)>
+<!ELEMENT http_routes (options*, subject_def*, site_subject_def*, route*, param*)>
+
+<!ELEMENT param (#PCDATA)>
+<!ATTLIST param name CDATA #REQUIRED type (string|int|bool) #IMPLIED>
 
 <!ELEMENT route (abonents+, sites+)>
 <!ATTLIST route
