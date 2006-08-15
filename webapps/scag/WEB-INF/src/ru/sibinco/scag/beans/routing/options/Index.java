@@ -32,6 +32,11 @@ public class Index extends EditBean {
     public static final String SITE_SELECT = "siteSelect_";
     public static final String ABON_USR_SELECT = "abonUsrSelect_";
     public static final String SITE_USR_SELECT = "siteUsrSelect_";
+    public static final String ABON_ROUTE_ID_SELECT = "abonRouteIdSelect_";
+    public static final String SITE_ROUTE_ID_SELECT = "siteRouteIdSelect_";
+    public static final String ABON_SERVICE_ID_SELECT = "abonServiceIdSelect_";
+    public static final String SITE_SERVICE_ID_SELECT = "siteServiceIdSelect_";
+
     public static final String URL_TYPE = "url";
     public static final String PARAM_TYPE = "param";
     public static final String HEADER_TYPE = "header";
@@ -45,6 +50,13 @@ public class Index extends EditBean {
     private String[] abonentUsrName = new String[0];
     private String[] abonentUsrType = new String[0];
 
+    private AbonentsPlacement[] abonentRouteId = new AbonentsPlacement[0];
+    private String[] abonentRouteIdName = new String[0];
+    private String[] abonentRouteIdType = new String[0];
+
+    private AbonentsPlacement[] abonentServiceId = new AbonentsPlacement[0];
+    private String[] abonentServiceIdName = new String[0];
+    private String[] abonentServiceIdType = new String[0];
 
     private SitePlacement[] siteAddress = new SitePlacement[0];
     private String[] siteAddrName = new String[0];
@@ -53,6 +65,14 @@ public class Index extends EditBean {
     private SitePlacement[] siteUsr = new SitePlacement[0];
     private String[] siteUsrName = new String[0];
     private String[] siteUsrType = new String[0];
+
+    private SitePlacement[] siteRouteId = new SitePlacement[0];
+    private String[] siteRouteIdName = new String[0];
+    private String[] siteRouteIdType = new String[0];
+
+    private SitePlacement[] siteServiceId = new SitePlacement[0];
+    private String[] siteServiceIdName = new String[0];
+    private String[] siteServiceIdType = new String[0];
 
     private String[] optionTypes = {URL_TYPE, PARAM_TYPE, HEADER_TYPE, COOKIE_TYPE};
 
@@ -69,6 +89,11 @@ public class Index extends EditBean {
         siteAddress = getSitePlacement(appContext.getHttpRoutingManager().getOptions().getSiteAddressPlace());
         abonentUsr = getAbonentsPlacements(appContext.getHttpRoutingManager().getOptions().getAbonUsrPlace());
         siteUsr = getSitePlacement(appContext.getHttpRoutingManager().getOptions().getSiteUsrPlace());
+        abonentRouteId = getAbonentsPlacements(appContext.getHttpRoutingManager().getOptions().getAbonRouteIdPlace() );
+        siteRouteId = getSitePlacement(appContext.getHttpRoutingManager().getOptions().getSiteRouteIdPlace());
+        abonentServiceId = getAbonentsPlacements(appContext.getHttpRoutingManager().getOptions().getAbonServiceIdPlace() );
+        siteServiceId = getSitePlacement(appContext.getHttpRoutingManager().getOptions().getSiteServiceIdPlace());
+
         if (getMbSave() != null) {
 
             //**********************************************************************************//
@@ -152,6 +177,91 @@ public class Index extends EditBean {
             }
             siteUsr = (SitePlacement[]) siteUsrrList.toArray(new SitePlacement[siteUsrrList.size()]);
             siteAddrList.clear();
+
+            //**********************************************************************************//
+            //                           ABONENT DEFAULT ROUTE ID PLACE                         //
+            //**********************************************************************************//
+
+            List abonentRouteIdList = new ArrayList();
+            for (int i = 0; i < abonentRouteIdName.length; i++) {
+                String s = new StringBuffer().append(ABON_ROUTE_ID_SELECT).append(abonentRouteIdName[i]).
+                        append(abonentRouteIdType[i].substring(abonentRouteIdType[i].lastIndexOf('_'))).toString();
+                String[] results = request.getParameterValues(s);
+
+                int priority = i + 1;
+                for (int j = 0; j < results.length; j++) {
+                    try {
+                        abonentRouteIdList.add(new AbonentsPlacement(results[j], abonentRouteIdName[i], priority));
+                    } catch (SibincoException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            }
+            abonentRouteId = (AbonentsPlacement[]) abonentRouteIdList.toArray(new AbonentsPlacement[abonentRouteIdList.size()]);
+            abonentRouteIdList.clear();
+
+            //**********************************************************************************//
+            //                            DEFAULT SITE ROUTE ID PLACE                           //
+            //**********************************************************************************//
+            List siteRouteIdList = new ArrayList();
+            for (int i = 0; i < siteRouteIdName.length; i++) {
+                String s = new StringBuffer().append(SITE_ROUTE_ID_SELECT).append(siteRouteIdName[i]).append(siteRouteIdType[i].
+                        substring(siteRouteIdType[i].lastIndexOf('_'))).toString();
+                String[] results = request.getParameterValues(s);
+                for (int j = 0; j < results.length; j++) {
+                    try {
+                        siteRouteIdList.add(new SitePlacement(results[j], siteRouteIdName[i]));
+                    } catch (SibincoException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            siteRouteId = (SitePlacement[]) siteRouteIdList.toArray(new SitePlacement[siteRouteIdList.size()]);
+            siteRouteIdList.clear();
+
+            //**********************************************************************************//
+            //                           ABONENT DEFAULT SERVICE ID PLACE                       //
+            //**********************************************************************************//
+
+            List abonentServiceIdList = new ArrayList();
+            for (int i = 0; i < abonentServiceIdName.length; i++) {
+                String s = new StringBuffer().append(ABON_SERVICE_ID_SELECT).append(abonentServiceIdName[i]).
+                        append(abonentServiceIdType[i].substring(abonentServiceIdType[i].lastIndexOf('_'))).toString();
+                String[] results = request.getParameterValues(s);
+
+                int priority = i + 1;
+                for (int j = 0; j < results.length; j++) {
+                    try {
+                        abonentServiceIdList.add(new AbonentsPlacement(results[j], abonentServiceIdName[i], priority));
+                    } catch (SibincoException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            }
+            abonentServiceId = (AbonentsPlacement[]) abonentServiceIdList.toArray(new AbonentsPlacement[abonentServiceIdList.size()]);
+            abonentServiceIdList.clear();
+
+            //**********************************************************************************//
+            //                            DEFAULT SITE SERVICE ID PLACE                         //
+            //**********************************************************************************//
+            List siteServiceIdList = new ArrayList();
+            for (int i = 0; i < siteServiceIdName.length; i++) {
+                String s = new StringBuffer().append(SITE_SERVICE_ID_SELECT).append(siteServiceIdName[i]).append(siteServiceIdType[i].
+                        substring(siteServiceIdType[i].lastIndexOf('_'))).toString();
+                String[] results = request.getParameterValues(s);
+                for (int j = 0; j < results.length; j++) {
+                    try {
+                        siteServiceIdList.add(new SitePlacement(results[j], siteServiceIdName[i]));
+                    } catch (SibincoException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            siteServiceId = (SitePlacement[]) siteServiceIdList.toArray(new SitePlacement[siteServiceIdList.size()]);
+            siteServiceIdList.clear();
+
             saveOptions();
             super.process(request, response);
         }
@@ -170,8 +280,12 @@ public class Index extends EditBean {
 
         option.getAbonAddressPlace().clear();
         option.getAbonUsrPlace().clear();
+        option.getAbonRouteIdPlace().clear();
+        option.getAbonServiceIdPlace().clear();
         option.getSiteAddressPlace().clear();
         option.getSiteUsrPlace().clear();
+        option.getSiteRouteIdPlace().clear();
+        option.getSiteServiceIdPlace().clear();
 
         for (int i = 0; i < abonentAddress.length; i++) {
             option.getAbonAddressPlace().add(abonentAddress[i]);
@@ -179,11 +293,24 @@ public class Index extends EditBean {
         for (int i = 0; i < abonentUsr.length; i++) {
             option.getAbonUsrPlace().add(abonentUsr[i]);
         }
+        for (int i = 0; i < abonentRouteId.length; i++) {
+            option.getAbonRouteIdPlace().add(abonentRouteId[i]);
+        }
+        for (int i = 0; i < abonentServiceId.length; i++) {
+            option.getAbonServiceIdPlace().add(abonentServiceId[i]);
+        }
+
         for (int i = 0; i < siteAddress.length; i++) {
             option.getSiteAddressPlace().add(siteAddress[i]);
         }
         for (int i = 0; i < siteUsr.length; i++) {
             option.getSiteUsrPlace().add(siteUsr[i]);
+        }
+        for (int i = 0; i < siteRouteId.length; i++) {
+            option.getSiteRouteIdPlace().add(siteRouteId[i]);
+        }
+        for (int i = 0; i < siteServiceId.length; i++) {
+            option.getSiteServiceIdPlace().add(siteServiceId[i]);
         }
 
         appContext.getHttpRoutingManager().setRoutesChanged(true);
@@ -208,6 +335,7 @@ public class Index extends EditBean {
         return optionTypes;
     }
 
+    // abonent placements
     public AbonentsPlacement[] getAbonentAddress() {
         return abonentAddress;
     }
@@ -224,6 +352,23 @@ public class Index extends EditBean {
         this.abonentUsr = abonentUsr;
     }
 
+    public AbonentsPlacement[] getAbonentRouteId() {
+        return abonentRouteId;
+    }
+
+    public void setAbonentRouteId(AbonentsPlacement[] abonentRouteId) {
+        this.abonentRouteId = abonentRouteId;
+    }
+
+    public AbonentsPlacement[] getAbonentServiceId() {
+        return abonentServiceId;
+    }
+
+    public void setAbonentServiceId(AbonentsPlacement[] abonentServiceId) {
+        this.abonentServiceId = abonentServiceId;
+    }
+
+    // site placements
     public SitePlacement[] getSiteAddress() {
         return siteAddress;
     }
@@ -240,6 +385,23 @@ public class Index extends EditBean {
         this.siteUsr = siteUsr;
     }
 
+    public SitePlacement[] getSiteRouteId() {
+        return siteRouteId;
+    }
+
+    public void setSiteRouteId(SitePlacement[] siteRouteId) {
+        this.siteRouteId = siteRouteId;
+    }
+
+    public SitePlacement[] getSiteServiceId() {
+        return siteServiceId;
+    }
+
+    public void setSiteServiceId(SitePlacement[] siteServiceId) {
+        this.siteServiceId = siteServiceId;
+    }
+
+    //abonent address properties
     public String[] getAbonAddrName() {
         return abonAddrName;
     }
@@ -256,6 +418,7 @@ public class Index extends EditBean {
         this.abonAddrType = abonAddrType;
     }
 
+   //site address properties
     public String[] getSiteAddrName() {
         return siteAddrName;
     }
@@ -272,6 +435,7 @@ public class Index extends EditBean {
         this.siteAddrType = siteAddrType;
     }
 
+    //abonent usr properties
     public String[] getAbonentUsrName() {
         return abonentUsrName;
     }
@@ -288,6 +452,7 @@ public class Index extends EditBean {
         this.abonentUsrType = abonentUsrType;
     }
 
+    //site usr properties
     public String[] getSiteUsrName() {
         return siteUsrName;
     }
@@ -303,4 +468,73 @@ public class Index extends EditBean {
     public void setSiteUsrType(String[] siteUsrType) {
         this.siteUsrType = siteUsrType;
     }
+
+    //abonent route id properties
+    public String[] getAbonentRouteIdName() {
+        return abonentRouteIdName;
+    }
+
+    public void setAbonentRouteIdName(String[] abonentRouteIdName) {
+        this.abonentRouteIdName = abonentRouteIdName;
+    }
+
+    public String[] getAbonentRouteIdType() {
+        return abonentRouteIdType;
+    }
+
+    public void setAbonentRouteIdType(String[] abonentRouteIdType) {
+        this.abonentRouteIdType = abonentRouteIdType;
+    }
+
+    //site route id properties
+    public String[] getSiteRouteIdName() {
+        return siteRouteIdName;
+    }
+
+    public void setSiteRouteIdName(String[] siteRouteIdName) {
+        this.siteRouteIdName = siteRouteIdName;
+    }
+
+    public String[] getSiteRouteIdType() {
+        return siteRouteIdType;
+    }
+
+    public void setSiteRouteIdType(String[] siteRouteIdType) {
+        this.siteRouteIdType = siteRouteIdType;
+    }
+
+    //abonent service id properties
+    public String[] getAbonentServiceIdName() {
+        return abonentServiceIdName;
+    }
+
+    public void setAbonentServiceIdName(String[] abonentServiceIdName) {
+        this.abonentServiceIdName = abonentServiceIdName;
+    }
+
+    public String[] getAbonentServiceIdType() {
+        return abonentServiceIdType;
+    }
+
+    public void setAbonentServiceIdType(String[] abonentServiceIdType) {
+        this.abonentServiceIdType = abonentServiceIdType;
+    }
+
+    //site service id properties
+    public String[] getSiteServiceIdName() {
+        return siteServiceIdName;
+    }
+
+    public void setSiteServiceIdName(String[] siteServiceIdName) {
+        this.siteServiceIdName = siteServiceIdName;
+    }
+
+    public String[] getSiteServiceIdType() {
+        return siteServiceIdType;
+    }
+
+    public void setSiteServiceIdType(String[] siteServiceIdType) {
+        this.siteServiceIdType = siteServiceIdType;
+    }
+
 }

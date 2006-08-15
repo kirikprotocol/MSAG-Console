@@ -10,6 +10,142 @@ function removeRow(tbl, rowId) {
     tbl.deleteRow(rowElem.rowIndex);
 }
 
+//service id
+function addSiteDefaultServiceIdplace(valueElem, selectElem) {
+    if ((trimStr(valueElem.value).length > 0)) {
+        var inner__counter = global_counter++;
+        var siteServiceIdPlaceName = valueElem.value;
+        var tbl = opForm.all.site_service_id_tbl;
+        var newRow = tbl.insertRow(tbl.rows.length);
+        newRow.className = "row" + ((tbl.rows.length + 1) & 1);
+        newRow.id = "site_service_id_place_" + "_" + (inner__counter);
+        var newCell = newRow.insertCell();
+        newCell.width = "7%";
+        newCell.innerHTML = getSelectType(siteServiceIdPlaceName, inner__counter, selectElem, 'siteServiceIdSelect_');
+        newRow.appendChild(newCell);
+        newCell = newRow.insertCell();
+        newCell.innerHTML = "&nbsp;";
+        newRow.appendChild(newCell);
+        newCell = newRow.insertCell();
+        newCell.innerHTML = "<input type=\"text\" size=\"45\" style=\"color:black;\" value=\"" + siteServiceIdPlaceName + "\" readonly=\"true\"/>"
+                + "<input type=\"hidden\" name=\"siteServiceIdName\" value=\"" + siteServiceIdPlaceName + "\">"
+                + "<input type=\"hidden\" name=\"siteServiceIdType\" value=\"" + siteServiceIdPlaceName + "_" + inner__counter + "\">";
+        newRow.appendChild(newCell);
+        newCell = newRow.insertCell();
+        newCell.width = "65%";
+        newCell.innerHTML = "<img src=\"content/images/but_del.gif\" alt=\"Remove "
+                + siteServiceIdPlaceName + " Default Service Id place\"  onClick=\"removeRow(opForm.all.site_service_id_tbl, " + "\'" + newRow.id + '\');\" style=\"cursor:hand;\"/>';
+        newRow.appendChild(newCell);
+
+        valueElem.value = "";
+        valueElem.focus();
+        return true;
+    } else
+        return false;
+}
+
+function addAbonDefaultServiceIdplace(valueElem, selectElem) {
+    if ((trimStr(valueElem.value).length > 0)) {
+        var inner__counter = global_counter++;
+        var abonServiceIdPlaceName = valueElem.value;
+        var tbl = opForm.all.abon_service_id_tbl;
+        var newRow = tbl.insertRow(tbl.rows.length);
+        newRow.className = "row" + ((tbl.rows.length + 1) & 1);
+        newRow.id = "abon_service_id_place_" + "_" + (inner__counter);
+        var newCell = newRow.insertCell();
+        newCell.width = "7%";
+        newCell.innerHTML = getSelectType(abonServiceIdPlaceName, inner__counter, selectElem, 'abonServiceIdSelect_');
+        newRow.appendChild(newCell);
+        newCell = newRow.insertCell();
+        newCell.innerHTML = "&nbsp;";
+        newRow.appendChild(newCell);
+        newCell = newRow.insertCell();
+        newCell.innerHTML = "<input type=\"text\" size=\"45\" style=\"color:black;\" value=\"" + abonServiceIdPlaceName + "\" readonly=\"true\"/>"
+                + "<input type=\"hidden\" name=\"abonentServiceIdName\" value=\"" + abonServiceIdPlaceName + "\">"
+                + "<input type=\"hidden\" name=\"abonentServiceIdType\" value=\"" + abonServiceIdPlaceName + "_" + inner__counter + "\">";
+        newRow.appendChild(newCell);
+        newCell = newRow.insertCell();
+        newCell.width = "65%";
+        newCell.innerHTML = "<img src=\"content/images/but_del.gif\" alt=\"Remove "
+                + abonServiceIdPlaceName + " Default Service Id place\"  onClick=\"removeRow(opForm.all.abon_service_id_tbl, " + "\'" + newRow.id + '\');\" style=\"cursor:hand;\"/>';
+
+        newRow.appendChild(newCell);
+
+        valueElem.value = "";
+        valueElem.focus();
+        return true;
+    } else
+        return false;
+}
+
+//route id
+function addSiteDefaultRouteIdplace(valueElem, selectElem) {
+    if ((trimStr(valueElem.value).length > 0)) {
+        var inner__counter = global_counter++;
+        var siteRouteIdPlaceName = valueElem.value;
+        var tbl = opForm.all.site_route_id_tbl;
+        var newRow = tbl.insertRow(tbl.rows.length);
+        newRow.className = "row" + ((tbl.rows.length + 1) & 1);
+        newRow.id = "site_route_id_place_" + "_" + (inner__counter);
+        var newCell = newRow.insertCell();
+        newCell.width = "7%";
+        newCell.innerHTML = getSelectType(siteRouteIdPlaceName, inner__counter, selectElem, 'siteRouteIdSelect_');
+        newRow.appendChild(newCell);
+        newCell = newRow.insertCell();
+        newCell.innerHTML = "&nbsp;";
+        newRow.appendChild(newCell);
+        newCell = newRow.insertCell();
+        newCell.innerHTML = "<input type=\"text\" size=\"45\" style=\"color:black;\" value=\"" + siteRouteIdPlaceName + "\" readonly=\"true\"/>"
+                + "<input type=\"hidden\" name=\"siteRouteIdName\" value=\"" + siteRouteIdPlaceName + "\">"
+                + "<input type=\"hidden\" name=\"siteRouteIdType\" value=\"" + siteRouteIdPlaceName + "_" + inner__counter + "\">";
+        newRow.appendChild(newCell);
+        newCell = newRow.insertCell();
+        newCell.width = "65%";
+        newCell.innerHTML = "<img src=\"content/images/but_del.gif\" alt=\"Remove "
+                + siteRouteIdPlaceName + " Default Route Id place\"  onClick=\"removeRow(opForm.all.site_route_id_tbl, " + "\'" + newRow.id + '\');\" style=\"cursor:hand;\"/>';
+        newRow.appendChild(newCell);
+
+        valueElem.value = "";
+        valueElem.focus();
+        return true;
+    } else
+        return false;
+}
+
+function addAbonDefaultRouteIdplace(valueElem, selectElem) {
+    if ((trimStr(valueElem.value).length > 0)) {
+        var inner__counter = global_counter++;
+        var abonRouteIdPlaceName = valueElem.value;
+        var tbl = opForm.all.abon_route_id_tbl;
+        var newRow = tbl.insertRow(tbl.rows.length);
+        newRow.className = "row" + ((tbl.rows.length + 1) & 1);
+        newRow.id = "abon_route_id_place_" + "_" + (inner__counter);
+        var newCell = newRow.insertCell();
+        newCell.width = "7%";
+        newCell.innerHTML = getSelectType(abonRouteIdPlaceName, inner__counter, selectElem, 'abonRouteIdSelect_');
+        newRow.appendChild(newCell);
+        newCell = newRow.insertCell();
+        newCell.innerHTML = "&nbsp;";
+        newRow.appendChild(newCell);
+        newCell = newRow.insertCell();
+        newCell.innerHTML = "<input type=\"text\" size=\"45\" style=\"color:black;\" value=\"" + abonRouteIdPlaceName + "\" readonly=\"true\"/>"
+                + "<input type=\"hidden\" name=\"abonentRouteIdName\" value=\"" + abonRouteIdPlaceName + "\">"
+                + "<input type=\"hidden\" name=\"abonentRouteIdType\" value=\"" + abonRouteIdPlaceName + "_" + inner__counter + "\">";
+        newRow.appendChild(newCell);
+        newCell = newRow.insertCell();
+        newCell.width = "65%";
+        newCell.innerHTML = "<img src=\"content/images/but_del.gif\" alt=\"Remove "
+                + abonRouteIdPlaceName + " Default Route Id place\"  onClick=\"removeRow(opForm.all.abon_route_id_tbl, " + "\'" + newRow.id + '\');\" style=\"cursor:hand;\"/>';
+
+        newRow.appendChild(newCell);
+
+        valueElem.value = "";
+        valueElem.focus();
+        return true;
+    } else
+        return false;
+}
+
 function addSiteDefaultUSRplace(valueElem, selectElem) {
     if ((trimStr(valueElem.value).length > 0)) {
         var inner__counter = global_counter++;

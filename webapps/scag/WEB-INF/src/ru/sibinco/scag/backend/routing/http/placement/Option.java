@@ -25,8 +25,12 @@ public class Option {
 
     private List abonAddressPlace = new ArrayList();
     private List abonUsrPlace = new ArrayList();
+    private List abonRouteIdPlace = new ArrayList();
+    private List abonServiceIdPlace = new ArrayList();
     private List siteAddressPlace = new ArrayList();
     private List siteUsrPlace = new ArrayList();
+    private List siteRouteIdPlace = new ArrayList();
+    private List siteServiceIdPlace = new ArrayList();
 
     public Option(final NodeList optionsList) throws SibincoException {
 
@@ -39,6 +43,8 @@ public class Option {
 
             NodeList addressPlaceList = abonentElement.getElementsByTagName("address_place");
             NodeList usrPlaceList = abonentElement.getElementsByTagName("usr_place");
+            NodeList routeIdPlaceList = abonentElement.getElementsByTagName("route_id_place");
+            NodeList serviceIdPlaceList = abonentElement.getElementsByTagName("service_id_place");
             for (int i = 0; i < addressPlaceList.getLength(); i++) {
                 Element addressPlaceElement = (Element) addressPlaceList.item(i);
                 final AbonentsPlacement abonentsPlacement = new AbonentsPlacement(
@@ -54,6 +60,22 @@ public class Option {
                         usrPlaceElement.getAttribute("name"),
                         Integer.parseInt(usrPlaceElement.getAttribute("priority")));
                 abonUsrPlace.add(abonentsPlacement);
+            }
+            for (int i = 0; i < routeIdPlaceList.getLength(); i++) {
+                Element routeIdPlaceElement = (Element) routeIdPlaceList.item(i);
+                final AbonentsPlacement abonentsPlacement = new AbonentsPlacement(
+                        routeIdPlaceElement.getAttribute("type"),
+                        routeIdPlaceElement.getAttribute("name"),
+                        Integer.parseInt(routeIdPlaceElement.getAttribute("priority")));
+                abonRouteIdPlace.add(abonentsPlacement);
+            }
+            for (int i = 0; i < serviceIdPlaceList.getLength(); i++) {
+                Element serviceIdPlaceElement = (Element) serviceIdPlaceList.item(i);
+                final AbonentsPlacement abonentsPlacement = new AbonentsPlacement(
+                        serviceIdPlaceElement.getAttribute("type"),
+                        serviceIdPlaceElement.getAttribute("name"),
+                        Integer.parseInt(serviceIdPlaceElement.getAttribute("priority")));
+                abonServiceIdPlace.add(abonentsPlacement);
             }
 
             NodeList sitesAddrPlaceList = sitesElement.getElementsByTagName("address_place");
@@ -71,6 +93,22 @@ public class Option {
                         usrPlaceElement.getAttribute("type"),
                         usrPlaceElement.getAttribute("name"));
                 siteUsrPlace.add(sitePlacement);
+            }
+            NodeList sitesRouteIdPlaceList = sitesElement.getElementsByTagName("route_id_place");
+            for (int i = 0; i < sitesRouteIdPlaceList.getLength(); i++) {
+                Element routeIdPlaceElement = (Element) sitesRouteIdPlaceList.item(i);
+                final SitePlacement sitePlacement = new SitePlacement(
+                        routeIdPlaceElement.getAttribute("type"),
+                        routeIdPlaceElement.getAttribute("name"));
+                siteRouteIdPlace.add(sitePlacement);
+            }
+            NodeList sitesServiceIdPlaceList = sitesElement.getElementsByTagName("service_id_place");
+            for (int i = 0; i < sitesServiceIdPlaceList.getLength(); i++) {
+                Element serviceIdPlaceElement = (Element) sitesServiceIdPlaceList.item(i);
+                final SitePlacement sitePlacement = new SitePlacement(
+                        serviceIdPlaceElement.getAttribute("type"),
+                        serviceIdPlaceElement.getAttribute("name"));
+                siteServiceIdPlace.add(sitePlacement);
             }
         }
 
@@ -95,6 +133,22 @@ public class Option {
                     + " name=\"" + StringEncoderDecoder.encode(placement.getName()) + "\" "
                     + " priority=\"" + placement.getPriority() + "\" />");
         }
+        out.println();
+        for (Iterator i = abonRouteIdPlace.iterator(); i.hasNext();) {
+            final AbonentsPlacement placement = (AbonentsPlacement) i.next();
+            out.println("                <route_id_place type=\""
+                    + StringEncoderDecoder.encode(placement.getType()) + "\" "
+                    + " name=\"" + StringEncoderDecoder.encode(placement.getName()) + "\" "
+                    + " priority=\"" + placement.getPriority() + "\" />");
+        }
+        out.println();
+        for (Iterator i = abonServiceIdPlace.iterator(); i.hasNext();) {
+            final AbonentsPlacement placement = (AbonentsPlacement) i.next();
+            out.println("                <service_id_place type=\""
+                    + StringEncoderDecoder.encode(placement.getType()) + "\" "
+                    + " name=\"" + StringEncoderDecoder.encode(placement.getName()) + "\" "
+                    + " priority=\"" + placement.getPriority() + "\" />");
+        }
         out.println("            </placement>");
         out.println("        </abonents>");
         out.println();
@@ -113,6 +167,20 @@ public class Option {
                     + StringEncoderDecoder.encode(placement.getType()) + "\" "
                     + " name=\"" + StringEncoderDecoder.encode(placement.getName()) + "\" />");
         }
+        out.println();
+        for (Iterator i = siteRouteIdPlace.iterator(); i.hasNext();) {
+            final SitePlacement placement = (SitePlacement) i.next();
+            out.println("                <route_id_place type=\""
+                    + StringEncoderDecoder.encode(placement.getType()) + "\" "
+                    + " name=\"" + StringEncoderDecoder.encode(placement.getName()) + "\" />");
+        }
+        out.println();
+        for (Iterator i = siteServiceIdPlace.iterator(); i.hasNext();) {
+            final SitePlacement placement = (SitePlacement) i.next();
+            out.println("                <service_id_place type=\""
+                    + StringEncoderDecoder.encode(placement.getType()) + "\" "
+                    + " name=\"" + StringEncoderDecoder.encode(placement.getName()) + "\" />");
+        }
         out.println("            </placement>");
         out.println("        </sites>");
         out.println("    </options>");
@@ -127,6 +195,14 @@ public class Option {
         return abonUsrPlace;
     }
 
+    public List getAbonRouteIdPlace() {
+        return abonRouteIdPlace;
+    }
+
+    public List getAbonServiceIdPlace() {
+        return abonServiceIdPlace;
+    }
+
     public List getSiteAddressPlace() {
         return siteAddressPlace;
     }
@@ -134,4 +210,13 @@ public class Option {
     public List getSiteUsrPlace() {
         return siteUsrPlace;
     }
+
+    public List getSiteRouteIdPlace() {
+        return   siteRouteIdPlace;
+    }
+
+    public List getSiteServiceIdPlace() {
+        return   siteServiceIdPlace;
+    }
+
 }
