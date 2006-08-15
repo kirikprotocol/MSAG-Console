@@ -25,7 +25,7 @@ import ru.sibinco.scag.backend.routing.http.placement.SitePlacement;
  * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
  */
 public class RouteSite {
-
+    private String defaultSiteObjId = null;
     private Map siteSubjects = new HashMap();
     private Map sites = new HashMap();
     private List usrPlace = new ArrayList();
@@ -45,12 +45,17 @@ public class RouteSite {
         for (int i = 0; i < subjSiteList.getLength(); i++) {
             Element subjSiteElement = (Element) subjSiteList.item(i);
             final HttpSite httpSite = new HttpSite(subjSiteElement.getAttribute("id").trim());
+            if (subjSiteElement.getAttribute("default").equals("true")) {
+               defaultSiteObjId=httpSite.getName();
+              //System.out.println("$$$$$$$$$$$"+defaultSiteSubj.getName());
+            }
             siteSubjects.put(httpSite.getName(), httpSite);
         }
         NodeList listSite = routeElement.getElementsByTagName("site");
         for (int i = 0; i < listSite.getLength(); i++) {
             Element siteElement = (Element) listSite.item(i);
-            final Site site = new Site(siteElement.getAttribute("host").trim(), Integer.parseInt(siteElement.getAttribute("port").trim()));
+            final Site site = new Site(siteElement.getAttribute("host").trim(), Integer.parseInt(siteElement.getAttribute("port").trim()), siteElement.getAttribute("default").equals("true"));
+            if (site.isDefaultSite()) defaultSiteObjId = site.getHost();
             NodeList pathNodeList = siteElement.getElementsByTagName("path");
             List list = new ArrayList();
             for (int j = 0; j < pathNodeList.getLength(); j++) {
@@ -95,12 +100,12 @@ public class RouteSite {
         out.println("    <sites>");
         for (Iterator i = siteSubjects.values().iterator(); i.hasNext();) {
             final HttpSite httpSite = (HttpSite) i.next();
-            out.println("        <site_subject id=\"" + StringEncoderDecoder.encode(httpSite.getName()) + "\"/>");
+            out.println("        <site_subject id=\"" + StringEncoderDecoder.encode(httpSite.getName()) + "\" default=\""+httpSite.getName().equals(defaultSiteObjId) +"\" />");
         }
         for (Iterator i = sites.values().iterator(); i.hasNext();) {
             final Site site = (Site) i.next();
             out.println("        <site host=\"" + StringEncoderDecoder.encode(site.getHost()) + "\"" +
-                    " port=\"" + site.getPort() + "\">");
+                    " port=\"" + site.getPort() + "\" default=\""+site.isDefaultSite()+"\">");
             for (int j = 0; j < site.getPathLinks().length; j++) {
                 out.println("            <path value=\"" + StringEncoderDecoder.encode(site.getPathLinks()[j]) + "\"/>");
             }
@@ -145,6 +150,14 @@ public class RouteSite {
             subjSiteList.add(httpSite.getName());
         }
         return (String[]) subjSiteList.toArray(new String[subjSiteList.size()]);
+    }
+
+    public String getDefaultSiteObjId() {
+        return defaultSiteObjId;
+    }
+
+    public void setDefaultSiteObjId(String defaultSiteObjId) {
+        this.defaultSiteObjId = defaultSiteObjId;      
     }
 
     public Site[] getArraySite() {

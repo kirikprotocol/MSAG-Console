@@ -53,6 +53,8 @@ public class Edit extends TabledEditBeanImpl {
     private Map serviceProviders;
     private String childEitId;
     private String mbDeleteHttpRoute;
+    private String mbDefaultHttpRoute;
+
     private List httpRuteItems = new ArrayList();
 
     private int totalHttpSize = 0;
@@ -125,10 +127,15 @@ public class Edit extends TabledEditBeanImpl {
         if (deleteRuleSMPP != null) deleteRule(Transport.SMPP_TRANSPORT_NAME);
         if (deleteRuleHTTP != null) deleteRule(Transport.HTTP_TRANSPORT_NAME);
         if (deleteRuleMMS != null) deleteRule(Transport.MMS_TRANSPORT_NAME);
+        if (mbDefaultHttpRoute!=null) setDefaultHttpRoute();
         if (getEditId() != null && !editChild) {
             super.process(request, response);
         }
 
+    }
+
+    private void setDefaultHttpRoute() {
+        appContext.getHttpRoutingManager().setDefaultHttpRoute(checkedSet);
     }
 
     private void deleteHttpRoute() {
@@ -371,5 +378,13 @@ public class Edit extends TabledEditBeanImpl {
 
     public void setMbDeleteHttpRoute(String mbDeleteHttpRoute) {
         this.mbDeleteHttpRoute = mbDeleteHttpRoute;
+    }
+
+    public String getMbDefaultHttpRoute() {
+        return mbDefaultHttpRoute;
+    }
+
+    public void setMbDefaultHttpRoute(String mbDefaultHttpRoute) {
+        this.mbDefaultHttpRoute = mbDefaultHttpRoute;
     }
 }

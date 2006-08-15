@@ -45,7 +45,10 @@ public class Edit extends EditBean {
     public static final String COOKIE_TYPE = "cookie";
 
     private String id;
+    private String name;
     private boolean enabled;
+    private boolean defaultRoute;
+    private boolean transit;
     private String path = "";
     private String parentId;
     private String serviceName = null;
@@ -72,6 +75,7 @@ public class Edit extends EditBean {
     private String[] sitesHost = new String[0];
     private String[] sitesPort = new String[0];
     private String[] pathLinks = new String[0];
+    private String defaultSiteObjId = null;
     private Set siteSubjsSet = new HashSet();
 
     private SitePlacement[] siteUsr = new SitePlacement[0];
@@ -170,12 +174,14 @@ public class Edit extends EditBean {
 
         final HttpRoute route = (HttpRoute) appContext.getHttpRoutingManager().getRoutes().get(getEditId());
         if (null != route) {
-            id = route.getName();
+            id = route.getId().toString();
+            name = route.getName();
             Abonent abonent = route.getAbonent();
             RouteSite routeSite = route.getRouteSite();
             siteSubj = routeSite.getSiteSubjAsString();
             sites = routeSite.getArraySite();
             sitesHost = routeSite.getSiteAsStr();
+            defaultSiteObjId = routeSite.getDefaultSiteObjId();
             ton = abonent.getTon();
             npi = abonent.getNpi();
             abonSubj = abonent.getSubjectsAsStr();
@@ -187,6 +193,8 @@ public class Edit extends EditBean {
             }
             abonAddress = abonent.getAddressAsStr();
             enabled = route.isEnabled();
+            defaultRoute = route.isDefaultRoute();
+            transit = route.isTransit();
             if (null != route.getService()) {
                 serviceName = route.getService().getName();
             }
@@ -196,6 +204,7 @@ public class Edit extends EditBean {
         }
         if (isAdd()) {
             enabled = true;
+            defaultRoute = appContext.getHttpRoutingManager().isDefaultRoute();
         }
     }
 
@@ -212,16 +221,15 @@ public class Edit extends EditBean {
             final RouteSite routeSite = createRouteSite();
             final Service serviceObj = appContext.getServiceProviderManager().getServiceById(Long.decode(getParentId()));
             if (isAdd()) {
-                if (routes.containsKey(id))
-                    throw new SCAGJspException(Constants.errors.routing.routes.ROUTE_ALREADY_EXISTS, id);
-                routes.put(id, new HttpRoute(id, serviceObj, enabled, abonent, routeSite));
-                messageText = "Added new route: " + id + " ";
+                HttpRoute route = appContext.getHttpRoutingManager().createRoute(name, serviceObj, enabled, defaultRoute, transit, abonent, routeSite);
+                routes.put(route.getId().toString(), route);
+                messageText = "Added new route: " + name + " ";
             } else {
                 if (!getEditId().equals(id) && routes.containsKey(id))
                     throw new SCAGJspException(Constants.errors.routing.routes.ROUTE_ALREADY_EXISTS, id);
                 routes.remove(getEditId());
-                routes.put(id, new HttpRoute(id, serviceObj, enabled, abonent, routeSite));
-                messageText = "Changed route: " + id + " ";
+                routes.put(id, new HttpRoute(Long.valueOf(id), name, serviceObj, enabled, defaultRoute, transit, abonent, routeSite));
+                messageText = "Changed route: " + name + " ";
 
             }
         } catch (SibincoException e) {
@@ -247,7 +255,8 @@ public class Edit extends EditBean {
 
     private RouteSite createRouteSite() throws SibincoException {
         RouteSite routeSite = new RouteSite();
-
+        routeSite.setDefaultSiteObjId(defaultSiteObjId);
+      
         for (int i = 0; i < siteSubj.length; i++) {
             final String subjectName = siteSubj[i];
             final HttpSite httpSite = (HttpSite) appContext.getHttpRoutingManager().getSites().get(subjectName);
@@ -262,7 +271,7 @@ public class Edit extends EditBean {
                 String siteName = port.substring(0, portlen);
                 port = port.substring(portlen + 1);
                 if (sitesHost[i].equals(siteName)) {
-                    final Site site = new Site(sitesHost[i], Integer.parseInt(port));
+                    final Site site = new Site(sitesHost[i], Integer.parseInt(port), sitesHost[i].equals(defaultSiteObjId));
                     List listPath = new ArrayList();
                     for (int k = 0; k < pathLinks.length; k++) {
                         String pathLink = pathLinks[k];
@@ -354,12 +363,37 @@ public class Edit extends EditBean {
         this.id = id;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(final String name) {
+        this.name = name;
+    }
+
     public boolean isEnabled() {
         return enabled;
     }
 
     public void setEnabled(final boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public boolean isDefaultRoute() {
+        return defaultRoute;
+    }
+
+
+    public void setDefaultRoute(final boolean defaultRoute) {
+        this.defaultRoute = defaultRoute;
+    }
+
+    public boolean isTransit() {
+        return transit;
+    }
+
+    public void setTransit(final boolean transit) {
+        this.transit = transit;
     }
 
     public String getPath() {
@@ -408,6 +442,14 @@ public class Edit extends EditBean {
 
     public void setSiteSubj(final String[] siteSubj) {
         this.siteSubj = siteSubj;
+    }
+
+    public String getDefaultSiteObjId() {
+        return defaultSiteObjId;
+    }
+
+    public void setDefaultSiteObjId(String defaultSiteObjId) {
+        this.defaultSiteObjId = defaultSiteObjId;
     }
 
     public Site[] getSites() {

@@ -262,6 +262,7 @@
                             <c:set var="esite_sub" value="${fn:substringBefore(esite,'.')}"/>
                             <c:set var="sectHeader" value="sectionHeader_${esite_sub}"/>
                             <c:set var="esite_table" value="sitesp_table_${esite_sub}"/>
+                            <c:set var="defaultSiteObjId" value="${fn:escapeXml(i.defaultSite)}"/>
 
                             <div class="collapsing_tree_opened" id="${sectHeader}">
                                  <%--onclick="collasping_tree_showhide_section('${esite_sub}')">--%>
@@ -270,7 +271,7 @@
                                     <col width="1%">
                                     <col width="99%">
                                     <tr>
-                                        <td width="100%">${fn:escapeXml(i.host)}</td>
+                                        <td width="100%"><input type="radio" name="defaultSiteObjId" value="${esite}" <c:if test="${defaultSiteObjId}">checked</c:if>> ${fn:escapeXml(i.host)}</td>
                                         <td align="left" nowrap="true"><input type="hidden" name="sitesHost"  id="${esite}"
                                                                               value="${esite}">
                                             <input type="hidden" name="sitesPort" value="${esite}_${eport}"></td>

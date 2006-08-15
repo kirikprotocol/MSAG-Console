@@ -25,12 +25,17 @@
     <tr>
         <td valign="top">
             <sm-ep:properties title="routes.edit.properties.route_info" noColoredLines="false">
-                <sm-ep:txt title="routes.edit.txt.id" name="id" maxlength="60" readonly="${!bean.add}" validation="nonEmpty"/>
+                <c:if test="${!param.add}">
+                    <sm-ep:txt title="routes.edit.txt.id" name="id" readonly="true"/>
+                </c:if>
+                <sm-ep:txt title="routes.edit.txt.name" name="name" maxlength="60" validation="nonEmpty"/>
             </sm-ep:properties>
         </td>
         <td valign="top">
             <sm-ep:properties title="routes.edit.properties.route_options" noColoredLines="false" noHeaders="false">
                 <sm-ep:check title="routes.edit.check.enabled" name="enabled"/>
+                <sm-ep:check title="routes.edit.check.default" name="defaultRoute" disabled="true"/>
+                <sm-ep:check title="routes.edit.check.transit" name="transit"/>
                 <sm-pm:space/>
             </sm-ep:properties>
         </td>
@@ -365,10 +370,11 @@
                 <col width="1%">
                 <col width="99%">
                 <c:set var="rowN" value="0"/>
+                <c:set var="defaultSiteObjId" value="${fn:escapeXml(bean.defaultSiteObjId)}"/>
                 <c:forEach items="${bean.siteSubj}" var="i">
                     <c:set var="ssubj" value="${fn:escapeXml(i)}"/>
                     <tr class="row${rowN%3}" id="siteSubRow_${ssubj}">
-                        <td><img src="content/images/subject.gif" alt=""><img src="content/images/subject.gif" alt=""></td>
+                        <td><input type="radio" name="defaultSiteObjId" <c:if test="${defaultSiteObjId==ssubj}">checked</c:if> value="${ssubj}"></td> 
                         <td>${ssubj}<input id="subSite" type="hidden" name="siteSubj" value="${ssubj}"></td>
                         <td><img src="content/images/but_del.gif" alt="" onclick="removeSiteSubj('siteSubRow_${ssubj}');"
                                 style="cursor:hand;"></td>
@@ -393,7 +399,7 @@
                                     <col width="1%">
                                     <col width="99%">
                                     <tr>
-                                        <td width="100%">${fn:escapeXml(i.host)}</td>
+                                        <td width="100%"><input type="radio" name="defaultSiteObjId" <c:if test="${defaultSiteObjId==esite}">checked</c:if> value="${esite}"> ${fn:escapeXml(i.host)}</td>
                                         <td align="left" nowrap="true"><input type="hidden" name="sitesHost"  id="${esite}"
                                                                               value="${esite}">
                                             <input type="hidden" name="sitesPort" value="${esite}_${eport}"></td>

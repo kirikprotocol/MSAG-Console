@@ -14,6 +14,9 @@
     <jsp:body>
         <sm-ep:properties title="service.edit.properties.service_info">
             <c:if test="${!bean.add}"><input type="hidden" name="id" id="id" value="${fn:escapeXml(bean.id)}"></c:if>
+            <c:if test="${!param.add}">
+               <sm-ep:txt title="service.edit.txt.id" name="id" readonly ="true" validation="nonEmpty"/>
+            </c:if>
             <sm-ep:txt title="service.edit.txt.name" name="name" validation="nonEmpty"/>
             <sm-ep:txtBox title="service.edit.txtbox.description" cols="0" rows="0" name="description"/>
             <input type="hidden" id="parentId" name="parentId" value="${fn:escapeXml(bean.parentId)}">
@@ -51,14 +54,16 @@
             </sm-pm:menu>
             <div class=page_subtitle>&nbsp;</div>
             <div class=page_subtitle><fmt:message>service.edit.label.http.routes_list</fmt:message></div>
-            <sm:http_route columns="checkbox,id,enabled" names="c,name,enabled" widths="1,79,20"
-                           child="/routing/routes/http" parentId="${bean.parentId}" edit="id"/>
+            <sm:http_route columns="checkbox,id,name,enabled,defaultRoute,transit" names="c,id,name,enabled,default,transit" widths="1,60,20,20,39,59"
+                           child="/routing/routes/http" parentId="${bean.parentId}" edit="name"/>
             <div class=page_subtitle>&nbsp;</div>
             <sm-pm:menu>
                 <sm-pm:item name="mbAddHttpRoute" value="service.edit.item.mbaddchild.value" title="service.edit.item.mbaddchild.title"/>
                 <sm-pm:item name="mbDeleteHttpRoute" value="service.edit.item.mbdelete.value" title="service.edit.item.mbdelete.title"
-                           onclick="return deleteConfirm()" isCheckSensible="true"/>
+                           onclick="return checkDefaultRoute()" isCheckSensible="true"/>
                 <sm-pm:space/>
+                <sm-pm:item name="mbDefaultHttpRoute" value="service.edit.item.mbsetdefaulthttproute.value" title="service.edit.item.mbsetdefaulthttproute.title"
+                           onclick="return checkCount()"/>
             </sm-pm:menu>
         </c:if>
     </jsp:body>

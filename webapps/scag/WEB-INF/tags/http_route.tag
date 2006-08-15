@@ -87,7 +87,7 @@ function edit(idToEdit, child, parentId) {
           <c:when test="${fn:substringBefore('name',column) == fn:substringBefore('name',column)}">
             <c:set var="Id" value="${ user['id']}"/>
             <c:set var="itemValue" value="${empty user[column] ? '&nbsp;' : fn:escapeXml(user[column])}"/>
-            <td>
+            <td <c:if test="${column=='defaultRoute'}"> id="defaultRoute_${Id}"</c:if>>
                 <c:choose>
                     <c:when test="${edit == column}">
                         <a href="#" onClick="return edit('${Id}','${child}','${parentId}');">${itemValue}</a>

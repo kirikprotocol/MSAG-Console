@@ -18,6 +18,7 @@ public class Site {
     private String host;
     private int port;
     private String[] pathLinks;
+    private boolean defaultSite;
 
     public String getId() {
         return host;
@@ -26,19 +27,21 @@ public class Site {
     public Site() {
     }
 
-    public Site(String host, int port, String[] pathLinks) throws SibincoException {
+    public Site(String host, int port, boolean defaultSite, String[] pathLinks) throws SibincoException {
         if(host == null)
             throw new NullPointerException("Host is null");
         this.host = host;
         this.port = port;
+        this.defaultSite = defaultSite;
         this.pathLinks = pathLinks;
     }
 
-    public Site(String host, int port)  throws SibincoException {
+    public Site(String host, int port, boolean defaultSite)  throws SibincoException {
         if(host == null)
             throw new NullPointerException("Host is null");
         this.host = host;
         this.port = port;
+        this.defaultSite = defaultSite;
     }
 
     public String getHost() {
@@ -64,5 +67,13 @@ public class Site {
 
     public void setPathLinks(String[] pathLinks) {
         this.pathLinks = pathLinks;
+    }
+
+    public boolean isDefaultSite() {
+        return defaultSite;
+    }
+
+    public void setDefaultSite(boolean defaultSite) {
+        this.defaultSite = defaultSite;
     }
 }

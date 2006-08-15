@@ -14,6 +14,7 @@ import ru.sibinco.lib.StatusDisconnectedException;
 import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.scag.backend.service.ServiceProvidersManager;
+import ru.sibinco.scag.backend.service.Service;
 import ru.sibinco.scag.backend.status.StatMessage;
 import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.backend.routing.http.placement.Option;
@@ -60,6 +61,9 @@ public class HttpRoutingManager extends Manager{
     private static final String HTTP_ROUTES_TEMPORAL_CONFIG = "http_routes_.xml";
     private static final String HTTP_ROUTES_TRACEABLE_CONFIG = "http_routes__.xml";
 
+    private long lastUsedHttpRouteId = -1;
+
+    private static final String PARAM_NAME_LAST_USED_HTTP_ROUTE_ID = "last used http route id";
 
     public HttpRoutingManager(final File msagConfFolder, final ServiceProvidersManager serviceProvidersManager, final HSDaemon hsDaemon) {
         this.msagConfFolder = msagConfFolder;
@@ -103,6 +107,7 @@ public class HttpRoutingManager extends Manager{
         logger.debug("exit " + this.getClass().getName() + ".loadFromFile(\"" + fileName + "\")");
         try {
             final Document routesDocument = Utils.parse(config.getAbsolutePath());
+            loadParams(routesDocument.getDocumentElement().getElementsByTagName("param"));
             loadOptions(routesDocument.getDocumentElement().getElementsByTagName("options"));
             loadSubjects(routesDocument.getDocumentElement().getElementsByTagName("subject_def"));
             loadSites(routesDocument.getDocumentElement().getElementsByTagName("site_subject_def"));
@@ -125,6 +130,20 @@ public class HttpRoutingManager extends Manager{
         }
     }
 
+    private void loadParams(NodeList params) {
+        for (int i=0; i<params.getLength();i++) {
+          final Element paramElement = (Element)params.item(i);
+          final String name = paramElement.getAttribute("name");
+          try {
+            if (name.equals(PARAM_NAME_LAST_USED_HTTP_ROUTE_ID)) {
+              lastUsedHttpRouteId = Integer.decode(Utils.getNodeText(paramElement)).intValue();
+            }
+          } catch (NumberFormatException e) {
+            logger.error("Int parameter \"" + name + "\" misformatted: " + lastUsedHttpRouteId + ", skipped", e);
+          }
+        }
+    }
+
     private void loadOptions(NodeList options) throws SibincoException {
         setOptions(new Option(options));
     }
@@ -134,12 +153,38 @@ public class HttpRoutingManager extends Manager{
         for (int i = 0; i < routeList.getLength(); i++) {
             final Element routeElem = (Element) routeList.item(i);
             String id = routeElem.getAttribute("id");
-            routes.put(id, createRoute(routeElem, subjects));
+            routes.put(id, createRoute(id,routeElem, subjects));
         }
     }
 
-    private HttpRoute createRoute(Element routeElem, Map subjects) throws SibincoException {
-        return new HttpRoute(routeElem, subjects, serviceProvidersManager);
+    public HttpRoute createRoute(String name, Service serviceObj, boolean enabled, boolean defaultRoute, boolean transit, Abonent abonent, RouteSite routeSite) throws SibincoException {
+      return new HttpRoute(new Long(++lastUsedHttpRouteId), name, serviceObj, enabled, defaultRoute, transit, abonent, routeSite);
+    }
+
+    private HttpRoute createRoute(String id, Element routeElem, Map subjects) throws SibincoException {
+        return new HttpRoute(Long.valueOf(id), routeElem, subjects, serviceProvidersManager);
+    }
+
+    public boolean isDefaultRoute() {
+        return getRoutes().size()>0?false:true;
+    }
+
+    public synchronized void setDefaultHttpRoute(final Set checkedSet) {
+        if (checkedSet.size()==0) return;
+        String id = (String)checkedSet.iterator().next();
+        //unchecking previous default
+        for (Iterator i = routes.values().iterator();i.hasNext();) {
+            ((HttpRoute)i.next()).setDefaultRoute(false);
+        }
+        //checking new default route
+        ((HttpRoute)routes.get(id)).setDefaultRoute(true);
+    }
+
+    private String getParamXmlText() {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append("   <param name=\"" + PARAM_NAME_LAST_USED_HTTP_ROUTE_ID + "\" type=\"int\">").
+              append(lastUsedHttpRouteId).append("</param>").append("\n");
+        return buffer.toString();
     }
 
     private void saveToFile(final String filename) throws SibincoException {
@@ -158,6 +203,7 @@ public class HttpRoutingManager extends Manager{
         try {
             final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream((backup)?newFile:file), localEncoding));
             Functions.storeConfigHeader(out, "http_routes", "http_routes.dtd", localEncoding);
+            out.print(getParamXmlText());
             options.store(out);
             for (Iterator iterator = subjects.values().iterator(); iterator.hasNext();) {
                 final HttpSubject httpSubject = (HttpSubject) iterator.next();

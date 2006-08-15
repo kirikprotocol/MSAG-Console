@@ -290,6 +290,7 @@ function validateForm(frm)
         result = result && r;
       }
 		}
+		else elem.value = true;
 	}
 	return result;
 }
@@ -510,4 +511,46 @@ function tableTag_checkChecks() {
 
 function deleteConfirm() {
     return confirm('<fmt:message>scripts.deleteConfirm</fmt:message>');
+}
+
+function checkCount() {
+    //alert(opForm.elements["checked"].length);
+    var allRoutes = opForm.elements["checked"];
+    var checkedHttpRoutesCounter = 0;
+    for (var i=0; i<allRoutes.length; i++) {
+        if (allRoutes[i].checked && document.getElementById("defaultRoute_"+allRoutes[i].value)) checkedHttpRoutesCounter ++;
+    }
+    if (checkedHttpRoutesCounter!=1) {
+        alert('<fmt:message>scripts.routes.checked</fmt:message>');
+        return false;
+    }
+    return true;
+}
+
+function checkDefaultRoute() {
+    var allRoutes = opForm.elements["checked"];
+    var httpRoutesCounter = 0;
+    var defaultRouteElement;
+    //count http routes
+    for (var i=0; i<allRoutes.length; i++) {
+       if (document.getElementById("defaultRoute_"+allRoutes[i].value)) httpRoutesCounter++;
+    }
+    if (httpRoutesCounter<=1) return true;
+    //checked routes
+    var checkedHttpRoutes = new Array();
+    for (var i=0; i<allRoutes.length; i++) {
+        if (allRoutes[i].checked && document.getElementById("defaultRoute_"+allRoutes[i].value)) checkedHttpRoutes[checkedHttpRoutes.length] = allRoutes[i].value;
+    }
+
+    if (checkedHttpRoutes.length == httpRoutesCounter) return true;
+
+    for (var i=0; i<checkedHttpRoutes.length; i++) {
+        defaultRouteElement = document.getElementById("defaultRoute_"+checkedHttpRoutes[i]);
+        if (trim(defaultRouteElement.firstChild.nodeValue) == "true") {
+            alert("<fmt:message>scripts.routes.delete_default_route</fmt:message>");
+            return false;
+        }
+    }
+
+    return true;
 }

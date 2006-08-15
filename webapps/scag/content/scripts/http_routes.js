@@ -204,6 +204,16 @@ function removeAbonetSubj(rowId) {
 }
 
 function removeSiteSubj(rowId) {
+    var defaultSiteRadios = document.getElementsByName("defaultSiteObjId");
+    var siteSubRow="siteSubRow_";
+    var _rowId=rowId.substr(siteSubRow.length, rowId.length);
+    if (defaultSiteRadios.length>1)
+    for (var i=0; i<defaultSiteRadios.length;i++ ) {
+        if (defaultSiteRadios[i].checked && (_rowId == defaultSiteRadios[i].value || (""+(parseInt(_rowId)+1)) == defaultSiteRadios[i].id) ) {
+          alert("Couldn't remove default site subject");
+          return false;
+        }
+    }
     var selectElem = opForm.all.siteSubjSelect;
     var tbl = opForm.all.sites_table;
     var rowElem = tbl.rows(rowId);
@@ -263,7 +273,8 @@ function addSiteSubj() {
         newRow.className = "row" + ((tbl.rows.length + 1) & 1);
         newRow.id = "siteSubRow_" + (global_http_counter++);
         newCell = document.createElement("td");
-        newCell.innerHTML = '<img src="content/images/subject.gif"><img src="content/images/subject.gif">';
+        var temp= '<input type="radio" name="defaultSiteObjId" id="'+global_http_counter+'" '+isSiteChecked()+' value="'+ subjValue +'">';
+        newCell.innerHTML = temp;
         newRow.appendChild(newCell);
         newCell = document.createElement("td");
         newCell.innerHTML = subjValue + '<input id="subSite" type="hidden" name="siteSubj" value="' + subjValue + '">';
@@ -326,6 +337,15 @@ function createImgButton(imgUrl, onclickT, tooltipText) {
 }
 
 function removeSection(sectionName) {
+    var defaultSiteRadios = document.getElementsByName("defaultSiteObjId");
+
+    if (defaultSiteRadios.length>1)
+    for (var i=0; i<defaultSiteRadios.length;i++ ) {
+        if (trimStr(defaultSiteRadios[i].value.substr(0, defaultSiteRadios[i].value.indexOf('.'))) == sectionName && defaultSiteRadios[i].checked) {
+          alert("Couldn't remove default site");
+          return false;
+        }
+    }
     sectionElem = document.getElementById("sectionHeader_" + sectionName);
     sectionElem.removeNode(true);
     sectionElem = document.getElementById("sectionValue_" + sectionName);
@@ -364,7 +384,7 @@ function addSiteSectionBody(siteName, siteFullName, sitePort, addPathStr) {
             + " <col width=\"1%\">"
             + " <col width=\"99%\">"
             + " <tr>"
-            + " <td width=\"100%\">" + siteFullName + "</td>"
+            + " <td width=\"100%\"><input type=\"radio\" name=\"defaultSiteObjId\" " +isSiteChecked() + " value=\"" + siteFullName + "\"> " + siteFullName + "</td>"
             + " <td align=\"left\" nowrap=\"true\"><input type=\"hidden\" name=\"sitesHost\" id=\"" + siteFullName + "\"  value=\"" + siteFullName + "\">"
             + " <input type=\"hidden\" name=\"sitesPort\" value=\"" + siteFullName + "_" + sitePort + "\"></td>"
             + " <td><img src=\"content/images/but_del.gif\" onClick=\"removeSection('" + siteName + "')\"></td>"
@@ -378,4 +398,12 @@ function addSiteSectionBody(siteName, siteFullName, sitePort, addPathStr) {
             + " </tr>"
             + " </table>"
             + "</div>";
+}
+
+function isSiteChecked() {
+  var defaultSiteRadios = document.getElementsByName("defaultSiteObjId");
+  if (defaultSiteRadios.length==0)
+    return "checked";
+  else
+    return "";
 }

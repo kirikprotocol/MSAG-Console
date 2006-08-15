@@ -53,7 +53,7 @@ public class Edit extends EditBean {
     private String[] sitesHost = new String[0];
     private String[] sitesPort = new String[0];
     private String[] pathLinks = new String[0];
-
+    private String defaultSiteObjId = null;
 
     public String getId() {
         return getName();
@@ -157,7 +157,7 @@ public class Edit extends EditBean {
                                 String siteName = port.substring(0, portlen);
                                 port = port.substring(portlen + 1);
                                 if (sitesHost[i].equals(siteName)) {
-                                    final Site site = new Site(sitesHost[i], Integer.parseInt(port));
+                                    final Site site = new Site(sitesHost[i], Integer.parseInt(port),sitesHost[i].equals(defaultSiteObjId));
                                     List listPath = new ArrayList();
                                     for (int k = 0; k < pathLinks.length; k++) {
                                         String pathLink = pathLinks[k];
@@ -241,7 +241,7 @@ public class Edit extends EditBean {
                                 String siteName = port.substring(0, portlen);
                                 port = port.substring(portlen + 1);
                                 if (sitesHost[i].equals(siteName)) {
-                                    final Site site = new Site(sitesHost[i], Integer.parseInt(port));
+                                    final Site site = new Site(sitesHost[i], Integer.parseInt(port),sitesHost[i].equals(defaultSiteObjId));
                                     List listPath = new ArrayList();
                                     for (int k = 0; k < pathLinks.length; k++) {
                                         String pathLink = pathLinks[k];
@@ -393,6 +393,14 @@ public class Edit extends EditBean {
 
     public void setSites(final Site[] sites) {
         this.sites = sites;
+    }
+
+    public String getDefaultSiteObjId() {
+        return defaultSiteObjId;
+    }
+
+    public void setDefaultSiteObjId(String defaultSiteObjId) {
+       this.defaultSiteObjId = defaultSiteObjId;
     }
 
     public String[] getSitesHost() {

@@ -37,6 +37,7 @@ public class HttpSite {
             Element siteElem = (Element) sitekList.item(i);
             site.setHost(siteElem.getAttribute("host").trim());
             site.setPort(Integer.parseInt(siteElem.getAttribute("port").trim()));
+            site.setDefaultSite(siteElem.getAttribute("default").equals("true"));
             NodeList pathList = siteElem.getElementsByTagName("path");
             for (int j = 0; j < pathList.getLength(); j++) {
                 Element pathElement = (Element) pathList.item(j);
@@ -51,7 +52,7 @@ public class HttpSite {
         out.println("  <site_subject_def id=\"" + StringEncoderDecoder.encode(getName()) + "\">");
         for (Iterator iterator = sites.values().iterator(); iterator.hasNext();) {
             final Site site = (Site) iterator.next();
-            out.println("    <site host=\"" + StringEncoderDecoder.encode(site.getHost()) + "\"  port=\"" + site.getPort() + "\" >");
+            out.println("    <site host=\"" + StringEncoderDecoder.encode(site.getHost()) + "\"  port=\"" + site.getPort() + "\" default=\""+site.isDefaultSite()+"\">");
             String[] pathLinks = site.getPathLinks();
             for (int i = 0; i < pathLinks.length; i++) {
                 out.println("      <path value=\"" + pathLinks[i] + "\"/>");
@@ -62,14 +63,14 @@ public class HttpSite {
         return out;
     }
 
-    public HttpSite(String name, Map sites) throws SibincoException {
+    public HttpSite(String name, Map sites) {
         if (name == null)
             throw new NullPointerException("Name is null");
         this.name = name;
         this.sites = sites;
     }
 
-    public HttpSite(String name) throws SibincoException {
+    public HttpSite(String name)  {
         if (name == null)
             throw new NullPointerException("Name is null");
         this.name = name;

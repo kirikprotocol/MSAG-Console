@@ -27,14 +27,17 @@ public class HttpRoute {
 
     private final Logger logger = Logger.getLogger(this.getClass());
 
+    private Long id;
     private String name;
     private Service service;
     private boolean enabled = false;
+    private boolean defaultRoute = false;
+    private boolean transit = false;
 
     private Abonent abonent;
     private RouteSite routeSite;
 
-    public HttpRoute(final String routeName, final Service service, final boolean enabled,
+    public HttpRoute(final Long id, final String routeName, final Service service, final boolean enabled, final boolean defaultRoute, final boolean transit,
                      final Abonent abonent, final RouteSite routeSite) {
         if (routeName == null)
             throw new NullPointerException("Http route name is null");
@@ -45,33 +48,41 @@ public class HttpRoute {
         if (routeSite == null)
             throw new NullPointerException("Sites list is null");
 
+        this.id = id;
         this.name = routeName;
         this.service = service;
         this.enabled = enabled;
+        this.defaultRoute = defaultRoute;
+        this.transit = transit;
         this.abonent = abonent;
         this.routeSite = routeSite;
     }
 
-    public HttpRoute(String routeName) {
+    public HttpRoute(Long id, String routeName) {
         if (routeName == null)
             throw new NullPointerException("Http route name is null");
         if (routeName.length() > Constants.ROUTE_ID_MAXLENGTH)
             throw new IllegalArgumentException("Http route name is too long");
-
+        this.id = id;
         this.name = routeName;
         this.abonent = null;
         this.routeSite = null;
         this.service = null;
         this.enabled = false;
+        this.defaultRoute = false;
+        this.transit = false;
     }
 
-    public HttpRoute(final Element routeElement, final Map subjects, final ServiceProvidersManager serviceProvidersManager)
+    public HttpRoute(final Long id, final Element routeElement, final Map subjects, final ServiceProvidersManager serviceProvidersManager)
             throws SibincoException {
-        this.name = routeElement.getAttribute("id");
+        this.id = id;
+        this.name = routeElement.getAttribute("name");
         if (name.length() > Constants.ROUTE_ID_MAXLENGTH)
             throw new SibincoException("Http route name is too long: " + name.length() + " chars \"" + name + '"');
 
         this.enabled = routeElement.getAttribute("enabled").equalsIgnoreCase("true");
+        this.defaultRoute = routeElement.getAttribute("default").equalsIgnoreCase("true");
+        this.transit = routeElement.getAttribute("transit").equalsIgnoreCase("true");
         final Long serviceId = Long.decode(routeElement.getAttribute("serviceId"));
         this.service = serviceProvidersManager.getServiceById(serviceId);
         abonent = loadAbonent(routeElement, subjects);
@@ -95,7 +106,7 @@ public class HttpRoute {
     public PrintWriter store(PrintWriter out) {
         String name = StringEncoderDecoder.encode(getName());
         try {
-            out.println("  <route id=\"" + name + "\" serviceId=\"" + service.getId() + "\" enabled=\"" + isEnabled() + "\">");
+            out.println("  <route id=\"" + id + "\" serviceId=\"" + service.getId() + "\" enabled=\"" + isEnabled() + "\" default=\""+ isDefaultRoute() + "\" name=\"" + name + "\" transit=\"" + isTransit() + "\">");
             abonent.store(out);
             routeSite.store(out);
             out.println("  </route>");
@@ -112,12 +123,12 @@ public class HttpRoute {
         this.name = name;
     }
 
-    public String getId() {
-        return getName();
+    public Long getId() {
+        return id;
     }
 
-    public void setId(String id) {
-        setName(id);
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public Service getService() {
@@ -134,6 +145,22 @@ public class HttpRoute {
 
     public void setEnabled(final boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public boolean isDefaultRoute() {
+        return defaultRoute;
+    }
+
+    public void setDefaultRoute(final boolean defaultRoute) {
+        this.defaultRoute = defaultRoute;
+    }
+
+    public boolean isTransit() {
+        return transit;
+    }
+
+    public void setTransit(final boolean transit) {
+        this.transit = transit;
     }
 
     public Abonent getAbonent() {
