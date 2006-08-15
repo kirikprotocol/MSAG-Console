@@ -603,12 +603,16 @@ void CommandTraceHttpRoute::init()
     site = "";
     path = "";
     port = 0;
+    sid = 0;
+    rid = 0;
 
     BEGIN_SCAN_PARAMS
     GETSTRPARAM_(addr,    "abonent")
     GETSTRPARAM_(site,    "site")
     GETSTRPARAM_(path,    "path")
     GETINTPARAM(port,    "port")
+    GETINTPARAM(rid,    "rid")    
+    GETINTPARAM(sid,    "sid")    
     END_SCAN_PARAMS
 
     std::string errorStr;
@@ -625,15 +629,22 @@ void CommandTraceHttpRoute::init()
 
 Response * CommandTraceHttpRoute::CreateResponse(scag::Scag * ScagApp)
 {
+    bool b;
     smsc_log_info(logger, "CommandTraceHttpRoute is processing...");
 
     Variant result(smsc::admin::service::StringListType);
 
     try {
-        if(port == 0)
-            port = 80;
+        if(port == 0) port = 80;
+        
         vector<std::string> traceBuff;
-        if(scag::transport::http::HttpTraceRouter::Instance().getTraceRoute(addr, site, path, port, traceBuff))
+        
+        if(rid || sid)
+            b = scag::transport::http::HttpTraceRouter::Instance().getTraceRouteById(addr, site, rid, sid, traceBuff);
+        else            
+            b = scag::transport::http::HttpTraceRouter::Instance().getTraceRoute(addr, site, path, port, traceBuff);
+            
+        if(b)            
             result.appendValueToStringList("Http route found");
         else
             result.appendValueToStringList("Http route not found");

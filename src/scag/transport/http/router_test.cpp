@@ -22,12 +22,12 @@ int main(int argc, char* argv[])
         HttpTraceRouter& tr = HttpTraceRouter::Instance();
         tr.ReloadRoutes();
         std::vector<std::string> trace;
-        tr.getTraceRoute("79029124444", "mail.ru", "/melodies/rus/pop/3.mp3", 8080, trace);
+        tr.getTraceRoute("79039004444", "mail.ru", "/melodies/rus/pop/3.mp3", 8080, trace);
         for(int i = 0; i< trace.size(); i++)
             smsc_log_debug(logger, trace[i].c_str());
         smsc_log_debug(logger, "sdfsdf");
         std::vector<std::string> trace1;
-        tr.getTraceRoute("79029124444", "mail.ru", "/pictures/1.gif", 8080, trace1);
+        tr.getTraceRouteById("79039004444", "/utf8/2.html", 1, 0, trace1);
         for(int i = 0; i< trace1.size(); i++)
             smsc_log_debug(logger, trace1[i].c_str());
 /*        HttpRoute r = rt.findRoute("+79139034444", "yandex.ru", "/melodies", 8080);

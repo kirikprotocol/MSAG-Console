@@ -193,7 +193,7 @@ public:
 class CommandTraceHttpRoute : public AdminCommand
 {
     std::string addr, site, path;
-    uint32_t port;
+    uint32_t port, sid, rid;
 public:
     CommandTraceHttpRoute(const xercesc::DOMDocument * const doc) :
         AdminCommand((Command::Id)CommandIds::traceHttpRoute, doc)

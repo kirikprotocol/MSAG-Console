@@ -136,6 +136,8 @@ void SCAGCommandDispatcher::stopGw()
 
 void SCAGCommandDispatcher::abortGw()
 {
+  Logger * logger = getLogger();
+  smsc_log_debug(logger, "Scag aborting...");
   MutexGuard guard(runnerMutex);
   if (runner != 0 && runner->isRunning()) {
     runner->Abort();
@@ -143,10 +145,13 @@ void SCAGCommandDispatcher::abortGw()
     delete runner;
     runner = 0;
   }
+  smsc_log_debug(logger, "Scag aborted");  
 }
 
 void SCAGCommandDispatcher::dumpGw()
 {
+  Logger * logger = getLogger();
+  smsc_log_debug(logger, "Scag dumping...");
   MutexGuard guard(runnerMutex);
   if (runner != 0 && runner->isRunning()) {
     runner->Dump();
@@ -154,6 +159,7 @@ void SCAGCommandDispatcher::dumpGw()
     delete runner;
     runner = 0;
   }
+  smsc_log_debug(logger, "Scag dumped");
 }
 
 SCAGCommandDispatcher::SCAGCommandDispatcher(Socket * admSocket)
