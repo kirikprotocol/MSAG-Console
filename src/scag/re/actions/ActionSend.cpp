@@ -119,11 +119,12 @@ void ActionSend::init(const SectionParams& params,PropertyObject _propertyObject
     propertyObject = _propertyObject;
 
     terminal = false;
-    if(params.Exists("terminal"))
-    {
-        if(!strcmp(params["terminal"].c_str(), "yes"))
-            terminal = true;
-    }
+    if(params.Exists("terminal") && !strcmp(params["terminal"].c_str(), "yes"))
+        terminal = true;
+
+    usr = false;
+    if(params.Exists("usr") && !strcmp(params["usr"].c_str(), "true"))
+        usr = true;
 
     CheckParameter(params, propertyObject, "send", "message", true, true, strMsg, bExist);
 
@@ -198,6 +199,8 @@ bool ActionSend::run(ActionContext& context)
     }
 
     ev.cCriticalityLevel = (uint8_t)level;
+    
+    if(usr) ev.sUsr = context.getSession().getUSR();
 
     smsc_log_debug(logger, "msg: \"%s\", toEmail: \"%s\", toSms: \"%s\", date: \"%s\"", ev.pMessageText.c_str(), ev.pAddressEmail.c_str(), ev.pAbonentsNumbers.c_str(), ev.pDeliveryTime.c_str());
 
