@@ -111,15 +111,21 @@ void PersClient::Init(const PersClientConfig& cfg)// throw(PersClientException);
 
 void PersClientImpl::init_internal(const char *_host, int _port, int _timeout) //throw(PersClientException)
 {
-    log = Logger::getInstance("client");
+    log = Logger::getInstance("persclient");
     connected = false;
     host = _host;
     port = _port;
     timeout = _timeout;
-    init();
+    try{
+        init();
+    }
+    catch(PersClientException& e)
+    {
+        smsc_log_error(log, "Error during initialization. %s", e.what());
+    }
 }
 
-void PersClientImpl::configChanged() //throw(PersClientException)
+void PersClientImpl::configChanged()
 {
     PersClientConfig& cfg = ConfigManager::Instance().getPersClientConfig();
     
@@ -137,7 +143,13 @@ void PersClientImpl::reinit(const char *_host, int _port, int _timeout) //throw(
     host = _host;
     port = _port;
     timeout = _timeout;
-    init();
+    try{
+        init();
+    }
+    catch(PersClientException& e)
+    {
+        smsc_log_error(log, "Error during reinitialization. %s", e.what());
+    }
 }
 
 void PersClientImpl::_SetProperty(ProfileType pt, const char* skey, uint32_t ikey, Property& prop) //throw(PersClientException)
@@ -316,8 +328,11 @@ int PersClientImpl::IncModProperty(ProfileType pt, uint32_t key, Property& prop,
 void PersClientImpl::init()
 {
     char resp[3];
-    if(connected)
-        return;
+    
+    if(connected) return;
+        
+    smsc_log_info(log, "Connecting to persserver host=%s:%d timeout=%d", host.c_str(), port, timeout);
+    
     if(sock.Init(host.c_str(), port, timeout) == -1 || sock.Connect() == -1)
         throw PersClientException(CANT_CONNECT);
         
@@ -379,16 +394,21 @@ void PersClientImpl::WriteAllTO(char* buf, uint32_t sz)
 
 void PersClientImpl::SendPacket()
 {
-    init();
-    try{
-        SetPacketSize();
-        WriteAllTO(sb.get(), sb.GetSize());
-    }
-    catch(PersClientException &e)
+    uint32_t  t = 0;
+    for(;;)
     {
-        connected = false;
-        sock.Close();
-        throw e;
+        try{
+            init();            
+            SetPacketSize();
+            WriteAllTO(sb.get(), sb.GetSize());
+            return;
+        }
+        catch(PersClientException &e)
+        {
+            connected = false;
+            sock.Close();
+            if(++t >= 2) throw e;
+        }
     }
 }
 

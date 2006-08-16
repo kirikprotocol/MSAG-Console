@@ -10,11 +10,13 @@
 #include "version.inc"
 
 #include "PersClient.h"
+#include "scag/config/ConfigManager.h"
 
 using namespace std;
 using namespace smsc::logger;
 using namespace scag::pers::client;
 using namespace scag::pers;
+using namespace scag::config;
 
 static Logger *logger;
 
@@ -33,6 +35,8 @@ int main(int argc, char* argv[])
     atexit(atExitHandler);
 
     try{
+        ConfigManager::Init();
+        
         PersClient::Init("localhost", 1200, 60);
         PersClient& pc = PersClient::Instance();
         Property prop;

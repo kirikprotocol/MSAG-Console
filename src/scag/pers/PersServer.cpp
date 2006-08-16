@@ -6,6 +6,8 @@ namespace scag { namespace pers {
 using smsc::util::Exception;
 using smsc::logger::Logger;
 
+#define MAX_PACKET_SIZE 100000
+
 PersServer::PersServer(const char *persHost_, int persPort_, int maxClientCount_, CommandDispatcher *d)
     : log(Logger::getInstance("server")), persHost(""), persPort(0), isStopping(false), CmdDispatcher(d)
 {
@@ -23,7 +25,7 @@ PersServer::~PersServer()
 
 void PersServer::InitServer()
 {
-    if(sock.InitServer(persHost.c_str(), persPort, 10))
+    if(sock.InitServer(persHost.c_str(), persPort, 10, 1, true))
         throw Exception("Failed to init socket server by host: %s, port: %d", persHost.c_str(), persPort);
 
     smsc_log_info(log, "Socket server is inited by host: %s, port: %d", persHost.c_str(), persPort);
@@ -48,7 +50,14 @@ void PersServer::process_read_socket(Socket* s)
             {
                 j = sb->GetPos();
                 sb->SetPos(0);
-                s->setData(1, (void*)sb->ReadInt32());
+                k = sb->ReadInt32();
+                if(k > MAX_PACKET_SIZE)
+                {
+                    smsc_log_warn(log, "Too big packet from client");
+                    remove_socket(s);
+                    return;
+                }
+                s->setData(1, (void*)k);
                 sb->SetPos(j);
             }
         }
