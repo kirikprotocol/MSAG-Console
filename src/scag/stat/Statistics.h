@@ -218,6 +218,7 @@ using smsc::smeman::SmeRecord;
         std::string  pDeliveryTime;//[DELEVIRY_TIME_LENGTH];
 
         uint8_t  cCriticalityLevel;
+        uint16_t  sUsr;
         SACC_ALARM_MESSAGE_t()
         {
             pAbonentsNumbers="";//memset(pAbonentsNumbers,0,MAX_NUMBERS_TEXT_LENGTH);
@@ -226,6 +227,7 @@ using smsc::smeman::SmeRecord;
             pDeliveryTime="";//memset(pDeliveryTime,0,DELEVIRY_TIME_LENGTH);
             cCriticalityLevel=scl_info; 
             sEventType = sec_alarm_message;
+            sUsr = 0;
         }
         SACC_ALARM_MESSAGE_t(const SACC_ALARM_MESSAGE_t & src)
         {
@@ -240,7 +242,7 @@ using smsc::smeman::SmeRecord;
          //   memcpy(pDeliveryTime,src.pDeliveryTime,DELEVIRY_TIME_LENGTH);
             cCriticalityLevel = src.cCriticalityLevel;
             sEventType=src.sEventType;
-
+            sUsr = src.sUsr;
         }
         SACC_ALARM_MESSAGE_t(SACC_ALARM_MESSAGE_t * src)
         {
@@ -255,7 +257,7 @@ using smsc::smeman::SmeRecord;
          //   memcpy(pDeliveryTime,src.pDeliveryTime,DELEVIRY_TIME_LENGTH);
             cCriticalityLevel = src->cCriticalityLevel;
             sEventType=src->sEventType;
-
+            sUsr = src->sUsr;
         }
         uint16_t getEventType()const{return sEventType;};
 

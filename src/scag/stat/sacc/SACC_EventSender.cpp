@@ -312,8 +312,9 @@ void EventSender::performTransportEvent(const SACC_TRAFFIC_INFO_EVENT_t& e)
     writeHeader(e.Header, e.pSessionKey);
 
     uint32_t len = e.pMessageText.size();
+    len = len > MAX_TEXT_MESSAGE_LENGTH * 2 ? MAX_TEXT_MESSAGE_LENGTH*2 : len;
     pdubuffer.WriteNetInt16(len);
-    pdubuffer.Write(e.pMessageText.c_str(),(len>MAX_TEXT_MESSAGE_LENGTH*2)?MAX_TEXT_MESSAGE_LENGTH*2:len);
+    pdubuffer.Write(e.pMessageText.c_str(), len);
     pdubuffer.WriteNetInt16(1);
     pdubuffer.WriteByte(e.cDirection);
     uint32_t bsize= pdubuffer.getPos();
@@ -390,7 +391,9 @@ void EventSender::performAlarmMessageEvent(const SACC_ALARM_MESSAGE_t& e)
 
  pdubuffer.WriteNetInt16(1);
  pdubuffer.WriteByte(e.cCriticalityLevel);
-
+ 
+ pdubuffer.WriteNetInt16(2);
+ pdubuffer.WriteInt16(e.sUsr);
  
  uint32_t bsize= pdubuffer.getPos();
  pdubuffer.setPos(0);

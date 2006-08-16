@@ -29,7 +29,7 @@ protected:
     std::string strMsg;
     Array<std::string> toSms, toEmail;
     Array<std::string> fromSms, fromEmail;
-    bool terminal;
+    bool terminal, usr;
 
     SendLevel level;
 

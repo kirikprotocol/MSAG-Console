@@ -123,7 +123,7 @@ void ActionSend::init(const SectionParams& params,PropertyObject _propertyObject
         terminal = true;
 
     usr = false;
-    if(params.Exists("usr") && !strcmp(params["usr"].c_str(), "true"))
+    if(params.Exists("usr") && !strcmp(params["usr"].c_str(), "yes"))
         usr = true;
 
     CheckParameter(params, propertyObject, "send", "message", true, true, strMsg, bExist);

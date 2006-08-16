@@ -95,6 +95,7 @@ namespace scag { namespace re { namespace actions
 
 
         CommandAccessor& getCommand() { return command; };
+        Session& getSession() { return session; };        
 
         bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value);
         Property* getProperty(const std::string& var);
