@@ -42,22 +42,22 @@
     struct timeval  agentStartTime;
     static u_long      accepted = 2;
     static int         status = 0;
-    static oid statusNotificationOid[] = { 1, 3, 6, 1, 4, 1, 17939, 1, 0, 1 };
-    static oid alertOid[] =              { 1, 3, 6, 1, 4, 1, 17939, 1, 0, 2 };
-    static oid smscAlertFFMROid[] =      { 1, 3, 6, 1, 4, 1, 17939, 1, 0, 3 };
-    static oid smscDescrOid[] =          { 1, 3, 6, 1, 4, 1, 17939, 1, 1, 0 };
-    static oid status_oid[] =            { 1, 3, 6, 1, 4, 1, 17939, 1, 2, 0 };
-    static oid smscUpTimeOid[] =         { 1, 3, 6, 1, 4, 1, 17939, 1, 3, 0 };
-    static oid accepted_oid[] =          { 1, 3, 6, 1, 4, 1, 17939, 1, 4, 0 };
-    static oid alertMessageOid[] =       { 1, 3, 6, 1, 4, 1, 17939, 1, 5, 0 };
-    static oid alertSeverityOid[] =      { 1, 3, 6, 1, 4, 1, 17939, 1, 7, 0 };
-    static oid alertIdOid[] =            { 1, 3, 6, 1, 4, 1, 17939, 1, 8, 0 };
-    static oid alertObjCategoryOid[] =   { 1, 3, 6, 1, 4, 1, 17939, 1, 9, 0 };
-    static oid sumbitOkOid[] =           { 1, 3, 6, 1, 4, 1, 17939, 1, 4, 1, 0 };
-    static oid sumbitErrOid[] =          { 1, 3, 6, 1, 4, 1, 17939, 1, 4, 2, 0 };
-    static oid deliverOkOid[] =          { 1, 3, 6, 1, 4, 1, 17939, 1, 4, 3, 0 };
-    static oid deliverErrOid[] =         { 1, 3, 6, 1, 4, 1, 17939, 1, 4, 4, 0 };
-    static oid rescheduledOid[] =        { 1, 3, 6, 1, 4, 1, 17939, 1, 4, 5, 0 };
+    static oid statusNotificationOid[] = { 1, 3, 6, 1, 4, 1, 26757, 1, 0, 1 };
+    static oid alertOid[] =              { 1, 3, 6, 1, 4, 1, 26757, 1, 0, 2 };
+    static oid smscAlertFFMROid[] =      { 1, 3, 6, 1, 4, 1, 26757, 1, 0, 3 };
+    static oid smscDescrOid[] =          { 1, 3, 6, 1, 4, 1, 26757, 1, 1, 0 };
+    static oid status_oid[] =            { 1, 3, 6, 1, 4, 1, 26757, 1, 2, 0 };
+    static oid smscUpTimeOid[] =         { 1, 3, 6, 1, 4, 1, 26757, 1, 3, 0 };
+    static oid accepted_oid[] =          { 1, 3, 6, 1, 4, 1, 26757, 1, 4, 0 };
+    static oid alertMessageOid[] =       { 1, 3, 6, 1, 4, 1, 26757, 1, 5, 0 };
+    static oid alertSeverityOid[] =      { 1, 3, 6, 1, 4, 1, 26757, 1, 7, 0 };
+    static oid alertIdOid[] =            { 1, 3, 6, 1, 4, 1, 26757, 1, 8, 0 };
+    static oid alertObjCategoryOid[] =   { 1, 3, 6, 1, 4, 1, 26757, 1, 9, 0 };
+    static oid sumbitOkOid[] =           { 1, 3, 6, 1, 4, 1, 26757, 1, 4, 1, 0 };
+    static oid sumbitErrOid[] =          { 1, 3, 6, 1, 4, 1, 26757, 1, 4, 2, 0 };
+    static oid deliverOkOid[] =          { 1, 3, 6, 1, 4, 1, 26757, 1, 4, 3, 0 };
+    static oid deliverErrOid[] =         { 1, 3, 6, 1, 4, 1, 26757, 1, 4, 4, 0 };
+    static oid rescheduledOid[] =        { 1, 3, 6, 1, 4, 1, 26757, 1, 4, 5, 0 };
   };
 
   namespace smsc{
