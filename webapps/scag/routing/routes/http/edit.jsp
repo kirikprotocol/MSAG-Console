@@ -188,6 +188,7 @@
     </tr>
     </table>
     <br>
+    <!------------------------ address prefix| address place---------------->
     <table width="100%" cellpadding="0" cellspacing="0">
         <tr><td>
         <div class="page_subtitle">&nbsp;</div>
@@ -280,6 +281,181 @@
          </tr>
         </table>
 <%--</sm-et:section>--%>
+    <!-- empty | route id-->
+    <table width="100%" cellpadding="0" cellspacing="0">
+        <tr><td>
+        <div class="page_subtitle">&nbsp;</div>
+        <br>
+        <table  width="50%" class="properties_list" cellpadding="0" cellspacing="0">
+            <tr>
+                <td>&nbsp;</td>
+                <td valign="top" width="100%">
+                </td>
+            </tr>
+        </table>
+            <table width="50%" class="properties_list" cellpadding="0" cellspacing="0">
+                <col width="40%" align="left">
+                <col width="50%" align="left">
+                <col width="0%" align="left">
+                <tr valign="top">
+                    <td width="25%">
+                    </td>
+                    <td width="68%">&nbsp;
+                    </td>
+                    <td>&nbsp;</td>
+                </tr>
+            </table>
+        </td>
+        <td width="473">
+        <div class="page_subtitle">Route Id place:</div>
+        <br>
+            <table id="site_route_id_tbl" class="properties_list" cellpadding="0" cellspacing="0">
+                <c:set var="rowN" value="0"/>
+                <c:forEach items="${bean.siteRouteId}" var="pls">
+                    <tr class="row${rowN%3}" id="site_route_id_place_${pls.name}_${rowN}">
+                        <td width="7%"><select id="siteRouteIdSelect_${pls.name}_${rowN}"
+                                               name="siteRouteIdSelect_${pls.name}_${rowN}" class="txt">
+                            <c:forEach items="${bean.optionTypes}" var="i">
+                                <c:choose>
+                                    <c:when test="${pls.type==i}">
+                                        <option value="${fn:escapeXml(i)}" selected="true">${fn:escapeXml(i)}</option>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>
+                                    </c:otherwise>
+                                </c:choose>
+                            </c:forEach>
+                        </select>
+                        </td>
+                        <td>&nbsp;</td>
+                            <%--<td width="43%">Priority:&nbsp;${pls.name}</td>--%>
+                        <td>
+                            <input type="text" size="45" style="color:black;" value="${pls.name}"
+                                   readonly="true"/>
+                            <input type="hidden" name="siteRouteIdName" value="${pls.name}">
+                            <input type="hidden" name="siteRouteIdType" value="${pls.name}_${rowN}">
+                        </td>
+                            <%--<td>Priority:&nbsp;${pls.priority}</td>--%>
+                        <td width="65%"><img src="content/images/but_del.gif" alt=""
+                                             onClick="removeRow(opForm.all.site_route_id_tbl, 'site_route_id_place_${pls.name}_${rowN}');"
+                                             style="cursor:hand;"></td>
+                    </tr>
+                    <c:set var="rowN" value="${rowN+1}"/>
+                </c:forEach>
+            </table>
+        <!--<br>-->
+        <hr width="50%" align="left"/>
+        <table width="50%" class="properties_list" cellpadding="0" cellspacing="0">
+            <col width="40%" align="left">
+            <col width="50%" align="left">
+            <col width="0%" align="left">
+            <tr valign="top">
+                <td width="7%"><select id="typeSelectRouteIdSite" class="txt">
+                    <c:forEach items="${bean.optionTypes}" var="i">
+                        <option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>
+                    </c:forEach>
+                </select>
+                </td>
+                <td width="25%">
+                    <input id="new_site_route_id" class="txt" size="50" name="new_site_route_id">
+                </td>
+                <td width="68%"><img src="content/images/but_add.gif" alt="Add new Site"
+                         onclick="addSiteDefaultRouteIdplace(opForm.all.new_site_route_id, opForm.all.typeSelectRouteIdSite.options[typeSelectRouteIdSite.selectedIndex].value)"
+                         style="cursor:hand;"></td>
+                <td>&nbsp;</td>
+            </tr>
+        </table>
+        </td>         </tr>
+        </table>
+    <!-- empty | route id-->
+    <br>
+    <!-- empty | service id-->
+    <table width="100%" cellpadding="0" cellspacing="0">
+        <tr><td>
+        <div class="page_subtitle">&nbsp;</div>
+        <br>
+        <table  width="50%" class="properties_list" cellpadding="0" cellspacing="0">
+            <tr>
+                <td>&nbsp;</td>
+                <td valign="top" width="100%">
+                </td>
+            </tr>
+        </table>
+            <table width="50%" class="properties_list" cellpadding="0" cellspacing="0">
+                <col width="40%" align="left">
+                <col width="50%" align="left">
+                <col width="0%" align="left">
+                <tr valign="top">
+                    <td width="25%">
+                    </td>
+                    <td width="68%">&nbsp;
+                    </td>
+                    <td>&nbsp;</td>
+                </tr>
+            </table>
+        </td>
+        <td width="473">
+        <div class="page_subtitle">Service Id place:</div>
+        <br>
+            <table id="site_service_id_tbl" class="properties_list" cellpadding="0" cellspacing="0">
+                <c:set var="rowN" value="0"/>
+                <c:forEach items="${bean.siteServiceId}" var="pls">
+                    <tr class="row${rowN%3}" id="site_service_id_place_${pls.name}_${rowN}">
+                        <td width="7%"><select id="siteServiceIdSelect_${pls.name}_${rowN}"
+                                               name="siteServiceIdSelect_${pls.name}_${rowN}" class="txt">
+                            <c:forEach items="${bean.optionTypes}" var="i">
+                                <c:choose>
+                                    <c:when test="${pls.type==i}">
+                                        <option value="${fn:escapeXml(i)}" selected="true">${fn:escapeXml(i)}</option>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>
+                                    </c:otherwise>
+                                </c:choose>
+                            </c:forEach>
+                        </select>
+                        </td>
+                        <td>&nbsp;</td>
+                            <%--<td width="43%">Priority:&nbsp;${pls.name}</td>--%>
+                        <td>
+                            <input type="text" size="45" style="color:black;" value="${pls.name}"
+                                   readonly="true"/>
+                            <input type="hidden" name="siteServiceIdName" value="${pls.name}">
+                            <input type="hidden" name="siteServiceIdType" value="${pls.name}_${rowN}">
+                        </td>
+                            <%--<td>Priority:&nbsp;${pls.priority}</td>--%>
+                        <td width="65%"><img src="content/images/but_del.gif" alt=""
+                                             onClick="removeRow(opForm.all.site_service_id_tbl, 'site_service_id_place_${pls.name}_${rowN}');"
+                                             style="cursor:hand;"></td>
+                    </tr>
+                    <c:set var="rowN" value="${rowN+1}"/>
+                </c:forEach>
+            </table>
+        <!--<br>-->
+        <hr width="50%" align="left"/>
+        <table width="50%" class="properties_list" cellpadding="0" cellspacing="0">
+            <col width="40%" align="left">
+            <col width="50%" align="left">
+            <col width="0%" align="left">
+            <tr valign="top">
+                <td width="7%"><select id="typeSelectServiceIdSite" class="txt">
+                    <c:forEach items="${bean.optionTypes}" var="i">
+                        <option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>
+                    </c:forEach>
+                </select>
+                </td>
+                <td width="25%">
+                    <input id="new_site_service_id" class="txt" size="50" name="new_site_service_id">
+                </td>
+                <td width="68%"><img src="content/images/but_add.gif" alt="Add new Site"
+                         onclick="addSiteDefaultServiceIdplace(opForm.all.new_site_service_id, opForm.all.typeSelectServiceIdSite.options[typeSelectServiceIdSite.selectedIndex].value)"
+                         style="cursor:hand;"></td>
+                <td>&nbsp;</td>
+            </tr>
+        </table>
+        </td>         </tr>
+        </table>
+    <!-- empty | service id-->
     </td></tr>
 </table>
 <br>
@@ -374,7 +550,7 @@
                 <c:forEach items="${bean.siteSubj}" var="i">
                     <c:set var="ssubj" value="${fn:escapeXml(i)}"/>
                     <tr class="row${rowN%3}" id="siteSubRow_${ssubj}">
-                        <td><input type="radio" name="defaultSiteObjId" <c:if test="${defaultSiteObjId==ssubj}">checked</c:if> value="${ssubj}"></td> 
+                        <td><input type="radio" name="defaultSiteObjId" <c:if test="${defaultSiteObjId==ssubj}">checked</c:if> value="${ssubj}"></td>
                         <td>${ssubj}<input id="subSite" type="hidden" name="siteSubj" value="${ssubj}"></td>
                         <td><img src="content/images/but_del.gif" alt="" onclick="removeSiteSubj('siteSubRow_${ssubj}');"
                                 style="cursor:hand;"></td>

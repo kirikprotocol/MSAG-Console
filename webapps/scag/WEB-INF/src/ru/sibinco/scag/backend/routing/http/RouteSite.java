@@ -30,6 +30,8 @@ public class RouteSite {
     private Map sites = new HashMap();
     private List usrPlace = new ArrayList();
     private List addressPlace = new ArrayList();
+    private List routeIdPlace = new ArrayList();
+    private List serviceIdPlace = new ArrayList();
 
 
     public RouteSite(Map siteSubjects, Map sites) {
@@ -67,8 +69,11 @@ public class RouteSite {
         }
         NodeList placementList = routeElement.getElementsByTagName("placement");
         if (placementList != null) {
-            Element usrplacementElement = (Element) placementList.item(0);
+            Element usrplacementElement = (Element) placementList.item(1);
             Element addrplacementElement = (Element) placementList.item(1);
+            Element routeIdplacementElement = (Element) placementList.item(1);
+            Element serviceIdplacementElement = (Element) placementList.item(1);
+
             if (usrplacementElement != null) {
                 NodeList usrPlaceNodeList = usrplacementElement.getElementsByTagName("usr_place");
                 if (usrPlaceNodeList != null) {
@@ -90,6 +95,30 @@ public class RouteSite {
                                 addressPlaceElement.getAttribute("type").trim(),
                                 addressPlaceElement.getAttribute("name").trim());
                         addressPlace.add(sitePlacement);
+                    }
+                }
+            }
+            if (routeIdplacementElement != null) {
+                NodeList routeIdPlaceNodeList = routeIdplacementElement.getElementsByTagName("route_id_place");
+                if (routeIdPlaceNodeList != null) {
+                    for (int i = 0; i < routeIdPlaceNodeList.getLength(); i++) {
+                        Element routeIdPlaceElement = (Element) routeIdPlaceNodeList.item(i);
+                        final SitePlacement sitePlacement = new SitePlacement(
+                                routeIdPlaceElement.getAttribute("type").trim(),
+                                routeIdPlaceElement.getAttribute("name").trim());
+                        routeIdPlace.add(sitePlacement);
+                    }
+                }
+            }
+            if (serviceIdplacementElement != null) {
+                NodeList serviceIdPlaceNodeList = serviceIdplacementElement.getElementsByTagName("service_id_place");
+                if (serviceIdPlaceNodeList != null) {
+                    for (int i = 0; i < serviceIdPlaceNodeList.getLength(); i++) {
+                        Element serviceIdPlaceElement = (Element) serviceIdPlaceNodeList.item(i);
+                        final SitePlacement sitePlacement = new SitePlacement(
+                                serviceIdPlaceElement.getAttribute("type").trim(),
+                                serviceIdPlaceElement.getAttribute("name").trim());
+                        serviceIdPlace.add(sitePlacement);
                     }
                 }
             }
@@ -128,6 +157,22 @@ public class RouteSite {
                     append("\" ").append(" name=\"").append(StringEncoderDecoder.encode(placement.getName())).
                     append("\" />").toString());
         }
+        out.println();
+        for (Iterator i = routeIdPlace.iterator(); i.hasNext();) {
+            final SitePlacement placement = (SitePlacement) i.next();
+            out.println(new StringBuffer().append("            <route_id_place type=\"").
+                    append(StringEncoderDecoder.encode(placement.getType())).
+                    append("\" ").append(" name=\"").append(StringEncoderDecoder.encode(placement.getName())).
+                    append("\" />").toString());
+        }
+        out.println();
+        for (Iterator i = serviceIdPlace.iterator(); i.hasNext();) {
+            final SitePlacement placement = (SitePlacement) i.next();
+            out.println(new StringBuffer().append("            <service_id_place type=\"").
+                    append(StringEncoderDecoder.encode(placement.getType())).
+                    append("\" ").append(" name=\"").append(StringEncoderDecoder.encode(placement.getName())).
+                    append("\" />").toString());
+        }
         out.println("        </placement>");
         out.println();
         out.println("    </sites>");
@@ -157,7 +202,7 @@ public class RouteSite {
     }
 
     public void setDefaultSiteObjId(String defaultSiteObjId) {
-        this.defaultSiteObjId = defaultSiteObjId;      
+        this.defaultSiteObjId = defaultSiteObjId;
     }
 
     public Site[] getArraySite() {
@@ -185,4 +230,13 @@ public class RouteSite {
     public List getAddressPlace() {
         return addressPlace;
     }
+
+    public List getRouteIdPlace() {
+        return routeIdPlace;
+    }
+
+    public List getServiceIdPlace() {
+        return serviceIdPlace;
+    }
+
 }
