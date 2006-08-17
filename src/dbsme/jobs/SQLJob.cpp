@@ -71,7 +71,8 @@ void SQLJob::process(Command& command, DataSource& ds)
 {
     Connection* connection = ds.getConnection();
     if (!connection) {
-        smsc_log_error(log, "DBSme failed to obtain connection. Killing service");
+        smsc_log_error(log, "DBSme failed to obtain connection for JobName='%s', JobId='%s'. Killing service",
+                       (name) ? name:"-", id.c_str());
         if (sigsend(P_PID, P_MYID, 9) != 0) {
             smsc_log_fatal(log, "Failed to send kill signal. Cause: %s. Terminating process...",
                            strerror(errno));
@@ -233,7 +234,8 @@ void PLSQLJob::process(Command& command, DataSource& ds)
 {
     Connection* connection = ds.getConnection();
     if (!connection) {
-        smsc_log_error(log, "DBSme failed to obtain connection. Killing service");
+        smsc_log_error(log, "DBSme failed to obtain connection for JobName='%s', JobId='%s'. Killing service",
+                       (name) ? name:"-", id.c_str());
         if (sigsend(P_PID, P_MYID, 9) != 0) {
             smsc_log_fatal(log, "Failed to send kill signal. Cause: %s. Terminating process...",
                            strerror(errno));
