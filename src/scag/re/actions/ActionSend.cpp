@@ -9,13 +9,13 @@ using namespace scag::stat;
 
 static bool checkSDTPDateFormat(std::string& str, std::string& msg)
 {
-    char p;
+    char p, l;
     uint32_t i, y, m, d, h, min, s, t, nn;
 
     if(str.length() > 0)
     {
-        i = sscanf(str.c_str(), "%2u%2u%2u%2u%2u%2u%1u%2u%c", &y, &m, &d, &h, &min, &s, &t, &nn, &p);
-        if(i != 9)
+        i = sscanf(str.c_str(), "%2u%2u%2u%2u%2u%2u%1u%2u%c%c", &y, &m, &d, &h, &min, &s, &t, &nn, &p, &l);
+        if(i < 9)
         {
             msg = "Wrong field count";
             return false;
@@ -43,6 +43,11 @@ static bool checkSDTPDateFormat(std::string& str, std::string& msg)
         else if(nn > 48)
         {
             msg = "Wrong nn parameter";
+            return false;
+        }
+        else if(i > 9 && l != 'T' && l != 'S')
+        {
+            msg = "Wrong T parameter";
             return false;
         }
     }
