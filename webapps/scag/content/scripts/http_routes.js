@@ -409,7 +409,7 @@ function addSiteSubj() {
         newRow.className = "row" + ((tbl.rows.length + 1) & 1);
         newRow.id = "siteSubRow_" + (global_http_counter++);
         newCell = document.createElement("td");
-        var temp= '<input type="radio" name="defaultSiteObjId" id="'+global_http_counter+'" '+isSiteChecked()+' value="'+ subjValue +'">';
+        var temp= '<input type="radio" name="defaultSiteObjId" id="'+global_http_counter+'" '+isSiteChecked()+' value="'+ subjValue +'"><img src="content/images/subject.gif" alt="">';
         newCell.innerHTML = temp;
         newRow.appendChild(newCell);
         newCell = document.createElement("td");
@@ -485,12 +485,16 @@ function removeSection(sectionName) {
     sectionElem = document.getElementById("sectionHeader_" + sectionName);
     sectionElem.removeNode(true);
     sectionElem = document.getElementById("sectionValue_" + sectionName);
-    sectionElem.removeNode(true);
+    if (sectionElem) sectionElem.removeNode(true);
 }
 
-function addSite(valueElem, portElem, addPathStr, msgVal) {
+function addSite(valueElem, portElem, addPathStr, msgVal, msgVal1) {
     if(document.getElementById(trim(valueElem.value)) != null){
         alert(msgVal);
+        return false;
+    }
+    if (valueElem.value.indexOf('.')==-1) {
+        alert(msgVal1);
         return false;
     }
     if (!trimStr(portElem.value).length > 0)

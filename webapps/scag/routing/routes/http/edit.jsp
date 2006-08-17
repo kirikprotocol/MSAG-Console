@@ -537,7 +537,7 @@
                     <td><fmt:message>routes.edit.site.port</fmt:message></td>
 
                     <td nowrap="true"><input id="newSite" class="midtxt" name="newSite"><b>:</b><input id="newPort" class="mintxt" name="newPort" value="80" validation="port" onkeyup="resetValidation(this)"></td>
-                    <td><img src="content/images/but_add.gif" alt="Add new Site" onclick="addSite(opForm.all.newSite,opForm.all.newPort,'<fmt:message>routes.edit.add.new.path</fmt:message>','<fmt:message>scripts.site.already.exist</fmt:message>')"
+                    <td><img src="content/images/but_add.gif" alt="Add new Site" onclick="addSite(opForm.all.newSite,opForm.all.newPort,'<fmt:message>routes.edit.add.new.path</fmt:message>','<fmt:message>scripts.site.already.exist</fmt:message>','<fmt:message>scripts.site.name.error</fmt:message>')"
                         style="cursor: hand;"></td>
                 </tr>
             </table>                            
@@ -550,7 +550,7 @@
                 <c:forEach items="${bean.siteSubj}" var="i">
                     <c:set var="ssubj" value="${fn:escapeXml(i)}"/>
                     <tr class="row${rowN%3}" id="siteSubRow_${ssubj}">
-                        <td><input type="radio" name="defaultSiteObjId" <c:if test="${defaultSiteObjId==ssubj}">checked</c:if> value="${ssubj}"></td>
+                        <td><input type="radio" name="defaultSiteObjId" <c:if test="${defaultSiteObjId==ssubj}">checked</c:if> value="${ssubj}"><img src="content/images/subject.gif" alt=""></td>
                         <td>${ssubj}<input id="subSite" type="hidden" name="siteSubj" value="${ssubj}"></td>
                         <td><img src="content/images/but_del.gif" alt="" onclick="removeSiteSubj('siteSubRow_${ssubj}');"
                                 style="cursor:hand;"></td>

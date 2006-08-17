@@ -38,7 +38,7 @@ public class TagLibFunctions {
 
   public static final boolean isBoolean(Object obj)
    {
-     return obj instanceof Boolean;
+     return ((obj instanceof Boolean) || (obj.toString().equals("true")) || (obj.toString().equals("false")));
    }
 
   public static final String concat(String s1, String s2)

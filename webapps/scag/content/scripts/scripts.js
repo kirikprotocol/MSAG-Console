@@ -494,19 +494,26 @@ function tableTag_sort(sort) {
     return false;
 }
 
-function tableTag_checkChecks() {
+function tableTag_checkChecks(targetElemId) {
+    var marker = false;
+    if (targetElemId) marker = true;
     var buttonsEnabled;
     buttonsEnabled = false;
     for (i = 0; i < opForm.elements.length; i++) {
         var elem = opForm.elements[i];
-        if (elem.tagName == "INPUT" && elem.className == "check" && elem.checked)
+        if (elem.tagName == "INPUT" && elem.className == "check" && elem.checked && ((marker)?(elem.id==(targetElemId+"Check")):true))
             buttonsEnabled = true;
     }
     for (i = 0; i < document.all.length; i++) {
         var elem = document.all[i];
-        if (elem.tagName == "A" && elem.isCheckSensible)
+        if (elem.tagName == "A" && elem.isCheckSensible && ((marker)?(elem.id==targetElemId):true))
             elem.disabled = !buttonsEnabled;
     }
+}
+
+function tableTag_checkChecksHttpRoute(targetElemId,defaultItemId) {
+    tableTag_checkChecks(targetElemId);
+    document.getElementById(defaultItemId).disabled = document.getElementById(targetElemId).disabled;
 }
 
 function deleteConfirm() {
@@ -516,9 +523,10 @@ function deleteConfirm() {
 function checkCount() {
     //alert(opForm.elements["checked"].length);
     var allRoutes = opForm.elements["checked"];
+    if (!allRoutes) return false;
     var checkedHttpRoutesCounter = 0;
     for (var i=0; i<allRoutes.length; i++) {
-        if (allRoutes[i].checked && document.getElementById("defaultRoute_"+allRoutes[i].value)) checkedHttpRoutesCounter ++;
+        if (allRoutes[i].checked && document.getElementById("defaultRoute_"+allRoutes[i].value)) checkedHttpRoutesCounter = checkedHttpRoutesCounter + 1 ;
     }
     if (checkedHttpRoutesCounter!=1) {
         alert('<fmt:message>scripts.routes.checked</fmt:message>');
@@ -546,7 +554,7 @@ function checkDefaultRoute() {
 
     for (var i=0; i<checkedHttpRoutes.length; i++) {
         defaultRouteElement = document.getElementById("defaultRoute_"+checkedHttpRoutes[i]);
-        if (trim(defaultRouteElement.firstChild.nodeValue) == "true") {
+        if (trim(defaultRouteElement.firstChild.id) == "true") {
             alert("<fmt:message>scripts.routes.delete_default_route</fmt:message>");
             return false;
         }

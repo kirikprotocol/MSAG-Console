@@ -1,5 +1,5 @@
 <%@ include file="/WEB-INF/inc/header.jspf" %>
-<sm:page>
+<sm:page onLoad="tableTag_checkChecks();">
     <jsp:attribute name="title">
         <c:choose>
             <c:when test="${param.add}">service.add.title</c:when>
@@ -44,7 +44,7 @@
             <div class=page_subtitle><fmt:message>service.edit.label.smpp.routes_list</fmt:message></div>
             <sm:table columns="checkbox,id,active,enabled,archived,notes"
                       names="c,service.edit.table.names.id,service.edit.table.names.active,service.edit.table.names.enabled,service.edit.table.names.archived,service.edit.table.names.notes" widths="1,60,20,20,39,59"
-                      child="/routing/routes" parentId="${bean.parentId}" edit="id"/>
+                      child="/routing/routes" parentId="${bean.parentId}" edit="id" targetElemId="mbDelete"/>
             <div class=page_subtitle>&nbsp;</div>
             <sm-pm:menu>
                 <sm-pm:item name="mbAddSmppRoute" value="service.edit.item.mbaddchild.value" title="service.edit.item.mbaddchild.title"/>
@@ -54,8 +54,8 @@
             </sm-pm:menu>
             <div class=page_subtitle>&nbsp;</div>
             <div class=page_subtitle><fmt:message>service.edit.label.http.routes_list</fmt:message></div>
-            <sm:http_route columns="checkbox,id,name,enabled,defaultRoute,transit" names="c,id,name,enabled,default,transit" widths="1,60,20,20,39,59"
-                           child="/routing/routes/http" parentId="${bean.parentId}" edit="name"/>
+            <sm:http_route columns="checkbox,id,name,enabled,defaultRoute,transit" names="c,service.edit.table.http_route.id,service.edit.table.http_route.name,service.edit.table.http_route.enabled,service.edit.table.http_route.default,service.edit.table.http_route.transit" widths="1,60,20,20,39,59"
+                           child="/routing/routes/http" parentId="${bean.parentId}" edit="name" targetElemId="mbDeleteHttpRoute" defaultItemId="mbDefaultHttpRoute"/>
             <div class=page_subtitle>&nbsp;</div>
             <sm-pm:menu>
                 <sm-pm:item name="mbAddHttpRoute" value="service.edit.item.mbaddchild.value" title="service.edit.item.mbaddchild.title"/>
@@ -63,7 +63,7 @@
                            onclick="return checkDefaultRoute()" isCheckSensible="true"/>
                 <sm-pm:space/>
                 <sm-pm:item name="mbDefaultHttpRoute" value="service.edit.item.mbsetdefaulthttproute.value" title="service.edit.item.mbsetdefaulthttproute.title"
-                           onclick="return checkCount()"/>
+                           onclick="return checkCount()" isCheckSensible="true"/>
             </sm-pm:menu>
         </c:if>
     </jsp:body>

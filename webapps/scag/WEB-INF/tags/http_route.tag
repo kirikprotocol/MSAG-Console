@@ -10,6 +10,8 @@
 <%@attribute name="child" required="false"%>
 <%@attribute name="parentId" required="false"%>
 <%@attribute name="subjType" required="false"%>
+<%@attribute name="targetElemId" required="true"%>
+<%@attribute name="defaultItemId" required="true"%>
 
 <c:set var="columns" value="${fn:split(columns, ',')}"/>
 <c:set var="names" value="${fn:split(names, ',')}"/>
@@ -62,7 +64,7 @@ function edit(idToEdit, child, parentId) {
         <c:otherwise>
           <th width="${widths[status.count-1]}%"><a href="#" onclick="return tableTag_sort('${column}')"
             <c:if test="${fn:endsWith(bean.sort, column)}">class="${fn:startsWith(bean.sort, '-') ? 'up' : 'down'}"</c:if>
-          >${names[status.count-1]}</a></th>
+          ><fmt:message>${names[status.count-1]}</fmt:message></a></th>
         </c:otherwise>
       </c:choose>
     </c:forEach>
@@ -76,7 +78,7 @@ function edit(idToEdit, child, parentId) {
         <c:set var="column" value="${fn:trim(_column)}"/>
         <c:choose>
           <c:when test="${column == 'checkbox'}">
-            <td class=ico><input class=check type=checkbox name=checked value="${user['id']}" onClick="tableTag_checkChecks();" <c:if test="${smf:checked(bean, user['id'])}" >checked</c:if>></td>
+            <td class=ico><input class=check id="${targetElemId}Check" type=checkbox name=checked value="${user['id']}" onClick="tableTag_checkChecksHttpRoute('${targetElemId}','${defaultItemId}');" <c:if test="${smf:checked(bean, user['id'])}" >checked</c:if>></td>
           </c:when>
           <c:when test="${column == 'status'}">
             <td class=ico>  <c:set var="Id" value="${ user['id']}"/>
@@ -92,8 +94,18 @@ function edit(idToEdit, child, parentId) {
                     <c:when test="${edit == column}">
                         <a href="#" onClick="return edit('${Id}','${child}','${parentId}');">${itemValue}</a>
                     </c:when>
+                    <c:when test="${smf:isBoolean(itemValue)}">
+                        <c:choose>
+                           <c:when test="${itemValue}">
+                               <span id="${itemValue}" style="width:100%; text-align:center;"><img align="center" src="content/images/ic_checked.gif"></span>
+                           </c:when>
+                           <c:otherwise>
+                               <span id="${itemValue}" style="width:100%; text-align:center;"><img align="center" src="content/images/ic_not_checked.gif"></span>
+                           </c:otherwise>
+                        </c:choose>
+                    </c:when>
                     <c:otherwise>
-                        ${itemValue}
+                       ${itemValue}
                     </c:otherwise>
                 </c:choose>
             </td>

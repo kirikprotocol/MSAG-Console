@@ -10,6 +10,7 @@
 <%@attribute name="child" required="false"%>
 <%@attribute name="parentId" required="false"%>
 <%@attribute name="subjType" required="false"%>
+<%@attribute name="targetElemId" required="false"%>
 
 <c:set var="columns" value="${fn:split(columns, ',')}"/>
 <c:set var="names" value="${fn:split(names, ',')}"/>
@@ -76,7 +77,7 @@ function edit(idToEdit, child, parentId) {
         <c:set var="column" value="${fn:trim(_column)}"/>
         <c:choose>
           <c:when test="${column == 'checkbox'}">
-            <td class=ico><input class=check type=checkbox name=checked value="${user['id']}" onClick="tableTag_checkChecks();" <c:if test="${smf:checked(bean, user['id'])}" >checked</c:if>></td>
+            <td class=ico><input class=check <c:if test="${!empty targetElemId}">id="${targetElemId}Check"</c:if> type=checkbox name=checked value="${user['id']}" onClick="tableTag_checkChecks(<c:if test="${!empty targetElemId}">'${targetElemId}'</c:if>);" <c:if test="${smf:checked(bean, user['id'])}" >checked</c:if>></td>
           </c:when>
           <c:when test="${column == 'status'}">
             <td class=ico>  <c:set var="Id" value="${ user['id']}"/>
@@ -92,6 +93,16 @@ function edit(idToEdit, child, parentId) {
                     <c:when test="${edit == column}">
                         <a href="#" onClick="return edit('${Id}','${child}','${parentId}');">${itemValue}</a>
                     </c:when>
+                    <c:when test="${smf:isBoolean(itemValue)}">
+                        <c:choose>
+                           <c:when test="${itemValue}">
+                               <span style="width:100%; text-align:center;"><img align="center" src="content/images/ic_checked.gif"></span>
+                           </c:when>
+                           <c:otherwise>
+                               <span style="width:100%; text-align:center;"><img align="center" src="content/images/ic_not_checked.gif"></span>
+                           </c:otherwise>
+                        </c:choose>
+                    </c:when>                                        
                     <c:otherwise>
                         ${itemValue}
                     </c:otherwise>
