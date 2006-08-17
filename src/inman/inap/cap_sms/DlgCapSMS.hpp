@@ -17,7 +17,7 @@ using smsc::inman::_InmanErrorSource;
 
 using smsc::inman::comp::InitialDPSMSArg;
 
-using smsc::inman::inap::SSNSession;
+using smsc::inman::inap::TCSessionSR;
 
 namespace smsc {
 namespace inman {
@@ -93,7 +93,7 @@ typedef union {
 class CapSMSDlg : public CapSMS_SCFContractorITF, DialogListener, InvokeListener {
 public:
     //NOTE: timeout is for OPERATIONs Invokes lifetime
-    CapSMSDlg(SSNSession* pSession, CapSMS_SSFhandlerITF * ssfHandler,
+    CapSMSDlg(TCSessionSR* pSession, CapSMS_SSFhandlerITF * ssfHandler,
                 USHORT_T timeout = 0, Logger * uselog = NULL);
     virtual ~CapSMSDlg(); //Dialog is not deleted, but just released !!!
     enum {
@@ -132,7 +132,7 @@ private:
     Mutex       _sync;
     unsigned    capId;
     Dialog*     dialog;     //TCAP dialog
-    SSNSession* session;    //TCAP dialogs factory
+    TCSessionSR* session;   //TCAP dialogs factory
     Logger*     logger;
     CAP3State   _capState;  //current state of cap3SMS CONTRACT
     CapSMS_SSFhandlerITF* ssfHdl;

@@ -17,10 +17,10 @@ namespace inap  {
 /////////////////////////////////////////////////////////////////////////////////////
 // Dialog class implementation
 /////////////////////////////////////////////////////////////////////////////////////
-Dialog::Dialog(USHORT_T dlgId, ACOID::DefinedOIDidx dialog_ac_idx,  USHORT_T msg_user_id,
-               const SCCP_ADDRESS_T & loc_addr, const SCCP_ADDRESS_T & rmt_addr,
+Dialog::Dialog(USHORT_T dlgId, USHORT_T msg_user_id,
+               ACOID::DefinedOIDidx dialog_ac_idx, const SCCP_ADDRESS_T & loc_addr,
                Logger * uselog/* = NULL*/)
-  : logger(uselog), _dId(dlgId),  ownAddr(loc_addr), rmtAddr(rmt_addr)
+  : logger(uselog), _dId(dlgId),  ownAddr(loc_addr)//, rmtAddr(rmt_addr)
   , qSrvc(EINSS7_I97TCAP_QLT_BOTH), priority(EINSS7_I97TCAP_PRI_HIGH_0)
   , _timeout(_DEFAULT_INVOKE_TIMER), _lastInvId(0)
   , _ac_idx(dialog_ac_idx), msgUserId(msg_user_id)

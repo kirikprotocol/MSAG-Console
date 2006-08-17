@@ -17,7 +17,7 @@ using smsc::inman::_InmanErrorSource;
 
 using smsc::inman::comp::atih::ATSIArg;
 using smsc::inman::comp::atih::ATSIRes;
-using smsc::inman::inap::SSNSession;
+using smsc::inman::inap::TCSessionMA;
 using smsc::inman::inap::Dialog;
 using smsc::inman::inap::DialogListener;
 using smsc::inman::inap::InvokeListener;
@@ -51,7 +51,7 @@ typedef union {
 //innate timer of the SS7 stack for Invoke lifetime.
 class MapATSIDlg : DialogListener, InvokeListener { // SCF -> HLR
 public:
-    MapATSIDlg(SSNSession* pSession, ATSIhandler * atsi_handler, Logger * uselog = NULL);
+    MapATSIDlg(TCSessionMA* pSession, ATSIhandler * atsi_handler, Logger * uselog = NULL);
     virtual ~MapATSIDlg();
 
     enum {
@@ -84,7 +84,7 @@ private:
     Mutex       _sync;
     unsigned    atsiId;
     Dialog*     dialog;     //TCAP dialog
-    SSNSession* session;    //TCAP dialogs factory
+    TCSessionMA* session;    //TCAP dialogs factory
     Logger*     logger;
     ATSIhandler * atsiHdl;
     ATSIState   _atsiState;  //current state of mapATSI dialog

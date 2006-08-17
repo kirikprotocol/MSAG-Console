@@ -31,7 +31,7 @@ public:
 
 class ATIInterrogator: ATSIhandler {
 public:
-    ATIInterrogator(SSNSession* pSession, ATCSIListener * csi_listener,
+    ATIInterrogator(TCSessionMA* pSession, ATCSIListener * csi_listener,
                     Logger * uselog = NULL);
     ~ATIInterrogator();
 
@@ -50,8 +50,7 @@ protected:
 private:
     Mutex           _sync;
     volatile bool   _active;
-    const char *    ownAdr;
-    SSNSession *    tcSesssion;
+    TCSessionMA *   tcSesssion;
     MapATSIDlg *    mapDlg;
     MAPSCFinfo      scfInfo;
     ATCSIListener * csiHdl;
@@ -100,6 +99,7 @@ private:
     Mutex           _sync;
     Logger*         logger;
     SSNSession*     session;
+    TCSessionMA *   mapSess;
     TCAPDispatcher* disp;
     volatile bool   running;
     ServiceATIH_CFG _cfg;

@@ -53,7 +53,8 @@ private:
     Mutex           _mutex;
     BillingConnMap  bConnects;
     Logger*         logger;
-    SSNSession*     session;
+    SSNSession*     session;    //
+    TCSessionSR*    capSess;    //TCAP session for CAPSMS Dialogs
     TCAPDispatcher* disp;
     Server*         server;
     volatile bool   running;

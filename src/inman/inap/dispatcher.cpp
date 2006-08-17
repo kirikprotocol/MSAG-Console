@@ -57,16 +57,7 @@ TCAPDispatcher::~TCAPDispatcher()
     }
 }
 
-bool TCAPDispatcher::reconnect(UCHAR_T toSsn)
-{
-    if (!connect(userId, toSsn)) { //starts MsgListener if necessary
-        disconnectCP(ss7None);
-        return connectCP(ss7CONNECTED) < 0 ? false : true;
-    }
-    return true;
-}
-
-bool TCAPDispatcher::connect(USHORT_T user_id, UCHAR_T toSsn)
+bool TCAPDispatcher::connect(USHORT_T user_id)
 {
     MutexGuard grd(_mutex);
     userId = user_id; //assign here, to make possible future reconnect attempts
@@ -77,9 +68,7 @@ bool TCAPDispatcher::connect(USHORT_T user_id, UCHAR_T toSsn)
             return false;
         }
     }
-    if (connectCP(ss7CONNECTED) < 0)
-        return false;
-    return bindSSN(toSsn);
+    return (connectCP(ss7CONNECTED) < 0) ? false : true;
 }
 
 void TCAPDispatcher::disconnect(void)
@@ -186,7 +175,7 @@ unsigned TCAPDispatcher::unbindedSSNs(void)
     unsigned rval = 0;
     for (SSNmap_T::iterator it = sessions.begin(); it != sessions.end(); it++) {
         SSNSession* pSession = (*it).second;
-        if (pSession->getState() != SSNSession::ssnBound)
+        if (pSession->getState() != smsc::inman::inap::ssnBound)
             rval++;
     }
     return rval;
@@ -194,25 +183,15 @@ unsigned TCAPDispatcher::unbindedSSNs(void)
 
 bool TCAPDispatcher::bindSSN(UCHAR_T ssn)
 {
-    SSNSession* pSession;
-    SSNmap_T::iterator it = sessions.find(ssn);
-
-    if (it == sessions.end()) {
-        pSession = new SSNSession(ssn, userId, logger);
-        sessions.insert(SSNmap_T::value_type(ssn, pSession));
-    } else
-        pSession = (*it).second;
-    //TBindReq() will call confirmSession()
+    //listener thread will call confirmSession()
     smsc_log_debug(logger, "TCAPDsp: BindReq(SSN=%u, userId=%u) ..", ssn, userId);
     USHORT_T  result = EINSS7_I97TBindReq(ssn, userId, TCAP_INSTANCE_ID,
-                                               EINSS7_I97TCAP_WHITE_USER);
+                                          EINSS7_I97TCAP_WHITE_USER);
     if (result) {
         smsc_log_error(logger, "TCAPDsp: BindReq(SSN=%u) failed with code %u (%s)",
                         ssn, result, getTcapReasonDescription(result));
-        pSession->setState(SSNSession::ssnError);
         return false;
     }
-    pSession->setState(SSNSession::ssnIdle);
     return true;
 }
 
@@ -222,7 +201,7 @@ void TCAPDispatcher::unbindSSNs(void)
         UCHAR_T ssn = (*it).first;
         SSNSession* pSession = (*it).second;
         EINSS7_I97TUnBindReq(ssn, userId, TCAP_INSTANCE_ID);
-        pSession->setState(SSNSession::ssnIdle);
+        pSession->setState(smsc::inman::inap::ssnIdle);
     }
     return;
 }
@@ -239,9 +218,9 @@ void TCAPDispatcher::bindSSNs(void)
         if (result) {
             smsc_log_error(logger, "TCAPDsp: BindReq(SSN=%u) failed with code %u (%s)",
                             ssn, result, getTcapReasonDescription(result));
-            pSession->setState(SSNSession::ssnError);
+            pSession->setState(smsc::inman::inap::ssnError);
         } else
-            pSession->setState(SSNSession::ssnIdle);
+            pSession->setState(smsc::inman::inap::ssnIdle);
     }
     return;
 }
@@ -338,40 +317,27 @@ void TCAPDispatcher::disconnectCP(SS7State_T downTo/* = ss7None*/)
     return;
 }
 
-
 /* ************************************************************************* *
  * TCAP sessions factory methods
  * ************************************************************************* */
-bool TCAPDispatcher::confirmSSN(UCHAR_T ssn, UCHAR_T bindResult)
+//Binds SSN and initializes SSNSession (TCAP dialogs factory)
+SSNSession* TCAPDispatcher::openSSN(UCHAR_T ssn_id, USHORT_T max_dlg_id, USHORT_T min_dlg_id,
+                                    Logger * uselog/* = NULL*/)
 {
-    SSNSession* pSession = findSession(ssn);
-    if (!pSession) {
-        smsc_log_warn(logger, "TCAPDsp: BindConf for invalid/inactive session, SSN: %u", ssn);
-        return false;
+    SSNSession* pSession = NULL;
+    {
+        MutexGuard tmp(_mutex);
+        if (!(pSession = lookUpSSN(ssn_id))) {
+            pSession = new SSNSession(ssn_id, userId, max_dlg_id, min_dlg_id, uselog);
+            sessions.insert(SSNmap_T::value_type(ssn_id, pSession));
+        } else
+            smsc_log_debug(logger, "TCAPDsp: SSN[%u] already inited, state: %u",
+                           ssn_id, pSession->getState());
     }
-
-    if ((bindResult == EINSS7_I97TCAP_BIND_OK)
-        || (bindResult == EINSS7_I97TCAP_BIND_SSN_IN_USE)) {
-        pSession->setState(SSNSession::ssnBound);
-        return true;
+    if (pSession->getState() != smsc::inman::inap::ssnBound) {
+        if (!bindSSN(ssn_id) || pSession->Wait(RECV_TIMEOUT)) //wait for confirmation
+            return NULL;
     }
-    smsc_log_error(logger, "TCAPDsp: SSN[%u] BindReq failed: '%s' (code 0x%X)",
-                       (unsigned)ssn, getTcapBindErrorMessage(bindResult), bindResult);
-    pSession->setState(SSNSession::ssnError);
-    return false;
-}
-
-//Opens or reinitializes SSNSession (multiRoute/multiAddress/singleRoute)
-SSNSession* TCAPDispatcher::openSession(UCHAR_T ssn, const char* own_addr,
-                            ACOID::DefinedOIDidx dialog_ac_idx, USHORT_T max_id,
-                            UCHAR_T rmt_ssn/* = 0*/, const char* rmt_addr/* = NULL*/)
-{
-    MutexGuard tmp(_mutex);
-    SSNSession* pSession = lookUpSSN(ssn);
-    if (!pSession) {
-        smsc_log_error(logger, "TCAPDsp: invalid/inactive session, SSN: %u", ssn);
-    } else if (!pSession->init(own_addr, dialog_ac_idx, rmt_addr, rmt_ssn, max_id))
-        return NULL;
     return pSession;
 }
 
@@ -379,6 +345,28 @@ SSNSession* TCAPDispatcher::findSession(UCHAR_T ssn)
 {
     MutexGuard tmp(_mutex);
     return lookUpSSN(ssn);
+}
+
+bool TCAPDispatcher::confirmSSN(UCHAR_T ssn, UCHAR_T bindResult)
+{
+    bool    rval = false;
+    SSNSession* pSession = findSession(ssn);
+    if (!pSession) {
+        smsc_log_warn(logger, "TCAPDsp: BindConf for invalid/inactive SSN[%u]", ssn);
+        return false;
+    }
+
+    if ((bindResult == EINSS7_I97TCAP_BIND_OK)
+        || (bindResult == EINSS7_I97TCAP_BIND_SSN_IN_USE)) {
+        pSession->setState(smsc::inman::inap::ssnBound);
+        rval = true;
+    } else {
+        smsc_log_error(logger, "TCAPDsp: SSN[%u] BindReq failed: '%s' (code 0x%X)",
+                           (unsigned)ssn, getTcapBindErrorMessage(bindResult), bindResult);
+        pSession->setState(smsc::inman::inap::ssnError);
+    }
+    pSession->Signal();
+    return rval;
 }
 
 

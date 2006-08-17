@@ -21,7 +21,7 @@ namespace inap {
 /* ************************************************************************** *
  * class CapSMSDlg implementation:
  * ************************************************************************** */
-CapSMSDlg::CapSMSDlg(SSNSession* pSession, CapSMS_SSFhandlerITF * ssfHandler,
+CapSMSDlg::CapSMSDlg(TCSessionSR* pSession, CapSMS_SSFhandlerITF * ssfHandler,
            USHORT_T timeout/* = 0*/, Logger * uselog/* = NULL*/)
     : ssfHdl(ssfHandler), session(pSession), logger(uselog)
 {

@@ -91,11 +91,14 @@ class Billing;
 //(for each request initiates new Billing).
 class BillingConnect: public ConnectListener {
 public: 
-    BillingConnect(BillingCFG * cfg, SSNSession* ss7_sess, Connect* conn,
+    BillingConnect(BillingCFG * cfg, TCSessionSR* cap_sess, Connect* conn,
                    TimeWatcher* tm_watcher, Logger * uselog = NULL);
     ~BillingConnect();
 
     unsigned int bConnId(void) const { return _bcId; }
+    TCSessionSR* capSession(void) const { return capSess; }
+    const BillingCFG & getConfig(void) const { return _cfg;}
+
     //sends command, returns true on success
     bool sendCmd(SerializableObject* cmd);
     //releases completed Billing, writting CDR if required
@@ -121,7 +124,7 @@ protected:
     BillingMap  workers;
     BillingList corpses;
     Connect*    _conn;
-    SSNSession*  _ss7Sess;
+    TCSessionSR*  capSess;
     TimeWatcher* _tmWatcher;
 };
 
@@ -147,7 +150,7 @@ public:
     } BillAction;
 
     Billing(BillingConnect* bconn, unsigned int b_id,
-            BillingCFG * cfg, TimeWatcher* tm_watcher, Logger * uselog = NULL);
+            TimeWatcher* tm_watcher, Logger * uselog = NULL);
     virtual ~Billing();
 
     unsigned int getId(void) const { return _bId; }
@@ -184,7 +187,6 @@ public:
 protected:
     typedef std::map<unsigned, StopWatch*> TimersMAP;
 
-    SSNSession * activateSSN(void);
     void doCleanUp(void);
     void doFinalize(bool doReport = true);
     void abortThis(const char * reason = NULL, bool doReport = true);
@@ -201,7 +203,7 @@ protected:
     BillingConnect* _bconn;     //parent BillingConnect
     BillingState    state;
 
-    SSNSession*     _ss7Sess;   //TCAP dialogs factory
+    TCSessionSR*    capSess;   //TCAP dialogs factory
     bool            capDlgActive;
     CapSMSDlg*      capDlg;     //CapSMS wrapper for TC dialog
 

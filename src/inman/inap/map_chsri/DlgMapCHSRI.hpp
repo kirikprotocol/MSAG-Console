@@ -16,7 +16,7 @@ using smsc::inman::InmanErrorType;
 using smsc::inman::_InmanErrorSource;
 
 using smsc::inman::comp::chsri::CHSendRoutingInfoRes;
-using smsc::inman::inap::SSNSession;
+using smsc::inman::inap::TCSessionMA;
 using smsc::inman::inap::Dialog;
 using smsc::inman::inap::DialogListener;
 using smsc::inman::inap::InvokeListener;
@@ -51,7 +51,7 @@ typedef union {
 //innate timer of the SS7 stack for Invoke lifetime.
 class MapCHSRIDlg : DialogListener, InvokeListener { // GMSC/SCF -> HLR
 public:
-    MapCHSRIDlg(SSNSession* pSession, CHSRIhandler * sri_handler, Logger * uselog = NULL);
+    MapCHSRIDlg(TCSessionMA* pSession, CHSRIhandler * sri_handler, Logger * uselog = NULL);
     virtual ~MapCHSRIDlg();
 
     enum {
@@ -83,7 +83,7 @@ private:
     Mutex       _sync;
     unsigned    sriId;
     Dialog*     dialog;     //TCAP dialog
-    SSNSession* session;    //TCAP dialogs factory
+    TCSessionMA* session;    //TCAP dialogs factory
     Logger*     logger;
     CHSRIhandler * sriHdl;
     CHSRIState   _sriState;  //current state of dialog

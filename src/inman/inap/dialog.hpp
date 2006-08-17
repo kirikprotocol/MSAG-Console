@@ -7,16 +7,17 @@
 #include <map>
 #include <list>
 
-#include "logger/Logger.h"
-#include "inman/common/types.hpp"
-#include "inman/inap/invoke.hpp"
-#include "inman/comp/acdefs.hpp"
-#include "inman/comp/operfactory.hpp"
+//#include "logger/Logger.h"
+//using smsc::logger::Logger;
 
+#include "inman/comp/acdefs.hpp"
 using smsc::ac::ACOID;
-using smsc::logger::Logger;
-using smsc::inman::common::CustomException;
+
+#include "inman/comp/operfactory.hpp"
 using smsc::inman::comp::OperationFactory;
+//using smsc::inman::common::CustomException;
+
+#include "inman/inap/invoke.hpp"
 
 namespace smsc {
 namespace inman {
@@ -66,9 +67,6 @@ public:
 
 class Dialog {
 public:
-    Dialog(USHORT_T dlgId, ACOID::DefinedOIDidx dialog_ac_idx, USHORT_T msg_user_id,
-           const SCCP_ADDRESS_T & loc_addr, const SCCP_ADDRESS_T & rmt_addr,
-           Logger * uselog = NULL);
     enum {
         tcUserGeneralError = 0
     };
@@ -78,6 +76,7 @@ public:
 
     TC_DlgState getState(void);
 
+    USHORT_T getSUId(void)    const { return _tcSUId;  }
     USHORT_T getId(void)      const { return _dId;     }
     //returns the default timeout for Invokes
     USHORT_T getTimeout(void) const { return _timeout; }
@@ -130,10 +129,16 @@ public:
     USHORT_T handleLCancelInvoke(UCHAR_T invokeId);
 
 protected:
+    friend class TCSessionAC;
+    Dialog(USHORT_T tc_sess_uid, USHORT_T msg_user_id,
+           ACOID::DefinedOIDidx dialog_ac_idx, const SCCP_ADDRESS_T & loc_addr,
+           Logger * uselog = NULL);
+    //reinitializes Dialog to be reused with other id and remote address
+    void reset(USHORT_T new_id, const SCCP_ADDRESS_T * rmt_addr);
+
+protected:
     friend class SSNSession;
     virtual ~Dialog();
-    //reinitializes Dialog to be reused with other id and remote address
-    void reset(USHORT_T new_id, const SCCP_ADDRESS_T * rmt_addr = NULL);
 
 private:
     void clearInvokes(void);
@@ -143,6 +148,7 @@ private:
     typedef std::list<DialogListener*> ListenerList;
     typedef std::map<UCHAR_T, Invoke*> InvokeMap;
 
+    USHORT_T        _tcSUId;     //TC session uid
     Mutex           invGrd;      //invokes guard
     InvokeMap       originating; //Invokes, which have result/errors defined
     InvokeMap       terminating; //

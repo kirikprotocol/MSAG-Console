@@ -13,7 +13,7 @@ namespace smsc  {
 namespace inman {
 
 Service::Service(const InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
-    : logger(uselog), _cfg(*in_cfg), session(0), disp(0)
+    : logger(uselog), _cfg(*in_cfg), session(0), disp(0), capSess(0)
     , server(0), tmWatcher(NULL)
 {
     if (!logger)
@@ -23,15 +23,21 @@ Service::Service(const InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
 
     disp = TCAPDispatcher::getInstance();
     _cfg.bill.userId += 39; //adjust USER_ID to PortSS7 units id
-    if (!disp->connect(_cfg.bill.userId, _cfg.bill.ssn))
+    if (!disp->connect(_cfg.bill.userId))
         smsc_log_error(logger, "InmanSrv: EINSS7 stack unavailable!!!");
     else {
         smsc_log_debug(logger, "InmanSrv: TCAP dispatcher has connected to SS7 stack");
-        session = disp->openSession(_cfg.bill.ssn, _cfg.bill.ssf_addr,
-                                    ACOID::id_ac_cap3_sms_AC, _cfg.bill.maxDlgId,
-                                    _cfg.bill.ssn, _cfg.bill.scf_addr);
-        if (session)
-            smsc_log_debug(logger, "InmanSrv: SSN[%u] session inited", _cfg.bill.ssn);
+        if (!(session = disp->openSSN(_cfg.bill.ssn, _cfg.bill.maxDlgId))) {
+            smsc_log_error(logger, "InmanSrv: SSN[%u] unavailable!!!", _cfg.bill.ssn);
+        } else {
+            if (!(capSess = session->newSRsession(_cfg.bill.ssf_addr,
+                    ACOID::id_ac_cap3_sms_AC, _cfg.bill.ssn, _cfg.bill.scf_addr))) {
+                smsc_log_error(logger, "InmanSrv: Unable to init CAP session: %s -> %u:%s",
+                               _cfg.bill.ssf_addr, _cfg.bill.ssn, _cfg.bill.scf_addr);
+            } else
+                smsc_log_debug(logger, "InmanSrv: TCSR[%u:%u] session inited",
+                               _cfg.bill.ssn, capSess->getUID());
+        }
     }
 
     server = new Server(&_cfg.sock, SerializerInap::getInstance(), logger);
@@ -169,7 +175,7 @@ void Service::onConnectOpened(Server* srv, Connect* conn)
 {
     assert(conn);
     conn->setConnectFormat(Connect::frmLengthPrefixed);
-    BillingConnect *bcon = new BillingConnect(&_cfg.bill, session, conn, 
+    BillingConnect *bcon = new BillingConnect(&_cfg.bill, capSess, conn, 
                                               tmWatcher, logger);
     if (bcon) {
         _mutex.Lock();

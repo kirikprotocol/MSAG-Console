@@ -1,5 +1,5 @@
 #ident "$Id$"
-// Session: TCAP dialogs factory, one per SSN
+// SSNSession: TCAP dialogs/sessions factory (one per SSN)
 
 #ifndef __SMSC_INMAN_INAP_SESSION__
 #define __SMSC_INMAN_INAP_SESSION__
@@ -7,11 +7,17 @@
 #include <map>
 #include <list>
 
+#include "core/synchronization/Event.hpp"
+using smsc::core::synchronization::Event;
+
 #include "inman/common/TimeOps.hpp"
-#include "inman/common/types.hpp"
-#include "logger/Logger.h"
 #include "inman/comp/acdefs.hpp"
 using smsc::ac::ACOID;
+
+#include "inman/common/adrutil.hpp"
+using smsc::cvtutil::TonNpiAddress;
+
+#include "logger/Logger.h"
 using smsc::logger::Logger;
 
 namespace smsc {
@@ -20,75 +26,172 @@ namespace inap {
 
 class Dialog;
 
-class SSNSession {
+class TCSessionAC;
+class TCSessionSR;
+class TCSessionMR;
+class TCSessionMA;
+
+/* ************************************************************************** *
+ * class SSNSession (TCAP dialogs/sessions factory):
+ * ************************************************************************** */
+typedef enum { ssnIdle = 0, ssnBound, ssnError } SSNState;
+
+class SSNSession: public Event {
 public:
-    typedef enum { ssnIdle = 0, ssnBound, ssnError } SSNState;
-    typedef enum { ssnSingleRoute = 0, ssnMultiAddress, ssnMultiRoute } SSNType;
+    SSNState    getState(void)  const { return state; }
+    UCHAR_T     getSSN(void)    const { return _SSN; }
+    USHORT_T    getMsgUserId(void) const { return msgUserId; }
 
-    SSNState    getState(void) const { return state; }
-    const char* getOwnAdr(void) const { return ownAdr; }
-    UCHAR_T     getRmtSSN(void) const { return !rmtAddr.addrLen ? 0 :
-                                        rmtAddr.addr[(rmtAddr.addrLen > 1) ? 1 : 0];
-                                      }
-
-    /* -- TCAP Dialogs factory methods -- */
-    //only for singleRoute session (opened with remote ssn & addr specified)
-    Dialog* openDialog(void);   
-    //only for multiAddress session (opened with remote ssn specified)
-    Dialog* openDialog(const char* rmt_addr);
-    //only for multiRoute session
-    Dialog* openDialog(UCHAR_T rmt_ssn, const char* rmt_addr);
+    // -- TCAP Sessions factory methods -- //
+    TCSessionMR * newMRsession(const char* own_addr, ACOID::DefinedOIDidx dlg_ac_idx);
+    TCSessionMA * newMAsession(const char* own_addr, ACOID::DefinedOIDidx dlg_ac_idx,
+                                UCHAR_T rmt_ssn);
+    TCSessionSR * newSRsession(const char* own_addr, ACOID::DefinedOIDidx dlg_ac_idx,
+                                UCHAR_T rmt_ssn, const char* rmt_addr);
+    
+    // -- TCAP Dialogs factory methods -- //
     Dialog* findDialog(USHORT_T did);
-    void    releaseDialog(Dialog* pDlg);
-    void    releaseDialogs(void);
+    void    releaseDialog(Dialog* pDlg, USHORT_T tc_suid = 0);
+    void    releaseDialogs(USHORT_T tc_suid = 0);
 
 protected:
     friend class TCAPDispatcher;
-    SSNSession(UCHAR_T ownssn, USHORT_T user_id, Logger * uselog = NULL);
+    SSNSession(UCHAR_T ssn_id, USHORT_T msg_user_id, USHORT_T max_dlg_id = 2000,
+               USHORT_T min_dlg_id = 1, Logger * uselog = NULL);
     ~SSNSession();
 
     void    setState(SSNState newState) { state = newState; }
-    //Returns false in case of invalid addresses
-    bool    init(const char* own_addr, ACOID::DefinedOIDidx dialog_ac_idx, 
-                const char* rmt_addr = NULL, UCHAR_T rmt_ssn = 0,
-                USHORT_T max_id = 2000, USHORT_T min_id = 1);
+
+protected:
+    friend class TCSessionAC;
+    friend class TCSessionSR;
+    friend class TCSessionMR;
+    friend class TCSessionMA;
+    bool    getDialogId(USHORT_T & dId);
+    void    markDialog(Dialog * p_dlg);
+    void    closeTCSession(TCSessionAC * p_sess);
 
 private:
     typedef struct {
-        struct timeval tms;
-        Dialog *       dlg;
+        struct timeval  tms;
+        Dialog *        dlg;
     } DlgTime;
 
-    typedef std::map<USHORT_T, DlgTime> DlgTimesMap_T;
-    typedef std::map<USHORT_T, Dialog*> DialogsMap_T;
-    typedef std::list<Dialog*> DialogsLIST;
+    typedef std::map<USHORT_T, Dialog*>      DialogsMAP;
+    typedef std::map<USHORT_T, DlgTime>      DlgTimesMAP;
+    typedef std::map<USHORT_T, TCSessionAC*> TCSessionsMAP;
+    typedef std::list<TCSessionAC*>          TCSessionsLIST;
 
-    Dialog* initDialog(const SCCP_ADDRESS_T & rmt_addr);
+    void    dischargeDlg(Dialog * pDlg, USHORT_T tc_suid = 0);
     bool    nextDialogId(USHORT_T & dId);
     void    cleanUpDialogs(void);
     Dialog* locateDialog(USHORT_T dId);
     void    dumpDialogs(void);
 
-    Mutex           dlgGrd;
-    DialogsMap_T    dialogs;
-    DialogsLIST     pool;
-    DlgTimesMap_T   pending; //released but not terminated Dialogs with timestamp
+    DialogsMAP      dialogs;
+    DlgTimesMAP     pending; //released but not terminated Dialogs with timestamp
+    TCSessionsMAP   tcSessions;
+    TCSessionsLIST  deadSess;
 
-    SSNType         iType;
-    UCHAR_T         SSN;
-    USHORT_T        userId;
+    USHORT_T        msgUserId;   //Common part message port user id
+    UCHAR_T         _SSN;
+    SSNState        state;
     USHORT_T        maxId;
     USHORT_T        minId;
-//    std::string     ownAdr;
-    char            ownAdr[48];
-    SCCP_ADDRESS_T  locAddr;
-    SCCP_ADDRESS_T  rmtAddr;
-    ACOID::DefinedOIDidx  ac_idx; //default APPLICATION-CONTEXT index for dialogs, see acdefs.hpp
-
-    SSNState        state;
     USHORT_T        lastDlgId;
+    USHORT_T        lastTCSUId;
     Logger*         logger;
 };
+
+/* ************************************************************************** *
+ * Various TCAP Session classes (TCAP dialogs factory):
+ * ************************************************************************** */
+
+class TCSessionAC { //Base for all types of TC Sessions
+public:
+    USHORT_T     getUID(void)        const { return tcUID; }
+    UCHAR_T      getSSNid(void)      const { return _owner->getSSN(); }
+    SSNSession * getSSNSession(void) const { return _owner; }
+    SSNState     getState(void)      const { return _owner->getState(); }
+    const TonNpiAddress & getOwnAdr(void) const { return ownAdr; }
+
+    // -- TCAP Dialogs factory methods -- //
+    void    releaseDialog(Dialog* pDlg);
+    void    releaseDialogs(void);
+    void    release(void);
+
+protected:
+    friend class SSNSession;
+    TCSessionAC(USHORT_T uid, SSNSession * owner,
+                const TonNpiAddress & own_addr, ACOID::DefinedOIDidx dlg_ac_idx);
+    virtual ~TCSessionAC();
+
+    void toPool(Dialog * p_dlg);
+
+protected:
+    typedef std::list<Dialog*> TCDialogsLIST;
+
+    Dialog * initDialog(const SCCP_ADDRESS_T & rmtAddr);
+
+    SSNSession *    _owner;
+    USHORT_T        tcUID;
+//    char            ownAdr[48]; //.ton.npi.addr
+    TonNpiAddress   ownAdr;
+    SCCP_ADDRESS_T  locAddr;
+    ACOID::DefinedOIDidx  ac_idx; //default APPLICATION-CONTEXT index for dialogs
+    Mutex           dlgGrd;
+    TCDialogsLIST   pool;
+};
+
+//multiRoute TC session (both remote ssn & addr may vary)
+class TCSessionMR: public TCSessionAC {
+public:
+    // -- TCAP Dialogs factory methods -- //
+    Dialog* openDialog(UCHAR_T rmt_ssn, const char* rmt_addr);
+
+protected:
+    friend class SSNSession; 
+    TCSessionMR(USHORT_T uid, SSNSession * owner,
+                const TonNpiAddress & own_addr, ACOID::DefinedOIDidx dlg_ac_idx);
+    ~TCSessionMR() { }
+};
+
+//multiAddress TC session (opened with remote ssn specified, remote addr may vary)
+class TCSessionMA: public TCSessionAC {
+public:
+    // -- TCAP Dialogs factory methods -- //
+    Dialog* openDialog(const char* rmt_addr);
+    Dialog* openDialog(const TonNpiAddress & rnpi);
+
+protected:
+    friend class SSNSession; 
+    TCSessionMA(USHORT_T uid, SSNSession * owner,
+                const TonNpiAddress & own_addr, ACOID::DefinedOIDidx dlg_ac_idx,
+                UCHAR_T rmt_ssn);
+    ~TCSessionMA() { }
+
+private:
+    UCHAR_T     rmtSSN;
+};
+
+//singleRoute TC session (opened with remote ssn & addr specified)
+class TCSessionSR: public TCSessionAC {
+public:
+    // -- TCAP Dialogs factory methods -- //
+    Dialog* openDialog(void);
+
+protected:
+    friend class SSNSession; 
+    TCSessionSR(USHORT_T uid, SSNSession * owner,
+                const TonNpiAddress & own_addr, ACOID::DefinedOIDidx dlg_ac_idx,
+                UCHAR_T rmt_ssn, const TonNpiAddress & rmt_addr);
+    ~TCSessionSR() { }
+
+private:
+    TonNpiAddress   rmtNpi;
+    SCCP_ADDRESS_T  rmtAddr;
+};
+
 } //inap
 } //inman
 } //smsc

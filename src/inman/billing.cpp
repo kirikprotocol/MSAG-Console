@@ -14,11 +14,11 @@ namespace smsc  {
 namespace inman {
 
 /* ************************************************************************** *
- * class BillingService implementation:
+ * class BillingConnect implementation:
  * ************************************************************************** */
-BillingConnect::BillingConnect(BillingCFG * cfg, SSNSession* ss7_sess, Connect* conn, 
+BillingConnect::BillingConnect(BillingCFG * cfg, TCSessionSR* cap_sess, Connect* conn, 
             TimeWatcher* tm_watcher, Logger * uselog/* = NULL*/)
-    : _cfg(*cfg), _ss7Sess(ss7_sess), _conn(conn), _tmWatcher(tm_watcher)
+    : _cfg(*cfg), capSess(cap_sess), _conn(conn), _tmWatcher(tm_watcher)
 {
     assert(conn && cfg && tm_watcher);
     logger = uselog ? uselog : Logger::getInstance("smsc.inman.BillConn");
@@ -100,7 +100,7 @@ void BillingConnect::onCommandReceived(Connect* conn, SerializableObject* recvCm
         BillingMap::iterator it = workers.find(dlgId);
         if (it == workers.end()) {
             if (workers.size() < _cfg.maxBilling) {
-                bill = new Billing(this, dlgId, &_cfg, _tmWatcher, logger);
+                bill = new Billing(this, dlgId, _tmWatcher, logger);
                 workers.insert(BillingMap::value_type(dlgId, bill));
             } else {
                 ChargeSmsResult res(errProtocol, InProtocol_ResourceLimitation,
@@ -145,14 +145,16 @@ void BillingConnect::onConnectError(Connect* conn, bool fatal/* = false*/)
  * class Billing implementation:
  * ************************************************************************** */
 Billing::Billing(BillingConnect* bconn, unsigned int b_id, 
-            BillingCFG * cfg, TimeWatcher* tm_watcher, Logger * uselog/* = NULL*/)
-        : _bconn(bconn), _bId(b_id), _cfg(*cfg), _ss7Sess(NULL)
-        , state(bilIdle), capDlg(NULL), postpaidBill(false), tmWatcher(tm_watcher)
+                TimeWatcher* tm_watcher, Logger * uselog/* = NULL*/)
+        : _bconn(bconn), _bId(b_id), state(bilIdle), capDlg(NULL)
+        , postpaidBill(false), tmWatcher(tm_watcher)
         , abBillType(smsc::inman::cache::btUnknown), providerQueried(false)
         , capDlgActive(false)
 {
-    assert(bconn && cfg && tm_watcher);
+    assert(bconn && tm_watcher);
     logger = uselog ? uselog : Logger::getInstance("smsc.inman.Billing");
+    _cfg = bconn->getConfig();
+    capSess = bconn->capSession();
 }
 
 
@@ -246,32 +248,15 @@ void Billing::abortThis(const char * reason/* = NULL*/, bool doReport/* = true*/
     doFinalize(doReport);
 }
 
-SSNSession * Billing::activateSSN(void)
-{
-    smsc_log_debug(logger, "Billing[%u.%u]: Searching for TCAP session [SSN=%u] ..",
-                    _bconn->bConnId(), _bId, _cfg.ssn);
-
-    TCAPDispatcher *disp = TCAPDispatcher::getInstance();
-
-    if (disp->getState() != TCAPDispatcher::ss7CONNECTED)
-        return (_ss7Sess = NULL);
-    if (!(_ss7Sess = disp->findSession(_cfg.ssn)))
-        _ss7Sess = disp->openSession(_cfg.ssn, _cfg.ssf_addr,
-                                     ACOID::id_ac_cap3_sms_AC, _cfg.maxDlgId,
-                                     _cfg.ssn, _cfg.scf_addr);
-    return _ss7Sess;
-}
-
 bool Billing::startCAPDialog(void)
 {
-    if (!activateSSN()
-        || (_ss7Sess->getState() != SSNSession::ssnBound)) {
-        smsc_log_error(logger, "Billing[%u.%u]: SSNSession is not available/bounded",
-                       _bconn->bConnId(), _bId);
+    if (capSess->getState() != smsc::inman::inap::ssnBound) {
+        smsc_log_error(logger, "Billing[%u.%u]: TCSR[%u:%u] session is not bounded",
+                       _bconn->bConnId(), _bId, capSess->getSSNid(),  capSess->getUID());
         return false;
     }
     try { //Initiate CAP3 dialog
-        capDlg = new CapSMSDlg(_ss7Sess, this, _cfg.capTimeout, logger); //initialize TCAP dialog
+        capDlg = new CapSMSDlg(capSess, this, _cfg.capTimeout, logger); //initialize TCAP dialog
         capDlgActive = true;
         smsc_log_debug(logger, "Billing[%u.%u]: Initiating CapSMS[%u]",
                         _bconn->bConnId(), _bId, capDlg->getId());

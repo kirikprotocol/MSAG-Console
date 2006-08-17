@@ -14,7 +14,7 @@ using smsc::inman::comp::atih::MAPATIH_OpCode;
 /* ************************************************************************** *
  * class MapATSIDlg implementation:
  * ************************************************************************** */
-MapATSIDlg::MapATSIDlg(SSNSession* pSession, ATSIhandler * atsi_handler,
+MapATSIDlg::MapATSIDlg(TCSessionMA* pSession, ATSIhandler * atsi_handler,
                         Logger * uselog/* = NULL*/)
     : atsiHdl(atsi_handler), session(pSession), atsiId(0), dialog(NULL)
     , logger(uselog)
@@ -48,7 +48,7 @@ void MapATSIDlg::subsciptionInterrogation(const char * subcr_adr,
     if (!tnAdr.fromText(subcr_adr))
         throw CustomException("inalid subscriberID", -1, subcr_adr);
 
-    dialog = session->openDialog(tnAdr.getSignals());
+    dialog = session->openDialog(tnAdr);
     if (!dialog)
         throw CustomException("MapATSI[0]: Unable to create TC Dialog");
     if (timeout)
@@ -85,10 +85,10 @@ void MapATSIDlg::onInvokeResult(Invoke* op, TcapEntity* res)
             (unsigned)res->getOpcode());
 
         _atsiState.s.ctrResulted = 1;
-        endTCap();
         ATSIRes * resComp = static_cast<ATSIRes *>(res->getParam());
         atsiHdl->onATSIResult(resComp);
-        do_end  = _atsiState.s.ctrFinished;
+        if ((do_end = _atsiState.s.ctrFinished) != 0)
+            endTCap();
     }
     if (do_end)
         atsiHdl->onEndATSI(0, smsc::inman::errOk);

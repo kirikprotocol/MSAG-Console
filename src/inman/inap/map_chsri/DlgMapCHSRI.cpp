@@ -15,7 +15,7 @@ using smsc::inman::comp::chsri::MAP_CH_SRI_OpCode;
 /* ************************************************************************** *
  * class MapCHSRIDlg implementation:
  * ************************************************************************** */
-MapCHSRIDlg::MapCHSRIDlg(SSNSession* pSession, CHSRIhandler * sri_handler,
+MapCHSRIDlg::MapCHSRIDlg(TCSessionMA* pSession, CHSRIhandler * sri_handler,
                         Logger * uselog/* = NULL*/)
     : sriHdl(sri_handler), session(pSession), sriId(0), dialog(NULL)
     , logger(uselog)
@@ -48,7 +48,7 @@ void MapCHSRIDlg::reqRoutingInfo(const char * subcr_adr, USHORT_T timeout/* = 0*
     if (!tnAdr.fromText(subcr_adr))
         throw CustomException("inalid subscriberID", -1, subcr_adr);
 
-    dialog = session->openDialog(tnAdr.getSignals());
+    dialog = session->openDialog(tnAdr);
     if (!dialog)
         throw CustomException("MapSRI[0]: Unable to create TC Dialog");
     if (timeout)

@@ -19,15 +19,21 @@ ServiceATIH::ServiceATIH(const ServiceATIH_CFG * in_cfg, Logger * uselog/* = NUL
 
     disp = TCAPDispatcher::getInstance();
     _cfg.hlr.userId += 39; //adjust USER_ID to PortSS7 units id
-    if (!disp->connect(_cfg.hlr.userId, _cfg.hlr.scf_ssn))
+    if (!disp->connect(_cfg.hlr.userId))
         smsc_log_error(logger, "ATIHSrv: EINSS7 stack unavailable!!!");
     else {
         smsc_log_debug(logger, "ATIHSrv: TCAP dispatcher has connected to SS7 stack");
-        session = disp->openSession(_cfg.hlr.scf_ssn, _cfg.hlr.scf_addr,
-                                    ACOID::id_ac_map_anyTimeInfoHandling_v3, 1000,
-                                    _cfg.hlr.hlr_ssn, NULL);
-        if (session)
-            smsc_log_debug(logger, "ATIHSrv: TCAP session inited");
+        if (!(session = disp->openSSN(_cfg.hlr.scf_ssn, 1000))) {
+            smsc_log_error(logger, "ATIHSrv: SSN[%u] unavailable!!!", _cfg.hlr.scf_ssn);
+        } else {
+            if (!(mapSess = session->newMAsession(_cfg.hlr.scf_addr,
+                    ACOID::id_ac_map_anyTimeInfoHandling_v3, _cfg.hlr.hlr_ssn))) {
+                smsc_log_error(logger, "ATIHSrv: Unable to init MAP session: %s -> %u:*",
+                               _cfg.hlr.scf_addr, _cfg.hlr.hlr_ssn);
+            } else
+                smsc_log_debug(logger, "ATIHSrv: TCMA[%u:%u] session inited",
+                               _cfg.hlr.scf_ssn, mapSess->getUID());
+        }
     }
 }
 
@@ -87,7 +93,7 @@ bool ServiceATIH::requestCSI(const std::string &subcr_addr, bool imsi/* = true*/
     MutexGuard  grd(_sync);
     IntrgtrMAP::iterator it = workers.find(subcr_addr);
     if (it == workers.end()) {
-        if (session && (session->getState() == SSNSession::ssnBound)) {
+        if (mapSess && (mapSess->getState() == smsc::inman::inap::ssnBound)) {
             ATIInterrogator * worker = newWorker();
             if (worker->interrogate(subcr_addr, imsi)) {
                 workers.insert(IntrgtrMAP::value_type(subcr_addr, worker));
@@ -144,21 +150,20 @@ ATIInterrogator * ServiceATIH::newWorker(void)
             return worker;
         }
     }
-    worker = new ATIInterrogator(session, this);
+    worker = new ATIInterrogator(mapSess, this);
     return worker;
 }
 
 /* ************************************************************************** *
  * class ATIInterrogator implementation:
  * ************************************************************************** */
-ATIInterrogator::ATIInterrogator(SSNSession* pSession, ATCSIListener * csi_listener,
+ATIInterrogator::ATIInterrogator(TCSessionMA* pSession, ATCSIListener * csi_listener,
                                   Logger * uselog/* = NULL*/)
     : tcSesssion(pSession), csiHdl(csi_listener), mapDlg(NULL)
     , _active(false), logger(uselog)
 { 
-    ownAdr = tcSesssion->getOwnAdr();
     if (!logger)
-        logger = Logger::getInstance("smsc.inman.inap.atih.Intrgtr");
+        logger = Logger::getInstance("smsc.inman.inap.atsi");
 }
 
 ATIInterrogator::~ATIInterrogator()

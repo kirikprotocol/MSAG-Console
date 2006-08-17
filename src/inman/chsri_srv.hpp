@@ -30,7 +30,7 @@ public:
 
 class SRIInterrogator: CHSRIhandler {
 public:
-    SRIInterrogator(SSNSession* pSession, SRI_CSIListener * csi_listener,
+    SRIInterrogator(TCSessionMA* pSession, SRI_CSIListener * csi_listener,
                     Logger * uselog = NULL);
     ~SRIInterrogator();
 
@@ -49,8 +49,7 @@ protected:
 private:
     Mutex           _sync;
     volatile bool   _active;
-    const char *    ownAdr;
-    SSNSession *    tcSesssion;
+    TCSessionMA *    tcSesssion;
     MapCHSRIDlg *   sriDlg;
     MAPSCFinfo      scfInfo;
     SRI_CSIListener * csiHdl;
@@ -100,6 +99,7 @@ private:
     Mutex           _sync;
     Logger*         logger;
     SSNSession*     session;
+    TCSessionMA *   mapSess;
     TCAPDispatcher* disp;
     volatile bool   running;
     ServiceCHSRI_CFG _cfg;

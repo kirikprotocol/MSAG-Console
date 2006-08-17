@@ -4,6 +4,8 @@
 #define __SMSC_INMAN_TCAP_DISPATCHER__
 
 #include "logger/Logger.h"
+using smsc::logger::Logger;
+
 #include "core/threads/Thread.hpp"
 #include "core/synchronization/Event.hpp"
 #include "core/synchronization/EventMonitor.hpp"
@@ -11,7 +13,6 @@
 #include "inman/inap/inss7util.hpp"
 #include "inman/inap/session.hpp"
 
-using smsc::logger::Logger;
 using smsc::core::threads::Thread;
 using smsc::core::synchronization::Event;
 using smsc::core::synchronization::Mutex;
@@ -44,25 +45,22 @@ public:
     //Initializes TCAPDispatcher, returns NULL if SS7 stack is unavailable
     static TCAPDispatcher* getInstance();
 
-    Logger * TCAPLogger(void) const { return logger; }
+    SS7State_T  getState(void) const { return state; }
+    Logger *    TCAPLogger(void) const { return logger; }
 
     //Returns true on successfull connection to SS7 stack
     //starts TCAP/SCCP message listener
-    bool    connect(USHORT_T user_id, UCHAR_T toSsn);
+    bool    connect(USHORT_T user_id);
     void    disconnect(void);
-    bool    reconnect(UCHAR_T ssn);
     bool    confirmSSN(UCHAR_T ssn, UCHAR_T bindResult);
     /* TCAP/SCCP message listener methods */
     void    Stop();     //stops  thread that listens for TCAP/SCCP messages
     void    onDisconnect(void);
 
-    SS7State_T  getState(void) const { return state; }
+    //Binds SSN and initializes SSNSession (TCAP dialogs factory)
+    SSNSession *openSSN(UCHAR_T ssn_id, USHORT_T max_dlg_id = 2000,
+                        USHORT_T min_dlg_id = 1, Logger * uselog = NULL);
 
-    //Opens or reinitializes SSNSession (TCAP dialogs factory)
-    //  multiRoute/multiAddress/singleRoute session:
-    SSNSession*  openSession(UCHAR_T ssn, const char* own_addr,
-                             ACOID::DefinedOIDidx dialog_ac_idx, USHORT_T max_id,
-                             UCHAR_T rmt_ssn = 0, const char* rmt_addr = NULL);
     SSNSession* findSession(UCHAR_T ssn);
 
 protected:
@@ -78,6 +76,7 @@ protected:
     unsigned unbindedSSNs(void);
 
     typedef std::map<UCHAR_T, SSNSession*> SSNmap_T;
+
     EventMonitor    _mutex;
     Event           lstEvent;
     USHORT_T        userId;
