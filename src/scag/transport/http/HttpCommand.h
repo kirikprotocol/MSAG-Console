@@ -224,7 +224,7 @@ public:
     typedef StringHashIterator ParameterIterator;
 
     HttpRequest(TransactionContext& tcx) : HttpCommand(tcx, HTTP_REQUEST),
-        queryParametersIterator(queryParameters), sitePort(80) {}
+        queryParametersIterator(queryParameters), sitePort(80), isInitialRequest(false) {}
 
     HttpMethod getMethod() {
         return httpMethod;
@@ -267,6 +267,9 @@ public:
     void setSiteFileName(const std::string& fn) {
         siteFileName = fn;
     }
+    
+    void setInitial() {isInitialRequest = true;};
+    bool isInitial() {return isInitialRequest;};
 
     ParameterIterator& getQueryParameterNames();
     const std::string& getQueryParameter(const std::string& paramName);
@@ -290,6 +293,8 @@ protected:
     std::string siteFull;
     std::string siteFileName;
     std::string paramValue;
+    
+    bool isInitialRequest;
 };
 
 /**

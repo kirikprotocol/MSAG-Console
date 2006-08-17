@@ -369,19 +369,11 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
         if(!request.getUSR())
         {
             se = SessionManager::Instance().newSession(sk);
-
-            if(se.Get())
-            {
-                PendingOperation pendingOperation;
-                pendingOperation.type = CO_HTTP_DELIVERY;
-                pendingOperation.validityTime = time(NULL) + SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
-                se.Get()->addPendingOperation(pendingOperation);
-                SessionManager::Instance().releaseSession(se);
-            }
-
+            request.setInitial();
             request.setUSR(sk.USR);
         }
-        se = SessionManager::Instance().getSession(sk);
+        else
+            se = SessionManager::Instance().getSession(sk);
 
         if(se.Get())
         {

@@ -7,7 +7,7 @@ namespace scag { namespace re { namespace http {
 
 using namespace scag::transport::http;
 
-RuleStatus HttpEventHandler::processRequest(HttpCommand& command, Session& session, CommandProperty& commandProperty)
+RuleStatus HttpEventHandler::processRequest(HttpRequest& command, Session& session, CommandProperty& commandProperty)
 {
     smsc_log_debug(logger, "Process HttpEventHandler Request...");
 
@@ -17,12 +17,10 @@ RuleStatus HttpEventHandler::processRequest(HttpCommand& command, Session& sessi
     HttpCommandAdapter _command(command);
 
     try{
-        session.setOperationFromPending(command, CO_HTTP_DELIVERY);
-
-        PendingOperation pendingOperation;
-        pendingOperation.type = CO_HTTP_DELIVERY;
-        pendingOperation.validityTime = time(NULL) + SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
-        session.addPendingOperation(pendingOperation);
+        if(command.isInitial())
+            session.AddNewOperationToHash(command, CO_HTTP_DELIVERY);        
+        else            
+            session.setOperationFromPending(command, CO_HTTP_DELIVERY);
 
         RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), "");
 
@@ -32,6 +30,11 @@ RuleStatus HttpEventHandler::processRequest(HttpCommand& command, Session& sessi
         if(rs.result < 0)
             session.closeCurrentOperation();            
 
+        PendingOperation pendingOperation;
+        pendingOperation.type = CO_HTTP_DELIVERY;
+        pendingOperation.validityTime = time(NULL) + SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
+        session.addPendingOperation(pendingOperation);
+            
         return rs;
     } catch (SCAGException& e)
     {
@@ -47,7 +50,7 @@ RuleStatus HttpEventHandler::processRequest(HttpCommand& command, Session& sessi
     return rs;
 }
 
-RuleStatus HttpEventHandler::processResponse(HttpCommand& command, Session& session, CommandProperty& commandProperty)
+RuleStatus HttpEventHandler::processResponse(HttpResponse& command, Session& session, CommandProperty& commandProperty)
 {
     smsc_log_debug(logger, "Process HttpEventHandler Response...");
 
@@ -82,7 +85,7 @@ RuleStatus HttpEventHandler::processResponse(HttpCommand& command, Session& sess
     return rs;
 }
 
-RuleStatus HttpEventHandler::processDelivery(HttpCommand& command, Session& session, CommandProperty& cp)
+RuleStatus HttpEventHandler::processDelivery(HttpResponse& command, Session& session, CommandProperty& cp)
 {
     smsc_log_debug(logger, "Process HttpEventHandler Delivery...");
 
@@ -153,11 +156,11 @@ RuleStatus HttpEventHandler::process(SCAGCommand& command, Session& session)
     switch(hc.getCommandId())
     {
         case HTTP_REQUEST:
-            return processRequest(hc, session, cp);
+            return processRequest((HttpRequest&)hc, session, cp);
         case HTTP_RESPONSE:
-            return processResponse(hc, session, cp);
+            return processResponse((HttpResponse&)hc, session, cp);
         case HTTP_DELIVERY:
-            return processDelivery(hc, session, cp);
+            return processDelivery((HttpResponse&)hc, session, cp);
         default:
             smsc_log_debug(logger, "HttpEventHandler: unknown command");
     }
