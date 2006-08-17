@@ -276,7 +276,7 @@ inline void fetchSmppOptional(SmppStream* stream,SmppOptional* opt)
         {
           opt->field_present |= SmppOptionalFields::unknownFields;
           smsc::logger::Logger* log=smsc::logger::Logger::getInstance("smpp");
-          warn2(log,"Unknown optional tag:%x(%d), length=%d",tag,tag,length);
+          debug2(log,"Unknown optional tag:%x(%d), length=%d",tag,tag,length);
           smsc::core::buffers::TmpBuf<uint8_t,128> buf(length);
           uint16_t tmp=htons(tag);
           buf.Append((uint8_t*)&tmp,2);
@@ -288,7 +288,7 @@ inline void fetchSmppOptional(SmppStream* stream,SmppOptional* opt)
             fetchX(stream,x);
             buf.Append(&x,1);
           }
-          info2(log,"added %d bytes to unknownFields",buf.GetPos());
+          debug2(log,"added %d bytes to unknownFields",buf.GetPos());
           opt->unknownFields.append((char*)buf.get(),buf.GetPos());
           break;
         }
