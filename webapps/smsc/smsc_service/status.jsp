@@ -178,10 +178,10 @@
                             "users.roles.subjects");
                 }
 
-                if (request.isUserInRole("aliases")) {
+/*                if (request.isUserInRole("aliases")) {
                     printOptionsString(out, request, bean.getJournalAliases(), rowN++, "aliases", bean.isAliasesChanged(),
                             "users.roles.aliases");
-                }
+                }*/
 
                 //if (request.isUserInRole("profiles"))      printOptionsString(out, request, bean.getJournalProfiles(), rowN++, "profiles", bean.isProfilesChanged(), "users.rules.profiles");
                 if (request.isUserInRole("hosts")) {

@@ -29,7 +29,10 @@ import ru.novosoft.smsc.util.xml.Utils;
 
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.*;
 
 
@@ -44,6 +47,9 @@ public class Smsc extends Service {
     private static final String APPLY_ROUTES_METHOD_ID = "apply_routes";
     private static final String LOAD_ROUTES_METHOD_ID = "load_routes";
     private static final String TRACE_ROUTE_METHOD_ID = "trace_route";
+
+    private static final String ALIAS_ADD_METHOD_ID = "alias_add";
+    private static final String ALIAS_DEL_METHOD_ID = "alias_del";
 
     private static final String PROFILE_LOOKUP_METHOD_ID = "lookup_profile";
     private static final String PROFILE_LOOKUP_EX_METHOD_ID = "profile_lookup_ex";
@@ -108,15 +114,16 @@ public class Smsc extends Service {
 
         try {
             this.configFolder = new File(smscConfFolderString);
-            final Document aliasesDoc = Utils.parse(new FileReader(new File(configFolder, "aliases.xml")));
-            aliases = new AliasSet(aliasesDoc.getDocumentElement());
+            //final Document aliasesDoc = Utils.parse(new FileReader(new File(configFolder, "aliases.xml")));
+            aliases = new AliasSet();
+            aliases.init(getSmscConfig(),this);
             profileDataFile = new ProfileDataFile();
             profileDataFile.init(getSmscConfig(), getConfigFolder().getAbsolutePath());
             initDefaultProfileProps();
         } catch (FactoryConfigurationError error) {
             logger.error("Couldn't configure xml parser factory", error);
             throw new AdminException("Couldn't configure xml parser factory: " + error.getMessage());
-        } catch (ParserConfigurationException e) {
+        }/* catch (ParserConfigurationException e) {
             logger.error("Couldn't configure xml parser", e);
             throw new AdminException("Couldn't configure xml parser: " + e.getMessage());
         } catch (SAXException e) {
@@ -125,7 +132,7 @@ public class Smsc extends Service {
         } catch (IOException e) {
             logger.error("Couldn't read", e);
             throw new AdminException("Couldn't read: " + e.getMessage());
-        } catch (NullPointerException e) {
+        }*/ catch (NullPointerException e) {
             logger.error("Couldn't parse", e);
             throw new AdminException("Couldn't parse: " + e.getMessage());
         }
@@ -135,12 +142,12 @@ public class Smsc extends Service {
         appContext = smscAppContext;
     }
 
-    protected PrintWriter storeAliases(final PrintWriter out) {
+/*    protected PrintWriter storeAliases(final PrintWriter out) {
         Functions.storeConfigHeader(out, "aliases", "AliasRecords.dtd");
         aliases.store(out);
         Functions.storeConfigFooter(out, "aliases");
         return out;
-    }
+    }*/
 
     public synchronized List loadRoutes(final RouteSubjectManager routeSubjectManager) throws AdminException {
         routeSubjectManager.trace();
@@ -176,7 +183,7 @@ public class Smsc extends Service {
             logger.debug("smsc.applyroutes: Smsc is not running");
     }
 
-    public synchronized void applyAliases() throws AdminException {
+/*    public synchronized void applyAliases() throws AdminException {
         try {
             final File smscConfFolder = WebAppFolders.getSmscConfFolder();
 
@@ -194,6 +201,29 @@ public class Smsc extends Service {
         } catch (IOException e) {
             throw new AdminException("Couldn't apply_routes new settings: " + e.getMessage());
         }
+    }*/
+
+    public void addAlias(final String address, final String alias, final boolean aliasHide) throws AdminException {
+        if (!getInfo().isOnline())
+            throw new AdminException("SMSC is not running.");
+
+        final Map params = new HashMap();
+        params.put("address", address);
+        params.put("alias", alias);
+        if (aliasHide)
+            params.put("hide", new Long(1));
+        else
+            params.put("hide", new Long(0));
+        call(SMSC_COMPONENT_ID, ALIAS_ADD_METHOD_ID, Type.Types[Type.StringType], params);
+    }
+
+    public void delAlias(final String alias) throws AdminException {
+        if (!getInfo().isOnline())
+            throw new AdminException("SMSC is not running.");
+
+        final Map params = new HashMap();
+        params.put("alias", alias);
+        call(SMSC_COMPONENT_ID, ALIAS_DEL_METHOD_ID, Type.Types[Type.StringType], params);
     }
 
     public synchronized AliasSet getAliases() {
@@ -201,6 +231,9 @@ public class Smsc extends Service {
     }
 
     public synchronized Profile profileLookup(final Mask mask) throws AdminException {
+        if (!getInfo().isOnline())
+            throw new AdminException("SMSC is not running.");
+
         final Map args = new HashMap();
         args.put("address", mask.getMask());
         final Object result = call(SMSC_COMPONENT_ID, PROFILE_LOOKUP_METHOD_ID, Type.Types[Type.StringListType], args);
@@ -211,6 +244,9 @@ public class Smsc extends Service {
     }
 
     public synchronized ProfileEx profileLookupEx(final Mask mask) throws AdminException {
+        if (!getInfo().isOnline())
+            throw new AdminException("SMSC is not running.");
+
         final Map args = new HashMap();
         args.put("address", mask.getMask());
         final Object result = call(SMSC_COMPONENT_ID, PROFILE_LOOKUP_EX_METHOD_ID, Type.Types[Type.StringListType], args);

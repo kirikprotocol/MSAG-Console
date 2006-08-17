@@ -58,8 +58,8 @@ public class Index extends SmscBean {
                 result = applyRoutes();
             else if ("subjects".equalsIgnoreCase(check))
                 result = applySubjects();
-            else if ("aliases".equalsIgnoreCase(check))
-                result = applyAliases();
+//            else if ("aliases".equalsIgnoreCase(check))
+//                result = applyAliases();
             else if ("profiles".equalsIgnoreCase(check))
                 result = applyProfiles();
             else if ("hosts".equalsIgnoreCase(check))
@@ -139,7 +139,7 @@ public class Index extends SmscBean {
         }
     }
 
-    private int applyAliases() {
+/*    private int applyAliases() {
         try {
             smsc.applyAliases();
             statuses.setAliasesChanged(false);
@@ -150,7 +150,7 @@ public class Index extends SmscBean {
             logger.error("Couldn't apply changes", t);
             return error(SMSCErrors.error.couldntApplyChanges, t);
         }
-    }
+    }*/
 
     private int applyProfiles() {
         smsc.applyProfiles();

@@ -17,7 +17,7 @@ public class ApplyAllCommand extends CommandClass
     {
         try {
             ctx.getSmsc().applyProfiles();
-            ctx.getSmsc().applyAliases();
+//            ctx.getSmsc().applyAliases();
             ctx.getCategoryManager().apply();
             ctx.getProviderManager().apply();
             ctx.getSmsc().applyRoutes(ctx.getRouteSubjectManager());

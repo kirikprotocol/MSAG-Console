@@ -66,8 +66,14 @@ public class LocaleMessages {
         if (res == null) res = (ResourceBundle) localeMessages.get(new Locale(locale.getLanguage(), locale.getCountry()));
         if (res == null) res = (ResourceBundle) localeMessages.get(new Locale(locale.getLanguage()));
         if (res == null) {
-            res = ResourceBundle.getBundle(SMSC_BUNDLE_NAME, locale);
-            localeMessages.put(locale, res);
+            try {
+                res = ResourceBundle.getBundle(SMSC_BUNDLE_NAME, locale);
+                localeMessages.put(locale, res);
+            }
+            catch (MissingResourceException e) {
+                System.err.println("locale resource bundle file not found: locale=\"" + locale.getLanguage() + "\"");
+                return null;
+            }
         }
         return res;
     }

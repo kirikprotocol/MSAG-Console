@@ -81,8 +81,10 @@ public class ProfileDataFile {
 
             String FileName = Message.readString(fis, 8);
             int version = (int) Message.readUInt32(fis);
+            int msgSize1 = 129; // 1+8+1+1+21+4+4+4+32+1+32+1+1+1+1+1+1+1+1+4+4+4
+            if (version == 0x00010000) msgSize1 = 117;
+            
             while (true) {
-                int msgSize1 = 129; // 1+8+1+1+21+4+4+4+32+1+32+1+1+1+1+1+1+1+1+4+4+4
                 readBuffer(fis, buf, msgSize1);
                 InputStream bis = new ByteArrayInputStream(buf, 0, msgSize1);
 

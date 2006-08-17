@@ -16,8 +16,8 @@ public class ApplyAliasesCommand extends CommandClass
     public void process(CommandContext ctx)
     {
         try {
-            ctx.getSmsc().applyAliases();
-            ctx.setMessage("Aliases applied succesfully");
+//            ctx.getSmsc().applyAliases();
+//            ctx.setMessage("Aliases applied succesfully");
             ctx.setStatus(CommandContext.CMD_OK);
         } catch (Exception e) {
             ctx.setMessage("Couldn't apply all alias(es) changes. Cause: "+e.getMessage());
