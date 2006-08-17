@@ -148,6 +148,8 @@ void SessionManagerCallback(void * sm,Session * session)
 
 void SessionManagerImpl::AddRestoredSession(Session * session)
 {
+    MutexGuard mt(inUseMonitor);
+
     CSessionKey sessionKey;
     sessionKey = session->getSessionKey();
 
@@ -261,10 +263,10 @@ void SessionManagerImpl::init(const SessionManagerConfig& _config) // possible t
 
         int key;
         Operation * value = 0;
+        
+        COperationsHash::Iterator iter = session->getOperationsHash()->First();
 
-        COperationsHash::Iterator iter = session->OperationsHash.First();
-
-        smsc_log_debug(logger,"SessionManager: Session (A=%s) has %d operations", (*it)->SessionKey.abonentAddr.toString().c_str(), session->OperationsHash.Count());
+        smsc_log_debug(logger,"SessionManager: Session (A=%s) has %d operations", (*it)->SessionKey.abonentAddr.toString().c_str(), session->getOperationsHash()->Count());
 
         for (;iter.Next(key, value);)
         {              
@@ -278,7 +280,7 @@ void SessionManagerImpl::init(const SessionManagerConfig& _config) // possible t
             delete value;
             session->bChanged = true;
 
-            session->OperationsHash.Delete(key);
+            session->getOperationsHash()->Delete(key);
         }    
 
         if (session->bChanged) 
@@ -343,6 +345,7 @@ int SessionManagerImpl::Execute()
     return 0;
 }
 
+//Приватный метод. Использовать только под мутиксом.
 SessionManagerImpl::CSessionSetIterator SessionManagerImpl::DeleteSession(CSessionSetIterator it)
 {
     CSessionSetIterator res;
@@ -484,10 +487,8 @@ SessionPtr SessionManagerImpl::getSession(const CSessionKey& sessionKey)
     {
         inUseMonitor.wait();
         itPtr = SessionHash.GetPtr(sessionKey);
-        if (!itPtr) 
-        {
-            return session;
-        }
+        if (!itPtr) return session; //session not found
+
         it = (*itPtr);
     }                                      
 
@@ -503,7 +504,7 @@ SessionPtr SessionManagerImpl::getSession(const CSessionKey& sessionKey)
 
 SessionPtr SessionManagerImpl::newSession(CSessionKey& sessionKey)
 {
-    SessionPtr session;
+    SessionPtr session(0);
     CSessionAccessData * accessData = 0;
 
     smsc_log_debug(logger,"SessionManager: new session");
@@ -548,10 +549,10 @@ SessionPtr SessionManagerImpl::newSession(CSessionKey& sessionKey)
 
 void SessionManagerImpl::releaseSession(SessionPtr session)
 {
+    MutexGuard guard(inUseMonitor);
+
     if (!session.Get()) return;
     CSessionKey sessionKey = session->getSessionKey();
-
-    MutexGuard guard(inUseMonitor);
     //if (session->isChanged()) store.updateSession(session);
     
     CSessionSetIterator * itPtr = SessionHash.GetPtr(sessionKey);
@@ -579,10 +580,6 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
     }
 
 
-    accessData->bOpened = false;
-    accessData->hasPending = session->hasPending();
-    accessData->hasOperations = session->hasOperations();
-
     if (!session->hasOperations()) 
     {
         SessionHash.Delete(sessionKey);
@@ -596,10 +593,13 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
         return;
     }
 
+
+    accessData->bOpened = false;
+    accessData->hasPending = session->hasPending();
+    accessData->hasOperations = session->hasOperations();
+
     if (changePendingFlag) 
     {
-        CSessionAccessData * accessData = (*it);
-
         SessionHash.Delete(sessionKey);
         SessionExpirePool.erase(it);
 
@@ -618,10 +618,11 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
 
 void SessionManagerImpl::closeSession(SessionPtr session)
 {
+    MutexGuard guard(inUseMonitor);
+
     if (!session.Get()) return;
     CSessionKey sessionKey = session->getSessionKey();
 
-    MutexGuard guard(inUseMonitor);
     store.deleteSession(sessionKey);
 
     CSessionSetIterator * itPtr;
