@@ -117,18 +117,20 @@ int EventSender::Execute()
  
  while( bStarted)
  {
-      if(!bConnected )
+      if(!bConnected)
       {
-          SaccSocket.Abort();
+//          SaccSocket.Abort();
+          SaccSocket.Close();
           if(connect(Host,Port,Timeout))
-               bConnected=true;
-        //evReconnect.wait(Timeout);
+            bConnected=true;
       }
       MutexGuard g(mtx);
       
       if(!bStarted) break;
       
-      if(!eventsQueue.Count()) mtx.wait(Timeout);
+      if(!eventsQueue.Count() || !bConnected) mtx.wait(Timeout);
+      
+      if(!bStarted) break;      
 
       void * ev;
       if(bConnected)
@@ -177,42 +179,28 @@ bool EventSender::isActive()
    return bConnected;
 }
 
-
-
-
-
 void EventSender::Start()
 {
-
- 
- bStarted=true;
- Thread::Start();
-
+    bStarted=true;
+    Thread::Start();
 }
-
- 
 
 void EventSender::Stop()
 {
-
- //evReconnect.notifyAll();
- 
- bStarted =false;
- mtx.notifyAll();
-
+    bStarted =false;
+    mtx.notifyAll();
 }
 
 void EventSender::Put (const SACC_ALARM_t& ev)
 {
-
- SACC_ALARM_t* pEv = new SACC_ALARM_t(ev);
- smsc_log_debug(logger,"EventSender::put SACC_ALARM_EVENT_t addr=0x%X",pEv);
+    SACC_ALARM_t* pEv = new SACC_ALARM_t(ev);
+    smsc_log_debug(logger,"EventSender::put SACC_ALARM_EVENT_t addr=0x%X",pEv);
  
- if(!PushEvent(pEv))
- {
-    smsc_log_warn(logger,"Error push alarm_event to QOEUE for SACC EVENT queue is Overflow!"); 
-  delete pEv;
- }
+    if(!PushEvent(pEv))
+    {
+        smsc_log_warn(logger,"Error push alarm_event to QOEUE for SACC EVENT queue is Overflow!"); 
+        delete pEv;
+    }
 }
 
 
