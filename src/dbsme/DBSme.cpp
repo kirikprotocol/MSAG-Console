@@ -24,6 +24,9 @@
 #include <admin/service/Component.h>
 #include <admin/service/ComponentManager.h>
 #include <admin/service/ServiceSocketListener.h>
+
+#include <util/timeslotcounter.hpp>
+
 #include "version.inc"
 
 #include "DBSmeComponent.h"
@@ -41,6 +44,8 @@ using namespace smsc::admin;
 using namespace smsc::admin::service;
 
 using namespace smsc::dbsme;
+using smsc::util::TimeSlotCounter;
+using smsc::core::synchronization::EventMonitor;
 
 static smsc::logger::Logger *logger = 0;
 
@@ -97,6 +102,51 @@ static bool isNeedReconnect() {
     return !bDBSmeIsConnected;
 }
 
+// TODO: Define it in DBSme configuration
+const int   DEFAULT_MAX_UNRESPONDED  = 50;
+const int   DEFAULT_MAX_PER_SECOND   = 100;
+static int  unrespondedMessagesMax   = DEFAULT_MAX_UNRESPONDED;
+static int  maxMessagesPerSecond     = DEFAULT_MAX_PER_SECOND;
+
+class TrafficControl
+{
+    static Mutex            trafficMutex;
+    static TimeSlotCounter<int> incoming;
+    static TimeSlotCounter<int> outgoing;
+    static bool                  stopped;
+
+public:
+
+    static void incOutgoing()
+    {
+        MutexGuard guard(trafficMutex);
+        outgoing.Inc();
+    };
+    static bool incIncoming()
+    {
+        MutexGuard guard(trafficMutex);
+        incoming.Inc();
+        if (TrafficControl::stopped) return true;
+        int out = outgoing.Get(); int inc = incoming.Get(); int difference = inc-out;
+        bool trafficLimitOk = (inc < maxMessagesPerSecond);
+        return ((difference < unrespondedMessagesMax) && trafficLimitOk);
+    };
+    static void stopControl()
+    {
+        MutexGuard guard(trafficMutex);
+        TrafficControl::stopped = true;
+    };
+    static void startControl()
+    {
+        MutexGuard guard(trafficMutex);
+        TrafficControl::stopped = false;
+    };
+};
+
+Mutex                TrafficControl::trafficMutex;
+TimeSlotCounter<int> TrafficControl::incoming(1, 1);
+TimeSlotCounter<int> TrafficControl::outgoing(1, 1);
+bool                 TrafficControl::stopped = false;
 
 class DBSmeTask : public ThreadedTask
 {
@@ -128,6 +178,12 @@ public:
         smResp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
         smResp.set_messageId("");
         smResp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+        if (!TrafficControl::incIncoming()) {
+            smResp.get_header().set_commandStatus(SmppStatusSet::ESME_RMSGQFUL);
+            transmitter.sendDeliverySmResp(smResp);
+            return;
+        }
+        smResp.get_header().set_commandStatus(SmppStatusSet::ESME_ROK);
         transmitter.sendDeliverySmResp(smResp);
 
         SMS request;
@@ -280,6 +336,7 @@ public:
             if (requestsProcessingCount) requestsProcessingCount--;
             requestsProcessedCount++;
         }
+        TrafficControl::incOutgoing();
     };
 
     virtual int Execute()
@@ -543,6 +600,28 @@ int main(void)
         DataSourceLoader::loadup(&dsConfig);
 
         ConfigView cpConfig(Manager::getInstance(), "DBSme");
+        
+        try { maxMessagesPerSecond = cpConfig.getInt("maxMessagesPerSecond"); } catch (...) {};
+        if (maxMessagesPerSecond <= 0) {
+            maxMessagesPerSecond = DEFAULT_MAX_PER_SECOND;
+            smsc_log_warn(logger, "Parameter 'maxMessagesPerSecond' value is invalid. Using default %d",
+                          maxMessagesPerSecond);
+        }
+        if (maxMessagesPerSecond > 1000) {
+            smsc_log_warn(logger, "Parameter 'maxMessagesPerSecond' value '%d' is too big. "
+                          "The preffered max value is 1000", maxMessagesPerSecond);
+        }
+        try { unrespondedMessagesMax = cpConfig.getInt("unrespondedMessagesMax"); } catch (...) {};
+        if (unrespondedMessagesMax <= 0) {
+            unrespondedMessagesMax = DEFAULT_MAX_UNRESPONDED;
+            smsc_log_warn(logger, "Parameter 'unrespondedMessagesMax' value is invalid. Using default %d",
+                          unrespondedMessagesMax);
+        }
+        if (unrespondedMessagesMax > 500) {
+            smsc_log_warn(logger, "Parameter 'unrespondedMessagesMax' value '%d' is too big. "
+                          "The preffered max value is 500", unrespondedMessagesMax);
+        }
+        
         initDataCoding(&cpConfig);
         CommandProcessor processor(&cpConfig);
 
@@ -590,6 +669,7 @@ int main(void)
             {
                 listener.setTrans(session.getSyncTransmitter());
                 setNeedReconnect(false);
+                TrafficControl::startControl();
                 session.connect();
             }
             catch (SmppConnectException& exc)
@@ -616,6 +696,7 @@ int main(void)
                            failuresNoticedCount);*/
             };
             smsc_log_info(logger, "Disconnecting from SMSC ...");
+            TrafficControl::stopControl();
             session.close();
             runner.shutdown();
         };
