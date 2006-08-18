@@ -125,11 +125,14 @@ public:
     static bool incIncoming()
     {
         MutexGuard guard(trafficMutex);
-        incoming.Inc();
         if (TrafficControl::stopped) return true;
-        int out = outgoing.Get(); int inc = incoming.Get(); int difference = inc-out;
+        int out = outgoing.Get(); int inc = incoming.Get();
+        int difference = inc - out;
         bool trafficLimitOk = (inc < maxMessagesPerSecond);
-        return ((difference < unrespondedMessagesMax) && trafficLimitOk);
+        if ((difference < unrespondedMessagesMax) && trafficLimitOk) {
+            incoming.Inc(); return true;
+        }
+        return false;
     };
     static void stopControl()
     {
