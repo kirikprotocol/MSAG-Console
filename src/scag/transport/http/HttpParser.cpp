@@ -272,12 +272,9 @@ StatusCode HttpParser::parseHeaderFieldLine(char *buf, unsigned int len,
     return ERROR;
 
   const char  *p = pos;
-  while (--p > buf) {
-    if (*p > 32)
-      break;
-  }
+  while (--p >= buf && *p <= 32);
 
-  if (p == buf)
+  if (p < buf)
     return ERROR; // no key
 
   key.assign(buf, p - buf + 1);
