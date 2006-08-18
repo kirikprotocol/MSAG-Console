@@ -173,16 +173,13 @@ bool HttpProcessorImpl::parsePath(const std::string &path, HttpRequest& cx)
       mid = strchr(pos, ':');
       if (mid && (mid < end)) {
         str.assign(pos, mid - pos);
-        smsc_log_debug(logger, "host: %s", str.c_str());        
         cx.setSite(str);
         mid++;
         str.assign(mid, end - mid);
-        smsc_log_debug(logger, "port: %s", str.c_str());                
         cx.setSitePort(atoi(str.c_str()));
       } else {
         str.assign(pos, end - pos);
         cx.setSite(str);
-        smsc_log_debug(logger, "host80: %s", str.c_str());
       }
   }
 
@@ -393,7 +390,7 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
     }
     catch(RouteNotFoundException& e)
     {
-        smsc_log_warn(logger, "route not found for abonent:%s, site:[%s]:[%d][%s]", request.getAbonent().c_str(), request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str());
+        smsc_log_warn(logger, "route not found for abonent:%s, site:[%s]:[%d][%s], route_id=%d, service_id=%d", request.getAbonent().c_str(), request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getRouteId(), request.getServiceId());
     }
     catch(Exception& e)
     {

@@ -26,8 +26,8 @@ class HttpParser;
 
 struct TransactionContext {
     int64_t operationId;
-    int32_t serviceId;
-    int32_t providerId;
+    uint32_t serviceId;
+    uint32_t providerId;
     uint32_t routeId;
     std::string abonent;
     std::string address;
@@ -36,9 +36,9 @@ struct TransactionContext {
 
     TransactionContext() {
         operationId = -1;
-        serviceId = -1;
-        providerId = -1;
-        ruleId = -1;
+        serviceId = 0;
+        providerId = 0;
+        ruleId = 0;
         routeId = 0;
         usr = 0;
     }
