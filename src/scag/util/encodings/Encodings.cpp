@@ -184,13 +184,13 @@ void ConvertorImpl::convert(const char* inCharset, const char* outCharset,
     i = outbytesleft = MAX_BYTES_IN_CHAR * inLen;
     buf.setSize(buf.GetPos() + outbytesleft);
     outbufptr = buf.GetCurPtr();
-    smsc_log_debug(smsc::logger::Logger::getInstance("conv.conv"), "in=%s, out=%s, inbuf=%d, inbuflen=%d, outbutesleft=%d", inCharset, outCharset, in, inLen, outbytesleft);
+//    smsc_log_debug(smsc::logger::Logger::getInstance("conv.conv"), "in=%s, out=%s, inbuf=%d, inbuflen=%d, outbutesleft=%d", inCharset, outCharset, in, inLen, outbytesleft);
     if(iconv(cd, &in, &inLen, &outbufptr, &outbytesleft) == (size_t)(-1) && errno != E2BIG)
         throw SCAGException("Convertor: iconv. Cannot convert from '%s' to '%s'. errno=%d. bytesleft=%d", inCharset, outCharset, errno, inLen);
         
     buf.SetPos(i - outbytesleft);
             
-    smsc_log_debug(smsc::logger::Logger::getInstance("conv.conv"), "in=%s, out=%s, inbuf=%d, inbuflen=%d, outbutesleft=%d", inCharset, outCharset, in, inLen, outbytesleft);
+//    smsc_log_debug(smsc::logger::Logger::getInstance("conv.conv"), "in=%s, out=%s, inbuf=%d, inbuflen=%d, outbutesleft=%d", inCharset, outCharset, in, inLen, outbytesleft);
         
 /*    while (inLen) {
          size_t i = inLen > ICONV_BLOCK_SIZE ? ICONV_BLOCK_SIZE : inLen;

@@ -112,45 +112,38 @@ bool EventSender::processEvent(void *ev)
 
 int EventSender::Execute()
 {
- if(connect(Host,Port,Timeout))
-     bConnected=true;
- 
- while( bStarted)
- {
-      if(!bConnected)
-      {
-//          SaccSocket.Abort();
-          SaccSocket.Close();
-          if(connect(Host,Port,Timeout))
+    while( bStarted)
+    {
+        if(!bConnected)
+        {
+            //          SaccSocket.Abort();
+            SaccSocket.Close();
+            if(connect(Host,Port,Timeout))
             bConnected=true;
-      }
-      
-      {
-          MutexGuard g(mtx);
-          
-          if(!bStarted) break;
-          
-          if(!eventsQueue.Count() || !bConnected) mtx.wait(Timeout);
-          
-          if(!bStarted) break;      
+        }
 
-          void * ev;
-          if(bConnected)
-          {
+        if(!bStarted) break;
+
+        MutexGuard g(mtx);
+
+        if(bStarted && (!eventsQueue.Count() || !bConnected))
+            mtx.wait(Timeout);
+
+        if(!bStarted) break;      
+          
+        if(bConnected)
+        {
             while(eventsQueue.Count() > 0)
             {
-                if(eventsQueue.Pop(ev))
-                {
-                   if(ev)
-                      processEvent(ev);
-                }
+                void * ev;                    
+                if(eventsQueue.Pop(ev) && ev)
+                   processEvent(ev);
             }
-          }
-      }
- }
+        }
+    }
 
- smsc_log_debug(logger,"EventSender stopped.");
- return 1;
+    smsc_log_debug(logger,"EventSender stopped.");
+    return 1;
 }
 
 
