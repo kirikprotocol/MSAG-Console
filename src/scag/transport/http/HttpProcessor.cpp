@@ -33,7 +33,6 @@ class HttpProcessorImpl : public HttpProcessor
 
         smsc::logger::Logger* logger;
         HttpRouterImpl router;
-        bool inURL;
         std::string inURLFields;
 
 //        bool findPlace(std::string& rs, const PlacementArray& places, HttpRequest& request);
@@ -132,21 +131,18 @@ bool HttpProcessorImpl::parsePath(const std::string &path, HttpRequest& cx)
     return false;
   }
 
-    if(inURL)
+    if (end == pos)
     {
-        if (end == pos)
+        pos++;
+        end = strchr(pos, '/');
+        if (!end)
         {
-            pos++;
-            end = strchr(pos, '/');
-            if (!end)
-            {
-              smsc_log_debug(logger, "if (!end)2");
-              return false;
-            }
+          smsc_log_debug(logger, "if (!end)2");
+          return false;
         }
-        
-        inURLFields.assign(pos, end);
     }
+
+    inURLFields.assign(pos, end);
     
   i = 0;
   if(findPlace("ROUTE_ID", rs, defInPlaces[PlacementKind::ROUTE_ID], cx, inURLFields))
@@ -177,13 +173,16 @@ bool HttpProcessorImpl::parsePath(const std::string &path, HttpRequest& cx)
       mid = strchr(pos, ':');
       if (mid && (mid < end)) {
         str.assign(pos, mid - pos);
+        smsc_log_debug(logger, "host: %s", str.c_str());        
         cx.setSite(str);
         mid++;
         str.assign(mid, end - mid);
+        smsc_log_debug(logger, "port: %s", str.c_str());                
         cx.setSitePort(atoi(str.c_str()));
       } else {
         str.assign(pos, end - pos);
         cx.setSite(str);
+        smsc_log_debug(logger, "host80: %s", str.c_str());
       }
   }
 
@@ -394,7 +393,7 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
     }
     catch(RouteNotFoundException& e)
     {
-        smsc_log_warn(logger, "route not found for abonent:%s, site:%s:%d%s", request.getAbonent().c_str(), request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str());
+        smsc_log_warn(logger, "route not found for abonent:%s, site:[%s]:[%d][%s]", request.getAbonent().c_str(), request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str());
     }
     catch(Exception& e)
     {
@@ -509,22 +508,12 @@ void HttpProcessorImpl::init(const std::string& cfg)
     ReloadRoutes();
 }
 
-bool HttpProcessorImpl::defInURL(uint32_t t)
-{
-    int i = 0;
-    while(i < defInPlaces[t].Count() && defInPlaces[t][i].type != PlacementType::URL)
-        i++;
-    return i < defInPlaces[t].Count();
-}
-
 void HttpProcessorImpl::ReloadRoutes()
 {
     router.ReloadRoutes();
 
     router.getDefaultInPlacement(defInPlaces);
     router.getDefaultOutPlacement(defOutPlaces);
-
-    inURL = defInURL(PlacementKind::ADDR) || defInURL(PlacementKind::USR) || defInURL(PlacementKind::ROUTE_ID) || defInURL(PlacementKind::SERVICE_ID);
 }
 
 void HttpProcessorImpl::registerEvent(int event, HttpRequest& cmd)

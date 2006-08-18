@@ -124,25 +124,28 @@ int EventSender::Execute()
           if(connect(Host,Port,Timeout))
             bConnected=true;
       }
-      MutexGuard g(mtx);
       
-      if(!bStarted) break;
-      
-      if(!eventsQueue.Count() || !bConnected) mtx.wait(Timeout);
-      
-      if(!bStarted) break;      
-
-      void * ev;
-      if(bConnected)
       {
-        while(eventsQueue.Count() > 0)
-        {
-            if(eventsQueue.Pop(ev))
+          MutexGuard g(mtx);
+          
+          if(!bStarted) break;
+          
+          if(!eventsQueue.Count() || !bConnected) mtx.wait(Timeout);
+          
+          if(!bStarted) break;      
+
+          void * ev;
+          if(bConnected)
+          {
+            while(eventsQueue.Count() > 0)
             {
-               if(ev)
-                  processEvent(ev);
+                if(eventsQueue.Pop(ev))
+                {
+                   if(ev)
+                      processEvent(ev);
+                }
             }
-        }
+          }
       }
  }
 
