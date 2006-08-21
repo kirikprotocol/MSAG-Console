@@ -31,7 +31,7 @@ static SmppProxy* getRegisteredProxy(SmeManager* smeManager,const char* sysId,co
 {
   MutexGuard mg(getKillMutex);
   SmppProxy* proxy=(SmppProxy*)smeManager->checkSmeProxy(sysId,pass);
-  if(!proxy || ct==-1)return 0;
+  if(!proxy)return 0;
   proxy->AddRef(ct);
   return proxy;
 }
@@ -568,14 +568,10 @@ int SmppInputThread::Execute()
                     {
                       debug2(log,"try to register sme:%s",sid.c_str());
                       //smsc_log_debug(snmpLog,"register sme:%s",sid.c_str());
-                      if(
                       smeManager->registerSmeProxy(
                         bindpdu->get_systemId()?bindpdu->get_systemId():"",
                         bindpdu->get_password()?bindpdu->get_password():"",
-                        proxy))
-                      {
-                        proxy->activate();
-                      }
+                        proxy);
 
                       smsc_log_debug(snmpLog,"register sme: %s successful",sid.c_str());
                       proxy->setId(sid,proxyIndex);

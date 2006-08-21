@@ -69,7 +69,6 @@ public:
   uint32_t uniqueId;
   SmeInfo info;
   SmeProxy* proxy;
-  std::vector<SmeProxy*> backupProxies;
   bool deleted;
   SmeIndex idx;
   mutable Mutex mutex;
@@ -236,7 +235,7 @@ public:
   virtual SmeIndex getSmeIndex() const; // ?????
 */
   // SmeRegistrar implementation
-  virtual bool registerSmeProxy(const SmeSystemId& systemId,
+  virtual void registerSmeProxy(const SmeSystemId& systemId,
                                 const SmePassword& pwd,
                                 SmeProxy* smeProxy);
   virtual void registerInternallSmeProxy(const SmeSystemId& systemId,

@@ -314,7 +314,7 @@ SmeProxy* SmeManager::checkSmeProxy(const SmeSystemId& systemId,const SmePasswor
 }
 
 
-bool SmeManager::registerSmeProxy(const SmeSystemId& systemId,
+void SmeManager::registerSmeProxy(const SmeSystemId& systemId,
                                   const SmePassword& pwd,
                                   SmeProxy* smeProxy)
 {
@@ -352,9 +352,7 @@ __synchronized__
     {
       __trace2__("Failed to register proxy with sid:%s",systemId.c_str());
       __warning__("Sme proxy with tihs systemId already registered");
-      //throw SmeRegisterException(SmeRegisterFailReasons::rfAlreadyRegistered);
-      records[index]->backupProxies.push_back(smeProxy);
-      return false;
+      throw SmeRegisterException(SmeRegisterFailReasons::rfAlreadyRegistered);
     }
 
     smeProxy->setPriority(records[index]->info.priority);
@@ -364,7 +362,6 @@ __synchronized__
   }
   //dispatcher.attachSmeProxy(smeProxy,index);
   smeProxy->attachMonitor(&mon);
-  return true;
 }
 
 void SmeManager::unregisterSmeProxy(SmeProxy* smeProxy)
@@ -379,33 +376,11 @@ void SmeManager::unregisterSmeProxy(SmeProxy* smeProxy)
   {
     if(records[index]->proxy==smeProxy)
     {
-      //dispatcher.detachSmeProxy(records[index]->proxy);
       records[index]->proxy->attachMonitor(0);
-      if(records[index]->backupProxies.empty())
-      {
-        records[index]->proxy = 0;
-      }else
-      {
-        records[index]->proxy=records[index]->backupProxies.front();
-        records[index]->backupProxies.erase(records[index]->backupProxies.begin());
-        records[index]->proxy->activate();
-      }
+      records[index]->proxy = 0;
     }else
     {
-      bool found=false;
-      for(std::vector<SmeProxy*>::iterator it=records[index]->backupProxies.begin();it!=records[index]->backupProxies.end();it++)
-      {
-        if(*it==smeProxy)
-        {
-          records[index]->backupProxies.erase(it);
-          found=true;
-          break;
-        }
-      }
-      if(!found)
-      {
-         __warning2__("unregisterSmeProxy: proxy not found(%p)!",smeProxy);
-      }
+      __warning2__("Attempt to unregister incorrect proxy:%s",smeProxy->getSystemId());
     }
   }
   else

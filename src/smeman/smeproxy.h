@@ -126,7 +126,6 @@ public:
     return true;
   };
 
-  virtual void activate(){}
   virtual void disconnect(){};
 };
 
