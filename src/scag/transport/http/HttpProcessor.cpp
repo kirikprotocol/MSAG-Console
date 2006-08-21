@@ -186,7 +186,7 @@ bool HttpProcessorImpl::parsePath(const std::string &path, HttpRequest& cx)
   pos = end;
   if (*pos)
   {
-    str.assign(pos);
+//    str.assign(pos);
     end = strrchr(pos, '/');
     str.assign(pos, end + 1 - pos);
     cx.setSitePath(str);
@@ -230,8 +230,8 @@ bool HttpProcessorImpl::findPlace(const char* wh, std::string& rs, const Placeme
             }
             case PlacementType::URL:
             {
-                const char *p;
-                while((p = strstr(url.c_str(), places[i].name.c_str())) && p > url.c_str() && p[-1] > 'A');
+                const char *p = url.c_str();
+                while((p = strstr(p, places[i].name.c_str())) && p > url.c_str() && p[-1] > 'A') p++;
                 
                 if(!p) break;
                 
@@ -390,7 +390,7 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
     }
     catch(RouteNotFoundException& e)
     {
-        smsc_log_warn(logger, "route not found for abonent:%s, site:[%s]:[%d][%s], route_id=%d, service_id=%d", request.getAbonent().c_str(), request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getRouteId(), request.getServiceId());
+        smsc_log_warn(logger, "route not found for abonent:%s, site:[%s]:[%d][%s], route_id=%d, service_id=%d", request.getAbonent().c_str(), request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str(), request.getRouteId(), request.getServiceId());
     }
     catch(Exception& e)
     {
