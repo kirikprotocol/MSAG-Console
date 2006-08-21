@@ -3567,6 +3567,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         try{
           sms.lastTime=time(NULL);
           sms.setNextTime(rescheduleSms(sms));
+          bool saveNeedArchivate=sms.needArchivate;
           sms.needArchivate=false;
           sms.billingRecord=0;
           store->createSms(sms,t.msgId,smsc::store::CREATE_NEW_NO_CLEAR);
@@ -3577,6 +3578,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
           {
             store->changeSmsStateToDeleted(t.msgId);
           }
+          sms.needArchivate=saveNeedArchivate;
         }catch(std::exception& e)
         {
           warn2(smsLog,"Failed to create dpf sms:%s",e.what());
@@ -5008,6 +5010,7 @@ void StateMachine::submitReceipt(SMS& sms,int type)
     SmeProxy *dest_proxy;
     smsc::router::RouteInfo ri;
     bool has_route=false;
+    sms.setSourceSmeId(smscSmeId.c_str());
     try{
       has_route=smsc->routeSms(sms.getOriginatingAddress(),sms.getDealiasedDestinationAddress(),dest_proxy_index,dest_proxy,&ri);
     }catch(std::exception& e)
@@ -5024,8 +5027,6 @@ void StateMachine::submitReceipt(SMS& sms,int type)
       int prio=sms.getPriority()+ri.priority;
       if(prio>SmeProxyPriorityMax)prio=SmeProxyPriorityMax;
       sms.setPriority(prio);
-
-      sms.setSourceSmeId(smscSmeId.c_str());
 
       sms.setDestinationSmeId(ri.smeSystemId.c_str());
       sms.setServiceId(ri.serviceId);
