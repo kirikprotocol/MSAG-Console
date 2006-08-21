@@ -658,7 +658,15 @@ void Scheduler::doFinalizeSms(SMSId id,smsc::sms::State state,int lastResult,con
   sd->sms.destinationDescriptor=dstDsc;
 
   LocalFileStoreSave(id,++sd->seq,sd->sms,true);
-  if (sd->sms.needArchivate) archiveStorage.createRecord(id, sd->sms);
+  if (sd->sms.needArchivate)
+  {
+    try{
+      archiveStorage.createRecord(id, sd->sms);
+    }catch(std::exception& e)
+    {
+      warn2(log,"archiveStorage.createRecord failed:%s",e.what());
+    }
+  }
   //if (sd->sms.billingRecord) billingStorage.createRecord(id, sd->sms);
   delStoreData(sd);
 }
