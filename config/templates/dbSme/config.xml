@@ -19,6 +19,8 @@
 	<param name="systemType" type="string">smpp</param>
 	<param name="forceDataCoding" type="string">UCS2</param>
 	<!-- DataCoding values: UCS2, SMSC7BIT, LATIN1. DEFAULT: LATIN1 -->
+	<param name="maxMessagesPerSecond" type="int">1000</param>
+	<param name="unrespondedMessagesMax" type="int">20</param>
         
         <section name="ThreadPool">
             <param name="max" type="int">15</param>

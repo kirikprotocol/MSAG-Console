@@ -18,6 +18,8 @@ public class Params extends DbsmeBean
   private String origAddress = null;
   private String systemType = null;
   private String forceDataCoding = null;
+  private int maxMessagesPerSecond = 1000;
+  private int unrespondedMessagesMax = 10;
   private int max = 0;
   private int init = 0;
   private String host = null;
@@ -53,6 +55,11 @@ public class Params extends DbsmeBean
       origAddress = getString("DBSme.origAddress");
       systemType  = getString("DBSme.systemType");
       forceDataCoding = getString("DBSme.forceDataCoding");
+      try { maxMessagesPerSecond = getInt("DBSme.maxMessagesPerSecond"); }
+      catch (Exception e) { maxMessagesPerSecond = 1000; }
+      try { unrespondedMessagesMax = getInt("DBSme.unrespondedMessagesMax"); }
+      catch (Exception e) { unrespondedMessagesMax = 10; }
+
       if (forceDataCoding == null || forceDataCoding.length() <= 0) {
         forceDataCoding = "LATIN1";
       }
@@ -99,6 +106,8 @@ public class Params extends DbsmeBean
     config.setString("DBSme.origAddress", origAddress == null ? "" : origAddress);
     config.setString("DBSme.systemType", systemType == null ? "" : systemType);
     config.setString("DBSme.forceDataCoding", forceDataCoding);
+    config.setInt   ("DBSme.maxMessagesPerSecond", maxMessagesPerSecond);
+    config.setInt   ("DBSme.unrespondedMessagesMax", unrespondedMessagesMax);
     config.setInt   ("DBSme.ThreadPool.max", max);
     config.setInt   ("DBSme.ThreadPool.init", init);
     config.setString("DBSme.SMSC.host", host == null ? "" : host);
@@ -150,6 +159,21 @@ public class Params extends DbsmeBean
   }
   public void setForceDataCoding(String forceDataCoding) {
     this.forceDataCoding = forceDataCoding;
+  }
+
+  public String getMaxMessagesPerSecond() {
+    return String.valueOf(maxMessagesPerSecond);
+  }
+  public void setMaxMessagesPerSecond(String maxMessagesPerSecond) {
+    try { this.maxMessagesPerSecond = Integer.decode(maxMessagesPerSecond).intValue(); }
+    catch (NumberFormatException e) { this.maxMessagesPerSecond = 1000; }
+  }
+  public String getUnrespondedMessagesMax() {
+    return String.valueOf(unrespondedMessagesMax);
+  }
+  public void setUnrespondedMessagesMax(String unrespondedMessagesMax) {
+    try { this.unrespondedMessagesMax = Integer.decode(unrespondedMessagesMax).intValue(); } 
+    catch (NumberFormatException e) { this.unrespondedMessagesMax = 10; }
   }
 
   public String getSvcType() {
