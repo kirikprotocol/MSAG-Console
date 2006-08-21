@@ -241,7 +241,8 @@ StatusCode HttpParser::parseFirstLine(char *buf, unsigned int len, HttpContext& 
         std::string path;
 
         if (end) {
-          path.assign(pos, end - pos - (end[-1] == '/' ? 1 : 0));
+// - (end[-1] == '/' ? 1 : 0)            
+          path.assign(pos, end - pos);
           end++;
           cx.getRequest().httpVersion.assign(end, len - (end - buf));
         } else
