@@ -1260,7 +1260,6 @@ static void DoUSSRUserResponceError(const SmscCommand& cmd , MapDialog* dialog)
   if(!ofDelivered)
   {
     sprintf( text, "Unknown formatter ussd_error for locale en_en" );
-    return;
   } else {
     try{
       string out;
