@@ -499,7 +499,7 @@
                 <tr class="row${rowN%3}" id="subjRow_${esubj}">
                     <td><img src="content/images/subject.gif" alt=""></td>
                     <td>${esubj}<input id="subjAbon" type="hidden" name="abonSubj" value="${esubj}"></td>
-                    <td><img src="content/images/but_del.gif" alt="" onclick="removeAbonetSubj('subRow_${esubj}');"
+                    <td><img src="content/images/but_del.gif" alt="" onclick="removeAbonetSubj('subjRow_${esubj}');"
                              style="cursor: hand;"></td>
                 </tr>
                 <c:set var="rowN" value="${rowN+1}"/>
