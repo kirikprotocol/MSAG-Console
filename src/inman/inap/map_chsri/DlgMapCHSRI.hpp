@@ -58,6 +58,7 @@ public:
         chsriServiceResponse = 0
     };
     void reqRoutingInfo(const char * subcr_adr, USHORT_T timeout = 0) throw(CustomException);
+    void reqRoutingInfo(const TonNpiAddress & tnpi_adr, USHORT_T timeout = 0) throw(CustomException);
 
     void endMapDlg(void);
 

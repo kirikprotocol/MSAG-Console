@@ -23,7 +23,7 @@ MapCHSRIDlg::MapCHSRIDlg(TCSessionMA* pSession, CHSRIhandler * sri_handler,
     assert(sri_handler && pSession);
     _sriState.value = 0;
     if (!logger)
-        logger = Logger::getInstance("smsc.inman.Inap.MapCHSRIDlg");
+        logger = Logger::getInstance("smsc.inman.inap");
 }
 
 MapCHSRIDlg::~MapCHSRIDlg()
@@ -41,16 +41,12 @@ void MapCHSRIDlg::endMapDlg(void)
 /* ------------------------------------------------------------------------ *
  * MAP_SEND_ROUTING_INFO interface
  * ------------------------------------------------------------------------ */
-void MapCHSRIDlg::reqRoutingInfo(const char * subcr_adr, USHORT_T timeout/* = 0*/) throw(CustomException)
+void MapCHSRIDlg::reqRoutingInfo(const TonNpiAddress & tnpi_adr, USHORT_T timeout/* = 0*/) throw(CustomException)
 {
     MutexGuard  grd(_sync);
-    TonNpiAddress   tnAdr;
-    if (!tnAdr.fromText(subcr_adr))
-        throw CustomException("inalid subscriberID", -1, subcr_adr);
-
-    dialog = session->openDialog(tnAdr);
+    dialog = session->openDialog(tnpi_adr);
     if (!dialog)
-        throw CustomException("MapSRI[0]: Unable to create TC Dialog");
+        throw CustomException("MapSRI: Unable to create TC Dialog");
     if (timeout)
         dialog->setInvokeTimeout(timeout);
     dialog->addListener(this);
@@ -58,14 +54,24 @@ void MapCHSRIDlg::reqRoutingInfo(const char * subcr_adr, USHORT_T timeout/* = 0*
 
     CHSendRoutingInfoArg     arg;
     arg.setGMSCorSCFaddress(session->getOwnAdr());
-    arg.setSubscrMSISDN(tnAdr);
+    arg.setSubscrMSISDN(tnpi_adr);
 
     Invoke* op = dialog->initInvoke(MAP_CH_SRI_OpCode::sendRoutingInfo, this);
     op->setParam(&arg);
     dialog->sendInvoke(op);
 
-    dialog->beginDialog();
+    dialog->beginDialog(); //throws
     _sriState.s.ctrInited = MAP_OPER_INITED;
+
+    smsc_log_debug(logger, "MapSRI[%u]: quering %s info", sriId, tnpi_adr.getSignals());
+}
+
+void MapCHSRIDlg::reqRoutingInfo(const char * subcr_adr, USHORT_T timeout/* = 0*/) throw(CustomException)
+{
+    TonNpiAddress   tnAdr;
+    if (!tnAdr.fromText(subcr_adr))
+        throw CustomException("inalid subscriber addr", -1, subcr_adr);
+    reqRoutingInfo(tnAdr, timeout);
 }
 
 /* ------------------------------------------------------------------------ *
