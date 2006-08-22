@@ -214,6 +214,14 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
   Parameters cgmListAbonentsParams;
   cgmListAbonentsParams["id"]=Parameter("id",LongType);
 
+  Parameters aliasAddParams;
+  aliasAddParams["address"]=Parameter("address",StringType);
+  aliasAddParams["alias"]=Parameter("alias",StringType);
+  aliasAddParams["hide"]=Parameter("hide",LongType);
+
+  Parameters aliasDelParams;
+  aliasDelParams["alias"]=Parameter("alias",StringType);
+
   /**************************** method declarations *************************/
   Method apply_routes          ((unsigned)applyRoutesMethod,         "apply_routes",          empty_params, StringType);
   Method apply_aliases         ((unsigned)applyAliasesMethod,        "apply_aliases",         empty_params, StringType);
@@ -299,6 +307,8 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
   Method cgm_delabonent((unsigned)cgmDelAbonentMethod,"cgm_delabonent",cgmDelAbonentParams,StringType);
   Method cgm_listabonents((unsigned)cgmListAbonentsMethod,"cgm_listabonents",cgmListAbonentsParams,StringListType);
 
+  Method alias_add((unsigned)aliasAddMethod,"alias_add",aliasAddParams,StringType);
+  Method alias_del((unsigned)aliasDelMethod,"alias_del",aliasDelParams,StringType);
 
   /***************************** method assigns *****************************/
   methods[apply_routes         .getName()] = apply_routes;
@@ -379,6 +389,8 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
   methods[cgm_addabonent.getName()] = cgm_addabonent;
   methods[cgm_delabonent.getName()] = cgm_delabonent;
 
+  methods[alias_add.getName()] = alias_add;
+  methods[alias_del.getName()] = alias_del;
 
   smsc_app_runner.reset(0);
 }
@@ -558,7 +570,10 @@ throw (AdminException)
         return cgmDelAbonent(args);
       case cgmListAbonentsMethod:
         return cgmListAbonents(args);
-
+      case aliasAddMethod:
+        return addAlias(args);
+      case aliasDelMethod:
+        return delAlias(args);
 
       default:
         smsc_log_debug(logger, "unknown method \"%s\" [%u]", method.getName(), method.getId());
@@ -1141,8 +1156,9 @@ Variant SmscComponent::traceRoute(const Arguments &args)
 void SmscComponent::applyAliases()
 throw (AdminException)
 {
-  configs.aliasconfig->reload();
-  smsc_app_runner->getApp()->reloadAliases(configs);
+  /*
+  //configs.aliasconfig->reload();
+  //smsc_app_runner->getApp()->reloadAliases(configs);
 
   if(smsc_app_runner->getApp()->isHs()){
       Interconnect * iconn = Interconnect::getInstance();
@@ -1153,6 +1169,7 @@ throw (AdminException)
       ApplyAliasesCommand * cmd = new ApplyAliasesCommand();
       iconn->sendCommand(cmd);
   }
+  */
 }
 
 void SmscComponent::applyReschedule()
@@ -1185,7 +1202,7 @@ throw (AdminException)
   configs.cfgman = & smsc::util::config::Manager::getInstance();
   smsc::resourcemanager::ResourceManager::reload(configs.cfgman->getString("core.locales"), configs.cfgman->getString("core.default_locale"));
   __trace__("config reinitialized");
-  configs.aliasconfig->reload();
+  //configs.aliasconfig->reload();
   configs.routesconfig->reload();
 }
 
@@ -1273,7 +1290,10 @@ Variant SmscComponent::profileLookupEx(const Arguments &args) throw (AdminExcept
       result.appendValueToStringList(numBuf);
       sprintf(numBuf,"%u",profile.accessMaskOut);
       result.appendValueToStringList(numBuf);
-
+#ifdef SMSEXTRA
+      sprintf(numBuf,"%u",profile.accessMaskOut);
+      result.appendValueToStringList(numBuf);
+#endif
 
       result.appendValueToStringList(getProfileMatchTypeStr(matchType));
       result.appendValueToStringList(matchAddress.c_str());
@@ -1336,6 +1356,10 @@ throw (AdminException)
       result.appendValueToStringList(numBuf);
       sprintf(numBuf,"%u",profile.accessMaskOut);
       result.appendValueToStringList(numBuf);
+#ifdef SMSEXTRA
+      sprintf(numBuf,"%u",profile.enabledServices);
+      result.appendValueToStringList(numBuf);
+#endif
       return result;
     }
     else
@@ -1364,7 +1388,12 @@ throw (AdminException)
   const char* translit          = *i++;
   const char* closedGroupId     = *i++;
   const char* accessMaskIn      = *i++;
+#ifndef SMSEXTRA
   const char* accessMaskOut     = *i;
+#else
+  const char* accessMaskOut     = *i++;
+  const char* enabledServices   = *i;
+#endif
 
   if (!codepageStr || !reportStr || !localeStr || !hideStr || !hideModifiableStr
     || !divert || !divertActive || !divertModifiable || !ussd7bit)
@@ -1438,6 +1467,10 @@ throw (AdminException)
   sscanf(closedGroupId,"%u",&profile.closedGroupId);
   sscanf(accessMaskIn,"%u",&profile.accessMaskIn);
   sscanf(accessMaskOut,"%u",&profile.accessMaskOut);
+#ifdef SMSEXTRA
+  sscanf(enabledServices,"%u",&profile.enabledServices);
+#endif
+
 }
 
 bool isMask(const Address & address)
@@ -2526,6 +2559,45 @@ Variant SmscComponent::cgmListAbonents(const Arguments & args)
   }
   ENDMETHOD
     return result;
+  EPILOGUE
+}
+
+#define ALIASPROLOGUE \
+  info2(logger,"alias admin call %s",__func__); \
+  AliasManager* aliaser=smsc_app_runner->getApp()->getAliaserInstance();\
+  const char* lastArg=0; \
+  try{
+
+
+Variant SmscComponent::addAlias(const Arguments & args)
+{
+  ALIASPROLOGUE
+    STRARG(address);
+    STRARG(alias);
+    INTARG(hide);
+  BEGINMETHOD
+  {
+    smsc::alias::AliasInfo ai;
+    ai.addr=address;
+    ai.alias=alias;
+    ai.hide=hide;
+    aliaser->addAlias(ai);
+  }
+  ENDMETHOD
+    return Variant("alias added");
+  EPILOGUE
+}
+
+Variant SmscComponent::delAlias(const Arguments & args)
+{
+  ALIASPROLOGUE
+    STRARG(alias);
+  BEGINMETHOD
+  {
+    aliaser->deleteAlias(alias);
+  }
+  ENDMETHOD
+    return Variant("alias deleted");
   EPILOGUE
 }
 
