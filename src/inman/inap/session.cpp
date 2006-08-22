@@ -163,7 +163,7 @@ SSNSession::SSNSession(UCHAR_T ownssn, USHORT_T user_id, USHORT_T max_dlg_id/* =
     if (!min_dlg_id)
         min_dlg_id++;
     lastDlgId = minId = min_dlg_id;
-    if (maxId > minId)
+    if (maxId < minId)
         maxId = minId;
 
     if (!uselog)
