@@ -248,6 +248,8 @@ FILE*& cmdfile=defVC.cmdfile;
 bool ansi1251=false;
 bool cmdecho=false;
 
+bool asyncsend=false;
+
 struct Option{
   const char* name;
   char type;
@@ -285,7 +287,8 @@ Option options[]={
 {"validTime",'i',&validTime},
 {"replaceIfPresent",'b',&replaceIfPresent},
 {"eservicetype",'s',&eservicetype},
-{"setDpf",'b',&setDpf}
+{"setDpf",'b',&setDpf},
+{"asyncsend",'b',&asyncsend}
 };
 
 const int optionsCount=sizeof(options)/sizeof(Option);
@@ -1379,8 +1382,9 @@ int main(int argc,char* argv[])
 
   SmppSession ss(cfg,&lst);
   SmppTransmitter *tr=ss.getSyncTransmitter();
+  SmppTransmitter *atr=ss.getAsyncTransmitter();
 
-  rp.setTrans(tr,ss.getAsyncTransmitter());
+  rp.setTrans(tr,atr);
 
   Address srcaddr;
   try{
@@ -1679,6 +1683,7 @@ int main(int argc,char* argv[])
           ss.close();
           ss.connect(bindType);
           tr=ss.getSyncTransmitter();
+          atr=ss.getAsyncTransmitter();
           rp.setTrans(tr,ss.getAsyncTransmitter());
         }catch(SmppConnectException& e)
         {
@@ -1984,16 +1989,21 @@ int main(int argc,char* argv[])
         }
       }
 
-      SmppHeader *resp;
+      SmppHeader *resp=0;
       if(!dataSm)
       {
         fillSmppPduFromSms(&sm,&s);
         AddOptionals(sm);
         try{
-          resp=(SmppHeader*)tr->submit(sm);
+          if(asyncsend)
+          {
+            atr->submit(sm);
+          }else
+          {
+            resp=(SmppHeader*)tr->submit(sm);
+          }
         }catch(SmppInvalidBindState& e)
         {
-          resp=NULL;
           printf("Pdu sent in invalid bind state\n");
         }
       }else
@@ -2001,10 +2011,15 @@ int main(int argc,char* argv[])
         fillDataSmFromSms(&dsm,&s);
         AddOptionals(dsm);
         try{
-          resp=(SmppHeader*)tr->data(dsm);
+          if(asyncsend)
+          {
+            atr->data(dsm);
+          }else
+          {
+            resp=(SmppHeader*)tr->data(dsm);
+          }
         }catch(SmppInvalidBindState& e)
         {
-          resp=NULL;
           printf("Pdu sent in invalid bind state\n");
         }
       }
@@ -2023,7 +2038,13 @@ int main(int argc,char* argv[])
           printf("Wasn't accepted: %08X\n",resp->get_commandStatus());
         }else
         {
-          printf("Timed out\n");
+          if(asyncsend)
+          {
+            printf("PDU sent\n");
+          }else
+          {
+            printf("Response timed out\n");
+          }
         }
         fflush(stdout);
       }
