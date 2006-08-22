@@ -80,6 +80,9 @@ struct Profile{
   bool translit:1;
   uint32_t closedGroupId;
   uint32_t accessMaskIn,accessMaskOut;
+#ifdef SMSEXTRA
+  uint32_t subscription;
+#endif
 
   File::offset_type offset;
 
@@ -104,6 +107,10 @@ struct Profile{
     closedGroupId=0;
     accessMaskIn=1;
     accessMaskOut=1;
+#ifdef SMSEXTRA
+    subscription=0;
+#endif
+
 
     offset=-1;
   }
@@ -135,6 +142,9 @@ struct Profile{
     accessMaskIn=src.accessMaskIn;
     accessMaskOut=src.accessMaskOut;
     offset=src.offset;
+#ifdef SMSEXTRA
+    subscription=src.subscription;
+#endif
     return *this;
   }
 
@@ -157,6 +167,9 @@ struct Profile{
            closedGroupId==src.closedGroupId &&
            accessMaskIn==src.accessMaskIn &&
            accessMaskOut==src.accessMaskOut
+#ifdef SMSEXTRA
+           && subscription==src.subscription
+#endif
            ;
   }
 
@@ -196,7 +209,9 @@ struct Profile{
     f.WriteNetInt32(closedGroupId);
     f.WriteNetInt32(accessMaskIn);
     f.WriteNetInt32(accessMaskOut);
-
+#ifdef SMSEXTRA
+    f.WriteNetInt32(subscription);
+#endif
   }
   void Read(File& f)
   {
@@ -226,11 +241,18 @@ struct Profile{
     closedGroupId=f.ReadNetInt32();
     accessMaskIn=f.ReadNetInt32();
     accessMaskOut=f.ReadNetInt32();
+#ifdef SMSEXTRA
+    subscription=f.ReadNetInt32();
+#endif
 
   }
   static uint32_t Size()
   {
-    return 4+4+4+32+1+32+1+1+1+1+1+1+1+1+4+4+4;
+    return 4+4+4+32+1+32+1+1+1+1+1+1+1+1+4+4+4
+#ifdef SMSEXTRA
+    +4
+#endif
+    ;
   }
 
   string toString()const
