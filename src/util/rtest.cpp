@@ -6,8 +6,8 @@
 #include "smeman/smeman.h"
 #include "util/regexp/RegExp.hpp"
 #include "logger/Logger.h"
-#include "alias/aliasman.h"
-#include "util/config/alias/aliasconf.h"
+#include "alias/AliasManImpl.hpp"
+//#include "util/config/alias/aliasconf.h"
 #include <string>
 #include <vector>
 #include "core/buffers/File.hpp"
@@ -27,34 +27,6 @@ extern void loadRoutes(RouteManager* rm,const smsc::util::config::route::RouteCo
 }
 }
 
-
-void reloadAliases(AliasManager* aliaser,const AliasConfig& cfg)
-{
-  {
-    smsc::util::config::alias::AliasConfig::RecordIterator i =
-                                cfg.getRecordIterator();
-    while(i.hasRecord())
-    {
-      smsc::util::config::alias::AliasRecord *rec;
-      i.fetchNext(rec);
-      __trace2__("adding %20s %20s",rec->addrValue,rec->aliasValue);
-      smsc::alias::AliasInfo ai;
-      ai.addr = smsc::sms::Address(
-        strlen(rec->addrValue),
-        rec->addrTni,
-        rec->addrNpi,
-        rec->addrValue);
-      ai.alias = smsc::sms::Address(
-        strlen(rec->aliasValue),
-        rec->aliasTni,
-        rec->aliasNpi,
-        rec->aliasValue);
-      ai.hide = rec->hide;
-      aliaser->addAlias(ai);
-    }
-    aliaser->commit();
-  }
-}
 
 void split(const string& str,char delim,vector<string>& out)
 {
@@ -78,13 +50,7 @@ int main(int argc,char* argv[])
 
   RouteManager rm;
   smsc::smeman::SmeManager smeman;
-  AliasManager am;
-
-  smsc::util::config::alias::AliasConfig acfg;
-
-  acfg.load("aliases.xml");
-
-  reloadAliases(&am,acfg);
+  AliasManImpl am("aliases.bin");
 
 
   smsc::util::config::smeman::SmeManConfig smemanconfig;
