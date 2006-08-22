@@ -67,8 +67,8 @@ public:
 
 protected:
   char* buf;
-  int strlength;
-  int size;
+  size_t strlength;
+  size_t size;
 };
 
 }//sms

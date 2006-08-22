@@ -31,7 +31,7 @@ namespace BufOps{
 
   inline SmsBuffer& operator<<(SmsBuffer& buf,const char* str)
   {
-    uint8_t len=strlen(str);
+    uint8_t len=(uint8_t)strlen(str);
     buf.Append((char*)&len,1);
     buf.Append(str,len);
     return buf;
@@ -39,8 +39,8 @@ namespace BufOps{
 
   struct SmallCharBuf{
     char* buf;
-    int len;
-    SmallCharBuf(char* argBuf,int argLen):buf(argBuf),len(argLen){}
+    size_t len;
+    SmallCharBuf(char* argBuf,size_t argLen):buf(argBuf),len(argLen){}
   };
 
   inline SmsBuffer& operator>>(SmsBuffer& buf,SmallCharBuf& scb)
@@ -105,7 +105,7 @@ namespace BufOps{
 
   inline SmsBuffer& operator<<(SmsBuffer& buf,time_t val)
   {
-    uint32_t tmp=ntohl(val);
+    uint32_t tmp=ntohl((uint32_t)val);
     buf.Append((char*)&tmp,4);
     return buf;
   }
@@ -120,7 +120,7 @@ namespace BufOps{
 
   inline SmsBuffer& operator<<(SmsBuffer& buf,uint16_t val)
   {
-    uint16_t nval=ntohs(val);
+    uint16_t nval=ntohs((uint16_t)val);
     buf.Append((char*)&nval,2);
     return buf;
   }
