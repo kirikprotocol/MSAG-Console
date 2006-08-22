@@ -4,11 +4,12 @@
  tag body-content="scriptless" %><%@
  attribute name="title" required="true"%><%@
  attribute name="name" required="true"%><%@
- attribute name="opened" required="false"%>
+ attribute name="opened" required="false"%><%@
+ attribute name="width" required="false"%>
 <c:set var="COLLAPSING_TREE_PREFIX" value="${smf:concat(!empty COLLAPSING_TREE_PREFIX ? COLLAPSING_TREE_PREFIX : '', smf:concat(name, '.'))}" scope="request"/>
 <dl class="collapsing_tree">
 	<dt id="collapsing_tree_${title}" <c:choose><c:when test="${opened}">class="opened"</c:when><c:otherwise>class="closed"</c:otherwise></c:choose>>${title}</dt>
-  <dd id="collapsing_tree_${title}_body" style="width:100%;<c:if test='${!opened}'>display:none;</c:if>">
+  <dd id="collapsing_tree_${title}_body" style="width:<c:choose><c:when test="${!empty width}">${width}</c:when><c:otherwise>100%</c:otherwise></c:choose>;<c:if test='${!opened}'>display:none;</c:if>">
     <jsp:doBody/>
   </dd>
 </dl>

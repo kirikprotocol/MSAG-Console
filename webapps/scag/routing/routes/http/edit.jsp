@@ -465,7 +465,7 @@
     <col width="16%">
     <col width="42%">
     <tr>
-        <td valign="top" width="50%">
+        <td valign="top" width="40%">
             <!--<div class="page_subtitle">Abonents</div>-->
             <table cellpadding="0" cellspacing="0">
                 <col width="50%" align="left">
@@ -517,7 +517,7 @@
                 </c:forEach>
             </table>
         </td>
-        <td valign="top" width="50%">
+        <td valign="top" width="60%">
             <table cellpadding="0" cellspacing="0">
                  <col width="50%" align="left">
                  <col width="50%" align="right">
@@ -536,7 +536,7 @@
                 <tr>
                     <td><fmt:message>routes.edit.site.port</fmt:message></td>
 
-                    <td nowrap="true"><input id="newSite" class="midtxt" name="newSite"><b>:</b><input id="newPort" class="mintxt" name="newPort" value="80" validation="port" onkeyup="resetValidation(this)"></td>
+                    <td nowrap="true"><input id="newSite" class="txt" name="newSite"><b>:</b><input id="newPort" class="mintxt" name="newPort" value="80" validation="port" onkeyup="resetValidation(this)"></td>
                     <td><img src="content/images/but_add.gif" alt="Add new Site" onclick="addSite(opForm.all.newSite,opForm.all.newPort,'<fmt:message>routes.edit.add.new.path</fmt:message>','<fmt:message>scripts.site.already.exist</fmt:message>','<fmt:message>scripts.site.name.error</fmt:message>')"
                         style="cursor: hand;"></td>
                 </tr>
@@ -568,14 +568,14 @@
                             <c:set var="sectHeader" value="sectionHeader_${esite_sub}"/>
                             <c:set var="esite_table" value="sitesp_table_${esite_sub}"/>
 
-                            <div class="collapsing_tree_opened" id="${sectHeader}">
+                            <div class="collapsing_tree_opened" id="${sectHeader}" style="width:100%;">
                                  <%--onclick="collasping_tree_showhide_section('${esite_sub}')">--%>
 
                                 <table id="${esite_table}" cellpadding="0" cellspacing="0" class="properties_list">
                                     <col width="1%">
                                     <col width="99%">
                                     <tr>
-                                        <td width="100%"><input type="radio" name="defaultSiteObjId" <c:if test="${defaultSiteObjId==esite}">checked</c:if> value="${esite}"> ${fn:escapeXml(i.host)}</td>
+                                        <td width="100%"><input type="radio" name="defaultSiteObjId" <c:if test="${defaultSiteObjId==esite}">checked</c:if> value="${esite}">&nbsp;${fn:escapeXml(i.host)}</td>
                                         <td align="left" nowrap="true"><input type="hidden" name="sitesHost"  id="${esite}"
                                                                               value="${esite}">
                                             <input type="hidden" name="sitesPort" value="${esite}_${eport}"></td>
@@ -585,7 +585,7 @@
                                     </tr>
 
                                     <tr>
-                                        <td nowrap="true"><fmt:message>routes.edit.add.new.path</fmt:message>&nbsp;</td>
+                                        <td nowrap="true" align="right"><fmt:message>routes.edit.add.new.path</fmt:message>&nbsp;</td>
                                         <td align="right"><input id="${esite_sub}_newPath" class="txt"
                                                                  name="${esite_sub}_newPath"></td>
                                         <td><img src="content/images/but_add.gif" alt="Add new path"
