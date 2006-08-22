@@ -21,7 +21,7 @@ using smsc::system::Smsc;
 using smsc::system::loadRoutes;
 using smsc::util::Exception;
 
-ApplyCommandListener::ApplyCommandListener(const smsc::system::SmscConfigs *configs_, /*smsc::smeman::SmeManager *smeman_,*/ 
+ApplyCommandListener::ApplyCommandListener(const smsc::system::SmscConfigs *configs_, /*smsc::smeman::SmeManager *smeman_,*/
                                            smsc::system::Smsc* app_)
     : configs(configs_),
     //smeman(smeman_),
@@ -31,20 +31,20 @@ ApplyCommandListener::ApplyCommandListener(const smsc::system::SmscConfigs *conf
 
 void ApplyCommandListener::handle(const Command& command)
 {
-	switch( command.getType() ){
-	case APPLYROUTES_CMD:
-		applyRoutes();
-		break;
+  switch( command.getType() ){
+  case APPLYROUTES_CMD:
+    applyRoutes();
+    break;
     case APPLYALIASES_CMD:
         applyAliases();
-		break;
+    break;
     case APPLYRESCHEDULE_CMD:
         applyReschedule();
-		break;
+    break;
     case APPLYLOCALERESOURCE_CMD:
         applyLocalResource();
-		break;
-	}
+    break;
+  }
 }
 
 void ApplyCommandListener::applyRoutes()
@@ -71,8 +71,8 @@ void ApplyCommandListener::applyRoutes()
 void ApplyCommandListener::applyAliases()
 {
     if(!app) throw Exception("Smsc undefined");
-    configs->aliasconfig->reload();
-    app->reloadAliases(*configs);
+    //configs->aliasconfig->reload();
+    //app->reloadAliases(*configs);
 
 
     /*auto_ptr<AliasManager> aliaser(new AliasManager());

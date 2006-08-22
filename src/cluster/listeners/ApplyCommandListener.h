@@ -5,11 +5,11 @@
 #include "smeman/smeman.h"
 #include "router/route_manager.h"
 #include "core/synchronization/Mutex.hpp"
-#include "alias/aliasman.h"
+//#include "alias/AliasMan.hpp"
 #include "admin/smsc_service/SmscComponent.h"
 #include "system/smsc.hpp"
 
-namespace smsc { 
+namespace smsc {
 namespace cluster {
 
 using smsc::system::Reffer;
@@ -25,7 +25,7 @@ class ApplyCommandListener : public CommandListener
 public:
     ApplyCommandListener(const smsc::system::SmscConfigs *configs_, /*smsc::smeman::SmeManager *smeman_, */smsc::system::Smsc * app_);
 protected:
-	void applyRoutes();
+  void applyRoutes();
     void applyAliases();
     void applyReschedule();
     void applyLocalResource();
@@ -53,7 +53,7 @@ protected:
     Smsc * app;
 
 public:
-	virtual void handle(const Command& command);
+  virtual void handle(const Command& command);
 };
 
 }
