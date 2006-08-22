@@ -1357,7 +1357,7 @@ throw (AdminException)
       sprintf(numBuf,"%u",profile.accessMaskOut);
       result.appendValueToStringList(numBuf);
 #ifdef SMSEXTRA
-      sprintf(numBuf,"%u",profile.enabledServices);
+      sprintf(numBuf,"%u",profile.subscription);
       result.appendValueToStringList(numBuf);
 #endif
       return result;
@@ -1392,7 +1392,7 @@ throw (AdminException)
   const char* accessMaskOut     = *i;
 #else
   const char* accessMaskOut     = *i++;
-  const char* enabledServices   = *i;
+  const char* subscription   = *i;
 #endif
 
   if (!codepageStr || !reportStr || !localeStr || !hideStr || !hideModifiableStr
@@ -1468,7 +1468,7 @@ throw (AdminException)
   sscanf(accessMaskIn,"%u",&profile.accessMaskIn);
   sscanf(accessMaskOut,"%u",&profile.accessMaskOut);
 #ifdef SMSEXTRA
-  sscanf(enabledServices,"%u",&profile.enabledServices);
+  sscanf(subscription,"%u",&profile.subscription);
 #endif
 
 }
