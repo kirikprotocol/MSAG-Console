@@ -72,7 +72,7 @@ public:
   void ReuseAddr()
   {
     int one=1;
-    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *) &one, sizeof(int));
+    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *) &one, (int)sizeof(int));
   }
   int canRead(int to=0);
   int canWrite(int to=0);
