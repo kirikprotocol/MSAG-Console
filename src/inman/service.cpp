@@ -39,6 +39,13 @@ Service::Service(const InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
                                _cfg.bill.ssn, capSess->getUID());
         }
     }
+    if (_cfg.provAllc) {
+        if (!(_cfg.bill.abProvider = _cfg.provAllc->create(logger)))
+            smsc_log_error(logger, "InmanSrv: AbonentProvider initialization failed!");
+        else
+            smsc_log_info(logger, "InmanSrv: AbonentProvider inited: '%s'",
+                          _cfg.provAllc->ident());
+    }
 
     server = new Server(&_cfg.sock, SerializerInap::getInstance(), logger);
     assert(server);

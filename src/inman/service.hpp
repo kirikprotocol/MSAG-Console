@@ -23,10 +23,14 @@ using smsc::inman::sync::TimeWatcher;
 using smsc::inman::cache::AbonentCacheCFG;
 using smsc::inman::cache::AbonentCache;
 
+#include "inman/abprov/IAPLoader.hpp"
+using smsc::inman::iaprvd::IAProviderCreatorITF;
+
 namespace smsc  {
 namespace inman {
 
 struct InService_CFG {
+    IAProviderCreatorITF * provAllc;
     ServSocketCFG   sock;
     BillingCFG      bill;
     AbonentCacheCFG cachePrm;

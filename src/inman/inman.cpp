@@ -73,7 +73,6 @@ static const char * const _PolicyModes[3] = {"IN", "DB", "HLR"};
 
 
 struct INBillConfig : public InService_CFG {
-    IAProviderCreatorITF * provAllc;
 public:
     INBillConfig()
     {
@@ -412,11 +411,6 @@ int main(int argc, char** argv)
     );
 
     try {
-        if (cfg.provAllc) {
-            cfg.bill.abProvider = cfg.provAllc->create(inmanLogger);
-            assert(cfg.bill.abProvider);
-            smsc_log_info(inmanLogger, "AbonentsProvider inited: '%s'", cfg.provAllc->ident());
-        }
         g_pService = new Service(&cfg, inmanLogger);
         assert(g_pService);
         _runService = 1;
