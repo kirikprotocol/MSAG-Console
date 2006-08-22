@@ -40,10 +40,9 @@ class IAPQueryAC : public ThreadedTask {
 protected:
     Mutex               _mutex;
     IAPQueryManagerITF* _owner;
-    unsigned            usage;
+    unsigned long       usage;  //counter of runs
     unsigned            timeOut;
     unsigned            _qId;   //query unique id
-    unsigned long       _usage; //counter of runs
     AbonentId           abonent;
     AbonentRecord       abRec;
     Logger *            logger;
@@ -99,7 +98,7 @@ private:
 
 protected:
     friend class IAPQueryAC;
-    //DBQueryManagerITF interface methods
+    //IAPQueryManagerITF interface methods
     void releaseQuery(IAPQueryAC * query);
     bool hasListeners(const AbonentId & ab_number);
 
