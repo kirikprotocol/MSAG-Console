@@ -3,7 +3,7 @@
 
 #include <logger/Logger.h>
 #include "BillProcessor.h"
-#include <inman/storage/FileStorages.hpp>
+//#include <inman/storage/CDRStorage.hpp>
 #include "inman/interaction/messages.hpp"
 #include "core/network/Socket.hpp"
 
@@ -12,7 +12,7 @@ namespace inmanemu { namespace server {
 using namespace smsc::inman::interaction;
 using namespace smsc::core::network;
 using namespace inmanemu::processor;
-using smsc::inman::filestore::InBillingFileStorage;
+//using smsc::inman::filestore::InBillingFileStorage;
 
 using smsc::logger::Logger;
 

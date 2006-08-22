@@ -25,7 +25,7 @@ using smsc::inman::common::RPCList;
 #include "inman/interaction/messages.hpp"
 #include "inman/interaction/connect.hpp"
 #include "inman/common/TimeWatcher.hpp"
-#include "inman/storage/FileStorages.hpp"
+#include "inman/storage/CDRStorage.hpp"
 
 using smsc::inman::inap::CapSMSDlg;
 using smsc::inman::inap::Dialog;

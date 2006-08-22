@@ -6,13 +6,10 @@
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/threads/Thread.hpp"
 #include "inman/storage/FileStorageCore.hpp"
-#include "inman/storage/cdrutil.hpp"
-
 
 using smsc::logger::Logger;
 using smsc::core::synchronization::EventMonitor;
 using smsc::core::threads::Thread;
-using smsc::inman::cdr::CDRRecord;
 using smsc::inman::filestore::RollingFileStorage;
 using smsc::inman::filestore::RollingFileStorageParms;
 
@@ -73,19 +70,9 @@ protected:
     EventMonitor            _mutex;
 };
 
-class InBillingFileStorage : public InRollingFileStorage 
-{
-public:
-    InBillingFileStorage(const std::string & location, unsigned long rollInterval = 0, Logger * uselog  = NULL);
-    ~InBillingFileStorage();
-
-    void bill(const CDRRecord & cdr);
-};
-
 } //filestore
 } //inman
 } //smsc
 
 #endif /* _INMAN_FILE_STORAGES_H */
-
 
