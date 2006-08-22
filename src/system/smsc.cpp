@@ -36,6 +36,7 @@
 #include "cluster/listeners/CgmCommandListener.h"
 #include "closedgroups/ClosedGroupsManager.hpp"
 #include "system/common/TimeZoneMan.hpp"
+#include "alias/AliasManImpl.hpp"
 
 #include <unistd.h>
 
@@ -390,34 +391,15 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     }
     smsc_log_info(log, "SME registration done" );
   }
-  // initialize aliases
-  /*{
-    smsc::util::config::alias::AliasConfig::RecordIterator i =
-                                cfg.aliasconfig->getRecordIterator();
-    while(i.hasRecord())
-    {
-      smsc::util::config::alias::AliasRecord *rec;
-      i.fetchNext(rec);
-      __trace2__("adding %20s %20s",rec->addrValue,rec->aliasValue);
-      smsc::alias::AliasInfo ai;
-      ai.addr = smsc::sms::Address(
-        strlen(rec->addrValue),
-        rec->addrTni,
-        rec->addrNpi,
-        rec->addrValue);
-      ai.alias = smsc::sms::Address(
-        strlen(rec->aliasValue),
-        rec->aliasTni,
-        rec->aliasNpi,
-        rec->aliasValue);
-      ai.hide = rec->hide;
-      aliaser.addAlias(ai);
-    }
-    aliaser.commit();
-  }*/
 
-  reloadAliases(cfg);
-  smsc_log_info(log, "Aliases loaded" );
+  aliaser=new smsc::alias::AliasManImpl(cfg.cfgman->getString("aliasman.storeFile"));
+
+  if(!ishs)
+  {
+    aliaser->Load();
+    smsc_log_info(log, "Aliases loaded" );
+  }
+
   reloadRoutes(cfg);
   smsc_log_info(log, "Routes loaded" );
 
@@ -1100,6 +1082,9 @@ void Smsc::run()
     distlstman->init();
     smsc::mscman::MscManager::startup(smsc::util::config::Manager::getInstance());
 
+    aliaser->Load();
+    smsc_log_info(log, "Aliases loaded" );
+
     SpeedMonitor *sm=new SpeedMonitor(eventqueue,&perfDataDisp,&perfSmeDataDisp,this);
     FILE *f=fopen("stats.txt","rt");
     if(f)
@@ -1247,11 +1232,19 @@ void Smsc::shutdown()
   //if(dataSource)delete dataSource;
   smeman.Dump();
   __trace__("smeman dumped");
-  if( ishs ) {
+  if( ishs )
+  {
     __trace__("stopping interconnect");
     InterconnectManager::shutdown();
   }
   common::TimeZoneManager::Shutdown();
+
+  if(aliaser)
+  {
+    delete aliaser;
+    aliaser=0;
+  }
+
   __trace__("shutdown completed");
 }
 
@@ -1276,6 +1269,7 @@ void Smsc::reloadTestRoutes(const RouteConfig& rcfg)
   ResetTestRouteManager(router.release());
 }
 
+/*
 void Smsc::reloadAliases(const SmscConfigs& cfg)
 {
   auto_ptr<AliasManager> aliaser(new AliasManager());
@@ -1306,6 +1300,7 @@ void Smsc::reloadAliases(const SmscConfigs& cfg)
 
   ResetAliases(aliaser.release());
 }
+*/
 
 void Smsc::reloadReschedule(){
     //RescheduleCalculator::reset();
