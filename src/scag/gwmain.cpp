@@ -5,7 +5,6 @@
 
 #include "scag/scag.h"
 
-#include "alias/aliasman.h"
 #include "util/config/alias/aliasconf.h"
 #include "util/config/route/RouteConfig.h"
 #include <admin/service/ComponentManager.h>
