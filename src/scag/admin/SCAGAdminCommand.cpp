@@ -615,15 +615,6 @@ void CommandTraceHttpRoute::init()
     GETINTPARAM(sid,    "sid")    
     END_SCAN_PARAMS
 
-    std::string errorStr;
-
-    if (addr == "") errorStr = "Failed to read parameter 'abonent' of CommandTraceHttpRoute";
-
-    if (errorStr.size() > 0) 
-    {
-        smsc_log_warn(logger, errorStr.c_str());
-        throw AdminException(errorStr.c_str());
-    }
 }
 
 Response * CommandTraceHttpRoute::CreateResponse(scag::Scag * ScagApp)
