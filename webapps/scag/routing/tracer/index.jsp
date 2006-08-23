@@ -32,6 +32,8 @@
             </c:when>
             <c:when test="${bean.appContext.statuses.httpRoutesLoaded && bean.transportId == 2}">
                 <sm-ep:properties title="http.routes_tracing.properties">
+                    <sm-ep:txt title="routes_tracing.txt.service_id" name="serviceId"/>
+                    <sm-ep:txt title="routes_tracing.txt.route_id" name="routeId"/>
                     <sm-ep:txt title="routes_tracing.txt.abonent" name="abonent"/>
                     <sm-ep:txt title="routes_tracing.txt.site" name="site"/>
                     <sm-ep:txt title="routes_tracing.txt.path" name="path"/>

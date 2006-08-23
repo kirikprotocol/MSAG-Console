@@ -239,10 +239,12 @@ public class Scag extends Proxy {
         return res instanceof List ? (List) res : null;
     }
 
-    public synchronized List traceHttpRoute(final String abonent, final String site, final String path, final int port)
+    public synchronized List traceHttpRoute(final int serviceId, final int routeId, final String abonent, final String site, final String path, final int port)
             throws SibincoException {
         String err = "Couldn't trace route , nested: ";
         final Map args = new HashMap();
+        args.put("sid", new Integer(serviceId));
+        args.put("rid", new Integer(routeId));      
         args.put("abonent", abonent);
         args.put("site", site);
         args.put("path", path);

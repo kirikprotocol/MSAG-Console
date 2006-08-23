@@ -32,6 +32,8 @@ public class Index extends TabledBeanImpl implements TabledBean {
     private String add = "";
 
     // ************ HTTP **************//
+    private int serviceId;
+    private int routeId;
     private String abonent;
     private String site;
     private String path = "/";
@@ -65,7 +67,7 @@ public class Index extends TabledBeanImpl implements TabledBean {
         } else if (null != mbTrace && null != dstAddress && null != srcAddress
                 && (getTransportId() == Transport.SMPP_TRANSPORT_ID)) {
             traceSmppRoute();
-        } else if (null != mbTrace && null != abonent && null != site && 0 != port
+        } else if (null != mbTrace && 0 != port
                 && (getTransportId() == Transport.HTTP_TRANSPORT_ID)) {
             traceHttpRoute();
         }
@@ -172,7 +174,7 @@ public class Index extends TabledBeanImpl implements TabledBean {
 
     private void traceHttpRoute() throws SCAGJspException {
         try {
-            traceResults = appContext.getScag().traceHttpRoute(abonent, site, path, port);
+            traceResults = appContext.getScag().traceHttpRoute(serviceId, routeId, (abonent==null)?"":abonent, (site==null)?"":site, path, port);
             if (null == traceResults || 1 >= traceResults.size())
                 throw new SibincoException("Transport error, invalid responce.");
             message = (String) traceResults.get(0);
@@ -283,6 +285,22 @@ public class Index extends TabledBeanImpl implements TabledBean {
 
     public void setScag(final Scag scag) {
         this.scag = scag;
+    }
+
+    public int getServiceId() {
+        return serviceId;
+    }
+
+    public void setServiceId(final int serviceId) {
+        this.serviceId = serviceId;
+    }
+
+    public int getRouteId() {
+        return routeId;
+    }
+
+    public void setRouteId(int routeId) {
+        this.routeId = routeId;
     }
 
     public String getAbonent() {
