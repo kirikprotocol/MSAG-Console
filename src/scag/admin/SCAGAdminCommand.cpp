@@ -618,7 +618,6 @@ void CommandTraceHttpRoute::init()
     std::string errorStr;
 
     if (addr == "") errorStr = "Failed to read parameter 'abonent' of CommandTraceHttpRoute";
-    if (site == "") errorStr = "Failed to read parameter 'site' of CommandTraceHttpRoute";
 
     if (errorStr.size() > 0) 
     {
