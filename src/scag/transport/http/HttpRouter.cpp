@@ -92,10 +92,14 @@ void HttpTraceRouter::routeInfo(HttpRouteInt* r, std::vector<std::string>& trace
     trace.push_back("Route info:");
 
     sprintf(buf, " RouteId: %d;ServiceId:%d", r->id, r->service_id);
-    std::string s1 = "RouteName: " + r->name + buf;
-    if(r->enabled) s1 +=";Enabled";
-    if(r->def) s1 += ";Default";
-    if(r->transit) s1 += ";Transit";
+    std::string s1 = "RouteName: " + r->name + ";" + buf;
+    s1 += ";";
+    if(r->enabled) s1 += "Enabled";
+    s1 += ";";
+    if(r->def) s1 += "Default";
+    s1 += ";";
+    if(r->transit) s1 += "Transit";
+    s1 += ";";
     
     trace[0] = s1;
 
