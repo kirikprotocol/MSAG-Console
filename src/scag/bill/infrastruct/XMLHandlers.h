@@ -28,6 +28,8 @@ public:
 
     TariffRec() {};
     TariffRec(uint32_t sn, double pr, const std::string& c, uint32_t ci, uint32_t mti):Price(pr), ServiceNumber(sn), Currency(c), CategoryId(ci), MediaTypeId(mti) {};
+    
+    TariffRec(const TariffRec& sm) { operator=(sm); };
 
     TariffRec& operator=(const TariffRec& sm)
     {

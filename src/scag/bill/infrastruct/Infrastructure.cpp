@@ -76,7 +76,7 @@ void InfrastructureImpl::init(const std::string& dir)
     }
     catch(Exception& e)
     {
-    }  
+    }
 }
 
 void InfrastructureImpl::SetFileNames(const std::string& dir)
@@ -176,10 +176,9 @@ void InfrastructureImpl::ReloadTariffMatrix()
 uint32_t InfrastructureImpl::GetProviderID(uint32_t service_id)
 {
     MutexGuard mt(ProviderMapMutex);
+    if(service_hash == NULL) return 0;
+    
     try{
-        if(service_hash == NULL)
-            return 0;
-
         return service_hash->Get(service_id);
     }
     catch(...)
@@ -217,7 +216,6 @@ uint32_t InfrastructureImpl::GetOperatorID(Address addr)
 TariffRec* InfrastructureImpl::GetTariff(uint32_t operator_id, uint32_t category, uint32_t mt)
 {
     MutexGuard mt1(TariffMatrixMapMutex);
-
     TariffRec *tr = NULL;
     try{
         if(category_hash == NULL || media_type_hash == NULL || tariff_hash == NULL)
@@ -227,16 +225,36 @@ TariffRec* InfrastructureImpl::GetTariff(uint32_t operator_id, uint32_t category
            id |= (media_type_hash->Get(mt) & 0x1FF) << 14;
            id |= operator_id & 0xFFF;
 
-        TariffRec * ptr = tariff_hash->GetPtr(id);
-        if (!ptr) return 0;
+        tr = new TariffRec(tariff_hash->Get(id));
 
-        tr = new TariffRec(*ptr);
         return tr;
     }
     catch(...)
     {
         delete tr;
         return NULL;
+    }
+}
+
+bool InfrastructureImpl::GetTariff(uint32_t operator_id, uint32_t category, uint32_t mt, TariffRec& tr)
+{
+    MutexGuard mt1(TariffMatrixMapMutex);
+    
+    if(category_hash == NULL || media_type_hash == NULL || tariff_hash == NULL) return false;
+    
+    try{
+
+        uint32_t id = (category_hash->Get(category) & 0x1ff) << 23;
+        
+        id |= (media_type_hash->Get(mt) & 0x1FF) << 14;
+        id |= operator_id & 0xFFF;
+
+        tr = tariff_hash->Get(id);
+        return true;
+    }
+    catch(...)
+    {
+        return false;
     }
 }
 

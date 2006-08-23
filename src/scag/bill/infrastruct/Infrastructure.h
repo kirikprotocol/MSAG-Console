@@ -25,6 +25,7 @@ public:
     virtual uint32_t GetProviderID(uint32_t service_id) = 0;
     virtual uint32_t GetOperatorID(Address addr) = 0;
     virtual TariffRec* GetTariff(uint32_t operator_id, uint32_t category, uint32_t mt) = 0;
+    virtual bool GetTariff(uint32_t operator_id, uint32_t category, uint32_t mt, TariffRec& tr) = 0;
     virtual void ReloadProviderMap() = 0;
     virtual void ReloadOperatorMap() = 0;
     virtual void ReloadTariffMatrix() = 0;
@@ -58,6 +59,7 @@ public:
     virtual uint32_t GetProviderID(uint32_t service_id);
     virtual uint32_t GetOperatorID(Address addr);
     virtual TariffRec* GetTariff(uint32_t operator_id, uint32_t category, uint32_t mt);
+    virtual bool GetTariff(uint32_t operator_id, uint32_t category, uint32_t mt, TariffRec& tr);
 };
 
 }}}
