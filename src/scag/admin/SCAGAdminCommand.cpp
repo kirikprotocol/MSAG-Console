@@ -640,7 +640,7 @@ Response * CommandTraceHttpRoute::CreateResponse(scag::Scag * ScagApp)
         vector<std::string> traceBuff;
         
         if(rid || sid)
-            b = scag::transport::http::HttpTraceRouter::Instance().getTraceRouteById(addr, site, rid, sid, traceBuff);
+            b = scag::transport::http::HttpTraceRouter::Instance().getTraceRouteById(addr, path, rid, sid, traceBuff);
         else            
             b = scag::transport::http::HttpTraceRouter::Instance().getTraceRoute(addr, site, path, port, traceBuff);
             

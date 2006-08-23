@@ -27,23 +27,20 @@ RuleStatus HttpEventHandler::processRequest(HttpRequest& command, Session& sessi
         ActionContext context(_constants, session, _command, commandProperty);
 
         rs = RunActions(context);
-        if(rs.result < 0)
-            session.closeCurrentOperation();            
+        if(!rs.status) session.closeCurrentOperation();
 
         PendingOperation pendingOperation;
         pendingOperation.type = CO_HTTP_DELIVERY;
         pendingOperation.validityTime = time(NULL) + SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
         session.addPendingOperation(pendingOperation);
-            
         return rs;
     } catch (SCAGException& e)
     {
         smsc_log_debug(logger, "HttpEventHandler: cannot process request command - %s", e.what());
         //TODO: отлуп в стейт-машину
     }
-
-    if(session.GetCurrentOperation())
-        session.closeCurrentOperation();
+    
+    session.closeCurrentOperation();
 
     rs.status = false;
     rs.result = -1;
@@ -67,8 +64,7 @@ RuleStatus HttpEventHandler::processResponse(HttpResponse& command, Session& ses
         ActionContext context(_constants, session, _command, commandProperty);
 
         rs = RunActions(context);
-        if(rs.result < 0)
-            session.closeCurrentOperation();            
+        if(!rs.status) session.closeCurrentOperation();
 
         return rs;
     } catch (SCAGException& e)
@@ -77,8 +73,7 @@ RuleStatus HttpEventHandler::processResponse(HttpResponse& command, Session& ses
         //TODO: отлуп в стейт-машину
     }
 
-    if(session.GetCurrentOperation())
-        session.closeCurrentOperation();
+    session.closeCurrentOperation();
 
     rs.status = false;
     rs.result = -1;
@@ -112,8 +107,7 @@ RuleStatus HttpEventHandler::processDelivery(HttpResponse& command, Session& ses
         //TODO: отлуп в стейт-машину
     }
 
-    if(session.GetCurrentOperation())
-        session.closeCurrentOperation();
+    session.closeCurrentOperation();
 
     rs.status = false;
     rs.result = -1;
