@@ -105,7 +105,7 @@ bool BillActionOpen::run(ActionContext& context)
     smsc_log_debug(logger,"Run Action '%s'...", m_ActionName.c_str());
 
     /////////////////////////////////////////////
-
+ 
     Statistics& statistics = Statistics::Instance();
 
     SACC_BILLING_INFO_EVENT_t ev;
@@ -141,19 +141,21 @@ bool BillActionOpen::run(ActionContext& context)
     }
 
     Operation * operation = context.GetCurrentOperation();
+
     if (!operation) 
     {
         smsc_log_error(logger,"Action '%s': Fatal error in action - operation from ActionContext is invalid", m_ActionName.c_str());
         SetBillingStatus(context, "operation is invalid", false, 0);
         return true;
     }
-
+     
     BillingManager& bm = BillingManager::Instance();
 
 
-    TariffRec * tariffRec;
+    TariffRec * tariffRec = 0;
     try {
         tariffRec = context.getTariffRec(category, mediaType);
+        if (!tariffRec) throw SCAGException("TariffRec is not valid");
     } catch (SCAGException& e)
     {
         smsc_log_warn(logger,"Action '%s' cannot process. Delails: %s", e.what());
@@ -161,29 +163,25 @@ bool BillActionOpen::run(ActionContext& context)
         return true;
     }
 
-/*    if (!tariffRec) 
-    {
-        smsc_log_warn(logger,"Action '%s' cannot process. Delails: Cannot find TariffRec for category='%d', mediaType='%d'", m_ActionName.c_str(), category, mediaType);
-        SetBillingStatus(context, "Cannot find TariffRec", false, 0);
-        return true;
-    }*/
 
-    if(tariffRec->Price == 0)
+    if (tariffRec->Price == 0)
         smsc_log_warn(logger, "Zero price in tariff matrix. ServiceNumber=%d, CategoryId=%d, MediaTypeId=%d", tariffRec->ServiceNumber, tariffRec->CategoryId, tariffRec->MediaTypeId);
 
     smsc::inman::interaction::ChargeSms op;
-    EventMonitor monitor;
+    EventMonitor * monitor = 0;
     TransactionStatus transactionStatus;
     int BillId = 0;
     context.fillChargeOperation(op, *tariffRec);
-
+    
     try 
     {
         BillId = bm.ChargeBill(op, &monitor, *tariffRec);
+        if (!monitor) throw SCAGException("Unknown error: EventMonitor is not valid"); 
 
         //TODO: Понять какое время нужно ждать до таймаута
-        monitor.wait(1000);
+        monitor->wait(1000);
         transactionStatus = bm.GetStatus(BillId);
+
     } catch (SCAGException& e)
     {
         smsc_log_warn(logger,"Action '%s' unable to process. Delails: %s", m_ActionName.c_str(), e.what());
@@ -192,6 +190,7 @@ bool BillActionOpen::run(ActionContext& context)
         statistics.registerSaccEvent(ev);
         return true;
     }
+    
 
     switch (transactionStatus) 
     {
@@ -212,13 +211,16 @@ bool BillActionOpen::run(ActionContext& context)
         break;
     default:
         //TRANSACTION_VALID
-
+     
         try
         {
             if (m_waitOperation) 
                 RegisterPending(context, BillId);
             else
+            {
                 operation->attachBill(BillId);
+            }
+                
         } catch (SCAGException& e)
         {
             smsc_log_warn(logger,"Action '%s' unable to process. Delails: %s", m_ActionName.c_str(), e.what());
@@ -226,11 +228,12 @@ bool BillActionOpen::run(ActionContext& context)
             SetBillingStatus(context, e.what(), false, 0);
             break;
         }
+        
         bm.sendReject(BillId);
 
         SetBillingStatus(context, "", true, tariffRec);
         context.makeBillEvent(TRANSACTION_OPEN, COMMAND_SUCCESSFULL, *tariffRec, ev);
-
+         
 
         smsc_log_debug(logger,"Action '%s' transaction successfully opened", m_ActionName.c_str());
         break;

@@ -264,9 +264,9 @@ void SessionManagerImpl::init(const SessionManagerConfig& _config) // possible t
         int key;
         Operation * value = 0;
         
-        COperationsHash::Iterator iter = session->getOperationsHash()->First();
+        COperationsHash::Iterator iter = session->OperationsHash.First();
 
-        smsc_log_debug(logger,"SessionManager: Session (A=%s) has %d operations", (*it)->SessionKey.abonentAddr.toString().c_str(), session->getOperationsHash()->Count());
+        smsc_log_debug(logger,"SessionManager: Session (A=%s) has %d operations", (*it)->SessionKey.abonentAddr.toString().c_str(), session->OperationsHash.Count());
 
         for (;iter.Next(key, value);)
         {              
@@ -280,7 +280,7 @@ void SessionManagerImpl::init(const SessionManagerConfig& _config) // possible t
             delete value;
             session->bChanged = true;
 
-            session->getOperationsHash()->Delete(key);
+            session->OperationsHash.Delete(key);
         }    
 
         if (session->bChanged) 
@@ -373,7 +373,7 @@ int SessionManagerImpl::processExpire()
     //smsc_log_debug(logger,"SessionManager: process expire");
 
     MutexGuard guard(inUseMonitor);
-
+    
     while (1) 
     {
         if (SessionExpirePool.empty()) return config.expireInterval;
@@ -463,7 +463,8 @@ int SessionManagerImpl::processExpire()
             if (iPeriod >= 0) return iPeriod;
         }
 
-    }
+    }  
+    return 10;
 }
 
 
@@ -608,7 +609,7 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
     }
 
 
-    //if (session->isChanged()) 
+    //if (session->isChanged())    
     store.updateSession(session);
 
     inUseMonitor.notifyAll();

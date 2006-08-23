@@ -37,7 +37,12 @@ class BillingManagerImpl : public BillingManager, public Thread, public BillingM
         bool inUse;
 
         EventMonitorEntity() : inUse(false) {}
+        ~EventMonitorEntity()
+        {
+        }
     };
+
+    std::vector<EventMonitorEntity *> EventMonitorArray;
 
     IntHash <BillTransaction> BillTransactionHash;
 
@@ -47,8 +52,6 @@ class BillingManagerImpl : public BillingManager, public Thread, public BillingM
     Event exitEvent;
 
     bool m_bStarted;
-
-    EventMonitorEntity * EventMonitorArray;
 
     int m_MaxEventMonitors;
     int m_lastBillId; 
@@ -67,8 +70,8 @@ public:
     virtual int Execute();
     virtual void Start();
 
-    virtual int ChargeBill(smsc::inman::interaction::ChargeSms& op, EventMonitor * eventMonitor, TariffRec& tariffRec);
-    virtual TariffRec& CheckCharge(int billId, EventMonitor * eventMonitor);
+    virtual int ChargeBill(smsc::inman::interaction::ChargeSms& op, EventMonitor ** eventMonitor, TariffRec& tariffRec);
+    virtual TariffRec& CheckCharge(int billId, EventMonitor ** eventMonitor);
 
     virtual TransactionStatus GetStatus(int billId);
 
@@ -88,13 +91,16 @@ public:
     
     BillingManagerImpl() : 
         m_bStarted(false), 
-        EventMonitorArray(0), 
         m_lastBillId(0), ConfigListener(BILLMAN_CFG) {}
 
     ~BillingManagerImpl()
     {
         Stop();
-        if (EventMonitorArray) delete EventMonitorArray;
+        for (int i=0; i < EventMonitorArray.size(); i++) 
+            delete EventMonitorArray[i];
+
+        EventMonitorArray.clear();
+
     }
 
 };
@@ -171,7 +177,17 @@ void BillingManagerImpl::init(BillingManagerConfig& cfg)
     m_Connected = true;
     #endif
 
-    EventMonitorArray = new EventMonitorEntity[m_MaxEventMonitors];
+
+    for (int i=0; i < EventMonitorArray.size(); i++) 
+        delete EventMonitorArray[i];
+
+    EventMonitorArray.clear();
+
+    for (int i=0; i < m_MaxEventMonitors; i++) 
+    {
+        EventMonitorEntity * ent = new EventMonitorEntity();
+        EventMonitorArray.push_back(ent);
+    }
 
     smsc_log_info(logger,"BillingManager: allowed %d threads", m_MaxEventMonitors);
     infrastruct.init(cfg.cfg_dir);
@@ -229,17 +245,22 @@ void BillingManagerImpl::Start()
     }
 }
 
-int BillingManagerImpl::ChargeBill(smsc::inman::interaction::ChargeSms& op, EventMonitor * eventMonitor, TariffRec& tariffRec)
+int BillingManagerImpl::ChargeBill(smsc::inman::interaction::ChargeSms& op, EventMonitor ** eventMonitor, TariffRec& tariffRec)
 {
-    MutexGuard guard(inUseLock);
+/*    BillTransaction billTransaction1;
+    billTransaction1.EventMonitorIndex = 0;
+    //*eventMonitor = EventMonitorArray[0].eventMonitor;
+    //BillTransactionHash.Insert(1, billTransaction1);
 
-    eventMonitor = 0;
+    return 1;
+*/
+    MutexGuard guard(inUseLock);
 
     int index = -1;
     for (int i = 0; i < m_MaxEventMonitors; i++) 
-        if (!EventMonitorArray[i].inUse) 
+        if (!EventMonitorArray[i]->inUse) 
         {
-            EventMonitorArray[i].inUse = true;
+            EventMonitorArray[i]->inUse = true;
             index = i;
             break;
         }
@@ -250,7 +271,7 @@ int BillingManagerImpl::ChargeBill(smsc::inman::interaction::ChargeSms& op, Even
     BillTransaction billTransaction;
     billTransaction.EventMonitorIndex = index;
 
-    eventMonitor = &(EventMonitorArray[billTransaction.EventMonitorIndex].eventMonitor);
+    *eventMonitor = &EventMonitorArray[billTransaction.EventMonitorIndex]->eventMonitor;
 
     m_lastBillId++;
 
@@ -273,6 +294,8 @@ int BillingManagerImpl::ChargeBill(smsc::inman::interaction::ChargeSms& op, Even
     sendCommand(op);
     #endif
     return m_lastBillId;
+               
+
 }
 
 
@@ -299,7 +322,7 @@ TariffRec& BillingManagerImpl::getTransactionData(int billId)
 }
 
 
-TariffRec& BillingManagerImpl::CheckCharge(int billId, EventMonitor * eventMonitor)
+TariffRec& BillingManagerImpl::CheckCharge(int billId, EventMonitor ** eventMonitor)
 {
     MutexGuard guard(inUseLock);
 
@@ -307,7 +330,7 @@ TariffRec& BillingManagerImpl::CheckCharge(int billId, EventMonitor * eventMonit
 
     if (!pBillTransaction) throw SCAGException("Cannot find transaction for billId=%d", billId);
 
-    eventMonitor = &(EventMonitorArray[pBillTransaction->EventMonitorIndex].eventMonitor);
+    *eventMonitor = &EventMonitorArray[pBillTransaction->EventMonitorIndex]->eventMonitor;
 
     pBillTransaction->ChargeOperation.setDialogId(billId);
 
@@ -315,9 +338,10 @@ TariffRec& BillingManagerImpl::CheckCharge(int billId, EventMonitor * eventMonit
     sendCommand(pBillTransaction->ChargeOperation);
     #else
     pBillTransaction->status = TRANSACTION_VALID;
-    #endif
+    #endif 
 
     return pBillTransaction->tariffRec;
+   
 }
 
 
@@ -327,11 +351,7 @@ void BillingManagerImpl::commit(int billId)
 
     BillTransaction * pBillTransaction = BillTransactionHash.GetPtr(billId);
 
-    if (!pBillTransaction) 
-    {
-        smsc_log_warn(logger, "Cannot find transaction for billId=%d", billId);
-        return;
-    }
+    if (!pBillTransaction) throw SCAGException("Cannot find transaction for billId=%d", billId);
 
 
     if (pBillTransaction->status == TRANSACTION_VALID)
@@ -348,7 +368,7 @@ void BillingManagerImpl::commit(int billId)
         #endif
     }
 
-    EventMonitorArray[pBillTransaction->EventMonitorIndex].inUse = false;
+    EventMonitorArray[pBillTransaction->EventMonitorIndex]->inUse = false;
     BillTransactionHash.Delete(billId);
 }
 
@@ -356,14 +376,11 @@ void BillingManagerImpl::commit(int billId)
 void BillingManagerImpl::rollback(int billId)
 {
     MutexGuard guard(inUseLock);
-
+      
     BillTransaction * pBillTransaction = BillTransactionHash.GetPtr(billId);
 
     if (!pBillTransaction) 
-    {
-        smsc_log_warn(logger, "Cannot find transaction for billId=%d", billId);
-        return;
-    }
+        throw SCAGException("Cannot find transaction for billId=%d", billId);
 
     if (pBillTransaction->status == TRANSACTION_VALID)
     {
@@ -376,11 +393,14 @@ void BillingManagerImpl::rollback(int billId)
         sendCommand(op);
         #endif
     }
+
+    assert ((pBillTransaction->EventMonitorIndex >=0)&&(pBillTransaction->EventMonitorIndex < m_MaxEventMonitors));
+
+    EventMonitorArray[pBillTransaction->EventMonitorIndex]->inUse = false;
+    BillTransactionHash.Delete(billId);          
     
-
-    EventMonitorArray[pBillTransaction->EventMonitorIndex].inUse = false;
-    BillTransactionHash.Delete(billId);
-
+    smsc_log_debug(logger, "Transaction rolled back (billId=%d)", billId);
+    
 }
 
 void BillingManagerImpl::sendReject(int billId)
@@ -389,11 +409,7 @@ void BillingManagerImpl::sendReject(int billId)
 
     BillTransaction * pBillTransaction = BillTransactionHash.GetPtr(billId);
 
-    if (!pBillTransaction) 
-    {
-        smsc_log_warn(logger, "Cannot find transaction for billId=%d", billId);
-        return;
-    }
+    if (!pBillTransaction) throw SCAGException("Cannot find transaction for billId=%d", billId);
 
     #ifdef MSAG_INMAN_BILL
     if (pBillTransaction->status == TRANSACTION_VALID)
@@ -407,22 +423,9 @@ void BillingManagerImpl::sendReject(int billId)
         sendCommand(op);
     }
     #endif
-
+    
 }
 
-
-/*
-void BillingManagerImpl::close(int billId)
-{
-    MutexGuard guard(inUseLock);
-
-    BillTransaction * pBillTransaction = BillTransactionHash.GetPtr(billId);
-
-    if (!pBillTransaction) throw SCAGException("Cannot find transaction for billId=%d", billId);
-
-    EventMonitorArray[pBillTransaction->EventMonitorIndex].inUse = false;
-    BillTransactionHash.Delete(billId);
-}   */
 
 void BillingManagerImpl::onChargeSmsResult(ChargeSmsResult* result)
 {
@@ -445,8 +448,9 @@ void BillingManagerImpl::onChargeSmsResult(ChargeSmsResult* result)
     else 
         pBillTransaction->status = TRANSACTION_INVALID;
 
-    EventMonitorArray[pBillTransaction->EventMonitorIndex].inUse = false;
-    EventMonitorArray[pBillTransaction->EventMonitorIndex].eventMonitor.notify();
+    EventMonitorArray[pBillTransaction->EventMonitorIndex]->inUse = false;
+
+    EventMonitorArray[pBillTransaction->EventMonitorIndex]->eventMonitor.notify();
 
 }
 

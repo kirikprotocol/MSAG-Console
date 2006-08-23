@@ -65,8 +65,8 @@ protected:
     BillingManager() {};
 
 public:
-    virtual int ChargeBill(smsc::inman::interaction::ChargeSms& op, EventMonitor * eventMonitor, TariffRec& tariffRec) = 0;
-    virtual TariffRec& CheckCharge(int billId, EventMonitor * eventMonitor) = 0;
+    virtual int ChargeBill(smsc::inman::interaction::ChargeSms& op, EventMonitor ** eventMonitor, TariffRec& tariffRec) = 0;
+    virtual TariffRec& CheckCharge(int billId, EventMonitor ** eventMonitor) = 0;
 
     virtual TransactionStatus GetStatus(int billId) = 0; //Возвращяет статус транзакции
 

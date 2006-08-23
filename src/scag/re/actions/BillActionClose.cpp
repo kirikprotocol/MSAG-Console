@@ -81,12 +81,13 @@ bool BillActionClose::run(ActionContext& context)
         }
 
 
-        EventMonitor eventMonitor;
+        EventMonitor * eventMonitor = 0;
         TariffRec tariffRec;
 
         try
         {
             tariffRec = bm.CheckCharge(operation->getBillId(), &eventMonitor);
+            if (!eventMonitor) throw SCAGException("Unknown error: EventMonitor is not valid");
         } catch (SCAGException& e)
         {
             smsc_log_error(logger,e.what());
@@ -98,7 +99,7 @@ bool BillActionClose::run(ActionContext& context)
         
 
         //TODO: Понять какое время нужно ждать до таймаута
-        eventMonitor.wait(1000);
+        eventMonitor->wait(1000);
         TransactionStatus transactionStatus = bm.GetStatus(operation->getBillId());
         std::string logMessage;
         int CommandStatus = COMMAND_SUCCESSFULL;
@@ -156,6 +157,14 @@ bool BillActionClose::run(ActionContext& context)
             return true;
         }
 
+        if (!operation->hasBill())
+        {
+            smsc_log_error(logger,"BillAction 'bill:close': Fatal error in action - bill is not attached to operation");
+            SetBillingStatus(context,"Bill is not attached to operation", false);
+            return true;
+        }
+
+
         TariffRec tariffRec;
 
         try 
@@ -167,7 +176,7 @@ bool BillActionClose::run(ActionContext& context)
             SetBillingStatus(context,e.what(), false);
             return true;
         }
-
+        
         try {
             bm.rollback(operation->getBillId());
             operation->detachBill();
@@ -180,8 +189,8 @@ bool BillActionClose::run(ActionContext& context)
             SetBillingStatus(context,e.what(), false);
             statistics.registerSaccEvent(ev);
             return true;
-        }
-
+        }   
+         
         statistics.registerSaccEvent(ev);
         SetBillingStatus(context,"", true);
     }

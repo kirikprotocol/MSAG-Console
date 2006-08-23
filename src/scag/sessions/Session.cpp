@@ -179,12 +179,14 @@ Session::~Session()
 
     char * key;
     AdapterProperty * value = 0;
-
+ 
     PropertyHash.First();
     for (Hash <AdapterProperty *>::Iterator it = PropertyHash.getIterator(); it.Next(key, value);)
         if (value) delete value;
 
-    ClearOperations();
+    ClearOperations();   
+    //smsc_log_debug(logger,"Session deleted (%s,%d)", m_SessionKey.abonentAddr.toString().c_str(),m_SessionKey.USR);
+
 }
 
 
@@ -239,7 +241,7 @@ void Session::DeserializeOperations(SessionBuffer& buff)
 
         buff >> operation->type;
         buff >> key;
-        getOperationsHash()->Insert(key,operation);
+        OperationsHash.Insert(key,operation);
         //smsc_log_debug(logger, "DESERIALIZE ALLRESP=%d, ALLPARTS=%d",operation->m_receivedAllResp, operation->m_receivedAllParts);
     }
 }
@@ -288,10 +290,9 @@ void Session::SerializeOperations(SessionBuffer& buff)
 {
     Operation * operation;
     int key;
+    COperationsHash::Iterator it = OperationsHash.First();
 
-    COperationsHash::Iterator it = getOperationsHash()->First();
-
-    buff << getOperationsHash()->Count();
+    buff << OperationsHash.Count();
 
     for (;it.Next(key, operation);)
     {              
@@ -340,7 +341,7 @@ void Session::Serialize(SessionBuffer& buff)
         bool                    bChanged, bDestroy;
         int                     accessCount;
     */
-
+ 
     SerializeProperty(buff);
     SerializeOperations(buff);
     SerializePendingOperations(buff);
@@ -355,6 +356,7 @@ void Session::Serialize(SessionBuffer& buff)
     buff << m_SessionKey.abonentAddr << (uint32_t)m_SessionKey.USR << lastAccessTime << lastOperationId;
     //buff << m_SmppDiscriptor.cmdType << m_SmppDiscriptor.currentIndex << m_SmppDiscriptor.lastIndex;
     buff << m_SessionPrimaryKey.abonentAddr << m_SessionPrimaryKey.BornMicrotime.tv_sec << m_SessionPrimaryKey.BornMicrotime.tv_usec;
+    
 }
 
 
@@ -377,7 +379,7 @@ void Session::Deserialize(SessionBuffer& buff)
     if (hasCurrentOperation) 
     {
         buff >> currentOperationId;
-        if (getOperationsHash()->Exist(currentOperationId)) m_pCurrentOperation = getOperationsHash()->Get(currentOperationId);
+        if (OperationsHash.Exist(currentOperationId)) m_pCurrentOperation = OperationsHash.Get(currentOperationId);
     }
 
     buff >> m_SessionKey.abonentAddr;
@@ -403,7 +405,7 @@ void Session::Deserialize(SessionBuffer& buff)
     buff >> m_SessionPrimaryKey.abonentAddr;
     buff >> m_SessionPrimaryKey.BornMicrotime.tv_sec;
     buff >> m_SessionPrimaryKey.BornMicrotime.tv_usec;
-
+                         
 }
 
 
@@ -456,7 +458,7 @@ void Session::ClearOperations()
     int key;
     Operation * value;
 
-    COperationsHash::Iterator it = getOperationsHash()->First();
+    COperationsHash::Iterator it = OperationsHash.First();
 
     for (;it.Next(key, value);)
     {              
@@ -464,7 +466,7 @@ void Session::ClearOperations()
     }
 
 
-    getOperationsHash()->Empty();
+    OperationsHash.Empty();
     PendingOperationList.clear();
     PrePendingOperationList.clear();
 
@@ -478,7 +480,7 @@ void Session::abort()
     int key;
     Operation * value;
 
-    COperationsHash::Iterator it = getOperationsHash()->First();
+    COperationsHash::Iterator it = OperationsHash.First();
 
     for (;it.Next(key, value);)
     {              
@@ -492,7 +494,7 @@ void Session::abort()
     }
 
 
-    getOperationsHash()->Empty();
+    OperationsHash.Empty();
     PendingOperationList.clear();
     PrePendingOperationList.clear();
 
@@ -505,7 +507,7 @@ void Session::abort()
 
 bool Session::hasOperations() 
 {
-    return !(PendingOperationList.empty() && (getOperationsHash()->Count() == 0));
+    return !(PendingOperationList.empty() && (OperationsHash.Count() == 0));
 }
 
 int Session::getNewOperationId()
@@ -540,9 +542,18 @@ void Session::closeCurrentOperation()
 
     smsc_log_debug(logger,"Session: close current operation (id=%lld)", currentOperationId);
 
-    delete m_pCurrentOperation;
+    /*delete m_pCurrentOperation;
     m_pCurrentOperation = 0;
-    getOperationsHash()->Delete(currentOperationId);
+    getOperationsHash()->Delete(currentOperationId);*/
+
+    Operation ** opPtr = OperationsHash.GetPtr(currentOperationId);
+    if (opPtr) 
+    {
+        delete (*opPtr);
+        OperationsHash.Delete(currentOperationId);
+        smsc_log_debug(logger,"Session: current operation (id=%lld) released (count = %d)", currentOperationId, OperationsHash.Count());
+    }
+    
 
     bChanged = true;
 }
@@ -550,7 +561,7 @@ void Session::closeCurrentOperation()
 
 Operation * Session::setCurrentOperation(uint64_t operationId)
 {
-    Operation ** operationPtr = getOperationsHash()->GetPtr(operationId);
+    Operation ** operationPtr = OperationsHash.GetPtr(operationId);
     if (!operationPtr) throw SCAGException("Cannot find operation (id=%lld)", operationId);
 
 
@@ -566,7 +577,7 @@ Operation * Session::setCurrentOperationByType(int operationType)
     Operation * operation;
     int key;
 
-    COperationsHash::Iterator it = getOperationsHash()->First();
+    COperationsHash::Iterator it = OperationsHash.First();
 
     for (;it.Next(key, operation);)
     {              
@@ -615,7 +626,7 @@ Operation * Session::AddNewOperationToHash(SCAGCommand& cmd, int operationType)
     operation->type = operationType;
 
     cmd.setOperationId(getNewOperationId());
-    getOperationsHash()->Insert(cmd.getOperationId(),operation);
+    OperationsHash.Insert(cmd.getOperationId(),operation);
     currentOperationId = cmd.getOperationId();
     m_pCurrentOperation = operation;
 

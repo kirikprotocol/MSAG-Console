@@ -207,9 +207,9 @@ namespace scag { namespace sessions
         };
     };
 
-
+    
     typedef IntHash<Operation*> COperationsHash;
-  
+    /*
     class COperationsHashPtr : public smsc::core::buffers::RefPtr<COperationsHash,smsc::core::synchronization::Mutex>
     {
     public:
@@ -222,7 +222,7 @@ namespace scag { namespace sessions
             return data->refCount;
         }
 
-    }; 
+    };   */
 
     //typedef RefPtrWithCounter <Session, smsc::core::synchronization::Mutex> COperationsHashPtr;
 
@@ -253,15 +253,14 @@ namespace scag { namespace sessions
 
         Hash<AdapterProperty *> PropertyHash;
         static Hash<int> OperationTypesHash;
-
+        /*
         COperationsHashPtr getOperationsHash()
         {
-            CSessionKey key;
             COperationsHashPtr opHashPtr(&OperationsHash);
             if (opHashPtr.getRefCount() > 1) abort();
 
             return opHashPtr;
-        }
+        }  */
         void ClearOperations();
 
         int getNewOperationId();

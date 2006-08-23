@@ -15,7 +15,6 @@ void ActionSubstr::init(const SectionParams& params,PropertyObject propertyObjec
     ft = CheckParameter(params, propertyObject, "substr", "result", true, false, m_strResult, bExist);
 
     m_ftBegin = CheckParameter(params, propertyObject, "substr", "begin", false, true, m_strBegin, m_bExistBegin);
-    //if (ft!=ftUnknown) throw SCAGException("Action 'substr': 'begin' parameter must be a scalar constant type");
 
     if ((m_ftBegin==ftUnknown)&&(m_bExistBegin))
     {
@@ -25,7 +24,6 @@ void ActionSubstr::init(const SectionParams& params,PropertyObject propertyObjec
 
 
     m_ftEnd = CheckParameter(params, propertyObject, "substr", "end", false, true, m_strEnd, m_bExistEnd);
-    //if (ft!=ftUnknown) throw SCAGException("Action 'substr': 'end' parameter must be a scalar constant type");
 
     if ((m_ftEnd==ftUnknown)&&(m_bExistEnd))
     {

@@ -62,7 +62,7 @@ bool ActionBillMoveWait::run(ActionContext& context)
             smsc_log_error(logger, "Action '%s': Invalid property '%s'", m_ActionName.c_str(), m_sMessage.c_str());
             return true;
         }
-        property->setStr("Cannot register pending operation");
+        property->setStr("Cannot register pending operation"); 
     }
      
     return true;

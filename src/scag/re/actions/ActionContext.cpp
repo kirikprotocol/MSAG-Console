@@ -107,7 +107,7 @@ void ActionContext::makeBillEvent(int billCommand, int commandStatus, TariffRec&
     ev.Header.iServiceProviderId = commandProperty.providerId;
 
     timeval tv;
-    gettimeofday(&tv,0);
+    gettimeofday(&tv,0);  
 
     ev.Header.lDateTime = (uint64_t)tv.tv_sec*1000 + (tv.tv_usec / 1000);
 
@@ -128,7 +128,7 @@ void ActionContext::makeBillEvent(int billCommand, int commandStatus, TariffRec&
 
     char buff[128];
     sprintf(buff,"%s/%ld%d", sessionPrimaryKey.abonentAddr.toString().c_str(), sessionPrimaryKey.BornMicrotime.tv_sec,sessionPrimaryKey.BornMicrotime.tv_usec / 1000);
-    ev.pSessionKey.append(buff);
+    ev.pSessionKey.append(buff);   
 
 }
 
@@ -137,10 +137,12 @@ TariffRec * ActionContext::getTariffRec(uint32_t category, uint32_t medyaType)
     if (!m_TariffRec.get()) 
     {
         Infrastructure& istr = BillingManager::Instance().getInfrastructure();
-        m_TariffRec.reset(istr.GetTariff(commandProperty.operatorId, category, medyaType));
+        TariffRec * trec = istr.GetTariff(commandProperty.operatorId, category, medyaType);
 
-        if (!m_TariffRec.get()) 
+        if (!trec) 
             throw SCAGException("BillEvent: Cannot find tariffRec for OID=%d, cat=%d, mtype=%d ", commandProperty.operatorId, category, medyaType);
+
+        m_TariffRec.reset(trec);
     }
 
     return m_TariffRec.get();
@@ -217,7 +219,7 @@ bool ActionContext::checkIfCanSetPending(int operationType, int eventHandlerType
 int ActionContext::getCurrentOperationBillID()
 {
     Operation * operation = session.GetCurrentOperation();
-    if (!operation) return 0;
+    if (!operation) throw SCAGException("Operation: cannot find billing current operation");
 
     if (!operation->hasBill()) throw SCAGException("Operation: cannot find billing transaction");
 
