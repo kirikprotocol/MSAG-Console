@@ -15,15 +15,6 @@ using namespace smsc::core::synchronization;
 using namespace scag::config;
 using namespace scag::bill::infrastruct;
 
-/*struct CTransactionData
-{
-    Address OA;
-    Address DA;
-
-    std::string mediatype;
-    std::string category;
-};
-  */
 enum TransactionStatus
 {
     TRANSACTION_NOT_STARTED = 0,
@@ -65,7 +56,7 @@ protected:
     BillingManager() {};
 
 public:
-    virtual int ChargeBill(smsc::inman::interaction::ChargeSms& op, EventMonitor ** eventMonitor, TariffRec& tariffRec) = 0;
+    virtual int ChargeBill(SMS& sms, EventMonitor ** eventMonitor, TariffRec& tariffRec) = 0;
     virtual TariffRec& CheckCharge(int billId, EventMonitor ** eventMonitor) = 0;
 
     virtual TransactionStatus GetStatus(int billId) = 0; //Возвращяет статус транзакции

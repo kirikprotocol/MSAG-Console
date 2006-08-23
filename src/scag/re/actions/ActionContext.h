@@ -28,8 +28,11 @@ namespace scag { namespace re { namespace actions
     class CommandAccessor : public PropertyManager
     {
     public:
+        /*
         virtual void fillChargeOperation(smsc::inman::interaction::ChargeSms& op, TariffRec& tariffRec) = 0;
         virtual void fillRespOperation(smsc::inman::interaction::DeliverySmsResult& op, TariffRec& tariffRec) = 0;
+        */
+        virtual SMS& getSMS() = 0;
     };
 
 
@@ -105,8 +108,12 @@ namespace scag { namespace re { namespace actions
 
         void makeBillEvent(int billCommand, int commandStatus, TariffRec& tariffRec, SACC_BILLING_INFO_EVENT_t& ev);
         CommandProperty& getCommandProperty() {return commandProperty;}
-        void fillChargeOperation(smsc::inman::interaction::ChargeSms& op, TariffRec& tariffRec);
-        void fillRespOperation(smsc::inman::interaction::DeliverySmsResult& op, TariffRec& tariffRec);
+
+        SMS& getSMS()
+        {
+            return command.getSMS();
+        }
+
 
         TariffRec * getTariffRec(uint32_t category, uint32_t mediaType);
         bool checkIfCanSetPending(int operationType, int eventHandlerType, TransportType transportType);

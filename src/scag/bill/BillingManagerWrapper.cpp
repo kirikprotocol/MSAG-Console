@@ -2,15 +2,22 @@
 
 #include "scag/exc/SCAGExceptions.h"
 
+#ifdef MSAG_INMAN_BILL
 #include "inman/common/console.hpp"
 #include "inman/common/util.hpp"
+#endif
+
 #include "logger/Logger.h"
 
 
 namespace scag { namespace bill {
 
+#ifdef MSAG_INMAN_BILL
 using smsc::inman::common::Console;
 using smsc::inman::common::format;
+using smsc::inman::interaction;
+#endif
+
 using scag::exceptions::SCAGException;
 
 /*
@@ -32,6 +39,8 @@ void BillingManagerWrapper::initConnection(const char * host, int port)
 
 bool BillingManagerWrapper::Reconnect()
 {
+    #ifdef MSAG_INMAN_BILL
+
     if (socket->Init(m_Host.c_str(), m_Port, 1000)) 
     {
         smsc_log_warn(logger, "Can't init socket to BillingServer on host '%s', port '%d': error %s (%d)\n", m_Host.c_str(), m_Port, strerror(errno), errno);
@@ -43,13 +52,15 @@ bool BillingManagerWrapper::Reconnect()
         smsc_log_warn(logger, "Can't connect socket to BillingServer on host '%s', port '%d' : %s (%d)\n", m_Host.c_str(), m_Port, strerror(errno), errno);
         return false;
     }        
-
+    #endif
 
     return true;
 }
 
 void BillingManagerWrapper::receiveCommand()
 {
+    #ifdef MSAG_INMAN_BILL
+
     fd_set read;
     FD_ZERO( &read );
     FD_SET( socket->getSocket(), &read );
@@ -80,13 +91,7 @@ void BillingManagerWrapper::receiveCommand()
         } 
      } //else 
         //Reconnect();
-    
-}
-
-
-void BillingManagerWrapper::sendCommand(SerializableObject& op)
-{
-    pipe->sendObj(&op);
+    #endif
 }
 
 }}

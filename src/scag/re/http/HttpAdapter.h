@@ -8,8 +8,8 @@
 namespace scag { namespace re { namespace http {
     using namespace scag::util::properties;
     using namespace scag::transport::http;
-    using smsc::core::buffers::IntHash;
     using scag::re::actions::CommandAccessor;
+    using smsc::core::buffers::IntHash;
     using scag::bill::infrastruct::TariffRec;
 
     class HttpCommandAdapter : public CommandAccessor
@@ -30,7 +30,7 @@ namespace scag { namespace re { namespace http {
         Property* getResponseProperty(const std::string& name);
         Property* getDeliveryProperty(const std::string& name);
 
-        HttpCommandAdapter(HttpCommand& _command) : CommandAccessor(), command(_command)
+        HttpCommandAdapter(HttpCommand& _command) :  command(_command)
         {
         }
 
@@ -39,10 +39,10 @@ namespace scag { namespace re { namespace http {
         virtual void changed(AdapterProperty& property);
         virtual Property* getProperty(const std::string& name);
         virtual ~HttpCommandAdapter();
-
-        virtual void fillChargeOperation(smsc::inman::interaction::ChargeSms& op, TariffRec& tariffRec);
-        virtual void fillRespOperation(smsc::inman::interaction::DeliverySmsResult& op, TariffRec& tariffRec);
-
+        virtual SMS& getSMS()
+        {
+            throw SCAGException("Http transport does not support SMS");
+        }
 
         static AccessType CheckAccess(int handlerType, const std::string& name);
     };

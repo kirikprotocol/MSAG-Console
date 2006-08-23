@@ -1352,6 +1352,13 @@ void SmppCommandAdapter::changed(AdapterProperty& property)
     if (propertyPtr) (*propertyPtr)->setPureStr(property.getStr());*/
 }
 
+SMS& SmppCommandAdapter::getSMS()
+{
+    return CommandBrige::getSMS(command);
+}
+
+
+/*
 void SmppCommandAdapter::fillChargeOperation(smsc::inman::interaction::ChargeSms& op, TariffRec& tariffRec)
 {
 
@@ -1411,6 +1418,6 @@ void SmppCommandAdapter::fillRespOperation(smsc::inman::interaction::DeliverySms
  //   op.setDivertedAdr();
  //   op.setResultValue();
 }
-
+*/
 
 }}}

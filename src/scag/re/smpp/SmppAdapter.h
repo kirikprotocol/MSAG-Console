@@ -13,8 +13,8 @@ namespace scag { namespace re { namespace smpp
     using namespace scag::util::properties;
     using namespace scag::transport::smpp;
     using smsc::core::buffers::IntHash;
-    using scag::re::actions::CommandAccessor;
     using scag::bill::infrastruct::TariffRec;
+    using scag::re::actions::CommandAccessor;
 
 
     class SmppCommandAdapter : public CommandAccessor
@@ -161,20 +161,21 @@ namespace scag { namespace re { namespace smpp
                                                             
     public:
 
-        SmppCommandAdapter(SmppCommand& _command) 
-            : CommandAccessor(), command(_command) 
+        SmppCommandAdapter(SmppCommand& _command) : command(_command) 
         {
             m_hasPayloadText = true;
         }
 
         virtual void changed(AdapterProperty& property);
         virtual Property* getProperty(const std::string& name);
-        virtual void fillChargeOperation(smsc::inman::interaction::ChargeSms& op, TariffRec& tariffRec);
-        virtual void fillRespOperation(smsc::inman::interaction::DeliverySmsResult& op, TariffRec& tariffRec);
+        //virtual void fillChargeOperation(smsc::inman::interaction::ChargeSms& op, TariffRec& tariffRec);
+        //virtual void fillRespOperation(smsc::inman::interaction::DeliverySmsResult& op, TariffRec& tariffRec);
 
 
         virtual ~SmppCommandAdapter();
         static AccessType CheckAccess(int handlerType,const std::string& name);
+        virtual SMS& getSMS();
+
     };
 
 }}}

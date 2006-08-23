@@ -149,15 +149,6 @@ TariffRec * ActionContext::getTariffRec(uint32_t category, uint32_t medyaType)
 }
 
 
-void ActionContext::fillChargeOperation(smsc::inman::interaction::ChargeSms& op, TariffRec& tariffRec)
-{
-    command.fillChargeOperation(op, tariffRec);
-}
-
-void ActionContext::fillRespOperation(smsc::inman::interaction::DeliverySmsResult& op, TariffRec& tariffRec)
-{
-    command.fillRespOperation(op, tariffRec);
-}
 
 
 bool ActionContext::checkIfCanSetPending(int operationType, int eventHandlerType, TransportType transportType)

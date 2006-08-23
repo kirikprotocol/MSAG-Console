@@ -167,15 +167,15 @@ bool BillActionOpen::run(ActionContext& context)
     if (tariffRec->Price == 0)
         smsc_log_warn(logger, "Zero price in tariff matrix. ServiceNumber=%d, CategoryId=%d, MediaTypeId=%d", tariffRec->ServiceNumber, tariffRec->CategoryId, tariffRec->MediaTypeId);
 
-    smsc::inman::interaction::ChargeSms op;
     EventMonitor * monitor = 0;
     TransactionStatus transactionStatus;
     int BillId = 0;
-    context.fillChargeOperation(op, *tariffRec);
+    //context.fillChargeOperation(op, *tariffRec);
     
     try 
     {
-        BillId = bm.ChargeBill(op, &monitor, *tariffRec);
+        SMS& sms = context.getSMS();
+        BillId = bm.ChargeBill(sms, &monitor, *tariffRec);
         if (!monitor) throw SCAGException("Unknown error: EventMonitor is not valid"); 
 
         //TODO: Понять какое время нужно ждать до таймаута

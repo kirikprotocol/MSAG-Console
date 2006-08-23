@@ -27,7 +27,9 @@ class BillingManagerImpl : public BillingManager, public Thread, public BillingM
         int EventMonitorIndex;
         TransactionStatus status;
         TariffRec tariffRec;
-        smsc::inman::interaction::ChargeSms ChargeOperation;
+        #ifdef MSAG_INMAN_BILL
+        ChargeSms ChargeOperation;
+        #endif
         BillTransaction() : status(TRANSACTION_NOT_STARTED), EventMonitorIndex(-1) { }
     };
 
@@ -70,7 +72,12 @@ public:
     virtual int Execute();
     virtual void Start();
 
-    virtual int ChargeBill(smsc::inman::interaction::ChargeSms& op, EventMonitor ** eventMonitor, TariffRec& tariffRec);
+    virtual int ChargeBill(SMS& sms, EventMonitor ** eventMonitor, TariffRec& tariffRec);
+
+    #ifdef MSAG_INMAN_BILL
+    virtual void onChargeSmsResult(ChargeSmsResult* result);
+    #endif
+
     virtual TariffRec& CheckCharge(int billId, EventMonitor ** eventMonitor);
 
     virtual TransactionStatus GetStatus(int billId);
@@ -80,7 +87,6 @@ public:
     //virtual void close(int billId);
 
 
-    virtual void onChargeSmsResult(ChargeSmsResult* result);
 
     virtual Infrastructure& getInfrastructure() { return infrastruct; };
     virtual TariffRec& getTransactionData(int billId);
@@ -245,7 +251,7 @@ void BillingManagerImpl::Start()
     }
 }
 
-int BillingManagerImpl::ChargeBill(smsc::inman::interaction::ChargeSms& op, EventMonitor ** eventMonitor, TariffRec& tariffRec)
+int BillingManagerImpl::ChargeBill(SMS& sms, EventMonitor ** eventMonitor, TariffRec& tariffRec)
 {
 /*    BillTransaction billTransaction1;
     billTransaction1.EventMonitorIndex = 0;
@@ -279,18 +285,19 @@ int BillingManagerImpl::ChargeBill(smsc::inman::interaction::ChargeSms& op, Even
     billTransaction.tariffRec = tariffRec;
 
     #ifdef MSAG_INMAN_BILL
+    ChargeSms op;
+    fillChargeSms(op, sms, tariffRec);
     billTransaction.status = TRANSACTION_WAIT_ANSWER;
+    billTransaction.ChargeOperation = op;
     #else
     billTransaction.status = TRANSACTION_VALID;
     #endif
 
-    billTransaction.ChargeOperation = op;
 
     BillTransactionHash.Insert(m_lastBillId, billTransaction);
 
-    op.setDialogId(m_lastBillId);
-
     #ifdef MSAG_INMAN_BILL
+    op.setDialogId(m_lastBillId);
     sendCommand(op);
     #endif
     return m_lastBillId;
@@ -332,9 +339,8 @@ TariffRec& BillingManagerImpl::CheckCharge(int billId, EventMonitor ** eventMoni
 
     *eventMonitor = &EventMonitorArray[pBillTransaction->EventMonitorIndex]->eventMonitor;
 
-    pBillTransaction->ChargeOperation.setDialogId(billId);
-
     #ifdef MSAG_INMAN_BILL
+    pBillTransaction->ChargeOperation.setDialogId(billId);
     sendCommand(pBillTransaction->ChargeOperation);
     #else
     pBillTransaction->status = TRANSACTION_VALID;
@@ -358,12 +364,12 @@ void BillingManagerImpl::commit(int billId)
     {
         smsc_log_debug(logger, "Commiting billId=%d...", billId);
 
+        #ifdef MSAG_INMAN_BILL
         DeliverySmsResult op;
- 
+
         op.setDialogId(billId);
         op.setResultValue(0);
 
-        #ifdef MSAG_INMAN_BILL
         sendCommand(op);
         #endif
     }
@@ -384,12 +390,11 @@ void BillingManagerImpl::rollback(int billId)
 
     if (pBillTransaction->status == TRANSACTION_VALID)
     {
+        #ifdef MSAG_INMAN_BILL
         DeliverySmsResult op;
 
         op.setDialogId(billId);
         op.setResultValue(2);
-
-        #ifdef MSAG_INMAN_BILL
         sendCommand(op);
         #endif
     }
@@ -427,6 +432,7 @@ void BillingManagerImpl::sendReject(int billId)
 }
 
 
+#ifdef MSAG_INMAN_BILL
 void BillingManagerImpl::onChargeSmsResult(ChargeSmsResult* result)
 {
     if (!result) return;
@@ -443,7 +449,7 @@ void BillingManagerImpl::onChargeSmsResult(ChargeSmsResult* result)
         return;
     }
     
-    if( result->GetValue() == smsc::inman::interaction::CHARGING_POSSIBLE ) 
+    if( result->GetValue() == CHARGING_POSSIBLE ) 
         pBillTransaction->status = TRANSACTION_VALID;
     else 
         pBillTransaction->status = TRANSACTION_INVALID;
@@ -453,6 +459,57 @@ void BillingManagerImpl::onChargeSmsResult(ChargeSmsResult* result)
     EventMonitorArray[pBillTransaction->EventMonitorIndex]->eventMonitor.notify();
 
 }
+
+void BillingManagerImpl::fillChargeSms(smsc::inman::interaction::ChargeSms& op, SMS& sms, TariffRec& tariffRec)
+{
+
+    char buff[128];
+    sprintf(buff,"%d", tariffRec.ServiceNumber);
+    std::string str(buff);
+    //op.setDestinationSubscriberNumber(sms.getDealiasedDestinationAddress().toString());
+    if (command->cmdid == DELIVERY) 
+    {
+        op.setDestinationSubscriberNumber(str);
+        op.setCallingPartyNumber(sms.getOriginatingAddress().toString());
+    } else if (command->cmdid == SUBMIT)
+    {
+        op.setDestinationSubscriberNumber(str);
+        op.setCallingPartyNumber(sms.getDestinationAddress().toString());
+    }
+
+    op.setCallingIMSI(sms.getOriginatingDescriptor().imsi);
+    //op.setSMSCAddress(INManComm::scAddr.toString());
+    op.setSubmitTimeTZ(sms.getSubmitTime());
+    op.setTPShortMessageSpecificInfo(0x11);
+    op.setTPProtocolIdentifier(sms.getIntProperty(Tag::SMPP_PROTOCOL_ID));
+    op.setTPDataCodingScheme(sms.getIntProperty(Tag::SMPP_DATA_CODING));
+    op.setTPValidityPeriod(sms.getValidTime()-time(NULL));
+    op.setLocationInformationMSC(sms.getOriginatingDescriptor().msc);
+    op.setCallingSMEid(sms.getSourceSmeId());
+    op.setRouteId(sms.getRouteId());
+
+    op.setServiceId(command.getServiceId());
+
+    op.setUserMsgRef(sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)?sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE):-1);
+    //op.setMsgId(id);
+    op.setServiceOp(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)?sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP):-1);
+    op.setPartsNum(sms.getIntProperty(Tag::SMSC_ORIGINALPARTSNUM));
+
+    if(sms.hasBinProperty(Tag::SMPP_SHORT_MESSAGE))
+    {
+        unsigned len;
+        sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+        op.setMsgLength(len);
+    }else
+    {
+        unsigned len;
+        sms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+        op.setMsgLength(len);
+    }
+}
+
+
+#endif
 
 }}
 
