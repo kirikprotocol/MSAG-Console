@@ -87,21 +87,12 @@ void HttpRouterImpl::init(const std::string& cfg)
 
 void HttpTraceRouter::routeInfo(HttpRouteInt* r, std::vector<std::string>& trace)
 {
-    char buf[150];
+    char buf[350];
     
     trace.push_back("Route info:");
 
-    sprintf(buf, " RouteId: %d;ServiceId:%d", r->id, r->service_id);
-    std::string s1 = "RouteName: " + r->name + ";" + buf;
-    s1 += ";";
-    if(r->enabled) s1 += "Enabled";
-    s1 += ";";
-    if(r->def) s1 += "Default";
-    s1 += ";";
-    if(r->transit) s1 += "Transit";
-    s1 += ";";
-    
-    trace[0] = s1;
+    sprintf(buf, "RouteName:%s;RouteId:%d;ServiceId:%d;Enabled:%d;Default:%d;Transit:%d", r->name.c_str(), r->id, r->service_id, r->enabled, r->def, r->transit);
+    trace[0] = buf;
 
     trace.push_back("Masks:");
     for(int i = 0; i < r->masks.Count(); i++)
