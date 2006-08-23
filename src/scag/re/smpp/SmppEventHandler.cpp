@@ -206,7 +206,7 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
 
     std::string message = CommandBrige::getMessageBody(*smppcommand);
 
-    //RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), message);
+    RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), message);
     
     /////////////////////////////////////////
 
