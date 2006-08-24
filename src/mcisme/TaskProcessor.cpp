@@ -28,6 +28,8 @@ extern "C" void clearSignalMask(void);
 namespace smsc { namespace mcisme 
 {
 
+const uint8_t	STK_PROFILE_ID = 0;
+
 static time_t parseDateTime(const char* str)
 {
     int year, month, day, hour, minute, second;
@@ -66,7 +68,7 @@ static int parseTime(const char* str)
 
 static void checkAddress(const char* address)
 {
-    static const char* ADDRESS_ERROR_NULL_MESSAGE    = "Destination address is undefined.";
+    static const char* ADDRESS_ERROR_NULL_MESSAGE    = "Address is undefined.";
     static const char* ADDRESS_ERROR_INVALID_MESSAGE = "Address '%s' is invalid";
     
     if (!address || address[0] == '\0')
@@ -279,6 +281,14 @@ TaskProcessor::TaskProcessor(ConfigView* config)
 	{
 		test_number="";
 	}
+	
+ //   try { stkTemplateId = config->getInt("stkTemplateId"); } catch (...)
+	//{
+	//	throw ConfigException("MCISme need stkTemplateId parameter."
+ //                             "Use <MCISme.stkTemplateId> parameter in config.xml. Default value = -1");
+	//	stkTemplateId = 0;
+	//}
+	
 
 //    std::auto_ptr<ConfigView> dsIntCfgGuard(config->getSubConfig("DataSource"));
 //    initDataSource(dsIntCfgGuard.get());
@@ -409,8 +419,8 @@ void TaskProcessor::Run()
 	time_t	cur_time;
 	int		wait_smsc_msg;
 
-	test();
-//	while(bOutQueueOpen)
+	//while(1) sleep(1000);
+	//	while(bOutQueueOpen)
 	while(pDeliveryQueue->isQueueOpened())
 	{
         if (mciModule && !mciModule->isRunning()) {
@@ -444,6 +454,10 @@ int TaskProcessor::Execute()
 	time_t start = time(0);
 	time_t end = time(0);
 	uint32_t count=0;
+	
+	//test_sched();
+	//while(1) sleep(1000);
+
 	while (bInQueueOpen)//++i<=12)//bInQueueOpen
 	{
 		try
@@ -478,8 +492,8 @@ int TaskProcessor::Execute()
 //			if (releaseCallsStrategy != MIXED_STRATEGY || event.cause != ABSENT)
 			if (checkEventMask(profile.eventMask, event.cause))
 			{
-				pStorage->addEvent(to, outEvent);
-				pDeliveryQueue->Schedule(to, ((event.cause&0x02)==0x02)); //0x02 - BUSY
+				time_t schedTime = pDeliveryQueue->Schedule(to, ((event.cause&0x02)==0x02)); //0x02 - BUSY
+				pStorage->addEvent(to, outEvent, schedTime);
 				statistics->incMissed();
 				smsc_log_debug(logger, "Abonent %s (couse = 0x%02X) was added to Scheduled Delivery Queue", to.toString().c_str(), event.cause);
 			}
@@ -495,7 +509,7 @@ int TaskProcessor::Execute()
     return 0;
 }
 
-void TaskProcessor::test(void)
+void TaskProcessor::test_stk(void)
 {
 	Message	msg;
 	
@@ -512,6 +526,31 @@ void TaskProcessor::test(void)
 		smsc_log_debug(logger, "Send DATA_SM for Abonent  failed");
 		return;
 	}
+}
+
+void TaskProcessor::test_sched(void)
+{
+	AbntAddr abnt1("1111111111");
+	AbntAddr abnt2("2222222222");
+	AbntAddr abnt3("3333333333");
+	AbntAddr abnt4("4444444444");
+	AbntAddr abnt5("5555555555");
+
+	pDeliveryQueue->Schedule(abnt1, false);
+	sleep(1);
+	pDeliveryQueue->Schedule(abnt2, false); 
+	sleep(1);
+	pDeliveryQueue->Schedule(abnt3, false);
+	sleep(1);
+	pDeliveryQueue->Schedule(abnt4, false); 
+	sleep(1);
+	pDeliveryQueue->Schedule(abnt5, false); 
+	sleep(5);
+	pDeliveryQueue->Reschedule(abnt1, 1179);
+	sleep(5);
+	pDeliveryQueue->Reschedule(abnt1, 1184);
+	sleep(5);
+	pDeliveryQueue->Reschedule(abnt1, 1179);
 }
 
 void TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt)
@@ -546,8 +585,11 @@ void TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt)
 	
 	pInfo->abnt = abnt;
 	int timeOffset = smsc::system::common::TimeZoneManager::getInstance().getTimeZone(abnt.getAddress())+timezone;
-//	msg.data_sm = true;
-	msg.secured_data = true;
+	if(profile.informTemplateId == STK_PROFILE_ID)
+		msg.secured_data = true;
+	else
+		msg.data_sm = true;
+
 	formatter.formatMessage(msg, abnt, events, 0, pInfo->events, timeOffset);
 	smsc_log_debug(logger, "ProcessAbntEvents: msg = %s", msg.message.c_str());
 	msg.abonent = abnt.getText();//"777";
@@ -596,7 +638,8 @@ bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
 			SendAbntOnlineNotifications(pInfo);
 			statistics->incDelivered(pInfo->events.size());
 			pStorage->deleteEvents(pInfo->abnt, pInfo->events);
-			pDeliveryQueue->Reschedule(pInfo->abnt);
+			time_t schedTime = pDeliveryQueue->Reschedule(pInfo->abnt);
+			pStorage->setSchedTime(pInfo->abnt, schedTime);
 		}
 		else if(smsc::system::Status::isErrorPermanent(status))
 		{
@@ -606,7 +649,8 @@ bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
 		else
 		{
 			statistics->incFailed(pInfo->events.size());
-			pDeliveryQueue->Reschedule(pInfo->abnt, status);
+			time_t schedTime = pDeliveryQueue->Reschedule(pInfo->abnt, status);
+			pStorage->setSchedTime(pInfo->abnt, schedTime);
 		}
 		delete pInfo;
 	}

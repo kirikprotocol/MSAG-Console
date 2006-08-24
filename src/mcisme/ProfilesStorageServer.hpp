@@ -35,9 +35,10 @@ const uint8_t MSG_ID_PROFILE = 0;
 const uint8_t MSG_ID_GETPROF = 1;
 const uint8_t MSG_ID_SETPROF = 2;
 
-const uint8_t STATUS_OK		= 0;
-const uint8_t STATUS_ERRROR	= 1;
-const uint8_t STATUS_BADMSG	= 2;
+const uint8_t STATUS_OK			= 0;
+const uint8_t STATUS_ERRROR		= 1;
+const uint8_t STATUS_BADMSG		= 2;
+const uint8_t STATUS_NO_ABNT	= 3;
 
 struct ProfileHeader
 {
@@ -168,9 +169,9 @@ protected:
 			AbntAddr		abnt(msg.body.abnt);
 			AbonentProfile	prof;
 
-			pProfStorage->Get(abnt, prof);
+			bool ret = pProfStorage->Get(abnt, prof);
 			msg.hdr.msgId = MSG_ID_PROFILE;
-			msg.hdr.Status = STATUS_OK;
+			msg.hdr.Status = ret?STATUS_OK:STATUS_NO_ABNT;
 			msg.body.eventMask = prof.eventMask;
 			msg.body.inform = prof.inform;
 			msg.body.informTemplateId = prof.informTemplateId;

@@ -247,7 +247,7 @@ public:
 			else if (value.addr_content.type == 0 && value.addr_content.plan == 1)
 				snprintf(buf,sizeof(buf),"%s",vl);
 			else
-				snprintf(buf,sizeof(buf),".%d.%d.%s",value.addr_content.type,value.addr_content.plan);
+				snprintf(buf,sizeof(buf),".%d.%d.%s",value.addr_content.type,value.addr_content.plan,vl);
 		}
 		else
 			buf[0]=0;

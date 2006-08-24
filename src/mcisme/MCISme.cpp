@@ -372,12 +372,8 @@ public:
 		}
 	    else if(message.secured_data)
 		{
-			smsc_log_debug(logger, "000000000000000");
 			const char* out  = message.GetMsg();//.message.c_str();
-			smsc_log_debug(logger, "1111111111");			
 			int outLen = message.GetMsgLen();//message.length();
-			smsc_log_debug(logger, "2222222222");
-
 
             char* msgBuf = 0;
             int msgDataCoding = DataCoding::BINARY;
@@ -396,8 +392,8 @@ public:
             sm.get_data().get_dest()  .set_numberingPlan(da.plan);
             sm.get_data().get_dest()  .set_value(da.value);
             sm.get_data().set_esmClass(SMSC_TRANSACTION_MSG_MODE|0x40); // forward (i.e. transactional)
-	    sm.get_data().set_dataCoding(msgDataCoding);
-	    sm.get_optional().set_destAddrSubunit(0x03);
+			sm.get_data().set_dataCoding(msgDataCoding);
+			sm.get_optional().set_destAddrSubunit(0x03);
 
             sm.get_optional().set_payloadType(0);
             sm.get_optional().set_messagePayload(out, outLen);
@@ -827,7 +823,10 @@ int main(void)
 		{
 			smsc_log_warn(logger, "Parameter <MCISme.ProfileStorage.port> missed. ProfilesStorageServer NOT started");
 		}
-		
+//		sleep(60);
+//		exit(0);
+
+
 		ConfigView adminConfig(manager, "MCISme.Admin");
 		smsc_log_debug(logger, "%s %d", adminConfig.getString("host"), adminConfig.getInt("port"));
 	    adminListener->init(adminConfig.getString("host"), adminConfig.getInt("port"));               

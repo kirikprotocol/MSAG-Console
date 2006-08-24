@@ -60,6 +60,7 @@ struct event_cell
 //	структура файла событий для абонентов
 struct dat_file_cell
 {
+	time_t			schedTime;
 	uint8_t         event_count;
 	AbntAddrValue	inaccessible_num;
 	uint8_t         reserved[16-1-sizeof(AbntAddrValue)];
@@ -141,7 +142,8 @@ public:
 	
 	int Init(smsc::util::config::ConfigView* storageConfig, DeliveryQueue* pDeliveryQueue);
 	int Init(const string& location, time_t eventLifeTime, uint8_t maxEvents, DeliveryQueue* pDeliveryQueue);
-	void addEvent(const AbntAddr& CalledNum, const MCEvent& event);
+	void addEvent(const AbntAddr& CalledNum, const MCEvent& event, time_t schedTime = 0);
+	void setSchedTime(const AbntAddr& CalledNum, time_t schedTime);
 	bool getEvents(const AbntAddr& CalledNum, vector<MCEvent>& events);
 	void deleteEvents(const AbntAddr& CalledNum, const vector<MCEvent>& events);
 
@@ -185,7 +187,7 @@ private:
 	int CompleteTransaction(void);
 	int LoadEvents(DeliveryQueue* pDeliveryQueue);
 
-	int CreateAbntEvents(const AbntAddr& CalledNum, const MCEvent& event);
+	int CreateAbntEvents(const AbntAddr& CalledNum, const MCEvent& event, time_t schedTime);
 	int DestroyAbntEvents(const AbntAddr& CalledNum);
 	int SaveAbntEvents(const AbntAddr& CalledNum, const dat_file_cell* pAbntEvents);
 	int LoadAbntEvents(const AbntAddr& CalledNum, dat_file_cell* pAbntEvents);

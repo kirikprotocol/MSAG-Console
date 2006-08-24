@@ -147,7 +147,7 @@ int FSStorage::Init(const string& location, time_t _eventLifeTime, uint8_t _maxE
 	
 }
 
-void FSStorage::addEvent(const AbntAddr& CalledNum, const MCEvent& event)
+void FSStorage::addEvent(const AbntAddr& CalledNum, const MCEvent& event, time_t schedTime)
 {
 	MutexGuard	lock(mut);
 
@@ -161,7 +161,21 @@ void FSStorage::addEvent(const AbntAddr& CalledNum, const MCEvent& event)
 		SaveAbntEvents(CalledNum, &AbntEvents);
 	}
 	else
-		CreateAbntEvents(CalledNum, event);
+		CreateAbntEvents(CalledNum, event, schedTime);
+}
+
+void FSStorage::setSchedTime(const AbntAddr& CalledNum, time_t schedTime)
+{
+	MutexGuard	lock(mut);
+
+	if(hashAbnt.Exists(CalledNum))
+	{
+		dat_file_cell	AbntEvents;
+
+		LoadAbntEvents(CalledNum, &AbntEvents);
+		AbntEvents.schedTime = schedTime;
+		SaveAbntEvents(CalledNum, &AbntEvents);
+	}
 }
 
 bool FSStorage::getEvents(const AbntAddr& CalledNum, vector<MCEvent>& events)
@@ -303,8 +317,9 @@ int FSStorage::LoadEvents(DeliveryQueue* pDeliveryQueue)
 	
 	try
 	{
-		uint32_t	rb, i, count; //, cell_num=0;
-		off_t		size;
+		uint32_t		rb, i, count; //, cell_num=0;
+		off_t			size;
+		dat_file_cell	AbntEvents;
 
 		idx_file.SeekEnd(0);
 		if(0 == (size = idx_file.Pos()))
@@ -333,8 +348,9 @@ int FSStorage::LoadEvents(DeliveryQueue* pDeliveryQueue)
 				else
 				{
 					AbntAddr abnt(&buf[i*sizeof(idx_file_cell)]);
+					LoadAbntEvents(abnt, &AbntEvents);
 					hashAbnt.Insert(abnt, cell_num);
-					pDeliveryQueue->Schedule(abnt);
+					pDeliveryQueue->Schedule(abnt, false, AbntEvents.schedTime);
 				}
 				cell_num++;
 			}
@@ -356,7 +372,7 @@ int FSStorage::CompleteTransaction(void)
 {
 	return 0;
 }
-int FSStorage::CreateAbntEvents(const AbntAddr& CalledNum, const MCEvent& event)
+int FSStorage::CreateAbntEvents(const AbntAddr& CalledNum, const MCEvent& event, time_t schedTime)
 {
 	cell_t			cell;
 	idx_file_cell	idx;
@@ -366,6 +382,7 @@ int FSStorage::CreateAbntEvents(const AbntAddr& CalledNum, const MCEvent& event)
 	dat.event_count = 1;
 	dat.events[0].date = time(0);
 	dat.events[0].id = 0;
+	dat.schedTime = schedTime;
 	memcpy((void*)&dat.inaccessible_num, (void*)CalledNum.getAddrSig(), sizeof(dat.inaccessible_num));
 	memcpy((void*)&(dat.events[0].calling_num), (void*)&(event.caller), sizeof(dat.events[0].calling_num));
 	memcpy((void*)&idx.inaccessible_num, (void*)CalledNum.getAddrSig(), sizeof(idx.inaccessible_num));
@@ -459,7 +476,8 @@ int FSStorage::AddAbntEvent(dat_file_cell* pAbntEvents, const MCEvent& event)
 	pAbntEvents->events[pAbntEvents->event_count].date = time(0);
 	pAbntEvents->events[pAbntEvents->event_count].id = pAbntEvents->events[pAbntEvents->event_count-1].id + 1;
 	memcpy((void*)&(pAbntEvents->events[pAbntEvents->event_count].calling_num), (void*)&(event.caller.full_addr), sizeof(pAbntEvents->events[pAbntEvents->event_count].calling_num));
-  pAbntEvents->event_count++;
+	pAbntEvents->event_count++;
+	return 0;
 }
 
 int FSStorage::RemoveAbntEvents(dat_file_cell* pAbntEvents, const vector<MCEvent>& events)

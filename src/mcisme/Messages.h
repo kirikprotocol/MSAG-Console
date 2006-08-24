@@ -56,11 +56,6 @@ namespace UDPattern
 	static const int indexCPL = 0x04;
 	static const int user_data_pattern_len = 19;
 	static const char user_data_pattern[19] = {UDHL, CPI, IEIDL, CPL1, CPL2, CHL, SPI1, SPI2, KIc, KID, TAR1, TAR2, TAR3, 0,0,0,0,0, 0};//, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-//	static const char user_data_pattern[19] = {UDHL, CPI, IEIDL, CPL1, CPL1, CHL, SPI1, SPI2, KIc, KID, TAR1, TAR2, TAR3, CNTR12345, CNTR12345, CNTR12345, CNTR12345, CNTR12345, PCNTR};
-//	static const char user_data_pattern[21] = {UDHL, IEI, IEIDL, CPI, CPL1,  CHI,
-//												CHL, SPI1, SPI2, KIc, KID, TAR1, TAR2,
-//												TAR3, CNTR12345, CNTR12345, CNTR12345,
-//												CNTR12345, CNTR12345, PCNTR};
 };
 
 using namespace UDPattern;
