@@ -174,8 +174,9 @@ bool BillActionOpen::run(ActionContext& context)
     
     try 
     {
-        SMS& sms = context.getSMS();
-        BillId = bm.ChargeBill(sms, &monitor, *tariffRec);
+
+        BillingInfoStruct billingInfoStruct = context.getBillingInfoStruct();
+        BillId = bm.ChargeBill(billingInfoStruct, &monitor, *tariffRec);
         if (!monitor) throw SCAGException("Unknown error: EventMonitor is not valid"); 
 
         //TODO: Понять какое время нужно ждать до таймаута

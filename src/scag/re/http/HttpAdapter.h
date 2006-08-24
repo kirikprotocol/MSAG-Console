@@ -39,10 +39,6 @@ namespace scag { namespace re { namespace http {
         virtual void changed(AdapterProperty& property);
         virtual Property* getProperty(const std::string& name);
         virtual ~HttpCommandAdapter();
-        virtual SMS& getSMS()
-        {
-            throw SCAGException("Http transport does not support SMS");
-        }
 
         static AccessType CheckAccess(int handlerType, const std::string& name);
     };

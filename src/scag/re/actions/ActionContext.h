@@ -32,7 +32,7 @@ namespace scag { namespace re { namespace actions
         virtual void fillChargeOperation(smsc::inman::interaction::ChargeSms& op, TariffRec& tariffRec) = 0;
         virtual void fillRespOperation(smsc::inman::interaction::DeliverySmsResult& op, TariffRec& tariffRec) = 0;
         */
-        virtual SMS& getSMS() = 0;
+        //virtual SMS& getSMS() = 0;
     };
 
 
@@ -109,9 +109,13 @@ namespace scag { namespace re { namespace actions
         void makeBillEvent(int billCommand, int commandStatus, TariffRec& tariffRec, SACC_BILLING_INFO_EVENT_t& ev);
         CommandProperty& getCommandProperty() {return commandProperty;}
 
-        SMS& getSMS()
+        BillingInfoStruct getBillingInfoStruct()
         {
-            return command.getSMS();
+            BillingInfoStruct billingInfoStruct;
+            billingInfoStruct.AbonentNumber = commandProperty.abonentAddr.toString();
+            billingInfoStruct.serviceId = commandProperty.serviceId;
+
+            return billingInfoStruct;
         }
 
 

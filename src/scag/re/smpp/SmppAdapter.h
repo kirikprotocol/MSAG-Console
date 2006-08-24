@@ -174,7 +174,7 @@ namespace scag { namespace re { namespace smpp
 
         virtual ~SmppCommandAdapter();
         static AccessType CheckAccess(int handlerType,const std::string& name);
-        virtual SMS& getSMS();
+        //virtual SMS& getSMS();
 
     };
 

@@ -47,6 +47,13 @@ enum BillingCommandStatus
 4-rollback_by_timeout */
 
 
+struct BillingInfoStruct
+{
+    std::string AbonentNumber;
+    int serviceId;
+    //int ServiceNumber;
+};
+
 class BillingManager
 {
     BillingManager(const BillingManager& bm);
@@ -56,7 +63,7 @@ protected:
     BillingManager() {};
 
 public:
-    virtual int ChargeBill(SMS& sms, EventMonitor ** eventMonitor, TariffRec& tariffRec) = 0;
+    virtual int ChargeBill(BillingInfoStruct& billingInfoStruct, EventMonitor ** eventMonitor, TariffRec& tariffRec) = 0;
     virtual TariffRec& CheckCharge(int billId, EventMonitor ** eventMonitor) = 0;
 
     virtual TransactionStatus GetStatus(int billId) = 0; //Возвращяет статус транзакции

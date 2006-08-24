@@ -66,13 +66,15 @@ class BillingManagerImpl : public BillingManager, public Thread, public BillingM
 
     InfrastructureImpl infrastruct;
 
+    void fillChargeSms(smsc::inman::interaction::ChargeSms& op, BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec);
+
 public:
     void init(BillingManagerConfig& cfg);
 
     virtual int Execute();
     virtual void Start();
 
-    virtual int ChargeBill(SMS& sms, EventMonitor ** eventMonitor, TariffRec& tariffRec);
+    virtual int ChargeBill(BillingInfoStruct& billingInfoStruct, EventMonitor ** eventMonitor, TariffRec& tariffRec);
 
     #ifdef MSAG_INMAN_BILL
     virtual void onChargeSmsResult(ChargeSmsResult* result);
@@ -251,7 +253,7 @@ void BillingManagerImpl::Start()
     }
 }
 
-int BillingManagerImpl::ChargeBill(SMS& sms, EventMonitor ** eventMonitor, TariffRec& tariffRec)
+int BillingManagerImpl::ChargeBill(BillingInfoStruct& billingInfoStruct, EventMonitor ** eventMonitor, TariffRec& tariffRec)
 {
 /*    BillTransaction billTransaction1;
     billTransaction1.EventMonitorIndex = 0;
@@ -286,7 +288,7 @@ int BillingManagerImpl::ChargeBill(SMS& sms, EventMonitor ** eventMonitor, Tarif
 
     #ifdef MSAG_INMAN_BILL
     ChargeSms op;
-    fillChargeSms(op, sms, tariffRec);
+    fillChargeSms(op, billingInfoStruct, tariffRec);
     billTransaction.status = TRANSACTION_WAIT_ANSWER;
     billTransaction.ChargeOperation = op;
     #else
@@ -460,9 +462,17 @@ void BillingManagerImpl::onChargeSmsResult(ChargeSmsResult* result)
 
 }
 
-void BillingManagerImpl::fillChargeSms(smsc::inman::interaction::ChargeSms& op, SMS& sms, TariffRec& tariffRec)
+void BillingManagerImpl::fillChargeSms(smsc::inman::interaction::ChargeSms& op, BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec)
 {
+    char buff[128];
+    sprintf(buff,"%d", tariffRec.ServiceNumber);
+    std::string str(buff);
 
+    op.setDestinationSubscriberNumber(str);
+    op.setCallingPartyNumber(billingInfoStruct.AbonentNumber);
+    op.setServiceId(billingInfoStruct.serviceId);
+
+    /*
     char buff[128];
     sprintf(buff,"%d", tariffRec.ServiceNumber);
     std::string str(buff);
@@ -505,7 +515,7 @@ void BillingManagerImpl::fillChargeSms(smsc::inman::interaction::ChargeSms& op, 
         unsigned len;
         sms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
         op.setMsgLength(len);
-    }
+    } */
 }
 
 
