@@ -110,8 +110,21 @@
                         </c:choose></th>
                         <td width="70%" nowrap><c:choose>
                             <c:when test="${val != null && fn:length(fn:trim(val))>0}">
-                                <c:out value="${val}"/>
-                                <%--<c:out value="${fn:escapeXml(val)}"/>--%>
+                               <c:choose>
+                                  <c:when test="${smf:isBoolean(val)}">
+                                    <c:choose>
+                                       <c:when test="${val}">
+                                         <img align="left" src="content/images/ic_checked.gif">
+                                       </c:when>
+                                       <c:otherwise>
+                                         <img align="left" src="content/images/ic_not_checked.gif">
+                                       </c:otherwise>
+                                    </c:choose>
+                                  </c:when>
+                                  <c:otherwise>
+                                    <c:out value="${val}"/>
+                                  </c:otherwise>
+                               </c:choose> 
                             </c:when>
                             <c:otherwise>&nbsp;</c:otherwise>
                         </c:choose></td>
