@@ -162,4 +162,7 @@
     <param name="host" type="string">@inman.host@</param>
     <param name="port" type="int">@inman.port@</param>
   </section>
+  <section name="aliasman">
+    <param name="storeFile" type="string">@localstore.dir@/aliases.bin</param>
+  </section>
 </config>
