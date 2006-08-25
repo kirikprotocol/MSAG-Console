@@ -3,7 +3,7 @@
 #include <exception>
 #include <sys/stat.h>
 #include "system/smsc.hpp"
-#include "util/config/alias/aliasconf.h"
+//#include "util/config/alias/aliasconf.h"
 #include "util/config/route/RouteConfig.h"
 #include <admin/service/ComponentManager.h>
 #include <admin/service/ServiceSocketListener.h>
@@ -98,8 +98,8 @@ int main(int argc,char* argv[])
     smemancfg.load(findConfigFile("sme.xml"));
     cfgs.smemanconfig=&smemancfg;
     smsc_log_info(logger,  "SME configuration loaded" );
-    smsc::util::config::alias::AliasConfig aliascfg;
-    aliascfg.load(findConfigFile("aliases.xml"));
+    //smsc::util::config::alias::AliasConfig aliascfg;
+    //aliascfg.load(findConfigFile("aliases.xml"));
     //cfgs.aliasconfig=&aliascfg;
     //smsc_log_info(logger,  "Alias configuration loaded" );
     smsc::util::config::route::RouteConfig rc;
