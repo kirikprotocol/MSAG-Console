@@ -18,6 +18,7 @@ void Abstract_CommandSmsc::init()
     smppEntityInfo.uid = -1;
     smppEntityInfo.port = -1;
     smppEntityInfo.altPort = -1;
+    smppEntityInfo.systemType = "";
 
     BEGIN_SCAN_PARAMS
 
@@ -25,8 +26,9 @@ void Abstract_CommandSmsc::init()
 //    GETSTRPARAM((char*)smppEntityInfo.password,      "password")
     GETSTRPARAM((char*)smppEntityInfo.bindSystemId,  "bindSystemId")
     GETSTRPARAM((char*)smppEntityInfo.bindPassword,  "bindPassword")
-    GETINTPARAM(smppEntityInfo.timeOut,               "timeout")
-    GETINTPARAM(smppEntityInfo.uid,                   "uid")
+    GETSTRPARAM((char*)smppEntityInfo.systemType,    "systemType")
+    GETINTPARAM(smppEntityInfo.timeOut,              "timeout")
+    GETINTPARAM(smppEntityInfo.uid,                  "uid")
 
     if (::strcmp("mode", name) == 0)
     {
@@ -37,11 +39,11 @@ void Abstract_CommandSmsc::init()
         smsc_log_info(logger, "mode: %s, %d", value.get(), smppEntityInfo.bindType);
     }
 
-    GETSTRPARAM((char*)smppEntityInfo.host,       "host")
-    GETINTPARAM(smppEntityInfo.port,              "port")
-    GETSTRPARAM((char*)smppEntityInfo.altHost,    "altHost")
-    GETINTPARAM(smppEntityInfo.altPort,           "altPort")
-    GETSTRPARAM((char*)smppEntityInfo.addressRange,    "addressRange")
+    GETSTRPARAM((char*)smppEntityInfo.host,         "host")
+    GETINTPARAM(smppEntityInfo.port,                "port")
+    GETSTRPARAM((char*)smppEntityInfo.altHost,      "altHost")
+    GETINTPARAM(smppEntityInfo.altPort,             "altPort")
+    GETSTRPARAM((char*)smppEntityInfo.addressRange, "addressRange")
 
     END_SCAN_PARAMS
 
