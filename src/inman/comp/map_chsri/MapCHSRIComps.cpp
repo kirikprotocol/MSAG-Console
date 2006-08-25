@@ -71,13 +71,14 @@ void CHSendRoutingInfoArg::encode(vector<unsigned char>& buf) throw(CustomExcept
     cmd.gmsc_OrGsmSCF_Address.buf = isdn_buf2;
     cmd.gmsc_OrGsmSCF_Address.size = 
         packMAPAddress2OCTS(scfAdr, (TONNPI_ADDRESS_OCTS *)(isdn_buf2));
-
+/*
     CallReferenceNumber_t   crfn;
     unsigned char           crfn_buf = 0x0F; //SIZE(1..8)
     ZERO_VALUE(crfn); //clear asn_ctx & optionals
     crfn.buf = &crfn_buf;
     crfn.size = 1;
     cmd.callReferenceNumber = &crfn;
+*/
 /*
     ExternalSignalInfo_t    nsi;
     ZERO_VALUE(nsi); //clear asn_ctx & optionals
