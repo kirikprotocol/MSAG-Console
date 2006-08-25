@@ -346,6 +346,7 @@ public:
       {
         if(processResponse(cmd))
         {
+          debug1(log,"delivery resp on ussd op preserved till corresponding submit");
           //delivery resp on ussd op preserved till corresponding submit
           return;
         }
