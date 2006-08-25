@@ -90,7 +90,7 @@ IAProviderITF * IAProviderCreatorSRI::create(Logger * use_log)
         }
         SSNSession * session = disp->openSSN(cfg.ownSsn, cfg.max_queries);
         if (!session) {
-            smsc_log_error(use_log, "SSN[%u] is unavailable!", cfg.ownSsn);
+            smsc_log_error(use_log, "SSN[%u] is unavailable!", (unsigned)cfg.ownSsn);
             return NULL;
         }
         if (!(cfg.qryCfg.mapSess = session->newMAsession(cfg.owdAddr.toString().c_str(),
@@ -99,7 +99,8 @@ IAProviderITF * IAProviderCreatorSRI::create(Logger * use_log)
                                   cfg.owdAddr.toString().c_str(), 6);
             return NULL;
         }
-        smsc_log_info(use_log, "iapSRI: TCMA[%u] inited", cfg.qryCfg.mapSess->getUID());
+        smsc_log_info(use_log, "iapSRI: TCMA[%u:%u] inited",
+                      (unsigned)cfg.ownSsn, cfg.qryCfg.mapSess->getUID());
         prvdCfg.qryPlant = new IAPQuerySRIFactory(cfg.qryCfg, cfg.qryCfg.mapTimeout, logger);
     }
     IAProviderThreaded * prov = new IAProviderThreaded(prvdCfg, use_log);
@@ -109,9 +110,11 @@ IAProviderITF * IAProviderCreatorSRI::create(Logger * use_log)
 
 void  IAProviderCreatorSRI::logConfig(Logger * use_log) const
 {
-    smsc_log_info(use_log, "iapSRI: GT=%s, SSN=%d", cfg.owdAddr.getSignals(), cfg.ownSsn);
+    smsc_log_info(use_log, "iapSRI: GT=%s, SSN=%d",
+                  cfg.owdAddr.getSignals(), (unsigned)cfg.ownSsn);
     if (cfg.qryCfg.mapSess)
-        smsc_log_info(use_log, "iapSRI: TCMA[%u]", cfg.qryCfg.mapSess->getUID());
+        smsc_log_info(use_log, "iapSRI: TCMA[%u:%u]",
+                      (unsigned)cfg.ownSsn, cfg.qryCfg.mapSess->getUID());
     else
         smsc_log_info(use_log, "iapSRI: TCMA uninitialized yet");
 
