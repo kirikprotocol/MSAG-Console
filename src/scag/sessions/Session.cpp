@@ -53,7 +53,7 @@ void PendingOperation::rollbackAll()
             bm.rollback(billID);
         } catch (SCAGException& e)
         {
-            smsc_log_debug(logger,"PendingOperation: Cannot rollback. Details: %s", e.what());
+            //smsc_log_debug(logger,"PendingOperation: Cannot rollback. Details: %s", e.what());
         }
 
 
