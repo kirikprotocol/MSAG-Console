@@ -30,10 +30,10 @@ struct SmscSocket:SmppSocket{
     connected=true;
     return true;
   }
-  void bind(const char* regSysId,const char* sysId,const char* pass,const char* addrRange)
+  void bind(const char* regSysId,const char* sysId,const char* pass,const char* addrRange,const char* sysType)
   {
     systemId=regSysId;
-    putCommand(SmppCommand::makeBindCommand(sysId,pass,addrRange));
+    putCommand(SmppCommand::makeBindCommand(sysId,pass,addrRange,sysType));
   }
 
   bool processPdu(PduGuard& pdu)

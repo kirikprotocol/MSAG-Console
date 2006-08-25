@@ -17,6 +17,7 @@ struct SmscConnectInfo{
   int lastIdx;
   time_t lastFailure;
   std::string addressRange;
+  std::string systemType;
 
   SmscConnectInfo()
   {

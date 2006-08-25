@@ -32,7 +32,8 @@ tag_altport,
 tag_uid,
 tag_bindSystemId,
 tag_bindPassword,
-tag_addressRange
+tag_addressRange,
+tag_systemType
 };
 
 struct Param{
@@ -57,7 +58,8 @@ TAGDEF(enabled),
 TAGDEF(uid),
 TAGDEF(bindSystemId),
 TAGDEF(bindPassword),
-TAGDEF(addressRange)
+TAGDEF(addressRange),
+TAGDEF(systemType)
 };
 
 struct ParamsHash:public smsc::core::buffers::Hash<ParamTag>{
@@ -191,6 +193,9 @@ static void ParseTag(SmppManager* smppMan,DOMNodeList* list,SmppEntityType et)
         case tag_addressRange:
           FillStringValue(attrs,entity.addressRange);
           break;
+        case tag_systemType:
+          FillStringValue(attrs,entity.systemType);
+          break;
       }
     }
     if(enabled)
@@ -307,6 +312,7 @@ void SmppManager::addSmppEntity(const SmppEntityInfo& info)
     ci.hosts[1]=info.altHost.c_str();
     ci.ports[1]=info.altPort;
     ci.addressRange=info.addressRange.c_str();
+    ci.systemType=info.systemType.c_str();
 
     sm.getSmscConnectorAdmin()->addSmscConnect(ci);
   }

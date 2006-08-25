@@ -14,6 +14,7 @@
 #include <vector>
 #include "system/status.h"
 #include "scag/transport/SCAGCommand.h"
+#include "util/64bitcompat.h"
 
 namespace scag{
 namespace transport{
@@ -366,7 +367,8 @@ struct BindCommand{
   std::string sysId;
   std::string pass;
   std::string addrRange;
-  BindCommand(const char* id,const char* pwd,const char* rng):sysId(id),pass(pwd),addrRange(rng){}
+  std::string systemType;
+  BindCommand(const char* id,const char* pwd,const char* rng,const char* st):sysId(id),pass(pwd),addrRange(rng),systemType(st){}
 };
 
 struct SmsCommand{
@@ -490,14 +492,14 @@ struct _SmppCommand
 
   BindCommand& get_bindCommand(){return *((BindCommand*)dta);}
 
-  int get_smeIndex(){return (int)dta;}
+  int get_smeIndex(){return VoidPtr2Int(dta);}
 
   void set_status(int st){status=st;}
   int get_status(){return status;} // for enquirelink and unbind
 
   int get_mode()
   {
-    return (int)dta;
+    return VoidPtr2Int(dta);
   }
 
   void set_serviceId(int argServiceId)
@@ -746,14 +748,14 @@ public:
     return cmd;
   }
 
-  static SmppCommand makeBindCommand(const char* sysId,const char* pwd,const char* addrRange)
+  static SmppCommand makeBindCommand(const char* sysId,const char* pwd,const char* addrRange,const char* sysType)
   {
     SmppCommand cmd;
     cmd.cmd = new _SmppCommand;
     _SmppCommand& _cmd = *cmd.cmd;
     _cmd.ref_count = 1;
     _cmd.cmdid = BIND_TRANSCEIVER;
-    _cmd.dta = new BindCommand(sysId,pwd,addrRange);
+    _cmd.dta = new BindCommand(sysId,pwd,addrRange,sysType);
     _cmd.dialogId = 0;
     return cmd;
   }
@@ -1218,6 +1220,7 @@ public:
         pdu->set_systemId(bnd.sysId.c_str());
         pdu->set_password(bnd.pass.c_str());
         pdu->set_interfaceVersion(0x34);
+        pdu->set_systemType(bnd.systemType.c_str());
         int ton=0,npi=0;
         char addr[64]={0,};
         sscanf(bnd.addrRange.c_str(),".%d.%d.%64s",&ton,&npi,addr);
