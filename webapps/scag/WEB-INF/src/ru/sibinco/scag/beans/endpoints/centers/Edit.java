@@ -44,6 +44,7 @@ public class Edit extends EditBean {
     private boolean enabled;
     private String bindSystemId;
     private String bindPassword;
+    private String systemType;
     protected long providerId = -1;
     protected long transportId = 1;
     private String providerName = null;
@@ -118,6 +119,7 @@ public class Edit extends EditBean {
         this.uid = center.getUid();
         this.bindSystemId = center.getBindSystemId();
         this.bindPassword = center.getBindPassword();
+        this.systemType = center.getSystemType();
         this.addressRange = center.getAddressRange();
     }
 
@@ -138,8 +140,9 @@ public class Edit extends EditBean {
         final Center center;
         if (altHost == null || getAltHost().length() == 0) altHost = "";
         if (bindPassword == null || getBindPassword().length() == 0) bindPassword = "";
+        if (systemType == null || getSystemType().length() == 0) systemType = "";
         center = new Center(getId(), timeout, mode, getHost(), port, getAltHost(), altPort,
-                enabled, providerObj, uid, getBindSystemId(), (bindPassword == null) ? "" : getBindPassword(), getAddressRange());
+                enabled, providerObj, uid, getBindSystemId(), getBindPassword(), getSystemType(), getAddressRange());
         centers.put(id, center);
 
         appContext.getSmppManager().createUpdateCenter(getLoginedPrincipal().getName(),
@@ -298,6 +301,15 @@ public class Edit extends EditBean {
 
     public void setBindPassword(String bindPassword) {
         this.bindPassword = bindPassword;
+    }
+
+    public String getSystemType() {
+       if(systemType != null) systemType.trim();
+       return systemType;
+    }
+
+    public void setSystemType(String systemType) {
+        this.systemType = systemType;
     }
 
     public String getAddressRange() {

@@ -43,7 +43,7 @@ public class Center {
     private int uid = -1;
     private String bindSystemId;
     private String bindPassword = "";
-    private String systemType;
+    private String systemType = "";
     private String transport = "SMPP";
     private String addressRange;
 

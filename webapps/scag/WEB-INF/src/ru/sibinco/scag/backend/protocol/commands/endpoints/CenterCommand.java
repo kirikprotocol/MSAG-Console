@@ -25,6 +25,7 @@ public class CenterCommand  extends Command {
         createStringParam("systemId", center.getId());
         createStringParam("bindSystemId", center.getBindSystemId());
         createStringParam("bindPassword", center.getBindPassword());
+        createStringParam("systemType", center.getSystemType());
         createIntParam("timeout", center.getTimeout());
         createStringParam("mode", center.getModeStr());
         createStringParam("host", center.getHost());
