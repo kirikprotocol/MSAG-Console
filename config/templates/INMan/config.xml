@@ -15,7 +15,9 @@
       sms:  request IN platform in case of SMS only, bill USSD to CDR
     -->
     <param name="abonentPolicy" type="string">DB_Contract</param> <!-- 
-      prioriterized CSV list of abonent providers to use (defined in section AbonentProviders) 
+      optional name of abonent provider to use (defined in section AbonentProviders) 
+      for getting abonent contract type , if it missing the IN is interacted basing on
+      IN_interaction.RPCList_postpaid setting.
      -->
     <param name="maxBillings" type="int">20</param>   <!--  [1 .. 100000] , default 500 
      maximium simultaneous billing requests per INMan client  connect -->
@@ -63,6 +65,17 @@
  </section>
 
   <section name="AbonentProviders">
+      <section name="HLR_SRI">
+          <param name="loadup" type="string">libinman_iap_sri.so</param>
+          <section name="Config"> 
+              <param name="ownAddress" type="string">@inman.ssfAddress@</param>  <!-- Provider ISDN address -->
+              <param name="ownSsn" type="int">146</param>
+              <param name="maxQueries" type="int">500</param>  <!--  max allowed simultaneous HLR queries -->
+              <param name="mapTimeout" type="int">20</param>   <!-- timeout on MAP operations, units: seconds, max: 65535, default 20 -->
+              <param name="msrnTimeout" type="int">300</param>  <!--  msrnExpiration timeout, units: secs -->
+          </section>
+      </section>
+
   <!-- abonent contract/gsmSCF params  providers -->
       <section name="DB_Contract"> <!-- DB provides abonent contract (prepaid or postpaid) only -->
           <param name="loadup" type="string">libinman_iap_db.so</param>
