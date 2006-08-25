@@ -36,16 +36,7 @@
                     <sm-ep:txt title="centers.edit.txt.id" name="id" maxlength="60" validation="nonEmpty"/>
                     <sm-ep:txt title="centers.edit.txt.bindsystemid" name="bindSystemId" validation="nonEmpty"/>
                     <sm-ep:txt title="centers.edit.txt.bindpassword" name="bindPassword"/>
-                    <%--c:choose>
-                        <c:when test="${bean.administrator}">
-                            <sm-ep:list title="provider" name="providerId"
-                                        values="${fn:join(bean.providerIds, ',')}"
-                                        valueTitles="${fn:join(bean.providerNames, ',')}"/>
-                        </c:when>
-                        <c:otherwise>
-                            <sm-ep:const title="provider" name="providerName" value="${bean.providerName}"/>
-                        </c:otherwise>
-                    </c:choose--%>
+                    <sm-ep:txt title="centers.edit.txt.systemtype" name="systemType"/>
                     <sm-ep:txt title="centers.edit.txt.host" name="host" validation="nonEmpty"/>
                     <sm-ep:txt title="centers.edit.txt.port" name="port" validation="port"/>
                     <sm-ep:txt title="centers.edit.txt.althost" name="altHost"/>

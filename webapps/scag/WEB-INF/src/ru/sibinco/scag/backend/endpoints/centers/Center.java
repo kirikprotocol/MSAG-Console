@@ -43,6 +43,7 @@ public class Center {
     private int uid = -1;
     private String bindSystemId;
     private String bindPassword = "";
+    private String systemType;
     private String transport = "SMPP";
     private String addressRange;
 
@@ -51,7 +52,7 @@ public class Center {
     public Center(String id, int timeout,
                   byte mode, String host, int port, String altHost,
                   int altPort, boolean enabled, final Provider provider,
-                  final int uid, final String bindSystemId, final String bindPassword, final String addressRange) throws NullPointerException {
+                  final int uid, final String bindSystemId, final String bindPassword, final String systemType, final String addressRange) throws NullPointerException {
         if (null == id || bindSystemId == null)
             throw new NullPointerException("SMSC ID or bind Password or bind SystemId  is null");
         this.id = id;
@@ -66,6 +67,7 @@ public class Center {
         this.uid = uid;
         this.bindSystemId = bindSystemId;
         this.bindPassword = bindPassword;
+        this.systemType = systemType;
         this.addressRange = addressRange;
     }
 
@@ -100,7 +102,10 @@ public class Center {
                     bindSystemId = value;
                 } else if ("bindPassword".equals(name)) {
                     bindPassword = value;
-                }else if ("addressRange".equals(name)){
+                } else if ("systemType".equals(name)) {
+                    systemType = value;
+                }
+                else if ("addressRange".equals(name)){
                     addressRange = value;
                 }
 
@@ -145,6 +150,7 @@ public class Center {
         out.println("    <param name=\"systemId\"       value=\"" + StringEncoderDecoder.encode(id) + "\"/>");
         out.println("    <param name=\"bindSystemId\"   value=\"" + StringEncoderDecoder.encode(bindSystemId) + "\"/>");
         out.println("    <param name=\"bindPassword\"   value=\"" + StringEncoderDecoder.encode(bindPassword) + "\"/>");
+        out.println("    <param name=\"systemType\"     value=\"" + StringEncoderDecoder.encode(systemType) + "\"/>");
         out.println("    <param name=\"timeout\"        value=\"" + timeout + "\"/>");
         out.println("    <param name=\"mode\"           value=\"" + getModeStr() + "\"/>");
         out.println("    <param name=\"host\"           value=\"" + host + "\"/>");
@@ -327,6 +333,14 @@ public class Center {
 
     public void setBindPassword(final String bindPassword) {
         this.bindPassword = bindPassword;
+    }
+
+    public String getSystemType() {
+        return systemType;
+    }
+
+    public void setSystemType(final String systemType) {
+        this.systemType = systemType;
     }
 
     public String getAddressRange() {
