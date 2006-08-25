@@ -48,7 +48,15 @@ void PendingOperation::rollbackAll()
 
         __warning__("PendingOperation: Rollback all");
 
-        bm.rollback(billID);
+        try
+        {
+            bm.rollback(billID);
+        } catch (SCAGException& e)
+        {
+            smsc_log_debug(logger,"PendingOperation: Cannot rollback. Details: %s", e.what());
+        }
+
+
         billID = 0;
     }
 }
@@ -146,7 +154,15 @@ void Operation::rollbackAll()
     {
         BillingManager& bm = BillingManager::Instance();
 
-        bm.rollback(billId);
+        try
+        {
+            bm.rollback(billId);
+        } catch (SCAGException& e)
+        {
+            smsc_log_debug(logger,"Operation: Cannot rollback. Details: %s", e.what());
+        }
+
+
         m_hasBill = false;
     }
 }
