@@ -104,7 +104,7 @@ public class Index extends TabledBeanImpl implements TabledBean {
         appContext.getScagRoutingManager().deleteSubjects(getLoginedPrincipal().getName(), checkedSet);
     }
 
-    protected void deleteHttpSite() {
+    protected void deleteHttpSite() throws SCAGJspException{
         appContext.getHttpRoutingManager().deleteSubjectsSite(getLoginedPrincipal().getName(), checkedSet);
     }
 
