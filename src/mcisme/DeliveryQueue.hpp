@@ -65,6 +65,7 @@ struct SchedParam
 	abnt_stat_t abntStatus;
 //	int8_t		count;
 	time_t		schedTime;
+	uint16_t	lastError;
 };
 
 class DeliveryQueue
@@ -140,7 +141,7 @@ public:
 		return deliveryQueue.size();
 	}
 
-	time_t Schedule(const AbntAddr& abnt, bool onBusy=false, time_t schedTime=-1)
+	time_t Schedule(const AbntAddr& abnt, bool onBusy=false, time_t schedTime=-1, uint16_t lastError=-1)
 	{
 		string strAbnt = abnt.toString();
 		smsc_log_debug(logger, "Schedule %s", strAbnt.c_str());
@@ -167,7 +168,7 @@ public:
 
 		deliveryQueue.insert(multimap<time_t, AbntAddr>::value_type(schedTime, abnt));
 		
-		SchedParam schedParam = {Idle, schedTime};
+		SchedParam schedParam = {Idle, schedTime, lastError};
 		AbntsStatus.Insert(strAbnt.c_str(), schedParam);
 		deliveryQueueMonitor.notify();
 		total++;
@@ -218,6 +219,7 @@ public:
 
 		Resched(abnt, oldSchedTime, newSchedTime);
 		schedParam->schedTime = newSchedTime;
+		schedParam->lastError = resp_status;
 		deliveryQueueMonitor.notify();
 		smsc_log_info(logger, "total = %d in queue = %d", total, deliveryQueue.size());
 		return newSchedTime;
@@ -241,6 +243,7 @@ public:
 			time_t newSchedTime = time(0);
 			Resched(abnt, schedParam->schedTime, newSchedTime);
 			schedParam->schedTime = newSchedTime;
+			schedParam->lastError = -1;
 			smsc_log_info(logger, "Registering Alert and rescheduling %s to Head ", strAbnt.c_str());
 			deliveryQueueMonitor.notify();
 		}

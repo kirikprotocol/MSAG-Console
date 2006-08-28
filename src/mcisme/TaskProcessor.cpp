@@ -92,7 +92,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
         bStarted(false), bInQueueOpen(false), bOutQueueOpen(false), pStorage(0), pDeliveryQueue(0)
 {
     smsc_log_info(logger, "Loading ...");
-
+	
     address = config->getString("Address");
     if (!address || !isMSISDNAddress(address))
         throw ConfigException("Address string '%s' is invalid", address ? address:"-");
@@ -639,7 +639,7 @@ bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
 			statistics->incDelivered(pInfo->events.size());
 			pStorage->deleteEvents(pInfo->abnt, pInfo->events);
 			time_t schedTime = pDeliveryQueue->Reschedule(pInfo->abnt);
-			pStorage->setSchedTime(pInfo->abnt, schedTime);
+			pStorage->setSchedParams(pInfo->abnt, schedTime, status);
 		}
 		else if(smsc::system::Status::isErrorPermanent(status))
 		{
@@ -650,7 +650,7 @@ bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
 		{
 			statistics->incFailed(pInfo->events.size());
 			time_t schedTime = pDeliveryQueue->Reschedule(pInfo->abnt, status);
-			pStorage->setSchedTime(pInfo->abnt, schedTime);
+			pStorage->setSchedParams(pInfo->abnt, schedTime, status);
 		}
 		delete pInfo;
 	}

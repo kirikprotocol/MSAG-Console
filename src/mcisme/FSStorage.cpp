@@ -164,7 +164,7 @@ void FSStorage::addEvent(const AbntAddr& CalledNum, const MCEvent& event, time_t
 		CreateAbntEvents(CalledNum, event, schedTime);
 }
 
-void FSStorage::setSchedTime(const AbntAddr& CalledNum, time_t schedTime)
+void FSStorage::setSchedParams(const AbntAddr& CalledNum, time_t schedTime, uint16_t lastError)
 {
 	MutexGuard	lock(mut);
 
@@ -174,6 +174,7 @@ void FSStorage::setSchedTime(const AbntAddr& CalledNum, time_t schedTime)
 
 		LoadAbntEvents(CalledNum, &AbntEvents);
 		AbntEvents.schedTime = schedTime;
+		AbntEvents.last_error = lastError;
 		SaveAbntEvents(CalledNum, &AbntEvents);
 	}
 }
@@ -348,9 +349,9 @@ int FSStorage::LoadEvents(DeliveryQueue* pDeliveryQueue)
 				else
 				{
 					AbntAddr abnt(&buf[i*sizeof(idx_file_cell)]);
-					LoadAbntEvents(abnt, &AbntEvents);
 					hashAbnt.Insert(abnt, cell_num);
-					pDeliveryQueue->Schedule(abnt, false, AbntEvents.schedTime);
+					LoadAbntEvents(abnt, &AbntEvents);
+					pDeliveryQueue->Schedule(abnt, false, AbntEvents.schedTime, AbntEvents.last_error);
 				}
 				cell_num++;
 			}
@@ -383,6 +384,7 @@ int FSStorage::CreateAbntEvents(const AbntAddr& CalledNum, const MCEvent& event,
 	dat.events[0].date = time(0);
 	dat.events[0].id = 0;
 	dat.schedTime = schedTime;
+	dat.last_error = -1;
 	memcpy((void*)&dat.inaccessible_num, (void*)CalledNum.getAddrSig(), sizeof(dat.inaccessible_num));
 	memcpy((void*)&(dat.events[0].calling_num), (void*)&(event.caller), sizeof(dat.events[0].calling_num));
 	memcpy((void*)&idx.inaccessible_num, (void*)CalledNum.getAddrSig(), sizeof(idx.inaccessible_num));

@@ -749,7 +749,7 @@ int main(void)
 {
     Logger::Init();
     logger = Logger::getInstance("smsc.mcisme.MCISme");
-    
+	
     atexit(atExitHandler);
 	clearSignalMask();
 	shutdownThread.Start();
