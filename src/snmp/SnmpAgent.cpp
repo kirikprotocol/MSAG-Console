@@ -6,7 +6,9 @@
 #include "system/smscsignalhandlers.h"
 #include "SnmpAgent.hpp"
 #include "SnmpAppender.hpp"
+#include "TrapRecordLog.hpp"
 #include "logger/Logger.h"
+#include "util/config/Manager.h"
 #include "system/smsc.hpp"
   extern "C" {
     void init_smsc(void);
@@ -63,6 +65,16 @@
   namespace smsc{
     namespace snmp{
       using smsc::system::Smsc;
+      using smsc::snmp::TrapRecordLog;
+      using smsc::inman::filestore::InFileStorageRoller;
+      using smsc::util::config::Manager;
+      using smsc::util::config::ConfigException;
+
+
+      TrapRecordLog*       fileLog = 0;
+      InFileStorageRoller* fileLogRoller = 0;
+      const char *         fileLogLocation = ".";
+      unsigned long        fileLogRollInterval = 60;
 
       const char* SnmpAgent::taskName()
       {
@@ -85,10 +97,22 @@
         agent = 0;
         smscptr = 0;
         agentlog = 0;
+        if (fileLog)
+        {
+          fileLog->RFSClose();
+          if (fileLogRoller)
+          {
+            delete fileLogRoller;
+            fileLogRoller = 0;
+          }
+          delete fileLog;
+          fileLog = 0;
+        }
       }
 
       void SnmpAgent::init()
       {
+
         gettimeofday(&agentStartTime, NULL);
         agentStartTime.tv_sec--;
         agentStartTime.tv_usec += 1000000L;
@@ -102,14 +126,44 @@
 
       int SnmpAgent::Execute()
       {
-         while(!isStopping)
-         {
-           agent_check_and_process(1);
-         }
-         smsc_log_debug(log, "try to shutdown snmp agent");
-         snmp_shutdown("smscd");// at shutdown time
-         smsc_log_debug(log, "snmp agent shutdowned");
-         return 0;
+        Manager& manager = Manager::getInstance();
+        try
+        {
+          fileLogLocation = manager.getString("snmp.csvFileDir");
+        }
+        catch (ConfigException& exc)
+        {
+            fileLogLocation=".";
+        }
+
+        try
+        {
+          fileLogRollInterval = manager.getInt("snmp.csvFileRollInterval");
+        }
+        catch (ConfigException& exc)
+        {
+            fileLogRollInterval = 60;
+        }
+
+        fileLog = new TrapRecordLog(fileLogLocation, 0, log);
+        fileLog->RFSOpen(true);
+        fileLogRoller = new InFileStorageRoller(fileLog,fileLogRollInterval);
+
+        if (fileLogRoller) {
+            fileLogRoller->Start();
+        }
+        while(!isStopping)
+        {
+          agent_check_and_process(1);
+        }
+        if (fileLogRoller) {
+            fileLogRoller->Stop();
+            fileLogRoller->WaitFor();
+        }
+        smsc_log_debug(log, "try to shutdown snmp agent");
+        snmp_shutdown("smscd");// at shutdown time
+        smsc_log_debug(log, "snmp agent shutdowned");
+        return 0;
       }
       void SnmpAgent::statusChange(smscStatus newstatus)
       {
@@ -124,6 +178,13 @@
 
       void SnmpAgent::trap(const char * const message)
       {
+        TrapRecord rec;
+        rec.submitTime = time(0);
+        rec.alarmId = "empty";
+        rec.alarmObjCategory = "empty";
+        rec.severity = NORMAL;
+        rec.text = message;
+        if(fileLog) fileLog->log(rec);
         struct timeval t;t.tv_sec=0,t.tv_usec=10;
         snmp_alarm_register_hr(t, 0, sendAlarmNotification, strdup(message));
       }
@@ -133,6 +194,13 @@
                            const char * const text)
       {
         if (!agent) return;
+        TrapRecord rec;
+        rec.submitTime = time(0);
+        rec.alarmId = alarmId;
+        rec.alarmObjCategory = alarmObjCategory;
+        rec.severity = severity;
+        rec.text = text;
+        if(fileLog) fileLog->log(rec);
         struct timeval t;t.tv_sec=0,t.tv_usec=10;
         struct FFMRargs * clientarg = (struct FFMRargs *)malloc(sizeof(struct FFMRargs));
         if (clientarg)

@@ -165,4 +165,8 @@
   <section name="aliasman">
     <param name="storeFile" type="string">@localstore.dir@/aliases.bin</param>
   </section>
+  <section name="snmp">
+    <param name="csvFileDir" type="string">@localstore.dir@/snmp</param>
+    <param name="csvFileRollInterval" type="int">60</param>
+  </section>
 </config>
