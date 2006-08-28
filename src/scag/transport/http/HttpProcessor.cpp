@@ -359,7 +359,9 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
 
         findUSR(request, getInPlaces(r, PlacementKind::USR));
 
-        request.setAddress(r.addressPrefix + request.getAbonent());
+
+        const std::string& s = request.getAbonent();
+        request.setAddress(r.addressPrefix + (s.c_str() + (s[0] == '+' ? 1 : 0)));
 
         CSessionKey sk = {request.getUSR(), request.getAddress().c_str()};
         if(!request.getUSR())
