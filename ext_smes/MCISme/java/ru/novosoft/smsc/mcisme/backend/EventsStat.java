@@ -71,8 +71,8 @@ public class EventsStat
 
 	  for(int i = 0; i < dirs.length; i++)
 	  {
-		  int year	= Integer.decode(dirs[i].substring(0,4)).intValue();
-		  int month	= Integer.decode(dirs[i].substring(5,7)).intValue();
+		  int year	= Integer.parseInt(dirs[i].substring(0,4), 10);
+		  int month	= Integer.parseInt(dirs[i].substring(5,7), 10);
 		  Date curDate = new Date (year-1900, month-1, 1);
 		  Date roughFromDate = new Date (fromYear-1900, fromMonth-1, 1);
 		  Date roughTillDate = new Date (tillYear-1900, tillMonth-1, 1);
