@@ -5,6 +5,9 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
+#include <errno.h>
+
+int errno;
 
 const int MAX_EVENTS = 50;
 const int RECORDS_COUNT = 1000;
@@ -70,7 +73,7 @@ int convert(const char* src_path, const char* dst_path)
 	uint8_t				dst_buf[dst_buf_size ];
 	dat_file_cell_ver0*	dat0;
 	dat_file_cell_ver1*	dat1;
-	uint32_t			rb, count;
+	uint32_t			rb, wb, count;
 	off_t				src_file_size = lseek(src, 0, SEEK_END);
 	
 	if(0 == lseek(src, 0, SEEK_END))
@@ -80,20 +83,23 @@ int convert(const char* src_path, const char* dst_path)
 		close(dst);
 		return 0;
 	}
-
-	if( src_file_size != ((src_file_size/sizeof(dat_file_cell_ver0))*sizeof(dat_file_cell_ver0)))
+	int total_records = src_file_size/sizeof(dat_file_cell_ver0);
+	if( src_file_size != (total_records*sizeof(dat_file_cell_ver0)))
 	{
 		printf("Source file corrupted\n");
 		close(src);
 		close(dst);
 		return 1;
 	}
+	printf("Total records in %s is %d\n", src_path, total_records);
 
 	lseek(src, 0, SEEK_SET);
 		
+	printf("Start converting. Source buffer = %d bytes. Destination buffer = %d bytes\n", src_buf_size, dst_buf_size);
 	while(rb = read(src, (void*)src_buf, src_buf_size))
 	{
 		count = rb / sizeof(dat_file_cell_ver0);
+//		printf("Read %d bytes (%d records) from %s\n", rb, count, src_path);
 		for(int i = 0; i < count; i++)
 		{
 			dat0 = (dat_file_cell_ver0*)&src_buf[i*sizeof(dat_file_cell_ver0)];
@@ -111,11 +117,34 @@ int convert(const char* src_path, const char* dst_path)
 				memcpy((void*)&(dat1->events[j].calling_num), (void*)&(dat0->events[j].calling_num), ADDRESS_LEN);
 			}
 		}
-		write(dst, dst_buf, dst_buf_size);
+		if(-1 == (wb = write(dst, dst_buf, count*sizeof(dat_file_cell_ver1))))
+		{
+			perror("Error write:");
+			printf("Stoped converting\n");
+			close(src);
+			close(dst);
+			return 2;
+		}
+//		else
+//		    printf("Wrote %d bytes (%d records) in %s\n", wb, wb/sizeof(dat_file_cell_ver1), dst_path);
+//		sleep(1);
 	}
+
+	off_t	dst_file_size = lseek(dst, 0, SEEK_END);
+	
+	total_records = dst_file_size/sizeof(dat_file_cell_ver1);
+	if( dst_file_size != (total_records*sizeof(dat_file_cell_ver1)))
+	{
+		printf("Convert failed\n");
+		close(src);
+		close(dst);
+		return 3;
+	}
+	printf("Total records in %s is %d\n", dst_path, total_records);
+
 	close(src);
 	close(dst);
-  return 1;
+  return 0;
 }
 
 
@@ -124,7 +153,7 @@ int main(int argc,char* argv[])
   if(argc != 3)
   {
     printf("%s converts old 32-bit format data_file to new 64-bit format\n", argv[0]);
-	printf("Usage: %s source_file destinationfile\n", argv[0]);
+	printf("Usage: %s source_file destination_file\n", argv[0]);
     return -1;
   }
   convert(argv[1], argv[2]);
