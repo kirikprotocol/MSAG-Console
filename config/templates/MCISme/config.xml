@@ -131,6 +131,7 @@
 
 	<section name="ProfileStorage">
 	    <param name="location" type="string">@mcisme.profstor.location@</param>
+	    <param name="host" type="string">127.0.0.1</param>
 	    <param name="port" type="int">@mcisme.profstor.port@</param>
 	</section>
 	
