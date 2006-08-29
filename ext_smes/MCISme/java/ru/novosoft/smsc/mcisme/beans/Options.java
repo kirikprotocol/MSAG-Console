@@ -245,14 +245,6 @@ public class Options extends MCISmeBean
         try { redirectionAddress = getConfig().getString("MCISme.redirectionAddress"); } catch (Throwable th) {
           redirectionAddress = address;
         }
-  //      dataSourceType = getConfig().getString("MCISme.DataSource.type");
-  //      dataSourceConnections = getConfig().getInt("MCISme.DataSource.connections");
-  //      dataSourceDbInstance = getConfig().getString("MCISme.DataSource.dbInstance");
-  //      dataSourceDbUserName = getConfig().getString("MCISme.DataSource.dbUserName");
-  //      dataSourceDbUserPassword = getConfig().getString("MCISme.DataSource.dbUserPassword");
-  //      dataSourceWatchdog = getConfig().getBool("MCISme.DataSource.watchdog");
-  //      dataSourceJdbcDriver = getConfig().getString("MCISme.DataSource.jdbc.driver");
-  //      dataSourceJdbcSource = getConfig().getString("MCISme.DataSource.jdbc.source");
 
 		countryCode = getConfig().getString("MCISme.CountryCode");
 		timeZoneFileLocation = getConfig().getString("MCISme.timeZoneFileLocation");

@@ -37,10 +37,12 @@ public class MCISmeBean extends PageBean
   public final static int RESULT_NOTIFY_ADD  = PageBean.PRIVATE_RESULT + 15;
   public final static int RESULT_NOTIFY_EDIT = PageBean.PRIVATE_RESULT + 16;
   protected final static int PRIVATE_RESULT  = PageBean.PRIVATE_RESULT + 17;
+  public final static int RESULT_PROFILE	 = PageBean.PRIVATE_RESULT + 18;
 
   public final static String RULES_SECTION_NAME     = "MCISme.Rules";
   public final static String OFFSETS_SECTION_NAME   = "MCISme.TimeOffsets";
   public final static String TEMPLATES_SECTION_NAME = "MCISme.Templates";
+  public final static String PROFSTORAGE_SECTION_NAME = "MCISme.ProfileStorage";
   public final static String INFORM_TEMPLATES_SECTION_NAME = TEMPLATES_SECTION_NAME+".Inform";
   public final static String NOTIFY_TEMPLATES_SECTION_NAME = TEMPLATES_SECTION_NAME+".Notify";
 
@@ -107,6 +109,7 @@ public class MCISmeBean extends PageBean
     else if ("rules".equals(mbMenu))     return RESULT_RULES;
     else if ("offsets".equals(mbMenu))   return RESULT_OFFSETS;
     else if ("drivers".equals(mbMenu))   return RESULT_DRIVERS;
+	else if ("profile".equals(mbMenu))   return RESULT_PROFILE;
     else return result;
   }
 

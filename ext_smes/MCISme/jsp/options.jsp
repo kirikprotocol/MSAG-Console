@@ -142,7 +142,7 @@
   <td><input class=txt name=countryCode value="<%=StringEncoderDecoder.encode(bean.getCountryCode())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Time zones file location</th>
+  <th>Time zone file location</th>
   <td><input class=txt name=timeZoneFileLocation value="<%=StringEncoderDecoder.encode(bean.getTimeZoneFileLocation())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
@@ -329,8 +329,8 @@ function clickRemoveErrorTimeout(id_to_remove)
 <col width=20%>
 <col width=20%>
 <tr>
-	<th>Error Number</th>
-	<th colspan=2>Timeout</th>
+	<th>Error Code</th>
+	<th colspan=2>Resending Period</th>
 </tr>
 
 <%

@@ -14,6 +14,9 @@
     case MCISmeBean.RESULT_STAT:
       response.sendRedirect("stat.jsp");
       return;
+    case MCISmeBean.RESULT_PROFILE:
+      response.sendRedirect("profile.jsp");
+      return;
     case MCISmeBean.RESULT_STATUSES:
       response.sendRedirect("statuses.jsp");
       return;
