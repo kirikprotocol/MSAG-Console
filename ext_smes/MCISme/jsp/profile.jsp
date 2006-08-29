@@ -40,7 +40,7 @@ page_menu_end(out);
 <col width="15%">
 <col width="85%">
 <tr class=row<%=rowN++&1%>>
-  <th>&nbsp</th>
+  <th>&nbsp;</th>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Inform</th>
@@ -83,29 +83,29 @@ page_menu_end(out);
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>&nbsp</th>
+  <th>&nbsp;</th>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Event Mask</th>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>&nbsp&nbspBusy</th>
+  <th>&nbsp;&nbsp;Busy</th>
   <td><input class=check type=checkbox name=busy id=idBusy value=true <%=bean.getBusy() ? "checked" : ""%>></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>&nbsp&nbspNo Replay</th>
+  <th>&nbsp;&nbsp;No Replay</th>
   <td><input class=check type=checkbox name=noReplay id=idNoReplay value=true <%=bean.getNoReplay() ? "checked" : ""%>></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>&nbsp&nbspAbsent</th>
+  <th>&nbsp;&nbsp;Absent</th>
   <td><input class=check type=checkbox name=absent id=idAbsent value=true <%=bean.getAbsent() ? "checked" : ""%>></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>&nbsp&nbspDetach</th>
+  <th>&nbsp;&nbsp;Detach</th>
   <td><input class=check type=checkbox name=detach id=idDetach value=true <%=bean.getDetach() ? "checked" : ""%>></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>&nbsp&nbspUnconditional</th>
+  <th>&nbsp;&nbsp;Unconditional</th>
   <td><input class=check type=checkbox name=uncond id=idUncond value=true <%=bean.getUncond() ? "checked" : ""%>></td>
 </tr>
 </table>
