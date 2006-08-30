@@ -660,7 +660,7 @@ public:
   }
   void connect(int bindtype=BindType::Transceiver)throw(SmppConnectException)
   {
-    __trace2__("SmppSession: CONNECT %p",this);
+    __trace2__("SmppSession: CONNECT %p, %s:%d to=%d",this, cfg.host.c_str(), cfg.port, cfg.timeOut);
     if(!closed)return;
     if(socket.Init(cfg.host.c_str(),cfg.port,cfg.timeOut)==-1)
       throw SmppConnectException(SmppConnectException::Reason::networkResolve);
