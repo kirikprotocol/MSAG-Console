@@ -22,7 +22,7 @@ namespace network{
 int Socket::Init(const char *host,int port,int timeout)
 {
   hostent* lpHostEnt;
-  unsigned long ulINAddr;
+  in_addr_t ulINAddr;
 
   timeOut=timeout;
 
@@ -30,7 +30,7 @@ int Socket::Init(const char *host,int port,int timeout)
   sockAddr.sin_family=AF_INET;
   ulINAddr=inet_addr(host);
 #ifndef INADDR_NONE
-  if(ulINAddr!=(unsigned int)-1)
+  if(ulINAddr!=-1)
 #else
   if(ulINAddr!=INADDR_NONE)
 #endif
