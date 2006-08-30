@@ -59,7 +59,7 @@ bool Mixer::Connect()
   if ( left_state_ != SESSION_OK ) {
     try {
       left_state_ = SESSION_OK;
-      smsc_log_info( log_, "Connecting to %s:%d timeout %d", config_.left.host, config_.left.port, config_.left.timeOut );
+      smsc_log_info( log_, "Connecting to %s:%d timeout %d, sid %s, pass %s", config_.left.host.c_str(), config_.left.port, config_.left.timeOut, config_.left.sid.c_str(), config_.left.password.c_str() );
       left_->connect();
     }catch(SmppConnectException& e) {
       smsc_log_error(log_, "<exception> on connect reason %d: %s", e.getReason(), e.what());
@@ -83,7 +83,7 @@ bool Mixer::Connect()
   if ( right_state_ != SESSION_OK ) {
     try {
       right_state_ = SESSION_OK;
-      smsc_log_info( log_, "Connecting to %s:%d timeout %d", config_.right.host, config_.right.port, config_.right.timeOut );
+      smsc_log_info( log_, "Connecting to %s:%d timeout %d, sid %s, pass %s", config_.right.host.c_str(), config_.right.port, config_.right.timeOut, config_.right.sid.c_str(), config_.right.password.c_str() );
       right_->connect();
     }catch(SmppConnectException& e) {
       smsc_log_error(log_, "<exception> on connect reason %d : %s",e.getReason(), e.what());
