@@ -674,6 +674,9 @@ namespace cfg{
  OutputFormatter *msgFormat;
  string storeDir;
  bool allowGsm2EmlWithoutProfile=false;
+ bool allowEml2GsmWithoutProfile=false;
+ LimitType defaultLimitType=ltDay;
+ int defaultLimitValue=10;
 };
 
 int stopped=0;
@@ -1139,6 +1142,7 @@ int ProcessMessage(const char *msg,int len)
   }
 
   AbonentProfile p;
+  bool noProfile=true;
 
   string dstUser=to.substr(0,to.find('@'));
 
@@ -1150,20 +1154,31 @@ int ProcessMessage(const char *msg,int len)
       if(!p.numberMap)
       {
         __trace2__("number map turned off for address:%s",dstUser.c_str());
-        return StatusCodes::STATUS_CODE_NOUSER;
+        //return StatusCodes::STATUS_CODE_NOUSER;
       }
     }else
     {
       __trace2__("no profile for address:%s",dstUser.c_str());
-      return StatusCodes::STATUS_CODE_NOUSER;
+      //return StatusCodes::STATUS_CODE_NOUSER;
     }
+  }else
+  {
+    noProfile=false;
+  }
+
+  if(!cfg::allowEml2GsmWithoutProfile && noProfile)
+  {
+    return StatusCodes::STATUS_CODE_NOUSER;
   }
 
 
-  if(!storage.checkEml2GsmLimit(dstUser.c_str()))
+  if(!noProfile)
   {
-    __trace2__("limit exceeded for user:%s",dstUser.c_str());
-    return StatusCodes::STATUS_CODE_UNKNOWNERROR;
+    if(!storage.checkEml2GsmLimit(dstUser.c_str()))
+    {
+      __trace2__("limit exceeded for user:%s",dstUser.c_str());
+      return StatusCodes::STATUS_CODE_UNKNOWNERROR;
+    }
   }
 
   if(!util::childRunning)
@@ -1223,7 +1238,7 @@ int ProcessMessage(const char *msg,int len)
   sms.setOriginatingAddress(cfg::sourceAddress.c_str());
 
   string fwd;
-  string dst=MapEmailToAddress(dstUser,fwd);
+  string dst=noProfile?dstUser:MapEmailToAddress(dstUser,fwd);
   if(fwd.length())
   {
     try{
@@ -1313,6 +1328,22 @@ int ProcessMessage(const char *msg,int len)
     }
     if(rc==StatusCodes::STATUS_CODE_OK)
     {
+      if(noProfile)
+      {
+        __trace2__("Creating implicit profile creation for address %s",dstUser.c_str());
+        AbonentProfile prof;
+        prof.addr=dstUser.c_str();
+        prof.user=dstUser.c_str();
+        //prof.forwardEmail;
+        //prof.realName;
+        prof.ltype=cfg::defaultLimitType;
+        prof.limitDate=time(NULL);
+        prof.numberMap=false;
+        prof.limitValue=cfg::defaultLimitValue;
+        prof.limitCountGsm2Eml=0;
+        prof.limitCountEml2Gsm=0;
+        storage.CreateProfile(prof);
+      }
       try{
         storage.incEml2GsmLimit(dstUser.c_str());
       }catch(exception& e)
@@ -1443,6 +1474,38 @@ int main(int argc,char* argv[])
   }catch(...)
   {
     __warning__("admin.allowGsm2EmlWithoutProfile not found, disabled by default");
+  }
+
+  try{
+    cfg::allowEml2GsmWithoutProfile=cfgman.getBool("admin.allowEml2GsmWithoutProfile");
+  }catch(...)
+  {
+    __warning__("admin.allowEml2GsmWithoutProfile not found, disabled by default");
+  }
+
+  try{
+    const char* lmt=cfgman.getString("admin.defaultLimit");
+    int val;
+    char type;
+    if(sscanf(lmt,"%d%c",&val,&type)!=2)
+    {
+      throw smsc::util::Exception("Invalid limit format:%s",lmt);
+    }
+    cfg::defaultLimitValue=val;
+    switch(type)
+    {
+      case 'd':cfg::defaultLimitType=ltDay;break;
+      case 'w':cfg::defaultLimitType=ltWeek;break;
+      case 'm':cfg::defaultLimitType=ltMonth;break;
+      default:throw smsc::util::Exception("Invalid limit format:%s",lmt);
+    }
+  }catch(std::exception& e)
+  {
+    __warning2__("parameter admin.defaultLimit parsing exception:%s, using default",e.what());
+  }
+  catch(...)
+  {
+    __warning__("parameter admin.defaultLimit not found, using default value");
   }
 
   cfg::storeDir=cfgman.getString("store.dir");
