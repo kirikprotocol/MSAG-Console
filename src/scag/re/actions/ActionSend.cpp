@@ -128,7 +128,7 @@ void ActionSend::init(const SectionParams& params,PropertyObject _propertyObject
         terminal = true;
 
     esmClass = 0;
-    ftEsmClass = CheckParameter(params, propertyObject, "send", "esmClasss", false, true, strEsmClass, bExist);
+    ftEsmClass = CheckParameter(params, propertyObject, "send", "esmClass", false, true, strEsmClass, bExist);
     if(ftEsmClass == ftUnknown && bExist)
         esmClass = atoi(strEsmClass.c_str());
         
@@ -241,7 +241,7 @@ bool ActionSend::run(ActionContext& context)
     
     if(usr) ev.sUsr = context.getSession().getUSR();
 
-    smsc_log_debug(logger, "msg: \"%s\", toEmail: \"%s\", toSms: \"%s\", date: \"%s\", esmClass: %d, destPort: %d", ev.pMessageText.c_str(), ev.pAddressEmail.c_str(), ev.pAbonentsNumbers.c_str(), ev.pDeliveryTime.c_str(), esmClass, destPort);
+    smsc_log_debug(logger, "msg: \"%s\", toEmail: \"%s\", toSms: \"%s\", date: \"%s\", esmClass: %d, destPort: %d", ev.pMessageText.c_str(), ev.pAddressEmail.c_str(), ev.pAbonentsNumbers.c_str(), ev.pDeliveryTime.c_str(), (int)esmClass, destPort);
 
     sm.registerSaccEvent(ev);
     return true;
