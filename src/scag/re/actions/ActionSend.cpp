@@ -127,9 +127,10 @@ void ActionSend::init(const SectionParams& params,PropertyObject _propertyObject
     if(params.Exists("terminal") && !strcmp(params["terminal"].c_str(), "yes"))
         terminal = true;
 
-    transMode = false;
-    if(params.Exists("transMode") && !strcmp(params["transMode"].c_str(), "yes"))
-        transMode = true;
+    esmClass = 0;
+    ftEsmClass = CheckParameter(params, propertyObject, "send", "esmClasss", false, true, strEsmClass, bExist);
+    if(ftEsmClass == ftUnknown && bExist)
+        esmClass = atoi(strEsmClass.c_str());
         
     destPort = 0;
     ftDestPort = CheckParameter(params, propertyObject, "send", "destPort", false, true, strDestPort, bExist);
@@ -212,7 +213,7 @@ bool ActionSend::run(ActionContext& context)
         return true;
     }
     
-    Property * p2 = 0;    
+    Property * p2;
     if(ftDestPort != ftUnknown)
     {
         if(!(p2 = context.getProperty(strDestPort))) 
@@ -223,14 +224,24 @@ bool ActionSend::run(ActionContext& context)
         destPort = p2->getInt();
     }
     
+    if(ftEsmClass != ftUnknown)
+    {
+        if(!(p2 = context.getProperty(strEsmClass))) 
+        {
+            smsc_log_warn(logger,"Action 'send': invalid 'esmClass' property '%s'", strEsmClass.c_str());
+            return false;
+        }
+        esmClass = p2->getInt();
+    }
+    
     ev.sDestPort = destPort;
-    ev.cEsmClass = transMode;
+    ev.cEsmClass = esmClass;
 
     ev.cCriticalityLevel = (uint8_t)level;
     
     if(usr) ev.sUsr = context.getSession().getUSR();
 
-    smsc_log_debug(logger, "msg: \"%s\", toEmail: \"%s\", toSms: \"%s\", date: \"%s\", transMode: %d, destPort: %d", ev.pMessageText.c_str(), ev.pAddressEmail.c_str(), ev.pAbonentsNumbers.c_str(), ev.pDeliveryTime.c_str(), transMode, destPort);
+    smsc_log_debug(logger, "msg: \"%s\", toEmail: \"%s\", toSms: \"%s\", date: \"%s\", esmClass: %d, destPort: %d", ev.pMessageText.c_str(), ev.pAddressEmail.c_str(), ev.pAbonentsNumbers.c_str(), ev.pDeliveryTime.c_str(), esmClass, destPort);
 
     sm.registerSaccEvent(ev);
     return true;

@@ -25,13 +25,14 @@ public:
 protected:
     ActionSend(const ActionSend&);
 
-    std::string strDate, strDestPort;
+    std::string strDate, strDestPort, strEsmClass;
     std::string strMsg;
     Array<std::string> toSms, toEmail;
     Array<std::string> fromSms, fromEmail;
     uint16_t destPort;
-    bool terminal, usr, transMode;
-    FieldType ftDestPort;
+    uint8_t esmClass;
+    bool terminal, usr;
+    FieldType ftDestPort, ftEsmClass;
 
     SendLevel level;
 

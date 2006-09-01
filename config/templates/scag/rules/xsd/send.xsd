@@ -19,7 +19,7 @@
         <attribute name="date"     type="scag:Value" use="optional" />
         <attribute name="terminal" type="send:YesNo" use="optional" />
         <attribute name="usr"      type="send:YesNo" use="optional" />
-        <attribute name="esmClass"      type="send:Value" use="optional" />
+        <attribute name="esmClass"      type="scag:Value" use="optional" />
         <attribute name="destPort"       type="scag:Value" use="optional" />
     </attributeGroup>
 
