@@ -219,6 +219,8 @@ using smsc::smeman::SmeRecord;
 
         uint8_t  cCriticalityLevel;
         uint16_t  sUsr;
+        uint16_t  sDestPort;        
+        uint8_t cEsmClass;
         SACC_ALARM_MESSAGE_t()
         {
             pAbonentsNumbers="";//memset(pAbonentsNumbers,0,MAX_NUMBERS_TEXT_LENGTH);
@@ -228,6 +230,8 @@ using smsc::smeman::SmeRecord;
             cCriticalityLevel=scl_info; 
             sEventType = sec_alarm_message;
             sUsr = 0;
+            sDestPort = 0;
+            cEsmClass = 0;
         }
         SACC_ALARM_MESSAGE_t(const SACC_ALARM_MESSAGE_t & src)
         {
@@ -243,6 +247,8 @@ using smsc::smeman::SmeRecord;
             cCriticalityLevel = src.cCriticalityLevel;
             sEventType=src.sEventType;
             sUsr = src.sUsr;
+            sDestPort = src.sDestPort;
+            cEsmClass = src.cEsmClass;
         }
         SACC_ALARM_MESSAGE_t(SACC_ALARM_MESSAGE_t * src)
         {
@@ -258,6 +264,8 @@ using smsc::smeman::SmeRecord;
             cCriticalityLevel = src->cCriticalityLevel;
             sEventType=src->sEventType;
             sUsr = src->sUsr;
+            sDestPort = src->sDestPort;
+            cEsmClass = src->cEsmClass;
         }
         uint16_t getEventType()const{return sEventType;};
 

@@ -360,7 +360,23 @@ void EventSender::performAlarmMessageEvent(const SACC_ALARM_MESSAGE_t& e)
  }
  else
      pdubuffer.WriteNetInt16(0); 
- 
+
+ if(e.cEsmClass)
+ {
+     pdubuffer.WriteNetInt16(1);
+     pdubuffer.WriteInt16(e.cEsmClass);
+ }
+ else
+     pdubuffer.WriteNetInt16(0); 
+          
+ if(e.sDestPort)
+ {
+     pdubuffer.WriteNetInt16(2);
+     pdubuffer.WriteInt16(e.sDestPort);
+ }
+ else
+     pdubuffer.WriteNetInt16(0); 
+     
  uint32_t bsize= pdubuffer.getPos();
  pdubuffer.setPos(0);
  pdubuffer.WriteNetInt32(bsize);

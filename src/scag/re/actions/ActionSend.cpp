@@ -127,6 +127,15 @@ void ActionSend::init(const SectionParams& params,PropertyObject _propertyObject
     if(params.Exists("terminal") && !strcmp(params["terminal"].c_str(), "yes"))
         terminal = true;
 
+    transMode = false;
+    if(params.Exists("transMode") && !strcmp(params["transMode"].c_str(), "yes"))
+        transMode = true;
+        
+    destPort = 0;
+    ftDestPort = CheckParameter(params, propertyObject, "send", "destPort", false, true, strDestPort, bExist);
+    if(ftDestPort == ftUnknown && bExist)
+        destPort = atoi(strDestPort.c_str());
+            
     usr = false;
     if(params.Exists("usr") && !strcmp(params["usr"].c_str(), "yes"))
         usr = true;
@@ -202,12 +211,26 @@ bool ActionSend::run(ActionContext& context)
         smsc_log_error(logger, "Action 'send' invalid SDTP date format: %s", msg.c_str());
         return true;
     }
+    
+    Property * p2 = 0;    
+    if(ftDestPort != ftUnknown)
+    {
+        if(!(p2 = context.getProperty(strDestPort))) 
+        {
+            smsc_log_warn(logger,"Action 'send': invalid 'destPort' property '%s'", strDestPort.c_str());
+            return false;
+        }
+        destPort = p2->getInt();
+    }
+    
+    ev.sDestPort = destPort;
+    ev.cEsmClass = transMode;
 
     ev.cCriticalityLevel = (uint8_t)level;
     
     if(usr) ev.sUsr = context.getSession().getUSR();
 
-    smsc_log_debug(logger, "msg: \"%s\", toEmail: \"%s\", toSms: \"%s\", date: \"%s\"", ev.pMessageText.c_str(), ev.pAddressEmail.c_str(), ev.pAbonentsNumbers.c_str(), ev.pDeliveryTime.c_str());
+    smsc_log_debug(logger, "msg: \"%s\", toEmail: \"%s\", toSms: \"%s\", date: \"%s\", transMode: %d, destPort: %d", ev.pMessageText.c_str(), ev.pAddressEmail.c_str(), ev.pAbonentsNumbers.c_str(), ev.pDeliveryTime.c_str(), transMode, destPort);
 
     sm.registerSaccEvent(ev);
     return true;
