@@ -18,7 +18,9 @@
         <attribute name="message"  type="scag:Value" use="required" />
         <attribute name="date"     type="scag:Value" use="optional" />
         <attribute name="terminal" type="send:YesNo" use="optional" />
-        <attribute name="usr"      type="send:YesNo" use="optional" />    
+        <attribute name="usr"      type="send:YesNo" use="optional" />
+        <attribute name="transMode"      type="send:YesNo" use="optional" />
+        <attribute name="destPort"       type="scag:Value" use="optional" />
     </attributeGroup>
 
     <complexType name="ToRecepient">
