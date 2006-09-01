@@ -231,4 +231,18 @@
       DESCRIPTION
     "Notify about smsc events"
       ::= { smscnotifications 3 }
+
+      smscNewAlertFFMR NOTIFICATION-TYPE
+      OBJECTS { alertMessage,alertSeverity,alertObjCategory,alertId }
+      STATUS current
+      DESCRIPTION
+    "Notify about smsc events"
+      ::= { smscnotifications 4 }
+
+      smscClearAlertFFMR NOTIFICATION-TYPE
+      OBJECTS { alertMessage,alertSeverity,alertObjCategory,alertId }
+      STATUS current
+      DESCRIPTION
+    "Notify about smsc events"
+      ::= { smscnotifications 5 }
     END
