@@ -13,7 +13,6 @@ import java.io.*;
 /**
  * User: miker
  * Date: 01.09.2006
- * To change this template use File | Settings | File Templates.
  */
 public class Profile extends MCISmeBean
 {

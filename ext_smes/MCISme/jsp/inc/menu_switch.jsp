@@ -17,6 +17,9 @@
     case MCISmeBean.RESULT_PROFILE:
       response.sendRedirect("profile.jsp");
       return;
+    case MCISmeBean.RESULT_SCHEDULE:
+      response.sendRedirect("schedule.jsp");
+      return;
     case MCISmeBean.RESULT_STATUSES:
       response.sendRedirect("statuses.jsp");
       return;

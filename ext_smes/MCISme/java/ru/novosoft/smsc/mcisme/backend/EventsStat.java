@@ -77,7 +77,6 @@ public class EventsStat
 		  Date roughFromDate = new Date (fromYear-1900, fromMonth-1, 1);
 		  Date roughTillDate = new Date (tillYear-1900, tillMonth-1, 1);
 
-//		  if( (year >= fromYear) && (year <= tillYear) && (month >= fromMonth) && (month <= tillMonth) )
 		  if( (curDate.compareTo(roughFromDate) >= 0) && (curDate.compareTo(roughTillDate) <= 0))
 		  {
 			  File dirDays = new File(statDir, dirs[i]);
@@ -89,7 +88,6 @@ public class EventsStat
 				  roughFromDate.setDate(fromDay);
 				  roughTillDate.setDate(tillDay);
 
-//				  if( (day >= fromDay) && (day <= tillDay))
 				  if( (curDate.compareTo(roughFromDate) >= 0) && (curDate.compareTo(roughTillDate) <= 0))
 				  {
 					  Date dt = new Date(year-1900, month-1, day);
@@ -111,7 +109,6 @@ public class EventsStat
 						  CountersSet curCounters = new CountersSet();
 						  int hour = getNextHourStat(statFile, counters);
 						  int curHour = hour;
-//						  while( -1 != (hour = getNextHourStat(statFile, counters)))
 						  boolean process = true;
 						  while(-1 != curHour)
 						  {

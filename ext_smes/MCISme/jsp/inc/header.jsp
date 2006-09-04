@@ -7,6 +7,7 @@
   sme_menu_button(out, "mbMenu",  "templates", "Templates",  "Message templates");
   sme_menu_button(out, "mbMenu",  "rules",     "Rules",      "Redirect rules");
   sme_menu_button(out, "mbMenu",  "profile",   "Profile",    "Manage Abonents profile");
+  sme_menu_button(out, "mbMenu",  "schedule",   "Schedule",    "View Schedule");
   sme_menu_space(out);
   sme_menu_button(out, "mbMenu",  "stat",      "Statistics", "Messages statistics");
   sme_menu_end(out);

@@ -7,6 +7,7 @@ import ru.novosoft.smsc.admin.AdminException;
 
 import java.util.HashMap;
 import java.util.StringTokenizer;
+import java.util.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -22,6 +23,8 @@ class MCISmeTransport extends Service
   private static final String method_flushStatistics_ID = "flushStatistics";
   private static final String method_getStatistics_ID = "getStatistics";
   private static final String method_getRuntime_ID = "getRuntime";
+  private static final String method_getSchedItem_ID = "getSchedItem";
+  private static final String method_getSchedItems_ID = "getSchedItems";
 
   public MCISmeTransport(ServiceInfo info, String host, int port) {
     super(info, port);
@@ -53,7 +56,48 @@ class MCISmeTransport extends Service
     return new RuntimeSet(el[0], el[1], el[2], el[3], el[4]);
   }
 
-  public synchronized void flushStatistics() throws AdminException {
+	private SchedItem decodeSchedItemString(String str) throws AdminException 
+	{
+		SchedItem item = new SchedItem();
+		
+		if(str.length() > 0)
+		{
+			int start = 0; int end = str.indexOf(",", start);
+			item.schedTime = str.substring(start, end);
+			start = end + 1; end = str.indexOf(",", start);
+			item.address = str.substring(start, end);
+			start = end + 1; end = str.indexOf(",", start);
+			item.eventsCount = str.substring(start, end);
+			start = end + 1; end = str.indexOf(";", start);
+			item.lastError = str.substring(start, end);
+		}
+		return item;
+	}
+	private ArrayList decodeSchedItemsString(String str) throws AdminException 
+	{
+		ArrayList itemsList = new ArrayList();
+
+		int pos = 0; int len = str.length();
+		while(pos < len)
+		{
+			SchedItem item = new SchedItem();
+
+			int start = pos; int end = str.indexOf(",", start);
+			item.schedTime = str.substring(start, end);
+			start = end + 1; end = str.indexOf(",", start);
+			item.address = str.substring(start, end);
+			start = end + 1; end = str.indexOf(",", start);
+			item.eventsCount = str.substring(start, end);
+			start = end + 1; end = str.indexOf(";", start);
+			item.lastError = str.substring(start, end);
+			itemsList.add(item);
+			pos = end + 1;
+		}		
+		return itemsList;
+	}
+	
+  public synchronized void flushStatistics() throws AdminException 
+  {
     call(SME_COMPONENT_ID, method_flushStatistics_ID, Type.Types[Type.StringType], new HashMap());
   }
   public synchronized CountersSet getStatistics() throws AdminException {
@@ -64,5 +108,20 @@ class MCISmeTransport extends Service
     Object obj = call(SME_COMPONENT_ID, method_getRuntime_ID, Type.Types[Type.StringType], new HashMap());
     return (obj != null && obj instanceof String) ? decodeRuntimeString((String)obj):new RuntimeSet();
   }
+
+	public synchronized SchedItem getSchedItem(String address) throws AdminException 
+	{
+		HashMap	arg = new HashMap();
+
+		arg.put("Abonent", address);
+		Object obj = call(SME_COMPONENT_ID, method_getSchedItem_ID, Type.Types[Type.StringType], arg);
+		return (obj != null && obj instanceof String) ? decodeSchedItemString((String)obj):new SchedItem();
+	}
+
+	public synchronized ArrayList getSchedItems() throws AdminException 
+	{
+		Object obj = call(SME_COMPONENT_ID, method_getSchedItems_ID, Type.Types[Type.StringType], new HashMap());
+		return (obj != null && obj instanceof String) ? decodeSchedItemsString((String)obj): new ArrayList();
+	}
 
 }
