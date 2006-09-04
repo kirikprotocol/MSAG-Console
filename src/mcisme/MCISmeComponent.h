@@ -8,6 +8,8 @@
 #include <admin/service/Method.h>
 #include <admin/service/Type.h>
 
+#include <string>
+
 #include "MCISmeAdmin.h"
 
 namespace smsc { namespace mcisme
@@ -26,7 +28,7 @@ namespace smsc { namespace mcisme
         MCISmeAdmin       &admin;
         Methods            methods;
         
-        enum { flushStatisticsMethod, getStatisticsMethod, getRuntimeMethod };
+        enum { flushStatisticsMethod, getStatisticsMethod, getRuntimeMethod, getSchedItemMethod, getSchedItemsMethod };
         
     protected:
         
@@ -34,6 +36,8 @@ namespace smsc { namespace mcisme
 
         Variant getStatistics();
         Variant getRuntime();
+		Variant getSchedItem(const std::string Abonent);
+		Variant getSchedItems(void);
     
     public:
         

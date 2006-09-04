@@ -743,6 +743,15 @@ public:
         TrafficControl::getTraffic(inSpeed, outSpeed);
         return RuntimeStat(activeTasks, inQueueSize, outQueueSize, inSpeed, outSpeed);
     };
+	virtual std::string getSchedItem(const std::string& Abonent)
+	{
+		return admin.getSchedItem(Abonent);
+	}
+	virtual std::string getSchedItems()
+	{
+		return admin.getSchedItems();
+	}
+
 };
 
 int main(void)

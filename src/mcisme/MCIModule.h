@@ -144,8 +144,8 @@ namespace smsc { namespace mcisme
                 int number = (int)(random()%maxAbonents);
                 int caller = (int)(maxAbonents - random()%maxAbonents);
                 event.time = time(NULL)+((int)random()%3600);
-                sprintf(abonent, "+79029%06d", number); event.to   = abonent;
-                sprintf(abonent, "+79029%06d", caller); event.from = abonent;
+                sprintf(abonent, "+70123%06d", number); event.to   = abonent;
+                sprintf(abonent, "+70123%06d", caller); event.from = abonent;
                 if (i%10 == 0)
 				event.from = ""; // unknown
                 event.cause = ALL;
@@ -173,7 +173,7 @@ namespace smsc { namespace mcisme
 						listener->missed(event);
 					}
                 }
-                sleepEvent.Wait(10000);
+                sleepEvent.Wait(3000);
             }
         }
         #endif

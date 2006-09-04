@@ -419,7 +419,7 @@ void TaskProcessor::Run()
 	time_t	cur_time;
 	int		wait_smsc_msg;
 
-	//while(1) sleep(1000);
+//	while(pDeliveryQueue->isQueueOpened()) sleep(1000); return;
 	//	while(bOutQueueOpen)
 	while(pDeliveryQueue->isQueueOpened())
 	{
@@ -458,7 +458,7 @@ int TaskProcessor::Execute()
 	//test_sched();
 	//while(1) sleep(1000);
 
-	while (bInQueueOpen)//++i<=12)//bInQueueOpen
+	while (bInQueueOpen)
 	{
 		try
 		{
@@ -784,5 +784,68 @@ bool TaskProcessor::getFromInQueue(MissedCallEvent& event)
     smsc_log_info(logger, "Input queue closed");
     return false;
 }
+
+// Admin Interface
+string TaskProcessor::getSchedItem(const string& Abonent)
+{
+	smsc_log_info(logger, "Received schedule query for abonent %s", Abonent.c_str());
+	string result;
+
+	try{checkAddress(Abonent.c_str());}catch(Exception e)
+	{
+		smsc_log_info(logger, "Schedule query contains bad address %s", e.what());
+		return result;
+	}
+	AbntAddr			abnt(Abonent.c_str());
+	SchedItem			item;
+	vector<MCEvent>		events;
+
+	if(!pDeliveryQueue->Get(abnt, item))
+	{
+		smsc_log_info(logger, "Abonent %s don't exists in Delivery Queue", Abonent.c_str());
+		return result;
+	}
+	
+	GetAbntEvents(abnt, events);
+
+	char buff[128];
+	struct tm* t = localtime(&item.schedTime);
+	snprintf(buff, 128, "%.2d.%.2d.%4d %.2d:%.2d:%.2d,%s,%d, %d;", t->tm_mday, t->tm_mon+1, t->tm_year+1900, t->tm_hour, t->tm_min, t->tm_sec,
+													Abonent.c_str(), events.size(), item.lastError);
+	result = buff;
+	return result;
+}
+
+string TaskProcessor::getSchedItems(void)
+{
+	smsc_log_info(logger, "Received schedule query for first 50 abonents ");
+	string				result;
+	vector<SchedItem>	items;
+
+	if(0 == pDeliveryQueue->Get(items, 50))
+	{
+		smsc_log_info(logger, "Delivery Queue is empty");
+		return result;
+	}
+	
+	for(int i = 0; i < items.size(); i++)
+	{
+		vector<MCEvent>	events;
+		char			buff[128];
+		time_t			schedTime;
+		struct tm*		t;
+
+		GetAbntEvents(items[i].abnt, events);
+		schedTime = items[i].schedTime;	t = localtime(&schedTime);
+		snprintf(buff, 128, "%.2d.%.2d.%4d %.2d:%.2d:%.2d,%s,%d,%d;", t->tm_mday, t->tm_mon+1, t->tm_year+1900, t->tm_hour, t->tm_min, t->tm_sec,
+														items[i].abnt.getText().c_str(), events.size(), items[i].lastError);
+//		smsc_log_debug(logger, "%.2d.%.2d.%4d %.2d:%.2d:%.2d,%s,%d,%d;", t->tm_mday, t->tm_mon+1, t->tm_year+1900, t->tm_hour, t->tm_min, t->tm_sec,
+//														items[i].abnt.getText().c_str(), events.size(), items[i].lastError);
+
+		result += buff;
+	}
+	return result;
+}
+
 }
 }

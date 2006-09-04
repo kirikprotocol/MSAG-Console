@@ -37,7 +37,9 @@ namespace smsc { namespace mcisme
         virtual int getActiveTasksCount() = 0;
         virtual int getInQueueSize()  = 0;
         virtual int getOutQueueSize() = 0;
-        
+		virtual std::string getSchedItem(const std::string& Abonent) = 0;
+		virtual std::string getSchedItems(void) = 0;
+
         AdminInterface() {};
 
     protected:
@@ -51,7 +53,9 @@ namespace smsc { namespace mcisme
         
         virtual EventsStat  getStatistics() = 0;
         virtual RuntimeStat getRuntimeStatistics() = 0;
-        
+		virtual std::string getSchedItem(const std::string& Abonent) = 0;
+		virtual std::string getSchedItems(void) = 0;
+
         MCISmeAdmin() {};
 
     protected:

@@ -8,6 +8,7 @@
 #define ___DELIVERYQUEUE_H
 
 #include <map>
+#include <vector>
 #include <sys/types.h>
 #include <time.h>
 
@@ -28,6 +29,7 @@ namespace smsc { namespace mcisme
 using std::multimap;
 using std::map;
 using std::pair;
+using std::vector;
 using namespace core::synchronization;
 using namespace core::buffers;
 
@@ -39,26 +41,32 @@ const abnt_stat_t	AlertHandled	= 0x02;
 
 const time_t	default_wait = 60;
 
-//struct SchedItem
-//{
-//	time_t		time;
-//	AbntAddr	abnt;
-//	
-//	SchedItem(){}
-//	SchedItem(const time_t& t, const AbntAddr& _abnt):time(t), abnt(_abnt){}
-//	SchedItem(const SchedItem& item):time(item.time), abnt(item.abnt){}
-//	SchedItem& operator=(const SchedItem& item)
-//	{
-//		if(this != &item)
-//		{
-//			time = item.time;
-//			abnt = item.abnt;
-//		}
-//		return *this;
-//	}
-//	bool operator<(const SchedItem& item) const
-//	{return time < item.time;}
-//};
+struct SchedItem
+{
+	time_t		schedTime;
+	AbntAddr	abnt;
+	uint8_t		eventsCount;
+	uint32_t	lastError;
+	
+	SchedItem(){}
+	SchedItem(time_t t, const AbntAddr& _abnt, uint8_t ec, uint32_t le):
+		schedTime(t), abnt(_abnt), eventsCount(ec), lastError(le){}
+	SchedItem(const SchedItem& item):
+		schedTime(item.schedTime), abnt(item.abnt), eventsCount(item.eventsCount), lastError(item.lastError){}
+	SchedItem& operator=(const SchedItem& item)
+	{
+		if(this != &item)
+		{
+			schedTime = item.schedTime;
+			abnt = item.abnt;
+			eventsCount = item.eventsCount;
+			lastError = item.lastError;
+		}
+		return *this;
+	}
+	bool operator<(const SchedItem& item) const
+	{return schedTime < item.schedTime;}
+};
 
 struct SchedParam
 {
@@ -316,6 +324,50 @@ public:
 		
 		smsc_log_debug(logger, "deliveryQueue is empty.");
 		return false;
+	}
+	
+	bool Get(const AbntAddr& abnt, SchedItem& item)
+	{
+		MutexGuard lock(deliveryQueueMonitor);
+		string strAbnt = abnt.toString();
+		if(AbntsStatus.Exists(strAbnt.c_str()))
+		{
+			SchedParam *schedParam = AbntsStatus.GetPtr(strAbnt.c_str());
+			item.abnt = abnt;
+			item.schedTime = schedParam->schedTime;
+			item.lastError = schedParam->lastError;
+			return true;
+		}
+		return false;
+	}
+
+	int Get(vector<SchedItem>& items, int count)
+	{
+		MutexGuard		lock(deliveryQueueMonitor);
+		AbntAddr		abnt;
+		DelQueueIter	It;
+		int				i;
+		
+		It = deliveryQueue.begin();
+		for(i = 0; i< count; i++)
+		{	
+			if(It == deliveryQueue.end()) break;
+			abnt = It->second;
+			string strAbnt = abnt.toString();
+			if(AbntsStatus.Exists(strAbnt.c_str()))
+			{
+				SchedParam	*schedParam = AbntsStatus.GetPtr(strAbnt.c_str());
+				SchedItem	item;
+				item.abnt = abnt;
+				item.schedTime = schedParam->schedTime;
+				item.lastError = schedParam->lastError;
+				items.push_back(item);
+			}
+			else
+				i--;
+			++It;
+		}
+		return i;
 	}
 
 	void Remove(const AbntAddr& abnt)

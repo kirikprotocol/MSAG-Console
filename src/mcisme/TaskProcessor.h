@@ -188,6 +188,8 @@ public:
 			return pDeliveryQueue->GetQueueSize();
 		return 0;
     }
+	virtual string getSchedItem(const string& Abonent);
+	virtual string getSchedItems(void);
 };
 
 };
