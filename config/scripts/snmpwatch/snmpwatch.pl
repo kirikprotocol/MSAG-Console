@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use strict;
 
-if(@ARGV==0)
+if(@ARGV!=3)
 {
   die "Config file expected in command line";
 }
@@ -15,6 +15,13 @@ my @severityNames=qw(1 2 3 4 5);
 
 my $cfgTimeStamp;
 my $cfgFileName=$ARGV[0];
+my $csvFileDir=$ARGV[1];
+$csvFileDir.='/' unless $csvFileDir=~m!/$!;
+my $csvRolInterval=$ARGV[2];
+
+my $csvFile;
+my $lastCsvRol=time;
+
 LoadConfig();
 
 
@@ -29,7 +36,7 @@ sub LoadConfig
   {
     return;
   };
-  print "Loading config:$cfgFileName\n";
+  Log("Loading config:$cfgFileName");
   $cfgTimeStamp=$st[9];
 
   @loadAvgThresholds=();
@@ -43,19 +50,19 @@ sub LoadConfig
   {
     s/[\x00-\x1f]//g;
     next if /^#/ || /^$/;
-    if(/^(\d+),(\d+(?:\.\d+)?),(\d+),(\d+),(\d+),(\d+),(\d+)$/)
+    if(/^(\d+),(\d+(?:\.\d+)?),(\d+),(\d+),(\d+),(\d+)$/)
     {
       $loadAvgThresholds[$1]=
       {
         hundredPercentValue=>$2,
-        severityThresholds=>[$3,$4,$5,$6,$7]
+        severityThresholds=>[$3,$4,$5,$6]
       };
-    }elsif(/^([^,]+),([^,]+),(\d+),(\d+),(\d+),(\d+),(\d+)$/)
+    }elsif(/^([^,]+),([^,]+),(\d+),(\d+),(\d+),(\d+)$/)
     {
-      $mntThresholds{$1}={name=>$2,thr=>[$3,$4,$5,$6,$7]};
+      $mntThresholds{$1}={name=>$2,thr=>[$3,$4,$5,$6]};
     }else
     {
-      print STDERR "Unknown line in config: $_";
+      print STDERR "Unknown line in config: $_\n";
     }
   }
   close($cfg);
@@ -77,9 +84,10 @@ while($running)
   CheckDiskFree();
   sleep(5);
   LoadConfig();
+  RollCsv();
 }
 
-print "Finished\n";
+Log("Finished");
 
 sub CheckLoadAverage
 {
@@ -95,10 +103,10 @@ sub CheckLoadAverage
 
   my $percent=int(100*$la/$thr->{hundredPercentValue});
 
-  print "Load average:$la ($percent\%)\n";
+  #print "Load average:$la ($percent\%)\n";
 
   my $loadLevel;
-  for(my $i=4;$i>=0;$i--)
+  for(my $i=3;$i>=0;$i--)
   {
     if($percent>=$thr->{severityThresholds}->[$i])
     {
@@ -134,12 +142,12 @@ sub CheckDiskFree
     next unless exists($mntThresholds{$mnt});
     my $capacity=int($line[4]);
     my $disk=$line[0];
-    print "mnt=$mnt,cap=$capacity,dsk=$disk\n";
+    #print "mnt=$mnt,cap=$capacity,dsk=$disk\n";
     my $svrt=$mntThresholds{$mnt}->{thr};
     my $name=$mntThresholds{$mnt}->{name};
 
     my $fillLevel;
-    for(my $i=4;$i>=0;$i--)
+    for(my $i=3;$i>=0;$i--)
     {
       if($capacity>=$svrt->[$i])
       {
@@ -165,14 +173,42 @@ sub CheckDiskFree
   }
 }
 
+sub Log{
+  my $str=shift;
+  my @tm=localtime(time);
+  printf("%02d-%02d %02d:%02d:%02d %s\n",$tm[4]+1,$tm[3],$tm[2],$tm[1],$tm[0],$str);
+}
+
+sub CsvLog{
+  my ($msg,$severity,$object,$alarmId)=@_;
+  my @tm=gmtime(time);
+  unless(defined($csvFile))
+  {
+    my $fn=$csvFileDir.sprintf("%04d%02d%02d_%02d%02d%02d.csv",$tm[5]+1900,$tm[4]+1,$tm[3],$tm[2],$tm[1],$tm[0]);
+    open($csvFile,'>'.$fn) || die "Failed to open $fn:$!";
+    print $csvFile "SUBMIT_TIME,ALARM_ID,ALARMCATEGORY,SEVERITY,TEXT\n";
+  }
+  my $ts=sprintf("%02d.%02d.%04d %02d:%02d:%02d",$tm[3],$tm[4]+1,$tm[5]+1900,$tm[2],$tm[1],$tm[0]);
+  print $csvFile qq!$ts,"$alarmId","$object",$severity,"$msg"\n!;
+}
+
+sub RollCsv{
+  my $now=time;
+  return unless $now-$lastCsvRol>$csvRolInterval;
+  close($csvFile) if defined($csvFile);
+  $csvFile=undef;
+  $lastCsvRol=$now;
+}
+
 sub SnmpTrap
 {
   my ($msg,$severity,$object,$alarmId)=@_;
-  system(
-"snmptrap -v 2c -c ussdc  traphost '' SIBINCO-SMSC-MIB::smscAlertFFMR ".
+  CsvLog(@_);
+  my $cmd="snmptrap -v 2c -c ussdc  traphost '' SIBINCO-SMSC-MIB::smscAlertFFMR ".
 "SIBINCO-SMSC-MIB::alertSeverity i $severity ".
 "SIBINCO-SMSC-MIB::alertMessage s '$msg' ".
 "SIBINCO-SMSC-MIB::alertObjCategory s '$object' ".
-"SIBINCO-SMSC-MIB::alertId s '$alarmId'"
-);
+"SIBINCO-SMSC-MIB::alertId s '$alarmId'";
+  Log("exec:$cmd");
+  system($cmd);
 }
