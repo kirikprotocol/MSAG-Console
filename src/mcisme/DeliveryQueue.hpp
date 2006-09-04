@@ -397,7 +397,7 @@ public:
 			item.schedTime = schedTime;
 			item.abonentsCount = abonentsCount;
 			items.push_back(item);
-			if(It != deliveryQueue.end()) ++It;
+//			if(It != deliveryQueue.end()) ++It;
 		}
 		return i;
 	}
