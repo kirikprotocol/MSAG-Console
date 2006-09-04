@@ -84,12 +84,15 @@ class MCISmeTransport extends Service
 
 			int start = pos; int end = str.indexOf(",", start);
 			item.schedTime = str.substring(start, end);
-			start = end + 1; end = str.indexOf(",", start);
-			item.address = str.substring(start, end);
-			start = end + 1; end = str.indexOf(",", start);
-			item.eventsCount = str.substring(start, end);
 			start = end + 1; end = str.indexOf(";", start);
-			item.lastError = str.substring(start, end);
+			item.abonentsCount = str.substring(start, end);
+
+//			start = end + 1; end = str.indexOf(",", start);
+//			item.address = str.substring(start, end);
+//			start = end + 1; end = str.indexOf(",", start);
+//			item.eventsCount = str.substring(start, end);
+//			start = end + 1; end = str.indexOf(";", start);
+//			item.lastError = str.substring(start, end);
 			itemsList.add(item);
 			pos = end + 1;
 		}		

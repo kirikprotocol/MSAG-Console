@@ -44,15 +44,18 @@ const time_t	default_wait = 60;
 struct SchedItem
 {
 	time_t		schedTime;
+	
 	AbntAddr	abnt;
 	uint8_t		eventsCount;
 	uint32_t	lastError;
+
+	uint32_t	abonentsCount;
 	
 	SchedItem(){}
-	SchedItem(time_t t, const AbntAddr& _abnt, uint8_t ec, uint32_t le):
-		schedTime(t), abnt(_abnt), eventsCount(ec), lastError(le){}
+	SchedItem(time_t t, const AbntAddr& _abnt, uint8_t ec, uint32_t le, uint32_t ac):
+		schedTime(t), abnt(_abnt), eventsCount(ec), lastError(le), abonentsCount(ac){}
 	SchedItem(const SchedItem& item):
-		schedTime(item.schedTime), abnt(item.abnt), eventsCount(item.eventsCount), lastError(item.lastError){}
+		schedTime(item.schedTime), abnt(item.abnt), eventsCount(item.eventsCount), lastError(item.lastError), abonentsCount(item.abonentsCount){}
 	SchedItem& operator=(const SchedItem& item)
 	{
 		if(this != &item)
@@ -61,6 +64,7 @@ struct SchedItem
 			abnt = item.abnt;
 			eventsCount = item.eventsCount;
 			lastError = item.lastError;
+			abonentsCount = item.abonentsCount;
 		}
 		return *this;
 	}
@@ -341,6 +345,35 @@ public:
 		return false;
 	}
 
+	//int Get(vector<SchedItem>& items, int count)
+	//{
+	//	MutexGuard		lock(deliveryQueueMonitor);
+	//	AbntAddr		abnt;
+	//	DelQueueIter	It;
+	//	int				i;
+	//	
+	//	It = deliveryQueue.begin();
+	//	for(i = 0; i< count; i++)
+	//	{	
+	//		if(It == deliveryQueue.end()) break;
+	//		abnt = It->second;
+	//		string strAbnt = abnt.toString();
+	//		if(AbntsStatus.Exists(strAbnt.c_str()))
+	//		{
+	//			SchedParam	*schedParam = AbntsStatus.GetPtr(strAbnt.c_str());
+	//			SchedItem	item;
+	//			item.abnt = abnt;
+	//			item.schedTime = schedParam->schedTime;
+	//			item.lastError = schedParam->lastError;
+	//			items.push_back(item);
+	//		}
+	//		else
+	//			i--;
+	//		++It;
+	//	}
+	//	return i;
+	//}
+
 	int Get(vector<SchedItem>& items, int count)
 	{
 		MutexGuard		lock(deliveryQueueMonitor);
@@ -349,23 +382,22 @@ public:
 		int				i;
 		
 		It = deliveryQueue.begin();
-		for(i = 0; i< count; i++)
+		for(i = 0; i < count; i++)
 		{	
 			if(It == deliveryQueue.end()) break;
-			abnt = It->second;
-			string strAbnt = abnt.toString();
-			if(AbntsStatus.Exists(strAbnt.c_str()))
+			uint32_t	abonentsCount = 0;
+			time_t		schedTime = It->first;
+
+			while(schedTime == It->first)
 			{
-				SchedParam	*schedParam = AbntsStatus.GetPtr(strAbnt.c_str());
-				SchedItem	item;
-				item.abnt = abnt;
-				item.schedTime = schedParam->schedTime;
-				item.lastError = schedParam->lastError;
-				items.push_back(item);
+				++abonentsCount; ++It;
+				if(It == deliveryQueue.end()) break;
 			}
-			else
-				i--;
-			++It;
+			SchedItem	item;
+			item.schedTime = schedTime;
+			item.abonentsCount = abonentsCount;
+			items.push_back(item);
+			if(It != deliveryQueue.end()) ++It;
 		}
 		return i;
 	}

@@ -83,9 +83,7 @@ page_menu_end(out);
 <col width="25%">
 <tr class=row<%=rowN++&1%>>
   <th>Schedule Time</th>
-  <td>Address</td>
-  <td>Events Count</td>
-  <td>Last Error</td>
+  <td>Abonents Count</td>
 </tr>
 <%
 	List abonentsList = bean.getAbonentsList();
@@ -95,9 +93,7 @@ page_menu_end(out);
 %>
 <tr class=row<%=rowN++&1%>>
   <th><%=StringEncoderDecoder.encode(item.schedTime)%></th>
-  <td><%=StringEncoderDecoder.encode(item.address)%></td>
-  <td><%=StringEncoderDecoder.encode(item.eventsCount)%></td>
-  <td><%=StringEncoderDecoder.encode(item.lastError)%></td>
+  <td><%=StringEncoderDecoder.encode(item.abonentsCount)%></td>
 </tr>
 <%
   	}

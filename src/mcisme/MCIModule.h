@@ -173,7 +173,7 @@ namespace smsc { namespace mcisme
 						listener->missed(event);
 					}
                 }
-                sleepEvent.Wait(3000);
+                sleepEvent.Wait(10000);
             }
         }
         #endif

@@ -830,17 +830,19 @@ string TaskProcessor::getSchedItems(void)
 	
 	for(int i = 0; i < items.size(); i++)
 	{
-		vector<MCEvent>	events;
+//		vector<MCEvent>	events;
 		char			buff[128];
 		time_t			schedTime;
 		struct tm*		t;
 
-		GetAbntEvents(items[i].abnt, events);
+//		GetAbntEvents(items[i].abnt, events);
 		schedTime = items[i].schedTime;	t = localtime(&schedTime);
-		snprintf(buff, 128, "%.2d.%.2d.%4d %.2d:%.2d:%.2d,%s,%d,%d;", t->tm_mday, t->tm_mon+1, t->tm_year+1900, t->tm_hour, t->tm_min, t->tm_sec,
-														items[i].abnt.getText().c_str(), events.size(), items[i].lastError);
+//		snprintf(buff, 128, "%.2d.%.2d.%4d %.2d:%.2d:%.2d,%s,%d,%d;", t->tm_mday, t->tm_mon+1, t->tm_year+1900, t->tm_hour, t->tm_min, t->tm_sec,
+//														items[i].abnt.getText().c_str(), events.size(), items[i].lastError);
 //		smsc_log_debug(logger, "%.2d.%.2d.%4d %.2d:%.2d:%.2d,%s,%d,%d;", t->tm_mday, t->tm_mon+1, t->tm_year+1900, t->tm_hour, t->tm_min, t->tm_sec,
 //														items[i].abnt.getText().c_str(), events.size(), items[i].lastError);
+		snprintf(buff, 128, "%.2d.%.2d.%4d %.2d:%.2d:%.2d,%d;", t->tm_mday, t->tm_mon+1, t->tm_year+1900, t->tm_hour, t->tm_min, t->tm_sec,
+														items[i].abonentsCount);
 
 		result += buff;
 	}
