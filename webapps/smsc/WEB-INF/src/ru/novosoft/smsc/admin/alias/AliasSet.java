@@ -48,8 +48,8 @@ public class AliasSet {
         FileInputStream fis = null;
         try {
             fis = new FileInputStream(aliasmanStorePath);
-            String FileName = Message.readString(fis, 8);
-            int version = (int) Message.readUInt32(fis);
+            /*String FileName = */Message.readString(fis, 8);
+            /*int version = (int) */Message.readUInt32(fis);
             int msgSizeLength = 48; //1+(1+1+21)+(1+1+21)+1
             byte buf[] = new byte[48];
 
@@ -71,8 +71,11 @@ public class AliasSet {
                 String aliasValue = Message.readString(bis, 21);
                 byte isHide = (byte) Message.readUInt8(bis);
 
-                if (isInUse != 0)
-                    add(new Alias(new Mask(addrTon, addrNpi, addrValue), new Mask(aliasTon, aliasNpi, aliasValue), (isHide != 0)));
+                if (isInUse != 0) {
+                    Alias new_alias = new Alias(new Mask(addrTon, addrNpi, addrValue), new Mask(aliasTon, aliasNpi, aliasValue), (isHide != 0));
+                    dataSource.add(new_alias);
+                    aliases.add(new_alias);
+                }
 
                 bis.close();
             }
