@@ -19,3 +19,8 @@ in file ..\smsc\webapps\scag\WEB-INF\locales.xml. For example: "ru", "en", "ru_R
 =================================================================================================================
 10.07.2006 19:00 makar
 Distributive build changes: added pers service
+=================================================================================================================
+06.09.2006 16:00 igor
+msag.properties.sample file changed: added new parameter logger.properties_file 
+
+
