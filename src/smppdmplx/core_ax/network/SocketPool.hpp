@@ -6,7 +6,7 @@
 # include <list>
 # include <utility>
 
-# include "Socket.hpp"
+# include <core_ax/network/Socket.hpp>
 
 namespace smsc {
 namespace core_ax {
