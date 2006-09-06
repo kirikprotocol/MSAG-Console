@@ -32,6 +32,8 @@ language.default=ru
 session.location=/opt/home/msag_test/msag_distr/storage/sessions
 session.expireInterval=60000
 
+logger.properties_file=/opt/home/msag_test/msag_distr/services/scag/logger.properties
+
 rules.path=/opt/home/msag_test/msag_distr/services/scag/conf/rules
 stat.dir=/opt/home/msag_test/msag_distr/storage/statistics
 stat.traffic_dir=/opt/home/msag_test/msag_distr/storage/statistics/traffic
