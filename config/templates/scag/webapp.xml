@@ -15,6 +15,8 @@
         <param name="operators_file" type="string">operators.xml</param>
         <param name="tariffs_file" type="string">tariffs.xml</param>
     </section>
+    
+    <param name="logger.properties_file" type="string">@logger.properties_file@</param>
 
     <param name="users_config_file" type="string">webapps/msag/WEB-INF/users.xml</param>
     <param name="status_folder" type="string">@stat.dir@/status</param>
