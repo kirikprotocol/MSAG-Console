@@ -1172,7 +1172,10 @@ int ProcessMessage(const char *msg,int len)
   }
 
 
-  if(!noProfile)
+  if(noProfile)
+  {
+    dstUser='+'+dstUser;
+  }else
   {
     if(!storage.checkEml2GsmLimit(dstUser.c_str()))
     {
