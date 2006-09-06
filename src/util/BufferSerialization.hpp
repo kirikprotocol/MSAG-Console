@@ -229,12 +229,12 @@ public:
     return buffer;
   }
 
-  void* getBuffer()
+  void* getBuffer() const
   {
     return buffer;
   }
 
-  uint32_t getBufferSize()
+  uint32_t getBufferSize() const
   {
     return bufferSize;
   }
@@ -249,7 +249,7 @@ public:
 
   void resize(uint32_t newSize)
   {
-    if(newSize<bufferSize)return;
+    if(newSize<=bufferSize)return;
     char* newBuf=new char[newSize];
     memcpy(newBuf,buffer,bufferSize);
     delete [] buffer;
