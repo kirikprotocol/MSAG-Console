@@ -2,12 +2,6 @@
 
 <sm:page title="logging.title">
 <jsp:attribute name="menu">
-    <sm-pm:menu>
-        <sm-pm:item name="mbSave" value="logging.item.mbsave.value" title="logging.item.mbsave.title"/>
-        <%--<sm-pm:item name="mbCancel" value="logging.item.mbcancel.value" title="logging.item.mbcancel.title"--%>
-                    <%--onclick="clickCancel()"/>--%>
-        <sm-pm:space/>
-    </sm-pm:menu>
 </jsp:attribute>
 <jsp:body>
 <script type="text/javascript">
@@ -430,5 +424,26 @@
             </td>
         </tr>
     </table>
+     <br>
+<c:choose>
+    <c:when test="${bean.running}">
+        <sm-pm:menu>
+            <sm-pm:item name="mbSave" value="item.mbapply.value" enabled="true" title="item.mbapply.title"/>
+            <sm-pm:item name="mbSavePermanent" value="logging.item.save.permanent.value" enabled="true"
+                        title="logging.item.save.permanent.title"
+                        onclick="clickCancel()"/>
+            <sm-pm:space/>
+        </sm-pm:menu>
+    </c:when>
+    <c:otherwise>
+        <sm-pm:menu>
+            <sm-pm:item name="mbSave" value="item.mbapply.value" enabled="false" title="item.mbapply.title"/>
+            <sm-pm:item name="mbSavePermanent" value="logging.item.save.permanent.value" enabled="false"
+                        title="logging.item.save.permanent.title"
+                        onclick="clickCancel()"/>
+            <sm-pm:space/>
+        </sm-pm:menu>
+    </c:otherwise>
+</c:choose>
 </jsp:body>
 </sm:page>
