@@ -150,7 +150,7 @@ void FSEntry::truncateFile(const std::string& fullPath, off_t length)
 void FSEntry::truncateFile(const std::string& location, const std::string& fileName, off_t length)
 {
     std::string fullPath = location;
-    fullPath +='/';
+    fullPath += '/';
     fullPath += fileName;
     truncateFile(fullPath, length);
 }
@@ -204,6 +204,24 @@ void FSEntry::rollFileExt(const std::string& location, std::string& fileName, co
     rollFileExt(fullOldFile, newExt);
 }
 
+void FSEntry::rollFileEnding(std::string& fullPath, const char* newExt, const char * oldExt)
+{
+    if (!newExt || !newExt[0] || !oldExt ||!oldExt[0])
+        return;
+
+    std::string     fullOldFile = fullPath;
+    std::string::size_type fileNameLen = fullPath.length();
+    int oldExtLen = strlen(oldExt);
+    fullPath.erase(fileNameLen - oldExtLen, fullPath.npos);
+//    fullPath += '.';
+    fullPath += newExt;
+
+    try { File::Rename(fullOldFile.c_str(), fullPath.c_str()); }
+    catch (FileException& exc) {
+        throw FileSystemException(exc.getErrNo(), exc.what());
+    }
+    return;
+}
 
 /* ************************************************************************** *
  * class RollingFileStorage implementation:
@@ -255,8 +273,14 @@ bool RollingFileStorage::FSOpen(bool rollOld/* = true*/)
         FSEntriesArray  files;
         FSEntry::findFiles(_location, _lastExt.c_str(), files);
 
-        for (int i = 0; rollOld && (i < files.Count()); i++)
-            FSEntry::rollFileExt(_location, files[i], _Ext.c_str());
+        for (int i = 0; rollOld && (i < files.Count()); i++) {
+            //FSEntry::rollFileExt(_location, files[i], _Ext.c_str());
+            std::string fullName(_location);
+            fullName += '/';
+            fullName += files[i];
+            FSEntry::rollFileEnding(fullName, _Ext.c_str(), _lastExt.c_str());
+        }
+
         
         if (!rollOld) { //delete all old files
             FSEntry::findFiles(_location, _Ext.c_str(), files);
@@ -389,7 +413,8 @@ bool RollingFileStorage::mkCurrFile(bool roll/* = true*/)
         catch (FileException& exc) {
             throw FileSystemException(exc.getErrNo(), exc.what());
         }
-        FSEntry::rollFileExt((std::string&)_currFile.getFileName(), _Ext.c_str());
+//        FSEntry::rollFileExt((std::string&)_currFile.getFileName(), _Ext.c_str());
+        FSEntry::rollFileEnding((std::string&)_currFile.getFileName(), _Ext.c_str(), _lastExt.c_str());
     }
 
     filePath += _lastExt;
