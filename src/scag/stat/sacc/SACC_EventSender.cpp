@@ -363,7 +363,7 @@ void EventSender::performAlarmMessageEvent(const SACC_ALARM_MESSAGE_t& e)
 
  if(e.cEsmClass)
  {
-     pdubuffer.WriteNetInt16(1);
+     pdubuffer.WriteNetInt16(2);
      pdubuffer.WriteInt16(e.cEsmClass);
  }
  else
