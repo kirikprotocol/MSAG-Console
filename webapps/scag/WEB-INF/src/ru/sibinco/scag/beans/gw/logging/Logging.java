@@ -29,11 +29,16 @@ public class Logging extends EditBean {
     private String[] priorities = {"FATAL", "ERROR", "WARN", "INFO", "DEBUG", "NOTSET"};
     private LoggerCategoryInfo[] rootCategories;
     private String category;
+    private String mbSavePermanent = null;
+    private boolean running = true;
 
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
         super.process(request, response);
         if (getMbSave() != null) {
             save(request.getParameterMap());
+        }
+        if (getMbSavePermanent() != null) {
+            savePermanent(request.getParameterMap());
         }
         init();
     }
@@ -145,6 +150,7 @@ public class Logging extends EditBean {
 
         } catch (SibincoException e) {
             rootCategory = new LoggerCategoryInfo("", "", "NOTSET");
+            setRunning(false);
         }
         rootCategories = getLoggerCategoryInfos(rootCategory);
 
@@ -183,6 +189,27 @@ public class Logging extends EditBean {
         }
         try {
             appContext.getScag().setLogCategories(cats);
+        } catch (SibincoException e) {
+            throw new SCAGJspException(Constants.errors.logging.COULDNT_SET_LOGCATS, e);
+        }
+    }
+
+    protected void savePermanent(Map parameters) throws SCAGJspException {
+        Map cats = new HashMap();
+        for (Iterator iterator = parameters.entrySet().iterator(); iterator.hasNext();) {
+            Map.Entry entry = (Map.Entry) iterator.next();
+            String paramName = (String) entry.getKey();
+            if (paramName.startsWith(catParamNamePrefix)) {
+                cats.put(paramName.substring(catParamNamePrefix.length()), getParamValue(entry.getValue()));
+                logger.info("cat param: " + paramName + ":=" + getParamValue(entry.getValue()));
+            } else {
+                logger.info("WRONG param: " + paramName + ":=" + getParamValue(entry.getValue()));
+            }
+
+        }
+        try {
+            appContext.getScag().setLogCategories(cats);
+            appContext.getLoggingManager().writeToLog(cats);
         } catch (SibincoException e) {
             throw new SCAGJspException(Constants.errors.logging.COULDNT_SET_LOGCATS, e);
         }
@@ -227,5 +254,21 @@ public class Logging extends EditBean {
             }
         }
         return (LoggerCategoryInfo[]) result.toArray(new LoggerCategoryInfo[result.size()]);
+    }
+
+    public String getMbSavePermanent() {
+        return mbSavePermanent;
+    }
+
+    public void setMbSavePermanent(String mbSavePermanent) {
+        this.mbSavePermanent = mbSavePermanent;
+    }
+
+    public boolean isRunning() {
+        return running;
+    }
+
+    public void setRunning(boolean running) {
+        this.running = running;
     }
 }
