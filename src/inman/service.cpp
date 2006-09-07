@@ -151,8 +151,7 @@ void Service::stop()
 
     if (roller) {
         smsc_log_debug(logger, "InmanSrv: Stopping BillingStorage roller ..");
-        roller->Stop();
-        roller->WaitFor();
+        roller->Stop(true);
     }
 
     running = false;

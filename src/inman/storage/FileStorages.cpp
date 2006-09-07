@@ -91,31 +91,107 @@ time_t InRollingFileStorage::getLastRollingTime(void) const
 /* ************************************************************************** *
  * class InFileStorageRoller implementation:
  * ************************************************************************** */
-InFileStorageRoller::InFileStorageRoller(InRollingFileStorage * rfs, unsigned long rollInterval)
-    : _rFS(rfs), _running(false), _interval(rollInterval)
+#define ROLL_TIMEOUT_STEP 200 //millisecs
+InFileStorageRoller::InFileStorageRoller(InRollingFileStorage * rfs/* = NULL*/,
+                                         unsigned long rollInterval/* = 0*/)
+    : _running(false)
 {
+    if (rfs && rollInterval)
+        rfsMap.insert(RolledFSMap::value_type(rfs, rollInterval));
 }
 
 InFileStorageRoller::~InFileStorageRoller()
 { 
     if (_running)
-        Stop();
-    WaitFor();
+        Stop(true);
+//    Thread::WaitFor();
 }
 
-void InFileStorageRoller::Stop(void)
+void InFileStorageRoller::attachRFS(InRollingFileStorage * rfs, unsigned long rollInterval)
+{
+    MutexGuard  tmp(_mutex);
+    if (rfs && rollInterval)
+        rfsMap.insert(RolledFSMap::value_type(rfs, rollInterval));
+}
+
+void InFileStorageRoller::detachRFS(InRollingFileStorage * rfs)
+{
+    MutexGuard  tmp(_mutex);
+    rfsMap.erase(rfs);
+}
+
+
+void InFileStorageRoller::Start(void)
+{
+    MutexGuard grd(_mutex);
+    if (!thread)
+        Thread::Start(); //starts Execute() that waits for _mutex
+    return;
+}
+
+void InFileStorageRoller::Stop(bool wait_for/* = false*/)
 {
     _mutex.Lock();
-    _running = false;
+    if (_running) {
+        _running = false;
+        _mutex.notify();
+    }
     _mutex.Unlock();
-    _mutex.notify();
+
+    if (wait_for)
+        Thread::WaitFor();
 }
 
+
+time_t InFileStorageRoller::checkRoll(const RolledFSMap::iterator & it)
+{
+    InRollingFileStorage * rFS = (*it).first;
+    time_t  nextTm = rFS->getLastRollingTime() + (*it).second; //interval;
+    if (time(NULL) >= nextTm) {
+        rFS->RFSRoll();
+        nextTm = rFS->getLastRollingTime() + (*it).second; //interval;
+    }
+    return nextTm;
+}
+
+int InFileStorageRoller::Execute(void)
+{
+    _mutex.Lock();
+    _running = true;
+    while(_running) {
+        time_t          nextTm, awakeTm;
+        int             sleepSecs;
+
+        RolledFSMap::iterator it = rfsMap.begin();
+        if (it != rfsMap.end()) {
+            awakeTm = checkRoll(it);
+            for (it++; it != rfsMap.end(); it++) {
+                nextTm = checkRoll(it);
+                if (nextTm < awakeTm)
+                    awakeTm = nextTm;
+            }
+        } else
+            awakeTm = time(NULL) + 600;
+
+        if ((sleepSecs = (int)(awakeTm - time(NULL))) > 0)
+            //NOTE: sleepSecs should be converted to millisecs, so check
+            //for overflow. Consider sleepSecs*1000 ~~ sleepSecs*1024,
+            //hence limit is 2**22 (= 4194304 = 0x400000)
+            _mutex.wait(sleepSecs > 0x400000 ? 0x400000 : sleepSecs*1000);
+    }
+    _mutex.Unlock();
+    return 0;
+}
+
+
+/*
 int InFileStorageRoller::Execute(void)
 {
     time_t          nextTm;
     int             sleepSecs;
 
+    rolEvent.Signal();
+    _mutex.Lock();
     _running = true;
     while(_running) {
         _mutex.Unlock();
@@ -130,9 +206,10 @@ int InFileStorageRoller::Execute(void)
             //hence limit is 2**22 (= 4194304 = 0x400000)
             _mutex.wait(sleepSecs > 0x400000 ? 0x400000 : sleepSecs*1000);
     }
+    _mutex.Unlock();
     return 0;
 }
-
+*/
 } //filestore
 } //inman
 } //smsc

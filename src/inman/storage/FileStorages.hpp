@@ -2,6 +2,8 @@
 #ifndef _INMAN_FILE_STORAGES_H
 #define _INMAN_FILE_STORAGES_H
 
+#include <map>
+
 #include "logger/Logger.h"
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/threads/Thread.hpp"
@@ -51,23 +53,30 @@ protected:
 };
 
 
-//Just an external roller for InRollingFileStorage
-class InFileStorageRoller : public Thread
-{
+//Just an external roller for several InRollingFileStorages
+class InFileStorageRoller : Thread {
 public:
     //NOTE: 'rollInterval' is measured in seconds
-    InFileStorageRoller(InRollingFileStorage * rfs, unsigned long rollInterval);
+    InFileStorageRoller(InRollingFileStorage * rfs = NULL, unsigned long rollInterval = 0);
     ~InFileStorageRoller();
 
-    //thread entry point, automatically ran by Thread::Start()
-    int  Execute(void);
-    void Stop(void);
+    void Start(void);
+    void Stop(bool wait_for = false);
+
+    //adds FileStorage to list of rolled ones or changes rolling interval
+    void attachRFS(InRollingFileStorage * rfs, unsigned long rollInterval);
+    void detachRFS(InRollingFileStorage * rfs);
 
 protected:
-    InRollingFileStorage *  _rFS;        //storage to roll
-    unsigned long           _interval;   //rolling interval, in seconds
-    bool                    _running;
-    EventMonitor            _mutex;
+    //thread entry point, automatically ran by Thread::Start()
+    int  Execute(void);
+
+    typedef std::map<InRollingFileStorage *, unsigned long> RolledFSMap;
+    time_t checkRoll(const RolledFSMap::iterator & it);
+
+    volatile bool       _running;
+    EventMonitor        _mutex;
+    RolledFSMap         rfsMap;
 };
 
 } //filestore
