@@ -9,6 +9,7 @@ inman/inman inman $(SOCKETLIB) -linman -ldb -linman-abprov -linman-storage -linm
 inman/atih_test atih_test $(SOCKETLIB) -linman -linman-inap -linman-inap-map_atih -linman-comp -linman-comp-map_atih -linman-codecs-map_atih -linman-codec_inc-map -linman-codec_inc-ros -linman-asn1rt -linman-common -lutil-config -lutil-xml $(XERCES_LIB) -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -lcore-threads -lthread -llogger -lcore-network -lnsl -ldl
 #-linman-codecs-map_chsri
 inman/chsri_test chsri_test $(SOCKETLIB) -linman -linman-inap -linman-inap-map_chsri -linman-comp -linman-comp-map_chsri  -linman-codec_inc-map -linman-codec_inc-ros -linman-asn1rt -linman-common -lutil-config -lutil-xml $(XERCES_LIB) -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -lcore-threads -lthread -llogger -lcore-network -lnsl -ldl
+inman/RFSTest RFSTest -linman-common -linman-storage -lrt -L$(SMSC_BUILDDIR)/bin -lcore-threads -lthread -llogger -lcore-network -lnsl
 
 
 
