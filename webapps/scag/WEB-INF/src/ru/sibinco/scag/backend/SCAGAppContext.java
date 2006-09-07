@@ -2,30 +2,31 @@ package ru.sibinco.scag.backend;
 
 import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
+import ru.sibinco.WHOISDIntegrator.TariffMatrixManager;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.util.config.Config;
-import ru.sibinco.scag.backend.resources.ResourceManager;
-import ru.sibinco.scag.backend.routing.http.HttpRoutingManager;
-import ru.sibinco.scag.backend.routing.ScagRoutingManager;
-import ru.sibinco.scag.backend.users.UserManager;
-import ru.sibinco.scag.backend.protocol.journal.Journal;
-import ru.sibinco.scag.backend.endpoints.SmppManager;
-import ru.sibinco.scag.backend.rules.RuleManager;
-import ru.sibinco.scag.backend.sme.ProviderManager;
-import ru.sibinco.scag.backend.sme.CategoryManager;
 import ru.sibinco.scag.backend.daemon.Daemon;
 import ru.sibinco.scag.backend.daemon.ServiceInfo;
-import ru.sibinco.scag.backend.status.StatusManager;
-import ru.sibinco.scag.backend.service.ServiceProvidersManager;
-import ru.sibinco.scag.backend.operators.OperatorManager;
+import ru.sibinco.scag.backend.endpoints.SmppManager;
 import ru.sibinco.scag.backend.gw.ConfigManager;
+import ru.sibinco.scag.backend.gw.logging.LoggingManager;
 import ru.sibinco.scag.backend.installation.HSDaemon;
+import ru.sibinco.scag.backend.operators.OperatorManager;
+import ru.sibinco.scag.backend.protocol.journal.Journal;
+import ru.sibinco.scag.backend.resources.ResourceManager;
+import ru.sibinco.scag.backend.routing.ScagRoutingManager;
+import ru.sibinco.scag.backend.routing.http.HttpRoutingManager;
+import ru.sibinco.scag.backend.rules.RuleManager;
+import ru.sibinco.scag.backend.service.ServiceProvidersManager;
+import ru.sibinco.scag.backend.sme.CategoryManager;
+import ru.sibinco.scag.backend.sme.ProviderManager;
+import ru.sibinco.scag.backend.status.StatusManager;
+import ru.sibinco.scag.backend.users.UserManager;
 import ru.sibinco.scag.perfmon.PerfServer;
-import ru.sibinco.scag.svcmon.SvcMonServer;
 import ru.sibinco.scag.scmon.ScServer;
+import ru.sibinco.scag.svcmon.SvcMonServer;
 import ru.sibinco.scag.util.LocaleManager;
 import ru.sibinco.tomcat_auth.XmlAuthenticator;
-import ru.sibinco.WHOISDIntegrator.TariffMatrixManager;
 
 import javax.sql.DataSource;
 import javax.xml.parsers.ParserConfigurationException;
@@ -65,8 +66,10 @@ public class SCAGAppContext {
     private final HSDaemon hsDaemon;
     private final Statuses statuses;
     private final DataSource connectionPool;
+    private final LoggingManager loggingManager;
     private Journal journal = new Journal();
     private static File scagConfFolder = null;
+
 
     private SCAGAppContext(final String config_filename) throws Throwable, ParserConfigurationException, SAXException, Config.WrongParamTypeException,
             Config.ParamNotFoundException, SibincoException {
@@ -76,6 +79,7 @@ public class SCAGAppContext {
             config = new Config(new File(config_filename));
             String gwConfigFolder = config.getString("gw location.gw_config_folder");
             scagConfFolder = new File(gwConfigFolder);
+            loggingManager = new LoggingManager(config.getString("logger.properties_file"));
             gwConfigFolder = gwConfigFolder  + File.separatorChar;
             String gwConfigFile = gwConfigFolder + File.separatorChar + config.getString("gw location.gw_config");
             gwConfig = new Config(new File(gwConfigFile));
@@ -161,6 +165,10 @@ public class SCAGAppContext {
 
     public Config getIdsConfig() {
         return idsConfig;
+    }
+
+    public LoggingManager getLoggingManager() {
+        return loggingManager;
     }
 
     public UserManager getUserManager() {
