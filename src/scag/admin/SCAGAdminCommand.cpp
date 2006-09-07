@@ -720,7 +720,7 @@ Response * CommandSetLogCategories::CreateResponse(scag::Scag * ScagApp)
         {
             val.assign(p, delim_pos - p);
             levels[cat.c_str()] = Logger::getLogLevel(val.c_str());
-            smsc_log_debug(logger, "SetLogCategories [%s]=[%s]", cat.c_str(), val.c_str());
+//            smsc_log_debug(logger, "SetLogCategories [%s]=[%s]", cat.c_str(), val.c_str());
         }
         s = !s;
         p = delim_pos + 1;
