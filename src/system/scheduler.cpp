@@ -67,7 +67,9 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
          (mainFileName+".bak").c_str():
          (rolFileName+".bak").c_str()
     );
-    abort();
+    //abort();
+    smsc->stop();
+    return;
   }
 
   bool delayInit=sched.delayInit;
