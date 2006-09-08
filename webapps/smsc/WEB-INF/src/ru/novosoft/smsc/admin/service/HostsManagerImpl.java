@@ -163,7 +163,7 @@ public abstract class HostsManagerImpl implements HostsManager {
 
     public synchronized void removeSme(final String smeId) throws AdminException {
         if (serviceManager.contains(smeId)) {
-            throw new AdminException("Couldn't remove sme \"" + smeId + "\" becouse it is service");
+            throw new AdminException("Couldn't remove sme \"" + smeId + "\" because it is service");
         }
 
         int useFlag = isSmeUsed(smeId);

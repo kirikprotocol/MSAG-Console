@@ -14,6 +14,7 @@ import ru.novosoft.smsc.admin.smsc_service.RouteSubjectManager;
 import ru.novosoft.smsc.admin.smsc_service.SmeManager;
 import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.admin.closedgroups.ClosedGroupManager;
+import ru.novosoft.smsc.admin.service.HostsManager;
 import ru.novosoft.smsc.jsp.Statuses;
 import ru.novosoft.smsc.util.config.Config;
 
@@ -70,6 +71,10 @@ public class CommandContext {
 
     public SmeManager getSmeManager() {
         return smeManager;
+    }
+
+    public HostsManager getHostsManager() {
+        return owner.getHostsManager();
     }
 
     public RouteSubjectManager getRouteSubjectManager() {

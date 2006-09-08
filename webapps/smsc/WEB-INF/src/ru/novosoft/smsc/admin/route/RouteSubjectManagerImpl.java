@@ -50,6 +50,8 @@ public class RouteSubjectManagerImpl implements RouteSubjectManager {
     public int isSmeUsed(String smeId) {
         for (Iterator i = routes.iterator(); i.hasNext();) {
             Route route = (Route) i.next();
+            if (route.getSrcSmeId().equals(smeId))
+                return 1;
             if (route.getDestinations().isSmeUsed(smeId))
                 return 1;
         }
