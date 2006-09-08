@@ -1172,10 +1172,7 @@ int ProcessMessage(const char *msg,int len)
   }
 
 
-  if(noProfile)
-  {
-    dstUser='+'+dstUser;
-  }else
+  if(!noProfile)
   {
     if(!storage.checkEml2GsmLimit(dstUser.c_str()))
     {
@@ -1241,7 +1238,7 @@ int ProcessMessage(const char *msg,int len)
   sms.setOriginatingAddress(cfg::sourceAddress.c_str());
 
   string fwd;
-  string dst=noProfile?dstUser:MapEmailToAddress(dstUser,fwd);
+  string dst=noProfile?'+'+dstUser:MapEmailToAddress(dstUser,fwd);
   if(fwd.length())
   {
     try{
@@ -1335,7 +1332,7 @@ int ProcessMessage(const char *msg,int len)
       {
         __trace2__("Creating implicit profile creation for address %s",dstUser.c_str());
         AbonentProfile prof;
-        prof.addr=dstUser.c_str();
+        prof.addr=dst.c_str();
         prof.user=dstUser.c_str();
         //prof.forwardEmail;
         //prof.realName;
