@@ -5012,7 +5012,7 @@ void StateMachine::submitReceipt(SMS& sms,int type)
     bool has_route=false;
     sms.setSourceSmeId(smscSmeId.c_str());
     try{
-      has_route=smsc->routeSms(sms.getOriginatingAddress(),sms.getDealiasedDestinationAddress(),dest_proxy_index,dest_proxy,&ri);
+      has_route=smsc->routeSms(sms.getOriginatingAddress(),sms.getDealiasedDestinationAddress(),dest_proxy_index,dest_proxy,&ri,smsc->getSmeIndex(smscSmeId));
     }catch(std::exception& e)
     {
       warn2(smsLog,"Routing %s->%s failed:%s",sms.getOriginatingAddress().toString().c_str(),
