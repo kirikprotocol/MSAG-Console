@@ -1291,7 +1291,7 @@ Variant SmscComponent::profileLookupEx(const Arguments &args) throw (AdminExcept
       sprintf(numBuf,"%u",profile.accessMaskOut);
       result.appendValueToStringList(numBuf);
 #ifdef SMSEXTRA
-      sprintf(numBuf,"%u",profile.accessMaskOut);
+      sprintf(numBuf,"%u",profile.subscription);
       result.appendValueToStringList(numBuf);
 #endif
 
