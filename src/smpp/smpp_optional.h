@@ -45,7 +45,7 @@ inline void fillSmppOptional(SmppStream* stream,SmppOptional* opt)
 #define macroFillCOctetStr(field,maxlen) \
   if ( opt->has_##field() && opt->get_##field() != NULL) {\
     const char* text = opt->get_##field();\
-    int str_length = strlen(opt->get_##field());\
+    int str_length = (int)strlen(opt->get_##field());\
     __throw_if_fail__(((str_length<=maxlen)||(maxlen==-1)),VeryLargOctetStringException);\
     fillX(stream,SmppOptionalTags::field); \
     fillX(stream,(uint16_t)(str_length+1)); \
