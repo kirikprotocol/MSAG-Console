@@ -1149,12 +1149,13 @@ int ProcessMessage(const char *msg,int len)
   if(!storage.getProfileByEmail(dstUser.c_str(),p))
   {
     __trace2__("no profile for user:%s",dstUser.c_str());
-    if(storage.getProfileByAddress(dstUser.c_str(),p))
+    std::string addr="+"+dstUser;
+    if(storage.getProfileByAddress(addr.c_str(),p))
     {
       if(!p.numberMap)
       {
-        __trace2__("number map turned off for address:%s",dstUser.c_str());
-        //return StatusCodes::STATUS_CODE_NOUSER;
+        __trace2__("number map turned off for address:%s",addr.c_str());
+        return StatusCodes::STATUS_CODE_NOUSER;
       }
     }else
     {
@@ -1330,7 +1331,7 @@ int ProcessMessage(const char *msg,int len)
     {
       if(noProfile)
       {
-        __trace2__("Creating implicit profile creation for address %s",dstUser.c_str());
+        __trace2__("Creating implicit profile creation for address %s",dst.c_str());
         AbonentProfile prof;
         prof.addr=dst.c_str();
         prof.user=dstUser.c_str();
