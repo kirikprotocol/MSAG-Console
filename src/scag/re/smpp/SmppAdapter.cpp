@@ -24,6 +24,8 @@ Hash<int> SmppCommandAdapter::DataSmRespFieldNames = SmppCommandAdapter::InitDat
 IntHash<AccessType> SmppCommandAdapter::SubmitFieldsAccess = SmppCommandAdapter::InitSubmitAccess();
 IntHash<AccessType> SmppCommandAdapter::DeliverFieldsAccess = SmppCommandAdapter::InitDeliverAccess();
 IntHash<AccessType> SmppCommandAdapter::DataSmFieldsAccess = SmppCommandAdapter::InitDataSmAccess();
+IntHash<AccessType> SmppCommandAdapter::SubmitRespFieldsAccess = SmppCommandAdapter::InitSubmitRespAccess();
+IntHash<AccessType> SmppCommandAdapter::DeliverRespFieldsAccess = SmppCommandAdapter::InitDeliverRespAccess();
 
 
 
@@ -54,15 +56,32 @@ AccessType SmppCommandAdapter::CheckAccess(int handlerType, const std::string& n
         if (actype) return *actype;
         return atRead;
     case EH_DELIVER_SM_RESP:
+        pFieldId = DeliverRespFieldNames.GetPtr(name.c_str());
+
+        if (!pFieldId) return atNoAccess;
+
+        actype = DeliverRespFieldsAccess.GetPtr(*pFieldId);
+        if (actype) return *actype;
+        /*
         if (name =="status") return atReadWrite;
         if (name =="ussd_dialog") return atRead;
-
         return atNoAccess;
+        */
+
     case EH_SUBMIT_SM_RESP:
-        if (name == "status") return atReadWrite;
+
+        pFieldId = SubmitRespFieldNames.GetPtr(name.c_str());
+
+        if (!pFieldId) return atNoAccess;
+
+        actype = SubmitRespFieldsAccess.GetPtr(*pFieldId);
+        if (actype) return *actype;
+
+        /*if (name == "status") return atReadWrite;
         if (name == "message_id") return atRead;
         if (name == "ussd_dialog") return atRead;
-        return atNoAccess;
+        
+        return atNoAccess;                       */
         break;
     case EH_DATA_SM:
 
@@ -86,6 +105,24 @@ AccessType SmppCommandAdapter::CheckAccess(int handlerType, const std::string& n
 
     return atNoAccess;
 }
+
+
+IntHash<AccessType> SmppCommandAdapter::InitSubmitRespAccess()
+{
+    IntHash<AccessType> hs;
+    hs.Insert(STATUS,atReadWrite);
+
+    return hs;
+}
+
+IntHash<AccessType> SmppCommandAdapter::InitDeliverRespAccess()
+{
+    IntHash<AccessType> hs;
+    hs.Insert(STATUS,atReadWrite);
+
+    return hs;
+}
+
 
 IntHash<AccessType> SmppCommandAdapter::InitDataSmAccess()
 {
@@ -374,6 +411,8 @@ Hash<int> SmppCommandAdapter::InitSubmitRespFieldNames()
     hs["message_id"] = MESSAGE_ID;
     hs["ussd_dialog"] = USSD_DIALOG;
 
+    hs["OA"] = OA;
+    hs["DA"] = DA;
 
     return hs;
 }
@@ -384,6 +423,9 @@ Hash<int> SmppCommandAdapter::InitDeliverRespFieldNames()
 
     hs["status"] = STATUS;
     hs["ussd_dialog"] = USSD_DIALOG;
+
+    hs["OA"] = OA;
+    hs["DA"] = DA;
 
     return hs;
 }
@@ -704,9 +746,16 @@ AdapterProperty * SmppCommandAdapter::getSubmitRespProperty(SMS& data, const std
         property = new AdapterProperty(name,this,command->get_status());
         break;
     case MESSAGE_ID:
+        //TODO: Inmplement
         break;
     case USSD_DIALOG:
         property = new AdapterProperty(name,this,data.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP));
+        break;
+    case OA:
+        property = new AdapterProperty(name,this,CommandBrige::getAbonentAddr(command).toString());
+        break;
+    case DA:
+        property = new AdapterProperty(name,this,CommandBrige::getDestAddr(command).toString());
         break;
 
     }
@@ -726,6 +775,12 @@ AdapterProperty * SmppCommandAdapter::getDeliverRespProperty(SMS& data, const st
         break;
     case USSD_DIALOG:
         property = new AdapterProperty(name,this,data.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP));
+        break;
+    case OA:
+        property = new AdapterProperty(name,this,CommandBrige::getAbonentAddr(command).toString());
+        break;
+    case DA:
+        property = new AdapterProperty(name,this,CommandBrige::getDestAddr(command).toString());
         break;
     }
 
