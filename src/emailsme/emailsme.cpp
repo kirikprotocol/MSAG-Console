@@ -594,6 +594,7 @@ public:
       buf.setExternalBuffer(tmp.get(),pktSize);
       uint32_t cmdId=buf.ReadNetInt32();
       uint32_t rv=1;
+      bool writeRV=true;
       try
       {
         smsc_log_debug(log,"Received cmdId=%d",cmdId);
@@ -631,14 +632,58 @@ public:
               storage.DeleteProfile(p);
             }
           }
+          case cmdLookupByAddr:
+          {
+            Address addr;
+            ReadAddress(buf,addr);
+            AbonentProfile p;
+            if(storage.getProfileByAddress(addr.value,p))
+            {
+              writeRV=false;
+              SerializationBuffer outbuf;
+              p.Write(outbuf);
+              uint32_t sz=htonl(outbuf.getPos());
+              clnt->WriteAll((char*)&sz,4);
+              clnt->WriteAll((char*)outbuf.getBuffer(),outbuf.getPos());
+            }else
+            {
+              rv=0;
+            }
+          }break;
+          case cmdLookupByUser:
+          {
+            std::string user;
+            ReadString(buf,user);
+            AbonentProfile p;
+            if(storage.getProfileByEmail(user.c_str(),p))
+            {
+              writeRV=false;
+              SerializationBuffer outbuf;
+              p.Write(outbuf);
+              uint32_t sz=htonl(outbuf.getPos());
+              clnt->WriteAll((char*)&sz,4);
+              clnt->WriteAll((char*)outbuf.getBuffer(),outbuf.getPos());
+            }else
+            {
+              rv=0;
+            }
+          }break;
+          default:
+          {
+            rv=0;
+            smsc_log_warn(log,"unknown cmdid=%d",cmdId);
+          }
         }
       }catch(std::exception& e)
       {
         rv=0;
         smsc_log_warn(log,"exception in cmd=%d:'%s'",cmdId,e.what());
       }
-      rv=htonl(rv);
-      clnt->Write((char*)&rv,4);
+      if(writeRV)
+      {
+        rv=htonl(rv);
+        clnt->Write((char*)&rv,4);
+      }
 
     }
     smsc_log_debug(log,"Finishing AdminCommandsListener");
@@ -650,7 +695,7 @@ public:
     sck.Abort();
   }
 protected:
-  enum{cmdUpdateProfile=1,cmdDeleteProfile};
+  enum{cmdUpdateProfile=1,cmdDeleteProfile,cmdLookupByAddr,cmdLookupByUser};
   smsc::core::network::Socket sck;
   int readTimeOut;
   bool running;
@@ -1450,7 +1495,7 @@ int main(int argc,char* argv[])
 
   using namespace smsc::util;
   //using namespace smsc::db;
-  config::Manager::init("conf/emailsme.xml");
+  config::Manager::init("conf/config.xml");
   config::Manager& cfgman= config::Manager::getInstance();
 
   config::ConfigView *dsConfig = new config::ConfigView(cfgman, "StartupLoader");

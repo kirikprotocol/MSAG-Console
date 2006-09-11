@@ -63,6 +63,7 @@ void ParseParams(ParamsMap& m,const char* str)
     std::string nm;
     nm.assign(ptr1,eq-ptr1);
     std::string vl;
+    while(ptr2 && ptr2<eq)ptr2=strchr(ptr2+1,',');
     if(ptr2)
     {
       vl.assign(eq+1,ptr2-(eq+1));
@@ -76,6 +77,43 @@ void ParseParams(ParamsMap& m,const char* str)
   }
 }
 
+char host[256];
+int port;
+Socket s;
+bool ConnectSocket()
+{
+  if(s.Init(host,port,0)==-1)
+  {
+    printf("Socket init failed at %s:%d\n",host,port);
+    return false;
+  }
+  if(s.Connect()==-1)
+  {
+    printf("Failed to connect to %s:%d\n",host,port);
+    return false;
+  }
+  return true;
+}
+
+void DumpProfile(const AbonentProfile& p)
+{
+  printf("addr=%s\n",p.addr.toString().c_str());
+  printf("user=%s\n",p.user.c_str());
+  if(p.forwardEmail.length())
+  {
+    printf("forward email=%s\n",p.forwardEmail.c_str());
+  }
+  if(p.realName.length())
+  {
+    printf("real name=%s\n",p.realName.c_str());
+  }
+  printf("numbermap:%s\n",p.numberMap?"on":"off");
+  printf("limit:%d%c\n",p.limitValue,p.ltype==ltDay?'D':p.ltype==ltWeek?'W':'M');
+  printf("limitCountGsm2Eml:%d\n",p.limitCountGsm2Eml);
+  printf("limitCountEml2Gsm:%d\n",p.limitCountEml2Gsm);
+}
+
+
 int main(int argc,char* argv[])
 {
   if(argc!=4)
@@ -84,11 +122,11 @@ int main(int argc,char* argv[])
     printf("Commands:\n"
     "update addr={address},user={username},limit={number}{d|w|m}[,forwardEmail={email}][,realName={realname}]\n"
     "delete addr={address}\n"
+    "getbyaddr addr={address}\n"
+    "getbyuser user={username}\n"
     );
     return -1;
   }
-  char host[256];
-  int port;
   if(sscanf(argv[1],"%[^:]:%d",host,&port)!=2)
   {
     printf("Invalid host:port entry:%s\n",argv[1]);
@@ -130,45 +168,77 @@ int main(int argc,char* argv[])
       SerializationBuffer sb;
       sb.WriteNetInt32(1);
       p.Write(sb);
-      Socket s;
-      if(s.Init(host,port,0)==-1)
-      {
-        printf("Socket init failed at %s:%d\n",host,port);
-        return -1;
-      }
-      if(s.Connect()==-1)
-      {
-        printf("Failed to connect to %s:%d\n",host,port);
-        return -1;
-      }
+      if(!ConnectSocket())return -1;
       int pktSz=htonl(sb.getPos());
       s.WriteAll((char*)&pktSz,4);
       s.WriteAll(sb.getBuffer(),sb.getPos());
       int rv;
       s.ReadAll((char*)&rv,4);
+      rv=ntohl(rv);
       printf("Result:%d\n",rv);
     }else if(command=="delete")
     {
       SerializationBuffer sb;
       sb.WriteNetInt32(2);
       WriteAddress(sb,getParamAsString(m,"addr").c_str());
-      Socket s;
-      if(s.Init(host,port,0)==-1)
-      {
-        printf("Socket init failed at %s:%d\n",host,port);
-        return -1;
-      }
-      if(s.Connect()==-1)
-      {
-        printf("Failed to connect to %s:%d\n",host,port);
-        return -1;
-      }
+      if(!ConnectSocket())return -1;
       int pktSz=htonl(sb.getPos());
       s.WriteAll((char*)&pktSz,4);
       s.WriteAll(sb.getBuffer(),sb.getPos());
       int rv;
       s.ReadAll((char*)&rv,4);
+      rv=ntohl(rv);
       printf("Result:%d\n",rv);
+    }else if(command=="getbyaddr")
+    {
+      SerializationBuffer sb;
+      sb.WriteNetInt32(3);
+      WriteAddress(sb,getParamAsString(m,"addr").c_str());
+      if(!ConnectSocket())return -1;
+      int pktSz=htonl(sb.getPos());
+      s.WriteAll((char*)&pktSz,4);
+      s.WriteAll(sb.getBuffer(),sb.getPos());
+      int rv;
+      s.ReadAll((char*)&rv,4);
+      rv=ntohl(rv);
+      if(rv>0)
+      {
+        char* buf=new char[rv];
+        s.ReadAll(buf,rv);
+        SerializationBuffer sb;
+        sb.setExternalBuffer(buf,rv);
+        AbonentProfile p;
+        p.Read(sb);
+        DumpProfile(p);
+      }else
+      {
+        printf("Profile not found\n");
+      }
+    }else if(command=="getbyuser")
+    {
+      SerializationBuffer sb;
+      sb.WriteNetInt32(4);
+      WriteString(sb,getParamAsString(m,"user").c_str());
+      if(!ConnectSocket())return -1;
+      int pktSz=htonl(sb.getPos());
+      s.WriteAll((char*)&pktSz,4);
+      s.WriteAll(sb.getBuffer(),sb.getPos());
+      int rv;
+      s.ReadAll((char*)&rv,4);
+      rv=ntohl(rv);
+      if(rv>0)
+      {
+        char* buf=new char[rv];
+        s.ReadAll(buf,rv);
+        SerializationBuffer sb;
+        sb.setExternalBuffer(buf,rv);
+        AbonentProfile p;
+        p.Read(sb);
+        DumpProfile(p);
+      }else
+      {
+        printf("Profile not found\n");
+      }
     }else
     {
       printf("Unknown command:%s\n",command.c_str());

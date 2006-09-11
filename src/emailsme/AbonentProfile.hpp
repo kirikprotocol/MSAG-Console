@@ -6,6 +6,7 @@
 #include "sms/sms.h"
 #include "sms/sms_util.h"
 #include "core/buffers/File.hpp"
+#include "core/buffers/TmpBuf.hpp"
 
 namespace smsc{
 namespace emailsme{
