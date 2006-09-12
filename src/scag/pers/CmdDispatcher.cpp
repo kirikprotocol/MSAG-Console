@@ -152,6 +152,12 @@ void CommandDispatcher::Execute(SerialBuffer* sb)
     try{
         sb->SetPos(4);
         cmd = (PersCmd)sb->ReadInt8();
+        if(cmd == PC_PING)
+        {
+            SendResponse(sb, RESPONSE_OK);            
+            smsc_log_debug(log, "Ping received");
+            return;
+        }
         pt = (ProfileType)sb->ReadInt8();
         if(pt != PT_ABONENT)
             int_key = sb->ReadInt32();

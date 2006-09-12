@@ -63,7 +63,7 @@ protected:
 
 public:
     static PersClient& Instance();
-    static void Init(const char *_host, int _port, int timeout);// throw(PersClientException);
+    static void Init(const char *_host, int _port, int timeout, int pingTimeout);// throw(PersClientException);
     static void Init(const PersClientConfig& cfg);// throw(PersClientException);    
 
     virtual void SetProperty(ProfileType pt, const char* key, Property& prop) = 0;// throw(PersClientException);

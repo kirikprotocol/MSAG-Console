@@ -1,5 +1,7 @@
 /* $Id$ */
 
+#include <core/threads/Thread.hpp>
+#include <core/synchronization/EventMonitor.hpp>
 #include <scag/util/singleton/Singleton.h>
 #include "scag/config/ConfigManager.h"
 #include "scag/config/ConfigListener.h"
@@ -11,12 +13,13 @@ namespace scag { namespace pers { namespace client {
 using namespace scag::util::singleton;
 using smsc::util::Exception;
 using smsc::logger::Logger;
+using smsc::core::threads::Thread;
 using scag::pers;
 
 bool  PersClient::inited = false;
 Mutex PersClient::initLock;
 
-class PersClientImpl: public PersClient, public ConfigListener {
+class PersClientImpl: public PersClient, public ConfigListener, public Thread {
 //    friend class PersClient;
 public:
     PersClientImpl(): connected(false), ConfigListener(PERSCLIENT_CFG) {};
@@ -37,12 +40,17 @@ public:
     int IncModProperty(ProfileType pt, const char* key, Property& prop, uint32_t mod); //throw(PersClientException)
     int IncModProperty(ProfileType pt, uint32_t key, Property& prop, uint32_t mod); //throw(PersClientException)
 
-    void init_internal(const char *_host, int _port, int timeout); //throw(PersClientException);
+    void init_internal(const char *_host, int _port, int timeout, int _pingTimeout); //throw(PersClientException);
+    
+    virtual int Execute();
+    void Stop() { MutexGuard mt(pingSleeper), mt1(mtx); isStopping = true; pingSleeper.notify(); WaitFor();};
+    void Start() {isStopping = false; Thread::Start();};
+    
 protected:
 
     void configChanged();
     void init();
-    void reinit(const char *_host, int _port, int _timeout); //throw(PersClientException)    
+    void reinit(const char *_host, int _port, int _timeout, int _pingTimeout); //throw(PersClientException)    
     void SetPacketSize();
     void _SetProperty(ProfileType pt, const char* skey, uint32_t ikey, Property& prop); //throw(PersClientException)
     void _DelProperty(ProfileType pt, const char* skey, uint32_t ikey, const char *property_name); //throw(PersClientException)
@@ -58,15 +66,18 @@ protected:
     uint32_t GetPacketSize();
     PersServerResponseType GetServerResponse();
     void ParseProperty(Property& prop);
+    void Sleep();
 
     std::string host;
     int port;
-    int timeout;
+    int timeout, pingTimeout;
+    time_t actTS;
     Socket sock;
-    bool connected;
+    bool connected, isStopping;
     Logger * log;
     Mutex mtx;
     SerialBuffer sb;
+    EventMonitor pingSleeper;
 };
 
 inline unsigned GetLongevity(PersClient*) { return 5; }
@@ -83,14 +94,14 @@ PersClient& PersClient::Instance()
     return SinglePC::Instance();
 }
 
-void PersClient::Init(const char *_host, int _port, int _timeout) //throw(PersClientException)
+void PersClient::Init(const char *_host, int _port, int _timeout, int _pingTimeout) //throw(PersClientException)
 {
     if (!PersClient::inited)
     {
         MutexGuard guard(PersClient::initLock);
         if(!inited) {
             PersClientImpl& pc = SinglePC::Instance();
-            pc.init_internal(_host, _port, _timeout);
+            pc.init_internal(_host, _port, _timeout, _pingTimeout);
             PersClient::inited = true;
         }
     }
@@ -103,19 +114,21 @@ void PersClient::Init(const PersClientConfig& cfg)// throw(PersClientException);
         MutexGuard guard(PersClient::initLock);
         if(!inited) {
             PersClientImpl& pc = SinglePC::Instance();
-            pc.init_internal(cfg.host.c_str(), cfg.port, cfg.timeout);
+            pc.init_internal(cfg.host.c_str(), cfg.port, cfg.timeout, cfg.pingTimeout);
             PersClient::inited = true;
         }
     }
 }
 
-void PersClientImpl::init_internal(const char *_host, int _port, int _timeout) //throw(PersClientException)
+void PersClientImpl::init_internal(const char *_host, int _port, int _timeout, int _pingTimeout) //throw(PersClientException)
 {
     log = Logger::getInstance("persclient");
     connected = false;
     host = _host;
     port = _port;
     timeout = _timeout;
+    pingTimeout = _pingTimeout;
+    actTS = time(NULL);
     try{
         init();
     }
@@ -123,26 +136,30 @@ void PersClientImpl::init_internal(const char *_host, int _port, int _timeout) /
     {
         smsc_log_error(log, "Error during initialization. %s", e.what());
     }
+    Start();
 }
 
 void PersClientImpl::configChanged()
 {
     PersClientConfig& cfg = ConfigManager::Instance().getPersClientConfig();
     
-    reinit(cfg.host.c_str(), cfg.port, cfg.timeout);
+    reinit(cfg.host.c_str(), cfg.port, cfg.timeout, cfg.pingTimeout);
 }
 
-void PersClientImpl::reinit(const char *_host, int _port, int _timeout) //throw(PersClientException)
+void PersClientImpl::reinit(const char *_host, int _port, int _timeout, int _pingTimeout) //throw(PersClientException)
 {
     MutexGuard mt(mtx);
 
-    smsc_log_info(log, "PersClient reinit host=%s:%d timeout=%d", _host, _port, _timeout);
+    smsc_log_info(log, "PersClient reinit host=%s:%d timeout=%d, pingtimoeut=%d", _host, _port, _timeout, _pingTimeout);
     
     if(connected) sock.Close();
+    Stop();
     connected = false;
     host = _host;
     port = _port;
     timeout = _timeout;
+    pingTimeout = _pingTimeout;
+    actTS = time(NULL);
     try{
         init();
     }
@@ -150,6 +167,57 @@ void PersClientImpl::reinit(const char *_host, int _port, int _timeout) //throw(
     {
         smsc_log_error(log, "Error during reinitialization. %s", e.what());
     }
+    Start();
+}
+
+void PersClientImpl::Sleep()
+{
+    int to;
+    MutexGuard ps(pingSleeper);
+/*    do{
+        to = time(NULL) - actTS;
+        if(to >= 0 && to < pingTimeout)*/
+            pingSleeper.wait(pingTimeout); // -to
+/*        if(isStopping) break;
+    }while(to < pingTimeout);*/
+}
+
+int PersClientImpl::Execute()
+{
+    smsc_log_debug(log, "Ping sender started");
+    while(!isStopping)
+    {
+        if(isStopping) break;
+        
+        Sleep();
+        
+        if(isStopping) break;
+        
+        MutexGuard mt(mtx);        
+        try{
+            sb.Empty();
+            sb.SetPos(4);
+            sb.WriteInt8(PC_PING);
+            SendPacket();
+            ReadPacket();
+            if(GetServerResponse() != RESPONSE_OK)
+                throw PersClientException(SERVER_ERROR);
+            actTS = time(NULL);
+            smsc_log_debug(log, "Ping sent");
+        }
+        catch(PersClientException& e)
+        {
+            smsc_log_error(log, "Ping failed: %s", e.what());
+            if(connected) sock.Close();
+            init();
+        }
+        catch(...)
+        {
+            smsc_log_error(log, "Unknown exception");
+        }
+    }
+    smsc_log_debug(log, "Ping sender stopped");
+    return 0;
 }
 
 void PersClientImpl::_SetProperty(ProfileType pt, const char* skey, uint32_t ikey, Property& prop) //throw(PersClientException)
@@ -165,6 +233,8 @@ void PersClientImpl::_SetProperty(ProfileType pt, const char* skey, uint32_t ike
     ReadPacket();
     if(GetServerResponse() != RESPONSE_OK)
         throw PersClientException(SERVER_ERROR);
+        
+    actTS = time(NULL);
 }
 
 void PersClientImpl::SetProperty(ProfileType pt, const char* key, Property& prop) //throw(PersClientException)
@@ -195,6 +265,7 @@ void PersClientImpl::GetProperty(ProfileType pt, const char* key, const char *pr
     SendPacket();
     ReadPacket();
     ParseProperty(prop);
+    actTS = time(NULL);    
 }
 void PersClientImpl::GetProperty(ProfileType pt, uint32_t key, const char *property_name, Property& prop) //throw(PersClientException)
 {
@@ -208,6 +279,7 @@ void PersClientImpl::GetProperty(ProfileType pt, uint32_t key, const char *prope
     SendPacket();
     ReadPacket();
     ParseProperty(prop);
+    actTS = time(NULL);    
 }
 
 void PersClientImpl::_DelProperty(ProfileType pt, const char* skey, uint32_t ikey, const char *property_name) //throw(PersClientException)
@@ -229,6 +301,7 @@ void PersClientImpl::_DelProperty(ProfileType pt, const char* skey, uint32_t ike
         throw PersClientException(PROPERTY_NOT_FOUND);
     else if(resp != RESPONSE_OK)
         throw PersClientException(SERVER_ERROR);
+    actTS = time(NULL);        
 }
 
 void PersClientImpl::DelProperty(ProfileType pt, const char* key, const char *property_name) //throw(PersClientException)
@@ -264,6 +337,7 @@ void PersClientImpl::_IncProperty(ProfileType pt, const char* skey, uint32_t ike
     ReadPacket();
     if(GetServerResponse() != RESPONSE_OK)
         throw PersClientException(SERVER_ERROR);
+    actTS = time(NULL);        
 }
 void PersClientImpl::IncProperty(ProfileType pt, const char* key, Property& prop) //throw(PersClientException)
 {
@@ -302,6 +376,7 @@ int PersClientImpl::_IncModProperty(ProfileType pt, const char* skey, uint32_t i
 
     try{
         sb.SetPos(sizeof(uint32_t) + 1);
+        actTS = time(NULL);        
         return sb.ReadInt32();
     }
     catch(SerialBufferOutOfBounds &e)

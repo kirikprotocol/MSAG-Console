@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
 
         SessionManager::Init(cfg.getSessionManConfig());
 
-        PersClient::Init("127.0.0.1", 1200, 300);
+        PersClient::Init("127.0.0.1", 1200, 300, 180);
 
         StatisticsManager::init(cfg.getStatManConfig());
 

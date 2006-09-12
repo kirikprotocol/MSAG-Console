@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
     try{
         ConfigManager::Init();
         
-        PersClient::Init("localhost", 1200, 60);
+        PersClient::Init("localhost", 1200, 60, 180);
         PersClient& pc = PersClient::Instance();
         Property prop;
 
