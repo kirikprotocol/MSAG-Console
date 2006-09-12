@@ -11,16 +11,10 @@ namespace snmp {
 static const RollingFileStorageParms _smsc_snmp_STORAGE_parms = {
     TrapRecord::headerText(), 0, 0, NULL
 };
-static const char* _smsc_snmp_CURRENT_LOG_FILE_EXTENSION = "lst";
-static const char* _smsc_snmp_ARCHIVED_LOG_FILE_EXTENSION = "csv";
-
 TrapRecordLog::TrapRecordLog(const std::string & location,
-                                            unsigned long rollInterval/* = 0*/,
-                                            Logger * uselog /* = NULL */)
-    : InRollingFileStorage(location,
-                           _smsc_snmp_CURRENT_LOG_FILE_EXTENSION,
-                           _smsc_snmp_ARCHIVED_LOG_FILE_EXTENSION, rollInterval,
-                            &_smsc_snmp_STORAGE_parms, uselog)
+                             const char *lastExt, const char *storageExt,
+                             unsigned long rollInterval, Logger * uselog)
+    : InRollingFileStorage(location,lastExt,storageExt, rollInterval,&_smsc_snmp_STORAGE_parms, uselog)
 { }
 
 TrapRecordLog::~TrapRecordLog()

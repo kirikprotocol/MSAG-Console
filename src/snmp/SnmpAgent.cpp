@@ -1,3 +1,4 @@
+static char const ident[] = "$Id$";
 #include <net-snmp/net-snmp-config.h>
 #include <signal.h>
 #include <net-snmp/net-snmp-includes.h>
@@ -31,12 +32,6 @@
                          netsnmp_handler_registration *reginfo,
                          netsnmp_agent_request_info *reqinfo,
                          netsnmp_request_info *requests);
-    struct FFMRargs {
-      char* alarmId;
-      char* alarmObjCategory;
-      char* text;
-      uint8_t severity;
-    };
     void send_change_status();
     void* agent = 0;
     void* agentlog = 0;
@@ -47,6 +42,8 @@
     static oid statusNotificationOid[] = { 1, 3, 6, 1, 4, 1, 26757, 1, 0, 1 };
     static oid alertOid[] =              { 1, 3, 6, 1, 4, 1, 26757, 1, 0, 2 };
     static oid smscAlertFFMROid[] =      { 1, 3, 6, 1, 4, 1, 26757, 1, 0, 3 };
+    static oid smscNewAlertFFMROid[] =   { 1, 3, 6, 1, 4, 1, 26757, 1, 0, 4 };
+    static oid smscClearAlertFFMROid[] = { 1, 3, 6, 1, 4, 1, 26757, 1, 0, 5 };
     static oid smscDescrOid[] =          { 1, 3, 6, 1, 4, 1, 26757, 1, 1, 0 };
     static oid status_oid[] =            { 1, 3, 6, 1, 4, 1, 26757, 1, 2, 0 };
     static oid smscUpTimeOid[] =         { 1, 3, 6, 1, 4, 1, 26757, 1, 3, 0 };
@@ -70,6 +67,13 @@
       using smsc::util::config::Manager;
       using smsc::util::config::ConfigException;
 
+    struct FFMRargs {
+      char* alarmId;
+      char* alarmObjCategory;
+      char* text;
+      uint8_t severity;
+      SnmpAgent::alertStatus status;
+    };
 
       TrapRecordLog*       fileLog = 0;
       InFileStorageRoller* fileLogRoller = 0;
@@ -145,9 +149,10 @@
             fileLogRollInterval = 60;
         }
 
-        fileLog = new TrapRecordLog(fileLogLocation, 0, log);
+        fileLog = new TrapRecordLog(fileLogLocation, "ucs.lst", "ucs.csv", fileLogRollInterval, log);
         fileLog->RFSOpen(true);
         fileLogRoller = new InFileStorageRoller(fileLog,fileLogRollInterval);
+//        fileLogRoller->attachRFS(fileLog,fileLogRollInterval);
 
         if (fileLogRoller) {
             fileLogRoller->Start();
@@ -158,7 +163,7 @@
         }
         if (fileLogRoller) {
             fileLogRoller->Stop();
-            fileLogRoller->WaitFor();
+//            fileLogRoller->WaitFor();
         }
         smsc_log_debug(log, "try to shutdown snmp agent");
         snmp_shutdown("smscd");// at shutdown time
@@ -193,6 +198,14 @@
                            alertSeverity severity,
                            const char * const text)
       {
+        trap(INFO,alarmId,alarmObjCategory,severity,text);
+      }
+      void SnmpAgent::trap(alertStatus status,
+                           const char * const alarmId,
+                           const char * const alarmObjCategory,
+                           alertSeverity severity,
+                           const char * const text)
+      {
         if (!agent) return;
         TrapRecord rec;
         rec.submitTime = time(0);
@@ -202,17 +215,17 @@
         rec.text = text;
         if(fileLog) fileLog->log(rec);
         struct timeval t;t.tv_sec=0,t.tv_usec=10;
-        struct FFMRargs * clientarg = (struct FFMRargs *)malloc(sizeof(struct FFMRargs));
+        FFMRargs* clientarg = new(FFMRargs);
         if (clientarg)
         {
           clientarg->alarmId = strdup(alarmId);
           clientarg->alarmObjCategory = strdup(alarmObjCategory);
           clientarg->severity = severity;
           clientarg->text = strdup(text);
+          clientarg->status = status;
         }
         snmp_alarm_register_hr(t, 0, sendSmscAlertFFMR,clientarg);
       }
-
 
     }//snmp name space
   }//smsc name space
@@ -337,13 +350,16 @@
     snmp_free_varbind(notification_vars);
     free(clientarg);
   }
-
+using smsc::snmp::FFMRargs;
+using smsc::snmp::SnmpAgent;
+//using smsc::snmp::CLEAR;
+//using smsc::snmp::INFO;
   /* order of vars in clientarg array: alarmId, alarmObCategory, severity, text */
   extern "C"
   void
   sendSmscAlertFFMR(unsigned int clientreg, void *clientarg)
   {
-    struct FFMRargs * vars = (struct FFMRargs *)clientarg;
+    FFMRargs* vars = (FFMRargs *)clientarg;
     if (vars)
     {
       netsnmp_variable_list *notification_vars = NULL;
@@ -381,12 +397,17 @@
                                   buf,buflen);
         free(vars->alarmId);
       }
-
-      send_enterprise_trap_vars(SNMP_TRAP_ENTERPRISESPECIFIC, 1,
-                                smscAlertFFMROid,
-                                OID_LENGTH(smscAlertFFMROid), notification_vars);
+      oid* poid = 0;
+      int  oidlen = 0;
+      switch (vars->status)
+      {
+        case SnmpAgent::INFO : poid = smscAlertFFMROid; oidlen = OID_LENGTH(smscAlertFFMROid); break;
+        case SnmpAgent::NEW  : poid = smscNewAlertFFMROid; oidlen = OID_LENGTH(smscNewAlertFFMROid); break;
+        case SnmpAgent::CLEAR: poid = smscClearAlertFFMROid; oidlen = OID_LENGTH(smscClearAlertFFMROid); break;
+      }
+      send_enterprise_trap_vars(SNMP_TRAP_ENTERPRISESPECIFIC, 1, poid, oidlen, notification_vars);
       snmp_free_varbind(notification_vars);
-      free(clientarg);
+      delete(clientarg);
     }
   }
 

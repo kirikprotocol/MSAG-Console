@@ -14,7 +14,7 @@ using smsc::inman::filestore::InRollingFileStorage;
 class TrapRecordLog : public InRollingFileStorage
 {
 public:
-    TrapRecordLog(const std::string & location, unsigned long rollInterval = 0, Logger * uselog  = NULL);
+    TrapRecordLog(const std::string & location, const char *lastExt, const char *storageExt, unsigned long rollInterval, Logger * uselog);
     ~TrapRecordLog();
 
     void log(const TrapRecord & trap);

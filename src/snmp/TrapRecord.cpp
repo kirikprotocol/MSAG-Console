@@ -2,7 +2,7 @@ static char const ident[] = "$Id$";
 
 #include "util/csv/CSVFileEncoder.h"
 #include "TrapRecord.hpp"
-
+#include <stdio.h>
 using smsc::util::csv::CSVFileEncoder;
 
 namespace smsc  {
@@ -13,7 +13,7 @@ using smsc::snmp::TrapRecord;
 const char    _TrapRecordHeader_TEXT[] =
     "SUBMIT_TIME,ALARM_ID,ALARMCATEGORY,SEVERITY,TEXT\n";
 
-const char* TrapRecord::headerText() {return _TrapRecordHeader_TEXT;}
+const char* TrapRecord::headerText() { return _TrapRecordHeader_TEXT;}
 
 TrapRecord::TrapRecord() {}
 
