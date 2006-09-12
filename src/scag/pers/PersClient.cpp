@@ -209,7 +209,11 @@ int PersClientImpl::Execute()
         catch(PersClientException& e)
         {
             smsc_log_error(log, "Ping failed: %s", e.what());
-            if(connected) sock.Close();
+            if(connected)
+            {
+                sock.Close();
+                connected = false;
+            }
             init();
         }
         catch(...)
