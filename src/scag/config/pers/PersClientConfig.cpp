@@ -13,7 +13,8 @@ void PersClientConfig::init(ConfigView& cv)   throw(ConfigException)
         std::auto_ptr <char> h(cv.getString("host", NULL, false));
         host = h.get();
         port = cv.getInt("port", NULL);
-        timeout = cv.getInt("timeout", NULL);        
+        timeout = cv.getInt("timeout", NULL);
+        pingTimeout = cv.getInt("pingTimeout", NULL);
     }catch(ConfigException& e){
         throw ConfigException(e.what());
     }catch(...){
@@ -25,7 +26,7 @@ bool PersClientConfig::check(ConfigView& cv)   throw(ConfigException)
 {   
     try {
         std::auto_ptr<char> h( cv.getString("host") );
-        return timeout != cv.getInt("timeout", NULL) ||
+        return timeout != cv.getInt("timeout", NULL) || pingTimeout != cv.getInt("pingTimeout", NULL) ||
             port != cv.getInt("port", NULL) || strcmp(host.c_str(), h.get());
     }catch(ConfigException& e){
         throw ConfigException(e.what());

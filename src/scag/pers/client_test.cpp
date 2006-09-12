@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
     try{
         ConfigManager::Init();
         
-        PersClient::Init("localhost", 1200, 60, 180);
+        PersClient::Init("localhost", 1200, 60, 5);
         PersClient& pc = PersClient::Instance();
         Property prop;
 
@@ -61,6 +61,7 @@ int main(int argc, char* argv[])
             pc.GetProperty(PT_ABONENT, "+79232446251", "test_val", prop);
             smsc_log_debug(logger,  ">>ABONENT: get int %s", prop.toString().c_str());
 
+            sleep(15);
             pc.GetProperty(PT_ABONENT, "+79232446251", "test_val_bool", prop);
             smsc_log_debug(logger,  ">>ABONENT: get bool %s", prop.toString().c_str());
 
@@ -78,7 +79,7 @@ int main(int argc, char* argv[])
             pc.DelProperty(PT_ABONENT, "+79232446251", "test_val");
             smsc_log_debug(logger,  ">>ABONENT: del int");
 
-
+            sleep(15);
             prop.setInt("test_val", 234567, FIXED, -1, 20);
             pc.SetProperty(PT_SERVICE, 12, prop);
 

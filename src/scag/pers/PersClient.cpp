@@ -123,6 +123,7 @@ void PersClient::Init(const PersClientConfig& cfg)// throw(PersClientException);
 void PersClientImpl::init_internal(const char *_host, int _port, int _timeout, int _pingTimeout) //throw(PersClientException)
 {
     log = Logger::getInstance("persclient");
+    smsc_log_info(log, "PersClient init host=%s:%d timeout=%d, pingtimeout=%d", _host, _port, _timeout, _pingTimeout);    
     connected = false;
     host = _host;
     port = _port;
@@ -177,7 +178,7 @@ void PersClientImpl::Sleep()
 /*    do{
         to = time(NULL) - actTS;
         if(to >= 0 && to < pingTimeout)*/
-            pingSleeper.wait(pingTimeout); // -to
+            pingSleeper.wait(pingTimeout * 1000); // -to
 /*        if(isStopping) break;
     }while(to < pingTimeout);*/
 }

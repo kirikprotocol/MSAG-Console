@@ -12,12 +12,12 @@ class PersClientConfig
 {
 public:
 
-    PersClientConfig(const std::string h, int p, int to):
-        host(h), port(p), timeout(to)
+    PersClientConfig(const std::string h, int p, int to, int pto):
+        host(h), port(p), timeout(to), pingTimeout(pto)
     {
     }
 
-    PersClientConfig(): port(1200), timeout(60)
+    PersClientConfig(): port(1200), timeout(60), pingTimeout(180)
     {
     }
 
@@ -26,7 +26,7 @@ public:
     bool check(ConfigView& cv)  throw(ConfigException);
 
     std::string host;
-    int port, timeout;    
+    int port, timeout, pingTimeout;    
 };
 
 }
