@@ -43,7 +43,7 @@ public:
     void init_internal(const char *_host, int _port, int timeout, int _pingTimeout); //throw(PersClientException);
     
     virtual int Execute();
-    void Stop() { MutexGuard mt(pingSleeper), mt1(mtx); smsc_log_debug(log, "Pers ping thread stopping. mutex lock gained"); isStopping = true; pingSleeper.notify(); WaitFor();};
+    void Stop() { isStopping = true; {MutexGuard mt(pingSleeper), mt1(mtx); pingSleeper.notify();} WaitFor();};
     void Start() {isStopping = false; Thread::Start();};
     
 protected:
@@ -175,10 +175,11 @@ void PersClientImpl::Sleep()
 {
     int to;
     MutexGuard ps(pingSleeper);
+    if(isStopping) return;
 /*    do{
         to = time(NULL) - actTS;
         if(to >= 0 && to < pingTimeout)*/
-            pingSleeper.wait(pingTimeout * 1000); // -to
+                pingSleeper.wait(pingTimeout * 1000); // -to
 /*        if(isStopping) break;
     }while(to < pingTimeout);*/
 }
@@ -195,6 +196,9 @@ int PersClientImpl::Execute()
         if(isStopping) break;
         
         MutexGuard mt(mtx);        
+        
+        if(isStopping) break;        
+        
         try{
             sb.Empty();
             sb.SetPos(4);
