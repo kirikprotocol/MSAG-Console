@@ -673,6 +673,7 @@ Response * CommandGetLogCategories::CreateResponse(scag::Scag * ScagApp)
             std::string tmp(k);
             tmp += ",";
             tmp += Logger::getLogLevel(level);
+            smsc_log_debug(logger, "GetLogCategories [%s]=[%d, %s]", k, level, Logger::getLogLevel(level));            
             result.appendValueToStringList(tmp.c_str());
         }
     } catch(Exception& e) {                                     
