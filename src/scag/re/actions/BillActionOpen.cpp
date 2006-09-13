@@ -57,44 +57,44 @@ bool BillActionOpen::FinishXMLSubSection(const std::string& name)
 
 void BillActionOpen::SetBillingStatus(ActionContext& context, const char * errorMsg, bool isOK, const TariffRec * tariffRec)
 {
-    Property * property = context.getProperty(m_sStatus);
-    if (!property) 
+    Property * propertyStatus = context.getProperty(m_sStatus);
+    if (!propertyStatus) 
     {
         smsc_log_debug(logger,"Action '%s' :: Invalid property %s for status", m_ActionName.c_str(), m_sStatus.c_str());
         return;
     }
 
-    if (isOK) property->setInt(0);
+    if (isOK) propertyStatus->setInt(0);
 
     if (m_ResNumExist) 
     {
-        property = context.getProperty(m_sResNumber);
+        Property * propertyResNum = context.getProperty(m_sResNumber);
 
-        if (!property)
+        if (!propertyResNum)
             smsc_log_debug(logger,"Action '%s' :: Invalid property %s for result_number", m_ActionName.c_str(), m_sResNumber.c_str());
         else
         {
             if ((isOK)&&(tariffRec)) 
-                property->setInt(tariffRec->ServiceNumber);
+                propertyResNum->setInt(tariffRec->ServiceNumber);
             else
-                property->setInt(0);
+                propertyResNum->setInt(0);
         }
     }
 
     if (!isOK) 
     {
-        property->setInt(1);
+        propertyStatus->setInt(1);
 
         if (m_MsgExist) 
         {
-            property = context.getProperty(m_sMessage);
+            Property * propertyMsg = context.getProperty(m_sMessage);
 
-            if (!property) 
+            if (!propertyMsg) 
             {
                 smsc_log_debug(logger,"Action '%s' :: Invalid property %s for msg", m_ActionName.c_str(), m_sMessage.c_str());
                 return;
             }
-            property->setStr(errorMsg);
+            propertyMsg->setStr(errorMsg);
         }
     }
 
