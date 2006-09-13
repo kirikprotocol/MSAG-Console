@@ -127,7 +127,11 @@ int EventSender::Execute()
         MutexGuard g(mtx);
 
         if(bStarted && (!eventsQueue.Count() || !bConnected))
+        {
             mtx.wait(Timeout);
+            if(bConnected && !eventsQueue.Count())
+                sendPing();
+        }
 
         if(!bStarted) break;      
           
@@ -237,6 +241,23 @@ void EventSender::Put(const SACC_ALARM_MESSAGE_t & ev)
  }
 }
  
+void EventSender::sendPing()
+{
+    pdubuffer.setPos(sizeof(uint32_t));
+    pdubuffer.WriteNetInt16(0); 
+    
+    uint32_t bsize= pdubuffer.getPos();
+    pdubuffer.setPos(0);
+    pdubuffer.WriteNetInt32(bsize);
+    pdubuffer.setPos(0);
+    int b =SaccSocket.WriteAll(pdubuffer.getBuffer() ,bsize);
+
+    if(b<=0)
+        bConnected=false;
+        
+    smsc_log_debug(logger,"EventSender::ping sent");        
+}
+
 void EventSender::writeHeader(const SACC_EVENT_HEADER_t& e, const std::string& pSessionKey)
 {
     pdubuffer.setPos(sizeof(uint32_t));///header plase 

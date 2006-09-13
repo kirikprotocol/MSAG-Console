@@ -102,6 +102,7 @@ private:
  void performAlarmMessageEvent(const SACC_ALARM_MESSAGE_t& e);
  void performAlarmEvent(const SACC_ALARM_t& e);
  void writeHeader(const SACC_EVENT_HEADER_t& e, const std::string& pSessionKey);
+ void sendPing();
 // void performSessionExpiredEvent(const SACC_SESSION_EXPIRATION_TIME_ALARM_t& e);
 // void performOperatorNotFoundEvent(const SACC_OPERATOR_NOT_FOUND_ALARM_t& e);
 
