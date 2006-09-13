@@ -23,7 +23,7 @@ class PersClientImpl: public PersClient, public ConfigListener, public Thread {
 //    friend class PersClient;
 public:
     PersClientImpl(): connected(false), ConfigListener(PERSCLIENT_CFG) {};
-    ~PersClientImpl() { Stop(); if(connected) sock.Close(); };
+    ~PersClientImpl() { smsc_log_debug(log, "Pers ping thread stopping"); Stop(); if(connected) sock.Close(); smsc_log_debug(log, "Pers ping thread stopped");};
 
     void SetProperty(ProfileType pt, const char* key, Property& prop);// throw(PersClientException);
     void SetProperty(ProfileType pt, uint32_t key, Property& prop);// throw(PersClientException);
@@ -43,7 +43,7 @@ public:
     void init_internal(const char *_host, int _port, int timeout, int _pingTimeout); //throw(PersClientException);
     
     virtual int Execute();
-    void Stop() { MutexGuard mt(pingSleeper), mt1(mtx); isStopping = true; pingSleeper.notify(); WaitFor();};
+    void Stop() { MutexGuard mt(pingSleeper), mt1(mtx); smsc_log_debug(log, "Pers ping thread stopping. mutex lock gained"); isStopping = true; pingSleeper.notify(); WaitFor();};
     void Start() {isStopping = false; Thread::Start();};
     
 protected:
