@@ -23,7 +23,7 @@ class PersClientImpl: public PersClient, public ConfigListener, public Thread {
 //    friend class PersClient;
 public:
     PersClientImpl(): connected(false), ConfigListener(PERSCLIENT_CFG) {};
-    ~PersClientImpl() { if(connected) sock.Close(); };
+    ~PersClientImpl() { Stop(); if(connected) sock.Close(); };
 
     void SetProperty(ProfileType pt, const char* key, Property& prop);// throw(PersClientException);
     void SetProperty(ProfileType pt, uint32_t key, Property& prop);// throw(PersClientException);
