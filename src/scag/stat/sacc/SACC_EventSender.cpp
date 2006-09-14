@@ -389,7 +389,15 @@ void EventSender::performAlarmMessageEvent(const SACC_ALARM_MESSAGE_t& e)
  }
  else
      pdubuffer.WriteNetInt16(0); 
-          
+
+ if(e.sSrcPort)
+ {
+     pdubuffer.WriteNetInt16(2);
+     pdubuffer.WriteInt16(e.sSrcPort);
+ }
+ else
+     pdubuffer.WriteNetInt16(0); 
+     
  if(e.sDestPort)
  {
      pdubuffer.WriteNetInt16(2);

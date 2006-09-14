@@ -136,6 +136,11 @@ void ActionSend::init(const SectionParams& params,PropertyObject _propertyObject
     ftDestPort = CheckParameter(params, propertyObject, "send", "destPort", false, true, strDestPort, bExist);
     if(ftDestPort == ftUnknown && bExist)
         destPort = atoi(strDestPort.c_str());
+        
+    srcPort = 0;
+    ftSrcPort = CheckParameter(params, propertyObject, "send", "srcPort", false, true, strSrcPort, bExist);
+    if(ftSrcPort == ftUnknown && bExist)
+        srcPort = atoi(strSrcPort.c_str());
             
     usr = false;
     if(params.Exists("usr") && !strcmp(params["usr"].c_str(), "yes"))
@@ -224,6 +229,16 @@ bool ActionSend::run(ActionContext& context)
         destPort = p2->getInt();
     }
     
+    if(ftSrcPort != ftUnknown)
+    {
+        if(!(p2 = context.getProperty(strSrcPort))) 
+        {
+            smsc_log_warn(logger,"Action 'send': invalid 'srcPort' property '%s'", strSrcPort.c_str());
+            return false;
+        }
+        srcPort = p2->getInt();
+    }
+    
     if(ftEsmClass != ftUnknown)
     {
         if(!(p2 = context.getProperty(strEsmClass))) 
@@ -234,6 +249,7 @@ bool ActionSend::run(ActionContext& context)
         esmClass = p2->getInt();
     }
     
+    ev.sSrcPort = srcPort;
     ev.sDestPort = destPort;
     ev.cEsmClass = esmClass;
 
@@ -241,7 +257,7 @@ bool ActionSend::run(ActionContext& context)
     
     if(usr) ev.sUsr = context.getSession().getUSR();
 
-    smsc_log_debug(logger, "msg: \"%s\", toEmail: \"%s\", toSms: \"%s\", date: \"%s\", esmClass: %d, destPort: %d", ev.pMessageText.c_str(), ev.pAddressEmail.c_str(), ev.pAbonentsNumbers.c_str(), ev.pDeliveryTime.c_str(), (int)esmClass, destPort);
+    smsc_log_debug(logger, "msg: \"%s\", toEmail: \"%s\", toSms: \"%s\", date: \"%s\", esmClass: %d, destPort: %d, srcPort: %d", ev.pMessageText.c_str(), ev.pAddressEmail.c_str(), ev.pAbonentsNumbers.c_str(), ev.pDeliveryTime.c_str(), (int)esmClass, destPort, srcPort);
 
     sm.registerSaccEvent(ev);
     return true;

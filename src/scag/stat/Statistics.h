@@ -220,6 +220,7 @@ using smsc::smeman::SmeRecord;
         uint8_t  cCriticalityLevel;
         uint16_t  sUsr;
         uint16_t  sDestPort;        
+        uint16_t  sSrcPort;                
         uint8_t cEsmClass;
         SACC_ALARM_MESSAGE_t()
         {
@@ -231,6 +232,7 @@ using smsc::smeman::SmeRecord;
             sEventType = sec_alarm_message;
             sUsr = 0;
             sDestPort = 0;
+            sSrcPort = 0;            
             cEsmClass = 0;
         }
         SACC_ALARM_MESSAGE_t(const SACC_ALARM_MESSAGE_t & src)
@@ -248,6 +250,7 @@ using smsc::smeman::SmeRecord;
             sEventType=src.sEventType;
             sUsr = src.sUsr;
             sDestPort = src.sDestPort;
+            sSrcPort = src.sSrcPort;
             cEsmClass = src.cEsmClass;
         }
         SACC_ALARM_MESSAGE_t(SACC_ALARM_MESSAGE_t * src)
@@ -265,6 +268,7 @@ using smsc::smeman::SmeRecord;
             sEventType=src->sEventType;
             sUsr = src->sUsr;
             sDestPort = src->sDestPort;
+            sSrcPort = src->sSrcPort;
             cEsmClass = src->cEsmClass;
         }
         uint16_t getEventType()const{return sEventType;};
@@ -432,3 +436,4 @@ using smsc::smeman::SmeRecord;
 }//namespace scag
 
 #endif // SMSC_STAT_STATISTICS
+

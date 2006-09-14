@@ -21,6 +21,7 @@
         <attribute name="usr"      type="send:YesNo" use="optional" />
         <attribute name="esmClass"      type="scag:Value" use="optional" />
         <attribute name="destPort"       type="scag:Value" use="optional" />
+        <attribute name="srcPort"       type="scag:Value" use="optional" />
     </attributeGroup>
 
     <complexType name="ToRecepient">
