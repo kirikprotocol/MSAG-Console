@@ -62,8 +62,6 @@ bool BillActionClose::run(ActionContext& context)
         }
 
 
-        TariffRec tariffRec;
-
         try
         {
             bm.Commit(operation->getBillId());
@@ -84,14 +82,14 @@ bool BillActionClose::run(ActionContext& context)
         Operation * operation = context.GetCurrentOperation();
         if (!operation)
         {
-            smsc_log_error(logger,"BillAction 'bill:close': Fatal error in action - operation from ActionContext is invalid");
+            smsc_log_error(logger,"BillAction 'bill:close' error: Operation from ActionContext is invalid");
             SetBillingStatus(context,"operation from ActionContext is invalid", false);
             return true;
         }
 
         if (!operation->hasBill())
         {
-            smsc_log_error(logger,"BillAction 'bill:close': Fatal error in action - bill is not attached to operation");
+            smsc_log_error(logger,"BillAction 'bill:close' error: Bill is not attached to operation");
             SetBillingStatus(context,"Bill is not attached to operation", false);
             return true;
         }

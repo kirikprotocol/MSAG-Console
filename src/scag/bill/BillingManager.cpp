@@ -1,3 +1,4 @@
+
 #include "BillingManager.h"
 #include <scag/util/singleton/Singleton.h>
 #include <core/synchronization/Mutex.hpp>
@@ -9,8 +10,6 @@
 #include "BillingManagerWrapper.h"
 #include "scag/config/ConfigListener.h"
 #include "scag/stat/Statistics.h"
-
-//#define MSAG_INMAN_BILL
 
 
 namespace scag { namespace bill {
@@ -322,7 +321,7 @@ int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, TariffRec& ta
     opRes.setDialogId(billId);
     opRes.setResultValue(1);
 
-    pBillTransaction->status = TRANSACTION_WAIT_ANSWER;
+    billTransaction->status = TRANSACTION_WAIT_ANSWER;
     sendCommand(opRes);
     #endif
 
@@ -340,7 +339,7 @@ void BillingManagerImpl::Commit(int billId)
 
     #ifdef MSAG_INMAN_BILL
     (*pBillTransactionPtr)->ChargeOperation.setDialogId(billId);
-    sendCommand((*pBillTransaction)->ChargeOperation);
+    sendCommand((*pBillTransactionPtr)->ChargeOperation);
     #else
     (*pBillTransactionPtr)->status = TRANSACTION_VALID;
     #endif 
