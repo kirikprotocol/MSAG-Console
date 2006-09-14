@@ -12,7 +12,6 @@
 #include <util/signal.hpp>
 #include <util/xml/init.h>
 #include <util/findConfigFile.h>
-#include <scag/scagsignalhandlers.h>
 #include <core/threads/Thread.hpp>
 
 #include "license/check/license.hpp"
@@ -22,6 +21,46 @@
 #include "Inst.h"
 
 #include "scag/version.inc"
+
+static const int SHUTDOWN_SIGNAL = SIGTERM;
+
+static int shutdownFlag = 0;
+static sigset_t st;
+
+static scag::Scag *app = NULL;
+
+scag::Scag *getApp()
+{
+    return app;
+}
+
+extern "C" void sigHandler(int signo)
+{
+    fprintf(stderr,"Signal received %d\n", signo);
+    shutdownFlag = signo;
+}
+
+void registerSignalHandlers()
+{
+  sigfillset(&st);
+  sigdelset(&st, SIGBUS);
+  sigdelset(&st, SIGFPE);
+  sigdelset(&st, SIGILL);
+  sigdelset(&st, SIGSEGV);
+  sigprocmask(SIG_SETMASK, &st, NULL);
+  
+  sigdelset(&st,17);
+  sigdelset(&st, SIGALRM);
+  sigdelset(&st, SIGABRT);
+  sigdelset(&st, SHUTDOWN_SIGNAL);
+
+  sigset(17,      sigHandler);
+  sigset(SIGFPE,  sigHandler);
+  sigset(SIGILL,  sigHandler);
+  signal(SIGABRT, sigHandler);
+  sigset(SIGALRM, sigHandler);
+  sigset(SHUTDOWN_SIGNAL,  sigHandler);
+}
 
 extern "C" void atExitHandler(void)
 {
@@ -34,7 +73,7 @@ int main(int argc,char* argv[])
   Logger::Init();
 
   atexit(atExitHandler);
-  scag::clearThreadSignalMask();
+  registerSignalHandlers();
 
   try {
     smsc::logger::Logger *logger = Logger::getInstance("scagmain");
@@ -83,60 +122,43 @@ int main(int argc,char* argv[])
         exit(-1);
     }
 
+    app = new scag::Scag;    
+     
+    smsc_log_info(logger,  "Start initialization");
+    app->init();
 
-    if (servicePort == 0 || admin_host == 0) {
-      fprintf(stderr,"WARNING: admin port not specified, admin module disabled - smsc is not administrable\n");
-
-      scag::Scag *app=new scag::Scag;
-
-      scag::registerScagSignalHandlers(app);
-
-      smsc_log_info(logger,  "Start initialization");
-      app->init();
-
-      smsc_log_info(logger,  "Run application");
-      app->run();
-
-      //      SmscRunner runner(app);
-//      runner.Start();
-//      runner.WaitFor();
-
-      fprintf(stderr,"quiting smsc\n");
-      delete app;
-      fprintf(stderr,"app deleted\n");
+    scag::admin::SCAGSocketListener *listener = NULL;
+    
+    if (servicePort != 0 && admin_host != 0) {
+      listener = new scag::admin::SCAGSocketListener;
+      listener->init(admin_host, servicePort);
+      listener->Start();      
     }
     else
+        smsc_log_warn(logger, "WARNING: admin port not specified, admin module disabled - smsc is not administrable");
+
+    while(!shutdownFlag) sigsuspend(&st);
+    
+    if(listener)
     {
-
-      //using namespace smsc::scag::admin;
-      scag::admin::SCAGCommandDispatcher::startGw();
-      fprintf(stderr,"SMPP GW started\n");
-
-
-      scag::admin::SCAGSocketListener listener;
-      listener.init(admin_host, servicePort);
-
-
-      scag::registerScagSignalHandlers(&listener);
-      listener.Start();
-
-      fprintf(stderr,"SMPP GW admin listener started\n");
-
-
-      //running...
-      fprintf(stderr,"running...\n");
-
-      listener.WaitFor();
-
-      fprintf(stderr,"SCAG shutdown...\n");
-      scag::admin::SCAGCommandDispatcher::stopGw();
-      fprintf(stderr,"SCAG stopped\n");
-
-      //smsc::util::config::Manager::deinit();
-
-      fprintf(stderr,"all finished\n");
-
+        if(shutdownFlag == SHUTDOWN_SIGNAL)
+            listener->shutdown();
+        else            
+            listener->abort();
+        listener->WaitFor();
+        delete listener;
     }
+    
+    if(shutdownFlag == SHUTDOWN_SIGNAL)
+        app->shutdown();    
+    else if(shutdownFlag == 17)        
+        app->abortScag();
+    else
+        app->dumpScag();
+        
+    delete app;
+    
+    smsc_log_info(logger, "All finished");
   }
   catch (AdminException &e)
   {

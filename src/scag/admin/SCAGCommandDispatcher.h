@@ -43,11 +43,12 @@ public:
   virtual Response *handle(const Command * const command) throw (AdminException);
   //virtual void DoActions(Actions::CommandActions actions);
 
-  static void shutdown();
+/*  static void shutdown();
   static void startGw();
   static void stopGw();
   static void abortGw();
   static void dumpGw();
+*/  
 };
 
 }

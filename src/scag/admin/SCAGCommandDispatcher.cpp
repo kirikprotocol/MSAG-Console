@@ -16,6 +16,8 @@
 
 #include "logger/Logger.h"
 
+scag::Scag *getApp();
+
 namespace scag {
 namespace admin {
 
@@ -24,142 +26,10 @@ using namespace scag;
 using scag::config::ConfigManager;
 using smsc::logger::Logger;
 
-class GwRunner : public smsc::core::threads::Thread
-{
-  public:
-    GwRunner()
-    : _app(new scag::Scag), running(false)
-    {}
-
-    virtual ~GwRunner() {
-      if (_app != 0)
-        delete _app;
-      _app = 0;
-    }
-
-    virtual int Execute() {
-      try {
-        if (_app != 0) {
-          {
-            MutexGuard guard(mutex);
-            running = true;
-          }
-          _app->init();
-          _app->run();
-        }
-        else
-          fprintf(stderr, "SCAG runner not initialized");
-      } catch(std::exception& e) {
-        fprintf(stderr, "top level exception: %s\n", e.what());
-        return (-1);
-      } catch(...) {
-        fprintf(stderr, "FATAL EXCEPTION!\n");
-        return (-0);
-      }
-      _app->shutdown();
-      {
-        MutexGuard guard(mutex);
-        running = false;
-      }
-      fprintf(stderr, "SCAG finished\n");
-      return 0;
-    }
-
-    void Stop()
-    {
-      if (_app != 0)
-        _app->stop();
-    }
-    void Abort()
-    {
-      if (_app != 0)
-        _app->abortScag();
-    }
-    void Dump()
-    {
-      if (_app != 0)
-        _app->dumpScag();
-    }
-
-    bool isRunning()
-    {
-      MutexGuard guard(mutex);
-      return running;
-    }
-
-    scag::Scag* const getApp()
-    {
-      MutexGuard guard(mutex);
-      return _app;
-    }
-
-protected:
-    smsc::logger::Logger * logger;
-  scag::Scag* _app;
-  Mutex mutex;
-  bool running;
-};
-
-
-GwRunner * runner = 0;
-Mutex runnerMutex;
-
-void SCAGCommandDispatcher::startGw()
-{
-  MutexGuard guard(runnerMutex);
-  if (runner == 0) {
-    runner = new GwRunner();
-    runner->Start();
-  }
-}
-
 Logger * SCAGCommandDispatcher::getLogger()
 {
     static Logger * logger = Logger::getInstance("CmdDsp");
     return logger;
-}
-
-void SCAGCommandDispatcher::stopGw()
-{
-  Logger * logger = getLogger();
-  smsc_log_info(logger, "Scag stopping...");
-  MutexGuard guard(runnerMutex);
-  if (runner != 0 && runner->isRunning()) {
-    runner->Stop();
-    runner->WaitFor();
-    delete runner;
-    runner = 0;
-    smsc_log_info(logger, "Scag stopped ok");
-  }else
-    smsc_log_warn(logger, "Can't stop Scag");
-}
-
-void SCAGCommandDispatcher::abortGw()
-{
-  Logger * logger = getLogger();
-  smsc_log_debug(logger, "Scag aborting...");
-  MutexGuard guard(runnerMutex);
-  if (runner != 0 && runner->isRunning()) {
-    runner->Abort();
-    runner->WaitFor();
-    delete runner;
-    runner = 0;
-  }
-  smsc_log_debug(logger, "Scag aborted");  
-}
-
-void SCAGCommandDispatcher::dumpGw()
-{
-  Logger * logger = getLogger();
-  smsc_log_debug(logger, "Scag dumping...");
-  MutexGuard guard(runnerMutex);
-  if (runner != 0 && runner->isRunning()) {
-    runner->Dump();
-    runner->WaitFor();
-    delete runner;
-    runner = 0;
-  }
-  smsc_log_debug(logger, "Scag dumped");
 }
 
 SCAGCommandDispatcher::SCAGCommandDispatcher(Socket * admSocket)
@@ -180,7 +50,7 @@ Response * SCAGCommandDispatcher::handle(const Command * const command) throw (A
     if (!adminCommand) throw AdminException("Fatal Error: Command is not a 'command' type");
 
     try {
-        Response * result = adminCommand->CreateResponse(runner->getApp());
+        Response * result = adminCommand->CreateResponse(getApp());
         //DoActions(adminCommand->GetActions());
         return result;
     } catch (AdminException &e) {
@@ -192,10 +62,6 @@ Response * SCAGCommandDispatcher::handle(const Command * const command) throw (A
     }
 }
 
-void SCAGCommandDispatcher::shutdown()
-{
-    stopGw();
-}
 /*
 void SCAGCommandDispatcher::DoActions(Actions::CommandActions actions)
 {
