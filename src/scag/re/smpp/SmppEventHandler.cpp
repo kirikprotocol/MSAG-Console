@@ -119,7 +119,7 @@ void SmppEventHandler::ModifyOperationAfterExecuting(Session& session, SmppComma
         return;
     }
     
-    smsc_log_debug(logger, "current operation status=%d",currentOperation->getStatus());
+    smsc_log_debug(logger, "current operation status=%d", currentOperation->getStatus());
 
     switch (smppDiscriptor.cmdType)
     {

@@ -1,24 +1,11 @@
 #include "BillActionClose.h"
-#include "scag/stat/Statistics.h"
-
 
 namespace scag { namespace re { namespace actions {
-
-using namespace scag::stat;
 
 
 void BillActionClose::init(const SectionParams& params,PropertyObject propertyObject)
 {
     logger = Logger::getInstance("scag.bill.actions");
-    /*
-    try
-    {
-        throw SCAGException("NOT CATCHED!");
-    }
-    catch (SCAGException& e)
-    {
-        smsc_log_debug(logger, "CATCHED!");
-    } */
 
 
     if (params.Exists("action")) 
@@ -53,13 +40,7 @@ bool BillActionClose::run(ActionContext& context)
     smsc_log_debug(logger, "Run Action 'bill:close'...");
 
 
-    /////////////////////////////////////////////
 
-    Statistics& statistics = Statistics::Instance();
-
-    SACC_BILLING_INFO_EVENT_t ev;
-
-    
     /////////////////////////////////////////////
     BillingManager& bm = BillingManager::Instance();
 
@@ -75,77 +56,28 @@ bool BillActionClose::run(ActionContext& context)
 
         if (!operation->hasBill()) 
         {
-            smsc_log_error(logger,"BillAction 'bill:close': Fatal error in action - no bill is attached");
+            smsc_log_error(logger,"Action 'bill:close': Fatal error in action - no bill is attached");
             SetBillingStatus(context, "no bill is attached", false);
             return true;
         }
 
 
-        EventMonitor * eventMonitor = 0;
         TariffRec tariffRec;
 
         try
         {
-            tariffRec = bm.CheckCharge(operation->getBillId(), &eventMonitor);
-            if (!eventMonitor) throw SCAGException("Unknown error: EventMonitor is not valid");
+            bm.Commit(operation->getBillId());
         } catch (SCAGException& e)
         {
-            smsc_log_error(logger,e.what());
+            smsc_log_error(logger,"Action 'bill:close' cannot process. Delails: %s", e.what());
             SetBillingStatus(context, e.what(), false);
-            context.makeBillEvent(TRANSACTION_COMMITED, EXTERNAL_ERROR, tariffRec, ev);
-            statistics.registerSaccEvent(ev);
+
+            operation->detachBill();
             return true;
         }
         
-
-        //TODO: Понять какое время нужно ждать до таймаута
-        eventMonitor->wait(1000);
-        TransactionStatus transactionStatus = bm.GetStatus(operation->getBillId());
-        std::string logMessage;
-        int CommandStatus = COMMAND_SUCCESSFULL;
-        BillingTransactionEvent billTransactionEvent;
-
-        switch (transactionStatus) 
-        {
-        case TRANSACTION_INVALID:
-            logMessage = "abnormal transaction termination (billing transaction deny)";
-            billTransactionEvent = TRANSACTION_COMMITED;
-            CommandStatus = REJECTED_BY_SERVER;
-            break;
-
-        case TRANSACTION_WAIT_ANSWER:
-            //TODO: дёрнуть тайм-аут на billing manager`е
-            logMessage = "billing transaction time out";
-            billTransactionEvent = TRANSACTION_TIME_OUT;
-            CommandStatus = SERVER_NOT_RESPONSE;
-            break;
-
-        case TRANSACTION_NOT_STARTED:
-            logMessage = "billing transaction invalid";
-            billTransactionEvent = TRANSACTION_COMMITED;
-            CommandStatus = INVALID_TRANSACTION;
-            break;
-
-        case TRANSACTION_VALID:
-            logMessage = "billing transaction commited";
-            billTransactionEvent = TRANSACTION_COMMITED;
-            break;
-        }
-
-        if (CommandStatus == COMMAND_SUCCESSFULL) bm.commit(operation->getBillId());
-
         operation->detachBill();
-        context.makeBillEvent(billTransactionEvent,CommandStatus, tariffRec, ev);
-
-        SetBillingStatus(context, logMessage.c_str(), (CommandStatus == COMMAND_SUCCESSFULL));
-        statistics.registerSaccEvent(ev);
-
-        if (CommandStatus == COMMAND_SUCCESSFULL) 
-            smsc_log_debug(logger,"Action 'bill:close': %s", logMessage.c_str());
-        else
-        {
-            smsc_log_error(logger,"Action 'bill:close'. Details: %s", logMessage.c_str());
-        }
+        smsc_log_debug(logger,"Action 'bill:close': transaction successfully commited");
     }
     else
     {
@@ -165,33 +97,16 @@ bool BillActionClose::run(ActionContext& context)
         }
 
 
-        TariffRec tariffRec;
-
-        try 
-        {
-            tariffRec = bm.getTransactionData(operation->getBillId());
-        } catch (SCAGException& e)
-        {
-            smsc_log_error(logger,"BillAction 'bill:close' error. Delails: %s", e.what());
-            SetBillingStatus(context,e.what(), false);
-            return true;
-        }
-        
         try {
-            bm.rollback(operation->getBillId());
-            operation->detachBill();
-
-            context.makeBillEvent(TRANSACTION_CALL_ROLLBACK, COMMAND_SUCCESSFULL, tariffRec, ev);
+            bm.Rollback(operation->getBillId());
         } catch (SCAGException& e)
         {        
             smsc_log_error(logger,"BillAction 'bill:close' error. Delails: %s", e.what());
-            context.makeBillEvent(TRANSACTION_CALL_ROLLBACK, EXTERNAL_ERROR, tariffRec, ev);
             SetBillingStatus(context,e.what(), false);
-            statistics.registerSaccEvent(ev);
+            operation->detachBill();
             return true;
         }   
-         
-        statistics.registerSaccEvent(ev);
+        operation->detachBill();
         SetBillingStatus(context,"", true);
     }
 

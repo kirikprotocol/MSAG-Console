@@ -8,6 +8,7 @@
 #include "scag/exc/SCAGExceptions.h"
 #include "BillingManagerWrapper.h"
 #include "scag/config/ConfigListener.h"
+#include "scag/stat/Statistics.h"
 
 //#define MSAG_INMAN_BILL
 
@@ -17,6 +18,7 @@ namespace scag { namespace bill {
 using namespace smsc::core::threads;
 using namespace scag::util::singleton;
 using namespace scag::exceptions;
+using namespace scag::stat;
 
 using smsc::logger::Logger;
 
@@ -24,29 +26,18 @@ class BillingManagerImpl : public BillingManager, public Thread, public BillingM
 {
     struct BillTransaction
     {
-        int EventMonitorIndex;
         TransactionStatus status;
         TariffRec tariffRec;
         #ifdef MSAG_INMAN_BILL
         ChargeSms ChargeOperation;
         #endif
-        BillTransaction() : status(TRANSACTION_NOT_STARTED), EventMonitorIndex(-1) { }
-    };
-
-    struct EventMonitorEntity
-    {
         EventMonitor eventMonitor;
-        bool inUse;
-
-        EventMonitorEntity() : inUse(false) {}
-        ~EventMonitorEntity()
-        {
-        }
+        int billId;
+        SACC_BILLING_INFO_EVENT_t billEvent;
+        BillTransaction() : status(TRANSACTION_NOT_STARTED) { }
     };
 
-    std::vector<EventMonitorEntity *> EventMonitorArray;
-
-    IntHash <BillTransaction> BillTransactionHash;
+    IntHash <BillTransaction *> BillTransactionHash;
 
     Event connectEvent;
     Mutex stopLock;
@@ -55,7 +46,6 @@ class BillingManagerImpl : public BillingManager, public Thread, public BillingM
 
     bool m_bStarted;
 
-    int m_MaxEventMonitors;
     int m_lastBillId; 
     int m_TimeOut;
 
@@ -67,32 +57,41 @@ class BillingManagerImpl : public BillingManager, public Thread, public BillingM
     InfrastructureImpl infrastruct;
 
     void fillChargeSms(smsc::inman::interaction::ChargeSms& op, BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec);
+    void ProcessSaccEvent(BillingTransactionEvent billingTransactionEvent, BillTransaction * billTransaction);
 
+    void modifyBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, SACC_BILLING_INFO_EVENT_t& ev);
+    void makeBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, TariffRec& tariffRec, BillingInfoStruct& billingInfo, SACC_BILLING_INFO_EVENT_t& ev);
+
+
+    void ClearTransactions()
+    {
+        int key;
+        BillTransaction * value;
+
+        for (IntHash <BillTransaction *>::Iterator it = BillTransactionHash.First(); it.Next(key, value);)
+        {
+            delete value;
+        }
+
+        BillTransactionHash.Empty();
+    }
 public:
     void init(BillingManagerConfig& cfg);
 
     virtual int Execute();
     virtual void Start();
 
-    virtual int ChargeBill(BillingInfoStruct& billingInfoStruct, EventMonitor ** eventMonitor, TariffRec& tariffRec);
-
     #ifdef MSAG_INMAN_BILL
     virtual void onChargeSmsResult(ChargeSmsResult* result);
     #endif
 
-    virtual TariffRec& CheckCharge(int billId, EventMonitor ** eventMonitor);
-
-    virtual TransactionStatus GetStatus(int billId);
-
-    virtual void commit(int billId);
-    virtual void rollback(int billId);
-    //virtual void close(int billId);
+    virtual int Open(BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec);
+    virtual void Commit(int billId);
+    virtual void Rollback(int billId);
 
 
 
     virtual Infrastructure& getInfrastructure() { return infrastruct; };
-    virtual TariffRec& getTransactionData(int billId);
-    virtual void sendReject(int billId);
 
 
     void configChanged();
@@ -104,11 +103,7 @@ public:
     ~BillingManagerImpl()
     {
         Stop();
-        for (int i=0; i < EventMonitorArray.size(); i++) 
-            delete EventMonitorArray[i];
-
-        EventMonitorArray.clear();
-
+        ClearTransactions();
     }
 
 };
@@ -167,11 +162,11 @@ bool BillingManagerImpl::isStarted()
 
 void BillingManagerImpl::init(BillingManagerConfig& cfg)
 {
+    MutexGuard guard(inUseLock);
     smsc_log_info(logger,"BillingManager start initing...");
 
     if (cfg.MaxThreads < 1) throw SCAGException("BillingManager: cant start service with %d allowed threads", cfg.MaxThreads);
 
-    m_MaxEventMonitors = cfg.MaxThreads;
     m_TimeOut = cfg.BillingTimeOut;
 
     InitConnection(cfg.BillingHost, cfg.BillingPort);
@@ -185,19 +180,6 @@ void BillingManagerImpl::init(BillingManagerConfig& cfg)
     m_Connected = true;
     #endif
 
-
-    for (int i=0; i < EventMonitorArray.size(); i++) 
-        delete EventMonitorArray[i];
-
-    EventMonitorArray.clear();
-
-    for (int i=0; i < m_MaxEventMonitors; i++) 
-    {
-        EventMonitorEntity * ent = new EventMonitorEntity();
-        EventMonitorArray.push_back(ent);
-    }
-
-    smsc_log_info(logger,"BillingManager: allowed %d threads", m_MaxEventMonitors);
     infrastruct.init(cfg.cfg_dir);
     smsc_log_info(logger,"BillingManager inited...");
 }
@@ -253,144 +235,153 @@ void BillingManagerImpl::Start()
     }
 }
 
-int BillingManagerImpl::ChargeBill(BillingInfoStruct& billingInfoStruct, EventMonitor ** eventMonitor, TariffRec& tariffRec)
+void BillingManagerImpl::ProcessSaccEvent(BillingTransactionEvent billingTransactionEvent, BillTransaction * billTransaction)
 {
-/*    BillTransaction billTransaction1;
-    billTransaction1.EventMonitorIndex = 0;
-    //*eventMonitor = EventMonitorArray[0].eventMonitor;
-    //BillTransactionHash.Insert(1, billTransaction1);
-
-    return 1;
-*/
     MutexGuard guard(inUseLock);
 
-    int index = -1;
-    for (int i = 0; i < m_MaxEventMonitors; i++) 
-        if (!EventMonitorArray[i]->inUse) 
-        {
-            EventMonitorArray[i]->inUse = true;
-            index = i;
-            break;
-        }
+    Statistics& statistics = Statistics::Instance();
 
-    if (index == -1) 
-        throw SCAGException("BillingManager error - cannot find not in use EventMonitor");
+    switch (billTransaction->status) 
+    {
+    case TRANSACTION_INVALID:
+        modifyBillEvent(billingTransactionEvent, INVALID_TRANSACTION, billTransaction->billEvent);
+        statistics.registerSaccEvent(billTransaction->billEvent);
 
-    BillTransaction billTransaction;
-    billTransaction.EventMonitorIndex = index;
+        BillTransactionHash.Delete(billTransaction->billId);
+        delete billTransaction;
+        throw SCAGException("billing transaction invalid");
+        break;
 
-    *eventMonitor = &EventMonitorArray[billTransaction.EventMonitorIndex]->eventMonitor;
+    case TRANSACTION_NOT_STARTED:
+        modifyBillEvent(billingTransactionEvent, REJECTED_BY_SERVER, billTransaction->billEvent);
+        statistics.registerSaccEvent(billTransaction->billEvent);
 
-    m_lastBillId++;
+        BillTransactionHash.Delete(billTransaction->billId);
+        delete billTransaction;
+        throw SCAGException("billing transaction deny");
+        break;
+
+    case TRANSACTION_WAIT_ANSWER:
+        modifyBillEvent(billingTransactionEvent, SERVER_NOT_RESPONSE, billTransaction->billEvent);
+        statistics.registerSaccEvent(billTransaction->billEvent);
+
+        BillTransactionHash.Delete(billTransaction->billId);
+        delete billTransaction;
+        throw SCAGException("billing transaction time out");
+        break;
+
+    default:
+        modifyBillEvent(billingTransactionEvent, COMMAND_SUCCESSFULL, billTransaction->billEvent);
+        statistics.registerSaccEvent(billTransaction->billEvent);
+    }
+
+}
+
+int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec)
+{
+    int billId;
+    SACC_BILLING_INFO_EVENT_t ev;
 
 
-    billTransaction.tariffRec = tariffRec;
+    inUseLock.Lock();
+    billId = ++m_lastBillId;
+    inUseLock.Unlock();
+
+    BillTransaction * billTransaction = new BillTransaction();
+    billTransaction->tariffRec = tariffRec;
+    billTransaction->billId = billId;
+    makeBillEvent(TRANSACTION_OPEN, COMMAND_SUCCESSFULL, tariffRec, billingInfoStruct, billTransaction->billEvent);
+
 
     #ifdef MSAG_INMAN_BILL
     ChargeSms op;
     fillChargeSms(op, billingInfoStruct, tariffRec);
-    billTransaction.status = TRANSACTION_WAIT_ANSWER;
-    billTransaction.ChargeOperation = op;
+    billTransaction->status = TRANSACTION_WAIT_ANSWER;
+    billTransaction->ChargeOperation = op;
+
     #else
-    billTransaction.status = TRANSACTION_VALID;
+    billTransaction->status = TRANSACTION_VALID;
     #endif
 
+    inUseLock.Lock();
+    BillTransactionHash.Insert(billId, billTransaction);
+    inUseLock.Unlock();
 
-    BillTransactionHash.Insert(m_lastBillId, billTransaction);
 
     #ifdef MSAG_INMAN_BILL
-    op.setDialogId(m_lastBillId);
+    op.setDialogId(billId);
     sendCommand(op);
+    billTransaction->eventMonitor.wait(1000);
     #endif
-    return m_lastBillId;
-               
 
-}
-
-
-TransactionStatus BillingManagerImpl::GetStatus(int billId)
-{
-    MutexGuard guard(inUseLock);
-
-    BillTransaction * pBillTransaction = BillTransactionHash.GetPtr(billId);
-
-    if (!pBillTransaction) return TRANSACTION_NOT_STARTED;
-    return pBillTransaction->status;
-}
-
-TariffRec& BillingManagerImpl::getTransactionData(int billId)
-{
-    MutexGuard guard(inUseLock);
-
-    BillTransaction * pBillTransaction = BillTransactionHash.GetPtr(billId);
-
-    if (!pBillTransaction) 
-        throw SCAGException("Cannot find transaction for billId=%d", billId);
-
-    return pBillTransaction->tariffRec;
-}
-
-
-TariffRec& BillingManagerImpl::CheckCharge(int billId, EventMonitor ** eventMonitor)
-{
-    MutexGuard guard(inUseLock);
-
-    BillTransaction * pBillTransaction = BillTransactionHash.GetPtr(billId);
-
-    if (!pBillTransaction) throw SCAGException("Cannot find transaction for billId=%d", billId);
-
-    *eventMonitor = &EventMonitorArray[pBillTransaction->EventMonitorIndex]->eventMonitor;
+    ProcessSaccEvent(TRANSACTION_OPEN, billTransaction);
 
     #ifdef MSAG_INMAN_BILL
-    pBillTransaction->ChargeOperation.setDialogId(billId);
-    sendCommand(pBillTransaction->ChargeOperation);
+    DeliverySmsResult opRes;
+
+    opRes.setDialogId(billId);
+    opRes.setResultValue(1);
+
+    pBillTransaction->status = TRANSACTION_WAIT_ANSWER;
+    sendCommand(opRes);
+    #endif
+
+    return billId;
+}
+
+
+void BillingManagerImpl::Commit(int billId)
+{
+    inUseLock.Lock();
+    BillTransaction ** pBillTransactionPtr = BillTransactionHash.GetPtr(billId);
+    inUseLock.Unlock();
+
+    if (!pBillTransactionPtr) throw SCAGException("Cannot find transaction for billId=%d", billId);
+
+    #ifdef MSAG_INMAN_BILL
+    (*pBillTransactionPtr)->ChargeOperation.setDialogId(billId);
+    sendCommand((*pBillTransaction)->ChargeOperation);
     #else
-    pBillTransaction->status = TRANSACTION_VALID;
+    (*pBillTransactionPtr)->status = TRANSACTION_VALID;
     #endif 
 
-    return pBillTransaction->tariffRec;
+    (*pBillTransactionPtr)->eventMonitor.wait(1000);
+
+    ProcessSaccEvent(TRANSACTION_COMMITED, *pBillTransactionPtr);
    
-}
+    smsc_log_debug(logger, "Commiting billId=%d...", billId);
 
-
-void BillingManagerImpl::commit(int billId)
-{
-    MutexGuard guard(inUseLock);
-
-    BillTransaction * pBillTransaction = BillTransactionHash.GetPtr(billId);
-
-    if (!pBillTransaction) throw SCAGException("Cannot find transaction for billId=%d", billId);
-
-
-    if (pBillTransaction->status == TRANSACTION_VALID)
+    if ((*pBillTransactionPtr)->status == TRANSACTION_VALID)
     {
-        smsc_log_debug(logger, "Commiting billId=%d...", billId);
-
         #ifdef MSAG_INMAN_BILL
         DeliverySmsResult op;
-
+    
         op.setDialogId(billId);
         op.setResultValue(0);
-
+    
         sendCommand(op);
         #endif
     }
 
-    EventMonitorArray[pBillTransaction->EventMonitorIndex]->inUse = false;
+    inUseLock.Lock();
+    delete (*pBillTransactionPtr);
     BillTransactionHash.Delete(billId);
+    inUseLock.Unlock();
 }
 
 
-void BillingManagerImpl::rollback(int billId)
-{
-    MutexGuard guard(inUseLock);
-      
-    BillTransaction * pBillTransaction = BillTransactionHash.GetPtr(billId);
 
-    if (!pBillTransaction) 
+void BillingManagerImpl::Rollback(int billId)
+{
+      
+    inUseLock.Lock();
+    BillTransaction ** pBillTransactionPtr = BillTransactionHash.GetPtr(billId);
+    inUseLock.Unlock();
+
+    if (!pBillTransactionPtr) 
         throw SCAGException("Cannot find transaction for billId=%d", billId);
 
-    if (pBillTransaction->status == TRANSACTION_VALID)
+    if ((*pBillTransactionPtr)->status == TRANSACTION_VALID)
     {
         #ifdef MSAG_INMAN_BILL
         DeliverySmsResult op;
@@ -401,37 +392,61 @@ void BillingManagerImpl::rollback(int billId)
         #endif
     }
 
-    assert ((pBillTransaction->EventMonitorIndex >=0)&&(pBillTransaction->EventMonitorIndex < m_MaxEventMonitors));
+    ProcessSaccEvent(TRANSACTION_CALL_ROLLBACK, *pBillTransactionPtr);
 
-    EventMonitorArray[pBillTransaction->EventMonitorIndex]->inUse = false;
-    BillTransactionHash.Delete(billId);          
+    inUseLock.Lock();
+    delete (*pBillTransactionPtr);
+    BillTransactionHash.Delete(billId);
+    inUseLock.Unlock();
     
     smsc_log_debug(logger, "Transaction rolled back (billId=%d)", billId);
     
 }
 
-void BillingManagerImpl::sendReject(int billId)
+
+void BillingManagerImpl::modifyBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, SACC_BILLING_INFO_EVENT_t& ev)
 {
-    MutexGuard guard(inUseLock);
+    ev.Header.cCommandId = billCommand;
+    ev.Header.sCommandStatus = commandStatus;
 
-    BillTransaction * pBillTransaction = BillTransactionHash.GetPtr(billId);
+    timeval tv;
+    gettimeofday(&tv,0);  
 
-    if (!pBillTransaction) throw SCAGException("Cannot find transaction for billId=%d", billId);
-
-    #ifdef MSAG_INMAN_BILL
-    if (pBillTransaction->status == TRANSACTION_VALID)
-    {
-        DeliverySmsResult op;
-
-        op.setDialogId(billId);
-        op.setResultValue(1);
-
-        pBillTransaction->status = TRANSACTION_WAIT_ANSWER;
-        sendCommand(op);
-    }
-    #endif
-    
+    ev.Header.lDateTime = (uint64_t)tv.tv_sec*1000 + (tv.tv_usec / 1000);
 }
+
+
+void BillingManagerImpl::makeBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, TariffRec& tariffRec, BillingInfoStruct& billingInfo, SACC_BILLING_INFO_EVENT_t& ev)
+{
+    ev.Header.cCommandId = billCommand;
+
+    ev.Header.cProtocolId = billingInfo.protocol;
+    ev.Header.iServiceId = billingInfo.serviceId;
+
+    ev.Header.iServiceProviderId = billingInfo.providerId;
+
+    timeval tv;
+    gettimeofday(&tv,0);  
+
+    ev.Header.lDateTime = (uint64_t)tv.tv_sec*1000 + (tv.tv_usec / 1000);
+
+    ev.Header.pAbonentNumber = billingInfo.AbonentNumber;
+    ev.Header.sCommandStatus = commandStatus;
+    ev.Header.iOperatorId = billingInfo.operatorId;
+    ev.iPriceCatId = tariffRec.CategoryId;
+    
+    
+    ev.fBillingSumm = tariffRec.Price;
+    ev.iMediaResourceType = tariffRec.MediaTypeId;
+
+    ev.pBillingCurrency = tariffRec.Currency;
+
+    char buff[128];
+    sprintf(buff,"%s/%ld%d",billingInfo.AbonentNumber.c_str(), billingInfo.SessionBornMicrotime.tv_sec, billingInfo.SessionBornMicrotime.tv_usec / 1000);
+    ev.pSessionKey.append(buff);   
+
+}
+
 
 
 #ifdef MSAG_INMAN_BILL
@@ -443,22 +458,20 @@ void BillingManagerImpl::onChargeSmsResult(ChargeSmsResult* result)
 
     int billId = result->getDialogId();
 
-    BillTransaction * pBillTransaction = BillTransactionHash.GetPtr(billId);
+    BillTransaction ** pBillTransactionPtr = BillTransactionHash.GetPtr(billId);
 
-    if (!pBillTransaction) 
+    if (!pBillTransactionPtr) 
     {
         //TODO: do what we must to do
         return;
     }
     
     if( result->GetValue() == CHARGING_POSSIBLE ) 
-        pBillTransaction->status = TRANSACTION_VALID;
+        (*pBillTransactionPtr)->status = TRANSACTION_VALID;
     else 
-        pBillTransaction->status = TRANSACTION_INVALID;
+        (*pBillTransactionPtr)->status = TRANSACTION_INVALID;
 
-    EventMonitorArray[pBillTransaction->EventMonitorIndex]->inUse = false;
-
-    EventMonitorArray[pBillTransaction->EventMonitorIndex]->eventMonitor.notify();
+    (*pBillTransactionPtr)->eventMonitor.notify();
 
 }
 

@@ -51,6 +51,11 @@ struct BillingInfoStruct
 {
     std::string AbonentNumber;
     int serviceId;
+    int protocol;
+    int providerId;
+    int operatorId;
+    timeval SessionBornMicrotime;
+
     //int ServiceNumber;
 };
 
@@ -63,14 +68,9 @@ protected:
     BillingManager() {};
 
 public:
-    virtual int ChargeBill(BillingInfoStruct& billingInfoStruct, EventMonitor ** eventMonitor, TariffRec& tariffRec) = 0;
-    virtual TariffRec& CheckCharge(int billId, EventMonitor ** eventMonitor) = 0;
-
-    virtual TransactionStatus GetStatus(int billId) = 0; //Возвращяет статус транзакции
-
-    virtual void commit(int billId) = 0;
-    virtual void rollback(int billId) = 0;
-    virtual void sendReject(int billId) = 0;
+    virtual int Open(BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec) = 0;
+    virtual void Commit(int billId) = 0;
+    virtual void Rollback(int billId) = 0;
 
     //virtual void close(int billId) = 0;
 
@@ -79,7 +79,6 @@ public:
     //static const ActionFactory * getActionFactory() {return &factory;}
 
     virtual Infrastructure& getInfrastructure() = 0;
-    virtual TariffRec& getTransactionData(int billId) = 0;
 };
 
 

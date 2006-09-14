@@ -108,8 +108,6 @@ bool BillActionOpen::run(ActionContext& context)
  
     Statistics& statistics = Statistics::Instance();
 
-    SACC_BILLING_INFO_EVENT_t ev;
-
     if (m_MediaTypeFieldType != ftUnknown) 
     {
         Property * property = context.getProperty(m_mediaType);
@@ -158,7 +156,7 @@ bool BillActionOpen::run(ActionContext& context)
         if (!tariffRec) throw SCAGException("TariffRec is not valid");
     } catch (SCAGException& e)
     {
-        smsc_log_warn(logger,"Action '%s' cannot process. Delails: %s", e.what());
+        smsc_log_warn(logger,"Action '%s' cannot process. Delails: %s", m_ActionName.c_str(), e.what());
         SetBillingStatus(context, e.what(), false, tariffRec);
         return true;
     }
@@ -167,81 +165,40 @@ bool BillActionOpen::run(ActionContext& context)
     if (tariffRec->Price == 0)
         smsc_log_warn(logger, "Zero price in tariff matrix. ServiceNumber=%d, CategoryId=%d, MediaTypeId=%d", tariffRec->ServiceNumber, tariffRec->CategoryId, tariffRec->MediaTypeId);
 
-    EventMonitor * monitor = 0;
-    TransactionStatus transactionStatus;
+    BillingInfoStruct billingInfoStruct = context.getBillingInfoStruct();
+
     int BillId = 0;
-    //context.fillChargeOperation(op, *tariffRec);
-    
+
     try 
     {
-
-        BillingInfoStruct billingInfoStruct = context.getBillingInfoStruct();
-        BillId = bm.ChargeBill(billingInfoStruct, &monitor, *tariffRec);
-        if (!monitor) throw SCAGException("Unknown error: EventMonitor is not valid"); 
-
-        //TODO: Понять какое время нужно ждать до таймаута
-        monitor->wait(1000);
-        transactionStatus = bm.GetStatus(BillId);
+        BillId = bm.Open(billingInfoStruct, *tariffRec);
 
     } catch (SCAGException& e)
     {
-        smsc_log_warn(logger,"Action '%s' unable to process. Delails: %s", m_ActionName.c_str(), e.what());
+        smsc_log_warn(logger, "Action '%s' unable to process. Delails: %s", m_ActionName.c_str(), e.what());
         SetBillingStatus(context, e.what(), false, 0);
-        context.makeBillEvent(TRANSACTION_OPEN, EXTERNAL_ERROR, *tariffRec, ev);
-        statistics.registerSaccEvent(ev);
+        return true;
+    }
+
+    try 
+    {
+        if (m_waitOperation) 
+            RegisterPending(context, BillId);
+        else
+            operation->attachBill(BillId);
+    }
+    catch (SCAGException& e)
+    {
+        smsc_log_warn(logger, "Action '%s' unable to process. Delails: %s", m_ActionName.c_str(), e.what());
+        SetBillingStatus(context, e.what(), false, 0);
+        if (!m_waitOperation) operation->detachBill();
+
+        bm.Rollback(BillId);
         return true;
     }
     
-
-    switch (transactionStatus) 
-    {
-    case TRANSACTION_INVALID:
-        smsc_log_error(logger,"Action '%s': billing transaction invalid", m_ActionName.c_str());
-        SetBillingStatus(context, "billing transaction invalid", false, 0);
-        context.makeBillEvent(TRANSACTION_OPEN, INVALID_TRANSACTION, *tariffRec, ev);
-        break;
-    case TRANSACTION_NOT_STARTED:
-        smsc_log_error(logger,"Action 'bill:open': billing transaction deny", m_ActionName.c_str());
-        SetBillingStatus(context, "billing transaction deny", false, 0);
-        context.makeBillEvent(TRANSACTION_OPEN, REJECTED_BY_SERVER, *tariffRec, ev);
-        break;
-    case TRANSACTION_WAIT_ANSWER:
-        smsc_log_error(logger,"Action '%s': billing transaction time out", m_ActionName.c_str());
-        SetBillingStatus(context, "billing transaction time out", false, 0);
-        context.makeBillEvent(TRANSACTION_OPEN, SERVER_NOT_RESPONSE, *tariffRec, ev);
-        break;
-    default:
-        //TRANSACTION_VALID
-     
-        try
-        {
-            if (m_waitOperation) 
-                RegisterPending(context, BillId);
-            else
-            {
-                operation->attachBill(BillId);
-            }
-                
-        } catch (SCAGException& e)
-        {
-            smsc_log_warn(logger,"Action '%s' unable to process. Delails: %s", m_ActionName.c_str(), e.what());
-            context.makeBillEvent(TRANSACTION_OPEN, EXTERNAL_ERROR, *tariffRec, ev);
-            SetBillingStatus(context, e.what(), false, 0);
-            break;
-        }
-        
-        bm.sendReject(BillId);
-
-        SetBillingStatus(context, "", true, tariffRec);
-        context.makeBillEvent(TRANSACTION_OPEN, COMMAND_SUCCESSFULL, *tariffRec, ev);
-         
-
-        smsc_log_debug(logger,"Action '%s' transaction successfully opened", m_ActionName.c_str());
-        break;
-    }
-
-        
-    statistics.registerSaccEvent(ev);
+    SetBillingStatus(context, "", true, tariffRec);
+    smsc_log_debug(logger,"Action '%s' transaction successfully opened", m_ActionName.c_str());
     return true;
 }
 

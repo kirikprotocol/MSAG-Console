@@ -106,14 +106,19 @@ namespace scag { namespace re { namespace actions
         void AddPendingOperation(uint8_t type, time_t pendingTime, int billID);
         Operation * GetCurrentOperation() {return session.GetCurrentOperation();}
 
-        void makeBillEvent(int billCommand, int commandStatus, TariffRec& tariffRec, SACC_BILLING_INFO_EVENT_t& ev);
         CommandProperty& getCommandProperty() {return commandProperty;}
 
         BillingInfoStruct getBillingInfoStruct()
         {
             BillingInfoStruct billingInfoStruct;
+
             billingInfoStruct.AbonentNumber = commandProperty.abonentAddr.toString();
             billingInfoStruct.serviceId = commandProperty.serviceId;
+            billingInfoStruct.protocol = commandProperty.protocol;
+            billingInfoStruct.providerId = commandProperty.providerId;
+            billingInfoStruct.operatorId = commandProperty.operatorId;
+
+            billingInfoStruct.SessionBornMicrotime = session.getPrimaryKey().BornMicrotime;
 
             return billingInfoStruct;
         }

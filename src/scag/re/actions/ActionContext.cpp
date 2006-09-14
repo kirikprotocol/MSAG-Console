@@ -97,41 +97,6 @@ void ActionContext::abortSession()
 }
 
 
-void ActionContext::makeBillEvent(int billCommand, int commandStatus, TariffRec& tariffRec, SACC_BILLING_INFO_EVENT_t& ev)
-{
-    ev.Header.cCommandId = billCommand;
-
-    ev.Header.cProtocolId = commandProperty.protocol;
-    ev.Header.iServiceId = commandProperty.serviceId;
-
-    ev.Header.iServiceProviderId = commandProperty.providerId;
-
-    timeval tv;
-    gettimeofday(&tv,0);  
-
-    ev.Header.lDateTime = (uint64_t)tv.tv_sec*1000 + (tv.tv_usec / 1000);
-
-    ev.Header.pAbonentNumber = commandProperty.abonentAddr.toString();
-    ev.Header.sCommandStatus = commandStatus;
-    ev.Header.iOperatorId = commandProperty.operatorId;
-    ev.iPriceCatId = tariffRec.CategoryId;
-    
-    
-    ev.fBillingSumm = tariffRec.Price;
-    ev.iMediaResourceType = tariffRec.MediaTypeId;
-
-    ev.pBillingCurrency = tariffRec.Currency;
-
-    CSessionPrimaryKey& sessionPrimaryKey = session.getPrimaryKey();
-
-    ev.pSessionKey = sessionPrimaryKey.abonentAddr.toString();
-
-    char buff[128];
-    sprintf(buff,"%s/%ld%d", sessionPrimaryKey.abonentAddr.toString().c_str(), sessionPrimaryKey.BornMicrotime.tv_sec,sessionPrimaryKey.BornMicrotime.tv_usec / 1000);
-    ev.pSessionKey.append(buff);   
-
-}
-
 TariffRec * ActionContext::getTariffRec(uint32_t category, uint32_t medyaType)
 {
     if (!m_TariffRec.get()) 
