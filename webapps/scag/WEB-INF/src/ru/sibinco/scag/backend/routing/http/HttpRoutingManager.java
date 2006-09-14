@@ -165,19 +165,25 @@ public class HttpRoutingManager extends Manager{
         return new HttpRoute(Long.valueOf(id), routeElem, subjects, serviceProvidersManager);
     }
 
-    public boolean isDefaultRoute() {
-        return getRoutes().size()>0?false:true;
+    public boolean isDefaultRoute(Long serviceId) {
+        return getRoutesByServiceId(serviceId).length>0?false:true;
     }
 
-    public synchronized void setDefaultHttpRoute(final Set checkedSet) {
+    public synchronized void setDefaultHttpRoute(final String user, final Set checkedSet, final Long serviceId) {
         if (checkedSet.size()==0) return;
         String id = (String)checkedSet.iterator().next();
-        //unchecking previous default
-        for (Iterator i = routes.values().iterator();i.hasNext();) {
-            ((HttpRoute)i.next()).setDefaultRoute(false);
+        HttpRoute[] httpRoutes = getRoutesByServiceId(serviceId);
+        //unchecking previous default for service
+        HttpRoute cur;
+        for (int i=0; i<httpRoutes.length;i++) {
+           ((HttpRoute)httpRoutes[i]).setDefaultRoute(false);
         }
         //checking new default route
         ((HttpRoute)routes.get(id)).setDefaultRoute(true);
+        setRoutesChanged(true);
+        StatMessage message = new StatMessage(user, "Routes", "Set default route: " + checkedSet.toString() + " for service " + serviceId);
+        StatusManager.getInstance().addStatMessages(message);
+        addStatMessages(message);
     }
 
     private String getParamXmlText() {

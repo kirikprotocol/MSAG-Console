@@ -456,7 +456,7 @@ function addPath(valueElem, prefElem, tblElem, tableName) {
         newCell.innerHTML = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
         newRow.appendChild(newCell);
         newCell = document.createElement("td");
-        newCell.innerHTML = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + valueElem.value + '<input type="hidden" name="pathLinks" value="' + prefElem + '_' + valueElem.value + '">';
+        newCell.innerHTML = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + valueElem.value + '<input type="hidden" name="pathLinks" value="' + prefElem + '^' + valueElem.value + '">';
         newRow.appendChild(newCell);
         newCell = document.createElement("td");
         newCell.innerHTML = '<img src="content/images/but_del.gif" onClick="removeRow(opForm.all.sitesp_table_' + tableName + ', \'' + newRow.id + '\')" style="cursor: hand;">';

@@ -259,7 +259,7 @@ public class Edit extends EditBean {
         }
         if (isAdd()) {
             enabled = true;
-            defaultRoute = appContext.getHttpRoutingManager().isDefaultRoute();
+            defaultRoute = appContext.getHttpRoutingManager().isDefaultRoute(Long.decode(getParentId()));
         }
     }
 
@@ -330,7 +330,7 @@ public class Edit extends EditBean {
                     List listPath = new ArrayList();
                     for (int k = 0; k < pathLinks.length; k++) {
                         String pathLink = pathLinks[k];
-                        int pathlen = pathLink.lastIndexOf('_');
+                        int pathlen = pathLink.lastIndexOf('^');
                         String sitPath = pathLink.substring(0, pathlen);
                         if (sitPath.equals(site.getHost())) {
                             listPath.add(pathLink.substring(pathlen + 1));

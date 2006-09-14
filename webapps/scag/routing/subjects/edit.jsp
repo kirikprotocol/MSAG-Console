@@ -295,7 +295,7 @@
                                             <td></td>
                                             <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${epath}<input type="hidden"
                                                                                              name="pathLinks"
-                                                                                             value="${esite}_${epath}">
+                                                                                             value="${esite}^${epath}">
                                             </td>
                                             <td><img src="content/images/but_del.gif"
                                                      onClick="removeRow(opForm.all.sitesp_table_${esite_sub}, 'pathRow_${esite_sub}_${epath}')"

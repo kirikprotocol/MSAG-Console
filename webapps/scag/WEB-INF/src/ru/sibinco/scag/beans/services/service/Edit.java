@@ -127,15 +127,15 @@ public class Edit extends TabledEditBeanImpl {
         if (deleteRuleSMPP != null) deleteRule(Transport.SMPP_TRANSPORT_NAME);
         if (deleteRuleHTTP != null) deleteRule(Transport.HTTP_TRANSPORT_NAME);
         if (deleteRuleMMS != null) deleteRule(Transport.MMS_TRANSPORT_NAME);
-        if (mbDefaultHttpRoute!=null) setDefaultHttpRoute();
+        if (mbDefaultHttpRoute!=null) setDefaultHttpRoute(new Long(id));
         if (getEditId() != null && !editChild) {
             super.process(request, response);
         }
 
     }
 
-    private void setDefaultHttpRoute() {
-        appContext.getHttpRoutingManager().setDefaultHttpRoute(checkedSet);
+    private void setDefaultHttpRoute(Long serviceId) {
+        appContext.getHttpRoutingManager().setDefaultHttpRoute(getLoginedPrincipal().getName(),checkedSet,serviceId);
     }
 
     private void deleteHttpRoute() {
