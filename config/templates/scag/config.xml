@@ -64,7 +64,7 @@
     </section>
 
     <section name="Personalization">
-        <param name="host" type="string">@pers.host@</param>
+        <param name="host" type="string">@pers.connect_host@</param>
         <param name="port" type="int">@pers.port@</param>
         <param name="timeout" type="int">100</param>
         <param name="pingTimeout" type="int">180</param>

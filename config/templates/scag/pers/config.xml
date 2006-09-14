@@ -4,7 +4,7 @@
 <config>
 
   <section name="pers">
-    <param name="host" type="string">@pers.host@</param>
+    <param name="host" type="string">@pers.listen_host@</param>
     <param name="port" type="int">@pers.port@</param>
     <param name="connections" type="int">@pers.connections@</param>
     <param name="storage_dir" type="string">@pers.storage_dir@</param>
