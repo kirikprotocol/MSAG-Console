@@ -66,8 +66,8 @@
     <section name="Personalization">
         <param name="host" type="string">@pers.connect_host@</param>
         <param name="port" type="int">@pers.port@</param>
-        <param name="timeout" type="int">100</param>
-        <param name="pingTimeout" type="int">180</param>
+        <param name="timeout" type="int">@pers.io_timeout@</param>
+        <param name="pingTimeout" type="int">@pers.ping_timeout@</param>
     </section>
 
 </config>

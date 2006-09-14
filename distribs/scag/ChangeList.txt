@@ -26,6 +26,6 @@ msag.properties.sample file changed: added new parameter logger.properties_file
 14.09.2006 15:00 makar
 msag.properties.sample file changed: 
 pers.listen_host & pers.connect_host parameters separated (was pers.host)
-
+pers.io_timeout & pers.ping_timeout parameters were added
 
 
