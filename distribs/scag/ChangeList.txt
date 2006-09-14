@@ -21,6 +21,11 @@ in file ..\smsc\webapps\scag\WEB-INF\locales.xml. For example: "ru", "en", "ru_R
 Distributive build changes: added pers service
 =================================================================================================================
 06.09.2006 16:00 igor
-msag.properties.sample file changed: added new parameter logger.properties_file 
+msag.properties.sample file changed: added new parameter logger.properties_file
+=================================================================================================================
+14.09.2006 15:00 makar
+msag.properties.sample file changed: 
+pers.listen_host & pers.connect_host parameters separated (was pers.host)
+
 
 
