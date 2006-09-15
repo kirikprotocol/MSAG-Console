@@ -27,7 +27,7 @@ public class EmailSmeService  {
     try {
       final Mask mask = new Mask(profile.getAddr());
 
-      addCommand.setAddress(mask.getMask());
+      addCommand.setAddress(mask.getMaskSimple());
       addCommand.setUserName((profile.getUserid() == null) ? "" : profile.getUserid());
       addCommand.setRealName(profile.getRealName());
       addCommand.setLimitType(EmailSmeContext.LIMITCHAR_DAY_CHAR);
@@ -54,7 +54,7 @@ public class EmailSmeService  {
     try {
       final Mask mask = new Mask(profile.getAddr());
 
-      delCommand.setAddress(mask.getMask());
+      delCommand.setAddress(mask.getMaskSimple());
       delCommand.setNpi(mask.getNpi());
       delCommand.setTon(mask.getTone());
       delCommand.process(context);
@@ -76,9 +76,10 @@ public class EmailSmeService  {
     final EmailSmeLookupByAddressCommand lookupByAddressCommand = new EmailSmeLookupByAddressCommand();
 
     final Mask mask = new Mask(addr);
-    lookupByAddressCommand.setAddress(mask.getMask());
+    lookupByAddressCommand.setAddress(mask.getMaskSimple());
     lookupByAddressCommand.setTon(mask.getTone());
     lookupByAddressCommand.setNpi(mask.getNpi());
+
     final LookupResult result = lookupByAddressCommand.process(context);
 
     return (result != null) ? new Profile(result.getAddr(), result.getUserName(), result.getLimitValue(), result.getForwardEmail(), result.getRealName()) : null;
