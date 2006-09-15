@@ -82,7 +82,7 @@ public class EmailSmeService  {
 
     final LookupResult result = lookupByAddressCommand.process(context);
 
-    return (result != null) ? new Profile(result.getAddr(), result.getUserName(), result.getLimitValue(), result.getForwardEmail(), result.getRealName()) : null;
+    return (result != null) ? new Profile(new Mask(result.getTon(), result.getNpi(),result.getAddr()).getMask(), result.getUserName(), result.getLimitValue(), result.getForwardEmail(), result.getRealName()) : null;
 
   }
 
@@ -94,6 +94,6 @@ public class EmailSmeService  {
     lookupCommand.setUserId(userId);
 
     final LookupResult result = lookupCommand.process(context);
-    return (result != null) ? new Profile(result.getAddr(), result.getUserName(), result.getLimitValue(), result.getForwardEmail(), result.getRealName()) : null;
+    return (result != null) ? new Profile(new Mask(result.getTon(), result.getNpi(),result.getAddr()).getMask(), result.getUserName(), result.getLimitValue(), result.getForwardEmail(), result.getRealName()) : null;
   }
 }
