@@ -1,7 +1,6 @@
 package ru.novosoft.smsc.emailsme.beans;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.emailsme.backend.SmeContext;
 import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.util.config.Config;
@@ -87,6 +86,7 @@ public class SmeBean extends PageBean
   public boolean isServiceOnline()
   {
     try {
+      System.out.println("isServiceOnline");
       return appContext.getHostsManager().getServiceInfo(SmeContext.SME_ID).isOnline();
     } catch (AdminException e) {
       logger.error("Couldn't get EMailSme status", e);

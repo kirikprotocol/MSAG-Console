@@ -1,13 +1,13 @@
 package ru.novosoft.smsc.emailsme.beans;
 
-import ru.novosoft.smsc.emailsme.backend.*;
-import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
-import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
-import ru.sibinco.util.conpool.ConnectionPool;
+import ru.novosoft.smsc.admin.route.Mask;
+import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.emailsme.backend.EmailSmeMessages;
+import ru.novosoft.smsc.emailsme.backend.EmailSmeService;
+import ru.novosoft.smsc.emailsme.backend.Profile;
 
 import javax.servlet.http.HttpServletRequest;
-import java.sql.*;
-import java.util.*;
+import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -18,223 +18,101 @@ import java.util.*;
  */
 public class Profiles extends SmeBean
 {
-  public static final int RESULT_EDIT = SmeBean.PRIVATE_RESULT + 0;
+  public static final int RESULT_EDIT = SmeBean.PRIVATE_RESULT;
   public static final int RESULT_ADD = SmeBean.PRIVATE_RESULT + 1;
   protected static final int PRIVATE_RESULT = SmeBean.PRIVATE_RESULT + 2;
 
-  private QueryResultSet resultSet = new EmptyResultSet();
-  private int startPosition = 0;
-  private String sort = null;
-  private int pageSize = -1;
-  private String edit = null;
-  private String[] checked = new String[0];
-  private Collection checkedSet = new HashSet();
+  public final static String SEARCH_BY_ADDR = "Address";
+  public final static String SEARCH_BY_ID = "ID";
 
-  private String mbEdit = null;
+  private String searchString;
+  private String searchField;
+
+  private String mbSearch = null;
   private String mbAdd = null;
-  private String mbDelete = null;
 
-  protected int init(List errors)
-  {
+  private EmailSmeService service;
+
+  private Profile foundProfile = null;
+
+  protected int init(List errors) {
     int result = super.init(errors);
     if (result != RESULT_OK)
       return result;
 
-    if (sort == null)
-      sort = getSmeContext().getSort();
-    else
-      getSmeContext().setSort(sort);
-    if (pageSize == -1)
-      pageSize = getSmeContext().getPageSize();
-    else
-      getSmeContext().setPageSize(pageSize);
+    service = new EmailSmeService(appContext);
 
-    checkedSet.addAll(Arrays.asList(checked));
-
-    final ConnectionPool connectionPool = getSmeContext().getConnectionPool();
-    if (connectionPool != null) {
-      try {
-        resultSet = new ProfilesDataSource().query(connectionPool, new ProfilesQuery(getPageSizeInt(), new ProfilesFilter(null, null, -1, null), getSort(), getStartPositionInt()));
-      } catch (SQLException e) {
-        return error("Could not get profiles from db", e);
-      }
-    } else
-      return result = error("Could not connect to SQL server.");
-
-    return result;
+    return RESULT_OK;
   }
 
-  public int process(HttpServletRequest request)
-  {
+  public int process(HttpServletRequest request) {
     int result = super.process(request);
     if (result != RESULT_OK)
       return result;
 
-    if (mbEdit != null) return RESULT_EDIT;
+    if (mbSearch != null && searchString != null) {
+      // validate search string
+      if (searchField.equals(SEARCH_BY_ADDR) && !Mask.isMaskValid(searchString))
+       return error(EmailSmeMessages.errors.invalidAddress);
+
+      // serach profile
+      try {
+        foundProfile = (searchField.equals(SEARCH_BY_ADDR)) ? service.lookupProfileByAddr(searchString) : service.lookupProfileByUserId(searchString);
+        if (foundProfile == null)
+          return error(EmailSmeMessages.errors.profileNotFound);
+      } catch (AdminException e) {
+        return error(EmailSmeMessages.errors.internalError);
+      }
+      return RESULT_EDIT;
+    }
+
     if (mbAdd != null) return RESULT_ADD;
-    if (mbDelete != null) return delete();
 
     return result;
   }
 
-  private int delete()
-  {
-    final ConnectionPool connectionPool = getSmeContext().getConnectionPool();
-    if (connectionPool == null)
-      return error("Could not connect to SQL server");
-
-    Connection connection = null;
-    logger.debug("delete " + checked.length + " profiles");
-    try {
-      connection = connectionPool.getConnection();
-      PreparedStatement statement = connection.prepareStatement("delete from emlsme_profiles where address=?");
-      for (int i = 0; i < checked.length; i++) {
-        String checkedAddr = checked[i];
-        statement.setString(1, checkedAddr);
-        statement.executeUpdate();
-      }
-      connection.commit();
-    } catch (SQLException e) {
-      StringBuffer checkedAddrs = new StringBuffer("[");
-      for (int i = 0; i < checked.length; i++) {
-        if (i > 0)
-          checkedAddrs.append(", ");
-        checkedAddrs.append('"').append(checked[i]).append('"');
-      }
-      checkedAddrs.append(']');
-      logger.error("Could not delete checked profiles " + checkedAddrs, e);
-      return error("Could not delete checked profiles " + checkedAddrs, e);
-    } finally {
-      try {
-        if (connection != null) connection.close();
-      } catch (SQLException e) {
-        logger.error("Could not close conection", e);
-        error("Could not close conection", e);
-      }
-    }
-    return RESULT_DONE;
+  public Profile getFoundProfile() {
+    return foundProfile;
   }
 
-  public QueryResultSet getResultSet()
-  {
-    return resultSet;
+  public boolean isSearchByAddr() {
+    return (searchField != null) && (searchField.equals(SEARCH_BY_ADDR));
   }
 
-  public String getSort()
-  {
-    return sort;
+  public boolean isSearchById() {
+    return (searchField != null) && (searchField.equals(SEARCH_BY_ID));
   }
 
-  public void setSort(String sort)
-  {
-    this.sort = sort;
+  public String getMbSearch() {
+    return mbSearch;
   }
 
-  public int getPageSizeInt()
-  {
-    return pageSize;
+  public void setMbSearch(String mbSearch) {
+    this.mbSearch = mbSearch;
   }
 
-  public void setPageSizeInt(int pageSize)
-  {
-    this.pageSize = pageSize;
-  }
-
-  public String getPageSize()
-  {
-    return String.valueOf(pageSize);
-  }
-
-  public void setPageSize(String pageSize)
-  {
-    try {
-      this.pageSize = Integer.decode(pageSize).intValue();
-    } catch (NumberFormatException e) {
-      logger.error("Invalid value for pagesize: " + pageSize);
-    }
-  }
-
-  public int getStartPositionInt()
-  {
-    return startPosition;
-  }
-
-  public void setStartPositionInt(int startPosition)
-  {
-    this.startPosition = startPosition;
-  }
-
-  public String getStartPosition()
-  {
-    return String.valueOf(startPosition);
-  }
-
-  public void setStartPosition(String startPosition)
-  {
-    try {
-      this.startPosition = Integer.decode(startPosition).intValue();
-    } catch (NumberFormatException e) {
-      logger.error("Invalid value for start position: " + startPosition);
-    }
-  }
-
-  public String getEdit()
-  {
-    return edit;
-  }
-
-  public void setEdit(String edit)
-  {
-    this.edit = edit;
-  }
-
-  public String getMbEdit()
-  {
-    return mbEdit;
-  }
-
-  public void setMbEdit(String mbEdit)
-  {
-    this.mbEdit = mbEdit;
-  }
-
-  public String getMbAdd()
-  {
+  public String getMbAdd() {
     return mbAdd;
   }
 
-  public void setMbAdd(String mbAdd)
-  {
+  public void setMbAdd(String mbAdd) {
     this.mbAdd = mbAdd;
   }
 
-  public String[] getChecked()
-  {
-    return checked;
+  public String getSearchString() {
+    return searchString;
   }
 
-  public void setChecked(String[] checked)
-  {
-    this.checked = checked;
+  public void setSearchString(String searchString) {
+    this.searchString = searchString;
   }
 
-  public boolean isChecked(String addr)
-  {
-    return checkedSet.contains(addr);
+  public String getSearchField() {
+    return searchField;
   }
 
-  public String getMbDelete()
-  {
-    return mbDelete;
+  public void setSearchField(String searchField) {
+    this.searchField = searchField;
   }
 
-  public void setMbDelete(String mbDelete)
-  {
-    this.mbDelete = mbDelete;
-  }
-
-  public int getTotalSizeInt()
-  {
-    return resultSet.getTotalSize();
-  }
 }

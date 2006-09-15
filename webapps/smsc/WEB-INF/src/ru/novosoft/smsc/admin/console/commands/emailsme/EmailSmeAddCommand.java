@@ -2,6 +2,7 @@ package ru.novosoft.smsc.admin.console.commands.emailsme;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.console.CommandContext;
+import ru.novosoft.smsc.jsp.SMSCAppContext;
 import antlr.RecognitionException;
 
 public class EmailSmeAddCommand extends EmailSmeGenCommand {
@@ -17,14 +18,18 @@ public class EmailSmeAddCommand extends EmailSmeGenCommand {
     public void process(CommandContext ctx) {
         String out = "emailsme '" + address + "'";
         try {
-            EmailSmeContext context = EmailSmeContext.getInstance(ctx.getOwner().getContext());
-            context.add(ton, npi, address, userName, forwardEmail, realName, limitType, (byte)1, 0, limitValue, 0, 0);
+            process(ctx.getOwner().getContext());  
             ctx.setMessage(out + " added or updated.");
             ctx.setStatus(CommandContext.CMD_OK);
         } catch (AdminException e) {
             ctx.setMessage("Couldn't add " + out + ". Cause: " + e.getMessage());
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
         }
+    }
+
+    public void process(SMSCAppContext ctx) throws AdminException {
+      EmailSmeContext context = EmailSmeContext.getInstance(ctx);
+      context.add(ton, npi, address, userName, forwardEmail, realName, limitType, (byte)1, 0, limitValue, 0, 0);
     }
 
     public String getId() {
