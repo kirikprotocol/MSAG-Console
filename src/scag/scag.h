@@ -7,7 +7,6 @@
 #include "core/threads/ThreadedTask.hpp"
 #include "scag/transport/smpp/router/route_manager.h"
 #include "util/config/smeman/SmeManConfig.h"
-#include "scag/performance.hpp"
 //#include "sme/SmppBase.hpp"
 #include "smeman/smsccmd.h"
 #include "scag/stat/StatisticsManager.h"
@@ -74,7 +73,7 @@ public:
   };
   ~Scag();
   void init();
-  void run();
+//  void run();
   void stop(){stopFlag=true;}
   //void mainLoop();
   void shutdown();
@@ -104,40 +103,8 @@ public:
   }
 
 
-  void updatePerformance(int counter)
-  {
-    MutexGuard g(perfMutex);
-    using namespace scag::performance::Counters;
-    switch(counter)
-    {
-      case cntAccepted:    acceptedCounter++;break;
-      case cntRejected:    rejectedCounter++;break;
-      case cntDelivered:   deliveredCounter++;break;
-      case cntDeliverErr:  deliverErrCounter++;break;
-      case cntTransOk:     transOkCounter++;break;
-      case cntTransFail:   transFailCounter++;break;
-    }
-  }
-
-  void SaveStats()
-  {
-    FILE *f=fopen("stats.txt","wt");
-    if(f)
-    {
-      fprintf(f,"%d %lld %lld %lld %lld %lld %lld",time(NULL)-startTime,
-        acceptedCounter,
-        rejectedCounter,
-        deliveredCounter,
-        deliverErrCounter,
-        transOkCounter,
-        transFailCounter
-      );
-      fclose(f);
-    }
-  }
   void abortScag()
   {
-    SaveStats();
     //MapDialogContainer::getInstance()->abort();
     kill(getpid(),9);
   }
@@ -146,17 +113,6 @@ public:
   {
     //MapDialogContainer::getInstance()->abort();
     abort();
-  }
-
-  void getPerfData(uint64_t *cnt)
-  {
-    MutexGuard g(perfMutex);
-    cnt[0]=acceptedCounter;
-    cnt[1]=rejectedCounter;
-    cnt[2]=deliveredCounter;
-    cnt[3]=deliverErrCounter;
-    cnt[4]=transOkCounter;
-    cnt[5]=transFailCounter;
   }
 
   void InitLicense(const Hash<string>& lic)
@@ -244,8 +200,6 @@ protected:
   int scagPort;
   scag::transport::smpp::SmppManager smppMan;
   scag::transport::http::HttpManager httpMan;
-
-  scag::performance::PerformanceDataDispatcher perfDataDisp;
 
   struct LicenseInfo{
     int maxsms;

@@ -150,166 +150,7 @@ using smsc::util::findConfigFile;
 
 Scag::~Scag()
 {
-  SaveStats();
 }
-
-class SpeedMonitor{
-public:
-
-  //****************************************************************************************
-  // Its nesseccary evenqueue to replace on something
-  //****************************************************************************************
-
-  SpeedMonitor(/*EventQueue& eq, */ scag::performance::PerformanceListener* pl, Scag* pscag):
-    /*queue(eq),*/perfListener(pl)
-  {
-    start.tv_sec=0;
-    start.tv_nsec=0;
-    scag = pscag;
-  }
-  int run()
-  {
-    uint64_t cnt = 0, last=0;
-
-    timespec now={0,0},lasttime={0,0};
-    double ut,tm,rate,avg;
-    if(start.tv_sec==0)
-      clock_gettime(CLOCK_REALTIME,&start);
-    Event ev;
-    __trace__("enter SpeedMonitor");
-    timeshift=0;
-    time_t perfStart=start.tv_sec;
-    for(int i=0;i<60;i++)times[i]=start.tv_sec;
-    int lastscnt=0;
-    memset(perfCnt,0,sizeof(perfCnt));
-    uint64_t lastPerfCnt[scag::performance::performanceCounters]={0,};
-    //now.tv_sec=0;
-    int i;
-    for(;;)
-    {
-      //sleep(1);
-      //timeval tv;
-      //tv.tv_sec=1;
-      //tv.tv_usec=0;
-      //select(0,0,0,0,&tv);
-      while(now.tv_sec==time(NULL))ev.Wait(10);
-
-      //===========================
-      // replace queue
-      //cnt=queue.getCounter();
-
-
-      int eqhash,equnl = 0;
-
-      //=======================
-      // replace queue
-      //queue.getStats(equnl);
-
-      clock_gettime(CLOCK_REALTIME,&now);
-      ut=((now.tv_sec*1000.0+now.tv_nsec/1000000.0)-
-         (start.tv_sec*1000.0+start.tv_nsec/1000000.0))/1000.0;
-      tm=((now.tv_sec*1000.0+now.tv_nsec/1000000.0)-
-         (lasttime.tv_sec*1000.0+lasttime.tv_nsec/1000000.0))/1000;
-      rate=(cnt-last)/tm;
-      avg=cnt/ut;
-      printf("UT:%.3lf AVG:%.3lf LAST:%.3lf (%llu)[%d]         \r",ut,avg,rate,cnt,equnl);
-      fflush(stdout);
-      last=cnt;
-      lasttime=now;
-
-      //if(isStopping)break;
-
-      uint64_t perf[scag::performance::performanceCounters];
-      // success, error, reschedule
-      scag->getPerfData(perf);
-      scag::performance::PerformanceData d;
-      d.countersNumber=scag::performance::performanceCounters;
-      for(i=0;i<scag::performance::performanceCounters;i++)
-      {
-        d.counters[i].lastSecond=(int)(perf[i]-lastPerfCnt[i]);
-        d.counters[i].total=perf[i];
-      }
-
-
-      int scnt=(now.tv_sec-perfStart)/60;
-      //__trace2__("SpeedMonitor: scnt=%d",scnt);
-      if(scnt<0)scnt=0;
-      if(scnt>=60)
-      {
-        timeshift++;
-        if(timeshift>=60)timeshift=0;
-        perfStart=times[timeshift];
-        scnt=59;
-        int idx=timeshift-1;
-        if(idx<0)idx=59;
-        times[idx]=now.tv_sec;
-        for(i=0;i<scag::performance::performanceCounters;i++)perfCnt[i][idx]=0;
-      }
-      if(scnt!=lastscnt)
-      {
-        times[scnt]=now.tv_sec;
-        lastscnt=scnt;
-      }
-      for(int j=0;j<scag::performance::performanceCounters;j++)
-      {
-        d.counters[j].average=0;
-      }
-      int idx=timeshift;
-      for(i=0;i<=scnt;i++,idx++)
-      {
-        if(idx>=60)idx=0;
-        if(i==scnt)
-        {
-          for(int j=0;j<scag::performance::performanceCounters;j++)
-          {
-            perfCnt[j][idx]+=d.counters[j].lastSecond;
-          }
-        }
-        for(int j=0;j<scag::performance::performanceCounters;j++)
-        {
-          d.counters[j].average+=perfCnt[j][idx];
-        }
-      }
-      int diff=now.tv_sec-times[timeshift];
-      if(diff==0)diff=1;
-      //__trace2__("ca=%d,ea=%d,ra=%d, time diff=%u",
-      //  d.success.average,d.error.average,d.rescheduled.average,diff);
-
-      for(i=0;i<scag::performance::performanceCounters;i++)
-      {
-        d.counters[i].average/=diff;
-      }
-
-      d.now=now.tv_sec;
-      d.uptime=now.tv_sec-start.tv_sec;
-
-      d.eventQueueSize=equnl;
-
-      perfListener->reportGenPerformance(&d);
-
-      for(i=0;i<scag::performance::performanceCounters;i++)
-      {
-        lastPerfCnt[i]=perf[i];
-      }
-    }
-    return 0;
-  }
-  void setStartTime(time_t t)
-  {
-    start.tv_sec=t;
-    start.tv_nsec=0;
-  }
-protected:
-  //EventQueue& queue;
-  int perfCnt[scag::performance::performanceCounters][60];
-  int timeshift;
-  time_t times[60];
-  timespec start;
-  scag::performance::PerformanceListener* perfListener;
-  static Scag* scag;
-};
-
-Scag* SpeedMonitor::scag=NULL;
 
 void Scag::init()
 {
@@ -650,10 +491,10 @@ void Scag::init()
 
 }
 
-void Scag::run()
+/*void Scag::run()
 {
   smsc::logger::Logger *log = smsc::logger::Logger::getInstance("smsc.run");
-
+*/
   //TODO: report performance on Speed Monitor
     /*SpeedMonitor *sm=new SpeedMonitor(&perfDataDisp,this);
     FILE *f=fopen("stats.txt","rt");
@@ -675,13 +516,13 @@ void Scag::run()
       remove("stats.txt");
     }
     sm->run();*/
-  while(!stopFlag)
+/*  while(!stopFlag)
   {
       sleep(1);
   }
     smsc_log_info(log, "Scag stoped" );
 }
-
+*/
 void Scag::shutdown()
 {
   __trace__("shutting down");

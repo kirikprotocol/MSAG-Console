@@ -3,11 +3,9 @@
 #include <exception>
 #include <sys/stat.h>
 
-#include "scag/scag.h"
+#include "scag.h"
 
-#include "util/config/alias/aliasconf.h"
 #include "util/config/route/RouteConfig.h"
-#include <admin/service/ComponentManager.h>
 #include <admin/service/ServiceSocketListener.h>
 #include <util/signal.hpp>
 #include <util/xml/init.h>
@@ -15,12 +13,11 @@
 #include <core/threads/Thread.hpp>
 
 #include "license/check/license.hpp"
-#include "scag/admin/SCAGCommandDispatcher.h"
-#include "scag/admin/SCAGSocketListener.h"
-#include "scag/config/ConfigManager.h"
+#include "admin/SCAGSocketListener.h"
+#include "config/ConfigManager.h"
 #include "Inst.h"
 
-#include "scag/version.inc"
+#include "version.inc"
 
 static const int SHUTDOWN_SIGNAL = SIGTERM;
 
@@ -118,7 +115,7 @@ int main(int argc,char* argv[])
     Inst inst(filename);
     // Shutdown if there is instance allready.
     if(!inst.run()) {
-        fprintf(stderr, "Instance is runing allready.\n");
+        fprintf(stderr, "Instance is running already.\n");
         exit(-1);
     }
 
@@ -182,6 +179,5 @@ int main(int argc,char* argv[])
   }
   //graceful shutdown
   //we don't need to restore stats on next startup in this case
-  remove("stats.txt");
   return 0;
 }
