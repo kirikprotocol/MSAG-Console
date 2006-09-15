@@ -58,6 +58,7 @@ tokens {
   TGT_GROUP     = "group";
   TGT_EMAILSME  = "emailsme";
 
+  OPT_ID        = "id";
   OPT_NAME      = "name";
   OPT_HIDE      = "hide";
   OPT_NOHIDE    = "nohide";
@@ -138,6 +139,8 @@ tokens {
   OPT_ADDRESS    = "address";
   OPT_LIMITTYPE  = "limittype";
   OPT_LIMITVALUE = "limitvalue";
+  OPT_SERVICESMASK = "servicesmask";
+  OPT_SERVICESBIT  = "servicesbit";
 
   VAL_FORCE     = "force";
   VAL_SUPPRESS  = "suppress";

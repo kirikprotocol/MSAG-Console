@@ -557,6 +557,30 @@ public CommandParser(ParserSharedInputState state) {
 			cmd=viewgroup();
 			break;
 		}
+		case TGT_EMAILSME:
+		{
+			match(TGT_EMAILSME);
+			{
+			switch ( LA(1)) {
+			case OPT_ID:
+			{
+				match(OPT_ID);
+				cmd=viewemailsmebyid();
+				break;
+			}
+			case OPT_TON:
+			{
+				cmd=viewemailsmebyaddr();
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			break;
+		}
 		default:
 		{
 			throw new NoViableAltException(LT(1), getFilename());
@@ -1066,6 +1090,8 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_INPUTACCESSBIT:
 		case OPT_OUTPUTACCESSMASK:
 		case OPT_OUTPUTACCESSBIT:
+		case OPT_SERVICESMASK:
+		case OPT_SERVICESBIT:
 		{
 			break;
 		}
@@ -1092,6 +1118,8 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_INPUTACCESSBIT:
 		case OPT_OUTPUTACCESSMASK:
 		case OPT_OUTPUTACCESSBIT:
+		case OPT_SERVICESMASK:
+		case OPT_SERVICESBIT:
 		{
 			break;
 		}
@@ -1121,6 +1149,8 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_INPUTACCESSBIT:
 		case OPT_OUTPUTACCESSMASK:
 		case OPT_OUTPUTACCESSBIT:
+		case OPT_SERVICESMASK:
+		case OPT_SERVICESBIT:
 		{
 			break;
 		}
@@ -1133,6 +1163,49 @@ public CommandParser(ParserSharedInputState state) {
 		profile_udh_concat_opt(cmd);
 		profile_translit_opt(cmd);
 		profile_group_opt(cmd);
+		{
+		switch ( LA(1)) {
+		case OPT_SERVICESMASK:
+		{
+			match(OPT_SERVICESMASK);
+			cmd.setServices(getint("services"));
+			break;
+		}
+		case OPT_SERVICESBIT:
+		{
+			match(OPT_SERVICESBIT);
+			{
+			switch ( LA(1)) {
+			case OPT_ON:
+			{
+				match(OPT_ON);
+				cmd.setServicesBit(true, getint("services bit"));
+				break;
+			}
+			case OPT_OFF:
+			{
+				match(OPT_OFF);
+				cmd.setServicesBit(false, getint("services bit"));
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			break;
+		}
+		case EOF:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
 		return cmd;
 	}
 	
@@ -2753,6 +2826,44 @@ public CommandParser(ParserSharedInputState state) {
 		return cmd;
 	}
 	
+	public final EmailSmeLookupByUserIdCommand  viewemailsmebyid() throws RecognitionException, TokenStreamException {
+		EmailSmeLookupByUserIdCommand cmd;
+		
+		
+		cmd = new EmailSmeLookupByUserIdCommand();
+		
+		
+		try {      // for error handling
+			{
+			cmd.setUserId(getnameid("name id"));
+			}
+		}
+		catch (RecognitionException ex) {
+			
+			throw new RecognitionException("user id option invalid. Details: "+ex.getMessage());
+			
+		}
+		return cmd;
+	}
+	
+	public final EmailSmeLookupByAddressCommand  viewemailsmebyaddr() throws RecognitionException, TokenStreamException {
+		EmailSmeLookupByAddressCommand cmd;
+		
+		
+		cmd = new EmailSmeLookupByAddressCommand();
+		
+		
+		try {      // for error handling
+			emailsme_gen_opt(cmd);
+		}
+		catch (RecognitionException ex) {
+			
+			throw new RecognitionException("ton, npi, address expected. Details: "+ex.getMessage());
+			
+		}
+		return cmd;
+	}
+	
 	public final AclGrantCommand  grantacl() throws RecognitionException, TokenStreamException {
 		AclGrantCommand cmd;
 		
@@ -3152,17 +3263,17 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			match(OPT_SRC);
 			{
-			int _cnt34=0;
-			_loop34:
+			int _cnt35=0;
+			_loop35:
 			do {
 				if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
 					srcdef(cmd);
 				}
 				else {
-					if ( _cnt34>=1 ) { break _loop34; } else {throw new NoViableAltException(LT(1), getFilename());}
+					if ( _cnt35>=1 ) { break _loop35; } else {throw new NoViableAltException(LT(1), getFilename());}
 				}
 				
-				_cnt34++;
+				_cnt35++;
 			} while (true);
 			}
 			}
@@ -3184,17 +3295,17 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			match(OPT_DST);
 			{
-			int _cnt38=0;
-			_loop38:
+			int _cnt39=0;
+			_loop39:
 			do {
 				if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
 					dstdef(cmd, needSmeId);
 				}
 				else {
-					if ( _cnt38>=1 ) { break _loop38; } else {throw new NoViableAltException(LT(1), getFilename());}
+					if ( _cnt39>=1 ) { break _loop39; } else {throw new NoViableAltException(LT(1), getFilename());}
 				}
 				
-				_cnt38++;
+				_cnt39++;
 			} while (true);
 			}
 			}
@@ -4046,14 +4157,14 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			addsubj_mask(cmd);
 			{
-			_loop117:
+			_loop118:
 			do {
 				if ((LA(1)==COMMA)) {
 					match(COMMA);
 					addsubj_mask(cmd);
 				}
 				else {
-					break _loop117;
+					break _loop118;
 				}
 				
 			} while (true);
@@ -4095,6 +4206,8 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_INPUTACCESSBIT:
 			case OPT_OUTPUTACCESSMASK:
 			case OPT_OUTPUTACCESSBIT:
+			case OPT_SERVICESMASK:
+			case OPT_SERVICESBIT:
 			{
 				break;
 			}
@@ -4125,6 +4238,8 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_INPUTACCESSBIT:
 			case OPT_OUTPUTACCESSMASK:
 			case OPT_OUTPUTACCESSBIT:
+			case OPT_SERVICESMASK:
+			case OPT_SERVICESBIT:
 			{
 				break;
 			}
@@ -4154,6 +4269,8 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_INPUTACCESSBIT:
 			case OPT_OUTPUTACCESSMASK:
 			case OPT_OUTPUTACCESSBIT:
+			case OPT_SERVICESMASK:
+			case OPT_SERVICESBIT:
 			{
 				break;
 			}
@@ -4182,6 +4299,8 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_INPUTACCESSBIT:
 			case OPT_OUTPUTACCESSMASK:
 			case OPT_OUTPUTACCESSBIT:
+			case OPT_SERVICESMASK:
+			case OPT_SERVICESBIT:
 			{
 				break;
 			}
@@ -4209,6 +4328,8 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_INPUTACCESSBIT:
 			case OPT_OUTPUTACCESSMASK:
 			case OPT_OUTPUTACCESSBIT:
+			case OPT_SERVICESMASK:
+			case OPT_SERVICESBIT:
 			{
 				break;
 			}
@@ -4240,6 +4361,8 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_INPUTACCESSBIT:
 			case OPT_OUTPUTACCESSMASK:
 			case OPT_OUTPUTACCESSBIT:
+			case OPT_SERVICESMASK:
+			case OPT_SERVICESBIT:
 			{
 				break;
 			}
@@ -4297,6 +4420,8 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_INPUTACCESSBIT:
 			case OPT_OUTPUTACCESSMASK:
 			case OPT_OUTPUTACCESSBIT:
+			case OPT_SERVICESMASK:
+			case OPT_SERVICESBIT:
 			{
 				break;
 			}
@@ -4353,6 +4478,8 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_INPUTACCESSBIT:
 			case OPT_OUTPUTACCESSMASK:
 			case OPT_OUTPUTACCESSBIT:
+			case OPT_SERVICESMASK:
+			case OPT_SERVICESBIT:
 			{
 				break;
 			}
@@ -4410,6 +4537,8 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_INPUTACCESSBIT:
 			case OPT_OUTPUTACCESSMASK:
 			case OPT_OUTPUTACCESSBIT:
+			case OPT_SERVICESMASK:
+			case OPT_SERVICESBIT:
 			{
 				break;
 			}
@@ -4442,6 +4571,8 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_INPUTACCESSBIT:
 			case OPT_OUTPUTACCESSMASK:
 			case OPT_OUTPUTACCESSBIT:
+			case OPT_SERVICESMASK:
+			case OPT_SERVICESBIT:
 			{
 				break;
 			}
@@ -4518,6 +4649,8 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_INPUTACCESSBIT:
 			case OPT_OUTPUTACCESSMASK:
 			case OPT_OUTPUTACCESSBIT:
+			case OPT_SERVICESMASK:
+			case OPT_SERVICESBIT:
 			{
 				break;
 			}
@@ -4554,6 +4687,8 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_INPUTACCESSBIT:
 			case OPT_OUTPUTACCESSMASK:
 			case OPT_OUTPUTACCESSBIT:
+			case OPT_SERVICESMASK:
+			case OPT_SERVICESBIT:
 			{
 				break;
 			}
@@ -4599,6 +4734,8 @@ public CommandParser(ParserSharedInputState state) {
 			case EOF:
 			case OPT_OUTPUTACCESSMASK:
 			case OPT_OUTPUTACCESSBIT:
+			case OPT_SERVICESMASK:
+			case OPT_SERVICESBIT:
 			{
 				break;
 			}
@@ -4642,6 +4779,8 @@ public CommandParser(ParserSharedInputState state) {
 				break;
 			}
 			case EOF:
+			case OPT_SERVICESMASK:
+			case OPT_SERVICESBIT:
 			{
 				break;
 			}
@@ -5500,27 +5639,27 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			}
 			{
-			_loop291:
+			_loop294:
 			do {
 				if ((LA(1)==ACT_ADD)) {
 					match(ACT_ADD);
 					cmd.addMask(getnameid("closed group mask to add"));
 				}
 				else {
-					break _loop291;
+					break _loop294;
 				}
 				
 			} while (true);
 			}
 			{
-			_loop293:
+			_loop296:
 			do {
 				if ((LA(1)==ACT_DELETE)) {
 					match(ACT_DELETE);
 					cmd.delMask(getnameid("closed group mask to delete"));
 				}
 				else {
-					break _loop293;
+					break _loop296;
 				}
 				
 			} while (true);
@@ -5610,6 +5749,7 @@ public CommandParser(ParserSharedInputState state) {
 		"\"archive\"",
 		"\"group\"",
 		"\"emailsme\"",
+		"\"id\"",
 		"\"name\"",
 		"\"hide\"",
 		"\"nohide\"",
@@ -5690,6 +5830,8 @@ public CommandParser(ParserSharedInputState state) {
 		"\"address\"",
 		"\"limittype\"",
 		"\"limitvalue\"",
+		"\"servicesmask\"",
+		"\"servicesbit\"",
 		"\"force\"",
 		"\"suppress\"",
 		"\"pass\"",

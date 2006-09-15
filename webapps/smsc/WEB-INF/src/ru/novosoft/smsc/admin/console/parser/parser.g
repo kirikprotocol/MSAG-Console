@@ -94,7 +94,7 @@ add returns [Command cmd] {
 	| TGT_PROVIDER	cmd = addprovider
 	| TGT_CATEGORY	cmd = addcategory
 	| TGT_GROUP     cmd = addgroup
-	| TGT_EMAILSME  cmd = addemailsme
+	| TGT_EMAILSME	cmd = addemailsme
 	;
 	
 /* ----------------------- Del action parser ---------------------- */
@@ -158,6 +158,11 @@ view returns [Command cmd] {
 	| TGT_DL	cmd = viewdl
 	| TGT_SME	cmd = viewsme
 	| TGT_GROUP  cmd = viewgroup
+	| TGT_EMAILSME
+	(
+	  OPT_ID       cmd = viewemailsmebyid
+	| cmd = viewemailsmebyaddr
+	)
 	;
 /* ----------------------- Show action parser --------------------- */
 show returns [AliasShowCommand cmd] {
@@ -615,6 +620,10 @@ addprofile returns [ProfileAddCommand cmd] {
 	  profile_udh_concat_opt[cmd]
 	  profile_translit_opt[cmd]
 	  profile_group_opt[cmd]
+	  (OPT_SERVICESMASK { cmd.setServices(getint("services")); }
+      |OPT_SERVICESBIT
+              (OPT_ON {cmd.setServicesBit(true, getint("services bit"));}
+              |OPT_OFF {cmd.setServicesBit(false, getint("services bit"));} ))?
 	;
 exception[mask]
 catch [RecognitionException ex] {
@@ -991,6 +1000,25 @@ emailsme_gen_opt[EmailSmeGenCommand cmd]
 exception
 catch [RecognitionException ex] {
    throw new RecognitionException("emailsme option(s) invalid. Details: "+ex.getMessage());
+}
+
+viewemailsmebyid returns [EmailSmeLookupByUserIdCommand cmd] {
+    cmd = new EmailSmeLookupByUserIdCommand();
+}   : ( {cmd.setUserId(getnameid("name id")); } )
+    ;
+exception
+catch [RecognitionException ex] {
+   throw new RecognitionException("user id option invalid. Details: "+ex.getMessage());
+}
+
+viewemailsmebyaddr returns [EmailSmeLookupByAddressCommand cmd] {
+    cmd = new EmailSmeLookupByAddressCommand();
+}
+    : emailsme_gen_opt[cmd]
+    ;
+exception
+catch [RecognitionException ex] {
+   throw new RecognitionException("ton, npi, address expected. Details: "+ex.getMessage());
 }
 
 addemailsme returns [EmailSmeAddCommand cmd] {
