@@ -3,7 +3,6 @@
 namespace scag {
 namespace config {
 
-const time_t SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL = 60;
 
 SessionManagerConfig::SessionManagerConfig()
 {
@@ -15,9 +14,8 @@ SessionManagerConfig::SessionManagerConfig(ConfigView& cv) throw(ConfigException
     init(cv);
 }
 
-SessionManagerConfig::SessionManagerConfig(const std::string& dir_, 
-                             time_t ei)   throw(ConfigException) 
-            : dir(dir_), expireInterval(ei) 
+SessionManagerConfig::SessionManagerConfig(const std::string& dir_)   throw(ConfigException) 
+            : dir(dir_) 
 {
 }
 
@@ -26,9 +24,10 @@ void SessionManagerConfig::init(ConfigView& cv)   throw(ConfigException)
     try {
         std::auto_ptr<char> dir_( cv.getString("location") );
         dir = dir_.get();
-
+        /*
         expireInterval = cv.getInt("expireInterval");
         if (expireInterval <=0) expireInterval = DEFAULT_EXPIRE_INTERVAL;
+        */
     }catch(ConfigException& e){
         throw ConfigException(e.what());
     }catch(...){

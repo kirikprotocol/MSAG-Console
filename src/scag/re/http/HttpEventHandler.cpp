@@ -2,10 +2,12 @@
 #include "HttpAdapter.h"
 #include "scag/re/actions/ActionContext.h"
 #include "scag/re/CommandBrige.h"
+#include "scag/sessions/SessionManager.h"
 
 namespace scag { namespace re { namespace http {
 
 using namespace scag::transport::http;
+using namespace scag::sessions;
 
 RuleStatus HttpEventHandler::processRequest(HttpRequest& command, Session& session, CommandProperty& commandProperty)
 {
@@ -31,7 +33,7 @@ RuleStatus HttpEventHandler::processRequest(HttpRequest& command, Session& sessi
 
         PendingOperation pendingOperation;
         pendingOperation.type = CO_HTTP_DELIVERY;
-        pendingOperation.validityTime = time(NULL) + SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
+        pendingOperation.validityTime = time(NULL) + SessionManager::DEFAULT_EXPIRE_INTERVAL;
         session.addPendingOperation(pendingOperation);
         return rs;
     } catch (SCAGException& e)

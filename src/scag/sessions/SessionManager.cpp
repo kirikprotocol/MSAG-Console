@@ -20,8 +20,13 @@
 #include "scag/re/CommandBrige.h"
 #include "scag/config/ConfigListener.h"
 
+
+
 namespace scag { namespace sessions 
 {
+    const time_t SessionManager::DEFAULT_EXPIRE_INTERVAL = 60;
+
+
     using namespace smsc::core::threads;
     using namespace smsc::core::synchronization;
     using namespace scag::util::singleton;
@@ -376,7 +381,9 @@ int SessionManagerImpl::processExpire()
     
     while (1) 
     {
-        if (SessionExpirePool.empty()) return config.expireInterval;
+        //smsc_log_debug(logger,"SessionManager: processing expire");
+
+        if (SessionExpirePool.empty()) return DEFAULT_EXPIRE_INTERVAL;
 
         CSessionSetIterator it;
 
@@ -403,10 +410,11 @@ int SessionManagerImpl::processExpire()
             {
                 it = SessionExpirePool.begin();
                 iPeriod = ((*it)->nextWakeTime - now);
-                if (iPeriod <= 0) return config.expireInterval;
+                if (iPeriod <= 0) return DEFAULT_EXPIRE_INTERVAL;
                 else return iPeriod;
             }
-            else return config.expireInterval;
+            else 
+                return DEFAULT_EXPIRE_INTERVAL;
         }
 
         iPeriod = (*it)->nextWakeTime - now;
@@ -612,8 +620,10 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
     //if (session->isChanged())    
     store.updateSession(session);
 
+    awakeEvent.Signal();
     inUseMonitor.notifyAll();
     //smsc_log_debug(logger,"SessionManager: session released, Pending Operations Count = %d",session->PendingOperationList.size());
+
 }
 
 

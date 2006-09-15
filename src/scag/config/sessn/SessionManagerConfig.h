@@ -11,16 +11,13 @@ namespace config {
 class SessionManagerConfig
 {
 public:
-    static const time_t DEFAULT_EXPIRE_INTERVAL;
     SessionManagerConfig();
-    SessionManagerConfig(const std::string& dir_, 
-                             time_t ei = DEFAULT_EXPIRE_INTERVAL)  throw(ConfigException);
+    SessionManagerConfig(const std::string& dir_)  throw(ConfigException);
     SessionManagerConfig(ConfigView& cv)  throw(ConfigException);
     void init(ConfigView& cv)  throw(ConfigException);   
     bool check(ConfigView& cv)  throw(ConfigException);
 
     std::string dir;
-    time_t      expireInterval;
 };
 
 }

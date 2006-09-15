@@ -29,7 +29,7 @@ bool ActionOperationWait::run(ActionContext& context)
         RegisterPending(context);
     } catch (SCAGException& e)
     {
-        smsc_log_error(logger,"Run Action '%s': Cannot process. Details: ", m_ActionName.c_str(), e.what());
+        smsc_log_error(logger,"Run Action '%s': Cannot process. Details: %s", m_ActionName.c_str(), e.what());
     }
 
     return true;

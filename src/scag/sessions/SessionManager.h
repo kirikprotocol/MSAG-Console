@@ -21,7 +21,7 @@ namespace scag { namespace sessions
         virtual ~SessionManager() {};
         SessionManager() {};
     public:
-
+        static const time_t DEFAULT_EXPIRE_INTERVAL;
         static void Init(const SessionManagerConfig& config);
         static SessionManager& Instance();
 
