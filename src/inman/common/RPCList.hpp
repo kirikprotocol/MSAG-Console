@@ -2,6 +2,9 @@
 #ifndef __SMSC_INMAN_RPCLIST__
 #define __SMSC_INMAN_RPCLIST__
 
+#include <list>
+#include <stdlib.h>
+
 //#include "inman/common/util.hpp"
 #include "inman/common/errors.hpp"
 
