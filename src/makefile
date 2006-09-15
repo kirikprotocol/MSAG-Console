@@ -130,6 +130,10 @@ SNMP_LIBS := -lnetsnmpagent -lnetsnmphelpers -lnetsnmpmibs -lnetsnmp -lkstat -ls
 export SNMP_LIBS
 endif
 
+ifeq ($(SMSX),YES)
+CXXFLAGS := $(CXXFLAGS) -DSMSEXTRA
+endif
+
 ifdef WARNINGS
 ifeq ($(CXX),CC)
 COMPFLAGS := $(COMPFLAGS) +w
