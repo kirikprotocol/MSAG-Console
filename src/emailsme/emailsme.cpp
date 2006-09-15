@@ -631,7 +631,7 @@ public:
             {
               storage.DeleteProfile(p);
             }
-          }
+          }break;
           case cmdLookupByAddr:
           {
             Address addr;
