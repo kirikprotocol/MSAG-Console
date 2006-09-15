@@ -45,7 +45,7 @@ extern "C" IAProviderCreatorITF *
 
 class IAProviderLoader {
 public:
-    static const IAProviderCreatorITF *
+    static IAProviderCreatorITF *
         LoadIAP(ConfigView* provCfg, Logger * use_log) throw(ConfigException);
 
 /* LoadIAP expects Provider configuration formed as follow:

@@ -29,7 +29,7 @@ protected:
 /* ************************************************************************** *
  * class AbonentProviderLoader implementation:
  * ************************************************************************** */
-const IAProviderCreatorITF *
+IAProviderCreatorITF *
     IAProviderLoader::LoadIAP(ConfigView* provCfg, Logger * use_log) throw(ConfigException)
 {
     IAProviderCreatorITF * cfg = NULL;
