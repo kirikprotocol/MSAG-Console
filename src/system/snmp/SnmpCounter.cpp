@@ -8,6 +8,8 @@ namespace system{
 using namespace xercesc;
 using namespace smsc::util::xml;
 
+SnmpCounter* SnmpCounter::instance=0;
+
 const char* cntNames[]={
 "accepted",
 "rejected",
@@ -79,6 +81,7 @@ void SnmpCounter::LoadCfg(const char* fileName)
   list = elem->getElementsByTagName(XmlStr("object"));
   int listLength=list->getLength();
   svrtHash.Empty();
+  int cnt=0;
   for(int i=0;i<listLength;i++)
   {
     record=list->item(i);
@@ -90,7 +93,9 @@ void SnmpCounter::LoadCfg(const char* fileName)
     lmt.enabled=enabled=="true";
     ParseRecord(record,lmt);
     svrtHash.Insert(objId.c_str(),lmt);
+    cnt++;
   }
+  smsc_log_info(log,"LoadCfg: %d objects loaded",cnt);
 }
 
 void SnmpCounter::Check(const char* name,Counters& cnt,Severities& svrt)
@@ -119,6 +124,7 @@ void SnmpCounter::Check(const char* name,Counters& cnt,Severities& svrt)
     {
       sprintf(alarmId,"%s_%s",name,alarmIdName[i]);
       sprintf(msg,"%s SMPP %s Threshold crossed (AlarmId=%s; severity=%d)",curSvrt==SnmpAgent::NORMAL?"CLEARED":"ACTIVE",alarmId,alarmId,curSvrt);
+      smsc_log_info(log,"SNMPTRAP:%s",msg);
       smsc::snmp::SnmpAgent::trap(alarmId,"SMPP",curSvrt,msg);
       svrt.values[i]=curSvrt;
     }

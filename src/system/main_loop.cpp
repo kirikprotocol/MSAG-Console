@@ -327,14 +327,14 @@ void Smsc::mainLoop()
             {
               if((*i)->get_commandId()==SUBMIT)
               {
-                info2(log,"Sms %s->%s sbm rejected: %d/%d (%d)",
+                info2(log,"Sms %s->%s sbm rejected by license limit: %d/%d (%d)",
                   (*i)->get_sms()->getOriginatingAddress().toString().c_str(),
                   (*i)->get_sms()->getDestinationAddress().toString().c_str(),
                   getTotalCounter().Get(),maxScaled,perSlot);
                 RejectSms(*i);
               }else
               {
-                info2(log,"Sms id=%lld fwd rejected: %d/%d (%d)",(*i)->get_forwardMsgId(),
+                info2(log,"Sms id=%lld fwd rejected by license limit: %d/%d (%d)",(*i)->get_forwardMsgId(),
                   getTotalCounter().Get(),maxScaled,perSlot);
                 scheduler->RejectForward((*i)->get_forwardMsgId());
               }

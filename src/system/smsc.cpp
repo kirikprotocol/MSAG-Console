@@ -310,6 +310,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     snmpAgent = new SnmpAgent(this);
     tp2.startTask(snmpAgent);
     snmpAgent->statusChange(SnmpAgent::INIT);
+    SnmpCounter::Init(findConfigFile("snmp.xml"));
   }
 #endif
 
@@ -1244,6 +1245,10 @@ void Smsc::shutdown()
     delete aliaser;
     aliaser=0;
   }
+
+#ifdef SNMP
+  SnmpCounter::Shutdown();
+#endif
 
   __trace__("shutdown completed");
 }

@@ -126,7 +126,7 @@ endif
 
 ifeq ($(SNMP),YES)
 CXXFLAGS := $(CXXFLAGS) -DSNMP
-SNMP_LIBS := -lnetsnmpagent -lnetsnmphelpers -lnetsnmpmibs -lnetsnmp -lkstat -lsnmp
+SNMP_LIBS := -lnetsnmpagent -lnetsnmphelpers -lnetsnmpmibs -lnetsnmp -lkstat -lsnmp -ladm
 export SNMP_LIBS
 endif
 

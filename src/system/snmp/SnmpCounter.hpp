@@ -109,12 +109,15 @@ protected:
   sync::EventMonitor mon;
   bool isStopping;
 
+  smsc::logger::Logger* log;
+
   sync::Mutex cfgMtx;
   buf::Hash<SeverityLimits> svrtHash;
   SeverityLimits defSvrtLim;
 
   SnmpCounter():isStopping(false)
   {
+    log=smsc::logger::Logger::getInstance("snmp.cnt");
   }
   static SnmpCounter* instance;
 
@@ -159,19 +162,22 @@ protected:
     int rv=smsc::snmp::SnmpAgent::NORMAL;
     if(limArr[0]<limArr[1])
     {
-      for(int i=0;i<4;i++)
-      {
-        if(cntValue>limArr[i])break;
-        rv++;
-      }
-    }else
-    {
+      smsc_log_debug(log,"normal severity order for %s/%d",name,cntIdx);
       for(int i=0;i<4;i++)
       {
         if(cntValue<limArr[i])break;
         rv++;
       }
+    }else
+    {
+      smsc_log_debug(log,"reversed severity order for %s/%d",name,cntIdx);
+      for(int i=0;i<4;i++)
+      {
+        if(cntValue>limArr[i])break;
+        rv++;
+      }
     }
+    smsc_log_debug(log,"severity=%d for %s(%d):%d",rv,name,cntIdx,cntValue);
     return (SeverityType)rv;
   }
 

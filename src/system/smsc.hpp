@@ -26,6 +26,9 @@
 //#include "db/DataSource.h"
 //#include "db/DataSourceLoader.h"
 #include "snmp/SnmpAgent.hpp"
+#ifdef SNMP
+#include "system/snmp/SnmpCounter.hpp"
+#endif
 #include "acls/interfaces.h"
 
 #include "distrlist/DistrListManager.h"
@@ -239,6 +242,9 @@ public:
         MutexGuard g(perfMutex);
         submitOkCounter++;
         smePerfMonitor.incAccepted(sms->getSourceSmeId());
+#ifdef SNMP
+        SnmpCounter::getInstance().incCounter(SnmpCounter::cntAccepted,sms->getSourceSmeId());
+#endif
       }break;
       case etSubmitErr:
       {
@@ -246,6 +252,9 @@ public:
         MutexGuard g(perfMutex);
         submitErrCounter++;
         smePerfMonitor.incRejected(sms->getSourceSmeId(), sms->getLastResult());
+#ifdef SNMP
+        SnmpCounter::getInstance().incCounter(SnmpCounter::cntRejected,sms->getSourceSmeId());
+#endif
       }break;
       case etDeliveredOk:
       {
