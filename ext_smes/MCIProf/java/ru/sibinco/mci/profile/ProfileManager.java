@@ -203,11 +203,21 @@ public class ProfileManager
 				ret = input.read(anw, len, 40-len);
 				len += ret;
 			}
-			if(anw[2] != 0)
+			if( anw[2] == 1)
 			{
-				logger.warn("ProfileInfo: Query to ProfileStorage - answer status != 0");
+				logger.warn("ProfileInfo: Query to ProfileStorage - answer status STATUS_ERRROR");
 				throw new ProfileManagerException(ProfileManagerException.DB_ERROR);
 			}
+            else if( anw[2] == 2)
+			{
+				logger.warn("ProfileInfo: Query to ProfileStorage - answer status STATUS_BADMSG");
+				throw new ProfileManagerException(ProfileManagerException.DB_ERROR);
+			}
+			else if( anw[2] == 3)
+			{
+				logger.info("ProfileInfo: Query to ProfileStorage - answer status STATUS_NO_ABNT");
+			}
+
 			input.close();
 			output.close();
 			socket.close();
