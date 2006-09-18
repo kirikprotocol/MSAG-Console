@@ -99,8 +99,8 @@ public class myServlet extends HttpServlet
        case SaveBackup: list=SaveBackup(new File(file), req); break;
        case UnLockServiceRule: unlockRule(req,file,transport); break;
        case Title: getTitle(req,file,transport,res); break;
-       case RuleHeaderLineNumber: getRuleHeaderLineNumber(res);
-       case getRuleStateAndLock: getRuleStateAndLock(req,file,transport,res);
+       case RuleHeaderLineNumber: getRuleHeaderLineNumber(res); break;
+       case getRuleStateAndLock: getRuleStateAndLock(req,file,transport,res); break;
        default:
         if (req.getParameter("renameto")!=null) list=RenameTo(new File(file),new File(req.getParameter("renameto")));
         else if (req.getParameter("intparam")!=null) list=FilesCommand(file,command,Integer.parseInt(req.getParameter("intparam")));
