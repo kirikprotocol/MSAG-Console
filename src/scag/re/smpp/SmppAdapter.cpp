@@ -3,6 +3,7 @@
 #include "scag/re/CommandBrige.h"
 
 #include "scag/util/encodings/Encodings.h"
+#include "logger/Logger.h"
 
 
 namespace scag { namespace re { namespace smpp 
@@ -715,20 +716,34 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
                 Convertor::UTF8ToGSM7Bit(str.data(), str.size(), resStr);
             }
   
+            //smsc::logger::Logger * logger = smsc::logger::Logger::getInstance("scag.test");
 
             if (IsShortSize(str.size())) 
             {
 
-                if (m_hasPayloadText) 
+                unsigned len = 0;
+                if (data.hasBinProperty(Tag::SMPP_SHORT_MESSAGE)) 
+                {
+                    data.getBinProperty(Tag::SMPP_SHORT_MESSAGE, &len);
+                    if (len == 0) 
+                    {
+                        //smsc_log_debug(logger, "1 String size is: %d", resStr.size());
+                        data.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, resStr.data(), resStr.size());
+                    } else
+                        data.setBinProperty(Tag::SMPP_SHORT_MESSAGE, resStr.data(), resStr.size());
+                }
+                else
                     data.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, resStr.data(), resStr.size());
-                else 
-                    data.setBinProperty(Tag::SMPP_SHORT_MESSAGE, resStr.data(), resStr.size());
             }
             else
             {
-                if (!m_hasPayloadText) data.setBinProperty(Tag::SMPP_SHORT_MESSAGE,0,0);
-                data.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,str.data(),str.size());
+                if (data.hasBinProperty(Tag::SMPP_SHORT_MESSAGE))
+                    data.setBinProperty(Tag::SMPP_SHORT_MESSAGE, 0, 0);
+
+                data.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, str.data(), str.size());
             }
+
+            //smsc_log_debug(logger, "MESSAGE BODY: %s", CommandBrige::getMessageBody(command).c_str());
             break;
         }
 }
