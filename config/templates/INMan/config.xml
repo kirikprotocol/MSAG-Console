@@ -2,9 +2,10 @@
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
 
 <!-- INMan interacts the IN node -->
-<config> <!-- InMan 0.4.2. and higher -->
+<config> <!-- InMan 0.5.0. and higher -->
+  <param name="version" type="string">0.5.0</param>   <!-- config version -->
   <param name="host" type="string">@inman.host@</param>  <!-- InMan service host -->
-  <param name="port" type="int">@inman.port@</param>     <!-- InMan service port -->
+  <param name="port" type="int">@inman.port@</param>        <!-- InMan service port -->
   <param name="maxClients" type="int">3</param>       <!--  max allowed INMan client connections, default: 3 -->
 
   <section name="Billing">
@@ -14,15 +15,15 @@
       ussd: request IN platform in case of USSD only, bill SMS to CDR
       sms:  request IN platform in case of SMS only, bill USSD to CDR
     -->
-    <param name="abonentPolicy" type="string">DB_Contract</param> <!-- 
-      optional name of abonent provider to use (defined in section AbonentProviders) 
-      for getting abonent contract type , if it missing the IN is interacted basing on
-      IN_interaction.RPCList_postpaid setting.
-     -->
+   <param name="abonentPolicy" type="string">MTC_Nsk_Default</param> <!-- 
+     preferred abonent policy (defined in section AbonentPolicies) , if it's missing, 
+     the policy is to use will be determined according to sender address and specified
+     policies address pool.
+    -->
     <param name="maxBillings" type="int">20</param>   <!--  [1 .. 100000] , default 500 
      maximium simultaneous billing requests per INMan client  connect -->
     <param name="abonentTypeTimeout" type="int">5</param> <!-- units: seconds, [1 .. 65535], default 5 
-    maximum allowed time for determining abonent type, (HLR & DB interaction),
+    maximum allowed time for determining abonent type, (AbonentProvider interaction),
     billing continues on its expiration in CDR mode -->
     <param name="maxTimeout" type="int">20</param>  <!-- units: seconds, [5 .. 65535], default 120 
     maximum allowed value for billing suspending time (SMSC interaction), billing aborts on its expiration  -->
@@ -41,31 +42,76 @@
      units: abonents :) , default: 10000 -->
   </section>
 
-  <section name="IN_interaction"> <!-- IN platform interaction parameters -->
-    <param name="ssfAddress" type="string">@inman.ssfAddress@</param>  <!-- InMan address -->
+  <section name="SS7"> <!-- SS7 stack interaction parameters -->
+    <param name="ssfAddress" type="string">@inman.ssfAddress@</param>  <!-- InMan ISDN address -->
     <param name="ssn" type="int">146</param>
-    <param name="scfAddress" type="string">@inman.scfAddress@</param>  <!-- IN point address -->
-    <param name="serviceKey" type="int">11</param>         <!-- IN service key: uint32_t -->
     <!-- OPTIONAL PARAMETERS follow:: -->
     <param name="ss7UserId" type="int">03</param>     <!-- PortSS7 user id [1..20], default: 03  -->
-    <param name="IN_Timeout" type="int">20</param>   <!-- timeout on CAP operations, units: seconds, max: 65535, default 20 -->
-    <param name="maxDialogs" type="int">2000</param>   <!-- maximum number of simultaneous TC dialogs, [2..65530], default 2000-->
-
-    <param name="RPCList_reject" type="string"></param> <!--
-     comma separated list of extra (in addition to 21) RP MO causes 
-     returned by IN platform, which forbid DP processing because of low balance (if supported) 
-     format: rpc1,rpc2,rpc3,.. 
-     example(Alcatel): 16
-    -->
-    <param name="RPCList_postpaid" type="string"></param> <!--
-     comma separated list of RP MO causes returned by IN platform for postpaid abonents (if supported),
-     format: rpc1,rpc2,rpc3,..
-     example (Huawei): 41 
-    -->
+    <param name="maxTimeout" type="int">20</param>   <!-- timeout on MAP/CAP operations, units: seconds, max: 65535, default 20 -->
+    <param name="maxDialogs" type="int">2000</param>   <!-- maximum number of simultaneous TC dialogs per SSN, [2..65530], default 2000-->
  </section>
 
-  <section name="AbonentProviders">
-      <section name="HLR_SRI">
+  <section name="AbonentPolicies">
+ <!--  policy value is a CSV list of  two parts, which are both optional:
+          1) name of abonent provider to use (defined in section AbonentProviders) 
+          for getting abonent contract type (possibly with gsmSCF parms),
+          2) CSV  list of IN-platform (defined in section IN-platforms)
+          NOTE 1: * is a special symbol, replacing all defined IN-platforms
+          NOTE 2: serviceKey from IN-platform config overrides the one returned by abonent provider
+         -->
+      <section name="MTC_Nsk_Default">
+          <param name="policy" type="string">IN_Nsk_Huawei</param> <!-- get contract from gsmSCF  -->
+          <!-- param name="addrPool" type="string">7913%7[0-9]</param -->  <!-- address pool mask -->
+          <!-- param name="active" type="bool">true</param -->    <!-- use or ignore this policy, default: true -->
+      </section>
+
+    <section name="MTC_Nsk_SRI"> <!-- get contract/gsmSCF from HLR, serviceKey from INMan config -->
+        <param name="policy" type="string">HLR_Nsk_SRI, IN_Nsk_Huawei</param>
+        <!-- param name="addrPool" type="string">7913%7[0-9]</param -->  <!-- address pool mask -->
+        <!-- param name="active" type="bool">true</param -->    <!-- use or ignore this policy, default: true -->
+    </section>
+
+    <section name="TST_Nsk_DB"> <!-- get contract from DB, gsmSCF/serviceKey from INMan config -->
+        <param name="policy" type="string">DB_Contract, IN_Nsk_Huawei</param>
+        <!-- param name="addrPool" type="string">7913%7[0-9]</param -->  <!-- address pool mask -->
+        <!-- param name="active" type="bool">true</param -->    <!-- use or ignore this policy, default: true -->
+    </section>
+
+    <section name="MTC_Ural_FORIS"> <!-- get contract from DB, gsmSCF/serviceKey from INMan config -->
+        <param name="policy" type="string">DB_Contract, IN_Ural_Alcatel</param>
+        <!-- param name="addrPool" type="string">7912%7[0-9]</param -->  <!-- address pool mask -->
+        <!-- param name="active" type="bool">true</param -->    <!-- use or ignore this policy, default: true -->
+    </section>
+
+  </section>
+
+  <section name="IN-platforms"> <!-- known IN-platforms with serviceKeys specified -->
+      <!--  IN-platform configuration may have two optional fields defined:
+            1) param name="RPCList_postpaid" type="string"  - it's a  comma separated list of 
+            RP MO causes returned by IN platform for postpaid abonents if supported.
+            example (Huawei): 41 
+            2) param name="RPCList_reject" type="string"  - it's a  omma separated list of 
+            extra (in addition to 21) RP MO causes returned by IN platform, which forbid DP
+            processing because of low balance if supported,
+            example(Alcatel): 16
+      -->
+      <section name="IN_Nsk_Huawei">
+          <param name="scfAddress" type="string">79139860005</param>  <!-- IN (gsmSCF) point address -->
+          <param name="serviceKey" type="int">11</param>         <!-- IN (gsmSCF) service key: uint32_t -->
+          <param name="RPCList_postpaid" type="string">41</param> <!-- supported -->
+          <param name="RPCList_reject" type="string"></param>        <!-- not supported -->
+      </section>
+
+      <section name="IN_Ural_Alcatel">
+          <param name="scfAddress" type="string">79126313005</param>  <!-- IN (gsmSCF) point address -->
+          <param name="serviceKey" type="int">2</param>         <!-- IN (gsmSCF) service key: uint32_t -->
+          <param name="RPCList_postpaid" type="string"></param> <!-- not supported -->
+          <param name="RPCList_reject" type="string">16</param> <!-- supported  -->
+      </section>
+  </section>
+
+  <section name="AbonentProviders"> <!-- abonent contract/gsmSCF params  providers -->
+      <section name="HLR_Nsk_SRI">
           <param name="loadup" type="string">libinman_iap_sri.so</param>
           <section name="Config"> 
               <param name="ownAddress" type="string">@inman.ssfAddress@</param>  <!-- Provider ISDN address -->
@@ -76,47 +122,34 @@
           </section>
       </section>
 
-  <!-- abonent contract/gsmSCF params  providers -->
       <section name="DB_Contract"> <!-- DB provides abonent contract (prepaid or postpaid) only -->
           <param name="loadup" type="string">libinman_iap_db.so</param>
           <section name="Config">
               <section name="DataSource">
-                 <param name="type" type="string">OCI</param> <!-- Oracle DB -->
-                 <param name="dbInstance" type="string">@inman.db.instance@</param>
-                 <param name="dbUserName" type="string">@inman.db.userid@</param>
-                 <param name="dbUserPassword" type="string">@inman.db.PasSword@</param>
-                 <param name="connections" type="int">5</param>  <!--  max allowed db connections -->
-                 <param name="maxQueries" type="int">15</param>  <!--  max allowed db queries -->
-                 <param name="watchdog" type="bool">true</param>  <!--  turn on timeouts handling -->
-                 <param name="timeout" type="int">15</param>  <!--  timeout on connection queries, units: secs  [1..65535] -->
+                  <param name="type" type="string">OCI</param> <!-- Oracle DB -->
+                  <param name="dbInstance" type="string">@inman.db.instance@</param>
+                  <param name="dbUserName" type="string">@inman.db.userid@</param>
+                  <param name="dbUserPassword" type="string">@inman.db.PasSword@</param>
+                  <param name="connections" type="int">5</param>  <!--  max allowed db connections -->
+                  <param name="maxQueries" type="int">15</param>  <!--  max allowed db queries -->
+                  <param name="watchdog" type="bool">true</param>  <!--  turn on timeouts handling -->
+                  <param name="timeout" type="int">15</param>  <!--  timeout on connection queries, units: secs  [1..65535] -->
 
-                <!--  SQL function returning Abonent type has following prototype:
-                       FUNCTION abonentQueryFunc (iqueryFuncArg  IN VARCHAR) RETURN NUMBER
-                 -->
-                 <param name="abonentQueryFunc" type="string">@inman.db.abonentQueryFunc@</param>
-                 <param name="queryFuncArg" type="string">@inman.db.queryFuncArg@</param>
+               <!--  SQL function returning Abonent type has following prototype:
+                      FUNCTION abonentQueryFunc (iqueryFuncArg  IN VARCHAR) RETURN NUMBER
+                -->
+                  <param name="abonentQueryFunc" type="string">get_prepaid</param>
+                  <param name="queryFuncArg" type="string">in_mob_num</param>
               </section>
-             <section name="DataSourceDrivers">
-                 <section name="OCIDataSourceDriver">
-                     <param name="type" type="string">OCI</param>
-                     <param name="loadup" type="string">libdb_oci.so</param>
-                 </section>
-             </section>
+              <section name="DataSourceDrivers">
+                  <section name="OCIDataSourceDriver">
+                      <param name="type" type="string">OCI</param>
+                      <param name="loadup" type="string">libdb_oci.so</param>
+                  </section>
+              </section>
           </section>
       </section> <!-- DB_Contract -->
 
   </section> <!-- AbonentProviders -->
 </config>
-
-<!--
-SCCP configuration
-
-GT           =  SSN
-
-79139869981  = 146
-791398699810 =   7
-791398699811 = 160
-79139869998  =   6
-79139869999  =   8
--->
 
