@@ -34,6 +34,21 @@ TCSessionAC::~TCSessionAC(void)
         pool.clear();
     }
 }
+void TCSessionAC::mkSignature(std::string & sid, UCHAR_T own_ssn, const TonNpiAddress & onpi,
+                             ACOID::DefinedOIDidx dlg_ac_idx,
+                             UCHAR_T rmt_ssn, const TonNpiAddress * rnpi)
+{
+    char rssn[8]; // sizeof("255")
+    if (rmt_ssn)
+        snprintf(rssn, sizeof(rssn), "%u", rmt_ssn);
+    else {
+        rssn[0] = '*';
+        rssn[1] = 0;   
+    }
+    format(sid, "%u:%s[%u]->%s:%s", own_ssn, onpi.toString().c_str(), dlg_ac_idx, rssn,
+           rnpi ? rnpi->toString().c_str() : "*");
+}
+
 
 void TCSessionAC::release(void)
 {
@@ -45,12 +60,12 @@ void TCSessionAC::release(void)
 
 void TCSessionAC::releaseDialogs(void)
 {
-    _owner->releaseDialogs(tcUID);
+    _owner->releaseDialogs(&sign);
 }
 
 void TCSessionAC::releaseDialog(Dialog* pDlg)
 {
-    _owner->releaseDialog(pDlg, tcUID);
+    _owner->releaseDialog(pDlg, &sign);
 }
 
 Dialog * TCSessionAC::initDialog(const SCCP_ADDRESS_T & rmt_addr)
@@ -67,7 +82,7 @@ Dialog * TCSessionAC::initDialog(const SCCP_ADDRESS_T & rmt_addr)
             pDlg = *(pool.begin());
             pool.pop_front();
         } else
-            pDlg = new Dialog(tcUID, _owner->getMsgUserId(), ac_idx, locAddr, NULL);
+            pDlg = new Dialog(sign, dId, _owner->getMsgUserId(), ac_idx, locAddr, NULL);
     }
     pDlg->reset(dId, &rmt_addr);
     _owner->markDialog(pDlg);
@@ -86,6 +101,7 @@ TCSessionMR::TCSessionMR(USHORT_T uid, SSNSession * owner,
                 const TonNpiAddress & own_addr, ACOID::DefinedOIDidx dlg_ac_idx)
     : TCSessionAC(uid, owner, own_addr, dlg_ac_idx)
 {
+    mkSignature(sign, owner->getSSN(), own_addr, dlg_ac_idx, 0, NULL);
 }
 
 Dialog* TCSessionMR::openDialog(UCHAR_T rmt_ssn, const char* rmt_addr)
@@ -110,6 +126,7 @@ TCSessionMA::TCSessionMA(USHORT_T uid, SSNSession * owner,
     : TCSessionAC(uid, owner, own_addr, dlg_ac_idx)
     , rmtSSN(rmt_ssn)
 {
+    mkSignature(sign, owner->getSSN(), own_addr, dlg_ac_idx, rmtSSN, NULL);
 }
 
 Dialog* TCSessionMA::openDialog(const char* rmt_addr)
@@ -141,6 +158,7 @@ TCSessionSR::TCSessionSR(USHORT_T uid, SSNSession * owner,
     : TCSessionAC(uid, owner, own_addr, dlg_ac_idx)
     , rmtNpi(rmt_addr)
 {
+    mkSignature(sign, owner->getSSN(), own_addr, dlg_ac_idx, rmt_ssn, &rmtNpi);
     packSCCPAddress(&rmtAddr, rmtNpi.getSignals(), rmt_ssn);
 }
 
@@ -216,59 +234,104 @@ SSNSession::~SSNSession()
 
 TCSessionMR * SSNSession::newMRsession(const char* own_addr, ACOID::DefinedOIDidx dlg_ac_idx)
 {
-    TCSessionMR *   pSess = NULL;
     TonNpiAddress   onpi;
-
-    if (!onpi.fromText(own_addr) || (onpi.numPlanInd != NUMBERING_ISDN)
-        || (onpi.typeOfNumber > ToN_INTERNATIONAL))
+    if (!onpi.fromText(own_addr))
         return NULL;
+    return newMRsession(onpi, dlg_ac_idx);
+}
 
+TCSessionMR * SSNSession::newMRsession(TonNpiAddress & onpi, ACOID::DefinedOIDidx dlg_ac_idx)
+{
+    TCSessionMR *   pSess = NULL;
+
+    if ((onpi.numPlanInd != NUMBERING_ISDN) || (onpi.typeOfNumber > ToN_INTERNATIONAL))
+        return NULL;
     onpi.typeOfNumber = ToN_INTERNATIONAL; //correct isdn unknown
     {
         MutexGuard tmp(mutex);
-        pSess = new TCSessionMR(++lastTCSUId, this, onpi, dlg_ac_idx);
-        tcSessions.insert(TCSessionsMAP::value_type(lastTCSUId, pSess));
+        std::string sid;
+        TCSessionAC::mkSignature(sid, _SSN, onpi, dlg_ac_idx, 0, NULL);
+
+        TCSessionsMAP::iterator it = tcSessions.find(sid);
+        if (it != tcSessions.end())
+            pSess = static_cast<TCSessionMR*>((*it).second);
+        else {
+            pSess = new TCSessionMR(++lastTCSUId, this, onpi, dlg_ac_idx);
+            tcSessions.insert(TCSessionsMAP::value_type(pSess->Signature(), pSess));
+        }
     }
     return pSess;
 }
+
+
 TCSessionMA * SSNSession::newMAsession(const char* own_addr, ACOID::DefinedOIDidx dlg_ac_idx,
                             UCHAR_T rmt_ssn)
 {
-    TCSessionMA *   pSess = NULL;
     TonNpiAddress   onpi;
-
-    if (!onpi.fromText(own_addr) || (onpi.numPlanInd != NUMBERING_ISDN)
-        || (onpi.typeOfNumber > ToN_INTERNATIONAL))
+    if (!onpi.fromText(own_addr))
         return NULL;
+    return newMAsession(onpi, dlg_ac_idx, rmt_ssn);
+}
 
+TCSessionMA * SSNSession::newMAsession(TonNpiAddress & onpi, ACOID::DefinedOIDidx dlg_ac_idx,
+                            UCHAR_T rmt_ssn)
+{
+    TCSessionMA *   pSess = NULL;
+
+    if ((onpi.numPlanInd != NUMBERING_ISDN) || (onpi.typeOfNumber > ToN_INTERNATIONAL))
+        return NULL;
     onpi.typeOfNumber = ToN_INTERNATIONAL; //correct isdn unknown
     {
         MutexGuard tmp(mutex);
-        pSess = new TCSessionMA(++lastTCSUId, this, onpi, dlg_ac_idx, rmt_ssn);
-        tcSessions.insert(TCSessionsMAP::value_type(lastTCSUId, pSess));
+        std::string sid;
+        TCSessionAC::mkSignature(sid, _SSN, onpi, dlg_ac_idx, rmt_ssn, NULL);
+
+        TCSessionsMAP::iterator it = tcSessions.find(sid);
+        if (it != tcSessions.end())
+            pSess = static_cast<TCSessionMA*>((*it).second);
+        else {
+            pSess = new TCSessionMA(++lastTCSUId, this, onpi, dlg_ac_idx, rmt_ssn);
+            tcSessions.insert(TCSessionsMAP::value_type(pSess->Signature(), pSess));
+        }
     }
     return pSess;
 }
+
+
 TCSessionSR * SSNSession::newSRsession(const char* own_addr, ACOID::DefinedOIDidx dlg_ac_idx,
                                 UCHAR_T rmt_ssn, const char* rmt_addr)
 {
-    TCSessionSR *   pSess = NULL;
-    TonNpiAddress   onpi;
+    TonNpiAddress   onpi, rnpi;
+    if (!onpi.fromText(own_addr) || !rnpi.fromText(rmt_addr))
+        return NULL;
+    return newSRsession(onpi, dlg_ac_idx, rmt_ssn, rnpi);
+}
 
-    if (!onpi.fromText(own_addr) || (onpi.numPlanInd != NUMBERING_ISDN)
-        || (onpi.typeOfNumber > ToN_INTERNATIONAL))
+TCSessionSR * SSNSession::newSRsession(TonNpiAddress & onpi, ACOID::DefinedOIDidx dlg_ac_idx,
+                                UCHAR_T rmt_ssn, TonNpiAddress & rnpi)
+{
+    TCSessionSR *   pSess = NULL;
+
+    if ((onpi.numPlanInd != NUMBERING_ISDN) || (onpi.typeOfNumber > ToN_INTERNATIONAL))
         return NULL;
     onpi.typeOfNumber = ToN_INTERNATIONAL; //correct isdn unknown
 
-    TonNpiAddress   rnpi;
-    if (!rnpi.fromText(rmt_addr) || (rnpi.numPlanInd != NUMBERING_ISDN)
-        || (rnpi.typeOfNumber > ToN_INTERNATIONAL))
+    if ((rnpi.numPlanInd != NUMBERING_ISDN) || (rnpi.typeOfNumber > ToN_INTERNATIONAL))
         return NULL;
     rnpi.typeOfNumber = ToN_INTERNATIONAL; //correct isdn unknown
+
     {
         MutexGuard tmp(mutex);
-        pSess = new TCSessionSR(++lastTCSUId, this, onpi, dlg_ac_idx, rmt_ssn, rnpi);
-        tcSessions.insert(TCSessionsMAP::value_type(lastTCSUId, pSess));
+        std::string sid;
+        TCSessionAC::mkSignature(sid, _SSN, onpi, dlg_ac_idx, rmt_ssn, &rnpi);
+
+        TCSessionsMAP::iterator it = tcSessions.find(sid);
+        if (it != tcSessions.end())
+            pSess = static_cast<TCSessionSR*>((*it).second);
+        else {
+            pSess = new TCSessionSR(++lastTCSUId, this, onpi, dlg_ac_idx, rmt_ssn, rnpi);
+            tcSessions.insert(TCSessionsMAP::value_type(pSess->Signature(), pSess));
+        }
     }
     return pSess;
 }
@@ -277,7 +340,7 @@ TCSessionSR * SSNSession::newSRsession(const char* own_addr, ACOID::DefinedOIDid
 void SSNSession::closeTCSession(TCSessionAC * p_sess)
 {
     MutexGuard tmp(mutex);
-    TCSessionsMAP::iterator sit = tcSessions.find(p_sess->getUID());
+    TCSessionsMAP::iterator sit = tcSessions.find(p_sess->Signature());
     if (sit != tcSessions.end()) {
         tcSessions.erase(sit);
         deadSess.push_back(p_sess);
@@ -294,7 +357,7 @@ Dialog* SSNSession::findDialog(USHORT_T dId)
 }
 
 
-void SSNSession::releaseDialog(Dialog* pDlg, USHORT_T tc_suid/* = 0*/)
+void SSNSession::releaseDialog(Dialog* pDlg, const TCSessionSUID * tc_suid/* = 0*/)
 {
     if (!pDlg)
         return;
@@ -321,13 +384,13 @@ void SSNSession::releaseDialog(Dialog* pDlg, USHORT_T tc_suid/* = 0*/)
     return;
 }
 
-void SSNSession::releaseDialogs(USHORT_T tc_suid/* = 0*/)
+void SSNSession::releaseDialogs(const TCSessionSUID * tc_suid/* = 0*/)
 {
     MutexGuard tmp(mutex);
     if (!tc_suid)
         smsc_log_debug(logger, "SSN[%u]: Releasing %u dialogs ..", (unsigned)_SSN, dialogs.size());
     else
-        smsc_log_debug(logger, "SSN[%u]: Releasing TSes[%u] dialogs ..", (unsigned)_SSN, tc_suid);
+        smsc_log_debug(logger, "SSN[%u]: Releasing %s dialogs ..", (unsigned)_SSN, tc_suid->c_str());
 
     for (DialogsMAP::iterator it = dialogs.begin(); it != dialogs.end(); it++) {
         Dialog* pDlg = (*it).second;
@@ -377,14 +440,14 @@ void SSNSession::markDialog(Dialog * p_dlg)
  * NOTE: these methods are not the processing graph entries, so never lock Mutex,
  *       it's a caller responsibility to lock it !!!
  * ---------------------------------------------------------------------------------- */
-void SSNSession::dischargeDlg(Dialog * pDlg, USHORT_T tc_suid/* = 0*/)
+void SSNSession::dischargeDlg(Dialog * pDlg, const TCSessionSUID * tc_suid/* = 0*/)
 {
-    if (tc_suid && (tc_suid == pDlg->getSUId())) {
-        TCSessionsMAP::iterator sit = tcSessions.find(tc_suid);
+    if (tc_suid && (*tc_suid == pDlg->getSUId())) {
+        TCSessionsMAP::iterator sit = tcSessions.find(*tc_suid);
         if (sit != tcSessions.end()) {
             TCSessionAC * sess = (*sit).second;
-            smsc_log_debug(logger, "SSN[%u]: Discharged terminated Dialog[0x%X], SUId: %u",
-                            (unsigned)_SSN, pDlg->getId(), tc_suid);
+            smsc_log_debug(logger, "SSN[%u]: Discharged terminated Dialog[0x%X], SUId: %s",
+                            (unsigned)_SSN, pDlg->getId(), tc_suid->c_str());
             sess->toPool(pDlg);
             return;
         }
@@ -403,7 +466,7 @@ void SSNSession::cleanUpDialogs(void)
         DlgTimesMAP::iterator curr = it++;
         if ((dtm.dlg->getState().value & TC_DLG_CLOSED_MASK) != 0) {
             pending.erase(curr);
-            dischargeDlg(dtm.dlg, dtm.dlg->getSUId());
+            dischargeDlg(dtm.dlg, &(dtm.dlg->getSUId()));
         }
     }
 }

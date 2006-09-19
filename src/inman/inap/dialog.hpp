@@ -7,15 +7,11 @@
 #include <map>
 #include <list>
 
-//#include "logger/Logger.h"
-//using smsc::logger::Logger;
-
 #include "inman/comp/acdefs.hpp"
 using smsc::ac::ACOID;
 
 #include "inman/comp/operfactory.hpp"
 using smsc::inman::comp::OperationFactory;
-//using smsc::inman::common::CustomException;
 
 #include "inman/inap/invoke.hpp"
 
@@ -75,11 +71,10 @@ public:
     void removeListener(DialogListener* pListener);
 
     TC_DlgState getState(void);
-
-    USHORT_T getSUId(void)    const { return _tcSUId;  }
-    USHORT_T getId(void)      const { return _dId;     }
+    const std::string & getSUId(void)  const { return _tcSUId;  }
+    USHORT_T    getId(void)     const { return _dId;     }
     //returns the default timeout for Invokes
-    USHORT_T getTimeout(void) const { return _timeout; }
+    USHORT_T    getTimeout(void) const { return _timeout; }
     //sets the default timeout for Invoke result waiting
     void    setInvokeTimeout(USHORT_T timeout);
 
@@ -130,7 +125,7 @@ public:
 
 protected:
     friend class TCSessionAC;
-    Dialog(USHORT_T tc_sess_uid, USHORT_T msg_user_id,
+    Dialog(const std::string & sess_uid, USHORT_T dlg_id, USHORT_T msg_user_id,
            ACOID::DefinedOIDidx dialog_ac_idx, const SCCP_ADDRESS_T & loc_addr,
            Logger * uselog = NULL);
     //reinitializes Dialog to be reused with other id and remote address
@@ -148,7 +143,7 @@ private:
     typedef std::list<DialogListener*> ListenerList;
     typedef std::map<UCHAR_T, Invoke*> InvokeMap;
 
-    USHORT_T        _tcSUId;     //TC session uid
+    std::string     _tcSUId;     //TC session signature
     Mutex           invGrd;      //invokes guard
     InvokeMap       originating; //Invokes, which have result/errors defined
     InvokeMap       terminating; //

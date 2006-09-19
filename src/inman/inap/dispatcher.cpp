@@ -330,9 +330,11 @@ SSNSession* TCAPDispatcher::openSSN(UCHAR_T ssn_id, USHORT_T max_dlg_id, USHORT_
         if (!(pSession = lookUpSSN(ssn_id))) {
             pSession = new SSNSession(ssn_id, userId, max_dlg_id, min_dlg_id, uselog);
             sessions.insert(SSNmap_T::value_type(ssn_id, pSession));
-        } else
+        } else {
+            pSession->incMaxDlgs(max_dlg_id);
             smsc_log_debug(logger, "TCAPDsp: SSN[%u] already inited, state: %u",
                            ssn_id, pSession->getState());
+        }
     }
     if (pSession->getState() != smsc::inman::inap::ssnBound) {
         if (!bindSSN(ssn_id) || pSession->Wait(RECV_TIMEOUT)) //wait for confirmation

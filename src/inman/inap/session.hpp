@@ -35,6 +35,7 @@ class TCSessionMA;
  * class SSNSession (TCAP dialogs/sessions factory):
  * ************************************************************************** */
 typedef enum { ssnIdle = 0, ssnBound, ssnError } SSNState;
+typedef std::string TCSessionSUID;
 
 class SSNSession: public Event {
 public:
@@ -44,15 +45,22 @@ public:
 
     // -- TCAP Sessions factory methods -- //
     TCSessionMR * newMRsession(const char* own_addr, ACOID::DefinedOIDidx dlg_ac_idx);
+    TCSessionMR * newMRsession(TonNpiAddress & onpi, ACOID::DefinedOIDidx dlg_ac_idx);
+
     TCSessionMA * newMAsession(const char* own_addr, ACOID::DefinedOIDidx dlg_ac_idx,
                                 UCHAR_T rmt_ssn);
+    TCSessionMA * newMAsession(TonNpiAddress & onpi, ACOID::DefinedOIDidx dlg_ac_idx,
+                                UCHAR_T rmt_ssn);
+
     TCSessionSR * newSRsession(const char* own_addr, ACOID::DefinedOIDidx dlg_ac_idx,
                                 UCHAR_T rmt_ssn, const char* rmt_addr);
+    TCSessionSR * newSRsession(TonNpiAddress & onpi, ACOID::DefinedOIDidx dlg_ac_idx,
+                                UCHAR_T rmt_ssn, TonNpiAddress & rnpi);
     
     // -- TCAP Dialogs factory methods -- //
     Dialog* findDialog(USHORT_T did);
-    void    releaseDialog(Dialog* pDlg, USHORT_T tc_suid = 0);
-    void    releaseDialogs(USHORT_T tc_suid = 0);
+    void    releaseDialog(Dialog* pDlg, const TCSessionSUID * tc_suid = 0);
+    void    releaseDialogs(const TCSessionSUID * tc_suid = 0);
 
 protected:
     friend class TCAPDispatcher;
@@ -61,6 +69,7 @@ protected:
     ~SSNSession();
 
     void    setState(SSNState newState) { state = newState; }
+    void    incMaxDlgs(USHORT_T max_dlg_id) { if (max_dlg_id > maxId) maxId = max_dlg_id; }
 
 protected:
     friend class TCSessionAC;
@@ -79,10 +88,10 @@ private:
 
     typedef std::map<USHORT_T, Dialog*>      DialogsMAP;
     typedef std::map<USHORT_T, DlgTime>      DlgTimesMAP;
-    typedef std::map<USHORT_T, TCSessionAC*> TCSessionsMAP;
+    typedef std::map<std::string, TCSessionAC*> TCSessionsMAP;
     typedef std::list<TCSessionAC*>          TCSessionsLIST;
 
-    void    dischargeDlg(Dialog * pDlg, USHORT_T tc_suid = 0);
+    void    dischargeDlg(Dialog * pDlg, const TCSessionSUID * tc_suid = 0);
     bool    nextDialogId(USHORT_T & dId);
     void    cleanUpDialogs(void);
     Dialog* locateDialog(USHORT_T dId);
@@ -114,6 +123,11 @@ public:
     SSNSession * getSSNSession(void) const { return _owner; }
     SSNState     getState(void)      const { return _owner->getState(); }
     const TonNpiAddress & getOwnAdr(void) const { return ownAdr; }
+    const TCSessionSUID & Signature(void)   const { return sign; }
+
+    static void mkSignature(std::string & sid, UCHAR_T own_ssn, const TonNpiAddress & onpi,
+                             ACOID::DefinedOIDidx dlg_ac_idx,
+                             UCHAR_T rmt_ssn, const TonNpiAddress * rnpi);
 
     // -- TCAP Dialogs factory methods -- //
     void    releaseDialog(Dialog* pDlg);
@@ -135,12 +149,12 @@ protected:
 
     SSNSession *    _owner;
     USHORT_T        tcUID;
-//    char            ownAdr[48]; //.ton.npi.addr
     TonNpiAddress   ownAdr;
     SCCP_ADDRESS_T  locAddr;
     ACOID::DefinedOIDidx  ac_idx; //default APPLICATION-CONTEXT index for dialogs
     Mutex           dlgGrd;
     TCDialogsLIST   pool;
+    TCSessionSUID   sign;
 };
 
 //multiRoute TC session (both remote ssn & addr may vary)
