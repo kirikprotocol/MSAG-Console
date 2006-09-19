@@ -130,6 +130,32 @@ IntHash<AccessType> SmppCommandAdapter::InitDataSmAccess()
     IntHash<AccessType> hs;
     hs.Insert(OA,atReadWrite);
     hs.Insert(DA,atReadWrite);
+
+    //submit fields
+    hs.Insert(DC_BINARY,atReadWrite);
+    hs.Insert(DC_TEXT, atReadWrite);
+    hs.Insert(DC_SMSC_DEFAULT, atReadWrite);
+    hs.Insert(DC_ASCII_X34, atReadWrite);
+    hs.Insert(DC_LATIN1, atReadWrite);
+    hs.Insert(DC_JIS, atReadWrite);
+    hs.Insert(DC_CYRILIC, atReadWrite);
+    hs.Insert(DC_LATIN_HEBREW, atReadWrite);
+    hs.Insert(DC_UCS2, atReadWrite);
+    hs.Insert(DC_PICTOGRAM_ENC, atReadWrite);
+    hs.Insert(DC_ISO_MUSIC_CODES, atReadWrite);
+    hs.Insert(DC_E_KANJI_JIS, atReadWrite);
+    hs.Insert(DC_KS_C_5601, atReadWrite);
+    hs.Insert(DC_GSM_MWI, atReadWrite);
+    hs.Insert(DC_GSM_MSG_CC, atReadWrite);
+
+    hs.Insert(Tag::SMPP_SM_LENGTH, atReadWrite);
+    hs.Insert(SMS_MESSAGE_BODY, atReadWrite);
+
+    hs.Insert(Tag::SMPP_USER_RESPONSE_CODE, atReadWrite);
+    hs.Insert(Tag::SMPP_LANGUAGE_INDICATOR, atReadWrite);
+
+    hs.Insert(SMS_SVC_TYPE, atReadWrite);
+
     return hs;
 }
 
@@ -224,6 +250,94 @@ Hash<int> SmppCommandAdapter::InitDataSmFieldNames()
 
     hs["whoisd_message_content_type"]              = OPTIONAL_MESSAGE_CONTENT_TYPE;
     hs["whoisd_expected_message_content_type"]     = OPTIONAL_EXPECTED_MESSAGE_CONTENT_TYPE;
+
+    //Submit fields
+    hs["esm_mm_smsc_default"]           = ESM_MM_SMSC_DEFAULT;
+    hs["esm_mm_datagram"]               = ESM_MM_DATAGRAM;
+    hs["esm_mm_forward"]                = ESM_MM_FORWARD;
+    hs["esm_mm_s_and_f"]                = ESM_MM_S_AND_F;
+    hs["esm_mt_default"]                = ESM_MT_DEFAULT;
+    hs["esm_mt_delivery_ack"]           = ESM_MT_DELIVERY_ACK;
+    hs["esm_mt_manual_ack"]             = ESM_MT_MANUAL_ACK;
+    hs["esm_nsf_none"]                  = ESM_NSF_NONE;
+    hs["esm_nsf_udhi"]                  = ESM_NSF_UDHI;
+    hs["esm_nsf_srp"]                   = ESM_NSF_SRP;
+    hs["esm_nsf_both"]                  = ESM_NSF_BOTH;
+
+
+    hs["protocol_id"]                   = Tag::SMPP_PROTOCOL_ID; 
+    hs["priority_flag"]                 = Tag::SMPP_PRIORITY; 
+    hs["schedule_delivery_time"]        = Tag::SMPP_SCHEDULE_DELIVERY_TIME;
+
+    //hs["registred_delivery"]            = Tag::SMPP_REGISTRED_DELIVERY; //mask +
+    hs["rd_receipt_off"]                = RD_RECEIPT_OFF;
+    hs["rd_receipt_on"]                 = RD_RECEIPT_ON;
+    hs["rd_receipt_failure"]            = RD_RECEIPT_FAILURE;
+    hs["rd_ack_off"]                    = RD_ACK_OFF;
+    hs["rd_ack_on"]                     = RD_ACK_ON;
+    hs["rd_ack_man_on"]                 = RD_ACK_MAN_ON;
+    hs["rd_ack_both_on"]                = RD_RD_ACK_BOTH_ON;
+    hs["rd_i_notification"]             = RD_I_NOTIFICATION;
+
+
+    hs["replace_if_present_flag"]       = Tag::SMPP_REPLACE_IF_PRESENT_FLAG;
+
+
+    //hs[""] = Tag::SMPP_DATA_CODING //mask *
+    hs["dc_binary"]                     = DC_BINARY;
+    hs["dc_text"]                       = DC_TEXT;
+    hs["dc_smsc_default"]               = DC_SMSC_DEFAULT;
+    hs["dc_ascii_x34"]                  = DC_ASCII_X34;
+    hs["dc_latin1"]                     = DC_LATIN1;
+    hs["dc_jis"]                        = DC_JIS;
+    hs["dc_cyrilic"]                    = DC_CYRILIC;
+    hs["dc_latin_hebrew"]               = DC_LATIN_HEBREW;
+    hs["dc_ucs2"]                       = DC_UCS2;
+    hs["dc_pictogram_enc"]              = DC_PICTOGRAM_ENC;
+    hs["dc_iso_music_codes"]            = DC_ISO_MUSIC_CODES;
+    hs["dc_e_kanji_jis"]                = DC_E_KANJI_JIS;
+    hs["dc_ks_c_5601"]                  = DC_KS_C_5601;
+    hs["dc_gsm_mwi"]                    = DC_GSM_MWI;
+    hs["dc_gsm_msg_cc"]                 = DC_GSM_MSG_CC;
+
+    /*
+    dc_binary !
+    dc_text   !
+    */
+
+
+    hs["sm_length"]                     = Tag::SMPP_SM_LENGTH; //*
+    hs["message_text"]                  = SMS_MESSAGE_BODY;
+
+    hs["source_port"]                   = Tag::SMPP_SOURCE_PORT; 
+    hs["destination_port"]              = Tag::SMPP_DESTINATION_PORT; 
+    hs["dest_addr_subunit"]             = Tag::SMPP_DEST_ADDR_SUBUNIT; 
+    hs["sar_msg_ref_num"]               = Tag::SMPP_SAR_MSG_REF_NUM; 
+    hs["sar_total_segments"]            = Tag::SMPP_SAR_TOTAL_SEGMENTS; 
+    hs["sar_segment_seqnum"]            = Tag::SMPP_SAR_SEGMENT_SEQNUM; 
+    hs["more_messages_to_send"]         = Tag::SMPP_MORE_MESSAGES_TO_SEND; 
+    hs["payload_type"]                  = Tag::SMPP_PAYLOAD_TYPE; 
+    hs["user_response_code"]            = Tag::SMPP_USER_RESPONSE_CODE; //*
+    hs["ms_validity"]                   = Tag::SMPP_MS_VALIDITY; 
+    hs["number_of_messages"]            = Tag::SMPP_NUMBER_OF_MESSAGES; 
+    hs["language_indicator"]            = Tag::SMPP_LANGUAGE_INDICATOR; //*
+
+
+    //hs[""] = Tag::SMPP_USSD_SERVICE_OP //mask +
+
+    hs["ussd_pssd_ind"]                 = USSD_PSSD_IND;
+    hs["ussd_pssr_ind"]                 = USSD_PSSR_IND;
+    hs["ussd_pssr_req"]                 = USSD_PSSR_REQ;
+    hs["ussd_ussn_req"]                 = USSD_USSN_REQ;
+    hs["ussd_pssd_resp"]                = USSD_PSSD_RESP;
+    hs["ussd_pssr_resp"]                = USSD_PSSR_RESP;
+    hs["ussd_ussr_conf"]                = USSD_USSR_CONF;
+    hs["ussd_ussn_conf"]                = USSD_USSN_CONF;
+
+    hs["validity_period"]               = SMS_VALIDITY_PERIOD;
+    hs["svc_type"]                      = SMS_SVC_TYPE;
+
+    hs["ussd_dialog"]                   = USSD_DIALOG;
 
     return hs;
 }
@@ -641,10 +755,13 @@ void SmppCommandAdapter::Set_DC_BIT_Property(SMS& data,int FieldId,bool value)
 
 void SmppCommandAdapter::WriteDataSmField(SMS& data,int FieldId,AdapterProperty& property)
 {
+    /*
     if (FieldId == OA) 
         AssignAddress(data.originatingAddress, property.getStr().c_str());
     else if (FieldId == DA) 
         AssignAddress(data.destinationAddress, property.getStr().c_str());
+        */
+    WriteDeliveryField(data,FieldId,property);
 }
 
 
@@ -1115,8 +1232,27 @@ AdapterProperty * SmppCommandAdapter::getDataSmRespProperty(SMS& data,const std:
 AdapterProperty * SmppCommandAdapter::getDataSmProperty(SmsCommand& data,const std::string& name,int FieldId)
 {
     AdapterProperty * property = 0;
+/*
+    dsdSrv2Srv,
+    dsdSrv2Sc,
+    dsdSc2Srv,
+    dsdSc2Sc
+*/
 
-    
+    if (FieldId == PACKET_DIRECTION) 
+    {
+        property = new AdapterProperty(name,this,(int)data.dir);
+    }
+    else if (data.dir == dsdSc2Srv) 
+    {
+        property = getSubmitProperty(data.sms, name, FieldId);
+    }
+    else if (data.dir == dsdSrv2Sc) 
+    {
+        property = getDeliverProperty(data.sms, name, FieldId);
+    }
+
+   /* 
     if ((FieldId >= OPTIONAL_CHARGING)&&(FieldId <= OPTIONAL_EXPECTED_MESSAGE_CONTENT_TYPE))
     {
         property = Get_Unknown_Property(data.sms, name, FieldId);
@@ -1134,7 +1270,7 @@ AdapterProperty * SmppCommandAdapter::getDataSmProperty(SmsCommand& data,const s
         property = new AdapterProperty(name,this,(int)data.dir);
         break;
     }
-
+    */
 
     return property;
 }
