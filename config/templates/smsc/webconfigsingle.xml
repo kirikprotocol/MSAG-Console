@@ -85,4 +85,9 @@
       <param name="pass" type="string">@db.password@</param>
       <param name="tables_prefix" type="string">sms_stat</param>
   </section>  
+
+  <section name="snmp">
+    <param name="csvFileDir" type="string">@localstore.dir@/snmp</param>
+    <param name="csvFileRollInterval" type="int">60</param>
+  </section>
 </config>

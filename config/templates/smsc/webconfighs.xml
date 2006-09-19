@@ -105,4 +105,9 @@
     <param name="webapp folder" type="string">c:/smsc_web/webapps/smsc</param>
     <param name="work folder" type="string">c:/smsc_web/temp</param>
   </section>
+
+  <section name="snmp">
+    <param name="csvFileDir" type="string">@localstore.dir@/snmp</param>
+    <param name="csvFileRollInterval" type="int">60</param>
+  </section>
 </config>

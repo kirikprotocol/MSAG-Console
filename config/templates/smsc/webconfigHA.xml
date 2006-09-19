@@ -98,4 +98,8 @@
     <param name="user" type="string">smsc_starkom</param>
   </section>
 
+  <section name="snmp">
+    <param name="csvFileDir" type="string">@localstore.dir@/snmp</param>
+    <param name="csvFileRollInterval" type="int">60</param>
+  </section>
 </config>
