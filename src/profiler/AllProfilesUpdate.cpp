@@ -77,6 +77,8 @@ void DumpAllFields(FieldToValues (&fields)[N])
       printf("\t%s\n",fields[i].values[j].name.c_str());
     }
   }
+  printf("accesssMaskIn={hex value}\n");
+  printf("accesssMaskOut={hex value}\n");
 }
 
 template <int N>
@@ -110,6 +112,14 @@ void PatchProfile(Profile& p,const ArgsVector& args)
     }else if(it->first=="hide")
     {
       p.hide=FindValue(it->second,hide);
+    }
+    else if(it->first=="accessmaskin")
+    {
+      sscanf(it->second.c_str(),"%x",&p.accessMaskIn);
+    }
+    else if(it->first=="accessmaskout")
+    {
+      sscanf(it->second.c_str(),"%x",&p.accessMaskOut);
     }else
     {
       throw Exception("Unknown field:%s\n",it->first.c_str());
