@@ -9,25 +9,25 @@ import ru.novosoft.smsc.jsp.SMSCAppContext;
  * User: artem
  * Date: 12.09.2006
  */
+
 public class EmailSmeLookupByUserIdCommand extends CommandClass {
 
   private String userId = "";
 
   public void process(CommandContext ctx) {
 
-    String out = "emailsme '" + userId + "'";
-
     try {
 
       final LookupResult result = process(ctx.getOwner().getContext());
-
-      ctx.setMessage(out + '\n' + " lookup result: \n" + ((result == null) ? "nothing" : result.toString()));
+      final char ch = 0x000D;
+      final String nextStr = "" + '\n' + ch;
+      ctx.setMessage(nextStr + ((result == null) ? "Nothing found" : result.toString()));
 
       ctx.setStatus(CommandContext.CMD_OK);
 
     } catch (AdminException e) {
 
-      ctx.setMessage("Couldn't find " + out + ". Cause: " + e.getMessage());
+      ctx.setMessage("Couldn't find. Cause: " + e.getMessage());
 
       ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
 
