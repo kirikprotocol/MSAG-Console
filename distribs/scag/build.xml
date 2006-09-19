@@ -66,6 +66,7 @@ Targets:
         <fileset dir="${DISTR_DIR}/tomcat/bin" includes="*.sh"/>
     </chmod>
     <ant antfile="${WEBSRC_DIR}/build-scag.xml" dir="${WEBSRC_DIR}" target="build"/>
+    <copy file="${SMSC_DIR}/config/tomcat/xalan.jar" todir="${DISTR_DIR}/tomcat/common/endorsed"/>  
   </target>
 
   <target name="rmdistr">
