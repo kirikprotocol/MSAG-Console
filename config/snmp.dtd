@@ -1,0 +1,7 @@
+<!ELEMENT config (default,object*) >
+
+<!ELEMENT default (counter*)>
+<!ELEMENT counter (#PCDATA)>
+<!ATTLIST counter name CDATA #REQUIRED>
+<!ELEMENT object (counter*)>
+<!ATTLIST object id CDATA #REQUIRED enabled (true|false) #REQUIRED>
