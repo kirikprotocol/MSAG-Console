@@ -846,7 +846,7 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
                     {
                         //smsc_log_debug(logger, "1 String size is: %d", resStr.size());
                         data.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, resStr.data(), resStr.size());
-                        data.setIntProperty(Tag::SMPP_SM_LENGTH, resStr.size());
+                        data.setIntProperty(Tag::SMPP_SM_LENGTH, 0);
                     } else
                     {
                         data.setBinProperty(Tag::SMPP_SHORT_MESSAGE, resStr.data(), resStr.size());
@@ -856,7 +856,7 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
                 else
                 {
                     data.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, resStr.data(), resStr.size());
-                    data.setIntProperty(Tag::SMPP_SM_LENGTH, resStr.size());
+                    data.setIntProperty(Tag::SMPP_SM_LENGTH, 0);
                 }
             }
             else
@@ -865,7 +865,7 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
                     data.setBinProperty(Tag::SMPP_SHORT_MESSAGE, 0, 0);
 
                 data.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, str.data(), str.size());
-                data.setIntProperty(Tag::SMPP_SM_LENGTH, str.size());
+                data.setIntProperty(Tag::SMPP_SM_LENGTH, 0);
             }
 
             //smsc_log_debug(logger, "MESSAGE BODY: %s", CommandBrige::getMessageBody(command).c_str());
