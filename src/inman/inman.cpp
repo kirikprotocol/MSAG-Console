@@ -7,17 +7,24 @@ static char const ident[] = "$Id$";
 #include <string>
 
 #include "version.hpp"
+#include "inman.hpp"
+
 #include "inman/comp/cap_sms/CapSMSFactory.hpp"
 using smsc::inman::comp::initCAP3SMSComponents;
 
-#include "service.hpp"
 #include "util/config/ConfigView.h"
 #include "util/mirrorfile/mirrorfile.h"
 using smsc::util::config::ConfigView;
+using smsc::util::config::CStrSet;
+using smsc::util::config::Manager;
+using smsc::util::config::ConfigException;
 
 #include "inman/abprov/IAPLoader.hpp"
 using smsc::inman::iaprvd::IAProviderLoader;
 using smsc::inman::iaprvd::IAProviderCreatorITF;
+
+#include "service.hpp"
+using smsc::inman::Service;
 
 namespace smsc {
   namespace inman {
@@ -30,10 +37,17 @@ namespace smsc {
 using smsc::inman::inap::inmanLogger;
 using smsc::inman::inap::_EINSS7_logger_DFLT;
 
-using smsc::inman::Service;
-using smsc::inman::InService_CFG;
-using smsc::util::config::Manager;
-using smsc::util::config::ConfigException;
+static char     _runService = 0;
+static Service* g_pService = 0;
+
+
+extern "C" static void sighandler(int signal)
+{
+    _runService = 0;
+}
+
+namespace smsc {
+  namespace inman {
 
 static const unsigned int _in_CFG_DFLT_CLIENT_CONNS = 3;
 static const long _in_CFG_MIN_BILLING_INTERVAL = 10; //in seconds
@@ -46,65 +60,274 @@ static const unsigned char _in_CFG_DFLT_SS7_USER_ID = 3; //USER03_ID
 static const unsigned short _in_CFG_DFLT_TCAP_DIALOGS = 2000;
 static const long _in_CFG_DFLT_CACHE_INTERVAL = 1440;
 static const int  _in_CFG_DFLT_CACHE_RECORDS = 10000;
-#define RP_MO_SM_transfer_rejected 21       //3GPP TS 24.011 Annex E-2
-
-static char     _runService = 0;
-static Service* g_pService = 0;
-
-
-extern "C" static void sighandler(int signal)
-{
-    _runService = 0;
-}
 
 //CDR_NONE = 0, CDR_ALL = 1, CDR_POSTPAID = 2
 static const char * const _CDRmodes[3] = {"none", "all", "postpaid"};
 //BILL_ALL = 0, BILL_USSD, BILL_SMS
 static const char * const _BILLmodes[4] = {"none", "all", "ussd", "sms"};
 
-static const char * const _PolicyModes[3] = {"IN", "DB", "HLR"};
+//according to IAProviderType
+static const char * const _IAPTypes[] = {"CACHE", "IN", "HLR", "DB"};
+//according to IAProviderAbility_e
+static const char * const _IAPAbilities[] = { "none", "abContract", "abSCF", "abContractSCF" };
 
 
-struct INBillConfig : public InService_CFG {
+class INScfsRegistry {
+protected:
+    INScfsMAP  scfMap;
+
 public:
-    INBillConfig()
+    INScfsRegistry()
+    { }
+    ~INScfsRegistry()
     {
-        provAllc = NULL; bill.abCache = NULL; bill.abProvider = NULL;
-        sock.host = bill.ssf_addr = bill.scf_addr = bill.cdrDir = NULL;
-        sock.port = bill.ssn = bill.serviceKey = 0;
-        bill.cdrInterval = cachePrm.interval = cachePrm.RAM = 0;
-        bill.policyNm = cachePrm.nmDir = NULL;
-        bill.billMode = smsc::inman::BILL_ALL;
-        bill.policy = smsc::inman::policyIN;
-        bill.cdrMode =  BillingCFG::CDR_ALL;
+        for (INScfsMAP::iterator sit = scfMap.begin(); sit != scfMap.end(); sit++)
+            delete (*sit).second;
+    }
 
+    void copyAll(INScfsMAP & cp_map)
+    {
+        cp_map.insert(scfMap.begin(), scfMap.end());
+    }
+    //NOTE: the 'nm_scf' subsection presence must be previously checked !!!
+    INScfCFG * readSCF(ConfigView * scf_sec, const char * nm_scf) throw(ConfigException)
+    {
+        std::auto_ptr<ConfigView> scfCfg(scf_sec->getSubConfig(nm_scf));
+        std::auto_ptr<INScfCFG> pin(new INScfCFG(nm_scf));
+        smsc_log_info(inmanLogger, "IN-platform '%s' config ..", pin->ident());
+
+        char * cstr = NULL;
+        cstr = scfCfg->getString("scfAddress");
+        if (!cstr[0])
+            throw ConfigException("SCF address missing");
+
+        if (!pin->scf.scfAddress.fromText(cstr)
+            || (pin->scf.scfAddress.numPlanInd != NUMBERING_ISDN)
+            || (pin->scf.scfAddress.typeOfNumber > ToN_INTERNATIONAL))
+            throw ConfigException("SCF address is bad: %s", cstr);
+        pin->scf.scfAddress.typeOfNumber = ToN_INTERNATIONAL; //correct isdn unknown
+
+        INScfsMAP::const_iterator sit = scfMap.find(pin->scf.scfAddress.toString());
+        if (sit != scfMap.end()) {
+            smsc_log_info(inmanLogger, "IN-platform '%s' known ..", pin->ident());
+            return (*sit).second;
+        }
+
+        pin->scf.serviceKey = (uint32_t)scfCfg->getInt("serviceKey");
+        smsc_log_info(inmanLogger, "SCF: %s:{%u}",
+                        pin->scf.scfAddress.toString().c_str(), pin->scf.serviceKey);
+
+        //optional parameters:
+        cstr = NULL; 
+        std::string cppStr = "RPCList_reject: ";
+        try { cstr = scfCfg->getString("RPCList_reject"); }
+        catch (ConfigException& exc) { }
+        if (cstr && cstr[0]) {
+            try { pin->rejectRPC.init(cstr); }
+            catch (std::exception& exc) {
+                throw ConfigException(format("RPCList_reject: %s", exc.what()).c_str());
+            }
+        }
+        if ((pin->rejectRPC.size() <= 1) || !pin->rejectRPC.print(cppStr))
+            cppStr += "unsupported";
+        smsc_log_info(inmanLogger, cppStr.c_str());
+
+        cstr = NULL; cppStr = "RPCList_postpaid: ";
+        try { cstr = scfCfg->getString("RPCList_postpaid"); }
+        catch (ConfigException& exc) { }
+        if (cstr) {
+            try { pin->postpaidRPC.init(cstr); }
+            catch (std::exception& exc) {
+                throw ConfigException(format("RPCList_postpaid: %s", exc.what()).c_str());
+            }
+        }
+        if (!pin->postpaidRPC.print(cppStr))
+            cppStr += "unsupported";
+        smsc_log_info(inmanLogger, cppStr.c_str());
+
+        scfMap.insert(INScfsMAP::value_type(pin->scf.scfAddress.toString(), pin.get()));
+        return pin.release();
+    }
+
+    unsigned readSCFs(ConfigView * scf_sec) throw(ConfigException)
+    {
+        std::auto_ptr<CStrSet> subs(scf_sec->getShortSectionNames());
+        CStrSet::iterator sit = subs->begin();
+        for (; sit != subs->end(); sit++)
+            readSCF(scf_sec, sit->c_str());
+        return scfMap.size();
+    }
+};
+
+class INManConfig : public InService_CFG {
+protected:
+    typedef std::list<const char *> CPTRList;
+    struct AbonentPolicyXCFG {
+    protected:
+        char *    text;
+    public:
+        const char *    ident;
+        const char *    prvdNm;
+        CPTRList  scfNms;
+       
+        AbonentPolicyXCFG(const char * nm_pol)
+            : ident(nm_pol), text(NULL), prvdNm(NULL)
+        { }
+        ~AbonentPolicyXCFG() { if (text) delete [] text; }
+
+        bool init(const char * str)
+        {
+            if (!str || !str[0])
+                return false;
+
+            text = new char[strlen(str)+1];
+            strcpy(text, str);
+
+            char *pos = text,  *commaPos = 0;
+            while ((commaPos = strchr(pos, ',')) != 0) {
+                *commaPos = 0;
+                while(isspace(*pos) && (pos < commaPos))
+                    pos++;
+                if (pos != commaPos)
+                    scfNms.push_back(pos);
+                pos = commaPos + 1;
+            }
+            while(*pos && isspace(*pos))
+                pos++;
+            if (*pos)
+                scfNms.push_back(pos);
+            if (!scfNms.size())
+                return false;
+
+            prvdNm = *(scfNms.begin());
+            scfNms.pop_front();
+            return true;
+        }
+
+        void print(std::string & pstr) const
+        {
+            pstr += "Prvd: ";
+            pstr += prvdNm;
+            pstr += ", INs: ";
+            if (scfNms.size()) {
+                CPTRList::const_iterator it = scfNms.begin();
+                pstr += *(it);
+                for (it++; it != scfNms.end(); it++) {
+                    pstr += ",  ";
+                    pstr += *(it);
+                }
+            } else
+                pstr += "<none>";
+        }
+    };
+
+    INScfsRegistry      scfMap;
+
+public:
+    INManConfig() : InService_CFG()
+    {
         //OPTIONAL PARAMETERS:
         sock.maxConn = _in_CFG_DFLT_CLIENT_CONNS;
-        bill.userId = _in_CFG_DFLT_SS7_USER_ID;
+        bill.ss7.userId = _in_CFG_DFLT_SS7_USER_ID;
         bill.maxBilling = _in_CFG_DFLT_BILLINGS;
-        bill.capTimeout = _in_CFG_DFLT_CAP_TIMEOUT;
-        bill.maxDlgId = _in_CFG_DFLT_TCAP_DIALOGS;
+        bill.ss7.capTimeout = _in_CFG_DFLT_CAP_TIMEOUT;
+        bill.ss7.maxDlgId = _in_CFG_DFLT_TCAP_DIALOGS;
         sock.timeout = bill.maxTimeout = _in_CFG_DFLT_BILL_TIMEOUT;
         bill.abtTimeout = _in_CFG_DFLT_ABTYPE_TIMEOUT;
-        bill.rejectRPC.push_back(RP_MO_SM_transfer_rejected);
         cachePrm.fileRcrd = _in_CFG_DFLT_CACHE_RECORDS;
     }
 
-    ~INBillConfig()
+    ~INManConfig()
+    { }
+
+    AbonentPolicy * readPolicyCFG(Manager & manager, const char * nm_pol) throw(ConfigException)
     {
-        if (provAllc)
-             delete provAllc;
+        AbonentPolicyXCFG   polXCFG(nm_pol);
+
+        if (!manager.findSection("AbonentPolicies"))
+            throw ConfigException("\'AbonentPolicies\' section is missed");
+
+        ConfigView  polSec(manager, "AbonentPolicies");
+        if (!polSec.findSubSection(polXCFG.ident))
+            throw ConfigException("\'%s\' policy is not specified", polXCFG.ident);
+
+        std::auto_ptr<AbonentPolicy> policyCFG(new AbonentPolicy(nm_pol));
+
+        std::auto_ptr<ConfigView> polCfg(polSec.getSubConfig(polXCFG.ident));
+        //parse policy cfg
+        smsc_log_info(inmanLogger, "Reading %s policy config ..", polXCFG.ident);
+
+        char * cstr = NULL;
+        cstr = polCfg->getString("policy");
+        if (!cstr || !cstr[0])
+            throw ConfigException("\'%s\' policy value is not specified", polXCFG.ident);
+        if (!polXCFG.init(cstr))
+            throw ConfigException("\'%s\' policy value is not valid: %s", polXCFG.ident, cstr);
+        {
+            std::string pstr;
+            polXCFG.print(pstr);
+            smsc_log_info(inmanLogger, "policy is: %s", pstr.c_str());
+        }
+
+        //lookup IN platforms configs
+        if (polXCFG.scfNms.size()) {
+            if (!manager.findSection("IN-platforms"))
+                throw ConfigException("\'IN-platforms\' section is missed");
+            ConfigView  scfSec(manager, "IN-platforms");
+
+            if (!strcmp((char*)"*", *(polXCFG.scfNms.begin()))) { //include all SCFs defined
+                if (!scfMap.readSCFs(&scfSec))
+                    throw ConfigException("IN-platforms is not defined");
+                scfMap.copyAll(policyCFG->scfMap);
+            } else {
+                for (CPTRList::iterator sit = polXCFG.scfNms.begin();
+                                        sit != polXCFG.scfNms.end(); sit++) {
+                    if (!scfSec.findSubSection(*sit))
+                        throw ConfigException("IN-platform \'%s\'is not defined", *sit);
+                    INScfCFG * pin = scfMap.readSCF(&scfSec, *sit);
+                    policyCFG->scfMap.insert(
+                        INScfsMAP::value_type(pin->scf.scfAddress.toString(), pin));
+                }
+            }
+        }
+        //lookup Abonent Provider config and load it
+        if (polXCFG.prvdNm) {
+            if (!manager.findSection("AbonentProviders"))
+                throw ConfigException("\'AbonentProviders\' section is missed");
+            ConfigView  prvdSec(manager, "AbonentProviders");
+            if (!prvdSec.findSubSection(polXCFG.prvdNm))
+                throw ConfigException("\'%s\' abonent provider is missed", polXCFG.prvdNm);
+
+            std::auto_ptr<ConfigView> provCfg(prvdSec.getSubConfig(polXCFG.prvdNm));
+            smsc_log_info(inmanLogger, "Loading AbonentProvider '%s'", polXCFG.prvdNm);
+            policyCFG->provAllc = IAProviderLoader::LoadIAP(provCfg.get(), inmanLogger); //throws
+            smsc_log_info(inmanLogger, "AbonentProvider '%s': type %s, ident: %s, ability: %s",
+                          polXCFG.prvdNm, _IAPTypes[policyCFG->provAllc->type()],
+                          policyCFG->provAllc->ident(), 
+                          _IAPAbilities[policyCFG->provAllc->ability()]);
+            policyCFG->provAllc->logConfig(inmanLogger);
+        }
+
+        return policyCFG.release();
     }
+
 
     void read(Manager& manager) throw(ConfigException)
     {
         uint32_t tmo = 0;
         char *   cstr = NULL;
+        char *   policyNm = NULL;
         std::string cppStr;
 
         /* ********************* *
          * InService parameters: *
          * ********************* */
+        try { cstr = manager.getString("version");
+        } catch (ConfigException& exc) { }
+        if (!cstr || !cstr[0])
+            smsc_log_warn(inmanLogger, "Config version is not set");
+        else
+            smsc_log_info(inmanLogger, "Config version: %s", cstr);
 
         try {
             sock.host = manager.getString("host");
@@ -144,12 +367,14 @@ public:
         smsc_log_info(inmanLogger, "billMode: %s [%d]", cstr, bill.billMode);
 
         cstr = NULL;
-        try { bill.policyNm = billCfg.getString("abonentPolicy");
+        try { policyNm = billCfg.getString("abonentPolicy");
         } catch (ConfigException& exc) {
-            throw ConfigException("'abonentPolicy' is unknown or missing");
+            throw ConfigException("'abonentPolicy' is unknown or missing!");
         }
-        if (!bill.policyNm[0])
-            bill.policyNm = NULL;
+        if (!policyNm || !policyNm[0]) {
+            policyNm = NULL;
+            smsc_log_warn(inmanLogger, "Default abonent policy is not set!");
+        }
 
         cstr = NULL;
         try { cstr = billCfg.getString("cdrMode");
@@ -242,130 +467,80 @@ public:
         }
         smsc_log_info(inmanLogger, "abonentTypeTimeout: %s%u secs", !tmo ? "default ":"", bill.abtTimeout);
 
-        /* ************************** *
-         * IN interaction parameters: *
-         * ************************** */
-        if (!manager.findSection("IN_interaction"))
-            throw ConfigException("\'IN_interaction\' section is missed");
+        /* ********************************* *
+         * SS7 stack interaction parameters: *
+         * ********************************* */
+        if (!manager.findSection("SS7"))
+            throw ConfigException("\'SS7\' section is missed");
 
-        ConfigView inss7Cfg(manager, "IN_interaction");
-        try {
-            bill.ssf_addr = inss7Cfg.getString("ssfAddress");
-            bill.ssn = inss7Cfg.getInt("ssn");
-            smsc_log_info(inmanLogger, "SSF : GT=%s, SSN=%d", bill.ssf_addr, bill.ssn);
-        } catch (ConfigException& exc) {
-            bill.ssf_addr = 0; bill.ssn = 0;
-            throw ConfigException("SSF address or SSN missing");
-        }
-        try {
-            bill.scf_addr = inss7Cfg.getString("scfAddress");
-            smsc_log_info(inmanLogger, "SCF : GT=%s", bill.scf_addr);
-        } catch (ConfigException& exc) {
-            bill.scf_addr = 0;
-            throw ConfigException("SCF address missing");
-        }
-        try {
-            bill.serviceKey = (unsigned int)inss7Cfg.getInt("serviceKey");
-            smsc_log_info(inmanLogger, "serviceKey: %d", bill.serviceKey);
-        } catch (ConfigException& exc) {
-            bill.serviceKey = 0;
-            throw ConfigException("serviceKey is invalid or missing");
-        }
-        /*  optional IN interaction parameters */
+        ConfigView ss7Cfg(manager, "SS7");
 
+        cstr = NULL;
+        try { cstr = ss7Cfg.getString("ssfAddress"); }
+        catch (ConfigException& exc) { }
+        if (!cstr || !cstr[0])
+            throw ConfigException("SSF address is missing");
+        if (!bill.ss7.ssf_addr.fromText(cstr)
+            || (bill.ss7.ssf_addr.numPlanInd != NUMBERING_ISDN)
+            || (bill.ss7.ssf_addr.typeOfNumber > ToN_INTERNATIONAL))
+            throw ConfigException("SSF address is invalid: %s", cstr);
+        bill.ss7.ssf_addr.typeOfNumber = ToN_INTERNATIONAL; //correct isdn unknown
+
+        bill.ss7.own_ssn = ss7Cfg.getInt("ssn"); //throws
+        smsc_log_info(inmanLogger, "SSF: %u:%s", bill.ss7.own_ssn,
+                        bill.ss7.ssf_addr.toString().c_str());
+
+        /*  optional SS7 interaction parameters */
         tmo = 0;    //ss7UserId
-        try { tmo = (uint32_t)inss7Cfg.getInt("ss7UserId"); }
+        try { tmo = (uint32_t)ss7Cfg.getInt("ss7UserId"); }
         catch (ConfigException& exc) { }
         if (tmo) {
             if (!tmo || (tmo > 20))
                 throw ConfigException("'ss7UserId' should fall into the range [1..20]");
-            bill.userId = (unsigned char)tmo;
+            bill.ss7.userId = (unsigned char)tmo;
         }
-        smsc_log_info(inmanLogger, "ss7UserId: %s%u", !tmo ? "default ":"", bill.userId);
+        smsc_log_info(inmanLogger, "ss7UserId: %s%u", !tmo ? "default ":"", bill.ss7.userId);
 
-        tmo = 0;    //IN_Timeout
-        try { tmo = (uint32_t)inss7Cfg.getInt("IN_Timeout"); }
+        tmo = 0;    //maxTimeout
+        try { tmo = (uint32_t)ss7Cfg.getInt("maxTimeout"); }
         catch (ConfigException& exc) { }
         if (tmo) {
             if (tmo >= 65535)
-                throw ConfigException("'IN_Timeout' should be less than 65535 seconds");
-            bill.capTimeout = (unsigned short)tmo;
+                throw ConfigException("'maxTimeout' should be less than 65535 seconds");
+            bill.ss7.capTimeout = (unsigned short)tmo;
         }
-        smsc_log_info(inmanLogger, "IN_Timeout: %s%u secs", !tmo ? "default ":"", bill.capTimeout);
+        smsc_log_info(inmanLogger, "maxTimeout: %s%u secs", !tmo ? "default ":"", bill.ss7.capTimeout);
 
         tmo = 0;    //maxDialogs
-        try { tmo = (uint32_t)inss7Cfg.getInt("maxDialogs"); }
+        try { tmo = (uint32_t)ss7Cfg.getInt("maxDialogs"); }
         catch (ConfigException& exc) { }
         if (tmo) {
             if ((tmo >= 65530) || (tmo < 2))
                 throw ConfigException("'maxDialogs' should fall into the range [2..65530]");
-            bill.maxDlgId = (unsigned short)tmo;
+            bill.ss7.maxDlgId = (unsigned short)tmo;
         }
-        smsc_log_info(inmanLogger, "maxDialogs: %s%u", !tmo ? "default ":"", bill.maxDlgId);
+        smsc_log_info(inmanLogger, "maxDialogs: %s%u", !tmo ? "default ":"", bill.ss7.maxDlgId);
 
-        cstr = NULL; cppStr = "RPCList_reject: ";
-        try { cstr = inss7Cfg.getString("RPCList_reject"); }
-        catch (ConfigException& exc) { }
-        if (cstr) {
-            try { bill.rejectRPC.init(cstr);
-            } catch (std::exception& exc) {
-                throw ConfigException(format("RPCList_reject: %s", exc.what()).c_str());
-            }
-        }
-        if (!bill.rejectRPC.print(cppStr))
-            cppStr += "unsupported";
-        smsc_log_info(inmanLogger, cppStr.c_str());
 
-        cstr = NULL; cppStr = "RPCList_postpaid: ";
-        try { cstr = inss7Cfg.getString("RPCList_postpaid"); }
-        catch (ConfigException& exc) { }
-        if (cstr) {
-            try { bill.postpaidRPC.init(cstr); }
-            catch (std::exception& exc) {
-                throw ConfigException(format("RPCList_postpaid: %s", exc.what()).c_str());
-            }
-        } else if (bill.policy == smsc::inman::policyIN)
-            throw ConfigException("'RPCList_postpaid' must be defined for abonentPolicy: IN");
-
-        if (!bill.postpaidRPC.print(cppStr))
-            cppStr += "unsupported";
-        smsc_log_info(inmanLogger, cppStr.c_str());
-
-        /* **************************** *
-         * AbonentProviders parameters:  *
-         * **************************** */
-        if (bill.policyNm) {
-            if (!manager.findSection("AbonentProviders"))
-                throw ConfigException("'AbonentProviders' section is missed (abonentPolicy: %s)",
-                                      bill.policyNm);
-            ConfigView  provSec(manager, "AbonentProviders");
-            if (!provSec.findSubSection(bill.policyNm))
-                throw ConfigException("'%s' is missed in 'AbonentProviders' section",
-                                      bill.policyNm);
-            ConfigView * provCfg = provSec.getSubConfig(bill.policyNm);
-            smsc_log_info(inmanLogger, "Loading AbonentProvider '%s'", bill.policyNm);
-            provAllc = (IAProviderCreatorITF *)IAProviderLoader::LoadIAP(provCfg, inmanLogger); //throws
-            switch (provAllc->type()) {
-            case smsc::inman::iaprvd::iapHLR:
-                bill.policy = smsc::inman::policyHLR; break;
-            case smsc::inman::iaprvd::iapDB:
-                bill.policy = smsc::inman::policyDB; break;
-            case smsc::inman::iaprvd::iapIN:
-                bill.policy = smsc::inman::policyIN; break;
-            default:;
-            }
-            smsc_log_info(inmanLogger, "AbonentProvider '%s': type %s (%u), ident: %s",
-                          bill.policyNm, _PolicyModes[bill.policy], provAllc->type(),
-                          provAllc->ident());
-            provAllc->logConfig(inmanLogger);
+        /* ***************************************************************** *
+         * AbonentPolicies: (IN-platforms and AbonentProviders) parameters:  *
+         * ***************************************************************** */
+        if (policyNm) { //default policy
+            abPolicies.setPreferred(readPolicyCFG(manager, policyNm));
         } else {
-            smsc_log_info(inmanLogger, "AbonentProvider: type %s (%u)",
-                          _PolicyModes[bill.policy], smsc::inman::iaprvd::iapIN);
+            //todo: policies address pool mask is not supported yet
+            throw ConfigException("Default abonent policy is not set!");
         }
         /**/
         return;
     }
+
 };
+
+} //inman
+} //smsc
+
+using smsc::inman::INManConfig;
 
 int main(int argc, char** argv)
 {
@@ -386,7 +561,7 @@ int main(int argc, char** argv)
     smsc_log_info(inmanLogger,"* Config file: %s", cfgFile);
     smsc_log_info(inmanLogger,"******************************");
 
-    INBillConfig cfg;
+    INManConfig cfg;
     try {
         Manager::init((const char *)cfgFile);
         Manager& manager = Manager::getInstance();
@@ -427,3 +602,4 @@ int main(int argc, char** argv)
     smsc_log_info(inmanLogger, "IN MANAGER shutdown complete");
     return rval;
 }
+

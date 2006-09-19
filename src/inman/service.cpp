@@ -13,8 +13,7 @@ namespace smsc  {
 namespace inman {
 
 Service::Service(const InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
-    : logger(uselog), _cfg(*in_cfg), session(0), disp(0), capSess(0)
-    , server(0), tmWatcher(NULL)
+    : logger(uselog), _cfg(*in_cfg), ssnSess(0), disp(0), server(0)
 {
     if (!logger)
         logger = Logger::getInstance("smsc.inman.Service");
@@ -22,29 +21,25 @@ Service::Service(const InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
     smsc_log_debug(logger, "InmanSrv: Creating ..");
 
     disp = TCAPDispatcher::getInstance();
-    _cfg.bill.userId += 39; //adjust USER_ID to PortSS7 units id
-    if (!disp->connect(_cfg.bill.userId))
+    _cfg.bill.ss7.userId += 39; //adjust USER_ID to PortSS7 units id
+    if (!disp->connect(_cfg.bill.ss7.userId))
         smsc_log_error(logger, "InmanSrv: EINSS7 stack unavailable!!!");
     else {
         smsc_log_debug(logger, "InmanSrv: TCAP dispatcher has connected to SS7 stack");
-        if (!(session = disp->openSSN(_cfg.bill.ssn, _cfg.bill.maxDlgId))) {
-            smsc_log_error(logger, "InmanSrv: SSN[%u] unavailable!!!", _cfg.bill.ssn);
-        } else {
-            if (!(capSess = session->newSRsession(_cfg.bill.ssf_addr,
-                    ACOID::id_ac_cap3_sms_AC, _cfg.bill.ssn, _cfg.bill.scf_addr))) {
-                smsc_log_error(logger, "InmanSrv: Unable to init CAP session: %s -> %u:%s",
-                               _cfg.bill.ssf_addr, _cfg.bill.ssn, _cfg.bill.scf_addr);
-            } else
-                smsc_log_debug(logger, "InmanSrv: TCSR[%u:%u] session inited",
-                               _cfg.bill.ssn, capSess->getUID());
-        }
+        if (!(ssnSess = disp->openSSN(_cfg.bill.ss7.own_ssn, _cfg.bill.ss7.maxDlgId)))
+            smsc_log_error(logger, "InmanSrv: SSN[%u] unavailable!!!", _cfg.bill.ss7.own_ssn);
     }
-    if (_cfg.provAllc) {
-        if (!(_cfg.bill.abProvider = _cfg.provAllc->create(logger)))
-            smsc_log_error(logger, "InmanSrv: AbonentProvider initialization failed!");
-        else
-            smsc_log_info(logger, "InmanSrv: AbonentProvider inited: '%s'",
-                          _cfg.provAllc->ident());
+
+    _cfg.bill.abCache = new AbonentCache(&_cfg.cachePrm, logger);
+    assert(_cfg.bill.abCache);
+    smsc_log_debug(logger, "InmanSrv: AbonentCache inited");
+
+    //initialize IAProviders for defined policies
+    for (AbonentPolicies::iterator pit = _cfg.abPolicies.begin(); 
+                                    pit != _cfg.abPolicies.end(); pit++) {
+        AbonentPolicy *pol = *pit;
+        pol->bindCache(_cfg.bill.abCache);
+        pol->getIAProvider(logger);
     }
 
     server = new Server(&_cfg.sock, SerializerInap::getInstance(), logger);
@@ -68,15 +63,10 @@ Service::Service(const InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
         }
     } else
         _cfg.bill.bfs = NULL;
-    tmWatcher = new TimeWatcher(logger);
-    assert(tmWatcher);
-    smsc_log_debug(logger, "InmanSrv: TimeWatcher inited");
 
-    _cfg.bill.abCache = new AbonentCache(&_cfg.cachePrm, logger);
-    assert(_cfg.bill.abCache);
-    if (_cfg.bill.abProvider)
-        _cfg.bill.abProvider->bindCache(_cfg.bill.abCache);
-    smsc_log_debug(logger, "InmanSrv: AbonentCache inited");
+    _cfg.bill.tmWatcher = new TimeWatcher(logger);
+    assert(_cfg.bill.tmWatcher);
+    smsc_log_debug(logger, "InmanSrv: TimeWatcher inited");
 }
 
 Service::~Service()
@@ -100,13 +90,9 @@ Service::~Service()
             delete roller;
         delete _cfg.bill.bfs;
     }
-    if (tmWatcher) {
+    if (_cfg.bill.tmWatcher) {
         smsc_log_debug(logger, "InmanSrv: Deleting TimeWatcher ..");
-        delete tmWatcher;
-    }
-    if (_cfg.bill.abProvider) {
-        smsc_log_debug(logger, "InmanSrv: Deleting AbonentsProvider ..");
-        delete _cfg.bill.abProvider;
+        delete _cfg.bill.tmWatcher;
     }
     if (_cfg.bill.abCache) {
         smsc_log_debug(logger, "InmanSrv: Closing AbonentsCache ..");
@@ -118,8 +104,8 @@ Service::~Service()
 bool Service::start()
 {
     smsc_log_debug(logger, "InmanSrv: Starting TimeWatcher ..");
-    tmWatcher->Start();
-    if (!tmWatcher->isRunning())
+    _cfg.bill.tmWatcher->Start();
+    if (!_cfg.bill.tmWatcher->isRunning())
         return false;
 
     smsc_log_debug(logger, "InmanSrv: Starting TCP server ..");
@@ -143,8 +129,8 @@ void Service::stop()
     }
 
     smsc_log_debug(logger, "InmanSrv: Stopping TimeWatcher ..");
-    tmWatcher->Stop();
-    tmWatcher->WaitFor();
+    _cfg.bill.tmWatcher->Stop();
+    _cfg.bill.tmWatcher->WaitFor();
 
     smsc_log_debug( logger, "InmanSrv: Stopping TCAP dispatcher ..");
     disp->Stop();
@@ -181,8 +167,7 @@ void Service::onConnectOpened(Server* srv, Connect* conn)
 {
     assert(conn);
     conn->setConnectFormat(Connect::frmLengthPrefixed);
-    BillingConnect *bcon = new BillingConnect(&_cfg.bill, capSess, conn, 
-                                              tmWatcher, logger);
+    BillingConnect *bcon = new BillingConnect(&_cfg.bill, ssnSess, conn, logger);
     if (bcon) {
         _mutex.Lock();
         bConnects.insert(BillingConnMap::value_type(conn->getSocketId(), bcon));

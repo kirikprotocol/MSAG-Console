@@ -2,6 +2,7 @@ static char const ident[] = "$Id$";
 #include <assert.h>
 
 #include "service.hpp"
+using smsc::inman::inap::TCSessionAC;
 using smsc::inman::interaction::ChargeSmsResult;
 using smsc::inman::interaction::CHARGE_SMS_TAG;
 using smsc::inman::interaction::CHARGE_SMS_RESULT_TAG;
@@ -16,11 +17,11 @@ namespace inman {
 /* ************************************************************************** *
  * class BillingConnect implementation:
  * ************************************************************************** */
-BillingConnect::BillingConnect(BillingCFG * cfg, TCSessionSR* cap_sess, Connect* conn, 
-            TimeWatcher* tm_watcher, Logger * uselog/* = NULL*/)
-    : _cfg(*cfg), capSess(cap_sess), _conn(conn), _tmWatcher(tm_watcher)
+BillingConnect::BillingConnect(BillingCFG * cfg, SSNSession * ssn_sess,
+                               Connect* conn, Logger * uselog/* = NULL*/)
+    : _cfg(*cfg), ssnSess(ssn_sess), _conn(conn)
 {
-    assert(conn && cfg && tm_watcher);
+//    assert(conn && cfg && cfg->tmWatcher);
     logger = uselog ? uselog : Logger::getInstance("smsc.inman.BillConn");
     _bcId = _conn->getSocketId();
     if (!_cfg.maxBilling)
@@ -80,6 +81,15 @@ void BillingConnect::billingDone(Billing* bill)
     return; //grd off
 }
 
+SSNSession* BillingConnect::ssnSession(void)
+{
+    if (!ssnSess) {
+        TCAPDispatcher * disp = TCAPDispatcher::getInstance();
+        ssnSess = disp->openSSN(_cfg.ss7.own_ssn, _cfg.ss7.maxDlgId);
+    }
+    return (!ssnSess || (ssnSess->getState() != smsc::inman::inap::ssnBound)) ? NULL: ssnSess;
+}
+
 /* -------------------------------------------------------------------------- *
  * ConnectListener interface implementation:
  * -------------------------------------------------------------------------- */
@@ -100,7 +110,7 @@ void BillingConnect::onCommandReceived(Connect* conn, SerializableObject* recvCm
         BillingMap::iterator it = workers.find(dlgId);
         if (it == workers.end()) {
             if (workers.size() < _cfg.maxBilling) {
-                bill = new Billing(this, dlgId, _tmWatcher, logger);
+                bill = new Billing(this, dlgId, logger);
                 workers.insert(BillingMap::value_type(dlgId, bill));
             } else {
                 ChargeSmsResult res(errProtocol, InProtocol_ResourceLimitation,
@@ -145,16 +155,14 @@ void BillingConnect::onConnectError(Connect* conn, bool fatal/* = false*/)
  * class Billing implementation:
  * ************************************************************************** */
 Billing::Billing(BillingConnect* bconn, unsigned int b_id, 
-                TimeWatcher* tm_watcher, Logger * uselog/* = NULL*/)
+                Logger * uselog/* = NULL*/)
         : _bconn(bconn), _bId(b_id), state(bilIdle), capDlg(NULL)
-        , postpaidBill(false), tmWatcher(tm_watcher)
-        , abBillType(smsc::inman::cache::btUnknown), providerQueried(false)
-        , capDlgActive(false)
+        , postpaidBill(false), abType(smsc::inman::cache::btUnknown)
+        , providerQueried(false), capDlgActive(false), capSess(NULL)
+        , abPolicy(NULL)
 {
-    assert(bconn && tm_watcher);
     logger = uselog ? uselog : Logger::getInstance("smsc.inman.Billing");
     _cfg = bconn->getConfig();
-    capSess = bconn->capSession();
 }
 
 
@@ -191,7 +199,7 @@ void Billing::doCleanUp(void)
 {
     //check for pending query to AbonentProvider
     if (providerQueried) {
-        _cfg.abProvider->cancelQuery(abNumber, this);
+        abPolicy->getIAProvider(logger)->cancelQuery(abNumber, this);
         providerQueried = false;
     }
     if (timers.size()) { //release active timers
@@ -248,20 +256,33 @@ void Billing::abortThis(const char * reason/* = NULL*/, bool doReport/* = true*/
     doFinalize(doReport);
 }
 
-bool Billing::startCAPDialog(void)
+bool Billing::startCAPDialog(INScfCFG * use_scf)
 {
-    if (capSess->getState() != smsc::inman::inap::ssnBound) {
-        smsc_log_error(logger, "Billing[%u.%u]: TCSR[%u:%u] session is not bounded",
-                       _bconn->bConnId(), _bId, capSess->getSSNid(),  capSess->getUID());
+    SSNSession * ssnSess = _bconn->ssnSession();
+    if (!ssnSess) {
+        smsc_log_error(logger, "Billing[%u.%u]: SSN session is not available/bound",
+                       _bconn->bConnId(), _bId);
         return false;
     }
+    if (!(capSess = ssnSess->newSRsession(_cfg.ss7.ssf_addr,
+            ACOID::id_ac_cap3_sms_AC, 146, use_scf->scf.scfAddress))) {
+        std::string sid;
+        TCSessionAC::mkSignature(sid, _cfg.ss7.own_ssn, _cfg.ss7.ssf_addr,
+                                 ACOID::id_ac_cap3_sms_AC, 146, &(use_scf->scf.scfAddress));
+        smsc_log_error(logger, "Billing[%u.%u]: Unable to init TCSR session: %s",
+                       _bconn->bConnId(), _bId, sid.c_str());
+        return false;
+    }
+    smsc_log_debug(logger, "Billing[%u.%u]: using TCSR[%u]: %s", _bconn->bConnId(), _bId,
+                   capSess->getUID(), capSess->Signature().c_str());
+
     try { //Initiate CAP3 dialog
-        capDlg = new CapSMSDlg(capSess, this, _cfg.capTimeout, logger); //initialize TCAP dialog
+        capDlg = new CapSMSDlg(capSess, this, _cfg.ss7.capTimeout, logger); //initialize TCAP dialog
         capDlgActive = true;
         smsc_log_debug(logger, "Billing[%u.%u]: Initiating CapSMS[%u]",
                         _bconn->bConnId(), _bId, capDlg->getId());
 
-        InitialDPSMSArg arg(smsc::inman::comp::DeliveryMode_Originating, _cfg.serviceKey);
+        InitialDPSMSArg arg(smsc::inman::comp::DeliveryMode_Originating, use_scf->scf.serviceKey);
 
         arg.setDestinationSubscriberNumber(cdr._dstAdr.c_str());
         arg.setCallingPartyNumber(cdr._srcAdr.c_str());
@@ -291,7 +312,7 @@ void Billing::StartTimer(unsigned short timeout)
 {
     OPAQUE_OBJ  timerArg;
     timerArg.setUInt((unsigned)state);
-    StopWatch * timer = tmWatcher->createTimer(this, &timerArg, false);
+    StopWatch * timer = _cfg.tmWatcher->createTimer(this, &timerArg, false);
     smsc_log_debug(logger, "Billing[%u.%u]: Starting timer[%u]:%u",
                 _bconn->bConnId(), _bId, timer->getId(), state);
     timers.insert(TimersMAP::value_type((unsigned)state, timer));
@@ -351,22 +372,87 @@ bool Billing::onChargeSms(ChargeSms* sms)
                         && (cdr._bearer == CDRRecord::dpSMS)) 
                    ) ? false : true;
 
-    //ask AbonentsCache for abonent type
-    AbonentBillType ab_type = _cfg.abCache->getAbonentInfo(abNumber);
-    if (!postpaidBill && (ab_type == smsc::inman::cache::btUnknown)
-        && !_cfg.postpaidRPC.size() && _cfg.abProvider) {
-        //IN point unable to tell abonent billing type, request cache
-        //to retrieve it from AbonentProvider
-        if (_cfg.abProvider->startQuery(abNumber, this)) {
+    AbonentRecord   abRec; //ab_type = btUnknown
+    if (postpaidBill
+        || ((abType = _cfg.abCache->getAbonentInfo(abNumber, &abRec))
+             == smsc::inman::cache::btPostpaid)) {
+        postpaidBill = true; //do not interact IN platform, just create CDR
+        chargeResult(smsc::inman::interaction::CHARGING_POSSIBLE);
+        return true;
+    }
+
+    //here goes: btPrepaid or btUnknown
+    abPolicy = _cfg.policies->getPolicy(&abNumber);
+    smsc_log_debug(logger, "Billing[%u.%u]: using policy: %s",
+                           _bconn->bConnId(), _bId, abPolicy->ident);
+
+    if (abRec.getSCFinfo() && (abRec.ab_type == smsc::inman::cache::btPrepaid)) {
+        return ConfigureSCFandCharge(abRec.ab_type, &abRec.gsmSCF); 
+    }
+    // configure SCF by quering provider
+    IAProviderITF *prvd = abPolicy->getIAProvider(logger);
+    if (prvd) {
+        if (prvd->startQuery(abNumber, this)) {
             providerQueried = true;
             StartTimer(_cfg.abtTimeout);
-            return true; //execution will continue in onAbonentQueried() by another thread.
+            return true; //execution will continue in onIAPQueried() by another thread.
         }
-        smsc_log_error(logger, "Billing[%u.%u]: startQuery(%s) failed!",
+        smsc_log_error(logger, "Billing[%u.%u]: startIAPQuery(%s) failed!",
                        _bconn->bConnId(), _bId, abNumber.getSignals());
-        //continue with btUnknown
     }
-    ChargeAbonent(ab_type);
+    return ConfigureSCFandCharge(abRec.ab_type, NULL);
+}
+
+bool Billing::ConfigureSCFandCharge(AbonentBillType ab_type, const MAPSCFinfo * p_scf/* = NULL*/)
+{
+    abType = ab_type;
+
+    if (p_scf) { //SCF is set for abonent by cache/IAProvider
+        abScf.scf = *p_scf;
+        //lookup policy for extra SCF parms (serviceKey, RPC lists)
+        abPolicy->getSCFparms(&abScf);
+    } else {
+        switch (abType) {
+        case smsc::inman::cache::btUnknown: {
+            INScfCFG * pin = NULL;
+            if (abPolicy->scfMap.size() == 1) { //single IN serving, look for postpaidRPC
+                pin = (*(abPolicy->scfMap.begin())).second;
+                if (pin->postpaidRPC.size())
+                    abScf = *pin;
+            }
+            if (!pin) {
+                smsc_log_error(logger, "Billing[%u.%u]: unable to determine"
+                                       " abonent type/SCF, switching to CDR mode",
+                               _bconn->bConnId(), _bId);
+                postpaidBill = true;
+            }
+        } break;
+
+        case smsc::inman::cache::btPrepaid: {
+            if (abPolicy->scfMap.size() == 1) { //single IN serving
+                abScf = *((*(abPolicy->scfMap.begin())).second);
+            } else {
+                smsc_log_error(logger, "Billing[%u.%u]: unable to determine"
+                                       " abonent SCF, switching to CDR mode",
+                               _bconn->bConnId(), _bId);
+                postpaidBill = true;
+            }
+        } break;
+        default:; //case smsc::inman::cache::btPostpaid:
+            postpaidBill = true;
+        }
+
+    }
+    if (!postpaidBill) {
+        smsc_log_debug(logger, "Billing[%u.%u]: using SCF %s:{%u}", _bconn->bConnId(), _bId, 
+                       abScf._ident.size() ? abScf.ident() : abScf.scf.scfAddress.getSignals(),
+                       abScf.scf.serviceKey);
+        postpaidBill = !startCAPDialog(&abScf);
+    }
+
+
+    if (postpaidBill) //do not interact IN platform, just create CDR
+        chargeResult(smsc::inman::interaction::CHARGING_POSSIBLE);
     return true;
 }
 
@@ -397,25 +483,6 @@ void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes)
     return;
 }
 
-void Billing::ChargeAbonent(AbonentBillType ab_type)
-{
-    smsc_log_debug(logger, "Billing[%u.%u]: charging, abonent type: %s (%u)",
-                    _bconn->bConnId(), _bId, _sabBillType[ab_type], (unsigned)ab_type);
-
-    abBillType = ab_type;
-    if ((ab_type == smsc::inman::cache::btPostpaid)
-        || ((ab_type == smsc::inman::cache::btUnknown)
-            && !_cfg.postpaidRPC.size()))
-        postpaidBill = true;
-
-    if (!postpaidBill)
-        postpaidBill = !startCAPDialog();
-
-    if (postpaidBill) //do not interact IN platform, just create CDR
-        chargeResult(smsc::inman::interaction::CHARGING_POSSIBLE);
-    return;
-}
-
 //NOTE: bilMutex should be locked upon entry
 void Billing::chargeResult(ChargeSmsResult_t chg_res, uint32_t inmanErr /* = 0*/)
 {
@@ -430,7 +497,7 @@ void Billing::chargeResult(ChargeSmsResult_t chg_res, uint32_t inmanErr /* = 0*/
     }
     smsc_log_info(logger, "Billing[%u.%u]: <-- CHARGING_%s, abonent(%s) type: %s (%u)",
             _bconn->bConnId(), _bId, reply.c_str(), abNumber.getSignals(),
-            _sabBillType[abBillType], (unsigned)abBillType);
+            _sabBillType[abType], (unsigned)abType);
 
     ChargeSmsResult res(inmanErr, chg_res);
     res.setDialogId(_bId);
@@ -525,14 +592,10 @@ void Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
         smsc_log_debug(logger, "Billing[%u.%u]: operation is timed out at state: %u",
                     _bconn->bConnId(), _bId, (unsigned)state);
         if (state == Billing::bilStarted) {
-            //abonent type query is expired, process in postpaid mode.
-            if (!postpaidBill)
-                smsc_log_debug(logger, "Billing[%u.%u]: switched to billing via CDR",
-                        _bconn->bConnId(), _bId);
-            postpaidBill = true;
-            _cfg.abProvider->cancelQuery(abNumber, this);
+            //abonent provider query is expired
+            abPolicy->getIAProvider(logger)->cancelQuery(abNumber, this);
             providerQueried = false;
-            ChargeAbonent(smsc::inman::cache::btUnknown);
+            ConfigureSCFandCharge(smsc::inman::cache::btUnknown, NULL);
             return;
         }
         if (state == Billing::bilContinued) {
@@ -561,8 +624,8 @@ void Billing::onIAPQueried(const AbonentId & ab_number, AbonentBillType ab_type,
     }
     StopTimer(state);
     state = bilQueried;
-    ChargeAbonent(ab_type);
-    return; //grd off
+    ConfigureSCFandCharge(ab_type, scf);
+    return;
 }
 
 /* -------------------------------------------------------------------------- *
@@ -576,26 +639,27 @@ void Billing::onDPSMSResult(unsigned char rp_cause/* = 0*/)
     ChargeSmsResult_t   chgRes = smsc::inman::interaction::CHARGING_POSSIBLE;
 
     if (!rp_cause) {    //ContinueSMS
-        if (abBillType != smsc::inman::cache::btPrepaid)  //Update abonents cache
-            _cfg.abCache->setAbonentInfo(abNumber, abBillType = smsc::inman::cache::btPrepaid);
+        if (abType != smsc::inman::cache::btPrepaid)  //Update abonents cache
+            _cfg.abCache->setAbonentInfo(abNumber, abType = smsc::inman::cache::btPrepaid,
+                                         0, &abScf.scf);
     } else {            //ReleaseSMS
         capDlgActive = false;
         //check for RejectSMS causes for postpaid abonents:
-        for (RPCList::iterator it = _cfg.postpaidRPC.begin(); 
-                                it != _cfg.postpaidRPC.end(); it++) {
+        for (RPCList::iterator it = abScf.postpaidRPC.begin(); 
+                                it != abScf.postpaidRPC.end(); it++) {
             if ((*it) == rp_cause) {
                 postpaidBill = true;
                 //Update abonents cache
-                if (abBillType != smsc::inman::cache::btPostpaid)
-                    _cfg.abCache->setAbonentInfo(abNumber, abBillType = smsc::inman::cache::btPostpaid);
+                if (abType != smsc::inman::cache::btPostpaid)
+                    _cfg.abCache->setAbonentInfo(abNumber, abType = smsc::inman::cache::btPostpaid);
                 break;
             }
         }
         if (!postpaidBill) { //check for RejectSMS causes indicating that abonent
                              //can't be charged (not just the technical failure)
             postpaidBill = true;
-            for (RPCList::iterator it = _cfg.rejectRPC.begin();
-                                    it != _cfg.rejectRPC.end(); it++) {
+            for (RPCList::iterator it = abScf.rejectRPC.begin();
+                                    it != abScf.rejectRPC.end(); it++) {
                 if ((*it) == rp_cause) {
                     postpaidBill = false;
                     break;
