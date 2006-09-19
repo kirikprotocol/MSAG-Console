@@ -80,7 +80,7 @@ struct AbonentCacheCFG {
     const char *nmDir;  //
 
     AbonentCacheCFG() {
-        interval = RAM = 0; /*nmFile = */nmDir = NULL;
+        interval = RAM = fileRcrd = 0; /*nmFile = */nmDir = NULL;
     }
 };
 
