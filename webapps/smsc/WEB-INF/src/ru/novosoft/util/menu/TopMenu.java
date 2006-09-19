@@ -55,6 +55,10 @@ public class TopMenu extends ArrayList {
             profileItems.add(new MenuItem("menu.profiles.lookup", "/smsc/profiles/lookup.jsp", MenuItem.VISIBLE_IN_ALL));
             add(new MenuItem("menu.profiles", "", profileItems));
 
+            Collection snmpItems = new ArrayList();
+            snmpItems.add(new MenuItem("menu.snmp.alarmStat", "/smsc/snmp/alarmStat.jsp", MenuItem.VISIBLE_IN_ALL));
+            add(new MenuItem("menu.snmp", "", snmpItems));
+
             Collection serviceItems = new ArrayList();
             serviceItems.add(new MenuItem("menu.services.hosts", "/smsc/hosts/index.jsp", MenuItem.VISIBLE_IN_ALL));
             serviceItems.add(new MenuItem("menu.services.services", "/smsc/services/index.jsp", MenuItem.VISIBLE_IN_SINGLE));
