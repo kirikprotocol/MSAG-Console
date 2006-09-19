@@ -9,6 +9,7 @@
 #include "core/synchronization/Mutex.hpp"
 #include "core/threads/Thread.hpp"
 #include "Interconnect.h"
+#include "SnmpTrap.hpp"
 
 namespace smsc{
 namespace admin{
@@ -71,6 +72,10 @@ public:
       smsc_log_error(logger, "Couldn't start service \"%s\"", serviceId);
       return -1;
     }
+
+    char msg[1024];
+    sprintf(msg,"SYSTEM %s Started (AlarmId=%s; severity=1)",serviceId,serviceId);
+    SnmpTrap("SYSTEM",serviceId,1,msg);
 
     while (!isStopping)
     {
@@ -143,6 +148,10 @@ public:
 
       sleep(1);
     }
+
+    sprintf(msg,"SYSTEM %s Stopped (AlarmId=%s; severity=5)",serviceId,serviceId);
+    SnmpTrap("SYSTEM",serviceId,5,msg);
+
     isStopped_ = true;
     __trace2__("ChildShutdownWaiter : waiter \"%s\" %d FINISHED", serviceId, pid);
     return 0;
