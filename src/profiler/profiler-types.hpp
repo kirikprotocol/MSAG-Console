@@ -122,29 +122,31 @@ struct Profile{
 
   Profile& operator=(const Profile& src)
   {
-    codepage=src.codepage;
-    reportoptions=src.reportoptions;
-    locale=src.locale;
-    hide=src.hide;
-    hideModifiable=src.hideModifiable;
+    if ( this != &src ) {
+      codepage=src.codepage;
+      reportoptions=src.reportoptions;
+      locale=src.locale;
+      hide=src.hide;
+      hideModifiable=src.hideModifiable;
 
-    divert=src.divert;
-    divertModifiable=src.divertModifiable;
-    divertActive=src.divertActive;
-    divertActiveAbsent=src.divertActiveAbsent;
-    divertActiveBlocked=src.divertActiveBlocked;
-    divertActiveBarred=src.divertActiveBarred;
-    divertActiveCapacity=src.divertActiveCapacity;
+      divert=src.divert;
+      divertModifiable=src.divertModifiable;
+      divertActive=src.divertActive;
+      divertActiveAbsent=src.divertActiveAbsent;
+      divertActiveBlocked=src.divertActiveBlocked;
+      divertActiveBarred=src.divertActiveBarred;
+      divertActiveCapacity=src.divertActiveCapacity;
 
-    udhconcat=src.udhconcat;
-    translit=src.translit;
-    closedGroupId=src.closedGroupId;
-    accessMaskIn=src.accessMaskIn;
-    accessMaskOut=src.accessMaskOut;
-    offset=src.offset;
+      udhconcat=src.udhconcat;
+      translit=src.translit;
+      closedGroupId=src.closedGroupId;
+      accessMaskIn=src.accessMaskIn;
+      accessMaskOut=src.accessMaskOut;
+      offset=src.offset;
 #ifdef SMSEXTRA
-    subscription=src.subscription;
+      subscription=src.subscription;
 #endif
+    }
     return *this;
   }
 
