@@ -677,6 +677,19 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     {
       smsc_log_warn(log, "Profiler:Unrecognized default report options");
     }
+
+    try {
+      defProfile.accessMaskIn = cfg.cfgman->getInt("profiler.defaultAccessMaskIn");
+    } catch(smsc::util::config::ConfigException& ex){
+      smsc_log_warn(log, "profiler.defaultAccessMaskIn not found, using hardcoded default(%d)",defProfile.accessMaskIn);
+    }
+
+    try {
+      defProfile.accessMaskOut = cfg.cfgman->getInt("profiler.defaultAccessMaskOut");
+    } catch(smsc::util::config::ConfigException& ex){
+      smsc_log_warn(log, "profiler.defaultAccessMaskOut not found, using hardcoded default(%d)",defProfile.accessMaskOut);
+    }
+
     profiler=new smsc::profiler::Profiler(defProfile,
                &smeman,
                cfg.cfgman->getString("profiler.systemId"));
