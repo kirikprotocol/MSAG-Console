@@ -60,7 +60,7 @@
           NOTE 2: serviceKey from IN-platform config overrides the one returned by abonent provider
          -->
       <section name="MTC_Nsk_Default">
-          <param name="policy" type="string">IN_Nsk_Huawei</param> <!-- get contract from gsmSCF  -->
+          <param name="policy" type="string">, IN_Nsk_Huawei</param> <!-- get contract from gsmSCF, No provider at all !!!  -->
           <!-- param name="addrPool" type="string">7913%7[0-9]</param -->  <!-- address pool mask -->
           <!-- param name="active" type="bool">true</param -->    <!-- use or ignore this policy, default: true -->
       </section>
