@@ -32,7 +32,7 @@ void ActionLog::init(const SectionParams& params,PropertyObject propertyObject)
 
     const char * name = 0;
     strCategory = params["category"];
-    std::string s = "rule." + ttToStr(propertyObject.transport) + "." + strCategory;
+    std::string s = "rule." + ttToStr(propertyObject.transport);
 
     logger = Logger::getInstance(s.c_str());
 
@@ -43,12 +43,14 @@ void ActionLog::init(const SectionParams& params,PropertyObject propertyObject)
 
 bool ActionLog::run(ActionContext& context)
 {
+    char buf[20];
     Property * p1 = 0;
     Property * p2 = 0;
 
-    std::string s2;
+    buf[19] = 0;
+    std::string s2 = strCategory + "." + lltostr(context.getCommandProperty().serviceId, buf + 19) + ": ";
 
-    if (ftMessage != ftUnknown)  
+    if (ftMessage != ftUnknown)
     {
         if (!(p2 = context.getProperty(strMsg))) 
         {
@@ -56,10 +58,10 @@ bool ActionLog::run(ActionContext& context)
             return true;
         }
 
-        s2 = p2->getStr();
+        s2 += p2->getStr();
     } 
     else
-        s2 = strMsg;
+        s2 += strMsg;
 
     switch (level) 
     {
