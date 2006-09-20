@@ -180,11 +180,21 @@ protected:
             if (!str || !str[0])
                 return false;
 
-            text = new char[strlen(str)+1];
+            size_t tSz = strlen(str);
+            text = new char[tSz + 1];
             strcpy(text, str);
 
             char *pos = text,  *commaPos = 0;
-            while ((commaPos = strchr(pos, ',')) != 0) {
+            //cut provider name
+            if ((commaPos = strchr(pos, ',')) != 0) {
+                *commaPos = 0;
+                while(isspace(*pos) && (pos < commaPos))
+                    pos++;
+                prvdNm = (pos != commaPos) ? pos : NULL;
+                pos = commaPos + 1;
+            }
+            //cut SCF names
+            while ((pos < (text + tSz)) && (commaPos = strchr(pos, ','))) {
                 *commaPos = 0;
                 while(isspace(*pos) && (pos < commaPos))
                     pos++;
@@ -192,22 +202,20 @@ protected:
                     scfNms.push_back(pos);
                 pos = commaPos + 1;
             }
-            while(*pos && isspace(*pos))
+            while((pos < (text + tSz)) && isspace(*pos))
                 pos++;
             if (*pos)
                 scfNms.push_back(pos);
-            if (!scfNms.size())
-                return false;
 
-            prvdNm = *(scfNms.begin());
-            scfNms.pop_front();
+            if (!prvdNm && !scfNms.size())
+                return false;
             return true;
         }
 
         void print(std::string & pstr) const
         {
             pstr += "Prvd: ";
-            pstr += prvdNm;
+            pstr += prvdNm ? prvdNm : "<none>";
             pstr += ", INs: ";
             if (scfNms.size()) {
                 CPTRList::const_iterator it = scfNms.begin();
