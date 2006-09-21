@@ -16,6 +16,7 @@
 #include <string.h>
 #include <errno.h>
 #include "util/sleep.h"
+#include "logger/Logger.h"
 
 namespace smsc{
 namespace sme{
@@ -159,6 +160,7 @@ public:
     lastUpdate(0)
   {
     log=smsc::logger::Logger::getInstance("smppdump");
+    logrd=smsc::logger::Logger::getInstance("smpp.rd");
     running=false;
   }
   static void sigdisp(int sig)
@@ -167,6 +169,7 @@ public:
   }
   int Execute()
   {
+    smsc_log_info(logrd,"smpp reader started");
 #ifndef _WIN32
     sigset(16,sigdisp);
 #endif
@@ -179,15 +182,15 @@ public:
       }catch(...)//exception& e)
       {
         //__trace2__("ex:%s",e.what());
-        __trace2__("Reader: About to call handleError, stopped=%d",stopped);
+        smsc_log_debug(logrd,"Reader: About to call handleError, stopped=%d",stopped);
         if(!stopped)listener->handleError(smppErrorNetwork);
         break;
       }
       if(pdu)
       {
-        __trace2__("SmppReader: received pdu, cmdid=%x, seqnum=%d",pdu->get_commandId(),pdu->get_sequenceNumber());
+        smsc_log_debug(logrd,"SmppReader: received pdu, cmdid=%x, seqnum=%d",pdu->get_commandId(),pdu->get_sequenceNumber());
         listener->handleEvent(pdu);
-        __trace__("SmppReader: handle event ok");
+        smsc_log_debug(logrd,"SmppReader: handle event ok");
         pdu=NULL;
       }else
       {
@@ -196,7 +199,7 @@ public:
       }
     }
     running=false;
-    __trace__("smpp reader exited");
+    smsc_log_info(logrd,"smpp reader exited");
     return 0;
   }
 
@@ -212,6 +215,7 @@ protected:
   int idleTimeout;
   int disconnectTimeout;
   smsc::logger::Logger* log;
+  smsc::logger::Logger* logrd;
   volatile bool running;
 
   time_t lastUpdate;
@@ -249,18 +253,18 @@ protected:
 
   SmppHeader* receivePdu()
   {
-    __trace__("SmppReader: receive pdu");
+    smsc_log_debug(logrd,"SmppReader: receive pdu");
     lastUpdate=time(NULL);
     buf.offset=0;
     buf.setSize(64);
     while(buf.offset<4)
     {
       if(!IdleCheck())continue;
-      __trace2__("SmppReader: read socket %p",socket);
+      smsc_log_debug(logrd,"SmppReader: read socket %p",socket);
       int rd=socket->Read(buf.buffer+buf.offset,4-buf.offset);
       if(rd<=0)
       {
-        __trace2__("SmppReader: Socket error %s",strerror(errno));
+        smsc_log_debug(logrd,"SmppReader: Socket error %s",strerror(errno));
         return NULL;
       }
       buf.offset+=rd;
@@ -269,7 +273,7 @@ protected:
     int sz=ntohl(*((int*)buf.buffer));
     if(sz>70000)
     {
-      __warning2__("Invalid pdu size=%d",sz);
+      smsc_log_warn(logrd,"Invalid pdu size=%d",sz);
       return NULL;
     }
     buf.setSize(sz);
@@ -281,7 +285,7 @@ protected:
       buf.offset+=rd;
     }
 
-    DumpPduBuffer(log,"in :",buf.buffer);
+    DumpPduBuffer(log,"in:",buf.buffer);
     SmppStream s;
     assignStreamWith(&s,buf.buffer,sz,true);
     return fetchSmppPdu(&s);
@@ -301,9 +305,12 @@ public:
   {
     running=false;
     shutdown=false;
+    log=smsc::logger::Logger::getInstance("smppdump");
+    logwr=smsc::logger::Logger::getInstance("smpp.wr");
   }
   int Execute()
   {
+    smsc_log_info(logwr,"Starting smppwriter");
     PduBuffer pb;
     mon.Lock();
     running=true;
@@ -336,7 +343,7 @@ public:
       queue.Pop(pb);
       delete pb.buf;
     }
-    __trace__("Exiting smppwriter");
+    smsc_log_info(logwr,"Exiting smppwriter");
     mon.Unlock();
     running=false;
     return 0;
@@ -383,10 +390,15 @@ protected:
   bool running;
   bool shutdown;
 
+  smsc::logger::Logger* log;
+  smsc::logger::Logger* logwr;
+
+
   void sendPdu(PduBuffer& pb)
   {
     int count=0,wr;
-    __trace2__("writer:sending buffer %p, %d",pb.buf,pb.size);
+    smsc_log_debug(logwr,"writer:sending buffer %p, %d",pb.buf,pb.size);
+    DumpPduBuffer(log,"out:",pb.buf);
     do{
       wr=socket->Write(pb.buf+count,pb.size-count);
       if(wr<=0)throw Exception("Failed to send smpp packet");
@@ -648,7 +660,8 @@ public:
     atrans(*this),
     closed(true)
   {
-    __trace2__("SmppSession: CREATE SESSION %p", this);
+    log=smsc::logger::Logger::getInstance("smpp.ses");
+    smsc_log_info(log,"SmppSession: create session %s:%p", config.sid.c_str(),this);
   }
   ~SmppSession()
   {
@@ -660,12 +673,11 @@ public:
   }
   void connect(int bindtype=BindType::Transceiver)throw(SmppConnectException)
   {
-    __trace2__("SmppSession: CONNECT %p, %s:%d to=%d",this, cfg.host.c_str(), cfg.port, cfg.timeOut);
+    smsc_log_info(log,"SmppSession: connect %p, %s:%d to=%d",this, cfg.host.c_str(), cfg.port, cfg.timeOut);
     if(!closed)return;
     if(socket.Init(cfg.host.c_str(),cfg.port,cfg.timeOut)==-1)
       throw SmppConnectException(SmppConnectException::Reason::networkResolve);
 
-    smsc::logger::Logger *log=smsc::logger::Logger::getInstance("SmppSession.connect");
     if(socket.Connect()==-1)
       throw SmppConnectException(SmppConnectException::Reason::networkConnect);
     reader.Start();
@@ -710,7 +722,7 @@ public:
                SmppConnectException::Reason::unknown;
       if(resp)
       {
-        __warning2__("Unexpected bind response code:%04X",resp->get_header().get_commandStatus());
+        smsc_log_warn(log,"Unexpected bind response code:%04X",resp->get_header().get_commandStatus());
         disposePdu((SmppHeader*)resp);
       }
       reader.Stop();
@@ -721,13 +733,13 @@ public:
       throw SmppConnectException(reason);
     }
     disposePdu((SmppHeader*)resp);
-    __trace2__("SmppSession: CONNECTED %p",this);
+    smsc_log_info(log,"SmppSession: connected %p",this);
     closed=false;
   }
   void close()
   {
     if(closed)return;
-    __trace2__("SmppSession: CLOSING %p",this);
+    smsc_log_info(log,"SmppSession: closing %p",this);
     reader.Stop();
     writer.Stop();
     socket.Close();
@@ -776,6 +788,8 @@ protected:
   bool closed;
   int bindType;
 
+  smsc::logger::Logger* log;
+
   IntHash<Lock> lock;
 
   void processTimeouts()
@@ -787,7 +801,7 @@ protected:
     time_t now=time(NULL);
     while(i.Next(key,l))
     {
-      __trace2__("to check:%d<%d",l.timeOut,now);
+      smsc_log_debug(log,"to check:%d<%d",l.timeOut,now);
       if(l.timeOut<now)
       {
         if(!l.pdu)
@@ -807,7 +821,7 @@ protected:
   {
     processTimeouts();
     MutexGuard g(lockMutex);
-    __trace2__("registerPdu seq=%d",seq);
+    smsc_log_debug(log,"registerPdu seq=%d",seq);
     if(lock.Exist(seq))
     {
       throw smsc::util::Exception("Attempt to register pdu with already registered seq=%d",seq);
@@ -1022,7 +1036,7 @@ protected:
     using namespace smsc::smpp::SmppCommandSet;
     if(!checkIncomingValidity(pdu))
     {
-      __warning2__("processIncoming: received pdu in invalid bind state (%x,%d)",pdu->get_commandId(),bindType);
+      smsc_log_warn(log,"processIncoming: received pdu in invalid bind state (%x,%d)",pdu->get_commandId(),bindType);
       PduGenericNack gnack;
       gnack.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
       atrans.sendGenericNack(gnack);
@@ -1085,7 +1099,7 @@ protected:
       {
         if(lock.Exist(seq))
         {
-          __trace2__("processIncoming: lock for %d found",seq);
+          smsc_log_debug(log,"processIncoming: lock for %d found",seq);
           Lock &l=lock.Get(seq);
           if(l.event)
           {

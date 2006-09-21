@@ -1646,6 +1646,8 @@ int main(int argc,char* argv[])
         int retcode;
         try{
           buf.buffer[sz]=0;
+          static smsc::logger::Logger* log=smsc::logger::Logger::getInstance("msgdmp");
+          smsc_log_debug(log,"msgdump:\n=== begin ===\n%s\n=== end ===",buf.buffer);
           retcode=ProcessMessage(buf.buffer,sz);
         }catch(exception& e)
         {
