@@ -1253,11 +1253,11 @@ AdapterProperty * SmppCommandAdapter::getDataSmProperty(SmsCommand& data,const s
     }
     else if (data.dir == dsdSc2Srv) 
     {
-        property = getSubmitProperty(data.sms, name, FieldId);
+        property = getDeliverProperty(data.sms, name, FieldId);
     }
     else if (data.dir == dsdSrv2Sc) 
     {
-        property = getDeliverProperty(data.sms, name, FieldId);
+        property = getSubmitProperty(data.sms, name, FieldId);
     }
 
    /* 
