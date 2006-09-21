@@ -63,6 +63,7 @@ enum CommandId
   PROCESSEXPIREDRESP      //25
 };
 
+/*
 enum CommandStatus{
   CMD_OK=0,
   CMD_ERR_TEMP=1,
@@ -70,6 +71,7 @@ enum CommandStatus{
   CMD_ERR_FATAL=3,
   CMD_ERR_RESCHEDULENOW=4
 };
+*/
 
 enum DataSmDirection{
   dsdUnknown,
@@ -80,10 +82,11 @@ enum DataSmDirection{
 };
 
 
+/*
 #define MAKE_COMMAND_STATUS(type,code) ((type<<16)|code)
 #define GET_STATUS_TYPE(status) ((status>>16)&7)
 #define GET_STATUS_CODE(status) (status&0x0ffff)
-
+*/
 
 struct SmsResp
 {
@@ -945,6 +948,7 @@ public:
       ((SmsResp*)_cmd->dta)->set_messageId(xsm->get_messageId());
       ((SmsResp*)_cmd->dta)->set_status(xsm->header.get_commandStatus());
 
+      /*
       if(pdu->commandId==SmppCommandSet::DELIVERY_SM_RESP || pdu->commandId==SmppCommandSet::DATA_SM_RESP)
       {
         int status=((SmsResp*)_cmd->dta)->get_status()&0xffff;
@@ -966,6 +970,7 @@ public:
             );
         }
       }
+      */
       if(pdu->commandId==SmppCommandSet::DATA_SM_RESP)
       {
         ((SmsResp*)_cmd->dta)->set_dataSm();
