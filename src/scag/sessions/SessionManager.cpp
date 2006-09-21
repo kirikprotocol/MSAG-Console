@@ -365,8 +365,8 @@ SessionManagerImpl::CSessionSetIterator SessionManagerImpl::DeleteSession(CSessi
     SessionExpirePool.erase(it);
     store.deleteSession(accessData->SessionKey);
 
+    smsc_log_debug(logger,"SessionManager: session expired (addr: %s, USR: %d)", accessData->SessionKey.abonentAddr.toString().c_str(), accessData->SessionKey.USR);
     delete accessData;
-    smsc_log_debug(logger,"SessionManager: session expired");
 
     return res;
 }
