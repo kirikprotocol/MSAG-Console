@@ -4,7 +4,8 @@ SMSC_DIR=/home/serge/smsc
 ; also specify apporpriate xtarget values in makeargs like:
 ; XTARGET="-xtarget=ultra3 -xarch=v9 -xmemalign=8i -xcode=pic32"
 B64=NO
-MAKE_ARGS=CXX=CC DEBUG=YES TRACE=YES DISABLE_SMPP_CHECKS=YES
+SMSX=YES
+MAKE_ARGS=CXX=CC DEBUG=YES TRACE=YES DISABLE_SMPP_CHECKS=YES SMSX=YES
 CATALINA_HOME=/home/serge/build/distr/tomcat
 CATALINA_BASE=/home/serge/build/distr
 TEMPLATE_PROPS=/home/serge/smsc/distribs/smsc/smsc.properties

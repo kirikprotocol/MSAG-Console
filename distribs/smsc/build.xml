@@ -31,6 +31,9 @@
   <condition property="B64CLASS" value="package ru.novosoft.smsc.util;${line.separator}public class Support64Bit { public static final boolean enabled = true; }" else ="package ru.novosoft.smsc.util;${line.separator}public class Support64Bit { public static final boolean enabled = false; }">
     <equals arg1="${B64}" arg2="YES"/>
   </condition>
+  <condition property="EXTPROFILECLASS" value="package ru.novosoft.smsc.admin.profiler;${line.separator}public class SupportExtProfile{public static final boolean enabled = true;}" else="package ru.novosoft.smsc.admin.profiler;${line.separator}public class SupportExtProfile{public static final boolean enabled = false;}">
+    <equals arg1="${SMSX}" arg2="YES"/>
+  </condition>
 
   <target name="help">
     <echo>
@@ -62,6 +65,9 @@ Targets:
     <echo file="${WEBSRC_DIR}/WEB-INF/src/ru/novosoft/smsc/util/Support64Bit.java">
       ${B64CLASS}
     </echo> 
+    <echo file="${WEBSRC_DIR}/WEB-INF/src/ru/novosoft/smsc/admin/profiler/SupportExtProfile.java">
+      ${EXTPROFILECLASS}
+    </echo>
     <untar compression="gzip" src="${SMSC_DIR}/config/tomcat/tomcat.tar.gz" dest="${DISTR_DIR}" overwrite="yes"/>
     <chmod perm="775">
       <fileset dir="${DISTR_DIR}" includes="tomcat/bin/*.sh"/>
