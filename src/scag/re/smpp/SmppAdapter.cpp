@@ -27,7 +27,7 @@ IntHash<AccessType> SmppCommandAdapter::DeliverFieldsAccess = SmppCommandAdapter
 IntHash<AccessType> SmppCommandAdapter::DataSmFieldsAccess = SmppCommandAdapter::InitDataSmAccess();
 IntHash<AccessType> SmppCommandAdapter::SubmitRespFieldsAccess = SmppCommandAdapter::InitSubmitRespAccess();
 IntHash<AccessType> SmppCommandAdapter::DeliverRespFieldsAccess = SmppCommandAdapter::InitDeliverRespAccess();
-
+IntHash<AccessType> SmppCommandAdapter::DataSmRespFieldsAccess = SmppCommandAdapter::InitDataSmRespAccess();
 
 
 AccessType SmppCommandAdapter::CheckAccess(int handlerType, const std::string& name)
@@ -98,7 +98,9 @@ AccessType SmppCommandAdapter::CheckAccess(int handlerType, const std::string& n
         pFieldId = DataSmRespFieldNames.GetPtr(name.c_str());
         if (!pFieldId) return atNoAccess;
 
-        return atRead;
+        actype = DataSmRespFieldsAccess.GetPtr(*pFieldId);
+        if (actype) return *actype;
+
         break;
     }
 
@@ -123,6 +125,15 @@ IntHash<AccessType> SmppCommandAdapter::InitDeliverRespAccess()
 
     return hs;
 }
+
+IntHash<AccessType> SmppCommandAdapter::InitDataSmRespAccess()
+{
+    IntHash<AccessType> hs;
+    hs.Insert(STATUS,atReadWrite);
+
+    return hs;
+}
+
 
 
 IntHash<AccessType> SmppCommandAdapter::InitDataSmAccess()
@@ -888,7 +899,7 @@ AdapterProperty * SmppCommandAdapter::getSubmitRespProperty(SMS& data, const std
     switch (FieldId) 
     {
     case STATUS:
-        property = new AdapterProperty(name,this,command->get_status());
+        property = new AdapterProperty(name,this,command->get_resp()->get_status());
         break;
     case MESSAGE_ID:
         //TODO: Inmplement
@@ -916,7 +927,7 @@ AdapterProperty * SmppCommandAdapter::getDeliverRespProperty(SMS& data, const st
     switch (FieldId) 
     {
     case STATUS:
-        property = new AdapterProperty(name,this,command->get_status());
+        property = new AdapterProperty(name,this,command->get_resp()->get_status());
         break;
     case USSD_DIALOG:
         property = new AdapterProperty(name,this,data.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP));
@@ -1251,7 +1262,7 @@ AdapterProperty * SmppCommandAdapter::getDataSmRespProperty(SmsCommand& data,con
     switch (FieldId) 
     {
     case STATUS:
-        property = new AdapterProperty(name,this,command->get_status());
+        property = new AdapterProperty(name,this,command->get_resp()->get_status());
         break;
     case MESSAGE_ID:
         //TODO: Inmplement
@@ -1545,11 +1556,11 @@ void SmppCommandAdapter::changed(AdapterProperty& property)
         break;
     case DELIVERY_RESP:
         if (name!="status") return;
-        command->set_status(property.getInt());
+        command->get_resp()->set_status(property.getInt());
         break;
     case SUBMIT_RESP:
         if (name!="status") return;
-        command->set_status(property.getInt());
+        command->get_resp()->set_status(property.getInt());
         break;
     case DATASM:
         sms = command->get_sms();
@@ -1562,8 +1573,8 @@ void SmppCommandAdapter::changed(AdapterProperty& property)
 
         break;
     case DATASM_RESP:
-        if (name!="status") return;
-        command->set_status(property.getInt());
+        if (name!= "status") return;
+        command->get_resp()->set_status(property.getInt());
         break;
 
 

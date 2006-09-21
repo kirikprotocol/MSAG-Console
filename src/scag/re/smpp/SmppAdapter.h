@@ -136,6 +136,7 @@ namespace scag { namespace re { namespace smpp
         static IntHash<AccessType> SubmitFieldsAccess;
         static IntHash<AccessType> DeliverFieldsAccess;
         static IntHash<AccessType> DataSmFieldsAccess;
+        static IntHash<AccessType> DataSmRespFieldsAccess;
         static IntHash<AccessType> SubmitRespFieldsAccess;
         static IntHash<AccessType> DeliverRespFieldsAccess;
 
@@ -161,6 +162,7 @@ namespace scag { namespace re { namespace smpp
         static IntHash<AccessType> InitDataSmAccess();
         static IntHash<AccessType> InitSubmitRespAccess();
         static IntHash<AccessType> InitDeliverRespAccess();
+        static IntHash<AccessType> InitDataSmRespAccess();
 
 
                                                             
