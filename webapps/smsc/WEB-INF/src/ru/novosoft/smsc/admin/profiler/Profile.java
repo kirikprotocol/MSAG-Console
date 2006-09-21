@@ -50,11 +50,13 @@ public class Profile {
     private long inputAccessMask = 1;
     private long outputAccessMask = 1;
 
+    private long services = 0;
+
 
     public Profile(final Mask mask, final byte codepage, final boolean ussd7bit, final byte reportOptions, final String locale, final byte aliasHide,
                    final boolean aliasModifiable, final String divert, final boolean divertActiveUnconditional, final boolean divertActiveAbsent,
                    final boolean divertActiveBlocked, final boolean divertActiveBarred, final boolean divertActiveCapacity, final boolean divertModifiable,
-                   final boolean udhConcat, final boolean translit, final int groupId, final long inputAccessMask, final long outputAccessMask) {
+                   final boolean udhConcat, final boolean translit, final int groupId, final long inputAccessMask, final long outputAccessMask, final long services) {
         this.mask = mask;
         setUssd7bit(ussd7bit);
         setDivert(divert);
@@ -74,11 +76,12 @@ public class Profile {
         setGroupId(groupId);
         setInputAccessMask(inputAccessMask);
         setOutputAccessMask(outputAccessMask);
+        setServices(services);
     }
 
     public Profile(final Mask mask, final byte codepage, final boolean ussd7bit, final byte reportOptions, final String locale, final byte aliasHide,
                    final boolean aliasModifiable, final String divert, final String divertActive, final boolean divertModifiable, final boolean udhConcat,
-                   final boolean translit, final int groupId, final int inputAccessMask, final int outputAccessMask) {
+                   final boolean translit, final int groupId, final long inputAccessMask, final long outputAccessMask, final long services) {
         this.mask = mask;
         setUssd7bit(ussd7bit);
         setDivert(divert);
@@ -94,11 +97,12 @@ public class Profile {
         setGroupId(groupId);
         setInputAccessMask(inputAccessMask);
         setOutputAccessMask(outputAccessMask);
+        setServices(services);
     }
 
     public Profile(final Mask mask, final String codepage, final String ussd7bit, final String reportOptions, final String locale, final String aliasHide,
                    final String aliasModifiable, final String divert, final String divert_act, final String divert_mod, final String udhConcat,
-                   final String translit, final String groupIdString, final String inputAccessMask, final String outputAccessMask) throws AdminException {
+                   final String translit, final String groupIdString, final String inputAccessMask, final String outputAccessMask, final String services) throws AdminException {
         this.mask = mask;
         setUssd7bit(ussd7bit);
         setDivert(divert);
@@ -114,11 +118,12 @@ public class Profile {
         setGroupId(groupIdString);
         setInputAccessMask(inputAccessMask);
         setOutputAccessMask(outputAccessMask);
+        setServices(services);
     }
 
     public Profile(final Mask mask, final String codepage, final String ussd7bit, final String reportOptions, final String locale, final String aliasHide,
                    final String aliasModifiable, final String divert, final String divert_act, final String divert_mod, final String udhConcat,
-                   final String translit, final int groupId, final int inputAccessMask, final int outputAccessMask) throws AdminException {
+                   final String translit, final int groupId, final long inputAccessMask, final long outputAccessMask, final long services) throws AdminException {
         this.mask = mask;
         setUssd7bit(ussd7bit);
         setDivert(divert);
@@ -134,6 +139,7 @@ public class Profile {
         setGroupId(groupId);
         setInputAccessMask(inputAccessMask);
         setOutputAccessMask(outputAccessMask);
+        setServices(services);
     }
 
 
@@ -151,7 +157,8 @@ public class Profile {
                 (String) profileProperties.get(10),
                 (String) profileProperties.get(11),
                 (String) profileProperties.get(12),
-                (String) profileProperties.get(13));
+                (String) profileProperties.get(13),
+                (SupportExtProfile.enabled ? (String) profileProperties.get(14) : "0"));
     }
 
     public byte getCodepage() {
@@ -415,9 +422,9 @@ public class Profile {
         this.inputAccessMask = inputAccessMask;
     }
 
-    public void setInputAccessMask(final String InputAccessMask) {
+    public void setInputAccessMask(final String inputAccessMask) {
         try {
-            this.inputAccessMask = Long.parseLong(InputAccessMask);
+            this.inputAccessMask = Long.parseLong(inputAccessMask);
         } catch (NumberFormatException e) {
             this.inputAccessMask = 1;
         }
@@ -429,6 +436,22 @@ public class Profile {
 
     public void setOutputAccessMask(final long outputAccessMask) {
         this.outputAccessMask = outputAccessMask;
+    }
+
+    public long getServices() {
+        return services;
+    }
+
+    public void setServices(long services) {
+        this.services = services;
+    }
+
+    public void setServices(final String services) {
+        try {
+            this.services = Long.parseLong(services);
+        } catch (NumberFormatException e) {
+            this.services = 0;
+        }
     }
 
     public void setOutputAccessMask(final String outputAccessMask) {

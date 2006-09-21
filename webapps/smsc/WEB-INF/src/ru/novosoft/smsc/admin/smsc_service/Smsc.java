@@ -11,6 +11,7 @@ import ru.novosoft.smsc.admin.dl.DistributionListManager;
 import ru.novosoft.smsc.admin.profiler.Profile;
 import ru.novosoft.smsc.admin.profiler.ProfileDataFile;
 import ru.novosoft.smsc.admin.profiler.ProfileEx;
+import ru.novosoft.smsc.admin.profiler.SupportExtProfile;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.route.MaskList;
 import ru.novosoft.smsc.admin.route.SME;
@@ -231,8 +232,7 @@ public class Smsc extends Service {
     }
 
     public synchronized Profile profileLookup(final Mask mask) throws AdminException {
-        if (!getInfo().isOnline())
-            throw new AdminException("SMSC is not running.");
+        checkSmscIsOnline();
 
         final Map args = new HashMap();
         args.put("address", mask.getMask());
@@ -244,9 +244,8 @@ public class Smsc extends Service {
     }
 
     public synchronized ProfileEx profileLookupEx(final Mask mask) throws AdminException {
-        if (!getInfo().isOnline())
-            throw new AdminException("SMSC is not running.");
-
+        checkSmscIsOnline();
+        
         final Map args = new HashMap();
         args.put("address", mask.getMask());
         final Object result = call(SMSC_COMPONENT_ID, PROFILE_LOOKUP_EX_METHOD_ID, Type.Types[Type.StringListType], args);
@@ -274,6 +273,7 @@ public class Smsc extends Service {
         profileArg.add(Integer.toString(newProfile.getGroupId()));
         profileArg.add(Long.toString(newProfile.getInputAccessMask()));
         profileArg.add(Long.toString(newProfile.getOutputAccessMask()));
+        if (SupportExtProfile.enabled) profileArg.add(Long.toString(newProfile.getServices())); 
         args.put("profile", profileArg);
         return ((Long) call(SMSC_COMPONENT_ID, PROFILE_UPDATE_METHOD_ID, Type.Types[Type.IntType], args)).intValue();
     }
@@ -714,5 +714,10 @@ public class Smsc extends Service {
             e.printStackTrace();
             throw new AdminException("wrong profiler's default properties section");
         }
+    }
+
+    private void checkSmscIsOnline() throws AdminException {
+        if (!getInfo().isOnline())
+            throw new AdminException("SMSC is not running.");
     }
 }

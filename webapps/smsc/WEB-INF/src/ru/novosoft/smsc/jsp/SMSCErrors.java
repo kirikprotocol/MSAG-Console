@@ -90,6 +90,7 @@ public class SMSCErrors {
             public static final String couldntGetClosedGroupsList = B + "couldntGetClosedGroupsList";
             public static final String couldntDelete = B + "couldntDelete";
             public static final String couldntUpdate = B + "couldntUpdate";
+            public static final String couldntGetSmsExtraServices = B + "couldntSmsExtraServices";
         }
 
 
@@ -310,6 +311,13 @@ public class SMSCErrors {
         public static class smsexport {
             private static final String B = error.B + "smsexport.";
             public static final String ExportFailed = B + "ExportFailed";
+        }
+
+        public static class snmp {
+            private static final String B = error.B + "snmp.";
+            public static final String CouldntGetConfig = B + "CouldntGetConfig";
+            public static final String InitFailed = B + "InitFailed";
+            public static final String CSVisInvalid = B + "CSVisInvalid";
         }
     }
 

@@ -12,6 +12,7 @@ import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.profiler.Profile;
+import ru.novosoft.smsc.admin.profiler.SupportExtProfile;
 import ru.novosoft.smsc.admin.route.Mask;
 
 public class ProfileAlterCommand extends ProfileGenCommand {
@@ -29,14 +30,17 @@ public class ProfileAlterCommand extends ProfileGenCommand {
                 isDivertOptions && !isDivert && !isDivertModifiable && !isDivertActiveAbsent &&
                 !isDivertActiveBarred && !isDivertActiveBlocked && !isDivertActiveCapacity &&
                 !isDivertActiveUnconditional && !isUdhConcat && !isTranslit && !isInputAccessMask &&
-                !isOutputAccessMask) {
+                !isOutputAccessMask && !isServices) {
             ctx.setMessage("expecting 'encoding', 'report', 'locale', 'alias', 'divert' option(s). " +
                     "Syntax: alter profile <profile_address> " +
                     "[report (full|none|final)] [locale <locale_name>] " +
                     "[encoding (default|ucs2|latin1|ucs2-latin1) [ussd7bit]] " +
                     "[alias [hide|nohide|substitute] [modifiable|notmodifiable]] " +
                     "[divert [(set <divert>)|clear] [(on|off) [absent][barred][blocked][capacity][unconditional]] " +
-                    "[modifiable|notmodifiable]] [udhconcat on|off] [translit on|off]");
+                    "[modifiable|notmodifiable]] [udhconcat on|off] [translit on|off] [group <string>] " +
+                    "[inputaccessmask <number> | inputaccessbit <on|off> <bit number:0-31>] " +
+                    "[outputaccessmask <number> | outputaccessbit <on|off> <bit number:0-31>] " +
+                    (SupportExtProfile.enabled ? "[servicesmask <number> | servicesbit <on|off> <bit number:0-31>]" : ""));
             ctx.setStatus(CommandContext.CMD_PARSE_ERROR);
             return;
         }
@@ -71,6 +75,7 @@ public class ProfileAlterCommand extends ProfileGenCommand {
                 }
                 if (isInputAccessMask) profile.setInputAccessMask(inputAccessMask);
                 if (isOutputAccessMask) profile.setOutputAccessMask(outputAccessMask);
+                if (isServices) profile.setServices(services);
                 updateResult = ctx.getSmsc().profileUpdate(mask, profile);
                 switch (updateResult) {
                     case 1:    //pusUpdated

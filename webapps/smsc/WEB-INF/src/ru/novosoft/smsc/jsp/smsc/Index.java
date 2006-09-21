@@ -76,6 +76,8 @@ public class Index extends SmscBean {
                 result = applySmsc();
             else if ("reschedule".equalsIgnoreCase(check))
                 result = applyReschedule();
+            else if ("snmp".equalsIgnoreCase(check))
+                result = applySNMP();
         }
         return result;
     }
@@ -118,6 +120,19 @@ public class Index extends SmscBean {
             return RESULT_OK;
         } catch (Throwable t) {
             logger.error("Couldn't apply changes", t);
+            return error(SMSCErrors.error.couldntApplyChanges, t);
+        }
+    }
+
+    private int applySNMP() {
+        try {
+            //TODO что делать?
+            statuses.setSNMPChanged(false);
+            journal.clear(SubjectTypes.TYPE_snmp);
+
+            return RESULT_OK;
+        } catch (Throwable t) {
+            logger.error("Couldn't apply snmp", t);
             return error(SMSCErrors.error.couldntApplyChanges, t);
         }
     }
@@ -287,6 +302,10 @@ public class Index extends SmscBean {
         return statuses.isScheduleChanged();
     }
 
+    public boolean isSNMPChanged() {
+        return statuses.isSNMPChanged();
+    }
+
     public String getMbApply() {
         return mbApply;
     }
@@ -338,5 +357,9 @@ public class Index extends SmscBean {
 
     public List getJournalReschedule() {
         return journal.getActions(SubjectTypes.TYPE_schedule);
+    }
+
+    public List getJournalSnmp() {
+        return journal.getActions(SubjectTypes.TYPE_snmp);
     }
 }

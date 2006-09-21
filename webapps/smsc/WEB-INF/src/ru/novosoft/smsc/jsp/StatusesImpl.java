@@ -24,11 +24,12 @@ public class StatusesImpl implements Statuses {
     private boolean categoriesChanged = false;
     private boolean scheduleChanged = false;
     private boolean closedGroupChanged = false;
+    private boolean snmpChanged = false;
 
     public boolean isSomethingChanged() {
         return isAliasesChanged() || isHostsChanged() || isProfilesChanged() || isRoutesChanged()
                 || isSmscChanged() || isSubjectsChanged() || isUsersChanged() || isWebXmlChanged()
-                || isProvidersChanged() || isCategoriesChanged() || isScheduleChanged();
+                || isProvidersChanged() || isCategoriesChanged() || isScheduleChanged() || isSNMPChanged();
     }
 
     public boolean isRoutesChanged() {
@@ -171,4 +172,11 @@ public class StatusesImpl implements Statuses {
         this.closedGroupChanged = closedGroupChanged;
     }
 
+    public boolean isSNMPChanged() {
+        return snmpChanged;
+    }
+
+    public void setSNMPChanged(boolean snmpChanged) {
+        this.snmpChanged = snmpChanged;
+    }
 }

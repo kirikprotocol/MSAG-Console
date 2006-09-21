@@ -2,6 +2,8 @@
                  ru.novosoft.smsc.util.StringEncoderDecoder,
                  java.util.Iterator" %>
 <%@ page import="ru.novosoft.smsc.admin.closedgroups.ClosedGroup"%>
+<%@ page import="java.util.Map"%>
+<%@ page import="ru.novosoft.smsc.admin.profiler.SupportExtProfile"%>
 <%--jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.profiles.ProfilesBean"/--%>
 <input type=hidden name=returnPath value="<%=bean.getReturnPath()%>">
 
@@ -140,5 +142,23 @@
     <td><input class=txt name="outputAccessMask" value="<%=bean.getOutputAccessMask()%>" validation="hex"
                onkeyup="resetValidation(this)"></td>
 </tr>
+          <%  if (SupportExtProfile.enabled) {
+              Map extraServices = bean.getSmsExtraServices();
+          %>
+<tr class=row1>
+    <th><%=getLocString("profiles.services")%></th>
+    <td><div class=select>
+          <%
+              for (Iterator i = extraServices.keySet().iterator(); i.hasNext();) {
+                  String bitNum = (String) i.next();
+                  String bitName = (String) extraServices.get(bitNum);
+          %>
+                  <label for=checkedServicesNames><%=bitName%></label>
+                  <input class=check type=checkbox name=checkedServicesNames
+                       value="<%=bitNum%>" <%=bean.isServiceChecked(bitNum) ? "checked" : ""%>>
+        <%    } %>
+    </div></td>
+</tr>
+          <% } %>
 </table>
 </div>

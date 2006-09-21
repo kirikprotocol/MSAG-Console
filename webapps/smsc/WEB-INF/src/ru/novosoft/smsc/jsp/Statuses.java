@@ -74,4 +74,8 @@ public interface Statuses {
     boolean isClosedGroupChanged();
 
     void setClosedGroupChanged(boolean closedGroupChanged);
+
+    boolean isSNMPChanged();
+
+    void setSNMPChanged(boolean snmpChanged);
 }

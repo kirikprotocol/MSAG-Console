@@ -42,6 +42,7 @@ public abstract class ProfileGenCommand extends CommandClass {
     protected String groupIdOrName = "";
     protected int inputAccessMask = 1;
     protected int outputAccessMask = 1;
+    protected int services = 0;
 
     protected boolean isAliasOptions = false;
     protected boolean isDivertOptions = false;
@@ -61,6 +62,7 @@ public abstract class ProfileGenCommand extends CommandClass {
     protected boolean isInputAccessMask = false;
     protected boolean isOutputAccessMask = false;
     protected boolean isGroupNameOrId = false;
+    protected boolean isServices = false;
 
     protected String locale;
     protected boolean isLocale = false;
@@ -216,5 +218,17 @@ public abstract class ProfileGenCommand extends CommandClass {
     public void setGroupIdOrName(String group) {
         this.groupIdOrName = group;
         this.isGroupNameOrId = true;
+    }
+
+    public void setServices(int services) {
+        this.services = services;
+        this.isServices = true;
+    }
+
+    public void setServicesBit(boolean value, int bitNum) throws RecognitionException {
+        if (bitNum < 0 && bitNum > 31) throw new RecognitionException("incorrect bit value");
+        if (value) services = services | (1 << bitNum);
+              else services = services & ~(1 << bitNum);
+        this.isServices = true;
     }
 }

@@ -103,8 +103,8 @@ public class Lookup extends PageBean {
                 matchAddress = p.getMatchAddress();
                 udhConcat = p.isUdhConcat();
                 translit = p.isTranslit();
-                inputAccessMask = Long.toString(p.getInputAccessMask());
-                outputAccessMask = Long.toString(p.getOutputAccessMask());
+                inputAccessMask = Long.toHexString(p.getInputAccessMask());
+                outputAccessMask = Long.toHexString(p.getOutputAccessMask());
                 closedGroup = appContext.getLocaleString(principal, "profiles.groupIsNotDefined");
                 ClosedGroup cg = appContext.getClosedGroupManager().getClosedGroups().get(p.getGroupId());
                 if (cg != null) closedGroup = cg.getName();

@@ -81,7 +81,7 @@ public class ProfileDataSource {
                         sqlResultSet.getString("divert_mod"),
                         sqlResultSet.getString("udhConcat"),
                         sqlResultSet.getString("translit"),
-                        "", "", ""))); //todo этот файл надо вообще удалить, так как он вроде не используется в проекте
+                        "", "", "", ""))); //todo этот файл надо вообще удалить, так как он вроде не используется в проекте
             }
 
             boolean isLast = true;

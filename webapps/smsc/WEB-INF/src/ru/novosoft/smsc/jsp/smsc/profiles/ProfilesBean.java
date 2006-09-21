@@ -2,11 +2,12 @@ package ru.novosoft.smsc.jsp.smsc.profiles;
 
 import ru.novosoft.smsc.admin.closedgroups.ClosedGroupList;
 import ru.novosoft.smsc.admin.profiler.Profile;
+import ru.novosoft.smsc.admin.profiler.SupportExtProfile;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
+import ru.novosoft.smsc.util.config.Config;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 
 /**
@@ -20,6 +21,7 @@ public class ProfilesBean extends SmscBean {
     protected String locale = "";
     protected List registeredLocales = new LinkedList();
     protected ClosedGroupList closedGroups = new ClosedGroupList();
+    protected Map smsExtraServices = null;
     protected String returnPath = null;
 
     protected byte aliasHide = Profile.ALIAS_HIDE_true;
@@ -39,6 +41,9 @@ public class ProfilesBean extends SmscBean {
     protected int groupId = 0;
     protected long inputAccessMask = 1;
     protected long outputAccessMask = 1;
+    protected long services = 0;
+
+    protected String[] checkedServicesNames = null;
 
     protected String groupName = "";
 
@@ -80,6 +85,20 @@ public class ProfilesBean extends SmscBean {
             logger.error("Couldn't get closed group list", e);
             return error(SMSCErrors.error.profiles.couldntGetRegisteredLocales, e);
         }
+        try {
+            if (SupportExtProfile.enabled) {
+                smsExtraServices = new HashMap();
+                Config webconfig = appContext.getConfig();
+                Set set = webconfig.getSectionChildParamsNames("profiler.extra");
+                for (Iterator i = set.iterator(); i.hasNext();) { String name = (String) i.next();
+                    Object param = webconfig.getParameter(name);
+                    smsExtraServices.put(name.substring("profiler.extra.".length()), param);  // вырезали profiler.extra.
+                }
+            }
+        } catch (Throwable e) {
+            logger.error("Couldn't get extra services names from webconfig", e);
+            return error(SMSCErrors.error.profiles.couldntGetSmsExtraServices, e);
+        }
         return result;
     }
 
@@ -106,7 +125,6 @@ public class ProfilesBean extends SmscBean {
             this.report = Profile.REPORT_OPTION_None;
         }
     }
-
 
     public String getCodepage() {
         return Byte.toString(codepage);
@@ -291,5 +309,23 @@ public class ProfilesBean extends SmscBean {
 
     public ClosedGroupList getClosedGroups() {
         return closedGroups;
+    }
+
+    public Map getSmsExtraServices() {
+        return smsExtraServices;
+    }
+
+    public boolean isServiceChecked(String bitNum) {
+        long bitNumLong = Long.parseLong(bitNum) - 1;
+        return (services & (1L << bitNumLong)) == (1L << bitNumLong);
+    }
+
+    public void setCheckedServicesNames(String[] checkedServicesNames) {
+        this.checkedServicesNames = checkedServicesNames;
+        services = 0;
+        for (int i = 0; i < checkedServicesNames.length; i++) {
+            int bitNum = Integer.parseInt(checkedServicesNames[i]);
+            services =  services | (1 << bitNum);
+        }
     }
 }

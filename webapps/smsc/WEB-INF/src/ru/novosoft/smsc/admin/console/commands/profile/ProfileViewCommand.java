@@ -14,6 +14,7 @@ import ru.novosoft.smsc.admin.alias.AliasSet;
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.profiler.Profile;
+import ru.novosoft.smsc.admin.profiler.SupportExtProfile;
 import ru.novosoft.smsc.admin.route.Mask;
 
 public class ProfileViewCommand extends CommandClass {
@@ -76,6 +77,8 @@ public class ProfileViewCommand extends CommandClass {
         else result += " group: none";
         result += " inputAccessMask: 0x" + Long.toHexString(profile.getInputAccessMask()) + "(" + Long.toBinaryString(profile.getInputAccessMask()) + ")";
         result += " outputAccessMask: 0x" + Long.toHexString(profile.getOutputAccessMask()) + "(" + Long.toBinaryString(profile.getOutputAccessMask()) + ")";
+        if (SupportExtProfile.enabled)
+            result += " services: 0x" + Long.toHexString(profile.getServices())  + "(" + Long.toBinaryString(profile.getServices()) + ")"; 
         return result;
     }
 

@@ -113,12 +113,15 @@ public class ProfileDataFile {
                 short udhconcat = (short) Message.readUInt8(bis);//f.WriteByte(udhconcat);
                 short translit = (short) Message.readUInt8(bis);//f.WriteByte(translit);
                 int groupId = 0;
-                int inputAccessMask = 0;
-                int outputAccessMask = 0;
+                int inputAccessMask = 1;
+                int outputAccessMask = 1;
+                int services = 0;
                 if (version > 0x00010000) {
                     groupId = (int) Message.readUInt32(bis);
                     inputAccessMask = (int) Message.readUInt32(bis);
                     outputAccessMask = (int) Message.readUInt32(bis);
+                    if (SupportExtProfile.enabled)
+                        services = (int) Message.readUInt32(bis);
                 }
 
                 if (used == 1 && isAddProfile(mask, queryFilter, show)) {
@@ -136,7 +139,7 @@ public class ProfileDataFile {
 
                     Profile profile = setProfile(mask, codepage, reportoptions,
                             locale, hide, hideModifiable, divert, divertResult,
-                            divertModifiable, udhconcat, translit, groupId, inputAccessMask, outputAccessMask);
+                            divertModifiable, udhconcat, translit, groupId, inputAccessMask, outputAccessMask, services);
 
                     results.add(new ProfileDataItem(profile));
                     totalCount++;
@@ -246,7 +249,8 @@ public class ProfileDataFile {
                                final String divertResult, final short divertModifiable,
                                final short udhconcat, final short translit,
                                final int groupId,
-                               final int inputAccessMask, final int outputAccessMask) throws AdminException {
+                               final int inputAccessMask, final int outputAccessMask,
+                               final int services) throws AdminException {
         return new Profile(mask,
                 Profile.getCodepageString((byte) ((byte) codepage & 0x7F)),
                 String.valueOf((codepage & 0x80) != 0),
@@ -261,7 +265,8 @@ public class ProfileDataFile {
                 String.valueOf((translit) != 0),
                 groupId,
                 inputAccessMask,
-                outputAccessMask);
+                outputAccessMask,
+                services);
     }
 
 

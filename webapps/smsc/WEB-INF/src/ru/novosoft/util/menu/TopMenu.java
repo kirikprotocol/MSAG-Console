@@ -56,6 +56,7 @@ public class TopMenu extends ArrayList {
             add(new MenuItem("menu.profiles", "", profileItems));
 
             Collection snmpItems = new ArrayList();
+            snmpItems.add(new MenuItem("menu.snmp.config", "/smsc/snmp/config.jsp", MenuItem.VISIBLE_IN_ALL));
             snmpItems.add(new MenuItem("menu.snmp.alarmStat", "/smsc/snmp/alarmStat.jsp", MenuItem.VISIBLE_IN_ALL));
             add(new MenuItem("menu.snmp", "", snmpItems));
 

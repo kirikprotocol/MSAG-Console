@@ -205,6 +205,11 @@
                             "users.roles.categories");
                 }
 
+                if (request.isUserInRole("snmp")) {
+                    printOptionsString(out, request, bean.getJournalSnmp(), rowN++, "snmp", bean.isSNMPChanged(),
+                            "users.roles.snmp");
+                }
+
                 //todo security-constraint для reschedule  if (request.isUserInRole("reschedule"))
                 printOptionsString(out, request, bean.getJournalReschedule(), rowN++, "reschedule", bean.isRescheduleChanged(),
                         "users.roles.reschedule");
