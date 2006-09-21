@@ -352,6 +352,11 @@ Hash<int> SmppCommandAdapter::InitDataSmRespFieldNames()
     hs["packet_direction"]              = PACKET_DIRECTION;
 
     hs["status"] = STATUS;
+
+    hs["message_id"] = MESSAGE_ID;
+    hs["ussd_dialog"] = USSD_DIALOG;
+
+
     return hs;
 }
 
@@ -1232,9 +1237,39 @@ AdapterProperty * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::str
     return property;
 }
 
-AdapterProperty * SmppCommandAdapter::getDataSmRespProperty(SMS& data,const std::string& name,int FieldId)
+AdapterProperty * SmppCommandAdapter::getDataSmRespProperty(SmsCommand& data,const std::string& name,int FieldId)
 {
-    return 0;
+    SmsResp * smsResp = command->get_resp();
+    if (!smsResp) return 0;
+    SMS * sms = smsResp->get_sms();
+
+    if (!sms) return 0;
+
+
+    AdapterProperty * property = 0;
+
+    switch (FieldId) 
+    {
+    case STATUS:
+        property = new AdapterProperty(name,this,command->get_status());
+        break;
+    case MESSAGE_ID:
+        //TODO: Inmplement
+        break;
+    case USSD_DIALOG:
+        property = new AdapterProperty(name,this,sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP));
+        break;
+    case OA:
+        property = new AdapterProperty(name,this,CommandBrige::getAbonentAddr(command).toString());
+        break;
+    case DA:
+        property = new AdapterProperty(name,this,CommandBrige::getDestAddr(command).toString());
+        break;
+    case PACKET_DIRECTION:
+        property = new AdapterProperty(name,this, (int)data.dir);
+    }
+
+    return property;
 }
 
 AdapterProperty * SmppCommandAdapter::getDataSmProperty(SmsCommand& data,const std::string& name,int FieldId)
@@ -1419,12 +1454,6 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
         propertyPtr = PropertyPul.GetPtr(*pFieldId);
         if (propertyPtr) return (*propertyPtr);
 
-        if (*pFieldId == STATUS) 
-        {
-            property = new AdapterProperty(name.c_str(),this,command->status);
-            break;
-        }
-
         smsResp = command->get_resp();
         if (!smsResp) return 0;
         sms = smsResp->get_sms();
@@ -1440,12 +1469,6 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
 
         propertyPtr = PropertyPul.GetPtr(*pFieldId);
         if (propertyPtr) return (*propertyPtr);
-
-        if (*pFieldId == STATUS) 
-        {
-            property = new AdapterProperty(name.c_str(),this,command->status);
-            break;
-        }
 
         smsResp = command->get_resp();
         if (!smsResp) return 0;
@@ -1473,19 +1496,7 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
         propertyPtr = PropertyPul.GetPtr(*pFieldId);
         if (propertyPtr) return (*propertyPtr);
 
-        smsResp = command->get_resp();
-        if (!smsResp) return 0;
-        sms = smsResp->get_sms();
-
-        if (!sms) return 0;
-
-        if (*pFieldId == STATUS) 
-        {
-            property = new AdapterProperty(name.c_str(),this,command->status);
-            break;
-        }
-
-        property = getDataSmRespProperty(*sms,name,*pFieldId);
+        property = getDataSmRespProperty(command->get_smsCommand(),name,*pFieldId);
         break;
     }
 

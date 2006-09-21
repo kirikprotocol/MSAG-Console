@@ -111,7 +111,7 @@ namespace scag { namespace re { namespace smpp
         AdapterProperty * getDeliverProperty(SMS& data,const std::string& name,int FieldId);
         AdapterProperty * getSubmitRespProperty(SMS& data, const std::string& name,int FieldId);
         AdapterProperty * getDeliverRespProperty(SMS& data, const std::string& name,int FieldId);
-        AdapterProperty * getDataSmRespProperty(SMS& data,const std::string& name,int FieldId);
+        AdapterProperty * getDataSmRespProperty(SmsCommand& data,const std::string& name,int FieldId);
         AdapterProperty * getDataSmProperty(SmsCommand& data,const std::string& name,int FieldId);
 
 
