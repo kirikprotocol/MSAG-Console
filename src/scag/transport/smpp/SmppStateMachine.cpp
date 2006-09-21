@@ -17,19 +17,17 @@ struct StateMachine::ResponseRegistry
   smsc::logger::Logger* log;
   int timeout;
 
-  ResponseRegistry()
-  {
-    log=0;
-    timeout=60;
-  }
-  struct RegKey{
-    int uid;
-    int seq;
+  ResponseRegistry() : log(0), timeout(60) {}
+  
+  struct RegKey {
+    int uid, seq;
+    RegKey(int _uid=-1, int _seq=-1) 
+	: uid(_uid), seq(_seq) {}
     bool operator==(const RegKey& key) {
       return uid==key.uid && seq==key.seq;
     }
   };
-  struct ListValue{
+  struct ListValue {
     RegKey key;
     time_t insTime;
   };
@@ -37,7 +35,7 @@ struct StateMachine::ResponseRegistry
   typedef std::list<ListValue> TimeOutList;
   TimeOutList toList;
 
-  struct RegValue{
+  struct RegValue {
     SmppCommand cmd;
     int dlgId;
     TimeOutList::iterator it;
@@ -48,40 +46,43 @@ struct StateMachine::ResponseRegistry
     }
   };
 
-  buf::XHash<RegKey,RegValue,HashFunc> reg;
+  buf::XHash<RegKey, RegValue, HashFunc> reg;
   sync::Mutex mtx;
 
-  void Register(int uid,int seq,SmppCommand& cmd)
+  bool Register(int uid, int seq, SmppCommand& cmd)
   {
     sync::MutexGuard mg(mtx);
-    if(!log)log=smsc::logger::Logger::getInstance("respreg");
-    info2(log,"register %d/%d",uid,seq);
-    RegKey key;
-    key.uid=uid;
-    key.seq=seq;
+    RegKey key(uid, seq);
+    if (!log) log=smsc::logger::Logger::getInstance("respreg");
+    if (reg.Exists(key)) { // key already registered
+	smsc_log_warn(log, "register %d/%d failed", uid, seq);
+	return false;
+    }
+    smsc_log_debug(log, "register %d/%d", uid, seq);
     RegValue val;
     ListValue lv;
-    lv.key=key;
-    lv.insTime=time(NULL);
+    lv.key = key;
+    lv.insTime = time(NULL);
     toList.push_back(lv);
-    val.cmd=cmd;
-    val.it=toList.end();
-    val.it--;
-    val.dlgId=cmd->get_dialogId();
+    val.cmd = cmd;
+    val.it = toList.end(); val.it--;
+    val.dlgId = cmd->get_dialogId();
     cmd->set_dialogId(seq);
     reg.Insert(key,val);
+    return true;
   }
 
-  bool Get(int uid,int seq,SmppCommand& cmd)
+  bool Get(int uid, int seq, SmppCommand& cmd)
   {
     sync::MutexGuard mg(mtx);
-    RegKey key;
-    key.uid=uid;
-    key.seq=seq;
+    RegKey key(uid, seq);
     RegValue* ptr=reg.GetPtr(key);
-    info2(log,"get %d/%d - %s",uid,seq,ptr?"ok":"not found");
-    if(!ptr)return 0;
-    cmd=ptr->cmd;
+    if (!log) log=smsc::logger::Logger::getInstance("respreg");
+    smsc_log_debug(log, "get %d/%d - %s", uid, seq, (ptr) ? "ok":"not found");
+    if (!ptr) { // TODO: toList cleanup (find listValue by key & delete it)?
+	return false;
+    }
+    cmd = ptr->cmd;
     cmd->set_dialogId(ptr->dlgId);
     toList.erase(ptr->it);
     reg.Delete(key);
@@ -91,19 +92,17 @@ struct StateMachine::ResponseRegistry
   bool getExpiredCmd(SmppCommand& cmd)
   {
     sync::MutexGuard mg(mtx);
-    if(toList.empty())return false;
-    time_t now=time(NULL);
-    if(now-toList.front().insTime<timeout)
-    {
-      return false;
-    }
+    if (toList.empty()) return false;
+    time_t now = time(NULL);
+    if ((now - toList.front().insTime) < timeout) return false;
     RegKey key = toList.front().key;
-    RegValue* ptr=reg.GetPtr(key);
-    cmd=ptr->cmd;
-    //cmd->set_dialogId(ptr->dlgId); expired cmd fix
+    RegValue* ptr = reg.GetPtr(key);
+    if (!ptr) { // TODO: toList cleanup (find listValue by key & delete it)?
+	// toList.erase(toList.begin());
+	return false;
+    }
+    cmd = ptr->cmd;
     cmd->set_dialogId(key.seq);
-    //reg.Delete(toList.head().key);
-    //toList.pop_front();
     return true;
   }
 
@@ -292,16 +291,16 @@ void StateMachine::processSubmit(SmppCommand& cmd)
 
   try{
     int newSeq=dst->getNextSeq();
-    reg.Register(dst->getUid(),newSeq,cmd);
-    if(sms.hasBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS))
-    {
+    if (!reg.Register(dst->getUid(), newSeq, cmd)) 
+	throw Exception("Register cmd for uid=%d, seq=%d failed", dst->getUid(), newSeq);
+    if(sms.hasBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS)) {
       sms.getMessageBody().dropProperty(Tag::SMSC_UNKNOWN_OPTIONALS);
     }
     dst->putCommand(cmd);
     registerEvent(scag::stat::events::smpp::ACCEPTED, src, dst, (char*)ri.routeId, -1);
   } catch(std::exception& e) {
     registerEvent(scag::stat::events::smpp::FAILED, src, dst, (char*)ri.routeId, -1);
-    smsc_log_info(log,"Submit:Failed to putCommand into %s:%s",dst->getSystemId(),e.what());
+    smsc_log_info(log,"Submit: Failed to putCommand into %s:%s",dst->getSystemId(),e.what());
   }
   scag::sessions::SessionManager::Instance().releaseSession(session);
 }
@@ -483,15 +482,15 @@ void StateMachine::processDelivery(SmppCommand& cmd)
 
   try{
     int newSeq=dst->getNextSeq();
-    reg.Register(dst->getUid(),newSeq,cmd);
-    if(sms.hasBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS))
-    {
+    if (!reg.Register(dst->getUid(),newSeq,cmd))
+	throw Exception("Register cmd for uid=%d, seq=%d failed", dst->getUid(), newSeq);
+    if(sms.hasBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS)) {
       sms.getMessageBody().dropProperty(Tag::SMSC_UNKNOWN_OPTIONALS);
     }
     dst->putCommand(cmd);
     registerEvent(scag::stat::events::smpp::ACCEPTED, src, dst, (char*)ri.routeId, -1);
   } catch(std::exception& e) {
-    smsc_log_info(log,"Delivery:Failed to putCommand into %s:%s",dst->getSystemId(),e.what());
+    smsc_log_info(log,"Delivery: Failed to putCommand into %s:%s",dst->getSystemId(),e.what());
     registerEvent(scag::stat::events::smpp::FAILED, src, dst, (char*)ri.routeId, -1);
   }
   scag::sessions::SessionManager::Instance().releaseSession(session);
@@ -499,8 +498,8 @@ void StateMachine::processDelivery(SmppCommand& cmd)
 
 void StateMachine::processDeliveryResp(SmppCommand& cmd)
 {
-    int rs = -2;
-    scag::re::RuleStatus st;
+  int rs = -2;
+  scag::re::RuleStatus st;
 
   smsc_log_debug(log, "Delivery resp: got");
 
@@ -665,15 +664,15 @@ void StateMachine::processDataSm(SmppCommand& cmd)
 
   try{
     int newSeq=dst->getNextSeq();
-    reg.Register(dst->getUid(),newSeq,cmd);
-    if(sms.hasBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS))
-    {
+    if (!reg.Register(dst->getUid(),newSeq,cmd))
+	throw Exception("Register cmd for uid=%d, seq=%d failed", dst->getUid(), newSeq);
+    if(sms.hasBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS)) {
       sms.getMessageBody().dropProperty(Tag::SMSC_UNKNOWN_OPTIONALS);
     }
     dst->putCommand(cmd);
     registerEvent(scag::stat::events::smpp::ACCEPTED, src, dst, (char*)ri.routeId, -1);
   } catch(std::exception& e) {
-    smsc_log_info(log,"DataSm:Failed to putCommand into %s:%s",dst->getSystemId(),e.what());
+    smsc_log_info(log,"DataSm: Failed to putCommand into %s:%s",dst->getSystemId(),e.what());
     registerEvent(scag::stat::events::smpp::FAILED, src, dst, (char*)ri.routeId, -1);
   }
   scag::sessions::SessionManager::Instance().releaseSession(session);
