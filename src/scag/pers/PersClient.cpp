@@ -218,7 +218,11 @@ int PersClientImpl::Execute()
                 sock.Close();
                 connected = false;
             }
-            init();
+            try{
+                init();
+            }
+            catch(...)
+            {};
         }
         catch(...)
         {
