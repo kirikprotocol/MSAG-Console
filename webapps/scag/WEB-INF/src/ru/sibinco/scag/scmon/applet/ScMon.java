@@ -8,19 +8,13 @@ import ru.sibinco.scag.scmon.ScSnap;
 import ru.sibinco.scag.util.RemoteResourceBundle;
 
 import javax.swing.*;
-import java.awt.event.MouseListener;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.ActionEvent;
-import java.awt.event.ItemEvent;
+import java.applet.Applet;
 import java.awt.*;
-import java.util.ResourceBundle;
-import java.util.Locale;
-import java.net.Socket;
+import java.awt.event.*;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.applet.Applet;
+import java.net.Socket;
+import java.util.Locale;
 
 public class ScMon extends Applet implements Runnable, MouseListener, ActionListener, ItemListener {
 
@@ -76,9 +70,10 @@ public class ScMon extends Applet implements Runnable, MouseListener, ActionList
                 graphHiGrid, graphHead, localText, snapHttpHistory);
 
         JTabbedPane jTabbedPane = new JTabbedPane();
+        jTabbedPane.addTab("SMPP", new SmppPanel());
         jTabbedPane.addTab("HTTP", new HttpPanel());
         jTabbedPane.addTab("MMS", new MmsPanel());
-        jTabbedPane.insertTab("SMPP", null, new SmppPanel(), null, 0);
+        //jTabbedPane.insertTab("SMPP", null, new SmppPanel(), null, 0);
         gbc.gridy = 1;
         gbc.gridx = 1;
         gbc.gridwidth = 1;
