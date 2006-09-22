@@ -83,20 +83,21 @@
                                     <tr>
                                         <td width=100%>${catItem.value.name}</td>
                                         <td>
-                                            <select name="category_${catItem.value.fullName}" id="category_${catItem.value.fullName}" class="txt" style="font-size:80%;">
-                                                <c:forEach items="${bean.priorities}" var="i">
-                                                    <c:choose>
-                                                        <c:when test="${catItem.value.priority==i}">
-                                                            <option value="${fn:escapeXml(i)}"
-                                                                    selected="true">${fn:escapeXml(i)}
-                                                            </option>
-                                                        </c:when>
-                                                        <c:otherwise>
-                                                            <option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>
-                                                        </c:otherwise>
-                                                    </c:choose>
-                                                </c:forEach>
-                                            </select>
+
+                                            <%--<select name="category_${catItem.value.fullName}" id="category_${catItem.value.fullName}" class="txt" style="font-size:80%;">--%>
+                                                <%--<c:forEach items="${bean.priorities}" var="i">--%>
+                                                    <%--<c:choose>--%>
+                                                        <%--<c:when test="${catItem.value.priority==i}">--%>
+                                                            <%--<option value="${fn:escapeXml(i)}"--%>
+                                                                    <%--selected="true">${fn:escapeXml(i)}--%>
+                                                            <!--</option>-->
+                                                        <%--</c:when>--%>
+                                                        <%--<c:otherwise>--%>
+                                                            <%--<option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>--%>
+                                                        <%--</c:otherwise>--%>
+                                                    <%--</c:choose>--%>
+                                                <%--</c:forEach>--%>
+                                            <!--</select>-->
                                         </td>
                                     </tr>
                                 </table>
@@ -118,22 +119,22 @@
                                                             <tr>
                                                                 <td width=100%>${catItem2.value.name}</td>
                                                                 <td>
-                                                                    <select name="category_${catItem2.value.fullName}"  id="category_${catItem2.value.fullName}"
-                                                                            class="txt"
-                                                                            style="font-size:80%;">
-                                                                        <c:forEach items="${bean.priorities}" var="i">
-                                                                            <c:choose>
-                                                                                <c:when test="${catItem2.value.priority==i}">
-                                                                                    <option value="${fn:escapeXml(i)}"
-                                                                                            selected="true">${fn:escapeXml(i)}
-                                                                                    </option>
-                                                                                </c:when>
-                                                                                <c:otherwise>
-                                                                                    <option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>
-                                                                                </c:otherwise>
-                                                                            </c:choose>
-                                                                        </c:forEach>
-                                                                    </select>
+                                                                    <%--<select name="category_${catItem2.value.fullName}"  id="category_${catItem2.value.fullName}"--%>
+                                                                            <!--class="txt"-->
+                                                                            <%--style="font-size:80%;">--%>
+                                                                        <%--<c:forEach items="${bean.priorities}" var="i">--%>
+                                                                            <%--<c:choose>--%>
+                                                                                <%--<c:when test="${catItem2.value.priority==i}">--%>
+                                                                                    <%--<option value="${fn:escapeXml(i)}"--%>
+                                                                                            <%--selected="true">${fn:escapeXml(i)}--%>
+                                                                                    <!--</option>-->
+                                                                                <%--</c:when>--%>
+                                                                                <%--<c:otherwise>--%>
+                                                                                    <%--<option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>--%>
+                                                                                <%--</c:otherwise>--%>
+                                                                            <%--</c:choose>--%>
+                                                                        <%--</c:forEach>--%>
+                                                                    <!--</select>-->
                                                                 </td>
                                                             </tr>
                                                         </table>
@@ -158,24 +159,24 @@
                                                                                     <tr>
                                                                                         <td width=100%>${catItem3.value.name}</td>
                                                                                         <td>
-                                                                                            <select name="category_${catItem3.value.fullName}"  id="category_${catItem3.value.fullName}"
-                                                                                                    class="txt"
-                                                                                                    style="font-size:80%;">
-                                                                                                <c:forEach
-                                                                                                        items="${bean.priorities}"
-                                                                                                        var="i">
-                                                                                                    <c:choose>
-                                                                                                        <c:when test="${catItem3.value.priority==i}">
-                                                                                                            <option value="${fn:escapeXml(i)}"
-                                                                                                                    selected="true">${fn:escapeXml(i)}
-                                                                                                            </option>
-                                                                                                        </c:when>
-                                                                                                        <c:otherwise>
-                                                                                                            <option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>
-                                                                                                        </c:otherwise>
-                                                                                                    </c:choose>
-                                                                                                </c:forEach>
-                                                                                            </select>
+                                                                                            <%--<select name="category_${catItem3.value.fullName}"  id="category_${catItem3.value.fullName}"--%>
+                                                                                                    <!--class="txt"-->
+                                                                                                    <%--style="font-size:80%;">--%>
+                                                                                                <%--<c:forEach--%>
+                                                                                                        <%--items="${bean.priorities}"--%>
+                                                                                                        <%--var="i">--%>
+                                                                                                    <%--<c:choose>--%>
+                                                                                                        <%--<c:when test="${catItem3.value.priority==i}">--%>
+                                                                                                            <%--<option value="${fn:escapeXml(i)}"--%>
+                                                                                                                    <%--selected="true">${fn:escapeXml(i)}--%>
+                                                                                                            <!--</option>-->
+                                                                                                        <%--</c:when>--%>
+                                                                                                        <%--<c:otherwise>--%>
+                                                                                                            <%--<option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>--%>
+                                                                                                        <%--</c:otherwise>--%>
+                                                                                                    <%--</c:choose>--%>
+                                                                                                <%--</c:forEach>--%>
+                                                                                            <!--</select>-->
                                                                                         </td>
                                                                                     </tr>
                                                                                 </table>
@@ -202,24 +203,24 @@
                                                                                                             <tr>
                                                                                                                 <td width=100%>${catItem4.value.name}</td>
                                                                                                                 <td>
-                                                                                                                    <select name="category_${catItem4.value.fullName}"  id="category_${catItem4.value.fullName}"
-                                                                                                                            class="txt"
-                                                                                                                            style="font-size:80%;">
-                                                                                                                        <c:forEach
-                                                                                                                                items="${bean.priorities}"
-                                                                                                                                var="i">
-                                                                                                                            <c:choose>
-                                                                                                                                <c:when test="${catItem4.value.priority==i}">
-                                                                                                                                    <option value="${fn:escapeXml(i)}"
-                                                                                                                                            selected="true">${fn:escapeXml(i)}
-                                                                                                                                    </option>
-                                                                                                                                </c:when>
-                                                                                                                                <c:otherwise>
-                                                                                                                                    <option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>
-                                                                                                                                </c:otherwise>
-                                                                                                                            </c:choose>
-                                                                                                                        </c:forEach>
-                                                                                                                    </select>
+                                                                                                                    <%--<select name="category_${catItem4.value.fullName}"  id="category_${catItem4.value.fullName}"--%>
+                                                                                                                            <!--class="txt"-->
+                                                                                                                            <%--style="font-size:80%;">--%>
+                                                                                                                        <%--<c:forEach--%>
+                                                                                                                                <%--items="${bean.priorities}"--%>
+                                                                                                                                <%--var="i">--%>
+                                                                                                                            <%--<c:choose>--%>
+                                                                                                                                <%--<c:when test="${catItem4.value.priority==i}">--%>
+                                                                                                                                    <%--<option value="${fn:escapeXml(i)}"--%>
+                                                                                                                                            <%--selected="true">${fn:escapeXml(i)}--%>
+                                                                                                                                    <!--</option>-->
+                                                                                                                                <%--</c:when>--%>
+                                                                                                                                <%--<c:otherwise>--%>
+                                                                                                                                    <%--<option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>--%>
+                                                                                                                                <%--</c:otherwise>--%>
+                                                                                                                            <%--</c:choose>--%>
+                                                                                                                        <%--</c:forEach>--%>
+                                                                                                                    <!--</select>-->
                                                                                                                 </td>
                                                                                                             </tr>
                                                                                                         </table>
@@ -246,24 +247,24 @@
                                                                                                             <tr>
                                                                                                                 <td width=100%>${catItem5.value.name}</td>
                                                                                                                 <td>
-                                                                                                                    <select name="category_${catItem5.value.fullName}"  id="category_${catItem5.value.fullName}"
-                                                                                                                            class="txt"
-                                                                                                                            style="font-size:80%;">
-                                                                                                                        <c:forEach
-                                                                                                                                items="${bean.priorities}"
-                                                                                                                                var="i">
-                                                                                                                            <c:choose>
-                                                                                                                                <c:when test="${catItem5.value.priority==i}">
-                                                                                                                                    <option value="${fn:escapeXml(i)}"
-                                                                                                                                            selected="true">${fn:escapeXml(i)}
-                                                                                                                                    </option>
-                                                                                                                                </c:when>
-                                                                                                                                <c:otherwise>
-                                                                                                                                    <option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>
-                                                                                                                                </c:otherwise>
-                                                                                                                            </c:choose>
-                                                                                                                        </c:forEach>
-                                                                                                                    </select>
+                                                                                                                    <%--<select name="category_${catItem5.value.fullName}"  id="category_${catItem5.value.fullName}"--%>
+                                                                                                                            <!--class="txt"-->
+                                                                                                                            <%--style="font-size:80%;">--%>
+                                                                                                                        <%--<c:forEach--%>
+                                                                                                                                <%--items="${bean.priorities}"--%>
+                                                                                                                                <%--var="i">--%>
+                                                                                                                            <%--<c:choose>--%>
+                                                                                                                                <%--<c:when test="${catItem5.value.priority==i}">--%>
+                                                                                                                                    <%--<option value="${fn:escapeXml(i)}"--%>
+                                                                                                                                            <%--selected="true">${fn:escapeXml(i)}--%>
+                                                                                                                                    <!--</option>-->
+                                                                                                                                <%--</c:when>--%>
+                                                                                                                                <%--<c:otherwise>--%>
+                                                                                                                                    <%--<option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>--%>
+                                                                                                                                <%--</c:otherwise>--%>
+                                                                                                                            <%--</c:choose>--%>
+                                                                                                                        <%--</c:forEach>--%>
+                                                                                                                    <!--</select>-->
                                                                                                                 </td>
                                                                                                             </tr>
                                                                                                         </table>
