@@ -128,6 +128,7 @@
             <sm-et:txt name="host" type="string" onchanged="configChanged();"/>
             <sm-et:txt name="port" type="int" validation="port" onchanged="configChanged();"/>
             <sm-et:txt title="Timeout" name="timeout" type="int" onchanged="configChanged();"/>
+            <sm-et:txt title="Ping Timeout" name="pingTimeout" type="int" onchanged="configChanged();"/>
         </sm-et:properties>
     </sm-et:section>
 
