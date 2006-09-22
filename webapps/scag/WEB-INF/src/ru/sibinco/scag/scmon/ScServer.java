@@ -4,15 +4,14 @@
 
 package ru.sibinco.scag.scmon;
 
-import ru.sibinco.scag.perfmon.PerfServerRunner;
 import ru.sibinco.lib.backend.util.config.Config;
 
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Properties;
-import java.io.IOException;
 
 public class ScServer extends Thread {
     private org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(this.getClass());
@@ -84,7 +83,7 @@ public class ScServer extends Thread {
             }
         }
         while (runners.size() > 0) {
-            ((PerfServerRunner) runners.get(0)).shutdown();
+            ((ScServerRunner) runners.get(0)).shutdown();
         }
     }
 
