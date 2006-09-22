@@ -24,8 +24,11 @@ public class LoggingManager {
 
     private File loggerFile;
 
-    public LoggingManager(final String lfile) throws IOException {
+    public LoggingManager(final String lfile){
         loggerFile = new File(lfile);
+        if(!loggerFile.exists()){
+            logger.error("Cannot find file: " + loggerFile.getAbsolutePath());
+        }
     }
 
     public synchronized void writeToLog(final Map cats) {
