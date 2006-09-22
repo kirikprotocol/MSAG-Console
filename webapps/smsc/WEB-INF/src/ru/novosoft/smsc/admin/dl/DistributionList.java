@@ -33,7 +33,7 @@ public class DistributionList extends AbstractDataItem
 
   public void setName(String name)
   {
-    values.put("name", name == null ? "" : name);
+    values.put("name", name == null ? "" : name.toLowerCase());
   }
 
   public String getOwner()
