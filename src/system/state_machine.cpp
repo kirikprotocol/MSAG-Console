@@ -51,34 +51,6 @@ static const int DF_DCSHIFT=8;
 
 Hash<std::list<std::string> > StateMachine::directiveAliases;
 
-#ifdef SNMP
-static void incSnmpCounterForError(int code,const char* sme)
-{
-  switch(code)
-  {
-    case 0x14:
-      SnmpCounter::getInstance().incCounter(SnmpCounter::cntErr0x14,sme);
-      break;
-    case 0x58:
-      SnmpCounter::getInstance().incCounter(SnmpCounter::cntErr0x58,sme);
-      break;
-    case 0x440:
-    case 0x442:
-    case 0x443:
-    case 0x444:
-    case 0x445:
-    case 0x446:
-    case 0x447:
-      SnmpCounter::getInstance().incCounter(SnmpCounter::cntErrSDP,sme);
-      break;
-    default:
-      SnmpCounter::getInstance().incCounter(SnmpCounter::cntErrOther,sme);
-      break;
-  }
-  SnmpCounter::getInstance().incCounter(SnmpCounter::cntTempError,sme);
-}
-#endif
-
 struct TaskGuard{
   Smsc *smsc;
   uint32_t dialogId;
@@ -1900,7 +1872,8 @@ StateType StateMachine::submit(Tuple& t)
     if( ri.deliveryMode != smsc::sms::SMSC_DEFAULT_MSG_MODE )
     {
       int esmcls = sms->getIntProperty( Tag::SMPP_ESM_CLASS );
-      if( (esmcls&0x3) == smsc::sms::SMSC_DEFAULT_MSG_MODE )
+      // following if removed at 25.09.2006 by request of customers
+      //if( (esmcls&0x3) == smsc::sms::SMSC_DEFAULT_MSG_MODE )
       {
         // allow override
         sms->setIntProperty( Tag::SMPP_ESM_CLASS, esmcls|(ri.deliveryMode&0x03) );
@@ -2664,15 +2637,6 @@ StateType StateMachine::submitChargeResp(Tuple& t)
     sms->setOriginatingAddress(srcOriginal);
     sms->setDestinationAddress(dstOriginal);
     sms->setLastResult(err);
-#ifdef SNMP
-    if(Status::isErrorPermanent(err))
-    {
-      SnmpCounter::getInstance().incCounter(SnmpCounter::cntFailed,src_proxy->getSystemId());
-    }else
-    {
-      incSnmpCounterForError(err,src_proxy->getSystemId());
-    }
-#endif
     if(Status::isErrorPermanent(err))
       sendFailureReport(*sms,t.msgId,err,"system failure");
     else
@@ -2728,10 +2692,6 @@ StateType StateMachine::forward(Tuple& t)
     smsc->getScheduler()->InvalidSms(t.msgId);
     return UNKNOWN_STATE;
   }
-#ifdef SNMP
-  SnmpCounter::getInstance().incCounter(SnmpCounter::cntRetried,sms.getDestinationSmeId());
-#endif
-
   smsc_log_debug(smsLog,"orgMSC=%s, orgIMSI=%s",sms.originatingDescriptor.msc,sms.originatingDescriptor.imsi);
   INFwdSmsChargeResponse::ForwardContext ctx;
   ctx.allowDivert=t.command->get_forwardAllowDivert();
@@ -3367,15 +3327,6 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     sms.setLastResult(errstatus);
     smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
 //    sendNotifyReport(sms,t.msgId,errtext);
-#ifdef SNMP
-    if(Status::isErrorPermanent(errstatus))
-    {
-      SnmpCounter::getInstance().incCounter(SnmpCounter::cntFailed,sms.getDestinationSmeId());
-    }else
-    {
-      incSnmpCounterForError(errstatus,sms.getDestinationSmeId());
-    }
-#endif
     try{
       if(Status::isErrorPermanent(errstatus))
         sendFailureReport(sms,t.msgId,errstatus,"system failure");
@@ -3603,28 +3554,6 @@ StateType StateMachine::deliveryResp(Tuple& t)
       t.command->get_resp()->get_diverted()?";diverted_to=":"",
       t.command->get_resp()->get_diverted()?sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str():""
     );
-
-#ifdef SNMP
-  if(GET_STATUS_TYPE(t.command->get_resp()->get_status())==CMD_OK)
-  {
-    SnmpCounter::getInstance().incCounter(SnmpCounter::cntDelivered,sms.getDestinationSmeId());
-  }else
-  {
-    switch(GET_STATUS_TYPE(t.command->get_resp()->get_status()))
-    {
-      case CMD_ERR_RESCHEDULENOW:
-      case CMD_ERR_TEMP:
-      {
-        incSnmpCounterForError(GET_STATUS_CODE(t.command->get_resp()->get_status()),sms.getDestinationSmeId());
-      }break;
-      default:
-      {
-        SnmpCounter::getInstance().incCounter(SnmpCounter::cntFailed,sms.getDestinationSmeId());
-      }break;
-    }
-  }
-#endif
-
 
 
   if(GET_STATUS_TYPE(t.command->get_resp()->get_status())!=CMD_OK)
@@ -5084,7 +5013,7 @@ void StateMachine::submitReceipt(SMS& sms,int type)
     bool has_route=false;
     sms.setSourceSmeId(smscSmeId.c_str());
     try{
-      has_route=smsc->routeSms(sms.getOriginatingAddress(),sms.getDealiasedDestinationAddress(),dest_proxy_index,dest_proxy,&ri,smsc->getSmeIndex(smscSmeId));
+      has_route=smsc->routeSms(sms.getOriginatingAddress(),sms.getDealiasedDestinationAddress(),dest_proxy_index,dest_proxy,&ri);
     }catch(std::exception& e)
     {
       warn2(smsLog,"Routing %s->%s failed:%s",sms.getOriginatingAddress().toString().c_str(),
