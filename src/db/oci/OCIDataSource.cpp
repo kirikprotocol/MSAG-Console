@@ -217,6 +217,7 @@ void OCIConnection::check(sword status)
     case OCI_ERROR:
         if (errhp)
         {
+            //NOTE: sometimes OCIErrorGet returns format string (with %s) instead of text !
             (void) OCIErrorGet (errhp, (ub4) 1, (text *) NULL,
                                 (sb4 *)&errcode, errbuf,
                                 (ub4) sizeof(errbuf), OCI_HTYPE_ERROR);
