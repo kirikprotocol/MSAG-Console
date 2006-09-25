@@ -1,4 +1,3 @@
-
 #include "DataSourceExceptions.h"
 
 namespace smsc { namespace db
@@ -9,7 +8,7 @@ SQLException::SQLException(int _code, int _status)
 {
 }
 SQLException::SQLException(const SQLException& exc) 
-    : Exception(exc.what()),
+    : Exception("%s", exc.what()),
         code(exc.getErrorCode()), status(exc.getErrorStatus())
 {
 }
@@ -47,6 +46,7 @@ LoadupException::~LoadupException() throw()
 {
 }
 
-}}
+} //db
+} //smsc
 
 
