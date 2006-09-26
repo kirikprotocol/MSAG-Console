@@ -457,7 +457,7 @@ public:
     AbonentProfile p;
     if(!getProfileByEmail(email,p) && !getProfileByAddress(email,p))throw smsc::util::Exception("Unknown user:%s",email);;
     p.limitCountEml2Gsm++;
-    smsc_log_debug(log,"Inc eml2gsm for %s=%d",email,p.limitCountEml2Gsm);
+    smsc_log_debug(log,"Inc eml2gsm for %s=%d/%d",email,p.limitCountEml2Gsm,p.limitValue);
     UpdateProfile(p);
     /*
     SerializationBuffer buf(256);
@@ -483,7 +483,7 @@ public:
     AbonentProfile p;
     if(!getProfileByAddress(addr,p))throw smsc::util::Exception("Unknown abonent:%s",addr);
     p.limitCountGsm2Eml++;
-    smsc_log_debug(log,"Inc gsm2eml for %s=%d",addr,p.limitCountGsm2Eml);
+    smsc_log_debug(log,"Inc gsm2eml for %s=%d/%d",addr,p.limitCountGsm2Eml,p.limitValue);
     UpdateProfile(p);
     /*
     SerializationBuffer buf(256);
@@ -606,6 +606,9 @@ public:
             p.Read(buf);
             if(storage.getProfileByAddress(p.addr.value,p2))
             {
+              p.limitCountEml2Gsm=p2.limitCountEml2Gsm;
+              p.limitCountGsm2Eml=p2.limitCountGsm2Eml;
+              p.limitDate=p2.limitDate;
               if(p.user!=p2.user)
               {
                 storage.DeleteProfile(p2);
@@ -626,6 +629,7 @@ public:
             AbonentProfile p;
             if(!storage.getProfileByAddress(addr.value,p))
             {
+              smsc_log_info(log,"cmdDeleteProfile failed, profile not found for addr:%s",addr.value);
               rv=0;
             }else
             {
