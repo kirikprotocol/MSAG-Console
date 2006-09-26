@@ -779,6 +779,7 @@ string ExtractEmail(const string& value)
   while(start>0 && ismailchar(value[start-1]))start--;
   while(end<value.length() && ismailchar(value[end+1]))end++;
   string res(value,start,end-start+1);
+  __trace2__("extracting email from '%s':'%s'",value.c_str(),res.c_str());
   return res;
 }
 
@@ -1079,7 +1080,7 @@ public:
   {
     if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
     {
-      char buf[260];
+      char buf[65536];
       getPduText((PduXSm*)pdu,buf,sizeof(buf));
       Address addr(
       ((PduXSm*)pdu)->get_message().get_source().value.size(),
@@ -1122,10 +1123,12 @@ bool GetNextLine(const char* text,int maxlen,int& pos,string& line)
 {
   int start=pos;
   if(pos>=maxlen)return false;
-  while(pos<maxlen && text[pos]!=0x0d && text[pos]!=0x0a)pos++;
-  line.assign(text+start,pos-start);
-  if(text[pos]==0x0d && pos<maxlen)pos++;
-  if(text[pos]==0x0a && pos<maxlen)pos++;
+  do{
+    while(pos<maxlen && text[pos]!=0x0d && text[pos]!=0x0a)pos++;
+    line.assign(text+start,pos-start);
+    if(text[pos]==0x0d && pos<maxlen)pos++;
+    if(text[pos]==0x0a && pos<maxlen)pos++;
+  }while(pos<maxlen && text[pos]==' ');
   return true;
 }
 
