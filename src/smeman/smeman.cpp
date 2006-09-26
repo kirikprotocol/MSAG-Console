@@ -294,6 +294,7 @@ __synchronized__
 
 SmeProxy* SmeManager::checkSmeProxy(const SmeSystemId& systemId,const SmePassword& pwd)
 {
+__synchronized__
   SmeIndex index = internalLookup(systemId);
   if ( index == INVALID_SME_INDEX )
   {
