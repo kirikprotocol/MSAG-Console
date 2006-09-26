@@ -143,7 +143,7 @@ public:
     AbonentPolicy* getPolicy(const TonNpiAddress * an_number = NULL) const
     {
 //        if (!ab_number)
-            return *begin();
+            return size() ? *begin() : NULL;
 //        else { /* todo: search policy by matching the address pools */ }
     }
 };

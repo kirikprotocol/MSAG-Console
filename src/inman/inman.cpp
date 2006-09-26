@@ -535,10 +535,10 @@ public:
          * ***************************************************************** */
         if (policyNm) { //default policy
             abPolicies.setPreferred(readPolicyCFG(manager, policyNm));
-        } else {
-            //todo: policies address pool mask is not supported yet
+        } else if (bill.billMode != smsc::inman::BILL_NONE) {
             throw ConfigException("Default abonent policy is not set!");
         }
+        //todo: policies address pool mask is not supported yet
         /**/
         return;
     }

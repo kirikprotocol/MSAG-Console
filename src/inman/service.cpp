@@ -20,14 +20,16 @@ Service::Service(const InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
 
     smsc_log_debug(logger, "InmanSrv: Creating ..");
 
-    disp = TCAPDispatcher::getInstance();
-    _cfg.bill.ss7.userId += 39; //adjust USER_ID to PortSS7 units id
-    if (!disp->connect(_cfg.bill.ss7.userId))
-        smsc_log_error(logger, "InmanSrv: EINSS7 stack unavailable!!!");
-    else {
-        smsc_log_debug(logger, "InmanSrv: TCAP dispatcher has connected to SS7 stack");
-        if (!(ssnSess = disp->openSSN(_cfg.bill.ss7.own_ssn, _cfg.bill.ss7.maxDlgId)))
-            smsc_log_error(logger, "InmanSrv: SSN[%u] unavailable!!!", _cfg.bill.ss7.own_ssn);
+    if (_cfg.bill.billMode != smsc::inman::BILL_NONE) {
+        disp = TCAPDispatcher::getInstance();
+        _cfg.bill.ss7.userId += 39; //adjust USER_ID to PortSS7 units id
+        if (!disp->connect(_cfg.bill.ss7.userId))
+            smsc_log_error(logger, "InmanSrv: EINSS7 stack unavailable!!!");
+        else {
+            smsc_log_debug(logger, "InmanSrv: TCAP dispatcher has connected to SS7 stack");
+            if (!(ssnSess = disp->openSSN(_cfg.bill.ss7.own_ssn, _cfg.bill.ss7.maxDlgId)))
+                smsc_log_error(logger, "InmanSrv: SSN[%u] unavailable!!!", _cfg.bill.ss7.own_ssn);
+        }
     }
 
     _cfg.bill.abCache = new AbonentCache(&_cfg.cachePrm, logger);
@@ -75,8 +77,10 @@ Service::~Service()
     if (running)
       stop();
 
-    smsc_log_debug(logger, "InmanSrv: Disconnecting SS7 stack ..");
-    disp->disconnect();
+    if (disp) {
+        smsc_log_debug(logger, "InmanSrv: Disconnecting SS7 stack ..");
+        disp->disconnect();
+    }
 
     if (server) {
         server->removeListener(this);
@@ -132,8 +136,10 @@ void Service::stop()
     _cfg.bill.tmWatcher->Stop();
     _cfg.bill.tmWatcher->WaitFor();
 
-    smsc_log_debug( logger, "InmanSrv: Stopping TCAP dispatcher ..");
-    disp->Stop();
+    if (disp) {
+        smsc_log_debug( logger, "InmanSrv: Stopping TCAP dispatcher ..");
+        disp->Stop();
+    }
 
     if (roller) {
         smsc_log_debug(logger, "InmanSrv: Stopping BillingStorage roller ..");

@@ -382,13 +382,17 @@ bool Billing::onChargeSms(ChargeSms* sms)
     }
 
     //here goes: btPrepaid or btUnknown
-    abPolicy = _cfg.policies->getPolicy(&abNumber);
+    if (!(abPolicy = _cfg.policies->getPolicy(&abNumber))) {
+        smsc_log_error(logger, "Billing[%u.%u]: no policy set for %s",
+                           _bconn->bConnId(), _bId, abNumber.toString().c_str());
+        return ConfigureSCFandCharge(abRec.ab_type, abRec.getSCFinfo());
+    }
+
     smsc_log_debug(logger, "Billing[%u.%u]: using policy: %s",
                            _bconn->bConnId(), _bId, abPolicy->ident);
+    if (abRec.getSCFinfo() && (abRec.ab_type == smsc::inman::cache::btPrepaid))
+        return ConfigureSCFandCharge(abRec.ab_type, abRec.getSCFinfo());
 
-    if (abRec.getSCFinfo() && (abRec.ab_type == smsc::inman::cache::btPrepaid)) {
-        return ConfigureSCFandCharge(abRec.ab_type, &abRec.gsmSCF); 
-    }
     // configure SCF by quering provider
     IAProviderITF *prvd = abPolicy->getIAProvider(logger);
     if (prvd) {
@@ -410,8 +414,9 @@ bool Billing::ConfigureSCFandCharge(AbonentBillType ab_type, const MAPSCFinfo * 
     if (p_scf) { //SCF is set for abonent by cache/IAProvider
         abScf.scf = *p_scf;
         //lookup policy for extra SCF parms (serviceKey, RPC lists)
-        abPolicy->getSCFparms(&abScf);
-    } else {
+        if (abPolicy)
+            abPolicy->getSCFparms(&abScf);
+    } else if (abPolicy) {
         switch (abType) {
         case smsc::inman::cache::btUnknown: {
             INScfCFG * pin = NULL;
@@ -442,14 +447,15 @@ bool Billing::ConfigureSCFandCharge(AbonentBillType ab_type, const MAPSCFinfo * 
             postpaidBill = true;
         }
 
-    }
+    } else
+        postpaidBill = true;
+
     if (!postpaidBill) {
         smsc_log_debug(logger, "Billing[%u.%u]: using SCF %s:{%u}", _bconn->bConnId(), _bId, 
                        abScf._ident.size() ? abScf.ident() : abScf.scf.scfAddress.getSignals(),
                        abScf.scf.serviceKey);
         postpaidBill = !startCAPDialog(&abScf);
     }
-
 
     if (postpaidBill) //do not interact IN platform, just create CDR
         chargeResult(smsc::inman::interaction::CHARGING_POSSIBLE);
