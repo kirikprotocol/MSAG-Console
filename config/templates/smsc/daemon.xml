@@ -16,4 +16,7 @@
       <param name="port" type="int">@daemon.admin.port@</param>
     </section>
   </section>
+  <section name="snmp">
+    <param name="logsDirectory" type="string">.</param>
+  </section>
 </config>
