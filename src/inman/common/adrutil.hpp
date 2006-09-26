@@ -31,8 +31,10 @@
 namespace smsc {
 namespace cvtutil {
 
-//This is the simplified analog of sms::sms::Address, the difference is that
-//its methods return error code instead of throwing exception
+//This is slightly more intelligent analog of sms::sms::Address,
+//it also accepts alpha-numeric addresses.
+//In opposite to sms::Address, all methods return error code instead
+//of throwing exception.
 struct TonNpiAddress {
     unsigned char    length, typeOfNumber, numPlanInd;
                      //value is always zero-terminated
@@ -76,7 +78,7 @@ struct TonNpiAddress {
                 }
             }
         }
-        if (scanned < max_scan)
+        if ((scanned < max_scan) || (iplan > 0xFF) || (itype > 0xFF))
             return false;
 
         numPlanInd = (unsigned char)iplan;
