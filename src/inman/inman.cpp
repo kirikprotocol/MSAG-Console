@@ -319,6 +319,63 @@ public:
         return policyCFG.release();
     }
 
+    void readSS7CFG(Manager & manager, SS7_CFG & ss7) throw(ConfigException)
+    {
+        if (!manager.findSection("SS7"))
+            throw ConfigException("\'SS7\' section is missed");
+
+        uint32_t tmo;
+        char *   cstr;
+        ConfigView ss7Cfg(manager, "SS7");
+
+        cstr = NULL;
+        try { cstr = ss7Cfg.getString("ssfAddress"); }
+        catch (ConfigException& exc) { }
+        if (!cstr || !cstr[0])
+            throw ConfigException("SSF address is missing");
+        if (!ss7.ssf_addr.fromText(cstr)
+            || (ss7.ssf_addr.numPlanInd != NUMBERING_ISDN)
+            || (ss7.ssf_addr.typeOfNumber > ToN_INTERNATIONAL))
+            throw ConfigException("SSF address is invalid: %s", cstr);
+        ss7.ssf_addr.typeOfNumber = ToN_INTERNATIONAL; //correct isdn unknown
+
+        ss7.own_ssn = ss7Cfg.getInt("ssn"); //throws
+        smsc_log_info(inmanLogger, "SSF: %u:%s", ss7.own_ssn,
+                        ss7.ssf_addr.toString().c_str());
+
+        /*  optional SS7 interaction parameters */
+        tmo = 0;    //ss7UserId
+        try { tmo = (uint32_t)ss7Cfg.getInt("ss7UserId"); }
+        catch (ConfigException& exc) { }
+        if (tmo) {
+            if (!tmo || (tmo > 20))
+                throw ConfigException("'ss7UserId' should fall into the range [1..20]");
+            ss7.userId = (unsigned char)tmo;
+        }
+        smsc_log_info(inmanLogger, "ss7UserId: %s%u", !tmo ? "default ":"", ss7.userId);
+
+        tmo = 0;    //maxTimeout
+        try { tmo = (uint32_t)ss7Cfg.getInt("maxTimeout"); }
+        catch (ConfigException& exc) { }
+        if (tmo) {
+            if (tmo >= 65535)
+                throw ConfigException("'maxTimeout' should be less than 65535 seconds");
+            ss7.capTimeout = (unsigned short)tmo;
+        }
+        smsc_log_info(inmanLogger, "maxTimeout: %s%u secs", !tmo ? "default ":"", ss7.capTimeout);
+
+        tmo = 0;    //maxDialogs
+        try { tmo = (uint32_t)ss7Cfg.getInt("maxDialogs"); }
+        catch (ConfigException& exc) { }
+        if (tmo) {
+            if ((tmo >= 65530) || (tmo < 2))
+                throw ConfigException("'maxDialogs' should fall into the range [2..65530]");
+            ss7.maxDlgId = (unsigned short)tmo;
+        }
+        smsc_log_info(inmanLogger, "maxDialogs: %s%u", !tmo ? "default ":"", ss7.maxDlgId);
+        return;
+    }
+
 
     void read(Manager& manager) throw(ConfigException)
     {
@@ -478,57 +535,9 @@ public:
         /* ********************************* *
          * SS7 stack interaction parameters: *
          * ********************************* */
-        if (!manager.findSection("SS7"))
-            throw ConfigException("\'SS7\' section is missed");
-
-        ConfigView ss7Cfg(manager, "SS7");
-
-        cstr = NULL;
-        try { cstr = ss7Cfg.getString("ssfAddress"); }
-        catch (ConfigException& exc) { }
-        if (!cstr || !cstr[0])
-            throw ConfigException("SSF address is missing");
-        if (!bill.ss7.ssf_addr.fromText(cstr)
-            || (bill.ss7.ssf_addr.numPlanInd != NUMBERING_ISDN)
-            || (bill.ss7.ssf_addr.typeOfNumber > ToN_INTERNATIONAL))
-            throw ConfigException("SSF address is invalid: %s", cstr);
-        bill.ss7.ssf_addr.typeOfNumber = ToN_INTERNATIONAL; //correct isdn unknown
-
-        bill.ss7.own_ssn = ss7Cfg.getInt("ssn"); //throws
-        smsc_log_info(inmanLogger, "SSF: %u:%s", bill.ss7.own_ssn,
-                        bill.ss7.ssf_addr.toString().c_str());
-
-        /*  optional SS7 interaction parameters */
-        tmo = 0;    //ss7UserId
-        try { tmo = (uint32_t)ss7Cfg.getInt("ss7UserId"); }
-        catch (ConfigException& exc) { }
-        if (tmo) {
-            if (!tmo || (tmo > 20))
-                throw ConfigException("'ss7UserId' should fall into the range [1..20]");
-            bill.ss7.userId = (unsigned char)tmo;
+        if (bill.billMode != smsc::inman::BILL_NONE) {
+            readSS7CFG(manager, bill.ss7);
         }
-        smsc_log_info(inmanLogger, "ss7UserId: %s%u", !tmo ? "default ":"", bill.ss7.userId);
-
-        tmo = 0;    //maxTimeout
-        try { tmo = (uint32_t)ss7Cfg.getInt("maxTimeout"); }
-        catch (ConfigException& exc) { }
-        if (tmo) {
-            if (tmo >= 65535)
-                throw ConfigException("'maxTimeout' should be less than 65535 seconds");
-            bill.ss7.capTimeout = (unsigned short)tmo;
-        }
-        smsc_log_info(inmanLogger, "maxTimeout: %s%u secs", !tmo ? "default ":"", bill.ss7.capTimeout);
-
-        tmo = 0;    //maxDialogs
-        try { tmo = (uint32_t)ss7Cfg.getInt("maxDialogs"); }
-        catch (ConfigException& exc) { }
-        if (tmo) {
-            if ((tmo >= 65530) || (tmo < 2))
-                throw ConfigException("'maxDialogs' should fall into the range [2..65530]");
-            bill.ss7.maxDlgId = (unsigned short)tmo;
-        }
-        smsc_log_info(inmanLogger, "maxDialogs: %s%u", !tmo ? "default ":"", bill.ss7.maxDlgId);
-
 
         /* ***************************************************************** *
          * AbonentPolicies: (IN-platforms and AbonentProviders) parameters:  *
@@ -538,7 +547,7 @@ public:
         } else if (bill.billMode != smsc::inman::BILL_NONE) {
             throw ConfigException("Default abonent policy is not set!");
         }
-        //todo: policies address pool mask is not supported yet
+        //todo: policies address pool mask is not supported yet!
         /**/
         return;
     }
