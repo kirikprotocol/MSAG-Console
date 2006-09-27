@@ -22,6 +22,8 @@ using smsc::inman::cache::AbonentCacheITF;
 namespace smsc  {
 namespace inman {
 
+typedef std::map<uint32_t, TonNpiAddress> SmsXServiceMap;
+
 class INManConfig;
 
 struct SS7_CFG {    //SS7 stack interaction:

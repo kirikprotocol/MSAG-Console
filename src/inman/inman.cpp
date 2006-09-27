@@ -230,6 +230,7 @@ protected:
     };
 
     INScfsRegistry      scfMap;
+    std::string         smsXcfg; //SMSExtra services config file
 
 public:
     INManConfig() : InService_CFG()
@@ -247,6 +248,8 @@ public:
 
     ~INManConfig()
     { }
+
+    const char * hasExtraConfig(void) const { return smsXcfg.length() ? smsXcfg.c_str() : NULL; }
 
     AbonentPolicy * readPolicyCFG(Manager & manager, const char * nm_pol) throw(ConfigException)
     {
@@ -539,6 +542,19 @@ public:
         }
         smsc_log_info(inmanLogger, "abonentTypeTimeout: %s%u secs", !tmo ? "default ":"", bill.abtTimeout);
 
+#ifdef SMSEXTRA
+        /* ********************************* *
+         * SMS Extra services configuration: *
+         * ********************************* */
+        cstr = NULL;
+        try { cstr = billCfg.getString("smsExtraConfig"); }
+        catch (ConfigException& exc) { }
+        if (cstr && cstr[0]) {
+            smsc_log_info(inmanLogger, "'smsExtraConfig': %s", cstr);
+            smsXcfg += cstr;
+        }
+#endif /* SMSEXTRA */
+
         /* ********************************* *
          * SS7 stack interaction parameters: *
          * ********************************* */
@@ -559,7 +575,60 @@ public:
         return;
     }
 
+    void readXServiceParms(ConfigView * cfg, std::string srv_id_parm) throw(ConfigException)
+    {
+        const char * cstr = srv_id_parm.c_str();
+        if (strstr(cstr, "serviceId") != cstr) {
+            smsc_log_warn(inmanLogger, "ignoring param: %s", cstr);
+            return;
+        }
+        char * ps_id = (char*)(cstr + strlen("serviceId"));
+        uint32_t srvId = atoi((const char*)ps_id);
+        if (!srvId)
+            throw ConfigException("invalid serviceId param: %s", cstr);
+
+        std::string srv_adr_parm("serviceAdr");
+        char ctmp[20]; //sizeof("4294967295") + 1
+        snprintf(ctmp, sizeof(ctmp)-1, "%u", srvId);
+        srv_adr_parm += ctmp;
+
+        cstr = NULL;
+        try { cstr = cfg->getString(srv_adr_parm.c_str()); }
+        catch (ConfigException& exc) { }
+        if (!cstr || !cstr[0])
+            throw ConfigException("missed param %s", srv_adr_parm.c_str());
+
+        TonNpiAddress  npi;
+        if (!npi.fromText(cstr))
+            throw ConfigException("invalid param %s value: %s", cstr);
+        bill.smsXMap.insert(SmsXServiceMap::value_type(srvId, npi));
+        smsc_log_info(inmanLogger, "SMS Extra service: 0x%x = %s", srvId, npi.toString().c_str());
+        return;        
+    }
+
+    void readExtraConfig(Manager& manager) throw(ConfigException)
+    {
+        uint32_t tmo = 0;
+        char *   cstr = NULL;
+        /* ********************************* *
+         * SMS Extra services parameters: *
+         * ********************************* */
+        if (!manager.findSection("SMSExtra"))
+            throw ConfigException("'SMSExtra' section is missed");
+        ConfigView smsXCfg(manager, "SMSExtra");
+
+        std::auto_ptr<CStrSet> srvIds(smsXCfg.getIntParamNames());
+        if (!srvIds->size())
+            throw ConfigException("no SMS Extra services specified");
+
+        for (CStrSet::iterator idIt = srvIds->begin(); idIt != srvIds->end(); idIt++) {
+            readXServiceParms(&smsXCfg, *idIt);
+        }
+        smsc_log_info(inmanLogger, "Total SMS Extra services: %u", bill.smsXMap.size());
+        return;
+    }
 };
+
 
 } //inman
 } //smsc
@@ -590,6 +659,12 @@ int main(int argc, char** argv)
         Manager::init((const char *)cfgFile);
         Manager& manager = Manager::getInstance();
         cfg.read(manager);
+        if (cfg.hasExtraConfig()) {
+            manager.deinit();
+            smsc_log_info(inmanLogger, "Reading smsExtra config %s ..", cfg.hasExtraConfig());
+            manager.init(cfg.hasExtraConfig());
+            cfg.readExtraConfig(manager);
+        }
     } catch (ConfigException& exc) {
         smsc_log_error(inmanLogger, "Config: %s", exc.what());
         smsc_log_error(inmanLogger, "Configuration invalid. Exiting.");

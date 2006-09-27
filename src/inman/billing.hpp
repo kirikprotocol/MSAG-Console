@@ -18,13 +18,11 @@ ChargeSmsResult     <-   | bilProcessed ]
 ]
 */
 
-//#include "inman/common/RPCList.hpp"
-//using smsc::inman::common::RPCList;
 #include "inman/inman.hpp"
 using smsc::inman::AbonentPolicy;
 using smsc::inman::AbonentPolicies;
 using smsc::inman::INScfCFG;
-//using smsc::inman::INScfsMAP;
+using smsc::inman::SmsXServiceMap;
 
 #include "inman/common/TimeWatcher.hpp"
 using smsc::inman::sync::StopWatch;
@@ -81,6 +79,7 @@ struct BillingCFG {
     unsigned short  maxBilling;     //maximum number of Billings per connect
 
     SS7_CFG         ss7;            //SS7 interaction:
+    SmsXServiceMap  smsXMap;        //SMS Extra services iDs and addresses
 
     BillingCFG()
     {
