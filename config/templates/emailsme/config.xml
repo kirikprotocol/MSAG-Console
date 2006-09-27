@@ -47,4 +47,20 @@
     <param name="annotationSize" type="int">460</param>
   </section>
 
+  <section name="answers">
+    <param name="alias" type="string">#template=emailsmealias#{alias}="$$string import=alias$$"</param>
+    <param name="aliasfailed" type="string">#template=emailsmealiasfailed#{alias}="$$string import=alias$$"</param>
+    <param name="aliasbusy" type="string">#template=emailsmealiasbusy#{alias}="$$string import=alias$$"</param>
+    <param name="noalias" type="string">#template=emailsmenoalias#</param>
+    <param name="forward" type="string">#template=emailsmeforward#{address}="$$string import=email$$"</param>
+    <param name="forwardfailed" type="string">#template=emailsmeforwardfailed#{address}="$$string import=email$$"</param>
+    <param name="forwardoff" type="string">#template=emailsmeforwardoff#</param>
+    <param name="realname" type="string">#template=emailsmerealname#{realname}="$$string import=realname$$"</param>
+    <param name="numberon" type="string">#template=emailsmenumberon#</param>
+    <param name="numberoff" type="string">#template=emailsmenumberoff#</param>
+    <param name="numberfailed" type="string">#template=emailsmenumberfailed#</param>
+    <param name="systemerror" type="string">#template=emailsmesystemerror#</param>
+    <param name="unknowncommand" type="string">#template=emailsmeunknowncommand#</param>
+  </section>
+
 </config>
