@@ -4605,6 +4605,7 @@ StateType StateMachine::replace(Tuple& t)
     smsc->registerStatisticalEvent(StatEvents::etSubmitErr,&sms);
     __REPLACE__RESPONSE(INVSCHED);
   }
+  bool updateSmsSchedule=t.command->get_replaceSm().scheduleDeliveryTime!=0;
   time_t newvalid=t.command->get_replaceSm().validityPeriod?
     t.command->get_replaceSm().validityPeriod:sms.getValidTime();
   time_t newsched=t.command->get_replaceSm().scheduleDeliveryTime?
@@ -4642,8 +4643,10 @@ StateType StateMachine::replace(Tuple& t)
     __REPLACE__RESPONSE(REPLACEFAIL);
   }
   try{
-    SmeIndex idx=smsc->getSmeIndex(sms.dstSmeId);
-    smsc->getScheduler()->UpdateSmsSchedule(t.msgId,sms);
+    if(updateSmsSchedule)
+    {
+      smsc->getScheduler()->UpdateSmsSchedule(t.msgId,sms);
+    }
     t.command.getProxy()->putCommand
     (
       SmscCommand::makeReplaceSmResp
