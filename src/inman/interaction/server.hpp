@@ -2,6 +2,7 @@
 #ifndef __SMSC_INMAN_TCP_SERVER__
 #define __SMSC_INMAN_TCP_SERVER__
 
+#include <string>
 #include <list>
 
 #include "core/threads/Thread.hpp"
@@ -18,15 +19,14 @@ namespace inman {
 namespace interaction  {
 
 typedef struct {
-    const char*     host;
+    std::string     host;
     int             port;
     unsigned int    maxConn;
     unsigned int    timeout; //units: secs
 } ServSocketCFG;
 
 class ServerListener;
-class Server : /*protected*/ Thread, public ObservableT< ServerListener >
-{
+class Server : Thread, public ObservableT< ServerListener > {
 public:
     typedef enum { lstStopped = 0, lstStopping, lstRunning } ServerState;
     typedef enum {
@@ -65,8 +65,7 @@ protected:
     Logger*         logger;
 };
 
-class ServerListener
-{
+class ServerListener {
 public:
     virtual void onConnectOpened(Server* srv, Connect* conn) = 0;
     virtual void onConnectClosing(Server* srv, Connect* conn) = 0;

@@ -18,7 +18,7 @@ Server::Server(const ServSocketCFG * in_cfg, SerializerITF * serializer,
     : _cfg(*in_cfg), ipSerializer(serializer), lstRestartCnt(0)
     , _runState(Server::lstStopped), logger(uselog)
 {
-    assert(_cfg.host && ipSerializer);
+    assert(_cfg.host.length() && ipSerializer);
     if (!logger)
         logger = Logger::getInstance("smsc.inman.TCPSrv");
 }
@@ -261,14 +261,14 @@ int Server::Execute()
 
 bool Server::Start(void)
 {
-    if (serverSocket.InitServer(_cfg.host, _cfg.port, _cfg.timeout)) {
+    if (serverSocket.InitServer(_cfg.host.c_str(), _cfg.port, _cfg.timeout)) {
         smsc_log_fatal(logger, "TCPSrv: failed to init server socket %s:%d",
-                       _cfg.host, _cfg.port);
+                       _cfg.host.c_str(), _cfg.port);
         return false;
     }
     if (serverSocket.StartServer()) {
         smsc_log_fatal(logger, "TCPSrv: failed to start server socket %s:%d",
-                       _cfg.host, _cfg.port);
+                       _cfg.host.c_str(), _cfg.port);
         return false;
     }
 
