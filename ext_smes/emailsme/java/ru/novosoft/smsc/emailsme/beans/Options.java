@@ -1,7 +1,10 @@
 package ru.novosoft.smsc.emailsme.beans;
 
+import ru.novosoft.smsc.util.config.Config;
+
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.io.IOException;
 
 /**
  * Created by IntelliJ IDEA.
@@ -12,6 +15,8 @@ import java.util.List;
  */
 public class Options extends SmeBean
 {
+  private String store_dir = "";
+
   private String smpp_host = "";
   private int smpp_port = 0;
   private int smpp_timeout = 0;
@@ -25,20 +30,22 @@ public class Options extends SmeBean
   private String listener_host = "";
   private int listener_port = 0;
 
+  private String admin_host = "";
+  private int admin_port = 0;
+  private boolean admin_allow_gsm_2_email_without_profile = false;
+  private boolean admin_allow_email_2_gsm_without_profile = false;
+  private String admin_default_limit = "";
+
+  private String mail_domain = "";
+  private String mail_stripper = "";
+  private String mail_format = "";
+
   private String smtp_host = "";
   private int smtp_port = 0;
 
-  private String dataSource_type = "";
-  private int dataSource_connections = 0;
-  private String dataSource_dbInstance = "";
-  private String dataSource_dbUserName = "";
-  private String dataSource_dbUserPassword = "";
-
-  private String mail_domain = "";
   private int defaults_dailyLimt = 0;
+  private int default_annotation_size = 0;
 
-  private String dataSource_jdbc_source = "";
-  private String dataSource_jdbc_driver = "";
 
   private String mbDone = null;
   private String mbCancel = null;
@@ -51,6 +58,8 @@ public class Options extends SmeBean
 
     if (!isInitialized()) {
       try {
+        store_dir = getConfig().getString("store.dir");
+
         smpp_host = getConfig().getString("smpp.host");
         smpp_port = getConfig().getInt("smpp.port");
         smpp_timeout = getConfig().getInt("smpp.timeout");
@@ -64,20 +73,21 @@ public class Options extends SmeBean
         listener_host = getConfig().getString("listener.host");
         listener_port = getConfig().getInt("listener.port");
 
+        admin_host = getConfig().getString("admin.host");
+        admin_port = getConfig().getInt("admin.port");
+        admin_allow_gsm_2_email_without_profile = getConfig().getBool("admin.allowGsm2EmlWithoutProfile");
+        admin_allow_email_2_gsm_without_profile = getConfig().getBool("admin.allowEml2GsmWithoutProfile");
+        admin_default_limit = getConfig().getString("admin.defaultLimit");
+
+        mail_domain = getConfig().getString("mail.domain");
+        mail_stripper = getConfig().getString("mail.stripper");
+        mail_format = getConfig().getString("mail.format");
+
         smtp_host = getConfig().getString("smtp.host");
         smtp_port = getConfig().getInt("smtp.port");
 
-        dataSource_type = getConfig().getString("DataSource.type");
-        dataSource_connections = getConfig().getInt("DataSource.connections");
-        dataSource_dbInstance = getConfig().getString("DataSource.dbInstance");
-        dataSource_dbUserName = getConfig().getString("DataSource.dbUserName");
-        dataSource_dbUserPassword = getConfig().getString("DataSource.dbUserPassword");
-
-        dataSource_jdbc_source = getConfig().getString("DataSource.jdbc.source");
-        dataSource_jdbc_driver = getConfig().getString("DataSource.jdbc.driver");
-
-        mail_domain = getConfig().getString("mail.domain");
         defaults_dailyLimt = getConfig().getInt("defaults.dailyLimit");
+        default_annotation_size = getConfig().getInt("defaults.annotationSize");
       } catch (Exception e) {
         logger.error(e);
         return error(e.getMessage());
@@ -92,9 +102,6 @@ public class Options extends SmeBean
     if (result != RESULT_OK)
       return result;
 
-    if (getSmeContext().getConnectionPool() == null)
-      message("Applied JDBC properties is incorrect");
-
     if (mbDone != null)
       return done();
     if (mbCancel != null)
@@ -105,6 +112,8 @@ public class Options extends SmeBean
 
   private int done()
   {
+    getConfig().setString("store.dir", store_dir);
+
     getConfig().setString("smpp.host", smpp_host);
     getConfig().setInt("smpp.port", smpp_port);
     getConfig().setInt("smpp.timeout", smpp_timeout);
@@ -118,22 +127,31 @@ public class Options extends SmeBean
     getConfig().setString("listener.host", listener_host);
     getConfig().setInt("listener.port", listener_port);
 
+    getConfig().setString("admin.host", admin_host);
+    getConfig().setInt("admin.port", admin_port);
+    getConfig().setBool("admin.allowGsm2EmlWithoutProfile", admin_allow_gsm_2_email_without_profile);
+    getConfig().setBool("admin.allowEml2GsmWithoutProfile", admin_allow_email_2_gsm_without_profile);
+    getConfig().setString("admin.defaultLimit", admin_default_limit);
+
+    getConfig().setString("mail.domain", mail_domain);
+    getConfig().setString("mail.stripper", mail_stripper);
+    getConfig().setString("mail.format", mail_format);
+
     getConfig().setString("smtp.host", smtp_host);
     getConfig().setInt("smtp.port", smtp_port);
 
-    getConfig().setString("DataSource.type", dataSource_type);
-    getConfig().setInt("DataSource.connections", dataSource_connections);
-    getConfig().setString("DataSource.dbInstance", dataSource_dbInstance);
-    getConfig().setString("DataSource.dbUserName", dataSource_dbUserName);
-    getConfig().setString("DataSource.dbUserPassword", dataSource_dbUserPassword);
-
-    getConfig().setString("DataSource.jdbc.source", dataSource_jdbc_source);
-    getConfig().setString("DataSource.jdbc.driver", dataSource_jdbc_driver);
-
-
-    getConfig().setString("mail.domain", mail_domain);
     getConfig().setInt("defaults.dailyLimit", defaults_dailyLimt);
+    getConfig().setInt("defaults.annotationSize", default_annotation_size);
 
+//    try {
+//      getConfig().save();
+//    } catch (IOException e) {
+//      logger.error("Cant save config", e);
+//      e.printStackTrace();
+//    } catch (Config.WrongParamTypeException e) {
+//      logger.error("Cant save config", e);
+//      e.printStackTrace();
+//    }
     return RESULT_DONE;
   }
 
@@ -357,70 +375,7 @@ public class Options extends SmeBean
     }
   }
 
-  public String getDataSource_type()
-  {
-    return dataSource_type;
-  }
 
-  public void setDataSource_type(String dataSource_type)
-  {
-    this.dataSource_type = dataSource_type;
-  }
-
-  public int getDataSource_connectionsInt()
-  {
-    return dataSource_connections;
-  }
-
-  public void setDataSource_connectionsInt(int dataSource_connections)
-  {
-    this.dataSource_connections = dataSource_connections;
-  }
-
-  public String getDataSource_connections()
-  {
-    return String.valueOf(dataSource_connections);
-  }
-
-  public void setDataSource_connections(String dataSource_connections)
-  {
-    try {
-      this.dataSource_connections = Integer.decode(dataSource_connections).intValue();
-    } catch (NumberFormatException e) {
-      logger.error("Invalid DataSource.connections parameter value: \"" + dataSource_connections + '"', e);
-      this.dataSource_connections = 0;
-    }
-  }
-
-  public String getDataSource_dbInstance()
-  {
-    return dataSource_dbInstance;
-  }
-
-  public void setDataSource_dbInstance(String dataSource_dbInstance)
-  {
-    this.dataSource_dbInstance = dataSource_dbInstance;
-  }
-
-  public String getDataSource_dbUserName()
-  {
-    return dataSource_dbUserName;
-  }
-
-  public void setDataSource_dbUserName(String dataSource_dbUserName)
-  {
-    this.dataSource_dbUserName = dataSource_dbUserName;
-  }
-
-  public String getDataSource_dbUserPassword()
-  {
-    return dataSource_dbUserPassword;
-  }
-
-  public void setDataSource_dbUserPassword(String dataSource_dbUserPassword)
-  {
-    this.dataSource_dbUserPassword = dataSource_dbUserPassword;
-  }
 
   public String getMbDone()
   {
@@ -476,23 +431,83 @@ public class Options extends SmeBean
     }
   }
 
-  public String getDataSource_jdbc_source()
-  {
-    return dataSource_jdbc_source;
+  public String getStore_dir() {
+    return store_dir;
   }
 
-  public void setDataSource_jdbc_source(String dataSource_jdbc_source)
-  {
-    this.dataSource_jdbc_source = dataSource_jdbc_source;
+  public void setStore_dir(String store_dir) {
+    this.store_dir = store_dir;
   }
 
-  public String getDataSource_jdbc_driver()
-  {
-    return dataSource_jdbc_driver;
+  public String getAdmin_host() {
+    return admin_host;
   }
 
-  public void setDataSource_jdbc_driver(String dataSource_jdbc_driver)
-  {
-    this.dataSource_jdbc_driver = dataSource_jdbc_driver;
+  public void setAdmin_host(String admin_host) {
+    this.admin_host = admin_host;
+  }
+
+  public String getAdmin_port() {
+    return String.valueOf(admin_port);
+  }
+
+  public void setAdmin_port(String admin_port) {
+    try {
+      this.admin_port = Integer.decode(admin_port).intValue();
+    } catch (NumberFormatException e) {
+      logger.error("Invalid admin.port parameter value: \"" + admin_port + '"', e);
+    }
+  }
+
+  public String getAdmin_allow_gsm_2_email_without_profile() {
+    return admin_allow_gsm_2_email_without_profile ? "checked" : "";
+  }
+
+  public void setAdmin_allow_gsm_2_email_without_profile(String admin_allow_gsm_2_email_without_profile) {
+    this.admin_allow_gsm_2_email_without_profile = admin_allow_gsm_2_email_without_profile.equals("on");
+  }
+
+  public String getAdmin_allow_email_2_gsm_without_profile() {
+    return admin_allow_email_2_gsm_without_profile ? "checked" : "";
+  }
+
+  public void setAdmin_allow_email_2_gsm_without_profile(String admin_allow_email_2_gsm_without_profile) {
+    this.admin_allow_email_2_gsm_without_profile = admin_allow_email_2_gsm_without_profile.equals("on");
+  }
+
+  public String getAdmin_default_limit() {
+    return admin_default_limit;
+  }
+
+  public void setAdmin_default_limit(String admin_default_limit) {
+    this.admin_default_limit = admin_default_limit;
+  }
+
+  public String getMail_stripper() {
+    return mail_stripper;
+  }
+
+  public void setMail_stripper(String mail_stripper) {
+    this.mail_stripper = mail_stripper;
+  }
+
+  public String getMail_format() {
+    return mail_format;
+  }
+
+  public void setMail_format(String mail_format) {
+    this.mail_format = mail_format;
+  }
+
+  public String getDefault_annotation_size() {
+    return String.valueOf(default_annotation_size);
+  }
+
+  public void setDefault_annotation_size(String default_annotation_size) {
+    try {
+      this.default_annotation_size = Integer.decode(default_annotation_size).intValue();
+    } catch (NumberFormatException e) {
+      logger.error("Invalid default.annotation parameter value: \"" + default_annotation_size + '"', e);
+    }
   }
 }

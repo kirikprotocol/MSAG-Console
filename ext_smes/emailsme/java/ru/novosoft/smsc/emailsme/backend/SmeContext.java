@@ -35,7 +35,6 @@ public class SmeContext implements SMEAppContext
 
   private final SMSCAppContext appContext;
   private Config config;
-  private ConnectionPool connectionPool;
   private String sort = "addr";
   private int pageSize = 20;
   private Category logger = Category.getInstance(this.getClass());
@@ -46,22 +45,11 @@ public class SmeContext implements SMEAppContext
     this.appContext = appContext;
     appContext.registerSMEContext(this);
     resetConfig();
-    applyJdbc(null);
   }
 
-  private void shutdownDataSource()
-  {
-    try {
-      if (connectionPool != null) connectionPool.shutdown();
-      connectionPool = null;
-    } catch (SQLException ex) {
-      logger.error("ConnectionPool shutdown failed", ex);
-    }
-  }
 
-  public void shutdown()
-  {
-    shutdownDataSource();
+
+  public void shutdown() {
   }
 
   public void resetConfig() throws AdminException, IOException, ParserConfigurationException, SAXException
@@ -72,11 +60,6 @@ public class SmeContext implements SMEAppContext
   public Config getConfig()
   {
     return config;
-  }
-
-  public ConnectionPool getConnectionPool()
-  {
-    return connectionPool;
   }
 
   public String getSort()
@@ -97,36 +80,6 @@ public class SmeContext implements SMEAppContext
   public void setPageSize(int pageSize)
   {
     this.pageSize = pageSize;
-  }
-
-  public void applyJdbc(Config oldConfig)
-  {
-    try {
-      final String newSource = config.getString("DataSource.jdbc.source");
-      final String newDriver = config.getString("DataSource.jdbc.driver");
-      final String newUser = config.getString("DataSource.dbUserName");
-      final String newPassword = config.getString("DataSource.dbUserPassword");
-      if (oldConfig == null
-          || !newSource.equals(oldConfig.getString("DataSource.jdbc.source"))
-          || !newDriver.equals(oldConfig.getString("DataSource.jdbc.driver"))
-          || !newUser.equals(oldConfig.getString("DataSource.dbUserName"))
-          || !newPassword.equals(oldConfig.getString("DataSource.dbUserPassword")))
-      {
-        shutdownDataSource();
-        Properties connectionPoolConfig = new Properties();
-        connectionPoolConfig.setProperty("jdbc.source", newSource);
-        connectionPoolConfig.setProperty("jdbc.driver", newDriver);
-        connectionPoolConfig.setProperty("jdbc.user", newUser);
-        connectionPoolConfig.setProperty("jdbc.pass", newPassword);
-        connectionPoolConfig.setProperty("jdbc.min.connections", "0");
-        connectionPoolConfig.setProperty("jdbc.max.idle.time", "240");
-        connectionPoolConfig.setProperty("jdbc.pool.name", "emailsme");
-        connectionPool = new ConnectionPool(connectionPoolConfig);
-      }
-    } catch (Throwable e) {
-      logger.error("Could not init connection pool", e);
-      connectionPool = null;
-    }
   }
 
   public Config loadCurrentConfig() throws AdminException, IOException, SAXException, ParserConfigurationException

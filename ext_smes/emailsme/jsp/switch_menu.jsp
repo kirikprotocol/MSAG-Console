@@ -15,9 +15,6 @@
     case SmeBean.RESULT_OPTIONS:
       response.sendRedirect("options.jsp");
       return;
-    case SmeBean.RESULT_DRIVERS:
-      response.sendRedirect("drivers.jsp");
-      return;
     case SmeBean.RESULT_PROFILES:
       response.sendRedirect("profiles.jsp");
       return;

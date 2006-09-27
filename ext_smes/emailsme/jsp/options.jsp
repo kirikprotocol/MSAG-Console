@@ -16,6 +16,14 @@
 <input type=hidden name=initialized value=true>
 <table class=properties_list cellspacing=0>
 <col width="10%">
+
+<tr><td colspan=2><div class=page_subtitle>Store</div></td></tr>
+<tr class=row<%=rowN++&1%>>
+  <th>directory</th>
+  <td><input class=txt name=store_dir value="<%=StringEncoderDecoder.encode(bean.getStore_dir())%>"></td>
+</tr>
+
+<%rowN=0;%>
 <tr><td colspan=2><div class=page_subtitle>SMPP</div></td></tr>
 <tr class=row<%=rowN++&1%>>
   <th>host</th>
@@ -68,11 +76,30 @@
 
 <%rowN=0;%>
 <tr><td colspan=2>&nbsp;</td></tr>
-<tr><td colspan=2><div class=page_subtitle>Mail</div></td></tr>
+<tr><td colspan=2><div class=page_subtitle>Admin</div></td></tr>
 <tr class=row<%=rowN++&1%>>
-  <th>domain</th>
-  <td><input class=txt name=mail_domain value="<%=StringEncoderDecoder.encode(bean.getMail_domain())%>"></td>
+  <th>host</th>
+  <td><input class=txt name=admin_host value="<%=StringEncoderDecoder.encode(bean.getAdmin_host())%>"></td>
 </tr>
+<tr class=row<%=rowN++&1%>>
+  <th>port</th>
+  <td><input class=txt name=admin_port value="<%=StringEncoderDecoder.encode(bean.getAdmin_port())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Allow GSM to email without profile</th>
+  <td align="LEFT"><input type=checkbox name=admin_allow_gsm_2_email_without_profile <%=bean.getAdmin_allow_gsm_2_email_without_profile()%>></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Allow email to GSM without profile</th>
+  <td align="LEFT"><input type=checkbox name=admin_allow_email_2_gsm_without_profile <%=bean.getAdmin_allow_email_2_gsm_without_profile()%>></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Default limit</th>
+  <td><input class=txt name=admin_default_limit value="<%=StringEncoderDecoder.encode(bean.getAdmin_default_limit())%>"></td>
+</tr>
+
+
+<%rowN=0;%>
 
 <%rowN=0;%>
 <tr><td colspan=2>&nbsp;</td></tr>
@@ -82,8 +109,24 @@
   <td><input class=txt name=smtp_host value="<%=StringEncoderDecoder.encode(bean.getSmtp_host())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>port</th>
+  <th>host</th>
   <td><input class=txt name=smtp_port value="<%=StringEncoderDecoder.encode(bean.getSmtp_port())%>"></td>
+</tr>
+
+<tr class=row<%=rowN++&1%>>
+<tr><td colspan=2>&nbsp;</td></tr>
+<tr><td colspan=2><div class=page_subtitle>Mail</div></td></tr>
+<tr class=row<%=rowN++&1%>>
+  <th>domain</th>
+  <td><input class=txt name=mail_domain value="<%=StringEncoderDecoder.encode(bean.getMail_domain())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>stripper</th>
+  <td><input class=txt name=mail_stripper value="<%=StringEncoderDecoder.encode(bean.getMail_stripper())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>format</th>
+  <td><input class=txt name=mail_format value="<%=StringEncoderDecoder.encode(bean.getMail_format())%>"></td>
 </tr>
 
 <%rowN=0;%>
@@ -93,38 +136,13 @@
   <th>daily limit</th>
   <td><input class=txt name=defaults_dailyLimt value="<%=StringEncoderDecoder.encode(bean.getDefaults_dailyLimt())%>"></td>
 </tr>
+<tr class=row<%=rowN++&1%>>
+  <th>annotation size</th>
+  <td><input class=txt name=default_annotation_size value="<%=StringEncoderDecoder.encode(bean.getDefault_annotation_size())%>"></td>
+</tr>
 
-<%rowN=0;%>
-<tr><td colspan=2>&nbsp;</td></tr>
-<tr><td colspan=2><div class=page_subtitle>DataSource</div></td></tr>
-<tr class=row<%=rowN++&1%>>
-  <th>type</th>
-  <td><input class=txt name=dataSource_type value="<%=StringEncoderDecoder.encode(bean.getDataSource_type())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th>connections</th>
-  <td><input class=txt name=dataSource_connections value="<%=StringEncoderDecoder.encode(bean.getDataSource_connections())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th>dbInstance</th>
-  <td><input class=txt name=dataSource_dbInstance value="<%=StringEncoderDecoder.encode(bean.getDataSource_dbInstance())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th>dbUserName</th>
-  <td><input class=txt name=dataSource_dbUserName value="<%=StringEncoderDecoder.encode(bean.getDataSource_dbUserName())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th>dbUserPassword</th>
-  <td><input class=txt name=dataSource_dbUserPassword value="<%=StringEncoderDecoder.encode(bean.getDataSource_dbUserPassword())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th>JDBC source</th>
-  <td><input class=txt name=dataSource_jdbc_source value="<%=StringEncoderDecoder.encode(bean.getDataSource_jdbc_source())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th>JDBC driver</th>
-  <td><input class=txt name=dataSource_jdbc_driver value="<%=StringEncoderDecoder.encode(bean.getDataSource_jdbc_driver())%>"></td>
-</tr>
+
+
 
 </table>
 </div><%

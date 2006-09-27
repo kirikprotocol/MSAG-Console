@@ -79,18 +79,9 @@ public class Index extends SmeBean
   {
     int result = RESULT_DONE;
     try {
-      Config oldConfig = null;
-      try {
-        oldConfig = getSmeContext().loadCurrentConfig();
-      } catch (Throwable e) {
-        logger.warn("Could not load old config", e);
-      }
       getConfig().save();
       if (appContext.getHostsManager().getServiceInfo(SmeContext.SME_ID).isOnline())
         result = warning("You need to restart sme to apply changes");
-      getSmeContext().applyJdbc(oldConfig);
-      if (getSmeContext().getConnectionPool() == null)
-        result = warning("SQL JDBC properties is invalid");
     } catch (Throwable e) {
       logger.error("Could not apply config", e);
       return error("Could not apply config", e);

@@ -18,7 +18,6 @@ public class SmeBean extends PageBean
 {
   public static final int RESULT_INDEX = PageBean.PRIVATE_RESULT + 0;
   public static final int RESULT_OPTIONS = PageBean.PRIVATE_RESULT + 1;
-  public static final int RESULT_DRIVERS = PageBean.PRIVATE_RESULT + 2;
   public static final int RESULT_PROFILES = PageBean.PRIVATE_RESULT + 3;
   protected static final int PRIVATE_RESULT = PageBean.PRIVATE_RESULT + 4;
 
@@ -45,8 +44,6 @@ public class SmeBean extends PageBean
       return RESULT_INDEX;
     else if ("options".equals(mbMenu))
       return RESULT_OPTIONS;
-    else if ("drivers".equals(mbMenu))
-      return RESULT_DRIVERS;
     else if ("profiles".equals(mbMenu))
       return RESULT_PROFILES;
     else

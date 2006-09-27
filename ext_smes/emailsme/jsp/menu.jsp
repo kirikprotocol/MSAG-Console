@@ -3,7 +3,6 @@
     sme_menu_begin(out);
     sme_menu_button(out, "mbMenu", "apply", "Home", "");
     sme_menu_button(out, "mbMenu", "options", "Options", "Global EMailSme options");
-    sme_menu_button(out, "mbMenu", "drivers", "Drivers", "Datasource drivers");
     sme_menu_button(out, "mbMenu", "profiles", "Profiles", "User profiles");
     sme_menu_space(out);
     if (ServiceIDForShowStatus != null && ServiceIDForShowStatus.length() > 0) {
