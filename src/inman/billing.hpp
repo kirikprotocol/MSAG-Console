@@ -71,7 +71,7 @@ struct BillingCFG {
     AbonentPolicies * policies;
     BILL_MODE       billMode;
     CDR_MODE        cdrMode;
-    const char *    cdrDir;         //location to store CDR files
+    std::string     cdrDir;         //location to store CDR files
     long            cdrInterval;    //rolling interval for CDR files
     unsigned short  maxTimeout;     //maximum timeout for TCP operations,
                                     //billing aborts on its expiration
@@ -85,7 +85,6 @@ struct BillingCFG {
     BillingCFG()
     {
         abCache = NULL; bfs = NULL; tmWatcher = NULL;
-        cdrDir = NULL;
         cdrInterval = 0;
         billMode = smsc::inman::BILL_ALL;
         cdrMode =  CDR_ALL;

@@ -22,7 +22,6 @@ using smsc::inman::BillingConnect;
 using smsc::inman::cache::AbonentCacheCFG;
 using smsc::inman::cache::AbonentCache;
 using smsc::inman::filestore::InFileStorageRoller;
-//using smsc::inman::sync::TimeWatcher;
 
 #include "inman/abprov/IAPLoader.hpp"
 using smsc::inman::iaprvd::IAProviderCreatorITF;
@@ -39,7 +38,6 @@ struct InService_CFG {
     InService_CFG()
     {
         bill.policies = &abPolicies;
-        sock.host = cachePrm.nmDir = NULL;
         sock.port = sock.maxConn = sock.timeout = 0;
     }
 };

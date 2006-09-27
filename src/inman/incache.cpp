@@ -31,7 +31,7 @@ AbonentCache::AbonentCache(AbonentCacheCFG * cfg, Logger * uselog/* = NULL*/)
         (sizeof(AbonentId) + sizeof(AbonentRecordRAM) + 4 + sizeof(void*))*2
          + (sizeof(AbonentId) + sizeof(void*)*3);
 
-    assert(_cfg.nmDir && _cfg.fileRcrd);
+    assert(_cfg.nmDir.length() && _cfg.fileRcrd);
     logger = uselog ? uselog : Logger::getInstance("smsc.inman.InCache");
     maxRamIt = ((((_cfg.RAM ? _cfg.RAM : DFLT_RAM)<<10)-1)/DFLT_FACTOR)<<10;
     smsc_log_info(logger, "InCache: RAM cache: %u abonents (factor: %u).",

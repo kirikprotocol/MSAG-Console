@@ -395,13 +395,14 @@ public:
             smsc_log_info(inmanLogger, "Config version: %s", cstr);
 
         try {
-            sock.host = manager.getString("host");
+            cstr = manager.getString("host");
             sock.port = manager.getInt("port");
-            smsc_log_info(inmanLogger, "INMan: %s:%d", sock.host, sock.port);
+            smsc_log_info(inmanLogger, "INMan: %s:%d", cstr, sock.port);
         } catch (ConfigException& exc) {
-            sock.host = 0; sock.port = 0;
             throw ConfigException("INMan host or port missing");
         }
+        sock.host += cstr;
+
         tmo = 0;
         try { tmo = (uint32_t)manager.getInt("maxClients"); }
         catch (ConfigException& exc) { }
@@ -455,19 +456,22 @@ public:
         smsc_log_info(inmanLogger, "cdrMode: %s [%d]", cstr, bill.cdrMode);
 
         if (bill.cdrMode != BillingCFG::CDR_NONE) {
-            try {
-                bill.cdrDir = billCfg.getString("cdrDir");
-                bill.cdrInterval = billCfg.getInt("cdrInterval");
-            } catch (ConfigException& exc) {
-                bill.cdrDir = NULL; bill.cdrInterval = 0;
-                throw ConfigException("'cdrDir' or 'cdrInterval' is invalid or missing");
+            cstr = NULL;
+            try { cstr = billCfg.getString("cdrDir"); } 
+            catch (ConfigException& exc) { }
+            if (!cstr || !cstr[0])
+                throw ConfigException("'cdrDir' is invalid or missing");
+
+            try { bill.cdrInterval = billCfg.getInt("cdrInterval"); }
+            catch (ConfigException& exc) {
+                throw ConfigException("'cdrInterval' is invalid or missing");
             }
             if (bill.cdrInterval < _in_CFG_MIN_BILLING_INTERVAL) {
-                bill.cdrDir = NULL; bill.cdrInterval = 0;
                 throw ConfigException("'cdrInterval' should be grater than %ld seconds",
                                       _in_CFG_MIN_BILLING_INTERVAL);
             }
-            smsc_log_info(inmanLogger, "cdrDir: %s", bill.cdrDir);
+            bill.cdrDir += cstr;
+            smsc_log_info(inmanLogger, "cdrDir: %s", cstr);
             smsc_log_info(inmanLogger, "cdrInterval: %d secs", bill.cdrInterval);
         }
         //cache parameters
@@ -487,11 +491,14 @@ public:
         } catch (ConfigException& exc) {
             throw ConfigException("'cacheRAM' is missing or invalid");
         }
-        try {
-            cachePrm.nmDir = billCfg.getString("cacheDir");
-        } catch (ConfigException& exc) {
+        cstr = NULL;
+        try { cstr = billCfg.getString("cacheDir"); }
+        catch (ConfigException& exc) { }
+        if (!cstr || !cstr[0])
             throw ConfigException("'cacheDir' is missing");
-        }
+        cachePrm.nmDir += cstr;
+        smsc_log_info(inmanLogger, "cacheDir: %s", cstr);
+
         tmo = 0;
         try { tmo = (uint32_t)billCfg.getInt("cacheRecords"); }
         catch (ConfigException& exc) { }

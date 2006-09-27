@@ -76,11 +76,11 @@ public:
 struct AbonentCacheCFG {
     long    interval;   //abonent info refreshing interval, units: seconds
     long    RAM;        //abonents cache RAM buffer size, units: Mb
-    int     fileRcrd ;  //initial number of cache file records
-    const char *nmDir;  //
+    int     fileRcrd;   //initial number of cache file records
+    std::string nmDir;  //directory storing cache files
 
     AbonentCacheCFG() {
-        interval = RAM = fileRcrd = 0; /*nmFile = */nmDir = NULL;
+        interval = RAM = fileRcrd = 0;
     }
 };
 
