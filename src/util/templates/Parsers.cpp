@@ -47,7 +47,6 @@ void InputParser::parse(std::string& input,
             if (parser)
             {
                 parser->parse(input, *entity, adapter, ctx);
-
                 bytes = 0; str = input.c_str();
                 while (str && isspace(str[bytes])) bytes++;
                 if (bytes) input.erase(0, bytes);
@@ -58,8 +57,8 @@ void InputParser::parse(std::string& input,
         else throw ParsingException("Type <%s> is invalid !",
                                     ioEntityTypeStrings[entity->type]);
     }
-
-    if (input.length() > 0)
+    
+    if (!ctx.isNeedMsgText() && (input.length() > 0))
         throw ParsingWarning("Unexpected paramenters left in input : '%s'", input.c_str());
 }
 
@@ -346,6 +345,10 @@ void StringParser::parse(std::string& input,
     std::string line = "";
 
     const char* imp = entity.getOption(SMSC_DBSME_IO_FORMAT_IMPORT_OPTION);
+    
+    
+    if (imp && (*SMSC_DBSME_MSG_TEXT == *imp)) ctx.setNeedMsgText(true);
+    
     char* impVal = 0;
     if (imp && ctx.importStr(imp, impVal) && impVal && impVal[0])
     {

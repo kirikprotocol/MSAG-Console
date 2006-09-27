@@ -143,6 +143,8 @@ void SQLJob::process(Command& command, Statement& stmt)
     ctx.exportStr(SMSC_DBSME_SQL_JOB_TO_ADDR_UN, toAddressUn);
     ctx.exportStr(SMSC_DBSME_SQL_JOB_NAME, getName());
 
+    ctx.exportStr(SMSC_DBSME_MSG_TEXT, ((command.getInData()) ? command.getInData():""));
+
     command.setOutData("");
 
     if (!parser || !formatter)
@@ -150,6 +152,7 @@ void SQLJob::process(Command& command, Statement& stmt)
               "IO Parser or Formatter wasn't defined!");
 
     std::string input = (command.getInData()) ? command.getInData():"";
+
 
     try
     {
@@ -169,7 +172,6 @@ void SQLJob::process(Command& command, Statement& stmt)
     {
         error(SQL_JOB_DS_FAILURE, exc.what());
     }
-
     std::string output = "";
     if (isQuery)
     {
@@ -305,6 +307,8 @@ void PLSQLJob::process(Command& command, Routine& routine)
     ctx.exportStr(SMSC_DBSME_SQL_JOB_TO_ADDR_UN, toAddressUn);
     ctx.exportStr(SMSC_DBSME_SQL_JOB_NAME, getName());
 
+    ctx.exportStr(SMSC_DBSME_MSG_TEXT, ((command.getInData()) ? command.getInData():""));
+
     command.setOutData("");
 
     if (!parser || !formatter)
@@ -318,7 +322,7 @@ void PLSQLJob::process(Command& command, Routine& routine)
     {
         SQLRoutineAdapter routineAdapter(&routine);
         try {
-            parser->parse(input, routineAdapter, ctx);
+	    parser->parse(input, routineAdapter, ctx);
         } catch (ParsingWarning& wng) {
             smsc_log_warn(log, "%s", wng.what());
         }

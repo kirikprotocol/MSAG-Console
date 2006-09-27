@@ -46,6 +46,8 @@ namespace smsc { namespace util { namespace templates
     static const char* SMSC_DBSME_IO_FORMAT_EXPORT_OPTION    = "export";
     static const char* SMSC_DBSME_IO_FORMAT_IMPORT_OPTION    = "import";
 
+    static const char* SMSC_DBSME_MSG_TEXT		     = "msg-text";
+    
     static const char  SMSC_DBSME_IO_FORMAT_ENTITY_DELIMETER = '$';
     static const char  SMSC_DBSME_IO_FORMAT_STRING_DELIMETER = '\"';
     static const char  SMSC_DBSME_IO_FORMAT_ENTITY_ESCAPER   = '\\';
@@ -90,12 +92,14 @@ namespace smsc { namespace util { namespace templates
         Hash<float>         flts;
         Hash<double>        dbls;
         Hash<long double>   ldls;
-
+	
         static void toUpperCase(const char* str, char* low);
-
+	
+	bool needMsgText;
+	
     public:
 
-        ContextEnvironment() {};
+        ContextEnvironment() { needMsgText = false; };
         virtual ~ContextEnvironment() {};
 
         bool exportStr(const char* key, const char* val);
@@ -112,6 +116,8 @@ namespace smsc { namespace util { namespace templates
         bool importLdl(const char* key, long double &val);
 
         void reset();
+	void setNeedMsgText(bool need) { needMsgText = need; };
+	bool isNeedMsgText() { return needMsgText; }; 
     };
 
     const int ioEntityTypesNumber = 14;

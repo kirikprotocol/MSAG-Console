@@ -21,7 +21,7 @@ namespace smsc { namespace util { namespace templates
     using smsc::core::buffers::Hash;
     
     using smsc::util::Exception;
-
+   
     struct ParsingException : public Exception
     {
         ParsingException(const char* fmt,...)
