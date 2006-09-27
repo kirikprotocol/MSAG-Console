@@ -671,7 +671,7 @@ public:
   {
     cfg=config;
   }
-  void connect(int bindtype=BindType::Transceiver)throw(SmppConnectException)
+  void connect(int bindtype=BindType::Transceiver)//throw(SmppConnectException)
   {
     smsc_log_info(log,"SmppSession: connect %p, %s:%d to=%d",this, cfg.host.c_str(), cfg.port, cfg.timeOut);
     if(!closed)return;
