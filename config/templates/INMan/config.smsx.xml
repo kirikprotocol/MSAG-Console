@@ -1,0 +1,32 @@
+<!--  "$Id$" -->
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE config SYSTEM "file://configuration.dtd">
+
+<config>
+  <section name="SMSExtra"> <!-- SMS Extra services short numbers and indexes -->
+  <!-- SMS Extra service is described by two parameters:
+                serviceId (type of uint32_t) and serviceAdr (type of string)
+        Name of parameters are composed as:
+        serviceIdNN[any_text]
+        serviceAdrNN
+        where NN is a arbitrary decimal number of service, that is used  for association of serviceAdr and  serviceId
+   -->
+    <param name="serviceId1_nick" type="int">1</param>
+    <param name="serviceAdr1" type="string">smsx:201</param> 
+
+    <param name="serviceId2_flash" type="int">2</param>
+    <param name="serviceAdr2" type="string">smsx:202</param> 
+
+    <param name="serviceId4_icq" type="int">3</param>
+    <param name="serviceAdr4" type="string">smsx:203</param> 
+
+    <param name="serviceId8" type="int">8</param>
+    <param name="serviceAdr8" type="string">smsx:208</param> 
+
+    <param name="serviceId5_icq_nick" type="int">5</param>
+    <param name="serviceAdr5" type="string">smsx:205</param> 
+
+  </section>
+</config>
+
+
