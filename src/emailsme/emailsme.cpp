@@ -945,6 +945,17 @@ bool isValidEmail(const std::string& value)
   return haveAt && haveDot;
 }
 
+std::string trimSpaces(const char* str)
+{
+  std::string rv=str;
+  int i=rv.length()-1;
+  while(i>=0 && rv[i]==' ')
+  {
+    i--;
+  }
+  rv.erase(i+1);
+  return rv;
+}
 
 void sendAnswer(const Address& orgAddr,const char* msgName,const char* paramName=0,const char* paramValue=0)
 {
@@ -1045,7 +1056,7 @@ int processSms(const char* text,const char* fromaddress)
       try{
         if(cmd=="alias")
         {
-          std::string value=sp;
+          std::string value=trimSpaces(sp);
           AbonentProfile p2;
           if(storage.getProfileByEmail(value.c_str(),p2))
           {
@@ -1077,14 +1088,15 @@ int processSms(const char* text,const char* fromaddress)
         }else
         if(cmd=="forward")
         {
-          if(isValidEmail(sp))
+          std::string eml=trimSpaces(sp);
+          if(isValidEmail(eml.c_str()))
           {
-            p.forwardEmail=sp;
+            p.forwardEmail=eml;
             storage.UpdateProfile(p);
-            sendAnswer(fromaddress,"forward","email",sp);
+            sendAnswer(fromaddress,"forward","email",eml.c_str());
           }else
           {
-            sendAnswer(fromaddress,"forwardfailed","email",sp);
+            sendAnswer(fromaddress,"forwardfailed","email",eml.c_str());
           }
           return ProcessSmsCodes::OK;
         }else
@@ -1097,14 +1109,14 @@ int processSms(const char* text,const char* fromaddress)
         }else
         if(cmd=="realname")
         {
-          p.realName=sp;
+          p.realName=trimSpaces(sp);
           storage.UpdateProfile(p);
-          sendAnswer(fromaddress,"realname","realname",sp);
+          sendAnswer(fromaddress,"realname","realname",p.realName.c_str());
           return ProcessSmsCodes::OK;
         }else
         if(cmd=="number")
         {
-          std::string val=sp;
+          std::string val=trimSpaces(sp);
           for(int i=0;i<val.length();i++)val[i]=tolower(val[i]);
           if(val=="on")
           {
@@ -1349,6 +1361,7 @@ int ProcessMessage(const char *msg,int len)
         __trace2__("number map turned off for address:%s",addr.c_str());
         return StatusCodes::STATUS_CODE_NOUSER;
       }
+      noProfile=false;
     }else
     {
       __trace2__("no profile for address:%s",dstUser.c_str());
@@ -1624,13 +1637,13 @@ int main(int argc,char* argv[])
 "/^(?:"
 "alias\\s+\\w*|"
 "noalias|"
-"forward\\s+[\\w\\-\\.]+@[\\w\\-\\.]+|"
+"forward\\s+[\\w\\-+\\.]+@[\\w\\-\\]+\\.[\\w\\-\\.]+|"
 "forwardoff|"
 "number\\s+on|"
 "number\\s+off|"
 "realname\\s+.*|"
 "(?{address}[\\w\\-\\.]+@[\\w\\-\\.]+)(?:\\ssubj=\"(?{subj}.*?)\")?\\s*(?{body}.*)"
-")$/isx"
+")\\s*$/isx"
 ))
   {
     fprintf(stderr,"Failed to compile parseregexp\n");
