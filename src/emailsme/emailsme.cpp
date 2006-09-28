@@ -48,6 +48,59 @@ FILE *emlOut;
 
 char hostName[256];
 
+bool isValidAlias(const std::string& value)
+{
+  bool haveLetters=false;
+  for(int i=0;i<value.length();i++)
+  {
+    if(isalpha(value[i]))haveLetters=true;
+    if(!isalnum(value[i]) && !strchr("-+_",value[i]))return false;
+  }
+  return haveLetters;
+}
+
+bool ismailchar(char c)
+{
+  if(isalnum(c))return true;
+  return c=='.' || c=='-' || c=='_' || c=='+';
+}
+
+bool isValidEmail(const std::string& value)
+{
+  bool haveAt=false;
+  bool haveDot=false;
+  for(int i=0;i<value.length();i++)
+  {
+    if(value[i]=='@')
+    {
+      if(haveAt)return false;
+      haveAt=true;
+    }else if(value[i]=='.' && haveAt)
+    {
+      haveDot=true;
+    }else if(!ismailchar(value[i]))return false;
+  }
+  return haveAt && haveDot;
+}
+
+std::string trimSpaces(const char* str)
+{
+  std::string rv=str;
+  int i=rv.length()-1;
+  while(i>=0 && rv[i]==' ')
+  {
+    i--;
+  }
+  rv.erase(i+1);
+  return rv;
+}
+
+void toLower(std::string& str)
+{
+  for(int i=0;i<str.length();i++)str[i]=tolower(str[i]);
+}
+
+
 class EmptyGetAdapter:public GetAdapter{
 public:
 
@@ -606,6 +659,7 @@ public:
           {
             AbonentProfile p,p2;
             p.Read(buf);
+            toLower(p.user);
             if(storage.getProfileByAddress(p.addr.value,p2))
             {
               p.limitCountEml2Gsm=p2.limitCountEml2Gsm;
@@ -773,12 +827,6 @@ string makeFromAddress(const char* fromaddress)
   return (string)fromaddress+"@"+cfg::maildomain;
 }
 
-bool ismailchar(char c)
-{
-  if(isalnum(c))return true;
-  return c=='.' || c=='-' || c=='_' || c=='+';
-}
-
 string ExtractEmail(const string& value)
 {
   unsigned int pos=value.find('@');
@@ -916,46 +964,6 @@ int SendEMail(const string& from,const Array<string>& to,const string& subj,cons
 }
 
 
-bool isValidAlias(const std::string& value)
-{
-  bool haveLetters=false;
-  for(int i=0;i<value.length();i++)
-  {
-    if(isalpha(value[i]))haveLetters=true;
-    if(!isalnum(value[i]) && !strchr("-+_",value[i]))return false;
-  }
-  return haveLetters;
-}
-
-bool isValidEmail(const std::string& value)
-{
-  bool haveAt=false;
-  bool haveDot=false;
-  for(int i=0;i<value.length();i++)
-  {
-    if(value[i]=='@')
-    {
-      if(haveAt)return false;
-      haveAt=true;
-    }else if(value[i]=='.' && haveAt)
-    {
-      haveDot=true;
-    }else if(!ismailchar(value[i]))return false;
-  }
-  return haveAt && haveDot;
-}
-
-std::string trimSpaces(const char* str)
-{
-  std::string rv=str;
-  int i=rv.length()-1;
-  while(i>=0 && rv[i]==' ')
-  {
-    i--;
-  }
-  rv.erase(i+1);
-  return rv;
-}
 
 void sendAnswer(const Address& orgAddr,const char* msgName,const char* paramName=0,const char* paramValue=0)
 {
@@ -1042,7 +1050,7 @@ int processSms(const char* text,const char* fromaddress)
     if(sp)
     {
       cmd.assign(text,0,sp-text);
-      for(int i=0;i<cmd.length();i++)cmd[i]=tolower(cmd[i]);
+      toLower(cmd);
       while(*sp==' ')sp++;
     }else
     {
@@ -1057,6 +1065,7 @@ int processSms(const char* text,const char* fromaddress)
         if(cmd=="alias")
         {
           std::string value=trimSpaces(sp);
+          toLower(value);
           AbonentProfile p2;
           if(storage.getProfileByEmail(value.c_str(),p2))
           {
@@ -1349,6 +1358,7 @@ int ProcessMessage(const char *msg,int msglen)
   bool noProfile=true;
 
   string dstUser=to.substr(0,to.find('@'));
+  toLower(dstUser);
 
   if(!storage.getProfileByEmail(dstUser.c_str(),p))
   {
