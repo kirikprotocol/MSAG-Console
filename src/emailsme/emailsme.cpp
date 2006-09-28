@@ -1306,14 +1306,14 @@ void IncUsageCounter(const string& address)
 }
 */
 
-int ProcessMessage(const char *msg,int len)
+int ProcessMessage(const char *msg,int msglen)
 {
   string line,name,value,from,to;
   bool inheader=true;
   int pos=0;
   for(;;)
   {
-    if(!GetNextLine(msg,len,pos,line))break;
+    if(!GetNextLine(msg,msglen,pos,line))break;
     if(inheader)
     {
       if(line.length()==0)
@@ -1397,13 +1397,13 @@ int ProcessMessage(const char *msg,int len)
       return StatusCodes::STATUS_CODE_UNKNOWNERROR;
     }
   };
-  __trace2__("write msg size:%d",len);
-  fprintf(emlOut,"%d\n",len);fflush(emlOut);
+  __trace2__("write msg size:%d",msglen);
+  fprintf(emlOut,"%d\n",msglen);fflush(emlOut);
   __trace__("write msg");
   int sz=0;
-  while(sz<len)
+  while(sz<msglen)
   {
-    int wr=fwrite(msg,1,len,emlOut);fflush(emlOut);
+    int wr=fwrite(msg+sz,1,msglen-sz,emlOut);fflush(emlOut);
     if(wr<=0)
     {
       __trace__("failed to write data for mailstripper");
@@ -1418,8 +1418,8 @@ int ProcessMessage(const char *msg,int len)
     __trace__("failed to read data from mailstripper");
     return StatusCodes::STATUS_CODE_UNKNOWNERROR;
   }
+  int len=atoi(buf);
   __trace2__("resp len=%d",len);
-  len=atoi(buf);
   auto_ptr<char> newmsg(new char[len+1]);
 
   sz=0;
@@ -1447,10 +1447,12 @@ int ProcessMessage(const char *msg,int len)
   string dst=noProfile?'+'+dstUser:MapEmailToAddress(dstUser,fwd);
   if(fwd.length())
   {
+    __trace2__("forwarding email to %s",fwd.c_str());
+    __trace2__("fwd body(%d):%s",msglen,msg);
     try{
       Array<string> to2;
       to2.Push(fwd);
-      string body(msg,len);
+      string body(msg,msglen);
       SendEMail(from,to2,"",body,true);
     }catch(exception& e)
     {
