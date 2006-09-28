@@ -1,10 +1,7 @@
 package ru.novosoft.smsc.emailsme.beans;
 
-import ru.novosoft.smsc.util.config.Config;
-
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
-import java.io.IOException;
 
 /**
  * Created by IntelliJ IDEA.
@@ -45,6 +42,20 @@ public class Options extends SmeBean
 
   private int defaults_dailyLimt = 0;
   private int default_annotation_size = 0;
+
+  private String answers_alias = "";
+  private String answers_aliasfailed = "";
+  private String answers_aliasbusy = "";
+  private String answers_noalias = "";
+  private String answers_forward = "";
+  private String answers_forwardfailed = "";
+  private String answers_forwardoff = "";
+  private String answers_realname = "";
+  private String answers_numberon = "";
+  private String answers_numberoff = "";
+  private String answers_numberfailed = "";
+  private String answers_systemerror = "";
+  private String answers_unknowncommand = "";
 
 
   private String mbDone = null;
@@ -88,6 +99,21 @@ public class Options extends SmeBean
 
         defaults_dailyLimt = getConfig().getInt("defaults.dailyLimit");
         default_annotation_size = getConfig().getInt("defaults.annotationSize");
+
+        answers_alias = getConfig().getString("answers.alias");
+        answers_aliasfailed = getConfig().getString("answers.aliasfailed");
+        answers_aliasbusy = getConfig().getString("answers.aliasbusy");
+        answers_noalias = getConfig().getString("answers.noalias");
+        answers_forward = getConfig().getString("answers.forward");
+        answers_forwardfailed = getConfig().getString("answers.forwardfailed");
+        answers_forwardoff = getConfig().getString("answers.forwardoff");
+        answers_realname = getConfig().getString("answers.realname");
+        answers_numberon = getConfig().getString("answers.numberon");
+        answers_numberoff = getConfig().getString("answers.numberoff");
+        answers_numberfailed = getConfig().getString("answers.numberfailed");
+        answers_systemerror = getConfig().getString("answers.systemerror");
+        answers_unknowncommand = getConfig().getString("answers.unknowncommand");
+
       } catch (Exception e) {
         logger.error(e);
         return error(e.getMessage());
@@ -143,15 +169,21 @@ public class Options extends SmeBean
     getConfig().setInt("defaults.dailyLimit", defaults_dailyLimt);
     getConfig().setInt("defaults.annotationSize", default_annotation_size);
 
-//    try {
-//      getConfig().save();
-//    } catch (IOException e) {
-//      logger.error("Cant save config", e);
-//      e.printStackTrace();
-//    } catch (Config.WrongParamTypeException e) {
-//      logger.error("Cant save config", e);
-//      e.printStackTrace();
-//    }
+
+    getConfig().setString("answers.alias", answers_alias);
+    getConfig().setString("answers.aliasfailed", answers_aliasfailed);
+    getConfig().setString("answers.aliasbusy", answers_aliasbusy);
+    getConfig().setString("answers.noalias", answers_noalias);
+    getConfig().setString("answers.forward", answers_forward);
+    getConfig().setString("answers.forwardfailed", answers_forwardfailed);
+    getConfig().setString("answers.forwardoff", answers_forwardoff);
+    getConfig().setString("answers.realname", answers_realname);
+    getConfig().setString("answers.numberon", answers_numberon);
+    getConfig().setString("answers.numberoff", answers_numberoff);
+    getConfig().setString("answers.numberfailed", answers_numberfailed);
+    getConfig().setString("answers.systemerror", answers_systemerror);
+    getConfig().setString("answers.unknowncommand", answers_unknowncommand);
+
     return RESULT_DONE;
   }
 
@@ -509,5 +541,109 @@ public class Options extends SmeBean
     } catch (NumberFormatException e) {
       logger.error("Invalid default.annotation parameter value: \"" + default_annotation_size + '"', e);
     }
+  }
+
+  public String getAnswers_alias() {
+    return answers_alias;
+  }
+
+  public void setAnswers_alias(String answers_alias) {
+    this.answers_alias = answers_alias;
+  }
+
+  public String getAnswers_aliasfailed() {
+    return answers_aliasfailed;
+  }
+
+  public void setAnswers_aliasfailed(String answers_aliasfailed) {
+    this.answers_aliasfailed = answers_aliasfailed;
+  }
+
+  public String getAnswers_aliasbusy() {
+    return answers_aliasbusy;
+  }
+
+  public void setAnswers_aliasbusy(String answers_aliasbusy) {
+    this.answers_aliasbusy = answers_aliasbusy;
+  }
+
+  public String getAnswers_noalias() {
+    return answers_noalias;
+  }
+
+  public void setAnswers_noalias(String answers_noalias) {
+    this.answers_noalias = answers_noalias;
+  }
+
+  public String getAnswers_forward() {
+    return answers_forward;
+  }
+
+  public void setAnswers_forward(String answers_forward) {
+    this.answers_forward = answers_forward;
+  }
+
+  public String getAnswers_forwardfailed() {
+    return answers_forwardfailed;
+  }
+
+  public void setAnswers_forwardfailed(String answers_forwardfailed) {
+    this.answers_forwardfailed = answers_forwardfailed;
+  }
+
+  public String getAnswers_forwardoff() {
+    return answers_forwardoff;
+  }
+
+  public void setAnswers_forwardoff(String answers_forwardoff) {
+    this.answers_forwardoff = answers_forwardoff;
+  }
+
+  public String getAnswers_realname() {
+    return answers_realname;
+  }
+
+  public void setAnswers_realname(String answers_realname) {
+    this.answers_realname = answers_realname;
+  }
+
+  public String getAnswers_numberon() {
+    return answers_numberon;
+  }
+
+  public void setAnswers_numberon(String answers_numberon) {
+    this.answers_numberon = answers_numberon;
+  }
+
+  public String getAnswers_numberoff() {
+    return answers_numberoff;
+  }
+
+  public void setAnswers_numberoff(String answers_numberoff) {
+    this.answers_numberoff = answers_numberoff;
+  }
+
+  public String getAnswers_numberfailed() {
+    return answers_numberfailed;
+  }
+
+  public void setAnswers_numberfailed(String answers_numberfailed) {
+    this.answers_numberfailed = answers_numberfailed;
+  }
+
+  public String getAnswers_systemerror() {
+    return answers_systemerror;
+  }
+
+  public void setAnswers_systemerror(String answers_systemerror) {
+    this.answers_systemerror = answers_systemerror;
+  }
+
+  public String getAnswers_unknowncommand() {
+    return answers_unknowncommand;
+  }
+
+  public void setAnswers_unknowncommand(String answers_unknowncommand) {
+    this.answers_unknowncommand = answers_unknowncommand;
   }
 }

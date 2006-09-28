@@ -86,15 +86,15 @@
   <td><input class=txt name=admin_port value="<%=StringEncoderDecoder.encode(bean.getAdmin_port())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Allow GSM to email without profile</th>
+  <th>allow GSM to email without profile</th>
   <td align="LEFT"><input type=checkbox name=admin_allow_gsm_2_email_without_profile <%=bean.getAdmin_allow_gsm_2_email_without_profile()%>></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Allow email to GSM without profile</th>
+  <th>allow email to GSM without profile</th>
   <td align="LEFT"><input type=checkbox name=admin_allow_email_2_gsm_without_profile <%=bean.getAdmin_allow_email_2_gsm_without_profile()%>></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Default limit</th>
+  <th>default limit</th>
   <td><input class=txt name=admin_default_limit value="<%=StringEncoderDecoder.encode(bean.getAdmin_default_limit())%>"></td>
 </tr>
 
@@ -140,6 +140,72 @@
   <th>annotation size</th>
   <td><input class=txt name=default_annotation_size value="<%=StringEncoderDecoder.encode(bean.getDefault_annotation_size())%>"></td>
 </tr>
+
+<%rowN=0;%>
+<tr><td colspan=2>&nbsp;</td></tr>
+<tr><td colspan=2><div class=page_subtitle>Answers</div></td></tr>
+<tr class=row<%=rowN++&1%>>
+  <th>alias</th>
+  <td><input class=txt name=answers_alias value="<%=StringEncoderDecoder.encode(bean.getAnswers_alias())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>alias failed</th>
+  <td><input class=txt name=answers_aliasfailed value="<%=StringEncoderDecoder.encode(bean.getAnswers_aliasfailed())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>alias busy</th>
+  <td><input class=txt name=answers_aliasbusy value="<%=StringEncoderDecoder.encode(bean.getAnswers_aliasbusy())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>no alias</th>
+  <td><input class=txt name=answers_noalias value="<%=StringEncoderDecoder.encode(bean.getAnswers_noalias())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>forward</th>
+  <td><input class=txt name=answers_forward value="<%=StringEncoderDecoder.encode(bean.getAnswers_forward())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>forward failed</th>
+  <td><input class=txt name=answers_forwardfailed value="<%=StringEncoderDecoder.encode(bean.getAnswers_forwardfailed())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>forward off</th>
+  <td><input class=txt name=answers_forwardoff value="<%=StringEncoderDecoder.encode(bean.getAnswers_forwardoff())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>real name</th>
+  <td><input class=txt name=answers_realname value="<%=StringEncoderDecoder.encode(bean.getAnswers_realname())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>number on</th>
+  <td><input class=txt name=answers_numberon value="<%=StringEncoderDecoder.encode(bean.getAnswers_numberon())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>number off</th>
+  <td><input class=txt name=answers_numberoff value="<%=StringEncoderDecoder.encode(bean.getAnswers_numberoff())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>number failed</th>
+  <td><input class=txt name=answers_numberfailed value="<%=StringEncoderDecoder.encode(bean.getAnswers_numberfailed())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>system error</th>
+  <td><input class=txt name=answers_systemerror value="<%=StringEncoderDecoder.encode(bean.getAnswers_systemerror())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>unknown command</th>
+  <td><input class=txt name=answers_unknowncommand value="<%=StringEncoderDecoder.encode(bean.getAnswers_unknowncommand())%>"></td>
+</tr>
+
+
+
+
+
+
+
+
+
+
 
 
 
