@@ -61,58 +61,83 @@ public class Options extends SmeBean
   private String mbDone = null;
   private String mbCancel = null;
 
-  protected int init(List errors)
-  {
+  private String getStringParameter(String name) {
+    try {
+      return getConfig().getString(name);
+    } catch (Exception e) {
+      logger.warn(e);
+      return "";
+    }
+  }
+
+  private int getIntParameter(String name) {
+    try {
+      return getConfig().getInt(name);
+    } catch (Exception e) {
+      logger.warn(e);
+      return 0;
+    }
+  }
+
+  private boolean getBoolParameter(String name) {
+    try {
+      return getConfig().getBool(name);
+    } catch (Exception e) {
+      logger.warn(e);
+      return false;
+    }
+  }
+  protected int init(List errors) {
     int result = super.init(errors);
     if (result != RESULT_OK)
       return result;
 
     if (!isInitialized()) {
       try {
-        store_dir = getConfig().getString("store.dir");
+        store_dir = getStringParameter("store.dir");
 
-        smpp_host = getConfig().getString("smpp.host");
-        smpp_port = getConfig().getInt("smpp.port");
-        smpp_timeout = getConfig().getInt("smpp.timeout");
-        smpp_systemId = getConfig().getString("smpp.systemId");
-        smpp_password = getConfig().getString("smpp.password");
-        smpp_sourceAddress = getConfig().getString("smpp.sourceAddress");
-        smpp_serviceType = getConfig().getString("smpp.serviceType");
-        smpp_protocolId = getConfig().getInt("smpp.protocolId");
-        smpp_retryTime = getConfig().getInt("smpp.retryTime");
+        smpp_host = getStringParameter("smpp.host");
+        smpp_port = getIntParameter("smpp.port");
+        smpp_timeout = getIntParameter("smpp.timeout");
+        smpp_systemId = getStringParameter("smpp.systemId");
+        smpp_password = getStringParameter("smpp.password");
+        smpp_sourceAddress = getStringParameter("smpp.sourceAddress");
+        smpp_serviceType = getStringParameter("smpp.serviceType");
+        smpp_protocolId = getIntParameter("smpp.protocolId");
+        smpp_retryTime = getIntParameter("smpp.retryTime");
 
-        listener_host = getConfig().getString("listener.host");
-        listener_port = getConfig().getInt("listener.port");
+        listener_host = getStringParameter("listener.host");
+        listener_port = getIntParameter("listener.port");
 
-        admin_host = getConfig().getString("admin.host");
-        admin_port = getConfig().getInt("admin.port");
-        admin_allow_gsm_2_email_without_profile = getConfig().getBool("admin.allowGsm2EmlWithoutProfile");
-        admin_allow_email_2_gsm_without_profile = getConfig().getBool("admin.allowEml2GsmWithoutProfile");
-        admin_default_limit = getConfig().getString("admin.defaultLimit");
+        admin_host = getStringParameter("admin.host");
+        admin_port = getIntParameter("admin.port");
+        admin_allow_gsm_2_email_without_profile = getBoolParameter("admin.allowGsm2EmlWithoutProfile");
+        admin_allow_email_2_gsm_without_profile = getBoolParameter("admin.allowEml2GsmWithoutProfile");
+        admin_default_limit = getStringParameter("admin.defaultLimit");
 
-        mail_domain = getConfig().getString("mail.domain");
-        mail_stripper = getConfig().getString("mail.stripper");
-        mail_format = getConfig().getString("mail.format");
+        mail_domain = getStringParameter("mail.domain");
+        mail_stripper = getStringParameter("mail.stripper");
+        mail_format = getStringParameter("mail.format");
 
-        smtp_host = getConfig().getString("smtp.host");
-        smtp_port = getConfig().getInt("smtp.port");
+        smtp_host = getStringParameter("smtp.host");
+        smtp_port = getIntParameter("smtp.port");
 
-        defaults_dailyLimt = getConfig().getInt("defaults.dailyLimit");
-        default_annotation_size = getConfig().getInt("defaults.annotationSize");
+        defaults_dailyLimt = getIntParameter("defaults.dailyLimit");
+        default_annotation_size = getIntParameter("defaults.annotationSize");
 
-        answers_alias = getConfig().getString("answers.alias");
-        answers_aliasfailed = getConfig().getString("answers.aliasfailed");
-        answers_aliasbusy = getConfig().getString("answers.aliasbusy");
-        answers_noalias = getConfig().getString("answers.noalias");
-        answers_forward = getConfig().getString("answers.forward");
-        answers_forwardfailed = getConfig().getString("answers.forwardfailed");
-        answers_forwardoff = getConfig().getString("answers.forwardoff");
-        answers_realname = getConfig().getString("answers.realname");
-        answers_numberon = getConfig().getString("answers.numberon");
-        answers_numberoff = getConfig().getString("answers.numberoff");
-        answers_numberfailed = getConfig().getString("answers.numberfailed");
-        answers_systemerror = getConfig().getString("answers.systemerror");
-        answers_unknowncommand = getConfig().getString("answers.unknowncommand");
+        answers_alias = getStringParameter("answers.alias");
+        answers_aliasfailed = getStringParameter("answers.aliasfailed");
+        answers_aliasbusy = getStringParameter("answers.aliasbusy");
+        answers_noalias = getStringParameter("answers.noalias");
+        answers_forward = getStringParameter("answers.forward");
+        answers_forwardfailed = getStringParameter("answers.forwardfailed");
+        answers_forwardoff = getStringParameter("answers.forwardoff");
+        answers_realname = getStringParameter("answers.realname");
+        answers_numberon = getStringParameter("answers.numberon");
+        answers_numberoff = getStringParameter("answers.numberoff");
+        answers_numberfailed = getStringParameter("answers.numberfailed");
+        answers_systemerror = getStringParameter("answers.systemerror");
+        answers_unknowncommand = getStringParameter("answers.unknowncommand");
 
       } catch (Exception e) {
         logger.error(e);

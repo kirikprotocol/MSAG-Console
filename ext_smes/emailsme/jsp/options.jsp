@@ -197,19 +197,6 @@
   <td><input class=txt name=answers_unknowncommand value="<%=StringEncoderDecoder.encode(bean.getAnswers_unknowncommand())%>"></td>
 </tr>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 </table>
 </div><%
 page_menu_begin(out);
