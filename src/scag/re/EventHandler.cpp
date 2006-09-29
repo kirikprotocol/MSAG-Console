@@ -99,9 +99,12 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, 
         ev.pMessageText.append(messageBody.data(), messageBody.size());
     }
 
-    MillisecTime msec(sessionPrimaryKey.BornMicrotime);
+//    MillisecTime msec(sessionPrimaryKey.BornMicrotime);
 
     ev.pSessionKey = sessionPrimaryKey.abonentAddr.toString();
+    char buff[128];
+    sprintf(buff,"/%ld%d", sessionPrimaryKey.BornMicrotime.tv_sec, sessionPrimaryKey.BornMicrotime.tv_usec / 1000);
+    ev.pSessionKey.append(buff);   
     //sprintf((char *)ev.pSessionKey,"%s/%s", sessionPrimaryKey.abonentAddr.toString().c_str(), msec.toString());
 
     if ((propertyObject.HandlerId == EH_DELIVER_SM)||(propertyObject.HandlerId == EH_SUBMIT_SM_RESP) || (propertyObject.HandlerId == EH_HTTP_REQUEST))
