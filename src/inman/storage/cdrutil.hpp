@@ -45,12 +45,12 @@ struct CDRRecord {
                                     //original destination number that differs from
                                     //address to which delivery was made.
 
-    //not processed by Inman for now:                                    
     uint32_t        _dpLength;      //DATA_LENGTH: message length: in chars for dpText,
                                     //in bytes for dpBinary.
     bool            _inBilled;      //message was billed by IN platform                                    
 //private:
-    bool            _finalized;  //all fields are fullfilled;
+    bool            _finalized;     //all fields are fullfilled;
+    uint32_t        _smsXSrvs;      //SMS Extra services id
 };
 
 

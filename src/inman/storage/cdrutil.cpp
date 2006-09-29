@@ -21,6 +21,7 @@ CDRRecord::CDRRecord()
     : _finalized(false), _msgId(0), _partsNum(1)
     , _cdrType(CDRRecord::dpOrdinary), _mediaType(CDRRecord::dpText)
     , _bearer(CDRRecord::dpSMS), _dlvrRes(CDRRecord::dpDeliveryFailed)
+    , _smsXSrvs(0)
 {
     _serviceId = _userMsgRef = _dpLength = 0;
     _submitTime = _finalTime = 0;
