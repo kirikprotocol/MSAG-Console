@@ -94,11 +94,10 @@ struct SMCAPSpecificInfo {
     time_t        tpValidityPeriod;
 };
 
-class ChargeSms : public InmanCommand
-{
+class ChargeSms : public InmanCommand {
 public:
     ChargeSms();
-    virtual ~ChargeSms();
+    virtual ~ChargeSms() { }
 
     void setForwarded(bool isFwd = true)
     { forwarded = isFwd; }
@@ -130,8 +129,14 @@ public:
     void setTPDataCodingScheme(unsigned char dcs);
     void setTPValidityPeriod(time_t vpVal);
 
+#ifdef SMSEXTRA
+    void setSmsXSrvs(uint32_t srv_ids)     { extCode |= 0x80; smsXSrvsId = srv_ids; }
+#endif /* SMSEXTRA */
+
     void export2CDR(CDRRecord & cdr) const;
     void exportCAPInfo(SMCAPSpecificInfo & csi) const { csi = csInfo; }
+    uint32_t getSmsXSrvs(void) const { return smsXSrvsId; }
+
     //InmanCommand interface
     void handle(InmanHandler* handler);
 
@@ -157,11 +162,13 @@ private:
     uint8_t       partsNum;     //number of parts if packet was conjoined.
     uint16_t      msgLen;       //total length of message(including multipart case)
     SMCAPSpecificInfo csInfo;
+    //
+    unsigned char extCode;      //extension fields are present
+    uint32_t      smsXSrvsId;
 };
 
 //NOTE: in case of CAP3 error, this command ends the TCP dialog.
-class ChargeSmsResult : public SmscCommand, public InmanErrorCode
-{
+class ChargeSmsResult : public SmscCommand, public InmanErrorCode {
 public:
     ChargeSmsResult();                //positive result, no error
     ChargeSmsResult(uint32_t errCode, ChargeSmsResult_t res = CHARGING_NOT_POSSIBLE);
@@ -182,8 +189,7 @@ private:
     ChargeSmsResult_t   value;
 };
 
-class DeliverySmsResult : public InmanCommand
-{
+class DeliverySmsResult : public InmanCommand {
 public:
     DeliverySmsResult();    //constructor for successfull delivery 
     DeliverySmsResult(uint32_t, bool finalAttemp = true);
@@ -219,15 +225,13 @@ private:
     time_t        finalTimeTZ;
 };
 
-class InmanHandler
-{
+class InmanHandler {
 public:
     virtual bool onChargeSms(ChargeSms* sms) = 0;
     virtual void onDeliverySmsResult(DeliverySmsResult* sms) = 0;
 };
 
-class SmscHandler
-{
+class SmscHandler {
 public:
     virtual void onChargeSmsResult(ChargeSmsResult* sms) = 0;
 };

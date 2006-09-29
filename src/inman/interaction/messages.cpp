@@ -123,11 +123,11 @@ SerializableObject* SerializerInap::deserialize(ObjectBuffer& in) throw(CustomEx
 
 void SerializerInap::serialize(SerializableObject* obj, ObjectBuffer& out)
 {
-    assert( obj );
+    assert(obj);
     out << (unsigned short) FORMAT_VERSION;
     out << (unsigned int) obj->getDialogId();
     out << (unsigned short) obj->getObjectId();
-    obj->save( out );
+    obj->save(out);
 }
 
 /* ************************************************************************** *
@@ -135,13 +135,9 @@ void SerializerInap::serialize(SerializableObject* obj, ObjectBuffer& out)
  * ************************************************************************** */
 
 ChargeSms::ChargeSms()
-    : partsNum(1), forwarded(false)
+    : partsNum(1), forwarded(false), extCode(0), smsXSrvsId(0)
 {
     setObjectId((unsigned short)CHARGE_SMS_TAG);
-}
-
-ChargeSms::~ChargeSms()
-{
 }
 
 //data for CAP3 InitialDP OPERATION
@@ -173,6 +169,7 @@ void ChargeSms::setTPValidityPeriod(time_t value)
 
 void ChargeSms::load(ObjectBuffer& in) throw(CustomException)
 {
+    in >> extCode;
     in >> dstSubscriberNumber;
     in >> callingPartyNumber;
     in >> callingImsi;
@@ -193,10 +190,15 @@ void ChargeSms::load(ObjectBuffer& in) throw(CustomException)
     in >> partsNum;
     in >> msgLen;
     in >> forwarded;
+    //extensions
+    if (extCode) {
+        in >> smsXSrvsId;
+    }
 }
 
 void ChargeSms::save(ObjectBuffer& out)
 {
+    out << extCode;
     out << dstSubscriberNumber;
     out << callingPartyNumber;
     out << callingImsi;
@@ -217,6 +219,10 @@ void ChargeSms::save(ObjectBuffer& out)
     out << partsNum;
     out << msgLen;
     out << forwarded;
+    //extensions
+    if (extCode) {
+        out << smsXSrvsId;
+    }
 }
 
 
@@ -240,13 +246,14 @@ void ChargeSms::export2CDR(CDRRecord & cdr) const
 
     cdr._dstAdr = dstSubscriberNumber;
     cdr._dpLength = (uint32_t)msgLen;
+    cdr._smsXSrvs = smsXSrvsId;
 }
 
 
 void ChargeSms::handle(InmanHandler* handler)
 {
-    assert( handler );
-    handler->onChargeSms( this );
+    assert(handler);
+    handler->onChargeSms(this);
 }
 
 //-----------------------------------------------
