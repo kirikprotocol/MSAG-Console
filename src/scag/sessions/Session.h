@@ -111,6 +111,14 @@ namespace scag { namespace sessions
     {
         smsc::sms::Address abonentAddr;
         timeval BornMicrotime;
+        
+        void toString(std::string& s) const
+        {
+            s = abonentAddr.toString();
+            char buff[128];
+            sprintf(buff,"/%ld%d", BornMicrotime.tv_sec, BornMicrotime.tv_usec / 1000);
+            s.append(buff);
+        }
     };
 
 
