@@ -743,6 +743,46 @@ Response * CommandSetLogCategories::CreateResponse(scag::Scag * ScagApp)
     return new Response(Response::Ok, Variant(true));
 }
 
+
+Response * CommandListSmppEntity::CreateResponse(scag::Scag * ScagApp)
+{
+    if (!ScagApp) throw Exception("Scag undefined");
+
+    smsc_log_info(logger, "%s is processing...", getCommandName());
+    scag::transport::smpp::SmppManagerAdmin * smppMan = ScagApp->getSmppManagerAdmin();
+
+    if (!smppMan) throw Exception("SmppManager undefined");
+
+    Variant result(smsc::admin::service::StringListType);
+    std::auto_ptr<scag::transport::smpp::SmppEntityAdminInfoList> entList(smppMan->getEntityAdminInfoList(getEntityType()));
+
+    if (!entList.get()) throw Exception("%s error: SmppManager returns null", getCommandName());
+
+    /*
+    SmppEntityType type;
+    std::string host;
+    int  port;
+    bool connected;
+    */
+
+    for (scag::transport::smpp::SmppEntityAdminInfoList::iterator it = entList->begin(); it!=entList->end(); ++it) 
+    {
+        //etUnknown,etSmsc,etService
+
+        result.appendValueToStringList(it->host.c_str());
+        char buff[10];
+        sprintf(buff, "%d", it->port);
+        result.appendValueToStringList(buff);
+
+        sprintf(buff, "%d", it->connected);
+        result.appendValueToStringList(buff);
+    }
+
+    smsc_log_info(logger, "%s is processed ok", getCommandName());
+    return new Response(Response::Ok, result);
+}
+
+
 }
 }
 

@@ -4,12 +4,27 @@
 #include "sms/sms_const.h"
 #include "SmppTypes.h"
 #include "core/buffers/FixedLengthString.hpp"
+#include <strings.h>
+#include <list>
 
 namespace scag{
 namespace transport{
 namespace smpp{
 
 namespace buf=smsc::core::buffers;
+
+
+struct SmppEntityAdminInfo
+{
+  //SmppEntityType type;
+  std::string host;
+  int  port;
+  bool connected;
+
+};
+
+typedef std::list<SmppEntityAdminInfo> SmppEntityAdminInfoList;
+
 
 struct SmppEntityInfo{
   SmppEntityType type;
@@ -41,6 +56,7 @@ struct SmppManagerAdmin{
   virtual void addSmppEntity(const SmppEntityInfo& info)=0;
   virtual void updateSmppEntity(const SmppEntityInfo& info)=0;
   virtual void deleteSmppEntity(const char* sysId)=0;
+  virtual SmppEntityAdminInfoList * getEntityAdminInfoList(SmppEntityType type) = 0;
 };
 
 }//smpp

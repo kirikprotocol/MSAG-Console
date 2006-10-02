@@ -11,6 +11,9 @@ namespace admin {
 using namespace smsc::admin::protocol;
 using namespace scag;
 
+
+
+
 //===================================================================
 //================= Sme commands ====================================
 
@@ -224,6 +227,58 @@ public:
     virtual Response * CreateResponse(scag::Scag * SmscApp);
     virtual void init();    
 };
+
+
+class CommandListSmppEntity : public AdminCommand 
+{
+protected:
+   virtual scag::transport::smpp::SmppEntityType getEntityType() = 0;
+   virtual const char * getCommandName() = 0;
+public:
+  CommandListSmppEntity(Command::Id commandId, const xercesc::DOMDocument * doc) : AdminCommand(commandId, doc) 
+  {   
+  }
+ 
+  virtual Response * CreateResponse(scag::Scag * SmscApp);
+
+};
+
+class CommandListSme : public CommandListSmppEntity
+{
+protected:
+    std::string name;
+
+    virtual scag::transport::smpp::SmppEntityType getEntityType() {
+        return scag::transport::smpp::etSmsc;
+    }
+
+    const char * getCommandName() {
+        return name.c_str();
+    }
+public:
+    CommandListSme(const xercesc::DOMDocument * doc) : name("CommandListSme"), 
+        CommandListSmppEntity((Command::Id)CommandIds::listSme, doc) {   }
+
+};
+
+class CommandListSmsc : public CommandListSmppEntity
+{
+protected:
+    std::string name;
+
+    virtual scag::transport::smpp::SmppEntityType getEntityType() {
+        return scag::transport::smpp::etService;
+    }
+
+    virtual const char * getCommandName() {
+        return name.c_str();
+    }
+public:
+    CommandListSmsc(const xercesc::DOMDocument * doc) : name("CommandListSmsc"),
+        CommandListSmppEntity((Command::Id)CommandIds::listSmsc, doc) {   }
+};
+
+
 
 }
 }

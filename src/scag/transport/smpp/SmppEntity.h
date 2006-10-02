@@ -30,6 +30,7 @@ struct SmppEntity
   SmppChannel* recvChannel;
   SmppChannel* transChannel;
   int seq;
+  bool connected;
 
   SmppEntity()
   {
@@ -38,6 +39,7 @@ struct SmppEntity
     recvChannel=0;
     transChannel=0;
     seq=0;
+    connected = false;
   }
   SmppEntity(const SmppEntityInfo& argInfo)
   {

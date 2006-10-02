@@ -370,6 +370,35 @@ void SmppManager::deleteSmppEntity(const char* sysId)
   ent.info.type=etUnknown;
 }
 
+SmppEntityAdminInfoList * SmppManager::getEntityAdminInfoList(SmppEntityType type)
+{
+    MutexGuard mg(regMtx);
+
+    SmppEntity * value = 0;
+    char * key = 0;
+
+    SmppEntityAdminInfoList * result = new SmppEntityAdminInfoList;
+
+    for (buf::Hash<SmppEntity *>::Iterator it = registry.getIterator(); it.Next(key, value);)
+    {
+        MutexGuard emg(value->mtx);
+        /*SmppEntityType type;
+        std::string host;
+        int  port;
+        bool connected;*/
+
+        if (value->info.type == type)
+        {
+            SmppEntityAdminInfo ai = {value->info.host, value->info.port, value->connected};
+            result->push_back(ai);
+        }
+    }
+
+    return result;
+}
+
+
+
 int SmppManager::registerSmeChannel(const char* sysId,const char* pwd,SmppBindType bt,SmppChannel* ch)
 {
   sync::MutexGuard mg(regMtx);
@@ -429,6 +458,7 @@ int SmppManager::registerSmeChannel(const char* sysId,const char* pwd,SmppBindTy
       ent.transChannel=ch;
     }
   }
+  ent.connected = true;
   ent.setUid(++lastUid);
   smsc_log_info(log,"Registered sme with sysId='%s'",sysId);
   return rarOk;
@@ -450,6 +480,7 @@ int SmppManager::registerSmscChannel(SmppChannel* ch)
     ent.channel=ch;
     smsc_log_info(log,"Registered smsc connection with sysId='%s'",ch->getSystemId());
   }
+  ent.connected = true;
   ent.setUid(++lastUid);
   return rarOk;
 }
@@ -480,6 +511,7 @@ void SmppManager::unregisterChannel(SmppChannel* ch)
   {
     ent.bt=btNone;
   }
+  ent.connected = false;
 }
 
 
