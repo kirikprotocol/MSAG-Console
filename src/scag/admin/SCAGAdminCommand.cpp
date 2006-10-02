@@ -765,18 +765,7 @@ Response * CommandListSmppEntity::CreateResponse(scag::Scag * ScagApp)
     bool connected;
     */
 
-    for (scag::transport::smpp::SmppEntityAdminInfoList::iterator it = entList->begin(); it!=entList->end(); ++it) 
-    {
-        //etUnknown,etSmsc,etService
-
-        result.appendValueToStringList(it->host.c_str());
-        char buff[10];
-        sprintf(buff, "%d", it->port);
-        result.appendValueToStringList(buff);
-
-        sprintf(buff, "%d", it->connected);
-        result.appendValueToStringList(buff);
-    }
+    fillResultSet(result, *entList);
 
     smsc_log_info(logger, "%s is processed ok", getCommandName());
     return new Response(Response::Ok, result);

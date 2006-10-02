@@ -234,6 +234,7 @@ class CommandListSmppEntity : public AdminCommand
 protected:
    virtual scag::transport::smpp::SmppEntityType getEntityType() = 0;
    virtual const char * getCommandName() = 0;
+   virtual void fillResultSet(Variant& result, scag::transport::smpp::SmppEntityAdminInfoList& lst) = 0;
 public:
   CommandListSmppEntity(Command::Id commandId, const xercesc::DOMDocument * doc) : AdminCommand(commandId, doc) 
   {   
@@ -255,6 +256,17 @@ protected:
     const char * getCommandName() {
         return name.c_str();
     }
+
+    virtual void fillResultSet(Variant& result, scag::transport::smpp::SmppEntityAdminInfoList& lst)
+    {
+        char buff[2048];
+        for (scag::transport::smpp::SmppEntityAdminInfoList::iterator it = lst.begin(); it!=lst.end(); ++it) 
+        {
+            sprintf(buff, "%s, %d, %s", it->host.c_str(), it->port, (it->connected) ? "yes" : "no");
+            result.appendValueToStringList(buff);
+        }
+    }
+
 public:
     CommandListSme(const xercesc::DOMDocument * doc) : name("CommandListSme"), 
         CommandListSmppEntity((Command::Id)CommandIds::listSme, doc) {   }
@@ -272,6 +284,16 @@ protected:
 
     virtual const char * getCommandName() {
         return name.c_str();
+    }
+
+    virtual void fillResultSet(Variant& result, scag::transport::smpp::SmppEntityAdminInfoList& lst)
+    {
+        char buff[2048];
+        for (scag::transport::smpp::SmppEntityAdminInfoList::iterator it = lst.begin(); it!=lst.end(); ++it) 
+        {
+            sprintf(buff, "%s, %s", it->host.c_str(), (it->connected) ? "yes" : "no");
+            result.appendValueToStringList(buff);
+        }
     }
 public:
     CommandListSmsc(const xercesc::DOMDocument * doc) : name("CommandListSmsc"),
