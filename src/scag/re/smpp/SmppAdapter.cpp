@@ -1555,11 +1555,16 @@ void SmppCommandAdapter::changed(AdapterProperty& property)
         WriteSubmitField(*sms,*pFieldId,property);
         break;
     case DELIVERY_RESP:
+
         if (name!="status") return;
+        if (!command->get_resp()) return;
+
         command->get_resp()->set_status(property.getInt());
         break;
     case SUBMIT_RESP:
         if (name!="status") return;
+        if (!command->get_resp()) return;
+
         command->get_resp()->set_status(property.getInt());
         break;
     case DATASM:
@@ -1574,6 +1579,8 @@ void SmppCommandAdapter::changed(AdapterProperty& property)
         break;
     case DATASM_RESP:
         if (name!= "status") return;
+        if (!command->get_resp()) return;
+
         command->get_resp()->set_status(property.getInt());
         break;
 

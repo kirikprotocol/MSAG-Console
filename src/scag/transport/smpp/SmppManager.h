@@ -43,7 +43,7 @@ public:
   virtual void addSmppEntity(const SmppEntityInfo& info);
   virtual void updateSmppEntity(const SmppEntityInfo& info);
   virtual void deleteSmppEntity(const char* sysId);
-  virtual SmppEntityAdminInfoList * getEntityAdminInfoList(SmppEntityType type);
+  virtual SmppEntityAdminInfoList * getEntityAdminInfoList(SmppEntityType entType);
 
   //registragor
   virtual int registerSmeChannel(const char* sysId,const char* pwd,SmppBindType bt,SmppChannel* ch);

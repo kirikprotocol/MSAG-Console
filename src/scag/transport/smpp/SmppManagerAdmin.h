@@ -17,6 +17,7 @@ namespace buf=smsc::core::buffers;
 struct SmppEntityAdminInfo
 {
   //SmppEntityType type;
+  std::string systemId;
   std::string host;
   int  port;
   bool connected;
@@ -56,7 +57,7 @@ struct SmppManagerAdmin{
   virtual void addSmppEntity(const SmppEntityInfo& info)=0;
   virtual void updateSmppEntity(const SmppEntityInfo& info)=0;
   virtual void deleteSmppEntity(const char* sysId)=0;
-  virtual SmppEntityAdminInfoList * getEntityAdminInfoList(SmppEntityType type) = 0;
+  virtual SmppEntityAdminInfoList * getEntityAdminInfoList(SmppEntityType entType) = 0;
 };
 
 }//smpp

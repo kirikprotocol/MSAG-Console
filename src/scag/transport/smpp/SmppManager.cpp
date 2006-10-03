@@ -370,7 +370,7 @@ void SmppManager::deleteSmppEntity(const char* sysId)
   ent.info.type=etUnknown;
 }
 
-SmppEntityAdminInfoList * SmppManager::getEntityAdminInfoList(SmppEntityType type)
+SmppEntityAdminInfoList * SmppManager::getEntityAdminInfoList(SmppEntityType entType)
 {
     MutexGuard mg(regMtx);
 
@@ -387,9 +387,9 @@ SmppEntityAdminInfoList * SmppManager::getEntityAdminInfoList(SmppEntityType typ
         int  port;
         bool connected;*/
 
-        if (value->info.type == type)
+        if (value->info.type == entType)
         {
-            SmppEntityAdminInfo ai = {value->info.host, value->info.port, value->connected};
+            SmppEntityAdminInfo ai = {value->getSystemId(), value->info.host, value->info.port, value->connected};
             result->push_back(ai);
         }
     }
