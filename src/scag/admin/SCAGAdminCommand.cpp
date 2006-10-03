@@ -758,7 +758,7 @@ Response * CommandListSmppEntity::CreateResponse(scag::Scag * ScagApp)
 
     if (!entList.get()) throw Exception("%s error: SmppManager returns null", getCommandName());
 
-    fillResultSet(result, *entList);
+    fillResultSet(result, *(entList.get()));
 
     smsc_log_info(logger, "%s is processed ok", getCommandName());
     return new Response(Response::Ok, result);
