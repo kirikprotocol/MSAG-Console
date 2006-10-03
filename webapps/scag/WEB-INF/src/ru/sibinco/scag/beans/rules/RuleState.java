@@ -15,8 +15,12 @@ public class RuleState implements Serializable {
   public static final String notExistError = "jEdit.rule_state.notExistError";
   public static final String lockedError = "jEdit.rule_state.lockedError";
 
+  private boolean pingable;
+  private String pingHostName;
+  private int pingPort;
   private boolean exists;
   private boolean locked;
+
   public void setExists(boolean exists) {
     this.exists = exists;
   }
@@ -28,6 +32,30 @@ public class RuleState implements Serializable {
   }
   public boolean getLocked() {
     return locked;
+  }
+
+  public boolean isPingable() {
+    return pingable;
+  }
+
+  public void setPingable(boolean pingable) {
+    this.pingable = pingable;
+  }
+
+  public void setPingHostName(String pingHostName) {
+    this.pingHostName = pingHostName;
+  }
+
+  public String getPingHostName() {
+    return pingHostName;
+  }
+
+  public void setPingPort(int pingPort) {
+    this.pingPort = pingPort;
+  }
+
+  public int getPingPort() {
+    return pingPort;
   }
 
   public RuleState copy() {

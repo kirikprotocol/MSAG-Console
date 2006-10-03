@@ -73,13 +73,9 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
   <link rel="STYLESHEET" type="text/css" href="content/styles/calendar.css">
 
   <link rel="STYLESHEET" type="text/css" href="collapsing_tree.css">
-<%--  <script> <%@include file = "/content/scripts/scripts.js" %> </script>--%>
-<%--  <script> <%@include file = "/content/scripts/calendar_msg.js" %> </script>--%>
-  <script src="content/scripts/scripts.jsp" type="text/javascript"></script>  
-<%--  <script src="content/scripts/scripts_msg_<%=ru.sibinco.scag.util.LocaleMessages.getInstance().getLocaleLanguage(session)%>.js" type="text/javascript"></script>--%>
-<%--  <script src="content/scripts/calendar_msg_<%=ru.sibinco.scag.util.LocaleMessages.getInstance().getCurBundleLocaleLanguage()%>.js" type="text/javascript"></script>--%>
+  <script src="content/scripts/scripts.jsp" type="text/javascript"></script>
 </head>
-<body onload="initjsDOMenu(); ${onLoad}">
+<body onload="initjsDOMenu(); assignOpener(); ${onLoad} " onKeyPress="return disableCtrlKeyCombination(event,'${param.editId}');" onKeyDown="return disableCtrlKeyCombination(event,'${param.editId}');">
   <!--calendar-->
   <iframe id=calendarIFrame class=calendarHiddenLayer2 src="content/images/blank.html"></iframe>
   <div id=calendarPanel class=calendarHiddenLayer

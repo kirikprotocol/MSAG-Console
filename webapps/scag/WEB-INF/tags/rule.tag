@@ -11,17 +11,6 @@
 <%@attribute name="ttitle" required="true"%>
 <%@attribute name="exists" required="true"%>
 <%@attribute name="locked" required="true"%>
-     <script>
-     function openJedit(id,action)
-     {
-       if (window.jEdit) {
-         window.jEdit.openjEditView(action,id);
-       } else {
-         window.open("<%=request.getContextPath()%>/rules/rules/jedit.jsp?id="+id+"&action="+action,"","width=1,height=1,left="+screen.availWidth+",top="+screen.availHeight);
-       }
-       return false;
-     }
-     </script>
 
   <sm-ep:property title = "${ttitle}">
      <c:choose>

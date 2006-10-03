@@ -202,7 +202,8 @@ public class jEdit extends Applet
   private String validate(String userFile, boolean newRule) {
     boolean isLocked = false;
     boolean isExist = false;
-    Object ruleState = getObject(userFile,getRuleStateAndLock);
+    lc = new LiveConnect();
+    Object ruleState = getObject(userFile, lc.getPingPort(), getRuleStateAndLock);
     try {
        Method locked = ruleState.getClass().getMethod("getLocked",new Class[]{});
        isLocked = ((Boolean)locked.invoke(ruleState,new Object[]{})).booleanValue();
@@ -255,12 +256,13 @@ public class jEdit extends Applet
     DockableWindowFactory.getInstance().clear();
     KillRing.getInstance().clear();
      //{{{ Clear static variables in plugins that must be cleared at destroy
+    if (jars!=null)
      for (int i = 0; i < jars.size(); i++) {
        PluginJAR jar=(PluginJAR) jars.elementAt(i);
        jar.clear();
      } //}}}
     //VFSManager.clear();
-    bufferHash.clear();
+    if (bufferHash!=null) bufferHash.clear();
     bufferCount=0;
     buffersFirst=null;
     buffersLast=null;
@@ -2509,6 +2511,7 @@ public class jEdit extends Applet
      // System.exit(0);
     }
     setWindowClosed(ruleAction);
+    if (lc!=null) lc.stopLC();
   } //}}}
   //{{{ exitView() method
   /**
@@ -2582,6 +2585,7 @@ public class jEdit extends Applet
      // System.exit(0);
     }
     setWindowClosed(ruleAction);
+    if (lc!=null) lc.stopLC();
   } //}}}
 
   private static void setWindowClosed(String ruleAction) {
@@ -2595,9 +2599,12 @@ public class jEdit extends Applet
 
   private static void unlockAllRules() {
     //System.out.println("$$$$$$$$Destroyed$$$$$$$$ " + bufferHash.size());
-    Set ruleIds = bufferHash.keySet();
-    for (Iterator i = ruleIds.iterator();i.hasNext();)
-      unlockRule((String)i.next());
+    Set ruleIds = null;
+    if (bufferHash!=null && bufferHash.size()>0) {
+      ruleIds = bufferHash.keySet();
+      for (Iterator i = ruleIds.iterator();i.hasNext();)
+        unlockRule((String)i.next());
+    }
   }
   private static void unlockRule(String file) {
     HashMap h = new HashMap();
@@ -2789,6 +2796,7 @@ public class jEdit extends Applet
   private static long propsModTime;
   private static PropertyManager propMgr;
   private static EditServer server;
+  private static LiveConnect lc;
   private static boolean background;
   private static ActionContext actionContext;
   private static ActionSet builtInActionSet;
@@ -3489,10 +3497,11 @@ public class jEdit extends Applet
     return list;
   }
 
-  public static Object getObject(final String file, final int command)
+  public static Object getObject(final String file, final int pingPort, final int command)
   {
     HashMap args = new HashMap();
     args.put("file", file);
+    args.put("pingPort", ""+pingPort);
     LinkedList list = (LinkedList) HttpGet(args, command);
     return list.get(0);
   }
@@ -3800,6 +3809,7 @@ public class jEdit extends Applet
         if (server != null)
           server.start();
 
+        if (lc!=null) lc.start();
         GUIUtilities.hideSplashScreen();
 
         Log.log(Log.MESSAGE, jEdit.class, "Startup "
@@ -4091,6 +4101,7 @@ loop:  for(int i = 0; i < list.length; i++)
         activeView = null;
 
       setWindowClosed(ruleAction);
+      //if (lc!=null) lc.stopLC();
       }
     }
   } //}}}

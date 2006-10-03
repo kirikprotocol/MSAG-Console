@@ -562,3 +562,24 @@ function checkDefaultRoute() {
 
     return true;
 }
+
+function disableCtrlKeyCombination(e, id) {
+	var disabled = {n:0};
+  var ctrlMod = window.event.ctrlKey ;
+  var key = window.event.keyCode;
+	key = String.fromCharCode(key).toLowerCase();
+	if (ctrlMod && (key in disabled)) {
+   if (id && (document.location.href.indexOf("editId")==-1))
+     window.open(document.location+"&editId="+id,"");
+   else
+     window.open(document.location,"");
+   return false;
+  }
+  return true;
+}
+
+function assignOpener() {
+  if (opener && !opener.closed)
+    opener.childW = window;
+}
+

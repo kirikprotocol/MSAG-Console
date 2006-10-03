@@ -35,6 +35,33 @@
         </sm-pm:menu>
         <c:if test="${!param.add}">
             <div class=page_subtitle>&nbsp;</div>
+         <script>
+         function openJedit(id,action)
+         {
+           if (window.jEdit) {
+             //alert('window.jEdit.openjEditView(action,id)');
+             window.jEdit.openjEditView(action,id);
+           } else if (opener && opener.jEdit && !opener.closed) {
+             //alert('opener.jEdit.openjEditView(action,id)');
+             opener.jEdit.openjEditView(action,id);
+           } else if (window.childW && window.childW.jEdit && !window.childW.closed) {
+             //alert('window.childW.jEdit.openjEditView(action,id)');
+             window.childW.jEdit.openjEditView(action,id);
+           } else {
+             //alert('window.open');
+             window.open("${pageContext.request.contextPath}/rules/rules/jedit.jsp?id="+id+"&action="+action,"","width=10,height=10,left="+screen.availWidth+",top="+screen.availHeight);
+           }
+           return false;
+         }
+
+         function submit0() {
+           document.opForm.submit();
+           /*if (window.childW && !window.childW.closed)
+             window.childW.document.opForm.submit();
+           if (opener && !opener.closed)
+             opener.document.opForm.submit();*/
+         }
+         </script>
             <sm-ep:properties title="service.edit.properties.service_rules">
                 <sm:rule tname="SMPP" ttitle="service.edit.rule.transport.smpp" exists="${bean.smppRuleState.exists}" locked="${bean.smppRuleState.locked}"/>
                 <sm:rule tname="HTTP" ttitle="service.edit.rule.transport.http" exists="${bean.httpRuleState.exists}" locked="${bean.httpRuleState.locked}"/>

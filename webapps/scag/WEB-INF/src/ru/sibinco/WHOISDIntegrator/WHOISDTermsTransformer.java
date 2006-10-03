@@ -21,7 +21,7 @@ import org.apache.log4j.Logger;
  * To change this template use File | Settings | File Templates.
  */
 public class WHOISDTermsTransformer {
-  protected final static Logger logger = Logger.getLogger("WHOISDTermsTransformer");
+  protected final static Logger logger = Logger.getLogger(WHOISDTermsTransformer.class);
 
   private final static String HeaderToWHOISDTerms = "<!--whoisd-terms \n <whoisd:terms>";
   private final static String EndingToWHOISDTerms = "-->";

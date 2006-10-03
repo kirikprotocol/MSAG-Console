@@ -203,12 +203,13 @@ public class myServlet extends HttpServlet
   private void getRuleStateAndLock(HttpServletRequest req, final String file, final String transport, HttpServletResponse res) {
     SCAGAppContext appContext = (SCAGAppContext) req.getAttribute(Constants.APP_CONTEXT);
     try {
-     RuleState ruleState = appContext.getRuleManager().getRuleStateAndLock(file,transport);
+     RuleState ruleState = appContext.getRuleManager().getRuleStateAndLock(file,transport,req.getRemoteHost(),Integer.parseInt(req.getParameter("pingPort")));                
      ObjectOutputStream out = new ObjectOutputStream(res.getOutputStream());
      out.writeObject(ruleState);
      out.flush();
      out.close();
     } catch(Throwable e) {
+      e.printStackTrace();
     }
   }
 

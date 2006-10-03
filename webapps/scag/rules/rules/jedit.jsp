@@ -18,7 +18,7 @@
                 if (checkResult)
                 {
                   alertError(checkResult);
-                  opener.document.opForm.submit();
+                  opener.submit0();
                 }
               }
 
@@ -42,7 +42,7 @@
               {
                 var action = document.jedit.isWindowClosed();
                 if (document.jedit.isWindowClosed()) {
-                   if (action == "addRule") opener.document.opForm.submit();
+                   /*if (action == "addRule")*/ opener.submit0();
                    if (document.jedit.isStopped()) {
                      window.close();
                      opener.status = "<fmt:message>jEdit.stopped</fmt:message>";
