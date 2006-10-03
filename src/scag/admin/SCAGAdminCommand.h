@@ -262,8 +262,9 @@ protected:
         char buff[2048];
         for (scag::transport::smpp::SmppEntityAdminInfoList::iterator it = lst.begin(); it!=lst.end(); ++it) 
         {
-            sprintf(buff, "%s, %d, %s", it->host.c_str(), it->port, (it->connected) ? "yes" : "no");
+            sprintf(buff, "%s, %s, %d, %s", it->systemId.c_str(), it->host.c_str(), it->port, (it->connected) ? "yes" : "no");
             result.appendValueToStringList(buff);
+            smsc_log_debug(logger, "Command %s returns: %s", getCommandName(), buff);
         }
     }
 
@@ -291,8 +292,9 @@ protected:
         char buff[2048];
         for (scag::transport::smpp::SmppEntityAdminInfoList::iterator it = lst.begin(); it!=lst.end(); ++it) 
         {
-            sprintf(buff, "%s, %s", it->host.c_str(), (it->connected) ? "yes" : "no");
+            sprintf(buff, "%s, %s, %s", it->systemId.c_str(), it->host.c_str(), (it->connected) ? "yes" : "no");
             result.appendValueToStringList(buff);
+            smsc_log_debug(logger, "Command %s returns: %s", getCommandName(), buff);
         }
     }
 public:

@@ -758,13 +758,6 @@ Response * CommandListSmppEntity::CreateResponse(scag::Scag * ScagApp)
 
     if (!entList.get()) throw Exception("%s error: SmppManager returns null", getCommandName());
 
-    /*
-    SmppEntityType type;
-    std::string host;
-    int  port;
-    bool connected;
-    */
-
     fillResultSet(result, *entList);
 
     smsc_log_info(logger, "%s is processed ok", getCommandName());
