@@ -314,7 +314,7 @@ void Scag::init()
   */
   //*****************************************************
 
-        
+  /*      
   ////////////////////////// FOR TEST
 
   scag::sessions::CSessionKey key;
@@ -436,7 +436,7 @@ void Scag::init()
   sm.releaseSession(sessionPtr);
 
 
-  /*  
+    
   scag::re::RuleEngine::Instance().process(commandDeliver1, *session);
   sm.releaseSession(sessionPtr);
 
@@ -445,8 +445,8 @@ void Scag::init()
   session = sessionPtr.Get();
   scag::re::RuleEngine::Instance().process(commandDeliverResp, *session);
   sm.releaseSession(sessionPtr);
- */ 
-  /*
+  
+  
   sessionPtr = sm.getSession(key);
   session = sessionPtr.Get();
   scag::re::RuleEngine::Instance().process(commandPureSubmit, *session);
@@ -457,8 +457,8 @@ void Scag::init()
   session = sessionPtr.Get();
   scag::re::RuleEngine::Instance().process(commandSubmitResp, *session);
   sm.releaseSession(sessionPtr);
-  */
-  /*
+  
+  
   //PURE SUBMIT
   sessionPtr = sm.getSession(key);
   session = sessionPtr.Get();
