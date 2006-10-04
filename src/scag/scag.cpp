@@ -27,6 +27,7 @@
 #include "scag/pers/PersClient.h"
 
 #include "scag/util/encodings/Encodings.h"
+//#include "scag/admin/SCAGAdminCommand.h"
 
 
 namespace scag
@@ -475,7 +476,12 @@ void Scag::init()
   ////////////////////////// FOR TEST 
   */                                 
                       
-                                    
+/*
+  scag::admin::CommandListSmsc * commandListSmsc = new scag::admin::CommandListSmsc(0);
+  commandListSmsc->CreateResponse(this);
+  */
+
+
     //********************************************************
     //************** HttpManager initialization **************
     try {

@@ -250,7 +250,7 @@ protected:
     std::string name;
 
     virtual scag::transport::smpp::SmppEntityType getEntityType() {
-        return scag::transport::smpp::etSmsc;
+        return scag::transport::smpp::etService;
     }
 
     const char * getCommandName() {
@@ -262,7 +262,8 @@ protected:
         char buff[2048];
         for (scag::transport::smpp::SmppEntityAdminInfoList::iterator it = lst.begin(); it!=lst.end(); ++it) 
         {
-            sprintf(buff, "SystemId, %s, Host, %s, Port, %d, Status, %s", it->systemId.c_str(), it->host.c_str(), it->port, (it->connected) ? "yes" : "no");
+            sprintf(buff, "SystemId, %s, Host, %s, Status, %s", it->systemId.c_str(), it->host.c_str(), (it->connected) ? "yes" : "no");
+
             result.appendValueToStringList(buff);
             smsc_log_debug(logger, "Command %s returns: %s", getCommandName(), buff);
         }
@@ -280,7 +281,7 @@ protected:
     std::string name;
 
     virtual scag::transport::smpp::SmppEntityType getEntityType() {
-        return scag::transport::smpp::etService;
+        return scag::transport::smpp::etSmsc;
     }
 
     virtual const char * getCommandName() {
@@ -292,7 +293,12 @@ protected:
         char buff[2048];
         for (scag::transport::smpp::SmppEntityAdminInfoList::iterator it = lst.begin(); it!=lst.end(); ++it) 
         {
-            sprintf(buff, "SystemId, %s, Host, %s, Status, %s", it->systemId.c_str(), it->host.c_str(), (it->connected) ? "yes" : "no");
+            if (it->host.size() == 0) 
+                sprintf(buff, "SystemId, %s, Host, %s, Port, %d, Status, %s", it->systemId.c_str(), "Unknown", "Unknown", (it->connected) ? "yes" : "no");
+            else
+                sprintf(buff, "SystemId, %s, Host, %s, Port, %d, Status, %s", it->systemId.c_str(), it->host.c_str(), it->port, (it->connected) ? "yes" : "no");
+
+
             result.appendValueToStringList(buff);
             smsc_log_debug(logger, "Command %s returns: %s", getCommandName(), buff);
         }
