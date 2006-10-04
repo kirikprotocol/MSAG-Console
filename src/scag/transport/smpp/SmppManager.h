@@ -36,7 +36,7 @@ public:
   SmppManager();
   ~SmppManager();
   void Init(const char* cfgFile);
-  void LoadRoutes(const char* cfgFile);
+  void LoadRoutes();
   void ReloadRoutes();
 
   //admin
