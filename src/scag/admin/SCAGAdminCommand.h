@@ -262,7 +262,10 @@ protected:
         char buff[2048];
         for (scag::transport::smpp::SmppEntityAdminInfoList::iterator it = lst.begin(); it!=lst.end(); ++it) 
         {
-            sprintf(buff, "SystemId, %s, Host, %s, Status, %s", it->systemId.c_str(), it->host.c_str(), (it->connected) ? "yes" : "no");
+            if (it->host.size() == 0) 
+                sprintf(buff, "SystemId, %s, Host, %s, Status, %s", it->systemId.c_str(), "Unknown", (it->connected) ? "yes" : "no");
+            else
+                sprintf(buff, "SystemId, %s, Host, %s, Status, %s", it->systemId.c_str(), it->host.c_str(), (it->connected) ? "yes" : "no");
 
             result.appendValueToStringList(buff);
             smsc_log_debug(logger, "Command %s returns: %s", getCommandName(), buff);
