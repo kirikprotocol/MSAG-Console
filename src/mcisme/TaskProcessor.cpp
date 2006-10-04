@@ -282,18 +282,13 @@ TaskProcessor::TaskProcessor(ConfigView* config)
 		test_number="";
 	}
 	
- //   try { stkTemplateId = config->getInt("stkTemplateId"); } catch (...)
+//   try { stkTemplateId = config->getInt("stkTemplateId"); } catch (...)
 	//{
 	//	throw ConfigException("MCISme need stkTemplateId parameter."
  //                             "Use <MCISme.stkTemplateId> parameter in config.xml. Default value = -1");
 	//	stkTemplateId = 0;
 	//}
 	
-
-//    std::auto_ptr<ConfigView> dsIntCfgGuard(config->getSubConfig("DataSource"));
-//    initDataSource(dsIntCfgGuard.get());
-//    dsStatConnection = ds->getConnection();
-    
 	std::auto_ptr<ConfigView> statCfgGuard(config->getSubConfig("Statistics"));
     ConfigView* statCfg = statCfgGuard.get();
 
@@ -353,9 +348,10 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     ConfigView* storageCfg = storageCfgGuard.get();
 	pStorage = new FSStorage();
 	int ret = pStorage->Init(storageCfg, pDeliveryQueue);
-	
 	smsc_log_warn(logger, "ret = %d", ret);
-	
+
+	timeoutMonitor = new TimeoutMonitor(this, 30);
+
 	smsc_log_info(logger, "Load success.");
 }
 TaskProcessor::~TaskProcessor()
@@ -382,7 +378,7 @@ void TaskProcessor::Start()
             smsc_log_error(logger, "Failed to start processing. Message sender is undefined.");
             return;
         }
-        
+		timeoutMonitor->Start();
 		pDeliveryQueue->OpenQueue();
         openInQueue();
         Thread::Start();
@@ -400,7 +396,7 @@ void TaskProcessor::Stop()
         smsc_log_info(logger, "Stopping event processing...");
         
         if (mciModule) mciModule->Detach();
-        
+        timeoutMonitor->Stop();
         closeInQueue();
 		pDeliveryQueue->CloseQueue();
         exitedEvent.Wait();
@@ -605,6 +601,7 @@ void TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt)
 		delete pInfo;
 		return;
 	}
+	timeoutMonitor->addSeqNum(seqNum);
 
 	count+=pInfo->events.size();
 	end = time(0);
@@ -625,13 +622,14 @@ bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
 		MutexGuard Lock(smsInfoMutex);
 		if(!smsInfo.Exist(seqNum))
 		{
-			smsc_log_debug(logger, "No info about SMS seqNum = %d\n", seqNum);
+			smsc_log_debug(logger, "No info for SMS seqNum = %d\n", seqNum);
 			return false;
 		}
 		sms_info* pInfo = smsInfo.Get(seqNum);
 		smsInfo.Delete(seqNum);
 
 		smsc_log_debug(logger, "Recieve a DATA_SM_RESP for Abonent %s seq_num = %d, status = %d", pInfo->abnt.toString().c_str(), seqNum, status);
+		timeoutMonitor->removeSeqNum(seqNum);
 
 		if(status == smsc::system::Status::OK)
 		{	
@@ -656,6 +654,29 @@ bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
 	}
 	return true;
 };
+
+void TaskProcessor::invokeProcessDataSmTimeout(int seqNum)
+{
+	smsc_log_debug(logger, "Timeout for SMS seqNum %d\n", seqNum);
+
+	MutexGuard Lock(smsInfoMutex);
+	if(!smsInfo.Exist(seqNum))
+	{
+		smsc_log_debug(logger, "No info for SMS seqNum = %d\n", seqNum);
+		return;
+	}
+	sms_info* pInfo = smsInfo.Get(seqNum);
+	smsInfo.Delete(seqNum);
+
+	smsc_log_debug(logger, "SMS for Abonent %s (seqNum %d) is removed from waiting list", pInfo->abnt.toString().c_str(), seqNum);
+
+	statistics->incFailed(pInfo->events.size());
+	time_t schedTime = pDeliveryQueue->Reschedule(pInfo->abnt);
+	pStorage->setSchedParams(pInfo->abnt, schedTime, -1);
+
+	delete pInfo;
+};
+
 
 bool TaskProcessor::invokeProcessAlertNotification(int cmdId, int status, const AbntAddr& abnt)
 {
@@ -809,9 +830,15 @@ string TaskProcessor::getSchedItem(const string& Abonent)
 	GetAbntEvents(abnt, events);
 
 	char buff[128];
-	struct tm* t = localtime(&item.schedTime);
-	snprintf(buff, 128, "%.2d.%.2d.%4d %.2d:%.2d:%.2d,%s,%d, %d;", t->tm_mday, t->tm_mon+1, t->tm_year+1900, t->tm_hour, t->tm_min, t->tm_sec,
+	if(item.schedTime != 0)
+	{
+		struct tm* t = localtime(&item.schedTime);
+		snprintf(buff, 128, "%.2d.%.2d.%4d %.2d:%.2d:%.2d,%s,%d, %d;", t->tm_mday, t->tm_mon+1, t->tm_year+1900, t->tm_hour, t->tm_min, t->tm_sec,
 													Abonent.c_str(), events.size(), item.lastError);
+	}
+	else
+		snprintf(buff, 128, "In delivery,%s,%d, %d;", Abonent.c_str(), events.size(), item.lastError);
+
 	result = buff;
 	return result;
 }

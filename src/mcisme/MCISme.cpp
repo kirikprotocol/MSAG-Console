@@ -446,8 +446,8 @@ public:
             sm.get_message().get_dest()  .set_typeOfNumber(da.type);
             sm.get_message().get_dest()  .set_numberingPlan(da.plan);
             sm.get_message().get_dest()  .set_value(da.value);
-            sm.get_message().set_esmClass(0x40); // default mode (not transactional)
-            sm.get_message().set_protocolId(0x7F);//processor.getProtocolId());
+            sm.get_message().set_esmClass(0); // default mode (not transactional)
+            sm.get_message().set_protocolId(processor.getProtocolId());
             sm.get_message().set_priorityFlag(0);
             char timeBuffer[64];
             cTime2SmppTime(smsValidityDate, timeBuffer);
@@ -458,7 +458,7 @@ public:
             sm.get_message().set_replaceIfPresentFlag(0);
 
             sm.get_message().set_smDefaultMsgId(0);
-            sm.get_message().set_dataCoding(DataCoding::BINARY);//;msgDataCoding);
+            sm.get_message().set_dataCoding(msgDataCoding);
             
             if (outLen > MAX_ALLOWED_MESSAGE_LENGTH)
             {
@@ -834,7 +834,6 @@ int main(void)
 		}
 //		sleep(60);
 //		exit(0);
-
 
 		ConfigView adminConfig(manager, "MCISme.Admin");
 		smsc_log_debug(logger, "%s %d", adminConfig.getString("host"), adminConfig.getInt("port"));

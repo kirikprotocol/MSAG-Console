@@ -74,6 +74,8 @@ struct sms_info
 	vector<MCEvent>		events;
 };
 
+class TimeoutMonitor;
+
 class TaskProcessor : public Thread, public MissedCallListener, public AdminInterface
 {
 	std::string test_number;
@@ -97,6 +99,7 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
     
 	ProfilesStorage*	profileStorage;
     StatisticsManager*  statistics;
+	TimeoutMonitor*		timeoutMonitor;
     
 //    EventMonitor    smscIdMonitor;
     Hash<bool>      lockedSmscIds;
@@ -163,6 +166,7 @@ public:
     };
     
     virtual bool invokeProcessDataSmResp(int cmdId, int status, int seqNum);
+	virtual void invokeProcessDataSmTimeout(int seqNum);
 	virtual bool invokeProcessAlertNotification(int cmdId, int status, const AbntAddr& abnt);
 
     /* ------------------------ Admin interface ------------------------ */
@@ -191,6 +195,102 @@ public:
 	virtual string getSchedItem(const string& Abonent);
 	virtual string getSchedItems(void);
 };
+
+class TimeoutMonitor : public Thread
+{
+	smsc::logger::Logger*   logger;
+	TaskProcessor*		processor;
+	uint32_t			timeout;
+	map<time_t, int>	seqNums;
+	EventMonitor		awakeMonitor;
+	Mutex				startLock;
+	Event				exitedEvent;
+	bool				bStarted, bNeedExit;
+
+public:
+	
+	TimeoutMonitor(TaskProcessor* _processor, uint32_t to):
+	  processor(_processor), timeout(to),
+	  logger(Logger::getInstance("mci.TimeoutM")) 
+	  {}
+    virtual int Execute()
+	{
+		while (!bNeedExit)
+		{
+			map<time_t, int>::iterator	It=seqNums.begin();
+			
+			time_t curTime = time(0);
+			time_t awakeTime = (It != seqNums.end())?It->first:curTime+60;
+			if(awakeTime > curTime)
+			{
+				uint32_t toSleep = (awakeTime - curTime)*1000;
+				smsc_log_debug(logger, "TimeoutMonitor: Start wait %d", toSleep);
+				awakeMonitor.wait(toSleep);
+				smsc_log_debug(logger, "TimeoutMonitor: End wait");
+			}
+			else
+			{
+				int seqNum = It->second;
+				smsc_log_debug(logger, "TimeoutMonitor: Timeout has passed for SMS seqNum %d", seqNum);
+				processor->invokeProcessDataSmTimeout(seqNum);
+				seqNums.erase(It);
+			}
+		}
+		exitedEvent.Signal();
+		return 0;	
+	}
+	void Start()
+	{
+		MutexGuard guard(startLock);
+	    
+		if (!bStarted)
+		{
+			smsc_log_info(logger, "TimeoutMonitor Starting ...");
+			bNeedExit = false;
+			Thread::Start();
+			bStarted = true;
+			smsc_log_info(logger, "TimeoutMonitor Started.");
+		}	
+	}
+	void Stop()
+	{
+		MutexGuard  guard(startLock);
+	    
+		if (bStarted)
+		{
+			smsc_log_info(logger, "TimeoutMonitor Stopping ...");
+			bNeedExit = true;
+			awakeMonitor.notify();
+			exitedEvent.Wait();
+			bStarted = false;
+			smsc_log_info(logger, "TimeoutMonitor Stoped.");
+		}
+	}
+
+	void addSeqNum(int seqNum)
+	{
+		seqNums.insert(multimap<time_t, int>::value_type(time(0) + timeout, seqNum));
+		awakeMonitor.notify();
+		smsc_log_debug(logger, "Added SMS (seqNum = %d) to monitoring list (total = %d).", seqNum, seqNums.size());
+	}
+	void removeSeqNum(int seqNum)
+	{
+		map<time_t, int>::iterator	It;
+		for(It = seqNums.begin(); It != seqNums.end(); ++It)
+		{
+			if(It->second == seqNum)
+			{
+				seqNums.erase(It);
+				awakeMonitor.notify();
+				smsc_log_debug(logger, "Removed SMS (seqNum = %d) from monitoring list (total = %d).", seqNum, seqNums.size());
+				return;
+			}
+		}
+		smsc_log_debug(logger, "Removing SMS (seqNum = %d) from monitoring list - failed. No such seqNum. (total = %d)", seqNum, seqNums.size());
+	}
+	
+};
+
 
 };
 };

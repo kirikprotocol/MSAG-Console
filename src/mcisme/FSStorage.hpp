@@ -143,7 +143,7 @@ public:
 	
 	int Init(smsc::util::config::ConfigView* storageConfig, DeliveryQueue* pDeliveryQueue);
 	int Init(const string& location, time_t eventLifeTime, uint8_t maxEvents, DeliveryQueue* pDeliveryQueue);
-	virtual void addEvent(const AbntAddr& CalledNum, const MCEvent& event, time_t schedTime = 0);
+	virtual void addEvent(const AbntAddr& CalledNum, const MCEvent& event, time_t schedTime);
 	virtual void setSchedParams(const AbntAddr& CalledNum, time_t schedTime, uint16_t lastError = -1);
 	bool getEvents(const AbntAddr& CalledNum, vector<MCEvent>& events);
 	void deleteEvents(const AbntAddr& CalledNum, const vector<MCEvent>& events);
