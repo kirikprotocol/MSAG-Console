@@ -7,9 +7,6 @@
 #include "util/debug.h"
 #include "system/smppio/SmppSocketsManager.hpp"
 #include <exception>
-#ifdef SNMP
-#include "system/snmp/SnmpCounter.hpp"
-#endif
 //#include <memory>
 
 namespace smsc{
@@ -331,12 +328,6 @@ int SmppInputThread::Execute()
                       SmppStatusSet::ESME_RALYBND:
                       SmppStatusSet::ESME_RBINDFAIL
                   );
-#ifdef SNMP
-                  if(resp->get_commandStatus()==SmppStatusSet::ESME_RBINDFAIL)
-                  {
-                    SnmpCounter::getInstance().incCounter(SnmpCounter::cntErr0xd,ss->getProxy()->getSystemId());
-                  }
-#endif
                   ((PduBindTRXResp*)resp)->set_scInterfaceVersion(0x34);
                   ((PduBindTRXResp*)resp)->set_systemId("smsc");
                   SmscCommand cmd=SmscCommand::makeSmppPduCommand
@@ -420,7 +411,6 @@ int SmppInputThread::Execute()
                     set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
                   err=true;
                 }
-
                 SmeInfo si;
                 if(!err)
                 {
@@ -530,8 +520,6 @@ int SmppInputThread::Execute()
                       break;
                   }
                 }
-
-
                 resppdu.get_header().
                   set_commandId(pdu->get_commandId()|0x80000000);
                 resppdu.get_header().
@@ -638,12 +626,6 @@ int SmppInputThread::Execute()
                     }
                   }
                 }
-#ifdef SNMP
-                if(resppdu.get_header().get_commandStatus()==SmppStatusSet::ESME_RBINDFAIL)
-                {
-                  SnmpCounter::getInstance().incCounter(SnmpCounter::cntErr0xd,bindpdu->get_systemId());
-                }
-#endif
                 resppdu.set_scInterfaceVersion(0x34);
                 char buf[64];
                 int size=resppdu.size();
@@ -1045,6 +1027,11 @@ int SmppOutputThread::Execute()
       for(i=0;i<sockets.Count();i++)
       {
         SmppSocket *ss=sockets[i];
+        if(now-ss->getLastUpdate()-inactivityTime>inactivityTimeOut*2)
+        {
+          ss->getSocket()->Close();
+        }
+
         Socket *s=ss->getSocket();
         if(s->getData(SOCKET_SLOT_KILL))
         {
