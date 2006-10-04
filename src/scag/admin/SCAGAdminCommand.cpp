@@ -444,14 +444,30 @@ Response * CommandApplyConfig::CreateResponse(scag::Scag * SmscApp)
 //================ ApplySmppTraceRoutes command ================================
 
 
-Response * CommandApplySmppRoutes::CreateResponse(scag::Scag * SmscApp)
+Response * CommandApplySmppRoutes::CreateResponse(scag::Scag * ScagApp)
 {
     smsc_log_info(logger, "CommandApplySmppRoutes is processing...");
+	
+    if (!ScagApp) throw Exception("Scag undefined");
 
-    ConfigManager & cfg = ConfigManager::Instance();
+    scag::transport::smpp::SmppManagerAdmin * smppMan = ScagApp->getSmppManagerAdmin();
 
-    cfg.reloadConfig(scag::config::ROUTE_CFG);
+    if (!smppMan) throw Exception("SmppManager undefined");
 
+    try {
+	    ConfigManager & cfg = ConfigManager::Instance();
+	    cfg.reloadConfig(scag::config::ROUTE_CFG);
+        smppMan->ReloadRoutes();
+    } catch(Exception& e) {                                     
+        char msg[1024];                                         
+        sprintf(msg, "Failed to reload routes. Details: %s", e.what());
+        smsc_log_error(logger, msg);
+        return new Response(Response::Error, msg);
+    } catch (...) {
+        smsc_log_warn(logger, "Failed to reload routes. Unknown exception");        
+        throw AdminException("Failed to reload routes. Unknown exception");
+    }
+	
     smsc_log_info(logger, "CommandApplySmppRoutes is processed ok");
     return new Response(Response::Ok, "none");
 }

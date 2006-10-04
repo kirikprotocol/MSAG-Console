@@ -275,11 +275,7 @@ void SmppManager::LoadRoutes(const char* cfgFile)
 
 void SmppManager::ReloadRoutes()
 {
-  scag::config::RouteConfig cfg;
-  if(cfg.load(routerConfigFile.c_str())!=scag::config::RouteConfig::success)
-  {
-    throw Exception("Failed to load routes config");
-  };
+  scag::config::RouteConfig& cfg = scag::config::ConfigManager::Instance().getRouteConfig();
   RouterRef newRouter(new router::RouteManager());
   router::loadRoutes(newRouter.Get(),cfg);
   routeMan=newRouter;
