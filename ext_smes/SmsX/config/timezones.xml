@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="windows-1251"?>
+
+<config>
+  <param name="default_timezne" type="string">360,Asia/Novosibirsk</param>
+
+  <section name="subjects">
+    <param name="Novosibirsk" type="string">420,Asia/Novosibirsk</param>
+    <param name="Moscow" type="string">420,Europe/Moscow</param>
+    <param name="Krasnoyarsk" type="string">420,Asia/Krasnoyarsk</param>
+  </section>
+</config>
