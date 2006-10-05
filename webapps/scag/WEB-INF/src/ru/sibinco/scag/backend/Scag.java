@@ -50,6 +50,8 @@ public class Scag extends Proxy {
     private static final String ADD_RULE_METHOD_ID = "addRule";
     private static final String UPDATE_RULE_METHOD_ID = "updateRule";
     private static final char LOGGER_DELIMITER = ',';
+    private static final String LIST_SME_METHOD_ID = "listSme";
+    private static final String LIST_SMSC_METHOD_ID = "listSmsc";
 
     public Scag(final ServiceInfo gwServiceInfo, final int port) {
         super(gwServiceInfo.getHost(), port);
@@ -200,6 +202,20 @@ public class Scag extends Proxy {
       final Response response = super.runCommand(new ReloadTariffMatrix());
       if (Response.STATUS_OK!=response.getStatus())
         throw new SibincoException(TariffMatrixManager.WHOISD_ERROR_PREFIX+", nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+    }
+
+    public List getSmscInfo() throws SibincoException {
+        final Map return_result = new HashMap();
+        String err = "Couldn't get SMSC info , nested: ";
+        final Object res = call(LIST_SMSC_METHOD_ID, err, Type.Types[Type.STRING_LIST_TYPE], new HashMap());
+        return res instanceof List ? (List) res : null;
+    }
+
+    public List getSmeInfo() throws SibincoException {
+        Map return_result = new HashMap();
+        String err = "Couldn't get SME info , nested: ";
+        final Object res = call(LIST_SME_METHOD_ID, err, Type.Types[Type.STRING_LIST_TYPE], new HashMap());
+        return res instanceof List ? (List) res : null;
     }
 
     public Object call(final String commandId, final String err, final Type returnType, final Map arguments) throws SibincoException {
