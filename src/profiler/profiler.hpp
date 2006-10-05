@@ -10,11 +10,9 @@
 #include "core/buffers/IntHash.hpp"
 #include "profiler-types.hpp"
 #include "profile-notifier-iface.hpp"
+#include "alias/AliasMan.hpp"
 
 namespace smsc{
-namespace db{
-class DataSource;
-}
 namespace profiler{
 
 using namespace smsc::sms;
@@ -156,6 +154,11 @@ public:
     notifier=pnotifier;
   }
 
+  void setAliasManager(smsc::alias::AliasManager* am)
+  {
+    aliasman=am;
+  }
+
 protected:
   mutable EventMonitor mon;
   smsc::core::buffers::Array<SmscCommand> outQueue;
@@ -165,6 +168,7 @@ protected:
   ProxyMonitor *managerMonitor;
   ProfilesTable *profiles;
   SmeRegistrar *smeman;
+  smsc::alias::AliasManager *aliasman;
   Mutex mtx;
   File storeFile;
   std::string storeFileName;
@@ -177,7 +181,6 @@ protected:
   string systemId;
   SmeProxyPriority prio;
 
-  smsc::db::DataSource *ds;
   ProfileNotifierInterface* notifier;
 
   void fileUpdate(const Address& addr,const Profile& profile);
