@@ -39,6 +39,8 @@ public class Svc {
     private byte mode = MODE_TRX;
     private Provider provider;
     private String transport = "SMPP";
+    private String connHost = "";
+    private String connStatus = "unknow";
     
     private byte type = SMPP;
 
@@ -235,6 +237,22 @@ public class Svc {
 
     public void setTransport(String transport) {
         this.transport = transport;
+    }
+
+    public String getConnHost() {
+        return connHost;
+    }
+
+    public void setConnHost(String connHost) {
+        this.connHost = connHost;
+    }
+
+    public String getConnStatus() {
+        return connStatus;
+    }
+
+    public void setConnStatus(String connStatus) {
+        this.connStatus = connStatus;
     }
 }
 
