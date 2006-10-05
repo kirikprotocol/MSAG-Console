@@ -77,7 +77,7 @@ static bool  bMCISmeIsConnecting = false;
 static void setNeedStop(bool stop=true) {
     MutexGuard gauard(needStopLock);
     bMCISmeIsStopped = stop;
-    if (stop && taskProcessor) taskProcessor->Pause();//Stop();
+    if (stop && taskProcessor) taskProcessor->Stop();
 }
 static bool isNeedStop() {
     MutexGuard gauard(needStopLock);
@@ -87,7 +87,7 @@ static bool isNeedStop() {
 static void setNeedReconnect(bool reconnect=true) {
     MutexGuard gauard(needReconnectLock);
     bMCISmeIsConnected = !reconnect;
-    if (reconnect && taskProcessor) taskProcessor->Stop();
+    if (reconnect && taskProcessor) taskProcessor->Pause();//Stop();
 }
 static bool isNeedReconnect() {
     MutexGuard gauard(needReconnectLock);
