@@ -89,7 +89,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
         protocolId(0), daysValid(1), svcType(0), address(0), 
         templateManager(0), mciModule(0), messageSender(0),
         statistics(0), maxInQueueSize(10000), maxOutQueueSize(10000),
-        bStarted(false), bInQueueOpen(false), bOutQueueOpen(false), pStorage(0), pDeliveryQueue(0)
+        bStarted(false), bInQueueOpen(false), bOutQueueOpen(false), bStopProcessing(false), pStorage(0), pDeliveryQueue(0)
 {
     smsc_log_info(logger, "Loading ...");
 	
@@ -387,6 +387,7 @@ void TaskProcessor::Start()
         bStarted = true;
         smsc_log_info(logger, "Event processing started.");
     }
+	bStopProcessing = false;
 }
 void TaskProcessor::Stop()
 {
@@ -399,11 +400,17 @@ void TaskProcessor::Stop()
         timeoutMonitor->Stop();
         closeInQueue();
 		pDeliveryQueue->CloseQueue();
+		bStopProcessing = true;
         exitedEvent.Wait();
 
 		bStarted = false;
         smsc_log_info(logger, "Event processing stoped.");
     }
+}
+void TaskProcessor::Pause()
+{
+    MutexGuard  guard(startLock);
+	bStopProcessing = true;
 }
 
 void TaskProcessor::Run()
@@ -417,7 +424,8 @@ void TaskProcessor::Run()
 
 //	while(pDeliveryQueue->isQueueOpened()) sleep(1000); return;
 	//	while(bOutQueueOpen)
-	while(pDeliveryQueue->isQueueOpened())
+//	while(pDeliveryQueue->isQueueOpened())
+	while(!bStopProcessing)
 	{
         if (mciModule && !mciModule->isRunning()) {
             smsc_log_info(logger, "MCI Module is down. Exiting message processing loop");

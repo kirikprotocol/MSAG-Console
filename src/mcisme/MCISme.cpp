@@ -77,7 +77,7 @@ static bool  bMCISmeIsConnecting = false;
 static void setNeedStop(bool stop=true) {
     MutexGuard gauard(needStopLock);
     bMCISmeIsStopped = stop;
-    if (stop && taskProcessor) taskProcessor->Stop();
+    if (stop && taskProcessor) taskProcessor->Pause();//Stop();
 }
 static bool isNeedStop() {
     MutexGuard gauard(needStopLock);

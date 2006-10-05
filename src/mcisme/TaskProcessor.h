@@ -113,7 +113,7 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
 
     Mutex   startLock;
     Event   exitedEvent;
-    bool    bStarted, bInQueueOpen, bOutQueueOpen;
+    bool    bStarted, bInQueueOpen, bOutQueueOpen, bStopProcessing;
     int                             maxInQueueSize, maxOutQueueSize;
     EventMonitor                    inQueueMonitor, outQueueMonitor;
     CyclicQueue<MissedCallEvent>    inQueue;
@@ -160,6 +160,7 @@ public:
     void Run();             // outQueue processing
     virtual int Execute();  // inQueue processing
     void Start(); void Stop();
+	void Pause(void);
     
     virtual void missed(MissedCallEvent event) {
         putToInQueue(event);
@@ -226,7 +227,7 @@ public:
 			if(awakeTime > curTime)
 			{
 				uint32_t toSleep = (awakeTime - curTime)*1000;
-				smsc_log_debug(logger, "TimeoutMonitor: Start wait %d", toSleep);
+				smsc_log_debug(logger, "TimeoutMonitor: Start wait %d ms", toSleep);
 				awakeMonitor.wait(toSleep);
 				smsc_log_debug(logger, "TimeoutMonitor: End wait");
 			}
