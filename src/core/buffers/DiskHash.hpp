@@ -147,7 +147,10 @@ protected:
     std::string tmp=name+".tmp";
     g.RWCreate(tmp.c_str());
     DiskHashHeader h;
-    h.size=size*reallocPercent/100;
+    uint64_t newsize=size;
+    newsize*=reallocPercent;
+    newsize/=100;
+    h.size=newsize;
 
     if(isCached)g.OpenInMemory(DiskHashHeader::Size()+recsize*h.size);
 
@@ -327,7 +330,7 @@ public:
 
   //Inserts/Updates record.
   //In case of insertion checks that key is not already used, otherwise
-  //throws DiskHashDuplicateKeyException 
+  //throws DiskHashDuplicateKeyException
   void Insert(const K& key, const V& value, bool update = false)
   {
     if(!isFileOpen)RTERROR("Attempt to insert into not opened hash file");
