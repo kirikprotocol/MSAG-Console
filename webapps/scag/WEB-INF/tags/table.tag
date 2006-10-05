@@ -102,7 +102,26 @@ function edit(idToEdit, child, parentId) {
                                <span style="width:100%; text-align:center;"><img align="center" src="content/images/ic_not_checked.gif"></span>
                            </c:otherwise>
                         </c:choose>
-                    </c:when>                                        
+                    </c:when>
+                    <c:when test="${column == 'connStatus'}">
+                        <c:choose>
+                           <c:when test="${fn:contains(itemValue, 'unknown')}">
+                               <span style="width:100%; text-align:center;"><img align="center" src="content/images/ic_unknown3.bmp" alt="<fmt:message>centers.index.table.names.unknown</fmt:message>"></span>
+                           </c:when>
+                            <c:when test="${itemValue == 'unknown'}">
+                               I<span style="width:100%; text-align:center;"><img align="center" src="content/images/ic_unknown3.bmp" alt="<fmt:message>centers.index.table.names.unknown</fmt:message>"></span>
+                           </c:when>
+                            <c:when test="${fn:contains(itemValue, 'yes')}">
+                               <span style="width:100%; text-align:center;"><img align="center" src="content/images/ic_internal.gif" alt="<fmt:message>centers.index.table.names.connected</fmt:message>"></span>
+                           </c:when>
+                           <c:when test="${fn:contains(itemValue, 'no')}">
+                               <span style="width:100%; text-align:center;"><img align="center" src="content/images/ic_disconnct.gif" alt="<fmt:message>centers.index.table.names.disconnected</fmt:message>"></span>
+                           </c:when>
+                           <c:otherwise>
+                               <span style="width:100%; text-align:center;"><img align="center" src="content/images/ic_unknown3.bmp" alt="<fmt:message>centers.index.table.names.unknown</fmt:message>"></span>
+                           </c:otherwise>
+                        </c:choose>
+                    </c:when>
                     <c:otherwise>
                         ${itemValue}
                     </c:otherwise>
