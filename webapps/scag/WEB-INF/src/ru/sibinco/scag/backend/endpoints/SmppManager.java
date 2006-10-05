@@ -8,26 +8,25 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-import ru.sibinco.lib.backend.util.xml.Utils;
-import ru.sibinco.lib.backend.util.Functions;
-import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.StatusDisconnectedException;
-import ru.sibinco.scag.backend.endpoints.svc.Svc;
-import ru.sibinco.scag.backend.endpoints.centers.Center;
-import ru.sibinco.scag.backend.sme.ProviderManager;
-import ru.sibinco.scag.backend.status.StatusManager;
-import ru.sibinco.scag.backend.status.StatMessage;
+import ru.sibinco.lib.backend.util.Functions;
+import ru.sibinco.lib.backend.util.SortedList;
+import ru.sibinco.lib.backend.util.xml.Utils;
+import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.Manager;
 import ru.sibinco.scag.backend.SCAGAppContext;
-import ru.sibinco.scag.backend.daemon.Proxy;
+import ru.sibinco.scag.backend.endpoints.centers.Center;
+import ru.sibinco.scag.backend.endpoints.svc.Svc;
+import ru.sibinco.scag.backend.sme.ProviderManager;
+import ru.sibinco.scag.backend.status.StatMessage;
+import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.beans.SCAGJspException;
-import ru.sibinco.scag.Constants;
 
 import javax.xml.parsers.ParserConfigurationException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.FileWriter;
 import java.util.*;
 
 
@@ -89,7 +88,8 @@ public class SmppManager extends Manager {
                 final Element centersRecords = (Element) centerRecords.item(i);
                 final Center center = createCenter(centersRecords);
                 centers.put(center.getId(), center);
-            }
+            }            
+
         }
     }
 
@@ -256,6 +256,58 @@ public class SmppManager extends Manager {
 
     public synchronized List getSvcsNames() {
         return new SortedList(svcs.keySet());
+    }
+
+    public synchronized Map getSvcs(SCAGAppContext appContext) {
+        Map result = getSvcs();
+        try {
+            List svcList = appContext.getScag().getSmeInfo();
+            for (Iterator iterator = svcList.iterator(); iterator.hasNext();) {
+                Map svc = ru.sibinco.scag.util.Utils.stringToMap((String) iterator.next(), ",");
+                Svc oldSvc = (Svc) result.get(svc.get("SystemId"));
+                if(oldSvc != null){
+                    oldSvc.setConnHost((String) svc.get("Host"));
+                    oldSvc.setConnStatus((String) svc.get("Status"));
+                    result.remove(oldSvc.getId());
+                    result.put(oldSvc.getId(), oldSvc);
+                }
+            }
+
+        } catch (SibincoException e) {
+            for (Iterator iterator = result.values().iterator(); iterator.hasNext();) {
+                Svc svc = (Svc) iterator.next();
+                svc.setConnHost("");
+                svc.setConnStatus("unknown");
+                result.put(svc.getId(), svc);
+            }
+        }
+        return result;
+    }
+
+    public synchronized Map getCenters(SCAGAppContext appContext) {
+        Map result = getCenters();
+        try {
+            List centerList = appContext.getScag().getSmscInfo();
+            for (Iterator iterator = centerList.iterator(); iterator.hasNext();) {
+                Map center = ru.sibinco.scag.util.Utils.stringToMap((String) iterator.next(), ",");
+                Center oldCenter = (Center) result.get(center.get("SystemId"));
+                if(oldCenter != null){
+                    oldCenter.setConnHostPort(center.get("Host") + ":" + center.get("Port"));
+                    oldCenter.setConnStatus((String) center.get("Status"));
+                    result.remove(oldCenter.getId());
+                    result.put(oldCenter.getId(), oldCenter);
+                }
+            }
+
+        } catch (SibincoException e) {
+            for (Iterator iterator = result.values().iterator(); iterator.hasNext();) {
+                Center center = (Center) iterator.next();
+                center.setConnHostPort("");
+                center.setConnStatus("unknown");
+                result.put(center.getId(), center);
+            }
+        }
+        return result;
     }
 
     public synchronized Map getCenters() {
