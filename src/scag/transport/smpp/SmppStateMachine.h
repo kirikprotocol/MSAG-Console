@@ -40,6 +40,7 @@ protected:
 
   void SubmitResp(SmppCommand& cmd,int status);
   void DeliveryResp(SmppCommand& cmd,int status);
+  void DataResp(SmppCommand& cmd,int status);
 
   void registerEvent(int event, SmppEntity* src, SmppEntity* dst, const char* rid, int errCode);
 

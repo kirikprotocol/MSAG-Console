@@ -585,6 +585,17 @@ void StateMachine::DeliveryResp(SmppCommand& cmd,int status)
   );
 }
 
+void StateMachine::DataResp(SmppCommand& cmd,int status)
+{
+  cmd.getEntity()->putCommand(
+    SmppCommand::makeDataSmResp(
+      "0",
+      cmd->get_dialogId(),
+      status
+    )
+  );
+}
+
 void StateMachine::processDataSm(SmppCommand& cmd)
 {
   router::RouteInfo ri;
@@ -600,7 +611,7 @@ void StateMachine::processDataSm(SmppCommand& cmd)
       sms.getOriginatingAddress().toString().c_str(),
       src->getSystemId(),
       sms.getDestinationAddress().toString().c_str());
-    DeliveryResp(cmd,smsc::system::Status::NOROUTE);
+    DataResp(cmd,smsc::system::Status::NOROUTE);
     registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
     return;
   }
@@ -654,8 +665,8 @@ void StateMachine::processDataSm(SmppCommand& cmd)
   if(!st.status)
   {
     smsc_log_info(log,"DataSm: RuleEngine returned result=%d",st.result);
-    DeliveryResp(cmd, st.temporal? smsc::system::Status::RX_T_APPN :
-                                   smsc::system::Status::RX_P_APPN);
+    DataResp(cmd, st.temporal? smsc::system::Status::RX_T_APPN :
+                               smsc::system::Status::RX_P_APPN);
     scag::sessions::SessionManager::Instance().releaseSession(session);
     registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, st.temporal? smsc::system::Status::RX_T_APPN : smsc::system::Status::RX_P_APPN);
     return;
