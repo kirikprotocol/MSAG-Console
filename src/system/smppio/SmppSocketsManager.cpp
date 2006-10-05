@@ -2,6 +2,7 @@
 #include "system/smppio/SmppIOTask.hpp"
 #include <string.h>
 #include "util/64bitcompat.h"
+#include "system/smppio/SmppSocket.hpp"
 
 namespace smsc{
 namespace system{
@@ -47,13 +48,14 @@ void SmppSocketsManager::registerSocket(Socket* sock)
   }
   MutexGuard g(mtxAdd);
   int i;
-  sock->setData(0,0);
-  sock->setData(1,this);
+  SmppSocketData *sd=new SmppSocketData;
+  sd->socketManager=this;
+  sock->setData(0,sd);
   for(i=0;i<intasks.Count();i++)
   {
     if(intasks[i]->socketsCount()<SM_SOCK_PER_THREAD)
     {
-      sock->setData(0,(void*)2);
+      sd->refCount=2;
       outtasks[i]->addSocket(sock,socketTimeOut);
       intasks[i]->addSocket(sock,socketTimeOut);
       intasks[i]->notify();
@@ -74,7 +76,7 @@ void SmppSocketsManager::registerSocket(Socket* sock)
   out->assignIn(in);
   in->assignOut(out);
 
-  sock->setData(0,(void*)2);
+  sd->refCount=2;
 
   in->addSocket(sock,socketTimeOut);
   out->addSocket(sock,socketTimeOut);
@@ -90,11 +92,10 @@ void SmppSocketsManager::registerSocket(Socket* sock)
 int SmppSocketsManager::removeSocket(Socket* sock)
 {
   MutexGuard g(mtxRemove);
-  int x=VoidPtr2Int(sock->getData(0));
-  x--;
-  trace2("socket ref count for %p:%d",sock,x);
-  sock->setData(0,(void*)x);
-  if(x)return x;
+  SmppSocketData* sd=(SmppSocketData*)sock->getData(0);
+  sd->refCount--;
+  trace2("socket ref count for %p:%d",sock,sd->refCount);
+  if(sd->refCount)return sd->refCount;
   Ptr2AddrMap::iterator it=ptr2addr.find(sock);
   connectCnt.Get(it->second.c_str())--;
   info2(log,"Decrease connections count for %s(%d)",it->second.c_str(),connectCnt.Get(it->second.c_str()));
@@ -102,6 +103,7 @@ int SmppSocketsManager::removeSocket(Socket* sock)
 
   info2(log,"deleting socket:%p",sock);
   sock->Abort();
+  delete sd;
   delete sock;
   return 0;
 }

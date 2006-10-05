@@ -50,6 +50,11 @@ char* SmppSocket::getBuffer(int length)
   return buffer;
 }
 
+time_t SmppSocket::getLastUpdate()
+{
+  return ((SmppSocketData*)socket->getData(0))->lastUpdateTime;
+}
+
 
 void SmppSocket::send(int length)
 {
@@ -109,7 +114,7 @@ int SmppSocket::receive()
     return -1;
   }
   bufferOffset+=rd;
-  lastUpdate=time(NULL);
+  ((SmppSocketData*)socket->getData(0))->lastUpdateTime=time(NULL);
   if(bufferOffset==packetsize)
   {
     return 1;

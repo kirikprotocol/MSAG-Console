@@ -36,6 +36,8 @@ using smsc::core::network::Socket;
 
 class SmppProxy;
 class SmppIOTask;
+class SmppSocketsManager;
+
 
 class SmppSocket{
 public:
@@ -44,7 +46,6 @@ public:
     socket(sock),
     timeOut(timeOut),
     lastEnquireLink(0),
-    lastUpdate(0),
     channelType(ctUnbound)
   {
     proxy=NULL;
@@ -96,12 +97,12 @@ public:
   int send();
   void send(int length);
 
+  time_t getLastUpdate();
+
   bool isConnectionTimedOut()
   {
-    return bufferOffset>0 && time(NULL)-lastUpdate>timeOut;
+    return bufferOffset>0 && time(NULL)-getLastUpdate()>timeOut;
   }
-
-  time_t getLastUpdate(){return lastUpdate;}
 
   void updateLastEL()
   {
@@ -135,7 +136,6 @@ protected:
   int bufferSize;
   int bufferOffset;
   int mode;
-  time_t lastUpdate;
   time_t lastEnquireLink;
   smsc::core::network::Socket* socket;
   int timeOut;
@@ -145,6 +145,29 @@ protected:
   smsc::logger::Logger* log;
   time_t connectTime;
 };//smppioSocket
+
+struct SmppSocketData{
+  int refCount;
+  SmppSocketsManager *socketManager;
+  SmppSocket* inSocket;
+  SmppSocket* outSocket;
+  bool inMulti;
+  bool outMulti;
+  bool killSocket;
+  time_t lastUpdateTime;
+  SmppSocketData()
+  {
+    refCount=0;
+    socketManager=0;
+    inSocket=0;
+    outSocket=0;
+    inMulti=false;
+    outMulti=false;
+    killSocket=false;
+    lastUpdateTime=time(NULL);
+  }
+};
+
 
 }//smppio
 }//system
