@@ -220,6 +220,7 @@ public:
 
 		while (!bNeedExit)
 		{
+			MutexGuard lock(awakeMonitor);
 			map<time_t, int>::iterator	It=seqNums.begin();
 			
 			time_t curTime = time(0);
@@ -233,13 +234,13 @@ public:
 			}
 			else
 			{
-				MutexGuard lock(awakeMonitor);
 				int seqNum = It->second;
 				smsc_log_debug(logger, "TimeoutMonitor: Timeout has passed for SMS seqNum %d", seqNum);
 				processor->invokeProcessDataSmTimeout(seqNum);
 				seqNums.erase(It);
 			}
 		}
+		smsc_log_info(logger, "TimeoutMonitor Exiting ...");
 		exitedEvent.Signal();
 		return 0;	
 	}
