@@ -3,9 +3,9 @@
  */
 package ru.sibinco.scag.beans.endpoints.services;
 
-import ru.sibinco.scag.beans.TabledBeanImpl;
-import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.lib.bean.TabledBean;
+import ru.sibinco.scag.beans.SCAGJspException;
+import ru.sibinco.scag.beans.TabledBeanImpl;
 
 import java.util.Collection;
 
@@ -20,7 +20,7 @@ import java.util.Collection;
 public class Index extends TabledBeanImpl implements TabledBean {
 
     protected Collection getDataSource() {
-        return appContext.getSmppManager().getSvcs().values();
+        return appContext.getSmppManager().getSvcs(appContext).values();
     }
 
     protected void delete() throws SCAGJspException {
