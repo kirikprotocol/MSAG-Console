@@ -46,6 +46,8 @@ public class Center {
     private String systemType = "";
     private String transport = "SMPP";
     private String addressRange;
+    private String connHostPort = "";
+    private String connStatus = "unknow";
 
     private Category logger = Category.getInstance(this.getClass());
 
@@ -349,5 +351,22 @@ public class Center {
 
     public void setAddressRange(final String addressRange) {
         this.addressRange = addressRange;
+    }
+
+
+    public String getConnStatus() {
+        return connStatus;
+    }
+
+    public void setConnStatus(String connStatus) {
+        this.connStatus = connStatus;
+    }
+
+    public String getConnHostPort() {
+        return connHostPort;
+    }
+
+    public void setConnHostPort(String connHostPort) {
+        this.connHostPort = connHostPort;
     }
 }
