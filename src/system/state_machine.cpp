@@ -2965,15 +2965,20 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     debug2(smsLog,"Sending AlertNotification to '%s'",sms.srcSmeId);
     if(proxy!=0)
     {
-      proxy->putCommand(
-        SmscCommand::makeAlertNotificationCommand
-        (
-          proxy->getNextSequenceNumber(),
-          sms.getOriginatingAddress(),
-          sms.getDestinationAddress(),
-          2
-        )
-      );
+      try{
+        proxy->putCommand(
+          SmscCommand::makeAlertNotificationCommand
+          (
+            proxy->getNextSequenceNumber(),
+            sms.getOriginatingAddress(),
+            sms.getDestinationAddress(),
+            2
+          )
+        );
+      }catch(std::exception& e)
+      {
+        warn2(smsLog,"Failed to put Alert Notification Command:%s",e.what());
+      }
     }else
     {
       warn2(smsLog,"Sme %s requested dpf, but not connected at the moment",sms.srcSmeId);
