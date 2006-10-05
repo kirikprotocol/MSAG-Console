@@ -5,6 +5,9 @@
 package ru.sibinco.scag.util;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.StringTokenizer;
 
 /**
  * The <code>Utils</code> class represents
@@ -26,6 +29,24 @@ public class Utils {
                 path = request.getContextPath() + path.substring(0, pos2);
         }
         return path;
+    }
+
+    public static Map stringToMap(String str, String delimiter) {
+        Map result = new HashMap();
+        int d = 0;
+        String name = "";
+        String value = "";
+        for (StringTokenizer tokenizer = new StringTokenizer(str, delimiter); tokenizer.hasMoreTokens();) {
+            final String res = tokenizer.nextToken();
+            d++;
+            if (d % 2 == 0) {
+                value = res;
+            } else {
+                name = res;
+            }
+            result.put(name.trim(), value.trim());
+        }
+        return result;
     }
 }
 
