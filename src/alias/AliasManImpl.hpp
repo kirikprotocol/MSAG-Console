@@ -47,7 +47,7 @@ public:
       smsc_log_warn(log,"duplicate add<->alias:%s<->%s",ai.addr.toString().c_str(),buf);
       throw smsc::util::Exception("Duplicate alias found:%s",buf);
     }
-    Record *recptr=new Record(ai.addr,ai.alias);
+    Record *recptr=new Record(ai.addr,ai.alias,ai.hide);
     if(ai.hide)
     {
       char buf2[32];
@@ -116,7 +116,7 @@ public:
     int cnt=0;
     while(off=store.Read(r))
     {
-      Record *recptr=new Record(r.addr,r.alias);
+      Record *recptr=new Record(r.addr,r.alias,r.hide);
       char buf[32];
       if(r.hide)
       {
@@ -138,7 +138,7 @@ protected:
     bool hide;
     buf::File::offset_type offset;
     Record():hide(false),offset(0){}
-    Record(const smsc::sms::Address& argAddr,const smsc::sms::Address& argAlias):addr(argAddr),alias(argAlias),hide(false),offset(0){}
+    Record(const smsc::sms::Address& argAddr,const smsc::sms::Address& argAlias,bool argHide):addr(argAddr),alias(argAlias),hide(argHide),offset(0){}
 
     template <class F>
     void Read(F& f)
