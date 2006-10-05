@@ -215,6 +215,8 @@ public:
 	  {}
     virtual int Execute()
 	{
+		clearSignalMask();
+
 		while (!bNeedExit)
 		{
 			map<time_t, int>::iterator	It=seqNums.begin();
@@ -230,6 +232,7 @@ public:
 			}
 			else
 			{
+				MutexGuard lock(awakeMonitor);
 				int seqNum = It->second;
 				smsc_log_debug(logger, "TimeoutMonitor: Timeout has passed for SMS seqNum %d", seqNum);
 				processor->invokeProcessDataSmTimeout(seqNum);
@@ -269,12 +272,14 @@ public:
 
 	void addSeqNum(int seqNum)
 	{
+		MutexGuard lock(awakeMonitor);
 		seqNums.insert(multimap<time_t, int>::value_type(time(0) + timeout, seqNum));
 		awakeMonitor.notify();
 		smsc_log_debug(logger, "Added SMS (seqNum = %d) to monitoring list (total = %d).", seqNum, seqNums.size());
 	}
 	void removeSeqNum(int seqNum)
 	{
+		MutexGuard lock(awakeMonitor);
 		map<time_t, int>::iterator	It;
 		for(It = seqNums.begin(); It != seqNums.end(); ++It)
 		{
