@@ -20,7 +20,7 @@ public class Index extends TabledBeanImpl {
 
 
     protected Collection getDataSource() {
-        return appContext.getSmppManager().getCenters().values();
+        return appContext.getSmppManager().getCenters(appContext).values();
     }
 
     protected void delete() throws SCAGJspException {
