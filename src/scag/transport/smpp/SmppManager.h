@@ -36,7 +36,7 @@ public:
   SmppManager();
   ~SmppManager();
   void Init(const char* cfgFile);
-  void LoadRoutes();
+  void LoadRoutes(const char* cfgFile);
   void ReloadRoutes();
 
   //admin
@@ -98,7 +98,7 @@ protected:
 
   typedef RefPtr<router::RouteManager,sync::Mutex> RouterRef;
   RouterRef routeMan;
-  std::string routerConfigFile;
+//  std::string routerConfigFile;
 
   thr::ThreadPool tp;
 

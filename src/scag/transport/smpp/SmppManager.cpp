@@ -237,7 +237,7 @@ void SmppManager::Init(const char* cfgFile)
 
   ParseTag(this,list,etSmsc);
 
-  LoadRoutes();
+  LoadRoutes("conf/smpp_routes.xml");
   running=true;
 
   int stmCnt = 0;
@@ -261,9 +261,13 @@ void SmppManager::configChanged()
 {
 }
 
-void SmppManager::LoadRoutes()
+void SmppManager::LoadRoutes(const char* cfgFile)
 {
   scag::config::RouteConfig& cfg = scag::config::ConfigManager::Instance().getRouteConfig();
+  if(cfg.load(cfgFile)!=scag::config::RouteConfig::success)
+  {
+    throw Exception("Failed to load routes config");
+  };
   routeMan=new router::RouteManager();
   router::loadRoutes(routeMan.Get(),cfg,false);
 }

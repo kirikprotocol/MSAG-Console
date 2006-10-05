@@ -38,7 +38,7 @@ int main(int argc,char* argv[])
   try{
     SmppManager sm;
     sm.Init("smpp.xml");
-    sm.LoadRoutes();
+    sm.LoadRoutes("routes.xml");
     printf("press enter...");
 
     /*
