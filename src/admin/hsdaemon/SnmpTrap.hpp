@@ -73,10 +73,16 @@ public:
   }
   int Execute()
   {
+    smsc::logger::Logger *log=smsc::logger::Logger::getInstance("snmp");
     while(!isStopping)
     {
       mon.wait(5*60*1000);
-      Roll();
+      try{
+        Roll();
+      }catch(std::exception& e)
+      {
+        smsc_log_error(log,"Failed to roll csv file:%s",e.what());
+      }
     }
     return 0;
   }
