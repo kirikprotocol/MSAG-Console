@@ -16,20 +16,19 @@
 #include "util/smstext.h"
 #include "logger/Logger.h"
 #include "system/status.h"
-
 #include "resourcemanager/ResourceManager.hpp"
 #include "util/templates/DummyAdapter.h"
-
 #include <exception>
 #include "util/timeslotcounter.hpp"
 #include "util/Exception.hpp"
 #include "core/buffers/TmpBuf.hpp"
-
 #include "sms/sms_util.h"
-
 #include "cluster/Interconnect.h"
-
 #include "closedgroups/ClosedGroupsInterface.hpp"
+
+#ifdef SMSEXTRA
+#include "system/ExtraBits.hpp"
+#endif
 
 namespace smsc{
 namespace profiler{
@@ -47,6 +46,15 @@ using namespace smsc::system;
 using namespace smsc::resourcemanager;
 
 using namespace smsc::sms;
+
+static bool isValidAlias(const std::string& s)
+{
+  for(int i=0;i<s.length();i++)
+  {
+    if(!(isalnum(s[i]) && s[i]>32 && s[i]<127 && strchr("|{}[]\\~",s[i])==0))return false;
+  }
+  return true;
+}
 
 class AccessDeniedException{};
 
@@ -472,6 +480,10 @@ static const int _update_charset_ussd=7;
 static const int _update_divert_cond=8;
 static const int _update_udhconcat=9;
 static const int _update_translit=10;
+static const int _update_subscription_add=11;
+static const int _update_subscription_clear=12;
+
+static const int _update_extra=0x10000;
 
 static const int update_div_cond_Absent=1;
 static const int update_div_cond_Blocked=2;
@@ -487,6 +499,20 @@ void Profiler::internal_update(int flag,const Address& addr,int value,const char
   Profile profile;
   profile.assign(lookup(addr));
 
+#ifdef SMSEXTRA
+  bool checkAccess=(flag&_update_extra)==0;
+  flag&=~_update_extra;
+
+  if(flag==_update_subscription_add)
+  {
+    profile.subscription|=value;
+  }
+  if(flag==_update_subscription_clear)
+  {
+    profile.subscription&=~value;
+  }
+#endif
+
   if(flag==_update_report)
   {
     profile.reportoptions=value;
@@ -501,6 +527,9 @@ void Profiler::internal_update(int flag,const Address& addr,int value,const char
   }
   if(flag==_update_hide)
   {
+#ifdef SMSEXTRA
+    if(checkAccess)
+#endif
     if(!profile.hideModifiable)throw AccessDeniedException();
     profile.hide=value;
   }
@@ -580,6 +609,19 @@ enum{
   msgDivertCapOff,
   msgTranslitOn,
   msgTranslitOff
+#ifdef SMSEXTRA
+  ,
+  msgAliasOk,
+  msgAliasDuplicate,
+  msgAliasFailed,
+  msgAliasOn,
+  msgAliasOff,
+  msgAliasDeleted,
+  msgAliasNotFound,
+  msgFlashOn,
+  msgFlashOff,
+  msgFlashFail
+#endif
 };
 
 int Profiler::Execute()
@@ -657,7 +699,7 @@ int Profiler::Execute()
       __trace2__("Profiler: received %s from .%d.%d.%.20s",body,addr.type,addr.plan,addr.value);
 
       int i;
-      for(i=0;i<len;i++)body[i]=toupper(body[i]);
+
       i=0;
       while(!isalnum(body[i]) && body[i]!='*' && body[i]!='#' && i<len)i++;
       msg=-1;
@@ -692,12 +734,17 @@ int Profiler::Execute()
             }
           }
         }
-        string profCmd,arg1,arg2;
+        string profCmd,orgArg,arg1,arg2;
         profCmd=body+i;
         if(splitString(profCmd,arg1))
         {
           splitString(arg1,arg2);
         }
+        orgArg=arg1;
+        for(i=0;i<profCmd.length();i++)profCmd[i]=toupper(profCmd[i]);
+        for(i=0;i<arg1.length();i++)arg1[i]=toupper(arg1[i]);
+        for(i=0;i<arg2.length();i++)arg2[i]=toupper(arg2[i]);
+
 
         if(profCmd=="REPORT")
         {
@@ -873,6 +920,83 @@ int Profiler::Execute()
             internal_update(_update_translit,addr,0,0);
           }
         }
+#ifdef SMSEXTRA
+        else if(profCmd=="NICK")
+        {
+          if(arg1=="NONE")
+          {
+            Address alias;
+            if(aliasman->AddressToAlias(sms->getOriginatingAddress(),alias))
+            {
+              aliasman->deleteAlias(alias);
+              msg=msgAliasDeleted;
+              internal_update(_update_extra|_update_hide,addr,0);
+              internal_update(_update_subscription_clear,addr,EXTRA_NICK);
+            }else
+            {
+              msg=msgAliasNotFound;
+            }
+          }else if(arg1=="ON")
+          {
+            Address alias;
+            if(aliasman->AddressToAlias(sms->getOriginatingAddress(),alias))
+            {
+              msg=msgAliasOn;
+              internal_update(_update_extra|_update_hide,addr,1);
+            }else
+            {
+              msg=msgAliasNotFound;
+            }
+          }else if(arg1=="OFF")
+          {
+            Address alias;
+            if(aliasman->AddressToAlias(sms->getOriginatingAddress(),alias))
+            {
+              msg=msgAliasOff;
+              internal_update(_update_extra|_update_hide,addr,0);
+            }else
+            {
+              msg=msgAliasNotFound;
+            }
+          }
+          else
+          {
+            try{
+              if(isValidAlias(orgArg))
+              {
+                smsc::alias::AliasInfo ai;
+                ai.addr=sms->getOriginatingAddress();
+                ai.alias=Address(orgArg.length(),5,0,orgArg.c_str());
+                ai.hide=true;
+                aliasman->addAlias(ai);
+                msg=msgAliasOk;
+                internal_update(_update_extra|_update_hide,addr,1);
+                internal_update(_update_subscription_add,addr,EXTRA_NICK);
+              }else
+              {
+                msg=msgAliasFailed;
+              }
+            }catch(...)
+            {
+              msg=msgAliasDuplicate;
+            }
+          }
+        }else if(profCmd=="FLASH")
+        {
+          if(arg1=="NONE")
+          {
+            internal_update(_update_subscription_clear,addr,EXTRA_FLASH);
+            msg=msgFlashOff;
+          }else if(arg1=="")
+          {
+            internal_update(_update_subscription_add,addr,EXTRA_FLASH);
+            msg=msgFlashOn;
+          }else
+          {
+            msg=msgFlashFail;
+          }
+        }
+#endif
       }catch(AccessDeniedException& e)
       {
         msg=msgAccessDenied;
@@ -889,6 +1013,7 @@ int Profiler::Execute()
       case msg: \
       { \
         msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler." #msg);\
+        if(msgstr.length()==0)msgstr=#msg;\
       }break
 
 
@@ -923,6 +1048,20 @@ int Profiler::Execute()
         SIMPLERESP(msgDivertCapOff);
         SIMPLERESP(msgTranslitOn);
         SIMPLERESP(msgTranslitOff);
+
+#ifdef SMSEXTRA
+        SIMPLERESP(msgAliasOk);
+        SIMPLERESP(msgAliasDuplicate);
+        SIMPLERESP(msgAliasFailed);
+        SIMPLERESP(msgAliasOn);
+        SIMPLERESP(msgAliasOff);
+        SIMPLERESP(msgAliasDeleted);
+        SIMPLERESP(msgAliasNotFound);
+        SIMPLERESP(msgFlashOn);
+        SIMPLERESP(msgFlashOff);
+        SIMPLERESP(msgFlashFail);
+#endif
+
         //SIMPLERESP(msgAccessDenied);
         case msgAccessDenied:
         {

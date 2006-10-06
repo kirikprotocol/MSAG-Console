@@ -475,6 +475,9 @@ struct INSmsChargeResponse{
     bool diverted;
     bool routeHide;
     Address dst;
+#ifdef SMSEXTRA
+    bool noDestChange;
+#endif
     bool transit;
     smsc::router::ReplyPath replyPath;
     int priority;

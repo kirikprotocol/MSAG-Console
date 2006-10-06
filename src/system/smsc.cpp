@@ -38,6 +38,11 @@
 #include "system/common/TimeZoneMan.hpp"
 #include "alias/AliasManImpl.hpp"
 
+#ifdef SMSEXTRA
+#include "Extra.hpp"
+#include "ExtraBits.hpp"
+#endif
+
 #include <unistd.h>
 
 //#define ENABLE_MAP_SYM
@@ -697,6 +702,8 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     profiler->serviceType=cfg.cfgman->getString("profiler.service_type");
     profiler->protocolId=cfg.cfgman->getInt("profiler.protocol_id");
 
+    profiler->setAliasManager(aliaser);
+
     using smsc::util::config::CStrSet;
     CStrSet *params=cfg.cfgman->getChildIntParamNames("profiler.ussdOpsMapping");
     CStrSet::iterator i=params->begin();
@@ -972,6 +979,26 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   {
     smsc_log_warn(log, "core.mergeTimeout not found, using default(%d)",mergeConcatTimeout);
   }
+
+#ifdef SMSEXTRA
+  {
+    ExtraInfo::Init();
+    int bits[]={EXTRA_NICK,EXTRA_FLASH,EXTRA_CALEND,EXTRA_SECRET};
+    const char* sections[]={"nick","flash","calendar","secret"};
+    std::string cfgParam;
+    for(int i=0;i<sizeof(bits)/sizeof(bits[0]);i++)
+    {
+      cfgParam="smsx.";
+      cfgParam+=sections[i];
+      const char* prefix=cfg.cfgman->getString((cfgParam+".prefix").c_str());
+      const char* divert=0;
+      try{
+        divert=cfg.cfgman->getString((cfgParam+".divertNumber").c_str());
+      }catch(...){}
+      ExtraInfo::getInstance().addPrefix(bits[i],prefix,divert);
+    }
+  }
+#endif
 
   try {
 
@@ -1258,6 +1285,10 @@ void Smsc::shutdown()
     delete aliaser;
     aliaser=0;
   }
+
+#ifdef SMSEXTRA
+  ExtraInfo::Shutdown();
+#endif
 
 #ifdef SNMP
   SnmpCounter::Shutdown();
