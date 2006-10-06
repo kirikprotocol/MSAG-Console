@@ -16,6 +16,7 @@ public:
   virtual void disconnect()=0;
   void setUid(int argUid){uid=argUid;}
   int  getUid(){return uid;}
+  virtual std::string getPeer() = 0;
 protected:
   int uid;
 };

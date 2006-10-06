@@ -453,6 +453,7 @@ int SmppManager::registerSmeChannel(const char* sysId,const char* pwd,SmppBindTy
       ent.transChannel=ch;
     }
   }
+  ent.info.host = ch->getPeer();
   ent.connected = true;
   ent.setUid(++lastUid);
   smsc_log_info(log,"Registered sme with sysId='%s'",sysId);

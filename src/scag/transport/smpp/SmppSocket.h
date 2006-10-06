@@ -185,6 +185,17 @@ struct SmppSocket:SmppChannel{
     outQueue.Push(SmppCommand::makeCommand(ENQUIRELINK,0,0,0));
   }
 
+  virtual std::string getPeer()
+  {
+      if (!sock) return "";
+
+      char buff[32];
+      sock->GetPeer(buff);
+
+      std::string str = buff;
+      return str;
+  }
+
 protected:
 
   sync::EventMonitor* outMon;
