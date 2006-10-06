@@ -49,6 +49,7 @@ struct SmppEntity
     recvChannel=0;
     transChannel=0;
     seq=0;
+    connected = false;
   }
   ~SmppEntity() 
   {
