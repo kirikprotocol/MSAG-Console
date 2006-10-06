@@ -995,7 +995,12 @@ protected:
   void ResizeBuffer(int newsz)
   {
     newsz+=newsz/4;
-    if(newsz>MAX_BUFFER_SIZE || newsz<=0)throw std::runtime_error("File buffer size exceeded limit");
+    if(newsz>MAX_BUFFER_SIZE || newsz<=0)
+    {
+      char buf[128];
+      sprintf(buf,"File buffer size exceeded limit:%d/%d",newsz,MAX_BUFFER_SIZE);
+      throw std::runtime_error(buf);
+    }
     char* newbuf=new char[newsz];
     memcpy(newbuf,buffer,bufferSize);
     delete [] buffer;
