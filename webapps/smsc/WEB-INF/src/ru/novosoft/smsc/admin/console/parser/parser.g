@@ -1024,7 +1024,7 @@ catch [RecognitionException ex] {
 addemailsme returns [EmailSmeAddCommand cmd] {
     cmd = new EmailSmeAddCommand();
 }	: emailsme_gen_opt[cmd]
-      (OPT_USERNAME { cmd.setUserName(getnameid("emailsme username")); })
+      (OPT_USERNAME { cmd.setUserName(getnameid("emailsme username")); }) ?
       (OPT_FORWARDEMAIL { cmd.setForwardEmail(getnameid("emailsme forwardemail")); })?
       (OPT_REALNAME { cmd.setRealName(getnameid("emailsme realname")); })?
       (OPT_LIMITTYPE { cmd.setLimitType(getnameid("emailsme limit type")); })

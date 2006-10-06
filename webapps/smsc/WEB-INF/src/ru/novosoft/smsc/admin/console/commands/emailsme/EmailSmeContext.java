@@ -21,6 +21,7 @@ public class EmailSmeContext extends Proxy {
 
   public static String EMAILSME_ID = "emailsme";
   private static final int STATUS_OK = 1;
+  private static final int STATUS_DUBLICATE_USERNAME = 2;
 
   private static final byte COMMAND_UPDATE = 1;
   private static final byte COMMAND_DELETE = 2;
@@ -65,9 +66,9 @@ public class EmailSmeContext extends Proxy {
       Message.writeUInt8(out, npi);
       byte[] addr = new byte[21];
       int len = (address.length() < 21 ? address.length() : 21);
-      for (int i = 0; i < len; i++) {
+      for (int i = 0; i < len; i++)
         addr[i] = (byte) address.charAt(i);
-      }
+
       out.write(addr);
       Message.writeString16(out, userName);
       Message.writeString16(out, forwardEmail);
@@ -80,6 +81,8 @@ public class EmailSmeContext extends Proxy {
       Message.writeUInt32(out, limitCountEml2Gsm);
       out.flush();
       int result = (int) Message.readUInt32(in);
+      if (result == STATUS_DUBLICATE_USERNAME)
+        throw new AdminException("Could not add: dublicate username");
       if (result != STATUS_OK) throw new AdminException("Could not add/update: emailsme returned error");
     }
     catch (java.io.IOException e) {
@@ -102,7 +105,8 @@ public class EmailSmeContext extends Proxy {
       }
       out.write(addr);
       out.flush();
-      int result = in.read();
+      int result = (int) Message.readUInt32(in);
+
       if (result != STATUS_OK) throw new AdminException("Could not delete: emailsme returned error");
     }
     catch (java.io.IOException e) {

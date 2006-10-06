@@ -1469,8 +1469,24 @@ public CommandParser(ParserSharedInputState state) {
 		
 		emailsme_gen_opt(cmd);
 		{
-		match(OPT_USERNAME);
-		cmd.setUserName(getnameid("emailsme username"));
+		switch ( LA(1)) {
+		case OPT_USERNAME:
+		{
+			match(OPT_USERNAME);
+			cmd.setUserName(getnameid("emailsme username"));
+			break;
+		}
+		case OPT_FORWARDEMAIL:
+		case OPT_REALNAME:
+		case OPT_LIMITTYPE:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
 		}
 		{
 		switch ( LA(1)) {
