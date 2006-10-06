@@ -947,7 +947,7 @@ public:
 
 protected:
   enum{INIT_BUFFER_SIZE=4096};
-  enum{MAX_BUFFER_SIZE=500*1024*1024};
+  enum{MAX_BUFFER_SIZE=2000*1024*1024};
   enum{
     FLG_BUFFERED=1,
     FLG_RDBUF=2,
