@@ -660,22 +660,36 @@ public:
             AbonentProfile p,p2;
             p.Read(buf);
             toLower(p.user);
-            if(storage.getProfileByAddress(p.addr.value,p2))
+            if(storage.getProfileByEmail(p.user.c_str(),p2))
             {
-              p.limitCountEml2Gsm=p2.limitCountEml2Gsm;
-              p.limitCountGsm2Eml=p2.limitCountGsm2Eml;
-              p.limitDate=p2.limitDate;
-              if(p.user!=p2.user)
+              if(!(p.addr==p2.addr))
               {
-                storage.DeleteProfile(p2);
-                storage.CreateProfile(p);
+                smsc_log_info(log,"attempt to add duplicate user '%s' for abonent '%s' (exists for '%s')",p.user.c_str(),p.addr.toString().c_str(),p2.addr.toString().c_str());
+                rv=2;
+                //throw smsc::util::Exception("Duplicate user:%s",p.user.c_str());
+              }
+            }
+
+
+            if(rv==1)
+            {
+              if(storage.getProfileByAddress(p.addr.value,p2))
+              {
+                p.limitCountEml2Gsm=p2.limitCountEml2Gsm;
+                p.limitCountGsm2Eml=p2.limitCountGsm2Eml;
+                p.limitDate=p2.limitDate;
+                if(p.user!=p2.user)
+                {
+                  storage.DeleteProfile(p2);
+                  storage.CreateProfile(p);
+                }else
+                {
+                  storage.UpdateProfile(p);
+                }
               }else
               {
-                storage.UpdateProfile(p);
+                storage.CreateProfile(p);
               }
-            }else
-            {
-              storage.CreateProfile(p);
             }
           }break;
           case cmdDeleteProfile:
@@ -967,43 +981,48 @@ int SendEMail(const string& from,const Array<string>& to,const string& subj,cons
 
 void sendAnswer(const Address& orgAddr,const char* msgName,const char* paramName=0,const char* paramValue=0)
 {
-  SMS sms;
-  sms.setOriginatingAddress(cfg::sourceAddress.c_str());
-  ContextEnvironment ce;
-  EmptyGetAdapter ga;
-  if(paramName)
+  try{
+    SMS sms;
+    sms.setOriginatingAddress(cfg::sourceAddress.c_str());
+    ContextEnvironment ce;
+    EmptyGetAdapter ga;
+    if(paramName)
+    {
+      ce.exportStr(paramName,paramValue?paramValue:"");
+    }
+    std::string text;
+    cfg::answerFormats[msgName]->format(text,ga,ce);
+    sms.setDestinationAddress(orgAddr);
+    sms.destinationAddress.type=1;
+    sms.destinationAddress.plan=1;
+    char msc[]="";
+    char imsi[]="";
+    sms.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
+    sms.setDeliveryReport(0);
+    sms.setArchivationRequested(false);
+    sms.setEServiceType(cfg::serviceType.c_str());
+    sms.setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID,cfg::protocolId);
+    sms.setIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS,0);
+    __trace2__("sending answer:%s",text.c_str());
+    if(hasHighBit(text.c_str(),text.length()))
+    {
+      TmpBuf<short,1024> ucs2(text.length()+1);
+      ConvertMultibyteToUCS2(text.c_str(),text.length(),ucs2.get(),(text.length()+1)*2,CONV_ENCODING_CP1251);
+      sms.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::UCS2);
+      sms.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD,(char*)ucs2.get(),text.length()*2);
+    }else
+    {
+      sms.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
+      sms.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD,text.c_str(),text.length());
+    }
+    PduSubmitSm sm;
+    sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+    fillSmppPduFromSms(&sm,&sms);
+    cfg::atr->submit(sm);
+  }catch(std::exception& e)
   {
-    ce.exportStr(paramName,paramValue?paramValue:"");
+    __warning2__("Failed to send answer sms:%s",e.what());
   }
-  std::string text;
-  cfg::answerFormats[msgName]->format(text,ga,ce);
-  sms.setDestinationAddress(orgAddr);
-  sms.destinationAddress.type=1;
-  sms.destinationAddress.plan=1;
-  char msc[]="";
-  char imsi[]="";
-  sms.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
-  sms.setDeliveryReport(0);
-  sms.setArchivationRequested(false);
-  sms.setEServiceType(cfg::serviceType.c_str());
-  sms.setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID,cfg::protocolId);
-  sms.setIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS,0);
-  __trace2__("sending answer:%s",text.c_str());
-  if(hasHighBit(text.c_str(),text.length()))
-  {
-    TmpBuf<short,1024> ucs2(text.length()+1);
-    ConvertMultibyteToUCS2(text.c_str(),text.length(),ucs2.get(),(text.length()+1)*2,CONV_ENCODING_CP1251);
-    sms.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::UCS2);
-    sms.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD,(char*)ucs2.get(),text.length()*2);
-  }else
-  {
-    sms.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
-    sms.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD,text.c_str(),text.length());
-  }
-  PduSubmitSm sm;
-  sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
-  fillSmppPduFromSms(&sm,&sms);
-  cfg::atr->submit(sm);
 }
 
 int processSms(const char* text,const char* fromaddress)
@@ -1038,6 +1057,7 @@ int processSms(const char* text,const char* fromaddress)
       __trace2__("no profile for abonent %s",fromaddress);
       if(!cfg::allowGsm2EmlWithoutProfile)
       {
+        sendAnswer(fromaddress,"messagefailednoprofile");
         return ProcessSmsCodes::NOPROFILE;
       }
       haveprofile=false;
@@ -1109,7 +1129,7 @@ int processSms(const char* text,const char* fromaddress)
           }
           return ProcessSmsCodes::OK;
         }else
-        if(cmd=="forwardoff")
+        if(cmd=="forwardoff" || cmd=="noforward")
         {
           p.forwardEmail="";
           storage.UpdateProfile(p);
@@ -1164,6 +1184,7 @@ int processSms(const char* text,const char* fromaddress)
     {
       if(!storage.checkGsm2EmlLimit(fromaddress))
       {
+        sendAnswer(fromaddress,"messagefailedlimit");
         return ProcessSmsCodes::OUTOFLIMIT;
       }
     }
@@ -1186,6 +1207,7 @@ int processSms(const char* text,const char* fromaddress)
     }catch(exception& e)
     {
       __warning2__("failed to map address to mail:%s",e.what());
+      sendAnswer(fromaddress,"systemerror");
       return ProcessSmsCodes::NOPROFILE;
     }
     fromdecor=from;
@@ -1215,16 +1237,18 @@ int processSms(const char* text,const char* fromaddress)
       int rv=SendEMail(fromdecor,to,subj,body);
       if(haveprofile)storage.incGsm2EmlLimit(fromaddress);
       if(rv!=ProcessSmsCodes::OK)return rv;
+      sendAnswer(fromaddress,"messagesent","to",to[0].c_str());
     }catch(...)
     {
       __warning__("SMTP session aborted");
+      sendAnswer(fromaddress,"messagefailedsendmail");
       return ProcessSmsCodes::UNABLETOSEND;
     }
     return ProcessSmsCodes::OK;
   }catch(std::exception& e)
   {
     __warning2__("Exception in processSms:%s",e.what());
-
+    sendAnswer(fromaddress,"messagefailedsystem");
   }
   return ProcessSmsCodes::NETERROR;
 }
@@ -1399,8 +1423,9 @@ int ProcessMessage(const char *msg,int msglen)
 
   if(!util::childRunning)
   {
-    if(emlIn)fclose(emlIn);
-    if(emlOut)fclose(emlOut);
+    __trace2__("forking mailstripper child:%s",cfg::mailstripper.c_str());
+    if(emlIn){fclose(emlIn);emlIn=0;}
+    if(emlOut){fclose(emlOut);emlOut=0;}
     if(util::ForkPipedCmd(cfg::mailstripper.c_str(),emlIn,emlOut)<=0)
     {
       __trace2__("failed to fork mailstripper child:%s",strerror(errno));
@@ -1651,6 +1676,7 @@ int main(int argc,char* argv[])
 "noalias|"
 "forward\\s+[\\w\\-+\\.]+@[\\w\\-\\]+\\.[\\w\\-\\.]+|"
 "forwardoff|"
+"noforward|"
 "number\\s+on|"
 "number\\s+off|"
 "realname\\s+.*|"
@@ -1788,7 +1814,12 @@ int main(int argc,char* argv[])
       "numberoff",
       "numberfailed",
       "systemerror",
-      "unknowncommand"
+      "unknowncommand",
+      "messagesent",
+      "messagefailedlimit",
+      "messagefailednoprofile",
+      "messagefailedsendmail",
+      "messagefailedsystem"
     };
     for(int i=0;i<sizeof(answers)/sizeof(answers[0]);i++)
     {
