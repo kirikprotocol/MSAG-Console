@@ -23,51 +23,85 @@ static void sig_pipe(int signo)
   brPipe=true;
 }
 
+struct PipeGuard{
+  int* pipe;
+  PipeGuard(int* argPipe):pipe(argPipe){}
+  void release(){pipe=0;}
+  ~PipeGuard()
+  {
+    if(pipe)
+    {
+      if(pipe[0]!=-1)close(pipe[0]);
+      if(pipe[1]!=-1)close(pipe[1]);
+    }
+  }
+};
+
 static pid_t piped_child(char **command, int *f_in, int *f_out)
 {
   pid_t pid;
   int to_child_pipe[2];
   int from_child_pipe[2];
 
-  if (pipe(to_child_pipe) < 0 || pipe(from_child_pipe) < 0) {
+  if (pipe(to_child_pipe) < 0 )
+  {
     return -1;
   }
+  PipeGuard inG(to_child_pipe);
+  if(pipe(from_child_pipe) < 0)
+  {
+    return -1;
+  }
+  PipeGuard outG(from_child_pipe);
 
   pid = fork();
-  if (pid < 0) {
+  if (pid < 0)
+  {
     return -1;
   }
 
-  if (pid == 0) {
+  if (pid == 0)
+  {
     /* child */
-    close(to_child_pipe[1]);
-    close(from_child_pipe[0]);
+    close(to_child_pipe[1]);to_child_pipe[1]=-1;
+    close(from_child_pipe[0]);to_child_pipe[1]=-1;
 
     if(to_child_pipe[0] != STDIN_FILENO)
     {
       if(dup2(to_child_pipe[0], STDIN_FILENO) < 0)
       {
-        return -1;
+        exit(-1);
       }
       close(to_child_pipe[0]);
+      to_child_pipe[0]=-1;
     }
     if(from_child_pipe[1] != STDOUT_FILENO)
     {
       if(dup2(from_child_pipe[1], STDOUT_FILENO) < 0)
       {
-        return -1;
+        exit(-1);
       }
       close(from_child_pipe[1]);
+      from_child_pipe[1]=-1;
     }
-
+    inG.release();
+    outG.release();
     execvp(command[0], command);
     exit(-1);
   }
 
-  if (close(from_child_pipe[1]) < 0 || close(to_child_pipe[0]) < 0)
+  if (close(from_child_pipe[1]) < 0)
+  {
+    from_child_pipe[1]=-1;
+    return -1;
+  }
+  if(close(to_child_pipe[0]) < 0)
   {
     return -1;
   }
+  to_child_pipe[0]=-1;
+  inG.release();
+  outG.release();
 
   *f_out = to_child_pipe[1];
   *f_in = from_child_pipe[0];
