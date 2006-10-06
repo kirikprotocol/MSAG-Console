@@ -755,6 +755,7 @@ public:
       }
       if(writeRV)
       {
+        smsc_log_info(log,"Sending answer:%d",rv);
         rv=htonl(rv);
         clnt->Write((char*)&rv,4);
       }

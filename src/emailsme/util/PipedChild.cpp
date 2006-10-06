@@ -115,8 +115,8 @@ pid_t ForkPipedCmd(const char *cmd, FILE*& f_in,FILE*& f_out)
 {
   if(!sigInit)
   {
-    if(signal(SIGPIPE, sig_pipe) == SIG_ERR)fprintf(stderr, "signal SIGPIPE error.\n");
-    if(signal(SIGCHLD, sig_pipe) == SIG_ERR)fprintf(stderr, "signal SIGCHILD error.\n");
+    if(sigset(SIGPIPE, sig_pipe) == SIG_ERR)fprintf(stderr, "signal SIGPIPE error.\n");
+    if(sigset(SIGCHLD, sig_pipe) == SIG_ERR)fprintf(stderr, "signal SIGCHILD error.\n");
     sigInit=true;
   }
   std::vector<char*> args;
@@ -132,7 +132,7 @@ pid_t ForkPipedCmd(const char *cmd, FILE*& f_in,FILE*& f_out)
     args.push_back(tok);
   }
   args.push_back(0);
-
+  brPipe=false;
   ret = piped_child(&args[0],&in,&out);
   sleep(1);
   if(ret>0 && !brPipe)
