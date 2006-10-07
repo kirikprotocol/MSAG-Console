@@ -7,8 +7,6 @@ import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.beans.TabledBeanImpl;
 
 import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 /**
  * The <code>Index</code> class represents
@@ -28,14 +26,6 @@ public class Index extends TabledBeanImpl {
     protected void delete() throws SCAGJspException {
         appContext.getSmppManager().deleteCenters(getLoginedPrincipal().getName(),
                 checkedSet, appContext);
-    }
-
-    public List getCenterIds() {
-        return appContext.getSmppManager().getCenterNames();
-    }
-
-    public Map getCenterStatuses() {
-        return appContext.getSmppManager().getCenterStatuses(appContext);
     }
 
 }
