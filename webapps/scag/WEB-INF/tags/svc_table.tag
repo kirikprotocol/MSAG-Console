@@ -1,17 +1,16 @@
-<%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
-<%@taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
-<%@taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%>
-<%@taglib prefix="smf" uri="/scag/func"%>
-<%@tag body-content="empty" %>
-<%@attribute name="columns" required="true"%>
-<%@attribute name="names" required="true"%>
-<%@attribute name="widths" required="true"%>
-<%@attribute name="edit" required="false"%>
-<%@attribute name="child" required="false"%>
-<%@attribute name="parentId" required="false"%>
-<%@attribute name="subjType" required="false"%>
-<%@attribute name="targetElemId" required="false"%>
-
+<%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%><%@
+        taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%><%@
+        taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%><%@
+        taglib prefix="smf" uri="/scag/func"%><%@
+        tag body-content="empty" %><%@
+        attribute name="columns" required="true"%><%@
+        attribute name="names" required="true"%><%@
+        attribute name="widths" required="true"%><%@
+        attribute name="edit" required="false"%><%@
+        attribute name="child" required="false"%><%@
+        attribute name="parentId" required="false"%><%@
+        attribute name="subjType" required="false"%><%@
+        attribute name="targetElemId" required="false"%>
 <c:set var="columns" value="${fn:split(columns, ',')}"/>
 <c:set var="names" value="${fn:split(names, ',')}"/>
 <c:set var="widths" value="${fn:split(widths, ',')}"/>
