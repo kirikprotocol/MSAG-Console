@@ -17,7 +17,9 @@ import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.Manager;
 import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.endpoints.centers.Center;
+import ru.sibinco.scag.backend.endpoints.centers.CenterStatus;
 import ru.sibinco.scag.backend.endpoints.svc.Svc;
+import ru.sibinco.scag.backend.endpoints.svc.SvcStatus;
 import ru.sibinco.scag.backend.sme.ProviderManager;
 import ru.sibinco.scag.backend.status.StatMessage;
 import ru.sibinco.scag.backend.status.StatusManager;
@@ -258,54 +260,49 @@ public class SmppManager extends Manager {
         return new SortedList(svcs.keySet());
     }
 
-    public synchronized Map getSvcs(SCAGAppContext appContext) {
-        Map result = getSvcs();
+    public synchronized Map getSvcsStatuses(SCAGAppContext appContext) {
+        Map result = new HashMap();
         try {
             List svcList = appContext.getScag().getSmeInfo();
             for (Iterator iterator = svcList.iterator(); iterator.hasNext();) {
-                Map svc = ru.sibinco.scag.util.Utils.stringToMap((String) iterator.next(), ",");
-                Svc oldSvc = (Svc) result.get(svc.get("SystemId"));
-                if(oldSvc != null){
-                    oldSvc.setConnHost((String) svc.get("Host"));
-                    oldSvc.setConnStatus((String) svc.get("Status"));
-                    result.remove(oldSvc.getId());
-                    result.put(oldSvc.getId(), oldSvc);
-                }
+                Map status = ru.sibinco.scag.util.Utils.stringToMap((String) iterator.next(), ",");
+                SvcStatus svcStatus = new SvcStatus(status);
+                result.put(svcStatus.getId(), svcStatus);
             }
 
         } catch (SibincoException e) {
-            for (Iterator iterator = result.values().iterator(); iterator.hasNext();) {
-                Svc svc = (Svc) iterator.next();
-                svc.setConnHost("");
-                svc.setConnStatus("unknown");
-                result.put(svc.getId(), svc);
+            List c = getSvcsNames();
+            for (Iterator i = c.iterator(); i.hasNext();) {
+                SvcStatus svcStatus = new SvcStatus((String) i.next());
+                result.put(svcStatus.getId(), svcStatus);
             }
+
+        } catch (NullPointerException e) {
+            logger.error("Could not get SCAG daemon");
         }
         return result;
     }
 
-    public synchronized Map getCenters(SCAGAppContext appContext) {
-        Map result = getCenters();
+    public synchronized Map getCenterStatuses(SCAGAppContext appContext) {
+        Map result = new HashMap();
         try {
             List centerList = appContext.getScag().getSmscInfo();
             for (Iterator iterator = centerList.iterator(); iterator.hasNext();) {
-                Map center = ru.sibinco.scag.util.Utils.stringToMap((String) iterator.next(), ",");
-                Center oldCenter = (Center) result.get(center.get("SystemId"));
-                if(oldCenter != null){
-                    oldCenter.setConnHostPort(center.get("Host") + ":" + center.get("Port"));
-                    oldCenter.setConnStatus((String) center.get("Status"));
-                    result.remove(oldCenter.getId());
-                    result.put(oldCenter.getId(), oldCenter);
-                }
+                Map status = ru.sibinco.scag.util.Utils.stringToMap((String) iterator.next(), ",");
+                CenterStatus centerStatus = new CenterStatus(status);
+                result.put(centerStatus.getId(), centerStatus);
             }
 
         } catch (SibincoException e) {
-            for (Iterator iterator = result.values().iterator(); iterator.hasNext();) {
-                Center center = (Center) iterator.next();
-                center.setConnHostPort("");
-                center.setConnStatus("unknown");
-                result.put(center.getId(), center);
+            List c = getCenterNames();
+
+            for (Iterator i = c.iterator(); i.hasNext();) {
+                CenterStatus centerStatus = new CenterStatus((String) i.next());
+                result.put(centerStatus.getId(), centerStatus);
             }
+
+        }catch (NullPointerException e) {
+            logger.error("Could not get SCAG daemon");
         }
         return result;
     }
