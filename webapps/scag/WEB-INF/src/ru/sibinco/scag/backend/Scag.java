@@ -205,14 +205,12 @@ public class Scag extends Proxy {
     }
 
     public List getSmscInfo() throws SibincoException {
-        final Map return_result = new HashMap();
         String err = "Couldn't get SMSC info , nested: ";
         final Object res = call(LIST_SMSC_METHOD_ID, err, Type.Types[Type.STRING_LIST_TYPE], new HashMap());
         return res instanceof List ? (List) res : null;
     }
 
     public List getSmeInfo() throws SibincoException {
-        Map return_result = new HashMap();
         String err = "Couldn't get SME info , nested: ";
         final Object res = call(LIST_SME_METHOD_ID, err, Type.Types[Type.STRING_LIST_TYPE], new HashMap());
         return res instanceof List ? (List) res : null;
