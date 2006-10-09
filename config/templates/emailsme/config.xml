@@ -61,6 +61,11 @@
     <param name="numberfailed" type="string">#template=emailsmenumberfailed#</param>
     <param name="systemerror" type="string">#template=emailsmesystemerror#</param>
     <param name="unknowncommand" type="string">#template=emailsmeunknowncommand#</param>
+    <param name="messagesent" type="string">#template=emailsmemessagesent#{to}="$$string import=to$$"</param>
+    <param name="messagefailedlimit" type="string">#template=emailsmemessagefailedlimit#</param>
+    <param name="messagefailednoprofile" type="string">#template=emailsmemessagefailednoprofile#</param>
+    <param name="messagefailedsendmail" type="string">#template=emailsmemessagefailedsendmail#</param>
+    <param name="messagefailedsystem" type="string">#template=emailsmemessagefailedsystem#</param>
   </section>
 
 </config>
