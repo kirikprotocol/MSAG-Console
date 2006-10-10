@@ -384,7 +384,7 @@ SmppEntityAdminInfoList * SmppManager::getEntityAdminInfoList(SmppEntityType ent
 
         if (value->info.type == entType)
         {
-            SmppEntityAdminInfo ai = {value->getSystemId(), value->info.host, value->info.port, value->connected};
+            SmppEntityAdminInfo ai = {value->getSystemId(), value->bt, value->info.host, value->info.port, value->connected};
             result->push_back(ai);
         }
     }

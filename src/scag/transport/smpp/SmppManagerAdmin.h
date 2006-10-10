@@ -18,6 +18,7 @@ struct SmppEntityAdminInfo
 {
   //SmppEntityType type;
   std::string systemId;
+  SmppBindType bindType;
   std::string host;
   int  port;
   bool connected;

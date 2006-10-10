@@ -235,6 +235,18 @@ protected:
    virtual scag::transport::smpp::SmppEntityType getEntityType() = 0;
    virtual const char * getCommandName() = 0;
    virtual void fillResultSet(Variant& result, scag::transport::smpp::SmppEntityAdminInfoList& lst) = 0;
+   std::string getStrBindType(scag::transport::smpp::SmppBindType bindType)
+   {
+       //btNone,btReceiver,btTransmitter,btRecvAndTrans,btTransceiver
+       std::string str = "none";
+
+       if (bindType == scag::transport::smpp::btReceiver) str = "rx";
+       else if (bindType == scag::transport::smpp::btTransmitter) str = "tx";
+       else if (bindType == scag::transport::smpp::btRecvAndTrans) str = "rtx";
+       else if (bindType == scag::transport::smpp::btTransceiver) str = "trx";
+
+       return str;
+   }
 public:
   CommandListSmppEntity(Command::Id commandId, const xercesc::DOMDocument * doc) : AdminCommand(commandId, doc) 
   {   
@@ -263,9 +275,9 @@ protected:
         for (scag::transport::smpp::SmppEntityAdminInfoList::iterator it = lst.begin(); it!=lst.end(); ++it) 
         {
             if (it->host.size() == 0) 
-                sprintf(buff, "SystemId, %s, Host, %s, Status, %s", it->systemId.c_str(), "Unknown", (it->connected) ? "yes" : "no");
+                sprintf(buff, "SystemId, %s, Host, %s %s, Status, %s", it->systemId.c_str(), getStrBindType(it->bindType).c_str(), "Unknown", (it->connected) ? "yes" : "no");
             else
-                sprintf(buff, "SystemId, %s, Host, %s, Status, %s", it->systemId.c_str(), it->host.c_str(), (it->connected) ? "yes" : "no");
+                sprintf(buff, "SystemId, %s, Host, %s %s, Status, %s", it->systemId.c_str(), getStrBindType(it->bindType).c_str(), it->host.c_str(), (it->connected) ? "yes" : "no");
 
             result.appendValueToStringList(buff);
             smsc_log_debug(logger, "Command %s returns: %s", getCommandName(), buff);
@@ -297,9 +309,9 @@ protected:
         for (scag::transport::smpp::SmppEntityAdminInfoList::iterator it = lst.begin(); it!=lst.end(); ++it) 
         {
             if (it->host.size() == 0) 
-                sprintf(buff, "SystemId, %s, Host, %s, Port, %d, Status, %s", it->systemId.c_str(), "Unknown", "Unknown", (it->connected) ? "yes" : "no");
+                sprintf(buff, "SystemId, %s, Host, %s %s, Port, %d, Status, %s", it->systemId.c_str(), getStrBindType(it->bindType).c_str(), "Unknown", "Unknown", (it->connected) ? "yes" : "no");
             else
-                sprintf(buff, "SystemId, %s, Host, %s, Port, %d, Status, %s", it->systemId.c_str(), it->host.c_str(), it->port, (it->connected) ? "yes" : "no");
+                sprintf(buff, "SystemId, %s, Host, %s %s, Port, %d, Status, %s", it->systemId.c_str(), getStrBindType(it->bindType).c_str(), it->host.c_str(), it->port, (it->connected) ? "yes" : "no");
 
 
             result.appendValueToStringList(buff);
