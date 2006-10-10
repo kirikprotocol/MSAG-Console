@@ -75,6 +75,8 @@ bool BillActionClose::run(ActionContext& context)
         }
         
         operation->detachBill();
+
+        SetBillingStatus(context, "", true);
         smsc_log_debug(logger,"Action 'bill:close': transaction successfully commited");
     }
     else
