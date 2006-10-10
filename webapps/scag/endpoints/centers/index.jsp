@@ -9,6 +9,6 @@
     </sm-pm:menu>
   </jsp:attribute>
     <jsp:body>        
-        <sm:smsc_table columns="checkbox,id,enabled,connHostPort,connStatus" names="c,centers.index.table.names.id,centers.index.table.names.enabled,centers.index.table.names.host_port,centers.index.table.names.status" widths="1,48,28,20,40,20" edit="id"/>
+        <sm:smsc_table columns="checkbox,id,enabled,connHostPort,connStatus" names="c,centers.index.table.names.id,centers.index.table.names.enabled,centers.index.table.names.host_port,centers.index.table.names.status" widths="1,38,20,38,40,20" edit="id"/>
     </jsp:body>
 </sm:page>

@@ -85,7 +85,7 @@
           <c:when test="${fn:substringBefore('name',column) == fn:substringBefore('name',column)}">
             <c:set var="Id" value="${ user['id']}"/>
             <c:set var="itemValue" value="${empty user[column] ? '&nbsp;' : fn:escapeXml(user[column])}"/>
-            <td>
+            <td <c:if test="${column == 'connStatus'}">align="center"</c:if> nowrap>
                 <c:choose>
                     <c:when test="${edit == column}">
                         <a href="#" onClick="return edit('${Id}','${child}','${parentId}');">${itemValue}</a>
@@ -101,10 +101,10 @@
                         </c:choose>
                     </c:when>
                     <c:when test="${column == 'connHost'}">
-                        <span id="CONNECTION_STATUSERVICE_${Id}" datasrc=#tdcSvcStatuses DATAFORMATAS=html datafld="${Id}"  class=C080></span>
+                        <span id="CONNECTION_STATUSERVICE_${Id}" datasrc=#tdcSvcStatuses DATAFORMATAS=html datafld="${Id}"  class=C080>&nbsp;</span>
                     </c:when>
                     <c:when test="${column == 'connStatus'}">
-                        <span id="CONNECTION_STATUSERVICE_${Id}_S" datasrc=#tdcSvcStatuses DATAFORMATAS=html datafld="${Id}_s"  class=C080></span>
+                        <span id="CONNECTION_STATUSERVICE_${Id}_S" datasrc=#tdcSvcStatuses DATAFORMATAS=html datafld="${Id}_s"  class=C080>&nbsp;</span>
                     </c:when>
                     <c:otherwise>
                         ${itemValue}

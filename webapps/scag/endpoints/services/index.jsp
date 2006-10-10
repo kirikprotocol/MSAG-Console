@@ -9,6 +9,6 @@
     </sm-pm:menu>
   </jsp:attribute>
   <jsp:body>
-    <sm:svc_table columns="checkbox,id,enabled,connHost,connStatus" names="c,sp.index.table.names.id,sp.index.table.names.enabled,sp.index.table.names.host,sp.index.table.names.status" widths="1,48,28,20,40,20" edit="id"/>
+    <sm:svc_table columns="checkbox,id,enabled,connHost,connStatus" names="c,sp.index.table.names.id,sp.index.table.names.enabled,sp.index.table.names.host,sp.index.table.names.status" widths="1,38,20,38,40,20" edit="id"/>
   </jsp:body>
 </sm:page>
