@@ -11,15 +11,15 @@
     <script>
               function openjEditView(action,id)
               {
-                document.focus();
                 var checkResult = null;
                 if (action == "edit") checkResult = document.jedit.openRule(id);
                   else checkResult = document.jedit.newRule(id);
                 if (checkResult)
                 {
                   alertError(checkResult);
-                  opener.submit0();
                 }
+                if (opener.submit0) opener.submit0();
+                document.focus();
               }
 
               function alertError(checkResult) {
@@ -28,12 +28,13 @@
                 else if (checkResult == 'jEdit.rule_state.notExistError')
                   opener.alert("<fmt:message>jEdit.rule_state.notExistError</fmt:message>");
                 else if (checkResult == 'jEdit.rule_state.lockedError')
-                  opener.alert("<fmt:message>jEdit.rule_state.lockedError</fmt:message>");                  
+                  opener.alert("<fmt:message>jEdit.rule_state.lockedError</fmt:message>");
               }
 
               function openjEditWindow(action,id)
               {
-                opener.status = "<fmt:message>jEdit.starting</fmt:message>";
+                opener.jEditStarting();
+                opener.assignjEditOpener(window,false);
                 openjEditView(action,id);
                 toClose();
               }
@@ -41,17 +42,14 @@
               function toClose()
               {
                 var action = document.jedit.isWindowClosed();
-                if (document.jedit.isWindowClosed()) {
-                   /*if (action == "addRule")*/ opener.submit0();
+                if (action) {
+                   if (opener.submit0) opener.submit0();
                    if (document.jedit.isStopped()) {
-                     window.close();
-                     opener.status = "<fmt:message>jEdit.stopped</fmt:message>";
-                     opener.jEdit = null;
+                     if (opener.closejEditWindow) opener.closejEditWindow();
                      return;
                    }
                 } else {
-                  opener.jEdit = window;
-                  opener.status = "<fmt:message>jEdit.started</fmt:message>";
+                  if (opener.assignjEditOpener) opener.assignjEditOpener(window,true);
                 }
                 setTimeout(toClose,1000);
               }

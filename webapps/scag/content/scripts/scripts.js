@@ -581,5 +581,7 @@ function disableCtrlKeyCombination(e, id) {
 function assignOpener() {
   if (opener && !opener.closed)
     opener.childW = window;
+  else return;
+  setTimeout("assignOpener()",1000);
 }
 

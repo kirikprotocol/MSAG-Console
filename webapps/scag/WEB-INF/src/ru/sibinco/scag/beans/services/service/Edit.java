@@ -320,18 +320,6 @@ public class Edit extends TabledEditBeanImpl {
         this.editChild = editChild;
     }
 
-    public RuleState getSmppRuleState() {
-        return (appContext.getRuleManager().getRuleState(String.valueOf(id), Transport.SMPP_TRANSPORT_NAME));
-    }
-
-    public RuleState getHttpRuleState() {
-        return (appContext.getRuleManager().getRuleState(String.valueOf(id), Transport.HTTP_TRANSPORT_NAME));
-    }
-
-    public RuleState getMmsRuleState() {
-        return (appContext.getRuleManager().getRuleState(String.valueOf(id), Transport.MMS_TRANSPORT_NAME));
-    }
-
     public String getMbAddSmppRoute() {
         return mbAddSmppRoute;
     }

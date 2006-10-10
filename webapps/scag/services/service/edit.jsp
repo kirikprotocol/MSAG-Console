@@ -35,38 +35,100 @@
         </sm-pm:menu>
         <c:if test="${!param.add}">
             <div class=page_subtitle>&nbsp;</div>
-         <script>
-         function openJedit(id,action)
-         {
-           if (window.jEdit) {
-             //alert('window.jEdit.openjEditView(action,id)');
-             window.jEdit.openjEditView(action,id);
-           } else if (opener && opener.jEdit && !opener.closed) {
-             //alert('opener.jEdit.openjEditView(action,id)');
-             opener.jEdit.openjEditView(action,id);
-           } else if (window.childW && window.childW.jEdit && !window.childW.closed) {
-             //alert('window.childW.jEdit.openjEditView(action,id)');
-             window.childW.jEdit.openjEditView(action,id);
-           } else {
-             //alert('window.open');
-             window.open("${pageContext.request.contextPath}/rules/rules/jedit.jsp?id="+id+"&action="+action,"","width=10,height=10,left="+screen.availWidth+",top="+screen.availHeight);
-           }
-           return false;
-         }
+            <script type = "text/javascript">
+               function openJedit(id,action)
+               {
+                 if (window.jEdit) {
+                   //alert('window.jEdit.openjEditView(action,id)');
+                   window.jEdit.openjEditView(action,id);
+                 } else if (opener && opener.jEdit && !opener.closed) {
+                   //alert('opener.jEdit.openjEditView(action,id)');
+                   opener.jEdit.openjEditView(action,id);
+                 } else {
+                   //alert('window.open');
+                   window.open("${pageContext.request.contextPath}/rules/rules/jedit.jsp?id="+id+"&action="+action,"","width=10,height=10,left="+screen.availWidth+",top="+screen.availHeight);
+                 }
+                 return false;
+               }
 
-         function submit0() {
-           document.opForm.submit();
-           /*if (window.childW && !window.childW.closed)
-             window.childW.document.opForm.submit();
-           if (opener && !opener.closed)
-             opener.document.opForm.submit();*/
-         }
-         </script>
-            <sm-ep:properties title="service.edit.properties.service_rules">
-                <sm:rule tname="SMPP" ttitle="service.edit.rule.transport.smpp" exists="${bean.smppRuleState.exists}" locked="${bean.smppRuleState.locked}"/>
-                <sm:rule tname="HTTP" ttitle="service.edit.rule.transport.http" exists="${bean.httpRuleState.exists}" locked="${bean.httpRuleState.locked}"/>
-                <sm:rule tname="MMS" ttitle="service.edit.rule.transport.mms" exists="${bean.mmsRuleState.exists}" locked="${bean.mmsRuleState.locked}"/>
+               function assignjEditOpener(jEditwindow, marker) {
+                 if (opener && !opener.closed) {
+                  opener.jEdit = jEditwindow;
+                  if (marker) opener.status = "<fmt:message>jEdit.started</fmt:message>";
+                 } else {
+                  window.jEdit = jEditwindow;
+                  if (marker) window.status = "<fmt:message>jEdit.started</fmt:message>";
+                 }
+               }
+
+               function closejEditWindow() {
+                 var jEditOpener;
+                 if (opener && !opener.closed) {
+                   jEditOpener = opener;
+                 } else {
+                   jEditOpener = window;
+                 }
+                 jEditOpener.jEdit.close();
+                 jEditOpener.status = "<fmt:message>jEdit.stopped</fmt:message>";
+                 jEditOpener.jEdit = null;
+               }
+
+               function jEditStarting() {
+                 if (opener && !opener.closed) {
+                   opener.status = "<fmt:message>jEdit.starting</fmt:message>";
+                 } else {
+                   window.status = "<fmt:message>jEdit.starting</fmt:message>";
+                 }
+               }
+
+               function submit0(invokedBy) {
+                 window.rulesFrame.location.href="${pageContext.request.contextPath}/rules/rules/rules.jsp?id=${bean.id}";
+                 if (window.childW && !window.childW.closed && window.childW!=invokedBy && window.childW.submit0) {
+                   //alert('window.childW.submit0(window)');
+                   window.childW.submit0(window);
+                 }
+                 if (opener && !opener.closed && opener!=invokedBy && opener.submit0) {
+                   //alert('opener.submit0(window)');
+                   opener.submit0(window);
+                 }
+               }
+
+               function fireRulesState(){
+                  var rules = window.rulesFrame.rulesState;
+                  var rulesTable = document.getElementById("rulesT");
+                  var spans = rulesTable.getElementsByTagName("span");
+                  for (var i=0;i<rules.length;i++) {
+                    //alert(rules[i].exists + " " + spans[i*2].id+ " " + spans[i*2+1].id);
+                    if (rules[i].exists) {
+                      spans[i*2].style.display="inline";
+                      spans[i*2+1].style.display="none";
+                     } else {
+                      spans[i*2].style.display="none";
+                      spans[i*2+1].style.display="inline";
+                     }
+                     lockRuleButtons(rules[i].locked, spans[i*2].getElementsByTagName("input"));
+                     lockRuleButtons(rules[i].locked, spans[i*2+1].getElementsByTagName("input"));
+                  }
+                  return false;
+               }
+
+               function lockRuleButtons(isLocked, buttons) {
+                 for (var j=0;j<buttons.length;j++)
+                   if (isLocked)
+                     buttons[j].disabled = true;
+                   else
+                     buttons[j].disabled = false;
+               }
+            </script>
+
+            <iframe id="rulesFrame" onload="fireRulesState()" src="${pageContext.request.contextPath}/rules/rules/rules.jsp?id=${bean.id}"  width='0px' height="0px"></iframe>
+
+            <sm-ep:properties title="service.edit.properties.service_rules" noEdit="true" id="rulesT">
+              <sm:rule tname="SMPP" ttitle="service.edit.rule.transport.smpp"/>
+              <sm:rule tname="HTTP" ttitle="service.edit.rule.transport.http"/>
+              <sm:rule tname="MMS" ttitle="service.edit.rule.transport.mms"/>
             </sm-ep:properties>
+
             <div class=page_subtitle>&nbsp;</div>
             <div class=page_subtitle><fmt:message>service.edit.label.smpp.routes_list</fmt:message></div>
             <sm:table columns="checkbox,id,active,enabled,archived,notes"
