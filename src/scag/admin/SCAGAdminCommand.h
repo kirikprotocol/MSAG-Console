@@ -238,7 +238,7 @@ protected:
    std::string getStrBindType(scag::transport::smpp::SmppBindType bindType)
    {
        //btNone,btReceiver,btTransmitter,btRecvAndTrans,btTransceiver
-       //std::string str = "none";
+       std::string str;
 
        if (bindType == scag::transport::smpp::btReceiver) str = "RX";
        else if (bindType == scag::transport::smpp::btTransmitter) str = "TX";
