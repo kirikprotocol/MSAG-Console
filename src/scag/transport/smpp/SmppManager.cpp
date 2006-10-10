@@ -374,10 +374,6 @@ SmppEntityAdminInfoList * SmppManager::getEntityAdminInfoList(SmppEntityType ent
 
     SmppEntityAdminInfoList * result = new SmppEntityAdminInfoList;
 
-    value = new SmppEntity();
-    value->info.type = etSmsc;
-    registry.Insert("popa1", value);
-
     for (buf::Hash<SmppEntity *>::Iterator it = registry.getIterator(); it.Next(key, value);)
     {
         MutexGuard emg(value->mtx);
