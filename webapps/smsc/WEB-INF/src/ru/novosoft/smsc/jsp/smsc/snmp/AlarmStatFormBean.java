@@ -64,10 +64,12 @@ public class AlarmStatFormBean extends IndexBean {
       String fileDirName = config.getString(ALARM_STAT_CSV_FILE_PARAM);
 //            calendar.setTime(date);
 //            Date utcTime = localCalendar.getTime();
-      dateFileFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
       rowSubmitTimeFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
       String dateFilePrefix = dateFileFormat.format(date);
-
+      localCalendar.setTime(date);
+      localCalendar.add( Calendar.DAY_OF_MONTH, -1);
+      String dateFilePrefix_prev = dateFileFormat.format(localCalendar.getTime());
+      logger.info("Querying snmp files for : "+dateFilePrefix+" and "+dateFilePrefix_prev);
       File dirNameFile = new File(fileDirName);
       File[] dirFiles = dirNameFile.listFiles();
       if (dirFiles == null || dirFiles.length == 0) return RESULT_OK;
@@ -75,7 +77,7 @@ public class AlarmStatFormBean extends IndexBean {
       for (int j = 0; j < dirFiles.length; j++) {
         String fileName = dirFiles[j].getName();
         if (fileName == null || fileName.length() <= 0 ||
-                !fileName.toLowerCase().startsWith(dateFilePrefix)) continue;
+                !(fileName.toLowerCase().startsWith(dateFilePrefix) || fileName.toLowerCase().startsWith(dateFilePrefix_prev))) continue;
 
         rows.addAll(processFile(new File(dirNameFile, fileName)));
       }
@@ -110,6 +112,9 @@ public class AlarmStatFormBean extends IndexBean {
   }
 
   private Collection processFile(File src) throws FileNotFoundException, IOException, ParseException {
+    logger.debug("Processing file "+src);
+    localCalendar.setTime( date );
+    Calendar cal = Calendar.getInstance(TimeZone.getDefault());
     Collection result = new ArrayList();
     BufferedReader br = new BufferedReader(new FileReader(src));
     br.readLine(); // строка заголовка
@@ -137,7 +142,11 @@ public class AlarmStatFormBean extends IndexBean {
       }
       st.nextToken();
       row.setText(st.sval);
-      result.add(row);
+      cal.setTime(row.getSubmit_time());
+      if( cal.get(Calendar.YEAR) == localCalendar.get(Calendar.YEAR)
+       && cal.get(Calendar.MONTH) == localCalendar.get(Calendar.MONTH)
+       && cal.get(Calendar.DAY_OF_MONTH) == localCalendar.get(Calendar.DAY_OF_MONTH))
+        result.add(row);
       st.nextToken();
       if (st.ttype == StreamTokenizer.TT_EOL) st.nextToken();
     }
