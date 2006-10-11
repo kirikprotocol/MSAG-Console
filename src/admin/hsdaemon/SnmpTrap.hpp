@@ -121,7 +121,7 @@ inline void SnmpTrap(const char* obj,const char* alarmId,int svrt,const char* ms
     snprintf(buf,sizeof(buf),
       "%02d.%02d.%04d %02d:%02d:%02d,"
       "\"%s\",\"%s\",%d,\"%s\"\n",
-      t2.tm_year+1900,t2.tm_mon+1,t2.tm_mday,t2.tm_hour,t2.tm_min,t2.tm_sec,
+      t2.tm_mday,t2.tm_mon+1,t2.tm_year+1900,t2.tm_hour,t2.tm_min,t2.tm_sec,
       alarmId,obj,svrt,msg);
     fh.Write(buf);
     char cmd[2048];
