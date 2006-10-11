@@ -56,6 +56,11 @@ public class Options extends SmeBean
   private String answers_numberfailed = "";
   private String answers_systemerror = "";
   private String answers_unknowncommand = "";
+  private String answers_messagesend = "";
+  private String answers_messagefailedlimit = "";
+  private String answers_messagefailednoprofile = "";
+  private String answers_messagefailedsendmail = "";
+  private String answers_messagefailedsystem = "";
 
 
   private String mbDone = null;
@@ -138,6 +143,11 @@ public class Options extends SmeBean
         answers_numberfailed = getStringParameter("answers.numberfailed");
         answers_systemerror = getStringParameter("answers.systemerror");
         answers_unknowncommand = getStringParameter("answers.unknowncommand");
+        answers_messagesend = getStringParameter("answers.messagesend");
+        answers_messagefailedlimit = getStringParameter("answers.messagefailedlimit");
+        answers_messagefailednoprofile = getStringParameter("answers.messagefailednoprofile");
+        answers_messagefailedsendmail = getStringParameter("answers.messagefailedsendmail");
+        answers_messagefailedsystem = getStringParameter("answers.messagefailedsystem");
 
       } catch (Exception e) {
         logger.error(e);
@@ -208,6 +218,11 @@ public class Options extends SmeBean
     getConfig().setString("answers.numberfailed", answers_numberfailed);
     getConfig().setString("answers.systemerror", answers_systemerror);
     getConfig().setString("answers.unknowncommand", answers_unknowncommand);
+    getConfig().setString("answers.messagesend", answers_messagesend);
+    getConfig().setString("answers.messagefailedlimit", answers_messagefailedlimit);
+    getConfig().setString("answers.messagefailednoprofile", answers_messagefailednoprofile);
+    getConfig().setString("answers.messagefailedsendmail", answers_messagefailedsendmail);
+    getConfig().setString("answers.messagefailedsystem", answers_messagefailedsystem);
 
     return RESULT_DONE;
   }
@@ -670,5 +685,45 @@ public class Options extends SmeBean
 
   public void setAnswers_unknowncommand(String answers_unknowncommand) {
     this.answers_unknowncommand = answers_unknowncommand;
+  }
+
+  public String getAnswers_messagesend() {
+    return answers_messagesend;
+  }
+
+  public void setAnswers_messagesend(String answers_messagesend) {
+    this.answers_messagesend = answers_messagesend;
+  }
+
+  public String getAnswers_messagefailedlimit() {
+    return answers_messagefailedlimit;
+  }
+
+  public void setAnswers_messagefailedlimit(String answers_messagefailedlimit) {
+    this.answers_messagefailedlimit = answers_messagefailedlimit;
+  }
+
+  public String getAnswers_messagefailednoprofile() {
+    return answers_messagefailednoprofile;
+  }
+
+  public void setAnswers_messagefailednoprofile(String answers_messagefailednoprofile) {
+    this.answers_messagefailednoprofile = answers_messagefailednoprofile;
+  }
+
+  public String getAnswers_messagefailedsendmail() {
+    return answers_messagefailedsendmail;
+  }
+
+  public void setAnswers_messagefailedsendmail(String answers_messagefailedsendmail) {
+    this.answers_messagefailedsendmail = answers_messagefailedsendmail;
+  }
+
+  public String getAnswers_messagefailedsystem() {
+    return answers_messagefailedsystem;
+  }
+
+  public void setAnswers_messagefailedsystem(String answers_messagefailedsystem) {
+    this.answers_messagefailedsystem = answers_messagefailedsystem;
   }
 }

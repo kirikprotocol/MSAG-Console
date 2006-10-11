@@ -196,6 +196,26 @@
   <th>unknown command</th>
   <td><input class=txt name=answers_unknowncommand value="<%=StringEncoderDecoder.encode(bean.getAnswers_unknowncommand())%>"></td>
 </tr>
+<tr class=row<%=rowN++&1%>>
+  <th>message send</th>
+  <td><input class=txt name=answers_messagesend value="<%=StringEncoderDecoder.encode(bean.getAnswers_messagesend())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>message failed limit</th>
+  <td><input class=txt name=answers_messagefailedlimit value="<%=StringEncoderDecoder.encode(bean.getAnswers_messagefailedlimit())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>message no profile</th>
+  <td><input class=txt name=answers_messagefailednoprofile value="<%=StringEncoderDecoder.encode(bean.getAnswers_messagefailednoprofile())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>message failed send mail</th>
+  <td><input class=txt name=answers_messagefailedsendmail value="<%=StringEncoderDecoder.encode(bean.getAnswers_messagefailedsendmail())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>message failed system</th>
+  <td><input class=txt name=answers_messagefailedsystem value="<%=StringEncoderDecoder.encode(bean.getAnswers_messagefailedsystem())%>"></td>
+</tr>
 
 </table>
 </div><%
