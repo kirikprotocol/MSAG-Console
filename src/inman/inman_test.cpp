@@ -355,8 +355,9 @@ struct INDialogCfg {
     unsigned            abId;
     unsigned            dstId; //destination address 
     bool                ussdOp;
+    uint32_t            xsmsIds; //SMS Extra services id
 
-    INDialogCfg() : abId(1), dstId(1), ussdOp(false) { }
+    INDialogCfg() : abId(1), dstId(1), ussdOp(false), xsmsIds(0) { }
 };
 
 class INDialog {
@@ -464,15 +465,17 @@ public:
         fprintf(stdout, "INDialog config:\n"
                 "  Abonent[%u]: %s (%s)\n"
                 "  bearerType : dp%s\n"
-                "  destAdr[%u]: %s (%s)\n",
+                "  destAdr[%u]: %s (%s)\n"
+                "  SMSExtra: %u\n",
                 _dlgCfg.abId, (abi->addr.toString()).c_str(),
                 (abi->abType == abPrepaid) ? "prepaid" : "postpaid",
                 _dlgCfg.ussdOp ? "USSD" : "SMS",
                 _dlgCfg.dstId, dAdr->toString().c_str(), 
-                _nm_ToN[dAdr->typeOfNumber]);
+                _nm_ToN[dAdr->typeOfNumber], _dlgCfg.xsmsIds);
     }
 
     void setUssdOp(bool op) { _dlgCfg.ussdOp = op; }
+    void setSmsXIds(uint32_t srv_ids) { _dlgCfg.xsmsIds = srv_ids; }
     bool setAddressId(unsigned adr_id)
     { 
         if (!_adrDB->get(adr_id))
@@ -543,6 +546,9 @@ public:
         op.setMsgId(++_msg_id);
         op.setServiceOp(_dlgCfg.ussdOp ? 0 : -1);
         op.setMsgLength(160);
+#ifdef SMSEXTRA
+        op.setSmsXSrvs(_dlgCfg.xsmsIds);
+#endif /* SMSEXTRA */
     }
 
     void composeDeliverySmsResult(DeliverySmsResult& op, unsigned int dlgId)
@@ -1038,6 +1044,45 @@ void cmd_postpaid(Console&, const std::vector<std::string> &args)
     utl_next_abn(args, abPostpaid);
 }
 
+//USAGE: use_abn [?|help | abn_NN]
+static const char hlp_use_xsms[] = "USAGE: %s [?|help | Number[baseSym]]\n"
+                                   "  baseSym: empty - Decimal, hH - Hex, Bb - Binary\n";
+void cmd_use_xsms(Console&, const std::vector<std::string> &args)
+{
+    uint32_t xId = 0;
+
+    if ((args.size() < 2)
+        || !strcmp("?", args[1].c_str()) || !strcmp("help", args[1].c_str())) {
+        fprintf(stdout, hlp_use_xsms, args[0].c_str());
+        return;
+    }
+    int base;
+    char sym = (args[1])[args[1].length() - 1];
+    switch (sym) {
+    case 'h': case 'H':
+        base = 16; break;
+    case 'b': case 'B':
+        base = 2; break;
+    default:
+        base = 0; //autodetect
+    }
+    unsigned long val = strtoul(args[1].c_str(), NULL, base);
+    if (!val || (val > 0xFFFFFFFF)) {
+        fprintf(stdout, "ERR: invalid number!");
+        return;
+    }
+    _pFacade->setSmsXIds((uint32_t)val);
+    _pFacade->printDlgConfig();
+}
+
+//USAGE: use_abn [?|help | abn_NN]
+void cmd_no_xsms(Console&, const std::vector<std::string> &args)
+{
+    _pFacade->setSmsXIds(0);
+    _pFacade->printDlgConfig();
+}
+
+
 
 int main(int argc, char** argv)
 {
@@ -1084,6 +1129,8 @@ int main(int argc, char** argv)
         console.addItem("adrnum",  cmd_adrNum);
         console.addItem("adralpha",  cmd_adrAlpha);
         /**/
+        console.addItem("use_xsms",  cmd_use_xsms);
+        console.addItem("no_xsms",  cmd_use_xsms);
         _pFacade->Start();
         console.run("inman>");
 
