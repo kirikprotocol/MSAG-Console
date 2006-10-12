@@ -601,8 +601,16 @@ public:
         TonNpiAddress  npi;
         if (!npi.fromText(cstr))
             throw ConfigException("invalid param %s value: %s", cstr);
-        bill.smsXMap.insert(SmsXServiceMap::value_type(srvId, npi));
-        smsc_log_info(inmanLogger, "SMS Extra service: 0x%x = %s", srvId, npi.toString().c_str());
+
+        uint32_t srvMask = 0;
+        try { srvMask = cfg->getInt(srv_id_parm.c_str()); }
+        catch (ConfigException& exc) { }
+        if (!srvMask)
+            throw ConfigException("invalid param %s value: %s", srv_id_parm.c_str());
+        
+        bill.smsXMap.insert(SmsXServiceMap::value_type(srvMask, npi));
+        smsc_log_info(inmanLogger, "SMS Extra service[%u]: 0x%x = %s", srvId, srvMask,
+                      npi.toString().c_str());
         return;        
     }
 
