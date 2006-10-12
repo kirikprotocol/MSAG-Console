@@ -21,7 +21,6 @@ BillingConnect::BillingConnect(BillingCFG * cfg, SSNSession * ssn_sess,
                                Connect* conn, Logger * uselog/* = NULL*/)
     : _cfg(*cfg), ssnSess(ssn_sess), _conn(conn)
 {
-//    assert(conn && cfg && cfg->tmWatcher);
     logger = uselog ? uselog : Logger::getInstance("smsc.inman.BillConn");
     _bcId = _conn->getSocketId();
     if (!_cfg.maxBilling)
@@ -424,6 +423,8 @@ bool Billing::ConfigureSCFandCharge(AbonentBillType ab_type, const MAPSCFinfo * 
                 pin = (*(abPolicy->scfMap.begin())).second;
                 if (pin->postpaidRPC.size())
                     abScf = *pin;
+                else
+                    pin = NULL;
             }
             if (!pin) {
                 smsc_log_error(logger, "Billing[%u.%u]: unable to determine"
