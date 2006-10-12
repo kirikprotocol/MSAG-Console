@@ -173,11 +173,12 @@ public:
             fh.WriteNetInt32(gsmSCF.serviceKey);
             TONNPI_ADDRESS_OCTS oct;
             unsigned len = packMAPAddress2OCTS(gsmSCF.scfAddress, &oct);
-            if (len && (len <= MAP_MAX_ISDN_AddressLength)) {
+            if ((len > 1) && (len <= MAP_MAX_ISDN_AddressLength)) {
                 fh.WriteByte((uint8_t)len);
                 fh.WriteByte(oct.b0.tonpi);
                 fh.Write(oct.val, len - 1);
-            }
+            } else
+                fh.WriteByte(0);
         }
     }
 };
