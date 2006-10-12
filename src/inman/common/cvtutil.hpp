@@ -74,7 +74,7 @@ inline unsigned unpackBCD2NumString(const unsigned char* bcd, char* str, unsigne
             break;
         str[k++] += '0';
     }
-    str[k++] = 0;
+    str[k] = 0;
     return k;
 }
 
