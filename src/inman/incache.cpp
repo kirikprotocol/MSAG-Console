@@ -150,8 +150,15 @@ void AbonentCache::setAbonentInfo(const AbonentId & ab_number, AbonentBillType a
                             ab_number.getSignals(), exc.what());
         }
     }
-    smsc_log_debug(logger, "InCache: abonent %s is %s: %u",
-                   ab_number.getSignals(), status ? "added" : "updated", ab_type);
+    if (logger->isDebugEnabled()) {
+        char scf_inf[10 + 10 + CAP_MAX_SMS_AddressValueLength + 2];
+        if (p_scf)
+            snprintf(scf_inf, sizeof(scf_inf) - 1, "%s:{%u}",
+                    p_scf->scfAddress.getSignals(), p_scf->serviceKey);
+        smsc_log_debug(logger, "InCache: abonent %s is %s: %s, SCF %s",
+                       ab_number.getSignals(), status ? "added" : "updated",
+                       _sabBillType[ab_type], p_scf ? scf_inf : "<none>");
+    }
 }
 
 AbonentBillType AbonentCache::getAbonentInfo(AbonentId & ab_number, 

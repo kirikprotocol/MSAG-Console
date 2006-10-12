@@ -144,24 +144,25 @@ public:
 
     //DiskHash interface methods
     static uint32_t Size(void)
-    { return sizeof(time_t) + 1 + sizeof(uint32_t) + MAP_MAX_ISDN_AddressLength; }
+    { return sizeof(time_t) + 1 + sizeof(uint32_t) + 1 + MAP_MAX_ISDN_AddressLength; }
 
     void Read(File& fh) /* throw (FileException) */
     {
-        unsigned char fb = fh.ReadByte();
+        uint8_t fb = fh.ReadByte();
         ab_type = (AbonentBillType)(fb & 0x7F);
         tm_queried = ReadTimeT(fh);
+        gsmSCF.scfAddress.clear();
         if (fb & 0x80) {
             gsmSCF.serviceKey = (uint32_t)fh.ReadNetInt32();
-            TONNPI_ADDRESS_OCTS oct;
-            oct.b0.tonpi = fh.ReadByte();
-            fh.Read(oct.val, MAP_MAX_ISDN_AddressLength);
-            unpackOCTS2MAPAddress(gsmSCF.scfAddress, &oct, MAP_MAX_ISDN_AddressLength);
-        } else {
+            uint8_t len = fh.ReadByte();
+            if (len && (len <= MAP_MAX_ISDN_AddressLength)) {
+                TONNPI_ADDRESS_OCTS oct;
+                oct.b0.tonpi = fh.ReadByte();
+                fh.Read(oct.val, len - 1);
+                unpackOCTS2MAPAddress(gsmSCF.scfAddress, &oct, len - 1);
+            }
+        } else
             gsmSCF.serviceKey = 0;
-            gsmSCF.scfAddress.clear();
-        }
-            
     }
     void Write(File& fh) /* throw (FileException) */ const
     { 
@@ -172,8 +173,11 @@ public:
             fh.WriteNetInt32(gsmSCF.serviceKey);
             TONNPI_ADDRESS_OCTS oct;
             unsigned len = packMAPAddress2OCTS(gsmSCF.scfAddress, &oct);
-            fh.WriteByte(oct.b0.tonpi);
-            fh.Write(oct.val, len - 1);
+            if (len && (len <= MAP_MAX_ISDN_AddressLength)) {
+                fh.WriteByte((uint8_t)len);
+                fh.WriteByte(oct.b0.tonpi);
+                fh.Write(oct.val, len - 1);
+            }
         }
     }
 };
