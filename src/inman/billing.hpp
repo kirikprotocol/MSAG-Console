@@ -194,6 +194,7 @@ protected:
     typedef std::map<unsigned, StopWatch*> TimersMAP;
 
     void doCleanUp(void);
+    void writeCDR(void);
     void doFinalize(bool doReport = true);
     void abortThis(const char * reason = NULL, bool doReport = true);
     bool startCAPDialog(INScfCFG * use_scf);
@@ -201,12 +202,15 @@ protected:
     void StopTimer(BillingState bilState);
     void chargeResult(ChargeSmsResult_t chg_res, uint32_t inmanErr = 0);
     bool ConfigureSCFandCharge(AbonentBillType ab_type, const MAPSCFinfo * p_scf = NULL);
+    bool matchBillMode(void) const;
 
     Mutex           bilMutex;
     BillingCFG      _cfg;
     Logger*         logger;
     unsigned int    _bId;       //unique billing dialogue id
     BillingConnect* _bconn;     //parent BillingConnect
+                                //prefix for logging info
+    char            _logId[sizeof("Billing[%u:%u]") + sizeof(unsigned int)*3 + 1];
     BillingState    state;
 
     TCSessionSR*    capSess;   //TCAP dialogs factory
@@ -223,6 +227,7 @@ protected:
     // ...
     AbonentPolicy * abPolicy;
     INScfCFG        abScf;
+    TonNpiAddress   smsxNumber;   //short number for SMS Extra service
 };
 
 } //inman
