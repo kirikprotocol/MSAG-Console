@@ -40,6 +40,7 @@ public:
     ServiceInfo info;
     info.serviceBit=bit;
     info.prefix=prefix;
+    if(info.prefix.length()!=1)info.prefix+=' ';
     info.diverted=divertAddr!=0;
     if(info.diverted)
     {
