@@ -15,6 +15,9 @@
 #include "cluster/Commands.h"
 #include "closedgroups/ClosedGroupsInterface.hpp"
 #include "system/common/TimeZoneMan.hpp"
+#ifdef SNMP
+#include "system/snmp/SnmpCounter.hpp"
+#endif
 
 namespace smsc {
 namespace admin {
@@ -230,6 +233,9 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
   Method apply_services        ((unsigned)applyServicesMethod,       "apply_services",        empty_params, StringType);
   Method apply_locale_resource ((unsigned)applyLocaleResourceMethod, "apply_locale_resources",empty_params, StringType);
   Method apply_timezones       ((unsigned)applyTimeZonesMethod,      "apply_timezones",       empty_params, StringType);
+#ifdef SNMP
+  Method apply_snmp            ((unsigned)applySnmpMethod,           "apply_snmp",            empty_params, StringType);
+#endif
 
   Parameters trace_route_params;
   trace_route_params["dstAddress"] = Parameter("dstAddress", StringType);
@@ -318,6 +324,9 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
   methods[apply_services       .getName()] = apply_services;
   methods[apply_locale_resource.getName()] = apply_locale_resource;
   methods[apply_timezones      .getName()] = apply_timezones;
+#ifdef SNMP
+  methods[apply_snmp           .getName()] = apply_snmp;
+#endif
 
   methods[profile_lookup.getName()] = profile_lookup;
   methods[profile_update.getName()] = profile_update;
@@ -425,6 +434,13 @@ throw (AdminException)
         applyReschedule();
         smsc_log_debug(logger, "reschedule applied");
         return Variant("");
+#ifdef SNMP
+      case applySnmpMethod:
+        smsc_log_debug(logger, "applying snmp...");
+        applySnmp();
+        smsc_log_debug(logger, "snmp applied");
+        return Variant("");
+#endif
       case profileLookupMethod:
         smsc_log_debug(logger, "lookup profile...");
         return profileLookup(args);
@@ -2600,6 +2616,20 @@ Variant SmscComponent::delAlias(const Arguments & args)
     return Variant("alias deleted");
   EPILOGUE
 }
+
+#ifdef SNMP
+
+void SmscComponent::applySnmp()
+{
+  try
+  {
+    smsc::system::SnmpCounter::getInstance().ReloadCfg();
+  }catch(std::exception& e)
+  {
+    throw AdminException("SnmpApplyConfigException:%s",e.what());
+  }
+}
+#endif
 
 }
 }

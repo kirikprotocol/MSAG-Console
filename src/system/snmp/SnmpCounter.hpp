@@ -34,6 +34,10 @@ public:
   }
 
   void LoadCfg(const char* fileName);
+  void ReloadCfg()
+  {
+    LoadCfg(configFileName.c_str());
+  }
 
   enum CounterId{
     cntAccepted,
@@ -101,6 +105,8 @@ protected:
     }
     SeverityType values[cntCountersNumber];
   };
+
+  std::string configFileName;
 
   Counters totalCnt;
   Severities totalSvrt;

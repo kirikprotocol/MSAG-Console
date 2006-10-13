@@ -73,6 +73,7 @@ void SnmpCounter::LoadCfg(const char* fileName)
 {
   sync::MutexGuard mg(cfgMtx);
   DOMTreeReader reader;
+  configFileName=fileName;
   DOMDocument* doc=reader.read(fileName);
   DOMElement *elem = doc->getDocumentElement();
   DOMNodeList *list = elem->getElementsByTagName(XmlStr("default"));

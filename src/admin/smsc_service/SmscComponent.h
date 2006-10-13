@@ -72,6 +72,10 @@ protected:
   void reReadConfigs() throw (AdminException);
   void applyTimeZones()throw(AdminException);
 
+#ifdef SNMP
+  void applySnmp();
+#endif
+
   void mscRegistrate(const Arguments & args);
   void mscUnregister(const Arguments & args);
   void mscBlock(const Arguments & args);
@@ -136,6 +140,10 @@ protected:
   Variant addAlias(const Arguments & args);
   Variant delAlias(const Arguments & args);
 
+#ifdef SNMP
+  Variant snmpApply(const Arguments & args);
+#endif
+
 
   SmscConfigs &configs;
   Methods methods;
@@ -158,6 +166,9 @@ protected:
     cgmAddGroupMethod,cgmDeleteGroupMethod,cgmAddAddrMethod,cgmCheckMethod,
     cgmDelAddrMethod,cgmAddAbonentMethod,cgmDelAbonentMethod,cgmListAbonentsMethod,
     aliasAddMethod,aliasDelMethod
+#ifdef SNMP
+    ,applySnmpMethod
+#endif
   };
 
   smsc::core::synchronization::Mutex mutex;
