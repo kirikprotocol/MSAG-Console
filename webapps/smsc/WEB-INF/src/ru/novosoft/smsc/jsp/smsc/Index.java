@@ -127,7 +127,7 @@ public class Index extends SmscBean {
 
     private int applySNMP() {
         try {
-            smsc.applyParameters();
+            smsc.applySnmp();
             statuses.setSNMPChanged(false);
             journal.clear(SubjectTypes.TYPE_snmp);
 

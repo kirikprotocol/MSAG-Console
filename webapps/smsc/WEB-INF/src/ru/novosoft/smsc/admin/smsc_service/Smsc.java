@@ -44,7 +44,7 @@ public class Smsc extends Service {
 
     private static final String APPLY_TIMEZONES_ID = "apply_timezones";
     private static final String APPLY_RESCHEDULE_ID = "apply_reschedule";
-    private static final String APPLY_PARAMETERS_ID = "apply_parameters";
+    private static final String APPLY_SNMP_ID = "apply_snmp";
 
     private static final String APPLY_ROUTES_METHOD_ID = "apply_routes";
     private static final String LOAD_ROUTES_METHOD_ID = "load_routes";
@@ -522,9 +522,9 @@ public class Smsc extends Service {
         }
     }
 
-    public synchronized void applyParameters() throws AdminException {
+    public synchronized void applySnmp() throws AdminException {
       if (getInfo().isOnline()) {
-        final String result = (String)call(SMSC_COMPONENT_ID, APPLY_PARAMETERS_ID, Type.Types[Type.StringType], new HashMap());
+        final String result = (String)call(SMSC_COMPONENT_ID, APPLY_SNMP_ID, Type.Types[Type.StringType], new HashMap());
         if (result != null)
           throw new AdminException(result);
       } else {
