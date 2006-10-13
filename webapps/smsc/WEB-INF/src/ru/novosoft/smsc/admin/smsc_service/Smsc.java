@@ -525,7 +525,7 @@ public class Smsc extends Service {
     public synchronized void applySnmp() throws AdminException {
       if (getInfo().isOnline()) {
         final String result = (String)call(SMSC_COMPONENT_ID, APPLY_SNMP_ID, Type.Types[Type.StringType], new HashMap());
-        if (result != null)
+        if (result != null && !result.equals(""))
           throw new AdminException(result);
       } else {
             logger.debug("Couldn't call apply parameters method on SMSC - SMSC is not running. Status is " + getInfo().getStatusStr() + " (" + getInfo().getStatus() + ")");
