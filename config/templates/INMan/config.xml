@@ -41,6 +41,8 @@
     <param name="cacheDir" type="string">./cache</param>  <!-- directory to store abonents cache -->
     <param name="cacheRecords" type="int">1</param>  <!-- initial number of cache file records, 
      units: abonents :) , default: 10000 -->
+    <!-- OPTIONAL PARAMETERS follow:: -->
+    <param name="smsExtraConfig" type="string">cfg_extra.xml</param>   <!-- config file for extra SMS services -->
   </section>
 
   <section name="SS7"> <!-- SS7 stack interaction parameters -->
