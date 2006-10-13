@@ -62,7 +62,7 @@ public class ConfigBean extends PageBean {
         }
         catch (Exception e) {
             logger.error("unable to parse SNMP config", e);
-            return error(SMSCErrors.error.smsc.couldntSave);
+            return error(SMSCErrors.error.smsc.couldntSave, e);
         }
 
         if (mbSave != null)
@@ -148,7 +148,7 @@ public class ConfigBean extends PageBean {
 
     private int loadParams() throws AdminException {
         try {
-            Document doc = Utils.parse(new FileReader(config));
+            Document doc = Utils.parse(config.getAbsolutePath());
 
             NodeList a = doc.getElementsByTagName(DEFAULT_SECTION);
             if (a.getLength() > 0) {

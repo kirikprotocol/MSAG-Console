@@ -8,6 +8,7 @@ package ru.novosoft.smsc.jsp.smsc;
 
 import ru.novosoft.smsc.admin.journal.Journal;
 import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.Statuses;
 import ru.novosoft.smsc.util.config.Config;
@@ -126,11 +127,11 @@ public class Index extends SmscBean {
 
     private int applySNMP() {
         try {
-            //TODO что делать?
+            smsc.applyParameters();
             statuses.setSNMPChanged(false);
             journal.clear(SubjectTypes.TYPE_snmp);
 
-            return RESULT_OK;
+          return RESULT_OK;
         } catch (Throwable t) {
             logger.error("Couldn't apply snmp", t);
             return error(SMSCErrors.error.couldntApplyChanges, t);
