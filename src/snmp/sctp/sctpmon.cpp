@@ -4,6 +4,7 @@ static char const ident[] = "$Id$";
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/resource.h>
+#include "util/mirrorfile/mirrorfile.h"
 #include "logger/Logger.h"
 #include "snmp/sctp/SctpMonitor.hpp"
 #include "snmp/sctp/util.hpp"
