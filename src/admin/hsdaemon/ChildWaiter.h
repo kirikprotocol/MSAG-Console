@@ -74,7 +74,7 @@ public:
     }
 
     char msg[1024];
-    sprintf(msg,"SYSTEM %s Started (AlarmId=%s; severity=1)",serviceId,serviceId);
+    sprintf(msg,"SYSTEM CLEARED %s Started (AlarmId=%s; severity=1)",serviceId,serviceId);
     SnmpTrap("SYSTEM",serviceId,1,msg);
 
     while (!isStopping)
@@ -149,7 +149,7 @@ public:
       sleep(1);
     }
 
-    sprintf(msg,"SYSTEM %s Stopped (AlarmId=%s; severity=5)",serviceId,serviceId);
+    sprintf(msg,"SYSTEM ACTIVE %s Stopped (AlarmId=%s; severity=5)",serviceId,serviceId);
     SnmpTrap("SYSTEM",serviceId,5,msg);
 
     isStopped_ = true;
