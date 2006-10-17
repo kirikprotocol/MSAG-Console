@@ -28,6 +28,7 @@ class SctpMonitor{
     void stop();
     void addAssociationChangeListener(AssociationChangeListener* listener);
     void removeAssociationChangeListener();
+    void startAllAssociations();
     SctpMonitor();
 };
 

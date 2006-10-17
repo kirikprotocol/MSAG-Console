@@ -17,6 +17,32 @@ static int going;
 static Mutex lock;
 Logger* logger = 0;
 
+static bool needToStartAssociation = false;
+static struct timeval lastassocstart;
+void SctpMonitor::startAllAssociations()
+{
+  long period = 60000L; // in milliseconds
+  struct timeval now;
+  struct timeval tmp;
+
+  tmp = lastassocstart;
+  long sec = period / 1000L;
+  long usec = (period % 1000L) * 1000L;
+  tmp.tv_sec += sec;
+  tmp.tv_usec += usec;
+  if (tmp.tv_usec > 1000000L)
+  {
+    tmp.tv_usec -= 1000000L;
+    tmp.tv_sec ++;
+  }
+  gettimeofday(&now, NULL);
+  if (now.tv_sec > tmp.tv_sec ||
+          (now.tv_sec == tmp.tv_sec && now.tv_usec >= tmp.tv_usec))
+  {
+    needToStartAssociation = true;
+  }
+}
+
 SctpMonitor* SctpMonitor::instance()
 {
   if ( monitor == 0 )
@@ -111,6 +137,8 @@ SctpMonitor::SctpMonitor()
   logger = Logger::getInstance("sctp.mon");
   smsc_log_debug(logger,"\n************************\n* SIBINCO SCTP MONITOR *\n************************");
   listener = 0;
+  lastassocstart.tv_sec = 0L;
+  lastassocstart.tv_usec = 0L;
   cancelTimer(&assoctimer);
 }
 void SctpMonitor::addAssociationChangeListener(AssociationChangeListener* _listener)
@@ -276,12 +304,33 @@ int SctpMonitor::run()
           if( EINSS7_MGMTAPI_REQUEST_OK != result)
           {
             smsc_log_error(logger,
-                           "EINSS7_MgmtApiSendMgmtReq failed with code %d(%s),state=%s,orderID = \"STATUSOFASSOCS_req\"",
+                           "EINSS7_MgmtApiSendOrderReq failed with code %d(%s),state=%s,orderID = \"STATUSOFASSOCS_req\"",
                            result,getReturnCodeDescription(result),
                            getStateDescription(state).c_str());
             goto unbindmgmt;
           }
           setalarm();
+        }
+        if (needToStartAssociation)
+        {
+          needToStartAssociation = false;
+          gettimeofday(&lastassocstart, NULL);
+          result = EINSS7_MgmtApiSendOrderReq(USERID,
+                                              MGMT_ID, /*receiverID*/
+                                              6, /* moduleID = MTPL3 */
+                                              39, /* orderID = ASSOC_START_ALL_req */
+                                              0, /*lengthOfInfo*/
+                                              NULL, /* orderInfo_p*/
+                                              NO_WAIT);
+          smsc_log_error(logger,"ASSOC_START_ALL_req has been sent");
+          if( EINSS7_MGMTAPI_REQUEST_OK != result)
+          {
+            smsc_log_error(logger,
+                           "EINSS7_MgmtApiSendOrderReq failed with code %d(%s),state=%s,orderID = \"ASSOC_START_ALL_req\"",
+                           result,getReturnCodeDescription(result),
+                           getStateDescription(state).c_str());
+            goto unbindmgmt;
+          }
         }
         break;
       case MGMTBINDERROR:

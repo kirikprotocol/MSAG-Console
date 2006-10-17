@@ -46,8 +46,11 @@ public:
 
 class Coordinator: public AssociationChangeListener{
   private:
+    SctpMonitor *monitor;
     XHash<unsigned,Association*,hash_func_said> assocs;
   public:
+    Coordinator() { monitor = 0; }
+    void setSctpMonitor(SctpMonitor *_monitor) { monitor = _monitor; }
     void setAssociationDescription(uint16_t said, string description) {
       Association* ptr = findAssociation(said);
       ptr->descr = description;
@@ -92,6 +95,10 @@ class Coordinator: public AssociationChangeListener{
         string alarm_id = assoc->descr;
         string text = "";
         string param = "";
+        if (stateCategory(event.state) == -1)
+        {
+          if (monitor) monitor->startAllAssociations();
+        }
         if (stateCategory(assoc->state) != stateCategory(event.state))
         {
           if (stateCategory(event.state) == 1) {
@@ -171,6 +178,7 @@ int main (int argc, char *argv[])
   sender->Start();
   SctpMonitor *monitor = SctpMonitor::instance();
   monitor->addAssociationChangeListener(&coord);
+  coord.setSctpMonitor(monitor);
   sigset( SIGTERM, sighandler );
 #if 0
   int i = 0;
