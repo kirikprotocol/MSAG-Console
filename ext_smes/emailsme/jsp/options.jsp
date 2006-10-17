@@ -145,6 +145,10 @@
 <tr><td colspan=2>&nbsp;</td></tr>
 <tr><td colspan=2><div class=page_subtitle>Answers</div></td></tr>
 <tr class=row<%=rowN++&1%>>
+  <th>Send success noticies</th>
+  <td align="LEFT"><input type=checkbox name=sendSuccessAnswer <%=bean.getSendSuccessAnswer()%>></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
   <th>alias</th>
   <td><input class=txt name=answers_alias value="<%=StringEncoderDecoder.encode(bean.getAnswers_alias())%>"></td>
 </tr>

@@ -31,6 +31,7 @@ public class Options extends SmeBean
   private int admin_port = 0;
   private boolean admin_allow_gsm_2_email_without_profile = false;
   private boolean admin_allow_email_2_gsm_without_profile = false;
+  private boolean sendSuccessAnswer = true;
   private String admin_default_limit = "";
 
   private String mail_domain = "";
@@ -118,6 +119,7 @@ public class Options extends SmeBean
         admin_port = getIntParameter("admin.port");
         admin_allow_gsm_2_email_without_profile = getBoolParameter("admin.allowGsm2EmlWithoutProfile");
         admin_allow_email_2_gsm_without_profile = getBoolParameter("admin.allowEml2GsmWithoutProfile");
+        sendSuccessAnswer = getBoolParameter("answers.sendSuccessAnswer");
         admin_default_limit = getStringParameter("admin.defaultLimit");
 
         mail_domain = getStringParameter("mail.domain");
@@ -192,6 +194,7 @@ public class Options extends SmeBean
     getConfig().setInt("admin.port", admin_port);
     getConfig().setBool("admin.allowGsm2EmlWithoutProfile", admin_allow_gsm_2_email_without_profile);
     getConfig().setBool("admin.allowEml2GsmWithoutProfile", admin_allow_email_2_gsm_without_profile);
+    getConfig().setBool("answers.sendSuccessAnswer", sendSuccessAnswer);
     getConfig().setString("admin.defaultLimit", admin_default_limit);
 
     getConfig().setString("mail.domain", mail_domain);
@@ -545,6 +548,14 @@ public class Options extends SmeBean
 
   public void setAdmin_allow_email_2_gsm_without_profile(String admin_allow_email_2_gsm_without_profile) {
     this.admin_allow_email_2_gsm_without_profile = admin_allow_email_2_gsm_without_profile.equals("on");
+  }
+
+  public String getSendSuccessAnswer() {
+    return sendSuccessAnswer ? "checked" : "";
+  }
+
+  public void setSendSuccessAnswer(String sendSuccessAnswer) {
+    this.sendSuccessAnswer = sendSuccessAnswer.equals("on");
   }
 
   public String getAdmin_default_limit() {
