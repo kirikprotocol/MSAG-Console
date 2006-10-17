@@ -1,5 +1,6 @@
 #!/usr/bin/perl
 use strict;
+use File::Copy;
 
 if(@ARGV!=3)
 {
@@ -11,6 +12,8 @@ my $loadAvgActive;
 my %mntThresholds;
 my %mntActive;
 
+my $hostname=`hostname`;
+
 my @severityNames=qw(1 2 3 4 5);
 
 my $cfgTimeStamp;
@@ -20,6 +23,7 @@ $csvFileDir.='/' unless $csvFileDir=~m!/$!;
 my $csvRolInterval=$ARGV[2];
 
 my $csvFile;
+my $csvFileName;
 my $lastCsvRol=time;
 
 LoadConfig();
@@ -118,7 +122,7 @@ sub CheckLoadAverage
   {
     if($loadAvgActive)
     {
-      SnmpTrap("Cleared OS AVG_LOAD Threshold crossed $percent\% (AlarmID=AVG_LOAD; severity=1)",1,'OS','AVG_LOAD');
+      SnmpTrap("CLEARED OS AVG_LOAD Threshold crossed $percent\% at $hostname (AlarmID=AVG_LOAD; severity=1)",1,'OS','AVG_LOAD');
       $loadAvgActive=undef;
     }
   }else
@@ -126,7 +130,7 @@ sub CheckLoadAverage
     if($loadAvgActive ne $severityNames[$loadLevel])
     {
       $loadAvgActive=$severityNames[$loadLevel];
-      SnmpTrap("Active OS AVG_LOAD Threshold crossed $percent\% (AlarmID=AVG_LOAD; severity=$loadAvgActive)",$loadAvgActive,'OS','AVG_LOAD');
+      SnmpTrap("ACTIVE OS AVG_LOAD Threshold crossed $percent\% at $hostname (AlarmID=AVG_LOAD; severity=$loadAvgActive)",$loadAvgActive,'OS','AVG_LOAD');
     }
   }
 }
@@ -159,7 +163,7 @@ sub CheckDiskFree
     {
       if($mntActive{$mnt})
       {
-        SnmpTrap("Cleared OS HDD_$name Threshold crossed $capacity\% (AlarmID=HDD_$name; severity=1)",1,'OS',"HDD_$name");
+        SnmpTrap("CLEARED OS HDD_$name Threshold crossed $capacity\% at $hostname (AlarmID=HDD_$name; severity=1)",1,'OS',"HDD_$name");
         $mntActive{$mnt}=undef;
       }
     }else
@@ -167,7 +171,7 @@ sub CheckDiskFree
       if($mntActive{$mnt} ne $severityNames[$fillLevel])
       {
         $mntActive{$mnt}=$severityNames[$fillLevel];
-        SnmpTrap("Active OS HDD_$name Threshold crossed $capacity\% (AlarmID=HDD_$name; severity=@{[$mntActive{$mnt}]})",$mntActive{$mnt},'OS',"HDD_$name");
+        SnmpTrap("ACTIVE OS HDD_$name Threshold crossed $capacity\% at $hostname (AlarmID=HDD_$name; severity=@{[$mntActive{$mnt}]})",$mntActive{$mnt},'OS',"HDD_$name");
       }
     }
   }
@@ -184,8 +188,8 @@ sub CsvLog{
   my @tm=gmtime(time);
   unless(defined($csvFile))
   {
-    my $fn=$csvFileDir.sprintf("%04d%02d%02d_%02d%02d%02d.csv",$tm[5]+1900,$tm[4]+1,$tm[3],$tm[2],$tm[1],$tm[0]);
-    open($csvFile,'>'.$fn) || die "Failed to open $fn:$!";
+    $csvFileName=$csvFileDir.sprintf("%04d%02d%02d_%02d%02d%02d.csv",$tm[5]+1900,$tm[4]+1,$tm[3],$tm[2],$tm[1],$tm[0]);
+    open($csvFile,'>'.$csvFileName) || die "Failed to open $csvFileName:$!";
     print $csvFile "SUBMIT_TIME,ALARM_ID,ALARMCATEGORY,SEVERITY,TEXT\n";
   }
   my $ts=sprintf("%02d.%02d.%04d %02d:%02d:%02d",$tm[3],$tm[4]+1,$tm[5]+1900,$tm[2],$tm[1],$tm[0]);
@@ -195,7 +199,17 @@ sub CsvLog{
 sub RollCsv{
   my $now=time;
   return unless $now-$lastCsvRol>$csvRolInterval;
-  close($csvFile) if defined($csvFile);
+  if(defined($csvFile))
+  {
+    close($csvFile);
+    if(exists($ENV{HS_MIRROR_PATH}))
+    {
+      my $dstFn=$ENV{HS_MIRROR_PATH};
+      $dstFn=$1 if $dstFn=~m!(.*)/$!;
+      $dstFn.=$csvFileName;
+      copy($csvFileName,$dstFn);
+    }
+  }
   $csvFile=undef;
   $lastCsvRol=$now;
 }
