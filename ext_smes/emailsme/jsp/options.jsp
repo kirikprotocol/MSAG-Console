@@ -202,7 +202,7 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>message send</th>
-  <td><input class=txt name=answers_messagesend value="<%=StringEncoderDecoder.encode(bean.getAnswers_messagesend())%>"></td>
+  <td><input class=txt name=answers_messagesent value="<%=StringEncoderDecoder.encode(bean.getAnswers_messagesent())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>message failed limit</th>

@@ -57,7 +57,7 @@ public class Options extends SmeBean
   private String answers_numberfailed = "";
   private String answers_systemerror = "";
   private String answers_unknowncommand = "";
-  private String answers_messagesend = "";
+  private String answers_messagesent = "";
   private String answers_messagefailedlimit = "";
   private String answers_messagefailednoprofile = "";
   private String answers_messagefailedsendmail = "";
@@ -145,7 +145,7 @@ public class Options extends SmeBean
         answers_numberfailed = getStringParameter("answers.numberfailed");
         answers_systemerror = getStringParameter("answers.systemerror");
         answers_unknowncommand = getStringParameter("answers.unknowncommand");
-        answers_messagesend = getStringParameter("answers.messagesend");
+        answers_messagesent = getStringParameter("answers.messagesent");
         answers_messagefailedlimit = getStringParameter("answers.messagefailedlimit");
         answers_messagefailednoprofile = getStringParameter("answers.messagefailednoprofile");
         answers_messagefailedsendmail = getStringParameter("answers.messagefailedsendmail");
@@ -221,7 +221,7 @@ public class Options extends SmeBean
     getConfig().setString("answers.numberfailed", answers_numberfailed);
     getConfig().setString("answers.systemerror", answers_systemerror);
     getConfig().setString("answers.unknowncommand", answers_unknowncommand);
-    getConfig().setString("answers.messagesend", answers_messagesend);
+    getConfig().setString("answers.messagesent", answers_messagesent);
     getConfig().setString("answers.messagefailedlimit", answers_messagefailedlimit);
     getConfig().setString("answers.messagefailednoprofile", answers_messagefailednoprofile);
     getConfig().setString("answers.messagefailedsendmail", answers_messagefailedsendmail);
@@ -698,12 +698,12 @@ public class Options extends SmeBean
     this.answers_unknowncommand = answers_unknowncommand;
   }
 
-  public String getAnswers_messagesend() {
-    return answers_messagesend;
+  public String getAnswers_messagesent() {
+    return answers_messagesent;
   }
 
-  public void setAnswers_messagesend(String answers_messagesend) {
-    this.answers_messagesend = answers_messagesend;
+  public void setAnswers_messagesent(String answers_messagesent) {
+    this.answers_messagesent = answers_messagesent;
   }
 
   public String getAnswers_messagefailedlimit() {
