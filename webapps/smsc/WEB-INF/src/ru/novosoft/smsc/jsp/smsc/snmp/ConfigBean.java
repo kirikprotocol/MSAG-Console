@@ -21,16 +21,19 @@ import java.util.*;
 
 public class ConfigBean extends PageBean {
     public static final String DEFAULT_SECTION = "default";
+    public static final String COUNTER_INTERVAL = "counterInterval";
     public static final String OBJECT_SECTION = "object";
 
     private String mbSave = null;
     private String mbReset = null;
     private Map params = new HashMap();
+    private int counterInterval = 0;
 
     private File config = null;
 
     public Map defaultCounters = new HashMap();
     public Map objects = new HashMap();
+    private boolean reloadParams = true;
 
     protected int init(List errors) {
         int result = super.init(errors);
@@ -57,10 +60,10 @@ public class ConfigBean extends PageBean {
             return error(SMSCErrors.error.snmp.CouldntGetConfig, e);
         }
 
+
         try {
-            processParams(request);
-        }
-        catch (Exception e) {
+          processParams(request);
+        } catch (Exception e) {
             logger.error("unable to parse SNMP config", e);
             return error(SMSCErrors.error.smsc.couldntSave, e);
         }
@@ -69,6 +72,8 @@ public class ConfigBean extends PageBean {
             return processApply();
         else if (mbReset != null)
             return processReset();
+
+
 
         return RESULT_OK;
     }
@@ -116,6 +121,7 @@ public class ConfigBean extends PageBean {
 
     private int processReset() {
         params.clear();
+        counterInterval = 0;
         try {
             return loadParams();
         }
@@ -128,7 +134,8 @@ public class ConfigBean extends PageBean {
     private int save() throws Exception {
         final File newFile = Functions.createNewFilenameForSave(config);
         PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), Functions.getLocaleEncoding()));
-        Functions.storeConfigHeader(out, "config", "snmp.dtd", Functions.getLocaleEncoding());
+        Functions.storeConfigHeader(out, "config", "snmp.dtd", "WINDOWS-1251"/*Functions.getLocaleEncoding()*/);
+        out.println("   <counterInterval value=\"" + String.valueOf(counterInterval) + "\"/>");
         out.println("   <default>");
         SnmpObject.writeCounters(out, defaultCounters);
         out.println("   </default>");
@@ -149,6 +156,17 @@ public class ConfigBean extends PageBean {
     private int loadParams() throws AdminException {
         try {
             Document doc = Utils.parse(config.getAbsolutePath());
+
+            if (counterInterval == 0) {
+              try {
+                final NodeList counterInt = doc.getElementsByTagName(COUNTER_INTERVAL);
+                if (counterInt.getLength() > 0)
+                  counterInterval = Integer.parseInt(((Element)counterInt.item(0)).getAttribute("value"));
+              } catch (NumberFormatException e) {
+                logger.error("Invalid counterInterval value");
+                counterInterval = 0;
+              }
+            }
 
             NodeList a = doc.getElementsByTagName(DEFAULT_SECTION);
             if (a.getLength() > 0) {
@@ -191,7 +209,9 @@ public class ConfigBean extends PageBean {
 
     private int processParams(HttpServletRequest request) throws AdminException {
         int result = RESULT_OK;
-        if (params.size() == 0) loadParams();
+        if (params.size() == 0) {
+          loadParams();
+        }
 
         Enumeration parameterNames = request.getParameterNames();
 
@@ -207,7 +227,18 @@ public class ConfigBean extends PageBean {
         return result;
     }
 
-    public String getMbSave() {
+  public String getCounterInterval() {
+    return String.valueOf(counterInterval);
+  }
+
+  public void setCounterInterval(String counterInterval) {
+    try {
+      this.counterInterval = Integer.parseInt(counterInterval);
+    } catch (NumberFormatException e) {
+    }
+  }
+
+  public String getMbSave() {
         return mbSave;
     }
 

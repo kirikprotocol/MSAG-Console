@@ -196,6 +196,13 @@ function addSectionCounter(parentSectionName)
     <%
         //################################## View #############################
         startSection(out, "main", "snmp.configTitle", true);
+
+        startSection(out, "counterInterval", "snmp.counterInterval", true);
+        startParams(out);
+        param(out, "snmp.counterInterval", "counterInterval", bean.getCounterInterval());
+        finishParams(out);
+        finishSection(out);
+
         startSection(out, "Default", "snmp.default", false);
         java.util.Map defMap = bean.defaultCounters;
         for (Iterator i = defMap.keySet().iterator(); i.hasNext();) {
