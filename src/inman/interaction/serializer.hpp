@@ -10,7 +10,7 @@
 
 #include "util/Uint64Converter.h"
 #include "inman/common/errors.hpp"
-#include "inman/common/SerialBuf.hpp"
+#include "core/buffers/ExtendingBuf.hpp"
 
 using smsc::util::Uint64Converter;
 using smsc::inman::common::CustomException;
@@ -19,21 +19,12 @@ namespace smsc  {
 namespace inman {
 namespace interaction {
 
-typedef smsc::core::buffers::SerialBuffer<unsigned char,1024> ObjectBuffer;
+typedef smsc::core::buffers::ExtendingBuffer<unsigned char,1024> ObjectBuffer;
 
 class SerializerException : public CustomException
 {
 public:
     typedef enum { invPacket = 1, invObject, invObjData } ErrorClass;
-/*
-    SerializerException(std::string & msg,
-                        ErrorClass ex_class = SerializerException::invObjData,
-                        const char * desc = NULL)
-        : CustomException(msg.c_str(), ex_class, desc)
-    {
-        setExcId("SerializerException");
-    }
-*/
     SerializerException(const char * msg,
                         ErrorClass ex_class = SerializerException::invObjData,
                         const char * desc = NULL)
