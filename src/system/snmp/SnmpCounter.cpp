@@ -76,7 +76,19 @@ void SnmpCounter::LoadCfg(const char* fileName)
   configFileName=fileName;
   DOMDocument* doc=reader.read(fileName);
   DOMElement *elem = doc->getDocumentElement();
-  DOMNodeList *list = elem->getElementsByTagName(XmlStr("default"));
+  DOMNodeList *list;
+  list = elem->getElementsByTagName(XmlStr("counterInterval"));
+  interval=300;
+  if(list->getLength()!=0)
+  {
+    DOMNode* interval=list->item(0);
+    XmlStr value(interval->getAttributes()->getNamedItem(XmlStr("value"))->getNodeValue());
+    interval=atoi(value.c_str());
+  }else
+  {
+    smsc_log_warn(log,"counterInterval not found, using default(300)");
+  }
+  list = elem->getElementsByTagName(XmlStr("default"));
   DOMNode *record = list->item(0);
   ParseRecord(record,defSvrtLim);
   list = elem->getElementsByTagName(XmlStr("object"));

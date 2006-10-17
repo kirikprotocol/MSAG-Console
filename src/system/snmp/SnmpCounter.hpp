@@ -115,6 +115,8 @@ protected:
   sync::EventMonitor mon;
   bool isStopping;
 
+  int interval;
+
   smsc::logger::Logger* log;
 
   sync::Mutex cfgMtx;
@@ -139,7 +141,9 @@ protected:
     sync::MutexGuard mg(mon);
     while(!isStopping)
     {
-      mon.wait(5*60*1000);
+      int toSleep=time(NULL)%interval;
+      toSleep*=1000;
+      mon.wait(toSleep);
       if(isStopping)break;
       Check("GLOBAL",totalCnt,totalSvrt);
       char* name;
