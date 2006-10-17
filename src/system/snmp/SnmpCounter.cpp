@@ -81,8 +81,8 @@ void SnmpCounter::LoadCfg(const char* fileName)
   interval=300;
   if(list->getLength()!=0)
   {
-    DOMNode* interval=list->item(0);
-    XmlStr value(interval->getAttributes()->getNamedItem(XmlStr("value"))->getNodeValue());
+    DOMNode* intervalNode=list->item(0);
+    XmlStr value(intervalNode->getAttributes()->getNamedItem(XmlStr("value"))->getNodeValue());
     interval=atoi(value.c_str());
   }else
   {
