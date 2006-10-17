@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE config SYSTEM "snmp.dtd">
 <config>
+  <counterInterval value="300"/>
   <default>
     <counter name="accepted">50,40,30,20</counter>
     <counter name="rejected">10,20,30,40</counter>

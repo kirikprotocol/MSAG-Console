@@ -1,5 +1,6 @@
-<!ELEMENT config (default,object*) >
-
+<!ELEMENT config (counterInterval,default,object*) >
+<!ELEMENT counterInterval EMPTY>
+<!ATTLIST counterInterval value CDATA #REQUIRED>
 <!ELEMENT default (counter*)>
 <!ELEMENT counter (#PCDATA)>
 <!ATTLIST counter name CDATA #REQUIRED>
