@@ -48,6 +48,8 @@
   </section>
 
   <section name="answers">
+    <param name="sendSuccessAnswer" type="bool">true</param>
+
     <param name="alias" type="string">#template=emailsmealias#{alias}="$$string import=alias$$"</param>
     <param name="aliasfailed" type="string">#template=emailsmealiasfailed#{alias}="$$string import=alias$$"</param>
     <param name="aliasbusy" type="string">#template=emailsmealiasbusy#{alias}="$$string import=alias$$"</param>
