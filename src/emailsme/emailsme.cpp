@@ -799,6 +799,7 @@ namespace cfg{
  bool allowEml2GsmWithoutProfile=false;
  LimitType defaultLimitType=ltDay;
  int defaultLimitValue=10;
+ bool sendSuccessAnswer=true;
 };
 
 int stopped=0;
@@ -1237,8 +1238,15 @@ int processSms(const char* text,const char* fromaddress)
     try{
       int rv=SendEMail(fromdecor,to,subj,body);
       if(haveprofile)storage.incGsm2EmlLimit(fromaddress);
-      if(rv!=ProcessSmsCodes::OK)return rv;
-      sendAnswer(fromaddress,"messagesent","to",to[0].c_str());
+      if(rv!=ProcessSmsCodes::OK)
+      {
+        sendAnswer(fromaddress,"messagefailedsendmail");
+        return rv;
+      }
+      if(cfg::sendSuccessAnswer)
+      {
+        sendAnswer(fromaddress,"messagesent","to",to[0].c_str());
+      }
     }catch(...)
     {
       __warning__("SMTP session aborted");
@@ -1797,6 +1805,8 @@ int main(int argc,char* argv[])
     fprintf(stderr,"Failed to execute mail stripper:%s",strerror(errno));
     return -1;
   }
+
+  cfg::sendSuccessAnswer=cfgman.getBool("answers.sendSuccessAnswer");
 
   cfg::msgFormat=new OutputFormatter(cfgman.getString("mail.format"));
 
