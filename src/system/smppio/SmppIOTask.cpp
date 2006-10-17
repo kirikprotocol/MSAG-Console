@@ -63,7 +63,7 @@ static void KillProxy(int ct,SmppProxy* proxy,SmeManager* smeManager)
       {
         char buf[1024];
         sprintf(buf,"ACTIVE ESME %s unregistered successfully (AlaramID=%s; severity=2)",proxy->getSystemId(),proxy->getSystemId());
-        smsc::snmp::SnmpAgent::trap(proxy->getSystemId(),"ESME",2,buf);
+        smsc::snmp::SnmpAgent::trap(proxy->getSystemId(),"ESME",smsc::snmp::SnmpAgent::WARNING,buf);
       }
 #endif
     }catch(...)
@@ -73,7 +73,7 @@ static void KillProxy(int ct,SmppProxy* proxy,SmeManager* smeManager)
       {
         char buf[1024];
         sprintf(buf,"ACTIVE ESME %s unregistration failed (AlaramID=%s; severity=4)",proxy->getSystemId(),proxy->getSystemId());
-        smsc::snmp::SnmpAgent::trap(proxy->getSystemId(),"ESME",4,buf);
+        smsc::snmp::SnmpAgent::trap(proxy->getSystemId(),"ESME",smsc::snmp::SnmpAgent::MAJOR,buf);
       }
 #endif
       smsc_log_debug(snmpLog,"unregister sme: %s failed",proxy->getSystemId());
@@ -90,7 +90,7 @@ static void KillProxy(int ct,SmppProxy* proxy,SmeManager* smeManager)
     char trueSid[32];
     sprintf(trueSid,"%s_%s",proxy->getSystemId(),ct==0?"rx":"tx");
     sprintf(buf,"ACTIVE ESME %s unregistered successfully (AlaramID=%s; severity=2)",trueSid,trueSid);
-    smsc::snmp::SnmpAgent::trap(proxy->getSystemId(),"ESME",2,buf);
+    smsc::snmp::SnmpAgent::trap(proxy->getSystemId(),"ESME",smsc::snmp::SnmpAgent::WARNING,buf);
   }
 #endif
 }
@@ -416,7 +416,7 @@ int SmppInputThread::Execute()
 #ifdef SNMP
                   char snmpMsg[1024];
                   sprintf(snmpMsg,"ACTIVE ESME %s registration failed (AlaramID=%s; severity=4)",sid.c_str(),sid.c_str());
-                  smsc::snmp::SnmpAgent::trap(sid.c_str(),"ESME",4,snmpMsg);
+                  smsc::snmp::SnmpAgent::trap(sid.c_str(),"ESME",smsc::snmp::SnmpAgent::WARNING,snmpMsg);
 #endif
 
                   int errcode=SmppStatusSet::ESME_RBINDFAIL;
@@ -620,7 +620,7 @@ int SmppInputThread::Execute()
 #ifdef SNMP
                       char snmpMsg[1024];
                       sprintf(snmpMsg,"CLEARED ESME %s registration successful (AlaramID=%s; severity=1)",sid.c_str(),sid.c_str());
-                      smsc::snmp::SnmpAgent::trap(sid.c_str(),"ESME",1,snmpMsg);
+                      smsc::snmp::SnmpAgent::trap(sid.c_str(),"ESME",smsc::snmp::SnmpAgent::NORMAL,snmpMsg);
 #endif
                       proxy->setId(sid,proxyIndex);
                       info2(log,"NEWPROXY: p=%p, smid=%s, forceDC=%s",proxy,sid.c_str(),si.forceDC?"true":"false");
@@ -631,7 +631,7 @@ int SmppInputThread::Execute()
                       char trueSid[32];
                       sprintf(trueSid,"%s_%s",sid.c_str(),pdu->get_commandId()==SmppCommandSet::BIND_RECIEVER?"rx":"tx");
                       sprintf(snmpMsg,"ACTIVE ESME %s registration successful (AlaramID=%s; severity=1)",trueSid,trueSid);
-                      smsc::snmp::SnmpAgent::trap(sid.c_str(),"ESME",4,snmpMsg);
+                      smsc::snmp::SnmpAgent::trap(sid.c_str(),"ESME",smsc::snmp::SnmpAgent::WARNING,snmpMsg);
 #endif
                       smsc_log_debug(snmpLog,"register second channel of sme:%s",sid.c_str());
                       //proxy->AddRef();
@@ -689,12 +689,12 @@ int SmppInputThread::Execute()
                     if(rebindproxy)
                     {
                       sprintf(snmpMsg,"CLEARED ESME %s registration successful (AlaramID=%s; severity=1)",sid.c_str(),sid.c_str());
-                      smsc::snmp::SnmpAgent::trap(sid.c_str(),"ESME",1,snmpMsg);
+                      smsc::snmp::SnmpAgent::trap(sid.c_str(),"ESME",smsc::snmp::SnmpAgent::NORMAL,snmpMsg);
                     }else
                     {
                       sprintf(trueSid,"%s_%s",sid.c_str(),pdu->get_commandId()==SmppCommandSet::BIND_RECIEVER?"rx":"tx");
                       sprintf(snmpMsg,"ACTIVE ESME %s registration failed (AlaramID=%s; severity=4)",trueSid,trueSid);
-                      smsc::snmp::SnmpAgent::trap(sid.c_str(),"ESME",4,snmpMsg);
+                      smsc::snmp::SnmpAgent::trap(sid.c_str(),"ESME",smsc::snmp::SnmpAgent::WARNING,snmpMsg);
                     }
                 }
                 if(resppdu.get_header().get_commandStatus()==SmppStatusSet::ESME_RBINDFAIL)
