@@ -2393,11 +2393,17 @@ StateType StateMachine::submitChargeResp(Tuple& t)
         if(sms->lastResult!=Status::OK)
         {
           sm->smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
+#ifdef SNMP
+          SnmpCounter::getInstance().incCounter(SnmpCounter::cntRejected,sms->getSourceSmeId());
+#endif
         }else
         {
           if((sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x1)//datagram mode
           {
             sm->smsc->registerStatisticalEvent(StatEvents::etSubmitOk,sms);
+#ifdef SNMP
+            SnmpCounter::getInstance().incCounter(SnmpCounter::cntAccepted,sms->getSourceSmeId());
+#endif
           }
         }
         if((sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x1 ||
@@ -2460,6 +2466,9 @@ StateType StateMachine::submitChargeResp(Tuple& t)
       src_proxy->getSystemId(),
       sms->getDestinationSmeId()
     );
+#ifdef SNMP
+    incSnmpCounterForError(Status::SMENOTCONNECTED,sms->getSourceSmeId());
+#endif
     try{
       //time_t now=time(NULL);
       Descriptor d;
@@ -2483,6 +2492,9 @@ StateType StateMachine::submitChargeResp(Tuple& t)
   }catch(...)
   {
     sms->setLastResult(Status::SMENOTCONNECTED);
+#ifdef SNMP
+    incSnmpCounterForError(Status::SMENOTCONNECTED,sms->getSourceSmeId());
+#endif
     try{
       //time_t now=time(NULL);
       Descriptor d;
@@ -3168,6 +3180,9 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     sms.getDestinationAddress().toString(bufdst,sizeof(bufdst));
     smsc_log_warn(smsLog, "FWD: msgId=%lld sme is not connected(%s->%s(%s))",t.msgId,bufsrc,bufdst,ri.smeSystemId.c_str());
     sms.setLastResult(Status::SMENOTCONNECTED);
+#ifdef SNMP
+    incSnmpCounterForError(Status::SMENOTCONNECTED,ri.smeSystemId.c_str());
+#endif
     smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
     try{
       sendNotifyReport(sms,t.msgId,"destination unavailable");
@@ -3268,6 +3283,9 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
       Descriptor d;
       __trace__("FORWARD: change state to enroute");
       sms.setLastResult(Status::SMENOTCONNECTED);
+#ifdef SNMP
+    incSnmpCounterForError(Status::SMENOTCONNECTED,ri.smeSystemId.c_str());
+#endif
       smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
       changeSmsStateToEnroute(sms,t.msgId,d,Status::SMENOTCONNECTED,rescheduleSms(sms));
 
@@ -4007,6 +4025,9 @@ StateType StateMachine::deliveryResp(Tuple& t)
         {
           __trace__("CONCAT: failed to send intermediate notification");
         }
+#ifdef SNMP
+        incSnmpCounterForError(Status::SMENOTCONNECTED,ri.smeSystemId.c_str());
+#endif
         try{
           //time_t now=time(NULL);
           Descriptor d;
@@ -4484,9 +4505,16 @@ StateType StateMachine::alert(Tuple& t)
   sms.getDestinationAddress().toString(bufdst,sizeof(bufdst));
   info2(smsLog, "ALERT: delivery timed out(%s->%s), msgId=%lld",bufsrc,bufdst,t.msgId);
   smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
+#ifdef SNMP
+  incSnmpCounterForError(Status::DELIVERYTIMEDOUT,sms.getDestinationSmeId());
+#endif
+
   if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==1 ||
      (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2)
   {
+#ifdef SNMP
+    SnmpCounter::getInstance().incCounter(SnmpCounter::cntRejected,sms.getDestinationSmeId());
+#endif
     sms.state=EXPIRED;
     if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2)
     {
