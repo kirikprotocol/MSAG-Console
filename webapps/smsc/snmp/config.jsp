@@ -41,7 +41,20 @@
 
     void printAddSectionCounter(JspWriter out, String string) throws IOException {
         out.print("<div>");
-        out.print("<input class=txt id=\"newSectionCounterInput_" + string + "\" name=\"newSectionCounterInput_" + string + "\">");
+        out.print("<select class=select id=\"newSectionCounterInput_" + string + "\" name=\"newSectionCounterInput_" + string + "\">");
+        out.print("<option value=\"0x00d\" SELECTED>0x00d</option>");
+        out.print("<option value=\"0x014\">0x014</option>");
+        out.print("<option value=\"0x058\">0x058</option>");
+        out.print("<option value=\"accepted\">accepted</option>");
+        out.print("<option value=\"delivered\">delivered</option>");
+        out.print("<option value=\"failed\">failed</option>");
+        out.print("<option value=\"other\">other</option>");
+        out.print("<option value=\"rejected\">rejected</option>");
+        out.print("<option value=\"retried\">retried</option>");
+        out.print("<option value=\"SDP\">SDP</option>");
+        out.print("<option value=\"temperror\">temperror</option>");
+        out.print("</select>");
+//        out.print("<input class=txt id=\"newSectionCounterInput_" + string + "\" name=\"newSectionCounterInput_" + string + "\">");
         out.print("<img src=\"/images/but_add.gif\" onclick=\"addSectionCounter('" + string + "')\" title='" + getLocString("common.hints.addSection") + "' style='position:relative;top:4px'></div>");
     }
 %>
@@ -119,8 +132,21 @@ function sectionValue(sectionName, fullName)
             + "<div class=collapsing_tree_closed  id=\"sectionHeader_" + fullName + "_counters\""
             + " onclick=\"collasping_tree_showhide_section('" + fullName + "_counters')\"><%=getLocString("snmp.counters")%></div>"
             + "<table cellspacing=0 cellpadding=0 id=\"sectionValue_" + fullName + "_counters\"><col width='56px'/><tr><th/><td>"
-            + "<div><input class=txt id=\"newSectionCounterInput_" + fullName + "_counters\""
-            + " name=\"newSectionCounterInput_" + fullName + "_counters\">"
+            + "<select class=select id=\"newSectionCounterInput_" + fullName + "_counters\" name=\"newSectionCounterInput_" + fullName + "_counters\">"
+            + "<option value=\"0x00d\" SELECTED>0x00d</option>"
+            + "<option value=\"0x014\">0x014</option>"
+            + "<option value=\"0x058\">0x058</option>"
+            + "<option value=\"accepted\">accepted</option>"
+            + "<option value=\"delivered\">delivered</option>"
+            + "<option value=\"failed\">failed</option>"
+            + "<option value=\"other\">other</option>"
+            + "<option value=\"rejected\">rejected</option>"
+            + "<option value=\"retried\">retried</option>"
+            + "<option value=\"SDP\">SDP</option>"
+            + "<option value=\"temperror\">temperror</option>"
+            + "</select>"
+//            + "<div><input class=txt id=\"newSectionCounterInput_" + fullName + "_counters\""
+//            + " name=\"newSectionCounterInput_" + fullName + "_counters\">"
             + "<img src=\"/images/but_add.gif\" onclick=\"addSectionCounter('" + fullName + "_counters')\" title='<%=getLocString("common.hints.addSection")%>'>"
             + "</div></td></tr></table>"
             + "</td></tr></table>"

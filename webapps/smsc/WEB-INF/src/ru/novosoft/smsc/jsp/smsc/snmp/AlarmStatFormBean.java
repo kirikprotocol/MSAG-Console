@@ -2,6 +2,10 @@ package ru.novosoft.smsc.jsp.smsc.snmp;
 
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
+import ru.novosoft.smsc.jsp.smsc.snmp.tables.*;
+import ru.novosoft.smsc.jsp.smsc.snmp.tables.fields.StringCell;
+import ru.novosoft.smsc.jsp.smsc.snmp.tables.fields.DateCell;
+import ru.novosoft.smsc.jsp.smsc.snmp.tables.fields.IntCell;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.config.Config;
 
@@ -16,54 +20,79 @@ public class AlarmStatFormBean extends IndexBean {
   private final static String DATE_FILE_FORMAT = "yyyyMMdd";
   private final static String ROW_SUBMIT_TIME_FORMAT = "dd.MM.yyyy HH:mm:ss";
 
-  private Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+  public static final String ALL_STATS = "all_stats";
+  public static final String OPENED_STATS = "opened_stats";
+  public static final String CLOSED_STATS = "closed_stats";
+
+//  private Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
   private Calendar localCalendar = Calendar.getInstance(TimeZone.getDefault());
   private SimpleDateFormat dateFileFormat = new SimpleDateFormat(DATE_FILE_FORMAT);
   private SimpleDateFormat rowSubmitTimeFormat = new SimpleDateFormat(ROW_SUBMIT_TIME_FORMAT);
 
   private static final String ALARM_STAT_CSV_FILE_PARAM = "snmp.csvFileDir";
 
-  private AlarmStatSet rows = new AlarmStatSet();
+  private final StatsTable allStatsTable = new StatsTable(AllStatsTableScheme.SCHEME);
+  private final StatsTable openedStatsTable = new StatsTable(OpenedStatsTableScheme.SCHEME);
+  private final StatsTable closedStatsTable = new StatsTable(ClosedStatsTableScheme.SCHEME);
+
+  private StatsTable tableToShow = allStatsTable;
+  private boolean isTableFilterModified = false;
+  private boolean hasResults = false;
+
   private Date date = Functions.truncateTime(new Date());
 
   private String mbQuery = null;
   private String mbClear = null;
-
-  public AlarmStatRow getRow(int index) {
-    return rows == null ? null : rows.getRow(index);
-  }
+  private String tableFilter = ALL_STATS;
 
   public int process(HttpServletRequest request) {
     int result = super.process(request);
     if (result != RESULT_OK) return result;
 
     if (pageSize == 0) pageSize = 20;
-    if (sort == null || sort.length() == 0)
-      sort = "submit_time";
 
-    Config webConfig = appContext.getConfig();
+    if (sort != null) {
+      if (sort.startsWith("-"))
+        tableToShow.orderBy(sort.substring(1), false);
+      else
+        tableToShow.orderBy(sort, true);
+    }
 
     if (mbQuery != null)
-      result = processQuery(webConfig);
+      result = processQuery(appContext.getConfig());
     else if (mbClear != null)
       result = clearQuery();
+
+    if (tableFilter != null)
+      changeTableFilter();
 
     mbQuery = null;
     mbClear = null;
 
-    rows.sort(sort);
-
     return result;
   }
 
-  public int processQuery(Config config) {
-    rows.clean();
-    startPosition = 0;
-    totalSize = 0;
+  private int changeTableFilter() {
+    if (tableFilter.equals(ALL_STATS))
+      tableToShow = allStatsTable;
+    else if (tableFilter.equals(OPENED_STATS))
+      tableToShow = openedStatsTable;
+    else if (tableFilter.equals(CLOSED_STATS))
+      tableToShow = closedStatsTable;
+
+    if (isTableFilterModified) {
+      startPosition = 0;
+      isTableFilterModified = false;
+    }
+
+    totalSize = tableToShow.getSize();
+    return RESULT_OK;
+  }
+
+  private int processQuery(Config config) {
+    clearQuery();
     try {
       String fileDirName = config.getString(ALARM_STAT_CSV_FILE_PARAM);
-//            calendar.setTime(date);
-//            Date utcTime = localCalendar.getTime();
       rowSubmitTimeFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
       String dateFilePrefix = dateFileFormat.format(date);
       localCalendar.setTime(date);
@@ -74,15 +103,14 @@ public class AlarmStatFormBean extends IndexBean {
       File[] dirFiles = dirNameFile.listFiles();
       if (dirFiles == null || dirFiles.length == 0) return RESULT_OK;
 
-      for (int j = 0; j < dirFiles.length; j++) {
-        String fileName = dirFiles[j].getName();
-        if (fileName == null || fileName.length() <= 0 ||
-                !(fileName.toLowerCase().startsWith(dateFilePrefix) || fileName.toLowerCase().startsWith(dateFilePrefix_prev))) continue;
+      for (int j = 0; j < dirFiles.length; j++)
+        processFile(new File(dirNameFile, dirFiles[j].getName()));
 
-        rows.addAll(processFile(new File(dirNameFile, fileName)));
-      }
+      processClosedStatsTable();
+
       startPosition = 0;
-      totalSize = (rows == null) ? 0 : rows.getRowsCount();
+      totalSize = tableToShow.getSize();
+      hasResults = true;
       return RESULT_OK;
     }
     catch (ParseException e) {
@@ -111,11 +139,10 @@ public class AlarmStatFormBean extends IndexBean {
     }
   }
 
-  private Collection processFile(File src) throws FileNotFoundException, IOException, ParseException {
+  private void processFile(File src) throws FileNotFoundException, IOException, ParseException {
     logger.debug("Processing file "+src);
     localCalendar.setTime( date );
-    Calendar cal = Calendar.getInstance(TimeZone.getDefault());
-    Collection result = new ArrayList();
+
     BufferedReader br = new BufferedReader(new FileReader(src));
     br.readLine(); // строка заголовка
     StreamTokenizer st = new StreamTokenizer(br);
@@ -127,34 +154,150 @@ public class AlarmStatFormBean extends IndexBean {
     st.wordChars(':', ':');
     st.quoteChar('"');
     st.nextToken();
+
+    Date submitTime;
+    String alarmId;
+    String alarmCategory;
+    int severity;
+    String text;
+
     while (st.ttype != StreamTokenizer.TT_EOF) {
-      AlarmStatRow row = new AlarmStatRow();
-      row.setSubmit_time(rowSubmitTimeFormat.parse(st.sval));
+      // Read string
+      submitTime = rowSubmitTimeFormat.parse(st.sval);
       st.nextToken();
-      row.setAlarm_id(st.sval);
+      alarmId = st.sval;
       st.nextToken();
-      row.setAlarm_category(st.sval);
+      alarmCategory = st.sval;
       st.nextToken();
       try {
-        row.setSeverity(Integer.valueOf(st.sval).intValue());
+        severity = Integer.valueOf(st.sval).intValue();
       } catch (NumberFormatException e) {
-        row.setSeverity(0);
+        severity = 0;
       }
       st.nextToken();
-      row.setText(st.sval);
-      cal.setTime(row.getSubmit_time());
-      if( cal.get(Calendar.YEAR) == localCalendar.get(Calendar.YEAR)
-       && cal.get(Calendar.MONTH) == localCalendar.get(Calendar.MONTH)
-       && cal.get(Calendar.DAY_OF_MONTH) == localCalendar.get(Calendar.DAY_OF_MONTH))
-        result.add(row);
+      text = st.sval;
+
+      // Fill tables
+      addStatToAllStatsTable(submitTime, alarmId, alarmCategory, severity, text); // All stats table
+      addStatToOpenedStatsTable(submitTime, alarmId, alarmCategory, severity, text); // Opened stats table
+      addStatToClosedStatsTable(submitTime, alarmId, alarmCategory, severity, text); // Closed stats table
+
       st.nextToken();
       if (st.ttype == StreamTokenizer.TT_EOL) st.nextToken();
     }
-    return result;
   }
 
-  public int clearQuery() {
-    rows.clean();
+  private void addStatToAllStatsTable(final Date submitTime, final String alarmId, final String alarmCategory,
+                                      final int severity, final String text) {
+    final Calendar cal = Calendar.getInstance(TimeZone.getDefault());
+    cal.setTime(submitTime);
+    if( cal.get(Calendar.YEAR) == localCalendar.get(Calendar.YEAR)
+      && cal.get(Calendar.MONTH) == localCalendar.get(Calendar.MONTH)
+      && cal.get(Calendar.DAY_OF_MONTH) == localCalendar.get(Calendar.DAY_OF_MONTH)) {
+
+      final StatsTableRow row = allStatsTable.createRow();
+      row.addFieldValue(AllStatsTableScheme.SCHEME.SUBMIT_TIME, new DateCell(submitTime));
+      row.addFieldValue(AllStatsTableScheme.SCHEME.ALARM_ID, new StringCell(alarmId));
+      row.addFieldValue(AllStatsTableScheme.SCHEME.ALARM_CATEGORY, new StringCell(alarmCategory));
+      row.addFieldValue(AllStatsTableScheme.SCHEME.SEVERITY, new IntCell(severity));
+      row.addFieldValue(AllStatsTableScheme.SCHEME.TEXT, new StringCell(text));
+    }
+  }
+
+  private void addStatToOpenedStatsTable(final Date submitTime, final String alarmId, final String alarmCategory,
+                                         final int severity, final String text) {
+    if(isBefore(submitTime, localCalendar.getTime())) {
+      if (severity != 1) { // add new row
+        final StatsTableRow row = openedStatsTable.createRow();
+        row.addFieldValue(OpenedStatsTableScheme.SCHEME.SUBMIT_TIME, new DateCell(submitTime));
+        row.addFieldValue(OpenedStatsTableScheme.SCHEME.ALARM_ID, new StringCell(alarmId));
+        row.addFieldValue(OpenedStatsTableScheme.SCHEME.ALARM_CATEGORY, new StringCell(alarmCategory));
+        row.addFieldValue(OpenedStatsTableScheme.SCHEME.SEVERITY, new IntCell(severity));
+        row.addFieldValue(OpenedStatsTableScheme.SCHEME.TEXT, new StringCell(text));
+      } else { // remove row
+        final StatsTableRow row = getOpenStatsTableRow(alarmId, alarmCategory);
+        if (row != null)
+          openedStatsTable.deleteRow(row);
+      }
+    }
+  }
+
+  private StatsTableRow getOpenStatsTableRow(final String alarmId, final String alarmCategory) {
+    for (Iterator iter = openedStatsTable.getRows(); iter.hasNext();) {
+      final StatsTableRow row = (StatsTableRow)iter.next();
+      if (row.getValueAsString(OpenedStatsTableScheme.SCHEME.ALARM_ID).equals(alarmId) &&
+          row.getValueAsString(OpenedStatsTableScheme.SCHEME.ALARM_CATEGORY).equals(alarmCategory))
+        return row;
+    }
+    return null;
+  }
+
+  private void addStatToClosedStatsTable(final Date submitTime, final String alarmId, final String alarmCategory,
+                                         final int severity, final String text) {
+
+    if(isBefore(submitTime, localCalendar.getTime())) {
+      if (severity != 1) { // add new row
+        final StatsTableRow row = closedStatsTable.createRow();
+        row.addFieldValue(ClosedStatsTableScheme.SCHEME.SUBMIT_TIME, new DateCell(submitTime));
+        row.addFieldValue(ClosedStatsTableScheme.SCHEME.ALARM_ID, new StringCell(alarmId));
+        row.addFieldValue(ClosedStatsTableScheme.SCHEME.ALARM_CATEGORY, new StringCell(alarmCategory));
+        row.addFieldValue(ClosedStatsTableScheme.SCHEME.SEVERITY, new IntCell(severity));
+        row.addFieldValue(ClosedStatsTableScheme.SCHEME.TEXT, new StringCell(text));
+        row.addFieldValue(ClosedStatsTableScheme.SCHEME.CLOSE_FLAG, new IntCell(0));
+      } else { // change rows value
+        final StatsTableRow row = getCloseStatsTableRow(alarmId, alarmCategory);
+
+        if (row != null) {
+          row.addFieldValue(ClosedStatsTableScheme.SCHEME.CLOSE_FLAG, new IntCell(1));
+          final StatsTableRow closeRow = closedStatsTable.insertRow(row);
+          closeRow.addFieldValue(ClosedStatsTableScheme.SCHEME.SUBMIT_TIME, new DateCell(submitTime));
+          closeRow.addFieldValue(ClosedStatsTableScheme.SCHEME.ALARM_ID, new StringCell(alarmId));
+          closeRow.addFieldValue(ClosedStatsTableScheme.SCHEME.ALARM_CATEGORY, new StringCell(alarmCategory));
+          closeRow.addFieldValue(ClosedStatsTableScheme.SCHEME.SEVERITY, null);
+          closeRow.addFieldValue(ClosedStatsTableScheme.SCHEME.TEXT, new StringCell(text));
+          closeRow.addFieldValue(ClosedStatsTableScheme.SCHEME.CLOSE_FLAG, new IntCell(1));
+        }
+      }
+    }
+  }
+
+  private StatsTableRow getCloseStatsTableRow(final String alarmId, final String alarmCategory) {
+    for (Iterator iter = closedStatsTable.getRows(); iter.hasNext();) {
+      final StatsTableRow row = (StatsTableRow)iter.next();
+      if (row.getValueAsString(ClosedStatsTableScheme.SCHEME.ALARM_ID).equals(alarmId) &&
+          row.getValueAsString(ClosedStatsTableScheme.SCHEME.ALARM_CATEGORY).equals(alarmCategory))
+        return row;
+    }
+    return null;
+  }
+
+  private void processClosedStatsTable() {
+    StatsTableRow row;
+    final ArrayList rows2Remove = new ArrayList();
+    for (Iterator iter = closedStatsTable.getRows(); iter.hasNext(); ) {
+      row = (StatsTableRow)iter.next();
+      if (row.getValueAsString(ClosedStatsTableScheme.SCHEME.CLOSE_FLAG).equals("0"))
+        rows2Remove.add(row);
+    }
+
+    for (Iterator iter = rows2Remove.iterator(); iter.hasNext();)
+      closedStatsTable.deleteRow((StatsTableRow)iter.next());
+  }
+
+  private boolean isBefore(final Date date1, final Date date2) {
+    final Calendar cal = Calendar.getInstance(TimeZone.getDefault());
+    cal.setTime(date1);
+    final Calendar cal1 = Calendar.getInstance(TimeZone.getDefault());
+    cal1.setTime(date2);
+    cal1.set(Calendar.DAY_OF_YEAR, cal1.get(Calendar.DAY_OF_YEAR) + 1);
+    return cal.getTime().before(cal1.getTime());
+  }
+
+  private int clearQuery() {
+//    rows.clean();
+    allStatsTable.clear();
+    openedStatsTable.clear();
+    closedStatsTable.clear();
     startPosition = 0;
     totalSize = 0;
 
@@ -201,4 +344,22 @@ public class AlarmStatFormBean extends IndexBean {
   public void setMbClear(String mbClear) {
     this.mbClear = mbClear;
   }
+
+  public String getTableFilter() {
+    return tableFilter;
+  }
+
+  public void setTableFilter(String tableFilter) {
+    isTableFilterModified = !tableFilter.equals(this.tableFilter);
+    this.tableFilter = tableFilter;
+  }
+
+  public StatsTable getTableToShow() {
+    return tableToShow;
+  }
+
+  public boolean isHasResults() {
+    return hasResults;
+  }
+
 }
