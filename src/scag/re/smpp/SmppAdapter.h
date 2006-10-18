@@ -122,6 +122,8 @@ namespace scag { namespace re { namespace smpp
         AdapterProperty * Get_Unknown_Property(SMS& data, const std::string& name,int FieldId);
 
         void Set_DC_BIT_Property(SMS& data, int FieldId, bool value);
+        void SetBitMask(SMS& data, int tag, int mask);
+
 
         AdapterProperty * GetStrBitFromMask(SMS& data,const std::string& name,int tag,int mask);
 

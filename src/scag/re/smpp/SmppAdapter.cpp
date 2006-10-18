@@ -804,6 +804,9 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
     else 
         switch (FieldId)
         {
+        case USSD_PSSR_RESP:
+            SetBitMask(data, Tag::SMPP_USSD_SERVICE_OP, 131072); //131072 == 2^17
+            break;
         case Tag::SMPP_SM_LENGTH:
         case Tag::SMPP_USER_RESPONSE_CODE:
         case Tag::SMPP_LANGUAGE_INDICATOR:
@@ -952,6 +955,15 @@ AdapterProperty * SmppCommandAdapter::GetStrBitFromMask(SMS& data,const std::str
 
     AdapterProperty * property = new AdapterProperty(name,this,((num&mask)==mask));
     return property;
+}
+
+void SmppCommandAdapter::SetBitMask(SMS& data, int tag, int mask)
+{
+    if (data.hasIntProperty(tag)) 
+    {
+        int prop = data.getIntProperty(tag);
+        data.setIntProperty(tag, prop&mask);
+    }
 }
 
 AdapterProperty * SmppCommandAdapter::Get_ESM_BIT_Property(SMS& data, const std::string& name,int FieldId)

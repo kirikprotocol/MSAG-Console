@@ -508,6 +508,7 @@ void SmppManager::unregisterChannel(SmppChannel* ch)
     ent.bt=btNone;
   }
   ent.connected = false;
+  if (ent.info.type == etService) ent.info.host = "";
 }
 
 
