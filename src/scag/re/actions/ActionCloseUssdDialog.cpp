@@ -1,36 +1,39 @@
-#include "ActionOperationWait.h"
+#include "ActionCloseUssdDialog.h"
 #include "scag/re/CommandAdapter.h"
 
 
 namespace scag { namespace re { namespace actions {
 
-IParserHandler * ActionOperationWait::StartXMLSubSection(const std::string& name, const SectionParams& params,const ActionFactory& factory)
+IParserHandler * ActionCloseUssdDialog::StartXMLSubSection(const std::string& name, const SectionParams& params,const ActionFactory& factory)
 {
-    throw SCAGException("Action 'operation:wait': cannot have a child object");
+    throw SCAGException("Action 'operation:close_ussd_dialog': cannot have a child object");
 }
 
-bool ActionOperationWait::FinishXMLSubSection(const std::string& name)
+bool ActionCloseUssdDialog::FinishXMLSubSection(const std::string& name)
 {
     return true;
 }
 
-void ActionOperationWait::init(const SectionParams& params,PropertyObject propertyObject)
+void ActionCloseUssdDialog::init(const SectionParams& params,PropertyObject propertyObject)
 {
-    m_ActionName = "operation:wait";
-
+    if (propertyObject.HandlerId != EH_SUBMIT_SM) 
+        throw SCAGException("Action 'operation:close_ussd_dialog' Error. Details: Action can be used only in 'SUBMIT_SM' handler.");
+    
     logger = Logger::getInstance("scag.re");
-    InitParameters(params,propertyObject);
 }
 
-bool ActionOperationWait::run(ActionContext& context)
+bool ActionCloseUssdDialog::run(ActionContext& context)
 {
-    try 
+    Property * propertyUSSD = context.getProperty("#ussd_dialog");
+    Property * propertySetter = context.getProperty("#ussd_pssr_req");
+
+    if ((!propertyUSSD)&&(!propertySetter))
     {
-        RegisterPending(context);
-    } catch (SCAGException& e)
-    {
-        smsc_log_error(logger,"Run Action '%s': Cannot process. Details: %s", m_ActionName.c_str(), e.what());
+        smsc_log_warn(logger, "Action 'operation:close_ussd_dialog' stopped. Details: Cannot read 'ussd_dialog' property.");
+        return true;
     }
+
+    if (propertyUSSD->getBool()) propertySetter->setInt(PSSR_RESPONSE);
 
     return true;
 }
