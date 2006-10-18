@@ -258,7 +258,7 @@ function addSectionCounter(parentSectionName)
 <%
     page_menu_begin(out);
     page_menu_button(session, out, "mbSave", "common.buttons.save", "common.buttons.saveConfig");
-    page_menu_button(session, out, "mbReset", "common.buttons.reset", "common.buttons.reset", "clickCancel()");
+    page_menu_button(session, out, "mbReset", "common.buttons.reset", "common.buttons.reset"/*, "clickCancel()"*/);
     page_menu_space(out);
     page_menu_end(out);
 %>

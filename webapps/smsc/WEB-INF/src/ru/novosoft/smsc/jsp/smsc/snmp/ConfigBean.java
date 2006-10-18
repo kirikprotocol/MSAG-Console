@@ -33,19 +33,10 @@ public class ConfigBean extends PageBean {
 
     public Map defaultCounters = new HashMap();
     public Map objects = new HashMap();
-    private boolean reloadParams = true;
 
     protected int init(List errors) {
         int result = super.init(errors);
         if (result != RESULT_OK) return result;
-
-        try {
-
-        } catch (Exception exc) {
-            exc.printStackTrace();
-            return error(SMSCErrors.error.smsc.contextInitFailed, exc.getMessage());
-        }
-
         return result;
     }
 
@@ -55,8 +46,7 @@ public class ConfigBean extends PageBean {
 
         try {
             config = new File(WebAppFolders.getSmscConfFolder(), "snmp.xml");
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             return error(SMSCErrors.error.snmp.CouldntGetConfig, e);
         }
 
@@ -72,8 +62,6 @@ public class ConfigBean extends PageBean {
             return processApply();
         else if (mbReset != null)
             return processReset();
-
-
 
         return RESULT_OK;
     }
@@ -124,8 +112,7 @@ public class ConfigBean extends PageBean {
         counterInterval = 0;
         try {
             return loadParams();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             logger.error("unable to parse SNMP config", e);
             return error(SMSCErrors.error.smsc.couldntSave);
         }
@@ -209,9 +196,8 @@ public class ConfigBean extends PageBean {
 
     private int processParams(HttpServletRequest request) throws AdminException {
         int result = RESULT_OK;
-        if (params.size() == 0) {
+        if (params.size() == 0)
           loadParams();
-        }
 
         Enumeration parameterNames = request.getParameterNames();
 
