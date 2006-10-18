@@ -21,6 +21,7 @@
 #include "scag/re/actions/ActionConcat.h"
 #include "scag/re/actions/ActionIndexof.h"
 #include "scag/re/actions/ActionBillMoveWait.h"
+#include "scag/re/actions/ActionCloseUssdDialog.h"
 
 
 //#include "scag/SAX2Print.hpp"
@@ -80,6 +81,7 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
     if (name=="http:set-cookie") return new CookieAction(true);
 
     if (name=="operation:bill_move_wait") return new ActionBillMoveWait();
+    if (name=="operation:close_ussd_dialog") return new ActionCloseUssdDialog();
 
     Action * action = 0;
 
