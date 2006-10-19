@@ -147,7 +147,8 @@ public:
         if (newSz > getMaxSize()) {
             extend(newSz);
             dataSz = newSz;
-        }
+        } else if (newSz > dataSz)
+            dataSz = newSz;
         std::copy(data, data + count, dataBuf + use_pos);
     }
 
