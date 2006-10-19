@@ -118,7 +118,7 @@ namespace scag { namespace re { namespace smpp
         AdapterProperty * Get_ESM_BIT_Property(SMS& data, const std::string& name,int FieldId);
         AdapterProperty * Get_RD_BIT_Property(SMS& data, const std::string& name,int FieldId);
         AdapterProperty * Get_DC_BIT_Property(SMS& data, const std::string& name,int FieldId);
-        AdapterProperty * Get_USSD_BIT_Property(SMS& data, const std::string& name,int FieldId);
+        AdapterProperty * Get_USSD_BOOL_Property(SMS& data, const std::string& name,int FieldId);
         AdapterProperty * Get_Unknown_Property(SMS& data, const std::string& name,int FieldId);
 
         void Set_DC_BIT_Property(SMS& data, int FieldId, bool value);

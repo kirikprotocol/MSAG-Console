@@ -805,9 +805,6 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
     else 
         switch (FieldId)
         {
-        case USSD_PSSR_RESP:
-            SetBitMask(data, Tag::SMPP_USSD_SERVICE_OP, 131072); //131072 == 2^17
-            break;
         case Tag::SMPP_SM_LENGTH:
         case Tag::SMPP_USER_RESPONSE_CODE:
         case Tag::SMPP_LANGUAGE_INDICATOR:
@@ -1109,37 +1106,64 @@ AdapterProperty * SmppCommandAdapter::Get_DC_BIT_Property(SMS& data, const std::
     return property;
 }
 
-AdapterProperty * SmppCommandAdapter::Get_USSD_BIT_Property(SMS& data, const std::string& name,int FieldId)
+AdapterProperty * SmppCommandAdapter::Get_USSD_BOOL_Property(SMS& data, const std::string& name,int FieldId)
 {
     AdapterProperty * property = 0;
+
+    if (!data.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) return 0;
+
+    int sop = data.getIntProperty(Tag::SMPP_USSD_SERVICE_OP);
+
+    /*
+    ussd_pssd_ind  0
+    ussd_pssr_ind  1
+    ussd_ussr_req  2
+    ussd_ussn_req  3
+    ussd_pssd_resp 16
+    ussd_pssr_resp 17
+    ussd_ussr_conf 18
+    ussd_ussn_conf 19
+
+
+  static const int8_t PSSD_INDICATION        = 0;
+  static const int8_t PSSR_INDICATION        = 1;
+  static const int8_t USSR_REQUEST           = 2;
+  static const int8_t USSN_REQUEST           = 3;
+  static const int8_t PSSD_RESPONSE          = 16;
+  static const int8_t PSSR_RESPONSE          = 17;
+  static const int8_t USSR_CONFIRM           = 18;
+  static const int8_t USSN_CONFIRM           = 19;
+    
+    */
 
     switch (FieldId) 
     {
     case USSD_PSSD_IND:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_USSD_SERVICE_OP,1);
+        property = new AdapterProperty(name, this, sop == PSSD_INDICATION);
         break;
     case USSD_PSSR_IND:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_USSD_SERVICE_OP,2);
+        property = new AdapterProperty(name, this, sop ==  PSSR_INDICATION);
         break;
     case USSD_USSR_REQ:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_USSD_SERVICE_OP,4);
+        property = new AdapterProperty(name, this, sop ==  USSR_REQUEST);
         break;
     case USSD_USSN_REQ:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_USSD_SERVICE_OP,8); 
+        property = new AdapterProperty(name, this, sop ==  USSN_REQUEST);
         break;
     case USSD_PSSD_RESP:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_USSD_SERVICE_OP,65536); //2^16
+        property = new AdapterProperty(name, this, sop ==  PSSD_RESPONSE);
         break;
     case USSD_PSSR_RESP:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_USSD_SERVICE_OP,131072); //2^17
+        property = new AdapterProperty(name, this, sop ==  PSSR_RESPONSE);
         break;
     case USSD_USSR_CONF:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_USSD_SERVICE_OP,262144); //2^18
+        property = new AdapterProperty(name, this, sop ==  USSR_CONFIRM);
         break;
     case USSD_USSN_CONF:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_USSD_SERVICE_OP,524288); //2^19
+        property = new AdapterProperty(name, this, sop ==  USSN_CONFIRM);
         break;
     }
+
 
     return property;
 }
@@ -1211,7 +1235,7 @@ AdapterProperty * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::str
         property = Get_DC_BIT_Property(data,name,FieldId);
     } else if ((FieldId >= USSD_PSSD_IND)&&(FieldId <= USSD_USSN_CONF)) 
     {
-        property = Get_USSD_BIT_Property(data,name,FieldId);
+        property = Get_USSD_BOOL_Property(data,name,FieldId);
     } else if (FieldId == Tag::SMPP_MESSAGE_PAYLOAD) 
     {
         property = new AdapterProperty(name,this,data.getState());
@@ -1362,7 +1386,7 @@ AdapterProperty * SmppCommandAdapter::getDeliverProperty(SMS& data,const std::st
         property = Get_DC_BIT_Property(data,name,FieldId);
     } else if ((FieldId >= USSD_PSSD_IND)&&(FieldId <= USSD_USSN_CONF)) 
     {
-        property = Get_USSD_BIT_Property(data,name,FieldId);
+        property = Get_USSD_BOOL_Property(data,name,FieldId);
     } else if (((FieldId >= ST_ENROUTE)&&(FieldId <= ST_REJECTED))||(FieldId == Tag::SMPP_MESSAGE_PAYLOAD)) 
     {
         property = new AdapterProperty(name,this,data.getState());
