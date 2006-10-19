@@ -64,7 +64,7 @@ namespace scag { namespace re { namespace smpp
 
             USSD_PSSD_IND           = 136,
             USSD_PSSR_IND           = 137,
-            USSD_PSSR_REQ           = 138,
+            USSD_USSR_REQ           = 138,
             USSD_USSN_REQ           = 139,
             USSD_PSSD_RESP          = 140,
             USSD_PSSR_RESP          = 141,
@@ -183,6 +183,21 @@ namespace scag { namespace re { namespace smpp
         virtual ~SmppCommandAdapter();
         static AccessType CheckAccess(int handlerType,const std::string& name);
         //virtual SMS& getSMS();
+
+        bool hasServiceOp()
+        {
+            return CommandBrige::getSMS(command).hasIntProperty(Tag::SMPP_USSD_SERVICE_OP);
+        }
+
+        int getServiceOp()
+        {
+            return CommandBrige::getSMS(command).getIntProperty(Tag::SMPP_USSD_SERVICE_OP);
+        }
+
+        void setServiceOp(int value)
+        {
+            CommandBrige::getSMS(command).setIntProperty(Tag::SMPP_USSD_SERVICE_OP, value);
+        }
 
     };
 

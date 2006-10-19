@@ -338,7 +338,7 @@ Hash<int> SmppCommandAdapter::InitDataSmFieldNames()
 
     hs["ussd_pssd_ind"]                 = USSD_PSSD_IND;
     hs["ussd_pssr_ind"]                 = USSD_PSSR_IND;
-    hs["ussd_pssr_req"]                 = USSD_PSSR_REQ;
+    hs["ussd_ussr_req"]                 = USSD_USSR_REQ;
     hs["ussd_ussn_req"]                 = USSD_USSN_REQ;
     hs["ussd_pssd_resp"]                = USSD_PSSD_RESP;
     hs["ussd_pssr_resp"]                = USSD_PSSR_RESP;
@@ -460,12 +460,13 @@ Hash<int> SmppCommandAdapter::InitSubmitFieldNames()
 
     hs["ussd_pssd_ind"]                 = USSD_PSSD_IND;
     hs["ussd_pssr_ind"]                 = USSD_PSSR_IND;
-    hs["ussd_pssr_req"]                 = USSD_PSSR_REQ;
+    hs["ussd_ussr_req"]                 = USSD_USSR_REQ;
     hs["ussd_ussn_req"]                 = USSD_USSN_REQ;
     hs["ussd_pssd_resp"]                = USSD_PSSD_RESP;
     hs["ussd_pssr_resp"]                = USSD_PSSR_RESP;
     hs["ussd_ussr_conf"]                = USSD_USSR_CONF;
     hs["ussd_ussn_conf"]                = USSD_USSN_CONF;
+
 
     hs["validity_period"]               = SMS_VALIDITY_PERIOD;
     hs["svc_type"]                      = SMS_SVC_TYPE;
@@ -653,7 +654,7 @@ Hash<int> SmppCommandAdapter::InitDeliverFieldNames()
 
     hs["ussd_pssd_ind"]                 = USSD_PSSD_IND;
     hs["ussd_pssr_ind"]                 = USSD_PSSR_IND;
-    hs["ussd_pssr_req"]                 = USSD_PSSR_REQ;
+    hs["ussd_ussr_req"]                 = USSD_USSR_REQ;
     hs["ussd_ussn_req"]                 = USSD_USSN_REQ;
     hs["ussd_pssd_resp"]                = USSD_PSSD_RESP;
     hs["ussd_pssr_resp"]                = USSD_PSSR_RESP;
@@ -1120,7 +1121,7 @@ AdapterProperty * SmppCommandAdapter::Get_USSD_BIT_Property(SMS& data, const std
     case USSD_PSSR_IND:
         property = GetStrBitFromMask(data,name,Tag::SMPP_USSD_SERVICE_OP,2);
         break;
-    case USSD_PSSR_REQ:
+    case USSD_USSR_REQ:
         property = GetStrBitFromMask(data,name,Tag::SMPP_USSD_SERVICE_OP,4);
         break;
     case USSD_USSN_REQ:
@@ -1136,7 +1137,7 @@ AdapterProperty * SmppCommandAdapter::Get_USSD_BIT_Property(SMS& data, const std
         property = GetStrBitFromMask(data,name,Tag::SMPP_USSD_SERVICE_OP,262144); //2^18
         break;
     case USSD_USSN_CONF:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_USSD_SERVICE_OP,524288); //2^16
+        property = GetStrBitFromMask(data,name,Tag::SMPP_USSD_SERVICE_OP,524288); //2^19
         break;
     }
 
