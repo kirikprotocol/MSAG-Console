@@ -92,6 +92,7 @@ void INManComm::ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INSmsChargeRespo
 
   smsc::inman::interaction::ObjectBuffer buf(16);
   smsc::inman::interaction::SerializerInap::getInstance()->serialize(&op,buf);
+  debug2(log,"Buffer size:%d",buf.getDataSize());
 
   {
     sync::MutexGuard mg(reqMtx);

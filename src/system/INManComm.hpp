@@ -276,7 +276,7 @@ protected:
           if(!queue.Pop(pkt))continue;
         }
         acquireSocket();
-        int nlen=htonl(pkt.len);
+        uint32_t nlen=htonl(pkt.len);
         socket->WriteAll((char*)&nlen,4);
         socket->WriteAll(pkt.buf,pkt.len);
         delete [] pkt.buf;
