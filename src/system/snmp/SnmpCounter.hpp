@@ -141,7 +141,7 @@ protected:
     sync::MutexGuard mg(mon);
     while(!isStopping)
     {
-      int toSleep=time(NULL)%interval;
+      int toSleep=interval-(time(NULL)%interval);
       toSleep*=1000;
       mon.wait(toSleep);
       if(isStopping)break;
@@ -187,7 +187,7 @@ protected:
         rv++;
       }
     }
-    smsc_log_debug(log,"severity=%d for %s(%d):%d",rv,name,cntIdx,cntValue);
+    smsc_log_info(log,"severity=%d for %s(%d):%d",rv,name,cntIdx,cntValue);
     return (SeverityType)rv;
   }
 
