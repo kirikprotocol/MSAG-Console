@@ -1935,16 +1935,22 @@ StateType StateMachine::submit(Tuple& t)
     // Override delivery mode if specified in config and default mode in sms
     //
 
-    if( ri.deliveryMode != smsc::sms::SMSC_DEFAULT_MSG_MODE )
+    if( ri.deliveryMode != smsc::sms::SMSC_DEFAULT_MSG_MODE)
     {
-      int esmcls = sms->getIntProperty( Tag::SMPP_ESM_CLASS );
-      // following if removed at 25.09.2006 by request of customers
-      //if( (esmcls&0x3) == smsc::sms::SMSC_DEFAULT_MSG_MODE )
+      if(sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT))
       {
-        // allow override
-        sms->setIntProperty( Tag::SMPP_ESM_CLASS, (esmcls&~0x03)|(ri.deliveryMode&0x03) );
-        isDatagram=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==1;
-        isTransaction=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2;
+        smsc_log_warn(smsLog,"Attempt to send multipart message in forward mode with route '%s'",ri.routeId.c_str());
+      }else
+      {
+        int esmcls = sms->getIntProperty( Tag::SMPP_ESM_CLASS );
+        // following if removed at 25.09.2006 by request of customers
+        //if( (esmcls&0x3) == smsc::sms::SMSC_DEFAULT_MSG_MODE )
+        {
+          // allow override
+          sms->setIntProperty( Tag::SMPP_ESM_CLASS, (esmcls&~0x03)|(ri.deliveryMode&0x03) );
+          isDatagram=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==1;
+          isTransaction=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2;
+        }
       }
     }
 
@@ -2467,7 +2473,7 @@ StateType StateMachine::submitChargeResp(Tuple& t)
       sms->getDestinationSmeId()
     );
 #ifdef SNMP
-    incSnmpCounterForError(Status::SMENOTCONNECTED,sms->getSourceSmeId());
+    incSnmpCounterForError(Status::SMENOTCONNECTED,sms->getDestinationSmeId());
 #endif
     try{
       //time_t now=time(NULL);
