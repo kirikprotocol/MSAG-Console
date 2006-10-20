@@ -40,7 +40,7 @@ bool ActionCloseUssdDialog::run(ActionContext& context)
         return true;
     }
 
-    //if (serviceOp == USSR_REQUEST) 
+    if (serviceOp == USSR_REQUEST) 
     {
         smppAdapter.setServiceOp(PSSR_RESPONSE);
         smsc_log_debug(logger,"Action 'operation:close_ussd_dialog' closed ussd dialog.");
