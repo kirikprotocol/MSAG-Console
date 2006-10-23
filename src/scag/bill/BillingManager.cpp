@@ -390,6 +390,13 @@ void BillingManagerImpl::Commit(int billId)
     inUseLock.Unlock();
 
 
+    if (status == TRANSACTION_WAIT_ANSWER) 
+        throw SCAGException("Transaction billId=%d timed out.", billId);
+
+    if (status == TRANSACTION_INVALID) 
+        throw SCAGException("Transaction billId=%d invalid.", billId);
+
+
     if (status == TRANSACTION_VALID)
     {
         #ifdef MSAG_INMAN_BILL
@@ -397,14 +404,7 @@ void BillingManagerImpl::Commit(int billId)
         op.Hdr().dlgId = billId;
         sendCommand(op);
         #endif
-    } else
-    {
-        if ((*pBillTransactionPtr)->status == TRANSACTION_WAIT_ANSWER) 
-            throw SCAGException("Transaction billId=%d timed out.", billId);
-
-        if ((*pBillTransactionPtr)->status == TRANSACTION_INVALID) 
-            throw SCAGException("Transaction billId=%d invalid.", billId);
-    }
+    } 
 }
 
 
