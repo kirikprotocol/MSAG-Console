@@ -50,27 +50,26 @@ uint32_t  InmanErrorCode::combineError(InmanErrorType range, uint16_t ercode)
     return (errCode > _ranges[range].limit) ? 0 : errCode;
 }
 
-//constructs InMan combined error code, returns zero on out-of-range args
-uint32_t InmanErrorCode::getCombinedError(void) const
+InmanErrorType  InmanErrorCode::setError(uint32_t err_code)
 {
-    return _errcode;
+    _errcode = err_code;
+    uint16_t sErrc;
+    return splitError(sErrc);
 }
 
 //splits combined error to class and code
-void InmanErrorCode::splitError(InmanErrorType & errType, uint16_t & errCode)
+InmanErrorType InmanErrorCode::splitError(uint16_t & errCode)
 {
     for (int range = 0; range <= MAX_RANGE; range++) {
         if ((_errcode >= _ranges[range].base)
             && (_errcode <= _ranges[range].limit)) {
-            errType = (InmanErrorType)range;
             errCode = _errcode - _ranges[range].base;
-            return;
+            return (InmanErrorType)range;
         }
     }
     //should never be reached
-    errType = errUndefined;
     errCode = 0;
-    return;
+    return errUndefined;
 }
 
 //returns class of error

@@ -35,22 +35,26 @@ typedef enum {
 } InTCAPErrors;
 
 class InmanErrorCode {
+protected:
+    uint32_t   _errcode; //combined error code
+
 public:
     InmanErrorCode(uint32_t ercode);
     InmanErrorCode(InmanErrorType range, uint16_t ercode);
 
     //constructs InMan combined error code, returns zero on out-of-range args
     static uint32_t combineError(InmanErrorType range, uint16_t ercode);
-    uint32_t        getCombinedError(void) const;
-    //splits combined error to class and code
-    void            splitError(InmanErrorType & errType, uint16_t & errCode);
+    uint32_t        setError(InmanErrorType range, uint16_t ercode)
+        { return (_errcode = combineError(range, ercode)); }
+    InmanErrorType  setError(uint32_t err_code);
+    //
+    uint32_t        getCombinedError(void) const { return _errcode; }
+    //splits combined error to class and short code
+    InmanErrorType  splitError(uint16_t & errCode);
     //returns class of error
     InmanErrorType  getErrorType(void) const;
     //returns original error code if error belongs to given InmanErrorType, otherwise returns zero
     uint16_t        getErrorCode(InmanErrorType range) const;
-
-protected:
-    uint32_t   _errcode; //combined error code
 };
 
 } //inman
