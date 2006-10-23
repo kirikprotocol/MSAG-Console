@@ -4,8 +4,7 @@ static char const ident[] = "$Id$";
 #include "inman/inap/dispatcher.hpp"
 #include "service.hpp"
 
-using smsc::inman::interaction::InmanCommand;
-using smsc::inman::interaction::SerializerInap;
+using smsc::inman::interaction::INPSerializer;
 using smsc::inman::inap::TCAPDispatcher;
 
 
@@ -44,7 +43,7 @@ Service::Service(const InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
         pol->getIAProvider(logger);
     }
 
-    server = new Server(&_cfg.sock, SerializerInap::getInstance(), logger);
+    server = new Server(&_cfg.sock, INPSerializer::getInstance(), logger);
     assert(server);
     server->addListener(this);
     smsc_log_debug(logger, "InmanSrv: TCP server inited");

@@ -26,14 +26,23 @@ using smsc::inman::common::Console;
 
 #include "inman/interaction/connect.hpp"
 using smsc::inman::interaction::Connect;
+using smsc::inman::interaction::ObjectBuffer;
+using smsc::inman::interaction::SerializerException;
 
-#include "inman/interaction/messages.hpp"
-using smsc::inman::interaction::SerializerInap;
+//#include "inman/interaction/messages.hpp"
+#include "inman/interaction/MsgBilling.hpp"
+using smsc::inman::interaction::INPPacketAC;
+using smsc::inman::interaction::INPSerializer;
+using smsc::inman::interaction::INPCSBilling;
 using smsc::inman::interaction::ChargeSms;
 using smsc::inman::interaction::ChargeSmsResult;
 using smsc::inman::interaction::DeliverySmsResult;
-using smsc::inman::interaction::SmscHandler;
-using smsc::inman::interaction::SmscCommand;
+using smsc::inman::interaction::SMSCBillingHandlerITF;
+using smsc::inman::interaction::CsBillingHdr_dlg;
+using smsc::inman::interaction::SPckChargeSms;
+using smsc::inman::interaction::SPckChargeSmsResult;
+using smsc::inman::interaction::SPckDeliverySmsResult;
+
 
 using smsc::inman::_InmanErrorSource;
 
@@ -392,7 +401,7 @@ protected:
 #define SELECT_TIMEOUT_STEP 400 //millisecs
 
 
-class Facade : public Thread, public SmscHandler {
+class Facade : public Thread, public SMSCBillingHandlerITF {
 protected:
     typedef std::map<unsigned int, INDialog*> INDialogsMap;
 
@@ -429,7 +438,7 @@ public:
             smsc_log_error(logger, msg.c_str());
             throw std::runtime_error(msg.c_str());
         }
-        pipe = new Connect(socket, SerializerInap::getInstance(),
+        pipe = new Connect(socket, INPSerializer::getInstance(),
                                         Connect::frmLengthPrefixed, logger);
         _abDB = AbonentsDB::Init(PRE_ABONENTS_NUM, _abonents);
         _adrDB = TNPIAddressDB::Init(PRE_ADDRESSES_NUM, _dstAdr);
@@ -516,12 +525,11 @@ public:
     }
 
     // -- INMan commands composition and sending methods -- //
-    void composeChargeSms(ChargeSms& op, unsigned int dlgId)
+    void composeChargeSms(ChargeSms& op)
     {
         static uint32_t _msg_ref = 0x0100;
         static uint64_t _msg_id = 0x010203040000;
 
-        op.setDialogId(dlgId);
         const TonNpiAddress * dAdr = _adrDB->get(_dlgCfg.dstId);
         op.setDestinationSubscriberNumber(dAdr->toString());
 
@@ -551,9 +559,8 @@ public:
 #endif /* SMSEXTRA */
     }
 
-    void composeDeliverySmsResult(DeliverySmsResult& op, unsigned int dlgId)
+    void composeDeliverySmsResult(DeliverySmsResult& op)
     {
-        op.setDialogId(dlgId);
         //fill fields for CDR creation
         op.setDestIMSI("250013901464251");
         op.setDestMSC(".1.1.79139860001");
@@ -565,12 +572,13 @@ public:
     void sendChargeSms(unsigned int dlgId)
     {
         //compose ChargeSms
-        ChargeSms op;
-        composeChargeSms(op, dlgId);
+        SPckChargeSms   pck;
+        pck.Hdr().dlgId = dlgId;
+        composeChargeSms(pck.Cmd());
 
-        std::string msg = format("Sending ChargeSms [dlgId: %u] ..\n", op.getDialogId());
+        std::string msg = format("Sending ChargeSms [dlgId: %u] ..\n", dlgId);
         prompt(msg);
-        pipe->sendObj(&op);
+        pipe->sendPck(&pck);
 
         INDialog * dlg = findDialog(dlgId);
         if (dlg) {
@@ -585,8 +593,10 @@ public:
 
     void sendDeliverySmsResult(unsigned int dlgId, uint32_t deliveryStatus)
     {
-        DeliverySmsResult   op(deliveryStatus);
-        composeDeliverySmsResult(op, dlgId);
+        SPckDeliverySmsResult   pck;
+        pck.Hdr().dlgId = dlgId;
+        pck.Cmd().setResultValue(deliveryStatus);
+        composeDeliverySmsResult(pck.Cmd());
 
         std::string msg = format("Sending DeliverySmsResult: DELIVERY_%s [dlgId: %u]\n",
                                  !deliveryStatus ? "SUCCEEDED" : "FAILED", dlgId);
@@ -603,18 +613,19 @@ public:
             msg =  format("WRN: Dialog[%u] is inknown!\n", dlgId);
             prompt(msg);
         }
-        pipe->sendObj(&op);
+        pipe->sendPck(&pck);
     }
 
     //Customized variant of Connect::sendObj(): it sends specified
     //number of bytes from ObjectBuffer
-    int  sendObjPart(SerializableObject &obj, uint32_t num_bytes)
+//    int  sendPckPart(SerializableObject &obj, uint32_t num_bytes)
+    int  sendPckPart(INPPacketAC &pck, uint32_t num_bytes)
     {
         int             offs = 4;
         ObjectBuffer    buffer(1024);
 
         buffer.setPos(offs);
-        SerializerInap::getInstance()->serialize(&obj, buffer);
+        pck.serialize(buffer);
         //always Connect::frmLengthPrefixed format
         {
             uint32_t len = htonl(num_bytes);
@@ -625,35 +636,33 @@ public:
     }
 
     // -- INMan commands listening and handling methods -- //
-    void onChargeSmsResult(ChargeSmsResult* result)
+    void onChargeSmsResult(ChargeSmsResult* result, CsBillingHdr_dlg * hdr)
     {
-        unsigned int did = result->getDialogId();
-        std::string msg = format("Dialog[%u] got ChargeSmsResult: CHARGING_%sPOSSIBLE", did,
-                (result->GetValue() == smsc::inman::interaction::CHARGING_POSSIBLE ) ?
+        std::string msg = format("Dialog[%u] got ChargeSmsResult: CHARGING_%sPOSSIBLE", hdr->dlgId,
+                (result->GetValue() == ChargeSmsResult::CHARGING_POSSIBLE ) ?
                  "" : "NOT_");
         if (result->getCombinedError()) {
-            InmanErrorType  errType;
             uint16_t        errCode;
-            result->splitError(errType, errCode);
+            InmanErrorType  errType = result->splitError(errCode);
             msg += format(", error %s: %u", _InmanErrorSource[errType], errCode);
         }
         msg += "\n";
         prompt(msg);
 
-        INDialog * dlg = findDialog(did);
+        INDialog * dlg = findDialog(hdr->dlgId);
         if (dlg) {
             if (dlg->getState() == INDialog::dCharged) {
                 dlg->setState(INDialog::dApproved);
                 if (dlg->isBatchMode()) {
-                    if (result->GetValue() == smsc::inman::interaction::CHARGING_POSSIBLE)
-                        sendDeliverySmsResult(did, dlg->getDlvrResult());
+                    if (result->GetValue() == ChargeSmsResult::CHARGING_POSSIBLE)
+                        sendDeliverySmsResult(hdr->dlgId, dlg->getDlvrResult());
                 }
             } else {
-                msg =  format("ERR: Dialog[%u] was not Charged!", did);
+                msg =  format("ERR: Dialog[%u] was not Charged!", hdr->dlgId);
                 prompt(msg);
             }
         } else {
-            msg =  format("ERR: Dialog[%u] is inknown!", did);
+            msg =  format("ERR: Dialog[%u] is inknown!", hdr->dlgId);
             prompt(msg);
         }
     }
@@ -688,8 +697,8 @@ public:
                 _running = false;
             } else if (n > 0) {
                 if (FD_ISSET(sockId, &readSet)) {
-                    SmscCommand* cmd = static_cast<SmscCommand*>(pipe->receiveObj());
-                    if (!cmd) {
+                    INPPacketAC* pck = static_cast<INPPacketAC*>(pipe->recvPck());
+                    if (!pck) {
                         CustomException * exc = pipe->hasException();
                         if (exc) {
                             smsc_log_error(logger, "TCPLst: %s", exc->what());
@@ -702,23 +711,33 @@ public:
                             socket->Close();
                         }
                     } else {
-                        if (cmd->getObjectId() == smsc::inman::interaction::CHARGE_SMS_RESULT_TAG) {
-                            bool goon = true;
-                            try { cmd->loadDataBuf(); }
-                            catch (SerializerException& exc) {
-                                std::string msg = format("ERR: corrupted cmd %u (dlgId: %u): %s",
-                                                        cmd->getObjectId(), cmd->getDialogId(),
-                                                        exc.what());
-                                fprintf(stdout, msg.c_str());
-                                smsc_log_error(logger, msg.c_str());
-                                goon = false;
-                            }
-                            if (goon)
-                                cmd->handle(this);
+                        if (!pck->pHdr() || ((pck->pHdr())->Id() != INPCSBilling::HDR_DIALOG)) {
+                            std::string msg;
+                            format(msg, "ERR: unknown cmd header: %u", (pck->pHdr())->Id());
+                            fprintf(stdout, msg.c_str());
+                            smsc_log_error(logger, msg.c_str());
                         } else {
-                            std::string msg = format("TCPLst: unknown command recieved: %u\n",
-                                                    cmd->getObjectId());
-                            prompt(msg);
+                            if ((pck->pCmd())->Id() == INPCSBilling::CHARGE_SMS_RESULT_TAG) {
+                                ChargeSmsResult * cmd = static_cast<ChargeSmsResult*>(pck->pCmd());
+                                CsBillingHdr_dlg * hdr = static_cast<CsBillingHdr_dlg*>(pck->pHdr());
+
+                                bool goon = true;
+                                try { cmd->loadDataBuf(); }
+                                catch (SerializerException& exc) {
+                                    std::string msg;
+                                    format(msg, "ERR: corrupted cmd %u (dlgId: %u): %s",
+                                            cmd->Id(), hdr->Id(), exc.what());
+                                    fprintf(stdout, msg.c_str());
+                                    smsc_log_error(logger, msg.c_str());
+                                    goon = false;
+                                }
+                                if (goon)
+                                    onChargeSmsResult(cmd, hdr);
+                            } else {
+                                std::string msg = format("TCPLst: unknown command recieved: %u\n",
+                                                        (pck->pCmd())->Id());
+                                prompt(msg);
+                            }
                         }
                     }
                 }
@@ -880,9 +899,10 @@ void cmd_chargeExc(Console&, const std::vector<std::string> &args)
         else
             dlgId = _pFacade->getNextDialogId();
 
-        ChargeSms op;
-        _pFacade->composeChargeSms(op, dlgId);
-        _pFacade->sendObjPart(op, size);
+        SPckChargeSms   pck;
+        pck.Hdr().dlgId = dlgId;
+        _pFacade->composeChargeSms(pck.Cmd());
+        _pFacade->sendPckPart(pck, size);
         fprintf(stdout, "Sent %u bytes of ChargeSMS (dlgId: %u)\n", size, dlgId);
     } else
         throw ConnectionClosedException();
@@ -903,9 +923,11 @@ void cmd_dlvrExc(Console&, const std::vector<std::string> &args)
         else
             dlgId = _pFacade->getNextDialogId();
 
-        DeliverySmsResult   op(1016);
-        _pFacade->composeDeliverySmsResult(op, dlgId);
-        _pFacade->sendObjPart(op, size);
+        SPckDeliverySmsResult   pck;
+        pck.Hdr().dlgId = dlgId;
+        pck.Cmd().setResultValue(1016);
+        _pFacade->composeDeliverySmsResult(pck.Cmd());
+        _pFacade->sendPckPart(pck, size);
         fprintf(stdout, "Sent %u bytes of DeliverySmsResult (dlgId: %u)\n", size, dlgId);
     } else
         throw ConnectionClosedException();

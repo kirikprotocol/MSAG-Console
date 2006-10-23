@@ -43,16 +43,21 @@ using smsc::inman::inap::CapSMSDlg;
 using smsc::inman::inap::Dialog;
 using smsc::inman::inap::CapSMS_SSFhandlerITF;
 
-#include "inman/interaction/messages.hpp"
 #include "inman/interaction/connect.hpp"
 using smsc::inman::interaction::Connect;
-using smsc::inman::interaction::ConnectListener;
-using smsc::inman::interaction::InmanCommand;
-using smsc::inman::interaction::InmanHandler;
+using smsc::inman::interaction::ConnectListenerITF;
+
+//#include "inman/interaction/messages.hpp"
+#include "inman/interaction/MsgBilling.hpp"
+using smsc::inman::interaction::INPPacketAC;
+
+using smsc::inman::interaction::INPBillingHandlerITF;
+using smsc::inman::interaction::CsBillingHdr_dlg;
 using smsc::inman::interaction::SMCAPSpecificInfo;
 using smsc::inman::interaction::ChargeSms;
+using smsc::inman::interaction::ChargeSmsResult;
 using smsc::inman::interaction::DeliverySmsResult;
-using smsc::inman::interaction::ChargeSmsResult_t;
+
 
 
 namespace smsc    {
@@ -96,7 +101,7 @@ struct BillingCFG {
 class Billing;
 //Manages SMSC Requests on given Connect in parallel/asynchronous mode
 //(for each request initiates new Billing).
-class BillingConnect: public ConnectListener {
+class BillingConnect: public ConnectListenerITF {
 public: 
     BillingConnect(BillingCFG * cfg, SSNSession * ssn_sess,
                    Connect* conn, Logger * uselog = NULL);
@@ -107,14 +112,14 @@ public:
     const BillingCFG & getConfig(void) const { return _cfg;}
 
     //sends command, returns true on success
-    bool sendCmd(SerializableObject* cmd);
+    bool sendCmd(INPPacketAC* cmd);
     //releases completed Billing, writting CDR if required
     void billingDone(Billing* bill);
     //
     CustomException * getConnectError(void) const { return _conn->hasException(); }
 
-    //ConnectListener interface
-    void onCommandReceived(Connect* conn, SerializableObject* cmd);
+    //ConnectListenerITF interface
+    void onCommandReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd);
     //Stops all Billings due to fatal socket error
     void onConnectError(Connect* conn, bool fatal/* = false*/);
 
@@ -135,7 +140,7 @@ protected:
     TimeWatcher* _tmWatcher;
 };
 
-class Billing : public CapSMS_SSFhandlerITF, public InmanHandler,
+class Billing : public CapSMS_SSFhandlerITF, public INPBillingHandlerITF,
                 public IAPQueryListenerITF, public TimerListenerITF {
 public:
     typedef enum {
@@ -159,11 +164,11 @@ public:
     Billing(BillingConnect* bconn, unsigned int b_id, Logger * uselog = NULL);
     virtual ~Billing();
 
-    unsigned int getId(void) const { return _bId; }
+    uint32_t     getId(void) const { return _bId; }
     BillingState getState(void) const { return state; }
 
     
-    void     handleCommand(InmanCommand* cmd);
+    void     handleCommand(INPPacketAC* cmd);
     //aborts billing due to fatal error
     void     Abort(const char * reason = NULL);
     //
@@ -175,9 +180,9 @@ public:
     //    
     const CDRRecord & getCDRRecord(void) const { return cdr; }
 
-    //InmanHandler interface methods:
-    bool onChargeSms(ChargeSms*);
-    void onDeliverySmsResult(DeliverySmsResult*);
+    //INPBillingHandlerITF interface methods:
+    bool onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr);
+    void onDeliverySmsResult(DeliverySmsResult* dlvr_res, CsBillingHdr_dlg *hdr);
 
     //CapSMS_SSFhandlerITF interface methods:
     void onDPSMSResult(unsigned char rp_cause = 0);
@@ -200,14 +205,14 @@ protected:
     bool startCAPDialog(INScfCFG * use_scf);
     void StartTimer(unsigned short timeout);
     void StopTimer(BillingState bilState);
-    void chargeResult(ChargeSmsResult_t chg_res, uint32_t inmanErr = 0);
+    void chargeResult(ChargeSmsResult::ChargeSmsResult_t chg_res, uint32_t inmanErr = 0);
     bool ConfigureSCFandCharge(AbonentBillType ab_type, const MAPSCFinfo * p_scf = NULL);
     bool matchBillMode(void) const;
 
     Mutex           bilMutex;
     BillingCFG      _cfg;
     Logger*         logger;
-    unsigned int    _bId;       //unique billing dialogue id
+    uint32_t        _bId;       //unique billing dialogue id
     BillingConnect* _bconn;     //parent BillingConnect
                                 //prefix for logging info
     char            _logId[sizeof("Billing[%u:%u]") + sizeof(unsigned int)*3 + 1];

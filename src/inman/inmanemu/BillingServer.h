@@ -1,11 +1,13 @@
+#ident "$Id$"
 #ifndef _INMANEMU_BILL_BILLING_SERVER_
 #define _INMANEMU_BILL_BILLING_SERVER_
 
 #include <logger/Logger.h>
 #include "BillProcessor.h"
 //#include <inman/storage/CDRStorage.hpp>
-#include "inman/interaction/messages.hpp"
 #include "core/network/Socket.hpp"
+//#include "inman/interaction/messages.hpp"
+#include "inman/interaction/MsgBilling.hpp"
 
 namespace inmanemu { namespace server {
 
@@ -34,11 +36,11 @@ class BillingServer
         return !needToStop;
     }
 
-    SerializableObject * ReadCommand();
-    ChargeSmsResult * CreateRespOnCharge(SerializableObject * obj);
-    void SendResp(SerializableObject * resp);
+    INPPacketAC * ReadCommand(); //throws
+    SPckChargeSmsResult * CreateRespOnCharge(SPckChargeSms * pck);
+    void SendResp(SPckChargeSmsResult * pck);
     bool ClientConnected();
-    void ProcessResultCommand(SerializableObject * resp);
+    void ProcessResultCommand(SPckDeliverySmsResult * pck);
 
 
 public:

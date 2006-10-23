@@ -79,7 +79,7 @@ void BillingServer::Stop()
 }
 
 
-SerializableObject * BillingServer::ReadCommand()
+INPPacketAC * BillingServer::ReadCommand()
 {
     int len;
 
@@ -101,31 +101,33 @@ SerializableObject * BillingServer::ReadCommand()
     }
     buff.setDataSize(len);
 
-    std::string dstr;
+    //std::string dstr;
     //dump(dstr, len, (unsigned char*)(buff), false);
-
     //smsc_log_debug(logger,"received:%s",dstr.c_str());
 
-    SerializableObject* obj=SerializerInap::getInstance()->deserialize(buff);
-    obj->load(buff);
-
-    smsc_log_debug(logger, "received obj dialogId=%d\n",obj->getDialogId());
-    return obj;
+    std::auto_ptr<INPPacketAC> pck(INPSerializer::getInstance()->deserialize(buff)); //throws
+    if ((pck->pHdr())->Id() != INPCSBilling::HDR_DIALOG) {
+        smsc_log_error(logger, "received cmd %u: unknown header: %u",
+                       (pck->pCmd())->Id(), (pck->pHdr())->Id());
+        return NULL;
+    }
+    CsBillingHdr_dlg * srvHdr = static_cast<CsBillingHdr_dlg*>(pck->pHdr());
+    smsc_log_debug(logger, "received cmd %u, dialogId = %u\n", (pck->pCmd())->Id(),
+                   srvHdr->dlgId);
+    return pck.release();
 }
 
 
-ChargeSmsResult * BillingServer::CreateRespOnCharge(SerializableObject * obj)
+SPckChargeSmsResult * BillingServer::CreateRespOnCharge(SPckChargeSms* pck)
 {
-    smsc::inman::interaction::ChargeSms * op = dynamic_cast<smsc::inman::interaction::ChargeSms *>(obj);
-
-    if (!op) 
+    if (!pck)
     {
-        smsc_log_debug(logger, "command invalid\n");
+        smsc_log_error(logger, "CreateRespOnCharge(): command invalid\n");
         return 0;
     }
 
     CDRRecord cdr;
-    op->export2CDR(cdr);
+    pck->Cmd().export2CDR(cdr);
     //fileStorage->bill(cdr);
 
 
@@ -143,57 +145,47 @@ ChargeSmsResult * BillingServer::CreateRespOnCharge(SerializableObject * obj)
     scanf("%d",&charge);
   } */
 
-  //ChargeSmsResult* res=charge?new ChargeSmsResult():new ChargeSmsResult(16);
-
     MatrixKey key;
     key.serviceNumber = atoi(cdr._dstAdr.c_str());
 
     Address addr(cdr._srcAdr.c_str());
-    ChargeSmsResult* res;
 
-  if (processor.charge(key, addr, obj->getDialogId()))
-      res = new ChargeSmsResult(0, CHARGING_POSSIBLE);
-  else
-      res = new ChargeSmsResult(0, CHARGING_NOT_POSSIBLE);
+    std::auto_ptr<SPckChargeSmsResult> res(new SPckChargeSmsResult()); //dflt: CHARGING_POSSIBLE
+    res->Hdr().dlgId = pck->Hdr().dlgId;
 
-  res->setDialogId(obj->getDialogId());
-  return res;
+    if (!processor.charge(key, addr, pck->Hdr().dlgId))
+        res->Cmd().SetValue(ChargeSmsResult::CHARGING_NOT_POSSIBLE);
+    return res.release();
 }
 
-void BillingServer::ProcessResultCommand(SerializableObject * obj)
+void BillingServer::ProcessResultCommand(SPckDeliverySmsResult * pck)
 {
-    smsc::inman::interaction::DeliverySmsResult * op = dynamic_cast<smsc::inman::interaction::DeliverySmsResult *>(obj);
-
-    int result = op->GetValue();
-
-    smsc_log_debug(logger, "DeliverySmsResult\n");
-    smsc_log_debug(logger, "BillId = %d\n", op->getDialogId());
+    int result = pck->Cmd().GetValue();
+    smsc_log_debug(logger, "DeliverySmsResult: %u\n", result);
+    smsc_log_debug(logger, "BillId = %u\n", pck->Hdr().dlgId);
 
     CDRRecord cdr;
-    op->export2CDR(cdr);
+    pck->Cmd().export2CDR(cdr);
     //fileStorage->bill(cdr);
 
     if (result) 
     {
         smsc_log_debug(logger, "rollback processing...\n");
-        processor.rollback(op->getDialogId());
+        processor.rollback(pck->Hdr().dlgId);
     }
     else
     {
-        processor.commit(op->getDialogId());
+        processor.commit(pck->Hdr().dlgId);
         smsc_log_debug(logger, "commit processing...\n");
     }
-
     smsc_log_debug(logger, "--------------\n\n");
-
-
 }
 
-void BillingServer::SendResp(SerializableObject * resp)
+void BillingServer::SendResp(SPckChargeSmsResult * pck)
 {
     buff.setPos(0);
     buff.setDataSize(0);
-    SerializerInap::getInstance()->serialize(resp,buff);
+    pck->serialize(buff);
 
     smsc_log_debug(logger, "\nSending responce: %d bytes\n", buff.getDataSize());
     smsc_log_debug(logger, "-------------------\n");
@@ -224,34 +216,28 @@ void BillingServer::Run()
     {
         if (m_ClientConnected) 
         {
-         
-            SerializableObject * obj = 0;
-            SerializableObject * resp = 0;       
-            obj = ReadCommand();
+            std::auto_ptr<INPPacketAC> pck;
+            try { pck.reset(ReadCommand());
+            } catch (std::exception & exc) {
+                smsc_log_error(logger, "Run(): %s", exc.what());
+            }
 
-            if (obj)
+            if (pck.get())
             {
-                switch (obj->getObjectId()) 
+                switch ((pck->pCmd())->Id())
                 {
-                case CHARGE_SMS_TAG:
+                case INPCSBilling::CHARGE_SMS_TAG: {
+                    std::auto_ptr<SPckChargeSmsResult> resp;
+                    resp.reset(CreateRespOnCharge(static_cast<SPckChargeSms*>(pck.get())));
+                    if (resp.get()) 
+                        SendResp(resp.get());
+                } break;
 
-                    resp = 0;
-                    resp = CreateRespOnCharge(obj);
-
-                    if (resp) 
-                    {
-                        SendResp(resp);
-                        delete resp;
-                    }
-
-                    break;
-                case DELIVERY_SMS_RESULT_TAG:
-                    ProcessResultCommand(obj);
+                case INPCSBilling::DELIVERY_SMS_RESULT_TAG:
+                    ProcessResultCommand(static_cast<SPckDeliverySmsResult*>(pck.get()));
                     break;
                 }
-
-                delete obj;
-            } else 
+            } else
             {
                 //sleep(10);
                 if (isStarted()) ClientConnected();
