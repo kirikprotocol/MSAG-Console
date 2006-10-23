@@ -1,12 +1,13 @@
-//#define MSAG_INMAN_BILL
+/* "$Id$" */
+// #define MSAG_INMAN_BILL
 
 #ifndef _BILLING_MANAGER_WRAPPER_
 #define _BILLING_BANAGER_WRAPPER_
 
 
 #ifdef MSAG_INMAN_BILL
-#include "inman/interaction/messages.hpp"
 #include "inman/interaction/connect.hpp"
+#include "inman/interaction/MsgBilling.hpp"
 #endif
 
 #include "core/network/Socket.hpp"
@@ -24,7 +25,7 @@ using smsc::logger::Logger;
 
 class BillingManagerWrapper 
 #ifdef MSAG_INMAN_BILL
-    : public SmscHandler
+    : public SMSCBillingHandlerITF
 #endif
 {
 
@@ -48,7 +49,7 @@ protected:
 
         #ifdef MSAG_INMAN_BILL
         socket = new Socket();
-        pipe = new Connect(socket, SerializerInap::getInstance(), Connect::frmLengthPrefixed, logger);
+        pipe = new Connect(socket, INPSerializer::getInstance(), Connect::frmLengthPrefixed, logger);
         #endif
     };
     ~BillingManagerWrapper()
@@ -66,11 +67,11 @@ protected:
         m_Port = port;
         #endif
     }
-    virtual void receiveCommand(); 
+    virtual void receiveCommand(); //throws
     #ifdef MSAG_INMAN_BILL
-    virtual void BillingManagerWrapper::sendCommand(SerializableObject& op)
+    virtual void BillingManagerWrapper::sendCommand(INPPacketAC& op)
     {
-        pipe->sendObj(&op);
+        pipe->sendPck(&op);
     }
     #endif
     virtual bool Reconnect();

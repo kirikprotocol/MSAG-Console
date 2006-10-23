@@ -1,4 +1,4 @@
-
+/* "$Id$" */
 #include "BillingManager.h"
 #include <scag/util/singleton/Singleton.h>
 #include <core/synchronization/Mutex.hpp>
@@ -28,7 +28,7 @@ class BillingManagerImpl : public BillingManager, public Thread, public BillingM
         TransactionStatus status;
         TariffRec tariffRec;
         #ifdef MSAG_INMAN_BILL
-        ChargeSms ChargeOperation;
+        SPckChargeSms ChargeOperation;
         #endif
         EventMonitor eventMonitor;
         int billId;
@@ -55,7 +55,10 @@ class BillingManagerImpl : public BillingManager, public Thread, public BillingM
 
     InfrastructureImpl infrastruct;
 
+    #ifdef MSAG_INMAN_BILL
     void fillChargeSms(smsc::inman::interaction::ChargeSms& op, BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec);
+    #endif /* MSAG_INMAN_BILL */
+
     void ProcessSaccEvent(BillingTransactionEvent billingTransactionEvent, BillTransaction * billTransaction);
 
     void modifyBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, SACC_BILLING_INFO_EVENT_t& ev);
@@ -81,7 +84,7 @@ public:
     virtual void Start();
 
     #ifdef MSAG_INMAN_BILL
-    virtual void onChargeSmsResult(ChargeSmsResult* result);
+    virtual void onChargeSmsResult(ChargeSmsResult* result, CsBillingHdr_dlg * hdr);
     #endif
 
     virtual int Open(BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec);
@@ -293,11 +296,10 @@ int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, TariffRec& ta
 
 
     #ifdef MSAG_INMAN_BILL
-    ChargeSms op;
-    fillChargeSms(op, billingInfoStruct, tariffRec);
+    SPckChargeSms pck;
+    fillChargeSms(pck.Cmd(), billingInfoStruct, tariffRec);
+    billTransaction->ChargeOperation = pck;
     billTransaction->status = TRANSACTION_WAIT_ANSWER;
-    billTransaction->ChargeOperation = op;
-
     #else
     billTransaction->status = TRANSACTION_VALID;
     #endif
@@ -308,18 +310,18 @@ int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, TariffRec& ta
 
 
     #ifdef MSAG_INMAN_BILL
-    op.setDialogId(billId);
-    sendCommand(op);
+    pck.Hdr().dlgId = billId;
+    sendCommand(pck);
+
     billTransaction->eventMonitor.wait(1000);
     #endif
 
     ProcessSaccEvent(TRANSACTION_OPEN, billTransaction);
 
     #ifdef MSAG_INMAN_BILL
-    DeliverySmsResult opRes;
-
-    opRes.setDialogId(billId);
-    opRes.setResultValue(1);
+    SPckDeliverySmsResult opRes;
+    opRes.Hdr().dlgId = billId;
+    opRes.Cmd().setResultValue(1);
 
     billTransaction->status = TRANSACTION_WAIT_ANSWER;
     sendCommand(opRes);
@@ -338,7 +340,7 @@ void BillingManagerImpl::Commit(int billId)
     if (!pBillTransactionPtr) throw SCAGException("Cannot find transaction for billId=%d", billId);
 
     #ifdef MSAG_INMAN_BILL
-    (*pBillTransactionPtr)->ChargeOperation.setDialogId(billId);
+    (*pBillTransactionPtr)->ChargeOperation.Hdr().dlgId = billId;
     sendCommand((*pBillTransactionPtr)->ChargeOperation);
     #else
     (*pBillTransactionPtr)->status = TRANSACTION_VALID;
@@ -353,11 +355,8 @@ void BillingManagerImpl::Commit(int billId)
     if ((*pBillTransactionPtr)->status == TRANSACTION_VALID)
     {
         #ifdef MSAG_INMAN_BILL
-        DeliverySmsResult op;
-    
-        op.setDialogId(billId);
-        op.setResultValue(0);
-    
+        SPckDeliverySmsResult op;
+        op.Hdr().dlgId = billId;
         sendCommand(op);
         #endif
     }
@@ -383,10 +382,9 @@ void BillingManagerImpl::Rollback(int billId)
     if ((*pBillTransactionPtr)->status == TRANSACTION_VALID)
     {
         #ifdef MSAG_INMAN_BILL
-        DeliverySmsResult op;
-
-        op.setDialogId(billId);
-        op.setResultValue(2);
+        SPckDeliverySmsResult op;
+        op.Hdr().dlgId = billId;
+        op.Cmd().setResultValue(2); 
         sendCommand(op);
         #endif
     }
@@ -449,13 +447,13 @@ void BillingManagerImpl::makeBillEvent(BillingTransactionEvent billCommand, Bill
 
 
 #ifdef MSAG_INMAN_BILL
-void BillingManagerImpl::onChargeSmsResult(ChargeSmsResult* result)
+void BillingManagerImpl::onChargeSmsResult(ChargeSmsResult* result, CsBillingHdr_dlg * hdr)
 {
     if (!result) return;
 
     MutexGuard guard(inUseLock);
 
-    int billId = result->getDialogId();
+    int billId = hdr->dlgId;
 
     BillTransaction ** pBillTransactionPtr = BillTransactionHash.GetPtr(billId);
 
@@ -465,7 +463,7 @@ void BillingManagerImpl::onChargeSmsResult(ChargeSmsResult* result)
         return;
     }
     
-    if( result->GetValue() == CHARGING_POSSIBLE ) 
+    if( result->GetValue() == ChargeSmsResult::CHARGING_POSSIBLE ) 
         (*pBillTransactionPtr)->status = TRANSACTION_VALID;
     else 
         (*pBillTransactionPtr)->status = TRANSACTION_INVALID;
@@ -530,8 +528,7 @@ void BillingManagerImpl::fillChargeSms(smsc::inman::interaction::ChargeSms& op, 
     } */
 }
 
-
-#endif
+#endif /* MSAG_INMAN_BILL */
 
 }}
 

@@ -1,3 +1,4 @@
+/* "$Id$" */
 #include "BillingManagerWrapper.h"
 
 #include "scag/exc/SCAGExceptions.h"
@@ -73,22 +74,30 @@ void BillingManagerWrapper::receiveCommand()
 
     if( n > 0 )
     {
-        SmscCommand* cmd = static_cast<SmscCommand*>(pipe->receiveObj());
-
-        if (cmd) 
+        std::auto_ptr<SerializablePacketAC>  pck(pipe->recvPck());
+        if (pck.get())
         {
-             if (cmd->getObjectId() == smsc::inman::interaction::CHARGE_SMS_RESULT_TAG) 
+            INPPacketAC * cmd = static_cast<INPPacketAC *>(pck.get());
+            if ((cmd->pHdr())->Id() != INPCSBilling::HDR_DIALOG)
+                throw SCAGException("unsupported Inman packet header: %u", (cmd->pHdr())->Id());
+
+            CsBillingHdr_dlg * hdr = static_cast<CsBillingHdr_dlg*>(cmd->pHdr());
+
+             if ((cmd->pCmd())->Id() == INPCSBilling::CHARGE_SMS_RESULT_TAG)
              {
                  try { 
-                     cmd->loadDataBuf(); 
-                     cmd->handle(this);
-                 } catch (SerializerException& exc) 
+                     (cmd->pCmd())->loadDataBuf();
+                     this->onChargeSmsResult(static_cast<ChargeSmsResult*>(cmd->pCmd()), hdr);
+                 } catch (SerializerException& exc)
                  {
-                     throw SCAGException("Corrupted cmd %u (dlgId: %u): %s",cmd->getObjectId(), cmd->getDialogId(),exc.what());
+                     throw SCAGException("Corrupted cmd %u (dlgId: %u): %s",
+                                         (cmd->pCmd())->Id(), hdr->dlgId, exc.what());
                  }
-             } else throw SCAGException("Unknown command recieved: %u",cmd->getObjectId());
+             } else throw SCAGException("Unknown command recieved: %u", (cmd->pCmd())->Id());
 
-        } 
+        } else if (pipe->hasException()) {
+            throw SCAGException("Connect error: %s", (pipe->hasException())->what());
+        }
      } //else 
         //Reconnect();
     #endif

@@ -1,3 +1,4 @@
+/* "$Id$" */
 #ifndef _BILLING_MANAGER_H_
 #define _BILLING_MANAGER_H_
 
@@ -6,7 +7,6 @@
 #include "scag/config/bill/BillingManagerConfig.h"
 
 #include "infrastruct/Infrastructure.h"
-#include "inman/interaction/messages.hpp"
 
 namespace scag { namespace bill {
 
