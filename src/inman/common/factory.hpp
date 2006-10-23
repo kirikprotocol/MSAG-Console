@@ -8,10 +8,11 @@ namespace smsc {
 namespace inman {
 namespace common {
 
-template <typename KeyType, class ProductType>
-class FactoryT
-{
+template <typename KeyTypeNm, class ProductType>
+class FactoryT {
 public:
+    typedef typename KeyTypeNm KeyType;
+
     struct Producer
     {
         virtual ProductType* create() const = 0;
