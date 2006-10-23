@@ -224,7 +224,7 @@ public:
 			map<time_t, int>::iterator	It=seqNums.begin();
 			
 			time_t curTime = time(0);
-			time_t awakeTime = (It != seqNums.end())?It->first:curTime+60;
+			time_t awakeTime = (It != seqNums.end())?It->first:curTime+600;
 			if(awakeTime > curTime)
 			{
 				uint32_t toSleep = (awakeTime - curTime)*1000;

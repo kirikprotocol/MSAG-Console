@@ -70,7 +70,6 @@ Variant MCISmeComponent::call(const Method& method, const Arguments& args)
             return getRuntime();
         case getSchedItemMethod:
 			{
-				smsc_log_debug(logger, "Received getSchedItem call");
 				Variant	arg = args.Get("Abonent");
 				smsc_log_debug(logger, "Received getSchedItem call - %s", arg.getStringValue());
 				return getSchedItem(arg.getStringValue());

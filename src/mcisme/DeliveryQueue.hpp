@@ -156,7 +156,7 @@ public:
 	time_t Schedule(const AbntAddr& abnt, bool onBusy=false, time_t schedTime=-1, uint16_t lastError=-1)
 	{
 		string strAbnt = abnt.toString();
-		smsc_log_debug(logger, "Schedule %s", strAbnt.c_str());
+//		smsc_log_debug(logger, "Schedule %s", strAbnt.c_str());
 		MutexGuard lock(deliveryQueueMonitor);
 		if(AbntsStatus.Exists(strAbnt.c_str()))
 		{
@@ -193,7 +193,7 @@ public:
 	{
 		bool toHead = false;
 		string strAbnt = abnt.toString();
-		smsc_log_debug(logger, "Reschedule %s", strAbnt.c_str());
+//		smsc_log_debug(logger, "Reschedule %s", strAbnt.c_str());
 		MutexGuard lock(deliveryQueueMonitor);
 		if(!AbntsStatus.Exists(strAbnt.c_str()))
 		{
@@ -271,13 +271,15 @@ public:
 		MutexGuard lock(deliveryQueueMonitor);
 		int pause = GetDeliveryTime()-time(0);
 
-		smsc_log_debug(logger, "pause = %d", pause);
+//		smsc_log_debug(logger, "pause = %d", pause);
 		if(pause > 0)
 		{
-			if(0 == deliveryQueueMonitor.wait(pause*1000))
-                smsc_log_debug(logger, "recieved a notify.");
-			else
-				smsc_log_debug(logger, "timeout has passed.");
+			deliveryQueueMonitor.wait(pause*1000);
+
+			//if(0 == deliveryQueueMonitor.wait(pause*1000))
+   //             smsc_log_debug(logger, "recieved a notify.");
+			//else
+			//	smsc_log_debug(logger, "timeout has passed.");
 		}
 
 		if(!isQueueOpen)

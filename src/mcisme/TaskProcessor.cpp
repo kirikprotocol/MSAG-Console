@@ -494,7 +494,10 @@ int TaskProcessor::Execute()
 			AbonentProfile profile;
 			profileStorage->Get(to, profile);
 //			if (releaseCallsStrategy != MIXED_STRATEGY || event.cause != ABSENT)
-			if (checkEventMask(profile.eventMask, event.cause))
+
+			if(!forceInform && !profile.inform)
+				smsc_log_debug(logger, "Event %s->%s skipped because inform disabled for abonent %s and forceInform is false.", event.from.c_str(), event.to.c_str(), to.toString().c_str());
+			else if (checkEventMask(profile.eventMask, event.cause))
 			{
 				time_t schedTime = pDeliveryQueue->Schedule(to, ((event.cause&0x02)==0x02)); //0x02 - BUSY
 				pStorage->addEvent(to, outEvent, schedTime);
@@ -627,14 +630,16 @@ bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
 	{
 //		printf("Recieve a DATA_SM_RESP (cmdId = %d status = %d seqNum = %d )\n", cmdId, status, seqNum);
 
-		MutexGuard Lock(smsInfoMutex);
+		MutexGuard *Lock = new MutexGuard(smsInfoMutex);
 		if(!smsInfo.Exist(seqNum))
 		{
 			smsc_log_debug(logger, "No info for SMS seqNum = %d\n", seqNum);
+			delete Lock;
 			return false;
 		}
 		sms_info* pInfo = smsInfo.Get(seqNum);
 		smsInfo.Delete(seqNum);
+		delete Lock;
 
 		smsc_log_debug(logger, "Recieve a DATA_SM_RESP for Abonent %s seq_num = %d, status = %d", pInfo->abnt.toString().c_str(), seqNum, status);
 		timeoutMonitor->removeSeqNum(seqNum);
@@ -667,14 +672,16 @@ void TaskProcessor::invokeProcessDataSmTimeout(int seqNum)
 {
 	smsc_log_debug(logger, "Timeout for SMS seqNum %d\n", seqNum);
 
-	MutexGuard Lock(smsInfoMutex);
+	MutexGuard *Lock = new MutexGuard(smsInfoMutex);
 	if(!smsInfo.Exist(seqNum))
 	{
 		smsc_log_debug(logger, "No info for SMS seqNum = %d\n", seqNum);
+		delete Lock;
 		return;
 	}
 	sms_info* pInfo = smsInfo.Get(seqNum);
 	smsInfo.Delete(seqNum);
+	delete Lock;
 
 	smsc_log_debug(logger, "SMS for Abonent %s (seqNum %d) is removed from waiting list", pInfo->abnt.toString().c_str(), seqNum);
 
@@ -817,7 +824,7 @@ bool TaskProcessor::getFromInQueue(MissedCallEvent& event)
 // Admin Interface
 string TaskProcessor::getSchedItem(const string& Abonent)
 {
-	smsc_log_info(logger, "Received schedule query for abonent %s", Abonent.c_str());
+//	smsc_log_info(logger, "Received schedule query for abonent %s", Abonent.c_str());
 	string result;
 
 	try{checkAddress(Abonent.c_str());}catch(Exception e)
@@ -853,7 +860,7 @@ string TaskProcessor::getSchedItem(const string& Abonent)
 
 string TaskProcessor::getSchedItems(void)
 {
-	smsc_log_info(logger, "Received schedule query for first 50 abonents ");
+//	smsc_log_info(logger, "Received schedule query for first 50 abonents ");
 	string				result;
 	vector<SchedItem>	items;
 
