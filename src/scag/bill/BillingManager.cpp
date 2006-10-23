@@ -305,6 +305,7 @@ int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, TariffRec& ta
     #ifdef MSAG_INMAN_BILL
     SPckChargeSms pck;
     fillChargeSms(pck.Cmd(), billingInfoStruct, tariffRec);
+    pck.Hdr().dlgId = billId;
     billTransaction->ChargeOperation = pck;
     billTransaction->status = TRANSACTION_WAIT_ANSWER;
     #else
@@ -317,15 +318,37 @@ int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, TariffRec& ta
 
 
     #ifdef MSAG_INMAN_BILL
-    pck.Hdr().dlgId = billId;
     sendCommand(pck);
 
     billTransaction->eventMonitor.wait(1000);
     #endif
 
+    if (billTransaction->status == TRANSACTION_WAIT_ANSWER) 
+    {
+        inUseLock.Lock();
+        delete billTransaction;
+        BillTransactionHash.Delete(billId);
+        inUseLock.Unlock();
+
+        throw SCAGException("Transaction billId=%d timed out", billId);
+    }
+
+    if (billTransaction->status == TRANSACTION_INVALID) 
+    {
+        inUseLock.Lock();
+        delete billTransaction;
+        BillTransactionHash.Delete(billId);
+        inUseLock.Unlock();
+
+        throw SCAGException("Transaction billId=%d: charging is impossible", billId);
+    }
+
+
+
     ProcessSaccEvent(TRANSACTION_OPEN, billTransaction);
 
     #ifdef MSAG_INMAN_BILL
+
     SPckDeliverySmsResult opRes;
     opRes.Hdr().dlgId = billId;
     opRes.Cmd().setResultValue(1);
@@ -359,19 +382,29 @@ void BillingManagerImpl::Commit(int billId)
    
     smsc_log_debug(logger, "Commiting billId=%d...", billId);
 
-    if ((*pBillTransactionPtr)->status == TRANSACTION_VALID)
+    int status = (*pBillTransactionPtr)->status;
+
+    inUseLock.Lock();
+    delete (*pBillTransactionPtr);
+    BillTransactionHash.Delete(billId);
+    inUseLock.Unlock();
+
+
+    if (status == TRANSACTION_VALID)
     {
         #ifdef MSAG_INMAN_BILL
         SPckDeliverySmsResult op;
         op.Hdr().dlgId = billId;
         sendCommand(op);
         #endif
-    }
+    } else
+    {
+        if ((*pBillTransactionPtr)->status == TRANSACTION_WAIT_ANSWER) 
+            throw SCAGException("Transaction billId=%d timed out.", billId);
 
-    inUseLock.Lock();
-    delete (*pBillTransactionPtr);
-    BillTransactionHash.Delete(billId);
-    inUseLock.Unlock();
+        if ((*pBillTransactionPtr)->status == TRANSACTION_INVALID) 
+            throw SCAGException("Transaction billId=%d invalid.", billId);
+    }
 }
 
 
