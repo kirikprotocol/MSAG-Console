@@ -13,8 +13,7 @@ using smsc::logger::Logger;
 using smsc::core::network::Socket;
 using smsc::inman::common::ObservableT;
 using smsc::inman::common::SystemError;
-using smsc::inman::interaction::SerializableObject;
-using smsc::inman::interaction::SerializerITF;
+using smsc::inman::interaction::SerializablePacketAC;
 
 namespace smsc  {
 namespace inman {
@@ -28,13 +27,12 @@ typedef struct {
 
 extern const ConnectParms _ConnectParms_DFLT;
 
-class ConnectListener;
+class ConnectListenerITF;
 //Connect: sends/receives object to/from TCP socket
 //NOTE: Connect methods, in case of error, create SystemError or SerializerException
 //(returned by hasException(), but do not throw it.
 //It's caller responsibility to manage this exception.
-class Connect : public ObservableT< ConnectListener >
-{
+class Connect : public ObservableT<ConnectListenerITF> {
 public:
     typedef enum { frmStraightData = 0, frmLengthPrefixed = 1 } ConnectFormat;
 
@@ -51,18 +49,18 @@ public:
     int     send (const unsigned char *buf, int bufSz);
     //receives bytes from socket,
     //returns -1 on error, otherwise - number of bytes red
-    int     receive(const unsigned char *buf, int bufSz, int minToRead);
+    int     receive(unsigned char *buf, int bufSz, int minToRead);
 
-    //serializes and sends object to socket according to ConnectFormat
+    //serializes and sends packet to socket according to ConnectFormat
     //returns -1 on error, or number of total bytes sent
-    int     sendObj(SerializableObject* obj); 
-    //receives and deserializes object from socket,
+    int     sendPck(SerializablePacketAC* pck);
+    //receives and deserializes packet from socket,
     //return NULL on error, otherwise - allocated object
-    SerializableObject* receiveObj(void);
+    SerializablePacketAC* recvPck(void);
 
     //returns exception created on connect error
-    CustomException* hasException(void) const { return _exc; }
-    void             resetException(void);
+    CustomException* hasException(void) const { return _exc.get(); }
+    void             resetException(void) { _exc.reset(NULL); }
 
     //listens for input objects and passes it to connect listeners
     //Returns false if no data was red from socket
@@ -71,22 +69,22 @@ public:
     void    handleConnectError(bool fatal = false);
 
 protected:
-    void setException(const char * msg, int err_code = 0);
+    int  receive_buf(unsigned char *buf, int bufSz, int minToRead);
 
+    Mutex           sndSync, rcvSync;
     Socket*         socket;
     Logger*         logger;
-    ConnectFormat       _frm;
-    ConnectParms        _parms;
-    SerializerITF *     _objSerializer;
-    CustomException*    _exc;   //last connect error
+    ConnectFormat   _frm;
+    ConnectParms    _parms;
+    SerializerITF * _objSerializer;
+    std::auto_ptr<CustomException> _exc;   //last connect error
 };
 
-class ConnectListener
-{
-    public:
-        virtual void onCommandReceived(Connect* conn, SerializableObject* cmd) = 0;
-        //NOTE: it's recommended to reset exception if it doesn't prevent entire Connect to function
-        virtual void onConnectError(Connect* conn, bool fatal = false) = 0;
+class ConnectListenerITF {
+public:
+    virtual void onCommandReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd) = 0;
+    //NOTE: it's recommended to reset exception if it doesn't prevent entire Connect to function
+    virtual void onConnectError(Connect* conn, bool fatal = false) = 0;
 };
 
 

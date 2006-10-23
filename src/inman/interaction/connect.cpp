@@ -21,7 +21,7 @@ Connect::Connect(Socket* sock, SerializerITF * serializer,
     : logger(uselog), socket(sock), _frm(frm), _exc(NULL)
     , _objSerializer(serializer), _parms(_ConnectParms_DFLT)
 {
-    assert(socket && _objSerializer);
+    assert(socket);
     if (!uselog)
         logger = Logger::getInstance("smsc.inman.Connect");
 }
@@ -29,8 +29,6 @@ Connect::Connect(Socket* sock, SerializerITF * serializer,
 Connect::~Connect()
 {
     delete socket;
-    if (_exc)
-        delete _exc;
 }
 
 void Connect::close(bool abort/* = false*/)
@@ -48,27 +46,13 @@ void Connect::setConnectFormat(Connect::ConnectFormat frm, ConnectParms * prm/* 
         _parms = *prm;
 }
 
-void Connect::resetException(void)
-{
-    if (_exc) {
-        delete _exc;
-        _exc = NULL;
-    }
-}
-
-void Connect::setException(const char * msg, int err_code/* = 0*/)
-{
-    resetException();
-    _exc = new SystemError(msg, err_code);
-}
-
 //passes Connect exception to connect listeners
 void Connect::handleConnectError(bool fatal/* = false*/)
 {
     //this Connect may be desroyed by one of onConnectError() so iterate over copy of list
     ListenerList    cplist = listeners;
     for (ListenerList::iterator it = cplist.begin(); it != cplist.end(); it++) {
-        ConnectListener* ptr = *it;
+        ConnectListenerITF* ptr = *it;
         ptr->onConnectError(this, fatal);
     }
 }
@@ -77,33 +61,36 @@ void Connect::handleConnectError(bool fatal/* = false*/)
 //returns -1 on error, otherwise - number of bytes sent
 int  Connect::send(const unsigned char *buf, int bufSz)
 {
-    Logger::LogLevel    errLvl = Logger::LEVEL_DEBUG;
-    std::string         dstr;
-
+    MutexGuard  tmp(sndSync);
     int n = socket->Write((const char *)buf, bufSz);
+    if ((n < bufSz) || logger->isDebugEnabled()) {
+        std::string         dstr;
+        Logger::LogLevel    errLvl;
 
-    format(dstr, "Connect[%u]: sent %d of %db: ", (unsigned int)
-            socket->getSocket(), n, bufSz);
-    if (n > 0)
-        dump(dstr, (unsigned short)n, (unsigned char*)buf, false);
-    if (n < bufSz) {
-        errLvl = Logger::LEVEL_ERROR;
-        setException(dstr.c_str(), errno);
+        format(dstr, "Connect[%u]: sent %d of %db: ", (unsigned int)
+                socket->getSocket(), n, bufSz);
+        if (n > 0)
+            dump(dstr, (unsigned short)n, (unsigned char*)buf, false);
+        if (n < bufSz) {
+            errLvl = Logger::LEVEL_ERROR;
+            _exc.reset(new SystemError(dstr.c_str(), errno));
+        } else
+            errLvl = Logger::LEVEL_DEBUG;
+
+        logger->log(errLvl, dstr.c_str());
     }
-    logger->log(errLvl, dstr.c_str());
-
     return (n < bufSz) ? (-1) : n;
 }
 
 //serializes and sends object to socket according to ConnectFormat
 //returns -1 on error, or number of total bytes sent
-int  Connect::sendObj(SerializableObject* obj)
+int  Connect::sendPck(SerializablePacketAC* pck)
 {
     int             offs = 4;
     ObjectBuffer    buffer(_parms.bufSndSz);
 
     buffer.setPos(offs);
-    _objSerializer->serialize(obj, buffer);
+    pck->serialize(buffer);
     if (_frm == Connect::frmLengthPrefixed) {
         uint32_t len = htonl((uint32_t)buffer.getPos() - 4);
         memcpy(buffer.get(), (const void *)&len, 4);
@@ -112,64 +99,54 @@ int  Connect::sendObj(SerializableObject* obj)
     return send(buffer.get() + offs, buffer.getPos());
 }
 
-//receives bytes from socket,
-//returns -1 on error, otherwise - number of bytes red
-//NOTE: minToRead should be <= bufSz
-int  Connect::receive(const unsigned char *buf, int bufSz, int minToRead)
+//Thread safe version of receive_buf
+int  Connect::receive(unsigned char *buf, int bufSz, int minToRead)
 {
-    Logger::LogLevel    errLvl = Logger::LEVEL_DEBUG;
-    std::string         dstr;
-
-    int n = socket->Read((char*)buf, bufSz);
-    if (!n) {
-        smsc_log_debug(logger, "Connect[%u]: socket empty!", (unsigned int)socket->getSocket());
-        return n;
-    }
-    format(dstr, "Connect[%u]: %sreceived %d of %db: ", (unsigned int)socket->getSocket(),
-            (n < minToRead) ? "error on socket, " : "", n, minToRead);
-    if (n > 0)
-        dump(dstr, (unsigned short)n, (unsigned char*)buf, false);
-    if (n < minToRead) {
-        errLvl = Logger::LEVEL_ERROR;
-        setException(dstr.c_str(), errno);
-    }
-    logger->log(errLvl, dstr.c_str());
-    return (n < minToRead) ? (-1) : n;
+    MutexGuard  tmp(rcvSync);
+    return receive_buf(buf, bufSz, minToRead);
 }
 
 //receives and deserializes object from socket,
 //return NULL on error, otherwise - allocated object
-SerializableObject* Connect::receiveObj(void)
+SerializablePacketAC* Connect::recvPck(void)
 {
+    MutexGuard  tmp(rcvSync);
     int             n;
     uint32_t        oct2read = _parms.bufRcvSz;
-    ObjectBuffer *  buffer = NULL;
     
     if (_frm == Connect::frmLengthPrefixed) {
         unsigned char  lenbuf[sizeof(uint32_t) + 2];
-        if ((n = receive(lenbuf, sizeof(uint32_t), sizeof(uint32_t))) <= 0)
+        if ((n = receive_buf(lenbuf, sizeof(uint32_t), sizeof(uint32_t))) <= 0)
             return NULL;
         oct2read = ntohl(*(uint32_t*)lenbuf);
 
         if (oct2read > _parms.maxPckSz) {
-            std::string dstr = format("Connect[%u]: incoming packet is too large: %ub",
+            std::string dstr;
+            format(dstr, "Connect[%u]: incoming packet is too large: %ub",
                                         (unsigned int)socket->getSocket(), oct2read);
-            setException(dstr.c_str(), 0);
+            _exc.reset(new CustomException(dstr.c_str()));
             return NULL;
         }
     }
-    buffer = new ObjectBuffer(oct2read);
+    std::auto_ptr<ObjectBuffer> buffer(new ObjectBuffer(oct2read));
 
-    if ((n = receive(buffer->get(), oct2read,
-                     (_frm == Connect::frmLengthPrefixed) ? oct2read : 1)) <= 0)
+    if ((n = receive_buf(buffer->get(), oct2read,
+                (_frm == Connect::frmLengthPrefixed) ? oct2read : 1)) <= 0)
         return NULL;
     buffer->setDataSize(n);
 
-    SerializableObject* obj = NULL;
-    try { obj = _objSerializer->deserializeAndOwn(buffer, true); }
-    catch (SerializerException & exc) {
-        setException(format("Connect[%u]: %s", (unsigned int)socket->getSocket(),
-                            exc.what()).c_str(), 0);
+    SerializablePacketAC* obj = NULL;
+    if (!_objSerializer) {
+        std::string dstr;
+        format(dstr, "Connect[%u]: Serializer is not set!", (unsigned int)socket->getSocket());
+        _exc.reset(new CustomException(dstr.c_str()));
+    } else {
+        try { obj = _objSerializer->deserialize(buffer); 
+        } catch (SerializerException & exc) {
+            std::string dstr;
+            format(dstr, "Connect[%u]: %s", (unsigned int)socket->getSocket(), exc.what());
+            _exc.reset(new CustomException(dstr.c_str()));
+        }
     }
     return obj;
 }
@@ -178,23 +155,52 @@ SerializableObject* Connect::receiveObj(void)
 //Returns false if no data was red from socket
 bool Connect::process(void)
 {
-    SerializableObject* cmd = receiveObj();
+    std::auto_ptr<SerializablePacketAC> cmd(recvPck());
 	
-    if (!cmd && !_exc)
+    if (!cmd.get() && !_exc.get())
 	return false;
 
-    bool res = cmd || _exc;
+    bool res = cmd.get() || _exc.get();
     for (ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++) {
-        ConnectListener* ptr = *it;
-        if (_exc)
+        ConnectListenerITF* ptr = *it;
+        if (_exc.get())
             ptr->onConnectError(this, false);
         else
             ptr->onCommandReceived(this, cmd);
     }
-    resetException();
-    if (cmd)
-        delete cmd;
+    _exc.reset(NULL);
     return res;
+}
+
+/* -------------------------------------------------------------------------- *
+ * Private/Protected methods:
+ * -------------------------------------------------------------------------- */
+//receives bytes from socket,
+//returns -1 on error, otherwise - number of bytes red
+//NOTE: minToRead should be <= bufSz
+int  Connect::receive_buf(unsigned char *buf, int bufSz, int minToRead)
+{
+    int n = socket->Read((char*)buf, bufSz);
+    if (!n) {
+        smsc_log_debug(logger, "Connect[%u]: socket empty!", (unsigned int)socket->getSocket());
+        return n;
+    }
+    if ((n < minToRead) || logger->isDebugEnabled()) {
+        std::string         dstr;
+        Logger::LogLevel    errLvl;
+        
+        format(dstr, "Connect[%u]: %sreceived %d of %db: ", (unsigned int)socket->getSocket(),
+                (n < minToRead) ? "error, " : "", n, minToRead);
+        if (n > 0)
+            dump(dstr, (unsigned short)n, (unsigned char*)buf, false);
+        if (n < minToRead) {
+            errLvl = Logger::LEVEL_ERROR;
+            _exc.reset(new SystemError(dstr.c_str(), errno));
+        } else
+            errLvl = Logger::LEVEL_DEBUG;
+        logger->log(errLvl, dstr.c_str());
+    }
+    return (n < minToRead) ? (-1) : n;
 }
 
 } // namespace interaction

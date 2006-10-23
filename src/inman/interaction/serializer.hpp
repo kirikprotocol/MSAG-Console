@@ -9,20 +9,18 @@
 #include <string>
 
 #include "util/Uint64Converter.h"
-#include "inman/common/errors.hpp"
-#include "core/buffers/ExtendingBuf.hpp"
-
 using smsc::util::Uint64Converter;
+
+#include "inman/common/errors.hpp"
 using smsc::inman::common::CustomException;
+
+#include "core/buffers/ExtendingBuf.hpp"
 
 namespace smsc  {
 namespace inman {
 namespace interaction {
 
-typedef smsc::core::buffers::ExtendingBuffer<unsigned char,1024> ObjectBuffer;
-
-class SerializerException : public CustomException
-{
+class SerializerException : public CustomException {
 public:
     typedef enum { invPacket = 1, invObject, invObjData } ErrorClass;
     SerializerException(const char * msg,
@@ -38,6 +36,8 @@ public:
     ErrorClass getErrClass(void) const { return (ErrorClass)errCode; }
 };
 
+
+typedef smsc::core::buffers::ExtendingBuffer<unsigned char,1024> ObjectBuffer;
 /*
  * BYTE ORDER:   network << host   - sending
  *               network >> host   - recieving
@@ -240,20 +240,17 @@ inline ObjectBuffer& operator>>(ObjectBuffer& buf, bool& val) throw(CustomExcept
 }
 
 
-class SerializableObject
-{
+class SerializableObjectAC {
 public:
-    SerializableObject() : dialogId(0), objectId(0), dataBuf(NULL), ownBuf(false) { }
-    virtual ~SerializableObject() {  if (dataBuf && ownBuf) delete dataBuf; }
+    SerializableObjectAC(unsigned short obj_id)
+        : objectId(obj_id), dataBuf(NULL), ownBuf(false)
+    { }
+    virtual ~SerializableObjectAC() {  if (dataBuf && ownBuf) delete dataBuf; }
 
-    void setDialogId(unsigned int id) { dialogId = id;  }
-    unsigned int getDialogId() const { return dialogId; }
-
-    void setObjectId(unsigned short id) { objectId = id;  }
-    unsigned short getObjectId() const { return objectId; }
+    unsigned short Id() const { return objectId; }
 
     virtual void load(ObjectBuffer& in) throw(CustomException) = 0;
-    virtual void save(ObjectBuffer& out) = 0;
+    virtual void save(ObjectBuffer& out) const = 0;
 
     void setDataBuf(ObjectBuffer * in, bool own = false)
     {
@@ -268,33 +265,81 @@ public:
             *dataBuf = *in;
         }
         ownBuf = true;
-    };
-    ObjectBuffer * getDataBuf(void) const { return dataBuf; };
+    }
+    ObjectBuffer * getDataBuf(void) const { return dataBuf; }
 
     void loadDataBuf(void) throw(CustomException) { if (dataBuf) load(*dataBuf); }
 
 protected:
-    unsigned int   dialogId; //unique id of TCP dialog, to which object belongs to
     unsigned short objectId; //unique id of object 
     ObjectBuffer * dataBuf;  //data for deferred deserialization
     bool           ownBuf;   //free buffer while destroying object
 };
 
+
+class SerializablePacketAC : public std::vector<SerializableObjectAC*>  {
+protected:
+    std::vector<bool>   ownObj;
+
+public:
+    virtual void serialize(ObjectBuffer& out_buf) throw(SerializerException) = 0;
+
+    void Resize(unsigned sz)
+    {
+        resize(sz, NULL);
+        ownObj.resize(sz, false);
+    }
+
+    //NOTE: it's a caller responsibility to check for index range!!!
+    SerializableObjectAC* releaseObj(unsigned idx)
+    {
+        SerializableObjectAC* pObj = at(idx);
+        at(idx) = NULL; ownObj[idx] = false;
+        return pObj;
+    }
+    //Deletes old object if any.
+    void resetObj(unsigned idx)
+    { 
+        if (ownObj[idx] && at(idx)) {
+            delete at(idx); at(idx) = NULL; ownObj[idx] = false;
+        } 
+    }
+    //Returns object Id, or zero in case of error
+    unsigned short referObj(unsigned idx, SerializableObjectAC & use_obj)
+    {
+        resetObj(idx);
+        return (!(at(idx) = &use_obj) ? 0 : use_obj.Id());
+    }
+    //Returns object Id, or zero in case of error
+    unsigned short assignObj(unsigned idx, SerializableObjectAC * use_obj)
+    {
+        resetObj(idx);
+        unsigned short objId;
+        ownObj[idx] = (objId = (!(at(idx) = use_obj)) ? 0 : use_obj->Id()) ? true : false;
+        return objId;
+    }
+
+    virtual ~SerializablePacketAC()
+    {
+        for (unsigned i = 0; i < size(); i++)
+            resetObj(i);
+    }
+};
+
 //Serializer interface:
-struct SerializerITF {
-    virtual SerializableObject*
+class SerializerITF {
+public:
+    virtual SerializablePacketAC*
             deserialize(ObjectBuffer& in) throw(CustomException) = 0;
-    //this method able to take ownership of ObjectBuffer, it's usefull in case 
-    //of partial deserialization (only packet prefix is parsed while
-    //the deserialization of contained object is deferred)
-    virtual SerializableObject*
-            deserializeAndOwn(ObjectBuffer* in, bool ownBuf = true) throw(CustomException); 
-    virtual void
-            serialize(SerializableObject*, ObjectBuffer& out) = 0;
+    //this method able to take ownership of ObjectBuffer, it's usefull
+    //in case of partial or deferred deserialization
+    virtual SerializablePacketAC*
+            deserialize(std::auto_ptr<ObjectBuffer>& p_in) throw(CustomException) = 0;
 };
 
 } //interaction
 } //inman
 } //smsc
 
-#endif
+#endif /* __SMSC_INMAN_INTERACTION_SERIALIZER__ */
+
