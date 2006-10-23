@@ -206,7 +206,14 @@ int BillingManagerImpl::Execute()
             if (m_Connected) 
             {
                 #ifdef MSAG_INMAN_BILL
-                receiveCommand();
+                try
+                {
+                    receiveCommand();
+                } catch (SCAGException& e)
+                {
+                    smsc_log_error(logger, "BillingManager error: Cannot receive command. Details: %s", e.what());
+                    m_Connected = false;
+                }
                 #endif
                 connectEvent.Wait(100);
             } else
