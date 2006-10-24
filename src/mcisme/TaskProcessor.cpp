@@ -601,7 +601,7 @@ void TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt)
 	smsc_log_debug(logger, "ProcessAbntEvents: msg = %s", msg.message.c_str());
 	msg.abonent = abnt.getText();//"777";
 	
-	MutexGuard Lock(smsInfoMutex);
+	MutexGuard *Lock = new MutexGuard(smsInfoMutex);
 	int seqNum = messageSender->getSequenceNumber();
 	int res = smsInfo.Insert(seqNum, pInfo);
 	if(!messageSender->send(seqNum, msg))
@@ -610,8 +610,11 @@ void TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt)
 		pDeliveryQueue->Reschedule(pInfo->abnt);
 		smsInfo.Delete(seqNum);
 		delete pInfo;
+		delete Lock;
 		return;
 	}
+	delete Lock;
+
 	timeoutMonitor->addSeqNum(seqNum);
 
 	count+=pInfo->events.size();
