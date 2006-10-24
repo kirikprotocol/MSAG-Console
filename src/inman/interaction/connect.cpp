@@ -115,10 +115,13 @@ SerializablePacketAC* Connect::recvPck(void)
     uint32_t        oct2read = _parms.bufRcvSz;
     
     if (_frm == Connect::frmLengthPrefixed) {
-        unsigned char  lenbuf[sizeof(uint32_t) + 2];
-        if ((n = receive_buf(lenbuf, sizeof(uint32_t), sizeof(uint32_t))) <= 0)
+        union { //force correct alignment of len.buf
+            uint32_t    ui;
+            uint8_t     buf[sizeof(uint32_t)];
+        } len;
+        if ((n = receive_buf(len.buf, sizeof(uint32_t), sizeof(uint32_t))) <= 0)
             return NULL;
-        oct2read = ntohl(*(uint32_t*)lenbuf);
+        oct2read = ntohl(*(uint32_t*)len.buf);
 
         if (oct2read > _parms.maxPckSz) {
             std::string dstr;
