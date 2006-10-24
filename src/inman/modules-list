@@ -1,3 +1,6 @@
+#
+# $Id$
+#
 abprov
 codec_inc
 codecs
@@ -8,4 +11,5 @@ comp
 inap
 interaction
 inmanemu
+utilbin
 #uss
