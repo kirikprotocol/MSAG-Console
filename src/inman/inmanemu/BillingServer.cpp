@@ -18,8 +18,8 @@ BillingServer::BillingServer() : buff(0), clnt(0)
 
 BillingServer::~BillingServer()
 {
-/*    socket.Abort();
-    if (clnt) clnt->Abort();*/
+    //socket.Abort();
+    //if (clnt) clnt->Abort();
     //if (fileStorage) delete fileStorage;
 }
 
@@ -105,15 +105,16 @@ INPPacketAC * BillingServer::ReadCommand()
     //dump(dstr, len, (unsigned char*)(buff), false);
     //smsc_log_debug(logger,"received:%s",dstr.c_str());
 
-    std::auto_ptr<INPPacketAC> pck(INPSerializer::getInstance()->deserialize(buff)); //throws
+    auto_ptr<INPPacketAC> pck(INPSerializer::getInstance()->deserialize(buff)); //throws
+
     if ((pck->pHdr())->Id() != INPCSBilling::HDR_DIALOG) {
         smsc_log_error(logger, "received cmd %u: unknown header: %u",
                        (pck->pCmd())->Id(), (pck->pHdr())->Id());
-        return NULL;
+        return 0;
     }
     CsBillingHdr_dlg * srvHdr = static_cast<CsBillingHdr_dlg*>(pck->pHdr());
-    smsc_log_debug(logger, "received cmd %u, dialogId = %u\n", (pck->pCmd())->Id(),
-                   srvHdr->dlgId);
+    smsc_log_debug(logger, "received cmd %u, dialogId = %u\n", (pck->pCmd())->Id(), srvHdr->dlgId);
+
     return pck.release();
 }
 
@@ -129,7 +130,7 @@ SPckChargeSmsResult * BillingServer::CreateRespOnCharge(SPckChargeSms* pck)
     CDRRecord cdr;
     pck->Cmd().export2CDR(cdr);
     //fileStorage->bill(cdr);
-
+    
 
     smsc_log_debug(logger, "Charge SMS:");
     smsc_log_debug(logger, "ServiceId = %d\n",cdr._serviceId);
@@ -146,16 +147,25 @@ SPckChargeSmsResult * BillingServer::CreateRespOnCharge(SPckChargeSms* pck)
   } */
 
     MatrixKey key;
-    key.serviceNumber = atoi(cdr._dstAdr.c_str());
+    if (cdr._dstAdr.size() > 0) 
+        key.serviceNumber = atoi(cdr._dstAdr.c_str());
+    else
+        key.serviceNumber = 0;
 
-    Address addr(cdr._srcAdr.c_str());
+    Address addr((cdr._srcAdr.size()>0) ? cdr._srcAdr.c_str(): "0");
 
-    std::auto_ptr<SPckChargeSmsResult> res(new SPckChargeSmsResult()); //dflt: CHARGING_POSSIBLE
+    SPckChargeSmsResult * res = new SPckChargeSmsResult();
+
+    //std::auto_ptr<SPckChargeSmsResult> res(new SPckChargeSmsResult()); //dflt: CHARGING_POSSIBLE
     res->Hdr().dlgId = pck->Hdr().dlgId;
+
+    smsc_log_debug(logger, "Start charging \n\n");
 
     if (!processor.charge(key, addr, pck->Hdr().dlgId))
         res->Cmd().SetValue(ChargeSmsResult::CHARGING_NOT_POSSIBLE);
-    return res.release();
+
+    smsc_log_debug(logger, "Finish charging \n\n");
+    return res;
 }
 
 void BillingServer::ProcessResultCommand(SPckDeliverySmsResult * pck)
@@ -227,8 +237,7 @@ void BillingServer::Run()
                 switch ((pck->pCmd())->Id())
                 {
                 case INPCSBilling::CHARGE_SMS_TAG: {
-                    std::auto_ptr<SPckChargeSmsResult> resp;
-                    resp.reset(CreateRespOnCharge(static_cast<SPckChargeSms*>(pck.get())));
+                    std::auto_ptr<SPckChargeSmsResult> resp(CreateRespOnCharge(static_cast<SPckChargeSms*>(pck.get())));
                     if (resp.get()) 
                         SendResp(resp.get());
                 } break;

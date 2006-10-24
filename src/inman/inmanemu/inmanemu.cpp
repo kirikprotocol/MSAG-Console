@@ -18,12 +18,15 @@ extern "C" static void appSignalHandler(int sig)
     if (sig==SIGTERM || sig==SIGINT)
     {
         if (billingServer) billingServer->Stop();
+
+        delete billingServer;
+        billingServer = 0;
+        //smsc::logger::Logger::Shutdown();
     }
 }
 
 extern "C" static void atExitHandler(void)
 {
-    smsc::logger::Logger::Shutdown();
 }
 
 
