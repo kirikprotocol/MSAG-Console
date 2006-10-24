@@ -2,17 +2,17 @@ static char const ident[] = "$Id$";
 #include <assert.h>
 
 #include "inman/inap/dispatcher.hpp"
-#include "service.hpp"
-
-using smsc::inman::interaction::INPSerializer;
 using smsc::inman::inap::TCAPDispatcher;
 
+#include "inman/service.hpp"
+using smsc::inman::cache::AbonentCache;
+using smsc::inman::interaction::INPSerializer;
 
 namespace smsc  {
 namespace inman {
 
 Service::Service(const InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
-    : logger(uselog), _cfg(*in_cfg), ssnSess(0), disp(0), server(0)
+    : logger(uselog), _cfg(*in_cfg), disp(0), server(0)
 {
     if (!logger)
         logger = Logger::getInstance("smsc.inman.Service");
@@ -26,10 +26,10 @@ Service::Service(const InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
             smsc_log_error(logger, "InmanSrv: EINSS7 stack unavailable!!!");
         else {
             smsc_log_debug(logger, "InmanSrv: TCAP dispatcher has connected to SS7 stack");
-            if (!(ssnSess = disp->openSSN(_cfg.bill.ss7.own_ssn, _cfg.bill.ss7.maxDlgId)))
+            if (!disp->openSSN(_cfg.bill.ss7.own_ssn, _cfg.bill.ss7.maxDlgId))
                 smsc_log_error(logger, "InmanSrv: SSN[%u] unavailable!!!", _cfg.bill.ss7.own_ssn);
         }
-    }
+    }                                         
 
     _cfg.bill.abCache = new AbonentCache(&_cfg.cachePrm, logger);
     assert(_cfg.bill.abCache);
@@ -171,9 +171,8 @@ void Service::onBillingConnectClosed(unsigned int connId)
  * -------------------------------------------------------------------------- */
 void Service::onConnectOpened(Server* srv, Connect* conn)
 {
-    assert(conn);
     conn->Init(Connect::frmLengthPrefixed, INPSerializer::getInstance());
-    BillingConnect *bcon = new BillingConnect(&_cfg.bill, ssnSess, conn, logger);
+    BillingConnect *bcon = new BillingConnect(&_cfg.bill, conn, logger);
     if (bcon) {
         _mutex.Lock();
         bConnects.insert(BillingConnMap::value_type(conn->getSocketId(), bcon));
@@ -187,7 +186,6 @@ void Service::onConnectOpened(Server* srv, Connect* conn)
 //Remote point ends connection
 void Service::onConnectClosing(Server* srv, Connect* conn)
 {
-    assert(conn);
     unsigned int connId = (unsigned int)conn->getSocketId();
     _mutex.Lock();
     BillingConnMap::const_iterator it = bConnects.find(connId);

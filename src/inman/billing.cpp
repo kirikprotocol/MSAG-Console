@@ -1,18 +1,19 @@
 static char const ident[] = "$Id$";
 #include <assert.h>
 
-#include "service.hpp"
+#include "inman/comp/acdefs.hpp"
+using smsc::ac::ACOID;
+
+#include "inman/inap/dispatcher.hpp"
+using smsc::inman::inap::TCAPDispatcher;
+using smsc::inman::inap::SSNSession;
 using smsc::inman::inap::TCSessionAC;
 
+#include "billing.hpp"
+using smsc::inman::cache::_sabBillType;
 using smsc::inman::interaction::SerializerException;
 using smsc::inman::interaction::INPCSBilling;
-using smsc::inman::interaction::CsBillingHdr_dlg;
-using smsc::inman::interaction::ChargeSmsResult;
 using smsc::inman::interaction::SPckChargeSmsResult;
-
-using smsc::inman::BILL_MODE;
-using smsc::inman::comp::EventReportSMSArg;
-using smsc::inman::cache::_sabBillType;
 
 namespace smsc  {
 namespace inman {
@@ -20,9 +21,8 @@ namespace inman {
 /* ************************************************************************** *
  * class BillingConnect implementation:
  * ************************************************************************** */
-BillingConnect::BillingConnect(BillingCFG * cfg, SSNSession * ssn_sess,
-                               Connect* conn, Logger * uselog/* = NULL*/)
-    : _cfg(*cfg), ssnSess(ssn_sess), _conn(conn)
+BillingConnect::BillingConnect(BillingCFG * cfg, Connect* conn, Logger * uselog/* = NULL*/)
+    : _cfg(*cfg), _conn(conn)
 {
     logger = uselog ? uselog : Logger::getInstance("smsc.inman.BillConn");
     _bcId = _conn->getSocketId();
@@ -81,15 +81,6 @@ void BillingConnect::billingDone(Billing* bill)
     corpses.push_back(bill);
     //smsc_log_debug(logger, "Billing[%u.%u]: released", _bcId, billId);
     return; //grd off
-}
-
-SSNSession* BillingConnect::ssnSession(void)
-{
-    if (!ssnSess) {
-        TCAPDispatcher * disp = TCAPDispatcher::getInstance();
-        ssnSess = disp->openSSN(_cfg.ss7.own_ssn, _cfg.ss7.maxDlgId);
-    }
-    return (!ssnSess || (ssnSess->getState() != smsc::inman::inap::ssnBound)) ? NULL: ssnSess;
 }
 
 /* -------------------------------------------------------------------------- *
@@ -307,11 +298,16 @@ void Billing::abortThis(const char * reason/* = NULL*/, bool doReport/* = true*/
 
 bool Billing::startCAPDialog(INScfCFG * use_scf)
 {
-    SSNSession * ssnSess = _bconn->ssnSession();
-    if (!ssnSess) {
+    TCAPDispatcher * disp = TCAPDispatcher::getInstance();
+    SSNSession * ssnSess = disp->findSession(_cfg.ss7.own_ssn);
+    if (!ssnSess) //attempt to open SSN
+        ssnSess = disp->openSSN(_cfg.ss7.own_ssn, _cfg.ss7.maxDlgId);
+
+    if (!ssnSess || (ssnSess->getState() != smsc::inman::inap::ssnBound)) {
         smsc_log_error(logger, "%s: SSN session is not available/bound", _logId);
         return false;
     }
+
     if (!(capSess = ssnSess->newSRsession(_cfg.ss7.ssf_addr,
             ACOID::id_ac_cap3_sms_AC, 146, use_scf->scf.scfAddress))) {
         std::string sid;
@@ -569,7 +565,7 @@ void Billing::chargeResult(ChargeSmsResult::ChargeSmsResult_t chg_res, uint32_t 
     if (_bconn->sendCmd(&res))
         StartTimer(_cfg.maxTimeout);
     else     //TCP connect fatal failure
-        abortThis(_bconn->getConnectError()->what());
+        abortThis(_bconn->connectError()->what());
     return;
 }
 

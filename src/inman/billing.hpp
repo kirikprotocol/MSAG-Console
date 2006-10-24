@@ -1,5 +1,11 @@
 #ident "$Id$"
-
+/* ************************************************************************** *
+ * Billing: implements Billing process logic:
+ * 1) determination of abonent contract type by quering abonent provider
+ * 2) determination of IN platform and configuring its dialog parameters
+ * 3) dialog with IN platform
+ * 4) writing CDRs
+ * ************************************************************************** */
 #ifndef __SMSC_INMAN_INAP_BILLING__
 #define __SMSC_INMAN_INAP_BILLING__
 
@@ -18,39 +24,18 @@ ChargeSmsResult     <-   | bilProcessed ]
 ]
 */
 
-#include "inman/inman.hpp"
+#include "inman/BillSession.hpp"
 using smsc::inman::AbonentPolicy;
-using smsc::inman::AbonentPolicies;
-using smsc::inman::INScfCFG;
-using smsc::inman::SmsXServiceMap;
-
-#include "inman/common/TimeWatcher.hpp"
 using smsc::inman::sync::StopWatch;
-using smsc::inman::sync::TimeWatcher;
 using smsc::inman::sync::TimerListenerITF;
-using smsc::inman::sync::TimersLIST;
 using smsc::inman::sync::OPAQUE_OBJ;
-
-#include "inman/abprov/IAProvider.hpp"
-using smsc::inman::iaprvd::IAProviderITF;
 using smsc::inman::iaprvd::IAPQueryListenerITF;
-
-#include "inman/storage/CDRStorage.hpp"
-using smsc::inman::filestore::InBillingFileStorage;
 
 #include "inman/inap/cap_sms/DlgCapSMS.hpp"
 using smsc::inman::inap::CapSMSDlg;
-using smsc::inman::inap::Dialog;
 using smsc::inman::inap::CapSMS_SSFhandlerITF;
 
-#include "inman/interaction/connect.hpp"
-using smsc::inman::interaction::Connect;
-using smsc::inman::interaction::ConnectListenerITF;
-
-//#include "inman/interaction/messages.hpp"
 #include "inman/interaction/MsgBilling.hpp"
-using smsc::inman::interaction::INPPacketAC;
-
 using smsc::inman::interaction::INPBillingHandlerITF;
 using smsc::inman::interaction::CsBillingHdr_dlg;
 using smsc::inman::interaction::SMCAPSpecificInfo;
@@ -58,87 +43,8 @@ using smsc::inman::interaction::ChargeSms;
 using smsc::inman::interaction::ChargeSmsResult;
 using smsc::inman::interaction::DeliverySmsResult;
 
-
-
 namespace smsc    {
 namespace inman   {
-
-typedef enum { BILL_NONE = 0, BILL_ALL, BILL_USSD, BILL_SMS } BILL_MODE;
-
-struct BillingCFG {
-    typedef enum { CDR_NONE = 0, CDR_ALL = 1, CDR_POSTPAID = 2} CDR_MODE;
-    AbonentCacheITF *   abCache;
-    InBillingFileStorage * bfs;
-    TimeWatcher *       tmWatcher;
-//billing parameters
-    AbonentPolicies * policies;
-    BILL_MODE       billMode;
-    CDR_MODE        cdrMode;
-    std::string     cdrDir;         //location to store CDR files
-    long            cdrInterval;    //rolling interval for CDR files
-    unsigned short  maxTimeout;     //maximum timeout for TCP operations,
-                                    //billing aborts on its expiration
-    unsigned short  abtTimeout;     //maximum timeout on abonent type requets,
-                                    //(HLR & DB interaction), on expiration billing
-                                    //continues in CDR mode 
-    unsigned short  maxBilling;     //maximum number of Billings per connect
-
-    SS7_CFG         ss7;            //SS7 interaction:
-    SmsXServiceMap  smsXMap;        //SMS Extra services iDs and addresses
-
-    BillingCFG()
-    {
-        abCache = NULL; bfs = NULL; tmWatcher = NULL;
-        cdrInterval = 0;
-        billMode = smsc::inman::BILL_ALL;
-        cdrMode =  CDR_ALL;
-        maxTimeout = abtTimeout = maxBilling = ss7.maxDlgId = ss7.capTimeout = 0;
-        ss7.own_ssn = ss7.userId = 0;
-    }
-
-};
-
-class Billing;
-//Manages SMSC Requests on given Connect in parallel/asynchronous mode
-//(for each request initiates new Billing).
-class BillingConnect: public ConnectListenerITF {
-public: 
-    BillingConnect(BillingCFG * cfg, SSNSession * ssn_sess,
-                   Connect* conn, Logger * uselog = NULL);
-    ~BillingConnect();
-
-    unsigned int    bConnId(void) const { return _bcId; }
-    SSNSession*     ssnSession(void);
-    const BillingCFG & getConfig(void) const { return _cfg;}
-
-    //sends command, returns true on success
-    bool sendCmd(INPPacketAC* cmd);
-    //releases completed Billing, writting CDR if required
-    void billingDone(Billing* bill);
-    //
-    CustomException * getConnectError(void) const { return _conn->hasException(); }
-
-    //ConnectListenerITF interface
-    void onCommandReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd);
-    //Stops all Billings due to fatal socket error
-    void onConnectError(Connect* conn, bool fatal/* = false*/);
-
-protected:
-    typedef std::map<unsigned int, Billing*> BillingMap;
-    typedef std::list<Billing*> BillingList;
-
-    void cleanUpBills(void);
-
-    Mutex       _mutex;
-    Logger*     logger;
-    unsigned int _bcId;
-    BillingCFG  _cfg;
-    BillingMap  workers;
-    BillingList corpses;
-    Connect*    _conn;
-    SSNSession *    ssnSess;
-    TimeWatcher* _tmWatcher;
-};
 
 class Billing : public CapSMS_SSFhandlerITF, public INPBillingHandlerITF,
                 public IAPQueryListenerITF, public TimerListenerITF {
@@ -177,22 +83,20 @@ public:
     bool     CDRComplete(void) const { return cdr._finalized; }
     //returns true if all billing stages are completed
     bool     BillComplete(void) const;
-    //    
-    const CDRRecord & getCDRRecord(void) const { return cdr; }
 
-    //INPBillingHandlerITF interface methods:
+    //-- INPBillingHandlerITF interface methods:
     bool onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr);
     void onDeliverySmsResult(DeliverySmsResult* dlvr_res, CsBillingHdr_dlg *hdr);
 
-    //CapSMS_SSFhandlerITF interface methods:
+    //-- CapSMS_SSFhandlerITF interface methods:
     void onDPSMSResult(unsigned char rp_cause = 0);
     //dialog finalization/error handling:
     void onEndCapDlg(unsigned char ercode = 0, InmanErrorType errLayer = smsc::inman::errOk);
 
-    //IAPQueryListenerITF interface methods:
+    //-- IAPQueryListenerITF interface methods:
     void onIAPQueried(const AbonentId & ab_number, AbonentBillType ab_type,
                                 const MAPSCFinfo * scf = NULL);
-    //TimerListenerITF interface methods:
+    //-- TimerListenerITF interface methods:
     void onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj);
 
 protected:

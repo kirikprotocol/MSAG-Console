@@ -5,9 +5,6 @@
 
 #include <map>
 
-#include "inman/comp/acdefs.hpp"
-using smsc::ac::ACOID;
-
 #include "inman/inap/dispatcher.hpp"
 using smsc::inman::inap::TCAPDispatcher;
 
@@ -16,15 +13,11 @@ using smsc::inman::interaction::ServSocketCFG;
 using smsc::inman::interaction::Server;
 using smsc::inman::interaction::ServerListener;
 
-#include "inman/billing.hpp"
+#include "inman/BillSession.hpp"
 using smsc::inman::BillingCFG;
 using smsc::inman::BillingConnect;
 using smsc::inman::cache::AbonentCacheCFG;
-using smsc::inman::cache::AbonentCache;
 using smsc::inman::filestore::InFileStorageRoller;
-
-#include "inman/abprov/IAPLoader.hpp"
-using smsc::inman::iaprvd::IAProviderCreatorITF;
 
 namespace smsc  {
 namespace inman {
@@ -62,7 +55,6 @@ private:
     Mutex           _mutex;
     BillingConnMap  bConnects;
     Logger*         logger;
-    SSNSession*     ssnSess;    //
     TCAPDispatcher* disp;
     Server*         server;
     volatile bool   running;
