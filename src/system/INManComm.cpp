@@ -1,5 +1,6 @@
+/* "$Id$" */
 #include "INManComm.hpp"
-#include "inman/interaction/messages.hpp"
+#include "inman/interaction/MsgBilling.hpp"
 #include "util/Exception.hpp"
 
 namespace smsc{
@@ -25,7 +26,8 @@ void INManComm::Init(const char* argHost,int argPort)
 {
   host=argHost;
   port=argPort;
-  smsc::inman::interaction::SerializerInap::getInstance();
+//  smsc::inman::interaction::SerializerInap::getInstance();
+  smsc::inman::interaction::INPSerializer::getInstance();
   if(socket->Init(host.c_str(),port,0)==-1)
   {
     throw smsc::util::Exception("Failed to resolve %s:%d",host.c_str(),port);
@@ -84,16 +86,13 @@ void INManComm::ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INSmsChargeRespo
   info2(log,"ChargeSms %lld/%d",id,dlgId);
   ctx.inDlgId=dlgId;
 
-  smsc::inman::interaction::ChargeSms op;
+  smsc::inman::interaction::SPckChargeSms pck;
+  pck.Hdr().dlgId = dlgId;
+  FillChargeOp(id, pck.Cmd(), sms);
+  smsc::inman::interaction::ObjectBuffer buf(400);
+  pck.serialize(buf);
 
-  op.setDialogId(dlgId);
-
-  FillChargeOp(id,op,sms);
-
-  smsc::inman::interaction::ObjectBuffer buf(16);
-  smsc::inman::interaction::SerializerInap::getInstance()->serialize(&op,buf);
   debug2(log,"Buffer size:%d",buf.getDataSize());
-
   {
     sync::MutexGuard mg(reqMtx);
     ReqData* rd=new ReqData;
@@ -123,16 +122,12 @@ void INManComm::ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INFwdSmsChargeRe
   info2(log,"ChargeSmsFwd %lld/%d",id,dlgId);
   ctx.inDlgId=dlgId;
 
-  smsc::inman::interaction::ChargeSms op;
-
-  op.setDialogId(dlgId);
-  op.setForwarded();
-
-  FillChargeOp(id,op,sms);
-
-  smsc::inman::interaction::ObjectBuffer buf(16);
-  smsc::inman::interaction::SerializerInap::getInstance()->serialize(&op,buf);
-
+  smsc::inman::interaction::SPckChargeSms pck;
+  pck.Cmd().setForwarded();
+  pck.Hdr().dlgId = dlgId;
+  FillChargeOp(id, pck.Cmd(), sms);
+  smsc::inman::interaction::ObjectBuffer buf(400);
+  pck.serialize(buf);
   {
     sync::MutexGuard mg(reqMtx);
     ReqData* rd=new ReqData;
@@ -156,25 +151,20 @@ void INManComm::ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INFwdSmsChargeRe
 void INManComm::Report(int dlgId,const SMS& sms,bool final)
 {
   info2(log,"Report:%d/%d",dlgId,sms.lastResult);
-  smsc::inman::interaction::DeliverySmsResult res
-    (
-      sms.lastResult,
-      final
-    );
-  res.setDialogId(dlgId);
 
-  res.setDestIMSI(sms.getDestinationDescriptor().imsi);
-  res.setDestMSC(sms.getDestinationDescriptor().msc);
-  res.setDestSMEid(sms.getDestinationSmeId());
-  res.setDeliveryTime(time(NULL));
-
+  smsc::inman::interaction::SPckDeliverySmsResult pck;
+  pck.Hdr().dlgId = dlgId;
+  pck.Cmd().setResultValue(sms.lastResult);
+  pck.Cmd().setDestIMSI(sms.getDestinationDescriptor().imsi);
+  pck.Cmd().setDestMSC(sms.getDestinationDescriptor().msc);
+  pck.Cmd().setDestSMEid(sms.getDestinationSmeId());
+  pck.Cmd().setDeliveryTime(time(NULL));
   if(sms.hasStrProperty(Tag::SMSC_DIVERTED_TO))
-  {
-    res.setDivertedAdr(sms.getStrProperty(Tag::SMSC_DIVERTED_TO));
-  }
+    pck.Cmd().setDivertedAdr(sms.getStrProperty(Tag::SMSC_DIVERTED_TO));
 
-  smsc::inman::interaction::ObjectBuffer buf(0);
-  smsc::inman::interaction::SerializerInap::getInstance()->serialize(&res,buf);
+  smsc::inman::interaction::ObjectBuffer buf(200);
+  pck.serialize(buf);
+
   packetWriter.enqueue((const char*)buf.get(),buf.getDataSize());
 }
 
@@ -263,14 +253,13 @@ int INManComm::Execute()
       continue;
     }
     buf.setDataSize(packetSize);
-    std::auto_ptr<smsc::inman::interaction::SerializableObject> obj;
-    try{
-      buf.setPos(0);
-      obj=std::auto_ptr<smsc::inman::interaction::SerializableObject>
-        (
-          smsc::inman::interaction::SerializerInap::getInstance()->deserialize(buf)
-        );
-      obj->loadDataBuf();
+    buf.setPos(0); 
+    std::auto_ptr<smsc::inman::interaction::INPPacketAC> pck;
+    try {
+        pck.reset(smsc::inman::interaction::INPSerializer::getInstance()->deserialize(buf));
+        if ((pck->pHdr())->Id() != smsc::inman::interaction::INPCSBilling::HDR_DIALOG)
+            throw smsc::util::Exception("unsupported Inman packet header");
+        (pck->pCmd())->loadDataBuf();
     }catch(std::exception& e)
     {
       warn2(log,"Failed to deserialize buffer:%s",e.what());
@@ -279,23 +268,29 @@ int INManComm::Execute()
       socket=new net::Socket();
       continue;
     }
-    if(obj->getObjectId()!=smsc::inman::interaction::CHARGE_SMS_RESULT_TAG)
+
+    if ((pck->pCmd())->Id() != smsc::inman::interaction::INPCSBilling::CHARGE_SMS_RESULT_TAG)
     {
-      info2(log,"Unknown object id:%d",obj->getObjectId());
+      info2(log,"Unknown object id:%d", (pck->pCmd())->Id());
       continue;
     }
-    smsc::inman::interaction::ChargeSmsResult* result=(smsc::inman::interaction::ChargeSmsResult*)obj.get();
+
+    smsc::inman::interaction::CsBillingHdr_dlg * hdr = 
+        static_cast<smsc::inman::interaction::CsBillingHdr_dlg*>(pck->pHdr());
+    smsc::inman::interaction::ChargeSmsResult* result = 
+        static_cast<smsc::inman::interaction::ChargeSmsResult*>(pck->pCmd());
 
     smsc::smeman::SmscCommand cmd;
     {
       sync::MutexGuard mg(reqMtx);
-      ReqDataMap::iterator it=reqDataMap.find(result->getDialogId());
+
+      ReqDataMap::iterator it=reqDataMap.find(hdr->dlgId);
       if(it==reqDataMap.end())
       {
-        info2(log,"Request for response with dlgId=%d not found",result->getDialogId());
+        info2(log,"Request for response with dlgId=%d not found", hdr->dlgId);
         continue;
       }
-      debug2(log,"Received response for dlgId=%d, value=%d",result->getDialogId(),result->GetValue());
+      debug2(log,"Received response for dlgId=%d, value=%d", hdr->dlgId, result->GetValue());
       if(it->second->chargeType==ReqData::ctSubmit)
       {
         cmd=smsc::smeman::SmscCommand::makeINSmsChargeResponse
@@ -303,7 +298,7 @@ int INManComm::Execute()
             it->second->id,
             it->second->sms,
             *it->second->sbmCtx,
-            result->GetValue()==smsc::inman::interaction::CHARGING_POSSIBLE
+            result->GetValue()==smsc::inman::interaction::ChargeSmsResult::CHARGING_POSSIBLE
           );
         delete it->second->sbmCtx;
       }else
@@ -313,7 +308,7 @@ int INManComm::Execute()
             it->second->id,
             it->second->sms,
             *it->second->fwdCtx,
-            result->GetValue()==smsc::inman::interaction::CHARGING_POSSIBLE
+            result->GetValue()==smsc::inman::interaction::ChargeSmsResult::CHARGING_POSSIBLE
           );
         delete it->second->fwdCtx;
       }
