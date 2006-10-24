@@ -1,0 +1,16 @@
+  <section name="smsx">
+    <section name="nick">
+      <param name="prefix" type="string">@</param>
+    </section>
+    <section name="flash">
+      <param name="prefix" type="string">*</param>
+    </section>
+    <section name="calendar">
+      <param name="prefix" type="string">AFT,AT</param>
+      <param name="divertNumber" type="string">777001</param>
+    </section>
+    <section name="secret">
+      <param name="prefix" type="string">SEC</param>
+      <param name="divertNumber" type="string">777002</param>
+    </section>
+  </section>
