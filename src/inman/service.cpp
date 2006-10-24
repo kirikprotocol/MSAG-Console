@@ -43,7 +43,8 @@ Service::Service(const InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
         pol->getIAProvider(logger);
     }
 
-    server = new Server(&_cfg.sock, INPSerializer::getInstance(), logger);
+    INPSerializer::getInstance();
+    server = new Server(&_cfg.sock, logger);
     assert(server);
     server->addListener(this);
     smsc_log_debug(logger, "InmanSrv: TCP server inited");
@@ -171,7 +172,7 @@ void Service::onBillingConnectClosed(unsigned int connId)
 void Service::onConnectOpened(Server* srv, Connect* conn)
 {
     assert(conn);
-    conn->setConnectFormat(Connect::frmLengthPrefixed);
+    conn->Init(Connect::frmLengthPrefixed, INPSerializer::getInstance());
     BillingConnect *bcon = new BillingConnect(&_cfg.bill, ssnSess, conn, logger);
     if (bcon) {
         _mutex.Lock();
