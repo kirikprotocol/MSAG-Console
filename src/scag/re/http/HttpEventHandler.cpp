@@ -147,7 +147,7 @@ RuleStatus HttpEventHandler::process(SCAGCommand& command, Session& session)
 
     smsc_log_debug(logger, "HttpEventHandler: Provider ID found. ID = %d", hc.getProviderId());
 
-    CommandProperty cp(command, 0, abonentAddr, hc.getProviderId(), operatorId, CO_HTTP_DELIVERY);
+    CommandProperty cp(command, 0, abonentAddr, hc.getProviderId(), operatorId, -1, CO_HTTP_DELIVERY);
 
     switch(hc.getCommandId())
     {

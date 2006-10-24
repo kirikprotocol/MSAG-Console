@@ -521,6 +521,9 @@ void BillingManagerImpl::fillChargeSms(smsc::inman::interaction::ChargeSms& op, 
     op.setDestinationSubscriberNumber(str);
     op.setCallingPartyNumber(billingInfoStruct.AbonentNumber);
     op.setServiceId(billingInfoStruct.serviceId);
+    op.setUserMsgRef(billingInfoStruct.msgRef);
+
+    smsc_log_debug(logger, "***** SN=%s, CPN=%s, SID=%d", str.c_str(), billingInfoStruct.AbonentNumber.c_str(), billingInfoStruct.serviceId);
 
     /*
     char buff[128];

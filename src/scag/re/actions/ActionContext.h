@@ -47,10 +47,11 @@ namespace scag { namespace re { namespace actions
 
         int providerId;
         int operatorId;
+        int msgRef;
         uint8_t commandId;
         CommandOperations cmdType;
 
-        CommandProperty(SCAGCommand& command, int commandStatus, Address& addr, int ProviderId, int OperatorId, CommandOperations CmdType);
+        CommandProperty(SCAGCommand& command, int commandStatus, Address& addr, int ProviderId, int OperatorId, int msgRef, CommandOperations CmdType);
     };
 
 
@@ -119,6 +120,7 @@ namespace scag { namespace re { namespace actions
             billingInfoStruct.operatorId = commandProperty.operatorId;
 
             billingInfoStruct.SessionBornMicrotime = session.getPrimaryKey().BornMicrotime;
+            billingInfoStruct.msgRef = commandProperty.msgRef;
 
             return billingInfoStruct;
         }

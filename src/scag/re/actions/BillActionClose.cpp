@@ -122,7 +122,7 @@ void BillActionClose::SetBillingStatus(ActionContext& context, const char * erro
         property = context.getProperty(m_sStatus);
         if (!property) 
         {
-            smsc_log_debug(logger,"BillAction 'bill:open' :: Invalid property %s for status", m_sStatus.c_str());
+            smsc_log_debug(logger,"BillAction 'bill:close' :: Invalid property %s for status", m_sStatus.c_str());
             return;
         }
 
@@ -141,7 +141,7 @@ void BillActionClose::SetBillingStatus(ActionContext& context, const char * erro
 
         if (!property) 
         {
-            smsc_log_debug(logger,"BillAction 'bill:open' :: Invalid property %s for msg", m_sMessage.c_str());
+            smsc_log_debug(logger,"BillAction 'bill:close' :: Invalid property %s for msg", m_sMessage.c_str());
             return;
         }
         property->setStr(std::string(errorMsg));

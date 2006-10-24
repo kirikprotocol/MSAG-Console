@@ -201,8 +201,11 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
         
         throw SCAGException("SmppEventHandler: Cannot find OperatorID for %s abonent", abonentAddr.toString().c_str());
     }
-    
-    CommandProperty commandProperty(command, (*smppcommand)->status, abonentAddr, providerId, operatorId, smppDiscriptor.cmdType);
+
+    SMS& sms = CommandBrige::getSMS(*smppcommand);
+    int msgRef = sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) ? sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE):-1;
+
+    CommandProperty commandProperty(command, (*smppcommand)->status, abonentAddr, providerId, operatorId, msgRef, smppDiscriptor.cmdType);
 
     std::string message = CommandBrige::getMessageBody(*smppcommand);
 

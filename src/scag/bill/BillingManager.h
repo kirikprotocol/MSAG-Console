@@ -54,6 +54,8 @@ struct BillingInfoStruct
     int protocol;
     int providerId;
     int operatorId;
+    int msgRef;
+
     timeval SessionBornMicrotime;
 
     //int ServiceNumber;

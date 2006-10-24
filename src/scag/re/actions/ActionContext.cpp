@@ -10,7 +10,7 @@ namespace scag { namespace re { namespace actions
     using namespace scag::exceptions;
 
 
-CommandProperty::CommandProperty(SCAGCommand& command, int commandStatus, Address& addr, int ProviderId, int OperatorId, CommandOperations CmdType)
+CommandProperty::CommandProperty(SCAGCommand& command, int commandStatus, Address& addr, int ProviderId, int OperatorId, int MsgRef, CommandOperations CmdType)
     : abonentAddr(addr)
 {
     cmdType = CmdType;
@@ -23,6 +23,7 @@ CommandProperty::CommandProperty(SCAGCommand& command, int commandStatus, Addres
     
     providerId = ProviderId;
     operatorId = OperatorId;
+    msgRef = MsgRef;
 }
 
 

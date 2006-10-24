@@ -106,6 +106,7 @@ INPPacketAC * BillingServer::ReadCommand()
     //smsc_log_debug(logger,"received:%s",dstr.c_str());
 
     auto_ptr<INPPacketAC> pck(INPSerializer::getInstance()->deserialize(buff)); //throws
+    pck->pCmd()->loadDataBuf();
 
     if ((pck->pHdr())->Id() != INPCSBilling::HDR_DIALOG) {
         smsc_log_error(logger, "received cmd %u: unknown header: %u",

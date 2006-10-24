@@ -1,5 +1,5 @@
 /* "$Id$" */
-// #define MSAG_INMAN_BILL
+//#define MSAG_INMAN_BILL
 
 #ifndef _BILLING_MANAGER_WRAPPER_
 #define _BILLING_BANAGER_WRAPPER_
@@ -49,6 +49,7 @@ protected:
 
         #ifdef MSAG_INMAN_BILL
         socket = new Socket();
+
         pipe = new Connect(socket, Connect::frmLengthPrefixed, INPSerializer::getInstance(), logger);
         #endif
     };
