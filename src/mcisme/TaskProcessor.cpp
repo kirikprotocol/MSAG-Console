@@ -601,7 +601,8 @@ void TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt)
 	smsc_log_debug(logger, "ProcessAbntEvents: msg = %s", msg.message.c_str());
 	msg.abonent = abnt.getText();//"777";
 	
-	MutexGuard *Lock = new MutexGuard(smsInfoMutex);
+//	MutexGuard *Lock = new MutexGuard(smsInfoMutex);
+	smsInfoMutex.Lock();
 	int seqNum = messageSender->getSequenceNumber();
 	int res = smsInfo.Insert(seqNum, pInfo);
 	if(!messageSender->send(seqNum, msg))
@@ -610,10 +611,12 @@ void TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt)
 		pDeliveryQueue->Reschedule(pInfo->abnt);
 		smsInfo.Delete(seqNum);
 		delete pInfo;
-		delete Lock;
+//		delete Lock;
+		smsInfoMutex.Unlock();
 		return;
 	}
-	delete Lock;
+//	delete Lock;
+	smsInfoMutex.Unlock();
 
 	timeoutMonitor->addSeqNum(seqNum);
 
@@ -633,16 +636,19 @@ bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
 	{
 //		printf("Recieve a DATA_SM_RESP (cmdId = %d status = %d seqNum = %d )\n", cmdId, status, seqNum);
 
-		MutexGuard *Lock = new MutexGuard(smsInfoMutex);
+//		MutexGuard *Lock = new MutexGuard(smsInfoMutex);
+		smsInfoMutex.Lock();
 		if(!smsInfo.Exist(seqNum))
 		{
 			smsc_log_debug(logger, "No info for SMS seqNum = %d\n", seqNum);
-			delete Lock;
+//			delete Lock;
+			smsInfoMutex.Unlock();
 			return false;
 		}
 		sms_info* pInfo = smsInfo.Get(seqNum);
 		smsInfo.Delete(seqNum);
-		delete Lock;
+//		delete Lock;
+		smsInfoMutex.Unlock();
 
 		smsc_log_debug(logger, "Recieve a DATA_SM_RESP for Abonent %s seq_num = %d, status = %d", pInfo->abnt.toString().c_str(), seqNum, status);
 		timeoutMonitor->removeSeqNum(seqNum);
@@ -675,16 +681,19 @@ void TaskProcessor::invokeProcessDataSmTimeout(int seqNum)
 {
 	smsc_log_debug(logger, "Timeout for SMS seqNum %d\n", seqNum);
 
-	MutexGuard *Lock = new MutexGuard(smsInfoMutex);
+//	MutexGuard *Lock = new MutexGuard(smsInfoMutex);
+	smsInfoMutex.Lock();
 	if(!smsInfo.Exist(seqNum))
 	{
 		smsc_log_debug(logger, "No info for SMS seqNum = %d\n", seqNum);
-		delete Lock;
+//		delete Lock;
+		smsInfoMutex.Unlock();
 		return;
 	}
 	sms_info* pInfo = smsInfo.Get(seqNum);
 	smsInfo.Delete(seqNum);
-	delete Lock;
+//	delete Lock;
+	smsInfoMutex.Unlock();
 
 	smsc_log_debug(logger, "SMS for Abonent %s (seqNum %d) is removed from waiting list", pInfo->abnt.toString().c_str(), seqNum);
 
