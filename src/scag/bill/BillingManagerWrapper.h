@@ -49,7 +49,7 @@ protected:
 
         #ifdef MSAG_INMAN_BILL
         socket = new Socket();
-        pipe = new Connect(socket, INPSerializer::getInstance(), Connect::frmLengthPrefixed, logger);
+        pipe = new Connect(socket, Connect::frmLengthPrefixed, INPSerializer::getInstance(), logger);
         #endif
     };
     ~BillingManagerWrapper()
