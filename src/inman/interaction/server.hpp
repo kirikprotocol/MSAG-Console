@@ -35,8 +35,7 @@ public:
         srvError = 1        //server socket fatal error
     } ShutdownReason;
 
-    Server(const ServSocketCFG * in_cfg, SerializerITF * serializer,
-           Logger* uselog = NULL);
+    Server(const ServSocketCFG * in_cfg, Logger* uselog = NULL);
     virtual ~Server();
 
     void openConnect(Connect* connect);
@@ -59,7 +58,6 @@ protected:
     volatile
         ServerState _runState;
     unsigned        lstRestartCnt;
-    SerializerITF * ipSerializer;
     Socket          serverSocket;
     ConnectsList    connects;
     Logger*         logger;

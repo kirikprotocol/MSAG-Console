@@ -36,13 +36,16 @@ class Connect : public ObservableT<ConnectListenerITF> {
 public:
     typedef enum { frmStraightData = 0, frmLengthPrefixed = 1 } ConnectFormat;
 
-    Connect(Socket* sock, SerializerITF * serializer,
-            ConnectFormat frm = Connect::frmLengthPrefixed, Logger * uselog = NULL);
+    Connect(Socket* sock, ConnectFormat frm = Connect::frmStraightData,
+            SerializerITF * serializer = NULL, Logger * uselog = NULL);
     virtual ~Connect();
+
+    void    Init(Connect::ConnectFormat frm,
+                 SerializerITF * serializer, ConnectParms * prm = NULL);
 
     Socket* getSocket(void) const   { return socket; }
     SOCKET  getSocketId(void) const { return socket->getSocket(); }
-    void    setConnectFormat(Connect::ConnectFormat frm, ConnectParms * prm = NULL);
+
     void    close(bool abort = false);
     //sends bytes directly to socket, 
     //returns -1 on error, otherwise - number of bytes sent
@@ -82,6 +85,7 @@ protected:
 
 class ConnectListenerITF {
 public:
+//    virtual ~ConnectListenerITF() { }
     virtual void onCommandReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd) = 0;
     //NOTE: it's recommended to reset exception if it doesn't prevent entire Connect to function
     virtual void onConnectError(Connect* conn, bool fatal = false) = 0;

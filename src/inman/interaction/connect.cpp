@@ -15,9 +15,8 @@ extern const ConnectParms _ConnectParms_DFLT = {
     /*bufSndSz = */1024, /*bufRcvSz = */1028, /*maxPckSz = */32767
 };
 
-Connect::Connect(Socket* sock, SerializerITF * serializer,
-                 ConnectFormat frm/* = Connect::frmLengthPrefixed*/,
-                 Logger * uselog/* = NULL*/)
+Connect::Connect(Socket* sock, ConnectFormat frm/* = Connect::frmLengthPrefixed*/,
+                 SerializerITF * serializer/* = NULL*/, Logger * uselog/* = NULL*/)
     : logger(uselog), socket(sock), _frm(frm), _exc(NULL)
     , _objSerializer(serializer), _parms(_ConnectParms_DFLT)
 {
@@ -39,9 +38,11 @@ void Connect::close(bool abort/* = false*/)
         socket->Close();
 }
 
-void Connect::setConnectFormat(Connect::ConnectFormat frm, ConnectParms * prm/* = NULL*/)
+void Connect::Init(Connect::ConnectFormat frm, 
+                    SerializerITF * serializer, ConnectParms * prm/* = NULL*/)
 {
     _frm = frm;
+    _objSerializer = serializer;
     if (prm)
         _parms = *prm;
 }

@@ -13,12 +13,11 @@ namespace interaction  {
 #define TIMEOUT_STEP 100 //millisecs
 #define LISTENER_RESTART_ATTEMPTS  2
 
-Server::Server(const ServSocketCFG * in_cfg, SerializerITF * serializer,
-                                                Logger* uselog /*= NULL*/)
-    : _cfg(*in_cfg), ipSerializer(serializer), lstRestartCnt(0)
+Server::Server(const ServSocketCFG * in_cfg, Logger * uselog /*= NULL*/)
+    : _cfg(*in_cfg), lstRestartCnt(0)
     , _runState(Server::lstStopped), logger(uselog)
 {
-    assert(_cfg.host.length() && ipSerializer);
+    assert(_cfg.host.length());
     if (!logger)
         logger = Logger::getInstance("smsc.inman.TCPSrv");
 }
@@ -202,8 +201,7 @@ Server::ShutdownReason Server::Listen(void)
                 } else if (connects.size() < _cfg.maxConn) {
                     smsc_log_debug(logger, "TCPSrv: accepted new connect[%u]",
                                    clientSocket->getSocket());
-                    Connect* connect = new Connect(clientSocket, ipSerializer,
-                                                   Connect::frmStraightData, logger);
+                    Connect* connect = new Connect(clientSocket, Connect::frmStraightData, NULL, logger);
                     openConnect(connect);
                     if (!connect->hasListeners()) {
                         smsc_log_warn(logger, "TCPSrv: No listeners being set for connect[%u]!",

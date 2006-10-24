@@ -438,8 +438,8 @@ public:
             smsc_log_error(logger, msg.c_str());
             throw std::runtime_error(msg.c_str());
         }
-        pipe = new Connect(socket, INPSerializer::getInstance(),
-                                        Connect::frmLengthPrefixed, logger);
+        pipe = new Connect(socket, Connect::frmLengthPrefixed,
+                           INPSerializer::getInstance(), logger);
         _abDB = AbonentsDB::Init(PRE_ABONENTS_NUM, _abonents);
         _adrDB = TNPIAddressDB::Init(PRE_ADDRESSES_NUM, _dstAdr);
     }
