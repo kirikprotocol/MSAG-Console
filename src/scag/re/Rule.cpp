@@ -24,7 +24,7 @@ Rule::~Rule()
         delete value;
     }
 
-    //smsc_log_debug(logger,"Rule released");
+    smsc_log_debug(logger,"Rule released");
 }
 
 

@@ -1,5 +1,5 @@
 /* "$Id$" */
-//#define MSAG_INMAN_BILL
+#define MSAG_INMAN_BILL
 
 #ifndef _BILLING_MANAGER_WRAPPER_
 #define _BILLING_BANAGER_WRAPPER_

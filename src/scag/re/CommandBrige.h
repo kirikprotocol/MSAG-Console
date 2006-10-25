@@ -65,6 +65,7 @@ struct CSmppDiscriptor
 
     bool isUSSDClosed;
     bool wantOpenUSSD;
+
     bool m_waitReceipt;
     bool isResp;
 

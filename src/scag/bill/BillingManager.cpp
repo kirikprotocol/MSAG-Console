@@ -303,10 +303,10 @@ int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, TariffRec& ta
 
 
     #ifdef MSAG_INMAN_BILL
-    SPckChargeSms pck;
-    fillChargeSms(pck.Cmd(), billingInfoStruct, tariffRec);
-    pck.Hdr().dlgId = billId;
-    billTransaction->ChargeOperation = pck;
+    //SPckChargeSms pck;
+    fillChargeSms(billTransaction->ChargeOperation.Cmd(), billingInfoStruct, tariffRec);
+    billTransaction->ChargeOperation.Hdr().dlgId = billId;
+    //billTransaction->ChargeOperation = pck;
     billTransaction->status = TRANSACTION_WAIT_ANSWER;
     #else
     billTransaction->status = TRANSACTION_VALID;
@@ -318,7 +318,7 @@ int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, TariffRec& ta
 
 
     #ifdef MSAG_INMAN_BILL
-    sendCommand(pck);
+    sendCommand(billTransaction->ChargeOperation);
 
     billTransaction->eventMonitor.wait(1000);
     #endif
@@ -370,8 +370,10 @@ void BillingManagerImpl::Commit(int billId)
     if (!pBillTransactionPtr) throw SCAGException("Cannot find transaction for billId=%d", billId);
 
     #ifdef MSAG_INMAN_BILL
-    (*pBillTransactionPtr)->ChargeOperation.Hdr().dlgId = billId;
+    //(*pBillTransactionPtr)->ChargeOperation.Hdr().dlgId = billId;
+    //SPckChargeSms pck;
     sendCommand((*pBillTransactionPtr)->ChargeOperation);
+    //sendCommand(pck);
     #else
     (*pBillTransactionPtr)->status = TRANSACTION_VALID;
     #endif 

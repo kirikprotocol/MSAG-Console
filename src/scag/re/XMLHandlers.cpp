@@ -53,6 +53,11 @@ void SemanticAnalyser::DeliverBeginTag(const std::string& name,const SectionPara
         } catch (SCAGException& e)
         {
             if (NewObj) delete NewObj;
+            if (RootObject)
+            {
+                delete RootObject;
+                RootObject = 0;
+            }
             throw RuleEngineException(nLine, "Invalid object '%s' to create: %s",name.c_str(),e.what());
         }
 
@@ -66,6 +71,8 @@ void SemanticAnalyser::DeliverBeginTag(const std::string& name,const SectionPara
     {
         if (RootObject) 
         {
+            delete RootObject;
+            RootObject = 0;
             throw SCAGException("Semantic Analyser: Structure cannot has 2 rule objects");
         }
 
@@ -78,6 +85,10 @@ void SemanticAnalyser::DeliverBeginTag(const std::string& name,const SectionPara
         } catch(SCAGException& e)
         {
             if (NewObj) delete NewObj;
+            delete rule;
+            RootObject = 0;
+            rule = 0;
+
             throw RuleEngineException(nLine, "Invalid object '%s' to create: %s",name.c_str(),e.what());
         }
         CurrentObject = rule;
