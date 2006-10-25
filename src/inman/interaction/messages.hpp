@@ -81,6 +81,9 @@ protected:
 public:
     INPSolidPacketT() : INPPacketAC()
         { referObj(0, pckHdr); referObj(1, pckCmd); }
+    //constructor for copying
+    INPSolidPacketT(const INPSolidPacketT &org_pck) : *this(org_pck)
+        { referObj(0, pckHdr); referObj(1, pckCmd); } //fix at([01]) references
 
     _Header &  Hdr() { return pckHdr; }
     _Command & Cmd() { return pckCmd; }

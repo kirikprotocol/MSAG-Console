@@ -245,6 +245,15 @@ public:
     SerializableObjectAC(unsigned short obj_id)
         : objectId(obj_id), dataBuf(NULL), ownBuf(false)
     { }
+    //constructor for copying
+    SerializableObjectAC(const SerializableObjectAC &org_obj)
+        : objectId(org_obj.objectId), dataBuf(NULL), ownBuf(false)
+    { 
+        //if there is a ObjectBuffer with data for deferred
+        //deserialization then copy it
+        if (org_obj.getDataBuf()) 
+            setDataBuf(org_obj.getDataBuf(), false);
+    }
     virtual ~SerializableObjectAC() {  if (dataBuf && ownBuf) delete dataBuf; }
 
     unsigned short Id() const { return objectId; }
