@@ -269,7 +269,7 @@ public:
 //			exitedEvent.Wait();
 			WaitFor();
 			bStarted = false;
-			smsc_log_info(logger, "TimeoutMonitor Stoped.");
+			smsc_log_info(logger, "TimeoutMonitor Stopped.");
 		}
 	}
 

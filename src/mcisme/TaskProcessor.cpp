@@ -350,7 +350,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
 	int ret = pStorage->Init(storageCfg, pDeliveryQueue);
 	smsc_log_warn(logger, "ret = %d", ret);
 
-	timeoutMonitor = new TimeoutMonitor(this, 30);
+//	timeoutMonitor = new TimeoutMonitor(this, 30);
 
 	smsc_log_info(logger, "Load success.");
 }
@@ -378,7 +378,7 @@ void TaskProcessor::Start()
             smsc_log_error(logger, "Failed to start processing. Message sender is undefined.");
             return;
         }
-		timeoutMonitor->Start();
+//		timeoutMonitor->Start();
 		pDeliveryQueue->OpenQueue();
         openInQueue();
         Thread::Start();
@@ -397,7 +397,7 @@ void TaskProcessor::Stop()
         smsc_log_info(logger, "Stopping event processing...");
         
         if (mciModule) mciModule->Detach();
-        timeoutMonitor->Stop();
+//        timeoutMonitor->Stop();
         closeInQueue();
 		pDeliveryQueue->CloseQueue();
 		bStopProcessing = true;
@@ -618,7 +618,7 @@ void TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt)
 //	delete Lock;
 	smsInfoMutex.Unlock();
 
-	timeoutMonitor->addSeqNum(seqNum);
+//	timeoutMonitor->addSeqNum(seqNum);
 
 	count+=pInfo->events.size();
 	end = time(0);
@@ -651,7 +651,7 @@ bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
 		smsInfoMutex.Unlock();
 
 		smsc_log_debug(logger, "Recieve a DATA_SM_RESP for Abonent %s seq_num = %d, status = %d", pInfo->abnt.toString().c_str(), seqNum, status);
-		timeoutMonitor->removeSeqNum(seqNum);
+//		timeoutMonitor->removeSeqNum(seqNum);
 
 		if(status == smsc::system::Status::OK)
 		{	
