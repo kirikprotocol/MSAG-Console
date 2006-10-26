@@ -241,7 +241,7 @@ public:
 			}
 		}
 		smsc_log_info(logger, "TimeoutMonitor Exiting ...");
-		exitedEvent.Signal();
+//		exitedEvent.Signal();
 		return 0;	
 	}
 	void Start()
@@ -266,7 +266,8 @@ public:
 			smsc_log_info(logger, "TimeoutMonitor Stopping ...");
 			bNeedExit = true;
 			awakeMonitor.notify();
-			exitedEvent.Wait();
+//			exitedEvent.Wait();
+			WaitFor();
 			bStarted = false;
 			smsc_log_info(logger, "TimeoutMonitor Stoped.");
 		}
