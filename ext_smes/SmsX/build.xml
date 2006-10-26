@@ -5,9 +5,9 @@
   <property name="SMSC_DIR" value="../.." />
   <property file="${SMSC_DIR}/webapps/build.properties"/>
   <property name="java_src" location="src"/>
+  <property name="config" location="config"/>
   <property name="java_out" location="${BUILD_DIR}/classes/${esme_name}"/>
-  <property name="exploded" location="${BUILD_DIR}/exploded/${esme_name}"/>
-  <property name="java_lib" location="${exploded}/lib"/>
+  <property name="java_lib" location="lib"/>
   <property name="libs_path" location="${SMSC_DIR}/webapps/libs"/>
   <property name="BUILD_BIN" value="${BUILD_DIR}/bin"/>
   <property name="TEMPLATE_PROPS" value="should be defined in calling script"/>
@@ -19,7 +19,7 @@
   </target>
 
   <target name="init">
-    <ant antfile="../make_esme.xml" target="init"/>
+    <mkdir dir="${java_out}"/>
   </target>
 
   <target name="compile" depends="init" description="compile the sources">
@@ -37,38 +37,40 @@
   </target>
 
   <target name="build" depends="clean,compile" description="generate the distribution">
-    <mkdir dir="${BUILD_BIN}/${esme_bin_path}"/>
-    <echo file="${BUILD_BIN}/${esme_bin_path}/${esme_bin_name}" message="Fake binary file"/>
-    <ant antfile="../make_esme.xml" target="build"/>
+    <mkdir dir="${DISTR_DIR}/services/${esme_name}/bin"/>
+    <jar jarfile="${DISTR_DIR}/services/${esme_name}/bin/${esme_name}.jar">
+	<fileset dir="${java_out}"/>
+    </jar> 
   </target>
 
   <target name="copy_libs">
-    <copy todir="${LIBS_OUT_DIR}" flatten="yes" preservelastmodified="yes" >
+    <mkdir dir="${DISTR_DIR}/services/${esme_name}/bin"/>
+    <copy todir="${DISTR_DIR}/services/${esme_name}/bin" flatten="yes" preservelastmodified="yes" >
       <fileset refid="project_libs"/>
       <fileset dir="${libs_path}" includes="log4j.jar classes12.jar"/>
       <fileset dir="${java_lib}" includes="${esme_name}.jar"/>
     </copy>
   </target>
-
-  <target name="distr" depends="build" description="installs the webapp">
-    <ant antfile="../make_esme.xml" target="distr"/>
-    <move file="${exploded}/lib/${esme_name}.jar" todir="${exploded}/bin" />
-    <antcall target="copy_libs">
-      <param name="LIBS_OUT_DIR" value="${exploded}/bin"/>
-    </antcall>
-    <copy todir="${exploded}/config">
-      <fileset dir="${TEMPL_DIR}/${esme_name}" includes="*.properties"/>
-      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+  
+  <target name="copy_sql">
+    <mkdir dir="${DISTR_DIR}/services/${esme_name}/config/sql"/>
+    <copy todir="${DISTR_DIR}/services/${esme_name}/config/sql">
+       <fileset dir="sql"/>
     </copy>
-    <jar basedir="${exploded}" jarfile="${DISTR_DIR}/services/${esme_name}.war" compress="9"/>
   </target>
 
-  <target name="update" depends="build" description="update existing installation">
-    <ant antfile="../make_esme.xml" target="update"/>
-    <delete file="${DISTR_DIR}/webapps/smsc/WEB-INF/lib/${esme_name}.jar"/>
-    <antcall target="copy_libs">
-      <param name="LIBS_OUT_DIR" value="${DISTR_DIR}/services/${esme_name}/bin"/>
-    </antcall>
+  <target name="distr" depends="build, copy_sql, copy_libs" description="installs the webapp">
+    <mkdir dir="${DISTR_DIR}/services/${esme_name}/config"/>
+    <mkdir dir="${DISTR_DIR}/services/${esme_name}/logs/calendar"/>
+    <mkdir dir="${DISTR_DIR}/services/${esme_name}/logs/secret"/>
+    
+    <copy todir="${DISTR_DIR}/services/${esme_name}/config">
+      <fileset dir="config" includes="*.properties"/>
+      <fileset dir="config" includes="*.xml"/>
+    </copy>  
+  </target>
+
+  <target name="update" depends="build, copy_sql, copy_libs" description="update existing installation">
   </target>
 
   <target name="clean" description="clean up">

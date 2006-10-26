@@ -62,5 +62,11 @@ Modules:
   <target name="inman_update">
     <ant dir="InManSme" antfile="build.xml" target="update"/>
   </target>
+  <target name="smsx_distr">
+    <ant dir="SmsX" antfile="build.xml" target="distr"/>
+  </target>
+  <target name="smsx_update">
+    <ant dir="SmsX" antfile="build.xml" target="update"/>
+  </target>        
   
 </project>
