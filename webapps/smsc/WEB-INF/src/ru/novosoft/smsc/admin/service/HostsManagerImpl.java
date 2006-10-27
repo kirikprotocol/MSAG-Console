@@ -6,6 +6,8 @@ import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.daemon.Daemon;
 import ru.novosoft.smsc.admin.daemon.DaemonManager;
 import ru.novosoft.smsc.admin.route.SME;
+import ru.novosoft.smsc.admin.route.Route;
+import ru.novosoft.smsc.admin.route.Subject;
 import ru.novosoft.smsc.admin.smsc_service.RouteSubjectManager;
 import ru.novosoft.smsc.admin.smsc_service.SmeManager;
 import ru.novosoft.smsc.util.config.Config;
@@ -14,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Iterator;
 
 public abstract class HostsManagerImpl implements HostsManager {
     protected Category logger = Category.getInstance(this.getClass());
@@ -60,11 +63,14 @@ public abstract class HostsManagerImpl implements HostsManager {
     }
 
     public synchronized Service removeService(final String serviceId) throws AdminException {
-        int useFlag = isSmeUsed(serviceId);
-        if (useFlag != 0) {
-            if (useFlag == 1) throw new AdminException("Service \"" + serviceId + "\" is used by routes");
-            if (useFlag == 2) throw new AdminException("Service \"" + serviceId + "\" is used by subjects");
-        }
+        final List routesUsingSme = getRoutesUsingSme(serviceId);
+        if (!routesUsingSme.isEmpty())
+          throw new AdminException("Service \"" + serviceId + "\" is used by routes: " + printRoutesList(routesUsingSme));
+
+        final List subjectsUsingSme = getSubjectsUsingSme(serviceId);
+        if (!subjectsUsingSme.isEmpty())
+          throw new AdminException("Service \"" + serviceId + "\" is used by subjects: " + printSubjectsList(subjectsUsingSme));
+
         final Daemon daemon = daemonManager.getServiceDaemon(serviceId);
         if (null == daemon) {
             throw new AdminException("Service \"" + serviceId + "\" host not found");
@@ -163,20 +169,44 @@ public abstract class HostsManagerImpl implements HostsManager {
 
     public synchronized void removeSme(final String smeId) throws AdminException {
         if (serviceManager.contains(smeId)) {
-            throw new AdminException("Couldn't remove sme \"" + smeId + "\" because it is service");
+            throw new AdminException("Sme \"" + smeId + "\" is service");
         }
 
-        int useFlag = isSmeUsed(smeId);
-        if (useFlag != 0) {
-            if (useFlag == 1) throw new AdminException("Couldn't remove sme \"" + smeId + "\" because it is used by routes");
-            if (useFlag == 2) throw new AdminException("Couldn't remove sme \"" + smeId + "\" because it is used by subjects");
-        }
+        final List routesUsingSme = getRoutesUsingSme(smeId);
+        if (!routesUsingSme.isEmpty())
+          throw new AdminException("Sme \"" + smeId + "\" is used by routes: " + printRoutesList(routesUsingSme));
+
+        final List subjectsUsingSme = getSubjectsUsingSme(smeId);
+        if (!subjectsUsingSme.isEmpty())
+          throw new AdminException("Sme \"" + smeId + "\" is used by subjects: " + printSubjectsList(subjectsUsingSme));
 
         smeManager.remove(smeId);
     }
 
-    protected int isSmeUsed(final String smeId) {
-        return routeSubjectManager.isSmeUsed(smeId);
+    protected int isSmeUsed(String smeId) {
+      return routeSubjectManager.isSmeUsed(smeId);
+    }
+
+    private List getRoutesUsingSme(String smeId) {
+      return routeSubjectManager.getRoutesUsingSme(smeId);
+    }
+
+    private List getSubjectsUsingSme(String smeId) {
+      return routeSubjectManager.getSubjectsUsingSme(smeId);
+    }
+
+    private String printRoutesList(List routesList) {
+      final StringBuffer result = new StringBuffer();
+      for (Iterator iterator = routesList.iterator(); iterator.hasNext();)
+        result.append(((Route)iterator.next()).getName()).append(iterator.hasNext() ? ", " : "");
+      return result.toString();
+    }
+
+    private String printSubjectsList(List subjectsList) {
+      final StringBuffer result = new StringBuffer();
+      for (Iterator iterator = subjectsList.iterator(); iterator.hasNext();)
+        result.append(((Subject)iterator.next()).getName()).append(iterator.hasNext() ? ", " : "");
+      return result.toString();
     }
 
     public synchronized int getHostPort(final String hostName) throws AdminException {

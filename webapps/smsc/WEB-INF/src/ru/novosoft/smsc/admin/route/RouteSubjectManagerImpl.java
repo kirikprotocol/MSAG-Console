@@ -21,6 +21,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
+import java.util.ArrayList;
 
 
 public class RouteSubjectManagerImpl implements RouteSubjectManager {
@@ -45,6 +47,26 @@ public class RouteSubjectManagerImpl implements RouteSubjectManager {
 
     public SubjectList getSubjects() {
         return subjects;
+    }
+
+    public List getRoutesUsingSme(String smeId) {
+      final List result = new ArrayList();
+      for (Iterator i = routes.iterator(); i.hasNext();) {
+        Route route = (Route) i.next();
+        if (route.getSrcSmeId().equals(smeId) || route.getDestinations().isSmeUsed(smeId))
+          result.add(route);
+      }
+      return result;
+    }
+
+    public List getSubjectsUsingSme(String smeId) {
+      final List result = new ArrayList();
+      for (Iterator i = subjects.iterator(); i.hasNext();) {
+        Subject subj = (Subject) i.next();
+        if (subj.getDefaultSme().getId().equals(smeId))
+          result.add(subj);
+      }
+      return result;
     }
 
     public int isSmeUsed(String smeId) {

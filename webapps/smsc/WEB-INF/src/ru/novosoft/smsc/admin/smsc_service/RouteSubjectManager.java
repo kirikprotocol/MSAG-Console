@@ -5,6 +5,7 @@ import ru.novosoft.smsc.admin.route.RouteList;
 import ru.novosoft.smsc.admin.route.SubjectList;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by igork
@@ -32,6 +33,10 @@ public interface RouteSubjectManager
   void trace() throws AdminException;   // save to traceable config (Traceable)
 
   int isSmeUsed(String smeId);
+
+  public List getRoutesUsingSme(String smeId);
+
+  public List getSubjectsUsingSme(String smeId);
 
   boolean hasSavedConfiguration();
 }

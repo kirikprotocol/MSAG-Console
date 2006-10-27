@@ -123,7 +123,7 @@ public class Index extends PageBean {
                 journalAppend(SubjectTypes.TYPE_service, id, Actions.ACTION_DEL);
                 //appContext.getStatuses().setServicesChanged(true);
             } catch (Throwable e) {
-                error(SMSCErrors.error.services.coudntDeleteService, id);
+                error(SMSCErrors.error.services.coudntDeleteService, e.getMessage());
                 logger.error("Couldn't delete service \"" + id + '"', e);
                 notRemoved.add(id);
             }

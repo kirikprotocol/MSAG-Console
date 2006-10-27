@@ -7,6 +7,8 @@ import ru.novosoft.smsc.admin.daemon.Daemon;
 import ru.novosoft.smsc.admin.resource_group.ResourceGroup;
 import ru.novosoft.smsc.admin.resource_group.ResourceGroupManager;
 import ru.novosoft.smsc.admin.route.SME;
+import ru.novosoft.smsc.admin.route.Route;
+import ru.novosoft.smsc.admin.route.Subject;
 import ru.novosoft.smsc.admin.smsc_service.RouteSubjectManager;
 import ru.novosoft.smsc.admin.smsc_service.SmeManager;
 import ru.novosoft.smsc.admin.smsc_service.SmscList;
@@ -19,6 +21,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Iterator;
 
 public class HostsManagerHAImpl implements HostsManager {
     private Category logger = Category.getInstance(this.getClass());
@@ -128,22 +131,42 @@ public class HostsManagerHAImpl implements HostsManager {
 
     public synchronized void removeSme(final String smeId) throws AdminException {
         if (serviceManager.contains(smeId)) {
-            throw new AdminException("Couldn't remove sme \"" + smeId + "\" because it is service");
+            throw new AdminException("Sme \"" + smeId + "\"  is service");
         }
 
-        int useFlag = isSmeUsed(smeId);
-        if (useFlag != 0) {
-            if (useFlag == 1) throw new AdminException("Couldn't remove sme \"" + smeId + "\" because it is used by routes");
-            if (useFlag == 2) throw new AdminException("Couldn't remove sme \"" + smeId + "\" because it is used by subjects");
-        }
+        final List routesUsingSme = getRoutesUsingSme(smeId);
+        if (!routesUsingSme.isEmpty())
+          throw new AdminException("Sme \"" + smeId + "\"  used by routes: " + printRoutesList(routesUsingSme));
+
+        final List subjectsUsingSme = getSubjectsUsingSme(smeId);
+        if (!subjectsUsingSme.isEmpty())
+          throw new AdminException("Sme \"" + smeId + "\"  used by subjects: " + printSubjectsList(subjectsUsingSme));
 
         smeManager.remove(smeId);
         resourceGroupManager.refreshResGroupList();
     }
 
 
-    private int isSmeUsed(final String smeId) {
-        return routeSubjectManager.isSmeUsed(smeId);
+    private List getRoutesUsingSme(String smeId) {
+      return routeSubjectManager.getRoutesUsingSme(smeId);
+    }
+
+    private List getSubjectsUsingSme(String smeId) {
+      return routeSubjectManager.getSubjectsUsingSme(smeId);
+    }
+
+    private String printRoutesList(List routesList) {
+      final StringBuffer result = new StringBuffer();
+      for (Iterator iterator = routesList.iterator(); iterator.hasNext();)
+        result.append(((Route)iterator.next()).getName()).append(iterator.hasNext() ? ", " : "");
+      return result.toString();
+    }
+
+    private String printSubjectsList(List subjectsList) {
+      final StringBuffer result = new StringBuffer();
+      for (Iterator iterator = subjectsList.iterator(); iterator.hasNext();)
+        result.append(((Subject)iterator.next()).getName()).append(iterator.hasNext() ? ", " : "");
+      return result.toString();
     }
 
     public synchronized int getHostPort(final String name) throws AdminException {
