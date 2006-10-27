@@ -1,6 +1,7 @@
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%><%@
  taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%><%@
  taglib prefix="smf" uri="/scag/func"%><%@
+ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%><%@
  taglib prefix="sm-et" tagdir="/WEB-INF/tags/edit/tree" %><%@
  tag body-content="empty" %><%@
  attribute name="title"      required="false"%><%@
@@ -9,6 +10,7 @@
  attribute name="type"       required="false"%>
 <%@attribute name="validation" required="false"%>
 <%@attribute name="onchanged" required="false"%>
+<%@attribute name="comments" required="false"%>
 <c:set var="param_name" value="${smf:concat(COLLAPSING_TREE_PREFIX, name)}"/>
 <sm-et:property title="${!empty title ? title : name}">
     <input class=txt type="${empty type ? 'text' : type}"
@@ -17,4 +19,5 @@
     <c:if test="${readonly}"> readonly</c:if>
     <c:if test="${!empty validation}"> validation="${validation}" onkeyup="resetValidation(this)"</c:if>
     <c:if test="${!empty onchanged}">onfocus="${onchanged}" </c:if>/>
+    <c:if test="${!empty comments}"><fmt:message>${comments}</fmt:message></c:if>
 </sm-et:property>

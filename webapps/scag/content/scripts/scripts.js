@@ -246,6 +246,16 @@ function validateField_release_cause(elem)
   return validationError(elem, '<fmt:message>scripts.causeValueErrorMsg_pre</fmt:message>'+intValue+'<fmt:message>scripts.causeValueErrorMsg_post</fmt:message>');
 }
 
+function validateField_transitOptionalTags(elem)
+{
+  elem.value = elem.value.split(" ").join("");
+  if (elem.value=="") return true;
+  var values = elem.value.split(",");
+  for (var i=0;i<values.length;i++) {
+    if (isNaN(parseInt(values[i],16))) return validationError(elem, values[i] + ' - <fmt:message>scripts.wrongValue</fmt:message>');
+  }
+  return true;
+}
 
 function validateField(elem)
 {
@@ -268,6 +278,7 @@ function validateField(elem)
 		case "reschedule": return validateField_reschedule(elem);
 		case "release_cause": return validateField_release_cause(elem);
 		case "language": return validateField_language(elem);
+		case "transitOptionalTags": return validateField_transitOptionalTags(elem);
 	}
 	alert('<fmt:message>scripts.unknownValidationTypeErrorMsg</fmt:message>' + ": "+elem.validation);
 	return false;
