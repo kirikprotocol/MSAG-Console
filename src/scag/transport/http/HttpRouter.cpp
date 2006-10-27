@@ -59,23 +59,28 @@ HttpRouterImpl::HttpRouterImpl()
     routes = NULL;
     routeIdMap = NULL;
     serviceIdMap = NULL;
+    AddressURLMap = NULL;
     masksMap = NULL;
     hostsMap = NULL;
     pathsMap = NULL;
     defInPlace = NULL;
     defOutPlace = NULL;
-    AddressURLMap = NULL;
     XMLPlatformUtils::Initialize("en_EN.UTF-8");
 }
 
 HttpRouterImpl::~HttpRouterImpl()
 {
-    delete routes;
-    delete routeIdMap;
-    delete serviceIdMap;
-    delete AddressURLMap;
-    delete defInPlace;
-    delete defOutPlace;
+    if (routes) delete routes;
+    if (routeIdMap) delete routeIdMap;
+    if (serviceIdMap) delete serviceIdMap;
+    if (AddressURLMap) delete AddressURLMap;
+
+    if (masksMap) delete masksMap;
+    if (hostsMap) delete hostsMap;
+    if (pathsMap) delete pathsMap;
+
+    if (defInPlace) delete defInPlace;
+    if (defOutPlace) delete defOutPlace;
 
     XMLPlatformUtils::Terminate();
 }
@@ -505,24 +510,24 @@ void HttpRouterImpl::ReloadRoutes()
     Hash<uint32_t>* ph = new Hash<uint32_t>;
     Hash<uint32_t>* hh = new Hash<uint32_t>;
     AddressURLHash* auh = new AddressURLHash;
-    PlacementKindArray *inap = (PlacementKindArray*)new PlacementKindArray;
-    PlacementKindArray* outap = (PlacementKindArray*)new PlacementKindArray;
-
+    PlacementKindArray*inap = (PlacementKindArray *) new PlacementArray();
+    PlacementKindArray* outap =(PlacementKindArray *) new PlacementArray();
+    
     try{
 
-        XMLBasicHandler handler(r, inap, outap);
-        ParseFile(route_cfg_file.c_str(), &handler);
-        BuildMaps(r, h, s, auh, mh, hh, ph);
+        //XMLBasicHandler handler(r, inap, outap);
+        //ParseFile(route_cfg_file.c_str(), &handler);
+        //BuildMaps(r, h, s, auh, mh, hh, ph);
         MutexGuard mg(GetRouteMutex);
-        delete routes;
-        delete routeIdMap;
-        delete serviceIdMap;
-        delete masksMap;
-        delete pathsMap;
-        delete hostsMap;
-        delete AddressURLMap;
-        delete defInPlace;
-        delete defOutPlace;
+        if (routes) delete routes;
+        if (routeIdMap) delete routeIdMap;
+        if (serviceIdMap) delete serviceIdMap;
+        if (masksMap) delete masksMap;
+        if (pathsMap) delete pathsMap;
+        if (hostsMap) delete hostsMap;
+        if (AddressURLMap) delete AddressURLMap;
+        if (defInPlace) delete defInPlace;
+        if (defOutPlace) delete defOutPlace;  
         routes = r;
         routeIdMap = h;
         serviceIdMap = s;
@@ -531,7 +536,7 @@ void HttpRouterImpl::ReloadRoutes()
         pathsMap = ph;
         AddressURLMap = auh;
         defInPlace = inap;
-        defOutPlace = outap;
+        defOutPlace = outap;  
     }
     catch(Exception& e)
     {
