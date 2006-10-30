@@ -177,8 +177,8 @@ int TimeNotifier::Execute(void)
     _sync.Lock();
     _running = true;
     awaked.Signal();
-    while (_running || timers.size()) {
-        if (timers.size()) {
+    while (_running || !timers.empty()) {
+        if (!timers.empty()) {
             do {
                 StopWatch * tmr = *(timers.begin());
                 timers.pop_front();
@@ -192,7 +192,7 @@ int TimeNotifier::Execute(void)
                     smsc_log_error(logger, "TmNtfr: timer[%u] listener unknown exception", tmr->getId());
                 }
                 _sync.Lock();
-            } while (timers.size());
+            } while (!timers.empty());
         }
         _sync.wait(TIMEOUT_STEP); //unlocks and waits
     }
@@ -324,8 +324,8 @@ TimerID TimeWatcher::createTimer(TimerListenerITF * listener/*= NULL*/,
     MutexGuard tmpGrd(_sync);
     StopWatch * tmr = NULL;
     
-    if (pool.size()) {
-        tmr = *(pool.begin());
+    if (!pool.empty()) {
+        tmr = pool.front();
         pool.pop_front();
     } else {
         if (!(++_lastId))
@@ -382,22 +382,20 @@ void TimeWatcher::dischargeTimer(TimerID tmr)
 {
     MutexGuard tmpGrd(_sync);
     smsc_log_debug(logger, "TmWT: releasing timer[%u]", tmr->getId());
-    TimersLIST::iterator it = std::find(signaled.begin(), signaled.end(), tmr);
-    if (it != signaled.end()) {
+    TimersLIST::iterator it;
+    if ((it = std::find(signaled.begin(), signaled.end(), tmr)) != signaled.end()) {
         signaled.erase(it);
         pool.push_back((StopWatch*)tmr);
         smsc_log_debug(logger, "TmWT: timer[%u] moved to pool (was signaled)", tmr->getId());
         return;
     }
-    it = std::find(started.begin(), started.end(), tmr);
-    if (it != started.end()) {
+    if ((it = std::find(started.begin(), started.end(), tmr)) != started.end()) {
         started.erase(it);
         pool.push_back((StopWatch*)tmr);
         smsc_log_debug(logger, "TmWT: timer[%u] moved to pool (was started)", tmr->getId());
         return;
     }
-    it = std::find(assigned.begin(), assigned.end(), tmr);
-    if (it != started.end()) {
+    if ((it = std::find(assigned.begin(), assigned.end(), tmr)) != assigned.end()) {
         assigned.erase(it);
         pool.push_back((StopWatch*)tmr);
         smsc_log_debug(logger, "TmWT: timer[%u] moved to pool (was assigned)", tmr->getId());
