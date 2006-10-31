@@ -206,7 +206,11 @@ static char const ident[] = "$Id$";
                            alertSeverity severity,
                            const char * const text)
       {
-        if (!agent) return;
+        if (!agent)
+        {
+          smsc_log_warn(log,"snmp agent isn't initialized, trap can't be sent");
+          return;
+        }
         TrapRecord rec;
         rec.submitTime = time(0);
         rec.alarmId = alarmId;
@@ -223,8 +227,16 @@ static char const ident[] = "$Id$";
           clientarg->severity = severity;
           clientarg->text = strdup(text);
           clientarg->status = status;
+          unsigned int reg_id;
+          reg_id = snmp_alarm_register_hr(t, 0 /* once */, sendSmscAlertFFMR,clientarg);
+          smsc_log_debug(log,
+                         "trap(alarmId=%s,object=%s,severity=%d,text=%s) has been registered to send, registration_id=%X",
+                         clientarg->alarmId,
+                         clientarg->alarmObjCategory,
+                         clientarg->severity,
+                         clientarg->text,
+                         reg_id);
         }
-        snmp_alarm_register_hr(t, 0, sendSmscAlertFFMR,clientarg);
       }
 
     }//snmp name space
@@ -360,6 +372,14 @@ using smsc::snmp::SnmpAgent;
   sendSmscAlertFFMR(unsigned int clientreg, void *clientarg)
   {
     FFMRargs* vars = (FFMRargs *)clientarg;
+    smsc_log_debug(log,
+                   "trap(alarmId=%s,object=%s,severity=%d,text=%s) is called to send, registration_id=%X",
+                   vars->alarmId,
+                   vars->alarmObjCategory,
+                   vars->severity,
+                   vars->text,
+                   clientreg);
+
     if (vars)
     {
       netsnmp_variable_list *notification_vars = NULL;
@@ -408,6 +428,7 @@ using smsc::snmp::SnmpAgent;
       send_enterprise_trap_vars(SNMP_TRAP_ENTERPRISESPECIFIC, 1, poid, oidlen, notification_vars);
       snmp_free_varbind(notification_vars);
       delete(clientarg);
+      smsc_log_debug(log,"trap with registration_id=%X has been sent", clientreg);
     }
   }
 
