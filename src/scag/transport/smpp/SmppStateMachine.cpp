@@ -4,6 +4,7 @@
 #include "scag/sessions/SessionManager.h"
 #include "scag/stat/StatisticsManager.h"
 #include "system/status.h"
+#include "SmppUtil.h"
 
 namespace scag{
 namespace transport{
@@ -12,17 +13,19 @@ namespace smpp{
 namespace buf=smsc::core::buffers;
 using namespace scag::stat;
 
+std::vector<int> StateMachine::allowedUnknownOptionals;
+
 struct StateMachine::ResponseRegistry
 {
   smsc::logger::Logger* log;
   int timeout;
 
   ResponseRegistry() : log(0), timeout(60) {}
-  
+
   struct RegKey {
     int uid, seq;
-    RegKey(int _uid=-1, int _seq=-1) 
-	: uid(_uid), seq(_seq) {}
+    RegKey(int _uid=-1, int _seq=-1)
+  : uid(_uid), seq(_seq) {}
     bool operator==(const RegKey& key) {
       return uid==key.uid && seq==key.seq;
     }
@@ -55,8 +58,8 @@ struct StateMachine::ResponseRegistry
     RegKey key(uid, seq);
     if (!log) log=smsc::logger::Logger::getInstance("respreg");
     if (reg.Exists(key)) { // key already registered
-	smsc_log_warn(log, "register %d/%d failed", uid, seq);
-	return false;
+  smsc_log_warn(log, "register %d/%d failed", uid, seq);
+  return false;
     }
     smsc_log_debug(log, "register %d/%d", uid, seq);
     RegValue val;
@@ -80,7 +83,7 @@ struct StateMachine::ResponseRegistry
     if (!log) log=smsc::logger::Logger::getInstance("respreg");
     smsc_log_debug(log, "get %d/%d - %s", uid, seq, (ptr) ? "ok":"not found");
     if (!ptr) { // TODO: toList cleanup (find listValue by key & delete it)?
-	return false;
+  return false;
     }
     cmd = ptr->cmd;
     cmd->set_dialogId(ptr->dlgId);
@@ -98,8 +101,8 @@ struct StateMachine::ResponseRegistry
     RegKey key = toList.front().key;
     RegValue* ptr = reg.GetPtr(key);
     if (!ptr) { // TODO: toList cleanup (find listValue by key & delete it)?
-	// toList.erase(toList.begin());
-	return false;
+  // toList.erase(toList.begin());
+  return false;
     }
     cmd = ptr->cmd;
     cmd->set_dialogId(key.seq);
@@ -291,11 +294,11 @@ void StateMachine::processSubmit(SmppCommand& cmd)
 
   try{
     int newSeq=dst->getNextSeq();
-    if (!reg.Register(dst->getUid(), newSeq, cmd)) 
-	throw Exception("Register cmd for uid=%d, seq=%d failed", dst->getUid(), newSeq);
-    if(sms.hasBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS)) {
-      sms.getMessageBody().dropProperty(Tag::SMSC_UNKNOWN_OPTIONALS);
+    if (!reg.Register(dst->getUid(), newSeq, cmd))
+    {
+      throw Exception("Register cmd for uid=%d, seq=%d failed", dst->getUid(), newSeq);
     }
+    stripUnknownSmppOptionals(sms,allowedUnknownOptionals);
     dst->putCommand(cmd);
     registerEvent(scag::stat::events::smpp::ACCEPTED, src, dst, (char*)ri.routeId, -1);
   } catch(std::exception& e) {
@@ -423,7 +426,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
       if (umr > 0) {
           smsc_log_warn(log, "SMPP Delivery, UMR=%d is set. "
                              "Created new session instead. USR=%d", umr, key.USR);
-	  umr = -1;
+    umr = -1;
       }
   }
   else // USSD Dialog
@@ -483,10 +486,10 @@ void StateMachine::processDelivery(SmppCommand& cmd)
   try{
     int newSeq=dst->getNextSeq();
     if (!reg.Register(dst->getUid(),newSeq,cmd))
-	throw Exception("Register cmd for uid=%d, seq=%d failed", dst->getUid(), newSeq);
-    if(sms.hasBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS)) {
-      sms.getMessageBody().dropProperty(Tag::SMSC_UNKNOWN_OPTIONALS);
+    {
+      throw Exception("Register cmd for uid=%d, seq=%d failed", dst->getUid(), newSeq);
     }
+    stripUnknownSmppOptionals(sms,allowedUnknownOptionals);
     dst->putCommand(cmd);
     registerEvent(scag::stat::events::smpp::ACCEPTED, src, dst, (char*)ri.routeId, -1);
   } catch(std::exception& e) {
@@ -676,10 +679,10 @@ void StateMachine::processDataSm(SmppCommand& cmd)
   try{
     int newSeq=dst->getNextSeq();
     if (!reg.Register(dst->getUid(),newSeq,cmd))
-	throw Exception("Register cmd for uid=%d, seq=%d failed", dst->getUid(), newSeq);
-    if(sms.hasBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS)) {
-      sms.getMessageBody().dropProperty(Tag::SMSC_UNKNOWN_OPTIONALS);
+    {
+      throw Exception("Register cmd for uid=%d, seq=%d failed", dst->getUid(), newSeq);
     }
+    stripUnknownSmppOptionals(sms,allowedUnknownOptionals);
     dst->putCommand(cmd);
     registerEvent(scag::stat::events::smpp::ACCEPTED, src, dst, (char*)ri.routeId, -1);
   } catch(std::exception& e) {
@@ -714,7 +717,7 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
   cmd->set_operationId(orgCmd->get_operationId());
   sms->setOriginatingAddress(smscmd.orgSrc);
   sms->setDestinationAddress(smscmd.orgDst);
-  
+
   scag::sessions::CSessionKey key;
   key.abonentAddr = (smscmd.dir == dsdSrv2Sc || smscmd.dir == dsdSc2Sc) ?
          orgCmd->get_sms()->getDestinationAddress():

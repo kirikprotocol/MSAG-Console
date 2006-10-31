@@ -1,6 +1,7 @@
 #ifndef __SCAG_TRANSPORT_SMPP_SMPPSTATEMACHINE_H__
 #define __SCAG_TRANSPORT_SMPP_SMPPSTATEMACHINE_H__
 
+#include <vector>
 #include "SmppCommandQueue.h"
 #include "SmppRouter.h"
 #include "SmppCommand.h"
@@ -33,6 +34,11 @@ public:
   void processDataSmResp(SmppCommand& cmd);
   void processExpiredResps();
 
+  static void addTransitOptional(int tag)
+  {
+    allowedUnknownOptionals.push_back(tag);
+  }
+
 protected:
   SmppCommandQueue* queue;
   SmppRouter* routeMan;
@@ -46,6 +52,8 @@ protected:
 
   struct ResponseRegistry;
   static ResponseRegistry reg;
+
+  static std::vector<int> allowedUnknownOptionals;
 };
 
 }//smpp

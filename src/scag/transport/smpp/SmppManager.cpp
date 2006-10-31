@@ -250,6 +250,32 @@ void SmppManager::Init(const char* cfgFile)
       throw SCAGException("Invalid parameter 'smpp.core.state_machines_count'");
   }
 
+  try{
+    const char* tags=scag::config::ConfigManager::Instance().getConfig()->getString("smpp.transitOptionalTags");
+    int n=0;
+    int len=strlen(tags);
+    int tag;
+    while(n<len)
+    {
+      if(sscanf(tags+n,"%x%n",&tag,&n)==1)
+      {
+        StateMachine::addTransitOptional(tag);
+      }
+      if(tags[n]==',')
+      {
+        n++;
+      }
+      else if(tags[n])
+      {
+        __warning2__("unexpected symbol in list of transit optional tags:'%c'",tags[n]);
+        break;
+      }
+    }
+  }catch(...)
+  {
+    __warning__("smpp.transitOptionalTags not found in config");
+  }
+
   smsc_log_info(log,"Starting %d state machines",stmCnt);
   for(int i=0;i<stmCnt;i++)
   {
@@ -322,7 +348,24 @@ void SmppManager::updateSmppEntity(const SmppEntityInfo& info)
   {
     throw smsc::util::Exception("updateSmppEntity:Enitity with systemId='%s' not found",info.systemId.c_str());
   }
-  (**ptr).info=info;
+  SmppEntity& ent=**ptr;
+  MutexGuard emg(ent.mtx);
+  ent.info=info;
+  switch(ent.bt)
+  {
+    case btTransceiver:
+      ent.channel->disconnect();
+      break;
+    case btTransmitter:
+      ent.transChannel->disconnect();
+      break;
+    case btRecvAndTrans:
+      ent.transChannel->disconnect();
+      //fallthru
+    case  btReceiver:
+      ent.recvChannel->disconnect();
+      break;
+  }
 }
 
 void SmppManager::deleteSmppEntity(const char* sysId)
