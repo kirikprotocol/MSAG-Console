@@ -510,8 +510,8 @@ void HttpRouterImpl::ReloadRoutes()
     Hash<uint32_t>* ph = new Hash<uint32_t>;
     Hash<uint32_t>* hh = new Hash<uint32_t>;
     AddressURLHash* auh = new AddressURLHash;
-    PlacementKindArray*inap = (PlacementKindArray *) new PlacementArray();
-    PlacementKindArray* outap =(PlacementKindArray *) new PlacementArray();
+    PlacementKindArray * inap = (PlacementKindArray *) new PlacementArray[PLACEMENT_KIND_COUNT];
+    PlacementKindArray * outap =(PlacementKindArray *) new PlacementArray[PLACEMENT_KIND_COUNT];
     
     try{
 
