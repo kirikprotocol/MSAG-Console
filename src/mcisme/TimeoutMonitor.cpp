@@ -21,6 +21,8 @@ using namespace smsc::core::threads;
 using std::multimap;
 using smsc::logger::Logger;
 
+const int IDLE_PERIOD = 600; //sec
+
 TimeoutMonitor::TimeoutMonitor(TaskProcessor* _processor, uint32_t to):
 	processor(_processor), timeout(to),
 	logger(Logger::getInstance("mci.TimeoutM")), count(0) 
@@ -30,7 +32,7 @@ int TimeoutMonitor::Execute()
 {
 	clearSignalMask();
 
-	int seqNum;	bool timeout=false;
+	int seqNum = 0;	bool isTimeout=false;
 	multimap<time_t, int>::iterator	It;
 
 	while (!bNeedExit)
@@ -40,10 +42,10 @@ int TimeoutMonitor::Execute()
 
 			It=seqNums.begin();
 			time_t curTime = time(0);
-			time_t awakeTime = (It != seqNums.end())?It->first:curTime+600;
+			time_t awakeTime = (It != seqNums.end())?It->first:curTime + IDLE_PERIOD;
 			if(awakeTime > curTime)
 			{
-				timeout = false;
+				isTimeout = false;
 				uint32_t toSleep = (awakeTime - curTime)*1000;
 				smsc_log_debug(logger, "TimeoutMonitor: Start wait %d ms", toSleep);
 				awakeMonitor.wait(toSleep);
@@ -51,14 +53,14 @@ int TimeoutMonitor::Execute()
 			}
 			else
 			{
-				timeout = true;
-				smsc_log_debug(logger, "TimeoutMonitor: Timeout has passed for SMS seqNum %d", seqNum);
+				isTimeout = true;
 				seqNum = It->second;
+				smsc_log_debug(logger, "TimeoutMonitor: Timeout has passed for SMS seqNum %d", seqNum);
 				seqNums.erase(It);
 				count--;
 			}
 		}
-		if(timeout) processor->invokeProcessDataSmTimeout(seqNum);
+		if(isTimeout) processor->invokeProcessDataSmTimeout(seqNum);
 	}
 	smsc_log_info(logger, "TimeoutMonitor Exiting ...");
 //		exitedEvent.Signal();
