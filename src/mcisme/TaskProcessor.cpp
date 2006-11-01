@@ -350,7 +350,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
 	int ret = pStorage->Init(storageCfg, pDeliveryQueue);
 	smsc_log_warn(logger, "ret = %d", ret);
 
-//	timeoutMonitor = new TimeoutMonitor(this, 30);
+	timeoutMonitor = new TimeoutMonitor(this, 30);
 
 	smsc_log_info(logger, "Load success.");
 }
@@ -362,9 +362,8 @@ TaskProcessor::~TaskProcessor()
     if (statistics) delete statistics;
 	if (pStorage) delete pStorage;
 	if (pDeliveryQueue) delete pDeliveryQueue;
+    if (timeoutMonitor) delete timeoutMonitor;
 	smsc::system::common::TimeZoneManager::Shutdown();
-//    if (dsStatConnection) ds->freeConnection(dsStatConnection);
-//    if (ds) delete ds;
 }
 
 void TaskProcessor::Start()
@@ -378,7 +377,7 @@ void TaskProcessor::Start()
             smsc_log_error(logger, "Failed to start processing. Message sender is undefined.");
             return;
         }
-//		timeoutMonitor->Start();
+		timeoutMonitor->Start();
 		pDeliveryQueue->OpenQueue();
         openInQueue();
         Thread::Start();
@@ -397,7 +396,7 @@ void TaskProcessor::Stop()
         smsc_log_info(logger, "Stopping event processing...");
         
         if (mciModule) mciModule->Detach();
-//        timeoutMonitor->Stop();
+        timeoutMonitor->Stop();
         closeInQueue();
 		pDeliveryQueue->CloseQueue();
 		bStopProcessing = true;
@@ -589,7 +588,8 @@ void TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt)
 	Message				msg;
 	MessageFormatter	formatter(templateManager->getInformFormatter(profile.informTemplateId));
 	sms_info*			pInfo = new sms_info;
-	
+	int					seqNum=0;
+
 	pInfo->abnt = abnt;
 	int timeOffset = smsc::system::common::TimeZoneManager::getInstance().getTimeZone(abnt.getAddress())+timezone;
 	if(profile.informTemplateId == STK_PROFILE_ID)
@@ -600,25 +600,21 @@ void TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt)
 	formatter.formatMessage(msg, abnt, events, 0, pInfo->events, timeOffset);
 	smsc_log_debug(logger, "ProcessAbntEvents: msg = %s", msg.message.c_str());
 	msg.abonent = abnt.getText();//"777";
-	
-//	MutexGuard *Lock = new MutexGuard(smsInfoMutex);
-	smsInfoMutex.Lock();
-	int seqNum = messageSender->getSequenceNumber();
-	int res = smsInfo.Insert(seqNum, pInfo);
-	if(!messageSender->send(seqNum, msg))
 	{
-		smsc_log_debug(logger, "Send DATA_SM for Abonent %s failed", pInfo->abnt.toString().c_str());
-		pDeliveryQueue->Reschedule(pInfo->abnt);
-		smsInfo.Delete(seqNum);
-		delete pInfo;
-//		delete Lock;
-		smsInfoMutex.Unlock();
-		return;
+		MutexGuard Lock(smsInfoMutex);
+		seqNum = messageSender->getSequenceNumber();
+		int res = smsInfo.Insert(seqNum, pInfo);
+		if(!messageSender->send(seqNum, msg))
+		{
+			smsc_log_debug(logger, "Send DATA_SM for Abonent %s failed", pInfo->abnt.toString().c_str());
+			pDeliveryQueue->Reschedule(pInfo->abnt);
+			smsInfo.Delete(seqNum);
+			delete pInfo;
+			return;
+		}
 	}
-//	delete Lock;
-	smsInfoMutex.Unlock();
 
-//	timeoutMonitor->addSeqNum(seqNum);
+	timeoutMonitor->addSeqNum(seqNum);
 
 	count+=pInfo->events.size();
 	end = time(0);
@@ -635,23 +631,22 @@ bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
 	if(cmdId == smsc::smpp::SmppCommandSet::DATA_SM_RESP)
 	{
 //		printf("Recieve a DATA_SM_RESP (cmdId = %d status = %d seqNum = %d )\n", cmdId, status, seqNum);
+//		if(!(seqNum%5)) return false;
 
-//		MutexGuard *Lock = new MutexGuard(smsInfoMutex);
-		smsInfoMutex.Lock();
-		if(!smsInfo.Exist(seqNum))
+		sms_info* pInfo=0;
 		{
-			smsc_log_debug(logger, "No info for SMS seqNum = %d\n", seqNum);
-//			delete Lock;
-			smsInfoMutex.Unlock();
-			return false;
+			MutexGuard Lock(smsInfoMutex);
+			if(!smsInfo.Exist(seqNum))
+			{
+				smsc_log_debug(logger, "No info for SMS seqNum = %d\n", seqNum);
+				return false;
+			}
+			pInfo = smsInfo.Get(seqNum);
+			smsInfo.Delete(seqNum);
 		}
-		sms_info* pInfo = smsInfo.Get(seqNum);
-		smsInfo.Delete(seqNum);
-//		delete Lock;
-		smsInfoMutex.Unlock();
 
 		smsc_log_debug(logger, "Recieve a DATA_SM_RESP for Abonent %s seq_num = %d, status = %d", pInfo->abnt.toString().c_str(), seqNum, status);
-//		timeoutMonitor->removeSeqNum(seqNum);
+		timeoutMonitor->removeSeqNum(seqNum);
 
 		if(status == smsc::system::Status::OK)
 		{	
@@ -679,23 +674,21 @@ bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
 
 void TaskProcessor::invokeProcessDataSmTimeout(int seqNum)
 {
-	smsc_log_debug(logger, "Timeout for SMS seqNum %d\n", seqNum);
+	smsc_log_debug(logger, "Timeout for SMS seqNum %d", seqNum);
 
-//	MutexGuard *Lock = new MutexGuard(smsInfoMutex);
-	smsInfoMutex.Lock();
-	if(!smsInfo.Exist(seqNum))
+	sms_info* pInfo=0;
 	{
-		smsc_log_debug(logger, "No info for SMS seqNum = %d\n", seqNum);
-//		delete Lock;
-		smsInfoMutex.Unlock();
-		return;
+		MutexGuard Lock(smsInfoMutex);
+		if(!smsInfo.Exist(seqNum))
+		{
+			smsc_log_debug(logger, "No info for SMS seqNum = %d\n", seqNum);
+			return;
+		}
+		pInfo = smsInfo.Get(seqNum);
+		smsInfo.Delete(seqNum);
 	}
-	sms_info* pInfo = smsInfo.Get(seqNum);
-	smsInfo.Delete(seqNum);
-//	delete Lock;
-	smsInfoMutex.Unlock();
 
-	smsc_log_debug(logger, "SMS for Abonent %s (seqNum %d) is removed from waiting list", pInfo->abnt.toString().c_str(), seqNum);
+	smsc_log_debug(logger, "SMS for Abonent %s (seqNum %d) is removed from waiting list by timeout", pInfo->abnt.toString().c_str(), seqNum);
 
 	statistics->incFailed(pInfo->events.size());
 	time_t schedTime = pDeliveryQueue->Reschedule(pInfo->abnt);
@@ -766,7 +759,7 @@ void TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo)
 		Message	msg;
 		NotifyGetAdapter	adapter(abnt, callers[i].getText().c_str());
 		messageFormatter->format(msg.message, adapter, ctx);
-		msg.abonent = msg.abonent = callers[i].getText();//"444"
+		msg.abonent = callers[i].getText();//"444"
 		try{checkAddress(msg.abonent.c_str());}catch(Exception e)
 		{
 			smsc_log_error(logger, "Skip notification message - bad address %s", e.what());
