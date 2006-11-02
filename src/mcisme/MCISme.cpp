@@ -147,9 +147,8 @@ public:
             smsc_log_debug(logger, "wait %d/%d (o=%d, i=%d)", 
                            difference, difference*unrespondedMessagesSleep, out, inc);
             trafficMonitor.wait(difference*unrespondedMessagesSleep);
-        } else {
-            smsc_log_debug(logger, "nowait");
         }
+//		else {smsc_log_debug(logger, "nowait");}
 
 		uint32_t pause;
 		while(limitSpeed.Get() >= outgoingSpeedMax)
@@ -158,7 +157,7 @@ public:
 			pause+=10;
 		}
 		limitSpeed.Inc();
-		smsc_log_debug(logger, "Speed limiter stoped sending by %d milliseconds", pause);
+//		smsc_log_debug(logger, "Speed limiter stoped sending by %d milliseconds", pause);
     };
     static bool getTraffic(int& in, int& out)
     {

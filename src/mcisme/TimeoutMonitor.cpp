@@ -76,7 +76,7 @@ void TimeoutMonitor::Start()
 		bNeedExit = false;
 		Thread::Start();
 		bStarted = true;
-		smsc_log_info(logger, "TimeoutMonitor Started.");
+		smsc_log_info(logger, "TimeoutMonitor Started. Response timeout is %d sec.", timeout);
 	}	
 }
 
