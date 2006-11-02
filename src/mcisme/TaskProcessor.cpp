@@ -350,7 +350,12 @@ TaskProcessor::TaskProcessor(ConfigView* config)
 	int ret = pStorage->Init(storageCfg, pDeliveryQueue);
 	smsc_log_warn(logger, "ret = %d", ret);
 
-	timeoutMonitor = new TimeoutMonitor(this, 30);
+	string sResponseWaitTime;
+	try { sResponseWaitTime = config->getString("responceWaitTime"); } catch (...){sResponseWaitTime = "00:00:60";
+		smsc_log_warn(logger, "Parameter <MCISme.responceWaitTime> missed. Default value is '00:00:30'.");}
+	time_t responseWaitTime = parseTime(sResponseWaitTime.c_str());
+
+	timeoutMonitor = new TimeoutMonitor(this, responseWaitTime);
 
 	smsc_log_info(logger, "Load success.");
 }
@@ -829,7 +834,7 @@ bool TaskProcessor::getFromInQueue(MissedCallEvent& event)
 // Admin Interface
 string TaskProcessor::getSchedItem(const string& Abonent)
 {
-//	smsc_log_info(logger, "Received schedule query for abonent %s", Abonent.c_str());
+	smsc_log_info(logger, "Received schedule query for abonent %s", Abonent.c_str());
 	string result;
 
 	try{checkAddress(Abonent.c_str());}catch(Exception e)
@@ -865,7 +870,7 @@ string TaskProcessor::getSchedItem(const string& Abonent)
 
 string TaskProcessor::getSchedItems(void)
 {
-//	smsc_log_info(logger, "Received schedule query for first 50 abonents ");
+	smsc_log_info(logger, "Received schedule query for first 50 abonents ");
 	string				result;
 	vector<SchedItem>	items;
 

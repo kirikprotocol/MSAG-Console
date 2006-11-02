@@ -80,6 +80,8 @@ struct SchedParam
 	uint16_t	lastError;
 };
 
+char* cTime(const time_t* clock);		// функция возвращает на статический буфер. Не потокобезопасная.
+
 class DeliveryQueue
 {
 	typedef multimap<time_t, AbntAddr>	DelQueue;
@@ -107,366 +109,31 @@ public:
 	DeliveryQueue(const DeliveryQueue& addr){}
 	virtual ~DeliveryQueue(){Erase();}
 
-	void AddScheduleRow(int error, time_t wait)
-	{
-		MutexGuard lock(deliveryQueueMonitor);
-		if(error == -1)
-			dt = wait;
-		else
-			scheduleTable.insert(map<int, time_t>::value_type(error, wait));
-	}
-	void SetSchedTimeOnBusy(time_t wait)
-	{
-		MutexGuard lock(deliveryQueueMonitor);
-		schedTimeOnBusy = wait;
-	}
-
-	void OpenQueue(void)
-	{
-		MutexGuard lock(deliveryQueueMonitor);
-		isQueueOpen = true;
-		deliveryQueueMonitor.notify();
-	}
-
-	void CloseQueue(void)
-	{
-//		MutexGuard lock(deliveryQueueMonitor);
-		isQueueOpen = false;
-//		deliveryQueueMonitor.notify();
-	}
-
-	bool isQueueOpened(void)
-	{
-//		MutexGuard lock(deliveryQueueMonitor);
-		return isQueueOpen;
-	}
-
-	int GetAbntCount(void)
-	{
-		MutexGuard lock(deliveryQueueMonitor);
-		return AbntsStatus.GetCount();
-	}
-
-	int GetQueueSize(void)
-	{
-		MutexGuard lock(deliveryQueueMonitor);
-		return deliveryQueue.size();
-	}
-
-	time_t Schedule(const AbntAddr& abnt, bool onBusy=false, time_t schedTime=-1, uint16_t lastError=-1)
-	{
-		string strAbnt = abnt.toString();
-//		smsc_log_debug(logger, "Schedule %s", strAbnt.c_str());
-		MutexGuard lock(deliveryQueueMonitor);
-		if(AbntsStatus.Exists(strAbnt.c_str()))
-		{
-			SchedParam *schedParam = AbntsStatus.GetPtr(strAbnt.c_str());
-			smsc_log_info(logger, "Abonent %s already scheduled. total = %d (%d)", strAbnt.c_str(), total, deliveryQueue.size());
-			return schedParam->schedTime;
-		}
-		if(-1 != schedTime)
-		{
-			smsc_log_info(logger, "Abonent %s scheduling on preset time %s", strAbnt.c_str(), ctime(&schedTime));
-		}
-		else
-		{
-			schedTime = time(0);
-			if(onBusy)
-			{
-				schedTime += schedTimeOnBusy;
-				smsc_log_info(logger, "Abonent %s was BUSY waiting up to %s", strAbnt.c_str(), ctime(&schedTime));
-			}
-		}
-
-		deliveryQueue.insert(multimap<time_t, AbntAddr>::value_type(schedTime, abnt));
-		
-		SchedParam schedParam = {Idle, schedTime, lastError};
-		AbntsStatus.Insert(strAbnt.c_str(), schedParam);
-		deliveryQueueMonitor.notify();
-		total++;
-		smsc_log_info(logger, "Add %s. total = %d (%d) (on time %s)", strAbnt.c_str(), total, deliveryQueue.size(), ctime(&schedTime));
-		
-		return schedTime;
-	}
-
-	time_t Reschedule(const AbntAddr& abnt, int resp_status = smsc::system::Status::OK) // bool toHead = false
-	{
-		bool toHead = false;
-		string strAbnt = abnt.toString();
-//		smsc_log_debug(logger, "Reschedule %s", strAbnt.c_str());
-		MutexGuard lock(deliveryQueueMonitor);
-		if(!AbntsStatus.Exists(strAbnt.c_str()))
-		{
-			smsc_log_debug(logger, "Rescheduling %s canceled (abonent is not in hash).", strAbnt.c_str());
-			return 0;
-		}
-		
-		if(resp_status == smsc::system::Status::OK)
-		{
-			smsc_log_debug(logger, "Previous SMS for Abonent %s was delivered normally.", strAbnt.c_str());
-			toHead = true;
-		}
-
-		SchedParam *schedParam = AbntsStatus.GetPtr(strAbnt.c_str());		
-		if(schedParam->abntStatus == AlertHandled)
-		{
-			smsc_log_debug(logger, "ALERT_NOTIFICATION for %s has accepted previously.", strAbnt.c_str());
-			toHead = true;
-		}
-		
-		schedParam->abntStatus = Idle;
-		time_t oldSchedTime = schedParam->schedTime;
-		time_t newSchedTime;
-
-		if(toHead)
-		{
-			newSchedTime = time(0);
-			smsc_log_info(logger, "Rescheduling %s to Head", strAbnt.c_str());
-		}
-		else 
-		{
-			newSchedTime = CalcTimeDelivery(resp_status);
-			smsc_log_info(logger, "Rescheduling %s to %s by error %d", strAbnt.c_str(), ctime(&newSchedTime), resp_status);
-		}
-
-		Resched(abnt, oldSchedTime, newSchedTime);
-		schedParam->schedTime = newSchedTime;
-		schedParam->lastError = resp_status;
-		deliveryQueueMonitor.notify();
-		smsc_log_info(logger, "total = %d in queue = %d", total, deliveryQueue.size());
-		return newSchedTime;
-	}
-
-	void RegisterAlert(const AbntAddr& abnt)
-	{
-		string strAbnt = abnt.toString();
-		smsc_log_debug(logger, "RegisterAlert for %s", strAbnt.c_str());
-		MutexGuard lock(deliveryQueueMonitor);
-		if(!AbntsStatus.Exists(strAbnt.c_str()))
-		{
-			smsc_log_debug(logger, "Registration alert for %s canceled (abonent is not in hash).", strAbnt.c_str());
-			return;
-		}
-
-		SchedParam *schedParam = AbntsStatus.GetPtr(strAbnt.c_str());		
-
-		if(schedParam->abntStatus == Idle)
-		{
-			time_t newSchedTime = time(0);
-			Resched(abnt, schedParam->schedTime, newSchedTime);
-			schedParam->schedTime = newSchedTime;
-			schedParam->lastError = -1;
-			smsc_log_info(logger, "Registering Alert and rescheduling %s to Head ", strAbnt.c_str());
-			deliveryQueueMonitor.notify();
-		}
-		else
-		{
-			schedParam->abntStatus = AlertHandled;
-			smsc_log_info(logger, "Registering Alert for %s", strAbnt.c_str());
-		}
-	}
-
-	bool Get(AbntAddr& abnt)
-	{
-		MutexGuard lock(deliveryQueueMonitor);
-		int pause = GetDeliveryTime()-time(0);
-
-//		smsc_log_debug(logger, "pause = %d", pause);
-		if(pause > 0)
-		{
-			deliveryQueueMonitor.wait(pause*1000);
-
-			//if(0 == deliveryQueueMonitor.wait(pause*1000))
-   //             smsc_log_debug(logger, "recieved a notify.");
-			//else
-			//	smsc_log_debug(logger, "timeout has passed.");
-		}
-
-		if(!isQueueOpen)
-		{	
-			smsc_log_info(logger, "Queue was closed.");
-			return false;
-		}
-		
-		if(!deliveryQueue.empty())
-		{
-			multimap<time_t, AbntAddr>::iterator It;
-			time_t	t;
-
-			It = deliveryQueue.begin();
-			t = It->first;
-
-			if(t > time(0))
-			{
-				smsc_log_debug(logger, "Delivery time is not reached yet.");
-				return false;
-			}
-			abnt = It->second;
-			deliveryQueue.erase(It);
-			string strAbnt = abnt.toString();
-			if(AbntsStatus.Exists(strAbnt.c_str()))
-			{
-				SchedParam *schedParam = AbntsStatus.GetPtr(strAbnt.c_str());
-				schedParam->schedTime = 0;
-				if(schedParam->abntStatus == Idle)
-				{	
-					schedParam->abntStatus = InProcess;
-					smsc_log_info(logger, "Abonent %s ready to delivery.", strAbnt.c_str());
-					return true;
-				}
-				else
-				{
-					smsc_log_info(logger, "Abonent %s already in delivery.", strAbnt.c_str());
-					return false;
-				}
-				return true;
-			}
-			else
-			{
-				smsc_log_debug(logger, "Abonent %s is not exists in the hash.", strAbnt.c_str());
-			    return false;
-			}
-		}
-		
-		smsc_log_debug(logger, "deliveryQueue is empty.");
-		return false;
-	}
+	void AddScheduleRow(int error, time_t wait);
+	void SetSchedTimeOnBusy(time_t wait);
 	
-	bool Get(const AbntAddr& abnt, SchedItem& item)
-	{
-		MutexGuard lock(deliveryQueueMonitor);
-		string strAbnt = abnt.toString();
-		if(AbntsStatus.Exists(strAbnt.c_str()))
-		{
-			SchedParam *schedParam = AbntsStatus.GetPtr(strAbnt.c_str());
-			item.abnt = abnt;
-			item.schedTime = schedParam->schedTime;
-			item.lastError = schedParam->lastError;
-			return true;
-		}
-		return false;
-	}
+	void OpenQueue(void);
+	void CloseQueue(void);
+	bool isQueueOpened(void);
+	int GetAbntCount(void);
+	int GetQueueSize(void);
 
-	//int Get(vector<SchedItem>& items, int count)
-	//{
-	//	MutexGuard		lock(deliveryQueueMonitor);
-	//	AbntAddr		abnt;
-	//	DelQueueIter	It;
-	//	int				i;
-	//	
-	//	It = deliveryQueue.begin();
-	//	for(i = 0; i< count; i++)
-	//	{	
-	//		if(It == deliveryQueue.end()) break;
-	//		abnt = It->second;
-	//		string strAbnt = abnt.toString();
-	//		if(AbntsStatus.Exists(strAbnt.c_str()))
-	//		{
-	//			SchedParam	*schedParam = AbntsStatus.GetPtr(strAbnt.c_str());
-	//			SchedItem	item;
-	//			item.abnt = abnt;
-	//			item.schedTime = schedParam->schedTime;
-	//			item.lastError = schedParam->lastError;
-	//			items.push_back(item);
-	//		}
-	//		else
-	//			i--;
-	//		++It;
-	//	}
-	//	return i;
-	//}
-
-	int Get(vector<SchedItem>& items, int count)
-	{
-		MutexGuard		lock(deliveryQueueMonitor);
-		AbntAddr		abnt;
-		DelQueueIter	It;
-		int				i;
-		
-		It = deliveryQueue.begin();
-		for(i = 0; i < count; i++)
-		{	
-			if(It == deliveryQueue.end()) break;
-			uint32_t	abonentsCount = 0;
-			time_t		schedTime = It->first;
-
-			while(schedTime == It->first)
-			{
-				++abonentsCount; ++It;
-				if(It == deliveryQueue.end()) break;
-			}
-			SchedItem	item;
-			item.schedTime = schedTime;
-			item.abonentsCount = abonentsCount;
-			items.push_back(item);
-//			if(It != deliveryQueue.end()) ++It;
-		}
-		return i;
-	}
-
-	void Remove(const AbntAddr& abnt)
-	{
-		string strAbnt = abnt.toString();
-		smsc_log_debug(logger, "Remove %s",strAbnt.c_str());
-		MutexGuard lock(deliveryQueueMonitor);
-		if(AbntsStatus.Exists(strAbnt.c_str()))
-		{
-			AbntsStatus.Delete(strAbnt.c_str());
-			total--;
-			smsc_log_info(logger, "Remove %s total = %d (%d, %d)", strAbnt.c_str(), total, deliveryQueue.size(), AbntsStatus.GetCount());
-		}
-		else
-			smsc_log_debug(logger, "Remove %s canceled (abonent is not in hash).", strAbnt.c_str());
-	}
-	void Erase(void)
-	{
-		smsc_log_debug(logger, "Erase");
-		MutexGuard lock(deliveryQueueMonitor);
-		smsc_log_info(logger, "Queue size = %d, Hash size = %d, total = %d", deliveryQueue.size(), AbntsStatus.GetCount(), total);
-		deliveryQueue.erase(deliveryQueue.begin(), deliveryQueue.end());
-		AbntsStatus.Empty();
-		total = 0;
-		smsc_log_info(logger, "Erased. (%d %d %d)", deliveryQueue.size(), AbntsStatus.GetCount(), total);
-	}
+	time_t Schedule(const AbntAddr& abnt, bool onBusy=false, time_t schedTime=-1, uint16_t lastError=-1);
+	time_t Reschedule(const AbntAddr& abnt, int resp_status = smsc::system::Status::OK); // bool toHead = false
+	void RegisterAlert(const AbntAddr& abnt);
+	bool Get(AbntAddr& abnt);
+	bool Get(const AbntAddr& abnt, SchedItem& item);
+//	int Get(vector<SchedItem>& items, int count);
+	int Get(vector<SchedItem>& items, int count);
+	void Remove(const AbntAddr& abnt);
+	void Erase(void);
 
 private:
 	
-	void Resched(const AbntAddr& abnt, time_t oldSchedTime, time_t newSchedTime)
-	{
-		if(0 != oldSchedTime)
-		{
-			pair<DelQueueIter, DelQueueIter> range= deliveryQueue.equal_range(oldSchedTime);
-			for(DelQueueIter i = range.first; i != range.second; ++i)
-				if((*i).second == abnt)
-				{
-					deliveryQueue.erase(i);
-					break;
-				}
-		}
-		deliveryQueue.insert(multimap<time_t, AbntAddr>::value_type(newSchedTime, abnt));
-	}
+	void Resched(const AbntAddr& abnt, time_t oldSchedTime, time_t newSchedTime);
+	time_t CalcTimeDelivery(int err = -1);
+	time_t GetDeliveryTime(void);
 
-	time_t CalcTimeDelivery(int err = -1)
-	{
-		if(err == -1) return time(0) + dt;
-		map<int, time_t>::iterator It;
-		It = scheduleTable.find(err);
-		if(It == scheduleTable.end())
-			return time(0) + dt;
-		return time(0) + It->second;
-	}
-
-	time_t GetDeliveryTime(void)
-	{
-		multimap<time_t, AbntAddr>::iterator It;
-		time_t t = time(0) + default_wait;
-		if(!deliveryQueue.empty())
-		{
-			It = deliveryQueue.begin();
-			t = It->first;
-		}
-		return t;
-	}
 };
 
 };	//  namespace msisme

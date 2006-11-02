@@ -43,38 +43,38 @@ void StatisticsManager::incMissed(const char* abonent)
 {
     MutexGuard  guard(switchLock);
     statistics[currentIndex].missed++;
-    smsc_log_info(processLog, "M %s", abonent ? abonent:"-");
+//    smsc_log_info(processLog, "M %s", abonent ? abonent:"-");
 }
 void StatisticsManager::incDelivered(const char* abonent)
 {
     MutexGuard  guard(switchLock);
     statistics[currentIndex].delivered++;
-    smsc_log_info(processLog, "D %s", abonent ? abonent:"-");
+//    smsc_log_info(processLog, "D %s", abonent ? abonent:"-");
 }
 void StatisticsManager::incFailed(const char* abonent)
 {
     MutexGuard  guard(switchLock);
     statistics[currentIndex].failed++;
-    smsc_log_info(processLog, "F %s", abonent ? abonent:"-");
+//    smsc_log_info(processLog, "F %s", abonent ? abonent:"-");
 }
 void StatisticsManager::incNotified(const char* abonent)
 {
     MutexGuard  guard(switchLock);
     statistics[currentIndex].notified++;
-    smsc_log_info(processLog, "N %s", abonent ? abonent:"-");
+//    smsc_log_info(processLog, "N %s", abonent ? abonent:"-");
 }
 
 void StatisticsManager::incMissed(uint8_t count)
 {
     MutexGuard  guard(switchLock);
     statistics[currentIndex].missed+=count;
-    smsc_log_info(processLog, "Missed calls count is %d (increased by %d, currentIndex=%d)", statistics[currentIndex].missed, count, currentIndex);
+//    smsc_log_info(processLog, "Missed calls count is %d (increased by %d, currentIndex=%d)", statistics[currentIndex].missed, count, currentIndex);
 }
 void StatisticsManager::incDelivered(uint8_t count)
 {
     MutexGuard  guard(switchLock);
     statistics[currentIndex].delivered+=count;
-    smsc_log_info(processLog, "Delivered Events is %d (increased by %d, currentIndex=%d)", statistics[currentIndex].delivered, count, currentIndex);
+//    smsc_log_info(processLog, "Delivered Events is %d (increased by %d, currentIndex=%d)", statistics[currentIndex].delivered, count, currentIndex);
 }
 void StatisticsManager::incFailed(uint8_t count)
 {
@@ -94,14 +94,14 @@ int StatisticsManager::Execute()
     while (!bNeedExit)
     {
         int toSleep = calculateToSleep();
-        smsc_log_debug(logger, "Start wait %d", toSleep);
+//        smsc_log_debug(logger, "Start wait %d", toSleep);
         awakeEvent.Wait(toSleep); // Wait for next hour begins ...
-        smsc_log_debug(logger, "End wait");
+//        smsc_log_debug(logger, "End wait");
 
         flushCounters(switchCounters());
         bExternalFlush = false;
         doneEvent.Signal();
-        smsc_log_debug(logger, "Statistics flushed");
+//        smsc_log_debug(logger, "Statistics flushed");
     }
     exitEvent.Signal();
     return 0;
