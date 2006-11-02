@@ -44,7 +44,7 @@ RuleStatus HttpEventHandler::processRequest(HttpRequest& command, Session& sessi
     
     session.closeCurrentOperation();
 
-    rs.status = false;
+    rs.status = STATUS_FAILED;
     rs.result = -1;
     return rs;
 }
@@ -77,7 +77,7 @@ RuleStatus HttpEventHandler::processResponse(HttpResponse& command, Session& ses
 
     session.closeCurrentOperation();
 
-    rs.status = false;
+    rs.status = STATUS_FAILED;
     rs.result = -1;
     return rs;
 }
@@ -111,7 +111,7 @@ RuleStatus HttpEventHandler::processDelivery(HttpResponse& command, Session& ses
 
     session.closeCurrentOperation();
 
-    rs.status = false;
+    rs.status = STATUS_FAILED;
     rs.result = -1;
     return rs;
 }
@@ -163,7 +163,7 @@ RuleStatus HttpEventHandler::process(SCAGCommand& command, Session& session)
 
     RuleStatus rs;
     
-    rs.status = false;
+    rs.status = STATUS_FAILED;
     rs.result = -1;
     return rs;
 }

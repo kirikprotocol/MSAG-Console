@@ -33,7 +33,7 @@ RuleStatus Rule::process(SCAGCommand& command,Session& session)
     RuleStatus rs;
     if (command.getType() != transportType)
     {
-        rs.status = false;
+        rs.status = STATUS_FAILED;
         throw SCAGException("Rule: command transport type and rule transport type are different");
         //smsc_log_error(logger,"Rule: command transport type and rule transport type are different");
         //return rs;
@@ -47,7 +47,7 @@ RuleStatus Rule::process(SCAGCommand& command,Session& session)
 
     if (!Handlers.Exist(handlerType)) 
     {
-        rs.status = false;
+        rs.status = STATUS_FAILED;
         smsc_log_warn(logger,"Rule: cannot find EventHandler for command");
         return rs;
     }
@@ -59,20 +59,20 @@ RuleStatus Rule::process(SCAGCommand& command,Session& session)
     }
     catch (Exception& e)
     {
-        rs.status = false;
+        rs.status = STATUS_FAILED;
         smsc_log_error(logger, "EH Rule top level exception: %s", e.what());
         return rs;
     } 
     catch (std::exception& e)
     {
-        rs.status = false;
+        rs.status = STATUS_FAILED;
         smsc_log_error(logger, "EH Rule top level exception: %s", e.what());
 	//abort();
         return rs;
     } 
     catch (...)
     {
-        rs.status = false;
+        rs.status = STATUS_FAILED;
         smsc_log_error(logger,"EH Rule top level exception: Unknown system error");
         return rs;
     }

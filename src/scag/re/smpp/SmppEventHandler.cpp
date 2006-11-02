@@ -237,11 +237,11 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     } catch (SCAGException& e)
     {
         smsc_log_debug(logger, "EventHandler: error in actions processing. Details: %s", e.what());
-        rs.status = false;
+        rs.status = STATUS_FAILED;
     } catch (std::exception& e)
     {
         smsc_log_debug(logger, "EventHandler: error in actions processing. Details: %s", e.what());
-        rs.status = false;
+        rs.status = STATUS_FAILED;
     }
 
     ModifyOperationAfterExecuting(session, *smppcommand, rs, smppDiscriptor);

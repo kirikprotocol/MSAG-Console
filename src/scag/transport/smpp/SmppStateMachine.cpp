@@ -282,7 +282,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
   scag::re::RuleStatus st=scag::re::RuleEngine::Instance().process(cmd,*session);
   smsc_log_debug(log, "Submit: RuleEngine procesed.");
 
-  if(!st.status)
+  if(st.status == scag::re::STATUS_FAILED)
   {
     smsc_log_info(log,"Submit: RuleEngine returned result=%d",st.result);
     SubmitResp(cmd, st.temporal ? smsc::system::Status::RX_T_APPN :
@@ -352,7 +352,7 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
     smsc_log_debug(log, "Submit resp: RuleEngine processing...");
     st=scag::re::RuleEngine::Instance().process(cmd,*session);
     smsc_log_debug(log, "Submit resp:RuleEngine  processed");
-    if(!st.status)
+    if(st.status == scag::re::STATUS_FAILED)
         rs = st.result;
   }
 
@@ -373,7 +373,7 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
     rs = -1;
   }
 
-  if(rs != -2 || !st.status)
+  if(rs != -2 || (st.status == scag::re::STATUS_FAILED))
     registerEvent(scag::stat::events::smpp::RESP_FAILED, src, dst, (char*)sms->getRouteId(), rs);
   else
     registerEvent(scag::stat::events::smpp::RESP_OK, src, dst, (char*)sms->getRouteId(), -1);
@@ -472,7 +472,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
   scag::re::RuleStatus st=scag::re::RuleEngine::Instance().process(cmd,*session);
   smsc_log_debug(log, "Delivery: RuleEngine procesed.");
 
-  if(!st.status)
+  if(st.status == scag::re::STATUS_FAILED)
   {
     smsc_log_info(log,"Delivery: RuleEngine returned result=%d",st.result);
     DeliveryResp(cmd, st.temporal? smsc::system::Status::RX_T_APPN :
@@ -542,7 +542,7 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
     smsc_log_debug(log, "Delivery resp: processing...");
     st=scag::re::RuleEngine::Instance().process(cmd,*session);
     smsc_log_debug(log, "Delivery resp: procesed.");
-    if(!st.status)
+    if(st.status == scag::re::STATUS_FAILED)
         rs = st.result;
   }
 
@@ -556,7 +556,7 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
     rs = -1;
   }
 
-  if(rs != -2 || !st.status)
+  if(rs != -2 || (st.status == scag::re::STATUS_FAILED))
       registerEvent(scag::stat::events::smpp::RESP_FAILED, src, dst, (char*)orgCmd->get_sms()->getRouteId(), rs);
   else
       registerEvent(scag::stat::events::smpp::RESP_OK, src, dst, (char*)orgCmd->get_sms()->getRouteId(), -1);
@@ -665,7 +665,7 @@ void StateMachine::processDataSm(SmppCommand& cmd)
   scag::re::RuleStatus st=scag::re::RuleEngine::Instance().process(cmd,*session);
   smsc_log_debug(log, "DataSm: RuleEngine procesed.");
 
-  if(!st.status)
+  if(st.status == scag::re::STATUS_FAILED)
   {
     smsc_log_info(log,"DataSm: RuleEngine returned result=%d",st.result);
     DataResp(cmd, st.temporal? smsc::system::Status::RX_T_APPN :
@@ -739,7 +739,7 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
     smsc_log_debug(log, "datasm resp: processing...");
     st=scag::re::RuleEngine::Instance().process(cmd,*session);
     smsc_log_debug(log, "datasm resp: procesed.");
-    if(!st.status)
+    if(st.status == scag::re::STATUS_FAILED)
         rs = st.result;
   }
 
@@ -753,7 +753,7 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
     rs = -1;
   }
 
-  if(rs != -2 || !st.status)
+  if(rs != -2 || (st.status == scag::re::STATUS_FAILED))
       registerEvent(scag::stat::events::smpp::RESP_FAILED, src, dst, (char*)orgCmd->get_sms()->getRouteId(), rs);
   else
       registerEvent(scag::stat::events::smpp::RESP_OK, src, dst, (char*)orgCmd->get_sms()->getRouteId(), -1);

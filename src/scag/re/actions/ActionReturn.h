@@ -13,7 +13,7 @@ class ActionReturn : public Action
     bool m_bResultExist;
     FieldType m_ftResult;
 
-    bool m_bStatusValue;
+    StatusEnum m_bStatusValue;
 
     ActionReturn(const ActionReturn &);
 

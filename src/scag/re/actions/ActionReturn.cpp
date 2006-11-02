@@ -29,9 +29,9 @@ void ActionReturn::init(const SectionParams& params,PropertyObject propertyObjec
         throw SCAGException("Action 'return': status must be 'Ok|Failed' type");
 
     if (StatusStr == "Ok") 
-        m_bStatusValue = true;
+        m_bStatusValue = STATUS_OK;
     else if (StatusStr == "Failed") 
-        m_bStatusValue = false;
+        m_bStatusValue = STATUS_FAILED;
     else
         throw SCAGException("Action 'return': status must be 'Ok|Failed' type");
 
