@@ -15,6 +15,8 @@ using namespace scag::stat;
 
 std::vector<int> StateMachine::allowedUnknownOptionals;
 
+const int MAX_REROUTE_CNT=10;
+
 struct StateMachine::ResponseRegistry
 {
   smsc::logger::Logger* log;
@@ -171,118 +173,148 @@ void StateMachine::registerEvent(int event, SmppEntity* src, SmppEntity* dst, co
 
 void StateMachine::processSubmit(SmppCommand& cmd)
 {
+    uint32_t rcnt = 0;
+  SmppEntity *src = NULL;
+  SmppEntity *dst = NULL, *ndst;
+  scag::sessions::SessionPtr session;
+  scag::sessions::CSessionKey key;  
   router::RouteInfo ri;
-  SMS& sms=*cmd->get_sms();
-  SmsCommand& smscmd=cmd->get_smsCommand();
-  smscmd.orgSrc=sms.getOriginatingAddress();
-  smscmd.orgDst=sms.getDestinationAddress();
-  SmppEntity *src=cmd.getEntity();
-  SmppEntity *dst=routeMan->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
-  if(!dst)
+    scag::re::RuleStatus st;
+    SMS& sms=*cmd->get_sms();
+    SmsCommand& smscmd=cmd->get_smsCommand();
+
+  do{  
+      smscmd.orgSrc=sms.getOriginatingAddress();
+      smscmd.orgDst=sms.getDestinationAddress();
+      src=cmd.getEntity();
+      ndst=routeMan->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
+      if(!ndst || ndst == dst)
+      {
+        smsc_log_info(log,"Submit: noroute %s(%s)->%s",
+        sms.getOriginatingAddress().toString().c_str(),
+        src->getSystemId(),
+        sms.getDestinationAddress().toString().c_str());
+        SubmitResp(cmd,smsc::system::Status::NOROUTE);
+        registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
+        return;
+      }
+      dst = ndst;
+
+      sms.setRouteId(ri.routeId);
+      sms.setSourceSmeId(src->getSystemId());
+      sms.setDestinationSmeId(dst->getSystemId());
+
+      cmd->set_serviceId(ri.serviceId);
+
+      int umr = sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) ?
+                sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) : -1;
+      int ussd_op = sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
+                    sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
+
+      smsc_log_debug(log, "Submit:%s UMR=%d, USSD_OP=%d. %s(%s)->%s", rcnt ? "(redirected)" : "", umr, ussd_op,
+        sms.getOriginatingAddress().toString().c_str(), src->getSystemId(), sms.getDestinationAddress().toString().c_str());
+
+      key.abonentAddr=sms.getDestinationAddress();
+      if (ussd_op < 0) // SMPP, No USSD specific flags
+      {
+        if(!session.Get())
+        {
+            if (umr < 0) {
+                key.USR = 0;
+                session=scag::sessions::SessionManager::Instance().newSession(key);
+                sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
+            }
+            else {
+                key.USR = umr;
+                smsc_log_debug(log, "SMPP Submit: Continue, UMR=%d", umr);
+                session=scag::sessions::SessionManager::Instance().getSession(key);
+                if (!session.Get()) {
+                    session=scag::sessions::SessionManager::Instance().newSession(key);
+                    sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
+                    smsc_log_warn(log, "SMPP Submit: Session for USR=%d not found, created new USR=%d", umr, key.USR);
+                }
+            }
+        }
+      }
+      else // USSD Dialog
+      {
+        if(session.Get())
+        {
+            smsc_log_warn(log, "USSD Submit: Rerouting for USSD dialog not allowed");        
+            SubmitResp(cmd,smsc::system::Status::NOROUTE);
+            registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
+            return;
+        }
+        
+        if (umr < 0)
+        {
+            if (ussd_op == smsc::smpp::UssdServiceOpValue::USSR_REQUEST) { // New service USSD dialog
+                // TODO: deny service initiated dialog !!!
+                smsc_log_debug(log, "USSD Submit: Begin service dialog...");
+                session=scag::sessions::SessionManager::Instance().newSession(key);
+                    sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
+                smsc_log_debug(log, "USSD Submit: Created session USR=%d", key.USR);
+            }
+            else {
+                smsc_log_warn(log, "USSD Submit: UMR is not specified");
+                SubmitResp(cmd,smsc::system::Status::USSDDLGREFMISM);
+                registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, -1);
+                return;
+            }
+        }
+        else if (ussd_op == smsc::smpp::UssdServiceOpValue::USSR_REQUEST) { // Continue USSD dialog
+            key.USR = umr; umr = dst->getUMR(key.abonentAddr, key.USR);
+            smsc_log_debug(log, "USSD Submit: Continue, UMR=%d", umr);
+            session=scag::sessions::SessionManager::Instance().getSession(key);
+            if (!session.Get()) {
+                smsc_log_warn(log, "USSD Submit: USR=%d is invalid, no session", key.USR);
+                SubmitResp(cmd,smsc::system::Status::USSDDLGREFMISM);
+                registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
+                return;
+            }
+            sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, umr);
+        }
+        else if (ussd_op == smsc::smpp::UssdServiceOpValue::PSSR_RESPONSE) { // End user USSD dialog
+            key.USR = umr; umr = dst->getUMR(key.abonentAddr, key.USR);
+            smsc_log_debug(log, "USSD Submit: End user dialog, UMR=%d", umr);
+            session=scag::sessions::SessionManager::Instance().getSession(key);
+            if (!session.Get()) {
+                smsc_log_warn(log, "USSD Submit: USR=%d is invalid, no session", key.USR);
+                SubmitResp(cmd,smsc::system::Status::USSDDLGREFMISM);
+                registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
+                return;
+            }
+            sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, umr);
+        }
+        else if (ussd_op == smsc::smpp::UssdServiceOpValue::USSN_REQUEST) { // End service USSD dialog
+            smsc_log_debug(log, "USSD Submit: End service dialog, UMR=%d", umr);
+            if (dst) dst->delUMRMapping(key.abonentAddr, umr);
+            // TODO: implement it !!!
+        }
+        else {
+            smsc_log_warn(log, "USSD Submit: USSD_OP=%d is invalid", ussd_op);
+            SubmitResp(cmd,smsc::system::Status::USSDDLGREFMISM); // TODO: status
+            registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
+            return;
+        }
+      }
+
+      smsc_log_debug(log, "Submit: RuleEngine processing...");
+      st=scag::re::RuleEngine::Instance().process(cmd,*session);
+      smsc_log_debug(log, "Submit: RuleEngine procesed.");
+  
+  }while(st.status == scag::re::STATUS_REDIRECT && rcnt++ < MAX_REROUTE_CNT);
+
+  if(rcnt >= MAX_REROUTE_CNT)
   {
-    smsc_log_info(log,"Submit: noroute %s(%s)->%s",
-    sms.getOriginatingAddress().toString().c_str(),
-    src->getSystemId(),
-    sms.getDestinationAddress().toString().c_str());
+    smsc_log_info(log,"Submit: noroute(MAX_REROUTE_CNT reached) %s(%s)->%s", sms.getOriginatingAddress().toString().c_str(),
+        src->getSystemId(), sms.getDestinationAddress().toString().c_str());
     SubmitResp(cmd,smsc::system::Status::NOROUTE);
     registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
     return;
   }
-
-  sms.setRouteId(ri.routeId);
-  sms.setSourceSmeId(src->getSystemId());
-  sms.setDestinationSmeId(dst->getSystemId());
-
-  cmd->set_serviceId(ri.serviceId);
-
-  int umr = sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) ?
-            sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) : -1;
-  int ussd_op = sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
-                sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
-
-  smsc_log_debug(log, "Submit: UMR=%d, USSD_OP=%d", umr, ussd_op);
-
-  scag::sessions::CSessionKey key;
-  scag::sessions::SessionPtr session;
-  key.abonentAddr=sms.getDestinationAddress();
-  if (ussd_op < 0) // SMPP, No USSD specific flags
-  {
-    if (umr < 0) {
-        key.USR = 0;
-        session=scag::sessions::SessionManager::Instance().newSession(key);
-        sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
-    }
-    else {
-        key.USR = umr;
-        smsc_log_debug(log, "SMPP Submit: Continue, UMR=%d", umr);
-        session=scag::sessions::SessionManager::Instance().getSession(key);
-        if (!session.Get()) {
-            session=scag::sessions::SessionManager::Instance().newSession(key);
-            sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
-            smsc_log_warn(log, "SMPP Submit: Session for USR=%d not found, created new USR=%d", umr, key.USR);
-        }
-    }
-  }
-  else // USSD Dialog
-  {
-    if (umr < 0)
-    {
-        if (ussd_op == smsc::smpp::UssdServiceOpValue::USSR_REQUEST) { // New service USSD dialog
-            // TODO: deny service initiated dialog !!!
-            smsc_log_debug(log, "USSD Submit: Begin service dialog...");
-            session=scag::sessions::SessionManager::Instance().newSession(key);
-                sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
-            smsc_log_debug(log, "USSD Submit: Created session USR=%d", key.USR);
-        }
-        else {
-            smsc_log_warn(log, "USSD Submit: UMR is not specified");
-            SubmitResp(cmd,smsc::system::Status::USSDDLGREFMISM);
-            registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, -1);
-            return;
-        }
-    }
-    else if (ussd_op == smsc::smpp::UssdServiceOpValue::USSR_REQUEST) { // Continue USSD dialog
-        key.USR = umr; umr = dst->getUMR(key.abonentAddr, key.USR);
-        smsc_log_debug(log, "USSD Submit: Continue, UMR=%d", umr);
-        session=scag::sessions::SessionManager::Instance().getSession(key);
-        if (!session.Get()) {
-            smsc_log_warn(log, "USSD Submit: USR=%d is invalid, no session", key.USR);
-            SubmitResp(cmd,smsc::system::Status::USSDDLGREFMISM);
-            registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
-            return;
-        }
-        sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, umr);
-    }
-    else if (ussd_op == smsc::smpp::UssdServiceOpValue::PSSR_RESPONSE) { // End user USSD dialog
-        key.USR = umr; umr = dst->getUMR(key.abonentAddr, key.USR);
-        smsc_log_debug(log, "USSD Submit: End user dialog, UMR=%d", umr);
-        session=scag::sessions::SessionManager::Instance().getSession(key);
-        if (!session.Get()) {
-            smsc_log_warn(log, "USSD Submit: USR=%d is invalid, no session", key.USR);
-            SubmitResp(cmd,smsc::system::Status::USSDDLGREFMISM);
-            registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
-            return;
-        }
-        sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, umr);
-    }
-    else if (ussd_op == smsc::smpp::UssdServiceOpValue::USSN_REQUEST) { // End service USSD dialog
-        smsc_log_debug(log, "USSD Submit: End service dialog, UMR=%d", umr);
-        if (dst) dst->delUMRMapping(key.abonentAddr, umr);
-        // TODO: implement it !!!
-    }
-    else {
-        smsc_log_warn(log, "USSD Submit: USSD_OP=%d is invalid", ussd_op);
-        SubmitResp(cmd,smsc::system::Status::USSDDLGREFMISM); // TODO: status
-        registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
-        return;
-    }
-  }
-
-  smsc_log_debug(log, "Submit: RuleEngine processing...");
-  scag::re::RuleStatus st=scag::re::RuleEngine::Instance().process(cmd,*session);
-  smsc_log_debug(log, "Submit: RuleEngine procesed.");
-
-  if(st.status == scag::re::STATUS_FAILED)
+  
+  if(st.status != scag::re::STATUS_OK)
   {
     smsc_log_info(log,"Submit: RuleEngine returned result=%d",st.result);
     SubmitResp(cmd, st.temporal ? smsc::system::Status::RX_T_APPN :
@@ -352,7 +384,7 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
     smsc_log_debug(log, "Submit resp: RuleEngine processing...");
     st=scag::re::RuleEngine::Instance().process(cmd,*session);
     smsc_log_debug(log, "Submit resp:RuleEngine  processed");
-    if(st.status == scag::re::STATUS_FAILED)
+    if(st.status != scag::re::STATUS_OK)
         rs = st.result;
   }
 
@@ -373,7 +405,7 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
     rs = -1;
   }
 
-  if(rs != -2 || (st.status == scag::re::STATUS_FAILED))
+  if(rs != -2 || st.status != scag::re::STATUS_OK)
     registerEvent(scag::stat::events::smpp::RESP_FAILED, src, dst, (char*)sms->getRouteId(), rs);
   else
     registerEvent(scag::stat::events::smpp::RESP_OK, src, dst, (char*)sms->getRouteId(), -1);
@@ -384,95 +416,126 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
 
 void StateMachine::processDelivery(SmppCommand& cmd)
 {
-  router::RouteInfo ri;
-  SMS& sms=*(cmd->get_sms());
-  SmsCommand& smscmd=cmd->get_smsCommand();
-  smscmd.orgSrc=sms.getOriginatingAddress();
-  smscmd.orgDst=sms.getDestinationAddress();
-  SmppEntity *src=cmd.getEntity();
-  SmppEntity *dst=routeMan->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
-  if(!dst)
-  {
-    smsc_log_info(log,"Delivery: no route %s(%s)->%s",
-      sms.getOriginatingAddress().toString().c_str(),
-      src->getSystemId(),
-      sms.getDestinationAddress().toString().c_str());
-    DeliveryResp(cmd,smsc::system::Status::NOROUTE);
-    registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
-    return;
-  }
-
-  sms.setRouteId(ri.routeId);
-  sms.setSourceSmeId(src->getSystemId());
-  sms.setDestinationSmeId(dst->getSystemId());
-
-  cmd->set_serviceId(ri.serviceId);
-
-  int umr = sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) ?
-            sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) : -1;
-  int ussd_op = sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
-                sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
-
-  smsc_log_debug(log, "Delivery: UMR=%d, USSD_OP=%d", umr, ussd_op);
-
-  scag::sessions::CSessionKey key;
+    uint32_t rcnt = 0;
+  SmppEntity *src = NULL;
+  SmppEntity *dst = NULL, *ndst;
   scag::sessions::SessionPtr session;
-  key.abonentAddr=sms.getOriginatingAddress();
-  if (ussd_op < 0) // SMPP, No USSD specific flags
-  {
-      key.USR = 0; // Always create new session
-      session=scag::sessions::SessionManager::Instance().newSession(key);
-      sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
-      if (umr > 0) {
-          smsc_log_warn(log, "SMPP Delivery, UMR=%d is set. "
-                             "Created new session instead. USR=%d", umr, key.USR);
-    umr = -1;
+  scag::sessions::CSessionKey key;  
+  router::RouteInfo ri;
+    scag::re::RuleStatus st;  
+    SMS& sms=*(cmd->get_sms());
+    SmsCommand& smscmd=cmd->get_smsCommand();
+
+  do{
+      smscmd.orgSrc=sms.getOriginatingAddress();
+      smscmd.orgDst=sms.getDestinationAddress();
+      src=cmd.getEntity();
+      ndst=routeMan->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
+      if(!ndst || ndst == dst)
+      {
+        smsc_log_info(log,"Delivery: no route %s(%s)->%s",
+          sms.getOriginatingAddress().toString().c_str(),
+          src->getSystemId(),
+          sms.getDestinationAddress().toString().c_str());
+        DeliveryResp(cmd,smsc::system::Status::NOROUTE);
+        registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
+        return;
       }
-  }
-  else // USSD Dialog
-  {
-      if (umr < 0) {
-          smsc_log_warn(log, "USSD Delivery: UMR is not specified");
-          DeliveryResp(cmd,smsc::system::Status::USSDDLGREFMISM);
-          registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
-          return;
+      dst = ndst;
+
+      sms.setRouteId(ri.routeId);
+      sms.setSourceSmeId(src->getSystemId());
+      sms.setDestinationSmeId(dst->getSystemId());
+
+      cmd->set_serviceId(ri.serviceId);
+
+      int umr = sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) ?
+                sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) : -1;
+      int ussd_op = sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
+                    sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
+
+      smsc_log_debug(log, "Delivery:%s UMR=%d, USSD_OP=%d. %s(%s)->%s", rcnt ? "(redirected)" : "", umr, ussd_op,
+        sms.getOriginatingAddress().toString().c_str(), src->getSystemId(), sms.getDestinationAddress().toString().c_str());
+        
+      key.abonentAddr=sms.getOriginatingAddress();
+      if (ussd_op < 0) // SMPP, No USSD specific flags
+      {
+          if(!session.Get())
+          {
+              key.USR = 0; // Always create new session
+              session=scag::sessions::SessionManager::Instance().newSession(key);
+              sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
+              if (umr > 0) {
+                  smsc_log_warn(log, "SMPP Delivery, UMR=%d is set. "
+                                     "Created new session instead. USR=%d", umr, key.USR);
+                umr = -1;
+              }
+          }
       }
-      else if (ussd_op == smsc::smpp::UssdServiceOpValue::PSSR_INDICATION) { // New user USSD dialog
-          smsc_log_debug(log, "USSD Delivery: Begin user dialog, UMR=%d", umr);
-          session=scag::sessions::SessionManager::Instance().newSession(key);
-          sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
-          smsc_log_debug(log, "USSD Delivery: Creating mapping USR=%d, UMR=%d", key.USR, umr);
-          if (src) src->setMapping(key.abonentAddr, umr, key.USR);
-      }
-      else if (ussd_op == smsc::smpp::UssdServiceOpValue::USSR_CONFIRM) { // Continue USSD dialog
-          key.USR = src->getUSR(key.abonentAddr, umr);
-          smsc_log_debug(log, "USSD Delivery: Continue USR=%d", key.USR);
-          session=scag::sessions::SessionManager::Instance().getSession(key);
-          if (!session.Get()) {
-              smsc_log_warn(log, "USSD Delivery: USR=%d is invalid, no session", key.USR);
+      else // USSD Dialog
+      {
+            if(session.Get())
+            {
+                smsc_log_warn(log, "USSD Delivery: Rerouting for USSD dialog not allowed");        
+                DeliveryResp(cmd,smsc::system::Status::NOROUTE);
+                registerEvent(scag::stat::events::smpp::REJECTED, src, dst, NULL, smsc::system::Status::NOROUTE);
+                return;
+            }
+        
+          if (umr < 0) {
+              smsc_log_warn(log, "USSD Delivery: UMR is not specified");
               DeliveryResp(cmd,smsc::system::Status::USSDDLGREFMISM);
               registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
               return;
           }
-          sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
+          else if (ussd_op == smsc::smpp::UssdServiceOpValue::PSSR_INDICATION) { // New user USSD dialog
+              smsc_log_debug(log, "USSD Delivery: Begin user dialog, UMR=%d", umr);
+              session=scag::sessions::SessionManager::Instance().newSession(key);
+              sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
+              smsc_log_debug(log, "USSD Delivery: Creating mapping USR=%d, UMR=%d", key.USR, umr);
+              if (src) src->setMapping(key.abonentAddr, umr, key.USR);
+          }
+          else if (ussd_op == smsc::smpp::UssdServiceOpValue::USSR_CONFIRM) { // Continue USSD dialog
+              key.USR = src->getUSR(key.abonentAddr, umr);
+              smsc_log_debug(log, "USSD Delivery: Continue USR=%d", key.USR);
+              session=scag::sessions::SessionManager::Instance().getSession(key);
+              if (!session.Get()) {
+                  smsc_log_warn(log, "USSD Delivery: USR=%d is invalid, no session", key.USR);
+                  DeliveryResp(cmd,smsc::system::Status::USSDDLGREFMISM);
+                  registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
+                  return;
+              }
+              sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
+          }
+          else if (ussd_op == smsc::smpp::UssdServiceOpValue::USSN_CONFIRM) { // End service USSD dialog
+              smsc_log_debug(log, "USSD Delivery: End service dialog, UMR=%d", umr);
+              if (src) src->delUMRMapping(key.abonentAddr, umr); // TODO: check & implement
+          }
+          else {
+              smsc_log_warn(log, "USSD Delivery: USSD_OP=%d is invalid", ussd_op);
+              DeliveryResp(cmd,smsc::system::Status::USSDDLGREFMISM); // TODO: status
+              registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
+              return;
+          }
       }
-      else if (ussd_op == smsc::smpp::UssdServiceOpValue::USSN_CONFIRM) { // End service USSD dialog
-          smsc_log_debug(log, "USSD Delivery: End service dialog, UMR=%d", umr);
-          if (src) src->delUMRMapping(key.abonentAddr, umr); // TODO: check & implement
-      }
-      else {
-          smsc_log_warn(log, "USSD Delivery: USSD_OP=%d is invalid", ussd_op);
-          DeliveryResp(cmd,smsc::system::Status::USSDDLGREFMISM); // TODO: status
-          registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
-          return;
-      }
+
+      smsc_log_debug(log, "Delivery: RuleEngine processing...");
+      st=scag::re::RuleEngine::Instance().process(cmd,*session);
+      smsc_log_debug(log, "Delivery: RuleEngine procesed.");
+
+  }while(st.status == scag::re::STATUS_REDIRECT && rcnt++ < MAX_REROUTE_CNT);
+
+  if(rcnt >= MAX_REROUTE_CNT)
+  {
+    smsc_log_info(log,"Delivery: noroute(MAX_REROUTE_CNT reached) %s(%s)->%s",  sms.getOriginatingAddress().toString().c_str(),
+          src->getSystemId(), sms.getDestinationAddress().toString().c_str());
+    
+    DeliveryResp(cmd,smsc::system::Status::NOROUTE);
+    registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
+    return;
   }
-
-  smsc_log_debug(log, "Delivery: RuleEngine processing...");
-  scag::re::RuleStatus st=scag::re::RuleEngine::Instance().process(cmd,*session);
-  smsc_log_debug(log, "Delivery: RuleEngine procesed.");
-
-  if(st.status == scag::re::STATUS_FAILED)
+    
+  if(st.status != scag::re::STATUS_OK)
   {
     smsc_log_info(log,"Delivery: RuleEngine returned result=%d",st.result);
     DeliveryResp(cmd, st.temporal? smsc::system::Status::RX_T_APPN :
@@ -481,7 +544,6 @@ void StateMachine::processDelivery(SmppCommand& cmd)
     registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, st.temporal? smsc::system::Status::RX_T_APPN : smsc::system::Status::RX_P_APPN);
     return;
   }
-
 
   try{
     int newSeq=dst->getNextSeq();
@@ -542,7 +604,7 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
     smsc_log_debug(log, "Delivery resp: processing...");
     st=scag::re::RuleEngine::Instance().process(cmd,*session);
     smsc_log_debug(log, "Delivery resp: procesed.");
-    if(st.status == scag::re::STATUS_FAILED)
+    if(st.status != scag::re::STATUS_OK)
         rs = st.result;
   }
 
@@ -556,7 +618,7 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
     rs = -1;
   }
 
-  if(rs != -2 || (st.status == scag::re::STATUS_FAILED))
+  if(rs != -2 || st.status != scag::re::STATUS_OK)
       registerEvent(scag::stat::events::smpp::RESP_FAILED, src, dst, (char*)orgCmd->get_sms()->getRouteId(), rs);
   else
       registerEvent(scag::stat::events::smpp::RESP_OK, src, dst, (char*)orgCmd->get_sms()->getRouteId(), -1);
@@ -601,71 +663,93 @@ void StateMachine::DataResp(SmppCommand& cmd,int status)
 
 void StateMachine::processDataSm(SmppCommand& cmd)
 {
+    uint32_t rcnt = 0;
+  SmppEntity *src = NULL;
+  SmppEntity *dst = NULL, *ndst;
+  scag::sessions::SessionPtr session;
+  scag::sessions::CSessionKey key;  
   router::RouteInfo ri;
-  SMS& sms=*(cmd->get_sms());
-  SmsCommand& smscmd=cmd->get_smsCommand();
-  smscmd.orgSrc=sms.getOriginatingAddress();
-  smscmd.orgDst=sms.getDestinationAddress();
-  SmppEntity *src=cmd.getEntity();
-  SmppEntity *dst=routeMan->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
-  if(!dst)
+    scag::re::RuleStatus st;
+    SMS& sms=*(cmd->get_sms());
+    SmsCommand& smscmd=cmd->get_smsCommand();
+
+  do{
+      smscmd.orgSrc=sms.getOriginatingAddress();
+      smscmd.orgDst=sms.getDestinationAddress();
+      src=cmd.getEntity();
+      ndst=routeMan->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
+      if(!ndst || ndst == dst)
+      {
+        smsc_log_info(log,"DataSm: no route %s(%s)->%s",
+          sms.getOriginatingAddress().toString().c_str(),
+          src->getSystemId(),
+          sms.getDestinationAddress().toString().c_str());
+        DataResp(cmd,smsc::system::Status::NOROUTE);
+        registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
+        return;
+      }
+
+      sms.setRouteId(ri.routeId);
+      sms.setSourceSmeId(src->getSystemId());
+      sms.setDestinationSmeId(dst->getSystemId());
+
+      if(src->info.type==etService) {
+        smscmd.dir = (dst->info.type==etService) ? dsdSrv2Srv : dsdSrv2Sc;
+      }
+      else {
+        smscmd.dir = (dst->info.type==etService) ? dsdSc2Srv : dsdSc2Sc;
+      }
+
+      cmd->set_serviceId(ri.serviceId);
+
+      int umr = sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) ?
+                sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) : -1;
+      int ussd_op = sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
+                    sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
+
+      smsc_log_debug(log, "Datasm:%s UMR=%d, USSD_OP=%d. %s(%s)->%s", rcnt ? "(redirected)" : "", umr, ussd_op,
+        sms.getOriginatingAddress().toString().c_str(), src->getSystemId(), sms.getDestinationAddress().toString().c_str());      
+
+      scag::sessions::CSessionKey key;
+      scag::sessions::SessionPtr session;
+      key.abonentAddr = (src->info.type == etService) ?
+             sms.getDestinationAddress() : sms.getOriginatingAddress();
+      if (ussd_op < 0) // SMPP, No USSD specific flags
+      {
+        if(!session.Get())
+        {
+          if (umr < 0) {
+              key.USR = 0;
+              session=scag::sessions::SessionManager::Instance().newSession(key);
+              sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
+          }
+          else {
+              key.USR = umr;
+              smsc_log_debug(log, "SMPP DataSm: Continue, UMR=%d", umr);
+              session=scag::sessions::SessionManager::Instance().getSession(key);
+              if (!session.Get()) {
+                  session=scag::sessions::SessionManager::Instance().newSession(key);
+                  sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
+                  smsc_log_warn(log, "SMPP DataSm: Session for USR=%d not found, created new USR=%d", umr, key.USR);
+              }
+          }
+        }
+      }
+      smsc_log_debug(log, "DataSm: RuleEngine processing...");
+      st=scag::re::RuleEngine::Instance().process(cmd,*session);
+      smsc_log_debug(log, "DataSm: RuleEngine procesed.");
+  }while(st.status == scag::re::STATUS_REDIRECT && rcnt++ < MAX_REROUTE_CNT);
+
+  if(rcnt >= MAX_REROUTE_CNT)
   {
-    smsc_log_info(log,"DataSm: no route %s(%s)->%s",
-      sms.getOriginatingAddress().toString().c_str(),
-      src->getSystemId(),
-      sms.getDestinationAddress().toString().c_str());
+    smsc_log_info(log,"DataSm: noroute(MAX_REROUTE_CNT reached) %s(%s)->%s", sms.getOriginatingAddress().toString().c_str(),
+        src->getSystemId(), sms.getDestinationAddress().toString().c_str());
     DataResp(cmd,smsc::system::Status::NOROUTE);
     registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
     return;
   }
-
-  sms.setRouteId(ri.routeId);
-  sms.setSourceSmeId(src->getSystemId());
-  sms.setDestinationSmeId(dst->getSystemId());
-
-  if(src->info.type==etService) {
-    smscmd.dir = (dst->info.type==etService) ? dsdSrv2Srv : dsdSrv2Sc;
-  }
-  else {
-    smscmd.dir = (dst->info.type==etService) ? dsdSc2Srv : dsdSc2Sc;
-  }
-
-  cmd->set_serviceId(ri.serviceId);
-
-  int umr = sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) ?
-            sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) : -1;
-  int ussd_op = sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
-                sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
-
-  smsc_log_debug(log, "Datasm: UMR=%d, USSD_OP=%d", umr, ussd_op);
-
-  scag::sessions::CSessionKey key;
-  scag::sessions::SessionPtr session;
-  key.abonentAddr = (src->info.type == etService) ?
-         sms.getDestinationAddress() : sms.getOriginatingAddress();
-  if (ussd_op < 0) // SMPP, No USSD specific flags
-  {
-      if (umr < 0) {
-          key.USR = 0;
-          session=scag::sessions::SessionManager::Instance().newSession(key);
-          sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
-      }
-      else {
-          key.USR = umr;
-          smsc_log_debug(log, "SMPP DataSm: Continue, UMR=%d", umr);
-          session=scag::sessions::SessionManager::Instance().getSession(key);
-          if (!session.Get()) {
-              session=scag::sessions::SessionManager::Instance().newSession(key);
-              sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
-              smsc_log_warn(log, "SMPP DataSm: Session for USR=%d not found, created new USR=%d", umr, key.USR);
-          }
-      }
-  }
-  smsc_log_debug(log, "DataSm: RuleEngine processing...");
-  scag::re::RuleStatus st=scag::re::RuleEngine::Instance().process(cmd,*session);
-  smsc_log_debug(log, "DataSm: RuleEngine procesed.");
-
-  if(st.status == scag::re::STATUS_FAILED)
+  
+  if(st.status != scag::re::STATUS_OK)
   {
     smsc_log_info(log,"DataSm: RuleEngine returned result=%d",st.result);
     DataResp(cmd, st.temporal? smsc::system::Status::RX_T_APPN :
@@ -674,7 +758,6 @@ void StateMachine::processDataSm(SmppCommand& cmd)
     registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, st.temporal? smsc::system::Status::RX_T_APPN : smsc::system::Status::RX_P_APPN);
     return;
   }
-
 
   try{
     int newSeq=dst->getNextSeq();
@@ -739,7 +822,7 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
     smsc_log_debug(log, "datasm resp: processing...");
     st=scag::re::RuleEngine::Instance().process(cmd,*session);
     smsc_log_debug(log, "datasm resp: procesed.");
-    if(st.status == scag::re::STATUS_FAILED)
+    if(st.status != scag::re::STATUS_OK)
         rs = st.result;
   }
 
@@ -753,7 +836,7 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
     rs = -1;
   }
 
-  if(rs != -2 || (st.status == scag::re::STATUS_FAILED))
+  if(rs != -2 || st.status != scag::re::STATUS_OK)
       registerEvent(scag::stat::events::smpp::RESP_FAILED, src, dst, (char*)orgCmd->get_sms()->getRouteId(), rs);
   else
       registerEvent(scag::stat::events::smpp::RESP_OK, src, dst, (char*)orgCmd->get_sms()->getRouteId(), -1);
