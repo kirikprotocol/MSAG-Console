@@ -253,6 +253,7 @@ namespace scag { namespace sessions
 
         CSessionKey             m_SessionKey;           //Ключ для SessionManager
         CSessionPrimaryKey      m_SessionPrimaryKey;    //Уникальный ключ для модуля статистики
+        bool                    m_bRedirectFlag;
 
         time_t                  lastAccessTime;
         bool                    bChanged, bDestroy;
@@ -284,6 +285,10 @@ namespace scag { namespace sessions
         void DeserializePendingOperations(SessionBuffer& buff);
         bool m_CanOpenSubmitOperation;
     public:
+        void setRedirectFlag() {m_bRedirectFlag = true;}
+        bool hasRedirectFlag() {return m_bRedirectFlag;}
+
+
         int getPendingAmount() {return PendingOperationList.size();}
         bool getCanOpenSubmitOperation() { return m_CanOpenSubmitOperation;}
 

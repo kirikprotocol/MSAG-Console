@@ -173,7 +173,7 @@ void Operation::rollbackAll()
 Session::Session(const CSessionKey& key) 
     : PropertyManager(), lastAccessTime(-1), 
         bChanged(false), bDestroy(false), accessCount(0), m_pCurrentOperation(0),
-        logger(0), lastOperationId(0), m_CanOpenSubmitOperation(false)
+        logger(0), lastOperationId(0), m_CanOpenSubmitOperation(false), m_bRedirectFlag(false)
 {
     logger = Logger::getInstance("scag.re");
     m_SessionKey = key;
@@ -380,6 +380,7 @@ void Session::Serialize(SessionBuffer& buff)
 void Session::Deserialize(SessionBuffer& buff)
 {
     PrePendingOperationList.clear();
+    m_bRedirectFlag = false;
 
     buff.SetPos(0);
 
