@@ -10,7 +10,7 @@ void ActionRedirect::init(const SectionParams& params,PropertyObject propertyObj
     if ((propertyObject.HandlerId != EH_SUBMIT_SM)&&(propertyObject.HandlerId != EH_DELIVER_SM)&&(propertyObject.HandlerId != EH_DATA_SM))
         throw SCAGException("Action 'redirect' Error. Details: Action can be used only in 'SUBMIT_SM', 'DELIVER_SM' or 'DATA_SM' handler.");
 
-    m_fDAFieldType = CheckParameter(params, propertyObject, "redirect", "OA", false, true, strOA, m_bExistOA);
+    m_fOAFieldType = CheckParameter(params, propertyObject, "redirect", "OA", false, true, strOA, m_bExistOA);
     m_fDAFieldType = CheckParameter(params, propertyObject, "redirect", "DA", false, true, strDA, m_bExistDA);
 
 
@@ -27,7 +27,7 @@ bool ActionRedirect::run(ActionContext& context)
 {
     smsc_log_debug(logger,"Run Action 'redirect'");
 
-    CommandAccessor& commandAccessor = context.getCommand();
+ /*   CommandAccessor& commandAccessor = context.getCommand();
     SmppCommandAdapter& smppAdapter = dynamic_cast<SmppCommandAdapter&>(commandAccessor);
 
     if (smppAdapter.hasServiceOp()) 
@@ -64,7 +64,7 @@ bool ActionRedirect::run(ActionContext& context)
     //////////////DA///////
     if (m_bExistDA) 
     {
-        if (m_fOAFieldType == ftUnknown) 
+        if (m_fDAFieldType == ftUnknown) 
         {
             Address tmp(strDA.c_str());
             DA = tmp;
@@ -81,8 +81,6 @@ bool ActionRedirect::run(ActionContext& context)
         }
     }
 
-    smsc_log_debug(logger,"Action 'redirect' finish");
-
     RuleStatus rs;
     rs.status = STATUS_REDIRECT;
 
@@ -91,6 +89,8 @@ bool ActionRedirect::run(ActionContext& context)
 
 
     context.setRuleStatus(rs);
+
+    smsc_log_debug(logger,"Action 'redirect' finished");   */
     return false;
 }
 
