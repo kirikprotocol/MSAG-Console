@@ -15,6 +15,8 @@ class ActionRedirect : public Action
     FieldType m_fOAFieldType;
     FieldType m_fDAFieldType;
 
+    bool m_bExistOA;
+    bool m_bExistDA;
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);

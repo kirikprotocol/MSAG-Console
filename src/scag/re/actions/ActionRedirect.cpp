@@ -7,16 +7,14 @@ void ActionRedirect::init(const SectionParams& params,PropertyObject propertyObj
 {
     logger = Logger::getInstance("scag.re");
 
-    bool bExistOA, bExistDA;
-
     if ((propertyObject.HandlerId != EH_SUBMIT_SM)&&(propertyObject.HandlerId != EH_DELIVER_SM)&&(propertyObject.HandlerId != EH_DATA_SM))
         throw SCAGException("Action 'redirect' Error. Details: Action can be used only in 'SUBMIT_SM', 'DELIVER_SM' or 'DATA_SM' handler.");
 
-    m_fDAFieldType = CheckParameter(params, propertyObject, "redirect", "OA", false, true, strOA, bExistOA);
-    m_fDAFieldType = CheckParameter(params, propertyObject, "redirect", "DA", false, true, strDA, bExistDA);
+    m_fDAFieldType = CheckParameter(params, propertyObject, "redirect", "OA", false, true, strOA, m_bExistOA);
+    m_fDAFieldType = CheckParameter(params, propertyObject, "redirect", "DA", false, true, strDA, m_bExistDA);
 
 
-    if ((!bExistOA)&&(!bExistDA)) 
+    if ((!m_bExistOA)&&(!m_bExistDA)) 
         throw SCAGException("Must exist at list one of 'OA' and 'DA' parameters");
 
 
@@ -43,44 +41,54 @@ bool ActionRedirect::run(ActionContext& context)
     Address DA;
 
     //////////////OA////////
-    if (m_fOAFieldType == ftUnknown) 
+    if (m_bExistOA) 
     {
-        Address tmp(strOA.c_str());
-        OA = tmp;
-    } else
-    {
-        Property * property = context.getProperty(strOA);
-
-        if (!property) 
+        if (m_fOAFieldType == ftUnknown) 
         {
-            smsc_log_warn(logger,"Action 'redirect':: invalid property '%s'", strOA.c_str());
-            return true;
+            Address tmp(strOA.c_str());
+            OA = tmp;
+        } else
+        {
+            Property * property = context.getProperty(strOA);
+
+            if (!property) 
+            {
+                smsc_log_warn(logger,"Action 'redirect':: invalid property '%s'", strOA.c_str());
+                return true;
+            }
+            Address tmp(property->getStr().c_str());
+            OA = tmp;
         }
-        Address tmp(property->getStr().c_str());
-        OA = tmp;
     }
 
     //////////////DA///////
-    if (m_fOAFieldType == ftUnknown) 
+    if (m_bExistDA) 
     {
-        Address tmp(strDA.c_str());
-        DA = tmp;
-    } else
-    {
-        Property * property = context.getProperty(strDA);
-        if (!property) 
+        if (m_fOAFieldType == ftUnknown) 
         {
-            smsc_log_warn(logger,"Action 'redirect':: invalid property '%s'", strDA.c_str());
-            return true;
+            Address tmp(strDA.c_str());
+            DA = tmp;
+        } else
+        {
+            Property * property = context.getProperty(strDA);
+            if (!property) 
+            {
+                smsc_log_warn(logger,"Action 'redirect':: invalid property '%s'", strDA.c_str());
+                return true;
+            }
+            Address tmp(property->getStr().c_str());
+            DA = tmp;
         }
-        Address tmp(property->getStr().c_str());
-        DA = tmp;
     }
 
     smsc_log_debug(logger,"Action 'redirect' finish");
 
     RuleStatus rs;
     rs.status = STATUS_REDIRECT;
+
+    if (m_bExistOA) smppAdapter.setOA(OA);
+    if (m_bExistDA) smppAdapter.setDA(DA);
+
 
     context.setRuleStatus(rs);
     return false;
