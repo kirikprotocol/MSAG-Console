@@ -103,8 +103,12 @@ public class AlarmStatFormBean extends IndexBean {
       File[] dirFiles = dirNameFile.listFiles();
       if (dirFiles == null || dirFiles.length == 0) return RESULT_OK;
 
-      for (int j = 0; j < dirFiles.length; j++)
+      for (int j = 0; j < dirFiles.length; j++) {
+        final String fileName = dirFiles[j].getName();
+        if (fileName == null || fileName.length() <= 0 ||
+          !(fileName.toLowerCase().startsWith(dateFilePrefix) || fileName.toLowerCase().startsWith(dateFilePrefix_prev))) continue;
         processFile(new File(dirNameFile, dirFiles[j].getName()));
+      }
 
       processClosedStatsTable();
 
@@ -116,14 +120,6 @@ public class AlarmStatFormBean extends IndexBean {
     catch (ParseException e) {
       e.printStackTrace();
       return error(SMSCErrors.error.snmp.CSVisInvalid, e.getMessage());
-    }
-    catch (FileNotFoundException e) {
-      e.printStackTrace();
-      return error(SMSCErrors.error.snmp.InitFailed, e.getMessage());
-    }
-    catch (IOException e) {
-      e.printStackTrace();
-      return error(SMSCErrors.error.snmp.InitFailed, e.getMessage());
     }
     catch (Config.ParamNotFoundException e) {
       e.printStackTrace();
@@ -139,86 +135,95 @@ public class AlarmStatFormBean extends IndexBean {
     }
   }
 
-  private void processFile(File src) throws FileNotFoundException, IOException, ParseException {
+  private void processFile(File src) throws ParseException {
     logger.debug("Processing file "+src);
     localCalendar.setTime( date );
 
-    BufferedReader br = new BufferedReader(new FileReader(src));
-    br.readLine(); // строка заголовка
-    StreamTokenizer st = new StreamTokenizer(br);
-    st.resetSyntax();
-    st.whitespaceChars(',', ',');
-    st.wordChars('0', '9');
-    st.wordChars('.', '.');
-    st.wordChars(' ', ' ');
-    st.wordChars(':', ':');
-    st.quoteChar('"');
-    st.nextToken();
+    BufferedReader br = null;
+    try {
+      br = new BufferedReader(new FileReader(src));
+      br.readLine(); // строка заголовка
+      StreamTokenizer st = new StreamTokenizer(br);
+      st.resetSyntax();
+      st.whitespaceChars(',', ',');
+      st.wordChars('0', '9');
+      st.wordChars('.', '.');
+      st.wordChars(' ', ' ');
+      st.wordChars(':', ':');
+      st.quoteChar('"');
+      st.nextToken();
 
-    Date submitTime;
-    String alarmId;
-    String alarmCategory;
-    int severity;
-    String text;
+      Date submitTime;
+      String alarmId;
+      String alarmCategory;
+      int severity;
+      String text;
 
-    while (st.ttype != StreamTokenizer.TT_EOF) {
-      // Read string
-      submitTime = rowSubmitTimeFormat.parse(st.sval);
-      st.nextToken();
-      alarmId = st.sval;
-      st.nextToken();
-      alarmCategory = st.sval;
-      st.nextToken();
-      try {
-        severity = Integer.valueOf(st.sval).intValue();
-      } catch (NumberFormatException e) {
-        severity = 0;
+      while (st.ttype != StreamTokenizer.TT_EOF) {
+        // Read string
+        submitTime = rowSubmitTimeFormat.parse(st.sval);
+        st.nextToken();
+        alarmId = st.sval;
+        st.nextToken();
+        alarmCategory = st.sval;
+        st.nextToken();
+        try {
+          severity = Integer.valueOf(st.sval).intValue();
+        } catch (NumberFormatException e) {
+          severity = 0;
+        }
+        st.nextToken();
+        text = st.sval;
+
+        // Fill tables
+        addStatToAllStatsTable(submitTime, alarmId, alarmCategory, severity, text); // All stats table
+        addStatToOpenedStatsTable(submitTime, alarmId, alarmCategory, severity, text); // Opened stats table
+        addStatToClosedStatsTable(submitTime, alarmId, alarmCategory, severity, text); // Closed stats table
+
+        st.nextToken();
+        if (st.ttype == StreamTokenizer.TT_EOL) st.nextToken();
       }
-      st.nextToken();
-      text = st.sval;
-
-      // Fill tables
-      addStatToAllStatsTable(submitTime, alarmId, alarmCategory, severity, text); // All stats table
-      addStatToOpenedStatsTable(submitTime, alarmId, alarmCategory, severity, text); // Opened stats table
-      addStatToClosedStatsTable(submitTime, alarmId, alarmCategory, severity, text); // Closed stats table
-
-      st.nextToken();
-      if (st.ttype == StreamTokenizer.TT_EOL) st.nextToken();
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    } finally {
+      try {
+        if (br != null)
+          br.close();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
   }
 
   private void addStatToAllStatsTable(final Date submitTime, final String alarmId, final String alarmCategory,
                                       final int severity, final String text) {
-    final Calendar cal = Calendar.getInstance(TimeZone.getDefault());
-    cal.setTime(submitTime);
-    if( cal.get(Calendar.YEAR) == localCalendar.get(Calendar.YEAR)
-      && cal.get(Calendar.MONTH) == localCalendar.get(Calendar.MONTH)
-      && cal.get(Calendar.DAY_OF_MONTH) == localCalendar.get(Calendar.DAY_OF_MONTH)) {
-
-      final StatsTableRow row = allStatsTable.createRow();
-      row.addFieldValue(AllStatsTableScheme.SCHEME.SUBMIT_TIME, new DateCell(submitTime));
-      row.addFieldValue(AllStatsTableScheme.SCHEME.ALARM_ID, new StringCell(alarmId));
-      row.addFieldValue(AllStatsTableScheme.SCHEME.ALARM_CATEGORY, new StringCell(alarmCategory));
-      row.addFieldValue(AllStatsTableScheme.SCHEME.SEVERITY, new IntCell(severity));
-      row.addFieldValue(AllStatsTableScheme.SCHEME.TEXT, new StringCell(text));
-    }
+    final StatsTableRow row = allStatsTable.createRow();
+    row.addFieldValue(AllStatsTableScheme.SCHEME.SUBMIT_TIME, new DateCell(submitTime));
+    row.addFieldValue(AllStatsTableScheme.SCHEME.ALARM_ID, new StringCell(alarmId));
+    row.addFieldValue(AllStatsTableScheme.SCHEME.ALARM_CATEGORY, new StringCell(alarmCategory));
+    row.addFieldValue(AllStatsTableScheme.SCHEME.SEVERITY, new IntCell(severity));
+    row.addFieldValue(AllStatsTableScheme.SCHEME.TEXT, new StringCell(text));
   }
 
   private void addStatToOpenedStatsTable(final Date submitTime, final String alarmId, final String alarmCategory,
                                          final int severity, final String text) {
-    if(isBefore(submitTime, localCalendar.getTime())) {
-      if (severity != 1) { // add new row
-        final StatsTableRow row = openedStatsTable.createRow();
-        row.addFieldValue(OpenedStatsTableScheme.SCHEME.SUBMIT_TIME, new DateCell(submitTime));
-        row.addFieldValue(OpenedStatsTableScheme.SCHEME.ALARM_ID, new StringCell(alarmId));
-        row.addFieldValue(OpenedStatsTableScheme.SCHEME.ALARM_CATEGORY, new StringCell(alarmCategory));
-        row.addFieldValue(OpenedStatsTableScheme.SCHEME.SEVERITY, new IntCell(severity));
-        row.addFieldValue(OpenedStatsTableScheme.SCHEME.TEXT, new StringCell(text));
-      } else { // remove row
-        final StatsTableRow row = getOpenStatsTableRow(alarmId, alarmCategory);
-        if (row != null)
-          openedStatsTable.deleteRow(row);
-      }
+    if (severity != 1) { // add new row
+      StatsTableRow row = getOpenStatsTableRow(alarmId, alarmCategory);
+      if (row == null)
+        row = openedStatsTable.createRow();
+
+      row.addFieldValue(OpenedStatsTableScheme.SCHEME.SUBMIT_TIME, new DateCell(submitTime));
+      row.addFieldValue(OpenedStatsTableScheme.SCHEME.ALARM_ID, new StringCell(alarmId));
+      row.addFieldValue(OpenedStatsTableScheme.SCHEME.ALARM_CATEGORY, new StringCell(alarmCategory));
+      row.addFieldValue(OpenedStatsTableScheme.SCHEME.SEVERITY, new IntCell(severity));
+      row.addFieldValue(OpenedStatsTableScheme.SCHEME.TEXT, new StringCell(text));
+      
+    } else { // remove row
+      final StatsTableRow row = getOpenStatsTableRow(alarmId, alarmCategory);
+      if (row != null)
+        openedStatsTable.deleteRow(row);
     }
   }
 
@@ -234,29 +239,26 @@ public class AlarmStatFormBean extends IndexBean {
 
   private void addStatToClosedStatsTable(final Date submitTime, final String alarmId, final String alarmCategory,
                                          final int severity, final String text) {
+    if (severity != 1) { // add new row
+      final StatsTableRow row = closedStatsTable.createRow();
+      row.addFieldValue(ClosedStatsTableScheme.SCHEME.SUBMIT_TIME, new DateCell(submitTime));
+      row.addFieldValue(ClosedStatsTableScheme.SCHEME.ALARM_ID, new StringCell(alarmId));
+      row.addFieldValue(ClosedStatsTableScheme.SCHEME.ALARM_CATEGORY, new StringCell(alarmCategory));
+      row.addFieldValue(ClosedStatsTableScheme.SCHEME.SEVERITY, new IntCell(severity));
+      row.addFieldValue(ClosedStatsTableScheme.SCHEME.TEXT, new StringCell(text));
+      row.addFieldValue(ClosedStatsTableScheme.SCHEME.CLOSE_FLAG, new IntCell(0));
+    } else { // change rows value
+      final StatsTableRow row = getCloseStatsTableRow(alarmId, alarmCategory);
 
-    if(isBefore(submitTime, localCalendar.getTime())) {
-      if (severity != 1) { // add new row
-        final StatsTableRow row = closedStatsTable.createRow();
-        row.addFieldValue(ClosedStatsTableScheme.SCHEME.SUBMIT_TIME, new DateCell(submitTime));
-        row.addFieldValue(ClosedStatsTableScheme.SCHEME.ALARM_ID, new StringCell(alarmId));
-        row.addFieldValue(ClosedStatsTableScheme.SCHEME.ALARM_CATEGORY, new StringCell(alarmCategory));
-        row.addFieldValue(ClosedStatsTableScheme.SCHEME.SEVERITY, new IntCell(severity));
-        row.addFieldValue(ClosedStatsTableScheme.SCHEME.TEXT, new StringCell(text));
-        row.addFieldValue(ClosedStatsTableScheme.SCHEME.CLOSE_FLAG, new IntCell(0));
-      } else { // change rows value
-        final StatsTableRow row = getCloseStatsTableRow(alarmId, alarmCategory);
-
-        if (row != null) {
-          row.addFieldValue(ClosedStatsTableScheme.SCHEME.CLOSE_FLAG, new IntCell(1));
-          final StatsTableRow closeRow = closedStatsTable.insertRow(row);
-          closeRow.addFieldValue(ClosedStatsTableScheme.SCHEME.SUBMIT_TIME, new DateCell(submitTime));
-          closeRow.addFieldValue(ClosedStatsTableScheme.SCHEME.ALARM_ID, new StringCell(alarmId));
-          closeRow.addFieldValue(ClosedStatsTableScheme.SCHEME.ALARM_CATEGORY, new StringCell(alarmCategory));
-          closeRow.addFieldValue(ClosedStatsTableScheme.SCHEME.SEVERITY, null);
-          closeRow.addFieldValue(ClosedStatsTableScheme.SCHEME.TEXT, new StringCell(text));
-          closeRow.addFieldValue(ClosedStatsTableScheme.SCHEME.CLOSE_FLAG, new IntCell(1));
-        }
+      if (row != null) {
+        row.addFieldValue(ClosedStatsTableScheme.SCHEME.CLOSE_FLAG, new IntCell(1));
+        final StatsTableRow closeRow = closedStatsTable.insertRow(row);
+        closeRow.addFieldValue(ClosedStatsTableScheme.SCHEME.SUBMIT_TIME, new DateCell(submitTime));
+        closeRow.addFieldValue(ClosedStatsTableScheme.SCHEME.ALARM_ID, new StringCell(alarmId));
+        closeRow.addFieldValue(ClosedStatsTableScheme.SCHEME.ALARM_CATEGORY, new StringCell(alarmCategory));
+        closeRow.addFieldValue(ClosedStatsTableScheme.SCHEME.SEVERITY, null);
+        closeRow.addFieldValue(ClosedStatsTableScheme.SCHEME.TEXT, new StringCell(text));
+        closeRow.addFieldValue(ClosedStatsTableScheme.SCHEME.CLOSE_FLAG, new IntCell(1));
       }
     }
   }
@@ -282,15 +284,6 @@ public class AlarmStatFormBean extends IndexBean {
 
     for (Iterator iter = rows2Remove.iterator(); iter.hasNext();)
       closedStatsTable.deleteRow((StatsTableRow)iter.next());
-  }
-
-  private boolean isBefore(final Date date1, final Date date2) {
-    final Calendar cal = Calendar.getInstance(TimeZone.getDefault());
-    cal.setTime(date1);
-    final Calendar cal1 = Calendar.getInstance(TimeZone.getDefault());
-    cal1.setTime(date2);
-    cal1.set(Calendar.DAY_OF_YEAR, cal1.get(Calendar.DAY_OF_YEAR) + 1);
-    return cal.getTime().before(cal1.getTime());
   }
 
   private int clearQuery() {
