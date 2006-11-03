@@ -40,8 +40,6 @@
                 </complexType>
             </element>
 
-	    <element name="close_ussd_dialog">
-	    </element>
 	    
         </choice>    
 	

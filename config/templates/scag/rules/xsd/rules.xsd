@@ -4,6 +4,7 @@
    xmlns:scag="http://www.sibinco.com/SCAG"
    xmlns:session="http://www.sibinco.com/SCAG/SESSIONS"
    xmlns:operation="http://www.sibinco.com/SCAG/OPERATIONS"
+   xmlns:smpp="http://www.sibinco.com/SCAG/SMPP"
    xmlns:strings="http://www.sibinco.com/SCAG/STRINGS"
    xmlns:bill="http://www.sibinco.com/SCAG/BILL"
    xmlns:send="http://www.sibinco.com/SCAG/SEND"
@@ -25,7 +26,9 @@
     <import schemaLocation="strings.xsd"    namespace="http://www.sibinco.com/SCAG/STRINGS"/>
     <import schemaLocation="profile.xsd"    namespace="http://www.sibinco.com/SCAG/PROFILE"/>
     <import schemaLocation="log.xsd"        namespace="http://www.sibinco.com/SCAG/LOG"/>
-    <import schemaLocation="http.xsd"        namespace="http://www.sibinco.com/SCAG/HTTP"/>
+    <import schemaLocation="http.xsd"       namespace="http://www.sibinco.com/SCAG/HTTP"/>
+    <import schemaLocation="smpp.xsd" 	    namespace="http://www.sibinco.com/SCAG/SMPP"/>
+
         
     <!-- General values types definition  -->
     <simpleType name="Value">
@@ -113,6 +116,7 @@
             <group ref="profile:Actions" />
             <group ref="log:Actions" />
             <group ref="http:Actions" />
+            <group ref="smpp:Actions" />
 
             <element name="set">
                 <complexType>
