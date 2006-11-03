@@ -27,7 +27,7 @@ bool ActionRedirect::run(ActionContext& context)
 {
     smsc_log_debug(logger,"Run Action 'redirect'");
 
- /*   CommandAccessor& commandAccessor = context.getCommand();
+    CommandAccessor& commandAccessor = context.getCommand();
     SmppCommandAdapter& smppAdapter = dynamic_cast<SmppCommandAdapter&>(commandAccessor);
 
     if (smppAdapter.hasServiceOp()) 
@@ -90,7 +90,7 @@ bool ActionRedirect::run(ActionContext& context)
 
     context.setRuleStatus(rs);
 
-    smsc_log_debug(logger,"Action 'redirect' finished");   */
+    smsc_log_debug(logger,"Action 'redirect' finished");   
     return false;
 }
 
