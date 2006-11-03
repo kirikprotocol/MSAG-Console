@@ -20,7 +20,6 @@ enum LongCallCommandId{
 };
 
 class LongCallInitiator;
-//class LongCallManager;
 struct LongCallContext;
 
 struct LongCallContext

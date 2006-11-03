@@ -71,4 +71,8 @@
         <param name="pingTimeout" type="int">@pers.ping_timeout@</param>
     </section>
 
+    <section name="LongCallManager">
+        <param name="maxTasks" type="int">10</param>
+    </section>
+
 </config>

@@ -8,6 +8,7 @@
 #include "scag/config/sessn/SessionManagerConfig.h"
 #include "scag/config/http/HttpManagerConfig.h"
 #include "scag/config/pers/PersClientConfig.h"
+#include "scag/config/lcm/LongCallManagerConfig.h"
 
 #include <string>
 
@@ -23,7 +24,8 @@ enum ConfigType
     BILLMAN_CFG,
     SESSIONMAN_CFG,
     HTTPMAN_CFG,
-    PERSCLIENT_CFG
+    PERSCLIENT_CFG,
+    LONGCALLMAN_CFG
 };
 
 class ConfigManager
@@ -47,6 +49,7 @@ public:
     virtual SessionManagerConfig& getSessionManConfig() = 0;
     virtual HttpManagerConfig& getHttpManConfig() = 0;    
     virtual PersClientConfig& getPersClientConfig() = 0;    
+    virtual LongCallManagerConfig& getLongCallManConfig() = 0;
     virtual Hash<std::string>*& getLicConfig() = 0;
     virtual Config* getConfig() = 0;
 };

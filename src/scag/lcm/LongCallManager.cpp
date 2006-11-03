@@ -97,7 +97,7 @@ void LongCallManagerImpl::init(uint32_t maxThr)
 
 void LongCallManagerImpl::configChanged()
 {
-    LongCallManagerConfig& cfg = ConfigManager::Instance().getLongCallManagerConfig();
+    LongCallManagerConfig& cfg = ConfigManager::Instance().getLongCallManConfig();
     
 }
 
@@ -162,7 +162,7 @@ int LongCallTask::Execute()
                 break;
         }
     }
-    return 0;    
+    return 0;
 }
 
 }}

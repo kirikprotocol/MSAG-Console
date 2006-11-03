@@ -51,7 +51,8 @@ public:
   virtual BillingManagerConfig& getBillManConfig(){ return getBillManConfig_(); }
   virtual SessionManagerConfig& getSessionManConfig(){ return getSessionManConfig_(); }
   virtual HttpManagerConfig& getHttpManConfig(){ return getHttpManConfig_(); }  
-  virtual PersClientConfig& getPersClientConfig(){ return getPersClientConfig_(); }    
+  virtual PersClientConfig& getPersClientConfig(){ return getPersClientConfig_(); }
+  virtual LongCallManagerConfig& getLongCallManConfig(){ return getLongCallManConfig_(); }
 
     static RouteConfig&  getRouteConfig_()
     {
@@ -87,6 +88,11 @@ public:
     {
         static PersClientConfig persCfg;
         return persCfg;
+    };
+    static LongCallManagerConfig& getLongCallManConfig_()
+    {
+        static LongCallManagerConfig cfg;
+        return cfg;
     };
     virtual Hash<std::string>*& getLicConfig(){return licconfig;};
     virtual Config* getConfig(){return &config;};
@@ -200,8 +206,9 @@ void ConfigManagerImpl::Init()
     getSessionManConfig_().init(ConfigView(config, "SessionManager"));
     getStatManConfig_().init(ConfigView(config, "StatisticsManager"));
     getHttpManConfig_().init(ConfigView(config, "HttpTransport"));    
-    getPersClientConfig_().init(ConfigView(config, "Personalization"));        
-
+    getPersClientConfig_().init(ConfigView(config, "Personalization"));
+    getLongCallManConfig_().init(ConfigView(config, "LongCallManager"));        
+    
   } catch (ParseException &e) {
       throw ConfigException(e.what());
   }catch(ConfigException& e){
@@ -495,6 +502,11 @@ void ConfigManagerImpl::reload(Array<int>& changedConfigs)
     if(  getPersClientConfig_().check(ConfigView(config, "Personalization"))  ){
         getPersClientConfig_().init(ConfigView(config, "Personalization"));
         changedConfigs.Push(PERSCLIENT_CFG);
+    }
+    
+    if(  getLongCallManConfig_().check(ConfigView(config, "LongCallManager"))  ){
+        getPersClientConfig_().init(ConfigView(config, "LongCallManager"));
+        changedConfigs.Push(LONGCALLMAN_CFG);
     }
 
 
