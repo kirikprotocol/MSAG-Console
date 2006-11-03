@@ -213,13 +213,15 @@ public class AlarmStatFormBean extends IndexBean {
       StatsTableRow row = getOpenStatsTableRow(alarmId, alarmCategory);
       if (row == null)
         row = openedStatsTable.createRow();
-
+      else if (((Date)row.getValue(OpenedStatsTableScheme.SCHEME.SUBMIT_TIME)).after(submitTime))
+        return;
+      
       row.addFieldValue(OpenedStatsTableScheme.SCHEME.SUBMIT_TIME, new DateCell(submitTime));
       row.addFieldValue(OpenedStatsTableScheme.SCHEME.ALARM_ID, new StringCell(alarmId));
       row.addFieldValue(OpenedStatsTableScheme.SCHEME.ALARM_CATEGORY, new StringCell(alarmCategory));
       row.addFieldValue(OpenedStatsTableScheme.SCHEME.SEVERITY, new IntCell(severity));
       row.addFieldValue(OpenedStatsTableScheme.SCHEME.TEXT, new StringCell(text));
-      
+
     } else { // remove row
       final StatsTableRow row = getOpenStatsTableRow(alarmId, alarmCategory);
       if (row != null)
