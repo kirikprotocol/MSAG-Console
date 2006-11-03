@@ -15,7 +15,7 @@ using namespace scag::stat;
 
 std::vector<int> StateMachine::allowedUnknownOptionals;
 
-const int MAX_REROUTE_CNT=10;
+const int MAX_REDIRECT_CNT=10;
 
 struct StateMachine::ResponseRegistry
 {
@@ -235,6 +235,8 @@ void StateMachine::processSubmit(SmppCommand& cmd)
                 }
             }
         }
+        else
+            session.setRedirectFlag();
       }
       else // USSD Dialog
       {
@@ -303,11 +305,11 @@ void StateMachine::processSubmit(SmppCommand& cmd)
       st=scag::re::RuleEngine::Instance().process(cmd,*session);
       smsc_log_debug(log, "Submit: RuleEngine procesed.");
   
-  }while(st.status == scag::re::STATUS_REDIRECT && rcnt++ < MAX_REROUTE_CNT);
+  }while(st.status == scag::re::STATUS_REDIRECT && rcnt++ < MAX_REDIRECT_CNT);
 
-  if(rcnt >= MAX_REROUTE_CNT)
+  if(rcnt >= MAX_REDIRECT_CNT)
   {
-    smsc_log_info(log,"Submit: noroute(MAX_REROUTE_CNT reached) %s(%s)->%s", sms.getOriginatingAddress().toString().c_str(),
+    smsc_log_info(log,"Submit: noroute(MAX_REDIRECT_CNT reached) %s(%s)->%s", sms.getOriginatingAddress().toString().c_str(),
         src->getSystemId(), sms.getDestinationAddress().toString().c_str());
     SubmitResp(cmd,smsc::system::Status::NOROUTE);
     registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
@@ -471,6 +473,8 @@ void StateMachine::processDelivery(SmppCommand& cmd)
                 umr = -1;
               }
           }
+          else
+            session.setRedirectFlag();
       }
       else // USSD Dialog
       {
@@ -523,11 +527,11 @@ void StateMachine::processDelivery(SmppCommand& cmd)
       st=scag::re::RuleEngine::Instance().process(cmd,*session);
       smsc_log_debug(log, "Delivery: RuleEngine procesed.");
 
-  }while(st.status == scag::re::STATUS_REDIRECT && rcnt++ < MAX_REROUTE_CNT);
+  }while(st.status == scag::re::STATUS_REDIRECT && rcnt++ < MAX_REDIRECT_CNT);
 
-  if(rcnt >= MAX_REROUTE_CNT)
+  if(rcnt >= MAX_REDIRECT_CNT)
   {
-    smsc_log_info(log,"Delivery: noroute(MAX_REROUTE_CNT reached) %s(%s)->%s",  sms.getOriginatingAddress().toString().c_str(),
+    smsc_log_info(log,"Delivery: noroute(MAX_REDIRECT_CNT reached) %s(%s)->%s",  sms.getOriginatingAddress().toString().c_str(),
           src->getSystemId(), sms.getDestinationAddress().toString().c_str());
     
     DeliveryResp(cmd,smsc::system::Status::NOROUTE);
@@ -734,15 +738,17 @@ void StateMachine::processDataSm(SmppCommand& cmd)
               }
           }
         }
+        else
+            session.setRedirectFlag();
       }
       smsc_log_debug(log, "DataSm: RuleEngine processing...");
       st=scag::re::RuleEngine::Instance().process(cmd,*session);
       smsc_log_debug(log, "DataSm: RuleEngine procesed.");
-  }while(st.status == scag::re::STATUS_REDIRECT && rcnt++ < MAX_REROUTE_CNT);
+  }while(st.status == scag::re::STATUS_REDIRECT && rcnt++ < MAX_REDIRECT_CNT);
 
-  if(rcnt >= MAX_REROUTE_CNT)
+  if(rcnt >= MAX_REDIRECT_CNT)
   {
-    smsc_log_info(log,"DataSm: noroute(MAX_REROUTE_CNT reached) %s(%s)->%s", sms.getOriginatingAddress().toString().c_str(),
+    smsc_log_info(log,"DataSm: noroute(MAX_REDIRECT_CNT reached) %s(%s)->%s", sms.getOriginatingAddress().toString().c_str(),
         src->getSystemId(), sms.getDestinationAddress().toString().c_str());
     DataResp(cmd,smsc::system::Status::NOROUTE);
     registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
