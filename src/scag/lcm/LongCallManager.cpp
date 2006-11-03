@@ -5,6 +5,8 @@
 #include <scag/util/singleton/Singleton.h>
 #include "scag/config/ConfigManager.h"
 #include "scag/config/ConfigListener.h"
+#include "scag/pers/PersClient.h"
+#include "scag/pers/Types.h"
 
 #include "LongCallManager.h"
 
@@ -14,6 +16,9 @@ using namespace scag::util::singleton;
 using smsc::util::Exception;
 using smsc::logger::Logger;
 using namespace smsc::core::threads;
+
+using namespace scag::pers::client;
+using namespace scag::pers;
 
 bool  LongCallManager::inited = false;
 Mutex LongCallManager::initLock;
@@ -29,6 +34,7 @@ public:
     void shutdown();
     
 protected:
+    Logger * logger;
     EventMonitor mtx;
     uint32_t maxThreads;
     ThreadPool pool;
@@ -40,8 +46,10 @@ protected:
 class LongCallTask : public ThreadedTask
 {
     LongCallManagerImpl* manager;
+    Logger * logger;    
 public:
-    LongCallTask(LongCallManagerImpl* man) : manager(man) {};
+    LongCallTask(LongCallManagerImpl* man) : manager(man) { logger = Logger::getInstance("lcm.task"); };
+    void ExecutePersCall(LongCallContext* ctx);
     int Execute();
     const char* taskName() { return "LongCallTask"; };
 };
@@ -89,6 +97,7 @@ void LongCallManager::Init(const LongCallManagerConfig& cfg)// throw(LongCallMan
 
 void LongCallManagerImpl::init(uint32_t maxThr)
 {
+    logger = Logger::getInstance("lcm");
     headContext = NULL;
     maxThreads = maxThr;
     for(int i = 0; i < maxThreads; i++)
@@ -103,6 +112,7 @@ void LongCallManagerImpl::configChanged()
 
 void LongCallManagerImpl::shutdown()
 {
+    smsc_log_debug(logger, "shutdown");
     pool.stopNotify();
     mtx.Lock();
     LongCallContext *cx;
@@ -140,6 +150,50 @@ void LongCallManagerImpl::call(LongCallContext* context)
     mtx.notify();        
 }
 
+void LongCallTask::ExecutePersCall(LongCallContext* ctx)
+{
+    PersCallParams* persParams = (PersCallParams*)ctx->param;
+    PersClient& pc = PersClient::Instance();
+    smsc_log_debug(logger, "ExecutePersCall: command=%d", ctx->callCommandId);
+    try{
+        if(persParams->pt == PT_ABONENT)        
+            switch(ctx->callCommandId)
+            {
+                case PERS_GET: pc.GetProperty(persParams->pt, persParams->skey, persParams->propName.c_str(), persParams->prop); break;
+                case PERS_SET: pc.SetProperty(persParams->pt, persParams->skey, persParams->prop); break;
+                case PERS_DEL: pc.DelProperty(persParams->pt, persParams->skey, persParams->propName.c_str()); break;
+                case PERS_INC_MOD: persParams->result = pc.IncModProperty(persParams->pt, persParams->skey, persParams->prop, persParams->mod); break;
+                case PERS_INC: pc.IncProperty(persParams->pt, persParams->skey, persParams->prop); break;
+            }
+        else
+            switch(ctx->callCommandId)
+            {
+                case PERS_GET: pc.GetProperty(persParams->pt, persParams->ikey, persParams->propName.c_str(), persParams->prop); break;
+                case PERS_SET: pc.SetProperty(persParams->pt, persParams->ikey, persParams->prop); break;
+                case PERS_DEL: pc.DelProperty(persParams->pt, persParams->ikey, persParams->propName.c_str()); break;
+                case PERS_INC_MOD: persParams->result = pc.IncModProperty(persParams->pt, persParams->ikey, persParams->prop, persParams->mod); break;
+                case PERS_INC: pc.IncProperty(persParams->pt, persParams->ikey, persParams->prop); break;
+            }
+        persParams->error = 0;
+        persParams->exception.assign("");
+    }
+    catch(PersClientException& exc)
+    {
+        persParams->error = exc.getType();
+        persParams->exception = exc.what();        
+    }
+    catch(Exception& exc)
+    {
+        persParams->error = 0;        
+        persParams->exception = exc.what();
+    }
+    catch(...)
+    {
+        persParams->error = 0;        
+        persParams->exception = "LongCallManager: Unknown exception";
+    }
+}
+        
 int LongCallTask::Execute()
 {
     LongCallContext* ctx;
@@ -149,18 +203,11 @@ int LongCallTask::Execute()
         ctx = manager->getContext();
         
         if(isStopping || !ctx) break;
-        
-        switch(ctx->callCommandId)        
-        {
-            case PERS_GET:
-                break;
-            case PERS_SET:
-                break;
-            case PERS_DEL:
-                break;
-            case PERS_INC:
-                break;
-        }
+
+        if(ctx->callCommandId >= PERS_GET && ctx->callCommandId <= PERS_INC)
+            ExecutePersCall(ctx);
+            
+        ctx->initiator->continueExecution(ctx);
     }
     return 0;
 }

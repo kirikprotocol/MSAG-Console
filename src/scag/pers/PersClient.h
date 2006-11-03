@@ -57,6 +57,22 @@ public:
     const char* what() const { return strs[et]; };
 };
 
+struct PersCallParams{
+    PersCallParams() : error(0), result(0) {};
+    ProfileType pt;
+    union{
+        uint32_t ikey;
+        const char* skey;
+    };
+    Property prop;
+    std::string propName;
+    uint32_t mod;
+    
+    uint32_t error;
+    uint32_t result;
+    std::string exception;
+};
+
 class PersClient {
 protected:
     virtual ~PersClient() {};

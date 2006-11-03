@@ -16,7 +16,8 @@ enum LongCallCommandId{
     PERS_GET = 1,
     PERS_SET,
     PERS_DEL,
-    PERS_INC
+    PERS_INC,
+    PERS_INC_MOD    
 };
 
 class LongCallInitiator;
@@ -26,9 +27,8 @@ struct LongCallContext
 {
     LongCallContext(LongCallInitiator* initr, uint32_t cid, void* p): initiator(initr), callCommandId(cid), param(p), next(NULL) {};
     
-    uint32_t systemType;
-    uint32_t callCommandId;
-    void *param;
+    uint32_t systemType, callCommandId;
+    void *param;    
     LongCallInitiator *initiator;
     LongCallContext *next;
 };
@@ -36,7 +36,7 @@ struct LongCallContext
 class LongCallInitiator
 {
 public:
-    virtual void continueExecution(LongCallContext& context) = 0;
+    virtual void continueExecution(LongCallContext* context) = 0;
 };
 
 
