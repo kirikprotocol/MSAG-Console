@@ -72,6 +72,7 @@ public:
 
   void releaseThread(PooledThread* thread);
 
+  void stopNotify();
   void shutdown();
 
   MemoryHeap* getMemoryHeap(const char* taskname,int rawheapsize,int blocksheapquantum);

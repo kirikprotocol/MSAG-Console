@@ -97,6 +97,15 @@ ThreadPool::~ThreadPool()
   __trace__("ThreadPool destroyed");
 }
 
+void ThreadPool::stopNotify()
+{
+  Lock();
+  __trace__("stopping notify tasks");
+  for(int i=0;i<usedThreads.Count();i++)
+    usedThreads[i]->stopTask();
+  Unlock();  
+}
+
 void ThreadPool::shutdown()
 {
   sigset(16,disp);
