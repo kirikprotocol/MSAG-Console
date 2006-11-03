@@ -199,6 +199,15 @@ namespace scag { namespace re { namespace smpp
             CommandBrige::getSMS(command).setIntProperty(Tag::SMPP_USSD_SERVICE_OP, value);
         }
 
+        void setOA(Address& addr)
+        {
+            CommandBrige::getSMS(command).setOriginatingAddress(addr);
+        }
+
+        void setDA(Address& addr)
+        {
+            CommandBrige::getSMS(command).setDestinationAddress(addr);
+        }
     };
 
 }}}

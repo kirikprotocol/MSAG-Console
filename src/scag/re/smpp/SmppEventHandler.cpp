@@ -105,7 +105,8 @@ void SmppEventHandler::ModifyOperationBeforeExecuting(Session& session, SmppComm
    if (smppDiscriptor.isResp)
        ProcessModifyRespCommandOperation(session, command, smppDiscriptor);
    else
-       ProcessModifyCommandOperation(session, command, smppDiscriptor);
+       if (!session.hasRedirectFlag()) 
+           ProcessModifyCommandOperation(session, command, smppDiscriptor);
 }
 
 void SmppEventHandler::ModifyOperationAfterExecuting(Session& session, SmppCommand& command, RuleStatus& ruleStatus, CSmppDiscriptor& smppDiscriptor)
