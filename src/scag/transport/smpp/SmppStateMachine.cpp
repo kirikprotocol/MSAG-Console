@@ -236,7 +236,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
             }
         }
         else
-            session.setRedirectFlag();
+            session->setRedirectFlag();
       }
       else // USSD Dialog
       {
@@ -474,7 +474,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
               }
           }
           else
-            session.setRedirectFlag();
+            session->setRedirectFlag();
       }
       else // USSD Dialog
       {
@@ -739,7 +739,7 @@ void StateMachine::processDataSm(SmppCommand& cmd)
           }
         }
         else
-            session.setRedirectFlag();
+            session->setRedirectFlag();
       }
       smsc_log_debug(log, "DataSm: RuleEngine processing...");
       st=scag::re::RuleEngine::Instance().process(cmd,*session);
