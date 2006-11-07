@@ -12,7 +12,7 @@ EventHandler::~EventHandler()
     int key;
     Action * value;
 
-    std::list<Action *>::const_iterator it;
+    std::vector<Action *>::const_iterator it;
 
     for (it = actions.begin(); it!=actions.end(); ++it)
     {
@@ -55,19 +55,23 @@ bool EventHandler::FinishXMLSubSection(const std::string& name)
 
 RuleStatus EventHandler::RunActions(ActionContext& context)
 {
-    std::list<Action *>::const_iterator it;
-
     RuleStatus rs;
 
     rs.status = STATUS_OK;
 
     context.setRuleStatus(rs);
 
-    for (it = actions.begin(); it!=actions.end(); ++it)
-    {
-        if (!(*it)->run(context)) break;
-    }
 
+    for (int i=0; i < actions.size(); i++) 
+    {
+        if (!(actions[i]->run(context))) 
+        {
+            ActionStackValue sv(i, false);
+            context.ActionStack.push_back(sv);
+            break;
+        }
+    }
+ 
     return context.getRuleStatus();
 }
 

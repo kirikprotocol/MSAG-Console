@@ -20,7 +20,7 @@ class EventHandler : public IParserHandler
 protected:
     PropertyObject propertyObject;
     Logger * logger;
-    std::list<Action *> actions;
+    std::vector<Action *> actions;
 //////////////IParserHandler Interfase///////////////////////
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);

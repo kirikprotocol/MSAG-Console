@@ -36,7 +36,6 @@ bool ActionRedirect::run(ActionContext& context)
         return true;
     }
     
-
     Address OA;
     Address DA;
 

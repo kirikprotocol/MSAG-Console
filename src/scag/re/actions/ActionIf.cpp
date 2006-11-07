@@ -40,7 +40,7 @@ ActionIf::~ActionIf()
     int key;
     Action * value;
 
-    std::list<Action *>::const_iterator it;
+    std::vector<Action *>::const_iterator it;
 
     for (it = ThenActions.begin(); it!=ThenActions.end(); ++it)
     {
@@ -208,23 +208,31 @@ bool ActionIf::run(ActionContext& context)
     }
 
 
-    std::list<Action *>::const_iterator it;
-
     if (isValidCondition) 
     {
         smsc_log_debug(logger,"Action 'if': run 'then' section");
 
-        for (it = ThenActions.begin(); it!=ThenActions.end(); ++it)
+        for (int i = 0; i < ThenActions.size(); i++)
         {
-            if (!(*it)->run(context)) return false;
+            if (!ThenActions[i]->run(context)) 
+            {
+                ActionStackValue sv(i, true);
+                context.ActionStack.push_back(sv);
+                return false;
+            }
         }
     } else
     {
         smsc_log_debug(logger,"Action 'if': run 'else' section");
 
-        for (it = ElseActions.begin(); it!=ElseActions.end(); ++it)
+        for (int i = 0; i < ElseActions.size(); i++)
         {
-            if (!(*it)->run(context)) return false;
+            if (!ElseActions[i]->run(context)) 
+            {
+                ActionStackValue sv(i, false);
+                context.ActionStack.push_back(sv);
+                return false;
+            }
         }
     }
     return true;

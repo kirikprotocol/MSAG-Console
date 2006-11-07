@@ -71,8 +71,8 @@ class ActionIf : public Action
 
     bool FillThenSection;
     bool FillElseSection;
-    std::list<Action *> ThenActions;
-    std::list<Action *> ElseActions;
+    std::vector<Action *> ThenActions;
+    std::vector<Action *> ElseActions;
 
 protected:
 

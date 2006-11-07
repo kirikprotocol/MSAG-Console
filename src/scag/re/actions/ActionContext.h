@@ -24,6 +24,19 @@ namespace scag { namespace re { namespace actions
         ftField =   '#'
     };
 
+    struct ActionStackValue
+    {
+        int actionIndex;
+        bool thenSection;
+
+        ActionStackValue() : thenSection(false)
+        {
+        }
+
+        ActionStackValue(int index, bool flag) : actionIndex(index), thenSection(flag)
+        {
+        }
+    };
 
     class CommandAccessor : public PropertyManager
     {
@@ -35,9 +48,7 @@ namespace scag { namespace re { namespace actions
         //virtual SMS& getSMS() = 0;
     };
 
-
-
-
+   
     struct CommandProperty
     {
         Address& abonentAddr;
@@ -130,6 +141,7 @@ namespace scag { namespace re { namespace actions
         bool checkIfCanSetPending(int operationType, int eventHandlerType, TransportType transportType);
         int getCurrentOperationBillID();
 
+        std::list<ActionStackValue> ActionStack;
    };
 
 }}}
