@@ -70,7 +70,7 @@
     </copy>
   </target>
 
-  <target name="create_templ" depends="copy_configs">
+  <target name="create_templ" depends="">
     <java classname="ru.sibinco.automation.MasksListConvertor" args="${TEMPLATES_CSV_FILE} ${DISTR_DIR}/services/${sme.name}/config/templates.xml">
       <classpath>
         <fileset file="${DISTR_DIR}/services/${sme.name}/bin/${sme.name}.jar"/>
