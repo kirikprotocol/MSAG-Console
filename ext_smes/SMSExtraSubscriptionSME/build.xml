@@ -91,7 +91,6 @@
   </target>
 
   <target name="distr" depends="clean, init, build, copy_configs, copy_libs, create_templ, create_logs_directory"/>
-  <target name="distr1" depends="clean, init, build, copy_configs, copy_libs, create_logs_directory"/>
   <target name="update" depends="clean, init, build, copy_libs"/>
 
 </project>

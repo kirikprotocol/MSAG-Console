@@ -67,6 +67,13 @@ Modules:
   </target>
   <target name="smsx_update">
     <ant dir="SmsX" antfile="build.xml" target="update"/>
-  </target>        
+  </target>
+  <target name="subscription_distr">
+    <ant dir="SMSExtraSubscriptionSME" target="distr"/>
+  </target>
+  <target name="subscription_update">
+    <ant dir="SMSExtraSubscriptionSME" target="update"/>
+  </target>
+           
   
 </project>
