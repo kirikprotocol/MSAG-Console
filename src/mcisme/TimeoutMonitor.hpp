@@ -45,24 +45,41 @@ class TimeoutMonitor : public Thread
 {
 	smsc::logger::Logger*   logger;
 	TaskProcessor*			processor;
-	uint32_t				timeout;
-	multimap<time_t, int>	seqNums;
-	EventMonitor			awakeMonitor;
-	Mutex					startLock;
-	Event					exitedEvent;
-	bool					bStarted, bNeedExit;
-	uint32_t				count;
+
+	Event		awakeEvent;
+	Mutex		startLock;
+	bool		bStarted, bNeedExit;
 
 public:
 	
-	TimeoutMonitor(TaskProcessor* _processor, uint32_t to);
+	TimeoutMonitor(TaskProcessor* _processor);
     virtual int Execute();
 	void Start();
 	void Stop();
-	void addSeqNum(int seqNum);
-	void removeSeqNum(int seqNum);
 };
 
+
+//class TimeoutMonitor : public Thread
+//{
+//	smsc::logger::Logger*   logger;
+//	TaskProcessor*			processor;
+//	uint32_t				timeout;
+//	multimap<time_t, int>	seqNums;
+//	EventMonitor			awakeMonitor;
+//	Mutex					startLock;
+//	Event					exitedEvent;
+//	bool					bStarted, bNeedExit;
+//	uint32_t				count;
+//
+//public:
+//	
+//	TimeoutMonitor(TaskProcessor* _processor, uint32_t to);
+//    virtual int Execute();
+//	void Start();
+//	void Stop();
+//	void addSeqNum(int seqNum);
+//	void removeSeqNum(int seqNum);
+//};
 
 };
 };

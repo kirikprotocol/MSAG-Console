@@ -145,7 +145,7 @@ time_t DeliveryQueue::Reschedule(const AbntAddr& abnt, int resp_status) // bool 
 	
 	if(resp_status == smsc::system::Status::OK)
 	{
-		smsc_log_debug(logger, "Previous SMS for Abonent %s was delivered normally.", strAbnt.c_str());
+		smsc_log_debug(logger, "Previous SMS for Abonent %s was delivered normally or no DATA_SM_RESP.", strAbnt.c_str());
 		toHead = true;
 	}
 

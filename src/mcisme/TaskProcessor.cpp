@@ -353,9 +353,10 @@ TaskProcessor::TaskProcessor(ConfigView* config)
 	string sResponseWaitTime;
 	try { sResponseWaitTime = config->getString("responceWaitTime"); } catch (...){sResponseWaitTime = "00:00:60";
 		smsc_log_warn(logger, "Parameter <MCISme.responceWaitTime> missed. Default value is '00:00:30'.");}
-	time_t responseWaitTime = parseTime(sResponseWaitTime.c_str());
+	responseWaitTime = parseTime(sResponseWaitTime.c_str());
 
-	timeoutMonitor = new TimeoutMonitor(this, responseWaitTime);
+//	timeoutMonitor = new TimeoutMonitor(this, responseWaitTime);
+	timeoutMonitor = new TimeoutMonitor(this);
 
 	smsc_log_info(logger, "Load success.");
 }
@@ -472,16 +473,16 @@ int TaskProcessor::Execute()
 		{
 			if (!getFromInQueue(event)) break;
 
-			count++;
-			end = time(0);
-			if( (end-start) > 0)
-			{
-				MutexGuard guard(inQueueMonitor);
-				uint32_t size = inQueue.Count();
-				smsc_log_debug(logger, "speed: Current incoming speed is %d messages per second (current inQueueSize = %d)", count, size);
-				start = time(0);
-				count=0;
-			}
+//			count++;
+//			end = time(0);
+//			if( (end-start) > 0)
+//			{
+//				MutexGuard guard(inQueueMonitor);
+//				uint32_t size = inQueue.Count();
+//				smsc_log_debug(logger, "speed: Current incoming speed is %d messages per second (current inQueueSize = %d)", count, size);
+//				start = time(0);
+//				count=0;
+//			}
 
 			try{checkAddress(event.to.c_str());}catch(Exception e)
 			{
@@ -608,6 +609,7 @@ void TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt)
 	{
 		MutexGuard Lock(smsInfoMutex);
 		seqNum = messageSender->getSequenceNumber();
+		pInfo->sending_time = time(0);
 		int res = smsInfo.Insert(seqNum, pInfo);
 		if(!messageSender->send(seqNum, msg))
 		{
@@ -617,18 +619,17 @@ void TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt)
 			delete pInfo;
 			return;
 		}
+//		timeoutMonitor->addSeqNum(seqNum);
 	}
 
-	timeoutMonitor->addSeqNum(seqNum);
-
-	count+=pInfo->events.size();
-	end = time(0);
-	if( (end-start) > 0)
-	{
-		smsc_log_debug(logger, "speed: Current Delivery speed is %d messages per second ", count);
-		start = time(0);
-		count=0;
-	}
+//	count+=pInfo->events.size();
+//	end = time(0);
+//	if( (end-start) > 0)
+//	{
+//		smsc_log_debug(logger, "speed: Current Delivery speed is %d messages per second ", count);
+//		start = time(0);
+//		count=0;
+//	}
 }
 
 bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
@@ -636,7 +637,7 @@ bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
 	if(cmdId == smsc::smpp::SmppCommandSet::DATA_SM_RESP)
 	{
 //		printf("Recieve a DATA_SM_RESP (cmdId = %d status = %d seqNum = %d )\n", cmdId, status, seqNum);
-//		if(!(seqNum%5)) return false;
+//		if((seqNum%5))	return false;
 
 		sms_info* pInfo=0;
 		{
@@ -648,10 +649,10 @@ bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
 			}
 			pInfo = smsInfo.Get(seqNum);
 			smsInfo.Delete(seqNum);
+//			timeoutMonitor->removeSeqNum(seqNum);
 		}
 
 		smsc_log_debug(logger, "Recieve a DATA_SM_RESP for Abonent %s seq_num = %d, status = %d", pInfo->abnt.toString().c_str(), seqNum, status);
-		timeoutMonitor->removeSeqNum(seqNum);
 
 		if(status == smsc::system::Status::OK)
 		{	
@@ -677,30 +678,59 @@ bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
 	return true;
 };
 
-void TaskProcessor::invokeProcessDataSmTimeout(int seqNum)
+void TaskProcessor::invokeProcessDataSmTimeout(void)
 {
-	smsc_log_debug(logger, "Timeout for SMS seqNum %d", seqNum);
-
+	MutexGuard Lock(smsInfoMutex);
+	int count_old = smsInfo.Count();
+	smsc_log_debug(logger, "Start serching unresponded DATA_SM. Total SMS in Hash is %d", smsInfo.Count());
+	smsc::core::buffers::IntHash<sms_info*>::Iterator It(smsInfo.First());
+	
+//	It = smsInfo.First();
 	sms_info* pInfo=0;
+	int seqNum=0;
+	while(It.Next(seqNum, pInfo))
 	{
-		MutexGuard Lock(smsInfoMutex);
-		if(!smsInfo.Exist(seqNum))
+		time_t curTime = time(0);
+//		smsc_log_debug(logger, "SMS for Abonent %s (seqNum %d) was sent %d sec ago", pInfo->abnt.toString().c_str(), seqNum, curTime - pInfo->sending_time);
+		if(curTime > (pInfo->sending_time + responseWaitTime))
 		{
-			smsc_log_debug(logger, "No info for SMS seqNum = %d\n", seqNum);
-			return;
+			smsc_log_debug(logger, "SMS for Abonent %s (seqNum %d) is removed from waiting list by timeout", pInfo->abnt.toString().c_str(), seqNum);
+
+			statistics->incFailed(pInfo->events.size());
+			time_t schedTime = pDeliveryQueue->Reschedule(pInfo->abnt);
+			pStorage->setSchedParams(pInfo->abnt, schedTime, -1);
+			smsInfo.Delete(seqNum);
+			delete pInfo;
 		}
-		pInfo = smsInfo.Get(seqNum);
-		smsInfo.Delete(seqNum);
 	}
+	int count_new = smsInfo.Count();
+	smsc_log_debug(logger, "Complete serching unresponded DATA_SM. Total SMS in Hash is %d, removed %d", count_new, count_old - count_new);
+}
 
-	smsc_log_debug(logger, "SMS for Abonent %s (seqNum %d) is removed from waiting list by timeout", pInfo->abnt.toString().c_str(), seqNum);
-
-	statistics->incFailed(pInfo->events.size());
-	time_t schedTime = pDeliveryQueue->Reschedule(pInfo->abnt);
-	pStorage->setSchedParams(pInfo->abnt, schedTime, -1);
-
-	delete pInfo;
-};
+//void TaskProcessor::invokeProcessDataSmTimeout(int seqNum)
+//{
+//	smsc_log_debug(logger, "Timeout for SMS seqNum %d", seqNum);
+//
+//	sms_info* pInfo=0;
+//	{
+//		MutexGuard Lock(smsInfoMutex);
+//		if(!smsInfo.Exist(seqNum))
+//		{
+//			smsc_log_debug(logger, "No info for SMS seqNum = %d\n", seqNum);
+//			return;
+//		}
+//		pInfo = smsInfo.Get(seqNum);
+//		smsInfo.Delete(seqNum);
+//	}
+//
+//	smsc_log_debug(logger, "SMS for Abonent %s (seqNum %d) is removed from waiting list by timeout", pInfo->abnt.toString().c_str(), seqNum);
+//
+//	statistics->incFailed(pInfo->events.size());
+//	time_t schedTime = pDeliveryQueue->Reschedule(pInfo->abnt);
+//	pStorage->setSchedParams(pInfo->abnt, schedTime, -1);
+//
+//	delete pInfo;
+//};
 
 
 bool TaskProcessor::invokeProcessAlertNotification(int cmdId, int status, const AbntAddr& abnt)

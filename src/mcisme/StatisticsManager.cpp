@@ -80,13 +80,13 @@ void StatisticsManager::incFailed(uint8_t count)
 {
     MutexGuard  guard(switchLock);
     statistics[currentIndex].failed+=count;
-    smsc_log_info(processLog, "Failed Events is %d (increased by %d, currentIndex=%d)", statistics[currentIndex].failed, count, currentIndex);
+//    smsc_log_info(processLog, "Failed Events is %d (increased by %d, currentIndex=%d)", statistics[currentIndex].failed, count, currentIndex);
 }
 void StatisticsManager::incNotified(uint8_t count)
 {
     MutexGuard  guard(switchLock);
     statistics[currentIndex].notified+=count;
-    smsc_log_info(processLog, "Notified abonents is %d (increased by %d, currentIndex=%d)", statistics[currentIndex].notified, count, currentIndex);
+//    smsc_log_info(processLog, "Notified abonents is %d (increased by %d, currentIndex=%d)", statistics[currentIndex].notified, count, currentIndex);
 }
 
 int StatisticsManager::Execute()

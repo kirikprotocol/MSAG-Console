@@ -71,6 +71,7 @@ protected:
 
 struct sms_info
 {
+	time_t				sending_time;
 	AbntAddr			abnt;
 	vector<MCEvent>		events;
 };
@@ -101,6 +102,7 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
 	ProfilesStorage*	profileStorage;
     StatisticsManager*  statistics;
 	TimeoutMonitor*		timeoutMonitor;
+	time_t				responseWaitTime;
     
 //    EventMonitor    smscIdMonitor;
     Hash<bool>      lockedSmscIds;
@@ -168,7 +170,8 @@ public:
     };
     
     virtual bool invokeProcessDataSmResp(int cmdId, int status, int seqNum);
-	virtual void invokeProcessDataSmTimeout(int seqNum);
+//	virtual void invokeProcessDataSmTimeout(int seqNum);
+	virtual void invokeProcessDataSmTimeout(void);
 	virtual bool invokeProcessAlertNotification(int cmdId, int status, const AbntAddr& abnt);
 
     /* ------------------------ Admin interface ------------------------ */

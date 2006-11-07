@@ -148,32 +148,32 @@ namespace smsc { namespace mcisme
                 sprintf(abonent, "+70123%06d", caller); event.from = abonent;
                 if (i%10 == 0)
 				event.from = ""; // unknown
-                event.cause = ALL;
+                event.cause = ABSENT;
                 {
                     MutexGuard guard(attachLock);
                     if (bAttached && listener) 
 					{
 						listener->missed(event);
-						listener->missed(event);
-						listener->missed(event);
-						caller = (int)(maxAbonents - random()%maxAbonents);
-						sprintf(abonent, "+79029%06d", caller); event.from = abonent;
-						listener->missed(event);
-						caller = (int)(maxAbonents - random()%maxAbonents);
-						sprintf(abonent, "+79029%06d", caller); event.from = abonent;
-						listener->missed(event);
-						listener->missed(event);
-						listener->missed(event);
-						caller = (int)(maxAbonents - random()%maxAbonents);
-						sprintf(abonent, "+79029%06d", caller); event.from = abonent;
-						listener->missed(event);
-						listener->missed(event);
-						listener->missed(event);
-						listener->missed(event);
-						listener->missed(event);
+						//listener->missed(event);
+						//listener->missed(event);
+						//caller = (int)(maxAbonents - random()%maxAbonents);
+						//sprintf(abonent, "+79029%06d", caller); event.from = abonent;
+						//listener->missed(event);
+						//caller = (int)(maxAbonents - random()%maxAbonents);
+						//sprintf(abonent, "+79029%06d", caller); event.from = abonent;
+						//listener->missed(event);
+						//listener->missed(event);
+						//listener->missed(event);
+						//caller = (int)(maxAbonents - random()%maxAbonents);
+						//sprintf(abonent, "+79029%06d", caller); event.from = abonent;
+						//listener->missed(event);
+						//listener->missed(event);
+						//listener->missed(event);
+						//listener->missed(event);
+						//listener->missed(event);
 					}
                 }
-                sleepEvent.Wait(500);
+                sleepEvent.Wait(2000);
             }
         }
         #endif
