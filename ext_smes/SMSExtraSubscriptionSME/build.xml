@@ -6,13 +6,14 @@
   <property name="sme.name" value="SubscriptionSme"/>
   <property name="sme.libs.dir" value="lib"/>
   <property name="sme.sourcepath" value="src"/>
-
+  <property name="SMSC_DIR" value="../.."/>
+  <property file="${SMSC_DIR}/webapps/build.properties"/>
   <property name="compiler.debug" value="on"/>
   <property name="compiler.generate.no.warnings" value="off"/>
   <property name="compiler.args" value=""/>
   <property name="compiler.max.memory" value="128m"/>
-  <property name="BUILD_BIN" value="BUILD"/>
-  <property name="DISTR_DIR" value="DISTRIB"/>
+  <property name="BUILD_BIN" value="${BUILD_DIR}/BUILD"/>
+  <property name="DISTR_DIR" value="${BUILD_DIR}/DISTR"/>
   <property name="TEMPLATES_CSV_FILE" value="docs/msisdn2smsc.csv"/>
 
   <patternset id="compiler.excluded"/>
@@ -60,7 +61,6 @@
   </target>
 
   <target name="build" depends="jar">
-    <delete dir="${BUILD_BIN}"/>
   </target>
 
   <target name="copy_configs" depends="copy_libs">

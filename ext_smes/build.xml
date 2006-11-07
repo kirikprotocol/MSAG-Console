@@ -69,9 +69,11 @@ Modules:
     <ant dir="SmsX" antfile="build.xml" target="update"/>
   </target>
   <target name="subscription_distr">
-    <ant dir="SMSExtraSubscriptionSME" target="distr"/>
+    <property name="TEMPLATES_CSV_FILE" value="SMSExtraSubscriptionSME/docs/msisdn2smsc.csv"/>
+    <ant dir="SMSExtraSubscriptionSME" target="distr"/>  
   </target>
   <target name="subscription_update">
+    <property name="TEMPLATES_CSV_FILE" value="SMSExtraSubscriptionSME/docs/msisdn2smsc.csv"/>
     <ant dir="SMSExtraSubscriptionSME" target="update"/>
   </target>
            
