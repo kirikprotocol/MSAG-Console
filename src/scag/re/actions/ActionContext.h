@@ -5,7 +5,7 @@
 #include <core/buffers/Hash.hpp>
 #include <scag/re/RuleStatus.h>
 #include "scag/sessions/Session.h"
-
+#include <stack>
 
 namespace scag { namespace re { namespace actions 
 {
@@ -141,7 +141,7 @@ namespace scag { namespace re { namespace actions
         bool checkIfCanSetPending(int operationType, int eventHandlerType, TransportType transportType);
         int getCurrentOperationBillID();
 
-        std::list<ActionStackValue> ActionStack;
+        std::stack<ActionStackValue> ActionStack;
    };
 
 }}}

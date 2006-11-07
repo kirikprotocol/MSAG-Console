@@ -217,7 +217,7 @@ bool ActionIf::run(ActionContext& context)
             if (!ThenActions[i]->run(context)) 
             {
                 ActionStackValue sv(i, true);
-                context.ActionStack.push_back(sv);
+                context.ActionStack.push(sv);
                 return false;
             }
         }
@@ -230,7 +230,7 @@ bool ActionIf::run(ActionContext& context)
             if (!ElseActions[i]->run(context)) 
             {
                 ActionStackValue sv(i, false);
-                context.ActionStack.push_back(sv);
+                context.ActionStack.push(sv);
                 return false;
             }
         }

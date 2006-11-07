@@ -67,7 +67,7 @@ RuleStatus EventHandler::RunActions(ActionContext& context)
         if (!(actions[i]->run(context))) 
         {
             ActionStackValue sv(i, false);
-            context.ActionStack.push_back(sv);
+            context.ActionStack.push(sv);
             break;
         }
     }
