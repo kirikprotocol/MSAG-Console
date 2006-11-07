@@ -149,70 +149,90 @@ bool ActionIf::run(ActionContext& context)
 
     bool isValidCondition = true;
 
-    Property * property = context.getProperty(singleparam.strOperand1);
-    if (!property) 
+    if (context.ActionStack.empty()) 
     {
-        smsc_log_debug(logger,"Action 'If' stopped. Details: Cannot find property '%s'", singleparam.strOperand1.c_str());
-        return true;
-    }
-
-
-    if (!m_hasOP) 
-    {
-        smsc_log_debug(logger,"Testing %s = '%lld' for bool", singleparam.strOperand1.c_str(), property->getInt());
-
-        isValidCondition = property->getBool();
-    } 
-    else
-    {
-        //std::string str = property->getStr();
-        //smsc_log_debug(logger,"Testing %s='%s' vs %s",singleparam.strOperand1.c_str(),FormatWStr(str).c_str(),ConvertWStrToStr(singleparam.wstrOperand2).c_str());
-
-        smsc_log_debug(logger,"Testing %s = '%s' vs '%s'", singleparam.strOperand1.c_str(), property->getStr().c_str(),singleparam.strOperand2.c_str());
-
-        int result = 0;
-
-        PropertyType pt;
-
-        switch (singleparam.Operation)
+        Property * property = context.getProperty(singleparam.strOperand1);
+        if (!property) 
         {
-        case opEQ: 
-        case opNE: 
-        case opGT: 
-        case opGE: 
-        case opLT: 
-        case opLE:
-            pt = pt_str;
-            break;
+            smsc_log_debug(logger,"Action 'If' stopped. Details: Cannot find property '%s'", singleparam.strOperand1.c_str());
+            return true;
+        }
 
-        default:
-            pt = pt_int;
-            break;
-        }                
 
-        if (ftUnknown == ftSecondOperandFieldType) 
+        if (!m_hasOP) 
         {
-            if (pt == pt_str)
-                result = property->Compare(singleparam.strOperand2);
-            else
-                result = property->Compare(atoi(singleparam.strOperand2.c_str())); 
+            smsc_log_debug(logger,"Testing %s = '%lld' for bool", singleparam.strOperand1.c_str(), property->getInt());
+
+            isValidCondition = property->getBool();
         } 
         else
         {
-            Property * valproperty = context.getProperty(singleparam.strOperand2);
-            if (valproperty) result = property->Compare(*valproperty,pt);
-            else smsc_log_warn(logger,"Action 'if': Invalid property '%s'", singleparam.strOperand2.c_str());
-        } 
-    
-        isValidCondition = CompareResultToBool(singleparam.Operation,result);
+            //std::string str = property->getStr();
+            //smsc_log_debug(logger,"Testing %s='%s' vs %s",singleparam.strOperand1.c_str(),FormatWStr(str).c_str(),ConvertWStrToStr(singleparam.wstrOperand2).c_str());
+
+            smsc_log_debug(logger,"Testing %s = '%s' vs '%s'", singleparam.strOperand1.c_str(), property->getStr().c_str(),singleparam.strOperand2.c_str());
+
+            int result = 0;
+
+            PropertyType pt;
+
+            switch (singleparam.Operation)
+            {
+            case opEQ: 
+            case opNE: 
+            case opGT: 
+            case opGE: 
+            case opLT: 
+            case opLE:
+                pt = pt_str;
+                break;
+
+            default:
+                pt = pt_int;
+                break;
+            }                
+
+            if (ftUnknown == ftSecondOperandFieldType) 
+            {
+                if (pt == pt_str)
+                    result = property->Compare(singleparam.strOperand2);
+                else
+                    result = property->Compare(atoi(singleparam.strOperand2.c_str())); 
+            } 
+            else
+            {
+                Property * valproperty = context.getProperty(singleparam.strOperand2);
+                if (valproperty) result = property->Compare(*valproperty,pt);
+                else smsc_log_warn(logger,"Action 'if': Invalid property '%s'", singleparam.strOperand2.c_str());
+            } 
+
+            isValidCondition = CompareResultToBool(singleparam.Operation,result);
+        }
     }
+    else
+        isValidCondition = context.ActionStack.top().thenSection;
 
 
     if (isValidCondition) 
     {
         smsc_log_debug(logger,"Action 'if': run 'then' section");
 
-        for (int i = 0; i < ThenActions.size(); i++)
+        int startIndex = 0;
+
+        if (!context.ActionStack.empty()) 
+        {
+            startIndex = context.ActionStack.top().actionIndex;
+            if (startIndex >= ThenActions.size())
+            {
+                smsc_log_error(logger, "Cannot continue running actions. Details: action index out of bound");
+                while (!context.ActionStack.empty()) context.ActionStack.pop();
+                return true;
+            }
+            context.ActionStack.pop();
+        }
+
+
+        for (int i = startIndex; i < ThenActions.size(); i++)
         {
             if (!ThenActions[i]->run(context)) 
             {
@@ -225,7 +245,22 @@ bool ActionIf::run(ActionContext& context)
     {
         smsc_log_debug(logger,"Action 'if': run 'else' section");
 
-        for (int i = 0; i < ElseActions.size(); i++)
+        int startIndex = 0;
+
+        if (!context.ActionStack.empty()) 
+        {
+            startIndex = context.ActionStack.top().actionIndex;
+            if (startIndex >= ElseActions.size())
+            {
+                smsc_log_error(logger, "Cannot continue running actions. Details: action index out of bound");
+                while (!context.ActionStack.empty()) context.ActionStack.pop();
+                return true;
+            }
+            context.ActionStack.pop();
+        }
+
+
+        for (int i = startIndex; i < ElseActions.size(); i++)
         {
             if (!ElseActions[i]->run(context)) 
             {

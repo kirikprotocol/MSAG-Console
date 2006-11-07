@@ -61,8 +61,20 @@ RuleStatus EventHandler::RunActions(ActionContext& context)
 
     context.setRuleStatus(rs);
 
+    int startIndex = 0;
+    if (!context.ActionStack.empty()) 
+    {
+        startIndex = context.ActionStack.top().actionIndex;
+        if (startIndex >= actions.size())
+        {
+            smsc_log_error(logger, "Cannot continue running actions. Details: action index out of bound");
+            while (!context.ActionStack.empty()) context.ActionStack.pop();
+            return context.getRuleStatus();
+        }
+        context.ActionStack.pop();
+    }
 
-    for (int i=0; i < actions.size(); i++) 
+    for (int i = startIndex; i < actions.size(); i++) 
     {
         if (!(actions[i]->run(context))) 
         {
