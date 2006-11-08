@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://www.sibinco.com/SCAG/SMPP" 
+    xmlns="http://www.w3.org/2001/XMLSchema"
+    xmlns:smpp="http://www.sibinco.com/SCAG/SMPP"
+    xmlns:scag="http://www.sibinco.com/SCAG"
+    elementFormDefault="qualified">
+
+    <import schemaLocation="rules.xsd" namespace="http://www.sibinco.com/SCAG" />
+
+    <group name="Actions">
+        <choice>
+            <element name="redirect">
+                <complexType>
+                    <attribute name="OA" type="scag:Value" use="optional"/>
+		    <attribute name="DA" type="scag:Value" use="optional"/>
+                </complexType>
+            </element>
+
+	    <element name="close_ussd_dialog">
+	    </element>
+
+	    
+        </choice>    
+	
+    </group>
+    
+</schema>
