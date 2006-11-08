@@ -444,6 +444,19 @@ Targets:
     </move>
   </target>
   
+  <target name="smsx_update" >
+    <ant dir="${SMSC_DIR}/ext_smes" target="smsx_update"/>
+  </target>
+  <target name="smsx_distr" >
+    <ant dir="${SMSC_DIR}/ext_smes" target="smsx_distr"/>
+  </target>
+
+  <target name="subscription_update" >
+    <ant dir="${SMSC_DIR}/ext_smes" target="subscription_update"/>
+  </target>
+  <target name="subscription_distr" >
+    <ant dir="${SMSC_DIR}/ext_smes" target="subscription_distr"/>
+  </target>
   <target name="exportarchive" depends="makeweb">
     <ant dir="${SMSC_DIR}/webapps/smscfeatures/smsexportarchive" target="copy"/>
   </target>
