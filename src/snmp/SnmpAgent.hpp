@@ -24,8 +24,8 @@ public:
   static void trap(const char * const alarmId, const char * const alarmObjCategory, alertSeverity severity, const char * const text);
   static void trap(alertStatus status, const char * const alarmId, const char * const alarmObjCategory, alertSeverity severity, const char * const text);
   void init();
+  static smsc::logger::Logger* log;
 protected:
-  smsc::logger::Logger* log;
   smsc::system::Smsc* smsc;
 };
 

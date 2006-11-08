@@ -66,6 +66,7 @@ static char const ident[] = "$Id$";
       using smsc::inman::filestore::InFileStorageRoller;
       using smsc::util::config::Manager;
       using smsc::util::config::ConfigException;
+      smsc::logger::Logger* SnmpAgent::log = 0;
 
     struct FFMRargs {
       char* alarmId;
@@ -372,7 +373,7 @@ using smsc::snmp::SnmpAgent;
   sendSmscAlertFFMR(unsigned int clientreg, void *clientarg)
   {
     FFMRargs* vars = (FFMRargs *)clientarg;
-    smsc_log_debug(log,
+    smsc_log_debug( smsc::snmp::SnmpAgent::log,
                    "trap(alarmId=%s,object=%s,severity=%d,text=%s) is called to send, registration_id=%X",
                    vars->alarmId,
                    vars->alarmObjCategory,
@@ -428,7 +429,7 @@ using smsc::snmp::SnmpAgent;
       send_enterprise_trap_vars(SNMP_TRAP_ENTERPRISESPECIFIC, 1, poid, oidlen, notification_vars);
       snmp_free_varbind(notification_vars);
       delete(clientarg);
-      smsc_log_debug(log,"trap with registration_id=%X has been sent", clientreg);
+      smsc_log_debug(smsc::snmp::SnmpAgent::log,"trap with registration_id=%X has been sent", clientreg);
     }
   }
 
