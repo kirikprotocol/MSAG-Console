@@ -4,6 +4,7 @@
 #include "util/smstext.h"
 #include "core/buffers/TmpBuf.hpp"
 #include "sms/sms.h"
+#include <ctype.h>
 
 namespace smsc{
 namespace system{
@@ -37,16 +38,25 @@ public:
 
   void addPrefix(uint32_t bit,const char* prefix,const char* divertAddr)
   {
-    ServiceInfo info;
-    info.serviceBit=bit;
-    info.prefix=prefix;
-    if(info.prefix.length()!=1)info.prefix+=' ';
-    info.diverted=divertAddr!=0;
-    if(info.diverted)
-    {
-      info.divertAddr=divertAddr;
-    }
-    services.push_back(info);
+    std::string str=prefix;
+    std::string::size_type pos=str.find(',');
+    std::string::size_type lastPos=0;
+    do{
+      ServiceInfo info;
+      info.serviceBit=bit;
+      info.prefix=str.substr(lastPos,pos==std::string::npos?pos:pos-lastPos);
+      for(std::string::size_type i=0;i<info.prefix.length();i++)info.prefix[i]=tolower(info.prefix[i]);
+      if(info.prefix.length()!=1)info.prefix+=' ';
+      info.diverted=divertAddr!=0;
+      if(info.diverted)
+      {
+        info.divertAddr=divertAddr;
+      }
+      services.push_back(info);
+      if(pos==std::string::npos)break;
+      lastPos=pos+1;
+      pos=str.find(',',lastPos);
+    }while(lastPos!=std::string::npos);
   }
 
   bool checkExtraService(SMS& sms,ServiceInfo& si)
@@ -61,7 +71,8 @@ public:
       msglen=sms.getIntProperty(Tag::SMPP_SM_LENGTH);
     }
     buf::TmpBuf<char,1024> msgText(msglen+1);
-    smsc::util::getSmsText(&sms,msgText.get(),msglen+1);
+    int len=smsc::util::getSmsText(&sms,msgText.get(),msglen+1);
+    for(int i=0;i<len && msgText.get()[i]!=' ';i++)msgText.get()[i]=tolower(msgText.get()[i]);
 
     bool rv=false;
     for(;it!=services.end();it++)
