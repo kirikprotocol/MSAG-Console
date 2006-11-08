@@ -1199,15 +1199,15 @@ StateType StateMachine::submit(Tuple& t)
   int extrabit=ExtraInfo::getInstance().checkExtraService(*sms,xsi);
   if(extrabit)
   {
-    info2(smsLog,"EXTRA: service with bit=%x detected for abonent %s",extrabit,sms->getOriginatingAddress().toString().c_str());
+    info2(smsLog,"EXTRA: service with bit=%x detected for abonent %s",xsi.serviceBit,sms->getOriginatingAddress().toString().c_str());
   }
-  if((srcprof.subscription&EXTRA_NICK) && (srcprof.hide==HideOption::hoEnabled || extrabit==EXTRA_NICK))
+  if((srcprof.subscription&EXTRA_NICK) && (srcprof.hide==HideOption::hoEnabled || xsi.serviceBit==EXTRA_NICK))
   {
     sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)|EXTRA_NICK);
     sms->setIntProperty(Tag::SMSC_HIDE,HideOption::hoEnabled);
     debug2(smsLog,"EXTRA: smsnick for abonent %s",sms->getOriginatingAddress().toString().c_str());
   }
-  if((srcprof.subscription&EXTRA_FLASH) || extrabit==EXTRA_FLASH)
+  if((srcprof.subscription&EXTRA_FLASH) || xsi.serviceBit==EXTRA_FLASH)
   {
     sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)|EXTRA_FLASH);
     sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,3);
@@ -1216,7 +1216,7 @@ StateType StateMachine::submit(Tuple& t)
   bool noDestChange=false;
   if(extrabit && xsi.diverted)
   {
-    sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,extrabit);
+    sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,xsi.serviceBit);
     sms->setIntProperty(Tag::SMSC_HIDE,HideOption::hoDisabled);
     sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,0);
     sms->setIntProperty(Tag::SMPP_ESM_CLASS,(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&~3)|2);
