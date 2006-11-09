@@ -569,6 +569,7 @@ void Session::closeCurrentOperation()
     {
         delete (*opPtr);
         OperationsHash.Delete(currentOperationId);
+        m_pCurrentOperation = 0;
         smsc_log_debug(logger,"Session: current operation (id=%lld) released (count = %d)", currentOperationId, OperationsHash.Count());
     }
     
