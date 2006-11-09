@@ -12,6 +12,7 @@ namespace scag { namespace re { namespace actions
 
 using smsc::logger::Logger;
 
+
 class Action : public IParserHandler
 {
 protected:

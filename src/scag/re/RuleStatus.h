@@ -7,7 +7,8 @@ enum StatusEnum
 {
     STATUS_OK,
     STATUS_FAILED,
-    STATUS_REDIRECT
+    STATUS_REDIRECT,
+    STATUS_LONG_CALL
 };
 
 struct RuleStatus
