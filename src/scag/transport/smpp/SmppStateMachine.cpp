@@ -682,10 +682,11 @@ void StateMachine::processDataSm(SmppCommand& cmd)
     SMS& sms=*(cmd->get_sms());
     SmsCommand& smscmd=cmd->get_smsCommand();
 
+    smscmd.orgSrc=sms.getOriginatingAddress();
+    smscmd.orgDst=sms.getDestinationAddress();
+    src=cmd.getEntity();
+    
   do{
-      smscmd.orgSrc=sms.getOriginatingAddress();
-      smscmd.orgDst=sms.getDestinationAddress();
-      src=cmd.getEntity();
       dst=routeMan->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
       if(!dst || routeId == ri.routeId)
       {

@@ -36,7 +36,7 @@ struct LongCallContext
 class LongCallInitiator
 {
 public:
-    virtual void continueExecution(LongCallContext* context) = 0;
+    virtual void continueExecution(LongCallContext* context, bool dropped) = 0;
 };
 
 
@@ -48,8 +48,9 @@ public:
     static LongCallManager& Instance();
     static void Init(uint32_t maxThr);
     static void Init(const LongCallManagerConfig& cfg);
+    static void shutdown();    
     
-    virtual void call(LongCallContext* context) = 0;
+    virtual bool call(LongCallContext* context) = 0;
 
 protected:
     static bool  inited;
