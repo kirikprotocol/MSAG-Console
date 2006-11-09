@@ -175,10 +175,11 @@ void StateMachine::processSubmit(SmppCommand& cmd)
 {
     uint32_t rcnt = 0;
   SmppEntity *src = NULL;
-  SmppEntity *dst = NULL, *ndst;
+  SmppEntity *dst = NULL;
   scag::sessions::SessionPtr session;
   scag::sessions::CSessionKey key;  
   router::RouteInfo ri;
+  buf::FixedLengthString<smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH> routeId;    
     scag::re::RuleStatus st;
     SMS& sms=*cmd->get_sms();
     SmsCommand& smscmd=cmd->get_smsCommand();
@@ -187,10 +188,10 @@ void StateMachine::processSubmit(SmppCommand& cmd)
       smscmd.orgSrc=sms.getOriginatingAddress();
       smscmd.orgDst=sms.getDestinationAddress();
       src=cmd.getEntity();
-      ndst=routeMan->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
-      if(!ndst || ndst == dst)
+      dst=routeMan->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
+      if(!dst || routeId == ri.routeId)
       {
-        smsc_log_info(log,"Submit: noroute %s(%s)->%s",
+        smsc_log_info(log,"Submit: %s %s(%s)->%s", !dst ? "no route" : "redirection to the same route",
         sms.getOriginatingAddress().toString().c_str(),
         src->getSystemId(),
         sms.getDestinationAddress().toString().c_str());
@@ -198,7 +199,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
         registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
         return;
       }
-      dst = ndst;
+      routeId = ri.routeId;
 
       sms.setRouteId(ri.routeId);
       sms.setSourceSmeId(src->getSystemId());
@@ -420,10 +421,11 @@ void StateMachine::processDelivery(SmppCommand& cmd)
 {
     uint32_t rcnt = 0;
   SmppEntity *src = NULL;
-  SmppEntity *dst = NULL, *ndst;
+  SmppEntity *dst = NULL;
   scag::sessions::SessionPtr session;
   scag::sessions::CSessionKey key;  
   router::RouteInfo ri;
+  buf::FixedLengthString<smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH> routeId;  
     scag::re::RuleStatus st;  
     SMS& sms=*(cmd->get_sms());
     SmsCommand& smscmd=cmd->get_smsCommand();
@@ -432,10 +434,10 @@ void StateMachine::processDelivery(SmppCommand& cmd)
       smscmd.orgSrc=sms.getOriginatingAddress();
       smscmd.orgDst=sms.getDestinationAddress();
       src=cmd.getEntity();
-      ndst=routeMan->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
-      if(!ndst || ndst == dst)
+      dst=routeMan->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
+      if(!dst || routeId == ri.routeId)
       {
-        smsc_log_info(log,"Delivery: no route %s(%s)->%s",
+        smsc_log_info(log,"Delivery: %s %s(%s)->%s", !dst ? "no route" : "redirection to the same route",
           sms.getOriginatingAddress().toString().c_str(),
           src->getSystemId(),
           sms.getDestinationAddress().toString().c_str());
@@ -443,7 +445,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
         registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
         return;
       }
-      dst = ndst;
+      routeId = ri.routeId;
 
       sms.setRouteId(ri.routeId);
       sms.setSourceSmeId(src->getSystemId());
@@ -669,10 +671,11 @@ void StateMachine::processDataSm(SmppCommand& cmd)
 {
     uint32_t rcnt = 0;
   SmppEntity *src = NULL;
-  SmppEntity *dst = NULL, *ndst;
+  SmppEntity *dst = NULL;
   scag::sessions::SessionPtr session;
   scag::sessions::CSessionKey key;  
   router::RouteInfo ri;
+  buf::FixedLengthString<smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH> routeId;    
     scag::re::RuleStatus st;
     SMS& sms=*(cmd->get_sms());
     SmsCommand& smscmd=cmd->get_smsCommand();
@@ -681,10 +684,10 @@ void StateMachine::processDataSm(SmppCommand& cmd)
       smscmd.orgSrc=sms.getOriginatingAddress();
       smscmd.orgDst=sms.getDestinationAddress();
       src=cmd.getEntity();
-      ndst=routeMan->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
-      if(!ndst || ndst == dst)
+      dst=routeMan->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
+      if(!dst || routeId == ri.routeId)
       {
-        smsc_log_info(log,"DataSm: no route %s(%s)->%s",
+        smsc_log_info(log,"DataSm: %s %s(%s)->%s", !dst ? "no route" : "redirection to the same route",        
           sms.getOriginatingAddress().toString().c_str(),
           src->getSystemId(),
           sms.getDestinationAddress().toString().c_str());
@@ -692,6 +695,7 @@ void StateMachine::processDataSm(SmppCommand& cmd)
         registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
         return;
       }
+      routeId = ri.routeId;
 
       sms.setRouteId(ri.routeId);
       sms.setSourceSmeId(src->getSystemId());
