@@ -7,7 +7,6 @@ void BillActionClose::init(const SectionParams& params,PropertyObject propertyOb
 {
     logger = Logger::getInstance("scag.bill.actions");
 
-
     if (params.Exists("action")) 
     {
         std::string str = params["action"];

@@ -142,6 +142,7 @@ namespace scag { namespace re { namespace actions
         int getCurrentOperationBillID();
 
         std::stack<ActionStackValue> ActionStack;
+        SessionBuffer LongCallContext;
    };
 
 }}}

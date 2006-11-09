@@ -13,6 +13,7 @@ class ActionConcat : public Action
     std::string strString;
     
     FieldType m_fStrFieldType;
+    Logger * logger;
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);

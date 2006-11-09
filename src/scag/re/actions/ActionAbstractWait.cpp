@@ -8,10 +8,10 @@ void ActionAbstractWait::InitParameters(const SectionParams& params,PropertyObje
     bool bExist;
     std::string sType;
 
-    ft = CheckParameter(params, propertyObject, m_ActionName.c_str(), "type", true, true, sType, bExist);
+    ft = Action::CheckParameter(params, propertyObject, m_ActionName.c_str(), "type", true, true, sType, bExist);
     if (ft!=ftUnknown) throw SCAGException("Action '%s': 'type' parameter must be a scalar constant type", m_ActionName.c_str());
 
-    m_ftTime = CheckParameter(params, propertyObject, m_ActionName.c_str(), "time", true, true, m_sTime, bExist);
+    m_ftTime = Action::CheckParameter(params, propertyObject, m_ActionName.c_str(), "time", true, true, m_sTime, bExist);
 
     m_opType = Session::getOperationType(sType);
 

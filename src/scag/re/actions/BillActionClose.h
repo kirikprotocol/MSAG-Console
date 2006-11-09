@@ -15,6 +15,7 @@ class BillActionClose : public Action
     bool m_MsgExist;
 
     bool actionCommit;
+    Logger * logger;
 
     void SetBillingStatus(ActionContext& context, const char * errorMsg, bool isOK);
 protected:

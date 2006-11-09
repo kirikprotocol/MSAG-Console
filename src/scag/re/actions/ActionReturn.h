@@ -16,6 +16,7 @@ class ActionReturn : public Action
     StatusEnum m_bStatusValue;
 
     ActionReturn(const ActionReturn &);
+    Logger * logger;
 
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);

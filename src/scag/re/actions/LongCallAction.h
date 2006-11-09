@@ -11,33 +11,41 @@ namespace scag { namespace re { namespace actions {
 class ActionLongCallInterface
 {
 protected:
-    void RunBeforePostpone(ActionContext& context);
     //void SaveActionPostponeData(ActionContext& context, const void * saveData, int size) = 0;
     //void LoadActionPostponeData(ActionContext& context) = 0;
-    void RunAfterPostpone(ActionContext& context) = 0;
+
+    virtual bool RunBeforePostpone(ActionContext& context) = 0;
+    virtual void ContinueRunning(ActionContext& context) = 0;
 };
 
 
 class LongCallAction : public Action, ActionLongCallInterface
 {
-    ActionLongCallInterface(const ActionLongCallInterface&);
+    LongCallAction(const LongCallAction&);
 
 public:
     virtual bool run(ActionContext& context)
     {
         if (context.ActionStack.empty()) 
         {
-            RunBeforePostpone(context);
+            if (!RunBeforePostpone(context)) return true;
+
             RuleStatus rs = context.getRuleStatus();
             rs.status = STATUS_LONG_CALL;
             context.setRuleStatus(rs);
 
+            while (!context.ActionStack.empty()) context.ActionStack.pop();
+
             return false;
         } else
-            RunAfterPostpone(ActionContext& context);
+        {
+            context.LongCallContext.SetPos(0);
+            ContinueRunning(context);
+        }
 
         return true;
     }
+    LongCallAction() {};
 };
 
 

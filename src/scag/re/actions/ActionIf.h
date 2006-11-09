@@ -73,7 +73,7 @@ class ActionIf : public Action
     bool FillElseSection;
     std::vector<Action *> ThenActions;
     std::vector<Action *> ElseActions;
-
+    Logger * logger;
 protected:
 
 //////////////IParserHandler Interfase///////////////////////

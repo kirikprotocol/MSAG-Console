@@ -8,6 +8,7 @@ namespace scag { namespace re { namespace actions {
 class ActionCloseUssdDialog : public Action
 {
     ActionCloseUssdDialog(const ActionCloseUssdDialog&);
+    Logger * logger;
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name, const SectionParams& params,const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);

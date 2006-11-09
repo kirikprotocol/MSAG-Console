@@ -12,17 +12,15 @@ namespace scag { namespace re { namespace actions
 
 using smsc::logger::Logger;
 
-
 class Action : public IParserHandler
 {
-protected:
-    FieldType CheckParameter(const SectionParams& params, PropertyObject& propertyObject, const char * actionName, const char * paramName, bool isRequired, bool readOnly, std::string& strParameter, bool& exist);
-    Logger * logger;
 public:
-    Action() : logger(0) {};
-    virtual bool run(ActionContext& context) = 0;
+    Action() {};
     virtual void init(const SectionParams& params,PropertyObject propertyObject) = 0;
+    virtual bool run(ActionContext& context) = 0;
+    static FieldType CheckParameter(const SectionParams& params, PropertyObject& propertyObject, const char * actionName, const char * paramName, bool isRequired, bool readOnly, std::string& strParameter, bool& exist);
 };
+
 
 }}}
 

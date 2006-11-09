@@ -21,6 +21,7 @@ class ActionSubstr : public Action
 
     bool m_bExistBegin;
     bool m_bExistEnd;
+    Logger * logger;
 
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
