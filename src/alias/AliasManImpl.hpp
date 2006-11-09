@@ -41,6 +41,16 @@ public:
     sync::MutexGuard mg(mtx);
     Record* tmp;
     char buf[32];
+    ai.addr.toString(buf,sizeof(buf));
+    if(addr2alias.Find(buf,tmp))
+    {
+      if(tmp->addr.value[tmp->addr.length-1]!='?')
+      {
+        smsc_log_warn(log,"duplicate add<->alias:%s<->%s",ai.addr.toString().c_str(),buf);
+        throw smsc::util::Exception("Duplicate alias found:%s",buf);
+      }
+    }
+
     ai.alias.toString(buf,sizeof(buf));
     if(alias2addr.Find(buf,tmp))
     {
@@ -48,13 +58,13 @@ public:
       throw smsc::util::Exception("Duplicate alias found:%s",buf);
     }
     Record *recptr=new Record(ai.addr,ai.alias,ai.hide);
+    alias2addr.Insert(buf,recptr);
     if(ai.hide)
     {
       char buf2[32];
       ai.addr.toString(buf2,sizeof(buf2));
       addr2alias.Insert(buf2,recptr);
     }
-    alias2addr.Insert(buf,recptr);
     recptr->offset=store.Append(*recptr);
   }
 
