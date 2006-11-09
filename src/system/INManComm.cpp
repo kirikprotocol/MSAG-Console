@@ -72,6 +72,12 @@ static void FillChargeOp(SMSId id,smsc::inman::interaction::ChargeSms& op,const 
     sms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
     op.setMsgLength(len);
   }
+#ifdef SMSEXTRA
+  if(sms.hasIntProperty(Tag::SMSC_EXTRAFLAGS))
+  {
+    op.setSmsXSrvs(sms.getIntProperty(Tag::SMSC_EXTRAFLAGS));
+  }
+#endif
 }
 
 
@@ -253,7 +259,7 @@ int INManComm::Execute()
       continue;
     }
     buf.setDataSize(packetSize);
-    buf.setPos(0); 
+    buf.setPos(0);
     std::auto_ptr<smsc::inman::interaction::INPPacketAC> pck;
     try {
         pck.reset(smsc::inman::interaction::INPSerializer::getInstance()->deserialize(buf));
@@ -275,9 +281,9 @@ int INManComm::Execute()
       continue;
     }
 
-    smsc::inman::interaction::CsBillingHdr_dlg * hdr = 
+    smsc::inman::interaction::CsBillingHdr_dlg * hdr =
         static_cast<smsc::inman::interaction::CsBillingHdr_dlg*>(pck->pHdr());
-    smsc::inman::interaction::ChargeSmsResult* result = 
+    smsc::inman::interaction::ChargeSmsResult* result =
         static_cast<smsc::inman::interaction::ChargeSmsResult*>(pck->pCmd());
 
     smsc::smeman::SmscCommand cmd;
