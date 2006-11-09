@@ -174,20 +174,21 @@ void StateMachine::registerEvent(int event, SmppEntity* src, SmppEntity* dst, co
 void StateMachine::processSubmit(SmppCommand& cmd)
 {
     uint32_t rcnt = 0;
-  SmppEntity *src = NULL;
-  SmppEntity *dst = NULL;
-  scag::sessions::SessionPtr session;
-  scag::sessions::CSessionKey key;  
-  router::RouteInfo ri;
-  buf::FixedLengthString<smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH> routeId;    
+    SmppEntity *src = NULL;
+    SmppEntity *dst = NULL;
+    scag::sessions::SessionPtr session;
+    scag::sessions::CSessionKey key;  
+    router::RouteInfo ri;
+    buf::FixedLengthString<smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH> routeId;
     scag::re::RuleStatus st;
     SMS& sms=*cmd->get_sms();
     SmsCommand& smscmd=cmd->get_smsCommand();
 
-  do{  
-      smscmd.orgSrc=sms.getOriginatingAddress();
-      smscmd.orgDst=sms.getDestinationAddress();
-      src=cmd.getEntity();
+    smscmd.orgSrc=sms.getOriginatingAddress();
+    smscmd.orgDst=sms.getDestinationAddress();
+    src=cmd.getEntity();    
+    
+    do{  
       dst=routeMan->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
       if(!dst || routeId == ri.routeId)
       {
@@ -429,11 +430,12 @@ void StateMachine::processDelivery(SmppCommand& cmd)
     scag::re::RuleStatus st;  
     SMS& sms=*(cmd->get_sms());
     SmsCommand& smscmd=cmd->get_smsCommand();
-
-  do{
-      smscmd.orgSrc=sms.getOriginatingAddress();
-      smscmd.orgDst=sms.getDestinationAddress();
-      src=cmd.getEntity();
+    
+    smscmd.orgSrc=sms.getOriginatingAddress();
+    smscmd.orgDst=sms.getDestinationAddress();
+    src=cmd.getEntity();
+    
+    do{
       dst=routeMan->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
       if(!dst || routeId == ri.routeId)
       {

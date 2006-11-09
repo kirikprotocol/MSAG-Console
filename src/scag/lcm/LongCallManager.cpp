@@ -25,15 +25,16 @@ Mutex LongCallManager::initLock;
 
 class LongCallManagerImpl: public LongCallManager, public ConfigListener{
 public:
-    LongCallManagerImpl(): ConfigListener(LONGCALLMAN_CFG) {};
+    LongCallManagerImpl(): ConfigListener(LONGCALLMAN_CFG), stopped(true) {};
     ~LongCallManagerImpl() {};
     
     LongCallContext* getContext();
-    void call(LongCallContext* context);
+    bool call(LongCallContext* context);
     void init(uint32_t _maxThreads);
     void shutdown();
     
 protected:
+    bool stopped;
     Logger * logger;
     EventMonitor mtx;
     uint32_t maxThreads;
@@ -69,7 +70,7 @@ LongCallManager& LongCallManager::Instance()
     return SingleLCM::Instance();
 }
 
-void LongCallManager::Init(uint32_t maxthr) //throw(LongCallManagerException)
+void LongCallManager::Init(uint32_t maxthr)
 {
     if (!LongCallManager::inited)
     {
@@ -82,7 +83,7 @@ void LongCallManager::Init(uint32_t maxthr) //throw(LongCallManagerException)
     }
 }
 
-void LongCallManager::Init(const LongCallManagerConfig& cfg)// throw(LongCallManagerException);    
+void LongCallManager::Init(const LongCallManagerConfig& cfg)
 {
     if (!LongCallManager::inited)
     {
@@ -95,6 +96,11 @@ void LongCallManager::Init(const LongCallManagerConfig& cfg)// throw(LongCallMan
     }
 }
 
+void LongCallManager::shutdown()
+{
+    SingleLCM::Instance().shutdown();
+}
+
 void LongCallManagerImpl::init(uint32_t maxThr)
 {
     logger = Logger::getInstance("lcm");
@@ -102,6 +108,9 @@ void LongCallManagerImpl::init(uint32_t maxThr)
     maxThreads = maxThr;
     for(int i = 0; i < maxThreads; i++)
         pool.startTask(new LongCallTask(this));
+
+    MutexGuard mt(mtx);        
+    stopped = false;
 }
 
 void LongCallManagerImpl::configChanged()
@@ -113,24 +122,26 @@ void LongCallManagerImpl::configChanged()
 void LongCallManagerImpl::shutdown()
 {
     smsc_log_debug(logger, "shutdown");
-    pool.stopNotify();
     mtx.Lock();
-    LongCallContext *cx;
+    stopped = true;
+    LongCallContext *ctx;
     while(headContext)
     {
-        cx = headContext;
+        ctx = headContext;
+        ctx->initiator->continueExecution(ctx, true);
         headContext = headContext->next;
-        delete cx;
+        delete ctx;
     }
     mtx.notifyAll();
     mtx.Unlock();
-    pool.shutdown();    
+    pool.shutdown();
 }
 
 LongCallContext* LongCallManagerImpl::getContext()
 {
     LongCallContext *ctx = NULL;
     MutexGuard mt(mtx);
+    if(stopped) return NULL;
     if(!headContext) mtx.wait();
     if(headContext)
     {
@@ -140,14 +151,16 @@ LongCallContext* LongCallManagerImpl::getContext()
     return ctx;        
 }
 
-void LongCallManagerImpl::call(LongCallContext* context)
+bool LongCallManagerImpl::call(LongCallContext* context)
 {
     MutexGuard mt(mtx);
+    if(stopped) return false;
     if(headContext)
         tailContext = tailContext->next = context;
     else
         headContext = tailContext = context;
     mtx.notify();        
+    return true;
 }
 
 void LongCallTask::ExecutePersCall(LongCallContext* ctx)
@@ -207,7 +220,7 @@ int LongCallTask::Execute()
         if(ctx->callCommandId >= PERS_GET && ctx->callCommandId <= PERS_INC)
             ExecutePersCall(ctx);
             
-        ctx->initiator->continueExecution(ctx);
+        ctx->initiator->continueExecution(ctx, false);
     }
     return 0;
 }
