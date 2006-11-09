@@ -29,7 +29,7 @@ RuleStatus HttpEventHandler::processRequest(HttpRequest& command, Session& sessi
         ActionContext context(_constants, session, _command, commandProperty);
 
         rs = RunActions(context);
-        if(!rs.status) session.closeCurrentOperation();
+        if(rs.status == STATUS_FAILED) session.closeCurrentOperation();
 
         PendingOperation pendingOperation;
         pendingOperation.type = CO_HTTP_DELIVERY;
@@ -66,7 +66,7 @@ RuleStatus HttpEventHandler::processResponse(HttpResponse& command, Session& ses
         ActionContext context(_constants, session, _command, commandProperty);
 
         rs = RunActions(context);
-        if(!rs.status) session.closeCurrentOperation();
+        if(rs.status == STATUS_FAILED) session.closeCurrentOperation();
 
         return rs;
     } catch (SCAGException& e)
