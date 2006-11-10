@@ -1210,7 +1210,7 @@ StateType StateMachine::submit(Tuple& t)
   if((srcprof.subscription&EXTRA_FLASH) || xsi.serviceBit==EXTRA_FLASH)
   {
     sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)|EXTRA_FLASH);
-    sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,3);
+    sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,1);
     info2(smsLog,"EXTRA: smsflash for abonent %s",sms->getOriginatingAddress().toString().c_str());
   }
   bool noDestChange=false;
