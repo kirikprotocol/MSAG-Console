@@ -50,6 +50,7 @@ using namespace smsc::sms;
 static bool isValidAlias(const std::string& s)
 {
   if(s.length()==0 || s.length()>10)return false;
+  if(!isalpha(s[0]))return false;
   for(int i=0;i<s.length();i++)
   {
     if(!(s[i]>32 && s[i]<127 && strchr("|{}[]\\~",s[i])==0))return false;
