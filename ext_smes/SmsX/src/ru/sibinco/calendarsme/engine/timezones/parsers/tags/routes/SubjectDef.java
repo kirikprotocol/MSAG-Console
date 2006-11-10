@@ -7,8 +7,8 @@ import ru.sibinco.calendarsme.engine.timezones.parsers.RoutesParser;
 import ru.sibinco.calendarsme.engine.timezones.parsers.tags.Tag;
 import ru.sibinco.calendarsme.engine.timezones.parsers.tags.UnknownTag;
 
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * User: artem
@@ -20,21 +20,21 @@ public class SubjectDef extends Tag {
   public static final String QNAME = "subject_def";
 
   private final String id;
-  private final Map masks;
+  private final Set masks;
 
   public SubjectDef(Tag parentTag, Parser parser, Attributes atts) {
     super(parentTag, parser);
 
     this.id = atts.getValue("id");
-    this.masks = new TreeMap();
+    this.masks = new HashSet();
   }
 
   public void endElement(String namespaceURI, String localName, String qName) throws SAXException {
-    ((RoutesParser)getParser()).addRoutes(masks);
+    ((RoutesParser)getParser()).addMasks(id, masks);
   }
 
   public void addMask(final String mask) {
-    masks.put(mask, id);
+    masks.add(mask);
   }
 
   public void characters(char ch[], int start, int length) throws SAXException {

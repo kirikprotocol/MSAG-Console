@@ -17,12 +17,14 @@ public class Param extends Tag {
   public static final String QNAME = "param";
 
   private final String name;
+  private final String sectionName;
 
   private String value = null;
 
-  public Param(final Tag parentTag, final Attributes atts, final Parser parser) {
+  public Param(final Tag parentTag, final String sectionName, final Attributes atts, final Parser parser) {
     super(parentTag, parser);
     this.name = atts.getValue("name");
+    this.sectionName = sectionName;
   }
 
   public void characters(char ch[], int start, int length) throws SAXException {
@@ -37,9 +39,11 @@ public class Param extends Tag {
 
   public void endElement(String namespaceURI, String localName, String qName) throws SAXException {
     if (name != null && value != null) {
-      if (!name.equalsIgnoreCase("default_timezone"))
-        getTimezonesParser().addTimezone(name, value);
-      else
+      if (sectionName.equalsIgnoreCase("masks")) {
+        getTimezonesParser().addMask(name, value);
+      } else if (!name.equalsIgnoreCase("default_timezone")) {
+        getTimezonesParser().addRoute(name, value);
+      } else
         getTimezonesParser().setDefaultTimezone(value);
     }
   }

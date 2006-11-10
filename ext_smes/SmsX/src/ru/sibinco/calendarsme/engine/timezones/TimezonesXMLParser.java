@@ -3,9 +3,7 @@ package ru.sibinco.calendarsme.engine.timezones;
 import ru.sibinco.calendarsme.engine.timezones.parsers.RoutesParser;
 import ru.sibinco.calendarsme.engine.timezones.parsers.TimezonesParser;
 
-import java.util.Iterator;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.Collection;
 
 
 /**
@@ -13,37 +11,18 @@ import java.util.TreeMap;
  * Date: Aug 2, 2006
  */
 
-public class TimezonesXMLParser {
-  private static final org.apache.log4j.Category Log = org.apache.log4j.Category.getInstance(TimezonesXMLParser.class);
+final class TimezonesXMLParser {
 
   public static Timezones parse(final String timezonesXML, final String routesXML) {
-    final SortedMap timezones = TimezonesParser.parse(ClassLoader.getSystemResourceAsStream(timezonesXML));
-    final SortedMap routes = RoutesParser.parse(ClassLoader.getSystemResourceAsStream(routesXML));
+    // Read timezones from timezonesXML
+    final TimezonesParser timezonesParser = new TimezonesParser();
+    timezonesParser.parse(ClassLoader.getSystemResourceAsStream(timezonesXML));
+    final Collection timezones = timezonesParser.getTimezones();
 
-    final SortedMap abonentsTimezones = new TreeMap();
+    // Add masks to timezones from routesXML
+    RoutesParser.parse(ClassLoader.getSystemResourceAsStream(routesXML), timezones);
 
-    for(Iterator iter = routes.keySet().iterator(); iter.hasNext();) {
-      final String phoneMask = (String)iter.next();
-      final String timezoneName = (String)routes.get(phoneMask);
-      final String timezone = (String)timezones.get(timezoneName);
-
-      if (timezone == null) {
-        Log.warn("!!! WARNING: " + routesXML + " has abonents with unknown timezone: " + timezoneName);
-        continue;
-      }
-
-      abonentsTimezones.put(preparePhoneMask(phoneMask), timezone);
-    }
-
-    return new Timezones(abonentsTimezones, (String)timezones.get("defaultTimezone"));
+    return new Timezones(timezones, timezonesParser.getDefaultTimezone());
   }
 
-  private static String preparePhoneMask(final String phoneMask) {
-    String result = phoneMask.replace('?', '.');
-
-    if (result.charAt(0)=='+')
-      result = "\\+" + result.substring(1);
-
-    return result;
-  }
 }

@@ -28,8 +28,8 @@ public class Section extends Tag {
   }
 
   public void startElement(String namespaceURI, String localName, String qName, Attributes atts) throws SAXException {
-    if (qName.equals(Param.QNAME) && name != null && name.equalsIgnoreCase("subjects"))
-      getParser().setCurrentTag(new Param(this, atts, getParser()));
+    if (qName.equals(Param.QNAME) && name != null && (name.equalsIgnoreCase("subjects") || name.equalsIgnoreCase("masks")))
+      getParser().setCurrentTag(new Param(this, name, atts, getParser()));
     else
       getParser().setCurrentTag(new UnknownTag(this, getParser()));
   }

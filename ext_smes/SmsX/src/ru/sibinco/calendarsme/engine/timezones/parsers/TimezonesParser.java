@@ -3,10 +3,10 @@ package ru.sibinco.calendarsme.engine.timezones.parsers;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
+import ru.sibinco.calendarsme.engine.timezones.ParseException;
+import ru.sibinco.calendarsme.engine.timezones.Timezone;
 import ru.sibinco.calendarsme.engine.timezones.parsers.tags.Tag;
 import ru.sibinco.calendarsme.engine.timezones.parsers.tags.timezones.Config;
-import ru.sibinco.calendarsme.engine.timezones.ParseException;
-import ru.sibinco.calendarsme.engine.timezones.parsers.Parser;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.Collection;
 
 /**
  * User: artem
@@ -23,25 +24,25 @@ import java.util.TreeMap;
 
 public class TimezonesParser extends DefaultHandler implements Parser {
 
+  private Tag currentTag = null;
+  private final SortedMap timezonesMap = new TreeMap();
+  private String defaultTimezone;
+
   /**
    * Reads and parses xml with timezones from source.
    * @param source
-   * @return SortedMap with structure:
    * key = timezone name;
    * value = timezone string
    * @throws ParseException
    */
-  public static SortedMap parse(InputStream source) throws ParseException {
+
+  public void parse(InputStream source) throws ParseException {
     SAXParserFactory fact = SAXParserFactory.newInstance();
 
     try {
       SAXParser saxParser = fact.newSAXParser();
-      final TimezonesParser parser = new TimezonesParser();
-      saxParser.parse(source, parser);
+      saxParser.parse(source, this);
 
-      final SortedMap result =  parser.getTimezonesMap();
-      result.put("defaultTimezone", parser.getDefaultTimezone());
-      return result;
     } catch (ParserConfigurationException e) {
       throw new ParseException(e);
     } catch (SAXException e) {
@@ -51,20 +52,25 @@ public class TimezonesParser extends DefaultHandler implements Parser {
     }
   }
 
-  private Tag currentTag = null;
-  private final SortedMap timezonesMap;
-  private String defaultTimezone;
-
-  public TimezonesParser() {
-    this.timezonesMap = new TreeMap();
-  }
-
   public void setCurrentTag(final Tag tag) {
     this.currentTag = tag;
   }
 
-  public void addTimezone(final String name, final String value) {
-    timezonesMap.put(name, value);
+  private Timezone getTimezone(String timezoneName) {
+    Timezone tz = (Timezone)timezonesMap.get(timezoneName);
+    if (tz == null) {
+      tz = new Timezone(timezoneName);
+      timezonesMap.put(timezoneName, tz);
+    }
+    return tz;
+  }
+
+  public void addRoute(final String route, final String timezoneName) {
+    getTimezone(timezoneName).addRoute(route);
+  }
+
+  public void addMask(final String mask, final String timezoneName) {
+    getTimezone(timezoneName).addMask(mask);
   }
 
   public void setDefaultTimezone(String defaultTimezone) {
@@ -75,8 +81,8 @@ public class TimezonesParser extends DefaultHandler implements Parser {
     return defaultTimezone;
   }
 
-  public SortedMap getTimezonesMap() {
-    return timezonesMap;
+  public Collection getTimezones() {
+    return timezonesMap.values();
   }
 
   public void characters(char ch[], int start, int length) throws SAXException {

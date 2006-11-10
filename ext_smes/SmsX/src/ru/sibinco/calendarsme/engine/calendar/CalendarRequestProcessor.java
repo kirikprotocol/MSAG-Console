@@ -11,7 +11,6 @@ import ru.aurorisoft.smpp.Multiplexor;
 import ru.aurorisoft.smpp.SMPPException;
 import ru.sibinco.calendarsme.InitializationException;
 import ru.sibinco.calendarsme.engine.timezones.Timezones;
-import ru.sibinco.calendarsme.engine.timezones.TimezonesXMLParser;
 import ru.sibinco.calendarsme.utils.ConnectionPool;
 import ru.sibinco.calendarsme.utils.Utils;
 
@@ -30,7 +29,6 @@ final class CalendarRequestProcessor {
   private final String insertMessageSQL;
 
   private final CalendarMessagesList messagesList;
-  private final Timezones timezones;
   private final Multiplexor multiplexor;
 
   public CalendarRequestProcessor(final Properties config, final CalendarMessagesList messagesList, final Multiplexor multiplexor) {
@@ -43,9 +41,6 @@ final class CalendarRequestProcessor {
     this.insertMessageSQL = Utils.loadString(config, "request.processor.insert.message.sql");
     this.messagesList = messagesList;
     this.multiplexor = multiplexor;
-
-    timezones = TimezonesXMLParser.parse(Utils.loadString(config, "request.processor.timezones.xml"),
-                                         Utils.loadString(config, "request.processor.routes.xml"));
   }
 
   public boolean processRequest(final Message message)  {
@@ -58,7 +53,7 @@ final class CalendarRequestProcessor {
       Log.info("Processing message: from abonent = " + message.getSourceAddress() + ", to abonent = " + message.getDestinationAddress() + ", message = " + message.getMessageString());
 
       final Date sendDate = (parseResult.getType() == CalendarRequestParser.ATF_REQUEST) ? parseResult.getDate() :
-        changeDateAccordingTimezone(message.getSourceAddress(), parseResult.getDate(), timezones);
+        changeDateAccordingTimezone(message.getSourceAddress(), parseResult.getDate());
 
       processMessage(new CalendarMessage(message.getSourceAddress(), message.getDestinationAddress(), sendDate, parseResult.getMessage()));
 
@@ -77,27 +72,22 @@ final class CalendarRequestProcessor {
 
 
 
-  private Date changeDateAccordingTimezone(final String abonent, final Date date, final Timezones timezones) throws ProcessingException {
-    try {
-      Log.info("Change time according abonent's time zone:");
-      Log.info("  Abonent send date = " + date);
-      final String timezone = timezones.getTimezoneByAbonent(abonent);
-      Log.info("  Timezone = " + timezone);
+  private Date changeDateAccordingTimezone(final String abonent, final Date date) throws ProcessingException {
 
-      // Find time difference
-      final long d1 = TimeZone.getTimeZone(timezone).getOffset(date.getTime());
-      final long d2 = TimeZone.getDefault().getOffset(date.getTime());
+    Log.info("Change time according abonent's time zone:");
+    Log.info("  Abonent send date = " + date);
+    final String timezone = Timezones.getTimezoneByAbonent(abonent);
+    Log.info("  Timezone = " + timezone);
 
-      // Calculate SME time by abonent time
-      Calendar calend = Calendar.getInstance();
-      calend.setTimeInMillis(date.getTime() +  d2 - d1);
-      Log.info("  Sme send date = " + calend.getTime());
-      return calend.getTime();
+    // Find time difference
+    final long d1 = TimeZone.getTimeZone(timezone).getOffset(date.getTime());
+    final long d2 = TimeZone.getDefault().getOffset(date.getTime());
 
-    } catch (Timezones.TimezoneNotFoundException e) {
-      Log.error("Timezone for abonent " + abonent + " not found");
-      throw new ProcessingException();
-    }
+    // Calculate SME time by abonent time
+    Calendar calend = Calendar.getInstance();
+    calend.setTimeInMillis(date.getTime() +  d2 - d1);
+    Log.info("  Sme send date = " + calend.getTime());
+    return calend.getTime();
   }
 
   private void processMessage(final CalendarMessage calendarMessage) throws ProcessingException {

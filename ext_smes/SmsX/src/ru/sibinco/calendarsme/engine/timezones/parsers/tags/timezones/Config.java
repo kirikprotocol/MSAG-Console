@@ -27,7 +27,7 @@ public class Config extends Tag {
 
   public void startElement(String namespaceURI, String localName, String qName, Attributes atts) throws SAXException {
     if (qName.equals(Param.QNAME))
-      getParser().setCurrentTag(new Param(this, atts, getParser()));
+      getParser().setCurrentTag(new Param(this, "", atts, getParser()));
     else if (qName.equals(Section.QNAME))
       getParser().setCurrentTag(new Section(this, getParser(), atts));
     else
