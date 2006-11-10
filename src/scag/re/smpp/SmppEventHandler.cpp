@@ -3,7 +3,8 @@
 #include "scag/re/actions/ActionContext.h"
 #include "scag/re/CommandBrige.h"
 #include "scag/re/RuleEngine.h"
-
+#include <sms/sms_serializer.h>
+ 
 namespace scag { namespace re {
 
 using namespace scag::re::smpp;

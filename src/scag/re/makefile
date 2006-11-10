@@ -3,6 +3,8 @@
 # $Id$
 #
 #
+CXXFLAGS := $(CXXFLAGS) -I$(SMSC_SRCDIR) -I$(SMSC_SRCDIR)/sms -I$(SMSC_SRCDIR)/core/buffers -I$(SMSC_SRCDIR)/scag/util/cluster
+
 
 PACKAGE := scag.re
 

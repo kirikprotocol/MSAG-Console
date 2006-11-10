@@ -4,8 +4,9 @@
 #
 #
 
-PACKAGE := scag.re.smpp
 
+
+PACKAGE := scag.re.smpp
 
 ifndef SMSC_SRCDIR
 $(error SMSC_SRCDIR is not defined)

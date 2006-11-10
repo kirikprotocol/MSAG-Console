@@ -180,23 +180,23 @@ bool BillActionOpen::RunBeforePostpone(ActionContext& context)
         SetBillingStatus(context, e.what(), false, 0);
         return false;
     }
-    /*
+    
     context.getBuffer() << BillId;
     context.getBuffer() << m_waitOperation;
     context.getBuffer() << category << mediaType;
-    */
+    
     return true;
 }
 
 void BillActionOpen::ContinueRunning(ActionContext& context)
 {
     int BillId;
-    /*
+    
     context.getBuffer() >> BillId;
     context.getBuffer() >> m_waitOperation;
     context.getBuffer() >> category >> mediaType;
     
-     */
+     
     BillingManager& bm = BillingManager::Instance();
 
 
