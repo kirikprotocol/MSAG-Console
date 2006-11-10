@@ -1,3 +1,4 @@
+<config>
   <section name="smsx">
     <section name="nick">
       <param name="prefix" type="string">@</param>
@@ -14,3 +15,10 @@
       <param name="divertNumber" type="string">777002</param>
     </section>
   </section>
+
+  <section name="distrList">
+    <param name="autocreatePrincipal" type="bool">true</param>
+    <param name="defaultMaxLists" type="int">10</param>
+    <param name="defaultMaxElements" type="int">10</param>
+  </section>
+</config>
