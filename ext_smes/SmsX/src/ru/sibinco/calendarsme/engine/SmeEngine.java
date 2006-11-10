@@ -11,8 +11,6 @@ import ru.sibinco.calendarsme.network.IncomingQueue;
 import ru.sibinco.calendarsme.network.OutgoingQueue;
 import ru.sibinco.calendarsme.utils.Service;
 
-import java.util.Properties;
-
 /**
  * User: artem
  * Date: Jul 27, 2006
@@ -28,8 +26,7 @@ public class SmeEngine extends Service {
   private final CalendarSmeEngine calendarSmeEngine;
   private final SecretRequestProcessor secretRequestProcessor;
 
-  public SmeEngine(final Properties config, final IncomingQueue inQueue,
-                   final OutgoingQueue outQueue, final Multiplexor multiplexor) {
+  public SmeEngine(final IncomingQueue inQueue, final OutgoingQueue outQueue, final Multiplexor multiplexor) {
 
     super(Log);
     if (inQueue == null)
@@ -40,8 +37,8 @@ public class SmeEngine extends Service {
     this.inQueue = inQueue;
     this.multiplexor = multiplexor;
 
-    calendarSmeEngine = new CalendarSmeEngine(config, outQueue, multiplexor);
-    secretRequestProcessor = new SecretRequestProcessor(config, outQueue, multiplexor);
+    calendarSmeEngine = new CalendarSmeEngine(outQueue, multiplexor);
+    secretRequestProcessor = new SecretRequestProcessor(outQueue, multiplexor);
 
     Log.info(NAME + ": initialization ok");
   }
@@ -53,7 +50,8 @@ public class SmeEngine extends Service {
         Log.error("Unknown message format!");
         Log.error("Message from abonent: " + message.getSourceAddress() + "; to abonent: " + message.getDestinationAddress() + "; message: " + message.getMessageString());
         sendResponse(message, Data.ESME_RX_P_APPN);
-      }
+      } else
+        sendResponse(message, Data.ESME_ROK);
     }
   }
 

@@ -2,10 +2,8 @@ package ru.sibinco.calendarsme.engine.calendar;
 
 import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.Multiplexor;
+import ru.sibinco.calendarsme.SmeProperties;
 import ru.sibinco.calendarsme.network.OutgoingQueue;
-import ru.sibinco.calendarsme.utils.Utils;
-
-import java.util.Properties;
 
 /**
  * User: artem
@@ -16,16 +14,16 @@ public class CalendarSmeEngine {
 
   private final CalendarRequestProcessor requestProcessor;
 
-  public CalendarSmeEngine(final Properties config, final OutgoingQueue outQueue, final Multiplexor multiplexor) {
-    final CalendarMessagesList messagesList = new CalendarMessagesList(Utils.loadInt(config, "calendar.messages.list.max.size"));
+  public CalendarSmeEngine(final OutgoingQueue outQueue, final Multiplexor multiplexor) {
+    final CalendarMessagesList messagesList = new CalendarMessagesList(SmeProperties.General.CALENDAR_MESSAGES_LIST_MAX_SIZE);
 
     // Start calendar engine
-    final CalendarEngine calendarEngine = new CalendarEngine(config, outQueue, messagesList);
+    final CalendarEngine calendarEngine = new CalendarEngine(outQueue, messagesList);
     calendarEngine.startService();
     calendarEngine.waitStarting();
 
     // Init request processor
-    this.requestProcessor = new CalendarRequestProcessor(config, messagesList, multiplexor);
+    this.requestProcessor = new CalendarRequestProcessor(messagesList, multiplexor);
   }
 
   public boolean processMessage(final Message message) {

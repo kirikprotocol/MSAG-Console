@@ -10,35 +10,28 @@ import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.Multiplexor;
 import ru.aurorisoft.smpp.SMPPException;
 import ru.sibinco.calendarsme.InitializationException;
+import ru.sibinco.calendarsme.SmeProperties;
 import ru.sibinco.calendarsme.engine.timezones.Timezones;
 import ru.sibinco.calendarsme.utils.ConnectionPool;
-import ru.sibinco.calendarsme.utils.Utils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Properties;
 import java.util.TimeZone;
 
 final class CalendarRequestProcessor {
   private static final org.apache.log4j.Category Log = org.apache.log4j.Category.getInstance(CalendarRequestProcessor.class);
   private static final String NAME = "CalendarRequestProcessor";
 
-  private final String insertMessageSQL;
-
   private final CalendarMessagesList messagesList;
   private final Multiplexor multiplexor;
 
-  public CalendarRequestProcessor(final Properties config, final CalendarMessagesList messagesList, final Multiplexor multiplexor) {
-    if (config == null)
-      throw new InitializationException(NAME + ": config is not specified");
+  public CalendarRequestProcessor(final CalendarMessagesList messagesList, final Multiplexor multiplexor) {
     if (messagesList == null)
       throw new InitializationException(NAME + ": messages list not specified");
 
-
-    this.insertMessageSQL = Utils.loadString(config, "request.processor.insert.message.sql");
     this.messagesList = messagesList;
     this.multiplexor = multiplexor;
   }
@@ -57,6 +50,8 @@ final class CalendarRequestProcessor {
 
       processMessage(new CalendarMessage(message.getSourceAddress(), message.getDestinationAddress(), sendDate, parseResult.getMessage()));
 
+      sendResponse(message, Data.ESME_ROK);
+      
     } catch (CalendarRequestParser.WrongMessageFormatException e) {
       return false;
 
@@ -72,7 +67,7 @@ final class CalendarRequestProcessor {
 
 
 
-  private Date changeDateAccordingTimezone(final String abonent, final Date date) throws ProcessingException {
+  private Date changeDateAccordingTimezone(final String abonent, final Date date) {
 
     Log.info("Change time according abonent's time zone:");
     Log.info("  Abonent send date = " + date);
@@ -108,7 +103,7 @@ final class CalendarRequestProcessor {
 
     try {
       conn = ConnectionPool.getConnection();
-      ps = conn.prepareStatement(insertMessageSQL);
+      ps = conn.prepareStatement(SmeProperties.General.REQUEST_PROCESSOR_INSERT_MESSAGE_SQL);
 
       ps.setString(1, calendarMessage.getSource());
       ps.setString(2, calendarMessage.getDest());

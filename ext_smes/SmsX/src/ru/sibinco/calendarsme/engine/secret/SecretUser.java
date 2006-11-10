@@ -1,15 +1,14 @@
 package ru.sibinco.calendarsme.engine.secret;
 
+import ru.sibinco.calendarsme.SmeProperties;
 import ru.sibinco.calendarsme.engine.Storable;
-import ru.sibinco.calendarsme.utils.Utils;
 import ru.sibinco.calendarsme.utils.ConnectionPool;
 import ru.sibinco.calendarsme.utils.MessageEncoder;
 
-import java.util.Properties;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 /**
  * User: artem
@@ -19,17 +18,6 @@ import java.sql.ResultSet;
 public class SecretUser extends Storable {
 
   private static final org.apache.log4j.Category Log = org.apache.log4j.Category.getInstance(SecretRequestProcessor.class);
-
-  private static final String insertSQL;
-  private static final String removeByNumberSQL;
-  private static final String selectByNumberSQL;
-
-  static {
-    final Properties config = Utils.loadConfig("secretuser.properties");
-    insertSQL = Utils.loadString(config, "insert.sql");
-    removeByNumberSQL = Utils.loadString(config, "remove.sql");
-    selectByNumberSQL = Utils.loadString(config, "select.by.number.sql");
-  }
 
   private final String number;
   private final String password;
@@ -61,7 +49,7 @@ public class SecretUser extends Storable {
 
     try {
       conn = ConnectionPool.getConnection();
-      ps = conn.prepareStatement(insertSQL);
+      ps = conn.prepareStatement(SmeProperties.SecretUser.INSERT_SQL);
 
       ps.setString(1, number);
       ps.setString(2, MessageEncoder.encodeMD5(password));
@@ -87,7 +75,7 @@ public class SecretUser extends Storable {
     try {
       conn = ConnectionPool.getConnection();
 
-      ps = conn.prepareStatement(removeByNumberSQL);
+      ps = conn.prepareStatement(SmeProperties.SecretUser.REMOVE_BY_NUMBER_SQL);
       ps.setString(1, number);
 
       ps.executeUpdate();
@@ -106,7 +94,7 @@ public class SecretUser extends Storable {
     try {
       conn = ConnectionPool.getConnection();
 
-      ps = conn.prepareStatement(selectByNumberSQL);
+      ps = conn.prepareStatement(SmeProperties.SecretUser.SELECT_BY_NUMBER_SQL);
       ps.setString(1, number);
 
       rs = ps.executeQuery();

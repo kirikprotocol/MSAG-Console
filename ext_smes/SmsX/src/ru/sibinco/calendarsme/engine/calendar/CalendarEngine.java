@@ -2,15 +2,14 @@ package ru.sibinco.calendarsme.engine.calendar;
 
 import ru.aurorisoft.smpp.Message;
 import ru.sibinco.calendarsme.InitializationException;
+import ru.sibinco.calendarsme.SmeProperties;
 import ru.sibinco.calendarsme.network.OutgoingObject;
 import ru.sibinco.calendarsme.network.OutgoingQueue;
 import ru.sibinco.calendarsme.utils.ConnectionPool;
 import ru.sibinco.calendarsme.utils.Service;
-import ru.sibinco.calendarsme.utils.Utils;
 
 import java.sql.*;
 import java.util.Date;
-import java.util.Properties;
 
 /**
  * User: artem
@@ -24,18 +23,12 @@ final class CalendarEngine extends Service {
 
   private final Object newMessageNotifier = new Object();
 
-  private final String loadListSQL;
-  private final String removeMessageSQL;
-
-  private final long workingInterval;
   private final Date nextReloadTime = new Date();
   private final OutgoingQueue outQueue;
 
-  public CalendarEngine(final Properties config, final OutgoingQueue outQueue, final CalendarMessagesList messagesList) {
+  public CalendarEngine(final OutgoingQueue outQueue, final CalendarMessagesList messagesList) {
     super(Log);
 
-    if (config == null)
-      throw new InitializationException("CalendarEngine: config is not specified");
     if (outQueue == null)
       throw new InitializationException("CalendarEngine: outgoing queue is not specified");
 
@@ -43,11 +36,6 @@ final class CalendarEngine extends Service {
 
     this.messagesList = messagesList;
     messagesList.addNewMessageNotifier(newMessageNotifier);
-
-    this.loadListSQL = Utils.loadString(config, "calendar.engine.load.list.sql");
-    this.removeMessageSQL = Utils.loadString(config, "calendar.engine.remove.message.sql");
-    this.workingInterval = Utils.loadLong(config, "calendar.engine.working.interval");
-
   }
 
   protected void doBeforeStart() {
@@ -56,7 +44,7 @@ final class CalendarEngine extends Service {
 
   public synchronized void iterativeWork() {
     Log.info("=====================================================================================");
-    nextReloadTime.setTime(System.currentTimeMillis() + workingInterval);
+    nextReloadTime.setTime(System.currentTimeMillis() + SmeProperties.General.CALENDAR_ENGINE_WORKING_INTERVAL);
     Log.info("Start new time period. End time= " + nextReloadTime.toString());
 
     boolean hasDBMessages = true;
@@ -136,7 +124,7 @@ final class CalendarEngine extends Service {
 
     try {
       conn = ConnectionPool.getConnection();
-      ps = conn.prepareStatement(removeMessageSQL);
+      ps = conn.prepareStatement(SmeProperties.General.CALENDAR_ENGINE_REMOVE_MESSAGE_SQL);
       ps.setInt(1, message.getId());
 
       ps.executeUpdate();
@@ -158,7 +146,7 @@ final class CalendarEngine extends Service {
 
       try {
         conn = ConnectionPool.getConnection();
-        ps = conn.prepareStatement(loadListSQL);
+        ps = conn.prepareStatement(SmeProperties.General.CALENDAR_ENGINE_LOAD_LIST_SQL);
 
         ps.setTimestamp(1, new Timestamp(nextReloadTime.getTime()));
         ps.setInt(2, messagesList.getMaxSize() - messagesList.size());

@@ -1,13 +1,12 @@
 package ru.sibinco.calendarsme.engine.secret;
 
+import ru.sibinco.calendarsme.SmeProperties;
 import ru.sibinco.calendarsme.engine.Storable;
-import ru.sibinco.calendarsme.utils.Utils;
 import ru.sibinco.calendarsme.utils.ConnectionPool;
 
-import java.util.Properties;
-import java.util.List;
-import java.util.ArrayList;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * User: artem
@@ -17,18 +16,6 @@ import java.sql.*;
 public class SecretMessage extends Storable {
 
   private static final org.apache.log4j.Category Log = org.apache.log4j.Category.getInstance(SecretRequestProcessor.class);
-
-  private static final String insertMessageSQL;
-  private static final String selectMessagesSQL;
-  private static final String removeMessageSQL;
-
-  static {
-    final Properties config = Utils.loadConfig("secretmessage.properties");
-    insertMessageSQL = Utils.loadString(config, "insert.sql");
-    removeMessageSQL = Utils.loadString(config, "remove.sql");
-    selectMessagesSQL = Utils.loadString(config, "select.by.user.sql");
-    config.clear();
-  }
 
   private int id = -1;
   private final String userNumber;
@@ -77,7 +64,7 @@ public class SecretMessage extends Storable {
     PreparedStatement ps = null;
     try {
       conn = ConnectionPool.getConnection();
-      ps = conn.prepareStatement(insertMessageSQL);
+      ps = conn.prepareStatement(SmeProperties.SecretMessage.INSERT_MESSAGE_SQL);
 
       ps.setString(1, userNumber);
       ps.setString(2, fromNumber);
@@ -100,7 +87,7 @@ public class SecretMessage extends Storable {
     PreparedStatement ps = null;
     try {
       conn = ConnectionPool.getConnection();
-      ps = conn.prepareStatement(removeMessageSQL);
+      ps = conn.prepareStatement(SmeProperties.SecretMessage.REMOVE_MESSAGE_SQL);
 
       ps.setInt(1, id);
 
@@ -122,7 +109,7 @@ public class SecretMessage extends Storable {
 
     try {
       conn = ConnectionPool.getConnection();
-      ps = conn.prepareStatement(selectMessagesSQL);
+      ps = conn.prepareStatement(SmeProperties.SecretMessage.SELECT_MESSAGE_SQL);
 
       ps.setString(1, userNumber);
 

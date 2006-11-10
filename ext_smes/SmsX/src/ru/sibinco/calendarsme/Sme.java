@@ -7,7 +7,6 @@ import ru.sibinco.calendarsme.network.*;
 import ru.sibinco.calendarsme.utils.Utils;
 
 import java.util.HashSet;
-import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 
@@ -18,8 +17,10 @@ import java.util.StringTokenizer;
 
 public final class Sme {
 
-  public Sme() throws InitializationException{
-    final Properties config = Utils.loadConfig("sme.properties");
+  Sme() throws InitializationException{
+    SmeProperties.init();
+
+    final java.util.Properties config = Utils.loadConfig("sme.properties");
 
     final IncomingQueue inQueue = new IncomingQueue(config);
 
@@ -36,7 +37,7 @@ public final class Sme {
 
     responseListener.setSendMonitor(messageSender.getSendMonitor());
 
-    new SmeEngine(config, inQueue, outQueue, multiplexor).startService();
+    new SmeEngine(inQueue, outQueue, multiplexor).startService();
 
     // connect multiplexor
     try {
@@ -50,7 +51,7 @@ public final class Sme {
     config.clear();
   }
 
-  private static Multiplexor initMultiplexor(final Properties config, final IncomingQueue inQueue) {
+  private static Multiplexor initMultiplexor(final java.util.Properties config, final IncomingQueue inQueue) {
     final Multiplexor multiplexor = new Multiplexor();
 
     try {
