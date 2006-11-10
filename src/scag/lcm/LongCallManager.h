@@ -6,7 +6,7 @@
 #include "logger/Logger.h"
 #include "scag/config/lcm/LongCallManagerConfig.h"
 #include <stack>
-#include "core/buffers/RefPtr.hpp"
+#include <sms/sms_serializer.h>
 
 namespace scag { namespace lcm {
 
