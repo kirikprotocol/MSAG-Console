@@ -17,7 +17,7 @@ public class SmeProperties {
     public static final String REQUEST_PROCESSOR_INSERT_MESSAGE_SQL;
     public static final String REQUEST_PROCESSOR_TIMEZONES_XML;
     public static final String REQUEST_PROCESSOR_ROUTES_XML;
-    public static final String REQUEST_PROCESSOR_RELOAD_TIMEZONES_INTERVAL;
+    public static final int REQUEST_PROCESSOR_RELOAD_TIMEZONES_INTERVAL;
 
     // CALENDAR ENGINE
     public static final long CALENDAR_ENGINE_WORKING_INTERVAL;
@@ -46,7 +46,7 @@ public class SmeProperties {
       REQUEST_PROCESSOR_INSERT_MESSAGE_SQL = Utils.loadString(config, "request.processor.insert.message.sql");
       REQUEST_PROCESSOR_TIMEZONES_XML = Utils.loadString(config, "request.processor.timezones.xml");
       REQUEST_PROCESSOR_ROUTES_XML = Utils.loadString(config, "request.processor.routes.xml");
-      REQUEST_PROCESSOR_RELOAD_TIMEZONES_INTERVAL = Utils.loadString(config, "request.processor.reload.timezones.interval");
+      REQUEST_PROCESSOR_RELOAD_TIMEZONES_INTERVAL = Utils.loadInt(config, "request.processor.reload.timezones.interval");
 
       CALENDAR_ENGINE_WORKING_INTERVAL = Utils.loadInt(config, "calendar.engine.working.interval");
       CALENDAR_ENGINE_LOAD_LIST_SQL = Utils.loadString(config, "calendar.engine.load.list.sql");

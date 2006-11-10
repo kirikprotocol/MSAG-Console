@@ -2,6 +2,7 @@ package ru.sibinco.calendarsme.engine.timezones;
 
 import ru.sibinco.calendarsme.utils.Service;
 import ru.sibinco.calendarsme.utils.Utils;
+import ru.sibinco.calendarsme.SmeProperties;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -21,20 +22,11 @@ public class Timezones {
 
   private static final Category log = Category.getInstance(Timezones.class);
 
-  private static final int RELOAD_INTERVAL;
-  private static final String TEMPLATES_XML;
-  private static final String ROUTES_XML;
-
   private static Timezones instance;
   private static final Object instanceLock = new Object();
 
   static {
-    final Properties config = Utils.loadConfig("sme.properties");
-    RELOAD_INTERVAL = Utils.loadInt(config, "request.processor.reload.timezones.interval");
-    TEMPLATES_XML = Utils.loadString(config, "request.processor.timezones.xml");
-    ROUTES_XML = Utils.loadString(config, "request.processor.routes.xml");
-
-    instance = TimezonesXMLParser.parse(TEMPLATES_XML, ROUTES_XML);
+    instance = TimezonesXMLParser.parse(SmeProperties.General.REQUEST_PROCESSOR_TIMEZONES_XML, SmeProperties.General.REQUEST_PROCESSOR_ROUTES_XML);
     new TimezonesReloader().startService();
   }
 
@@ -72,17 +64,17 @@ public class Timezones {
 
     public synchronized void iterativeWork() {
       try {
-        wait((!errorOccured) ? RELOAD_INTERVAL : 15000);
+        wait((!errorOccured) ? SmeProperties.General.REQUEST_PROCESSOR_RELOAD_TIMEZONES_INTERVAL : 15000);
       } catch (InterruptedException e) {
         log.error("Interrupted", e);
       }
 
-      final File tf = new File(URI.create(ClassLoader.getSystemResource(TEMPLATES_XML).toString()));
-      final File rf = new File(URI.create(ClassLoader.getSystemResource(ROUTES_XML).toString()));
+      final File tf = new File(URI.create(ClassLoader.getSystemResource(SmeProperties.General.REQUEST_PROCESSOR_TIMEZONES_XML).toString()));
+      final File rf = new File(URI.create(ClassLoader.getSystemResource(SmeProperties.General.REQUEST_PROCESSOR_ROUTES_XML).toString()));
 
       if (timezonesLastModifiedTime != tf.lastModified() || routesLastModifiedTime != rf.lastModified()) {
         try {
-          final Timezones timezones = TimezonesXMLParser.parse(TEMPLATES_XML, ROUTES_XML);
+          final Timezones timezones = TimezonesXMLParser.parse(SmeProperties.General.REQUEST_PROCESSOR_TIMEZONES_XML, SmeProperties.General.REQUEST_PROCESSOR_ROUTES_XML);
 
           if (timezones != null) {
             log.info("Timezones have been reloaded");
