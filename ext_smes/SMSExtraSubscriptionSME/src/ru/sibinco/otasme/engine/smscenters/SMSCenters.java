@@ -1,15 +1,14 @@
 package ru.sibinco.otasme.engine.smscenters;
 
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Properties;
+import org.apache.log4j.Category;
+import ru.sibinco.otasme.SmeProperties;
+import ru.sibinco.otasme.utils.Service;
+
 import java.io.File;
 import java.net.URI;
-
-import org.apache.log4j.Category;
-import ru.sibinco.otasme.utils.Utils;
-import ru.sibinco.otasme.utils.Service;
+import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * User: artem
@@ -20,20 +19,11 @@ public class SMSCenters {
 
   private static final Category log = Category.getInstance(SMSCenters.class);
 
-  private static final int RELOAD_INTERVAL;
-  private static final String SMSCENTERS_XML;
-  private static final String ROUTES_XML;
-
   private static SMSCenters instance;
   private static final Object instanceLock = new Object();
 
   static {
-    final Properties config = Utils.loadConfig("sme.properties");
-    RELOAD_INTERVAL = Utils.loadInt(config, "sme.engine.reload.smscenters.interval");
-    SMSCENTERS_XML = Utils.loadString(config, "sme.engine.smscenters.xml");
-    ROUTES_XML = Utils.loadString(config, "sme.engine.routes.xml");
-
-    instance = SMSCentersXMLParser.parse(SMSCENTERS_XML, ROUTES_XML);
+    instance = SMSCentersXMLParser.parse(SmeProperties.Templates.SMSCENTERS_XML, SmeProperties.Templates.ROUTES_XML);
     new SMSCentersReloader().startService();
   }
 
@@ -71,17 +61,17 @@ public class SMSCenters {
 
     public synchronized void iterativeWork() {
       try {
-        wait((!errorOccured) ? RELOAD_INTERVAL : 15000);
+        wait((!errorOccured) ? SmeProperties.Templates.RELOAD_INTERVAL : 15000);
       } catch (InterruptedException e) {
         log.error("Interrupted", e);
       }
 
-      final File tf = new File(URI.create(ClassLoader.getSystemResource(SMSCENTERS_XML).toString()));
-      final File rf = new File(URI.create(ClassLoader.getSystemResource(ROUTES_XML).toString()));
+      final File tf = new File(URI.create(ClassLoader.getSystemResource(SmeProperties.Templates.SMSCENTERS_XML).toString()));
+      final File rf = new File(URI.create(ClassLoader.getSystemResource(SmeProperties.Templates.ROUTES_XML).toString()));
 
       if (timezonesLastModifiedTime != tf.lastModified() || routesLastModifiedTime != rf.lastModified()) {
         try {
-          final SMSCenters centers = SMSCentersXMLParser.parse(SMSCENTERS_XML, ROUTES_XML);
+          final SMSCenters centers = SMSCentersXMLParser.parse(SmeProperties.Templates.SMSCENTERS_XML, SmeProperties.Templates.ROUTES_XML);
 
           if (centers != null) {
             log.info("SMSCenters have been reloaded");

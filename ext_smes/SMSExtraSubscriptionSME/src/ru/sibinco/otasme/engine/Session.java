@@ -3,11 +3,10 @@ package ru.sibinco.otasme.engine;
 import org.apache.log4j.Category;
 import ru.aurorisoft.smpp.Message;
 import ru.sibinco.otasme.Sme;
+import ru.sibinco.otasme.SmeProperties;
 import ru.sibinco.otasme.network.OutgoingObject;
-import ru.sibinco.otasme.utils.Utils;
 
 import java.util.Date;
-import java.util.Properties;
 
 /**
  * User: artem
@@ -17,28 +16,6 @@ import java.util.Properties;
 public final class Session {
 
   private static final Category log = Category.getInstance(Session.class);
-
-  // Messages, sended to abonent
-  private static final String ON_ERROR_TEXT;
-  private static final String OFF_ERROR_TEXT;
-  private static final String INFO_TEXT;
-  private static final String UNEXPECTED_MESSAGE_ERROR_TEXT;
-  private static final String TIMEOUT_ERROR_TEXT;
-  private static final String SMSEXTRA_NUMBER;
-  private static final String OTA_NUMBER;
-  private static final int MAX_OTA_MESSAGE_REPEATS;
-
-  static {
-    final Properties config = Utils.loadConfig("sme.properties");
-    ON_ERROR_TEXT = Utils.loadString(config, "session.on.error.text");
-    OFF_ERROR_TEXT = Utils.loadString(config, "session.off.error.text");
-    INFO_TEXT = Utils.loadString(config, "session.info.text");
-    UNEXPECTED_MESSAGE_ERROR_TEXT = Utils.loadString(config, "session.unexpected.message.error.text");
-    TIMEOUT_ERROR_TEXT = Utils.loadString(config, "session.timeout.error.text");
-    SMSEXTRA_NUMBER = Utils.loadString(config, "session.smsextra.smsc.number");
-    OTA_NUMBER = Utils.loadString(config, "sme.engine.ota.number");
-    MAX_OTA_MESSAGE_REPEATS = Utils.loadInt(config, "session.max.ota.message.repeats");
-  }
 
   private final String abonentNumber;
   private final String smeAddress;
@@ -73,7 +50,7 @@ public final class Session {
   }
 
   public void doBeforeUnregisterByTimeout() {
-    sendMessage(TIMEOUT_ERROR_TEXT, smeAddress);
+    sendMessage(SmeProperties.Session.TIMEOUT_ERROR_TEXT, smeAddress);
   }
 
   private void unregisterMyself() {
@@ -128,12 +105,12 @@ public final class Session {
 
     private SessionState processOn() {
       logInfo("ON message received.");
-      return sendSRCommand(SMSEXTRA_NUMBER, ON_ERROR_TEXT);
+      return sendSRCommand(SmeProperties.Session.SMSEXTRA_NUMBER, SmeProperties.Session.ON_ERROR_TEXT);
     }
 
     private SessionState processOff() {
       logInfo("OFF message received.");
-      return sendSRCommand(smscenterNumber, OFF_ERROR_TEXT);
+      return sendSRCommand(smscenterNumber, SmeProperties.Session.OFF_ERROR_TEXT);
     }
 
     private String removePlusFromAbonentNumber(String number) {
@@ -146,8 +123,8 @@ public final class Session {
       otaRequest.setWtsOperationCode(Message.WTS_OPERATION_CODE_COMMAND);
       otaRequest.setWTSUserId(removePlusFromAbonentNumber(abonentNumber));
       otaRequest.setWTSServiceName(wtsServiceName);
-      otaRequest.setSourceAddress(OTA_NUMBER);
-      otaRequest.setDestinationAddress(OTA_NUMBER);
+      otaRequest.setSourceAddress(SmeProperties.Session.OTA_NUMBER);
+      otaRequest.setDestinationAddress(SmeProperties.Session.OTA_NUMBER);
       otaRequest.setWtsRequestReference(abonentNumber);
       Sme.outQueue.addOutgoingObject(new OutgoingObject(otaRequest));
       logInfo("Send SR_COMMAND with service name = " + wtsServiceName);
@@ -156,7 +133,7 @@ public final class Session {
 
     private void processOther(Message incomingMessage) {
       logInfo("Unknown message received: " + incomingMessage.getMessageString());
-      sendMessage(INFO_TEXT, incomingMessage.getDestinationAddress());
+      sendMessage(SmeProperties.Session.INFO_TEXT, incomingMessage.getDestinationAddress());
     }
   }
 
@@ -172,7 +149,7 @@ public final class Session {
     public synchronized SessionState processMessage(Message incomingMessage) throws UnexpectedMessageException {
       if (incomingMessage.getType() != Message.TYPE_WTS_REQUEST || incomingMessage.getWtsOperationCode() != Message.WTS_OPERATION_CODE_AACK) {
         if (incomingMessage.getType() == Message.TYPE_DELIVER)
-          sendMessage(UNEXPECTED_MESSAGE_ERROR_TEXT, smeAddress);
+          sendMessage(SmeProperties.Session.UNEXPECTED_MESSAGE_ERROR_TEXT, smeAddress);
         throw new UnexpectedMessageException();
       }
 
@@ -189,7 +166,7 @@ public final class Session {
           logInfo("It is temporary error. Repeat SR_COMMAND after some time.");
           try {
             currentMessageRepeats ++;
-            if (currentMessageRepeats < MAX_OTA_MESSAGE_REPEATS) {
+            if (currentMessageRepeats < SmeProperties.Session.MAX_OTA_MESSAGE_REPEATS) {
               CommandsRepeater.addCommand(new Command2Send(abonentNumber, serviceName, abonentNumber));
               return this;
             } else {

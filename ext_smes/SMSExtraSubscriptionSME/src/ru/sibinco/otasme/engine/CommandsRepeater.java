@@ -1,14 +1,13 @@
 package ru.sibinco.otasme.engine;
 
-import ru.sibinco.otasme.utils.Service;
-import ru.sibinco.otasme.utils.Utils;
-import ru.sibinco.otasme.network.OutgoingObject;
-import ru.sibinco.otasme.Sme;
-import ru.aurorisoft.smpp.Message;
 import org.apache.log4j.Category;
+import ru.aurorisoft.smpp.Message;
+import ru.sibinco.otasme.Sme;
+import ru.sibinco.otasme.SmeProperties;
+import ru.sibinco.otasme.network.OutgoingObject;
+import ru.sibinco.otasme.utils.Service;
 
 import java.util.Vector;
-import java.util.Properties;
 
 /**
  * User: artem
@@ -17,17 +16,11 @@ import java.util.Properties;
 
 public final class CommandsRepeater extends Service {
   private final static Category log = Category.getInstance(CommandsRepeater.class);
-  private final static String OTA_NUMBER;
-  private final static long RETRY_PERIOD;
 
   private static final Commands2Send commands2send;
 
   static {
-    final Properties config = Utils.loadConfig("sme.properties");
-    OTA_NUMBER = Utils.loadString(config, "sme.engine.ota.number");
-    RETRY_PERIOD = Utils.loadLong(config, "commands.repeater.retry.period");
-
-    commands2send = new Commands2Send(Utils.loadInt(config, "commands.repeater.size"));
+    commands2send = new Commands2Send(SmeProperties.CommandsRepeater.SIZE);
     new CommandsRepeater().startService();
   }
 
@@ -49,7 +42,7 @@ public final class CommandsRepeater extends Service {
       sendCommand((Command2Send)commands.get(i));
 
     try {
-      wait(RETRY_PERIOD);
+      wait(SmeProperties.CommandsRepeater.RETRY_PERIOD);
     } catch (InterruptedException e) {
       log.error("Interrupted", e);
     }
@@ -61,8 +54,8 @@ public final class CommandsRepeater extends Service {
     otaRequest.setWtsOperationCode(Message.WTS_OPERATION_CODE_COMMAND);
     otaRequest.setWTSUserId(command2send.getWtsUserId());
     otaRequest.setWTSServiceName(command2send.getWtsServiceName());
-    otaRequest.setSourceAddress(OTA_NUMBER);
-    otaRequest.setDestinationAddress(OTA_NUMBER);
+    otaRequest.setSourceAddress(SmeProperties.CommandsRepeater.OTA_NUMBER);
+    otaRequest.setDestinationAddress(SmeProperties.CommandsRepeater.OTA_NUMBER);
     otaRequest.setWtsRequestReference(command2send.getWtsRequestReference());
     Sme.outQueue.addOutgoingObject(new OutgoingObject(otaRequest));
     log.info("COMMANDS REPEATER: Send SR_COMMAND from abonent = " + command2send.getWtsUserId() + " with service name = " + command2send.getWtsServiceName());

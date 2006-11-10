@@ -1,8 +1,8 @@
 package ru.sibinco.otasme.engine;
 
 import org.apache.log4j.Category;
+import ru.sibinco.otasme.SmeProperties;
 import ru.sibinco.otasme.utils.Service;
-import ru.sibinco.otasme.utils.Utils;
 
 import java.util.*;
 
@@ -17,11 +17,9 @@ public class SessionsRegistry {
   private static final SessionsRegistry instance;
 
   static {
-    final Properties config = Utils.loadConfig("sme.properties");
-    instance = new SessionsRegistry(Utils.loadInt(config, "sessions.registry.max.size"),
-                                    Utils.loadInt(config, "sessions.registry.clean.interval"),
-                                    Utils.loadInt(config, "sessions.registry.session.idle.time"));
-    config.clear();
+    instance = new SessionsRegistry(SmeProperties.SessionsRegistry.MAX_SIZE,
+                                    SmeProperties.SessionsRegistry.CLEAN_INTERVAL,
+                                    SmeProperties.SessionsRegistry.SESSION_IDLE_TIME);
   }
 
   public static void registerSession(final Session session) throws SessionsRegistryException, SessionsRegistryOverflowException {

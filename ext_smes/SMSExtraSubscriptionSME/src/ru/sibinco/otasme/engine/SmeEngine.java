@@ -3,12 +3,10 @@ package ru.sibinco.otasme.engine;
 import org.apache.log4j.Category;
 import ru.aurorisoft.smpp.Message;
 import ru.sibinco.otasme.Sme;
+import ru.sibinco.otasme.SmeProperties;
 import ru.sibinco.otasme.engine.smscenters.SMSCenters;
 import ru.sibinco.otasme.network.OutgoingObject;
 import ru.sibinco.otasme.utils.Service;
-import ru.sibinco.otasme.utils.Utils;
-
-import java.util.Properties;
 
 /**
  * User: artem
@@ -18,16 +16,6 @@ import java.util.Properties;
 public final class SmeEngine extends Service {
 
   private static final Category log = Category.getInstance(SmeEngine.class);
-
-  private static final String NUMBER_NOT_FOUND_ERROR_TEXT;
-  private static final String SESSIONS_REGISTRY_OVERFLOW_TEXT;
-
-  static {
-    final Properties config = Utils.loadConfig("sme.properties");
-    NUMBER_NOT_FOUND_ERROR_TEXT = Utils.loadString(config, "sme.engine.number.not.found.error.text");
-    SESSIONS_REGISTRY_OVERFLOW_TEXT = Utils.loadString(config, "sme.engine.sessions.registry.full.text");
-  }
-
 
   public SmeEngine() {
     super(log);
@@ -52,7 +40,7 @@ public final class SmeEngine extends Service {
         String smscenterNumber = SMSCenters.getSMSCenterNumberByAbonent(abonentAddr);
         if (smscenterNumber == null) {
           log.info("WARNING!!! Can't find macro region for abonent " + abonentAddr);
-          sendMessage(NUMBER_NOT_FOUND_ERROR_TEXT, smeAddr, abonentAddr);
+          sendMessage(SmeProperties.SmeEngine.NUMBER_NOT_FOUND_ERROR_TEXT, smeAddr, abonentAddr);
           return;
         }
 
@@ -62,10 +50,10 @@ public final class SmeEngine extends Service {
       session.processMessage(incomingMessage);
     } catch (SessionsRegistry.SessionsRegistryException e) {
       log.error("Can't start new session", e);
-      sendMessage(SESSIONS_REGISTRY_OVERFLOW_TEXT, smeAddr, abonentAddr);
+      sendMessage(SmeProperties.SmeEngine.SESSIONS_REGISTRY_OVERFLOW_TEXT, smeAddr, abonentAddr);
     } catch (SessionsRegistry.SessionsRegistryOverflowException e) {
       log.error("Can't start new session", e);
-      sendMessage(SESSIONS_REGISTRY_OVERFLOW_TEXT, smeAddr, abonentAddr);
+      sendMessage(SmeProperties.SmeEngine.SESSIONS_REGISTRY_OVERFLOW_TEXT, smeAddr, abonentAddr);
     } catch (Session.UnexpectedMessageException e) {
       log.error("Unexpected message", e);
     }

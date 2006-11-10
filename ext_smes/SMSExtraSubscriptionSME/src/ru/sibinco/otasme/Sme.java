@@ -25,9 +25,13 @@ public final class Sme {
     final Properties config = Utils.loadConfig("sme.properties");
     inQueue = new IncomingQueue(config);
     outQueue = new OutgoingQueue(config, inQueue);
+    config.clear();
   }
 
   private Sme() throws InitializationException{
+
+    SmeProperties.init();
+
     final Properties config = Utils.loadConfig("sme.properties");
 
     new OutgoingQueueController(config, outQueue);
