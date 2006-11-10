@@ -4,7 +4,6 @@
 #
 #
 
-CXXFLAGS := $(CXXFLAGS) -I$(SMSC_SRCDIR)
 PACKAGE := scag.lcm
 DEBUG := YES
 #LEAKTRACE := YES

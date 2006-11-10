@@ -1,6 +1,7 @@
 #ifndef SCAG_RULE_ENGINE_ACTION_CONTEXT
 #define SCAG_RULE_ENGINE_ACTION_CONTEXT
 
+#include <sms/sms_serializer.h>
 #include <string>
 #include <core/buffers/Hash.hpp>
 #include <scag/re/RuleStatus.h>
@@ -9,12 +10,15 @@
 
 namespace scag { namespace re { namespace actions 
 {
+ 
+    using namespace scag::util;
     using namespace scag::util::properties;
     using smsc::core::buffers::Hash;
     using scag::re::RuleStatus;
     using namespace scag::stat;
     using namespace scag::sessions;
     using namespace scag::lcm;
+    using namespace smsc::core::buffers;
 
     enum FieldType
     {
@@ -77,7 +81,7 @@ namespace scag { namespace re { namespace actions
         auto_ptr<TariffRec>     m_TariffRec;
     public:
 
-        ActionContext(LongCallContext _longCallContext, Hash<Property>& _constants,
+        ActionContext(LongCallContext& _longCallContext, Hash<Property>& _constants,
                       Session& _session, CommandAccessor& _command, CommandProperty& _commandProperty)
             : longCallContext(_longCallContext), constants(_constants), session(_session), 
               command(_command), commandProperty(_commandProperty) 
@@ -130,11 +134,16 @@ namespace scag { namespace re { namespace actions
         int getCurrentOperationBillID();
 
         LongCallContext&        longCallContext;
+
         void clearLongCallContext()
         {
             while (longCallContext.ActionStack.empty()) longCallContext.ActionStack.pop();
         }
 
+        SerializeBuffer& getBuffer()
+        {
+            return longCallContext.contextActionBuffer;
+        }
         
 
    };

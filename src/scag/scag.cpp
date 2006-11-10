@@ -427,7 +427,8 @@ void Scag::init()
   scag::sessions::Session * session = sessionPtr.Get();
 
   if (session) smsc_log_warn(log, "SESSION IS VALID");
-  
+  */
+  /*
   scag::re::RuleEngine::Instance().process(commandPureDataSm, *session);
   sm.releaseSession(sessionPtr);
 
@@ -436,12 +437,12 @@ void Scag::init()
   scag::re::RuleEngine::Instance().process(commandPureDataSmResp, *session);
   sm.releaseSession(sessionPtr);
 
-
-    
+  */
+  /*  
   scag::re::RuleEngine::Instance().process(commandDeliver1, *session);
   sm.releaseSession(sessionPtr);
-
-  
+  */
+  /*
   sessionPtr = sm.getSession(key);
   session = sessionPtr.Get();
   scag::re::RuleEngine::Instance().process(commandDeliverResp, *session);
@@ -472,9 +473,9 @@ void Scag::init()
   session = sessionPtr.Get();
   scag::re::RuleEngine::Instance().process(commandDeliver2, *session);
   sm.releaseSession(sessionPtr);
-
+   */
   ////////////////////////// FOR TEST 
-  */                                 
+                                   
                       
 /*
   scag::admin::CommandListSmsc * commandListSmsc = new scag::admin::CommandListSmsc(0);

@@ -3,6 +3,7 @@ util
 stat
 transport
 config
+lcm
 sessions
 bill
 re
