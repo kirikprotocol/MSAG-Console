@@ -166,7 +166,7 @@ void SmppEventHandler::ModifyOperationAfterExecuting(Session& session, SmppComma
 
 
 
-RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
+RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session, LongCallContext& longCallContext)
 {
     smsc_log_debug(logger, "Process EventHandler...");
 
@@ -230,7 +230,7 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
         return rs;
     }
 
-    ActionContext context(_constants, session, _command, commandProperty);
+    ActionContext context(longCallContext, _constants, session, _command, commandProperty);
 
     try
     {

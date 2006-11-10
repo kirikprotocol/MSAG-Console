@@ -6,13 +6,14 @@
 
 
 #include "scag/re/actions/ActionFactory.h"
+#include "scag/lcm/LongCallManager.h"
 
 namespace scag { namespace re
 {
 using scag::transport::SCAGCommand;
 using namespace scag::re::actions;
 using smsc::logger::Logger;
-
+using scag::lcm;
 
 class EventHandler : public IParserHandler
 {
@@ -36,7 +37,7 @@ public:
     virtual ~EventHandler();
 
     virtual void init(const SectionParams& params,PropertyObject _propertyObject) {propertyObject = _propertyObject;}
-    virtual RuleStatus process(SCAGCommand& command,Session& session) = 0;
+    virtual RuleStatus process(SCAGCommand& command,Session& session, LongCallContext& longCallContext) = 0;
     virtual int StrToHandlerId(const std::string& str) = 0;
 
 };

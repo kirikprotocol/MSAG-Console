@@ -9,7 +9,7 @@ namespace scag { namespace re { namespace http {
 using namespace scag::transport::http;
 using namespace scag::sessions;
 
-RuleStatus HttpEventHandler::processRequest(HttpRequest& command, Session& session, CommandProperty& commandProperty)
+RuleStatus HttpEventHandler::processRequest(HttpRequest& command, Session& session, CommandProperty& commandProperty, LongCallContext& longCallContext)
 {
     smsc_log_debug(logger, "Process HttpEventHandler Request...");
 
@@ -26,7 +26,7 @@ RuleStatus HttpEventHandler::processRequest(HttpRequest& command, Session& sessi
 
         RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), "");
 
-        ActionContext context(_constants, session, _command, commandProperty);
+        ActionContext context(longCallContext, _constants, session, _command, commandProperty);
 
         rs = RunActions(context);
         if(rs.status == STATUS_FAILED) session.closeCurrentOperation();
@@ -49,7 +49,7 @@ RuleStatus HttpEventHandler::processRequest(HttpRequest& command, Session& sessi
     return rs;
 }
 
-RuleStatus HttpEventHandler::processResponse(HttpResponse& command, Session& session, CommandProperty& commandProperty)
+RuleStatus HttpEventHandler::processResponse(HttpResponse& command, Session& session, CommandProperty& commandProperty, LongCallContext& longCallContext)
 {
     smsc_log_debug(logger, "Process HttpEventHandler Response...");
 
@@ -63,7 +63,7 @@ RuleStatus HttpEventHandler::processResponse(HttpResponse& command, Session& ses
 
         RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), "");
 
-        ActionContext context(_constants, session, _command, commandProperty);
+        ActionContext context(longCallContext, _constants, session, _command, commandProperty);
 
         rs = RunActions(context);
         if(rs.status == STATUS_FAILED) session.closeCurrentOperation();
@@ -82,7 +82,7 @@ RuleStatus HttpEventHandler::processResponse(HttpResponse& command, Session& ses
     return rs;
 }
 
-RuleStatus HttpEventHandler::processDelivery(HttpResponse& command, Session& session, CommandProperty& cp)
+RuleStatus HttpEventHandler::processDelivery(HttpResponse& command, Session& session, CommandProperty& cp, LongCallContext& longCallContext)
 {
     smsc_log_debug(logger, "Process HttpEventHandler Delivery...");
 
@@ -96,7 +96,7 @@ RuleStatus HttpEventHandler::processDelivery(HttpResponse& command, Session& ses
 
         RegisterTrafficEvent(cp, session.getPrimaryKey(), "");
 
-        ActionContext context(_constants, session, _command, cp);
+        ActionContext context(longCallContext, _constants, session, _command, cp);
 
         rs = RunActions(context);
 
@@ -116,7 +116,7 @@ RuleStatus HttpEventHandler::processDelivery(HttpResponse& command, Session& ses
     return rs;
 }
 
-RuleStatus HttpEventHandler::process(SCAGCommand& command, Session& session)
+RuleStatus HttpEventHandler::process(SCAGCommand& command, Session& session, LongCallContext& longCallContext)
 {
     smsc_log_debug(logger, "Process HttpEventHandler...");
 
@@ -152,11 +152,11 @@ RuleStatus HttpEventHandler::process(SCAGCommand& command, Session& session)
     switch(hc.getCommandId())
     {
         case HTTP_REQUEST:
-            return processRequest((HttpRequest&)hc, session, cp);
+            return processRequest((HttpRequest&)hc, session, cp, longCallContext);
         case HTTP_RESPONSE:
-            return processResponse((HttpResponse&)hc, session, cp);
+            return processResponse((HttpResponse&)hc, session, cp, longCallContext);
         case HTTP_DELIVERY:
-            return processDelivery((HttpResponse&)hc, session, cp);
+            return processDelivery((HttpResponse&)hc, session, cp, longCallContext);
         default:
             smsc_log_debug(logger, "HttpEventHandler: unknown command");
     }

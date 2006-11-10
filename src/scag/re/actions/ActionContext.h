@@ -5,7 +5,7 @@
 #include <core/buffers/Hash.hpp>
 #include <scag/re/RuleStatus.h>
 #include "scag/sessions/Session.h"
-#include <stack>
+#include "scag/lcm/LongCallManager.h"
 
 namespace scag { namespace re { namespace actions 
 {
@@ -14,6 +14,7 @@ namespace scag { namespace re { namespace actions
     using scag::re::RuleStatus;
     using namespace scag::stat;
     using namespace scag::sessions;
+    using namespace scag::lcm;
 
     enum FieldType
     {
@@ -22,20 +23,6 @@ namespace scag { namespace re { namespace actions
         ftConst =   '@',
         ftSession = '$',
         ftField =   '#'
-    };
-
-    struct ActionStackValue
-    {
-        int actionIndex;
-        bool thenSection;
-
-        ActionStackValue() : thenSection(false)
-        {
-        }
-
-        ActionStackValue(int index, bool flag) : actionIndex(index), thenSection(flag)
-        {
-        }
     };
 
     class CommandAccessor : public PropertyManager
@@ -90,9 +77,10 @@ namespace scag { namespace re { namespace actions
         auto_ptr<TariffRec>     m_TariffRec;
     public:
 
-        ActionContext(Hash<Property>& _constants,
+        ActionContext(LongCallContext _longCallContext, Hash<Property>& _constants,
                       Session& _session, CommandAccessor& _command, CommandProperty& _commandProperty)
-            : constants(_constants), session(_session), command(_command), commandProperty(_commandProperty) 
+            : longCallContext(_longCallContext), constants(_constants), session(_session), 
+              command(_command), commandProperty(_commandProperty) 
         {
         };
 
@@ -141,8 +129,14 @@ namespace scag { namespace re { namespace actions
         bool checkIfCanSetPending(int operationType, int eventHandlerType, TransportType transportType);
         int getCurrentOperationBillID();
 
-        std::stack<ActionStackValue> ActionStack;
-        SessionBuffer LongCallContext;
+        LongCallContext&        longCallContext;
+        void clearLongCallContext()
+        {
+            while (longCallContext.ActionStack.empty()) longCallContext.ActionStack.pop();
+        }
+
+        
+
    };
 
 }}}

@@ -149,7 +149,7 @@ bool ActionIf::run(ActionContext& context)
 
     bool isValidCondition = true;
 
-    if (context.ActionStack.empty()) 
+    if (context.longCallContext.ActionStack.empty()) 
     {
         Property * property = context.getProperty(singleparam.strOperand1);
         if (!property) 
@@ -210,7 +210,7 @@ bool ActionIf::run(ActionContext& context)
         }
     }
     else
-        isValidCondition = context.ActionStack.top().thenSection;
+        isValidCondition = context.longCallContext.ActionStack.top().thenSection;
 
 
     if (isValidCondition) 
@@ -219,16 +219,16 @@ bool ActionIf::run(ActionContext& context)
 
         int startIndex = 0;
 
-        if (!context.ActionStack.empty()) 
+        if (!context.longCallContext.ActionStack.empty()) 
         {
-            startIndex = context.ActionStack.top().actionIndex;
+            startIndex = context.longCallContext.ActionStack.top().actionIndex;
             if (startIndex >= ThenActions.size())
             {
                 smsc_log_error(logger, "Cannot continue running actions. Details: action index out of bound");
-                while (!context.ActionStack.empty()) context.ActionStack.pop();
+                context.clearLongCallContext();
                 return true;
             }
-            context.ActionStack.pop();
+            context.longCallContext.ActionStack.pop();
         }
 
 
@@ -237,7 +237,7 @@ bool ActionIf::run(ActionContext& context)
             if (!ThenActions[i]->run(context)) 
             {
                 ActionStackValue sv(i, true);
-                context.ActionStack.push(sv);
+                context.longCallContext.ActionStack.push(sv);
                 return false;
             }
         }
@@ -247,16 +247,16 @@ bool ActionIf::run(ActionContext& context)
 
         int startIndex = 0;
 
-        if (!context.ActionStack.empty()) 
+        if (!context.longCallContext.ActionStack.empty()) 
         {
-            startIndex = context.ActionStack.top().actionIndex;
+            startIndex = context.longCallContext.ActionStack.top().actionIndex;
             if (startIndex >= ElseActions.size())
             {
                 smsc_log_error(logger, "Cannot continue running actions. Details: action index out of bound");
-                while (!context.ActionStack.empty()) context.ActionStack.pop();
+                context.clearLongCallContext();
                 return true;
             }
-            context.ActionStack.pop();
+            context.longCallContext.ActionStack.pop();
         }
 
 
@@ -265,7 +265,7 @@ bool ActionIf::run(ActionContext& context)
             if (!ElseActions[i]->run(context)) 
             {
                 ActionStackValue sv(i, false);
-                context.ActionStack.push(sv);
+                context.longCallContext.ActionStack.push(sv);
                 return false;
             }
         }

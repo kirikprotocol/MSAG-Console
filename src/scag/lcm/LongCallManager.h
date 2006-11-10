@@ -5,12 +5,15 @@
 
 #include "logger/Logger.h"
 #include "scag/config/lcm/LongCallManagerConfig.h"
+#include <stack>
+#include "core/buffers/RefPtr.hpp"
 
 namespace scag { namespace lcm {
 
 using smsc::logger::Logger;
 using namespace scag::config;
 using smsc::core::synchronization;
+using namespace smsc::core::buffers;
 
 enum LongCallCommandId{
     PERS_GET = 1,
@@ -23,6 +26,36 @@ enum LongCallCommandId{
 class LongCallInitiator;
 struct LongCallContext;
 
+struct ActionStackValue
+{
+    int actionIndex;
+    bool thenSection;
+    ActionStackValue(int index, bool flag) : actionIndex(index), thenSection(flag) {}
+};
+
+class LongCallBuffer : public smsc::sms::BufOps::SmsBuffer
+{
+protected:
+    LongCallBuffer& operator >> (std::string& str)
+    {
+        uint8_t len;
+        this->Read((char*)&len,1);
+        char scb[256];
+    
+        if (len>255) throw smsc::util::Exception("Attempt to read %d byte in buffer with size %d",(int)len,255);
+    
+        this->Read(scb,len);
+        scb[len] = 0;
+    
+        str = scb;
+        return *this;
+    };
+public:
+    LongCallBuffer() : smsc::sms::BufOps::SmsBuffer(2048) {}
+    LongCallBuffer(int size):smsc::sms::BufOps::SmsBuffer(size){}
+};
+
+
 struct LongCallContext
 {
     LongCallContext(LongCallInitiator* initr, uint32_t cid, void* p): initiator(initr), callCommandId(cid), param(p), next(NULL) {};
@@ -31,6 +64,9 @@ struct LongCallContext
     void *param;    
     LongCallInitiator *initiator;
     LongCallContext *next;
+
+    std::stack<ActionStackValue> ActionStack;
+    LongCallBuffer contextActionBuffer;
 };
 
 class LongCallInitiator

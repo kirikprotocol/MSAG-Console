@@ -63,7 +63,7 @@ bool ActionReturn::run(ActionContext& context)
     context.setRuleStatus(rs);
     smsc_log_debug(logger,"Action 'return': return result=%d, status=%d",rs.result, rs.status);
 
-    while (!context.ActionStack.empty()) context.ActionStack.pop();
+    context.clearLongCallContext();
     return false;
 }
 

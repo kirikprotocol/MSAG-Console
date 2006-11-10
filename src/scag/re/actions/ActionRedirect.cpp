@@ -89,7 +89,7 @@ bool ActionRedirect::run(ActionContext& context)
 
     context.setRuleStatus(rs);
 
-    while (!context.ActionStack.empty()) context.ActionStack.pop();
+    context.clearLongCallContext();
     smsc_log_debug(logger,"Action 'redirect' finished");   
     return false;
 }

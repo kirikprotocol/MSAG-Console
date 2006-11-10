@@ -26,7 +26,7 @@ class LongCallAction : public Action, ActionLongCallInterface
 public:
     virtual bool run(ActionContext& context)
     {
-        if (context.ActionStack.empty()) 
+        if (context.longCallContext.ActionStack.empty()) 
         {
             if (!RunBeforePostpone(context)) return true;
 
@@ -34,12 +34,12 @@ public:
             rs.status = STATUS_LONG_CALL;
             context.setRuleStatus(rs);
 
-            while (!context.ActionStack.empty()) context.ActionStack.pop();
+            context.clearLongCallContext();
 
             return false;
         } else
         {
-            context.LongCallContext.SetPos(0);
+            context.longCallContext.contextActionBuffer.SetPos(0);
             ContinueRunning(context);
         }
 

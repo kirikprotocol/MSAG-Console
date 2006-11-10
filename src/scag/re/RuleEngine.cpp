@@ -180,7 +180,7 @@ public:
     void ProcessInit(const std::string& dir);
     virtual void updateRule(RuleKey& key);
     virtual void removeRule(RuleKey& key);
-    virtual RuleStatus process(SCAGCommand& command, Session& session);
+    virtual RuleStatus process(SCAGCommand& command, Session& session, LongCallContext& longCallContext);
 
     virtual Hash<TransportType> getTransportTypeHash() {return TransportTypeHash;}
     virtual Hash<Property> getConstants();
@@ -400,7 +400,7 @@ std::string RuleEngineImpl::CreateRuleFileName(const std::string& dir,const Rule
 }
 
 
-RuleStatus RuleEngineImpl::process(SCAGCommand& command, Session& session)
+RuleStatus RuleEngineImpl::process(SCAGCommand& command, Session& session, LongCallContext& longCallContext)
 {
 
     smsc_log_debug(logger,"");
@@ -419,7 +419,7 @@ RuleStatus RuleEngineImpl::process(SCAGCommand& command, Session& session)
 
     if (rulePtr) 
     {
-        rs = (*rulePtr)->process(command, session);
+        rs = (*rulePtr)->process(command, session, longCallContext);
     } 
     else
         throw RuleEngineException(0,"Cannot process Rule with ID=%d: Rule not found", key.serviceId);
