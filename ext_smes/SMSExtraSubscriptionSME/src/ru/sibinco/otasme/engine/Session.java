@@ -3,7 +3,6 @@ package ru.sibinco.otasme.engine;
 import org.apache.log4j.Category;
 import ru.aurorisoft.smpp.Message;
 import ru.sibinco.otasme.Sme;
-import ru.sibinco.otasme.engine.template.MacroRegion;
 import ru.sibinco.otasme.network.OutgoingObject;
 import ru.sibinco.otasme.utils.Utils;
 
@@ -43,14 +42,14 @@ public final class Session {
 
   private final String abonentNumber;
   private final String smeAddress;
-  private final MacroRegion macroRegion;
+  private final String smscenterNumber;
 
   private Date lastRequestDate = new Date();
   private SessionState currentState = new StartState();
 
-  public Session(String abonentNumber, String smeAddress, MacroRegion macroRegion) throws SessionsRegistry.SessionsRegistryException, SessionsRegistry.SessionsRegistryOverflowException {
+  public Session(String abonentNumber, String smeAddress, String smscenterNumber) throws SessionsRegistry.SessionsRegistryException, SessionsRegistry.SessionsRegistryOverflowException {
     this.abonentNumber = abonentNumber;
-    this.macroRegion = macroRegion;
+    this.smscenterNumber = smscenterNumber;
     this.smeAddress = smeAddress;
     SessionsRegistry.registerSession(this);
   }
@@ -134,7 +133,7 @@ public final class Session {
 
     private SessionState processOff() {
       logInfo("OFF message received.");
-      return sendSRCommand(macroRegion.getNumber(), OFF_ERROR_TEXT);
+      return sendSRCommand(smscenterNumber, OFF_ERROR_TEXT);
     }
 
     private String removePlusFromAbonentNumber(String number) {
@@ -152,7 +151,7 @@ public final class Session {
       otaRequest.setWtsRequestReference(abonentNumber);
       Sme.outQueue.addOutgoingObject(new OutgoingObject(otaRequest));
       logInfo("Send SR_COMMAND with service name = " + wtsServiceName);
-      return new OTAState(otaMessage.replaceAll("%SMSC_NUMBER%", macroRegion.getNumber()), wtsServiceName);
+      return new OTAState(otaMessage.replaceAll("%SMSC_NUMBER%", smscenterNumber), wtsServiceName);
     }
 
     private void processOther(Message incomingMessage) {

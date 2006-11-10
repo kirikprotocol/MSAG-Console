@@ -3,8 +3,7 @@ package ru.sibinco.otasme.engine;
 import org.apache.log4j.Category;
 import ru.aurorisoft.smpp.Message;
 import ru.sibinco.otasme.Sme;
-import ru.sibinco.otasme.engine.template.MacroRegion;
-import ru.sibinco.otasme.engine.template.Templates;
+import ru.sibinco.otasme.engine.smscenters.SMSCenters;
 import ru.sibinco.otasme.network.OutgoingObject;
 import ru.sibinco.otasme.utils.Service;
 import ru.sibinco.otasme.utils.Utils;
@@ -50,14 +49,14 @@ public final class SmeEngine extends Service {
           return;
         }
 
-        MacroRegion macroRegion = Templates.getMacroRegionByAbonentNumber(abonentAddr);
-        if (macroRegion == null) {
+        String smscenterNumber = SMSCenters.getSMSCenterNumberByAbonent(abonentAddr);
+        if (smscenterNumber == null) {
           log.info("WARNING!!! Can't find macro region for abonent " + abonentAddr);
           sendMessage(NUMBER_NOT_FOUND_ERROR_TEXT, smeAddr, abonentAddr);
           return;
         }
 
-        session = new Session(abonentAddr, smeAddr, macroRegion);
+        session = new Session(abonentAddr, smeAddr, smscenterNumber);
       }
 
       session.processMessage(incomingMessage);
