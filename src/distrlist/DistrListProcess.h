@@ -54,6 +54,7 @@ protected:
   ProxyMonitor *managerMonitor;
   int seq;
   SmeRegistrar* smereg;
+
 public:
   DistrListProcess(DistrListAdmin* admin,SmeRegistrar* sm);
   virtual ~DistrListProcess();
@@ -81,6 +82,10 @@ public:
 
   string serviceType;
   int protocolId;
+
+  bool autoCreatePrincipal;
+  int defaultMaxLists;
+  int defaultMaxElements;
 
 protected:
   void putIncomingCommand(const SmscCommand& cmd);

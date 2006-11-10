@@ -31,7 +31,11 @@ DistrListProcess::DistrListProcess(DistrListAdmin* admin,SmeRegistrar* reg) :
   managerMonitor(0),
   seq(1),
   smereg(reg)
-{}
+{
+  autoCreatePrincipal=false;
+  defaultMaxLists=10;
+  defaultMaxElements=10;
+}
 
 DistrListProcess::~DistrListProcess()
 {
@@ -204,6 +208,19 @@ int DistrListProcess::Execute()
         }else
         if(cmd=="add")
         {
+          if(autoCreatePrincipal)
+          {
+            try{
+              admin->getPrincipal(sms.getOriginatingAddress());
+            }catch(PrincipalNotExistsException& e)
+            {
+              Principal p;
+              p.address=sms.getOriginatingAddress();
+              p.maxLst=defaultMaxLists;
+              p.maxEl=defaultMaxElements;
+              admin->addPrincipal(p);
+            }
+          }
           try{
             tmpl="dl.adderr";
             admin->addDistrList(fullarg,false,sms.getOriginatingAddress(),0);

@@ -1000,6 +1000,14 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   }
 #endif
 
+  try{
+    distlstsme->autoCreatePrincipal=cfg.cfgman->getBool("distrList.autocreatePrincipal");
+    distlstsme->defaultMaxLists=cfg.cfgman->getInt("distrList.defaultMaxLists");
+    distlstsme->defaultMaxElements=cfg.cfgman->getInt("distrList.defaultMaxElements");
+  }catch(...)
+  {
+  }
+
   try {
 
      if(ishs){
