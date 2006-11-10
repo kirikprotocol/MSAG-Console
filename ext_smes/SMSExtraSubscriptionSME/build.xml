@@ -46,7 +46,7 @@
       <classpath refid="sme.classpath"/>
     </javac>
   </target>
-  
+
   <target name="clean" description="cleanup">
     <delete dir="${BUILD_BIN}/classes"/>
   </target>
@@ -70,14 +70,6 @@
     </copy>
   </target>
 
-  <target name="create_templ" depends="">
-    <java classname="ru.sibinco.automation.MasksListConvertor" args="${TEMPLATES_CSV_FILE} ${DISTR_DIR}/services/${sme.name}/config/templates.xml">
-      <classpath>
-        <fileset file="${DISTR_DIR}/services/${sme.name}/bin/${sme.name}.jar"/>
-      </classpath>
-    </java>
-  </target>
-
   <target name="copy_libs">
     <mkdir dir="${DISTR_DIR}/services/${sme.name}/lib"/>
     <copy todir="${DISTR_DIR}/services/${sme.name}/lib">
@@ -90,7 +82,7 @@
     <!-- Creating any other logs directories here !-->
   </target>
 
-  <target name="distr" depends="clean, init, build, copy_configs, copy_libs, create_templ, create_logs_directory"/>
+  <target name="distr" depends="clean, init, build, copy_configs, copy_libs,  create_logs_directory"/>
   <target name="update" depends="clean, init, build, copy_libs"/>
 
 </project>
