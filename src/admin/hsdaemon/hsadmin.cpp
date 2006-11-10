@@ -52,7 +52,7 @@ int main(int argc,char* argv[])
 {
   if(argc<3)
   {
-    printf("Usage: %s host:port[,host:port] command [args]\n");
+    printf("Usage: %s host:port[,host:port] command [args]\n",argv[0]);
     printf("Supported commands:\n");
     printf("status [serviceId]\n");
     printf("start serviceId\n");
