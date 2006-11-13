@@ -40,6 +40,7 @@
     <param name="state_machines_count" type="int">5</param>
     <param name="systemId" type="string">smscsme</param>
     <param name="timezones_config" type="string">timezones.xml</param>
+    <param name="smscenters_config" type="string">smscenters.xml</param>
     <param name="reschedule_config" type="string">schedule.xml</param>
     <section name="performance">
       <param name="host" type="string">@listen.host@</param>
