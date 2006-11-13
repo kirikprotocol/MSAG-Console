@@ -19,7 +19,7 @@ import org.apache.log4j.Category;
 public class SMSCenters {
   private static final Category logger = Category.getInstance(SMSCenters.class);
 
-  private static final String SMS_CENTERS_CONFIG = "core.smscenters_config";
+  private static final String SMS_CENTERS_CONFIG = "smsx.smscenters_config";
   public static final String SMS_CENTERS_SUBJECTS_PREFIX = "subjects";
   public static final String SMS_CENTERS_MASKS_PREFIX = "masks";
   private static final char DOT_REPLACER = '^';
@@ -63,7 +63,7 @@ public class SMSCenters {
   }
 
   private Config getSMSCentersConfig(SMSCAppContext appContext) throws Throwable {
-    Config smscConfig = appContext.getSmsc().getSmscConfig();
+    Config smscConfig = appContext.getConfig();
     if (smscConfig == null)
       throw new AdminException(SMSCErrors.error.smsc.couldntGetConfig);
 

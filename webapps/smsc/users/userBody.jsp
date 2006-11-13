@@ -1,3 +1,4 @@
+<%@ page import="ru.novosoft.smsc.admin.profiler.SupportExtProfile"%>
 <%@ include file="/WEB-INF/inc/collapsing_tree.jsp" %>
 <div class=content>
 <div class=page_subtitle><%=getLocString("users.subTitle")%></div>
@@ -57,6 +58,8 @@
             paramCheck(out, "users.roles.timezones", "roles", "role30", "timezones", bean.isUserInRole("timezones"), null);
             paramCheck(out, "users.roles.emailsme", "roles", "role31", "emailsme", bean.isUserInRole("emailsme"), null);
             paramCheck(out, "users.roles.snmp", "roles", "role32", "snmp", bean.isUserInRole("snmp"), null);            
+            if (SupportExtProfile.enabled)
+              paramCheck(out, "users.roles.smscenters", "roles", "role33", "smscenters", bean.isUserInRole("smscenters"), null);
 
             if (bean.getServiceRoles().size() > 0)
                 for (Iterator i = bean.getServiceRoles().iterator(); i.hasNext();) {
