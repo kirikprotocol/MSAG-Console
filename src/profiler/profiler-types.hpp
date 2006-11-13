@@ -224,7 +224,7 @@ struct Profile{
     hide=f.ReadNetInt32();
     char buf[32]={0,};
     f.Read(buf,sizeof(buf));
-    locale=buf;
+    locale=(const char*)buf;
 
     hideModifiable=f.ReadByte();
 
