@@ -43,9 +43,9 @@ public class SMSCenters {
 
   private String getSMSCenterNumberByAbonentInternal(final String abonentAddr) {
     for (Iterator iterator = timezones.iterator(); iterator.hasNext();) {
-      final SMSCenter tz =  (SMSCenter)iterator.next();
-      if (tz.allowNumber(abonentAddr))
-        return tz.getNumber();
+      final SMSCenter smsc =  (SMSCenter)iterator.next();
+      if (smsc.allowNumber(abonentAddr))
+        return smsc.getNumber();
     }
     return defaultTimezone;
   }
@@ -94,8 +94,8 @@ public class SMSCenters {
   }
 
   public static void main(String args[]) {
-    System.out.println(SMSCenters.getSMSCenterNumberByAbonent(".1.1.79133105665"));
-    System.out.println(SMSCenters.getSMSCenterNumberByAbonent(".1.1.79135019090"));
+    System.out.println(SMSCenters.getSMSCenterNumberByAbonent("1.2.3.4"));
+    System.out.println(SMSCenters.getSMSCenterNumberByAbonent(".0.1.3"));
     System.out.println(SMSCenters.getSMSCenterNumberByAbonent(".1.1.9001"));
   }
 }
