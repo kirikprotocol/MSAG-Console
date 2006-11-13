@@ -219,6 +219,13 @@ public class SMSCErrors {
                 public static final String couldntSave = B + "couldntSave";
                 public static final String couldntGetTimezoneConfig = B + "couldntGetTimezoneConfig";
             }
+
+            public static class smscenters {
+                private static final String B = smsc.B + "smscenters.";
+                public static final String couldntGetSMSCenters = B + "couldntGetSMSCenters";
+                public static final String couldntSave = B + "couldntSave";
+                public static final String couldntGetSMSCentersConfig = B + "couldntGetSMSCentersConfig";
+            }
         }
 
 
