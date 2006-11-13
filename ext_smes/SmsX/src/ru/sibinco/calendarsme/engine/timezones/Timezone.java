@@ -22,7 +22,7 @@ public final class Timezone {
   }
 
   public void addRoute(String route) {
-    routes.add(route);
+    routes.add(route.replace('^', '.'));
   }
 
   public boolean hasRoute(String route) {
@@ -34,7 +34,7 @@ public final class Timezone {
   }
 
   public void addMask(String mask) {
-    masks.add(preparePhoneMask(mask));
+    masks.add(preparePhoneMask(mask.replace('^', '.')));
   }
 
   private static String preparePhoneMask(final String phoneMask) {

@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="windows-1251"?>
 
 <config>
-  <param name="default_timezne" type="string">360,Asia/Novosibirsk</param>
+  <param name="default_timezone" type="string">360,Asia/Novosibirsk</param>
+  
+  <section name="masks">
+    <param name=".1.1.900" type="string">420,Asiz/kukiw10</param>
+  </section>
 
   <section name="subjects">
-    <param name="Novosibirsk" type="string">420,Asia/Novosibirsk</param>
-    <param name="Moscow" type="string">420,Europe/Moscow</param>
-    <param name="Krasnoyarsk" type="string">420,Asia/Krasnoyarsk</param>
+    <param name="Регион Абакан" type="string">420,Asia/Krasnoyarsk2</param>
+    <param name="Регион Кемерово" type="string">420,Asia/Krasnoyarsk1</param>
+    <param name="Регион Красноярск" type="string">420,Asia/Krasnoyarsk3</param>
+    <param name="Регион Норильск" type="string">420,Asia/Krasnoyarsk4</param>
+    <param name="Регион Тыва" type="string">420,Asia/Krasnoyarsk5</param>
   </section>
 </config>
