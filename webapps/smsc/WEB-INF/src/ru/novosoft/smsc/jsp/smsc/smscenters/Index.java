@@ -68,9 +68,6 @@ public class Index extends SmscBean {
 
   public Collection getSubjects() {
     if (smsCenters == null) return new LinkedList();
-    System.out.println("ROUTES:");
-    for (Iterator iterator = smsCenters.getRoutes().iterator(); iterator.hasNext();)
-      System.out.println(iterator.next());
     return smsCenters.getRoutes();
   }
 
@@ -84,7 +81,6 @@ public class Index extends SmscBean {
 
     Collection oldMasks = smsCenters.getMasks();
     Collection oldSubjects = smsCenters.getRoutes();
-    System.out.println("save");
     while (parameterNames.hasMoreElements()) {
       String s = (String) parameterNames.nextElement();
       if (s.equals("newParamName_" + SMSCenters.SMS_CENTERS_MASKS_PREFIX)) {

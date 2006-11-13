@@ -93,12 +93,10 @@ public class SMSCenters {
   }
 
   public void addMask(final String mask, final String smscNumber) {
-    System.out.println("add mask: " + mask + " " + smscNumber);
     config.setString(SMS_CENTERS_MASKS_PREFIX + "." + mask.replace('.', DOT_REPLACER), smscNumber);
   }
 
   public void addSubject(final String name, final String smscNumber) {
-    System.out.println("add subject: " + name + " " + smscNumber);
     config.setString(SMS_CENTERS_SUBJECTS_PREFIX + "." + name.replace('.', DOT_REPLACER), smscNumber);
   }
 
