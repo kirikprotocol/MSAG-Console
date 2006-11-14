@@ -89,5 +89,9 @@
   <section name="snmp">
     <param name="csvFileDir" type="string">@localstore.dir@/snmp</param>
     <param name="csvFileRollInterval" type="int">60</param>
-  </section>  <section name="smsx">    <param name="smscenters_config" type="string">smscenters.xml</param>  </section>
+  </section>
+  
+  <section name="smsx">
+    <param name="smscenters_config" type="string">smscenters.xml</param>
+  </section>
 </config>
