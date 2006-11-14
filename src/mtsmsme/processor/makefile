@@ -1,4 +1,4 @@
-CXXFLAGS := $(CXXFLAGS) -I$(SMSC_SRCDIR)/sms -I/opt/EABss7009/src -I./codec -I./asn1rt -I./decoder -Dasn_DEF=asn_DEF_MessageType
+CXXFLAGS := $(CXXFLAGS) -D__EXTENSIONS__ -I$(SMSC_SRCDIR)/sms -I/opt/EABss7009/src -I./codec -I./asn1rt -I./decoder -Dasn_DEF=asn_DEF_MessageType
 __LIBRARIES := $(__LIBRARIES) -L$(SS7_STACK_HOME)/lib -L$(SMSC_BUILDDIR)/bin
 PACKAGE := mtsmsme.processor
 
