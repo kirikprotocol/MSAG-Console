@@ -197,6 +197,8 @@ void StateMachine::processSubmit(SmppCommand& cmd)
         src->getSystemId(),
         sms.getDestinationAddress().toString().c_str());
         SubmitResp(cmd,smsc::system::Status::NOROUTE);
+        if(session.Get())
+            scag::sessions::SessionManager::Instance().releaseSession(session);                  
         registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
         return;
       }
@@ -246,6 +248,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
         {
             smsc_log_warn(log, "USSD Submit: Rerouting for USSD dialog not allowed");        
             SubmitResp(cmd,smsc::system::Status::NOROUTE);
+            scag::sessions::SessionManager::Instance().releaseSession(session);                  
             registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
             return;
         }
@@ -314,6 +317,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
     smsc_log_info(log,"Submit: noroute(MAX_REDIRECT_CNT reached) %s(%s)->%s", sms.getOriginatingAddress().toString().c_str(),
         src->getSystemId(), sms.getDestinationAddress().toString().c_str());
     SubmitResp(cmd,smsc::system::Status::NOROUTE);
+    scag::sessions::SessionManager::Instance().releaseSession(session);                  
     registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
     return;
   }
@@ -343,6 +347,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
   }
   scag::sessions::SessionManager::Instance().releaseSession(session);
 }
+
 
 void StateMachine::processSubmitResp(SmppCommand& cmd)
 {
@@ -444,6 +449,8 @@ void StateMachine::processDelivery(SmppCommand& cmd)
           src->getSystemId(),
           sms.getDestinationAddress().toString().c_str());
         DeliveryResp(cmd,smsc::system::Status::NOROUTE);
+        if(session.Get())
+            scag::sessions::SessionManager::Instance().releaseSession(session);                  
         registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
         return;
       }
@@ -486,6 +493,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
             {
                 smsc_log_warn(log, "USSD Delivery: Rerouting for USSD dialog not allowed");        
                 DeliveryResp(cmd,smsc::system::Status::NOROUTE);
+                scag::sessions::SessionManager::Instance().releaseSession(session);                  
                 registerEvent(scag::stat::events::smpp::REJECTED, src, dst, NULL, smsc::system::Status::NOROUTE);
                 return;
             }
@@ -539,6 +547,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
           src->getSystemId(), sms.getDestinationAddress().toString().c_str());
     
     DeliveryResp(cmd,smsc::system::Status::NOROUTE);
+    scag::sessions::SessionManager::Instance().releaseSession(session);            
     registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
     return;
   }
@@ -695,6 +704,8 @@ void StateMachine::processDataSm(SmppCommand& cmd)
           src->getSystemId(),
           sms.getDestinationAddress().toString().c_str());
         DataResp(cmd,smsc::system::Status::NOROUTE);
+        if(session.Get())
+            scag::sessions::SessionManager::Instance().releaseSession(session);                  
         registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
         return;
       }
@@ -758,6 +769,7 @@ void StateMachine::processDataSm(SmppCommand& cmd)
     smsc_log_info(log,"DataSm: noroute(MAX_REDIRECT_CNT reached) %s(%s)->%s", sms.getOriginatingAddress().toString().c_str(),
         src->getSystemId(), sms.getDestinationAddress().toString().c_str());
     DataResp(cmd,smsc::system::Status::NOROUTE);
+    scag::sessions::SessionManager::Instance().releaseSession(session);                  
     registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::NOROUTE);
     return;
   }
