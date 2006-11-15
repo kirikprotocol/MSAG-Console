@@ -258,7 +258,7 @@ StateMachine::StateMachine(EventQueue& q,
   __throw_if_fail__(dreDef.LastError()==regexp::errNone,RegExpCompilationException);
   dreTemplate.Compile(AltConcat("template",directiveAliases,"=(.*?)").c_str(),OP_IGNORECASE|OP_OPTIMIZE);
   __throw_if_fail__(dreTemplate.LastError()==regexp::errNone,RegExpCompilationException);
-  dreTemplateParam.Compile("/\\s*\\{(\\w+)\\}=(\".*?\"|[^{\\s]+)/s");
+  dreTemplateParam.Compile("/\\s*\\{(\\w+)\\}=(\".*?\"|[^\"{\\s]*)/s");
   __throw_if_fail__(dreTemplateParam.LastError()==regexp::errNone,RegExpCompilationException);
   dreUnknown.Compile("/#.*?#/");
   __throw_if_fail__(dreUnknown.LastError()==regexp::errNone,RegExpCompilationException);
@@ -663,11 +663,17 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
       while(dreTemplateParam.MatchEx(buf,buf+j,buf+len,m,n))
       {
         name.assign(buf+m[1].start,m[1].end-m[1].start);
-        value.assign
-        (
-          buf+m[2].start+(buf[m[2].start]=='"'?1:0),
-          m[2].end-m[2].start-(buf[m[2].start]=='"'?2:0)
-        );
+        if(m[2].end!=m[2].start)
+        {
+          value.assign
+          (
+            buf+m[2].start+(buf[m[2].start]=='"'?1:0),
+            m[2].end-m[2].start-(buf[m[2].start]=='"'?2:0)
+          );
+        }else
+        {
+          value="";
+        }
         __trace2__("DIRECT: found template param %s=%s",name.c_str(),value.c_str());
         if(f)
         {
