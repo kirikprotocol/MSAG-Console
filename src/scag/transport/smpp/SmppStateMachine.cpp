@@ -325,8 +325,12 @@ void StateMachine::processSubmit(SmppCommand& cmd)
   if(st.status != scag::re::STATUS_OK)
   {
     smsc_log_info(log,"Submit: RuleEngine returned result=%d",st.result);
-    SubmitResp(cmd, st.temporal ? smsc::system::Status::RX_T_APPN :
-                                  smsc::system::Status::RX_P_APPN);
+    if(!st.result)
+    {
+        smsc_log_warn(log, "Submit: Rule failed and no error(zero rezult) returned");        
+        st.result = smsc::system::Status::SYSERR;
+    }
+    SubmitResp(cmd, st.result);        
     scag::sessions::SessionManager::Instance().releaseSession(session);
     registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, st.result);
     return;
@@ -555,8 +559,12 @@ void StateMachine::processDelivery(SmppCommand& cmd)
   if(st.status != scag::re::STATUS_OK)
   {
     smsc_log_info(log,"Delivery: RuleEngine returned result=%d",st.result);
-    DeliveryResp(cmd, st.temporal? smsc::system::Status::RX_T_APPN :
-                                   smsc::system::Status::RX_P_APPN);
+    if(!st.result)
+    {
+        smsc_log_warn(log, "Delivery: Rule failed and no error(zero rezult) returned");        
+        st.result = smsc::system::Status::SYSERR;
+    }
+    DeliveryResp(cmd, st.result);        
     scag::sessions::SessionManager::Instance().releaseSession(session);
     registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, st.temporal? smsc::system::Status::RX_T_APPN : smsc::system::Status::RX_P_APPN);
     return;
@@ -732,8 +740,6 @@ void StateMachine::processDataSm(SmppCommand& cmd)
       smsc_log_debug(log, "Datasm:%s UMR=%d, USSD_OP=%d. %s(%s)->%s", rcnt ? "(redirected)" : "", umr, ussd_op,
         sms.getOriginatingAddress().toString().c_str(), src->getSystemId(), sms.getDestinationAddress().toString().c_str());      
 
-      scag::sessions::CSessionKey key;
-      scag::sessions::SessionPtr session;
       key.abonentAddr = (src->info.type == etService) ?
              sms.getDestinationAddress() : sms.getOriginatingAddress();
       if (ussd_op < 0) // SMPP, No USSD specific flags
@@ -777,8 +783,12 @@ void StateMachine::processDataSm(SmppCommand& cmd)
   if(st.status != scag::re::STATUS_OK)
   {
     smsc_log_info(log,"DataSm: RuleEngine returned result=%d",st.result);
-    DataResp(cmd, st.temporal? smsc::system::Status::RX_T_APPN :
-                               smsc::system::Status::RX_P_APPN);
+    if(!st.result)
+    {
+        smsc_log_warn(log, "DataSm: Rule failed and no error(zero rezult) returned");        
+        st.result = smsc::system::Status::SYSERR;
+    }
+    DataResp(cmd, st.result);        
     scag::sessions::SessionManager::Instance().releaseSession(session);
     registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, st.temporal? smsc::system::Status::RX_T_APPN : smsc::system::Status::RX_P_APPN);
     return;
