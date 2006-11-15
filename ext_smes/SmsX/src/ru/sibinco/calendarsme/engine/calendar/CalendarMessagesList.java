@@ -32,6 +32,14 @@ final class CalendarMessagesList {
     newMessageNotifiers.add(obj);
   }
 
+  public boolean canAdd(final CalendarMessage obj) {
+    synchronized(maxDate) {
+      if (obj.getSendDate().after(maxDate))
+        return false;
+    }
+    return true;
+  }
+
   public boolean add(final CalendarMessage obj) {
     synchronized(maxDate) {
       if (obj.getSendDate().after(maxDate))

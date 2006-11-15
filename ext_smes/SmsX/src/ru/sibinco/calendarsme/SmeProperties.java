@@ -1,6 +1,7 @@
 package ru.sibinco.calendarsme;
 
 import ru.sibinco.calendarsme.utils.Utils;
+import ru.sibinco.calendarsme.engine.timezones.Timezones;
 
 import java.util.Properties;
 
@@ -101,5 +102,6 @@ public class SmeProperties {
     new General();
     new SecretMessage();
     new SecretUser();
+    Timezones.init();
   }
 }

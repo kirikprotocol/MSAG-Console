@@ -36,6 +36,9 @@ public class Timezones {
     }
   }
 
+  public static void init() {
+  }
+
   private final Collection timezones;
   private final String defaultTimezone;
 

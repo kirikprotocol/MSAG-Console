@@ -48,10 +48,8 @@ final class CalendarRequestProcessor {
       final Date sendDate = (parseResult.getType() == CalendarRequestParser.ATF_REQUEST) ? parseResult.getDate() :
         changeDateAccordingTimezone(message.getSourceAddress(), parseResult.getDate());
 
-      processMessage(new CalendarMessage(message.getSourceAddress(), message.getDestinationAddress(), sendDate, parseResult.getMessage()));
+      processMessage(message, new CalendarMessage(message.getSourceAddress(), message.getDestinationAddress(), sendDate, parseResult.getMessage()));
 
-      sendResponse(message, Data.ESME_ROK);
-      
     } catch (CalendarRequestParser.WrongMessageFormatException e) {
       return false;
 
@@ -85,14 +83,17 @@ final class CalendarRequestProcessor {
     return calend.getTime();
   }
 
-  private void processMessage(final CalendarMessage calendarMessage) throws ProcessingException {
+  private void processMessage(final Message message, final CalendarMessage calendarMessage) throws ProcessingException {
     Log.info("Message parsing ok: send time = " + calendarMessage.getSendDate() + ", message = " + calendarMessage.getMessage());
 
     Log.info("Trying to put message into messages list...");
-    if (messagesList.add(calendarMessage))
+    if (messagesList.canAdd(calendarMessage)) {
+      sendResponse(message, Data.ESME_ROK);
+      messagesList.add(calendarMessage);
       Log.info("Message puted into calendar engine messages list");
-    else {
+    } else {
       insertMessageToDB(calendarMessage);
+      sendResponse(message, Data.ESME_ROK);
       Log.info("Message date is out of working interval. Message puted into DB");
     }
   }

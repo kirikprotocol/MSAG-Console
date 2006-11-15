@@ -84,7 +84,7 @@ public class SecretRequestProcessor {
     return true;
   }
 
-  private void enableService(final Message incomingMessage, final String password) throws MessageEncoder.EncodeException {
+  private void enableService(final Message incomingMessage, final String password)  {
     final String abonent = incomingMessage.getSourceAddress();
     String responseMessageText;
 
@@ -92,7 +92,7 @@ public class SecretRequestProcessor {
       new SecretUser(abonent, password).save();
       Log.info("Abonent " + abonent + " registered in DB");
       responseMessageText = SmeProperties.General.SECRET_ENGINE_REGISTER_OK_MESSAGE;
-    } catch (SQLException e) {
+    } catch (Exception e) {
       Log.error("Can't register abonent " + abonent, e);
       responseMessageText = SmeProperties.General.SECRET_ENGINE_REGISTER_ERROR_MESSAGE;
     }
@@ -122,7 +122,7 @@ public class SecretRequestProcessor {
     sendResponse(incomingMessage, Data.ESME_ROK);
     sendMessage(incomingMessage.getDestinationAddress(), incomingMessage.getSourceAddress(), responseMessage);
   }
-
+       
   private void addMessageToDB(final Message incomingMessage, final String message) throws SQLException, ReceiverNotRegisteredException, SenderNotRegisteredException {
     final String fromAbonent = incomingMessage.getSourceAddress();
     final String toAbonent = incomingMessage.getDestinationAddress();
@@ -134,8 +134,9 @@ public class SecretRequestProcessor {
     final SecretMessage secretMessage = new SecretMessage(toAbonent, message, fromAbonent);
     secretMessage.save();
 
+    final String informMessage = prepareInformMessage(toAbonent, fromAbonent);
     sendResponse(incomingMessage, Data.ESME_ROK);
-    sendMessage(smeAddress, toAbonent, prepareInformMessage(toAbonent, fromAbonent));
+    sendMessage(smeAddress, toAbonent, informMessage);
   }
 
   private void sendMessagesFromDB(final Message incomingMessage, final String password) throws SQLException, MessageEncoder.EncodeException, IncorrectPasswordException, ReceiverNotRegisteredException {
@@ -155,9 +156,10 @@ public class SecretRequestProcessor {
         final SecretMessage msg = (SecretMessage)iter.next();
         msg.remove();
 
+        final String deliveryReport = prepareDeliveryReport(toAbonent, msg.getSendDate());
         sendResponse(incomingMessage, Data.ESME_ROK);
         sendMessage(msg.getFromNumber(), toAbonent, msg.getMessage());
-        sendMessage(smeAddress, msg.getFromNumber(), prepareDeliveryReport(toAbonent, msg.getSendDate()));
+        sendMessage(smeAddress, msg.getFromNumber(), deliveryReport);
       }
     }
   }

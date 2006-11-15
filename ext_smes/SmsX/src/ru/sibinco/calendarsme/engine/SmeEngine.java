@@ -50,8 +50,7 @@ public class SmeEngine extends Service {
         Log.error("Unknown message format!");
         Log.error("Message from abonent: " + message.getSourceAddress() + "; to abonent: " + message.getDestinationAddress() + "; message: " + message.getMessageString());
         sendResponse(message, Data.ESME_RX_P_APPN);
-      } else
-        sendResponse(message, Data.ESME_ROK);
+      } 
     }
   }
 
