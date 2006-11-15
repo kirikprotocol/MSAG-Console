@@ -440,29 +440,27 @@ bool Billing::onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr)
         return true;
     }
 
-    //here goes: btPrepaid or btUnknown or btPostpaid(SMSX)
     if (!(abPolicy = _cfg.policies->getPolicy(&abNumber))) {
-        smsc_log_error(logger, "%s: no policy set for %s",
-                           _logId, abNumber.toString().c_str());
-        return ConfigureSCFandCharge(abRec.ab_type, abRec.getSCFinfo());
-    }
-
-    smsc_log_debug(logger, "%s: using policy: %s", _logId, abPolicy->ident);
-    if (abRec.getSCFinfo() && (abRec.ab_type == smsc::inman::cache::btPrepaid))
-        return ConfigureSCFandCharge(abRec.ab_type, abRec.getSCFinfo());
-
-    // configure SCF by quering provider
-    IAProviderITF *prvd = abPolicy->getIAProvider(logger);
-    if (prvd) {
-        if (prvd->startQuery(abNumber, this)) {
-            providerQueried = true;
-            StartTimer(_cfg.abtTimeout);
-            return true; //execution will continue in onIAPQueried() by another thread.
+        smsc_log_error(logger, "%s: no policy set for %s", _logId, 
+                       abNumber.toString().c_str());
+    } else {
+        smsc_log_debug(logger, "%s: using policy: %s", _logId, abPolicy->ident);
+        if ((abType == smsc::inman::cache::btUnknown)
+            || ((abType == smsc::inman::cache::btPrepaid) && !abRec.getSCFinfo())) {
+            // configure SCF by quering provider first
+            IAProviderITF *prvd = abPolicy->getIAProvider(logger);
+            if (prvd) {
+                if (prvd->startQuery(abNumber, this)) {
+                    providerQueried = true;
+                    StartTimer(_cfg.abtTimeout);
+                    return true; //execution will continue in onIAPQueried() by another thread.
+                }
+                smsc_log_error(logger, "%s: startIAPQuery(%s) failed!", _logId,
+                               abNumber.getSignals());
+            }
         }
-        smsc_log_error(logger, "%s: startIAPQuery(%s) failed!",
-                       _logId, abNumber.getSignals());
     }
-    return ConfigureSCFandCharge(abRec.ab_type, NULL);
+    return ConfigureSCFandCharge(abRec.ab_type, abRec.getSCFinfo());
 }
 
 //here goes: btPrepaid or btUnknown or btPostpaid(SMSX)
@@ -475,7 +473,7 @@ bool Billing::ConfigureSCFandCharge(AbonentBillType ab_type, const MAPSCFinfo * 
         //lookup policy for extra SCF parms (serviceKey, RPC lists)
         if (abPolicy)
             abPolicy->getSCFparms(&abScf);
-    } else if (abPolicy) {  //attempt to determine SCF params
+    } else if (abPolicy) {  //attempt to determine SCF params from config.xml
         if (abType == smsc::inman::cache::btUnknown) {
             INScfCFG * pin = NULL;
             if (abPolicy->scfMap.size() == 1) { //single IN serving, look for postpaidRPC
@@ -490,7 +488,7 @@ bool Billing::ConfigureSCFandCharge(AbonentBillType ab_type, const MAPSCFinfo * 
                                 " abonent type/SCF, switching to CDR mode", _logId);
                 postpaidBill = true;
             }
-        } else if ((abType == smsc::inman::cache::btPrepaid) || cdr._smsXSrvs) {
+        } else if (abType == smsc::inman::cache::btPrepaid) {
             if (abPolicy->scfMap.size() == 1) { //single IN serving
                 abScf = *((*(abPolicy->scfMap.begin())).second);
             } else {
@@ -498,7 +496,7 @@ bool Billing::ConfigureSCFandCharge(AbonentBillType ab_type, const MAPSCFinfo * 
                                 " abonent SCF, switching to CDR mode", _logId);
                 postpaidBill = true;
             }
-        } else
+        } else //btPostpaid
             postpaidBill = true;
     } else
         postpaidBill = true;
@@ -699,7 +697,7 @@ void Billing::onDPSMSResult(unsigned char rp_cause/* = 0*/)
     ChargeSmsResult::ChargeSmsResult_t  chgRes = ChargeSmsResult::CHARGING_POSSIBLE;
 
     if (!rp_cause) {    //ContinueSMS
-        if (!cdr._smsXSrvs && (abType != smsc::inman::cache::btPrepaid))  //Update abonents cache
+        if (abType != smsc::inman::cache::btPrepaid)  //Update abonents cache
             _cfg.abCache->setAbonentInfo(abNumber, abType = smsc::inman::cache::btPrepaid,
                                          0, &abScf.scf);
     } else {            //ReleaseSMS
@@ -710,7 +708,7 @@ void Billing::onDPSMSResult(unsigned char rp_cause/* = 0*/)
             if ((*it) == rp_cause) {
                 postpaidBill = true;
                 //Update abonents cache
-                if (!cdr._smsXSrvs && (abType != smsc::inman::cache::btPostpaid))
+                if (abType != smsc::inman::cache::btPostpaid)
                     _cfg.abCache->setAbonentInfo(abNumber, abType = smsc::inman::cache::btPostpaid);
                 break;
             }
