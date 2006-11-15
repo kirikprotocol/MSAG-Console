@@ -1199,29 +1199,28 @@ StateType StateMachine::submit(Tuple& t)
   int extrabit=ExtraInfo::getInstance().checkExtraService(*sms,xsi);
   if(extrabit)
   {
-    info2(smsLog,"EXTRA: service with bit=%x detected for abonent %s",xsi.serviceBit,sms->getOriginatingAddress().toString().c_str());
+    info2(smsLog,"EXTRA: service with bit=%x detected for abonent %s",extrabit,sms->getOriginatingAddress().toString().c_str());
   }
-  if((srcprof.subscription&EXTRA_NICK) && (srcprof.hide==HideOption::hoEnabled || xsi.serviceBit==EXTRA_NICK))
+  if((srcprof.subscription&EXTRA_NICK) && (srcprof.hide==HideOption::hoEnabled || extrabit==EXTRA_NICK))
   {
     sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)|EXTRA_NICK);
     sms->setIntProperty(Tag::SMSC_HIDE,HideOption::hoEnabled);
-    info2(smsLog,"EXTRA: smsnick for abonent %s",sms->getOriginatingAddress().toString().c_str());
+    debug2(smsLog,"EXTRA: smsnick for abonent %s",sms->getOriginatingAddress().toString().c_str());
   }
-  if((srcprof.subscription&EXTRA_FLASH) || xsi.serviceBit==EXTRA_FLASH)
+  if((srcprof.subscription&EXTRA_FLASH) || extrabit==EXTRA_FLASH)
   {
     sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)|EXTRA_FLASH);
-    sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,1);
-    info2(smsLog,"EXTRA: smsflash for abonent %s",sms->getOriginatingAddress().toString().c_str());
+    sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,3);
+    debug2(smsLog,"EXTRA: smsflash for abonent %s",sms->getOriginatingAddress().toString().c_str());
   }
   bool noDestChange=false;
   if(extrabit && xsi.diverted)
   {
-    sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,xsi.serviceBit);
+    sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,extrabit);
     sms->setIntProperty(Tag::SMSC_HIDE,HideOption::hoDisabled);
     sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,0);
-    sms->setIntProperty(Tag::SMPP_ESM_CLASS,(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&~3)|2);
     dst=xsi.divertAddr;
-    info2(smsLog,"EXTRA: divert for abonent %s to %s",sms->getOriginatingAddress().toString().c_str(),xsi.divertAddr.toString().c_str());
+    debug2(smsLog,"EXTRA: divert for abonent %s to %s",sms->getOriginatingAddress().toString().c_str(),xsi.divertAddr.toString().c_str());
     noDestChange=true;
   }
 #endif
@@ -1935,22 +1934,16 @@ StateType StateMachine::submit(Tuple& t)
     // Override delivery mode if specified in config and default mode in sms
     //
 
-    if( ri.deliveryMode != smsc::sms::SMSC_DEFAULT_MSG_MODE)
+    if( ri.deliveryMode != smsc::sms::SMSC_DEFAULT_MSG_MODE )
     {
-      if(sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT))
+      int esmcls = sms->getIntProperty( Tag::SMPP_ESM_CLASS );
+      // following if removed at 25.09.2006 by request of customers
+      //if( (esmcls&0x3) == smsc::sms::SMSC_DEFAULT_MSG_MODE )
       {
-        smsc_log_warn(smsLog,"Attempt to send multipart message in forward mode with route '%s'",ri.routeId.c_str());
-      }else
-      {
-        int esmcls = sms->getIntProperty( Tag::SMPP_ESM_CLASS );
-        // following if removed at 25.09.2006 by request of customers
-        //if( (esmcls&0x3) == smsc::sms::SMSC_DEFAULT_MSG_MODE )
-        {
-          // allow override
-          sms->setIntProperty( Tag::SMPP_ESM_CLASS, (esmcls&~0x03)|(ri.deliveryMode&0x03) );
-          isDatagram=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==1;
-          isTransaction=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2;
-        }
+        // allow override
+        sms->setIntProperty( Tag::SMPP_ESM_CLASS, (esmcls&~0x03)|(ri.deliveryMode&0x03) );
+        isDatagram=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==1;
+        isTransaction=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2;
       }
     }
 
@@ -2399,17 +2392,11 @@ StateType StateMachine::submitChargeResp(Tuple& t)
         if(sms->lastResult!=Status::OK)
         {
           sm->smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
-#ifdef SNMP
-          SnmpCounter::getInstance().incCounter(SnmpCounter::cntRejected,sms->getSourceSmeId());
-#endif
         }else
         {
           if((sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x1)//datagram mode
           {
             sm->smsc->registerStatisticalEvent(StatEvents::etSubmitOk,sms);
-#ifdef SNMP
-            SnmpCounter::getInstance().incCounter(SnmpCounter::cntAccepted,sms->getSourceSmeId());
-#endif
           }
         }
         if((sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x1 ||
@@ -2472,9 +2459,6 @@ StateType StateMachine::submitChargeResp(Tuple& t)
       src_proxy->getSystemId(),
       sms->getDestinationSmeId()
     );
-#ifdef SNMP
-    incSnmpCounterForError(Status::SMENOTCONNECTED,sms->getDestinationSmeId());
-#endif
     try{
       //time_t now=time(NULL);
       Descriptor d;
@@ -2498,9 +2482,6 @@ StateType StateMachine::submitChargeResp(Tuple& t)
   }catch(...)
   {
     sms->setLastResult(Status::SMENOTCONNECTED);
-#ifdef SNMP
-    incSnmpCounterForError(Status::SMENOTCONNECTED,sms->getSourceSmeId());
-#endif
     try{
       //time_t now=time(NULL);
       Descriptor d;
@@ -3186,9 +3167,6 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     sms.getDestinationAddress().toString(bufdst,sizeof(bufdst));
     smsc_log_warn(smsLog, "FWD: msgId=%lld sme is not connected(%s->%s(%s))",t.msgId,bufsrc,bufdst,ri.smeSystemId.c_str());
     sms.setLastResult(Status::SMENOTCONNECTED);
-#ifdef SNMP
-    incSnmpCounterForError(Status::SMENOTCONNECTED,ri.smeSystemId.c_str());
-#endif
     smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
     try{
       sendNotifyReport(sms,t.msgId,"destination unavailable");
@@ -3289,9 +3267,6 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
       Descriptor d;
       __trace__("FORWARD: change state to enroute");
       sms.setLastResult(Status::SMENOTCONNECTED);
-#ifdef SNMP
-    incSnmpCounterForError(Status::SMENOTCONNECTED,ri.smeSystemId.c_str());
-#endif
       smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
       changeSmsStateToEnroute(sms,t.msgId,d,Status::SMENOTCONNECTED,rescheduleSms(sms));
 
@@ -4031,9 +4006,6 @@ StateType StateMachine::deliveryResp(Tuple& t)
         {
           __trace__("CONCAT: failed to send intermediate notification");
         }
-#ifdef SNMP
-        incSnmpCounterForError(Status::SMENOTCONNECTED,ri.smeSystemId.c_str());
-#endif
         try{
           //time_t now=time(NULL);
           Descriptor d;
@@ -4511,16 +4483,9 @@ StateType StateMachine::alert(Tuple& t)
   sms.getDestinationAddress().toString(bufdst,sizeof(bufdst));
   info2(smsLog, "ALERT: delivery timed out(%s->%s), msgId=%lld",bufsrc,bufdst,t.msgId);
   smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
-#ifdef SNMP
-  incSnmpCounterForError(Status::DELIVERYTIMEDOUT,sms.getDestinationSmeId());
-#endif
-
   if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==1 ||
      (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2)
   {
-#ifdef SNMP
-    SnmpCounter::getInstance().incCounter(SnmpCounter::cntRejected,sms.getDestinationSmeId());
-#endif
     sms.state=EXPIRED;
     if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2)
     {
