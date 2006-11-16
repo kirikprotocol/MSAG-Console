@@ -800,6 +800,10 @@ namespace cfg{
  LimitType defaultLimitType=ltDay;
  int defaultLimitValue=10;
  bool sendSuccessAnswer=true;
+
+ bool useTransformRegexp=false;
+ RegExp reTransform;
+ std::string transformResult;
 };
 
 int stopped=0;
@@ -1348,6 +1352,42 @@ void IncUsageCounter(const string& address)
 }
 */
 
+std::string RxSubst(const std::string& src,const std::string& pat,SMatch* m,int n)
+{
+  std::string result;
+  for(int i=0;i<pat.length();i++)
+  {
+    if(pat[i]!='$')
+    {
+      result+=pat[i];
+    }
+    else
+    {
+      if(i<pat.length()+1)
+      {
+        if(!isdigit(pat[i+1]))
+        {
+          result+=pat[i+1];
+          i++;
+        }
+        else
+        {
+          int idx,sz;
+          if(sscanf(pat.c_str()+i+1,"%d%n",&idx,&sz)==1)
+          {
+            if(idx<n)
+            {
+              result+=src.substr(m[idx].start,m[idx].end-m[idx].start);
+            }
+            i+=sz;
+          }
+        }
+      }
+    }
+  }
+  return result;
+}
+
 int ProcessMessage(const char *msg,int msglen)
 {
   string line,name,value,from,to;
@@ -1392,6 +1432,18 @@ int ProcessMessage(const char *msg,int msglen)
 
   string dstUser=to.substr(0,to.find('@'));
   toLower(dstUser);
+
+  if(cfg::useTransformRegexp)
+  {
+    SMatch m[10];
+    int n=10;
+    if(cfg::reTransform.Match(dstUser.c_str(),m,n))
+    {
+      __trace2__("performing transformation for username %s",dstUser.c_str());
+      dstUser=RxSubst(dstUser,cfg::transformResult,m,n);
+      __trace2__("transformation result:%s",dstUser.c_str());
+    }
+  }
 
   if(!storage.getProfileByEmail(dstUser.c_str(),p))
   {
@@ -1778,6 +1830,21 @@ int main(int argc,char* argv[])
   cfg::protocolId=cfgman.getInt("smpp.protocolId");
 
   cfg::maildomain=cfgman.getString("mail.domain");
+
+  try{
+    const char* re=cfgman.getString("mail.userNameTransformRegexp");
+    cfg::transformResult=cfgman.getString("mail.userNameTransformResult");
+    if(!cfg::reTransform.Compile(re,OP_OPTIMIZE))
+    {
+      __warning2__("Username Transformation Regexp compilation error(%d). Transformation disabled!",cfg::reTransform.LastError());
+    }else
+    {
+      cfg::useTransformRegexp=true;
+    }
+  }catch(std::exception& e)
+  {
+    __warning2__("Missing optional parameter:%s",e.what());
+  }
 
   AdminCommandsListener acl;
 
