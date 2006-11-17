@@ -1539,6 +1539,20 @@ int ProcessMessage(const char *msg,int msglen)
   SMS sms;
   sms.setOriginatingAddress(cfg::sourceAddress.c_str());
 
+  if(noProfile)
+  {
+    bool numberOk=true;
+    for(int i=0;i<dstUser.length();i++)
+    {
+      if(!isdigit(dstUser[i]))
+      {
+        numberOk=false;
+        break;
+      }
+    }
+    if(!numberOk)return StatusCodes::STATUS_CODE_NOUSER;
+  }
+
   string fwd;
   string dst=noProfile?'+'+dstUser:MapEmailToAddress(dstUser,fwd);
   if(fwd.length())
