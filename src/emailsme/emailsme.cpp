@@ -1427,6 +1427,11 @@ int ProcessMessage(const char *msg,int msglen)
     break;
   }
 
+  if(from.length()==0 || to.length()==0)
+  {
+    return StatusCodes::STATUS_CODE_INVALIDMSG;
+  }
+
   AbonentProfile p;
   bool noProfile=true;
 
