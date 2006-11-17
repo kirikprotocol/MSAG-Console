@@ -165,7 +165,7 @@ int main(int argc,char* argv[])
   switch(code)
   {
     case StatusCodes::STATUS_CODE_UNKNOWNERROR:
-    case StatusCodes::STATUS_CODE_INVALIDMSG:return(EX_IOERR);
+    case StatusCodes::STATUS_CODE_INVALIDMSG://return(EX_IOERR);
     case StatusCodes::STATUS_CODE_NOUSER:return(EX_NOUSER);
     case StatusCodes::STATUS_CODE_TEMPORARYERROR:return(EX_TEMPFAIL);
   }
