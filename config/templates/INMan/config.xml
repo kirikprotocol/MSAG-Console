@@ -1,9 +1,11 @@
+<!-- ERASE THE NEXT STRING BEFORE DEPLOYING -->
 <!--  "$Id$" -->
+
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
 
 <!-- INMan interacts the IN node -->
-<config> <!-- InMan 0.5.0. and higher -->
+<config> <!-- InMan 0.5.3. and higher -->
   <param name="version" type="string">0.5.0</param>   <!-- config version -->
   <param name="host" type="string">@inman.host@</param>  <!-- InMan service host -->
   <param name="port" type="int">@inman.port@</param>        <!-- InMan service port -->
@@ -122,6 +124,8 @@
               <param name="maxQueries" type="int">500</param>  <!--  max allowed simultaneous HLR queries -->
               <param name="mapTimeout" type="int">20</param>   <!-- timeout on MAP operations, units: seconds, max: 65535, default 20 -->
               <param name="msrnTimeout" type="int">300</param>  <!--  msrnExpiration timeout, units: secs -->
+              <!-- OPTIONAL PARAMETERS follow:: -->
+              <param name="fakeSsn" type="int">8</param>    <!--  ssn to substitute in TCAP dialog org addr -->
           </section>
       </section>
 
