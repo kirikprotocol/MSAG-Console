@@ -32,6 +32,12 @@ extern "C" IAProviderCreatorITF *
     if (!(cfg.ownSsn = (UCHAR_T)hlrCfg->getInt("ownSsn")))
         throw ConfigException("'ownSsn' is not set!", cstr);
 
+    UCHAR_T tmp = 0;
+    try { tmp = (UCHAR_T)hlrCfg->getInt("fakeSsn"); }
+    catch (ConfigException & exc) { }
+    if (tmp && (tmp != cfg.ownSsn))
+        cfg.fakeSsn = tmp;
+
     try { cfg.max_queries = (unsigned)hlrCfg->getInt("maxQueries");
     } catch (ConfigException & exc) { }
     if (!cfg.max_queries) {
@@ -94,7 +100,7 @@ IAProviderITF * IAProviderCreatorSRI::create(Logger * use_log)
             return NULL;
         }
         if (!(cfg.qryCfg.mapSess = session->newMAsession(cfg.owdAddr.toString().c_str(),
-            ACOID::id_ac_map_locInfoRetrieval_v3, 6))) {
+            ACOID::id_ac_map_locInfoRetrieval_v3, 6, cfg.fakeSsn))) {
             smsc_log_error(use_log, "Unable to init MAP session: %s -> %u:*",
                                   cfg.owdAddr.toString().c_str(), 6);
             return NULL;
@@ -110,8 +116,12 @@ IAProviderITF * IAProviderCreatorSRI::create(Logger * use_log)
 
 void  IAProviderCreatorSRI::logConfig(Logger * use_log) const
 {
-    smsc_log_info(use_log, "iapSRI: GT=%s, SSN=%d",
-                  cfg.owdAddr.getSignals(), (unsigned)cfg.ownSsn);
+    if (cfg.fakeSsn)
+        smsc_log_info(use_log, "iapSRI: GT=%s, SSN=%u(fake=%u)",
+                        cfg.owdAddr.getSignals(), (unsigned)cfg.ownSsn, (unsigned)cfg.fakeSsn);
+    else
+        smsc_log_info(use_log, "iapSRI: GT=%s, SSN=%u",
+                        cfg.owdAddr.getSignals(), (unsigned)cfg.ownSsn);
     if (cfg.qryCfg.mapSess)
         smsc_log_info(use_log, "iapSRI: TCMA[%u:%u]",
                       (unsigned)cfg.ownSsn, cfg.qryCfg.mapSess->getUID());

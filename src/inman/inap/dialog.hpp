@@ -127,7 +127,7 @@ protected:
     friend class TCSessionAC;
     Dialog(const std::string & sess_uid, USHORT_T dlg_id, USHORT_T msg_user_id,
            ACOID::DefinedOIDidx dialog_ac_idx, const SCCP_ADDRESS_T & loc_addr,
-           Logger * uselog = NULL);
+           UCHAR_T sender_ssn = 0, Logger * uselog = NULL);
     //reinitializes Dialog to be reused with other id and remote address
     void reset(USHORT_T new_id, const SCCP_ADDRESS_T * rmt_addr);
 

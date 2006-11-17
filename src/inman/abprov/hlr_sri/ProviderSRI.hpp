@@ -13,6 +13,8 @@
  *      <param name="maxQueries" type="int">500</param>  <!--  max allowed simultaneous HLR queries -->
  *      <param name="mapTimeout" type="int">20</param>   <!-- timeout on MAP operations, units: seconds, max: 65535, default 20 -->
  *      <param name="msrnTimeout" type="int">300</param>  <!--  msrnExpiration timeout, units: secs -->
+ *      <!--  OPTIONAL PARAMETERS -->
+ *      <param name="fakeSsn" type="int">FAKE_SSN</param> <!--  ssn to substitute in TCAP dialog org addr -->
  *  </section>
  * ************************************************************************** */
 #ifndef SMSC_INMAN_IAPROVIDER_HLR_SRI_HPP
@@ -91,6 +93,7 @@ struct IAPCreatorSRI_CFG {
     IAPQuerySRI_CFG qryCfg;
     TonNpiAddress   owdAddr;
     UCHAR_T         ownSsn;
+    UCHAR_T         fakeSsn;
     unsigned        max_queries;
     unsigned        init_threads;
     union {
@@ -101,7 +104,7 @@ struct IAPCreatorSRI_CFG {
         } s;
     } defVal;
 
-    IAPCreatorSRI_CFG() { max_queries = init_threads = defVal.i = 0; }
+    IAPCreatorSRI_CFG() { max_queries = init_threads = defVal.i = fakeSsn = 0; }
 };
 
 class IAProviderCreatorSRI: public IAProviderCreatorITF {

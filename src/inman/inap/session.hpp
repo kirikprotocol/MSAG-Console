@@ -44,18 +44,22 @@ public:
     USHORT_T    getMsgUserId(void) const { return msgUserId; }
 
     // -- TCAP Sessions factory methods -- //
-    TCSessionMR * newMRsession(const char* own_addr, ACOID::DefinedOIDidx dlg_ac_idx);
-    TCSessionMR * newMRsession(TonNpiAddress & onpi, ACOID::DefinedOIDidx dlg_ac_idx);
+    //NOTE: fake_ssn is substituted in TCAP dialog originating address,
+    //but sending still perfomed by behalf on SSN from owning SSNSession
+    TCSessionMR * newMRsession(const char* own_addr, ACOID::DefinedOIDidx dlg_ac_idx,
+                               UCHAR_T fake_ssn = 0);
+    TCSessionMR * newMRsession(TonNpiAddress & onpi, ACOID::DefinedOIDidx dlg_ac_idx,
+                               UCHAR_T fake_ssn = 0);
 
     TCSessionMA * newMAsession(const char* own_addr, ACOID::DefinedOIDidx dlg_ac_idx,
-                                UCHAR_T rmt_ssn);
+                                UCHAR_T rmt_ssn, UCHAR_T fake_ssn = 0);
     TCSessionMA * newMAsession(TonNpiAddress & onpi, ACOID::DefinedOIDidx dlg_ac_idx,
-                                UCHAR_T rmt_ssn);
+                                UCHAR_T rmt_ssn, UCHAR_T fake_ssn = 0);
 
     TCSessionSR * newSRsession(const char* own_addr, ACOID::DefinedOIDidx dlg_ac_idx,
-                                UCHAR_T rmt_ssn, const char* rmt_addr);
+                                UCHAR_T rmt_ssn, const char* rmt_addr, UCHAR_T fake_ssn = 0);
     TCSessionSR * newSRsession(TonNpiAddress & onpi, ACOID::DefinedOIDidx dlg_ac_idx,
-                                UCHAR_T rmt_ssn, TonNpiAddress & rnpi);
+                                UCHAR_T rmt_ssn, TonNpiAddress & rnpi, UCHAR_T fake_ssn = 0);
     
     // -- TCAP Dialogs factory methods -- //
     Dialog* findDialog(USHORT_T did);
@@ -136,7 +140,9 @@ public:
 
 protected:
     friend class SSNSession;
-    TCSessionAC(USHORT_T uid, SSNSession * owner,
+    //NOTE: fake_ssn is substituted in TCAP dialog originating address,
+    //but sending still perfomed by behalf on SSN from owning SSNSession
+    TCSessionAC(USHORT_T uid, SSNSession * owner, UCHAR_T fake_ssn,
                 const TonNpiAddress & own_addr, ACOID::DefinedOIDidx dlg_ac_idx);
     virtual ~TCSessionAC();
 
@@ -151,6 +157,7 @@ protected:
     USHORT_T        tcUID;
     TonNpiAddress   ownAdr;
     SCCP_ADDRESS_T  locAddr;
+    UCHAR_T         senderSsn;
     ACOID::DefinedOIDidx  ac_idx; //default APPLICATION-CONTEXT index for dialogs
     Mutex           dlgGrd;
     TCDialogsLIST   pool;
@@ -165,7 +172,7 @@ public:
 
 protected:
     friend class SSNSession; 
-    TCSessionMR(USHORT_T uid, SSNSession * owner,
+    TCSessionMR(USHORT_T uid, SSNSession * owner, UCHAR_T fake_ssn,
                 const TonNpiAddress & own_addr, ACOID::DefinedOIDidx dlg_ac_idx);
     ~TCSessionMR() { }
 };
@@ -179,7 +186,7 @@ public:
 
 protected:
     friend class SSNSession; 
-    TCSessionMA(USHORT_T uid, SSNSession * owner,
+    TCSessionMA(USHORT_T uid, SSNSession * owner, UCHAR_T fake_ssn,
                 const TonNpiAddress & own_addr, ACOID::DefinedOIDidx dlg_ac_idx,
                 UCHAR_T rmt_ssn);
     ~TCSessionMA() { }
@@ -196,7 +203,7 @@ public:
 
 protected:
     friend class SSNSession; 
-    TCSessionSR(USHORT_T uid, SSNSession * owner,
+    TCSessionSR(USHORT_T uid, SSNSession * owner, UCHAR_T fake_ssn,
                 const TonNpiAddress & own_addr, ACOID::DefinedOIDidx dlg_ac_idx,
                 UCHAR_T rmt_ssn, const TonNpiAddress & rmt_addr);
     ~TCSessionSR() { }

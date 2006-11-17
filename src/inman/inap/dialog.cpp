@@ -19,14 +19,14 @@ namespace inap  {
 /////////////////////////////////////////////////////////////////////////////////////
 Dialog::Dialog(const std::string & sess_uid, USHORT_T dlg_id, USHORT_T msg_user_id,
                ACOID::DefinedOIDidx dialog_ac_idx, const SCCP_ADDRESS_T & loc_addr,
-               Logger * uselog/* = NULL*/)
+               UCHAR_T sender_ssn/* = 0*/, Logger * uselog/* = NULL*/)
   : logger(uselog), _tcSUId(sess_uid), _dId(dlg_id),  ownAddr(loc_addr)
   , qSrvc(EINSS7_I97TCAP_QLT_BOTH), priority(EINSS7_I97TCAP_PRI_HIGH_0)
   , _timeout(_DEFAULT_INVOKE_TIMER), _lastInvId(0)
   , _ac_idx(dialog_ac_idx), msgUserId(msg_user_id)
 {
     _state.value = 0;
-    dSSN = ownAddr.addr[1];
+    dSSN = sender_ssn ? sender_ssn : ownAddr.addr[1];
     if (!logger)
         logger = Logger::getInstance("smsc.inman.inap.Dialog");
     APP_CONTEXT_T * acPtr = (APP_CONTEXT_T *)ACOID::OIDbyIdx(dialog_ac_idx);

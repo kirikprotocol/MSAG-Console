@@ -4,7 +4,7 @@ static char const ident[] = "$Id$";
 #include "inman/common/adrutil.hpp"
 #include "inman/inap/session.hpp"
 #include "inman/inap/dialog.hpp"
-
+#include "inman/inap/dispatcher.hpp"
 using smsc::cvtutil::packSCCPAddress;
 using smsc::cvtutil::unpackSCCP2SSN_GT;
 
@@ -17,11 +17,12 @@ namespace inap  {
 /* ************************************************************************** *
  * class TCSessionAC implementation:
  * ************************************************************************** */
-TCSessionAC::TCSessionAC(USHORT_T uid, SSNSession * owner,
+TCSessionAC::TCSessionAC(USHORT_T uid, SSNSession * owner, UCHAR_T fake_ssn,
                 const TonNpiAddress & own_addr, ACOID::DefinedOIDidx dlg_ac_idx)
     : tcUID(uid), _owner(owner), ac_idx(dlg_ac_idx), ownAdr(own_addr)
 {
-    packSCCPAddress(&locAddr, ownAdr.getSignals(), _owner->getSSN());
+    senderSsn = _owner->getSSN();
+    packSCCPAddress(&locAddr, ownAdr.getSignals(), fake_ssn ? fake_ssn : senderSsn);
 }
 
 TCSessionAC::~TCSessionAC(void)
@@ -82,7 +83,8 @@ Dialog * TCSessionAC::initDialog(const SCCP_ADDRESS_T & rmt_addr)
             pDlg = *(pool.begin());
             pool.pop_front();
         } else
-            pDlg = new Dialog(sign, dId, _owner->getMsgUserId(), ac_idx, locAddr, NULL);
+            pDlg = new Dialog(sign, dId, _owner->getMsgUserId(), ac_idx,
+                              locAddr, senderSsn, NULL);
     }
     pDlg->reset(dId, &rmt_addr);
     _owner->markDialog(pDlg);
@@ -97,9 +99,9 @@ void TCSessionAC::toPool(Dialog * p_dlg)
 /* ************************************************************************** *
  * class TCSessionMR implementation:
  * ************************************************************************** */
-TCSessionMR::TCSessionMR(USHORT_T uid, SSNSession * owner,
+TCSessionMR::TCSessionMR(USHORT_T uid, SSNSession * owner, UCHAR_T fake_ssn,
                 const TonNpiAddress & own_addr, ACOID::DefinedOIDidx dlg_ac_idx)
-    : TCSessionAC(uid, owner, own_addr, dlg_ac_idx)
+    : TCSessionAC(uid, owner, fake_ssn, own_addr, dlg_ac_idx)
 {
     mkSignature(sign, owner->getSSN(), own_addr, dlg_ac_idx, 0, NULL);
 }
@@ -120,10 +122,10 @@ Dialog* TCSessionMR::openDialog(UCHAR_T rmt_ssn, const char* rmt_addr)
 /* ************************************************************************** *
  * class TCSessionMA implementation:
  * ************************************************************************** */
-TCSessionMA::TCSessionMA(USHORT_T uid, SSNSession * owner,
+TCSessionMA::TCSessionMA(USHORT_T uid, SSNSession * owner, UCHAR_T fake_ssn,
                 const TonNpiAddress & own_addr, ACOID::DefinedOIDidx dlg_ac_idx,
                 UCHAR_T rmt_ssn)
-    : TCSessionAC(uid, owner, own_addr, dlg_ac_idx)
+    : TCSessionAC(uid, owner, fake_ssn, own_addr, dlg_ac_idx)
     , rmtSSN(rmt_ssn)
 {
     mkSignature(sign, owner->getSSN(), own_addr, dlg_ac_idx, rmtSSN, NULL);
@@ -152,10 +154,10 @@ Dialog* TCSessionMA::openDialog(const TonNpiAddress & rnpi)
 /* ************************************************************************** *
  * class TCSessionSR implementation:
  * ************************************************************************** */
-TCSessionSR::TCSessionSR(USHORT_T uid, SSNSession * owner,
+TCSessionSR::TCSessionSR(USHORT_T uid, SSNSession * owner, UCHAR_T fake_ssn,
                 const TonNpiAddress & own_addr, ACOID::DefinedOIDidx dlg_ac_idx,
                 UCHAR_T rmt_ssn, const TonNpiAddress & rmt_addr)
-    : TCSessionAC(uid, owner, own_addr, dlg_ac_idx)
+    : TCSessionAC(uid, owner, fake_ssn, own_addr, dlg_ac_idx)
     , rmtNpi(rmt_addr)
 {
     mkSignature(sign, owner->getSSN(), own_addr, dlg_ac_idx, rmt_ssn, &rmtNpi);
@@ -232,15 +234,17 @@ SSNSession::~SSNSession()
     }
 }
 
-TCSessionMR * SSNSession::newMRsession(const char* own_addr, ACOID::DefinedOIDidx dlg_ac_idx)
+TCSessionMR * SSNSession::newMRsession(const char* own_addr, ACOID::DefinedOIDidx dlg_ac_idx,
+                                       UCHAR_T fake_ssn/* = 0*/)
 {
     TonNpiAddress   onpi;
     if (!onpi.fromText(own_addr))
         return NULL;
-    return newMRsession(onpi, dlg_ac_idx);
+    return newMRsession(onpi, dlg_ac_idx, fake_ssn);
 }
 
-TCSessionMR * SSNSession::newMRsession(TonNpiAddress & onpi, ACOID::DefinedOIDidx dlg_ac_idx)
+TCSessionMR * SSNSession::newMRsession(TonNpiAddress & onpi, ACOID::DefinedOIDidx dlg_ac_idx,
+                                       UCHAR_T fake_ssn/* = 0*/)
 {
     TCSessionMR *   pSess = NULL;
 
@@ -256,7 +260,7 @@ TCSessionMR * SSNSession::newMRsession(TonNpiAddress & onpi, ACOID::DefinedOIDid
         if (it != tcSessions.end())
             pSess = static_cast<TCSessionMR*>((*it).second);
         else {
-            pSess = new TCSessionMR(++lastTCSUId, this, onpi, dlg_ac_idx);
+            pSess = new TCSessionMR(++lastTCSUId, this, fake_ssn, onpi, dlg_ac_idx);
             tcSessions.insert(TCSessionsMAP::value_type(pSess->Signature(), pSess));
         }
     }
@@ -265,16 +269,16 @@ TCSessionMR * SSNSession::newMRsession(TonNpiAddress & onpi, ACOID::DefinedOIDid
 
 
 TCSessionMA * SSNSession::newMAsession(const char* own_addr, ACOID::DefinedOIDidx dlg_ac_idx,
-                            UCHAR_T rmt_ssn)
+                            UCHAR_T rmt_ssn, UCHAR_T fake_ssn/* = 0*/)
 {
     TonNpiAddress   onpi;
     if (!onpi.fromText(own_addr))
         return NULL;
-    return newMAsession(onpi, dlg_ac_idx, rmt_ssn);
+    return newMAsession(onpi, dlg_ac_idx, rmt_ssn, fake_ssn);
 }
 
 TCSessionMA * SSNSession::newMAsession(TonNpiAddress & onpi, ACOID::DefinedOIDidx dlg_ac_idx,
-                            UCHAR_T rmt_ssn)
+                            UCHAR_T rmt_ssn, UCHAR_T fake_ssn/* = 0*/)
 {
     TCSessionMA *   pSess = NULL;
 
@@ -290,7 +294,7 @@ TCSessionMA * SSNSession::newMAsession(TonNpiAddress & onpi, ACOID::DefinedOIDid
         if (it != tcSessions.end())
             pSess = static_cast<TCSessionMA*>((*it).second);
         else {
-            pSess = new TCSessionMA(++lastTCSUId, this, onpi, dlg_ac_idx, rmt_ssn);
+            pSess = new TCSessionMA(++lastTCSUId, this, fake_ssn, onpi, dlg_ac_idx, rmt_ssn);
             tcSessions.insert(TCSessionsMAP::value_type(pSess->Signature(), pSess));
         }
     }
@@ -299,16 +303,16 @@ TCSessionMA * SSNSession::newMAsession(TonNpiAddress & onpi, ACOID::DefinedOIDid
 
 
 TCSessionSR * SSNSession::newSRsession(const char* own_addr, ACOID::DefinedOIDidx dlg_ac_idx,
-                                UCHAR_T rmt_ssn, const char* rmt_addr)
+                                UCHAR_T rmt_ssn, const char* rmt_addr, UCHAR_T fake_ssn/* = 0*/)
 {
     TonNpiAddress   onpi, rnpi;
     if (!onpi.fromText(own_addr) || !rnpi.fromText(rmt_addr))
         return NULL;
-    return newSRsession(onpi, dlg_ac_idx, rmt_ssn, rnpi);
+    return newSRsession(onpi, dlg_ac_idx, rmt_ssn, rnpi, fake_ssn);
 }
 
 TCSessionSR * SSNSession::newSRsession(TonNpiAddress & onpi, ACOID::DefinedOIDidx dlg_ac_idx,
-                                UCHAR_T rmt_ssn, TonNpiAddress & rnpi)
+                                UCHAR_T rmt_ssn, TonNpiAddress & rnpi, UCHAR_T fake_ssn/* = 0*/)
 {
     TCSessionSR *   pSess = NULL;
 
@@ -329,7 +333,7 @@ TCSessionSR * SSNSession::newSRsession(TonNpiAddress & onpi, ACOID::DefinedOIDid
         if (it != tcSessions.end())
             pSess = static_cast<TCSessionSR*>((*it).second);
         else {
-            pSess = new TCSessionSR(++lastTCSUId, this, onpi, dlg_ac_idx, rmt_ssn, rnpi);
+            pSess = new TCSessionSR(++lastTCSUId, this, fake_ssn, onpi, dlg_ac_idx, rmt_ssn, rnpi);
             tcSessions.insert(TCSessionsMAP::value_type(pSess->Signature(), pSess));
         }
     }
@@ -479,7 +483,6 @@ bool SSNSession::nextDialogId(USHORT_T & dId)
         if (++lastDlgId  > maxId)
             lastDlgId = minId;
     } while (locateDialog(dId) && ((++attempt) < MAX_ID_ATTEMPTS));
-
     return (attempt < MAX_ID_ATTEMPTS) ? true : false;
 }
 
