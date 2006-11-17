@@ -39,6 +39,28 @@ public class SecretUser extends Storable {
     return password.equals(pwd) || password.equals(MessageEncoder.encodeMD5(pwd));
   }
 
+  public void updatePassword(final String password) throws SQLException, MessageEncoder.EncodeException {
+    Connection conn = null;
+    PreparedStatement ps = null;
+
+    try {
+      conn = ConnectionPool.getConnection();
+      ps = conn.prepareStatement(SmeProperties.SecretUser.UPDATE_PASSWORD_SQL);
+
+      ps.setString(1, MessageEncoder.encodeMD5(password));
+      ps.setString(2, number);
+
+      ps.executeUpdate();
+
+    } catch (SQLException e) {
+      throw new SQLException(e.getMessage());
+    } catch (MessageEncoder.EncodeException e) {
+      throw new MessageEncoder.EncodeException(e);
+    } finally {
+      close(Log, null, ps, conn);
+    }
+  }
+
   public void save() throws SQLException, MessageEncoder.EncodeException {
     // remove old
     remove();

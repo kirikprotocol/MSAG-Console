@@ -39,6 +39,12 @@ public class SmeProperties {
     public static final String SECRET_ENGINE_INFORM_MESSAGE;
     public static final String SECRET_ENGINE_NO_MESSAGES;
     public static final String SECRET_ENGINE_DELIVERY_REPORT;
+    public static final String SECRET_ENGINE_WRONG_PASSWORD;
+    public static final String SECRET_ENGINE_DESTINATION_ABONENT_NOT_REGISTERED;
+    public static final String SECRET_ENGINE_ABONENT_NOT_REGISTERED;
+    public static final String SECRET_ENGINE_SYSTEM_ERROR;
+    public static final String SECRET_ENGINE_ABONENT_ALREADY_REGISTERED;
+    public static final String SECRET_ENGINE_PASSWORD_CHANGED;
 
 
     static {
@@ -64,6 +70,12 @@ public class SmeProperties {
       SECRET_ENGINE_INFORM_MESSAGE = Utils.loadString(config, "secret.engine.inform.message");
       SECRET_ENGINE_NO_MESSAGES = Utils.loadString(config, "secret.engine.no.messages");
       SECRET_ENGINE_DELIVERY_REPORT = Utils.loadString(config, "secret.engine.delivery.report");
+      SECRET_ENGINE_WRONG_PASSWORD = Utils.loadString(config, "secret.engine.wrong.password");
+      SECRET_ENGINE_DESTINATION_ABONENT_NOT_REGISTERED = Utils.loadString(config, "secret.engine.destination.abonent.not.registered");
+      SECRET_ENGINE_ABONENT_NOT_REGISTERED= Utils.loadString(config, "secret.engine.abonent.not.registered");
+      SECRET_ENGINE_SYSTEM_ERROR= Utils.loadString(config, "secret.engine.system.error");
+      SECRET_ENGINE_ABONENT_ALREADY_REGISTERED= Utils.loadString(config, "secret.engine.abonent.already.registered");
+      SECRET_ENGINE_PASSWORD_CHANGED= Utils.loadString(config, "secret.engine.password.changed");
 
       config.clear();
     }
@@ -87,12 +99,14 @@ public class SmeProperties {
     public static final String INSERT_SQL;
     public static final String REMOVE_BY_NUMBER_SQL;
     public static final String SELECT_BY_NUMBER_SQL;
+    public static final String UPDATE_PASSWORD_SQL;
 
     static {
       final Properties config = Utils.loadConfig("secretuser.properties");
       INSERT_SQL = Utils.loadString(config, "insert.sql");
       REMOVE_BY_NUMBER_SQL = Utils.loadString(config, "remove.sql");
       SELECT_BY_NUMBER_SQL = Utils.loadString(config, "select.by.number.sql");
+      UPDATE_PASSWORD_SQL = Utils.loadString(config, "update.password.sql");
     }
   }
 

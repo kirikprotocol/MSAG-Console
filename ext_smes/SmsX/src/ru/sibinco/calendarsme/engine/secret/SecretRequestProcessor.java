@@ -139,7 +139,7 @@ public class SecretRequestProcessor {
       // Chech fromAbonent's registration
       if (SecretUser.loadByNumber(fromAbonent) == null) { // fromAbonent has not been registered
         Log.error("Abonent " + fromAbonent + " not registered in DB");
-        sendResponse(incomingMessage, Data.ESME_RSYSERR);
+        sendResponse(incomingMessage, Data.ESME_RX_P_APPN);
         // We don't need to send message to fromAbonent here!!! Because SMSC impl.
         return;
       }
