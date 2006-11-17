@@ -7,7 +7,6 @@ import ru.aurorisoft.smpp.SMPPException;
 import ru.sibinco.calendarsme.SmeProperties;
 import ru.sibinco.calendarsme.network.OutgoingObject;
 import ru.sibinco.calendarsme.network.OutgoingQueue;
-import ru.sibinco.calendarsme.utils.MessageEncoder;
 
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -55,32 +54,21 @@ public class SecretRequestProcessor {
       } else if (res.getType().equals(SecretRequestParser.ParseResultType.PWD) && message.getDestinationAddress().equals(smeAddress)) {
         Log.info("It is request to deliver messages");
         sendMessagesFromDB(message, res.getMessage());
+      } else if (res.getType().equals(SecretRequestParser.ParseResultType.CHANGE_PWD) && message.getDestinationAddress().equals(smeAddress)) {
+        Log.info("It is request to change password");
+        changePassword(message, res.getMessage());
       } else {
         Log.error("Request not recognized.");
         return false;
       }
 
-    } catch (SecretRequestParser.ParseException e) {
-      Log.error("", e);
-      sendResponse(message, Data.ESME_RSYSERR);
-    } catch (SQLException e) {
-      Log.error("", e);
-      sendResponse(message, Data.ESME_RSYSERR);
-    } catch (MessageEncoder.EncodeException e) {
-      Log.error("", e);
-      sendResponse(message, Data.ESME_RSYSERR);
-    } catch (IncorrectPasswordException e) {
-      Log.error("Wrong password!", e);
-      sendResponse(message, Data.ESME_RX_P_APPN);
-    } catch (ReceiverNotRegisteredException e) {
-      Log.error("Abonent " + message.getDestinationAddress() + " not registered in DB!", e);
-      sendResponse(message, Data.ESME_RX_P_APPN);
-    } catch (SenderNotRegisteredException e) {
-      Log.error("Abonent " + message.getSourceAddress() + " not registered in DB!", e);
-      sendResponse(message, Data.ESME_RX_P_APPN);
     } catch (SecretRequestParser.WrongMessageFormatException e) {
       return false;
+    } catch (Exception e) {
+      Log.error("", e);
+      return false;
     }
+
     return true;
   }
 
@@ -89,9 +77,19 @@ public class SecretRequestProcessor {
     String responseMessageText;
 
     try {
-      new SecretUser(abonent, password).save();
-      Log.info("Abonent " + abonent + " registered in DB");
-      responseMessageText = SmeProperties.General.SECRET_ENGINE_REGISTER_OK_MESSAGE;
+      // Check abonent's registration
+      if (SecretUser.loadByNumber(abonent) != null) { // Abonent has been registered
+
+        Log.info("Abonent " + abonent + " has already registered in DB");
+        responseMessageText = SmeProperties.General.SECRET_ENGINE_ABONENT_ALREADY_REGISTERED;
+
+      } else { // Abonent has not been registered
+
+        new SecretUser(abonent, password).save();
+        Log.info("Abonent " + abonent + " registered in DB");
+        responseMessageText = SmeProperties.General.SECRET_ENGINE_REGISTER_OK_MESSAGE;
+      }
+
     } catch (Exception e) {
       Log.error("Can't register abonent " + abonent, e);
       responseMessageText = SmeProperties.General.SECRET_ENGINE_REGISTER_ERROR_MESSAGE;
@@ -104,16 +102,26 @@ public class SecretRequestProcessor {
   private void disableService(final Message incomingMessage) {
     final String abonent = incomingMessage.getSourceAddress();
     String responseMessage;
-    try {
-      // Remove messages
-      final List messages = SecretMessage.loadByUser(abonent);
-      for (Iterator iter = messages.iterator(); iter.hasNext();)
-        ((SecretMessage) iter.next()).remove();
-      // Remove user
-      new SecretUser(abonent, null).remove();
 
-      Log.info("Abonent " + abonent + " and all his messages removed from DB");
-      responseMessage = SmeProperties.General.SECRET_ENGINE_UNREGISTER_OK_MESSAGE;
+    try {
+      // Check abonent's registration
+      if (SecretUser.loadByNumber(abonent) != null) { // Abonent has been registered in DB
+
+        // Remove messages
+        final List messages = SecretMessage.loadByUser(abonent);
+        for (Iterator iter = messages.iterator(); iter.hasNext();)
+          ((SecretMessage) iter.next()).remove();
+        // Remove user
+        new SecretUser(abonent, null).remove();
+        Log.info("Abonent " + abonent + " and all his messages removed from DB");
+        responseMessage = SmeProperties.General.SECRET_ENGINE_UNREGISTER_OK_MESSAGE;
+
+      } else { // Abonent has not been registered
+
+        Log.info("Abonent " + abonent + " not registered in DB");
+        responseMessage = SmeProperties.General.SECRET_ENGINE_ABONENT_NOT_REGISTERED.replaceAll("\\{abonent}", abonent);
+      }
+
     } catch (SQLException e) {
       Log.error("Can't unregister abonent " + abonent, e);
       responseMessage = SmeProperties.General.SECRET_ENGINE_UNREGISTER_ERROR_MESSAGE;
@@ -122,45 +130,129 @@ public class SecretRequestProcessor {
     sendResponse(incomingMessage, Data.ESME_ROK);
     sendMessage(incomingMessage.getDestinationAddress(), incomingMessage.getSourceAddress(), responseMessage);
   }
-       
-  private void addMessageToDB(final Message incomingMessage, final String message) throws SQLException, ReceiverNotRegisteredException, SenderNotRegisteredException {
+
+  private void addMessageToDB(final Message incomingMessage, final String message)  {
     final String fromAbonent = incomingMessage.getSourceAddress();
     final String toAbonent = incomingMessage.getDestinationAddress();
-    if (SecretUser.loadByNumber(toAbonent) == null)
-      throw new ReceiverNotRegisteredException();
-    if (SecretUser.loadByNumber(fromAbonent) == null)
-      throw new SenderNotRegisteredException();
 
-    final SecretMessage secretMessage = new SecretMessage(toAbonent, message, fromAbonent);
-    secretMessage.save();
+    try {
+      // Chech fromAbonent's registration
+      if (SecretUser.loadByNumber(fromAbonent) == null) { // fromAbonent has not been registered
+        Log.error("Abonent " + fromAbonent + " not registered in DB");
+        sendResponse(incomingMessage, Data.ESME_RSYSERR);
+        // We don't need to send message to fromAbonent here!!! Because SMSC impl.
+        return;
+      }
 
-    final String informMessage = prepareInformMessage(toAbonent, fromAbonent);
-    sendResponse(incomingMessage, Data.ESME_ROK);
-    sendMessage(smeAddress, toAbonent, informMessage);
+      // Check toAbonent's registration
+      if (SecretUser.loadByNumber(toAbonent) == null) { // toAbonent has not been registered
+        Log.error("Abonent " + toAbonent + " not registered in DB");
+        sendResponse(incomingMessage, Data.ESME_RX_P_APPN);
+        sendMessage(smeAddress, fromAbonent, SmeProperties.General.SECRET_ENGINE_DESTINATION_ABONENT_NOT_REGISTERED.replaceAll("\\{dest_abonent}", toAbonent));
+        return;
+      }
+
+      // Store message
+      final SecretMessage secretMessage = new SecretMessage(toAbonent, message, fromAbonent);
+      secretMessage.save();
+
+      // Send notification message to toAbonent
+      final String informMessage = prepareInformMessage(toAbonent, fromAbonent);
+      sendResponse(incomingMessage, Data.ESME_ROK);
+      sendMessage(smeAddress, toAbonent, informMessage);
+
+    } catch (SQLException e) {
+      Log.error("Can't add message to DB", e);
+      sendResponse(incomingMessage, Data.ESME_RSYSERR);
+      // We don't need to send message to fromAbonent here!!! Because SMSC impl.
+    }
   }
 
-  private void sendMessagesFromDB(final Message incomingMessage, final String password) throws SQLException, MessageEncoder.EncodeException, IncorrectPasswordException, ReceiverNotRegisteredException {
+  private void sendMessagesFromDB(final Message incomingMessage, final String password) {
     final String toAbonent = incomingMessage.getSourceAddress();
-    final SecretUser user = SecretUser.loadByNumber(toAbonent);
-    if (user == null)
-      throw new ReceiverNotRegisteredException();
-    if (!user.confirmPassword(password))
-      throw new IncorrectPasswordException();
 
-    final List messages = SecretMessage.loadByUser(toAbonent);
-    if (messages.isEmpty()) {
-      sendResponse(incomingMessage, Data.ESME_ROK);
-      sendMessage(smeAddress, toAbonent, SmeProperties.General.SECRET_ENGINE_NO_MESSAGES);
-    } else {
-      for (Iterator iter = messages.iterator(); iter.hasNext();) {
-        final SecretMessage msg = (SecretMessage)iter.next();
-        msg.remove();
+    try {
+      final SecretUser user = SecretUser.loadByNumber(toAbonent);
 
-        final String deliveryReport = prepareDeliveryReport(toAbonent, msg.getSendDate());
-        sendResponse(incomingMessage, Data.ESME_ROK);
-        sendMessage(msg.getFromNumber(), toAbonent, msg.getMessage());
-        sendMessage(smeAddress, msg.getFromNumber(), deliveryReport);
+      // Check user's registration
+      if (user == null) { // user has not been registered
+        Log.error("Abonent " + toAbonent + " not registered in DB");
+        sendResponse(incomingMessage, Data.ESME_RX_P_APPN);
+        sendMessage(smeAddress, toAbonent, SmeProperties.General.SECRET_ENGINE_DESTINATION_ABONENT_NOT_REGISTERED.replaceAll("\\{abonent}", toAbonent));
+        return;
       }
+
+      // Check user's password
+      if (!user.confirmPassword(password)) { // Password is wrond
+        Log.error("Password is wrong");
+        sendResponse(incomingMessage, Data.ESME_RX_P_APPN);
+        sendMessage(smeAddress, toAbonent, SmeProperties.General.SECRET_ENGINE_WRONG_PASSWORD);
+        return;
+      }
+
+      // Load and send messages for toAbonent
+      final List messages = SecretMessage.loadByUser(toAbonent);
+      if (messages.isEmpty()) { // No messages has been found
+
+        sendResponse(incomingMessage, Data.ESME_ROK);
+        sendMessage(smeAddress, toAbonent, SmeProperties.General.SECRET_ENGINE_NO_MESSAGES);
+
+      } else { // Some messages has been found
+
+        for (Iterator iter = messages.iterator(); iter.hasNext();) {
+          final SecretMessage msg = (SecretMessage) iter.next();
+          msg.remove();
+
+          final String deliveryReport = prepareDeliveryReport(toAbonent, msg.getSendDate());
+          sendResponse(incomingMessage, Data.ESME_ROK);
+          sendMessage(msg.getFromNumber(), toAbonent, msg.getMessage());
+          sendMessage(smeAddress, msg.getFromNumber(), deliveryReport);
+        }
+      }
+    } catch (Exception e) {
+      Log.error("Can't send messages from DB", e);
+      sendResponse(incomingMessage, Data.ESME_RSYSERR);
+      sendMessage(smeAddress, toAbonent, SmeProperties.General.SECRET_ENGINE_SYSTEM_ERROR);
+    }
+  }
+
+  private void changePassword(final Message incomingMessage, final String passwords) {
+    final String abonent = incomingMessage.getSourceAddress();
+
+    try {
+
+      final SecretUser user = SecretUser.loadByNumber(abonent);
+      // Check abonent's registration
+      if (user == null) { // Abonent has not been registered
+        Log.error("Abonent " + abonent + " not registered in DB");
+        sendResponse(incomingMessage, Data.ESME_ROK);
+        sendMessage(smeAddress, abonent, SmeProperties.General.SECRET_ENGINE_ABONENT_NOT_REGISTERED.replaceAll("\\{abonent}", abonent));
+        return;
+      }
+
+      if (passwords.indexOf(" ") > 0) {
+        final String oldPassword = passwords.substring(0, passwords.indexOf(" ")).trim();
+        final String newPassword = passwords.substring(passwords.indexOf(" ")).trim();
+        Log.info("old = " + oldPassword + ", new = " + newPassword);
+
+        // Check old password
+        if (!user.confirmPassword(oldPassword)) {
+          Log.error("Wrong password");
+          sendResponse(incomingMessage, Data.ESME_ROK);
+          sendMessage(smeAddress, abonent, SmeProperties.General.SECRET_ENGINE_WRONG_PASSWORD);
+          return;
+        }
+
+        // Update password
+        user.updatePassword(newPassword);
+        sendResponse(incomingMessage, Data.ESME_ROK);
+        sendMessage(smeAddress, abonent, SmeProperties.General.SECRET_ENGINE_PASSWORD_CHANGED);
+      }
+
+    } catch (Exception e) {
+      Log.error("Can't change password", e);
+      sendResponse(incomingMessage, Data.ESME_ROK);
+      sendMessage(smeAddress, abonent, SmeProperties.General.SECRET_ENGINE_SYSTEM_ERROR);
     }
   }
 
@@ -190,11 +282,5 @@ public class SecretRequestProcessor {
       Log.warn("Exception occured sending delivery response.", e);
     }
   }
-
-  public class ReceiverNotRegisteredException extends Exception {}
-
-  public class SenderNotRegisteredException extends Exception {}
-
-  public class IncorrectPasswordException extends Exception {}
 
 }

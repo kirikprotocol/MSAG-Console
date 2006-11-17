@@ -22,6 +22,7 @@ public class SecretRequestParser {
   private final static String ANY_WORD = "\\s*\\S+\\s*";
 
   private final static String SECRET_ON_REGEX = SECRET  + ANY_NONSPACE_STRING_AFTER_SPACE;
+  private final static String SECRET_CHANGE_PASSWORD_REGEX = SECRET + ANY_NONSPACE_STRING_AFTER_SPACE + ANY_NONSPACE_STRING_AFTER_SPACE;
   private final static String SECRET_OFF_REGEX = SECRET + ONE_OR_MORE_SPACES + NONE;
   private final static String SECRET_MESSAGE_REGEX = SEC + ANY_STRING_AFTER_SPACE;
 
@@ -30,6 +31,8 @@ public class SecretRequestParser {
       // Order is important here
       if (message.matches(SECRET_OFF_REGEX))
         return new ParseResult(ParseResultType.OFF);
+      else if (message.matches(SECRET_CHANGE_PASSWORD_REGEX))
+        return new ParseResult(ParseResultType.CHANGE_PWD, getPassword(message)); // There in password will be 2 words: old pwd and new pwd
       else if (message.matches(SECRET_ON_REGEX))
         return new ParseResult(ParseResultType.ON, getPassword(message));
       else if (message.matches(SECRET_MESSAGE_REGEX))
@@ -78,6 +81,7 @@ public class SecretRequestParser {
     static final ParseResultType OFF = new ParseResultType();
     static final ParseResultType MSG = new ParseResultType();
     static final ParseResultType PWD = new ParseResultType();
+    static final ParseResultType CHANGE_PWD = new ParseResultType();
 
     private ParseResultType() {
     }

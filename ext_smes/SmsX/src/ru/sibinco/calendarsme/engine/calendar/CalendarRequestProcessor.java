@@ -56,9 +56,6 @@ final class CalendarRequestProcessor {
     } catch (CalendarRequestParser.ParseException e) {
       Log.error("", e);
       sendResponse(message, Data.ESME_RSYSERR);
-    } catch (ProcessingException e) {
-      Log.error("", e);
-      sendResponse(message, Data.ESME_RSYSERR);
     }
     return true;
   }
@@ -83,22 +80,30 @@ final class CalendarRequestProcessor {
     return calend.getTime();
   }
 
-  private void processMessage(final Message message, final CalendarMessage calendarMessage) throws ProcessingException {
+  private void processMessage(final Message message, final CalendarMessage calendarMessage)  {
     Log.info("Message parsing ok: send time = " + calendarMessage.getSendDate() + ", message = " + calendarMessage.getMessage());
 
-    Log.info("Trying to put message into messages list...");
-    if (messagesList.canAdd(calendarMessage)) {
-      sendResponse(message, Data.ESME_ROK);
-      messagesList.add(calendarMessage);
-      Log.info("Message puted into calendar engine messages list");
-    } else {
-      insertMessageToDB(calendarMessage);
-      sendResponse(message, Data.ESME_ROK);
-      Log.info("Message date is out of working interval. Message puted into DB");
+    try {
+      Log.info("Trying to put message into messages list...");
+
+      if (messagesList.canAdd(calendarMessage)) {
+
+        sendResponse(message, Data.ESME_ROK);
+        messagesList.add(calendarMessage);
+        Log.info("Message puted into calendar engine messages list");
+
+      } else {
+
+        insertMessageToDB(calendarMessage);
+        sendResponse(message, Data.ESME_ROK);
+        Log.info("Message date is out of working interval. Message puted into DB");
+      }
+    } catch (SQLException e) {
+      sendResponse(message, Data.ESME_RSYSERR);
     }
   }
 
-  private void insertMessageToDB(final CalendarMessage calendarMessage) throws ProcessingException{
+  private void insertMessageToDB(final CalendarMessage calendarMessage) throws SQLException {
     Connection conn = null;
     PreparedStatement ps = null;
 
@@ -115,7 +120,7 @@ final class CalendarRequestProcessor {
 
     } catch (SQLException e) {
       Log.error("Can't insert message: ", e);
-      throw new ProcessingException();
+      throw new SQLException();
     } finally {
       close(conn, ps);
     }
