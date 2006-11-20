@@ -193,8 +193,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
       if(!dst || routeId == ri.routeId)
       {
         smsc_log_info(log,"Submit: %s %s(%s)->%s", !dst ? "no route" : "redirection to the same route",
-        sms.getOriginatingAddress().toString().c_str(),
-        src->getSystemId(),
+        sms.getOriginatingAddress().toString().c_str(), src->getSystemId(),
         sms.getDestinationAddress().toString().c_str());
         SubmitResp(cmd,smsc::system::Status::NOROUTE);
         if(session.Get())
@@ -343,10 +342,21 @@ void StateMachine::processSubmit(SmppCommand& cmd)
       throw Exception("Register cmd for uid=%d, seq=%d failed", dst->getUid(), newSeq);
     }
     stripUnknownSmppOptionals(sms,allowedUnknownOptionals);
-    dst->putCommand(cmd);
-    registerEvent(scag::stat::events::smpp::ACCEPTED, src, dst, (char*)ri.routeId, -1);
+      if(dst->getBindType() == btNone)
+      {
+        smsc_log_info(log,"Submit: sme not connected %s(%s)->%s(%s)", sms.getOriginatingAddress().toString().c_str(), src->getSystemId(),
+            sms.getDestinationAddress().toString().c_str(), dst->getSystemId());
+        SubmitResp(cmd,smsc::system::Status::SMENOTCONNECTED);
+        registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::SMENOTCONNECTED);
+      }
+      else
+      {
+        dst->putCommand(cmd);
+        registerEvent(scag::stat::events::smpp::ACCEPTED, src, dst, (char*)ri.routeId, -1);
+      }
   } catch(std::exception& e) {
-    registerEvent(scag::stat::events::smpp::FAILED, src, dst, (char*)ri.routeId, -1);
+    SubmitResp(cmd,smsc::system::Status::SYSFAILURE);    
+    registerEvent(scag::stat::events::smpp::FAILED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSFAILURE);
     smsc_log_info(log,"Submit: Failed to putCommand into %s:%s",dst->getSystemId(),e.what());
   }
   scag::sessions::SessionManager::Instance().releaseSession(session);
@@ -586,11 +596,23 @@ void StateMachine::processDelivery(SmppCommand& cmd)
       throw Exception("Register cmd for uid=%d, seq=%d failed", dst->getUid(), newSeq);
     }
     stripUnknownSmppOptionals(sms,allowedUnknownOptionals);
-    dst->putCommand(cmd);
-    registerEvent(scag::stat::events::smpp::ACCEPTED, src, dst, (char*)ri.routeId, -1);
+      if(dst->getBindType() == btNone)
+      {
+        smsc_log_info(log,"Delivery: sme not connected %s(%s)->%s(%s)", sms.getOriginatingAddress().toString().c_str(), src->getSystemId(),
+            sms.getDestinationAddress().toString().c_str(), dst->getSystemId());
+        DeliveryResp(cmd,smsc::system::Status::SMENOTCONNECTED);
+        registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::SMENOTCONNECTED);
+      }
+      else
+      {
+        dst->putCommand(cmd);
+        registerEvent(scag::stat::events::smpp::ACCEPTED, src, dst, (char*)ri.routeId, -1);
+      }
+    
   } catch(std::exception& e) {
     smsc_log_info(log,"Delivery: Failed to putCommand into %s:%s",dst->getSystemId(),e.what());
-    registerEvent(scag::stat::events::smpp::FAILED, src, dst, (char*)ri.routeId, -1);
+    DeliveryResp(cmd,smsc::system::Status::SYSFAILURE);    
+    registerEvent(scag::stat::events::smpp::FAILED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSFAILURE);
   }
   scag::sessions::SessionManager::Instance().releaseSession(session);
 }
@@ -819,11 +841,22 @@ void StateMachine::processDataSm(SmppCommand& cmd)
       throw Exception("Register cmd for uid=%d, seq=%d failed", dst->getUid(), newSeq);
     }
     stripUnknownSmppOptionals(sms,allowedUnknownOptionals);
-    dst->putCommand(cmd);
-    registerEvent(scag::stat::events::smpp::ACCEPTED, src, dst, (char*)ri.routeId, -1);
+      if(dst->getBindType() == btNone)
+      {
+        smsc_log_info(log,"DataSm: sme not connected %s(%s)->%s(%s)", sms.getOriginatingAddress().toString().c_str(), src->getSystemId(),
+            sms.getDestinationAddress().toString().c_str(), dst->getSystemId());
+        DataResp(cmd,smsc::system::Status::SMENOTCONNECTED);
+        registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::SMENOTCONNECTED);
+      }
+      else
+      {
+        dst->putCommand(cmd);
+        registerEvent(scag::stat::events::smpp::ACCEPTED, src, dst, (char*)ri.routeId, -1);
+      }
   } catch(std::exception& e) {
     smsc_log_info(log,"DataSm: Failed to putCommand into %s:%s",dst->getSystemId(),e.what());
-    registerEvent(scag::stat::events::smpp::FAILED, src, dst, (char*)ri.routeId, -1);
+    DataResp(cmd,smsc::system::Status::SYSFAILURE);    
+    registerEvent(scag::stat::events::smpp::FAILED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSFAILURE);
   }
   scag::sessions::SessionManager::Instance().releaseSession(session);
 }
