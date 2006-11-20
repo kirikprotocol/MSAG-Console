@@ -389,8 +389,8 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
   if(!session.Get())
   {
     smsc_log_warn(log,"Session not found. key='%s:%d'",key.abonentAddr.toString().c_str(),key.USR);
-    cmd->get_resp()->set_status(smsc::system::Status::RX_T_APPN);
-    rs = smsc::system::Status::RX_T_APPN;
+    cmd->get_resp()->set_status(smsc::system::Status::TRANSACTIONTIMEDOUT);
+    rs = smsc::system::Status::TRANSACTIONTIMEDOUT;
   }
   else
   {
@@ -398,7 +398,16 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
     st=scag::re::RuleEngine::Instance().process(cmd,*session);
     smsc_log_debug(log, "Submit resp:RuleEngine  processed");
     if(st.status != scag::re::STATUS_OK)
+    {
+        if(!st.result)
+        {
+            smsc_log_warn(log, "Submit resp: Rule failed and no error(zero rezult) returned");        
+            st.result = smsc::system::Status::SYSERR;
+        }
+       
         rs = st.result;
+        cmd->get_resp()->set_status(st.result);
+    }
   }
 
   if (ussd_op == smsc::smpp::UssdServiceOpValue::PSSR_RESPONSE ||
@@ -566,7 +575,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
     }
     DeliveryResp(cmd, st.result);        
     scag::sessions::SessionManager::Instance().releaseSession(session);
-    registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, st.temporal? smsc::system::Status::RX_T_APPN : smsc::system::Status::RX_P_APPN);
+    registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, st.result);
     return;
   }
 
@@ -621,8 +630,8 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
   if(!session.Get())
   {
     smsc_log_warn(log,"Session not found. key='%s:%d'",key.abonentAddr.toString().c_str(),key.USR);
-    cmd->get_resp()->set_status(smsc::system::Status::RX_T_APPN);
-    rs = smsc::system::Status::RX_T_APPN;
+    cmd->get_resp()->set_status(smsc::system::Status::TRANSACTIONTIMEDOUT);
+    rs = smsc::system::Status::TRANSACTIONTIMEDOUT;
   }
   else
   {
@@ -630,7 +639,16 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
     st=scag::re::RuleEngine::Instance().process(cmd,*session);
     smsc_log_debug(log, "Delivery resp: procesed.");
     if(st.status != scag::re::STATUS_OK)
+    {
+        if(!st.result)
+        {
+            smsc_log_warn(log, "Delivery resp: Rule failed and no error(zero rezult) returned");        
+            st.result = smsc::system::Status::SYSERR;
+        }
+       
         rs = st.result;
+        cmd->get_resp()->set_status(st.result);
+    }
   }
 
   cmd->set_dialogId(orgCmd->get_dialogId());
@@ -790,7 +808,7 @@ void StateMachine::processDataSm(SmppCommand& cmd)
     }
     DataResp(cmd, st.result);        
     scag::sessions::SessionManager::Instance().releaseSession(session);
-    registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, st.temporal? smsc::system::Status::RX_T_APPN : smsc::system::Status::RX_P_APPN);
+    registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, st.result);
     return;
   }
 
@@ -849,8 +867,8 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
   if(!session.Get())
   {
     smsc_log_warn(log,"Session not found. key='%s:%d'",key.abonentAddr.toString().c_str(),key.USR);
-    cmd->get_resp()->set_status(smsc::system::Status::RX_T_APPN);
-    rs = smsc::system::Status::RX_T_APPN;
+    cmd->get_resp()->set_status(smsc::system::Status::TRANSACTIONTIMEDOUT);
+    rs = smsc::system::Status::TRANSACTIONTIMEDOUT;
   }
   else
   {
@@ -858,7 +876,16 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
     st=scag::re::RuleEngine::Instance().process(cmd,*session);
     smsc_log_debug(log, "datasm resp: procesed.");
     if(st.status != scag::re::STATUS_OK)
+    {
+        if(!st.result)
+        {
+            smsc_log_warn(log, "datasm resp: Rule failed and no error(zero rezult) returned");        
+            st.result = smsc::system::Status::SYSERR;
+        }
+       
         rs = st.result;
+        cmd->get_resp()->set_status(st.result);
+    }
   }
 
   cmd->set_dialogId(orgCmd->get_dialogId());
