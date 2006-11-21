@@ -36,12 +36,6 @@
 #include "cluster/listeners/CgmCommandListener.h"
 #include "closedgroups/ClosedGroupsManager.hpp"
 #include "system/common/TimeZoneMan.hpp"
-#include "alias/AliasManImpl.hpp"
-
-#ifdef SMSEXTRA
-#include "Extra.hpp"
-#include "ExtraBits.hpp"
-#endif
 
 #include <unistd.h>
 
@@ -315,7 +309,6 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     snmpAgent = new SnmpAgent(this);
     tp2.startTask(snmpAgent);
     snmpAgent->statusChange(SnmpAgent::INIT);
-    SnmpCounter::Init(findConfigFile("snmp.xml"));
   }
 #endif
 
@@ -397,15 +390,34 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     }
     smsc_log_info(log, "SME registration done" );
   }
+  // initialize aliases
+  /*{
+    smsc::util::config::alias::AliasConfig::RecordIterator i =
+                                cfg.aliasconfig->getRecordIterator();
+    while(i.hasRecord())
+    {
+      smsc::util::config::alias::AliasRecord *rec;
+      i.fetchNext(rec);
+      __trace2__("adding %20s %20s",rec->addrValue,rec->aliasValue);
+      smsc::alias::AliasInfo ai;
+      ai.addr = smsc::sms::Address(
+        strlen(rec->addrValue),
+        rec->addrTni,
+        rec->addrNpi,
+        rec->addrValue);
+      ai.alias = smsc::sms::Address(
+        strlen(rec->aliasValue),
+        rec->aliasTni,
+        rec->aliasNpi,
+        rec->aliasValue);
+      ai.hide = rec->hide;
+      aliaser.addAlias(ai);
+    }
+    aliaser.commit();
+  }*/
 
-  aliaser=new smsc::alias::AliasManImpl(cfg.cfgman->getString("aliasman.storeFile"));
-
-  if(!ishs)
-  {
-    aliaser->Load();
-    smsc_log_info(log, "Aliases loaded" );
-  }
-
+  reloadAliases(cfg);
+  smsc_log_info(log, "Aliases loaded" );
   reloadRoutes(cfg);
   smsc_log_info(log, "Routes loaded" );
 
@@ -702,8 +714,6 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     profiler->serviceType=cfg.cfgman->getString("profiler.service_type");
     profiler->protocolId=cfg.cfgman->getInt("profiler.protocol_id");
 
-    profiler->setAliasManager(aliaser);
-
     using smsc::util::config::CStrSet;
     CStrSet *params=cfg.cfgman->getChildIntParamNames("profiler.ussdOpsMapping");
     CStrSet::iterator i=params->begin();
@@ -910,6 +920,14 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
 
     tcontrol=new TrafficControl(tccfg);
     */
+
+    try{
+      smartMultipartForward=cfg.cfgman->getBool("core.smartMultipartForward");
+    }catch(...)
+    {
+      smsc_log_warn(log,"core.smartMultipartForward not found in config and disabled by default");
+    }
+
     maxSmsPerSecond=cfg.cfgman->getInt("trafficControl.maxSmsPerSecond");
     if(maxSmsPerSecond>license.maxsms)
     {
@@ -978,34 +996,6 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   }catch(...)
   {
     smsc_log_warn(log, "core.mergeTimeout not found, using default(%d)",mergeConcatTimeout);
-  }
-
-#ifdef SMSEXTRA
-  {
-    ExtraInfo::Init();
-    int bits[]={EXTRA_NICK,EXTRA_FLASH,EXTRA_CALEND,EXTRA_SECRET};
-    const char* sections[]={"nick","flash","calendar","secret"};
-    std::string cfgParam;
-    for(int i=0;i<sizeof(bits)/sizeof(bits[0]);i++)
-    {
-      cfgParam="smsx.";
-      cfgParam+=sections[i];
-      const char* prefix=cfg.cfgman->getString((cfgParam+".prefix").c_str());
-      const char* divert=0;
-      try{
-        divert=cfg.cfgman->getString((cfgParam+".divertNumber").c_str());
-      }catch(...){}
-      ExtraInfo::getInstance().addPrefix(bits[i],prefix,divert);
-    }
-  }
-#endif
-
-  try{
-    distlstsme->autoCreatePrincipal=cfg.cfgman->getBool("distrList.autocreatePrincipal");
-    distlstsme->defaultMaxLists=cfg.cfgman->getInt("distrList.defaultMaxLists");
-    distlstsme->defaultMaxElements=cfg.cfgman->getInt("distrList.defaultMaxElements");
-  }catch(...)
-  {
   }
 
   try {
@@ -1113,6 +1103,7 @@ void Smsc::run()
          int rv=idleMon.wait(1000);
          //__trace2__("idleMon.wait returned %d(%s)",rv,strerror(rv));
          if(rv!=ETIME && rv!=ETIMEDOUT)break;
+         if(icon->getRole()==smsc::cluster::MASTER)break;
       }
     }
     if(stopFlag)
@@ -1130,9 +1121,6 @@ void Smsc::run()
 
     distlstman->init();
     smsc::mscman::MscManager::startup(smsc::util::config::Manager::getInstance());
-
-    aliaser->Load();
-    smsc_log_info(log, "Aliases loaded" );
 
     SpeedMonitor *sm=new SpeedMonitor(eventqueue,&perfDataDisp,&perfSmeDataDisp,this);
     FILE *f=fopen("stats.txt","rt");
@@ -1281,27 +1269,11 @@ void Smsc::shutdown()
   //if(dataSource)delete dataSource;
   smeman.Dump();
   __trace__("smeman dumped");
-  if( ishs )
-  {
+  if( ishs ) {
     __trace__("stopping interconnect");
     InterconnectManager::shutdown();
   }
   common::TimeZoneManager::Shutdown();
-
-  if(aliaser)
-  {
-    delete aliaser;
-    aliaser=0;
-  }
-
-#ifdef SMSEXTRA
-  ExtraInfo::Shutdown();
-#endif
-
-#ifdef SNMP
-  SnmpCounter::Shutdown();
-#endif
-
   __trace__("shutdown completed");
 }
 
@@ -1326,7 +1298,6 @@ void Smsc::reloadTestRoutes(const RouteConfig& rcfg)
   ResetTestRouteManager(router.release());
 }
 
-/*
 void Smsc::reloadAliases(const SmscConfigs& cfg)
 {
   auto_ptr<AliasManager> aliaser(new AliasManager());
@@ -1357,7 +1328,6 @@ void Smsc::reloadAliases(const SmscConfigs& cfg)
 
   ResetAliases(aliaser.release());
 }
-*/
 
 void Smsc::reloadReschedule(){
     //RescheduleCalculator::reset();
