@@ -62,8 +62,18 @@ public class ProfileAddCommand extends ProfileGenCommand {
       if (!isDivertModifiable) divertModifiable = ctx.getSmsc().getDefaultProfilePropBoolean("DivertModifiable");
       if (!isUdhConcat) udhConcat = ctx.getSmsc().getDefaultProfilePropBoolean("UdhConcat");
       if (!isLocale) locale = ctx.getSmsc().getDefaultProfilePropString("Locale");
-      if(!isInputAccessMask) inputAccessMask = ctx.getSmsc().getDefaultProfilePropInt("defaultAccessMaskIn");
-      if(!isOutputAccessMask) outputAccessMask = ctx.getSmsc().getDefaultProfilePropInt("defaultAccessMaskOut");
+      try {
+        if(!isInputAccessMask) inputAccessMask = ctx.getSmsc().getDefaultProfilePropInt("AccessMaskIn");
+      } catch (Exception e) {
+        inputAccessMask = 1;
+        logger.warn("Couldn't get default profile AccessMaskIn, using default 1");
+      }
+      try {
+        if(!isOutputAccessMask) outputAccessMask = ctx.getSmsc().getDefaultProfilePropInt("AccessMaskOut");
+      } catch (Exception e) {
+        outputAccessMask = 1;
+        logger.warn("Couldn't get default profile AccessMaskOut, using default 1");
+      }
       if (inputAccessBitOff != 0) {
         inputAccessMask = inputAccessMask & (~inputAccessBitOff);
       } else if (inputAccessBitOn != 0) {
