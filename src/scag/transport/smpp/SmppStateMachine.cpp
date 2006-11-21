@@ -228,15 +228,15 @@ void StateMachine::processSubmit(SmppCommand& cmd)
         {
             if (umr < 0) {
                 key.USR = 0;
-                session=scag::sessions::SessionManager::Instance().newSession(key);
+                session=sm.newSession(key);
                 sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
             }
             else {
                 key.USR = umr;
                 smsc_log_debug(log, "SMPP Submit: Continue, UMR=%d", umr);
-                session=scag::sessions::SessionManager::Instance().getSession(key);
+                session=sm.getSession(key);
                 if (!session.Get()) {
-                    session=scag::sessions::SessionManager::Instance().newSession(key);
+                    session=sm.newSession(key);
                     sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
                     smsc_log_warn(log, "SMPP Submit: Session for USR=%d not found, created new USR=%d", umr, key.USR);
                 }
@@ -602,12 +602,6 @@ void StateMachine::processDelivery(SmppCommand& cmd)
   }
 
   try{
-    int newSeq=dst->getNextSeq();
-    if (!reg.Register(dst->getUid(),newSeq,cmd))
-    {
-      throw Exception("Register cmd for uid=%d, seq=%d failed", dst->getUid(), newSeq);
-    }
-    stripUnknownSmppOptionals(sms,allowedUnknownOptionals);
       if(dst->getBindType() == btNone)
       {
         smsc_log_info(log,"Delivery: sme not connected %s(%s)->%s(%s)", sms.getOriginatingAddress().toString().c_str(), src->getSystemId(),
@@ -617,6 +611,13 @@ void StateMachine::processDelivery(SmppCommand& cmd)
       }
       else
       {
+        int newSeq=dst->getNextSeq();
+        if (!reg.Register(dst->getUid(),newSeq,cmd))
+        {
+          throw Exception("Register cmd for uid=%d, seq=%d failed", dst->getUid(), newSeq);
+        }
+        stripUnknownSmppOptionals(sms,allowedUnknownOptionals);
+        
         dst->putCommand(cmd);
         registerEvent(scag::stat::events::smpp::ACCEPTED, src, dst, (char*)ri.routeId, -1);
       }
