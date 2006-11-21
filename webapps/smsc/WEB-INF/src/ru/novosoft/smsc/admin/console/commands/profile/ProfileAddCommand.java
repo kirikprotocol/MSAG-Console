@@ -12,8 +12,11 @@ import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.profiler.Profile;
 import ru.novosoft.smsc.admin.route.Mask;
+import org.apache.log4j.Category;
 
 public class ProfileAddCommand extends ProfileGenCommand {
+  static Category logger = Category.getInstance(ProfileAddCommand.class);
+
   private String mask;
   int updateResult;
 
@@ -98,6 +101,7 @@ public class ProfileAddCommand extends ProfileGenCommand {
           break;
       }
     } catch (Exception e) {
+      logger.error("Failed to add profile", e);
       ctx.setMessage("Couldn't add " + out + ". Cause: " + e.getMessage());
       ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
     }
