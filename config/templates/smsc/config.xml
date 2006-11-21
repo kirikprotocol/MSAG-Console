@@ -52,6 +52,7 @@
 
     <param name="eventQueueLimit" type="int">1000</param>
     <param name="mergeTimeout" type="int">600</param>
+    <param name="smartMultipartForward" type="bool">true</param>
   </section>
 
   <section name="directives">
