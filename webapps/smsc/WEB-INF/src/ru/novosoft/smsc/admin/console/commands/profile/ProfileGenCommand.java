@@ -42,6 +42,10 @@ public abstract class ProfileGenCommand extends CommandClass {
     protected String groupIdOrName = "";
     protected int inputAccessMask = 1;
     protected int outputAccessMask = 1;
+    protected int inputAccessBitOff = 0;
+    protected int outputAccessBitOff = 0;
+    protected int inputAccessBitOn = 0;
+    protected int outputAccessBitOn = 0;
     protected int services = 0;
 
     protected boolean isAliasOptions = false;
@@ -197,10 +201,9 @@ public abstract class ProfileGenCommand extends CommandClass {
     }
 
     public void setInputAccessBit(boolean value, int bitNum) throws RecognitionException {
-        if (bitNum < 0 && bitNum > 31) throw new RecognitionException("incorrect bit value");
-        if (value) inputAccessMask = inputAccessMask | (1 << bitNum);
-              else inputAccessMask = inputAccessMask & ~(1 << bitNum);
-        this.isInputAccessMask = true;
+      if (bitNum < 0 && bitNum > 31) throw new RecognitionException("incorrect bit value");
+      if( value ) inputAccessBitOn = 1 << bitNum;
+      else inputAccessBitOff = 1 << bitNum;
     }
 
     public void setOutputAccessMask(int outputAccessMask) {
@@ -209,10 +212,9 @@ public abstract class ProfileGenCommand extends CommandClass {
     }
 
     public void setOutputAccessBit(boolean value, int bitNum) throws RecognitionException {
-        if (bitNum < 0 && bitNum > 31) throw new RecognitionException("incorrect bit value");
-        if (value) outputAccessMask = outputAccessMask | (1 << bitNum);
-              else outputAccessMask = outputAccessMask & ~(1 << bitNum);
-        this.isOutputAccessMask = true;
+      if (bitNum < 0 && bitNum > 31) throw new RecognitionException("incorrect bit value");
+      if( value ) outputAccessBitOn = 1 << bitNum;
+      else outputAccessBitOff = 1 << bitNum;
     }
 
     public void setGroupIdOrName(String group) {

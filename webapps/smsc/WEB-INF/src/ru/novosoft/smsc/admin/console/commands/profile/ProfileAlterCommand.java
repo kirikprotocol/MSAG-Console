@@ -74,7 +74,17 @@ public class ProfileAlterCommand extends ProfileGenCommand {
                     profile.setLocale(locale);
                 }
                 if (isInputAccessMask) profile.setInputAccessMask(inputAccessMask);
+                else if( inputAccessBitOff != 0 ) {
+                  profile.setInputAccessMask(profile.getInputAccessMask()&(~inputAccessBitOff));
+                } else if( inputAccessBitOn != 0 ) {
+                  profile.setInputAccessMask(profile.getInputAccessMask()|inputAccessBitOn);
+                }
                 if (isOutputAccessMask) profile.setOutputAccessMask(outputAccessMask);
+                else if( outputAccessBitOff != 0 ) {
+                  profile.setOutputAccessMask(profile.getOutputAccessMask()&(~outputAccessBitOff));
+                } else if( outputAccessBitOn != 0 ) {
+                  profile.setOutputAccessMask(profile.getOutputAccessMask()|outputAccessBitOn);
+                }
                 if (isServices) profile.setServices(services);
                 updateResult = ctx.getSmsc().profileUpdate(mask, profile);
                 switch (updateResult) {
