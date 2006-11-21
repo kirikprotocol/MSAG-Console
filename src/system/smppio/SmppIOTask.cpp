@@ -59,7 +59,7 @@ static void KillProxy(int ct,SmppProxy* proxy,SmeManager* smeManager)
       smeManager->unregisterSmeProxy(proxy);
       smsc_log_debug(snmpLog,"unregister sme: %s successful",proxy->getSystemId());
 #ifdef SNMP
-      if(ct==-1)
+      if(ct==ctTransceiver)
       {
         char buf[1024];
         sprintf(buf,"ACTIVE ESME %s unregistered successfully (AlaramID=%s; severity=2)",proxy->getSystemId(),proxy->getSystemId());
@@ -69,7 +69,7 @@ static void KillProxy(int ct,SmppProxy* proxy,SmeManager* smeManager)
     }catch(...)
     {
 #ifdef SNMP
-      if(ct==-1)
+      if(ct==ctTransceiver)
       {
         char buf[1024];
         sprintf(buf,"ACTIVE ESME %s unregistration failed (AlaramID=%s; severity=4)",proxy->getSystemId(),proxy->getSystemId());
@@ -83,16 +83,20 @@ static void KillProxy(int ct,SmppProxy* proxy,SmeManager* smeManager)
     delete proxy;
     proxy=0;
   }
+
 #ifdef SNMP
-  if(proxy && ct!=-1 && cnt%1)
+  __trace2__("unreg: sid=%s, ct=%d, cnt=%d",proxy?proxy->getSystemId():"NULL",ct,cnt);
+  if(proxy && ct!=ctTransceiver && (cnt%2))
   {
+    __trace2__("sending unreg trap for %s",proxy->getSystemId());
     char buf[1024];
     char trueSid[32];
-    sprintf(trueSid,"%s_%s",proxy->getSystemId(),ct==0?"rx":"tx");
+    sprintf(trueSid,"%s_%s",proxy->getSystemId(),ct==ctReceiver?"rx":"tx");
     sprintf(buf,"ACTIVE ESME %s unregistered successfully (AlaramID=%s; severity=2)",trueSid,trueSid);
-    smsc::snmp::SnmpAgent::trap(proxy->getSystemId(),"ESME",smsc::snmp::SnmpAgent::WARNING,buf);
+    smsc::snmp::SnmpAgent::trap(trueSid,"ESME",smsc::snmp::SnmpAgent::WARNING,buf);
   }
 #endif
+
 }
 
 SmppInputThread::~SmppInputThread()
@@ -307,11 +311,11 @@ int SmppInputThread::Execute()
           int retcode=ss->receive();
           if(retcode==-1)
           {
-            for(int i=0;i<sockets.Count();i++)
+            for(int j=0;j<sockets.Count();j++)
             {
-              if(sockets[i]==ss)
+              if(sockets[j]==ss)
               {
-                killSocket(i);
+                killSocket(j);
                 break;
               }
             }
@@ -321,11 +325,11 @@ int SmppInputThread::Execute()
             SmppHeader *pdu=ss->decode();
             if(!pdu)
             {
-              for(int i=0;i<sockets.Count();i++)
+              for(int j=0;j<sockets.Count();j++)
               {
-                if(sockets[i]==ss)
+                if(sockets[j]==ss)
                 {
-                  killSocket(i);
+                  killSocket(j);
                   break;
                 }
               }
@@ -419,16 +423,16 @@ int SmppInputThread::Execute()
                   smsc::snmp::SnmpAgent::trap(sid.c_str(),"ESME",smsc::snmp::SnmpAgent::WARNING,snmpMsg);
 #endif
 
-                  int errcode=SmppStatusSet::ESME_RBINDFAIL;
+                  int respcode=SmppStatusSet::ESME_RBINDFAIL;
                   switch(e.getReason())
                   {
-                    case SmeRegisterFailReasons::rfUnknownSystemId:errcode=SmppStatusSet::ESME_RBINDFAIL;break;
-                    case SmeRegisterFailReasons::rfAlreadyRegistered:errcode=SmppStatusSet::ESME_RALYBND;break;
-                    case SmeRegisterFailReasons::rfInvalidPassword:errcode=SmppStatusSet::ESME_RBINDFAIL;break;
-                    case SmeRegisterFailReasons::rfDisabled:errcode=SmppStatusSet::ESME_RBINDFAIL;break;
+                    case SmeRegisterFailReasons::rfUnknownSystemId:respcode=SmppStatusSet::ESME_RBINDFAIL;break;
+                    case SmeRegisterFailReasons::rfAlreadyRegistered:respcode=SmppStatusSet::ESME_RALYBND;break;
+                    case SmeRegisterFailReasons::rfInvalidPassword:respcode=SmppStatusSet::ESME_RBINDFAIL;break;
+                    case SmeRegisterFailReasons::rfDisabled:respcode=SmppStatusSet::ESME_RBINDFAIL;break;
                     //case SmeRegisterFailReasons::rfInternalError:;
                   }
-                  resppdu.get_header().set_commandStatus(errcode);
+                  resppdu.get_header().set_commandStatus(respcode);
                   warn2(log,"registration failed:%s",e.what());
                   //delete proxy;
                   err=true;
@@ -619,8 +623,16 @@ int SmppInputThread::Execute()
                       smsc_log_debug(snmpLog,"register sme: %s successful",sid.c_str());
 #ifdef SNMP
                       char snmpMsg[1024];
-                      sprintf(snmpMsg,"CLEARED ESME %s registration successful (AlaramID=%s; severity=1)",sid.c_str(),sid.c_str());
-                      smsc::snmp::SnmpAgent::trap(sid.c_str(),"ESME",smsc::snmp::SnmpAgent::NORMAL,snmpMsg);
+                      char realSid[32];
+                      if(pdu->get_commandId()!=SmppCommandSet::BIND_TRANCIEVER)
+                      {
+                        sprintf(realSid,"%s_%s",sid.c_str(),pdu->get_commandId()==SmppCommandSet::BIND_RECIEVER?"rx":"tx");
+                      }else
+                      {
+                        sprintf(realSid,"%s",sid.c_str());
+                      }
+                      sprintf(snmpMsg,"CLEARED ESME %s registration successful (AlaramID=%s; severity=1)",realSid,realSid);
+                      smsc::snmp::SnmpAgent::trap(realSid,"ESME",smsc::snmp::SnmpAgent::NORMAL,snmpMsg);
 #endif
                       proxy->setId(sid,proxyIndex);
                       info2(log,"NEWPROXY: p=%p, smid=%s, forceDC=%s",proxy,sid.c_str(),si.forceDC?"true":"false");
@@ -628,10 +640,10 @@ int SmppInputThread::Execute()
                     {
 #ifdef SNMP
                       char snmpMsg[1024];
-                      char trueSid[32];
-                      sprintf(trueSid,"%s_%s",sid.c_str(),pdu->get_commandId()==SmppCommandSet::BIND_RECIEVER?"rx":"tx");
-                      sprintf(snmpMsg,"ACTIVE ESME %s registration successful (AlaramID=%s; severity=1)",trueSid,trueSid);
-                      smsc::snmp::SnmpAgent::trap(sid.c_str(),"ESME",smsc::snmp::SnmpAgent::WARNING,snmpMsg);
+                      char realSid[32];
+                      sprintf(realSid,"%s_%s",sid.c_str(),pdu->get_commandId()==SmppCommandSet::BIND_RECIEVER?"rx":"tx");
+                      sprintf(snmpMsg,"CLEARED ESME %s registration successful (AlaramID=%s; severity=1)",realSid,realSid);
+                      smsc::snmp::SnmpAgent::trap(realSid,"ESME",smsc::snmp::SnmpAgent::NORMAL,snmpMsg);
 #endif
                       smsc_log_debug(snmpLog,"register second channel of sme:%s",sid.c_str());
                       //proxy->AddRef();
@@ -641,17 +653,17 @@ int SmppInputThread::Execute()
                   }catch(SmeRegisterException& e)
                   {
                     smsc_log_debug(snmpLog,"register sme: %s failed",sid.c_str());
-                    int errcode=SmppStatusSet::ESME_RBINDFAIL;
+                    int respcode=SmppStatusSet::ESME_RBINDFAIL;
                     switch(e.getReason())
                     {
-                      case SmeRegisterFailReasons::rfUnknownSystemId:errcode=SmppStatusSet::ESME_RBINDFAIL;break;
-                      case SmeRegisterFailReasons::rfAlreadyRegistered:errcode=SmppStatusSet::ESME_RALYBND;break;
-                      case SmeRegisterFailReasons::rfInvalidPassword:errcode=SmppStatusSet::ESME_RBINDFAIL;break;
-                      case SmeRegisterFailReasons::rfDisabled:errcode=SmppStatusSet::ESME_RBINDFAIL;break;
+                      case SmeRegisterFailReasons::rfUnknownSystemId:respcode=SmppStatusSet::ESME_RBINDFAIL;break;
+                      case SmeRegisterFailReasons::rfAlreadyRegistered:respcode=SmppStatusSet::ESME_RALYBND;break;
+                      case SmeRegisterFailReasons::rfInvalidPassword:respcode=SmppStatusSet::ESME_RBINDFAIL;break;
+                      case SmeRegisterFailReasons::rfDisabled:respcode=SmppStatusSet::ESME_RBINDFAIL;break;
                       //case SmeRegisterFailReasons::rfInternalError:;
                     }
                     resppdu.get_header().
-                      set_commandStatus(errcode);
+                      set_commandStatus(respcode);
                     warn2(log,"registration failed:%s",e.what());
                     //delete proxy;
                     err=true;
@@ -685,21 +697,21 @@ int SmppInputThread::Execute()
                 if(err)
                 {
                     char snmpMsg[1024];
-                    char trueSid[32];
-                    if(rebindproxy)
+                    char realSid[32];
+                    if(pdu->get_commandId()!=SmppCommandSet::BIND_TRANCIEVER)
                     {
-                      sprintf(snmpMsg,"CLEARED ESME %s registration successful (AlaramID=%s; severity=1)",sid.c_str(),sid.c_str());
-                      smsc::snmp::SnmpAgent::trap(sid.c_str(),"ESME",smsc::snmp::SnmpAgent::NORMAL,snmpMsg);
+                      sprintf(realSid,"%s_%s",sid.c_str(),pdu->get_commandId()==SmppCommandSet::BIND_RECIEVER?"rx":"tx");
                     }else
                     {
-                      sprintf(trueSid,"%s_%s",sid.c_str(),pdu->get_commandId()==SmppCommandSet::BIND_RECIEVER?"rx":"tx");
-                      sprintf(snmpMsg,"ACTIVE ESME %s registration failed (AlaramID=%s; severity=4)",trueSid,trueSid);
-                      smsc::snmp::SnmpAgent::trap(sid.c_str(),"ESME",smsc::snmp::SnmpAgent::WARNING,snmpMsg);
+                      sprintf(realSid,"%s",sid.c_str());
                     }
+                    sprintf(realSid,"%s_%s",sid.c_str(),pdu->get_commandId()==SmppCommandSet::BIND_RECIEVER?"rx":"tx");
+                    sprintf(snmpMsg,"ACTIVE ESME %s registration failed (AlaramID=%s; severity=4)",realSid,realSid);
+                    smsc::snmp::SnmpAgent::trap(realSid,"ESME",smsc::snmp::SnmpAgent::WARNING,snmpMsg);
                 }
                 if(resppdu.get_header().get_commandStatus()==SmppStatusSet::ESME_RBINDFAIL)
                 {
-                  SnmpCounter::getInstance().incCounter(SnmpCounter::cntErr0xd,bindpdu->get_systemId());
+                  SnmpCounter::getInstance().incCounter(SnmpCounter::cntErr0xd,sid.c_str());
                 }
 #endif
                 resppdu.set_scInterfaceVersion(0x34);
@@ -719,11 +731,11 @@ int SmppInputThread::Execute()
                 }
                 if(err)
                 {
-                  for(int i=0;i<sockets.Count();i++)
+                  for(int j=0;j<sockets.Count();j++)
                   {
-                    if(sockets[i]==ss)
+                    if(sockets[j]==ss)
                     {
-                      killSocket(i);
+                      killSocket(j);
                       break;
                     }
                   }
