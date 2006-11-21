@@ -11,8 +11,8 @@
 #include "system/event_queue.h"
 #include "store/MessageStore.h"
 #include "util/config/smeman/SmeManConfig.h"
-#include "alias/aliasman.h"
-#include "util/config/alias/aliasconf.h"
+#include "alias/AliasMan.hpp"
+//#include "util/config/alias/aliasconf.h"
 #include "util/config/route/RouteConfig.h"
 #include "system/scheduler.hpp"
 #include "profiler/profiler.hpp"
@@ -26,6 +26,9 @@
 //#include "db/DataSource.h"
 //#include "db/DataSourceLoader.h"
 #include "snmp/SnmpAgent.hpp"
+#ifdef SNMP
+#include "system/snmp/SnmpCounter.hpp"
+#endif
 #include "acls/interfaces.h"
 
 #include "distrlist/DistrListManager.h"
@@ -123,7 +126,7 @@ namespace StatEvents{
 struct SmscConfigs{
   smsc::util::config::Manager* cfgman;
   smsc::util::config::smeman::SmeManConfig* smemanconfig;
-  smsc::util::config::alias::AliasConfig* aliasconfig;
+  //smsc::util::config::alias::AliasConfig* aliasconfig;
   smsc::util::config::route::RouteConfig* routesconfig;
   Hash<string> *licconfig;
 };
@@ -131,7 +134,7 @@ struct SmscConfigs{
 class Smsc
 {
 public:
-  Smsc():ssockman(&tp,&smeman),stopFlag(false),router_(0),aliaser_(0),testRouter_(0),mergeCacheTimeouts(4096), ishs(false)
+  Smsc():ssockman(&tp,&smeman),stopFlag(false),router_(0),aliaser(0),testRouter_(0),mergeCacheTimeouts(4096), ishs(false)
   {
     submitOkCounter=0;
     submitErrCounter=0;
@@ -163,11 +166,11 @@ public:
 
   bool AliasToAddress(const Address& alias,Address& addr)
   {
-    return getAliaserInstance()->AliasToAddress(alias,addr);
+    return aliaser->AliasToAddress(alias,addr);
   }
   bool AddressToAlias(const Address& addr,Address& alias)
   {
-    return getAliaserInstance()->AddressToAlias(addr,alias);
+    return aliaser->AddressToAlias(addr,alias);
   }
 
   void cancelSms(SMSId id,const Address& oa,const Address& da)
@@ -240,6 +243,9 @@ public:
         MutexGuard g(perfMutex);
         submitOkCounter++;
         smePerfMonitor.incAccepted(sms->getSourceSmeId());
+#ifdef SNMP
+        SnmpCounter::getInstance().incCounter(SnmpCounter::cntAccepted,sms->getSourceSmeId());
+#endif
       }break;
       case etSubmitErr:
       {
@@ -247,6 +253,9 @@ public:
         MutexGuard g(perfMutex);
         submitErrCounter++;
         smePerfMonitor.incRejected(sms->getSourceSmeId(), sms->getLastResult());
+#ifdef SNMP
+        SnmpCounter::getInstance().incCounter(SnmpCounter::cntRejected,sms->getSourceSmeId());
+#endif
       }break;
       case etDeliveredOk:
       {
@@ -353,11 +362,12 @@ public:
     return RefferGuard<RouteManager>(testRouter_);
   }
 
-  RefferGuard<AliasManager> getAliaserInstance()
+
+  AliasManager* getAliaserInstance()
   {
-    MutexGuard g(aliasesSwitchMutex);
-    return RefferGuard<AliasManager>(aliaser_);
+    return aliaser;
   }
+
 
   void ResetRouteManager(RouteManager* manager)
   {
@@ -373,16 +383,18 @@ public:
     testRouter_ = new Reffer<RouteManager>(manager);
   }
 
+  /*
   void ResetAliases(AliasManager* manager)
   {
     MutexGuard g(aliasesSwitchMutex);
     if ( aliaser_ ) aliaser_->Release();
     aliaser_ = new Reffer<AliasManager>(manager);
   }
+  */
 
   void reloadRoutes(const SmscConfigs& cfg);
   void reloadTestRoutes(const RouteConfig& rcfg);
-  void reloadAliases(const SmscConfigs& cfg);
+  //void reloadAliases(const SmscConfigs& cfg);
   void reloadReschedule();
 
   void flushStatistics()
@@ -530,10 +542,12 @@ protected:
   smsc::system::smppio::SmppSocketsManager ssockman;
   smsc::smeman::SmeManager smeman;
   Mutex routerSwitchMutex;
-  Mutex aliasesSwitchMutex;
+  //Mutex aliasesSwitchMutex;
   Reffer<RouteManager>* router_;
   Reffer<RouteManager>* testRouter_;
-  Reffer<AliasManager>* aliaser_;
+
+  AliasManager* aliaser;
+
   EventQueue eventqueue;
   smsc::store::MessageStore *store;
   Scheduler *scheduler;
