@@ -12,6 +12,7 @@
 #include <util/config/ConfigView.h>
 
 #include "version.inc"
+#include "util/mirrorfile/mirrorfile.h"
 
 #include "ProfileStore.h"
 #include "PersServer.h"

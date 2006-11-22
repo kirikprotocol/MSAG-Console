@@ -13,6 +13,8 @@
 #include <core/threads/Thread.hpp>
 
 #include "license/check/license.hpp"
+#include "util/mirrorfile/mirrorfile.h"
+
 #include "admin/SCAGSocketListener.h"
 #include "config/ConfigManager.h"
 #include "Inst.h"
