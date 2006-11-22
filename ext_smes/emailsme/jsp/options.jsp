@@ -128,14 +128,24 @@
   <th>format</th>
   <td><input class=txt name=mail_format value="<%=StringEncoderDecoder.encode(bean.getMail_format())%>"></td>
 </tr>
+<tr class=row<%=rowN++&1%>>
+  <th>user name transform regexp</th>
+  <td><input class=txt name=mail_user_name_transform_regexp value="<%=StringEncoderDecoder.encode(bean.getMail_user_name_transform_regexp())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>user name transform result</th>
+  <td><input class=txt name=mail_user_name_transform_result value="<%=StringEncoderDecoder.encode(bean.getMail_user_name_transform_result())%>"></td>
+</tr>
 
 <%rowN=0;%>
 <tr><td colspan=2>&nbsp;</td></tr>
 <tr><td colspan=2><div class=page_subtitle>Defaults</div></td></tr>
-<tr class=row<%=rowN++&1%>>
+<!--
+<tr class=row<%=""/*rowN++&1*/%>>
   <th>daily limit</th>
   <td><input class=txt name=defaults_dailyLimt value="<%=StringEncoderDecoder.encode(bean.getDefaults_dailyLimt())%>"></td>
 </tr>
+-->
 <tr class=row<%=rowN++&1%>>
   <th>annotation size</th>
   <td><input class=txt name=default_annotation_size value="<%=StringEncoderDecoder.encode(bean.getDefault_annotation_size())%>"></td>

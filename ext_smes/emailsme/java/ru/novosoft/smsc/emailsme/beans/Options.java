@@ -37,6 +37,8 @@ public class Options extends SmeBean
   private String mail_domain = "";
   private String mail_stripper = "";
   private String mail_format = "";
+  private String mail_user_name_transform_regexp;
+  private String mail_user_name_transform_result;
 
   private String smtp_host = "";
   private int smtp_port = 0;
@@ -125,6 +127,8 @@ public class Options extends SmeBean
         mail_domain = getStringParameter("mail.domain");
         mail_stripper = getStringParameter("mail.stripper");
         mail_format = getStringParameter("mail.format");
+        mail_user_name_transform_regexp = getStringParameter("mail.userNameTransformRegexp");
+        mail_user_name_transform_result = getStringParameter("mail.userNameTransformResult");
 
         smtp_host = getStringParameter("smtp.host");
         smtp_port = getIntParameter("smtp.port");
@@ -200,6 +204,8 @@ public class Options extends SmeBean
     getConfig().setString("mail.domain", mail_domain);
     getConfig().setString("mail.stripper", mail_stripper);
     getConfig().setString("mail.format", mail_format);
+    getConfig().setString("mail.userNameTransformRegexp", mail_user_name_transform_regexp);
+    getConfig().setString("mail.userNameTransformResult", mail_user_name_transform_result);
 
     getConfig().setString("smtp.host", smtp_host);
     getConfig().setInt("smtp.port", smtp_port);
@@ -580,6 +586,22 @@ public class Options extends SmeBean
 
   public void setMail_format(String mail_format) {
     this.mail_format = mail_format;
+  }
+
+  public String getMail_user_name_transform_regexp() {
+    return mail_user_name_transform_regexp;
+  }
+
+  public void setMail_user_name_transform_regexp(String mail_user_name_transform_regexp) {
+    this.mail_user_name_transform_regexp = mail_user_name_transform_regexp;
+  }
+
+  public String getMail_user_name_transform_result() {
+    return mail_user_name_transform_result;
+  }
+
+  public void setMail_user_name_transform_result(String mail_user_name_transform_result) {
+    this.mail_user_name_transform_result = mail_user_name_transform_result;
   }
 
   public String getDefault_annotation_size() {
