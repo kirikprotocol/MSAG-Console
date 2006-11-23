@@ -24,6 +24,7 @@ import java.util.Date;
 public abstract class Session extends Thread
 {
     private org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(this.getClass());
+    private org.apache.log4j.Category logConsole = org.apache.log4j.Category.getInstance("console");
 
     private final static String COMMAND_QUIT = "quit";
 
@@ -196,6 +197,7 @@ public abstract class Session extends Thread
             prompt();
             String input = readTelnetLine(true);
             if (input == null || input.length() == 0) continue;
+            logConsole.info(user.getName()+"@"+socket.getInetAddress().getHostAddress()+" in: "+input);
             if (input.equalsIgnoreCase(COMMAND_QUIT)) {
                 farewell(null); sleep(1000); break;
             }
@@ -290,6 +292,7 @@ public abstract class Session extends Thread
         os.flush();
     }
     protected void printlnString(String str) throws IOException {
+      logConsole.info(user.getName()+"@"+socket.getInetAddress().getHostAddress()+" out: "+str);
         printString(str+"\r\n");
     }
 
