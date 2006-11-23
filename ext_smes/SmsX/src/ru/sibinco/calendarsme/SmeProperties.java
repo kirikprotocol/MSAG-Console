@@ -22,6 +22,9 @@ public class SmeProperties {
 
     // CALENDAR ENGINE
     public static final long CALENDAR_ENGINE_WORKING_INTERVAL;
+    public static final String CALENDAR_SEND_DATE_IS_IN_THE_PAST;
+    public static final String CALENDAR_SEND_DATE_IS_WRONG;
+    public static final int CALENDAR_SEND_DATE_MAX_YEAR;
     // SQL
     public static final String CALENDAR_ENGINE_LOAD_LIST_SQL;
     public static final String CALENDAR_ENGINE_REMOVE_MESSAGE_SQL;
@@ -56,6 +59,9 @@ public class SmeProperties {
       REQUEST_PROCESSOR_RELOAD_TIMEZONES_INTERVAL = Utils.loadInt(config, "request.processor.reload.timezones.interval");
 
       CALENDAR_ENGINE_WORKING_INTERVAL = Utils.loadInt(config, "calendar.engine.working.interval");
+      CALENDAR_SEND_DATE_IS_IN_THE_PAST = Utils.loadString(config, "calendar.send.date.is.in.the.past");
+      CALENDAR_SEND_DATE_IS_WRONG = Utils.loadString(config, "calendar.send.date.is.wrong");
+      CALENDAR_SEND_DATE_MAX_YEAR = Utils.loadInt(config, "calendar.send.date.max.year");
       CALENDAR_ENGINE_LOAD_LIST_SQL = Utils.loadString(config, "calendar.engine.load.list.sql");
       CALENDAR_ENGINE_REMOVE_MESSAGE_SQL = Utils.loadString(config, "calendar.engine.remove.message.sql");
 

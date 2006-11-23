@@ -23,7 +23,7 @@ public class CalendarSmeEngine {
     calendarEngine.waitStarting();
 
     // Init request processor
-    this.requestProcessor = new CalendarRequestProcessor(messagesList, multiplexor);
+    this.requestProcessor = new CalendarRequestProcessor(messagesList, outQueue, multiplexor);
   }
 
   public boolean processMessage(final Message message) {

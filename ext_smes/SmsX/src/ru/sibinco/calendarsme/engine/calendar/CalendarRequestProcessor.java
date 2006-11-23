@@ -11,6 +11,8 @@ import ru.aurorisoft.smpp.Multiplexor;
 import ru.aurorisoft.smpp.SMPPException;
 import ru.sibinco.calendarsme.InitializationException;
 import ru.sibinco.calendarsme.SmeProperties;
+import ru.sibinco.calendarsme.network.OutgoingObject;
+import ru.sibinco.calendarsme.network.OutgoingQueue;
 import ru.sibinco.calendarsme.engine.timezones.Timezones;
 import ru.sibinco.calendarsme.utils.ConnectionPool;
 
@@ -27,13 +29,15 @@ final class CalendarRequestProcessor {
 
   private final CalendarMessagesList messagesList;
   private final Multiplexor multiplexor;
+  private final OutgoingQueue outQueue;
 
-  public CalendarRequestProcessor(final CalendarMessagesList messagesList, final Multiplexor multiplexor) {
+  public CalendarRequestProcessor(final CalendarMessagesList messagesList, final OutgoingQueue outQueue, final Multiplexor multiplexor) {
     if (messagesList == null)
       throw new InitializationException(NAME + ": messages list not specified");
 
     this.messagesList = messagesList;
     this.multiplexor = multiplexor;
+    this.outQueue = outQueue;
   }
 
   public boolean processRequest(final Message message)  {
@@ -48,6 +52,15 @@ final class CalendarRequestProcessor {
       final Date sendDate = (parseResult.getType() == CalendarRequestParser.ATF_REQUEST) ? parseResult.getDate() :
         changeDateAccordingTimezone(message.getSourceAddress(), parseResult.getDate());
 
+
+      // Check send date
+      if (sendDate.before(new Date())) {
+        sendResponse(message, Data.ESME_RX_P_APPN);
+        sendMessage(message.getDestinationAddress(), message.getSourceAddress(), SmeProperties.General.CALENDAR_SEND_DATE_IS_IN_THE_PAST);
+        return true;
+      }
+
+
       processMessage(message, new CalendarMessage(message.getSourceAddress(), message.getDestinationAddress(), sendDate, parseResult.getMessage()));
 
     } catch (CalendarRequestParser.WrongMessageFormatException e) {
@@ -56,6 +69,9 @@ final class CalendarRequestProcessor {
     } catch (CalendarRequestParser.ParseException e) {
       Log.error("", e);
       sendResponse(message, Data.ESME_RSYSERR);
+    } catch (CalendarRequestParser.WrongSendDateException e) {
+      sendResponse(message, Data.ESME_RX_P_APPN);
+      sendMessage(message.getDestinationAddress(), message.getSourceAddress(), SmeProperties.General.CALENDAR_SEND_DATE_IS_WRONG);
     }
     return true;
   }
@@ -147,6 +163,15 @@ final class CalendarRequestProcessor {
     } catch (SMPPException e) {
       Log.warn("Exception occured sending delivery response.", e);
     }
+  }
+
+  private void sendMessage(final String fromAbonent, final String toAbonent, final String message) {
+    Log.info("Send message from abonent: " + fromAbonent + "; to abonent: " + toAbonent + "; message: " + message);
+    final Message msg = new Message();
+    msg.setSourceAddress(fromAbonent);
+    msg.setDestinationAddress(toAbonent);
+    msg.setMessageString(message);
+    outQueue.addOutgoingObject(new OutgoingObject(msg));
   }
 
   /**

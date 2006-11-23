@@ -1,5 +1,7 @@
 package ru.sibinco.calendarsme.engine.calendar;
 
+import ru.sibinco.calendarsme.SmeProperties;
+
 import java.util.Calendar;
 import java.util.Date;
 
@@ -42,7 +44,7 @@ final class CalendarRequestParser {
   private final static String AT_REGEX_DATE_TIME_MIN = AT + ONE_OR_MORE_SPACES + DATE_TIME_MIN + ANY_STRING_AFTER_SPACE;
   private final static String AT_REGEX_DATE_TIME_SEC = AT + ONE_OR_MORE_SPACES + DATE_TIME_SEC + ANY_STRING_AFTER_SPACE;
 
-  static ParseResult parseRequest(final String message) throws ParseException, WrongMessageFormatException{
+  static ParseResult parseRequest(final String message) throws ParseException, WrongMessageFormatException, WrongSendDateException{
     try {
       final String msg = message.trim();
 
@@ -55,8 +57,8 @@ final class CalendarRequestParser {
         return parseAT(msg, DATE_TIME_MIN);
       else if (msg.matches(AT_REGEX_DATE))
         return parseAT(msg, DATE);
-    } catch (WrongMessageFormatException e) {
-      throw new WrongMessageFormatException();
+    } catch (WrongSendDateException e) {
+      throw new WrongSendDateException();
     } catch (Throwable e) {
       throw new ParseException(e);
     }
@@ -76,7 +78,7 @@ final class CalendarRequestParser {
     return new ParseResult(ATF_REQUEST, message, calendar.getTime());
   }
 
-  private static ParseResult parseAT(final String str, final String dateRegex) throws WrongMessageFormatException {
+  private static ParseResult parseAT(final String str, final String dateRegex) throws  WrongSendDateException {
     final String dateAndMessage = str.split(AT + ONE_OR_MORE_SPACES, 2)[1].trim() + " "; // Space is neccessary here
     final String message = dateAndMessage.split(dateRegex)[1].trim();
     final String dateStr = dateAndMessage.substring(0, dateAndMessage.length() - message.length() - 1);
@@ -85,22 +87,25 @@ final class CalendarRequestParser {
 
 
 
-  private static Date parseDate(final String dateStr) throws WrongMessageFormatException {
+  private static Date parseDate(final String dateStr) throws  WrongSendDateException {
     final String[] strings = dateStr.split(DOT);
     final int day = Integer.parseInt(strings[0].trim());
     final int months = Integer.parseInt(strings[1].trim());
     if (months - 1 > 11)
-      throw new WrongMessageFormatException();
+      throw new WrongSendDateException();
 
     final String[] strings1 = strings[2].trim().split(ONE_OR_MORE_SPACES);
     final int year = Integer.parseInt(strings1[0]);
+
+    if (year == 0 || year > SmeProperties.General.CALENDAR_SEND_DATE_MAX_YEAR )
+      throw new WrongSendDateException();
 
     // Check date
     Calendar calend = Calendar.getInstance();
     calend.set(Calendar.MONTH, months - 1);
     calend.set(Calendar.YEAR, year);
     if (day == 0 || day > calend.getActualMaximum(Calendar.DAY_OF_MONTH))
-      throw new WrongMessageFormatException();
+      throw new WrongSendDateException();
 
     final Calendar calendar = Calendar.getInstance();
     calendar.setTime(new Date());
@@ -118,7 +123,7 @@ final class CalendarRequestParser {
     }
 
     if (hour > 23 || minute > 59 || second > 59)
-      throw new WrongMessageFormatException();
+      throw new WrongSendDateException();
 
     calendar.set(year, months - 1, day, hour, minute, second);
 
@@ -142,6 +147,8 @@ final class CalendarRequestParser {
       e.printStackTrace();
     } catch (WrongMessageFormatException e) {
       System.out.println("Wrong message format");
+    } catch (WrongSendDateException e) {
+      e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
     }
   }
 
@@ -181,5 +188,11 @@ final class CalendarRequestParser {
    * Wrong or unknown message format
    */
   public static class WrongMessageFormatException extends Exception{
+  }
+
+  /**
+   * Wrong send date
+   */
+  public static class WrongSendDateException extends Exception {
   }
 }
