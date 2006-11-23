@@ -439,6 +439,20 @@
     </form-login-config>
   </login-config>
 
+  <!-- Emailsme -->
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/esme_emailsme/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>emailsme</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
   <!-- security roles -->
 
   <security-role>
