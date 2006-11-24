@@ -425,8 +425,8 @@ public:
         bool retry     = (!Status::isErrorPermanent(status));
 
         bool immediate = (status == Status::MSGQFUL   ||
-                          status == Status::THROTTLED ||
-                          status == Status::SUBSCRBUSYMT);
+                          status == Status::THROTTLED /*|| commented for Lugovoj's request
+                                                        status == Status::SUBSCRBUSYMT*/);
 
         bool trafficst = (status == Status::MSGQFUL                   ||
                           status == Status::THROTTLED                 ||
