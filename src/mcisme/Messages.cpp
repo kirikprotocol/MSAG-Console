@@ -17,9 +17,9 @@ const char* MSG_TEMPLATE_PARAM_ROWS    = "rows";
 
 static const char*  UNKNOWN_CALLER = "XXX";
 
-const uint8_t MAX_MSG_LATIN_LEN = 600; //160;
-const uint8_t MAX_MSG_RUS_LEN = 256;
-const uint8_t MAX_MSG_LENS[2] = {MAX_MSG_LATIN_LEN, MAX_MSG_RUS_LEN};
+const int MAX_MSG_LATIN_LEN = 600; //160;
+const int MAX_MSG_RUS_LEN = 256;
+const int MAX_MSG_LENS[2] = {MAX_MSG_LATIN_LEN, MAX_MSG_RUS_LEN};
 
 void keyIsNotSupported(const char* key) throw(AdapterException) {
     throw AdapterException(Exception("Argument '%s' is not supported by message formatter", key));
