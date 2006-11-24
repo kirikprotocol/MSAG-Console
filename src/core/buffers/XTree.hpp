@@ -503,40 +503,18 @@ public:
   }
   bool Find(const char* key,T& data)const
   {
-    Node* backTrack=0;
-    const char* btKey=0;
-    Node* ptr=root;
-    while(ptr)
+    if(FindRec(root,key,data))return true;
+    Node* ptr=root->maskNode;
+    key++;
+    while(ptr && *key)
     {
-      if(ptr->maskNode)
-      {
-        backTrack=ptr->maskNode;
-        btKey=key;
-      }
-      if(!*key)
-      {
-        if(ptr->data)
-        {
-          data=*ptr->data;
-          return true;
-        }
-        if(backTrack)
-        {
-          ptr=backTrack;
-          key=btKey;
-          backTrack=0;
-          continue;
-        }
-        return false;
-      }
-      ptr=ptr->Find(*key);
-      if(!ptr)
-      {
-        ptr=backTrack;
-        key=btKey;
-        backTrack=0;
-      }
+      ptr=ptr->maskNode;
       key++;
+    }
+    if(ptr && ptr->data)
+    {
+      data=*ptr->data;
+      return true;
     }
     return false;
   }
@@ -624,6 +602,44 @@ protected:
         ForEachRecursive(ptr->subNodes[i],op);
       }
     }
+  }
+
+  bool FindRec(Node* ptr,const char* key,T& data)const
+  {
+    ptr=ptr->Find(*key);
+    key++;
+    while(ptr)
+    {
+      if(!*key)
+      {
+        if(ptr->data)
+        {
+          data=*ptr->data;
+          return true;
+        }
+        return false;
+      }
+      if(ptr->maskNode)
+      {
+        if(FindRec(ptr,key,data))return true;
+        ptr=ptr->maskNode;
+        key++;
+        while(ptr && *key)
+        {
+          ptr=ptr->maskNode;
+          key++;
+        }
+        if(ptr && ptr->data)
+        {
+          data=*ptr->data;
+          return true;
+        }
+        return false;
+      }
+      ptr=ptr->Find(*key);
+      key++;
+    }
+    return false;
   }
 
 };
