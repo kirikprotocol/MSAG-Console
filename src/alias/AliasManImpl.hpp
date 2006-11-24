@@ -44,7 +44,7 @@ public:
     ai.addr.toString(buf,sizeof(buf));
     if(addr2alias.Find(buf,tmp))
     {
-      if(tmp->addr.value[tmp->addr.length-1]!='?')
+      if(ai.addr==tmp->addr)
       {
         smsc_log_warn(log,"duplicate add<->alias:%s<->%s",ai.addr.toString().c_str(),buf);
         throw smsc::util::Exception("Duplicate alias found:%s",buf);
@@ -54,8 +54,11 @@ public:
     ai.alias.toString(buf,sizeof(buf));
     if(alias2addr.Find(buf,tmp))
     {
-      smsc_log_warn(log,"duplicate add<->alias:%s<->%s",ai.addr.toString().c_str(),buf);
-      throw smsc::util::Exception("Duplicate alias found:%s",buf);
+      if(ai.alias==tmp->alias)
+      {
+        smsc_log_warn(log,"duplicate add<->alias:%s<->%s",ai.addr.toString().c_str(),buf);
+        throw smsc::util::Exception("Duplicate alias found:%s",buf);
+      }
     }
     Record *recptr=new Record(ai.addr,ai.alias,ai.hide);
     alias2addr.Insert(buf,recptr);
