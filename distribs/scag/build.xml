@@ -44,6 +44,9 @@ Targets:
     rmbuild     Removes build directory from BUILD_DIR.
     makegw      Builds C++ MSAG, Admin Daemon sources into BUILD_DIR.
     makeweb     Builds WebAdmin sorces into BUILD_DIR.
+    update      Rebuilds C++ MSAG, Admin Daemon, WebAdmin sources into DISTR_DIR.	
+    updategw    Rebuilds C++ MSAG, Admin Daemon sources into DISTR_DIR.
+    updateweb   Rebuilds WebAdmin sources into DISTR_DIR.
     
     TODO: The rest of !!!!
     
@@ -129,7 +132,11 @@ Targets:
     <symlink resource="${WEBINF_DIR}/classes/log4j.properties" link="${DISTR_DIR}/conf"/>
   </target>
 
-  <target name="create_update" depends="create_distr_tree_update, makegw, makeweb">
+  <target name="create_update" depends="create_distr_tree_update, makegw, makeweb, copy_to_dist_dir">
+
+  </target>
+
+  <target name="copy_to_dist_dir">
     <copy file="${BUILD_BIN}/liblogger.so" todir="${DISTR_DIR}/lib"/>
     <!--copy file="${BUILD_BIN}/scag/exc/libscag_exc.so" todir="${DISTR_DIR}/lib"/-->
     <copy file="${BUILD_BIN}/db/exceptions/libdb_exc.so" todir="${DISTR_DIR}/lib"/>
@@ -156,15 +163,22 @@ Targets:
     <copy todir="${DISTR_DIR}/services/scag/conf" preservelastmodified="yes" flatten="yes" >
       <fileset dir="${SMSC_DIR}/config"
                includes="scag/smpp.dtd scag/operators.dtd scag/tariffs.dtd scag/services.dtd scag/smpp_routes.dtd scag/http_routes.dtd"/>
-    </copy>
+    </copy>      
   </target>
 
-  <target name="update" depends="create_update">
-    <ant antfile="${WEBSRC_DIR}/build-scag.xml" dir="${WEBSRC_DIR}" target="update"/>
-    <copy file="${BUILD_BIN}/scag/scag" todir="${DISTR_DIR}/services/scag/bin"/>
-    <chmod file="${DISTR_DIR}/services/scag/bin/scag" perm="755"/>
-    <copy file="${BUILD_BIN}/scag/pers" todir="${DISTR_DIR}/services/pers/bin"/>
-    <chmod file="${DISTR_DIR}/services/pers/bin/pers" perm="755"/>
+  <target name="clear_build_bin_dir">
+    <delete dir="${BUILD_BIN}"/>
+  </target>
+
+  <target name="updategw" depends="clear_build_bin_dir, makegw, copy_to_dist_dir">
+  </target>
+  
+  <target name="updateweb" depends="distjedit">
+    <ant antfile="${WEBSRC_DIR}/build-scag.xml" dir="${WEBSRC_DIR}" target="update"/>  
+  </target>
+  
+  <target name="update" depends="updategw, updateweb">
+
   </target>
 
   <target name="configure" depends="create_distr_tree" >
