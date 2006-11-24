@@ -530,6 +530,12 @@
     <role-name>emailsme</role-name>
   </security-role>
   <security-role>
+    <role-name>timezones</role-name>
+  </security-role>
+  <security-role>
+    <role-name>smscenters</role-name>
+  </security-role>
+  <security-role>
     <description>Access Control List manager</description>
     <role-name>acls</role-name>
   </security-role>
