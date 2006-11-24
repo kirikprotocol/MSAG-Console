@@ -546,10 +546,10 @@ void Billing::chargeResult(ChargeSmsResult::ChargeSmsResult_t chg_res, uint32_t 
     std::string reply;
 
     if (chg_res != ChargeSmsResult::CHARGING_POSSIBLE) {
-        format(reply, "NOT_POSSIBLE (code %u)", inmanErr);
+        format(reply, "NOT_POSSIBLE (cause %u)", inmanErr);
         state = Billing::bilReleased;
     } else {
-        format(reply, "POSSIBLE (via %s)", postpaidBill ? "CDR" : "SCF");
+        format(reply, "POSSIBLE (via %s, cause %u)", postpaidBill ? "CDR" : "SCF", inmanErr);
         state = Billing::bilContinued;
     }
     smsc_log_info(logger, "%s: <-- CHARGING_%s, abonent(%s) type: %s (%u)",
