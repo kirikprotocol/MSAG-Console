@@ -23,7 +23,7 @@ public:
   const char* taskName(){return "SmeAcceptor";}
   void Init(const char* host,int port)
   {
-    if(sock.InitServer(host,port,0)==-1)
+    if(sock.InitServer(host,port,0,1,true)==-1)
     {
       throw smsc::util::Exception("Failed to init listener at %s:%d",host,port);
     }
