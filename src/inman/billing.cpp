@@ -207,6 +207,16 @@ bool Billing::matchBillMode(void) const
             ) ? true : false;
 }
 
+std::string Billing::dpType(void) const
+{
+    std::string dps((cdr._bearer == CDRRecord::dpUSSD) ? "dpUSSD" : "dpSMS");
+    if (cdr._smsXSrvs) {
+        char buf[sizeof("(Extra: 0x%x)") + sizeof("FFFFFFFF") + 2];
+        snprintf(buf, sizeof(buf), "(Extra: 0x%x)", cdr._smsXSrvs);
+        dps += buf;
+    }
+    return dps;
+}
 
 void Billing::doCleanUp(void)
 {
@@ -392,16 +402,8 @@ bool Billing::onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr)
         smsc_log_error(logger, "%s: invalid Call.Adr <%s>", _logId, cdr._srcAdr.c_str());
         return false;
     }
-    {
-        std::string dps((cdr._bearer == CDRRecord::dpUSSD) ? "dpUSSD" : "dpSMS");
-        if (cdr._smsXSrvs) {
-            char buf[sizeof("(Extra: 0x%x)") + sizeof("FFFFFFFF") + 2];
-            snprintf(buf, sizeof(buf), "(Extra: 0x%x)", cdr._smsXSrvs);
-            dps += buf;
-        }
-        smsc_log_info(logger, "%s: %s: Call.Adr <%s>, Dest.Adr <%s>", _logId,
-                      dps.c_str(), cdr._srcAdr.c_str(), cdr._dstAdr.c_str());
-    }
+    smsc_log_info(logger, "%s: %s: Call.Adr <%s>, Dest.Adr <%s>", _logId,
+                    dpType().c_str(), cdr._srcAdr.c_str(), cdr._dstAdr.c_str());
     if (cdr._smsXSrvs) {
         if (cdr._bearer != CDRRecord::dpSMS)
             smsc_log_error(logger, "%s: invalid bearer for SMS Extra service", _logId);
@@ -552,9 +554,9 @@ void Billing::chargeResult(ChargeSmsResult::ChargeSmsResult_t chg_res, uint32_t 
         format(reply, "POSSIBLE (via %s, cause %u)", postpaidBill ? "CDR" : "SCF", inmanErr);
         state = Billing::bilContinued;
     }
-    smsc_log_info(logger, "%s: <-- CHARGING_%s, abonent(%s) type: %s (%u)",
-            _logId, reply.c_str(), abNumber.getSignals(),
-            _sabBillType[abType], (unsigned)abType);
+    smsc_log_info(logger, "%s: <-- %s CHARGING_%s, abonent(%s) type: %s (%u)", _logId,
+                dpType().c_str(), reply.c_str(), abNumber.getSignals(),
+                _sabBillType[abType], (unsigned)abType);
 
     SPckChargeSmsResult res;
     res.Cmd().SetValue(chg_res);
