@@ -79,7 +79,6 @@ public class SCAGAppContext {
             config = new Config(new File(config_filename));
             String gwConfigFolder = config.getString("gw location.gw_config_folder");
             scagConfFolder = new File(gwConfigFolder);
-            loggingManager = new LoggingManager(config.getString("logger.properties_file"));
             gwConfigFolder = gwConfigFolder  + File.separatorChar;
             String gwConfigFile = gwConfigFolder + File.separatorChar + config.getString("gw location.gw_config");
             gwConfig = new Config(new File(gwConfigFile));
@@ -91,6 +90,7 @@ public class SCAGAppContext {
 
             connectionPool = null;
             hsDaemon = new HSDaemon(config.getString("installation.type"), config.getString("installation.mirrorpath"));
+            loggingManager = new LoggingManager(config.getString("logger.properties_file"),hsDaemon);
             userManager = new UserManager(config.getString("users_config_file"),hsDaemon);
             providerManager = new ProviderManager(idsConfig);
             serviceProvidersManager = new ServiceProvidersManager(gwConfigFolder + config.getString("gw location.services_file"));
