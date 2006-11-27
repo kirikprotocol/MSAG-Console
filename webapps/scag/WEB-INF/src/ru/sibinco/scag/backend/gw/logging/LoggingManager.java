@@ -10,6 +10,9 @@ import java.io.*;
 import java.util.Iterator;
 import java.util.Map;
 
+import ru.sibinco.scag.backend.installation.HSDaemon;
+import ru.sibinco.lib.SibincoException;
+
 /**
  * The <code>LoggingManager</code> class represents
  * <p><p/>
@@ -21,19 +24,23 @@ import java.util.Map;
 public class LoggingManager {
 
     private Logger logger = Logger.getLogger(this.getClass());
-
+    private static final String CAT_PREFIX = "cat.";
+    private final HSDaemon hsDaemon;
     private File loggerFile;
 
-    public LoggingManager(final String lfile){
+    public LoggingManager(final String lfile, HSDaemon hsDaemon){
         loggerFile = new File(lfile);
         if(!loggerFile.exists()){
             logger.error("Cannot find file: " + loggerFile.getAbsolutePath());
         }
+        this.hsDaemon = hsDaemon;
     }
 
-    public synchronized void writeToLog(final Map cats) {
+    public synchronized void writeToLog(final Map cats) throws SibincoException{
+        String appender = null;
         OutputStreamWriter fout = null;
         try {
+            appender = extractAppender();
             fout = new OutputStreamWriter(new FileOutputStream(loggerFile));
             PrintWriter pw = new PrintWriter(fout, true);
             pw.write("root=" +cats.get("") + ", default"  + "\n");
@@ -42,13 +49,13 @@ public class LoggingManager {
                 final String catName = (String) entry.getKey();
                 final String catPriority = (String) entry.getValue();
                 if (catName != null && !catName.trim().equals("") && !catPriority.equalsIgnoreCase("NOTSET")) {
-                    pw.write("cat." + catName + "=" + catPriority  + "\n");
+                    pw.write(CAT_PREFIX + catName + "=" + catPriority  + "\n");
                 }
             }
-            pw.write("\n");
-            printAppender(pw);
+            pw.write(appender);
             pw.flush();
             pw.close();
+            hsDaemon.store(loggerFile);
         } catch (FileNotFoundException e) {
             logger.error("Cannot find logger.properties file ", e);
         }
@@ -64,9 +71,25 @@ public class LoggingManager {
         }
     }
 
-    private synchronized void printAppender(PrintWriter pw) {
-        pw.write("appender.default.file.name=logs/scag.log" + "\n");
-        pw.write("appender.default.file.maxsize=50Mb" + "\n");
-        pw.write("appender.default.file.maxindex=4" + "\n");
+    private String extractAppender() throws FileNotFoundException {
+      BufferedReader br = new BufferedReader(new FileReader(loggerFile));
+      StringBuffer buf = new StringBuffer();
+      String str;
+      try {
+        br.readLine();
+        while ((str = br.readLine())!=null) {
+          if (!str.startsWith(CAT_PREFIX)) buf.append(str).append("\n");
+        }
+      } catch (IOException io) {
+        logger.error("Cannot read from "+loggerFile.getAbsolutePath(),io);
+      } finally {
+        if (br!=null)
+          try {
+           br.close();
+          } catch (IOException io) {
+             logger.error("Cannot close input stream.", io);
+          }
+      }
+      return buf.toString();
     }
 }

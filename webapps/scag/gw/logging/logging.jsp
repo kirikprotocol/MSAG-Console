@@ -8,12 +8,15 @@
     function collasping_tree_showhide_section(sectionId) {
 
         var headerElem = opForm.all("sectionHeader_" + sectionId);
+        var imgElem = opForm.all("img_"+sectionId);
         var valueElem = opForm.all("sectionValue_" + sectionId);
         if (valueElem.style.display != "none") {
             headerElem.className = "collapsing_tree_closed";
+            imgElem.src = "content/images/list_closed.gif";
             valueElem.style.display = "none";
         } else {
             headerElem.className = "collapsing_tree_opened";
+            imgElem.src = "content/images/list_opened.gif";
             valueElem.style.display = "";
         }
 
@@ -81,7 +84,7 @@
                                  onclick="collasping_tree_showhide_section('${catItem.value.fullName}')">
                                 <table cellspacing=0>
                                     <tr>
-                                        <td width=100%>${catItem.value.name}</td>
+                                        <td width=100%><img id="img_${catItem.value.fullName}" src="content/images/list_closed.gif" alt="">&nbsp;${catItem.value.name}</td>
                                         <td>
 
                                             <%--<select name="category_${catItem.value.fullName}" id="category_${catItem.value.fullName}" class="txt" style="font-size:80%;">--%>
@@ -117,7 +120,7 @@
                                                          onclick="collasping_tree_showhide_section('${catItem2.value.fullName}')">
                                                         <table cellspacing=0>
                                                             <tr>
-                                                                <td width=100%>${catItem2.value.name}</td>
+                                                                <td width=100%><img id="img_${catItem2.value.fullName}" src="content/images/list_closed.gif" alt="">&nbsp;${catItem2.value.name}</td>
                                                                 <td>
                                                                     <%--<select name="category_${catItem2.value.fullName}"  id="category_${catItem2.value.fullName}"--%>
                                                                             <!--class="txt"-->
@@ -157,7 +160,7 @@
                                                                                  onclick="collasping_tree_showhide_section('${catItem3.value.fullName}')">
                                                                                 <table cellspacing=0>
                                                                                     <tr>
-                                                                                        <td width=100%>${catItem3.value.name}</td>
+                                                                                        <td width=100%><img id="img_${catItem3.value.fullName}" src="content/images/list_closed.gif" alt="">&nbsp;${catItem3.value.name}</td>
                                                                                         <td>
                                                                                             <%--<select name="category_${catItem3.value.fullName}"  id="category_${catItem3.value.fullName}"--%>
                                                                                                     <!--class="txt"-->
@@ -201,7 +204,7 @@
                                                                                                          onclick="collasping_tree_showhide_section('${catItem4.value.fullName}')">
                                                                                                         <table cellspacing=0>
                                                                                                             <tr>
-                                                                                                                <td width=100%>${catItem4.value.name}</td>
+                                                                                                                <td width=100%><img id="img_${catItem4.value.fullName}" src="content/images/list_closed.gif" alt="">&nbsp;${catItem4.value.name}</td>
                                                                                                                 <td>
                                                                                                                     <%--<select name="category_${catItem4.value.fullName}"  id="category_${catItem4.value.fullName}"--%>
                                                                                                                             <!--class="txt"-->
@@ -245,7 +248,7 @@
                                                                                                          onclick="collasping_tree_showhide_section('${catItem5.value.fullName}')">
                                                                                                         <table cellspacing=0>
                                                                                                             <tr>
-                                                                                                                <td width=100%>${catItem5.value.name}</td>
+                                                                                                                <td width=100%><img id="img_${catItem5.value.fullName}" src="content/images/list_closed.gif" alt="">&nbsp;${catItem5.value.name}</td>
                                                                                                                 <td>
                                                                                                                     <%--<select name="category_${catItem5.value.fullName}"  id="category_${catItem5.value.fullName}"--%>
                                                                                                                             <!--class="txt"-->
