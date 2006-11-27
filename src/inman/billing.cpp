@@ -158,7 +158,7 @@ Billing::Billing(BillingConnect* bconn, unsigned int b_id,
         : _bconn(bconn), _bId(b_id), state(bilIdle), capDlg(NULL)
         , postpaidBill(false), abType(smsc::inman::cache::btUnknown)
         , providerQueried(false), capDlgActive(false), capSess(NULL)
-        , abPolicy(NULL)
+        , abPolicy(NULL), billErr(0)
 {
     logger = uselog ? uselog : Logger::getInstance("smsc.inman.Billing");
     _cfg = bconn->getConfig();
@@ -237,14 +237,15 @@ void Billing::doCleanUp(void)
     return;
 }
 
-//NOTE: CDR must be finalized, cdrMode != none
-void Billing::writeCDR(void)
+//NOTE: CDR must be finalized, cdrMode != none, returns number of CDRs created
+unsigned Billing::writeCDR(void)
 {
+    unsigned cnt = 0;
     if (cdr._smsXSrvs) { //write SMSExtra part first (if necessary)
         if (!cdr._inBilled || (_cfg.cdrMode == BillingCFG::CDR_ALL)) {
             CDRRecord xcdr = cdr;
             xcdr._dstAdr = smsxNumber.toString();
-            _cfg.bfs->bill(xcdr);
+            _cfg.bfs->bill(xcdr); cnt++;
             smsc_log_info(logger, "%s: CDR(Extra) written: "
                         "msgId = %llu, IN billed: %s, dstAdr: %s", _logId,
                         xcdr._msgId, xcdr._inBilled ? "true": "false", xcdr._dstAdr.c_str());
@@ -254,34 +255,32 @@ void Billing::writeCDR(void)
             || (_cfg.cdrMode == BillingCFG::CDR_ALL) || !matchBillMode()) {
             CDRRecord xcdr = cdr;
             xcdr._inBilled = false;
-            _cfg.bfs->bill(xcdr);
+            _cfg.bfs->bill(xcdr); cnt++;
             smsc_log_info(logger, "%s: CDR written: "
                         "msgId = %llu, IN billed: false, dstAdr: %s",
                         _logId, xcdr._msgId, xcdr._dstAdr.c_str());
         }
     } else if (!cdr._inBilled || (_cfg.cdrMode == BillingCFG::CDR_ALL)) {
-        _cfg.bfs->bill(cdr);
+        _cfg.bfs->bill(cdr); cnt++;
         smsc_log_info(logger, "%s: CDR written: msgId = %llu, IN billed: %s, dstAdr: %s",
                     _logId, cdr._msgId, cdr._inBilled ? "true": "false",
                     cdr._dstAdr.c_str());
     }
-    return;
+    return cnt;
 }
 
 void Billing::doFinalize(bool doReport/* = true*/)
 {
-    smsc_log_info(logger, "%s: %scomplete, CDR is %sprepared, "
-                   "cdrMode: %d, billingType: %sPAID(%s)",
-                   _logId, BillComplete() ? "" : "IN",
-                   cdr._finalized ? "" : "NOT ",
-                   _cfg.cdrMode, postpaidBill ? "POST": "PRE",
-                   cdr._inBilled ? "IN": "CDR");
-
+    unsigned cdrs = 0;
     if (_cfg.cdrMode && cdr._finalized && _cfg.bfs)
-        writeCDR();
+        cdrs = writeCDR();
 
-    smsc_log_debug(logger, "%s: %s, state: %u",
-                   _logId, doReport ? "finished" : "cancelled", state);
+    smsc_log_info(logger, "%s: %scomplete, %s --> %s(cause: %u),"
+                          " abonent(%s), type %s, CDR(s) written: %u",
+                    _logId, BillComplete() ? "" : "IN", dpType().c_str(),
+                    cdr._inBilled ? "SCF": "CDR", billErr, abNumber.getSignals(),
+                    _sabBillType[abType], cdrs);
+
     doCleanUp();
     if (doReport) {
         state = bilComplete;
@@ -292,8 +291,8 @@ void Billing::doFinalize(bool doReport/* = true*/)
 
 void Billing::abortThis(const char * reason/* = NULL*/, bool doReport/* = true*/)
 {
-    smsc_log_error(logger, "%s: Aborting%s%s",
-                   _logId, reason ? ", reason: " : "", reason ? reason : "");
+    smsc_log_error(logger, "%s: Aborting at state %u%s%s",
+                   _logId, state, reason ? ", reason: " : "", reason ? reason : "");
     if (capDlgActive) {
         if ((state >= bilContinued) && (state < bilReported)) { //send sms_o_failure to SCF
             try { capDlg->eventReportSMS(false);
@@ -545,6 +544,8 @@ void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes, CsBillingHdr_dlg *h
 //NOTE: bilMutex should be locked upon entry
 void Billing::chargeResult(ChargeSmsResult::ChargeSmsResult_t chg_res, uint32_t inmanErr /* = 0*/)
 {
+    if (inmanErr)
+        billErr = inmanErr;
     std::string reply;
 
     if (chg_res != ChargeSmsResult::CHARGING_POSSIBLE) {
@@ -746,6 +747,7 @@ void Billing::onEndCapDlg(unsigned char ercode/* = 0*/,
             smsc_log_error(logger, "%s: onEndCapDlg() at state: %u",
                            _logId, (unsigned)state);
     } else {                                //AbortSMS
+        billErr = InmanErrorCode::combineError(errLayer, (uint16_t)ercode); 
         smsc_log_error(logger, "%s: CapSMSDlg Error, code: %u, layer %s",
                        _logId, (unsigned)ercode, _InmanErrorSource[errLayer]);
         bool  contCharge = false;
@@ -772,8 +774,7 @@ void Billing::onEndCapDlg(unsigned char ercode/* = 0*/,
                             " (reason: CapSMSDlg error).", _logId);
         }
         if (contCharge)
-            chargeResult(ChargeSmsResult::CHARGING_POSSIBLE,
-                        InmanErrorCode::combineError(errLayer, (uint16_t)ercode));
+            chargeResult(ChargeSmsResult::CHARGING_POSSIBLE, billErr);
     }
     return;
 }

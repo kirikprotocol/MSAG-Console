@@ -103,7 +103,7 @@ protected:
     typedef std::map<unsigned, StopWatch*> TimersMAP;
 
     void doCleanUp(void);
-    void writeCDR(void);
+    unsigned writeCDR(void);
     void doFinalize(bool doReport = true);
     void abortThis(const char * reason = NULL, bool doReport = true);
     bool startCAPDialog(INScfCFG * use_scf);
@@ -138,6 +138,7 @@ protected:
     AbonentPolicy * abPolicy;
     INScfCFG        abScf;
     TonNpiAddress   smsxNumber;   //short number for SMS Extra service
+    uint32_t        billErr;      //combined billing error code
 };
 
 } //inman
