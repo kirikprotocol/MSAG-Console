@@ -3,8 +3,7 @@
 #include "scag/re/actions/ActionContext.h"
 #include "scag/re/CommandBrige.h"
 #include "scag/re/RuleEngine.h"
-#include <sms/sms_serializer.h>
- 
+
 namespace scag { namespace re {
 
 using namespace scag::re::smpp;
@@ -167,7 +166,7 @@ void SmppEventHandler::ModifyOperationAfterExecuting(Session& session, SmppComma
 
 
 
-RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session, LongCallContext& longCallContext)
+RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
 {
     smsc_log_debug(logger, "Process EventHandler...");
 
@@ -220,29 +219,31 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session, Lon
         ModifyOperationBeforeExecuting(session, *smppcommand, smppDiscriptor);
     } catch (SCAGException& e)
     {
-        smsc_log_debug(logger, "EventHandler cannot start/locate operation. Details: %s", e.what());
+        smsc_log_warn(logger, "EventHandler cannot start/locate operation. Details: %s", e.what());
         rs.result = (*smppcommand)->status;
+	rs.status = STATUS_FAILED;
         return rs;
     }
 
     if ((*smppcommand)->status > 0)
     {
         rs.result = (*smppcommand)->status;
+	rs.status = STATUS_FAILED;
         return rs;
     }
 
-    ActionContext context(longCallContext, _constants, session, _command, commandProperty);
+    ActionContext context(_constants, session, _command, commandProperty);
 
     try
     {
         rs = RunActions(context);
     } catch (SCAGException& e)
     {
-        smsc_log_debug(logger, "EventHandler: error in actions processing. Details: %s", e.what());
+        smsc_log_error(logger, "EventHandler: error in actions processing. Details: %s", e.what());
         rs.status = STATUS_FAILED;
     } catch (std::exception& e)
     {
-        smsc_log_debug(logger, "EventHandler: error in actions processing. Details: %s", e.what());
+        smsc_log_error(logger, "EventHandler: error in actions processing. Details: %s", e.what());
         rs.status = STATUS_FAILED;
     }
 
