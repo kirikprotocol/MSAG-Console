@@ -166,7 +166,7 @@ void SmppEventHandler::ModifyOperationAfterExecuting(Session& session, SmppComma
 
 
 
-RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
+RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session, LongCallContext& longCallContext)
 {
     smsc_log_debug(logger, "Process EventHandler...");
 
@@ -221,18 +221,18 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     {
         smsc_log_warn(logger, "EventHandler cannot start/locate operation. Details: %s", e.what());
         rs.result = (*smppcommand)->status;
-	rs.status = STATUS_FAILED;
+        rs.status = STATUS_FAILED;
         return rs;
     }
 
     if ((*smppcommand)->status > 0)
     {
         rs.result = (*smppcommand)->status;
-	rs.status = STATUS_FAILED;
+        rs.status = STATUS_FAILED;
         return rs;
     }
 
-    ActionContext context(_constants, session, _command, commandProperty);
+    ActionContext context(longCallContext, _constants, session, _command, commandProperty);
 
     try
     {
