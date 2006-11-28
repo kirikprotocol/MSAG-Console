@@ -28,7 +28,7 @@ Rule::~Rule()
 }
 
 
-RuleStatus Rule::process(SCAGCommand& command,Session& session, LongCallContext& longCallContext)
+RuleStatus Rule::process(SCAGCommand& command,Session& session)
 {
     RuleStatus rs;
     if (command.getType() != transportType)
@@ -55,7 +55,7 @@ RuleStatus Rule::process(SCAGCommand& command,Session& session, LongCallContext&
     EventHandler * eh = Handlers.Get(handlerType);
     try
     {
-        rs = eh->process(command, session, longCallContext);
+        rs = eh->process(command, session);
     }
     catch (Exception& e)
     {
@@ -67,7 +67,7 @@ RuleStatus Rule::process(SCAGCommand& command,Session& session, LongCallContext&
     {
         rs.status = STATUS_FAILED;
         smsc_log_error(logger, "EH Rule top level exception: %s", e.what());
-	//abort();
+    //abort();
         return rs;
     } 
     catch (...)

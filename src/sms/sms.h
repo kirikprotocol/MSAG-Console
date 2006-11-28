@@ -1739,6 +1739,11 @@ struct SMS
   {
     return messageBody.hasBinProperty(tag);
   }
+  void dropProperty(int tag)
+  {
+    messageBody.dropProperty(tag);
+  }
+  
 
   ~SMS() {}
 

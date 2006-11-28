@@ -41,7 +41,7 @@ public:
     static void Init(const std::string& dir);
     static RuleEngine& Instance();
 
-    virtual RuleStatus process(SCAGCommand& command, Session& session, LongCallContext& longCallContext) = 0;
+    virtual RuleStatus process(SCAGCommand& command, Session& session) = 0;
     virtual void updateRule(RuleKey& key) = 0;
     virtual void removeRule(RuleKey& key) = 0;
     virtual ActionFactory& getActionFactory() = 0;
