@@ -30,6 +30,9 @@ $Id$
 #include "util/Base64.hpp"
 #include "core/buffers/TmpBuf.hpp"
 
+const char* cssc_version="@(#)" "$Id $";
+
+
 using namespace smsc::emailsme;
 using namespace smsc::sms;
 using namespace smsc::sme;
@@ -852,7 +855,7 @@ string makeFromAddress(const char* fromaddress)
 
 string ExtractEmail(const string& value)
 {
-  unsigned int pos=value.find('@');
+  std::string::size_type pos=value.find('@');
   if(pos==string::npos)return "";
   int start=pos,end=pos;
   while(start>0 && ismailchar(value[start-1]))start--;
