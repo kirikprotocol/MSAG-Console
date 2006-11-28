@@ -398,6 +398,8 @@ struct _SmppCommand
   int serviceId;
   int priority;
   uint64_t opId;
+  LongCallContext lcmCtx;  
+  
   _SmppCommand() : ref_count(0), dta(0), ent(0),status(0),priority(ScagCommandDefaultPriority)
   {
   }
@@ -1311,6 +1313,11 @@ public:
    uint8_t getCommandId() const
    {
        return cmd->cmdid;
+   }
+   
+   LongCallContext& getLongCallContext()
+   {
+        return cmd->lcmCtx;
    }
 
 };

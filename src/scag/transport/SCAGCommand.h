@@ -3,10 +3,12 @@
 
 #include "util/int.h"
 #include <core/buffers/Hash.hpp>
+#include "scag/lcm/LongCallManager.h"
 
 namespace scag { namespace transport
 {
 
+using scag::lcm::LongCallContext;
 using smsc::core::buffers::Hash;
 
     enum TransportType
@@ -15,7 +17,7 @@ using smsc::core::buffers::Hash;
     };
 
 
-	    
+        
     
     class SCAGCommand
     {
@@ -23,7 +25,6 @@ using smsc::core::buffers::Hash;
 
       //static Hash<TransportType> TransportTypeHash;
       //static Hash<TransportType> InitTransportTypeHash();
-      
       virtual TransportType getType() const = 0;
 
       virtual int getServiceId() const = 0;
@@ -32,7 +33,9 @@ using smsc::core::buffers::Hash;
       virtual int64_t getOperationId() const = 0;
       virtual void setOperationId(int64_t op) = 0;
       virtual uint8_t getCommandId() const = 0;
-
+      
+      virtual LongCallContext& getLongCallContext() = 0;
+      
       virtual ~SCAGCommand() {};
     };
 

@@ -19,6 +19,13 @@ CommandDispatcher::CommandDispatcher(StringProfileStore *abonent, IntProfileStor
     AbonentStore = abonent;
 }
 
+IntProfileStore* CommandDispatcher::findStore(ProfileType pt)
+{
+    int i = 0;
+    while(i < INT_STORE_CNT && pt != int_store[i].pt) i++;
+    return i < INT_STORE_CNT ? int_store[i].store : NULL;            
+}
+
 void CommandDispatcher::SendResponse(SerialBuffer *sb, PersServerResponseType r)
 {
     sb->Empty();
@@ -34,24 +41,24 @@ void CommandDispatcher::SetPacketSize(SerialBuffer *sb)
 
 void CommandDispatcher::DelCmdHandler(ProfileType pt, uint32_t int_key, std::string& str_key, std::string& name, SerialBuffer *sb)
 {
+    IntProfileStore *is;
     bool exists = false;
     if(pt == PT_ABONENT)
     {
         smsc_log_debug(log, "DelCmdHandler AbonetStore: key=%s, name=%s", str_key.c_str(), name.c_str());
         exists = AbonentStore->delProperty(StringProfileKey(str_key.c_str()), name.c_str());
     }
-    else
-        for(int i = 0; i < INT_STORE_CNT; i++)
-            if(pt == int_store[i].pt)
-            {
-                smsc_log_debug(log, "DelCmdHandler store= %d, key=%d, name=%s", pt, int_key, name.c_str());
-                exists = int_store[i].store->delProperty(IntProfileKey(int_key), name.c_str());
-            }
+    else if(is = findStore(pt))
+    {
+        smsc_log_debug(log, "DelCmdHandler store= %d, key=%d, name=%s", pt, int_key, name.c_str());
+        exists = is->delProperty(IntProfileKey(int_key), name.c_str());
+    }
     SendResponse(sb, exists ? RESPONSE_OK : RESPONSE_PROPERTY_NOT_FOUND);
 }
 
 void CommandDispatcher::GetCmdHandler(ProfileType pt, uint32_t int_key, std::string& str_key, std::string& name, SerialBuffer *sb)
 {
+    IntProfileStore *is;
     Property prop;
     bool exists = false;
     if(pt == PT_ABONENT)
@@ -59,13 +66,11 @@ void CommandDispatcher::GetCmdHandler(ProfileType pt, uint32_t int_key, std::str
         smsc_log_debug(log, "GetCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), name.c_str());
         exists = AbonentStore->getProperty(StringProfileKey(str_key.c_str()), name.c_str(), prop);
     }
-    else
-        for(int i = 0; i < INT_STORE_CNT; i++)
-            if(pt == int_store[i].pt)
-            {
-                smsc_log_debug(log, "GetCmdHandler store=%d, key=%d, name=%s", pt, int_key, name.c_str());
-                exists = int_store[i].store->getProperty(IntProfileKey(int_key), name.c_str(), prop);
-            }
+    else if(is = findStore(pt))
+    {
+        smsc_log_debug(log, "GetCmdHandler store=%d, key=%d, name=%s", pt, int_key, name.c_str());
+        exists = is->getProperty(IntProfileKey(int_key), name.c_str(), prop);
+    }
     if(exists)
     {   
         smsc_log_debug(log, "GetCmdHandler prop=%s", prop.toString().c_str());
@@ -78,36 +83,34 @@ void CommandDispatcher::GetCmdHandler(ProfileType pt, uint32_t int_key, std::str
 
 void CommandDispatcher::SetCmdHandler(ProfileType pt, uint32_t int_key, std::string& str_key, Property& prop, SerialBuffer *sb)
 {
+    IntProfileStore *is;
     if(pt == PT_ABONENT)
     {
         smsc_log_debug(log, "SetCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), prop.toString().c_str());
         AbonentStore->setProperty(StringProfileKey(str_key.c_str()), prop);
     }
-    else
-        for(int i = 0; i < INT_STORE_CNT; i++)
-            if(pt == int_store[i].pt)
-            {
-                smsc_log_debug(log, "SetCmdHandler store=%d, key=%d, prop=%s", pt, int_key, prop.toString().c_str());
-                int_store[i].store->setProperty(IntProfileKey(int_key), prop);
-            }
+    else if(is = findStore(pt))    
+    {
+        smsc_log_debug(log, "SetCmdHandler store=%d, key=%d, prop=%s", pt, int_key, prop.toString().c_str());
+        is->setProperty(IntProfileKey(int_key), prop);
+    }
     SendResponse(sb, RESPONSE_OK);
 }
 
 void CommandDispatcher::IncCmdHandler(ProfileType pt, uint32_t int_key, std::string& str_key, Property& prop, SerialBuffer *sb)
 {
+    IntProfileStore *is;
     bool exists = false;
     if(pt == PT_ABONENT)
     {
         smsc_log_debug(log, "IncCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), prop.getName().c_str());
         exists = AbonentStore->incProperty(StringProfileKey(str_key.c_str()), prop);
     }
-    else
-        for(int i = 0; i < INT_STORE_CNT; i++)
-            if(pt == int_store[i].pt)
-            {
-                smsc_log_debug(log, "IncCmdHandler store=%d, key=%d, name=%s", pt, int_key, prop.getName().c_str());
-                exists = int_store[i].store->incProperty(IntProfileKey(int_key), prop);
-            }
+    else if(is = findStore(pt))    
+    {
+        smsc_log_debug(log, "IncCmdHandler store=%d, key=%d, name=%s", pt, int_key, prop.getName().c_str());
+        exists = is->incProperty(IntProfileKey(int_key), prop);
+    }
     if(exists)
         SendResponse(sb, RESPONSE_OK);
     else
@@ -116,6 +119,7 @@ void CommandDispatcher::IncCmdHandler(ProfileType pt, uint32_t int_key, std::str
 
 void CommandDispatcher::IncModCmdHandler(ProfileType pt, uint32_t int_key, std::string& str_key, Property& prop, int mod, SerialBuffer *sb)
 {
+    IntProfileStore *is;
     bool exists = false;
     int res = 0;
     if(pt == PT_ABONENT)
@@ -123,13 +127,11 @@ void CommandDispatcher::IncModCmdHandler(ProfileType pt, uint32_t int_key, std::
         smsc_log_debug(log, "IncModCmdHandler AbonentStore: key=%s, name=%s, mod=%d", str_key.c_str(), prop.getName().c_str(), mod);
         exists = AbonentStore->incModProperty(StringProfileKey(str_key.c_str()), prop, mod, res);
     }
-    else
-        for(int i = 0; i < INT_STORE_CNT; i++)
-            if(pt == int_store[i].pt)
-            {
-                smsc_log_debug(log, "IncModCmdHandler store=%d, key=%d, name=%s, mod=%d", pt, int_key, prop.getName().c_str(), mod);
-                exists = int_store[i].store->incModProperty(IntProfileKey(int_key), prop, mod, res);
-            }
+    else if(is = findStore(pt))    
+    {
+        smsc_log_debug(log, "IncModCmdHandler store=%d, key=%d, name=%s, mod=%d", pt, int_key, prop.getName().c_str(), mod);
+        exists = is->incModProperty(IntProfileKey(int_key), prop, mod, res);
+    }
     if(exists)
     {
         SendResponse(sb, RESPONSE_OK);

@@ -24,6 +24,7 @@ protected:
         IntProfileStore* store;
     } IntStore;
 
+    IntProfileStore* findStore(ProfileType pt);
     void SendResponse(SerialBuffer *sb, PersServerResponseType r);
     void SetPacketSize(SerialBuffer *sb);
     void DelCmdHandler(ProfileType pt, uint32_t int_key, std::string& str_key, std::string& name, SerialBuffer *sb);

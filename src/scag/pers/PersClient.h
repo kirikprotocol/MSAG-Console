@@ -9,6 +9,7 @@
 #include "core/network/Socket.hpp"
 #include "Types.h"
 #include "scag/config/pers/PersClientConfig.h"
+#include "scag/lcm/LongCallManager.h"
 
 namespace scag { namespace pers { namespace client {
 
@@ -17,6 +18,7 @@ using smsc::core::network::Socket;
 using smsc::logger::Logger;
 using scag::pers;
 using namespace scag::config;
+using scag::lcm::LongCallParams;
 
 enum PersClientExceptionType{
     CANT_CONNECT,
@@ -57,7 +59,8 @@ public:
     const char* what() const { return strs[et]; };
 };
 
-struct PersCallParams{
+class PersCallParams : public LongCallParams{
+public:
     PersCallParams() : error(0), result(0) {};
     ProfileType pt;
     union{

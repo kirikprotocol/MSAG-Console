@@ -595,6 +595,9 @@ bool SmppManager::getCommand(SmppCommand& cmd)
   return true;
 }
 
+void SmppManager::continueExecution(LongCallContext* lcmCtx, bool dropped)
+{
+}
 
 }//smpp
 }//transport
