@@ -1,13 +1,17 @@
+#ifndef MOD_IDENT_OFF
+static char const ident[] = "$Id$";
+#endif /* MOD_IDENT_OFF */
+
 #include "BillingServer.h"
 #include <util/Exception.hpp>
 
 #include <string>
 
-#include "inman/common/util.hpp"
+//#include "util/BinDump.hpp"
+//using smsc::util::DumpHex;
 
 namespace inmanemu { namespace server {
 
-using smsc::inman::common::dump;
 using inmanemu::MatrixKey;
 using namespace smsc::util;
 
@@ -101,12 +105,9 @@ INPPacketAC * BillingServer::ReadCommand()
     }
     buff.setDataSize(len);
 
-    //std::string dstr;
-    //dump(dstr, len, (unsigned char*)(buff), false);
-    //smsc_log_debug(logger,"received:%s",dstr.c_str());
+    //smsc_log_debug(logger,"received: 0x%s", DumpHex(len, (unsigned char*)(buff)).c_str());
 
     auto_ptr<INPPacketAC> pck(INPSerializer::getInstance()->deserialize(buff)); //throws
-    pck->pCmd()->loadDataBuf();
 
     if ((pck->pHdr())->Id() != INPCSBilling::HDR_DIALOG) {
         smsc_log_error(logger, "received cmd %u: unknown header: %u",

@@ -5,7 +5,6 @@
 
 #ifdef MSAG_INMAN_BILL
 #include "inman/common/console.hpp"
-#include "inman/common/util.hpp"
 #endif
 
 #include "logger/Logger.h"
@@ -15,7 +14,6 @@ namespace scag { namespace bill {
 
 #ifdef MSAG_INMAN_BILL
 using smsc::inman::common::Console;
-using smsc::inman::common::format;
 using smsc::inman::interaction;
 #endif
 
