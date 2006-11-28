@@ -1333,7 +1333,7 @@ bool GetNextLine(const char* text,int maxlen,int& pos,string& line)
     line.assign(text+start,pos-start);
     if(text[pos]==0x0d && pos<maxlen)pos++;
     if(text[pos]==0x0a && pos<maxlen)pos++;
-  }while(pos<maxlen && text[pos]==' ');
+  }while(pos<maxlen && (text[pos]==' ' || text[pos]=='\t'));
   return true;
 }
 
