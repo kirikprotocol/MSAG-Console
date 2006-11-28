@@ -80,7 +80,7 @@ struct SmppSocket:SmppChannel{
   {
     MutexGuard mg(mtx);
     refCount++;
-    smsc_log_info(log, "acquire:%p(%s)/%d",this,systemId.c_str(),refCount);
+    smsc_log_debug(log, "acquire:%p(%s)/%d",this,systemId.c_str(),refCount);
   }
 
   void release()
@@ -89,14 +89,14 @@ struct SmppSocket:SmppChannel{
     {
       MutexGuard mg(mtx);
       cnt=--refCount;
-      smsc_log_info(log, "release:%p(%s)/%d",this,systemId.c_str(),refCount);
+      smsc_log_debug(log, "release:%p(%s)/%d",this,systemId.c_str(),refCount);
     }
     if(!cnt)
     {
-      smsc_log_info(log, "Deleting socket for %s",systemId.c_str());
+      smsc_log_debug(log, "Deleting socket for %s",systemId.c_str());
       if(bindType!=btNone)
       {
-        smsc_log_info(log, "unregisterChannel(bt=%d)",bindType);
+        smsc_log_debug(log, "unregisterChannel(bt=%d)",bindType);
         chReg->unregisterChannel(this);
         bindType=btNone;
       }

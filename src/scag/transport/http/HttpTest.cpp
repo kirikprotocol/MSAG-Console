@@ -45,7 +45,7 @@ namespace scag { namespace transport { namespace http
     class MyHttpProcessor : public HttpProcessor
     {
     public:
-        virtual bool processRequest(HttpRequest& request) {        
+        virtual int processRequest(HttpRequest& request, bool continued) {        
 #ifdef LOG_HEADERS        
             request.serialize();
             const std::string &hdr = request.getMessageHeaders();
@@ -70,9 +70,9 @@ namespace scag { namespace transport { namespace http
                 req_cnt++;
             }
 
-            return true;
+            return 1;
         }
-        virtual bool processResponse(HttpResponse& response) {
+        virtual int processResponse(HttpResponse& response) {
 #ifdef LOG_HEADERS
             response.serialize();
             const std::string &hdr = response.getMessageHeaders();
@@ -95,10 +95,10 @@ namespace scag { namespace transport { namespace http
                 resp_cnt++;
             }
 
-            return true;
+            return 1;
         }
 
-        virtual void statusResponse(HttpResponse& response, bool delivered = true)
+        virtual int statusResponse(HttpResponse& response, bool delivered = true)
         {
 #ifdef LOG_HEADERS
             smsc_log_debug( logger,  "Response %s", delivered ? 
@@ -108,6 +108,7 @@ namespace scag { namespace transport { namespace http
                 MutexGuard mt(mtx);
                 st_resp_cnt++;
             }
+            return 1;
 
         }
     virtual void ReloadRoutes()
@@ -202,41 +203,41 @@ HttpManagerConfig HttpManCfg(
 void load_config(ConfigView & cv)
 {
  
-	    try {
+        try {
 
         std::auto_ptr<char> host_( cv.getString("host") );
         HttpManCfg.readerSockets =cv.getInt("readerSockets");;
-		HttpManCfg.writerSockets =cv.getInt("writerSockets");;
-		HttpManCfg.readerPoolSize=cv.getInt("readerPoolSize");;
-		HttpManCfg.writerPoolSize=cv.getInt("writerPoolSize");;
-		HttpManCfg.scagPoolSize  =cv.getInt("scagPoolSize");;
-		HttpManCfg.scagQueueLimit=cv.getInt("scagQueueLimit");;
-		HttpManCfg.connectionTimeout=cv.getInt("connectionTimeout");;
-		HttpManCfg.host = host_.get();
+        HttpManCfg.writerSockets =cv.getInt("writerSockets");;
+        HttpManCfg.readerPoolSize=cv.getInt("readerPoolSize");;
+        HttpManCfg.writerPoolSize=cv.getInt("writerPoolSize");;
+        HttpManCfg.scagPoolSize  =cv.getInt("scagPoolSize");;
+        HttpManCfg.scagQueueLimit=cv.getInt("scagQueueLimit");;
+        HttpManCfg.connectionTimeout=cv.getInt("connectionTimeout");;
+        HttpManCfg.host = host_.get();
         HttpManCfg.port = cv.getInt("port");
    
 
-		printf("%s:%d\n",HttpManCfg.host.c_str(),HttpManCfg.port);
-		printf("readerSockets %d\n",HttpManCfg.readerSockets);
-		printf("writerSockets %d\n",HttpManCfg.writerSockets);
-		printf("readerPoolSize %d\n",HttpManCfg.readerPoolSize);
-		printf("writerPoolSize %d\n",HttpManCfg.writerPoolSize);
-		printf("scagPoolSize %d\n",HttpManCfg.scagPoolSize);
-		printf("scagQueueLimit %d\n",HttpManCfg.scagQueueLimit);
-		printf("connectionTimeout %d\n",HttpManCfg.connectionTimeout);
+        printf("%s:%d\n",HttpManCfg.host.c_str(),HttpManCfg.port);
+        printf("readerSockets %d\n",HttpManCfg.readerSockets);
+        printf("writerSockets %d\n",HttpManCfg.writerSockets);
+        printf("readerPoolSize %d\n",HttpManCfg.readerPoolSize);
+        printf("writerPoolSize %d\n",HttpManCfg.writerPoolSize);
+        printf("scagPoolSize %d\n",HttpManCfg.scagPoolSize);
+        printf("scagQueueLimit %d\n",HttpManCfg.scagQueueLimit);
+        printf("connectionTimeout %d\n",HttpManCfg.connectionTimeout);
 
 
-		fflush(stdout);
+        fflush(stdout);
     }
-	catch(ConfigException& e)
-	{
+    catch(ConfigException& e)
+    {
         smsc_log_error(logger,"%s",e.what());
     }
-	catch(...)
-	{
+    catch(...)
+    {
         smsc_log_debug(logger," Unknown exception.");
     }
-	
+    
 }
 
 int configure() 
@@ -245,14 +246,14 @@ int configure()
   
   try
   {
-	Config config;
+    Config config;
     __trace__("reading config...");
     DOMTreeReader reader;
 
     const char* cfgFile=smsc::util::findConfigFile("config.xml");
     char * filename = new char[strlen(cfgFile) + 1];
     std::strcpy(filename, cfgFile);
-	std::auto_ptr<char>config_filename(filename);
+    std::auto_ptr<char>config_filename(filename);
 
     DOMDocument *document = reader.read(config_filename.get());
     if (document && document->getDocumentElement())
@@ -266,23 +267,23 @@ int configure()
                  config.strParams.GetCount());
     } else {
       smsc_log_debug(logger,"Parse result is null");
-	  return 0;
+      return 0;
     }
 
      load_config(ConfigView(config, "HttpTransport"));
 
   } catch (ParseException &e) {
       smsc_log_debug(logger,"%s",e.what());
-	  return 0;
+      return 0;
   }catch(ConfigException& e){
       smsc_log_debug(logger,"%s",e.what());
-	  return 0;
+      return 0;
   }catch(Exception &e) {
       smsc_log_debug(logger,"%s",e.what());
-	  return 0;
+      return 0;
   }catch(...) {
       smsc_log_debug(logger,"exception, unknown exception");
-	  return 0;
+      return 0;
   }
   return 1;
 }
@@ -307,11 +308,11 @@ int main()
 
     Logger::Init();
     logger = Logger::getInstance("scag.http");
-	if(!configure())
-	{
-		printf("error in config file!");
-		return 0;
-	}
+    if(!configure())
+    {
+        printf("error in config file!");
+        return 0;
+    }
 
 //#if 1
 //    {

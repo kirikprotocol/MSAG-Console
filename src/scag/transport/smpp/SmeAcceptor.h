@@ -31,6 +31,7 @@ public:
     {
       throw smsc::util::Exception("Failed to listen at %s:%d",host,port);
     }
+    smsc_log_info(log,"SmeAcceptor inited");      
   }
   int Execute()
   {
@@ -40,13 +41,15 @@ public:
       if(!s)break;
       char buf[32];
       s->GetPeer(buf);
-      info2(log,"connection accepted from %s",buf);
+      smsc_log_info(log,"connection accepted from %s",buf);
       sm->registerSocket(new SmeSocket(s));
     }
+    smsc_log_info(log,"SmeAcceptor stopped");
     return 0;
   }
   void Stop()
   {
+    smsc_log_info(log, "SmeAcceptor stopping");
     sock.Close();
     isStopping=true;
   }

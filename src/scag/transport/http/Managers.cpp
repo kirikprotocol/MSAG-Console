@@ -95,6 +95,17 @@ void ScagTaskManager::process(HttpContext* cx)
     }
 }
 
+void ScagTaskManager::continueExecution(LongCallContext* context, bool dropped)
+{
+    HttpContext *cx = (HttpContext*)context->stateMachineContext;
+    cx->continueExec = true;
+
+    if(!dropped)
+        process(cx);
+    else
+        delete cx;
+}
+
 void ScagTaskManager::init(int maxThreads, int scagQueueLim, HttpProcessor& p)
 {
     int i;

@@ -49,7 +49,7 @@ public:
   void addSocket(SmppSocket* sock)
   {
     MutexGuard mg(mon);
-    smsc_log_info(log, "add socket %p",sock);
+    smsc_log_debug(log, "add socket %p",sock);
     sock->acquire();
     sock->setMonitor(&mon);
     sockets.Push(sock);
@@ -75,7 +75,7 @@ protected:
 
   void deleteSocketUnsync(int index)
   {
-    smsc_log_info(log, "delete socket %p",sockets[index]);
+    smsc_log_debug(log, "delete socket %p",sockets[index]);
     onDeleteSocket(sockets[index]);
     sockets[index]->release();
     sockets.Delete(index);

@@ -1,6 +1,7 @@
 #include "ScagTask.h"
 #include "Managers.h"
 #include "HttpContext.h"
+#include "scag/re/RuleStatus.h"
 
 namespace scag { namespace transport { namespace http
 {
@@ -10,8 +11,18 @@ ScagTask::ScagTask(HttpManager& m, HttpProcessor& p) : manager(m), processor(p)
     logger = Logger::getInstance("scag.http.scag");
 }
 
+bool ScagTask::makeLongCall(HttpContext *cx)
+{
+    LongCallContext& lcmCtx = cx->command->getLongCallContext();
+    lcmCtx.stateMachineContext = cx;
+    lcmCtx.initiator = &manager.scags;
+    
+    return LongCallManager::Instance().call(&lcmCtx);
+}
+
 int ScagTask::Execute()
 {
+    int st;
     HttpContext *cx;
 
     smsc_log_debug(logger, "%p started", this);
@@ -28,68 +39,76 @@ int ScagTask::Execute()
         switch (cx->action) {
         case PROCESS_REQUEST:
             smsc_log_debug(logger, "%p: %p, call to processRequest()", this, cx);
-            if (processor.processRequest(cx->getRequest())) {
+            st = processor.processRequest(cx->getRequest(), cx->continueExec);
+            if (st == scag::re::STATUS_OK)
+            {
                 smsc_log_info(logger, "%p: %p, request approved", this, cx);
                 cx->getRequest().serialize();
 //                smsc_log_debug(logger, "request %s", cx->getRequest().headers.c_str());
                 cx->action = SEND_REQUEST;
+                cx->continueExec = false;
                 manager.writers.process(cx);                               
                 break;
             }
-            else {
-                smsc_log_info(logger, "%p: %p, request denied", this, cx);
-                cx->result = 503;          
-                // no break, go to the case PROCESS_RESPONSE
-            }
+            else if(st == scag::re::STATUS_LONG_CALL && makeLongCall(cx))
+                break;
+                
+            smsc_log_info(logger, "%p: %p, request denied", this, cx);
+            cx->result = 503;          
+            // no break, go to the case PROCESS_RESPONSE
         case PROCESS_RESPONSE:
             {
                 int status = cx->result;
 
-                if (status == 0) {
+                if (status == 0)
+                {
                     smsc_log_debug(logger, "%p: %p, call to processResponse()", this, cx);
-                    if (processor.processResponse(cx->getResponse())) {
+                    st = processor.processResponse(cx->getResponse());
+                    if (st == scag::re::STATUS_OK)
                         smsc_log_info(logger, "%p: %p, response approved", this, cx);
-                    }
-                    else {
+                    else
+                    {
+                        if(st == scag::re::STATUS_LONG_CALL && makeLongCall(cx))
+                            break;
+                        
                         smsc_log_info(logger, "%p: %p, response denied", this, cx);
                         status = 503;
                     }
                 }
 
-                if (status) {
+                if (status)
+                {
                     cx->createFakeResponse(status);
-                    smsc_log_warn(logger, "%p: %p, status %d, fake response created",
-                        this, cx, status);
+                    smsc_log_warn(logger, "%p: %p, status %d, fake response created", this, cx, status);
                 }
             }
 
             cx->getResponse().serialize();
             cx->action = SEND_RESPONSE;
+            cx->continueExec = false;
             manager.writers.process(cx);       
             break;      
         case PROCESS_STATUS_RESPONSE:
             {
-                bool delivered;
-
-                if (cx->result) {
+                if(cx->result)
+                {
                     cx->createFakeResponse(cx->result);
-                    smsc_log_warn(logger, "%p: %p, status %d, fake response created",
-                        this, cx, cx->result);
-                    delivered = false;
+                    smsc_log_warn(logger, "%p: %p, status %d, fake response created", this, cx, cx->result);
                 }
-                else {
-                    delivered = true;
-                }
-                smsc_log_debug(logger, "%p: %p, call to statusResponse(%s)",
-                        this, cx, delivered ? "true" : "false");
-                processor.statusResponse(cx->getResponse(), delivered);
+                bool delivered = !cx->result;
+                    
+                smsc_log_debug(logger, "%p: %p, call to statusResponse(%s)", this, cx, delivered ? "true" : "false");
+                st = processor.statusResponse(cx->getResponse(), delivered);
+
+                if(st == scag::re::STATUS_LONG_CALL && makeLongCall(cx))
+                    break;
+                    
                 delete cx;
             }
         }
     }
 
-    if (cx)
-        delete cx;
+    if(cx) delete cx;
 
     smsc_log_debug(logger, "%p quit", this);
 

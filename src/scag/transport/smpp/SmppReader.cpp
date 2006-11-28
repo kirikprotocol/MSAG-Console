@@ -7,7 +7,7 @@ namespace smpp{
 
 int SmppReader::Execute()
 {
-  info1(log,"Starting SmppReader");
+  smsc_log_debug(log,"Starting SmppReader");
   net::Multiplexer::SockArray ready;
   net::Multiplexer::SockArray error;
   while(!isStopping)
@@ -32,7 +32,7 @@ int SmppReader::Execute()
         MutexGuard mg(mon);
         for(int i=0;i<error.Count();i++)
         {
-          debug2(log,"error on socket %p",error[i]);
+          smsc_log_warn(log,"error on socket %p",error[i]);
           getSmppSocket(error[i])->disconnect();
         }
         for(int i=0;i<ready.Count();i++)
@@ -43,10 +43,10 @@ int SmppReader::Execute()
       }
     }catch(std::exception& e)
     {
-      warn2(log,"!!! Exception in SmppReader:%s",e.what());
+      smsc_log_warn(log,"!!! Exception in SmppReader:%s",e.what());
     }
   }
-  info1(log,"Execution of SmppReader finished");
+  smsc_log_debug(log,"Execution of SmppReader finished");
   return 0;
 }
 

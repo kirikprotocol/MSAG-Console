@@ -4,6 +4,7 @@
 #include <scag/re/RuleEngine.h>
 #include <scag/sessions/SessionManager.h>
 #include <scag/stat/Statistics.h>
+#include "scag/lcm/LongCallManager.h"
 
 #include "HttpCommand.h"
 #include "HttpProcessor.h"
@@ -20,9 +21,9 @@ using namespace scag::re;
 class HttpProcessorImpl : public HttpProcessor
 {
     public:
-        virtual bool processRequest(HttpRequest& request);
-        virtual bool processResponse(HttpResponse& response);
-        virtual void statusResponse(HttpResponse& response, bool delivered=true);
+        virtual int processRequest(HttpRequest& request, bool continued);
+        virtual int processResponse(HttpResponse& response);
+        virtual int statusResponse(HttpResponse& response, bool delivered=true);
         virtual void ReloadRoutes();
 
         void init(const std::string& cfg);
@@ -311,7 +312,7 @@ void HttpProcessorImpl::setFields(HttpRequest& request, HttpRoute& r)
 }
 
 
-bool HttpProcessorImpl::processRequest(HttpRequest& request)
+int HttpProcessorImpl::processRequest(HttpRequest& request, bool continued)
 {
     HttpRoute r;
 
@@ -319,65 +320,78 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
     SessionPtr se;
 
     try{
-        smsc_log_debug(logger, "SERIALIZED REQUEST BEFORE PROCESSING: %s", request.serialize().c_str());
+        if(!continued)
+        {
+            smsc_log_debug(logger, "SERIALIZED REQUEST BEFORE PROCESSING: %s", request.serialize().c_str());
                 
-        if(!parsePath(request.getSitePath(), request))
-        {
-            registerEvent(scag::stat::events::http::REQUEST_FAILED, request);
-            smsc_log_debug( logger, "http_request path parse error %s", request.getSitePath().c_str());
-            return false;
-        }
-        
-        if(request.getRouteId() > 0)
-        {
-            r = router.findRouteByRouteId(request.getAbonent(), request.getRouteId(), request.getSitePath() + request.getSiteFileName());
-            request.setSite(r.defSite.host);
-            request.setSitePort(r.defSite.port);
-        }
-        else if(request.getServiceId() > 0)
-        {
-            r = router.findRouteByServiceId(request.getAbonent(), request.getServiceId(), request.getSitePath() + request.getSiteFileName());
-            request.setSite(r.defSite.host);
-            request.setSitePort(r.defSite.port);
+            if(!parsePath(request.getSitePath(), request))
+            {
+                registerEvent(scag::stat::events::http::REQUEST_FAILED, request);
+                smsc_log_debug( logger, "http_request path parse error %s", request.getSitePath().c_str());
+                return scag::re::STATUS_FAILED;
+            }
+            
+            if(request.getRouteId() > 0)
+            {
+                r = router.findRouteByRouteId(request.getAbonent(), request.getRouteId(), request.getSitePath() + request.getSiteFileName());
+                request.setSite(r.defSite.host);
+                request.setSitePort(r.defSite.port);
+            }
+            else if(request.getServiceId() > 0)
+            {
+                r = router.findRouteByServiceId(request.getAbonent(), request.getServiceId(), request.getSitePath() + request.getSiteFileName());
+                request.setSite(r.defSite.host);
+                request.setSitePort(r.defSite.port);
+            }
+            else
+                r = router.findRoute(request.getAbonent(), request.getSite(), request.getSitePath() + request.getSiteFileName(), request.getSitePort());        
+            
+            if(r.id && !request.getAbonent().length())
+            {
+                smsc_log_info(logger, "Transit request served");
+                registerEvent(scag::stat::events::http::REQUEST_OK, request);            
+                return scag::re::STATUS_OK;
+            }
+
+            smsc_log_debug(logger, "Got http_request command host=%s:%d, path=%s, filename=%s, abonent=%s, USR=%d", request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str(), request.getAbonent().c_str(), request.getUSR());
+               
+            smsc_log_debug( logger, "httproute found route_id=%d, service_id=%d", r.id, r.service_id);
+            request.setServiceId(r.service_id);
+            request.setRouteId(r.id);
+            request.setProviderId(r.provider_id);
+
+            findUSR(request, getInPlaces(r, PlacementKind::USR));
+
+            const std::string& s = request.getAbonent();
+            request.setAddress(r.addressPrefix + (s.c_str() + (s[0] == '+' ? 1 : 0)));
+
+            CSessionKey sk = {request.getUSR(), request.getAddress().c_str()};
+            if(!request.getUSR())
+            {
+                se = SessionManager::Instance().newSession(sk);
+                request.setInitial();
+                request.setUSR(sk.USR);
+            }
+            else
+                se = SessionManager::Instance().getSession(sk);
         }
         else
-            r = router.findRoute(request.getAbonent(), request.getSite(), request.getSitePath() + request.getSiteFileName(), request.getSitePort());        
-        
-        if(r.id && !request.getAbonent().length())
         {
-            smsc_log_info(logger, "Transit request served");
-            registerEvent(scag::stat::events::http::REQUEST_OK, request);            
-            return true;
-        }
-
-        smsc_log_debug(logger, "Got http_request command host=%s:%d, path=%s, filename=%s, abonent=%s, USR=%d", request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str(), request.getAbonent().c_str(), request.getUSR());
-           
-        smsc_log_debug( logger, "httproute found route_id=%d, service_id=%d", r.id, r.service_id);
-        request.setServiceId(r.service_id);
-        request.setRouteId(r.id);
-        request.setProviderId(r.provider_id);
-
-        findUSR(request, getInPlaces(r, PlacementKind::USR));
-
-
-        const std::string& s = request.getAbonent();
-        request.setAddress(r.addressPrefix + (s.c_str() + (s[0] == '+' ? 1 : 0)));
-
-        CSessionKey sk = {request.getUSR(), request.getAddress().c_str()};
-        if(!request.getUSR())
-        {
-            se = SessionManager::Instance().newSession(sk);
-            request.setInitial();
-            request.setUSR(sk.USR);
-        }
-        else
+            CSessionKey sk = {request.getUSR(), request.getAddress().c_str()};        
             se = SessionManager::Instance().getSession(sk);
-
+        }
+            
         if(se.Get())
         {
             rs = RuleEngine::Instance().process(request, *se.Get());
+            
+            if(rs.status == scag::re::STATUS_LONG_CALL)
+            {
+                SessionManager::Instance().releaseSession(se);
+                return rs.status;
+            }
 
-            if(rs.result >= 0 && rs.status == scag::re::STATUS_OK)
+            if(rs.status == scag::re::STATUS_OK)
             {
                 registerEvent(scag::stat::events::http::REQUEST_OK, request);
                 SessionManager::Instance().releaseSession(se);
@@ -385,7 +399,7 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
                 setFields(request, r);
 
                 smsc_log_debug(logger, "SERIALIZED REQUEST AFTER PROCESSING: %s", request.serialize().c_str());
-                return true;
+                return rs.status;
             }
         } else
             smsc_log_error( logger, "session not found for addr=%s, USR=%d", request.getAddress().c_str(), request.getUSR());
@@ -404,17 +418,17 @@ bool HttpProcessorImpl::processRequest(HttpRequest& request)
 
     registerEvent(scag::stat::events::http::REQUEST_FAILED, request);
 
-    return false;
+    return scag::re::STATUS_FAILED;
 }
 
-bool HttpProcessorImpl::processResponse(HttpResponse& response)
+int HttpProcessorImpl::processResponse(HttpResponse& response)
 {
     smsc_log_debug( logger, "Got http_response command abonent=%s, USR=%d, route_id=%d, service_id=%d", response.getAbonent().c_str(), response.getUSR(), response.getRouteId(), response.getServiceId());
     
     if(!response.getAbonent().length())
     {
         smsc_log_debug(logger, "Transit response served");
-        return true;
+        return scag::re::STATUS_OK;
     }
 
     SessionPtr se;
@@ -426,11 +440,14 @@ bool HttpProcessorImpl::processResponse(HttpResponse& response)
         if(se.Get())
         {
             rs = RuleEngine::Instance().process(response, *se.Get());
-            if(rs.result >= 0 && rs.status == scag::re::STATUS_OK)
-            {
+
+            if(rs.status == scag::re::STATUS_OK)
                 registerEvent(scag::stat::events::http::RESPONSE_OK, response);
+                        
+            if(rs.status == scag::re::STATUS_OK || rs.status == scag::re::STATUS_LONG_CALL)
+            {
                 SessionManager::Instance().releaseSession(se);
-                return true;
+                return rs.status;
             }
         } else
             smsc_log_error( logger, "http_response session not found abonent=%s, USR=%d", response.getAddress().c_str(), response.getUSR());
@@ -449,10 +466,10 @@ bool HttpProcessorImpl::processResponse(HttpResponse& response)
 
     registerEvent(scag::stat::events::http::RESPONSE_FAILED, response);
 
-    return false;
+    return scag::re::STATUS_FAILED;
 }
 
-void HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
+int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
 {
     smsc_log_debug(logger, "Got http_status_response command abonent=%s, USR=%d, route_id=%d, service_id=%d, delivered=%d",
              response.getAbonent().c_str(), response.getUSR(), response.getRouteId(), response.getServiceId(), delivered);
@@ -460,7 +477,7 @@ void HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
     if(!response.getAbonent().length())
     {
         smsc_log_debug(logger, "Transit response served");
-        return;
+        return scag::re::STATUS_OK;
     }
 
     SessionPtr se;
@@ -474,12 +491,14 @@ void HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
             response.setCommandId(HTTP_DELIVERY);
             response.setDelivered(delivered);
             rs = RuleEngine::Instance().process(response, *se.Get());
-
-            if(rs.result > 0 && rs.status  == scag::re::STATUS_OK && delivered)
-            {
+            
+            if(rs.status == scag::re::STATUS_OK && delivered)
                 registerEvent(scag::stat::events::http::DELIVERED, response);
+
+            if((rs.status == scag::re::STATUS_OK && delivered) || rs.status == scag::re::STATUS_LONG_CALL)
+            {
                 SessionManager::Instance().releaseSession(se);
-                return;
+                return rs.status;
             }
         }
         else
@@ -498,6 +517,8 @@ void HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
         SessionManager::Instance().releaseSession(se);
 
     registerEvent(scag::stat::events::http::FAILED, response);
+    
+    return scag::re::STATUS_FAILED;
 }
         
 void HttpProcessorImpl::init(const std::string& cfg)

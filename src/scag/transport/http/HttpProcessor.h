@@ -6,6 +6,7 @@
 #include "HttpCommand.h"
 
 namespace scag { namespace transport { namespace http {
+
     class HttpProcessor 
     {
     public:
@@ -17,7 +18,7 @@ namespace scag { namespace transport { namespace http {
          * @return  true if request was successfuly processed and
          *          accepted to forward to service
          */
-        virtual bool processRequest(HttpRequest& request) = 0;
+        virtual int processRequest(HttpRequest& request, bool continued = false) = 0;
         
         /**
          * Should be called on HttpResponse comes from service.
@@ -27,7 +28,7 @@ namespace scag { namespace transport { namespace http {
          * @return  true if response was successfuly processed and
          *          accepted to return to abonent
          */
-        virtual bool processResponse(HttpResponse& response) = 0;
+        virtual int processResponse(HttpResponse& response) = 0;
 
         /**
          * Should be called on HttpResponse delivery (ok or failed).
@@ -35,7 +36,7 @@ namespace scag { namespace transport { namespace http {
          * @param   response - HttpResponse tried to deliver
          * @param   delivered - packet delivery outcome status (ok or failed).
          */
-        virtual void statusResponse(HttpResponse& response, bool delivered=true) = 0;
+        virtual int statusResponse(HttpResponse& response, bool delivered=true) = 0;
 
         virtual void ReloadRoutes() = 0;
 

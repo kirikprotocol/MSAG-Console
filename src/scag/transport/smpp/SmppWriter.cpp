@@ -7,6 +7,7 @@ namespace smpp{
 
 int SmppWriter::Execute()
 {
+  smsc_log_debug(log,"Starting SmppWriter");
   net::Multiplexer::SockArray ready,error;
   while(!isStopping)
   {
@@ -28,6 +29,7 @@ int SmppWriter::Execute()
         }
         if(sockets[i]->checkTimeout(inactivityTimeout))
         {
+          smsc_log_warn(log, "SmppWriter: inactivity timeout expired");
           sockets[i]->disconnect();
           continue;
         }
@@ -48,7 +50,7 @@ int SmppWriter::Execute()
     {
       for(int i=0;i<error.Count();i++)
       {
-        debug2(log,"error on socket %p",error[i]);
+        smsc_log_warn(log,"error on socket %p",error[i]);
         getSmppSocket(error[i])->disconnect();
       }
       for(int i=0;i<ready.Count();i++)
@@ -57,7 +59,7 @@ int SmppWriter::Execute()
           getSmppSocket(ready[i])->sendData();
         }catch(std::exception& e)
         {
-          warn2(log,"exception in sendData:%s",e.what());
+          smsc_log_warn(log,"exception in sendData:%s",e.what());
         }
       }
       MutexGuard mg(mon);
@@ -65,6 +67,7 @@ int SmppWriter::Execute()
     }
   }
   deleteDisconnected();
+  smsc_log_debug(log,"Execution of SmppWriter finished");  
   return 0;
 }
 

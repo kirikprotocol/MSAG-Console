@@ -30,7 +30,7 @@ bool CookieAction::run(ActionContext& context)
     if(!getStrProperty(context, strName, "name", nm) || !nm.length())
         return false;
 
-    HttpCommand& hc = ((HttpCommandAdapter&)context.getCommand()).getCommand();
+    HttpCommand& hc = (HttpCommand&)context.getSCAGCommand();
 
     if(set)
     {
