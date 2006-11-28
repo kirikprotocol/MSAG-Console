@@ -13,14 +13,14 @@ void SmppSocketManager::registerSocket(SmppSocket* sock)
   {
     if(readers[i]->getSocketsCount()<MaxSocketsPerThread)
     {
-      info2(log,"Reusing reader/writer (%d)",readers[i]->getSocketsCount());
+      smsc_log_debug(log,"Reusing reader/writer (%d)",readers[i]->getSocketsCount());
       readers[i]->addSocket(sock);
       writers[i]->addSocket(sock);
       sock->release();
       return;
     }
   }
-  info2(log,"Creating new reader/writer (%d)",readers.Count());
+  smsc_log_debug(log,"Creating new reader/writer (%d)",readers.Count());
   SmppReader* rd=new SmppReader();
   SmppWriter* wr=new SmppWriter();
   readers.Push(rd);
