@@ -1,4 +1,5 @@
-#define FILEVER "$Id $"
+#define FILEVER "\
+$Id $"
 #include <stdio.h>
 #include <string.h>
 #include "sme/SmppBase.hpp"
