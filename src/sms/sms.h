@@ -827,6 +827,13 @@ public:
     return prop.properties[tag].getInt();
   }
 
+  bool hasProperty(int tag)const
+  {
+    tag&=0xff;
+    __require__(tag<=SMS_LAST_TAG);
+    return prop.properties[tag].isSet();
+  }
+  
   bool hasIntProperty(int tag)const
   {
     __require__((tag>>8)==SMS_INT_TAG);
@@ -1715,6 +1722,10 @@ struct SMS
   uint32_t getIntProperty(int tag)const
   {
     return messageBody.getIntProperty(tag);
+  }
+  bool hasProperty(int tag)const
+  {
+    return messageBody.hasProperty(tag);
   }
   bool hasIntProperty(int tag)const
   {

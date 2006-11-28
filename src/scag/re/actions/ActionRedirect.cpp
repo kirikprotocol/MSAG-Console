@@ -91,7 +91,7 @@ bool ActionRedirect::run(ActionContext& context)
 
     context.clearLongCallContext();
     smsc_log_debug(logger,"Action 'redirect' finished");   
-    return false;
+    return true;
 }
 
 IParserHandler * ActionRedirect::StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory)

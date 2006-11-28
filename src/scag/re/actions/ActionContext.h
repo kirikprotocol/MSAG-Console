@@ -37,6 +37,7 @@ namespace scag { namespace re { namespace actions
         virtual void fillRespOperation(smsc::inman::interaction::DeliverySmsResult& op, TariffRec& tariffRec) = 0;
         */
         //virtual SMS& getSMS() = 0;
+        virtual SCAGCommand& getSCAGCommand() = 0;
     };
 
    
@@ -81,9 +82,9 @@ namespace scag { namespace re { namespace actions
         auto_ptr<TariffRec>     m_TariffRec;
     public:
 
-        ActionContext(LongCallContext& _longCallContext, Hash<Property>& _constants,
+        ActionContext(Hash<Property>& _constants,
                       Session& _session, CommandAccessor& _command, CommandProperty& _commandProperty)
-            : longCallContext(_longCallContext), constants(_constants), session(_session), 
+            : constants(_constants), session(_session), 
               command(_command), commandProperty(_commandProperty) 
         {
         };
@@ -102,6 +103,7 @@ namespace scag { namespace re { namespace actions
 
 
         CommandAccessor& getCommand() { return command; };
+        SCAGCommand& getSCAGCommand() { return command.getSCAGCommand(); };
         Session& getSession() { return session; };        
 
         bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value);
@@ -130,19 +132,19 @@ namespace scag { namespace re { namespace actions
 
 
         TariffRec * getTariffRec(uint32_t category, uint32_t mediaType);
+        bool getTariffRec(uint32_t category, uint32_t mediaType, TariffRec& tr);
         bool checkIfCanSetPending(int operationType, int eventHandlerType, TransportType transportType);
         int getCurrentOperationBillID();
 
-        LongCallContext&        longCallContext;
-
         void clearLongCallContext()
         {
+            LongCallContext& longCallContext = command.getSCAGCommand().getLongCallContext();
             while (longCallContext.ActionStack.empty()) longCallContext.ActionStack.pop();
         }
 
-        SerializeBuffer& getBuffer()
+        LongCallBuffer& getBuffer()
         {
-            return longCallContext.contextActionBuffer;
+            return command.getSCAGCommand().getLongCallContext().contextActionBuffer;
         }
         
 

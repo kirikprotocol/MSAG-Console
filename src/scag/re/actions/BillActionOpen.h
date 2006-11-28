@@ -6,6 +6,15 @@
 
 namespace scag { namespace re { namespace actions {
 
+class BillOpenCallParams : public LongCallParams
+{
+public:
+    BillingInfoStruct billingInfoStruct;
+    TariffRec tariffRec;
+    int BillId;
+    std::string exception;
+};
+
 class BillActionOpen : public LongCallAction, ActionAbstractWait
 {
     std::string m_sName;

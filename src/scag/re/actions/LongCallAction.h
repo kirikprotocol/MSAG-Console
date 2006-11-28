@@ -26,7 +26,7 @@ class LongCallAction : public Action, ActionLongCallInterface
 public:
     virtual bool run(ActionContext& context)
     {
-        if (context.longCallContext.ActionStack.empty()) 
+        if (context.getSCAGCommand().getLongCallContext().ActionStack.empty()) 
         {
             if (!RunBeforePostpone(context)) return true;
 

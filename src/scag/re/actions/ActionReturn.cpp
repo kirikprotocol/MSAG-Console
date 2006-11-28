@@ -64,7 +64,7 @@ bool ActionReturn::run(ActionContext& context)
     smsc_log_debug(logger,"Action 'return': return result=%d, status=%d",rs.result, rs.status);
 
     context.clearLongCallContext();
-    return false;
+    return true;
 }
 
 

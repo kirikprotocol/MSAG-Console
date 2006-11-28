@@ -34,7 +34,7 @@ namespace scag { namespace re { namespace http {
         {
         }
 
-        HttpCommand& getCommand() { return command; };
+        SCAGCommand& getSCAGCommand() { return command; };
 
         virtual void changed(AdapterProperty& property);
         virtual Property* getProperty(const std::string& name);

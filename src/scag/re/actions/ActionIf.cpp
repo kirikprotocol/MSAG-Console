@@ -141,15 +141,42 @@ bool ActionIf::CompareResultToBool(IfOperations op,int result)
             (((op == opNE)||(op == opNE_I))&& (result != 0)));
 }
 
+bool ActionIf::runSection(ActionContext& context, LongCallContext& longCallContext, std::vector<Action *>& actions)
+{
+    int startIndex = 0;
+
+    if (!longCallContext.ActionStack.empty()) 
+    {
+        startIndex = longCallContext.ActionStack.top().actionIndex;
+        if (startIndex >= actions.size())
+        {
+            smsc_log_error(logger, "Cannot continue running actions. Details: action index out of bound");
+            context.clearLongCallContext();
+            return true;
+        }
+        longCallContext.ActionStack.pop();
+    }
+
+    for (int i = startIndex; i < actions.size(); i++)
+    {
+        if (!actions[i]->run(context)) 
+        {
+            ActionStackValue sv(i, false);
+            longCallContext.ActionStack.push(sv);
+            return false;
+        }
+    }
+    return true;    
+}
 
 bool ActionIf::run(ActionContext& context)
 {
-
     smsc_log_debug(logger,"Run Action 'if'...");
 
     bool isValidCondition = true;
 
-    if (context.longCallContext.ActionStack.empty()) 
+    LongCallContext &longCallContext = context.getSCAGCommand().getLongCallContext();
+    if (longCallContext.ActionStack.empty()) 
     {
         Property * property = context.getProperty(singleparam.strOperand1);
         if (!property) 
@@ -157,7 +184,6 @@ bool ActionIf::run(ActionContext& context)
             smsc_log_debug(logger,"Action 'If' stopped. Details: Cannot find property '%s'", singleparam.strOperand1.c_str());
             return true;
         }
-
 
         if (!m_hasOP) 
         {
@@ -204,73 +230,16 @@ bool ActionIf::run(ActionContext& context)
                 Property * valproperty = context.getProperty(singleparam.strOperand2);
                 if (valproperty) result = property->Compare(*valproperty,pt);
                 else smsc_log_warn(logger,"Action 'if': Invalid property '%s'", singleparam.strOperand2.c_str());
-            } 
+            }
 
             isValidCondition = CompareResultToBool(singleparam.Operation,result);
         }
     }
     else
-        isValidCondition = context.longCallContext.ActionStack.top().thenSection;
+        isValidCondition = longCallContext.ActionStack.top().thenSection;
 
-
-    if (isValidCondition) 
-    {
-        smsc_log_debug(logger,"Action 'if': run 'then' section");
-
-        int startIndex = 0;
-
-        if (!context.longCallContext.ActionStack.empty()) 
-        {
-            startIndex = context.longCallContext.ActionStack.top().actionIndex;
-            if (startIndex >= ThenActions.size())
-            {
-                smsc_log_error(logger, "Cannot continue running actions. Details: action index out of bound");
-                context.clearLongCallContext();
-                return true;
-            }
-            context.longCallContext.ActionStack.pop();
-        }
-
-
-        for (int i = startIndex; i < ThenActions.size(); i++)
-        {
-            if (!ThenActions[i]->run(context)) 
-            {
-                ActionStackValue sv(i, true);
-                context.longCallContext.ActionStack.push(sv);
-                return false;
-            }
-        }
-    } else
-    {
-        smsc_log_debug(logger,"Action 'if': run 'else' section");
-
-        int startIndex = 0;
-
-        if (!context.longCallContext.ActionStack.empty()) 
-        {
-            startIndex = context.longCallContext.ActionStack.top().actionIndex;
-            if (startIndex >= ElseActions.size())
-            {
-                smsc_log_error(logger, "Cannot continue running actions. Details: action index out of bound");
-                context.clearLongCallContext();
-                return true;
-            }
-            context.longCallContext.ActionStack.pop();
-        }
-
-
-        for (int i = startIndex; i < ElseActions.size(); i++)
-        {
-            if (!ElseActions[i]->run(context)) 
-            {
-                ActionStackValue sv(i, false);
-                context.longCallContext.ActionStack.push(sv);
-                return false;
-            }
-        }
-    }
-    return true;
+    smsc_log_debug(logger,"Action 'if': run '%s' section", isValidCondition ? "then" : "else");
+    return runSection(context, longCallContext, isValidCondition ? ThenActions : ElseActions);
 }
 
 }}}

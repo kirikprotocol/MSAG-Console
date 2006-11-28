@@ -23,7 +23,7 @@
 #include "scag/re/actions/ActionBillMoveWait.h"
 #include "scag/re/actions/ActionCloseUssdDialog.h"
 #include "scag/re/actions/ActionRedirect.h"
-
+#include "scag/re/actions/ActionTLV.h"
 
 //#include "scag/SAX2Print.hpp"
                  
@@ -85,7 +85,11 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
     if (name=="smpp:close_ussd_dialog") return new ActionCloseUssdDialog();
 
     if (name=="smpp:redirect") return new ActionRedirect();
-
+    
+    if (name=="smpp:set_tlv") return new ActionTLV(TLV_SET);
+    if (name=="smpp:get_tlv") return new ActionTLV(TLV_GET);
+    if (name=="smpp:del_tlv") return new ActionTLV(TLV_DEL);    
+    if (name=="smpp:exist_tlv") return new ActionTLV(TLV_EXIST);
 
     Action * action = 0;
 

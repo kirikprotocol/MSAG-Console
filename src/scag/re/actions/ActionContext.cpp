@@ -114,8 +114,11 @@ TariffRec * ActionContext::getTariffRec(uint32_t category, uint32_t medyaType)
     return m_TariffRec.get();
 }
 
-
-
+bool ActionContext::getTariffRec(uint32_t category, uint32_t medyaType, TariffRec& tr)
+{
+    Infrastructure& istr = BillingManager::Instance().getInfrastructure();
+    return istr.GetTariff(commandProperty.operatorId, category, medyaType, tr);
+}
 
 bool ActionContext::checkIfCanSetPending(int operationType, int eventHandlerType, TransportType transportType)
 {
