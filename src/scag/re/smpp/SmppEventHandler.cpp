@@ -220,14 +220,14 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session, Lon
     } catch (SCAGException& e)
     {
         smsc_log_warn(logger, "EventHandler cannot start/locate operation. Details: %s", e.what());
-        rs.result = (*smppcommand)->status;
+        rs.result = smsc::system::Status::SYSFAILURE;
         rs.status = STATUS_FAILED;
         return rs;
     }
 
     if ((*smppcommand)->status > 0)
     {
-        rs.result = (*smppcommand)->status;
+        rs.result = smsc::system::Status::SYSFAILURE;
         rs.status = STATUS_FAILED;
         return rs;
     }
