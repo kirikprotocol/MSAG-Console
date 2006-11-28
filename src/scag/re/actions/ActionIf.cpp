@@ -140,7 +140,7 @@ bool ActionIf::CompareResultToBool(IfOperations op,int result)
             (((op == opEQ)||(op == opEQ_I))&& (result == 0)) ||
             (((op == opNE)||(op == opNE_I))&& (result != 0)));
 }
-
+/*
 bool ActionIf::runSection(ActionContext& context, LongCallContext& longCallContext, std::vector<Action *>& actions)
 {
     int startIndex = 0;
@@ -168,7 +168,7 @@ bool ActionIf::runSection(ActionContext& context, LongCallContext& longCallConte
     }
     return true;    
 }
-
+*/
 bool ActionIf::run(ActionContext& context)
 {
     smsc_log_debug(logger,"Run Action 'if'...");
@@ -239,7 +239,7 @@ bool ActionIf::run(ActionContext& context)
         isValidCondition = longCallContext.ActionStack.top().thenSection;
 
     smsc_log_debug(logger,"Action 'if': run '%s' section", isValidCondition ? "then" : "else");
-    return runSection(context, longCallContext, isValidCondition ? ThenActions : ElseActions);
+    return RunActionVector(context, longCallContext, isValidCondition ? ThenActions : ElseActions, logger);
 }
 
 }}}

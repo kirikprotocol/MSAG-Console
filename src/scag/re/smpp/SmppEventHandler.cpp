@@ -227,7 +227,7 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
 
     if ((*smppcommand)->status > 0)
     {
-        rs.result = smsc::system::Status::SYSFAILURE;
+        rs.result = (*smppcommand)->status;
         rs.status = STATUS_FAILED;
         return rs;
     }

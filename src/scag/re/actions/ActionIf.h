@@ -5,11 +5,12 @@
 
 #include "ActionContext.h"
 #include "Action.h"
+#include "LongCallAction.h"
 
 namespace scag { namespace re { namespace actions 
 {
 
-class ActionIf : public Action
+class ActionIf : public Action, ComplexActionLongCallHelper
 {
     enum IfOperations
     {
@@ -80,8 +81,9 @@ protected:
 
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);
-    bool runSection(ActionContext& context, LongCallContext& longCallContext, std::vector<Action *>& actions);
 //////////////IParserHandler Interfase///////////////////////
+
+    //virtual bool RunActionVector(ActionContext& context, LongCallContext& longCallContext, std::vector<Action *>& actions, Logger * logger);
 
 public:
 

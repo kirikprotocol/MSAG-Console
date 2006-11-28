@@ -7,6 +7,37 @@
 
 namespace scag { namespace re { namespace actions {
 
+class ComplexActionLongCallHelper
+{
+protected:
+    virtual bool RunActionVector(ActionContext& context, LongCallContext& longCallContext, std::vector<Action *>& actions, Logger * logger)
+    {
+        int startIndex = 0;
+
+        if (!longCallContext.ActionStack.empty()) 
+        {
+            startIndex = longCallContext.ActionStack.top().actionIndex;
+            if (startIndex >= actions.size())
+            {
+                smsc_log_error(logger, "Cannot continue running actions. Details: action index out of bound");
+                context.clearLongCallContext();
+                return true;
+            }
+            longCallContext.ActionStack.pop();
+        }
+
+        for (int i = startIndex; i < actions.size(); i++)
+        {
+            if (!actions[i]->run(context)) 
+            {
+                ActionStackValue sv(i, false);
+                longCallContext.ActionStack.push(sv);
+                return false;
+            }
+        }
+        return true;    
+    }
+};
 
 class ActionLongCallInterface
 {
