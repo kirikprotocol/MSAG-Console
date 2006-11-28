@@ -20,7 +20,14 @@ enum LongCallCommandId{
     PERS_SET,
     PERS_DEL,
     PERS_INC,
-    PERS_INC_MOD    
+    PERS_INC_MOD,
+    BILL_OPEN,
+    BILL_CLOSE
+};
+
+class LongCallParams{
+public:
+    virtual ~LongCallParams() {};
 };
 
 class LongCallInitiator;
@@ -35,16 +42,36 @@ struct ActionStackValue
 
 
 
-struct LongCallContext
+class LongCallContext
 {
-    LongCallContext(LongCallInitiator* initr, uint32_t cid, void* p): initiator(initr), callCommandId(cid), param(p), next(NULL) {};
+    LongCallParams *params;
+public:
+    LongCallContext(): initiator(NULL), stateMachineContext(NULL), next(NULL), params(NULL) {};
     
     uint32_t systemType, callCommandId;
-    void *param;    
+    void *stateMachineContext;
     LongCallInitiator *initiator;
     LongCallContext *next;
 
     std::stack<ActionStackValue> ActionStack;
+
+    LongCallParams* getParams() { return params; };
+    void setParams(LongCallParams* p)
+    {
+        if(params) delete params;
+       params = p;
+    }
+    
+    void freeParams()
+    {
+        if(params) delete params;
+        params = NULL;
+    }
+    
+    ~LongCallContext()
+    {
+        if(params) delete params;
+    }
     scag::util::SerializeBuffer contextActionBuffer;
 };
 

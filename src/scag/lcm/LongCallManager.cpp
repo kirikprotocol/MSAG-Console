@@ -7,6 +7,7 @@
 #include "scag/config/ConfigListener.h"
 #include "scag/pers/PersClient.h"
 #include "scag/pers/Types.h"
+#include "scag/re/actions/BillActionOpen.h"
 
 #include "LongCallManager.h"
 
@@ -19,6 +20,7 @@ using namespace smsc::core::threads;
 
 using namespace scag::pers::client;
 using namespace scag::pers;
+using scag::re::actions::BillOpenCallParams;
 
 bool  LongCallManager::inited = false;
 Mutex LongCallManager::initLock;
@@ -51,6 +53,9 @@ class LongCallTask : public ThreadedTask
 public:
     LongCallTask(LongCallManagerImpl* man) : manager(man) { logger = Logger::getInstance("lcm.task"); };
     void ExecutePersCall(LongCallContext* ctx);
+    void ExecuteBillOpenCall(LongCallContext* ctx);
+    void ExecuteBillCloseCall(LongCallContext* ctx);
+    
     int Execute();
     const char* taskName() { return "LongCallTask"; };
 };
@@ -155,6 +160,7 @@ bool LongCallManagerImpl::call(LongCallContext* context)
 {
     MutexGuard mt(mtx);
     if(stopped) return false;
+    context->next = NULL;
     if(headContext)
         tailContext = tailContext->next = context;
     else
@@ -165,7 +171,7 @@ bool LongCallManagerImpl::call(LongCallContext* context)
 
 void LongCallTask::ExecutePersCall(LongCallContext* ctx)
 {
-    PersCallParams* persParams = (PersCallParams*)ctx->param;
+    PersCallParams* persParams = (PersCallParams*)ctx->getParams();
     PersClient& pc = PersClient::Instance();
     smsc_log_debug(logger, "ExecutePersCall: command=%d", ctx->callCommandId);
     try{
@@ -206,7 +212,43 @@ void LongCallTask::ExecutePersCall(LongCallContext* ctx)
         persParams->exception = "LongCallManager: Unknown exception";
     }
 }
-        
+    
+void LongCallTask::ExecuteBillOpenCall(LongCallContext* ctx)
+{
+    BillOpenCallParams* params = (BillOpenCallParams*)ctx->getParams();
+    params->exception = "";
+    try 
+    {
+        params->BillId = scag::bill::BillingManager::Instance().Open(params->billingInfoStruct, params->tariffRec);
+    }
+    catch (Exception& e)
+    {
+        params->exception = e.what();
+    }
+    catch (...)
+    {
+        params->exception = "LongCallManager: BillOpenCall unknown exception";
+    }
+}
+
+void LongCallTask::ExecuteBillCloseCall(LongCallContext* ctx)
+{
+/*    BillOpenCallParams* params = (BillOpenCallParams*)ctx->getParams();
+    params->exception = "";
+    try 
+    {
+        params->BillId = scag::bill::BillingManager::Instance().Open(params->billingInfoStruct, params->tariffRec);
+    }
+    catch (Exception& e)
+    {
+        params->exception = e.what();
+    }
+    catch (...)
+    {
+        params->exception = "LongCallManager: BillOpenCall unknown exception";
+    }*/
+}
+
 int LongCallTask::Execute()
 {
     LongCallContext* ctx;
@@ -219,6 +261,10 @@ int LongCallTask::Execute()
 
         if(ctx->callCommandId >= PERS_GET && ctx->callCommandId <= PERS_INC)
             ExecutePersCall(ctx);
+        else if(ctx->callCommandId == BILL_OPEN)
+            ExecuteBillOpenCall(ctx);
+        else if(ctx->callCommandId == BILL_CLOSE)
+            ExecuteBillCloseCall(ctx);
             
         ctx->initiator->continueExecution(ctx, false);
     }
