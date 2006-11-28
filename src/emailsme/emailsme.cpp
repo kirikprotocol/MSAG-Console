@@ -1,3 +1,4 @@
+#define FILEVER "$Id $"
 #include <stdio.h>
 #include <string.h>
 #include "sme/SmppBase.hpp"
@@ -27,8 +28,7 @@
 #include "util/Base64.hpp"
 #include "core/buffers/TmpBuf.hpp"
 
-const char* cssc_version="@(#)"
-$Id $
+const char* cssc_version="@(#)" FILEVER;
 
 
 using namespace smsc::emailsme;
