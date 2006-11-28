@@ -57,6 +57,7 @@ void SmppSocket::processInput()
   }
   if(res<=0)
   {
+    smsc_log_debug(log, "SmppSocket error from recv: %d", errno);
     connected=false;
     return;
   }

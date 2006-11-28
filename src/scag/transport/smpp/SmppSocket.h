@@ -61,6 +61,7 @@ struct SmppSocket:SmppChannel{
 
   SmppSocket(net::Socket* s)
   {
+    smsc_log_debug(log, "SmmpSocket init: %x", s);  
     Init();
     sock=s;
     connected=true;
@@ -69,6 +70,7 @@ struct SmppSocket:SmppChannel{
 
   virtual ~SmppSocket()
   {
+    smsc_log_debug(log, "SmmpSocket destroying: %x", sock);
     delete [] wrBuffer;
     delete [] rdBuffer;
     if(sock)delete sock;
@@ -78,7 +80,7 @@ struct SmppSocket:SmppChannel{
   {
     MutexGuard mg(mtx);
     refCount++;
-    info2(log,"acquire:%p(%s)/%d",this,systemId.c_str(),refCount);
+    smsc_log_info(log, "acquire:%p(%s)/%d",this,systemId.c_str(),refCount);
   }
 
   void release()
@@ -87,14 +89,14 @@ struct SmppSocket:SmppChannel{
     {
       MutexGuard mg(mtx);
       cnt=--refCount;
-      info2(log,"release:%p(%s)/%d",this,systemId.c_str(),refCount);
+      smsc_log_info(log, "release:%p(%s)/%d",this,systemId.c_str(),refCount);
     }
     if(!cnt)
     {
-      info2(log,"Deleting socket for %s",systemId.c_str());
+      smsc_log_info(log, "Deleting socket for %s",systemId.c_str());
       if(bindType!=btNone)
       {
-        info2(log,"unregisterChannel(bt=%d)",bindType);
+        smsc_log_info(log, "unregisterChannel(bt=%d)",bindType);
         chReg->unregisterChannel(this);
         bindType=btNone;
       }
