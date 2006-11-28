@@ -39,7 +39,7 @@ public:
             return false;
         } else
         {
-            context.getBuffer().SetPos(0);
+            //context.getBuffer().SetPos(0);
             ContinueRunning(context);
         }
 

@@ -142,10 +142,10 @@ namespace scag { namespace re { namespace actions
             while (longCallContext.ActionStack.empty()) longCallContext.ActionStack.pop();
         }
 
-        LongCallBuffer& getBuffer()
+        /*LongCallBuffer& getBuffer()
         {
             return command.getSCAGCommand().getLongCallContext().contextActionBuffer;
-        }
+        } */
         
 
    };
