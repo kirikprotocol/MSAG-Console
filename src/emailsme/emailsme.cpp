@@ -30,7 +30,8 @@ $Id$
 #include "util/Base64.hpp"
 #include "core/buffers/TmpBuf.hpp"
 
-const char* cssc_version="@(#)" "$Id $";
+const char* cssc_version="@(#)"
+"$Id $";
 
 
 using namespace smsc::emailsme;
