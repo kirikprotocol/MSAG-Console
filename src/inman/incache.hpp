@@ -92,13 +92,13 @@ public:
     //DiskHash interface methods
     void Read(File& fh) /* throw (FileException) */
     {
-        fh.Read(value, MAX_ABONENT_ID_LEN);
-        value[length = MAX_ABONENT_ID_LEN] = 0;
+        fh.Read(signals, MAX_ABONENT_ID_LEN);
+        signals[length = MAX_ABONENT_ID_LEN] = 0;
         //isdn international address only
         numPlanInd = typeOfNumber = 1;
     }
     void Write(File& fh) /* throw (FileException) */ const
-    { fh.Write(value, MAX_ABONENT_ID_LEN); }
+    { fh.Write(signals, MAX_ABONENT_ID_LEN); }
 
     static uint32_t Size(void)
     { return MAX_ABONENT_ID_LEN; }
@@ -108,12 +108,12 @@ public:
     { 
         uint32_t hcode = attempt + length;
         for (uint32_t i = 0; i < (uint32_t)length; i++)
-           hcode = ((hcode << 5) ^ (hcode >> 27)) ^ value[i];
+           hcode = ((hcode << 5) ^ (hcode >> 27)) ^ signals[i];
         return hcode;
     }
     int operator== (const AbonentHashKey & key2)
     {
-        return !strcmp((const char*)value, key2.getSignals());
+        return !strcmp((const char*)signals, key2.getSignals());
     }
 };
 
