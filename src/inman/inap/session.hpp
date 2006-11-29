@@ -15,7 +15,6 @@ using smsc::core::synchronization::Event;
 using smsc::ac::ACOID;
 
 #include "inman/common/adrutil.hpp"
-using smsc::cvtutil::TonNpiAddress;
 
 #include "logger/Logger.h"
 using smsc::logger::Logger;

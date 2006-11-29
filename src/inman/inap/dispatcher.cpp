@@ -1,9 +1,9 @@
 static char const ident[] = "$Id$";
 
-#include "inman/inap/dispatcher.hpp"
-#include "inman/common/util.hpp"
+#include "util/vformat.hpp"
+using smsc::util::format;
 
-using smsc::inman::common::format;
+#include "inman/inap/dispatcher.hpp"
 
 namespace smsc  {
 namespace inman {

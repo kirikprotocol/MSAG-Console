@@ -3,11 +3,12 @@ static char const ident[] = "$Id$";
 #include <assert.h>
 #include <memory>
 
+#include "util/BinDump.hpp"
+using smsc::util::DumpHex;
+
 #include "inman/inap/dialog.hpp"
 #include "inman/inap/dispatcher.hpp"
 
-using smsc::inman::common::format;
-using smsc::inman::common::dump;
 using smsc::inman::comp::ApplicationContextFactory;
 
 namespace smsc  {
@@ -125,10 +126,10 @@ void Dialog::beginDialog(UCHAR_T* ui/* = NULL*/, USHORT_T uilen/* = 0*/) throw (
                     "  User info[%u]: %s\n"
                     "}",
                    dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, priority, qSrvc, 
-                   dump(rmtAddr.addrLen, rmtAddr.addr).c_str(),
-                   dump(ownAddr.addrLen, ownAddr.addr).c_str(),
-                   dump(ac.acLen, ac.ac).c_str(),
-                   uilen, dump(uilen, ui).c_str()
+                   DumpHex(rmtAddr.addrLen, rmtAddr.addr, _HexDump_CVSD).c_str(),
+                   DumpHex(ownAddr.addrLen, ownAddr.addr, _HexDump_CVSD).c_str(),
+                   DumpHex(ac.acLen, ac.ac, _HexDump_CVSD).c_str(),
+                   uilen, DumpHex(uilen, ui).c_str()
                    );
     MutexGuard  tmp(dlgGrd);
     USHORT_T result = EINSS7_I97TBeginReq(
@@ -160,8 +161,8 @@ void Dialog::continueDialog(void) throw (CustomException)
                     "  App. context[%u]: %s\n"
                     "}",
                     dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, priority, qSrvc, 
-                    "", // dump(ownAddr.addrLen, ownAddr.addr).c_str(),
-                    ac.acLen, dump(ac.acLen, ac.ac).c_str()
+                    "", // DumpHex(ownAddr.addrLen, ownAddr.addr, _HexDump_CVSD).c_str(),
+                    ac.acLen, DumpHex(ac.acLen, ac.ac, _HexDump_CVSD).c_str()
                    );
 
     MutexGuard  tmp(dlgGrd);
@@ -190,7 +191,7 @@ void Dialog::endDialog(bool basicEnd/* = true*/) throw (CustomException)
                         "  App. context[%u]: %s\n"
                         "}",
                        dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, priority, qSrvc,
-                       termination, ac.acLen, dump(ac.acLen, ac.ac).c_str()
+                       termination, ac.acLen, DumpHex(ac.acLen, ac.ac, _HexDump_CVSD).c_str()
                        );
 
         USHORT_T result =
@@ -225,8 +226,8 @@ void Dialog::sendInvoke(Invoke * inv) throw (CustomException)
                 dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
                 inv->getId(), linked ? "YES" : "NO", linked ? linked->getId() : 0,
                 (inv->getTag() == EINSS7_I97TCAP_OPERATION_TAG_LOCAL) ? "LOCAL" : "GLOBAL",
-                op.size(), dump(op.size(), &op[0]).c_str(),
-                params.size(), dump(params.size(), &params[0]).c_str());
+                op.size(), DumpHex(op.size(), &op[0], _HexDump_CVSD).c_str(),
+                params.size(), DumpHex(params.size(), &params[0]).c_str());
 
     USHORT_T result = 
         EINSS7_I97TInvokeReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, inv->getId(), 
@@ -249,8 +250,8 @@ void Dialog::sendResultLast(TcapEntity* res) throw (CustomException)
                 dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
                 res->getId(), 
                 (res->getTag() == EINSS7_I97TCAP_OPERATION_TAG_LOCAL) ? "LOCAL" : "GLOBAL",
-                op.size(), dump(op.size(), &op[0]).c_str(),
-                params.size(), dump(params.size(), &params[0]).c_str());
+                op.size(), DumpHex(op.size(), &op[0], _HexDump_CVSD).c_str(),
+                params.size(), DumpHex(params.size(), &params[0]).c_str());
 
     USHORT_T result =
         EINSS7_I97TResultLReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
@@ -271,8 +272,8 @@ void Dialog::sendResultNotLast(TcapEntity* res) throw (CustomException)
                 dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
                 res->getId(), 
                 (res->getTag() == EINSS7_I97TCAP_OPERATION_TAG_LOCAL) ? "LOCAL" : "GLOBAL",
-                op.size(), dump(op.size(), &op[0]).c_str(),
-                params.size(), dump(params.size(), &params[0]).c_str());
+                op.size(), DumpHex(op.size(), &op[0], _HexDump_CVSD).c_str(),
+                params.size(), DumpHex(params.size(), &params[0]).c_str());
 
     USHORT_T result =
         EINSS7_I97TResultNLReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
@@ -294,8 +295,8 @@ void Dialog::sendResultError(TcapEntity* res) throw (CustomException)
                 dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
                 res->getId(), 
                 (res->getTag() == EINSS7_I97TCAP_OPERATION_TAG_LOCAL) ? "LOCAL" : "GLOBAL",
-                op.size(), dump(op.size(), &op[0]).c_str(),
-                params.size(), dump(params.size(), &params[0]).c_str());
+                op.size(), DumpHex(op.size(), &op[0], _HexDump_CVSD).c_str(),
+                params.size(), DumpHex(params.size(), &params[0]).c_str());
 
     USHORT_T result =
         EINSS7_I97TUErrorReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,

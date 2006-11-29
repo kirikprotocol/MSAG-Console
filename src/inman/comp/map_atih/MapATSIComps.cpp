@@ -6,11 +6,11 @@ static char const ident[] = "$Id$";
 #include "inman/codecs/map_atih/AnyTimeSubscriptionInterrogationRes.h"
 #include "inman/comp/map_atih/MapATSIComps.hpp"
 #include "inman/comp/compsutl.hpp"
-#include "inman/common/util.hpp"
+#include "util/vformat.hpp"
+using smsc::util::format;
 
 using smsc::cvtutil::packNumString2BCD;
 using smsc::cvtutil::packMAPAddress2OCTS;
-using smsc::inman::common::format;
 using smsc::inman::comp::OCTET_STRING_2_Address;
 using smsc::inman::comp::smsc_log_component;
 

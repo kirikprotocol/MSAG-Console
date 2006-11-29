@@ -1,11 +1,11 @@
 static char const ident[] = "$Id$";
 #include <assert.h>
 
-#include "inman/interaction/connect.hpp"
+#include "util/BinDump.hpp"
+using smsc::util::DumpHex;
 
+#include "inman/interaction/connect.hpp"
 using smsc::inman::interaction::ObjectBuffer;
-using smsc::inman::common::dump;
-using smsc::inman::common::format;
 
 namespace smsc  {
 namespace inman {
@@ -70,8 +70,9 @@ int  Connect::send(const unsigned char *buf, int bufSz)
 
         format(dstr, "Connect[%u]: sent %d of %db: ", (unsigned int)
                 socket->getSocket(), n, bufSz);
-        if (n > 0)
-            dump(dstr, (unsigned short)n, (unsigned char*)buf, false);
+        if (n > 0) {
+            dstr += "0x"; DumpHex(dstr, (unsigned short)n, (unsigned char*)buf);
+        }
         if (n < bufSz) {
             errLvl = Logger::LEVEL_ERROR;
             _exc.reset(new SystemError(dstr.c_str(), errno));
@@ -195,8 +196,10 @@ int  Connect::receive_buf(unsigned char *buf, int bufSz, int minToRead)
         
         format(dstr, "Connect[%u]: %sreceived %d of %db: ", (unsigned int)socket->getSocket(),
                 (n < minToRead) ? "error, " : "", n, minToRead);
-        if (n > 0)
-            dump(dstr, (unsigned short)n, (unsigned char*)buf, false);
+        if (n > 0) {
+            dstr += "0x"; DumpHex(dstr, (unsigned short)n, (unsigned char*)buf/*, _HexDump_CVSD*/);
+//            dstr += "\n"; DumpDbg(dstr, (unsigned short)n, (unsigned char*)buf);
+        }
         if (n < minToRead) {
             errLvl = Logger::LEVEL_ERROR;
             _exc.reset(new SystemError(dstr.c_str(), errno));

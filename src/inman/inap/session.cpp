@@ -1,6 +1,8 @@
 static char const ident[] = "$Id$";
 
-#include "inman/common/util.hpp"
+#include "util/vformat.hpp"
+using smsc::util::format;
+
 #include "inman/common/adrutil.hpp"
 #include "inman/inap/session.hpp"
 #include "inman/inap/dialog.hpp"

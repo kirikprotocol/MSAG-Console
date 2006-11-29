@@ -4,12 +4,13 @@ static char const ident[] = "$Id$";
 #include <string>
 #include <stdexcept>
 
+#include "util/vformat.hpp"
+using smsc::util::format;
+
 #include "inman/uss/ussmessages.hpp"
-#include "inman/common/util.hpp"
 #include "inman/common/cvtutil.hpp"
 
 using std::runtime_error;
-using smsc::inman::common::format;
 using smsc::cbs::CBS_DCS;
 using smsc::cbs::parseCBS_DCS;
 using smsc::cvtutil::unpack7BitPadded2Text;

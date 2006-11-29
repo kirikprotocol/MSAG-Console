@@ -6,16 +6,17 @@ static char const ident[] = "$Id$";
 #include <exception>
 #include <string>
 
+#include "util/BinDump.hpp"
+using smsc::util::DumpHex;
+using smsc::util::format;
+
 #include "logger/Logger.h"
 #include "core/threads/Thread.hpp"
 #include "inman/common/console.hpp"
-#include "inman/common/util.hpp"
 #include "inman/uss/ussmessages.hpp"
 
 using smsc::logger::Logger;
 using smsc::core::threads::Thread;
-using smsc::inman::common::dump;
-using smsc::inman::common::format;
 using smsc::inman::common::Console;
 using smsc::inman::interaction::ObjectPipe;
 using smsc::inman::interaction::SerializerUSS;
@@ -99,7 +100,7 @@ public:
         case USS2CMD::STATUS_USS_REQUEST_OK: {
             std::string  str;
             if (!res->getUSSDataAsLatin1Text(str))
-                str = dump((res->getUSSData()).size(), (unsigned char*)&(res->getUSSData())[0], 0);
+                str = DumpHex((res->getUSSData()).size(), (unsigned char*)&(res->getUSSData())[0]);
             fprintf(stdout, "Request[%d]: got result %s\n", res->getDialogId(), str.c_str());
         } break;
 

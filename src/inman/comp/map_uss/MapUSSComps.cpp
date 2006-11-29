@@ -5,10 +5,9 @@ static char const ident[] = "$Id$";
 #include "inman/codec_inc/map/USSD-Arg.h"
 #include "inman/comp/map_uss/MapUSSComps.hpp"
 #include "inman/comp/compsutl.hpp"
-#include "inman/common/util.hpp"
+#include "util/vformat.hpp"
+using smsc::util::format;
 
-
-using smsc::inman::common::format;
 using smsc::inman::comp::smsc_log_component;
 using smsc::inman::comp::OCTET_STRING_2_Address;
 
@@ -86,7 +85,7 @@ ProcessUSSRequestArg::~ProcessUSSRequestArg() { }
 
 bool ProcessUSSRequestArg::msISDNadr_present(void)
 {
-    return (_msAdr.value[0] && (_msAdr.value[1] || _msAdr.value[0] != '0')) ? true : false;
+    return (_msAdr.signals[0] && (_msAdr.signals[1] || _msAdr.signals[0] != '0')) ? true : false;
 }
 
 bool ProcessUSSRequestArg::msAlerting_present(void)

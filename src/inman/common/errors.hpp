@@ -7,9 +7,9 @@
 #include <errno.h>
 #include <stdexcept>
 
-#include "inman/common/util.hpp"
+#include "util/vformat.hpp"
 
-using smsc::inman::common::format;
+using smsc::util::format;
 
 namespace smsc {
 namespace inman {

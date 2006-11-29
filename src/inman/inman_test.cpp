@@ -7,7 +7,6 @@ static char const ident[] = "$Id$";
 #include <string>
 
 #include "inman/common/adrutil.hpp"
-using smsc::cvtutil::TonNpiAddress;
 
 //#include "logger/Logger.h"
 #include "core/synchronization/Event.hpp"
@@ -21,15 +20,14 @@ using smsc::core::threads::Thread;
 #include "inman/common/console.hpp"
 using smsc::inman::common::Console;
 
-//#include "inman/common/util.hpp"
-//using smsc::inman::common::format;
+//#include "util/vformat.hpp"
+//using smsc::util::format;
 
 #include "inman/interaction/connect.hpp"
 using smsc::inman::interaction::Connect;
 using smsc::inman::interaction::ObjectBuffer;
 using smsc::inman::interaction::SerializerException;
 
-//#include "inman/interaction/messages.hpp"
 #include "inman/interaction/MsgBilling.hpp"
 using smsc::inman::interaction::INPPacketAC;
 using smsc::inman::interaction::INPSerializer;

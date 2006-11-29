@@ -1,9 +1,11 @@
 static char const ident[] = "$Id$";
 #include <assert.h>
 
+#include "util/BinDump.hpp"
+using smsc::util::DumpHex;
+
 #include "inman/common/cvtutil.hpp"
 #include "inman/common/adrutil.hpp"
-#include "inman/common/util.hpp"
 #include "inman/uss/ussdsm.hpp"
 #include "inman/uss/vlr.hpp"
 //#include "inman/interaction/ussmessages.hpp"
@@ -14,7 +16,7 @@ using smsc::inman::interaction::USSResultMessage;
 using smsc::inman::interaction::USS2CMD;
 using smsc::inman::interaction::USSDATA_T;
 
-using smsc::inman::common::dump;
+
 using smsc::cvtutil::packTextAs7BitPadded;
 
 using smsc::inman::usscomp::ProcessUSSRequestRes;
@@ -146,9 +148,9 @@ void USSDSM::onProcessUSSRequest(USSRequestMessage* req)
                        (req->getUSSData()).size(), &(req->getUSSData())[0]);
     } else {
         arg.setRAWUSSData(dcs, &(req->getUSSData())[0], (req->getUSSData()).size());
-        smsc_log_debug(logger, "DSM: incoming USS request[0x%X]: %s", _dsmId,
-                        dump((req->getUSSData()).size(),
-                             (unsigned char*)(&(req->getUSSData())[0]), 0).c_str());
+        smsc_log_debug(logger, "DSM: incoming USS request[0x%X]: 0x%s", _dsmId,
+                        DumpHex((req->getUSSData()).size(),
+                             (unsigned char*)(&(req->getUSSData())[0])).c_str());
     }
 
 /* GVR NOTE: though MAP USS ASN.1 notation specifies that msISDN address   *
@@ -184,7 +186,7 @@ void USSDSM::onUSSRequestResult(ProcessUSSRequestRes* resL)
     if (logger->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG)) {
         std::string ussd;
         if (!resL->getUSSDataAsLatin1Text(ussd))
-            ussd = dump((resp.getUSSData()).size(), (unsigned char*)&(resp.getUSSData())[0], 0);
+            ussd = DumpHex((resp.getUSSData()).size(), (unsigned char*)&(resp.getUSSData())[0]);
         smsc_log_debug(logger, "DSM: USS request[0x%X] got result: %s", _dsmId, ussd.c_str());
     }
                    

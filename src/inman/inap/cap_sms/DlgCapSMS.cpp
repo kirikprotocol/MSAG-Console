@@ -3,11 +3,12 @@ static char const ident[] = "$Id$";
 
 #include <assert.h>
 
-//#include "inman/common/util.hpp"
+#include "util/vformat.hpp"
+using smsc::util::format;
+
 #include "inman/inap/cap_sms/DlgCapSMS.hpp"
 using smsc::inman::comp::CapSMSOpCode;
 
-using smsc::inman::common::format;
 //using smsc::inman::comp::ConnectSMSArg;
 using smsc::inman::comp::ReleaseSMSArg;
 using smsc::inman::comp::RequestReportSMSEventArg;

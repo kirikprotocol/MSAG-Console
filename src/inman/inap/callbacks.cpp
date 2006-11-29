@@ -5,17 +5,16 @@ static char const ident[] = "$Id$";
 
 #include <assert.h>
 
+#include "util/BinDump.hpp"
+using smsc::util::DumpHex;
+using smsc::util::format;
 
 #include "inman/inap/dispatcher.hpp"
 #include "inman/inap/dialog.hpp"
-#include "inman/common/util.hpp"
-
 using smsc::inman::inap::Dialog;
 using smsc::inman::inap::SSNSession;
 using smsc::inman::inap::TCAPDispatcher;
 using smsc::inman::inap::getTcapBindErrorMessage;
-using smsc::inman::common::dump;
-using smsc::inman::common::format;
 
 
 #define tcapLogger TCAPDispatcher::getInstance()->TCAPLogger()
@@ -93,8 +92,8 @@ USHORT_T EINSS7_I97TContinueInd(UCHAR_T          ssn,
                     "}",
                    ssn, userId, tcapInstanceId, dialogueId, priOrder,
                    qualityOfService, compPresent ? "TRUE":"FALSE",
-                   dump(appContextLength, appContext_p).c_str(),
-                   dump(userInfoLength, userInfo_p).c_str()
+                   DumpHex(appContextLength, appContext_p, _HexDump_CVSD).c_str(),
+                   DumpHex(userInfoLength, userInfo_p, _HexDump_CVSD).c_str()
                    );
     Dialog* dlg = findDialog(ssn, dialogueId);
     if (dlg)
@@ -118,7 +117,7 @@ USHORT_T EINSS7_I97TAddressInd(UCHAR_T ssn,
                     "  Org. address: %s\n"
                     "}",
                    ssn, userId, tcapInstanceId, dialogueId, (USHORT_T)bitMask,
-                   dump(addressLength, orgAdr_p).c_str()
+                   DumpHex(addressLength, orgAdr_p, _HexDump_CVSD).c_str()
                    );
     return MSG_OK;
 }
@@ -146,8 +145,8 @@ USHORT_T EINSS7_I97TEndInd(UCHAR_T          ssn,
                     "}",
                    ssn, userId, tcapInstanceId, dialogueId, priOrder,
                    qualityOfService, compPresent ? "TRUE":"FALSE",
-                   dump(appContextLength, appContext_p).c_str(),
-                   dump(userInfoLength, userInfo_p).c_str()
+                   DumpHex(appContextLength, appContext_p, _HexDump_CVSD).c_str(),
+                   DumpHex(userInfoLength, userInfo_p, _HexDump_CVSD).c_str()
                    );
     Dialog* dlg = findDialog( ssn, dialogueId );
     if (dlg)
@@ -174,14 +173,14 @@ USHORT_T EINSS7_I97TInvokeInd(UCHAR_T          ssn,
                     "  Dialog[0x%X], LastComponent: %s\n"
                     "  InvokeID: 0x%X, LinkedId: %s\n"
                     "  Operation: %s, Tag: %s\n"
-                    "  Params[%u]: %s\n"
+                    "  Params[%u]: 0x%s\n"
                     "}",
                     ssn, userId, tcapInstanceId, dialogueId,
                     (lastComponent ? "TRUE" : "FALSE"), invokeId, 
                     (linkedIdUsed ? format("0x%X", linkedId).c_str() : "NOT USED"),
-                    dump(opLength, op).c_str(),
+                    DumpHex(opLength, op, _HexDump_CVSD).c_str(),
                     (tag == 0x02 ? "LOCAL" : "GLOBAL"), 
-                    paramLength, dump(paramLength, pm).c_str()
+                    paramLength, DumpHex(paramLength, pm).c_str()
                    );
 
     Dialog* dlg = findDialog(ssn, dialogueId);
@@ -208,13 +207,13 @@ USHORT_T EINSS7_I97TResultNLInd(UCHAR_T          ssn,
                     "  Dialog[0x%X], LastComponent: %s\n"
                     "  InvokeID: 0x%X\n"
                     "  Operation: %s, Tag: %s\n"
-                    "  Params[%u]: %s\n"
+                    "  Params[%u]: 0x%s\n"
                     "}",
                     ssn, userId, tcapInstanceId, dialogueId,
                     (lastComponent ? "TRUE" : "FALSE"), invokeId, 
-                    dump(opLength, op).c_str(),
+                    DumpHex(opLength, op, _HexDump_CVSD).c_str(),
                     (tag == 0x02 ? "LOCAL" : "GLOBAL"), 
-                    paramLength, dump(paramLength, pm).c_str()
+                    paramLength, DumpHex(paramLength, pm).c_str()
                    );
     Dialog* dlg = findDialog( ssn, dialogueId );
     if (dlg)
@@ -239,13 +238,13 @@ USHORT_T EINSS7_I97TResultLInd( UCHAR_T          ssn,
                     "  Dialog[0x%X], LastComponent: %s\n"
                     "  InvokeID: 0x%X\n"
                     "  Operation: %s, Tag: %s\n"
-                    "  Params[%u]: %s\n"
+                    "  Params[%u]: 0x%s\n"
                     "}",
                     ssn, userId, tcapInstanceId, dialogueId,
                     (lastComponent ? "TRUE" : "FALSE"), invokeId, 
-                    dump(opLength, op).c_str(),
+                    DumpHex(opLength, op, _HexDump_CVSD).c_str(),
                     (tag == 0x02 ? "LOCAL" : "GLOBAL"), 
-                    paramLength, dump(paramLength, pm).c_str()
+                    paramLength, DumpHex(paramLength, pm).c_str()
                    );
     Dialog* dlg = findDialog( ssn, dialogueId );
     if (dlg)
@@ -274,9 +273,9 @@ USHORT_T EINSS7_I97TUErrorInd(UCHAR_T          ssn,
                     "}",
                     ssn, userId, tcapInstanceId, dialogueId,
                     (lastComponent ? "TRUE" : "FALSE"), invokeId, 
-                    dump(opLength, op).c_str(),
+                    DumpHex(opLength, op, _HexDump_CVSD).c_str(),
                     (tag == 0x02 ? "LOCAL" : "GLOBAL"), 
-                    paramLength, dump(paramLength, pm).c_str()
+                    paramLength, DumpHex(paramLength, pm).c_str()
                    );
     Dialog* dlg = findDialog( ssn, dialogueId );
     if (dlg)
@@ -330,9 +329,9 @@ USHORT_T EINSS7_I97TUAbortInd(UCHAR_T          ssn,
                     "}",
                    ssn, userId, tcapInstanceId, dialogueId,
                    priOrder, qualityOfService, 
-                   dump(abortInfoLength, abortInfo_p ).c_str(),
-                   dump(appContextLength, appContext_p).c_str(),
-                   dump(userInfoLength, userInfo_p).c_str()
+                   DumpHex(abortInfoLength, abortInfo_p, _HexDump_CVSD).c_str(),
+                   DumpHex(appContextLength, appContext_p, _HexDump_CVSD).c_str(),
+                   DumpHex(userInfoLength, userInfo_p, _HexDump_CVSD).c_str()
                    );
 
     Dialog* dlg = findDialog(ssn, dialogueId);
@@ -389,10 +388,10 @@ USHORT_T EINSS7_I97TBeginInd(UCHAR_T          ssn,
                     "}",
                    ssn, userId, tcapInstanceId, dialogueId, priOrder,
                    qualityOfService, compPresent ? "TRUE":"FALSE",
-                   dump(destAddrLength, destAddr_p).c_str(),
-                   dump(orgAddrLength, orgAddr_p).c_str(),
-                   dump(appContextLength, appContext_p).c_str(),
-                   dump(userInfoLength, userInfo_p).c_str()
+                   DumpHex(destAddrLength, destAddr_p, _HexDump_CVSD).c_str(),
+                   DumpHex(orgAddrLength, orgAddr_p, _HexDump_CVSD).c_str(),
+                   DumpHex(appContextLength, appContext_p, _HexDump_CVSD).c_str(),
+                   DumpHex(userInfoLength, userInfo_p, _HexDump_CVSD).c_str()
                    );
   // TODO: Implement
   return MSG_OK;
@@ -424,10 +423,10 @@ USHORT_T EINSS7_I97TUniInd(UCHAR_T          ssn,
                     "}",
                    ssn, userId, tcapInstanceId, priOrder,
                    qualityOfService, compPresent ? "TRUE":"FALSE",
-                   dump(destAddrLength, destAddr_p).c_str(),
-                   dump(orgAddrLength, orgAddr_p).c_str(),
-                   dump(appContextLength, appContext_p).c_str(),
-                   dump(userInfoLength, userInfo_p).c_str()
+                   DumpHex(destAddrLength, destAddr_p, _HexDump_CVSD).c_str(),
+                   DumpHex(orgAddrLength, orgAddr_p, _HexDump_CVSD).c_str(),
+                   DumpHex(appContextLength, appContext_p, _HexDump_CVSD).c_str(),
+                   DumpHex(userInfoLength, userInfo_p, _HexDump_CVSD).c_str()
                    );
     // TODO: Implement
     return MSG_OK;
@@ -456,8 +455,8 @@ USHORT_T EINSS7_I97TNoticeInd(UCHAR_T          ssn,
                     "}",
                     ssn, userId, tcapInstanceId, dialogueId, relDialogueId,
                     reportCause, returnIndicator, segmentationIndicator,
-                    dump(destAddrLength, destAddr_p).c_str(),
-                    dump(orgAddrLength, orgAddr_p).c_str()
+                    DumpHex(destAddrLength, destAddr_p, _HexDump_CVSD).c_str(),
+                    DumpHex(orgAddrLength, orgAddr_p, _HexDump_CVSD).c_str()
                    );
     // TODO: Implement
     return MSG_OK;
