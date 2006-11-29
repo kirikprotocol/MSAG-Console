@@ -11,10 +11,10 @@ unsigned packMAPAddress2OCTS(const TonNpiAddress& addr, TONNPI_ADDRESS_OCTS * oa
     unsigned	oa_length;
 
     if ((addr.typeOfNumber == 0x05) && !addr.numPlanInd)
-	oa_length = packTextAs7BitPaddedSafe((const char*)addr.value,
+	oa_length = packTextAs7BitPaddedSafe((const char*)addr.signals,
 			(unsigned)addr.length, oa->val, (unsigned)sizeof(oa->val));
     else
-	oa_length = packNumString2BCD(oa->val, (const char*)addr.value, (int)addr.length);
+	oa_length = packNumString2BCD(oa->val, (const char*)addr.signals, (int)addr.length);
 
     oa->b0.st.ton = addr.typeOfNumber;
     oa->b0.st.npi = addr.numPlanInd;
@@ -30,13 +30,13 @@ unsigned unpackOCTS2MAPAddress(TonNpiAddress& addr, TONNPI_ADDRESS_OCTS * oa, un
 {
     addr.numPlanInd = oa->b0.st.npi;
     addr.typeOfNumber = oa->b0.st.ton;
-    addr.value[0] = addr.length = 0;
+    addr.signals[0] = addr.length = 0;
 
     if (addr.typeOfNumber == 0x05)	//packed 7bit text
-	addr.length = unpack7BitPadded2TextSafe(oa->val, valLen, (unsigned char*)addr.value,
+	addr.length = unpack7BitPadded2TextSafe(oa->val, valLen, (unsigned char*)addr.signals,
 							CAP_MAX_SMS_AddressValueLength);
     else if (valLen*2 <= CAP_MAX_SMS_AddressValueLength) //check for ABW
-	addr.length = (uint8_t)unpackBCD2NumString(oa->val, (char*)addr.value, valLen);
+	addr.length = (uint8_t)unpackBCD2NumString(oa->val, (char*)addr.signals, valLen);
 
     return (unsigned)addr.length;
 }
@@ -52,7 +52,7 @@ unsigned packMAPAddress2LocationOCTS(const TonNpiAddress& addr, LOCATION_ADDRESS
     if (addr.typeOfNumber == 0x05)
         return 0; //"invalid typeOfNumber : 0x05"
 
-    oa_length = packNumString2BCD(oa->val, (const char*)addr.value, (int)addr.length);
+    oa_length = packNumString2BCD(oa->val, (const char*)addr.signals, (int)addr.length);
     oa->b0.st.oddAdrLen = (unsigned char)((int)addr.length % 2);
     oa->b0.st.ton = addr.typeOfNumber;
 
