@@ -12,6 +12,30 @@ namespace scag { namespace re { namespace actions
 
 using smsc::logger::Logger;
 
+class ActionParameter
+{
+protected:
+    std::string m_strVariable;
+    Property * m_pProperty;
+
+    FieldType m_FieldType;
+    bool m_bReadOnly;
+    bool m_bExists;
+    Logger * m_pLogger;
+    std::string m_actionName;
+public:
+    bool prepareValue(ActionContext& context);
+    bool isReadOnly() {return m_bReadOnly;}
+    bool Exists() {return m_bExists;}
+
+    void setStrValue(std::string& value);
+    void setIntValue(int value);
+
+    std::string getStrValue();
+    int getIntValue();
+    ActionParameter(const SectionParams& params, PropertyObject& propertyObject, const std::string& actionName, const char * paramName, bool isRequired, Logger * logger);
+};
+
 class Action : public IParserHandler
 {
 public:
