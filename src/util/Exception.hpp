@@ -2,51 +2,83 @@
 #define __UTIL_EXCEPTION_HPP__
 
 #include <exception>
-#include <string>
-#include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
+
+#include "util/vformat.hpp"
 
 #define SMSC_UTIL_EX_FILL(fmt) \
     va_list arglist;\
     va_start(arglist,fmt);\
-    fill(fmt,arglist);\
+    smsc::util::vformat(message, fmt, arglist);\
     va_end(arglist);
 
 
-namespace smsc{
-namespace util{
+namespace smsc {
+namespace util {
 
-class Exception:public std::exception{
+class Exception: public std::exception {
 public:
-  Exception(){}
-  Exception(const char* fmt,...)
-  {
-    SMSC_UTIL_EX_FILL(fmt);
-  }
-  inline void fill(const char* fmt,va_list arglist)
-  {
-    size_t size=strlen(fmt)*4;
-    char *buf=new char[size];
-    int res;
-    res=vsnprintf( buf, size,fmt,arglist);
-    if(res>size)
+    Exception() { }
+    Exception(const char* fmt,...)
     {
-      delete [] buf;
-      size=res+4;
-      buf=new char[size];
-      res=vsnprintf( buf, size,fmt,arglist);
+        SMSC_UTIL_EX_FILL(fmt);
     }
-    message=buf;
-    delete [] buf;
-  }
-  virtual ~Exception()throw(){}
-  virtual const char* what()const throw(){return message.c_str();}
+
+    virtual ~Exception() throw() { }
+    virtual const char* what() const throw() { return message.c_str(); }
 protected:
-  std::string message;
+    std::string message;
 };
+
+class CustomException : public Exception {
+protected:
+    int         errCode;
+    std::string exId;
+
+public:
+    CustomException(int err_code, const char * msg, const char * err_desc = NULL)
+        : Exception(), errCode(err_code), exId("CustomException")
+    {
+        if (msg)
+            message += msg;
+        if (errCode)
+            format(message, "$scode %d", msg ? ", " : "", errCode);
+        if (err_desc) {
+            if (!message.empty())
+                message += ": ";
+            message += err_desc;
+        }
+    }
+    CustomException(const char * fmt, ...)
+        : Exception(), errCode(-1), exId("CustomException")
+    {
+        SMSC_UTIL_EX_FILL(fmt);
+    }
+    ~CustomException() throw()
+    {}
+
+    int errorCode(void) const { return errCode; }
+    const char * excId(void) const { return exId.c_str(); }
+    void setExcId(const char * ids) { exId = ids ? ids : ""; }
+};
+
+//system errors based on 'errno'
+class SystemError : public CustomException {
+public:
+    SystemError(const char * msg, int err_code = errno)
+        : CustomException(err_code, msg, err_code ? strerror(err_code) : NULL)
+    { setExcId("SystemError"); }
+
+    SystemError(std::string & msg, int err_code = errno)
+        : CustomException(err_code, msg.c_str(), err_code ? strerror(err_code) : NULL)
+    { setExcId("SystemError"); }
+};
+
 
 }//util
 }//smsc
 
-#endif
+#endif /* __UTIL_EXCEPTION_HPP__ */
+
