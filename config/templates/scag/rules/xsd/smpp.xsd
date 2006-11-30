@@ -12,16 +12,46 @@
             <element name="redirect">
                 <complexType>
                     <attribute name="OA" type="scag:Value" use="optional"/>
-		    <attribute name="DA" type="scag:Value" use="optional"/>
+                    <attribute name="DA" type="scag:Value" use="optional"/>
                 </complexType>
             </element>
 
-	    <element name="close_ussd_dialog">
-	    </element>
+            <element name="close_ussd_dialog">
+            </element>
 
-	    
+            <element name="set_tlv">
+                <complexType>
+                    <attribute name="tag" type="scag:Value" use="optional"/>
+                    <attribute name="name" type="scag:Value" use="optional"/>
+                    <attribute name="var" type="scag:Value" use="required"/>
+                </complexType>
+            </element>
+            
+            <element name="get_tlv">
+                <complexType>
+                    <attribute name="tag" type="scag:Value" use="optional"/>
+                    <attribute name="name" type="scag:Value" use="optional"/>
+                    <attribute name="var" type="scag:Value" use="required"/>                    
+                </complexType>
+            </element>
+            
+            <element name="del_tlv">
+                <complexType>
+                    <attribute name="tag" type="scag:Value" use="optional"/>
+                    <attribute name="name" type="scag:Value" use="optional"/>
+                </complexType>
+            </element>
+            
+            <element name="exist_tlv">
+                <complexType>
+                    <attribute name="tag" type="scag:Value" use="optional"/>
+                    <attribute name="name" type="scag:Value" use="optional"/>
+                    <attribute name="exist" type="scag:Value" use="required"/>
+                </complexType>
+            </element>
+        
         </choice>    
-	
+    
     </group>
     
 </schema>
