@@ -19,12 +19,12 @@ struct SmscSocket:SmppSocket{
   {
     if(sock->Init(host.c_str(),port,0)==-1)
     {
-      info2(log,"Failed to resolve host %s",host.c_str());
+      smsc_log_warn(log, "Failed to resolve host %s",host.c_str());
       return false;
     }
     if(sock->Connect()==-1)
     {
-      info2(log,"Failed to connect to %s:%d",host.c_str(),port);
+      smsc_log_warn(log, "Failed to connect to %s:%d",host.c_str(),port);
       return false;
     }
     connected=true;
@@ -42,11 +42,10 @@ struct SmscSocket:SmppSocket{
     {
       case smsc::smpp::SmppCommandSet::BIND_TRANCIEVER_RESP:
       {
-        if(chReg->registerSmscChannel(this)!=rarOk)
-        {
-          warn1(log,"Registration of smsc channel failed???");
-        }else
-        {
+        if(chReg->registerSmscChannel(this)!=rarOk) {
+          smsc_log_warn(log, "Registration of smsc channel failed???");
+        } 
+	else {
           bindType=btTransceiver;
         }
       }break;
