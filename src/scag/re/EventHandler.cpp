@@ -62,6 +62,7 @@ RuleStatus EventHandler::RunActions(ActionContext& context)
     context.setRuleStatus(rs);
 
     LongCallContext& longCallContext = context.getSCAGCommand().getLongCallContext();
+/*
     int startIndex = 0;
     if (!longCallContext.ActionStack.empty()) 
     {
@@ -84,7 +85,8 @@ RuleStatus EventHandler::RunActions(ActionContext& context)
             break;
         }
     }
- 
+*/
+    RunActionVector(context, longCallContext, actions, logger);
     return context.getRuleStatus();
 }
 
