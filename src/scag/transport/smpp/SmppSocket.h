@@ -61,8 +61,8 @@ struct SmppSocket:SmppChannel{
 
   SmppSocket(net::Socket* s)
   {
-    smsc_log_debug(log, "SmmpSocket init: %x", s);  
     Init();
+    smsc_log_debug(log, "SmmpSocket init: %x", s);      
     sock=s;
     connected=true;
     sock->setData(0,this);

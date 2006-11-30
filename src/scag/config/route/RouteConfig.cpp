@@ -278,6 +278,7 @@ RouteConfig::status RouteConfig::load(const char * const filename)
   {
     return fail;
   }
+  smsc_log_info(logger, "Smpp routes loaded successfully");  
   return success;
 }
 
