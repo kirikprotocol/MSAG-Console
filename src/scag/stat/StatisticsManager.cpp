@@ -782,7 +782,7 @@ void StatisticsManager::dumpCounters(const uint8_t* buff, int buffLen, const tm&
     {
         sprintf(dirName, dirNameFmt, flushTM.tm_year+1900, flushTM.tm_mon+1);
         createDir(location + "/" + dirName); hasDir = true;
-        smsc_log_debug(logger, "New dir '%s' created", dirName);
+        smsc_log_info(logger, "New dir '%s' created", dirName);
     }
 
     if (fileTM.tm_mday != flushTM.tm_mday)
@@ -808,7 +808,7 @@ void StatisticsManager::dumpCounters(const uint8_t* buff, int buffLen, const tm&
             uint16_t version = htons(SCAG_STAT_VERSION_INFO);
             file.Write(&version, sizeof(version));
             file.Flush();
-            smsc_log_debug(logger, "New file '%s' created", fileName);
+            smsc_log_info(logger, "New file '%s' created", fileName);
         }
 
         fileTM = flushTM;
@@ -931,7 +931,7 @@ void StatisticsManager::initTraffic(Hash<TrafficRecord>& h, const std::string lo
 
     }catch(FileException & e)
     {
-        smsc_log_warn(logger, "Failed to init traffic. Detailes: %s", e.what());
+        smsc_log_info(logger, "No stored traffic data. Detailes: %s", e.what());
     }catch(...)
     {
         smsc_log_warn(logger, "Failed to init traffic. Unknown error");
