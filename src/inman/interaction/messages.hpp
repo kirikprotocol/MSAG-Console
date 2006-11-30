@@ -129,19 +129,19 @@ public:
 
     INPCommandSetAC * commandSet(unsigned short cmd_id);
     //SerializerITF interface:
-    INPPacketAC *   deserialize(ObjectBuffer& in) throw(CustomException); 
-    INPPacketAC *   deserialize(std::auto_ptr<ObjectBuffer>& p_in) throw(CustomException);
+    INPPacketAC *   deserialize(ObjectBuffer& in) throw(SerializerException); 
+    INPPacketAC *   deserialize(std::auto_ptr<ObjectBuffer>& p_in) throw(SerializerException);
 
     static INPSerializer* getInstance();
 
 protected:
     INPSerializer();
     INPCommandSetAC* loadHdr(ObjectBuffer & in, std::auto_ptr<INPPacketAC> & pck)
-                        throw(CustomException);
+                        throw(SerializerException);
     //Returns false if deserialization of ObjectBuffer is deferred.
     bool            loadObj(INPCommandSetAC * cmd_set, INPPacketAC * pck,
                             ObjectBuffer * in, bool ownBuf = false)
-                        throw(CustomException);
+                        throw(SerializerException);
 
 private:
     typedef std::map<INPCommandSetId, INPCommandSetAC*> INPCsMap;

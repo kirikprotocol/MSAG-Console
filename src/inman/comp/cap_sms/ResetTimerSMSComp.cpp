@@ -15,7 +15,7 @@ ResetTimerSMSArg::ResetTimerSMSArg()
 }
 ResetTimerSMSArg::~ResetTimerSMSArg() { }
 
-void ResetTimerSMSArg::decode(const vector<unsigned char>& buf) throw(CustomException)
+void ResetTimerSMSArg::decode(const std::vector<unsigned char>& buf) throw(CustomException)
 {
     ResetTimerSMSArg_t *dcmd = NULL;	/* decoded structure */
     asn_dec_rval_t	drc;		/* Decoder return value  */

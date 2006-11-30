@@ -26,7 +26,7 @@ RequestReportSMSEventArg::~RequestReportSMSEventArg()
     delete(comp);
 }
 
-void RequestReportSMSEventArg::decode(const vector<unsigned char>& buf) throw(CustomException)
+void RequestReportSMSEventArg::decode(const std::vector<unsigned char>& buf) throw(CustomException)
 {
     RequestReportSMSEventArg_t *req = 0;
     asn_dec_rval_t rval;

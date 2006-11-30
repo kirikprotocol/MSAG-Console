@@ -109,7 +109,7 @@ void Dialog::checkSS7res(const char * descr, USHORT_T result) throw(CustomExcept
     if (result) {
         if ((MSG_BROKEN_CONNECTION == result) || (MSG_NOT_CONNECTED == result))
             TCAPDispatcher::getInstance()->onDisconnect();
-        throw CustomException(descr, result, getTcapReasonDescription(result));
+        throw CustomException(result, descr, getTcapReasonDescription(result));
     }
     return;
 }

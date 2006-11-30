@@ -32,7 +32,7 @@ unsigned char MAPUSS2Comp::getDCS(void) const
     return _dCS;
 }
 
-const vector<unsigned char>& MAPUSS2Comp::getUSSData(void) const
+const std::vector<unsigned char>& MAPUSS2Comp::getUSSData(void) const
 {
     return _uSSData;
 }
@@ -55,7 +55,7 @@ void MAPUSS2Comp::setUSSData(const unsigned char * data, unsigned size) throw(Cu
 {
     unsigned ussdStrSz = estimateTextAs7Bit((const char*)data, size, NULL);
     if (ussdStrSz > MAP_MAX_USSD_StringLength)
-        throw CustomException("MAPUSS2Comp: ussdStrSz is too large", (int)ussdStrSz, NULL);
+        throw CustomException("MAPUSS2Comp: ussdStrSz is too large: %u", ussdStrSz);
 
     uint8_t ussdStr[MAP_MAX_USSD_StringLength];
     ussdStrSz = packTextAs7BitPadded((const char*)data, size, ussdStr);
@@ -120,7 +120,7 @@ void ProcessUSSRequestArg::setMSISDNadr(const char* adrStr)
 }
 
 
-void ProcessUSSRequestArg::decode(const vector<unsigned char>& buf) throw(CustomException)
+void ProcessUSSRequestArg::decode(const std::vector<unsigned char>& buf) throw(CustomException)
 {
     USSD_Arg_t *  dcmd = NULL;  /* decoded structure */
     asn_dec_rval_t  drc;    /* Decoder return value  */
@@ -154,7 +154,7 @@ void ProcessUSSRequestArg::decode(const vector<unsigned char>& buf) throw(Custom
                       _uSSData.size());
 }
 
-void ProcessUSSRequestArg::encode(vector<unsigned char>& buf) throw(CustomException)
+void ProcessUSSRequestArg::encode(std::vector<unsigned char>& buf) throw(CustomException)
 {
     asn_enc_rval_t  er;
     /* construct USSD_Arg */
@@ -175,8 +175,8 @@ void ProcessUSSRequestArg::encode(vector<unsigned char>& buf) throw(CustomExcept
 
     /* prepare ussd string */
     if (_uSSData.size() > MAP_MAX_USSD_StringLength)
-        throw CustomException("ProcessUSSRequestArg: ussdata size is too large",
-                              _uSSData.size(), NULL);
+        throw CustomException("ProcessUSSRequestArg: ussdata size is too large: %u",
+                              _uSSData.size());
 
     cmd.ussd_String.size = _uSSData.size();
     cmd.ussd_String.buf = &fussdsbuf[0];

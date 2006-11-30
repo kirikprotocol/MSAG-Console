@@ -123,7 +123,7 @@ public:
     void setLocationInformationMSC(const TonNpiAddress& addr) throw(CustomException);
     void setLocationInformationMSC(const char* text) throw(CustomException);
 
-    void encode(vector<unsigned char>& buf) throw(CustomException);
+    void encode(std::vector<unsigned char>& buf) throw(CustomException);
 
 private:
     Logger*  compLogger;
@@ -139,7 +139,7 @@ public:
     EventReportSMSArg(EventTypeSMS_e et, messageType_e mt);
     ~EventReportSMSArg() {}
 
-    void encode(vector<unsigned char>& buf) throw(CustomException);
+    void encode(std::vector<unsigned char>& buf) throw(CustomException);
 
 private:
     EventTypeSMS_e	eventType;
@@ -159,14 +159,14 @@ public:
         EventTypeSMS_e event;
         MonitorMode_e monitorType;
     };
-    typedef vector<SMSEvent> SMSEventVector;
+    typedef std::vector<SMSEvent> SMSEventVector;
 
     RequestReportSMSEventArg();
     ~RequestReportSMSEventArg();
 
     const SMSEventVector& getSMSEvents();
 
-    void  decode(const vector<unsigned char>& buf) throw(CustomException);
+    void  decode(const std::vector<unsigned char>& buf) throw(CustomException);
 
 private:
     InternalRequestReportSMSEventArg* comp;
@@ -185,7 +185,7 @@ public:
     const TonNpiAddress&	callingPartyNumber() { return clngPN; }
     const TonNpiAddress&	SMSCAddress() { return sMSCAdr; }
 
-    void decode(const vector<unsigned char>& buf) throw(CustomException);
+    void decode(const std::vector<unsigned char>& buf) throw(CustomException);
 
 protected:
     TonNpiAddress	dstSN, clngPN, sMSCAdr;
@@ -206,7 +206,7 @@ public:
     FurnishChargingInformationSMSArg();
     ~FurnishChargingInformationSMSArg();
 
-    void decode(const vector<unsigned char>& buf) throw(CustomException);
+    void decode(const std::vector<unsigned char>& buf) throw(CustomException);
 
 private:
 	Logger* compLogger;
@@ -222,7 +222,7 @@ public:
     ReleaseSMSArg();
     ~ReleaseSMSArg();
 
-    void decode(const vector<unsigned char>& buf) throw(CustomException);
+    void decode(const std::vector<unsigned char>& buf) throw(CustomException);
 
 private:
     Logger* compLogger;
@@ -238,7 +238,7 @@ public:
     ResetTimerSMSArg();
     ~ResetTimerSMSArg();
 
-    void decode(const vector<unsigned char>& buf) throw(CustomException);
+    void decode(const std::vector<unsigned char>& buf) throw(CustomException);
 
 private:
     Logger* compLogger;

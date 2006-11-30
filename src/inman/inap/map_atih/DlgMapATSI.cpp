@@ -46,7 +46,7 @@ void MapATSIDlg::subsciptionInterrogation(const char * subcr_adr,
     MutexGuard  grd(_sync);
     TonNpiAddress   tnAdr;
     if (!tnAdr.fromText(subcr_adr))
-        throw CustomException("inalid subscriberID", -1, subcr_adr);
+        throw CustomException(-1, "inalid subscriberID", subcr_adr);
 
     dialog = session->openDialog(tnAdr);
     if (!dialog)

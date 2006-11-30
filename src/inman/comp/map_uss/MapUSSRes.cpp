@@ -25,7 +25,7 @@ ProcessUSSRequestRes::ProcessUSSRequestRes()
 ProcessUSSRequestRes::~ProcessUSSRequestRes() { }
 
 
-void ProcessUSSRequestRes::decode(const vector<unsigned char>& buf) throw(CustomException)
+void ProcessUSSRequestRes::decode(const std::vector<unsigned char>& buf) throw(CustomException)
 {
     USSD_Res_t *        dcmd = NULL;    /* decoded structure */
     asn_dec_rval_t      drc;            /* Decoder return value  */
@@ -45,7 +45,7 @@ void ProcessUSSRequestRes::decode(const vector<unsigned char>& buf) throw(Custom
                       _uSSData.size());
 }
 
-void ProcessUSSRequestRes::encode(vector<unsigned char>& buf) throw(CustomException)
+void ProcessUSSRequestRes::encode(std::vector<unsigned char>& buf) throw(CustomException)
 {
     asn_enc_rval_t      er;
     /* construct USSD_Arg */
@@ -61,8 +61,8 @@ void ProcessUSSRequestRes::encode(vector<unsigned char>& buf) throw(CustomExcept
     
     /* prepare ussd string */
     if (_uSSData.size() > MAP_MAX_USSD_StringLength)
-        throw CustomException("ProcessUSSRequestRes: ussdata size is too large",
-                              _uSSData.size(), NULL);
+        throw CustomException("ProcessUSSRequestRes: ussdata size is too large: %u",
+                              _uSSData.size());
 
     cmd.ussd_String.size = _uSSData.size();
     cmd.ussd_String.buf = &fussdsbuf[0];

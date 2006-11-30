@@ -75,7 +75,7 @@ public:
 
     void setRequestedCSI(enum RequestedCAMEL_SubscriptionInfo csi2ask) { askCSI = csi2ask; }
 
-    void encode(vector<unsigned char>& buf) throw(CustomException);
+    void encode(std::vector<unsigned char>& buf) throw(CustomException);
 
 private:
     bool            subscrImsi;
@@ -97,7 +97,7 @@ public:
     //O-CSI only for now
     bool getSCFinfo(enum RequestedCAMEL_SubscriptionInfo req_csi, MAPSCFinfo * scf_dat) const;
 
-    void decode(const vector<unsigned char>& buf) throw(CustomException);
+    void decode(const std::vector<unsigned char>& buf) throw(CustomException);
 
 private:
     unsigned    mask;

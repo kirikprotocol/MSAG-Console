@@ -11,8 +11,9 @@
 #include "util/Uint64Converter.h"
 using smsc::util::Uint64Converter;
 
-#include "inman/common/errors.hpp"
-using smsc::inman::common::CustomException;
+#include "util/Exception.hpp"
+using smsc::util::format;
+using smsc::util::CustomException;
 
 #include "core/buffers/ExtendingBuf.hpp"
 
@@ -26,12 +27,11 @@ public:
     SerializerException(const char * msg,
                         ErrorClass ex_class = SerializerException::invObjData,
                         const char * desc = NULL)
-        : CustomException(msg, ex_class, desc)
-    {
-        setExcId("SerializerException");
-    }
+        : CustomException((int)ex_class, msg, desc)
+    { setExcId("SerializerException"); }
+
     ~SerializerException() throw()
-    {}
+    { }
 
     ErrorClass getErrClass(void) const { return (ErrorClass)errCode; }
 };
@@ -54,7 +54,7 @@ inline ObjectBuffer& operator<<(ObjectBuffer& buf, const std::vector<unsigned ch
     buf.Append(&arr[0], (int)arr.size());
     return buf;
 }
-inline ObjectBuffer& operator>>(ObjectBuffer& buf, std::vector<unsigned char>& arr ) throw(CustomException)
+inline ObjectBuffer& operator>>(ObjectBuffer& buf, std::vector<unsigned char>& arr ) throw(SerializerException)
 {
     int len = 0;
     unsigned char l7b;
@@ -87,7 +87,7 @@ inline ObjectBuffer& operator<<(ObjectBuffer& buf, const std::string& str)
     buf.Append((const unsigned char*)str.c_str(), (int)str.size());
     return buf;
 }
-inline ObjectBuffer& operator>>(ObjectBuffer& buf, std::string& str ) throw(CustomException)
+inline ObjectBuffer& operator>>(ObjectBuffer& buf, std::string& str ) throw(SerializerException)
 {
     int len = 0;
     unsigned char l7b;
@@ -123,7 +123,7 @@ inline ObjectBuffer& operator<<(ObjectBuffer& buf, const uint64_t& val)
     buf.Append((unsigned char*)&nval, 8);
     return buf;
 }
-inline ObjectBuffer& operator>>(ObjectBuffer& buf, uint64_t & val) throw(CustomException)
+inline ObjectBuffer& operator>>(ObjectBuffer& buf, uint64_t & val) throw(SerializerException)
 {
     uint64_t nval;
     if (buf.Read((unsigned char*)&nval, 8) < 8)
@@ -142,7 +142,7 @@ inline ObjectBuffer& operator<<(ObjectBuffer& buf, const uint32_t & val)
     buf.Append((unsigned char*)&nval, 4);
     return buf;
 }
-inline ObjectBuffer& operator>>(ObjectBuffer& buf, uint32_t & val) throw(CustomException)
+inline ObjectBuffer& operator>>(ObjectBuffer& buf, uint32_t & val) throw(SerializerException)
 {
     if (buf.Read((unsigned char*)&val, 4) < 4)
         throw SerializerException(format("ObjectBuffer[pos: %u]", buf.getPos()).c_str(),
@@ -159,7 +159,7 @@ inline ObjectBuffer& operator<<(ObjectBuffer& buf, const int32_t& val)
     buf.Append((unsigned char*)&nval, 4);
     return buf;
 }
-inline ObjectBuffer& operator>>(ObjectBuffer& buf, int32_t& val) throw(CustomException)
+inline ObjectBuffer& operator>>(ObjectBuffer& buf, int32_t& val) throw(SerializerException)
 {
     if (buf.Read((unsigned char*)&val, 4) < 4)
         throw SerializerException(format("ObjectBuffer[pos: %u]", buf.getPos()).c_str(),
@@ -178,7 +178,7 @@ inline ObjectBuffer& operator<<(ObjectBuffer& buf, const time_t& val)
     buf.Append((unsigned char*)&nval, 4);
     return buf;
 }
-inline ObjectBuffer& operator>>(ObjectBuffer& buf, time_t& val) throw(CustomException)
+inline ObjectBuffer& operator>>(ObjectBuffer& buf, time_t& val) throw(SerializerException)
 {   
     uint32_t nval;
     if (buf.Read((unsigned char*)&nval, 4) < 4)
@@ -196,7 +196,7 @@ inline ObjectBuffer& operator<<(ObjectBuffer& buf, const unsigned short& val)
     buf.Append((unsigned char*)&nval, 2);
     return buf;
 }
-inline ObjectBuffer& operator>>(ObjectBuffer& buf, unsigned short& val) throw(CustomException)
+inline ObjectBuffer& operator>>(ObjectBuffer& buf, unsigned short& val) throw(SerializerException)
 {
     if (buf.Read((unsigned char*)&val, 2) < 2)
         throw SerializerException(format("ObjectBuffer[pos: %u]", buf.getPos()).c_str(),
@@ -213,7 +213,7 @@ inline ObjectBuffer& operator<<(ObjectBuffer& buf, const unsigned char& val)
     buf.Append(&val, 1);
     return buf;
 }
-inline ObjectBuffer& operator>>(ObjectBuffer& buf, unsigned char& val) throw(CustomException)
+inline ObjectBuffer& operator>>(ObjectBuffer& buf, unsigned char& val) throw(SerializerException)
 {
     if (buf.Read(&val, 1) < 1)
         throw SerializerException(format("ObjectBuffer[pos: %u]", buf.getPos()).c_str(),
@@ -228,7 +228,7 @@ inline ObjectBuffer& operator<<(ObjectBuffer& buf, const bool& val)
     buf.Append(&nval, 1);
     return buf;
 }
-inline ObjectBuffer& operator>>(ObjectBuffer& buf, bool& val) throw(CustomException)
+inline ObjectBuffer& operator>>(ObjectBuffer& buf, bool& val) throw(SerializerException)
 {
     unsigned char nval;
     if (buf.Read(&nval, 1) < 1)
@@ -258,7 +258,7 @@ public:
 
     unsigned short Id() const { return objectId; }
 
-    virtual void load(ObjectBuffer& in) throw(CustomException) = 0;
+    virtual void load(ObjectBuffer& in) throw(SerializerException) = 0;
     virtual void save(ObjectBuffer& out) const = 0;
 
     void setDataBuf(ObjectBuffer * in, bool own = false)
@@ -277,7 +277,7 @@ public:
     }
     ObjectBuffer * getDataBuf(void) const { return dataBuf; }
 
-    void loadDataBuf(void) throw(CustomException) { if (dataBuf) load(*dataBuf); }
+    void loadDataBuf(void) throw(SerializerException) { if (dataBuf) load(*dataBuf); }
 
 protected:
     unsigned short objectId; //unique id of object 
@@ -339,11 +339,11 @@ public:
 class SerializerITF {
 public:
     virtual SerializablePacketAC*
-            deserialize(ObjectBuffer& in) throw(CustomException) = 0;
+            deserialize(ObjectBuffer& in) throw(SerializerException) = 0;
     //this method able to take ownership of ObjectBuffer, it's usefull
     //in case of partial or deferred deserialization
     virtual SerializablePacketAC*
-            deserialize(std::auto_ptr<ObjectBuffer>& p_in) throw(CustomException) = 0;
+            deserialize(std::auto_ptr<ObjectBuffer>& p_in) throw(SerializerException) = 0;
 };
 
 } //interaction

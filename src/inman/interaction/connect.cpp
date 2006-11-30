@@ -126,10 +126,8 @@ SerializablePacketAC* Connect::recvPck(void)
         oct2read = ntohl(*(uint32_t*)len.buf);
 
         if (oct2read > _parms.maxPckSz) {
-            std::string dstr;
-            format(dstr, "Connect[%u]: incoming packet is too large: %ub",
-                                        (unsigned int)socket->getSocket(), oct2read);
-            _exc.reset(new CustomException(dstr.c_str()));
+            _exc.reset(new CustomException("Connect[%u]: incoming packet is too large: %ub",
+                                        (unsigned)socket->getSocket(), oct2read));
             return NULL;
         }
     }
@@ -142,15 +140,13 @@ SerializablePacketAC* Connect::recvPck(void)
 
     SerializablePacketAC* obj = NULL;
     if (!_objSerializer) {
-        std::string dstr;
-        format(dstr, "Connect[%u]: Serializer is not set!", (unsigned int)socket->getSocket());
-        _exc.reset(new CustomException(dstr.c_str()));
+        _exc.reset(new CustomException("Connect[%u]: Serializer is not set!",
+                                       (unsigned)socket->getSocket()));
     } else {
         try { obj = _objSerializer->deserialize(buffer); 
         } catch (SerializerException & exc) {
-            std::string dstr;
-            format(dstr, "Connect[%u]: %s", (unsigned int)socket->getSocket(), exc.what());
-            _exc.reset(new CustomException(dstr.c_str()));
+            _exc.reset(new CustomException("Connect[%u]: %s",
+                                           (unsigned)socket->getSocket(), exc.what()));
         }
     }
     return obj;

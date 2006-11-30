@@ -56,8 +56,8 @@ public:
 
     CsBillingHdr_dlg();
 
-    virtual void load(ObjectBuffer &in) throw(CustomException)  { in >> dlgId; }
-    virtual void save(ObjectBuffer &out) const                  { out << dlgId; }
+    virtual void load(ObjectBuffer &in) throw(SerializerException)  { in >> dlgId; }
+    virtual void save(ObjectBuffer &out) const                      { out << dlgId; }
 };
 
 class CsBillingHdr_sess : public INPHeaderAC {
@@ -67,8 +67,8 @@ public:
 
     CsBillingHdr_sess();
 
-    void load(ObjectBuffer &in) throw(CustomException)  { in >> sessId; in >> dlgId; }
-    void save(ObjectBuffer &out) const                  { out << sessId; out << dlgId; }
+    void load(ObjectBuffer &in) throw(SerializerException)  { in >> sessId; in >> dlgId; }
+    void save(ObjectBuffer &out) const                      { out << sessId; out << dlgId; }
 };
 
 // --------------------------------------------------------- //
@@ -134,7 +134,7 @@ public:
 
 protected:
     //SerializableObject interface
-    void load(ObjectBuffer& in) throw(CustomException);
+    void load(ObjectBuffer& in) throw(SerializerException);
     void save(ObjectBuffer& out) const;
 
 private:
@@ -175,7 +175,7 @@ public:
     void    SetValue(ChargeSmsResult_t res = CHARGING_NOT_POSSIBLE) { value = res; }
 
 protected:
-    virtual void load(ObjectBuffer& in) throw(CustomException);
+    virtual void load(ObjectBuffer& in) throw(SerializerException);
     virtual void save(ObjectBuffer& out) const;
 
 private:
@@ -202,7 +202,7 @@ public:
 
 protected:
     //SerializableObject interface
-    virtual void load(ObjectBuffer& in) throw(CustomException);
+    virtual void load(ObjectBuffer& in) throw(SerializerException);
     virtual void save(ObjectBuffer& out) const;
 
 private:

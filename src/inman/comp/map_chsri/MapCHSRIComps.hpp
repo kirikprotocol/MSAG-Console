@@ -56,7 +56,7 @@ public:
     void setSubscrMSISDN(const char * msisdn) throw(CustomException);
     void setSubscrMSISDN(const TonNpiAddress& addr) { subscrAdr = addr; }
 
-    void encode(vector<unsigned char>& buf) throw(CustomException);
+    void encode(std::vector<unsigned char>& buf) throw(CustomException);
 
 private:
     TonNpiAddress      	scfAdr;     //requesting GMSC or SCF address
@@ -73,7 +73,7 @@ public:
     int getSCFinfo(MAPSCFinfo * scf_dat) const;
     int getIMSI(char *imsi) const;
 
-    void decode(const vector<unsigned char>& buf) throw(CustomException);
+    void decode(const std::vector<unsigned char>& buf) throw(CustomException);
     void mergeSegment(Component * segm) throw(CustomException);
 
     bool hasIMSI(void) const { return mask.imsi; }

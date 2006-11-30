@@ -70,7 +70,7 @@ void MapCHSRIDlg::reqRoutingInfo(const char * subcr_adr, USHORT_T timeout/* = 0*
 {
     TonNpiAddress   tnAdr;
     if (!tnAdr.fromText(subcr_adr))
-        throw CustomException("inalid subscriber addr", -1, subcr_adr);
+        throw CustomException(-1, "inalid subscriber addr", subcr_adr);
     reqRoutingInfo(tnAdr, timeout);
 }
 

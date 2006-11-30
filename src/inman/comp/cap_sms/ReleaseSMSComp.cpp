@@ -15,7 +15,7 @@ ReleaseSMSArg::ReleaseSMSArg()
 }
 ReleaseSMSArg::~ReleaseSMSArg() { }
 
-void ReleaseSMSArg::decode(const vector<unsigned char>& buf) throw(CustomException)
+void ReleaseSMSArg::decode(const std::vector<unsigned char>& buf) throw(CustomException)
 {
     RPCause_t *		dcmd = NULL;	/* decoded structure */
     asn_dec_rval_t	drc;		/* Decoder return value  */

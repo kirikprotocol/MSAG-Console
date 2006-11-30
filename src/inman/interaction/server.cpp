@@ -3,8 +3,6 @@ static char const ident[] = "$Id$";
 
 #include "inman/interaction/server.hpp"
 
-using smsc::inman::common::SystemError;
-
 namespace smsc  {
 namespace inman {
 namespace interaction  {

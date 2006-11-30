@@ -5,8 +5,9 @@
 #include <list>
 #include <stdlib.h>
 
-//#include "inman/common/util.hpp"
-#include "inman/common/errors.hpp"
+#include "util/Exception.hpp"
+using smsc::util::format;
+using smsc::util::CustomException;
 
 namespace smsc   {
 namespace inman  {
@@ -26,8 +27,7 @@ public:
                 std::string rp_s = rplist.substr(pos, commaPos);
                 int rp_i = atoi(rp_s.c_str());
                 if (!rp_i || (rp_i > 0xFF))
-                    throw CustomException(format("bad element \'%s\'", rp_s.c_str()).c_str());
-
+                    throw CustomException("bad element \'%s\'", rp_s.c_str());
                 RPCList::push_back((unsigned char)rp_i);
                 pos = commaPos + 1;
             } while (commaPos != rplist.npos);

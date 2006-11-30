@@ -36,7 +36,7 @@ INPCommandSetAC * INPSerializer::commandSet(unsigned short cmd_id)
     return cmdSet;
 }
 
-INPPacketAC* INPSerializer::deserialize(ObjectBuffer& in) throw(CustomException)
+INPPacketAC* INPSerializer::deserialize(ObjectBuffer& in) throw(SerializerException)
 {
     std::auto_ptr<INPPacketAC> pck; 
     INPCommandSetAC * cmdSet = loadHdr(in, pck);     //throws
@@ -45,7 +45,7 @@ INPPacketAC* INPSerializer::deserialize(ObjectBuffer& in) throw(CustomException)
 }
 
 INPPacketAC* INPSerializer::deserialize(std::auto_ptr<ObjectBuffer>& p_in)
-                                        throw(CustomException)
+                                        throw(SerializerException)
 {
     ObjectBuffer * in = p_in.get();
     std::auto_ptr<INPPacketAC> pck;             //throws
@@ -59,7 +59,7 @@ INPPacketAC* INPSerializer::deserialize(std::auto_ptr<ObjectBuffer>& p_in)
  * Private/Protected methods:
  * -------------------------------------------------------------------------- */
 INPCommandSetAC* INPSerializer::loadHdr(ObjectBuffer & in, std::auto_ptr<INPPacketAC> & pck)
-                                    throw(CustomException)
+                                    throw(SerializerException)
 {
     unsigned short cmdId = 0, hdrFrm = 0;
     try {
@@ -89,7 +89,7 @@ INPCommandSetAC* INPSerializer::loadHdr(ObjectBuffer & in, std::auto_ptr<INPPack
 //Returns false if deserialization of ObjectBuffer is deferred.
 bool INPSerializer::loadObj(INPCommandSetAC * cmd_set, INPPacketAC * pck,
                             ObjectBuffer * in, bool ownBuf/* = false*/)
-                        throw(CustomException)
+                        throw(SerializerException)
 {
     if (cmd_set->loadMode((pck->pCmd())->Id()) == INPCommandSetAC::lmHeader) {
         (pck->pCmd())->setDataBuf(in, ownBuf);

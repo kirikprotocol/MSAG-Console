@@ -40,13 +40,13 @@ CHSendRoutingInfoArg::CHSendRoutingInfoArg()
 void CHSendRoutingInfoArg::setGMSCorSCFaddress(const char * addr) throw(CustomException)
 {
     if (!scfAdr.fromText(addr))
-        throw CustomException("inalid scfAdr", -1, addr);
+        throw CustomException(-1, "inalid scfAdr", addr);
 }
 //sets subscriber identity: IMSI or MSISDN addr
 void CHSendRoutingInfoArg::setSubscrMSISDN(const char *addr) throw(CustomException)
 {
     if (!subscrAdr.fromText(addr) || (subscrAdr.numPlanInd != 1))
-        throw CustomException("inalid subscriber MSISDN", -1, addr);
+        throw CustomException(-1, "inalid subscriber MSISDN", addr);
 }
 
 //ISDN BC IE for the preferred service,
@@ -54,7 +54,7 @@ void CHSendRoutingInfoArg::setSubscrMSISDN(const char *addr) throw(CustomExcepti
 
 //3GPP TS 23.018 version 6.5.0 Release 6
 //      7.2.2.1 Process SRI_HLR
-void CHSendRoutingInfoArg::encode(vector<unsigned char>& buf) throw(CustomException)
+void CHSendRoutingInfoArg::encode(std::vector<unsigned char>& buf) throw(CustomException)
 {
     asn_enc_rval_t          erc;
     SendRoutingInfoArg_t    cmd;
@@ -120,7 +120,7 @@ static bool parse_O_CSI(O_CSI_t *csi, MAPSCFinfo *scf_inf) throw(CustomException
         scf_inf->serviceKey = root_elem->serviceKey;
            
         if (!OCTET_STRING_2_Address(&(root_elem->gsmSCF_Address), scf_inf->scfAddress))
-            throw CustomException("O_CSI: bad gsmSCF_Adr", -11, NULL);
+            throw CustomException(-11, "O_CSI: bad gsmSCF_Adr", NULL);
 
         for (int i = 1; i < csi->o_BcsmCamelTDPDataList.list.count; i++) {
             O_BcsmCamelTDPData_t *elem = csi->o_BcsmCamelTDPDataList.list.array[i];
@@ -129,7 +129,7 @@ static bool parse_O_CSI(O_CSI_t *csi, MAPSCFinfo *scf_inf) throw(CustomException
                           elem->gsmSCF_Address.buf, root_elem->gsmSCF_Address.size)) {
                 std::string msg;
                 format(msg, "element: %u, trigger: %u", i, elem->o_BcsmTriggerDetectionPoint);
-                throw CustomException("O_CSI: different gsmSCF_Adr", -12, msg.c_str());
+                throw CustomException(-12, "O_CSI: different gsmSCF_Adr", msg.c_str());
             }
         }
         return true;
@@ -154,7 +154,7 @@ int CHSendRoutingInfoRes::getIMSI(char *imsi) const
 }
 
 
-void CHSendRoutingInfoRes::decode(const vector<unsigned char>& buf) throw(CustomException)
+void CHSendRoutingInfoRes::decode(const std::vector<unsigned char>& buf) throw(CustomException)
 {
     SendRoutingInfoRes_t *  dcmd = NULL;
     asn_dec_rval_t  drc;    /* Decoder return value  */
@@ -167,7 +167,7 @@ void CHSendRoutingInfoRes::decode(const vector<unsigned char>& buf) throw(Custom
         if (dcmd->imsi) {
             if (dcmd->imsi->size >= sizeof(o_imsi)
                 || !unpackBCD2NumString(dcmd->imsi->buf, o_imsi, dcmd->imsi->size))
-                throw CustomException("SRIRes: bad IMSI", -1, NULL);
+                throw CustomException(-1, "SRIRes: bad IMSI");
             mask.imsi = 1;
         }
         if (dcmd->extendedRoutingInfo

@@ -66,13 +66,13 @@ public:
     //Getters:
     unsigned char getDCS(void) const;
     //returns USS data 'as is', i.e. encoded according to CBS coding scheme
-    const vector<unsigned char>& getUSSData(void) const;
+    const std::vector<unsigned char>& getUSSData(void) const;
     //if possible, converts USS data to plain LATIN1 test and returns true, otherwise - false
     bool  getUSSDataAsLatin1Text(std::string & ussStr) const;
 
 protected:
     unsigned char	    _dCS;	// unparsed data coding scheme (CBS CS)
-    vector<unsigned char>   _uSSData;	// encoded USS data string (GSM 7-bit, UCS2, etc)
+    std::vector<unsigned char>   _uSSData;	// encoded USS data string (GSM 7-bit, UCS2, etc)
 };
 
 class ProcessUSSRequestArg : public MAPUSS2Comp
@@ -96,8 +96,8 @@ public:
     //returns alertingNotSet if alerting absent
     enum AlertingPattern getAlertingPattern(void) const;
 
-    void encode(vector<unsigned char>& buf) throw(CustomException);
-    void decode(const vector<unsigned char>& buf) throw(CustomException);
+    void encode(std::vector<unsigned char>& buf) throw(CustomException);
+    void decode(const std::vector<unsigned char>& buf) throw(CustomException);
 
 private:
     //Optional parameters:
@@ -112,8 +112,8 @@ public:
     ProcessUSSRequestRes();
     ~ProcessUSSRequestRes();
 
-    void encode(vector<unsigned char>& buf) throw(CustomException);
-    void decode(const vector<unsigned char>& buf) throw(CustomException);
+    void encode(std::vector<unsigned char>& buf) throw(CustomException);
+    void decode(const std::vector<unsigned char>& buf) throw(CustomException);
 
 private:
     Logger*		compLogger;

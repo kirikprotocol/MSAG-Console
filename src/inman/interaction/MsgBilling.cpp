@@ -50,7 +50,7 @@ ChargeSms::ChargeSms()
     , partsNum(1), forwarded(false), extCode(0), smsXSrvsId(0)
 { }
 
-void ChargeSms::load(ObjectBuffer& in) throw(CustomException)
+void ChargeSms::load(ObjectBuffer& in) throw(SerializerException)
 {
     in >> extCode;
     in >> dstSubscriberNumber;
@@ -154,7 +154,7 @@ ChargeSmsResult::ChargeSmsResult(InmanErrorType errType, uint16_t errCode,
 {
 }
 
-void ChargeSmsResult::load(ObjectBuffer& in) throw(CustomException)
+void ChargeSmsResult::load(ObjectBuffer& in) throw(SerializerException)
 {
     unsigned short v;
     in >> v;
@@ -183,7 +183,7 @@ DeliverySmsResult::DeliverySmsResult(uint32_t val, bool finalAttemp /*= true*/)
 {
 }
 
-void DeliverySmsResult::load(ObjectBuffer& in) throw(CustomException)
+void DeliverySmsResult::load(ObjectBuffer& in) throw(SerializerException)
 {
     in >> value;
     in >> final;

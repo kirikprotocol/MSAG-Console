@@ -5,14 +5,12 @@
 
 #include "inman/interaction/serializer.hpp"
 #include "inman/common/observable.hpp"
-#include "inman/common/errors.hpp"
 #include "core/network/Socket.hpp"
 #include "logger/Logger.h"
 
 using smsc::logger::Logger;
 using smsc::core::network::Socket;
 using smsc::inman::common::ObservableT;
-using smsc::inman::common::SystemError;
 using smsc::inman::interaction::SerializablePacketAC;
 
 namespace smsc  {
