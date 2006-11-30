@@ -31,9 +31,7 @@ protected:
             if (!actions[i]->run(context)) 
             {
                 ActionStackValue sv(i, false);
-                smsc_log_debug(logger,"Run Action 'if' !!!1");
                 longCallContext.ActionStack.push(sv);
-                smsc_log_debug(logger,"Run Action 'if' !!!2");
                 return false;
             }
         }

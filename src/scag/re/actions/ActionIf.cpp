@@ -176,7 +176,6 @@ bool ActionIf::run(ActionContext& context)
     bool isValidCondition = true;
 
     LongCallContext &longCallContext = context.getSCAGCommand().getLongCallContext();
-    smsc_log_debug(logger,"Run Action 'if'...2");
 
     if (longCallContext.ActionStack.empty()) 
     {
