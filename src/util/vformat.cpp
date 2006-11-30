@@ -37,7 +37,7 @@ std::string & vformat(std::string & fstr, const char* fmt, va_list arg_list)
     int n = VSNPRINTF(abuf, sizeof(abuf) - 1, fmt, arg_list);
     if (n >= sizeof(abuf)) {
         char * vbuf = NULL;
-        n = vpformat(fmt, arg_list, &vbuf, n);
+        n = vpformat(fmt, arg_list, &vbuf, n + 2);
         fstr += vbuf;
         delete [] vbuf;
     } else if (n > 0)
