@@ -66,7 +66,7 @@ struct SmscConnectTask:thr::ThreadedTask{
     std::auto_ptr<SmscSocket> sock(new SmscSocket(host.c_str(),port));
     if(!sock->connect())
     {
-      conn->reportSmscDisconnect(sysId.c_str());
+      conn->reportSmscDisconnect(regSysId.c_str());
       return 0;
     }
     sock->bind(regSysId.c_str(),sysId.c_str(),pass.c_str(),addressRange.c_str(),systemType.c_str());
