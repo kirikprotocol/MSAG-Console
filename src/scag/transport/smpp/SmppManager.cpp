@@ -290,10 +290,10 @@ void SmppManager::configChanged()
 void SmppManager::LoadRoutes(const char* cfgFile)
 {
   scag::config::RouteConfig& cfg = scag::config::ConfigManager::Instance().getRouteConfig();
-  if(cfg.load(cfgFile)!=scag::config::RouteConfig::success)
+/*  if(cfg.load(cfgFile)!=scag::config::RouteConfig::success)
   {
     throw Exception("Failed to load routes config");
-  };
+  };*/
   routeMan=new router::RouteManager();
   router::loadRoutes(routeMan.Get(),cfg,false);
 }
