@@ -71,10 +71,8 @@ ApplicationContextFactory::Init(id_ac_sample_v1, initSampleAComponents);
 #ifndef __SMSC_INMAN_COMP_OPERFACTORY__
 #define __SMSC_INMAN_COMP_OPERFACTORY__
 
-#include <map>
-
+#include "util/Factory.hpp"
 #include "inman/comp/compdefs.hpp"
-#include "inman/common/factory.hpp"
 #include "logger/Logger.h"
 
 using smsc::logger::Logger;
@@ -84,8 +82,8 @@ namespace smsc {
 namespace inman {
 namespace comp {
 
-typedef smsc::inman::common::FactoryT<unsigned, Component>  CompFactory; 
-typedef smsc::inman::common::FactoryT<unsigned, Component>::Producer  CompProducer; 
+typedef smsc::util::FactoryT<unsigned, Component>           CompFactory;
+typedef smsc::util::FactoryT<unsigned, Component>::Producer CompProducer;
 
 class OperationFactory {
 public:
@@ -135,23 +133,23 @@ public:
     // this function is for dynamical factory initialization
     static void Init(FactoryInitFunc fif)
     {
-	if (fif) {
-	    fif(getInstance());
-	    ApplicationContextFactory::getInstance()->markFIF(ac_idx, fif);
-	}
+        if (fif) {
+            fif(getInstance());
+            ApplicationContextFactory::getInstance()->markFIF(ac_idx, fif);
+        }
     }
 
     OperationFactoryInstanceT() : OperationFactory(ac_idx) { }
 
     static OperationFactoryInstanceT * getInstance()
     {
-	static OperationFactoryInstanceT instance;
-	return &instance;
+        static OperationFactoryInstanceT instance;
+        return &instance;
     }
 
 protected:
 // forbid destruction and instantiation
-    void* operator new(size_t);    
+    void* operator new(size_t);
     ~OperationFactoryInstanceT() {}
 };
 

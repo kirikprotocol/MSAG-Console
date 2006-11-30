@@ -2,12 +2,10 @@
 #ifndef __SMSC_INMAN_INTERACTION_MESSAGES__
 #define __SMSC_INMAN_INTERACTION_MESSAGES__
 
-#include <map>
+#include "util/Factory.hpp"
+using smsc::util::FactoryT;
 
 #include "inman/interaction/serializer.hpp"
-
-#include "inman/common/factory.hpp"
-using smsc::inman::common::FactoryT;
 
 namespace smsc  {
 namespace inman {

@@ -5,14 +5,16 @@
 
 #include "sms/sms.h"
 #include "inman/interaction/serializer.hpp"
-#include "inman/common/factory.hpp"
+
+#include "util/Factory.hpp"
+using smsc::util::FactoryT;
 
 using std::runtime_error;
 using smsc::sms::Address;
 using smsc::inman::interaction::ObjectBuffer;
 using smsc::inman::interaction::SerializableObject;
 using smsc::inman::interaction::SerializerITF;
-using smsc::inman::common::FactoryT;
+
 
 //NOTE: USSman considers the USS request encoding with DCS == 0xF4 as plain LATIN1 text
 #define USSMAN_LATIN1_DCS 0xF4 // 1111 0100
