@@ -120,8 +120,8 @@ public:
     void setTPProtocolIdentifier(unsigned char );
     void setTPDataCodingScheme(unsigned char );
 
-    void setLocationInformationMSC(const TonNpiAddress& addr);
-    void setLocationInformationMSC(const char* text);
+    void setLocationInformationMSC(const TonNpiAddress& addr) throw(CustomException);
+    void setLocationInformationMSC(const char* text) throw(CustomException);
 
     void encode(vector<unsigned char>& buf) throw(CustomException);
 

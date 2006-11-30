@@ -192,11 +192,14 @@ void InitialDPSMSArg::setTPValidityPeriod(time_t vpVal, enum TP_VP_format fmt) t
 }
 
 /* Sets VLR number and LocationNumber (duplicates it from VLR) */
-void InitialDPSMSArg::setLocationInformationMSC(const TonNpiAddress& addr)
+void InitialDPSMSArg::setLocationInformationMSC(const TonNpiAddress& addr) throw(CustomException)
 {
-    memset(&(comp->_li), 0, sizeof(comp->_li)); //reset _asn_ctx & optionals
+    /* NOTE: _vlrNumber may be only the ISDN INTERNATIONAL address */
+    if ((addr.numPlanInd != NUMBERING_ISDN) || (addr.typeOfNumber != ToN_INTERNATIONAL))
+        throw CustomException("InitialDPSMSArg: invalid VLR address", -1,
+                              addr.toString().c_str());
 
-    /* NOTE: TonNpiAddress cann't be the alphanumeric */
+    memset(&(comp->_li), 0, sizeof(comp->_li)); //reset _asn_ctx & optionals
     Address2OCTET_STRING(comp->_vlrNumber, addr);
     comp->_li.vlr_number = &(comp->_vlrNumber);
     /**/
@@ -225,11 +228,17 @@ void InitialDPSMSArg::setLocationInformationMSC(const TonNpiAddress& addr)
     comp->idp.locationInformationMSC = &(comp->_li);
 }
 
-void InitialDPSMSArg::setLocationInformationMSC(const char* text)
+void InitialDPSMSArg::setLocationInformationMSC(const char* text) throw(CustomException)
 {
     TonNpiAddress   sadr;
-    if (sadr.fromText(text))
-        InitialDPSMSArg::setLocationInformationMSC((const TonNpiAddress&)sadr);
+
+    if (!sadr.fromText(text) || (sadr.numPlanInd != NUMBERING_ISDN)
+        || (sadr.typeOfNumber > ToN_INTERNATIONAL))
+        throw CustomException("InitialDPSMSArg: invalid VLR address", -1,
+                              sadr.toString().c_str());
+    //correct ToN_UNKNOWN
+    sadr.typeOfNumber = ToN_INTERNATIONAL;
+    InitialDPSMSArg::setLocationInformationMSC(sadr);
 }
 
 
