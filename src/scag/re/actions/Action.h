@@ -33,7 +33,7 @@ public:
 
     std::string getStrValue();
     int getIntValue();
-    ActionParameter(const SectionParams& params, PropertyObject& propertyObject, const std::string& actionName, const char * paramName, bool isRequired, Logger * logger);
+    ActionParameter(const SectionParams& params, PropertyObject& propertyObject, const std::string& actionName, const char * paramName, bool isRequired, bool readOnly, Logger * logger);
 };
 
 class Action : public IParserHandler

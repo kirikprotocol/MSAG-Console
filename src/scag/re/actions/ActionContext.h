@@ -139,7 +139,7 @@ namespace scag { namespace re { namespace actions
         void clearLongCallContext()
         {
             LongCallContext& longCallContext = command.getSCAGCommand().getLongCallContext();
-            while (longCallContext.ActionStack.empty()) longCallContext.ActionStack.pop();
+            while (!longCallContext.ActionStack.empty()) longCallContext.ActionStack.pop();
         }
 
         /*LongCallBuffer& getBuffer()

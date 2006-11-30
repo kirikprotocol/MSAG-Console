@@ -28,10 +28,10 @@ public:
  
 */
 
-ActionParameter::ActionParameter(const SectionParams& params, PropertyObject& propertyObject, const std::string& actionName, const char * paramName, bool isRequired, Logger * logger)
+ActionParameter::ActionParameter(const SectionParams& params, PropertyObject& propertyObject, const std::string& actionName, const char * paramName, bool isRequired, bool readOnly, Logger * logger)
 {
     m_FieldType = ftUnknown;
-    m_bReadOnly = isReadOnly;
+    m_bReadOnly = readOnly;
     m_pProperty = 0;
     m_pLogger = logger;
     m_actionName = actionName;

@@ -8,7 +8,7 @@ namespace scag { namespace re { namespace actions {
 class ActionRedirect : public Action
 {
     ActionRedirect(const ActionRedirect &);
-
+    /*
     std::string strOA;
     std::string strDA;
     
@@ -17,6 +17,8 @@ class ActionRedirect : public Action
 
     bool m_bExistOA;
     bool m_bExistDA;
+    */
+    std::auto_ptr<ActionParameter> paramOA, paramDA;
     Logger * logger;
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
