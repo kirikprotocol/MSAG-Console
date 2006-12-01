@@ -13,7 +13,6 @@ using smsc::inman::comp::Component;
 #define MAX_USSD_TEXT8_LENGTH        90
 #define MAX_USSD_TEXT16_LENGTH       40
 
-
 namespace smsc {
 namespace inman {
 namespace comp {
@@ -50,11 +49,10 @@ struct ERR_ProcessUSS_Request {
 
 
 //The base class for MAP USS2 requests/results
-class MAPUSS2Comp : public Component
-{
+class MAPUSS2CompAC : public Component {
 public:
-    MAPUSS2Comp() {}
-    virtual ~MAPUSS2Comp() {}
+    MAPUSS2CompAC() {}
+    virtual ~MAPUSS2CompAC() {}
 
     //Setters:
     //assigns USS data, that is plain LATIN1 text,
@@ -64,9 +62,9 @@ public:
     void setRAWUSSData(unsigned char dcs, const unsigned char * data, unsigned size);
 
     //Getters:
-    unsigned char getDCS(void) const;
+    unsigned char getDCS(void) const { return _dCS; }
     //returns USS data 'as is', i.e. encoded according to CBS coding scheme
-    const std::vector<unsigned char>& getUSSData(void) const;
+    const std::vector<unsigned char>& getUSSData(void) const { return _uSSData; }
     //if possible, converts USS data to plain LATIN1 test and returns true, otherwise - false
     bool  getUSSDataAsLatin1Text(std::string & ussStr) const;
 
@@ -75,26 +73,25 @@ protected:
     std::vector<unsigned char>   _uSSData;	// encoded USS data string (GSM 7-bit, UCS2, etc)
 };
 
-class ProcessUSSRequestArg : public MAPUSS2Comp
-{
+class ProcessUSSRequestArg : public MAPUSS2CompAC {
 public:
     ProcessUSSRequestArg();
-    ~ProcessUSSRequestArg();
+    ~ProcessUSSRequestArg() { }
 
     //Setters:
     //Optional parameters
-    void setAlertingPattern(enum AlertingPattern alrt);
-    void setMSISDNadr(const TonNpiAddress& msadr);
-    void setMSISDNadr(const char * adrStr);
+    void setAlertingPattern(enum AlertingPattern alrt) { _alrt = alrt; }
+    void setMSISDNadr(const TonNpiAddress& msadr) { _msAdr = msadr; }
+    void setMSISDNadr(const char * adrStr) throw(CustomException);
 
     //Getters:
     //Optional parameters
     bool  msISDNadr_present(void);
     bool  msAlerting_present(void);
     //returns empty TonNpiAddress if msISDN adr absent
-    const TonNpiAddress& getMSISDNadr(void) const; 
+    const TonNpiAddress& getMSISDNadr(void) const   { return _msAdr; }
     //returns alertingNotSet if alerting absent
-    enum AlertingPattern getAlertingPattern(void) const;
+    enum AlertingPattern getAlertingPattern(void) const { return _alrt; }
 
     void encode(std::vector<unsigned char>& buf) throw(CustomException);
     void decode(const std::vector<unsigned char>& buf) throw(CustomException);
@@ -106,8 +103,7 @@ private:
     Logger*		compLogger;
 };
 
-class ProcessUSSRequestRes : public MAPUSS2Comp
-{
+class ProcessUSSRequestRes : public MAPUSS2CompAC {
 public:
     ProcessUSSRequestRes();
     ~ProcessUSSRequestRes();

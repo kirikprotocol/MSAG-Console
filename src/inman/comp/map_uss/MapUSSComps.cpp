@@ -1,4 +1,7 @@
+#ifndef MOD_IDENT_OFF
 static char const ident[] = "$Id$";
+#endif /* MOD_IDENT_OFF */
+
 #include <vector>
 #include <assert.h>
 
@@ -17,27 +20,14 @@ using smsc::cvtutil::unpack7BitPadded2Text;
 using smsc::cvtutil::packTextAs7BitPadded;
 using smsc::cvtutil::estimateTextAs7Bit;
 
-
 namespace smsc {
 namespace inman {
 namespace comp {
 namespace uss {
-
-
 /* ************************************************************************** *
- * class MAPUSS2Comp implementation:
+ * class MAPUSS2CompAC implementation:
  * ************************************************************************** */
-unsigned char MAPUSS2Comp::getDCS(void) const
-{
-    return _dCS;
-}
-
-const std::vector<unsigned char>& MAPUSS2Comp::getUSSData(void) const
-{
-    return _uSSData;
-}
-
-bool  MAPUSS2Comp::getUSSDataAsLatin1Text(std::string & str) const
+bool  MAPUSS2CompAC::getUSSDataAsLatin1Text(std::string & str) const
 {
     CBS_DCS    parsedDCS;
 
@@ -51,11 +41,11 @@ bool  MAPUSS2Comp::getUSSDataAsLatin1Text(std::string & str) const
     return false;
 }
 
-void MAPUSS2Comp::setUSSData(const unsigned char * data, unsigned size) throw(CustomException)
+void MAPUSS2CompAC::setUSSData(const unsigned char * data, unsigned size) throw(CustomException)
 {
     unsigned ussdStrSz = estimateTextAs7Bit((const char*)data, size, NULL);
     if (ussdStrSz > MAP_MAX_USSD_StringLength)
-        throw CustomException("MAPUSS2Comp: ussdStrSz is too large: %u", ussdStrSz);
+        throw CustomException("MAPUSS2CompAC: ussdStrSz is too large: %u", ussdStrSz);
 
     uint8_t ussdStr[MAP_MAX_USSD_StringLength];
     ussdStrSz = packTextAs7BitPadded((const char*)data, size, ussdStr);
@@ -65,23 +55,21 @@ void MAPUSS2Comp::setUSSData(const unsigned char * data, unsigned size) throw(Cu
     _dCS = 0x0F; //GSM 7-bit, arbitrary language
 }
 
-void MAPUSS2Comp::setRAWUSSData(unsigned char dcs, const unsigned char * data, unsigned size)
+void MAPUSS2CompAC::setRAWUSSData(unsigned char dcs, const unsigned char * data, unsigned size)
 {
     _uSSData.clear();
     _uSSData.insert(_uSSData.begin(), data, data + size);
     _dCS = dcs;
 }
 
-
 /* ************************************************************************** *
  * class ProcessUSSRequestArg implementation:
  * ************************************************************************** */
 ProcessUSSRequestArg::ProcessUSSRequestArg()
 {
-    compLogger = smsc::logger::Logger::getInstance("smsc.inman.usscomp.ProcessUSSRequestArg");
+    compLogger = smsc::logger::Logger::getInstance("smsc.inman.comp.uss");
     _alrt = alertingNotSet;
 }
-ProcessUSSRequestArg::~ProcessUSSRequestArg() { }
 
 bool ProcessUSSRequestArg::msISDNadr_present(void)
 {
@@ -93,32 +81,11 @@ bool ProcessUSSRequestArg::msAlerting_present(void)
     return (_alrt == alertingNotSet) ? false : true;
 }
 
-const TonNpiAddress& ProcessUSSRequestArg::getMSISDNadr(void) const
+void ProcessUSSRequestArg::setMSISDNadr(const char* adrStr) throw(CustomException)
 {
-    return _msAdr;
+    if (!_msAdr.fromText(adrStr))
+        throw CustomException(-1, "ProcessUSSRequestArg: invalid msisdn", adrStr);
 }
-
-
-void ProcessUSSRequestArg::setAlertingPattern(enum AlertingPattern alrt)
-{
-    _alrt = alrt;
-}
-
-enum AlertingPattern ProcessUSSRequestArg::getAlertingPattern(void) const
-{
-    return _alrt;
-}
-
-void ProcessUSSRequestArg::setMSISDNadr(const TonNpiAddress& msadr)
-{
-    _msAdr = msadr;
-}
-
-void ProcessUSSRequestArg::setMSISDNadr(const char* adrStr)
-{
-    _msAdr.fromText(adrStr);
-}
-
 
 void ProcessUSSRequestArg::decode(const std::vector<unsigned char>& buf) throw(CustomException)
 {
