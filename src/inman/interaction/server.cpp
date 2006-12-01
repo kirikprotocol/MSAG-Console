@@ -40,40 +40,53 @@ Server::~Server()
 void Server::closeAllConnects(bool abort/* = false*/)
 {
     if (connects.size()) {
-        ConnectsList    cplist = connects;
         smsc_log_debug(logger, "TCPSrv: %s %u connects ..", abort ? "killing" : "closing",
-                       cplist.size());
-        for (ConnectsList::const_iterator cit = cplist.begin(); cit != cplist.end(); cit++)
+                       connects.size());
+        ConnectsList::iterator it = connects.begin();
+        while (it != connects.end()) {
+            ConnectsList::iterator cit = it; it++;
             closeConnect(*cit, abort);
+            connects.erase(cit);
+        } 
     }
 }
 
-void Server::openConnect(Connect* connect)
+void Server::openConnect(Socket* use_sock)
 {
-    assert(connect);
-    _mutex.Lock();
-    connects.push_back( connect );
-    _mutex.Unlock();
-
-    for (ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++) {
-        ServerListener* ptr = *it;
-        ptr->onConnectOpened(this, connect);
+    unsigned sock_id = use_sock->getSocket();
+    std::auto_ptr<Connect> pConn(new Connect(use_sock,
+                                        Connect::frmStraightData, NULL, logger));
+    try {
+        for (ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++) {
+            ServerListener* ptr = *it;
+            ptr->onConnectOpened(this, pConn.get());
+        }
+        if (!pConn->hasListeners())
+            smsc_log_warn(logger, "TCPSrv: connect[%u] no listener set!", sock_id);
+        else
+            connects.push_back(pConn.release());
+    } catch (const std::exception& exc) {
+        smsc_log_error(logger, "TCPSrv: connect[%u] opening listener exception: %s",
+                       sock_id, exc.what());
+    }
+    if (pConn.get()) {
+        pConn->close(true);
+        smsc_log_debug(logger, "TCPSrv: Socket[%u] closed.", sock_id);
     }
 }
-
 
 void Server::closeConnect(Connect* connect, bool abort/* = false*/)
 {
-    assert(connect);
-    for (ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++) {
-        ServerListener* ptr = *it;
-        ptr->onConnectClosing(this, connect);
-    }
-    _mutex.Lock();
-    connects.remove(connect);
-    _mutex.Unlock();
-
     SOCKET sockId = connect->getSocketId();
+    try {
+        for (ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++) {
+            ServerListener* ptr = *it;
+            ptr->onConnectClosing(this, connect);
+        }
+    } catch (const std::exception& exc) {
+        smsc_log_error(logger, "TCPSrv: connect[%u] closing listener exception: %s",
+                       (unsigned)sockId, exc.what());
+    }
     connect->close(abort);
     delete connect;
     smsc_log_debug(logger, "TCPSrv: Socket[%u] closed.", (unsigned)sockId);
@@ -179,6 +192,7 @@ Server::ShutdownReason Server::Listen(void)
                         conn->resetException();
                     } else { //remote point ends connection
                         smsc_log_debug(logger, "TCPSrv: client ends connection[%u]", socket);
+                        connects.remove(conn);
                         closeConnect(conn);
                     }
                 }
@@ -186,6 +200,7 @@ Server::ShutdownReason Server::Listen(void)
             if (FD_ISSET(socket, &errorSet)) {
                 smsc_log_debug(logger, "TCPSrv: Error Event on socket[%u].", socket);
                 conn->handleConnectError(true);
+                connects.remove(conn);
                 closeConnect(conn, true);
             }
         }
@@ -199,16 +214,11 @@ Server::ShutdownReason Server::Listen(void)
                 } else if (connects.size() < _cfg.maxConn) {
                     smsc_log_debug(logger, "TCPSrv: accepted new connect[%u]",
                                    clientSocket->getSocket());
-                    Connect* connect = new Connect(clientSocket, Connect::frmStraightData, NULL, logger);
-                    openConnect(connect);
-                    if (!connect->hasListeners()) {
-                        smsc_log_warn(logger, "TCPSrv: No listeners being set for connect[%u]!",
-                                      connect->getSocketId());
-                        closeConnect(connect, true);
-                    }
+                    openConnect(clientSocket);
                 } else { //connects number exceeded
                     delete clientSocket;
-                    smsc_log_warn(logger, "TCPSrv: connection refused, resource limitation.");
+                    smsc_log_warn(logger, "TCPSrv: connection refused, "
+                                          "resource limitation: %u", _cfg.maxConn);
                 }
             }
             if (FD_ISSET(serverSocket.getSocket(), &errorSet)) {

@@ -46,7 +46,7 @@ protected:
 
     int  Execute(); //listener thread entry point
     ShutdownReason Listen(void);
-    void openConnect(Connect* connect);
+    void openConnect(Socket* use_sock);
     void closeConnect(Connect* connect, bool abort = false);
     //Closes all client's connections
     void closeAllConnects(bool abort = false);
