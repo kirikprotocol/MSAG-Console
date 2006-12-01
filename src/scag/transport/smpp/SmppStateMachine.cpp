@@ -60,8 +60,8 @@ struct StateMachine::ResponseRegistry
     RegKey key(uid, seq);
     if (!log) log=smsc::logger::Logger::getInstance("respreg");
     if (reg.Exists(key)) { // key already registered
-  smsc_log_warn(log, "register %d/%d failed", uid, seq);
-  return false;
+        smsc_log_warn(log, "register %d/%d failed", uid, seq);
+        return false;
     }
     smsc_log_debug(log, "register %d/%d", uid, seq);
     RegValue val;
@@ -85,7 +85,7 @@ struct StateMachine::ResponseRegistry
     if (!log) log=smsc::logger::Logger::getInstance("respreg");
     smsc_log_debug(log, "get %d/%d - %s", uid, seq, (ptr) ? "ok":"not found");
     if (!ptr) { // TODO: toList cleanup (find listValue by key & delete it)?
-  return false;
+        return false;
     }
     cmd = ptr->cmd;
     cmd->set_dialogId(ptr->dlgId);
@@ -102,9 +102,10 @@ struct StateMachine::ResponseRegistry
     if ((now - toList.front().insTime) < timeout) return false;
     RegKey key = toList.front().key;
     RegValue* ptr = reg.GetPtr(key);
-    if (!ptr) { // TODO: toList cleanup (find listValue by key & delete it)?
-  // toList.erase(toList.begin());
-  return false;
+    if (!ptr) {
+       // toList cleanup (find listValue by key & delete it)?
+       toList.erase(toList.begin());
+       return false;
     }
     cmd = ptr->cmd;
     cmd->set_dialogId(key.seq);
@@ -125,7 +126,7 @@ int StateMachine::Execute()
       {
         if (cmd->get_commandId() != 25) {
           smsc_log_debug(log,"Exec: processing command %d(%x) from %s",cmd->get_commandId(),cmd->get_commandId(),cmd.getEntity()?cmd.getEntity()->getSystemId():"");
-  }
+        }
         switch(cmd->get_commandId())
         {
           case SUBMIT:          processSubmit(cmd);         break;
@@ -379,9 +380,17 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
 
   SmppCommand orgCmd;
   SmppEntity* src=cmd.getEntity();
-  if(!reg.Get(src->getUid(),cmd->get_dialogId(),orgCmd))
-  {
-    smsc_log_warn(log,"Original submit for submit response not found. sid='%s',seq='%d'",src->getSystemId(),cmd->get_dialogId());
+  int srcUid = 0; 
+  try { srcUid = src->getUid(); } 
+  catch (std::exception& exc) {
+    smsc_log_warn(log, "Src entity disconnected. sid='%s', seq='%d'",
+                  src->getSystemId(), cmd->get_dialogId());
+    registerEvent(scag::stat::events::smpp::RESP_FAILED, src, NULL, NULL, -1);
+    return;
+  }
+  if(!reg.Get(srcUid, cmd->get_dialogId(), orgCmd)) {
+    smsc_log_warn(log,"Original submit for submit response not found. sid='%s',seq='%d'",
+                  src->getSystemId(),cmd->get_dialogId());
     registerEvent(scag::stat::events::smpp::RESP_FAILED, src, NULL, NULL, -1);
     return;
   }
@@ -640,8 +649,15 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
 
   SmppCommand orgCmd;
   SmppEntity* src=cmd.getEntity();
-  if(!reg.Get(src->getUid(),cmd->get_dialogId(),orgCmd))
-  {
+  int srcUid = 0; 
+  try { srcUid = src->getUid(); } 
+  catch (std::exception& exc) {
+    smsc_log_warn(log, "Src entity disconnected. sid='%s', seq='%d'",
+                  src->getSystemId(), cmd->get_dialogId());
+    registerEvent(scag::stat::events::smpp::RESP_FAILED, src, NULL, NULL, -1);
+    return;
+  }
+  if(!reg.Get(srcUid, cmd->get_dialogId(), orgCmd)) {
     smsc_log_warn(log,"Original delivery for delivery response not found. sid='%s',seq='%d'",src->getSystemId(),cmd->get_dialogId());
     registerEvent(scag::stat::events::smpp::RESP_FAILED, src, NULL, NULL, -1);
     return;
@@ -889,8 +905,15 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
 
   SmppCommand orgCmd;
   SmppEntity* src=cmd.getEntity();
-  if(!reg.Get(src->getUid(),cmd->get_dialogId(),orgCmd))
-  {
+  int srcUid = 0; 
+  try { srcUid = src->getUid(); } 
+  catch (std::exception& exc) {
+    smsc_log_warn(log, "Src entity disconnected. sid='%s', seq='%d'",
+                  src->getSystemId(), cmd->get_dialogId());
+    registerEvent(scag::stat::events::smpp::RESP_FAILED, src, NULL, NULL, -1);
+    return;
+  }
+  if(!reg.Get(srcUid, cmd->get_dialogId(), orgCmd)) {
     smsc_log_warn(log,"Original datasm for datasm response not found. sid='%s',seq='%d'",src->getSystemId(),cmd->get_dialogId());
     registerEvent(scag::stat::events::smpp::RESP_FAILED, src, NULL, NULL, -1);
     return;
