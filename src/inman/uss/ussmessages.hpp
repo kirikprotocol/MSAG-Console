@@ -3,16 +3,15 @@
 #ifndef __SMSC_INMAN_INTERACTION_USSMESSAGES__
 #define __SMSC_INMAN_INTERACTION_USSMESSAGES__
 
-#include "sms/sms.h"
-#include "inman/interaction/serializer.hpp"
-
 #include "util/Factory.hpp"
 using smsc::util::FactoryT;
 
-using std::runtime_error;
-using smsc::sms::Address;
+#include "util/TonNpiAddress.hpp"
+using smsc::util::TonNpiAddress;
+
+#include "inman/interaction/serializer.hpp"
 using smsc::inman::interaction::ObjectBuffer;
-using smsc::inman::interaction::SerializableObject;
+using smsc::inman::interaction::SerializableObjectAC;
 using smsc::inman::interaction::SerializerITF;
 
 
@@ -22,6 +21,9 @@ using smsc::inman::interaction::SerializerITF;
 namespace smsc  {
 namespace inman {
 namespace interaction {
+
+// 1. USSRequest         ( client --> USSMAN )
+// 2. USSRequestResult   ( client <-- USSMAN )
 
 struct USS2CMD {
     enum _TAG {
@@ -35,14 +37,15 @@ struct USS2CMD {
     };
 };
 
-//serializer for USSman commands, transferred over TCP socket
-class SerializerUSS : public SerializerITF, public FactoryT< unsigned short, SerializableObject >
-{
+//DeSerializer for USSman commands, transferred over TCP socket
+//NOTE: SerializerUSS doesn't provide partial deserialization of packets
+class SerializerUSS : public SerializerITF, 
+                    public FactoryT<unsigned short, SerializableObjectAC> {
 public:
-    virtual ~SerializerUSS();
+    virtual ~SerializerUSS() { }
 
-    SerializableObject * deserialize(ObjectBuffer &);
-    void                 serialize(SerializableObject *, ObjectBuffer &out);
+    SerializablePacketAC * deserialize(ObjectBuffer & in) throw(SerializerException);
+    SerializablePacketAC * deserialize(std::auto_ptr<ObjectBuffer>& p_in) throw(SerializerException);
 
     static SerializerUSS* getInstance();
 
@@ -50,82 +53,120 @@ protected:
     SerializerUSS();
 };
 
+/*
+ * USSMan messages are transferred as length prefixed packet
+ * consisting of single serialized object(command) and have
+ * the following serialization format:
 
+  2b        4b              up to ...b
+-------  ---------   -------------------------------
+ msgId : requestId  :  message data                |
+       |                                           |
+           -- processed by load()/save() method --
+*/
+class USSPacketAC : public SerializablePacketAC { //[0] = cmdObject
+protected:
+    uint32_t    dlgId;
+
+public:
+    USSPacketAC(uint32_t dlg_id = 0) : dlgId(dlg_id) { Resize(1); }
+   
+    SerializableObjectAC * pCmd(void) { return at(0); }
+    uint32_t dialogId(void) const { return dlgId; }
+    void setDialogId(uint32_t dlg_id) { dlgId = dlg_id; }
+
+    //SerializablePacketAC interface implementation
+    void serialize(ObjectBuffer& out_buf) throw(SerializerException)
+    {
+        out_buf << at(0)->Id();
+        at(0)->save(out_buf);
+    }
+};
+
+//Template class for solid packet construction.
+template<class _Command /* : public USSMessageAC*/>
+class USSSolidPacketT : public USSPacketAC {
+protected:
+    _Command pckCmd;
+
+public:
+    USSSolidPacketT() : USSPacketAC()
+        { referObj(0, pckCmd); }
+    //constructor for copying
+    USSSolidPacketT(const USSSolidPacketT &org_pck) : *this(org_pck)
+        { referObj(0, pckCmd); } //fix at(0) reference
+
+    _Command & Cmd(void) { return pckCmd; }
+};
+
+// --------------------------------------------------------- //
+// USSMan commands: 
+// --------------------------------------------------------- // 
 typedef std::vector<unsigned char> USSDATA_T;
 
-// 1. USSRequest         ( client --> USSMAN )
-// 2. USSRequestResult   ( client <-- USSMAN )
-// 3. USSRequestDenial   ( client <-- USSMAN )
-
-
-/*
-class USSCommandHandler;
-class USSCommand : public SerializableObject
-{
-    virtual void handle( USSCommandHandler* ) = 0;
-};
-*/
-class USSMessageBase : public SerializableObject //USSCommand not used for now
-{
+//Abstract class for USSman commands
+class USSMessageAC : public SerializableObjectAC {
 public:
-    USSMessageBase(unsigned short msgTag) { setObjectId(msgTag); _status = 0; }
-    virtual ~USSMessageBase() {}
+    USSMessageAC(unsigned short msgTag) : SerializableObjectAC(msgTag)
+    { _status = 0; }
+    virtual ~USSMessageAC() {}
 
-    //USSCommand interface: not used for now
-    //virtual void handle( USSCommandHandler* );
-
-    //SerializableObject interface:
-    void load(ObjectBuffer &in);
-    void save(ObjectBuffer &out);
+    //SerializableObjectAC interface:
+    void load(ObjectBuffer &in) throw(SerializerException);
+    void save(ObjectBuffer &out) const;
 
     //assigns USS data, that is plain LATIN1 text,
     void setUSSData(const unsigned char * data, unsigned size);
     //assigns USS data encoded according to CBS coding scheme (UCS2, GSM 7bit, etc)
     void setRAWUSSData(unsigned char dcs, const USSDATA_T& ussdata);
 
-    void setMSISDNadr(const Address& msadr);
-    void setMSISDNadr(const char * adrStr);
+    void setMSISDNadr(const TonNpiAddress& msadr) { _msAdr = msadr; }
+    void setMSISDNadr(const char * adrStr) throw (CustomException);
 
-    void setStatus(const unsigned short& status);
+    void setStatus(const unsigned short& status) { _status = status; }
 
-    const USSDATA_T& getUSSData(void) const;
-    const Address&   getMSISDNadr(void) const;
-    unsigned char    getDCS(void) const;
-    unsigned short   getStatus(void) const;
+    const USSDATA_T& getUSSData(void) const { return _ussData; }
+    const TonNpiAddress& getMSISDNadr(void) const { return _msAdr; }
+    unsigned char    getDCS(void) const     { return _dCS; }
+    unsigned short   getStatus(void) const  { return _status; }
 
 protected:
     unsigned char   _dCS;
     USSDATA_T       _ussData;
-    Address         _msAdr;
+    TonNpiAddress   _msAdr;
     unsigned short  _status; //only for PROCESS_USS_RESULT_TAG
 };
 
 
-class USSRequestMessage : public USSMessageBase
-{
+class USSRequestMessage : public USSMessageAC {
 public:
-    USSRequestMessage() : USSMessageBase(USS2CMD::PROCESS_USS_REQUEST_TAG) {}
+    USSRequestMessage() : USSMessageAC(USS2CMD::PROCESS_USS_REQUEST_TAG) {}
     ~USSRequestMessage() {}
 };
 
 
-class USSResultMessage : public USSMessageBase
-{
+class USSResultMessage : public USSMessageAC {
 public:
-    USSResultMessage() : USSMessageBase(USS2CMD::PROCESS_USS_RESULT_TAG) {}
+    USSResultMessage() : USSMessageAC(USS2CMD::PROCESS_USS_RESULT_TAG) {}
     ~USSResultMessage() {};
 
     bool  getUSSDataAsLatin1Text(std::string & str);
 };
 
-class USSCommandHandler
-{
-    public:
-        virtual void onProcessUSSRequest(USSRequestMessage* req) = 0;
-        virtual void onDenyUSSRequest(USSRequestMessage* req) = 0;
+// --------------------------------------------------------- //
+// Solid instances of USSMan packets:
+// --------------------------------------------------------- //
+typedef USSSolidPacketT<USSRequestMessage>  SPckUSSRequest;
+typedef USSSolidPacketT<USSResultMessage>   SPckUSSResult;
+
+// --------------------------------------------------------- //
+// USSman command handler interface:
+// --------------------------------------------------------- //
+class USSCommandHandlerITF {
+public:
+    virtual void onProcessUSSRequest(USSRequestMessage* req) = 0;
+    virtual void onDenyUSSRequest(USSRequestMessage* req) = 0;
 };
-
-
 
 } //interaction
 } //inman

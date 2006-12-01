@@ -25,12 +25,8 @@ namespace interaction {
 
 SerializerUSS::SerializerUSS()
 {
-    registerProduct( USS2CMD::PROCESS_USS_REQUEST_TAG, new ProducerT< USSRequestMessage >() );
-    registerProduct( USS2CMD::PROCESS_USS_RESULT_TAG, new ProducerT< USSResultMessage>() );
-}
-
-SerializerUSS::~SerializerUSS()
-{
+    registerProduct(USS2CMD::PROCESS_USS_REQUEST_TAG, new ProducerT<USSRequestMessage>());
+    registerProduct(USS2CMD::PROCESS_USS_RESULT_TAG, new ProducerT<USSResultMessage>());
 }
 
 SerializerUSS* SerializerUSS::getInstance()
@@ -45,7 +41,7 @@ SerializerUSS* SerializerUSS::getInstance()
 
 Request (PROCESS_USS_REQUEST_TAG):
 --------
-  1b        4b        1b       1b        up to 160b   1b     up to 32
+  2b        4b        1b       1b        up to 160b   1b     up to 32
 ------   ---------   -----  ----------   ----------   ---  -----------------------
  cmdId : requestId  : DCS : ussDataLen  :  ussData  : len : ms ISDN address string
                     |                                                            |
@@ -55,7 +51,7 @@ Request (PROCESS_USS_REQUEST_TAG):
 Result (PROCESS_USS_RESULT_TAG):
 --------
 
-  1b        4b          2b      1b       1b        up to 160b   1b     up to 32
+  2b        4b          2b      1b       1b        up to 160b   1b     up to 32
 ------   ---------   -------   ---   ----------   ----------   ---  -----------------------
  cmdId : requestId  : status : DCS : ussDataLen  :  ussData  : len : ms ISDN address string
                              |                                                             |
@@ -63,41 +59,42 @@ Result (PROCESS_USS_RESULT_TAG):
                     |                                                                      |
                     -------- processed by save() method ------------------------------------
 */
-
-void SerializerUSS::serialize(SerializableObject* obj, ObjectBuffer& out)
+//NOTE: SerializerUSS doesn't provide partial deserialization of packets
+SerializablePacketAC * SerializerUSS::deserialize(std::auto_ptr<ObjectBuffer>& p_in)
+        throw(SerializerException)
 {
-    assert( obj );
-    out << (unsigned char) obj->getObjectId();
-    out << (unsigned int) obj->getDialogId();
-    obj->save( out );
+    return deserialize(*(p_in.get()));
 }
 
-
-SerializableObject* SerializerUSS::deserialize(ObjectBuffer& in)
+SerializablePacketAC* SerializerUSS::deserialize(ObjectBuffer& in)
+        throw(SerializerException)
 {
-    unsigned char objectId;
-    unsigned int  reqId;
+    unsigned short objectId;
+    uint32_t       reqId;
+    try {
+        in >> objectId;
+        in >> reqId;
+    } catch (SerializerException & exc) {
+        throw SerializerException("USSrlzr: invalid packet structure",
+                                  SerializerException::invPacket, exc.what());
+    }
 
-    in >> objectId;
-    SerializableObject* obj = create((unsigned short)objectId);
-    if( !obj ) 
-        throw runtime_error(format("SerializerUSS: unknown object, id: 0x%X", (unsigned)objectId));
+    std::auto_ptr<SerializableObjectAC> obj(create(objectId));
+    if (!obj.get())
+        throw SerializerException("USSrlzr: illegal command", SerializerException::invObject);
+    obj->load(in);  //throws
 
-    in >> reqId;
-    obj->setObjectId((unsigned short)objectId);
-    obj->setDialogId(reqId);
-    obj->load(in);
-    return obj;
+    std::auto_ptr<USSPacketAC> pck(new USSPacketAC(reqId));
+    pck->assignObj(0, obj.release());
+    return pck.release();
 }
 
 /* ************************************************************************** *
- * class USSMessageBase implementation:
+ * class USSMessageAC implementation:
  * ************************************************************************** */
-/* SerializableObject interface:
- * ************************************************************************** */
-void USSMessageBase::save(ObjectBuffer& out)
+void USSMessageAC::save(ObjectBuffer& out) const
 {
-    if (getObjectId() == USS2CMD::PROCESS_USS_RESULT_TAG) {
+    if (objectId == USS2CMD::PROCESS_USS_RESULT_TAG) {
         out << _status;
         if (_status)
             return;
@@ -107,90 +104,43 @@ void USSMessageBase::save(ObjectBuffer& out)
     out << _msAdr.toString();
 }
 
-void USSMessageBase::load(ObjectBuffer& in)
+void USSMessageAC::load(ObjectBuffer& in) throw(SerializerException)
 {
-    if (getObjectId() == USS2CMD::PROCESS_USS_RESULT_TAG) {
+    if (objectId == USS2CMD::PROCESS_USS_RESULT_TAG) {
         in >> _status;
         if (_status)
             return;
     }
     in >> _dCS;
     in >> _ussData;
-
-//  read msISDN address
-    unsigned char len;
-    in >> len;
-    char* strBuf = new char[len + 1];
-    in.Read(strBuf, len);
-    strBuf[len] = 0;
-
-    Address msadr(strBuf);
-    _msAdr = msadr;
+    std::string sadr;
+    in >> sadr;
+    if (!_msAdr.fromText(sadr.c_str()))
+        throw SerializerException("invalid msisdn" , SerializerException::invObjData, NULL);
 }
 
-/* ************************************************************************** *
- * USSCommand interface:
- * ************************************************************************** */
-/* Not used for now:
-void USSMessageBase::handle( USSCommandHandler* handler)
-{
-    assert( handler );
-    handler->onProcessUSSRequest( this );
-
-}
-*/
 /* ************************************************************************** *
  * Own methods:
  * ************************************************************************** */
 
-void USSMessageBase::setRAWUSSData(unsigned char dcs, const USSDATA_T& ussdata)
+void USSMessageAC::setRAWUSSData(unsigned char dcs, const USSDATA_T& ussdata)
 {
     _ussData.clear();
     _ussData = ussdata;
     _dCS = dcs;
 }
 
-void USSMessageBase::setUSSData(const unsigned char * data, unsigned size)
+void USSMessageAC::setUSSData(const unsigned char * data, unsigned size)
 {
     _ussData.clear();
     _ussData.insert(_ussData.begin(), data, data + size);
     _dCS = USSMAN_LATIN1_DCS;
 }
 
-void USSMessageBase::setMSISDNadr(const char * adrStr)
+void USSMessageAC::setMSISDNadr(const char * adrStr) throw (CustomException)
 {
-    Address	msadr(adrStr);
-    _msAdr = msadr;
-}
-
-void USSMessageBase::setMSISDNadr(const Address& msadr)
-{
-    _msAdr = msadr;
-}
-
-void USSMessageBase::setStatus(const unsigned short& status)
-{
-    _status = status;
-}
-
-const USSDATA_T& USSMessageBase::getUSSData(void) const
-{
-    return _ussData;
-}
-
-const Address&   USSMessageBase::getMSISDNadr(void) const
-{
-    return _msAdr;
-}
-
-unsigned char USSMessageBase::getDCS(void) const
-{
-    return _dCS;
-}
-
-unsigned short USSMessageBase::getStatus(void) const
-{
-    return _status;
+    if (!_msAdr.fromText(adrStr))
+        throw CustomException("invalid msisdn: %s", adrStr);
 }
 
 /* ************************************************************************** *
