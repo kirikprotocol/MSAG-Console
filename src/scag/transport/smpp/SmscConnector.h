@@ -18,7 +18,10 @@ namespace thr=smsc::core::threads;
 
 class SmscConnector:public SmscConnectorAdmin{
 public:
-  SmscConnector(SmppSMInterface* argSm):sm(argSm),active(true){}
+  SmscConnector(SmppSMInterface* argSm):sm(argSm),active(true)
+  {
+    log=smsc::logger::Logger::getInstance("smpp.acc");    
+  }
 
   void addSmscConnect(const SmscConnectInfo& info);
   void deleteSmscConnect(const char* sysId);
@@ -34,6 +37,7 @@ public:
     active=false;
   }
 protected:
+  smsc::logger::Logger* log;
   thr::ThreadPool tp;
   SmppSMInterface* sm;
   buf::Hash<SmscConnectInfo> smscConnections;

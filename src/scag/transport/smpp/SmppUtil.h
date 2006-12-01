@@ -31,18 +31,14 @@ void stripUnknownSmppOptionals(smsc::sms::SMS& sms,const std::vector<int>& allow
       }
     }
     if(allow)
-    {
       newopt.Append(oldopt+off,len+2+2);
-    }
     off+=len+2+2;
   }
+
   if(newopt.GetPos()!=0)
-  {
     sms.setBinProperty(smsc::sms::Tag::SMSC_UNKNOWN_OPTIONALS,newopt.get(),newopt.GetPos());
-  }else
-  {
+  else
     sms.messageBody.dropProperty(smsc::sms::Tag::SMSC_UNKNOWN_OPTIONALS);
-  }
 }
 
 }//smpp

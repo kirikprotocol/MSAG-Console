@@ -267,13 +267,13 @@ void SmppManager::Init(const char* cfgFile)
       }
       else if(tags[n])
       {
-        __warning2__("unexpected symbol in list of transit optional tags:'%c'",tags[n]);
+        smsc_log_warn(log, "unexpected symbol in list of transit optional tags:'%c'", tags[n]);
         break;
       }
     }
   }catch(...)
   {
-    __warning__("smpp.transitOptionalTags not found in config");
+    smsc_log_warn(log, "smpp.transitOptionalTags not found in config");
   }
 
   smsc_log_info(log,"Starting %d state machines",stmCnt);
@@ -365,6 +365,22 @@ void SmppManager::updateSmppEntity(const SmppEntityInfo& info)
     case  btReceiver:
       ent.recvChannel->disconnect();
       break;
+  }
+  
+  if(ent.info.type==etSmsc)
+  {
+    SmscConnectInfo ci;
+    ci.regSysId=info.systemId.c_str();
+    ci.sysId=info.bindSystemId.c_str();
+    ci.pass=info.bindPassword.c_str();
+    ci.hosts[0]=info.host.c_str();
+    ci.ports[0]=info.port;
+    ci.hosts[1]=info.altHost.c_str();
+    ci.ports[1]=info.altPort;
+    ci.addressRange=info.addressRange.c_str();
+    ci.systemType=info.systemType.c_str();
+    
+    sm.getSmscConnectorAdmin()->updateSmscConnect(ci);
   }
 }
 
