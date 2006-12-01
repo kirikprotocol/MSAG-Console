@@ -1,3 +1,4 @@
+#ident "$Id$"
 #ifndef __UTIL_EXCEPTION_HPP__
 #define __UTIL_EXCEPTION_HPP__
 
@@ -11,7 +12,7 @@
 #define SMSC_UTIL_EX_FILL(fmt) \
     va_list arglist;\
     va_start(arglist,fmt);\
-    smsc::util::vformat(message, fmt, arglist);\
+    fill(fmt,arglist);\
     va_end(arglist);
 
 
@@ -24,6 +25,11 @@ public:
     Exception(const char* fmt,...)
     {
         SMSC_UTIL_EX_FILL(fmt);
+    }
+
+    inline void fill(const char* &fmt, va_list &arglist)
+    {
+        smsc::util::vformat(message, fmt, arglist);
     }
 
     virtual ~Exception() throw() { }
