@@ -638,61 +638,6 @@ void StatisticsManager::resetHttpCounters(int index)
   httpStatByUrl[index].Empty();
 }
 
-void StatisticsManager::Fseek(long offset, int whence, FILE* &cfPtr)
-{
-    if (cfPtr && fseek(cfPtr, offset, whence)) {
-        int error = ferror(cfPtr);
-        Exception exc("Failed to seek file. Details: %s", strerror(error));
-        Fclose(cfPtr); throw exc;
-    }
-}
-
-void StatisticsManager::Fclose(FILE* &cfPtr)
-{
-    if (cfPtr) { 
-        fclose(cfPtr); cfPtr = 0;
-    }
-}
-
-void StatisticsManager::Fopen(FILE* &cfPtr, const std::string loc)
-{
-    cfPtr = fopen(loc.c_str(), "ab+"); // open or create for update
-    if (!cfPtr)
-        throw Exception("Failed to create/open file '%s'. Details: %s", 
-                            loc.c_str(), strerror(errno));
-}
-
-void StatisticsManager::Fflush(FILE* &cfPtr)
-{
-    if (cfPtr && fflush(cfPtr)) {
-        int error = ferror(cfPtr);
-        Exception exc("Failed to flush file. Details: %s", strerror(error));
-        Fclose(cfPtr); throw exc;
-    }
-}
-
-size_t StatisticsManager::Fread(FILE* &cfPtr, void* data, size_t size)
-{
-    int read_size = fread(data, size, 1, cfPtr);
-
-    if( (read_size != 1) && (read_size != 0)){
-        int err = ferror(cfPtr);
-        Fclose(cfPtr);
-        throw Exception("Can't read route from file. Details: %s", strerror(err));
-    }
-
-    return read_size;
-}
-
-void StatisticsManager::Fwrite(const void* data, size_t size, FILE* &cfPtr)
-{
-    if (cfPtr && fwrite(data, size, 1, cfPtr) != 1) {
-        int error = ferror(cfPtr);
-        Exception exc("Failed to write file. Details: %s", strerror(error));
-        Fclose(cfPtr); throw exc;
-    }
-}
-
 bool StatisticsManager::createDir(const std::string& dir)
 {
     if (mkdir(dir.c_str(), S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH) != 0) {
@@ -876,7 +821,7 @@ void StatisticsManager::dumpTraffic(Hash<TrafficRecord>& traff, const std::strin
         tfile.Write(buf.getBuffer(), buf.getPos());
         tfile.Close();
         std::string traffpath = path + "traffic.dat";
-        rename(loc.c_str(), traffpath.c_str());
+        File::Rename(loc.c_str(), traffpath.c_str());
     }catch(FileException & e){
         smsc_log_warn(logger, "Failed to dump traffic. Detailes: %s", e.what());
     }catch(...){

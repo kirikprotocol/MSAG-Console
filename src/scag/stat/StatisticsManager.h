@@ -207,12 +207,6 @@ namespace stat {
         File httpFile;
 
         std::string traffloc;
-        void Fopen(FILE* &cfPtr, const std::string loc);
-        void Fseek(long offset, int whence, FILE* &cfPtr);
-        void Fclose(FILE* &cfPtr);
-        void Fflush(FILE* &cfPtr);
-        void Fwrite(const void* data, size_t size, FILE* &cfPtr);
-        size_t Fread(FILE* &cfPtr, void* data, size_t size);
         void initTraffic(Hash<TrafficRecord>& h, const std::string loc);
 
         static bool createDir(const std::string& dir);
