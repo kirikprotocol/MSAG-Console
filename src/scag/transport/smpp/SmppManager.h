@@ -25,7 +25,7 @@ namespace buf=smsc::core::buffers;
 namespace thr=smsc::core::threads;
 namespace sync=smsc::core::synchronization;
 using namespace scag::config;
-using namespace scag::lcm;
+//using namespace scag::lcm;
 
 class SmppManager:
   public SmppManagerAdmin,
