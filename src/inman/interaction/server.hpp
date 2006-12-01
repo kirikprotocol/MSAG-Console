@@ -38,9 +38,6 @@ public:
     Server(const ServSocketCFG * in_cfg, Logger* uselog = NULL);
     virtual ~Server();
 
-    void openConnect(Connect* connect);
-    void closeConnect(Connect* connect, bool abort = false);
-
     bool Start(void);
     void Stop(unsigned int timeOutMilliSecs = 400);
 
@@ -49,6 +46,8 @@ protected:
 
     int  Execute(); //listener thread entry point
     ShutdownReason Listen(void);
+    void openConnect(Connect* connect);
+    void closeConnect(Connect* connect, bool abort = false);
     //Closes all client's connections
     void closeAllConnects(bool abort = false);
 
