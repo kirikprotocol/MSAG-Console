@@ -180,8 +180,6 @@ namespace scag { namespace re { namespace smpp
         //virtual void fillRespOperation(smsc::inman::interaction::DeliverySmsResult& op, TariffRec& tariffRec);
 
 
-        virtual SCAGCommand& getSCAGCommand() { return command; }
-        
         virtual ~SmppCommandAdapter();
         static AccessType CheckAccess(int handlerType,const std::string& name);
         //virtual SMS& getSMS();
