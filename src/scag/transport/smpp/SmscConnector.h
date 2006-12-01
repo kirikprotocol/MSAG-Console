@@ -20,7 +20,7 @@ class SmscConnector:public SmscConnectorAdmin{
 public:
   SmscConnector(SmppSMInterface* argSm):sm(argSm),active(true)
   {
-    log=smsc::logger::Logger::getInstance("smpp.acc");    
+    log=smsc::logger::Logger::getInstance("smpp.conn");    
   }
 
   void addSmscConnect(const SmscConnectInfo& info);
