@@ -30,8 +30,12 @@ protected:
         {
             if (!actions[i]->run(context)) 
             {
-                ActionStackValue sv(i, false);
-                longCallContext.ActionStack.push(sv);
+                if (context.getRuleStatus().status == STATUS_LONG_CALL) 
+                {
+                    ActionStackValue sv(i, false);
+                    longCallContext.ActionStack.push(sv);
+                }
+
                 return false;
             }
         }
