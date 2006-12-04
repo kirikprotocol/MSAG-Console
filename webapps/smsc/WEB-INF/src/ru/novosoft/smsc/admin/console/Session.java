@@ -329,6 +329,7 @@ public abstract class Session extends Thread {
   }
 
   public String getUserName() {
+    if( user == null ) return "";
     return user.getName();
   }
 
