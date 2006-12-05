@@ -274,7 +274,9 @@ public class Smsc extends Service {
         profileArg.add(Integer.toString(newProfile.getGroupId()));
         profileArg.add(Long.toString(newProfile.getInputAccessMask()));
         profileArg.add(Long.toString(newProfile.getOutputAccessMask()));
-        if (SupportExtProfile.enabled) profileArg.add(Long.toString(newProfile.getServices())); 
+        if (SupportExtProfile.enabled) profileArg.add(Long.toString(newProfile.getServices()));
+        if (SupportExtProfile.enabled) profileArg.add(Short.toString(newProfile.getSponsored()));
+
         args.put("profile", profileArg);
         return ((Long) call(SMSC_COMPONENT_ID, PROFILE_UPDATE_METHOD_ID, Type.Types[Type.IntType], args)).intValue();
     }

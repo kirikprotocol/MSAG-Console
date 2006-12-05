@@ -164,6 +164,10 @@
         <th nowrap><%=getLocString("profiles.outputAccessMask")%></th>
         <td><%=bean.getOutputAccessMask()%></td>
     </tr>
+    <tr class=row<%=(rowN++) & 1%>>
+        <th nowrap><%=getLocString("profiles.sponsored")%></th>
+        <td><%=bean.getSponsored()%></td>
+    </tr>
 </table>
 </div>
 <%

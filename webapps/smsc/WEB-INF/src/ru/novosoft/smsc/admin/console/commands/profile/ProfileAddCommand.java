@@ -89,7 +89,7 @@ public class ProfileAddCommand extends ProfileGenCommand {
               aliasHide, aliasModifiable,
               divert, divertActiveUnconditional, divertActiveAbsent,
               divertActiveBlocked, divertActiveBarred, divertActiveCapacity,
-              divertModifiable, udhConcat, translit, groupId, inputAccessMask, outputAccessMask, services);
+              divertModifiable, udhConcat, translit, groupId, inputAccessMask, outputAccessMask, services, (sponsored > 255) ? 255 : (short)sponsored);
 
       updateResult = ctx.getSmsc().profileUpdate(profileMask, profile);
       switch (updateResult) {

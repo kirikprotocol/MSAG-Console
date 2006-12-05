@@ -141,6 +141,7 @@ tokens {
   OPT_LIMITVALUE = "limitvalue";
   OPT_SERVICESMASK = "servicesmask";
   OPT_SERVICESBIT  = "servicesbit";
+  OPT_SPONSORED = "sponsored";
 
   VAL_FORCE     = "force";
   VAL_SUPPRESS  = "suppress";

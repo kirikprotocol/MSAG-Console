@@ -47,6 +47,7 @@ public abstract class ProfileGenCommand extends CommandClass {
     protected int inputAccessBitOn = 0;
     protected int outputAccessBitOn = 0;
     protected int services = 0;
+    protected int sponsored = 0;
 
     protected boolean isAliasOptions = false;
     protected boolean isDivertOptions = false;
@@ -67,6 +68,7 @@ public abstract class ProfileGenCommand extends CommandClass {
     protected boolean isOutputAccessMask = false;
     protected boolean isGroupNameOrId = false;
     protected boolean isServices = false;
+    protected boolean isSponsored = false;
 
     protected String locale;
     protected boolean isLocale = false;
@@ -232,5 +234,11 @@ public abstract class ProfileGenCommand extends CommandClass {
         if (value) services = services | (1 << bitNum);
               else services = services & ~(1 << bitNum);
         this.isServices = true;
+    }
+
+
+    public void setSponsored(int sponsored) {
+      this.sponsored = sponsored;
+      this.isSponsored = true;
     }
 }

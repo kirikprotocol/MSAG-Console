@@ -123,11 +123,12 @@ public class Index extends IndexBean {
 //    return isEditAllowed() ? RESULT_OK : error(SMSCErrors.error.profiles.smscNotConnected);
 //  }
 
+        System.out.println("1");
         if (initialized && preferences.getProfilesFilter() != null && preferences.getProfilesFilter().length() > 0) {
             try {
-
+                System.out.println("2");
                 if (isRunQuery()) {
-
+                    System.out.println("3");
                     if (request.getSession().getAttribute("PROFILE_ADD_MASK") != null) {
                         profiles = getProfilesAddByMask((String) request.getSession().getAttribute("PROFILE_ADD_MASK"));
                         request.getSession().removeAttribute("PROFILE_ADD_MASK");

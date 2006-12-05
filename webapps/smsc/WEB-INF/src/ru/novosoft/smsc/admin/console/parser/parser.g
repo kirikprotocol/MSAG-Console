@@ -624,6 +624,7 @@ addprofile returns [ProfileAddCommand cmd] {
       |OPT_SERVICESBIT
               (OPT_ON {cmd.setServicesBit(true, getint("services bit"));}
               |OPT_OFF {cmd.setServicesBit(false, getint("services bit"));} ))?
+    (OPT_SPONSORED {cmd.setSponsored(getint("sponsored")); })
 	;
 exception[mask]
 catch [RecognitionException ex] {
@@ -650,6 +651,7 @@ altprofile returns [ProfileAlterCommand cmd] {
 	  profile_udh_concat_opt[cmd]
 	  profile_translit_opt[cmd]
 	  profile_group_opt[cmd]
+	  (OPT_SPONSORED {cmd.setSponsored(getint("sponsored")); })
 	;
 exception[addr]
 catch [RecognitionException ex] {

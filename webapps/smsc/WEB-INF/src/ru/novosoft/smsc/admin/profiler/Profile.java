@@ -51,12 +51,12 @@ public class Profile {
     private long outputAccessMask = 1;
 
     private long services = 0;
-
+    private short sponsored = 0;
 
     public Profile(final Mask mask, final byte codepage, final boolean ussd7bit, final byte reportOptions, final String locale, final byte aliasHide,
                    final boolean aliasModifiable, final String divert, final boolean divertActiveUnconditional, final boolean divertActiveAbsent,
                    final boolean divertActiveBlocked, final boolean divertActiveBarred, final boolean divertActiveCapacity, final boolean divertModifiable,
-                   final boolean udhConcat, final boolean translit, final int groupId, final long inputAccessMask, final long outputAccessMask, final long services) {
+                   final boolean udhConcat, final boolean translit, final int groupId, final long inputAccessMask, final long outputAccessMask, final long services, final short sponsored) {
         this.mask = mask;
         setUssd7bit(ussd7bit);
         setDivert(divert);
@@ -77,11 +77,12 @@ public class Profile {
         setInputAccessMask(inputAccessMask);
         setOutputAccessMask(outputAccessMask);
         setServices(services);
+        setSponsored(sponsored);
     }
 
     public Profile(final Mask mask, final byte codepage, final boolean ussd7bit, final byte reportOptions, final String locale, final byte aliasHide,
                    final boolean aliasModifiable, final String divert, final String divertActive, final boolean divertModifiable, final boolean udhConcat,
-                   final boolean translit, final int groupId, final long inputAccessMask, final long outputAccessMask, final long services) {
+                   final boolean translit, final int groupId, final long inputAccessMask, final long outputAccessMask, final long services, final short sponsored) {
         this.mask = mask;
         setUssd7bit(ussd7bit);
         setDivert(divert);
@@ -98,11 +99,12 @@ public class Profile {
         setInputAccessMask(inputAccessMask);
         setOutputAccessMask(outputAccessMask);
         setServices(services);
+        setSponsored(sponsored);
     }
 
     public Profile(final Mask mask, final String codepage, final String ussd7bit, final String reportOptions, final String locale, final String aliasHide,
                    final String aliasModifiable, final String divert, final String divert_act, final String divert_mod, final String udhConcat,
-                   final String translit, final String groupIdString, final String inputAccessMask, final String outputAccessMask, final String services) throws AdminException {
+                   final String translit, final String groupIdString, final String inputAccessMask, final String outputAccessMask, final String services, final String sponsored) throws AdminException {
         this.mask = mask;
         setUssd7bit(ussd7bit);
         setDivert(divert);
@@ -119,11 +121,12 @@ public class Profile {
         setInputAccessMask(inputAccessMask);
         setOutputAccessMask(outputAccessMask);
         setServices(services);
+        setSponsored(sponsored);
     }
 
     public Profile(final Mask mask, final String codepage, final String ussd7bit, final String reportOptions, final String locale, final String aliasHide,
                    final String aliasModifiable, final String divert, final String divert_act, final String divert_mod, final String udhConcat,
-                   final String translit, final int groupId, final long inputAccessMask, final long outputAccessMask, final long services) throws AdminException {
+                   final String translit, final int groupId, final long inputAccessMask, final long outputAccessMask, final long services, final short sponsored) throws AdminException {
         this.mask = mask;
         setUssd7bit(ussd7bit);
         setDivert(divert);
@@ -140,6 +143,7 @@ public class Profile {
         setInputAccessMask(inputAccessMask);
         setOutputAccessMask(outputAccessMask);
         setServices(services);
+        setSponsored(sponsored);
     }
 
 
@@ -158,7 +162,8 @@ public class Profile {
                 (String) profileProperties.get(11),
                 (String) profileProperties.get(12),
                 (String) profileProperties.get(13),
-                (SupportExtProfile.enabled ? (String) profileProperties.get(14) : "0"));
+                (SupportExtProfile.enabled ? (String) profileProperties.get(14) : "0"),
+                (SupportExtProfile.enabled ? (String) profileProperties.get(15) : "0"));
     }
 
     public byte getCodepage() {
@@ -501,5 +506,21 @@ public class Profile {
             return CODEPAGE_UCS2AndLatin1;
         else
             throw new AdminException("Unknown codepage: " + codepageString);
+    }
+
+    public short getSponsored() {
+      return sponsored;
+    }
+
+    public void setSponsored(short sponsored) {
+      this.sponsored = sponsored;
+    }
+
+    public void setSponsored(String sponsored) {
+      try {
+        this.sponsored = Short.parseShort(sponsored);
+      } catch (NumberFormatException e) {
+        this.sponsored = 0;
+      }
     }
 }

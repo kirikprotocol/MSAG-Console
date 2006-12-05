@@ -42,6 +42,7 @@ public class ProfilesBean extends SmscBean {
     protected long inputAccessMask = 1;
     protected long outputAccessMask = 1;
     protected long services = 0;
+    protected short sponsored = 0;
 
     protected String[] checkedServicesNames = null;
 
@@ -327,5 +328,13 @@ public class ProfilesBean extends SmscBean {
             int bitNum = Integer.parseInt(checkedServicesNames[i]);
             services =  services | (1 << bitNum);
         }
+    }
+
+    public String getSponsored() {
+      return String.valueOf(sponsored);
+    }
+
+    public void setSponsored(byte sponsored) {
+      this.sponsored = sponsored;
     }
 }

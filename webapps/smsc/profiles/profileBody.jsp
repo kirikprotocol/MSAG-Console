@@ -159,6 +159,10 @@
         <%    } %>
     </div></td>
 </tr>
+<tr class=row1>
+    <th><%=getLocString("profiles.sponsored")%></th>
+    <td><input class=txt name="sponsored" value="<%=bean.getSponsored()%>" validation="hex" onkeyup="resetValidation(this)"></td>
+</tr>
           <% } %>
 </table>
 </div>

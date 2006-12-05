@@ -10,6 +10,7 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.profiler.Profile;
+import ru.novosoft.smsc.admin.profiler.SupportExtProfile;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 
@@ -54,6 +55,10 @@ public class ProfilesEdit extends ProfilesBean {
                 groupId = p.getGroupId();
                 inputAccessMask = p.getInputAccessMask();
                 outputAccessMask = p.getOutputAccessMask();
+                if (SupportExtProfile.enabled) {
+                  services = p.getServices();
+                  sponsored = p.getSponsored();
+                }
             } catch (AdminException e) {
                 logger.error("Couldn't lookup profile \"" + mask + '"', e);
                 return error(SMSCErrors.error.profiles.couldntLookup, mask, e);
@@ -83,7 +88,7 @@ public class ProfilesEdit extends ProfilesBean {
 
         try {
             final Mask address = new Mask(mask);
-            final Profile profile = new Profile(address, codepage, ussd7bit, report, locale, aliasHide, aliasModifiable, divert, divertActiveUnconditional, divertActiveAbsent, divertActiveBlocked, divertActiveBarred, divertActiveCapacity, divertModifiable, udhConcat, translit, groupId, inputAccessMask, outputAccessMask, services);
+            final Profile profile = new Profile(address, codepage, ussd7bit, report, locale, aliasHide, aliasModifiable, divert, divertActiveUnconditional, divertActiveAbsent, divertActiveBlocked, divertActiveBarred, divertActiveCapacity, divertModifiable, udhConcat, translit, groupId, inputAccessMask, outputAccessMask, services, sponsored);
             switch (smsc.profileUpdate(address, profile)) {
                 case 1: //pusUpdated
                     journalAppend(SubjectTypes.TYPE_profile, address.getMask(), Actions.ACTION_MODIFY);

@@ -36,6 +36,7 @@ public class Lookup extends PageBean {
     private boolean aliasModifiable = false;
     private byte matchType = ProfileEx.MATCH_UNKNOWN;
     private Mask matchAddress = null;
+    private short sponsored = 0;
     private String divert = "";
     private boolean divertActiveUnconditional = false;
     private boolean divertActiveAbsent = false;
@@ -100,6 +101,7 @@ public class Lookup extends PageBean {
                 divertActiveCapacity = p.isDivertActiveCapacity();
                 divertModifiable = p.isDivertModifiable();
                 matchType = p.getMatchType();
+                sponsored = p.getSponsored();
                 matchAddress = p.getMatchAddress();
                 udhConcat = p.isUdhConcat();
                 translit = p.isTranslit();
@@ -195,6 +197,10 @@ public class Lookup extends PageBean {
 
     public Mask getMatchAddress() {
         return matchAddress;
+    }
+
+    public short getSponsored() {
+      return sponsored;
     }
 
     public String getMbAdd() {

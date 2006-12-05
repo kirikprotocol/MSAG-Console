@@ -74,6 +74,7 @@ public class ProfileDataFile {
         results = new QueryResultSetImpl(columnNames, query_to_run.getSortOrder());
         FileInputStream fis = null;
         System.out.println("start reading File in: " + new Date());
+        System.out.println(profilerStorePath);
         long tm = System.currentTimeMillis();
         try {
             fis = new FileInputStream(profilerStorePath);
@@ -116,12 +117,15 @@ public class ProfileDataFile {
                 int inputAccessMask = 1;
                 int outputAccessMask = 1;
                 int services = 0;
+                short sponsored = 0;
                 if (version > 0x00010000) {
                     groupId = (int) Message.readUInt32(bis);
                     inputAccessMask = (int) Message.readUInt32(bis);
                     outputAccessMask = (int) Message.readUInt32(bis);
-                    if (SupportExtProfile.enabled)
+                    if (SupportExtProfile.enabled) {
                         services = (int) Message.readUInt32(bis);
+                        sponsored = (short) Message.readUInt8(bis);
+                    }
                 }
 
                 if (used == 1 && isAddProfile(mask, queryFilter, show)) {
@@ -139,7 +143,7 @@ public class ProfileDataFile {
 
                     Profile profile = setProfile(mask, codepage, reportoptions,
                             locale, hide, hideModifiable, divert, divertResult,
-                            divertModifiable, udhconcat, translit, groupId, inputAccessMask, outputAccessMask, services);
+                            divertModifiable, udhconcat, translit, groupId, inputAccessMask, outputAccessMask, services, sponsored);
 
                     results.add(new ProfileDataItem(profile));
                     totalCount++;
@@ -148,7 +152,10 @@ public class ProfileDataFile {
                 bis.close();
             }
         } catch (EOFException e) {
+          e.printStackTrace();
         } catch (Exception e) {
+            System.out.println("Exception");
+            e.printStackTrace();
             logger.error("Unexpected exception occured reading operative store file", e);
         } finally {
             if (fis != null)
@@ -250,7 +257,7 @@ public class ProfileDataFile {
                                final short udhconcat, final short translit,
                                final int groupId,
                                final int inputAccessMask, final int outputAccessMask,
-                               final int services) throws AdminException {
+                               final int services, final short sponsored) throws AdminException {
         return new Profile(mask,
                 Profile.getCodepageString((byte) ((byte) codepage & 0x7F)),
                 String.valueOf((codepage & 0x80) != 0),
@@ -266,7 +273,7 @@ public class ProfileDataFile {
                 groupId,
                 inputAccessMask,
                 outputAccessMask,
-                services);
+                services, sponsored);
     }
 
 
