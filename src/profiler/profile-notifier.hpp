@@ -62,6 +62,7 @@ public:
       debug2(log,"PN: connected ok to %s:%d",host.c_str(),port);
       socketOk=true;
     }
+    s.SetNoDelay(true);
 
     debug2(log,"filepath=%s",filePath.c_str());
 
@@ -82,6 +83,7 @@ public:
           mon.Lock();
           if(socketOk)
           {
+            s.SetNoDelay(true);
             debug1(log,"PN: Connect ok");
             if(File::Exists(filePath.c_str()))
             {
@@ -101,6 +103,13 @@ public:
                   if(s.WriteAll(str.c_str(),str.length())==-1)
                   {
                     debug1(log,"write failed");
+                    socketOk=false;
+                    break;
+                  }
+                  char ok[2];
+                  if(s.ReadAll(ok,2)!=2 || ok[0]!='O' || ok[1]!='K')
+                  {
+                    debug1(log,"read resp failed");
                     socketOk=false;
                     break;
                   }
@@ -132,14 +141,19 @@ public:
         {
           debug2(log,"PN: writing to socket:%s",str.c_str());
           mon.Unlock();
-          try{
-            if(s.WriteAll(str.c_str(),str.length())==-1)
+          if(s.WriteAll(str.c_str(),str.length())==-1)
+          {
+            debug1(log,"PN: write to socket failed");
+            socketOk=false;
+          }
+          if(socketOk)
+          {
+            char ok[2];
+            if(s.ReadAll(ok,2)!=2 || ok[0]!='O' || ok[1]!='K')
             {
-              debug1(log,"PN: write to socket failed");
+              debug1(log,"PN: reading resp from socket failed");
               socketOk=false;
             }
-          }catch(...)
-          {
           }
           mon.Lock();
         }
