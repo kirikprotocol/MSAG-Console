@@ -22,10 +22,51 @@ namespace inman {
 namespace inap {
 namespace uss {
 
+/* makeUI(): composes UserInfo for TC dialog portion, containing MAP-OpenInfo PDU
+ * according to following notation:
+
+UserInfo ::= [UNIVERSAL 8] IMPLICIT SEQUENCE {
+     direct-reference	OBJECT IDENTIFIER (map-DialogueAS),
+     single-ASN1-type	[0] CHOICE {
+	map-accept	[0] MAP-OpenInfo
+     }
+}
+
+map-DialogueAS  OBJECT IDENTIFIER ::=
+	{gsm-NetworkId as-Id(1) map-DialoguePDU(1) version1(1)}
+
+gsm-NetworkId OBJECT IDENTIFIER ::=
+	{ itu-t(0) identified-organization(4) etsi(0) mobileDomain(0)
+	gsm-Network(1) }
+
+MAP-OpenInfo ::= SEQUENCE {
+	destinationReference	[0] AddressString	OPTIONAL,
+        -- IMSI in case of id_ac_map_networkUnstructuredSs_v2 ops (cl. 7.3.1)
+	originationReference	[1] AddressString	OPTIONAL,
+        -- ISDN Address in case of id_ac_map_networkUnstructuredSs_v2 ops (cl. 7.3.1)
+	...,
+	extensionContainer	ExtensionContainer	OPTIONAL
+	-- extensionContainer must not be used in version 2
+	}
+
+ * NOTE: The Ericcson MAP implementation requires the destinationReference to
+ * be passed as ISDN Address as vendor specific extension:
+ *   destinationISDN	[2] AddressString
+ *  
+ * References:
+ * 1) Q.773: Transaction capabilities formats and encoding,
+ *    clause 4.2.3 Dialogue Portion
+ *
+ * 2) X690: Specification of Basic Encoding Rules (BER)
+ *    clause 8.18 Encoding of a value of the external type
+ *
+ * 3) 3GPP TS 29.02 (ETSI TS 129 002): Mobile Application Part (MAP) 
+ *    clauses 7.3.1, 17.*
+ */
 static void makeUI(std::vector<unsigned char> & ui, const TonNpiAddress & msadr,
                    const TonNpiAddress & own_adr)
 {
-    //BER encoded OID
+    //BER encoded map-DialogueAS OID + single-ASN1-type tag [0]
     static const UCHAR_T ui_oid[] = {06,0x07,0x04,0x00,0x00,0x01,0x01,0x01,0x01,0xA0};
 
     unsigned char addrOcts[sizeof(TONNPI_ADDRESS_OCTS) + 1];
@@ -34,16 +75,16 @@ static void makeUI(std::vector<unsigned char> & ui, const TonNpiAddress & msadr,
     unsigned addrLen = packMAPAddress2OCTS(msadr, (TONNPI_ADDRESS_OCTS*)addrOcts);
     ui.insert(ui.begin(), addrOcts, addrOcts + addrLen);
     ui.insert(ui.begin(), (unsigned char)addrLen);
-    ui.insert(ui.begin(), 0x82);
+    ui.insert(ui.begin(), 0x82); //destinationISDN [2]
 
     addrLen = packMAPAddress2OCTS(own_adr, (TONNPI_ADDRESS_OCTS*)addrOcts);
     ui.insert(ui.begin(), addrOcts, addrOcts + addrLen);
     ui.insert(ui.begin(), (unsigned char)addrLen);
-    ui.insert(ui.begin(), 0x81);
+    ui.insert(ui.begin(), 0x81); //originationReference	[1]
 
     addrLen = ui.size();
     ui.insert(ui.begin(), (unsigned char)addrLen);
-    ui.insert(ui.begin(), 0xA0);
+    ui.insert(ui.begin(), 0xA0); //[0] MAP-OpenInfo
 
     addrLen = ui.size();
     ui.insert(ui.begin(), (unsigned char)addrLen);
@@ -51,13 +92,13 @@ static void makeUI(std::vector<unsigned char> & ui, const TonNpiAddress & msadr,
 
     addrLen = ui.size();
     ui.insert(ui.begin(), (unsigned char)addrLen);
-    ui.insert(ui.begin(), 0x28);
+    ui.insert(ui.begin(), 0x28); //UserInfo ::= IMPLICIT [UNIVERSAL 8]
 }
 
 /* ************************************************************************** *
  * class MapUSSDlg implementation:
  * ************************************************************************** */
-MapUSSDlg::MapUSSDlg(TCSessionSR* pSession, USSDhandler * res_handler,
+MapUSSDlg::MapUSSDlg(TCSessionSR* pSession, USSDhandlerITF * res_handler,
                         Logger * uselog/* = NULL*/)
     : resHdl(res_handler), session(pSession), dlgId(0), dialog(NULL)
     , logger(uselog)

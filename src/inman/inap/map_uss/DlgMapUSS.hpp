@@ -31,7 +31,7 @@ namespace inap {
 namespace uss {
 
 //USS Dialog Handler
-class USSDhandler { //  <- gsmSCF */
+class USSDhandlerITF { //  <- gsmSCF */
 public: 
     virtual void onMapResult(MAPUSS2CompAC* arg) = 0;
     //dialog finalization/error handling:
@@ -57,7 +57,7 @@ typedef union {
 //innate timer of the SS7 stack for Invoke lifetime.
 class MapUSSDlg : DialogListener, InvokeListener { //  -> gsmSCF
 public:
-    MapUSSDlg(TCSessionSR* pSession, USSDhandler * res_handler, Logger * uselog = NULL);
+    MapUSSDlg(TCSessionSR* pSession, USSDhandlerITF * res_handler, Logger * uselog = NULL);
     virtual ~MapUSSDlg();
 
     enum {
@@ -94,7 +94,7 @@ private:
     Dialog*     dialog;     //TCAP dialog
     TCSessionSR* session;   //TCAP dialogs factory
     Logger*     logger;
-    USSDhandler * resHdl;   //request result handler
+    USSDhandlerITF * resHdl;   //request result handler
     USSDState   dlgState;   //current state of dialog
     std::auto_ptr<MAPUSS2CompAC> reqRes;
 };
