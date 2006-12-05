@@ -1159,9 +1159,10 @@ StateType StateMachine::submit(Tuple& t)
     try{
       if(smsc->routeSms(sms->getOriginatingAddress(),divDst,idx,prx,&ri2,src_proxy->getSmeIndex()))
       {
-        if(prx && strcmp(prx->getSystemId(),"MAP_PROXY")!=0)
+        if(ri2.smeSystemId!="MAP_PROXY")
         {
-          warn2(smsLog,"attempt to divert to non-map address:%s->%s",
+          warn2(smsLog,"attempt to divert to non-map address(sysId=%s):%s->%s",
+            ri2.smeSystemId.c_str(),
             sms->getOriginatingAddress().toString().c_str(),divDst.toString().c_str());
           goto divert_failed;
         }
@@ -1375,6 +1376,13 @@ StateType StateMachine::submit(Tuple& t)
   {
     info2(smsLog,"EXTRA: smsnick not allowed for route %s",ri.routeId.c_str());
     sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)&~EXTRA_NICK);
+  }
+
+  if(fromMap && toMap && profile.sponsored>0)
+  {
+    info2(smsLog,"EXTRA: sponsored sms for abonent %s(cnt=%d)",sms->getOriginatingAddress().toString().c_str(),profile.sponsored);
+    sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)|EXTRA_SPONSORED);
+    smsc->getProfiler()->decrementSponsoredCount(sms->getOriginatingAddress());
   }
 #endif
 
@@ -2915,7 +2923,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     {
       __warning__("FORWARD: failed to change state to expired");
     }
-    info2(smsLog, "FWD: %lld expired (valid:%u - now:%u)",t.msgId,sms.getValidTime(),now);
+    info2(smsLog, "FWD: %lld expired (valid:%u - now:%u), attempts=%d",t.msgId,sms.getValidTime(),now,sms.getAttemptsCount());
     sendFailureReport(sms,t.msgId,EXPIRED_STATE,"expired");
     try{
       smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
@@ -3684,6 +3692,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
     smsc_log_debug(smsLog,"multiPart=%s, lastPart=%s, final=%s",multiPart?"true":"false",lastPart?"true":"false",final?"true":"false");
     if(!multiPart || lastPart || !final)
     {
+      int savedLastResult=sms.getLastResult();
       try{
         sms.setLastResult(GET_STATUS_CODE(t.command->get_resp()->get_status()));
         if(sms.hasStrProperty(Tag::SMSC_DIVERTED_TO) && !t.command->get_resp()->get_diverted())
@@ -3700,6 +3709,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       {
         smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
       }
+      sms.setLastResult(savedLastResult);
     }
   }
 

@@ -1496,5 +1496,19 @@ void Profiler::CreateOrOpenFileIfNeeded()
   storeFile.RWOpen(storeFileName.c_str());
 }
 
+
+#ifdef SMSEXTRA
+void Profiler::decrementSponsoredCount(const Address& address)
+{
+  Profile p=lookup(address);
+  if(p.sponsored)
+  {
+    p.sponsored--;
+    update(address,p);
+  }
+}
+#endif
+
+
 }//profiler
 }//smsc

@@ -82,6 +82,7 @@ struct Profile{
   uint32_t accessMaskIn,accessMaskOut;
 #ifdef SMSEXTRA
   uint32_t subscription;
+  uint8_t sponsored;
 #endif
 
   File::offset_type offset;
@@ -109,6 +110,7 @@ struct Profile{
     accessMaskOut=1;
 #ifdef SMSEXTRA
     subscription=0;
+    sponsored=0;
 #endif
 
 
@@ -145,6 +147,7 @@ struct Profile{
       offset=src.offset;
 #ifdef SMSEXTRA
       subscription=src.subscription;
+      sponsored=src.sponsored;
 #endif
     }
     return *this;
@@ -171,6 +174,7 @@ struct Profile{
            accessMaskOut==src.accessMaskOut
 #ifdef SMSEXTRA
            && subscription==src.subscription
+           && sponsored==src.sponsored
 #endif
            ;
   }
@@ -213,6 +217,7 @@ struct Profile{
     f.WriteNetInt32(accessMaskOut);
 #ifdef SMSEXTRA
     f.WriteNetInt32(subscription);
+    f.WriteByte(sponsored);
 #endif
   }
   void Read(File& f)
@@ -245,6 +250,7 @@ struct Profile{
     accessMaskOut=f.ReadNetInt32();
 #ifdef SMSEXTRA
     subscription=f.ReadNetInt32();
+    sponsored=f.ReadByte();
 #endif
 
   }
@@ -252,7 +258,7 @@ struct Profile{
   {
     return 4+4+4+32+1+32+1+1+1+1+1+1+1+1+4+4+4
 #ifdef SMSEXTRA
-    +4
+    +4+1
 #endif
     ;
   }

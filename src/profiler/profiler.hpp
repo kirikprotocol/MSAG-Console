@@ -44,6 +44,10 @@ public:
 
   void remove(const Address& address);
 
+#ifdef SMSEXTRA
+  void decrementSponsoredCount(const Address& address);
+#endif
+
   /* from SmppProxy */
 
   void close(){}
