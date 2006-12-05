@@ -1267,13 +1267,13 @@ AdapterProperty * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::str
     }
 
     int tagType = (FieldId >> 8);
-    /*
+    
     if (!property) 
     {
         if (tagType == SMS_STR_TAG) 
         {
             if (!data.hasStrProperty(FieldId)) return 0;
-            property = new AdapterProperty(name,this,ConvertStrToWStr(data.getStrProperty(FieldId).c_str()));
+            property = new AdapterProperty(name,this,data.getStrProperty(FieldId).c_str());
         } else if (tagType == SMS_INT_TAG) 
         {
             if (!data.hasIntProperty(FieldId)) return 0;
@@ -1281,7 +1281,7 @@ AdapterProperty * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::str
             property = new AdapterProperty(name,this,num);
         }
     }
-    */      
+          
     return property;
 }
 
