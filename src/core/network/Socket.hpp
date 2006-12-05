@@ -20,6 +20,7 @@ typedef int SOCKET;
 #define SOCKET_ERROR (-1)
 #define closesocket close
 #endif
+#include <string.h>
 
 namespace smsc{
 namespace core{
@@ -66,7 +67,45 @@ public:
   SOCKET getSocket(){return sock;}
 
   int Init(const char *host,int port,int timeout);
+
+  int BindClient(const char* host)
+  {
+    sockaddr_in sAddr;
+    hostent* lpHostEnt;
+    in_addr_t ulINAddr;
+
+    memset(&ulINAddr,0,sizeof(ulINAddr));
+    sAddr.sin_family=AF_INET;
+    ulINAddr=inet_addr(host);
+  #ifndef INADDR_NONE
+    if(ulINAddr!=-1)
+  #else
+    if(ulINAddr!=INADDR_NONE)
+  #endif
+    {
+      memcpy(&sAddr.sin_addr,&ulINAddr,sizeof(ulINAddr));
+    }else
+    {
+  #ifndef _REENTRANT
+      lpHostEnt=gethostbyname(host);
+  #else
+      char buf[1024];
+      int h_err;
+      hostent he;
+      lpHostEnt=gethostbyname_r(host, &he, buf, sizeof(buf), &h_err);
+  #endif
+      if(lpHostEnt==NULL)
+      {
+        return -1;
+      }
+      memcpy(&sAddr.sin_addr,lpHostEnt->h_addr,lpHostEnt->h_length);
+    }
+    sAddr.sin_port=0;
+    if(bind(sock,(sockaddr*)&sAddr,sizeof(sAddr)))return -1;
+    return 0;
+  }
   int Connect(bool nb = false);
+  int ConnectEx(bool nb,const char* bindHost);
   void Close();
   void Abort();
   void ReuseAddr()

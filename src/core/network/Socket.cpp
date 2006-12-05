@@ -83,6 +83,37 @@ int Socket::Connect(bool nb)
   return 0;
 }
 
+int Socket::ConnectEx(bool nb,const char* bindHost)
+{
+  Close();
+  sock=socket(AF_INET,SOCK_STREAM,0);
+
+  if(sock==INVALID_SOCKET)
+  {
+    return -1;
+  }
+
+  if(nb) setNonBlocking(1);
+  if(bindHost)
+  {
+    if(BindClient(bindHost)==-1)return -1;
+  }
+
+  if(connect(sock,(sockaddr*)&sockAddr,sizeof(sockAddr)) && errno != EINPROGRESS)
+  {
+    closesocket(sock);
+    sock=INVALID_SOCKET;
+    return -1;
+  }
+  //linger l;
+  //l.l_onoff=1;
+  //l.l_linger=0;
+  //setsockopt(sock,SOL_SOCKET,SO_LINGER,(char*)&l,sizeof(l));
+
+  connected=1;
+  return 0;
+}
+
 void Socket::Close()
 {
   if(!connected)
