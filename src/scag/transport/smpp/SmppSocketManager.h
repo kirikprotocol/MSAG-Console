@@ -28,6 +28,9 @@ public:
       scag::config::ConfigManager::Instance().getConfig()->getInt("smpp.port")
     );
     conn=new SmscConnector(this);
+    conn->Init(
+      scag::config::ConfigManager::Instance().getConfig()->getString("smpp.host")
+    );
     tp.startTask(acc);
     log=smsc::logger::Logger::getInstance("smpp.sm");
   }

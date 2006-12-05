@@ -15,14 +15,14 @@ struct SmscSocket:SmppSocket{
     sock=new net::Socket();
     sock->setData(0,this);
   }
-  bool connect()
+  bool connect(const std::string& bindHost)
   {
     if(sock->Init(host.c_str(),port,0)==-1)
     {
       smsc_log_warn(log, "Failed to resolve host %s",host.c_str());
       return false;
     }
-    if(sock->Connect()==-1)
+    if(sock->ConnectEx(false,bindHost.c_str())==-1)
     {
       smsc_log_warn(log, "Failed to connect to %s:%d",host.c_str(),port);
       return false;
@@ -44,8 +44,8 @@ struct SmscSocket:SmppSocket{
       {
         if(chReg->registerSmscChannel(this)!=rarOk) {
           smsc_log_warn(log, "Registration of smsc channel failed???");
-        } 
-	else {
+        }
+  else {
           bindType=btTransceiver;
         }
       }break;
