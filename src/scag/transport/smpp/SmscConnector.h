@@ -48,7 +48,7 @@ protected:
 struct SmscConnectTask:thr::ThreadedTask{
   SmscConnectTask(SmscConnector* argConn,const SmscConnectInfo& info):conn(argConn)
   {
-    log=smsc::logger::Logger::getInstance("smpp.conntask");      
+    log=smsc::logger::Logger::getInstance("smpp.conn");      
     regSysId=info.regSysId;
     sysId=info.sysId;
     pass=info.pass;
@@ -68,7 +68,7 @@ struct SmscConnectTask:thr::ThreadedTask{
       ts.tv_nsec=0;
       nanosleep(&ts,0);
     }
-    smsc_log_info(log, "SmscTask trying connect to: %s:%d", host.c_str(),port);
+    smsc_log_info(log, "Connecting to '%s' (%s:%d)", regSysId.c_str(), host.c_str(), port);
     std::auto_ptr<SmscSocket> sock(new SmscSocket(host.c_str(),port));
     if(!sock->connect())
     {
@@ -77,7 +77,7 @@ struct SmscConnectTask:thr::ThreadedTask{
     }
     sock->bind(regSysId.c_str(),sysId.c_str(),pass.c_str(),addressRange.c_str(),systemType.c_str());
     conn->registerSocket(sock.release());
-    smsc_log_info(log, "SmscTask connected to: %s:%d", host.c_str(),port);    
+    smsc_log_info(log, "Connected to '%s' (%s:%d)", regSysId.c_str(), host.c_str(), port);    
     return 0;
   }
 protected:
