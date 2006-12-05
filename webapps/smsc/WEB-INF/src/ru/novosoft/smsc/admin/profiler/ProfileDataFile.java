@@ -82,11 +82,14 @@ public class ProfileDataFile {
 
             String FileName = Message.readString(fis, 8);
             int version = (int) Message.readUInt32(fis);
-            int msgSize1 = 129 + 4 + 4; // 1+8+1+1+21+4+4+4+32+1+32+1+1+1+1+1+1+1+1+4+4+4+4+4
+            int msgSize1 = 129 + 4 + 1; // 1+8+1+1+21+4+4+4+32+1+32+1+1+1+1+1+1+1+1+4+4+4+4+1
             if (version == 0x00010000) msgSize1 = 117;
-            
+
+            int currentPos = 0;
+
             while (true) {
                 readBuffer(fis, buf, msgSize1);
+
                 InputStream bis = new ByteArrayInputStream(buf, 0, msgSize1);
 
                 int used = (int) Message.readUInt8(bis);
@@ -145,17 +148,18 @@ public class ProfileDataFile {
                             locale, hide, hideModifiable, divert, divertResult,
                             divertModifiable, udhconcat, translit, groupId, inputAccessMask, outputAccessMask, services, sponsored);
 
-                    results.add(new ProfileDataItem(profile));
+                    if (currentPos >= query_to_run.getStartPosition()) {
+                      System.out.println("Add profile: " + profile.getMask().getMask());
+                      results.add(new ProfileDataItem(profile));
+                    }
                     totalCount++;
                     isLast = false;
                 }
                 bis.close();
+                currentPos++;
             }
         } catch (EOFException e) {
-          e.printStackTrace();
         } catch (Exception e) {
-            System.out.println("Exception");
-            e.printStackTrace();
             logger.error("Unexpected exception occured reading operative store file", e);
         } finally {
             if (fis != null)
