@@ -1309,6 +1309,8 @@ Variant SmscComponent::profileLookupEx(const Arguments &args) throw (AdminExcept
 #ifdef SMSEXTRA
       sprintf(numBuf,"%u",profile.subscription);
       result.appendValueToStringList(numBuf);
+      sprintf(numBuf,"%u",profile.sponsored);
+      result.appendValueToStringList(numBuf);
 #endif
 
       result.appendValueToStringList(getProfileMatchTypeStr(matchType));
@@ -1375,6 +1377,8 @@ throw (AdminException)
 #ifdef SMSEXTRA
       sprintf(numBuf,"%u",profile.subscription);
       result.appendValueToStringList(numBuf);
+      sprintf(numBuf,"%u",profile.sponsored);
+      result.appendValueToStringList(numBuf);
 #endif
       return result;
     }
@@ -1408,7 +1412,8 @@ throw (AdminException)
   const char* accessMaskOut     = *i;
 #else
   const char* accessMaskOut     = *i++;
-  const char* subscription   = *i;
+  const char* subscription      = *i++;
+  const char* sponsored         = *i;
 #endif
 
   if (!codepageStr || !reportStr || !localeStr || !hideStr || !hideModifiableStr
@@ -1485,6 +1490,9 @@ throw (AdminException)
   sscanf(accessMaskOut,"%u",&profile.accessMaskOut);
 #ifdef SMSEXTRA
   sscanf(subscription,"%u",&profile.subscription);
+  uint32_t sponsoredValue;
+  sscanf(sponsored,"%u",&sponsoredValue);
+  profile.sponsored=(uint8_t)sponsoredValue;
 #endif
 
 }
