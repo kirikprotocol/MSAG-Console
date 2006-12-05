@@ -110,14 +110,9 @@
   </target>
 
   <target name="update" depends="build" description="update existing installation">
+    <delete file="${exploded}/WEB-INF/users.xml"/>
     <copy todir="${CATALINA_BASE}/webapps/msag" preservelastmodified="yes">
-      <fileset dir="${exploded}" excludes="WEB-INF/config.xml WEB-INF/users.xml" />
-    </copy>
-    <copy todir="${CATALINA_BASE}/webapps/msag" preservelastmodified="yes">
-      <fileset dir="${exploded}" excludes="WEB-INF/services.xml WEB-INF/services.xml" />
-    </copy>
-    <copy todir="${CATALINA_BASE}/webapps/msag" preservelastmodified="yes">
-      <fileset dir="${exploded}" excludes="WEB-INF/ids.xml WEB-INF/ids.xml" />
+      <fileset dir="${exploded}"/>
     </copy>
   </target>
 
