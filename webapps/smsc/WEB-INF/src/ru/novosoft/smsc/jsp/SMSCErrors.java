@@ -91,6 +91,7 @@ public class SMSCErrors {
             public static final String couldntDelete = B + "couldntDelete";
             public static final String couldntUpdate = B + "couldntUpdate";
             public static final String couldntGetSmsExtraServices = B + "couldntSmsExtraServices";
+            public static final String wrongSponsored = B + "wrongSponsored";
         }
 
 

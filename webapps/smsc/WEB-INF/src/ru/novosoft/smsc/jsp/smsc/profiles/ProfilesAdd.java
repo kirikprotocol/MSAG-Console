@@ -44,6 +44,10 @@ public class ProfilesAdd extends ProfilesBean {
             return error(SMSCErrors.error.profiles.invalidMask, mask);
         if (!appContext.getSmsc().isLocaleRegistered(locale))
             return error(SMSCErrors.error.profiles.invalidLocale, locale);
+        if (sponsored < 0) {
+          sponsored = 0;
+          return error(SMSCErrors.error.profiles.wrongSponsored);
+        }
 
         try {
             final Mask address = new Mask(mask);

@@ -86,6 +86,11 @@ public class ProfilesEdit extends ProfilesBean {
         if (!Mask.isMaskValid(mask))
             return error(SMSCErrors.error.profiles.invalidMask, mask);
 
+        if (sponsored < 0) {
+          sponsored = 0;
+          return error(SMSCErrors.error.profiles.wrongSponsored);
+        }
+
         try {
             final Mask address = new Mask(mask);
             final Profile profile = new Profile(address, codepage, ussd7bit, report, locale, aliasHide, aliasModifiable, divert, divertActiveUnconditional, divertActiveAbsent, divertActiveBlocked, divertActiveBarred, divertActiveCapacity, divertModifiable, udhConcat, translit, groupId, inputAccessMask, outputAccessMask, services, sponsored);

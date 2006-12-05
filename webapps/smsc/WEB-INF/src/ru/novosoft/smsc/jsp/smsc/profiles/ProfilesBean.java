@@ -334,7 +334,13 @@ public class ProfilesBean extends SmscBean {
       return String.valueOf(sponsored);
     }
 
-    public void setSponsored(byte sponsored) {
-      this.sponsored = sponsored;
+    public void setSponsored(String sponsored) {
+      try {
+        this.sponsored = Short.parseShort(sponsored);
+        if (this.sponsored > 255 || this.sponsored < 0)
+          this.sponsored = -1;
+      } catch (NumberFormatException e) {
+        this.sponsored = -1;
+      }
     }
 }
