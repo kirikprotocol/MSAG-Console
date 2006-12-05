@@ -149,7 +149,6 @@ public class ProfileDataFile {
                             divertModifiable, udhconcat, translit, groupId, inputAccessMask, outputAccessMask, services, sponsored);
 
                     if (currentPos >= query_to_run.getStartPosition()) {
-                      System.out.println("Add profile: " + profile.getMask().getMask());
                       results.add(new ProfileDataItem(profile));
                     }
                     totalCount++;
