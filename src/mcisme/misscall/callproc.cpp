@@ -1392,7 +1392,7 @@ USHORT_T EINSS7_MgmtApiHandleOrderConf(USHORT_T moduleId,
                  orderId,
                  getResultDescription(orderResult));
   if ( moduleId == ISUP_ID &&
-       orderId == 0x0B /*UNBLOCK CURCUITS*/)
+       orderId == 0x0B /*UNBLOCK CURCUITS*/ && lengthOfInfo && orderInfo)
   {
     int span = orderInfo[1];
      Connection *conn = 0;
