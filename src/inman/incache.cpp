@@ -10,9 +10,6 @@ using smsc::core::buffers::HashListLink;
 namespace smsc {
 namespace inman {
 namespace cache {
-
-const char * _sabBillType[] = {"Unknown", "Postpaid", "Prepaid" };
-
 /* ************************************************************************** *
  * class AbonentCache implementation:
  * ************************************************************************** */
@@ -121,9 +118,9 @@ AbonentRecord * AbonentCache::ramLookUp(AbonentId & ab_number)
             accList.push_front(ab_number);
             pabRec->accIt = accList.begin();
         }
-        if (pabRec->ab_type != btUnknown) {
+        if (!pabRec->isUnknown()) {
             if (time(NULL) >= (pabRec->tm_queried + _cfg.interval)) {
-                pabRec->ab_type = btUnknown; //expired
+                pabRec->ab_type = AbonentRecordRAM::abtUnknown; //expired
                 smsc_log_debug(logger, "InCache: abonent %s info is expired",
                                ab_number.getSignals());
             }
@@ -141,7 +138,7 @@ void AbonentCache::setAbonentInfo(const AbonentId & ab_number, AbonentBillType a
     MutexGuard grd(cacheGuard);
     int status = ramInsert(ab_number, ab_type, queried, p_scf); //sets time
 
-    if (ab_type != btUnknown) {
+    if (ab_type != AbonentRecord::abtUnknown) {
         try {
             flCache.Insert(AbonentHashKey(ab_number),
                             AbonentHashData(ab_type, queried, p_scf), true);
@@ -157,7 +154,8 @@ void AbonentCache::setAbonentInfo(const AbonentId & ab_number, AbonentBillType a
                     p_scf->scfAddress.getSignals(), p_scf->serviceKey);
         smsc_log_debug(logger, "InCache: abonent %s is %s: %s, SCF %s",
                        ab_number.getSignals(), status ? "added" : "updated",
-                       _sabBillType[ab_type], p_scf ? scf_inf : "<none>");
+                       AbonentContractInfo::type2Str(ab_type),
+                       p_scf ? scf_inf : "<none>");
     }
 }
 
@@ -168,7 +166,7 @@ AbonentBillType AbonentCache::getAbonentInfo(AbonentId & ab_number,
     AbonentHashData     ab_rec;
     AbonentRecord *     rabRec = ramLookUp(ab_number);
 
-    if (!rabRec || rabRec->ab_type == btUnknown) { //look in file cache
+    if (!rabRec || rabRec->isUnknown()) { //look in file cache
         try {
             if (flCache.LookUp(AbonentHashKey(ab_number), ab_rec)) {
                 if (time(NULL) < (ab_rec.tm_queried + _cfg.interval)) {
@@ -184,7 +182,7 @@ AbonentBillType AbonentCache::getAbonentInfo(AbonentId & ab_number,
     }
     if (rabRec && p_ab_rec)
         *p_ab_rec = *rabRec;
-    return rabRec ? rabRec->ab_type : btUnknown;
+    return rabRec ? rabRec->ab_type : AbonentRecord::abtUnknown;
 }
 
 

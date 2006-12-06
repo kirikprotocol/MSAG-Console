@@ -5,18 +5,23 @@
 #include <list>
 #include <time.h>
 
-#include "logger/Logger.h"
+#include "inman/AbntContract.hpp"
+using smsc::inman::AbonentContractInfo;
+
 #include "inman/common/adrutil.hpp"
+using smsc::cvtutil::packMAPAddress2OCTS;
+using smsc::cvtutil::unpackOCTS2MAPAddress;
+
+#include "logger/Logger.h"
+using smsc::logger::Logger;
+
 #include "core/buffers/Hash.hpp"
 #define NOLOGGERPLEASE
 #include "core/buffers/DiskHash.hpp"
 #undef NOLOGGERPLEASE
-
-using smsc::logger::Logger;
-using smsc::cvtutil::packMAPAddress2OCTS;
-using smsc::cvtutil::unpackOCTS2MAPAddress;
 using smsc::core::buffers::Hash;
 using smsc::core::buffers::DiskHash;
+
 
 namespace smsc {
 namespace inman {
@@ -26,37 +31,24 @@ typedef TonNpiAddress AbonentId; //isdn international number assumed
 
 enum { MAX_ABONENT_ID_LEN =  11 }; //only isdn international numbers supported
 
-typedef enum { btUnknown = 0, btPostpaid, btPrepaid 
-} AbonentBillType;
+typedef smsc::inman::AbonentContractInfo::ContractType AbonentBillType;
 
-extern const char * _sabBillType[];
+struct AbonentRecord : public AbonentContractInfo {
+    time_t  tm_queried;
 
-struct AbonentRecord {
-    AbonentBillType ab_type;
-    time_t          tm_queried;
-    MAPSCFinfo      gsmSCF;
-
-    AbonentRecord() : ab_type(smsc::inman::cache::btUnknown), tm_queried(0)
+    AbonentRecord()
+        : AbonentContractInfo(), tm_queried(0)
     { }
     AbonentRecord(AbonentBillType abType, time_t qryTm, const MAPSCFinfo * p_scf = NULL)
-        : ab_type(abType), tm_queried(qryTm)
-    {
-        if (p_scf)
-            gsmSCF = *p_scf;
-    }
+        : AbonentContractInfo(abType, p_scf), tm_queried(qryTm)
+    { }
 
     void reset(void)
     {
-        ab_type = smsc::inman::cache::btUnknown;
-        tm_queried = 0;
+        ab_type = abtUnknown;
         gsmSCF.serviceKey = 0;
         gsmSCF.scfAddress.clear();
-
-    }
-
-    const MAPSCFinfo * getSCFinfo(void) const
-    {
-        return gsmSCF.scfAddress.length ? &gsmSCF : NULL;
+        tm_queried = 0;
     }
 };
 

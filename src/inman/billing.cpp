@@ -10,7 +10,6 @@ using smsc::inman::inap::SSNSession;
 using smsc::inman::inap::TCSessionAC;
 
 #include "billing.hpp"
-using smsc::inman::cache::_sabBillType;
 using smsc::inman::interaction::SerializerException;
 using smsc::inman::interaction::INPCSBilling;
 using smsc::inman::interaction::SPckChargeSmsResult;
@@ -156,7 +155,7 @@ void BillingConnect::onConnectError(Connect* conn, bool fatal/* = false*/)
 Billing::Billing(BillingConnect* bconn, unsigned int b_id, 
                 Logger * uselog/* = NULL*/)
         : _bconn(bconn), _bId(b_id), state(bilIdle), capDlg(NULL)
-        , postpaidBill(false), abType(smsc::inman::cache::btUnknown)
+        , postpaidBill(false), abType(AbonentContractInfo::abtUnknown)
         , providerQueried(false), capDlgActive(false), capSess(NULL)
         , abPolicy(NULL), billErr(0)
 {
@@ -251,7 +250,7 @@ unsigned Billing::writeCDR(void)
                         xcdr._msgId, xcdr._inBilled ? "true": "false", xcdr._dstAdr.c_str());
         }
         //write bearer part (not billed by IN)
-        if ((abType == smsc::inman::cache::btPostpaid)
+        if ((abType == AbonentContractInfo::abtPostpaid)
             || (_cfg.cdrMode == BillingCFG::CDR_ALL) || !matchBillMode()) {
             CDRRecord xcdr = cdr;
             xcdr._inBilled = false;
@@ -279,7 +278,7 @@ void Billing::doFinalize(bool doReport/* = true*/)
                           " abonent(%s), type %s, CDR(s) written: %u",
                     _logId, BillComplete() ? "" : "IN", dpType().c_str(),
                     cdr._inBilled ? "SCF": "CDR", billErr, abNumber.getSignals(),
-                    _sabBillType[abType], cdrs);
+                    AbonentContractInfo::type2Str(abType), cdrs);
 
     doCleanUp();
     if (doReport) {
@@ -434,10 +433,10 @@ bool Billing::onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr)
     }
 
     postpaidBill = !matchBillMode();
-    AbonentRecord   abRec; //ab_type = btUnknown
+    AbonentRecord   abRec; //ab_type = abtUnknown
     if (postpaidBill
         || (((abType = _cfg.abCache->getAbonentInfo(abNumber, &abRec))
-             == smsc::inman::cache::btPostpaid) && !smsXSrvs)) {
+             == AbonentContractInfo::abtPostpaid) && !smsXSrvs)) {
         postpaidBill = true; //do not interact IN platform, just create CDR
         chargeResult(ChargeSmsResult::CHARGING_POSSIBLE);
         return true;
@@ -448,8 +447,8 @@ bool Billing::onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr)
                        abNumber.toString().c_str());
     } else {
         smsc_log_debug(logger, "%s: using policy: %s", _logId, abPolicy->ident);
-        if ((abType == smsc::inman::cache::btUnknown)
-            || ((abType == smsc::inman::cache::btPrepaid) && !abRec.getSCFinfo())) {
+        if ((abType == AbonentContractInfo::abtUnknown)
+            || ((abType == AbonentContractInfo::abtPrepaid) && !abRec.getSCFinfo())) {
             // configure SCF by quering provider first
             IAProviderITF *prvd = abPolicy->getIAProvider(logger);
             if (prvd) {
@@ -466,7 +465,7 @@ bool Billing::onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr)
     return ConfigureSCFandCharge(abRec.ab_type, abRec.getSCFinfo());
 }
 
-//here goes: btPrepaid or btUnknown or btPostpaid(SMSX)
+//here goes: abtPrepaid or abtUnknown or abtPostpaid(SMSX)
 bool Billing::ConfigureSCFandCharge(AbonentBillType ab_type, const MAPSCFinfo * p_scf/* = NULL*/)
 {
     abType = ab_type;
@@ -477,7 +476,7 @@ bool Billing::ConfigureSCFandCharge(AbonentBillType ab_type, const MAPSCFinfo * 
         if (abPolicy)
             abPolicy->getSCFparms(&abScf);
     } else if (abPolicy) {  //attempt to determine SCF params from config.xml
-        if (abType == smsc::inman::cache::btUnknown) {
+        if (abType == AbonentContractInfo::abtUnknown) {
             INScfCFG * pin = NULL;
             if (abPolicy->scfMap.size() == 1) { //single IN serving, look for postpaidRPC
                 pin = (*(abPolicy->scfMap.begin())).second;
@@ -491,7 +490,7 @@ bool Billing::ConfigureSCFandCharge(AbonentBillType ab_type, const MAPSCFinfo * 
                                 " abonent type/SCF, switching to CDR mode", _logId);
                 postpaidBill = true;
             }
-        } else if (abType == smsc::inman::cache::btPrepaid) {
+        } else if (abType == AbonentContractInfo::abtPrepaid) {
             if (abPolicy->scfMap.size() == 1) { //single IN serving
                 abScf = *((*(abPolicy->scfMap.begin())).second);
             } else {
@@ -559,7 +558,7 @@ void Billing::chargeResult(ChargeSmsResult::ChargeSmsResult_t chg_res, uint32_t 
     }
     smsc_log_info(logger, "%s: <-- %s CHARGING_%s, abonent(%s) type: %s (%u)", _logId,
                 dpType().c_str(), reply.c_str(), abNumber.getSignals(),
-                _sabBillType[abType], (unsigned)abType);
+                AbonentContractInfo::type2Str(abType), (unsigned)abType);
 
     SPckChargeSmsResult res;
     res.Cmd().SetValue(chg_res);
@@ -659,7 +658,7 @@ void Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
             //abonent provider query is expired
             abPolicy->getIAProvider(logger)->cancelQuery(abNumber, this);
             providerQueried = false;
-            ConfigureSCFandCharge(smsc::inman::cache::btUnknown, NULL);
+            ConfigureSCFandCharge(AbonentContractInfo::abtUnknown, NULL);
             return;
         }
         if (state == Billing::bilContinued) {
@@ -702,8 +701,8 @@ void Billing::onDPSMSResult(unsigned char rp_cause/* = 0*/)
     ChargeSmsResult::ChargeSmsResult_t  chgRes = ChargeSmsResult::CHARGING_POSSIBLE;
 
     if (!rp_cause) {    //ContinueSMS
-        if (abType != smsc::inman::cache::btPrepaid)  //Update abonents cache
-            _cfg.abCache->setAbonentInfo(abNumber, abType = smsc::inman::cache::btPrepaid,
+        if (abType != AbonentContractInfo::abtPrepaid)  //Update abonents cache
+            _cfg.abCache->setAbonentInfo(abNumber, abType = AbonentContractInfo::abtPrepaid,
                                          0, &abScf.scf);
     } else {            //ReleaseSMS
         capDlgActive = false;
@@ -713,8 +712,9 @@ void Billing::onDPSMSResult(unsigned char rp_cause/* = 0*/)
             if ((*it) == rp_cause) {
                 postpaidBill = true;
                 //Update abonents cache
-                if (abType != smsc::inman::cache::btPostpaid)
-                    _cfg.abCache->setAbonentInfo(abNumber, abType = smsc::inman::cache::btPostpaid);
+                if (abType != AbonentContractInfo::abtPostpaid)
+                    _cfg.abCache->setAbonentInfo(abNumber,
+                                                 abType = AbonentContractInfo::abtPostpaid);
                 break;
             }
         }

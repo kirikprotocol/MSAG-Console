@@ -1,7 +1,6 @@
 static const char ident[] = "$Id$";
 
 #include "inman/abprov/db/ProviderDb.hpp"
-//using smsc::inman::cache::_sabBillType;
 using smsc::db::Connection;
 using smsc::db::Routine;
 
@@ -177,9 +176,9 @@ int IAPQueryDB::Execute(void)
     }
     //convert returned integer to AbonentBillType value
     if (res > 0) 
-        abRec.ab_type = smsc::inman::cache::btPrepaid;
+        abRec.ab_type = AbonentRecord::abtPrepaid;
     else if (!res)
-        abRec.ab_type = smsc::inman::cache::btPostpaid;
+        abRec.ab_type = AbonentRecord::abtPostpaid;
     //else btUnknown
 
     //do not unregister routine in order to reuse it in next queries.

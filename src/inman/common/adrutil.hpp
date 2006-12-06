@@ -12,34 +12,21 @@
 #include <string>
 
 #include "inman/common/types.hpp"
-#include "util/TonNpiAddress.hpp"
-using smsc::util::TonNpiAddress;
+#include "inman/AbntContract.hpp"
 
 #define MAP_MAX_IMSI_AddressLength      8
 #define MAP_MAX_IMSI_AddressValueLength (MAP_MAX_IMSI_AddressLength*2)
 #define MAP_MAX_ISDN_AddressLength      8
 
-//#define CAP_MAX_SMS_AddressStringLength 10 //CAP-datatypes.maxSMS-AddressStringLength - 1
-//#define CAP_MAX_SMS_AddressValueLength  (CAP_MAX_SMS_AddressStringLength*2)
 #define CAP_MAX_LocationNumber_Length   8
 #define CAP_MAX_TimeAndTimezoneLength   8
 #define CAP_MAX_IMSILength              8
 
-//#define NUMBERING_ISDN                  1
-//#define ToN_INTERNATIONAL               1
-//#define ToN_ALPHANUM                    5
-//#define ToN_UNKNOWN                     0
 
 namespace smsc {
 namespace cvtutil {
 
-struct MAPSCFinfo { //gsmSCF paramaters
-    uint32_t      serviceKey;
-    TonNpiAddress scfAddress;
-
-    MAPSCFinfo() : serviceKey(0) { }
-};
-
+typedef smsc::inman::GsmSCFinfo MAPSCFinfo;
 
 typedef union TONPI_OCT_u {
     unsigned char tonpi;

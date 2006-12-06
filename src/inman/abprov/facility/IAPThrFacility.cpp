@@ -125,7 +125,7 @@ void IAProviderThreaded::releaseQuery(IAPQueryAC * query)
     //else query is being deleted by PooledThread::Execute()
     smsc_log_debug(logger, "IAPrvd: query[%u:%lu](%s) is finished, type: %s (%u)",
                    query->getId(), query->Usage(), ab_number.getSignals(),
-                   _sabBillType[abRec.ab_type], abRec.ab_type);
+                   abRec.type2Str(), abRec.ab_type);
     return;
 }
 

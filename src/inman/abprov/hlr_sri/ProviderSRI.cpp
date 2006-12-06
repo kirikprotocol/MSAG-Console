@@ -198,11 +198,11 @@ void IAPQuerySRI::onMapResult(CHSendRoutingInfoRes* arg)
                         _qId, usage, abonent.getSignals());
     else {
         if (!arg->getSCFinfo(&abRec.gsmSCF)) {
-            abRec.ab_type = smsc::inman::cache::btPostpaid;
+            abRec.ab_type = AbonentRecord::abtPostpaid;
             smsc_log_debug(logger, "QrySRI[%u:%lu](%s): gsmSCF not set.",
                            _qId, usage, abonent.getSignals());
         } else {
-            abRec.ab_type = smsc::inman::cache::btPrepaid;
+            abRec.ab_type = AbonentRecord::abtPrepaid;
             smsc_log_debug(logger, "QrySRI[%u:%lu](%s): gsmSCF %s:%u",
                            _qId, usage, abonent.getSignals(),
                            abRec.gsmSCF.scfAddress.getSignals(), abRec.gsmSCF.serviceKey);

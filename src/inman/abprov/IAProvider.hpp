@@ -10,7 +10,7 @@ using smsc::inman::cache::AbonentId;
 using smsc::inman::cache::AbonentBillType;
 using smsc::inman::cache::AbonentCacheITF;
 using smsc::inman::cache::AbonentRecord;
-using smsc::inman::cache::_sabBillType;
+
 
 namespace smsc {
 namespace inman {
