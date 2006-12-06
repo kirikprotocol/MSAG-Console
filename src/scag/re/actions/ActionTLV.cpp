@@ -69,6 +69,8 @@ bool ActionTLV::run(ActionContext& context)
     smsc_log_debug(logger,"Run Action 'tlv'");
 
     SMS& sms = CommandBrige::getSMS((SmppCommand&)context.getSCAGCommand());
+
+    smsc_log_debug(logger, "Action SMS %x", &sms);        
     
     if(!tag)
     {
@@ -91,15 +93,6 @@ bool ActionTLV::run(ActionContext& context)
     int tt = tag >> 8;
     tag &= 0xFF;
 
-    smsc_log_debug(logger, "orig addr: %s", sms.getOriginatingAddress().toString().c_str());
-    for(int i=0; i < 68; i++)
-    {
-        smsc_log_debug(logger, "tag: %d=%d %d %d", i, sms.hasProperty(tag | (SMS_INT_TAG << 8)), sms.hasProperty(tag | (SMS_STR_TAG << 8)), sms.hasProperty(tag | (SMS_BIN_TAG << 8)));
-        smsc_log_debug(logger, "tag1: %d=%d", i, sms.getIntProperty(tag | (SMS_INT_TAG << 8)));        
-    }
-    sms.setIntProperty(22 | (SMS_INT_TAG << 8), 33);
-    smsc_log_debug(logger, "has property %d", sms.hasProperty(22 | (SMS_INT_TAG << 8)));    
-        
     Property* prop = NULL;
     if(type != TLV_DEL && ftVar != ftUnknown)
     {
@@ -131,11 +124,12 @@ bool ActionTLV::run(ActionContext& context)
         if(tt == SMS_INT_TAG)
         {
             prop->setInt(sms.getIntProperty(tag));
+            smsc_log_debug(logger, "sss: %d %d", sms.getIntProperty(tag), prop->getInt());            
             smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%d", tag, prop->getInt());
         }
         else if(tt == SMS_STR_TAG)
         {
-            prop->setStr(sms.getStrProperty(tag));
+            prop->setStr(sms.getStrProperty(tag | (SMS_STR_TAG << 8)));
             smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%s", tag, prop->getStr().c_str());
         }
     
