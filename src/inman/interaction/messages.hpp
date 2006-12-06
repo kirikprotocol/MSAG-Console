@@ -59,7 +59,7 @@ public:
     INPPacketAC() { Resize(2); }
    
     INPHeaderAC * pHdr(void) { return at(0); }
-    SerializableObjectAC * pCmd(void) { return at(1); }
+    INPCommandAC * pCmd(void) { return static_cast<INPCommandAC*>(at(1)); }
 
     //SerializablePacketAC interface implementation
     void serialize(ObjectBuffer& out_buf) throw(SerializerException)
