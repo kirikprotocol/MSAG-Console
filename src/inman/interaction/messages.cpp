@@ -6,6 +6,7 @@ static char const ident[] = "$Id$";
 
 #include "inman/interaction/messages.hpp"
 #include "inman/interaction/MsgBilling.hpp"
+#include "inman/interaction/MsgContract.hpp"
 
 namespace smsc  {
 namespace inman {
@@ -16,6 +17,7 @@ namespace interaction {
 INPSerializer::INPSerializer()
 {
     cmdSets.insert(INPCsMap::value_type(csBilling, INPCSBilling::getInstance()));
+    cmdSets.insert(INPCsMap::value_type(csAbntContract, INPCSAbntContract::getInstance()));
 }
 
 INPSerializer* INPSerializer::getInstance()

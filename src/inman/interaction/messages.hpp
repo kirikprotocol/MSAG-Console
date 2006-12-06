@@ -13,19 +13,22 @@ namespace interaction {
 //NOTE: the plain numbering of object Ids through all
 //command sets is used for simplicity!
 typedef enum {
-    csBilling = 1, //SMS Charging dialog, objIds [1..5]
-    csSession = 2, //Session establishment and control, objIds [6..10]
-    csControl = 3, //INman service control (radmin), objIds [11...] 
+    csBilling  = 1, //SMS Charging dialog, objIds [1..5]
+    csAbntContract,  //Subscriber contract and gsmSCF parms determination [6..9]
+    csSession,      //Session establishment and control, objIds [10..15]
+    csControl,      //INman service control (radmin), objIds [16...] 
     //...
     csUndefined  // just a max cap, reserved
 } INPCommandSetId;
 
 static INPCommandSetId csIdbyCmdId(unsigned cmd_id)
 {
-    if (cmd_id > 10)
+    if (cmd_id >= 16)
         return csControl;
-    if (cmd_id > 5)
+    if (cmd_id >= 10)
         return csSession;
+    if (cmd_id >= 6)
+        return csAbntContract;
     return cmd_id ? csBilling : csUndefined;
 }
 
