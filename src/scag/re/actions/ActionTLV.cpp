@@ -56,7 +56,7 @@ void ActionTLV::init(const SectionParams& params,PropertyObject propertyObject)
     }
     else if(type == TLV_EXIST)
     {
-        ftResult = CheckParameter(params, propertyObject, "tlv", "result", true, false, strVar, bExist);
+        ftResult = CheckParameter(params, propertyObject, "tlv", "exist", true, false, strVar, bExist);
         if(ftResult == ftUnknown || ftResult == ftConst)
             throw SCAGException("Action 'tlv': Result can't be a const value");
     }
@@ -70,8 +70,6 @@ bool ActionTLV::run(ActionContext& context)
 
     SMS& sms = CommandBrige::getSMS((SmppCommand&)context.getSCAGCommand());
 
-    smsc_log_debug(logger, "Action SMS %x", &sms);        
-    
     if(!tag)
     {
         Property* property = context.getProperty(strTag);
@@ -91,7 +89,6 @@ bool ActionTLV::run(ActionContext& context)
     }
     
     int tt = tag >> 8;
-    tag &= 0xFF;
 
     Property* prop = NULL;
     if(type != TLV_DEL && ftVar != ftUnknown)
@@ -124,8 +121,7 @@ bool ActionTLV::run(ActionContext& context)
         if(tt == SMS_INT_TAG)
         {
             prop->setInt(sms.getIntProperty(tag));
-            smsc_log_debug(logger, "sss: %d %d", sms.getIntProperty(tag), prop->getInt());            
-            smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%d", tag, prop->getInt());
+            smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%d", tag, (uint32_t)prop->getInt());
         }
         else if(tt == SMS_STR_TAG)
         {
@@ -138,8 +134,8 @@ bool ActionTLV::run(ActionContext& context)
     {
         if(tt == SMS_INT_TAG)
         {
-            sms.setIntProperty(tag, prop ? prop->getInt() : val);
-            smsc_log_debug(logger, "Action 'tlv': Tag: %d. SetValue=%d", tag, prop ? prop->getInt() : val);
+            sms.setIntProperty(tag, prop ? (uint32_t)prop->getInt() : val);
+            smsc_log_debug(logger, "Action 'tlv': Tag: %d. SetValue=%d", tag, prop ? (uint32_t)prop->getInt() : val);
         }
         else if(tt == SMS_STR_TAG)
         {
