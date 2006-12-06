@@ -18,9 +18,10 @@ using smsc::inman::iaprvd::IAProviderITF;
 #include "inman/incache.hpp"
 using smsc::inman::cache::AbonentCacheITF;
 
-
 namespace smsc  {
 namespace inman {
+//_smsXSrvs bits to mask, i.e. exclude from processing logic
+#define SMSX_RESERVED_MASK  0x80000000
 
 typedef std::map<uint32_t, TonNpiAddress> SmsXServiceMap;
 

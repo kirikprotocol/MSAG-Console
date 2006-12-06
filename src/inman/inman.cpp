@@ -600,14 +600,16 @@ public:
 
         TonNpiAddress  npi;
         if (!npi.fromText(cstr))
-            throw ConfigException("invalid param %s value: %s", cstr);
+            throw ConfigException("invalid param %s value: %s", srv_adr_parm.c_str(), cstr);
 
         uint32_t srvMask = 0;
         try { srvMask = cfg->getInt(srv_id_parm.c_str()); }
         catch (ConfigException& exc) { }
         if (!srvMask)
-            throw ConfigException("invalid param %s value: %s", srv_id_parm.c_str());
-        
+            throw ConfigException("invalid param %s value", srv_id_parm.c_str());
+        if (srvMask & SMSX_RESERVED_MASK)
+            throw ConfigException("reserved bits used in param %s value", srv_id_parm.c_str());
+
         bill.smsXMap.insert(SmsXServiceMap::value_type(srvMask, npi));
         smsc_log_info(inmanLogger, "SMS Extra service[%u]: 0x%x = %s", srvId, srvMask,
                       npi.toString().c_str());

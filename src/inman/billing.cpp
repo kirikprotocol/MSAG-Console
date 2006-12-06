@@ -241,7 +241,7 @@ void Billing::doCleanUp(void)
 unsigned Billing::writeCDR(void)
 {
     unsigned cnt = 0;
-    if (cdr._smsXSrvs) { //write SMSExtra part first (if necessary)
+    if (smsxNumber.length) { //write SMSExtra part first (if necessary)
         if (!cdr._inBilled || (_cfg.cdrMode == BillingCFG::CDR_ALL)) {
             CDRRecord xcdr = cdr;
             xcdr._dstAdr = smsxNumber.toString();
@@ -332,10 +332,10 @@ bool Billing::startCAPDialog(INScfCFG * use_scf)
         capDlg = new CapSMSDlg(capSess, this, _cfg.ss7.capTimeout, logger); //initialize TCAP dialog
         capDlgActive = true;
         smsc_log_debug(logger, "%s: Initiating CapSMS[%u] -> %s", _logId, capDlg->getId(),
-                       cdr._smsXSrvs ? smsxNumber.toString().c_str() : cdr._dstAdr.c_str());
+                       smsxNumber.length ? smsxNumber.toString().c_str() : cdr._dstAdr.c_str());
 
         InitialDPSMSArg arg(smsc::inman::comp::DeliveryMode_Originating, use_scf->scf.serviceKey);
-        if (cdr._smsXSrvs)
+        if (smsxNumber.length)
             arg.setDestinationSubscriberNumber(smsxNumber);
         else
             arg.setDestinationSubscriberNumber(cdr._dstAdr.c_str());
@@ -403,19 +403,21 @@ bool Billing::onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr)
     }
     smsc_log_info(logger, "%s: %s: Call.Adr <%s>, Dest.Adr <%s>", _logId,
                     dpType().c_str(), cdr._srcAdr.c_str(), cdr._dstAdr.c_str());
-    if (cdr._smsXSrvs) {
+
+    uint32_t smsXSrvs = cdr._smsXSrvs & ~SMSX_RESERVED_MASK;
+    if (smsXSrvs) {
         if (cdr._bearer != CDRRecord::dpSMS)
             smsc_log_error(logger, "%s: invalid bearer for SMS Extra service", _logId);
 
-        SmsXServiceMap::iterator it = _cfg.smsXMap.find(cdr._smsXSrvs);
+        SmsXServiceMap::iterator it = _cfg.smsXMap.find(smsXSrvs);
         if (it != _cfg.smsXMap.end()) {
             smsxNumber = (*it).second;
             smsc_log_info(logger, "%s: SMSExtra 0x%x configured to %s", _logId,
-                          cdr._smsXSrvs, smsxNumber.toString().c_str());
+                          smsXSrvs, smsxNumber.toString().c_str());
         } else {
             smsc_log_error(logger, "%s: SMSExtra 0x%x misconfigured, ignoring!",
-                           _logId, cdr._smsXSrvs);
-            cdr._smsXSrvs = 0;
+                           _logId, smsXSrvs);
+            cdr._smsXSrvs &= SMSX_RESERVED_MASK;
         }
     }
 
@@ -435,7 +437,7 @@ bool Billing::onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr)
     AbonentRecord   abRec; //ab_type = btUnknown
     if (postpaidBill
         || (((abType = _cfg.abCache->getAbonentInfo(abNumber, &abRec))
-             == smsc::inman::cache::btPostpaid) && !cdr._smsXSrvs)) {
+             == smsc::inman::cache::btPostpaid) && !smsXSrvs)) {
         postpaidBill = true; //do not interact IN platform, just create CDR
         chargeResult(ChargeSmsResult::CHARGING_POSSIBLE);
         return true;
