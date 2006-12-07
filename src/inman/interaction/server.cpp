@@ -185,13 +185,17 @@ Server::ShutdownReason Server::Listen(void)
             SOCKET socket = conn->getSocketId();
 
             if (FD_ISSET(socket, &readSet)) {
-                if (!conn->process()) {
+                bool doClose = !conn->process();
+                if (doClose) //remote point ends connection
+                    smsc_log_debug(logger, "TCPSrv: client ends Connect[%u]", socket);
+                else {
                     CustomException * exc = conn->hasException();
                     if (exc) {
                         smsc_log_error(logger, "TCPSrv: %s", exc->what());
-                    } else { //remote point ends connection
-                        smsc_log_debug(logger, "TCPSrv: client ends Connect[%u]", socket);
+                        doClose = true;
                     }
+                }
+                if (doClose) {
                     connects.remove(conn);
                     closeConnect(conn);
                 }

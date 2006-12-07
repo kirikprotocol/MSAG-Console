@@ -151,7 +151,7 @@ SerializablePacketAC* Connect::recvPck(void)
 }
 
 //listens for input objects and passes it to connect listeners
-//Returns false if no data was red from socket
+//Returns false if no data was successfully red from socket
 //NOTE: it's assumed that in case of _exc is set upon return,
 //the controlling TCP server destroys this Connect.
 bool Connect::process(void)
@@ -161,8 +161,8 @@ bool Connect::process(void)
     if (!cmd.get() && !_exc.get())
 	return false;
 
-    bool res = cmd.get() || _exc.get();
-    for (ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++) {
+    ListenerList cplist = listeners;
+    for (ListenerList::iterator it = cplist.begin(); it != cplist.end(); it++) {
         ConnectListenerITF* ptr = *it;
         try {
             if (_exc.get())
@@ -173,7 +173,7 @@ bool Connect::process(void)
             _exc.reset(new CustomException("%s: %s", _logId, lexc.what()));
         }
     }
-    return res;
+    return true;
 }
 
 /* -------------------------------------------------------------------------- *
