@@ -37,6 +37,7 @@ public:
     }
 
     INPCommandSetId CsId(void) const { return csBilling; }
+    const char *    CsName(void) const { return "csBilling"; }
     INPLoadMode loadMode(unsigned short obj_id) const { return INPCommandSetAC::lmHeader; }
 };
 

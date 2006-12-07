@@ -26,6 +26,7 @@ public:
     static INPCSAbntContract * getInstance(void);
 
     INPCommandSetId CsId(void) const { return csAbntContract; }
+    const char *    CsName(void) const { return "csAbntContract"; }
     INPLoadMode loadMode(unsigned short obj_id) const { return INPCommandSetAC::lmHeader; }
 };
 

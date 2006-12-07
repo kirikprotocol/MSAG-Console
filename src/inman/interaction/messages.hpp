@@ -32,6 +32,17 @@ static INPCommandSetId csIdbyCmdId(unsigned cmd_id)
     return cmd_id ? csBilling : csUndefined;
 }
 
+static const char * csNamebyCmdId(unsigned cmd_id)
+{
+    if (cmd_id >= 16)
+        return "csControl";
+    if (cmd_id >= 10)
+        return "csSession";
+    if (cmd_id >= 6)
+        return "csAbntContract";
+    return cmd_id ? "csBilling" : "csUndefined";
+}
+
 //INMan Protocol CommandSet: factory of commands and their subobjects
 class INPCommandSetAC;
 
@@ -112,6 +123,7 @@ public:
     } INPLoadMode;
 
     virtual INPCommandSetId CsId(void) const = 0;
+    virtual const char *    CsName(void) const = 0;
     virtual INPLoadMode loadMode(unsigned short cmd_id) const = 0;
 
     //creates solid packet (header + command)
