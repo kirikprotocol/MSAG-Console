@@ -8,7 +8,7 @@ use Time::Local qw(timegm timelocal);
 use Fcntl ':flock';
 
 my $f;
-open($f,'>>/data/bill_bin/lock') || die "Failed to open lock file:$!";
+open($f,'>>/data/conf/scripts/lock') || die "Failed to open lock file:$!";
 flock($f,LOCK_EX) || die "Lock failed:$!";
 
 my @OUT_FIELDS;
@@ -31,7 +31,7 @@ my $eoln="\x0d\x0a";
 {field=>'DATA_LENGTH',width=>10},                #06  41 Data Volume (size)
 {field=>'PAYER_IMSI',width=>21},                 #07  51 ID
 {field=>'PAYER_ADDR',width=>21},                 #08  72 ID2
-{value=>'',width=>21},                           #09  93 ID3
+{field=>'SMSX_SRV',width=>21},                   #09  93 ID3
 {field=>'OTHER_ADDR',width=>31},                 #10 114 Other Party
 {value=>'',width=>31},                           #11 145 Fwd A, diverted adddress
 {value=>'',width=>17},                           #12 176 IMEI
@@ -103,7 +103,7 @@ for(@dir)
 
   my $tmpfile=$tmpdir.$ofn;
   my $outfile=$outdir.
-              sprintf("SMS2_%02d%s%d_%02d&%02d&%02d_",$mday,$curmon,$year,$hour,$min,$sec).
+              sprintf("smsx_%04d%02d%02d_%02d%02d%02d_",$year,$mon,$mday,$hour,$min,$sec).
               $ofn;
   print "$outfile\n";
 
@@ -120,6 +120,7 @@ for(@dir)
 
   if(-f $tmpfile)
   {
+    `chown cdr:cdr $tmpfile`;
     if(!move($tmpfile,$outfile))
     {
       unlink $tmpfile;
