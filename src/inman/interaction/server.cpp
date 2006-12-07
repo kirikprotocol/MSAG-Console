@@ -189,12 +189,11 @@ Server::ShutdownReason Server::Listen(void)
                     CustomException * exc = conn->hasException();
                     if (exc) {
                         smsc_log_error(logger, "TCPSrv: %s", exc->what());
-                        conn->resetException();
                     } else { //remote point ends connection
-                        smsc_log_debug(logger, "TCPSrv: client ends connection[%u]", socket);
-                        connects.remove(conn);
-                        closeConnect(conn);
+                        smsc_log_debug(logger, "TCPSrv: client ends Connect[%u]", socket);
                     }
+                    connects.remove(conn);
+                    closeConnect(conn);
                 }
             }
             if (FD_ISSET(socket, &errorSet)) {

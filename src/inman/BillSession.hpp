@@ -79,7 +79,8 @@ public:
     CustomException * connectError(void) const { return _conn ? _conn->hasException() : NULL; }
 
     //-- ConnectListenerITF interface
-    void onCommandReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd);
+    void onCommandReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd)
+            throw(std::exception);
     //Stops all Billings due to fatal socket error
     void onConnectError(Connect* conn, bool fatal/* = false*/);
 

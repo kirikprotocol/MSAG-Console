@@ -23,6 +23,7 @@ Connect::Connect(Socket* sock, ConnectFormat frm/* = Connect::frmLengthPrefixed*
     assert(socket);
     if (!uselog)
         logger = Logger::getInstance("smsc.inman.Connect");
+    snprintf(_logId, sizeof(_logId)-1, "Connect[%u]", (unsigned)socket->getSocket());
 }
 
 Connect::~Connect()
@@ -68,8 +69,7 @@ int  Connect::send(const unsigned char *buf, int bufSz)
         std::string         dstr;
         Logger::LogLevel    errLvl;
 
-        format(dstr, "Connect[%u]: sent %d of %db: ", (unsigned int)
-                socket->getSocket(), n, bufSz);
+        format(dstr, "%s: sent %d of %db: ", _logId, n, bufSz);
         if (n > 0) {
             dstr += "0x"; DumpHex(dstr, (unsigned short)n, (unsigned char*)buf);
         }
@@ -126,8 +126,8 @@ SerializablePacketAC* Connect::recvPck(void)
         oct2read = ntohl(*(uint32_t*)len.buf);
 
         if (oct2read > _parms.maxPckSz) {
-            _exc.reset(new CustomException("Connect[%u]: incoming packet is too large: %ub",
-                                        (unsigned)socket->getSocket(), oct2read));
+            _exc.reset(new CustomException("%s: incoming packet is too large: %ub",
+                                            _logId, oct2read));
             return NULL;
         }
     }
@@ -140,13 +140,11 @@ SerializablePacketAC* Connect::recvPck(void)
 
     SerializablePacketAC* obj = NULL;
     if (!_objSerializer) {
-        _exc.reset(new CustomException("Connect[%u]: Serializer is not set!",
-                                       (unsigned)socket->getSocket()));
+        _exc.reset(new CustomException("%s: Serializer is not set!", _logId));
     } else {
         try { obj = _objSerializer->deserialize(buffer); 
         } catch (SerializerException & exc) {
-            _exc.reset(new CustomException("Connect[%u]: %s",
-                                           (unsigned)socket->getSocket(), exc.what()));
+            _exc.reset(new CustomException("%s: %s", _logId, exc.what()));
         }
     }
     return obj;
@@ -154,6 +152,8 @@ SerializablePacketAC* Connect::recvPck(void)
 
 //listens for input objects and passes it to connect listeners
 //Returns false if no data was red from socket
+//NOTE: it's assumed that in case of _exc is set upon return,
+//the controlling TCP server destroys this Connect.
 bool Connect::process(void)
 {
     std::auto_ptr<SerializablePacketAC> cmd(recvPck());
@@ -164,12 +164,15 @@ bool Connect::process(void)
     bool res = cmd.get() || _exc.get();
     for (ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++) {
         ConnectListenerITF* ptr = *it;
-        if (_exc.get())
-            ptr->onConnectError(this, false);
-        else
-            ptr->onCommandReceived(this, cmd);
+        try {
+            if (_exc.get())
+                ptr->onConnectError(this, false);
+            else
+                ptr->onCommandReceived(this, cmd);
+        } catch (std::exception& lexc) {
+            _exc.reset(new CustomException("%s: %s", _logId, lexc.what()));
+        }
     }
-    _exc.reset(NULL);
     return res;
 }
 
@@ -183,14 +186,14 @@ int  Connect::receive_buf(unsigned char *buf, int bufSz, int minToRead)
 {
     int n = socket->Read((char*)buf, bufSz);
     if (!n) {
-        smsc_log_debug(logger, "Connect[%u]: socket empty!", (unsigned int)socket->getSocket());
+        smsc_log_debug(logger, "%s: socket empty!", _logId);
         return n;
     }
     if ((n < minToRead) || logger->isDebugEnabled()) {
         std::string         dstr;
         Logger::LogLevel    errLvl;
         
-        format(dstr, "Connect[%u]: %sreceived %d of %db: ", (unsigned int)socket->getSocket(),
+        format(dstr, "%s: %sreceived %d of %db: ", _logId,
                 (n < minToRead) ? "error, " : "", n, minToRead);
         if (n > 0) {
             dstr += "0x"; DumpHex(dstr, (unsigned short)n, (unsigned char*)buf/*, _HexDump_CVSD*/);

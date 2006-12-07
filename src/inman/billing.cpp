@@ -86,6 +86,7 @@ void BillingConnect::billingDone(Billing* bill)
  * ConnectListenerITF interface implementation:
  * -------------------------------------------------------------------------- */
 void BillingConnect::onCommandReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd)
+                        throw(std::exception)
 {
     //check service header
     INPPacketAC* pck = static_cast<INPPacketAC*>(recv_cmd.get());

@@ -78,13 +78,16 @@ protected:
     ConnectFormat   _frm;
     ConnectParms    _parms;
     SerializerITF * _objSerializer;
-    std::auto_ptr<CustomException> _exc;   //last connect error
+    std::auto_ptr<CustomException> _exc;   //last connect exception
+    char            _logId[sizeof("Connect[%u]") + sizeof(unsigned)*3 + 1];
 };
 
+//NOTE: it's assumed that if Connect has exception set upon return from these callbacks,
+//the controlling TCP server destroys this Connect.
 class ConnectListenerITF {
 public:
-//    virtual ~ConnectListenerITF() { }
-    virtual void onCommandReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd) = 0;
+    virtual void onCommandReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd)
+                     throw(std::exception) = 0;
     //NOTE: it's recommended to reset exception if it doesn't prevent entire Connect to function
     virtual void onConnectError(Connect* conn, bool fatal = false) = 0;
 };
