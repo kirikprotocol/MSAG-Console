@@ -1,5 +1,7 @@
 package ru.sibinco.otasme.engine.smscenters;
 
+import org.apache.log4j.Category;
+
 import java.util.*;
 
 /**
@@ -8,6 +10,8 @@ import java.util.*;
  */
 
 public final class SMSCenter {
+
+  private static final Category log = Category.getInstance(SMSCenter.class);
 
   private final String number;
   private Set routes = new TreeSet();
@@ -38,21 +42,40 @@ public final class SMSCenter {
   }
 
   private static String preparePhoneMask(final String phoneMask) {
-    String result = phoneMask.replace('.', '%');
-    result = result.replaceAll("%", "\\\\.");
-    result = result.replace('?', '.');
+    try {
+      String result = null;
 
-    if (result.charAt(0)=='+')
-      result = "\\+" + result.substring(1);
-    return result;
+      if (phoneMask.startsWith("."))
+        result = phoneMask.split("\\.")[3];
+
+      if (phoneMask.startsWith("+"))
+        result = phoneMask.substring(1);
+
+      result = result.replace('?', '.');
+
+      return result;
+    } catch (Throwable e) {
+      log.error("Can't add mask " + phoneMask, e);
+      return "";
+    }
+//    String result = phoneMask.replace('.', '%');
+//    result = result.replaceAll("%", "\\\\.");
+
+//
+//    if (result.charAt(0)=='+')
+//      result = "\\+" + result.substring(1);
+
   }
 
 
   public boolean allowNumber(String number) {
+    final String num = preparePhoneMask(number);
     for (Iterator iterator = masks.iterator(); iterator.hasNext();) {
       String mask = (String) iterator.next();
-      if (number.matches(mask))
+      if (num.matches(mask)) {
+        System.out.println("Maches mask: " + mask);
         return true;
+      }
     }
     return false;
   }
