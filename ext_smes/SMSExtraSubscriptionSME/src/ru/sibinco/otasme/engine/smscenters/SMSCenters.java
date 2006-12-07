@@ -36,7 +36,7 @@ public class SMSCenters {
   private final Collection timezones;
   private final String defaultTimezone;
 
-  SMSCenters(Collection timezones, final String defaultTimezone) {
+  public SMSCenters(Collection timezones, final String defaultTimezone) {
     this.timezones = timezones;
     this.defaultTimezone = defaultTimezone;
   }
@@ -65,6 +65,7 @@ public class SMSCenters {
       } catch (InterruptedException e) {
         log.error("Interrupted", e);
       }
+      System.out.println("reload");
 
       final File tf = new File(URI.create(ClassLoader.getSystemResource(SmeProperties.Templates.SMSCENTERS_XML).toString()));
       final File rf = new File(URI.create(ClassLoader.getSystemResource(SmeProperties.Templates.ROUTES_XML).toString()));
@@ -74,6 +75,7 @@ public class SMSCenters {
           final SMSCenters centers = SMSCentersXMLParser.parse(SmeProperties.Templates.SMSCENTERS_XML, SmeProperties.Templates.ROUTES_XML);
 
           if (centers != null) {
+            System.out.println("reloaded");
             log.info("SMSCenters have been reloaded");
             errorOccured = false;
             timezonesLastModifiedTime = tf.lastModified();
@@ -94,8 +96,9 @@ public class SMSCenters {
   }
 
   public static void main(String args[]) {
-    System.out.println(SMSCenters.getSMSCenterNumberByAbonent("1.2.3.4"));
-    System.out.println(SMSCenters.getSMSCenterNumberByAbonent(".0.1.3"));
-    System.out.println(SMSCenters.getSMSCenterNumberByAbonent(".1.1.9001"));
+    System.out.println("1");
+    System.out.println(SMSCenters.getSMSCenterNumberByAbonent("+79100001111"));
+    System.out.println(SMSCenters.getSMSCenterNumberByAbonent("+79163516553"));
+    System.out.println(SMSCenters.getSMSCenterNumberByAbonent(".1.1.79165656073"));
   }
 }

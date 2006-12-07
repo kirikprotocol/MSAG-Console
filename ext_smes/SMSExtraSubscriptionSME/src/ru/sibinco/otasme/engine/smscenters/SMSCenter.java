@@ -72,10 +72,8 @@ public final class SMSCenter {
     final String num = preparePhoneMask(number);
     for (Iterator iterator = masks.iterator(); iterator.hasNext();) {
       String mask = (String) iterator.next();
-      if (num.matches(mask)) {
-        System.out.println("Maches mask: " + mask);
+      if (num.matches(mask)) 
         return true;
-      }
     }
     return false;
   }
