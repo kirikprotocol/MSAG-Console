@@ -45,7 +45,7 @@ my $eoln="\x0d\x0a";
 {value=>'0',width=>10},                          #20 246 Service Code
 {value=>'0',width=>10},                          #21 256 Chain Reference
 {value=>'0',width=>1},                           #22 266 Is Forwarded
-{value=>'0',width=>1},                           #23 267 IsPreCharged
+{field=>'ISPRECHARGED',width=>1},                #23 267 IsPreCharged
 {value=>'0',width=>1},                           #24 268 IsHasTax
 {value=>'0',width=>1},                           #25 269 IsFirstCdr
 {value=>'0',width=>10,align=>'R'},               #26 270 Company Zone
@@ -254,6 +254,13 @@ sub process{
         $$addrref=~s/^\.\d\.\d\.//i;
         #$$addrref=~s/^(?!ussd:)/ussd:/i;
       }
+    }
+
+    $outfields->{ISPRECHARGED}=0;
+    if($infields->{SMSX_SRV}&0x80000000)
+    {
+      $outfields->{SMSX_SRV}=$infields->{SMSX_SRV}&~0x80000000;
+      $outfields->{ISPRECHARGED}=1;
     }
 
     $outfields->{RECORD_TYPE}=10;
