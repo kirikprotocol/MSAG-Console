@@ -92,7 +92,8 @@ protected:
 class AbntContractResult : public INPAbntContractCmd {
 protected:
     AbonentContractInfo cntrInfo;
-    std::string   nmPolicy;
+    std::string     nmPolicy;
+    uint32_t        errCode;
 
 public:
     AbntContractResult()
@@ -103,10 +104,17 @@ public:
     //Setters:
     void setContractInfo(const AbonentContractInfo & cntr_info) { cntrInfo = cntr_info; }
     void setPolicy(const std::string nm_policy) { nmPolicy = nm_policy; }
+    void setError(uint32_t err_code)
+    { 
+        cntrInfo.ab_type = AbonentContractInfo::abtUnknown;
+        cntrInfo.gsmSCF.scfAddress.clear();
+        errCode = err_code;
+    }
 
     //Getters:
     bool  cacheUsed(void) const { return nmPolicy.empty(); }
     const char * policyUsed(void) const { return nmPolicy.empty() ? NULL: nmPolicy.c_str(); }
+    uint32_t    errorCode(void) const { return errCode; }
 
     const AbonentContractInfo::ContractType contractType(void) const { return cntrInfo.ab_type; }
     const AbonentContractInfo & contractInfo(void) const { return cntrInfo; }
@@ -123,17 +131,18 @@ protected:
         if (!cntrInfo.gsmSCF.scfAddress.fromText(stmp.c_str()))
             throw SerializerException("invalid gsmSCF address",
                                       SerializerException::invObjData, stmp.c_str());
-        if (cntrInfo.gsmSCF.scfAddress.length)
-            in >> cntrInfo.gsmSCF.serviceKey;
-
+        in >> errCode;
+        if (cntrInfo.gsmSCF.scfAddress.length) {
+            cntrInfo.gsmSCF.serviceKey = errCode;
+            errCode = 0;
+        }
     }
     void save(ObjectBuffer& out) const
     {
         out << nmPolicy;
         out << (uint8_t)cntrInfo.ab_type;
         out << cntrInfo.gsmSCF.scfAddress.toString();
-        if (cntrInfo.gsmSCF.scfAddress.length)
-            out << cntrInfo.gsmSCF.serviceKey;
+        out << errCode ? errCode : cntrInfo.gsmSCF.serviceKey;
     }
 };
 
