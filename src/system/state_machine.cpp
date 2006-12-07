@@ -1378,9 +1378,9 @@ StateType StateMachine::submit(Tuple& t)
     sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)&~EXTRA_NICK);
   }
 
-  if(fromMap && toMap && profile.sponsored>0)
+  if(fromMap && toMap && srcprof.sponsored>0)
   {
-    info2(smsLog,"EXTRA: sponsored sms for abonent %s(cnt=%d)",sms->getOriginatingAddress().toString().c_str(),profile.sponsored);
+    info2(smsLog,"EXTRA: sponsored sms for abonent %s(cnt=%d)",sms->getOriginatingAddress().toString().c_str(),srcprof.sponsored);
     sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)|EXTRA_SPONSORED);
     smsc->getProfiler()->decrementSponsoredCount(sms->getOriginatingAddress());
   }
