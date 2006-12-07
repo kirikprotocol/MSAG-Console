@@ -50,7 +50,7 @@ public:
         if (msg)
             message += msg;
         if (errCode)
-            format(message, "$scode %d", msg ? ", " : "", errCode);
+            format(message, "%scode %d", msg ? ", " : "", errCode);
         if (err_desc) {
             if (!message.empty())
                 message += ": ";
