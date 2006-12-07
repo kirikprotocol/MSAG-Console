@@ -141,6 +141,8 @@ void ActionSend::init(const SectionParams& params,PropertyObject _propertyObject
     ftSrcPort = CheckParameter(params, propertyObject, "send", "srcPort", false, true, strSrcPort, bExist);
     if(ftSrcPort == ftUnknown && bExist)
         srcPort = atoi(strSrcPort.c_str());
+        
+    ftPacketType = CheckParameter(params, propertyObject, "send", "packetType", false, true, strPacketType, bExist);
             
     usr = false;
     if(params.Exists("usr") && !strcmp(params["usr"].c_str(), "yes"))
@@ -248,6 +250,18 @@ bool ActionSend::run(ActionContext& context)
         }
         esmClass = p2->getInt();
     }
+    
+    if(ftPacketType != ftUnknown)
+    {
+        if(!(p2 = context.getProperty(strPacketType))) 
+        {
+            smsc_log_warn(logger,"Action 'send': invalid 'packetType' property '%s'", strPacketType.c_str());
+            return false;
+        }
+        ev.pPacketType = p2->getStr();
+    }
+    else
+        ev.pPacketType = strPacketType;
     
     ev.sSrcPort = srcPort;
     ev.sDestPort = destPort;
