@@ -1,0 +1,79 @@
+#ident "$Id$"
+/* ************************************************************************** *
+ * Billing: implements Billing process logic:
+ * 1) determination of abonent contract type by quering abonent provider
+ * 2) determination of IN platform and configuring its dialog parameters
+ * ************************************************************************** */
+#ifndef __SMSC_INMAN_ABNT_DETECTOR_HPP
+#define __SMSC_INMAN_ABNT_DETECTOR_HPP
+
+#include "inman/AbntDetManager.hpp"
+using smsc::inman::AbonentPolicy;
+using smsc::inman::sync::StopWatch;
+using smsc::inman::sync::TimerListenerITF;
+using smsc::inman::sync::OPAQUE_OBJ;
+using smsc::inman::iaprvd::IAPQueryListenerITF;
+
+#include "inman/interaction/MsgContract.hpp"
+using smsc::inman::interaction::AbntContractReqHandlerITF;
+using smsc::inman::interaction::AbntContractRequest;
+
+namespace smsc    {
+namespace inman   {
+
+class AbonentDetector : public WorkerAC, public IAPQueryListenerITF,
+                     public TimerListenerITF, AbntContractReqHandlerITF {
+public:
+    AbonentDetector(unsigned w_id, AbntDetectorManager * owner, Logger * uselog = NULL);
+    virtual ~AbonentDetector();
+
+    //-- WorkerAC interface
+    void handleCommand(INPPacketAC* cmd);
+    void Abort(const char * reason = NULL); //aborts billing due to fatal error
+
+    //-- IAPQueryListenerITF interface methods:
+    void onIAPQueried(const AbonentId & ab_number, AbonentBillType ab_type,
+                                const MAPSCFinfo * scf = NULL);
+    //-- TimerListenerITF interface methods:
+    void onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj);
+
+protected:
+    //-- AbntContractReqHandlerITF interface methods:
+    bool onContractReq(AbntContractRequest* req, uint32_t req_id);
+
+    typedef std::map<unsigned, StopWatch*> TimersMAP;
+
+    void sendResult(uint32_t inmanErr = 0);
+    void doCleanUp(void);
+    void ConfigureSCFandReport(AbonentBillType ab_type, const MAPSCFinfo * p_scf = NULL);
+
+    Mutex           _mutex;
+    AbonentDetectorCFG  _cfg;
+                    //prefix for logging info
+    char            _logId[sizeof("AbntDet[%u:%u]") + sizeof(unsigned int)*3 + 1];
+
+    AbonentRecord   abRec;      //ab_type = abtUnknown
+    TonNpiAddress   abNumber;   //calling abonent ISDN number
+    bool            providerQueried;
+    StopWatch *     iapTimer;   //timer for InAbonentProvider quering
+    AbonentPolicy * abPolicy;
+
+    inline void StartTimer(unsigned short timeout)
+    {
+        iapTimer = _cfg.tmWatcher->createTimer(this, NULL, false);
+        smsc_log_debug(logger, "%s: Starting timer[%u]", _logId, iapTimer->getId());
+        iapTimer->start((long)timeout, false);
+    }
+    inline void StopTimer(void)
+    {
+        iapTimer->release();
+        smsc_log_debug(logger, "%s: Released timer[%u]", _logId, iapTimer->getId());
+        iapTimer = NULL;
+    }
+};
+
+} //inman
+} //smsc
+
+#endif /* __SMSC_INMAN_ABNT_DETECTOR_HPP */
+

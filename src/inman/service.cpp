@@ -1,4 +1,6 @@
+#ifndef MOD_IDENT_OFF
 static char const ident[] = "$Id$";
+#endif /* MOD_IDENT_OFF */
 #include <assert.h>
 
 #include "inman/inap/dispatcher.hpp"
@@ -7,12 +9,15 @@ using smsc::inman::inap::TCAPDispatcher;
 #include "inman/service.hpp"
 using smsc::inman::cache::AbonentCache;
 using smsc::inman::interaction::INPSerializer;
+using smsc::inman::interaction::INPCommandSetAC;
+
+#include "inman/AbntDetManager.hpp"
 
 namespace smsc  {
 namespace inman {
 
 Service::Service(const InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
-    : logger(uselog), _cfg(*in_cfg), disp(0), server(0)
+    : logger(uselog), _cfg(*in_cfg), disp(0), server(0), lastSessId(0)
 {
     if (!logger)
         logger = Logger::getInstance("smsc.inman.Service");
@@ -150,58 +155,47 @@ void Service::stop()
     smsc_log_debug(logger, "InmanSrv: Stopped.");
 }
 
-//Local point requests to end connection
-void Service::onBillingConnectClosed(unsigned int connId)
+void Service::closeSession(unsigned sockId)
 {
-    _mutex.Lock();
-    BillingConnMap::const_iterator it = bConnects.find(connId);
-    if (it != bConnects.end()) {
-        BillingConnect* bcon = (*it).second;
-        bConnects.erase(connId);
-        _mutex.Unlock();
-        delete bcon;
-        smsc_log_debug(logger, "InmanSrv: BillingConnect[0x%X] closed", connId);
-    } else {
-        _mutex.Unlock();
-        smsc_log_warn(logger, "InmanSrv: attempt to close unknown connect[0x%X]", connId);
+    ConnectManagerAC * pCm = NULL;
+    {
+        MutexGuard grd(_mutex);
+        SocketsMap::iterator it = sockets.find(sockId);
+        if (it == sockets.end() || !(*it).second)
+            return;
+        unsigned sesId = (*it).second;
+        sockets.erase(it);
+
+        SessionsMap::iterator sit = sessions.find(sesId);
+        if (sit != sessions.end()) {
+            SessionInfo & sess = (*sit).second;
+            pCm = sess.hdl;
+            smsc_log_error(logger, "InmanSrv: closing session[%u] on Connect[%u]",
+                           sess.sId, sockId);
+            sessions.erase(sit);
+        }
     }
+    if (pCm)
+        delete pCm;
+    return;
 }
+
 /* -------------------------------------------------------------------------- *
  * ServerListener interface implementation:
  * -------------------------------------------------------------------------- */
 void Service::onConnectOpened(Server* srv, Connect* conn)
 {
     conn->Init(Connect::frmLengthPrefixed, INPSerializer::getInstance());
-    BillingConnect *bcon = new BillingConnect(&_cfg.bill, conn, logger);
-    if (bcon) {
-        _mutex.Lock();
-        bConnects.insert(BillingConnMap::value_type(conn->getSocketId(), bcon));
-        conn->addListener(bcon);
-        _mutex.Unlock();
-        smsc_log_debug(logger, "InmanSrv: New BillingConnect[%u] created",
-                       conn->getSocketId());
-    }
+    conn->addListener(this);
+//    smsc_log_debug(logger, "InmanSrv: New Connect[%u] inited", (unsigned)conn->getSocketId());
 }
 
 //Remote point ends connection
 void Service::onConnectClosing(Server* srv, Connect* conn)
 {
-    unsigned int connId = (unsigned int)conn->getSocketId();
-    _mutex.Lock();
-    BillingConnMap::const_iterator it = bConnects.find(connId);
-    if (it != bConnects.end()) {
-        BillingConnect *bcon = (*it).second;
-        conn->removeListener(bcon);
-        bConnects.erase(connId);
-        _mutex.Unlock();
-
-        delete bcon;
-        smsc_log_info(logger, "InmanSrv: BillingConnect[%u] closed", connId);
-    } else {
-        _mutex.Unlock();
-        smsc_log_warn(logger, "InmanSrv: attempt to close unknown connect[%u]", connId);
-    }
+    closeSession((unsigned)conn->getSocketId());
 }
+
 //throws CustomException
 void Service::onServerShutdown(Server* srv, Server::ShutdownReason reason)
 {
@@ -211,6 +205,65 @@ void Service::onServerShutdown(Server* srv, Server::ShutdownReason reason)
     if (reason != Server::srvStopped) { //abnormal shutdown
         throw CustomException("InmanSrv: TCP server fatal failure, exiting.");
     }
+}
+
+/* -------------------------------------------------------------------------- *
+ * ConnectListenerITF interface implementation:
+ * -------------------------------------------------------------------------- */
+//Creates/Restores session (creates/rebinds ConnectManager)
+void Service::onCommandReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd)
+                throw(std::exception)
+{
+    INPPacketAC* pck = static_cast<INPPacketAC*>(recv_cmd.get());
+    INPCommandSetAC * pCs = pck->pCmd()->commandSet();
+    //NOTE: session restoration is not supported for now, so just create new session
+    SessionInfo  newSess;
+    _mutex.Lock();
+    newSess.sId = ++lastSessId;
+    _mutex.Unlock();
+    //NOTE: only commands with HDR_DIALOG is supported for now (bindSockId session type)
+    newSess.type = SessionInfo::bindSockId;
+    newSess.conn = conn;
+    newSess.hdl = NULL;
+
+    switch (pCs->CsId()) {
+    case smsc::inman::interaction::csBilling: {
+        newSess.hdl = new BillingManager(&_cfg.bill, newSess.sId, conn, logger);
+    } break;
+
+    case smsc::inman::interaction::csAbntContract: {
+        AbonentDetectorCFG sCfg;
+        sCfg.tmWatcher = _cfg.bill.tmWatcher;
+        sCfg.abCache = _cfg.bill.abCache;
+        sCfg.policies = _cfg.bill.policies;
+        sCfg.abtTimeout = _cfg.bill.abtTimeout;
+        sCfg.maxRequests = _cfg.bill.maxBilling;
+        sCfg.ss7 = _cfg.bill.ss7;
+
+        newSess.hdl = new AbntDetectorManager(&sCfg, newSess.sId, conn, logger);
+    } break;
+
+    default: //close connect
+        throw CustomException("InmanSrv: unsupported CommandSet: %s (%u)",
+                              pCs->CsName(), pCs->CsId());
+    }
+    conn->removeListener(this);
+    conn->addListener(newSess.hdl);
+    _mutex.Lock();
+    sockets.insert(SocketsMap::value_type((unsigned)conn->getSocketId(), newSess.sId));
+    sessions.insert(SessionsMap::value_type(newSess.sId, newSess));
+    _mutex.Unlock();
+    smsc_log_debug(logger, "InmanSrv: New %s session[%u] on Connect[%u] created",
+                  pCs->CsName(), newSess.sId, (unsigned)conn->getSocketId());
+
+    newSess.hdl->onCommandReceived(conn, recv_cmd); //throws
+}
+
+//NOTE: session restoration is not supported for now, so just delete session
+void Service::onConnectError(Connect* conn, bool fatal/* = false*/)
+{ 
+    conn->removeListener(this);
+    closeSession((unsigned)conn->getSocketId());
 }
 
 } // namespace inmgr

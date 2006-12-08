@@ -1,4 +1,6 @@
+#ifndef MOD_IDENT_OFF
 static char const ident[] = "$Id$";
+#endif /* MOD_IDENT_OFF */
 #include <assert.h>
 
 #include "inman/comp/acdefs.hpp"
@@ -18,81 +20,20 @@ namespace smsc  {
 namespace inman {
 
 /* ************************************************************************** *
- * class BillingConnect implementation:
+ * class BillingManager implementation:
  * ************************************************************************** */
-BillingConnect::BillingConnect(BillingCFG * cfg, Connect* conn, Logger * uselog/* = NULL*/)
-    : _cfg(*cfg), _conn(conn)
-{
-    logger = uselog ? uselog : Logger::getInstance("smsc.inman.BillConn");
-    _bcId = _conn->getSocketId();
-    if (!_cfg.maxBilling)
-        _cfg.maxBilling = 20;
-}
-
-BillingConnect::~BillingConnect()
-{
-    MutexGuard grd(_mutex);
-
-    //delete died billings first
-    cleanUpBills();
-
-    //abort all active Billings
-    for (BillingMap::iterator it = workers.begin(); it != workers.end(); it++) {
-        Billing * bill = (*it).second;
-        bill->Abort("BillingConnect destroyed");
-        delete bill;
-    }
-    workers.clear();
-}
-
-//mutex shouldbe locked prior to calling this function
-void BillingConnect::cleanUpBills(void)
-{
-    if (corpses.size()) {
-        for (BillingList::iterator it = corpses.begin(); it != corpses.end(); it++)
-            delete (*it);
-        corpses.clear();
-    }
-    return;
-}
-
-//returns true on success, false on closed connect(possibly due to error)
-bool BillingConnect::sendCmd(INPPacketAC* cmd)
-{
-    if (_conn)
-        return (_conn->sendPck(cmd) > 0) ? true : false;
-    return false;
-}
-
-void BillingConnect::billingDone(Billing* bill)
-{
-    MutexGuard grd(_mutex);
-    //delete died billings first
-    cleanUpBills();
-
-    unsigned int billId = bill->getId();
-    BillingMap::iterator it = workers.find(billId);
-    if (it == workers.end())
-        smsc_log_error(logger, "BillConn[%u]: Attempt to free unregistered Billing[%u]",
-                        _bcId, billId);
-    else
-        workers.erase(it); //billId
-    corpses.push_back(bill);
-    //smsc_log_debug(logger, "Billing[%u.%u]: released", _bcId, billId);
-    return; //grd off
-}
 
 /* -------------------------------------------------------------------------- *
  * ConnectListenerITF interface implementation:
  * -------------------------------------------------------------------------- */
-void BillingConnect::onCommandReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd)
+void BillingManager::onCommandReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd)
                         throw(std::exception)
 {
     //check service header
     INPPacketAC* pck = static_cast<INPPacketAC*>(recv_cmd.get());
     //check for header
     if (!pck->pHdr() || ((pck->pHdr())->Id() != INPCSBilling::HDR_DIALOG)) {
-        smsc_log_error(logger, "BillConn[%u]: missed/unknown cmd header", _bcId);
+        smsc_log_error(logger, "%s: missed/unsupported cmd header", _logId);
         return;
     }
     Billing* bill = NULL;
@@ -100,69 +41,56 @@ void BillingConnect::onCommandReceived(Connect* conn, std::auto_ptr<Serializable
     {
         MutexGuard   grd(_mutex);
         //delete died billings first
-        cleanUpBills(); 
+        cleanUpWorkers();
         //assign command to Billing
-        smsc_log_debug(logger, "BillConn[%u]: Cmd[0x%X] for Billing[%u] received",
-                       _bcId, pck->pCmd()->Id(), srvHdr->dlgId);
+        smsc_log_debug(logger, "%s: Cmd[0x%X] for Billing[%u] received", _logId,
+                       pck->pCmd()->Id(), srvHdr->dlgId);
         
-        BillingMap::iterator it = workers.find(srvHdr->dlgId);
+        WorkersMap::iterator it = workers.find(srvHdr->dlgId);
         if (it == workers.end()) {
             if (workers.size() < _cfg.maxBilling) {
-                bill = new Billing(this, srvHdr->dlgId, logger);
-                workers.insert(BillingMap::value_type(srvHdr->dlgId, bill));
+                bill = new Billing(srvHdr->dlgId, this, logger);
+                workers.insert(WorkersMap::value_type(srvHdr->dlgId, bill));
             } else {
                 SPckChargeSmsResult spck;
                 spck.Cmd().SetValue(ChargeSmsResult::CHARGING_NOT_POSSIBLE);
-                spck.Cmd().setError(errProtocol, InProtocol_ResourceLimitation);
+                spck.Cmd().setError(errInman, InLogic_ResourceLimitation);
                 spck.Hdr().dlgId = srvHdr->dlgId;
                 _conn->sendPck(&spck);
-                smsc_log_warn(logger, "BillConn[%u]: maxBilling limit reached: %u",
-                              _bcId, _cfg.maxBilling);
+                smsc_log_warn(logger, "%s: maxBilling limit reached: %u", _logId,
+                              _cfg.maxBilling);
 
                 if (logger->isDebugEnabled()) {
                     std::string dump;
-                    format(dump, "BillConn[%u]: Workers [%u of %u]: ", _bcId,
+                    format(dump, "%s: Workers [%u of %u]: ", _logId,
                            workers.size(), _cfg.maxBilling);
                     for (it = workers.begin(); it != workers.end(); it++) {
-                        Billing* worker = (*it).second;
+                         Billing* worker = (Billing*)((*it).second);
                         format(dump, "[%u].%u, ", worker->getId(), worker->getState());
                     }
                     smsc_log_debug(logger, dump.c_str());
                 }   
             }
         } else
-            bill = (*it).second;
+            bill = (Billing*)((*it).second);
     } //grd off
     if (bill)
         bill->handleCommand(pck);
     return;
 }
 
-//Stops all Billings due to error condition pending on socket
-void BillingConnect::onConnectError(Connect* conn, bool fatal/* = false*/)
-{
-    MutexGuard grd(mutex);
-    CustomException * exc = conn->hasException();
-    smsc_log_error(logger, "BillConn[%u]: %s",
-                   _bcId, exc ? exc->what() : "connect error");
-
-//    if (fatal) { /*stops all billings*/ }
-    return; //grd off
-}
-
 /* ************************************************************************** *
  * class Billing implementation:
  * ************************************************************************** */
-Billing::Billing(BillingConnect* bconn, unsigned int b_id, 
-                Logger * uselog/* = NULL*/)
-        : _bconn(bconn), _bId(b_id), state(bilIdle), capDlg(NULL)
+Billing::Billing(unsigned b_id, BillingManager * owner, Logger * uselog/* = NULL*/)
+        : WorkerAC(b_id, owner, uselog), state(bilIdle), capDlg(NULL)
         , postpaidBill(false), abType(AbonentContractInfo::abtUnknown)
         , providerQueried(false), capDlgActive(false), capSess(NULL)
         , abPolicy(NULL), billErr(0)
 {
     logger = uselog ? uselog : Logger::getInstance("smsc.inman.Billing");
-    _cfg = bconn->getConfig();
-    snprintf(_logId, sizeof(_logId)-1, "Billing[%u:%u]", _bconn->bConnId(), _bId);
+    _cfg = owner->getConfig();
+    snprintf(_logId, sizeof(_logId)-1, "Billing[%u:%u]", _mgr->cmId(), _wId);
 }
 
 
@@ -284,7 +212,7 @@ void Billing::doFinalize(bool doReport/* = true*/)
     doCleanUp();
     if (doReport) {
         state = bilComplete;
-        _bconn->billingDone(this);
+        _mgr->workerDone(this);
     }
     return;
 }
@@ -447,7 +375,7 @@ bool Billing::onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr)
         smsc_log_error(logger, "%s: no policy set for %s", _logId, 
                        abNumber.toString().c_str());
     } else {
-        smsc_log_debug(logger, "%s: using policy: %s", _logId, abPolicy->ident);
+        smsc_log_debug(logger, "%s: using policy: %s", _logId, abPolicy->Ident());
         if ((abType == AbonentContractInfo::abtUnknown)
             || ((abType == AbonentContractInfo::abtPrepaid) && !abRec.getSCFinfo())) {
             // configure SCF by quering provider first
@@ -564,11 +492,11 @@ void Billing::chargeResult(ChargeSmsResult::ChargeSmsResult_t chg_res, uint32_t 
     SPckChargeSmsResult res;
     res.Cmd().SetValue(chg_res);
     res.Cmd().setError(inmanErr);
-    res.Hdr().dlgId = _bId;
-    if (_bconn->sendCmd(&res))
+    res.Hdr().dlgId = _wId;
+    if (_mgr->sendCmd(&res))
         StartTimer(_cfg.maxTimeout);
     else     //TCP connect fatal failure
-        abortThis(_bconn->connectError()->what());
+        abortThis(_mgr->connectError()->what());
     return;
 }
 
@@ -599,9 +527,9 @@ void Billing::handleCommand(INPPacketAC* pck)
             if (!goon || !onChargeSms(static_cast<ChargeSms*>(pck->pCmd()), NULL)) {
                 SPckChargeSmsResult spck;
                 spck.Cmd().SetValue(ChargeSmsResult::CHARGING_NOT_POSSIBLE);
-                spck.Cmd().setError(errProtocol, InProtocol_InvalidData);
-                spck.Hdr().dlgId = _bId;
-                _bconn->sendCmd(&spck);
+                spck.Cmd().setError(errInman, InProtocol_InvalidData);
+                spck.Hdr().dlgId = _wId;
+                _mgr->sendCmd(&spck);
                 doFinalize();
             }
         } else {

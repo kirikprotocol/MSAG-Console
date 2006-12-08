@@ -13,9 +13,8 @@ using smsc::inman::interaction::ServSocketCFG;
 using smsc::inman::interaction::Server;
 using smsc::inman::interaction::ServerListener;
 
-#include "inman/BillSession.hpp"
+#include "inman/BillingManager.hpp"
 using smsc::inman::BillingCFG;
-using smsc::inman::BillingConnect;
 using smsc::inman::cache::AbonentCacheCFG;
 using smsc::inman::filestore::InFileStorageRoller;
 
@@ -35,31 +34,54 @@ struct InService_CFG {
     }
 };
 
-class Service : public ServerListener {
+typedef struct {
+    enum _BindType {
+        bindSockId = 0, bindSessId
+    }          type;
+    unsigned    sId;
+    Connect*    conn;
+    ConnectManagerAC * hdl;
+} SessionInfo;
+
+class Service : public ServerListener, public ConnectListenerITF {
 public:
     Service(const InService_CFG * in_cfg, Logger * uselog = NULL);
     virtual ~Service();
 
     bool start();
     void stop();
-    void onBillingConnectClosed(unsigned int connId);
-    
-    //ServerListener interface
+
+protected:
+    friend class smsc::inman::interaction::Server;
+    //-- ServerListener interface methods
     void onConnectOpened(Server* srv, Connect* conn);
     void onConnectClosing(Server* srv, Connect* conn);
     void onServerShutdown(Server* srv, Server::ShutdownReason reason);
 
+    friend class smsc::inman::interaction::Connect;
+    //-- ConnectListenerITF methods
+    void onCommandReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd)
+        throw (std::exception);
+    //NOTE: it's recommended to reset exception if it doesn't prevent entire Connect to function
+    void onConnectError(Connect* conn, bool fatal = false);
+
 private:
-    typedef std::map<unsigned int, BillingConnect*> BillingConnMap;
+    typedef std::map<unsigned, SessionInfo> SessionsMap;
+    typedef std::map<unsigned /*sock_id*/, unsigned /*sess_id*/> SocketsMap;
+
+    void closeSession(unsigned sockId);
 
     Mutex           _mutex;
-    BillingConnMap  bConnects;
     Logger*         logger;
     TCAPDispatcher* disp;
     Server*         server;
     volatile bool   running;
     InService_CFG   _cfg;
     InFileStorageRoller * roller;
+
+    SessionsMap     sessions;
+    SocketsMap      sockets;
+    unsigned        lastSessId;
 };
 
 } //inman

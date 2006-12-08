@@ -24,7 +24,7 @@ ChargeSmsResult     <-   | bilProcessed ]
 ]
 */
 
-#include "inman/BillSession.hpp"
+#include "inman/BillingManager.hpp"
 using smsc::inman::AbonentPolicy;
 using smsc::inman::sync::StopWatch;
 using smsc::inman::sync::TimerListenerITF;
@@ -46,8 +46,9 @@ using smsc::inman::interaction::DeliverySmsResult;
 namespace smsc    {
 namespace inman   {
 
-class Billing : public CapSMS_SSFhandlerITF, public INPBillingHandlerITF,
-                public IAPQueryListenerITF, public TimerListenerITF {
+class Billing : public WorkerAC, public CapSMS_SSFhandlerITF, 
+                public IAPQueryListenerITF, public TimerListenerITF,
+                INPBillingHandlerITF {
 public:
     typedef enum {
         bilIdle, bilAborted,
@@ -67,26 +68,20 @@ public:
         doCont = 0, doEnd, doAbort
     } BillAction;
 
-    Billing(BillingConnect* bconn, unsigned int b_id, Logger * uselog = NULL);
+    Billing(unsigned b_id, BillingManager * owner, Logger * uselog = NULL);
     virtual ~Billing();
 
-    uint32_t     getId(void) const { return _bId; }
-    BillingState getState(void) const { return state; }
-
-    
+    //-- WorkerAC interface
     void     handleCommand(INPPacketAC* cmd);
-    //aborts billing due to fatal error
-    void     Abort(const char * reason = NULL);
+    void     Abort(const char * reason = NULL); //aborts billing due to fatal error
+
+    BillingState getState(void) const { return state; }
     //
     bool     isPostpaidBill(void) const { return postpaidBill; }
     //retuns false if CDR was not complete
     bool     CDRComplete(void) const { return cdr._finalized; }
     //returns true if all billing stages are completed
     bool     BillComplete(void) const;
-
-    //-- INPBillingHandlerITF interface methods:
-    bool onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr);
-    void onDeliverySmsResult(DeliverySmsResult* dlvr_res, CsBillingHdr_dlg *hdr);
 
     //-- CapSMS_SSFhandlerITF interface methods:
     void onDPSMSResult(unsigned char rp_cause = 0);
@@ -100,6 +95,10 @@ public:
     void onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj);
 
 protected:
+    //-- INPBillingHandlerITF interface methods:
+    bool onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr);
+    void onDeliverySmsResult(DeliverySmsResult* dlvr_res, CsBillingHdr_dlg *hdr);
+
     typedef std::map<unsigned, StopWatch*> TimersMAP;
 
     void doCleanUp(void);
@@ -116,10 +115,7 @@ protected:
 
     Mutex           bilMutex;
     BillingCFG      _cfg;
-    Logger*         logger;
-    uint32_t        _bId;       //unique billing dialogue id
-    BillingConnect* _bconn;     //parent BillingConnect
-                                //prefix for logging info
+                    //prefix for logging info
     char            _logId[sizeof("Billing[%u:%u]") + sizeof(unsigned int)*3 + 1];
     BillingState    state;
 

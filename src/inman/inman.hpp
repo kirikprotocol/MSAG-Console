@@ -72,12 +72,12 @@ protected:
     AbonentCacheITF * cache;
     IAProviderITF * prvd;
     IAProviderCreatorITF * provAllc;
+    std::string     ident;
 
 public:
-    const char *    ident;   //policy ident
     INScfsMAP      scfMap;
 
-    AbonentPolicy(const char * nm_pol = NULL)
+    AbonentPolicy(const char * nm_pol)
         : ident(nm_pol), prvd(NULL), provAllc(NULL), cache(NULL)
     { }
     ~AbonentPolicy()
@@ -85,6 +85,8 @@ public:
         if (provAllc)
              delete provAllc;
     }
+
+    const char * Ident(void) { return ident.c_str(); }
 
     bool getSCFparms(INScfCFG* scf)
     {
@@ -102,10 +104,10 @@ public:
         if (!prvd && provAllc) {
             if (!(prvd = provAllc->create(use_log)))
                 smsc_log_error(use_log, "%s: AbonentProvider %s initialization failed!",
-                               ident, provAllc->ident());
+                               ident.c_str(), provAllc->ident());
             else {
-                smsc_log_info(use_log, "%s: AbonentProvider %s inited", ident,
-                              provAllc->ident());
+                smsc_log_info(use_log, "%s: AbonentProvider %s inited",
+                              ident.c_str(), provAllc->ident());
                 provAllc->logConfig(use_log);
                 if (cache)
                     prvd->bindCache(cache);

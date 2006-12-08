@@ -11,7 +11,7 @@ extern const char * _InmanErrorSource[];
 
 typedef enum { errOk = 0, 
     errRPCause = 1,     // RP cause MO SM transfer
-    errProtocol = 2,    // INMan <-> SMSC protocol
+    errInman = 2,       // INMan <-> SMSC protocol
     errTCAP = 3,        // TCAP layer errors
     errTCuser = 4,      // TC user errors
     errCAP3 = 5,        // CAP3 services errors
@@ -24,9 +24,11 @@ typedef enum { errOk = 0,
 
 typedef enum {
     InProtocol_GeneralError = 1,
-    InProtocol_ResourceLimitation = 2,
-    InProtocol_InvalidData = 3
-} InmanProtocolErrors;
+    InProtocol_InvalidData,
+    InLogic_ResourceLimitation,
+    InLogic_GeneralError,
+    InLogic_TimedOut
+} InmanInternalErrors;
 
 typedef enum {
   tcapUnrecognizedMessageType = 0, tcapUnrecognizedTransactionID = 1,

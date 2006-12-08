@@ -7,7 +7,7 @@ namespace smsc  {
 namespace inman {
 
 const char * _InmanErrorSource[] = {
-    "Ok", "RPCause", "INManProtocol",
+    "Ok", "RPCause", "INManInternals",
     "TCAP", "TCuser", "CAP3", "CAPuser", "MAP", "MAPuser"
 };
 /* ************************************************************************** *
@@ -20,7 +20,7 @@ typedef struct {
 
 static const InErrorRange    _ranges[] = { {0,0} //placeholder
     ,{0, 255}      //RP cause MO SM transfer
-    ,{256, 279}    //Inman-SMSC TCP protocol errors
+    ,{256, 279}    //Inman logic/protocol errors
     ,{280, 409}    //TCAP errors
     ,{410, 675}    //TCuser  errors
     ,{680, 935}    //CAP3 operations errors

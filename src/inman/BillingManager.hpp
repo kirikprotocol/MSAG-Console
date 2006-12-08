@@ -1,12 +1,14 @@
 #ident "$Id$"
-
-#ifndef __SMSC_INMAN_BILLING_SESSION__
-#define __SMSC_INMAN_BILLING_SESSION__
+/* ************************************************************************* *
+ * BillingManager: manages SMSC billing requests on given Connect in
+ * asynchronous mode
+ * ************************************************************************* */
+#ifndef __SMSC_INMAN_BILLING_MANGER_HPP
+#define __SMSC_INMAN_BILLING_MANGER_HPP
 
 #include "inman/inman.hpp"
 using smsc::inman::AbonentPolicies;
 using smsc::inman::INScfCFG;
-using smsc::inman::SmsXServiceMap;
 
 #include "inman/common/TimeWatcher.hpp"
 using smsc::inman::sync::TimeWatcher;
@@ -14,12 +16,9 @@ using smsc::inman::sync::TimeWatcher;
 #include "inman/storage/CDRStorage.hpp"
 using smsc::inman::filestore::InBillingFileStorage;
 
-#include "inman/interaction/connect.hpp"
-using smsc::inman::interaction::Connect;
-using smsc::inman::interaction::ConnectListenerITF;
-
-#include "inman/interaction/messages.hpp"
-using smsc::inman::interaction::INPPacketAC;
+#include "inman/ConnManager.hpp"
+using smsc::inman::WorkerAC;
+using smsc::inman::ConnectManagerT;
 
 namespace smsc    {
 namespace inman   {
@@ -59,49 +58,22 @@ struct BillingCFG {
 
 };
 
-class Billing; //see billing.hpp
-
-//Manages SMSC Requests on given Connect in parallel/asynchronous mode
-//(for each request initiates new Billing).
-class BillingConnect: public ConnectListenerITF {
+class BillingManager: public ConnectManagerT<BillingCFG> {
 public: 
-    BillingConnect(BillingCFG * cfg, Connect* conn, Logger * uselog = NULL);
-    ~BillingConnect();
-
-    unsigned int    bConnId(void) const { return _bcId; }
-    const BillingCFG & getConfig(void) const { return _cfg;}
-
-    //sends command, returns true on success
-    bool sendCmd(INPPacketAC* cmd);
-    //releases completed Billing, writting CDR if required
-    void billingDone(Billing* bill);
-    //
-    CustomException * connectError(void) const { return _conn ? _conn->hasException() : NULL; }
+    BillingManager(BillingCFG * cfg, unsigned cm_id, Connect* conn, Logger * uselog = NULL)
+        : ConnectManagerT<BillingCFG>(cfg, cm_id, conn, uselog)
+    {
+        logger = uselog ? uselog : Logger::getInstance("smsc.inman");
+        snprintf(_logId, sizeof(_logId)-1, "BillMgr[%u]", _cmId);
+    }
+    ~BillingManager() { }
 
     //-- ConnectListenerITF interface
     void onCommandReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd)
             throw(std::exception);
-    //Stops all Billings due to fatal socket error
-    void onConnectError(Connect* conn, bool fatal/* = false*/);
-
-protected:
-    typedef std::map<unsigned int, Billing*> BillingMap;
-    typedef std::list<Billing*> BillingList;
-
-    void cleanUpBills(void);
-
-    Mutex       _mutex;
-    Logger*     logger;
-    unsigned int _bcId;
-    BillingCFG  _cfg;
-    BillingMap  workers;
-    BillingList corpses;
-    Connect*    _conn;
 };
-
 
 } //inman
 } //smsc
-
-#endif /* __SMSC_INMAN_BILLING_SESSION__ */
+#endif /* __SMSC_INMAN_BILLING_MANGER_HPP */
 
