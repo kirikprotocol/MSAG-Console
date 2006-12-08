@@ -173,16 +173,16 @@ void LongCallTask::ExecutePersCall(LongCallContext* ctx)
 {
     PersCallParams* persParams = (PersCallParams*)ctx->getParams();
     PersClient& pc = PersClient::Instance();
-    smsc_log_debug(logger, "ExecutePersCall: command=%d", ctx->callCommandId);
+    smsc_log_debug(logger, "ExecutePersCall: command=%d %s", ctx->callCommandId, persParams->skey.c_str());
     try{
         if(persParams->pt == PT_ABONENT)        
             switch(ctx->callCommandId)
             {
-                case PERS_GET: pc.GetProperty(persParams->pt, persParams->skey, persParams->propName.c_str(), persParams->prop); break;
-                case PERS_SET: pc.SetProperty(persParams->pt, persParams->skey, persParams->prop); break;
-                case PERS_DEL: pc.DelProperty(persParams->pt, persParams->skey, persParams->propName.c_str()); break;
-                case PERS_INC_MOD: persParams->result = pc.IncModProperty(persParams->pt, persParams->skey, persParams->prop, persParams->mod); break;
-                case PERS_INC: pc.IncProperty(persParams->pt, persParams->skey, persParams->prop); break;
+                case PERS_GET: pc.GetProperty(persParams->pt, persParams->skey.c_str(), persParams->propName.c_str(), persParams->prop); break;
+                case PERS_SET: pc.SetProperty(persParams->pt, persParams->skey.c_str(), persParams->prop); break;
+                case PERS_DEL: pc.DelProperty(persParams->pt, persParams->skey.c_str(), persParams->propName.c_str()); break;
+                case PERS_INC_MOD: persParams->result = pc.IncModProperty(persParams->pt, persParams->skey.c_str(), persParams->prop, persParams->mod); break;
+                case PERS_INC: pc.IncProperty(persParams->pt, persParams->skey.c_str(), persParams->prop); break;
             }
         else
             switch(ctx->callCommandId)

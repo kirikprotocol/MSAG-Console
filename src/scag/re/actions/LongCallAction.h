@@ -19,7 +19,7 @@ protected:
             startIndex = longCallContext.ActionStack.top().actionIndex;
             smsc_log_debug(logger, "Skeep %d actions", startIndex);
 
-            if (startIndex >= actions.size())
+            if(startIndex >= actions.size())
             {
                 smsc_log_error(logger, "Cannot continue running actions. Details: action index out of bound");
                 context.clearLongCallContext();
@@ -89,6 +89,5 @@ public:
 
 
 }}}
-
 
 #endif
