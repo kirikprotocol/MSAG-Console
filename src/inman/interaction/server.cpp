@@ -1,4 +1,6 @@
+#ifndef MOD_IDENT_OFF
 static char const ident[] = "$Id$";
+#endif /* MOD_IDENT_OFF */
 #include <assert.h>
 
 #include "inman/interaction/server.hpp"
@@ -7,17 +9,18 @@ namespace smsc  {
 namespace inman {
 namespace interaction  {
 
-//timeout for select()
-#define TIMEOUT_STEP 100 //millisecs
-#define LISTENER_RESTART_ATTEMPTS  2
-
+#define TIMEOUT_STEP                100 //default timeout for select(), millisecs
+#define LISTENER_RESTART_ATTEMPTS   2
+/* ************************************************************************** *
+ * class Service implementation:
+ * ************************************************************************** */
 Server::Server(const ServSocketCFG * in_cfg, Logger * uselog /*= NULL*/)
-    : _cfg(*in_cfg), lstRestartCnt(0)
-    , _runState(Server::lstStopped), logger(uselog)
+    : _cfg(*in_cfg), lstRestartCnt(0), _runState(Server::lstStopped), logger(uselog)
 {
     assert(_cfg.host.length());
     if (!logger)
         logger = Logger::getInstance("smsc.inman.TCPSrv");
+    setPollTimeout(TIMEOUT_STEP);
 }
 
 Server::~Server()
@@ -36,60 +39,49 @@ Server::~Server()
     }
 }
 
-//Closes all client's connections
-void Server::closeAllConnects(bool abort/* = false*/)
+void Server::setPollTimeout(unsigned long milli_secs)
 {
-    if (connects.size()) {
-        smsc_log_debug(logger, "TCPSrv: %s %u connects ..", abort ? "killing" : "closing",
-                       connects.size());
-        ConnectsList::iterator it = connects.begin();
-        while (it != connects.end()) {
-            ConnectsList::iterator cit = it; it++;
-            closeConnect(*cit, abort);
-            connects.erase(cit);
-        } 
-    }
+    if (!milli_secs)
+        milli_secs = TIMEOUT_STEP;
+
+    tmo.tv_sec = milli_secs/1000;
+    tmo.tv_usec = 1000L*(milli_secs % 1000);
 }
 
-void Server::openConnect(Socket* use_sock)
+//Ad hoc method: upon successfull socket initialization,
+//calls listeners via onConnectOpening()
+bool Server::setConnection(const char * host, unsigned port, unsigned timeout_secs)
 {
-    unsigned sock_id = use_sock->getSocket();
-    std::auto_ptr<Connect> pConn(new Connect(use_sock,
-                                        Connect::frmStraightData, NULL, logger));
-    try {
-        for (ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++) {
-            ServerListener* ptr = *it;
-            ptr->onConnectOpened(this, pConn.get());
-        }
-        if (!pConn->hasListeners())
-            smsc_log_warn(logger, "TCPSrv: connect[%u] no listener set!", sock_id);
-        else
-            connects.push_back(pConn.release());
-    } catch (const std::exception& exc) {
-        smsc_log_error(logger, "TCPSrv: connect[%u] opening listener exception: %s",
-                       sock_id, exc.what());
+    std::auto_ptr<Socket> socket(new Socket());
+    if (socket->Init(host, port, timeout_secs)
+        || socket->Connect()) {
+        smsc_log_error(logger, "TCPSrv: unable to set connection to %s:%u : %s (%d)",
+                       host, port, strerror(errno), errno);
+        return false;
     }
-    if (pConn.get()) {
-        pConn->close(true);
-        smsc_log_debug(logger, "TCPSrv: Socket[%u] closed.", sock_id);
-    }
+    openConnect(socket);
+    return true;
 }
 
-void Server::closeConnect(Connect* connect, bool abort/* = false*/)
+bool Server::Start(void)
 {
-    SOCKET sockId = connect->getSocketId();
-    try {
-        for (ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++) {
-            ServerListener* ptr = *it;
-            ptr->onConnectClosing(this, connect);
-        }
-    } catch (const std::exception& exc) {
-        smsc_log_error(logger, "TCPSrv: connect[%u] closing listener exception: %s",
-                       (unsigned)sockId, exc.what());
+    if (serverSocket.InitServer(_cfg.host.c_str(), _cfg.port, _cfg.timeout)) {
+        smsc_log_fatal(logger, "TCPSrv: failed to init server socket %s:%d",
+                       _cfg.host.c_str(), _cfg.port);
+        return false;
     }
-    connect->close(abort);
-    delete connect;
-    smsc_log_debug(logger, "TCPSrv: Socket[%u] closed.", (unsigned)sockId);
+    if (serverSocket.StartServer()) {
+        smsc_log_fatal(logger, "TCPSrv: failed to start server socket %s:%d",
+                       _cfg.host.c_str(), _cfg.port);
+        return false;
+    }
+
+    Thread::Start();
+    if (lstEvent.Wait(TIMEOUT_STEP)) {
+        smsc_log_error(logger, "TCPSrv: unable to start Listener thread");
+        return false;
+    }
+    return true;
 }
 
 void Server::Stop(unsigned int timeOutMilliSecs/* = 400*/)
@@ -119,15 +111,79 @@ void Server::Stop(unsigned int timeOutMilliSecs/* = 400*/)
     WaitFor();
 }
 
+/* -------------------------------------------------------------------------- *
+ * Private/Protected methods:
+ * -------------------------------------------------------------------------- */
+//Closes all client's connections
+void Server::closeAllConnects(bool abort/* = false*/)
+{
+    if (connects.size()) {
+        smsc_log_debug(logger, "TCPSrv: %s %u connects ..", abort ? "killing" : "closing",
+                       connects.size());
+        ConnectsList::iterator it = connects.begin();
+        while (it != connects.end()) {
+            ConnectsList::iterator cit = it; it++;
+            closeConnect(*cit, abort);
+            connects.erase(cit);
+        } 
+    }
+}
+//Notifies listeners for new socket opened. In case of ConnectAC is created
+//by listeners, add it to connects collection.
+//NOTE: Requires _mutex to be unlocked !!!
+void Server::openConnect(std::auto_ptr<Socket>& use_sock)
+{
+    unsigned sock_id = use_sock->getSocket();
+    std::auto_ptr<ConnectAC> pConn;
+    try {
+        for (ListenerList::iterator it = listeners.begin();
+             it != listeners.end() && !pConn.get(); it++) {
+            ServerListenerITF* ptr = *it;
+            pConn.reset(ptr->onConnectOpening(this, use_sock.get()));
+        }
+    } catch (const std::exception& exc) {
+        smsc_log_error(logger, "TCPSrv: connect[%u] opening listener exception: %s",
+                       sock_id, exc.what());
+    }
+    if (pConn.get() && (pConn->State() == ConnectAC::connAlive)) {
+        MutexGuard grd(_mutex);
+        use_sock.release();
+        connects.push_back(pConn.release());
+    } else {
+        use_sock->Abort();
+        smsc_log_warn(logger, "TCPSrv: Socket[%u] closed: no listener set!", sock_id);
+    }
+}
+
+void Server::closeConnect(ConnectAC* connect, bool abort/* = false*/)
+{
+    unsigned sockId = connect->getId();
+    try {
+        for (ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++) {
+            ServerListenerITF* ptr = *it;
+            ptr->onConnectClosing(this, connect);
+        }
+    } catch (const std::exception& exc) {
+        smsc_log_error(logger, "TCPSrv: connect[%u] closing listener exception: %s",
+                       (unsigned)sockId, exc.what());
+    }
+    connect->Close(abort);
+    delete connect;
+    smsc_log_debug(logger, "TCPSrv: Socket[%u] closed.", (unsigned)sockId);
+}
+
+void Server::closeConnectGuarded(ConnectAC* conn, bool abort/* = false*/)
+{
+    {
+        MutexGuard grd(_mutex);
+        connects.remove(conn);
+    }
+    closeConnect(conn, abort);
+}
 
 Server::ShutdownReason Server::Listen(void)
 {
-    struct timeval tmo;
     Server::ShutdownReason result = Server::srvStopped;
-
-    tmo.tv_sec = 0;
-    tmo.tv_usec = 1000L*TIMEOUT_STEP;
-
     _mutex.Lock();
     _runState = Server::lstRunning;
     while (_runState != Server::lstStopped) {
@@ -152,7 +208,7 @@ Server::ShutdownReason Server::Listen(void)
             maxSock = serverSocket.getSocket();
         } //in case of lstStopping the clients connection should be served for a while
         for (ConnectsList::iterator i = connects.begin(); i != connects.end(); i++) {
-            SOCKET  socket = (*i)->getSocketId();
+            SOCKET  socket = (*i)->getId();
             FD_SET(socket, &readSet);
             FD_SET(socket, &errorSet);
             if (socket > maxSock)
@@ -181,37 +237,27 @@ Server::ShutdownReason Server::Listen(void)
         ConnectsList stump(connects);
         _mutex.Unlock();
         for (ConnectsList::iterator i = stump.begin(); i != stump.end(); i++) {
-            Connect* conn = (*i);
-            SOCKET socket = conn->getSocketId();
+            ConnectAC* conn = (*i);
+            SOCKET socket = (SOCKET)conn->getId();
 
             if (FD_ISSET(socket, &readSet)) {
-                bool doClose = !conn->process();
-                if (doClose) //remote point ends connection
+                ConnectAC::ConnectState  st = conn->onReadEvent();
+                if (st == ConnectAC::connEOF)
                     smsc_log_debug(logger, "TCPSrv: client ends Connect[%u]", socket);
-                else {
-                    CustomException * exc = conn->hasException();
-                    if (exc) {
-                        smsc_log_error(logger, "TCPSrv: %s", exc->what());
-                        doClose = true;
-                    }
-                }
-                if (doClose) {
-                    connects.remove(conn);
-                    closeConnect(conn);
-                }
+                if (st != ConnectAC::connAlive)
+                    closeConnectGuarded(conn);
             }
             if (FD_ISSET(socket, &errorSet)) {
                 smsc_log_debug(logger, "TCPSrv: Error Event on socket[%u].", socket);
-                conn->handleConnectError(true);
-                connects.remove(conn);
-                closeConnect(conn, true);
+                conn->onErrorEvent();
+                closeConnectGuarded(conn, true);
             }
         }
 
         if (_runState == Server::lstRunning) {
             if (FD_ISSET(serverSocket.getSocket(), &readSet)) {
-                Socket* clientSocket = serverSocket.Accept();
-                if (!clientSocket) {
+                std::auto_ptr<Socket> clientSocket(serverSocket.Accept());
+                if (!clientSocket.get()) {
                     smsc_log_error(logger, "TCPSrv: failed to accept client connection, cause: %d (%s)",
                                    errno, strerror(errno));
                 } else if (connects.size() < _cfg.maxConn) {
@@ -219,7 +265,6 @@ Server::ShutdownReason Server::Listen(void)
                                    clientSocket->getSocket());
                     openConnect(clientSocket);
                 } else { //connects number exceeded
-                    delete clientSocket;
                     smsc_log_warn(logger, "TCPSrv: connection refused, "
                                           "resource limitation: %u", _cfg.maxConn);
                 }
@@ -262,31 +307,10 @@ int Server::Execute()
     //notify ServerListeners about server shutdown
     ListenerList cplist = listeners;
     for (ListenerList::iterator it = cplist.begin(); it != cplist.end(); it++) {
-        ServerListener* ptr = *it;
+        ServerListenerITF* ptr = *it;
         ptr->onServerShutdown(this, result);
     }
     return result;
-}
-
-bool Server::Start(void)
-{
-    if (serverSocket.InitServer(_cfg.host.c_str(), _cfg.port, _cfg.timeout)) {
-        smsc_log_fatal(logger, "TCPSrv: failed to init server socket %s:%d",
-                       _cfg.host.c_str(), _cfg.port);
-        return false;
-    }
-    if (serverSocket.StartServer()) {
-        smsc_log_fatal(logger, "TCPSrv: failed to start server socket %s:%d",
-                       _cfg.host.c_str(), _cfg.port);
-        return false;
-    }
-
-    Thread::Start();
-    if (lstEvent.Wait(TIMEOUT_STEP)) {
-        smsc_log_error(logger, "TCPSrv: unable to start Listener thread");
-        return false;
-    }
-    return true;
 }
 
 } // namespace interaction

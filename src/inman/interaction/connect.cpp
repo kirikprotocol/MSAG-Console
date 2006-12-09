@@ -1,8 +1,11 @@
+#ifndef MOD_IDENT_OFF
 static char const ident[] = "$Id$";
+#endif /* MOD_IDENT_OFF */
 #include <assert.h>
 
 #include "util/BinDump.hpp"
 using smsc::util::DumpHex;
+//using smsc::util::DumpDbg;
 
 #include "inman/interaction/connect.hpp"
 using smsc::inman::interaction::ObjectBuffer;
@@ -15,56 +18,111 @@ extern const ConnectParms _ConnectParms_DFLT = {
     /*bufSndSz = */1024, /*bufRcvSz = */1028, /*maxPckSz = */32767
 };
 
-Connect::Connect(Socket* sock, ConnectFormat frm/* = Connect::frmLengthPrefixed*/,
-                 SerializerITF * serializer/* = NULL*/, Logger * uselog/* = NULL*/)
-    : logger(uselog), socket(sock), _frm(frm), _exc(NULL)
-    , _objSerializer(serializer), _parms(_ConnectParms_DFLT)
+/* ************************************************************************** *
+ * classes PckAcquirer implementation:
+ * ************************************************************************** */
+SocketAcquirerAC::SAcqStatus PckAcquirer::onSocketError(void)
 {
-    assert(socket);
+    exc.reset(new CustomException("%s: socket error, code %u: %s", logId, errno,
+                                    errno ? strerror(errno) : ""));
+    return SocketAcquirerAC::acqSockErr;
+}
+
+SocketAcquirerAC::SAcqStatus PckAcquirer::onBytesReceived(unsigned lastRed)
+{
+    smsc_log_debug(logger, "%s: received %u of %ub: %s%s", logId, numRed, num2Read,
+                   "0x", DumpHex(numRed, dbuf).c_str());
+//                  "\n", DumpDbg(numRed, dbuf).c_str());
+    if (_state == pckIdle) {  //packet length is just red
+        uint32_t oct2read = ntohl(*(uint32_t*)len.buf);
+        len.ui = oct2read;
+        if (oct2read > maxPckSz) {
+            exc.reset(new CustomException("%s: incoming packet is too large: %ub",
+                                          logId, oct2read));
+            return SocketAcquirerAC::acqDataErr;
+        }
+        objBuf.reset(new ObjectBuffer(oct2read));
+        dbuf = objBuf->get();
+        numRed = 0;
+        num2Read = oct2read;
+        _state = pckLength;
+        return SocketAcquirerAC::acqAwaits;
+    }
+    assert((_state == pckLength));
+    //rest of packet was red, finilize objBuf, (_state == pckLength)
+    objBuf->setDataSize(len.ui);
+    _state = pckBody;
+    return SocketAcquirerAC::acqComplete;
+}
+
+/* ************************************************************************** *
+ * class Connect implementation:
+ * ************************************************************************** */
+Connect::Connect(Socket* sock, SerializerITF * serializer, Logger * uselog/* = NULL*/,
+                 ConnectParms * use_prm/* = NULL*/)
+    : ConnectAC(sock), logger(uselog), _exc(NULL), _objSerializer(serializer)
+{
+    assert(_socket && serializer);
     if (!uselog)
         logger = Logger::getInstance("smsc.inman.Connect");
-    snprintf(_logId, sizeof(_logId)-1, "Connect[%u]", (unsigned)socket->getSocket());
+    _parms = use_prm ? *use_prm : _ConnectParms_DFLT;
+    snprintf(_logId, sizeof(_logId)-1, "Connect[%u]", (unsigned)_socket->getSocket());
+    pckAcq.Init(_parms.maxPckSz, _logId, logger);
 }
 
-Connect::~Connect()
+/* -------------------------------------------------------------------------- *
+ * ConnectAC interface implementation:
+ * -------------------------------------------------------------------------- */
+ConnectAC::ConnectState Connect::onReadEvent(void)
 {
-    delete socket;
-}
+    switch (pckAcq.readSocket(_socket)) {
+    case PckAcquirer::acqEOF: {
+        smsc_log_debug(logger, "%s: remote point closed socket", _logId);
+        _state = ConnectAC::connEOF;
+    } break;
 
-void Connect::close(bool abort/* = false*/)
-{
-    if (abort)
-        socket->Abort();
-    else
-        socket->Close();
-}
+    case PckAcquirer::acqComplete: {
+        std::auto_ptr<SerializablePacketAC> msg;
+        try { msg.reset(_objSerializer->deserialize(pckAcq.objBuf));
+        } catch (SerializerException & exc) {
+            _exc.reset(new CustomException("%s: %s", _logId, exc.what()));
+        }
+        if (!_exc.get()) {
+            notifyByMsg(msg); 
+            pckAcq.Reset(); //acqAwaits
+        } else
+            notifyByExc();
+    } break;
 
-void Connect::Init(Connect::ConnectFormat frm, 
-                    SerializerITF * serializer, ConnectParms * prm/* = NULL*/)
-{
-    _frm = frm;
-    _objSerializer = serializer;
-    if (prm)
-        _parms = *prm;
+    case PckAcquirer::acqDataErr: case PckAcquirer::acqSockErr: {
+        _exc.reset(pckAcq.exc.release());
+        notifyByExc();
+    } break;
+
+    default:; // case PckAcquirer::acqAwaits:
+    } /* eosw */
+    return _state;
 }
 
 //passes Connect exception to connect listeners
-void Connect::handleConnectError(bool fatal/* = false*/)
+ConnectAC::ConnectState Connect::onErrorEvent()
 {
-    //this Connect may be desroyed by one of onConnectError() so iterate over copy of list
-    ListenerList    cplist = listeners;
-    for (ListenerList::iterator it = cplist.begin(); it != cplist.end(); it++) {
-        ConnectListenerITF* ptr = *it;
-        ptr->onConnectError(this, fatal);
-    }
+    _exc.reset(new CustomException("%s: socket error, code %u: %s", _logId, errno,
+                                    errno ? strerror(errno) : ""));
+    notifyByExc();
+    //unconditionally close connection
+    return _state = ConnectAC::connException;
 }
 
+/* -------------------------------------------------------------------------- *
+ * Public methods:
+ * -------------------------------------------------------------------------- */
 //sends bytes directly to socket, 
 //returns -1 on error, otherwise - number of bytes sent
 int  Connect::send(const unsigned char *buf, int bufSz)
 {
     MutexGuard  tmp(sndSync);
-    int n = socket->Write((const char *)buf, bufSz);
+    int n = _socket->Write((const char *)buf, bufSz);
     if ((n < bufSz) || logger->isDebugEnabled()) {
         std::string         dstr;
         Logger::LogLevel    errLvl;
@@ -84,131 +142,52 @@ int  Connect::send(const unsigned char *buf, int bufSz)
     return (n < bufSz) ? (-1) : n;
 }
 
-//serializes and sends object to socket according to ConnectFormat
+//serializes and sends object to socket in length prefixed format,
 //returns -1 on error, or number of total bytes sent
 int  Connect::sendPck(SerializablePacketAC* pck)
 {
-    int             offs = 4;
     ObjectBuffer    buffer(_parms.bufSndSz);
-
-    buffer.setPos(offs);
+    buffer.setPos(4);
     pck->serialize(buffer);
-    if (_frm == Connect::frmLengthPrefixed) {
+    {
         uint32_t len = htonl((uint32_t)buffer.getPos() - 4);
         memcpy(buffer.get(), (const void *)&len, 4);
-        offs = 0;
     }
-    return send(buffer.get() + offs, buffer.getPos());
-}
-
-//Thread safe version of receive_buf
-int  Connect::receive(unsigned char *buf, int bufSz, int minToRead)
-{
-    MutexGuard  tmp(rcvSync);
-    return receive_buf(buf, bufSz, minToRead);
-}
-
-//receives and deserializes object from socket,
-//return NULL on error, otherwise - allocated object
-SerializablePacketAC* Connect::recvPck(void)
-{
-    MutexGuard  tmp(rcvSync);
-    int             n;
-    uint32_t        oct2read = _parms.bufRcvSz;
-    
-    if (_frm == Connect::frmLengthPrefixed) {
-        union { //force correct alignment of len.buf
-            uint32_t    ui;
-            uint8_t     buf[sizeof(uint32_t)];
-        } len;
-        if ((n = receive_buf(len.buf, sizeof(uint32_t), sizeof(uint32_t))) <= 0)
-            return NULL;
-        oct2read = ntohl(*(uint32_t*)len.buf);
-
-        if (oct2read > _parms.maxPckSz) {
-            _exc.reset(new CustomException("%s: incoming packet is too large: %ub",
-                                            _logId, oct2read));
-            return NULL;
-        }
-    }
-    std::auto_ptr<ObjectBuffer> buffer(new ObjectBuffer(oct2read));
-
-    if ((n = receive_buf(buffer->get(), oct2read,
-                (_frm == Connect::frmLengthPrefixed) ? oct2read : 1)) <= 0)
-        return NULL;
-    buffer->setDataSize(n);
-
-    SerializablePacketAC* obj = NULL;
-    if (!_objSerializer) {
-        _exc.reset(new CustomException("%s: Serializer is not set!", _logId));
-    } else {
-        try { obj = _objSerializer->deserialize(buffer); 
-        } catch (SerializerException & exc) {
-            _exc.reset(new CustomException("%s: %s", _logId, exc.what()));
-        }
-    }
-    return obj;
-}
-
-//listens for input objects and passes it to connect listeners
-//Returns false if no data was successfully red from socket
-//NOTE: it's assumed that in case of _exc is set upon return,
-//the controlling TCP server destroys this Connect.
-bool Connect::process(void)
-{
-    std::auto_ptr<SerializablePacketAC> cmd(recvPck());
-	
-    if (!cmd.get() && !_exc.get())
-	return false;
-
-    ListenerList cplist = listeners;
-    for (ListenerList::iterator it = cplist.begin(); it != cplist.end(); it++) {
-        ConnectListenerITF* ptr = *it;
-        try {
-            if (_exc.get())
-                ptr->onConnectError(this, false);
-            else
-                ptr->onCommandReceived(this, cmd);
-        } catch (std::exception& lexc) {
-            _exc.reset(new CustomException("%s: %s", _logId, lexc.what()));
-        }
-    }
-    return true;
+    return send(buffer.get(), buffer.getPos());
 }
 
 /* -------------------------------------------------------------------------- *
  * Private/Protected methods:
  * -------------------------------------------------------------------------- */
-//receives bytes from socket,
-//returns -1 on error, otherwise - number of bytes red
-//NOTE: minToRead should be <= bufSz
-int  Connect::receive_buf(unsigned char *buf, int bufSz, int minToRead)
+void Connect::notifyByMsg(std::auto_ptr<SerializablePacketAC>& p_msg)
 {
-    int n = socket->Read((char*)buf, bufSz);
-    if (!n) {
-        smsc_log_debug(logger, "%s: socket empty!", _logId);
-        return n;
-    }
-    if ((n < minToRead) || logger->isDebugEnabled()) {
-        std::string         dstr;
-        Logger::LogLevel    errLvl;
-        
-        format(dstr, "%s: %sreceived %d of %db: ", _logId,
-                (n < minToRead) ? "error, " : "", n, minToRead);
-        if (n > 0) {
-            dstr += "0x"; DumpHex(dstr, (unsigned short)n, (unsigned char*)buf/*, _HexDump_CVSD*/);
-//            dstr += "\n"; DumpDbg(dstr, (unsigned short)n, (unsigned char*)buf);
+    ListenerList cplist = listeners;
+    for (ListenerList::iterator it = cplist.begin();
+                        it != cplist.end() && p_msg.get(); it++) {
+        ConnectListenerITF* ptr = *it;
+        try { ptr->onPacketReceived(this, p_msg);
+        } catch (std::exception& lexc) {
+            _exc.reset(new CustomException("%s: %s", _logId, lexc.what()));
+            smsc_log_error(logger, _exc->what());
         }
-        if (n < minToRead) {
-            errLvl = Logger::LEVEL_ERROR;
-            _exc.reset(new SystemError(dstr.c_str(), errno));
-        } else
-            errLvl = Logger::LEVEL_DEBUG;
-        logger->log(errLvl, dstr.c_str());
     }
-    return (n < minToRead) ? (-1) : n;
 }
 
+void Connect::notifyByExc(void)
+{
+    smsc_log_error(logger, _exc->what());
+    ListenerList cplist = listeners;
+    for (ListenerList::iterator it = cplist.begin();
+                        it != cplist.end() && _exc.get(); it++) {
+        ConnectListenerITF* ptr = *it;
+        try { ptr->onConnectError(this, _exc);
+        } catch (std::exception& lexc) {
+            smsc_log_error(logger, "%s: %s", _logId, lexc.what());
+        }
+    }
+    if (_exc.get()) //Listeners do not reset connect exception!!!
+        _state = ConnectAC::connException;
+}
 } // namespace interaction
 } // namespace inman
 } // namespace smsc

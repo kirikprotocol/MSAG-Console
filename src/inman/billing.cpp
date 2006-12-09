@@ -26,8 +26,8 @@ namespace inman {
 /* -------------------------------------------------------------------------- *
  * ConnectListenerITF interface implementation:
  * -------------------------------------------------------------------------- */
-void BillingManager::onCommandReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd)
-                        throw(std::exception)
+void BillingManager::onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd)
+                        /*throw(std::exception)*/
 {
     //check service header
     INPPacketAC* pck = static_cast<INPPacketAC*>(recv_cmd.get());

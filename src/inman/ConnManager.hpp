@@ -102,14 +102,13 @@ public:
     }
 
     // -- ConnectListenerITF interface methods
-    //virtual void onCommandReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd)
-    //                     throw(std::exception) = 0;
+    //virtual void onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd)
+    //                     /*throw(std::exception)*/ = 0;
     //Stops all Workers due to error condition pending on socket
-    virtual void onConnectError(Connect* conn, bool fatal = false)
+    virtual void onConnectError(Connect* conn, std::auto_ptr<CustomException>& p_exc)
     {
         MutexGuard grd(mutex);
-        CustomException * exc = conn->hasException();
-        const char * reason = exc ? exc->what() : "Connect exception";
+        const char * reason = p_exc->what();
         smsc_log_error(logger, "%s: %s", _logId, reason);
 
         if (!workers.empty()) { //abort all active workers

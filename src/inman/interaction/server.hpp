@@ -6,13 +6,21 @@
 #include <list>
 
 #include "core/threads/Thread.hpp"
-#include "core/synchronization/Event.hpp"
-#include "inman/interaction/connect.hpp"
-
 using smsc::core::threads::Thread;
+
+#include "core/synchronization/Event.hpp"
 using smsc::core::synchronization::Mutex;
 using smsc::core::synchronization::Event;
-using smsc::inman::interaction::Connect;
+
+#include "logger/Logger.h"
+using smsc::logger::Logger;
+
+#include "inman/common/observable.hpp"
+using smsc::inman::common::ObservableT;
+
+#include "inman/interaction/ConnectDefs.hpp"
+using smsc::inman::interaction::ConnectAC;
+
 
 namespace smsc  {
 namespace inman {
@@ -25,8 +33,8 @@ typedef struct {
     unsigned int    timeout; //units: secs
 } ServSocketCFG;
 
-class ServerListener;
-class Server : Thread, public ObservableT< ServerListener > {
+class ServerListenerITF;
+class Server : Thread, public ObservableT< ServerListenerITF > {
 public:
     typedef enum { lstStopped = 0, lstStopping, lstRunning } ServerState;
     typedef enum {
@@ -41,13 +49,20 @@ public:
     bool Start(void);
     void Stop(unsigned int timeOutMilliSecs = 400);
 
+    void setPollTimeout(unsigned long  milli_secs);
+
+    //Ad hoc method: upon successfull socket initialization,
+    //notifies listeners via onConnectOpening()
+    bool setConnection(const char * host, unsigned port, unsigned timeout_secs);
+
 protected:
-    typedef std::list<Connect*> ConnectsList;
+    typedef std::list<ConnectAC*> ConnectsList;
 
     int  Execute(); //listener thread entry point
     ShutdownReason Listen(void);
-    void openConnect(Socket* use_sock);
-    void closeConnect(Connect* connect, bool abort = false);
+    void openConnect(std::auto_ptr<Socket>& use_sock);
+    void closeConnect(ConnectAC* connect, bool abort = false);
+    void closeConnectGuarded(ConnectAC* connect, bool abort = false);
     //Closes all client's connections
     void closeAllConnects(bool abort = false);
 
@@ -59,13 +74,16 @@ protected:
     unsigned        lstRestartCnt;
     Socket          serverSocket;
     ConnectsList    connects;
+    struct timeval  tmo;
     Logger*         logger;
 };
 
-class ServerListener {
+class ServerListenerITF {
 public:
-    virtual void onConnectOpened(Server* srv, Connect* conn) = 0;
-    virtual void onConnectClosing(Server* srv, Connect* conn) = 0;
+    //Listener creates its own ConnectAC implementation
+    virtual ConnectAC* onConnectOpening(Server* srv, Socket* sock) = 0;
+    //Listener shouldn't delete ConnectAC !!!
+    virtual void onConnectClosing(Server* srv, ConnectAC* conn) = 0;
     virtual void onServerShutdown(Server* srv, Server::ShutdownReason reason) = 0;
 };
 

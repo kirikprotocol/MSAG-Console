@@ -49,8 +49,8 @@ public:
     ~AbntDetectorManager() { }
 
     //-- ConnectListenerITF interface
-    void onCommandReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd)
-            throw(std::exception);
+    void onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd)
+            /*throw(std::exception)*/;
 };
 
 } //inman

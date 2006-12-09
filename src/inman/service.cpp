@@ -15,7 +15,9 @@ using smsc::inman::interaction::INPCommandSetAC;
 
 namespace smsc  {
 namespace inman {
-
+/* ************************************************************************** *
+ * class Service implementation:
+ * ************************************************************************** */
 Service::Service(const InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
     : logger(uselog), _cfg(*in_cfg), disp(0), server(0), lastSessId(0)
 {
@@ -183,17 +185,18 @@ void Service::closeSession(unsigned sockId)
 /* -------------------------------------------------------------------------- *
  * ServerListener interface implementation:
  * -------------------------------------------------------------------------- */
-void Service::onConnectOpened(Server* srv, Connect* conn)
+ConnectAC * Service::onConnectOpening(Server* srv, Socket* sock)
 {
-    conn->Init(Connect::frmLengthPrefixed, INPSerializer::getInstance());
+    Connect * conn = new Connect(sock, INPSerializer::getInstance());
     conn->addListener(this);
-//    smsc_log_debug(logger, "InmanSrv: New Connect[%u] inited", (unsigned)conn->getSocketId());
+//    smsc_log_debug(logger, "InmanSrv: New Connect[%u] inited", conn->getId());
+    return conn;
 }
 
 //Remote point ends connection
-void Service::onConnectClosing(Server* srv, Connect* conn)
+void Service::onConnectClosing(Server* srv, ConnectAC* conn)
 {
-    closeSession((unsigned)conn->getSocketId());
+    closeSession(conn->getId());
 }
 
 //throws CustomException
@@ -211,8 +214,8 @@ void Service::onServerShutdown(Server* srv, Server::ShutdownReason reason)
  * ConnectListenerITF interface implementation:
  * -------------------------------------------------------------------------- */
 //Creates/Restores session (creates/rebinds ConnectManager)
-void Service::onCommandReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd)
-                throw(std::exception)
+void Service::onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd)
+                /*throw(std::exception)*/
 {
     INPPacketAC* pck = static_cast<INPPacketAC*>(recv_cmd.get());
     INPCommandSetAC * pCs = pck->pCmd()->commandSet();
@@ -250,20 +253,20 @@ void Service::onCommandReceived(Connect* conn, std::auto_ptr<SerializablePacketA
     conn->removeListener(this);
     conn->addListener(newSess.hdl);
     _mutex.Lock();
-    sockets.insert(SocketsMap::value_type((unsigned)conn->getSocketId(), newSess.sId));
+    sockets.insert(SocketsMap::value_type(conn->getId(), newSess.sId));
     sessions.insert(SessionsMap::value_type(newSess.sId, newSess));
     _mutex.Unlock();
     smsc_log_debug(logger, "InmanSrv: New %s session[%u] on Connect[%u] created",
-                  pCs->CsName(), newSess.sId, (unsigned)conn->getSocketId());
+                  pCs->CsName(), newSess.sId, conn->getId());
 
-    newSess.hdl->onCommandReceived(conn, recv_cmd); //throws
+    newSess.hdl->onPacketReceived(conn, recv_cmd); //throws
 }
 
 //NOTE: session restoration is not supported for now, so just delete session
-void Service::onConnectError(Connect* conn, bool fatal/* = false*/)
+void Service::onConnectError(Connect* conn, std::auto_ptr<CustomException>& p_exc)
 { 
     conn->removeListener(this);
-    closeSession((unsigned)conn->getSocketId());
+    closeSession(conn->getId());
 }
 
 } // namespace inmgr

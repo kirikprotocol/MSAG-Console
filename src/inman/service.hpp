@@ -11,7 +11,11 @@ using smsc::inman::inap::TCAPDispatcher;
 #include "inman/interaction/server.hpp"
 using smsc::inman::interaction::ServSocketCFG;
 using smsc::inman::interaction::Server;
-using smsc::inman::interaction::ServerListener;
+using smsc::inman::interaction::ServerListenerITF;
+using smsc::inman::interaction::ConnectAC;
+
+#include "inman/interaction/connect.hpp"
+using smsc::inman::interaction::Connect;
 
 #include "inman/BillingManager.hpp"
 using smsc::inman::BillingCFG;
@@ -43,7 +47,7 @@ typedef struct {
     ConnectManagerAC * hdl;
 } SessionInfo;
 
-class Service : public ServerListener, public ConnectListenerITF {
+class Service : public ServerListenerITF, public ConnectListenerITF {
 public:
     Service(const InService_CFG * in_cfg, Logger * uselog = NULL);
     virtual ~Service();
@@ -53,17 +57,17 @@ public:
 
 protected:
     friend class smsc::inman::interaction::Server;
-    //-- ServerListener interface methods
-    void onConnectOpened(Server* srv, Connect* conn);
-    void onConnectClosing(Server* srv, Connect* conn);
+    //-- ServerListenerITF interface methods
+    ConnectAC * onConnectOpening(Server* srv, Socket* sock);
+    void onConnectClosing(Server* srv, ConnectAC* conn);
     void onServerShutdown(Server* srv, Server::ShutdownReason reason);
 
     friend class smsc::inman::interaction::Connect;
     //-- ConnectListenerITF methods
-    void onCommandReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd)
-        throw (std::exception);
+    void onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd)
+        /*throw (std::exception)*/;
     //NOTE: it's recommended to reset exception if it doesn't prevent entire Connect to function
-    void onConnectError(Connect* conn, bool fatal = false);
+    void onConnectError(Connect* conn, std::auto_ptr<CustomException>& p_exc);
 
 private:
     typedef std::map<unsigned, SessionInfo> SessionsMap;

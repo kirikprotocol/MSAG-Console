@@ -23,8 +23,8 @@ using smsc::inman::common::Console;
 //#include "util/vformat.hpp"
 //using smsc::util::format;
 
-#include "inman/interaction/connect.hpp"
-using smsc::inman::interaction::Connect;
+#include "inman/interaction/SerialSocket.hpp"
+using smsc::inman::interaction::SerialSocket;
 using smsc::inman::interaction::ObjectBuffer;
 using smsc::inman::interaction::SerializerException;
 
@@ -408,7 +408,7 @@ protected:
     bool                _running;
     unsigned            dialogId;
     Socket*             socket;
-    Connect*            pipe;
+    SerialSocket*            pipe;
     Logger*             logger;
     INDialogsMap        _Dialogs;
     INDialogCfg         _dlgCfg;
@@ -436,7 +436,7 @@ public:
             smsc_log_error(logger, msg.c_str());
             throw std::runtime_error(msg.c_str());
         }
-        pipe = new Connect(socket, Connect::frmLengthPrefixed,
+        pipe = new SerialSocket(socket, SerialSocket::frmLengthPrefixed,
                            INPSerializer::getInstance(), logger);
         _abDB = AbonentsDB::Init(PRE_ABONENTS_NUM, _abonents);
         _adrDB = TNPIAddressDB::Init(PRE_ADDRESSES_NUM, _dstAdr);
@@ -614,7 +614,7 @@ public:
         pipe->sendPck(&pck);
     }
 
-    //Customized variant of Connect::sendObj(): it sends specified
+    //Customized variant of SerialSocket::sendObj(): it sends specified
     //number of bytes from ObjectBuffer
 //    int  sendPckPart(SerializableObject &obj, uint32_t num_bytes)
     int  sendPckPart(INPPacketAC &pck, uint32_t num_bytes)
@@ -624,7 +624,7 @@ public:
 
         buffer.setPos(offs);
         pck.serialize(buffer);
-        //always Connect::frmLengthPrefixed format
+        //always SerialSocket::frmLengthPrefixed format
         {
             uint32_t len = htonl(num_bytes);
             memcpy(buffer.get(), (const void *)&len, 4);
