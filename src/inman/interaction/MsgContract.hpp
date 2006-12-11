@@ -146,7 +146,7 @@ protected:
         else {
             out << (uint8_t)0x00;
         }
-        out << errCode ? errCode : cntrInfo.gsmSCF.serviceKey;
+        out << (errCode ? errCode : cntrInfo.gsmSCF.serviceKey);
     }
 };
 
