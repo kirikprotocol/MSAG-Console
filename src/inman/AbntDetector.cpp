@@ -90,7 +90,8 @@ void AbntDetectorManager::onPacketReceived(Connect* conn,
  * class AbonentDetector implementation:
  * ************************************************************************** */
 AbonentDetector::AbonentDetector(unsigned w_id, AbntDetectorManager * owner, Logger * uselog/* = NULL*/)
-        : WorkerAC(w_id, owner, uselog), providerQueried(false), abPolicy(NULL)
+        : WorkerAC(w_id, owner, uselog), providerQueried(false)
+        , abPolicy(NULL), iapTimer(NULL)
 {
     logger = uselog ? uselog : Logger::getInstance("smsc.inman");
     _cfg = owner->getConfig();
