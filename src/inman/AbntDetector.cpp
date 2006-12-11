@@ -197,7 +197,8 @@ bool AbonentDetector::onContractReq(AbntContractRequest* req, uint32_t req_id)
                        req->subscrAddr().c_str());
         return false;
     }
-    smsc_log_info(logger, "%s: AbntAdr <%s>", _logId, req->subscrAddr().c_str());
+    smsc_log_info(logger, "%s: --> REQUEST, abonent(%s), cacheMode(%s)", _logId,
+                  req->subscrAddr().c_str(), req->cacheMode() ? "true" : "false");
 
     if (req->cacheMode())
         _cfg.abCache->getAbonentInfo(abNumber, &abRec);
