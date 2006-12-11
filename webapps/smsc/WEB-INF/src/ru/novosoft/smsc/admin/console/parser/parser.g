@@ -607,25 +607,29 @@ catch [RecognitionException ex] {
 addprofile returns [ProfileAddCommand cmd] {
     cmd = new ProfileAddCommand();
 }
-	: (mask:STR  { cmd.setMask(mask.getText());    })
-	  (OPT_REPORT (VAL_FULL  { cmd.setFullReport(); }
-	              |VAL_NONE  { cmd.setNoneReport(); }
-	              |VAL_FINAL { cmd.setFinalReport(); }))
-      (OPT_LOCALE { cmd.setLocale(getnameid("Locale name")); } )
-	  (OPT_ENCODE profile_encode_opt[cmd] )?
-	  (TGT_ALIAS  profile_alias_opt[cmd]  )?
-	  (OPT_DIVERT  { cmd.setDivertOptions(true); }
-	              ({ cmd.setDivert(getnameid("Divert value")); })
-	                 profile_divert_opt[cmd] )?
-	  profile_udh_concat_opt[cmd]
-	  profile_translit_opt[cmd]
-	  profile_group_opt[cmd]
-	  (OPT_SERVICESMASK { cmd.setServices(getint("services")); }
-      |OPT_SERVICESBIT
-              (OPT_ON {cmd.setServicesBit(true, getint("services bit"));}
-              |OPT_OFF {cmd.setServicesBit(false, getint("services bit"));} ))?
-    (OPT_SPONSORED {cmd.setSponsored(getint("sponsored")); })
-	;
+: (mask:STR  { cmd.setMask(mask.getText());    })
+  (OPT_REPORT (VAL_FULL  { cmd.setFullReport(); }
+              |VAL_NONE  { cmd.setNoneReport(); }
+              |VAL_FINAL { cmd.setFinalReport(); })
+  )
+  (OPT_LOCALE { cmd.setLocale(getnameid("Locale name")); } )
+  (OPT_ENCODE profile_encode_opt[cmd] )?
+  (TGT_ALIAS  profile_alias_opt[cmd]  )?
+  (OPT_SPONSORED {cmd.setSponsored(getint("sponsored")); })?
+  (OPT_DIVERT  { cmd.setDivertOptions(true); }
+	      ({ cmd.setDivert(getnameid("Divert value")); })
+	         profile_divert_opt[cmd] 
+  )?
+  profile_udh_concat_opt[cmd]
+  profile_translit_opt[cmd]
+  profile_group_opt[cmd]
+  (OPT_SERVICESMASK { cmd.setServices(getint("services")); }
+  |OPT_SERVICESBIT
+      (OPT_ON {cmd.setServicesBit(true, getint("services bit"));}
+      |OPT_OFF {cmd.setServicesBit(false, getint("services bit"));}
+      )
+  )?
+;
 exception[mask]
 catch [RecognitionException ex] {
     throw new RecognitionException("Profile mask expected");
@@ -641,6 +645,7 @@ altprofile returns [ProfileAlterCommand cmd] {
 	  (OPT_LOCALE { cmd.setLocale(getnameid("Locale name")); } )?
 	  (OPT_ENCODE profile_encode_opt[cmd] )?
 	  (TGT_ALIAS  profile_alias_opt[cmd]  )?
+	  (OPT_SPONSORED {cmd.setSponsored(getint("sponsored")); })?
 	  (OPT_DIVERT { cmd.setDivertOptions(true); }
 	    ((OPT_SET   { cmd.setDivert(getnameid("Divert value")); })|
 	     (OPT_CLEAR { cmd.setDivert(""); }))?
@@ -651,7 +656,6 @@ altprofile returns [ProfileAlterCommand cmd] {
 	  profile_udh_concat_opt[cmd]
 	  profile_translit_opt[cmd]
 	  profile_group_opt[cmd]
-	  (OPT_SPONSORED {cmd.setSponsored(getint("sponsored")); })
 	;
 exception[addr]
 catch [RecognitionException ex] {

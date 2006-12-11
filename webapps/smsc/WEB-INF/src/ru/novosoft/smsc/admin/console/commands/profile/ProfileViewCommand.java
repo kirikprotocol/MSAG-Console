@@ -79,6 +79,8 @@ public class ProfileViewCommand extends CommandClass {
         result += " outputAccessMask: 0x" + Long.toHexString(profile.getOutputAccessMask()) + "(" + Long.toBinaryString(profile.getOutputAccessMask()) + ")";
         if (SupportExtProfile.enabled)
             result += " services: 0x" + Long.toHexString(profile.getServices())  + "(" + Long.toBinaryString(profile.getServices()) + ")"; 
+        if (SupportExtProfile.enabled)
+            result += " sponsored: " + profile.getSponsored(); 
         return result;
     }
 
