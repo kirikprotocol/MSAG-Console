@@ -38,14 +38,15 @@ public:
     void onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj);
 
 protected:
+    bool verifyReq(AbntContractRequest* req);
     //-- AbntContractReqHandlerITF interface methods:
     bool onContractReq(AbntContractRequest* req, uint32_t req_id);
 
     typedef std::map<unsigned, StopWatch*> TimersMAP;
 
-    void sendResult(uint32_t inmanErr = 0);
     void doCleanUp(void);
-    void ConfigureSCFandReport(AbonentBillType ab_type, const MAPSCFinfo * p_scf = NULL);
+    void ConfigureSCF(AbonentBillType ab_type, const MAPSCFinfo * p_scf = NULL);
+    void reportAndExit(void);
 
     Mutex           _mutex;
     AbonentDetectorCFG  _cfg;
@@ -55,6 +56,7 @@ protected:
     AbonentRecord   abRec;      //ab_type = abtUnknown
     TonNpiAddress   abNumber;   //calling abonent ISDN number
     bool            providerQueried;
+    uint32_t        _wErr;
     StopWatch *     iapTimer;   //timer for InAbonentProvider quering
     AbonentPolicy * abPolicy;
 
