@@ -62,30 +62,10 @@ RuleStatus EventHandler::RunActions(ActionContext& context)
     context.setRuleStatus(rs);
 
     LongCallContext& longCallContext = context.getSCAGCommand().getLongCallContext();
-/*
-    int startIndex = 0;
-    if (!longCallContext.ActionStack.empty()) 
-    {
-        startIndex = longCallContext.ActionStack.top().actionIndex;
-        if (startIndex >= actions.size())
-        {
-            smsc_log_error(logger, "Cannot continue running actions. Details: action index out of bound");
-            context.clearLongCallContext();
-            return context.getRuleStatus();
-        }
-        longCallContext.ActionStack.pop();
-    }
 
-    for (int i = startIndex; i < actions.size(); i++) 
-    {
-        if (!(actions[i]->run(context))) 
-        {
-            ActionStackValue sv(i, false);
-            longCallContext.ActionStack.push(sv);
-            break;
-        }
-    }
-*/
+    ActionStackValue sv(0);
+    longCallContext.ActionStack.push(sv);
+
     RunActionVector(context, longCallContext, actions, logger);
     return context.getRuleStatus();
 }

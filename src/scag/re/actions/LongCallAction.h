@@ -14,6 +14,8 @@ protected:
     {
         int startIndex = 0;
 
+        if (!longCallContext.empty()) longCallContext.pop();
+
         if (!longCallContext.ActionStack.empty()) 
         {
             startIndex = longCallContext.ActionStack.top().actionIndex;
@@ -25,7 +27,6 @@ protected:
                 context.clearLongCallContext();
                 return true;
             }
-            longCallContext.ActionStack.pop();
         }
 
         for (int i = startIndex; i < actions.size(); i++)
@@ -73,11 +74,10 @@ public:
             context.setRuleStatus(rs);
 
             context.clearLongCallContext();
-
             return false;
         } else
         {
-            //context.getBuffer().SetPos(0);
+            context.getSCAGCommand().getLongCallContext().pop();            
             ContinueRunning(context);
         }
 
