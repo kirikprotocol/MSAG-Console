@@ -56,8 +56,8 @@ void ActionTLV::init(const SectionParams& params,PropertyObject propertyObject)
     }
     else if(type == TLV_EXIST)
     {
-        ftResult = CheckParameter(params, propertyObject, "tlv", "exist", true, false, strVar, bExist);
-        if(ftResult == ftUnknown || ftResult == ftConst)
+        ftVar = CheckParameter(params, propertyObject, "tlv", "exist", true, false, strVar, bExist);
+        if(ftVar == ftUnknown || ftVar == ftConst)
             throw SCAGException("Action 'tlv': Result can't be a const value");
     }
 
@@ -66,7 +66,7 @@ void ActionTLV::init(const SectionParams& params,PropertyObject propertyObject)
 
 bool ActionTLV::run(ActionContext& context)
 {
-    smsc_log_debug(logger,"Run Action 'tlv'");
+    smsc_log_debug(logger,"Run Action 'tlv' type=%d, %d", type, ftVar);
 
     SMS& sms = CommandBrige::getSMS((SmppCommand&)context.getSCAGCommand());
 
