@@ -97,7 +97,7 @@ protected:
 
 public:
     AbntContractResult()
-        : INPAbntContractCmd(INPCSAbntContract::ABNT_CONTRACT_RESULT_TAG)
+        : INPAbntContractCmd(INPCSAbntContract::ABNT_CONTRACT_RESULT_TAG), errCode(0)
     { }
     ~AbntContractResult() { }
 
@@ -141,7 +141,11 @@ protected:
     {
         out << nmPolicy;
         out << (uint8_t)cntrInfo.ab_type;
-        out << cntrInfo.gsmSCF.scfAddress.toString();
+        if (cntrInfo.gsmSCF.scfAddress.length)
+            out << cntrInfo.gsmSCF.scfAddress.toString();
+        else {
+            out << (uint8_t)0x00;
+        }
         out << errCode ? errCode : cntrInfo.gsmSCF.serviceKey;
     }
 };
