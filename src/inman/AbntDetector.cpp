@@ -203,8 +203,10 @@ bool AbonentDetector::onContractReq(AbntContractRequest* req, uint32_t req_id)
     if (req->cacheMode())
         _cfg.abCache->getAbonentInfo(abNumber, &abRec);
     
-    if (abRec.ab_type != AbonentContractInfo::abtPostpaid)
+    if (abRec.ab_type != AbonentContractInfo::abtPostpaid) {
         sendResult();
+        return;
+    }
 
     if (!(abPolicy = _cfg.policies->getPolicy(&abNumber))) {
         smsc_log_error(logger, "%s: no policy set for %s", _logId, 
