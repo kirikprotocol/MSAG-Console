@@ -21,7 +21,7 @@ class ActionTLV : public Action
     std::string strVar, strTag;
     static Hash<int> namesHash;
     bool byTag;
-    FieldType ftVar, ftResult, ftTag;
+    FieldType ftVar, ftTag;
 
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
