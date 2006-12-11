@@ -205,7 +205,7 @@ bool AbonentDetector::onContractReq(AbntContractRequest* req, uint32_t req_id)
     
     if (abRec.ab_type != AbonentContractInfo::abtPostpaid) {
         sendResult();
-        return;
+        return true;
     }
 
     if (!(abPolicy = _cfg.policies->getPolicy(&abNumber))) {
