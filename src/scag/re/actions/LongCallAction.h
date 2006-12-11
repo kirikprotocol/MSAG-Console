@@ -14,7 +14,7 @@ protected:
     {
         int startIndex = 0;
 
-        if (!longCallContext.empty()) longCallContext.pop();
+        if (!longCallContext.ActionStack.empty()) longCallContext.ActionStack.pop();
 
         if (!longCallContext.ActionStack.empty()) 
         {
@@ -77,7 +77,7 @@ public:
             return false;
         } else
         {
-            context.getSCAGCommand().getLongCallContext().pop();            
+            context.getSCAGCommand().getLongCallContext().ActionStack.pop();
             ContinueRunning(context);
         }
 
@@ -85,8 +85,6 @@ public:
     }
     LongCallAction() {};
 };
-
-
 
 }}}
 

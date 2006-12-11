@@ -63,7 +63,7 @@ RuleStatus EventHandler::RunActions(ActionContext& context)
 
     LongCallContext& longCallContext = context.getSCAGCommand().getLongCallContext();
 
-    ActionStackValue sv(0);
+    ActionStackValue sv(0, false);
     longCallContext.ActionStack.push(sv);
 
     RunActionVector(context, longCallContext, actions, logger);
