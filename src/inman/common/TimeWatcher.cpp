@@ -92,6 +92,9 @@ void StopWatch::init(TimerListenerITF * listener, OPAQUE_OBJ * opaque_obj/* = NU
     _result = tmrNone;
     if (opaque_obj)
         _opaqueObj = *opaque_obj;
+    else
+        _opaqueObj.kind = OPAQUE_OBJ::objNone;
+
 }
 
 void StopWatch::signalStatus(SWStatus status)
