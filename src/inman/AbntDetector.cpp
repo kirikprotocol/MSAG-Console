@@ -152,7 +152,9 @@ void AbonentDetector::onIAPQueried(const AbonentId & ab_number, AbonentBillType 
     MutexGuard grd(_mutex);
     providerQueried = false;
     StopTimer();
-    ConfigureSCF(ab_type, scf);
+    if (ab_type == AbonentContractInfo::abtPrepaid)
+        //lookup config.xml for extra SCF parms (serviceKey, RPC lists)
+        ConfigureSCF(ab_type, scf);
     reportAndExit();
 }
 
@@ -262,6 +264,7 @@ bool AbonentDetector::onContractReq(AbntContractRequest* req, uint32_t req_id)
             }
         }
     }
+    //lookup config.xml for extra SCF parms (serviceKey, RPC lists)
     ConfigureSCF(abRec.ab_type, abRec.getSCFinfo());
     return true;
 }
