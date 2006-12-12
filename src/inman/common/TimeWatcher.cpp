@@ -280,13 +280,18 @@ int TimeWatcher::Execute(void)
     while (_running) {
         _sync.Unlock();
         //determine expired timers, pass them to Notifier,
-        //count next time to awake
+        //determine next time to awake
         struct timeval tms, tmNext;
         getTime(tms);
 //        smsc_log_debug(logger, "TmWT: time %lu:%lu.", tms.tv_sec, tms.tv_usec);
         tmNext = tms;
         tmNext.tv_usec += 1000L*TIMEOUT_STEP;
+        if (tmNext.tv_usec > 1000000L) {
+            tmNext.tv_sec++;
+            tmNext.tv_usec = tmNext.tv_usec % 1000000L;
+        }
 
+        TimersLIST  expired;
         _sync.Lock();
         for (TimersLIST::iterator it = started.begin(); it != started.end(); ) {
             StopWatch * tmr = *it;
@@ -294,14 +299,17 @@ int TimeWatcher::Execute(void)
             it++;
             if (tms >= tmr->targetTime()) {
                 smsc_log_debug(logger, "TmWT: timer[%u] is expired.", tmr->getId());
-                signaled.push_back(tmr);
+                expired.push_back(tmr);
                 started.erase(curr);
-                ntfr->signalTimer(tmr);
             } else if (tmr->targetTime() < tmNext)
                 tmNext = tmr->targetTime();
         }
-//        smsc_log_debug(logger, "TmWT: sleeping up to %lu:%lu.", tmNext.tv_sec, tmNext.tv_usec);
+        signaled.insert(signaled.end(), expired.begin(), expired.end());
+        _sync.Unlock();
+        ntfr->signalTimers(expired, StopWatch::tmrExpired);
+        _sync.Lock();
         //awakes either by timeout or by event signaled by StartTimer()
+//        smsc_log_debug(logger, "TmWT: sleeping up to %lu:%lu.", tmNext.tv_sec, tmNext.tv_usec);
         _sync.wait(tmNext);
     } /* eow */
     if (started.size()) {
