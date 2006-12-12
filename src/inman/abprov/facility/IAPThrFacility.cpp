@@ -48,7 +48,7 @@ void IAPQueryAC::onRelease(void)
 IAProviderThreaded::IAProviderThreaded(const IAProviderThreadedCFG & in_cfg, Logger * uselog/* = NULL*/)
     : _cfg(in_cfg), _lastQId(0)
 {
-    logger = uselog ? uselog : Logger::getInstance("smsc.inman.abprov.db");
+    logger = uselog ? uselog : Logger::getInstance("smsc.inman.iaprvd");
     pool.setMaxThreads((int)_cfg.max_queries);
     if (_cfg.init_threads)
         pool.preCreateThreads((int)_cfg.init_threads);
@@ -77,9 +77,9 @@ void IAProviderThreaded::cancelAllQueries(void)
 
     QueriesHash::Iterator cit = qryCache.getIterator();
     while (cit.Next(ab_number, ab_rec)) {
-        smsc_log_debug(logger, "IAPrvd: cancelling query[%u:%lu](%s):%u",
-                        ab_rec->query->getId(), ab_rec->query->Usage(), 
-                       ab_number, ab_rec->cbList.size());
+        smsc_log_debug(logger, "IAPrvd: %s[%u:%lu](%s): cancelling, %u listeners set",
+                       ab_rec->query->taskName(), ab_rec->query->getId(),
+                       ab_rec->query->Usage(), ab_number, ab_rec->cbList.size());
         ab_rec->cbList.clear();
         ab_rec->query->stop();
     }
@@ -112,20 +112,22 @@ void IAProviderThreaded::releaseQuery(IAPQueryAC * query)
                                         it != qry_rec->cbList.end(); it++)
                 (*it)->onIAPQueried(ab_number, abRec.ab_type, abRec.getSCFinfo());
         } else
-            smsc_log_debug(logger, "IAPrvd: no listeners for query[%u:%lu](%s)",
-                           query->getId(), query->Usage(), ab_number.getSignals());
+            smsc_log_debug(logger, "IAPrvd: %s[%u:%lu](%s): no listeners set",
+                           query->taskName(), query->getId(), query->Usage(),
+                           ab_number.getSignals());
 
         qryCache.Delete(ab_number.getSignals());
     } else
-        smsc_log_warn(logger, "IAPrvd: not in cache query[%u:%lu](%s)",
-                       query->getId(), query->Usage(), ab_number.getSignals());
+        smsc_log_error(logger, "IAPrvd: %s[%u:%lu](%s): not in cache",
+                       query->taskName(), query->getId(), query->Usage(),
+                       ab_number.getSignals());
 
     if (!query->delOnCompletion())
         qryPool.push_back(query);
     //else query is being deleted by PooledThread::Execute()
-    smsc_log_debug(logger, "IAPrvd: query[%u:%lu](%s) is finished, type: %s (%u)",
-                   query->getId(), query->Usage(), ab_number.getSignals(),
-                   abRec.type2Str(), abRec.ab_type);
+    smsc_log_debug(logger, "IAPrvd: %s[%u:%lu](%s): finished, type %s (%u)",
+                   query->taskName(), query->getId(), query->Usage(),
+                   ab_number.getSignals(), abRec.type2Str(), abRec.ab_type);
     return;
 }
 
@@ -147,9 +149,9 @@ bool IAProviderThreaded::startQuery(const AbonentId & ab_number,
     CachedQuery * qry_rec = qryCache.GetPtr(ab_number.getSignals());
     if (qry_rec) { //allocated query exists, just add callback to list
         qry_rec->cbList.push_back(pf_cb);
-        smsc_log_debug(logger, "IAPrvd: listener is added to query[%u:%lu](%s)",
-                       qry_rec->query->getId(), qry_rec->query->Usage(),
-                       ab_number.getSignals());
+        smsc_log_debug(logger, "IAPrvd: %s[%u:%lu](%s): listener is added",
+                       qry_rec->query->taskName(), qry_rec->query->getId(),
+                       qry_rec->query->Usage(), ab_number.getSignals());
         return true;
     }
 
@@ -167,13 +169,13 @@ bool IAProviderThreaded::startQuery(const AbonentId & ab_number,
     if (qryRec.query->init(ab_number)) {
         qryCache.Insert(ab_number.getSignals(), qryRec);
         pool.startTask(qryRec.query, !_cfg.qryMultiRun); //do not delete task on completion !!!
-        smsc_log_debug(logger, "IAPrvd: query[%u:%lu](%s) is added to queue",
-                       qryRec.query->getId(), qryRec.query->Usage(),
-                       ab_number.getSignals());
+        smsc_log_debug(logger, "IAPrvd: %s[%u:%lu](%s): added to queue",
+                        qryRec.query->taskName(), qryRec.query->getId(),
+                        qryRec.query->Usage(), ab_number.getSignals());
     } else
-        smsc_log_error(logger, "IAPrvd: query[%u:%lu](%s) failed to init",
-                       qryRec.query->getId(), qryRec.query->Usage(),
-                       ab_number.getSignals());
+        smsc_log_error(logger, "IAPrvd: %s[%u:%lu](%s): failed to init",
+                       qryRec.query->taskName(), qryRec.query->getId(),
+                       qryRec.query->Usage(), ab_number.getSignals());
     return true;
 }
 
@@ -183,21 +185,22 @@ void IAProviderThreaded::cancelQuery(const AbonentId & ab_number, IAPQueryListen
     MutexGuard  guard(qrsGuard);
     CachedQuery * qry_rec = qryCache.GetPtr(ab_number.getSignals());
     if (!qry_rec) {
-        smsc_log_warn(logger, "IAPrvd: attempt to cancel unexisting query!");
+        smsc_log_error(logger, "IAPrvd: attempt to cancel unexisting query!");
         return;
     }
-    smsc_log_debug(logger, "IAPrvd: cancelling query[%u:%lu](%s)",
-                    qry_rec->query->getId(), qry_rec->query->Usage(),
-                    ab_number.getSignals());
+    smsc_log_debug(logger, "IAPrvd: %s[%u:%lu](%s): cancelling ",
+                    qry_rec->query->taskName(), qry_rec->query->getId(),
+                    qry_rec->query->Usage(), ab_number.getSignals());
 
     QueryCBList::iterator it = std::find(qry_rec->cbList.begin(),
                                          qry_rec->cbList.end(), pf_cb);
     if (it != qry_rec->cbList.end())
         qry_rec->cbList.erase(it);
     if (qry_rec->cbList.size())
-        smsc_log_debug(logger, "IAPrvd: %u listeners remain for query[%u:%lu](%s)",
-                       qry_rec->cbList.size(), qry_rec->query->getId(),
-                       qry_rec->query->Usage(), ab_number.getSignals());
+        smsc_log_debug(logger, "IAPrvd: %s[%u:%lu](%s): %u listeners remain",
+                       qry_rec->query->taskName(), qry_rec->query->getId(),
+                       qry_rec->query->Usage(), ab_number.getSignals(),
+                       qry_rec->cbList.size());
     return;
 }
 
