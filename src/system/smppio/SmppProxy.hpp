@@ -159,17 +159,17 @@ public:
       debug2(log,"put command:total %d commands",outqueue.Count());
       outqueue.Push(cmd,cmd->get_priority());
     }
-    SmppSocket * rSck=0;
-    SmppSocket * tSck=0;
+    volatile SmppSocket * rSck=0;
+    volatile SmppSocket * tSck=0;
     {
       MutexGuard g(mutex);
       if(dualChannel)
       {
-        if(smppReceiverSocket)rSck->notifyOutThread();
-        if(smppTransmitterSocket)tSck->notifyOutThread();
+        if(smppReceiverSocket)rSck=smppReceiverSocket;
+        if(smppTransmitterSocket)tSck=smppTransmitterSocket;
       }else
       {
-        if(smppReceiverSocket)rSck->notifyOutThread();
+        if(smppReceiverSocket)rSck=smppReceiverSocket;
       }
     }
     if(rSck)rSck->notifyOutThread();
@@ -252,17 +252,17 @@ public:
         if(!opened)return;
         outqueue.Push(errresp,errresp->get_priority());
       }
-      SmppSocket * rSck=0;
-      SmppSocket * tSck=0;
+      volatile SmppSocket * rSck=0;
+      volatile SmppSocket * tSck=0;
       {
         MutexGuard g(mutex);
         if(dualChannel)
         {
-          if(smppReceiverSocket)rSck->notifyOutThread();
-          if(smppTransmitterSocket)tSck->notifyOutThread();
+          if(smppReceiverSocket)rSck=smppReceiverSocket;
+          if(smppTransmitterSocket)tSck=smppTransmitterSocket;
         }else
         {
-          if(smppReceiverSocket)rSck->notifyOutThread();
+          if(smppReceiverSocket)rSck=smppReceiverSocket;
         }
       }
       if(rSck)rSck->notifyOutThread();
