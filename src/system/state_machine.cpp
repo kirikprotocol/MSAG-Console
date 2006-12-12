@@ -3154,11 +3154,15 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     }
   }
 
-  if(sms.hasStrProperty(Tag::SMSC_DIVERTED_TO) && (sms.getIntProperty(Tag::SMSC_DIVERTFLAGS)&DF_UNCOND))
+  //for interfaceVersion==0x50
+  if(!sms.hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID))
   {
-    dst=sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str();
-    Address newdst;
-    if(smsc->AliasToAddress(dst,newdst))dst=newdst;
+    if(sms.hasStrProperty(Tag::SMSC_DIVERTED_TO) && (sms.getIntProperty(Tag::SMSC_DIVERTFLAGS)&DF_UNCOND))
+    {
+      dst=sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str();
+      Address newdst;
+      if(smsc->AliasToAddress(dst,newdst))dst=newdst;
+    }
   }
 
   smsc::router::RouteInfo ri;
@@ -3211,7 +3215,13 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     return ERROR_STATE;
   }
 
-
+  if(sms.hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID) &&
+     sms.hasStrProperty(Tag::SMSC_DIVERTED_TO))
+  {
+    smsc_log_debug(smsLog,"FWD: diverted receipt for %s",sms.getStrProperty(Tag::SMSC_DIVERTED_TO));
+    dest_proxy_index=smsc->getSmeIndex(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
+    dest_proxy=smsc->getSmeProxy(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
+  }
 
   if(!dest_proxy)
   {
@@ -4057,9 +4067,14 @@ StateType StateMachine::deliveryResp(Tuple& t)
       int dest_proxy_index;
 
       Address dst=sms.getDealiasedDestinationAddress();
-      if(sms.hasStrProperty(Tag::SMSC_DIVERTED_TO) && (sms.getIntProperty(Tag::SMSC_DIVERTFLAGS)&(DF_COND|DF_UNCOND)))
+
+      // for interfaceVersion==0x50
+      if(!sms.hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID))
       {
-        dst=sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str();
+        if(sms.hasStrProperty(Tag::SMSC_DIVERTED_TO) && (sms.getIntProperty(Tag::SMSC_DIVERTFLAGS)&(DF_COND|DF_UNCOND)))
+        {
+          dst=sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str();
+        }
       }
 
       smsc::router::RouteInfo ri;
@@ -4099,6 +4114,15 @@ StateType StateMachine::deliveryResp(Tuple& t)
         }
         return ERROR_STATE;
       }
+
+      if(sms.hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID) &&
+         sms.hasStrProperty(Tag::SMSC_DIVERTED_TO))
+      {
+        smsc_log_debug(smsLog,"CONCAT: diverted receipt for %s",sms.getStrProperty(Tag::SMSC_DIVERTED_TO));
+        dest_proxy_index=smsc->getSmeIndex(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
+        dest_proxy=smsc->getSmeProxy(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
+      }
+
       if(!dest_proxy)
       {
         __trace__("CONCAT: no proxy");
@@ -4467,6 +4491,11 @@ StateType StateMachine::deliveryResp(Tuple& t)
       rpt.setStrProperty(Tag::SMSC_RECIPIENTADDRESS,addr);
       rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,time(NULL));
       rpt.setIntProperty(Tag::SMSC_RECEIPTED_MSG_SUBMIT_TIME,sms.getSubmitTime());
+      SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());
+      if(si.interfaceVersion==0x50)
+      {
+        rpt.setStrProperty(Tag::SMSC_DIVERTED_TO,sms.getSourceSmeId());
+      }
       char msgid[60];
       sprintf(msgid,"%lld",t.msgId);
       rpt.setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID,msgid);
@@ -4495,7 +4524,6 @@ StateType StateMachine::deliveryResp(Tuple& t)
       fd.msc=d.msc;
       smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
       fd.locale=profile.locale.c_str();
-      smsc::smeman::SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());
       fd.scheme=si.receiptSchemeName.c_str();
 
       formatDeliver(fd,out);
@@ -5054,6 +5082,12 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
   rpt.setStrProperty(Tag::SMSC_RECIPIENTADDRESS,addr);
   rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,time(NULL));
 
+  SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());
+  if(si.interfaceVersion==0x50)
+  {
+    rpt.setStrProperty(Tag::SMSC_DIVERTED_TO,sms.getSourceSmeId());
+  }
+
   char msgid[60];
   sprintf(msgid,"%lld",msgId);
   rpt.setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID,msgid);
@@ -5081,7 +5115,6 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
   fd.setLastResult(sms.lastResult);
   smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
   fd.locale=profile.locale.c_str();
-  smsc::smeman::SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());
   fd.scheme=si.receiptSchemeName.c_str();
 
   formatFailed(fd,out);
@@ -5137,6 +5170,12 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
     rpt.setStrProperty(Tag::SMSC_RECIPIENTADDRESS,addr);
     rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,time(NULL));
 
+    SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());
+    if(si.interfaceVersion==0x50)
+    {
+      rpt.setStrProperty(Tag::SMSC_DIVERTED_TO,sms.getSourceSmeId());
+    }
+
     char msgid[60];
     sprintf(msgid,"%lld",msgId);
     rpt.setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID,msgid);
@@ -5164,7 +5203,6 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
     fd.setLastResult(sms.lastResult);
     smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
     fd.locale=profile.locale.c_str();
-    smsc::smeman::SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());
     fd.scheme=si.receiptSchemeName.c_str();
 
 
