@@ -1123,7 +1123,14 @@ int SmppOutputThread::Execute()
           continue;
         }
         SmscCommand cmd;
-        if(!ss->hasData() && ss->getProxy() && ss->getOutgoingCommand(cmd))
+        bool haveCmd=false;
+        if(!ss->hasData() && ss->getProxy())
+        {
+          mon.Unlock();
+          haveCmd=ss->getOutgoingCommand(cmd);
+          mon.Lock();
+        }
+        if(haveCmd)
         {
 
           SmppHeader *pdu=0;
