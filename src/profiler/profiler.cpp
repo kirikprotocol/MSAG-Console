@@ -967,6 +967,16 @@ int Profiler::Execute()
             try{
               if(isValidAlias(orgArg))
               {
+                Address oldAlias;
+                if(aliasman->AddressToAlias(sms->getOriginatingAddress(),oldAlias))
+                {
+                  try{
+                    aliasman->deleteAlias(oldAlias);
+                  }catch(std::exception& e)
+                  {
+                    smsc_log_warn(log,"DeleteAlias failed for '%s':'%s'",oldAlias.toString().c_str(),e.what());
+                  }
+                }
                 smsc::alias::AliasInfo ai;
                 ai.addr=sms->getOriginatingAddress();
                 ai.alias=Address(orgArg.length(),5,0,orgArg.c_str());
