@@ -53,7 +53,7 @@ protected:
     {
         char buf[sizeof("[%u:%lu]") + sizeof(_qId)*3 + sizeof(usage)*3];
         snprintf(buf, sizeof(buf)-1, "[%u:%lu]", _qId, usage);
-        tName += taskType();
+        tName = taskType();
         tName += buf;
     }
 
@@ -62,15 +62,14 @@ public:
                unsigned timeout_secs, Logger * use_log = NULL);
     virtual ~IAPQueryAC();
 
+    //NOTE: if successor overwrites this one it should call it in its implementation!!!
     virtual bool init(const AbonentId & ab_number);
 
 //-- Are to implement:
     virtual const char * taskType(void) const = 0;
 //    virtual int Execute(void) = 0;            
 
-    const char *            taskName(void)
-    { return tName.empty() ? taskType() : tName.c_str(); }
-
+    const char *            taskName(void)                { return tName.c_str(); }
     const AbonentRecord &   getAbonentRecord(void)  const { return abRec; }
     const AbonentId &       getAbonentId(void)      const { return abonent; }
     unsigned                getId(void)             const { return _qId; }

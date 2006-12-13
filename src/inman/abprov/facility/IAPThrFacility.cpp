@@ -31,6 +31,7 @@ bool IAPQueryAC::init(const AbonentId & ab_number)
     abRec.reset();
     isReleased = isStopping = false;
     usage++;
+    mkTaskName();
     return true;
 }
 
