@@ -106,6 +106,12 @@ public:
                     socketOk=false;
                     break;
                   }
+                  if(!s.canRead(5))
+                  {
+                    debug1(log,"read resp failed");
+                    socketOk=false;
+                    break;
+                  }
                   char ok[2];
                   if(s.ReadAll(ok,2)!=2 || ok[0]!='O' || ok[1]!='K')
                   {
