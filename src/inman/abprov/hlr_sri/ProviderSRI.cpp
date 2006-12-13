@@ -158,6 +158,7 @@ IAPQuerySRI::IAPQuerySRI(unsigned q_id, IAPQueryManagerITF * owner,
     : IAPQueryAC(q_id, owner, use_cfg.mapTimeout, use_log), _cfg(use_cfg)
 {
     logger = use_log ? use_log : Logger::getInstance("smsc.inman.iaprvd.sri");
+    mkTaskName();
 }
 
 int IAPQuerySRI::Execute(void)
@@ -174,8 +175,8 @@ int IAPQuerySRI::Execute(void)
         if (qsig.Wait(_cfg.mapTimeout*1000 + 10) != 0)
             status = -2;
     } catch (std::exception & exc) {
-        smsc_log_error(logger, "%s[%u:%lu](%s): %s", taskName(),
-                       _qId, usage, abonent.getSignals(), exc.what());
+        smsc_log_error(logger, "%s(%s): %s", taskName(),
+                       abonent.getSignals(), exc.what());
         status = -1;
     }
     {
@@ -194,17 +195,14 @@ void IAPQuerySRI::onMapResult(CHSendRoutingInfoRes* arg)
 {
     MutexGuard  grd(_mutex);
     if (!arg->getIMSI(subcrImsi))
-        smsc_log_error(logger, "%s[%u:%lu](%s): IMSI not determined.", taskName(),
-                        _qId, usage, abonent.getSignals());
+        smsc_log_error(logger, "%s(%s): IMSI not determined.", taskName(), abonent.getSignals());
     else {
         if (!arg->getSCFinfo(&abRec.gsmSCF)) {
             abRec.ab_type = AbonentRecord::abtPostpaid;
-            smsc_log_debug(logger, "%s[%u:%lu](%s): gsmSCF not set.", taskName(),
-                           _qId, usage, abonent.getSignals());
+            smsc_log_debug(logger, "%s(%s): gsmSCF not set.", taskName(), abonent.getSignals());
         } else {
             abRec.ab_type = AbonentRecord::abtPrepaid;
-            smsc_log_debug(logger, "%s[%u:%lu](%s): gsmSCF %s:%u", taskName(),
-                           _qId, usage, abonent.getSignals(),
+            smsc_log_debug(logger, "%s(%s): gsmSCF %s:%u", taskName(), abonent.getSignals(),
                            abRec.gsmSCF.scfAddress.getSignals(), abRec.gsmSCF.serviceKey);
         }
     }
@@ -218,8 +216,8 @@ void IAPQuerySRI::onEndMapDlg(unsigned short ercode, InmanErrorType errLayer)
         sriDlg = NULL;
     }
     if (errLayer != smsc::inman::errOk)
-        smsc_log_error(logger, "%s[%u:%lu](%s): query failed: code %u, layer %s\n",
-                        taskName(), _qId, usage, abonent.getSignals(), ercode,
+        smsc_log_error(logger, "%s(%s): query failed: code %u, layer %s\n",
+                        taskName(), abonent.getSignals(), ercode,
                         _InmanErrorSource[errLayer]);
     qsig.Signal();
 }

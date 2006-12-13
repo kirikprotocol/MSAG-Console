@@ -132,6 +132,7 @@ IAPQueryDB::IAPQueryDB(unsigned q_id, IAPQueryManagerITF * owner,
     callStr += _cfg.rtId; callStr += "(:";
     callStr += _cfg.rtKey; callStr += ");";
     logger = use_log ? use_log : Logger::getInstance("smsc.inman.iaprvd.db");
+    mkTaskName();
 }
 
 int IAPQueryDB::Execute(void)
@@ -152,8 +153,8 @@ int IAPQueryDB::Execute(void)
     try { //throws SQLException, connects to DB, large delay possible
         rtq = dcon->getRoutine(_cfg.rtId, callStr.c_str(), true); 
     } catch (std::exception& exc) {
-        smsc_log_error(logger, "%s[%u:%lu](%s): %s", taskName(),
-                       _qId, usage, abonent.getSignals(), exc.what());
+        smsc_log_error(logger, "%s(%s): %s", taskName(),
+                       abonent.getSignals(), exc.what());
         status = -1; 
     }
 
@@ -174,8 +175,8 @@ int IAPQueryDB::Execute(void)
                 _cfg.ds->stopTimer(timerId);
             res = rtq->getInt16("RETURN"); //FUNCTION_RETURN_ATTR_NAME
         } catch (std::exception& exc) {
-            smsc_log_error(logger, "%s[%u:%lu](%s): %s", taskName(),
-                           _qId, usage, abonent.getSignals(), exc.what());
+            smsc_log_error(logger, "%s(%s): %s", taskName(), 
+                           abonent.getSignals(), exc.what());
             status = -2; 
         }
     }

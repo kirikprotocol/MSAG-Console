@@ -61,7 +61,7 @@ public:
     //-- IAPQueryAC implementation:
     // ****************************************
     int Execute(void);
-    const char * taskName() { return "IAPQuerySRI"; }
+    const char * taskType(void) const { return "IAPQuerySRI"; }
 
     // ****************************************
     //-- CHSRIhandler interface:

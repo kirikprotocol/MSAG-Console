@@ -72,7 +72,7 @@ public:
     //-- IAPQueryAC implementation:
     // ****************************************
     int Execute(void);
-    const char * taskName() { return "IAPQueryDB"; }
+    const char * taskType(void) const { return "IAPQueryDB"; }
 };
 
 struct DBSourceCFG {
