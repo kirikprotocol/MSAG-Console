@@ -59,9 +59,9 @@ public:
     virtual void setAbonentInfo(const AbonentId & ab_number, AbonentBillType ab_type,
                                 time_t queried = 0, const MAPSCFinfo * p_scf = NULL) = 0;
 
-    void setAbonentInfo(const AbonentId & ab_number, AbonentRecord * ab_rec)
+    void setAbonentInfo(const AbonentId & ab_number, const AbonentRecord & ab_rec)
     {
-        setAbonentInfo(ab_number, ab_rec->ab_type, ab_rec->tm_queried, ab_rec->getSCFinfo());
+        setAbonentInfo(ab_number, ab_rec.ab_type, ab_rec.tm_queried, ab_rec.getSCFinfo());
     }
 };
 
