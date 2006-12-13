@@ -2909,31 +2909,6 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     return EXPIRED_STATE;
   }
 
-  time_t now=time(NULL);
-  if((sms.getValidTime()<=now && sms.getLastResult()!=0) || //expired or
-     RescheduleCalculator::calcNextTryTime(now,sms.getLastResult(),sms.getAttemptsCount())==-1) //max attempts count reached
-  {
-    sms.setLastResult(Status::EXPIRED);
-    smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
-    smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
-    try{
-      smsc->getScheduler()->InvalidSms(t.msgId);
-      store->changeSmsStateToExpired(t.msgId);
-    }catch(...)
-    {
-      __warning__("FORWARD: failed to change state to expired");
-    }
-    info2(smsLog, "FWD: %lld expired (valid:%u - now:%u), attempts=%d",t.msgId,sms.getValidTime(),now,sms.getAttemptsCount());
-    sendFailureReport(sms,t.msgId,EXPIRED_STATE,"expired");
-    try{
-      smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
-    }catch(std::exception& e)
-    {
-      smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
-    }
-    return EXPIRED_STATE;
-  }
-
 
   if(sms.hasIntProperty(Tag::SMSC_MERGE_CONCAT) && sms.getIntProperty(Tag::SMSC_MERGE_CONCAT)!=3)
   {
@@ -2972,6 +2947,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     }
     return sms.getState();
   }
+  time_t now=time(NULL);
   if( sms.getNextTime()>now && sms.getAttemptsCount()==0 && (!isReschedulingForward || sms.getLastResult()==0) )
   {
     debug2(smsLog, "FWD: nextTime>now (%d>%d)",sms.getNextTime(),now);
@@ -3218,7 +3194,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
   if(sms.hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID) &&
      sms.hasStrProperty(Tag::SMSC_DIVERTED_TO))
   {
-    smsc_log_debug(smsLog,"FWD: diverted receipt for %s",sms.getStrProperty(Tag::SMSC_DIVERTED_TO));
+    smsc_log_debug(smsLog,"FWD: diverted receipt for %s",sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
     dest_proxy_index=smsc->getSmeIndex(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
     dest_proxy=smsc->getSmeProxy(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
   }
@@ -3661,7 +3637,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
   }
 
   {
-    char buf[MAX_ADDRESS_VALUE_LENGTH*4+12];
+    char buf[MAX_ADDRESS_VALUE_LENGTH*4+12]="";
     if(sms.originatingDescriptor.mscLength && sms.originatingDescriptor.imsiLength &&
        sms.destinationDescriptor.mscLength && sms.destinationDescriptor.imsiLength)
     {
@@ -3763,8 +3739,32 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
   if(GET_STATUS_TYPE(t.command->get_resp()->get_status())!=CMD_OK)
   {
-    sms.setLastResult(GET_STATUS_CODE(t.command->get_resp()->get_status()));
+    time_t now=time(NULL);
+    if((sms.getValidTime()<=now && sms.getLastResult()!=0) || //expired or
+       RescheduleCalculator::calcNextTryTime(now,sms.getLastResult(),sms.getAttemptsCount())==-1) //max attempts count reached
+    {
+      sms.setLastResult(Status::EXPIRED);
+      smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
+      smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
+      try{
+        smsc->getScheduler()->InvalidSms(t.msgId);
+        store->changeSmsStateToExpired(t.msgId);
+      }catch(...)
+      {
+        __warning__("DLVRSP: failed to change state to expired");
+      }
+      info2(smsLog, "DLVRSP: %lld expired (valid:%u - now:%u), attempts=%d",t.msgId,sms.getValidTime(),now,sms.getAttemptsCount());
+      sendFailureReport(sms,t.msgId,EXPIRED_STATE,"expired");
+      try{
+        smsc->ReportDelivery(t.command->get_resp()->get_inDlgId(),sms,true,Smsc::chargeOnDelivery);
+      }catch(std::exception& e)
+      {
+        smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
+      }
+      return EXPIRED_STATE;
+    }
 
+    sms.setLastResult(GET_STATUS_CODE(t.command->get_resp()->get_status()));
     if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2 &&
        sms.getIntProperty(Tag::SMPP_SET_DPF))//forward/transaction mode
     {
@@ -4118,7 +4118,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       if(sms.hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID) &&
          sms.hasStrProperty(Tag::SMSC_DIVERTED_TO))
       {
-        smsc_log_debug(smsLog,"CONCAT: diverted receipt for %s",sms.getStrProperty(Tag::SMSC_DIVERTED_TO));
+        smsc_log_debug(smsLog,"CONCAT: diverted receipt for %s",sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
         dest_proxy_index=smsc->getSmeIndex(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
         dest_proxy=smsc->getSmeProxy(sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
       }
@@ -4587,6 +4587,31 @@ StateType StateMachine::alert(Tuple& t)
       smsc->getScheduler()->InvalidSms(t.msgId);
       return UNKNOWN_STATE;
     }
+  }
+
+  time_t now=time(NULL);
+  if((sms.getValidTime()<=now && sms.getLastResult()!=0) || //expired or
+     RescheduleCalculator::calcNextTryTime(now,sms.getLastResult(),sms.getAttemptsCount())==-1) //max attempts count reached
+  {
+    sms.setLastResult(Status::EXPIRED);
+    smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
+    smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
+    try{
+      smsc->getScheduler()->InvalidSms(t.msgId);
+      store->changeSmsStateToExpired(t.msgId);
+    }catch(...)
+    {
+      __warning__("ALERT: failed to change state to expired");
+    }
+    info2(smsLog, "ALERT: %lld expired (valid:%u - now:%u), attempts=%d",t.msgId,sms.getValidTime(),now,sms.getAttemptsCount());
+    sendFailureReport(sms,t.msgId,EXPIRED_STATE,"expired");
+    try{
+      smsc->ReportDelivery(ad.inDlgId,sms,true,Smsc::chargeOnDelivery);
+    }catch(std::exception& e)
+    {
+      smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
+    }
+    return EXPIRED_STATE;
   }
 
   sms.setLastResult(Status::DELIVERYTIMEDOUT);
