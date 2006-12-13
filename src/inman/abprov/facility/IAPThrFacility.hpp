@@ -46,6 +46,16 @@ protected:
     AbonentId           abonent;
     AbonentRecord       abRec;
     Logger *            logger;
+    std::string         tName;
+
+    //Composes taskName, it's recommended to call it in successors constructor
+    inline void mkTaskName(void)
+    {
+        char buf[sizeof("[%u:%lu]") + sizeof(_qId)*3 + sizeof(usage)*3];
+        snprintf(buf, sizeof(buf)-1, "[%u:%lu]", _qId, usage);
+        tName += taskType();
+        tName += buf;
+    }
 
 public:
     IAPQueryAC(unsigned q_id, IAPQueryManagerITF * owner,
@@ -55,8 +65,11 @@ public:
     virtual bool init(const AbonentId & ab_number);
 
 //-- Are to implement:
+    virtual const char * taskType(void) const = 0;
 //    virtual int Execute(void) = 0;            
-//    virtual const char * taskName() = 0;
+
+    const char *            taskName(void)
+    { return tName.empty() ? taskType() : tName.c_str(); }
 
     const AbonentRecord &   getAbonentRecord(void)  const { return abRec; }
     const AbonentId &       getAbonentId(void)      const { return abonent; }
