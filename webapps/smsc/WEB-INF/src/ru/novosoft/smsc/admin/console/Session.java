@@ -10,6 +10,7 @@ package ru.novosoft.smsc.admin.console;
 import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.console.parser.CommandLexer;
 import ru.novosoft.smsc.admin.console.parser.CommandParser;
+import ru.novosoft.smsc.admin.console.commands.PingCommand;
 import ru.novosoft.smsc.util.auth.AuthenticatorProxy;
 
 import java.io.IOException;
@@ -83,8 +84,14 @@ public abstract class Session extends Thread {
             AuthenticatorProxy.getInstance().hasRole(Constants.TomcatRealmName, user, role));
   }
 
+  private boolean isCommandGeneral(String command) {
+    return command.equals(PingCommand.ID);
+  }
+
   protected boolean commandAllowed(String command) {
     if (userAuthorized()) {
+      if (isCommandGeneral(command))
+        return true;
       String roles[] = owner.getCommandRoles(command);
       for (int i = 0; roles != null && i < roles.length; i++) {
         if (roles[i] != null &&

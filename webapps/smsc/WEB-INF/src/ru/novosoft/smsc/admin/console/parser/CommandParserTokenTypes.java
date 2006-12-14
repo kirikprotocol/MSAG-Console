@@ -168,12 +168,13 @@ public interface CommandParserTokenTypes {
 	int VAL_TRX = 143;
 	int VAL_SMPP = 144;
 	int VAL_SS7 = 145;
-	int WS = 146;
-	int STR = 147;
-	int QSTR = 148;
-	int STR_WS = 149;
-	int STR_CHR = 150;
-	int COMMA = 151;
-	int ESC = 152;
-	int DIGIT = 153;
+	int PING = 146;
+	int WS = 147;
+	int STR = 148;
+	int QSTR = 149;
+	int STR_WS = 150;
+	int STR_CHR = 151;
+	int COMMA = 152;
+	int ESC = 153;
+	int DIGIT = 154;
 }

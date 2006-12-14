@@ -64,8 +64,13 @@ parse returns [Command cmd] {
 	| ACT_CHECK	cmd = check
 	| ACT_EXPORT	cmd = export
 	| ACT_APPLY	cmd = apply
+	| PING cmd = ping
 	;
-	
+
+ping returns [PingCommand cmd] {
+  cmd = new PingCommand();
+}:;
+
 /* --------------------- Apply action parser ---------------------- */
 apply returns [Command cmd] {
     cmd = null;
