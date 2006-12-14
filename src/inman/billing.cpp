@@ -263,17 +263,18 @@ bool Billing::startCAPDialog(INScfCFG * use_scf)
                        smsxNumber.length ? smsxNumber.toString().c_str() : cdr._dstAdr.c_str());
 
         InitialDPSMSArg arg(smsc::inman::comp::DeliveryMode_Originating, use_scf->scf.serviceKey);
-        if (smsxNumber.length)
+        arg.setSMSCAddress(csInfo.smscAddress.c_str());
+        if (smsxNumber.length) {
             arg.setDestinationSubscriberNumber(smsxNumber);
-        else
+            arg.setLocationInformationMSC(use_scf->substIDPLocalInfo ?
+                                          csInfo.smscAddress.c_str() : cdr._srcMSC.c_str());
+        } else {
             arg.setDestinationSubscriberNumber(cdr._dstAdr.c_str());
-
+            arg.setLocationInformationMSC(cdr._srcMSC.c_str());
+        }
         arg.setCallingPartyNumber(cdr._srcAdr.c_str());
         arg.setIMSI(cdr._srcIMSI.c_str());
-        arg.setLocationInformationMSC(cdr._srcMSC.c_str());
         arg.setTimeAndTimezone(cdr._submitTime);
-
-        arg.setSMSCAddress(csInfo.smscAddress.c_str());
         arg.setTPShortMessageSpecificInfo(csInfo.tpShortMessageSpecificInfo);
         arg.setTPValidityPeriod(csInfo.tpValidityPeriod, smsc::inman::comp::tp_vp_relative);
         arg.setTPProtocolIdentifier(csInfo.tpProtocolIdentifier);

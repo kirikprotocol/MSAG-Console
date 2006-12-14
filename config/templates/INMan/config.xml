@@ -5,8 +5,8 @@
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
 
 <!-- INMan interacts the IN node -->
-<config> <!-- InMan 0.5.3. and higher -->
-  <param name="version" type="string">0.5.0</param>   <!-- config version -->
+<config> <!-- InMan 0.5.6. and higher -->
+  <param name="version" type="string">0.5.6</param>   <!-- config version -->
   <param name="host" type="string">@inman.host@</param>  <!-- InMan service host -->
   <param name="port" type="int">@inman.port@</param>        <!-- InMan service port -->
   <param name="maxClients" type="int">3</param>       <!--  max allowed INMan client connections, default: 3 -->
@@ -92,19 +92,23 @@
 
   <section name="IN-platforms"> <!-- known IN-platforms with serviceKeys specified -->
       <!--  IN-platform configuration may have two optional fields defined:
-            1) param name="RPCList_postpaid" type="string"  - it's a  comma separated list of 
+            1) param name="RPCList_postpaid" type="string"  - it's a comma separated list of 
             RP MO causes returned by IN platform for postpaid abonents if supported.
             example (Huawei): 41 
-            2) param name="RPCList_reject" type="string"  - it's a  omma separated list of 
+            2) param name="RPCList_reject" type="string"  - it's a comma separated list of 
             extra (in addition to 21) RP MO causes returned by IN platform, which forbid DP
             processing because of low balance if supported,
             example(Alcatel): 16
+            3) param name="substIDPLocalInfo" type="bool" - indicates that the SMSC address
+            should be substituted into LocationInformationMSC in InitialDP operation
+            while interacting this IN platfrom, default: false
       -->
       <section name="IN_Nsk_Huawei">
           <param name="scfAddress" type="string">79139860005</param>  <!-- IN (gsmSCF) point address -->
           <param name="serviceKey" type="int">11</param>         <!-- IN (gsmSCF) service key: uint32_t -->
           <param name="RPCList_postpaid" type="string">41</param> <!-- supported -->
-          <param name="RPCList_reject" type="string"></param>        <!-- not supported -->
+          <param name="RPCList_reject" type="string"></param>     <!-- not supported -->
+          <param name="substIDPLocalInfo" type="bool"></param>  <!-- default: false -->
       </section>
 
       <section name="IN_Ural_Alcatel">
@@ -112,6 +116,7 @@
           <param name="serviceKey" type="int">2</param>         <!-- IN (gsmSCF) service key: uint32_t -->
           <param name="RPCList_postpaid" type="string"></param> <!-- not supported -->
           <param name="RPCList_reject" type="string">16</param> <!-- supported  -->
+          <param name="substIDPLocalInfo" type="bool">true</param>  <!-- default: false -->
       </section>
   </section>
 

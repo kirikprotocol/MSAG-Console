@@ -145,6 +145,11 @@ public:
             cppStr += "unsupported";
         smsc_log_info(inmanLogger, cppStr.c_str());
 
+        try { pin->substIDPLocalInfo = scfCfg->getBool("substIDPLocalInfo");}
+        catch (ConfigException& exc) { }
+        smsc_log_info(inmanLogger, "substIDPLocalInfo: %s",
+                      pin->substIDPLocalInfo ? "true" : "false");
+
         scfMap.insert(INScfsMAP::value_type(pin->scf.scfAddress.toString(), pin.get()));
         return pin.release();
     }

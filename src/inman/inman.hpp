@@ -42,8 +42,11 @@ public:
     MAPSCFinfo      scf;
     RPCList         rejectRPC;      //list of RP causes forcing charging denial because of low balance
     RPCList         postpaidRPC;    //list of RP causes returned for postpaid abonents
+    bool            substIDPLocalInfo;  //indicates that the SMSC address should be
+                    //substituted into LocationInformationMSC in InitialDP operation
+                    //while interacting this IN platfrom
 
-    INScfCFG(const char * name = NULL)
+    INScfCFG(const char * name = NULL) : substIDPLocalInfo(false)
     { 
         if (name) _ident += name;
         rejectRPC.push_back(RP_MO_SM_transfer_rejected);
@@ -55,6 +58,7 @@ public:
         rejectRPC.clear();
         rejectRPC.push_back(RP_MO_SM_transfer_rejected);
         postpaidRPC.clear();
+        substIDPLocalInfo = false;
     }
     const char * ident(void)
     {
