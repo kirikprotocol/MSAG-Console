@@ -24,8 +24,21 @@ namespace inman   {
 class AbonentDetector : public WorkerAC, public IAPQueryListenerITF,
                      public TimerListenerITF, AbntContractReqHandlerITF {
 public:
+    typedef enum {
+        adIdle = 0,
+        adIAPQuering,
+        adIAPQueried,
+        adTimedOut,
+        adCompleted,
+        adReported,    // AD -> SMSC : AbntContractResult
+        adAborted
+    } ADState;
+
     AbonentDetector(unsigned w_id, AbntDetectorManager * owner, Logger * uselog = NULL);
     virtual ~AbonentDetector();
+
+    static const char * State2Str(ADState st);
+    inline const char * State2Str(void) { return State2Str(_state); }
 
     //-- WorkerAC interface
     void handleCommand(INPPacketAC* cmd);
@@ -49,6 +62,7 @@ protected:
     void reportAndExit(void);
 
     Mutex           _mutex;
+    ADState         _state;
     AbonentDetectorCFG  _cfg;
                     //prefix for logging info
     char            _logId[sizeof("AbntDet[%u:%u]") + sizeof(unsigned int)*3 + 1];
@@ -59,7 +73,7 @@ protected:
     uint32_t        _wErr;
     StopWatch *     iapTimer;   //timer for InAbonentProvider quering
     AbonentPolicy * abPolicy;
-
+    
     inline void StartTimer(unsigned short timeout)
     {
         iapTimer = _cfg.tmWatcher->createTimer(this, NULL, false);
@@ -71,6 +85,12 @@ protected:
         iapTimer->release();
         smsc_log_debug(logger, "%s: Released timer[%u]", _logId, iapTimer->getId());
         iapTimer = NULL;
+    }
+    inline void SetState(ADState new_state)
+    {
+        _mutex.Lock();
+        _state = new_state;
+        _mutex.Unlock();
     }
 };
 

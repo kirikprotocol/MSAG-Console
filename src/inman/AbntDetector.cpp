@@ -91,7 +91,7 @@ void AbntDetectorManager::onPacketReceived(Connect* conn,
  * ************************************************************************** */
 AbonentDetector::AbonentDetector(unsigned w_id, AbntDetectorManager * owner, Logger * uselog/* = NULL*/)
         : WorkerAC(w_id, owner, uselog), providerQueried(false)
-        , abPolicy(NULL), iapTimer(NULL), _wErr(0)
+        , abPolicy(NULL), iapTimer(NULL), _wErr(0), _state(adIdle)
 {
     logger = uselog ? uselog : Logger::getInstance("smsc.inman");
     _cfg = owner->getConfig();
@@ -104,6 +104,16 @@ AbonentDetector::~AbonentDetector()
     MutexGuard grd(_mutex);
     doCleanUp();
     smsc_log_debug(logger, "%s: Deleted", _logId);
+}
+
+const char * AbonentDetector::State2Str(ADState st)
+{
+    static const char *_nm_state[] = { "adIdle",
+        "adIAPQuering", "adIAPQueried",
+        "adTimedOut", "adCompleted",
+        "adReported", "adAborted"
+    };
+    return _nm_state[st];
 }
 
 /* -------------------------------------------------------------------------- *
@@ -136,91 +146,15 @@ void AbonentDetector::handleCommand(INPPacketAC* pck)
 //NOTE: it's the processing graph entry point, so locks Mutex !!!
 void AbonentDetector::Abort(const char * reason/* = NULL*/)
 {
-    MutexGuard grd(_mutex);
+    MutexGuard  grd(_mutex);
+    _state = adAborted;
     smsc_log_error(logger, "%s: Aborting %s%s", _logId,
                    reason ? ", reason: " : "..", reason ? reason : "");
     doCleanUp();
 }
 
 /* -------------------------------------------------------------------------- *
- * IAPQueryListenerITF interface implementation:
- * -------------------------------------------------------------------------- */
-//NOTE: it's the processing graph entry point, so locks Mutex !!!
-void AbonentDetector::onIAPQueried(const AbonentId & ab_number, AbonentBillType ab_type,
-                           const MAPSCFinfo * scf/* = NULL*/)
-{
-    MutexGuard grd(_mutex);
-    providerQueried = false;
-    StopTimer();
-    if (ab_type == AbonentContractInfo::abtPrepaid)
-        //lookup config.xml for extra SCF parms (serviceKey, RPC lists)
-        ConfigureSCF(ab_type, scf);
-    reportAndExit();
-}
-
-/* -------------------------------------------------------------------------- *
- * TimerListenerITF interface implementation:
- * -------------------------------------------------------------------------- */
-//NOTE: it's the processing graph entry point, so locks Mutex !!!
-void AbonentDetector::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
-{
-    MutexGuard grd(_mutex);
-    smsc_log_debug(logger, "%s: timer[%u] signaled", _logId, iapTimer->getId());
-    iapTimer = NULL;
-    abRec.reset(); //abtUnknown
-    _wErr = InmanErrorCode::combineError(errInman, InLogic_TimedOut);
-    reportAndExit();
-}
-
-/* ---------------------------------------------------------------------------------- *
- * Protected/Private methods:
- * NOTE: these methods are not the processing graph entries, so never lock Mutex,
- *       it's a caller responsibility to lock it !!!
- * ---------------------------------------------------------------------------------- */
-//NOTE: _mutex should be locked upon entry
-void AbonentDetector::reportAndExit(void)
-{
-    doCleanUp();
-
-    std::string dstr;
-    format(dstr, "%s: <-- RESULT, abonent(%s) type %s", _logId,
-           abNumber.getSignals(), AbonentContractInfo::type2Str(abRec.ab_type));
-
-    if (abRec.ab_type == AbonentContractInfo::abtUnknown) {
-        format(dstr, ", errCode: %u", _wErr);
-    } else if (abRec.ab_type == AbonentContractInfo::abtPrepaid) {
-        format(dstr, ", SCF %s:{%u}", abRec.gsmSCF.scfAddress.toString().c_str(),
-               abRec.gsmSCF.serviceKey);
-    }
-    smsc_log_info(logger, dstr.c_str());
-
-    SPckContractResult spck;
-    spck.Hdr().dlgId = _wId;
-    if (_wErr)
-        spck.Cmd().setError(_wErr);
-    else {
-        spck.Cmd().setContractInfo(abRec);
-        if (abPolicy)
-            spck.Cmd().setPolicy(abPolicy->Ident());
-    }
-    _mgr->sendCmd(&spck);
-    /**/
-    _mgr->workerDone(this);
-}
-
-void AbonentDetector::doCleanUp(void)
-{
-    if (providerQueried) {  //check for pending query to AbonentProvider
-        abPolicy->getIAProvider(logger)->cancelQuery(abNumber, this);
-        providerQueried = false;
-    }
-    if (iapTimer) //release active timer
-        StopTimer();
-    return;
-}
-
-/* -------------------------------------------------------------------------- *
- * AbntContractReqHandlerITF
+ * AbntContractReqHandlerITF methods and helpers
  * -------------------------------------------------------------------------- */
 bool AbonentDetector::verifyReq(AbntContractRequest* req)
 {
@@ -240,35 +174,81 @@ bool AbonentDetector::onContractReq(AbntContractRequest* req, uint32_t req_id)
     if (req->cacheMode())
         _cfg.abCache->getAbonentInfo(abNumber, &abRec);
     
-    if (abRec.ab_type != AbonentContractInfo::abtUnknown)
+    if (abRec.ab_type == AbonentContractInfo::abtPostpaid) {
+        _state = adCompleted;
         return true;
-
+    }
+        
     if (!(abPolicy = _cfg.policies->getPolicy(&abNumber))) {
         smsc_log_error(logger, "%s: no policy set for %s", _logId, 
                        abNumber.toString().c_str());
     } else {
         smsc_log_debug(logger, "%s: using policy: %s", _logId, abPolicy->Ident());
-        if ((abRec.ab_type == AbonentContractInfo::abtUnknown)
-            || ((abRec.ab_type == AbonentContractInfo::abtPrepaid) && !abRec.getSCFinfo())) {
+        if ((abRec.ab_type == AbonentContractInfo::abtUnknown) || !abRec.getSCFinfo()) {
             // configure SCF by quering provider first
             IAProviderITF *prvd = abPolicy->getIAProvider(logger);
             if (prvd) {
-                if (prvd->startQuery(abNumber, this)) {
-                    providerQueried = true;
+                if ((providerQueried = prvd->startQuery(abNumber, this))) {
+                    _state = adIAPQuering;
                     StartTimer(_cfg.abtTimeout);
                     //execution will continue in onIAPQueried()/onTimerEvent() by another thread.
                     return false; 
                 }
-                smsc_log_error(logger, "%s: startIAPQuery(%s) failed!", _logId,
+                smsc_log_error(logger, "%s: startQuery(%s) failed!", _logId,
                                abNumber.getSignals());
             }
         }
     }
     //lookup config.xml for extra SCF parms (serviceKey, RPC lists)
     ConfigureSCF(abRec.ab_type, abRec.getSCFinfo());
+    _state = adCompleted;
     return true;
 }
 
+/* -------------------------------------------------------------------------- *
+ * IAPQueryListenerITF interface implementation:
+ * -------------------------------------------------------------------------- */
+//NOTE: it's the processing graph entry point, so locks Mutex !!!
+void AbonentDetector::onIAPQueried(const AbonentId & ab_number, AbonentBillType ab_type,
+                           const MAPSCFinfo * scf/* = NULL*/)
+{
+    MutexGuard grd(_mutex);
+    if (_state != adIAPQuering) {
+        smsc_log_warn(logger, "%s: IAPQueried() at state: %s", State2Str());
+        return;
+    }
+    _state = adIAPQueried;
+    providerQueried = false;
+    StopTimer();
+    if (ab_type == AbonentContractInfo::abtPrepaid)
+        //lookup config.xml for extra SCF parms (serviceKey, RPC lists)
+        ConfigureSCF(ab_type, scf);
+    reportAndExit();
+}
+
+/* -------------------------------------------------------------------------- *
+ * TimerListenerITF interface implementation:
+ * -------------------------------------------------------------------------- */
+//NOTE: it's the processing graph entry point, so locks Mutex !!!
+void AbonentDetector::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
+{
+    MutexGuard grd(_mutex);
+    smsc_log_debug(logger, "%s: timer[%u] signaled at state %s", _logId,
+                   iapTimer->getId(), State2Str());
+    if (_state > adIAPQuering)
+        return;
+    iapTimer = NULL;
+    _state = adTimedOut;
+    abRec.reset(); //abtUnknown
+    _wErr = InmanErrorCode::combineError(errInman, InLogic_TimedOut);
+    reportAndExit();
+}
+
+/* ---------------------------------------------------------------------------------- *
+ * Protected/Private methods:
+ * NOTE: these methods are not the processing graph entries, so never lock Mutex,
+ *       it's a caller responsibility to lock it !!!
+ * ---------------------------------------------------------------------------------- */
 void AbonentDetector::ConfigureSCF(AbonentBillType ab_type, const MAPSCFinfo * p_scf/* = NULL*/)
 {
     bool scfKnown = true;
@@ -309,6 +289,47 @@ void AbonentDetector::ConfigureSCF(AbonentBillType ab_type, const MAPSCFinfo * p
     if (!scfKnown && (ab_type == AbonentContractInfo::abtPrepaid))
         abRec.ab_type = AbonentContractInfo::abtUnknown;
     abRec.gsmSCF = abScf.scf;
+}
+
+void AbonentDetector::doCleanUp(void)
+{
+    if (providerQueried) {  //check for pending query to AbonentProvider
+        abPolicy->getIAProvider(logger)->cancelQuery(abNumber, this);
+        providerQueried = false;
+    }
+    if (iapTimer) //release active timer
+        StopTimer();
+    return;
+}
+
+void AbonentDetector::reportAndExit(void)
+{
+    doCleanUp();
+    std::string dstr;
+    format(dstr, "%s: <-- RESULT, abonent(%s) type %s", _logId,
+           abNumber.getSignals(), AbonentContractInfo::type2Str(abRec.ab_type));
+
+    if (abRec.ab_type == AbonentContractInfo::abtUnknown) {
+        format(dstr, ", errCode: %u", _wErr);
+    } else if (abRec.ab_type == AbonentContractInfo::abtPrepaid) {
+        format(dstr, ", SCF %s:{%u}", abRec.gsmSCF.scfAddress.toString().c_str(),
+               abRec.gsmSCF.serviceKey);
+    }
+    smsc_log_info(logger, dstr.c_str());
+
+    SPckContractResult spck;
+    spck.Hdr().dlgId = _wId;
+    if (_wErr)
+        spck.Cmd().setError(_wErr);
+    else {
+        spck.Cmd().setContractInfo(abRec);
+        if (abPolicy)
+            spck.Cmd().setPolicy(abPolicy->Ident());
+    }
+    _mgr->sendCmd(&spck);
+    _state = adReported;
+    /**/
+    _mgr->workerDone(this);
 }
 
 } //inman
