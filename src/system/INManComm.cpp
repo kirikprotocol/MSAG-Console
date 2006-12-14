@@ -165,6 +165,7 @@ void INManComm::Report(int dlgId,const SMS& sms,bool final)
   pck.Cmd().setDestMSC(sms.getDestinationDescriptor().msc);
   pck.Cmd().setDestSMEid(sms.getDestinationSmeId());
   pck.Cmd().setDeliveryTime(time(NULL));
+  pck.Cmd().setFinal(final);
   if(sms.hasStrProperty(Tag::SMSC_DIVERTED_TO))
     pck.Cmd().setDivertedAdr(sms.getStrProperty(Tag::SMSC_DIVERTED_TO));
 
