@@ -98,26 +98,36 @@ bool IAProviderThreaded::hasListeners(const AbonentId & ab_number)
 //Notifies query listeners and releases query.
 void IAProviderThreaded::releaseQuery(IAPQueryAC * query)
 {
-    {   //update active queries cache
-        MutexGuard      guard(qrsGuard);
+    //Notify listeners if any, and remove query from active queries cache
+    {
+        qrsGuard.Lock();
         CachedQuery *   qry_rec = qryCache.GetPtr((query->getAbonentId()).getSignals());
 
         if (qry_rec) {
-            if (qry_rec->cbList.size()) { //query wasn't cancelled
-                //notify listeners if any
-                for (QueryCBList::iterator it = qry_rec->cbList.begin();
-                                            it != qry_rec->cbList.end(); it++)
-                    (*it)->onIAPQueried(query->getAbonentId(), 
-                                        (query->getAbonentRecord()).ab_type,
-                                        (query->getAbonentRecord()).getSCFinfo());
-            } else
+            if (qry_rec->cbList.empty())
                 smsc_log_debug(logger, "IAPrvd: %s(%s): no listeners set",
                                query->taskName(), (query->getAbonentId()).getSignals());
-
+            else {
+                do {
+                    IAPQueryListenerITF * hdl = qry_rec->cbList.front();
+                    qry_rec->cbList.pop_front();
+                    qrsGuard.Unlock();
+                    try { hdl->onIAPQueried(query->getAbonentId(),
+                                (query->getAbonentRecord()).ab_type,
+                                (query->getAbonentRecord()).getSCFinfo());
+                    } catch (std::exception &exc) {
+                        smsc_log_error(logger, "IAPrvd: %s(%s): listener exception: %s",
+                                query->taskName(), (query->getAbonentId()).getSignals(),
+                                exc.what());
+                    }
+                    qrsGuard.Lock();
+                } while (!qry_rec->cbList.empty());
+            }
             qryCache.Delete((query->getAbonentId()).getSignals());
         } else
             smsc_log_error(logger, "IAPrvd: %s(%s): not in cache",
                            query->taskName(), (query->getAbonentId()).getSignals());
+        qrsGuard.Unlock();
     }
     //update cache: in case of DiskHash it may takes many seconds!!!
     if (cache)
@@ -189,9 +199,6 @@ void IAProviderThreaded::cancelQuery(const AbonentId & ab_number, IAPQueryListen
         smsc_log_error(logger, "IAPrvd: attempt to cancel unexisting query!");
         return;
     }
-    smsc_log_debug(logger, "IAPrvd: %s(%s): cancelling ",
-                    qry_rec->query->taskName(), ab_number.getSignals());
-
     QueryCBList::iterator it = std::find(qry_rec->cbList.begin(),
                                          qry_rec->cbList.end(), pf_cb);
     if (it != qry_rec->cbList.end())
@@ -200,6 +207,9 @@ void IAProviderThreaded::cancelQuery(const AbonentId & ab_number, IAPQueryListen
         smsc_log_debug(logger, "IAPrvd: %s(%s): %u listeners remain",
                        qry_rec->query->taskName(), ab_number.getSignals(),
                        qry_rec->cbList.size());
+    else
+        smsc_log_debug(logger, "IAPrvd: %s(%s): cancelled",
+                        qry_rec->query->taskName(), ab_number.getSignals());
     return;
 }
 
