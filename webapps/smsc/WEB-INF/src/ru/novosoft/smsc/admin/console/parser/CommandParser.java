@@ -141,12 +141,6 @@ public CommandParser(ParserSharedInputState state) {
 			cmd=apply();
 			break;
 		}
-		case PING:
-		{
-			match(PING);
-			cmd=ping();
-			break;
-		}
 		default:
 		{
 			throw new NoViableAltException(LT(1), getFilename());
@@ -753,16 +747,6 @@ public CommandParser(ParserSharedInputState state) {
 			throw new NoViableAltException(LT(1), getFilename());
 		}
 		}
-		return cmd;
-	}
-	
-	public final PingCommand  ping() throws RecognitionException, TokenStreamException {
-		PingCommand cmd;
-		
-		
-		cmd = new PingCommand();
-		
-		
 		return cmd;
 	}
 	
@@ -3355,17 +3339,17 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			match(OPT_SRC);
 			{
-			int _cnt36=0;
-			_loop36:
+			int _cnt35=0;
+			_loop35:
 			do {
 				if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
 					srcdef(cmd);
 				}
 				else {
-					if ( _cnt36>=1 ) { break _loop36; } else {throw new NoViableAltException(LT(1), getFilename());}
+					if ( _cnt35>=1 ) { break _loop35; } else {throw new NoViableAltException(LT(1), getFilename());}
 				}
 				
-				_cnt36++;
+				_cnt35++;
 			} while (true);
 			}
 			}
@@ -3387,17 +3371,17 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			match(OPT_DST);
 			{
-			int _cnt40=0;
-			_loop40:
+			int _cnt39=0;
+			_loop39:
 			do {
 				if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
 					dstdef(cmd, needSmeId);
 				}
 				else {
-					if ( _cnt40>=1 ) { break _loop40; } else {throw new NoViableAltException(LT(1), getFilename());}
+					if ( _cnt39>=1 ) { break _loop39; } else {throw new NoViableAltException(LT(1), getFilename());}
 				}
 				
-				_cnt40++;
+				_cnt39++;
 			} while (true);
 			}
 			}
@@ -4249,14 +4233,14 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			addsubj_mask(cmd);
 			{
-			_loop119:
+			_loop118:
 			do {
 				if ((LA(1)==COMMA)) {
 					match(COMMA);
 					addsubj_mask(cmd);
 				}
 				else {
-					break _loop119;
+					break _loop118;
 				}
 				
 			} while (true);
@@ -5734,27 +5718,27 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			}
 			{
-			_loop297:
+			_loop296:
 			do {
 				if ((LA(1)==ACT_ADD)) {
 					match(ACT_ADD);
 					cmd.addMask(getnameid("closed group mask to add"));
 				}
 				else {
-					break _loop297;
+					break _loop296;
 				}
 				
 			} while (true);
 			}
 			{
-			_loop299:
+			_loop298:
 			do {
 				if ((LA(1)==ACT_DELETE)) {
 					match(ACT_DELETE);
 					cmd.delMask(getnameid("closed group mask to delete"));
 				}
 				else {
-					break _loop299;
+					break _loop298;
 				}
 				
 			} while (true);
@@ -5946,7 +5930,6 @@ public CommandParser(ParserSharedInputState state) {
 		"\"TRX\"",
 		"\"SMPP\"",
 		"\"SS7\"",
-		"\"ping\"",
 		"WS",
 		"more input",
 		"quoted string",

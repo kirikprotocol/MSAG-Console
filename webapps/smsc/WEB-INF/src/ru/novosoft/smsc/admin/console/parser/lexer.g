@@ -161,8 +161,6 @@ tokens {
   VAL_TRX	= "TRX";
   VAL_SMPP	= "SMPP";
   VAL_SS7	= "SS7";
-
-  PING = "ping";
 }
 
 WS    	: 	( STR_WS

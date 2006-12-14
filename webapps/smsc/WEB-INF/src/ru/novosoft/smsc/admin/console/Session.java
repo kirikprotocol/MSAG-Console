@@ -10,7 +10,6 @@ package ru.novosoft.smsc.admin.console;
 import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.console.parser.CommandLexer;
 import ru.novosoft.smsc.admin.console.parser.CommandParser;
-import ru.novosoft.smsc.admin.console.commands.PingCommand;
 import ru.novosoft.smsc.util.auth.AuthenticatorProxy;
 
 import java.io.IOException;
@@ -27,6 +26,7 @@ public abstract class Session extends Thread {
   private org.apache.log4j.Category logConsole = org.apache.log4j.Category.getInstance("console");
 
   private final static String COMMAND_QUIT = "quit";
+  private final static String COMMAND_PING = "ping";
 
   protected final static int CONSOLE_AUTH_FAIL_SLEEP = 3000;
   protected final static int CONSOLE_AUTH_FAIL_TRIES = 3;
@@ -84,14 +84,8 @@ public abstract class Session extends Thread {
             AuthenticatorProxy.getInstance().hasRole(Constants.TomcatRealmName, user, role));
   }
 
-  private boolean isCommandGeneral(String command) {
-    return command.equals(PingCommand.ID);
-  }
-
   protected boolean commandAllowed(String command) {
     if (userAuthorized()) {
-      if (isCommandGeneral(command))
-        return true;
       String roles[] = owner.getCommandRoles(command);
       for (int i = 0; roles != null && i < roles.length; i++) {
         if (roles[i] != null &&
@@ -219,12 +213,18 @@ public abstract class Session extends Thread {
       String input = readTelnetLine(true);
       if (input == null || input.length() == 0) continue;
       logConsole.info(user.getName() + "@" + socket.getInetAddress().getHostAddress() + " in: " + input);
+      CommandContext ctx = new CommandContext(owner);
+
       if (input.equalsIgnoreCase(COMMAND_QUIT)) {
         farewell(null);
         sleep(1000);
         break;
+      } else if (input.equalsIgnoreCase(COMMAND_PING)) {
+        ctx.setMessage("");
+        display(ctx);
+        continue;
       }
-      CommandContext ctx = new CommandContext(owner);
+
       try {
         CommandLexer lexer = new CommandLexer(new StringReader(input));
         CommandParser parser = new CommandParser(lexer);

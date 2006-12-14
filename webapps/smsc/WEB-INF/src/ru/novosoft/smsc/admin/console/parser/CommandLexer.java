@@ -60,7 +60,6 @@ public CommandLexer(LexerSharedInputState state) {
 	literals.put(new ANTLRHashString("aliases", this), new Integer(22));
 	literals.put(new ANTLRHashString("outputaccessbit", this), new Integer(116));
 	literals.put(new ANTLRHashString("clear", this), new Integer(84));
-	literals.put(new ANTLRHashString("ping", this), new Integer(146));
 	literals.put(new ANTLRHashString("forceDelivery", this), new Integer(92));
 	literals.put(new ANTLRHashString("grant", this), new Integer(11));
 	literals.put(new ANTLRHashString("timeout", this), new Integer(103));

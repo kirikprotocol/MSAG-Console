@@ -142,12 +142,11 @@ VAL_RX="RX"=142
 VAL_TRX="TRX"=143
 VAL_SMPP="SMPP"=144
 VAL_SS7="SS7"=145
-PING="ping"=146
-WS=147
-STR("more input")=148
-QSTR("quoted string")=149
-STR_WS=150
-STR_CHR=151
-COMMA("comma character ','")=152
-ESC=153
-DIGIT=154
+WS=146
+STR("more input")=147
+QSTR("quoted string")=148
+STR_WS=149
+STR_CHR=150
+COMMA("comma character ','")=151
+ESC=152
+DIGIT=153
