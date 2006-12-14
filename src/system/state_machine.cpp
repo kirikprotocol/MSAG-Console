@@ -2401,7 +2401,7 @@ StateType StateMachine::submitChargeResp(Tuple& t)
   {
     smsc->getScheduler()->AddScheduledSms(t.msgId,*sms,dest_proxy_index);
     sms->setLastResult(Status::DEFERREDDELIVERY);
-    smsc->ReportDelivery(resp->cntx.inDlgId,*sms,true,Smsc::chargeOnDelivery);
+    smsc->ReportDelivery(resp->cntx.inDlgId,*sms,false,Smsc::chargeOnDelivery);
     return ENROUTE_STATE;
   }
 
