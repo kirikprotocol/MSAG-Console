@@ -51,9 +51,10 @@ void DistrListManager::init()
   }
 
   DistrListRecord lstRec;
+  bool createList=true;
   while((lstRec.offset=lstFile.Read(lstRec))!=0)
   {
-    lists.Insert(lstRec.name,new DistrListRecord(lstRec));
+    createList=true;
     if(!lstRec.system)
     {
       lstRec.owner.toString(buf,sizeof(buf));
@@ -65,11 +66,17 @@ void DistrListManager::init()
         {
           warn2(logger,"Principal %s exceeded number of lists:%d/%d",buf,
             prcRecPtr->lstCount,prcRecPtr->maxLst);
+          createList=false;
         }
       }else
       {
         warn2(logger,"OWNER OF LIST %s NOT FOUND(%s)!!!",lstRec.name,buf);
+        createList=false;
       }
+    }
+    if(createList)
+    {
+      lists.Insert(lstRec.name,new DistrListRecord(lstRec));
     }
   }
   MemberRecord memRec;
@@ -83,11 +90,17 @@ void DistrListManager::init()
       if(!lst.system)
       {
         lst.owner.toString(buf,sizeof(buf));
-        PrincipalRecord& prc=principals.Get(buf);
-        if(prc.maxEl!=0 && lst.members.size()>prc.maxEl)
+        PrincipalRecord* prcPtr=principals.GetPtr(buf);
+        if(!prcPtr)
         {
-          warn2(logger,"LIST %s EXCEEDED MAXIMUM NUMBER OF ELEMETS OF PRINCIPAL %s - %d/%d",
-            lst.name,buf,lst.members.size(),prc.maxEl);
+          warn2(logger,"PRINCIPAL NOT FOUND: %s",buf);
+        }else
+        {
+          if(prcPtr->maxEl!=0 && lst.members.size()>prcPtr->maxEl)
+          {
+            warn2(logger,"LIST %s EXCEEDED MAXIMUM NUMBER OF ELEMETS OF PRINCIPAL %s - %d/%d",
+              lst.name,buf,lst.members.size(),prcPtr->maxEl);
+          }
         }
       }
     }else
