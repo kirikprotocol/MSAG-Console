@@ -7,10 +7,8 @@
 
 #include "inman/InCacheDefs.hpp"
 using smsc::inman::cache::AbonentId;
-//using smsc::inman::cache::AbonentBillType;
 using smsc::inman::cache::AbonentCacheITF;
 using smsc::inman::cache::AbonentRecord;
-
 
 
 namespace smsc {
