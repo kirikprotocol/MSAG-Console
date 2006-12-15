@@ -376,6 +376,8 @@ Hash<int> SmppCommandAdapter::InitSubmitFieldNames()
 {
     Hash<int> hs;
 
+    hs["packet_direction"]              = PACKET_DIRECTION;
+
     hs["OA"]                            = OA;
     hs["DA"]                            = DA;
 
@@ -539,6 +541,8 @@ Hash<int> SmppCommandAdapter::InitSubmitRespFieldNames()
 {
     Hash<int> hs;
 
+    hs["packet_direction"]              = PACKET_DIRECTION;
+
     hs["status"] = STATUS;
     hs["message_id"] = MESSAGE_ID;
     hs["ussd_dialog"] = USSD_DIALOG;
@@ -553,6 +557,8 @@ Hash<int> SmppCommandAdapter::InitDeliverRespFieldNames()
 {
     Hash<int> hs;
 
+    hs["packet_direction"]              = PACKET_DIRECTION;
+
     hs["status"] = STATUS;
     hs["ussd_dialog"] = USSD_DIALOG;
 
@@ -566,6 +572,8 @@ Hash<int> SmppCommandAdapter::InitDeliverRespFieldNames()
 Hash<int> SmppCommandAdapter::InitDeliverFieldNames()
 {
     Hash<int> hs;
+
+    hs["packet_direction"]              = PACKET_DIRECTION;
 
     hs["OA"]                            = OA;
     hs["DA"]                            = DA;
@@ -899,6 +907,9 @@ AdapterProperty * SmppCommandAdapter::getSubmitRespProperty(SMS& data, const std
 
     switch (FieldId) 
     {
+    case PACKET_DIRECTION:
+        property = new AdapterProperty(name,this,dsdSc2Srv);
+        break;
     case STATUS:
         property = new AdapterProperty(name,this,command->get_resp()->get_status());
         break;
@@ -927,6 +938,9 @@ AdapterProperty * SmppCommandAdapter::getDeliverRespProperty(SMS& data, const st
 
     switch (FieldId) 
     {
+    case PACKET_DIRECTION:
+        property = new AdapterProperty(name,this,dsdSrv2Sc);
+        break;
     case STATUS:
         property = new AdapterProperty(name,this,command->get_resp()->get_status());
         break;
@@ -1246,6 +1260,9 @@ AdapterProperty * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::str
     } else
     switch (FieldId) 
     {
+    case PACKET_DIRECTION:
+        property = new AdapterProperty(name,this,dsdSrv2Sc);
+        break;
     case OA:
         property = new AdapterProperty(name,this,data.getOriginatingAddress().toString().c_str());
         break;
@@ -1314,7 +1331,14 @@ AdapterProperty * SmppCommandAdapter::getDataSmRespProperty(SmsCommand& data,con
         property = new AdapterProperty(name,this,CommandBrige::getDestAddr(command).toString());
         break;
     case PACKET_DIRECTION:
-        property = new AdapterProperty(name,this, (int)data.dir);
+        if (data.dir == dsdSrv2Sc) 
+            property = new AdapterProperty(name,this, dsdSc2Srv);
+        else 
+            if (data.dir == dsdSc2Srv) property = new AdapterProperty(name,this, dsdSrv2Sc);
+        else
+            property = new AdapterProperty(name,this, (int)data.dir);
+
+        break;
     }
 
     return property;
@@ -1394,6 +1418,9 @@ AdapterProperty * SmppCommandAdapter::getDeliverProperty(SMS& data,const std::st
     } else
     switch (FieldId) 
     {
+    case PACKET_DIRECTION:
+        property = new AdapterProperty(name,this,dsdSc2Sme);
+        break;
     case OA:
         property = new AdapterProperty(name,this,data.getOriginatingAddress().toString().c_str());
         break;
