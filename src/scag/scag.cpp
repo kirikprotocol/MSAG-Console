@@ -164,21 +164,7 @@ void Scag::init()
 
     //smsc::util::regexp::RegExp::InitLocale();
 
-    //********************************************************
-    //********** Statistics manager initialization ***********
-    try{
-      StatisticsManager::init(cfg.getStatManConfig());
-
-      smsc_log_info(log, "Statistics manager started" );
-    }catch(exception& e){
-      smsc_log_warn(log, "Smsc.init exception: %s", e.what());
-      __warning__("Statistics manager is not started.");
-    }catch(...){
-      __warning__("Statistics manager is not started.");
-    }
-    //********************************************************
-
-/*    try {
+    /* try {
         InitLicense(*cfg.getLicConfig());
     } catch (exception& e) {
         smsc_log_error(log, "Cannot initialize license. Initialization stopped. %s", e.what());
@@ -207,6 +193,20 @@ void Scag::init()
       __warning__("Sessioan Manager is not started.");
     }catch(...){
       __warning__("Session Manager is not started.");
+    }
+    //********************************************************
+
+    //********************************************************
+    //********** Statistics manager initialization ***********
+    try{
+      StatisticsManager::init(cfg.getStatManConfig());
+
+      smsc_log_info(log, "Statistics manager started" );
+    }catch(exception& e){
+      smsc_log_warn(log, "Smsc.init exception: %s", e.what());
+      __warning__("Statistics manager is not started.");
+    }catch(...){
+      __warning__("Statistics manager is not started.");
     }
     //********************************************************
 
