@@ -15,6 +15,21 @@ struct GsmSCFinfo { //gsmSCF paramaters
     TonNpiAddress scfAddress;
 
     GsmSCFinfo() : serviceKey(0) { }
+
+    void Reset(void) { serviceKey = 0; scfAddress.clear(); }
+
+    //gsmSCF address is always ISDN international
+    std::string toString(bool omit_ton_npi = true) const
+    {
+        if (!scfAddress.length)
+            return "<none>";
+        std:: string    str = scfAddress.toString(!omit_ton_npi);
+        char            buf[sizeof("%s:{%u}") + sizeof(serviceKey)*3];
+        int n = snprintf(buf, sizeof(buf) - 1, ":{%u}", serviceKey);
+        buf[(n > 0) ? n : 0] = 0;
+        str += buf;
+        return str;
+    }
 };
 
 struct AbonentContractInfo {
@@ -23,11 +38,19 @@ struct AbonentContractInfo {
     ContractType    ab_type;
     GsmSCFinfo      gsmSCF;
 
-    AbonentContractInfo() : ab_type(abtUnknown)
-    { }
-    AbonentContractInfo(ContractType cntr_type, const GsmSCFinfo * p_scf = NULL)
+    AbonentContractInfo(ContractType cntr_type = abtUnknown, const GsmSCFinfo * p_scf = NULL)
         : ab_type(cntr_type)
-    { if (p_scf) gsmSCF = *p_scf; }
+    {
+        if (p_scf)
+            gsmSCF = *p_scf;
+        else
+            gsmSCF.Reset();
+    }
+
+    AbonentContractInfo(const AbonentContractInfo & ab_info)
+    { AbonentContractInfo(ab_info.ab_type , ab_info.getSCFinfo()); }
+
+    void Reset(void) { ab_type = abtUnknown; gsmSCF.Reset(); }
 
     inline bool isUnknown(void) const { return (bool)(ab_type == abtUnknown); }
     inline bool isPostpaid(void) const { return (bool)(ab_type == abtPostpaid); }
