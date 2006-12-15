@@ -363,11 +363,12 @@ int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, TariffRec& ta
 
 void BillingManagerImpl::Commit(int billId)
 {
+    BillTransaction * pBillTransaction=0;
     {
       MutexGuard mg(inUseLock);
       BillTransaction ** pBillTransactionPtrPtr = BillTransactionHash.GetPtr(billId);
       if (!pBillTransactionPtrPtr) throw SCAGException("Cannot find transaction for billId=%d", billId);
-      BillTransaction * pBillTransaction=*pBillTransactionPtrPtr;
+      pBillTransaction=*pBillTransactionPtrPtr;
     }
 
 
@@ -376,11 +377,11 @@ void BillingManagerImpl::Commit(int billId)
     //SPckChargeSms pck;
     sendCommand(pBillTransaction->ChargeOperation);
     //sendCommand(pck);
+    pBillTransaction->eventMonitor.wait(1000);
     #else
     pBillTransaction->status = TRANSACTION_VALID;
     #endif
 
-    pBillTransaction->eventMonitor.wait(1000);
 
     ProcessSaccEvent(TRANSACTION_COMMITED, pBillTransaction);
 
@@ -416,11 +417,12 @@ void BillingManagerImpl::Commit(int billId)
 void BillingManagerImpl::Rollback(int billId)
 {
 
+    BillTransaction * pBillTransaction=0;
     {
       MutexGuard mg(inUseLock);
       BillTransaction ** pBillTransactionPtrPtr = BillTransactionHash.GetPtr(billId);
       if (!pBillTransactionPtrPtr) throw SCAGException("Cannot find transaction for billId=%d", billId);
-      BillTransaction * pBillTransaction=*pBillTransactionPtrPtr;
+      pBillTransaction=*pBillTransactionPtrPtr;
     }
 
     if (pBillTransaction->status == TRANSACTION_VALID)
