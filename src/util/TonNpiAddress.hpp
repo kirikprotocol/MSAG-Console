@@ -20,6 +20,8 @@
 
 namespace smsc {
 namespace util {
+                                 // '.' + 3 + '.' + 3 + '.' + 20
+#define TonNpiAddress_strSZ (12 + CAP_MAX_SMS_AddressValueLength + 2)
 
 //This is slightly more intelligent analog of sms::sms::Address,
 //it also accepts alpha-numeric addresses.
@@ -78,19 +80,27 @@ struct TonNpiAddress {
         return true;
     }
 
-    //use at least 30 chars buffer
-    inline int toString(char* buf, int buflen) const
+    //Returns true if address numbering is ISDN international
+    inline bool interISDN(void) const { return (bool)(~(numPlanInd ^ typeOfNumber) == 1); }
+                
+    //use at least TonNpiAddress_strSZ chars buffer
+    inline int toString(char* buf, int buflen = TonNpiAddress_strSZ) const
     {
-        return snprintf(buf, buflen, ".%u.%u.%s",
+        return snprintf(buf, buflen - 1, ".%u.%u.%s",
                         (unsigned)typeOfNumber, (unsigned)numPlanInd, signals);
     }
 
-    inline std::string toString() const
+    inline std::string toString(bool ton_npi = true) const
     {
-        char buf[48+2]; // '.' + 3 + '.' + 3 + '.' + 20
-        buf[0] = 0;
-        snprintf(buf, sizeof(buf)-1, ".%u.%u.%s",
-                        (unsigned)typeOfNumber, (unsigned)numPlanInd, signals);
+        char buf[TonNpiAddress_strSZ];
+        int n = (buf[0] = 0);
+        if (ton_npi)
+            n = snprintf(buf, sizeof(buf) - 1, ".%u.%u.",
+                            (unsigned)typeOfNumber, (unsigned)numPlanInd);
+        else if (interISDN()) {
+            n = 1; buf[0] = '+';
+        }
+        strcpy(buf + n, getSignals());
         return buf;
     }
 
