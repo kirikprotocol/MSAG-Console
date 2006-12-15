@@ -1,4 +1,6 @@
+#ifndef MOD_IDENT_OFF
 static const char ident[] = "$Id$";
+#endif /* MOD_IDENT_OFF */
 
 #include <assert.h>
 #include "inman/incache.hpp"
@@ -92,10 +94,13 @@ int AbonentCache::ramInsert(const AbonentId & ab_number,
         ramRec.tm_queried = time(NULL);
 
     if (!pabRec) {
+        if (accList.size() >= maxRamIt) {
+            AbonentId delId = accList.back();
+            cache.Delete(delId.getSignals());
+            accList.pop_back();
+        }
         status = cache.Insert(ab_number.getSignals(), ramRec);
         pabRec = cache.GetPtr(ab_number.getSignals());
-        if (accList.size() >= maxRamIt)
-            accList.pop_back();
     } else { //update
         *pabRec = ramRec;
         accList.erase(pabRec->accIt);
@@ -147,7 +152,7 @@ void AbonentCache::setAbonentInfo(const AbonentId & ab_number,
                     ab_rec.type2Str(), ab_rec.gsmSCF.toString().c_str());
 }
 
-AbonentBillType AbonentCache::getAbonentInfo(AbonentId & ab_number, 
+AbonentBillType AbonentCache::getAbonentInfo(AbonentId & ab_number,
                                              AbonentRecord * p_ab_rec/* = NULL*/)
 {
     MutexGuard  guard(cacheGuard);
