@@ -45,7 +45,7 @@ class BillingManagerImpl : public BillingManager, public Thread, public BillingM
 
     bool m_bStarted;
 
-    int m_lastBillId; 
+    int m_lastBillId;
     int m_TimeOut;
 
     bool m_Connected;
@@ -97,9 +97,9 @@ public:
 
 
     void configChanged();
-    
-    BillingManagerImpl() : 
-        m_bStarted(false), 
+
+    BillingManagerImpl() :
+        m_bStarted(false),
         m_lastBillId(0), ConfigListener(BILLMAN_CFG) {}
 
     ~BillingManagerImpl()
@@ -134,10 +134,10 @@ void BillingManager::Init(BillingManagerConfig& cfg)
 
 BillingManager& BillingManager::Instance()
 {
-    if (!bBillingManagerInited) 
+    if (!bBillingManagerInited)
     {
         MutexGuard guard(initBillingManagerLock);
-        if (!bBillingManagerInited) 
+        if (!bBillingManagerInited)
             throw SCAGException("BillingManager not inited!");
     }
     return SingleBM::Instance();
@@ -147,12 +147,12 @@ void BillingManagerImpl::Stop()
 {
     MutexGuard guard(stopLock);
 
-    if (m_bStarted) 
+    if (m_bStarted)
     {
         m_bStarted = false;
         connectEvent.Signal();
 
-        exitEvent.Wait(); 
+        exitEvent.Wait();
     }
     smsc_log_info(logger,"BillingManager::stop");
 }
@@ -189,7 +189,7 @@ void BillingManagerImpl::init(BillingManagerConfig& cfg)
 void BillingManagerImpl::configChanged()
 {
     MutexGuard guard(inUseLock);
-    
+
     Stop();
     init(ConfigManager::Instance().getBillManConfig());
     Start();
@@ -203,7 +203,7 @@ int BillingManagerImpl::Execute()
     {
         try
         {
-            if (m_Connected) 
+            if (m_Connected)
             {
                 #ifdef MSAG_INMAN_BILL
                 try
@@ -221,14 +221,14 @@ int BillingManagerImpl::Execute()
                 m_Connected = Reconnect();
                 if (!m_Connected) connectEvent.Wait(m_TimeOut*1000);
             }
-            
+
         } catch (SCAGException& e)
         {
             smsc_log_error(logger, "BillingManager error: %s", e.what());
             m_Connected = false;
         }
     }
- 
+
     smsc_log_info(logger,"BillingManager::stop executing");
     exitEvent.Signal();
     return 0;
@@ -237,7 +237,7 @@ int BillingManagerImpl::Execute()
 void BillingManagerImpl::Start()
 {
     MutexGuard guard(stopLock);
-    if (!m_bStarted) 
+    if (!m_bStarted)
     {
         m_bStarted = true;
         Thread::Start();
@@ -250,7 +250,7 @@ void BillingManagerImpl::ProcessSaccEvent(BillingTransactionEvent billingTransac
 
     Statistics& statistics = Statistics::Instance();
 
-    switch (billTransaction->status) 
+    switch (billTransaction->status)
     {
     case TRANSACTION_INVALID:
         modifyBillEvent(billingTransactionEvent, INVALID_TRANSACTION, billTransaction->billEvent);
@@ -323,7 +323,7 @@ int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, TariffRec& ta
     billTransaction->eventMonitor.wait(1000);
     #endif
 
-    if (billTransaction->status == TRANSACTION_WAIT_ANSWER) 
+    if (billTransaction->status == TRANSACTION_WAIT_ANSWER)
     {
         inUseLock.Lock();
         delete billTransaction;
@@ -333,7 +333,7 @@ int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, TariffRec& ta
         throw SCAGException("Transaction billId=%d timed out", billId);
     }
 
-    if (billTransaction->status == TRANSACTION_INVALID) 
+    if (billTransaction->status == TRANSACTION_INVALID)
     {
         inUseLock.Lock();
         delete billTransaction;
@@ -363,39 +363,41 @@ int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, TariffRec& ta
 
 void BillingManagerImpl::Commit(int billId)
 {
-    inUseLock.Lock();
-    BillTransaction ** pBillTransactionPtr = BillTransactionHash.GetPtr(billId);
-    inUseLock.Unlock();
+    {
+      MutexGuard mg(inUseLock);
+      BillTransaction ** pBillTransactionPtrPtr = BillTransactionHash.GetPtr(billId);
+      if (!pBillTransactionPtrPtr) throw SCAGException("Cannot find transaction for billId=%d", billId);
+      BillTransaction * pBillTransaction=*pBillTransactionPtrPtr;
+    }
 
-    if (!pBillTransactionPtr) throw SCAGException("Cannot find transaction for billId=%d", billId);
 
     #ifdef MSAG_INMAN_BILL
     //(*pBillTransactionPtr)->ChargeOperation.Hdr().dlgId = billId;
     //SPckChargeSms pck;
-    sendCommand((*pBillTransactionPtr)->ChargeOperation);
+    sendCommand(pBillTransaction->ChargeOperation);
     //sendCommand(pck);
     #else
-    (*pBillTransactionPtr)->status = TRANSACTION_VALID;
-    #endif 
+    pBillTransaction->status = TRANSACTION_VALID;
+    #endif
 
-    (*pBillTransactionPtr)->eventMonitor.wait(1000);
+    pBillTransaction->eventMonitor.wait(1000);
 
-    ProcessSaccEvent(TRANSACTION_COMMITED, *pBillTransactionPtr);
-   
+    ProcessSaccEvent(TRANSACTION_COMMITED, pBillTransaction);
+
     smsc_log_debug(logger, "Commiting billId=%d...", billId);
 
-    int status = (*pBillTransactionPtr)->status;
+    int status = pBillTransaction->status;
 
     inUseLock.Lock();
-    delete (*pBillTransactionPtr);
+    delete pBillTransaction;
     BillTransactionHash.Delete(billId);
     inUseLock.Unlock();
 
 
-    if (status == TRANSACTION_WAIT_ANSWER) 
+    if (status == TRANSACTION_WAIT_ANSWER)
         throw SCAGException("Transaction billId=%d timed out.", billId);
 
-    if (status == TRANSACTION_INVALID) 
+    if (status == TRANSACTION_INVALID)
         throw SCAGException("Transaction billId=%d invalid.", billId);
 
 
@@ -406,40 +408,40 @@ void BillingManagerImpl::Commit(int billId)
         op.Hdr().dlgId = billId;
         sendCommand(op);
         #endif
-    } 
+    }
 }
 
 
 
 void BillingManagerImpl::Rollback(int billId)
 {
-      
-    inUseLock.Lock();
-    BillTransaction ** pBillTransactionPtr = BillTransactionHash.GetPtr(billId);
-    inUseLock.Unlock();
 
-    if (!pBillTransactionPtr) 
-        throw SCAGException("Cannot find transaction for billId=%d", billId);
+    {
+      MutexGuard mg(inUseLock);
+      BillTransaction ** pBillTransactionPtrPtr = BillTransactionHash.GetPtr(billId);
+      if (!pBillTransactionPtrPtr) throw SCAGException("Cannot find transaction for billId=%d", billId);
+      BillTransaction * pBillTransaction=*pBillTransactionPtrPtr;
+    }
 
-    if ((*pBillTransactionPtr)->status == TRANSACTION_VALID)
+    if (pBillTransaction->status == TRANSACTION_VALID)
     {
         #ifdef MSAG_INMAN_BILL
         SPckDeliverySmsResult op;
         op.Hdr().dlgId = billId;
-        op.Cmd().setResultValue(2); 
+        op.Cmd().setResultValue(2);
         sendCommand(op);
         #endif
     }
 
-    ProcessSaccEvent(TRANSACTION_CALL_ROLLBACK, *pBillTransactionPtr);
+    ProcessSaccEvent(TRANSACTION_CALL_ROLLBACK, pBillTransaction);
 
     inUseLock.Lock();
-    delete (*pBillTransactionPtr);
+    delete pBillTransaction;
     BillTransactionHash.Delete(billId);
     inUseLock.Unlock();
-    
+
     smsc_log_debug(logger, "Transaction rolled back (billId=%d)", billId);
-    
+
 }
 
 
@@ -449,7 +451,7 @@ void BillingManagerImpl::modifyBillEvent(BillingTransactionEvent billCommand, Bi
     ev.Header.sCommandStatus = commandStatus;
 
     timeval tv;
-    gettimeofday(&tv,0);  
+    gettimeofday(&tv,0);
 
     ev.Header.lDateTime = (uint64_t)tv.tv_sec*1000 + (tv.tv_usec / 1000);
 }
@@ -465,7 +467,7 @@ void BillingManagerImpl::makeBillEvent(BillingTransactionEvent billCommand, Bill
     ev.Header.iServiceProviderId = billingInfo.providerId;
 
     timeval tv;
-    gettimeofday(&tv,0);  
+    gettimeofday(&tv,0);
 
     ev.Header.lDateTime = (uint64_t)tv.tv_sec*1000 + (tv.tv_usec / 1000);
 
@@ -473,8 +475,8 @@ void BillingManagerImpl::makeBillEvent(BillingTransactionEvent billCommand, Bill
     ev.Header.sCommandStatus = commandStatus;
     ev.Header.iOperatorId = billingInfo.operatorId;
     ev.iPriceCatId = tariffRec.CategoryId;
-    
-    
+
+
     ev.fBillingSumm = tariffRec.Price;
     ev.iMediaResourceType = tariffRec.MediaTypeId;
 
@@ -482,7 +484,7 @@ void BillingManagerImpl::makeBillEvent(BillingTransactionEvent billCommand, Bill
 
     char buff[128];
     sprintf(buff,"%s/%ld%d",billingInfo.AbonentNumber.c_str(), billingInfo.SessionBornMicrotime.tv_sec, billingInfo.SessionBornMicrotime.tv_usec / 1000);
-    ev.pSessionKey.append(buff);   
+    ev.pSessionKey.append(buff);
 
 }
 
@@ -499,15 +501,15 @@ void BillingManagerImpl::onChargeSmsResult(ChargeSmsResult* result, CsBillingHdr
 
     BillTransaction ** pBillTransactionPtr = BillTransactionHash.GetPtr(billId);
 
-    if (!pBillTransactionPtr) 
+    if (!pBillTransactionPtr)
     {
         //TODO: do what we must to do
         return;
     }
-    
-    if( result->GetValue() == ChargeSmsResult::CHARGING_POSSIBLE ) 
+
+    if( result->GetValue() == ChargeSmsResult::CHARGING_POSSIBLE )
         (*pBillTransactionPtr)->status = TRANSACTION_VALID;
-    else 
+    else
         (*pBillTransactionPtr)->status = TRANSACTION_INVALID;
 
     (*pBillTransactionPtr)->eventMonitor.notify();
@@ -532,7 +534,7 @@ void BillingManagerImpl::fillChargeSms(smsc::inman::interaction::ChargeSms& op, 
     sprintf(buff,"%d", tariffRec.ServiceNumber);
     std::string str(buff);
     //op.setDestinationSubscriberNumber(sms.getDealiasedDestinationAddress().toString());
-    if (command->cmdid == DELIVERY) 
+    if (command->cmdid == DELIVERY)
     {
         op.setDestinationSubscriberNumber(str);
         op.setCallingPartyNumber(sms.getOriginatingAddress().toString());
@@ -576,4 +578,3 @@ void BillingManagerImpl::fillChargeSms(smsc::inman::interaction::ChargeSms& op, 
 #endif /* MSAG_INMAN_BILL */
 
 }}
-

@@ -172,34 +172,14 @@ void Scag::init()
         throw;
     }*/
     //********************************************************
-    //************** SmppManager initialization **************
-    try {
-        smsc_log_info(log, "Smpp Manager is starting");
-        smppMan.Init(findConfigFile("../conf/smpp.xml"));
-        smsc_log_info(log, "Smpp Manager started");
-    }catch(Exception& e)
-    {
-        throw Exception("Exception during initialization of SmppManager: %s", e.what());
-    }catch (XMLException& e)
-    {
-        scag::re::StrX msg(e.getMessage());
 
-        throw Exception("Exception during initialization of SmppManager: %s", msg.localForm());
-    }catch (...)
-    {
-        throw Exception("Exception during initialization of SmppManager: unknown error");
-    }
-  //********************************************************
-
-
-   
     try {
         BillingManager::Init(cfg.getBillManConfig());
     }catch(...)
     {
         throw Exception("Exception during initialization of BillingManager");
     }
-    
+
 
   //********************************************************
   //*********** SessionManager initialization **************
@@ -287,14 +267,24 @@ void Scag::init()
   scagHost=cfg.getConfig()->getString("smpp.host");
   scagPort=cfg.getConfig()->getInt("smpp.port");
 
-
-  eventQueueLimit=1000;
-  try{
-    eventQueueLimit=cfg.getConfig()->getInt("smpp.core.eventQueueLimit");
-  }catch(...)
+  //************** SmppManager initialization **************
+  try {
+      smsc_log_info(log, "Smpp Manager is starting");
+      smppMan.Init(findConfigFile("../conf/smpp.xml"));
+      smsc_log_info(log, "Smpp Manager started");
+  }catch(Exception& e)
   {
-    __warning__("eventQueueLimit not found, using default(1000)");
+      throw Exception("Exception during initialization of SmppManager: %s", e.what());
+  }catch (XMLException& e)
+  {
+      scag::re::StrX msg(e.getMessage());
+
+      throw Exception("Exception during initialization of SmppManager: %s", msg.localForm());
+  }catch (...)
+  {
+      throw Exception("Exception during initialization of SmppManager: unknown error");
   }
+//********************************************************
 
   //*****************************************************
   // test route instance initialization
@@ -315,7 +305,7 @@ void Scag::init()
   */
   //*****************************************************
 
-  /*      
+  /*
   ////////////////////////// FOR TEST
 
   scag::sessions::CSessionKey key;
@@ -325,10 +315,10 @@ void Scag::init()
   //sms1.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, smsc::smpp::UssdServiceOpValue::PSSR_INDICATION);
   sms2.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, 100);
 
-  
+
   std::string text;
   const char * inBuff = "2 3 LA";
-  
+
   Convertor::UTF8ToGSM7Bit(inBuff, strlen(inBuff), text);
   sms1.setIntProperty(Tag::SMPP_DATA_CODING, smsc::smpp::DataCoding::SMSC7BIT);
   sms1.setBinProperty(Tag::SMPP_SHORT_MESSAGE, text.data(), text.size());
@@ -363,9 +353,9 @@ void Scag::init()
 
 
   unsigned short shbuff[100];
-  shbuff[0] = 0x4903; 
-  shbuff[1] = 2; 
-  shbuff[2] = 12593; 
+  shbuff[0] = 0x4903;
+  shbuff[1] = 2;
+  shbuff[2] = 12593;
 
   sms2.setBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS, (const char *)shbuff, 6);
 
@@ -385,7 +375,7 @@ void Scag::init()
   commandPureDataSm->cmdid = scag::transport::smpp::DATASM;
   commandPureDataSm->get_smsCommand().dir = scag::transport::smpp::dsdSrv2Sc;
   commandPureDataSm.setServiceId(1);
-  
+
 
 
   //commandSubmitResp->get_resp()->set_sms(&sms2);
@@ -438,7 +428,7 @@ void Scag::init()
   sm.releaseSession(sessionPtr);
 
   */
-  /*  
+  /*
   scag::re::RuleEngine::Instance().process(commandDeliver1, *session);
   sm.releaseSession(sessionPtr);
   */
@@ -447,20 +437,20 @@ void Scag::init()
   session = sessionPtr.Get();
   scag::re::RuleEngine::Instance().process(commandDeliverResp, *session);
   sm.releaseSession(sessionPtr);
-  
-  
+
+
   sessionPtr = sm.getSession(key);
   session = sessionPtr.Get();
   scag::re::RuleEngine::Instance().process(commandPureSubmit, *session);
   sm.releaseSession(sessionPtr);
-  
-  
+
+
   sessionPtr = sm.getSession(key);
   session = sessionPtr.Get();
   scag::re::RuleEngine::Instance().process(commandSubmitResp, *session);
   sm.releaseSession(sessionPtr);
-  
-  
+
+
   //PURE SUBMIT
   sessionPtr = sm.getSession(key);
   session = sessionPtr.Get();
@@ -474,9 +464,9 @@ void Scag::init()
   scag::re::RuleEngine::Instance().process(commandDeliver2, *session);
   sm.releaseSession(sessionPtr);
    */
-  ////////////////////////// FOR TEST 
-                                   
-                      
+  ////////////////////////// FOR TEST
+
+
 /*
   scag::admin::CommandListSmsc * commandListSmsc = new scag::admin::CommandListSmsc(0);
   commandListSmsc->CreateResponse(this);

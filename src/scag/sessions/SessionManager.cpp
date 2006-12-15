@@ -21,7 +21,7 @@
 
 
 
-namespace scag { namespace sessions 
+namespace scag { namespace sessions
 {
     const time_t SessionManager::DEFAULT_EXPIRE_INTERVAL = 60;
 
@@ -66,7 +66,7 @@ namespace scag { namespace sessions
         };
 
 
-        struct FAccessDataCompare 
+        struct FAccessDataCompare
         {
             bool operator () (const CSessionAccessData* x,const CSessionAccessData* y) const
             {
@@ -101,20 +101,20 @@ namespace scag { namespace sessions
         int  processExpire();
         CSessionSetIterator DeleteSession(CSessionSetIterator it);
 
-        
+
         int16_t getNewUSR(Address& address);
         int16_t getLastUSR(Address& address);
 
     public:
         void configChanged();
-        
+
         void AddRestoredSession(Session * session);
 
         void init(const SessionManagerConfig& config);
 
         SessionManagerImpl() : bStarted(false) , logger(0), ConfigListener(SESSIONMAN_CFG) {};
         virtual ~SessionManagerImpl();
-        
+
         // SessionManager interface
         virtual SessionPtr getSession(const CSessionKey& sessionKey);
         virtual void releaseSession(SessionPtr session);
@@ -136,7 +136,7 @@ namespace scag { namespace sessions
 static bool  bSessionManagerInited = false;
 static Mutex initSessionManagerLock;
 
-inline unsigned GetLongevity(SessionManager*) { return 6; } // ? Move upper ? 
+inline unsigned GetLongevity(SessionManager*) { return 6; } // ? Move upper ?
 typedef SingletonHolder<SessionManagerImpl> SingleSM;
 
 void SessionManagerCallback(void * sm,Session * session)
@@ -171,7 +171,7 @@ void SessionManagerImpl::AddRestoredSession(Session * session)
     UMRHash.Insert(sessionKey.abonentAddr,maxUSR);
 
     session->setSessionKey(sessionKey);
-    
+
     time_t time = session->getWakeUpTime();
 
     CSessionAccessData * accessData = new CSessionAccessData();
@@ -185,7 +185,7 @@ void SessionManagerImpl::AddRestoredSession(Session * session)
 
     CSessionSetIterator it = SessionExpirePool.insert(accessData);
 
-/*    if (!pr.second) 
+/*    if (!pr.second)
     {
         delete accessData;
 
@@ -195,13 +195,13 @@ void SessionManagerImpl::AddRestoredSession(Session * session)
     SessionHash.Insert(sessionKey,it);
 
     smsc_log_debug(logger,"SessionManager: Session restored from store with USR='%d', Address='%s', pending: %d-%d",
-		   accessData->SessionKey.USR,accessData->SessionKey.abonentAddr.toString().c_str(),
-		   session->PendingOperationList.size(),session->PrePendingOperationList.size());
+       accessData->SessionKey.USR,accessData->SessionKey.abonentAddr.toString().c_str(),
+       session->PendingOperationList.size(),session->PrePendingOperationList.size());
 }
 
-SessionManagerImpl::~SessionManagerImpl() 
-{ 
-    Stop(); 
+SessionManagerImpl::~SessionManagerImpl()
+{
+    Stop();
 
     CSessionSetIterator it;
 
@@ -212,15 +212,15 @@ SessionManagerImpl::~SessionManagerImpl()
 
     CSessionKey key;
     CSessionSetIterator * value;
-    
+
     SessionHash.First();
     for (CSessionHash::Iterator it = SessionHash.getIterator(); it.Next(key, value);)
     {
         SessionPtr session = store.getSession(key);
-        if (session.Get()) session->abort(); 
+        if (session.Get()) session->abort();
         else smsc_log_debug(logger,"SessionManager: cannot find session in store - USR='%d', Address='%s'",
-			    key.USR,key.abonentAddr.toString().c_str());
-    }     
+          key.USR,key.abonentAddr.toString().c_str());
+    }
 
     smsc_log_debug(logger,"SessionManager released");
 }
@@ -240,16 +240,16 @@ void SessionManager::Init(const SessionManagerConfig& config)
 }
 SessionManager& SessionManager::Instance()
 {
-    if (!bSessionManagerInited) 
+    if (!bSessionManagerInited)
     {
         MutexGuard guard(initSessionManagerLock);
-        if (!bSessionManagerInited) 
+        if (!bSessionManagerInited)
             throw std::runtime_error("SessionManager not inited!");
     }
     return SingleSM::Instance();
 }
 
-// ################ TODO: Actual SessionManager Implementation follows ################ 
+// ################ TODO: Actual SessionManager Implementation follows ################
 
 void SessionManagerImpl::init(const SessionManagerConfig& _config) // possible throws exceptions
 {
@@ -260,28 +260,33 @@ void SessionManagerImpl::init(const SessionManagerConfig& _config) // possible t
 
     store.init(config.dir,SessionManagerCallback,this);
 
-    
+
     CSessionSetIterator it;
     for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();++it)
     {
         CSessionAccessData * accessData = (*it);
 
         SessionPtr session = store.getSession(accessData->SessionKey);
+        if(!session.Get())
+        {
+          smsc_log_warn(logger,"Session not found in store:%s:%d",accessData->SessionKey.abonentAddr.toString().c_str(),accessData->SessionKey.USR);
+          continue;
+        }
 
         int key;
         Operation * value = 0;
-        
+
         COperationsHash::Iterator iter = session->OperationsHash.First();
 
-        smsc_log_debug(logger,"SessionManager: Session USR='%d', Address='%s' has %d operations", 
+        smsc_log_debug(logger,"SessionManager: Session USR='%d', Address='%s' has %d operations",
                        (*it)->SessionKey.USR, (*it)->SessionKey.abonentAddr.toString().c_str(), session->OperationsHash.Count());
 
         for (;iter.Next(key, value);)
-        {              
-            smsc_log_debug(logger,"SessionManager: Session USR='%d', Address='%s' operation has finished (TYPE=%d)", 
+        {
+            smsc_log_debug(logger,"SessionManager: Session USR='%d', Address='%s' operation has finished (TYPE=%d)",
                            (*it)->SessionKey.USR, (*it)->SessionKey.abonentAddr.toString().c_str(), value->type);
 
-            if (session->m_pCurrentOperation == value) 
+            if (session->m_pCurrentOperation == value)
             {
                 session->m_pCurrentOperation = 0;
                 session->currentOperationId = 0;
@@ -291,9 +296,9 @@ void SessionManagerImpl::init(const SessionManagerConfig& _config) // possible t
             session->bChanged = true;
 
             session->OperationsHash.Delete(key);
-        }    
+        }
 
-        if (session->bChanged) 
+        if (session->bChanged)
         {
             accessData->hasOperations = session->hasOperations();
             store.updateSession(session);
@@ -309,7 +314,7 @@ void SessionManagerImpl::init(const SessionManagerConfig& _config) // possible t
 void SessionManagerImpl::configChanged()
 {
     MutexGuard mt(inUseMonitor);
-    
+
     Stop();
     init(ConfigManager::Instance().getSessionManConfig());
     Start();
@@ -323,7 +328,7 @@ bool SessionManagerImpl::isStarted()
 void SessionManagerImpl::Start()
 {
     MutexGuard guard(stopLock);
-    if (!bStarted) 
+    if (!bStarted)
     {
         bStarted = true;
         Thread::Start();
@@ -333,11 +338,11 @@ void SessionManagerImpl::Stop()
 {
     MutexGuard guard(stopLock);
 
-    if (bStarted) 
+    if (bStarted)
     {
         bStarted = false;
         awakeEvent.Signal();
-        exitEvent.Wait(); 
+        exitEvent.Wait();
     }
     smsc_log_info(logger,"SessionManager::stop");
 }
@@ -371,7 +376,7 @@ SessionManagerImpl::CSessionSetIterator SessionManagerImpl::DeleteSession(CSessi
     SessionExpirePool.erase(it);
     store.deleteSession(accessData->SessionKey);
 
-    smsc_log_debug(logger,"SessionManager: session expired USR='%d', Address='%s'", 
+    smsc_log_debug(logger,"SessionManager: session expired USR='%d', Address='%s'",
                    accessData->SessionKey.USR, accessData->SessionKey.abonentAddr.toString().c_str());
     delete accessData;
 
@@ -385,8 +390,8 @@ int SessionManagerImpl::processExpire()
     //smsc_log_debug(logger,"SessionManager: process expire");
 
     MutexGuard guard(inUseMonitor);
-    
-    while (1) 
+
+    while (1)
     {
         //smsc_log_debug(logger,"SessionManager: processing expire");
 
@@ -397,10 +402,10 @@ int SessionManagerImpl::processExpire()
         for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();)
         {
             if ((!(*it)->bOpened)&&((*it)->hasPending)) break;
-            if ((!(*it)->bOpened)&&(!(*it)->hasPending)&&(!(*it)->hasOperations)) 
+            if ((!(*it)->bOpened)&&(!(*it)->hasPending)&&(!(*it)->hasOperations))
             {
                 it = DeleteSession(it);
-            } 
+            }
             else ++it;
         }
 
@@ -413,14 +418,14 @@ int SessionManagerImpl::processExpire()
 
         if (it == SessionExpirePool.end())
         {
-            if (!SessionExpirePool.empty()) 
+            if (!SessionExpirePool.empty())
             {
                 it = SessionExpirePool.begin();
                 iPeriod = ((*it)->nextWakeTime - now);
                 if (iPeriod <= 0) return DEFAULT_EXPIRE_INTERVAL;
                 else return iPeriod;
             }
-            else 
+            else
                 return DEFAULT_EXPIRE_INTERVAL;
         }
 
@@ -438,7 +443,7 @@ int SessionManagerImpl::processExpire()
 
         while ((iPeriod <= 0)&&(data->hasPending))
         {
-            if (!session) 
+            if (!session)
             {
                 smsc_log_debug(logger,"SessionManager: Session USR='%d', Address='%s' cannot be found in store",
                                (*it)->SessionKey.USR,(*it)->SessionKey.abonentAddr.toString().c_str());
@@ -460,7 +465,7 @@ int SessionManagerImpl::processExpire()
 
             time_t wakeTime = session->getWakeUpTime();
 
-            if (wakeTime == 0) data->nextWakeTime = now; 
+            if (wakeTime == 0) data->nextWakeTime = now;
             else data->nextWakeTime = wakeTime;
 
             iPeriod = data->nextWakeTime - now;
@@ -473,18 +478,18 @@ int SessionManagerImpl::processExpire()
 
 
         // Session expired
-        if (!(*it)->hasOperations) 
+        if (!(*it)->hasOperations)
         {
             DeleteSession(it);
             return 0;
-        } 
+        }
         else
         {
             store.updateSession(sessionPtr);
             if (iPeriod >= 0) return iPeriod;
         }
 
-    }  
+    }
     return 10;
 }
 
@@ -502,8 +507,8 @@ SessionPtr SessionManagerImpl::getSession(const CSessionKey& sessionKey)
                    sessionKey.USR, sessionKey.abonentAddr.toString().c_str());
 
     CSessionSetIterator * itPtr = SessionHash.GetPtr(sessionKey);
-    if (!itPtr) return session; 
-    
+    if (!itPtr) return session;
+
     CSessionSetIterator it = (*itPtr);
     while ((*it)->bOpened)
     {
@@ -511,19 +516,19 @@ SessionPtr SessionManagerImpl::getSession(const CSessionKey& sessionKey)
         itPtr = SessionHash.GetPtr(sessionKey);
         smsc_log_debug(logger, "SessionManager: inUse monitor exited for  session USR='%d', Address='%s' (result: %s session, %s)",
                        sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), (itPtr) ? "got":"no",
-		       (itPtr && (*(*itPtr))->bOpened) ? "locked":"free");
-	if (!itPtr) return session; //session not found
+           (itPtr && (*(*itPtr))->bOpened) ? "locked":"free");
+  if (!itPtr) return session; //session not found
         it = (*itPtr);
-    }                                      
+    }
 
     (*it)->bOpened = true;
 
     session = store.getSession(sessionKey);
 
-    smsc_log_debug(logger,"SessionManager: got session USR='%d', Address='%s' (pending count=%d)", 
-                   session->getUSR(), session->getSessionKey().abonentAddr.toString().c_str(), 
-		   session->PendingOperationList.size());
-    
+    smsc_log_debug(logger,"SessionManager: got session USR='%d', Address='%s' (pending count=%d)",
+                   session->getUSR(), session->getSessionKey().abonentAddr.toString().c_str(),
+       session->PendingOperationList.size());
+
     return session;
 }
 
@@ -533,13 +538,13 @@ SessionPtr SessionManagerImpl::newSession(CSessionKey& sessionKey)
     SessionPtr session(0);
     CSessionAccessData * accessData = 0;
 
-    smsc_log_debug(logger,"SessionManager: creating new session for '%s'", 
-		   sessionKey.abonentAddr.toString().c_str());
+    smsc_log_debug(logger,"SessionManager: creating new session for '%s'",
+       sessionKey.abonentAddr.toString().c_str());
 
     MutexGuard guard(inUseMonitor);
 
     smsc_log_debug(logger,"SessionManager: creating new session for '%s', get new USR",
-		   sessionKey.abonentAddr.toString().c_str());
+       sessionKey.abonentAddr.toString().c_str());
     sessionKey.USR = getNewUSR(sessionKey.abonentAddr);
 
     session = store.newSession(sessionKey);
@@ -558,7 +563,7 @@ SessionPtr SessionManagerImpl::newSession(CSessionKey& sessionKey)
 
     CSessionSetIterator it = SessionExpirePool.insert(accessData);
 
-/*    if (!pr.second) 
+/*    if (!pr.second)
     {
         delete accessData;
         store.deleteSession(sessionKey);
@@ -580,17 +585,17 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
 {
     if (!session.Get()) return;
     CSessionKey sessionKey = session->getSessionKey();
-    
+
     smsc_log_debug(logger,"SessionManager: try to release session USR='%d', Address='%s'",
                    sessionKey.USR, sessionKey.abonentAddr.toString().c_str());
 
     MutexGuard guard(inUseMonitor);
     //if (session->isChanged()) store.updateSession(session);
-    
+
     CSessionSetIterator * itPtr = SessionHash.GetPtr(sessionKey);
 
-    if (!itPtr) throw 
-        SCAGException("SessionManager: Fatal error - cannot find session USR='%d', Address='%s' to release", 
+    if (!itPtr) throw
+        SCAGException("SessionManager: Fatal error - cannot find session USR='%d', Address='%s' to release",
                       sessionKey.USR, sessionKey.abonentAddr.toString().c_str());
 
     CSessionSetIterator it = (*itPtr);
@@ -600,7 +605,7 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
 
     std::list<PendingOperation>::iterator itPending;
 
-    if (session->PrePendingOperationList.size() > 0) 
+    if (session->PrePendingOperationList.size() > 0)
     {
         for (itPending = session->PrePendingOperationList.begin(); itPending!=session->PrePendingOperationList.end(); ++itPending)
         {
@@ -613,7 +618,7 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
         changePendingFlag = true;
     }
 
-    if (!session->hasOperations()) 
+    if (!session->hasOperations())
     {
         SessionHash.Delete(sessionKey);
         SessionExpirePool.erase(it);
@@ -622,7 +627,7 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
         store.deleteSession(sessionKey);
 
         inUseMonitor.notifyAll();
-        smsc_log_debug(logger,"SessionManager: session closed USR='%d', Address='%s'", 
+        smsc_log_debug(logger,"SessionManager: session closed USR='%d', Address='%s'",
                        sessionKey.USR, sessionKey.abonentAddr.toString().c_str());
         return;
     }
@@ -632,7 +637,7 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
     accessData->hasPending = session->hasPending();
     accessData->hasOperations = session->hasOperations();
 
-    if (changePendingFlag) 
+    if (changePendingFlag)
     {
         SessionHash.Delete(sessionKey);
         SessionExpirePool.erase(it);
@@ -642,7 +647,7 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
     }
 
 
-    //if (session->isChanged())    
+    //if (session->isChanged())
     store.updateSession(session);
 
     awakeEvent.Signal();
@@ -675,8 +680,8 @@ void SessionManagerImpl::closeSession(SessionPtr session)
     SessionHash.Delete(sessionKey);
     delete (*it);
     inUseMonitor.notifyAll();
-    
-    smsc_log_debug(logger,"SessionManager: session closed USR='%d', Address='%s'", 
+
+    smsc_log_debug(logger,"SessionManager: session closed USR='%d', Address='%s'",
                    sessionKey.USR, sessionKey.abonentAddr.toString().c_str());
 }
 
@@ -685,7 +690,7 @@ int16_t SessionManagerImpl::getLastUSR(Address& address)
     int16_t result = 0;
 
     int * resultPtr = UMRHash.GetPtr(address);
-    if (resultPtr) result = (*resultPtr); 
+    if (resultPtr) result = (*resultPtr);
     return result;
 }
 
@@ -695,7 +700,7 @@ int16_t SessionManagerImpl::getNewUSR(Address& address)
 
     int * resultPtr = UMRHash.GetPtr(address);
 
-    if (resultPtr) result = ++(*resultPtr); 
+    if (resultPtr) result = ++(*resultPtr);
     else UMRHash.Insert(address,result);
 
     return result;
@@ -710,5 +715,3 @@ uint32_t SessionManagerImpl::getSessionsCount()
 
 
 }}
-
-

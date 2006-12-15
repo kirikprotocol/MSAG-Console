@@ -220,8 +220,6 @@ protected:
   int    ussdSSN;
   time_t startTime;
 
-  int eventQueueLimit;
-
   //smsc::core::threads::ThreadPool tp,tp2;
 
   Mutex routerSwitchMutex;
