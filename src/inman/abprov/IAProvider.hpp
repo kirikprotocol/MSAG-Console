@@ -5,11 +5,12 @@
 #ifndef SMSC_INMAN_IAPROVIDER_HPP
 #define SMSC_INMAN_IAPROVIDER_HPP
 
-#include "inman/incache.hpp"
+#include "inman/InCacheDefs.hpp"
 using smsc::inman::cache::AbonentId;
-using smsc::inman::cache::AbonentBillType;
+//using smsc::inman::cache::AbonentBillType;
 using smsc::inman::cache::AbonentCacheITF;
 using smsc::inman::cache::AbonentRecord;
+
 
 
 namespace smsc {
@@ -18,8 +19,7 @@ namespace iaprvd { //(I)NMan (A)bonent (P)roviders
 
 class IAPQueryListenerITF {
 public:
-    virtual void onIAPQueried(const AbonentId & ab_number, AbonentBillType ab_type,
-                                const MAPSCFinfo * scf = NULL) = 0;
+    virtual void onIAPQueried(const AbonentId & ab_number, const AbonentRecord & ab_rec) = 0;
 };
 
 class IAProviderITF {

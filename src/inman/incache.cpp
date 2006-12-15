@@ -81,27 +81,23 @@ bool AbonentCache::close(void)
 }
 
 //Returns: 0 - update, 1 - addition
-int AbonentCache::ramInsert(const AbonentId & ab_number, AbonentBillType ab_type,
-                            time_t & queried, const MAPSCFinfo * p_scf/* = NULL*/)
+int AbonentCache::ramInsert(const AbonentId & ab_number,
+                            const AbonentRecord & ab_rec)
 {
     int status = 0; 
-    if (!queried)
-        queried = time(NULL);
+    AbonentRecordRAM    ramRec(ab_rec);
+    AbonentRecordRAM *  pabRec = cache.GetPtr(ab_number.getSignals());
 
-    AbonentRecordRAM * pabRec = cache.GetPtr(ab_number.getSignals());
+    if (!ramRec.tm_queried)
+        ramRec.tm_queried = time(NULL);
+
     if (!pabRec) {
-        AbonentRecordRAM ab_rec(ab_type, queried, p_scf);
-        status = cache.Insert(ab_number.getSignals(), ab_rec);
+        status = cache.Insert(ab_number.getSignals(), ramRec);
         pabRec = cache.GetPtr(ab_number.getSignals());
         if (accList.size() >= maxRamIt)
             accList.pop_back();
     } else { //update
-        pabRec->ab_type = ab_type;
-        pabRec->tm_queried = queried;
-        if (p_scf)
-            pabRec->gsmSCF = *p_scf;
-        else
-            pabRec->gsmSCF.serviceKey = 0;
+        *pabRec = ramRec;
         accList.erase(pabRec->accIt);
     }
     accList.push_front(ab_number);
@@ -119,8 +115,8 @@ AbonentRecord * AbonentCache::ramLookUp(AbonentId & ab_number)
             pabRec->accIt = accList.begin();
         }
         if (!pabRec->isUnknown()) {
-            if (time(NULL) >= (pabRec->tm_queried + _cfg.interval)) {
-                pabRec->ab_type = AbonentRecordRAM::abtUnknown; //expired
+            if (pabRec->isExpired(_cfg.interval)) {
+                pabRec->ab_type = AbonentRecord::abtUnknown;
                 smsc_log_debug(logger, "InCache: abonent %s info is expired",
                                ab_number.getSignals());
             }
@@ -132,31 +128,23 @@ AbonentRecord * AbonentCache::ramLookUp(AbonentId & ab_number)
 // ----------------------------------------
 // AbonentCacheITF interface methods:
 // ----------------------------------------
-void AbonentCache::setAbonentInfo(const AbonentId & ab_number, AbonentBillType ab_type,
-                                  time_t queried /*= 0*/, const MAPSCFinfo * p_scf/* = NULL*/)
+void AbonentCache::setAbonentInfo(const AbonentId & ab_number,
+                                  const AbonentRecord & ab_rec)
 {
     MutexGuard grd(cacheGuard);
-    int status = ramInsert(ab_number, ab_type, queried, p_scf); //sets time
+    int status = ramInsert(ab_number, ab_rec); //sets queried time
 
-    if (ab_type != AbonentRecord::abtUnknown) {
+    if (ab_rec.ab_type != AbonentRecord::abtUnknown) {
         try {
-            flCache.Insert(AbonentHashKey(ab_number),
-                            AbonentHashData(ab_type, queried, p_scf), true);
+            flCache.Insert(AbonentHashKey(ab_number), AbonentHashData(ab_rec), true);
         } catch (std::exception & exc) {
             smsc_log_error(logger, "InCache: abonent %s: %s",
                             ab_number.getSignals(), exc.what());
         }
     }
-    if (logger->isDebugEnabled()) {
-        char scf_inf[10 + 10 + CAP_MAX_SMS_AddressValueLength + 2];
-        if (p_scf)
-            snprintf(scf_inf, sizeof(scf_inf) - 1, "%s:{%u}",
-                    p_scf->scfAddress.getSignals(), p_scf->serviceKey);
-        smsc_log_debug(logger, "InCache: abonent %s is %s: %s, SCF %s",
-                       ab_number.getSignals(), status ? "added" : "updated",
-                       AbonentContractInfo::type2Str(ab_type),
-                       p_scf ? scf_inf : "<none>");
-    }
+    smsc_log_debug(logger, "InCache: abonent %s is %s: %s, SCF %s",
+                    ab_number.getSignals(), status ? "added" : "updated",
+                    ab_rec.type2Str(), ab_rec.gsmSCF.toString().c_str());
 }
 
 AbonentBillType AbonentCache::getAbonentInfo(AbonentId & ab_number, 
@@ -169,11 +157,8 @@ AbonentBillType AbonentCache::getAbonentInfo(AbonentId & ab_number,
     if (!rabRec || rabRec->isUnknown()) { //look in file cache
         try {
             if (flCache.LookUp(AbonentHashKey(ab_number), ab_rec)) {
-                if (time(NULL) < (ab_rec.tm_queried + _cfg.interval)) {
-                    ramInsert(ab_number, ab_rec.ab_type, ab_rec.tm_queried,
-                              ab_rec.getSCFinfo());
-                    rabRec = &ab_rec;
-                }
+                if (!ab_rec.isExpired(_cfg.interval))
+                    ramInsert(ab_number, *(rabRec = ab_rec.getAbonentRecord()));
             }
         } catch (std::exception & exc) {
             smsc_log_error(logger, "InCache: abonent %s: %s",
@@ -184,7 +169,6 @@ AbonentBillType AbonentCache::getAbonentInfo(AbonentId & ab_number,
         *p_ab_rec = *rabRec;
     return rabRec ? rabRec->ab_type : AbonentRecord::abtUnknown;
 }
-
 
 } //cache
 } //inman

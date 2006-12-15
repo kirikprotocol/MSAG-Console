@@ -19,8 +19,10 @@ using smsc::inman::interaction::Connect;
 
 #include "inman/BillingManager.hpp"
 using smsc::inman::BillingCFG;
-using smsc::inman::cache::AbonentCacheCFG;
 using smsc::inman::filestore::InFileStorageRoller;
+
+#include "inman/incache.hpp"
+using smsc::inman::cache::AbonentCacheCFG;
 
 namespace smsc  {
 namespace inman {

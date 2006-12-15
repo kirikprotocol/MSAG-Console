@@ -1,6 +1,7 @@
 static const char ident[] = "$Id$";
 
 #include "inman/abprov/facility/IAPThrFacility.hpp"
+//using smsc::core::synchronization::MutexGuard;
 
 namespace smsc {
 namespace inman {
@@ -112,9 +113,7 @@ void IAProviderThreaded::releaseQuery(IAPQueryAC * query)
                     IAPQueryListenerITF * hdl = qry_rec->cbList.front();
                     qry_rec->cbList.pop_front();
                     qrsGuard.Unlock();
-                    try { hdl->onIAPQueried(query->getAbonentId(),
-                                (query->getAbonentRecord()).ab_type,
-                                (query->getAbonentRecord()).getSCFinfo());
+                    try { hdl->onIAPQueried(query->getAbonentId(), query->getAbonentRecord());
                     } catch (std::exception &exc) {
                         smsc_log_error(logger, "IAPrvd: %s(%s): listener exception: %s",
                                 query->taskName(), (query->getAbonentId()).getSignals(),

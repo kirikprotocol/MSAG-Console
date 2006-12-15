@@ -11,12 +11,13 @@ using smsc::core::synchronization::MutexGuard;
 #include "inman/common/RPCList.hpp"
 using smsc::inman::common::RPCList;
 
-#include "inman/abprov/IAPLoader.hpp"
+//#include "inman/InCacheDefs.hpp"
+//using smsc::inman::cache::AbonentCacheITF;
+
+#include "inman/abprov/IAPLoader.hpp"   //includes cache defs
 using smsc::inman::iaprvd::IAProviderCreatorITF;
 using smsc::inman::iaprvd::IAProviderITF;
 
-#include "inman/incache.hpp"
-using smsc::inman::cache::AbonentCacheITF;
 
 namespace smsc  {
 namespace inman {
@@ -39,7 +40,7 @@ struct SS7_CFG {    //SS7 stack interaction:
 class INScfCFG {
 public:
     std::string     _ident;   //INPlatform ident
-    MAPSCFinfo      scf;
+    GsmSCFinfo      scf;
     RPCList         rejectRPC;      //list of RP causes forcing charging denial because of low balance
     RPCList         postpaidRPC;    //list of RP causes returned for postpaid abonents
     bool            substIDPLocalInfo;  //indicates that the SMSC address should be

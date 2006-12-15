@@ -30,6 +30,7 @@ using smsc::inman::sync::StopWatch;
 using smsc::inman::sync::TimerListenerITF;
 using smsc::inman::sync::OPAQUE_OBJ;
 using smsc::inman::iaprvd::IAPQueryListenerITF;
+using smsc::inman::cache::AbonentBillType;
 
 #include "inman/inap/cap_sms/DlgCapSMS.hpp"
 using smsc::inman::inap::CapSMSDlg;
@@ -89,8 +90,8 @@ public:
     void onEndCapDlg(unsigned char ercode = 0, InmanErrorType errLayer = smsc::inman::errOk);
 
     //-- IAPQueryListenerITF interface methods:
-    void onIAPQueried(const AbonentId & ab_number, AbonentBillType ab_type,
-                                const MAPSCFinfo * scf = NULL);
+    void onIAPQueried(const AbonentId & ab_number, const AbonentRecord & ab_rec);
+//                       AbonentBillType ab_type, const MAPSCFinfo * scf = NULL);
     //-- TimerListenerITF interface methods:
     void onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj);
 

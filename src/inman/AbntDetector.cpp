@@ -200,7 +200,7 @@ bool AbonentDetector::onContractReq(AbntContractRequest* req, uint32_t req_id)
         }
     }
     //lookup config.xml for extra SCF parms (serviceKey, RPC lists)
-    ConfigureSCF(abRec.ab_type, abRec.getSCFinfo());
+    ConfigureSCF();
     _state = adCompleted;
     return true;
 }
@@ -209,20 +209,22 @@ bool AbonentDetector::onContractReq(AbntContractRequest* req, uint32_t req_id)
  * IAPQueryListenerITF interface implementation:
  * -------------------------------------------------------------------------- */
 //NOTE: it's the processing graph entry point, so locks Mutex !!!
-void AbonentDetector::onIAPQueried(const AbonentId & ab_number, AbonentBillType ab_type,
-                           const MAPSCFinfo * scf/* = NULL*/)
+void AbonentDetector::onIAPQueried(const AbonentId & ab_number, const AbonentRecord & ab_rec)
+
+//                                   AbonentBillType ab_type, const MAPSCFinfo * scf/* = NULL*/)
 {
     MutexGuard grd(_mutex);
     if (_state != adIAPQuering) {
         smsc_log_warn(logger, "%s: IAPQueried() at state: %s", State2Str());
         return;
     }
+    abRec = ab_rec;
     _state = adIAPQueried;
     providerQueried = false;
     StopTimer();
-    if (ab_type == AbonentContractInfo::abtPrepaid)
+    if (abRec.ab_type == AbonentContractInfo::abtPrepaid)
         //lookup config.xml for extra SCF parms (serviceKey, RPC lists)
-        ConfigureSCF(ab_type, scf);
+        ConfigureSCF();
     reportAndExit();
 }
 
@@ -249,19 +251,18 @@ void AbonentDetector::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
  * NOTE: these methods are not the processing graph entries, so never lock Mutex,
  *       it's a caller responsibility to lock it !!!
  * ---------------------------------------------------------------------------------- */
-void AbonentDetector::ConfigureSCF(AbonentBillType ab_type, const MAPSCFinfo * p_scf/* = NULL*/)
+void AbonentDetector::ConfigureSCF(void)
 {
     bool scfKnown = true;
-    abRec.ab_type = ab_type;
     INScfCFG        abScf;
 
-    if (p_scf) { //SCF is set for abonent by cache/IAProvider
-        abScf.scf = *p_scf;
+    if (abRec.getSCFinfo()) { //SCF is set for abonent by cache/IAProvider
+        abScf.scf = abRec.gsmSCF;
         //lookup policy for extra SCF parms (serviceKey, RPC lists)
         if (abPolicy)
             abPolicy->getSCFparms(&abScf);
     } else if (abPolicy) {  //attempt to determine SCF and its params from config.xml
-        if (ab_type == AbonentContractInfo::abtUnknown) {
+        if (abRec.ab_type == AbonentContractInfo::abtUnknown) {
             INScfCFG * pin = NULL;
             if (abPolicy->scfMap.size() == 1) { //single IN serving, look for postpaidRPC
                 pin = (*(abPolicy->scfMap.begin())).second;
@@ -274,7 +275,7 @@ void AbonentDetector::ConfigureSCF(AbonentBillType ab_type, const MAPSCFinfo * p
                 scfKnown = false;
                 smsc_log_error(logger, "%s: unable to get gsmSCF from config.xml", _logId);
             }
-        } else if (ab_type == AbonentContractInfo::abtPrepaid) {
+        } else if (abRec.ab_type == AbonentContractInfo::abtPrepaid) {
             if (abPolicy->scfMap.size() == 1) { //single IN serving
                 abScf = *((*(abPolicy->scfMap.begin())).second);
             } else {
@@ -286,7 +287,7 @@ void AbonentDetector::ConfigureSCF(AbonentBillType ab_type, const MAPSCFinfo * p
     } else
         scfKnown = false;
 
-    if (!scfKnown && (ab_type == AbonentContractInfo::abtPrepaid))
+    if (!scfKnown && (abRec.ab_type == AbonentContractInfo::abtPrepaid))
         abRec.ab_type = AbonentContractInfo::abtUnknown;
     abRec.gsmSCF = abScf.scf;
 }

@@ -13,6 +13,10 @@
 using smsc::core::threads::ThreadedTask;
 using smsc::core::threads::ThreadPool;
 
+#include "logger/Logger.h"
+using smsc::logger::Logger;
+using smsc::core::synchronization::Mutex;
+
 namespace smsc {
 namespace inman {
 namespace iaprvd { //(I)NMan (A)bonent (P)roviders

@@ -5,6 +5,7 @@
 #include "util/config/ConfigView.h"
 using smsc::util::config::ConfigView;
 using smsc::util::config::ConfigException;
+using smsc::logger::Logger;
 
 #include "inman/abprov/IAProvider.hpp"
 

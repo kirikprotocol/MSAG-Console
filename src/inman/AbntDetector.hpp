@@ -45,8 +45,8 @@ public:
     void Abort(const char * reason = NULL); //aborts billing due to fatal error
 
     //-- IAPQueryListenerITF interface methods:
-    void onIAPQueried(const AbonentId & ab_number, AbonentBillType ab_type,
-                                const MAPSCFinfo * scf = NULL);
+    void onIAPQueried(const AbonentId & ab_number, const AbonentRecord & ab_rec);
+//                      AbonentBillType ab_type, const GsmSCFinfo * scf = NULL);
     //-- TimerListenerITF interface methods:
     void onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj);
 
@@ -58,7 +58,7 @@ protected:
     typedef std::map<unsigned, StopWatch*> TimersMAP;
 
     void doCleanUp(void);
-    void ConfigureSCF(AbonentBillType ab_type, const MAPSCFinfo * p_scf = NULL);
+    void ConfigureSCF(void);
     void reportAndExit(void);
 
     Mutex           _mutex;

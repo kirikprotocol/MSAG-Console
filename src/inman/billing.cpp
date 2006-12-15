@@ -11,7 +11,7 @@ using smsc::inman::inap::TCAPDispatcher;
 using smsc::inman::inap::SSNSession;
 using smsc::inman::inap::TCSessionAC;
 
-#include "billing.hpp"
+#include "inman/billing.hpp"
 using smsc::inman::interaction::SerializerException;
 using smsc::inman::interaction::INPCSBilling;
 using smsc::inman::interaction::SPckChargeSmsResult;
@@ -604,8 +604,8 @@ void Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
  * IAPQueryListenerITF interface implementation:
  * -------------------------------------------------------------------------- */
 //NOTE: it's the processing graph entry point, so locks bilMutex !!!
-void Billing::onIAPQueried(const AbonentId & ab_number, AbonentBillType ab_type,
-                           const MAPSCFinfo * scf/* = NULL*/)
+void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentRecord & ab_rec)
+//                           AbonentBillType ab_type, const MAPSCFinfo * scf/* = NULL*/)
 {
     MutexGuard grd(bilMutex);
 
@@ -616,7 +616,7 @@ void Billing::onIAPQueried(const AbonentId & ab_number, AbonentBillType ab_type,
     }
     StopTimer(state);
     state = bilQueried;
-    ConfigureSCFandCharge(ab_type, scf);
+    ConfigureSCFandCharge(ab_rec.ab_type, ab_rec.getSCFinfo());
     return;
 }
 
@@ -632,8 +632,8 @@ void Billing::onDPSMSResult(unsigned char rp_cause/* = 0*/)
 
     if (!rp_cause) {    //ContinueSMS
         if (abType != AbonentContractInfo::abtPrepaid)  //Update abonents cache
-            _cfg.abCache->setAbonentInfo(abNumber, abType = AbonentContractInfo::abtPrepaid,
-                                         0, &abScf.scf);
+            _cfg.abCache->setAbonentInfo(abNumber, AbonentRecord(abType = 
+                                AbonentContractInfo::abtPrepaid, 0, &abScf.scf));
     } else {            //ReleaseSMS
         capDlgActive = false;
         //check for RejectSMS causes for postpaid abonents:
@@ -643,8 +643,8 @@ void Billing::onDPSMSResult(unsigned char rp_cause/* = 0*/)
                 postpaidBill = true;
                 //Update abonents cache
                 if (abType != AbonentContractInfo::abtPostpaid)
-                    _cfg.abCache->setAbonentInfo(abNumber,
-                                                 abType = AbonentContractInfo::abtPostpaid);
+                    _cfg.abCache->setAbonentInfo(abNumber, AbonentRecord(abType = 
+                                                 AbonentContractInfo::abtPostpaid));
                 break;
             }
         }

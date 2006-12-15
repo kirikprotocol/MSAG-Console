@@ -159,7 +159,7 @@ int IAPQueryDB::Execute(void)
     }
 
     {
-        MutexGuard tmp(mutex);
+        MutexGuard tmp(_mutex);
         if (isStopping || !_owner->hasListeners(abonent))
             rtq = NULL; //query was cancelled by either QueryManager or ThreadPool
     }
