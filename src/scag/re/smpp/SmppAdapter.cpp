@@ -1419,7 +1419,7 @@ AdapterProperty * SmppCommandAdapter::getDeliverProperty(SMS& data,const std::st
     switch (FieldId) 
     {
     case PACKET_DIRECTION:
-        property = new AdapterProperty(name,this,dsdSc2Sme);
+        property = new AdapterProperty(name,this,dsdSc2Srv);
         break;
     case OA:
         property = new AdapterProperty(name,this,data.getOriginatingAddress().toString().c_str());
