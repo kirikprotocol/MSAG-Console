@@ -164,6 +164,19 @@ void Scag::init()
 
     //smsc::util::regexp::RegExp::InitLocale();
 
+    //********************************************************
+    //********** Statistics manager initialization ***********
+    try{
+      StatisticsManager::init(cfg.getStatManConfig());
+
+      smsc_log_info(log, "Statistics manager started" );
+    }catch(exception& e){
+      smsc_log_warn(log, "Smsc.init exception: %s", e.what());
+      __warning__("Statistics manager is not started.");
+    }catch(...){
+      __warning__("Statistics manager is not started.");
+    }
+    //********************************************************
 
 /*    try {
         InitLicense(*cfg.getLicConfig());
@@ -181,22 +194,21 @@ void Scag::init()
     }
 
 
-  //********************************************************
-  //*********** SessionManager initialization **************
-  try{
+    //********************************************************
+    //*********** SessionManager initialization **************
+    try{
       smsc_log_info(log, "Session Manager is starting..." );
 
       SessionManager::Init(cfg.getSessionManConfig());
 
       smsc_log_info(log, "Session Manager started" );
-  }catch(exception& e){
+    }catch(exception& e){
       smsc_log_warn(log, "Scag.init exception: %s", e.what());
       __warning__("Sessioan Manager is not started.");
-  }catch(...){
+    }catch(...){
       __warning__("Session Manager is not started.");
-  }
-  //********************************************************
-
+    }
+    //********************************************************
 
     //********************************************************
     //************** Personalization client initialization **************
@@ -217,11 +229,11 @@ void Scag::init()
     {
         throw Exception("Exception during initialization of PersClient: unknown error");
     }
-  //********************************************************
+    //********************************************************
 
-  //********************************************************
-  //************** RuleEngine initialization ***************
-  try {
+    //********************************************************
+    //************** RuleEngine initialization ***************
+    try {
       smsc_log_info(log, "Rule Engine is starting..." );
 
       using scag::config::ConfigView;
@@ -236,74 +248,32 @@ void Scag::init()
       re.Init(location);
 
       smsc_log_info(log, "Rule Engine started" );
-
-  } catch (SCAGException& e) {
+    } catch (SCAGException& e) {
       smsc_log_warn(log, "%s", e.what());
       __warning__("Rule Engine is not started.");
-  } catch(...){
+    } catch(...){
       __warning__("Unknown error: rule Engine is not started.");
-  }
+    }
 
+    //********************************************************
 
+    scagHost=cfg.getConfig()->getString("smpp.host");
+    scagPort=cfg.getConfig()->getInt("smpp.port");
 
-  //********************************************************
-
-
-  //********************************************************
-  //********** Statistics manager initialization ***********
-  try{
-      StatisticsManager::init(cfg.getStatManConfig());
-
-      smsc_log_info(log, "Statistics manager started" );
-  }catch(exception& e){
-      smsc_log_warn(log, "Smsc.init exception: %s", e.what());
-      __warning__("Statistics manager is not started.");
-  }catch(...){
-      __warning__("Statistics manager is not started.");
-  }
-  //********************************************************
-
-
-  scagHost=cfg.getConfig()->getString("smpp.host");
-  scagPort=cfg.getConfig()->getInt("smpp.port");
-
-  //************** SmppManager initialization **************
-  try {
+    //************** SmppManager initialization **************
+    try {
       smsc_log_info(log, "Smpp Manager is starting");
       smppMan.Init(findConfigFile("../conf/smpp.xml"));
       smsc_log_info(log, "Smpp Manager started");
-  }catch(Exception& e)
-  {
+    } catch(Exception& e) {
       throw Exception("Exception during initialization of SmppManager: %s", e.what());
-  }catch (XMLException& e)
-  {
+    } catch (XMLException& e) {
       scag::re::StrX msg(e.getMessage());
-
       throw Exception("Exception during initialization of SmppManager: %s", msg.localForm());
-  }catch (...)
-  {
+    } catch (...) {
       throw Exception("Exception during initialization of SmppManager: unknown error");
-  }
-//********************************************************
-
-  //*****************************************************
-  // test route instance initialization
-  //*****************************************************
-  /*
-  try {
-      RouteConfig cfg;
-      if (cfg.load("conf/smpp_routes__.xml") == RouteConfig::fail){
-          smsc_log_warn(log, "Load routes config file failed.");
-      }else{
-          reloadTestRoutes(cfg);
-          getTestRouterInstance()->enableTrace(true);
-      }
-  }catch(...)
-  {
-      throw Exception("Exception during test route instance initialization");
-  }
-  */
-  //*****************************************************
+    }
+    //********************************************************
 
   /*
   ////////////////////////// FOR TEST
