@@ -620,9 +620,9 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
 
     if (!session->hasOperations())
     {
+        delete accessData;
         SessionHash.Delete(sessionKey);
         SessionExpirePool.erase(it);
-        delete (*it);
 
         store.deleteSession(sessionKey);
 
