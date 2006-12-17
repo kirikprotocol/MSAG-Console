@@ -1297,8 +1297,11 @@ AdapterProperty * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::str
     return property;
 }
 
-AdapterProperty * SmppCommandAdapter::getDataSmRespProperty(SMS& data,const std::string& name,int FieldId)
+AdapterProperty * SmppCommandAdapter::getDataSmRespProperty(SmsResp& smsResp,const std::string& name,int FieldId)
 {
+    SMS * sms = smsResp.get_sms();
+    if (!sms) return 0;
+    
     AdapterProperty * property = 0;
 
     switch (FieldId) 
@@ -1310,7 +1313,7 @@ AdapterProperty * SmppCommandAdapter::getDataSmRespProperty(SMS& data,const std:
         //TODO: Inmplement
         break;
     case USSD_DIALOG:
-        property = new AdapterProperty(name,this,data.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP));
+        property = new AdapterProperty(name,this,sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP));
         break;
     case OA:
         property = new AdapterProperty(name,this,CommandBrige::getAbonentAddr(command).toString());
@@ -1319,12 +1322,12 @@ AdapterProperty * SmppCommandAdapter::getDataSmRespProperty(SMS& data,const std:
         property = new AdapterProperty(name,this,CommandBrige::getDestAddr(command).toString());
         break;
     case PACKET_DIRECTION:
-        if (data.dir == dsdSrv2Sc) 
+        if (smsResp.get_dir() == dsdSrv2Sc) 
             property = new AdapterProperty(name,this, dsdSc2Srv);
         else 
-            if (data.dir == dsdSc2Srv) property = new AdapterProperty(name,this, dsdSrv2Sc);
+            if (smsResp.get_dir() == dsdSc2Srv) property = new AdapterProperty(name,this, dsdSrv2Sc);
         else
-            property = new AdapterProperty(name,this, (int)data.dir);
+            property = new AdapterProperty(name,this, (int)smsResp.get_dir());
 
         break;
     }
@@ -1561,10 +1564,8 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
 
         smsResp = command->get_resp();
         if (!smsResp) return 0;
-        sms = smsResp->get_sms();
-        if (!sms) return 0;
 
-        property = getDataSmRespProperty(*sms,name,*pFieldId);
+        property = getDataSmRespProperty(*smsResp,name,*pFieldId);
         break;
     }
 
