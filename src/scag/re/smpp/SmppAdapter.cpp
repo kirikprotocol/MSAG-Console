@@ -1310,7 +1310,7 @@ AdapterProperty * SmppCommandAdapter::getDataSmRespProperty(SMS& data,const std:
         //TODO: Inmplement
         break;
     case USSD_DIALOG:
-        property = new AdapterProperty(name,this,sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP));
+        property = new AdapterProperty(name,this,data->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP));
         break;
     case OA:
         property = new AdapterProperty(name,this,CommandBrige::getAbonentAddr(command).toString());
