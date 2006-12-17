@@ -63,12 +63,9 @@ AccessType SmppCommandAdapter::CheckAccess(int handlerType, const std::string& n
 
         actype = DeliverRespFieldsAccess.GetPtr(*pFieldId);
         if (actype) return *actype;
-        /*
-        if (name =="status") return atReadWrite;
-        if (name =="ussd_dialog") return atRead;
-        return atNoAccess;
-        */
 
+        return atRead;
+        break;
     case EH_SUBMIT_SM_RESP:
 
         pFieldId = SubmitRespFieldNames.GetPtr(name.c_str());
@@ -77,12 +74,8 @@ AccessType SmppCommandAdapter::CheckAccess(int handlerType, const std::string& n
 
         actype = SubmitRespFieldsAccess.GetPtr(*pFieldId);
         if (actype) return *actype;
-
-        /*if (name == "status") return atReadWrite;
-        if (name == "message_id") return atRead;
-        if (name == "ussd_dialog") return atRead;
-        
-        return atNoAccess;                       */
+ 
+        return atRead;
         break;
     case EH_DATA_SM:
 
@@ -92,6 +85,7 @@ AccessType SmppCommandAdapter::CheckAccess(int handlerType, const std::string& n
 
         actype = DataSmFieldsAccess.GetPtr(*pFieldId);
         if (actype) return *actype;
+
         return atRead;
         break;
     case EH_DATA_SM_RESP:
@@ -101,6 +95,7 @@ AccessType SmppCommandAdapter::CheckAccess(int handlerType, const std::string& n
         actype = DataSmRespFieldsAccess.GetPtr(*pFieldId);
         if (actype) return *actype;
 
+        return atRead;
         break;
     }
 
@@ -1302,15 +1297,8 @@ AdapterProperty * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::str
     return property;
 }
 
-AdapterProperty * SmppCommandAdapter::getDataSmRespProperty(SmsCommand& data,const std::string& name,int FieldId)
+AdapterProperty * SmppCommandAdapter::getDataSmRespProperty(SMS& data,const std::string& name,int FieldId)
 {
-    SmsResp * smsResp = command->get_resp();
-    if (!smsResp) return 0;
-    SMS * sms = smsResp->get_sms();
-
-    if (!sms) return 0;
-
-
     AdapterProperty * property = 0;
 
     switch (FieldId) 
@@ -1571,7 +1559,12 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
         propertyPtr = PropertyPul.GetPtr(*pFieldId);
         if (propertyPtr) return (*propertyPtr);
 
-        property = getDataSmRespProperty(command->get_smsCommand(),name,*pFieldId);
+        smsResp = command->get_resp();
+        if (!smsResp) return 0;
+        sms = smsResp->get_sms();
+        if (!sms) return 0;
+
+        property = getDataSmRespProperty(*sms,name,*pFieldId);
         break;
     }
 
