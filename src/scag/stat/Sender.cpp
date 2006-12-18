@@ -239,7 +239,12 @@ int Sender::Execute()
       d.now=now.tv_sec;
       d.uptime=now.tv_sec-start.tv_sec;
 
-      d.sessionCount= SessionManager::Instance().getSessionsCount();
+      try {
+          d.sessionCount = SessionManager::Instance().getSessionsCount();
+      } catch (std::exception& e)
+      {
+          d.sessionCount = 0;
+      }
 
       perfListener->reportGenPerformance(&d);
 

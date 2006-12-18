@@ -172,6 +172,21 @@ void Scag::init()
     }*/
     //********************************************************
 
+    //********************************************************
+    //********** Statistics manager initialization ***********
+    try{
+      StatisticsManager::init(cfg.getStatManConfig());
+
+      smsc_log_info(log, "Statistics manager started" );
+    }catch(exception& e){
+      smsc_log_warn(log, "Smsc.init exception: %s", e.what());
+      __warning__("Statistics manager is not started.");
+    }catch(...){
+      __warning__("Statistics manager is not started.");
+    }
+    //********************************************************
+
+
     try {
         BillingManager::Init(cfg.getBillManConfig());
     }catch(...)
@@ -196,19 +211,6 @@ void Scag::init()
     }
     //********************************************************
 
-    //********************************************************
-    //********** Statistics manager initialization ***********
-    try{
-      StatisticsManager::init(cfg.getStatManConfig());
-
-      smsc_log_info(log, "Statistics manager started" );
-    }catch(exception& e){
-      smsc_log_warn(log, "Smsc.init exception: %s", e.what());
-      __warning__("Statistics manager is not started.");
-    }catch(...){
-      __warning__("Statistics manager is not started.");
-    }
-    //********************************************************
 
     //********************************************************
     //************** Personalization client initialization **************
@@ -331,10 +333,10 @@ void Scag::init()
 
   char buff[128];
   scag::transport::smpp::SmppCommand commandDeliver1 = scag::transport::smpp::SmppCommand::makeDeliverySm(sms1,1);
-  scag::transport::smpp::SmppCommand commandDeliverResp = scag::transport::smpp::SmppCommand::makeDeliverySmResp(buff,1,1);
+  scag::transport::smpp::SmppCommand commandDeliverResp = scag::transport::smpp::SmppCommand::makeDeliverySmResp(buff,1,0);
   scag::transport::smpp::SmppCommand commandSubmit = scag::transport::smpp::SmppCommand::makeSubmitSm(sms2,1);
-  scag::transport::smpp::SmppCommand commandSubmitResp = scag::transport::smpp::SmppCommand::makeSubmitSmResp(buff,1,1, true);
-  scag::transport::smpp::SmppCommand commandPureDataSmResp = scag::transport::smpp::SmppCommand::makeDataSmResp(buff,1,1);
+  scag::transport::smpp::SmppCommand commandSubmitResp = scag::transport::smpp::SmppCommand::makeSubmitSmResp(buff,1,0, true);
+  scag::transport::smpp::SmppCommand commandPureDataSmResp = scag::transport::smpp::SmppCommand::makeDataSmResp(buff,1,0);
 
   scag::transport::smpp::SmppCommand commandDeliver2 = scag::transport::smpp::SmppCommand::makeDeliverySm(sms3,1);
 
@@ -371,14 +373,12 @@ void Scag::init()
   SMS * pSms = new SMS();
   (*pSms) = sms3;
 
-  //commandDeliverResp->get_resp()->set_sms(pSms);
+  commandDeliverResp->get_resp()->set_sms(pSms);
   commandPureDataSmResp->get_resp()->set_sms(pSms);
+  commandSubmitResp->get_resp()->set_sms(pSms);
+
   commandPureDataSmResp->get_resp()->set_dir(scag::transport::smpp::dsdSrv2Sc);
 
-  //commandSubmitResp->get_resp()->set_sms(&sms2);
-
-  //commandDeliverResp.setOperationId(1);
-  //commandSubmitResp.setOperationId(1);
 
 
 
@@ -387,30 +387,33 @@ void Scag::init()
   scag::sessions::Session * session = sessionPtr.Get();
 
   if (session) smsc_log_warn(log, "SESSION IS VALID");
-  */
-  /*
+  
+  
   scag::re::RuleEngine::Instance().process(commandPureDataSm, *session);
   sm.releaseSession(sessionPtr);
 
   sessionPtr = sm.getSession(key);
   session = sessionPtr.Get();
+
   scag::re::RuleEngine::Instance().process(commandPureDataSmResp, *session);
   sm.releaseSession(sessionPtr);
-
-  */
+  
+  
   /*
   scag::re::RuleEngine::Instance().process(commandDeliver1, *session);
   sm.releaseSession(sessionPtr);
-  */
-  /*
+  
+  
   sessionPtr = sm.getSession(key);
   session = sessionPtr.Get();
   scag::re::RuleEngine::Instance().process(commandDeliverResp, *session);
   sm.releaseSession(sessionPtr);
+  */
+  
+  //sessionPtr = sm.getSession(key);
+  //session = sessionPtr.Get();
 
-
-  sessionPtr = sm.getSession(key);
-  session = sessionPtr.Get();
+  /*
   scag::re::RuleEngine::Instance().process(commandPureSubmit, *session);
   sm.releaseSession(sessionPtr);
 
@@ -419,8 +422,8 @@ void Scag::init()
   session = sessionPtr.Get();
   scag::re::RuleEngine::Instance().process(commandSubmitResp, *session);
   sm.releaseSession(sessionPtr);
-
-
+  */
+  /*
   //PURE SUBMIT
   sessionPtr = sm.getSession(key);
   session = sessionPtr.Get();

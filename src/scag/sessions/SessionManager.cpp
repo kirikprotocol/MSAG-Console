@@ -194,9 +194,10 @@ void SessionManagerImpl::AddRestoredSession(Session * session)
     }*/
     SessionHash.Insert(sessionKey,it);
 
-    smsc_log_debug(logger,"SessionManager: Session restored from store with USR='%d', Address='%s', pending: %d-%d",
+    /*smsc_log_debug(logger,"SessionManager: Session restored from store with USR='%d', Address='%s', pending: %d-%d",
        accessData->SessionKey.USR,accessData->SessionKey.abonentAddr.toString().c_str(),
        session->PendingOperationList.size(),session->PrePendingOperationList.size());
+       */
 }
 
 SessionManagerImpl::~SessionManagerImpl()
@@ -503,8 +504,8 @@ SessionPtr SessionManagerImpl::getSession(const CSessionKey& sessionKey)
 
     MutexGuard guard(inUseMonitor);
 
-    smsc_log_debug(logger,"SessionManager: wait session USR='%d', Address='%s'",
-                   sessionKey.USR, sessionKey.abonentAddr.toString().c_str());
+    //smsc_log_debug(logger,"SessionManager: wait session USR='%d', Address='%s'",
+    //               sessionKey.USR, sessionKey.abonentAddr.toString().c_str());
 
     CSessionSetIterator * itPtr = SessionHash.GetPtr(sessionKey);
     if (!itPtr) return session;
@@ -586,8 +587,8 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
     if (!session.Get()) return;
     CSessionKey sessionKey = session->getSessionKey();
 
-    smsc_log_debug(logger,"SessionManager: try to release session USR='%d', Address='%s'",
-                   sessionKey.USR, sessionKey.abonentAddr.toString().c_str());
+    //smsc_log_debug(logger,"SessionManager: try to release session USR='%d', Address='%s'",
+    //               sessionKey.USR, sessionKey.abonentAddr.toString().c_str());
 
     MutexGuard guard(inUseMonitor);
     //if (session->isChanged()) store.updateSession(session);

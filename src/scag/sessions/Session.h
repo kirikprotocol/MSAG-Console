@@ -14,17 +14,17 @@
 #include <scag/util/sms/HashUtil.h>
 #include <scag/transport/SCAGCommand.h>
 
+#include <sms/sms_serializer.h>
 #include <scag/re/RuleStatus.h>
 #include <scag/re/CommandBrige.h>
 #include "scag/config/sessn/SessionManagerConfig.h"
 #include "core/buffers/RefPtr.hpp"
-#include "scag/util/SerializeBuffer.h"
 
 
 namespace scag { namespace sessions
 {
-    using scag::util::SerializeBuffer;
     using scag::config::SessionManagerConfig;
+    using namespace smsc::sms::BufOps;
     using scag::re::CSmppDiscriptor;
 
     using smsc::logger::Logger;
@@ -82,9 +82,7 @@ namespace scag { namespace sessions
         }
     };
 
-    typedef SerializeBuffer SessionBuffer;
 
-   /*
     class SessionBuffer : public smsc::sms::BufOps::SmsBuffer
     {
     friend class Session;
@@ -108,7 +106,7 @@ namespace scag { namespace sessions
        SessionBuffer(int size):smsc::sms::BufOps::SmsBuffer(size){}
     };
 
-    */
+
     struct CSessionPrimaryKey
     {
         smsc::sms::Address abonentAddr;
