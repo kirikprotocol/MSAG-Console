@@ -405,11 +405,7 @@ void EventSender::performAlarmMessageEvent(const SACC_ALARM_MESSAGE_t& e)
  }
  else
      pdubuffer.WriteNetInt16(0); 
-
- len = (e.pPacketType.length() > PACKET_TYPE_LENGTH) ? PACKET_TYPE_LENGTH : e.pPacketType.length();
- pdubuffer.WriteNetInt16(len);
- pdubuffer.Write(e.pPacketType.c_str(), len);
-          
+     
  uint32_t bsize= pdubuffer.getPos();
  pdubuffer.setPos(0);
  pdubuffer.WriteNetInt32(bsize);
