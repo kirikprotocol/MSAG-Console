@@ -1,6 +1,8 @@
-
 #include "Task.h"
 #include "SQLAdapters.h"
+#include <time.h>
+#include <sstream>
+#include <list>
 
 extern bool isMSISDNAddress(const char* string);
 
@@ -978,7 +980,7 @@ bool Task::getNextMessage(Connection* connection, Message& message)
         int fetched = 0; int uncommited = 0;
         while (rs->fetchNext() && ++fetched <= info.messagesCacheSize)
         {
-            uint64_t    msgId = rs->getUint64(1);
+          uint64_t    msgId = rs->getUint64(1);
             const char* msgAbonent = rs->isNull(2) ? 0 : rs->getString(2);
             const char* msgMessage = rs->isNull(3) ? 0 : rs->getString(3);
             dsInt->stopTimer(wdTimerId);
@@ -1085,6 +1087,344 @@ bool Task::isReady(time_t time, bool checkActivePeriod)
         }
     }
     return true;
+}
+
+bool Task::insertDeliveryMessage(uint8_t msgState,
+                                 const std::string& address,
+                                 time_t messageDate,
+                                 const std::string& msg)
+{
+  Connection* intConnection = dsInt->getConnection();
+  if (!intConnection)
+    throw Exception("Failed to obtain connection to internal data source.");
+
+  std::auto_ptr<char> newMessageId(prepareSqlCall(NEW_MESSAGE_STATEMENT_ID));
+  std::auto_ptr<char> newMessageSql(prepareSqlCall(NEW_MESSAGE_STATEMENT_SQL));
+  Statement* newMessage = intConnection->getStatement(newMessageId.get(),
+                                                      newMessageSql.get());
+  if (!newMessage)
+    throw Exception("Failed to create statement for message generation.");
+
+  //  std::string message = "";
+  //  formatter->format(message, getAdapter, context);
+  if (msg.length() > 0)
+  {
+    newMessage->setUint8(1, MESSAGE_NEW_STATE);
+    newMessage->setString(2, address.c_str());
+    newMessage->setDateTime(3, messageDate);
+    newMessage->setString(4, msg.c_str());
+    newMessage->executeUpdate();
+
+    //if (statistics) statistics->incGenerated(info.id, 1);
+  }
+  intConnection->commit();
+
+  return true;
+}
+bool Task::changeDeliveryMessageInfoByRecordId(uint8_t msgState,
+                                               time_t unixTime,
+                                               const std::string& recordId)
+{
+  uint64_t msgId = atol(recordId.c_str());
+  smsc_log_debug(logger, "Task::changeDeliveryMessageInfoByRecordId method called on task '%s' for id=%lld",
+                 info.id.c_str(), msgId);
+
+  try
+  {
+    Connection* intConnection = dsInt->getConnection();
+    if (!intConnection)
+      throw Exception("Failed to obtain connection to internal data source.");
+
+    std::auto_ptr<char> updateMessageId(prepareSqlCall(DO_RETRY_MESSAGE_STATEMENT_ID));
+    std::auto_ptr<char> updateMessageSql(prepareSqlCall(DO_RETRY_MESSAGE_STATEMENT_SQL));
+    Statement* updateMessage = intConnection->getStatement(updateMessageId.get(), 
+                                                           updateMessageSql.get());
+    if (!updateMessage)
+      throw Exception("changeDeliveryMessageInfoByRecordId(): Failed to create statement for messages access.");
+
+    updateMessage->setUint8   (1, msgState);
+    updateMessage->setDateTime(2, unixTime); 
+    updateMessage->setUint64  (3, msgId);
+        
+    updateMessage->executeUpdate();
+
+    return true;
+  }
+  catch (Exception& exc) {
+    smsc_log_error(logger, "Task '%s'. changeDeliveryMessageInfoByRecordId(): Messages access failure. "
+                   "Details: %s", info.id.c_str(), exc.what());
+  }
+  catch (...) {
+    smsc_log_error(logger, "Task '%s'. changeDeliveryMessageInfoByRecordId(): Messages access failure.", 
+                   info.id.c_str());
+  }
+    
+  return false;
+}
+
+const char* DO_FULL_TABLESCAN_DELIVERYMESSAGE_STATEMENT_ID  = "%s_FULL_TABLE_SCAN_ID";
+const char* DO_FULL_TABLESCAN_DELIVERYMESSAGE_STATEMENT_SQL = "FULL_TABLE_SCAN FROM %s";
+
+bool Task::changeDeliveryMessageInfoByCompositCriterion(uint8_t msgState,
+                                                        time_t unixTime,
+                                                        const InfoSme_T_SearchCriterion& searchCrit)
+{
+  smsc_log_debug(logger, "Task::changeDeliveryMessageInfoByCompositCriterion method called on task '%s'",
+                 info.id.c_str());
+
+  Connection* intConnection = dsInt->getConnection();
+  if (!intConnection)
+    throw Exception("Failed to obtain connection to internal data source.");
+
+  std::auto_ptr<char> fullTableScanMessageId(prepareSqlCall(DO_FULL_TABLESCAN_DELIVERYMESSAGE_STATEMENT_ID));
+  std::auto_ptr<char> fullTableScanMessageSql(prepareSqlCall(DO_FULL_TABLESCAN_DELIVERYMESSAGE_STATEMENT_SQL));
+  Statement* selectMessage = intConnection->getStatement(fullTableScanMessageId.get(), 
+                                                         fullTableScanMessageSql.get());
+  if (!selectMessage)
+    throw Exception("changeDeliveryMessageInfoByCompositCriterion(): Failed to create statement for messages access.");
+
+  std::auto_ptr<ResultSet> rsGuard(selectMessage->executeQuery());
+
+  ResultSet* rs = rsGuard.get();
+  if (!rs)
+    throw Exception("Failed to obtain result set for message access.");
+        
+  int fetched = 0;
+  while (rs->fetchNext()) {
+    smsc_log_debug(logger, "Task::changeDeliveryMessageInfoByCompositCriterion::: check next record");
+    if ( doesMessageConformToCriterion(rs, searchCrit) ) {
+      char recordId[32];
+      sprintf(recordId, "%lld", rs->getUint64(1));
+
+      changeDeliveryMessageInfoByRecordId(msgState,
+                                          unixTime,
+                                          recordId);
+    }
+  }
+  return true;
+}
+
+bool Task::doesMessageConformToCriterion(ResultSet* rs, const InfoSme_T_SearchCriterion& searchCrit)
+{
+  smsc_log_debug(logger, "Task::doesMessageConformToCriterion: Enter it");
+
+  if ( searchCrit.isSetAbonentAddress() &&
+       searchCrit.getAbonentAddress() != rs->getString(3) ) {
+    smsc_log_debug(logger, "Task::doesMessageConformToCriterion::: searchCrit.getAbonentAddress()=%s != rs->getString(3)=%s", searchCrit.getAbonentAddress().c_str(), rs->getString(3));
+    return false;
+  }
+  if ( searchCrit.isSetState() &&
+       searchCrit.getState() != rs->getUint8(2) ) {
+    smsc_log_debug(logger, "Task::doesMessageConformToCriterion::: searchCrit.getState=%d != rs->getUint8(2)=%d", searchCrit.getState(), rs->getUint8(2));
+    return false;
+  }
+  if ( searchCrit.isSetFromDate() && 
+       searchCrit.getFromDate() > rs->getDateTime(4) ) {
+    smsc_log_debug(logger, "Task::doesMessageConformToCriterion::: searchCrit.getFromDate()=%ld > rs->getDateTime(4)=%ld", searchCrit.getFromDate(), rs->getDateTime(4));
+    return false;
+  }
+  if ( searchCrit.isSetToDate() && 
+       searchCrit.getToDate() < rs->getDateTime(4) ) {
+    smsc_log_debug(logger, "Task::doesMessageConformToCriterion::: searchCrit.getToDate()=%ld < rs->getDateTime(4)=%ld", searchCrit.getToDate(), rs->getDateTime(4));
+    return false;
+  }
+  return true;
+}
+
+bool Task::deleteDeliveryMessageByRecordId(const std::string& recordId)
+{
+  smsc_log_debug(logger, "Task::deleteDeliveryMessageByRecordId method called on task '%s'",
+                 info.id.c_str());
+
+  Connection* intConnection = dsInt->getConnection();
+  if (!intConnection)
+    throw Exception("Failed to obtain connection to internal data source.");
+
+  std::auto_ptr<char> deleteMessageId(prepareSqlCall(DO_DELETE_MESSAGE_STATEMENT_ID));
+  std::auto_ptr<char> deleteMessageSql(prepareSqlCall(DO_DELETE_MESSAGE_STATEMENT_SQL));
+  Statement* deleteMessage = intConnection->getStatement(deleteMessageId.get(), 
+                                                         deleteMessageSql.get());
+
+  if (!deleteMessage)
+    throw Exception("changeDeliveryMessageInfoByCompositCriterion(): Failed to create statement for messages access.");
+  uint64_t msgId = atol(recordId.c_str());
+  deleteMessage->setUint64(1, msgId);
+  deleteMessage->executeUpdate();
+  return true;
+}
+
+bool Task::deleteDeliveryMessagesByCompositCriterion(const InfoSme_T_SearchCriterion& searchCrit)
+{
+  smsc_log_debug(logger, "Task::deleteDeliveryMessagesByCompositCriterion method called on task '%s'",
+                 info.id.c_str());
+
+  Connection* intConnection = dsInt->getConnection();
+  if (!intConnection)
+    throw Exception("Failed to obtain connection to internal data source.");
+
+  std::auto_ptr<char> fullTableScanMessageId(prepareSqlCall(DO_FULL_TABLESCAN_DELIVERYMESSAGE_STATEMENT_ID));
+  std::auto_ptr<char> fullTableScanMessageSql(prepareSqlCall(DO_FULL_TABLESCAN_DELIVERYMESSAGE_STATEMENT_SQL));
+  Statement* selectMessage = intConnection->getStatement(fullTableScanMessageId.get(), 
+                                                         fullTableScanMessageSql.get());
+  if (!selectMessage)
+    throw Exception("deleteDeliveryMessagesByCompositCriterion(): Failed to create statement for messages access.");
+
+  std::auto_ptr<ResultSet> rsGuard(selectMessage->executeQuery());
+
+  ResultSet* rs = rsGuard.get();
+  if (!rs)
+    throw Exception("Failed to obtain result set for message access.");
+        
+  int fetched = 0;
+  smsc_log_debug(logger, "Task::deleteDeliveryMessagesByCompositCriterion::: search records matching criterion");
+  while (rs->fetchNext()) {
+    smsc_log_debug(logger, "Task::deleteDeliveryMessagesByCompositCriterion::: check next record");
+    if ( doesMessageConformToCriterion(rs, searchCrit) ) {
+      char recordId[32];
+      sprintf(recordId, "%lld", rs->getUint64(1));
+      smsc_log_debug(logger, "Task::deleteDeliveryMessagesByCompositCriterion: record found[recordId=%s]",recordId);
+      deleteDeliveryMessageByRecordId(recordId);
+    }
+  }
+  return true;
+
+}
+
+struct MessageDescription {
+  MessageDescription(uint64_t anId, uint8_t aState, 
+                     const std::string& anAbonentAddress,
+                     time_t aSendDate,
+                     const std::string& aMessage)
+    : id(anId), state(aState), abonentAddress(anAbonentAddress), sendDate(aSendDate), message(aMessage){}
+
+  std::string toString() {
+    std::ostringstream obuf;
+    obuf << "id=[" << id 
+         << "],state=[" << uint_t(state)
+         << "],abonentAddress=[" << abonentAddress
+         << "],sendDate=[" << sendDate
+         << "],message=[" << message 
+         << "]";
+    return obuf.str();
+  }
+  uint64_t id;
+  uint8_t state;
+  std::string abonentAddress;
+  time_t sendDate;
+  std::string message;
+};
+
+static bool orderByState(MessageDescription& lhs, MessageDescription& rhs)
+{
+  if ( lhs.state < rhs.state ) return true;
+  else return false;
+}
+
+static bool reverseOrderByState(MessageDescription& lhs, MessageDescription& rhs)
+{  
+  if ( lhs.state > rhs.state ) return true;
+  else return false;
+}
+
+static bool orderByAbonent(MessageDescription& lhs, MessageDescription& rhs)
+{
+  if ( lhs.abonentAddress < rhs.abonentAddress ) return true;
+  else return false;
+}
+
+static bool reverseOrderByAbonent(MessageDescription& lhs, MessageDescription& rhs)
+{
+  if ( lhs.abonentAddress > rhs.abonentAddress ) return true;
+  else return false;
+}
+
+static bool orderBySendDate(MessageDescription& lhs, MessageDescription& rhs)
+{
+  if ( lhs.sendDate < rhs.sendDate ) return true;
+  else return false;
+}
+
+static bool reverseOrderBySendDate(MessageDescription& lhs, MessageDescription& rhs)
+{
+  if ( lhs.sendDate > rhs.sendDate ) return true;
+  else return false;
+}
+
+Array<std::string>
+Task::selectDeliveryMessagesByCompositCriterion(const InfoSme_T_SearchCriterion& searchCrit)
+{
+  smsc_log_debug(logger, "Task::selectDeliveryMessagesByCompositCriterion method called on task '%s'",
+                 info.id.c_str());
+
+  Connection* intConnection = dsInt->getConnection();
+  if (!intConnection)
+    throw Exception("Failed to obtain connection to internal data source.");
+
+  std::auto_ptr<char> fullTableScanMessageId(prepareSqlCall(DO_FULL_TABLESCAN_DELIVERYMESSAGE_STATEMENT_ID));
+  std::auto_ptr<char> fullTableScanMessageSql(prepareSqlCall(DO_FULL_TABLESCAN_DELIVERYMESSAGE_STATEMENT_SQL));
+  Statement* selectMessage = intConnection->getStatement(fullTableScanMessageId.get(), 
+                                                         fullTableScanMessageSql.get());
+  if (!selectMessage)
+    throw Exception("selectDeliveryMessagesByCompositCriterion(): Failed to create statement for messages access.");
+
+  std::auto_ptr<ResultSet> rsGuard(selectMessage->executeQuery());
+
+  ResultSet* rs = rsGuard.get();
+  if (!rs)
+    throw Exception("Failed to obtain result set for message access.");
+
+  typedef std::list<MessageDescription> MessagesList_t;
+  MessagesList_t messagesList;
+
+  int fetched = 0;
+  while (rs->fetchNext()) {
+    if ( doesMessageConformToCriterion(rs, searchCrit) ) {
+      smsc_log_debug(logger, "Task::selectDeliveryMessagesByCompositCriterion::: add message [%lld,%d,%s,%lld,%s] into messagesList", rs->getUint64(1), rs->getUint8(2), rs->getString(3), rs->getDateTime(4), rs->getString(5));
+      messagesList.push_back(MessageDescription(rs->getUint64(1),
+                                                rs->getUint8(2),
+                                                rs->getString(3),
+                                                rs->getDateTime(4),
+                                                rs->getString(5)));
+    }
+  }
+
+  if ( searchCrit.isSetOrderByCriterion() ) {
+    smsc_log_debug(logger, "Task::selectDeliveryMessagesByCompositCriterion::: try sort taskMessages");
+    bool (*predicate)(MessageDescription& lhs, MessageDescription& rhs) = NULL;
+
+    if ( searchCrit.getOrderByCriterion() == "state" ) {
+      if ( searchCrit.isSetOrderDirection() && searchCrit.getOrderDirection() == "desc" )
+        predicate = reverseOrderByState;
+      else
+        predicate = orderByState;
+    } else if ( searchCrit.getOrderByCriterion() == "abonent" ) {
+      if ( searchCrit.isSetOrderDirection() && searchCrit.getOrderDirection() == "desc" )
+        predicate = reverseOrderByAbonent;
+      else
+        predicate = orderByAbonent;
+    } else if ( searchCrit.getOrderByCriterion() == "send_date" ) {
+      if ( searchCrit.isSetOrderDirection() && searchCrit.getOrderDirection() == "desc" )
+        predicate = reverseOrderBySendDate;
+      else
+        predicate = orderBySendDate;
+    }
+    if ( predicate ) 
+      messagesList.sort(predicate);
+  }
+  smsc_log_debug(logger, "Task::selectDeliveryMessagesByCompositCriterion:::  prepare taskMessages");
+  Array<std::string> taskMessages;
+  for(MessagesList_t::iterator iter=messagesList.begin(); iter!=messagesList.end(); ++iter) {
+    std::ostringstream messageBuf;
+    messageBuf << iter->id << "|"
+               << uint_t(iter->state) << "|"
+               << iter->abonentAddress << "|"
+               << unixTimeToStringFormat(iter->sendDate) << "|"
+               << iter->message;
+    smsc_log_debug(logger, "Task::selectDeliveryMessagesByCompositCriterion::: add message=[%s] to taskMessages", messageBuf.str().c_str());
+    taskMessages.Push(messageBuf.str());
+  }
+
+  return taskMessages; 
 }
 
 }}

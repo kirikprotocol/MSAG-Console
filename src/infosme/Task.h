@@ -27,6 +27,8 @@
 #include "Statistics.h"
 #include "DateTime.h"
 
+#include "InfoSme_T_SearchCriterion.hpp"
+
 namespace smsc { namespace infosme 
 {
     using namespace smsc::core::buffers;
@@ -160,6 +162,7 @@ namespace smsc { namespace infosme
         Mutex       finalizingLock;
         bool        bFinalizing, bSelectedAll;
 
+        bool doesMessageConformToCriterion(ResultSet* rs, const InfoSme_T_SearchCriterion& searchCrit);
     protected:
 
         TaskInfo        info;
@@ -328,7 +331,25 @@ namespace smsc { namespace infosme
          * @return true         если сообщение найдено и изменено 
          */
         bool enrouteMessage(uint64_t msgId, Connection* connection=0);
-        
+
+        bool insertDeliveryMessage(uint8_t msgState,
+                                   const std::string& address,
+                                   time_t messageDate,
+                                   const std::string& msg);
+
+        bool changeDeliveryMessageInfoByRecordId(uint8_t msgState,
+                                                 time_t unixTime,
+                                                 const std::string& recordId);
+
+        bool changeDeliveryMessageInfoByCompositCriterion(uint8_t msgState,
+                                                          time_t unixTime,
+                                                          const InfoSme_T_SearchCriterion& searchCrit);
+
+        bool deleteDeliveryMessageByRecordId(const std::string& recordId);
+
+        bool deleteDeliveryMessagesByCompositCriterion(const InfoSme_T_SearchCriterion& searchCrit);
+
+        Array<std::string> selectDeliveryMessagesByCompositCriterion(const InfoSme_T_SearchCriterion& searchCrit);
     };
     
     class TaskGuard
