@@ -187,6 +187,8 @@ void Scag::init()
     //********************************************************
 
 
+    //********************************************************
+    //********** Billing manager initialization ***********
     try {
         BillingManager::Init(cfg.getBillManConfig());
     }catch(...)
@@ -519,7 +521,8 @@ void Scag::shutdown()
 {
   __trace__("shutting down");
 
-  //httpMan.shutdown();
+  httpMan.shutdown();
+  smppMan.StopProcessing();
   //tp.shutdown();
   //tp2.shutdown();
 }
