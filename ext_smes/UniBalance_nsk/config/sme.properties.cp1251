@@ -50,14 +50,10 @@ inactivity.timeout=60000
 
 
 ### TreadsPool configuration ###
-
-# Minimum threads in pool.
-threads.pool.min_threads=5
-# Maximum threads in pool.
-threads.pool.max_threads=10
-# Max idle time for thread. If time is reached thread will be removed from pool.  Ten minutes by default.
-threads.pool.max_idle=20000
-
+pool.max.threads=20
+pool.min.threads=20
+pool.max.jobs=0
+pool.block.mode=yes
 ### END TreadsPool configuration ###
 
 
