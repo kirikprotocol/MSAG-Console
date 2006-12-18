@@ -4,6 +4,7 @@
 <html>
 <head>
     <link rel="STYLESHEET" type="text/css" href="/styles/common.css">
+    <title><%=request.getServerName()%></title>
 </head>
 
 <body style="margin: 0px 0px 0px 0px;">
