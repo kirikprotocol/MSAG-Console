@@ -60,7 +60,7 @@ public class InManClient {
     if (shutdown) {
       return false;
     }
-    logger.debug("Connecting to server");
+    if (logger.isDebugEnabled()) logger.debug("Connecting to server");
     try {
       socket = new Socket(serverHost, serverPort);
       socket.setKeepAlive(true);
@@ -72,7 +72,7 @@ public class InManClient {
       return false;
     }
     connected = true;
-    logger.info("Connected to " + serverHost + ":" + serverPort);
+    if (logger.isInfoEnabled()) logger.info("Connected to " + serverHost + ":" + serverPort);
     synchronized(connectMonitor){
       connectMonitor.notifyAll();
     }
@@ -82,12 +82,12 @@ public class InManClient {
   protected void disconnect() {
     synchronized (writeMonitor) {
       synchronized (readMonitor) {
-        logger.debug("Disconnecting from server");
+        if (logger.isDebugEnabled()) logger.debug("Disconnecting from server");
         connected = false;
         try {
           if (socket != null) {
             socket.close();
-            logger.info("Disconnected");
+            if (logger.isInfoEnabled()) logger.info("Disconnected");
           }
         } catch (IOException e) {
           logger.warn("I/O Error at socket close: " + e, e);

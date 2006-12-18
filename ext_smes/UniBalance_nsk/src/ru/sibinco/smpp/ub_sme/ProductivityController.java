@@ -26,16 +26,16 @@ public class ProductivityController extends Thread {
   private List controlObjects = new LinkedList();
 
   public void init(Properties config) throws InitializationException {
-    logger.debug("init(..)");
+    if (logger.isDebugEnabled()) logger.debug("init(..)");
 
     try {
       pollingInterval = Long.parseLong(config.getProperty("productivity.controller.polling.interval", Long.toString(pollingInterval)));
     } catch (NumberFormatException e) {
       throw new InitializationException("Bad value of productivity.controller.polling.interval: " + config.getProperty("productivity.controller.polling.interval"));
     }
-    logger.info("productivity.controller.polling.interval: " + pollingInterval);
+    if (logger.isInfoEnabled()) logger.info("productivity.controller.polling.interval: " + pollingInterval);
 
-    logger.debug("init(..) finished");
+    if (logger.isDebugEnabled()) logger.debug("init(..) finished");
   }
 
   public void addControlObject(ProductivityControllable obj){
@@ -47,7 +47,7 @@ public class ProductivityController extends Thread {
    * Starts the thread
    */
   public void startService() {
-    logger.debug("startService()");
+    if (logger.isDebugEnabled()) logger.debug("startService()");
     if(!logger.isInfoEnabled()){
       logger.warn("Logger INFO is disabled. Couldn't start ProductivityController");
       return;
@@ -62,7 +62,7 @@ public class ProductivityController extends Thread {
   public void stopService() {
     synchronized (shutMonitor) {
       synchronized (monitor) {
-        logger.debug("stopService()");
+        if (logger.isDebugEnabled()) logger.debug("stopService()");
         stop = true;
         monitor.notifyAll();
       }
@@ -78,14 +78,14 @@ public class ProductivityController extends Thread {
     while (!stop) {
       for (int i = 0; i < controlObjects.size(); i++) {
         ProductivityControllable object = (ProductivityControllable) controlObjects.get(i);
-        logger.info(object.getName()+": "+(1000L*object.getEventsCount()/(System.currentTimeMillis()-object.getCounterStartTime()))+" / sec.");
+        if (logger.isInfoEnabled()) logger.info(object.getName()+": "+(1000L*object.getEventsCount()/(System.currentTimeMillis()-object.getCounterStartTime()))+" / sec.");
         object.resetEventsCounter();
       }
       synchronized (monitor) {
         try {
           monitor.wait(pollingInterval);
         } catch (InterruptedException e) {
-          logger.debug(getName() + " was interrupted.", e);
+          logger.warn(getName() + " was interrupted.", e);
         }
       }
     }

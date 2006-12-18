@@ -64,7 +64,7 @@ public class Sme {
     Multiplexor multiplexor = new Multiplexor();
     try {
       multiplexor.init(config, "", null);
-      Logger.info("Network multiplexor initialized.");
+      if (Logger.isInfoEnabled()) Logger.info("Network multiplexor initialized.");
     } catch (SMPPException e) {
       Logger.error("Exception occured during initializing of multiplexor.", e);
       throw new InitializationException("Exception occured during initializing of multiplexor.");

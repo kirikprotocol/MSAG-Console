@@ -79,7 +79,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
   private ProductivityControlObject waitForSmsResponses;
 
   public void init(Properties config) throws InitializationException {
-    logger.debug("UniBalance SME init started");
+    if (logger.isDebugEnabled()) logger.debug("UniBalance SME init started");
 
     mgAddress = config.getProperty("mg.address", "");
     if (mgAddress.length() == 0) {
@@ -224,7 +224,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
 
     new RequestStatesController(requestStatesControllerPollingInterval).startService();
 
-    logger.debug("UniBalance SME init fineshed");
+    if (logger.isDebugEnabled()) logger.debug("UniBalance SME init fineshed");
   }
 
   protected SmeEngine(Multiplexor multiplexor,
@@ -393,7 +393,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       synchronized (state) {
         /*
         if (state.getAbonentRequestTime() + requestLifeTime <= System.currentTimeMillis() && !state.isClosed()) {
-          logger.debug(state.getAbonentRequest().getSourceAddress() + " request state expired.");
+          if (logger.isDebugEnabled()) logger.debug(state.getAbonentRequest().getSourceAddress() + " request state expired.");
           if (!state.isUssdSessionClosed()) {
             sendDeliverSMResponse(state.getAbonentRequest(), Data.ESME_RSYSERR);
           }
@@ -710,7 +710,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
 
     public void startService() {
       started = true;
-      logger.info(getName() + " started.");
+      if (logger.isInfoEnabled()) logger.info(getName() + " started.");
       start();
     }
 
@@ -740,7 +740,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
           try {
             monitor.wait(pollingInterval);
           } catch (InterruptedException e) {
-            logger.debug(getName() + " was interrupted.", e);
+            logger.warn(getName() + " was interrupted.", e);
           }
         }
       }
