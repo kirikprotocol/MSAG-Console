@@ -47,19 +47,27 @@ ScagTaskManager::ScagTaskManager(HttpManager& m) : manager(m)
 {
 }
 
+void ScagTaskManager::deleteQueue(HttpContext* pcx)
+{
+    HttpContext *cx;
+    while (pcx) {
+        cx = pcx;
+        pcx = pcx->next;
+        delete cx;
+    }
+}
+
 void ScagTaskManager::shutdown()
 {
     pool.shutdown();
     
     {
-        HttpContext *cx;
+        HttpContext *cx, *pcx;
         MutexGuard g(procMut);
-                        
-        while (headContext) {
-            cx = headContext;
-            headContext = headContext->next;
-            delete cx;      
-        }
+        
+        deleteQueue(headContext[PROCESS_REQUEST]);
+        deleteQueue(headContext[PROCESS_RESPONSE]);
+        deleteQueue(headContext[PROCESS_STATUS_RESPONSE]);
     }
 }
 
@@ -67,23 +75,12 @@ void ScagTaskManager::process(HttpContext* cx)
 {
     MutexGuard g(procMut);
 
-    cx->next = tailContext[cx->action]->next;
-
-    switch (cx->action) {
-    case PROCESS_RESPONSE:
-        if (tailContext[PROCESS_REQUEST] == tailContext[PROCESS_RESPONSE])
-            tailContext[PROCESS_REQUEST] = cx;
-        break;
-    case PROCESS_STATUS_RESPONSE:                    
-        if (tailContext[PROCESS_RESPONSE] == tailContext[PROCESS_STATUS_RESPONSE])
-            tailContext[PROCESS_RESPONSE] = cx;
-        if (tailContext[PROCESS_REQUEST] == tailContext[PROCESS_STATUS_RESPONSE])
-            tailContext[PROCESS_REQUEST] = cx;
-        break;
-    }
-
-    tailContext[cx->action]->next = cx;
-    tailContext[cx->action] = cx;
+    cx->next = NULL;
+    if(headContext[cx->action])
+        tailContext[cx->action]->next = cx;
+    else        
+        headContext[cx->action] = cx;
+    tailContext[cx->action] = cx;        
     
     if (++queueLength > scagQueueLimit)
         waitQueueShrinkage = true;
@@ -95,16 +92,16 @@ void ScagTaskManager::process(HttpContext* cx)
     }
 }
 
-void ScagTaskManager::continueExecution(LongCallContext* context, bool dropped)
+/*void ScagTaskManager::continueExecution(LongCallContext* context, bool dropped)
 {
     HttpContext *cx = (HttpContext*)context->stateMachineContext;
-    cx->continueExec = true;
+    context->continueExec = true;
 
     if(!dropped)
         process(cx);
     else
         delete cx;
-}
+}*/
 
 void ScagTaskManager::init(int maxThreads, int scagQueueLim, HttpProcessor& p)
 {
@@ -114,10 +111,9 @@ void ScagTaskManager::init(int maxThreads, int scagQueueLim, HttpProcessor& p)
     scagQueueLimit = scagQueueLim;
     waitQueueShrinkage = false;
     
-    headContext = NULL;
-    tailContext[PROCESS_REQUEST] = (HttpContext *)&headContext;
-    tailContext[PROCESS_RESPONSE] = (HttpContext *)&headContext;
-    tailContext[PROCESS_STATUS_RESPONSE] = (HttpContext *)&headContext;
+    headContext[PROCESS_REQUEST] = NULL;
+    headContext[PROCESS_RESPONSE] = NULL;
+    headContext[PROCESS_STATUS_RESPONSE] = NULL;
 
     logger = Logger::getInstance("scag.http.scag");
 
@@ -129,31 +125,28 @@ void ScagTaskManager::init(int maxThreads, int scagQueueLim, HttpProcessor& p)
 
 HttpContext *ScagTaskManager::getFirst()
 {
+    uint32_t i;
     HttpContext *cx;
     MutexGuard g(procMut);
 
-    if (headContext) {
-        cx = headContext;
+    if(headContext[PROCESS_STATUS_RESPONSE])
+        i = PROCESS_STATUS_RESPONSE;        
+    else if(headContext[PROCESS_RESPONSE])
+        i = PROCESS_RESPONSE;
+    else if(headContext[PROCESS_REQUEST])
+        i = PROCESS_REQUEST;
+    else
+        return NULL;            
+    
+    cx = headContext[i];
+    headContext[i] = headContext[i]->next;
+    queueLength--;
 
-        if (headContext == tailContext[PROCESS_REQUEST])
-            tailContext[PROCESS_REQUEST] = (HttpContext *)&headContext;
-        if (headContext == tailContext[PROCESS_RESPONSE])
-            tailContext[PROCESS_RESPONSE] = (HttpContext *)&headContext;
-        if (headContext == tailContext[PROCESS_STATUS_RESPONSE])
-            tailContext[PROCESS_STATUS_RESPONSE] = (HttpContext *)&headContext;
+    if (waitQueueShrinkage && queueLength <= scagQueueLimit) {
+        MutexGuard q(queMon);
         
-        headContext = headContext->next;
-        queueLength--;
-
-        if (waitQueueShrinkage && queueLength <= scagQueueLimit) {
-            MutexGuard q(queMon);
-            
-            waitQueueShrinkage = false;
-            queMon.notify();
-        }
-    }
-    else {
-        cx = NULL;
+        waitQueueShrinkage = false;
+        queMon.notify();
     }
     
     return cx;
@@ -178,7 +171,7 @@ bool ScagTaskManager::canStop()
 {
     MutexGuard g(procMut);
     
-    return headContext == NULL;
+    return tailContext[PROCESS_REQUEST] == NULL && tailContext[PROCESS_RESPONSE] == NULL && tailContext[PROCESS_STATUS_RESPONSE] == NULL;
 }
 
 IOTask* ReaderTaskManager::newTask()
