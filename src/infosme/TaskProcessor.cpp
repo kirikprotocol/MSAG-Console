@@ -1,7 +1,7 @@
-
 #include "TaskProcessor.h"
 #include <exception>
-
+#include <list>
+#include <sstream>
 extern bool isMSISDNAddress(const char* string);
 
 namespace smsc { namespace infosme 
@@ -157,7 +157,8 @@ bool TaskProcessor::addTask(Task* task)
     __require__(task);
     
     if (hasTask(task->getId())) return false;
-    if (task->canGenerateMessages()) task->createTable(); // throws Exception
+    /*if (task->canGenerateMessages())*/
+    task->createTable(); // throws Exception
     return putTask(task);
 }
 bool TaskProcessor::remTask(std::string taskId)
@@ -200,7 +201,7 @@ bool TaskProcessor::hasTask(std::string taskId)
 TaskGuard TaskProcessor::getTask(std::string taskId)
 {
     MutexGuard guard(tasksLock);
-    
+
     const char* task_id = taskId.c_str();
     if (!task_id || task_id[0] == '\0' || !tasks.Exists(task_id)) return TaskGuard(0);
     Task* task = tasks.Get(task_id);
@@ -1000,6 +1001,212 @@ void TaskProcessor::changeSchedule(std::string scheduleId)
     }
 }
 
+void TaskProcessor::addDeliveryMessages(const std::string& taskId,
+                                        uint8_t msgState,
+                                        const std::string& abonentAddress,
+                                        time_t messageDate,
+                                        const std::string& msg)
+{
+  TaskGuard taskGuard = getTask(taskId);
+  Task* task = taskGuard.get();
+  if (!task) throw Exception("TaskProcessor::addDeliveryMessages::: can't get task by taskId='%s'", taskId.c_str());
+  task->insertDeliveryMessage(msgState, abonentAddress, messageDate, msg);
+}
+
+void TaskProcessor::changeDeliveryMessageInfoByRecordId(const std::string& taskId,
+                                                        uint8_t msgState,
+                                                        time_t unixTime,
+                                                        const std::string& recordId)
+{
+  TaskGuard taskGuard = getTask(taskId);
+  Task* task = taskGuard.get();
+  if (!task) throw Exception("TaskProcessor::changeDeliveryMessageInfoByRecordId::: can't get task by taskId='%s'", taskId.c_str());
+  task->changeDeliveryMessageInfoByRecordId(msgState, unixTime, recordId);
+}
+
+void TaskProcessor::changeDeliveryMessageInfoByCompositCriterion(const std::string& taskId,
+                                                                 uint8_t msgState,
+                                                                 time_t unixTime,
+                                                                 const InfoSme_T_SearchCriterion& searchCrit)
+{
+  TaskGuard taskGuard = getTask(taskId);
+  Task* task = taskGuard.get();
+  if (!task) throw Exception("TaskProcessor::changeDeliveryMessageInfoByCompositCriterion::: can't get task by taskId='%s'", taskId.c_str());
+  task->changeDeliveryMessageInfoByCompositCriterion(msgState, unixTime, searchCrit);
+}
+
+void TaskProcessor::deleteDeliveryMessageByRecordId(const std::string& taskId,
+                                                    const std::string& recordId)
+{
+  TaskGuard taskGuard = getTask(taskId);
+  Task* task = taskGuard.get();
+  if (!task) throw Exception("TaskProcessor::deleteDeliveryMessageByRecordId::: can't get task by taskId='%s'", taskId.c_str());
+  task->deleteDeliveryMessageByRecordId(recordId);
+}
+
+void TaskProcessor::deleteDeliveryMessagesByCompositCriterion(const std::string& taskId,
+                                                              const InfoSme_T_SearchCriterion& searchCrit)
+{
+  TaskGuard taskGuard = getTask(taskId);
+  Task* task = taskGuard.get();
+  if (!task) throw Exception("TaskProcessor::deleteDeliveryMessagesByCompositCriterion::: can't get task by taskId='%s'", taskId.c_str());
+  task->deleteDeliveryMessagesByCompositCriterion(searchCrit);
+}
+
+extern const char* INSERT_TASK_STAT_STATE_SQL;
+extern const char* INSERT_TASK_STAT_STATE_ID;
+
+void TaskProcessor::insertRecordIntoTasksStat(const std::string& taskId,
+                                              uint32_t period,
+                                              uint32_t generated,
+                                              uint32_t delivered,
+                                              uint32_t retried,
+                                              uint32_t failed)
+{
+  Statement* statement = dsIntConnection->getStatement(INSERT_TASK_STAT_STATE_ID, 
+                                                       INSERT_TASK_STAT_STATE_SQL);
+  if (!statement)
+    throw Exception("Failed to obtain statement for statistics update");
+
+  statement->setString(1, taskId.c_str());
+  statement->setUint32(2, period);
+  statement->setUint32(3, generated);
+  statement->setUint32(4, delivered);
+  statement->setUint32(5, retried);
+  statement->setUint32(6, failed);
+
+  statement->executeUpdate();
+}
+
+Array<std::string> TaskProcessor::getTaskMessages(const std::string& taskId,
+                                                  const InfoSme_T_SearchCriterion& searchCrit)
+{
+  try {
+    TaskGuard taskGuard = getTask(taskId);
+    Task* task = taskGuard.get();
+    if (!task) throw Exception("TaskProcessor::getTaskMessages::: can't get task by taskId='%s'", taskId.c_str());
+    return task->selectDeliveryMessagesByCompositCriterion(searchCrit);
+  } catch (std::exception& ex) {
+    smsc_log_error(logger, "TaskProcessor::getTaskMessages::: catch exception=[%s]", ex.what());
+    throw;
+  } catch (...) {
+    smsc_log_error(logger, "TaskProcessor::getTaskMessages::: catch unexpected exception");
+    throw;
+  }
+}
+
+bool TaskProcessor::doesMessageConformToCriterion(ResultSet* rs, const InfoSme_Tasks_Stat_SearchCriterion& searchCrit)
+{
+  if ( searchCrit.isSetTaskId() && 
+       searchCrit.getTaskId() != rs->getString(1) )
+    return false;
+
+  if ( searchCrit.isSetStartPeriod() && 
+       searchCrit.getStartPeriod() > rs->getUint32(2) )
+    return false;
+
+  if ( searchCrit.isSetEndPeriod() && 
+       searchCrit.getEndPeriod() < rs->getUint32(2) )
+    return false;
+
+  return true;
+}
+
+const char* DO_FULL_TABLESCAN_TASKS_STAT_STATEMENT_ID = "FULL_TABLESCAN_TASKS_STAT_STATEMENT_ID";
+const char* DO_FULL_TABLESCAN_TASKS_STAT_STATEMENT_SQL = "FULL_TABLE_SCAN FROM INFOSME_TASKS_STAT";
+
+struct TaskStatDescription {
+  TaskStatDescription(const std::string& anTaskId="", uint32_t aPeriod=0, uint32_t aGenerated=0,
+                      uint32_t aDelivered=0, uint32_t aRetried=0, uint32_t aFailed=0)
+    : taskId(anTaskId), period(aPeriod), generated(aGenerated), delivered(aDelivered), retried(aRetried), failed(aFailed) {}
+
+  TaskStatDescription& operator+(const TaskStatDescription& rhs) {
+    if ( period == rhs.period ) {
+      generated += rhs.generated;
+      delivered += rhs.delivered;
+      retried += rhs.retried;
+      failed += rhs.failed;
+    }
+    return *this;
+  }
+  std::string taskId;
+  uint32_t period;
+  uint32_t generated;
+  uint32_t delivered;
+  uint32_t retried;
+  uint32_t failed;
+};
+
+static bool orderBinaryPredicate(const TaskStatDescription& lhs,
+                                 const TaskStatDescription& rhs)
+{
+  if ( lhs.period < rhs.period ) return true;
+  else return false;
+}
+
+Array<std::string> TaskProcessor::getTasksStatistic(const InfoSme_Tasks_Stat_SearchCriterion& searchCrit)
+{
+  Statement* selectMessage = dsIntConnection->getStatement(DO_FULL_TABLESCAN_TASKS_STAT_STATEMENT_ID,
+                                                           DO_FULL_TABLESCAN_TASKS_STAT_STATEMENT_SQL);
+  if (!selectMessage)
+    throw Exception("getTasksStatistic(): Failed to create statement for messages access.");
+
+  std::auto_ptr<ResultSet> rsGuard(selectMessage->executeQuery());
+
+  ResultSet* rs = rsGuard.get();
+  if (!rs)
+    throw Exception("Failed to obtain result set for message access.");
+
+  typedef std::list<TaskStatDescription> TasksStatList_t;
+  TasksStatList_t statisticsList;
+
+  int fetched = 0;
+  while (rs->fetchNext()) {
+    if ( doesMessageConformToCriterion(rs, searchCrit) ) {
+      smsc_log_debug(logger, "TaskProcessor::getTasksStatistic::: add statistic [%s,%d,%d,%d,%d,%d] into statisticsList", rs->getString(1), rs->getUint32(2), rs->getUint32(3), rs->getUint32(4), rs->getUint32(5), rs->getUint32(6));
+      statisticsList.push_back(TaskStatDescription(rs->getString(1),
+                                                   rs->getUint32(2),
+                                                   rs->getUint32(3),
+                                                   rs->getUint32(4),
+                                                   rs->getUint32(5),
+                                                   rs->getUint32(6)));
+    }
+  }
+
+  statisticsList.sort(orderBinaryPredicate);
+
+  TasksStatList_t accumulatedStatisticsList;
+
+  TasksStatList_t::iterator iter = statisticsList.begin();
+
+  if ( iter != statisticsList.end() ) {
+    TaskStatDescription prevElement(*iter);
+    TaskStatDescription taskStatResult(*iter);
+    while ( ++iter != statisticsList.end() ) {
+      if ( iter->period != prevElement.period ) {
+        accumulatedStatisticsList.push_back(taskStatResult);
+        taskStatResult = *iter;
+      } else
+        taskStatResult = taskStatResult + *iter;
+      prevElement = *iter;
+    }
+    accumulatedStatisticsList.push_back(taskStatResult);
+  }
+
+  Array<std::string> tasksStat;
+  for(TasksStatList_t::iterator iter=accumulatedStatisticsList.begin();
+      iter!=accumulatedStatisticsList.end(); ++iter) {
+    std::ostringstream statisticBuf;
+    statisticBuf << iter->period << "|"
+                 << iter->generated << "|"
+                 << iter->delivered << "|"
+                 << iter->retried << "|"
+                 << iter->failed;
+    tasksStat.Push(statisticBuf.str());
+  }
+
+  return tasksStat;
+}
 
 }}
 
