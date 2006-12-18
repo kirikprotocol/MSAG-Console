@@ -25,6 +25,8 @@
 #include "StatisticsManager.h"
 #include "InfoSmeAdmin.h"
 
+#include "InfoSme_Tasks_Stat_SearchCriterion.hpp"
+
 namespace smsc { namespace infosme
 {
     using namespace smsc::core::buffers;
@@ -311,6 +313,8 @@ namespace smsc { namespace infosme
         virtual void processReceipt (std::string smscId,
                                      bool delivered, bool retry, bool internal=false);
 
+        bool doesMessageConformToCriterion(ResultSet* rs,
+                                           const InfoSme_Tasks_Stat_SearchCriterion& searchCrit);
     public:
 
         TaskProcessor(ConfigView* config);
@@ -415,6 +419,38 @@ namespace smsc { namespace infosme
         virtual void removeSchedule(std::string scheduleId);
         virtual void changeSchedule(std::string scheduleId);
 
+        virtual void addDeliveryMessages(const std::string& taskId,
+                                         uint8_t msgState,
+                                         const std::string& address,
+                                         time_t messageDate,
+                                         const std::string& msg);
+
+        virtual void changeDeliveryMessageInfoByRecordId(const std::string& taskId,
+                                                         uint8_t messageState,
+                                                         time_t unixTime,
+                                                         const std::string& recordId);
+
+        virtual void changeDeliveryMessageInfoByCompositCriterion(const std::string& taskId,
+                                                                  uint8_t messageState,
+                                                                  time_t unixTime,
+                                                                  const InfoSme_T_SearchCriterion& searchCrit);
+        virtual void deleteDeliveryMessageByRecordId(const std::string& taskId,
+                                                     const std::string& recordId);
+
+        virtual void deleteDeliveryMessagesByCompositCriterion(const std::string& taskId,
+                                                               const InfoSme_T_SearchCriterion& searchCrit);
+
+        virtual void insertRecordIntoTasksStat(const std::string& taskId,
+                                               uint32_t period,
+                                               uint32_t generated,
+                                               uint32_t delivered,
+                                               uint32_t retried,
+                                               uint32_t failed);
+
+        virtual Array<std::string> getTaskMessages(const std::string& taskId,
+                                                   const InfoSme_T_SearchCriterion& searchCrit);
+
+        virtual Array<std::string> getTasksStatistic(const InfoSme_Tasks_Stat_SearchCriterion& searchCrit);
     };
 
 }}
