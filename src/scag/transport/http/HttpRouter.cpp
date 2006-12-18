@@ -515,9 +515,9 @@ void HttpRouterImpl::ReloadRoutes()
     
     try{
 
-        //XMLBasicHandler handler(r, inap, outap);
-        //ParseFile(route_cfg_file.c_str(), &handler);
-        //BuildMaps(r, h, s, auh, mh, hh, ph);
+        XMLBasicHandler handler(r, inap, outap);
+        ParseFile(route_cfg_file.c_str(), &handler);
+        BuildMaps(r, h, s, auh, mh, hh, ph);
         MutexGuard mg(GetRouteMutex);
         if (routes) delete routes;
         if (routeIdMap) delete routeIdMap;
