@@ -1,0 +1,4 @@
+class DiskIODispatcher {
+public:
+  getPage();
+};

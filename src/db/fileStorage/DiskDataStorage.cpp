@@ -1,0 +1,449 @@
+#include <stdio.h>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <inttypes.h>
+#include <errno.h>
+#include <unistd.h>
+
+#include "DiskDataStorage.hpp"
+#include <util/BufferSerialization.hpp>
+#include <util/crc32.h>
+
+template <class V>
+int
+SimpleFileDispatcher<V>::readNbytesFromFile(IOPage& ioPage, uchar_t* buf, size_t bufSz)
+{
+  size_t sz=0;
+
+  ssize_t st=ioPage.read(buf, bufSz);
+  if ( st < 0 )
+    return st;
+
+  sz = st;
+  while ( sz != bufSz ) {
+    ioPage = _ioPageDispatcher->getNextIOPage(ioPage);
+    st = ioPage.read(buf+sz, bufSz-sz);
+    if ( st < 0 )
+      return st;
+    sz += st;
+  }
+  return 0;
+}
+
+template <class V>
+int
+SimpleFileDispatcher<V>::writeNbytesToFile(IOPage& ioPage, uchar_t* buf, size_t bufSz)
+{
+  size_t sz=0;
+
+  ssize_t st=ioPage.write(buf, bufSz);
+  if ( st < 0 )
+    return st;
+
+  sz = st;
+  ioPage.commitMemory();
+  while ( sz != bufSz ) {
+    ioPage = _ioPageDispatcher->getNextIOPage(ioPage);
+    st = ioPage.write(buf+sz, bufSz-sz);
+    if ( st < 0 )
+      return st;
+    sz += st;
+    ioPage.commitMemory();
+  }
+  return 0;
+}
+
+template<typename V>
+uchar_t
+SimpleFileDispatcher<V>::end_storage_marker_constant[STORAGE_END_MARKER_SZ] = { 0xAA, 0x11, 0xEE, 0x33 };
+
+template<typename V>
+uchar_t
+SimpleFileDispatcher<V>::record_marker_constant[RECORD_MARKER_SZ] = { 0x00, 0x00 };
+
+template <typename V>
+DataStorage_FileDispatcher<V>::DataStorage_FileDispatcher(const std::string& fileName)
+  : _storageFileName(fileName) {}
+
+template <typename V>
+SimpleFileDispatcher<V>::~SimpleFileDispatcher() { close(); }
+
+template <class V>
+typename DataStorage_FileDispatcher<V>::operation_status_t
+SimpleFileDispatcher<V>::create()
+{
+  if ( (_fd = ::open(DataStorage_FileDispatcher<V>::_storageFileName.c_str(), O_RDWR | O_CREAT | O_EXCL, 0640)) < 0 ) {
+    if ( errno == EEXIST )
+      return DataStorage_FileDispatcher<V>::STORAGE_ALREADY_EXISTS;
+    else
+      return DataStorage_FileDispatcher<V>::FATAL;
+  }
+  const size_t EMPTYSTORAGEBUFSZ
+    = sizeof(uint32_t) + sizeof(uint32_t) + sizeof(end_storage_marker_constant);
+
+  smsc::util::SerializationBuffer buf(EMPTYSTORAGEBUFSZ);
+
+  buf.WriteNetInt32(STORAGE_VERSION);
+  buf.WriteNetInt32(0); // reserved bytes
+  buf.Write(end_storage_marker_constant,sizeof(end_storage_marker_constant));
+
+  if ( write(_fd, buf.getBuffer(), buf.getBufferSize()) != buf.getBufferSize() )
+    return DataStorage_FileDispatcher<V>::FATAL;
+
+  off_t offset = lseek(_fd, -sizeof(end_storage_marker_constant), SEEK_END);
+  if ( offset < 0 )
+    return DataStorage_FileDispatcher<V>::FATAL;
+
+  if ( !(_ioPageDispatcher = new IOPageDispatcher(_fd)) )
+    return DataStorage_FileDispatcher<V>::FATAL;
+
+  return DataStorage_FileDispatcher<V>::OPERATION_OK;
+}
+
+template <typename V>
+typename DataStorage_FileDispatcher<V>::operation_status_t
+SimpleFileDispatcher<V>::open()
+{
+  if ( (_fd = ::open(DataStorage_FileDispatcher<V>::_storageFileName.c_str(), O_RDWR, 0)) < 0 ) {
+    if ( errno == ENOENT )
+      return DataStorage_FileDispatcher<V>::NO_SUCH_FILE;
+    else
+      return DataStorage_FileDispatcher<V>::FATAL;
+  }
+  const size_t EMPTYSTORAGEBUFSZ
+    = sizeof(uint32_t) + sizeof(uint32_t) + sizeof(end_storage_marker_constant);
+
+  uint8_t emptyStorageBuf[EMPTYSTORAGEBUFSZ];
+  if ( read(_fd, emptyStorageBuf, sizeof(emptyStorageBuf)) != sizeof(emptyStorageBuf))
+    return DataStorage_FileDispatcher<V>::FATAL;
+
+  smsc::util::SerializationBuffer buf;
+  buf.setExternalBuffer(emptyStorageBuf,EMPTYSTORAGEBUFSZ);
+  if ( buf.ReadNetInt32() != STORAGE_VERSION )
+    return DataStorage_FileDispatcher<V>::INVALID_FILE_VERSION;
+
+  if ( lseek(_fd, -sizeof(end_storage_marker_constant), SEEK_CUR) < 0 ||
+       !(_ioPageDispatcher = new IOPageDispatcher(_fd)) )
+    return DataStorage_FileDispatcher<V>::FATAL;
+
+  return DataStorage_FileDispatcher<V>::OPERATION_OK;
+}
+
+template <typename V>
+typename DataStorage_FileDispatcher<V>::operation_status_t
+SimpleFileDispatcher<V>::close()
+{
+  if ( ::close(_fd) < 0 )
+    return DataStorage_FileDispatcher<V>::FATAL;
+
+  _fd = -1;
+  return DataStorage_FileDispatcher<V>::OPERATION_OK;
+}
+
+template <typename V>
+typename DataStorage_FileDispatcher<V>::operation_status_t
+SimpleFileDispatcher<V>::drop()
+{
+  if ( close() != DataStorage_FileDispatcher<V>::OPERATION_OK ||
+       unlink(DataStorage_FileDispatcher<V>::_storageFileName.c_str()) < 0 )
+    return DataStorage_FileDispatcher<V>::FATAL;
+  else
+    return DataStorage_FileDispatcher<V>::OPERATION_OK;
+}
+
+template <typename V>
+typename DataStorage_FileDispatcher<V>::operation_status_t
+SimpleFileDispatcher<V>::checkEndStorageMarker(const IOPage& ioPage)
+{
+  uchar_t end_marker_buf[STORAGE_END_MARKER_SZ];
+
+  IOPage dupIoPage = ioPage;
+  if ( readNbytesFromFile(dupIoPage, end_marker_buf, sizeof(end_marker_buf)) < 0 )
+    return DataStorage_FileDispatcher<V>::FILE_DAMAGED;
+
+  if ( !memcmp(end_marker_buf, end_storage_marker_constant, sizeof(end_storage_marker_constant)) )
+    return DataStorage_FileDispatcher<V>::NO_RECORD_FOUND;
+  else
+    return DataStorage_FileDispatcher<V>::OPERATION_OK;
+}
+
+template <typename V>
+typename DataStorage_FileDispatcher<V>::operation_status_t
+SimpleFileDispatcher<V>::extractRecord(V* record, const typename DataStorage_FileDispatcher<V>::rid_t& rid)
+{
+  IOPage ioPage=_ioPageDispatcher->getIOPage(rid);
+
+  StorableRecord readbleRecord;
+  DataStorage_FileDispatcher<V>::operation_status_t 
+    opRes = readbleRecord.unmarshal(ioPage, *this);
+
+  if ( opRes == DataStorage_FileDispatcher<V>::OPERATION_OK )
+    *record = *(readbleRecord.getReadRecord());
+  return opRes;
+}
+
+template <typename V>
+typename DataStorage_FileDispatcher<V>::operation_status_t
+SimpleFileDispatcher<V>::addRecord(const V& record, typename DataStorage_FileDispatcher<V>::rid_t* rid)
+{
+  uchar_t end_marker_buf[STORAGE_END_MARKER_SZ];
+  typename DataStorage_FileDispatcher<V>::rid_t addedRid;
+
+  smsc::core::synchronization::MutexGuard mutexGuard(_addRecordLock);
+
+  IOPage ioPage=_ioPageDispatcher->getLastIOPage();
+
+  ioPage.setPosition(0, SEEK_END);
+  ssize_t sz = ioPage.readOrderReverse(end_marker_buf, sizeof(end_marker_buf));
+  if ( sz < 0 )
+    return DataStorage_FileDispatcher<V>::FILE_DAMAGED;
+
+  if ( sz != sizeof(end_marker_buf) ) {
+    ioPage = _ioPageDispatcher->getPreviousIOPage(ioPage);
+    ioPage.setPosition(0, SEEK_END);
+    sz = sizeof(end_marker_buf) - sz;
+    if ( ioPage.readOrderReverse(end_marker_buf, sz) != sz )
+      return DataStorage_FileDispatcher<V>::FATAL;
+    if ( memcmp(end_marker_buf, end_storage_marker_constant, sizeof(end_storage_marker_constant)) )
+      return DataStorage_FileDispatcher<V>::FILE_DAMAGED;
+  }
+
+  addedRid=ioPage.getAbsolutPosition();
+
+  if ( ioPage.getFreeSize() < record.getSize() + sizeof(end_marker_buf)  ) {
+    // !!!! Запись может не влезть целиком в следующую страницу, поэтому необходимо 
+    // !!!! предусмотреть выделение нескольких страниц подряд
+    IOPage newIoPage = _ioPageDispatcher->createNewIOPage();
+  }
+  StorableRecord addingRecord(&record,(uint8_t)0);
+  if ( addingRecord.marshal(ioPage, *this) )
+    return DataStorage_FileDispatcher<V>::FATAL;
+
+  if ( writeNbytesToFile(ioPage, end_storage_marker_constant, sizeof(end_storage_marker_constant)) < 0 )
+    return DataStorage_FileDispatcher<V>::FATAL;
+
+  *rid = addedRid;
+  return DataStorage_FileDispatcher<V>::OPERATION_OK;
+}
+
+template <typename V>
+typename DataStorage_FileDispatcher<V>::operation_status_t
+SimpleFileDispatcher<V>::extractFirstRecord(V* record, typename DataStorage_FileDispatcher<V>::rid_t* rid, rid_t* nextRid)
+{
+  typename DataStorage_FileDispatcher<V>::rid_t
+    firstRecordRid;
+
+  IOPage ioPage=_ioPageDispatcher->getFirstIOPage();
+  firstRecordRid = ioPage.getAbsolutPosition();
+
+  if ( firstRecordRid < 0  )
+    return DataStorage_FileDispatcher<V>::FILE_DAMAGED;
+
+  StorableRecord readbleRecord;
+  DataStorage_FileDispatcher<V>::operation_status_t opRes;
+  do {
+    opRes = checkEndStorageMarker(ioPage);
+    if ( opRes != DataStorage_FileDispatcher<V>::OPERATION_OK )
+      return opRes;
+    opRes = readbleRecord.unmarshal(ioPage, *this);
+  } while( opRes == RECORD_DELETED );
+
+  if ( opRes == DataStorage_FileDispatcher<V>::OPERATION_OK ) {
+    *record = *(readbleRecord.getReadRecord());
+    *rid = firstRecordRid;
+  }
+
+  if ((*nextRid = ioPage.getAbsolutPosition()) >= 0) return opRes;
+  else return DataStorage_FileDispatcher<V>::FILE_DAMAGED;
+}
+
+template <typename V>
+typename DataStorage_FileDispatcher<V>::operation_status_t
+SimpleFileDispatcher<V>::extractNextRecord(V* record, typename DataStorage_FileDispatcher<V>::rid_t* rid, rid_t* nextRid)
+{
+  IOPage ioPage=_ioPageDispatcher->getIOPage(*nextRid);
+
+  typename DataStorage_FileDispatcher<V>::rid_t
+    nextRecordRid = ioPage.setPosition(*nextRid, SEEK_SET);
+
+  if ( nextRecordRid < 0 )
+    return DataStorage_FileDispatcher<V>::FILE_DAMAGED;
+
+  StorableRecord readbleRecord;
+  DataStorage_FileDispatcher<V>::operation_status_t opRes;
+  do {
+    opRes = checkEndStorageMarker(ioPage);
+    if ( opRes != DataStorage_FileDispatcher<V>::OPERATION_OK )
+      return opRes;
+
+    opRes = readbleRecord.unmarshal(ioPage, *this);
+  } while( opRes == RECORD_DELETED );
+
+  if ( opRes == DataStorage_FileDispatcher<V>::OPERATION_OK ) {
+    *record = *(readbleRecord.getReadRecord());
+    *rid = nextRecordRid;
+  }
+  if ((*nextRid = ioPage.getAbsolutPosition()) > 0) return opRes;
+  else return DataStorage_FileDispatcher<V>::FILE_DAMAGED;
+}
+
+template <typename V>
+typename DataStorage_FileDispatcher<V>::operation_status_t
+SimpleFileDispatcher<V>::deleteRecord(const typename DataStorage_FileDispatcher<V>::rid_t& rid)
+{
+  IOPage ioPage=_ioPageDispatcher->getIOPage(rid);
+
+  typename DataStorage_FileDispatcher<V>::rid_t old_rid;
+  old_rid=ioPage.getAbsolutPosition();
+  if ( old_rid < 0 )
+    return DataStorage_FileDispatcher<V>::FATAL;
+
+  off_t saveRid;
+  if ( (saveRid=ioPage.setPosition(rid, SEEK_SET)) < 0 )
+    return DataStorage_FileDispatcher<V>::FATAL;
+
+  typename DataStorage_FileDispatcher<V>::operation_status_t 
+    opResult = checkEndStorageMarker(ioPage);
+  if ( opResult != DataStorage_FileDispatcher<V>::OPERATION_OK )
+    return opResult;
+
+  StorableRecord readableRecord;
+
+  opResult = readableRecord.unmarshal(ioPage, *this);
+  if ( opResult == DataStorage_FileDispatcher<V>::OPERATION_OK ) {
+    // пермещаемся в хранилище на начало только что считанной записи
+    if (ioPage.setPosition(rid, SEEK_SET) < 0 )
+      return DataStorage_FileDispatcher<V>::FATAL;
+
+    StorableRecord writeableRecord(readableRecord.getReadRecord(),
+                                   RECORD_DELETED_FLAG);
+    opResult = writeableRecord.marshal(ioPage, *this);
+  }
+
+  // переходим к записи на которой были до вызова метода удаления
+  if ( ioPage.setPosition(old_rid, SEEK_SET) < 0 )
+    return DataStorage_FileDispatcher<V>::FATAL;
+  else return opResult;
+}
+
+template <typename V>
+typename DataStorage_FileDispatcher<V>::operation_status_t
+SimpleFileDispatcher<V>::replaceRecord(const V& record, const typename DataStorage_FileDispatcher<V>::rid_t& rid)
+{
+  IOPage ioPage=_ioPageDispatcher->getIOPage(rid);
+
+  typename DataStorage_FileDispatcher<V>::rid_t old_rid;
+  old_rid=ioPage.getAbsolutPosition();
+  if ( old_rid < 0 )
+    return DataStorage_FileDispatcher<V>::FATAL;
+
+  if (ioPage.setPosition(rid, SEEK_SET) < 0 )
+    return DataStorage_FileDispatcher<V>::FATAL;
+
+  typename DataStorage_FileDispatcher<V>::operation_status_t 
+    opResult = checkEndStorageMarker(ioPage);
+  if ( opResult != DataStorage_FileDispatcher<V>::OPERATION_OK )
+    return opResult;
+
+  StorableRecord readableRecord;
+
+  opResult = readableRecord.unmarshal(ioPage, *this);
+
+  if ( opResult == DataStorage_FileDispatcher<V>::OPERATION_OK ) {
+    if ( readableRecord.getReadRecord()->getSize() == record.getSize() ) {
+      StorableRecord writeableRecord(&record,0);
+      // пермещаемся в хранилище на начало только что считанной записи
+      if (ioPage.setPosition(rid, SEEK_SET) < 0 )
+        return DataStorage_FileDispatcher<V>::FATAL;
+      opResult = writeableRecord.marshal(ioPage, *this);
+    } else
+      opResult = DataStorage_FileDispatcher<V>::REPLACEMENT_NOT_ALLOWED;
+  }
+
+  // переходим к записи на которой были до вызова метода удаления
+  if ( ioPage.setPosition(old_rid, SEEK_SET) < 0 )
+    return DataStorage_FileDispatcher<V>::FATAL;
+  else return opResult;
+}
+
+template <typename V>
+typename DataStorage_FileDispatcher<V>::operation_status_t
+SimpleFileDispatcher<V>::StorableRecord::marshal(IOPage& ioPage, SimpleFileDispatcher<V>& fileDispatcher) {
+  smsc::util::SerializationBuffer
+    serialize_recordBuf(RECORD_OVERHEAD_SZ + _recordSz);
+
+  serialize_recordBuf.Write(record_marker_constant, sizeof(record_marker_constant));
+
+  serialize_recordBuf.WriteNetInt16(_recordSz);
+  _crc = smsc::util::crc32(0,&_recordSz,sizeof(_recordSz));
+
+  serialize_recordBuf.WriteByte(_flg);
+  _crc = smsc::util::crc32(_crc,&_flg,sizeof(_flg));
+
+  _writingAppData->marshal(&serialize_recordBuf);
+
+  _crc = _writingAppData->calcCrc(_crc);
+  serialize_recordBuf.WriteNetInt32(_crc);
+
+  if ( fileDispatcher.writeNbytesToFile(ioPage, reinterpret_cast<uchar_t*>(serialize_recordBuf.getBuffer()), serialize_recordBuf.getBufferSize()) < 0 )
+    return DataStorage_FileDispatcher<V>::FATAL;
+  else
+    return DataStorage_FileDispatcher<V>::OPERATION_OK;
+}
+
+template <typename V>
+typename DataStorage_FileDispatcher<V>::operation_status_t
+SimpleFileDispatcher<V>::StorableRecord::unmarshal(IOPage& ioPage, SimpleFileDispatcher<V>& fileDispatcher)
+{
+  uchar_t markerBuf[RECORD_MARKER_SZ];
+
+  if ( fileDispatcher.readNbytesFromFile(ioPage, markerBuf, sizeof(markerBuf)) < 0 ||
+       memcmp(markerBuf, record_marker_constant, sizeof(record_marker_constant)) )
+    return DataStorage_FileDispatcher<V>::FILE_DAMAGED;
+
+  uchar_t recordSizeBuf[RECORD_LENGTH_SZ];
+
+  if ( fileDispatcher.readNbytesFromFile(ioPage, recordSizeBuf, sizeof(recordSizeBuf)) < 0 )
+    return DataStorage_FileDispatcher<V>::FILE_DAMAGED;
+
+  smsc::util::SerializationBuffer serialize_recordSizeBuf;
+  serialize_recordSizeBuf.setExternalBuffer(recordSizeBuf, sizeof(recordSizeBuf));
+  _recordSz = serialize_recordSizeBuf.ReadNetInt16();
+
+  if ( _recordSz == 0 ) return DataStorage_FileDispatcher<V>::FILE_DAMAGED;
+
+  _crc=smsc::util::crc32(0, &_recordSz, sizeof(_recordSz));
+
+  if ( fileDispatcher.readNbytesFromFile(ioPage, &_flg, sizeof(_flg)) < 0 )
+    return DataStorage_FileDispatcher<V>::FILE_DAMAGED;
+
+  _crc=smsc::util::crc32(_crc, &_flg, sizeof(_flg));
+
+  smsc::util::SerializationBuffer serialize_recordBuf(_recordSz);
+
+  if ( fileDispatcher.readNbytesFromFile(ioPage,reinterpret_cast<uchar_t*>(serialize_recordBuf.getBuffer()), serialize_recordBuf.getBufferSize()) < 0 )
+    return DataStorage_FileDispatcher<V>::FILE_DAMAGED;
+
+  _crc=smsc::util::crc32(_crc, serialize_recordBuf.getBuffer(), serialize_recordBuf.getBufferSize());
+
+  uchar_t crcBuf[RECORD_CRC_SZ];
+  if ( fileDispatcher.readNbytesFromFile(ioPage, crcBuf, sizeof(crcBuf)) < 0 )
+    return DataStorage_FileDispatcher<V>::FILE_DAMAGED;
+
+  smsc::util::SerializationBuffer serialize_crcBuf;
+  serialize_crcBuf.setExternalBuffer(crcBuf, RECORD_CRC_SZ);
+
+  if ( serialize_crcBuf.ReadNetInt32() != _crc )
+    return DataStorage_FileDispatcher<V>::FILE_DAMAGED;
+
+  if ( _flg & RECORD_DELETED_FLAG )
+    return DataStorage_FileDispatcher<V>::RECORD_DELETED;
+  else {
+    _readingAppData = new V(serialize_recordBuf);
+
+    return DataStorage_FileDispatcher<V>::OPERATION_OK;
+  }
+}
