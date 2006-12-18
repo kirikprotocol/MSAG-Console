@@ -1,0 +1,1 @@
+native2ascii sme.properties.cp1251 sme.properties

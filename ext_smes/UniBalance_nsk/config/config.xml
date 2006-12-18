@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- файл конфигурации для сервера, будут загружены эти настройки
+если при запуске сервера был передан аргу мент в командную строку равный "-c" -->
+<CONFIG>
+	<NET>
+		<!-- этот порт будет прослушиваться сервером -->
+		<TCP port="25000" bind="0.0.0.0" />
+	</NET>
+	<PARAMS>
+		<!-- параметры по которым будут отключаться клиенты
+			timeout -
+			size -
+		-->
+		<ERRINFO timeout="200" size="20" />
+		<!-- порт который прослушивает сервис статистики по серверу -->
+		<STATISTIC port="38000" />
+		<!--  -->
+		<LINE size="7" />
+		<!-- количество работающих потоков -->
+		<WORKTHREADS count="5"></WORKTHREADS>
+		<!-- параметры алгоритма
+			name - имя алгоритма с которым будет работать сервер
+			может быть:
+			AlgorithmSingleEdition
+			AlgorithmSingleEditionMTS
+			AlgorithmSingleEdition2
+			type - тип алгоритма, может быть:
+			custom - если используется SmartDataAPI
+			default - для простых DataAPI
+		-->
+		<ALGORITHM name="AlgorithmSingleEditionMTS" type="default"></ALGORITHM>
+		<!-- параметры DataAPI который будет подключаться
+			name - класс(с указанием package где он находиться)
+			который будет использоваться при работе сервера,
+			может быть:
+			com.lorissoft.advertising.hashfile.HashFileDataAPI
+			com.lorissoft.advertising.db2dataapi.DB2DataAPI
+			confpath - путь к файлу конфигурации DataAPI,
+			./config/DataAPI.properties
+		-->
+		<DATAAPI name="com.lorissoft.advertising.hashfile.HashFileDataAPI"
+			confpath="./config/DataAPI.properties">
+		</DATAAPI>
+		<!-- параметры WebDataAPI который будет подключаться
+			name - класс(с указанием package где он находиться)
+			который будет использоваться при работе сервера,
+			может быть:
+			com.lorissoft.advertising.db2dataapi.WebDB2DataAPI
+			com.lorissoft.advertising.hashfile.WebFileDataAPI
+			confpath - путь к файлу конфигурации WebDataAPI,
+			./config/DataAPI.properties
+		-->
+		<WEBDATAAPI
+			name="com.lorissoft.advertising.hashfile.WebFileDataAPI"
+			confpath="./config/DataAPI.properties">
+		</WEBDATAAPI>
+
+		<CACHE
+		    enable ="true"
+			name="com.lorissoft.advertising.cache.RMICache"
+			confpath="./config/DataAPI.properties">
+		</CACHE>
+		<!-- путь к библиотеке для работы с RMI, осуществляющего контроль сервера -->
+		<CODEBASE path="file://../lib/adv-control.jar"></CODEBASE>
+	</PARAMS>
+</CONFIG>
+
+
+
+
+
