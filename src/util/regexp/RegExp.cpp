@@ -2131,49 +2131,77 @@ inline int RegExp::StrCmp(prechar& str,prechar _st,prechar ed)
               { \
                 j=op->next->symbol; \
                 if(*str!=j) \
-                while(str<end && cmp && str[1]!=j && st->max--!=0)str++; \
+                while(str<end && cmp && st->max--!=0)\
+                {\
+                  str++;\
+                  if(str[1]!=j)break;\
+                } \
                 break; \
               } \
               case opNotSymbol: \
               { \
                 j=op->next->symbol; \
                 if(*str==j) \
-                while(str<end && cmp && str[1]==j && st->max--!=0)str++; \
+                while(str<end && cmp && st->max--!=0)\
+                {\
+                  str++;\
+                  if(str[1]==j)break;\
+                } \
                 break; \
               } \
               case opSymbolIgnoreCase: \
               { \
                 j=op->next->symbol; \
                 if(TOLOWER(*str)!=j) \
-                while(str<end && cmp && TOLOWER(str[1])!=j && st->max--!=0)str++; \
+                while(str<end && cmp && st->max--!=0)\
+                {\
+                  str++;\
+                  if(TOLOWER(str[1])!=j)break;\
+                } \
                 break; \
               } \
               case opNotSymbolIgnoreCase: \
               { \
                 j=op->next->symbol; \
                 if(TOLOWER(*str)==j) \
-                while(str<end && cmp && TOLOWER(str[1])==j && st->max--!=0)str++; \
+                while(str<end && cmp && st->max--!=0)\
+                {\
+                  str++;\
+                  if(TOLOWER(str[1])==j)break;\
+                } \
                 break; \
               } \
               case opType: \
               { \
                 j=op->next->type; \
                 if(!(ISTYPE(*str,j))) \
-                while(str<end && cmp && !(ISTYPE(str[1],j)) && st->max--!=0)str++; \
+                while(str<end && cmp && st->max--!=0)\
+                {\
+                  str++;\
+                  if(!(ISTYPE(str[1],j)))break;\
+                } \
                 break; \
               } \
               case opNotType: \
               { \
                 j=op->next->type; \
                 if((ISTYPE(*str,j))) \
-                while(str<end && cmp && (ISTYPE(str[1],j)) && st->max--!=0)str++; \
+                while(str<end && cmp && st->max--!=0)\
+                {\
+                  str++;\
+                  if((ISTYPE(str[1],j)))break;\
+                } \
                 break; \
               } \
               case opSymbolClass: \
               { \
                 cl=op->next->symbolclass; \
                 if(!GetBit(cl,*str)) \
-                while(str<end && cmp && !GetBit(cl,str[1]) && st->max--!=0)str++; \
+                while(str<end && cmp && st->max--!=0)\
+                {\
+                  str++;\
+                  if(!GetBit(cl,str[1]))break;\
+                } \
                 break; \
               } \
             } \

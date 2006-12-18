@@ -16,7 +16,9 @@
 #error "RegExp.hpp is for C++ only"
 #endif
 
+#ifndef RE_STATIC_LOCALE
 #define RE_STATIC_LOCALE
+#endif
 
 #ifdef RE_SPINOZA_MODE
   #define RE_EXTERNAL_CTYPE
