@@ -20,7 +20,17 @@ namespace smsc { namespace infosme
     extern int scanMonthName(const char* str);
     extern int scanWeekDay(const char* str);
     extern int scanWeekDayN(const char* str);
-    
+    /*
+    ** Convert string in DDMMYYYYHH24MISS format to unix epoche time.
+    */
+    extern bool convertFullDateFormatToUnixTime(// expected date format is DDMMYYYYHH24MISS
+                                                const std::string& date,
+                                                time_t* unixTime);
+    /*
+    ** Convert unix epoche time to string presentation in DDMMYYYYHH24MISS format
+    */
+    extern std::string unixTimeToStringFormat(time_t aTime);
+
     struct WeekDaysSet
     {
         uint8_t weekDays;

@@ -1,5 +1,7 @@
-
 #include "DateTime.h"
+#include <sstream>
+#include <iomanip>
+#include <errno.h>
 
 namespace smsc { namespace infosme 
 {
@@ -158,6 +160,82 @@ bool MonthesNamesParser::initMonthesNames(const std::string& monthesNames)
     } 
     while (*str++);
     return true;
+}
+
+/*
+** Convert unix epoche time to string presentation in DDMMYYYYHH24MISS format
+*/
+std::string unixTimeToStringFormat(time_t aTime)
+{
+  struct tm* tmPtr;
+  struct tm  bufForDate;
+
+  tmPtr = localtime_r(&aTime, &bufForDate);
+
+  std::ostringstream dateStrBuf;
+  dateStrBuf << std::setw(2) << std::setfill('0') 
+	     << uint16_t(tmPtr->tm_mday)
+             << std::setw(2)
+             << uint16_t(tmPtr->tm_mon + 1)
+	     << std::setw(4)
+             << uint32_t(tmPtr->tm_year + 1900)
+             << std::setw(2)
+             << uint16_t(tmPtr->tm_hour)
+             << std::setw(2)
+             << uint16_t(tmPtr->tm_min)
+             << std::setw(2)
+             << uint16_t(tmPtr->tm_sec);
+
+  return dateStrBuf.str();
+}
+
+/*
+** Convert string in DDMMYYYYHH24MISS format to unix epoche time.
+*/
+bool convertFullDateFormatToUnixTime(// expected date format is DDMMYYYYHH24MISS
+                                     const std::string& date,
+                                     time_t* unixTime)
+{
+  struct tm timeval;
+  errno = 0;
+  timeval.tm_mday = strtol(date.substr(0, 2).c_str(), (char **)NULL, 10);
+  if ( (!timeval.tm_mday && errno) ||
+       (timeval.tm_mday > 31 || timeval.tm_mday  < 1 ) )
+       return false;
+
+  timeval.tm_mon=strtol(date.substr(2, 2).c_str(), (char **)NULL, 10);
+  if ( (!timeval.tm_mon && errno) ||
+       (timeval.tm_mon>12 || timeval.tm_mon<1 ) )
+    return false;
+  timeval.tm_mon = timeval.tm_mon - 1;
+
+  timeval.tm_year = strtol(date.substr(4, 4).c_str(), (char**)NULL, 10);
+  if ( (!timeval.tm_year && errno) ||
+       timeval.tm_year < 1900 )
+    return false;
+  timeval.tm_year = timeval.tm_year - 1900;
+
+  timeval.tm_hour = strtol(date.substr(8, 2).c_str(), (char**)NULL, 10);
+  if ( (!timeval.tm_hour && errno) ||
+       ( timeval.tm_hour < 0 || timeval.tm_hour > 23 ) )
+    return false;
+
+  timeval.tm_min = strtol(date.substr(10, 2).c_str(), (char**)NULL, 10);
+  if ( (!timeval.tm_min && errno) ||
+       ( timeval.tm_min < 0 || timeval.tm_min > 59 ) )
+    return false;
+
+  timeval.tm_sec = strtol(date.substr(12, 2).c_str(), (char**)NULL, 10);
+  if ( (!timeval.tm_sec && errno) ||
+       ( timeval.tm_sec < 0 || timeval.tm_sec > 61 ) )
+    return false;
+
+  timeval.tm_isdst = -1;
+  *unixTime = mktime(&timeval);
+  if ( *unixTime == -1 && errno )
+    return false;
+
+  return true;
 }
 
 }}
