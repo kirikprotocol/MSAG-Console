@@ -17,6 +17,9 @@
 
 #include <core/buffers/Array.hpp>
 
+#include "InfoSme_T_SearchCriterion.hpp"
+#include "InfoSme_Tasks_Stat_SearchCriterion.hpp"
+
 namespace smsc { namespace infosme
 {
     using smsc::core::buffers::Array;
@@ -48,7 +51,39 @@ namespace smsc { namespace infosme
         virtual void addSchedule(std::string scheduleId) = 0;
         virtual void removeSchedule(std::string scheduleId) = 0;
         virtual void changeSchedule(std::string scheduleId) = 0;
-        
+        virtual void addDeliveryMessages(const std::string& taskId,
+                                         uint8_t msgState,
+                                         const std::string& address,
+                                         time_t messageDate,
+                                         const std::string& msg) = 0;
+
+        virtual void changeDeliveryMessageInfoByRecordId(const std::string& taskId,
+                                                         uint8_t messageState,
+                                                         time_t unixTime,
+                                                         const std::string& recordId) = 0;
+
+        virtual void changeDeliveryMessageInfoByCompositCriterion(const std::string& taskId,
+                                                                  uint8_t messageState,
+                                                                  time_t unixTime,
+                                                                  const InfoSme_T_SearchCriterion& searchCrit) = 0;
+        virtual void deleteDeliveryMessageByRecordId(const std::string& taskId,
+                                                     const std::string& recordId) = 0;
+
+        virtual void deleteDeliveryMessagesByCompositCriterion(const std::string& taskId,
+                                                               const InfoSme_T_SearchCriterion& searchCrit) = 0;
+
+        virtual void insertRecordIntoTasksStat(const std::string& taskId,
+                                               uint32_t period,
+                                               uint32_t generated,
+                                               uint32_t delivered,
+                                               uint32_t retried,
+                                               uint32_t failed) = 0;
+
+        virtual Array<std::string> getTaskMessages(const std::string& taskId,
+                                                   const InfoSme_T_SearchCriterion& searchCrit) = 0;
+
+        virtual Array<std::string> getTasksStatistic(const InfoSme_Tasks_Stat_SearchCriterion& searchCrit) = 0;
+
         InfoSmeAdmin() {};
 
     protected:
