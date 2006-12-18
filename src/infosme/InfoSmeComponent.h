@@ -35,11 +35,21 @@ namespace smsc { namespace infosme
             startTasksMethod, stopTasksMethod, 
             getGeneratingTasksMethod, getProcessingTasksMethod,
             isTaskEnabledMethod, setTaskEnabledMethod, 
-            addScheduleMethod, removeScheduleMethod, changeScheduleMethod
+            addScheduleMethod, removeScheduleMethod, changeScheduleMethod,
+            addDeliveryMessagesMethod, changeDeliveryMessageInfoMethod,
+            deleteDeliveryMessagesMethod, addStatisticRecordMethod,
+            selectTaskMessagesMethod, selectTasksStatisticMethod
         };
         
         void error(const char* method, const char* param);
-    
+        void deleteEscapeSymbols(std::string* message);
+
+        void splitMessageToFields(const std::string& messageDescription, long* messageState,
+                                  std::string* address, std::string* messageDate,
+                                  std::string* messageText);
+
+        bool getParameterIfExistsAndNotNull(const Arguments& args, const char* argumentId,
+                                            std::string& argumentValue);
     protected:
 
         void addTask(const Arguments& args);
@@ -57,7 +67,13 @@ namespace smsc { namespace infosme
         void addSchedule(const Arguments& args);
         void removeSchedule(const Arguments& args);
         void changeSchedule(const Arguments& args);
-        
+
+        void addDeliveryMessages(const Arguments& args);
+        void changeDeliveryMessageInfo(const Arguments& args);
+        void deleteDeliveryMessages(const Arguments& args);
+        void addStatisticRecord(const Arguments& args);
+        Variant selectTaskMessages(const Arguments& args);
+        Variant selectTasksStatistic(const Arguments& args);
     public:
     
         InfoSmeComponent(InfoSmeAdmin& admin);
