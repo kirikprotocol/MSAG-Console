@@ -144,15 +144,12 @@ void LongCallManagerImpl::shutdown()
 
 LongCallContext* LongCallManagerImpl::getContext()
 {
-    LongCallContext *ctx = NULL;
+    LongCallContext *ctx;
     MutexGuard mt(mtx);
     if(stopped) return NULL;
     if(!headContext) mtx.wait();
-    if(headContext)
-    {
-        ctx = headContext;
-        headContext = headContext->next;
-    }
+    ctx = headContext;    
+    if(headContext) headContext = headContext->next;
     return ctx;        
 }
 
@@ -161,10 +158,13 @@ bool LongCallManagerImpl::call(LongCallContext* context)
     MutexGuard mt(mtx);
     if(stopped) return false;
     context->next = NULL;
+
     if(headContext)
-        tailContext = tailContext->next = context;
+        tailContext->next = context;
     else
-        headContext = tailContext = context;
+        headContext = context;
+    tailContext = context;
+    
     mtx.notify();        
     return true;
 }

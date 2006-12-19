@@ -40,18 +40,17 @@ struct ActionStackValue
     ActionStackValue(int index, bool flag) : actionIndex(index), thenSection(flag) {}
 };
 
-
-
 class LongCallContext
 {
     LongCallParams *params;
 public:
-    LongCallContext(): initiator(NULL), stateMachineContext(NULL), next(NULL), params(NULL) {};
+    LongCallContext(): initiator(NULL), stateMachineContext(NULL), next(NULL), params(NULL), continueExec(false) {};
     
     uint32_t systemType, callCommandId;
     void *stateMachineContext;
     LongCallInitiator *initiator;
     LongCallContext *next;
+    bool continueExec;
 
     std::stack<ActionStackValue> ActionStack;
 
@@ -72,7 +71,7 @@ public:
     {
         if(params) delete params;
     }
-    scag::util::SerializeBuffer contextActionBuffer;
+//    scag::util::SerializeBuffer contextActionBuffer;
 };
 
 class LongCallInitiator
