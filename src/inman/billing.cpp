@@ -267,7 +267,7 @@ bool Billing::startCAPDialog(INScfCFG * use_scf)
         if (smsxNumber.length) {
             arg.setDestinationSubscriberNumber(smsxNumber);
             arg.setLocationInformationMSC(use_scf->substIDPLocalInfo ?
-                                          csInfo.smscAddress.c_str() : cdr._srcMSC.c_str());
+                                          _cfg.ss7.ssf_addr.toString() : cdr._srcMSC.c_str());
         } else {
             arg.setDestinationSubscriberNumber(cdr._dstAdr.c_str());
             arg.setLocationInformationMSC(cdr._srcMSC.c_str());
