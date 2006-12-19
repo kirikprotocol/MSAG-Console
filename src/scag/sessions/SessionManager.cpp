@@ -208,7 +208,7 @@ SessionManagerImpl::~SessionManagerImpl()
 
     for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();++it)
     {
-        delete (*it);
+	delete (*it);
     }
 
     CSessionKey key;
@@ -399,23 +399,25 @@ int SessionManagerImpl::processExpire()
         if (SessionExpirePool.empty()) return DEFAULT_EXPIRE_INTERVAL;
 
         CSessionSetIterator it;
+	CSessionAccessData *accessData = 0;
 
         for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();)
         {
-            if ((!(*it)->bOpened)&&((*it)->hasPending)) break;
-            if ((!(*it)->bOpened)&&(!(*it)->hasPending)&&(!(*it)->hasOperations))
+            accessData = (*it);
+	    if (!accessData) continue;
+	    if ((!accessData->bOpened)&&(accessData->hasPending)) break;
+            if ((!accessData->bOpened)&&(!accessData->hasPending)&&(!accessData->hasOperations))
             {
                 it = DeleteSession(it);
             }
             else ++it;
         }
 
-        time_t now;
-        time(&now);
+	accessData = 0;
+        time_t now; time(&now);
         int iPeriod;
 
         //smsc_log_debug(logger,"SessionManager: process expire - check session");
-
 
         if (it == SessionExpirePool.end())
         {
@@ -430,62 +432,56 @@ int SessionManagerImpl::processExpire()
                 return DEFAULT_EXPIRE_INTERVAL;
         }
 
-        iPeriod = (*it)->nextWakeTime - now;
+	accessData = (*it);
+        iPeriod = accessData->nextWakeTime - now;
 
-        smsc_log_debug(logger,"SessionManager: session USR= '%d', Address='%s' has period: %d",
-                       (*it)->SessionKey.USR,(*it)->SessionKey.abonentAddr.toString().c_str(),iPeriod);
-
+        smsc_log_debug(logger, "SessionManager: session USR= '%d', Address='%s' has period: %d",
+                       accessData->SessionKey.USR, accessData->SessionKey.abonentAddr.toString().c_str(),iPeriod);
         if (iPeriod > 0) return iPeriod;
 
-        SessionPtr sessionPtr(0);
-        sessionPtr = store.getSession((*it)->SessionKey);
+	SessionPtr sessionPtr(0);
+        sessionPtr = store.getSession(accessData->SessionKey);
         Session * session = sessionPtr.Get();
-        CSessionAccessData * data = (*it);
 
-        while ((iPeriod <= 0)&&(data->hasPending))
+        while ((iPeriod <= 0)&&(accessData->hasPending))
         {
             if (!session)
             {
                 smsc_log_debug(logger,"SessionManager: Session USR='%d', Address='%s' cannot be found in store",
-                               (*it)->SessionKey.USR,(*it)->SessionKey.abonentAddr.toString().c_str());
+                               accessData->SessionKey.USR, accessData->SessionKey.abonentAddr.toString().c_str());
 
-                SessionHash.Delete((*it)->SessionKey);
+                SessionHash.Delete(accessData->SessionKey);
+		delete accessData;
                 SessionExpirePool.erase(it);
-                delete (*it);
                 return 0;
             }
 
             smsc_log_debug(logger,"SessionManager: try to expire session USR='%d', Address='%s', has p: %d op: %d",
-                           (*it)->SessionKey.USR,(*it)->SessionKey.abonentAddr.toString().c_str(),
+                           accessData->SessionKey.USR, accessData->SessionKey.abonentAddr.toString().c_str(),
                            session->hasPending(),session->hasOperations());
 
             session->expirePendingOperation();
 
-            data->hasPending = session->hasPending();
-            data->hasOperations = session->hasOperations();
+            accessData->hasPending = session->hasPending();
+            accessData->hasOperations = session->hasOperations();
 
             time_t wakeTime = session->getWakeUpTime();
+            if (wakeTime == 0) accessData->nextWakeTime = now;
+            else accessData->nextWakeTime = wakeTime;
 
-            if (wakeTime == 0) data->nextWakeTime = now;
-            else data->nextWakeTime = wakeTime;
-
-            iPeriod = data->nextWakeTime - now;
+            iPeriod = accessData->nextWakeTime - now;
         }
 
         SessionExpirePool.erase(it);
-        it = SessionExpirePool.insert(data);
-        SessionHash.Delete(data->SessionKey);
-        SessionHash.Insert(data->SessionKey,it);
-
+        it = SessionExpirePool.insert(accessData);
+        SessionHash.Delete(accessData->SessionKey);
+        SessionHash.Insert(accessData->SessionKey, it);
 
         // Session expired
-        if (!(*it)->hasOperations)
-        {
+        if (!accessData->hasOperations) {
             DeleteSession(it);
             return 0;
-        }
-        else
-        {
+        } else {
             store.updateSession(sessionPtr);
             if (iPeriod >= 0) return iPeriod;
         }
@@ -670,10 +666,7 @@ void SessionManagerImpl::closeSession(SessionPtr session)
     MutexGuard guard(inUseMonitor);
 
     store.deleteSession(sessionKey);
-
-    CSessionSetIterator * itPtr;
-
-    itPtr = SessionHash.GetPtr(sessionKey);
+    CSessionSetIterator *itPtr = SessionHash.GetPtr(sessionKey);
     if (!itPtr) throw SCAGException("SessionManager: Fatal error 1");
     CSessionSetIterator it = (*itPtr);
 
@@ -700,7 +693,6 @@ int16_t SessionManagerImpl::getNewUSR(Address& address)
     int16_t result = 1;
 
     int * resultPtr = UMRHash.GetPtr(address);
-
     if (resultPtr) result = ++(*resultPtr);
     else UMRHash.Insert(address,result);
 
