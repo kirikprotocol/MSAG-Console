@@ -116,7 +116,7 @@ Variant::Variant(const char * const value, Type variant_type)
 
 
 Variant::Variant(const Variant &copy)
-  throw (AdminException)
+  throw (AdminException) : type(undefined)
 {
   initByCopy(copy);
 }
@@ -124,7 +124,8 @@ Variant::Variant(const Variant &copy)
 Variant & Variant::operator = (const Variant & copy)
   throw (AdminException)
 {
-  initByCopy(copy);
+  if ( this != &copy )
+    initByCopy(copy);
   return *this;
 }
 
@@ -207,6 +208,17 @@ void Variant::appendValueToStringList(const char * const value)
 void Variant::initByCopy(const Variant& copy)
   throw (AdminException)
 {
+  if ( type == StringType ) 
+    delete strValue;
+  else if ( type == StringListType ) {
+    if (  stringListValue ) {
+      for (StringList::const_iterator i = stringListValue->begin(); i != stringListValue->end(); i++)
+        delete *i;
+
+      delete stringListValue;
+    }
+  }
+
   type = copy.type;
   switch (type)
   {
@@ -230,7 +242,6 @@ void Variant::initByCopy(const Variant& copy)
     throw AdminException("Unknow type of variant to copy");
   }
 }
-
 
 }
 }
