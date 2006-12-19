@@ -20,12 +20,10 @@ typedef TonNpiAddress AbonentId; //isdn international number assumed
 
 enum { MAX_ABONENT_ID_LEN =  11 }; //only isdn international numbers supported
 
-typedef smsc::inman::AbonentContractInfo::ContractType AbonentBillType;
-
 struct AbonentRecord : public AbonentContractInfo {
     time_t  tm_queried;
 
-    AbonentRecord(AbonentBillType abType = abtUnknown, time_t qryTm = 0, const GsmSCFinfo * p_scf = NULL)
+    AbonentRecord(ContractType abType = abtUnknown, time_t qryTm = 0, const GsmSCFinfo * p_scf = NULL)
         : AbonentContractInfo(abType, p_scf), tm_queried(qryTm)
     { }
     AbonentRecord(const AbonentRecord & ab_rec)
@@ -44,8 +42,9 @@ struct AbonentRecord : public AbonentContractInfo {
         tm_queried = 0;
         return *this;
     }
-
 };
+
+typedef AbonentRecord::ContractType AbonentBillType;
 
 class AbonentCacheITF {
 public:
