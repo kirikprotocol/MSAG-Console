@@ -323,7 +323,7 @@ static void StartDialogProcessing(MapDialog* dialog,const SmscCommand& cmd)
   if ( !dialog->isQueryAbonentStatus ) {
     dialog->sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
     __map_trace2__("%s: DELIVERY_SM dlg 0x%x %s",__func__,dialog->dialogid_map,RouteToString(dialog).c_str());
-    mkMapAddress( &dialog->m_msAddr, dialog->sms->getDestinationAddress().value, dialog->sms->getDestinationAddress().length );
+    mkMapAddress( &dialog->m_msAddr, dialog->sms->getDestinationAddress() );
     mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), SC_ADDRESS().length() );
     mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, SSN );
     mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
@@ -640,7 +640,7 @@ static void ForwardMO(MapDialog* dialog) {
   appContext.acType = ET96MAP_SHORT_MSG_MO_RELAY;
   SetVersion(appContext,dialog->version);
 
-  mkMapAddress( &fwdAddr, addr.value, addr.length );
+  mkMapAddress( &fwdAddr, addr );
   mkSS7GTAddress( &destAddr, &fwdAddr, 8 );
 
   mkRP_DA_Address( &smRpDa, addr.value, addr.length, ET96MAP_ADDRTYPE_SCADDR );
@@ -1430,10 +1430,13 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
       dialog->state = MAPST_WaitUSSDNotifyOpenConf;
     }
     dialog->invokeId=0;
-    ET96MAP_ADDRESS_T origAddr;
-    mkMapAddress( &origAddr, dialog->sms->getOriginatingAddress().value, dialog->sms->getOriginatingAddress().length );
-
-    checkMapReq( Et96MapOpenReq( dialog->ssn, dialog->dialogid_map, &appContext, &dialog->mshlrAddr, GetUSSDAddr(), 0, &origAddr, 0/*&specificInfo*/ ), __func__);
+    ET96MAP_ADDRESS_T origRef;
+    mkMapAddress( &origRef, dialog->sms->getOriginatingAddress() );
+    ET96MAP_IMSI_OR_MSISDN_T destRef;
+    memset(&destRef,0,sizeof(destRef));
+    if( dialog->s_imsi.length() > 0 ) mkIMSIOrMSISDNFromIMSI( &destRef, dialog->s_imsi );
+    
+    checkMapReq( Et96MapOpenReq( dialog->ssn, dialog->dialogid_map, &appContext, &dialog->mshlrAddr, GetUSSDAddr(), &destRef, &origRef, 0/*&specificInfo*/ ), __func__);
   }
   dialog->invokeId++;
   ET96MAP_ALERTING_PATTERN_T alertPattern = ET96MAP_ALERTING_PATTERN_LEVEL2;
@@ -2875,7 +2878,7 @@ static void PauseOnImsiReq(MapDialog* map)
         FormatText("MAP::%s has no SMS",__func__));
     if ( !map->isUSSD )
     {
-      mkMapAddress( &dialog->m_msAddr, map->sms->getOriginatingAddress().value, map->sms->getOriginatingAddress().length );
+      mkMapAddress( &dialog->m_msAddr, map->sms->getOriginatingAddress() );
     }
     else
     {
@@ -3158,7 +3161,7 @@ static void SendAlertToSMSC(MapDialog* dialog,ET96MAP_ADDRESS_T *mapAddr)
      }
     }
 
-  mkMapAddress( &dialog->m_msAddr, addr.value, addr.length );
+  mkMapAddress( &dialog->m_msAddr, addr );
   __map_trace2__("%s: addr len=%d val=%s", __func__, addr.length, addr.value );
   mkMapAddress( &dialog->m_scAddr, SC_ADDRESS().c_str(), SC_ADDRESS().length() );
   mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, 8 );

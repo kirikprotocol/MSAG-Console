@@ -288,6 +288,40 @@ inline void mkMapAddress( ET96MAP_ADDRESS_T *addr, const char *saddr, unsigned l
   }
 }
 
+inline void mkIMSIOrMSISDNFromIMSI( ET96MAP_IMSI_OR_MSISDN_T *addr, string &s_imsi ) {
+  addr->imsiOrMsisdnLen = (s_imsi.length()+1)/2;
+  const char *value = s_imsi.c_str();
+  for( i = 0; i < len; i++ ) {
+    int bi = i/2;
+    if( i%2 == 1 ) {
+      addr->imsiOrMsisdn[bi] |= ((value[i]-'0')<<4); // fill high octet
+    } else {
+      addr->imsiOrMsisdn[bi] = (value[i]-'0')&0x0F; // fill low octet
+    }
+  }
+  if( len%2 != 0 ) {
+    addr->imsiOrMsisdn[addr->imsiOrMsisdnLen-1] |= 0xF0;
+  }
+}
+
+inline void mkMapAddress( ET96MAP_ADDRESS_T *addr, const Address &saddr) {
+  unsigned i;
+  int sz = (saddr.length+1)/2;
+  addr->addressLength = saddr.length;
+  addr->typeOfAddress = 0x80|(saddr.type<<4)|saddr.plan; // InterNational, ISDN
+  for( i = 0; i < len; i++ ) {
+    int bi = i/2;
+    if( i%2 == 1 ) {
+      addr->address[bi] |= ((saddr.value[i]-'0')<<4); // fill high octet
+    } else {
+      addr->address[bi] = (saddr.value[i]-'0')&0x0F; // fill low octet
+    }
+  }
+  if( len%2 != 0 ) {
+    addr->address[sz-1] |= 0xF0;
+  }
+}
+
 inline void mkRP_DA_Address( ET96MAP_SM_RP_DA_T *addr, const char *saddr, unsigned len, char type) {
   unsigned i;
   int sz = (len+1)/2;
