@@ -3029,6 +3029,29 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     return UNDELIVERABLE_STATE;
   }
 
+  if(sms.getLastTime()>sms.getValidTime())
+  {
+    sms.setLastResult(Status::EXPIRED);
+    smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
+    smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
+    try{
+      smsc->getScheduler()->InvalidSms(t.msgId);
+      store->changeSmsStateToExpired(t.msgId);
+    }catch(...)
+    {
+      __warning__("FWD: failed to change state to expired");
+    }
+    info2(smsLog, "FWD: %lld expired lastTry(%u)>valid(%u)",t.msgId,sms.getLastTime(),sms.getValidTime());
+    sendFailureReport(sms,t.msgId,EXPIRED_STATE,"expired");
+    try{
+      smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
+    }catch(std::exception& e)
+    {
+      smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
+    }
+    return EXPIRED_STATE;
+  }
+
   if(!t.command->get_fwdChargeSmsResp()->result)
   {
     char bufsrc[64],bufdst[64];
