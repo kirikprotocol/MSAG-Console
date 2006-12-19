@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <string.h>
 #include <utility>
+#include <algorithm>
 
 #include <pthread.h>
 
@@ -149,7 +150,7 @@ IOPage_impl::read(off_t* inPageOffset, uint8_t *buf, size_t bufSz)
 {
   ReadLockGuard rwlockGuard(_page_IO_RwLock);
 
-  size_t readeableSize = std::min(ulong_t(PAGE_SIZE - *inPageOffset), bufSz);
+  size_t readeableSize = std::min(size_t(PAGE_SIZE - *inPageOffset), bufSz);
 
   ::memcpy(buf, _pageDataPtr+*inPageOffset, readeableSize);
   *inPageOffset += bufSz;
@@ -173,7 +174,7 @@ IOPage_impl::readOrderReverse(off_t* inPageOffset, uint8_t *buf, size_t bufSz)
 ssize_t
 IOPage_impl::write(off_t* inPageOffset, const uint8_t *buf, size_t bufSz)
 {
-  size_t writeableSize = std::min(ulong_t(PAGE_SIZE - *inPageOffset), bufSz);
+  size_t writeableSize = std::min(size_t(PAGE_SIZE - *inPageOffset), bufSz);
 
   WriteLockGuard rwlockGuard(_page_IO_RwLock);
   ::memcpy(_pageDataPtr+*inPageOffset, buf, writeableSize);
