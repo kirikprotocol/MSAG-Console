@@ -18,44 +18,42 @@ typedef std::list<const char *> StringList;
 class Variant
 {
 private:
-	Type type;
-	union {
-		char * strValue;
-		long longValue;
-		bool boolValue;
-		StringList* stringListValue;
-	};
+  Type type;
+  union {
+    char * strValue;
+    long longValue;
+    bool boolValue;
+    StringList* stringListValue;
+  };
 public:
-	Variant();
-	Variant(const Type type) throw (AdminException);
-	Variant(const char * const value);
-	Variant(const long value);
-	Variant(const bool value);
-	Variant(const StringList & value);
+  Variant();
+  Variant(const Type type) throw (AdminException);
+  Variant(const char * const value);
+  Variant(const long value);
+  Variant(const bool value);
+  Variant(const StringList & value);
 
-	Variant(const char * const value, Type type) throw (AdminException);
-	Variant(const Variant &copy) throw (AdminException);
+  Variant(const char * const value, Type type) throw (AdminException);
+  Variant(const Variant &copy) throw (AdminException);
 
-	virtual ~Variant();
+  virtual ~Variant();
 
-	Variant & operator = (const Variant & copy) throw (AdminException);
+  Variant & operator = (const Variant & copy) throw (AdminException);
 
+  const Type getType() const;
+  const char * const getStringValue() const throw (AdminException);
+  const long getLongValue() const throw (AdminException);
+  const bool getBooleanValue() const throw (AdminException);
+  const StringList& getStringListValue() const throw (AdminException);
 
-	const Type getType() const;
-	const char * const getStringValue() const throw (AdminException);
-	const long getLongValue() const throw (AdminException);
-	const bool getBooleanValue() const throw (AdminException);
-	const StringList& getStringListValue() const throw (AdminException);
-
-	void appendValueToStringList(const char * const value) throw (AdminException);
+  void appendValueToStringList(const char * const value) throw (AdminException);
   void appendValueToStringList(const std::string & value) throw (AdminException)
   {
     appendValueToStringList(value.c_str());
   }
 
-
 private:
-	void initByCopy(const Variant& copy) throw (AdminException);
+  void initByCopy(const Variant& copy) throw (AdminException);
 };
 
 typedef smsc::core::buffers::Hash<Variant> Arguments;
