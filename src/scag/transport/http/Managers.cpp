@@ -171,7 +171,7 @@ bool ScagTaskManager::canStop()
 {
     MutexGuard g(procMut);
     
-    return tailContext[PROCESS_REQUEST] == NULL && tailContext[PROCESS_RESPONSE] == NULL && tailContext[PROCESS_STATUS_RESPONSE] == NULL;
+    return headContext[PROCESS_REQUEST] == NULL && headContext[PROCESS_RESPONSE] == NULL && headContext[PROCESS_STATUS_RESPONSE] == NULL;
 }
 
 IOTask* ReaderTaskManager::newTask()
