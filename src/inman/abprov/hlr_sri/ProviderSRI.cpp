@@ -41,14 +41,14 @@ extern "C" IAProviderCreatorITF *
     try { cfg.max_queries = (unsigned)hlrCfg->getInt("maxQueries");
     } catch (ConfigException & exc) { }
     if (!cfg.max_queries) {
-        cfg.defVal.s.queries = 1;
+        cfg.defVal.queries = true;
         cfg.max_queries = _CFG_DFLT_QUERIES;
     }
 
     try { cfg.qryCfg.mapTimeout = (unsigned)hlrCfg->getInt("mapTimeout");
     } catch (ConfigException & exc) { }
     if (!cfg.qryCfg.mapTimeout) {
-        cfg.defVal.s.mapTmo = 1;
+        cfg.defVal.mapTmo = true;
         cfg.qryCfg.mapTimeout = _CFG_DFLT_MAP_TIMEOUT;
     }
 
@@ -129,9 +129,9 @@ void  IAProviderCreatorSRI::logConfig(Logger * use_log) const
         smsc_log_info(use_log, "iapSRI: TCMA uninitialized yet");
 
     smsc_log_info(use_log, "iapSRI: Max.queries: %u%s", prvdCfg.max_queries,
-                  cfg.defVal.s.queries ? " (default)" : "");
+                  cfg.defVal.queries ? " (default)" : "");
     smsc_log_info(use_log, "iapSRI: Query timeout: %u secs%s", cfg.qryCfg.mapTimeout,
-                  cfg.defVal.s.mapTmo ? " (default)" : "");
+                  cfg.defVal.mapTmo ? " (default)" : "");
 }
 
 /* ************************************************************************** *

@@ -96,15 +96,16 @@ struct IAPCreatorSRI_CFG {
     UCHAR_T         fakeSsn;
     unsigned        max_queries;
     unsigned        init_threads;
-    union {
-        unsigned char       i;
-        struct {
-            unsigned int    queries : 1;
-            unsigned int    mapTmo  : 1;
-        } s;
+    struct {
+        bool    queries;
+        bool    mapTmo;
     } defVal;
 
-    IAPCreatorSRI_CFG() { max_queries = init_threads = defVal.i = fakeSsn = 0; }
+    IAPCreatorSRI_CFG()
+    {
+        max_queries = init_threads = fakeSsn = 0;
+        defVal.mapTmo = defVal.queries = false;
+    }
 };
 
 class IAProviderCreatorSRI: public IAProviderCreatorITF {
