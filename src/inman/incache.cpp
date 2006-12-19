@@ -95,8 +95,7 @@ int AbonentCache::ramInsert(const AbonentId & ab_number,
 
     if (!pabRec) {
         if (accList.size() >= maxRamIt) {
-            AbonentId delId = accList.back();
-            cache.Delete(delId.getSignals());
+            cache.Delete(accList.back().getSignals());
             accList.pop_back();
         }
         status = cache.Insert(ab_number.getSignals(), ramRec);
