@@ -1434,7 +1434,8 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
     mkMapAddress( &origRef, dialog->sms->getOriginatingAddress() );
     ET96MAP_IMSI_OR_MSISDN_T destRef;
     memset(&destRef,0,sizeof(destRef));
-    if( dialog->s_imsi.length() > 0 ) mkIMSIOrMSISDNFromIMSI( &destRef, dialog->s_imsi );
+//    if( dialog->s_imsi.length() > 0 ) mkIMSIOrMSISDNFromIMSI( &destRef, dialog->s_imsi );
+    mkIMSIOrMSISDNFromAddress( &destRef, dialog->sms->getDestinationAddress() );
     
     checkMapReq( Et96MapOpenReq( dialog->ssn, dialog->dialogid_map, &appContext, &dialog->mshlrAddr, GetUSSDAddr(), &destRef, &origRef, &specificInfo ), __func__);
   }
