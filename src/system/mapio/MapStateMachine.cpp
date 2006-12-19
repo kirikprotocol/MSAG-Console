@@ -1417,13 +1417,13 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
     ET96MAP_APP_CNTX_T appContext;
     appContext.acType = ET96MAP_NETWORK_UNSTRUCTURED_SS_CONTEXT;
     SetVersion(appContext, dialog->version);
-/*    ET96MAP_USERDATA_T specificInfo;
+    ET96MAP_USERDATA_T specificInfo;
     specificInfo.specificInfoLen=3+(dialog->m_msAddr.addressLength+1)/2;
     specificInfo.specificData[0] = 0x82;
     specificInfo.specificData[1] = 1+(dialog->m_msAddr.addressLength+1)/2;
     specificInfo.specificData[2] = dialog->m_msAddr.typeOfAddress;
     memcpy( specificInfo.specificData+3, dialog->m_msAddr.address, (dialog->m_msAddr.addressLength+1)/2 );
-*/
+
     if( serviceOp == USSD_USSR_REQ ) {
       dialog->state = MAPST_WaitUSSDReqOpenConf;
     } else {
@@ -1436,7 +1436,7 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
     memset(&destRef,0,sizeof(destRef));
     if( dialog->s_imsi.length() > 0 ) mkIMSIOrMSISDNFromIMSI( &destRef, dialog->s_imsi );
     
-    checkMapReq( Et96MapOpenReq( dialog->ssn, dialog->dialogid_map, &appContext, &dialog->mshlrAddr, GetUSSDAddr(), &destRef, &origRef, 0/*&specificInfo*/ ), __func__);
+    checkMapReq( Et96MapOpenReq( dialog->ssn, dialog->dialogid_map, &appContext, &dialog->mshlrAddr, GetUSSDAddr(), &destRef, &origRef, &specificInfo ), __func__);
   }
   dialog->invokeId++;
   ET96MAP_ALERTING_PATTERN_T alertPattern = ET96MAP_ALERTING_PATTERN_LEVEL2;
