@@ -677,9 +677,9 @@ void SessionManagerImpl::closeSession(SessionPtr session)
     if (!itPtr) throw SCAGException("SessionManager: Fatal error 1");
     CSessionSetIterator it = (*itPtr);
 
+    delete (*it);    
     SessionExpirePool.erase(it);
     SessionHash.Delete(sessionKey);
-    delete (*it);
     inUseMonitor.notifyAll();
 
     smsc_log_debug(logger,"SessionManager: session closed USR='%d', Address='%s'",
