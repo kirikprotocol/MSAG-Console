@@ -5,7 +5,7 @@
 
 # include "InfoSme_Id_Mapping_Entity.hpp"
 # include "InfoSme_Id_Mapping_DBEntityStorage.hpp"
-# include <db/dbEntityStorage/Exceptions.hpp>
+# include <db/fileStorage/Exceptions.hpp>
 
 # include <logger/Logger.h>
 
