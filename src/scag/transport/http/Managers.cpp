@@ -34,8 +34,18 @@ void HttpManager::shutdown()
 {
     acceptor.shutdown();
 
-    while (!(readers.canStop() && writers.canStop() && scags.canStop()))
+    while(1)
+    {
+        if(!readers.canStop())
+            smc_log_info(logger, "Waiting readers to stop");
+        else if(!writers.canStop())
+            smc_log_info(logger, "Waiting writers to stop");
+        else if(!scags.canStop())
+            smc_log_info(logger, "Waiting scagtasks to stop");
+        else
+            break;
         sleep(1);
+    }
         
     scags.shutdown();
     readers.shutdown();
@@ -92,7 +102,7 @@ void ScagTaskManager::process(HttpContext* cx)
     }
 }
 
-/*void ScagTaskManager::continueExecution(LongCallContext* context, bool dropped)
+void ScagTaskManager::continueExecution(LongCallContext* context, bool dropped)
 {
     HttpContext *cx = (HttpContext*)context->stateMachineContext;
     context->continueExec = true;
@@ -101,7 +111,7 @@ void ScagTaskManager::process(HttpContext* cx)
         process(cx);
     else
         delete cx;
-}*/
+}
 
 void ScagTaskManager::init(int maxThreads, int scagQueueLim, HttpProcessor& p)
 {

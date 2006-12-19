@@ -11,7 +11,7 @@
 #include "scag/config/http/HttpManagerConfig.h"
 #include "scag/config/ConfigManager.h"
 #include "scag/config/ConfigListener.h"
-//#include "scag/lcm/LongCallManager.h"
+#include "scag/lcm/LongCallManager.h"
 
 namespace scag { namespace transport { namespace http
 {
@@ -21,7 +21,7 @@ using smsc::core::network::Socket;
 using smsc::core::threads::ThreadPool;
 using smsc::logger::Logger;
 using namespace scag::config;
-//using namespace scag::lcm;
+using namespace scag::lcm;
 
 class HttpAcceptor;
 class IOTask;
@@ -30,7 +30,7 @@ class HttpContext;
 class HttpProcessor;
 class HttpManager;
 
-class ScagTaskManager /*: public LongCallInitiator*/ {
+class ScagTaskManager : public LongCallInitiator {
 public:
     ScagTaskManager(HttpManager& m);
 
@@ -56,7 +56,7 @@ public:
         taskMon.wait();
     }
     
-//    void continueExecution(LongCallContext* context, bool dropped);
+    void continueExecution(LongCallContext* context, bool dropped);
 
 protected:
     ThreadPool pool;
