@@ -216,6 +216,7 @@ using smsc::smeman::SmeRecord;
         std::string  pAddressEmail;//[MAX_EMAIL_ADDRESS_LENGTH];
         std::string  pMessageText;//[MAX_TEXT_MESSAGE_LENGTH];
         std::string  pDeliveryTime;//[DELEVIRY_TIME_LENGTH];
+        std::string  pPacketType;        
 
         uint8_t  cCriticalityLevel;
         uint16_t  sUsr;
@@ -224,10 +225,6 @@ using smsc::smeman::SmeRecord;
         uint8_t cEsmClass;
         SACC_ALARM_MESSAGE_t()
         {
-            pAbonentsNumbers="";//memset(pAbonentsNumbers,0,MAX_NUMBERS_TEXT_LENGTH);
-            pAddressEmail="";//memset(pAddressEmail,0,MAX_EMAIL_ADDRESS_LENGTH*sizeof(uint16_t));
-            pMessageText="";//memset(pMessageText,0,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
-            pDeliveryTime="";//memset(pDeliveryTime,0,DELEVIRY_TIME_LENGTH);
             cCriticalityLevel=scl_info; 
             sEventType = sec_alarm_message;
             sUsr = 0;
@@ -241,6 +238,7 @@ using smsc::smeman::SmeRecord;
             pAddressEmail=src.pAddressEmail;
             pMessageText=src.pMessageText;
             pDeliveryTime=src.pDeliveryTime;
+            pPacketType=src.pPacketType;
 
          //   memcpy(pAbonentsNumbers,src.pAbonentsNumbers ,MAX_NUMBERS_TEXT_LENGTH);
          //   memcpy(pAddressEmail,src.pAddressEmail ,MAX_EMAIL_ADDRESS_LENGTH*sizeof(uint16_t));
@@ -259,6 +257,7 @@ using smsc::smeman::SmeRecord;
             pAddressEmail=src->pAddressEmail;
             pMessageText=src->pMessageText;
             pDeliveryTime=src->pDeliveryTime;
+            pPacketType=src->pPacketType;            
 
          //   memcpy(pAbonentsNumbers,src.pAbonentsNumbers ,MAX_NUMBERS_TEXT_LENGTH);
          //   memcpy(pAddressEmail,src.pAddressEmail ,MAX_EMAIL_ADDRESS_LENGTH*sizeof(uint16_t));
