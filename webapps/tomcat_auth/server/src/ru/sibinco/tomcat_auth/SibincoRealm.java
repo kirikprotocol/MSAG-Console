@@ -7,6 +7,9 @@ package ru.sibinco.tomcat_auth;
 
 import org.apache.catalina.realm.RealmBase;
 
+import org.apache.catalina.*;
+import org.apache.catalina.deploy.*;
+
 import java.security.Principal;
 
 
@@ -23,7 +26,7 @@ public class SibincoRealm extends RealmBase
   {
     return null;
   }
-
+                          
   protected Principal getPrincipal(final String s)
   {
     return null;
@@ -39,7 +42,8 @@ public class SibincoRealm extends RealmBase
   public boolean hasRole(final Principal principal, final String role)
   {
     final boolean result = AuthenticatorProxy.getInstance().hasRole(getName(), principal, role);
-    System.out.println(REALM_NAME + ".hasRole(\"" + principal + "\", \"" + role + "\"): " + result);
+    //System.out.println(REALM_NAME + ".hasRole(\"" + principal + "\", \"" + role + "\"): " + result);
     return result;
   }
+
 }

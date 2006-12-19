@@ -51,7 +51,7 @@ public class AuthenticatorProxy
     final Authenticator auth;
     synchronized (authenticators) {
       auth = (Authenticator) authenticators.get(realmName);
-      System.out.println(this.getClass().getName()+ ".hasRole: " + auth);
+      //System.out.println(this.getClass().getName()+ ".hasRole: " + auth);
     }
     if (auth == null)
       return false;
