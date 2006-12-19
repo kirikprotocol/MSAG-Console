@@ -18,24 +18,24 @@ using smsc::core::synchronization::MutexGuard;
 class ComponentManager
 {
 public:
-	static Variant dispatch(const char * const componentName,
-													const Method & method,
-													const Arguments & args)
-		throw (AdminException);
+  static Variant dispatch(const char * const componentName,
+                          const Method & method,
+                          const Arguments & args)
+    throw (AdminException);
 
-	static void registerComponent(Component * component)
-		throw (AdminException);
+  static void registerComponent(Component * component)
+    throw (AdminException);
 
-	static void deregisterComponent(const char * const componentName)
-		throw (AdminException);
+  static void deregisterComponent(const char * const componentName)
+    throw (AdminException);
 
-	static void deregisterAllComponent();
+  static void deregisterAllComponent();
 
-	static const Components & getComponents() throw();
+  static const Components & getComponents() throw();
 
 protected:
-	static Components components;
-	static Mutex componentsLock;
+  static Components components;
+  static Mutex componentsLock;
 };
 
 }
