@@ -19,7 +19,12 @@ PersServer::PersServer(const char *persHost_, int persPort_, int maxClientCount_
 
 PersServer::~PersServer()
 {
-    //todo delete sockets array
+    listener.remove(&sock);
+    sock.Close();
+    
+    while(listener.count())
+        remove_socket(listener.get(0));
+            
     delete CmdDispatcher;
 }
 

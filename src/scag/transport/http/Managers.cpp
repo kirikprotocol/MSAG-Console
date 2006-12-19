@@ -37,11 +37,11 @@ void HttpManager::shutdown()
     while(1)
     {
         if(!readers.canStop())
-            smc_log_info(logger, "Waiting readers to stop");
+            smsc_log_info(logger, "Waiting readers to stop");
         else if(!writers.canStop())
-            smc_log_info(logger, "Waiting writers to stop");
+            smsc_log_info(logger, "Waiting writers to stop");
         else if(!scags.canStop())
-            smc_log_info(logger, "Waiting scagtasks to stop");
+            smsc_log_info(logger, "Waiting scagtasks to stop");
         else
             break;
         sleep(1);

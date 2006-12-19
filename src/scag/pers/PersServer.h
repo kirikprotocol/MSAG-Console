@@ -14,32 +14,32 @@ using smsc::core::network::Socket;
 using smsc::logger::Logger;
 
 class PersServer {
-	Multiplexer::SockArray socks;
-	CommandDispatcher* CmdDispatcher;
+//    Multiplexer::SockArray socks;
+    CommandDispatcher* CmdDispatcher;
 
 public:
     PersServer(const char* persHost_, int persPort_, int maxClientCount_, CommandDispatcher *d);
     ~PersServer();
     void InitServer();
     int Execute();
-	void Stop() { MutexGuard mt(mtx); isStopping = true; };
-	bool isStopped() { MutexGuard mt(mtx); return isStopping; };
+    void Stop() { MutexGuard mt(mtx); isStopping = true; };
+    bool isStopped() { MutexGuard mt(mtx); return isStopping; };
 
 protected:
-	void process_read_socket(Socket* sock);
-	void process_write_socket(Socket* sock);
-	void remove_socket(Socket* s);
+    void process_read_socket(Socket* sock);
+    void process_write_socket(Socket* sock);
+    void remove_socket(Socket* s);
 
     Logger * log;
     std::string persHost;
     int persPort;
-	int maxClientCount;
-	int clientCount;
+    int maxClientCount;
+    int clientCount;
     Socket sock;
     bool isStopping;
     RWMultiplexer listener;
     Mutex mtx;
-	char tmp_buf[1024];
+    char tmp_buf[1024];
 };
 
 }

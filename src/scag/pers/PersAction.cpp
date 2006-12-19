@@ -273,10 +273,12 @@ bool PersAction::RunBeforePostpone(ActionContext& context)
     params->propName = var;
     
     if(params->pt == PT_ABONENT)
-        params->skey = cp.abonentAddr.value;
+        params->skey = cp.abonentAddr.toString();
     else
         params->ikey = getKey(cp, profile);
-        
+    
+    smsc_log_debug(logger, "%d %s %s", params->pt, cp.abonentAddr.toString().c_str(), params->skey.c_str());
+    
     if(cmd == PC_INC || cmd == PC_INC_MOD || cmd == PC_SET)
     {
         if(ftValue != ftUnknown)

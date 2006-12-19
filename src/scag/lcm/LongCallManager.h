@@ -6,8 +6,6 @@
 #include "logger/Logger.h"
 #include "scag/config/lcm/LongCallManagerConfig.h"
 #include <stack>
-#include "scag/util/SerializeBuffer.h"
-
 
 namespace scag { namespace lcm {
 
@@ -71,7 +69,6 @@ public:
     {
         if(params) delete params;
     }
-//    scag::util::SerializeBuffer contextActionBuffer;
 };
 
 class LongCallInitiator

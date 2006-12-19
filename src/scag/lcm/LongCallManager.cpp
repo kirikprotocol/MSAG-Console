@@ -171,7 +171,7 @@ bool LongCallManagerImpl::call(LongCallContext* context)
 
 void LongCallTask::ExecutePersCall(LongCallContext* ctx)
 {
-    PersCallParams* persParams = (PersCallParams*)ctx->getParams();
+/*    PersCallParams* persParams = (PersCallParams*)ctx->getParams();
     PersClient& pc = PersClient::Instance();
     smsc_log_debug(logger, "ExecutePersCall: command=%d %s", ctx->callCommandId, persParams->skey.c_str());
     try{
@@ -210,12 +210,12 @@ void LongCallTask::ExecutePersCall(LongCallContext* ctx)
     {
         persParams->error = 0;        
         persParams->exception = "LongCallManager: Unknown exception";
-    }
+    }*/
 }
     
 void LongCallTask::ExecuteBillOpenCall(LongCallContext* ctx)
 {
-    BillOpenCallParams* params = (BillOpenCallParams*)ctx->getParams();
+/*    BillOpenCallParams* params = (BillOpenCallParams*)ctx->getParams();
     params->exception = "";
     try 
     {
@@ -228,7 +228,7 @@ void LongCallTask::ExecuteBillOpenCall(LongCallContext* ctx)
     catch (...)
     {
         params->exception = "LongCallManager: BillOpenCall unknown exception";
-    }
+    }*/
 }
 
 void LongCallTask::ExecuteBillCloseCall(LongCallContext* ctx)

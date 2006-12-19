@@ -63,10 +63,8 @@ class PersCallParams : public LongCallParams{
 public:
     PersCallParams() : error(0), result(0) {};
     ProfileType pt;
-    union{
-        uint32_t ikey;
-        const char* skey;
-    };
+    uint32_t ikey;
+    std::string skey;
     Property prop;
     std::string propName;
     uint32_t mod;

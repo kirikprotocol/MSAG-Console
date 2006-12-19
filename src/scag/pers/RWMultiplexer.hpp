@@ -27,6 +27,9 @@ public:
   int addRW(Socket* sock) { return add(sock, POLLIN|POLLOUT); }
 
   int canReadWrite(SockArray& read, SockArray& write, SockArray& error, int timeout = -1);
+  
+  int count() {return sockets.Count(); };
+  Socket* get(int i) {return sockets[i];};
 };
 
 }}
