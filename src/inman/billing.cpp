@@ -263,15 +263,20 @@ bool Billing::startCAPDialog(INScfCFG * use_scf)
                        smsxNumber.length ? smsxNumber.toString().c_str() : cdr._dstAdr.c_str());
 
         InitialDPSMSArg arg(smsc::inman::comp::DeliveryMode_Originating, use_scf->scf.serviceKey);
-        arg.setSMSCAddress(csInfo.smscAddress.c_str());
-        if (smsxNumber.length) {
-            arg.setDestinationSubscriberNumber(smsxNumber);
-            arg.setLocationInformationMSC(use_scf->substIDPLocalInfo ?
-                                          _cfg.ss7.ssf_addr.toString() : cdr._srcMSC.c_str());
-        } else {
-            arg.setDestinationSubscriberNumber(cdr._dstAdr.c_str());
+
+        switch (use_scf->idpLiAddr) {
+        case INScfCFG::idpLiSSF:
+            arg.setLocationInformationMSC(_cfg.ss7.ssf_addr); break;
+        case INScfCFG::idpLiSMSC:
+            arg.setLocationInformationMSC(csInfo.smscAddress.c_str()); break;
+        default:
             arg.setLocationInformationMSC(cdr._srcMSC.c_str());
         }
+        if (smsxNumber.length)
+            arg.setDestinationSubscriberNumber(smsxNumber);
+        else
+            arg.setDestinationSubscriberNumber(cdr._dstAdr.c_str());
+        arg.setSMSCAddress(csInfo.smscAddress.c_str());
         arg.setCallingPartyNumber(cdr._srcAdr.c_str());
         arg.setIMSI(cdr._srcIMSI.c_str());
         arg.setTimeAndTimezone(cdr._submitTime);

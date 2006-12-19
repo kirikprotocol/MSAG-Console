@@ -70,6 +70,8 @@ static const char * const _BILLmodes[4] = {"none", "all", "ussd", "sms"};
 static const char * const _IAPTypes[] = {"CACHE", "IN", "HLR", "DB"};
 //according to IAProviderAbility_e
 static const char * const _IAPAbilities[] = { "none", "abContract", "abSCF", "abContractSCF" };
+// according to INScfCFG::IDPLocationAddr
+static const char * const _IDPLIAddr[] = { "MSC", "SMSC", "SSF" };
 
 
 class INScfsRegistry {
@@ -85,10 +87,11 @@ public:
             delete (*sit).second;
     }
 
-    void copyAll(INScfsMAP & cp_map)
+    inline void copyAll(INScfsMAP & cp_map)
     {
         cp_map.insert(scfMap.begin(), scfMap.end());
     }
+
     //NOTE: the 'nm_scf' subsection presence must be previously checked !!!
     INScfCFG * readSCF(ConfigView * scf_sec, const char * nm_scf) throw(ConfigException)
     {
@@ -104,7 +107,7 @@ public:
         if (!pin->scf.scfAddress.fromText(cstr)
             || (pin->scf.scfAddress.numPlanInd != NUMBERING_ISDN)
             || (pin->scf.scfAddress.typeOfNumber > ToN_INTERNATIONAL))
-            throw ConfigException("SCF address is bad: %s", cstr);
+            throw ConfigException("SCF address is invalid: %s", cstr);
         pin->scf.scfAddress.typeOfNumber = ToN_INTERNATIONAL; //correct isdn unknown
 
         INScfsMAP::const_iterator sit = scfMap.find(pin->scf.scfAddress.toString());
@@ -125,7 +128,7 @@ public:
         if (cstr && cstr[0]) {
             try { pin->rejectRPC.init(cstr); }
             catch (std::exception& exc) {
-                throw ConfigException(format("RPCList_reject: %s", exc.what()).c_str());
+                throw ConfigException("RPCList_reject: %s", exc.what());
             }
         }
         if ((pin->rejectRPC.size() <= 1) || !pin->rejectRPC.print(cppStr))
@@ -138,17 +141,27 @@ public:
         if (cstr) {
             try { pin->postpaidRPC.init(cstr); }
             catch (std::exception& exc) {
-                throw ConfigException(format("RPCList_postpaid: %s", exc.what()).c_str());
+                throw ConfigException("RPCList_postpaid: %s", exc.what());
             }
         }
         if (!pin->postpaidRPC.print(cppStr))
             cppStr += "unsupported";
         smsc_log_info(inmanLogger, cppStr.c_str());
 
-        try { pin->substIDPLocalInfo = scfCfg->getBool("substIDPLocalInfo");}
+        cstr = NULL; cppStr = "IDPLocationInfo: ";
+        try { cstr = scfCfg->getString("IDPLocationInfo");}
         catch (ConfigException& exc) { }
-        smsc_log_info(inmanLogger, "substIDPLocalInfo: %s",
-                      pin->substIDPLocalInfo ? "true" : "false");
+
+        if (cstr && cstr[0]) {
+            if (!strcmp(cstr, _IDPLIAddr[INScfCFG::idpLiSSF]))
+                pin->idpLiAddr = INScfCFG::idpLiSSF;
+            else if (!strcmp(cstr, _IDPLIAddr[INScfCFG::idpLiSMSC]))
+                pin->idpLiAddr = INScfCFG::idpLiSMSC;
+            else if (strcmp(cstr, _IDPLIAddr[INScfCFG::idpLiMSC]))
+                throw ConfigException("IDPLocationInfo: invalid value");
+        } else
+            cstr = (char*)_IDPLIAddr[INScfCFG::idpLiMSC];
+        smsc_log_info(inmanLogger, "IDPLocationInfo: %s", cstr);
 
         scfMap.insert(INScfsMAP::value_type(pin->scf.scfAddress.toString(), pin.get()));
         return pin.release();
