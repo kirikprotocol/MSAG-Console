@@ -98,11 +98,11 @@ int AbonentCache::ramInsert(const AbonentId & ab_number,
             cache.Delete(accList.back().getSignals());
             accList.pop_back();
         }
-        status = cache.Insert(ab_number.getSignals(), ramRec);
+        status = cache.Insert(ab_number.getSignals(), ramRec); //accIt not inited yet!!!
         pabRec = cache.GetPtr(ab_number.getSignals());
     } else { //update
-        *pabRec = ramRec;
         accList.erase(pabRec->accIt);
+        *pabRec = ramRec; //accIt not inited yet!!!
     }
     accList.push_front(ab_number);
     pabRec->accIt = accList.begin();
