@@ -27,6 +27,7 @@ import bsh.UtilEvalError;
 import com.microstar.xml.*;
 
 import javax.swing.*;
+import javax.swing.Timer;
 import java.awt.event.KeyEvent;
 import java.awt.*;
 import java.io.*;
@@ -82,6 +83,8 @@ public class jEdit extends Applet
 
   public static URL baseUrl = null;
   public static URL servletUrl = null;
+  public static int ping_port;
+  public static int ping_timeout;
   public static String username = null;
   public static String password = null;
   public static char separatorChar ;
@@ -119,8 +122,12 @@ public class jEdit extends Applet
       servletUrl = new URL(baseUrl, getParameter("servleturl"));
     } catch (MalformedURLException e) { e.printStackTrace();
     }
+    ping_port = Integer.parseInt(getParameter("ping_port"));
+    ping_timeout = Integer.parseInt(getParameter("ping_timeout"));
     System.out.println("baseUrl= " + baseUrl.toString());
     System.out.println("servletUrl= " + servletUrl.toString());
+    System.out.println("ping_port= " + ping_port);
+    System.out.println("ping_timeout= " + ping_timeout);
     initSystemProperties();
     VFSManager.init();
     if (!getBooleanProperty("debug"))  {
@@ -202,8 +209,7 @@ public class jEdit extends Applet
   private String validate(String userFile, boolean newRule) {
     boolean isLocked = false;
     boolean isExist = false;
-    lc = new LiveConnect();
-    Object ruleState = getObject(userFile, lc.getPingPort(), getRuleStateAndLock);
+    Object ruleState = getObject(userFile, getRuleStateAndLock);
     try {
        Method locked = ruleState.getClass().getMethod("getLocked",new Class[]{});
        isLocked = ((Boolean)locked.invoke(ruleState,new Object[]{})).booleanValue();
@@ -296,6 +302,8 @@ public class jEdit extends Applet
     // later on we need to know if certain code is called from
     // the main thread
     mainThread = Thread.currentThread();
+    lc = new LiveConnect(baseUrl.getHost(),ping_port);
+    lcTimer = new Timer(ping_timeout,lc);
 
     settingsDirectory = null; // ".jedit";
 
@@ -531,7 +539,7 @@ public class jEdit extends Applet
     String scriptFile = null;
     String userFile="";
     userFile=args[0];
-
+    lc.addRuleId(userFile);
     //{{{ Run script specified with -run= parameter
     //todo userDir changed
     //String transport=getParameter("transport");
@@ -1728,6 +1736,7 @@ public class jEdit extends Applet
     removeBufferFromList(buffer);
     buffer.close();
     DisplayManager.bufferClosed(buffer);
+    lc.removeRuleId(path);
     unlockRule(path);
     System.out.println("jEdit._closeBuffer line 1654 EditBus.send(new BufferUpdate(buffer, view, BufferUpdate.CLOSED))");
     EditBus.send(new BufferUpdate(buffer, view, BufferUpdate.CLOSED));
@@ -2511,7 +2520,7 @@ public class jEdit extends Applet
      // System.exit(0);
     }
     setWindowClosed(ruleAction);
-    if (lc!=null) lc.stopLC();
+    if (lcTimer!=null) lcTimer.stop();
   } //}}}
   //{{{ exitView() method
   /**
@@ -2585,7 +2594,7 @@ public class jEdit extends Applet
      // System.exit(0);
     }
     setWindowClosed(ruleAction);
-    if (lc!=null) lc.stopLC();
+    if (lcTimer!=null) lcTimer.stop();
   } //}}}
 
   private static void setWindowClosed(String ruleAction) {
@@ -2796,6 +2805,7 @@ public class jEdit extends Applet
   private static long propsModTime;
   private static PropertyManager propMgr;
   private static EditServer server;
+  private static Timer lcTimer;
   private static LiveConnect lc;
   private static boolean background;
   private static ActionContext actionContext;
@@ -3497,11 +3507,10 @@ public class jEdit extends Applet
     return list;
   }
 
-  public static Object getObject(final String file, final int pingPort, final int command)
+  public static Object getObject(final String file,  final int command)
   {
     HashMap args = new HashMap();
     args.put("file", file);
-    args.put("pingPort", ""+pingPort);
     LinkedList list = (LinkedList) HttpGet(args, command);
     return list.get(0);
   }
@@ -3809,7 +3818,7 @@ public class jEdit extends Applet
         if (server != null)
           server.start();
 
-        if (lc!=null) lc.start();
+        if (lcTimer!=null) lcTimer.start();
         GUIUtilities.hideSplashScreen();
 
         Log.log(Log.MESSAGE, jEdit.class, "Startup "
@@ -4101,7 +4110,7 @@ loop:  for(int i = 0; i < list.length; i++)
         activeView = null;
 
       setWindowClosed(ruleAction);
-      //if (lc!=null) lc.stopLC();
+      //if (lcTimer!=null) lcTimer.stopLC();
       }
     }
   } //}}}
