@@ -87,10 +87,10 @@ void PerfSocketServer::InitServer(std::string perfHost_, int perfGenPort_, int p
     if(genSocket.InitServer(perfHost.c_str(), perfGenPort, 10, 1, true))
         throw Exception("Failed to init socket server by host: %s, port: %d", perfHost.c_str(), perfGenPort);
     smsc_log_info(logger, "Socket server is inited by host: %s, port: %d", perfHost.c_str(), perfGenPort);
-    if(svcSocket.InitServer(perfHost.c_str(), perfSvcPort, 10, 1, true)))
+    if(svcSocket.InitServer(perfHost.c_str(), perfSvcPort, 10, 1, true))
         throw Exception("Failed to init socket server by host: %s, port: %d", perfHost.c_str(), perfSvcPort);
     smsc_log_info(logger, "Socket server is inited by host: %s, port: %d", perfHost.c_str(), perfSvcPort);
-    if(scSocket.InitServer(perfHost.c_str(), perfScPort, 10, 1, true)))
+    if(scSocket.InitServer(perfHost.c_str(), perfScPort, 10, 1, true))
         throw Exception("Failed to init socket server by host: %s, port: %d", perfHost.c_str(), perfScPort);
     smsc_log_info(logger, "Socket server is inited by host: %s, port: %d", perfHost.c_str(), perfScPort);
 
