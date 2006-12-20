@@ -27,5 +27,9 @@ msag.properties.sample file changed: added new parameter logger.properties_file
 msag.properties.sample file changed: 
 pers.listen_host & pers.connect_host parameters separated (was pers.host)
 pers.io_timeout & pers.ping_timeout parameters were added
+=================================================================================================================
+20.12.2006 11:00 dym
+msag.properties.sample file changed:
+Added parameters: rule_editor.ping_port & rule_editor.ping_timeout
 
 
