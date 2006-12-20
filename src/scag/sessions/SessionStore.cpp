@@ -111,5 +111,52 @@ void SessionStore::updateSession(SessionPtr session)
   pfile.Update(off.value,sb.get(),sb.GetPos());
 }
 
+
+void CachedSessionStore::init(const std::string& dir,SessionLoadCallback cb,void* dataPtr, uint32_t mcs)
+{
+    store.init(dir, cb, dataPtr);
+    maxCacheSize = mcs;
+    cache = new SessionPtr[mcs];
+}
+
+SessionPtr CachedSessionStore::getSession(const CSessionKey& sessionKey)
+{
+  sync::MutexGuard mg(mtx);
+  uint32_t i = getIdx(sessionKey);
+  if(cache[i].Get() && cache[i]->getSessionKey() == sessionKey)
+  {
+    smsc_log_debug(logger, "Session found in cache");
+    return cache[i];
+  }
+  
+  SessionPtr p = store.getSession(sessionKey);
+  if(p.Get()) cache[i] = p;
+  
+  return p;
+}
+
+SessionPtr CachedSessionStore::newSession(const CSessionKey& sessionKey)
+{
+  sync::MutexGuard mg(mtx);
+  SessionPtr p = store.newSession(sessionKey);
+  cache[getIdx(sessionKey)] = p;
+  return p;
+}
+
+void CachedSessionStore::deleteSession(const CSessionKey& sessionKey)
+{
+  sync::MutexGuard mg(mtx);
+  uint32_t i = getIdx(sessionKey);
+  if(cache[i].Get() && cache[i]->getSessionKey() == sessionKey)
+    cache[i] = NULL;
+  store.deleteSession(sessionKey);  
+}
+
+void CachedSessionStore::updateSession(SessionPtr session)
+{
+  sync::MutexGuard mg(mtx);
+  store.updateSession(session);
+}
+
 }
 }
