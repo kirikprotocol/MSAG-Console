@@ -28,32 +28,37 @@ public class MenuItem  implements Serializable {
     private String uri;
     private String target;
     private String onclick;
+    private String[] roles;
 
     private Collection subMenu;
     int subMenuWidth;
 
-    public MenuItem(String key, String uri) {
+    public MenuItem(String key, String uri, String[] roles) {
         this.key = key;
         this.uri = uri;
+        this.roles = roles;
     }
 
-    public MenuItem(String key, String uri, String target) {
+    public MenuItem(String key, String uri, String target, String[] roles) {
         this.key = key;
         this.uri = uri;
         this.target = target;
+        this.roles = roles;
     }
 
-    public MenuItem(String key, String uri, Collection subMenu) {
+    public MenuItem(String key, String uri, Collection subMenu, String[] roles) {
         this.key = key;
         this.uri = uri;
         this.subMenu = subMenu;
+        this.roles = roles;
     }
 
-    public MenuItem(int id, int parentId, String caption, String uri) {
+    public MenuItem(int id, int parentId, String caption, String uri, String[] roles) {
         this.id = id;
         this.parentId = parentId;
         this.caption = caption;
         this.uri = uri;
+        this.roles = roles;
     }
 
     public MenuItem() {
@@ -63,6 +68,7 @@ public class MenuItem  implements Serializable {
         this.caption = null;
         this.uri = null;
         this.subMenu = null;
+        this.roles = null;
     }
 
     public int getId() {
@@ -150,5 +156,9 @@ public class MenuItem  implements Serializable {
 
     public void setOnclick(String onclick) {
         this.onclick = onclick;
+    }
+
+    public String[] getRoles() {
+      return roles;
     }
 }

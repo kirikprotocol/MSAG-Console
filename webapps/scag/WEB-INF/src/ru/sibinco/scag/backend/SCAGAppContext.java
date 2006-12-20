@@ -17,6 +17,7 @@ import ru.sibinco.scag.backend.resources.ResourceManager;
 import ru.sibinco.scag.backend.routing.ScagRoutingManager;
 import ru.sibinco.scag.backend.routing.http.HttpRoutingManager;
 import ru.sibinco.scag.backend.rules.RuleManager;
+import ru.sibinco.scag.backend.rules.LiveConnect;
 import ru.sibinco.scag.backend.service.ServiceProvidersManager;
 import ru.sibinco.scag.backend.sme.CategoryManager;
 import ru.sibinco.scag.backend.sme.ProviderManager;
@@ -67,6 +68,7 @@ public class SCAGAppContext {
     private final Statuses statuses;
     private final DataSource connectionPool;
     private final LoggingManager loggingManager;
+    private final LiveConnect liveConnect;
     private Journal journal = new Journal();
     private static File scagConfFolder = null;
 
@@ -126,6 +128,8 @@ public class SCAGAppContext {
             svcMonServer.start();
             scServer = new ScServer(config);
             scServer.start();
+            liveConnect = new LiveConnect(ruleManager,config);
+            liveConnect.start();
             XmlAuthenticator.init(new File(config.getString("users_config_file")));
         } catch (Throwable e) {
             logger.fatal("Could not initialize App Context", e);
@@ -138,6 +142,7 @@ public class SCAGAppContext {
         perfServer.shutdown();
         svcMonServer.shutdown();
         scServer.shutdown();
+        liveConnect.stopLC();
     }
 
     public static synchronized SCAGAppContext getInstance(final String config_filename) throws Throwable, IOException, ParserConfigurationException,
@@ -243,6 +248,10 @@ public class SCAGAppContext {
         return smppManager;
     }
 
+    public LiveConnect getLiveConnect() {
+      return liveConnect;
+    }
+  
     public static File getScagConfFolder() {
         return scagConfFolder;
     }

@@ -16,7 +16,7 @@ import java.util.Collection;
  */
 public class Menu {
 
-    private Collection menu = null;
+    private TopMenu menu = null;
 
     private static Menu instance = new Menu();
 
@@ -31,12 +31,12 @@ public class Menu {
      * Private constructor
      */
     private Menu() {
-        menu = (Collection) new TopMenu();
+        menu = new TopMenu();
     }
 
     public Collection getMenu() {
         if (menu == null) {
-            menu = (Collection) new TopMenu();
+            menu = new TopMenu();
         }
         return menu;
     }

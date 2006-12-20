@@ -109,15 +109,10 @@ public class RuleManager
       String complexRuleId = Rule.composeComplexId(ruleId,transport);
       RuleState ruleState = null;
       ruleState = (RuleState)ruleStates.get(complexRuleId);
-      if (ruleState!=null) {
-        if (ruleState.getLocked())
-          Pinger.checkConnect(ruleState);
-        return ruleState;
-      }
+      if (ruleState!=null) return ruleState;
       ruleState = new RuleState();
       ruleState.setExists(checkRuleFileExists(ruleId, transport));
       ruleState.setLocked(false);
-      ruleState.setPingable(false);
       ruleStates.put(complexRuleId,ruleState);
       return ruleState;
     }
@@ -126,13 +121,10 @@ public class RuleManager
   //this method is called when client want to lock rule!
   public RuleState getRuleStateAndLock(String ruleId, String transport) {
     synchronized (lockObject) {
-
       String complexRuleId = Rule.composeComplexId(ruleId,transport);
       RuleState ruleState = null;
       ruleState = (RuleState)ruleStates.get(complexRuleId);
       if (ruleState!=null) {
-        if (ruleState.getLocked())
-          Pinger.checkConnect(ruleState);
         if (ruleState.getLocked()) {
           return ruleState;
         } else {
@@ -156,33 +148,19 @@ public class RuleManager
     }
   }
 
-  public RuleState getRuleStateAndLock(String ruleId, String transport, String host, int port) {
-    synchronized (lockObject) {
-      String complexRuleId = Rule.composeComplexId(ruleId,transport);
-      RuleState ruleState = null;
-      ruleState = (RuleState)ruleStates.get(complexRuleId);
-      if (!ruleState.getLocked()) {
-        ruleState.setPingable(true);
-        ruleState.setPingHostName(host);
-        ruleState.setPingPort(port);
-      }  
-    }
-    return getRuleStateAndLock(ruleId,transport);
-  }
 
-  private void setRuleState(String ruleId, String transport, boolean exists, boolean locked, boolean pingable) {
+  private void setRuleState(String ruleId, String transport, boolean exists, boolean locked) {
     synchronized (lockObject) {
       String complexRuleId = Rule.composeComplexId(ruleId,transport);
       RuleState ruleState = (RuleState)ruleStates.get(complexRuleId);
       ruleState.setExists(exists);
       ruleState.setLocked(locked);
-      ruleState.setPingable(pingable);
     }
   }
 
   public void unlockRule(String ruleId, String transport) {
-    logger.debug("!!!!!unlock rule id = " + ruleId + " transport = " + transport);
-    setRuleState(ruleId, transport, checkRuleFileExists(ruleId, transport), false, false);
+    System.out.println("!!!!!unlock rule id = " + ruleId + " transport = " + transport);
+    setRuleState(ruleId, transport, checkRuleFileExists(ruleId, transport), false);
   }
 
   public void unlockRule(String complexRuleId) {

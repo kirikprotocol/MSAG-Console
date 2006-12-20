@@ -31,8 +31,8 @@
             <%--sm-ep:list title="provider" name="providerId" values="${fn:join(bean.providerIds, ',')}"
                         valueTitles="${fn:join(bean.providerNames, ',')}" rowId="id_Providers_list"/--%>
 
-            <sm-ep:checks title="users.edit.checks.title" name="roles" values="gw,routing,services,stat"
-                          valueTitles="users.edit.checks.values.gw,users.edit.checks.values.routing,users.edit.checks.values.services,users.edit.checks.values.stat"/>
+            <sm-ep:checks title="users.edit.checks.title" name="roles" values="gw,super_admin,management,routing,stat"
+                          valueTitles="users.edit.checks.values.gw,users.edit.checks.values.super_admin,users.edit.checks.values.management,users.edit.checks.values.routing,users.edit.checks.values.stat"/>
             <sm-ep:txt title="users.edit.txt.firstname" name="firstName" validation="nonEmpty"/>
             <sm-ep:txt title="users.edit.txt.lastmame" name="lastName" validation="nonEmpty"/>
             <sm-ep:txt title="users.edit.txt.dept" name="dept"/>

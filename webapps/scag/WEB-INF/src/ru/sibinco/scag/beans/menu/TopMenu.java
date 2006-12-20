@@ -22,43 +22,43 @@ public class TopMenu  extends ArrayList {
 
         try {
             Collection scagItems = new ArrayList();
-            scagItems.add(new MenuItem("menu.scag.status", "/gw/status/index.jsp"));
-            scagItems.add(new MenuItem("menu.scag.config", "/gw/config/index.jsp"));
-            scagItems.add(new MenuItem("menu.scag.logging", "/gw/logging/logging.jsp"));
-            scagItems.add(new MenuItem("menu.scag.users", "/gw/users/index.jsp"));
-            add(new MenuItem("menu.scag", "", scagItems));
+            scagItems.add(new MenuItem("menu.scag.status", "/gw/status/index.jsp",new String[]{"gw"}));
+            scagItems.add(new MenuItem("menu.scag.config", "/gw/config/index.jsp",new String[]{"gw"}));
+            scagItems.add(new MenuItem("menu.scag.logging", "/gw/logging/logging.jsp",new String[]{"gw"}));
+            scagItems.add(new MenuItem("menu.scag.users", "/gw/users/index.jsp",new String[]{"super_admin"}));
+            add(new MenuItem("menu.scag", "", scagItems, new String[]{"gw","super_admin"}));
 
             Collection scagServices = new ArrayList();
-            scagServices.add(new MenuItem("menu.services.providers", "/services/index.jsp"));
-            scagServices.add(new MenuItem("menu.scag.operators", "/operators/index.jsp"));
-            add(new MenuItem("menu.services", "", scagServices));
+            scagServices.add(new MenuItem("menu.services.providers", "/services/index.jsp",new String[]{"management"}));
+            scagServices.add(new MenuItem("menu.scag.operators", "/operators/index.jsp",new String[]{"management"}));
+            add(new MenuItem("menu.services", "", scagServices,new String[]{"management"}));
 
             Collection endpointItems = new ArrayList();
-            endpointItems.add(new MenuItem("menu.endpoint.services","/endpoints/services/index.jsp"));
-            endpointItems.add(new MenuItem("menu.endpoint.services.monitor","","/endpoints/services/monitor/index.jsp', 'svcmon', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=640');"));
-            endpointItems.add(new MenuItem("menu.endpoint.centers","/endpoints/centers/index.jsp"));
-            endpointItems.add(new MenuItem("menu.endpoint.centers.monitor","","/endpoints/centers/monitor/index.jsp', 'scmon', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=640');"));
-            add(new MenuItem("menu.endpoint", "", endpointItems));
+            endpointItems.add(new MenuItem("menu.endpoint.services","/endpoints/services/index.jsp", new String[]{"routing"}));
+            endpointItems.add(new MenuItem("menu.endpoint.services.monitor","","/endpoints/services/monitor/index.jsp', 'svcmon_scag', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=640');",new String[]{"stat"}));
+            endpointItems.add(new MenuItem("menu.endpoint.centers","/endpoints/centers/index.jsp",new String[]{"routing"}));
+            endpointItems.add(new MenuItem("menu.endpoint.centers.monitor","","/endpoints/centers/monitor/index.jsp', 'scmon_scag', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=640');",new String[]{"stat"}));
+            add(new MenuItem("menu.endpoint", "", endpointItems, new String[]{"routing","stat"}));
 
             Collection routingItems = new ArrayList();
             Collection subjectItems = new ArrayList();
-            subjectItems.add(new MenuItem("menu.routing.routes.SMPP", "/routing/subjects/index.jsp?transportId=1"));
-            subjectItems.add(new MenuItem("menu.routing.routes.HTTP", "/routing/subjects/index.jsp?transportId=2"));
-            subjectItems.add(new MenuItem("menu.routing.routes.MMS", "/routing/subjects/index.jsp?transportId=3"));
-            routingItems.add(new MenuItem("menu.routing.subjects", "", subjectItems));
-            routingItems.add(new MenuItem("menu.routing.options", "/routing/options/index.jsp"));
+            subjectItems.add(new MenuItem("menu.routing.routes.SMPP", "/routing/subjects/index.jsp?transportId=1",new String[]{"routing"}));
+            subjectItems.add(new MenuItem("menu.routing.routes.HTTP", "/routing/subjects/index.jsp?transportId=2",new String[]{"routing"}));
+            subjectItems.add(new MenuItem("menu.routing.routes.MMS", "/routing/subjects/index.jsp?transportId=3",new String[]{"routing"}));
+            routingItems.add(new MenuItem("menu.routing.subjects", "", subjectItems,new String[]{"routing"}));
+            routingItems.add(new MenuItem("menu.routing.options", "/routing/options/index.jsp",new String[]{"routing"}));
             Collection routesStatusItems = new ArrayList();
-            routesStatusItems.add(new MenuItem("menu.routing.routes.SMPP", "/routing/routes/index.jsp?transportId=1"));
-            routesStatusItems.add(new MenuItem("menu.routing.routes.HTTP", "/routing/routes/index.jsp?transportId=2"));
-            routesStatusItems.add(new MenuItem("menu.routing.routes.MMS", "/routing/routes/index.jsp?transportId=3"));
-            routingItems.add(new MenuItem("menu.routing.routes", "", routesStatusItems));
-            routingItems.add(new MenuItem("menu.routing.tracer", "/routing/tracer/index.jsp"));
-            add(new MenuItem("menu.routing", "", routingItems));
+            routesStatusItems.add(new MenuItem("menu.routing.routes.SMPP", "/routing/routes/index.jsp?transportId=1",new String[]{"routing"}));
+            routesStatusItems.add(new MenuItem("menu.routing.routes.HTTP", "/routing/routes/index.jsp?transportId=2",new String[]{"routing"}));
+            routesStatusItems.add(new MenuItem("menu.routing.routes.MMS", "/routing/routes/index.jsp?transportId=3",new String[]{"routing"}));
+            routingItems.add(new MenuItem("menu.routing.routes", "", routesStatusItems,new String[]{"routing"}));
+            routingItems.add(new MenuItem("menu.routing.tracer", "/routing/tracer/index.jsp",new String[]{"routing"}));
+            add(new MenuItem("menu.routing", "", routingItems,new String[]{"routing"}));
 
             Collection statisticItems = new ArrayList();
-            statisticItems.add(new MenuItem("menu.stat.monitor","", "/stat/monitor/index.jsp','perfmon', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=580');"));
-            statisticItems.add(new MenuItem("menu.stat.stat","/stat/stat/index.jsp"));
-            add(new MenuItem("menu.stat", "", statisticItems));
+            statisticItems.add(new MenuItem("menu.stat.monitor","", "/stat/monitor/index.jsp','perfmon_scag', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=580');",new String[]{"stat"}));
+            statisticItems.add(new MenuItem("menu.stat.stat","/stat/stat/index.jsp",new String[]{"stat"}));
+            add(new MenuItem("menu.stat", "", statisticItems,new String[]{"stat"}));
 
         } catch (Exception e) {
             category.error(e.getMessage());

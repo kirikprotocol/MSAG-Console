@@ -1,4 +1,5 @@
-<%--
+<%@ page import="ru.sibinco.scag.backend.SCAGAppContext"%>
+ <%--
   Created by IntelliJ IDEA.
   User: dym
   Date: 18.05.2006
@@ -61,6 +62,8 @@
        <param name="homedir" value="applet">
        <param name="username" value="rules">
        <param name="servletUrl" value="${pageContext.request.contextPath}/applet/myServlet">
+       <param name="ping_port" value="<%=((SCAGAppContext)request.getAttribute("appContext")).getLiveConnect().getPingPort()%>">
+       <param name="ping_timeout" value="<%=((SCAGAppContext)request.getAttribute("appContext")).getLiveConnect().getTimeout()%>">
     </applet>
   </body>
 

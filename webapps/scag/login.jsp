@@ -1,4 +1,7 @@
 <%@include file="/WEB-INF/inc/header.jspf"%>
+<c:if test="${param.access_denied}">
+ <c:redirect url="/access_denied.jsp"/>
+</c:if>
 <sm:page form_uri="j_security_check" form_method="post" title="login.title">
   <jsp:attribute name="menu">
     <sm-pm:menu>
@@ -8,7 +11,7 @@
   </jsp:attribute>
 
   <jsp:body>
-    <c:if test="${request.loginError}">
+    <c:if test="${param.loginError}">
       <div class=error><div class="header"><fmt:message>login.label.error</fmt:message></div><fmt:message>login.label.error.comment</fmt:message></div>
     </c:if>
     <sm-ep:properties title="login.properties">

@@ -4,9 +4,9 @@
 <users>
   <user login="admin" password="password" firstName="default" lastName="default" dept="default">
     <role name="gw"/>
+    <role name="management"/>
     <role name="routing"/>
-    <role name="services"/>
     <role name="stat"/>
-    <role name="rule"/>
+    <role name="super_admin"/>
   </user>
 </users>

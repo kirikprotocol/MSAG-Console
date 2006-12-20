@@ -19,6 +19,11 @@
       int i = 0;
       for(java.util.Iterator it = menu.iterator(); it.hasNext();i++){
         ru.sibinco.scag.beans.menu.MenuItem menuItem = (ru.sibinco.scag.beans.menu.MenuItem)it.next();
+
+        if (request.getUserPrincipal() != null) {
+          if (!isUserInRoleForMenu(menuItem,request)) continue;
+        }
+
         String menuItemName = "menu_"+i;
         if(menuItem.getSubMenu() != null){
           createMenu(request, out, menuItemName, ""+menuItem.getSubMenuWidth(rb), menuItem.getSubMenu(),rb);
@@ -26,6 +31,18 @@
         }
       }
     out.println("}");
+  }
+
+  boolean isUserInRoleForMenu(ru.sibinco.scag.beans.menu.MenuItem menuItem, HttpServletRequest request) {
+          boolean isUserInRoleForMenu = false;
+          String[] menuItemRoles =  menuItem.getRoles();
+          for (int j = 0; j < menuItemRoles.length; j++) {
+            if (request.isUserInRole(menuItemRoles[j])) {
+              isUserInRoleForMenu = true;
+              break;
+            }
+          }
+          return isUserInRoleForMenu;
   }
 
  java.util.Collection getTopMenu() throws java.io.IOException{
@@ -55,6 +72,11 @@
     int i = 0;
     for(java.util.Iterator it = menu.iterator(); it.hasNext();i++){
       ru.sibinco.scag.beans.menu.MenuItem menuItem = (ru.sibinco.scag.beans.menu.MenuItem)it.next();
+
+      if (request.getUserPrincipal() != null) {
+          if (!isUserInRoleForMenu(menuItem,request)) continue;
+      }
+
       if(menuItem.getSubMenu() == null){
         String url = menuItem.getUri();
           if(menuItem.getUri().equals("")){
