@@ -120,8 +120,8 @@ class CachedSessionStore
 {
 public:
 
-  CachedSessionStore() { logger=smsc::logger::Logger::getInstance("csesstore"); };
-  ~CachedSessionStore() {};
+  CachedSessionStore() : cache(NULL) { logger=smsc::logger::Logger::getInstance("csesstore"); };
+  ~CachedSessionStore() { if(cache) delete[] cache; };
 
   void init(const std::string& dir,SessionLoadCallback cb,void* data, uint32_t mcs = 10000);
 
