@@ -99,7 +99,11 @@ private:
 public:
 
 
-  SmsResp() : messageId(0), status(0),dataSm(false),sms(0), dir(dsdUnknown){};
+  SmsResp() : messageId(0), status(0),dataSm(false),sms(0), dir(dsdUnknown)
+  {
+    expiredUid=0;
+    expiredResp=false;
+  };
   ~SmsResp()
   {
     if ( messageId ) delete messageId;
@@ -155,6 +159,9 @@ public:
   {
     return sms;
   }
+
+  int expiredUid;
+  bool expiredResp;
 
 };
 
@@ -398,8 +405,8 @@ struct _SmppCommand
   int serviceId;
   int priority;
   uint64_t opId;
-//  LongCallContext lcmCtx;  
-  
+//  LongCallContext lcmCtx;
+
   _SmppCommand() : ref_count(0), dta(0), ent(0),status(0),priority(ScagCommandDefaultPriority)
   {
   }
@@ -1314,7 +1321,7 @@ public:
    {
        return cmd->cmdid;
    }
-   
+
 /*   LongCallContext& getLongCallContext()
    {
         return cmd->lcmCtx;
