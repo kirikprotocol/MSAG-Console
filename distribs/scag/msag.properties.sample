@@ -61,7 +61,7 @@ pers.storage_dir=/opt/home/msag_stbl/msag_distr/storage/pers
 pers.service.args=MSAG Personalization
 pers.service.autostart=false
 
-rule_editor.ping_port=23986 
+rule_editor.ping_port=23987
 rule_editor.ping_timeout=10000
 
 LC_ALL=ru_RU.WINDOWS-1251
