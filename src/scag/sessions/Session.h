@@ -132,6 +132,16 @@ namespace scag { namespace sessions
             return ((this->USR == sk.USR) && (this->abonentAddr == sk.abonentAddr));
         }
         //CSessionKey() : USR(-1) {}
+        static uint32_t CalcHash(const CSessionKey& key)
+        {
+            uint32_t retval = (key.abonentAddr.type+key.USR)^key.abonentAddr.plan;
+            int i;
+            for(i=0;i<key.abonentAddr.length;i++)
+            {
+                retval=retval*10+(key.abonentAddr.value[i]-'0');
+            }
+            return retval;
+        }
     };
 
  /*   struct COperationKey

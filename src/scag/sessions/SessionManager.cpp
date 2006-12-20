@@ -51,21 +51,6 @@ namespace scag { namespace sessions
             CSessionAccessData() : nextWakeTime(0), bOpened(false), hasPending(false), hasOperations(false) {}
         };
 
-        class XSessionHashFunc{
-        public:
-            static uint32_t CalcHash(const CSessionKey& key)
-            {
-                uint32_t retval = (key.abonentAddr.type+key.USR)^key.abonentAddr.plan;
-                int i;
-                for(i=0;i<key.abonentAddr.length;i++)
-                {
-                    retval=retval*10+(key.abonentAddr.value[i]-'0');
-                }
-                return retval;
-            }
-        };
-
-
         struct FAccessDataCompare
         {
             bool operator () (const CSessionAccessData* x,const CSessionAccessData* y) const
@@ -76,7 +61,7 @@ namespace scag { namespace sessions
 
         typedef std::multiset<CSessionAccessData*,FAccessDataCompare> CSessionSet;
         typedef std::multiset<CSessionAccessData*>::iterator CSessionSetIterator;
-        typedef XHash<CSessionKey,CSessionSetIterator,XSessionHashFunc> CSessionHash;
+        typedef XHash<CSessionKey,CSessionSetIterator,CSessionKey> CSessionHash;
 
         typedef XHash<Address,int,XAddrHashFunc> CUMRHash;
 
@@ -93,7 +78,7 @@ namespace scag { namespace sessions
         Event           awakeEvent, exitEvent;
         bool            bStarted;
 
-        SessionStore    store;
+        CachedSessionStore    store;
         SessionManagerConfig config;
 
         void Stop();
