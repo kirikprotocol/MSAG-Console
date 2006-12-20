@@ -389,7 +389,10 @@ int SessionManagerImpl::processExpire()
         for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();)
         {
             accessData = (*it);
-	    if (!accessData) continue;
+	    if (!accessData) {
+            ++it;
+            continue;
+        }
 	    if ((!accessData->bOpened)&&(accessData->hasPending)) break;
             if ((!accessData->bOpened)&&(!accessData->hasPending)&&(!accessData->hasOperations))
             {
@@ -457,17 +460,20 @@ int SessionManagerImpl::processExpire()
             iPeriod = accessData->nextWakeTime - now;
         }
 
-        SessionExpirePool.erase(it);
-        it = SessionExpirePool.insert(accessData);
-        SessionHash.Delete(accessData->SessionKey);
-        SessionHash.Insert(accessData->SessionKey, it);
-
         // Session expired
         if (!accessData->hasOperations) {
             DeleteSession(it);
             return 0;
         } else {
+            SessionExpirePool.erase(it);
+            it = SessionExpirePool.insert(accessData);
+            SessionHash.Delete(accessData->SessionKey);
+            SessionHash.Insert(accessData->SessionKey, it);
+
+
             store.updateSession(sessionPtr);
+
+            iPeriod = (*SessionExpirePool.begin())->nextWakeTime - now;
             if (iPeriod >= 0) return iPeriod;
         }
 
