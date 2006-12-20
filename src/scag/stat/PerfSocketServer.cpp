@@ -84,6 +84,11 @@ void PerfSocketServer::init(PerformanceServer * perfServer)
 
 void PerfSocketServer::InitServer(std::string perfHost_, int perfGenPort_, int perfSvcPort_, int perfScPort_)
 {
+    perfHost = perfHost_;
+    perfGenPort = perfGenPort_;
+    perfSvcPort = perfSvcPort_;
+    perfScPort = perfScPort_;
+
     if(genSocket.InitServer(perfHost.c_str(), perfGenPort, 10, 1, true))
         throw Exception("Failed to init socket server by host: %s, port: %d", perfHost.c_str(), perfGenPort);
     smsc_log_info(logger, "Socket server is inited by host: %s, port: %d", perfHost.c_str(), perfGenPort);
