@@ -122,15 +122,14 @@ void CachedSessionStore::init(const std::string& dir,SessionLoadCallback cb,void
 SessionPtr CachedSessionStore::getSession(const CSessionKey& sessionKey)
 {
   sync::MutexGuard mg(mtx);
+  
   uint32_t i = getIdx(sessionKey);
   if(cache[i].Get() && cache[i]->getSessionKey() == sessionKey)
-  {
-    smsc_log_debug(logger, "Session found in cache");
     return cache[i];
-  }
   
   SessionPtr p = store.getSession(sessionKey);
-  if(p.Get()) cache[i] = p;
+  if(p.Get())
+    cache[i] = p;
   
   return p;
 }

@@ -116,6 +116,31 @@ protected:
   sync::Mutex mtx;
 };
 
+class CachedSessionStore
+{
+public:
+
+  CachedSessionStore() { logger=smsc::logger::Logger::getInstance("csesstore"); };
+  ~CachedSessionStore() {};
+
+  void init(const std::string& dir,SessionLoadCallback cb,void* data, uint32_t mcs = 10000);
+
+  SessionPtr getSession(const CSessionKey& sessionKey);
+
+  SessionPtr newSession(const CSessionKey& sessionKey);
+  void deleteSession(const CSessionKey& sessionKey);
+  void updateSession(SessionPtr session);
+  uint32_t getSessionsCount() {return store.getSessionsCount();}
+protected:
+    inline uint32_t getIdx(const CSessionKey& key) { return CSessionKey::CalcHash(key) % maxCacheSize; };
+
+    sync::Mutex mtx;
+    smsc::logger::Logger* logger;
+    uint32_t maxCacheSize;
+    SessionStore store;
+    SessionPtr *cache;
+};
+
 }
 }
 
