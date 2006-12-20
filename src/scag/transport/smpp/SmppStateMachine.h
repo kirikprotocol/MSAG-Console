@@ -44,8 +44,8 @@ protected:
   SmppRouter* routeMan;
   smsc::logger::Logger* log;
 
-  sync::Mutex expMtx;
-  bool expProc;
+  static sync::Mutex expMtx;
+  static bool expProc;
 
   void SubmitResp(SmppCommand& cmd,int status);
   void DeliveryResp(SmppCommand& cmd,int status);
