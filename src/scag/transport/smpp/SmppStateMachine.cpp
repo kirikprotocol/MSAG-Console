@@ -12,6 +12,7 @@ namespace smpp{
 
 namespace buf=smsc::core::buffers;
 using namespace scag::stat;
+using namespace scag::lcm;
 
 std::vector<int> StateMachine::allowedUnknownOptionals;
 
