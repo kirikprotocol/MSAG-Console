@@ -38,7 +38,7 @@ public:
   {
     allowedUnknownOptionals.push_back(tag);
   }
-
+    
 protected:
   SmppCommandQueue* queue;
   SmppRouter* routeMan;
@@ -52,7 +52,9 @@ protected:
   void DataResp(SmppCommand& cmd,int status);
 
   void registerEvent(int event, SmppEntity* src, SmppEntity* dst, const char* rid, int errCode);
-
+  
+  bool makeLongCall(SmppCommand& cx);
+  
   struct ResponseRegistry;
   static ResponseRegistry reg;
 

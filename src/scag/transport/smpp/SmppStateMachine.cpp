@@ -364,6 +364,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
         smsc_log_info(log,"Submit: sme not connected %s(%s)->%s(%s)", sms.getOriginatingAddress().toString().c_str(), src->getSystemId(),
             sms.getDestinationAddress().toString().c_str(), dst->getSystemId());
         SubmitResp(cmd,smsc::system::Status::SMENOTCONNECTED);
+        session->closeCurrentOperation();        
         registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::SMENOTCONNECTED);
       }
       else
@@ -381,6 +382,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
   } catch(std::exception& e) {
     SubmitResp(cmd,smsc::system::Status::SYSFAILURE);
     registerEvent(scag::stat::events::smpp::FAILED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSFAILURE);
+    session->closeCurrentOperation();
     smsc_log_info(log,"Submit: Failed to putCommand into %s:%s",dst->getSystemId(),e.what());
   }
   sm.releaseSession(session);
@@ -639,6 +641,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
         smsc_log_info(log,"Delivery: sme not connected %s(%s)->%s(%s)", sms.getOriginatingAddress().toString().c_str(), src->getSystemId(),
             sms.getDestinationAddress().toString().c_str(), dst->getSystemId());
         DeliveryResp(cmd,smsc::system::Status::SMENOTCONNECTED);
+        session->closeCurrentOperation();        
         registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::SMENOTCONNECTED);
       }
       else
@@ -657,6 +660,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
   } catch(std::exception& e) {
     smsc_log_info(log,"Delivery: Failed to putCommand into %s:%s",dst->getSystemId(),e.what());
     DeliveryResp(cmd,smsc::system::Status::SYSFAILURE);
+    session->closeCurrentOperation();    
     registerEvent(scag::stat::events::smpp::FAILED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSFAILURE);
   }
   sm.releaseSession(session);
@@ -903,6 +907,7 @@ void StateMachine::processDataSm(SmppCommand& cmd)
         smsc_log_info(log,"DataSm: sme not connected %s(%s)->%s(%s)", sms.getOriginatingAddress().toString().c_str(), src->getSystemId(),
             sms.getDestinationAddress().toString().c_str(), dst->getSystemId());
         DataResp(cmd,smsc::system::Status::SMENOTCONNECTED);
+        session->closeCurrentOperation();        
         registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::SMENOTCONNECTED);
       }
       else
@@ -920,6 +925,7 @@ void StateMachine::processDataSm(SmppCommand& cmd)
   } catch(std::exception& e) {
     smsc_log_info(log,"DataSm: Failed to putCommand into %s:%s",dst->getSystemId(),e.what());
     DataResp(cmd,smsc::system::Status::SYSFAILURE);
+    session->closeCurrentOperation();
     registerEvent(scag::stat::events::smpp::FAILED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSFAILURE);
   }
   sm.releaseSession(session);
