@@ -165,6 +165,14 @@ int StateMachine::Execute()
   return 0;
 }
 
+bool StateMachine::makeLongCall(SmppCommand& cx)
+{
+    LongCallContext& lcmCtx = cx.getLongCallContext();
+    lcmCtx.stateMachineContext = new SmppCommand(cx);
+
+    return LongCallManager::Instance().call(&lcmCtx);
+}
+
 void StateMachine::registerEvent(int event, SmppEntity* src, SmppEntity* dst, const char* rid, int errCode)
 {
     char* src_id;
@@ -344,6 +352,14 @@ void StateMachine::processSubmit(SmppCommand& cmd)
     return;
   }
 
+  if(st.status == scag::re::STATUS_LONG_CALL)
+  {
+    smsc_log_info(log,"Submit: long call initiate");
+    makeLongCall(cmd);
+    sm.releaseSession(session);
+    return;
+  }
+  
   if(st.status != scag::re::STATUS_OK)
   {
     smsc_log_info(log,"Submit: RuleEngine returned result=%d",st.result);
@@ -621,6 +637,14 @@ void StateMachine::processDelivery(SmppCommand& cmd)
     return;
   }
 
+  if(st.status == scag::re::STATUS_LONG_CALL)
+  {
+      smsc_log_debug(log,"Delivery: long call initiate");
+      makeLongCall(cmd);
+      scag::sessions::SessionManager::Instance().releaseSession(session);
+      return;
+  }
+  
   if(st.status != scag::re::STATUS_OK)
   {
     smsc_log_info(log,"Delivery: RuleEngine returned result=%d",st.result);
@@ -887,6 +911,14 @@ void StateMachine::processDataSm(SmppCommand& cmd)
     return;
   }
 
+  if(st.status == scag::re::STATUS_LONG_CALL)
+  {
+      smsc_log_debug(log,"DataSm: long call initiate");
+      makeLongCall(cmd);
+      scag::sessions::SessionManager::Instance().releaseSession(session);
+      return;
+  }
+  
   if(st.status != scag::re::STATUS_OK)
   {
     smsc_log_info(log,"DataSm: RuleEngine returned result=%d",st.result);

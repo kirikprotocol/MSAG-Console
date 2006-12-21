@@ -25,15 +25,15 @@ namespace buf=smsc::core::buffers;
 namespace thr=smsc::core::threads;
 namespace sync=smsc::core::synchronization;
 using namespace scag::config;
-//using namespace scag::lcm;
+using namespace scag::lcm;
 
 class SmppManager:
   public SmppManagerAdmin,
   public SmppChannelRegistrator,
   public SmppCommandQueue,
   public SmppRouter,
-  public ConfigListener//,
-//  public LongCallInitiator
+  public ConfigListener,
+  public LongCallInitiator
   {
 public:
   SmppManager();
@@ -56,7 +56,7 @@ public:
   //queue
   virtual void putCommand(SmppChannel* ct,SmppCommand& cmd);
   virtual bool getCommand(SmppCommand& cmd);
-//  virtual void continueExecution(LongCallContext* lcmCtx, bool dropped);
+  virtual void continueExecution(LongCallContext* lcmCtx, bool dropped);
   
   void configChanged();
 

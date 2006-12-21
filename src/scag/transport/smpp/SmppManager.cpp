@@ -581,6 +581,7 @@ void SmppManager::putCommand(SmppChannel* ct,SmppCommand& cmd)
   }
 
   MutexGuard mg(queueMon);
+  cmd.getLongCallContext().initiator = this;  
   queue.Push(cmd);
   queueMon.notify();
 }
@@ -611,9 +612,19 @@ bool SmppManager::getCommand(SmppCommand& cmd)
   return true;
 }
 
-/*void SmppManager::continueExecution(LongCallContext* lcmCtx, bool dropped)
+void SmppManager::continueExecution(LongCallContext* lcmCtx, bool dropped)
 {
-}*/
+    SmppCommand *cx = (SmppCommand*)lcmCtx->stateMachineContext;
+    lcmCtx->continueExec = true;
+
+    if(!dropped)
+    {
+        MutexGuard mg(queueMon);
+        queue.Push(*cx);
+        queueMon.notify();
+    }
+    delete cx;
+}
 
 }//smpp
 }//transport

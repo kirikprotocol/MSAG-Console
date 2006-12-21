@@ -29,6 +29,7 @@
 #include "scag/util/encodings/Encodings.h"
 //#include "scag/admin/SCAGAdminCommand.h"
 
+#include "scag/lcm/LongCallManager.h"
 
 namespace scag
 {
@@ -147,6 +148,7 @@ using scag::bill::BillingManager;
 using scag::stat::StatisticsManager;
 using scag::config::BillingManagerConfig;
 using scag::sessions::SessionManager;
+using scag::lcm::LongCallManager;
 using smsc::util::findConfigFile;
 
 Scag::~Scag()
@@ -171,6 +173,13 @@ void Scag::init()
         throw;
     }*/
     //********************************************************
+    
+    try {
+        LongCallManager::Init(cfg.getLongCallManConfig());
+    }catch(...)
+    {
+        throw Exception("Exception during initialization of LongCallManager");
+    }
 
     //********************************************************
     //********** Statistics manager initialization ***********
@@ -525,6 +534,7 @@ void Scag::shutdown()
   smppMan.StopProcessing();
   //tp.shutdown();
   //tp2.shutdown();
+  LongCallManager::shutdown();  
 }
 
 void Scag::reloadTestRoutes(const RouteConfig& rcfg)
