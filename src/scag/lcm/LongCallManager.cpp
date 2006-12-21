@@ -20,7 +20,7 @@ using namespace smsc::core::threads;
 
 using namespace scag::pers::client;
 using namespace scag::pers;
-using scag::re::actions::BillOpenCallParams;
+//using scag::re::actions::BillOpenCallParams;
 
 bool  LongCallManager::inited = false;
 Mutex LongCallManager::initLock;
