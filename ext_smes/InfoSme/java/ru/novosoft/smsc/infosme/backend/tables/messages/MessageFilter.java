@@ -19,7 +19,7 @@ public class MessageFilter implements Filter
   private Date tillDate = new Date();
   private String taskId = null;
   private String address = null;
-  private byte status = Message.MESSAGE_UNDEFINED_STATE;
+  private Message.State status = Message.State.UNDEFINED;
 
   private boolean fromDateEnabled = false;
   private boolean tillDateEnabled = false;
@@ -67,11 +67,11 @@ public class MessageFilter implements Filter
     this.address = address;
   }
 
-  public byte getStatus() {
+  public Message.State getStatus() {
     return status;
   }
   public void setStatus(byte status) {
-    this.status = status;
+    this.status = Message.State.getById(status);
   }
 
   public boolean isEmpty() {

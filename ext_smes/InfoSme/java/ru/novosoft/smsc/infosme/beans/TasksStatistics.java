@@ -1,10 +1,11 @@
 package ru.novosoft.smsc.infosme.beans;
 
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.infosme.backend.*;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
+import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
-import ru.novosoft.smsc.util.Functions;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspWriter;
@@ -26,8 +27,9 @@ public class TasksStatistics extends InfoSmeBean
     private static final String DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
 
     private Statistics statistics = null;
-    private TasksStat  stat  = new TasksStat();
     private StatQuery  query = new StatQuery();
+
+    private InfoSme infoSme = null;
 
     private String exportFilePath = null;
 
@@ -36,55 +38,102 @@ public class TasksStatistics extends InfoSmeBean
 
     private boolean initialized = false;
 
-    protected int init(List errors)
-    {
+    protected int init(List errors) {
         int result = super.init(errors);
         if (result != RESULT_OK)
             return result;
 
-        if (getInfoSmeContext().getDataSource() != null)
-            stat.setDataSource(getInfoSmeContext().getDataSource());
-        stat.setInfoSme(getInfoSmeContext().getInfoSme());
-
-        if (!initialized) {
-            query.setFromDate(Functions.truncateTime(new Date()));
-            query.setFromDateEnabled(true);
+        try {
+          this.infoSme = new InfoSme(appContext.getHostsManager().getServiceInfo("InfoSme"),
+                                     appContext.getConfig().getString("InfoSme.Admin.host"),
+                                     appContext.getConfig().getInt("InfoSme.Admin.port"));
+        } catch (Exception e) {
+          logger.error("Can't init InfoSme", e);
+          return RESULT_ERROR;
         }
+
+        if (!initialized)
+            query.setFromDate(Functions.truncateTime(new Date()));
 
         return RESULT_OK;
     }
 
-    public int process(HttpServletRequest request)
-    {
+    public int process(HttpServletRequest request) {
         int result = super.process(request);
         if (result != RESULT_OK)
             return result;
 
-        if (getInfoSmeContext().getDataSource() == null)
-            warning("infosme.error.ds_not_inited");
-
+      try {
         if (mbCancel != null) {
-            mbCancel = null;
-            return RESULT_DONE;
+          mbCancel = null;
+          return RESULT_DONE;
         }
-        if (mbQuery != null) {
-            try
-            {
-                statistics = null;
-                if (getInfoSmeContext().getDataSource() == null)
-                    return error("infosme.error.ds_not_inited");
 
-                statistics = stat.getStatistics(query);
-                if (result != RESULT_OK) return result;
-            }
-            catch (Throwable e) {
-                logger.debug("Couldn't get statisctics", e);
-                return error("infosme.error.ds_stat_query_failed", e);
-            }
-            mbQuery = null;
+        if (mbQuery != null) {
+          processQuery();
+          mbQuery = null;
         }
-        return RESULT_OK;
+      } catch (Throwable e) {
+        logger.debug("Couldn't get statisctics", e);
+        return error("infosme.error.ds_stat_query_failed", e);
+      }
+      return RESULT_OK;
     }
+
+  private void processQuery() throws AdminException {
+     flushStatistics(query);
+
+      Calendar oldPeriod = null;
+      DateCountersSet dateCounters = null;
+
+      statistics = null;
+      statistics = new Statistics();
+
+      final List stats =  infoSme.getTaskStatistics(query.getTaskId(),
+                                                    (query.isFromDateEnabled()) ? query.getFromDate() : null,
+                                                    (query.isTillDateEnabled()) ? query.getTillDate() : null);
+
+      for (Iterator iter = stats.iterator(); iter.hasNext();) {
+        Statistic st = (Statistic)iter.next();
+        final Calendar newPeriod =Calendar.getInstance();
+        newPeriod.setTime(st.getPeriod());
+
+        int hour = newPeriod.get(Calendar.HOUR_OF_DAY);
+
+        HourCountersSet hourCounters = new HourCountersSet(st.getGenerated(), st.getDelivered(), st.getRetried(), st.getFailed(), hour);
+        if (dateCounters == null) { // on first iteration
+          dateCounters = new DateCountersSet(newPeriod.getTime());
+        } else if (needChangeDate(oldPeriod, newPeriod)) { // on date changed
+          statistics.addDateStat(dateCounters);
+          dateCounters = new DateCountersSet(newPeriod.getTime());
+        }
+        dateCounters.addHourStat(hourCounters);
+        oldPeriod = newPeriod;
+      }
+
+      if (dateCounters != null)
+        statistics.addDateStat(dateCounters);
+    }
+
+    private void flushStatistics(StatQuery query) throws AdminException {
+      boolean needFlush = true;
+      if (query.getTillDate() != null) {
+        long till = query.getTillDate().getTime();
+        long curr = (new Date()).getTime();
+        needFlush = (till >= curr - 3600);
+      }
+
+      if (needFlush)
+          infoSme.flushStatistics();
+    }
+
+    private boolean needChangeDate(Calendar oldPeriod, Calendar newPeriod) {
+      return oldPeriod.get(Calendar.YEAR) != newPeriod.get(Calendar.YEAR) ||
+             oldPeriod.get(Calendar.MONTH) != newPeriod.get(Calendar.MONTH) ||
+             oldPeriod.get(Calendar.DAY_OF_MONTH) != newPeriod.get(Calendar.DAY_OF_MONTH);
+    }
+
+
 
     private final static char   COL_SEP       = ',';
     private final static String CAPTION_STR   = "Sibinco InfoSme statistics report";
@@ -228,9 +277,9 @@ public class TasksStatistics extends InfoSmeBean
         String id = query.getTaskId();
         return (id == null) ? "" : id;
     }
+
     public void setTaskId(String taskId) {
-        query.setTaskId((taskId == null || taskId.length() <= 0 ||
-                taskId.equals(ALL_TASKS_MARKER)) ? null : taskId);
+        query.setTaskId((taskId == null || taskId.length() <= 0 || taskId.equals(ALL_TASKS_MARKER)) ? null : taskId);
     }
 
     public String getTaskName(String taskId)

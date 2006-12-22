@@ -87,6 +87,7 @@ page_menu_end(out);
     <%
       for (Iterator i = statistics.getCountersByDates().iterator(); i.hasNext();) {
         DateCountersSet dateCounters =    (DateCountersSet) i.next();
+        if (dateCounters != null) {
         SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy");
         String date = formatter.format(dateCounters.getDate());
         String dateHex = StringEncoderDecoder.encodeHEX(date);
@@ -114,6 +115,7 @@ page_menu_end(out);
           </tr><%
         }
         %></table></td></tr><%
+        }
       }
     %>
     </table>

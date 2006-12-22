@@ -1,8 +1,7 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="ru.novosoft.smsc.util.StringEncoderDecoder,
                  java.util.*, ru.novosoft.smsc.infosme.backend.Message,
-                 ru.novosoft.smsc.jsp.util.tables.QueryResultSet,
-                 ru.novosoft.smsc.infosme.backend.tables.messages.MessageDataItem"%>
+                 ru.novosoft.smsc.jsp.util.tables.QueryResultSet"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.infosme.beans.Messages" />
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -49,13 +48,20 @@ function setSort(sorting)
 <%}%></select></td>
   <th style="text-align:left"><%= getLocString("infosme.label.msg_state")%></th>
   <td><select name=status>
-    <option value="<%=Message.MESSAGE_UNDEFINED_STATE%>" <%= (bean.isStatus(Message.MESSAGE_UNDEFINED_STATE)) ? "selected":""%>>ALL</option>
-    <option value="<%=Message.MESSAGE_NEW_STATE%>"       <%= (bean.isStatus(Message.MESSAGE_NEW_STATE)) ? "selected":""%>      >NEW</option>
-    <option value="<%=Message.MESSAGE_WAIT_STATE%>"      <%= (bean.isStatus(Message.MESSAGE_WAIT_STATE)) ? "selected":""%>     >WAIT</option>
-    <option value="<%=Message.MESSAGE_ENROUTE_STATE%>"   <%= (bean.isStatus(Message.MESSAGE_ENROUTE_STATE)) ? "selected":""%>  >ENROUTE</option>
-    <option value="<%=Message.MESSAGE_DELIVERED_STATE%>" <%= (bean.isStatus(Message.MESSAGE_DELIVERED_STATE)) ? "selected":""%>>DELIVERED</option>
-    <option value="<%=Message.MESSAGE_EXPIRED_STATE%>"   <%= (bean.isStatus(Message.MESSAGE_EXPIRED_STATE)) ? "selected":""%>  >EXPIRED</option>
-    <option value="<%=Message.MESSAGE_FAILED_STATE%>"    <%= (bean.isStatus(Message.MESSAGE_FAILED_STATE)) ? "selected":""%>   >FAILED</option>
+<%--    <option value="<%=Message.MESSAGE_UNDEFINED_STATE%>" <%= (bean.isStatus(Message.MESSAGE_UNDEFINED_STATE)) ? "selected":""%>>ALL</option>--%>
+<%--    <option value="<%=Message.MESSAGE_NEW_STATE%>"       <%= (bean.isStatus(Message.MESSAGE_NEW_STATE)) ? "selected":""%>      >NEW</option>--%>
+<%--    <option value="<%=Message.MESSAGE_WAIT_STATE%>"      <%= (bean.isStatus(Message.MESSAGE_WAIT_STATE)) ? "selected":""%>     >WAIT</option>--%>
+<%--    <option value="<%=Message.MESSAGE_ENROUTE_STATE%>"   <%= (bean.isStatus(Message.MESSAGE_ENROUTE_STATE)) ? "selected":""%>  >ENROUTE</option>--%>
+<%--    <option value="<%=Message.MESSAGE_DELIVERED_STATE%>" <%= (bean.isStatus(Message.MESSAGE_DELIVERED_STATE)) ? "selected":""%>>DELIVERED</option>--%>
+<%--    <option value="<%=Message.MESSAGE_EXPIRED_STATE%>"   <%= (bean.isStatus(Message.MESSAGE_EXPIRED_STATE)) ? "selected":""%>  >EXPIRED</option>--%>
+<%--    <option value="<%=Message.MESSAGE_FAILED_STATE%>"    <%= (bean.isStatus(Message.MESSAGE_FAILED_STATE)) ? "selected":""%>   >FAILED</option>--%>
+        <option value="<%=Message.State.UNDEFINED.getId()%>" <%= (bean.isStatus(Message.State.UNDEFINED.getId())) ? "selected":""%>>ALL</option>
+        <option value="<%=Message.State.NEW.getId()%>"       <%= (bean.isStatus(Message.State.NEW.getId())) ? "selected":""%>      >NEW</option>
+        <option value="<%=Message.State.WAIT.getId()%>"      <%= (bean.isStatus(Message.State.WAIT.getId())) ? "selected":""%>     >WAIT</option>
+        <option value="<%=Message.State.ENROUTE.getId()%>"   <%= (bean.isStatus(Message.State.ENROUTE.getId())) ? "selected":""%>     >WAIT</option>
+        <option value="<%=Message.State.DELIVERED.getId()%>" <%= (bean.isStatus(Message.State.DELIVERED.getId())) ? "selected":""%>>DELIVERED</option>
+        <option value="<%=Message.State.EXPIRED.getId()%>"   <%= (bean.isStatus(Message.State.EXPIRED.getId())) ? "selected":""%>  >EXPIRED</option>
+        <option value="<%=Message.State.FAILED.getId()%>"    <%= (bean.isStatus(Message.State.FAILED.getId())) ? "selected":""%>   >FAILED</option>
   </select></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
@@ -87,8 +93,8 @@ page_menu_space(out);
 page_menu_end(out);
 if (bean.isInitialized()) {
 %><div class=content><%
-QueryResultSet allMessages = bean.getMessages();
-if (allMessages == null || allMessages.getTotalSize() == 0)
+List allMessages = bean.getMessages();
+if (allMessages == null || allMessages.size() == 0)
 {%><span style='color:blue;'><%= getLocString("infosme.msg.no_messages_matched")%></span><%}
 else
 {%>
@@ -110,13 +116,13 @@ else
 </tr></thead>
 <tbody><%
   for (Iterator i=allMessages.iterator(); i.hasNext();) {
-    MessageDataItem message = (MessageDataItem)i.next();
+    Message message = (Message)i.next();
     %><tr class=row<%=rowN++&1%>>
-      <td><input class=check type=checkbox name=checked value="<%=message.getId()%>" <%=bean.isMessageChecked(message.getIdString()) ? "checked" : ""%>></td>
-      <td><%=StringEncoderDecoder.encode(message.getIdString())%></td>
+      <td><input class=check type=checkbox name=checked value="<%=message.getTaskId()%>" <%=bean.isMessageChecked(message.getTaskId()) ? "checked" : ""%>></td>
+      <td><%=StringEncoderDecoder.encode(message.getTaskId())%></td>
       <td><%=StringEncoderDecoder.encode(message.getAbonent())%></td>
-      <td><%=StringEncoderDecoder.encode(message.getStatus())%></td>
-      <td nowrap><%=StringEncoderDecoder.encode(message.getDate())%></td>
+      <td><%=StringEncoderDecoder.encode(bean.getStateName(message.getState()))%></td>
+      <td nowrap><%=StringEncoderDecoder.encode(bean.convertDateToString(message.getSendDate()))%></td>
       <td><%=StringEncoderDecoder.encode(message.getMessage())%></td>
     </tr>
 <%}%>

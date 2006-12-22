@@ -16,7 +16,7 @@ public class DateCountersSet extends CountersSet
 
   private Vector byHours = new Vector(); // contains HourCountersSet
 
-  DateCountersSet(Date date)
+  public DateCountersSet(Date date)
   {
     this.date = date;
   }

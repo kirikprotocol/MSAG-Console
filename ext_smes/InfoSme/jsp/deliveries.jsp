@@ -214,7 +214,7 @@ refreshProgressStatus();
 <div class=page_subtitle><%= getLocString("infosme.subtitle.stage4")%></div><br/>
 <div class=secInfo><%= ((bean.getStatus() == Deliveries.STATUS_OK) ?
                          getLocString("infosme.msg.task_add_success"):
-                         getLocString("infosme.msg.task_add_failure"))%>'<%= bean.getId()%>'</div>
+                         getLocString("infosme.msg.task_add_failure"))%>'<%= bean.getId()%>': <%=" " + bean.getStatusStr()%></div>
 <div class=secInfo><%= getLocString("infosme.msg.to_main")%></div>
         <%}
         break;

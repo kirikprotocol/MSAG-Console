@@ -1,13 +1,13 @@
 package ru.novosoft.smsc.infosme.beans;
 
+import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.infosme.backend.InfoSme;
+import ru.novosoft.smsc.infosme.backend.Message;
+import ru.novosoft.smsc.infosme.backend.tables.messages.MessageFilter;
+import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
+import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
-import ru.novosoft.smsc.util.Functions;
-import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
-import ru.novosoft.smsc.infosme.backend.tables.messages.MessageFilter;
-import ru.novosoft.smsc.infosme.backend.tables.messages.MessageDataSource;
-import ru.novosoft.smsc.infosme.backend.tables.messages.MessageQuery;
-import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 
 import javax.servlet.http.HttpServletRequest;
 import java.text.ParseException;
@@ -31,9 +31,9 @@ public class Messages extends InfoSmeBean
   private int startPosition = 0;
   private int pageSize = 0;
 
-  private MessageDataSource msgSource = null;
   private MessageFilter  msgFilter = new MessageFilter();
-  private QueryResultSet messages = null;
+  private List messages = null;
+  private InfoSme infoSme = null;
 
   private String mbQuery     = null;
   private String mbResend    = null;
@@ -48,13 +48,13 @@ public class Messages extends InfoSmeBean
     int result = super.init(errors);
     if (result != RESULT_OK) return result;
 
-    if (msgSource == null) {
-      try {
-        msgSource = new MessageDataSource(getInfoSmeContext().getDataSource(),
-                        getInfoSmeContext().getConfig().getString("InfoSme.tasksTablesPrefix"));
-      } catch (Exception e) {
-        return error("infosme.error.ds_init_failed", e);
-      }
+    try {
+      this.infoSme = new InfoSme(appContext.getHostsManager().getServiceInfo("InfoSme"),
+                                 appContext.getConfig().getString("InfoSme.Admin.host"),
+                                 appContext.getConfig().getInt("InfoSme.Admin.port"));
+    } catch (Exception e) {
+      logger.error("Can't init InfoSme", e);
+      return RESULT_ERROR;
     }
 
     checkedSet = new HashSet(Arrays.asList(checked));
@@ -81,69 +81,121 @@ public class Messages extends InfoSmeBean
     if (allTasks == null || allTasks.size() <= 0)
       return warning("infosme.warn.no_task_for_msg");
 
-    if (getInfoSmeContext().getDataSource() == null)
-      return error("infosme.error.ds_not_inited");
-
-    if (mbDelete != null || mbDeleteAll != null) return processDelete();
-    else if (mbResend != null || mbResendAll != null) return processResend();
-    else if (mbQuery != null || (initialized && messages == null)) return processQuery();
-
+    try {
+      if (mbDelete != null || mbDeleteAll != null) return processDelete();
+      else if (mbResend != null || mbResendAll != null) return processResend();
+      else if (mbQuery != null || (initialized && messages == null)) return processQuery();
+    } catch (AdminException e) {
+      logger.error("Process error", e);
+      error("Error", e);
+    }
     return result;
   }
 
-  private int processQuery()
-  {
+  public String getStateName(Message.State state) {
+    if (state == Message.State.UNDEFINED)
+      return "ALL";
+    else if (state == Message.State.NEW)
+      return "NEW";
+    else if (state == Message.State.WAIT)
+      return "WAIT";
+    else if (state == Message.State.ENROUTE)
+      return "ENROUTE";
+    else if (state == Message.State.DELIVERED)
+      return "DELIVERED";
+    else if (state == Message.State.EXPIRED)
+      return "EXPIRED";
+    else if (state == Message.State.FAILED)
+      return "FAILED";
+
+    return "";
+  }
+
+
+  private int processQuery() throws AdminException {
     if (mbQuery != null) { startPosition = 0; mbQuery = null; }
-    messages = null;
-    try {
-      messages = msgSource.query(new MessageQuery(pageSize, msgFilter, sort, startPosition));
-      String error = msgSource.getError();
-      if (error != null) throw new Exception(error);
-    } catch (Throwable e) {
-      logger.debug("Messages query failed", e);
-      return error("infosme.error.ds_msg_query_failed", e);
-    }
+    messages = infoSme.getMessages(msgFilter.getTaskId(), msgFilter.getStatus(), msgFilter.getFromDate(), msgFilter.getTillDate(),
+                                   (sort != null && sort.startsWith("-")) ? sort.substring(1) : sort, (sort == null || !sort.startsWith("-")));
     return RESULT_OK;
   }
 
-  private int processDelete()
-  {
+  private int processDelete() throws AdminException {
+
+    if (mbDelete != null)
+      deleteChecked();
+    else if (mbDeleteAll != null)
+      deleteAll();
+
+    resetChecked();
+    mbDelete = mbDeleteAll = null;
+
+    return processQuery();
+  }
+
+  private int deleteChecked() {
     int deleted = 0;
     try {
-      if (mbDelete != null)         deleted = msgSource.delete(msgFilter.getTaskId(), checked);
-      else if (mbDeleteAll != null) deleted = msgSource.delete(msgFilter);
-      else throw new Exception("Internal error. Invalid delete method called");
-      String error = msgSource.getError();
-      if (error != null) throw new Exception(error);
+      for (int i = 0; i < checked.length; i++) {
+        String id = checked[i];
+        infoSme.deleteMessages(msgFilter.getTaskId(), id);
+        deleted++;
+      }
     } catch (Throwable e) {
       logger.debug("Messages delete failed", e);
       return error("infosme.error.ds_msg_del_failed", e);
     }
-    resetChecked();
-    mbDelete = mbDeleteAll = null;
-    int result = processQuery();
-    if (result != RESULT_OK) return result;
-    return message(""+deleted+" messages deleted");
+
+    return message(""+deleted+" messages have been deleted");
   }
 
-  private int processResend()
-  {
+  private int deleteAll() {
+    try {
+      infoSme.deleteMessages(msgFilter.getTaskId(), msgFilter.getAddress(), msgFilter.getStatus(), msgFilter.getFromDate(), msgFilter.getTillDate());
+
+    } catch (AdminException e) {
+      logger.debug("Messages delete failed", e);
+      return error("infosme.error.ds_msg_del_failed", e);
+    }
+    return message("Messages have been resended");
+  }
+
+  private int processResend() throws AdminException {
+    if (mbResend != null)
+      resendChecked();
+    else if (mbResendAll != null)
+      resendAll();
+
+    resetChecked();
+    mbResend = mbResendAll = null;
+
+    return processQuery();
+  }
+
+  private int resendChecked() {
     int resent = 0;
     try {
-      if (mbResend != null)         resent = msgSource.resend(msgFilter.getTaskId(), checked);
-      else if (mbResendAll != null) resent = msgSource.resend(msgFilter);
-      else throw new Exception("Internal error. Invalid resend method called");
-      String error = msgSource.getError();
-      if (error != null) throw new Exception(error);
+      for (int i = 0; i < checked.length; i++) {
+        String id = checked[i];
+        infoSme.resendMessages(msgFilter.getTaskId(), id, Message.State.NEW, new Date());
+        resent++;
+      }
     } catch (Throwable e) {
       logger.debug("Messages resend failed", e);
       return error("infosme.error.ds_msg_res_failed", e);
     }
-    resetChecked();
-    mbResend = mbResendAll = null;
-    int result = processQuery();
-    if (result != RESULT_OK) return result;
+
     return message(""+resent+" messages resending");
+  }
+
+  private int resendAll() {
+    try {
+      infoSme.resendMessages(msgFilter.getTaskId(), msgFilter.getAddress(), msgFilter.getStatus(), msgFilter.getFromDate(), msgFilter.getTillDate(),
+                             Message.State.NEW, new Date());
+    } catch (AdminException e) {
+      logger.debug("Messages resend failed", e);
+      return error("infosme.error.ds_msg_res_failed", e);
+    }
+    return message("Messages resending");
   }
 
   private void resetChecked() {
@@ -151,11 +203,11 @@ public class Messages extends InfoSmeBean
     checkedSet = new HashSet(Arrays.asList(checked));
   }
 
-  public QueryResultSet getMessages() {
+  public List getMessages() {
     return messages;
   }
   public int getTotalSize() {
-    return (messages == null) ? 0:messages.getTotalSize();
+    return (messages == null) ? 0 : messages.size();
   }
   public int getTotalSizeInt() {
     return getTotalSize();
@@ -210,7 +262,7 @@ public class Messages extends InfoSmeBean
     }
     return converted;
   }
-  private String convertDateToString(Date date)
+  public String convertDateToString(Date date)
   {
     SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
     return formatter.format(date);
@@ -325,12 +377,12 @@ public class Messages extends InfoSmeBean
   }
 
   public int getStatus() {
-    return msgFilter.getStatus();
+    return msgFilter.getStatus().getId();
   }
   public void setStatus(int status) {
     msgFilter.setStatus((byte)status);
   }
   public boolean isStatus(int status) {
-    return (msgFilter.getStatus() == status);
+    return (msgFilter.getStatus().getId() == status);
   }
 }

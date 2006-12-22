@@ -17,7 +17,7 @@ public class HourCountersSet extends CountersSet
     this.hour = hour;
   }
 
-  HourCountersSet(long g, long d, long r, long f, int hour)
+  public HourCountersSet(long g, long d, long r, long f, int hour)
   {
     super(g, d, r, f);
     this.hour = hour;

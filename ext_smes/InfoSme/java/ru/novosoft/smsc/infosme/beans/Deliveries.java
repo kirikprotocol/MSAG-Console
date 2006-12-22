@@ -1,24 +1,25 @@
 package ru.novosoft.smsc.infosme.beans;
 
-import ru.novosoft.smsc.util.Functions;
-import ru.novosoft.smsc.util.WebAppFolders;
-import ru.novosoft.smsc.util.Transliterator;
-import ru.novosoft.smsc.util.config.Config;
-import ru.novosoft.smsc.infosme.backend.Task;
-import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.util.jsp.MultipartServletRequest;
+import ru.novosoft.smsc.admin.route.Mask;
+import ru.novosoft.smsc.infosme.backend.Message;
+import ru.novosoft.smsc.infosme.backend.Task;
+import ru.novosoft.smsc.util.Functions;
+import ru.novosoft.smsc.util.Transliterator;
+import ru.novosoft.smsc.util.WebAppFolders;
+import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.util.jsp.MultipartDataSource;
+import ru.novosoft.util.jsp.MultipartServletRequest;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.sql.DataSource;
-import java.io.*;
-import java.util.*;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.PreparedStatement;
-import java.sql.Statement;
-import java.text.SimpleDateFormat;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -31,6 +32,19 @@ public class Deliveries extends InfoSmeBean
 {
     public final static String ABONENTS_FILE_PARAM = "abonentsFile";
 
+    public final static int STATUS_OK = 0;
+    public final static int STATUS_ERR = -1;
+    public final static int STATUS_DONE = 1;
+
+    private final static String STATUS_STR_GENERATING = "Generating messages...";
+    private final static String STATUS_STR_INIT       = "Initialization...";
+    private final static String STATUS_STR_DONE       = "Finished";
+    private final static String STATUS_STR_ERR        = "Error - ";
+
+    private int status = STATUS_OK;
+    private String statusStr = STATUS_STR_INIT;
+
+
     private String mbDlstat = null;
     private String mbStat   = null;
     private String mbNext   = null;
@@ -42,14 +56,26 @@ public class Deliveries extends InfoSmeBean
     private boolean transliterate = false;
     private boolean retryOnFail = true;
 
+    private Config backup = null;
+
     private Task task = new Task();
-    private String taskTableName = null;
 
     protected int init(List errors)
     {
       int result = super.init(errors);
       if (result != RESULT_OK)
         return result;
+
+      try {
+        if (backup == null) {
+          final Config oldConfig = getInfoSmeContext().getConfig();
+          backup = (Config) oldConfig.clone();
+        }
+
+      } catch (Exception e) {
+        logger.error("Can't init InfoSme", e);
+        return RESULT_ERROR;
+      }
 
       return RESULT_OK;
     }
@@ -96,7 +122,6 @@ public class Deliveries extends InfoSmeBean
       incomingFile = null;
 
       transliterate = false;
-      taskTableName = null;
       task = new Task();
       resetTask();
     }
@@ -115,10 +140,8 @@ public class Deliveries extends InfoSmeBean
             generateThread = null;
         }
 
-        if (taskTableName != null) {
-            cleanupTaskDB(); // Drop task table by task.id
-            taskTableName = null;
-        }
+        System.out.println("Remove tasks");
+        removeTask();
 
         return RESULT_DONE;
     }
@@ -151,9 +174,9 @@ public class Deliveries extends InfoSmeBean
       }
 
       if (errors.size() == 0) {
-        stage++; return RESULT_OK;
-      }
-      else
+        stage++;
+        return RESULT_OK;
+      } else
         return RESULT_ERROR;
     }
 
@@ -180,15 +203,14 @@ public class Deliveries extends InfoSmeBean
 
     class GenerateThread extends Thread
     {
-        private Connection connection = null;
         private BufferedInputStream bis = null;
 
         private boolean isStopping = false;
         private Object  shutdownSemaphore = new Object();
 
-        public GenerateThread(FileInputStream fis, Connection connection) throws IOException
+
+        public GenerateThread(FileInputStream fis) throws IOException
         {
-            this.connection = connection;
             resetCounters(fis.getChannel().size());
             this.bis = new BufferedInputStream(fis, 1024*10); // 10Kb
         }
@@ -217,27 +239,31 @@ public class Deliveries extends InfoSmeBean
             return sb.toString().trim();
         }
 
-        private void rollback()
-        {
-            try { if (connection != null) connection.rollback(); }
-            catch (Throwable tt) { logger.error("Failed to rollback", tt); }
+        private void rollback() {
+//          removeTask();
         }
+
         public void run()
         {
             final String taskId = task.getId();
             status = STATUS_OK; statusStr = STATUS_STR_GENERATING;
-            String line = null; long uncommited = 0;
+            String line = null;
+
+            final Config oldConfig = getInfoSmeContext().getConfig();
+
             try
             {
                 generateThreadRunning = true;
                 logger.debug("Starting messages generating for task '"+taskId+"'");
 
-                GregorianCalendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
                 java.util.Date currentTime = new java.util.Date();
-                PreparedStatement stmt = connection.prepareStatement(prepareInsertMessageSql());
-                stmt.setByte  (1, (byte)0); // NEW_STATE
-                stmt.setTimestamp(3, new java.sql.Timestamp(currentTime.getTime()), cal);
-                stmt.setString(4, task.getText());
+
+                task.storeToConfig(oldConfig);
+                oldConfig.save();
+                if (getInfoSme().getInfo().isOnline())
+                getInfoSmeContext().getInfoSme().addTask(taskId);
+
+                final List messages = new ArrayList();
 
                 while(!isStopping)
                 {
@@ -246,49 +272,50 @@ public class Deliveries extends InfoSmeBean
                         incProgress(true); break;
                     }
                     Mask address = new Mask(line); // throws AdminException
-                    stmt.setString(2, address.getMask());
-                    stmt.executeUpdate();
-                    incProgress(false);
-                    if (++uncommited >= 50) { 
-                        connection.commit(); uncommited = 0;
+                    final Message message = new Message();
+                    message.setState(Message.State.NEW);
+                    message.setSendDate(currentTime);
+                    message.setMessage(task.getText());
+                    message.setAbonent(address.getMask());
+
+                    messages.add(message);
+
+                    if (messages.size() > 1000) {
+                      getInfoSmeContext().getInfoSme().addDeliveryMessages(task.getId(), messages);
+                      messages.clear();
                     }
+
+                    incProgress(false);
                 }
-                if (uncommited > 0) connection.commit();
-                stmt.close();
-                
-                // create & call insert statistics statement
-                stmt = connection.prepareStatement(INSERT_STAT_SQL);
-                SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHH");
-                stmt.setInt   (1, Integer.parseInt(formatter.format(new java.util.Date())));
-                stmt.setString(2, taskId);
-                stmt.setLong  (3, getMessages());
-                stmt.executeUpdate();
-                connection.commit(); stmt.close();
+
+                getInfoSmeContext().getInfoSme().addDeliveryMessages(task.getId(), messages);
+                messages.clear();
+
+                getInfoSmeContext().getInfoSme().addStatisticRecord(task.getId(), new Date(), (int)getMessages(), 0, 0 ,0);
 
                 status = STATUS_DONE; statusStr = STATUS_STR_DONE;
 
+                stage++;
             } catch (AdminException ae) {
-              rollback(); logger.error("Incorrect abonent address format '"+line+"'.", ae);
-              setError("Incorrect abonent address format '"+line+"'.");
-            } catch (SQLException se) {
-              rollback(); logger.error("DataSource error", se);
-              setError("DataSource error. Details: "+se.getMessage());
+              rollback();
+              logger.error("Error: " + ae.getMessage(), ae);
+              setError("Error: " + ae.getMessage());
             } catch (IOException ex) {
-              rollback(); logger.error("File input error", ex);
+              rollback();
+              logger.error("File input error", ex);
               setError("File input error. Details: "+ex.getMessage());
             } catch (Throwable th) {
-              rollback(); logger.error("Unexpected error occured", th);
+              rollback();
+              logger.error("Unexpected error occured", th);
               setError("Unexpected error occured. "+th.getMessage());
             } finally {
-              try { if (connection != null) connection.close(); } 
-              catch (SQLException e) { logger.error("Can't close connection to DB", e); }
               try { bis.close(); }
               catch (Throwable th) { logger.error("Can't close input stream", th); }
               synchronized(shutdownSemaphore) {
                 shutdownSemaphore.notifyAll();
               }
               logger.debug("Messages generation for task '"+taskId+"' finished");
-              generateThreadRunning = false; generateThread = null; connection = null;
+              generateThreadRunning = false; generateThread = null; //connection = null;
             }
         }
         public void shutdown()
@@ -315,178 +342,74 @@ public class Deliveries extends InfoSmeBean
         return generateThreadRunning;
     }
 
-    public final static int STATUS_OK = 0;
-    public final static int STATUS_ERR = -1;
-    public final static int STATUS_DONE = 1;
-
-    private final static String STATUS_STR_GENERATING = "Generating messages...";
-    private final static String STATUS_STR_INIT       = "Initialization...";
-    private final static String STATUS_STR_DONE       = "Finished";
-    private final static String STATUS_STR_ERR        = "Error - ";
-
-    private int status = STATUS_OK;
-    private String statusStr = STATUS_STR_INIT;
 
     public String getStatusStr() {
         return statusStr;
     }
+
     public int getStatus() {
         return status;
     }
+
     private void setError(String str) {
         status = STATUS_ERR; statusStr = STATUS_STR_ERR + str;
     }
 
-    private final static String DROP_TABLE_SQL = "DROP TABLE ";
-    private final static String CREATE_TABLE_SQL = "CREATE TABLE ";
-    private final static String CREATE_TABLE_BODY_SQL =
-        " (ID       NUMBER          NOT NULL,"+
-        " STATE     NUMBER(3)       NOT NULL,"+
-        " ABONENT   VARCHAR2(30)    NOT NULL,"+
-        " SEND_DATE DATE            NOT NULL,"+
-        " MESSAGE   VARCHAR2(2000)  NULL,"+
-        " PRIMARY KEY (ID))";
+    private synchronized void removeTask() {
 
-    // "CREATE INDEX %s_SD_IDX ON %s (STATE, SEND_DATE)";
-    // "CREATE INDEX %s_AB_IDX ON %s (STATE, ABONENT)";
-    private final static String CREATE_INDEX_SQL = "CREATE INDEX ";
-    private final static String CREATE_INDEX1_PX_SQL = "_SD_IDX ON ";
-    private final static String CREATE_INDEX2_PX_SQL = "_AB_IDX ON ";
-    private final static String CREATE_INDEX1_BODY_SQL = "(STATE, SEND_DATE)";
-    private final static String CREATE_INDEX2_BODY_SQL = "(STATE, ABONENT)";
-    private final static String INSERT_MSG_SQL = "INSERT INTO ";
-    private final static String INSERT_MSG_BODY_SQL =
-        " (ID, STATE, ABONENT, SEND_DATE, MESSAGE) VALUES (INFOSME_MESSAGES_SEQ.NEXTVAL, ?, ?, ?, ?)";
-    private final static String INSERT_STAT_SQL = 
-        "INSERT INTO INFOSME_TASKS_STAT (period, task_id, generated, delivered, retried, failed)"+
-        " VALUES(?, ?, ?, 0, 0, 0)";
-    private String prepareCreateTableSql() {
-        return CREATE_TABLE_SQL +  taskTableName + CREATE_TABLE_BODY_SQL;
-    }
-    private String prepareCreateIndex1Sql() {
-        return CREATE_INDEX_SQL + taskTableName +
-               CREATE_INDEX1_PX_SQL + taskTableName + CREATE_INDEX1_BODY_SQL;
-    }
-    private String prepareCreateIndex2Sql() {
-        return CREATE_INDEX_SQL + taskTableName +
-               CREATE_INDEX2_PX_SQL + taskTableName + CREATE_INDEX2_BODY_SQL;
-    }
-    private String prepareDropTableSql() {
-        return DROP_TABLE_SQL + taskTableName;
-    }
-    private String prepareInsertMessageSql() {
-        return INSERT_MSG_SQL + taskTableName + INSERT_MSG_BODY_SQL;
+      try {
+        if (backup != null) {
+          logger.warn("Restoring old config.");
+          backup.save();
+          getInfoSmeContext().resetConfig();
+          getInfoSmeContext().getConfig().save();
+        }
+
+        getInfoSmeContext().getInfoSme().removeTask(task.getId());
+      } catch (Throwable e) {
+        logger.error("Failed rollback task");
+        error("infosme.error.config_restore");
+      }
     }
 
-    private void cleanupTaskDB()
-    {
-        Connection connection = null;
-        try {
-            DataSource ds = getInfoSmeContext().getDataSource();
-            if (ds == null || (connection = ds.getConnection()) == null)
-                throw new SQLException("Failed to obtain DataSource connection");
-            cleanupTaskDB(connection);
-        } catch (SQLException exc) {
-            try { if (connection != null) connection.close(); } catch (Exception e) {
-              logger.error("Can't close connection to DB", e);
-            }
-        }
-    }
-    private void cleanupTaskDB(Connection connection)
-    {
-        logger.debug("DB cleanup called");
-        if (connection == null || taskTableName == null) return;
-        try {
-          Statement stmt = connection.createStatement();
-          stmt.execute(prepareDropTableSql());
-          connection.commit();
-        } catch(Exception e) {
-          logger.error("Task cleanup failed", e);
-        } finally {
-          try { connection.close(); } catch (Exception e) {
-            logger.error("Can't close connection to DB", e);
-          }
-        }
-        logger.debug("DB cleanup called finished");
-    }
     private int processFile()
     {
         if (generateThread != null || generateThreadRunning) return RESULT_DONE;
         if (!checkAndPrepareTask()) return RESULT_ERROR;
 
-        Connection connection = null;
         FileInputStream fis = null;
         try
         {
-          DataSource ds = getInfoSmeContext().getDataSource();
-          if (ds == null || (connection = ds.getConnection()) == null)
-              throw new SQLException("Failed to obtain DataSource connection");
-
-          logger.debug("Creating DB tables for task '"+task.getId()+"'");
-          Statement stmt = connection.createStatement();
-          stmt.execute(prepareCreateTableSql());
-          stmt.execute(prepareCreateIndex1Sql());
-          stmt.execute(prepareCreateIndex2Sql());
-          connection.commit();
-
-          logger.debug("DB tables for task '"+task.getId()+"' created. Start generating...");
           fis = new FileInputStream(incomingFile);
-          generateThread = new GenerateThread(fis, connection);
-          status = STATUS_OK;
-        }
-        catch (SQLException exc) {
-          cleanupTaskDB(connection);
-          error("infosme.error.prepare_db", exc.getMessage());
+          generateThread = new GenerateThread(fis);
+
         }
         catch (Exception exc) {
-          cleanupTaskDB(connection);
+          removeTask();
           try { if (fis != null) fis.close(); }
           catch (Exception e) { logger.error("Can't close input stream", e); }
           error("infosme.error.abonents_file_incorrect", exc.getMessage());
         }
 
+        status = STATUS_OK;
         if (errors.size() == 0) {
             if (generateThread != null) generateThread.start();
-            stage++; return RESULT_OK;
+            stage++;
+            return RESULT_OK;
         }
+
         return RESULT_ERROR;
     }
 
     private int processTask()
     {
-        errors.clear();
+//        stage++;
 
-        final String taskId = task.getId();
-        Config backup = null;
-        try
-        {
-          final Config oldConfig = getInfoSmeContext().getConfig();
-          backup = (Config) oldConfig.clone();
-          task.storeToConfig(oldConfig);
-          oldConfig.save();
-          if (getInfoSme().getInfo().isOnline())
-            getInfoSmeContext().getInfoSme().addTask(taskId);
-        }
-        catch (Exception e)
-        {
-          logger.error("Could not add task '"+taskId+"'. Details: "+e.getMessage(), e);
-          error("infosme.error.add_task", taskId, e);
-          if (backup != null) {
-              logger.warn("Restoring old config.");
-              try { backup.save(); } catch(Throwable th) {
-                  logger.error("Failed to restore backup config");
-                  error("infosme.error.config_restore");
-              }
-          }
-          cleanupTaskDB();
-        }
-
-        stage++;
-        if (errors.size() <= 0) {
-            status = STATUS_OK; statusStr = STATUS_STR_INIT;
+        if (status != STATUS_ERR) {
+            statusStr = STATUS_STR_INIT;
             return RESULT_OK;
         }
-        setError("Failed to add task '"+taskId+"'");
+
         return RESULT_ERROR;
     }
     private void resetTask()
@@ -509,8 +432,7 @@ public class Deliveries extends InfoSmeBean
         task.setTransactionMode(false);
         task.setValidityPeriod("12:00:00");
     }
-    private boolean checkAndPrepareTask()
-    {
+    private boolean checkAndPrepareTask() {
         errors.clear();
 
         String taskId = task.getId();
@@ -539,20 +461,9 @@ public class Deliveries extends InfoSmeBean
             error("Task with name='"+taskName+"' already exists. Please specify another name");
 
         if (errors.size() > 0) return false;
-        try {
-          taskTableName = getTablesPrefix() + taskId;
-        } catch (Exception exc) {
-          error("Invalid settings. Details: "+exc.getMessage());
-        }
         return (errors.size() <= 0);
     }
-    private String getTablesPrefix() throws Exception
-    {
-        String tableNamesPrefix = getInfoSmeContext().getConfig().getString("InfoSme.tasksTablesPrefix");
-        if (tableNamesPrefix == null)
-          throw new Exception("Parameter 'InfoSme.tasksTablesPrefix' is undefined");
-        return tableNamesPrefix;
-    }
+
     private int finishTask()
     {
         errors.clear();
