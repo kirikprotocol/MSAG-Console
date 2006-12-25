@@ -1,24 +1,19 @@
 #ifndef SCAG_RULE_ENGINE_ACTION_CONTEXT
 #define SCAG_RULE_ENGINE_ACTION_CONTEXT
 
-#include <sms/sms_serializer.h>
 #include <string>
 #include <core/buffers/Hash.hpp>
 #include <scag/re/RuleStatus.h>
 #include "scag/sessions/Session.h"
-#include "scag/lcm/LongCallManager.h"
+#include <stack>
 
 namespace scag { namespace re { namespace actions 
 {
- 
-    using namespace scag::util;
     using namespace scag::util::properties;
     using smsc::core::buffers::Hash;
     using scag::re::RuleStatus;
     using namespace scag::stat;
     using namespace scag::sessions;
-    using namespace scag::lcm;
-    using namespace smsc::core::buffers;
 
     enum FieldType
     {
@@ -29,6 +24,20 @@ namespace scag { namespace re { namespace actions
         ftField =   '#'
     };
 
+    struct ActionStackValue
+    {
+        int actionIndex;
+        bool thenSection;
+
+        ActionStackValue() : thenSection(false)
+        {
+        }
+
+        ActionStackValue(int index, bool flag) : actionIndex(index), thenSection(flag)
+        {
+        }
+    };
+
     class CommandAccessor : public PropertyManager
     {
     public:
@@ -37,7 +46,6 @@ namespace scag { namespace re { namespace actions
         virtual void fillRespOperation(smsc::inman::interaction::DeliverySmsResult& op, TariffRec& tariffRec) = 0;
         */
         //virtual SMS& getSMS() = 0;
-        virtual SCAGCommand& getSCAGCommand() = 0;
     };
 
    
@@ -84,8 +92,7 @@ namespace scag { namespace re { namespace actions
 
         ActionContext(Hash<Property>& _constants,
                       Session& _session, CommandAccessor& _command, CommandProperty& _commandProperty)
-            : constants(_constants), session(_session), 
-              command(_command), commandProperty(_commandProperty) 
+            : constants(_constants), session(_session), command(_command), commandProperty(_commandProperty) 
         {
         };
 
@@ -103,13 +110,12 @@ namespace scag { namespace re { namespace actions
 
 
         CommandAccessor& getCommand() { return command; };
-        SCAGCommand& getSCAGCommand() { return command.getSCAGCommand(); };
         Session& getSession() { return session; };        
 
         bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value);
         Property* getProperty(const std::string& var);
         void abortSession();
-        void AddPendingOperation(uint8_t type, time_t pendingTime, int billID);
+        void AddPendingOperation(uint8_t type, time_t pendingTime, unsigned int billID);
         Operation * GetCurrentOperation() {return session.GetCurrentOperation();}
 
         CommandProperty& getCommandProperty() {return commandProperty;}
@@ -132,22 +138,10 @@ namespace scag { namespace re { namespace actions
 
 
         TariffRec * getTariffRec(uint32_t category, uint32_t mediaType);
-        bool getTariffRec(uint32_t category, uint32_t mediaType, TariffRec& tr);
         bool checkIfCanSetPending(int operationType, int eventHandlerType, TransportType transportType);
         int getCurrentOperationBillID();
 
-        void clearLongCallContext()
-        {
-            LongCallContext& longCallContext = command.getSCAGCommand().getLongCallContext();
-            while (!longCallContext.ActionStack.empty()) longCallContext.ActionStack.pop();
-        }
-
-        /*LongCallBuffer& getBuffer()
-        {
-            return command.getSCAGCommand().getLongCallContext().contextActionBuffer;
-        } */
-        
-
+        std::stack<ActionStackValue> ActionStack;
    };
 
 }}}

@@ -100,13 +100,12 @@ void BillActionOpen::SetBillingStatus(ActionContext& context, const char * error
 
 }
 
-
-bool BillActionOpen::RunBeforePostpone(ActionContext& context)
+bool BillActionOpen::run(ActionContext& context)
 {
     smsc_log_debug(logger,"Run Action '%s'...", m_ActionName.c_str());
 
     /////////////////////////////////////////////
-
+ 
     Statistics& statistics = Statistics::Instance();
 
     if (m_MediaTypeFieldType != ftUnknown) 
@@ -116,7 +115,7 @@ bool BillActionOpen::RunBeforePostpone(ActionContext& context)
         {
             SetBillingStatus(context, "Invalid property for content-type", false, 0);
             smsc_log_error(logger,"Action '%s' :: Invalid property %s for content-type", m_ActionName.c_str(), m_mediaType.c_str());
-            return false;
+            return true;
         }
         mediaType = property->getInt();
     } 
@@ -128,7 +127,7 @@ bool BillActionOpen::RunBeforePostpone(ActionContext& context)
         {
             SetBillingStatus(context, "Invalid property for category", false, 0);
             smsc_log_error(logger,"Action '%s' :: Invalid property %s for category", m_ActionName.c_str(), m_category.c_str());
-            return false;
+            return true;
         }
         category = property->getInt();
     } 
@@ -145,74 +144,62 @@ bool BillActionOpen::RunBeforePostpone(ActionContext& context)
     {
         smsc_log_error(logger,"Action '%s': Fatal error in action - operation from ActionContext is invalid", m_ActionName.c_str());
         SetBillingStatus(context, "operation is invalid", false, 0);
-        return false;
+        return true;
     }
-
+     
     BillingManager& bm = BillingManager::Instance();
 
-    BillOpenCallParams* params = new BillOpenCallParams();
-    
-    if(!context.getTariffRec(category, mediaType, params->tariffRec))
+
+    TariffRec * tariffRec = 0;
+    try {
+        tariffRec = context.getTariffRec(category, mediaType);
+        if (!tariffRec) throw SCAGException("TariffRec is not valid");
+    } catch (SCAGException& e)
     {
-        smsc_log_warn(logger,"Action '%s' cannot process. Delails: TariffRec is not valid", m_ActionName.c_str());
-        SetBillingStatus(context, "TariffRec is not valid", false, &params->tariffRec);
-        delete params;
-        return false;
+        smsc_log_warn(logger,"Action '%s' cannot process. Delails: %s", m_ActionName.c_str(), e.what());
+        SetBillingStatus(context, e.what(), false, tariffRec);
+        return true;
     }
 
-    if (params->tariffRec.Price == 0)
-        smsc_log_warn(logger, "Zero price in tariff matrix. ServiceNumber=%d, CategoryId=%d, MediaTypeId=%d", params->tariffRec.ServiceNumber, params->tariffRec.CategoryId, params->tariffRec.MediaTypeId);
 
-    params->billingInfoStruct = context.getBillingInfoStruct();
+    if (tariffRec->Price == 0)
+        smsc_log_warn(logger, "Zero price in tariff matrix. ServiceNumber=%d, CategoryId=%d, MediaTypeId=%d", tariffRec->ServiceNumber, tariffRec->CategoryId, tariffRec->MediaTypeId);
 
-    context.getSCAGCommand().getLongCallContext().setParams(params);    
-    return true;
-}
+    BillingInfoStruct billingInfoStruct = context.getBillingInfoStruct();
 
-void BillActionOpen::ContinueRunning(ActionContext& context)
-{
-    LongCallContext& lcmCtx = context.getSCAGCommand().getLongCallContext();
-    BillOpenCallParams* params = (BillOpenCallParams*)lcmCtx.getParams();
-     
-    if(params->exception.length()) 
+    unsigned int BillId = 0;
+
+    try 
     {
-        smsc_log_error(logger,"Action '%s': Fatal error in action: %d", m_ActionName.c_str(), params->exception.c_str());
-        SetBillingStatus(context, params->exception.c_str(), false, 0);
-        lcmCtx.freeParams();
-        return;
-    }
-    
-    Operation * operation = context.GetCurrentOperation();
+        BillId = bm.Open(billingInfoStruct, *tariffRec);
 
-    if (!operation) 
+    } catch (SCAGException& e)
     {
-        smsc_log_error(logger,"Action '%s': Fatal error in action - operation from ActionContext is invalid", m_ActionName.c_str());
-        SetBillingStatus(context, "operation is invalid", false, 0);
-        lcmCtx.freeParams();
-        return;
+        smsc_log_warn(logger, "Action '%s' unable to process. Delails: %s", m_ActionName.c_str(), e.what());
+        SetBillingStatus(context, e.what(), false, 0);
+        return true;
     }
-    
-    smsc_log_debug(logger,"Continue Action '%s'...", m_ActionName.c_str());
 
     try 
     {
         if (m_waitOperation) 
-            RegisterPending(context, params->BillId);
+            RegisterPending(context, BillId);
         else
-            operation->attachBill(params->BillId);
-            
-        SetBillingStatus(context, "", true, &params->tariffRec);
-        smsc_log_debug(logger,"Action '%s' transaction successfully opened", m_ActionName.c_str());
+            operation->attachBill(BillId);
     }
     catch (SCAGException& e)
     {
         smsc_log_warn(logger, "Action '%s' unable to process. Delails: %s", m_ActionName.c_str(), e.what());
         SetBillingStatus(context, e.what(), false, 0);
         if (!m_waitOperation) operation->detachBill();
-        BillingManager::Instance().Rollback(params->BillId);
-    }
 
-    lcmCtx.freeParams();
+        bm.Rollback(BillId);
+        return true;
+    }
+    
+    SetBillingStatus(context, "", true, tariffRec);
+    smsc_log_debug(logger,"Action '%s' transaction successfully opened (BillId=%d)", m_ActionName.c_str(),BillId);
+    return true;
 }
 
 }}}

@@ -8,10 +8,10 @@ void ActionAbstractWait::InitParameters(const SectionParams& params,PropertyObje
     bool bExist;
     std::string sType;
 
-    ft = Action::CheckParameter(params, propertyObject, m_ActionName.c_str(), "type", true, true, sType, bExist);
+    ft = CheckParameter(params, propertyObject, m_ActionName.c_str(), "type", true, true, sType, bExist);
     if (ft!=ftUnknown) throw SCAGException("Action '%s': 'type' parameter must be a scalar constant type", m_ActionName.c_str());
 
-    m_ftTime = Action::CheckParameter(params, propertyObject, m_ActionName.c_str(), "time", true, true, m_sTime, bExist);
+    m_ftTime = CheckParameter(params, propertyObject, m_ActionName.c_str(), "time", true, true, m_sTime, bExist);
 
     m_opType = Session::getOperationType(sType);
 
@@ -22,7 +22,7 @@ void ActionAbstractWait::InitParameters(const SectionParams& params,PropertyObje
     smsc_log_debug(logger,"Action '%s':: init", m_ActionName.c_str());
 }
 
-void ActionAbstractWait::RegisterPending(ActionContext& context, int billID)
+void ActionAbstractWait::RegisterPending(ActionContext& context, unsigned int billID)
 {
     smsc_log_debug(logger,"Action '%s': registering pending...", m_ActionName.c_str());
 
@@ -49,7 +49,7 @@ void ActionAbstractWait::RegisterPending(ActionContext& context, int billID)
     pendingTime = now + wait_time;
 
     context.AddPendingOperation(m_opType, pendingTime, billID);
-    smsc_log_debug(logger,"Action '%s': pending registered time=%d, type=%d", m_ActionName.c_str(), wait_time, m_opType);
+    smsc_log_debug(logger,"Action '%s': pending registered time=%d, type=%d, billId=%d", m_ActionName.c_str(), wait_time, m_opType, billID);
 
 }
 

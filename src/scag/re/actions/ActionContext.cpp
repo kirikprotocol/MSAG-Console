@@ -29,12 +29,12 @@ CommandProperty::CommandProperty(SCAGCommand& command, int commandStatus, Addres
 
 
 
-void ActionContext::AddPendingOperation(uint8_t type, time_t pendingTime, int billID)
+void ActionContext::AddPendingOperation(uint8_t type, time_t pendingTime, unsigned int billID)
 {
     PendingOperation pendingOperation;
     pendingOperation.validityTime = pendingTime;
     pendingOperation.type = type;
-
+    
     if (billID > 0) 
         pendingOperation.billID = billID;
     
@@ -114,11 +114,8 @@ TariffRec * ActionContext::getTariffRec(uint32_t category, uint32_t medyaType)
     return m_TariffRec.get();
 }
 
-bool ActionContext::getTariffRec(uint32_t category, uint32_t medyaType, TariffRec& tr)
-{
-    Infrastructure& istr = BillingManager::Instance().getInfrastructure();
-    return istr.GetTariff(commandProperty.operatorId, category, medyaType, tr);
-}
+
+
 
 bool ActionContext::checkIfCanSetPending(int operationType, int eventHandlerType, TransportType transportType)
 {
