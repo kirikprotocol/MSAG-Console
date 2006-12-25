@@ -517,6 +517,7 @@ SessionPtr SessionManagerImpl::getSession(const CSessionKey& sessionKey)
                    session->getUSR(), session->getSessionKey().abonentAddr.toString().c_str(),
        session->PendingOperationList.size());
 
+    session->m_CanOpenSubmitOperation := false;
     return session;
 }
 

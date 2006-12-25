@@ -31,7 +31,7 @@ class BillingManagerImpl : public BillingManager, public Thread, public BillingM
         SPckChargeSms ChargeOperation;
         #endif
         EventMonitor eventMonitor;
-        int billId;
+        unsigned int billId;
         SACC_BILLING_INFO_EVENT_t billEvent;
         BillTransaction() : status(TRANSACTION_NOT_STARTED) { }
     };
@@ -45,7 +45,7 @@ class BillingManagerImpl : public BillingManager, public Thread, public BillingM
 
     bool m_bStarted;
 
-    int m_lastBillId;
+    unsigned int m_lastBillId;
     int m_TimeOut;
 
     bool m_Connected;
@@ -87,7 +87,7 @@ public:
     virtual void onChargeSmsResult(ChargeSmsResult* result, CsBillingHdr_dlg * hdr);
     #endif
 
-    virtual int Open(BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec);
+    virtual unsigned int Open(BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec);
     virtual void Commit(int billId);
     virtual void Rollback(int billId);
 
@@ -286,9 +286,9 @@ void BillingManagerImpl::ProcessSaccEvent(BillingTransactionEvent billingTransac
 
 }
 
-int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec)
+unsigned int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec)
 {
-    int billId;
+    unsigned int billId;
     SACC_BILLING_INFO_EVENT_t ev;
 
 

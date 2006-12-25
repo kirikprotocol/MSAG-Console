@@ -70,7 +70,7 @@ protected:
     BillingManager() {};
 
 public:
-    virtual int Open(BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec) = 0;
+    virtual unsigned int Open(BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec) = 0;
     virtual void Commit(int billId) = 0;
     virtual void Rollback(int billId) = 0;
 

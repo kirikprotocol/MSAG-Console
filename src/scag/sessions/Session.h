@@ -170,7 +170,7 @@ namespace scag { namespace sessions
         uint8_t type;
         time_t validityTime;
         bool bStartBillingOperation;
-        int billID;
+        unsigned int billID;
         void rollbackAll();
 
         PendingOperation() : bStartBillingOperation(false), billID(0) {};
@@ -184,7 +184,7 @@ namespace scag { namespace sessions
         Logger * logger;
         Operation(const Operation& operation);
         bool m_hasBill;
-        int billId;
+        unsigned int billId;
         int m_receivedParts;
         bool m_receivedAllParts;
 
@@ -198,7 +198,7 @@ namespace scag { namespace sessions
 
     public:
         uint8_t type;
-        void attachBill(int BillId);
+        void attachBill(unsigned int BillId);
         void detachBill();
         void rollbackAll();
         bool hasBill() {return m_hasBill;}

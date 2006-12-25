@@ -136,7 +136,7 @@ void Operation::receiveNewResp(int currentIndex,int lastIndex)
 }
 
 
-void Operation::attachBill(int BillId)
+void Operation::attachBill(unsigned int BillId)
 { 
     if (m_hasBill) throw SCAGException("Operation: Cannot attach bill - bill already attached!");
 
@@ -149,7 +149,7 @@ void Operation::attachBill(int BillId)
 
 void Operation::rollbackAll()
 {
-    smsc_log_debug(logger,"Operation: Rollback all");
+    smsc_log_warn(logger,"Operation: Rollback all");
     
     if (m_hasBill) 
     {
@@ -160,7 +160,7 @@ void Operation::rollbackAll()
             bm.Rollback(billId);
         } catch (SCAGException& e)
         {
-            smsc_log_debug(logger,"Operation: Cannot rollback. Details: %s", e.what());
+            smsc_loga_warn(logger,"Operation: Cannot rollback. Details: %s", e.what());
         }
 
 
