@@ -240,7 +240,7 @@ public class Deliveries extends InfoSmeBean
         }
 
         private void rollback() {
-//          removeTask();
+          removeTask();
         }
 
         public void run()
