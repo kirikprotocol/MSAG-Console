@@ -172,9 +172,14 @@ namespace scag { namespace sessions
         bool bStartBillingOperation;
         unsigned int billID;
         void rollbackAll();
+        Logger * logger;
 
-        PendingOperation() : bStartBillingOperation(false), billID(0) {};
+        PendingOperation() : bStartBillingOperation(false), billID(0), logger(0) 
+        {
+            logger = Logger::getInstance("scag.re");
+        };
     };
+
 
     class Operation
     {
@@ -259,7 +264,7 @@ namespace scag { namespace sessions
         COperationsHash OperationsHash;
         Operation * m_pCurrentOperation;
         uint64_t currentOperationId;
-        int lastOperationId;
+        unsigned int lastOperationId;
 
         CSessionKey             m_SessionKey;           //Ключ для SessionManager
         CSessionPrimaryKey      m_SessionPrimaryKey;    //Уникальный ключ для модуля статистики

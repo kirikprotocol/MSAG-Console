@@ -46,15 +46,14 @@ void PendingOperation::rollbackAll()
     {
         BillingManager& bm = BillingManager::Instance();
 
-        __warning__("PendingOperation: Rollback all");
+        smsc_log_warn(logger, "PendingOperation: Rollback all (billId=%d)", billID);
 
         try
         {
             bm.Rollback(billID);
         } catch (SCAGException& e)
         {
-            __warning__("PendingOperation: Cannot rollback.");
-            //smsc_log_debug(logger,"PendingOperation: Cannot rollback. Details: %s", e.what());
+            smsc_log_warn(logger,"PendingOperation: Cannot rollback. Details: %s", e.what());
         }
 
 
@@ -499,6 +498,7 @@ void Session::abort()
     Operation * value;
 
     COperationsHash::Iterator it = OperationsHash.First();
+    smsc_log_debug(logger,"Session: abort (usr=%d, %s)", m_SessionKey.USR, m_SessionKey.abonentAddr.toString().c_str());
 
     for (;it.Next(key, value);)
     {              
@@ -519,8 +519,8 @@ void Session::abort()
     m_pCurrentOperation = 0;
     lastOperationId = 0;
     bChanged = true;
-
-    smsc_log_debug(logger,"Session: session aborted");
+    
+    smsc_log_debug(logger,"Session: session aborted (usr=%d, %s)", m_SessionKey.USR, m_SessionKey.abonentAddr.toString().c_str());
 }
 
 bool Session::hasOperations() 
@@ -543,10 +543,11 @@ void Session::expirePendingOperation()
 {
     if (PendingOperationList.size() > 0) 
     {
-        smsc_log_debug(logger,"Session: pending operation has expiried");
 
         std::list<PendingOperation>::iterator it = PendingOperationList.begin();
         if (it->billID > 0) it->rollbackAll();
+
+        smsc_log_debug(logger,"Session: pending operation has expiried (billId = %d, type=%d)",it->billID, it->type);
 
         PendingOperationList.pop_front();
         bChanged = true;
@@ -558,7 +559,7 @@ void Session::closeCurrentOperation()
 {
     if (!m_pCurrentOperation) return;
 
-    smsc_log_debug(logger,"Session: close current operation (id=%lld)", currentOperationId);
+    smsc_log_debug(logger,"Session: close current operation (id=%lld, type=)", currentOperationId, m_pCurrentOperation->type);
 
     /*delete m_pCurrentOperation;
     m_pCurrentOperation = 0;
@@ -626,10 +627,11 @@ Operation * Session::setOperationFromPending(SCAGCommand& cmd, int operationType
 
             if (it->billID > 0) operation->attachBill(it->billID);
 
+            smsc_log_debug(logger,"** Session: pending closed (type=%d)", it->type);
+
             PendingOperationList.erase(it);
             bChanged = true;
 
-            smsc_log_debug(logger,"** Session: pending closed", currentOperationId);
             return operation;
         }
     }
@@ -651,7 +653,7 @@ Operation * Session::AddNewOperationToHash(SCAGCommand& cmd, int operationType)
 
     bChanged = true;
 
-    smsc_log_debug(logger,"** Session: create new operation (id=%lld)", currentOperationId);
+    smsc_log_debug(logger,"** Session: create new operation (id=%lld, type=%d)", currentOperationId, operationType);
 
     return operation;
 }
