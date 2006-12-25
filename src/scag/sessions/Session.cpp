@@ -160,7 +160,7 @@ void Operation::rollbackAll()
             bm.Rollback(billId);
         } catch (SCAGException& e)
         {
-            smsc_loga_warn(logger,"Operation: Cannot rollback. Details: %s", e.what());
+            smsc_log_warn(logger,"Operation: Cannot rollback. Details: %s", e.what());
         }
 
 
