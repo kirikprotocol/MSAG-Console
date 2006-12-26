@@ -161,6 +161,7 @@ public class AlarmStatFormBean extends IndexBean {
 
       while (st.ttype != StreamTokenizer.TT_EOF) {
         // Read string
+        try {
         submitTime = rowSubmitTimeFormat.parse(st.sval);
         st.nextToken();
         alarmId = st.sval;
@@ -182,13 +183,14 @@ public class AlarmStatFormBean extends IndexBean {
 
         st.nextToken();
         if (st.ttype == StreamTokenizer.TT_EOL) st.nextToken();
+	} catch (Exception e) {
+    	  logger.warn("Invalid snmp log line: "+e.getMessage());
+     	}
       }
     } catch (FileNotFoundException e) {
       logger.warn("File not found "+e.getMessage());
     } catch (IOException e) {
       logger.warn("I/O error occured "+e.getMessage());
-    }  catch (Exception e) {
-      logger.warn("Invalid snmp log line: "+e.getMessage());
     } finally {
       try {
         if (br != null)
