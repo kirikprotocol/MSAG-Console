@@ -185,6 +185,8 @@ public class AlarmStatFormBean extends IndexBean {
         if (st.ttype == StreamTokenizer.TT_EOL) st.nextToken();
 	} catch (Exception e) {
     	  logger.warn("Invalid snmp log line: "+e.getMessage());
+	  while(st.ttype != StreamTokenizer.TT_EOL) st.nextToken();
+	  st.nextToken();
      	}
       }
     } catch (FileNotFoundException e) {
