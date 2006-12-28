@@ -26,6 +26,7 @@ static const char* ARGUMENT_RETRIED         = "retried";
 static const char* ARGUMENT_FAILED          = "failed";
 static const char* ARGUMENT_ORDER_BY        = "order_by";
 static const char* ARGUMENT_ORDER_DIRECTION = "order_direction";
+static const char* ARGUMENT_MSG_LIMIT       = "msg_limit";
 
 static const char* ARGUMENT_START_PERIOD    = "start_period";
 static const char* ARGUMENT_END_PERIOD      = "end_period";
@@ -136,6 +137,8 @@ InfoSmeComponent::InfoSmeComponent(InfoSmeAdmin& admin)
     message_criterion_params[ARGUMENT_TO_DATE]         = Parameter(ARGUMENT_TO_DATE, StringType);
     message_criterion_params[ARGUMENT_ORDER_BY]        = Parameter(ARGUMENT_ORDER_BY, StringType);
     message_criterion_params[ARGUMENT_ORDER_DIRECTION] = Parameter(ARGUMENT_ORDER_DIRECTION, StringType);
+    message_criterion_params[ARGUMENT_ADDRESS]         = Parameter(ARGUMENT_ADDRESS, StringType);
+    message_criterion_params[ARGUMENT_MSG_LIMIT]       = Parameter(ARGUMENT_MSG_LIMIT, StringType);
     Method select_task_messages ((unsigned)selectTaskMessagesMethod, "selectTaskMessages",
                                  message_criterion_params, StringListType);
 
@@ -783,6 +786,19 @@ Variant InfoSmeComponent::selectTaskMessages(const Arguments& args)
   std::string orderDirection;
   if ( getParameterIfExistsAndNotNull(args, ARGUMENT_ORDER_DIRECTION, orderDirection) )
     searchCrit.setOrderDirection(orderDirection);
+
+  std::string address;
+  if ( getParameterIfExistsAndNotNull(args, ARGUMENT_ADDRESS, address) )
+    searchCrit.setAbonentAddress(address);
+
+  std::string msgLimit;
+  if ( getParameterIfExistsAndNotNull(args, ARGUMENT_MSG_LIMIT, msgLimit) ) {
+    size_t msgLimitAsNumber;
+    msgLimitAsNumber = strtol(msgLimit.c_str(), (char**)NULL, 10);
+    if ( !msgLimitAsNumber && errno ) 
+      error("selectTaskMessages", ARGUMENT_MSG_LIMIT);
+    searchCrit.setMsgLimit(msgLimitAsNumber);
+  }
 
   Variant result(StringListType);
   Array<std::string> taskMessagesList = admin.getTaskMessages(taskId, searchCrit);
