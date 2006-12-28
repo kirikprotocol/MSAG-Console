@@ -63,6 +63,7 @@ UniqueStorageIndex<K,V>::eraseIndexedValue(const K& key)
 template <typename K, typename V>
 class NonUniqueStorageIndex {
 public:
+  NonUniqueStorageIndex() : _findBeingExecuted(false) {}
   bool isExist(const K& key) const;
   bool insertIndexedValue(const K& key, const V& value);
 
@@ -74,6 +75,7 @@ public:
 private:
   std::multimap<K,V> _index;
   typename std::multimap<K,V>::iterator _searchIter;
+  bool _findBeingExecuted;
 };
 
 template <typename K, typename V>
@@ -102,6 +104,7 @@ NonUniqueStorageIndex<K,V>::findFirstIndexedValueByKey(const K& key, V* value)
 
   if ( _searchIter != _index.end() ) {
     *value = _searchIter->second;
+    ++_searchIter; _findBeingExecuted = true;
     return true;
   } else
     return false;
@@ -111,11 +114,14 @@ template <typename K, typename V>
 bool
 NonUniqueStorageIndex<K,V>::findNextIndexedValueByKey(const K& key, V* value)
 {
-  if ( ++_searchIter != _index.upper_bound(key) ) {
+  if ( _searchIter != _index.upper_bound(key) ) {
     *value = _searchIter->second;
+    ++_searchIter;
     return true;
-  } else
+  } else {
+    _findBeingExecuted = false;
     return false;
+  }
 }
 
 template <typename K, typename V>
@@ -124,10 +130,14 @@ NonUniqueStorageIndex<K,V>::eraseIndexedValue(const K& key, const V& value)
 {
   typename std::multimap<K,V>::iterator
     indexIter = _index.lower_bound(key);
+  if ( indexIter == _index.end() )
+    return false;
+
   while ( indexIter != _index.upper_bound(key) ) {
-    if ( indexIter->second == value )
+    if ( indexIter->second == value ) {
+      if ( _findBeingExecuted && indexIter == _searchIter ) ++_searchIter;
       _index.erase(indexIter++);
-    else
+    } else
       indexIter++;
   }
   return true;
