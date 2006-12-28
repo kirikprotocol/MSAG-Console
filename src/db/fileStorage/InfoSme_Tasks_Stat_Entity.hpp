@@ -79,8 +79,8 @@ public:
     // InfoSme_Tasks_Stat_Entity object.
     TaskId_Period_Key(const InfoSme_Tasks_Stat_Entity& dataValue) : _taskId(dataValue.getTaskId()), _period(dataValue.getPeriod()) {}
     /*
-    ** ЬФПФ ЛПОУФТХЛФПТ ЙУРПМШЪХЕФУС РТЙ ХДБМЕОЙЙ ПВЯЕЛФПЧ ЙЪ ИТБОЙМЙЭБ ОБ ПУОПЧБОЙЙ 
-    ** ЛМАЮБ TaskId_Key, ЛПФПТЩК СЧМСЕФУС ЮБУФША ЛМАЮБ TaskId_Period_Key
+    ** этот конструктор используется при удалении объектов из хранилища на основании 
+    ** ключа TaskId_Key, который является частью ключа TaskId_Period_Key
     */
     TaskId_Period_Key(const TaskId_Key& taskIdKey, uint32_t period) : _taskId(taskIdKey._taskId), _period(period) {}
 
