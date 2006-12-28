@@ -75,7 +75,7 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
   <link rel="STYLESHEET" type="text/css" href="collapsing_tree.css">
   <script src="content/scripts/scripts.jsp" type="text/javascript"></script>
 </head>
-<body onload="initjsDOMenu(); assignOpener(); ${onLoad} " onKeyPress="return disableCtrlKeyCombination(event,'${param.editId}');" onKeyDown="return disableCtrlKeyCombination(event,'${param.editId}');">
+<body onload="initjsDOMenu(); assignOpener(); refreshTdcSCAGStatusObject(); ${onLoad} " onKeyPress="return disableCtrlKeyCombination(event,'${param.editId}');" onKeyDown="return disableCtrlKeyCombination(event,'${param.editId}');">
   <!--calendar-->
   <iframe id=calendarIFrame class=calendarHiddenLayer2 src="content/images/blank.html"></iframe>
   <div id=calendarPanel class=calendarHiddenLayer
@@ -166,23 +166,6 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
     <PARAM NAME="TextQualifier" VALUE='"'>
   </OBJECT>
   <%}%>
-  <script>
-  function openPerfMon()
-  {
-    open("perfmon/index.jsp", null, "channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=580");
-    return false;
-  }
-  <%if (request.getUserPrincipal() != null) {%>
-  function refreshTdcSCAGStatusObject()
-  {
-    document.all.tdcSCAGStatusObject.DataURL = document.all.tdcSCAGStatusObject.DataURL;
-    document.all.tdcSCAGStatusObject.reset();
-    window.setTimeout(refreshTdcSCAGStatusObject, 5000);
-  }
-  refreshTdcSCAGStatusObject();
-  <%}%>
-  </script>
-
   <table height="100%" cellspacing=0 cellpadding=0 class=main_table>
   <tr>
     <td width=50 background="content/images/smsc_02.jpg" rowspan=3></td>

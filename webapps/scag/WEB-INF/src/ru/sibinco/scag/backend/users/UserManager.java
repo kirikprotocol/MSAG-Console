@@ -51,7 +51,7 @@ public class UserManager {
         Document document = Utils.parse(new FileReader(configFile));
         NodeList userNodes = document.getElementsByTagName("user");
         for (int i = 0; i < userNodes.getLength(); i++) {
-            User user = new User((Element) userNodes.item(i));
+            User user = new ScagUser((Element) userNodes.item(i));
             users.put(user.getLogin(), user);
         }
     }
@@ -69,7 +69,7 @@ public class UserManager {
         Functions.storeConfigHeader(out, "users", "users.dtd", System.getProperty("file.encoding"));
         for (Iterator i = new SortedList(users.keySet()).iterator(); i.hasNext();) {
             String userLogin = (String) i.next();
-            User user = (User) users.get(userLogin);
+            User user = (ScagUser) users.get(userLogin);
             out.print(user.getXmlText());
         }
         Functions.storeConfigFooter(out, "users");

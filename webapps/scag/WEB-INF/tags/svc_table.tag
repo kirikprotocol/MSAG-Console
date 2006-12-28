@@ -45,7 +45,6 @@
         document.getElementById('tdcSvcStatuses').reset();
         window.setTimeout(refreshStatus, 10000);
     }
-    refreshStatus();
 
 </script>
 <table class=list cellspacing=0>

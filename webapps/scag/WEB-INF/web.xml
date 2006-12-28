@@ -123,7 +123,7 @@
   <security-constraint>
     <web-resource-collection>
       <web-resource-name>scag statistics</web-resource-name>
-      <url-pattern>/stat/stat/*</url-pattern>
+      <url-pattern>/stat/*</url-pattern>
       <url-pattern>/endpoints/services/monitor/*</url-pattern>
       <url-pattern>/endpoints/centers/monitor/*</url-pattern>
       <url-pattern>/gw/status/status.jsp</url-pattern>

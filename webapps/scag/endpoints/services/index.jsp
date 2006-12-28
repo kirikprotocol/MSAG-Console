@@ -1,5 +1,5 @@
 <%@include file="/WEB-INF/inc/header.jspf"%>
-<sm:page title="sp.index.title">
+<sm:page title="sp.index.title" onLoad="refreshStatus()">
   <jsp:attribute name="menu">
     <sm-pm:menu>
       <sm-pm:item name="mbAdd" value="sp.index.item.mbadd.value" title="sp.index.item.mbadd.title"/>

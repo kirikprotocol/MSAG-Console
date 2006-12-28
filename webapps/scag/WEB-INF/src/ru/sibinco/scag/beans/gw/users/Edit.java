@@ -3,6 +3,8 @@ package ru.sibinco.scag.beans.gw.users;
 import ru.sibinco.lib.backend.users.User;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.sme.Provider;
+import ru.sibinco.scag.backend.users.ScagUser;
+import ru.sibinco.scag.backend.users.UserPreferences;
 import ru.sibinco.scag.beans.DoneException;
 import ru.sibinco.scag.beans.EditBean;
 import ru.sibinco.scag.beans.SCAGJspException;
@@ -18,6 +20,7 @@ import java.util.*;
 public class Edit extends EditBean {
 
     private static final String ALL_PROVIDERS = "ALL PROVIDERS";
+    private static final String COLLAPSING_TREE_PARAM_PREFIX = "collapsing_tree_param.";
     protected String login = null;
     protected String password = null;
     protected String confirmPassword = null;
@@ -32,6 +35,8 @@ public class Edit extends EditBean {
     protected String homePhone = null;
     protected String cellPhone = null;
     protected String email = null;
+    protected Map params = new HashMap();
+    protected Map requestParams = new HashMap();
 
 
     public String getId() {
@@ -39,8 +44,11 @@ public class Edit extends EditBean {
     }
 
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
+        requestParams = request.getParameterMap();
         super.process(request, response);
 
+        if (isAdd()) setDefaultValues();
+      
         final Collection providers = appContext.getProviderManager().getProviders().values();
         final List ids = new ArrayList(providers.size());
         final List names = new ArrayList(providers.size());
@@ -81,8 +89,24 @@ public class Edit extends EditBean {
                     password = user.getPassword();
             }
         }
-        users.put(getLogin(), new User(getLogin(), getPassword(), roles, getFirstName(), getLastName(),
-                getDept(), getWorkPhone(), getHomePhone(), getCellPhone(), getEmail(), providerId));
+
+        for (Iterator i = requestParams.entrySet().iterator(); i.hasNext();) {
+          Map.Entry entry = (Map.Entry) i.next();
+          if (entry.getKey() instanceof String) {
+              String key = (String) entry.getKey();
+              if (key.startsWith(COLLAPSING_TREE_PARAM_PREFIX)) {
+                  String name = key.substring(COLLAPSING_TREE_PARAM_PREFIX.length());
+                  StringBuffer value = new StringBuffer();
+                  for (int j = 0; j < ((String[]) entry.getValue()).length; j++) {
+                      String valueElem = ((String[]) entry.getValue())[j];
+                      value.append(valueElem.trim());
+                  }                
+                  params.put(name, value.toString());
+              }
+          }
+        }
+
+        users.put(getLogin(), new ScagUser(getLogin(), getPassword(), roles, getFirstName(), getLastName(),getDept(), getWorkPhone(), getHomePhone(), getCellPhone(), getEmail(), providerId, params));
         appContext.getStatuses().setUsersChanged(true);
         applyUsers();
         throw new DoneException();
@@ -95,7 +119,8 @@ public class Edit extends EditBean {
         if (!appContext.getUserManager().getUsers().containsKey(userLogin))
             throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, userLogin);
 
-        final User user = (User) appContext.getUserManager().getUsers().get(userLogin);
+        final ScagUser user = (ScagUser) appContext.getUserManager().getUsers().get(userLogin);
+        params = user.getPrefs().getMonPrefs();
         login = user.getLogin();
         roles = (String[]) user.getRoles().toArray(new String[0]);
         providerId = user.getProviderId();
@@ -118,6 +143,10 @@ public class Edit extends EditBean {
         }
     }
 
+    private void setDefaultValues() {
+        UserPreferences prefs = new UserPreferences();
+        params.putAll(prefs.getMonPrefs());
+    }
 
     public String getLogin() {
         if(login != null)login.trim();
@@ -231,5 +260,13 @@ public class Edit extends EditBean {
 
     public void setProviderId(final long providerId) {
         this.providerId = providerId;
+    }
+
+    public Map getParams() {
+      return params;
+    }
+
+    public void setParams(Map params) {
+      this.params = params;
     }
 }

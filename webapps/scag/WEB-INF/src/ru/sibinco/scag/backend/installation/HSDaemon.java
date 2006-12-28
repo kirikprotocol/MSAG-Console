@@ -36,14 +36,22 @@ public class HSDaemon {
   }
 
   public void store(final File configFile) throws SibincoException {
-    doOperation(configFile,UPDATEORADD);
+    doOperation(configFile,UPDATEORADD,new CommonSaver(configFile));
   }
 
   public void store(final File folder, final String fileName) throws SibincoException {
     store(new File(folder, fileName));
   }
 
-  public synchronized void doOperation(final File configFile, final byte operationType) throws SibincoException {
+  public void store(final File configFile, SavingStrategy saver) throws SibincoException {
+    doOperation(configFile,UPDATEORADD,saver);
+  }
+
+  public void doOperation(final File configFile, final byte operationType) throws SibincoException {
+    doOperation(configFile, operationType, new CommonSaver(configFile));
+  }
+
+  private synchronized void doOperation(final File configFile, final byte operationType, final SavingStrategy saver) throws SibincoException {
     if (type.equals(typeSingle))
       return;
     else if (type.equals(typeHS)) {
@@ -51,7 +59,7 @@ public class HSDaemon {
       File mirrorFile = getMirrorFile(configFile);
       switch(operationType)
       {
-       case UPDATEORADD: save(configFile, mirrorFile); break;
+       case UPDATEORADD: saver.storeToMirror(mirrorFile); break;
        case REMOVE: remove(mirrorFile); break;
       }
     }
@@ -90,7 +98,13 @@ public class HSDaemon {
     throw new SibincoException("operationType "+operationType+" doesn't supported by HSDaemon");
   }
   
-  private void save(final File source, final File dest) throws SibincoException {
+  private class CommonSaver implements SavingStrategy {
+  private File source;
+  public CommonSaver(File configFile) {
+    this.source = configFile;
+  }
+
+  public void storeToMirror(final File dest) throws SibincoException {
     OutputStream fos = null;
     InputStream fis = null;
     try
@@ -123,4 +137,5 @@ public class HSDaemon {
     }
   }
 
+  }
 }

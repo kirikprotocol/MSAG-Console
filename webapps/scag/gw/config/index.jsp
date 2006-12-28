@@ -133,5 +133,11 @@
         </sm-et:properties>
     </sm-et:section>
 
+    <sm-et:section title="Long Call Manager" name = "LongCallManager">
+        <sm-et:properties>
+            <sm-et:txt name="maxTasks" type="int" onchanged="configChanged();"/>
+        </sm-et:properties>
+    </sm-et:section>
+
 </jsp:body>
 </sm:page>

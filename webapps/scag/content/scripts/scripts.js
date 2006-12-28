@@ -486,7 +486,7 @@ function changeTransportId() {
     return true;
 }
 
-function tableTag_NavigatePage(pageNum) {
+/*function tableTag_navigatePage(pageNum) {
     opForm.startPosition.value = pageNum * $
 {
     bean.pageSize
@@ -494,7 +494,7 @@ function tableTag_NavigatePage(pageNum) {
     ;
     opForm.submit();
     return false;
-}
+} */
 
 function tableTag_sort(sort) {
     if (document.all.sort.value == sort)
@@ -596,3 +596,11 @@ function assignOpener() {
   setTimeout("assignOpener()",1000);
 }
 
+function refreshTdcSCAGStatusObject()
+{
+   <%if (request.getUserPrincipal() != null) {%>
+   document.all.tdcSCAGStatusObject.DataURL = document.all.tdcSCAGStatusObject.DataURL;
+   document.all.tdcSCAGStatusObject.reset();
+   window.setTimeout(refreshTdcSCAGStatusObject, 5000);
+   <%}%>
+}

@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import ru.sibinco.scag.backend.installation.HSDaemon;
+import ru.sibinco.scag.backend.installation.SavingStrategy;
 import ru.sibinco.lib.SibincoException;
 
 /**
@@ -36,43 +37,51 @@ public class LoggingManager {
         this.hsDaemon = hsDaemon;
     }
 
-    public synchronized void writeToLog(final Map cats) throws SibincoException{
-        String appender = null;
-        OutputStreamWriter fout = null;
-        try {
-            appender = extractAppender();
-            fout = new OutputStreamWriter(new FileOutputStream(loggerFile));
-            PrintWriter pw = new PrintWriter(fout, true);
-            pw.write("root=" +cats.get("") + ", default"  + "\n");
-            for (Iterator iterator = cats.entrySet().iterator(); iterator.hasNext();) {
-                final Map.Entry entry = (Map.Entry) iterator.next();
-                final String catName = (String) entry.getKey();
-                final String catPriority = (String) entry.getValue();
-                if (catName != null && !catName.trim().equals("") && !catPriority.equalsIgnoreCase("NOTSET")) {
-                    pw.write(CAT_PREFIX + catName + "=" + catPriority  + "\n");
-                }
-            }
-            pw.write(appender);
-            pw.flush();
-            pw.close();
-            hsDaemon.store(loggerFile);
-        } catch (FileNotFoundException e) {
-            logger.error("Cannot find logger.properties file ", e);
-        }
-        finally {
-            try {
-                if (fout != null) {
-                    fout.close();
-                }
-            }
-            catch (IOException ex) {
-                logger.error("Cannot close output stream.", ex);
-            }
-        }
+    private void write(final Map cats , final File destination) throws SibincoException{
+      String appender = null;
+      OutputStreamWriter fout = null;
+      try {
+          appender = extractAppender(destination);
+          fout = new OutputStreamWriter(new FileOutputStream(destination));
+          PrintWriter pw = new PrintWriter(fout, true);
+          pw.write("root=" +cats.get("") + ", default"  + "\n");
+          for (Iterator iterator = cats.entrySet().iterator(); iterator.hasNext();) {
+              final Map.Entry entry = (Map.Entry) iterator.next();
+              final String catName = (String) entry.getKey();
+              final String catPriority = (String) entry.getValue();
+              if (catName != null && !catName.trim().equals("") && !catPriority.equalsIgnoreCase("NOTSET")) {
+                  pw.write(CAT_PREFIX + catName + "=" + catPriority  + "\n");
+              }
+          }
+          pw.write(appender);
+          pw.flush();
+          pw.close();
+      } catch (FileNotFoundException e) {
+          logger.error("Cannot find logger.properties file ", e);
+      }
+      finally {
+          try {
+              if (fout != null) {
+                  fout.close();
+              }
+          }
+          catch (IOException ex) {
+              logger.error("Cannot close output stream.", ex);
+          }
+      }
     }
 
-    private String extractAppender() throws FileNotFoundException {
-      BufferedReader br = new BufferedReader(new FileReader(loggerFile));
+    public synchronized void writeToLog(final Map cats) throws SibincoException{
+      write(cats, loggerFile);
+      hsDaemon.store(loggerFile, new SavingStrategy() {
+          public void storeToMirror(File mirrorFile) throws SibincoException {
+           write(cats, mirrorFile);
+          }
+      });
+    }
+
+    private String extractAppender(final File destination) throws FileNotFoundException {
+      BufferedReader br = new BufferedReader(new FileReader(destination));
       StringBuffer buf = new StringBuffer();
       String str;
       try {
@@ -81,7 +90,7 @@ public class LoggingManager {
           if (!str.startsWith(CAT_PREFIX)) buf.append(str).append("\n");
         }
       } catch (IOException io) {
-        logger.error("Cannot read from "+loggerFile.getAbsolutePath(),io);
+        logger.error("Cannot read from "+destination.getAbsolutePath(),io);
       } finally {
         if (br!=null)
           try {

@@ -9,6 +9,51 @@
 <c:set var="pageFirst" value="${(pageCurrent -4) < 0 ? 0 : (pageCurrent -4)}"/>
 <c:set var="pageTotal" value="${((bean.totalSize-(bean.totalSize%bean.pageSize)) / bean.pageSize) + ((bean.totalSize % bean.pageSize) > 0 ? 1 : 0)}"/>
 <c:set var="pageLast" value="${(pageCurrent +4) > (pageTotal-1) ? (pageTotal-1) : (pageCurrent +4)}"/>
+<script>
+   function tableTag_navigatePage(pageNum) {
+       opForm.startPosition.value = pageNum * ${bean.pageSize};
+       opForm.submit();
+       return false;
+   }
+</script>
+<style type="text/css">
+table.navbar td.first a
+{
+	background-image: url(content/images/nav_first.gif);
+}
+table.navbar td.first a:hover
+{
+	background-image: url(content/images/nav_first_over.gif);
+}
+
+table.navbar td.prev a
+{
+	background-image: url(content/images/nav_prev.gif);
+}
+table.navbar td.prev a:hover
+{
+	background-image: url(content/images/nav_prev_over.gif);
+}
+
+table.navbar td.next a
+{
+	background-image: url(content/images/nav_next.gif);
+}
+table.navbar td.next a:hover
+{
+	background-image: url(content/images/nav_next_over.gif);
+}
+
+table.navbar td.last a
+{
+	background-image: url(content/images/nav_last.gif);
+}
+table.navbar td.last a:hover
+{
+	background-image: url(content/images/nav_last_over.gif);
+}
+</style>
+
 <table class=navbar cellspacing=1 cellpadding=0>
 <tr>
 <td class=first onclick="return tableTag_navigatePage(0)" title="First page"><a href="#">&nbsp;</a></td>

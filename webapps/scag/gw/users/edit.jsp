@@ -33,6 +33,35 @@
 
             <sm-ep:checks title="users.edit.checks.title" name="roles" values="gw,super_admin,management,routing,stat"
                           valueTitles="users.edit.checks.values.gw,users.edit.checks.values.super_admin,users.edit.checks.values.management,users.edit.checks.values.routing,users.edit.checks.values.stat"/>
+            <sm-ep:property title="users.edit.property.preferences">
+                  <sm-et:section title="Performance monitor" name="perfmon">
+                      <sm-et:properties>
+                          <sm-et:txt title="pixPerSecond" name="pixPerSecond" validation="positive"/>
+                          <sm-et:txt title="scale" name="scale" validation="positive"/>
+                          <sm-et:txt title="block" name="block" validation="positive"/>
+                          <sm-et:txt title="vLightGrid" name="vLightGrid" validation="positive"/>
+                          <sm-et:txt title="vMinuteGrid" name="vMinuteGrid" validation="positive"/>
+                      </sm-et:properties>
+                  </sm-et:section>
+                  <sm-et:section title="Center monitor" name="scmon">
+                      <sm-et:properties>
+                          <sm-et:txt title="graph.scale" name="graph.scale" validation="positive"/>
+                          <sm-et:txt title="graph.grid" name="graph.grid" validation="positive"/>
+                          <sm-et:txt title="graph.higrid" name="graph.higrid" validation="positive"/>
+                          <sm-et:txt title="graph.head" name="graph.head" validation="positive"/>
+                          <sm-et:txt title="max.speed" name="max.speed" validation="positive"/>
+                      </sm-et:properties>
+                  </sm-et:section>
+                  <sm-et:section title="Service points monitor" name="svcmon">
+                      <sm-et:properties>
+                          <sm-et:txt title="graph.scale" name="graph.scale" validation="positive"/>
+                          <sm-et:txt title="graph.grid" name="graph.grid" validation="positive"/>
+                          <sm-et:txt title="graph.higrid" name="graph.higrid" validation="positive"/>
+                          <sm-et:txt title="graph.head" name="graph.head" validation="positive"/>
+                          <sm-et:txt title="max.speed" name="max.speed" validation="positive"/>
+                      </sm-et:properties>
+                  </sm-et:section>
+            </sm-ep:property>
             <sm-ep:txt title="users.edit.txt.firstname" name="firstName" validation="nonEmpty"/>
             <sm-ep:txt title="users.edit.txt.lastmame" name="lastName" validation="nonEmpty"/>
             <sm-ep:txt title="users.edit.txt.dept" name="dept"/>
