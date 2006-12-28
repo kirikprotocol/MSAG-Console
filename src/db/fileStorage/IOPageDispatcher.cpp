@@ -8,59 +8,13 @@
 
 #include <pthread.h>
 
-class ReadLockGuard {
-public:
-  ReadLockGuard(pthread_rwlock_t& lock) : _lock(lock) {
-    pthread_rwlock_rdlock(&_lock);
-  }
-  ~ReadLockGuard() {
-    pthread_rwlock_unlock(&_lock);
-  }
-private:
-  pthread_rwlock_t& _lock;
-};
+#include <assert.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
-class WriteLockGuard {
-public:
-  WriteLockGuard(pthread_rwlock_t& lock) : _lock(lock) {
-    pthread_rwlock_wrlock(&_lock);
-  }
-  ~WriteLockGuard() {
-    pthread_rwlock_unlock(&_lock);
-  }
-private:
-  pthread_rwlock_t& _lock;
-};
+#include "RWLockGuard.hpp"
 
-IOPageDispatcher::IOPageDispatcher(int fd) : _fd(fd), _firstPageOffset(0), _startByteOffset(::lseek(_fd, 0, SEEK_CUR)), _lastPageOffset(0) {
-  if ( _startByteOffset < 0 )
-    throw std::runtime_error("IOPageDispatcher::IOPageDispatcher::: lseek failed");
-}
-
-IOPage
-IOPageDispatcher::getIOPage(off_t byteOffset)
-{
-  int pageNum = byteOffset / IOPage_impl::PAGE_SIZE;
-
-  smsc::core::synchronization::MutexGuard mutexGuard(_registredPagesLock);
-  registredPagesMap_t::iterator regPageIter = _registredPages.find(pageNum);
-  if ( regPageIter == _registredPages.end() ) {
-    uint8_t* pageDataPtr = new uint8_t[IOPage_impl::PAGE_SIZE];
-    ssize_t sz;
-    {
-      if ( ::lseek(_fd, _startByteOffset + pageNum * IOPage_impl::PAGE_SIZE, SEEK_SET) < 0 ||
-           ((sz=::read(_fd, pageDataPtr, IOPage_impl::PAGE_SIZE)) < 0) )
-        return IOPage(NULL,0);
-    }
-    ::memset(pageDataPtr+sz, 0xFF, IOPage_impl::PAGE_SIZE-sz);
-
-    std::pair<registredPagesMap_t::iterator, bool> insResult = _registredPages.insert(std::make_pair(pageNum, new IOPage_impl(pageNum, pageDataPtr, sz, this)));
-    if (insResult.second)
-      regPageIter = insResult.first;
-    else return IOPage(NULL,0);
-  }
-  return IOPage(regPageIter->second, byteOffset % IOPage_impl::PAGE_SIZE);
-}
+IOPageDispatcher::IOPageDispatcher(int fd) : _fd(fd), _firstPageOffset(0), _startByteOffset(::lseek(_fd, 0, SEEK_CUR)), _lastPageOffset(0) {}
 
 IOPage
 IOPageDispatcher::getFirstIOPage()
@@ -89,12 +43,30 @@ IOPageDispatcher::getLastIOPage()
   return getIOPage(_lastPageOffset);
 }
 
-IOPage
-IOPageDispatcher::createNewIOPage()
+IOPage_impl*
+IOPageDispatcher::loadPageData(int pageNum, IOPage_impl* pagePtr)
 {
-  smsc::core::synchronization::MutexGuard mutexGuard(_lastPageLock);
-  _lastPageOffset += IOPage_impl::PAGE_SIZE;
-  return getIOPage(_lastPageOffset);
+  uint8_t *pageDataPtr;
+  if ( ! pagePtr )
+    pageDataPtr = new uint8_t[IOPage_impl::PAGE_SIZE];
+  else {
+    pageDataPtr = pagePtr->returnAllocatedMemory();
+    pagePtr->~IOPage_impl();
+  }
+  ssize_t sz;
+
+  if ( ::lseek(_fd, _startByteOffset + pageNum * IOPage_impl::PAGE_SIZE, SEEK_SET) < 0 ||
+       ((sz=::read(_fd, pageDataPtr, IOPage_impl::PAGE_SIZE)) < 0) ) {
+    delete [] pageDataPtr;
+    throw std::runtime_error("IOPageDispatcher::loadPageData::: can't extend file");
+  }
+
+  ::memset(pageDataPtr+sz, 0xFF, IOPage_impl::PAGE_SIZE-sz);
+
+  if ( pagePtr )
+    return new (pagePtr)IOPage_impl(pageNum, pageDataPtr, sz, this);
+  else
+    return new IOPage_impl(pageNum, pageDataPtr, sz, this);
 }
 
 void
@@ -123,6 +95,16 @@ IOPage_impl::IOPage_impl(size_t pageNum, uint8_t* pageDataPtr, size_t actualData
 IOPage_impl::~IOPage_impl()
 {
   pthread_rwlock_destroy(&_page_IO_RwLock);
+  if ( _pageDataPtr )
+    delete [] _pageDataPtr;
+}
+
+uint8_t*
+IOPage_impl::returnAllocatedMemory()
+{
+  uint8_t* pageDataPtr = _pageDataPtr;
+  _pageDataPtr = (uint8_t*)NULL;
+  return pageDataPtr;
 }
 
 ssize_t
@@ -132,14 +114,17 @@ IOPage_impl::setPosition(off_t* inPageOffset, off_t byteOffset, int whence)
     *inPageOffset = byteOffset % PAGE_SIZE;
   } else { // corresponds to SEEK_CUR or SEEK_END
     ReadLockGuard rwlockGuard(_page_IO_RwLock);
+    off_t saveInPageOffset=*inPageOffset;
     if ( whence == SEEK_END ) {
       *inPageOffset = _actualDataSize + byteOffset;
     } else { // SEEK_CUR
       *inPageOffset += byteOffset;
     }
 
-    if ( *inPageOffset >= PAGE_SIZE )
+    if ( *inPageOffset > PAGE_SIZE || *inPageOffset < 0 ) {
+      *inPageOffset = saveInPageOffset;
       return -1;
+    }
   }
 
   return _pageNum*PAGE_SIZE + *inPageOffset;
@@ -151,9 +136,10 @@ IOPage_impl::read(off_t* inPageOffset, uint8_t *buf, size_t bufSz)
   ReadLockGuard rwlockGuard(_page_IO_RwLock);
 
   size_t readeableSize = std::min(size_t(PAGE_SIZE - *inPageOffset), bufSz);
-
-  ::memcpy(buf, _pageDataPtr+*inPageOffset, readeableSize);
-  *inPageOffset += bufSz;
+  if (readeableSize) {
+    ::memcpy(buf, _pageDataPtr+*inPageOffset, readeableSize);
+    *inPageOffset += readeableSize;
+  }
 
   return readeableSize;
 }
@@ -163,10 +149,11 @@ IOPage_impl::readOrderReverse(off_t* inPageOffset, uint8_t *buf, size_t bufSz)
 {
   ReadLockGuard rwlockGuard(_page_IO_RwLock);
   int i=bufSz;
-  while (i>0 && *inPageOffset>=0) {
-    buf[i-1] = _pageDataPtr[*inPageOffset];
-    --i; --*inPageOffset;
-  }
+  if ( !*inPageOffset )
+    return 0;
+
+  while (i>0 && *inPageOffset>0)
+    buf[--i] = _pageDataPtr[--*inPageOffset];
 
   return bufSz - i;
 }
@@ -176,15 +163,17 @@ IOPage_impl::write(off_t* inPageOffset, const uint8_t *buf, size_t bufSz)
 {
   size_t writeableSize = std::min(size_t(PAGE_SIZE - *inPageOffset), bufSz);
 
-  WriteLockGuard rwlockGuard(_page_IO_RwLock);
-  ::memcpy(_pageDataPtr+*inPageOffset, buf, writeableSize);
+  if (writeableSize) {
+    WriteLockGuard rwlockGuard(_page_IO_RwLock);
+    ::memcpy(_pageDataPtr+*inPageOffset, buf, writeableSize);
 
-  _uncommited_memory_chunks.insert(std::make_pair(*inPageOffset, writeableSize));
+    _uncommited_memory_chunks.insert(std::make_pair(*inPageOffset, writeableSize));
 
-  *inPageOffset += writeableSize;
+    *inPageOffset += writeableSize;
 
-  if ( _actualDataSize < *inPageOffset )
-    _actualDataSize = *inPageOffset;
+    if ( _actualDataSize < *inPageOffset )
+      _actualDataSize = *inPageOffset;
+  }
 
   return writeableSize;
 }
@@ -210,6 +199,7 @@ IOPage_impl::flush(int fd, off_t recordFilePosition)
                                       _uncommited_memory_chunks.end());
       return -1;
     }
+
     _uncommited_memory_chunks.erase(iter);
   }
 
