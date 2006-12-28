@@ -371,13 +371,11 @@ StorageHelper::getInfoSme_Tasks_Stat_Storage()
 
 Connection* DBEntityStorageDataSource::getConnection()
 {
-  smsc_log_debug(_logger, "Enter DBEntityStorageDataSource::getConnection");
   return newConnection();
 }
 
 void DBEntityStorageDataSource::closeRegisteredQueries(const char* id)
 {
-  smsc_log_debug(_logger, "Enter DBEntityStorageDataSource::closeRegisteredQueries");
   getConnection()->unregisterStatement(id);
   getConnection()->unregisterRoutine(id);
 }
@@ -393,6 +391,5 @@ Connection*
 DBEntityStorageDriver::newConnection()
 {
   static DBEntityStorageConnection _localStorage;
-  smsc_log_debug(_logger, "Enter DBEntityStorageDataSource::newConnection");
   return &_localStorage;
 }
