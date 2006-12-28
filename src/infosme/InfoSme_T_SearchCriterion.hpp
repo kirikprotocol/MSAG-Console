@@ -10,7 +10,7 @@ namespace smsc{ namespace infosme
 class InfoSme_T_SearchCriterion
 {
 public:
-  InfoSme_T_SearchCriterion() : _isSetAbonetAdress(false), _isSetState(false), _isSetFromDate(false), _isSetToDate(false), _isSetOrderByColumnName(false) {}
+  InfoSme_T_SearchCriterion() : _isSetAbonetAdress(false), _isSetState(false), _isSetFromDate(false), _isSetToDate(false), _isSetOrderByColumnName(false), _isSetMsgLimit(false) {}
   void setAbonentAddress(const std::string& address) {
     _isSetAbonetAdress=true;
     _abonentAddress = address;
@@ -52,6 +52,14 @@ public:
   }
   bool isSetOrderDirection() const { return _isSetOrderDirection; }
   const std::string& getOrderDirection() const { return _orderDirection; }
+
+  void setMsgLimit(size_t msgLimit) {
+    _isSetMsgLimit = true;
+    _msgLimit = msgLimit;
+  }
+  bool isSetMsgLimit() const { return _isSetMsgLimit; }
+  size_t getMsgLimit() const { return _msgLimit; }
+
 private:
   bool _isSetAbonetAdress;
   std::string _abonentAddress;
@@ -70,6 +78,9 @@ private:
 
   bool _isSetOrderDirection;
   std::string _orderDirection;
+
+  bool _isSetMsgLimit;
+  size_t _msgLimit;
 };
 
 }
