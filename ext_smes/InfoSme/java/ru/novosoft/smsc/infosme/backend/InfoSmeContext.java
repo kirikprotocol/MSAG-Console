@@ -47,6 +47,7 @@ public class InfoSmeContext implements SMEAppContext
   private int schedulesPageSize = 20;
   private String messagesSort = Message.SORT_BY_DATE;
   private int messagesPageSize = 20;
+  private int maxMessagesTotalSize = 1000;
 
   private boolean changedOptions = false;
   private boolean changedDrivers = false;
@@ -269,6 +270,10 @@ public class InfoSmeContext implements SMEAppContext
   public void setMessagesPageSize(int messagesPageSize)
   {
     this.messagesPageSize = messagesPageSize;
+  }
+
+  public int getMaxMessagesTotalSize() {
+    return maxMessagesTotalSize;
   }
 
 }

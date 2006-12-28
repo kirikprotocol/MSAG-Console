@@ -8,6 +8,7 @@ import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
+import ru.novosoft.smsc.jsp.SMSCJspException;
 
 import javax.servlet.http.HttpServletRequest;
 import java.text.ParseException;
@@ -114,8 +115,16 @@ public class Messages extends InfoSmeBean
 
   private int processQuery() throws AdminException {
     if (mbQuery != null) { startPosition = 0; mbQuery = null; }
-    messages = infoSme.getMessages(msgFilter.getTaskId(), msgFilter.getStatus(), msgFilter.getFromDate(), msgFilter.getTillDate(),
-                                   (sort != null && sort.startsWith("-")) ? sort.substring(1) : sort, (sort == null || !sort.startsWith("-")));
+    if (messages != null)
+      messages.clear();
+
+    messages = infoSme.getMessages(msgFilter.getTaskId(), msgFilter.getStatus(), msgFilter.getFromDate(), msgFilter.getTillDate(), msgFilter.getAddress(),
+                                   (sort != null && sort.startsWith("-")) ? sort.substring(1) : sort, (sort == null || !sort.startsWith("-")), getInfoSmeContext().getMaxMessagesTotalSize()+1);
+
+    if (messages.size() > getInfoSmeContext().getMaxMessagesTotalSize())
+      return _error(new SMSCJspException("Messages size is more than " + getInfoSmeContext().getMaxMessagesTotalSize() + ", show first " + getInfoSmeContext().getMaxMessagesTotalSize() + " messages",
+                    SMSCJspException.ERROR_CLASS_MESSAGE));
+
     return RESULT_OK;
   }
 

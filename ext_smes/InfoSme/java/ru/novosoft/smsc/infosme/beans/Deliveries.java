@@ -260,7 +260,7 @@ public class Deliveries extends InfoSmeBean
 
                 task.storeToConfig(oldConfig);
                 oldConfig.save();
-                if (getInfoSme().getInfo().isOnline())
+
                 getInfoSmeContext().getInfoSme().addTask(taskId);
 
                 final List messages = new ArrayList();

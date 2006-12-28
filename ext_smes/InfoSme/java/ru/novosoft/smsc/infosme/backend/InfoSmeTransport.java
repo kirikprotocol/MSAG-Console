@@ -197,8 +197,8 @@ class InfoSmeTransport extends Service
   }
 
 
-  public List getMessages(final String taskId, final Message.State state, final Date fromSendDate, final Date toSendDate,
-                          final String orderBy, final boolean orderAsc) throws AdminException {
+  public List getMessages(final String taskId, final Message.State state, final Date fromSendDate, final Date toSendDate, final String address,
+                          final String orderBy, final boolean orderAsc, final int limit) throws AdminException {
     if (taskId == null)
       throw new AdminException("Task id is null");
 
@@ -209,6 +209,8 @@ class InfoSmeTransport extends Service
     args.put("to_date", (toSendDate == null) ? "" : dateToString(toSendDate));
     args.put("order_by", (orderBy == null) ? "" : orderBy);
     args.put("order_direction", (orderAsc) ? "" : "desc");
+    args.put("address", (address == null) ? "" : address);
+    args.put("msg_limit", String.valueOf(limit));
 
     return translateGetMessagesResult((List)callMethod(SELECT_TASK_MESSAGES_METHOD_ID, Type.Types[Type.StringListType], args));
   }

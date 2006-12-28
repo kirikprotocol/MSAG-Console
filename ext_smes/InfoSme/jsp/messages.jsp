@@ -1,14 +1,17 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="ru.novosoft.smsc.util.StringEncoderDecoder,
                  java.util.*, ru.novosoft.smsc.infosme.backend.Message,
-                 ru.novosoft.smsc.jsp.util.tables.QueryResultSet"%>
-<jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.infosme.beans.Messages" />
-<jsp:setProperty name="bean" property="*"/>
+                 ru.novosoft.smsc.jsp.util.tables.QueryResultSet,
+                 ru.novosoft.smsc.infosme.beans.Messages"%>
+<jsp:useBean id="infosme_messages_bean" scope="session" class="ru.novosoft.smsc.infosme.beans.Messages" />
+<jsp:setProperty name="infosme_messages_bean" property="*"/>
 <%
 	//ServiceIDForShowStatus = ;
 	TITLE=getLocString("infosme.title");
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
+
+  final Messages bean = (Messages)infosme_messages_bean;
 
   int rowN = 0;
   int beanResult = bean.process(request);
@@ -115,8 +118,12 @@ else
   <th style="text-align:left"><%= getLocString("infosme.label.message")%></th>
 </tr></thead>
 <tbody><%
-  for (Iterator i=allMessages.iterator(); i.hasNext();) {
+  int start = bean.getStartPositionInt();
+  int end = start + bean.getPageSizeInt();
+  int pos = 0;
+  for (Iterator i=allMessages.iterator(); i.hasNext() && pos < end; pos++) {
     Message message = (Message)i.next();
+    if (pos >= start) {
     %><tr class=row<%=rowN++&1%>>
       <td><input class=check type=checkbox name=checked value="<%=message.getTaskId()%>" <%=bean.isMessageChecked(message.getTaskId()) ? "checked" : ""%>></td>
       <td><%=StringEncoderDecoder.encode(message.getTaskId())%></td>
@@ -125,7 +132,8 @@ else
       <td nowrap><%=StringEncoderDecoder.encode(bean.convertDateToString(message.getSendDate()))%></td>
       <td><%=StringEncoderDecoder.encode(message.getMessage())%></td>
     </tr>
-<%}%>
+<%  }
+  }%>
 </tbody>
 </table>
 <%@ include file="/WEB-INF/inc/navbar_nofilter.jsp"%>
