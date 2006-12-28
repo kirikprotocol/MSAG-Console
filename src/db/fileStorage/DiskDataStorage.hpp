@@ -8,16 +8,16 @@
 # include <string.h>
 # include <util/BufferSerialization.hpp>
 /*
-** лМБУУ ПРЙУЩЧБЕФ ЙОФЕТЖЕКУ БВУФТБЛГЙЙ ДЙУРЕФЮЕТБ ЖБКМПЧ ИТБОЙМЙЭБ ДБООЩИ.
-** лМБУУЩ, ТЕБМЙЪХАЭЙЕ ДБООЩК ЙОФЕТЖЕКУ, ПФЧЕФУФЧЕООЩ ЪБ ИТБОЕОЙЕ ЪБРЙУЕК Ч 
-** ОЕЛПФПТПН ЙУФПЮОЙЛЕ ДБООЩИ Й РТЕДПУФБЧМЕОЙЕ/НПДЙЖЙЛБГЙА ЬФЙИ ДБООЩИ
-** РП ЪБРТПУХ. нЕФПДЩ ЛМБУУБ ПРЕТЙТХАФ РПОСФЙЕН ЪБРЙУШ. ъБРЙУШ ПДОПЪОБЮОП
-** ПРТЕДЕМСЕФУС ЙДЕОФЙЖЙЛБФПТПН ЪБРЙУЙ (record id, ЙМЙ rid ). лМБУУ
-** РБТБНЕФТЙЪХЕФУС ФЙРПН V, РТЕДУФБЧМСАЭЙН УПИТБОСЕНХА ЪБРЙУШ. йОФЕТЖЕКУ,
-** РТЕДУФБЧМЕООЩК ФЙРПН V, ПВСЪБО РТЕДПУФБЧЙФШ НЕФПД ДМС УПИТБОЕОЙС
-** ЪБРЙУЙ V::marshal(), ЛПОУФТХЛФПТ, РТЙОЙНБАЭЙК SerializationBuffer Й НЕФПДЩ
-** ДМС РПМХЮЕОЙС ТБЪНЕТБ ЪБРЙУЙ V::getSize() Й ДМС ЧЩЮЙУМЕОЙС crc
-** ЪБРЙУЙ V::calcCrc().
+** Класс описывает интерфейс абстракции диспетчера файлов хранилища данных.
+** Классы, реализующие данный интерфейс, ответственны за хранение записей в 
+** некотором источнике данных и предоставление/модификацию этих данных
+** по запросу. Методы класса оперируют понятием запись. Запись однозначно
+** определяется идентификатором записи (record id, или rid ). Класс
+** параметризуется типом V, представляющим сохраняемую запись. Интерфейс,
+** представленный типом V, обязан предоставить метод для сохранения
+** записи V::marshal(), конструктор, принимающий SerializationBuffer и методы
+** для получения размера записи V::getSize() и для вычисления crc
+** записи V::calcCrc().
 */
 template<typename V>
 class DataStorage_FileDispatcher {
@@ -28,36 +28,36 @@ public:
                  FATAL=255 } operation_status_t;
   typedef off_t rid_t;
 
-  // лПОУФТХЛФПТ УПЪДБЕФ ПВЯЕЛФ, УППФЧЕФУФЧХАЭЙК ИТБОЙМЙЭХ ДБООЩИ У ЙНЕОЕН ЖБКМБ,
-  // РЕТЕДБООЩН Ч БТЗХНЕОФЕ.
+  // Конструктор создает объект, соответствующий хранилищу данных с именем файла,
+  // переданным в аргументе.
   explicit DataStorage_FileDispatcher(const std::string& fileName);
   virtual ~DataStorage_FileDispatcher() {}
-  // пФЛТЩФШ ИТБОЙМЙЭЕ ДБООЩИ.
+  // Открыть хранилище данных.
   virtual operation_status_t open() = 0;
-  // уПЪДБФШ ИТБОЙМЙЭЕ ДБООЩИ.
+  // Создать хранилище данных.
   virtual operation_status_t create() = 0;
-  // ъБЛТЩФШ ИТБОЙМЙЭЕ
+  // Закрыть хранилище
   virtual operation_status_t close() = 0;
-  // хОЙЮФПЦЙФШ ИТБОЙМЙЭЕ
+  // Уничтожить хранилище
   virtual operation_status_t drop() = 0;
 
-  // йЪЧМЕЮШ ЪБРЙУШ ЙЪ ИТБОЙМЙЭБ РП ЪОБЮЕОЙА record id 
+  // Извлечь запись из хранилища по значению record id 
   virtual operation_status_t extractRecord(V* record, const rid_t& rid) = 0;
-  // йЪЧМЕЮШ РЕТЧХА ЪБРЙУШ ЙЪ ИТБОЙМЙЭБ. чПЪЧТБЭБЕФ NO_RECORD_FOUND, ЕУМЙ
-  // Ч ИТБОЙМЙЭЕ ОЕФ ЪБРЙУЕК.
+  // Извлечь первую запись из хранилища. Возвращает NO_RECORD_FOUND, если
+  // в хранилище нет записей.
   virtual operation_status_t extractFirstRecord(V* record, rid_t* rid, rid_t* nextRid) = 0;
-  // йЪЧМЕЮШ УМЕДХАЭХА ЪБРЙУШ ЙЪ ИТБОЙМЙЭБ. чПЪЧТБЭБЕФ NO_RECORD_FOUND, ЕУМЙ
-  // РТПУНПФТЕОЩ ЧУЕ ЪБРЙУЙ.
+  // Извлечь следующую запись из хранилища. Возвращает NO_RECORD_FOUND, если
+  // просмотрены все записи.
   virtual operation_status_t extractNextRecord(V* record, rid_t* rid, rid_t* nextRid) = 0;
-  // ъБНЕОЙФШ ЪБРЙУШ Ч ИТБОЙМЙЭЕ ДМС ХЛБЪБООПЗП record id 
+  // Заменить запись в хранилище для указанного record id 
   virtual operation_status_t replaceRecord(const V& record, const rid_t& rid) = 0;
-  // дПВБЧЙФШ ОПЧХА ЪБРЙУШ Ч ИТБОЙМЙЭЕ. дМС ХУРЕЫОП УПЪДБООПК ЪБРЙУЙ
-  // ЧПЪЧТБЭБЕФУС record id
+  // Добавить новую запись в хранилище. Для успешно созданной записи
+  // возвращается record id
   virtual operation_status_t addRecord(const V& record, rid_t* rid) = 0;
-  // хДБМЙФШ ЪБРЙУШ ЙЪ ИТБОЙМЙЭБ, УППФЧЕФУФЧХАЭХА ХЛБЪБООПНХ record id
+  // Удалить запись из хранилища, соответствующую указанному record id
   virtual operation_status_t deleteRecord(const rid_t& rid) = 0;
 
-  // уВТПУЙФШ НПДЙЖЙГЙТПЧБООЩЕ ДБООЩЕ ОБ ДЙУЛ
+  // Сбросить модифицированные данные на диск
   virtual void flush() = 0;
 
 protected:
@@ -77,15 +77,17 @@ static const size_t RECORD_MARKER_SZ=2,
   RECORD_CRC_SZ=4,
   RECORD_OVERHEAD_SZ = RECORD_MARKER_SZ + RECORD_LENGTH_SZ + RECORD_FLG_SZ + RECORD_CRC_SZ;
 
-static const size_t STORAGE_HEADER_SZ = 4 + 4; // ЧЕТУЙС (4ВБКФБ) Й reserved(4ВБКФБ).
+static const size_t STORAGE_HEADER_SZ = 4 + 4; // версия (4байта) и reserved(4байта).
 
 # include "IOPageDispatcher.hpp"
 # include <core/synchronization/Mutex.hpp>
 
+# include <logger/Logger.h>
+
 template<typename V>
 class SimpleFileDispatcher : public DataStorage_FileDispatcher<V> {
 public:
-  explicit SimpleFileDispatcher(const std::string& fileName) : DataStorage_FileDispatcher<V>(fileName), _ioPageDispatcher(0) {}
+  explicit SimpleFileDispatcher(const std::string& fileName) : DataStorage_FileDispatcher<V>(fileName), _ioPageDispatcher(0),_logger(smsc::logger::Logger::getInstance("dbstrg")) {}
   virtual ~SimpleFileDispatcher();
 
   virtual typename DataStorage_FileDispatcher<V>::operation_status_t open();
@@ -114,21 +116,21 @@ private:
   static uchar_t record_marker_constant[RECORD_MARKER_SZ];
 
   /*
-  ** ъБЗПМПЧПЛ: ЧЕТУЙС (4ВБКФБ), reserved(4ВБКФБ).
-  ** ъБРЙУЙ УМЕДХАФ РПУМЕДПЧБФЕМШОП ПДОБ ЪБ ДТХЗПК.
-  ** жПТНБФ ЪБРЙУЙ: НБТЛЕТ ОБЮБМБ ЪБРЙУЙ(2 ВБКФБ), ТБЪНЕТ РТЙЛМБДОЩИ ДБООЩИ 
-  ** ЪБРЙУЙ (2 ВБКФБ), РПМЕ ЖМБЗПЧ(1 ВБКФ), РТЙЛМБДОЩЕ ДБООЩЕ,
-  ** crc РП ДБООЩН ЪБРЙУЙ (ТБЪНЕТ,ЖМБЗ,ДБООЩЕ) 4 ВБКФБ.
-  ** нБТЛЕТЩ ОБЮБМБ ЪБРЙУЙ ДПМЦЕО ЙНЕФШ ЪОБЮЕОЙЕ 0x00 0x00. ъБРЙУШ У ОХМЕЧЩН
-  ** ТБЪНЕТПН ОЕ ДПРХУЛБЕФУС
-  ** уРЙУПЛ ЪБРЙУЕК ЪБЧЕТЫБЕФУС ФЕТНЙОЙТХАЭЙН НБТЛЕТПН - РПУМЕДПЧБФЕМШОПУФШ ЙЪ 4 ВБКФ,
-  ** ЙНЕАЭБС ЪОБЮЕОЙЕ 0xAA 0x11 0xEE 0x33
+  ** Заголовок: версия (4байта), reserved(4байта).
+  ** Записи следуют последовательно одна за другой.
+  ** Формат записи: маркер начала записи(2 байта), размер прикладных данных 
+  ** записи (2 байта), поле флагов(1 байт), прикладные данные,
+  ** crc по данным записи (размер,флаг,данные) 4 байта.
+  ** Маркеры начала записи должен иметь значение 0x00 0x00. Запись с нулевым
+  ** размером не допускается
+  ** Список записей завершается терминирующим маркером - последовательность из 4 байт,
+  ** имеющая значение 0xAA 0x11 0xEE 0x33
   */
 
   class StorableRecord {
   public:
-    StorableRecord() : _recordSz(0), _flg(0), _writingAppData(NULL), _readingAppData(NULL), _crc(0) {}
-    StorableRecord(const V* appData, uint8_t flg) : _recordSz(appData->getSize()),_writingAppData(appData), _readingAppData(NULL), _flg(flg) {}
+    StorableRecord() : _recordSz(0), _flg(0), _writingAppData(NULL), _readingAppData(NULL), _crc(0),_logger(smsc::logger::Logger::getInstance("dbstrg")) {}
+    StorableRecord(const V* appData, uint8_t flg) : _recordSz(appData->getSize()),_writingAppData(appData), _readingAppData(NULL), _flg(flg), _logger(smsc::logger::Logger::getInstance("dbstrg")) {}
     operation_status_t marshal(IOPage& ioPage, SimpleFileDispatcher<V>& fileDispatcher);
     operation_status_t unmarshal(IOPage& ioPage, SimpleFileDispatcher<V>& fileDispatcher);
     uint8_t getFlg() const { return _flg; }
@@ -140,6 +142,7 @@ private:
     const V* _writingAppData;
     V* _readingAppData;
     uint32_t _crc;
+    smsc::logger::Logger* _logger;
   };
   int _fd;
 
@@ -151,6 +154,8 @@ private:
 
   IOPageDispatcher* _ioPageDispatcher;
   smsc::core::synchronization::Mutex _addRecordLock;
+
+  smsc::logger::Logger* _logger;
 };
 
 #endif
