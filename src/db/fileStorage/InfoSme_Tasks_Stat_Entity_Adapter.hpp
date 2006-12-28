@@ -23,11 +23,11 @@ public:
   using EntityStorable_Helper::calcCrc;
   using EntityStorable_Helper::getSize;
 
-  InfoSme_Tasks_Stat_Entity& getAdaptedObjRef() { return _createdObj; } // приветси к соответствию константность возвращаемых значений и объявлений методов
+  InfoSme_Tasks_Stat_Entity& getAdaptedObjRef() { return _createdObj; } // ОПХБЕРЯХ Й ЯННРБЕРЯРБХЧ ЙНМЯРЮМРМНЯРЭ БНГБПЮЫЮЕЛШУ ГМЮВЕМХИ Х НАЗЪБКЕМХИ ЛЕРНДНБ
 
 private:
-  // вспомогательный класс для определения строго порядка вычисления аргументов
-  // конструктора InfoSme_Generating_Tasks_Entity
+  // БЯОНЛНЦЮРЕКЭМШИ ЙКЮЯЯ ДКЪ НОПЕДЕКЕМХЪ ЯРПНЦН ОНПЪДЙЮ БШВХЯКЕМХЪ ЮПЦСЛЕМРНБ
+  // ЙНМЯРПСЙРНПЮ InfoSme_Generating_Tasks_Entity
   struct strict_field_order {
     strict_field_order() {}
     strict_field_order(smsc::util::SerializationBuffer& inputBuf) {
@@ -49,7 +49,7 @@ private:
 
   InfoSme_Tasks_Stat_Entity _createdObj;
 
-  enum {SERIALIZATION_BUF_OVERHEAD = 1} overhead_size_t; // накладные расходы - 1 байт на длину поля taskId
+  enum {SERIALIZATION_BUF_OVERHEAD = 1} overhead_size_t; // МЮЙКЮДМШЕ ПЮЯУНДШ - 1 АЮИР МЮ ДКХМС ОНКЪ taskId
 };
 
 #endif

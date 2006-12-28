@@ -24,11 +24,11 @@ public:
   using EntityStorable_Helper::calcCrc;
   using EntityStorable_Helper::getSize;
 
-  InfoSme_T_Entity& getAdaptedObjRef() { return _createdObj; } // приветси к соответствию константность возвращаемых значений и объявлений методов
+  InfoSme_T_Entity& getAdaptedObjRef() { return _createdObj; } // ОПХБЕРЯХ Й ЯННРБЕРЯРБХЧ ЙНМЯРЮМРМНЯРЭ БНГБПЮЫЮЕЛШУ ГМЮВЕМХИ Х НАЗЪБКЕМХИ ЛЕРНДНБ
 
 private:
-  // вспомогательный класс для определения строго порядка вычисления аргументов
-  // конструктора InfoSme_T_Entity
+  // БЯОНЛНЦЮРЕКЭМШИ ЙКЮЯЯ ДКЪ НОПЕДЕКЕМХЪ ЯРПНЦН ОНПЪДЙЮ БШВХЯКЕМХЪ ЮПЦСЛЕМРНБ
+  // ЙНМЯРПСЙРНПЮ InfoSme_T_Entity
   struct strict_field_order {
     strict_field_order() {}
     strict_field_order(smsc::util::SerializationBuffer& inputBuf) {
@@ -52,7 +52,7 @@ private:
 
   InfoSme_T_Entity _createdObj;
 
-  enum {SERIALIZATION_BUF_OVERHEAD = 3} overhead_size_t; // два байта на длину сообщения и байт на длину адреса
+  enum {SERIALIZATION_BUF_OVERHEAD = 3} overhead_size_t; // ДБЮ АЮИРЮ МЮ ДКХМС ЯННАЫЕМХЪ Х АЮИР МЮ ДКХМС ЮДПЕЯЮ
 };
 
 #endif
