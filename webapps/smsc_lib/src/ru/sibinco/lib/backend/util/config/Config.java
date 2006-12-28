@@ -322,6 +322,13 @@ public class Config implements Cloneable
     saveInternal(configFile, Functions.getLocaleEncoding());
   }
 
+  public void saveWithoutBackup(String encoding) throws IOException, WrongParamTypeException
+  {
+    if (null == configFile)
+      throw new NullPointerException("config file not specified");
+    saveInternal(configFile, encoding);
+  }
+
   public synchronized Collection getSectionChildShortParamsNames(final String sectionName)
   {
     final int dotpos = sectionName.length();
