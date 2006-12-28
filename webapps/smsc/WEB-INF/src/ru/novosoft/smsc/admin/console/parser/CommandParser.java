@@ -436,7 +436,7 @@ public CommandParser(ParserSharedInputState state) {
 		case TGT_ALIAS:
 		{
 			match(TGT_ALIAS);
-			cmd = new AliasListCommand();
+			cmd=lstalias();
 			break;
 		}
 		case TGT_SUBJECT:
@@ -2752,6 +2752,73 @@ public CommandParser(ParserSharedInputState state) {
 		cmd.setClosedGroupId(getnameid("group id to alter"));
 		}
 		group_alt_opt(cmd);
+		return cmd;
+	}
+	
+	public final AliasListCommand  lstalias() throws RecognitionException, TokenStreamException {
+		AliasListCommand cmd;
+		
+		
+		cmd = new AliasListCommand();
+		
+		
+		{
+		switch ( LA(1)) {
+		case OPT_ADDRESS:
+		{
+			match(OPT_ADDRESS);
+			cmd.setAddress(getnameid("Alias address"));
+			break;
+		}
+		case EOF:
+		case TGT_ALIAS:
+		case OPT_HIDE:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case TGT_ALIAS:
+		{
+			match(TGT_ALIAS);
+			cmd.setAlias(getnameid("Alias name"));
+			break;
+		}
+		case EOF:
+		case OPT_HIDE:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_HIDE:
+		{
+			match(OPT_HIDE);
+			cmd.setHide(getint("Hide"));
+			break;
+		}
+		case EOF:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
 		return cmd;
 	}
 	
@@ -5718,27 +5785,27 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			}
 			{
-			_loop296:
+			_loop300:
 			do {
 				if ((LA(1)==ACT_ADD)) {
 					match(ACT_ADD);
 					cmd.addMask(getnameid("closed group mask to add"));
 				}
 				else {
-					break _loop296;
+					break _loop300;
 				}
 				
 			} while (true);
 			}
 			{
-			_loop298:
+			_loop302:
 			do {
 				if ((LA(1)==ACT_DELETE)) {
 					match(ACT_DELETE);
 					cmd.delMask(getnameid("closed group mask to delete"));
 				}
 				else {
-					break _loop298;
+					break _loop302;
 				}
 				
 			} while (true);

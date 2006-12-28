@@ -135,7 +135,7 @@ lst returns [Command cmd] {
     cmd = null;
 }
 	: TGT_ROUTE	{ cmd = new RouteListCommand();     }
-	| TGT_ALIAS	{ cmd = new AliasListCommand();     }
+	| TGT_ALIAS	cmd = lstalias
 	| TGT_SUBJECT	{ cmd = new SubjectListCommand();   }
 	| TGT_PRINCIPAL	{ cmd = new PrincipalListCommand(); }
 	| TGT_ACL	{ cmd = new AclListCommand();       }
@@ -657,6 +657,18 @@ altprofile returns [ProfileAlterCommand cmd] {
 	  profile_translit_opt[cmd]
 	  profile_group_opt[cmd]
 	;
+exception[addr]
+catch [RecognitionException ex] {
+    throw new RecognitionException("Profile address expected");
+}
+
+lstalias returns [AliasListCommand cmd] {
+  cmd = new AliasListCommand();
+}
+  : (OPT_ADDRESS {cmd.setAddress(getnameid("Alias address"));})?
+    (TGT_ALIAS {cmd.setAlias(getnameid("Alias name"));})?
+    (OPT_HIDE {cmd.setHide(getint("Hide"));})?
+    ;
 exception[addr]
 catch [RecognitionException ex] {
     throw new RecognitionException("Profile address expected");

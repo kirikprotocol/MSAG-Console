@@ -12,10 +12,15 @@ import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataItem;
 
 public class AliasDataItem extends AbstractDataItem
 {
-  protected AliasDataItem(Alias alias)
-  {
-    values.put("Address", alias.getAddress().getMask());
-    values.put("Alias", alias.getAlias().getMask());
-    values.put("Hide", new Boolean(alias.isHide()));
+  public AliasDataItem(Alias alias) {
+    values.put(AliasDataSource.ALIAS_FIELD, alias.getAlias().getMask());
+    values.put(AliasDataSource.ADDRESS_FIELD, alias.getAddress().getMask());
+    values.put(AliasDataSource.HIDE_FIELD, new Boolean(alias.isHide()));
+  }
+
+  public AliasDataItem(String alias, String address, boolean hide) {
+    values.put(AliasDataSource.ALIAS_FIELD, alias);
+    values.put(AliasDataSource.ADDRESS_FIELD, address);
+    values.put(AliasDataSource.HIDE_FIELD, new Boolean(hide));
   }
 }

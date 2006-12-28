@@ -13,6 +13,7 @@ import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.jsp.SMSCErrors;
+import ru.novosoft.smsc.jsp.SMSCJspException;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
 import javax.servlet.http.HttpServletRequest;
@@ -117,13 +118,12 @@ public class AliasesEdit extends SmscBean
     final boolean aliasChanged = !oldAl.getAlias().equals(al.getAlias());
     final boolean addressChanged = !oldAl.getAddress().equals(al.getAddress());
 
-    if (aliasChanged && smsc.getAliases().contains(al))
-      return error(SMSCErrors.error.aliases.alreadyExistsAlias, al.getAlias().getMask());
-
-    if (al.isHide() && smsc.getAliases().isAddressExistsAndHide(al.getAddress(), !addressChanged ? oldAl : null))
-      return error(SMSCErrors.error.aliases.alreadyExistsAddress, al.getAddress().getMask());
-
+//    if (aliasChanged && smsc.getAliases().contains(al))
+//      return error(SMSCErrors.error.aliases.alreadyExistsAlias, al.getAlias().getMask());
     try {
+      if (al.isHide() && smsc.getAliases().isAddressExistsAndHide(al.getAddress(), !addressChanged ? oldAl : null))
+        return error(SMSCErrors.error.aliases.alreadyExistsAddress, al.getAddress().getMask());
+
       smsc.getAliases().remove(oldAl);
       if (smsc.getAliases().add(al)) {
           request.getSession().setAttribute("alias",alias);
@@ -137,7 +137,7 @@ public class AliasesEdit extends SmscBean
         return error(SMSCErrors.error.aliases.alreadyExistsAlias, alias);
     } catch (Throwable t) {
       logger.error("Couldn't edit alias \"" + address + "\"-->\"" + alias + "\"", t);
-      return error(SMSCErrors.error.aliases.cantEdit, alias);
+      return _error(new SMSCJspException(SMSCErrors.error.aliases.cantEdit, SMSCJspException.ERROR_CLASS_ERROR, t));
     }
   }
 

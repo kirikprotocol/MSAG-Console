@@ -11,6 +11,7 @@ package ru.novosoft.smsc.admin.console.commands.alias;
 import ru.novosoft.smsc.admin.alias.Alias;
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.console.commands.CommandClass;
+import ru.novosoft.smsc.admin.AdminException;
 
 public class AliasViewCommand extends CommandClass
 {
@@ -28,8 +29,14 @@ public class AliasViewCommand extends CommandClass
     }
     public void process(CommandContext ctx)
     {
-        Alias smscAlias = ctx.getSmsc().getAliases().get(alias);
-        if (smscAlias != null) {
+      Alias smscAlias = null;
+      try {
+        smscAlias = ctx.getSmsc().getAliases().get(alias);
+      } catch (AdminException e) {
+        e.printStackTrace();
+      }
+
+      if (smscAlias != null) {
             ctx.setMessage(showAlias(smscAlias));
             ctx.setStatus(CommandContext.CMD_OK);
         }

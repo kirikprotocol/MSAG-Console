@@ -1,140 +1,120 @@
-<%@ include file="/WEB-INF/inc/code_header.jsp" %>
 <%@ page import="ru.novosoft.smsc.jsp.PageBean,
                  ru.novosoft.smsc.jsp.smsc.aliases.Index,
-                 ru.novosoft.smsc.jsp.util.tables.DataItem" %>
-<jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.aliases.Index"/>
+                 ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasFilter"%>
+<%@ include file="/WEB-INF/inc/code_header.jsp" %>
+<jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.jsp.smsc.aliases.Index"/>
 <jsp:setProperty name="bean" property="*"/>
+
 <%
     TITLE = getLocString("aliases.title");
 
     switch (bean.process(request)) {
         case PageBean.RESULT_OK :
         case PageBean.RESULT_ERROR :
+        case PageBean.RESULT_DONE:
             break;
-        case Index.RESULT_DONE :
-            response.sendRedirect("index.jsp");
-            return;
-        case Index.RESULT_FILTER :
-            response.sendRedirect("aliasesFilter.jsp");
-            return;
         case Index.RESULT_ADD :
             response.sendRedirect("aliasesAdd.jsp");
             return;
         case Index.RESULT_EDIT :
-            response.sendRedirect("aliasesEdit.jsp?alias=" + URLEncoder.encode(bean.getEditAlias()) + "&address=" +
-                    URLEncoder.encode(bean.getEditAddress()) + "&hide=" + bean.isEditHide());
+            response.sendRedirect("aliasesEdit.jsp?alias=" + URLEncoder.encode((String)bean.getSelectedAlias().getValue("Alias")) + "&address=" +
+                    URLEncoder.encode((String)bean.getSelectedAlias().getValue("Address")) + "&hide=" + URLEncoder.encode(((Boolean)bean.getSelectedAlias().getValue("Hide")).toString()));
             return;
         default :
             errorMessages.add(new SMSCJspException(ru.novosoft.smsc.jsp.SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
     }
+  int rowN=0;
 %>
+
+
 <%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
 <%
     MENU0_SELECTION = "MENU0_ALIASES";
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp" %>
+
+
+
+<div class=content>
+
+    <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Aliases ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
+    <div class=page_subtitle><%=getLocString("common.titles.aliases")%></div>
+    <table class=properties_list cellspacing=0 cellspadding=0>
+        <col width=1px>
+        <col align=left>
+        <%
+            for (int i = 0; i < bean.getAliases().length; i++) {
+        %>
+        <tr class=row<%=(rowN++) & 1%>>
+            <td><input class=txt name=aliases value="<%=bean.getAliases()[i]%>" validation="mask"
+                       onkeyup="resetValidation(this)"></td>
+            <td>&nbsp;</td>
+        </tr>
+        <%}%>
+        <tr class=row<%=(rowN++) & 1%>>
+            <td><input class=txt name=aliases validation="mask" onkeyup="resetValidation(this)"></td>
+            <td><%addButton(out, "mbAddAlias", "Add", "aliases.addAliasHint");%></td>
+        </tr>
+    </table>
+    <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Addresses ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
+    <div class=page_subtitle><%=getLocString("common.titles.addresses")%></div>
+    <table class=properties_list cellspacing=0 cellspadding=0>
+        <col width=1px>
+        <col align=left>
+        <%
+            rowN = 0;
+            for (int i = 0; i < bean.getAddresses().length; i++) {
+        %>
+        <tr class=row<%=(rowN++) & 1%>>
+            <td><input class=txt name=addresses value="<%=bean.getAddresses()[i]%>" validation="mask"
+                       onkeyup="resetValidation(this)"></td>
+            <td></td>
+        </tr>
+        <%}%>
+        <tr class=row<%=(rowN++) & 1%>>
+            <td><input class=txt name=addresses validation="mask" onkeyup="resetValidation(this)"></td>
+            <td><%addButton(out, "mbAddAddress", "Add", "aliases.addAddressHint");%></td>
+        </tr>
+    </table>
+    <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Options ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
+    <div class=page_subtitle><%=getLocString("common.titles.options")%></div>
+    <table class=properties_list cellspacing=0 cellspadding=0>
+        <col width=1px>
+        <%rowN = 0;%>
+        <tr class=row<%=(rowN++) & 1%>>
+            <th><%=getLocString("aliases.hideOption")%>:</th>
+            <td><div class=select><select class=txt name=hide>
+                <option value="<%=AliasFilter.HIDE_NOFILTER%>" <%=AliasFilter.HIDE_NOFILTER == bean.getHideByte() ? "selected" : ""%>><%=getLocString("aliases.hideOption.all")%></option>
+                <option value="<%=AliasFilter.HIDE_SHOW_HIDE%>" <%=AliasFilter.HIDE_SHOW_HIDE == bean.getHideByte() ? "selected" : ""%>><%=getLocString("aliases.hideOption.hide")%></option>
+                <option value="<%=AliasFilter.HIDE_SHOW_NOHIDE%>" <%=AliasFilter.HIDE_SHOW_NOHIDE == bean.getHideByte() ? "selected" : ""%>><%=getLocString("aliases.hideOption.noHide")%></option>
+            </select></div></td>
+        </tr>
+    </table>
+</div>
+
 <%
     page_menu_begin(out);
     page_menu_button(session, out, "mbAdd", "aliases.add", "aliases.add");
-    page_menu_button(session, out, "mbDelete", "aliases.delete", "aliases.deleteHint");
+    page_menu_button(session, out, "mbQuery", "common.buttons.query", "common.buttons.query");
+    if (bean.isInitialized())
+      page_menu_button(session, out, "mbClear", "common.buttons.clear", "common.buttons.clear");
     page_menu_space(out);
     page_menu_end(out);
+
+    if (bean.isInitialized()) {
 %>
+
 <div class=content>
-    <input type=hidden name=startPosition value="<%= bean.getStartPosition() %>">
-    <input type=hidden name=editAlias id=editAlias>
-    <input type=hidden name=editAddress id=editAddress>
-    <input type=hidden name=editHide id=editHide>
-    <input type=hidden name=totalSize value="<%= bean.getTotalSize() %>">
-    <input type=hidden name=sort>
-    <script>
-        function edit(alias, address, hide) {
-            document.getElementById('jbutton').name = "mbEdit";
-            opForm.editAlias.value = alias;
-            opForm.editAddress.value = address;
-            opForm.editHide.value = hide;
-
-            opForm.submit();
-
-            return false;
-        }
-
-        function setSort(sorting) {
-            if (sorting == "<%= bean.getSort() %>") {
-                opForm.sort.value = "-<%= bean.getSort() %>";
-            } else {
-                opForm.sort.value = sorting;
-            }
-
-            opForm.submit();
-
-            return false;
-        }
-    </script>
-    <table class=list cellspacing=1>
-        <col width="1%">
-        <col width="60%" align=left>
-        <col width="20%" align=left>
-        <col width="20%" align=center>
-        <thead>
-            <tr>
-                <th>
-                    &nbsp;
-                </th>
-                <th>
-                    <a href="javascript:setSort('Alias')" <%= bean.getSort().endsWith("Alias") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : "" %>
-                       title="<%= getLocString("common.sortmodes.aliasHint") %>"><%= getLocString("common.sortmodes.alias") %></a>
-                </th>
-                <th>
-                    <a href="javascript:setSort('Address')" <%= bean.getSort().endsWith("Address") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : "" %>
-                       title="<%= getLocString("common.sortmodes.addressHint") %>"><%= getLocString("common.sortmodes.address") %></a>
-                </th>
-                <th>
-                    <a href="javascript:setSort('Hide')" <%= bean.getSort().endsWith("Hide") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : "" %>
-                       title="<%= getLocString("common.sortmodes.hideHint") %>"><%= getLocString("common.sortmodes.hide") %></a>
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-            <%
-                {
-                    int row = 0;
-
-                    for (Iterator i = bean.getAliases().iterator(); i.hasNext();) {
-                        DataItem item = (DataItem) i.next();
-                        String encAlias = StringEncoderDecoder.encode((String) item.getValue("Alias"));
-                        String encAddress = StringEncoderDecoder.encode((String) item.getValue("Address"));
-            %>
-            <tr class=row<%= (row++) & 1 %>>
-                <td class=check>
-                    <input class=check type=checkbox name=checkedAliases
-                           value="<%= encAlias %>" <%= bean.isAliasChecked((String)item.getValue("Alias")) ? "checked" : "" %>>
-                </td>
-                <td class=name>
-                    <a href="javascript:edit('<%= encAlias %>', '<%= encAddress %>', '<%= item.getValue("Hide") %>')"
-                       title="<%= getLocString("aliases.editTitle") %>"><%= encAlias %></a>
-                </td>
-                <td>
-                    <%= encAddress %>
-                </td>
-                <td>
-                    <%= item.getValue("Hide") %>
-                </td>
-            </tr>
-            <%
-                    }
-                }
-            %>
-        </tbody>
-    </table>
-    <%@ include file="/WEB-INF/inc/navbar.jsp" %>
+  <%@ include file="/WEB-INF/inc/paged_table.jsp"%>
 </div>
 <%
-    page_menu_begin(out);
-    page_menu_button(session, out, "mbAdd", "aliases.add", "aliases.add");
-    page_menu_button(session, out, "mbDelete", "aliases.delete", "aliases.deleteHint");
-    page_menu_space(out);
-    page_menu_end(out);
+      page_menu_begin(out);
+      page_menu_button(session, out, "mbAdd", "aliases.add", "aliases.add");
+      page_menu_button(session, out, "mbDelete", "aliases.delete", "aliases.deleteHint");
+      page_menu_space(out);
+      page_menu_end(out);
+    }
 %>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp" %>
 <%@ include file="/WEB-INF/inc/code_footer.jsp" %>
+

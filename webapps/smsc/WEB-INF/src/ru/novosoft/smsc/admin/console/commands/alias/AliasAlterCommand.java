@@ -19,6 +19,7 @@ import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.route.Mask;
+import ru.novosoft.smsc.admin.AdminException;
 
 public class AliasAlterCommand extends CommandClass
 {
@@ -42,7 +43,15 @@ public class AliasAlterCommand extends CommandClass
   public void process(CommandContext ctx)
   {
     String out = "Alias '"+alias+"'";
-    Alias smscAlias = ctx.getSmsc().getAliases().get(alias);
+    Alias smscAlias = null;
+    try {
+      smscAlias = ctx.getSmsc().getAliases().get(alias);
+    } catch (AdminException e) {
+      e.printStackTrace();
+      ctx.setMessage("Couldn't alter "+out+". Cause: "+e.getMessage());
+      ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+    }
+
     if (smscAlias != null) {
       try {
         Alias newAlias = new Alias(new Mask(address), new Mask(alias), (hideSet) ? hide:smscAlias.isHide());

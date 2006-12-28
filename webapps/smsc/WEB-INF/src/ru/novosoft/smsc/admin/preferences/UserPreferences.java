@@ -31,6 +31,7 @@ public class UserPreferences {
     private String profilesFilter = null;
 
     private int aliasesPageSize = 20;
+    private int maxAliasesTotalSize = 1000;
     private AliasFilter aliasesFilter = new AliasFilter();
     private Vector aliasesSortOrder = new Vector();
 
@@ -173,6 +174,10 @@ public class UserPreferences {
 
     public int getAliasesPageSize() {
         return aliasesPageSize;
+    }
+
+    public int getMaxAliasesTotalSize() {
+      return maxAliasesTotalSize;
     }
 
     public AliasFilter getAliasesFilter() {

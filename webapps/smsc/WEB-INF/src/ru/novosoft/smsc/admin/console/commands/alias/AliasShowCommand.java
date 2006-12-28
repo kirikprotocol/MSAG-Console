@@ -7,12 +7,16 @@
  */
 package ru.novosoft.smsc.admin.console.commands.alias;
 
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.alias.Alias;
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.route.Mask;
+import ru.novosoft.smsc.jsp.util.tables.DataItem;
+import ru.novosoft.smsc.jsp.util.tables.Filter;
+import ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasDataSource;
 
-import java.util.Iterator;
+import java.util.List;
 
 public class AliasShowCommand extends CommandClass
 {
@@ -27,19 +31,38 @@ public class AliasShowCommand extends CommandClass
         String out = "for address '"+address+"'";
         try
         {
-            Mask addrMask = new Mask(address);
-            Iterator i = ctx.getSmsc().getAliases().iterator();
-            if (!i.hasNext()) {
-                ctx.setMessage("No aliases defined at all");
-                ctx.setStatus(CommandContext.CMD_OK);
-                return;
-            }
-            while (i.hasNext()) {
-                Alias alias = (Alias)i.next();
-                String mask = alias.getAddress().getMask();
-                if (mask.equals(addrMask.getMask())) {
-                    ctx.addResult(alias.getAlias().getMask());
+            final Mask addrMask = new Mask(address);
+//            Iterator i = ctx.getSmsc().getAliases().iterator();
+//            if (!i.hasNext()) {
+//                ctx.setMessage("No aliases defined at all");
+//                ctx.setStatus(CommandContext.CMD_OK);
+//                return;
+//            }
+//            while (i.hasNext()) {
+//                Alias alias = (Alias)i.next();
+//                String mask = alias.getAddress().getMask();
+//                if (mask.equals(addrMask.getMask())) {
+//                    ctx.addResult(alias.getAlias().getMask());
+//                }
+//            }
+            final Filter filter = new Filter() {
+
+              public boolean isEmpty() { return false; }
+
+              public boolean isItemAllowed(DataItem item) {
+                try {
+                  return new Mask((String)item.getValue(AliasDataSource.ADDRESS_FIELD)).getMask().equals(addrMask.getMask());
+                } catch (AdminException e) {
+                  e.printStackTrace();
+                  return false;
                 }
+              }
+            };
+
+            final List aliases = ctx.getSmsc().getAliases().findAliases(filter, 100);
+            for (int i = 0; i < aliases.size(); i++) {
+              Alias alias = (Alias) aliases.get(i);
+              ctx.addResult(alias.getAlias().getMask());
             }
             if (ctx.getResults().size() > 0) {
                 ctx.setStatus(CommandContext.CMD_LIST);

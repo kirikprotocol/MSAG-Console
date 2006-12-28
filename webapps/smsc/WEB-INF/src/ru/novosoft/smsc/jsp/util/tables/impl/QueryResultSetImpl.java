@@ -12,6 +12,7 @@ import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Vector;
+import java.util.Collection;
 
 
 public class QueryResultSetImpl implements QueryResultSet
@@ -48,6 +49,21 @@ public class QueryResultSetImpl implements QueryResultSet
   public void add(DataItem item)
   {
     results.add(item);
+  }
+
+  public void addAll(QueryResultSet rs) {
+    for (int i=0; i < rs.size(); i++)
+      results.add(rs.get(i));
+  }
+
+  public void addAll(Collection c) {
+    for (Iterator iterator = c.iterator(); iterator.hasNext();)
+      results.add(iterator.next());
+  }
+
+  public void clearValues() {
+    totalSize = 0;
+    results.clear();
   }
 
   public int size()

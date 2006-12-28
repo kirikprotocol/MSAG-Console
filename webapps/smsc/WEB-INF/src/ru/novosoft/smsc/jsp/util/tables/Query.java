@@ -11,6 +11,8 @@ import java.util.Vector;
 
 public interface Query
 {
+  Aggregator getAggregator();
+
   Filter getFilter();
 
   int getStartPosition();

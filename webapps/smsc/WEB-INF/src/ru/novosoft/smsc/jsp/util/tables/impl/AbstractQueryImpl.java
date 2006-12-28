@@ -8,6 +8,7 @@ package ru.novosoft.smsc.jsp.util.tables.impl;
 
 import ru.novosoft.smsc.jsp.util.tables.Filter;
 import ru.novosoft.smsc.jsp.util.tables.Query;
+import ru.novosoft.smsc.jsp.util.tables.Aggregator;
 
 import java.util.Vector;
 
@@ -18,6 +19,7 @@ public abstract class AbstractQueryImpl implements Query
   protected Filter filter = null;
   protected Vector sortOrder = null;
   protected int startPosition = 0;
+  protected Aggregator aggregator = null;
 
   public AbstractQueryImpl(int expectedResultsQuantity, Filter filter, Vector sortOrder, int startPosition)
   {
@@ -54,5 +56,13 @@ public abstract class AbstractQueryImpl implements Query
   public int getStartPosition()
   {
     return startPosition;
+  }
+
+  public Aggregator getAggregator() {
+    return aggregator;
+  }
+
+  public void setAggregator(Aggregator aggregator) {
+    this.aggregator = aggregator;
   }
 }
