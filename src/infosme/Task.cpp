@@ -1206,8 +1206,6 @@ bool Task::changeDeliveryMessageInfoByCompositCriterion(uint8_t msgState,
 
 bool Task::doesMessageConformToCriterion(ResultSet* rs, const InfoSme_T_SearchCriterion& searchCrit)
 {
-  smsc_log_debug(logger, "Task::doesMessageConformToCriterion: Enter it");
-
   if ( searchCrit.isSetAbonentAddress() &&
        searchCrit.getAbonentAddress() != rs->getString(3) ) {
     smsc_log_debug(logger, "Task::doesMessageConformToCriterion::: searchCrit.getAbonentAddress()=%s != rs->getString(3)=%s", searchCrit.getAbonentAddress().c_str(), rs->getString(3));
@@ -1246,8 +1244,9 @@ bool Task::deleteDeliveryMessageByRecordId(const std::string& recordId)
                                                          deleteMessageSql.get());
 
   if (!deleteMessage)
-    throw Exception("changeDeliveryMessageInfoByCompositCriterion(): Failed to create statement for messages access.");
+    throw Exception("deleteDeliveryMessageByRecordId(): Failed to create statement for messages access.");
   uint64_t msgId = atol(recordId.c_str());
+  smsc_log_debug(logger, "Task::deleteDeliveryMessageByRecordId::: call deleteMessage->executeUpdate for msgId=%ld",msgId);
   deleteMessage->setUint64(1, msgId);
   deleteMessage->executeUpdate();
   return true;
@@ -1377,6 +1376,11 @@ Task::selectDeliveryMessagesByCompositCriterion(const InfoSme_T_SearchCriterion&
   MessagesList_t messagesList;
 
   int fetched = 0;
+  size_t msgLimit=0;
+  if ( searchCrit.isSetMsgLimit() )
+    msgLimit = searchCrit.getMsgLimit();
+
+  size_t fetchedCount=0;
   while (rs->fetchNext()) {
     if ( doesMessageConformToCriterion(rs, searchCrit) ) {
       smsc_log_debug(logger, "Task::selectDeliveryMessagesByCompositCriterion::: add message [%lld,%d,%s,%lld,%s] into messagesList", rs->getUint64(1), rs->getUint8(2), rs->getString(3), rs->getDateTime(4), rs->getString(5));
@@ -1385,6 +1389,8 @@ Task::selectDeliveryMessagesByCompositCriterion(const InfoSme_T_SearchCriterion&
                                                 rs->getString(3),
                                                 rs->getDateTime(4),
                                                 rs->getString(5)));
+      if ( msgLimit && ++fetchedCount == msgLimit )
+        break;
     }
   }
 
