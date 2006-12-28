@@ -11,17 +11,6 @@ initLogger(const char* moduleName)
 static smsc::logger::Logger* logger=initLogger("dmplx");
 #endif
 
-static void showTableRecord(smsc::logger::Logger *logger, InfoSme_T_DBEntityStorage* dataSource)
-{
-  // DEBUG END
-  smsc_log_info(logger, "showTableRecord::: dump of Infosme_T_ for storage=[%p]::: ###", dataSource);
-
-  InfoSme_T_Entity resultValue;
-  std::auto_ptr<DbIterator<InfoSme_T_Entity> > iterator(dataSource->getIterator());
-  while (iterator->nextValue(&resultValue)) 
-    smsc_log_info(logger, "showTableRecord::: next record of Infosme_T_::[%s]###", resultValue.toString().c_str());
-}
-
 void
 SelectInfoSme_T_stateAndSendDate_criterion::setUint8(int pos, uint8_t val, bool null)
   throw(SQLException)
@@ -57,26 +46,20 @@ SelectInfoSme_T_stateAndSendDate_criterion::InfoSme_T_ResultSet::fetchNext()
 {
   bool isFetched;
 
-  // DEBUG
-  smsc_log_info(_logger, "SelectInfoSme_T_stateAndSendDate_criterion::InfoSme_T_ResultSet::: finding key interval =[minkey=[%s],maxkey=[%s]]###",_minKey.toString().c_str(), _maxKey.toString().c_str());
-  // END DEBUG
-
   InfoSme_T_Entity resultValue;
   if ( _beginSearch ) {
     _beginSearch = false;
     isFetched = _dataSource->findFirstValue(_minKey, &resultValue);
+    if ( isFetched && _maxKey  < InfoSme_T_Entity::StateANDSDate_key(resultValue) )
+      isFetched = false;
   } else
     isFetched = _dataSource->findNextValue(_maxKey, &resultValue);
 
-  if ( isFetched && resultValue.getState() != _minKey.getState() )
-    isFetched = fetchNext();
-
-  smsc_log_info(_logger, "SelectInfoSme_T_stateAndSendDate_criterion::InfoSme_T_ResultSet::: try dump next record of Infosme_T_::: ###");
   if (isFetched) {
     _fetchedValue = resultValue;
-    smsc_log_info(_logger, "next record of Infosme_T_::[%s]###", _fetchedValue.toString().c_str());
+    smsc_log_debug(_logger, "next record of Infosme_T_=[%s]", _fetchedValue.toString().c_str());
   } else
-    smsc_log_info(_logger, "no more records of Infosme_T_::###");
+    smsc_log_debug(_logger, "no more records of Infosme_T_");
 
   return isFetched;
 }
@@ -107,7 +90,7 @@ SelectInfoSme_T_stateAndSendDate_criterion::InfoSme_T_ResultSet::isNull(int pos)
 {
   return false;
 }
-//
+
 ResultSet*
 SelectInfoSme_T_fullTableScan::executeQuery()
   throw(SQLException)
@@ -124,12 +107,11 @@ SelectInfoSme_T_fullTableScan::InfoSme_T_ResultSet::fetchNext()
   InfoSme_T_Entity resultValue;
   bool isFetched = _iterator->nextValue(&resultValue);
 
-  smsc_log_info(_logger, "SelectInfoSme_T_fullTableScan::InfoSme_T_ResultSet::: try dump next record of Infosme_T_::: ###");
   if (isFetched) {
     _fetchedValue = resultValue;
-    smsc_log_info(_logger, "next record of Infosme_T_::[%s]###", _fetchedValue.toString().c_str());
+    smsc_log_debug(_logger, "next record of Infosme_T_::[%s]###", _fetchedValue.toString().c_str());
   } else
-    smsc_log_info(_logger, "no more records of Infosme_T_::###");
+    smsc_log_debug(_logger, "no more records of Infosme_T_::###");
 
   return isFetched;
 }
@@ -218,7 +200,6 @@ uint32_t
 Insert_into_InfoSme_T::executeUpdate()
   throw(SQLException)
 {
-  smsc_log_info(_logger, "Insert_into_InfoSme_T::executeUpdate::: insert message ###");
   if ( _dataSource->putValue(InfoSme_T_Entity(_dataSource->getNextIdSequenceNumber(),
                                               _state,
                                               _abonentAddress,
@@ -245,7 +226,7 @@ Delete_from_InfoSme_T_By_Id::executeUpdate()
   if ( ret < 0 )
     throw SQLException("Delete_from_InfoSme_T_By_Id::executeUpdate::: can't delete record");
   if ( ret > 0 )
-    smsc_log_info(_logger, "Delete_from_InfoSme_T_By_Id::executeUpdate::: record was deleted");
+    smsc_log_debug(_logger, "Delete_from_InfoSme_T_By_Id::executeUpdate::: record was deleted with msgId=%ld",_msgId);
   return ret;
 }
 
@@ -330,6 +311,7 @@ Update_InfoSme_T_Set_NewState_By_OldState::executeUpdate()
   InfoSme_T_Entity oldValue;
 
   int st;
+
   while(_iterator->nextValue(&oldValue)) {
     if (oldValue.getState() == _searchState) {
       InfoSme_T_Entity::Id_Key primaryKey(oldValue);
@@ -340,6 +322,7 @@ Update_InfoSme_T_Set_NewState_By_OldState::executeUpdate()
                                 oldValue.getSendDate(),
                                 oldValue.getMessage());
 
+      smsc_log_debug(_logger, "Update_InfoSme_T_Set_NewState_By_OldState::executeUpdate::: set new value=[%s] for row with key=[%s]",newValue.toString().c_str(), primaryKey.toString().c_str());
       if ( (st = _dataSource->updateValue(primaryKey, oldValue, newValue)) < 0 )
         throw SQLException("Update_InfoSme_T_Set_NewState_By_OldState::executeUpdate::: can't update record");
      
@@ -382,6 +365,7 @@ Update_InfoSme_T_Set_State_By_Id::executeUpdate()
                               oldValue.getAbonentAddress(),
                               oldValue.getSendDate(),
                               oldValue.getMessage());
+    smsc_log_debug(_logger, "Update_InfoSme_T_Set_State_By_Id::executeUpdate::: set new value=[%s] for row with key=[%s]", newValue.toString().c_str(), primaryKey.toString().c_str());
     int updateRes = _dataSource->updateValue(primaryKey, oldValue, newValue);
     if ( updateRes < 0 )
       throw SQLException("Update_InfoSme_T_Set_State_By_Id::executeUpdate::: can't update record");
@@ -419,12 +403,14 @@ Update_InfoSme_T_Set_State_By_IdAndState::executeUpdate()
 
   InfoSme_T_Entity oldValue;
   bool ret = _dataSource->findValue(primaryKey, &oldValue);
+
   if ( ret && oldValue.getState() == _oldMsgState ) {
     InfoSme_T_Entity newValue(oldValue.getId(),
                               _newMsgState,
                               oldValue.getAbonentAddress(),
                               oldValue.getSendDate(),
                               oldValue.getMessage());
+    smsc_log_debug(_logger, "Update_InfoSme_T_Set_State_By_IdAndState::executeUpdate::: set new value=[%s] for row with key=[%s]", newValue.toString().c_str(), primaryKey.toString().c_str());
     int updateRes = _dataSource->updateValue(primaryKey, oldValue, newValue);
     if ( updateRes < 0 )
       throw SQLException("Update_InfoSme_T_Set_State_By_IdAndState::executeUpdate::: can't update record");
@@ -508,13 +494,9 @@ SelectInfoSme_Id_Mapping_SmscId_criterion::InfoSme_Id_Mapping_ResultSet::fetchNe
   bool isFetched;
   if ( _beginFetch ) {
     _beginFetch = false;
-    smsc_log_info(_logger, "SelectInfoSme_Id_Mapping_SmscId_criterion::InfoSme_Id_Mapping_ResultSet::fetchNext::: call _dataSource->findFirstValue ###");
     isFetched = _dataSource->findFirstValue(_key, &_fetchedValue);
-    smsc_log_info(_logger, "SelectInfoSme_Id_Mapping_SmscId_criterion::InfoSme_Id_Mapping_ResultSet::fetchNext::: isFetched=%d###", isFetched);
   } else {
-    smsc_log_info(_logger, "SelectInfoSme_Id_Mapping_SmscId_criterion::InfoSme_Id_Mapping_ResultSet::fetchNext::: call _dataSource->findNextValue ###");
     isFetched = _dataSource->findNextValue(_key, &_fetchedValue);
-    smsc_log_info(_logger, "SelectInfoSme_Id_Mapping_SmscId_criterion::InfoSme_Id_Mapping_ResultSet::executeUpdate::: fetchNext isFetched=%d###", isFetched);
   }
 
   return isFetched;
