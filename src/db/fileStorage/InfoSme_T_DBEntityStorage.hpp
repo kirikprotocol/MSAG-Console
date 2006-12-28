@@ -13,10 +13,10 @@
 # include <core/synchronization/Mutex.hpp>
 
 /*
-** лМБУУ РТЕДПУФБЧМСЕФ ЙОФЕТЖЕКУ ДМС УПИТБОЕОЙС ЬМЕНЕОФПЧ ДБООЩИ ФЙРБ InfoSme_T_Entity,
-** ЧЩРПМОЕОЙС ПРЕТБГЙК РПЙУЛБ УПИТБОЕООЩИ ДБООЩИ РП ЪБДБООПНХ ЛМАЮХ, РПУМЕДПЧБФЕМШОПЗП
-** ДПУФХРБ Л ИТБОЙНЩН ЬМЕНЕОФБН  Й ХДБМЕОЙС ИТБОЙНПЗП ЬМЕНЕОФБ ОБ ПУОПЧБОЙЙ
-** ЪБДБООПЗП ЪОБЮЕОЙС ЛМАЮБ.
+** Класс предоставляет интерфейс для сохранения элементов данных типа InfoSme_T_Entity,
+** выполнения операций поиска сохраненных данных по заданному ключу, последовательного
+** доступа к хранимым элементам  и удаления хранимого элемента на основании
+** заданного значения ключа.
 */
 class InfoSme_T_DBEntityStorage
   : public DbEntity_SearchIface<InfoSme_T_Entity::Id_Key, InfoSme_T_Entity>,
@@ -47,7 +47,7 @@ private:
   UniqueStorageIndex<InfoSme_T_Entity::Id_Key,
                      DataStorage_FileDispatcher<InfoSme_T_Entity>::rid_t> _uniq_index_by_id_key;
   NonUniqueStorageIndex<InfoSme_T_Entity::StateANDSDate_key,
-                        DataStorage_FileDispatcher<InfoSme_T_Entity>::rid_t> _nonuniq_index_by_send_and_sdate_key;
+                        DataStorage_FileDispatcher<InfoSme_T_Entity>::rid_t> _nonuniq_index_by_state_and_sdate_key;
   smsc::core::synchronization::Mutex _storageLock;
 
   class InfoSme_T_DbIterator : public DbIterator<InfoSme_T_Entity> {
