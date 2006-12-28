@@ -27,6 +27,7 @@ public:
 
   int getPageNum() const;
   enum {PAGE_SIZE=4096} page_size_t;
+  uint8_t* returnAllocatedMemory();
 private:
   const size_t _pageNum;
   uint8_t* _pageDataPtr;
@@ -50,7 +51,10 @@ public:
     return _page->read(&_inPageOffset, buf, bufSz);
   }
   ssize_t readOrderReverse(uint8_t *buf, size_t bufSz) {
-    return _page->readOrderReverse(&_inPageOffset, buf, bufSz);
+    ssize_t reverseCnt=0;
+    if ( _inPageOffset > 0 )
+      reverseCnt = _page->readOrderReverse(&_inPageOffset, buf, bufSz);
+    return reverseCnt;
   }
   ssize_t write(const uint8_t *buf, size_t bufSz) {
     return _page->write(&_inPageOffset, buf, bufSz);
@@ -70,6 +74,12 @@ public:
   int getPageNum() const {
     return _page->getPageNum();
   }
+  size_t getRemainderSizeToEndPage() const {
+    return IOPage_impl::PAGE_SIZE - _inPageOffset;
+  }
+  size_t getPageSize() const {
+    return IOPage_impl::PAGE_SIZE;
+  }
 private:
   IOPage_impl* _page;
   off_t _inPageOffset;
@@ -78,12 +88,16 @@ private:
 class IOPageDispatcher {
 public:
   IOPageDispatcher(int fd);
-  virtual IOPage getIOPage(off_t rid);
+  ~IOPageDispatcher() {}
   virtual IOPage getFirstIOPage();
   virtual IOPage getNextIOPage(const IOPage& currentPage);
   virtual IOPage getPreviousIOPage(const IOPage& currentPage);
   virtual IOPage getLastIOPage();
-  virtual IOPage createNewIOPage();
+
+  virtual IOPage createNewIOPage() = 0;
+  virtual IOPage getIOPage(off_t rid) = 0;
+  virtual bool haveNextPage(const IOPage& currentPage) = 0;
+
   virtual void markPageAsDitry(IOPage_impl* dirtyPage);
   virtual int commitDirtyPage(IOPage_impl* dirtyPage);
 protected:
@@ -94,6 +108,8 @@ protected:
   registredPagesMap_t _registredPages;
 
   smsc::core::synchronization::Mutex _lastPageLock, _registredPagesLock;
+
+  IOPage_impl* loadPageData(int pageNum, IOPage_impl* pagePtr=0);
 };
 
 #endif
