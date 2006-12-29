@@ -37,13 +37,12 @@ public class AliasSet {
 
   /**
    *
-   * @aram config
    * @param smsc
    * @throws AdminException
    */
   public void init(Config config, Smsc smsc) throws AdminException {
     try {
-      aliasmanStorePath = "/network/shulga/build/smsc/distr/services/SMSC/store/aliases.bin";//config.getString(PARAM_NAME_FILE_NAME);
+      aliasmanStorePath = config.getString(PARAM_NAME_FILE_NAME);
       if (aliasmanStorePath == null || aliasmanStorePath.length() <= 0)
         throw new AdminException("store path is empty");
     } catch (Exception e) {
